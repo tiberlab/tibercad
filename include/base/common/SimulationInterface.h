@@ -6,6 +6,7 @@
 #include "tiber_config.h"
 #include "TiberModelObject.h"
 #include "TypeDefs.h"
+#include "HashMap.h"
 #include "InitFailedException.h"
 #include "SolveFailedException.h"
 #include "ModelErrorException.h"
@@ -466,21 +467,21 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \return \c NULL if no model is present for the given side
      */
-    PhysicalModel* get_surface_model(const Elem*, int side) const;
+    PhysicalModel* get_surface_model(const Elem* elem, int side) const;
 
 
     //! Get the physical model associated to an element edge
     /*!
      * \return \c NULL if no model is present for the given edge
      */
-    PhysicalModel* get_edge_model(const Elem*, int edge) const;
+    PhysicalModel* get_edge_model(const Elem* elem, int edge) const;
 
 
     //! Get the physical model associated to an element node
     /*!
      * \return \c NULL if no model is present for the given node
      */
-    PhysicalModel* get_node_model(const Elem*, int node) const;
+    PhysicalModel* get_node_model(const Elem* elem, int node) const;
 
 
 
@@ -837,11 +838,11 @@ class SimulationInterface : public TiberModelObject
   private:
 
     //! A typedef for convenience
-    typedef std::map<ID, SimulationInterface*> SimulationMap;
+    typedef TiberCad::HashMap<ID, SimulationInterface*>::Type SimulationMap;
 
 
     //! A typedef for the embracing region map
-    typedef std::map<SimulationInterface*, Embracing*> EmbracingMap;
+    typedef TiberCad::HashMap<SimulationInterface*, Embracing*>::Type EmbracingMap;
 
 
     //! The environment for this simulation

@@ -32,7 +32,7 @@ class NodeObject : public PhysicalObject
   protected:
 
     //! Construct an edge object
-    NodeObject(void) : PhysicalObject(NODE) {};
+    NodeObject(const ModelOptions& options) : PhysicalObject(NODE, options) {};
 
 
     //! \copydoc PhysicalObject::do_init()
@@ -53,7 +53,7 @@ inline
 NodeObject*
 NodeObject::create(const ModelOptions& options)
 {
-  return new NodeObject();
+  return new NodeObject(options);
 }
 
 

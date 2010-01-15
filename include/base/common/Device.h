@@ -6,6 +6,7 @@
 
 #include "TiberCad.h"
 #include "TypeDefs.h"
+#include "HashMap.h"
 #include "ModelOptions.h"
 #include "DeviceException.h"
 
@@ -31,92 +32,92 @@ class AtomisticStructure;
  */
 class Device
 {
-
- public:
-
-  typedef std::map<ID, std::vector<ID> > BCNodeMap;
-
-
-  //! Destructor
-  ~Device();
-
-  //! The method for creation of a device
-  /*!
-   * \param options the options needed for device creation
-   * \return a pointer to the newly created device
-   *
-   * \c options has to contain at least the following options:
-   * \li "meshfile" -> filename
-   * \li "dimension" -> the real space dimension (1, 2 or 3)
-   * \li "mesh_units" -> the units of the mesh (cf. get_mesh_units())
-   */
-  static Device* create(const ModelOptions& options);
-
-
-  //! Destroy a Device object
-  static void destroy(Device* device);
-
-
-  //! Get a reference to the mesh
-  MeshBase& get_mesh(void) const;
-
-  //! Get a pointer to the meshdata
-  MeshData_elements* get_meshdata(void) const;
     
-  //! Get a reference to the equation systems object
-  EquationSystems& get_equation_systems(void) const;
+  public:
+
+    typedef std::map<ID, std::vector<ID> > BCNodeMap;
 
 
-  //! Initialize this device
-  /*!
-   * This method will call \c init() of all Materials in this device
-   */
-  void init(void);
+    //! Destructor
+    ~Device();
 
+    //! The method for creation of a device
+    /*!
+     * \param options the options needed for device creation
+     * \return a pointer to the newly created device
+     *
+     * \c options has to contain at least the following options:
+     * \li "meshfile" -> filename
+     * \li "dimension" -> the real space dimension (1, 2 or 3)
+     * \li "mesh_units" -> the units of the mesh (cf. get_mesh_units())
+     */
+    static Device* create(const ModelOptions& options);
+
+
+    //! Destroy a Device object
+    static void destroy(Device* device);
+
+
+    //! Get a reference to the mesh
+    MeshBase& get_mesh(void) const;
+
+    //! Get a pointer to the meshdata
+    MeshData_elements* get_meshdata(void) const;
+
+    //! Get a reference to the equation systems object
+    EquationSystems& get_equation_systems(void) const;
+
+
+    //! Initialize this device
+    /*!
+     * This method will call \c init() of all Materials in this device
+     */
+    void init(void);
+
+
+    //! Set a material for a number of geometrical regions
+    /*!
+     * \c region_id is assumed to be a vector of valid region numbers
+     * as given in the mesh.
+     *
+     * \param material a pointer to the material
+     * \param region_id the region numbers this material should belong to
+     * \param region_name the name to be assigned
+     */
+    void set_material(Material* material, const std::vector<ID>& region_ids,
+        const std::string& region_name);
+
+
+    //! Set an atomistic structure to be kept in structures map
+    void set_atomistic_structure(const std::string& name,
+        AtomisticStructure* atomistic_structure);
+
+
+    //! Set the Control module which will control this device
+    void set_control(Control* control);
+
+
+    //! Get the material for a given region ID
+    /*!
+     * If \c region_id is not found in the material list, the NULL
+     * pointer is returned.
+     *
+     * \param region_id the region number
+     */
+    const Material* get_material(ID region_id) const;
     
-  //! Set a material for a number of geometrical regions
-  /*!
-   * \c region_id is assumed to be a vector of valid region numbers
-   * as given in the mesh.
-   *
-   * \param material a pointer to the material
-   * \param region_id the region numbers this material should belong to
-   * \param region_name the name to be assigned
-   */
-  void set_material(Material* material, const std::vector<ID>& region_ids,
-                    const std::string& region_name);
-
-
-  //! Set an atomistic structure to be kept in structures map
-  void set_atomistic_structure(const std::string& name,
-                               AtomisticStructure* atomistic_structure);
-
-
-  //! Set the Control module which will control this device
-  void set_control(Control* control);
-
     
-  //! Get the material for a given region ID
-  /*!
-   * If \c region_id is not found in the material list, the NULL
-   * pointer is returned.
-   *
-   * \param region_id the region number
-   */
-  const Material* get_material(ID region_id) const;
-
-
     /*! \copydoc get_material(ID) const */
     Material* get_material(ID region_id);
 
 
-  //! Get the material for a region name
-  /*!
-   * \param name the user defined name of a region
-   * \return the material pointer or \c NULL if \c name does not name
-   * a valid region
-   */
-  const Material* get_material(const std::string& name) const;
+    //! Get the material for a region name
+    /*!
+     * \param name the user defined name of a region
+     * \return the material pointer or \c NULL if \c name does not name
+     * a valid region
+     */
+    const Material* get_material(const std::string& name) const;
 
 
     /*! \copydoc get_material(const std::string&) const */
@@ -145,96 +146,96 @@ class Device
     
     //! Get the map that contains all boundary nodes for all boundaries
     BCNodeMap& get_boundary_node_map(void) const;
-
     
-  //! Get the mesh units
-  /*!
-   * Mesh units are in SI units, i.e. meters. The return value is
-   * the distance in real space corresponding to a distance of 1 in
-   * the mesh object, or:
-   * \f[\mathrm{d}_{real}(x, y) = \gamma\mathrm{d}_{mesh}(x,y)\f]
-   * where \f$\gamma\f$ is the result of get_mesh_units()
-   */
-  double get_mesh_units(void) const;
-
-
-  //! Get a reference to the Control module that controls this device
-  Control& get_control(void) const;
-
-
-  //! Get the set with all region IDs
-  /*!
-   * Only active regions are returned (that is regions that have a material
-   * associated).
-   */
-  const std::set<ID>& get_active_region_ids(void) const;
-
-
-  //! Get the name of a region
-  /*!
-   * \param id the ID of the physical region
-   *
-   * If a region has no name associated, it will be assigned the
-   * empty string.
-   */
-  const std::string& get_region_name(ID id) const;
-
-
-  //! Get the name of a boundary region
-  /*!
-   * \param id the ID of the boundary region
-   *
-   * If a region has no name associated, it will be assigned the
-   * empty string.
-   */
-  const std::string& get_boundary_region_name(ID id) const;
-
-
-  //! Get the region IDs of the region with name \c name
-  /*!
-   * \c name can be the name of a physical region, of a cluster
-   * or of a mesh region
-   * Only active regions are returned (that is regions that have a material
-   * associated).
-   */
-  void get_active_region_ids(const std::string& name, std::vector<ID>& ids) const;
-
-
-  //! Get the region IDs of the mesh region with name \c name
-  /*!
-   * This looks only in the list of original mesh region names.
-   */
-  void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const;
-
-
-
-  //! Get the region IDs of the boundary region with name \c name
-  void get_boundary_region_ids(const std::string& name,
-                               std::vector<ID>& ids) const;
-
-
-  //! Set the name for a boundary region
-  void set_boundary_region_name(const std::string& name,
-                                const std::vector<ID>& ids);
-
-
-  //! Define a cluster
-  void set_cluster(const std::string& name, const std::vector<ID>& ids);
-
-
-  //! Get the type of symmetry
-  TiberCad::Symmetry get_symmetry(void) const;
     
+    //! Get the mesh units
+    /*!
+     * Mesh units are in SI units, i.e. meters. The return value is
+     * the distance in real space corresponding to a distance of 1 in
+     * the mesh object, or:
+     * \f[\mathrm{d}_{real}(x, y) = \gamma\mathrm{d}_{mesh}(x,y)\f]
+     * where \f$\gamma\f$ is the result of get_mesh_units()
+     */
+    double get_mesh_units(void) const;
 
-  //! Get the pointer for the atomistic structure defined with \c name
-  AtomisticStructure* get_atomistic_structure(const std::string&);
+
+    //! Get a reference to the Control module that controls this device
+    Control& get_control(void) const;
 
 
- private:
+    //! Get the set with all region IDs
+    /*!
+     * Only active regions are returned (that is regions that have a material
+     * associated).
+     */
+    const std::set<ID>& get_active_region_ids(void) const;
+
+
+    //! Get the name of a region
+    /*!
+     * \param id the ID of the physical region
+     *
+     * If a region has no name associated, it will be assigned the
+     * empty string.
+     */
+    const std::string& get_region_name(ID id) const;
+
+
+    //! Get the name of a boundary region
+    /*!
+     * \param id the ID of the boundary region
+     *
+     * If a region has no name associated, it will be assigned the
+     * empty string.
+     */
+    const std::string& get_boundary_region_name(ID id) const;
+
+
+    //! Get the region IDs of the region with name \c name
+    /*!
+     * \c name can be the name of a physical region, of a cluster
+     * or of a mesh region
+     * Only active regions are returned (that is regions that have a material
+     * associated).
+     */
+    void get_active_region_ids(const std::string& name, std::vector<ID>& ids) const;
+
+
+    //! Get the region IDs of the mesh region with name \c name
+    /*!
+     * This looks only in the list of original mesh region names.
+     */
+    void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const;
+
+
+
+    //! Get the region IDs of the boundary region with name \c name
+    void get_boundary_region_ids(const std::string& name,
+        std::vector<ID>& ids) const;
+
+
+    //! Set the name for a boundary region
+    void set_boundary_region_name(const std::string& name,
+        const std::vector<ID>& ids);
+
+
+    //! Define a cluster
+    void set_cluster(const std::string& name, const std::vector<ID>& ids);
+
+
+    //! Get the type of symmetry
+    TiberCad::Symmetry get_symmetry(void) const;
+
+
+    //! Get the pointer for the atomistic structure defined with \c name
+    AtomisticStructure* get_atomistic_structure(const std::string&);
+
+
+  private:
 
 
     //! A typdef for the bulk materials
-    typedef std::map<ID, Material*> MaterialMap;
+    typedef TiberCad::HashMap<ID, Material*>::Type MaterialMap;
 
     //! A typdef for the material boundaries
     typedef std::map<ID, MaterialBoundary*> MaterialBoundayMap;
@@ -246,132 +247,138 @@ class Device
     typedef std::map<ID, NodeObject*> NodeObjMap;
 
 
+
+
     //! A typdef for convenience
     typedef std::map<std::string, std::vector<ID> > ClusterMap;
+    
+    
+    //! Empty Constructor
+    /*!
+     * The mesh is assumed to be correctly prepared, i.e. all elements the
+     * right subdomain id assigned (which is the physical region number
+     * found in the mesh file).
+     * The \c boundary_nodes map has to contain all nodes for each boundary
+     * for which a boundary condition is implied.
+     */
+    Device(void);
 
 
-  //! Empty Constructor
-  /*!
-   * The mesh is assumed to be correctly prepared, i.e. all elements the
-   * right subdomain id assigned (which is the physical region number
-   * found in the mesh file).
-   * The \c boundary_nodes map has to contain all nodes for each boundary
-   * for which a boundary condition is implied.
-   */
-  Device(void);
-  
+    //! Set a material for a physical region
+    /*!
+     * \param material a pointer to the material
+     * \param region_id the region number this material should belong to
+     * \throws {InitFailedException if \c region_id is invalid or already
+     * used.}
+     */
+    void set_material(Material* material, ID region_id);
 
-  //! Set a material for a physical region
-  /*!
-   * \param material a pointer to the material
-   * \param region_id the region number this material should belong to
-   * \throws {InitFailedException if \c region_id is invalid or already
-   * used.}
-   */
-  void set_material(Material* material, ID region_id);
- 
 
-  //! Set the name for a physical region 
-  void set_region_name(const std::string& name, const std::vector<ID>& ids);
+    //! Set the name for a physical region
+    void set_region_name(const std::string& name, const std::vector<ID>& ids);
+
+
+    //! Set options for this device
+    /*!
+     * The options are stored internally and are accessible through
+     * special methods.
+     * Options have to be specified at creation time.
+     */
+    void set_options(const ModelOptions& options);
+
+
+    //! Get a reference to the model options
+    ModelOptions& get_options(void);
+
+
+    //! creates the mesh and the equation system
+    /*!
+     * This method assumes, that \c _options contain the name of the
+     * meshfile and the dimension
+     */
+    void setup_mesh(void);
+
+
+    //! The map that connects region number to material
+    MaterialMap _material_map;
+
+
+    //! The map connecting boundary regions to model containers
+    MaterialBoundayMap _boundary_map;
+
+
+    //! The map that connects atomistic structure names to pointers
+    /*! (keep track of existing atomistic struxctures) */
+    std::map<std::string,  AtomisticStructure*> _atomistic_structure_map;
+
+
+    //! The mesh for this device
+    MeshBase* _mesh;
+
+    //! The meshdata for this device
+    MeshData_elements* _meshdata;
+
+
+    //! The mesh unit in m
+    /*!
+     * A distance of 1 in the mesh corresponds to \c _mesh_units m
+     */
+    double _mesh_units;
+
+
+    //! The control module which controls this device
+    Control* _control;
+
+
+    //! The equation systems used for this device
+    /*!
+     * This is stored here because it has to be consistent with the mesh
+     * of the device
+     */
+    EquationSystems* _eq_system;
+
+
+    //! A map that contains all nodes for boundary conditions
+    BCNodeMap* _boundary_nodes;
+
+
+    //! User defined options for this device
+    ModelOptions _options;
+
+
+    //! A set with all region IDs
+    std::set<ID> _region_ids;
+
+
+    //! A set with all active region IDs
+    /*!
+     * An active region is a region with an associated material.
+     */
+    std::set<ID> _active_region_ids;
+
+
+    //! A map that assigns physical region or cluster IDs to names
+    std::map<ID, std::string> _region_names;
+
+
+    //! A map containing the original mesh region names
+    std::map<ID, std::string> _mesh_region_names;
+
+
+    //! A map that assigns boundary region IDs to boundary region names
+    std::map<ID, std::string> _boundary_region_names;
 
     
-  //! Set options for this device
-  /*!
-   * The options are stored internally and are accessible through
-   * special methods.
-   * Options have to be specified at creation time.
-   */
-  void set_options(const ModelOptions& options);
-
+    //! A map containing all clusters
+    ClusterMap _cluster_map;
     
-  //! Get a reference to the model options
-  ModelOptions& get_options(void);
-
     
-  //! creates the mesh and the equation system
-  /*!
-   * This method assumes, that \c _options contain the name of the
-   * meshfile and the dimension
-   */
-  void setup_mesh(void);
-
+    //! The symmetry of the device
+    /*!
+     * The default assumes no special symmetry.
+     */
+    TiberCad::Symmetry _symmetry;
     
-  //! The map that connects region number to material
-  MaterialMap _material_map;
-
-
-  //! The map that connects atomistic structure names to pointers
-  /*! (keep track of existing atomistic struxctures) */
-  std::map<std::string,  AtomisticStructure*> _atomistic_structure_map;
-  
-
-  //! The mesh for this device
-  MeshBase* _mesh;
-
-  //! The meshdata for this device
-  MeshData_elements* _meshdata;
-
-   
-  //! The mesh unit in m
-  /*!
-   * A distance of 1 in the mesh corresponds to \c _mesh_units m
-   */
-  double _mesh_units;
-
-
-  //! The control module which controls this device
-  Control* _control;
-
-    
-  //! The equation systems used for this device
-  /*!
-   * This is stored here because it has to be consistent with the mesh
-   * of the device
-   */
-  EquationSystems* _eq_system;
-
-    
-  //! A map that contains all nodes for boundary conditions
-  BCNodeMap* _boundary_nodes;
-
-
-  //! User defined options for this device
-  ModelOptions _options;
-
-
-  //! A set with all region IDs
-  std::set<ID> _region_ids;
-
-
-  //! A set with all active region IDs
-  /*!
-   * An active region is a region with an associated material.
-   */
-  std::set<ID> _active_region_ids;
-  
-
-  //! A map that assigns physical region or cluster IDs to names
-  std::map<ID, std::string> _region_names;
-  
-
-  //! A map containing the original mesh region names
-  std::map<ID, std::string> _mesh_region_names;
-  
-
-  //! A map that assigns boundary region IDs to boundary region names
-  std::map<ID, std::string> _boundary_region_names;
-
-
-  //! A map containing all clusters
-  ClusterMap _cluster_map;
-
-
-  //! The symmetry of the device
-  /*!
-   * The default assumes no special symmetry.
-   */
-  TiberCad::Symmetry _symmetry;
-
 };
 
 
@@ -429,6 +436,22 @@ Device::get_material(ID region_id) const
     return NULL;
 
   return it->second;
+}
+
+
+inline
+const Material*
+Device::get_material(const Elem* elem) const
+{
+  return get_material(elem->subdomain_id());
+}
+
+
+inline
+Material*
+Device::get_material(const Elem* elem)
+{
+  return get_material(elem->subdomain_id());
 }
 
 
@@ -555,5 +578,5 @@ Device::get_atomistic_structure(const std::string& name)
 {
   return _atomistic_structure_map[name];
 } 
-    
+
 #endif //  __DEVICE_H__

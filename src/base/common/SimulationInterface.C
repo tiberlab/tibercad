@@ -4,6 +4,9 @@
 #include "SimulationEnvironment.h"
 #include "Control.h"
 #include "Material.h"
+#include "MaterialBoundary.h"
+#include "EdgeObject.h"
+#include "NodeObject.h"
 #include "Alloy.h"
 #include "Embracing.h"
 
@@ -238,6 +241,61 @@ SimulationInterface::get_physical_model(ID region_id) const
 
 
 
+PhysicalModel*
+SimulationInterface::get_bulk_model(const Elem* elem) const
+{
+  PhysicalModel* mod = NULL;
+  Material* mat = get_environment().get_device().get_material(elem);
+  if (mat != NULL)
+    mod = mat->get_model(get_id());
+
+  return mod;
+}
+
+
+
+PhysicalModel*
+SimulationInterface::get_surface_model(const Elem* elem, int side) const
+{
+  PhysicalModel* mod = NULL;
+  MaterialBoundary* mb =
+      get_environment().get_device().get_boundary_object(elem, side);
+  if (mb != NULL)
+    mod = mb->get_model(get_id());
+
+  return mod;
+}
+
+
+
+PhysicalModel*
+SimulationInterface::get_edge_model(const Elem* elem, int edge) const
+{
+  PhysicalModel* mod = NULL;
+  EdgeObject* eo =
+      get_environment().get_device().get_edge_object(elem, edge);
+  if (eo != NULL)
+    mod = eo->get_model(get_id());
+
+  return mod;
+}
+
+
+
+PhysicalModel*
+SimulationInterface::get_node_model(const Elem* elem, int node) const
+{
+  PhysicalModel* mod = NULL;
+  NodeObject* no =
+      get_environment().get_device().get_node_object(elem, node);
+  if (no != NULL)
+    mod = no->get_model(get_id());
+
+  return mod;
+}
+
+
+
 void
 SimulationInterface::init(void) throw (InitFailedException)
 {
@@ -355,7 +413,7 @@ SimulationInterface::find_simulation(const string& name)
     else
     {
       // look for user defined names
-      for ( ; (it != end) && ((it->second)->get_name() != name); ++it);
+      for ( ; (it != end) && ((it->second)->get_name() != name); ++it) {}
 
       if (it != end)
         sim = it->second;
@@ -364,7 +422,7 @@ SimulationInterface::find_simulation(const string& name)
       {
         // name could be model identifier
         it = _simulation_map.begin();
-        for ( ; (it != end) && ((it->second)->get_type() != name); ++it);
+        for ( ; (it != end) && ((it->second)->get_type() != name); ++it) {}
 
         if (it != end)
           sim = it->second;

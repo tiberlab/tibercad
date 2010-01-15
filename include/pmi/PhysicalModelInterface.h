@@ -136,7 +136,7 @@ class PhysicalModelInterface : public TiberModelObject
      * \deprecated
      * This can be used for bulk models only.
      */
-    void set_material(PhysicalObject* owner);
+    void set_material(Material* owner);
 
 
     //! Set a reference to the physical object this model belongs to
@@ -606,9 +606,10 @@ PhysicalModelInterface::set_name(const std::string& name)
 
 inline
 void
-PhysicalModelInterface::set_material(PhysicalObject* owner)
+PhysicalModelInterface::set_material(Material* owner)
 {
-  _owner = owner;
+  // the cast is only to not produce a compiler error
+  _owner = reinterpret_cast<PhysicalObject*>(owner);
 }
 
 

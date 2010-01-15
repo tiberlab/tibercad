@@ -61,3 +61,29 @@
 
 /* Define to 1 if gcc has the -fvisibility flag is enabled */
 #define GCC_HASVISIBILITY 1
+
+/* define if the compiler supports __gnu_cxx::hash_map */
+#undef HAVE_EXT_HASH_MAP
+
+/* define if the compiler supports __gnu_cxx::hash_set */
+#undef HAVE_EXT_HASH_SET
+
+/* define if the compiler supports std::hash_map */
+#undef HAVE_HASH_MAP
+
+/* define if the compiler supports std::hash_set */
+#undef HAVE_HASH_SET
+
+/* define if the compiler supports std::tr1::unordered_map */
+#undef HAVE_TR1_UNORDERED_MAP
+
+/* define if the compiler supports std::tr1::unordered_set */
+#undef HAVE_TR1_UNORDERED_SET
+
+/* define if the compiler supports std::unordered_map */
+#undef HAVE_UNORDERED_MAP
+
+/* define if the compiler supports std::unordered_set */
+#undef HAVE_UNORDERED_SET
+
+

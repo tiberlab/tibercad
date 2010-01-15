@@ -32,7 +32,7 @@ class EdgeObject : public PhysicalObject
   protected:
 
     //! Construct an edge object
-    EdgeObject(void) : PhysicalObject(EDGE) {};
+    EdgeObject(const ModelOptions& options) : PhysicalObject(EDGE, options) {};
 
 
     //! \copydoc PhysicalObject::do_init()
@@ -53,7 +53,7 @@ inline
 EdgeObject*
 EdgeObject::create(const ModelOptions& options)
 {
-  return new EdgeObject();
+  return new EdgeObject(options);
 }
 
 

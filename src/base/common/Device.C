@@ -253,6 +253,27 @@ Device::get_material(const std::string& name) const
 }
 
 
+MaterialBoundary*
+Device::get_boundary_object(const Elem* elem, int side)
+{
+  return NULL;
+}
+
+
+EdgeObject*
+Device::get_edge_object(const Elem* elem, int edge)
+{
+  return NULL;
+}
+
+
+NodeObject*
+Device::get_node_object(const Elem* elem, int node)
+{
+  return NULL;
+}
+
+
 
 void 
 Device::get_active_region_ids(const string& name, vector<ID>& ids) const

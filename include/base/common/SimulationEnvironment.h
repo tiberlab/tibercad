@@ -4,6 +4,7 @@
 #define _SIMULATIONENVIRONMENT_H_
 
 #include "TypeDefs.h"
+#include "HashSet.h"
 #include "Device.h"
 #include "BoundaryNodeMap.h"
 #include "BoundaryElementMap.h"
@@ -24,6 +25,18 @@ class Node;
 class SimulationEnvironment
 {
 
+  private:
+
+    //! A typedef for convenience
+    typedef std::map<ID, Boundary*> BCMap;
+
+    //! A typedef for convenience
+    typedef std::map<ElementSide, ID> ElemSideMap;
+
+    //! The type of the element list
+    typedef TiberCad::HashSet<const Elem*>::Type ElementList;
+
+
   public:
 
     //! An iterator for the element sides lying on a boundary
@@ -36,7 +49,7 @@ class SimulationEnvironment
     typedef std::map<ID, Boundary*>::const_iterator BoundaryIterator;
 
     //! An iterator for the elements
-    typedef std::set<const Elem*>::const_iterator ConstElemIterator;
+    typedef ElementList::const_iterator ConstElemIterator;
 
     //! An iterator for the elements
     //typedef std::set<const Elem*>::iterator ElemIterator
@@ -318,14 +331,8 @@ class SimulationEnvironment
     void get_region_names(std::set<std::string>& names) const;
 
 
+
   private:
-
-    //! A typedef for convenience
-    typedef std::map<ID, Boundary*> BCMap;
-
-    //! A typedef for convenience
-    typedef std::map<ElementSide, ID> ElemSideMap;
-
 
     //! Disable copy constructor
     SimulationEnvironment(const SimulationEnvironment&);
@@ -352,7 +359,7 @@ class SimulationEnvironment
 
     
     //! A set containing all elements belonging to this simulation region
-    std::set<const Elem*> _element_list;
+    ElementList _element_list;
 
     
     //! A map that assigns boundary ID to boundary condition
