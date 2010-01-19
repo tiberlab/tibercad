@@ -8,6 +8,7 @@
 #include "tensor.h"
 
 #include <vector>
+#include <map>
 
 
 //! A class for managing bond maps

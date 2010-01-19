@@ -6,6 +6,7 @@
 
 #include "TiberCad.h"
 #include "TypeDefs.h"
+#include "ElementSide.h"
 #include "HashMap.h"
 #include "ModelOptions.h"
 #include "DeviceException.h"
@@ -238,14 +239,14 @@ class Device
     typedef TiberCad::HashMap<ID, Material*>::Type MaterialMap;
 
     //! A typdef for the material boundaries
-    typedef std::map<ID, MaterialBoundary*> MaterialBoundayMap;
+    typedef TiberCad::HashMap<ElementSide, MaterialBoundary*,
+      ElementSide::hash>::Type BoundaryMap;
 
     //! A typdef for the edge objects
     typedef std::map<ID, EdgeObject*> EdgeObjMap;
 
     //! A typdef for the node objects
     typedef std::map<ID, NodeObject*> NodeObjMap;
-
 
 
 
@@ -304,7 +305,8 @@ class Device
 
 
     //! The map connecting boundary regions to model containers
-    MaterialBoundayMap _boundary_map;
+    BoundaryMap _boundary_map;
+
 
 
     //! The map that connects atomistic structure names to pointers

@@ -66,10 +66,6 @@ class Material : public PhysicalObject
     void add_dopant(Dopant* dopant);
 
 
-    //! Get the material name
-    const std::string& get_name(void) const;
-
-
     //! Set the structure
     void set_structure(const std::string& structure);
 
@@ -152,12 +148,6 @@ class Material : public PhysicalObject
 
   private:
 
-    //! The material name
-    /*!
-     * The name of the material as GaAs, Si etc.
-     */
-    const std::string _name;
-
 
     //! The crystal structure
     /*!
@@ -199,14 +189,6 @@ Material::is_alloy(void) const
   return _is_alloy;
 }
 
-
-
-inline
-const std::string&
-Material::get_name(void) const
-{
-  return  _name;
-}
 
 
 inline

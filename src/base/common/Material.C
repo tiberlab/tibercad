@@ -14,11 +14,11 @@
 Material::Material(const std::string& name,
     const ModelOptions& options, bool alloy)
   : PhysicalObject(BULK, options),
-    _name(name),
     _structure("zb"),
     _is_alloy(alloy),
     _rotated_crystal(NULL)
 {
+  set_name(name);
 }
 
 

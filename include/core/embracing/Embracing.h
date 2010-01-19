@@ -3,7 +3,7 @@
 #ifndef _EMBRACING_H_
 #define _EMBRACING_H_
 
-#include "TypeDefs.h"
+#include "ElementSide.h"
 
 #include "point.h"
 #include "linear_implicit_system.h"

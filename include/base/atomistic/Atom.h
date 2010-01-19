@@ -4,7 +4,7 @@
 #include "tensor.h"
 #include "TypeDefs.h"
 
-class elem;
+class Elem;
 
 
 //! Contains Atom definition

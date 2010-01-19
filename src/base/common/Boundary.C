@@ -77,6 +77,6 @@ Boundary::find_region_ids(void)
   {
     ID id = it->second;
     if (_env->get_boundary(id) == this)
-      _region_ids.insert((it->first).first->subdomain_id());
+      _region_ids.insert((it->first).elem()->subdomain_id());
   }
 }

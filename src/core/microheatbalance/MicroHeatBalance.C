@@ -779,7 +779,7 @@ void MicroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		    if (elem->is_node_on_side(n,side))
 		    {
 		      
-		      const Elem* neighbour = (elside.first)->neighbor(side);
+		      const Elem* neighbour = (elside.elem())->neighbor(side);
 		      double temp = (dynamic_cast<FourierBTE*> (contact) )->get_temperature(neighbour,elem->point(n));
 		      
 		      for (unsigned int nc = 0; nc < n_dofs; nc++)
@@ -2181,7 +2181,7 @@ kappa /=s_0;
 	      {   
 		if (elem->is_node_on_side(n,side))
 		{
-		  const Elem* neighbour = (elside.first)->neighbor(side);
+		  const Elem* neighbour = (elside.elem())->neighbor(side);
 		  double temp = (dynamic_cast<FourierBTE*> (contact) )->get_temperature(neighbour,elem->point(n));
 		  for (unsigned int nc = 0; nc < n_dofs; nc++)
 		    Ke(n,nc) = 0.0;

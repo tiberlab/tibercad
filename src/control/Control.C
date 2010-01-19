@@ -295,9 +295,33 @@ Control::create_device(void)
 {
   Messages::debug("Control::create_device() begin");
 
-  ModelOptions opts;
   InputParser parser(_inputfile);
+
+  ModelOptions opts;
   parser.get_simulation_options(opts);
+  if (opts.find_option("mesh_units"))
+  {
+    Messages::warning("\"mesh_units\" in $Simulation section is deprecated "
+        " and should be moved to the device options.");
+  }
+  if (opts.find_option("dimension"))
+  {
+    Messages::warning("\"dimension\" in $Simulation section is deprecated "
+        " and should be moved to the device options.");
+  }
+  if (opts.find_option("meshfile"))
+  {
+    Messages::warning("\"meshfile\" in $Simulation section is deprecated "
+        " and should be moved to the device options.");
+  }
+  if (opts.find_option("symmetry"))
+  {
+    Messages::warning("\"symmetry\" in $Simulation section is deprecated "
+        " and should be moved to the device options.");
+  }
+
+  parser.read_device();
+  opts += parser.get_device_options();
 
   // we pass the remaining options to the device
   _device = Device::create(opts);

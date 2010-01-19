@@ -31,7 +31,8 @@ class SimulationEnvironment
     typedef std::map<ID, Boundary*> BCMap;
 
     //! A typedef for convenience
-    typedef std::map<ElementSide, ID> ElemSideMap;
+    typedef TiberCad::HashMap<ElementSide, ID,
+      ElementSide::hash>::Type ElemSideMap;
 
     //! The type of the element list
     typedef TiberCad::HashSet<const Elem*>::Type ElementList;
@@ -40,7 +41,7 @@ class SimulationEnvironment
   public:
 
     //! An iterator for the element sides lying on a boundary
-    typedef std::map<ElementSide, ID>::const_iterator BoundarySideIterator;
+    typedef ElemSideMap::const_iterator BoundarySideIterator;
 
     //! An iterator for the nodes lying on a boundary
     typedef std::map<const Node*, ID>::const_iterator BoundaryNodeIterator;
@@ -461,7 +462,7 @@ SimulationEnvironment::is_on_boundary(const ElementSide& side) const
 {
   bool result = true;
 
-  const Elem* neighbour = (side.first)->neighbor(side.second);
+  const Elem* neighbour = (side.elem())->neighbor(side.side());
 
   if (neighbour != NULL)
   {
@@ -480,10 +481,10 @@ SimulationEnvironment::is_boundary(const ElementSide& side) const
 {
   bool result = false;
 
-  const Elem* neighbour = (side.first)->neighbor(side.second);
+  const Elem* neighbour = (side.elem())->neighbor(side.side());
 
   if ((neighbour == NULL) ||
-      (neighbour->subdomain_id() != (side.first)->subdomain_id()))
+      (neighbour->subdomain_id() != (side.elem()->subdomain_id())))
     result = true;
 
   return result;
@@ -497,7 +498,7 @@ SimulationEnvironment::is_outer_boundary(const ElementSide& side) const
 {
   bool result = true;
 
-  const Elem* neighbour = (side.first)->neighbor(side.second);
+  const Elem* neighbour = (side.elem())->neighbor(side.side());
 
   if (neighbour != NULL)
   {
@@ -516,10 +517,10 @@ SimulationEnvironment::is_inner_boundary(const ElementSide& side) const
 {
   bool result = false;
 
-  const Elem* neighbour = (side.first)->neighbor(side.second);
+  const Elem* neighbour = (side.elem())->neighbor(side.side());
 
   if ((neighbour != NULL) &&
-      (neighbour->subdomain_id() != (side.first)->subdomain_id()))
+      (neighbour->subdomain_id() != (side.elem()->subdomain_id())))
   {
     ID neighbour_id = neighbour->subdomain_id();
     if (_region_numbers.find(neighbour_id) != _region_numbers.end())

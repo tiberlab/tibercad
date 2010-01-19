@@ -86,6 +86,10 @@ class PhysicalObject : public TiberModelObject
     ObjectType get_type(void) const;
 
 
+    //! Get the material name
+    const std::string& get_name(void) const;
+
+
 
   protected:
 
@@ -98,6 +102,10 @@ class PhysicalObject : public TiberModelObject
      * \param type the object type (BULK, BOUNDARY, EDGE, NODE)
      */
     PhysicalObject(ObjectType type, const ModelOptions& options);
+
+
+    //! Set the objects name
+    void set_name(const std::string& name);
 
 
     //! The real init function
@@ -117,6 +125,10 @@ class PhysicalObject : public TiberModelObject
 
 
   private:
+
+    //! The objects name
+    std::string _name;
+
 
     //! The database to be used
     Database* _database;
@@ -144,6 +156,23 @@ class PhysicalObject : public TiberModelObject
 //
 // inline members
 //
+
+
+
+inline
+const std::string&
+PhysicalObject::get_name(void) const
+{
+  return  _name;
+}
+
+
+inline
+void
+PhysicalObject::set_name(const std::string& name)
+{
+  _name = name;
+}
 
 
 inline

@@ -2,6 +2,13 @@
 # Description of  the  device physical regions
 $Device
 {
+   Options
+   {
+     meshfile = bulk.msh
+     dimension = 1
+   }
+
+
    Region bulk 
    {
      mat = Si
@@ -86,8 +93,6 @@ $Physics
 
 $Simulation
 {
-  meshfile = bulk.msh
-  dimension = 1
   temperature = 300
   solve = sweep
   resultpath = output

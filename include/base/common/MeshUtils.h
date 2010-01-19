@@ -9,6 +9,7 @@
 
 #include <set>
 
+class Elem;
 class MeshBase;
 class MeshData_elements;
 

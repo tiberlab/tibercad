@@ -6,6 +6,7 @@
 #include "TypeDefs.h"
 
 #include <string>
+#include <map>
 #include <vector>
 
 class MeshData_elements;

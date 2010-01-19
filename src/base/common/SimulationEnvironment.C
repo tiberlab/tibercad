@@ -246,7 +246,7 @@ SimulationEnvironment::update_boundary_node_map(void)
       const ElementSide& elem_side = it->first;
       //_node_map[(elem_side.first)->get_node(elem_side.second)] = it->second;
       _node_map.add_node(it->second,
-          (elem_side.first)->get_node(elem_side.second));
+          (elem_side.elem())->get_node(elem_side.side()));
     }
   }
   else
@@ -254,8 +254,8 @@ SimulationEnvironment::update_boundary_node_map(void)
     for ( ; it != end; ++it)
     {
       const ElementSide& elem_side = it->first;
-      const Elem* elem = elem_side.first;
-      const unsigned int side_num = elem_side.second;
+      const Elem* elem = elem_side.elem();
+      const unsigned int side_num = elem_side.side();
 
       // get the active family tree of this element
       vector<const Elem*> fam_tree;

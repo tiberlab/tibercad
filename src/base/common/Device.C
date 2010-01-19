@@ -256,6 +256,12 @@ Device::get_material(const std::string& name) const
 MaterialBoundary*
 Device::get_boundary_object(const Elem* elem, int side)
 {
+  MaterialBoundary* mb = NULL;
+
+  BoundaryMap::iterator it(_boundary_map.find(ElementSide(elem, side)));
+  if (it != _boundary_map.end())
+    mb = it->second;
+
   return NULL;
 }
 

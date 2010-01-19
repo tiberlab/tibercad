@@ -102,16 +102,16 @@ Embracing::generate_embracing_region(void)
     const set<ElementSide>::iterator end(_sides.end());
 
     for ( ; it != end; ++it)
-      _elem_list[it->first] = 0.0;
+      _elem_list[it->elem()] = 0.0;
 
 
     for (it = _sides.begin(); it != end; ++it)
     {
-      const Elem* elem = it->first;
+      const Elem* elem = it->elem();
       const Elem* neighbour;
       for (unsigned int s = 0; s < elem->n_sides(); s++)
       {
-        if ((s != it->second) && ((neighbour = elem->neighbor(s)) != NULL))
+        if ((s != it->side()) && ((neighbour = elem->neighbor(s)) != NULL))
         {
           if ((find_elem(neighbour) == list_end) && 
               (in.contains_element(neighbour)))

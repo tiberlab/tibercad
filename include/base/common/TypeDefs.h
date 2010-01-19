@@ -3,16 +3,7 @@
 #ifndef _TYPEDEFS_H_
 #define _TYPEDEFS_H_
 
-#include <utility>
-#include <map>
 #include <limits.h>
-#include <limits.h>
-
-class Elem;
-
-
-//! An element side
-typedef std::pair<const Elem*, unsigned int> ElementSide;
 
 
 //! A typedef to be used for numerical identifiers

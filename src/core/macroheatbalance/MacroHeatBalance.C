@@ -536,7 +536,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	      {
 
 		RealGradient heat_flux(0);
-		const Elem* neighbour = (elside.first)->neighbor(side);
+		const Elem* neighbour = (elside.elem())->neighbor(side);
 				heat_flux  =  (dynamic_cast<BTEFourier*> (contact))->get_heat_flux(neighbour,qface_point[qp]);
  
 				
