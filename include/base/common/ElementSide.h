@@ -19,7 +19,7 @@ class ElementSide
     {
       size_t operator()(const ElementSide& elside) const
       {
-        unsigned int x = reinterpret_cast<unsigned int>(elside._elside.first);
+        size_t x = reinterpret_cast<size_t>(elside._elside.first);
         unsigned int y = elside._elside.second;
         return (x << 4) | (y && 0x000f);
       }
