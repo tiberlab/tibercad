@@ -180,14 +180,14 @@ $Models
         BC_Region reservoir
    	{
     
-         BC_reg_numb = 1
+         BC_reg_numb = 18
          temperature = 300
    	}
 
         BC_Region reservoir
    	{
     
-         BC_reg_numb = 2
+         BC_reg_numb = 19
          temperature = 300
    	}
  
@@ -229,7 +229,7 @@ $Models
     {
       BC_Region p_contact
       {
-        BC_reg_numb = 4
+        BC_reg_numb = 21
         type = ohmic
       	zero_grad_fermi_e = true
 	voltage = @Vb[0.0] 
@@ -238,7 +238,7 @@ $Models
       
       BC_Region n_contact
       {
-        BC_reg_numb = 3
+        BC_reg_numb = 20
         type = ohmic
  	zero_grad_fermi_h = true
         voltage = 0.0
@@ -262,7 +262,7 @@ $Models
     {
       BC_Region substr
       {
-        BC_reg_numb = 2
+        BC_reg_numb = 19
 	type = substrate
         material = GaN
 	structure = wz
@@ -353,7 +353,7 @@ $Solver
     # steps =  10 #20 # 5
   #   plotvariable = current
 
-   } 
+   }
 
 
 

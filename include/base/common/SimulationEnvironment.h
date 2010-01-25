@@ -12,6 +12,7 @@
 #include "elem.h"
 
 #include <set>
+#include <cassert>
 
 class Boundary;
 class Node;

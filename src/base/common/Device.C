@@ -4,6 +4,10 @@
 #include "Material.h"
 #include "MeshUtils.h"
 #include "MeshReader.h"
+#include "ReadGMSH.h"
+#include "ReadISEGrid.h"
+#include "BoundaryRegions.h"
+#include "MeshRegionInfo.h"
 #include "SimulationOptions.h"
 #include "AtomisticStructure.h"
 
@@ -49,7 +53,8 @@ Device::~Device()
   delete _eq_system;
   delete _boundary_nodes;
   delete _mesh;
-  delete _meshdata;
+  delete _mesh_region_info;
+  delete _bd_regions;
 }
 
 
@@ -80,7 +85,7 @@ Device::setup_mesh(void)
   _mesh_units = _options.get_option("mesh_units", _mesh_units);
 
   // this is backup solution if dim cannot be guessed from the mesh file
-  int dim = _options.get_option("dimension", -1);
+  int dim = _options.get_option("dimension", 1);
 
   const string& meshfile = _options["meshfile"];
 
@@ -90,17 +95,19 @@ Device::setup_mesh(void)
     m.info(os.str(), false);
   }
 
+  _mesh = new Mesh(dim);
 
+  _mesh_region_info = new MeshRegionInfo;
+  _bd_regions = new BoundaryRegions;
+
+  MeshReader::read_mesh(meshfile, *_mesh, *_mesh_region_info, *_bd_regions);
+
+
+  // only for now
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
+  _bd_regions->get_bc_node_map(*_boundary_nodes);
 
-  MeshReader::read_mesh(meshfile, dim, _mesh, _meshdata, *_boundary_nodes,
-                       _mesh_region_names, _boundary_region_names);
-
-
-  MeshUtils::assign_subdomain_ids(*_mesh, *_meshdata);
-
-  MeshUtils::get_subdomain_ids(*_mesh, _region_ids);
 
   // update mesh dimension
   dim = _mesh->mesh_dimension();
@@ -124,7 +131,7 @@ Device::setup_mesh(void)
     _symmetry = TiberCad::CYLINDRICAL;
     m.info("Using cylinder symmetry (=> 3D simulation)");
   }
-  
+
 
   /*
    * NOTE:
@@ -140,7 +147,45 @@ Device::setup_mesh(void)
   _eq_system = new EquationSystems(*_mesh);
 }
 
-  
+
+
+
+void
+Device::prepare_boundaries(void)
+{
+  BCNodeMap::const_iterator bd_it;
+  const BCNodeMap::const_iterator bd_end(_boundary_nodes->end());
+
+  // we only look on level zero
+  MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
+  const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
+
+  for ( ; el != el_end; ++el)
+  {
+    Elem* elem = *el;
+    const ID id = elem->subdomain_id();
+
+    // loop over the sides
+    int n_sides = elem->n_sides();
+    for (int s = 0; s < n_sides; s++)
+    {
+
+      // check if the neighbouring element is inexistent (outer boundary)
+      // or in another simulation region (inner boundary)
+      //
+      // we allow inner 'boundaries', i.e. we don't really consider
+      // boundaries but n-1 dimensional domains
+      const Elem* neighbour = elem->neighbor(s);
+
+      if ((neighbour == NULL) ||
+          (neighbour->subdomain_id() != id))
+      {
+
+      }
+    }
+  }
+
+}
 
 
 
@@ -165,7 +210,7 @@ Device::set_material(Material* material, ID region_id)
 {
   assert(material != NULL);
 
-  if (_region_ids.find(region_id) == _region_ids.end())
+  if (!_mesh_region_info->has_id(region_id))
   {
     /*
      * In single processor case this has to be considered an error,
@@ -281,7 +326,7 @@ Device::get_node_object(const Elem* elem, int node)
 
 
 
-void 
+void
 Device::get_active_region_ids(const string& name, vector<ID>& ids) const
 {
   ids.resize(0);
@@ -300,27 +345,35 @@ Device::get_active_region_ids(const string& name, vector<ID>& ids) const
     // as last resort we look in the mesh region list
     if (ids.size() == 0)
     {
-      map<ID, string>::const_iterator it(_mesh_region_names.begin());
-      const map<ID, string>::const_iterator end(_mesh_region_names.end());
-      for ( ; it != end; ++it)
-        if ((it->second == name) && (_active_region_ids.count(it->first) == 1))
-          ids.push_back(it->first);
+      //map<ID, string>::const_iterator it(_mesh_region_names.begin());
+      //const map<ID, string>::const_iterator end(_mesh_region_names.end());
+      //for ( ; it != end; ++it)
+      //  if ((it->second == name) && (_active_region_ids.count(it->first) == 1))
+      //    ids.push_back(it->first);
+
+      ID id = _mesh_region_info->get_id(name);
+      if ((id != INVALID_ID) && _region_names.count(id))
+        ids.push_back(id);
     }
   }
 }
 
 
 
-void 
+void
 Device::get_mesh_region_ids(const string& name, vector<ID>& ids) const
 {
   ids.resize(0);
 
-  map<ID, string>::const_iterator it(_mesh_region_names.begin());
-  const map<ID, string>::const_iterator end(_mesh_region_names.end());
-  for ( ; it != end; ++it)
-    if (it->second == name)
-      ids.push_back(it->first);
+  //map<ID, string>::const_iterator it(_mesh_region_names.begin());
+  //const map<ID, string>::const_iterator end(_mesh_region_names.end());
+  //for ( ; it != end; ++it)
+  //  if (it->second == name)
+  //    ids.push_back(it->first);
+
+  ID id = _mesh_region_info->get_id(name);
+  if (id != INVALID_ID)
+    ids.push_back(id);
 }
 
 
@@ -330,16 +383,20 @@ void
 Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
 {
   ids.resize(0);
-  map<ID, string>::const_iterator it(_boundary_region_names.begin());
-  const map<ID, string>::const_iterator end(_boundary_region_names.end());
-  for ( ; it != end; ++it)
-    if (it->second == name)
-      ids.push_back(it->first);
+  //map<ID, string>::const_iterator it(_boundary_region_names.begin());
+  //const map<ID, string>::const_iterator end(_boundary_region_names.end());
+  //for ( ; it != end; ++it)
+  //  if (it->second == name)
+  //    ids.push_back(it->first);
+
+  ID id = _bd_regions->get_id(name);
+  if (id != INVALID_ID)
+    ids.push_back(id);
 }
 
 
 
-void 
+void
 Device::set_region_name(const string& name, const vector<ID>& ids)
 {
   for (unsigned int i = 0 ; i < ids.size(); ++i)
@@ -347,14 +404,14 @@ Device::set_region_name(const string& name, const vector<ID>& ids)
 }
 
 
-
+/*
 void
 Device::set_boundary_region_name(const string& name, const vector<ID>& ids)
 {
   for (unsigned int i = 0 ; i < ids.size(); ++i)
     _boundary_region_names[ids[i]] = name;
 }
-
+*/
 
 
 void

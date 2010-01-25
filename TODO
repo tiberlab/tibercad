@@ -3,7 +3,7 @@
 
 2009-11-06 Auf der Maur
 	( ) put plot keyword into modules
-	( ) put mesh, dimension into $Device
+	(DONE) put mesh, dimension into $Device
 
 2009-09-4 Auf der Maur
 	( ) set crystal directions in Material in create() and add method

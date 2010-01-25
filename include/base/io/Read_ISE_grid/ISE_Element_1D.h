@@ -13,7 +13,7 @@ class ISE_Element_1D: public  ISE_Element
 {
  public:
 
-  //!  Constructor 
+  //!  Constructor
   /*!
     Assigns two vertex pointers to the element.
   */
@@ -22,15 +22,11 @@ class ISE_Element_1D: public  ISE_Element
   //!Virtual Destructor.
   /*!
     Dummy.
-  */	
-  virtual ~ISE_Element_1D();
-	
-  /*!
-    Returns nodes id.
   */
-  vector<unsigned int> get_nodes_id();
-	
-	
+  virtual ~ISE_Element_1D();
+
+
+
  private:
 
   /*!
@@ -42,26 +38,21 @@ class ISE_Element_1D: public  ISE_Element
     Vertex Pointer.
   */
   ISE_Vertex*  node_2;
-	
+
 };
 
-inline 
+inline
 ISE_Element_1D::ISE_Element_1D(ISE_Vertex*  vertex_0, ISE_Vertex*  vertex_1 ):ISE_Element()
 {
   node_1 = vertex_0;
   node_2 = vertex_1;
-		
+
+  element_nodes_id.resize(2);
+  element_nodes_id[0] = node_1->get_node_id();
+  element_nodes_id[1] = node_2->get_node_id();
+
 }
 
-inline vector<unsigned int>
-ISE_Element_1D::get_nodes_id()
-{
-		
-  element_nodes_id.push_back (node_1->get_node_id() );
-  element_nodes_id.push_back (node_2->get_node_id() );
-	
-  return element_nodes_id;
-}
 
 
 #endif /*ISE_ELEMENT_1D_H_*/

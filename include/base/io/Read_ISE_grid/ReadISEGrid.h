@@ -3,131 +3,56 @@
 
 
 #include <iomanip>
+#include <set>
+#include <vector>
+#include <map>
 
 #include <iostream> //for I/O interaction
 #include <fstream>  //for file streaming
 #include <InitFailedException.h>
 
-#include "ISE_Vertex.h"
-#include "ISE_Edge.h"
-#include "ISE_Face.h"
-#include "ISE_Element_3D.h"
-#include "ISE_Element_2D.h"
-#include "ISE_Element_1D.h"
-#include "ISE_Element_0D.h"
 #include "TypeDefs.h"
 
 //  LibMesh  include files
-#include "mesh_data_elements.h"
-#include "mesh_data.h"
-#include "libmesh.h"
-#include "mesh_generation.h"
+#include "mesh_input.h"
 
 class MeshBase;
+class MeshRegionInfo;
+class BoundaryRegions;
+class ISE_Element;
+class ISE_Vertex;
+class ISE_Edge;
+class ISE_Face;
 
-//!ISE Reading and Libmesh Writing Class.
-/*!
- *  Reads a '*.grd' (ISE T-Cad) file and converts it into
- * libmesh type ('*.xda'; '*.xta'). Extracts also boundary conditions.
- */
-class ReadISEGrid 
+//! Reads an ISE mesh (*.grd file).
+class ReadISEGrid : public MeshInput<MeshBase>
 {
-		
+
  public:
-  //!  Constructor
-  /*!  Needs the '*.grd' file path, the \c Mesh and \c MeshData objects.
-   *  Writes *.xda and *.xta files into default directory.
-   * 
+
+  /*!
+   * Constructor.  Takes a non-const Mesh reference which it
+   * will fill up with elements via the read() command.
    */
-  ReadISEGrid(const char* file_name);
+  ReadISEGrid(MeshBase& mesh, MeshRegionInfo& reg_info,
+      BoundaryRegions& bd_regions);
 
 
   //! Virtual Destructor.
-  /*! 
+  /*!
     Deallocate pointers.
   */
-  virtual ~ReadISEGrid();
-	
-
-  //!  Gets Boundary region nodes map [(dimension-1) elements].
-  /*!
-   *Puts in map BoundCond_map  a  map which associates   each Boundary region ID  with its nodes.
-   */ 
-  void  get_BC_data (std::map<unsigned int, std::vector<unsigned int> >& BoundCond_map );
- 
+  virtual ~ReadISEGrid() {};
 
   /*!
-    Returns simulation dimension.
-  */
-  unsigned int get_dim();
-
-
-  /*!
-    Gets the map which associates internal mesh IDs to user-defined physical region names
-  */
-  void  get_region_names_map (std::map<ID, std::string >& region_names_map );
-
-  /*!
-    Gets the map which associates internal mesh BC IDs to user-defined BC  region names
-  */
-  void  get_BC_region_names_map (std::map<ID, std::string >& region_names_map );
-
-
+   * Reads in a mesh in the Gmsh *.msh format
+   * from the ASCII file given by name.
+   */
+  virtual void read(const std::string& name);
 
 
 
  private:
-  
-
-  //!  Writes  mesh file for  Libmesh in  DEAL  format  (.xda)
-  /*!
-   *  .xda file contains a DEAL header, a list of all (simulation-dimension) mesh elements
-   *  and a list of all the nodes.
-   */
-  void write_xda();
-
-  
-
-  //! Writes meshdata data file (xta).
-  /*!
-   *  .xta file contains a list of all simulation-dimension elements
-   *  associated to the relative physical region ID.
-   */
-  void write_xta();
-
-  //! Utility    to  eliminate  repetitions  in  node  list.
-  /*!
-    Deletes repetitions in node list.
-  */
-  void  unique_nodes(std::vector<unsigned int>& v1);
-
- 
-
-
-  /*!
-    Xda file name string.
-  */  
-  std::string fname_xda;
-
-  /*!
-    Xta file name string.
-  */
-  std::string fname_xta;
-
- 
-
-
-
-
-  /*!
-    Write  mesh  and  meshdata from  .xda and  .xta  files
-  */
-  void   read_mesh_and_data(MeshBase& mesh, MeshData_elements&  mesh_data );
-
-  /*!
-    Sets Boundary Condition Data.
-  */
-  void set_BC_data();
 
   /*!
    *  Integrity Check. Controls if file Version and Type are correct.
@@ -138,101 +63,30 @@ class ReadISEGrid
   /*!
     Reads Input file.
   */
-  void scan_grid_file();
-	
-  /*!
-    List of all ISE file types whose  dimension is equal to the simulation dimension.
-  */
-  std::vector<unsigned int> ISE_element_type_list;
-
-  /*!
-    Elements belonging to xda file (subset of the vector  of all elements "elements_list").
-  */
-  std::vector<ISE_Element*> xda_list_elements;  
-	
-  /*!
-    Base variables.
-  */
-  unsigned int dimension, nb_vertices, nb_edges, nb_faces, nb_elements, nb_regions;
-
-
-  /*!
-    Vector of all vertices.
-  */	
-  std::vector<ISE_Vertex*> vertices; 
-
-  /*!
-    Input file name.
-  */
-  const char* ISE_file_name;
-	
-	
-
-
- 
-
-  /*!
-    Temporary edge vector.
-  */
-  std::vector<ISE_Edge*> edges;
-
- 
-
-  /*!
-    Temporary face vector.
-  */
-  std::vector<ISE_Face*> faces;
-
- 
-
-  /*!
-    List of all elements.
-  */
-  std::vector<ISE_Element*> elements_list;  //  delete  these  pointers in  destructor !!
-	
-  /*!
-    lists of ISE physical region IDs, respectively of 0D, 1D, 2D and 3D.
-  */
-  std::vector<unsigned int> regions_0D;
-  std::vector<unsigned int> regions_1D;
-  std::vector<unsigned int> regions_2D;
-  std::vector<unsigned int> regions_3D;
-
- 
-
-  /*!	
-    maps <ISE phis reg ID, region_elements_nD>
-  */
-  std::map <unsigned int , vector<ISE_Element*> >  map_0D_region_elements;
-  std::map <unsigned int , vector<ISE_Element*> >  map_1D_region_elements;
-  std::map <unsigned int , vector<ISE_Element*> >  map_2D_region_elements;
-  std::map <unsigned int , vector<ISE_Element*> >  map_3D_region_elements;
-  /*!	
-    map <unsigned int tiber_BC_region, vector<unsigned int> region_nodes )
-  */
-  std::map <unsigned int , vector<unsigned int>  > map_BC_region_nodes;
-	
-
-
-  /*!	
-    Map which associates internal mesh IDs to user-defined physical region names 
-  */
-  std::map<ID, std::string >  region_names_ID_map;
-
-
-  /*!	
-    Map which associates internal mesh BC IDs to user-defined BC region names 
-  */
-  std::map<ID, std::string > BC_region_names_ID_map;
+  void scan_grid_file(std::istream& ISE_INPUT);
 
 
 
-	
+  //! Mesh region info
+  MeshRegionInfo& _reg_info;
+
+
+  //! The object to hold boundary region information
+  BoundaryRegions& _bd_regions;
+
+
 };
 
-inline unsigned int ReadISEGrid::get_dim()
-{
-  return (dimension);
-}
+
+inline
+ReadISEGrid::ReadISEGrid(MeshBase& mesh, MeshRegionInfo& reg_info,
+    BoundaryRegions& bd_regions) :
+  MeshInput<MeshBase>(mesh),
+  _reg_info(reg_info),
+  _bd_regions(bd_regions)
+{}
+
+
+
 
 #endif /* _READISEGRID_H_ */

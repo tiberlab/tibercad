@@ -50,4 +50,10 @@ class ElementSide
     std::pair<const Elem*, unsigned int> _elside;
 };
 
+
+// we can use the same class in other contexts
+typedef ElementSide ElementEdge;
+typedef ElementSide ElementNode;
+
+
 #endif // _ELEMENTSIDE_H_

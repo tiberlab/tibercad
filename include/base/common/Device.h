@@ -12,7 +12,6 @@
 #include "DeviceException.h"
 
 #include "elem.h"
-#include "mesh_data_elements.h"
 
 #include <vector>
 #include <set>
@@ -25,6 +24,9 @@ class Control;
 class MeshBase;
 class EquationSystems;
 class AtomisticStructure;
+class MeshRegionInfo;
+class BoundaryRegions;
+
 
 //! Higher-level definition of the  structure to  be  simulated.
 /*!
@@ -33,7 +35,7 @@ class AtomisticStructure;
  */
 class Device
 {
-    
+
   public:
 
     typedef std::map<ID, std::vector<ID> > BCNodeMap;
@@ -62,8 +64,6 @@ class Device
     //! Get a reference to the mesh
     MeshBase& get_mesh(void) const;
 
-    //! Get a pointer to the meshdata
-    MeshData_elements* get_meshdata(void) const;
 
     //! Get a reference to the equation systems object
     EquationSystems& get_equation_systems(void) const;
@@ -106,8 +106,8 @@ class Device
      * \param region_id the region number
      */
     const Material* get_material(ID region_id) const;
-    
-    
+
+
     /*! \copydoc get_material(ID) const */
     Material* get_material(ID region_id);
 
@@ -143,12 +143,12 @@ class Device
 
     //! Get the NodeObject for a given element side
     NodeObject* get_node_object(const Elem*, int node);
-    
-    
+
+
     //! Get the map that contains all boundary nodes for all boundaries
     BCNodeMap& get_boundary_node_map(void) const;
-    
-    
+
+
     //! Get the mesh units
     /*!
      * Mesh units are in SI units, i.e. meters. The return value is
@@ -189,7 +189,7 @@ class Device
      * If a region has no name associated, it will be assigned the
      * empty string.
      */
-    const std::string& get_boundary_region_name(ID id) const;
+    //const std::string& get_boundary_region_name(ID id) const;
 
 
     //! Get the region IDs of the region with name \c name
@@ -216,8 +216,8 @@ class Device
 
 
     //! Set the name for a boundary region
-    void set_boundary_region_name(const std::string& name,
-        const std::vector<ID>& ids);
+    //void set_boundary_region_name(const std::string& name,
+    //    const std::vector<ID>& ids);
 
 
     //! Define a cluster
@@ -252,8 +252,8 @@ class Device
 
     //! A typdef for convenience
     typedef std::map<std::string, std::vector<ID> > ClusterMap;
-    
-    
+
+
     //! Empty Constructor
     /*!
      * The mesh is assumed to be correctly prepared, i.e. all elements the
@@ -292,12 +292,20 @@ class Device
     ModelOptions& get_options(void);
 
 
-    //! creates the mesh and the equation system
+    //! Creates the mesh and the equation system
     /*!
      * This method assumes, that \c _options contain the name of the
      * meshfile and the dimension
      */
     void setup_mesh(void);
+
+
+    //! Prepares the boundaries
+    /*!
+     * Assign to each explicitly or implicitly (region interfaces) defined
+     * boundary a unique index.
+     */
+    void prepare_boundaries(void);
 
 
     //! The map that connects region number to material
@@ -316,9 +324,6 @@ class Device
 
     //! The mesh for this device
     MeshBase* _mesh;
-
-    //! The meshdata for this device
-    MeshData_elements* _meshdata;
 
 
     //! The mesh unit in m
@@ -349,7 +354,7 @@ class Device
 
 
     //! A set with all region IDs
-    std::set<ID> _region_ids;
+    //std::set<ID> _region_ids;
 
 
     //! A set with all active region IDs
@@ -363,24 +368,27 @@ class Device
     std::map<ID, std::string> _region_names;
 
 
-    //! A map containing the original mesh region names
-    std::map<ID, std::string> _mesh_region_names;
+    //! A structure containing the original mesh region info
+    MeshRegionInfo* _mesh_region_info;
+
+    //! A structure containing the original boundary region info
+    BoundaryRegions* _bd_regions;
 
 
     //! A map that assigns boundary region IDs to boundary region names
-    std::map<ID, std::string> _boundary_region_names;
+    //std::map<ID, std::string> _boundary_region_names;
 
-    
+
     //! A map containing all clusters
     ClusterMap _cluster_map;
-    
-    
+
+
     //! The symmetry of the device
     /*!
      * The default assumes no special symmetry.
      */
     TiberCad::Symmetry _symmetry;
-    
+
 };
 
 
@@ -389,7 +397,7 @@ class Device
 
 //
 // inline methods
-// 
+//
 
 inline
 void
@@ -465,14 +473,6 @@ Device::get_mesh(void) const
 }
 
 
-inline
-MeshData_elements*
-Device::get_meshdata(void) const
-{
-  return  _meshdata;
-}
-
-
 
 inline
 void
@@ -539,7 +539,7 @@ Device::get_region_name(ID id) const
 
 
 
-
+/*
 inline
 const std::string&
 Device::get_boundary_region_name(ID id) const
@@ -554,7 +554,7 @@ Device::get_boundary_region_name(ID id) const
   }
   return it->second;
 }
-
+*/
 
 
 inline
@@ -567,7 +567,7 @@ Device::get_symmetry(void) const
 
 
 inline
-void 
+void
 Device::set_atomistic_structure(const std::string& name, AtomisticStructure* atomistic_structure)
 {
   _atomistic_structure_map[name] = atomistic_structure;
@@ -579,6 +579,6 @@ AtomisticStructure*
 Device::get_atomistic_structure(const std::string& name)
 {
   return _atomistic_structure_map[name];
-} 
+}
 
 #endif //  __DEVICE_H__

@@ -1,5 +1,5 @@
 # build directory
-BUILDDIR=`pwd`/../test
+BUILDDIR=`pwd`/../extern
 
 # PETSc version
 #PETSCVERSION="2.3.3"

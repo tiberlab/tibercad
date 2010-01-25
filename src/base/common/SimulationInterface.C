@@ -296,6 +296,14 @@ SimulationInterface::get_node_model(const Elem* elem, int node) const
 
 
 
+MeshBase&
+SimulationInterface::get_mesh(void) const
+{
+  return get_environment().get_device().get_mesh();
+}
+
+
+
 void
 SimulationInterface::init(void) throw (InitFailedException)
 {
@@ -640,31 +648,39 @@ void
 SimulationInterface::plot_regions(void)
 {
 
-  const Device& dev = get_environment().get_device();
+  const MeshBase& mesh = get_mesh();
 
   string suffix = get_control().get_filename_suffix();
 
-  DataOutput data_output(dev.get_mesh(), get_control().get_output_format());
+  DataOutput data_output(mesh, get_control().get_output_format());
   data_output.set_output_directory(get_control().get_output_dir());
 
   // materials  output: for each simulation an output file with IDs of
   // physical regions activated for that simulation
-  // IDs are taken from the meshdata object associated to the  device;
   // IDs are data associated to elements
 
-  std::vector<Number> translated_data;
-  std::vector<std::string> data_names;
 
-  (dev.get_meshdata())->activate();
-  (dev.get_meshdata())->translate_elem_data(dev.get_mesh(),
-                                            translated_data,
-                                            data_names);
+  const unsigned int nn  = mesh.n_active_elem();
 
-  if (data_names.size() > 0)
+  std::vector<double> data(nn);
+  std::vector<std::string> names(1, "RegionID");
+
+  MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+
+  unsigned int elem_number = 0;
+
+  for ( ; el != end_el ; ++el)
   {
-    string filename(get_name() + "_materials" + suffix);
-    data_output.write_cell_data(filename, translated_data, data_names);
+    const Elem* elem = *el;
+
+    data[elem_number] = static_cast<double>(elem->subdomain_id());
+
+    elem_number++;
   }
+
+  string filename(get_name() + "_materials" + suffix);
+  data_output.write_cell_data(filename, data, names);
 }
 
 

@@ -10,7 +10,7 @@ using namespace  std;
 
 
 //! 0D Class Element.
-/*! 
+/*!
   Point Definition.
 */
 class ISE_Element_0D : public ISE_Element
@@ -25,39 +25,29 @@ class ISE_Element_0D : public ISE_Element
   //! Virtual Destructor.
   /*!
     Dummy.
-  */	
+  */
   virtual ~ISE_Element_0D();
 
-  /*!
-    Returns node id.
-  */	
-  vector<unsigned int> get_nodes_id();
-	
-	
+
+
  private:
 
   /*!
     Vertex Pointer.
   */
   ISE_Vertex* node;
-	
+
 };
 
 inline
 ISE_Element_0D::ISE_Element_0D(ISE_Vertex* vertex_0) :ISE_Element()
 {
   node = vertex_0;
-		
+  element_nodes_id.resize(1);
+  element_nodes_id[0] = node->get_node_id();
+
 }
 
-inline vector<unsigned int>
-ISE_Element_0D::get_nodes_id()
-{
-		
-  element_nodes_id.push_back (node->get_node_id() );
-	
-  return element_nodes_id;
-}
 
 
 #endif /*ISE_ELEMENT_0D_H_*/

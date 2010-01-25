@@ -32,7 +32,7 @@ class PhysicalModel;
 class BoundaryProperties;
 class Control;
 class Material;
-class Mesh;
+class MeshBase;
 class Point;
 
 //! The base class for any simulation
@@ -414,6 +414,15 @@ class SimulationInterface : public TiberModelObject
 
     //! Get the scaling parameters
     Scaling& get_scaling(void);
+
+
+    //! Get the mesh
+    /*!
+     * \return a constant reference to the simulation mesh
+     */
+    MeshBase& get_mesh(void) const;
+
+
 
 
     //! Build a finite element
@@ -1346,6 +1355,7 @@ SimulationInterface::build_integrated_quantities_description(
   ignore_unused_variable(legend);
   ignore_unused_variable(description);
 }
+
 
 
 

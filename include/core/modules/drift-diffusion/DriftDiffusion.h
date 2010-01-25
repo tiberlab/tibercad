@@ -318,14 +318,6 @@ class DriftDiffusion : public SimulationInterface
     void set_my_options(const Options& options);
 
 
-    //! Get the mesh
-    /*!
-     * \return a constant reference to the simulation mesh
-     */
-    MeshBase& get_mesh(void) const;
-
-
-
     //! Set the electron quasi Fermi level to \c Ef_n
     /*!
      * \c Ef_n has to be given as electron energy in units of eV
@@ -783,13 +775,6 @@ DriftDiffusion::get_boundary_currents() const
   return _boundary_currents;
 }
 
-
-inline
-MeshBase&
-DriftDiffusion::get_mesh(void) const
-{
-  return _device->get_mesh();
-}
 
 
 

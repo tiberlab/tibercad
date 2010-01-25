@@ -155,11 +155,12 @@ Control::init(void) throw (InitFailedException,
     ModelErrorException, DatabaseException)
 {
 
+  // TODO this is currently broken
   // setup the signal handler
-  SignalHandler::set_control(this);
+  //SignalHandler::set_control(this);
 
   // we want to intercept SIGINT (Ctrl-C)
-  SignalHandler::activate_sigint();
+  //SignalHandler::activate_sigint();
 
 
   // we check here if the input file exists
@@ -774,8 +775,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       // if no numbers are specified we try to get them from the region name
       if (ids.size() == 0)
         _device->get_boundary_region_ids(data.get_region_name(), ids);
-      else
-        _device->set_boundary_region_name(data.get_region_name(), ids);
+      //else
+      //  _device->set_boundary_region_name(data.get_region_name(), ids);
 
       if (ids.size() == 0)
       {

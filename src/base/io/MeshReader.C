@@ -2,95 +2,49 @@
 
 #include "MeshReader.h"
 #include "ReadISEGrid.h"
-#include "Read_MSH.h"
+#include "ReadGMSH.h"
 #include "InitFailedException.h"
 
 #include "mesh_base.h"
-#include "mesh_data_elements.h"
+#include "mesh_communication.h"
 
-#include <iostream> //for I/O interaction
-#include <fstream>  //for file streaming
+#include <sstream>
 
 using namespace std;
 
 
 
-
-void MeshReader::read_mesh(const string& file_name, int sim_dim,
-                          MeshBase*& mesh, MeshData_elements*& mesh_data,
-                          map<unsigned int, vector<unsigned int> >& BoundCond ,
-                          map<ID, string >& region_names_map,
-                          map<ID, string >& BC_region_names_map)
+void MeshReader::read_mesh(const string& filename, MeshBase& mesh,
+    MeshRegionInfo& region_info, BoundaryRegions& bd_regions)
 {
 
-  // See if the file exists.  
-  ifstream in (file_name.c_str());
-     
-  if (!in.good())
+  // we read only on processor 0
+  if (libMesh::processor_id() == 0)
   {
-    ostringstream os;
-    os << "Cannot locate specified mesh file: " << file_name;
-    throw InitFailedException(os.str());
-  }
-
-  if  ( file_name.rfind(".grd") < file_name.size() )
-  {
-
-    ReadISEGrid ISE_mesh(file_name.c_str());
-    ISE_mesh.get_BC_data(BoundCond);
-    ISE_mesh.get_region_names_map(region_names_map);
-    ISE_mesh.get_BC_region_names_map(BC_region_names_map);
-    
-    sim_dim  = ISE_mesh.get_dim();
-
-    mesh = new Mesh(sim_dim);
-
-    mesh_data = new MeshData_elements(*mesh);
-    string  mesh_file_data = "elem_data.xta";
-    string  mesh_file_inp = "in.xda";
-
-    (*mesh_data).enable_compatibility_mode();
-
-    mesh->read (mesh_file_inp, mesh_data); 
-  
-    mesh_data->read(mesh_file_data);
-  }
-  else if ( file_name.rfind(".msh") < file_name.size() )
-  {
-    Read_MSH GMSH_mesh(file_name, sim_dim);
-    GMSH_mesh.get_BC_data(BoundCond);
-
-    sim_dim = GMSH_mesh.get_simulation_dim();
-   
-    mesh = new Mesh(sim_dim);
-    mesh_data = new MeshData_elements(*mesh);
-    string  mesh_file_data = "elem_data.xta";
-    string  mesh_file_inp = "in.xda";
-
-    (*mesh_data).enable_compatibility_mode();
-
-    mesh->read (mesh_file_inp, mesh_data); 
-
-  
-    mesh_data->read(mesh_file_data);
-
-
-    // assign the names
-    map<ID, string> names;
-    GMSH_mesh.get_physical_names_map(names);
-    if (names.size() > 0)
+    if  (filename.rfind(".grd") < filename.size())
     {
-      map<ID, string>::const_iterator it(names.begin());
-      const map<ID, string>::const_iterator end(names.end());
-      for ( ; it != end; ++it)
-      {
-        if (BoundCond.find(it->first) != BoundCond.end())
-          BC_region_names_map[it->first] = it->second;
-        else
-          region_names_map[it->first] = it->second;
-      }
+      ReadISEGrid ise_mesh(mesh, region_info, bd_regions);
+      ise_mesh.read(filename);
+    }
+    else if (filename.rfind(".msh") < filename.size())
+    {
+      ReadGMSH msh_mesh(mesh, region_info, bd_regions);
+      msh_mesh.read(filename);
+    }
+    else
+    {
+      ostringstream os;
+      os << filename << " has unknown mesh file format." << endl;
+      os << "Known formats are: ISE grid (.grd), GMSH (.msh)";
+      throw InitFailedException(os.str());
     }
 
+    // broadcast it to the other processors
+    MeshCommunication().broadcast(mesh);
+
+    // TODO we need to broadcast also region_info and bd_regions
   }
 
+  // now prepare it for use
+  mesh.prepare_for_use();
 }

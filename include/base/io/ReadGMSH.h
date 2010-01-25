@@ -1,0 +1,70 @@
+// $Id$
+
+#ifndef __READGMSH_H__
+#define __READGMSH_H__
+
+// libMesh includes
+#include "libmesh_common.h"
+#include "mesh_input.h"
+
+// Forward declarations
+class MeshBase;
+class BoundaryRegions;
+class MeshRegionInfo;
+
+
+
+/*!
+ * This class implements reading of meshes in the Gmsh format.
+ * For a full description of the Gmsh format and to obtain the
+ * GMSH software see
+ * <a href="http://http://www.geuz.org/gmsh/">the Gmsh home page</a>
+ */
+class ReadGMSH : public MeshInput<MeshBase>
+{
+  public:
+
+    /*!
+     * Constructor.  Takes a non-const Mesh reference which it
+     * will fill up with elements via the read() command.
+     */
+    ReadGMSH(MeshBase& mesh, MeshRegionInfo& reg_info, BoundaryRegions& bd_regions);
+
+    /*!
+     * Reads in a mesh in the Gmsh *.msh format
+     * from the ASCII file given by name.
+     */
+    virtual void read(const std::string& name);
+
+
+  private:
+
+    /*!
+     * Implementation of the read() function.  This function
+     * is called by the public interface function and implements
+     * reading the file.
+     */
+    void read_mesh(std::istream& in);
+
+
+    //! Mesh region info
+    MeshRegionInfo& _reg_info;
+
+
+    //! The object to hold boundary region information
+    BoundaryRegions& _bd_regions;
+
+
+};
+
+
+inline
+ReadGMSH::ReadGMSH(MeshBase& mesh, MeshRegionInfo& reg_info,
+    BoundaryRegions& bd_regions) :
+  MeshInput<MeshBase>(mesh),
+  _reg_info(reg_info),
+  _bd_regions(bd_regions)
+{}
+
+
+#endif // __READGMSH_H__

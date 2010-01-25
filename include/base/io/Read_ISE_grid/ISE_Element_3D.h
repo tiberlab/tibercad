@@ -16,27 +16,20 @@ using namespace  std;
 class ISE_Element_3D : public ISE_Element
 {
  public:
-  //!  Constructor 
+  //!  Constructor
   /*!
     Assigns face pointers and orientations vector.
   */
   //  ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces  );
   ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces,unsigned int element_type);
 
-  //! Virtual Destructor. 	
-  /*! 
+  //! Virtual Destructor.
+  /*!
     Dummy.
-  */	
+  */
   virtual ~ISE_Element_3D();
 
 
-  /*!
-   *  Returns nodes id vector. 
-   *  Beware: repetitions in the list: to use after unique_nodes_point() method! 
-   */	
-  vector<unsigned int> get_nodes_id();
-	
-	
  private:
 
   /*!
@@ -47,12 +40,12 @@ class ISE_Element_3D : public ISE_Element
 
   /*!
     Orientation vector. If negative, face must be inverted.
-  */	  
+  */
   vector<bool> negative_faces;
-	
+
   /*!
     Sets Element nodes.
-  */	
+  */
   void set_element_nodes();
 
   /*!
@@ -62,7 +55,7 @@ class ISE_Element_3D : public ISE_Element
 
   /*!
     Writes element_nodes_id vector. Used after possible change of orientation.
-  */	
+  */
   void  set_element_nodes_id();
 
 
@@ -77,10 +70,10 @@ class ISE_Element_3D : public ISE_Element
 
 
 inline
-ISE_Element_3D::ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces, 
+ISE_Element_3D::ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_faces,
                                unsigned int element_type ):ISE_Element()
 {
- 
+
   element_faces = face_ids;
   negative_faces = neg_faces;
   set_type(element_type);
@@ -89,18 +82,12 @@ ISE_Element_3D::ISE_Element_3D(vector<ISE_Face*> face_ids, vector<bool> neg_face
   unique_nodes_point();
   // writes element_nodes_id (after possible  change  of  orientation)
   set_element_nodes_id();
-		
+
 }
 
 
 
 
-inline  vector<unsigned int> 
-ISE_Element_3D::get_nodes_id()
-{
-  //  beware :  repetitions in  the  list  :  use  unique after  !
-  return element_nodes_id;
-}
 
 /* inline void  */
 /* ISE_Element_3D::set_type(unsigned int element_type) */
