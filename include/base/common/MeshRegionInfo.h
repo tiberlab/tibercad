@@ -5,6 +5,7 @@
 
 #include "TypeDefs.h"
 #include "HashMap.h"
+#include "IDSet.h"
 
 #include <string>
 #include <iostream>
@@ -21,7 +22,7 @@ class MeshRegionInfo
   public:
 
     //! Destructor
-    ~MeshRegionInfo(void);
+    virtual ~MeshRegionInfo(void);
 
 
     //! Associate a name to a ID
@@ -31,8 +32,8 @@ class MeshRegionInfo
     void set_name(ID id, const std::string& name);
 
 
-    //! Get the ID for a given name
-    ID get_id(const std::string& name) const;
+    //! Get the IDs for a given name
+    const IDSet& get_ids(const std::string& name) const;
 
 
     //! Set a ID
@@ -46,12 +47,24 @@ class MeshRegionInfo
     bool has_id(ID id) const;
 
 
-    //! Get the ID for a given name
-    const std::string& get_name(ID id) const;
+    //! Get the total number of regions
+    unsigned int n_subdomains(void) const;
 
 
     //! Cleanup the structure
     void clear(void);
+
+    void print_info() const;
+
+
+  protected:
+
+    //! Get the next valid ID
+    ID next_id(void) const;
+
+
+    //! Get the name for a given id
+    const std::string& get_name(ID id) const;
 
 
   private:
@@ -64,7 +77,11 @@ class MeshRegionInfo
     typedef TiberCad::HashMap<ID, std::string>::Type IDToNameMap;
 
     //! name to ID map
-    typedef TiberCad::HashMap<std::string, ID>::Type NameToIDMap;
+    /*!
+     * Each ID can in principle have different names associated.
+     */
+    typedef TiberCad::HashMap<std::string, std::set<ID> >::Type NameToIDMap;
+
 
 
     //! The names corresponding to the IDs
@@ -75,7 +92,10 @@ class MeshRegionInfo
 
 
     //! the empty string
-    const std::string _empty;
+    const std::string _empty_string;
+
+    //! an empty set
+    const IDSet _empty_set;
 };
 
 
@@ -87,21 +107,20 @@ MeshRegionInfo::set_name(ID id, const std::string& name)
   if (it != _ids_to_names.end())
   {
     _ids_to_names[id] = name;
-    _names_to_ids[name] = id;
+    _names_to_ids[name].insert(id);
   }
 }
 
 
 inline
-ID
-MeshRegionInfo::get_id(const std::string& name) const
+const IDSet&
+MeshRegionInfo::get_ids(const std::string& name) const
 {
-  ID id = INVALID_ID;
   NameToIDMap::const_iterator it(_names_to_ids.find(name));
   if (it != _names_to_ids.end())
-    id = it->second;
+    return it->second;
 
-  return id;
+  return _empty_set;
 }
 
 
@@ -113,7 +132,7 @@ MeshRegionInfo::get_name(ID id) const
   if (it != _ids_to_names.end())
     return it->second;
   else
-    return _empty;
+    return _empty_string;
 }
 
 
@@ -134,17 +153,10 @@ MeshRegionInfo::has_id(ID id) const
 
 
 inline
-MeshRegionInfo::~MeshRegionInfo(void)
+unsigned int
+MeshRegionInfo::n_subdomains(void) const
 {
-  clear();
-}
-
-inline
-void
-MeshRegionInfo::clear(void)
-{
-  _ids_to_names.clear();
-  _names_to_ids.clear();
+  return _ids_to_names.size();
 }
 
 

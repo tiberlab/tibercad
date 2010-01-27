@@ -8,6 +8,7 @@
 #include "DatabaseException.h"
 #include "SolveFailedException.h"
 #include "TypeDefs.h"
+#include "IDSet.h"
 
 #include <map>
 #include <list>
@@ -323,8 +324,7 @@ class Control
 
 
     //! Extract physical regions from a string
-    void extract_physical_regions(const std::string& str,
-        std::set<ID>& ids);
+    void extract_physical_regions(const std::string& str, IDSet& ids);
 };
 
 

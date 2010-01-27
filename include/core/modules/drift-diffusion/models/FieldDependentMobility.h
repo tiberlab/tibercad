@@ -139,7 +139,6 @@ FieldDependentMobility::create_new(void) const
 inline
 FieldDependentMobility::~FieldDependentMobility(void)
 {
-  destroy(_low_field_mob);
 }
 
 #endif // _FIELDDEPENDENTMOBILITY_H_

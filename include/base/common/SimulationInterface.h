@@ -449,18 +449,35 @@ class SimulationInterface : public TiberModelObject
     bool includes_region(ID region_id) const;
 
 
-    //! Create a physical model to be used with this simulation
-    PhysicalModel* new_physical_model(const ModelOptions& options,
+    //! Create a bulk physical model to be used with this simulation
+    PhysicalModel* new_bulk_model(const ModelOptions& options,
         const Material* material);
 
 
     //! Create a boundary model to be used with this simulation
+    /*!
+     * deprecated the use of BoundaryProperties is obsolete
+     */
     BoundaryProperties* new_boundary_model(const ModelOptions& options);
+
+
+    //! Create a boundary model to be used with this simulation
+    PhysicalModel* new_boundary_model(const ModelOptions& options,
+        const Material* material_A, const Material* material_B);
+
+
+    //! Create an edge model
+    PhysicalModel* new_edge_model(const ModelOptions& options);
+
+
+    //! Create a nodal model
+    PhysicalModel* new_node_model(const ModelOptions& options);
 
 
     //! Get the physical model for a certain region ID
     /*!
      * \return \c NULL if no model is present for region \c region_id
+     * \deprecated get_bulk_model should be used instead
      */
     PhysicalModel* get_physical_model(ID region_id) const;
 
@@ -495,7 +512,7 @@ class SimulationInterface : public TiberModelObject
 
 
 
-    //! Get a reference to the set of all physical models
+    //! Get a reference to the set of all bulk physical models
     const std::set<PhysicalModel*>& get_physical_models(void) const;
 
 
@@ -824,6 +841,8 @@ class SimulationInterface : public TiberModelObject
       create_physical_model(const ModelOptions& options,
                             const Material* mat) const
       throw (ModelErrorException);
+    virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
+        const Material* mat) const;
 
 
     //! Create a boundary model that can be used by this type of simulation
@@ -837,6 +856,30 @@ class SimulationInterface : public TiberModelObject
     virtual BoundaryProperties*
       create_boundary_model(const ModelOptions& options) const
       throw (ModelErrorException);
+    virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
+        const Material* material_A, const Material* material_B) const;
+
+
+    //! Create an edge model that can be used by this type of simulation
+    /*!
+     * The default behaviour defined in the base class is to return the
+     * NULL pointer, because there could be simulations that don't need
+     * an edge model. If a derived class reimplements this method (which
+     * will normally be the case) it should notify about errors by throwing
+     * a ModelErrorException.
+     */
+    virtual PhysicalModel* create_edge_model(const ModelOptions& options) const;
+
+
+    //! Create a nodal model that can be used by this type of simulation
+    /*!
+     * The default behaviour defined in the base class is to return the
+     * NULL pointer, because there could be simulations that don't need
+     * an nodal model. If a derived class reimplements this method (which
+     * will normally be the case) it should notify about errors by throwing
+     * a ModelErrorException.
+     */
+    virtual PhysicalModel* create_node_model(const ModelOptions& options) const;
 
 
     //! Set or unset the \c equilibrium_done flag

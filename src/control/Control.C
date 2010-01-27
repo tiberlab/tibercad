@@ -16,6 +16,9 @@
 #include "SimulationOptions.h"
 #include "Device.h"
 #include "Material.h"
+#include "MaterialBoundary.h"
+#include "EdgeObject.h"
+#include "NodeObject.h"
 #include "Boundary.h"
 #include "SimulationEnvironment.h"
 #include "SimulationInterface.h"
@@ -572,7 +575,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     // extract the physical regions
     //
 
-    set<ID> phys_regions;
+    IDSet phys_regions;
     const string& physreg = simopts.get_option("physical_regions", "all");
     extract_physical_regions(physreg, phys_regions);
 
@@ -668,8 +671,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
     // we have to do this for each material!
-    set<ID>::iterator it(phys_regions.begin());
-    const set<ID>::iterator end(phys_regions.end());
+    IDSet::iterator it(phys_regions.begin());
+    const IDSet::iterator end(phys_regions.end());
     for ( ; it != end; ++it)
     {
       ID reg_id = *it;
@@ -718,7 +721,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
             // we have to check if it should be built for the current region
             if ((mapit->second).find_option("restrict_to_region"))
             {
-              set<ID> regs;
+              IDSet regs;
               const string& physreg =
                 (mapit->second).get_option("restrict_to_region", "all");
               extract_physical_regions(physreg, regs);
@@ -743,12 +746,11 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
         // here we actually create the model
-        PhysicalModel* model = sim->new_physical_model(opts, mat);
+        PhysicalModel* model = sim->new_bulk_model(opts, mat);
 
         // NOTE: model could be NULL, but we don't care about. Who tells us that
         // every simulation necessarily needs a model?
-        if (model != NULL)
-          mat->add_model(model, sim->get_id());
+        mat->add_model(model, sim->get_id());
       }
     }
 
@@ -769,14 +771,31 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       //ID id = bdit->first;
       const RegionStructure& data = bdit->second;
 
-      vector<ID> ids;
-      Utils::extract_vector(data.get_region_ID(), ids);
+      // first get region names
+      vector<string> ids_strings;
+      Utils::extract_vector(data.get_region_ID(), ids_strings);
 
+      // for the numeric IDs
+      vector<ID> ids;
+
+      unsigned int n_ids = ids_strings.size();
       // if no numbers are specified we try to get them from the region name
-      if (ids.size() == 0)
+      if (n_ids == 0)
         _device->get_boundary_region_ids(data.get_region_name(), ids);
-      //else
-      //  _device->set_boundary_region_name(data.get_region_name(), ids);
+      else
+      {
+        vector<ID> tmp_id;
+        for (unsigned int i = 0; i < n_ids; i++)
+        {
+          // either it is a name or a number
+          // try first name
+          _device->get_boundary_region_ids(ids_strings[i], tmp_id);
+          if (tmp_id.size() > 0)
+            ids.insert(ids.end(), tmp_id.begin(), tmp_id.end());
+          else
+            ids.push_back(Utils::convert<unsigned int>(ids_strings[i]));
+        }
+      }
 
       if (ids.size() == 0)
       {
@@ -786,7 +805,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         throw InitFailedException(s.str());
       }
 
-      set<ID> region_ids;
+      IDSet region_ids;
       for (unsigned int i = 0; i < ids.size(); i++)
         region_ids.insert(ids[i]);
 
@@ -802,6 +821,9 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
       const ModelOptions& bdopts = data.get_options();
 
+      //
+      // this is the old way -->
+
       Boundary* bd = new Boundary(data.get_region_name(), env, region_ids);
       bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
 
@@ -811,6 +833,38 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       // every simulation necessarily needs a boundary model?
       if (bdprop != NULL)
         bd->add_boundary_properties(bdprop, sim->get_id());
+
+      // <-- end of old way
+      //
+
+      for (IDSet::const_iterator it(region_ids.begin());
+           it != region_ids.end(); ++it)
+      {
+        ID id = *it;
+
+        MaterialBoundary* bd;
+        if ((bd = device.get_boundary_object(id)) != NULL)
+        {
+          Material* matA = bd->get_material_A();
+          Material* matB = bd->get_material_B();
+          PhysicalModel* pm = sim->new_boundary_model(bdopts, matA, matB);
+          bd->add_model(pm, sim->get_id());
+        }
+
+        EdgeObject* eo;
+        if ((eo = device.get_edge_object(id)) != NULL)
+        {
+          PhysicalModel* pm = sim->new_edge_model(bdopts);
+          eo->add_model(pm, sim->get_id());
+        }
+
+        NodeObject* no;
+        if ((no = device.get_node_object(id)) != NULL)
+        {
+          PhysicalModel* pm = sim->new_node_model(bdopts);
+          no->add_model(pm, sim->get_id());
+        }
+      }
 
     }
     m.info("done");
@@ -1014,7 +1068,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
 void
-Control::extract_physical_regions(const std::string& str, std::set<ID>& ids)
+Control::extract_physical_regions(const std::string& str, IDSet& ids)
 {
 
   if (str == "all")
@@ -1028,8 +1082,8 @@ Control::extract_physical_regions(const std::string& str, std::set<ID>& ids)
 
     vector<ID> preg_ids;
 
-    const set<ID>& regs = _device->get_active_region_ids();
-    const set<ID>::const_iterator id_end(regs.end());
+    const IDSet& regs = _device->get_active_region_ids();
+    const IDSet::const_iterator id_end(regs.end());
     unsigned int n = preg.size();
     for (unsigned int i = 0; i < n; i++)
     {

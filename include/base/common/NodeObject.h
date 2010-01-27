@@ -36,7 +36,7 @@ class NodeObject : public PhysicalObject
 
 
     //! \copydoc PhysicalObject::do_init()
-    void do_init(void);
+    void do_init(void) {};
 
 
   private:

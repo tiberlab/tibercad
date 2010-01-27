@@ -8,6 +8,7 @@
 #include "TypeDefs.h"
 #include "ElementSide.h"
 #include "HashMap.h"
+#include "IDSet.h"
 #include "ModelOptions.h"
 #include "DeviceException.h"
 
@@ -133,16 +134,44 @@ class Device
     Material* get_material(const Elem* elem);
 
 
+    //! Get the MaterialBoundary object for a given ID
+    /*!
+     * if there is no object associated to \c id
+     * it will be created.
+     */
+    MaterialBoundary* get_boundary_object(ID id);
+
+
     //! Get the MaterialBoundary object for a given element side
     MaterialBoundary* get_boundary_object(const Elem*, int side);
+
+
+    //! Get the EdgeObject for a given ID
+    /*!
+     * if there is no object associated to \c id
+     * it will be created.
+     */
+    EdgeObject* get_edge_object(ID id);
 
 
     //! Get the EdgeObject for a given element side
     EdgeObject* get_edge_object(const Elem*, int edge);
 
 
+    //! Get the NodeObject for a given ID
+    /*!
+     * if there is no object associated to\c id
+     * it will be created.
+     */
+    NodeObject* get_node_object(ID id);
+
+
     //! Get the NodeObject for a given element side
     NodeObject* get_node_object(const Elem*, int node);
+
+
+    //! Get the NodeObject for a given element side
+    NodeObject* get_node_object(const Node* node);
 
 
     //! Get the map that contains all boundary nodes for all boundaries
@@ -169,7 +198,7 @@ class Device
      * Only active regions are returned (that is regions that have a material
      * associated).
      */
-    const std::set<ID>& get_active_region_ids(void) const;
+    const IDSet& get_active_region_ids(void) const;
 
 
     //! Get the name of a region
@@ -209,6 +238,9 @@ class Device
     void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const;
 
 
+    /* //! Get a const reference to the boundary region descriptor */
+    //const BoundaryRegions& get_boundary_regions(void) const;
+
 
     //! Get the region IDs of the boundary region with name \c name
     void get_boundary_region_ids(const std::string& name,
@@ -239,14 +271,13 @@ class Device
     typedef TiberCad::HashMap<ID, Material*>::Type MaterialMap;
 
     //! A typdef for the material boundaries
-    typedef TiberCad::HashMap<ElementSide, MaterialBoundary*,
-      ElementSide::hash>::Type BoundaryMap;
+    typedef TiberCad::HashMap<ID, MaterialBoundary*>::Type BoundaryMap;
 
     //! A typdef for the edge objects
-    typedef std::map<ID, EdgeObject*> EdgeObjMap;
+    typedef TiberCad::HashMap<ID, EdgeObject*>::Type EdgeObjMap;
 
     //! A typdef for the node objects
-    typedef std::map<ID, NodeObject*> NodeObjMap;
+    typedef TiberCad::HashMap<ID, NodeObject*>::Type NodeObjMap;
 
 
 
@@ -316,6 +347,14 @@ class Device
     BoundaryMap _boundary_map;
 
 
+    //! The map connecting edge regions to model containers
+    EdgeObjMap _edge_map;
+
+
+    //! The map connecting node regions to model containers
+    NodeObjMap _node_map;
+
+
 
     //! The map that connects atomistic structure names to pointers
     /*! (keep track of existing atomistic struxctures) */
@@ -361,7 +400,7 @@ class Device
     /*!
      * An active region is a region with an associated material.
      */
-    std::set<ID> _active_region_ids;
+    IDSet _active_region_ids;
 
 
     //! A map that assigns physical region or cluster IDs to names
@@ -514,7 +553,7 @@ Device::get_mesh_units(void) const
 
 
 inline
-const std::set<ID>&
+const IDSet&
 Device::get_active_region_ids(void) const
 {
   return _active_region_ids;
@@ -538,6 +577,14 @@ Device::get_region_name(ID id) const
 }
 
 
+/*
+inline
+const BoundaryRegions&
+Device::get_boundary_regions(void) const
+{
+  return *_bd_regions;
+}
+*/
 
 /*
 inline

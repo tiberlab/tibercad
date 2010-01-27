@@ -46,6 +46,7 @@ TiberNonlinLS::do_solve(void)
   assert(_assemble != NULL);
 
   NumericVector<Number>& u = get_solution_vector();
+  if (!u.closed()) u.close();
   NumericVector<Number>& du = *solution;
   AutoPtr<NumericVector<Number> > u_old_ptr = u.clone();
   NumericVector<Number>& u_old = *u_old_ptr;

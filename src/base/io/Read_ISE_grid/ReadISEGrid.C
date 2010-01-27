@@ -902,5 +902,18 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
     _bd_regions.set_name(id, it->first);
   }
 
+  // clean up
+  for (size_t i = 0; i < vertices.size(); i++)
+    delete vertices[i];
+
+  for (size_t i = 0; i < edges.size(); i++)
+    delete edges[i];
+
+  for (size_t i = 0; i < faces.size(); i++)
+    delete faces[i];
+
+  for (size_t i = 0; i < elements_list.size(); i++)
+    delete elements_list[i];
+
 }
 

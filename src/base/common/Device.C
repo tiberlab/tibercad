@@ -7,6 +7,9 @@
 #include "ReadGMSH.h"
 #include "ReadISEGrid.h"
 #include "BoundaryRegions.h"
+#include "MaterialBoundary.h"
+#include "EdgeObject.h"
+#include "NodeObject.h"
 #include "MeshRegionInfo.h"
 #include "SimulationOptions.h"
 #include "AtomisticStructure.h"
@@ -47,6 +50,24 @@ Device::~Device()
   const set<Material*>::iterator matend(mats.end());
   for ( ; matit != matend; ++matit)
     delete *matit;
+
+  // every ID has its own object
+  BoundaryMap::iterator bdit(_boundary_map.begin());
+  const BoundaryMap::iterator bdend(_boundary_map.end());
+  for ( ; bdit != bdend; ++bdit)
+    delete bdit->second;
+
+  // every ID has its own object
+  EdgeObjMap::iterator eit(_edge_map.begin());
+  const EdgeObjMap::iterator eend(_edge_map.end());
+  for ( ; eit != eend; ++eit)
+    delete eit->second;
+
+  // every ID has its own object
+  NodeObjMap::iterator nit(_node_map.begin());
+  const NodeObjMap::iterator nend(_node_map.end());
+  for ( ; nit != nend; ++nit)
+    delete nit->second;
 
   _material_map.clear();
 
@@ -103,7 +124,7 @@ Device::setup_mesh(void)
   MeshReader::read_mesh(meshfile, *_mesh, *_mesh_region_info, *_bd_regions);
 
 
-  // only for now
+  // only for now (back compatibility)
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
   _bd_regions->get_bc_node_map(*_boundary_nodes);
@@ -119,11 +140,13 @@ Device::setup_mesh(void)
     os << "mesh units          : " << _mesh_units << " m" << endl
        << "mesh dimension      : " << setw(7) << setfill(' ') << dim << endl
        << "number of nodes     : " << setw(7) << setfill(' ') << _mesh->n_nodes() << endl
-       << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl;
-    //<< "number of subdomains: " << setw(7) << setfill(' ') << _mesh->n_subdomains();
+       << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl
+       << "number of subdomains: " << setw(7) << setfill(' ') << _mesh_region_info->n_subdomains();
     m.info(os.str());
   }
   m.newline();
+
+  //_mesh_region_info->print_info();
 
   const string& sym = _options.get_option("symmetry", "");
   if (sym == "cylindrical")
@@ -299,29 +322,151 @@ Device::get_material(const std::string& name) const
 
 
 MaterialBoundary*
+Device::get_boundary_object(ID id)
+{
+  MaterialBoundary* mb = NULL;
+
+  if (id != INVALID_ID)
+  {
+    BoundaryMap::iterator it(_boundary_map.find(id));
+    if (it != _boundary_map.end())
+      mb = it->second;
+    else
+    {
+      if (_bd_regions->is_side(id))
+      {
+        // first get ids of the regions on both sides
+        const IDSet& ids = _bd_regions->get_contiguous_regions_for_side(id);
+        assert(ids.size() == 2);
+        ID idA = *(ids.begin());
+        ID idB = *(++(ids.begin()));
+        Material* matA = get_material(idA);
+        Material* matB = get_material(idB);
+        mb = MaterialBoundary::create(matA, matB, ModelOptions());
+        _boundary_map[id] = mb;
+      }
+    }
+  }
+
+  return mb;
+}
+
+
+
+MaterialBoundary*
 Device::get_boundary_object(const Elem* elem, int side)
 {
   MaterialBoundary* mb = NULL;
 
-  BoundaryMap::iterator it(_boundary_map.find(ElementSide(elem, side)));
-  if (it != _boundary_map.end())
-    mb = it->second;
+  ID id = _bd_regions->get_side_id(elem, side);
+  if (id != INVALID_ID)
+  {
+    BoundaryMap::iterator it(_boundary_map.find(id));
+    if (it != _boundary_map.end())
+      mb = it->second;
+  }
 
-  return NULL;
+  return mb;
+}
+
+
+EdgeObject*
+Device::get_edge_object(ID id)
+{
+  EdgeObject* mb = NULL;
+
+  if (id != INVALID_ID)
+  {
+    EdgeObjMap::iterator it(_edge_map.find(id));
+    if (it != _edge_map.end())
+      mb = it->second;
+    else
+    {
+      if (_bd_regions->is_edge(id))
+      {
+        mb = EdgeObject::create(ModelOptions());
+        _edge_map[id] = mb;
+      }
+    }
+  }
+
+  return mb;
 }
 
 
 EdgeObject*
 Device::get_edge_object(const Elem* elem, int edge)
 {
-  return NULL;
+  EdgeObject* mb = NULL;
+
+  ID id = _bd_regions->get_edge_id(elem, edge);
+  if (id != INVALID_ID)
+  {
+    EdgeObjMap::iterator it(_edge_map.find(id));
+    if (it != _edge_map.end())
+      mb = it->second;
+  }
+
+  return mb;
+}
+
+
+
+NodeObject*
+Device::get_node_object(ID id)
+{
+  NodeObject* mb = NULL;
+
+  if (id != INVALID_ID)
+  {
+    NodeObjMap::iterator it(_node_map.find(id));
+    if (it != _node_map.end())
+      mb = it->second;
+    else
+    {
+      if (_bd_regions->is_node(id))
+      {
+        mb = NodeObject::create(ModelOptions());
+        _node_map[id] = mb;
+      }
+    }
+  }
+
+  return mb;
 }
 
 
 NodeObject*
 Device::get_node_object(const Elem* elem, int node)
 {
-  return NULL;
+  NodeObject* mb = NULL;
+
+  ID id = _bd_regions->get_node_id(elem->get_node(node));
+  if (id != INVALID_ID)
+  {
+    NodeObjMap::iterator it(_node_map.find(id));
+    if (it != _node_map.end())
+      mb = it->second;
+  }
+
+  return mb;
+}
+
+
+NodeObject*
+Device::get_node_object(const Node* node)
+{
+  NodeObject* mb = NULL;
+
+  ID id = _bd_regions->get_node_id(node);
+  if (id != INVALID_ID)
+  {
+    NodeObjMap::iterator it(_node_map.find(id));
+    if (it != _node_map.end())
+      mb = it->second;
+  }
+
+  return mb;
 }
 
 
@@ -345,15 +490,12 @@ Device::get_active_region_ids(const string& name, vector<ID>& ids) const
     // as last resort we look in the mesh region list
     if (ids.size() == 0)
     {
-      //map<ID, string>::const_iterator it(_mesh_region_names.begin());
-      //const map<ID, string>::const_iterator end(_mesh_region_names.end());
-      //for ( ; it != end; ++it)
-      //  if ((it->second == name) && (_active_region_ids.count(it->first) == 1))
-      //    ids.push_back(it->first);
-
-      ID id = _mesh_region_info->get_id(name);
-      if ((id != INVALID_ID) && _region_names.count(id))
-        ids.push_back(id);
+      const IDSet& idset = _mesh_region_info->get_ids(name);
+      IDSet::iterator it(idset.begin());
+      const IDSet::iterator end(idset.end());
+      for ( ; it != end; ++it)
+        if (_region_names.count(*it))
+          ids.push_back(*it);
     }
   }
 }
@@ -363,17 +505,16 @@ Device::get_active_region_ids(const string& name, vector<ID>& ids) const
 void
 Device::get_mesh_region_ids(const string& name, vector<ID>& ids) const
 {
-  ids.resize(0);
+  const IDSet& idset = _mesh_region_info->get_ids(name);
+  ids.clear();
+  ids.reserve(idset.size());
 
-  //map<ID, string>::const_iterator it(_mesh_region_names.begin());
-  //const map<ID, string>::const_iterator end(_mesh_region_names.end());
-  //for ( ; it != end; ++it)
-  //  if (it->second == name)
-  //    ids.push_back(it->first);
+  IDSet::iterator it(idset.begin());
+  const IDSet::iterator end(idset.end());
+  for ( ; it != end; ++it)
+    ids.push_back(*it);
 
-  ID id = _mesh_region_info->get_id(name);
-  if (id != INVALID_ID)
-    ids.push_back(id);
+  ids.reserve(ids.size());
 }
 
 
@@ -382,16 +523,15 @@ Device::get_mesh_region_ids(const string& name, vector<ID>& ids) const
 void
 Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
 {
-  ids.resize(0);
-  //map<ID, string>::const_iterator it(_boundary_region_names.begin());
-  //const map<ID, string>::const_iterator end(_boundary_region_names.end());
-  //for ( ; it != end; ++it)
-  //  if (it->second == name)
-  //    ids.push_back(it->first);
+  const IDSet& idset = _bd_regions->get_ids(name);
+  ids.reserve(idset.size());
 
-  ID id = _bd_regions->get_id(name);
-  if (id != INVALID_ID)
-    ids.push_back(id);
+  IDSet::iterator it(idset.begin());
+  const IDSet::iterator end(idset.end());
+  for ( ; it != end; ++it)
+    ids.push_back(*it);
+
+  ids.reserve(ids.size());
 }
 
 

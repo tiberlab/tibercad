@@ -206,7 +206,7 @@ SimulationInterface::includes_region(ID region_id) const
 
 
 PhysicalModel*
-SimulationInterface::new_physical_model(const ModelOptions& options,
+SimulationInterface::new_bulk_model(const ModelOptions& options,
     const Material* material)
 {
   PhysicalModel* pm = create_physical_model(options, material);
@@ -224,6 +224,43 @@ SimulationInterface::new_boundary_model(const ModelOptions& options)
   BoundaryProperties* bp = create_boundary_model(options);
 
   return bp;
+}
+
+
+PhysicalModel*
+SimulationInterface::new_boundary_model(const ModelOptions& options,
+    const Material* material_A, const Material* material_B)
+{
+  PhysicalModel* pm = create_boundary_model(options, material_A, material_B);
+
+  //if (pm != NULL)
+  //  _boundary_models.insert(pm);
+
+  return pm;
+}
+
+
+PhysicalModel*
+SimulationInterface::new_edge_model(const ModelOptions& options)
+{
+  PhysicalModel* pm = create_edge_model(options);
+
+  //if (pm != NULL)
+  //  _edge_models.insert(pm);
+
+  return pm;
+}
+
+
+PhysicalModel*
+SimulationInterface::new_node_model(const ModelOptions& options)
+{
+  PhysicalModel* pm = create_node_model(options);
+
+  //if (pm != NULL)
+  //  _node_models.insert(pm);
+
+  return pm;
 }
 
 
@@ -592,27 +629,54 @@ SimulationInterface::do_set_solution_vector(
 
 
 BoundaryProperties*
-SimulationInterface::create_boundary_model(const ModelOptions& options) const
+SimulationInterface::create_boundary_model(const ModelOptions&) const
   throw (ModelErrorException)
 {
-  ignore_unused_variable(options);
-
   return NULL;
 }
 
 
 
 PhysicalModel*
-SimulationInterface::create_physical_model(const ModelOptions& options,
-    const Material* mat) const
+SimulationInterface::create_physical_model(const ModelOptions&,
+    const Material*) const
   throw (ModelErrorException)
 {
-  ignore_unused_variable(options);
-  ignore_unused_variable(mat);
-
   return NULL;
 }
 
+
+PhysicalModel*
+SimulationInterface::create_bulk_model(const ModelOptions&,
+    const Material*) const
+{
+  return NULL;
+}
+
+
+
+PhysicalModel*
+SimulationInterface::create_boundary_model(const ModelOptions&,
+    const Material*, const Material*) const
+{
+  return NULL;
+}
+
+
+
+PhysicalModel*
+SimulationInterface::create_edge_model(const ModelOptions&) const
+{
+  return NULL;
+}
+
+
+
+PhysicalModel*
+SimulationInterface::create_node_model(const ModelOptions&) const
+{
+  return NULL;
+}
 
 
 

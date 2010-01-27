@@ -3,6 +3,7 @@
 #include "MeshReader.h"
 #include "ReadISEGrid.h"
 #include "ReadGMSH.h"
+#include "BoundaryRegions.h"
 #include "InitFailedException.h"
 
 #include "mesh_base.h"
@@ -47,4 +48,5 @@ void MeshReader::read_mesh(const string& filename, MeshBase& mesh,
 
   // now prepare it for use
   mesh.prepare_for_use();
+  bd_regions.prepare_for_use();
 }

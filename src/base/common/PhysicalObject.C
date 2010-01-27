@@ -34,20 +34,22 @@ PhysicalObject::~PhysicalObject(void)
 void
 PhysicalObject::add_model(PhysicalModel* model, ID simulator_id)
 {
-  assert(model != NULL);
   assert(simulator_id != 0);
 
-  ModelMap::iterator it = _models.find(simulator_id);
-  if (it != _models.end())
+  if (model != NULL)
   {
-    destroy(it->second);
-    it->second = model;
-  }
-  else
-    _models[simulator_id] = model;
+    ModelMap::iterator it = _models.find(simulator_id);
+    if (it != _models.end())
+    {
+      destroy(it->second);
+      it->second = model;
+    }
+    else
+      _models[simulator_id] = model;
 
-  model->set_owner(this);
-  model->set_simulator_id(simulator_id);
+    model->set_owner(this);
+    model->set_simulator_id(simulator_id);
+  }
 }
 
 
