@@ -36,7 +36,20 @@ if test "$tc_cv_boost" == yes; then
   AC_DEFINE([HAVE_BOOST], [1], [define if boost is available.])
 fi
 ])dnl 
-	
+
+dnl set boost libdir
+dnl
+AC_DEFUN([TC_BOOST_LIBDIR],
+[AC_CACHE_VAL(tc_cv_boost_libdir,
+[AC_ARG_WITH([boost-libdir], AS_HELP_STRING([--with-boost-libdir=DIR],
+	[specify the path to the boost libraries]),
+	[tc_cv_boost_libdir="$with_boost_libdir"])
+])dnl
+if test "${tc_cv_boost_libdir+set}" == "set"; then
+ AC_SUBST([BOOST_CPPFLAGS],["-I$tc_cv_boost_prefix/include"])
+fi
+])dnl 
+		
 
 dnl check for Boost::regex in a user defined or system directory
 dnl
@@ -49,7 +62,9 @@ AC_CACHE_CHECK([wether Boost::regex is available], tc_cv_boost_regex_lib,
  CXXFLAGS_save=$CXXFLAGS
  CXXFLAGS=$BOOST_CPPFLAGS
  LDFLAGS_save=$LDFLAGS
- if test "x$tc_cv_boost_prefix" != "x"; then
+ if test "${tc_cv_boost_libdir+set}" == "set"; then
+   tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_libdir} -L${tc_cv_boost_libdir}"
+ elif test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
  fi
  [tc_boost_lib="boost_regex-`$CC --version | awk '{ print $1; exit}'` boost_regex"]
@@ -85,7 +100,9 @@ AC_CACHE_CHECK([wether Boost::filesystem is available], tc_cv_boost_filesystem_l
  CXXFLAGS_save=$CXXFLAGS
  CXXFLAGS=$BOOST_CPPFLAGS
  LDFLAGS_save=$LDFLAGS
- if test "x$tc_cv_boost_prefix" != "x"; then
+ if test "${tc_cv_boost_libdir+set}" == "set"; then
+   tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_libdir} -L${tc_cv_boost_libdir}"
+ elif test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
  fi
  [tc_boost_lib="boost_filesystem-`$CC --version | awk '{ print $1; exit}'` boost_filesystem"]

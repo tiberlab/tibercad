@@ -163,6 +163,8 @@ then
   AC_MSG_ERROR([Boost is not available, but it is needed for TiberCAD!])
 fi
 
+TC_BOOST_LIBDIR
+
 # boost regex
 TC_BOOST_REGEX
 if test "${tc_cv_boost_regex_lib-no}" == "no"; then

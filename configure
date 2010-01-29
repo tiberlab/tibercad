@@ -1322,6 +1322,7 @@ Optional Packages:
   --with-petsc-arch=ARCH  specify the (complex) PETSc ARCH to be used
   --with-slepc-prefix=DIR specify the SLEPc installation prefix
   --with-boost-prefix=DIR specify the path to the boost installation
+  --with-boost-libdir=DIR specify the path to the boost libraries
   --with-boost-regex-lib=LIB
                           specify the boost regex library or library extension
   --with-boost-filesystem-lib=LIB
@@ -5339,6 +5340,23 @@ echo "$as_me: error: Boost is not available, but it is needed for TiberCAD!" >&2
    { (exit 1); exit 1; }; }
 fi
 
+if test "${tc_cv_boost_libdir+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+# Check whether --with-boost-libdir was given.
+if test "${with_boost_libdir+set}" = set; then
+  withval=$with_boost_libdir; tc_cv_boost_libdir="$with_boost_libdir"
+fi
+
+
+fi
+if test "${tc_cv_boost_libdir+set}" == "set"; then
+ BOOST_CPPFLAGS="-I$tc_cv_boost_prefix/include"
+
+fi
+
+
 # boost regex
 { echo "$as_me:$LINENO: checking wether Boost::regex is available" >&5
 echo $ECHO_N "checking wether Boost::regex is available... $ECHO_C" >&6; }
@@ -5354,7 +5372,9 @@ fi
  CXXFLAGS_save=$CXXFLAGS
  CXXFLAGS=$BOOST_CPPFLAGS
  LDFLAGS_save=$LDFLAGS
- if test "x$tc_cv_boost_prefix" != "x"; then
+ if test "${tc_cv_boost_libdir+set}" == "set"; then
+   tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_libdir} -L${tc_cv_boost_libdir}"
+ elif test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
  fi
  tc_boost_lib="boost_regex-`$CC --version | awk '{ print ; exit}'` boost_regex"
@@ -5457,7 +5477,9 @@ fi
  CXXFLAGS_save=$CXXFLAGS
  CXXFLAGS=$BOOST_CPPFLAGS
  LDFLAGS_save=$LDFLAGS
- if test "x$tc_cv_boost_prefix" != "x"; then
+ if test "${tc_cv_boost_libdir+set}" == "set"; then
+   tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_libdir} -L${tc_cv_boost_libdir}"
+ elif test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
  fi
  tc_boost_lib="boost_filesystem-`$CC --version | awk '{ print ; exit}'` boost_filesystem"
