@@ -485,7 +485,7 @@ void
 Database::get(const string& variable, vector<double>& data, bool required) const
 {
   open();
-cerr << "get: " << is_alloy() << " " << _mixing_type << "\n";
+
   if (is_alloy() && (_mixing_type != NONE))
   {
     size_t n = get_number_of_components();
