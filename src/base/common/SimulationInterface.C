@@ -360,6 +360,8 @@ SimulationInterface::init(void) throw (InitFailedException)
       plot_regions();
     }
 
+    // insert an invalid solution descriptor
+    _solution_descriptors.insert(make_pair(INVALID_ID, SolutionDescriptor()));
 
     _verbosity = get_option("verbose", _verbosity);
     do_init();
@@ -1370,6 +1372,27 @@ SimulationInterface::declare_solution(const std::string& name, ID id,
 {
   _solution_descriptors.insert(
       make_pair(id, SolutionDescriptor(name, id, type, location, units)));
+}
+
+
+
+ID
+SimulationInterface::convert_variable_name_to_id(
+    const std::string& variable_name) const
+{
+  ID id = INVALID_ID;
+  SolutionDescrMap::const_iterator it(_solution_descriptors.begin());
+  const SolutionDescrMap::const_iterator end(_solution_descriptors.end());
+  for ( ; it != end; ++it)
+  {
+    if ((it->second).name() == variable_name)
+    {
+      id = it->first;
+      break;
+    }
+  }
+
+  return id;
 }
 
 

@@ -12,18 +12,26 @@ struct SolutionDescriptor
   public:
     enum Type
     {
-      REAL,
-      COMPLEX,
-      VECTOR,
-      TENSOR
+      REAL,     //!< a real value
+      COMPLEX,  //!< a complex value, ordered as (real,imag)
+      VECTOR,   //!< a real vector with three components (x, y, z)
+      TENSOR    //!< a real symmetric tensor of second rank ( TODO )
     };
 
 
     enum Location
     {
         NODAL,
-        CELL
+        CELL,
+        ATOM,
+        GLOBAL
     };
+
+    //! Default constructor
+    /*!
+     * Sets the ID to \c INVALID_ID
+     */
+    SolutionDescriptor(void) : _id(INVALID_ID) {}
 
     SolutionDescriptor(const std::string& name, ID id,
         Type type, Location location, const std::string& units = "");
@@ -33,7 +41,7 @@ struct SolutionDescriptor
     ID id(void) const { return _id; }
 
     //! Get the name
-    const std::string& name(void) { return _name; }
+    const std::string& name(void) const { return _name; }
 
     //! Get the type
     Type type(void) const { return _type; }

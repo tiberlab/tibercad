@@ -240,9 +240,28 @@ class SimulationInterface : public TiberModelObject
 
     /*!
      * \copydoc convert_variable_name_to_id()
-     *
+     * \deprecated use get_solution_id instead
      */
     ID get_variable_id(const std::string& variable_name) const;
+
+
+    //! Get the ID associated to a solution variable
+    /*!
+     *
+     * \param solution_name the name of the solution variable
+     * \return the ID, if \c solution_name exists, \c INVALID_ID otherwise
+     */
+    ID get_solution_id(const std::string& solution_name) const;
+
+
+    //! Get the descriptor of a solution variable
+    /*!
+     *
+     * \param solution_name the name of the solution variable
+     * \return the descriptor (which can have the ID \c INVALID_ID if
+     *   \c solution_name does not exist)
+     */
+    const SolutionDescriptor& get_solution_descriptor(const std::string& solution_name) const;
 
 
     //! Get solution values on the nodes of a specified element
@@ -1297,14 +1316,6 @@ SimulationInterface::get_variable_id(const std::string& variable_name) const
 }
 
 
-inline
-ID
-SimulationInterface::convert_variable_name_to_id(
-    const std::string& variable_name) const
-{
-  ignore_unused_variable(variable_name);
-  return INVALID_ID;
-}
 
 
 inline
