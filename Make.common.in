@@ -47,14 +47,7 @@ include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
 TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
-CXXFLAGS := $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags) -pthread
-INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
-LDFLAGS  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
-# always use -fPIC, also if libmesh was compiled without
-FCFLAGS  := -fPIC
-
-
-LDFLAGS += -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir) -L$(libdir)
+LDFLAGS := -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir) -L$(libdir)
 #ifeq ($(build_modules), yes)
 # LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
 #endif
@@ -76,13 +69,13 @@ else
 endif
 
 
-#NON_TIBER_INCLUDES := $(INCLUDE) @GSL_CFLAGS@ @BOOST_CPPFLAGS@ -I@MKL_INCLUDEDIR@
+INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
 
-NON_TIBER_INCLUDES := $(INCLUDE) @BOOST_CPPFLAGS@ 
+NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ $(INCLUDE) 
 
 ifeq ($(have_mkl),yes)
  LDFLAGS += -L@MKL_LIBDIR@ -Wl,-rpath,@MKL_LIBDIR@
- NON_TIBER_INCLUDES +=  -I@MKL_INCLUDEDIR@
+ NON_TIBER_INCLUDES += -I@MKL_INCLUDEDIR@
 endif
 
 
@@ -92,6 +85,11 @@ NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
+
+CXXFLAGS += $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags) -pthread
+LDFLAGS  += $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
+FCFLAGS  += -fPIC
+
 
 vpath %.h $(include_dirs)
 
