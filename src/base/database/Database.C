@@ -31,7 +31,8 @@ Database::Database(const string& material,
     const string& datafile)
   : _section(""),
     _file(NULL),
-    _is_alloy(false)
+    _is_alloy(false),
+   _mixing_type(VCA)
 {
   set_material(material, datafile);
 
@@ -68,6 +69,7 @@ Database::operator=(const Database& rhs)
     _material = rhs._material;
     _datafile = rhs._datafile;
     _is_alloy = rhs._is_alloy;
+    _mixing_type = rhs._mixing_type;
     _comp_db = rhs._comp_db;
   }
 
@@ -122,7 +124,7 @@ Database::close()
 
 
 void
-Database::set_section(const string& section)
+Database::set_section(const string& section) const
 {
   open();
 
@@ -483,7 +485,7 @@ void
 Database::get(const string& variable, vector<double>& data, bool required) const
 {
   open();
-
+cerr << "get: " << is_alloy() << " " << _mixing_type << "\n";
   if (is_alloy() && (_mixing_type != NONE))
   {
     size_t n = get_number_of_components();

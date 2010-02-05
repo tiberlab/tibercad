@@ -98,7 +98,7 @@ class Messages
 //
 
 inline
-Messages::Messages(void) : _indent_loc(0) { };
+Messages::Messages(void) : _indent_loc(0) { }
 
 
 inline

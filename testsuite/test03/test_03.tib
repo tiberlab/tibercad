@@ -66,7 +66,7 @@ $Models
          type = heat_reservoir
          BC_reg_numb = (1,4)
          temperature = 300
-   	}  
+   	}
      }
   }
   
@@ -85,7 +85,7 @@ $Models
      physical_model recombination
      { 
        model  =  srh
-     }                
+     }
      
      physical_model thermoelectric_power
      {

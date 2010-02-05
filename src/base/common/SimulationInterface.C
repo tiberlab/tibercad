@@ -1362,6 +1362,18 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 }
 
 
+
+void
+SimulationInterface::declare_solution(const std::string& name, ID id,
+    SolutionDescriptor::Type type, SolutionDescriptor::Location location,
+    const std::string& units)
+{
+  _solution_descriptors.insert(
+      make_pair(id, SolutionDescriptor(name, id, type, location, units)));
+}
+
+
+
 ModelOptions&
 SimulationInterface::get_solver_options(void)
 {

@@ -89,7 +89,7 @@ class Database
     /*!
      * Call this method always before reading data.
      */
-    void set_section(const std::string& section);
+    void set_section(const std::string& section) const;
 
     //! Get the name of the model
     const std::string& get_section(void) const;

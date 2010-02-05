@@ -7,6 +7,7 @@
 #include "TiberModelObject.h"
 #include "TypeDefs.h"
 #include "HashMap.h"
+#include "SolutionDescriptor.h"
 #include "InitFailedException.h"
 #include "SolveFailedException.h"
 #include "ModelErrorException.h"
@@ -723,6 +724,20 @@ class SimulationInterface : public TiberModelObject
     virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
 
 
+    //! Register a solution
+    /*!
+     *
+     * \param name the name of the solution
+     * \param id the ID to be assigned to the solution
+     * \param type the type of the solution (see SolutionDescriptor)
+     * \param location the location of the quantity inside an element
+     *        (see SolutionDescriptor)
+     */
+    void declare_solution(const std::string& name, ID id,
+        SolutionDescriptor::Type type, SolutionDescriptor::Location location,
+        const std::string& units = "");
+
+
     //! Get solution values on the nodes of a specified element
     /*!
      *
@@ -897,6 +912,10 @@ class SimulationInterface : public TiberModelObject
     typedef TiberCad::HashMap<SimulationInterface*, Embracing*>::Type EmbracingMap;
 
 
+    //! The type of the solution descriptor map
+    typedef TiberCad::HashMap<ID, SolutionDescriptor>::Type SolutionDescrMap;
+
+
     //! The environment for this simulation
     SimulationEnvironment* _environment;
 
@@ -949,6 +968,10 @@ class SimulationInterface : public TiberModelObject
 
     //! A map with all embracing regions
     EmbracingMap _embracings;
+
+
+    //! A map with the descriptors of all known solutions
+    SolutionDescrMap _solution_descriptors;
 
 
     //! A map with remembered solutions
