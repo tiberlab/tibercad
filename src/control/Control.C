@@ -448,7 +448,7 @@ Control::create_atomistic_structures(void)
 
   ModelOptions atomistic_options;
 
- // iterate the map and create the structures
+  // iterate the map and create the structures
   map<ID, RegionStructure>::const_iterator mapit(atomistic_map.begin());
   const map<ID, RegionStructure>::const_iterator mapend(atomistic_map.end());
   for ( ; mapit != mapend; ++mapit)
