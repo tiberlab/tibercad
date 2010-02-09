@@ -837,19 +837,19 @@ void ETB::get_band_edges(void)
 
   for(std::set<ID>::iterator reg = IDs.begin(); reg != IDs.end(); reg++)
   {
-      Material* mat = as->get_device()->get_material( (*reg) );
+      const Material* mat = as->get_device()->get_material( (*reg) );
 
       if (mat->is_alloy())
       {
-	Alloy* alloy = static_cast<const Alloy*>(mat);
+	const Alloy* alloy = static_cast<const Alloy*>(mat);
 
-	Material* matA = alloy->get_component_A();
-        Material* matB = alloy->get_component_B();
+	const Material* matA = alloy->get_component_A();
+        const Material* matB = alloy->get_component_B();
 	double x = alloy->get_molar_fraction();
 
 	std::cerr << "Fraction: " << x<< std::endl; 
 
-	Database& dbA = matA->get_database();
+	Database dbA = matA->get_database();
 	dbA.set_section("valenceband");
 	double vbA = dbA.get("E_v",0.0);
 	dbA.set_section("bandgap");
@@ -859,7 +859,7 @@ void ETB::get_band_edges(void)
 
 	std::cerr << "Eg_a: " << Eg << std::endl;
 
-	Database& dbB = matB->get_database();
+	Database dbB = matB->get_database();
 	dbB.set_section("valenceband");
 	double vbB = dbB.get("E_v",0.0);
 	dbB.set_section("bandgap");
@@ -881,7 +881,7 @@ void ETB::get_band_edges(void)
       }
       else
       {
-	Database& db = mat->get_database();
+	Database db = mat->get_database();
 	db.set_section("valenceband");
 	double vb = db.get("E_v",0.0);
 

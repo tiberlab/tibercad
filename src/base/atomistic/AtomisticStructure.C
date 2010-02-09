@@ -6,7 +6,7 @@
 #include "AtomisticGenerator2D.h"
 #include "AtomisticGenerator3D.h"
 #include "BondMap.h"
-#include"Messages.h"
+#include "Messages.h"
 #include "MeshUtils.h"
 
 //C++ includes
@@ -19,6 +19,18 @@
 #include <map>
 //---------------------
 
+
+
+AtomisticStructure::AtomisticStructure()
+:_bondmap(NULL),
+_device(NULL)
+{
+  N_atoms = 0;
+  for (unsigned int i = 0; i < 9; i++)
+  {
+    _periodicity_vectors[i] = 0.0;
+  }
+}
 
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
@@ -44,30 +56,16 @@ AtomisticStructure::~AtomisticStructure(void)
 
 
 AtomisticStructure*
-AtomisticStructure::create(const std::string& name)
+AtomisticStructure::create()
 {
   AtomisticStructure* st =  NULL;
-  st = new AtomisticStructure(name);
-
-  return st;
-}
-
-
-AtomisticStructure*
-AtomisticStructure::create(const std::string& name, const ModelOptions& options)
-{
-  AtomisticStructure* st = create(name);
-
-  st->set_options(options);
-
+  st = new AtomisticStructure();
   return st;
 }
 
 
 AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
-:is_passivated(false),
-contains_bond_map(false),
-is_periodical(false),
+:is_periodical(false),
 is_associated(false)
 {}
 
@@ -76,117 +74,149 @@ AtomisticStructure::AtomisticStructureOptions::~AtomisticStructureOptions(void)
 {}
 
 
-//Copy operator
-//AtomisticStructure::AtomisticStructure(const AtomisticStructure& start)
-//{
-//TODO: USING DEFAULT ONE, CHECK IF IT MAKES SOME MESS
-//  return *this;
-//}
-
-
-
 void
-AtomisticStructure::init()
+AtomisticStructure::init(const std::string& name,
+    const Device* const device, const ModelOptions& options)
 {
   std::ostringstream os;
-  assert(_device != NULL);
 
-  // Read structure from file
-  std::string path;
+  _name = name;
+  _device = device;
+  set_options(options);
 
   //Setting scale factor
   _scale = ( ( _device->get_mesh_units() ) / 1e-10 );
 
-  //---------------------------------------------------------------
-  os << "Mesh_units is " << _device->get_mesh_units() << std::endl
-  << "Scale factor is " << _scale << std::endl;
-  Messages::debug(os.str());
-  os.str(std::string());
-  //--------------------------------------------------------------
+  //There's 3 ways of building a structure:
+  // by material (bulk), by regions (mesh based)
+  // or by file.
+  // In the input section we can specify any, here we
+  // define which of the three ways is given
+  //
+  // If file path is defined, structure is read from file.
+  // Physical regions can be specified for a faster projection
+  // between mesh and atoms. If it's not, all regions are considered
+  // by default. If device is not defined, no regions are defined.
+  //
+  // If reference_region is defined and physical_regions is
+  // not defined, a bulk description of material in the
+  // reference region is done. AtomisticStructure build a copy of
+  // Material, so options can be override
+  //
+  // If reference_region is defined and physical_regions is defined
+  // the atomistic generator for complex structures is invoked
+  //
+  // Read from file
 
-
-  if ( _options.find_option("physical_regions") )
+  if (_options.find_option("load_structure"))
   {
-    //Put physical regions specified in input file in _regions
-    //A vector is needed as temporary container
-    std::vector<std::string> region_string;
-    _options.get_option("physical_regions", region_string);
-
-    for (unsigned int i = 0; i < region_string.size(); i++)
-    {
-      _regionset.insert(region_string[i]);
-    }
-    region_string.clear();
-
-    //If all regions are specified (value = "all", must fill with real names of all regions)
-    if ( _regionset.count("all") == 1)
-    {
-      _regionset.clear();
-      std::set < ID >::iterator region_ID_iterator = _device->get_active_region_ids().begin();
-
-      for (unsigned int i = 0; i < _device->get_active_region_ids().size(); i++)
-      {
-        _regionset.insert( _device->get_region_name(*region_ID_iterator) );
-        region_ID_iterator ++;
-      }
-
-    }
-
-    //Build an array of physical regions ID
-    for (std::set<std::string>::iterator i = _regionset.begin(); i != _regionset.end(); i++)
-    {
-      std::vector<ID> tmp_ID;
-      _device->get_active_region_ids( (*i), tmp_ID);
-      for (unsigned int j = 0; j < tmp_ID.size(); j++) {_IDset.insert(tmp_ID[j]);}
-    }
-  }
-
-  else std::cerr << "Error in AtomisticStructure: at least a physical region must be defined in input" << std::endl;
-
-
-  if (_options.find_option("load_structure")){
+    std::string filename;
 
     //------------------------------------------------------------
-    os << "Reading structure from file " << path <<
+    os << "Reading structure from file " << filename <<
     ". Any further information will be neglected" << std::endl;
     Messages::info(os.str(), true);
     os.str(std::string());
     //---------------------------------------------------------------
 
-    path = _options.get_option("load_structure","none");
-    read_structure(path);
+    filename = _options.get_option("load_structure","none");
+
+    init(filename);
+
+    parse_regions();
+
+    if (_atomistic_structure_options.is_associated == false) associate_elements();
+
+    build_bond_map();
+
+    print_structure("tb2.tgn");
+ }
+
+  // Build material representation
+  else if ( (_options.find_option("reference_region"))
+      && (! _options.find_option("physical_regions")) )
+  {
+
+  }
+
+  // Build mesh based representation
+  else if ( (_options.find_option("reference_region"))
+      && ( _options.find_option("physical_regions")) )
+  {
+    init_mesh_structure();
   }
 
   else
   {
-
-    //--------------------------------------------------------------
-    os << "Atomistic structure builder started " << path << std::endl;
+    //------------------------------------------------------------
+    os << "Error in Atomistic " << _name <<
+    "input block. Too few arguments defined." << std::endl;
     Messages::info(os.str(), true);
     os.str(std::string());
-    //-----------------------------------------------------------
-
-    _structure_atoms.clear();
-
-    AtomisticGenerator* generate;
-
-    if ( _device->get_mesh().mesh_dimension() == 1 ) generate = static_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
-    if ( _device->get_mesh().mesh_dimension() == 2 )  generate = static_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
-    if ( _device->get_mesh().mesh_dimension() == 3 )  generate = static_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
-
-    generate->do_init();
-
-    std::string name;
-    name = _name + ".xyb" ;
-    print_structure(name);
-    name = _name + ".gen" ;
-    print_structure(name);
-    name = _name + ".tgn" ;
-    print_structure(name);
+    //---------------------------------------------------------------
 
   }
 
-  //If no bond map exists, make it
+}
+
+
+void
+AtomisticStructure::init(const std::string& filename)
+{
+  std::ostringstream os;
+
+  read_structure(filename);
+
+}
+
+
+void
+AtomisticStructure::parse_regions(void)
+{
+
+  //If no physical regions are specified, "all" is the default
+  if ( (get_options().is_empty()) || (!get_options().find_option("physical_regions")) )
+    _regionset.insert("all");
+
+  //Put physical regions specified in input file in _regions
+  //A vector is needed as temporary container
+  std::vector<std::string> region_string;
+  _options.get_option("physical_regions", region_string);
+
+  for (unsigned int i = 0; i < region_string.size(); i++)
+  {
+    _regionset.insert(region_string[i]);
+  }
+  region_string.clear();
+
+  //If all regions are specified (value = "all", must fill with real names of all regions)
+  if ( _regionset.count("all") == 1)
+  {
+    _regionset.clear();
+    std::set < ID >::iterator region_ID_iterator = get_device()->get_active_region_ids().begin();
+
+    for (unsigned int i = 0; i < get_device()->get_active_region_ids().size(); i++)
+    {
+      _regionset.insert( get_device()->get_region_name(*region_ID_iterator) );
+      region_ID_iterator ++;
+    }
+
+  }
+
+  //Build an array of physical regions ID
+  for (std::set<std::string>::iterator i = _regionset.begin(); i != _regionset.end(); i++)
+  {
+    std::vector<ID> tmp_ID;
+    get_device()->get_active_region_ids( (*i), tmp_ID);
+    for (unsigned int j = 0; j < tmp_ID.size(); j++) {_IDset.insert(tmp_ID[j]);}
+  }
+
+}
+
+
+void
+AtomisticStructure::build_bond_map(void)
+{
   if (_bondmap == NULL)
   {
     _bondmap = new BondMap;
@@ -196,17 +226,62 @@ AtomisticStructure::init()
     {
       for (unsigned int j = 0; j < 3; j++)
       {
-        period(j + 1, i + 1) + _periodicity_vectors[i + j];
+        period(j + 1, i + 1) = _periodicity_vectors[i*3 + j];
       }
     }
     _bondmap->do_solve(_structure_atoms, period);
   }
+}
 
 
-  if (_atomistic_structure_options.is_associated == false) associate_elements();
+void
+AtomisticStructure::init_mesh_structure()
+{
+  std::ostringstream os;
+  assert(_device != NULL);
 
-  //Refresh some information after structure building
-  N_atoms = _structure_atoms.size();
+  // Read structure from file
+  std::string path;
+
+  //---------------------------------------------------------------
+  os << "Mesh_units is " << _device->get_mesh_units() << std::endl
+  << "Scale factor is " << _scale << std::endl;
+  Messages::debug(os.str());
+  os.str(std::string());
+  //--------------------------------------------------------------
+
+  parse_regions();
+
+  //--------------------------------------------------------------
+  os << "Atomistic structure builder started " << path << std::endl;
+  Messages::info(os.str(), true);
+  os.str(std::string());
+  //-----------------------------------------------------------
+
+  _structure_atoms.clear();
+
+  AtomisticGenerator* generate;
+
+  if ( _device->get_mesh().mesh_dimension() == 1 ) generate = static_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
+  if ( _device->get_mesh().mesh_dimension() == 2 )  generate = static_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
+  if ( _device->get_mesh().mesh_dimension() == 3 )  generate = static_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
+
+  generate->do_init();
+  build_bond_map();
+
+  //if (_atomistic_structure_options.is_associated == false) associate_elements();
+
+   //Refresh some information after structure building
+   N_atoms = _structure_atoms.size();
+
+  std::string name;
+  name = _name + ".xyb" ;
+  print_structure(name);
+  name = _name + ".gen" ;
+  print_structure(name);
+  name = _name + ".tgn" ;
+  print_structure(name);
+  print_upg("tb2.upg", "none");
 
 }
 
@@ -456,7 +531,7 @@ AtomisticStructure::read_structure(const std::string& path)
       }
     }
     //    }
-}
+  }
 
   else if ( (extension.compare(".tgn") == 0) || (extension.compare(".TGN") == 0) )
   {
@@ -487,13 +562,14 @@ AtomisticStructure::read_tgn(const std::string& path)
   unsigned int n_specie;
   Atom tmp_atom;
   Tensor1 pos;
+  std::stringstream line_string;
   std::ostringstream os;
 
   Messages::debug("Reading tgn file. Loading atom coords and bond map ");
 
-  file.open(path.c_str(), std::ifstream::in);
+  file.open(path.c_str());
 
-  if (!file)
+  if ( !(file.is_open()) )
   {
     //-------------------------------------------------------------------------------
     os << "Unable to open file " << path << ". Cannot read Atomistic Structure. \n";
@@ -504,16 +580,17 @@ AtomisticStructure::read_tgn(const std::string& path)
   }
 
   getline(file, line);
-  std::stringstream line_string(line);
+
+  line_string.clear();
+  line_string.str(line);
 
   line_string >> record;
 
-
-  N_atoms = atoi(line.c_str());
+  N_atoms = atoi(record.c_str());
   _structure_atoms.reserve(N_atoms);
 
   //Prepare bond map object
-  if (_bondmap == NULL) _bondmap = new BondMap;
+  if ( _bondmap == NULL) _bondmap = new BondMap;
   else
   {
     delete _bondmap;
@@ -539,23 +616,16 @@ AtomisticStructure::read_tgn(const std::string& path)
 
   getline(file, line);
 
-  //  //This line clean stringstream in a safe way
-  //       line_string.clear(std::stringstream::goodbit);
+  //This 2 lines clean stringstream in a safe way
+  line_string.clear();
+  line_string.str(line);
 
-  //       //Don't know why these spaces are needed!!!!!!!!!!!!!!! check it!!!!
-  //       line_string << "                       ";
-
-  //try in this way
-  line_string.str(std::string());
-  line_string.clear(std::stringstream::goodbit);
-  //---------------------------------------------
-
-  line_string << line;
 
   while ( line_string >> record)
   {
     _atom_types.push_back(record);
   }
+
 
   N_types = _atom_types.size();
 
@@ -564,7 +634,9 @@ AtomisticStructure::read_tgn(const std::string& path)
   for (unsigned int i = 1; i <= N_atoms; i++)
   {
     getline(file, line);
-    std::stringstream line_string(line);
+
+    line_string.clear();
+    line_string.str(line);
 
     // First value is ignored (just atoms enumeration)
     line_string >> record;
@@ -593,7 +665,7 @@ AtomisticStructure::read_tgn(const std::string& path)
     line_string >> record;
     int tmp_id = atoi(record.c_str());
 
-    if (tmp_id == -1) _structure_atoms[i].set_elem(NULL);
+    if (tmp_id == -1) _structure_atoms[i - 1].set_elem(NULL);
     else
     {
       _structure_atoms[i - 1].set_elem(_device->get_mesh().elem(tmp_id));
@@ -605,13 +677,13 @@ AtomisticStructure::read_tgn(const std::string& path)
   getline(file, line);
 
   // Read periodicity vectors anyway, if system is not periodical they will be ignored
-  //    if (_atomistic_structure_options.is_periodical)
-  //    {
   unsigned int count = 0;
   for (unsigned int i = 0; i < 3; i++)
   {
     getline(file, line);
-    std::stringstream line_string(line);
+    line_string.clear();
+    line_string.str(line);
+
     for (unsigned int j = 0; j < 3; j++)
     {
       line_string >> record;
@@ -620,6 +692,7 @@ AtomisticStructure::read_tgn(const std::string& path)
     }
   }
 
+  file.close();
   _atomistic_structure_options.is_associated = true;
 
 }
@@ -856,20 +929,19 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     file.open(path.c_str());
 
     //I must build a materials map
-    std::map<Material*, unsigned int> material_map;
+    std::map<const Material*, unsigned int> material_map;
 
     std::set<ID>::iterator ID_it;
 
     unsigned int id = 1;
-    Material* mat = NULL;
+    const Material* mat = NULL;
 
     for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ID_it ++)
     {
       mat = _device->get_material(*ID_it);
-      material_map[mat] = id;
+      material_map.insert(std::pair<const Material*, unsigned int>(mat, id));
       id++;
     }
-    //I got the material map material_map
 
     //Standard gen section (modified with material index)
     file << _structure_atoms.size();
@@ -892,8 +964,13 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       }
       file << std::setw(10);
       if (_structure_atoms[i].get_specie() ==  "H")
+      {
         file << material_map[_device->get_material(_structure_atoms[get_bond_map()[i][0]].get_region_ID()) ];
-      else file << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ];
+      }
+      else
+      {
+        file << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ];
+      }
 
       file << std::setw(5) << n_specie + 1
       << std::setw(20) << std::setprecision(10)
@@ -942,17 +1019,11 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       }
     }
 
-    //file << std::endl;
-
     //Information about materials
 
     file << "#Materials " << std::endl;
 
-
-    std::map<Material*, unsigned int>::iterator mat_it = material_map.begin();
-
-    for (mat_it = material_map.begin(); mat_it != material_map.end(); mat_it++)
-      //for (unsigned int i = 1; i <= material_map.size(); i++)
+    for (std::map<const Material*, unsigned int>::iterator mat_it = material_map.begin(); mat_it != material_map.end(); mat_it++)
     {
       //Note: material_map has material in ascending order, starting from one, despite any general enumeration
       //in TiberCAD. Check some lines above how it's built. In file they need to be stored in ascending order,
@@ -964,8 +1035,8 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       //  {
       //    if ((*mat_it).second == i) break;
       //  }
-      Material* mat = (*mat_it).first;
-      Database& db = mat->get_database();
+      const Material* mat = (*mat_it).first;
+      Database db = mat->get_database();
       db.set_section("atomistic_structure");
 
       file << std::setw(3)  << (*mat_it).second

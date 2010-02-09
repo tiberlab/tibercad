@@ -281,9 +281,9 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++)
   {
 
-    Material* mat = _as->get_device()->get_material( (*reg) );
+    const Material* mat = _as->get_device()->get_material( (*reg) );
 
-    Database& db = mat->get_database();
+    Database db = mat->get_database();
 
     db.set_section("atomistic_structure");
 
@@ -995,7 +995,7 @@ void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
 
 
 
-void AtomisticGenerator::parse_parameters(Material* mat)
+void AtomisticGenerator::parse_parameters(const Material* mat)
 {
 
   Atom tmp;
@@ -1009,7 +1009,7 @@ void AtomisticGenerator::parse_parameters(Material* mat)
     //lattice constant are expressed in Amstrong
     //_lattice_constant[0] = data("a", 0.0) * 10.0;
 
-    Database& db = mat->get_database();
+    Database db = mat->get_database();
     db.set_section("lattice");
     _lattice_constant[0] = db.get("a", 0.0) * 10.0;
     if (_lattice_constant[0] == 0.0) Messages::error("At least "
@@ -1065,7 +1065,7 @@ void AtomisticGenerator::parse_parameters(Material* mat)
   if (mat->is_alloy())
   {
     //Cannot act dynamic cast on mat itself because constant
-    Alloy* mat_alloy = dynamic_cast<Alloy*>(mat);
+    const Alloy* mat_alloy = dynamic_cast<const Alloy*>(mat);
 
     //Get database for alloy (db) and for parental materials
     //NOTE: IMPLEMENTATION IS GOOD ONLY FOR BINARY COMPOUNDS
@@ -1074,7 +1074,10 @@ void AtomisticGenerator::parse_parameters(Material* mat)
     //Quindi non possiamo inizializzare 3 oggetti database e portarceli appresso, perche' saranno tutti
     //collegati al datafile settato dall'ultima assegnazione. Questa cosa va cambiata nella classe Database
     // (TODO)
-    Database* db = &(mat_alloy->get_database());
+    //This take two lines as I don't know how to specify that i call non constant method
+    //if I do Database* db = &(mat_alloy->get_database())
+    Database tmp_db = mat_alloy->get_database();
+    Database* db = &tmp_db;
 
     //std::cout << "component A is  " << mat_alloy->get_component_A()->get_name() << std::endl;
     //std::cout << "component B is  " << mat_alloy->get_component_B()->get_name() << std::endl;
@@ -1117,12 +1120,15 @@ void AtomisticGenerator::parse_parameters(Material* mat)
 
     }
 
-    db = &(mat_alloy->get_component_A()->get_database());
+    tmp_db = mat_alloy->get_database();
+    db = &tmp_db;
     db->set_section("");
     db->set_section("atomistic_structure");
     set_lattice_type(db->get("lattice_type", "none"));
 
-    db = &(mat_alloy->get_database());
+    tmp_db = mat_alloy->get_database();
+    db = &tmp_db;
+
     db->set_section("atomistic_structure");
 
     unsigned int n_basis_specie = db->get("n_basis_specie", 0);

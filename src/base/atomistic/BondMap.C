@@ -4,6 +4,7 @@
 
 
 BondMap::BondMap(void)
+:_period(0)
 {
 };
 

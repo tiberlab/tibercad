@@ -116,7 +116,7 @@ protected:
   BondMap* _bondmapobject;
 
   //! Reference material
-    Material* _reference_material;
+  const Material* _reference_material;
 
     //! Database of reference material
     Database _reference_material_db;
@@ -178,7 +178,7 @@ protected:
   virtual void build() = 0;
 
   //! Parsing of atomistic infos to build lattice and basis vectors
-  void parse_parameters(Material* mat);
+  void parse_parameters(const Material* mat);
 
 
   //Some data manipulation function useful only in this class

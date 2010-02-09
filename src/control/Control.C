@@ -455,17 +455,14 @@ Control::create_atomistic_structures(void)
   {
     const RegionStructure& data = mapit->second;
 
-    ModelOptions atomistic_options = data.get_options();
+    ModelOptions options = data.get_options();
 
     const string& st_name = data.get_region_name();
-    AtomisticStructure* st = AtomisticStructure::create(st_name, data.get_options());
-
-    //Set a reference to device. It's needed for keeping track of region informations
-    st->set_device( _device );
+    AtomisticStructure* st = AtomisticStructure::create();
 
     //WARNING: For debugging purposes, initialization of
     //atomistic structures is here, but it's not the right place! (maybe it is...)
-    st->init();
+    st->init(st_name, _device, options);
 
     // Defined atomistic structure is put in the atomistic_structure_map
     _device->set_atomistic_structure(st_name, st);

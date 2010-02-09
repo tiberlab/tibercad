@@ -3,6 +3,8 @@
 
 #include "tensor.h"
 #include "TypeDefs.h"
+#include "point.h"
+#include "dof_object.h"
 
 class Elem;
 
@@ -24,7 +26,7 @@ public:
   Atom(std::string& init_specie, Tensor1& init_position);
 
   //!Complete constructor: specifies all atom characteristics
-  Atom(std::string& specie, Tensor1& position, int (&conv_address)[3], ID atom_id, ID region_id, unsigned int flag, ID contact);
+  Atom(std::string& specie, Tensor1& position, unsigned int flag);
 
   //! Atom destructor
   ~Atom();
@@ -42,21 +44,12 @@ public:
   const double get_position(int i) const;
 
   //! Get the whole position (1X3 Tensor)
-  const Tensor1& get_position() const;
-
-  //! If atom belongs to contact, return the id of contact (0 otherwise)
-  const ID get_contact() const;
+  Tensor1 get_position() const;
 
   //! Get the ID of the region the atom belongs to
   //! (Note: little errors may occur using basis or conventional cell
   //! preservation in Atomistic Generator)
   const int get_region_ID() const;
-
-  //! Get atom identifier
-  const ID get_atom_ID(void) const;
-
-  //! Set atom identifier
-  void set_atom_ID(const ID my_id);
 
   //! Set a general purpose integer flag, used internally. 0 is default safe value
   void set_flag(const unsigned int fg);
@@ -82,17 +75,10 @@ private:
   std::string _specie;
 
   //! Atom position
-  Tensor1 _position;
-
-  //! An integer which says if an atom belongs to device (0)
-  //! or to contact (number of contact). Useful in electronic transport
-  ID _contact;
+  Point _position;
 
   //! A general purpose integer flag (for example used in passivation)
   unsigned int _flag;
-
-  //!An ID identifying univocally the atom
-  ID _atom_id;
 
 };
 
@@ -116,44 +102,9 @@ const std::string& Atom::get_specie(void) const
 
 
 inline
-void Atom::set_position(const Tensor1 pos)
-{
-  _position = pos;
-}
-
-
-inline
-const Tensor1& Atom::get_position(void) const
-{
-  return _position;
-}
-
-
-inline
 const double Atom::get_position(int i) const
 {
-  return _position(i);
-}
-
-
-inline
-const ID Atom::get_contact(void) const
-{
-  return _contact;
-}
-
-
-inline
-const ID Atom::get_atom_ID(void) const
-{
-  return _atom_id;
-}
-
-
-inline
-void Atom::set_atom_ID(const ID my_id)
-{
-  _atom_id=my_id;
+  return _position(i - 1);
 }
 
 

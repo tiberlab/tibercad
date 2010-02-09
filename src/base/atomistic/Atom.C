@@ -6,34 +6,28 @@
 Atom::Atom()
 :_specie("none"),
 belong_to_structure(false),
-_el(NULL)
+_el(NULL),
+_position()
 {
   _flag = 0;
-  _atom_id = 0;
-  _position(1) = 0.0; _position(2) = 0.0; _position(3) = 0.0;
-  _contact = 0;
 }
 
 Atom::Atom(std::string& specie, Tensor1& position)
 :belong_to_structure(false),
-_el(NULL)
+_el(NULL),
+_position(position(1), position(2), position(3)),
+_specie(specie)
 {
-  _position = position;
-  _specie = specie;
   _flag = 0;
-  _atom_id = 0;
-  _contact = 0;
 }
 
-Atom::Atom(std::string& specie, Tensor1& position, int (&conv_address)[3], ID atom_id, ID region_id, ID contact, unsigned int flag)
+Atom::Atom(std::string& specie, Tensor1& position, unsigned int flag)
 :belong_to_structure(false),
-_el(NULL)
+_el(NULL),
+_position(position(1), position(2), position(3)),
+_specie(specie)
 {
-  _position = position;
-  _specie = specie;
   _flag = flag;
-  _atom_id = atom_id;
-  _contact = contact;
 }
 
 Atom::~Atom()
@@ -51,4 +45,18 @@ const int Atom::get_region_ID(void) const
 {
   if (_el == NULL) return INVALID_ID;
   else return _el->subdomain_id();
+}
+
+
+void Atom::set_position(const Tensor1 pos)
+{
+  _position(0) = pos(1); _position(1) = pos(2); _position(2) = pos(3);
+}
+
+
+Tensor1 Atom::get_position(void) const
+{
+  Tensor1 pos;
+  pos(1) = _position(0); pos(2) = _position(1); pos(3) = _position(2);
+  return pos;
 }

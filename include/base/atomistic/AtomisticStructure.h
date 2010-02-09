@@ -11,6 +11,7 @@
 #include "Database.h"
 #include "Atom.h"
 #include "BondMap.h"
+#include "Messages.h"
 
 //! Contains all needed data for an atomic structure
 /*!
@@ -36,12 +37,6 @@ public:
     //!Options destructor
     ~AtomisticStructureOptions(void);
 
-        //! Tells if structure has been passivated
-    bool is_passivated;
-
-    //!Tells if structure contains bond map informations
-    bool contains_bond_map;
-
     //!Tells if structure has to be considered periodical;
     bool is_periodical;
 
@@ -56,16 +51,15 @@ public:
    * be specified
    *
    */
+  AtomisticStructure();
+
   AtomisticStructure(const std::string& name);
 
   //! Destructor for AtomisticStructure class object
   ~AtomisticStructure(void);
 
  //! Create a material with name /c name
-  static AtomisticStructure* create(const std::string& name);
-
-  //! Create a material with name /c name and options /c options
-  static AtomisticStructure* create(const std::string& name, const ModelOptions& options);
+  static AtomisticStructure* create();
 
   //! Get the structure options
   ModelOptions& get_options(void);
@@ -81,10 +75,10 @@ public:
   const std::set<ID>& get_IDset(void);
 
    //! Set the device we're working with
-  void set_device(Device* const device);
+  void set_device(const Device* const device);
 
   //! Get Device reference
-  Device*  get_device(void);
+  const Device*  get_device(void);
 
   //! Return a const reference to structure atoms
   const std::vector<Atom>& get_structure_atoms(void) const;
@@ -104,8 +98,11 @@ public:
   //! Get periodicity vectors for the structure:
   double* get_periodicity_vectors(void);
 
-  //! Initialize the structure
-  void init(void);
+  //! Initialize a structure (to be read from input file)
+  void init(const std::string& name, const Device* const device, const ModelOptions& options);
+
+  // ! Initialize a structure (to be read from file)
+  void init(const std::string& filename);
 
   //! Add a type to the atom types list
   void add_atom_type(const std::string&);
@@ -158,8 +155,16 @@ public:
   //! Get number of non hydrogen atoms
   unsigned int get_N_without_H(void);
 
+  //! Set the model options
+    void set_options(const ModelOptions& options);
+
 private:
 
+    //! Initialize the structure using mesh infos
+    void init_mesh_structure(void);
+
+    //Build mesh regions infos
+    void parse_regions(void);
 
   //!Build element to atoms association map
   void build_elem_to_atoms(void);
@@ -175,9 +180,6 @@ private:
 
   //! Bond Map object pointer
   BondMap* _bondmap;
-
-  //! Set the model options
-  void set_options(const ModelOptions& options);
 
   //! Read structure from file
   void read_structure(const std::string& path);
@@ -218,13 +220,16 @@ private:
   bool _is_initialized;
 
   //! Contains reference to device we're working with
-  Device* _device;
+  const Device* _device;
 
   //! Reference material
   Material* _reference_material;
 
   //! Database of reference material
   Database _reference_material_db;
+
+  //! Build bond map
+  void build_bond_map(void);
 
 };
 
@@ -236,15 +241,17 @@ private:
 inline
 ModelOptions& AtomisticStructure::get_options(void)
 {
-  return _options;
-}
+    assert( !(_options.is_empty()) );
+
+    if (!_options.is_empty()) return _options;
+
+ }
 
 
 inline
 void AtomisticStructure::set_options(const ModelOptions& options)
 {
   _options = options;
-
 }
 
 
@@ -297,15 +304,19 @@ double* AtomisticStructure::get_periodicity_vectors(void){
 
 
 inline
-Device* AtomisticStructure::get_device(void)
+const Device* AtomisticStructure::get_device(void)
 {
+
+  assert ( (_device != NULL) );
+
   return _device;
+
 }
 
 inline
-void AtomisticStructure::set_device(Device* const device)
+void AtomisticStructure::set_device(const Device* const device)
 {
- _device = &(*device);
+ _device = device;
 }
 
 
