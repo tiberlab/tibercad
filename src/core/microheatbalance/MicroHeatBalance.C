@@ -1207,13 +1207,12 @@ void MicroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 }
 void
 MicroHeatBalance::build_integrated_quantities_description(
-    const std::set<std::string>& names,
     std::vector<std::string>& legend,
     std::vector<std::string>& description)
 {
 
 
-  if (names.count("PowerDissipated"))
+  if (plot_solution("PowerDissipated"))
   {
     legend.resize(1);
 
@@ -1239,12 +1238,12 @@ MicroHeatBalance::build_integrated_quantities_description(
 
 
 void
-MicroHeatBalance::build_integrated_quantities(const set<string>& names,
+MicroHeatBalance::build_integrated_quantities(
     vector<double>& values)
 {
 
 
-  if (names.count("PowerDissipated"))
+  if (plot_solution("PowerDissipated"))
   {
 
     // double power = calculate_power_dissipated();

@@ -2902,14 +2902,11 @@ DSSC::build_elemental_results(const set<string>& variables,
 
 
 void
-DSSC::build_integrated_quantities(const set<string>& names,
+DSSC::build_integrated_quantities(
     vector<double>& values)
 {
 
-  const set<string>::const_iterator varend(names.end());
-
-  if ((names.find("ContactCurrents") != varend) ||
-      (names.find("current") != varend))
+  if (plot_solution("ContactCurrents") || plot_solution("current"))
   {
     //if (get_options().current_calculation == RSTF)
       calculate_currents_rstf();
@@ -2936,14 +2933,11 @@ DSSC::calculate_currents(void)
 
 void
 DSSC::build_integrated_quantities_description(
-    const std::set<std::string>& names,
     std::vector<std::string>& legend,
     std::vector<std::string>& description)
 {
-  const set<string>::const_iterator varend(names.end());
 
-  if ((names.find("ContactCurrents") != varend) ||
-      (names.find("current") != varend))
+  if (plot_solution("ContactCurrents") || plot_solution("current"))
   {
     legend.resize(_boundary_currents.size());
 

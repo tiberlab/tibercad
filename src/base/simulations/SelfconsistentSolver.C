@@ -197,7 +197,7 @@ SelfconsistentSolver::do_plot(void)
 
 
 void
-SelfconsistentSolver::build_integrated_quantities(const set<string>& names,
+SelfconsistentSolver::build_integrated_quantities(
     vector<double>& values)
 {
   vector<double> val;
@@ -206,7 +206,7 @@ SelfconsistentSolver::build_integrated_quantities(const set<string>& names,
 
   for (int i = 0; i < num_sim; i++)
   {
-    _simulations[i]->get_integrated_quantities(names, val);
+    _simulations[i]->get_integrated_quantities(val);
     values.insert(values.end(), val.begin(), val.end());
   }
 }
@@ -216,7 +216,6 @@ SelfconsistentSolver::build_integrated_quantities(const set<string>& names,
 
 void
 SelfconsistentSolver::build_integrated_quantities_description(
-    const set<string>& names,
     vector<string>& legend,
     vector<string>& description)
 {
@@ -227,7 +226,7 @@ SelfconsistentSolver::build_integrated_quantities_description(
 
   for (int i = 0; i < num_sim; i++)
   {
-    _simulations[i]->get_integrated_quantities_description(names, leg, desc);
+    _simulations[i]->get_integrated_quantities_description(leg, desc);
     legend.insert(legend.end(), leg.begin(), leg.end());
     description.insert(description.end(), desc.begin(), desc.end());
   }

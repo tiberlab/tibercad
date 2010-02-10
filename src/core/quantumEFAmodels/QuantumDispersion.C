@@ -87,7 +87,7 @@ void QuantumDispersion::do_plot (void)
   format = get_options().get_option("output_format", format);
 
 
-  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+  const std::set< std::string >& plotvariables = get_plotvariables();
 
   if (plotvariables.find("k-space_dispersion") != plotvariables.end())
   {

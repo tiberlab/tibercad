@@ -136,10 +136,6 @@ class Control
     SimulationInterface* find_simulation(const std::string& name) const;
 
 
-    //! Get the variables to plot
-    const std::set<std::string>& get_plotvariables(void) const;
-
-
     //! Get the directory where to put output files
     const std::string& get_output_dir(void) const;
 
@@ -249,8 +245,8 @@ class Control
 
     //! A list of all simulation environments we control
     /*!
-     * \note {Not every simulation necessarily has an associated
-     * environment! }
+     * \note Not every simulation necessarily has an associated
+     * environment!
      */
     EnvironmentMap _simulation_environments;
 
@@ -263,11 +259,7 @@ class Control
     std::string _outputdir;
 
 
-    //! The variables we want to save data
-    std::set<std::string> _plotvariables;
-
-
-    //! The list frfom which the filename suffix gets constructed
+    //! The list from which the filename suffix gets constructed
     std::list<std::string> _filename_suffix;
 
 
@@ -348,13 +340,6 @@ Control::get_device(void)
   return *_device;
 }
 
-
-inline
-const std::set<std::string>&
-Control::get_plotvariables(void) const
-{
-  return _plotvariables;
-}
 
 
 inline

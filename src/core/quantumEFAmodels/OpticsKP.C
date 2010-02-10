@@ -1179,7 +1179,7 @@ void OpticsKP::do_plot()
   }
 
 
-  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+  const std::set< std::string >& plotvariables = get_plotvariables();
   if (plotvariables.find("optical_spectrum_k_0") != plotvariables.end())
   {
     string filename(get_name() +

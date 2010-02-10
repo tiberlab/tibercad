@@ -25,17 +25,6 @@ Sweep::~Sweep(void)
 
 
 
-const set<string>&
-Sweep::get_plotvariables(void) const
-{
-  if (_plotvariables.size() != 0)
-    return _plotvariables;
-
-  return get_control().get_plotvariables();
-}
-
-
-
 void
 Sweep::do_init(void)
 {
@@ -130,14 +119,6 @@ Sweep::parse_options(void)
     o << "Sweep: The variable " << _variable << " is not defined.";
     throw InitFailedException(o.str());
   }
-
-
-  // read the variables we want to plot (type IV characteristic)
-  vector<string> vars;
-  opts.get_option("plotvariable", vars);
-  for (unsigned int i = 0; i < vars.size(); i++)
-    _plotvariables.insert(vars[i]);
-
 
 
   // whether to plot data or not
@@ -236,7 +217,7 @@ Sweep::prepare_plot_files(vector<ofstream*>& plotfiles)
 
     vector<string> legend;
     vector<string> description;
-    _simulations[i]->get_integrated_quantities_description(get_plotvariables(),
+    _simulations[i]->get_integrated_quantities_description(
         legend, description);
 
     // should we plot something?
@@ -460,8 +441,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
         if (plotfiles[j] != NULL)
         {
           // it means we have something to plot
-          _simulations[j]->get_integrated_quantities(get_plotvariables(),
-              plotvalues);
+          _simulations[j]->get_integrated_quantities(plotvalues);
 
           sweep_data[j][goal] = plotvalues;
 
@@ -582,7 +562,6 @@ Sweep::do_delete_remembered_solution(ID id)
 
 void
 Sweep::build_integrated_quantities(
-    const set<string>& variables,
     vector<double>& values)
 {
   vector<double> vals;
@@ -590,7 +569,7 @@ Sweep::build_integrated_quantities(
   int num_sim = _simulations.size();
   for (int i = 0; i < num_sim; i++)
   {
-    _simulations[i]->get_integrated_quantities(variables, vals);
+    _simulations[i]->get_integrated_quantities(vals);
     values.insert(values.end(), vals.begin(), vals.end());
   }
 }
@@ -599,7 +578,6 @@ Sweep::build_integrated_quantities(
 
 void
 Sweep::build_integrated_quantities_description(
-    const set<string>& variables,
     vector<string>& legend,
     vector<string>& description)
 {
@@ -609,8 +587,7 @@ Sweep::build_integrated_quantities_description(
   int num_sim = _simulations.size();
   for (int i = 0; i < num_sim; i++)
   {
-    _simulations[i]->get_integrated_quantities_description(variables,
-        leg, desc);
+    _simulations[i]->get_integrated_quantities_description(leg, desc);
     legend.insert(legend.end(), leg.begin(), leg.end());
     description.insert(description.end(), desc.begin(), desc.end());
   }

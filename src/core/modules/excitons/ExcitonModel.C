@@ -138,9 +138,9 @@ ExcitonModel::do_init(void)
 
   std::string varname("recombination.");
   varname += get_option("generation_model", "");
-  _gen_model = _dd_sim->get_variable_id(varname);
+  _gen_model = _dd_sim->get_solution_id(varname);
 
-  _Eg_id = _dd_sim->get_variable_id("Eg");
+  _Eg_id = _dd_sim->get_solution_id("Eg");
 
   if ((_gen_model == INVALID_ID) || (_Eg_id == INVALID_ID))
   {

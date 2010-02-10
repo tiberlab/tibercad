@@ -52,7 +52,7 @@ void KspaceIntegration::do_plot()
     else 
       suff = ".gmv"; 
 
-    const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+    const std::set< std::string >& plotvariables = get_plotvariables();
 
     if (plotvariables.find("k-space") != plotvariables.end())
     {

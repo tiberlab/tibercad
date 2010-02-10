@@ -31,7 +31,7 @@ PotentialInterface::set_simulation(const std::string& name)
         throw InitFailedException("No such simulation found: " + name);
 
       _id_set.clear();
-      _id = _simulation->get_variable_id(_variable_name);
+      _id = _simulation->get_solution_id(_variable_name);
 
       if (_id == INVALID_ID)
         throw InitFailedException("Simulation " + name +
@@ -41,7 +41,7 @@ PotentialInterface::set_simulation(const std::string& name)
 
       //TODO: THIS PART IS ADDED FOR DIRTY IWCE CALCULATIONS!!!
       //------------------------------------------------------------
-      _id_chem_el = _simulation->get_variable_id("QFermi_e");
+      _id_chem_el = _simulation->get_solution_id("QFermi_e");
 
       if (_id == INVALID_ID)
         throw InitFailedException("Simulation " + name +
@@ -49,7 +49,7 @@ PotentialInterface::set_simulation(const std::string& name)
 
       _id_set.insert(_id_chem_el);
 
-      _id_chem_hl = _simulation->get_variable_id("QFermi_h");
+      _id_chem_hl = _simulation->get_solution_id("QFermi_h");
 
       if (_id == INVALID_ID)
         throw InitFailedException("Simulation " + name +

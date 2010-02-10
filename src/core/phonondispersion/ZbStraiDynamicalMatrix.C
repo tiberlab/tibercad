@@ -72,12 +72,12 @@ void  ZbStrainDynamicalMatrix::do_init(void)
    throw InitFailedException("Could not find " + strain_sim);
 
     //Get the variable IDs
-    var_map[E_XX]=_simul->get_variable_id("eps_xx"); 
-    var_map[E_XY]=_simul->get_variable_id("eps_xy");  
-    var_map[E_XZ]=_simul->get_variable_id("eps_xz"); 
-    var_map[E_YY]=_simul->get_variable_id("eps_yy"); 
-    var_map[E_YZ]=_simul->get_variable_id("eps_yz"); 
-    var_map[E_ZZ]=_simul->get_variable_id("eps_zz"); 
+    var_map[E_XX]=_simul->get_solution_id("eps_xx");
+    var_map[E_XY]=_simul->get_solution_id("eps_xy");
+    var_map[E_XZ]=_simul->get_solution_id("eps_xz");
+    var_map[E_YY]=_simul->get_solution_id("eps_yy");
+    var_map[E_YZ]=_simul->get_solution_id("eps_yz");
+    var_map[E_ZZ]=_simul->get_solution_id("eps_zz");
 
    std::map<ID,ID>::iterator      it(var_map.begin());
    std::map<ID,ID>::iterator      end(var_map.end());

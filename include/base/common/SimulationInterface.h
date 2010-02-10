@@ -1,5 +1,7 @@
 // $Id$
 
+/*! \file SimulationInterface.h */
+
 #ifndef _SIMULATIONINTERFACE_H_
 #define _SIMULATIONINTERFACE_H_
 
@@ -95,7 +97,6 @@ class SimulationInterface : public TiberModelObject
      * and do_print_info();
      */
     void init(void) throw (InitFailedException);
-
 
 
     //! Solve the system for equilibrium
@@ -239,13 +240,6 @@ class SimulationInterface : public TiberModelObject
     bool equilibrium_done(void) const;
 
 
-    /*!
-     * \copydoc convert_variable_name_to_id()
-     * \deprecated use get_solution_id instead
-     */
-    ID get_variable_id(const std::string& variable_name) const;
-
-
     //! Get the ID associated to a solution variable
     /*!
      *
@@ -277,7 +271,7 @@ class SimulationInterface : public TiberModelObject
      * type of the solution (more specifically on the number of locations in the element
      * and on the number of solution components). See also the SolutionDescriptor class.
      */
-    void get_solution(const DofObject* elem, std::map<ID, std::vector<double> > values);
+    void get_solution(const DofObject* elem, std::map<ID, std::vector<double> >& values);
 
 
     //! Get solutions at specified points in an element
@@ -293,7 +287,7 @@ class SimulationInterface : public TiberModelObject
      *  and the SolutionDescriptor class).
      */
     void get_solution(const DofObject* elem, const std::vector<Point>& p,
-        std::map<ID, std::vector<double> > values);
+        std::map<ID, std::vector<double> >& values);
 
 
     //! Get solution values on the nodes of a specified element
@@ -411,20 +405,17 @@ class SimulationInterface : public TiberModelObject
      * This method is used in sweeps for creating files like I-V
      * characteristics and similar.
      *
-     * \param names the identifier of the quantities to plot
      * \param values the vector where the values will be put
      */
-    void get_integrated_quantities(const std::set<std::string>& variables,
-        std::vector<double>& values);
+    void get_integrated_quantities(std::vector<double>& values);
 
 
     //! Get the description for some integrated quantities
     /*!
      * calls build_integrated_quantities_description()
      *
-     * cf. get_integrated_quantities()
+     * \see get_integrated_quantities()
      *
-     * \param variables the identifier of the quantities to plot
      * \param legend the legend for the plot values, has usually the same
      * size as \c values in get_integrated_quantities()
      * \param description a description for each of the known quantities
@@ -434,7 +425,6 @@ class SimulationInterface : public TiberModelObject
      * accessed simulation.
      */
     void get_integrated_quantities_description(
-        const std::set<std::string>& variables,
         std::vector<std::string>& legend,
         std::vector<std::string>& description);
 
@@ -635,6 +625,14 @@ class SimulationInterface : public TiberModelObject
     void is_solved(bool flag);
 
 
+    //! Get the set of plotvariables
+    const std::set<std::string>& get_plotvariables(void) const;
+
+
+    //! Checks if a solution variable should be plotted
+    bool plot_solution(const std::string& name) const;
+
+
     //! Do a plot
     /*!
      * This method creates files with the results of the simulation.
@@ -783,10 +781,77 @@ class SimulationInterface : public TiberModelObject
      * \param type the type of the solution (see SolutionDescriptor)
      * \param location the location of the quantity inside an element
      *        (see SolutionDescriptor)
+     * \param units the physical units, if applicable (recommended)
+     * \param n_comp the number of components (only needed for generic n-tuples)
+     *
+     * It is convenient to use this method via the declare_solution macro. This
+     * macro accepts as the first argument an enum value (or the name of a static
+     * member variable) whose name as a string will be used as the solution
+     * variable name. For \c type and \c location one can use directly the enum values (instead
+     * of the fully qualified name).
+     * Example:
+     * \code
+     * enum Solutions {
+     *   Field,
+     *   Potential
+     * };
+     *
+     * ...
+     *
+     * declare_solution(Field, VECTOR, CELL, "V/m");
+     * declare_solution(Potential, REAL, NODAL, "V");
+     * \endcode
      */
-    void declare_solution(const std::string& name, ID id,
+    void declare_solution_ext(const std::string& name, ID id,
         SolutionDescriptor::Type type, SolutionDescriptor::Location location,
-        const std::string& units = "");
+        const std::string& units = "", unsigned int n_comp = 0);
+
+    /*!
+     * \brief This is a shorter version of declare_solution_ext()
+     *
+     * \li \c name the name of the solution
+     * \li \c type the type of the solution (see SolutionDescriptor)
+     * \li \c location the location of the quantity inside an element
+     *        (see SolutionDescriptor)
+     * \li \c units the physical units, if applicable (optional, recommended)
+     * \li \c n_comp the number of components (only needed for generic n-tuples)
+     *
+     * The name should correspond to an enum value (or the name of a static
+     * member variable).
+     * For \c type and \c location one can use directly the enum values (instead
+     * of the fully qualified name)
+     *
+     * \protected \memberof SimulationInterface
+     */
+#define declare_solution(name, type, location, ...) \
+    declare_solution_ext(#name, name, SolutionDescriptor::type, \
+        SolutionDescriptor::location, ## __VA_ARGS__)
+
+
+    //! Get solutions on their ``natural'' location in the specified element
+     /*!
+      * \param elem the pointer to the element (Elem or Atom)
+      * \param values a map to hold the values, the key IDs specify the solutions
+      *  to be returned
+      *
+      * \pre \c elem is an active element/atom of this simulation
+      */
+     virtual void get_solution_secure(const DofObject* elem,
+         std::map<ID, std::vector<double> >& values);
+
+
+     //! Get solutions at specified points in an element
+     /*!
+      * \param elem the pointer to the element (Elem or Atom)
+      * \param p the vector containing the points
+      * \param values a map to hold the values, the key IDs specify the solutions
+      *  to be returned
+      *
+      * \pre \c elem is an active element/atom of this simulation
+      */
+     virtual void get_solution_secure(const DofObject* elem,
+         const std::vector<Point>& p,
+         std::map<ID, std::vector<double> >& values);
 
 
     //! Get solution values on the nodes of a specified element
@@ -879,9 +944,7 @@ class SimulationInterface : public TiberModelObject
      * energy (e.g. for some spectrum). In this case, the legend should contain
      * the corresponding values of the independent variable.
      */
-    virtual void build_integrated_quantities(
-        const std::set<std::string>& variables,
-        std::vector<double>& values);
+    virtual void build_integrated_quantities(std::vector<double>& values);
 
     //! Create legend and description for integrated quantities
     /*!
@@ -890,7 +953,6 @@ class SimulationInterface : public TiberModelObject
      * The return values of this method are used in printing data files
      */
     virtual void build_integrated_quantities_description(
-        const std::set<std::string>& variables,
         std::vector<std::string>& legend,
         std::vector<std::string>& description);
 
@@ -907,6 +969,7 @@ class SimulationInterface : public TiberModelObject
       create_physical_model(const ModelOptions& options,
                             const Material* mat) const
       throw (ModelErrorException);
+
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
         const Material* mat) const;
 
@@ -922,6 +985,7 @@ class SimulationInterface : public TiberModelObject
     virtual BoundaryProperties*
       create_boundary_model(const ModelOptions& options) const
       throw (ModelErrorException);
+
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
         const Material* material_A, const Material* material_B) const;
 
@@ -1035,6 +1099,10 @@ class SimulationInterface : public TiberModelObject
 
     //! The level of verbosity
     int _verbosity;
+
+
+    //! The set of all variables to be plotted
+    std::set<std::string> _plotvariables;
 
 
     //! The map containing all simulations with their ID
@@ -1195,6 +1263,21 @@ SimulationInterface::is_solved(void) const
 }
 
 
+inline
+const std::set<std::string>&
+SimulationInterface::get_plotvariables(void) const
+{
+  return _plotvariables;
+}
+
+
+inline
+bool
+SimulationInterface::plot_solution(const std::string& name) const
+{
+  return _plotvariables.count(name);
+}
+
 
 inline
 void
@@ -1244,12 +1327,9 @@ SimulationInterface::get_type(void) const
 inline
 void
 SimulationInterface::build_nodal_results(
-    const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
+    const std::set<std::string>&,
+    std::vector<double>&, std::vector<std::string>&)
 {
-  ignore_unused_variable(variables);
-  ignore_unused_variable(results);
-  ignore_unused_variable(legend);
 }
 
 
@@ -1257,12 +1337,9 @@ SimulationInterface::build_nodal_results(
 inline
 void
 SimulationInterface::build_elemental_results(
-    const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
+    const std::set<std::string>&,
+    std::vector<double>&, std::vector<std::string>&)
 {
-  ignore_unused_variable(variables);
-  ignore_unused_variable(results);
-  ignore_unused_variable(legend);
 }
 
 
@@ -1340,14 +1417,6 @@ SimulationInterface::set_scaling(const Scaling& scaling)
 }
 
 
-inline
-ID
-SimulationInterface::get_variable_id(const std::string& variable_name) const
-{
-  return convert_variable_name_to_id(variable_name);
-}
-
-
 
 
 inline
@@ -1414,55 +1483,6 @@ int&
 SimulationInterface::verbose(void)
 {
   return _verbosity;
-}
-
-
-
-inline
-void
-SimulationInterface::get_solution_secure(const Elem* elem,
-        const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
-{
-  ignore_unused_variable(elem);
-  ignore_unused_variable(ids);
-  ignore_unused_variable(values);
-}
-
-
-inline
-void
-SimulationInterface::get_solution_secure(const Elem* elem,
-        const std::vector<Point>& p, const std::set<ID>& ids,
-        std::vector<std::map<ID, double> >& values)
-{
-  ignore_unused_variable(elem);
-  ignore_unused_variable(p);
-  ignore_unused_variable(ids);
-  ignore_unused_variable(values);
-}
-
-
-inline
-void
-SimulationInterface::build_integrated_quantities(
-        const std::set<std::string>& variables,
-        std::vector<double>& values)
-{
-  ignore_unused_variable(variables);
-  ignore_unused_variable(values);
-}
-
-
-inline
-void
-SimulationInterface::build_integrated_quantities_description(
-        const std::set<std::string>& variables,
-        std::vector<std::string>& legend,
-        std::vector<std::string>& description)
-{
-  ignore_unused_variable(variables);
-  ignore_unused_variable(legend);
-  ignore_unused_variable(description);
 }
 
 

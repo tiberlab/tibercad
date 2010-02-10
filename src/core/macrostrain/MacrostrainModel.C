@@ -59,13 +59,13 @@ void MacrostrainModel::do_init()
     if (poisson == NULL)
       throw InitFailedException("MacrostrainModel: Unknown poisson model" + poisson_name);
 
-    id_Ex = poisson->get_variable_id("Ex");
+    id_Ex = poisson->get_solution_id("Ex");
     Poisson_variables_ID.insert(id_Ex);
 
-    id_Ey = poisson->get_variable_id("Ey");
+    id_Ey = poisson->get_solution_id("Ey");
     Poisson_variables_ID.insert(id_Ey);
 
-    id_Ez = poisson->get_variable_id("Ez");
+    id_Ez = poisson->get_solution_id("Ez");
     Poisson_variables_ID.insert(id_Ez);
 
   }

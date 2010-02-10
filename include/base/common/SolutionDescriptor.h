@@ -17,7 +17,7 @@ struct SolutionDescriptor
     enum Type
     {
       REAL,     //!< a real value
-      COMPLEX,  //!< a complex value, ordered as (real,imag)
+      COMPLEX,  //!< a complex value, ordered as (real, imag)
       VECTOR,   //!< a real 3D vector (x, y, z)
       TENSOR,   //!< a real 3D symmetric tensor of second rank (xx, yy, zz, xy, yz, zz)
       NTUPLE    //!< a generic n-tuple

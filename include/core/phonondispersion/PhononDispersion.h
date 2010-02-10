@@ -68,18 +68,6 @@ class PhononDispersion : public SimulationInterface
   //!Create an MacroHeatBalance object 
   static PhononDispersion*  create(const ModelOptions& options);
   
-  /*! \copydoc SimulationInterface::build_integrated_quantities() */
-  virtual void build_integrated_quantities(
-					   const std::set<std::string>& names,
-					   std::vector<double>& values){};
-  
-  
-  /*! \copydoc SimulationInterface::build_integrated_quantities_description()
-   */
-  virtual void build_integrated_quantities_description(
-						       const std::set<std::string>& names,
-						       std::vector<std::string>& legend,
-						       std::vector<std::string>& description){};
 
    /*! \copydoc SimulationInterface::do_print_info() */
   virtual void do_print_info(void){};

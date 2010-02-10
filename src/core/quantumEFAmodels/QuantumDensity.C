@@ -226,47 +226,7 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
 }
 
 
-//=======================================================================================//
-void  QuantumDensity::build_integrated_quantities (const std::set< std::string > &variables, std::vector< double > &values)
-{
 
- 
-  // I think this is not implemented. Commented out due to problems
-  /*
-  if (variables.find("quantum_density") != variables.end() )
-  {
-   
-    
-    values.resize(1);
-    values[0] = real_space_density[NULL];
-    
-    //now I have to transform from atomic units to [cm^-3]    
-      
-    const double coeff =  1.0/ ( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
-    
-   
-    values[0] *= coeff;
-  }
-  */
-}
-
-//==========================================================================================//
-void QuantumDensity::build_integrated_quantities_description(const std::set<std::string>& variables, 
-							     std::vector<std::string>& legend, 
-							     std::vector<std::string>& description)
-{
-  // see above
-  /*
-  if (variables.find("quantum_density") != variables.end() )
-  {
-    legend.resize(1);
-    legend[0] = "density";
- 
-    description.resize(1);
-    description[0] = "Density 1/cm^3";
-  }
-  */
-}
 //=======================================================================================//
 void QuantumDensity::do_init( )
 {

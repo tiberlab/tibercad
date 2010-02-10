@@ -266,13 +266,6 @@ Control::setup_globals(void)
   // what we want solve
   opts.get_option("solve", _solve_list);
 
-  // read the variables we want to plot
-  vector<string> vars;
-  opts.get_option("plot", vars);
-  opts.delete_option("plot");
-  for (unsigned int i = 0; i < vars.size(); i++)
-    _plotvariables.insert(vars[i]);
-
 
   // create output directory
   path outpath(_outputdir, native);
@@ -542,6 +535,16 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
   InputParser parser(_inputfile);
 
+  string plotvars;
+  {
+    ModelOptions opts;
+    parser.get_simulation_options(opts);
+    plotvars = opts["plot"];
+    if (plotvars.size() > 0)
+      Messages::warning("The specification of plot variables in the"
+          "$Simulation section is deprecated. Put them into the model options");
+  }
+
   typedef multimap<const string, ModelStructure*> ModelsMap;
   typedef map<string, ModelOptions> OptionsMap;
 
@@ -565,7 +568,9 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   {
     ModelStructure* model_str = modit->second;
 
-    ModelOptions simopts(model_str->get_model_options());
+    ModelOptions simopts;
+    simopts.set_option("plot", plotvars);
+    simopts += model_str->get_model_options();
     const string& modelname = model_str->get_model_name();
 
     //

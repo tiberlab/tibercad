@@ -52,9 +52,9 @@ void BTEFourier::do_init()
   if ( _simul == NULL)
     throw InitFailedException("Could not find " + temp_simul);
 
-  var_map[JQX]=_simul->get_variable_id("Jqx");
-  var_map[JQY]=_simul->get_variable_id("Jqy");
-  var_map[JQZ]=_simul->get_variable_id("Jqz");
+  var_map[JQX]=_simul->get_solution_id("Jqx");
+  var_map[JQY]=_simul->get_solution_id("Jqy");
+  var_map[JQZ]=_simul->get_solution_id("Jqz");
 
 
 

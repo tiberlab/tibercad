@@ -88,18 +88,17 @@ inline double EnvelopFunctionApprox::get_electro_chem_potential(const Elem* elem
 
 
 //---------------------------------------------------------------------------------//
-void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values) 
+void EnvelopFunctionApprox::build_integrated_quantities (std::vector< double > &values)
 {
 
   
 
-  const set<string>::const_iterator varend(names.end());
   values.resize(0);
   
 
 
 
-  if (names.find("EigenEnergy") != varend)
+  if (plot_solution("EigenEnergy"))
   {
     unsigned int n = solution.size();
     values.resize(n);
@@ -110,7 +109,7 @@ void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::st
   }
 
 
-  if (names.find("Occupation") != varend)
+  if (plot_solution("Occupation"))
   {
     unsigned int n = solution.size();
     unsigned int m = values.size();
@@ -125,15 +124,14 @@ void EnvelopFunctionApprox::build_integrated_quantities (const std::set< std::st
 
 //---------------------------------------------------------------------------------//
 
-void EnvelopFunctionApprox::build_integrated_quantities_description (const std::set< std::string > &names,
-							 std::vector< std::string > &legend, 
-							 std::vector< std::string > &description)
+void EnvelopFunctionApprox::build_integrated_quantities_description (
+    std::vector< std::string > &legend,
+    std::vector< std::string > &description)
 {
 
   legend.resize(0);
 
-  const set<string>::const_iterator varend(names.end());
-  if (names.find("EigenEnergy") != varend)
+  if (plot_solution("EigenEnergy"))
   {
     unsigned int n = solution.size(); 
     legend.resize(n);
@@ -150,7 +148,7 @@ void EnvelopFunctionApprox::build_integrated_quantities_description (const std::
   description.resize(1);
   description[0] = "Eigen energy [eV]";
   
-  if (names.find("Occupation") != varend)
+  if (plot_solution("Occupation"))
   {
     unsigned int n = solution.size();
     unsigned int m = legend.size();
@@ -496,7 +494,7 @@ void EnvelopFunctionApprox::parse_options()
     if (poisson_equation == NULL)
       throw InitFailedException( "Unknown poisson model " + poisson_model_name);
 
-    potential_ID = poisson_equation->get_variable_id("ElPotential");
+    potential_ID = poisson_equation->get_solution_id("ElPotential");
 
   
 
@@ -506,14 +504,14 @@ void EnvelopFunctionApprox::parse_options()
 
     if (opt.particle == "el")
     {
-      electro_chem_pot_ID = poisson_equation->get_variable_id("QFermi_e");
-      band_edge_ID = poisson_equation->get_variable_id("Ec");
+      electro_chem_pot_ID = poisson_equation->get_solution_id("QFermi_e");
+      band_edge_ID = poisson_equation->get_solution_id("Ec");
       
     }
     else if (opt.particle=="hl")
     {
-      band_edge_ID = poisson_equation->get_variable_id("Ev");
-      electro_chem_pot_ID = poisson_equation->get_variable_id("QFermi_h");
+      band_edge_ID = poisson_equation->get_solution_id("Ev");
+      electro_chem_pot_ID = poisson_equation->get_solution_id("QFermi_h");
       
     }
     
@@ -583,7 +581,7 @@ void EnvelopFunctionApprox::parse_options()
     if (temperature_simulation == NULL)
       throw InitFailedException( "Unknown heat model " + heat_model_name);
 
-    temperature_ID = temperature_simulation->get_variable_id("temperature");
+    temperature_ID = temperature_simulation->get_solution_id("temperature");
 
   }
  

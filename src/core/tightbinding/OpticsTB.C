@@ -287,7 +287,7 @@ void OpticsTB::do_plot()
   const ModelOptions& mod_spectrum = get_options();
 
 
-  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+  const std::set< std::string >& plotvariables = get_plotvariables();
   if (plotvariables.find("optical_spectrum_k_0") != plotvariables.end())
   {
 

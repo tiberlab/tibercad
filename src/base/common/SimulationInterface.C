@@ -363,6 +363,14 @@ SimulationInterface::init(void) throw (InitFailedException)
     // insert an invalid solution descriptor
     _solution_descriptors.insert(make_pair(INVALID_ID, SolutionDescriptor()));
 
+    // setup the set of solution variables to be plotted
+    vector<string> vars;
+    get_option("plot", vars);
+    get_options().delete_option("plot");
+    for (unsigned int i = 0; i < vars.size(); i++)
+      _plotvariables.insert(vars[i]);
+
+
     _verbosity = get_option("verbose", _verbosity);
     do_init();
 
@@ -683,15 +691,14 @@ SimulationInterface::create_node_model(const ModelOptions&) const
 
 
 void
-SimulationInterface::get_integrated_quantities(
-    const std::set<std::string>& variables, std::vector<double>& values)
+SimulationInterface::get_integrated_quantities(std::vector<double>& values)
 {
 
   if (_environment != NULL)
     get_environment().prepare_for_solve();
 
   values.resize(0);
-  build_integrated_quantities(variables, values);
+  build_integrated_quantities(values);
 }
 
 
@@ -773,7 +780,7 @@ SimulationInterface::do_plot(void)
   //
   // nodal values
   //
-  get_nodal_results(get_control().get_plotvariables(), results, names);
+  get_nodal_results(get_plotvariables(), results, names);
   if (names.size() > 0)
   {
     string filename(get_name() + "_nodal" + suffix);
@@ -785,7 +792,7 @@ SimulationInterface::do_plot(void)
   //
   // elemental values
   //
-  get_elemental_results(get_control().get_plotvariables(), results, names);
+  get_elemental_results(get_plotvariables(), results, names);
   if (names.size() > 0)
   {
     string filename(get_name() + "_elemental" + suffix);
@@ -798,8 +805,7 @@ SimulationInterface::do_plot(void)
   // integrated properties
   //
   vector<string> description;
-  get_integrated_quantities_description(get_control().get_plotvariables(),
-                                        names, description);
+  get_integrated_quantities_description(names, description);
   if (names.size() > 0)
   {
     string filename(outdir + "/" + get_name() + suffix + ".dat");
@@ -814,7 +820,7 @@ SimulationInterface::do_plot(void)
         file << "#    * " << description[i] << endl;
       file << "#" << endl;
 
-      build_integrated_quantities(get_control().get_plotvariables(), results);
+      build_integrated_quantities(results);
 
       unsigned int nn = names.size();
       unsigned int nr = results.size();
@@ -1106,14 +1112,13 @@ SimulationInterface::get_nodal_results(const std::set<std::string>& variables,
 
 void
 SimulationInterface::get_integrated_quantities_description(
-    const std::set<std::string>& variables,
     std::vector<std::string>& legend,
     std::vector<std::string>& description)
 {
   legend.resize(0);
   description.resize(0);
-  if (variables.size() > 0)
-    build_integrated_quantities_description(variables, legend, description);
+  if (_plotvariables.size() > 0)
+    build_integrated_quantities_description(legend, description);
 }
 
 
@@ -1365,14 +1370,88 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
 
 
+
+
 void
-SimulationInterface::declare_solution(const std::string& name, ID id,
+SimulationInterface::get_solution(const DofObject*,
+    std::map<ID, std::vector<double> >&)
+{
+
+}
+
+
+void
+SimulationInterface::get_solution(const DofObject*,
+    const std::vector<Point>&,
+    std::map<ID, std::vector<double> >&)
+{
+
+}
+
+
+
+void
+SimulationInterface::get_solution_secure(const DofObject*,
+    std::map<ID, std::vector<double> >&)
+{
+}
+
+void
+SimulationInterface::get_solution_secure(const DofObject*,
+    const std::vector<Point>&,
+    std::map<ID, std::vector<double> >&)
+{
+}
+
+
+
+void
+SimulationInterface::get_solution_secure(const Elem*,
+        const std::set<ID>&, std::vector<std::map<ID, double> >&)
+{
+}
+
+
+void
+SimulationInterface::get_solution_secure(const Elem*,
+        const std::vector<Point>&, const std::set<ID>&,
+        std::vector<std::map<ID, double> >&)
+{
+}
+
+
+void
+SimulationInterface::build_integrated_quantities(std::vector<double>&)
+{
+}
+
+
+void
+SimulationInterface::build_integrated_quantities_description(
+        std::vector<std::string>&,
+        std::vector<std::string>&)
+{
+}
+
+
+
+void
+SimulationInterface::declare_solution_ext(const std::string& name, ID id,
     SolutionDescriptor::Type type, SolutionDescriptor::Location location,
-    const std::string& units)
+    const std::string& units, unsigned int n_comp)
 {
   _solution_descriptors.insert(
-      make_pair(id, SolutionDescriptor(name, id, type, location, units)));
+      make_pair(id, SolutionDescriptor(name, id, type, location,
+          units, n_comp)));
 }
+
+
+ID
+SimulationInterface::get_solution_id(const std::string& variable_name) const
+{
+  return convert_variable_name_to_id(variable_name);
+}
+
 
 
 

@@ -87,9 +87,7 @@ class Sweep : public SimulationInterface
      * This will build the integrated quantities from all its
      * simulations.
      */
-    virtual void build_integrated_quantities(
-        const std::set<std::string>& variables,
-        std::vector<double>& values);
+    virtual void build_integrated_quantities(std::vector<double>& values);
 
     
     /*! \copydoc SimulationInterface::build_integrated_quantities()
@@ -98,13 +96,8 @@ class Sweep : public SimulationInterface
      * from all its simulations.
      */
     virtual void build_integrated_quantities_description(
-        const std::set<std::string>& variables,
         std::vector<std::string>& legend,
         std::vector<std::string>& description);
-
-
-    //! Get the the variables for the characteristics plots
-    const std::set<std::string>& get_plotvariables(void) const;
 
 
     //! Get the innermost simulations
@@ -139,10 +132,6 @@ class Sweep : public SimulationInterface
 
     //! Write results to file after every step if true
     bool _plot_data;
-
-
-    //! The dependent variables we want to plot
-    std::set<std::string> _plotvariables;
 
 
     //! The ids of the remembered solutions

@@ -31,7 +31,7 @@ TemperatureInterface::set_simulation(const std::string& name)
       throw InitFailedException("No such simulation found: " + name);
 
     _id_set.clear();
-    _id = _simulation->get_variable_id(_variable_name);
+    _id = _simulation->get_solution_id(_variable_name);
 
     if (_id == INVALID_ID)
       throw InitFailedException("Simulation " + name +

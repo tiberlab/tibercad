@@ -214,15 +214,6 @@ class QuantumDensity : public KspaceIntegration
    
    virtual void do_solve();
 
-   //!only for bulk
-   virtual void  build_integrated_quantities (const std::set< std::string > &variables, std::vector< double > &values);
-
-   //!only for bulk
-   virtual void build_integrated_quantities_description(
-        const std::set<std::string>& variables,
-        std::vector<std::string>& legend,
-        std::vector<std::string>& description);
-
 
    virtual NumericVector< double > & 	do_get_solution_vector (void);
 

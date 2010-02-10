@@ -39,8 +39,6 @@
 
 // C++ includes
 #include <fstream>
-//#include <boost/iostreams/filtering_streambuf.hpp>
-//#include <boost/iostreams/filter/gzip.hpp>
 
 //
 // Module interface
@@ -1204,6 +1202,16 @@ DriftDiffusion::do_init(void)
 
   get_environment().update_boundary_element_map(real_contacts);
 
+  // declare solution variables
+  declare_solution(ElPotential, REAL, NODAL, "V");
+  declare_solution(EField, VECTOR, CELL, "V/cm");
+  declare_solution(Eg, REAL, CELL, "eV");
+
+  declare_solution(eDensity, REAL, NODAL, "cm^-3");
+  declare_solution(hDensity, REAL, NODAL, "cm^-3");
+
+  declare_solution(eMobility, REAL, NODAL, "cm^2/Vs");
+  declare_solution(hMobility, REAL, NODAL, "cm^2/Vs");
 
 }
 
@@ -4021,13 +4029,10 @@ DriftDiffusion::build_elemental_results(const set<string>& variables,
 
 
 void
-DriftDiffusion::build_integrated_quantities(const set<string>& names,
-    vector<double>& values)
+DriftDiffusion::build_integrated_quantities(vector<double>& values)
 {
-  const set<string>::const_iterator varend(names.end());
 
-  if ((names.find("ContactCurrents") != varend) ||
-      (names.find("current") != varend))
+  if (plot_solution("ContactCurrents") || plot_solution("current"))
   {
     calculate_currents();
 
@@ -4065,14 +4070,11 @@ DriftDiffusion::calculate_currents(void)
 
 void
 DriftDiffusion::build_integrated_quantities_description(
-    const set<string>& names,
     vector<string>& legend,
     vector<string>& description)
 {
-  const set<string>::const_iterator varend(names.end());
 
-  if ((names.find("ContactCurrents") != varend) ||
-      (names.find("current") != varend))
+  if (plot_solution("ContactCurrents") || plot_solution("current"))
   {
     legend.resize(_boundary_currents.size());
 

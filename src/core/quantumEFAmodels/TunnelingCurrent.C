@@ -128,7 +128,7 @@ void TunnelingCurrent::do_plot (void)
  
   suff = ".dat";
   
-  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+  const std::set< std::string >& plotvariables = get_plotvariables();
 
   if (plotvariables.find("tunneling_current") != plotvariables.end())
   {
@@ -739,7 +739,7 @@ void TunnelingCurrent::k_space_output(void)
   
 
   
-  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+  const std::set< std::string >& plotvariables = get_plotvariables();
 
   double voltage = (*applied_voltage_node)(0);
   ostringstream v_s;

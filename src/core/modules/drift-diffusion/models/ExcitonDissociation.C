@@ -29,7 +29,7 @@ ExcitonDissociation::do_init(void)
     throw InitFailedException(msg);
   }
 
-  _Rdiss_id = _exciton_sim->get_variable_id("dissociation");
+  _Rdiss_id = _exciton_sim->get_solution_id("dissociation");
 }
 
 

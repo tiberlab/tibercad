@@ -519,7 +519,7 @@ void ETB::do_plot(void){
   std::cout << "(TC) Calling ETB->do_plot() " << std::endl;
 #endif
 
-  const std::set<string>& plots = get_control().get_plotvariables();
+  const std::set<string>& plots = get_plotvariables();
 
   std::string outdir =get_environment().get_device()
                                        .get_control().get_output_dir();

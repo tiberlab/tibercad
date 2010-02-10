@@ -35,12 +35,12 @@ void ZbPiezoelectricModel::do_init ( )
   // e14 = get_parameter("e14", e14); 
 
   var_map.clear();
-  var_map[EXX]=_simul->get_variable_id("eps_xx");
-  var_map[EXY]=_simul->get_variable_id("eps_xy");
-  var_map[EXZ]=_simul->get_variable_id("eps_xz");
-  var_map[EYY]=_simul->get_variable_id("eps_yy");
-  var_map[EYZ]=_simul->get_variable_id("eps_yz");
-  var_map[EZZ]=_simul->get_variable_id("eps_zz");
+  var_map[EXX]=_simul->get_solution_id("eps_xx");
+  var_map[EXY]=_simul->get_solution_id("eps_xy");
+  var_map[EXZ]=_simul->get_solution_id("eps_xz");
+  var_map[EYY]=_simul->get_solution_id("eps_yy");
+  var_map[EYZ]=_simul->get_solution_id("eps_yz");
+  var_map[EZZ]=_simul->get_solution_id("eps_zz");
 
   std::map<ID,ID>::iterator      it(var_map.begin());
   std::map<ID,ID>::iterator      end(var_map.end());

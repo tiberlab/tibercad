@@ -33,15 +33,15 @@ StrainInterface::set_simulation(const std::string& name)
     _strain_ids.resize(9);
     _id_set.clear();
     
-    _strain_ids[0] = _simulation->get_variable_id("eps_xx");
-    _strain_ids[1] = _simulation->get_variable_id("eps_yy");
-    _strain_ids[2] = _simulation->get_variable_id("eps_zz");
-    _strain_ids[3] = _simulation->get_variable_id("eps_xy");
-    _strain_ids[4] = _simulation->get_variable_id("eps_yz");
-    _strain_ids[5] = _simulation->get_variable_id("eps_xz");
-    _strain_ids[6] = _simulation->get_variable_id("Px");
-    _strain_ids[7] = _simulation->get_variable_id("Py");
-    _strain_ids[8] = _simulation->get_variable_id("Pz");
+    _strain_ids[0] = _simulation->get_solution_id("eps_xx");
+    _strain_ids[1] = _simulation->get_solution_id("eps_yy");
+    _strain_ids[2] = _simulation->get_solution_id("eps_zz");
+    _strain_ids[3] = _simulation->get_solution_id("eps_xy");
+    _strain_ids[4] = _simulation->get_solution_id("eps_yz");
+    _strain_ids[5] = _simulation->get_solution_id("eps_xz");
+    _strain_ids[6] = _simulation->get_solution_id("Px");
+    _strain_ids[7] = _simulation->get_solution_id("Py");
+    _strain_ids[8] = _simulation->get_solution_id("Pz");
 
     for (int i = 0; i < 9; i++)
       if (_strain_ids[i] == INVALID_ID)

@@ -3885,7 +3885,7 @@ void  Macrostrain::write_atom_potential()
   if (poisson_equation != NULL)
   {
 
-    ID pot_ID = poisson_equation->get_variable_id("ElPotential");
+    ID pot_ID = poisson_equation->get_solution_id("ElPotential");
 
 
     potential_file.open( atom_potential_filename.c_str() );

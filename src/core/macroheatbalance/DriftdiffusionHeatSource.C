@@ -51,19 +51,19 @@ void  DriftDiffusionHeatSource::do_init(void)
 
 
   var_map.clear();
-  var_map[EJOULE]=_simul->get_variable_id("HJouleN");
+  var_map[EJOULE]=_simul->get_solution_id("HJouleN");
 
-  var_map[HJOULE]=_simul->get_variable_id("HJouleP");
+  var_map[HJOULE]=_simul->get_solution_id("HJouleP");
   //var_map[RECHEAT]=_simul->get_variable_id(rec_string);
-  var_map[RECHEAT]=_simul->get_variable_id("HRecomb");
-  var_map[EPELTH]=_simul->get_variable_id("HPelThomE");
-  var_map[HPELTH]=_simul->get_variable_id("HPelThomH");
-  var_map[WNX]=_simul->get_variable_id("PowerNx");
-  var_map[WNY]=_simul->get_variable_id("PowerNy");
-  var_map[WNZ]=_simul->get_variable_id("PowerNz");
-  var_map[WPX]=_simul->get_variable_id("PowerPx");
-  var_map[WPY]=_simul->get_variable_id("PowerPy");
-  var_map[WPZ]=_simul->get_variable_id("PowerPz");
+  var_map[RECHEAT]=_simul->get_solution_id("HRecomb");
+  var_map[EPELTH]=_simul->get_solution_id("HPelThomE");
+  var_map[HPELTH]=_simul->get_solution_id("HPelThomH");
+  var_map[WNX]=_simul->get_solution_id("PowerNx");
+  var_map[WNY]=_simul->get_solution_id("PowerNy");
+  var_map[WNZ]=_simul->get_solution_id("PowerNz");
+  var_map[WPX]=_simul->get_solution_id("PowerPx");
+  var_map[WPY]=_simul->get_solution_id("PowerPy");
+  var_map[WPZ]=_simul->get_solution_id("PowerPz");
 
 
    std::map<ID,ID>::iterator      it(var_map.begin());

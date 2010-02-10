@@ -13,7 +13,7 @@ void OptRecombinSpectrum::do_plot()
 {
  
   KspaceIntegration::do_plot();
-  const std::set< std::string >& plotvariables = get_control().get_plotvariables();
+  const std::set< std::string >& plotvariables = get_plotvariables();
   
   if (plotvariables.find("optical_spectrum") != plotvariables.end())
   {

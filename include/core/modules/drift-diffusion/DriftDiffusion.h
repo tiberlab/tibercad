@@ -143,6 +143,49 @@ class DriftDiffusion : public SimulationInterface
     };
 
 
+    //! The variables that can be provided
+    enum Solutions
+    {
+      ElPotential,      /*!< electric potential */
+      eQFermi,          /*!< electron electro-chemical potential */
+      hQFermi,          /*!< hole electro-chemical potential */
+      //CBANDEDGE,        /*!< conduction band edge */
+      //VBANDEDGE,        /*!< valence band edge */
+      //CBANDEDGEINTR,    /*!< intrinsic conduction band edge */
+      //VBANDEDGEINTR,    /*!< intrinsic valence band edge */
+      Eg,               /*!< band gap */
+      eDensity,         /*!< electron density */
+      hDensity,         /*!< hole density */
+      eMobility,        /*!< electron mobility */
+      hMobility,        /*!< hole mobility */
+      //SIGMAE,           /*!< electron conductivity */
+      //SIGMAH,           /*!< hole conductivity */
+      EField,           /*!< electric field vector */
+      CurrentDensity,   /*!< total electric current density */
+      eFlux,            /*!< electron flux */
+      hFlux,            /*!< hole flux */
+      eCurrent,         /*!< electron current density */
+      hCurrent,         /*!< hole current density */
+      eThElPower,       /*!< electron thermoelectric power */
+      hThElPower,       /*!< hole thermoelectric power */
+      NetRecomb,        /*!< total recombination rate */
+      eJoule,           /*!< electron Joule heat */
+      hJoule,           /*!< hole Joule heat */
+      //POWERNX,          /*!< electron power flux, x direction */
+      //POWERNY,          /*!< electron power flux, y direction */
+      //POWERNZ,          /*!< electron power flux, z direction */
+      //POWERPX,          /*!< hole power flux, x direction */
+      //POWERPY,          /*!< hole power flux, y direction */
+      //POWERPZ,          /*!< hole power flux, z direction */
+      //EPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
+      //HPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
+      //HRECOMB,          /*!< Recombination heat  */
+      //MODELS = 100,     /*!< base number for models */
+      //HEATMODELS = 1000 /*!< base number for heat models */
+
+    };
+
+
     //! The solver methods that can be used
     enum SolverMethod
     {
@@ -412,15 +455,12 @@ class DriftDiffusion : public SimulationInterface
 
 
     /*! \copydoc SimulationInterface::build_integrated_quantities() */
-    virtual void build_integrated_quantities(
-        const std::set<std::string>& names,
-        std::vector<double>& values);
+    virtual void build_integrated_quantities(std::vector<double>& values);
 
 
     /*! \copydoc SimulationInterface::build_integrated_quantities_description()
      */
     virtual void build_integrated_quantities_description(
-        const std::set<std::string>& names,
         std::vector<std::string>& legend,
         std::vector<std::string>& description);
 

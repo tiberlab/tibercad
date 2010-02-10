@@ -36,12 +36,11 @@ BoundaryProperties* MaxwellEquations::create_boundary_model(const ModelOptions& 
 }
 
 //=======================================================================================================//
-void 	MaxwellEquations::build_integrated_quantities (const std::set< std::string > &names, std::vector< double > &values)
+void 	MaxwellEquations::build_integrated_quantities (std::vector< double > &values)
 {
 
-  const set<string>::const_iterator varend(names.end());
   values.resize(0);
-  if (names.find("PhotonEnergy") != varend)
+  if (plot_solution("PhotonEnergy"))
   {
     unsigned int n = solution.size();
     values.resize(n);
@@ -58,15 +57,14 @@ void 	MaxwellEquations::build_integrated_quantities (const std::set< std::string
 
 }
 //=======================================================================================================//
-void 	MaxwellEquations::build_integrated_quantities_description (const std::set< std::string > &names,
+void 	MaxwellEquations::build_integrated_quantities_description (
 						 std::vector< std::string > &legend, 
 						 std::vector< std::string > &description)
 {
   legend.resize(0);
 
-  const set<string>::const_iterator varend(names.end());
 
-  if (names.find("PhotonEnergy") != varend)
+  if (plot_solution("PhotonEnergy"))
   {
     unsigned int n = solution.size(); 
     legend.resize(n);
