@@ -385,8 +385,8 @@ class SimulationInterface : public TiberModelObject
      *
      * Calls build_nodal_results()
      */
-    void get_nodal_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
+    void get_nodal_results(std::vector<double>& results,
+        std::vector<std::string>& legend);
 
 
     /*!
@@ -394,8 +394,8 @@ class SimulationInterface : public TiberModelObject
      *
      * Calls build_elemental_results()
      */
-    void get_elemental_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
+    void get_elemental_results(std::vector<double>& results,
+        std::vector<std::string>& legend);
 
 
     //! Build a vector with some integrated quantities

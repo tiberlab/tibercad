@@ -780,7 +780,7 @@ SimulationInterface::do_plot(void)
   //
   // nodal values
   //
-  get_nodal_results(get_plotvariables(), results, names);
+  get_nodal_results(results, names);
   if (names.size() > 0)
   {
     string filename(get_name() + "_nodal" + suffix);
@@ -792,7 +792,7 @@ SimulationInterface::do_plot(void)
   //
   // elemental values
   //
-  get_elemental_results(get_plotvariables(), results, names);
+  get_elemental_results(results, names);
   if (names.size() > 0)
   {
     string filename(get_name() + "_elemental" + suffix);
@@ -1063,15 +1063,14 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
 
 
 void
-SimulationInterface::get_elemental_results(
-    const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
+SimulationInterface::get_elemental_results(std::vector<double>& results,
+    std::vector<std::string>& legend)
 {
   results.resize(0);
   legend.resize(0);
-  if (variables.size() > 0)
+  if (_plotvariables.size() > 0)
   {
-    build_elemental_results(variables, results, legend);
+    build_elemental_results(_plotvariables, results, legend);
 
     unsigned int n = get_environment().get_mesh().n_active_elem();
 
@@ -1089,14 +1088,14 @@ SimulationInterface::get_elemental_results(
 
 
 void
-SimulationInterface::get_nodal_results(const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
+SimulationInterface::get_nodal_results(std::vector<double>& results,
+    std::vector<std::string>& legend)
 {
   results.resize(0);
   legend.resize(0);
-  if (variables.size() > 0)
+  if (_plotvariables.size() > 0)
   {
-    build_nodal_results(variables, results, legend);
+    build_nodal_results(_plotvariables, results, legend);
 
     unsigned int n = get_environment().get_mesh().n_nodes();
     if (results.size() != n * legend.size())
