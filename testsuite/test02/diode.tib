@@ -2,6 +2,13 @@
 
 $Device
 {
+
+  Options
+  {
+    meshfile = diode.msh
+    dimension = 1
+  }
+
    Region n_side 
    {
      reg_numb = 2
@@ -28,6 +35,7 @@ $Models
     options
     {
      simulation_name = driftdiffusion
+     plot = (Ec, Ev, Eg, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, ContactCurrent)
     }
 
      physical_model recombination
@@ -87,7 +95,6 @@ $Solver
     start = 0.0
     stop = 2.0
     steps = 40
-    plotvariable = current
     plot_data = true
   }
 }
@@ -105,14 +112,11 @@ $Physics
 
 $Simulation
 {
-  meshfile = diode.msh
-  dimension = 1
   temperature = 300
   verbose = 3
   solve = sweep
   resultpath = output
   output_format = grace
-  plot = (Ec, Ev, Eg, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current)
 }
 
 

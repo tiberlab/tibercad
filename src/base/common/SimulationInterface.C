@@ -357,6 +357,7 @@ SimulationInterface::init(void) throw (InitFailedException)
       _scaling.set_calc_mesh_units((_environment->get_device()).get_mesh_units());
 
       // plot the regions
+      // TODO misha wants it at the end of solve
       plot_regions();
     }
 
@@ -373,6 +374,8 @@ SimulationInterface::init(void) throw (InitFailedException)
 
     _verbosity = get_option("verbose", _verbosity);
     do_init();
+
+    // TODO we might make a list of the IDs of the solutions to be plotted
 
   }
 
@@ -1116,8 +1119,7 @@ SimulationInterface::get_integrated_quantities_description(
 {
   legend.resize(0);
   description.resize(0);
-  if (_plotvariables.size() > 0)
-    build_integrated_quantities_description(legend, description);
+  build_integrated_quantities_description(legend, description);
 }
 
 

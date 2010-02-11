@@ -6,6 +6,12 @@
 $Device
 {
 
+  Options
+  {
+    meshfile =  mesh_led_tri_msh.grd
+    mesh_units = 1e-6      
+    dimension = 2
+  }
 
 
  Region region_1  #pGaN_pcontact
@@ -202,6 +208,7 @@ $Models
     {
  
      simulation_name = driftdiffusion
+     plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, polarization)
 
      strain_simulation = strain
      relax_polarization = @polariz[0.0]
@@ -255,6 +262,7 @@ $Models
     options
     {
       simulation_name = strain
+      plot = (strain, polarization)
       physical_regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
     }
 
@@ -338,7 +346,6 @@ $Solver
     start = 0
     stop = 4  #5
     steps =  50 # 25
-    plotvariable = current
     plot_data = true
 
   }
@@ -405,9 +412,6 @@ $Physics
 $Simulation
 {
 
-  meshfile =  mesh_led_tri_msh.grd # led_quantum_msh.grd   # mesa_msh.grd
-  mesh_units = 1e-6      
-  dimension = 2
   temperature = 300
 #  solve = (strain,sweep)
 #  solve = (strain,driftdiffusion) # sweep
@@ -415,7 +419,6 @@ $Simulation
 
   #symmetry = cylindrical
   resultpath =  output # output_test_no_ox_no_alinn_relP  #output_test_alinn_no_pyro_relP  #input_siO2_str_noncyl
-  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, Occupation, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent)
   output_format = ise # vtk
 }
 

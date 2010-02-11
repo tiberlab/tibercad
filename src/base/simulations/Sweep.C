@@ -588,6 +588,7 @@ Sweep::build_integrated_quantities_description(
   for (int i = 0; i < num_sim; i++)
   {
     _simulations[i]->get_integrated_quantities_description(leg, desc);
+    cerr << _simulations[i]->get_name() << " " << leg.size() << endl;
     legend.insert(legend.end(), leg.begin(), leg.end());
     description.insert(description.end(), desc.begin(), desc.end());
   }

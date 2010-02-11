@@ -4032,7 +4032,8 @@ void
 DriftDiffusion::build_integrated_quantities(vector<double>& values)
 {
 
-  if (plot_solution("ContactCurrents") || plot_solution("current"))
+  if (plot_solution("ContactCurrent") || plot_solution("ContactCurrents")
+      || plot_solution("current"))
   {
     calculate_currents();
 
@@ -4074,7 +4075,8 @@ DriftDiffusion::build_integrated_quantities_description(
     vector<string>& description)
 {
 
-  if (plot_solution("ContactCurrents") || plot_solution("current"))
+  if (plot_solution("ContactCurrent") || plot_solution("ContactCurrents")
+      || plot_solution("current"))
   {
     legend.resize(_boundary_currents.size());
 

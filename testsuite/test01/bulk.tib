@@ -28,6 +28,7 @@ $Models
     options
     {
      simulation_name = driftdiffusion
+     plot = (Ec, Ev, ContactCurrent)
 
     }
 
@@ -75,7 +76,6 @@ $Solver
     start = 0.0
     stop = 1
     steps = 10
-    plotvariable = current
   }
 
 }
@@ -97,7 +97,6 @@ $Simulation
   solve = sweep
   resultpath = output
   output_format = grace
-  plot = (Ec, Ev)
 }
 
 

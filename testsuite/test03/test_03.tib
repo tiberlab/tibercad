@@ -2,6 +2,12 @@
 
 $Device
 {
+  Options
+  {
+    meshfile = test_03.msh
+    dimension = 1
+  }
+
    Region Air
    {
      reg_numb = 1
@@ -48,6 +54,7 @@ $Models
     { 
       simulation_name = tt
       physical_regions = all
+      plot = (thermal)
     }
 
     physical_model heat_source
@@ -78,6 +85,7 @@ $Models
     options
     {
      simulation_name = dd
+     plot = (ContactCurrent, Pn, Pp)
      
      thermal_simulation = tt
     }
@@ -163,13 +171,10 @@ $Physics
 $Simulation
 {
   
-  meshfile = test_03.msh
-  dimension = 1
   temperature = 300
   solve = sweep
   resultpath = output
   output_format = grace
-  plot = (ContactCurrents,Pn,Pp,thermal)
 }
 
 
