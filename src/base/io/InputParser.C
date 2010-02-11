@@ -1010,7 +1010,7 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
         else if  (  parse(str.c_str(), r_bracket_terminated ).full ) 
         {  
           //  cout << endl ;
-          cerr <<  "    ********Fine blocco !  " << block << endl ;
+      //    cerr <<  "    ********Fine blocco !  " << block << endl ;
           //   if (name == "a")
           break;
         }
