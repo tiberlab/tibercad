@@ -787,6 +787,11 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
   rule<> r_command_terminated  = *(space_p) >> (list_of_assignement )    >> 
     *(space_p) >> (ch_p("}")) >>  *(space_p) >> !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
 
+// -------   rule  for  a  simple   }   termination
+  rule<> r_bracket_terminated  = *(space_p) >> (ch_p("}")) >>  *(space_p) >> 
+    !(comment_p("#") >> *(anychar_p)) >>*(space_p)  ;
+
+
 
   //  ****************************************************************
 
@@ -1001,10 +1006,11 @@ void InputParser::parse_options(ifstream& in_stream, ModelOptions& region_option
         //  *******************************************************
 
         //   termination condition  !!!
-        else if  (parse(str.c_str(), ( *(space_p)>>ch_p("}")  >> *(anychar_p) >>*(space_p) )  , space_p).full) 
+    //    else if  (parse(str.c_str(), ( *(space_p)>>ch_p("}")  >> *(anychar_p) >>*(space_p) )  , space_p).full) 
+        else if  (  parse(str.c_str(), r_bracket_terminated ).full ) 
         {  
           //  cout << endl ;
-          //         cout <<  "Fine  !" << endl ;
+          cerr <<  "    ********Fine blocco !  " << block << endl ;
           //   if (name == "a")
           break;
         }
