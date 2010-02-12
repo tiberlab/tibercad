@@ -1443,7 +1443,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
 
 void
-SimulationInterface::get_solution(const DofObject*,
+SimulationInterface::get_solution(const Elem*,
     std::map<ID, std::vector<double> >&)
 {
 
@@ -1451,13 +1451,24 @@ SimulationInterface::get_solution(const DofObject*,
 
 
 void
-SimulationInterface::get_solution(const DofObject*,
+SimulationInterface::get_solution(const Elem*,
     const std::vector<Point>&,
     std::map<ID, std::vector<double> >&)
 {
 
 }
 
+
+void
+SimulationInterface::get_solution(const Atom*,
+    std::map<ID, std::vector<double> >&)
+{
+}
+
+void
+SimulationInterface::get_solution(std::map<ID, std::vector<double> >&)
+{
+}
 
 
 void

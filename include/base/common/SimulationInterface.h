@@ -272,7 +272,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get solutions on their ``natural'' location in the specified element
     /*!
-     * \param elem the pointer to the element (Elem or Atom)
+     * \param elem the pointer to the element
      * \param values a map to hold the values, the key IDs specify the solutions
      *  to be returned
      *
@@ -280,25 +280,58 @@ class SimulationInterface : public TiberModelObject
      * element (e.g. if the element is not in the simulation domain), the corresponding
      * vector in the map has size zero. Generally the size of the vector depends on the
      * type of the solution (more specifically on the number of locations in the element
-     * and on the number of solution components). See also the SolutionDescriptor class.
+     * and on the number of solution components).
+     * \see SolutionDescriptor
      */
-    void get_solution(const DofObject* elem, std::map<ID, std::vector<double> >& values);
+    void get_solution(const Elem* elem, std::map<ID, std::vector<double> >& values);
 
 
     //! Get solutions at specified points in an element
     /*!
-     * \param elem the pointer to the element (Elem or Atom)
+     * \param elem the pointer to the element
      * \param p the vector containing the points
      * \param values a map to hold the values, the key IDs specify the solutions
      *  to be returned
      *
      *  Solution values will be ordered in he vectors according the the order of the
      *  given points. The number of values per point depends on the type of solution
-     *  variable (see also get_solution(const DofObject*, std::map<ID, std::vector<double> >
+     *  variable (see also get_solution(const Elem*, std::map<ID, std::vector<double> >
      *  and the SolutionDescriptor class).
      */
-    void get_solution(const DofObject* elem, const std::vector<Point>& p,
+    void get_solution(const Elem* elem, const std::vector<Point>& p,
         std::map<ID, std::vector<double> >& values);
+
+
+    //! Get solutions associated to an atom
+    /*!
+     *
+     *\param atom a pointer to the atom
+     *\param values a map to hold the values, the key IDs specify the solutions
+     *  to be returned
+     *
+     * If a solution associated to a certain ID does not exist in the specified
+     * element (e.g. if the element is not in the simulation domain), the corresponding
+     * vector in the map has size zero. Generally the size of the vector depends on the
+     * type of the solution (more specifically on the number of locations in the element
+     * and on the number of solution components).
+     * \see SolutionDescriptor
+     */
+    void get_solution(const Atom* atom, std::map<ID, std::vector<double> >& values);
+
+
+    //! Get solutions that are not associated to elements or atoms
+    /*!
+     *
+     *\param values a map to hold the values, the key IDs specify the solutions
+     *  to be returned
+     *
+     * If a solution associated to a certain ID does not exist, the corresponding
+     * vector in the map has size zero. Generally the size of the vector depends on the
+     * type of the solution (more specifically on the number of solution components).
+     * \see SolutionDescriptor
+     */
+    void get_solution(std::map<ID, std::vector<double> >& values);
+
 
 
     //! Get solution values on the nodes of a specified element
