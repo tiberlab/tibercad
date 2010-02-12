@@ -208,7 +208,7 @@ $Models
     {
  
      simulation_name = driftdiffusion
-     plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, polarization)
+     plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, ContactCurrent, NetRecombination, eMob, hMob, polarization)
 
      strain_simulation = strain
      relax_polarization = @polariz[0.0]
