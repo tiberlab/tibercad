@@ -168,7 +168,7 @@ class DriftDiffusion : public SimulationInterface
       hCurrent,         /*!< hole current density */
       eThElPower,       /*!< electron thermoelectric power */
       hThElPower,       /*!< hole thermoelectric power */
-      NetRecomb,        /*!< total recombination rate */
+      NetRecombination, /*!< total recombination rate */
       eJoule,           /*!< electron Joule heat */
       hJoule,           /*!< hole Joule heat */
       //POWERNX,          /*!< electron power flux, x direction */

@@ -7,7 +7,7 @@
 #include "VTKIO.h"
 
 #include "SimulationOptions.h"
- 
+
 using namespace std;
 
 KspaceIntegration::KspaceIntegration(const ModelOptions& options)
@@ -49,37 +49,35 @@ void KspaceIntegration::do_plot()
       suff = ".plt";
     else if (format == "vtk")
       suff = ".vtk";
-    else 
-      suff = ".gmv"; 
+    else
+      suff = ".gmv";
 
-    const std::set< std::string >& plotvariables = get_plotvariables();
-
-    if (plotvariables.find("k-space") != plotvariables.end())
+    if (plot_solution("k-space"))
     {
       string filename(outdir + "/" + get_name() +
 		      "_k_space" + suffix + additional_name_suffix + suff);
 
-   
+
 
       vector<string> names(1,"value[atomicUnits]");
 
-   
+
 
       const vector<double> results = get_density_in_k_space();
-  
+
 
       if (format == "gmv")
 	GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
       else if (format == "ise")
 	TecplotIO_cell(get_k_mesh()).write_cell_data(filename, results, names);
       else if (format == "vtk")
-	TiberVTKIO(get_k_mesh()).write_elemental_data(filename, results, names); 
+	TiberVTKIO(get_k_mesh()).write_elemental_data(filename, results, names);
       else
       {
 	cout << "Output format not supported. Falling back to GMV." << endl;
 	GMVIO_cell(get_k_mesh()).write_ascii_cell_data(filename, results, names);
       }
-      
+
     }
   }
   //----------------------------------------------------------------------------
@@ -92,71 +90,71 @@ void KspaceIntegration::calculate_density()
   int verbose = SimulationOptions::verbose();
 
   const DofMap& dof_map = system->get_dof_map();
-    
+
   FEType fe_type = dof_map.variable_type(0);
 
- 
-    
+
+
   AutoPtr<FEBase> fe (FEBase::build(k_dim, fe_type));
 
   QGauss qrule (k_dim, THIRD);
   //QGauss qrule (k_dim, SEVENTH);
-    
+
   fe->attach_quadrature_rule (&qrule);
 
- 
-  
+
+
   const std::vector<Real>& JxW = fe->get_JxW();
-  
+
   const std::vector<Point>& q_point = fe->get_xyz();
-  
+
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
- 
- 
+
+
   MeshBase::element_iterator       it     = kmesh->active_elements_begin();
   const MeshBase::element_iterator it_el  = kmesh->active_elements_end();
- 
-   
 
- 
+
+
+
   double factor = 1.0;
   {
     for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
-    
+
     factor *= get_degeneracy_factor() * opt.degeneracy;
   }
 
- 
+
 
   std::vector<unsigned int> dof_indices;
 
 
- 
+
 
 
   for ( ; it != it_el ; ++it) //loop over k space elements
   {
     const Elem* elem = *it;
-    
+
 
     std::map<const Elem*, std::map <const Elem*, double> >::iterator it_k_elem;
-    
+
     it_k_elem = kspace_local_density.find(elem);
 
     if (it_k_elem == kspace_local_density.end())
-    {  
+    {
 
       map<const Elem*, double>  dens_at_k_elem;
 
       fe->reinit (elem);
 
       dof_map.dof_indices (elem, dof_indices, 0);
-    
+
       for (unsigned int qp=0; qp<qrule.n_points(); qp++)
       {//qp
-	
-      
+
+
 
 	map<const Elem*, double>  dens_at_k_point ;
 
@@ -172,38 +170,38 @@ void KspaceIntegration::calculate_density()
 
 
 	calculate_for_k_point( q_point[qp], dens_at_k_point, integrated_quantity);
-	
+
 
 	if (verbose > 2)
 	{
 	  std::cout << "Quantity used for mesh refinement  " << integrated_quantity <<  "\n";
 	  std::cout << flush ;
 	}
-	
+
 
 
 	kspace_integral[elem] += integrated_quantity * JxW[qp] * factor;
 
 
-	  
 
-	
+
+
 	map<const Elem*, double>::iterator   dens_at_k_node_it = dens_at_k_point.begin();
 	map<const Elem*, double>::iterator   dens_at_k_node_end = dens_at_k_point.end();
-	
-	
+
+
 
 	for ( ; dens_at_k_node_it != dens_at_k_node_end ; ++dens_at_k_node_it) //loop over real space elements
 	{
 	  const Elem* el = dens_at_k_node_it->first;
-	  
+
 	  dens_at_k_elem[el] += (dens_at_k_node_it->second)*JxW[qp] * factor;
 	}
-	  
- 
-	     
-	
-	
+
+
+
+
+
       }
 
       kspace_local_density.insert(pair<const Elem*,map<const Elem*, double> >(elem,dens_at_k_elem));
@@ -212,13 +210,13 @@ void KspaceIntegration::calculate_density()
 
   //--------------------------------------------------------------------------//
   {//real space density calculation
-  
-  
-   
+
+
+
 
     MeshBase::element_iterator       it_k_space     = kmesh->active_elements_begin();
     const MeshBase::element_iterator it2  = kmesh->active_elements_end();
-    
+
 
     for ( ; it_k_space != it2 ; ++it_k_space)
     {
@@ -240,7 +238,7 @@ void KspaceIntegration::calculate_density()
 
 
   }
-  
+
 
 
   //--------------------------------------------------------------------------//
@@ -251,9 +249,9 @@ void KspaceIntegration::calculate_density()
 //-------------------------------------------------------------------------------//
 void KspaceIntegration::calculate_convergent_density()
 {
-  
 
-  
+
+
 
   int verbose = SimulationOptions::verbose();
 
@@ -263,92 +261,92 @@ void KspaceIntegration::calculate_convergent_density()
   eq = new EquationSystems(*kmesh);
 
   eq->add_system<LinearImplicitSystem> ("k-integration");
-  
+
   system = &(eq->get_system<LinearImplicitSystem> ("k-integration"));
-  
+
   system->add_variable("u", integration_order);
 
-  
- 
 
-  
+
+
+
   eq->init();
 
-  
+
   kspace_local_density.clear();
- 
+
   kspace_integral.clear();
 
   volume.clear();
- 
- 
+
+
   real_space_density.clear();
 
   calculate_volumes();
 
   calculate_density();
 
- 
+
 
   double x1;
   double x2;
- 
-  
 
-  if (opt.k_domain_refinement) 
+
+
+  if (opt.k_domain_refinement)
   {
     //----------------------------------------
     //refinement block
     //---------------------------------------
-     
-     
+
+
     if (verbose > 1)
     {
       std::cout << "Simulation " << get_name() << " " << "is performing k space refinement\n";
       cout.flush();
-    } 
+    }
 
     MeshRefinement mesh_refinement(*kmesh);
 
-      
+
     double norm_of_error = opt.relative_accuracy;
 
-    
- 
-    for ( ; (norm_of_error >=  opt.relative_accuracy) ;  ) 
+
+
+    for ( ; (norm_of_error >=  opt.relative_accuracy) ;  )
     {//for
 
       if (opt.uniform_refinement)
 	mesh_refinement.uniformly_refine(1);
       else
       {
-	      
 
-	      
-	ErrorVector error = ErrorVector(kmesh->n_elem(), kmesh);  
-	
-	      
+
+
+	ErrorVector error = ErrorVector(kmesh->n_elem(), kmesh);
+
+
 	Tensor2Gen RotM_inv =  transform_matrix.transpose() ;
-	      
+
 	rotate_mesh(kmesh,  RotM_inv );
-	
+
 	estimate_error_for_refinement(error);
-	
+
 	rotate_mesh(kmesh, transform_matrix);
-	      
+
 
         mesh_refinement.refine_fraction() = opt.refine_fraction;
 
 	mesh_refinement.max_h_level() = 10;
 
 	mesh_refinement.coarsen_fraction() = 0.0;
-	
+
 
 
 	if (verbose > 2)
-	{	      
+	{
 	  cout << "Error vector has " << error.size() << "\n";
-	  
+
 	  unsigned int n = error.size();
 
 	  for (unsigned int i = 0; i < n; i++ )
@@ -363,9 +361,9 @@ void KspaceIntegration::calculate_convergent_density()
 
 	mesh_refinement.flag_elements_by_error_fraction (error);
 
-	      
+
 	mesh_refinement.refine_and_coarsen_elements();
-	     
+
 
 	if (verbose > 1)
 	{
@@ -397,15 +395,15 @@ void KspaceIntegration::calculate_convergent_density()
 	  std::cout << "k space grid has " << kmesh->n_nodes() << " nodes " << flush;
 	  std::cout <<  "density error " << norm_of_error << endl << flush;
 
-	  
+
 	}
-	      
+
       }
 
     }
 
-    
-      
+
+
 
 
 
@@ -421,7 +419,7 @@ void KspaceIntegration::parse_options( )
 {
 
   const ModelOptions& mod_opt = get_options();
- 
+
 
 
   opt.uniform_refinement      = mod_opt.get_option("uniform_refinement",false);
@@ -461,31 +459,31 @@ void KspaceIntegration::do_init(void)
 //--------------------------------------------------------------------------------------//
 void KspaceIntegration::estimate_error_for_refinement(ErrorVector& error)
 {
-  
+
 
 
   std::fill (error.begin(), error.end(), 0.0);
 
- 
+
   MeshBase::const_element_iterator       elem_it1  = kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator elem_end1 = kmesh->active_elements_end(); 
-  
+  const MeshBase::const_element_iterator elem_end1 = kmesh->active_elements_end();
+
   for (; elem_it1 != elem_end1; ++elem_it1)
   {
 
-   
+
     const Elem* el = *elem_it1;
     const unsigned int el_id = el->id();
 
 
     error[el_id] = abs(kspace_integral[el]); //test
-    
-  
+
+
 
   }
 
 
- 
+
 
 }
 
@@ -493,25 +491,25 @@ void KspaceIntegration::estimate_error_for_refinement(ErrorVector& error)
 
 void KspaceIntegration::calculate_volumes(void)
 {
- 
-  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end(); 
-  
 
- 
+  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
+  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end();
+
+
+
 
   for (; elem_it != elem_end; ++elem_it)
   {
- 
+
     const Elem* el = *elem_it;
-   
+
     if (volume.find(el) == volume.end())
-    {	         
-      volume[el] = el->volume(); 
+    {
+      volume[el] = el->volume();
     }
   }
-  
-  
+
+
 }
 //-------------------------------------------------------------------------------
 unsigned int KspaceIntegration::how_many_elements_to_do()
@@ -546,11 +544,11 @@ double  KspaceIntegration::estimate_error(void)
     const Elem* el = it->first;
 
     double volume;
-    
-    if (el != NULL) 
+
+    if (el != NULL)
       volume =  el->volume();
     else
-      volume = 1.0; // bulk calculus 
+      volume = 1.0; // bulk calculus
 
     t1 += real_space_density[el] * real_space_density[el] * volume;
 
@@ -567,11 +565,11 @@ double  KspaceIntegration::estimate_error(void)
 //=================================================================//
 std::vector<double>   KspaceIntegration::get_density_in_k_space(void)  const
 {
-  
+
   vector<double> result ;
 
   MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end(); 
+  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end();
 
   unsigned int n_active_elements = 0;
 
@@ -579,34 +577,34 @@ std::vector<double>   KspaceIntegration::get_density_in_k_space(void)  const
   {
     n_active_elements++;
   }
-    
-    
- 
+
+
+
 
   result.resize( n_active_elements );
   elem_it  = kmesh->active_elements_begin();
-    
+
   unsigned int j = 0;
   for ( ; elem_it !=  elem_end; ++elem_it )
   {
     const Elem* el = *elem_it;
-   
+
 
     map <const Elem*, double >::const_iterator it1 = kspace_integral.find(el);
-    
+
 
     map <const Elem*, double >::const_iterator it2 = volume.find(el);
 
 
- 
+
 
     result[j] = it1->second / it2->second;
-    
+
 
     j++;
   }
 
 
   return(result);
- 
+
 }

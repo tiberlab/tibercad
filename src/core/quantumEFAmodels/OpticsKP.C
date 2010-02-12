@@ -36,7 +36,7 @@ PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
   kp8x8options["model"] = "kp";
   kp8x8options["kp_model"] = "8x8";
 
-  EFAbulkModel* model = dynamic_cast<EFAbulkModel*> 
+  EFAbulkModel* model = dynamic_cast<EFAbulkModel*>
     ( PhysicalModelInterface::create("EFAmodel", kp8x8options ) );
 
   if (model == NULL)
@@ -47,7 +47,7 @@ PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
 }
 
 //===============================================//
-BoundaryProperties* OpticsKP::create_boundary_model(const ModelOptions& options) const 
+BoundaryProperties* OpticsKP::create_boundary_model(const ModelOptions& options) const
  throw (ModelErrorException)
 {
 
@@ -96,7 +96,7 @@ void OpticsKP::parse_options()
   }
 
   _final_eigen_state_numbers.clear();
-  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& fin_solution = 
+  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& fin_solution =
     final_state_model->get_solution();
 
   {
@@ -381,7 +381,7 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
-      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]] 
+      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]]
 	             - fs_eigen_values[ _final_eigen_state_numbers[j]];
 
 
@@ -393,8 +393,8 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
 
 
-      Complex Me = P_matrix[0][i][j] * polariz(1) + 
-	           P_matrix[1][i][j] * polariz(2) +  
+      Complex Me = P_matrix[0][i][j] * polariz(1) +
+	           P_matrix[1][i][j] * polariz(2) +
 	           P_matrix[2][i][j] * polariz(3);
 
 
@@ -409,7 +409,7 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 
         double En = elem->centroid()(0);
 
-        double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)  
+        double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)
                             + (0.5*Gamma)*(0.5*Gamma)) * Hartree;
 	// Note(alex): the division by Hartree seems wrong. Lorenzian is in 1/eV, so transformation
 	// should be "Lorenzian * Hartree"
@@ -419,14 +419,14 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
         double omega = trans_energy/Hartree;
 
         //This is the right formula, as f1 is electron occupation probability and f2 is hole occupation probability.
-        //Note that it differs from usual literature where usually f1 and f2 states initial state and final state 
+        //Note that it differs from usual literature where usually f1 and f2 states initial state and final state
 	//occupation probability, so it's related to electrons and it becomes f1*(1-f2)
 
         spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
-	
+
 	//Note(alex): This factor 1/(2*PI*PI) was changed to 1/(2*PI). nr still missing
         //
-	//According to Chuang's book the recombination rate should contain a pre-factor 
+	//According to Chuang's book the recombination rate should contain a pre-factor
 	//(including 2 for spin sum and 2 for polarization and 4 Pi for angle integration)
 	//
 	//    nr^2 w^2           pi e^2      2       8 nr w e^2 c
@@ -437,14 +437,14 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
 	// we get the following prefactor (in which V has been removed to get total power emitted):
 	//
 	//     8 nr (hbar w)^2 e^2/(4 pi e0)
-	//  = ------------------------------   
+	//  = ------------------------------
 	//             (hbar c)^3  hbar
 	//
-	//  Expressed in atomic units, hbar=1, e=1, 4 pi e0=1, c=1/fine_struct. 
-	//  
+	//  Expressed in atomic units, hbar=1, e=1, 4 pi e0=1, c=1/fine_struct.
+	//
 	//  So the formula above, multiplied by 4*Pi for angle integration, and a factor of 4 for spin/pol deg
 	//  agrees to Chuang's only if the factor is nr/(2*PI) rather than 1/(2*PI*PI).
-	//  
+	//
 
       }
 
@@ -1179,8 +1179,7 @@ void OpticsKP::do_plot()
   }
 
 
-  const std::set< std::string >& plotvariables = get_plotvariables();
-  if (plotvariables.find("optical_spectrum_k_0") != plotvariables.end())
+  if (plot_solution("optical_spectrum_k_0"))
   {
     string filename(get_name() +
         "_spectrum_k_0" + get_control().get_filename_suffix());

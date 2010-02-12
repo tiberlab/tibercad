@@ -11,11 +11,10 @@ using namespace std;
 
 void OptRecombinSpectrum::do_plot()
 {
- 
+
   KspaceIntegration::do_plot();
-  const std::set< std::string >& plotvariables = get_plotvariables();
-  
-  if (plotvariables.find("optical_spectrum") != plotvariables.end())
+
+  if (plot_solution("optical_spectrum"))
   {
      string filename(get_name() + "_spectrum" +
          get_control().get_filename_suffix());
@@ -44,7 +43,7 @@ void OptRecombinSpectrum::do_plot()
        area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
      }
 
-     vector<string> names(1,"power_density[W/eV" + dimension + "]"); 
+     vector<string> names(1,"power_density[W/eV" + dimension + "]");
 
      vector<double> results;
 
@@ -62,7 +61,7 @@ void OptRecombinSpectrum::do_plot()
          value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
          value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
 	 value /= area_dim_factor ; //[J/(eV*second)/((cm)^kdim)]
-	 
+
 
 
        }
@@ -70,17 +69,17 @@ void OptRecombinSpectrum::do_plot()
        else
          cerr << "WARNING!!!!";
 #endif
-       
+
 
 
        results.push_back(value);
 
-     } 
+     }
 
-     
-    
+
+
      data_output.write_cell_data(filename, results, names);
-    
+
 
 
   }
@@ -97,10 +96,10 @@ OptRecombinSpectrum::OptRecombinSpectrum(const ModelOptions& options)
   _quantum_model_initial_state = NULL;
   _quantum_model_final_state = NULL ;
 
- 
+
   _optical_model = NULL;
 
- 
+
   _energy_mesh = NULL;
 
 }
@@ -116,18 +115,18 @@ OptRecombinSpectrum::~OptRecombinSpectrum()
 
 
 //================================================================//
-void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point, 
-                                                std::map<const Elem*, double>& density, 
+void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
+                                                std::map<const Elem*, double>& density,
                                                 double& integrated_quantity)
 {
 
 
-  
+
 
   vector<double> k_vector(3, 0.0);
-  
 
- 
+
+
 
   k_vector[0] = k_point(0);
   k_vector[1] = k_point(1);
@@ -157,14 +156,14 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
 
   _quantum_model_final_state->solve(); //calculate eigenstates
 
-  _optical_model->solve(); //calculate matrix elements of P operator  
+  _optical_model->solve(); //calculate matrix elements of P operator
 
- 
+
 
 
   std::map<const Elem*, double>& spectrum = density;
 
- 
+
   _optical_model->calculate_spectrum(*_energy_mesh, opt.Gamma, opt.polariz,  spectrum );
 
   //for integrated quantity I take a sum of the map
@@ -192,15 +191,15 @@ void OptRecombinSpectrum::do_init( )
 
   //---------------------- options OptSpectrum -----------------------
   //  take  the  name of  Optics  simulation used in  Opt Spectrum
- 
-  
-  std::string optics_simul_name ; 
+
+
+  std::string optics_simul_name ;
   if (mod_spectrum.find_option("optical_matr_elem_model"))
   {
     optics_simul_name = mod_spectrum.get_option("optical_matr_elem_model","");
     _optical_model   = dynamic_cast<  OpticsKP* > ( find_simulation(optics_simul_name )   );
     if ( _optical_model== NULL)
-      throw  InitFailedException("Optical Spectrum:optical_matr_elem_model  " + 
+      throw  InitFailedException("Optical Spectrum:optical_matr_elem_model  " +
                                  optics_simul_name + " does not exist");
   }
   else
@@ -208,27 +207,27 @@ void OptRecombinSpectrum::do_init( )
     throw  InitFailedException("Optical Spectrum: optical_matr_elem_model   has to be specified");
   }
 
- 
+
   if (!_optical_model->is_initialized())
     _optical_model->init();
 
 
-  
+
 
  //---------quantum models for initial and final states (from OpticsKP module)---------------------------------
   _quantum_model_initial_state    = _optical_model->get_initial_state_model();
 
   _quantum_model_final_state    = _optical_model->get_final_state_model();
- 
 
- 
+
+
   if (mod_spectrum.find_option("Emin"))
     opt.Emin = mod_spectrum.get_option("Emin", 0.0);
   else
      throw InitFailedException("Optical Spectrum: Emin must be defined\n");
 
 
-  
+
   if (mod_spectrum.find_option("Emax"))
     opt.Emax = mod_spectrum.get_option("Emax", 0.0);
   else
@@ -245,21 +244,21 @@ void OptRecombinSpectrum::do_init( )
 
 
   if (opt.dE <= 0)  throw InitFailedException("Optical Spectrum: dE <= 0");
-   
-  
-  
-  unsigned int num_nodes = (int)((opt.Emax - opt.Emin)/opt.dE) + 1; 
+
+
+
+  unsigned int num_nodes = (int)((opt.Emax - opt.Emin)/opt.dE) + 1;
 
   _energy_mesh = new Mesh(1);
-  
-  MeshTools::Generation::build_cube (*_energy_mesh, 
-				     num_nodes, 0, 0, 
-				     opt.Emin, opt.Emax, 
-				     0, 0, 
+
+  MeshTools::Generation::build_cube (*_energy_mesh,
+				     num_nodes, 0, 0,
+				     opt.Emin, opt.Emax,
+				     0, 0,
 				     0, 0,
 				     EDGE2);
 
- 
+
 }
 
 
@@ -281,7 +280,7 @@ void OptRecombinSpectrum::parse_options( )
     opt.polariz(1) = polariz[0];
     opt.polariz(2) = polariz[1];
     opt.polariz(3) = polariz[2];
-    
+
     if (norm (opt.polariz) != 0)
       opt.polariz = opt.polariz/norm( opt.polariz );
     else
@@ -296,13 +295,13 @@ void OptRecombinSpectrum::parse_options( )
     job = RECOMBINATION;
   else if (job_name == "absorption")
     job = ABSORPTION;
- 
+
   else
-    throw InitFailedException( "OptSpectrum: Incorrect process: " + job_name );  
+    throw InitFailedException( "OptSpectrum: Incorrect process: " + job_name );
 
 
 
- 
+
 
 
 

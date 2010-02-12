@@ -27,7 +27,7 @@ struct SolutionDescriptor
     //! The spatial association
     enum Location
     {
-        NODAL,  //!< located on the element nodes
+        NODES,  //!< located on the element nodes
         CELL,   //!< located on the cell
         ATOM,   //!< associated to an atom
         GLOBAL  //!< no spatial association
@@ -70,6 +70,10 @@ struct SolutionDescriptor
 
     //! Get the number of components
     unsigned int n_components(void) const { return _n_comp; }
+
+    //! Return \c true if the quantity is located on the mesh
+    bool on_mesh(void) const;
+
 
   private:
 
@@ -130,5 +134,11 @@ SolutionDescriptor::SolutionDescriptor(const std::string& name, ID id,
   }
 }
 
+inline
+bool
+SolutionDescriptor::on_mesh(void) const
+{
+  return ((_location == NODES) || (_location == CELL));
+}
 
 #endif /* _SOLUTIONDESCRIPTOR_H_ */

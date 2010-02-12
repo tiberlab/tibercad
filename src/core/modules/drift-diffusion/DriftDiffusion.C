@@ -1203,16 +1203,30 @@ DriftDiffusion::do_init(void)
   get_environment().update_boundary_element_map(real_contacts);
 
   // declare solution variables
-  declare_solution(ElPotential, REAL, NODAL, "V");
+  declare_solution(ElPotential, REAL, NODES, "V");
   declare_solution(EField, VECTOR, CELL, "V/cm");
   declare_solution(Eg, REAL, CELL, "eV");
 
-  declare_solution(eDensity, REAL, NODAL, "cm^-3");
-  declare_solution(hDensity, REAL, NODAL, "cm^-3");
+  declare_solution(eDensity, REAL, NODES, "cm^-3");
+  declare_solution(hDensity, REAL, NODES, "cm^-3");
 
-  declare_solution(eMobility, REAL, NODAL, "cm^2/Vs");
-  declare_solution(hMobility, REAL, NODAL, "cm^2/Vs");
+  declare_solution(eMobility, REAL, NODES, "cm^2/(V*s)");
+  declare_solution(hMobility, REAL, NODES, "cm^2/(V*s)");
 
+  declare_solution(CurrentDensity, VECTOR, CELL, "A/cm^2");
+  declare_solution(eCurrent, VECTOR, CELL, "A/cm^2");
+  declare_solution(hCurrent, VECTOR, CELL, "A/cm^2");
+  declare_solution(eFlux, VECTOR, CELL, "1/(s*cm^2)");
+  declare_solution(hFlux, VECTOR, CELL, "1/(s*cm^2)");
+
+  declare_solution(eThElPower, REAL, NODES, "?");
+  declare_solution(hThElPower, REAL, NODES, "?");
+
+  declare_solution(NetRecombination, REAL, NODES, "1/(s*cm^3)");
+  declare_solution(eJoule, REAL, NODES, "W/cm^3");
+  declare_solution(hJoule, REAL, NODES, "W/cm^3");
+
+  // TODO add the single recombination rates
 }
 
 

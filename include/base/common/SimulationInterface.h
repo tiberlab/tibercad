@@ -38,6 +38,7 @@ class Material;
 class MeshBase;
 class Point;
 class DofObject;
+class Atom;
 
 //! The base class for any simulation
 class SimulationInterface : public TiberModelObject
@@ -247,6 +248,16 @@ class SimulationInterface : public TiberModelObject
      * \return the ID, if \c solution_name exists, \c INVALID_ID otherwise
      */
     ID get_solution_id(const std::string& solution_name) const;
+
+
+    //! Get the descriptor of a solution variable ID
+    /*!
+     *
+     * \param id the id of the solution variable
+     * \return the descriptor (which can have the ID \c INVALID_ID if
+     *   \c id does not exist)
+     */
+    const SolutionDescriptor& get_solution_descriptor(ID id) const;
 
 
     //! Get the descriptor of a solution variable
@@ -626,11 +637,15 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get the set of plotvariables
-    const std::set<std::string>& get_plotvariables(void) const;
+    //const std::set<std::string>& get_plotvariables(void) const;
 
 
     //! Checks if a solution variable should be plotted
     bool plot_solution(const std::string& name) const;
+
+
+    //! Checks if a solution variable with given ID should be plotted
+    bool plot_solution(ID id) const;
 
 
     //! Do a plot
@@ -641,6 +656,7 @@ class SimulationInterface : public TiberModelObject
      * sweeps, selfconsitent solvers etc.
      */
     virtual void do_plot(void);
+    virtual void do_plot_old(void);
 
 
     //! Plots the regions active for this simulation
@@ -829,29 +845,54 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get solutions on their ``natural'' location in the specified element
-     /*!
-      * \param elem the pointer to the element (Elem or Atom)
-      * \param values a map to hold the values, the key IDs specify the solutions
-      *  to be returned
-      *
-      * \pre \c elem is an active element/atom of this simulation
-      */
-     virtual void get_solution_secure(const DofObject* elem,
-         std::map<ID, std::vector<double> >& values);
+    /*!
+     * \param elem the pointer to the element
+     * \param values a map to hold the values, the key IDs specify the solutions
+     *  to be returned
+     *
+     * \pre \c elem is an active element of this simulation
+     * \pre all ids refer to solutions located on an element
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        std::map<ID, std::vector<double> >& values);
 
 
-     //! Get solutions at specified points in an element
-     /*!
-      * \param elem the pointer to the element (Elem or Atom)
-      * \param p the vector containing the points
-      * \param values a map to hold the values, the key IDs specify the solutions
-      *  to be returned
-      *
-      * \pre \c elem is an active element/atom of this simulation
-      */
-     virtual void get_solution_secure(const DofObject* elem,
-         const std::vector<Point>& p,
-         std::map<ID, std::vector<double> >& values);
+    //! Get solutions at specified points in an element
+    /*!
+     * \param elem the pointer to the element
+     * \param p the vector containing the points
+     * \param values a map to hold the values, the key IDs specify the solutions
+     *  to be returned
+     *
+     * \pre \c elem is an active element of this simulation
+     * \pre all ids refer to solutions located on an element
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        const std::vector<Point>& p,
+        std::map<ID, std::vector<double> >& values);
+
+
+    //! Get solutions on an atom
+    /*!
+     * \param atom the pointer to the atom
+     * \param values a map to hold the values, the key IDs specify the solutions
+     *  to be returned
+     *
+     * \pre \c atom is an atom of this simulation
+     * \pre all ids refer to solutions associated to an atom
+     */
+    virtual void get_solution_secure(const Atom* atom,
+        std::map<ID, std::vector<double> >& values);
+
+
+    //! Get solutions not located on the mesh or the atoms
+    /*!
+     * \param values a map to hold the values, the key IDs specify the solutions
+     *  to be returned
+     *
+     *  \pre all ids refer to mesh independent solutions
+     */
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
 
     //! Get solution values on the nodes of a specified element
@@ -1105,6 +1146,10 @@ class SimulationInterface : public TiberModelObject
     std::set<std::string> _plotvariables;
 
 
+    //! The set of all variable IDs to be plotted
+    std::set<ID> _plotvariable_ids;
+
+
     //! The map containing all simulations with their ID
     static SimulationMap _simulation_map;
 
@@ -1262,20 +1307,29 @@ SimulationInterface::is_solved(void) const
   return _is_solved;
 }
 
-
+/*
 inline
 const std::set<std::string>&
 SimulationInterface::get_plotvariables(void) const
 {
   return _plotvariables;
 }
-
+*/
 
 inline
 bool
 SimulationInterface::plot_solution(const std::string& name) const
 {
+  //return plot_solution(convert_variable_name_to_id(name));
   return _plotvariables.count(name);
+}
+
+
+inline
+bool
+SimulationInterface::plot_solution(ID id) const
+{
+  return _plotvariable_ids.count(id);
 }
 
 

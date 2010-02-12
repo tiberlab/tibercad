@@ -357,7 +357,7 @@ SimulationInterface::init(void) throw (InitFailedException)
       _scaling.set_calc_mesh_units((_environment->get_device()).get_mesh_units());
 
       // plot the regions
-      // TODO misha wants it at the end of solve
+      // TODO Misha wants it at the end of solve
       plot_regions();
     }
 
@@ -365,17 +365,23 @@ SimulationInterface::init(void) throw (InitFailedException)
     _solution_descriptors.insert(make_pair(INVALID_ID, SolutionDescriptor()));
 
     // setup the set of solution variables to be plotted
-    vector<string> vars;
-    get_option("plot", vars);
+    vector<string> plotvars;
+    get_option("plot", plotvars);
     get_options().delete_option("plot");
-    for (unsigned int i = 0; i < vars.size(); i++)
-      _plotvariables.insert(vars[i]);
+    for (unsigned int i = 0; i < plotvars.size(); i++)
+      _plotvariables.insert(plotvars[i]);
 
 
     _verbosity = get_option("verbose", _verbosity);
     do_init();
 
-    // TODO we might make a list of the IDs of the solutions to be plotted
+    // make a list of the IDs of the solutions to be plotted
+    for (unsigned int i = 0; i < plotvars.size(); i++)
+    {
+      ID id = get_solution_id(plotvars[i]);
+      if (id != INVALID_ID)
+        _plotvariable_ids.insert(id);
+    }
 
   }
 
@@ -766,6 +772,59 @@ SimulationInterface::plot_regions(void)
 void
 SimulationInterface::do_plot(void)
 {
+  // for now call the old implementation
+  do_plot_old();
+
+  // the container for the solution values
+  map<ID, vector<double> > solutions;
+
+  // we prepare it to contain all mesh localized solution variables
+  set<ID>::const_iterator varit(_plotvariable_ids.begin());
+  for ( ; varit != _plotvariable_ids.end(); ++varit)
+  {
+    const SolutionDescriptor& descr = get_solution_descriptor(*varit);
+    if (descr.on_mesh())
+      solutions.insert(make_pair(descr.id(), vector<double>(0)));
+  }
+
+
+  const MeshBase& mesh = get_mesh();
+
+  //MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
+  //const MeshBase::const_element_iterator end = mesh.active_local_elements_end();
+  MeshBase::const_element_iterator it = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end = mesh.active_elements_end();
+
+  // first gather subdomain infos
+  map<ID, size_t> n_elem;
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    ID subdomain = elem->subdomain_id();
+
+    n_elem[subdomain]++;
+
+  }
+
+
+  for (it = mesh.active_elements_begin(); it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    ID subdomain = elem->subdomain_id();
+
+    get_solution_secure(elem, solutions);
+
+  }
+}
+
+
+
+
+void
+SimulationInterface::do_plot_old(void)
+{
 
   const Device& dev = get_environment().get_device();
 
@@ -1071,9 +1130,14 @@ SimulationInterface::get_elemental_results(std::vector<double>& results,
 {
   results.resize(0);
   legend.resize(0);
-  if (_plotvariables.size() > 0)
+  if (_plotvariable_ids.size() > 0)
   {
-    build_elemental_results(_plotvariables, results, legend);
+    set<string> plotvariables;
+    set<ID>::const_iterator it(_plotvariable_ids.begin());
+    for ( ; it != _plotvariable_ids.end(); ++it)
+      plotvariables.insert(get_solution_descriptor(*it).name());
+
+    build_elemental_results(plotvariables, results, legend);
 
     unsigned int n = get_environment().get_mesh().n_active_elem();
 
@@ -1096,9 +1160,14 @@ SimulationInterface::get_nodal_results(std::vector<double>& results,
 {
   results.resize(0);
   legend.resize(0);
-  if (_plotvariables.size() > 0)
+  if (_plotvariable_ids.size() > 0)
   {
-    build_nodal_results(_plotvariables, results, legend);
+    set<string> plotvariables;
+    set<ID>::const_iterator it(_plotvariable_ids.begin());
+    for ( ; it != _plotvariable_ids.end(); ++it)
+      plotvariables.insert(get_solution_descriptor(*it).name());
+
+    build_nodal_results(plotvariables, results, legend);
 
     unsigned int n = get_environment().get_mesh().n_nodes();
     if (results.size() != n * legend.size())
@@ -1392,15 +1461,26 @@ SimulationInterface::get_solution(const DofObject*,
 
 
 void
-SimulationInterface::get_solution_secure(const DofObject*,
+SimulationInterface::get_solution_secure(const Elem*,
     std::map<ID, std::vector<double> >&)
 {
 }
 
 void
-SimulationInterface::get_solution_secure(const DofObject*,
+SimulationInterface::get_solution_secure(const Elem*,
     const std::vector<Point>&,
     std::map<ID, std::vector<double> >&)
+{
+}
+
+void
+SimulationInterface::get_solution_secure(const Atom*,
+    std::map<ID, std::vector<double> >&)
+{
+}
+
+void
+SimulationInterface::get_solution_secure(std::map<ID, std::vector<double> >&)
 {
 }
 
@@ -1454,25 +1534,40 @@ SimulationInterface::get_solution_id(const std::string& variable_name) const
 }
 
 
+const SolutionDescriptor&
+SimulationInterface::get_solution_descriptor(ID id) const
+{
+  SolutionDescrMap::const_iterator it(_solution_descriptors.find(id));
+  if (it != _solution_descriptors.end())
+    return it->second;
+
+  // I know for sure that it exists
+  return _solution_descriptors.find(INVALID_ID)->second;
+}
+
+
+
+const SolutionDescriptor&
+SimulationInterface::get_solution_descriptor(const std::string& solution_name) const
+{
+  SolutionDescrMap::const_iterator it(_solution_descriptors.begin());
+  const SolutionDescrMap::const_iterator end(_solution_descriptors.end());
+  for ( ; it != end; ++it)
+  {
+    if ((it->second).name() == solution_name)
+      return it->second;
+  }
+
+  // I know for sure that it exists
+  return _solution_descriptors.find(INVALID_ID)->second;
+}
 
 
 ID
 SimulationInterface::convert_variable_name_to_id(
     const std::string& variable_name) const
 {
-  ID id = INVALID_ID;
-  SolutionDescrMap::const_iterator it(_solution_descriptors.begin());
-  const SolutionDescrMap::const_iterator end(_solution_descriptors.end());
-  for ( ; it != end; ++it)
-  {
-    if ((it->second).name() == variable_name)
-    {
-      id = it->first;
-      break;
-    }
-  }
-
-  return id;
+  return get_solution_descriptor(variable_name).id();
 }
 
 

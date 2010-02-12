@@ -20,7 +20,7 @@ QuantumDispersion::QuantumDispersion(const ModelOptions& options)
 
 QuantumDispersion::~QuantumDispersion()
 {
- 
+
 }
 
 //---------------------------------------------------------------//
@@ -32,7 +32,7 @@ void QuantumDispersion::do_init(void)
   Kspace::do_init();//--kspace domain--------------
 
   //---------quantum model---------------------------------------------------------------------//
-  
+
   std::string quantum_simul_name;
   if (mod_opt.find_option("quantum_simulation"))
   {
@@ -46,7 +46,7 @@ void QuantumDispersion::do_init(void)
     throw  InitFailedException("QuantumDispersion: quantum_simulation  has to be specified");
   }
 
- 
+
   //--------------------------------------------------------------------------------------------//
 }
 
@@ -68,11 +68,11 @@ void 	QuantumDispersion::parse_options (void)
   opt.min_eigenvalue_number = mod_opt.get_option("min_eigenvalue_number", 0);
   opt.max_eigenvalue_number = mod_opt.get_option("max_eigenvalue_number", 10);
   opt.bulk_calculation = mod_opt.get_option("bulk_calculation", false);
-  
+
 
 }
 //---------------------------------------------------------------//
-  
+
 void QuantumDispersion::do_plot (void)
 {
 
@@ -87,9 +87,8 @@ void QuantumDispersion::do_plot (void)
   format = get_options().get_option("output_format", format);
 
 
-  const std::set< std::string >& plotvariables = get_plotvariables();
 
-  if (plotvariables.find("k-space_dispersion") != plotvariables.end())
+  if (plot_solution("k-space_dispersion"))
   {
 
     unsigned int kdim =  get_k_mesh().mesh_dimension();
@@ -103,8 +102,8 @@ void QuantumDispersion::do_plot (void)
 
     DataOutput data_output(get_k_mesh(), format);
     data_output.set_output_directory(get_control().get_output_dir());
-    
-   
+
+
     std::vector<double> results;
     std::vector<std::string> names;
 
@@ -119,14 +118,14 @@ void QuantumDispersion::do_plot (void)
     for (unsigned int i = 0; i < number_of_eigs_to_store ; i++)
     {
       std::ostringstream i_str;
-      //The states are numbered starting from 0 
+      //The states are numbered starting from 0
       i_str << "state_number_" << i + opt.min_eigenvalue_number ;
       names[i] = i_str.str();
 
       for (unsigned int j = 0; j < number_of_k_points ; j++)
 	results[number_of_eigs_to_store * j + i] = eigen_energy[j][i];
     }
-    
+
 
     Mesh* kmesh1D = NULL;
     if (format == "grace")
@@ -150,7 +149,7 @@ void QuantumDispersion::calculate_eigen_energy()
 {
 
   build_k_grid();
-  
+
 
   unsigned int number_of_k_points = kmesh->n_nodes();
   unsigned int number_of_eigs_to_store = opt.max_eigenvalue_number - opt.min_eigenvalue_number + 1;
@@ -162,11 +161,11 @@ void QuantumDispersion::calculate_eigen_energy()
 
   for (unsigned int i = 0; i < number_of_k_points; i++)
   {
-   
-   
+
+
     const Node  k_point = kmesh->node(i);
 
-   
+
     vector<double> k_vector(3, 0.0);
 
     k_vector[0] = k_point(0);
@@ -177,8 +176,8 @@ void QuantumDispersion::calculate_eigen_energy()
 
     quantum_model_opts.set_option("k_vector",  k_vector);
 
-    quantum_model_opts.set_option("number_of_eigenstates",opt.max_eigenvalue_number + 1); 
-  
+    quantum_model_opts.set_option("number_of_eigenstates",opt.max_eigenvalue_number + 1);
+
     if (opt.bulk_calculation)
       quantum_model_opts["job"] = "bulk";
     else
@@ -192,13 +191,13 @@ void QuantumDispersion::calculate_eigen_energy()
 
     const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& solution = quantum_model->get_solution();
 
-    
+
     for (unsigned int j = 0 ; j < number_of_eigs_to_store ; j++)
     {
       eigen_energy[i][j] = solution[j + opt.min_eigenvalue_number].eigen_energy;
     }
 
-    
+
   }
 
 }
