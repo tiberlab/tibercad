@@ -1130,14 +1130,9 @@ SimulationInterface::get_elemental_results(std::vector<double>& results,
 {
   results.resize(0);
   legend.resize(0);
-  if (_plotvariable_ids.size() > 0)
+  if (_plotvariables.size() > 0)
   {
-    set<string> plotvariables;
-    set<ID>::const_iterator it(_plotvariable_ids.begin());
-    for ( ; it != _plotvariable_ids.end(); ++it)
-      plotvariables.insert(get_solution_descriptor(*it).name());
-
-    build_elemental_results(plotvariables, results, legend);
+    build_elemental_results(_plotvariables, results, legend);
 
     unsigned int n = get_environment().get_mesh().n_active_elem();
 
@@ -1160,14 +1155,9 @@ SimulationInterface::get_nodal_results(std::vector<double>& results,
 {
   results.resize(0);
   legend.resize(0);
-  if (_plotvariable_ids.size() > 0)
+  if (_plotvariables.size() > 0)
   {
-    set<string> plotvariables;
-    set<ID>::const_iterator it(_plotvariable_ids.begin());
-    for ( ; it != _plotvariable_ids.end(); ++it)
-      plotvariables.insert(get_solution_descriptor(*it).name());
-
-    build_nodal_results(plotvariables, results, legend);
+    build_nodal_results(_plotvariables, results, legend);
 
     unsigned int n = get_environment().get_mesh().n_nodes();
     if (results.size() != n * legend.size())
