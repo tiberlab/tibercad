@@ -10,7 +10,6 @@ $Device
   {
     meshfile =  mesh_led_tri_msh.grd
     mesh_units = 1e-6      
-    dimension = 2
   }
 
 
@@ -297,7 +296,7 @@ $Solver
    {
 
     nonlin_max_it = 50 #25
-    nonlin_step_tol = 1e-3
+    nonlin_step_tol = 1e-4
     ls_max_step =  2  # 2 #0.8 # 1.5  #1.0 # 1.5  #1.0 #2       # 1.0  fino a P = 0.33
     pc_type = ilu
  #   ksp_type = gmres
