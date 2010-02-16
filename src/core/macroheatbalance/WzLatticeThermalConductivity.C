@@ -9,19 +9,18 @@
 
 
 //--------------------------------------------------------//
-void  WzLatticeThermalConductivity::read_database_alloy(void)
-{
+//void  WzLatticeThermalConductivity::read_database_alloy(void)
+//{
 
-  Database& db = get_database();
-  db.set_section("thermal_conductivity/constant");
-
-
- _kappa_x = db.get("therm_lat_cond_x", 0.0);
- _kappa_z = db.get("therm_lat_cond_z", 0.0);
+//  Database& db = get_database();
+//  db.set_section("thermal_conductivity/constant");
 
 
+// _kappa_x = db.get("therm_lat_cond_x", _kappa_x);
+// _kappa_z = db.get("therm_lat_cond_z", _kappa_z);
 
-}
+//}
+
 //--------------------------------------------------------//
 void  WzLatticeThermalConductivity::read_database(void)
 {
