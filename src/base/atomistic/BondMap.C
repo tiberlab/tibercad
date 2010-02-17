@@ -67,7 +67,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
 
   //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
   //cannot be smaller than the higher bond lenght. (in amstrong)
-  const double minimum_spacing = 7.0;
+  const double minimum_spacing = 4.0;
 
   // define the addressing grid
   //------------------------------------------------

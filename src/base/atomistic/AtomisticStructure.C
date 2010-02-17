@@ -217,8 +217,10 @@ AtomisticStructure::parse_regions(void)
 void
 AtomisticStructure::build_bond_map(void)
 {
-  if (_bondmap == NULL)
+  if (_bondmap != NULL)
   {
+     delete _bondmap;
+  }
     _bondmap = new BondMap;
     _bondmap->do_init(_structure_atoms.size());
     Tensor2Gen period;
@@ -230,7 +232,7 @@ AtomisticStructure::build_bond_map(void)
       }
     }
     _bondmap->do_solve(_structure_atoms, period);
-  }
+
 }
 
 

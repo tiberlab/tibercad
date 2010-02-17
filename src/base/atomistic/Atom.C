@@ -41,7 +41,7 @@ void Atom::set_elem(Elem* el)
 }
 
 
-const int Atom::get_region_ID(void) const
+int Atom::get_region_ID(void) const
 {
   if (_el == NULL) return INVALID_ID;
   else return _el->subdomain_id();

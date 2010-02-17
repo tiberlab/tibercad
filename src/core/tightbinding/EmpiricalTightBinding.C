@@ -5,7 +5,6 @@
 #ifdef ENABLE_UPTIGHT
 
 #include "EmpiricalTightBinding.h"
-//#include "BoundaryProperties.h"
 #include "PhysicalModel.h"
 #include "EtbModel.h"
 #include "SimulationOptions.h"
