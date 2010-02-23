@@ -10,9 +10,14 @@ Specie::~Specie(void)
 
 }
 
-Specie::Specie(std::string type)
+Specie::Specie(std::string& type)
 {
   _type = string_to_specie[type];
+}
+
+Specie::Specie(Type& type)
+{
+  _type = type;
 }
 
 
@@ -69,19 +74,19 @@ bool operator!= (const Type& type, const Specie& specie)
   return !( type == specie);
     }
 
-//!Override comparison operator, allows:
-    //! s.get_type() == 'H'
-bool operator!= (Type& type, std::string& type_string)
-{
-  return !(type == type_string);
-}
-
-//!Override comparison operator, allows:
-    //! 'H' == s.get_type()
-bool operator!= (std::string& type_string, Type& type)
-{
-  return !(type == type_string);
-}
+////!Override comparison operator, allows:
+//    //! s.get_type() == 'H'
+//bool operator!= (Type& type, std::string& type_string)
+//{
+//  return !(type == string_to_specie[type_string]);
+//}
+//
+////!Override comparison operator, allows:
+//    //! 'H' == s.get_type()
+//bool operator!= (std::string& type_string, Type& type)
+//{
+//  return !(type == type_string);
+//}
 
 //!Override comparison operator, allows:
   //! s == 'H'

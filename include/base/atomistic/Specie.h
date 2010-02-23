@@ -67,7 +67,10 @@ public:
     ~Specie(void);
 
     //! Constructor with string specification
-    Specie(std::string type);
+    Specie(std::string& type);
+
+    //! Constructor with enumerator specification
+    Specie(Type& type);
 
     //! Get reference to specie type
     //const Type& get_type(void) const;
