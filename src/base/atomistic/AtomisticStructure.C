@@ -797,7 +797,7 @@ AtomisticStructure::print_structure(const std::string& path)
       unsigned int n_specie;
       for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
       {
-        if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
+        if ( _atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
       }
       file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
@@ -871,7 +871,7 @@ AtomisticStructure::print_structure(const std::string& path)
       unsigned int n_specie;
       for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
       {
-        if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
+        if (_atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
       }
       file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
@@ -962,10 +962,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       unsigned int n_specie;
       for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
       {
-        if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
+        if (_atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
       }
       file << std::setw(10);
-      if (_structure_atoms[i].get_specie() ==  "H")
+      if (_structure_atoms[i].get_specie() ==  H)
       {
         file << material_map[_device->get_material(_structure_atoms[get_bond_map()[i][0]].get_region_ID()) ];
       }
@@ -1153,7 +1153,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
       unsigned int n_specie;
       for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
       {
-        if (_atom_types[n_specie].compare(_structure_atoms[i].get_specie()) == 0) break;
+        if ( _atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
       }
       file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
       << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
@@ -1263,7 +1263,7 @@ AtomisticStructure::get_N_without_H(void)
 
   for (unsigned int i = 0; i < _structure_atoms.size(); i++)
   {
-    if (_structure_atoms[i].get_specie() != "H")
+    if (_structure_atoms[i].get_specie() != H)
     {
       N++;
     }

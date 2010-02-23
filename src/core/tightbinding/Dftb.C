@@ -597,7 +597,7 @@ Dftb::obtain_hubbard_parameters(void)
           tmp_map[tmp_shell] = * (tmp_u_hub + i + j);
 
         }
-      _u_hub[_dftb_options.specieNameStrings[j]] = tmp_map;
+      _u_hub[Specie::string_to_specie[_dftb_options.specieNameStrings[j]]] = tmp_map;
     }
 
   delete[] tmp_u_hub; tmp_u_hub = NULL;

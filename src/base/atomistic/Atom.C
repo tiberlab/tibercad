@@ -4,7 +4,7 @@
 
 
 Atom::Atom()
-:_specie("none"),
+:_specie(),
 belong_to_structure(false),
 _el(NULL),
 _position()

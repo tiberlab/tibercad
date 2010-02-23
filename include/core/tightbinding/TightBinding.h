@@ -7,6 +7,7 @@
 #include "AtomisticStructure.h"
 #include "SimulationEnvironment.h"
 #include "Database.h"
+#include "Specie.h"
 
 
 //forward declaration
@@ -92,7 +93,7 @@ protected:
   /*!
    * Usage: _u_hub[<specie>][shell] = hubbard_index
    */
-  std::map<std::string, std::map<Shell, double> > _u_hub;
+  std::map<Specie, std::map<Shell, double> > _u_hub;
 
   //! Build charge density on given point
   double build_rho(const Point& r);

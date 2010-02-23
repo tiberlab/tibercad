@@ -129,11 +129,10 @@ TightBinding::build_rho(const Point& r)
 
   for (unsigned int iatm = 0; iatm  < _atomistic_structure->get_N_atoms(); iatm++)
     {
-
-      //std::cout << "rho before loop is " << rho << std::endl;
       //Getting Hubbard parameter
       //Up to now densities are mapped on orbital S
-      uhatom = _u_hub[_atomistic_structure->get_structure_atoms()[iatm].get_specie()][S];
+      Specie sp = _atomistic_structure->get_structure_atoms()[iatm].get_specie();
+      uhatom = _u_hub[sp][S];
 
       //Convert atom position to mesh units
       x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
@@ -150,7 +149,6 @@ TightBinding::build_rho(const Point& r)
       if (deltar > deltar_max) continue;
       else
         {
-          //std::cout << "uhatom is " << uhatom <<std::endl;
 	  rho = rho + (Constants::e * _mulliken_netcharges[iatm] * tau * tau * tau * exp(-1.0 * tau * deltar));
 
         }

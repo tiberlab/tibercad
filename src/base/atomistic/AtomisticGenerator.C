@@ -6,6 +6,7 @@
 #include "BondMap.h"
 #include "Messages.h"
 #include "MeshUtils.h"
+#include "Specie.h"
 
 #include <stdio.h>
 #include <cmath>
@@ -244,7 +245,7 @@ AtomisticGenerator::do_init()
 
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
   {
-    atom_types.insert(_structure_basis[i].get_specie());
+    atom_types.insert(_structure_basis[i].get_specie().get_string());
   }
   _as->set_N_types ( atom_types.size() );
 

@@ -11,9 +11,14 @@ BondMap::BondMap(void)
 
 BondMap::~BondMap(void)
 {
-  _grid_cell.clear();
 };
 
+
+void
+BondMap::clean()
+{
+  _grid_cell.clear();
+}
 
 void
 BondMap::set_cutoff()
@@ -134,6 +139,8 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
         }
     }
 
+  clean();
+
   Messages::info("Bond Map completed");
 
 
@@ -170,13 +177,13 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
     {
 
 
-      cutofftmp = _cutoff[basis[i].get_specie().c_str()] + _cutoff[basis[j].get_specie().c_str()];
+      cutofftmp = _cutoff[basis[i].get_specie().get_string().c_str()] + _cutoff[basis[j].get_specie().get_string().c_str()];
       position1 = basis[i].get_position();
       position2 = basis[j].get_position() + period;
 
       if ( cutofftmp == 0.0 ) std::cout << "WARNING, CUTOFF DISTANCE BETWEEN "
-					<< basis[i].get_specie().c_str()
-					<< " AND " << basis[j].get_specie().c_str()
+					<< basis[i].get_specie().get_string().c_str()
+					<< " AND " << basis[j].get_specie().get_string().c_str()
 					<< " IS NOT DEFINED " << std::endl;
 
       if ( norm( position1 - position2) < cutofftmp ){

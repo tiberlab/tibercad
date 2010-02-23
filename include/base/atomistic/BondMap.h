@@ -21,9 +21,12 @@
  * where p_{i} and c_{i} are position and cutoff parameter
  * of atom i.
  * Periodical structure bond maps are also calculated.
- * Bond Map are stored in an (i x 8) array. Last elements of each
+ * Bond Map are stored in a vector. Last elements of each
  * row is the number of neighbours.
  */
+
+typedef
+std::vector < std::vector < unsigned int > > Bondmap;
 
 class BondMap
 {
@@ -53,6 +56,7 @@ public:
   std::vector < std::vector < Tensor1 > >& get_translation(void);
 
 private:
+
 
   //! Internally defined parallepipedal grid
   std::vector<std::vector<std::vector<std::vector<unsigned int> > > >  _grid_cell;
@@ -93,6 +97,9 @@ private:
 
   //! Map for cutoff parameters
   std::map<std::string, double> _cutoff;
+
+  //! Clean informations no more useful after bond map calculation
+  void clean();
 
   //------------------------------------------------------------------
   //TODO: translation vector and double pointer must be substituted
