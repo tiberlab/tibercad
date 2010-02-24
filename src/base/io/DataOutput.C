@@ -189,6 +189,18 @@ DataOutput::set_data(const std::map<SolutionDescriptor,
   _data.insert(make_pair(zone, &data));
 }
 
+bool
+DataOutput::has_data(ID zone)
+{
+  return (_data.count(zone));
+}
+
+
+const DataOutput::DataMap&
+DataOutput::get_zone_data(ID zone)
+{
+  return *_data[zone];
+}
 
 void
 DataOutput::write(void)
