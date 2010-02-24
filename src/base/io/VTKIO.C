@@ -3,27 +3,43 @@
 #include "boost/tokenizer.hpp"
 
 #include "VTKIO.h"
+#include "RuntimeException.h"
 
 #include "elem.h"
 #include "mesh_base.h"
+
+#include "b64/encode.h"
+
+
 
 // C++ includes
 #include <fstream>
 #include <sstream>
 #include <map>
 #include <stdexcept>
+#include <cstring>
+#include <cstdlib>
+#include <typeinfo>
 
 using namespace std;
 
 
+
+
+
+
+
+
+
 TiberVTKIO::TiberVTKIO(const MeshBase& mesh)
-  : MeshOutput<MeshBase>(mesh)
+  : DataOutput()
 {
+  set_mesh(mesh);
 }
 
 
 void TiberVTKIO::write_nodal_data(const string& fname,
-    const vector<Number>& soln,
+    const vector<double>& soln,
     const vector<string>& names)
 {
 
@@ -33,7 +49,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
   if (names.size() == 0)
     return;
 
-  const MeshBase& mesh = MeshOutput<MeshBase>::mesh();
+  const MeshBase& mesh = get_mesh();
 
 
   set<unsigned int> node_ids;
@@ -41,7 +57,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
   // count nodes of active part of mesh ...
   {
     MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end = mesh.active_elements_end(); 
+    const MeshBase::const_element_iterator end = mesh.active_elements_end();
 
     for ( ; it != end; ++it)
     {
@@ -65,7 +81,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
 
   // The number of variables in the equation system
   const unsigned int n_vars = names.size();
-  
+
   // Write header to stream
   out << "# vtk DataFile Version 2.0\n"
       << "Nodal data\n"
@@ -74,7 +90,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
   out << "POINTS " << n_nodes << " double\n";
 
   map<unsigned int, unsigned int> vtk_node_ids;
-  
+
   set<unsigned int>::iterator nodeit(node_ids.begin());
   const set<unsigned int>::iterator nodeend(node_ids.end());
   for (unsigned int vtk_id = 0; nodeit != nodeend; ++nodeit, vtk_id++)
@@ -94,7 +110,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
 
 
   MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end = mesh.active_elements_end(); 
+  const MeshBase::const_element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -113,7 +129,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
     const Elem* elem = *it;
 
     unsigned int nn = elem->n_nodes();
-    
+
     out << nn;
 
     for (unsigned int i = 0; i < nn; i++)
@@ -135,9 +151,9 @@ void TiberVTKIO::write_nodal_data(const string& fname,
 
     out << get_VTK_cell_type(elem) << "\n";
   }
-  
 
-      
+
+
   // get ordered nodal data using a map
   typedef pair<unsigned int, Number> key_value_pair;
   typedef map<unsigned int, Number> map_type;
@@ -196,7 +212,7 @@ void TiberVTKIO::write_nodal_data(const string& fname,
 
 
 void TiberVTKIO::write_elemental_data(const string& fname,
-    const vector<Number>& soln,
+    const vector<double>& soln,
     const vector<string>& names)
 {
 
@@ -206,7 +222,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
   if (names.size() == 0)
     return;
 
-  const MeshBase& mesh = MeshOutput<MeshBase>::mesh();
+  const MeshBase& mesh = get_mesh();
 
 
   set<unsigned int> node_ids;
@@ -214,7 +230,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
   // count nodes  of active part of mesh ...
   {
     MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end = mesh.active_elements_end(); 
+    const MeshBase::const_element_iterator end = mesh.active_elements_end();
 
     for ( ; it != end; ++it)
     {
@@ -238,7 +254,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
 
   // The number of variables in the equation system
   const unsigned int n_vars = names.size();
-  
+
   // Write header to stream
   out << "# vtk DataFile Version 2.0\n"
       << "Nodal data\n"
@@ -247,7 +263,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
   out << "POINTS " << n_nodes << " double\n";
 
   map<unsigned int, unsigned int> vtk_node_ids;
-  
+
   set<unsigned int>::iterator nodeit(node_ids.begin());
   const set<unsigned int>::iterator nodeend(node_ids.end());
   for (unsigned int vtk_id = 0; nodeit != nodeend; ++nodeit, vtk_id++)
@@ -267,7 +283,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
 
 
   MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end = mesh.active_elements_end(); 
+  const MeshBase::const_element_iterator end = mesh.active_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -286,7 +302,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
     const Elem* elem = *it;
 
     unsigned int nn = elem->n_nodes();
-    
+
     out << nn;
 
     for (unsigned int i = 0; i < nn; i++)
@@ -308,9 +324,9 @@ void TiberVTKIO::write_elemental_data(const string& fname,
 
     out << get_VTK_cell_type(elem) << "\n";
   }
-  
 
-      
+
+
   // get ordered nodal data using a map
   typedef pair<unsigned int, Number> key_value_pair;
   typedef pair<unsigned int, vector<Number> > vector_key_value_pair;
@@ -356,7 +372,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
 
       vector<int> indices(3, -1);
 
-      
+
       if (coord == "x")
         indices[0] = var;
       else if (coord == "y")
@@ -465,7 +481,7 @@ void TiberVTKIO::write_elemental_data(const string& fname,
     }
     else
     {
-    
+
       out << "SCALARS " <<  names[var] << " double\n";
       out << "LOOKUP_TABLE default\n";
 
@@ -512,7 +528,7 @@ TiberVTKIO::get_VTK_cell_type(const Elem* elem)
   assert(elem != NULL);
 
   using namespace libMeshEnums;
-  
+
   VTKCellType vtk_type;
 
   switch (elem->type())
@@ -550,4 +566,256 @@ TiberVTKIO::get_VTK_cell_type(const Elem* elem)
   }
 
   return vtk_type;
+}
+
+
+void
+TiberVTKIO::do_write(void)
+{
+  const MeshBase& mesh = get_mesh();
+  string file = get_output_directory() + "/" + get_filename() + ".vtu";
+  ofstream of(file.c_str());
+
+
+  of << "<VTKFile type=\"UnstructuredGrid\" "
+    << "version=\"0.1\" byte_order=\"";
+  {
+    short int word = 0x0001;
+    char *byte = (char *) &word;
+    if (byte[0])
+      of << (byte[0] ? "LittleEndian" : "BigEndian");
+  }
+  of << "\">\n"
+    << "<UnstructuredGrid>\n";
+
+  map<ID, vector<unsigned int> > nodes;
+  map<ID, vector<VTKElem> > vtk_elem;
+  create_pieces(nodes, vtk_elem);
+
+  map<ID, vector<unsigned int> >::iterator it(nodes.begin());
+  for ( ; it != nodes.end(); ++it)
+  {
+    ID id = it->first;
+
+    const vector<unsigned int>& nodevec = nodes[id];
+    const vector<VTKElem>& elemvec = vtk_elem[id];
+    unsigned int num_pt = nodevec.size();
+    unsigned int num_el = elemvec.size();
+    of << "<Piece NumberOfPoints=\"" << num_pt << "\" "
+      << "NumberOfCells=\"" << num_el << "\">\n";
+
+    vector<float> buffer;
+
+    of << "<Points>\n";
+    buffer.resize(3 * num_pt);
+    for (unsigned int i = 0; i < num_pt; ++i)
+    {
+      const Point& p = mesh.point(nodevec[i]);
+      buffer[3 * i] = static_cast<float>(p(0));
+      buffer[3 * i + 1] = static_cast<float>(p(1));
+      buffer[3 * i + 2] = static_cast<float>(p(2));
+    }
+    write_data_array("", 3, buffer, of);
+    buffer.clear();
+    of << "</Points>\n";
+
+    vector<uint32_t> intbuf;
+    of << "<Cells>\n";
+    intbuf.reserve(4 * num_el);
+    for (size_t i = 0; i < num_el; ++i)
+    {
+      const VTKElem& el = elemvec[i];
+      size_t elconn = el.connectivity.size();
+      if (intbuf.capacity() < (intbuf.size() + elconn))
+        intbuf.reserve(2 * intbuf.capacity());
+
+      for (size_t n = 0; n < el.connectivity.size(); n++)
+        intbuf.push_back(static_cast<uint32_t>(el.connectivity[n]));
+    }
+    write_data_array("connectivity", 1, intbuf, of);
+
+    intbuf.resize(num_el);
+    size_t offset = 0;
+    for (size_t i = 0; i < num_el; ++i)
+    {
+      const VTKElem& el = elemvec[i];
+      offset += el.connectivity.size();
+      intbuf[i] = static_cast<uint32_t>(offset);
+    }
+    write_data_array("offsets", 1, intbuf, of);
+    intbuf.clear();
+
+
+    vector<uint8_t> shortbuf(num_el);
+    for (size_t i = 0; i < num_el; ++i)
+    {
+      const VTKElem& el = elemvec[i];
+      shortbuf[i] = static_cast<uint8_t>(el.type);
+    }
+    write_data_array("types", 1, shortbuf, of);
+    intbuf.clear();
+    of << "</Cells>\n";
+
+    of << "<PointData>\n";
+    // loop over all data maps
+
+    of << "</PointData>\n";
+
+    of << "</Piece>\n";
+  }
+
+  of << "</UnstructuredGrid>\n"
+    << "</VTKFile>\n";
+
+}
+
+template <typename T>
+void
+TiberVTKIO::write_data_array(const string& name, int comp,
+    vector<T>& data, ostream& os)
+{
+  string type;
+  int typelen;
+  if (typeid(T) == typeid(float))
+  {
+    type = "Float32";
+    typelen = 4;
+  }
+  else if (typeid(T) == typeid(uint32_t))
+  {
+    type = "UInt32";
+    typelen = 4;
+  }
+  else if (typeid(T) == typeid(int32_t))
+  {
+    type = "Int32";
+    typelen = 4;
+  }
+  else if (typeid(T) == typeid(uint8_t))
+  {
+    type = "UInt8";
+    typelen = 1;
+  }
+  else if (typeid(T) == typeid(int8_t))
+  {
+    type = "Int8";
+    typelen = 1;
+  }
+  else
+  {
+    ostringstream es;
+    es << "VTK output is not implemented for data type \'"
+        << typeid(T).name();
+    throw RuntimeException(es.str());
+  }
+  assert(sizeof(T) == typelen);
+
+  os << "<DataArray type=\"" << type << "\" ";
+  if (name.size() > 0)
+    os << "Name=\"" << name << "\" ";
+  os << "NumberOfComponents=\"" << comp << "\" "
+      << "format=\"" << (is_ascii() ? "ascii" : "binary") << "\">\n";
+
+  size_t n = data.size();
+
+  if (is_ascii())
+  {
+    for (size_t i = 0; i < n; i++)
+      if ((typeid(T) == typeid(uint8_t)) || (typeid(T) == typeid(int8_t)))
+        os << static_cast<int>(data[i]) << " ";
+      else
+        os << data[i] << " ";
+  }
+  else
+  {
+    uint32_t nbytes = typelen * n;
+    stringstream is(ios_base::in | ios_base::out | ios_base::binary);
+    is.write(reinterpret_cast<char*>(&nbytes), 4);
+    for (size_t i = 0; i < n; i++)
+    {
+      is.write(reinterpret_cast<char*>(&data[i]), typelen);
+    }
+
+    base64::encoder enc;
+    enc.encode(is, os);
+  }
+
+  os << "\n</DataArray>\n";
+}
+
+
+void
+TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
+    map<ID, vector<VTKElem> >& elems)
+{
+  if (libMesh::processor_id() == 0)
+  {
+    // # elements in each subdomain
+    map<ID, unsigned int> n_elem;
+
+    const MeshBase& mesh = get_mesh();
+
+    MeshBase::const_element_iterator it  = mesh.active_elements_begin();
+    MeshBase::const_element_iterator end = mesh.active_elements_end();
+
+    for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
+      unsigned int id = elem->subdomain_id();
+      map<ID, unsigned int>::iterator it(n_elem.find(id));
+      if (it != n_elem.end())
+        (it->second)++;
+      else
+        n_elem[id] = 0;
+    }
+
+    // translation table for node IDs
+    map<ID, map<ID, unsigned int> > ttable;
+
+    for (it = mesh.active_elements_begin(); it != end; ++it)
+    {
+      const Elem* elem = *it;
+      unsigned int id = elem->subdomain_id();
+
+      unsigned int nn = elem->n_nodes();
+      for (unsigned int i = 0; i < nn; i++)
+      {
+        if (ttable[id].count(elem->node(i)) == 0)
+        {
+          unsigned int n_id = ttable[id].size();
+          ttable[id][elem->node(i)] = n_id;
+        }
+      }
+    }
+
+    for (map<ID, unsigned int>::const_iterator i(n_elem.begin());
+      i != n_elem.end(); ++i)
+    {
+      elems[i->first].reserve(i->second);
+      points[i->first].resize(ttable[i->first].size());
+    }
+
+
+    for (it = mesh.active_elements_begin(); it != end; ++it)
+    {
+      const Elem* elem = *it;
+      unsigned int id = elem->subdomain_id();
+
+      unsigned int nn = elem->n_nodes();
+
+      VTKElem vtkel;// = elems[id][el_cnt];
+      vtkel.type = get_VTK_cell_type(elem);
+      vtkel.connectivity.resize(nn);
+
+      for (unsigned int i = 0; i < nn; i++)
+      {
+        unsigned int n = ttable[id][elem->node(i)];
+        points[id][n] = elem->node(i);
+        vtkel.connectivity[i] = n;
+      }
+
+      elems[id].push_back(vtkel);
+    }
+
+  }
 }

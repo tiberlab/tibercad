@@ -817,6 +817,18 @@ SimulationInterface::do_plot(void)
     get_solution_secure(elem, solutions);
 
   }
+
+  DataOutput* writer = DataOutput::create(get_control().get_output_format());
+  if (writer != NULL)
+  {
+    string suffix = get_control().get_filename_suffix();
+    string outdir = get_control().get_output_dir();
+    writer->set_output_directory(outdir);
+    writer->set_filename(get_name() + suffix);
+    writer->set_ascii();
+    writer->set_mesh(get_mesh());
+    writer->write();
+  }
 }
 
 
@@ -1432,32 +1444,332 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
 
 
-void
-SimulationInterface::get_solution(const Elem*,
-    std::map<ID, std::vector<double> >&)
+bool
+SimulationInterface::get_solution(const Elem* elem,
+    std::map<ID, std::vector<double> >& values)
 {
+  if (!is_solved()) return false;
 
+  SimulationEnvironment& env = get_environment();
+
+  const Elem* el = elem;
+
+  bool flag = true;
+
+  // first resize all data vectors to the right size
+  int nn = elem->n_nodes();
+  map<ID, vector<double> >::iterator it(values.begin());
+  map<ID, vector<double> >::iterator end(values.end());
+  for ( ; it != end; ++it)
+  {
+    const SolutionDescriptor& sd = get_solution_descriptor(it->first);
+    assert(sd.id() != INVALID_ID);
+    unsigned int n_comp = sd.n_components();
+    switch (sd.location())
+    {
+      case SolutionDescriptor::CELL:
+        values[it->first].resize(n_comp);
+        break;
+
+      case SolutionDescriptor::NODES:
+        values[it->first].resize(nn * n_comp);
+        break;
+
+      default:
+      {
+        ostringstream os;
+        os << "In get_solution(): solution variable \'" << sd.name()
+                        << "\' seems not to be associated to the mesh.";
+        throw ModelErrorException(os.str());
+      }
+    }
+  }
+
+  if (!env.contains_element(elem))
+  {
+    // perhaps the parent is?
+    const Elem* parent = elem->parent();
+
+    while ((parent != NULL) && (!env.contains_element(parent)))
+      parent = parent->parent();
+
+    el = parent; // is NULL if no parent
+
+    if (el != NULL)
+    {
+      // the nodes are now inner points of the parent element
+      vector<Point> p(nn);
+      for (int i = 0; i < nn; i++)
+        p[i] = elem->point(i);
+
+      // get the solutions on the points
+      get_solution_secure(elem, p, values);
+    }
+    else
+    {
+      // no active parent, so look for children
+      // TODO This part is not tested at all !!!
+      vector<const Elem*> tree;
+      elem->family_tree(tree, false);
+
+      set<const Elem*> elem_list;
+      unsigned int len = tree.size();
+      for (unsigned int i = 0; i < len; i++)
+      {
+        const Elem* elem_i = tree[i];
+        if (env.contains_element(elem_i))
+          elem_list.insert(elem_i);
+      }
+
+      if (elem_list.size() == 0)
+        flag = false;
+      else
+      {
+
+        // we need a copy of values
+        map<ID, vector<double> > valcopy(values);
+
+        // area of elem
+        double elem_vol = elem->volume();
+
+        set<unsigned int> nodenr;
+        unsigned int np = elem->n_nodes();
+        for (unsigned int i = 0; i < np; i++)
+          nodenr.insert(i);
+
+        set<const Elem*>::iterator el_it = elem_list.begin();
+        set<const Elem*>::iterator el_end = elem_list.end();
+        for ( ; el_it != el_end; ++el_it)
+        {
+          el = *el_it;
+
+          vector<Point> p;
+          vector<unsigned int> pid;
+          p.reserve(1);
+          pid.reserve(1);
+
+          set<unsigned int>::iterator nit(nodenr.begin());
+          const set<unsigned int>::iterator nend(nodenr.end());
+          for ( ; nit != nend; ++nit)
+          {
+            unsigned int node = *nit;
+            if (el->contains_point(elem->point(node)))
+            {
+              nodenr.erase(nit);
+              p.push_back(elem->point(node));
+              pid.push_back(node);
+            }
+            else
+              p.push_back(el->centroid());
+          }
+
+          get_solution_secure(el, p, valcopy);
+          double weight = el->volume() / elem_vol;
+
+          // now copy nodal values to their right position
+          // make mean value of cell values
+          for (it = values.begin(); it != end; ++it)
+          {
+            const SolutionDescriptor& sd = get_solution_descriptor(it->first);
+            unsigned int n_comp = sd.n_components();
+            vector<double>& vals = values[it->first];
+            vector<double>& newvals = valcopy[it->first];
+            switch (sd.location())
+            {
+              case SolutionDescriptor::CELL:
+                for (int i = 0; i < n_comp; i++)
+                  vals[i] += newvals[i] * weight;
+                break;
+
+              case SolutionDescriptor::NODES:
+                for (int i = 0; i < p.size(); i++)
+                  for (int j = 0; j < n_comp; i++)
+                    vals[pid[i] + j] = newvals[i + j];
+                break;
+
+            }
+          }
+        }
+      }
+    }
+  }
+  else
+    get_solution_secure(elem, values);
+
+  return flag;
 }
 
 
-void
-SimulationInterface::get_solution(const Elem*,
-    const std::vector<Point>&,
-    std::map<ID, std::vector<double> >&)
+bool
+SimulationInterface::get_solution(const Elem* elem,
+    const std::vector<Point>& points,
+    std::map<ID, std::vector<double> >& values)
 {
+  if (!is_solved()) return false;
+  size_t nn = points.size();
+  if (nn == 0) return true;
 
+  SimulationEnvironment& env = get_environment();
+
+  const Elem* el = elem;
+
+  bool flag = true;
+
+  // first resize all data vectors to the right size
+  map<ID, vector<double> >::iterator it(values.begin());
+  map<ID, vector<double> >::iterator end(values.end());
+  for ( ; it != end; ++it)
+  {
+    const SolutionDescriptor& sd = get_solution_descriptor(it->first);
+    assert(sd.id() != INVALID_ID);
+    unsigned int n_comp = sd.n_components();
+    switch (sd.location())
+    {
+      case SolutionDescriptor::CELL:
+        values[it->first].resize(n_comp);
+        break;
+
+      case SolutionDescriptor::NODES:
+        values[it->first].resize(nn * n_comp);
+        break;
+
+      default:
+      {
+        ostringstream os;
+        os << "In get_solution(): solution variable \'" << sd.name()
+                        << "\' seems not to be associated to the mesh.";
+        throw ModelErrorException(os.str());
+      }
+    }
+  }
+
+  if (!env.contains_element(elem))
+  {
+    // perhaps the parent is?
+    const Elem* parent = elem->parent();
+
+    while ((parent != NULL) && (!env.contains_element(parent)))
+      parent = parent->parent();
+
+    el = parent; // is NULL if no parent
+
+    if (el != NULL)
+    {
+      get_solution_secure(elem, points, values);
+    }
+    else
+    {
+      // no active parent, so look for children
+      // TODO This part is not tested at all !!!
+      vector<const Elem*> tree;
+      elem->family_tree(tree, false);
+
+      set<const Elem*> elem_list;
+      unsigned int len = tree.size();
+      for (unsigned int i = 0; i < len; i++)
+      {
+        const Elem* elem_i = tree[i];
+        if (env.contains_element(elem_i))
+          elem_list.insert(elem_i);
+      }
+
+      if (elem_list.size() == 0)
+        flag = false;
+      else
+      {
+
+        // we need a copy of values
+        map<ID, vector<double> > valcopy(values);
+
+        // area of elem
+        double elem_vol = elem->volume();
+
+        set<unsigned int> nodenr;
+        for (unsigned int i = 0; i < nn; i++)
+          nodenr.insert(i);
+
+        set<const Elem*>::iterator el_it = elem_list.begin();
+        set<const Elem*>::iterator el_end = elem_list.end();
+        for ( ; el_it != el_end; ++el_it)
+        {
+          el = *el_it;
+
+          vector<Point> p;
+          vector<unsigned int> pid;
+          p.reserve(1);
+          pid.reserve(1);
+
+          set<unsigned int>::iterator nit(nodenr.begin());
+          const set<unsigned int>::iterator nend(nodenr.end());
+          for ( ; nit != nend; ++nit)
+          {
+            unsigned int node = *nit;
+            if (el->contains_point(points[node]))
+            {
+              nodenr.erase(nit);
+              p.push_back(points[node]);
+              pid.push_back(node);
+            }
+            else
+              p.push_back(el->centroid());
+          }
+
+          get_solution_secure(el, p, valcopy);
+
+          double weight = el->volume() / elem_vol;
+
+          // now copy nodal values to their right position
+          // make mean value of cell values
+          for (it = values.begin(); it != end; ++it)
+          {
+            const SolutionDescriptor& sd = get_solution_descriptor(it->first);
+            unsigned int n_comp = sd.n_components();
+            vector<double>& vals = values[it->first];
+            vector<double>& newvals = valcopy[it->first];
+            switch (sd.location())
+            {
+              case SolutionDescriptor::CELL:
+                for (int i = 0; i < n_comp; i++)
+                  vals[i] += newvals[i] * weight;
+                break;
+
+              case SolutionDescriptor::NODES:
+                for (int i = 0; i < p.size(); i++)
+                  for (int j = 0; j < n_comp; i++)
+                    vals[pid[i] + j] = newvals[i + j];
+                break;
+
+            }
+          }
+        }
+      }
+    }
+  }
+  else
+    get_solution_secure(elem, points, values);
+
+  return flag;
 }
 
 
-void
+bool
 SimulationInterface::get_solution(const Atom*,
     std::map<ID, std::vector<double> >&)
 {
+  if (!is_solved()) return false;
+
+  // TODO needs to be implemented
+  return false;
 }
 
-void
-SimulationInterface::get_solution(std::map<ID, std::vector<double> >&)
+
+bool
+SimulationInterface::get_solution(std::map<ID, std::vector<double> >& values)
 {
+  if (!is_solved()) return false;
+
+  get_solution_secure(values);
+  return true;
 }
 
 

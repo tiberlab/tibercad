@@ -275,6 +275,7 @@ class SimulationInterface : public TiberModelObject
      * \param elem the pointer to the element
      * \param values a map to hold the values, the key IDs specify the solutions
      *  to be returned
+     * \return \c false if the model has not been solved or the element is invalid
      *
      * If a solution associated to a certain ID does not exist in the specified
      * element (e.g. if the element is not in the simulation domain), the corresponding
@@ -283,31 +284,33 @@ class SimulationInterface : public TiberModelObject
      * and on the number of solution components).
      * \see SolutionDescriptor
      */
-    void get_solution(const Elem* elem, std::map<ID, std::vector<double> >& values);
+    bool get_solution(const Elem* elem, std::map<ID, std::vector<double> >& values);
 
 
     //! Get solutions at specified points in an element
     /*!
      * \param elem the pointer to the element
-     * \param p the vector containing the points
+     * \param points the vector containing the points
      * \param values a map to hold the values, the key IDs specify the solutions
      *  to be returned
+     * \return \c false if the model has not been solved or the element is invalid
      *
      *  Solution values will be ordered in he vectors according the the order of the
      *  given points. The number of values per point depends on the type of solution
      *  variable (see also get_solution(const Elem*, std::map<ID, std::vector<double> >
      *  and the SolutionDescriptor class).
      */
-    void get_solution(const Elem* elem, const std::vector<Point>& p,
+    bool get_solution(const Elem* elem, const std::vector<Point>& points,
         std::map<ID, std::vector<double> >& values);
 
 
     //! Get solutions associated to an atom
     /*!
      *
-     *\param atom a pointer to the atom
-     *\param values a map to hold the values, the key IDs specify the solutions
+     * \param atom a pointer to the atom
+     * \param values a map to hold the values, the key IDs specify the solutions
      *  to be returned
+     * \return \c false if the model has not been solved or the atom is invalid
      *
      * If a solution associated to a certain ID does not exist in the specified
      * element (e.g. if the element is not in the simulation domain), the corresponding
@@ -316,27 +319,28 @@ class SimulationInterface : public TiberModelObject
      * and on the number of solution components).
      * \see SolutionDescriptor
      */
-    void get_solution(const Atom* atom, std::map<ID, std::vector<double> >& values);
+    bool get_solution(const Atom* atom, std::map<ID, std::vector<double> >& values);
 
 
     //! Get solutions that are not associated to elements or atoms
     /*!
      *
-     *\param values a map to hold the values, the key IDs specify the solutions
+     * \param values a map to hold the values, the key IDs specify the solutions
      *  to be returned
+     * \return \c false if there is no solution
      *
      * If a solution associated to a certain ID does not exist, the corresponding
      * vector in the map has size zero. Generally the size of the vector depends on the
      * type of the solution (more specifically on the number of solution components).
      * \see SolutionDescriptor
      */
-    void get_solution(std::map<ID, std::vector<double> >& values);
+    bool get_solution(std::map<ID, std::vector<double> >& values);
 
 
 
     //! Get solution values on the nodes of a specified element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param id identifier for the variable to be returned
      * \param values a vector to store the values. The vector index
@@ -350,7 +354,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get solution values on the nodes of a specified element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param ids identifiers for the variables to be returned
      * \param values a vector to store the values. The vector index
@@ -364,7 +368,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get solution values on one inner point of a specified element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param p the point (assumed to lie in \c elem)
      * \param ids identifiers for the variables to be returned
@@ -379,7 +383,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get solution values on one inner point of a specified element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param p the point (assumed to lie in \c elem)
      * \param id identifier for the variable to be returned
@@ -392,7 +396,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get solution values on inner points of a specified element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param p a vector with the points. All Points are assumed to lie in
      * \c elem
@@ -408,7 +412,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get solution values on inner points of a specified element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param p a vector with the points. All Points are assumed to lie in
      * \c elem
@@ -930,7 +934,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get solution values on the nodes of a specified element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param ids identifiers for the variables to be returned
      * \param values a vector to store the values. The first index
@@ -946,7 +950,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get solution values on inner points of a specified element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param p a vector with the points. All Points are assumed to lie in
      * \c elem
@@ -966,7 +970,7 @@ class SimulationInterface : public TiberModelObject
 
     //! Get the solution values on one point of an element
     /*!
-     *
+     * \deprecated
      * \param elem a pointer to the element
      * \param p the point (assumed to lie in \c elem)
      * \param values a vector to store the values.

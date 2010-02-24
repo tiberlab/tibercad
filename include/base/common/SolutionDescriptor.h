@@ -4,6 +4,9 @@
 #ifndef _SOLUTIONDESCRIPTOR_H_
 #define _SOLUTIONDESCRIPTOR_H_
 
+#include "TypeDefs.h"
+
+#include <string>
 #include <cassert>
 
 
@@ -54,6 +57,9 @@ struct SolutionDescriptor
 
 
     //! Get the ID
+    /*!
+     * The IDs are \em not assumed to be globally unique.
+     */
     ID id(void) const { return _id; }
 
     //! Get the name
@@ -73,6 +79,10 @@ struct SolutionDescriptor
 
     //! Return \c true if the quantity is located on the mesh
     bool on_mesh(void) const;
+
+    //! To be used as map/set key
+    bool operator<(const SolutionDescriptor& rhs) const
+        { return this->id() < rhs.id(); };
 
 
   private:

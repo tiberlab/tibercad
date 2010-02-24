@@ -1699,7 +1699,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
 	  
 	  
-	  std::map<unsigned int, DofConstraintRow> :: iterator it;
+	  DofConstraints :: iterator it;
 	  
 	  it = my_dof_constraints.find(j);
 	    
@@ -1709,7 +1709,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 	      
 	    DofConstraintRow constr_row = it->second;
 	    
-	    std::map<unsigned int, Real>::iterator  c =  constr_row.begin();
+	    DofConstraintRow::iterator  c =  constr_row.begin();
 
 	     
 	    for ( ; c != constr_row.end() ; ++c )

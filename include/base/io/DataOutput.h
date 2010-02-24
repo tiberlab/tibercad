@@ -3,9 +3,11 @@
 #ifndef _DATAOUTPUT_H_
 #define _DATAOUTPUT_H_
 
+#include "SolutionDescriptor.h"
 
 #include <string>
 #include <vector>
+#include <map>
 
 class MeshBase;
 
@@ -22,11 +24,18 @@ class DataOutput
       UNKNOWN   = 0x0000,       //!< Unknown format
       TECPLOT   = 0x0001,       //!< Tecplot format
       GRACE     = 0x0002,       //!< Xmgrace format
-      GNUPLOT   = 0x0004,       //!< GnuPlot format
+      //GNUPLOT   = 0x0004,       //!< GnuPlot format
       VTK       = 0x0008,       //!< Paraview format
-      GMSH      = 0x0010,       //!< GMSH format
+      //GMSH      = 0x0010,       //!< GMSH format
       GMV       = 0x0020        //!< GMV format
     };
+
+
+    //! Constructor
+    DataOutput(void);
+
+    //! Destructor
+    virtual ~DataOutput(void);
 
 
     //! The constructor
@@ -38,6 +47,10 @@ class DataOutput
      * \param format the output file format in string representation
      */
     DataOutput(const MeshBase& mesh, const std::string& format);
+
+
+    //! Create a writer for a given format
+    static DataOutput* create(const std::string& format);
 
 
     //! Write nodal data
@@ -59,9 +72,70 @@ class DataOutput
     //! Set the output directory
     void set_output_directory(const std::string& output_dir);
 
+    //! Set the filename
+    void set_filename(const std::string& filename);
+
+    //! Set to binary output
+    void set_binary(void);
+
+    //! Set to ASCII output
+    void set_ascii(void);
+
 
     //! Set the mesh
     void set_mesh(const MeshBase& mesh);
+
+
+    //! Set the data to print
+    /*!
+     * \param data the map containing all data of a certain zone
+     * \param zone the zone ID (e.g. mesh subdomain)
+     *
+     * If \c zone is not specified, data is assumed to be on all zones
+     */
+    void set_data(const std::map<SolutionDescriptor,
+        std::vector<double> >& data, ID zone);
+
+
+    //! Write out everything
+    void write(void);
+
+
+  protected:
+
+    //! A typedef for the data container
+    typedef std::map<SolutionDescriptor, std::vector<double> > DataMap;
+
+    //! Get a reference to the mesh
+    const MeshBase& get_mesh(void) const;
+
+    //! Check if this writer has a mesh assigned
+    bool has_mesh(void) const;
+
+    //! Get the output directory
+    const std::string& get_output_directory(void) const;
+
+    //! Get the filename
+    const std::string& get_filename(void) const;
+
+    //! Check if it is a binary file
+    bool is_binary(void) const;
+
+    //! Check if it is an ascii file
+    bool is_ascii(void) const;
+
+    //! Check if a zone ID has data
+    bool has_data(ID zone);
+
+    //! Get the zone data
+    /*!
+     * This method will throw an error if the given zone
+     * has no associated data
+     */
+    const DataMap& get_zone_data(ID zone);
+
+    //! The actual writer
+    virtual void do_write(void) {}; // = 0;
 
 
 
@@ -76,7 +150,43 @@ class DataOutput
     //! The output directory
     std::string _output_dir;
 
+    //! The filename
+    std::string _filename;
+
+    //! \c true if it is binary file
+    bool _is_binary;
+
+    //! A map collecting pointers to all zone data
+    std::map<ID, const DataMap*> _data;
+
+
 };
+
+
+//
+// inline members
+//
+
+inline
+bool
+DataOutput::has_mesh(void) const
+{
+  return (_mesh != NULL ? true : false);
+}
+
+inline
+bool
+DataOutput::is_binary(void) const
+{
+  return _is_binary;
+}
+
+inline
+bool
+DataOutput::is_ascii(void) const
+{
+  return !is_binary();
+}
 
 
 #endif // _DATAOUTPUT_H_

@@ -86,9 +86,10 @@ CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 
-CXXFLAGS += $(shell export METHOD=$(METHOD) && $(libmesh_config) --cxxflags) -pthread
-LDFLAGS  += $(shell export METHOD=$(METHOD) && $(libmesh_config) --ldflags)
+CXXFLAGS += $(shell METHOD=$(METHOD) $(libmesh_config) --cxxflags) -pthread
+LDFLAGS  += $(shell METHOD=$(METHOD) $(libmesh_config) --ldflags)
 FCFLAGS  += -fPIC
+CFLAGS  += -fPIC
 
 
 vpath %.h $(include_dirs)

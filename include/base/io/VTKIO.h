@@ -4,7 +4,8 @@
 #ifndef _TIBERVTKIO_H_
 #define _TIBERVTKIO_H_
 
-#include "mesh_output.h"
+#include "TypeDefs.h"
+#include "DataOutput.h"
 
 
 // forward declaration
@@ -12,36 +13,44 @@ class MeshBase;
 class Elem;
 
 
-//! Write nodal and elemental data using a grace-compatible format 
-class TiberVTKIO : public MeshOutput<MeshBase>
+//! Write nodal and elemental data using a grace-compatible format
+class TiberVTKIO : public DataOutput
 {
+
  public:
 
-    
+
+  //! Constructor
+  TiberVTKIO(void) : DataOutput() {}
+
   //! Constructor
   /*!
    * \param mesh a reference to a constant mesh object.
    */
   TiberVTKIO(const MeshBase& mesh);
 
+  //! Destructor
+  ~TiberVTKIO(void) {}
 
-  //! Write the mesh to the specified file.
-  /*!
-   * Does nothing for this format
-   */
-  virtual void write(const std::string&) {};
 
-  
+
   //! Write a mesh with nodal data
-  virtual void write_nodal_data(const std::string& fname,
-      const std::vector<Number>& soln,
+  void write_nodal_data(const std::string& fname,
+      const std::vector<double>& soln,
       const std::vector<std::string>& names);
 
-  
+
   //! Write a mesh with elemental data
-  virtual void write_elemental_data(const std::string& fname,
-      const std::vector<Number>& soln,
+  void write_elemental_data(const std::string& fname,
+      const std::vector<double>& soln,
       const std::vector<std::string>& names);
+
+
+
+ protected:
+
+  //! The implementation of the writing routine
+  virtual void do_write(void);
 
 
 
@@ -67,12 +76,24 @@ class TiberVTKIO : public MeshOutput<MeshBase>
     VTK_PYRAMID
   };
 
-  
+  struct VTKElem
+  {
+    VTKCellType type;
+    std::vector<int> connectivity;
+  };
+
   //! Get the VTK cell type for an element
   VTKCellType get_VTK_cell_type(const Elem* elem);
-  
+
+  void create_pieces(std::map<ID, std::vector<unsigned int> >& points,
+    std::map<ID, std::vector<VTKElem> >& elems);
+
+  //! Write a data array to the given stream
+  template <typename T>
+  void write_data_array(const std::string& name, int comp, std::vector<T>& data,
+      std::ostream& os);
 
 };
 
-    
+
 #endif
