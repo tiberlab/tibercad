@@ -1,22 +1,24 @@
-# GaInP-zb
+# GaInSb-zb
 
 alloy = 2
 structure = zb
 
-comp_A = GaP
-comp_B = InP
+comp_A = GaSb
+comp_B = InSb
 
 
 
 [conductionband] # [1]
-bow_m_G = 0.051
+bow_m_G = 0.0092
 
 
 [bandgap] # [1]
-bow_Eg_G = 0.65
-bow_Eg_L = 1.03
-bow_Eg_X = 0.2
+bow_Eg_G = 0.415
+bow_Eg_L = 0.4
+bow_Eg_X = 0.33
 
+[kdotp]
+delta = 0.1
 
 
 
@@ -26,7 +28,7 @@ bow_Eg_X = 0.2
 n_basis_specie=2
 
 specie_1=GaIn
-specie_2=P
+specie_2=Sb
 
 [densityfunctional_tb]
 
