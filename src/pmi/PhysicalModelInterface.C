@@ -75,14 +75,6 @@
 #include <ZbPiezoelectricModel.h>
 #include <WzPiezoelectricModel.h>
 
-#include <AnisotropicStiffness.h>
-#include <IsotropicStiffness.h>
-#include <MechanicalModel.h>
-#include <ZbPiezoBodyForce.h>
-#include <WzPiezoBodyForce.h>
-#include <PiezoBodyForce.h>
-#include <LatticeRelaxation.h>
-
 
 #include "Messages.h"
 
@@ -230,25 +222,6 @@ PhysicalModelInterface::create(const string& name,
     mod = ZbPiezoelectricModel::create(options);
   else if  (name == "piezoelectric_model_wz")
     mod = WzPiezoelectricModel::create(options);
-  else if  (name == "converse_piezo")
-    mod = PiezoBodyForce::create(options);
-  else if  (name == "piezo_body_force_zb")
-    mod = ZbPiezoBodyForce::create(options);
-  else if  (name == "piezo_body_force_wz")
-    mod = WzPiezoBodyForce::create(options);
-  else if  (name == "stiffness_anisotropic")
-    mod = AnisotropicStiffness::create(options);
-
-  else if  (name == "stiffness_isotropic")
-  {
-    mod = IsotropicStiffness::create(options);
-    //   std::cout<<name<<std::endl;
-  }
-
-  else if  (name == "lattice_relaxation")
-    mod =  LatticeRelaxation::create(options);
-  else if  (name == "mechanical_model")
-    mod = MechanicalModel::create(options);
 
   std::cout<<"PM "<<name<<std::endl;
 
