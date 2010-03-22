@@ -276,6 +276,8 @@ AtomisticStructure::init_mesh_structure()
    //Refresh some information after structure building
    N_atoms = _structure_atoms.size();
 
+  //Default: print an xyz
+  _options.set_option("print", "xyz");
 
   if (_options.find_option("print"))
   {
