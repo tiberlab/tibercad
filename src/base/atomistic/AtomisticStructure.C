@@ -277,7 +277,7 @@ AtomisticStructure::init_mesh_structure()
    N_atoms = _structure_atoms.size();
 
   //Default: print an xyz
-  _options.set_option("print", "xyz");
+ // _options.set_option("print", "xyz");
 
   if (_options.find_option("print"))
   {
@@ -289,6 +289,9 @@ AtomisticStructure::init_mesh_structure()
       print_structure(name);
     }
   }
+  else
+    print_structure(_name + ".xyz");
+
 
 //  std::string name;
 //  name = _name + ".xyb" ;
