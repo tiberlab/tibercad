@@ -108,7 +108,7 @@ AtomisticStructure::init(const std::string& name,
   //
   // Read from file
 
-  if (_options.find_option("load_structure"))
+  if (_options.find_option("load_structure")||_options.find_option("load"))
   {
     std::string filename;
 
@@ -119,7 +119,8 @@ AtomisticStructure::init(const std::string& name,
     os.str(std::string());
     //---------------------------------------------------------------
 
-    filename = _options.get_option("load_structure","none");
+    if (_options.find_option("load_structure")) filename = _options.get_option("load_structure","none");
+    if (_options.find_option("load")) filename = _options.get_option("load","none");
 
     init(filename);
 
@@ -129,7 +130,6 @@ AtomisticStructure::init(const std::string& name,
 
     build_bond_map();
 
-    print_structure("tb2.tgn");
  }
 
   // Build material representation
@@ -276,14 +276,26 @@ AtomisticStructure::init_mesh_structure()
    //Refresh some information after structure building
    N_atoms = _structure_atoms.size();
 
-  std::string name;
-  name = _name + ".xyb" ;
-  print_structure(name);
-  name = _name + ".gen" ;
-  print_structure(name);
-  name = _name + ".tgn" ;
-  print_structure(name);
-  print_upg("tb2.upg", "none");
+
+  if (_options.find_option("print"))
+  {
+    std::vector<std::string> extensions;
+    _options.get_option("print", extensions);
+    for (int i = 0; i < extensions.size(); i++)
+    {
+      std::string name(_name + "." + extensions[i]);
+      print_structure(name);
+    }
+  }
+
+//  std::string name;
+//  name = _name + ".xyb" ;
+//  print_structure(name);
+//  name = _name + ".gen" ;
+//  print_structure(name);
+//  name = _name + ".tgn" ;
+//  print_structure(name);
+//  print_upg("tb2.upg", "none");
 
 }
 
