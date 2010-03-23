@@ -72,7 +72,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
 
   //define the minimum spacing of the grid. the smaller it is, the faster is bonds calculations
   //cannot be smaller than the higher bond lenght. (in amstrong)
-  const double minimum_spacing = 4.0;
+  const double minimum_spacing = 6.0;
 
   // define the addressing grid
   //------------------------------------------------
@@ -176,7 +176,6 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
   if ((i != j))
     {
 
-
       cutofftmp = _cutoff[basis[i].get_specie().get_string().c_str()] + _cutoff[basis[j].get_specie().get_string().c_str()];
       position1 = basis[i].get_position();
       position2 = basis[j].get_position() + period;
@@ -195,7 +194,8 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
           {
             for (unsigned int n = 0; n < put_here; n++){
 
-              if (_bond_map[i][n] == j)
+              //TODO: norm is slow, you whould study a new strategy overloading == operator
+              if (_bond_map[i][n] == j && norm(_translation[i][n] - period) < 1e-6)
                 {
                   not_already_signed = false;
                   break;
@@ -210,29 +210,29 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
             _translation[i].push_back(period);
           }
 
-        not_already_signed = true;
-        put_here = _bond_map[j].size();
-
-        if (put_here != 0)
-          {
-            for (unsigned int n = 0; n < put_here; n++){
-
-              if (_bond_map[j][n] == i)
-                {
-                  not_already_signed = false;
-                  break;
-                }
-
-            }
-          }
-        else
-          not_already_signed = true;
-        if (not_already_signed)
-          {
-            _bond_map[j].push_back(i);
-            _translation[j].push_back(-1.0 * period);
-          }
-
+//        not_already_signed = true;
+//        put_here = _bond_map[j].size();
+//
+//        if (put_here != 0)
+//          {
+//            for (unsigned int n = 0; n < put_here; n++){
+//
+//              if (_bond_map[j][n] == i && norm(_translation[j][n] - period) < 1e-6)
+//                {
+//                  not_already_signed = false;
+//                  break;
+//                }
+//
+//            }
+//          }
+//        else
+//          not_already_signed = true;
+//        if (not_already_signed)
+//          {
+//            _bond_map[j].push_back(i);
+//            _translation[j].push_back(-1.0 * period);
+//          }
+//
       }
 
     }
