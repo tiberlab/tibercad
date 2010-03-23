@@ -105,3 +105,7 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
 template class FiniteElement<1, libMeshEnums::LAGRANGE>;
 template class FiniteElement<2, libMeshEnums::LAGRANGE>;
 template class FiniteElement<3, libMeshEnums::LAGRANGE>;
+
+template class FiniteElement<1, libMeshEnums::MONOMIAL>;
+template class FiniteElement<2, libMeshEnums::MONOMIAL>;
+template class FiniteElement<3, libMeshEnums::MONOMIAL>;
