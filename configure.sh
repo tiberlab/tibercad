@@ -32,4 +32,4 @@ fi
   --enable-uptight\
   --enable-pardiso \
   ${CONFIGOPTS} \
-  --with-libmesh-prefix=/usr/pack/tibercad_dev-2.0-ma/libmesh-svn
+  --with-libmesh-prefix=/usr/pack/tibercad_dev-2.0-ma/libmesh-svn-${ARCH}

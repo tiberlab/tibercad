@@ -223,7 +223,6 @@ PhysicalModelInterface::create(const string& name,
   else if  (name == "piezoelectric_model_wz")
     mod = WzPiezoelectricModel::create(options);
 
-  std::cout<<"PM "<<name<<std::endl;
 
   if (mod == NULL)
     mod = create_from_library<PhysicalModelInterface>(name, options);
