@@ -66,6 +66,9 @@ public:
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);
 
+  //! Get library version
+  void get_version(void);
+
   //!Initialize the Upt instance
   int inituptight();
 
