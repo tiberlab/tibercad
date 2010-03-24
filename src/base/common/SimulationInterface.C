@@ -1083,13 +1083,30 @@ SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
 }
 
 
+#define __create_finite_elem(d, f) \
+  { \
+    FiniteElement<d, libMeshEnums::f>* fem = \
+          new FiniteElement<d, libMeshEnums::f>(type); \
+    fem->set_symmetry(sym); \
+    fem->set_scaling(x0, mu); \
+    fe = fem; \
+  }
 
+#define __switch_family(d) \
+  switch (type.family) \
+  { \
+    case libMeshEnums::LAGRANGE: \
+      __create_finite_elem(d, LAGRANGE); \
+      break; \
+    case libMeshEnums::MONOMIAL: \
+      __create_finite_elem(d, MONOMIAL); \
+      break; \
+  }
 
 AutoPtr<FEBase>
 SimulationInterface::build_finite_element(unsigned int dim, FEType type,
                                           bool scale)
 {
-  assert(type.family == libMeshEnums::LAGRANGE);
 
   double x0 = scale ? get_scaling().get_length_scaling() : 1.0;
   double mu = get_scaling().get_calc_mesh_units();
@@ -1099,35 +1116,20 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
 
   switch (dim)
   {
-  case 1:
-    {
-      FiniteElement<1, libMeshEnums::LAGRANGE>* fem =
-        new FiniteElement<1, libMeshEnums::LAGRANGE>(type);
-      fem->set_symmetry(sym);
-      fem->set_scaling(x0, mu);
-      fe = fem;
-    }
-    break;
-  case 2:
-    {
-      FiniteElement<2, libMeshEnums::LAGRANGE>* fem =
-        new FiniteElement<2, libMeshEnums::LAGRANGE>(type);
-      fem->set_symmetry(sym);
-      fem->set_scaling(x0, mu);
-      fe = fem;
-    }
-    break;
-  case 3:
-    {
-      FiniteElement<3, libMeshEnums::LAGRANGE>* fem =
-        new FiniteElement<3, libMeshEnums::LAGRANGE>(type);
-      fem->set_symmetry(sym);
-      fem->set_scaling(x0, mu);
-      fe = fem;
-    }
-    break;
-  default:
-    fe = NULL;
+    case 1:
+      __switch_family(1);
+      break;
+
+    case 2:
+      __switch_family(2);
+      break;
+
+    case 3:
+      __switch_family(3);
+      break;
+
+    default:
+      fe = NULL;
   }
   assert(fe != NULL);
 
