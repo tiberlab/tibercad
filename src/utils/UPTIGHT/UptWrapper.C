@@ -86,6 +86,13 @@ int UptWrapper::inituptight()
     }
 }
 
+//! Get Uptight version
+void UptWrapper::get_version()
+{
+    f77_upt_getversion(_handler);
+}
+
+
 //!destroy container variables (allocations)
 void UptWrapper::cleanuptight() 
 {
