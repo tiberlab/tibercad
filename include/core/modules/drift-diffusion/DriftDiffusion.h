@@ -91,66 +91,16 @@ class DriftDiffusion : public SimulationInterface
 {
   public:
 
-
-    //! The variables that can be provided
-    enum Variables
-    {
-      UNKNOWN = 0,
-      ELPOTENTIAL,      /*!< electric potential */
-      QFERMIE,          /*!< electron electro-chemical potential */
-      QFERMIH,          /*!< hole electro-chemical potential */
-      CBANDEDGE,        /*!< conduction band edge */
-      VBANDEDGE,        /*!< valence band edge */
-      CBANDEDGEINTR,    /*!< intrinsic conduction band edge */
-      VBANDEDGEINTR,    /*!< intrinsic valence band edge */
-      BANDGAP,          /*!< band gap */
-      EDENSITY,         /*!< electron density */
-      HDENSITY,         /*!< hole density */
-      EMOBILITY,        /*!< electron mobility */
-      HMOBILITY,        /*!< hole mobility */
-      SIGMAE,           /*!< electron conductivity */
-      SIGMAH,           /*!< hole conductivity */
-      E,                /*!< modulus of electric field */
-      EX,               /*!< electric field, x-component */
-      EY,               /*!< electric field, y-component */
-      EZ,               /*!< electric field, z-component */
-      J,                /*!< total current density, modulus */
-      JN,               /*!< electron current density, modulus */
-      JNX,              /*!< electron current density, x-component */
-      JNY,              /*!< electron current density, y-component */
-      JNZ,              /*!< electron current density, z-component */
-      JP,               /*!< hole current density, modulus */
-      JPX,              /*!< hole current density, x-component */
-      JPY,              /*!< hole current density, y-component */
-      JPZ,              /*!< hole current density, z-component */
-      PN,               /*!< electron thermoelectric power */
-      PP,               /*!< hole thermoelectric power */
-      RECOMB,           /*!< total recombination rate */
-      EJOULE,           /*!< electrons Joule's effect */
-      HJOULE,           /*!< holes Joule's effect */
-      POWERNX,          /*!< electron power flux, x direction */
-      POWERNY,          /*!< electron power flux, y direction */
-      POWERNZ,          /*!< electron power flux, z direction */
-      POWERPX,          /*!< hole power flux, x direction */
-      POWERPY,          /*!< hole power flux, y direction */
-      POWERPZ,          /*!< hole power flux, z direction */
-      EPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
-      HPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
-      HRECOMB,          /*!< Recombination heat  */
-      MODELS = 100,     /*!< base number for models */
-      HEATMODELS = 1000 /*!< base number for heat models */
-
-    };
-
-
     //! The variables that can be provided
     enum Solutions
     {
-      ElPotential,      /*!< electric potential */
+      Ec,               /*!< conduction band edge */
+      Ev,               /*!< valence band edge */
       eQFermi,          /*!< electron electro-chemical potential */
       hQFermi,          /*!< hole electro-chemical potential */
-      //CBANDEDGE,        /*!< conduction band edge */
-      //VBANDEDGE,        /*!< valence band edge */
+      ElPotential,      /*!< electric potential */
+      Ec0,              /*!< bare conduction band edge */
+      Ev0,              /*!< bare valence band edge */
       //CBANDEDGEINTR,    /*!< intrinsic conduction band edge */
       //VBANDEDGEINTR,    /*!< intrinsic valence band edge */
       Eg,               /*!< band gap */
@@ -158,30 +108,29 @@ class DriftDiffusion : public SimulationInterface
       hDensity,         /*!< hole density */
       eMobility,        /*!< electron mobility */
       hMobility,        /*!< hole mobility */
-      //SIGMAE,           /*!< electron conductivity */
-      //SIGMAH,           /*!< hole conductivity */
-      EField,           /*!< electric field vector */
+      eConductivity,    /*!< electron conductivity */
+      hConductivity,    /*!< hole conductivity */
+      ElField,          /*!< electric field vector */
+      Polarization,     /*!< total electric polarization */
       CurrentDensity,   /*!< total electric current density */
-      eFlux,            /*!< electron flux */
-      hFlux,            /*!< hole flux */
-      eCurrent,         /*!< electron current density */
-      hCurrent,         /*!< hole current density */
+      //eFlux,            /*!< electron flux */
+      //hFlux,            /*!< hole flux */
+      eCurrentDensity,  /*!< electron current density */
+      hCurrentDensity,  /*!< hole current density */
+      IonizedDonors,    /*!< ionized donor density */
+      IonizedAcceptors, /*!< ionized acceptor density */
       eThElPower,       /*!< electron thermoelectric power */
       hThElPower,       /*!< hole thermoelectric power */
-      NetRecombination, /*!< total recombination rate */
       eJoule,           /*!< electron Joule heat */
       hJoule,           /*!< hole Joule heat */
-      //POWERNX,          /*!< electron power flux, x direction */
-      //POWERNY,          /*!< electron power flux, y direction */
-      //POWERNZ,          /*!< electron power flux, z direction */
-      //POWERPX,          /*!< hole power flux, x direction */
-      //POWERPY,          /*!< hole power flux, y direction */
-      //POWERPZ,          /*!< hole power flux, z direction */
-      //EPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
-      //HPTSOURCE,        /*!< Electron Peltier-Thomson heat source */
-      //HRECOMB,          /*!< Recombination heat  */
-      //MODELS = 100,     /*!< base number for models */
-      //HEATMODELS = 1000 /*!< base number for heat models */
+      ePowerFlux,       /*!< electron power flux */
+      hPowerFlux,       /*!< hole power flux */
+      ePeltier,         /*!< Electron Peltier-Thomson heat source */
+      hPeltier,         /*!< Electron Peltier-Thomson heat source */
+      RecombHeat,       /*!< Recombination heat  */
+      NetRecombination = 100,  /*!< base number for recombination models */
+      ContactCurrent   = 200,  /*!< base number for contact currents */
+      ContactVoltage   = 300   /*!< base number for contact voltages */
 
     };
 
@@ -419,6 +368,10 @@ class DriftDiffusion : public SimulationInterface
     virtual void do_init(void);
 
 
+    //! Setup the available variables
+    virtual void do_setup_solution_variables(void);
+
+
     /*! \copydoc SimulationInterface::do_equilibrium() */
     virtual void do_equilibrium(void);
 
@@ -440,18 +393,14 @@ class DriftDiffusion : public SimulationInterface
     virtual void parse_options(void);
 
 
-    /*! \copydoc SimulationInterface::solution_vector() */
-    virtual NumericVector<double>& solution_vector(void);
-
-
     /*! \copydoc SimulationInterface::build_nodal_results() */
-    virtual void build_nodal_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
+    //virtual void build_nodal_results(const std::set<std::string>& variables,
+    //    std::vector<double>& results, std::vector<std::string>& legend);
 
 
     /*! \copydoc SimulationInterface::build_elemental_results() */
-    virtual void build_elemental_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
+    //virtual void build_elemental_results(const std::set<std::string>& variables,
+    //    std::vector<double>& results, std::vector<std::string>& legend);
 
 
     /*! \copydoc SimulationInterface::build_integrated_quantities() */
@@ -473,28 +422,30 @@ class DriftDiffusion : public SimulationInterface
     virtual double do_maximum_norm_of_difference(ID id);
 
 
-    /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
-    virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     *  std::map<ID, std::vector<double> >&, const std::vector<Point>&)
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        std::map<ID, std::vector<double> >& values,
+        const std::vector<Point>& p);
 
 
     /*!
-     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
-     * const std::vector<ID>&, std::vector<std::vector<double> >&)
+     * \copydoc SimulationInterface::get_solution_secure(
+     *  std::map<ID, std::vector<double> >&)
      */
-    virtual void get_solution_secure(const Elem* elem,
-        const std::set<ID>& ids,
-        std::vector<std::map<ID, double> >& values);
+    virtual void get_solution_secure(
+        std::map<ID, std::vector<double> >& values);
 
 
-    /*!
-     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
-     * const std::vector<Point>&, const std::vector<ID>&,
-     * std::vector<std::vector<double> >&)
-     */
-    virtual void get_solution_secure(const Elem* elem,
-        const std::vector<Point>& p,
-        const std::set<ID>& ids,
-        std::vector<std::map<ID, double> >& solution);
+    //! We override this to not produce too many files ...
+    virtual void plot_globaldata(void) {};
+
+
+    //! We need to reimplement this
+    virtual void do_set_to_remembered_solution(ID id);
+
 
 
   private:
@@ -533,6 +484,9 @@ class DriftDiffusion : public SimulationInterface
      * a dielectric and a semiconductor
      */
     std::set<const Node*> _dielectric_boundary_nodes;
+
+    //! A set of all recombination model IDs (for variables)
+    std::set<ID> _recombination_ids;
 
 
     /*!

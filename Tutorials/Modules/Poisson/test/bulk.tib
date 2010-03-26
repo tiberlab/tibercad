@@ -1,0 +1,76 @@
+
+# Description of  the  device physical regions
+$Device
+{
+  Options
+  {
+    meshfile = bulk.msh
+  }
+
+   Region bulk 
+   {
+     material = Si
+     doping = 1e16 doping_type = donor
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+  model mypoisson
+  { 
+              
+    options
+    {
+      plot = (Potential, Field, Displacement)
+    }
+
+    physical_model contact
+    {
+      type = dirichlet
+      region = anode
+      potential = @Va[1]
+    }
+
+    physical_model contact
+    {
+      type = dirichlet
+      region = cathode
+      potential = 0.0
+    }
+
+
+  }  
+
+}
+
+$Solver
+{
+}
+
+# Definition of  model-indipendent parameters of the Simulation
+$Simulation
+{
+  verbose = 2
+  temperature = 300
+  solve = mypoisson
+  resultpath = output
+  output_format = dat
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

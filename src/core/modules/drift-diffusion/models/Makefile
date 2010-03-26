@@ -2,9 +2,10 @@
 
 topdir := ../../../../..
 
-MODULE_LDFLAGS = -L$(topdir)/lib/tibermodels -ldriftdiffusion -L$(topdir)/lib -ltibercad
+MODULE_LDFLAGS = -L$(topdir)/lib/tibermodels -l:driftdiffusion.so -L$(topdir)/lib -ltibercad
 include $(topdir)/Make.module
 
+MODULENAME=driftdiffusion
 
 $(foreach lib, $(srcfiles), $(eval $(call SUBMODEL, $(lib))))
 

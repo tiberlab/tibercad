@@ -38,8 +38,8 @@ extern "C"
   typedef int PetscErrorCode;
   typedef int PetscInt;
 #endif
-  
-  // this function is called by PETSc at the end of each nonlinear step  
+
+  // this function is called by PETSc at the end of each nonlinear step
   PetscErrorCode
   __tiber_petsc_snes_monitor(SNES _snes, PetscInt its, PetscReal fnorm,
       void *ctx)
@@ -52,7 +52,6 @@ extern "C"
 
     KSPConvergedReason reason;
     KSPGetConvergedReason(ksp, &reason);
-
 
     if (fnorm != fnorm)
     {
@@ -105,25 +104,25 @@ extern "C"
     assert (x   != NULL);
     assert (r   != NULL);
     assert (ctx != NULL);
-    
+
     TiberPetscNonlinearSolver* solver =
       static_cast<TiberPetscNonlinearSolver*>(ctx);
-    
+
     PetscVector<Number> X_global(x), R(r);
     PetscVector<Number> X_local(X_global.size());
 
     X_global.localize (X_local);
-  
+
     if (solver->residual != NULL) solver->residual(X_local, R);
     if (solver->matvec   != NULL) solver->matvec(X_local, &R, NULL);
 
     R.close();
-    
+
     return ierr;
   }
 
 
-  
+
   // this function is called by PETSc to evaluate the Jacobian at X
   PetscErrorCode
   __tiber_petsc_snes_jacobian(SNES snes, Vec x, Mat *jac, Mat *pc,
@@ -132,10 +131,10 @@ extern "C"
     int ierr=0;
 
     assert (ctx != NULL);
-    
+
     TiberPetscNonlinearSolver* solver =
       static_cast<TiberPetscNonlinearSolver*>(ctx);
-    
+
     PetscMatrix<Number> PC(*pc);
     PetscMatrix<Number> Jac(*jac);
     PetscVector<Number> X_global(x);
@@ -145,13 +144,13 @@ extern "C"
 
     if (solver->jacobian != NULL) solver->jacobian(X_local, PC);
     if (solver->matvec   != NULL) solver->matvec(X_local, NULL, &PC);
-    
+
     PC.close();
     Jac.close();
-    
+
     *msflag = SAME_NONZERO_PATTERN;
     //*msflag = DIFFERENT_NONZERO_PATTERN;
-    
+
     return ierr;
   }
 
@@ -176,7 +175,7 @@ extern "C"
 
   //
   // Convergence test
-  // 
+  //
 # if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
     (PETSC_VERSION_SUBMINOR >= 2)) || (PETSC_VERSION_MAJOR >= 3)
   PetscErrorCode
@@ -202,17 +201,25 @@ extern "C"
         throw(SNESDivergedError(-1, it, fnorm));
 
       solver->old_gnorm() = gnorm;
-    }
+
 #if (PETSC_VERSION_MAJOR >= 3)
-    return SNESDefaultConverged(snes, it, xnorm, gnorm, fnorm, reason, ctx);
+      return SNESDefaultConverged(snes, it, xnorm, gnorm, fnorm, reason, ctx);
 #else
-    return SNESConverged_LS(snes, it, xnorm, gnorm, fnorm, reason, ctx);
+      return SNESConverged_LS(snes, it, xnorm, gnorm, fnorm, reason, ctx);
 #endif
+    }
+    else
+    {
+      // this is a trick for situations where the solution is already found
+      if (fnorm < 1e-12)
+        *reason = SNES_CONVERGED_FNORM_ABS;
+      return 0;
+    }
     // TODO check gnorm
   }
 #else
   PetscErrorCode
-  __tiber_snes_convergence_test(SNES snes, PetscReal xnorm, PetscReal gnorm, 
+  __tiber_snes_convergence_test(SNES snes, PetscReal xnorm, PetscReal gnorm,
       PetscReal fnorm, SNESConvergedReason *reason, void *ctx)
   {
     int ierr = 0;
@@ -229,7 +236,7 @@ extern "C"
     return SNESConverged_LS(snes, xnorm, gnorm, fnorm, reason, ctx);
   }
 #endif
-    
+
 } // end extern "C"
 
 
@@ -282,7 +289,7 @@ void TiberPetscNonlinearSolver::clear(void)
 
 
 void TiberPetscNonlinearSolver::init(void)
-{  
+{
   // Initialize the data structures if not done so already.
   if (!this->initialized())
   {
@@ -305,7 +312,7 @@ void TiberPetscNonlinearSolver::init(void)
     ierr = SNESCreate(libMesh::COMM_WORLD,&_snes);
     TiberPetscUtils::checkerr(ierr);
 
-#endif	     
+#endif
 
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
     (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
@@ -339,7 +346,7 @@ void TiberPetscNonlinearSolver::init(void)
 
 
 
-std::pair<unsigned int, Real> 
+std::pair<unsigned int, Real>
 TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
     NumericVector<double>& solution,
     NumericVector<double>& residual)
@@ -410,7 +417,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
 #else
   SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
 #endif
-  
+
   KSP ksp;
   SNESGetKSP(_snes, &ksp);
 
@@ -419,7 +426,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
 
   KSPSetTolerances(ksp, get_linear_rtol(), get_linear_atol(), PETSC_DEFAULT,
       get_linear_max_it());
- 
+
   PC pc;
   KSPGetPC(ksp, &pc);
 
@@ -487,13 +494,13 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   ierr = SNESSolve(_snes, x->vec(), &n_iterations);
   TiberPetscUtils::checkerr(ierr);
 
-  // 2.2.x style	
+  // 2.2.x style
 #elif (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
 
   ierr = SNESSolve(_snes, x->vec());
   TiberPetscUtils::checkerr(ierr);
 
-  // 2.3.x & newer style	
+  // 2.3.x & newer style
 #else
 
   ierr = SNESSolve(_snes, PETSC_NULL, x->vec());
@@ -504,7 +511,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   // check for convergence
   SNESConvergedReason reason;
   SNESGetConvergedReason(_snes, &reason);
-  
+
   SNESGetIterationNumber(_snes, &n_iterations);
 
   double fnorm;
@@ -513,7 +520,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   // reason < 0 means that the solver diverged. In this case we
   // throw an exception.
   if (reason < 0)
-  { 
+  {
 # if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
     (PETSC_VERSION_SUBMINOR >= 2)) || (PETSC_VERSION_MAJOR >= 3)
     bool throw_ex = true;

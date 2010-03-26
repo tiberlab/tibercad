@@ -24,11 +24,11 @@ PATCH=${PWD}/libmesh.patch-${LIBMESHVERSION}
 
 cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
-  if [ ! -d libmesh-${LIBMESHVERSION} ]; then
-    svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}
+  if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
+    svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$march
 
     if [ -e ${PATCH} ]; then
-      patch -p0 -d libmesh-${LIBMESHVERSION} < ${PATCH}
+      patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
     fi
   fi
 else
@@ -37,20 +37,21 @@ else
   fi
 fi
 
-if [ ! -d libmesh-${LIBMESHVERSION} ]; then
+if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
   if [ ! -e ${ARCHIVE} ]; then
     echo "Could not download libmesh."
     exit 1
   fi
   tar zxf ${ARCHIVE}
+  mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$march
 
   if [ -e ${PATCH} ]; then
-    patch -p0 -d libmesh-${LIBMESHVERSION} < ${PATCH}
+    patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
   fi
 fi
 
 
-cd libmesh-${LIBMESHVERSION}
+cd libmesh-${LIBMESHVERSION}-$march
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
@@ -74,6 +75,7 @@ sed 's/-pedantic//g' Make.common.orig | sed 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' | s
 make |tee make_opt.log
 
 if [ $DEBUG == 'y' ]; then
+  export PETSC_ARCH=${ARCH}-dbg
   make METHOD=dbg
 fi
 

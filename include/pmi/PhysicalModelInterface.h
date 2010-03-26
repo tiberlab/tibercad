@@ -200,6 +200,14 @@ class PhysicalModelInterface : public TiberModelObject
         const PhysicalModelInterface* comp_B, double xa);
 
 
+    //! Initialize this model as interface model
+    /*!
+     * It calls read_interface_database(), do_init_interface() and do_init()
+     */
+    void init_interface(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B);
+
+
     //! Print some info
     void print_info(void);
 
@@ -283,17 +291,33 @@ class PhysicalModelInterface : public TiberModelObject
     virtual void read_database_alloy(void) {};
 
 
+    //! Read interface parameters from the database
+    /*!
+     * Read parameters for an interface model from the database.
+     * If you reimplement this in a derived class, call the method
+     * of the base class, too.
+     */
+    virtual void read_interface_database(void) {};
+
+
     //! Initialize an alloy
     /*!
      * Calculates all parameters of an alloy \f$A_xB_{x-1}C\f$.
      *
-     * You have to do everything that in a normal material would be done in
-     * do_init()
-     *
-     * \note do_init() will \em not be called for an alloy
+     * \note do_init() will not be called after do_init_alloy()
      */
     virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
+
+
+    //! Initialize an interface model
+    /*!
+     * Calculates all parameters of an interface.
+     *
+     * \note do_init() will not be called after do_init_interface()
+     */
+    virtual void do_init_interface(const PhysicalModelInterface* comp_A,
+        const PhysicalModelInterface* comp_B);
 
 
     /*! \copydoc TiberModelObject::override_parameter_string()
@@ -671,12 +695,17 @@ PhysicalModelInterface::create_submodel_alloy(const T* comp_A,
 
 inline
 void
-PhysicalModelInterface::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
+PhysicalModelInterface::do_init_alloy(const PhysicalModelInterface*,
+    const PhysicalModelInterface*, double)
 {
-  ignore_unused_variable(comp_A);
-  ignore_unused_variable(comp_B);
-  ignore_unused_variable(xa);
+}
+
+
+inline
+void
+PhysicalModelInterface::do_init_interface(const PhysicalModelInterface*,
+    const PhysicalModelInterface*)
+{
 }
 
 

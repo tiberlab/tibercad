@@ -83,6 +83,18 @@ class Macrostrain : public StrainSimulation
 
 
 
+    //! The variables that can be provided
+    enum Solutions
+    {
+      strain,           //!< strain
+      stress,           //!< stress
+      vonMises,         //!< von Mises stress measure
+      piezoPolarization,//!< piezoelectric polarization
+      strainCrystal,    //!< strain in crystal coordinates
+      stressCrystal,    //!< stress in crystal coordinates
+      energyDensity     //!< elastic energy density
+    };
+
 
 
   struct atom
@@ -534,6 +546,9 @@ class Macrostrain : public StrainSimulation
   virtual void parse_options(void);
 
 
+  //! Setup the available variables
+  virtual void do_setup_solution_variables(void);
+
 
 
 
@@ -545,12 +560,20 @@ class Macrostrain : public StrainSimulation
     and polarization vector \f$ \bf P \f$ components.
     \f$ x, y,  z\f$ refer to calculation coordinate system.
    */
-  virtual void build_elemental_results(const std::set<std::string>& variables,
-				       std::vector<double>& results, std::vector<std::string>& legend) ;
+  //virtual void build_elemental_results(const std::set<std::string>& variables,
+//				       std::vector<double>& results, std::vector<std::string>& legend) ;
 
 
 
 
+
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     *  std::map<ID, std::vector<double> >&, const std::vector<Point>&)
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        std::map<ID, std::vector<double> >& values,
+        const std::vector<Point>& p);
 
 
 

@@ -37,7 +37,7 @@
  * this macro somewhere in the source file to be able to compile
  * it as TiberCad module.
  *
- * \param name the name of the class that should be 'creatable'
+ * \param name the name of the class that should be 'createable'
  * \param simname the name for this module
  *
  * \c simname will be used to create the library name, and the model
@@ -48,8 +48,8 @@
     TBDLEXPORT void TBDESTROYFUNC(TiberModelObject* p) { \
       delete p; \
     } \
-    TBDLEXPORT classname* TBCREATEFUNC(void) { \
-      return new classname(); \
+    TBDLEXPORT classname* TBCREATEFUNC(const ModelOptions& options) { \
+      return classname::create(options); \
     } \
   } \
 

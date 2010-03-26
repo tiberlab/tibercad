@@ -47,6 +47,8 @@ $Models
      # we use a different quadrature rule to avoid density peaks
      # where the mesh is not so dense
      quadrature_rule = trapez
+
+     plot = (Ec, Ev, ElPotential, ElField, eQFermi, hQFermi, eDensity, hDensity, eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents, NetRecombination, eMobility, hMobility)
     }
 
 
@@ -149,8 +151,6 @@ $Simulation
   solve = sweep_base
   resultpath = output
   output_format = vtk
-
-  plot = (Ec, Ev, ElPotential, EField, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, ContactCurrents, NetRecombination, eMob, hMob)
 }
 
 

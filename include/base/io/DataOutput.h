@@ -116,7 +116,10 @@ class DataOutput
     const std::string& get_output_directory(void) const;
 
     //! Get the filename
-    const std::string& get_filename(void) const;
+    /*!
+     * \return the full path to the output file, excluding the suffix
+     */
+    std::string get_filename(void) const;
 
     //! Check if it is a binary file
     bool is_binary(void) const;
@@ -125,13 +128,13 @@ class DataOutput
     bool is_ascii(void) const;
 
     //! Check if a zone ID has data
-    bool has_data(ID zone);
+    /*!
+     * If no argument is given, the method checks if there is
+     * any zone data available.
+     */
+    bool has_data(ID zone = INVALID_ID);
 
     //! Get the zone data
-    /*!
-     * This method will throw an error if the given zone
-     * has no associated data
-     */
     const DataMap& get_zone_data(ID zone);
 
     //! The actual writer

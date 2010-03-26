@@ -325,8 +325,8 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   //Model Variables
 
   Tensor2Sym kappa;
-  
-  
+
+
 
 
   ThermalContact* contact;
@@ -385,10 +385,10 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
 	  double value = 0.0;
 
-	  for (short i = 0; i < dim; i++)
+	  for (unsigned int i = 0; i < dim; i++)
 	  {//loop over direction (1); test function derivative
 
-	    for (short j = 0; j < dim; j++)
+	    for (unsigned int j = 0; j < dim; j++)
 	    {//loop over direction (2); basis function derivative
 
 	      double kappa_value;
@@ -404,7 +404,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 	  }//end loop over direction (1)
 
 	  Ke(p1,p2) += value;
-	
+
 	} //loop over basis functions
 
 	Fe(p1) +=JxW[qp] * heat_source[qp] * phi[p1][qp];
@@ -538,20 +538,20 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		RealGradient heat_flux(0);
 		const Elem* neighbour = (elside.elem())->neighbor(side);
 				heat_flux  =  (dynamic_cast<BTEFourier*> (contact))->get_heat_flux(neighbour,qface_point[qp]);
- 
-				
+
+
 		for (unsigned int p1=0; p1<n_dofs; p1++) //test functions of the variable T
 		{ //minus means that the normal should be refereed to the other side
-		 
-		  Fe(p1) -=  JxW_face[qp] * (heat_flux * normal[qp]) *  phi_face[p1][qp];  
+
+		  Fe(p1) -=  JxW_face[qp] * (heat_flux * normal[qp]) *  phi_face[p1][qp];
 
 		}//for (unsigned int p1=0; p1<n_dofs; p1++)
-		
+
 
 	      }// for (unsigned int qp=0; qp < qface.n_points(); qp++)
 	    }
 	    break;
-	    
+
 	  }//switch
 
 	}//  if (bd->get_boundary_properties( get_id() ) != NULL )
@@ -777,7 +777,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
     // std::vector<std::set<ID> > source_index(nm);
 
-    for (int i = 0; i < nm; i++)
+    for (unsigned int i = 0; i < nm; i++)
     {
 
       std::map<ID,std::string> source_legend =
@@ -821,7 +821,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
        W.push_back(n_vars);
 
-       legend.resize(legend.size() + dim);
+       legend.resize(legend.size() + dim + 1);
 
       switch (dim)
       {
@@ -843,7 +843,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
     //Other fluxes
      std::vector<std::set<ID> > flux_index(nm);
-     for (int i = 0; i < nm; i++)
+     for (unsigned int i = 0; i < nm; i++)
      {
        std::map<ID,std::string> flux_legend  =
 	 heat_model->get_heat_source_model(ids[i])->get_flux_legend(variables);
@@ -854,7 +854,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
        for (; leg != leg_end; leg++)
        {
 	 W.push_back(n_vars);
-	 legend.resize(legend.size() + dim);
+	 legend.resize(legend.size() + dim + 1);
 
          flux_index[i].insert(leg->first);
 	 std::string label = leg->second;
@@ -948,7 +948,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
   fe->attach_quadrature_rule(&qrule);
 
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  //const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
   std::vector<unsigned int> dof_indices;
 
@@ -968,7 +968,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
     dof_map.dof_indices (elem, dof_indices);
 
-    unsigned int n_dofs = dof_indices.size();
+    //unsigned int n_dofs = dof_indices.size();
 
     unsigned int id = n_vars * elem_number;
 
@@ -991,7 +991,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
       unsigned int k = 0;
 
-      for (int i = 0; i < nm; i++)
+      for (unsigned int i = 0; i < nm; i++)
       {
         std::vector<std::map<ID, double> > heat_sources;
 
@@ -1057,7 +1057,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
       //Other power flux
       std::vector<std::map<ID,RealGradient> > power_flux;
 
-      for (int i = 0; i < nm; i++)
+      for (unsigned int i = 0; i < nm; i++)
       {
 	heat_model->get_heat_source_model(ids[i])->get_power_fluxes(elem,_node,power_flux);
 

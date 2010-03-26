@@ -2,6 +2,13 @@
 # Description of  the  device physical regions
 $Device
 {
+
+  Options
+  {
+    meshfile = mosfet.msh
+    dimension = 2
+  }
+
    Region substrate 
    {
      material = Si
@@ -39,6 +46,8 @@ $Models
 
      # we only solve for electrons
      coupling = electrons
+
+     plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity,  NetRecombination, ElField, ElPotential, ContactCurrents)
 
     }
 
@@ -137,14 +146,11 @@ $Solver
 # Definition of  model-indipendent parameters of the Simulation
 $Simulation
 {
-  meshfile = mosfet.msh
-  dimension = 2
   temperature = 300
   solve = sweep_gate
   resultpath = output_IV_char  
   #output_format = gmv
   output_format = vtk
-  plot = (Ec, Ev, QFermi_e, eDensity, eCurrent,  NetRecombination, EField, ElPotential, ContactCurrents)
 }
 
 

@@ -137,9 +137,9 @@ PhysicalModelInterface::create(const string& name,
     mod = FieldDependentMobility::create(options);
   else if (name == "mobility_field_assisted")
     mod = FieldAssistedMobility::create(options);
-  else if (name == "dd_simple")
+  else if (name == "driftdiffusion_simple")
     mod = SimpleSemiconductorModel::create(options);
-  else if (name == "dd_default")
+  else if (name == "driftdiffusion_default")
     mod = SemiconductorModel::create(options);
   else if (name == "dssc_default")
     mod = DSSCModel::create(options);
@@ -428,6 +428,43 @@ PhysicalModelInterface::init(void)
 }
 
 
+void
+PhysicalModelInterface::init_interface(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B)
+{
+
+  read_database();
+
+  read_interface_database();
+
+  // setup the submodels
+  _create_submodels();
+
+  SubmodelIterator it(submodels_begin());
+  const SubmodelIterator end(submodels_end());
+  ConstSubmodelIterator it_A(comp_A->submodels_begin());
+
+  // comp_B might be NULL (if it is a 'true' boundary)
+  if (comp_B != NULL)
+  {
+    assert(typeid(*comp_A) == typeid(*comp_B));
+
+    ConstSubmodelIterator it_B(comp_B->submodels_begin());
+    for ( ; it != end; ++it, ++it_A, ++it_B)
+    {
+      PhysicalModelInterface* pm = it->second;
+      pm->init_interface(it_A->second, it_B->second);
+    }
+  }
+  else
+    for ( ; it != end; ++it, ++it_A)
+      it->second->init_interface(it_A->second, NULL);
+
+  // some models might treat alloys in a special way
+  do_init_interface(comp_A, comp_B);
+
+  do_init();
+}
 
 
 void
@@ -510,7 +547,7 @@ PhysicalModelInterface::_create_submodels(void)
     // we delete the options from the ModelOptions object
     get_options().delete_submodel(it);
 
-    _submodels.insert(SubmodelMap::value_type(it->first, pm));
+    add_submodel(it->first, pm);
   }
 }
 

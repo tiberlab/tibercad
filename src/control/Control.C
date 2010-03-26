@@ -17,12 +17,13 @@
 #include "Device.h"
 #include "Material.h"
 #include "MaterialBoundary.h"
+#include "PhysicalModel.h"
 #include "EdgeObject.h"
 #include "NodeObject.h"
 #include "Boundary.h"
 #include "SimulationEnvironment.h"
 #include "SimulationInterface.h"
-#include "PetscRuntimeError.h"
+#include "RuntimeException.h"
 #include "AtomisticStructure.h"
 
 #include <sstream>
@@ -237,7 +238,7 @@ Control::setup_globals(void)
   _outputdir = opts.get_option("resultpath", _outputdir);
   opts.delete_option("resultpath");
 
-  _output_format = opts.get_option("output_format", "gmv");
+  _output_format = opts.get_option("output_format", "vtk");
 
   {
     Messages m;
@@ -578,7 +579,10 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     //
 
     IDSet phys_regions;
-    const string& physreg = simopts.get_option("physical_regions", "all");
+    string physreg = simopts.get_option("physical_regions", "all");
+    if (physreg != "all")
+      Messages::warning("physical_regions keyword is deprecated.");
+    physreg = simopts.get_option("region", physreg);
     extract_physical_regions(physreg, phys_regions);
 
     // get the user defined name (if defined...)
@@ -646,11 +650,124 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     sim->verbose() = SimulationOptions::verbose();
 
+    // this map contains all sub- and boundary models
+    multimap<const string, ModelOptions>& physmodels =
+      model_str->get_physical_model_map();
+
+    //
+    // we create all lower dimensional models (and eliminate them
+    // from the map)
+    //
+    m.newline();
+    m.info("Setup of lower dimensional (boundary) models... ");
+    m.indent();
+    {
+
+      multimap<const string,
+        ModelOptions>::iterator mapit(physmodels.begin());
+      multimap<const string,
+        ModelOptions>::iterator mapend(physmodels.end());
+      while (mapit != mapend)
+      {
+        multimap<const string, ModelOptions>::iterator tmpit(mapit);
+        ++mapit;
+
+        const ModelOptions& bdopts = tmpit->second;
+
+        const string& physreg = bdopts.get_option("region", "all");
+
+        // if "all", it cannot be a lower dimensional region
+        if (physreg == "all")
+          continue;
+
+        bool add = false;
+
+        // It might be some lower dim model
+
+        vector<string> ids_strings;
+        Utils::extract_vector(physreg, ids_strings);
+
+        // TODO the following is not complete! It depends on input file
+        // details (there should be a generic interface section)
+        for (unsigned int i = 0; i < ids_strings.size(); i++)
+        {
+          vector<ID> region_ids;
+          device.get_boundary_region_ids(ids_strings[i], region_ids);
+
+          // if it is no boundary region, we continue to the next region name
+          if (region_ids.size() == 0)
+            continue;
+
+          // now it must be a lower dim model
+          add = true;
+
+          // NOTE: the model will only be added if a corresponding boundary ID
+          // has been found
+          for (unsigned int reg = 0; reg < region_ids.size(); reg++)
+          {
+            ID id = region_ids[reg];
+
+            MaterialBoundary* bd;
+            if ((bd = device.get_boundary_object(id)) != NULL)
+            {
+              PhysicalModel* pm = bd->get_model(sim->get_id());
+              if (pm == NULL)
+              {
+                Material* matA = bd->get_material_A();
+                Material* matB = bd->get_material_B();
+                pm = sim->new_boundary_model(bdopts, matA, matB);
+                bd->add_model(pm, sim->get_id());
+              }
+
+              // now it's there
+              // TODO trick for the moment: remove a boundary model named 'contact'
+              if (tmpit->first != "contact")
+                pm->get_options().add_submodel(tmpit->first, bdopts);
+
+            }
+
+            EdgeObject* eo;
+            if ((eo = device.get_edge_object(id)) != NULL)
+            {
+              PhysicalModel* pm = eo->get_model(sim->get_id());
+              if (pm == NULL)
+              {
+                pm = sim->new_edge_model(bdopts);
+                eo->add_model(pm, sim->get_id());
+              }
+
+              // now it's there
+            }
+
+            NodeObject* no;
+            if ((no = device.get_node_object(id)) != NULL)
+            {
+              PhysicalModel* pm = no->get_model(sim->get_id());
+              if (pm == NULL)
+              {
+                pm = sim->new_node_model(bdopts);
+                no->add_model(pm, sim->get_id());
+              }
+
+              // now it's there
+            }
+          }
+        }
+
+        // remove it from the map
+        if (add)
+          physmodels.erase(tmpit);
+      }
+    }
+    m.unindent();
+
 
     //
     // now we have to create the models
     //
-    m.info("Creating physical models... ", false);
+    m.newline();
+    m.info("Creating bulk models... ");
+    m.indent();
 
     // TODO only for backwards compatibility
     map_it = physics_opts.find(modelname);
@@ -690,9 +807,13 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         //throw InitFailedException(s.str());
       }
 
+      // TODO this is incomplete. The input file should contain a block
+      // describing the basic model
+
       // we only continue if the model has not already been added
       // this is important as a material can be assigned to different
       // regions
+      // TODO (Is this true ??)
       if (mat->get_model(sim->get_id()) == NULL)
       {
 
@@ -710,9 +831,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         // NOTE: different submodels could have the same identifier
         //
         {
-          multimap<const string, ModelOptions>& physmodels =
-            model_str->get_physical_model_map();
-
           multimap<const string,
             ModelOptions>::iterator mapit(physmodels.begin());
           multimap<const string,
@@ -720,12 +838,17 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
           for ( ; mapit != mapend; ++mapit)
           {
             bool add = true;
+
             // we have to check if it should be built for the current region
+            // TODO to not allow for errors
             if ((mapit->second).find_option("restrict_to_region"))
+              throw RuntimeException("\'restrict_to_region\' is deprecated. Use \'region\'");
+
+            if ((mapit->second).find_option("region"))
             {
               IDSet regs;
               const string& physreg =
-                (mapit->second).get_option("restrict_to_region", "all");
+                (mapit->second).get_option("region", "all");
               extract_physical_regions(physreg, regs);
               if (regs.count(reg_id) == 0) add = false;
             }
@@ -755,15 +878,16 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         mat->add_model(model, sim->get_id());
       }
     }
+    m.unindent();
 
-    m.info("done");
 
+
+    //
+    // this is the old way -->
 
     //
     // and now... the boundary conditions
     //
-    m.info("Setup of boundary models...", false);
-
     map<ID, RegionStructure>& bc_map = model_str->get_model_BC_map();
     map<ID, RegionStructure>::iterator bdit(bc_map.begin());
     const map<ID, RegionStructure>::iterator bdend(bc_map.end());
@@ -823,8 +947,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
       const ModelOptions& bdopts = data.get_options();
 
-      //
-      // this is the old way -->
 
       Boundary* bd = new Boundary(data.get_region_name(), env, region_ids);
       bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
@@ -836,43 +958,18 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       if (bdprop != NULL)
         bd->add_boundary_properties(bdprop, sim->get_id());
 
-      // <-- end of old way
-      //
-
-      for (IDSet::const_iterator it(region_ids.begin());
-           it != region_ids.end(); ++it)
-      {
-        ID id = *it;
-
-        MaterialBoundary* bd;
-        if ((bd = device.get_boundary_object(id)) != NULL)
-        {
-          Material* matA = bd->get_material_A();
-          Material* matB = bd->get_material_B();
-          PhysicalModel* pm = sim->new_boundary_model(bdopts, matA, matB);
-          bd->add_model(pm, sim->get_id());
-        }
-
-        EdgeObject* eo;
-        if ((eo = device.get_edge_object(id)) != NULL)
-        {
-          PhysicalModel* pm = sim->new_edge_model(bdopts);
-          eo->add_model(pm, sim->get_id());
-        }
-
-        NodeObject* no;
-        if ((no = device.get_node_object(id)) != NULL)
-        {
-          PhysicalModel* pm = sim->new_node_model(bdopts);
-          no->add_model(pm, sim->get_id());
-        }
-      }
-
     }
-    m.info("done");
+    // <-- end of old way
+    //
+
+
+
 
     // prepare some of the environments internals (lists of elements etc.)
     env->prepare();
+
+    // setup the solution variables
+    sim->setup_solution_variables();
 
   } // end loop over simulations
 
@@ -1104,7 +1201,7 @@ Control::extract_physical_regions(const std::string& str, IDSet& ids)
         if (regs.find(id) == id_end)
         {
           ostringstream s;
-          s << "Physical region " << id <<
+          s << "Physical region " << preg[i] <<
             " does not exist in mesh file.";
           throw InitFailedException(s.str());
         }

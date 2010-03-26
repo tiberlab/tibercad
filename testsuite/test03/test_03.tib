@@ -85,7 +85,7 @@ $Models
     options
     {
      simulation_name = dd
-     plot = (ContactCurrent, Pn, Pp)
+     plot = (ContactCurrents, Pn, Pp, RecombHeat, ePeltier, hPeltier, eJoule, hJoule, ePowerFlux, hPowerFlux)
      
      thermal_simulation = tt
     }
@@ -157,12 +157,6 @@ $Solver
   }
 }
 
-
-
-# Definition of  Model dependent physical parameters
-$Physics
-{
-}
 
 
 # Definition of  model-indipendent parameters of the Simulation

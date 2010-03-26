@@ -28,7 +28,7 @@ fi
   --with-slepc-prefix=/usr/pack/tibercad_dev-2.0-ma/slepc-3.0.0-p7 \
   --with-mkl=/usr/pack/intel_mkl-10.2-gp \
   --with-subversion=svn-1.6.5 \
-  --disable-modules \
+  --enable-modules \
   --enable-uptight\
   --enable-pardiso \
   ${CONFIGOPTS} \

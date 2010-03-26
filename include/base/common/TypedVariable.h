@@ -7,6 +7,7 @@
 #include "InitializerBase.h"
 
 #include <sstream>
+#include <set>
 
 
 //! The real variable class which is aware of the variable type
@@ -104,14 +105,17 @@ template <typename T>
 void
 TypedVariable<T>::do_unregister(const TiberModelObject* ct)
 {
-  typename VarMap::iterator it(_variables.begin());
-  for ( ; it != _variables.end(); ++it)
+  typename VarMap::iterator iter(_variables.begin());
+  std::set<T*> to_be_removed;
+  for ( ; iter != _variables.end(); ++iter)
+    if ((iter->second).first == ct)
+      to_be_removed.insert(iter->first);
+
+  typename std::set<T*>::iterator it(to_be_removed.begin());
+  for ( ; it != to_be_removed.end(); ++it)
   {
-    if ((it->second).first == ct)
-    {
-      delete (it->second).second;
-      _variables.erase(it);
-    }
+    delete _variables[*it].second;
+    _variables.erase(*it);
   }
 }
 

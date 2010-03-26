@@ -1,14 +1,14 @@
 // $Id$
 
-#include "boost/regex.hpp"
-#include "boost/algorithm/string/trim.hpp"
-
 #include "Variable.h"
 #include "TypedVariable.h"
 #include "Utils.h"
 #include "InitFailedException.h"
 #include "RuntimeException.h"
 
+
+#include "boost/regex.hpp"
+#include "boost/algorithm/string/trim.hpp"
 
 using namespace std;
 

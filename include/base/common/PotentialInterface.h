@@ -47,11 +47,12 @@ public:
 
   //! Get the electrostatic potential in specified points
   void get_potential(const Elem* elem, const std::vector<Point>& p,
-      std::vector<double>& potentials);
+      std::vector<double>& potentials, bool local_coord = false);
 
 
   //! Get the electrostatic potential in one point
-  double get_potential(const Elem* elem, const Point& p);
+  double get_potential(const Elem* elem, const Point& p,
+      bool local_coord = false);
 
 
   //THIS SECTION IS TEMPORARY FOR IWCE CALCULATION
@@ -62,11 +63,12 @@ public:
 
   //! Get the electron chemical potential in specified points
   void get_el_chem_potential(const Elem* elem, const std::vector<Point>& p,
-      std::vector<double>& potentials);
+      std::vector<double>& potentials, bool local_coord = false);
 
 
   //! Get the electron chemical potential in one point
-  double get_el_chem_potential(const Elem* elem, const Point& p);
+  double get_el_chem_potential(const Elem* elem, const Point& p,
+      bool local_coord = false);
 
   //! Get the nodal hole chemical potentials
   void get_hl_chem_potential(const Elem* elem, std::vector<double>& potentials);
@@ -74,17 +76,12 @@ public:
 
   //! Get the hole chemical potential in specified points
   void get_hl_chem_potential(const Elem* elem, const std::vector<Point>& p,
-      std::vector<double>& potentials);
+      std::vector<double>& potentials, bool local_coord = false);
 
 
   //! Get the hole chemical potential in one point
-  double get_hl_chem_potential(const Elem* elem, const Point& p);
-
-  //! The ID as returned from the simulation
-  ID _id_chem_el;
-
-  //! The ID as returned from the simulation
-  ID _id_chem_hl;
+  double get_hl_chem_potential(const Elem* elem, const Point& p,
+      bool local_coord = false);
   //-------------------------------------------------------------
 
 
@@ -103,16 +100,14 @@ private:
   SimulationInterface* _simulation;
 
 
-  //! The name of the potential variable
-  static std::string _variable_name;
-
-
   //! The ID as returned from the simulation
   ID _id;
 
+  //! The ID as returned from the simulation
+  ID _id_chem_el;
 
-  //! We need the ID in a set for the function calls
-  std::set<ID> _id_set;
+  //! The ID as returned from the simulation
+  ID _id_chem_hl;
 
 };
 

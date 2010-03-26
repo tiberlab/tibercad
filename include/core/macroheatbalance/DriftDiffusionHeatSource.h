@@ -2,7 +2,7 @@
 #define _DRIFTDIFFUSIONHEATSOURCE_H_
 
 #include "PhysicalModelInterface.h"
-#include "HeatSourceInterface.h"       
+#include "HeatSourceInterface.h"
 
 
 
@@ -20,13 +20,13 @@ public:
 
   //! Costructor
   static  DriftDiffusionHeatSource* create(const ModelOptions& options);
- 
-  
-  
+
+
+
   virtual void get_power_fluxes(const Elem*  elem, std::vector<Point> h_point, std::vector<std::map<ID,RealGradient> >& power_fluxes);
 
 
-  virtual void get_heat_sources( const Elem*  elem, std::vector<Point> h_point, std::vector<std::map<ID, double> >& heat_sources);     
+  virtual void get_heat_sources( const Elem*  elem, std::vector<Point> h_point, std::vector<std::map<ID, double> >& heat_sources);
 
 
   //! \copydoc HeatSourceInterface::get_source_legend(const std::set<std::string>& variables);
@@ -37,8 +37,8 @@ public:
 
 
   //!Set the current element
-  virtual void set_heat_model(HeatModel* heat_model); 
-  
+  virtual void set_heat_model(HeatModel* heat_model);
+
   //! \copydoc PhysicalModel::do_print_info(void)
   virtual void do_print_info(void);
 
@@ -48,34 +48,30 @@ public:
    public:
      //!Constructor
      HeatSourceParameters(void);
-    
+
      //! name of this heat source model
      std::string model_name;
-     
+
      //! name of the drift diffusion siulation
      std::string dd_simul_name;
-    
+
   };
 
 private:
 
-  //!Heat model option 
-  HeatSourceParameters heat_source_opt;  
+  //!Heat model option
+  HeatSourceParameters heat_source_opt;
 
 
   enum heat_variables
     {
       EJOULE = 0,
-      HJOULE,  
+      HJOULE,
       RECHEAT,
       EPELTH,
       HPELTH,
       WNX,
-      WNY,
-      WNZ,
-      WPX,
-      WPY,
-      WPZ
+      WPX
     };
 
   //!Power flux legend
@@ -96,21 +92,21 @@ private:
   //!Variable map
   std::map<ID,ID> var_map;
 
- 
+
 protected:
 
 
   //!Constructor
   DriftDiffusionHeatSource(const ModelOptions& options);
-    
+
 
   virtual void do_init (void);
 
 
   virtual PhysicalModelInterface* create_new (void) const;
- 
- 
- 
+
+
+
 };
 
 
@@ -141,7 +137,7 @@ DriftDiffusionHeatSource::create(const ModelOptions& options)
 
 
 inline
-void 
+void
 DriftDiffusionHeatSource::set_heat_model(HeatModel* heat_model)
 {
 
@@ -153,7 +149,7 @@ DriftDiffusionHeatSource::set_heat_model(HeatModel* heat_model)
 // std::map<ID,std::string>
 // DriftDiffusionHeatSource::get_source_legend(void)
 // {
- 
+
 //  return  _source_legend;
 
 // }
@@ -163,7 +159,7 @@ DriftDiffusionHeatSource::set_heat_model(HeatModel* heat_model)
 // DriftDiffusionHeatSource::get_flux_legend(void)
 // {
 
-  
+
 //  return  _flux_legend;
 
 // }

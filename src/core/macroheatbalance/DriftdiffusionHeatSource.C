@@ -46,24 +46,21 @@ void  DriftDiffusionHeatSource::do_init(void)
    throw InitFailedException("Could not find " + heat_source_opt.dd_simul_name);
 
 
-  std::string name_model = get_options(). get_option("recombination_type", "srh");
+  // should now work, putting "SRHRecombination"
+  std::string name_model = get_options().get_option("recombination_type", "srh");
   std::string rec_string = "recHeat." + name_model;
 
 
   var_map.clear();
-  var_map[EJOULE]=_simul->get_solution_id("HJouleN");
+  var_map[EJOULE]=_simul->get_solution_id("eJoule");
 
-  var_map[HJOULE]=_simul->get_solution_id("HJouleP");
+  var_map[HJOULE]=_simul->get_solution_id("hJoule");
   //var_map[RECHEAT]=_simul->get_variable_id(rec_string);
-  var_map[RECHEAT]=_simul->get_solution_id("HRecomb");
-  var_map[EPELTH]=_simul->get_solution_id("HPelThomE");
-  var_map[HPELTH]=_simul->get_solution_id("HPelThomH");
-  var_map[WNX]=_simul->get_solution_id("PowerNx");
-  var_map[WNY]=_simul->get_solution_id("PowerNy");
-  var_map[WNZ]=_simul->get_solution_id("PowerNz");
-  var_map[WPX]=_simul->get_solution_id("PowerPx");
-  var_map[WPY]=_simul->get_solution_id("PowerPy");
-  var_map[WPZ]=_simul->get_solution_id("PowerPz");
+  var_map[RECHEAT]=_simul->get_solution_id("RecombHeat");
+  var_map[EPELTH]=_simul->get_solution_id("ePeltier");
+  var_map[HPELTH]=_simul->get_solution_id("hPeltier");
+  var_map[WNX]=_simul->get_solution_id("ePowerFlux");
+  var_map[WPX]=_simul->get_solution_id("hPowerFlux");
 
 
    std::map<ID,ID>::iterator      it(var_map.begin());
@@ -88,20 +85,25 @@ DriftDiffusionHeatSource::get_heat_sources(const Elem*  elem, std::vector<Point>
 
   //const Elem*  elem = _heat_model->get_element();
 
-  std::vector< std::map< ID, double > > solution;
+  std::map<ID, std::vector<double> > solution;
+  solution[var_map[EJOULE]].resize(0);
+  solution[var_map[HJOULE]].resize(0);
+  solution[var_map[RECHEAT]].resize(0);
+  solution[var_map[EPELTH]].resize(0);
+  solution[var_map[HPELTH]].resize(0);
 
 
-  if  (_simul->get_solution(elem,h_point,ID_set,solution))
+  if  (_simul->get_solution(elem, solution, h_point))
   {
 
     for(unsigned n =0; n<h_point.size();++n)
     {
 
-      double eJoule = solution[n].find(var_map[EJOULE])->second;
-      double hJoule = solution[n].find(var_map[HJOULE])->second;
-      double RecHeat = solution[n].find(var_map[RECHEAT])->second;
-      double ePelTh = solution[n].find(var_map[EPELTH])->second;
-      double hPelTh = solution[n].find(var_map[HPELTH])->second;
+      double eJoule = solution[var_map[EJOULE]][n];
+      double hJoule = solution[var_map[HJOULE]][n];
+      double RecHeat = solution[var_map[RECHEAT]][n];
+      double ePelTh = solution[var_map[EPELTH]][n];
+      double hPelTh = solution[var_map[HPELTH]][n];
 
 
       //std::cout << "eJoule " << eJoule << std::endl;
@@ -112,19 +114,19 @@ DriftDiffusionHeatSource::get_heat_sources(const Elem*  elem, std::vector<Point>
 
       //if  (ids.count(EJOULE))
       heat_sources[n][EJOULE]=eJoule;
-      
+
       //if  (ids.count(HJOULE))
       heat_sources[n][HJOULE]=hJoule;
-      
+
       //    if  (ids.count(RECHEAT))
       heat_sources[n][RECHEAT]=RecHeat;
-      
+
       //  (ids.count(EPELTH))
       heat_sources[n][EPELTH]=ePelTh;
-      
+
       //  (ids.count(HPELTH))
       heat_sources[n][HPELTH]=hPelTh;
-      
+
       // if  (ids.count(100))
       //	heat_sources[n][100]=eJoule + hJoule + RecHeat + ePelTh + hPelTh;
 
@@ -181,22 +183,25 @@ DriftDiffusionHeatSource::get_power_fluxes(const Elem*  elem,std::vector<Point> 
     ID IDP = 1;
   //ID IDTOT = 100;
 
-  std::vector< std::map< ID, double > > solution;
+  // TODO perhaps power flux will become cell based
+  std::map<ID, std::vector<double> > solution;
+  solution[var_map[WNX]].resize(0);
+  solution[var_map[WPX]].resize(0);
 
-  if  (_simul->get_solution(elem,h_point,ID_set,solution))
+  if  (_simul->get_solution(elem,solution,h_point))
   {
 
     for(unsigned int n =0 ; n<h_point.size();n++)
     {
 
 
-          double Wn_x = solution[n].find(var_map[WNX])->second;
-	  double Wn_y = solution[n].find(var_map[WNY])->second;
-	  double Wn_z = solution[n].find(var_map[WNZ])->second;
+          double Wn_x = solution[var_map[WNX]][3 * n];
+	  double Wn_y = solution[var_map[WNX]][3 * n + 1];
+	  double Wn_z = solution[var_map[WNX]][3 * n + 2];
 
-	  double Wp_x = solution[n].find(var_map[WPX])->second;
-	  double Wp_y = solution[n].find(var_map[WPY])->second;
-	  double Wp_z = solution[n].find(var_map[WPZ])->second;
+	  double Wp_x = solution[var_map[WPX]][3 * n];
+	  double Wp_y = solution[var_map[WPX]][3 * n + 1];
+	  double Wp_z = solution[var_map[WPX]][3 * n + 2];
 
 	  //  if (ids.count(IDN))
 	  // {

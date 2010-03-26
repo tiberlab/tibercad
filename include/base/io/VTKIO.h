@@ -13,7 +13,7 @@ class MeshBase;
 class Elem;
 
 
-//! Write nodal and elemental data using a grace-compatible format
+//! Write data using VTK XML unstructured grid format (.vtu)
 class TiberVTKIO : public DataOutput
 {
 
@@ -90,7 +90,7 @@ class TiberVTKIO : public DataOutput
 
   //! Write a data array to the given stream
   template <typename T>
-  void write_data_array(const std::string& name, int comp, std::vector<T>& data,
+  void write_data_array(const std::string& name, int comp, const std::vector<T>& data,
       std::ostream& os);
 
 };

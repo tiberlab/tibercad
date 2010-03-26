@@ -8,6 +8,7 @@
 
 #include <string>
 #include <cassert>
+#include <iostream>
 
 
 //! A structure describing the properties of a solution
@@ -105,6 +106,7 @@ struct SolutionDescriptor
     //! The number of components
     unsigned int _n_comp;
 
+
 };
 
 
@@ -112,8 +114,8 @@ inline
 SolutionDescriptor::SolutionDescriptor(const std::string& name, ID id,
     Type type, Location location, const std::string& units,
     unsigned int num_components) :
-    _name(name),
     _id(id),
+    _name(name),
     _type(type),
     _location(location),
     _units(units),
@@ -150,5 +152,10 @@ SolutionDescriptor::on_mesh(void) const
 {
   return ((_location == NODES) || (_location == CELL));
 }
+
+
+std::ostream& operator<<(std::ostream& os, SolutionDescriptor::Type type);
+std::ostream& operator<<(std::ostream& os, SolutionDescriptor::Location location);
+
 
 #endif /* _SOLUTIONDESCRIPTOR_H_ */

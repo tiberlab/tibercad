@@ -46,11 +46,15 @@
 
 #include <sstream>
 
+
+
 using namespace std;
 
 SimulationInterface::SimulationMap
 SimulationInterface::_simulation_map;
 
+SolutionDescriptor
+SimulationInterface::_invalid_descr = SolutionDescriptor();
 
 
 SimulationInterface::SimulationInterface(const ModelOptions& options)
@@ -67,6 +71,8 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
 
   _simulation_map[new_id] = this;
   _relaxation = 1.0;
+
+
 }
 
 
@@ -188,6 +194,22 @@ SimulationInterface::create(const string& type,
 
 
 
+void
+SimulationInterface::setup_solution_variables(void)
+{
+  // setup the set of solution variables to be plotted
+  vector<string> plotvars;
+  get_option("plot", plotvars);
+  get_options().delete_option("plot");
+  for (unsigned int i = 0; i < plotvars.size(); i++)
+    _plotvariables.insert(plotvars[i]);
+
+  // add common plot variables
+  declare_solution(RegionIDs, REAL, CELL);
+  add_alias("materials", RegionIDs);
+
+  do_setup_solution_variables();
+}
 
 
 void
@@ -209,7 +231,7 @@ PhysicalModel*
 SimulationInterface::new_bulk_model(const ModelOptions& options,
     const Material* material)
 {
-  PhysicalModel* pm = create_physical_model(options, material);
+  PhysicalModel* pm = create_bulk_model(options, material);
 
   if (pm != NULL)
     _physical_models.insert(pm);
@@ -279,7 +301,7 @@ SimulationInterface::get_physical_model(ID region_id) const
 
 
 PhysicalModel*
-SimulationInterface::get_bulk_model(const Elem* elem) const
+SimulationInterface::_get_bulk_model(const Elem* elem) const
 {
   PhysicalModel* mod = NULL;
   Material* mat = get_environment().get_device().get_material(elem);
@@ -292,7 +314,7 @@ SimulationInterface::get_bulk_model(const Elem* elem) const
 
 
 PhysicalModel*
-SimulationInterface::get_surface_model(const Elem* elem, int side) const
+SimulationInterface::_get_surface_model(const Elem* elem, int side) const
 {
   PhysicalModel* mod = NULL;
   MaterialBoundary* mb =
@@ -306,7 +328,7 @@ SimulationInterface::get_surface_model(const Elem* elem, int side) const
 
 
 PhysicalModel*
-SimulationInterface::get_edge_model(const Elem* elem, int edge) const
+SimulationInterface::_get_edge_model(const Elem* elem, int edge) const
 {
   PhysicalModel* mod = NULL;
   EdgeObject* eo =
@@ -320,7 +342,7 @@ SimulationInterface::get_edge_model(const Elem* elem, int edge) const
 
 
 PhysicalModel*
-SimulationInterface::get_node_model(const Elem* elem, int node) const
+SimulationInterface::_get_node_model(const Elem* elem, int node) const
 {
   PhysicalModel* mod = NULL;
   NodeObject* no =
@@ -357,31 +379,13 @@ SimulationInterface::init(void) throw (InitFailedException)
       _scaling.set_calc_mesh_units((_environment->get_device()).get_mesh_units());
 
       // plot the regions
-      // TODO Misha wants it at the end of solve
-      plot_regions();
+      //plot_regions();
     }
 
-    // insert an invalid solution descriptor
-    _solution_descriptors.insert(make_pair(INVALID_ID, SolutionDescriptor()));
-
-    // setup the set of solution variables to be plotted
-    vector<string> plotvars;
-    get_option("plot", plotvars);
-    get_options().delete_option("plot");
-    for (unsigned int i = 0; i < plotvars.size(); i++)
-      _plotvariables.insert(plotvars[i]);
 
 
     _verbosity = get_option("verbose", _verbosity);
     do_init();
-
-    // make a list of the IDs of the solutions to be plotted
-    for (unsigned int i = 0; i < plotvars.size(); i++)
-    {
-      ID id = get_solution_id(plotvars[i]);
-      if (id != INVALID_ID)
-        _plotvariable_ids.insert(id);
-    }
 
   }
 
@@ -391,21 +395,22 @@ SimulationInterface::init(void) throw (InitFailedException)
 
   if (verbose() > 0)
   {
-    ostringstream os;
-    os << ">>>>============================"
-      "==================================" << Messages::endl
-      << "Simulation options for " << get_name() << " (" <<
-      get_type() << ")";
-#ifdef DEBUG
-      os << " ptr = " << this;
-#endif
-
     Messages m;
     m.newline();
-    m.info(os.str());
+    {
+      ostringstream os;
+      os << ">>>>";
+      os.width(Messages::available_width() - 4);
+      os.fill('>');
+      os << "" << Messages::endl
+          << "Simulation options for " << get_name() << " (" <<
+          get_type() << ")";
+
+      m.info(os.str());
+    }
     m.indent();
 
-    do_print_info();
+    print_info();
 
     m.newline();
 
@@ -436,8 +441,14 @@ SimulationInterface::init(void) throw (InitFailedException)
 
     m.unindent();
     m.newline();
-    m.info("<<<<============================="
-        "=================================");
+    {
+      ostringstream os;
+      os << "<<<<";
+      os.width(Messages::available_width() - 4);
+      os.fill('<');
+      os << "" << Messages::endl;
+      m.info(os.str());
+    }
     m.newline();
   }
 }
@@ -537,6 +548,11 @@ SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
 }
 
 
+void
+SimulationInterface::add_plot_variable(const std::string& name)
+{
+  _plotvariables.insert(name);
+}
 
 
 void
@@ -666,10 +682,11 @@ SimulationInterface::create_physical_model(const ModelOptions&,
 
 
 PhysicalModel*
-SimulationInterface::create_bulk_model(const ModelOptions&,
-    const Material*) const
+SimulationInterface::create_bulk_model(const ModelOptions& options,
+    const Material* material) const
 {
-  return NULL;
+  // call the old implementation for back compatibility
+  return create_physical_model(options, material);
 }
 
 
@@ -725,7 +742,7 @@ SimulationInterface::plot(void)
 
 
 
-
+/*
 void
 SimulationInterface::plot_regions(void)
 {
@@ -764,6 +781,7 @@ SimulationInterface::plot_regions(void)
   string filename(get_name() + "_materials" + suffix);
   data_output.write_cell_data(filename, data, names);
 }
+*/
 
 
 
@@ -772,21 +790,17 @@ SimulationInterface::plot_regions(void)
 void
 SimulationInterface::do_plot(void)
 {
-  // for now call the old implementation
-  do_plot_old();
+  plot_meshdata();
+  plot_atomisticdata();
+  plot_globaldata();
+}
 
-  // the container for the solution values
-  map<ID, vector<double> > solutions;
 
-  // we prepare it to contain all mesh localized solution variables
-  set<ID>::const_iterator varit(_plotvariable_ids.begin());
-  for ( ; varit != _plotvariable_ids.end(); ++varit)
-  {
-    const SolutionDescriptor& descr = get_solution_descriptor(*varit);
-    if (descr.on_mesh())
-      solutions.insert(make_pair(descr.id(), vector<double>(0)));
-  }
 
+
+void
+SimulationInterface::plot_meshdata(void)
+{
 
   const MeshBase& mesh = get_mesh();
 
@@ -796,15 +810,71 @@ SimulationInterface::do_plot(void)
   const MeshBase::const_element_iterator end = mesh.active_elements_end();
 
   // first gather subdomain infos
+  // number of elements
   map<ID, size_t> n_elem;
-  for ( ; it != end; ++it)
+  // node translation table and connectivity
+  map<ID, map<unsigned int, pair<unsigned int, unsigned short> > > node_conn;
   {
-    const Elem* elem = *it;
+    for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
 
-    ID subdomain = elem->subdomain_id();
+      ID subdomain = elem->subdomain_id();
 
-    n_elem[subdomain]++;
+      if (!n_elem.count(subdomain))
+        n_elem[subdomain] = 1;
+      else
+        n_elem[subdomain]++;
 
+      for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+      {
+        if (node_conn[subdomain].count(elem->node(n)) == 0)
+        {
+          unsigned int nodeid = node_conn[subdomain].size();
+          node_conn[subdomain][elem->node(n)] = make_pair(nodeid, 1);
+        }
+        else
+          (node_conn[subdomain][elem->node(n)].second)++;
+      }
+    }
+  }
+
+
+  // the container for the solution values
+  map<ID, vector<double> > solutions;
+
+  // the container for the data to be handed over to the writer
+  map<ID, map<SolutionDescriptor, vector<double> > > data;
+
+  // we prepare them to contain all mesh localized solution variables
+  IDSet::const_iterator varit(_plotvariable_ids.begin());
+  for ( ; varit != _plotvariable_ids.end(); ++varit)
+  {
+    const SolutionDescriptor& descr = get_solution_descriptor(*varit);
+    if (descr.on_mesh())
+    {
+      solutions.insert(make_pair(descr.id(), vector<double>(0)));
+      unsigned int ncomp = descr.n_components();
+      map<ID, size_t>::iterator it(n_elem.begin());
+      for ( ; it != n_elem.end(); ++it)
+      {
+        size_t len = 0;
+        switch (descr.location())
+        {
+          case SolutionDescriptor::NODES:
+            len = ncomp * node_conn[it->first].size();
+            data[it->first].insert(make_pair(descr, vector<double>(len)));
+            break;
+          case SolutionDescriptor::CELL:
+            len = ncomp * it->second;
+            data[it->first].insert(make_pair(descr, vector<double>(0)));
+            data[it->first][descr].reserve(len);
+            break;
+          default:
+            break;
+        }
+      }
+    }
   }
 
 
@@ -814,23 +884,234 @@ SimulationInterface::do_plot(void)
 
     ID subdomain = elem->subdomain_id();
 
-    get_solution_secure(elem, solutions);
+    get_solution(elem, solutions);
 
+    // put them into the right vectors
+    map<SolutionDescriptor, vector<double> >::iterator
+                                    dit(data[subdomain].begin());
+    const map<SolutionDescriptor, vector<double> >::iterator
+                                    dend(data[subdomain].end());
+    for ( ; dit != dend; ++dit)
+    {
+      const SolutionDescriptor& descr = dit->first;
+      vector<double>& vec = dit->second;
+      vector<double>& sol = solutions[descr.id()];
+      if (sol.size() == 0)
+      {
+        if (descr.id() == RegionIDs)
+          vec.push_back(subdomain);
+        continue;
+      }
+
+      switch (descr.location())
+      {
+        case SolutionDescriptor::CELL:
+          vec.insert(vec.end(), sol.begin(), sol.end());
+          break;
+
+        case SolutionDescriptor::NODES:
+          for (unsigned int n = 0; n < elem->n_nodes(); n++)
+          {
+            unsigned int ncomp = descr.n_components();
+            unsigned int index =
+              ncomp * node_conn[subdomain][elem->node(n)].first;
+            unsigned short w = node_conn[subdomain][elem->node(n)].second;
+            for (unsigned int i = 0; i < ncomp; i++)
+              vec[index + i] += sol[ncomp * n + i] / w;
+
+          }
+          break;
+
+        default:
+          break;
+      }
+    }
   }
 
+
+
   DataOutput* writer = DataOutput::create(get_control().get_output_format());
-  if (writer != NULL)
+  //if (writer != NULL)
+  if ((writer != NULL) && (_solution_descriptors.size() > 0))
   {
     string suffix = get_control().get_filename_suffix();
     string outdir = get_control().get_output_dir();
     writer->set_output_directory(outdir);
     writer->set_filename(get_name() + suffix);
-    writer->set_ascii();
+    writer->set_binary();
     writer->set_mesh(get_mesh());
+
+    map<ID, map<SolutionDescriptor, vector<double> > >::iterator dit(data.begin());
+    const map<ID, map<SolutionDescriptor, vector<double> > >::iterator dend(data.end());
+    for ( ; dit != dend; ++dit)
+      writer->set_data(dit->second, dit->first);
+
     writer->write();
   }
+
+  do_plot_old();
+
 }
 
+
+
+void
+SimulationInterface::plot_atomisticdata(void)
+{
+}
+
+
+
+void
+SimulationInterface::plot_globaldata(void)
+{
+  map<ID, vector<double> > values;
+
+  IDSet::iterator it(_plotvariable_ids.begin());
+  const IDSet::iterator end(_plotvariable_ids.end());
+  for ( ; it != end; ++it)
+  {
+    ID id = *it;
+    if (get_solution_descriptor(id).location() == SolutionDescriptor::GLOBAL)
+      values.insert(make_pair(id, vector<double>(0)));
+  }
+
+  get_solution_secure(values);
+  map<ID, vector<double> >::iterator ii(values.begin());
+  for ( ; ii != values.end(); ++ii)
+    if (ii->second.size() == 0)
+      values.erase(ii);
+
+  if (values.size() > 0)
+  {
+    string suffix = get_control().get_filename_suffix();
+    string outdir = get_control().get_output_dir();
+
+    string filename(outdir + "/" + get_name() + suffix + ".dat");
+    ofstream file;
+    file.open(filename.c_str());
+    if (file.good())
+    {
+      // header
+      int width[5] = {22, 15, 10};
+      file << "# Global data for simulation: " << get_name() << endl;
+      //file << "# Data:" << endl;
+      file << "#" << endl;
+      {
+        ostringstream os;
+        os << "# name";
+        int w = width[0];
+        os.width(w - os.tellp());
+        os << "" << "units";
+        w += width[1];
+        os.width(w - os.tellp());
+        os << "" << "type" << endl;
+        file << os.str();
+      }
+
+      map<ID, vector<double> >::iterator it(values.begin());
+      for ( ; it != values.end(); ++it)
+      {
+        const SolutionDescriptor& descr = get_solution_descriptor(it->first);
+        ostringstream os;
+        os << "# " << descr.name();
+        int w = width[0];
+        os.width(w - os.tellp());
+        os << "" << descr.units();
+        w += width[1];
+        os.width(w - os.tellp());
+        os << "";
+        if (descr.type() == SolutionDescriptor::NTUPLE)
+          os << descr.n_components() << "-tuple";
+        else
+          os << descr.type();
+
+        file << os.str() << endl;
+      }
+
+      file << "#" << endl;
+      file << "# ";
+      for (it = values.begin(); it != values.end(); ++it)
+      {
+        const SolutionDescriptor& descr = get_solution_descriptor(it->first);
+        file << descr.name() << "  ";
+      }
+      file << endl;
+
+      for (it = values.begin(); it != values.end(); ++it)
+      {
+        const vector<double>& vals = it->second;
+        for (unsigned int i = 0; i < vals.size(); i++)
+          file << vals[i] << "  ";
+      }
+
+      file << endl;
+
+      file.close();
+    }
+  }
+  else // temporary only !
+  {
+    string suffix = get_control().get_filename_suffix();
+    string outdir = get_control().get_output_dir();
+
+    vector<double> results;
+    vector<string> names;
+
+    vector<string> description;
+    get_integrated_quantities_description(names, description);
+    if (names.size() > 0)
+    {
+      string filename(outdir + "/" + get_name() + suffix + ".dat");
+      ofstream file;
+      file.open(filename.c_str());
+      if (file.good())
+      {
+        // header
+        file << "# Simulation: " << get_name() << endl;
+        file << "# Data:" << endl;
+        for (unsigned int i = 0; i < description.size(); i++)
+          file << "#    * " << description[i] << endl;
+        file << "#" << endl;
+
+        build_integrated_quantities(results);
+
+        unsigned int nn = names.size();
+        unsigned int nr = results.size();
+
+        // if nn != nr, we print data in columns, otherwise on a row
+        if (nn != nr)
+        {
+          // TODO is completely without logic
+          ostringstream l;
+          l << setprecision(12);
+          for (unsigned int i = 0; i < nn; i++)
+            l << names[i] << "   " << results[i] << endl;
+
+          file << l.str();
+        }
+        else
+        {
+          // legend
+          ostringstream l;
+          l << setprecision(12);
+          l << "# ";
+          for (unsigned int i = 0; i < nn; i++)
+            l << names[i] << "   ";
+          l << endl;
+
+          // data
+          for (unsigned int i = 0; i < nr; i++)
+            l << results[i] << "   ";
+          l << endl;
+          file << l.str();
+        }
+
+        file.close();
+      }
+    }
+  }
+}
 
 
 
@@ -873,63 +1154,6 @@ SimulationInterface::do_plot_old(void)
     data_output.write_cell_data(filename, results, names);
   }
 
-
-
-  //
-  // integrated properties
-  //
-  vector<string> description;
-  get_integrated_quantities_description(names, description);
-  if (names.size() > 0)
-  {
-    string filename(outdir + "/" + get_name() + suffix + ".dat");
-    ofstream file;
-    file.open(filename.c_str());
-    if (file.good())
-    {
-      // header
-      file << "# Simulation: " << get_name() << endl;
-      file << "# Data:" << endl;
-      for (unsigned int i = 0; i < description.size(); i++)
-        file << "#    * " << description[i] << endl;
-      file << "#" << endl;
-
-      build_integrated_quantities(results);
-
-      unsigned int nn = names.size();
-      unsigned int nr = results.size();
-
-      // if nn != nr, we print data in columns, otherwise on a row
-      if (nn != nr)
-      {
-        // TODO is completely without logic
-        ostringstream l;
-        l << setprecision(12);
-        for (unsigned int i = 0; i < nn; i++)
-          l << names[i] << "   " << results[i] << endl;
-
-        file << l.str();
-      }
-      else
-      {
-        // legend
-        ostringstream l;
-        l << setprecision(12);
-        l << "# ";
-        for (unsigned int i = 0; i < nn; i++)
-          l << names[i] << "   ";
-        l << endl;
-
-        // data
-        for (unsigned int i = 0; i < nr; i++)
-          l << results[i] << "   ";
-        l << endl;
-        file << l.str();
-      }
-
-      file.close();
-    }
-  }
 
 }
 
@@ -1392,32 +1616,6 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
 
 bool
-SimulationInterface::get_solution(const Elem* elem, ID id, vector<double>& values)
-{
-  set<ID> ids;
-  ids.insert(id);
-  values.resize(elem->n_nodes());
-
-  vector<map<ID, double> > vals;
-
-  bool flag = get_solution(elem, ids, vals);
-
-  if (flag && (vals[0].size() != 0))
-  {
-    int n = vals.size();
-    values.resize(n);
-    for (int i = 0; i < n; i++)
-    {
-      values[i] = vals[i][id];
-    }
-  }
-
-  return flag;
-}
-
-
-
-bool
 SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
                                   ID id, vector<double>& values)
 {
@@ -1448,168 +1646,26 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
 bool
 SimulationInterface::get_solution(const Elem* elem,
-    std::map<ID, std::vector<double> >& values)
+    map<ID, vector<double> >& values,
+    const vector<Point>& p, bool local_coord)
 {
   if (!is_solved()) return false;
 
-  SimulationEnvironment& env = get_environment();
-
-  const Elem* el = elem;
-
-  bool flag = true;
-
-  // first resize all data vectors to the right size
-  int nn = elem->n_nodes();
-  map<ID, vector<double> >::iterator it(values.begin());
-  map<ID, vector<double> >::iterator end(values.end());
-  for ( ; it != end; ++it)
+  vector<Point> points(p);
+  unsigned int nn = points.size();
+  if (nn == 0)
   {
-    const SolutionDescriptor& sd = get_solution_descriptor(it->first);
-    assert(sd.id() != INVALID_ID);
-    unsigned int n_comp = sd.n_components();
-    switch (sd.location())
+    nn = elem->n_nodes();
+    points.resize(nn);
+    for (unsigned int i = 0; i < nn; i++)
     {
-      case SolutionDescriptor::CELL:
-        values[it->first].resize(n_comp);
-        break;
-
-      case SolutionDescriptor::NODES:
-        values[it->first].resize(nn * n_comp);
-        break;
-
-      default:
-      {
-        ostringstream os;
-        os << "In get_solution(): solution variable \'" << sd.name()
-                        << "\' seems not to be associated to the mesh.";
-        throw ModelErrorException(os.str());
-      }
+      points[i] = elem->local_node(elem->type(), i);
     }
   }
-
-  if (!env.contains_element(elem))
+  else if (!local_coord)
   {
-    // perhaps the parent is?
-    const Elem* parent = elem->parent();
-
-    while ((parent != NULL) && (!env.contains_element(parent)))
-      parent = parent->parent();
-
-    el = parent; // is NULL if no parent
-
-    if (el != NULL)
-    {
-      // the nodes are now inner points of the parent element
-      vector<Point> p(nn);
-      for (int i = 0; i < nn; i++)
-        p[i] = elem->point(i);
-
-      // get the solutions on the points
-      get_solution_secure(elem, p, values);
-    }
-    else
-    {
-      // no active parent, so look for children
-      // TODO This part is not tested at all !!!
-      vector<const Elem*> tree;
-      elem->family_tree(tree, false);
-
-      set<const Elem*> elem_list;
-      unsigned int len = tree.size();
-      for (unsigned int i = 0; i < len; i++)
-      {
-        const Elem* elem_i = tree[i];
-        if (env.contains_element(elem_i))
-          elem_list.insert(elem_i);
-      }
-
-      if (elem_list.size() == 0)
-        flag = false;
-      else
-      {
-
-        // we need a copy of values
-        map<ID, vector<double> > valcopy(values);
-
-        // area of elem
-        double elem_vol = elem->volume();
-
-        set<unsigned int> nodenr;
-        unsigned int np = elem->n_nodes();
-        for (unsigned int i = 0; i < np; i++)
-          nodenr.insert(i);
-
-        set<const Elem*>::iterator el_it = elem_list.begin();
-        set<const Elem*>::iterator el_end = elem_list.end();
-        for ( ; el_it != el_end; ++el_it)
-        {
-          el = *el_it;
-
-          vector<Point> p;
-          vector<unsigned int> pid;
-          p.reserve(1);
-          pid.reserve(1);
-
-          set<unsigned int>::iterator nit(nodenr.begin());
-          const set<unsigned int>::iterator nend(nodenr.end());
-          for ( ; nit != nend; ++nit)
-          {
-            unsigned int node = *nit;
-            if (el->contains_point(elem->point(node)))
-            {
-              nodenr.erase(nit);
-              p.push_back(elem->point(node));
-              pid.push_back(node);
-            }
-            else
-              p.push_back(el->centroid());
-          }
-
-          get_solution_secure(el, p, valcopy);
-          double weight = el->volume() / elem_vol;
-
-          // now copy nodal values to their right position
-          // make mean value of cell values
-          for (it = values.begin(); it != end; ++it)
-          {
-            const SolutionDescriptor& sd = get_solution_descriptor(it->first);
-            unsigned int n_comp = sd.n_components();
-            vector<double>& vals = values[it->first];
-            vector<double>& newvals = valcopy[it->first];
-            switch (sd.location())
-            {
-              case SolutionDescriptor::CELL:
-                for (int i = 0; i < n_comp; i++)
-                  vals[i] += newvals[i] * weight;
-                break;
-
-              case SolutionDescriptor::NODES:
-                for (int i = 0; i < p.size(); i++)
-                  for (int j = 0; j < n_comp; i++)
-                    vals[pid[i] + j] = newvals[i + j];
-                break;
-
-            }
-          }
-        }
-      }
-    }
+    FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, p, points);
   }
-  else
-    get_solution_secure(elem, values);
-
-  return flag;
-}
-
-
-bool
-SimulationInterface::get_solution(const Elem* elem,
-    const std::vector<Point>& points,
-    std::map<ID, std::vector<double> >& values)
-{
-  if (!is_solved()) return false;
-  size_t nn = points.size();
-  if (nn == 0) return true;
 
   SimulationEnvironment& env = get_environment();
 
@@ -1657,7 +1713,7 @@ SimulationInterface::get_solution(const Elem* elem,
 
     if (el != NULL)
     {
-      get_solution_secure(elem, points, values);
+      get_solution_secure(elem, values, points);
     }
     else
     {
@@ -1696,9 +1752,9 @@ SimulationInterface::get_solution(const Elem* elem,
         {
           el = *el_it;
 
-          vector<Point> p;
+          vector<Point> my_p;
           vector<unsigned int> pid;
-          p.reserve(1);
+          my_p.reserve(1);
           pid.reserve(1);
 
           set<unsigned int>::iterator nit(nodenr.begin());
@@ -1706,17 +1762,17 @@ SimulationInterface::get_solution(const Elem* elem,
           for ( ; nit != nend; ++nit)
           {
             unsigned int node = *nit;
-            if (el->contains_point(points[node]))
+            if (FEInterface::on_reference_element(points[node], el->type()))
             {
               nodenr.erase(nit);
-              p.push_back(points[node]);
+              my_p.push_back(points[node]);
               pid.push_back(node);
             }
             else
-              p.push_back(el->centroid());
+              my_p.push_back(el->centroid());
           }
 
-          get_solution_secure(el, p, valcopy);
+          get_solution_secure(el, valcopy, my_p);
 
           double weight = el->volume() / elem_vol;
 
@@ -1731,16 +1787,18 @@ SimulationInterface::get_solution(const Elem* elem,
             switch (sd.location())
             {
               case SolutionDescriptor::CELL:
-                for (int i = 0; i < n_comp; i++)
+                for (unsigned int i = 0; i < n_comp; i++)
                   vals[i] += newvals[i] * weight;
                 break;
 
               case SolutionDescriptor::NODES:
-                for (int i = 0; i < p.size(); i++)
-                  for (int j = 0; j < n_comp; i++)
+                for (unsigned int i = 0; i < p.size(); i++)
+                  for (unsigned int j = 0; j < n_comp; j++)
                     vals[pid[i] + j] = newvals[i + j];
                 break;
 
+              default:
+                break;
             }
           }
         }
@@ -1748,9 +1806,24 @@ SimulationInterface::get_solution(const Elem* elem,
     }
   }
   else
-    get_solution_secure(elem, points, values);
+    get_solution_secure(elem, values, points);
 
   return flag;
+}
+
+
+
+bool
+SimulationInterface::get_solution(const Elem* elem,
+    ID id, vector<double>& values,
+    const vector<Point>& p, bool local_coord)
+{
+  map<ID, vector<double> > tmp;
+  tmp[id].resize(0);
+  bool success = get_solution(elem, tmp, p, local_coord);
+  if (success) values = tmp[id];
+
+  return success;
 }
 
 
@@ -1775,16 +1848,11 @@ SimulationInterface::get_solution(std::map<ID, std::vector<double> >& values)
 }
 
 
-void
-SimulationInterface::get_solution_secure(const Elem*,
-    std::map<ID, std::vector<double> >&)
-{
-}
 
 void
 SimulationInterface::get_solution_secure(const Elem*,
-    const std::vector<Point>&,
-    std::map<ID, std::vector<double> >&)
+    std::map<ID, std::vector<double> >&,
+    const std::vector<Point>&)
 {
 }
 
@@ -1839,6 +1907,24 @@ SimulationInterface::declare_solution_ext(const std::string& name, ID id,
   _solution_descriptors.insert(
       make_pair(id, SolutionDescriptor(name, id, type, location,
           units, n_comp)));
+  _solution_ids[name] = id;
+
+  bool plot_all = _plotvariables.count("all");
+
+  // check if it should be plotted
+  if (_plotvariables.count(name) || plot_all)
+    _plotvariable_ids.insert(id);
+}
+
+
+void
+SimulationInterface::add_alias(const std::string& alias, ID id)
+{
+  _solution_ids[alias] = id;
+
+  // check if it should be plotted
+  if (_plotvariables.count(alias))
+    _plotvariable_ids.insert(id);
 }
 
 
@@ -1856,8 +1942,8 @@ SimulationInterface::get_solution_descriptor(ID id) const
   if (it != _solution_descriptors.end())
     return it->second;
 
-  // I know for sure that it exists
-  return _solution_descriptors.find(INVALID_ID)->second;
+  // If it does not exist, return an invalid solution descriptor
+  return _invalid_descr;
 }
 
 
@@ -1865,16 +1951,12 @@ SimulationInterface::get_solution_descriptor(ID id) const
 const SolutionDescriptor&
 SimulationInterface::get_solution_descriptor(const std::string& solution_name) const
 {
-  SolutionDescrMap::const_iterator it(_solution_descriptors.begin());
-  const SolutionDescrMap::const_iterator end(_solution_descriptors.end());
-  for ( ; it != end; ++it)
-  {
-    if ((it->second).name() == solution_name)
-      return it->second;
-  }
+  ID id = INVALID_ID;
+  map<const string, ID>::const_iterator it(_solution_ids.find(solution_name));
+  if (it != _solution_ids.end())
+    id = it->second;
 
-  // I know for sure that it exists
-  return _solution_descriptors.find(INVALID_ID)->second;
+  return get_solution_descriptor(id);
 }
 
 
@@ -1922,3 +2004,68 @@ SimulationInterface::create_embracing_region(
   return emb;
 }
 
+
+
+void
+SimulationInterface::print_info(void)
+{
+  if (verbose() >= 2)
+  {
+    int width[5] = {25, 15, 10, 12, 4};
+    int tot_width = width[0] + width[1] + width[2] + width[3] + width[4];
+
+    Messages::newline();
+    Messages::info("Available solution variables:");
+    ostringstream line;
+    line.width(tot_width);
+    line.fill('-');
+    line << "";
+    Messages::info(line.str());
+
+    {
+      ostringstream os;
+      os << "Name";
+      int w = width[0];
+      os.width(w - os.tellp());
+      os << "" << "Units";
+      w += width[1];
+      os.width(w - os.tellp());
+      os << "" << "Type";
+      w += width[2];
+      os.width(w - os.tellp());
+      os << "" << "Association";
+      w += width[3];
+      os.width(w - os.tellp());
+      os << "" << "Plot" << Messages::endl;
+      os.width(w + width[4]);
+      os.fill('-');
+      os << "";
+      Messages::info(os.str());
+    }
+
+    SolutionDescrMap::const_iterator it(_solution_descriptors.begin());
+    for ( ; it != _solution_descriptors.end(); ++it)
+    {
+      if (it->first == INVALID_ID) continue;
+
+      int w = width[0];
+      ostringstream os;
+      os << it->second.name();
+      os.width(w - os.tellp());
+      os << "" << it->second.units();
+      w += width[1];
+      os.width(w - os.tellp());
+      os << "" << it->second.type();
+      w += width[2];
+      os.width(w - os.tellp());
+      os << "" << it->second.location();
+      w += width[3];
+      os.width(w - os.tellp());
+      os << "" << (plot_solution(it->first) ? "y" : "n");
+      Messages::info(os.str());
+    }
+    Messages::info(line.str());
+  }
+
+  if (verbose() > 0) do_print_info();
+}

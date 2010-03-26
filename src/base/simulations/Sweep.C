@@ -36,6 +36,7 @@ Sweep::do_init(void)
   // get the names of the simulations to be solved
   vector<string> sims;
   opts.get_option("simulation", sims);
+  opts.get_option("solve", sims);
   int num_of_sims = sims.size();
 
 
@@ -419,7 +420,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     ostringstream suffix;
     suffix << _variable << "_" << goal;
     get_control().prepend_to_filename_suffix(suffix.str());
-    
+
     bool failed = false;
     try
     {
@@ -428,7 +429,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
       // the loop over the simulations
       for (int j = 0; j < num_sim; j++)
       {
-        // now solve everything after and including the 
+        // now solve everything after and including the
         // first nested sweep
         if (j >= first_nested)
           _simulations[j]->solve();
@@ -588,7 +589,6 @@ Sweep::build_integrated_quantities_description(
   for (int i = 0; i < num_sim; i++)
   {
     _simulations[i]->get_integrated_quantities_description(leg, desc);
-    cerr << _simulations[i]->get_name() << " " << leg.size() << endl;
     legend.insert(legend.end(), leg.begin(), leg.end());
     description.insert(description.end(), desc.begin(), desc.end());
   }

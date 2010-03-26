@@ -3,6 +3,12 @@
 # Description of  the  device physical regions
 $Device
 {
+  Options
+  {
+    meshfile = tut_09.msh
+    dimension = 2
+  }
+
    Region n_side 
    {
      mat = Si
@@ -39,6 +45,8 @@ $Models
 
      statistics = FD
      thermal_simulation = tt
+
+     plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity, eMobility, hMobility, NetRecombination, Pn, Pp, RecombHeat, ePeltier, hPeltier, eJoule, hJoule, ePowerFlux, hPowerFlux, ContactCurrents)
     }
 
      physical_model recombination
@@ -85,6 +93,7 @@ $Models
     { 
       simulation_name = tt
       physical_regions = all
+      plot = (thermal)
     }
 
       physical_model heat_source
@@ -153,15 +162,11 @@ $Solver
 # Definition of  model-indipendent parameters of the Simulation
 $Simulation
 {
-  #searchpath = ../../materials
-  meshfile = tut_09.msh
-  dimension = 2
   temperature = 300
   solve = sweep
   resultpath = output_tut9
   symmetry = cylindrical
   output_format = vtk
- plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eMob, hMob, current, NetRecombination,Pn,Pp,thermal,ContactCurrents)
 }
 
 

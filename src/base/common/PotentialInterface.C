@@ -7,14 +7,11 @@
 
 #include "elem.h"
 
-std::string
-PotentialInterface::_variable_name = "ElPotential";
 
 
-
-PotentialInterface::PotentialInterface(void)
-: _simulation(NULL),
-_id(INVALID_ID)
+PotentialInterface::PotentialInterface(void) :
+  _simulation(NULL),
+  _id(INVALID_ID)
 {
 }
 
@@ -25,42 +22,38 @@ PotentialInterface::set_simulation(const std::string& name)
 {
   bool answer = false;
   if (name != "")
-    {
-      _simulation = SimulationInterface::find_simulation(name);
-      if (_simulation == NULL)
-        throw InitFailedException("No such simulation found: " + name);
+  {
+    _simulation = SimulationInterface::find_simulation(name);
+    if (_simulation == NULL)
+      throw InitFailedException("No such simulation found: " + name);
 
-      _id_set.clear();
-      _id = _simulation->get_solution_id(_variable_name);
+    _id = _simulation->get_solution_id("ElPotential");
 
-      if (_id == INVALID_ID)
-        throw InitFailedException("Simulation " + name +
-            " has no variable '" + _variable_name + "'");
-
-      _id_set.insert(_id);
-
-      //TODO: THIS PART IS ADDED FOR DIRTY IWCE CALCULATIONS!!!
-      //------------------------------------------------------------
-      _id_chem_el = _simulation->get_solution_id("QFermi_e");
-
-      if (_id == INVALID_ID)
-        throw InitFailedException("Simulation " + name +
-            " has no variable '" + _variable_name + "'");
-
-      _id_set.insert(_id_chem_el);
-
-      _id_chem_hl = _simulation->get_solution_id("QFermi_h");
-
-      if (_id == INVALID_ID)
-        throw InitFailedException("Simulation " + name +
-            " has no variable '" + _variable_name + "'");
-
-      _id_set.insert(_id_chem_hl);
-      //------------------------------------------------------------
+    if (_id == INVALID_ID)
+      throw InitFailedException("Simulation " + name +
+          " has no variable 'ElPotential'");
 
 
-      answer = true;
-    }
+    //TODO: THIS PART IS ADDED FOR DIRTY IWCE CALCULATIONS!!!
+    //------------------------------------------------------------
+    _id_chem_el = _simulation->get_solution_id("eQFermi");
+
+    if (_id == INVALID_ID)
+      throw InitFailedException("Simulation " + name +
+          " has no variable 'eQFermi'");
+
+
+    _id_chem_hl = _simulation->get_solution_id("hQFermi");
+
+    if (_id == INVALID_ID)
+      throw InitFailedException("Simulation " + name +
+          " has no variable 'hQFermi'");
+
+    //------------------------------------------------------------
+
+
+    answer = true;
+  }
 
   return answer;
 }
@@ -72,67 +65,43 @@ PotentialInterface::get_potential(const Elem* elem,
 {
   assert(elem != NULL);
 
-  int nn = elem->n_nodes();
-
-  potentials.resize(nn);
-
-
-  if (_simulation == NULL)
-    {
-      for (int i = 0; i < nn; i++)
-        potentials[i] = 0.0;
-    }
-  else
-    {
-
-      std::vector<std::map<ID, double> > temp;
-
-      if (_simulation->get_solution(elem, _id_set, temp))
-        for (int i = 0; i < nn; i++)
-          potentials[i] = temp[i][_id];
-
-      else
-        for (int i = 0; i < nn; i++)
-          potentials[i] = 0.0;
-    }
+  if ((_simulation == NULL) ||
+      !_simulation->get_solution(elem, _id, potentials))
+  {
+    int nn = elem->n_nodes();
+    potentials.resize(nn);
+    for (int i = 0; i < nn; i++)
+      potentials[i] = 0.0;
+  }
 }
 
 
 void
 PotentialInterface::get_potential(const Elem* elem,
-    const std::vector<Point>& p, std::vector<double>& potentials)
+    const std::vector<Point>& p, std::vector<double>& potentials,
+    bool local_coord)
 {
   assert(elem != NULL);
 
-  int nn = p.size();
-
-  potentials.resize(nn);
-
-  if (_simulation == NULL)
-    {
-      for (int i = 0; i < nn; i++)
-        potentials[i] = 0.0;
-    }
-  else
-    {
-      std::vector<std::map<ID, double> > temp;
-      if (_simulation->get_solution(elem, p, _id_set, temp))
-        for (int i = 0; i < nn; i++)
-          potentials[i] = temp[i][_id];
-      else
-        for (int i = 0; i < nn; i++)
-          potentials[i] = 0.0;
-    }
+  if ((_simulation == NULL) ||
+      !_simulation->get_solution(elem, _id, potentials, p, local_coord))
+  {
+    int nn = p.size();
+    potentials.resize(nn);
+    for (int i = 0; i < nn; i++)
+      potentials[i] = 0.0;
+  }
 }
 
 
 double
-PotentialInterface::get_potential(const Elem* elem, const Point& p)
+PotentialInterface::get_potential(const Elem* elem, const Point& p,
+    bool local_coord)
 {
   std::vector<Point> ps(1, p);
   std::vector<double> temp(1);
 
-  get_potential(elem, ps, temp);
+  get_potential(elem, ps, temp, local_coord);
 
   return temp[0];
 }
@@ -144,68 +113,43 @@ PotentialInterface::get_el_chem_potential(const Elem* elem,
 {
   assert(elem != NULL);
 
-  int nn = elem->n_nodes();
-
-  potentials.resize(nn);
-
-
-  if (_simulation == NULL)
-    {
-      for (int i = 0; i < nn; i++)
-        potentials[i] = 0.0;
-    }
-  else
-    {
-
-      std::vector<std::map<ID, double> > temp;
-
-      if (_simulation->get_solution(elem, _id_set, temp))
-        for (int i = 0; i < nn; i++)
-          potentials[i] = temp[i][_id_chem_el];
-
-      else
-        for (int i = 0; i < nn; i++)
-          potentials[i] = 0.0;
-    }
+  if ((_simulation == NULL) ||
+      !_simulation->get_solution(elem, _id_chem_el, potentials))
+  {
+    int nn = elem->n_nodes();
+    potentials.resize(nn);
+    for (int i = 0; i < nn; i++)
+      potentials[i] = 0.0;
+  }
 }
 
 
 void
 PotentialInterface::get_el_chem_potential(const Elem* elem,
-    const std::vector<Point>& p, std::vector<double>& potentials)
+    const std::vector<Point>& p, std::vector<double>& potentials,
+    bool local_coord)
 {
-
   assert(elem != NULL);
 
-  int nn = p.size();
-
-  potentials.resize(nn);
-
-  if (_simulation == NULL)
-    {
-      for (int i = 0; i < nn; i++)
-        potentials[i] = 0.0;
-    }
-  else
-    {
-      std::vector<std::map<ID, double> > temp;
-      if (_simulation->get_solution(elem, p, _id_set, temp))
-        for (int i = 0; i < nn; i++)
-          potentials[i] = temp[i][_id_chem_el];
-      else
-        for (int i = 0; i < nn; i++)
-          potentials[i] = 0.0;
-    }
+  if ((_simulation == NULL) ||
+      !_simulation->get_solution(elem, _id_chem_el, potentials, p, local_coord))
+  {
+    int nn = p.size();
+    potentials.resize(nn);
+    for (int i = 0; i < nn; i++)
+      potentials[i] = 0.0;
+  }
 }
 
 
 double
-PotentialInterface::get_el_chem_potential(const Elem* elem, const Point& p)
+PotentialInterface::get_el_chem_potential(const Elem* elem, const Point& p,
+    bool local_coord)
 {
   std::vector<Point> ps(1, p);
   std::vector<double> temp(1);
 
-  get_el_chem_potential(elem, ps, temp);
+  get_el_chem_potential(elem, ps, temp, local_coord);
 
   return temp[0];
 }
@@ -217,68 +161,43 @@ PotentialInterface::get_hl_chem_potential(const Elem* elem,
 {
   assert(elem != NULL);
 
-  int nn = elem->n_nodes();
-
-  potentials.resize(nn);
-
-
-  if (_simulation == NULL)
-    {
-      for (int i = 0; i < nn; i++)
-        potentials[i] = 0.0;
-    }
-  else
-    {
-
-      std::vector<std::map<ID, double> > temp;
-
-      if (_simulation->get_solution(elem, _id_set, temp))
-        for (int i = 0; i < nn; i++)
-          potentials[i] = temp[i][_id_chem_hl];
-
-      else
-        for (int i = 0; i < nn; i++)
-          potentials[i] = 0.0;
-    }
+  if ((_simulation == NULL) ||
+      !_simulation->get_solution(elem, _id_chem_hl, potentials))
+  {
+    int nn = elem->n_nodes();
+    potentials.resize(nn);
+    for (int i = 0; i < nn; i++)
+      potentials[i] = 0.0;
+  }
 }
 
 
 void
 PotentialInterface::get_hl_chem_potential(const Elem* elem,
-    const std::vector<Point>& p, std::vector<double>& potentials)
+    const std::vector<Point>& p, std::vector<double>& potentials,
+    bool local_coord)
 {
-
   assert(elem != NULL);
 
-  int nn = p.size();
-
-  potentials.resize(nn);
-
-  if (_simulation == NULL)
-    {
-      for (int i = 0; i < nn; i++)
-        potentials[i] = 0.0;
-    }
-  else
-    {
-      std::vector<std::map<ID, double> > temp;
-      if (_simulation->get_solution(elem, p, _id_set, temp))
-        for (int i = 0; i < nn; i++)
-          potentials[i] = temp[i][_id_chem_hl];
-      else
-        for (int i = 0; i < nn; i++)
-          potentials[i] = 0.0;
-    }
+  if ((_simulation == NULL) ||
+      !_simulation->get_solution(elem, _id_chem_hl, potentials, p, local_coord))
+  {
+    int nn = p.size();
+    potentials.resize(nn);
+    for (int i = 0; i < nn; i++)
+      potentials[i] = 0.0;
+  }
 }
 
 
 double
-PotentialInterface::get_hl_chem_potential(const Elem* elem, const Point& p)
+PotentialInterface::get_hl_chem_potential(const Elem* elem, const Point& p,
+    bool local_coord)
 {
   std::vector<Point> ps(1, p);
   std::vector<double> temp(1);
 
-  get_hl_chem_potential(elem, ps, temp);
+  get_hl_chem_potential(elem, ps, temp, local_coord);
 
   return temp[0];
 }

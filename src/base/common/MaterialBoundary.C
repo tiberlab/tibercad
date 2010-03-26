@@ -2,6 +2,7 @@
 
 #include "MaterialBoundary.h"
 #include "Material.h"
+#include "PhysicalModel.h"
 
 #include <cassert>
 
@@ -21,11 +22,21 @@ MaterialBoundary::create(Material* mat_A, Material* mat_B,
     const ModelOptions& options)
 {
   assert(mat_A != NULL);
-  //string name(mat_A->get_name());
-  //if (mat_B != NULL)
-  //  name += "-" +  mat_B->get_name();
+
+  // TODO how to use database correctly in this case?
+
+  string name(mat_A->get_name());
+  if (mat_B != NULL)
+    name += "%" +  mat_B->get_name();
+
+  Database db(name, options.get_option("datafile", ""));
+  db.set_section("");
 
   MaterialBoundary* mat = new MaterialBoundary(mat_A, mat_B, options);
+
+  assert(mat != NULL);
+
+  mat->set_database(db);
 
   return mat;
 }
@@ -46,6 +57,6 @@ MaterialBoundary::do_init(void)
     if (_mat_B != NULL)
       pmb = _mat_B->get_model(it->first);
 
-    //(it->second)->init_boundary(pma, pmb);
+    (it->second)->init_interface(pma, pmb);
   }
 }

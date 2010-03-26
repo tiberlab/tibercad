@@ -35,8 +35,8 @@ class NodeObject : public PhysicalObject
     NodeObject(const ModelOptions& options) : PhysicalObject(NODE, options) {};
 
 
-    //! \copydoc PhysicalObject::do_init()
-    void do_init(void) {};
+    //\copydoc PhysicalObject::do_init()
+    //void do_init(void) {};
 
 
   private:
@@ -49,12 +49,6 @@ class NodeObject : public PhysicalObject
 // Inline member functions
 //--------------------------------------------------------------
 
-inline
-NodeObject*
-NodeObject::create(const ModelOptions& options)
-{
-  return new NodeObject(options);
-}
 
 
 

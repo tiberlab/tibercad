@@ -331,5 +331,5 @@ $Simulation
   solve = (str, dd, selfconsistent)
   resultpath = output
   output_format = grace
-  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, Current, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
+  plot = (strain, polarization, Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, CurrentDensity, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
 }

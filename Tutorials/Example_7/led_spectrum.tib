@@ -387,6 +387,7 @@ $Solver
 
   sweep
   {
+    simulation = driftdiffusion
     variable = Vb
     start = 0.0
     stop =  4.0 #
@@ -597,7 +598,7 @@ $Simulation
 
   resultpath =   output_V4_QW3
  
-  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, Occupation, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent,  optical_spectrum, k-space  )
+  plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensityDensity, eCurrentDensity, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, Occupation, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent,  optical_spectrum, k-space  )
  
   output_format = grace
 

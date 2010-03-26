@@ -5,7 +5,7 @@ Line(1) = {1,2};
 Line(2) = {2,3};
 
 
-Physical Line(1) = {2};
-Physical Line(2) = {1};
-Physical Point(1) = {3};
-Physical Point(2) = {1};
+Physical Line("n_side") = {2};
+Physical Line("p_side") = {1};
+Physical Point("anode") = {1};
+Physical Point("cathode") = {3};

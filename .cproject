@@ -63,6 +63,7 @@
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/tibercad/include/core/modules/drift-diffusion/models}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/tibercad/include/core/modules/dssc}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/tibercad/include/core/modules/excitons}&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/tibercad/include/core/microheatbalance}&quot;"/>
 </option>
 <inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1418998841" languageId="org.eclipse.cdt.core.g++" languageName="GNU C++" sourceContentType="org.eclipse.cdt.core.cxxSource,org.eclipse.cdt.core.cxxHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 </tool>
@@ -243,11 +244,13 @@
 </scannerConfigBuildInfo>
 </storageModule>
 <storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+
 <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
 <buildTargets>
 <target name="all" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
-<buildTarget>all</buildTarget>
+<buildArguments>-j 2</buildArguments>
+<buildTarget>-j 2 all</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>true</useDefaultCommand>
 <runAllBuilders>true</runAllBuilders>
@@ -255,7 +258,7 @@
 <target name="all METHOD=dbg" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
 <buildCommand>make</buildCommand>
 <buildArguments/>
-<buildTarget>METHOD=dbg all</buildTarget>
+<buildTarget>-j 2 METHOD=dbg all</buildTarget>
 <stopOnError>true</stopOnError>
 <useDefaultCommand>true</useDefaultCommand>
 <runAllBuilders>true</runAllBuilders>

@@ -59,12 +59,12 @@ void
 TiberLinearSystem::solve(void)
 {
   if (this->assemble_before_solve)
-    this->assemble(); 
+    this->assemble();
 
   // Get a reference to the EquationSystems
   const EquationSystems& es =
     this->get_equation_systems();
-  
+
   TiberLinearSolver* lin_solver =
     static_cast<TiberLinearSolver*>(linear_solver.get());
   lin_solver->set_options(get_options());
@@ -85,7 +85,9 @@ TiberLinearSystem::solve(void)
   // solve and the final residual.
   _n_linear_iterations   = rval.first;
   _final_linear_residual = rval.second;
-    
+
   // Update the system after the solve
-  this->update();  
+  this->update();
+
+  linear_solver->clear();
 }

@@ -30,6 +30,7 @@ PhysicalModelInterface* MacrostrainModel::create_new (void) const
 }
 
 
+
 void
 MacrostrainModel::create_submodels(void)
 {
@@ -59,15 +60,7 @@ void MacrostrainModel::do_init()
     if (poisson == NULL)
       throw InitFailedException("MacrostrainModel: Unknown poisson model" + poisson_name);
 
-    id_Ex = poisson->get_solution_id("Ex");
-    Poisson_variables_ID.insert(id_Ex);
-
-    id_Ey = poisson->get_solution_id("Ey");
-    Poisson_variables_ID.insert(id_Ey);
-
-    id_Ez = poisson->get_solution_id("Ez");
-    Poisson_variables_ID.insert(id_Ez);
-
+    id_E = poisson->get_solution_id("ElField");
   }
 
 }
@@ -100,24 +93,19 @@ void MacrostrainModel::get_converse_piezo_stress(Tensor2Sym& sigma, const Elem* 
 
     Point q_point = element->centroid();
     std::vector<Point> q_point_vec(1, q_point);
-    const std::set< ID > ids;
 
-    std::vector< std::map< ID, double > >  field_components;
+    std::map<ID, std::vector<double> > field_components;
+    field_components[id_E].resize(0);
 
-    bool got_solution = poisson->get_solution (element, q_point_vec, Poisson_variables_ID, field_components);
-
-
+    bool got_solution = poisson->get_solution(element, field_components, q_point_vec);
 
     if (got_solution)
     {
       Tensor1 field;
 
-
-      field(1) = field_components[0][id_Ex];
-      field(2) = field_components[0][id_Ey];
-      field(3) = field_components[0][id_Ez];
-
-
+      field(1) = field_components[id_E][0];
+      field(2) = field_components[id_E][1];
+      field(3) = field_components[id_E][2];
 
       Material*   mat = get_material();
 

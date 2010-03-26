@@ -34,8 +34,9 @@ RelaxationMethod::do_solve(void)
   open_xmonitor();
 
   AutoPtr<NumericVector<double> > x_old = NumericVector<double>::build();
+  get_solution_vector().close();
   x_old->init(get_solution_vector());
-  x_old->close();
+  //x_old->close();
 
   bool converged = true;
   unsigned int it = 0;

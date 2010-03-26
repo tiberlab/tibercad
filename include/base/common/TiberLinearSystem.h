@@ -59,6 +59,10 @@ class TiberLinearSystem : public TiberEqSystem, public LinearImplicitSystem
     virtual void user_initialization(void);
 
 
+    //! Get the solution vector
+    NumericVector<double>& get_solution_vector(void);
+
+
 
   private:
 
@@ -78,6 +82,12 @@ TiberLinearSystem::system_type(void) const
 }
 
 
+inline
+NumericVector<double>&
+TiberLinearSystem::get_solution_vector(void)
+{
+  return *solution;
+}
 
 
 #endif // _TIBERLINEARSYSTEM_H_

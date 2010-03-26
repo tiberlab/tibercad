@@ -3,7 +3,9 @@
 #ifndef _DRIFTDIFFUSIONPROPERTIES_H_
 #define _DRIFTDIFFUSIONPROPERTIES_H_
 
-
+#ifndef TIBER_MODULE_PREFIX
+#define TIBER_MODULE_PREFIX driftdiffusion
+#endif
 
 #include "PhysicalModel.h"
 
@@ -1034,7 +1036,7 @@ DriftDiffusionProperties::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<DriftDiffusionProperties*>(
-      PhysicalModelInterface::create("dd_" + name, options));
+      PhysicalModelInterface::create("driftdiffusion_" + name, options));
 }
 
 

@@ -9,6 +9,7 @@
 #include "TiberModelObject.h"
 #include "TypeDefs.h"
 #include "HashMap.h"
+#include "IDSet.h"
 #include "SolutionDescriptor.h"
 #include "InitFailedException.h"
 #include "SolveFailedException.h"
@@ -95,9 +96,25 @@ class SimulationInterface : public TiberModelObject
     //! Initialize the system
     /*!
      * This method calls do_init() after some health checks
-     * and do_print_info();
+     * and print_info();
      */
     void init(void) throw (InitFailedException);
+
+
+    //! Setup the available solution variables
+    /*!
+     * This has to be done before calling init() of all models
+     * because others could want to know about solution variables
+     * during initialisation.
+     */
+    void setup_solution_variables(void);
+
+
+    //! Print some useful info
+    /*!
+     * Calls do_print_info()
+     */
+    void print_info(void);
 
 
     //! Solve the system for equilibrium
@@ -270,38 +287,42 @@ class SimulationInterface : public TiberModelObject
     const SolutionDescriptor& get_solution_descriptor(const std::string& solution_name) const;
 
 
-    //! Get solutions on their ``natural'' location in the specified element
+    //! Get solutions at specified points in an element
     /*!
      * \param elem the pointer to the element
      * \param values a map to hold the values, the key IDs specify the solutions
      *  to be returned
+     * \param points the vector containing the points
+     * \param local_coords set to true if the points are already in local coordinates
      * \return \c false if the model has not been solved or the element is invalid
+     *
+     * \note for efficiency it is preferable to pass local coordinates (i.e. coordinates
+     *  in reference element)
      *
      * If a solution associated to a certain ID does not exist in the specified
      * element (e.g. if the element is not in the simulation domain), the corresponding
      * vector in the map has size zero. Generally the size of the vector depends on the
-     * type of the solution (more specifically on the number of locations in the element
-     * and on the number of solution components).
+     * type of the solution.
+     *
+     * Cell based solutions have to be returned only once, not for every
+     * requested point.
+     *
+     * If \c points is not specified, the values are returned on the ``natural''
+     * locations of the solution variables.
      * \see SolutionDescriptor
      */
-    bool get_solution(const Elem* elem, std::map<ID, std::vector<double> >& values);
+    bool get_solution(const Elem* elem, std::map<ID, std::vector<double> >& values,
+        const std::vector<Point>& p = std::vector<Point>(),
+        bool local_coords = false);
 
-
-    //! Get solutions at specified points in an element
+    //! Get a single solution
     /*!
-     * \param elem the pointer to the element
-     * \param points the vector containing the points
-     * \param values a map to hold the values, the key IDs specify the solutions
-     *  to be returned
-     * \return \c false if the model has not been solved or the element is invalid
-     *
-     *  Solution values will be ordered in he vectors according the the order of the
-     *  given points. The number of values per point depends on the type of solution
-     *  variable (see also get_solution(const Elem*, std::map<ID, std::vector<double> >
-     *  and the SolutionDescriptor class).
+     * \see get_solution(const Elem*, std::map<ID, std::vector<double> >&,
+     *   const std::vector<Point>&, bool)
      */
-    bool get_solution(const Elem* elem, const std::vector<Point>& points,
-        std::map<ID, std::vector<double> >& values);
+    bool get_solution(const Elem* elem, ID id, std::vector<double>& values,
+        const std::vector<Point>& p = std::vector<Point>(),
+        bool local_coords = false);
 
 
     //! Get solutions associated to an atom
@@ -336,20 +357,6 @@ class SimulationInterface : public TiberModelObject
      */
     bool get_solution(std::map<ID, std::vector<double> >& values);
 
-
-
-    //! Get solution values on the nodes of a specified element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param id identifier for the variable to be returned
-     * \param values a vector to store the values. The vector index
-     * corresponds to the node.
-     *
-     * \return false if no data can be found for \c elem
-     */
-    bool get_solution(const Elem* elem, ID id,
-        std::vector<double>& values);
 
 
     //! Get solution values on the nodes of a specified element
@@ -576,28 +583,32 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \return \c NULL if no model is present for \c elem
      */
-    PhysicalModel* get_bulk_model(const Elem* elem) const;
+    template <typename T = PhysicalModel>
+    T* get_bulk_model(const Elem* elem) const;
 
 
     //! Get the physical model associated to an element side
     /*!
      * \return \c NULL if no model is present for the given side
      */
-    PhysicalModel* get_surface_model(const Elem* elem, int side) const;
+    template <typename T = PhysicalModel>
+    T* get_surface_model(const Elem* elem, int side) const;
 
 
     //! Get the physical model associated to an element edge
     /*!
      * \return \c NULL if no model is present for the given edge
      */
-    PhysicalModel* get_edge_model(const Elem* elem, int edge) const;
+    template <typename T = PhysicalModel>
+    T* get_edge_model(const Elem* elem, int edge) const;
 
 
     //! Get the physical model associated to an element node
     /*!
      * \return \c NULL if no model is present for the given node
      */
-    PhysicalModel* get_node_model(const Elem* elem, int node) const;
+    template <typename T = PhysicalModel>
+    T* get_node_model(const Elem* elem, int node) const;
 
 
 
@@ -644,6 +655,10 @@ class SimulationInterface : public TiberModelObject
     virtual void do_init(void) = 0;
 
 
+    //! Setup the available variables
+    virtual void do_setup_solution_variables(void) {};
+
+
     //! Solve for equilibrium
     /*!
      * Can be implemented in derived classes to solve for some
@@ -676,12 +691,18 @@ class SimulationInterface : public TiberModelObject
     //! Get the set of plotvariables
     //const std::set<std::string>& get_plotvariables(void) const;
 
+    //! Adds a solution name to the plot list
+    void add_plot_variable(const std::string& name);
+
 
     //! Checks if a solution variable should be plotted
     bool plot_solution(const std::string& name) const;
 
 
     //! Checks if a solution variable with given ID should be plotted
+    /*!
+     * This method can be used only \em after init()
+     */
     bool plot_solution(ID id) const;
 
 
@@ -691,13 +712,44 @@ class SimulationInterface : public TiberModelObject
      * In almost all cases the default implementation should be ok, but
      * in some it is not, especially in "compound" simulations as
      * sweeps, selfconsitent solvers etc.
+     *
+     * It calls plot_meshdata(), plot_atomisticdata() and plot_globaldata()
      */
     virtual void do_plot(void);
     virtual void do_plot_old(void);
 
 
+    //! Plot mesh associated data
+    /*!
+     * This method plots data associated with the simulation mesh. Usually,
+     * the default implementation should be ok.
+     */
+    virtual void plot_meshdata(void);
+
+
+    //! Plot data associated with atoms
+    /*!
+     * This method plots data associated with the atoms mesh. Usually,
+     * the default implementation should be ok.
+     *
+     * TODO this has to be implemented
+     */
+    virtual void plot_atomisticdata(void);
+
+
+    //! Plot global data
+    /*!
+     * This method writes global data without association with a grid
+     * (e.g. contact currents, energy levels etc.)
+     *
+     * The default implementation may not make much sense in certain
+     * cases and should then be reimplemented.
+     */
+    virtual void plot_globaldata(void);
+
+
     //! Plots the regions active for this simulation
-    void plot_regions(void);
+    //void plot_regions(void);
 
 
     //! Print simulation info
@@ -880,33 +932,27 @@ class SimulationInterface : public TiberModelObject
     declare_solution_ext(#name, name, SolutionDescriptor::type, \
         SolutionDescriptor::location, ## __VA_ARGS__)
 
+    //! Add an alias for a solution variable
+    void add_alias(const std::string& alias, ID id);
 
-    //! Get solutions on their ``natural'' location in the specified element
-    /*!
-     * \param elem the pointer to the element
-     * \param values a map to hold the values, the key IDs specify the solutions
-     *  to be returned
-     *
-     * \pre \c elem is an active element of this simulation
-     * \pre all ids refer to solutions located on an element
-     */
-    virtual void get_solution_secure(const Elem* elem,
-        std::map<ID, std::vector<double> >& values);
 
 
     //! Get solutions at specified points in an element
     /*!
      * \param elem the pointer to the element
-     * \param p the vector containing the points
      * \param values a map to hold the values, the key IDs specify the solutions
      *  to be returned
+     * \param p the vector containing the points
+     *
+     * \note The points in \c p are given in \em local coordinates (i.e. on the
+     * reference element)
      *
      * \pre \c elem is an active element of this simulation
      * \pre all ids refer to solutions located on an element
      */
     virtual void get_solution_secure(const Elem* elem,
-        const std::vector<Point>& p,
-        std::map<ID, std::vector<double> >& values);
+        std::map<ID, std::vector<double> >& values,
+        const std::vector<Point>& p);
 
 
     //! Get solutions on an atom
@@ -1106,8 +1152,18 @@ class SimulationInterface : public TiberModelObject
 
 
     //! The type of the solution descriptor map
-    typedef TiberCad::HashMap<ID, SolutionDescriptor>::Type SolutionDescrMap;
+    typedef std::map<ID, SolutionDescriptor> SolutionDescrMap;
 
+
+    //! Some common solution variables
+    /*!
+     * We assign the IDs below INVALID_ID so a clash with the ones
+     * defined in modules should be impossible.
+     */
+    enum Solution
+    {
+      RegionIDs = (INVALID_ID - 1)        /*!< The region IDs */
+    };
 
     //! The environment for this simulation
     SimulationEnvironment* _environment;
@@ -1167,6 +1223,10 @@ class SimulationInterface : public TiberModelObject
     SolutionDescrMap _solution_descriptors;
 
 
+    //! A map mapping solution names to IDs
+    std::map<const std::string, ID> _solution_ids;
+
+
     //! A map with remembered solutions
     std::map<ID, NumericVector<double>*> _remembered_solutions;
 
@@ -1184,12 +1244,19 @@ class SimulationInterface : public TiberModelObject
 
 
     //! The set of all variable IDs to be plotted
-    std::set<ID> _plotvariable_ids;
+    IDSet _plotvariable_ids;
 
 
     //! The map containing all simulations with their ID
     static SimulationMap _simulation_map;
 
+
+    //! An invalid solution descriptor
+    /*!
+     * Some accessor methods need to return a reference to
+     * an invalid solution descriptor.
+     */
+    static SolutionDescriptor _invalid_descr;
 
 
 
@@ -1205,12 +1272,31 @@ class SimulationInterface : public TiberModelObject
     void set_type(const std::string& type);
 
 
+    //! Print all registered solution variables
+    void print_known_solution_variables(void) const;
+
+
     //! Do not allow copy constructor
     SimulationInterface(const SimulationInterface&);
 
     //! Do not allow assignement operator
     SimulationInterface& operator=(const SimulationInterface&);
 
+
+    //! \see get_bulk_model()
+    PhysicalModel* _get_bulk_model(const Elem* elem) const;
+
+
+    //! \see get_surface_model()
+    PhysicalModel* _get_surface_model(const Elem* elem, int side) const;
+
+
+    //! \see get_edge_model()
+    PhysicalModel* _get_edge_model(const Elem* elem, int edge) const;
+
+
+    //! \see get_node_model()
+    PhysicalModel* _get_node_model(const Elem* elem, int node) const;
 };
 
 
@@ -1357,7 +1443,6 @@ inline
 bool
 SimulationInterface::plot_solution(const std::string& name) const
 {
-  //return plot_solution(convert_variable_name_to_id(name));
   return _plotvariables.count(name);
 }
 
@@ -1577,6 +1662,41 @@ SimulationInterface::verbose(void)
 }
 
 
+template <typename T>
+inline
+T*
+SimulationInterface::get_bulk_model(const Elem* elem) const
+{
+  return dynamic_cast<T*>(_get_bulk_model(elem));
+}
+
+
+template <typename T>
+inline
+T*
+SimulationInterface::get_surface_model(const Elem* elem, int side) const
+{
+  return dynamic_cast<T*>(_get_surface_model(elem, side));
+}
+
+
+template <typename T>
+inline
+T*
+SimulationInterface::get_edge_model(const Elem* elem, int edge) const
+{
+  return dynamic_cast<T*>(_get_edge_model(elem, edge));
+}
+
+
+
+template <typename T>
+inline
+T*
+SimulationInterface::get_node_model(const Elem* elem, int node) const
+{
+  return dynamic_cast<T*>(_get_node_model(elem, node));
+}
 
 
 #endif // _SIMULATIONINTERFACE_H_

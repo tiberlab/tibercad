@@ -113,11 +113,64 @@ Index: include/base/getpot.h
  GetPot::__get_until_closing_bracket(std::istream& istr)
    // parse input until next matching }
  {
+Index: src/mesh/mesh_refinement.C
+===================================================================
+--- src/mesh/mesh_refinement.C	(revision 3286)
++++ src/mesh/mesh_refinement.C	(working copy)
+@@ -1635,9 +1635,12 @@
+ 
+       for ( ; elem_it != elem_end; ++elem_it)
+         {
+-	  (*elem_it)->set_refinement_flag(Elem::COARSEN);
+-          if ((*elem_it)->parent()) 
+-	    (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          if ((*elem_it)->level() != 0)
++          {
++            (*elem_it)->set_refinement_flag(Elem::COARSEN);
++            if ((*elem_it)->parent()) 
++              (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          }
+         }
+ 
+       // Coarsen all the elements we just flagged.
+--- Make.common.in.orig	2009-10-26 16:40:40.070747643 +0100
++++ Make.common.in	2009-10-26 16:40:19.742747715 +0100
+@@ -177,6 +177,8 @@
+ ###############################################################################
+ 
+ 
++libmesh_CXXFLAGS += -DMPICH_IGNORE_CXX_SEEK
++
+ 
+ ###############################################################################
+ # Compiler flags, different for optimized, debug, and profiler modes.
+Index: include/parallel/parallel.h
+===================================================================
+--- include/parallel/parallel.h	(revision 3581)
++++ include/parallel/parallel.h	(working copy)
+@@ -1539,7 +1539,7 @@
+ 		src_processor_id,
+ 		tag,
+ 		libMesh::COMM_WORLD,
+-		status);
++		&(*status));
+     libmesh_assert (ierr == MPI_SUCCESS);
+ 
+     STOP_LOG("receive()", "Parallel");
+@@ -1576,7 +1576,7 @@
+ 		src_processor_id,
+ 		tag,
+ 		libMesh::COMM_WORLD,
+-		status);
++		&(*status));
+     libmesh_assert (ierr == MPI_SUCCESS);
+     
+     STOP_LOG("receive()", "Parallel");
 Index: src/geom/elem.C
 ===================================================================
---- src/geom/elem.C	(revision 3286)
-+++ src/geom/elem.C	(working copy)
-@@ -760,6 +760,787 @@
+--- src/geom/elem.C.orig	2010-01-13 11:54:51.870788567 +0100
++++ src/geom/elem.C	2010-03-03 09:42:52.149966196 +0100
+@@ -844,6 +844,811 @@
  
  
  
@@ -705,6 +758,30 @@ Index: src/geom/elem.C
 +
 +    switch(n){
 +
++    case 0:
++      return Point(0.0, 0.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 4:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 5:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
 +    }
 +
 +    break;
@@ -905,7 +982,7 @@ Index: src/geom/elem.C
  Real Elem::quality (const ElemQuality q) const
  {
    switch (q)
-@@ -1073,7 +1854,8 @@
+@@ -1157,7 +1962,8 @@
    // Or recurse into an ancestor element's children.
    // Do not clear the vector any more.
    else if (!this->active())
@@ -915,56 +992,3 @@ Index: src/geom/elem.C
        {
          Elem *child = this->child(c);
          if (child != remote_elem && child->has_neighbor(neighbor))
-Index: src/mesh/mesh_refinement.C
-===================================================================
---- src/mesh/mesh_refinement.C	(revision 3286)
-+++ src/mesh/mesh_refinement.C	(working copy)
-@@ -1635,9 +1635,12 @@
- 
-       for ( ; elem_it != elem_end; ++elem_it)
-         {
--	  (*elem_it)->set_refinement_flag(Elem::COARSEN);
--          if ((*elem_it)->parent()) 
--	    (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
-+          if ((*elem_it)->level() != 0)
-+          {
-+            (*elem_it)->set_refinement_flag(Elem::COARSEN);
-+            if ((*elem_it)->parent()) 
-+              (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
-+          }
-         }
- 
-       // Coarsen all the elements we just flagged.
---- Make.common.in.orig	2009-10-26 16:40:40.070747643 +0100
-+++ Make.common.in	2009-10-26 16:40:19.742747715 +0100
-@@ -177,6 +177,8 @@
- ###############################################################################
- 
- 
-+libmesh_CXXFLAGS += -DMPICH_IGNORE_CXX_SEEK
-+
- 
- ###############################################################################
- # Compiler flags, different for optimized, debug, and profiler modes.
-Index: include/parallel/parallel.h
-===================================================================
---- include/parallel/parallel.h	(revision 3581)
-+++ include/parallel/parallel.h	(working copy)
-@@ -1539,7 +1539,7 @@
- 		src_processor_id,
- 		tag,
- 		libMesh::COMM_WORLD,
--		status);
-+		&(*status));
-     libmesh_assert (ierr == MPI_SUCCESS);
- 
-     STOP_LOG("receive()", "Parallel");
-@@ -1576,7 +1576,7 @@
- 		src_processor_id,
- 		tag,
- 		libMesh::COMM_WORLD,
--		status);
-+		&(*status));
-     libmesh_assert (ierr == MPI_SUCCESS);
-     
-     STOP_LOG("receive()", "Parallel");

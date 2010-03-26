@@ -31,7 +31,7 @@ DataOutput::DataOutput(const MeshBase& mesh, const std::string& format)
   std::vector<std::string> formats;
   Utils::extract_vector(format, formats);
 
-  for (int i = 0; i < formats.size(); i++)
+  for (unsigned int i = 0; i < formats.size(); i++)
     _format |= tell_data_format(formats[i]);
 
 }
@@ -46,6 +46,8 @@ DataOutput::create(const std::string& format)
 
   if (format == "vtk")
     writer = new TiberVTKIO();
+  else if ((format == "grace") || format == "dat")
+    writer = new GraceIO();
 
   return writer;
 }
@@ -174,10 +176,10 @@ DataOutput::get_output_directory(void) const
 }
 
 
-const std::string&
+std::string
 DataOutput::get_filename(void) const
 {
-  return _filename;
+  return get_output_directory() + "/" + _filename + "_msh";
 }
 
 
@@ -192,6 +194,9 @@ DataOutput::set_data(const std::map<SolutionDescriptor,
 bool
 DataOutput::has_data(ID zone)
 {
+  if (zone == INVALID_ID)
+    return _data.size();
+
   return (_data.count(zone));
 }
 
@@ -205,7 +210,8 @@ DataOutput::get_zone_data(ID zone)
 void
 DataOutput::write(void)
 {
-  do_write();
+  if (has_data())
+    do_write();
 }
 
 

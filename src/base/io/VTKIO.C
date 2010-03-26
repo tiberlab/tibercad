@@ -26,11 +26,6 @@ using namespace std;
 
 
 
-
-
-
-
-
 TiberVTKIO::TiberVTKIO(const MeshBase& mesh)
   : DataOutput()
 {
@@ -573,7 +568,7 @@ void
 TiberVTKIO::do_write(void)
 {
   const MeshBase& mesh = get_mesh();
-  string file = get_output_directory() + "/" + get_filename() + ".vtu";
+  string file = get_filename() + ".vtu";
   ofstream of(file.c_str());
 
 
@@ -656,10 +651,85 @@ TiberVTKIO::do_write(void)
     intbuf.clear();
     of << "</Cells>\n";
 
-    of << "<PointData>\n";
-    // loop over all data maps
+    if (has_data(id))
+    {
+      const DataMap& data = get_zone_data(id);
 
-    of << "</PointData>\n";
+      of << "<PointData";
+      DataMap::const_iterator it(data.begin());
+      const DataMap::const_iterator end(data.end());
+
+      bool scalar_ok = false;
+      bool vector_ok = false;
+      bool tensor_ok = false;
+      for ( ; it != end; ++it)
+      {
+        const SolutionDescriptor& descr = it->first;
+        if (descr.location() == SolutionDescriptor::NODES)
+        {
+          if (!scalar_ok && (descr.n_components() == 1))
+          {
+            of << " Scalars=\"" << descr.name() << "\"";
+            scalar_ok = true;
+          }
+          else if (!vector_ok && (descr.n_components() == 3))
+          {
+            of << " Vectors=\"" << descr.name() << "\"";
+            vector_ok = true;
+          }
+          else if (!tensor_ok && (descr.n_components() == 9))
+          {
+            of << " Tensors=\"" << descr.name() << "\"";
+            tensor_ok = true;
+          }
+        }
+      }
+      of << ">\n";
+
+      // loop over all data
+      for (it = data.begin(); it != end; ++it)
+      {
+        const SolutionDescriptor& descr = it->first;
+        if (descr.location() == SolutionDescriptor::NODES)
+          write_data_array(descr.name(), descr.n_components(), it->second, of);
+      }
+      of << "</PointData>\n";
+
+      of << "<CellData";
+      scalar_ok = false;
+      vector_ok = false;
+      tensor_ok = false;
+      for (it = data.begin(); it != end; ++it)
+      {
+        const SolutionDescriptor& descr = it->first;
+        if (descr.location() == SolutionDescriptor::CELL)
+        {
+          if (!scalar_ok && (descr.n_components() == 1))
+          {
+            of << " Scalars=\"" << descr.name() << "\"";
+            scalar_ok = true;
+          }
+          else if (!vector_ok && (descr.n_components() == 3))
+          {
+            of << " Vectors=\"" << descr.name() << "\"";
+            vector_ok = true;
+          }
+          else if (!tensor_ok && (descr.n_components() == 9))
+          {
+            of << " Tensors=\"" << descr.name() << "\"";
+            tensor_ok = true;
+          }
+        }
+      }
+      of << ">\n";
+      for (it = data.begin(); it != end; ++it)
+      {
+        const SolutionDescriptor& descr = it->first;
+        if (descr.location() == SolutionDescriptor::CELL)
+          write_data_array(descr.name(), descr.n_components(), it->second, of);
+      }
+      of << "</CellData>\n";
+    }
 
     of << "</Piece>\n";
   }
@@ -669,14 +739,15 @@ TiberVTKIO::do_write(void)
 
 }
 
+
 template <typename T>
 void
 TiberVTKIO::write_data_array(const string& name, int comp,
-    vector<T>& data, ostream& os)
+    const vector<T>& data, ostream& os)
 {
   string type;
   int typelen;
-  if (typeid(T) == typeid(float))
+  if ((typeid(T) == typeid(float)) || (typeid(T) == typeid(double)))
   {
     type = "Float32";
     typelen = 4;
@@ -708,7 +779,6 @@ TiberVTKIO::write_data_array(const string& name, int comp,
         << typeid(T).name();
     throw RuntimeException(es.str());
   }
-  assert(sizeof(T) == typelen);
 
   os << "<DataArray type=\"" << type << "\" ";
   if (name.size() > 0)
@@ -721,10 +791,12 @@ TiberVTKIO::write_data_array(const string& name, int comp,
   if (is_ascii())
   {
     for (size_t i = 0; i < n; i++)
+    {
       if ((typeid(T) == typeid(uint8_t)) || (typeid(T) == typeid(int8_t)))
         os << static_cast<int>(data[i]) << " ";
       else
         os << data[i] << " ";
+    }
   }
   else
   {
@@ -733,7 +805,13 @@ TiberVTKIO::write_data_array(const string& name, int comp,
     is.write(reinterpret_cast<char*>(&nbytes), 4);
     for (size_t i = 0; i < n; i++)
     {
-      is.write(reinterpret_cast<char*>(&data[i]), typelen);
+      if (typeid(T) == typeid(double))
+      {
+        float tmp = static_cast<float>(data[i]);
+        is.write(reinterpret_cast<const char*>(&tmp), typelen);
+      }
+      else
+        is.write(reinterpret_cast<const char*>(&data[i]), typelen);
     }
 
     base64::encoder enc;

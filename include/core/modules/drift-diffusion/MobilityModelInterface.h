@@ -4,9 +4,7 @@
 #define _MOBILITYMODELINTERFACE_H_
 
 
-#ifdef TIBER_MODULE_PREFIX
-# undef TIBER_MODULE_PREFIX
-#endif
+#undef TIBER_MODULE_PREFIX
 #define TIBER_MODULE_PREFIX mobility
 
 

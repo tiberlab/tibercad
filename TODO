@@ -2,7 +2,7 @@
 	( ) in 1D/2D check if mesh is along x or in x/y
 
 2009-11-06 Auf der Maur
-	( ) put plot keyword into modules
+	(DONE) put plot keyword into modules
 	(DONE) put mesh, dimension into $Device
 
 2009-09-4 Auf der Maur

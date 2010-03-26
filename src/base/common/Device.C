@@ -162,10 +162,6 @@ Device::setup_mesh(void)
    * and therefore only a part of the region IDs are present
    */
 
-#ifdef DEBUG
-  cout << endl << "Device::setup_mesh(): ";
-  _mesh->print_info();
-#endif
 
   _eq_system = new EquationSystems(*_mesh);
 }
@@ -221,6 +217,22 @@ Device::init(void)
   const MaterialMap::iterator end(_material_map.end());
   for ( ; it != end; ++it)
     (it->second)->init();
+
+  // init all lower dimensional regions
+  BoundaryMap::iterator bdit(_boundary_map.begin());
+  const BoundaryMap::iterator bdend(_boundary_map.end());
+  for ( ; bdit != bdend; ++bdit)
+    (bdit->second)->init();
+
+  EdgeObjMap::iterator eit(_edge_map.begin());
+  const EdgeObjMap::iterator eend(_edge_map.end());
+  for ( ; eit != eend; ++eit)
+    (eit->second)->init();
+
+  NodeObjMap::iterator nit(_node_map.begin());
+  const NodeObjMap::iterator nend(_node_map.end());
+  for ( ; nit != nend; ++nit)
+    (nit->second)->init();
 
 }
 

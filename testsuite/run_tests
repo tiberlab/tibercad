@@ -130,7 +130,7 @@ print("     $last_changed_author\n") if $info;
 if (@tests eq 0) { print("\nNo test specified\n"); }
 
 
-if (scalar grep(/compile|all/, @tests)) {
+if (scalar grep(/^compile$|^all$/, @tests)) {
   my $compile = check_compilation($topdir);
   check($compile);
   $checklist{'compilation'} = $compile;
@@ -138,11 +138,12 @@ if (scalar grep(/compile|all/, @tests)) {
 
 
 opendir CWD, ".";
-while ((my $dir = readdir CWD)) {
+foreach (sort(readdir CWD)) {
+  my $dir = $_;
 
   (($dir =~ /^test[0-9]+/) && (-d $dir)) || next;
 
-  if (scalar grep(/$dir|all/, @tests)) {
+  if (scalar grep(/$dir|^all$/, @tests)) {
     my $result = run_test($dir);
     check($result);
     $checklist{$dir} = $result;

@@ -87,7 +87,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   if (file_exists)
   {
-    Messages::info("Trying to open " + libfile + "... ", false);
+    //Messages::info("Trying to open " + libfile + "... ", false);
 
     // we will set it to false if something bad happens
     success = true;
@@ -113,12 +113,12 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
       success = false;
 
     if (success)
-      Messages::info("OK");
-    else
-      if (error_msg != 0)
-        Messages::info("failed: " + string(error_msg));
-      else
-        Messages::info("failed");
+      Messages::info("(using " + libfile + ")");
+    //else
+    //  if (error_msg != 0)
+    //    Messages::info("failed: " + string(error_msg));
+    //  else
+    //    Messages::info("failed");
   }
 
   return success;

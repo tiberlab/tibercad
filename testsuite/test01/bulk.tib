@@ -28,7 +28,7 @@ $Models
     options
     {
      simulation_name = driftdiffusion
-     plot = (Ec, Ev, ContactCurrent)
+     plot = (Ec, Ev, ContactCurrents)
 
     }
 

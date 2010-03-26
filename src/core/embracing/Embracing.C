@@ -34,7 +34,7 @@ Embracing::Embracing(SimulationInterface* outer,
     _is_empty(true),
     _do_plot(false),
     _need_mixing(false),
-    _laplace(NULL) 
+    _laplace(NULL)
 {
   if ((outer == NULL) || (inner == NULL))
     throw InitFailedException("Embracing needs valid SimulationInterfaces");
@@ -113,7 +113,7 @@ Embracing::generate_embracing_region(void)
       {
         if ((s != it->side()) && ((neighbour = elem->neighbor(s)) != NULL))
         {
-          if ((find_elem(neighbour) == list_end) && 
+          if ((find_elem(neighbour) == list_end) &&
               (in.contains_element(neighbour)))
           {
             double w = (neighbour->centroid() - elem->centroid()).size();
@@ -171,9 +171,6 @@ Embracing::find_boundary(void)
   SimulationEnvironment& out = _outer->get_environment();
   SimulationEnvironment& in = _inner->get_environment();
 
-  const MeshBase& mesh = in.get_mesh();
-  unsigned int dim = mesh.mesh_dimension();
-
   // loop over the elements of the 'inner' simulation
   SimulationEnvironment::ConstElemIterator el(in.elements_begin());
   const SimulationEnvironment::ConstElemIterator end(in.elements_end());
@@ -205,7 +202,6 @@ Embracing::find_inner_boundary(void)
   SimulationEnvironment& in = _inner->get_environment();
 
   const MeshBase& mesh = in.get_mesh();
-  unsigned int dim = mesh.mesh_dimension();
 
 
   // loop over the elements of the embracing region
@@ -316,7 +312,7 @@ Embracing::plot(void)
       sol[elem_number] = elem->subdomain_id();
     }
     data_output.write_cell_data(os.str(), sol, solname);
-  }  
+  }
 
 }
 
@@ -358,15 +354,15 @@ Embracing::calculate_mixing(void)
 }
 
 
-  
+
 
 void
 Embracing::assembly(LaplaceEq& system)
 {
   const unsigned int var = system.variable_number("u");
-  
+
   DofMap& dof_map = system.get_dof_map();
-  
+
   FEType fe_type = dof_map.variable_type(var);
 
   const MeshBase& mesh = system.get_mesh();
@@ -380,7 +376,7 @@ Embracing::assembly(LaplaceEq& system)
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
 
   std::vector<unsigned int> dof_indices;
-  
+
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
 
@@ -392,20 +388,20 @@ Embracing::assembly(LaplaceEq& system)
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
-    
-    dof_map.dof_indices (elem, dof_indices);  
+
+    dof_map.dof_indices (elem, dof_indices);
     const unsigned int n_dofs   = dof_indices.size();
-    
+
     fe->reinit(elem);
 
     Ke.resize(n_dofs, n_dofs);
     Fe.resize(n_dofs);
 
-    for (int qp = 0; qp < qrule.n_points(); qp++)
-      for (int i = 0; i < n_dofs; i++)
-        for (int j = 0; j < n_dofs; j++)
+    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+      for (unsigned int i = 0; i < n_dofs; i++)
+        for (unsigned int j = 0; j < n_dofs; j++)
           Ke(i, j) += JxW[qp] * dphi[i][qp] * dphi[j][qp];
-    
+
 
     if ((_cutoff > 0.0) && (_elem_list[elem] < _cutoff))
       for (size_t n = 0; n < elem->n_nodes(); n++)
@@ -413,7 +409,7 @@ Embracing::assembly(LaplaceEq& system)
 
     // loop over the sides for boundary conditions
     // NOTE we use penalty-method here
-    for (int s = 0; s < elem->n_sides(); s++)
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
       bool bd = false;
       double val = 0.0;
@@ -445,7 +441,7 @@ Embracing::assembly(LaplaceEq& system)
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
     system.matrix->add_matrix(Ke, dof_indices);
-    system.rhs->add_vector(Fe, dof_indices); 
+    system.rhs->add_vector(Fe, dof_indices);
   }
 }
 
@@ -458,8 +454,8 @@ Embracing::LaplaceEq::build_nodal_results(vector<double>& results,
   legend.resize(1);
   legend[0] = "u";
 
-  const unsigned int s = number();
-  const unsigned int var = variable_number("u");
+  //const unsigned int s = number();
+  //const unsigned int var = variable_number("u");
   const MeshBase& mesh = get_mesh();
 
   MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
@@ -469,7 +465,7 @@ Embracing::LaplaceEq::build_nodal_results(vector<double>& results,
   for ( ; nd != nd_end; ++nd)  number_of_points++;
 
   results.resize(number_of_points, 0.0);
-  
+
   MeshBase::const_element_iterator it(mesh.active_local_elements_begin());
   const MeshBase::const_element_iterator
     end(mesh.active_local_elements_end());
@@ -478,15 +474,15 @@ Embracing::LaplaceEq::build_nodal_results(vector<double>& results,
   DofMap& dof_map = get_dof_map();
 
   for ( ; it != end; ++it)
-  { 
+  {
     const Elem* elem = *it;
 
-    dof_map.dof_indices(elem, dof_indices); 
+    dof_map.dof_indices(elem, dof_indices);
 
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     {
       unsigned int id =  elem->node(n);
-      results[id]  =  (*solution)(dof_indices[n]);       
+      results[id]  =  (*solution)(dof_indices[n]);
     }
   }
 }
@@ -520,7 +516,7 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
       unsigned int dim = mesh.mesh_dimension();
 
       vector<unsigned int> dof_indices;
-      dof_map.dof_indices(elem, dof_indices); 
+      dof_map.dof_indices(elem, dof_indices);
 
       AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
       const vector<vector<double> >& phi = fe->get_phi();

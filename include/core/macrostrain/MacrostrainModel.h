@@ -26,7 +26,7 @@ class MacrostrainModel: public MacrostrainModelInterface
   //! define an object that stores Young moduli
   void add_stiffness(Stiffness*  st);
 
-  
+
   //! define the piezoelectricity
   void add_piezo(Piezoelectricity* pz);
 
@@ -39,7 +39,7 @@ class MacrostrainModel: public MacrostrainModelInterface
   //!  calculates \f$ \sigma_{jk} = d_{i,jk}E_i \f$
   void get_converse_piezo_stress(Tensor2Sym& eps, const Elem* element);
 
- 
+
 
 
  private:
@@ -52,25 +52,20 @@ class MacrostrainModel: public MacrostrainModelInterface
 
   //! A pointer to the Poissons solver
   SimulationInterface* poisson;
-  
-  //! set of ID's of the electric field components
-  std::set< ID > Poisson_variables_ID;
 
-  //!  ID's of the electric field components
-  ID id_Ex; 
-  ID id_Ey;
-  ID id_Ez;
+  //! ID of the electric field solution
+  ID id_E;
 
  protected:
 
   //!Constructor
   MacrostrainModel(const ModelOptions& options);
-  
+
   virtual PhysicalModelInterface* create_new (void) const;
 
 
   virtual void do_init();
-  
+
   virtual void create_submodels();
 
 
@@ -96,4 +91,4 @@ inline Piezoelectricity* MacrostrainModel::get_piezo(void)
 
 
 
-#endif 
+#endif

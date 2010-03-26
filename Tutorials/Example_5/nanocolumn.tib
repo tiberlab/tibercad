@@ -8,6 +8,13 @@
 $Device
 {
 
+  Options
+  {
+    meshfile = nanocolumn.msh
+    mesh_units = 1e-9
+    dimension = 3
+  }
+
   Region well
   {
  #   mesh_regions = 1
@@ -108,6 +115,7 @@ $Models
     options
     {          
       simulation_name = strain
+      plot = (strain, stress, piezoPolarization)
     }
 
     
@@ -140,6 +148,8 @@ $Models
 
       strain_simulation = strain
       statistics = FD
+
+      plot = (ElPotential, ElField, Ec, Ev, eQFermi, hQFermi, eMobility, hMobility, eDensity, hDensity, CurrentDensity, eCurrentDensity, hCurrentDensity, ContactCurrents, NetRecombination, Polarization, Ec0, Ev0)
     }
 
     physical_model recombination
@@ -238,7 +248,7 @@ $Solver
    start = 0.0
    stop = 4.5 #5.0
    steps = 200 #20
- #  plot_data = true
+   plot_data = true
  }
 
 
@@ -251,16 +261,12 @@ $Solver
 # Definition of  model-indipendent parameters of the Simulation
 $Simulation
 {
-  #searchpath = ../../materials    
-  meshfile = nanocolumn.msh  # nanocolumn_v2.0.7_names_test1.msh  # nanocolumn_v2.0.7.msh  #nanocolumn_names_2.3.msh # nanocolumn_names.msh #nanocolumn.msh  
-  mesh_units = 1e-9
-  dimension = 3
   temperature = 300
+  verbose = 2
 
   solve = (strain, sweep)
   resultpath = output_nanocol_tecplot_tut_IV 
   output_format = vtk
-  plot = (strain, polarization,Ec, Ev, QFermi_e, QFermi_h, eMob, hMob, EigenFunctions, EigenEnergy, EnergyLevels, eDensity, hDensity, CurrentDensity, eCurrent, hCurrent, ContactCurrents)
 }
 
 

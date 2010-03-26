@@ -32,6 +32,126 @@ Macrostrain* Macrostrain::static_this;
 
 
 
+void Macrostrain::do_setup_solution_variables(void)
+{
+  declare_solution(strain, TENSOR, CELL, "-");
+  declare_solution(stress, TENSOR, CELL, "GPa");
+  declare_solution(vonMises, REAL, CELL, "GPa");
+  declare_solution(piezoPolarization, VECTOR, CELL, "C/m^2");
+  declare_solution(strainCrystal, TENSOR, CELL, "-");
+  declare_solution(stressCrystal, TENSOR, CELL, "GPa");
+  declare_solution(energyDensity, REAL, CELL, "J/m^3");
+}
+
+
+
+void
+Macrostrain::get_solution_secure(const Elem* elem,
+    std::map<ID, std::vector<double> >& values,
+    const std::vector<Point>& points)
+{
+
+  ID subdomain = elem->subdomain_id();
+  MacrostrainModel* macrostrain_model =
+      dynamic_cast<MacrostrainModel*>(get_physical_model(subdomain));
+
+  const RotatedCrystal& crystal = macrostrain_model->get_material()->get_rotated_crystal();
+  const Tensor2Gen& RotM = crystal.RotMatrix;
+
+  // this is in crystal system
+  const Tensor2Sym& str_cryst = result_strain[elem];
+  Tensor2Sym elemstr = sym(RotM * (str_cryst * RotM.transpose()));
+
+  if (values.count(strain))
+  {
+    values[strain][0] = elemstr(1,1);
+    values[strain][1] = elemstr(2,2);
+    values[strain][2] = elemstr(3,3);
+    values[strain][3] = elemstr(2,1);
+    values[strain][4] = elemstr(3,2);
+    values[strain][5] = elemstr(3,1);
+  }
+
+  bool do_stress = values.count(stress);
+  bool do_vonmises = values.count(vonMises);
+  bool do_stress_cryst = values.count(stressCrystal);
+  bool do_energy = values.count(energyDensity);
+  Tensor2Sym elemstress;
+
+  if (do_stress || do_vonmises || do_stress_cryst || do_energy)
+  {
+    //Elasticity in the calculation system
+    Stiffness* C_tensor_el = macrostrain_model->get_stiffness();
+    const Tensor4DSym& C_calc =  C_tensor_el->C_calc;
+
+    elemstress = elemstr * C_calc;
+
+    if (do_stress)
+    {
+      values[stress][0] = elemstress(1,1);
+      values[stress][1] = elemstress(2,2);
+      values[stress][2] = elemstress(3,3);
+      values[stress][3] = elemstress(2,1);
+      values[stress][4] = elemstress(3,2);
+      values[stress][5] = elemstress(3,1);
+    }
+
+    if (do_vonmises)
+    {
+      double e11 = elemstress(1,1);
+      double e22 = elemstress(2,2);
+      double e33 = elemstress(3,3);
+      double e21 = elemstress(2,1);
+      double e31 = elemstress(3,1);
+      double e32 = elemstress(3,2);
+      double I1 = e11 + e22 + e33;
+      double I2 = e11*e22 + e22*e33 + e11*e33 - e21*e21 - e31*e31 - e32*e32;
+      double J2 = I1 * I1 / 3.0 - I2;
+      values[vonMises][0] = sqrt(3 * J2);
+    }
+
+    if (do_energy)
+    {
+      double energy = doubleContraction(elemstress, elemstr);
+      // stress is in GPa
+      values[energyDensity][0] = energy * 1e9;
+    }
+
+    if (values.count(piezoPolarization))
+    {
+      Tensor1 piezo = get_piezopolarization(elem);
+
+      values[piezoPolarization][0] = piezo(1);
+      values[piezoPolarization][1] = piezo(2);
+      values[piezoPolarization][2] = piezo(3);
+    }
+
+    if (do_stress_cryst)
+    {
+      elemstress = sym(RotM.transpose() * (elemstress * RotM));
+      values[stressCrystal][0] = elemstress(1,1);
+      values[stressCrystal][1] = elemstress(2,2);
+      values[stressCrystal][2] = elemstress(3,3);
+      values[stressCrystal][3] = elemstress(2,1);
+      values[stressCrystal][4] = elemstress(3,2);
+      values[stressCrystal][5] = elemstress(3,1);
+    }
+  }
+
+  if (values.count(strainCrystal))
+  {
+    values[strainCrystal][0] = str_cryst(1,1);
+    values[strainCrystal][1] = str_cryst(2,2);
+    values[strainCrystal][2] = str_cryst(3,3);
+    values[strainCrystal][3] = str_cryst(2,1);
+    values[strainCrystal][4] = str_cryst(3,2);
+    values[strainCrystal][5] = str_cryst(3,1);
+  }
+}
+
+
+
+/*
 //-----------------------------------------------------------------//
 void Macrostrain::build_elemental_results(const std::set<std::string>& variables,
 			     std::vector<double>& results, std::vector<std::string>& legend)
@@ -158,6 +278,7 @@ void Macrostrain::build_elemental_results(const std::set<std::string>& variables
   } //Elements
 
 }
+*/
 
 //-------------------------------------------------------------------------//
 
@@ -1867,7 +1988,6 @@ void Macrostrain::do_solve()
   _first_run = false;
 
 
-
   }
   //--------------------------------------------------------------------------------------------------//
 }
@@ -2690,8 +2810,8 @@ void Macrostrain::prepare_stress_data_for_output( std::vector<std::string>& stre
                {
                   double stress_value = stress_el(i,j);
                   stress_data[index + elem_number * 6  ] = stress_value; //that's a correct order of variables
+                  index++;
                }
-                index++;
              }
 
                 elem_number++;

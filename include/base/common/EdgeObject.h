@@ -35,8 +35,8 @@ class EdgeObject : public PhysicalObject
     EdgeObject(const ModelOptions& options) : PhysicalObject(EDGE, options) {};
 
 
-    //! \copydoc PhysicalObject::do_init()
-    void do_init(void) {};
+    // \copydoc PhysicalObject::do_init()
+    //void do_init(void);
 
 
   private:
@@ -48,13 +48,6 @@ class EdgeObject : public PhysicalObject
 //--------------------------------------------------------------
 // Inline member functions
 //--------------------------------------------------------------
-
-inline
-EdgeObject*
-EdgeObject::create(const ModelOptions& options)
-{
-  return new EdgeObject(options);
-}
 
 
 
