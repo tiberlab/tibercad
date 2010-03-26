@@ -17,7 +17,6 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side,
   FE<Dim, T>::reinit(elem, side, tolerance);
 
   unsigned int dim = FE<Dim, T>::qrule->get_dim();
-  unsigned int n_points = FE<Dim, T>::JxW.size();
 
   double x0 = _length_scaling / _mesh_units;
   double x0_inv = _mesh_units / _length_scaling;
@@ -34,6 +33,7 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side,
       J = 1.0;
   }
 
+  unsigned int n_points = FE<Dim, T>::JxW.size();
   switch (_symmetry)
   {
     case TiberCad::CYLINDRICAL:
@@ -63,7 +63,6 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
   FE<Dim, T>::reinit(elem, points);
 
   unsigned int dim = FE<Dim, T>::dim;
-  unsigned int n_points = FE<Dim, T>::JxW.size();
 
   double x0 = _length_scaling / _mesh_units;
   double x0_inv = _mesh_units / _length_scaling;
@@ -78,6 +77,7 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
       break;
   }
 
+  unsigned int n_points = FE<Dim, T>::JxW.size();
   switch (_symmetry)
   {
     case TiberCad::CYLINDRICAL:
@@ -91,9 +91,12 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
   }
   
   if (FE<Dim, T>::calculate_dphi)
+  {
+    unsigned int n_dofs = FE<Dim, T>::dphi.size();
     for (unsigned int i = 0; i < n_points; i++)
-      for (unsigned int j = 0; j < elem->n_nodes(); j++)
+      for (unsigned int j = 0; j < n_dofs; j++)
         FE<Dim, T>::dphi[j][i] *= x0;
+  }
 }
 
 
