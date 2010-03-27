@@ -29,7 +29,7 @@ endif
 export MODULE_LIBS
 
 
-all: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext)
+all: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext) modules
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
@@ -59,6 +59,7 @@ $(libdir)/libtibercad.a:
 clean: src
 	@$(MAKE) --no-print-directory -C examples clean
 	@$(MAKE) --no-print-directory -C src/tibercad clean
+	@$(MAKE) --no-print-directory -C src/core/modules clean
 
 
 
@@ -66,15 +67,26 @@ distclean: src doc
 	@$(MAKE) --no-print-directory -C manual distclean
 	@$(MAKE) --no-print-directory -C examples distclean
 	@$(MAKE) --no-print-directory -C src/tibercad distclean
+	@$(MAKE) --no-print-directory -C src/core/modules distclean
 	@rm -rf lib/*
 	@rm -f bin/tibercad*.bin bin/tibercad*.exe
 
+
+ifeq ($(build_modules),yes)
+modules: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext)
+	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
+else
+modules:
+endif
 
 
 .PHONY: src
 src:
 	@mkdir -p $(libdir)/tibermodels
 	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
+ifeq ($(build_modules),yes)
+	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
+endif
 
 
 
