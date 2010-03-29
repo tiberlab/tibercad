@@ -14,7 +14,7 @@
 using namespace std;
 
 SimulationEnvironment::SimulationEnvironment(
-    Device& device, set<ID> region_numbers)
+    Device& device, const set<ID>& region_numbers)
   : _device(&device),
     _region_numbers(region_numbers),
     _is_initialized(false),
@@ -22,15 +22,6 @@ SimulationEnvironment::SimulationEnvironment(
 {
 }
 
-
-SimulationEnvironment::SimulationEnvironment(
-    Device& device, ID region_number)
-  : _device(&device),
-    _is_initialized(false),
-    _is_prepared(false)
-{
-  _region_numbers.insert(region_number);
-}
 
 
 SimulationEnvironment::~SimulationEnvironment(void)
@@ -85,7 +76,7 @@ SimulationEnvironment::add_boundary(Boundary* boundary, ID boundary_id)
   assert(boundary != NULL);
   assert(!_is_initialized);
 
-  if ((_device->get_boundary_node_map()).find(boundary_id) == 
+  if ((_device->get_boundary_node_map()).find(boundary_id) ==
       (_device->get_boundary_node_map()).end())
   {
     std::ostringstream s;
@@ -93,7 +84,7 @@ SimulationEnvironment::add_boundary(Boundary* boundary, ID boundary_id)
       " does not exist in device.";
     throw InitFailedException(s.str());
   }
-  
+
   BCMap::iterator it = _bc_map.find(boundary_id);
   if (it == _bc_map.end())
     _bc_map[boundary_id] = boundary;
@@ -111,7 +102,7 @@ SimulationEnvironment::add_boundary(Boundary* boundary,
     const set<ID>& boundary_ids)
 {
   assert(boundary != NULL);
-  
+
   set<ID>::const_iterator it(boundary_ids.begin());
   set<ID>::const_iterator end(boundary_ids.end());
 
@@ -172,7 +163,7 @@ SimulationEnvironment::create_bc_maps(void)
     // a boundary side
     if (this->contains_region(id))
     {
-      
+
       int n_sides = elem->n_sides();
       for (int s = 0; s < n_sides; s++)
       {
@@ -184,7 +175,7 @@ SimulationEnvironment::create_bc_maps(void)
         // boundaries but n-1 dimensional domains
         if (is_boundary(ElementSide(elem, s)))
         {
-          
+
           // now we also have to loop over all relevant map entries
           // in bd_nodes. We look only for the IDs that are found in the
           // PropertyMap
@@ -198,7 +189,7 @@ SimulationEnvironment::create_bc_maps(void)
               const vector<ID>& nodes = bd_it->second;
               const vector<ID>::const_iterator n_begin(nodes.begin());
               const vector<ID>::const_iterator n_end(nodes.end());
-              
+
               if (dim == 1)
               {
                 // we cannot build the element sides here
@@ -236,7 +227,7 @@ SimulationEnvironment::update_boundary_node_map(void)
 
   BoundarySideIterator it(_element_side_map.begin());
   const BoundarySideIterator end(_element_side_map.end());
-  
+
   if ((_device->get_mesh()).mesh_dimension() == 1)
   {
     // 1D case is easy: boundary nodes will always be the same
@@ -351,7 +342,7 @@ SimulationEnvironment::prepare_for_solve(void)
 
   if (!_is_initialized)
     init();
-  
+
   MeshBase& mesh = _device->get_mesh();
 
   MeshBase::element_iterator it = mesh.elements_begin();
@@ -368,7 +359,7 @@ SimulationEnvironment::prepare_for_solve(void)
   }
 
   (_device->get_control()).invalidate_environments();
-  
+
   _is_prepared = true;
 }
 

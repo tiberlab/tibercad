@@ -52,7 +52,6 @@ class Device
      *
      * \c options has to contain at least the following options:
      * \li "meshfile" -> filename
-     * \li "dimension" -> the real space dimension (1, 2 or 3)
      * \li "mesh_units" -> the units of the mesh (cf. get_mesh_units())
      */
     static Device* create(const ModelOptions& options);

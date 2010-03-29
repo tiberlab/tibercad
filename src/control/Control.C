@@ -655,12 +655,161 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       model_str->get_physical_model_map();
 
     //
-    // we create all lower dimensional models (and eliminate them
-    // from the map)
+    // and now... the boundary conditions
     //
     m.newline();
     m.info("Setup of lower dimensional (boundary) models... ");
     m.indent();
+
+    {
+      // TODO adapt to new input file syntax
+      map<ID, RegionStructure>& bc_map = model_str->get_model_BC_map();
+      map<ID, RegionStructure>::iterator bdit(bc_map.begin());
+      const map<ID, RegionStructure>::iterator bdend(bc_map.end());
+
+      for ( ; bdit != bdend; ++bdit)
+      {
+        //ID id = bdit->first;
+        const RegionStructure& data = bdit->second;
+
+        // first get region names
+        vector<string> ids_strings;
+        Utils::extract_vector(data.get_region_ID(), ids_strings);
+
+        // for the numeric IDs
+        vector<ID> ids;
+
+        unsigned int n_ids = ids_strings.size();
+        // if no numbers are specified we try to get them from the region name
+        if (n_ids == 0)
+          _device->get_boundary_region_ids(data.get_region_name(), ids);
+        else
+        {
+          vector<ID> tmp_id;
+          for (unsigned int i = 0; i < n_ids; i++)
+          {
+            // either it is a name or a number
+            // try first name
+            _device->get_boundary_region_ids(ids_strings[i], tmp_id);
+            if (tmp_id.size() > 0)
+              ids.insert(ids.end(), tmp_id.begin(), tmp_id.end());
+            else
+              ids.push_back(Utils::convert<unsigned int>(ids_strings[i]));
+          }
+        }
+
+        if (ids.size() == 0)
+        {
+          ostringstream s;
+          s << "Boundary region \'" << data.get_region_name() <<
+          "\' is not consistent with mesh.";
+          throw InitFailedException(s.str());
+        }
+
+        {
+          ostringstream os;
+          os << "Add boundary \'" << data.get_region_name() << "\'";
+          Messages::info(os.str());
+        }
+
+        const ModelOptions& bdopts = data.get_options();
+
+        IDSet region_ids; // TODO needed only for old way
+        for (unsigned int i = 0; i < ids.size(); i++)
+        {
+          region_ids.insert(ids[i]);
+
+          bool found = false;
+
+          MaterialBoundary* bd;
+          if ((bd = device.get_boundary_object(ids[i])) != NULL)
+          {
+            PhysicalModel* pm = bd->get_model(sim->get_id());
+            if (pm != NULL)
+            {
+              ostringstream os;
+              os << "Trying to add already existing boundary \'"
+                << data.get_region_name() << "\' for module "
+                << sim->get_name();
+               throw InitFailedException(os.str());
+            }
+
+            Material* matA = bd->get_material_A();
+            Material* matB = bd->get_material_B();
+            pm = sim->new_boundary_model(bdopts, matA, matB);
+            bd->add_model(pm, sim->get_id());
+            found = true;
+          }
+
+          EdgeObject* eo;
+          if ((eo = device.get_edge_object(ids[i])) != NULL)
+          {
+            PhysicalModel* pm = eo->get_model(sim->get_id());
+            if (pm != NULL)
+            {
+              ostringstream os;
+              os << "Trying to add already existing boundary \'"
+                << data.get_region_name() << "\' for module "
+                << sim->get_name();
+               throw InitFailedException(os.str());
+            }
+
+            pm = sim->new_edge_model(bdopts);
+            eo->add_model(pm, sim->get_id());
+            found = true;
+          }
+
+          NodeObject* no;
+          if ((no = device.get_node_object(ids[i])) != NULL)
+          {
+            PhysicalModel* pm = no->get_model(sim->get_id());
+            if (pm != NULL)
+            {
+              ostringstream os;
+              os << "Trying to add already existing boundary \'"
+                << data.get_region_name() << "\' for module "
+                << sim->get_name();
+               throw InitFailedException(os.str());
+            }
+
+            pm = sim->new_node_model(bdopts);
+            no->add_model(pm, sim->get_id());
+            found = true;
+          }
+
+          if (!found)
+          {
+            ostringstream os;
+            os << "Boundary \'" << data.get_region_name()
+              << "\' does not exist.";
+            throw InitFailedException(os.str());
+          }
+
+        }
+
+        //
+        // this is the old way -->
+
+        Boundary* bd = new Boundary(data.get_region_name(), env, region_ids);
+        bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
+
+        BoundaryProperties* bdprop = sim->new_boundary_model(bdopts);
+
+        // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
+        // every simulation necessarily needs a boundary model?
+        if (bdprop != NULL)
+          bd->add_boundary_properties(bdprop, sim->get_id());
+
+        // <-- end of old way
+        //
+
+      }
+    }
+
+
+    //
+    // Next, we create all lower dimensional submodels
+    //
     {
 
       multimap<const string,
@@ -713,16 +862,15 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
               PhysicalModel* pm = bd->get_model(sim->get_id());
               if (pm == NULL)
               {
+                // create the default model on the fly
                 Material* matA = bd->get_material_A();
                 Material* matB = bd->get_material_B();
-                pm = sim->new_boundary_model(bdopts, matA, matB);
+                pm = sim->new_boundary_model(ModelOptions(), matA, matB);
                 bd->add_model(pm, sim->get_id());
               }
 
               // now it's there
-              // TODO trick for the moment: remove a boundary model named 'contact'
-              if (tmpit->first != "contact")
-                pm->get_options().add_submodel(tmpit->first, bdopts);
+              pm->get_options().add_submodel(tmpit->first, bdopts);
 
             }
 
@@ -732,11 +880,13 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
               PhysicalModel* pm = eo->get_model(sim->get_id());
               if (pm == NULL)
               {
-                pm = sim->new_edge_model(bdopts);
+                // create the default model on the fly
+                pm = sim->new_edge_model(ModelOptions());
                 eo->add_model(pm, sim->get_id());
               }
 
               // now it's there
+              pm->get_options().add_submodel(tmpit->first, bdopts);
             }
 
             NodeObject* no;
@@ -745,11 +895,13 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
               PhysicalModel* pm = no->get_model(sim->get_id());
               if (pm == NULL)
               {
-                pm = sim->new_node_model(bdopts);
+                // create the default model on the fly
+                pm = sim->new_node_model(ModelOptions());
                 no->add_model(pm, sim->get_id());
               }
 
               // now it's there
+              pm->get_options().add_submodel(tmpit->first, bdopts);
             }
           }
         }
@@ -763,7 +915,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
 
     //
-    // now we have to create the models
+    // now we have to create the bulk models
     //
     m.newline();
     m.info("Creating bulk models... ");
@@ -879,88 +1031,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       }
     }
     m.unindent();
-
-
-
-    //
-    // this is the old way -->
-
-    //
-    // and now... the boundary conditions
-    //
-    map<ID, RegionStructure>& bc_map = model_str->get_model_BC_map();
-    map<ID, RegionStructure>::iterator bdit(bc_map.begin());
-    const map<ID, RegionStructure>::iterator bdend(bc_map.end());
-
-    for ( ; bdit != bdend; ++bdit)
-    {
-      //ID id = bdit->first;
-      const RegionStructure& data = bdit->second;
-
-      // first get region names
-      vector<string> ids_strings;
-      Utils::extract_vector(data.get_region_ID(), ids_strings);
-
-      // for the numeric IDs
-      vector<ID> ids;
-
-      unsigned int n_ids = ids_strings.size();
-      // if no numbers are specified we try to get them from the region name
-      if (n_ids == 0)
-        _device->get_boundary_region_ids(data.get_region_name(), ids);
-      else
-      {
-        vector<ID> tmp_id;
-        for (unsigned int i = 0; i < n_ids; i++)
-        {
-          // either it is a name or a number
-          // try first name
-          _device->get_boundary_region_ids(ids_strings[i], tmp_id);
-          if (tmp_id.size() > 0)
-            ids.insert(ids.end(), tmp_id.begin(), tmp_id.end());
-          else
-            ids.push_back(Utils::convert<unsigned int>(ids_strings[i]));
-        }
-      }
-
-      if (ids.size() == 0)
-      {
-        ostringstream s;
-        s << "Boundary region \'" << data.get_region_name() <<
-          "\' is not consistent with mesh.";
-        throw InitFailedException(s.str());
-      }
-
-      IDSet region_ids;
-      for (unsigned int i = 0; i < ids.size(); i++)
-        region_ids.insert(ids[i]);
-
-      {
-        ostringstream os;
-        os << "Add boundary \'" << data.get_region_name()
-          << "\' (region nr.";
-        for (unsigned int i = 0; i < ids.size(); i++)
-          os << " " << ids[i];
-        os << ")";
-        Messages::debug(os.str());
-      }
-
-      const ModelOptions& bdopts = data.get_options();
-
-
-      Boundary* bd = new Boundary(data.get_region_name(), env, region_ids);
-      bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
-
-      BoundaryProperties* bdprop = sim->new_boundary_model(bdopts);
-
-      // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
-      // every simulation necessarily needs a boundary model?
-      if (bdprop != NULL)
-        bd->add_boundary_properties(bdprop, sim->get_id());
-
-    }
-    // <-- end of old way
-    //
 
 
 
