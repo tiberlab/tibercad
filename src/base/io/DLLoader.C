@@ -10,6 +10,13 @@
 #include <dlfcn.h>
 
 
+#ifdef DEBUG
+#define DLOPENFLAGS RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE
+#else
+#define DLOPENFLAGS RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE
+#endif
+
+
 using namespace std;
 
 
@@ -94,26 +101,31 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
     const char* error_msg = 0;
 
-#ifdef DEBUG
-    iface.handle = dlopen(libfile.c_str(), RTLD_NOW | RTLD_GLOBAL);
-#else
-    iface.handle = dlopen(libfile.c_str(), RTLD_LAZY | RTLD_GLOBAL);
-#endif
-    if ((iface.handle != NULL) && ((error_msg = dlerror()) == NULL))
+    // check if it is already resident
+    iface.handle = dlopen(libfile.c_str(), RTLD_NOLOAD | DLOPENFLAGS);
+
+    if (iface.handle == NULL)
+    {
+      iface.handle = dlopen(libfile.c_str(), DLOPENFLAGS);
+
+      // print the library name, but only the first time
+      if ((iface.handle != NULL) && ((error_msg = dlerror()) == NULL))
+        Messages::info("(using " + libfile + ")");
+    }
+
+    if (iface.handle != NULL)
     {
       iface.create_fnc = dlsym(iface.handle, TBCREATEFUNCSYM);
       iface.destroy_fnc = dlsym(iface.handle, TBDESTROYFUNCSYM);
 
-      if ((iface.create_fnc == NULL)
-          || (iface.destroy_fnc == NULL)
-          || (dlerror() != NULL))
+      if ((iface.create_fnc == NULL) || (iface.destroy_fnc == NULL))
         success = false;
     }
     else
       success = false;
 
-    if (success)
-      Messages::info("(using " + libfile + ")");
+    //if (success)
+    //  Messages::info("(using " + libfile + ")");
     //else
     //  if (error_msg != 0)
     //    Messages::info("failed: " + string(error_msg));

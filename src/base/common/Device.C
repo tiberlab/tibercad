@@ -212,13 +212,21 @@ void
 Device::init(void)
 {
 
+  Messages m;
+
   // init all materials
+  m.info("Setting up bulk models ...");
+  m.indent();
   MaterialMap::iterator it(_material_map.begin());
   const MaterialMap::iterator end(_material_map.end());
   for ( ; it != end; ++it)
     (it->second)->init();
+  m.unindent();
+  m.newline();
 
   // init all lower dimensional regions
+  m.info("Setting up lower dimensional (boundary) models ...");
+  m.indent();
   BoundaryMap::iterator bdit(_boundary_map.begin());
   const BoundaryMap::iterator bdend(_boundary_map.end());
   for ( ; bdit != bdend; ++bdit)
@@ -233,6 +241,7 @@ Device::init(void)
   const NodeObjMap::iterator nend(_node_map.end());
   for ( ; nit != nend; ++nit)
     (nit->second)->init();
+  m.unindent();
 
 }
 
