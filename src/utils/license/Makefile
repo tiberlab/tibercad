@@ -11,13 +11,14 @@ target := liblicense.a $(topdir)/bin/create_license
 
 # we take the library of crypto++ and add our stuff...
 liblicense.a: $(topdir)/contrib/crypto++/build/libcryptopp.a $(objects)
+	@echo "Creating $@ ..."
 	@cp $(topdir)/contrib/crypto++/build/libcryptopp.a $@
 	@ar ru $@ $(objects)
 	@ranlib $@
 
 
 $(topdir)/bin/create_license: create_license$(obj-suffix) liblicense.a
-	$(CXX) -o $@ $< liblicense.a -lpthread
+	@$(CXX) -o $@ $< liblicense.a -lpthread
 
 
 $(topdir)/contrib/crypto++/build/libcryptopp.a:

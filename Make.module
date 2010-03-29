@@ -34,7 +34,7 @@ $(libdir)/tibermodels/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix)
 #	$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) \
 #			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 
-$(subdirs): $(libdir)/tibermodels/$$(call modulelib, $(1))
+#$(subdirs): $(libdir)/tibermodels/$$(call modulelib, $(1))
 endef
 
 
