@@ -31,11 +31,25 @@ MPI=${MPI:-'y'}
 MPIDIR=${MPIDIR:-"/usr/pack/mpich-1.2.7p1-ma"}
 
 
+# system
+system=`uname -s`
+case $system in
+	CYGWIN_NT-*)
+	SYSTEM=cygwin
+	;;
+
+	Linux)
+	SYSTEM=linux-gnu
+	;;
+
+	*)
+	echo "$system is not supported"; exit 1 ;;
+esac
 
 
 # architecture
 march=`uname -m`
-ARCH=linux-gnu-${march}
+ARCH=${SYSTEM}-${march}
 
 # compilers
 CC=${CC:-"gcc"}

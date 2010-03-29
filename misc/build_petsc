@@ -72,7 +72,7 @@ fi
 
 if [ ! -e ${ARCH}-complex.ok ]; then
   export PETSC_ARCH=${ARCH}-complex
-  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-clanguage=C++ --with-debugging=0 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-debugging=0 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
   make
   #touch ${ARCH}-complex-opt.ok
 fi
