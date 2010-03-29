@@ -84,7 +84,7 @@ endif
 src:
 	@mkdir -p $(libdir)/tibermodels
 	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
-ifeq ($(build_modules),yes)
+ifneq ($(build_modules),yes)
 	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 endif
 
