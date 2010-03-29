@@ -38,6 +38,7 @@ use Text::ParseWords;
 use Term::ANSIColor;
 use File::Basename;
 use Net::SMTP;
+use XML::Parser;
 
 
 ##
@@ -80,7 +81,7 @@ $to_log_file = " >& $options{'logfile'}";
 $textwidth = 50;
 $padchar = ".";
 $default_precision = 1e-4;
-@known_suffixes = ('dat', 'gmv');
+@known_suffixes = ('dat', 'gmv', 'vtu');
 
 
 
@@ -170,6 +171,8 @@ sub extract_data_from_characteristic($$);
 ## Returns the data in a list
 ##
 sub extract_data_from_gmv($$);
+
+sub extract_data_from_vtu($$);
 
 
 ##
@@ -420,6 +423,12 @@ sub compare_results_with_reference {
             $extract_func = \&extract_data_from_gmv;
             last SWITCH;
           };
+
+          /vtu/   && do {
+            $extract_func = \&extract_data_from_vtu;
+            last SWITCH;
+          };
+
       }
 
       @data2 = &$extract_func($variable, $reffile);
@@ -523,6 +532,38 @@ sub extract_data_from_gmv($$) {
 }
 
 
+sub startElement {
+  my ($parseinst, $element, %attrs) = @_;
+  print $element, %attrs;
+}
+
+sub endElement {
+  my ($parseinst, $element) = @_;
+}
+
+sub characterData {
+  my ($parseinst, $data) = @_;
+}
+
+sub default {
+  my ($parseinst, $data) = @_;
+}
+
+
+sub extract_data_from_vtu($$) {
+
+  my ($variable, $file) = @_;
+
+  my $parser = new XML::Parser;
+  $parser->setHandlers( Start => \&startElement,
+                        End => \&endElement,
+                        Char => \&characterData,
+                        Default => \&default
+                      );
+
+  $parser->parsefile($file);
+
+}
 
 
 
