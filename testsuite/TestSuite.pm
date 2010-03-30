@@ -531,45 +531,53 @@ sub extract_data_from_gmv($$) {
   return @data;
 }
 
-
-my $currvar;
-my $append = 0;
-my @datavector = ();
-
-sub startElement {
-  my ($parseinst, $element, %attrs) = @_;
-
-  if ($element =~ 'DataArray') {
-    if ($attrs{'Name'} =~ $currvar) {
-      $append = 1;
-    }
-  }
-}
-
-sub endElement {
-  my ($parseinst, $element) = @_;
-  $append = 0;
-}
-
-sub characterData {
-  my ($parseinst, @data) = @_;
-
-  if ($append) {
-    @datavector = (@datavector, @data);
-  }
-}
-
-sub default {
-  my ($parseinst, $data) = @_;
-}
-
-
 sub extract_data_from_vtu($$) {
 
   my ($variable, $file) = @_;
 
-  @datavector = ();
-  $currvar = $variable;
+  our $currvar = $variable;
+  our $append = 0;
+  our @datavector = ();
+
+
+  # handler for starting tag
+  sub startElement {
+    my ($parseinst, $element, %attrs) = @_;
+
+    if ($element =~ 'DataArray') {
+      if ((exists $attrs{'Name'}) && ($attrs{'Name'} =~ $currvar)) {
+        $append = 1;
+      }
+    }
+  }
+
+
+  # handler for ending tag
+  sub endElement {
+    my ($parseinst, $element) = @_;
+    $append = 0;
+  }
+
+
+  # handler for data
+  sub characterData {
+    my ($parseinst, $data) = @_;
+
+    if ($append) {
+      @datavector = (@datavector, split(/\s+/, trim($data)));
+    }
+  }
+
+
+  # default handler
+  sub default {
+    my ($parseinst, $data) = @_;
+  }
+
+
+  #
+  # the function body
+  #
 
   my $parser = new XML::Parser;
   $parser->setHandlers( Start => \&startElement,
@@ -594,10 +602,9 @@ sub compare_data_vectors($$$) {
   my $n = $#data1;
 
   if ($n != $#data2) { return 1 };
-
   my $difference = 0;
   for (my $i = 0; $i <= $n; $i++) {
-    print "$data1[$i] $data2[$i]\n";
+    #print "$data1[$i] $data2[$i] \n";
     my $diff = $data1[$i] - $data2[$i];
     if (abs($diff) > $prec * (1.0 + abs($data1[$i]))) {
       $difference = 1;
