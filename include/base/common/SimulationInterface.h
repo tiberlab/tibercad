@@ -748,10 +748,6 @@ class SimulationInterface : public TiberModelObject
     virtual void plot_globaldata(void);
 
 
-    //! Plots the regions active for this simulation
-    //void plot_regions(void);
-
-
     //! Print simulation info
     virtual void do_print_info(void);
 
@@ -862,6 +858,26 @@ class SimulationInterface : public TiberModelObject
      * \c do_init() or \c do_solve().
      */
     virtual void parse_options(void) = 0;
+
+
+    //! Get the output data formats
+    void get_output_format(std::vector<std::string>& formats) const;
+
+
+    //! Get the output directory
+    std::string get_output_directory(void) const;
+
+
+    //! Get the output filename prefix
+    std::string get_output_filename_prefix(void) const;
+
+
+    //! Get the whole output filename
+    std::string get_output_filename(void) const;
+
+
+    //! Check if binary data should be written
+    bool binary_output(void) const;
 
 
     //! Get the unique name for the equation system

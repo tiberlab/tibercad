@@ -253,12 +253,13 @@ Control::setup_globals(void)
       << SimulationOptions::temperature << " K" << endl
       << "Database search path  : "
       << Database::get_search_path() << endl
-      << "Output directory      : "
-      << _outputdir << endl
+      //<< "Output directory      : "
+      //<< _outputdir << endl
       << "Log file              : "
       << logfile << endl
-      << "Output file format    : "
-      << _output_format << endl << endl;
+      //<< "Output file format    : "
+      //<< _output_format << endl
+      << endl;
     m.info(os.str());
     m.newline();
   }
@@ -536,7 +537,11 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
   InputParser parser(_inputfile);
 
+  // global variables
   string plotvars;
+  string outputdir;
+  string output_format;
+  string binaryout;
   {
     ModelOptions opts;
     parser.get_simulation_options(opts);
@@ -544,6 +549,12 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     if (plotvars.size() > 0)
       Messages::warning("The specification of plot variables in the"
           "$Simulation section is deprecated. Put them into the model options");
+
+
+    // gloabl options for output
+    outputdir = opts.get_option("resultpath", ".");
+    output_format = opts.get_option("output_format", "vtk");
+    binaryout = opts.get_option("binary_output", "true");
   }
 
   typedef multimap<const string, ModelStructure*> ModelsMap;
@@ -571,6 +582,9 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
     ModelOptions simopts;
     simopts.set_option("plot", plotvars);
+    simopts.set_option("resultpath", outputdir);
+    simopts.set_option("output_format", output_format);
+    simopts.set_option("binary_output", binaryout);
     simopts += model_str->get_model_options();
     const string& modelname = model_str->get_model_name();
 

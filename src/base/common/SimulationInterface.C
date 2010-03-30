@@ -742,47 +742,47 @@ SimulationInterface::plot(void)
 
 
 
-/*
+
+
+
+
 void
-SimulationInterface::plot_regions(void)
+SimulationInterface::get_output_format(vector<string>& formats) const
 {
-
-  const MeshBase& mesh = get_mesh();
-
-  string suffix = get_control().get_filename_suffix();
-
-  DataOutput data_output(mesh, get_control().get_output_format());
-  data_output.set_output_directory(get_control().get_output_dir());
-
-  // materials  output: for each simulation an output file with IDs of
-  // physical regions activated for that simulation
-  // IDs are data associated to elements
-
-
-  const unsigned int nn  = mesh.n_active_elem();
-
-  std::vector<double> data(nn);
-  std::vector<std::string> names(1, "RegionID");
-
-  MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
-
-  unsigned int elem_number = 0;
-
-  for ( ; el != end_el ; ++el)
-  {
-    const Elem* elem = *el;
-
-    data[elem_number] = static_cast<double>(elem->subdomain_id());
-
-    elem_number++;
-  }
-
-  string filename(get_name() + "_materials" + suffix);
-  data_output.write_cell_data(filename, data, names);
+  // there is at least one format in the string
+  get_option("output_format", formats);
 }
-*/
 
+
+string
+SimulationInterface::get_output_directory(void) const
+{
+  return get_option("resultpath", ".");
+}
+
+
+string
+SimulationInterface::get_output_filename_prefix(void) const
+{
+  if (has_option("output_prefix"))
+    return get_option("output_prefix", get_name());
+  else
+    return get_name();
+}
+
+
+string
+SimulationInterface::get_output_filename(void) const
+{
+  return get_output_filename_prefix() + get_control().get_filename_suffix();
+}
+
+
+bool
+SimulationInterface::binary_output(void) const
+{
+  return get_option("binary_output", true);
+}
 
 
 
@@ -930,23 +930,29 @@ SimulationInterface::plot_meshdata(void)
 
 
 
-  DataOutput* writer = DataOutput::create(get_control().get_output_format());
-  //if (writer != NULL)
-  if ((writer != NULL) && (_solution_descriptors.size() > 0))
+  vector<string> formats;
+  get_output_format(formats);
+  for (unsigned int i = 0; i < formats.size(); i++)
   {
-    string suffix = get_control().get_filename_suffix();
-    string outdir = get_control().get_output_dir();
-    writer->set_output_directory(outdir);
-    writer->set_filename(get_name() + suffix);
-    writer->set_binary();
-    writer->set_mesh(get_mesh());
+    DataOutput* writer = DataOutput::create(formats[i]);
+    if ((writer != NULL) && (_solution_descriptors.size() > 0))
+    {
+      writer->set_output_directory(get_output_directory());
+      writer->set_filename(get_output_filename());
+      if (binary_output())
+        writer->set_binary();
+      else
+        writer->set_ascii();
 
-    map<ID, map<SolutionDescriptor, vector<double> > >::iterator dit(data.begin());
-    const map<ID, map<SolutionDescriptor, vector<double> > >::iterator dend(data.end());
-    for ( ; dit != dend; ++dit)
-      writer->set_data(dit->second, dit->first);
+      writer->set_mesh(get_mesh());
 
-    writer->write();
+      map<ID, map<SolutionDescriptor, vector<double> > >::iterator dit(data.begin());
+      const map<ID, map<SolutionDescriptor, vector<double> > >::iterator dend(data.end());
+      for ( ; dit != dend; ++dit)
+        writer->set_data(dit->second, dit->first);
+
+      writer->write();
+    }
   }
 
   do_plot_old();
@@ -985,9 +991,9 @@ SimulationInterface::plot_globaldata(void)
   if (values.size() > 0)
   {
     string suffix = get_control().get_filename_suffix();
-    string outdir = get_control().get_output_dir();
+    string outdir = get_output_directory();
 
-    string filename(outdir + "/" + get_name() + suffix + ".dat");
+    string filename(outdir + "/" + get_output_filename() + ".dat");
     ofstream file;
     file.open(filename.c_str());
     if (file.good())
@@ -1052,8 +1058,7 @@ SimulationInterface::plot_globaldata(void)
   }
   else // temporary only !
   {
-    string suffix = get_control().get_filename_suffix();
-    string outdir = get_control().get_output_dir();
+    string outdir = get_output_directory();
 
     vector<double> results;
     vector<string> names;
@@ -1062,7 +1067,7 @@ SimulationInterface::plot_globaldata(void)
     get_integrated_quantities_description(names, description);
     if (names.size() > 0)
     {
-      string filename(outdir + "/" + get_name() + suffix + ".dat");
+      string filename(outdir + "/" + get_output_filename() + ".dat");
       ofstream file;
       file.open(filename.c_str());
       if (file.good())
@@ -2009,7 +2014,7 @@ SimulationInterface::create_embracing_region(
 void
 SimulationInterface::print_info(void)
 {
-  if (verbose() >= 2)
+  if (verbose() > 0)
   {
     int width[5] = {25, 15, 10, 12, 4};
     int tot_width = width[0] + width[1] + width[2] + width[3] + width[4];
@@ -2065,6 +2070,15 @@ SimulationInterface::print_info(void)
       Messages::info(os.str());
     }
     Messages::info(line.str());
+
+
+    Messages::newline();
+    ostringstream os;
+    os << "Output directory      : " << get_output_directory() << endl;
+    os << "Output file format    : " << get_option("output_format", "-") << endl;
+    os << "Output file basename  : " << get_output_filename_prefix() << endl;
+    Messages::info(os.str());
+    Messages::newline();
   }
 
   if (verbose() > 0) do_print_info();
