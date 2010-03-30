@@ -938,7 +938,8 @@ SimulationInterface::plot_meshdata(void)
     string outdir = get_control().get_output_dir();
     writer->set_output_directory(outdir);
     writer->set_filename(get_name() + suffix);
-    writer->set_binary();
+    //writer->set_binary();
+    writer->set_ascii();
     writer->set_mesh(get_mesh());
 
     map<ID, map<SolutionDescriptor, vector<double> > >::iterator dit(data.begin());
