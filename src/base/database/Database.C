@@ -38,10 +38,10 @@ Database::Database(const string& material,
   set_material(material, datafile);
 
   // check if it is an alloy and create sub-databases
-  if (is_alloy())
+  if (is_alloy() || is_interface())
   {
     vector<string> comp;
-    get_alloy_components(comp);
+    get_components(comp);
 
     for (size_t i = 0; i < comp.size(); i++)
       _comp_db.push_back(Database(comp[i]));
@@ -154,12 +154,23 @@ Database::set_section(const string& section) const
 
 
 void
-Database::get_alloy_components(vector<string>& comp) const
+Database::get_components(vector<string>& comp) const
 {
-  open();
-  comp.resize(2);
-  comp[0] = (*_file)("comp_A", "");
-  comp[1] = (*_file)("comp_B", "");
+  if (is_alloy())
+  {
+    open();
+    // TODO extend to any type of alloy
+    comp.resize(2);
+    comp[0] = (*_file)("comp_A", "");
+    comp[1] = (*_file)("comp_B", "");
+  }
+  else if (is_interface())
+  {
+    comp.resize(2);
+    size_t pos = _material.find("%", 0);
+    comp[0] = _material.substr(0, pos);
+    comp[1] = _material.substr(pos + 1, _material.size() - pos);
+  }
 }
 
 

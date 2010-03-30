@@ -29,7 +29,7 @@ Alloy::do_preinit(void)
 {
   std::vector<std::string> names;
   get_database().set_section("");
-  get_database().get_alloy_components(names);
+  get_database().get_components(names);
 
   // for now, alloys can have only two components!
   assert(names.size() == 2);

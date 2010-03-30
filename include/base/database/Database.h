@@ -105,8 +105,8 @@ class Database
     bool is_interface(void) const;
 
 
-    //! Returns the alloy components
-    void get_alloy_components(std::vector<std::string>& comp) const;
+    //! Returns the alloy or interface components
+    void get_components(std::vector<std::string>& comp) const;
 
 
     //! Get the number of components

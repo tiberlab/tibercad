@@ -316,7 +316,7 @@ $Simulation
 
   solve = (str, dd,quantum_el, quantum_hl)
  
-  resultpath = output/
-  output_format = gmv
-  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , EigenFunctions, EigenEnergy, EnergyLevels)
+  resultpath = output
+  output_format = vtk
+  plot = (strain, piezoPolarization, Ec, Ev, eQFermi, hQFermi, ElField, Polarization, EigenFunctions, EigenEnergy, EnergyLevels)
 }

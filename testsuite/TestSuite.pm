@@ -549,7 +549,7 @@ sub extract_data_from_vtu($$) {
 
   our $currvar = $variable;
   our $append = 0;
-  our @datavector = ();
+  our $data = "";
 
 
   # handler for starting tag
@@ -573,17 +573,19 @@ sub extract_data_from_vtu($$) {
 
   # handler for data
   sub characterData {
-    my ($parseinst, $data) = @_;
+    my ($parseinst, $chardata) = @_;
 
+    # the data might be read in pieces, so we put them together
+    # as strings and extract data afterwards
     if ($append) {
-      @datavector = (@datavector, split(/\s+/, trim($data)));
+      $data = $data . $chardata;
     }
   }
 
 
   # default handler
   sub default {
-    my ($parseinst, $data) = @_;
+    #my ($parseinst, $data) = @_;
   }
 
 
@@ -600,7 +602,7 @@ sub extract_data_from_vtu($$) {
 
   $parser->parsefile($file);
 
-  return @datavector;
+  return split(/\s+/, trim($data));
 }
 
 
