@@ -544,12 +544,16 @@ sub extract_data_from_gmv($$) {
 sub extract_data_from_vtu($$) {
 
   use XML::Parser;
+  use MIME::Base64;
 
   my ($variable, $file) = @_;
 
+  # variables visible to all XML parser handlers
   our $currvar = $variable;
   our $append = 0;
+  our $base64 = 0;
   our $data = "";
+  our @dataarray = ();
 
 
   # handler for starting tag
@@ -558,6 +562,7 @@ sub extract_data_from_vtu($$) {
 
     if ($element =~ 'DataArray') {
       if ((exists $attrs{'Name'}) && ($attrs{'Name'} =~ $currvar)) {
+        ($attrs{'format'} =~ 'binary') && ($base64 = 1);
         $append = 1;
       }
     }
@@ -567,6 +572,23 @@ sub extract_data_from_vtu($$) {
   # handler for ending tag
   sub endElement {
     my ($parseinst, $element) = @_;
+
+    if ($append) {
+      if ($base64) {
+        # we have to decode and unpack
+        my $decoded = decode_base64($data);
+        my @unpacked = unpack("If*", $decoded);
+        shift @unpacked;
+        @dataarray = (@dataarray, @unpacked);
+      }
+      else {
+        # we just split it up
+        @dataarray = (@dataarray, split(/\s+/, trim($data)));
+      }
+    }
+
+    # reset data container
+    $data = "";
     $append = 0;
   }
 
@@ -602,7 +624,7 @@ sub extract_data_from_vtu($$) {
 
   $parser->parsefile($file);
 
-  return split(/\s+/, trim($data));
+  return @dataarray;
 }
 
 
