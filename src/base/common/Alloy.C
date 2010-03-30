@@ -7,7 +7,6 @@
 #include "Messages.h"
 
 
-inline
 Alloy::Alloy(const std::string& name, const ModelOptions& options)
   : Material(name, options, true),
     _molar_fraction(0.0),
@@ -28,24 +27,27 @@ Alloy::~Alloy()
 void
 Alloy::do_preinit(void)
 {
-  std::string name_A, name_B;
+  std::vector<std::string> names;
   get_database().set_section("");
-  get_database().get_alloy_components(name_A, name_B);
+  get_database().get_alloy_components(names);
+
+  // for now, alloys can have only two components!
+  assert(names.size() == 2);
 
   _molar_fraction = get_options().get_option("x", 0.0);
 
 #ifdef DEBUG
   std::ostringstream os;
   os << get_name() << " is an alloy with components " <<
-    name_A << " and " << name_B << " and molar fraction of " << name_A
+    names[0] << " and " << names[1] << " and molar fraction of " << names[0]
     << " is " << _molar_fraction << ".";
   Messages::debug(os.str());
 #endif
 
 
 
-  _mat_A = Material::create(name_A, get_options());
-  _mat_B = Material::create(name_B, get_options());
+  _mat_A = Material::create(names[0], get_options());
+  _mat_B = Material::create(names[1], get_options());
 
 
   // TODO for now alloy has two components

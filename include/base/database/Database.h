@@ -98,9 +98,11 @@ class Database
     bool is_alloy(void) const;
 
 
-    //! Returns the alloy components
-    void get_alloy_components(std::string& comp_A,
-        std::string& comp_B) const;
+    //! Returns true if the material is an interface
+    /*!
+     * Interfaces are named as Mat1%Mat2
+     */
+    bool is_interface(void) const;
 
 
     //! Returns the alloy components
@@ -195,6 +197,10 @@ class Database
     bool _is_alloy;
 
 
+    //! \c true if this is the database of an interface
+    bool _is_interface;
+
+
     //! The type of alloy mixing
     AlloyMixing _mixing_type;
 
@@ -220,7 +226,7 @@ class Database
      */
     void open(void) const;
 
-    //! Does the real opening of the databas
+    //! Does the real opening of the database
     void do_open(void) const;
 
     //! Check for a variable and throw exception if it is not found
@@ -240,6 +246,7 @@ Database::Database(void)
     _datafile(""),
     _file(NULL),
     _is_alloy(false),
+    _is_interface(false),
     _mixing_type(VCA)
 {
 }
@@ -316,6 +323,16 @@ Database::is_alloy(void) const
 {
   return _is_alloy;
 }
+
+
+
+inline
+bool
+Database::is_interface(void) const
+{
+  return _is_interface;
+}
+
 
 
 inline

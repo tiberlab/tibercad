@@ -32,6 +32,7 @@ Database::Database(const string& material,
   : _section(""),
     _file(NULL),
     _is_alloy(false),
+    _is_interface(false),
    _mixing_type(VCA)
 {
   set_material(material, datafile);
@@ -90,13 +91,24 @@ Database::set_material(const string& material,
     _material = material;
     _datafile = df;
 
-    open();
-    if (_file->have_variable("alloy"))
-      _is_alloy = true;
+    if (_material.find("%", 0) != string::npos)
+    {
+      // this is an interface!
+      _is_interface = true;
+    }
+    else
+    {
+      // it might be an alloy
+      open();
+      if (_file->have_variable("alloy"))
+        _is_alloy = true;
 
-    close();
+      close();
+    }
   }
 }
+
+
 
 
 void
@@ -104,7 +116,7 @@ Database::do_open(void) const
 {
   assert(_file == NULL);
 
-  if (!check_data_file(_datafile))
+  if (!check_data_file(_datafile) && !is_interface())
   {
     string msg("Cannot open material data file ");
     msg += _datafile;
@@ -139,15 +151,6 @@ Database::set_section(const string& section) const
 }
 
 
-
-void
-Database::get_alloy_components(string& comp_A,
-    string& comp_B) const
-{
-  open();
-  comp_A = (*_file)("comp_A", "");
-  comp_B = (*_file)("comp_B", "");
-}
 
 
 void
@@ -231,9 +234,10 @@ Database::get_data_file(const string& material) const
 
     if ((_default_path.size() == 0) || (!check_data_file(s)))
     {
-      string msg("Cannot find material data file ");
-      msg += material + ".dat";
-      throw DatabaseException(msg);
+      //string msg("Cannot find material data file ");
+      //msg += material + ".dat";
+      //throw DatabaseException(msg);
+      s = "";
     }
   }
 
