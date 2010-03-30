@@ -38,7 +38,6 @@ use Text::ParseWords;
 use Term::ANSIColor;
 use File::Basename;
 use Net::SMTP;
-use XML::Parser;
 
 
 ##
@@ -172,6 +171,12 @@ sub extract_data_from_characteristic($$);
 ##
 sub extract_data_from_gmv($$);
 
+
+##
+## Extract data fields from a .vtu file
+##
+## Returns the data in a list
+##
 sub extract_data_from_vtu($$);
 
 
@@ -531,7 +536,14 @@ sub extract_data_from_gmv($$) {
   return @data;
 }
 
+
+
+
+
+
 sub extract_data_from_vtu($$) {
+
+  use XML::Parser;
 
   my ($variable, $file) = @_;
 
@@ -590,6 +602,7 @@ sub extract_data_from_vtu($$) {
 
   return @datavector;
 }
+
 
 
 
