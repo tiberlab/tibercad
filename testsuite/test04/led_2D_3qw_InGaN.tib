@@ -418,7 +418,7 @@ $Simulation
 
   #symmetry = cylindrical
   resultpath =  output # output_test_no_ox_no_alinn_relP  #output_test_alinn_no_pyro_relP  #input_siO2_str_noncyl
-  output_format = ise # vtk
+  output_format = vtk
 }
 
 
