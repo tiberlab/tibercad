@@ -5,15 +5,18 @@ export CC=gcc-4.3.2
 export FC=ifort-11.1
 export FCFLAGS="-fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
 
+BOOST="/usr/pack/boost-1.41.0-ma"
+
 ARCH=`uname -m`
 if [ $ARCH == "i686" ]
 then
-  CONFIGOPTS="--with-boost-prefix=/usr/pack/boost-1.33.1-ma"
+  sepparch=i686-debian-linux4.0
 else
-  BOOST="/usr/pack/boost-1.41.0-ma"
+  sepparch=amd64-debian-linux5.0
   FCFLAGS="-fPIC ${FCFLAGS}"
-  CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/amd64-debian-linux5.0/lib"
 fi
+
+CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${sepparch}/lib"
 
 
 #  --enable-hetero \
