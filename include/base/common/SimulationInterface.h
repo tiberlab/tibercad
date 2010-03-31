@@ -872,7 +872,11 @@ class SimulationInterface : public TiberModelObject
     std::string get_output_filename_prefix(void) const;
 
 
-    //! Get the whole output filename
+    //! Get the whole output filename (except extension)
+    /*!
+     * \return get_output_filename_prefix() +
+     *    get_control().get_filename_suffix()
+     */
     std::string get_output_filename(void) const;
 
 

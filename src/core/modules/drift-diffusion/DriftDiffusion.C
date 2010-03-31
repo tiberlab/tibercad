@@ -688,8 +688,8 @@ DriftDiffusion::do_solve(void)
     bool save = get_option("save_state", false);
     if (save)
     {
-      string file = get_control().get_output_dir() + "/" +
-      get_name() + "_equilibrium.tsv";
+      string file = get_output_directory() + "/" +
+      get_output_filename_prefix() + "_equilibrium.tsv";
       save_data(file);
     }
 
@@ -820,8 +820,8 @@ DriftDiffusion::do_solve(void)
   bool save = get_option("save_state", false);
   if (save)
   {
-    string file = get_control().get_output_dir() + "/" +
-      get_name() + get_control().get_filename_suffix() + ".tsv";
+    string file = get_output_directory() + "/" +
+      get_output_filename() + ".tsv";
     save_data(file);
   }
 }
@@ -5457,8 +5457,8 @@ DriftDiffusion::write_nodal_vector(const string& filename, const NumericVector<d
 
   }
 
-  DataOutput data_output(get_mesh(), get_control().get_output_format());
-  data_output.set_output_directory(get_control().get_output_dir());
+  DataOutput data_output(get_mesh(), "vtk");
+  data_output.set_output_directory(get_output_directory());
   vector<string> names(3);
   names[0] = "u";
   names[1] = "v";

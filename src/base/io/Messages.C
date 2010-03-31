@@ -1,5 +1,8 @@
 // $Id$
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/convenience.hpp>
+
 #include "Messages.h"
 #include "TeeStream.h"
 #include "TypeDefs.h"
@@ -21,8 +24,10 @@ namespace
   const char* normal  = "\033[0m";
 }
 
+using namespace std;
 
-const std::string
+
+const string
 Messages::endl = "\n";
 
 const int
@@ -35,13 +40,36 @@ const int
 Messages::_indent_width = 2;
 
 
-std::ofstream
+ofstream
 Messages::_log;
 
 
 void
-Messages::set_log_file(const std::string& logfile)
+Messages::set_log_file(const string& logfile)
 {
+  using namespace boost::filesystem;
+
+  path logpath(logfile, native);
+  logpath.remove_filename();
+  if (logpath.string().size() > 0)
+  {
+    if (!exists(logpath))
+    {
+      // we catch any error here without doing anything yet
+      try {
+        create_directories(logpath);
+      }
+      catch (...) {}
+    }
+
+    if (!(exists(logpath) && is_directory(logpath)))
+    {
+      string msg("Cannot create or use directory '");
+      msg += logpath.string() + "' for logging.";
+      throw InitFailedException(msg);
+    }
+  }
+
   _log.open(logfile.c_str());
   if (_log.fail() || !_log.good())
     throw InitFailedException("cannot open logfile for writing.");
@@ -65,42 +93,42 @@ Messages::close_log_file(void)
 
 
 void
-Messages::warning(const std::string& msg)
+Messages::warning(const string& msg)
 {
-  TeeStream ts(std::cout, _log);
+  TeeStream ts(cout, _log);
   ts << Messages::endl;
-  std::cout << yellowb;
+  cout << yellowb;
   _log << "*** ";
   ts << "Warning:";
-  std::cout << normal << " ";
-  ts << msg << endl << std::flush;
+  cout << normal << " ";
+  ts << msg << endl << flush;
 }
 
 
 
 void
-Messages::error(const std::string& msg)
+Messages::error(const string& msg)
 {
-  TeeStream ts(std::cerr, _log);
+  TeeStream ts(cerr, _log);
   ts << Messages::endl;
-  std::cerr << redb;
+  cerr << redb;
   _log << "*** ";
   ts << "ERROR:";
-  std::cerr << normal << " ";
-  ts << msg << endl << std::flush;
+  cerr << normal << " ";
+  ts << msg << endl << flush;
 }
 
 
 
 void
-Messages::info(const std::string& msg, bool newline)
+Messages::info(const string& msg, bool newline)
 {
   static bool contd = false;
 
-  std::vector<std::string> lines;
+  vector<string> lines;
   Utils::tokenize(msg, lines, "\n");
 
-  TeeStream ts(std::cout, _log);
+  TeeStream ts(cout, _log);
 
   size_t nl = lines.size();
 
@@ -112,7 +140,7 @@ Messages::info(const std::string& msg, bool newline)
     ts << lines[l];
     if (newline || (l < nl - 1)) ts << endl;
 
-    ts << std::flush;
+    ts << flush;
   }
 
   if (newline) contd = false;
@@ -122,11 +150,11 @@ Messages::info(const std::string& msg, bool newline)
 
 
 void
-Messages::debug(const std::string& msg)
+Messages::debug(const string& msg)
 {
 #ifdef DEBUG
-  TeeStream ts(std::cerr, _log);
-  ts << "DEBUG: " << msg <<  endl << std::flush;
+  TeeStream ts(cerr, _log);
+  ts << "DEBUG: " << msg <<  endl << flush;
 #else
   ignore_unused_variable(msg);
 #endif
@@ -136,6 +164,6 @@ Messages::debug(const std::string& msg)
 void
 Messages::newline(void)
 {
-  TeeStream ts(std::cout, _log);
-  ts << endl << std::flush;
+  TeeStream ts(cout, _log);
+  ts << endl << flush;
 }

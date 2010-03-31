@@ -990,7 +990,6 @@ SimulationInterface::plot_globaldata(void)
 
   if (values.size() > 0)
   {
-    string suffix = get_control().get_filename_suffix();
     string outdir = get_output_directory();
 
     string filename(outdir + "/" + get_output_filename() + ".dat");
@@ -1127,12 +1126,19 @@ SimulationInterface::do_plot_old(void)
   const Device& dev = get_environment().get_device();
 
   string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
+  string outdir = get_output_directory();
 
   vector<double> results;
   vector<string> names;
 
-  DataOutput data_output(dev.get_mesh(), get_control().get_output_format());
+  vector<string> formats;
+  get_output_format(formats);
+  string formatstr("(");
+  for (unsigned int i = 0; i < formats.size(); i++)
+    formatstr += formats[i] + ",";
+  formatstr += ")";
+
+  DataOutput data_output(dev.get_mesh(), formatstr);
   data_output.set_output_directory(outdir);
 
 
