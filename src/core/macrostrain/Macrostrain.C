@@ -4462,8 +4462,12 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
           Tensor1 tmp(0);
           //std::cout << "setting position from " << as->get_structure_atoms()[i].get_position();
           tmp(1) = new_pos_of_atom[0] * as->get_scale();
-          tmp(2) = new_pos_of_atom[1] * as->get_scale();
-          tmp(3) = new_pos_of_atom[2] * as->get_scale();
+
+          if (dim >= 2) tmp(2) = new_pos_of_atom[1] * as->get_scale();
+	  else tmp(2) = as->get_structure_atoms()[i].get_position()(2);
+          
+	  if (dim == 3) tmp(3) = new_pos_of_atom[2] * as->get_scale();
+	  else tmp(3) = as->get_structure_atoms()[i].get_position()(3);
 
           u_atm[i] = tmp - as->get_structure_atoms()[i].get_position();
 
