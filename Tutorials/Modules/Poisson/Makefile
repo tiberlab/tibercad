@@ -2,12 +2,12 @@
 
 topdir := ../../..
 
-# subdirectories
+#MODULENAME := mypoisson
+
 MODULE_LDFLAGS := -L$(topdir)/lib -ltibercad
 
 include $(topdir)/Make.module
 
-MODULENAME=mypoisson
 
 mainsrc := MyPoisson.C
 srcfiles := MyPoissonModel.C PoissonBoundaryModel.C

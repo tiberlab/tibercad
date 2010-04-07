@@ -7,8 +7,6 @@ MODULE_LDFLAGS = $(topdir)/lib/tibermodels/driftdiffusion.so -L$(topdir)/lib -lt
 
 include $(topdir)/Make.module
 
-MODULENAME=driftdiffusion
-
 $(foreach lib, $(srcfiles), $(eval $(call SUBMODEL, $(lib))))
 
 

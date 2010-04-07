@@ -11,6 +11,20 @@
 #include "reference_counted_object.h"
 
 
+// stringify
+#ifndef xstr
+#define xstr(a) stringify(a)
+#endif
+#ifndef stringify
+#define stringify(a) #a
+#endif
+
+
+#ifndef MODULENAME
+#define MODULENAME
+#endif
+
+
 class InitializerBase;
 
 

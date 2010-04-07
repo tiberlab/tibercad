@@ -108,12 +108,11 @@ PhysicalModelInterface::~PhysicalModelInterface(void)
 
 PhysicalModelInterface*
 PhysicalModelInterface::create(const string& name,
-    const ModelOptions& options)
+    const ModelOptions& options, const string& module)
 {
 
   // NOTE: for bulk models options contains the crystal structure
 
-  //  std::cout<<name<<std::endl;
   PhysicalModelInterface* mod = NULL;
 
 #ifndef BUILD_TIBER_MODULES
@@ -225,7 +224,9 @@ PhysicalModelInterface::create(const string& name,
 
 
   if (mod == NULL)
+  {
     mod = create_from_library<PhysicalModelInterface>(name, options);
+  }
 
   if (mod != NULL)
   {

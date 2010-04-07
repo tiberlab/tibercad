@@ -164,7 +164,14 @@ SimulationInterface::create(const string& type,
     sim = MicroHeatBalance::create(options);
 
   if (sim == NULL)
-    sim = create_from_library<SimulationInterface>(type_name, options);
+  {
+    // try first in a module directory
+    if ((sim = create_from_library<SimulationInterface>(
+           type + "/" + type_name, options)) == 0)
+    {
+      sim = create_from_library<SimulationInterface>(type_name, options);
+    }
+  }
 
   if (sim != NULL)
   {

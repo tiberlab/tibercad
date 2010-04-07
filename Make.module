@@ -12,6 +12,7 @@ target :=
 
 
 MODULE_CXXFLAGS = -fvisibility=hidden
+CPPFLAGS += -DMODULENAME=$(MODULENAME)
 
 
 modulelib = $(shell echo `grep TIBER_MODULE $(1) \
@@ -29,12 +30,11 @@ define MODULE
 target += $(libdir)/tibermodels/$$(call modulelib, $(1))
 $(libdir)/tibermodels/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
 	@echo "Linking module $$(notdir $$@) ..."
-	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_LDFLAGS) \
+	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) $$(MODULE_LDFLAGS) \
 			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 #	$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) \
 #			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 
-#$(subdirs): $(libdir)/tibermodels/$$(call modulelib, $(1))
 endef
 
 

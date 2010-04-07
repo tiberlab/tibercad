@@ -74,8 +74,8 @@ class PhysicalModelInterface : public TiberModelObject
      * The template parameter identifies the model family which the
      * model should belong to.
      */
-    template <typename T>
-    static ID get_id_from_name(const std::string& model_name);
+    //template <typename T>
+    //static ID get_id_from_name(const std::string& model_name);
 
     //! Creates a new named model
     /*!
@@ -84,10 +84,12 @@ class PhysicalModelInterface : public TiberModelObject
      *
      * \param name the model name
      * \param options the options as given in the input file
+     * \param module the module to which this model belongs
      * \return a pointer to the newly created object
      */
     static PhysicalModelInterface* create(const std::string& name,
-        const ModelOptions& options = ModelOptions());
+        const ModelOptions& options = ModelOptions(),
+        const std::string& module = xstr(MODULENAME));
 
 
     //! Creates a new model from a given creator function
@@ -716,7 +718,7 @@ PhysicalModelInterface::print_info(void)
   do_print_info();
 }
 
-
+/*
 template <typename T>
 ID
 PhysicalModelInterface::get_id_from_name(const std::string& name)
@@ -734,7 +736,7 @@ PhysicalModelInterface::get_id_from_name(const std::string& name)
 
   return id;
 }
-
+*/
 
 inline
 void
