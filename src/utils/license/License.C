@@ -6,10 +6,10 @@
 #include "Utils.h"
 #include "TiberCad.h"
 
-#include "hex.h"
-#include "randpool.h"
-#include "rsa.h"
-#include "validate.h"
+#include <hex.h>
+#include <randpool.h>
+#include <rsa.h>
+#include <validate.h>
 
 #include <iostream>
 #include <sstream>
