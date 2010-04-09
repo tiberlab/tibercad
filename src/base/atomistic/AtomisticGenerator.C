@@ -429,7 +429,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                 if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
                 if (MeshUtils::may_belong_to_element(elem,p))
                 {
-                  if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
+                  if ( (elem->contains_point(p) ) ) tmp_atom.set_elem(elem);
                 }
 
 
