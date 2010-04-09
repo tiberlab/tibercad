@@ -1036,7 +1036,7 @@ DriftDiffusionProperties::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<DriftDiffusionProperties*>(
-      PhysicalModelInterface::create("driftdiffusion_" + name, options));
+      PhysicalModelInterface::create("ddbulk_" + name, options));
 }
 
 

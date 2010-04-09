@@ -2,10 +2,8 @@
 
 topdir := ../../../..
 
-MODULENAME := driftdiffusion
-export MODULENAME
-
-MODULE_LDFLAGS := -L$(topdir)/lib -ltibercad
+MODULE_NAME := driftdiffusion
+export MODULE_NAME
 
 include $(topdir)/Make.module
 

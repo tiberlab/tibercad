@@ -8,7 +8,7 @@
 
 
 
-TIBER_MODULE(OpticalGeneration, optical)
+TIBER_MODULE(OpticalGeneration, recombination, optical)
 
 
 

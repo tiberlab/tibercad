@@ -5,10 +5,8 @@
 
 #include "PhysicalModel.h"
 
+#define MODULE_PREFIX contact
 
-
-#undef TIBER_MODULE_PREFIX
-#define TIBER_MODULE_PREFIX mypoisson
 
 class Elem;
 class Point;

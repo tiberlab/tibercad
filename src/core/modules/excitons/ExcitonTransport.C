@@ -102,8 +102,8 @@ ExcitonTransport::~ExcitonTransport(void)
 
 
 PhysicalModel*
-ExcitonTransport::create_physical_model(const ModelOptions& options,
-    const Material* mat) const throw (ModelErrorException)
+ExcitonTransport::create_bulk_model(const ModelOptions& options,
+    const Material* mat) const
 {
   const string& modelname = options.get_option("model", "simple");
 

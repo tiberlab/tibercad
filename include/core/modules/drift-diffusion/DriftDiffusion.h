@@ -274,10 +274,15 @@ class DriftDiffusion : public SimulationInterface
     static DriftDiffusion* create(const ModelOptions& options);
 
 
-    /*! \copydoc SimulationInterface::create_physical_model() */
+    //! Create the bulk model
     virtual PhysicalModel*
-      create_physical_model(const ModelOptions& options,
-          const Material* mat) const throw (ModelErrorException);
+      create_bulk_model(const ModelOptions& options,
+          const Material* mat) const;
+
+
+    //! Create the boundary model
+    virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
+        const Material* material_A, const Material* material_B) const;
 
 
     /*! \copydoc SimulationInterface::create_boundary_model() */

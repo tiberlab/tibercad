@@ -7,7 +7,7 @@
 #include "DriftDiffusionProperties.h"
 
 
-TIBER_MODULE(ExcitonGeneration, exciton_generation)
+TIBER_MODULE(ExcitonGeneration, recombination, exciton_generation)
 
 
 void

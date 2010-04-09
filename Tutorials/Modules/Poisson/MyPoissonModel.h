@@ -10,9 +10,6 @@
 #include "vector_value.h"
 
 
-#undef TIBER_MODULE_PREFIX
-#define TIBER_MODULE_PREFIX mypoisson
-
 
 class Elem;
 

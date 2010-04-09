@@ -9,7 +9,7 @@ PoissonBoundaryModel::create(const ModelOptions& options)
 {
   std::string type = options.get_option("type", "dirichlet");
   PoissonBoundaryModel* mod = dynamic_cast<PoissonBoundaryModel*>(
-      PhysicalModelInterface::create("mypoisson_" + type, options));
+      PhysicalModelInterface::create("contact_" + type, options));
 
   if (mod == NULL)
   {

@@ -8,7 +8,7 @@
 
 
 
-TIBER_MODULE(FieldDependentMobility, field_dependent)
+TIBER_MODULE(FieldDependentMobility, mobility, field_dependent)
 
 
 void

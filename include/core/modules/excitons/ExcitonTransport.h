@@ -145,10 +145,10 @@ class ExcitonTransport : public SimulationInterface
     static ExcitonTransport* create(const ModelOptions& options);
   
     
-    /*! \copydoc SimulationInterface::create_physical_model() */
+    /*! \copydoc SimulationInterface::create_bulk_model() */
     virtual PhysicalModel*
-      create_physical_model(const ModelOptions& options,
-          const Material* mat) const throw (ModelErrorException);
+      create_bulk_model(const ModelOptions& options,
+          const Material* mat) const;
 
   
 

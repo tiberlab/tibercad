@@ -5,7 +5,7 @@
 #include "Messages.h"
 
 
-TIBER_MODULE(SimpleSemiconductorModel, simple)
+TIBER_MODULE(SimpleSemiconductorModel, ddbulk, simple)
 
 
 

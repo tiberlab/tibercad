@@ -502,7 +502,7 @@ DSSCModel::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<DSSCModel*>(
-      PhysicalModelInterface::create("dssc_" + name, options));
+      PhysicalModelInterface::create("dscbulk_" + name, options));
 }
 
 

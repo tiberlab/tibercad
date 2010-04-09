@@ -166,8 +166,8 @@ SimulationInterface::create(const string& type,
   if (sim == NULL)
   {
     // try first in a module directory
-    if ((sim = create_from_library<SimulationInterface>(
-           type + "/" + type_name, options)) == 0)
+    if ((type.size() > 0 ) && ((sim = create_from_library<SimulationInterface>(
+           type + "/" + type_name, options)) == 0))
     {
       sim = create_from_library<SimulationInterface>(type_name, options);
     }

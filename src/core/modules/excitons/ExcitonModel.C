@@ -15,7 +15,7 @@
 #include "elem.h"
 
 
-TIBER_MODULE(ExcitonModel, simple)
+TIBER_MODULE(ExcitonModel, exbulk, simple)
 
 
 

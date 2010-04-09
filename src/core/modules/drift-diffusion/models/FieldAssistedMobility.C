@@ -8,7 +8,7 @@
 
 
 
-TIBER_MODULE(FieldAssistedMobility, field_assisted)
+TIBER_MODULE(FieldAssistedMobility, mobility, field_assisted)
 
 
 void

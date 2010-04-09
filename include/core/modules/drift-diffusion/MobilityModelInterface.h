@@ -4,9 +4,6 @@
 #define _MOBILITYMODELINTERFACE_H_
 
 
-#undef TIBER_MODULE_PREFIX
-#define TIBER_MODULE_PREFIX mobility
-
 
 #include "DriftDiffusionModelInterface.h"
 

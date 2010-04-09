@@ -11,40 +11,25 @@ ifeq ($(build_modules), yes)
 target :=
 
 
-MODULE_CXXFLAGS = -fvisibility=hidden
-CPPFLAGS += -DMODULENAME=$(MODULENAME)
+CPPFLAGS += -DMODULE_NAME=$(MODULE_NAME)
+MODULE_CXXFLAGS := -fvisibility=hidden
+MODULE_LDFLAGS += -L$(topdir)/lib -ltibercad
 
 
-modulelib = $(shell echo `grep TIBER_MODULE $(1) \
-		| sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext))
-
-
-submodellib = $(shell echo `$(CPP) $(CPPFLAGS) -dM $(1) \
-		| awk '/TIBER_MODULE_PREFIX/ { module = $$3; } \
-		  	END { if (module != "") printf("%s_", module) }'``grep TIBER_MODULE $(1) | sed 's/[[:space:]]*TIBER_MODULE([[:space:]]*[a-zA-Z]\+[[:space:]]*,[[:space:]]*\([a-zA-Z_]\+\)[[:space:]]*)/\1/'`$(shared_libext))
-
-
+modulelib = $(shell echo `grep TIBER_MODULE $(1) | sed 's/MODULE_NAME/$(MODULE_NAME)/' \
+		| sed -e 's/[[:space:]]//g' -e 's/TIBER_MODULE([a-zA-Z]\+,\([a-zA-Z_,]\+\))/\1/' -e 's/,/_/g'`$(shared_libext))
 
 
 define MODULE
-target += $(libdir)/tibermodels/$$(call modulelib, $(1))
-$(libdir)/tibermodels/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
+
+target += $(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1))
+
+$(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
 	@echo "Linking module $$(notdir $$@) ..."
+	@[ -d $$(dir $$@) ] || mkdir -p  $$(dir $$@)
 	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) $$(MODULE_LDFLAGS) \
 			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
-#	$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) \
-#			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 
-endef
-
-
-
-define SUBMODEL
-target += $(libdir)/tibermodels/$$(call submodellib, $(1))
-$(libdir)/tibermodels/$$(call submodellib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
-	@echo "Linking module $$(notdir $$@) ..."
-	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) $$(MODULE_LDFLAGS) \
-			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 endef
 
 
@@ -52,7 +37,6 @@ else
 
 define MODULE
 endef
-define SUBMODEL
-endef
+
 
 endif # ($(build_modules), yes)

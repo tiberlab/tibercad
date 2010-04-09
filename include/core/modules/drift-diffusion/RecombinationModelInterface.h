@@ -4,9 +4,6 @@
 #define _RECOMBINATIONMODELINTERFACE_H_
 
 
-#undef TIBER_MODULE_PREFIX
-#define TIBER_MODULE_PREFIX recombination
-
 
 #include "DriftDiffusionModelInterface.h"
 

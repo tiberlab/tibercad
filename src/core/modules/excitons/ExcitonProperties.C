@@ -25,7 +25,7 @@ ExcitonProperties::create(const std::string& name,
     const ModelOptions& options)
 {
   return dynamic_cast<ExcitonProperties*>(
-      PhysicalModelInterface::create("exmodel_" + name, options));
+      PhysicalModelInterface::create("exbulk_" + name, options));
 }
 
 

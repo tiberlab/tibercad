@@ -12,7 +12,7 @@
 #include <sstream>
 
 
-TIBER_MODULE(SemiconductorModel, default)
+TIBER_MODULE(SemiconductorModel, ddbulk, default)
 
 
 using namespace DriftDiffusionDefs;
@@ -26,8 +26,8 @@ SemiconductorModel::~SemiconductorModel(void)
 
 SemiconductorModel::SemiconductorModel(const ModelOptions& options)
   : DriftDiffusionProperties(options),
-    _bulk_model(NULL),
     _is_prepared(false),
+    _bulk_model(NULL),
     _recompute_band_parameters(false)
 {
 }
@@ -148,7 +148,7 @@ SemiconductorModel::extract_band_properties(void)
   int id = 0;
   get_conduction_band().band_edges[0] = cbs[0].energy;
 
-  for (int i = 1; i < cbs.size(); i++)
+  for (unsigned int i = 1; i < cbs.size(); i++)
   {
     if (cbs[i].energy < cbs[id].energy)
       id = i;
@@ -170,7 +170,7 @@ SemiconductorModel::extract_band_properties(void)
   //double kT = SimulationOptions::T * Constants::k_B;
   double kT = get_lattice_temperature();
   double delta_max = 4.0 * kT;
-  for (int i = 1; i < vbs.size(); i++)
+  for (unsigned int i = 1; i < vbs.size(); i++)
   {
     get_valence_band().band_edges[i] = vbs[i].energy;
     if (vbs[i].energy > vbs[id].energy)
@@ -180,7 +180,7 @@ SemiconductorModel::extract_band_properties(void)
 
   double tmp = 0;
   // include other bands
-  for (int i = 0; i < vbs.size(); i++)
+  for (unsigned int i = 0; i < vbs.size(); i++)
   {
     double delta = get_valence_band().band_edge - vbs[i].energy;
     if (delta < delta_max)

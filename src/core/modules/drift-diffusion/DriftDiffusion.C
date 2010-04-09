@@ -44,7 +44,7 @@
 // Module interface
 //
 
-TIBER_MODULE(DriftDiffusion, driftdiffusion)
+TIBER_MODULE(DriftDiffusion, MODULE_NAME)
 
 namespace
 {
@@ -151,8 +151,8 @@ DriftDiffusion::~DriftDiffusion(void)
 
 
 PhysicalModel*
-DriftDiffusion::create_physical_model(const ModelOptions& options,
-    const Material* mat) const throw (ModelErrorException)
+DriftDiffusion::create_bulk_model(const ModelOptions& options,
+    const Material* mat) const
 {
   string modelname;
 
@@ -183,6 +183,13 @@ DriftDiffusion::create_physical_model(const ModelOptions& options,
 
 
 
+PhysicalModel*
+DriftDiffusion::create_boundary_model(const ModelOptions& options,
+    const Material* material_A, const Material* material_B) const
+{
+
+  return NULL;
+}
 
 
 BoundaryProperties*

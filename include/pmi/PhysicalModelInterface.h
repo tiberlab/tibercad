@@ -84,12 +84,13 @@ class PhysicalModelInterface : public TiberModelObject
      *
      * \param name the model name
      * \param options the options as given in the input file
-     * \param module the module to which this model belongs
+     * \param module the module this model belongs to (in most cases
+     *   found automatically)
      * \return a pointer to the newly created object
      */
     static PhysicalModelInterface* create(const std::string& name,
         const ModelOptions& options = ModelOptions(),
-        const std::string& module = xstr(MODULENAME));
+        const std::string& module = xstr(MODULE_NAME));
 
 
     //! Creates a new model from a given creator function
@@ -212,6 +213,10 @@ class PhysicalModelInterface : public TiberModelObject
 
     //! Print some info
     void print_info(void);
+
+
+    //! Get the name of the module this object belong to
+    const std::string& get_module_name(void) const;
 
 
 
@@ -485,6 +490,10 @@ class PhysicalModelInterface : public TiberModelObject
     PhysicalObject* _owner;
 
 
+    //! The name of the module this object is part of
+    std::string _module;
+
+
     //! A list of submodels
     SubmodelMap _submodels;
 
@@ -512,6 +521,10 @@ class PhysicalModelInterface : public TiberModelObject
     void _set_type(const std::string& type);
 
 
+    //! Set the module name
+    void _set_module_name(const std::string& module);
+
+
     //! Create automatically all submodels
     /*!
      * Calls create_submodels() which can be overridden by module developers.
@@ -533,7 +546,8 @@ PhysicalModelInterface::PhysicalModelInterface(const ModelOptions& options)
     _id(INVALID_ID),
     _simulator_id(INVALID_ID),
     _name(""),
-    _owner(NULL)
+    _owner(NULL),
+    _module("")
 {
 }
 
@@ -543,6 +557,15 @@ void
 PhysicalModelInterface::_set_type(const std::string& type)
 {
   _type = type;
+}
+
+
+
+inline
+void
+PhysicalModelInterface::_set_module_name(const std::string& module)
+{
+  _module = module;
 }
 
 
@@ -663,6 +686,13 @@ PhysicalModelInterface::get_owner(void) const
 }
 
 
+
+inline
+const std::string&
+PhysicalModelInterface::get_module_name(void) const
+{
+  return _module;
+}
 
 
 

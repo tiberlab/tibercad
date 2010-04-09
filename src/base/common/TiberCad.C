@@ -77,9 +77,9 @@ TiberCad::init(int argc, char** argv)
     Database::set_default_search_path(tiberroot + "/materials");
 
     // setup DLLoader paths
-    DLLoader::set_library_path(tiberroot + "/lib/tibermodels");
+    DLLoader::set_library_path(tiberroot + "/lib/modules");
 #ifdef DEBUG
-    DLLoader::prepend_to_library_path(tiberroot + "/lib/debug/tibermodels");
+    DLLoader::prepend_to_library_path(tiberroot + "/lib/debug/modules");
 #endif
     char* modelpath = getenv("TIBERMODELPATH");
     if (modelpath != NULL)

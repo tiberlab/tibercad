@@ -8,7 +8,7 @@
 
 
 
-TIBER_MODULE(DopingDependentMobility, doping_dependent)
+TIBER_MODULE(DopingDependentMobility, mobility, doping_dependent)
 
 
 

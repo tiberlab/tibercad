@@ -225,7 +225,12 @@ PhysicalModelInterface::create(const string& name,
 
   if (mod == NULL)
   {
-    mod = create_from_library<PhysicalModelInterface>(name, options);
+    // first try in the module directory
+    if ((module.size() > 0) && ((mod = create_from_library<PhysicalModelInterface>(
+        module + "/" + name, options)) == 0))
+    {
+      mod = create_from_library<PhysicalModelInterface>(name, options);
+    }
   }
 
   if (mod != NULL)
@@ -234,6 +239,8 @@ PhysicalModelInterface::create(const string& name,
 
     // we let it know what's its identifier
     mod->_set_type(name);
+
+    mod->_set_module_name(module);
 
     //! set the name
     // 2007-08-17
@@ -246,7 +253,7 @@ PhysicalModelInterface::create(const string& name,
     ostringstream os;
     os << "Added model (ID = " << mod->get_id() <<
       " name = " << mod->get_name() << " type = " <<
-       mod->get_type() << ")";
+       mod->get_type() << " module = " << mod->get_module_name() << ")";
     Messages::debug(os.str());
   }
 
@@ -535,7 +542,8 @@ PhysicalModelInterface::_create_submodels(void)
     if (type.size() > 0)
       name += string("_") + type;
 
-    PhysicalModelInterface* pm = create(name, it->second);
+    // we try to create it from the same module
+    PhysicalModelInterface* pm = create(name, it->second, get_module_name());
 
     if (pm == NULL)
     {

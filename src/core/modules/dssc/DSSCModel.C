@@ -7,7 +7,7 @@
 #include "elem.h"
 
 
-TIBER_MODULE(DSSCModel,default)
+TIBER_MODULE(DSSCModel, dscbulk, default)
 
 
 using namespace std;

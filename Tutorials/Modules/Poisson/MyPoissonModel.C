@@ -12,7 +12,7 @@ MyPoissonModel::create(const ModelOptions& options)
 {
   string type("default");
   options.get_option("type", type);
-  type = "mypoisson_" + type;
+  type = "bulk_" + type;
 
   return dynamic_cast<MyPoissonModel*>(
       PhysicalModelInterface::create(type, options));

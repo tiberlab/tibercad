@@ -29,7 +29,7 @@
 # endif
 
 /*!
- * \def TIBER_MODULE(classname, simname)
+ * \def TIBER_MODULE(classname, model [, type])
  *
  * \brief Creates methods to create and destroy a simulation object
  *
@@ -37,13 +37,14 @@
  * this macro somewhere in the source file to be able to compile
  * it as TiberCad module.
  *
- * \param name the name of the class that should be 'createable'
- * \param simname the name for this module
+ * \param classname the name of the class that should be 'createable'
+ * \param model the model family (e.g. recombination, mobility etc.)
+ * \param type the specific model name, if applicable (e.g. srh, auger)
  *
- * \c simname will be used to create the library name, and the model
- * will have to be referred to in the input file by \c simname
+ * \c model and \c type will be used to create the library name as
+ * model
  */
-#define TIBER_MODULE(classname, simname) \
+#define TIBER_MODULE(classname, model, type...) \
   extern "C" { \
     TBDLEXPORT void TBDESTROYFUNC(TiberModelObject* p) { \
       delete p; \
@@ -58,9 +59,12 @@
 
 # define TBDLEXPORT
 # define TBDLLOCAL
-# define TIBER_MODULE(classname, simname)
+# define TIBER_MODULE(classname, model, ...)
 
 #endif // BUILD_TIBER_MODULES
 
+#ifndef MODULE_NAME
+#define MODULE_NAME
+#endif
 
 #endif // _TIBERMODULE_H_

@@ -6,7 +6,7 @@
 
 
 
-TIBER_MODULE(DirectRecombination, direct)
+TIBER_MODULE(DirectRecombination, recombination, direct)
 
 
 
