@@ -347,9 +347,9 @@ MyPoisson::do_assemble(EquationSystems& es, const std::string& system_name)
           for (unsigned int i = 0; i < n_dofs; i++)
           {
             for (unsigned int j = 0; j < n_dofs; j++)
-              Ke(i, j) += a * JxW[qp] * (phi_face[i][qp] * phi_face[j][qp]);
+              Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
 
-            Fe(i) += c * JxW[qp] * phi_face[i][qp];
+            Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
           }
         }
       }
