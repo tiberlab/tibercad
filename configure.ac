@@ -150,6 +150,17 @@ TC_SLEPC
 AC_MSG_NOTICE([])
 
 
+# check for TAO
+AC_MSG_NOTICE([])
+AC_MSG_NOTICE([****************************************])
+AC_MSG_NOTICE([* Checking for tao])
+AC_MSG_NOTICE([****************************************])
+
+TC_TAO
+
+AC_MSG_NOTICE([])
+
+
 # boost includes
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([****************************************])
