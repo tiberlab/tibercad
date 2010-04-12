@@ -437,8 +437,8 @@ PhysicalModelInterface::init(void)
 
 
 void
-PhysicalModelInterface::init_interface(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B)
+PhysicalModelInterface::init_interface(const Material* comp_A,
+    const Material* comp_B)
 {
 
   read_database();
@@ -450,23 +450,9 @@ PhysicalModelInterface::init_interface(const PhysicalModelInterface* comp_A,
 
   SubmodelIterator it(submodels_begin());
   const SubmodelIterator end(submodels_end());
-  ConstSubmodelIterator it_A(comp_A->submodels_begin());
 
-  // comp_B might be NULL (if it is a 'true' boundary)
-  if (comp_B != NULL)
-  {
-    assert(typeid(*comp_A) == typeid(*comp_B));
-
-    ConstSubmodelIterator it_B(comp_B->submodels_begin());
-    for ( ; it != end; ++it, ++it_A, ++it_B)
-    {
-      PhysicalModelInterface* pm = it->second;
-      pm->init_interface(it_A->second, it_B->second);
-    }
-  }
-  else
-    for ( ; it != end; ++it, ++it_A)
-      it->second->init_interface(it_A->second, NULL);
+  for ( ; it != end; ++it)
+    it->second->init_interface(comp_A, comp_B);
 
   // some models might treat alloys in a special way
   do_init_interface(comp_A, comp_B);
@@ -532,9 +518,9 @@ PhysicalModelInterface::_create_submodels(void)
 
   // loop over all submodels
   ModelOptions::submodel_iterator it(get_options().submodels_begin());
-  ModelOptions::submodel_iterator end(get_options().submodels_end());
+  const ModelOptions::submodel_iterator end(get_options().submodels_end());
 
-  for ( ; it != end; ++it)
+  while (it != end)
   {
     string name(it->first);
     string type((it->second).get_option("model", ""));
@@ -553,10 +539,16 @@ PhysicalModelInterface::_create_submodels(void)
       throw InitFailedException(os.str());
     }
 
-    // we delete the options from the ModelOptions object
-    get_options().delete_submodel(it);
-
     add_submodel(it->first, pm);
+
+    // a temporary iterator as we cannot delete the loop iterator
+    ModelOptions::submodel_iterator tmp_it(it);
+
+    // next entry
+    ++it;
+
+    // we delete the options from the ModelOptions object
+    get_options().delete_submodel(tmp_it);
   }
 }
 

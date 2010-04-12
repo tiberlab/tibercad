@@ -28,20 +28,20 @@ $Models
       plot = (Potential, Field, Displacement, materials)
     }
 
-    physical_model contact
+    BC_Regions  
     {
-      type = dirichlet
-      region = anode
-      potential = @Va[1]
-    }
+      BC_Region anode
+      {
+        type = dirichlet
+        potential = @Va[1]
+      }
 
-    physical_model contact
-    {
-      type = dirichlet
-      region = cathode
-      potential = 0.0
+      BC_Region cathode
+      {
+        type = dirichlet
+        potential = 0.0
+      }
     }
-
 
   }  
 

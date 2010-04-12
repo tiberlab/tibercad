@@ -50,13 +50,5 @@ MaterialBoundary::do_init(void)
   ModelMap::const_iterator end(models_end());
 
   for ( ; it != end; ++it)
-  {
-    // mat_A is never NULL
-    PhysicalModel* pma = _mat_A->get_model(it->first);
-    PhysicalModel* pmb = NULL;
-    if (_mat_B != NULL)
-      pmb = _mat_B->get_model(it->first);
-
-    (it->second)->init_interface(pma, pmb);
-  }
+    (it->second)->init_interface(_mat_A, _mat_B);
 }

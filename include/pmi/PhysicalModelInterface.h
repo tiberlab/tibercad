@@ -207,8 +207,8 @@ class PhysicalModelInterface : public TiberModelObject
     /*!
      * It calls read_interface_database(), do_init_interface() and do_init()
      */
-    void init_interface(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B);
+    void init_interface(const Material* comp_A,
+        const Material* comp_B);
 
 
     //! Print some info
@@ -311,7 +311,7 @@ class PhysicalModelInterface : public TiberModelObject
     /*!
      * Calculates all parameters of an alloy \f$A_xB_{x-1}C\f$.
      *
-     * \note do_init() will not be called after do_init_alloy()
+     * \note do_init() will be called after do_init_alloy()
      */
     virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
@@ -321,10 +321,10 @@ class PhysicalModelInterface : public TiberModelObject
     /*!
      * Calculates all parameters of an interface.
      *
-     * \note do_init() will not be called after do_init_interface()
+     * \note do_init() will be called after do_init_interface()
      */
-    virtual void do_init_interface(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B);
+    virtual void do_init_interface(const Material* comp_A,
+        const Material* comp_B);
 
 
     /*! \copydoc TiberModelObject::override_parameter_string()
@@ -735,8 +735,8 @@ PhysicalModelInterface::do_init_alloy(const PhysicalModelInterface*,
 
 inline
 void
-PhysicalModelInterface::do_init_interface(const PhysicalModelInterface*,
-    const PhysicalModelInterface*)
+PhysicalModelInterface::do_init_interface(const Material*,
+    const Material*)
 {
 }
 

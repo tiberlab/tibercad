@@ -50,7 +50,8 @@ Messages::set_log_file(const string& logfile)
   using namespace boost::filesystem;
 
   path logpath(logfile, native);
-  logpath.remove_filename();
+  logpath.remove_leaf();
+  //logpath.remove_filename();
   if (logpath.string().size() > 0)
   {
     if (!exists(logpath))
