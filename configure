@@ -699,6 +699,8 @@ LIBMESH_CONFIG
 COMPLEX_PETSC_DIR
 COMPLEX_PETSC_ARCH
 SLEPC_DIR
+TAO_DIR
+TAO_INCLUDES
 BOOST_CPPFLAGS
 BOOST_REGEX_LIB
 BOOST_FILESYSTEM_LIB
@@ -1321,6 +1323,7 @@ Optional Packages:
   --with-petsc-prefix=DIR specify the (complex) PETSc installation prefix
   --with-petsc-arch=ARCH  specify the (complex) PETSc ARCH to be used
   --with-slepc-prefix=DIR specify the SLEPc installation prefix
+  --with-tao-prefix=DIR   specify the TAO installation prefix
   --with-boost-prefix=DIR specify the path to the boost installation
   --with-boost-libdir=DIR specify the path to the boost libraries
   --with-boost-regex-lib=LIB
@@ -5066,12 +5069,109 @@ if test "${with_slepc_prefix+set}" = set; then
   withval=$with_slepc_prefix; tc_slepc_prefix=$with_slepc_prefix
 fi
 
-      SLEPC_DIR="$tc_slepc_prefix"
+   CXXFLAGS_save=$CXXFLAGS
+ LDFLAGS_save=$LDFLAGS
+ ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+ CXXFLAGS="-I${tc_slepc_prefix}/include"
+ LDFLAGS="-L${tc_slepc_prefix}/lib/${tc_petsc_arch} -lslepc \
+  	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch} -lpetscksp"
+ cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include "slepceps.h"
+int
+main ()
+{
+SlepcInitialize(0,0,0,0);
+ 				  SlepcFinalize();
+  ;
+  return 0;
+};
+ 			        tc_cv_have_slepc="yes"
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  :
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+  ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+  CXXFLAGS=$CXXFLAGS_save
+  LDFLAGS=$LDFLAGS_save
+ SLEPC_DIR="$tc_slepc_prefix"
 
  if test "$tc_cv_have_slepc" == "yes"; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_COMPLEX_SLEPC 1
+_ACEOF
+
+ fi
+
+
+{ echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+
+
+# check for TAO
+{ echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+{ echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+{ echo "$as_me:$LINENO: * Checking for tao" >&5
+echo "$as_me: * Checking for tao" >&6;}
+{ echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+
+
+# Check whether --with-tao-prefix was given.
+if test "${with_tao_prefix+set}" = set; then
+  withval=$with_tao_prefix; tc_tao_prefix=$with_tao_prefix
+fi
+
+      TAO_DIR="$tc_tao_prefix"
+
+ TAO_INCLUDES="-I${tc_tao_prefix} -I${tc_tao_prefix}/include"
+
+ if test "$tc_cv_have_tao" == "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_TAO 1
 _ACEOF
 
  fi
@@ -7999,6 +8099,8 @@ LIBMESH_CONFIG!$LIBMESH_CONFIG$ac_delim
 COMPLEX_PETSC_DIR!$COMPLEX_PETSC_DIR$ac_delim
 COMPLEX_PETSC_ARCH!$COMPLEX_PETSC_ARCH$ac_delim
 SLEPC_DIR!$SLEPC_DIR$ac_delim
+TAO_DIR!$TAO_DIR$ac_delim
+TAO_INCLUDES!$TAO_INCLUDES$ac_delim
 BOOST_CPPFLAGS!$BOOST_CPPFLAGS$ac_delim
 BOOST_REGEX_LIB!$BOOST_REGEX_LIB$ac_delim
 BOOST_FILESYSTEM_LIB!$BOOST_FILESYSTEM_LIB$ac_delim
@@ -8011,8 +8113,6 @@ ENABLE_UPTIGHT!$ENABLE_UPTIGHT$ac_delim
 ENABLE_HETERO!$ENABLE_HETERO$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 BUILD_TIBER_MODULES!$BUILD_TIBER_MODULES$ac_delim
-LICENSE_CHECK!$LICENSE_CHECK$ac_delim
-LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -8047,6 +8147,51 @@ N; s/^.*\n//; s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g; b n
 ' >>$CONFIG_STATUS <conf$$subs.sed
 rm -f conf$$subs.sed
 cat >>$CONFIG_STATUS <<_ACEOF
+CEOF$ac_eof
+_ACEOF
+
+
+ac_delim='%!_!# '
+for ac_last_try in false false false false false :; do
+  cat >conf$$subs.sed <<_ACEOF
+LICENSE_CHECK!$LICENSE_CHECK$ac_delim
+LTLIBOBJS!$LTLIBOBJS$ac_delim
+_ACEOF
+
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 2; then
+    break
+  elif $ac_last_try; then
+    { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
+echo "$as_me: error: could not make $CONFIG_STATUS" >&2;}
+   { (exit 1); exit 1; }; }
+  else
+    ac_delim="$ac_delim!$ac_delim _$ac_delim!! "
+  fi
+done
+
+ac_eof=`sed -n '/^CEOF[0-9]*$/s/CEOF/0/p' conf$$subs.sed`
+if test -n "$ac_eof"; then
+  ac_eof=`echo "$ac_eof" | sort -nru | sed 1q`
+  ac_eof=`expr $ac_eof + 1`
+fi
+
+cat >>$CONFIG_STATUS <<_ACEOF
+cat >"\$tmp/subs-2.sed" <<\CEOF$ac_eof
+/@[a-zA-Z_][a-zA-Z_0-9]*@/!b end
+_ACEOF
+sed '
+s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g
+s/^/s,@/; s/!/@,|#_!!_#|/
+:n
+t n
+s/'"$ac_delim"'$/,g/; t
+s/$/\\/; p
+N; s/^.*\n//; s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g; b n
+' >>$CONFIG_STATUS <conf$$subs.sed
+rm -f conf$$subs.sed
+cat >>$CONFIG_STATUS <<_ACEOF
+:end
+s/|#_!!_#|//g
 CEOF$ac_eof
 _ACEOF
 
@@ -8289,7 +8434,7 @@ s&@builddir@&$ac_builddir&;t t
 s&@abs_builddir@&$ac_abs_builddir&;t t
 s&@abs_top_builddir@&$ac_abs_top_builddir&;t t
 $ac_datarootdir_hack
-" $ac_file_inputs | sed -f "$tmp/subs-1.sed" | sed 's/|#_!!_#|//g' >$tmp/out
+" $ac_file_inputs | sed -f "$tmp/subs-1.sed" | sed -f "$tmp/subs-2.sed" >$tmp/out
 
 test -z "$ac_datarootdir_hack$ac_datarootdir_seen" &&
   { ac_out=`sed -n '/\${datarootdir}/p' "$tmp/out"`; test -n "$ac_out"; } &&

@@ -152,4 +152,8 @@ config.status: configure VERSION
 	./config.status --recheck
 
 
+aclocal.m4: acinclude.m4
+	aclocal -I /usr/share/autoconf-archive/
+    
+
 include Make.rules

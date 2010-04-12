@@ -30,6 +30,10 @@ have_mkl = @HAVE_MKL@
 # gmsh
 GMSH := @GMSH@
 
+
+# TAO
+TAO_DIR := @TAO_DIR@
+
 # some handy defaults
 #DIM := 2
 #ORDER := 1
@@ -38,7 +42,6 @@ GMSH := @GMSH@
 # the main TiberCAD library
 TIBERLIBNAME := tibercad
 export TIBERLIBNAME
-
 
 
 
@@ -71,7 +74,7 @@ endif
 
 INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
 
-NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ $(INCLUDE) 
+NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ @TAO_INCLUDES@ $(INCLUDE) 
 
 ifeq ($(have_mkl),yes)
  LDFLAGS += -L@MKL_LIBDIR@ -Wl,-rpath,@MKL_LIBDIR@

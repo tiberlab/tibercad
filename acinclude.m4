@@ -243,6 +243,8 @@ AC_DEFUN([TC_GSL],
 ])dnl
 
 
+
+
 dnl check for libmesh directory
 dnl for now we just get the installation path
 dnl
@@ -258,6 +260,9 @@ AC_DEFUN([TC_LIBMESH_PATH],
   					  "$tc_libmesh_prefix")])
   CPPFLAGS="$CPPFLAGS_save"
 ])dnl
+
+
+
 
 dnl check for libmesh-config
 dnl
@@ -279,6 +284,8 @@ AC_DEFUN([TC_LIBMESH_CONFIG],
 ])dnl
 
 
+
+
 dnl check for complex petsc
 dnl
 AC_DEFUN([TC_COMPLEX_PETSC],
@@ -293,6 +300,8 @@ AC_DEFUN([TC_COMPLEX_PETSC],
  AC_SUBST([COMPLEX_PETSC_ARCH], "$tc_petsc_arch")
 ])dnl
 
+
+
 dnl check for SLEPc
 dnl
 AC_DEFUN([TC_SLEPC],
@@ -302,22 +311,54 @@ AC_DEFUN([TC_SLEPC],
 	[tc_slepc_prefix=$with_slepc_prefix])
  dnl
  dnl compile test
-dnl CXXFLAGS_save=$CXXFLAGS
-dnl LDFLAGS_save=$LDFLAGS
-dnl AC_LANG_PUSH([C++])
-dnl CXXFLAGS=-I${tc_slepc_prefix}/include
-dnl LDFLAGS=-L${tc_slepc_prefix}/lib/${tc_petsc_arch} -lslepc \
-dnl  	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch} -lpetscksp
-dnl AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include "slepceps.h"]],
-dnl 			        [[SlepcInitialize(0,0,0,0);
-dnl 				  SlepcFinalize();]]);
-dnl 			        [tc_cv_have_slepc="yes"])
- dnl AC_LANG_POP()
- dnl CXXFLAGS=$CXXFLAGS_save
- dnl LDFLAGS=$LDFLAGS_save
+ CXXFLAGS_save=$CXXFLAGS
+ LDFLAGS_save=$LDFLAGS
+ AC_LANG_PUSH([C++])
+ CXXFLAGS="-I${tc_slepc_prefix}/include"
+ LDFLAGS="-L${tc_slepc_prefix}/lib/${tc_petsc_arch} -lslepc \
+  	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch} -lpetscksp"
+ AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include "slepceps.h"]],
+ 			        [[SlepcInitialize(0,0,0,0);
+ 				  SlepcFinalize();]]);
+ 			        [tc_cv_have_slepc="yes"])
+  AC_LANG_POP()
+  CXXFLAGS=$CXXFLAGS_save
+  LDFLAGS=$LDFLAGS_save
  AC_SUBST([SLEPC_DIR], "$tc_slepc_prefix")
  if test "$tc_cv_have_slepc" == "yes"; then
    AC_DEFINE([HAVE_COMPLEX_SLEPC], [1], [Define to 1 if complex SLEPc is available])
+ fi
+])dnl
+
+
+
+
+dnl check for TAO
+dnl
+AC_DEFUN([TC_TAO],
+[dnl
+ AC_ARG_WITH([tao-prefix], AS_HELP_STRING([--with-tao-prefix=DIR],
+	[specify the TAO installation prefix]),
+	[tc_tao_prefix=$with_tao_prefix])
+ dnl
+ dnl compile test
+dnl CXXFLAGS_save=$CXXFLAGS
+dnl LDFLAGS_save=$LDFLAGS
+dnl AC_LANG_PUSH([C++])
+dnl CXXFLAGS=-I${tc_tao_prefix}/include
+dnl LDFLAGS=-L${tc_tao_prefix}/lib/${tc_petsc_arch} -ltao \
+dnl  	 -L${tc_tao_prefix}/lib/${tc_petsc_arch} -ltaopetsc
+dnl AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include "tao.h"]],
+dnl 			        [[TaoInitialize(0,0,0,0);
+dnl 				  TaoFinalize();]]);
+dnl 			        [tc_cv_have_tao="yes"])
+ dnl AC_LANG_POP()
+ dnl CXXFLAGS=$CXXFLAGS_save
+ dnl LDFLAGS=$LDFLAGS_save
+ AC_SUBST([TAO_DIR], "$tc_tao_prefix")
+ AC_SUBST([TAO_INCLUDES], "-I${tc_tao_prefix} -I${tc_tao_prefix}/include")
+ if test "$tc_cv_have_tao" == "yes"; then
+   AC_DEFINE([HAVE_TAO], [1], [Define to 1 if tao is available])
  fi
 ])dnl
 
