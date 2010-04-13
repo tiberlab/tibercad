@@ -108,7 +108,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
 
   //a guess of atom density for cell is used for a first guess memory reservation
   //it could waste some memory but make calculation faster
-  double density = basis.size() / (_n_x + _n_y + _n_z);
+  double density = basis.size() / (_n_x * _n_y * _n_z);
   int int_density = static_cast<int>(floor(density));
 
   for (x = 0; x < _n_x; x++)
@@ -118,7 +118,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
          for (z = 0; z < _n_z; z++)
            {
              //reserve is redundant as density is not an accurate evaluation
-             _grid_cell[x][y][z].reserve(3 * int_density);
+             _grid_cell[x][y][z].reserve(2 * int_density);
            }
         }
     }
