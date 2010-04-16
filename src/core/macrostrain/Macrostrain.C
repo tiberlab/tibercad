@@ -117,15 +117,6 @@ Macrostrain::get_solution_secure(const Elem* elem,
       values[energyDensity][0] = energy * 1e9;
     }
 
-    if (values.count(piezoPolarization))
-    {
-      Tensor1 piezo = get_piezopolarization(elem);
-
-      values[piezoPolarization][0] = piezo(1);
-      values[piezoPolarization][1] = piezo(2);
-      values[piezoPolarization][2] = piezo(3);
-    }
-
     if (do_stress_cryst)
     {
       elemstress = sym(RotM.transpose() * (elemstress * RotM));
@@ -137,6 +128,17 @@ Macrostrain::get_solution_secure(const Elem* elem,
       values[stressCrystal][5] = elemstress(3,1);
     }
   }
+
+
+  if (values.count(piezoPolarization))
+  {
+    Tensor1 piezo = get_piezopolarization(elem);
+
+    values[piezoPolarization][0] = piezo(1);
+    values[piezoPolarization][1] = piezo(2);
+    values[piezoPolarization][2] = piezo(3);
+  }
+
 
   if (values.count(strainCrystal))
   {
