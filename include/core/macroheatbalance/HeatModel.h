@@ -46,7 +46,7 @@ class HeatModel: public PhysicalModel
     void do_print_info(void);
 
    //! Get the temperature
-   void set_temperature(double temperature);
+    void set_temperature(double temperature);
 
 
   //!Get total the heat source model given an ID
