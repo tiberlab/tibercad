@@ -19,7 +19,8 @@ class ThermalContact: public BoundaryProperties
     BTEFourier = 4,
     ThermalSurfaceConductance = 5,
     Specular = 6,
-    Diffusive = 7
+    Diffusive = 7,
+    Meso =8 
   };
 
   //!Constructor
