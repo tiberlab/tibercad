@@ -12,7 +12,7 @@
 #include "quadrature_gauss.h"
 #include "quadrature_trap.h"
 #include "HeatModel.h"
-
+#include "ElementSide.h"
 #include "elem.h"
 
 
@@ -46,20 +46,26 @@ class MicroHeatBalance : public SimulationInterface
     double max_error; //!< Max tollerance for self-consistent loop
     double ref_temp;
     double eq_temp;
+    int DG;
     double work_units; //!< SI units, has to be consistent with the database parameters
     double initial_value;
     std::string macro_sim;
+    std::vector<int> custom_dir;
      libMeshEnums::QuadratureType  quadrature_type;
     /**
      * The order of gauss integration
      */
     libMeshEnums::Order integration_order;
-    double scale;
-
+    
     //New
     double equilibrium_energy;
     std::string first_guess;
-  
+
+    std::vector<Point> cd;
+
+    bool diffusive;
+    double s_0;
+    double t_0;
   };
 
 
@@ -96,6 +102,8 @@ class MicroHeatBalance : public SimulationInterface
 
   static void assemble_heat_matrix(EquationSystems& es,
 				   const std::string& system_name);
+  //static void assemble_heat_matrix_DG(EquationSystems& es,
+  //			   const std::string& system_name);
 
   static void assemble_macro_heat_matrix(EquationSystems& es,
 				  const std::string& system_name);
@@ -116,14 +124,40 @@ class MicroHeatBalance : public SimulationInterface
    /*! \copydoc SimulationInterface::do_print_info() */
     virtual void do_print_info(void);
 
+  //  SimulationEnvironment& si;
  private:
 
-  double s_0;
-  double t_0; 
+
+  //! We need to create a physical model
+  virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
+					   const Material* mat) const;
+
+
+  // double energy_conservation_check_fourier();
+
+  double energy_conservation_check();
+
+  ID iter;
+
+  ID gray_sys_number;
+
+  // double print_error(void);
+
+  double energy_norm;
+
+  double old_energy_norm;
+  
+  double e_0;
+  double get_boundary_value(ElementSide elside); 
+
   //Boundary values
   std::map<const Node*, std::vector<double> > bv;
 
   typedef  std::map<const Node*, std::vector<double> >  BoundaryData;
+
+  typedef  std::map<const ElementSide, std::vector<double> >  SideData;
+
+  SideData SD;
 
   void compute_fourier_solution(void);
 
@@ -170,13 +204,13 @@ class MicroHeatBalance : public SimulationInterface
   //! Order the solution in correct mode
   virtual void 	build_nodal_results(const std::set< std::string > &variables,
 				     std::vector< double > &results,
-				     std::vector< std::string > &legend);
+				    std::vector< std::string > &legend);
 
 
   //! Order the solution in correct mode
   virtual void build_elemental_results(const std::set<std::string>& variables,
 				       std::vector<double>& results,
-				       std::vector<std::string>& legend){};
+				       std::vector<std::string>& legend);
 
   //! Calculate Power Dissipated
   /*!
@@ -190,11 +224,15 @@ class MicroHeatBalance : public SimulationInterface
 
   //void compute_total_equilibrium_energy(void);
 
-  double calculate_power_emitted(void);
+  // double calculate_power_emitted(void);
 
   // double calculate_power_dissipated_rstf(void);
 
-  void calculate_power_dissipated(double& power_dissipated, double& error);
+  //void calculate_power_dissipated(double& power_dissipated, double& error);
+  
+  //double calculate_power_dissipated_fourier(void);
+
+  //double calculate_power_emitted_fourier(void);
 
   static MicroHeatBalance* static_this;
 
@@ -202,6 +240,8 @@ class MicroHeatBalance : public SimulationInterface
 
   //!non-static method that actually does matrix assembling
   void do_assemble(EquationSystems& es, const std::string& system_name);
+
+  //  void do_assemble_DG(EquationSystems& es, const std::string& system_name);
 
   void do_macro_assemble(EquationSystems& es, const std::string& system_name);
 
@@ -244,11 +284,14 @@ class MicroHeatBalance : public SimulationInterface
 
    void compute_directions(void);
 
-   void compute_alternative_directions(void);
+   void compute_custom_direction(std::vector<Point> custom_dir);
 
-   void compute_very_alternative_directions(void);
 
-   void compute_very_alternative_directions2(void);
+   // void compute_alternative_directions(void);
+
+   //   void compute_very_alternative_directions(void);
+
+   //   void compute_very_alternative_directions2(void);
 
    void print_info(void);
 
