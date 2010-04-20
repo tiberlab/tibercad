@@ -52,8 +52,6 @@ void HeatModel::create_submodels()
   }
   get_options().delete_submodels("heat_source");
 
-
-
   assert(kappa == NULL);
 
   it = get_options().submodels_begin("Lattice_thermal_conductivity");
@@ -62,35 +60,54 @@ void HeatModel::create_submodels()
   {
 
 
-    kappa =dynamic_cast<LatticeThermalConductivity*>(
-		      PhysicalModelInterface::create("lat_therm_cond_" +
-		      get_material()->get_structure(), it->second));
+   kappa =dynamic_cast<LatticeThermalConductivity*>(
+  		      PhysicalModelInterface::create("lat_therm_cond_" +
+  	      get_material()->get_structure(), it->second));
 
 
    if (kappa == NULL)
-      throw InitFailedException("Could not create lattice thermal conductivity model");
-
-
-    }
-   else
-   {
-     kappa = dynamic_cast<LatticeThermalConductivity*>(
-	  PhysicalModelInterface::create("lat_therm_cond_" +
-		get_material()->get_structure()));
+     throw InitFailedException("Could not create lattice thermal conductivity model");
+   
+   //add_submodel("lat_therm_cond", kappa);
+   kappa->set_material(get_material());
+   kappa->init();
+   kappa->get_conductivity(_lattice_thermal_conductivity);
 
    }
-  add_submodel("lat_therm_cond", kappa);
+   else
+  {
+    kappa = dynamic_cast<LatticeThermalConductivity*>(
+  	  PhysicalModelInterface::create("lat_therm_cond_" +
+  	get_material()->get_structure()));
+
+    // add_submodel("lat_therm_cond", kappa);
+    kappa->set_material(get_material());
+    kappa->init();
+    kappa->get_conductivity(_lattice_thermal_conductivity);
+  }
+ 
+  //add_submodel("lat_therm_cond", kappa);
+
   get_options().delete_submodels("Lattice_thermal_conductivity");
 
-    
-    //kappa->get_conductivity(_lattice_thermal_conductivity);
+  //add_submodel("lat_therm_cond", kappa);
+  //kappa->set_material(get_material());
+  //kappa->init();
+  //kappa->get_conductivity(_lattice_thermal_conductivity);
 
+
+  //     std::cout<<get_material()->get_name()<<std::endl;
+  //  std::cout<<"kg: "<<_lattice_thermal_conductivity<<std::endl;
+
+  
 }
 
 
 void
 HeatModel::do_init(void)
 {
+
+  //kappa->get_conductivity(_lattice_thermal_conductivity);
 
   Database& db = get_database();
 
@@ -103,24 +120,23 @@ HeatModel::do_init(void)
   db.set_section("lattice_thermal_capacity/constant");
   cg = db.get("C", cg);
 
-  //kg = _lattice_thermal_conductivity(1,1);
+  kg = _lattice_thermal_conductivity(1,1);
   
   db.set_section("thermal_conductivity/constant");
-  kg = db.get("therm_lat_cond_x", kg);
+  //kg = db.get("therm_lat_cond_x", kg);
 
   tg = 3.0 * kg / (vg * vg * cg);  //s
 
-//    std::cout<<get_material()->get_name()<<std::endl;
+    std::cout<<get_material()->get_name()<<std::endl;
+    std::cout<<"tg: "<<tg<<std::endl;
+    std::cout<<"cg: "<<cg<<std::endl;
+    std::cout<<"vg: "<<vg<<std::endl;
+    std::cout<<"kg: "<<kg<<std::endl;
+    std::cout<<"Lg: "<<tg * vg * 1e4<<" um"<<std::endl;
+    std::cout<<" "<<std::endl;
+   
 
- 
-//    std::cout<<"tg: "<<tg<<std::endl;
-//    std::cout<<"cg: "<<cg<<std::endl;
-//    std::cout<<"vg: "<<vg<<std::endl;
-//    std::cout<<"kg: "<<kg<<std::endl;
-//    std::cout<<" "<<std::endl;
-   //cg = 1;
-
-  kappa->get_conductivity(_lattice_thermal_conductivity);
+   
 }
 
 

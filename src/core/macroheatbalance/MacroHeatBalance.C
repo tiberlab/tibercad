@@ -146,17 +146,18 @@ void  MacroHeatBalance::do_solve()
   my_system->solve();
 
   double power_emitted = calculate_power_emitted();
-  double power_dissipated_rstf = calculate_power_dissipated_rstf();
-  //double power_dissipated = calculate_power_dissipated();
+  double power_dissipated = calculate_power_dissipated_rstf();
+  // double power_dissipated = calculate_power_dissipated();
 
-   double check = 100 - std::abs((power_emitted - power_dissipated_rstf)/(power_emitted));
-   if (power_emitted<1e-10)
-     check = 0;
+
+  double check = (1.0 - std::abs((power_emitted - power_dissipated)/(std::max(power_emitted,power_dissipated)))) * 100.0;
+   //  if (power_emitted<1e-10)
+   //  check = 0;
 
 
      std::cout<<"Power Emitted"   <<"          "<<power_emitted<<std::endl;
      //td::cout<<"Power Dissipated"<<"       "   <<power_dissipated<<std::endl;
-    std::cout<<"Power Dissipated rstf"<<"  "   <<power_dissipated_rstf<<std::endl;
+    std::cout<<"Power Dissipated"<<"  "   <<power_dissipated<<std::endl;
 
 
      if (SimulationOptions::verbose() > 1)
@@ -327,8 +328,6 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
   Tensor2Sym kappa;
 
 
-
-
   ThermalContact* contact;
   //----------------------------------------------------------LatticeThermalConductivity-------//
 
@@ -372,7 +371,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
     heat_model->get_thermal_conductivity(kappa);
 
-    //    std::cout<<kappa(1,1)<<std::endl;
+    std::cout<<kappa(1,1)<<endl;
+
+    //std::cout<<mat->get_name()<<":  "<<kappa(1,1)<<std::endl;
 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
@@ -398,7 +399,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 		kappa_value = kappa(i+1, j+1);
 
 	      value += JxW[qp] * dphi[p1][qp](i) * kappa_value * dphi[p2][qp](j);
-
+	     
 	    }//end loop over direction (2)
 
 	  }//end loop over direction (1)
@@ -658,16 +659,11 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
 
   const unsigned int n_dofs = dof_indices.size();
 
-
-
   Tensor2Sym kappa;
-
 
   ID subdomain = elem->subdomain_id();
   const Material* mat = _device->get_material(subdomain);
   HeatModel* heat_model = (dynamic_cast<HeatModel*>(mat->get_model(get_id())));
-  // heat_model->set_element(elem);
-  //heat_model->set_side(-1);
   heat_model->re_init();
   heat_model->get_thermal_conductivity(kappa);
 
@@ -821,7 +817,9 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
 
        W.push_back(n_vars);
 
-       legend.resize(legend.size() + dim + 1);
+
+       legend.resize(legend.size() + dim + 2);
+
 
       switch (dim)
       {
@@ -883,7 +881,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
      {
 
        W.push_back(n_vars);
-       legend.resize(legend.size() + dim);
+       legend.resize(legend.size() + dim + 1);
 
        switch (dim)
        {
@@ -1319,9 +1317,6 @@ MacroHeatBalance::calculate_power_dissipated(void)
 	const Material* mat = _device->get_material(subdomain);
 	HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
 
-	//heat_model->set_element(elem);
-	//heat_model->set_side(s);
-
 	heat_model->re_init();
 
 	fe_face->reinit(elem, s);
@@ -1342,6 +1337,8 @@ MacroHeatBalance::calculate_power_dissipated(void)
 	    power_dissipated += JxW[qp] * P * face_normals[qp];
 	  else
 	    power_dissipated +=  P * face_normals[qp];
+	  // if (face_normals[qp](2)==1.0)
+	  // std::cout<<JxW[qp] * P * face_normals[qp]<<std::endl;
 
 	}
       }
@@ -1438,7 +1435,7 @@ MacroHeatBalance::calculate_power_dissipated_rstf(void)
       Boundary* bd = env.get_boundary(elem->get_node(n));
       node_ids[n] = bd;
       if (bd != NULL)
-        has_node = true;
+        has_node = true; 
     }
 
 
@@ -1447,15 +1444,12 @@ MacroHeatBalance::calculate_power_dissipated_rstf(void)
     if (!has_node)
       continue;
 
-
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices, var);
-
-
-
-     std::vector< std::map< ID, double > > jq_solution;
+    
+    std::vector< std::map< ID, double > > jq_solution;
      get_solution_secure(elem,q_point,JQ_var,jq_solution);
-
+     
     for (unsigned int qp = 0; qp < q_rule->n_points(); qp++)
     {
 
@@ -1476,7 +1470,7 @@ MacroHeatBalance::calculate_power_dissipated_rstf(void)
         if (boundary != NULL)
         {
 	  power_dissipated  += JxW[qp] * (P * dphi[n][qp] + heat_source[qp] * phi[n][qp]);
-          //power_dissipated  += P * dphi[n][qp];
+         
         }
 
       }

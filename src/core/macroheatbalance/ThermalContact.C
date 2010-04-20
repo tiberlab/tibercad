@@ -8,6 +8,7 @@
 #include "BTEFourier.h"
 #include "Specular.h"
 #include "Diffusive.h"
+#include "MesoThermalContact.h"
 //==================================================================================//
 ThermalContact*
 ThermalContact::create(const std::string & name,  const ModelOptions &   options)
@@ -37,6 +38,9 @@ ThermalContact::create(const std::string & name,  const ModelOptions &   options
 
   if (name == "diffusive")
     result = Diffusive::create(options);
+
+  if (name == "meso")
+    result = MesoThermalContact::create(options);
 
 
   return result;

@@ -9,17 +9,20 @@
 
 
 //--------------------------------------------------------//
-//void  WzLatticeThermalConductivity::read_database_alloy(void)
-//{
+void  WzLatticeThermalConductivity::read_database_alloy(void)
+{
 
-//  Database& db = get_database();
-//  db.set_section("thermal_conductivity/constant");
+  //  Database& db = get_database();
+  //db.set_section("thermal_conductivity/constant");
 
 
-// _kappa_x = db.get("therm_lat_cond_x", _kappa_x);
-// _kappa_z = db.get("therm_lat_cond_z", _kappa_z);
+  //_kappa_x = db.get("therm_lat_cond_x", _kappa_x);
+  //_kappa_z = db.get("therm_lat_cond_z", _kappa_z);
 
-//}
+ //std::cout<<"Alloy: "<<std::endl;
+ //std::cout<<get_material()->get_name()<<": "<<_kappa_x<< std::endl;
+ 
+}
 
 //--------------------------------------------------------//
 void  WzLatticeThermalConductivity::read_database(void)
@@ -54,7 +57,8 @@ void WzLatticeThermalConductivity::do_init(void)
 
   rotate_to_calculation_system(cr.RotMatrix);
 
- 
+  // std::cout<<"Non Alloy: "<<std::endl;
+  // std::cout<<get_material()->get_name()<<": "<<_kappa_x<< std::endl;
 }
 
 
@@ -62,12 +66,12 @@ void WzLatticeThermalConductivity::do_init(void)
 void WzLatticeThermalConductivity::do_init_alloy (const PhysicalModelInterface *comp_A,
                                                 const PhysicalModelInterface *comp_B, double xa)
 {
- //  const WzLatticeThermalConductivity* modA = dynamic_cast<const WzLatticeThermalConductivity*>(comp_A);
+   const WzLatticeThermalConductivity* modA = dynamic_cast<const WzLatticeThermalConductivity*>(comp_A);
 
-//   const WzLatticeThermalConductivity* modB = dynamic_cast<const WzLatticeThermalConductivity*>(comp_B);
+   const WzLatticeThermalConductivity* modB = dynamic_cast<const WzLatticeThermalConductivity*>(comp_B);
 
-//   _kappa_x = alloy(modA->_kappa_x, modB->_kappa_x, xa);
-//   _kappa_z = alloy(modA->_kappa_z, modB->_kappa_z, xa);
+   _kappa_x = alloy(modA->_kappa_x, modB->_kappa_x, xa);
+   _kappa_z = alloy(modA->_kappa_z, modB->_kappa_z, xa);
 
 
 
