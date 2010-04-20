@@ -371,7 +371,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
     heat_model->get_thermal_conductivity(kappa);
 
-    std::cout<<kappa(1,1)<<endl;
+    
 
     //std::cout<<mat->get_name()<<":  "<<kappa(1,1)<<std::endl;
 
