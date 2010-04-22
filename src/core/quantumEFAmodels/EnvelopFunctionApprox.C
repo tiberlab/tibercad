@@ -2555,7 +2555,7 @@ void EnvelopFunctionApprox::calculate_density( )
 
 	Point center = el->centroid();
 
-	double chem_pot_value_eV = -get_electro_chem_potential(el);
+	double chem_pot_value_eV = get_electro_chem_potential(el);
 
 
 	prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, solution[i].Temperature); //Thermal probability
@@ -2563,7 +2563,6 @@ void EnvelopFunctionApprox::calculate_density( )
 
 
       double temp = density_of_state[el_number] * prob_factor;
-
 
       if (it == it_begin && i == 0)
       {
@@ -3185,7 +3184,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
 
     if (poisson_equation != NULL)
-    	solution[i].Fermi_energy = -get_electro_chem_potential(mat_elem);
+    	solution[i].Fermi_energy = get_electro_chem_potential(mat_elem);
 
 
 
