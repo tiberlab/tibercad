@@ -121,8 +121,8 @@ class Utils
     static std::string basename(const std::string& file);
 
 
-    //! Convert a windows style path to something more UNIX like
-    static void convert_path_to_unix(std::string& path);
+    //! Convert a windows style path to a cygwin POSIX pathname like
+    static void convert_win32_path_to_posix(std::string& path);
 
 
     //! Read a stream until the matching (closing) symbol of a grouping pair is found

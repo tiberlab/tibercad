@@ -65,20 +65,6 @@ int main (int argc, char** argv)
 
   }
 
-  {
-    // we check here if the input file exists
-    ifstream infile;
-    infile.open(inputfile.c_str());
-    if (infile.fail() || !infile.good())
-    {
-      infile.close();
-      cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
-      return 1;
-    }
-    infile.close();
-  }
-
-
   // do some preparation
   {
 #ifdef CYGWIN
@@ -99,6 +85,21 @@ int main (int argc, char** argv)
       setenv("TIBERCADROOT", exepath.c_str(), 1);
     }
 #endif
+
+  {
+    // we check here if the input file exists
+    ifstream infile;
+    infile.open(inputfile.c_str());
+    if (infile.fail() || !infile.good())
+    {
+      infile.close();
+      cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
+      return 1;
+    }
+    infile.close();
+  }
+
+
 
 
 #ifdef LICENSE_CHECK

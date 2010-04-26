@@ -152,7 +152,7 @@ Utils::time_to_string(double seconds)
 
 
 void
-Utils::convert_path_to_unix(std::string& path)
+Utils::convert_win32_path_to_posix(std::string& path)
 {
   size_t n = path.size();
 
@@ -161,8 +161,19 @@ Utils::convert_path_to_unix(std::string& path)
     for (size_t i = 0; i < n; i++)
       if (path[i] == '\\') path[i] = '/';
 
-    if (path[0] == '/')
-      path = '/' + path;
+    // treat drive name:
+    // cygwin mounts drives e.g. "C:\" as
+    // "/cygdrive/c"
+    size_t pos = path.find(':');
+    if (pos != string::npos)
+    {
+      path[pos] = '/';
+      path = "cygdrive/" + path;
+    }
+
+    // I do not remember if this had any sense:
+    //if (path[0] == '/')
+    //  path = '/' + path;
   }
 }
 
