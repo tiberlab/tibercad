@@ -21,7 +21,7 @@ cd ../
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   --disable-modules \
   $TIBEROPTS \
-  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}
+  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${march}
 
 
 make

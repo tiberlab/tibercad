@@ -50,13 +50,16 @@ make_windows_package () {
   cp ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf .
 
   cd $curdir
+  cd ${files}
 
   # copy cygwin system libraries
   test ! -x /usr/bin/cygcheck.exe && exit 1
 
-  for lib in `cygcheck windows/files/tibercad.exe | awk '/cyg/'` ; do
-    cp `cygpath -u -a $lib` ${files}
+  for lib in `cygcheck ./tibercad.exe | awk '/cyg/'` ; do
+    cp `cygpath -u -a $lib` .
   done
+
+  cd $curdir
 
   return
 }
