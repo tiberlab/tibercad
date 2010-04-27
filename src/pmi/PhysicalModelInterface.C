@@ -136,9 +136,9 @@ PhysicalModelInterface::create(const string& name,
     mod = FieldDependentMobility::create(options);
   else if (name == "mobility_field_assisted")
     mod = FieldAssistedMobility::create(options);
-  else if (name == "driftdiffusion_simple")
+  else if (name == "ddbulk_simple")
     mod = SimpleSemiconductorModel::create(options);
-  else if (name == "driftdiffusion_default")
+  else if (name == "ddbulk_default")
     mod = SemiconductorModel::create(options);
   else if (name == "dssc_default")
     mod = DSSCModel::create(options);

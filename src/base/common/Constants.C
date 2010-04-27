@@ -1,7 +1,8 @@
 // $Id$
 
 #include "Constants.h"
-#include <cmath>
+
+using namespace std;
 
 const double
 Constants::k_Boltzmann = 8.617343e-5;

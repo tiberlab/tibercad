@@ -9,6 +9,10 @@
 
 #include <dlfcn.h>
 
+#ifdef CYGWIN
+#define RTLD_NODELETE 0
+#define RTLD_NOLOAD 0
+#endif
 
 #ifdef DEBUG
 #define DLOPENFLAGS RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE

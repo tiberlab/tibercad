@@ -583,7 +583,7 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \return \c NULL if no model is present for \c elem
      */
-    template <typename T = PhysicalModel>
+    template <typename T>
     T* get_bulk_model(const Elem* elem) const;
 
 
@@ -591,7 +591,7 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \return \c NULL if no model is present for the given side
      */
-    template <typename T = PhysicalModel>
+    template <typename T>
     T* get_surface_model(const Elem* elem, int side) const;
 
 
@@ -599,7 +599,7 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \return \c NULL if no model is present for the given edge
      */
-    template <typename T = PhysicalModel>
+    template <typename T>
     T* get_edge_model(const Elem* elem, int edge) const;
 
 
@@ -607,7 +607,7 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \return \c NULL if no model is present for the given node
      */
-    template <typename T = PhysicalModel>
+    template <typename T>
     T* get_node_model(const Elem* elem, int node) const;
 
 

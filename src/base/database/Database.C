@@ -181,7 +181,8 @@ Database::check_data_file(const string& name) const
 
   ifstream infile;
   infile.open(name.c_str());
-  if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
+  //if (infile.fail() || !infile.good() || (infile.rdbuf()->in_avail() == 0))
+  if (infile.fail() || !infile.good())
     ans = false;
 
   return ans;

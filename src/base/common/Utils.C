@@ -167,8 +167,8 @@ Utils::convert_win32_path_to_posix(std::string& path)
     size_t pos = path.find(':');
     if (pos != string::npos)
     {
-      path[pos] = '/';
-      path = "cygdrive/" + path;
+      path.erase(pos, 1);
+      path = "/cygdrive/" + path;
     }
 
     // I do not remember if this had any sense:

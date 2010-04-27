@@ -3,6 +3,13 @@
 #ifndef _CONSTANTS_H_
 #define _CONSTANTS_H_
 
+#ifndef M_PI
+ #define M_PI		3.14159265358979323846
+#endif
+#ifndef M_2_SQRTPI	
+ #define M_2_SQRTPI	1.12837916709551257390
+#endif
+
 //! Physical constants
 /*!
  *

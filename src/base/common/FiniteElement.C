@@ -1,9 +1,10 @@
 // $Id$
 
 #include "FiniteElement.h"
-#include "quadrature.h"
+#include "Constants.h"
 
 #include "elem.h"
+#include "quadrature.h"
 
 using namespace std;
 

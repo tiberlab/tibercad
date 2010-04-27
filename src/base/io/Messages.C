@@ -9,6 +9,7 @@
 #include "InitFailedException.h"
 #include "TiberCad.h"
 #include "Utils.h"
+#include "tiber_config.h"
 
 #include <vector>
 
@@ -50,8 +51,12 @@ Messages::set_log_file(const string& logfile)
   using namespace boost::filesystem;
 
   path logpath(logfile, native);
+#ifdef CYGWIN
+  logpath = logpath.branch_path();
+#else
   logpath.remove_leaf();
   //logpath.remove_filename();
+#endif
   if (logpath.string().size() > 0)
   {
     if (!exists(logpath))
