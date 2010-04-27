@@ -4,6 +4,7 @@
 #define _ELEMENTSIDE_H_
 
 #include <utility>
+#include <string>
 
 
 class Elem;
