@@ -1,5 +1,3 @@
-// $Id$
-
 #include "tiber_config.h"
 #include "PhysicalModelInterface.h"
 #include "Material.h"
@@ -51,6 +49,7 @@
 
 #include  "ZbLatticeThermalConductivity.h"
 #include  "WzLatticeThermalConductivity.h"
+#include  "LinearThermalConductivity.h"
 #include  "HeatModel.h"
 #include  "DftbModel.h"
 #include  "EtbModel.h"
@@ -179,10 +178,14 @@ PhysicalModelInterface::create(const string& name,
     mod = WzDDsemiconductor::create(options);
   else if (name == "EFAmodel")
     mod = EFAbulkModel::create(options);
-  else if (name == "lat_therm_cond_zb")
+  else if (name == "lat_therm_cond_constant_zb")
     mod = ZbLatticeThermalConductivity::create(options);
-  else if (name == "lat_therm_cond_wz")
+  else if (name == "lat_therm_cond_constant_wz")
     mod = WzLatticeThermalConductivity::create(options);
+  else if (name == "lat_therm_cond_linear_zb")
+    mod = LinearThermalConductivity::create(options);
+  else if (name == "lat_therm_cond_linear_wz")
+    mod = LinearThermalConductivity::create(options);
   else if (name == "thermal")
     mod = HeatModel::create(options);
   else if  (name == "poisson")
@@ -551,5 +554,4 @@ PhysicalModelInterface::_create_submodels(void)
     get_options().delete_submodel(tmp_it);
   }
 }
-
 
