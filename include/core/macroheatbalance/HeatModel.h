@@ -197,6 +197,7 @@ inline
 void
 HeatModel::set_element(const Elem* elem)
 {
+ 
   // std::cout<<elem<<std::endl;
  _elem = elem;
 

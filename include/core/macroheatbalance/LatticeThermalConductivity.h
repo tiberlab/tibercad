@@ -4,8 +4,7 @@
 #define _LATTICETHERMALCONDUCTIVITY_H_
 
 #include "PhysicalModelInterface.h"
-
-
+#include "elem.h"
 
 //! Class to return the lattice thermal Conductivity
 /*!
@@ -27,6 +26,8 @@ public:
   ~LatticeThermalConductivity(){};
 
 
+  virtual void calculate(void){};
+
   //!provides conductivity in simulation system W/(cm K)
    void get_conductivity(Tensor2Sym& conductivity) const;
 
@@ -37,13 +38,18 @@ public:
   virtual void re_init(void)=0;
 
 
+  ///!Set the current element
+   void set_element(const Elem* elem);
+
 private:
 
 
 
 
-protected:
 
+protected:
+   //! Current element
+   const Elem* _elem;
   //! Temperature
    double _temperature;
 
@@ -82,6 +88,14 @@ LatticeThermalConductivity::rotate_to_calculation_system(const Tensor2Gen& RotMa
 
 }
 
+inline
+void
+LatticeThermalConductivity::set_element(const Elem* elem)
+{
+  // std::cout<<elem<<std::endl;
+ _elem = elem;
+
+}
 
 inline
 void
