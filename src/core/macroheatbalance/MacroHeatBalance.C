@@ -358,7 +358,9 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
     const Material* mat = _device->get_material(subdomain);
     HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
 
-    //heat_model->set_element(elem);
+  
+    heat_model->set_element(elem);
+
     //heat_model->set_side(-1);
 
     heat_model->re_init();
@@ -373,7 +375,7 @@ void MacroHeatBalance::do_assemble(EquationSystems& es, const std::string& syste
 
     
 
-    //std::cout<<mat->get_name()<<":  "<<kappa(1,1)<<std::endl;
+    // std::cout<<kappa(1,1)<<std::endl;
 
     for (unsigned int p1=0; p1<n_dofs; p1++) // loop over test function
     { // loop over test function
@@ -664,6 +666,7 @@ MacroHeatBalance::get_solution_secure(const Elem* elem, const vector<Point>& p,
   ID subdomain = elem->subdomain_id();
   const Material* mat = _device->get_material(subdomain);
   HeatModel* heat_model = (dynamic_cast<HeatModel*>(mat->get_model(get_id())));
+  heat_model->set_element(elem);
   heat_model->re_init();
   heat_model->get_thermal_conductivity(kappa);
 
@@ -769,6 +772,10 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     heat_model= dynamic_cast<HeatModel*>(
 					 device.get_material(subdomain)->get_model(get_id()));
 
+    heat_model->set_element(elem);
+
+    heat_model->re_init();
+    
     nm = heat_model->get_heat_source_IDs(ids);
 
     // std::vector<std::set<ID> > source_index(nm);
@@ -911,7 +918,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     int Kappa_xx = -1;
     int Kappa_zz = -1;
     if (variables.count("thermal") ||
-        variables.count("LatticeThermalCond") )
+        variables.count("kappa") )
     {
       Kappa = 0;
       Kappa_xx = n_vars;
@@ -978,7 +985,7 @@ MacroHeatBalance::build_elemental_results(const std::set<std::string>& variables
     const Material* mat = _device->get_material(subdomain);
     HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
 
-    //heat_model->set_element(elem);
+    heat_model->set_element(elem);
     //heat_model->set_side(-1);
 
     heat_model->re_init();
@@ -1177,11 +1184,9 @@ void MacroHeatBalance::build_nodal_results (const std::set< std::string > &varia
 	unsigned int id =  (elem->node(n) * n_vars) ;
 
 	if (Temp != -1)
-	{
-
 	  results[id+Temp]  =  (*(my_system->solution))(dof_indices[n]);
 
-	}
+	
 
       }
 
@@ -1316,7 +1321,7 @@ MacroHeatBalance::calculate_power_dissipated(void)
 	ID subdomain = elem->subdomain_id();
 	const Material* mat = _device->get_material(subdomain);
 	HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
-
+        heat_model->set_element(elem);
 	heat_model->re_init();
 
 	fe_face->reinit(elem, s);
@@ -1419,7 +1424,7 @@ MacroHeatBalance::calculate_power_dissipated_rstf(void)
     const Material* mat = _device->get_material(subdomain);
 
     HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
-    //heat_model->set_element(elem);
+    heat_model->set_element(elem);
     //heat_model->set_side(-1);
     heat_model->re_init();
     std::vector<double> heat_source;
@@ -1551,7 +1556,7 @@ MacroHeatBalance::calculate_power_emitted(void)
 
     HeatModel* heat_model =  (  dynamic_cast<HeatModel*> (  mat -> get_model(get_id()) )  );
 
-    //heat_model->set_element(elem);
+    heat_model->set_element(elem);
 
     //heat_model->set_side(-1);
 

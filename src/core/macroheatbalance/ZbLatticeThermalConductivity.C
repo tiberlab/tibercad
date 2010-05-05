@@ -9,7 +9,7 @@ void  ZbLatticeThermalConductivity::read_database(void)
   Database& db = get_database();
   db.set_section("thermal_conductivity/constant");
 
-  _kappa = db.get("therm_lat_cond", 0.0);
+  _kappa = db.get("therm_lat_cond_x", 0.0);
 
 //---------------------------------------------------------//
 }

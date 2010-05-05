@@ -59,9 +59,11 @@ void HeatModel::create_submodels()
   if (it != end)
   {
 
-
+    std::string type = (it->second).get_option("type","constant");
+    
+   std::cout<<type<<std::endl;
    kappa =dynamic_cast<LatticeThermalConductivity*>(
-  		      PhysicalModelInterface::create("lat_therm_cond_" +
+  		      PhysicalModelInterface::create("lat_therm_cond_" + type + "_" +
   	      get_material()->get_structure(), it->second));
 
 
@@ -76,8 +78,9 @@ void HeatModel::create_submodels()
    }
    else
   {
+    std::cout<<"CONSTANT"<<std::endl;
     kappa = dynamic_cast<LatticeThermalConductivity*>(
-  	  PhysicalModelInterface::create("lat_therm_cond_" +
+  	  PhysicalModelInterface::create("lat_therm_cond_constant_" +
   	get_material()->get_structure()));
 
     // add_submodel("lat_therm_cond", kappa);
@@ -86,14 +89,14 @@ void HeatModel::create_submodels()
     kappa->get_conductivity(_lattice_thermal_conductivity);
   }
  
-  //add_submodel("lat_therm_cond", kappa);
+  add_submodel("lat_therm_cond", kappa);
 
   get_options().delete_submodels("Lattice_thermal_conductivity");
 
   //add_submodel("lat_therm_cond", kappa);
-  //kappa->set_material(get_material());
-  //kappa->init();
-  //kappa->get_conductivity(_lattice_thermal_conductivity);
+  kappa->set_material(get_material());
+  kappa->init();
+  kappa->get_conductivity(_lattice_thermal_conductivity);
 
 
   //     std::cout<<get_material()->get_name()<<std::endl;
@@ -111,13 +114,13 @@ HeatModel::do_init(void)
 
   Database& db = get_database();
 
-  db.set_section("phonon_velocity/constant");
+  db.set_section("sound_velocity/constant");
   vg = db.get("vg", vg);
 
   //db.set_section("phonon_scattering/constant");
   //tg = db.get("tau_g", tg);
   
-  db.set_section("lattice_thermal_capacity/constant");
+  db.set_section("heat_capacity/constant");
   cg = db.get("C", cg);
 
   kg = _lattice_thermal_conductivity(1,1);
@@ -254,8 +257,9 @@ HeatModel::do_print_info(void)
 void
 HeatModel::re_init(void)
 {
-
-  // update_lattice_thermal_conductivity();
+  //   std::cout<<"INSIDE"<<std::endl;
+  //std::cout<<_elem->centroid()<<std::endl;
+   update_lattice_thermal_conductivity();
 
 }
 
@@ -263,7 +267,9 @@ void
 HeatModel::update_lattice_thermal_conductivity(void)
 {
 
- kappa->get_conductivity(_lattice_thermal_conductivity);
+  kappa->set_element(_elem);
+  kappa->calculate();
+  kappa->get_conductivity(_lattice_thermal_conductivity);
 
 }
 
