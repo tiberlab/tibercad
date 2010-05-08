@@ -49,8 +49,8 @@ As onsite
 's*'   17.8411D0   1
 'd'    12.1954D0   5
 
-In offset = 0.05D0
-As offset = 0.05D0
+In offset = -0.00016D0
+As offset = -0.00016D0
 
 # strain coefficient for the d orbitals
 In b_d parameter = 0.655D0
