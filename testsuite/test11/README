@@ -1,0 +1,4 @@
+test 11
+
+Simple kp 8x8 / Empirical tight binding comparison on a 5nm InAs/GaAs well. No strain (harrison scaling false) and no polarization.
+Useful to check Hamiltonian assembly, building 1D zincblenda, 8x8 simple kp, states plot (jvxl)

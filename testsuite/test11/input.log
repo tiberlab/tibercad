@@ -1,0 +1,261 @@
+
+TiberCAD version 1.5.0-1943
+
+Log start: Mon May 10 17:39:01 2010
+
+
+Input file: input.tib
+
+Initialize global simulation options
+  Simulation temperature: 1 K
+  Database search path  : /work/gpenazzi/TIBERCAD/trunk/materials
+  Log file              : input.log
+
+
+
+*** Warning:"mesh_units" in $Simulation section is deprecated  and should be moved to the device options.
+
+*** Warning:"dimension" in $Simulation section is deprecated  and should be moved to the device options.
+
+*** Warning:"meshfile" in $Simulation section is deprecated  and should be moved to the device options.
+Setup mesh
+  Reading mesh file well.msh ... done.
+  mesh units          : 1e-10 m
+  mesh dimension      :       1
+  number of nodes     :    2434
+  number of elements  :    2433
+  number of subdomains:       5
+
+
+Create materials ...
+  Added material InAs for region 'QW' (mesh regions 3)
+  Added material GaAs for region 'barrier_left' (mesh regions 5)
+  Added material GaAs for region 'barrier_right' (mesh regions 6)
+  Added material GaAs for region 'device_left' (mesh regions 4)
+  Added material GaAs for region 'device_right' (mesh regions 7)
+Creation of materials done.
+
+Setting up Cluster 'Quantum' containing regions 5, 6, 3
+Atomistic structure builder started 
+Building Atomistic Structure tb
+Starting passivation...
+Calculating Bond Map
+Bond Map completed
+Passivation done
+Calculating Bond Map
+Bond Map completed
+Calculating Bond Map
+Bond Map completed
+
+*** Warning:The specification of plot variables in the$Simulation section is deprecated. Put them into the model options
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /work/gpenazzi/TIBERCAD/trunk/lib/modules/driftdiffusion/driftdiffusion.so)
+
+  Setup of lower dimensional (boundary) models... 
+    Add boundary 'anode'
+    Add boundary 'cathode'
+
+  Creating bulk models... 
+
+*** Warning:The $Physics section is deprecated. 
+Options should be put into the 'options' block of the model instead.
+    (using /work/gpenazzi/TIBERCAD/trunk/lib/modules/driftdiffusion/ddbulk_default.so)
+
+
+*** Warning:physical_regions keyword is deprecated.
+
+Setting up simulation of type 'efaschroedinger' ...
+
+  Setup of lower dimensional (boundary) models... 
+
+  Creating bulk models... 
+
+
+*** Warning:physical_regions keyword is deprecated.
+
+Setting up simulation of type 'efaschroedinger' ...
+
+  Setup of lower dimensional (boundary) models... 
+
+  Creating bulk models... 
+
+
+*** Warning:physical_regions keyword is deprecated.
+
+Setting up simulation of type 'empirical_tb' ...
+
+  Setup of lower dimensional (boundary) models... 
+
+  Creating bulk models... 
+
+Setting up bulk models ...
+  (using /work/gpenazzi/TIBERCAD/trunk/lib/modules/driftdiffusion/mobility_constant.so)
+
+Setting up lower dimensional (boundary) models ...
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (driftdiffusion)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  Ec                       eV             real      nodal       y
+  Ev                       eV             real      nodal       y
+  eQFermi                  eV             real      nodal       n
+  hQFermi                  eV             real      nodal       n
+  ElPotential              V              real      nodal       n
+  Ec0                      eV             real      nodal       n
+  Ev0                      eV             real      nodal       n
+  Eg                       eV             real      nodal       n
+  eDensity                 cm^-3          real      nodal       y
+  hDensity                 cm^-3          real      nodal       y
+  eMobility                cm^2/(V*s)     real      nodal       n
+  hMobility                cm^2/(V*s)     real      nodal       n
+  eConductivity            S/cm           real      nodal       n
+  hConductivity            S/cm           real      nodal       n
+  ElField                  V/cm           vector    cell        n
+  Polarization             C/m^2          vector    cell        n
+  CurrentDensity           A/cm^2         vector    cell        n
+  eCurrentDensity          A/cm^2         vector    cell        n
+  hCurrentDensity          A/cm^2         vector    cell        n
+  IonizedDonors            cm^-3          real      nodal       n
+  IonizedAcceptors         cm^-3          real      nodal       n
+  eThElPower               eV/K           real      nodal       n
+  hThElPower               eV/K           real      nodal       n
+  eJoule                   W/cm^3         real      nodal       n
+  hJoule                   W/cm^3         real      nodal       n
+  ePowerFlux               W/cm^2         vector    nodal       n
+  hPowerFlux               W/cm^2         vector    nodal       n
+  ePeltier                 W/cm^3         real      nodal       n
+  hPeltier                 W/cm^3         real      nodal       n
+  RecombHeat               W/cm^3         real      nodal       n
+  NetRecombination         1/(s*cm^3)     real      nodal       n
+  ContactCurrent           A/cm^2         real      none        n
+  cathode.current          A/cm^2         real      none        n
+  anode.current            A/cm^2         real      none        n
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output
+  Output file format    : grace
+  Output file basename  : driftdiffusion
+
+
+  solving for : poisson 
+  using local scaling
+
+  Region QW, InAs
+    default semiconductor model (using k.p)
+    unstrained model
+  Region barrier_left, GaAs
+    default semiconductor model (using k.p)
+    unstrained model
+  Region barrier_right, GaAs
+    default semiconductor model (using k.p)
+    unstrained model
+  Region device_left, GaAs
+    default semiconductor model (using k.p)
+    unstrained model
+  Region device_right, GaAs
+    default semiconductor model (using k.p)
+    unstrained model
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for kp_electrons (efaschroedinger)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output
+  Output file format    : grace
+  Output file basename  : kp_electrons
+
+
+  Region QW, InAs
+  Region barrier_left, GaAs
+  Region barrier_right, GaAs
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for kp_holes (efaschroedinger)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output
+  Output file format    : grace
+  Output file basename  : kp_holes
+
+
+  Region QW, InAs
+  Region barrier_left, GaAs
+  Region barrier_right, GaAs
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tb (empirical_tb)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output
+  Output file format    : grace
+  Output file basename  : tb
+
+
+  Region QW, InAs
+  Region barrier_left, GaAs
+  Region barrier_right, GaAs
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+We solve: driftdiffusion tb 
+
+>>>>----------------------------------------------------------------------------
+driftdiffusion (name: driftdiffusion)
+
+  Solving equilibrium
+  it 1, |du| = 3957.14, |r| = 4.97473e-12
+
+  iterations: 2, |du| = 2.22875e-08, |r| = 1.31497e-12
+  Equilibrium done
+
+Solve time: 0.25 sec
+<<<<----------------------------- (driftdiffusion) -----------------------------
+
+
+>>>>----------------------------------------------------------------------------
+empirical_tb (name: tb)
+
+
+Solve time: 4 min 23.24 sec
+<<<<----------------------------------- (tb) -----------------------------------
+
+Simulation finished...
+Goodbye

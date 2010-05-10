@@ -1,0 +1,198 @@
+$Device
+{
+
+	Options
+	{
+	x-growth-direction = (0, 0, 1)
+	y-growth-direction = (0, 1, 0)
+	z-growth-direction = (1, 0, 0)
+	dielectric = true
+	}
+
+
+	Region QW
+	{
+	material = InAs
+	}
+
+	Region barrier_left
+	{
+	material =  GaAs
+	}
+
+	Region barrier_right
+	{
+	material =  GaAs
+	}
+
+	Region device_left
+	{
+	material = GaAs
+	}
+
+	Region device_right
+	{
+	material = GaAs
+	}
+
+	# group together the regions for the quantum simulation
+	Cluster Quantum
+	{
+	mesh_regions = (barrier_left, barrier_right, QW)
+	}
+}
+
+$Scale
+{
+	Atomistic tb
+	{
+	  reference_region = barrier_left
+	  physical_regions = Quantum
+	  passivation = yes
+	  print = (xyb, xyz, gen, tgn)
+	}
+
+}
+
+$Models
+{ 
+
+	model driftdiffusion
+	  { 
+
+	    options
+	    {
+	     simulation_name = driftdiffusion
+	     physical_regions = all
+	    }
+
+
+	    BC_Regions  
+	    {
+	      BC_Region anode
+	      {
+		type = ohmic
+		voltage = 0.0
+	      }
+      
+      
+	      BC_Region cathode
+	      {
+		type = ohmic
+		voltage = @Vb[0.0]  
+	      }
+	    }   
+
+ } 
+
+
+ 
+   model empirical_tb
+  {
+    options
+     {
+       physical_regions = Quantum
+       simulation_name = tb
+       atomistic_structure = tb
+       Harrison_scaling = false
+     }
+  }
+
+
+  model efaschroedinger
+	{
+	       options
+		{
+		simulation_name = kp_electrons
+		physical_regions = (barrier_left, barrier_right, QW)
+		particle = el
+		model = kp
+		kp_model = 8x8
+		spectrum_shift = -0.2
+		}
+	}
+
+  model efaschroedinger
+      {
+          options
+          {
+           simulation_name = kp_holes
+           physical_regions = (barrier_left, barrier_right, QW)
+	   particle = hl
+	   model = kp
+	   kp_model = 8x8
+	   spectrum_shift = -0.4
+	  }
+      }
+
+
+}
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  
+  tb
+  {
+    num_valence_eigenvalues = 4
+    num_conduction_eigenvalues = 4
+    potential_simulation = driftdiffusion
+    relativistic = true
+  }
+
+
+  driftdiffusion
+  {
+    nonlinear_solver = tiber
+    coupling = poisson
+    nonlin_rel_tol = 1e-14  
+    nonlin_abs_tol =  1e-50  
+    nonlin_step_tol = 1e-3
+
+    lin_rel_tol = 1e-6
+    nonlin_max_it = 30
+    discretization = fem
+    ls_max_step = 1.0 
+    pc_type = lu 
+
+  }
+ 
+  efaschroedinger
+    {
+    x-periodicity = false
+    Dirichlet_bc_everywhere = true   # if  false -&gt;  Neumann everywhere
+    number_of_eigenstates = 4 
+    poisson_model_name = driftdiffusion  #  potential from driftdiffusion
+    log_output= false
+    }
+
+}
+# Definition of  Model dependent physical parameters
+$Physics
+{
+  driftdiffusion 
+  {
+    statistics = FD
+  } 
+
+
+}
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  meshfile = well.msh 
+  mesh_units = 1e-10
+  dimension = 1
+  temperature = 1
+  #solve = (driftdiffusion, kp_electrons, kp_holes,  tb)
+  solve = (driftdiffusion, tb)
+  resultpath =  output
+
+  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, polarization, EigenFunctions, EigenEnergy,EnergyLevels,  tbstates, EigenFunctions, EigenEnergy,EnergyLevels)
+ 
+  output_format = grace
+
+}
