@@ -52,8 +52,8 @@ N onsite
 'd12'  30.4332D0   2
 
 #Valence band offset is used to align the valence band at 0.0 eV 
-Al offset =  -0.147385D0
-N offset =   -0.147385D0
+Al offset =  -0.14928109D0
+N offset =   -0.14928109D0
 
 # strain coefficient for the d orbitals
 Al b_d parameter = 0.0D0
@@ -88,7 +88,7 @@ N Al coupling 1
 'ddp'      6.4201D0    2.00D0
 'ddd'     -4.5012D0    2.00D0    
 
-N Al pair reference distance 1 = 1.903D0
+N Al pair reference distance 1 =  1.9026259D0
 
 
 
