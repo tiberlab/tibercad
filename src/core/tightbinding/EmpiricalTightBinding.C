@@ -549,7 +549,7 @@ void ETB::parse_options(void)
 
   _upt_options.check_bondmap = get_options().get_option("check_bondmap", false);
   _upt_options.harrison_flag = get_options().get_option("Harrison_scaling", true);
-  _upt_options.relat_flag = get_options().get_option("relativistic", false);
+  _upt_options.relat_flag = get_options().get_option("relativistic", true);
 
   _upt_options.temperature = get_options().get_option("temperature",
 						      SimulationOptions::temperature );
