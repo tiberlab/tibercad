@@ -6,6 +6,7 @@
 #include "BondMap.h"
 #include "Atom.h"
 #include "tensor.h"
+#include "Specie.h"
 
 #include <vector>
 #include <map>
@@ -96,7 +97,7 @@ private:
   void set_cutoff();
 
   //! Map for cutoff parameters
-  std::map<std::string, double> _cutoff;
+  std::map<Specie, double> _cutoff;
 
   //! Clean informations no more useful after bond map calculation
   void clean();

@@ -1,5 +1,9 @@
 #include "BondMap.h"
 #include "Messages.h"
+#include "Database.h"
+#include "Messages.h"
+#include <fstream>
+
 
 
 
@@ -23,15 +27,49 @@ BondMap::clean()
 void
 BondMap::set_cutoff()
 {
-  _cutoff["Si"] = 1.25;
-  _cutoff["Ga"] = 1.2;
-  _cutoff["As"] = 1.4;
-  _cutoff["N"] = 1.2;
-  _cutoff["Al"] = 1.2;
-  _cutoff["H"] = 0.05;
-  _cutoff["InGa"] = 1.4;
-  _cutoff["In"] = 1.2;
-  _cutoff["AlGa"] = 1.4;
+  std::ifstream file;
+  std::string database_path = Database::get_default_search_path();
+  std::string filename = "cutoff.dat";
+  std::string line, record;
+  std::stringstream line_stream;
+  Specie s;
+
+  filename = database_path + filename;
+
+
+    file.exceptions ( std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit );
+    try {
+      file.open(filename.c_str());
+    }
+    catch (std::ifstream::failure e) {
+      Messages::error("Exception opening/reading file cutoff.dat");
+    }
+
+    file.close();
+
+    while (!file.eof())
+      {
+      getline(file, line);
+      line_stream.str(std::string());
+      line_stream.clear(std::stringstream::goodbit);
+      line_stream << line;
+      line_stream >> record;
+      s = record;
+      line_stream >> record;
+
+      _cutoff[s] = atof(record.c_str());
+
+      }
+  //TODO: cutoff must be scecified in separated file
+  //_cutoff["Si"] = 1.25;
+  //_cutoff["Ga"] = 1.2;
+  //_cutoff["As"] = 1.4;
+  //_cutoff["N"] = 1.2;
+  //_cutoff["Al"] = 1.2;
+  //_cutoff["H"] = 0.05;
+  //_cutoff["InGa"] = 1.4;
+  //_cutoff["In"] = 1.2;
+  //_cutoff["AlGa"] = 1.4;
 }
 
 void
@@ -176,7 +214,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
   if ((i != j))
     {
 
-      cutofftmp = _cutoff[basis[i].get_specie().get_string().c_str()] + _cutoff[basis[j].get_specie().get_string().c_str()];
+      cutofftmp = _cutoff[basis[i].get_specie()] + _cutoff[basis[j].get_specie()];
       position1 = basis[i].get_position();
       position2 = basis[j].get_position() + period;
 

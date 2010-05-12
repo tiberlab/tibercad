@@ -371,9 +371,7 @@ AtomisticStructure::read_structure(const std::string& path)
   Atom tmp_atom;
   Tensor1 pos;
 
-  //#ifdef DEBUG
-  //  std::cerr << "AtomisticStructure::read_structure(path) begin \n";
-  //#endif
+  Messages::debug("Reading structure from file");
 
   // Delete eventually existing structure
   if (!(_structure_atoms.empty())) _structure_atoms.clear();
@@ -490,12 +488,6 @@ AtomisticStructure::read_structure(const std::string& path)
     getline(file, line);
 
     //  //This line clean stringstream in a safe way
-    //       line_string.clear(std::stringstream::goodbit);
-
-    //       //Don't know why these spaces are needed!!!!!!!!!!!!!!! check it!!!!
-    //       line_string << "                       ";
-
-    //try in this way
     line_string.str(std::string());
     line_string.clear(std::stringstream::goodbit);
     //---------------------------------------------
