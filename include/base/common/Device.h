@@ -624,7 +624,10 @@ inline
 AtomisticStructure*
 Device::get_atomistic_structure(const std::string& name)
 {
-  return _atomistic_structure_map[name];
+  if (_atomistic_structure_map.find(name) != _atomistic_structure_map.end())
+    return _atomistic_structure_map[name];
+  else
+    return NULL;
 }
 
 #endif //  __DEVICE_H__
