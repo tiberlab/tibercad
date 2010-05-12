@@ -38,6 +38,9 @@
 /* Define to 1 if complex SLEPc is available */
 #undef HAVE_COMPLEX_SLEPC
 
+/* Define to 1 if TAO is available */
+#undef HAVE_TAO
+
 /* Define if you have a readline compatible library */
 #undef HAVE_LIBREADLINE
 
