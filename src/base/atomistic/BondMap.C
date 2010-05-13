@@ -34,18 +34,15 @@ BondMap::set_cutoff()
   std::stringstream line_stream;
   Specie s;
 
-  filename = database_path + filename;
+  filename = database_path + "/" + filename;
 
-
-    file.exceptions ( std::ifstream::eofbit | std::ifstream::failbit | std::ifstream::badbit );
-    try {
+    
       file.open(filename.c_str());
-    }
-    catch (std::ifstream::failure e) {
+    if (!file)
+    {
       Messages::error("Exception opening/reading file cutoff.dat");
+      exit(1);
     }
-
-    file.close();
 
     while (!file.eof())
       {
@@ -60,6 +57,9 @@ BondMap::set_cutoff()
       _cutoff[s] = atof(record.c_str());
 
       }
+
+     file.close();
+
   //TODO: cutoff must be scecified in separated file
   //_cutoff["Si"] = 1.25;
   //_cutoff["Ga"] = 1.2;
