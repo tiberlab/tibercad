@@ -903,10 +903,13 @@ SimulationInterface::plot_meshdata(void)
       const SolutionDescriptor& descr = dit->first;
       vector<double>& vec = dit->second;
       vector<double>& sol = solutions[descr.id()];
+      
       if (sol.size() == 0)
+        continue;
+
+      if (descr.id() == RegionIDs)
       {
-        if (descr.id() == RegionIDs)
-          vec.push_back(subdomain);
+        vec.push_back(subdomain);
         continue;
       }
 
