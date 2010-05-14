@@ -14,8 +14,10 @@ class DSSCContact : public BoundaryProperties
     //! Constructor
     DSSCContact(const ModelOptions& options);
 
+
     //! Destructor
     ~DSSCContact(void) { };
+
 
     //! Create a contact
     static DSSCContact* create(const std::string& name,
@@ -25,8 +27,17 @@ class DSSCContact : public BoundaryProperties
     //! Get the contact potential
     double get_potential(void) const;
 
+
+    //! Get the contact load
+    double get_load(void) const;
+    
+
     //! Get the contact current
     double get_current(void) const;
+   
+
+    //! Get the exchange current
+    double get_ex_curr(void) const;
 
 
     //! Set the potential
@@ -35,10 +46,12 @@ class DSSCContact : public BoundaryProperties
 
     bool& is_cathode(void);
 
+
     void set_values(double I, double Idark, double I3, double I3dark);
 
 
     void set_open_circuit(bool open_circuit = true);
+
 
     bool is_open_circuit(void) const;
 
@@ -52,22 +65,31 @@ class DSSCContact : public BoundaryProperties
 
   private:
 
-    //! The boundary value (eg. applied voltage)
-    double _boundary_value;
+    //! The voltage (eg. applied voltage)
+    //double _boundary_value;
+    double _bias;
+
+
+    //! The external load
+    double _res;
+
 
     bool _cathode;
 
+
     double _Ioc;
     double _Idark;
-
     double _I3oc;
     double _I3dark;
 
     double _j0;
 
+
     double _beta;
 
+
     double _current;
+
 
     static bool _open_circuit;
 
@@ -75,9 +97,8 @@ class DSSCContact : public BoundaryProperties
     //! Set the open circuit potential and densities
     void set_OC_values(double Ioc, double Idark, double I3oc, double I3dark);
 
+
     void calculate_current(double I, double I3);
-
-
 
 };
 
@@ -90,10 +111,12 @@ inline
 DSSCContact::DSSCContact(const ModelOptions& options)
   // open circuit value
   : BoundaryProperties(options),
-    _boundary_value(1e10),
+    //_boundary_value(1e10),
+    _bias(0.0),
+    _res(1e10),
     _cathode(false),
     _j0(0.1),
-    _beta(0.78),
+    _beta(1.0),
     _current(0.0)
 {
 }
@@ -103,7 +126,8 @@ inline
 void
 DSSCContact::set_potential(double potential)
 {
-  _boundary_value = potential;
+  //_boundary_value = potential;
+  _bias = potential;
 }
 
 
@@ -111,7 +135,15 @@ inline
 double
 DSSCContact::get_potential(void) const
 {
-  return _boundary_value;
+  return _bias;
+}
+
+
+inline
+double
+DSSCContact::get_load(void) const
+{
+  return _res;
 }
 
 
@@ -122,6 +154,7 @@ DSSCContact::is_cathode(void)
 {
   return _cathode;
 }
+
 
 inline
 void
@@ -158,15 +191,12 @@ DSSCContact::set_values(double I, double Idark, double I3, double I3dark)
 }
 
 
-
-
 inline
 double
 DSSCContact::get_current(void) const
 {
   return _current;
 }
-
 
 
 inline
@@ -176,5 +206,13 @@ DSSCContact::is_open_circuit(void) const
   return _open_circuit;
 }
 
+
+inline
+double
+//DSSCContact::get_exchange_current
+DSSCContact::get_ex_curr(void) const
+{
+  return _j0;
+}
 
 #endif // _DSSCCONTACT_H_

@@ -169,6 +169,7 @@ DSSC::compute_scaling(Scaling::ScalingType type)
       dynamic_cast<DSSCModel*>(
           _device->get_material(elem->subdomain_id())->get_model(get_id()));
 
+    sc->reinit(elem);
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(0.0);
     sc->set_electric_field(RealGradient(0));
@@ -176,7 +177,6 @@ DSSC::compute_scaling(Scaling::ScalingType type)
     sc->set_grad_fermi_I(RealGradient(0));
     sc->set_grad_fermi_I3(RealGradient(0));
     sc->set_grad_fermi_C(RealGradient(0));
-    sc->reinit(elem);
 
     sc->calculate_densities();
 
@@ -197,6 +197,8 @@ DSSC::compute_scaling(Scaling::ScalingType type)
 
     double mu = sc->get_mobility_n();
     double C = sc->get_equilibrium_concentrations().n;
+    //double C1 = sc->get_generation_rate();
+    //C = (C > C1) ? C : C1;
     mu0 = (mu0 > mu) ? mu0 : mu;
     C0 = (C0 > C) ? C0 : C;
     _cond_scaling.n = (mu * C > _cond_scaling.n) ? mu * C : _cond_scaling.n;
@@ -419,8 +421,6 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
       //sc->set_potentials(u, en, eI, eI3, eC);
-      //cout << "u = " << u << endl;
-      //cout << "en = " << en << endl;
 
       sc->calculate_densities();
 
@@ -432,6 +432,8 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 
     double mu = sc->get_mobility_n();
     double C = sc->get_density_n();
+    //double C1 = sc->get_generation_rate();
+    //C = (C > C1) ? C : C1;
     mu0 = (mu0 > mu) ? mu0 : mu;
     C0 = (C0 > C) ? C0 : C;
     _cond_scaling.n = (mu * C > _cond_scaling.n) ? mu * C : _cond_scaling.n;
@@ -459,7 +461,6 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
     eps0 = (eps0 > eps) ? eps0 : eps;
   }
 
-  //cout << "_cond_scaling_n prima: " << _cond_scaling.n << endl;
   switch (type)
   {
     default: // UNITS
@@ -517,8 +518,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
   //_cond_scaling.C = 1;
   //get_scaling().set_scaling_type(type);
   get_scaling().set_potential_scaling(phi0);
-  get_scaling().set_density_scaling(C0);
-  //cout << "C0 " << C0 << endl;
+  //get_scaling().set_density_scaling(C0);
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
   get_scaling().set_density_scaling(C0);
@@ -530,7 +530,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 void
 DSSC::get_OC_values(void)
 {
-
+/*
   // references for nicer code
   const MeshBase& mesh = get_mesh();
   EquationSystems& eq_sys = get_equation_systems();
@@ -640,7 +640,7 @@ DSSC::get_OC_values(void)
     }
   }
 
-
+*/
 }
 
 
@@ -708,8 +708,9 @@ DSSC::do_solve(void)
   try
   {
     do_newton();
-    get_OC_values();
+    //get_OC_values();
     compute_scaling_only(_scaling_type);
+    //build_local_scaling();
   }
   catch (SolverException& e)
   {
@@ -955,6 +956,7 @@ DSSC::parse_const_options(void)
 
   const ModelOptions& opts = SimulationInterface::get_options();
 
+  //do_local_scaling_ = opts.get_option("local_scaling", true);
   do_local_scaling_ = opts.get_option("local_scaling", false);
 
   string scaling = opts.get_option("scaling", "");
@@ -963,7 +965,7 @@ DSSC::parse_const_options(void)
   else
     _scaling_type = Scaling::UNITS;
 
-  _light_from = opts.get_option("light_from", "anode");
+  //_light_from = opts.get_option("light_from", "anode");
 
 }
 
@@ -2058,8 +2060,8 @@ DSSC::calculate_currents_rstf(void)
 void
 DSSC::build_local_scaling(void)
 {
-/*
-  TiberNonlinearSystem* system =
+
+ /* TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
         get_equation_system_name());
 
@@ -2073,7 +2075,7 @@ DSSC::build_local_scaling(void)
 
   const unsigned int dim = mesh.mesh_dimension();
 
-  const Options& params = get_options();
+  //const Options& params = get_options();
 
   // the scaling parameters to scale back the result
   const Scaling& scaling = get_scaling();
@@ -2084,32 +2086,38 @@ DSSC::build_local_scaling(void)
   const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
 
 
+  // numeric ids corresponding to the variables
   const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
+  const unsigned int en_var = system->variable_number("fermi_n");
+  const unsigned int eI_var = system->variable_number("fermi_I");
+  const unsigned int eI3_var = system->variable_number("fermi_I3");
+  const unsigned int eC_var = system->variable_number("fermi_C");
 
   FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, params.integration_order);
+
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
 
   // Jacobian * quadrature weight at each integration point.
   const vector<Real>& JxW = fe->get_JxW();
-  //
+
   // physical coordinates of the quadrature points
   const vector<Point>& q_point = fe->get_xyz();
-  //
+
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
-  //
+
+  // element shape function gradients
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
 
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_eI;
+  vector<unsigned int> dof_indices_eI3;
+  vector<unsigned int> dof_indices_eC;
 
 
   local_scaling_.clear();
@@ -2121,7 +2129,7 @@ DSSC::build_local_scaling(void)
 
     for ( ; it != end; ++it)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
-        local_scaling_[(*it)->get_node(n)] = vector<double>(3, 0.0);
+        local_scaling_[(*it)->get_node(n)] = vector<double>(5, 0.0);
   }
 
 
@@ -2138,90 +2146,123 @@ DSSC::build_local_scaling(void)
 
     dof_map.dof_indices(elem, dof_indices_u, u_var);
     dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-    unsigned int n_dofs     = dof_indices_u.size();
+    dof_map.dof_indices(elem, dof_indices_eI, eI_var);
+    dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
+    dof_map.dof_indices(elem, dof_indices_eC, eC_var);
 
     DSSCModel* sc =
       dynamic_cast<DSSCModel*>(
           device.get_material(subdomain)->get_model(get_id()));
-    assert(sc != NULL);
 
-    sc->reinit(elem);
 
     fe->reinit(elem);
 
+    sc->reinit(elem);
+   
     assert(elem->n_nodes() == dof_indices_u.size());
-
-    RealGradient field(0.0);
-    for (unsigned int i = 0; i < dof_indices_u.size(); i++)
-      field += dphi[i][0] * solution(dof_indices_u[i]);
-    field *= -phi0;
-
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
-      // get the solution values at the quadrature point
+
+      unsigned int n_dofs = dof_indices_u.size();
+      // get the solution values at the centroid
       Real u  = 0.0;
       Real en = 0.0;
-      Real ep = 0.0;
+      Real eI = 0.0;
+      Real eI3 = 0.0;
+      Real eC = 0.0;
+      RealGradient dEfn(0);
+      RealGradient dEfI(0);
+      RealGradient dEfI3(0);
+      RealGradient dEfC(0);
       RealGradient e_field(0);
+      RealGradient dT(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * solution(dof_indices_u[i]);
         en += phi[i][qp] * solution(dof_indices_en[i]);
-        ep += phi[i][qp] * solution(dof_indices_ep[i]);
+        eI += phi[i][qp] * solution(dof_indices_eI[i]);
+        eI3 += phi[i][qp] * solution(dof_indices_eI3[i]);
+        eC += phi[i][qp] * solution(dof_indices_eC[i]);
+
+        dEfn += dphi[i][qp] * solution(dof_indices_en[i]);
+        dEfI += dphi[i][qp] * solution(dof_indices_eI[i]);
+        dEfI3 += dphi[i][qp] * solution(dof_indices_eI3[i]);
+        dEfC += dphi[i][qp] * solution(dof_indices_eC[i]);
         e_field += dphi[i][qp] * solution(dof_indices_u[i]);
       }
-
-
 
       // prepare for calculating local properties
       sc->set_coordinates(q_point[qp]);
 
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
 
-      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-      sc->set_electric_field(phi0 / x0 * e_field);
-      sc->set_grad_fermi_e(RealGradient(0.0));
-      sc->set_grad_fermi_h(RealGradient(0.0));
+      sc->set_electric_field(e_field);
+      sc->set_grad_fermi_n(dEfn);
+      sc->set_grad_fermi_I(dEfI);
+      sc->set_grad_fermi_I3(dEfI3);
+      sc->set_grad_fermi_C(dEfC);
 
       sc->calculate_densities();
-      sc->calculate_mobilities();
+      sc->calculate_net_recombination_rate();
+      
+      // the jacobian x weight x scaling
+      double J = JxW[qp];
+      
+      double mu_I = sc->get_mobility_I();
+      double mu_I3 = sc->get_mobility_I3();
+      double mu_C = sc->get_mobility_C();
+      double mu_n = sc->get_mobility_n();
+      
+      double sigma_I = mu_I * sc->get_density_I()* J;
+      double sigma_I3 = mu_I3 * sc->get_density_I3() * J;
+      double sigma_C = mu_C * sc->get_density_C() * J;
+      double sigma_n = mu_n * sc->get_density_n() * J;
 
+      double dn_dphi = sc->get_density_derivative_n();
+      double dI_dphi = sc->get_density_derivative_I();
+      double dI3_dphi = sc->get_density_derivative_I3();
+      double dC_dphi = sc->get_density_derivative_C();
       double epsilon = sc->get_relative_permittivity();
-      double l2_eps = JxW[qp] * l2 * epsilon;
-      //double l2_eps = JxW[qp] * epsilon;
+      double l2_eps = J * l2 * epsilon;
 
-      double sigma_e = JxW[qp] *
-        sc->get_electron_mobility() * sc->get_electron_density() / mu0;
-      double sigma_h = JxW[qp] *
-        sc->get_hole_mobility() * sc->get_hole_density() / mu0;
+      double R = 0.0;
+      R = sc->get_net_recombination_rate();
+      
+      double drho = dC_dphi - (dn_dphi + dI_dphi + dI3_dphi);
+        drho *= phi0;
 
+      double dR[4];
 
-      double dn_dphi = sc->get_electron_density_derivative();
-      double dp_dphi = sc->get_hole_density_derivative();
-      double dNd_dphi = sc->get_ionized_donor_density_derivative();
-      double dNa_dphi = sc->get_ionized_acceptor_density_derivative();
+      if (R == 0.0)
+        dR[0] = dR[1] = dR[2] = dR[3] = 0.0;
+      else
+      {
+        double dR_dn = sc->get_net_recombination_rate_derivatives()[0];
+        double dR_dI = sc->get_net_recombination_rate_derivatives()[1];
+        double dR_dI3 = sc->get_net_recombination_rate_derivatives()[2];
 
-      double drho;
-      drho = JxW[qp] * (dp_dphi - dNa_dphi - dn_dphi + dNd_dphi) * phi0 / C0;
-      if (sc->is_dielectric())
-        drho = 0.0;
-
+        dR[1] = -dR_dn * dn_dphi * phi0 * J;
+        dR[2] = -dR_dI * dI_dphi * phi0 * J; 
+        dR[3] = -dR_dI3 * dI3_dphi * phi0 * J;
+        dR[0] = -(dR[1] + dR[2] + dR[3]);
+      }
 
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         //local_scaling_[elem->get_node(i)][0] += sigma_e * phi[i][qp];
         //local_scaling_[elem->get_node(i)][1] += sigma_h * phi[i][qp];
-        local_scaling_[elem->get_node(i)][0] +=
-          sigma_e * (dphi[i][qp] * dphi[i][qp]);
-        local_scaling_[elem->get_node(i)][1] +=
-          sigma_h * (dphi[i][qp] * dphi[i][qp]);
-        local_scaling_[elem->get_node(i)][2] +=
-          l2_eps * (dphi[i][qp] * dphi[i][qp]) -
-          drho * phi[i][qp] * phi[i][qp];
+        local_scaling_[elem->get_node(i)][0] += sigma_n * (dphi[i][qp] * dphi[i][qp]) 
+                                                  - dR[1] * (phi[i][qp] * phi[i][qp]);
+        local_scaling_[elem->get_node(i)][1] += sigma_I * (dphi[i][qp] * dphi[i][qp])
+                                                  + 1.5 * dR[2] * (phi[i][qp] * phi[i][qp]);
+        local_scaling_[elem->get_node(i)][2] += sigma_I3 * (dphi[i][qp] * dphi[i][qp])
+                                                  - 0.5 * dR[3] * (phi[i][qp] * phi[i][qp]);
+        local_scaling_[elem->get_node(i)][3] += sigma_C * (dphi[i][qp] * dphi[i][qp]);
+        local_scaling_[elem->get_node(i)][4] += l2_eps * (dphi[i][qp] * dphi[i][qp])
+                                                  - J * drho * (phi[i][qp] * phi[i][qp]);
       }
 
 
@@ -2523,7 +2564,7 @@ DSSC::build_nodal_results(const set<string>& variables,
           local[id + Pot + 2] += eI / conn;
           local[id + Pot + 3] += eI3 / conn;
           local[id + Pot + 4] += eC / conn;
-          local[id + Pot + 5] += -0.5 * (3*eI - eI3 - 2*u) / conn;
+          local[id + Pot + 5] += 0.5 * (3*eI - eI3 - 2*u) / conn;
         }
 
       } // end loop over nodes
@@ -3082,10 +3123,28 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   double C0_I3 = _cond_scaling.I3;
   // scaling for C
   double C0_C = _cond_scaling.C;
+  // scaling for I + I3
+  double C0_tot = C0;
+  // scaling C
+  double scaling_C = 1.0;
+  // scaling I
+  double scaling_I = 1.0;
+  // scaling I3
+  double scaling_I3 = 1.0;
+  // scaling all charges 
+  double scaling_tot = 1.0;
+
 
 
   if (do_local_scaling_)
-    C0_e = C0_I = C0_I3 = C0_C = 1.0;
+  {
+    scaling_C = _cond_scaling.C;
+    scaling_I = _cond_scaling.I;
+    scaling_I3 = _cond_scaling.I3;
+    scaling_tot = scaling.get_density_scaling();
+    C0_tot = C0_e = C0_I = C0_I3 = C0_C = 1.0;
+  }
+  
 
 
   // scaling for recombination rates
@@ -3315,13 +3374,14 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     assert(sc != NULL);
     sc->reinit(elem);
 
-    sc->get_x0();
+    // get the light source
+    //sc->get_x0();
 
     // Get the temperature given the element
     //vector<double> T_nodes = sc->get_temperature_at_nodes();
 
 
-    vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(3, 1));
+    vector<vector<double> > local_scaling(elem->n_nodes(), vector<double>(5, 1));
     if (do_local_scaling_)
     {
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
@@ -3432,7 +3492,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         {
           double laplace = J * (dphi[i][qp] * dphi[j][qp]);
 
-          Kuu(i,j) += l2_eps * laplace / local_scaling[i][2];
+          Kuu(i,j) += l2_eps * laplace / local_scaling[i][4];
 
           if (!poisson_only())
           {
@@ -3443,12 +3503,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             {
               KII(i,j) += sigma_I * laplace / local_scaling[i][1];
 
-              KI3I3(i,j) += sigma_I3 * laplace / local_scaling[i][1];
+              KI3I3(i,j) += sigma_I3 * laplace / local_scaling[i][2];
 
-              KCC(i,j) += sigma_C * laplace / local_scaling[i][1];
-              //KCC(i,i) += 1;
-              //Kaa(i,j) += laplace;
-              //Kbb(i,j) += laplace;
+              KCC(i,j) += sigma_C * laplace / local_scaling[i][3];
               //Kaa(i,i) += 1;
               //Kbb(i,i) += 1;
             }
@@ -3479,7 +3536,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         double dC_dphi = sc->get_density_derivative_C();
 
         double drho = dC_dphi - (dn_dphi + dI_dphi + dI3_dphi);
-        drho *= phi0 / C0;
+        drho *= phi0 / C0_tot;
 
 
         double dR[4];
@@ -3509,10 +3566,14 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
-          double lap_e = (dphi[i][qp] * grad_en) / local_scaling[i][0];
-          double lap_I = (dphi[i][qp] * grad_eI) / local_scaling[i][1];
-          double lap_I3 = (dphi[i][qp] * grad_eI3) / local_scaling[i][1];
-          double lap_C = (dphi[i][qp] * grad_eC) / local_scaling[i][1];
+          //double lap_e = (dphi[i][qp] * grad_en) / local_scaling[i][0];
+          //double lap_I = (dphi[i][qp] * grad_eI) / local_scaling[i][1];
+          //double lap_I3 = (dphi[i][qp] * grad_eI3) / local_scaling[i][2];
+          //double lap_C = (dphi[i][qp] * grad_eC) / local_scaling[i][3];
+          double lap_e = (dphi[i][qp] * grad_en);
+          double lap_I = (dphi[i][qp] * grad_eI);
+          double lap_I3 = (dphi[i][qp] * grad_eI3);
+          double lap_C = (dphi[i][qp] * grad_eC);
           double dsigma_n_x_lap = dsigma_n * lap_e;
           double dsigma_I_x_lap = dsigma_I * lap_I;
           double dsigma_I3_x_lap = dsigma_I3 * lap_I3;
@@ -3520,12 +3581,12 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
           double volume = elem->volume();
 
-          cons_cat->add(dof_indices_eC[i], -phi0 * J * dC_dphi * phi[i][qp] / C0_C);
-          cons_cat->add(dof_indices_u[i], phi0 * J * dC_dphi * phi[i][qp]  / C0_C);
+          cons_cat->add(dof_indices_eC[i], -phi0 * J * dC_dphi * phi[i][qp] / C0_C / scaling_C );
+          cons_cat->add(dof_indices_u[i], phi0 * J * dC_dphi * phi[i][qp]  / C0_C / scaling_C );
 
-          cons_iodine->add(dof_indices_eI[i], -phi0 * J * dI_dphi * phi[i][qp] / (3.0*C0) );
-          cons_iodine->add(dof_indices_eI3[i], -phi0 * J * dI3_dphi * phi[i][qp] / C0 );
-          cons_iodine->add(dof_indices_u[i], phi0 * J * phi[i][qp] * ( ((1/3.0) * dI_dphi + dI3_dphi ) / C0) );
+          cons_iodine->add(dof_indices_eI[i], -phi0 * J * dI_dphi * phi[i][qp] / (3.0*C0_tot*scaling_tot) );
+          cons_iodine->add(dof_indices_eI3[i], -phi0 * J * dI3_dphi * phi[i][qp] / (C0_tot * scaling_tot) );
+          cons_iodine->add(dof_indices_u[i], phi0 * J * phi[i][qp] * ( ( (1/3.0) * dI_dphi + dI3_dphi ) / (C0_tot * scaling_tot) ) );
 
           for (unsigned int j = 0; j < n_dofs; j++)
           {
@@ -3543,20 +3604,20 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
             if (is_TiO2 && !poisson_only())
             {
-              Knu(i,j) += dsigma_n_x_phi;
-              Knn(i,j) -= dsigma_n_x_phi;
+              Knu(i,j) += dsigma_n_x_phi / local_scaling[i][0];
+              Knn(i,j) -= dsigma_n_x_phi / local_scaling[i][0];
             }
 
             if (is_electrolyte && !poisson_only())
             {
-              KIu(i,j) += dsigma_I_x_phi;
-              KII(i,j) -= dsigma_I_x_phi;
+              KIu(i,j) += dsigma_I_x_phi / local_scaling[i][1];
+              KII(i,j) -= dsigma_I_x_phi / local_scaling[i][1];
 
-              KI3u(i,j) += dsigma_I3_x_phi;
-              KI3I3(i,j) -= dsigma_I3_x_phi;
+              KI3u(i,j) += dsigma_I3_x_phi / local_scaling[i][2];
+              KI3I3(i,j) -= dsigma_I3_x_phi / local_scaling[i][2];
 
-              KCu(i,j) += dsigma_C_x_phi;
-              KCC(i,j) -= dsigma_C_x_phi;
+              KCu(i,j) += dsigma_C_x_phi / local_scaling[i][3];
+              KCC(i,j) -= dsigma_C_x_phi / local_scaling[i][3]; 
             }
 
 
@@ -3565,11 +3626,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             // The dFe_i/dX_j part
             double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
-            Kuu(i,j) -= drho * phi_i_x_phi_j / local_scaling[i][2];
+            Kuu(i,j) -= drho * phi_i_x_phi_j / local_scaling[i][4];
 
             if (is_TiO2)
             {
-              Kun(i,j) -= phi0 * dn_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0;
+              Kun(i,j) -= phi0 * dn_dphi * phi_i_x_phi_j / local_scaling[i][4] / C0_tot;
 
               if (!poisson_only())
               {
@@ -3580,16 +3641,16 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
             if (is_electrolyte)
             {
-              KuI(i,j) -= phi0 * dI_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0;
-              KuI3(i,j) -= phi0 * dI3_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0;
-              KuC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / local_scaling[i][2] / C0;
+              KuI(i,j) -= phi0 * dI_dphi * phi_i_x_phi_j / local_scaling[i][4] / C0_tot;
+              KuI3(i,j) -= phi0 * dI3_dphi * phi_i_x_phi_j / local_scaling[i][4] / C0_tot;
+              KuC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / local_scaling[i][4] / C0_tot;
 
               //Kau(i,j) -= phi0 * dC_dphi * phi_i_x_phi_j / C0_C;
               //KaC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / C0_C;
 
-              //Kbu(i,j) -= phi0 * (dI3_dphi + dI_dphi / 3.0) * phi_i_x_phi_j / C0;
-              //KbI(i,j) += phi0 * dI_dphi / 3.0 * phi_i_x_phi_j / C0;
-              //KbI3(i,j) += phi0 * dI3_dphi * phi_i_x_phi_j / C0;
+              //Kbu(i,j) -= phi0 * (dI3_dphi + dI_dphi / 3.0) * phi_i_x_phi_j / C0_tot;
+              //KbI(i,j) += phi0 * dI_dphi / 3.0 * phi_i_x_phi_j / C0_tot;
+              //KbI3(i,j) += phi0 * dI3_dphi * phi_i_x_phi_j / C0_tot;
 
               if (!poisson_only())
               {
@@ -3599,16 +3660,16 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                   KnI3(i,j) -= dR[3] * phi_i_x_phi_j / local_scaling[i][0] / R0_e;
 
                   KIn(i,j) += 1.5 * dR[1] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
-                  KI3n(i,j) -= 0.5 * dR[1] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
+                  KI3n(i,j) -= 0.5 * dR[1] * phi_i_x_phi_j / local_scaling[i][2] / R0_I3;
                 }
 
                 KIu(i,j) += 1.5 * dR[0] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
                 KII(i,j) += 1.5 * dR[2] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
                 KII3(i,j) += 1.5 * dR[3] * phi_i_x_phi_j / local_scaling[i][1] / R0_I;
 
-                KI3u(i,j) -= 0.5 * dR[0] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
-                KI3I(i,j) -= 0.5 * dR[2] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
-                KI3I3(i,j) -= 0.5 * dR[3] * phi_i_x_phi_j / local_scaling[i][1] / R0_I3;
+                KI3u(i,j) -= 0.5 * dR[0] * phi_i_x_phi_j / local_scaling[i][2] / R0_I3;
+                KI3I(i,j) -= 0.5 * dR[2] * phi_i_x_phi_j / local_scaling[i][2] / R0_I3;
+                KI3I3(i,j) -= 0.5 * dR[3] * phi_i_x_phi_j / local_scaling[i][2] / R0_I3;
               }
             }
           }
@@ -3622,7 +3683,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       if (residual != NULL)
       {
         // charge density
-        double J_x_rho = J * sc->get_charge_density() / C0;
+        double J_x_rho = J * sc->get_charge_density() / C0_tot;
 
         // net recombination rate
         double J_x_R = 0.0;
@@ -3632,22 +3693,35 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
-          double net_recomb = J_x_R * phi[i][qp] / local_scaling[i][0];
+          double net_recomb = J_x_R * phi[i][qp];
 
-          Fu(i) -= J_x_rho * phi[i][qp] / local_scaling[i][2];
+          Fu(i) -= J_x_rho * phi[i][qp] / local_scaling[i][4];
 
-          Fn(i) -= net_recomb / R0_e;
+          Fn(i) -= net_recomb / R0_e / local_scaling[i][0];
 
           // TODO factors
-          FI(i) += 1.5 * net_recomb / R0_I;
-          FI3(i) -= 0.5 * net_recomb / R0_I3;
+          FI(i) += 1.5 * net_recomb / R0_I / local_scaling[i][1];
+          FI3(i) -= 0.5 * net_recomb / R0_I3 / local_scaling[i][2];
 
           double volume = elem->volume();
 
           tot_cat += J * phi[i][qp] * n_C / C0_C;
-          tot_iodine += J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0;
+          tot_iodine += J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
           //Fa(i) -= J * phi[i][qp] * n_C / C0_C;
-          //Fb(i) -= J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0;
+          //Fb(i) -= J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
+          
+          /*cout << "local_scaling n = " << local_scaling[i][0] << "\n";
+          cout << "local_scaling I = " << local_scaling[i][1] << "\n";
+          cout << "local_scaling I3 = " << local_scaling[i][2] << "\n";
+          cout << "local_scaling C = " << local_scaling[i][3] << "\n";
+          cout << "local_scaling u = " << local_scaling[i][4] << "\n";*/
+          /*cout << "C_e = " << C0_e << "\n";
+          cout << "C_I = " << C0_I << "\n";
+          cout << "C_I3 = " << C0_I3 << "\n";
+          cout << "C_C = " << C0_C << "\n";
+          cout << "C_0 = " << C0_tot << "\n";
+         */
+
         }
       }
 
@@ -3658,7 +3732,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     set<unsigned int> nodes_on_boundary_sides;
 
 
-///*
+
     // now loop over the element sides to find boundary elements
     // and to include von Neumann and mixed type boundary conditions
     //
@@ -3806,51 +3880,56 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                   for (unsigned int j = 0; j < n_dofs; j++)
                   {
 
-                    double res = contact->get_potential() * x0;
+                    double res = contact->get_load() * x0;
 
-                    double Normal_I = x0 / (phi0 * C0_I * Constants::e );
-                    double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e );
+                    //double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
+                    //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
+                    double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
+                    double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
 
                     double J_phi_i_phi_j = J * phi_face[i][qp] * phi_face[j][qp];
 
-
-                    KIn(i,j) += 1.5 * J_phi_i_phi_j * Normal_I / res;
+                    //KIu(i,j) += 1.5 * 2 * J_phi_i_phi_j * Normal_I / res;
+                    //KII(i,j) += 1.5 * -1.5 * J_phi_i_phi_j * Normal_I / res;
+                    //KII3(i,j) += 1.5 * 0.5 * J_phi_i_phi_j * Normal_I / res;
                     KIu(i,j) += 1.5 * J_phi_i_phi_j * Normal_I / res;
-                    //KIu(s,s) += 1.5 * 2 * Normal_I / res;
-                    //KII(s,s) += 1.5 * -1.5 * Normal_I / res;
-                    //KII3(s,s) += 1.5 * 0.5 * Normal_I / res;
 
-                    KI3n(i,j) += -0.5 * J_phi_i_phi_j * Normal_I3 / res ;
-                    KI3u(i,j) += -0.5 * J_phi_i_phi_j * Normal_I3 / res ;
-                    //KI3u(s,s) += -0.5 * 2 * Normal_I3 / res;
-                    //KI3I(s,s) += -0.5 * -1.5 * Normal_I3 / res;
-                    //KI3I3(s,s) += -0.5 * 0.5 * Normal_I3 / res;
-
+                    //KI3u(i,j) += -0.5 * 2 * J_phi_i_phi_j * Normal_I3 / res;
+                    //KI3I(i,j) += -0.5 * -1.5 * J_phi_i_phi_j * Normal_I3 / res;
+                    //KI3I3(i,j) += -0.5 * 0.5 * J_phi_i_phi_j * Normal_I3 / res;
+                    KI3u(i,j) += -0.5 * J_phi_i_phi_j * Normal_I3 / res;
 
                   }
                 }
                 if (residual != NULL)
                 {
-                  double res = contact->get_potential() * x0;
-                  double Normal_I = x0 / (phi0 * C0_I * Constants::e );
-                  double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e );
+                  double res = contact->get_load() * x0;
+                  //double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
+                  //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
+                  double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
+                  double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
 
                   pot = -u;
-                  //pot = -Xu(s) - res;
-                  //pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
+                  //pot = -2*u + 1.5*eI - 0.5*eI3;
                   FI(i) += -1.5 * pot * J * phi_face[i][qp] * Normal_I / res ;
                   FI3(i) += 0.5 * pot * J * phi_face[i][qp] * Normal_I3 / res ;
 
                   //Fa(s) += _cation_amount / C0_C;
-                  //Fb(s) += _iodine_amount / C0;
+                  //Fb(s) += _iodine_amount / C0_tot;
                 }
               }
 
             }
             else
             {
-              if (n_cat == NULL)
-                n_cat = side->get_node(0);
+             
+             if (n_cat == NULL)
+             {
+               n_cat = side->get_node(0);
+               //local_scaling_C = local_scaling[s][3];
+               //local_scaling_I = local_scaling[s][1]; 
+             }
+
             }
 
          } //contact
@@ -3895,7 +3974,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             grad_eI3 += dphi_face[n][0](0) * XI3(n);
             grad_eC += dphi_face[n][0](0) * XC(n);
             e_field(0) += dphi_face[n][0](0) * Xu(n);
-
           }
 
           sc->set_electric_field(phi0 / x0 * e_field);
@@ -3926,114 +4004,101 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
           if (contact->is_cathode())
           {
-            for (unsigned int n = 0; n < elem->n_nodes(); n++)
-            {
-              //KII(s,n) -= sigma_I * dphi_face[n][0](0);
-              //KI3I3(s,n) -= sigma_I3 * dphi_face[n][0](0);
-            }
 
             if (jacobian != NULL)
             {
 
+                double res = contact->get_load() * x0;
+                //double j0 = contact->get_ex_curr();
+                //double kT = sc->get_lattice_temperature();
+	        //double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
+	        //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
+                double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
+                double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
 
+        	//double dn_dphi = sc->get_density_derivative_n();
+        	//double dI_dphi = sc->get_density_derivative_I();
+        	//double dI3_dphi = sc->get_density_derivative_I3();
+        	//double I_dark = sc->get_equilibrium_concentrations().I;
+        	//double I3_dark = sc->get_equilibrium_concentrations().I3;
 
-                double res = contact->get_potential() * x0;
-
-	        double Normal_I = x0 / (phi0 * C0_I * Constants::e );
-	        double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e );
-
-		double R = 0.0;
-                if ((is_TiO2 && is_electrolyte) && !poisson_only())
-                  R = sc->get_net_recombination_rate();
-                  double net_recomb = R / local_scaling[s][0];
-
-		double dR[4];
-        	double dn_dphi = sc->get_density_derivative_n();
-        	double dI_dphi = sc->get_density_derivative_I();
-        	double dI3_dphi = sc->get_density_derivative_I3();
-
-       		double dR_dn = sc->get_net_recombination_rate_derivatives()[0];
-       		double dR_dI = sc->get_net_recombination_rate_derivatives()[1];
-       		double dR_dI3 = sc->get_net_recombination_rate_derivatives()[2];
-
-       		dR[1] = -dR_dn * dn_dphi * phi0;
-       		dR[2] = -dR_dI * dI_dphi * phi0;
-       		dR[3] = -dR_dI3 * dI3_dphi * phi0;
-       		dR[0] = -(dR[1] + dR[2] + dR[3]);
-
-
-		for (unsigned int n = 0; n < elem->n_nodes(); n++)
-		{
-                   //Knn(s,n) += sign * sigma_n * dphi_face[n][0](0) / local_scaling[s][0];
-                   //KII(s,n) += sign * sigma_I * dphi_face[n][0](0) / local_scaling[s][1];
-                   //KI3I(s,n) += -(1/3) * sign * sigma_I * dphi_face[n][0](0) * (C0_I / C0_I3) / local_scaling[s][1];
-                   //KI3I3(s,n) += sign * sigma_I3 * dphi_face[n][0](0)  / local_scaling[s][1];
-		}
-
-	        //KIn(s,s) += (1.5 * Normal_I) / (res * local_scaling[s][1]);
-	        //KIu(s,s) += -(1.5 * Normal_I) / (res * local_scaling[s][1]);
-
-	        //KI3n(s,s) += (-0.5 * Normal_I3) / (res * local_scaling[s][1]);
-	        //KI3u(s,s) += -(-0.5 * Normal_I3) / (res * local_scaling[s][1]);
-
-                KIn(s,s) += 1.5 * Normal_I / res;
-                KIu(s,s) += 1.5 * Normal_I / res;
                 //KIu(s,s) += 1.5 * 2 * Normal_I / res;
                 //KII(s,s) += 1.5 * -1.5 * Normal_I / res;
                 //KII3(s,s) += 1.5 * 0.5 * Normal_I / res;
+                KIu(s,s) += 1.5 * Normal_I / res;
 
-                KI3n(s,s) += -0.5 * Normal_I3 / res ;
-                KI3u(s,s) += -0.5 * Normal_I3 / res ;
                 //KI3u(s,s) += -0.5 * 2 * Normal_I3 / res;
                 //KI3I(s,s) += -0.5 * -1.5 * Normal_I3 / res;
                 //KI3I3(s,s) += -0.5 * 0.5 * Normal_I3 / res;
+                KI3u(s,s) += -0.5 * Normal_I3 / res;
+                
+                //KIu(s,s) += 1.5 * sign * j0 * ( (1.0 / I3_dark) * dI3_dphi - (1.0 / I_dark) * dI_dphi ) * Normal_I;
+                //KII(s,s) += 1.5 * sign * j0 * (-1.0 / I_dark) * -dI_dphi * Normal_I;
+                //KII3(s,s) += 1.5 * sign * j0 * (1.0 / I3_dark) * -dI3_dphi * Normal_I;
+
+                //KI3u(s,s) += -0.5 * sign * j0 * ( (1.0 / I3_dark) * dI3_dphi - (1.0 / I_dark) * dI_dphi ) * Normal_I3;
+                //KI3I(s,s) += -0.5 * sign * j0 * (-1.0 / I_dark) * -dI_dphi * Normal_I3;
+                //KI3I3(s,s) += -0.5 * sign * j0 * (1.0 / I3_dark) * -dI3_dphi * Normal_I3;
+                
+                //for (unsigned int n = 0; n < elem->n_nodes(); n++)
+                //{
+                //  KI3u(s,n) += -(1/3) * dsigma_I * XI(n) * dphi_face[n][0](0) * C0_I/C0_I3 ;
+                //  KI3I(s,n) += -(1/3) * -dsigma_I * XI(n) * dphi_face[n][0](0) * C0_I/C0_I3 ;
+                //  KI3I(s,n) += -(1/3) * sigma_I * dphi_face[n][0](0) * C0_I/C0_I3 ;
+                //}
+
+                //for (unsigned int n = 0; n < elem->n_nodes(); n++)
+                //{
+                //  KIu(s,n) += -3 * dsigma_I3 * XI3(n) * dphi_face[n][0](0) * C0_I3/C0_I ;
+                //  KII3(s,n) += -3 * -dsigma_I3 * XI3(n) * dphi_face[n][0](0) * C0_I3/C0_I ;
+                //  KII3(s,n) += -3 * sigma_I3 * dphi_face[n][0](0) ;
+                //}
 
 
             }
             if (residual != NULL)
             {
-                double R = 0.0;
-                if ((is_TiO2 && is_electrolyte) && !poisson_only())
-                  R = sc->get_net_recombination_rate();
-                  double net_recomb = R / local_scaling[s][0];
-                double res = contact->get_potential() * x0;
-	        double Normal_I = x0 / (phi0 * C0_I * Constants::e );
-	        double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e );
+               double res = contact->get_load() * x0;
+	       double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
+	       double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
+               //double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
+               //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
+               
+               //double j0 = contact->get_ex_curr();
+               //double I_dark = sc->get_equilibrium_concentrations().I;
+               //double I3_dark = sc->get_equilibrium_concentrations().I3;
+               //double kT = sc->get_lattice_temperature();
 
-                pot = -Xu(s);
-                //pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
-                //pot = -Xu(s) - res;
-                //pot = -2*Xu(s) + 1.5 * XI(s) - 0.5 * XI3(s);
-                FI(s) += -1.5 * pot * Normal_I / res ;
-                FI3(s) += 0.5 * pot * Normal_I3 / res ;
+               //double density_I = sc->get_density_I();
+               //double density_I3 = sc->get_density_I3();
 
+               //pot =  -2*Xu(s) + 1.5*XI(s) - 0.5*XI3(s);
+               pot =  -Xu(s);
+               FI(s) += -1.5 * pot * Normal_I / res ;
+               FI3(s) += 0.5 * pot * Normal_I3 / res ;
+              
+               //FI(s) += -1.5 * sign * j0 * ( density_I3 / I3_dark  - density_I / I_dark ) * Normal_I;
+               //FI3(s) += 0.5 * sign * j0 * ( density_I3 / I3_dark  - density_I / I_dark ) * Normal_I3;
+               //FI3(s) += (1/3) * sigma_I * XI(s) * dphi_face[s][0](0) * C0_I/C0_I3;
+              
+               //for (unsigned int n = 0; n < elem->n_nodes(); n++)
+               //{
+               //  FI(s) += -3 * sigma_I3 * XI3(n) * dphi_face[n][0](0) * C0_I3/C0_I ;
+               //}
 
-                //Fa(s) += _cation_amount / C0_C;
-                //Fb(s) += _iodine_amount / C0;
+               //Fa(s) += _cation_amount / C0_C;
+               //Fb(s) += _iodine_amount / C0_tot;
              }
            }
            else
 	   {
+             
              if (n_cat == NULL)
+             {
                n_cat = side->get_node(0);
-
-
-	       double Normal_I = x0 / (phi0 * C0_I * Constants::e );
-               double res = contact->get_potential() * x0;
-
-	       if (jacobian != NULL)
-   	       {
-
-		 for (unsigned int n = 0; n < elem->n_nodes(); n++)
-		 {
-                    //Knn(s,n) += sign * sigma_n * dphi_face[n][0](0) / local_scaling[s][1];
-		 }
-	       }
-	       if (residual != NULL)
-	       {
-
-
-	       }
+               //local_scaling_C = local_scaling[s][3];
+               //local_scaling_I = local_scaling[s][1]; 
+             }
 
            }
 	}
@@ -4099,12 +4164,14 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             if (!contact->is_cathode())
             {
 
-               double res = contact->get_potential() * x0;
+               double bias = contact->get_potential();
 
-             // if (dim == 1 && res < 1e10)
-             // {
-                Ke.condense(i + n_dofs, i + n_dofs, 0.0, Fe);
-              //}
+               Ke.condense(i + n_dofs, i + n_dofs, bias, Fe);
+
+            }
+            else
+            {
+               
 
             }
           }
@@ -4152,8 +4219,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   }
   else
   {
-    residual->set(dof_cat, tot_cat - _cation_amount / C0_C);
-    residual->set(dof_iodine, tot_iodine - _iodine_amount / C0);
+    residual->set(dof_cat, tot_cat / scaling_C - _cation_amount / C0_C / scaling_C);
+    residual->set(dof_iodine, tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot);
     residual->close();
     residual->print_matlab("F.m");
   }

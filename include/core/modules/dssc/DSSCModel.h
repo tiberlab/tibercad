@@ -80,6 +80,7 @@ class DSSCModel : public PhysicalModel
     static DSSCModel* create(const std::string& name,
         const ModelOptions& options = ModelOptions());
 
+
     //! Create an instance of this class
     static DSSCModel* create(const ModelOptions& options);
 
@@ -97,6 +98,7 @@ class DSSCModel : public PhysicalModel
 
     //! Tells if this model is for TiO2
     bool is_TiO2(void) const;
+
 
     //! Get the TiO2 porosity
     /*!
@@ -125,20 +127,26 @@ class DSSCModel : public PhysicalModel
     void set_potentials(double electric_potential, double Ef_n = 0.0,
         double Ef_I = 0.0, double Ef_I3 = 0.0, double Ef_C = 0.0);
 
+
     //! Set coordinates of the contact under illumination
     void set_x0(double x0);
+
 
     //! Set the electric field
     void set_electric_field(const RealGradient& E);
 
+
     //! Set the gradient of the electron electro-chemical potential
     void set_grad_fermi_n(const RealGradient& grad_F);
+
 
     //! Set the gradient of the iodide electro-chemical potential
     void set_grad_fermi_I(const RealGradient& grad_F);
 
+
     //! Set the gradient of the triiodide electro-chemical potential
     void set_grad_fermi_I3(const RealGradient& grad_F);
+
 
     //! Set the gradient of the cation electro-chemical potential
     void set_grad_fermi_C(const RealGradient& grad_F);
@@ -147,22 +155,22 @@ class DSSCModel : public PhysicalModel
     //! Get coordinates of the contact under illumination
     const double get_x0() const;
 
-
-    //! Get external potential
-    const double get_Vext() const;
-    
     
     //! Get the electric field
     const RealGradient& get_electric_field(void) const;
 
+
     //! Get the gradient of the electron electro-chemical potential
     const RealGradient& get_grad_fermi_n(void) const;
+
 
     //! Get the gradient of the iodide electro-chemical potential
     const RealGradient& get_grad_fermi_I(void) const;
 
+
     //! Get the gradient of the triiodide electro-chemical potential
     const RealGradient& get_grad_fermi_I3(void) const;
+
 
     //! Get the gradient of the cation electro-chemical potential
     const RealGradient& get_grad_fermi_C(void) const;
@@ -175,6 +183,7 @@ class DSSCModel : public PhysicalModel
     //! Get the element we are currently working on
     const Elem* get_element(void) const;
 
+
     //! Get the coordinates of the point we are currently working on
     const Point& get_coordinates(void) const;
 
@@ -182,8 +191,10 @@ class DSSCModel : public PhysicalModel
     //! Set the lattice temperature (in K)
     void set_lattice_temperature(double T);
 
+
     //! Get the lattice temperature (in units of eV)
     double get_lattice_temperature(void) const;
+
 
     //! Calculate electron and hole densities and derivatives
     /*!
@@ -232,7 +243,6 @@ class DSSCModel : public PhysicalModel
 
     //! Get the ionized dye density
     double get_ionized_dye_density(void) const;
-
 
 
     //! Get the total charge density
@@ -284,14 +294,12 @@ class DSSCModel : public PhysicalModel
       { return _mobility.C; };
 
 
-
     //! Get all the nodal temperatures for a given element
     //std::vector<double>& get_temperature_at_nodes(void);
 
 
     //! Get the equilibrium concentrations
     const EquilibriumConcentrations& get_equilibrium_concentrations(void) const;
-
 
 
   protected:
@@ -332,20 +340,24 @@ class DSSCModel : public PhysicalModel
 
       double ionized_dye;
 
+
       //! The recombination
       double recombination_rate;
 
+
       //! The recombination rate derivatives
       std::vector<double> recombination_rate_derivatives;
+
 
       //! The generation
       double generation_rate;
     };
 
 
-
     /*! \copydoc PhysicalModel::read_database() */
-    virtual void read_database(void) { };
+    //virtual void read_database(void) { };
+    /*! \copydoc PhysicalModel::read_database() */
+    virtual void read_database(void);
 
 
     //! Initialize this model
@@ -378,7 +390,6 @@ class DSSCModel : public PhysicalModel
     virtual void do_print_info(void);
 
 
-
     //! Get the temperature interface
     TemperatureInterface& get_temperature_interface(void);
 
@@ -389,7 +400,6 @@ class DSSCModel : public PhysicalModel
 
     //! Get the pointwise data
     PointData& get_pd(void);
-
 
 
   private:
@@ -425,7 +435,12 @@ class DSSCModel : public PhysicalModel
     //! The relative permittivity tensor
     double _permittivity;
 
+    //! The permittivity oxide
+    double _perm_ox;
 
+    //! The permittivity electrolyte
+    double _perm_elec;
+    
     //! The nodal lattice temperature
     //std::vector<double> _nodal_lattice_vt;
 
@@ -486,8 +501,9 @@ class DSSCModel : public PhysicalModel
     double _deltaG;
 
 
-    //! absorption coefficient
-    double _Vext;
+    //! beta factor
+    double _beta;
+
 };
 
 
@@ -501,8 +517,9 @@ DSSCModel*
 DSSCModel::create(const std::string& name,
     const ModelOptions& options)
 {
-  return dynamic_cast<DSSCModel*>(
-      PhysicalModelInterface::create("dscbulk_" + name, options));
+  //return dynamic_cast<DSSCModel*>(
+  //    PhysicalModelInterface::create("dscbulk_" + name, options));
+  return new DSSCModel(options);
 }
 
 
@@ -546,14 +563,12 @@ DSSCModel::set_coordinates(const Point& p)
 }
 
 
-
 inline
 double
 DSSCModel::get_electric_potential(void) const
 {
   return _pd.electric_potential;
 }
-
 
 
 inline
@@ -569,14 +584,12 @@ DSSCModel::set_potentials(double electric_potential, double Ef_n,
 }
 
 
-
 inline
 void
 DSSCModel::set_x0(double x0)
 {
   _x0 = x0;
 }
-
 
 
 inline
@@ -603,7 +616,6 @@ DSSCModel::set_grad_fermi_I(const RealGradient& grad_F)
 }
 
 
-
 inline
 void
 DSSCModel::set_grad_fermi_I3(const RealGradient& grad_F)
@@ -612,24 +624,12 @@ DSSCModel::set_grad_fermi_I3(const RealGradient& grad_F)
 }
 
 
-
 inline
 void
 DSSCModel::set_grad_fermi_C(const RealGradient& grad_F)
 {
   _pd.grad_fermi_C = grad_F;
 }
-
-
-
-
-inline
-const double
-DSSCModel::get_Vext(void) const
-{
-  return _Vext;
-}
-
 
 
 inline
@@ -648,14 +648,12 @@ DSSCModel::get_electric_field(void) const
 }
 
 
-
 inline
 const RealGradient&
 DSSCModel::get_grad_fermi_n(void) const
 {
   return _pd.grad_fermi_n;
 }
-
 
 
 inline
@@ -666,14 +664,12 @@ DSSCModel::get_grad_fermi_I(void) const
 }
 
 
-
 inline
 const RealGradient&
 DSSCModel::get_grad_fermi_I3(void) const
 {
   return _pd.grad_fermi_I3;
 }
-
 
 
 inline
@@ -684,16 +680,12 @@ DSSCModel::get_grad_fermi_C(void) const
 }
 
 
-
-
-
 inline
 void
 DSSCModel::set_lattice_temperature(double T)
 {
   _pd.kT = T * Constants::k_B;
 }
-
 
 
 inline
@@ -729,15 +721,12 @@ DSSCModel::get_charge_density(void) const
 }
 
 
-
-
 inline
 PhysicalModelInterface*
 DSSCModel::create_new(void) const
 {
   return new DSSCModel(get_options());
 }
-
 
 
 inline
@@ -772,14 +761,12 @@ DSSCModel::get_recombination_rate(void) const
 }
 
 
-
 inline
 double
 DSSCModel::get_net_recombination_rate(void) const
 {
   return (_pd.recombination_rate - _pd.generation_rate);
 }
-
 
 
 inline
@@ -798,15 +785,12 @@ DSSCModel::get_ionized_dye_density(void) const
 }
 
 
-
-
 inline
 double
 DSSCModel::get_density_C(void) const
 {
   return _pd.density_C;
 }
-
 
 
 inline
@@ -817,14 +801,12 @@ DSSCModel::get_density_derivative_C(void) const
 }
 
 
-
 inline
 double
 DSSCModel::get_density_n(void) const
 {
   return _pd.density_n;
 }
-
 
 
 inline
@@ -835,14 +817,12 @@ DSSCModel::get_density_derivative_n(void) const
 }
 
 
-
 inline
 double
 DSSCModel::get_density_I(void) const
 {
   return _pd.density_I;
 }
-
 
 
 inline
@@ -853,14 +833,12 @@ DSSCModel::get_density_derivative_I(void) const
 }
 
 
-
 inline
 double
 DSSCModel::get_density_I3(void) const
 {
   return _pd.density_I3;
 }
-
 
 
 inline
@@ -871,13 +849,11 @@ DSSCModel::get_density_derivative_I3(void) const
 }
 
 
-
 inline
 const DSSCModel::EquilibriumConcentrations&
 DSSCModel::get_equilibrium_concentrations(void) const
 {
   return _eq_conc;
 }
-
 
 #endif /* _DSSCMODEL_H_ */

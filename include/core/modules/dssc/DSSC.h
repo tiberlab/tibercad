@@ -53,6 +53,7 @@ class DSSC : public SimulationInterface
     //! Constructor
     DSSC(const ModelOptions& options);
 
+
     //! Destructor
     virtual ~DSSC(void);
 
@@ -193,7 +194,6 @@ class DSSC : public SimulationInterface
   private:
 
 
-
     // for nicer code
     typedef std::map<const Boundary*, double> ContactData;
     typedef std::map<const Node*, Boundary*> BoundaryNodeList;
@@ -207,6 +207,7 @@ class DSSC : public SimulationInterface
       double C;
     };
 
+
     ConductivityScaling _cond_scaling;
 
 
@@ -216,8 +217,10 @@ class DSSC : public SimulationInterface
      */
     static DSSC* _this;
 
+
     //! An internal pointer to the device
     Device* _device;
+
 
     /*!
      * A list of nodes with dirichlet boundary conditions
@@ -228,25 +231,28 @@ class DSSC : public SimulationInterface
     //! The total number of cations
     double _cation_amount;
 
+
     //! The total amount of iodine
     double _iodine_amount;
+
 
     /*!
      * If @c true, the equation system needs to be rebuilt
      */
     bool _rebuild_eq_system;
 
+
     //! Do only Poisson if true
     bool _poisson_only;
+
 
     //! Tells if we are doing only Poisson
     bool poisson_only(void) const;
 
-    //! from where the light comes from
-    std::string _light_from;
 
-    //! coordinates of the contact from where the light comes from (from from)
+    //! coordinates of the contact from where the light comes 
     Point _x0;
+
 
     //! The type of scaling
     Scaling::ScalingType _scaling_type;
@@ -281,10 +287,12 @@ class DSSC : public SimulationInterface
     //! Calculate the local density scaling on each node
     void build_local_scaling(void);
 
+
     /**
      * The number of nonlinear iterations needed
      */
     unsigned int _n_nonlinear_iterations;
+
 
     /**
      * The final residual norm
@@ -295,13 +303,13 @@ class DSSC : public SimulationInterface
     //! disable the copy constructor
     DSSC(const DSSC& rhs);
 
+
     //! disable the copy assignment operator
     DSSC& operator=(const DSSC& rhs);
 
 
     //! Parse the options which will not change between calls to solve()
     void parse_const_options(void);
-
 
 
     //! Rebuild the equation system if needed
@@ -313,7 +321,6 @@ class DSSC : public SimulationInterface
      * scaling type \p type
      */
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
-
     void compute_scaling_only(Scaling::ScalingType type = Scaling::UNITS);
 
 
@@ -323,6 +330,7 @@ class DSSC : public SimulationInterface
 
     //! Find nods on boundary TiO2/electrolyte
     void find_internal_boundary_nodes(void);
+
 
     //! Tells if node lies on an inner TiO2/electrolyte boundary
     bool is_internal_boundary_node(const Node* node) const;
@@ -334,7 +342,6 @@ class DSSC : public SimulationInterface
      * touching simulation voltages and solutions.
      */
     void reset_solver(void);
-
 
 
     //! Cleanup solver environment.
@@ -423,13 +430,13 @@ class DSSC : public SimulationInterface
 // inline member functions
 //
 
+
 inline
 DSSC*
 DSSC::create(const ModelOptions& options)
 {
   return new DSSC(options);
 }
-
 
 
 inline
@@ -439,12 +446,14 @@ DSSC::get_n_nonlinear_iterations(void) const
   return _n_nonlinear_iterations;
 }
 
+
 inline
 double
 DSSC::get_final_residual(void) const
 {
   return _final_residual;
 }
+
 
 inline
 const std::map<const Boundary*, double>&
@@ -480,7 +489,6 @@ DSSC::is_internal_boundary_node(const Node* node) const
 
   return result;
 }
-
 
 
 #endif // _DSSC_H_

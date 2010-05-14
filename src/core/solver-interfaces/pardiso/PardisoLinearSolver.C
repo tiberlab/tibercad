@@ -290,13 +290,13 @@ void PardisoLinearSolver::solve_pardiso(double *a, int *ia, int *ja, double *b, 
 
 
     if (error != 0) {
+	printf("\nERROR during solution: %d", error);
 
         phase = -1; /* Release internal memory. */
 	PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
 		 &n, &ddum, ia, ja, &idum, &nrhs,
 		 iparm, &msglvl, &ddum, &ddum, &error);
 
-	printf("\nERROR during solution: %d", error);
       	throw PardisoSolverException(error);
       
     }
