@@ -849,6 +849,32 @@ DriftDiffusion::do_equilibrium(void)
 
   //parse_options();
 
+  // update the number of components of the band edge variables
+  {
+    size_t num_cb = 0;
+    size_t num_vb = 0;
+
+    const set<PhysicalModel*>& pm = get_physical_models();
+    set<PhysicalModel*>::const_iterator it(pm.begin());
+    set<PhysicalModel*>::const_iterator end(pm.end());
+    for ( ; it != end; ++it)
+    {
+      DriftDiffusionProperties* sc =
+          static_cast<DriftDiffusionProperties*>(*it);
+      
+      // the conduction bands
+      const vector<double>& cb = sc->get_conduction_bands();
+      num_cb = max(num_cb, cb.size());
+      
+      // the valence bands
+      const vector<double>& vb = sc->get_valence_bands();
+      num_vb = max(num_vb, vb.size());
+    }
+
+    declare_solution(ConductionBands, NTUPLE, CELL, "eV", num_cb);
+    declare_solution(ValenceBands, NTUPLE, CELL, "eV", num_vb);
+  }
+
 
   // first we have to compute the scaling
   compute_scaling(get_my_options().scaling_type);
@@ -1241,6 +1267,10 @@ DriftDiffusion::do_setup_solution_variables(void)
   declare_solution(Ec0, REAL, NODES, "eV");
   declare_solution(Ev0, REAL, NODES, "eV");
 
+  // the correct number of components will be inserted afterwards
+  declare_solution(ConductionBands, NTUPLE, CELL, "eV", 1);
+  declare_solution(ValenceBands, NTUPLE, CELL, "eV", 1);
+
   declare_solution(Polarization, VECTOR, CELL, "C/m^2");
 
   declare_solution(eDensity, REAL, NODES, "cm^-3");
@@ -1280,6 +1310,9 @@ DriftDiffusion::do_setup_solution_variables(void)
   declare_solution(NetRecombination, REAL, NODES, "1/(s*cm^3)");
   // add the single recombination rates
   {
+    //size_t num_cb = 1;
+    //size_t num_vb = 1;
+
     bool plot_rec = plot_solution(NetRecombination);
     const set<PhysicalModel*>& pm = get_physical_models();
     set<PhysicalModel*>::const_iterator it(pm.begin());
@@ -1288,6 +1321,14 @@ DriftDiffusion::do_setup_solution_variables(void)
     {
       DriftDiffusionProperties* sc =
           static_cast<DriftDiffusionProperties*>(*it);
+      
+      // the conduction bands
+      //const vector<double>& cb = sc->get_conduction_bands();
+      //num_cb = max(num_cb, cb.size());
+      
+      // the valence bands
+      //const vector<double>& vb = sc->get_valence_bands();
+      //num_vb = max(num_vb, vb.size());
 
       vector<ID> ids;
       int n = sc->get_net_recombination_rate_IDs(ids);
@@ -1554,13 +1595,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (values.count(Eg))
       values[Eg][n] =
         sc->get_conduction_band_edge() - sc->get_valence_band_edge();
-/*
-    if (ids.count(VBANDEDGEINTR))
-      values[n][VBANDEDGEINTR] = sc->get_valence_band_edge();
 
-    if (ids.count(CBANDEDGEINTR))
-      values[n][CBANDEDGEINTR] = sc->get_conduction_band_edge();
-*/
     if (values.count(eDensity))
       values[eDensity][n] = edens;
 
@@ -1712,6 +1747,20 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     values[hCurrentDensity][0] = jp(0) / np;
     values[hCurrentDensity][1] = jp(1) / np;
     values[hCurrentDensity][2] = jp(2) / np;
+  }
+
+  if (values.count(ConductionBands))
+  {
+    const vector<double>& cb = sc->get_conduction_bands();
+    for (size_t i = 0; i < cb.size(); ++i)
+      values[ConductionBands][i] = cb[i];
+  }
+
+  if (values.count(ValenceBands))
+  {
+    const vector<double>& vb = sc->get_valence_bands();
+    for (size_t i = 0; i < vb.size(); ++i)
+      values[ValenceBands][i] = vb[i];
   }
 
 }
@@ -4367,6 +4416,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         dRp[2] = -dRp_dp * dp_dphi * phi0 / R0_h;
         dRp[0] = -(dRp[1] + dRp[2]);
 
+
         if (Rn == 0.0)
           dRn[0] = dRn[1] = dRn[2] = 0.0;
         if (Rp == 0.0)
@@ -5168,16 +5218,21 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   {
     jacobian->close();
     //jacobian->print_matlab("J.m");
+    //if (coupling & ELECTRONS) __private_counter++;
+    //if (__private_counter == 2) exit(0);
   }
   else
   {
     residual->close();
     //residual->print_matlab("F.m");
-    //ostringstream os;
-    //os << "_" << __private_counter;
-    //write_nodal_vector("residual" + os.str(), *residual);
-    //write_nodal_vector("x" + os.str(), x);
-    //__private_counter++;
+    //if (coupling & ELECTRONS)
+    //{
+    //  ostringstream os;
+    //  os << "_" << __private_counter;
+    //  write_nodal_vector("residual" + os.str(), *residual);
+    //  write_nodal_vector("x" + os.str(), x);
+    //  __private_counter++;
+    //}
   }
 
 

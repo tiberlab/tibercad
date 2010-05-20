@@ -1925,9 +1925,8 @@ SimulationInterface::declare_solution_ext(const std::string& name, ID id,
     SolutionDescriptor::Type type, SolutionDescriptor::Location location,
     const std::string& units, unsigned int n_comp)
 {
-  _solution_descriptors.insert(
-      make_pair(id, SolutionDescriptor(name, id, type, location,
-          units, n_comp)));
+  _solution_descriptors[id] = SolutionDescriptor(name, id, type, location,
+          units, n_comp);
   _solution_ids[name] = id;
 
   bool plot_all = _plotvariables.count("all");

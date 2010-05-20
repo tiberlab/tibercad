@@ -926,6 +926,9 @@ class SimulationInterface : public TiberModelObject
      * declare_solution(Field, VECTOR, CELL, "V/m");
      * declare_solution(Potential, REAL, NODAL, "V");
      * \endcode
+     *
+     * \note You can call declare_solution() more than once for the same id, but this
+     * will overwrite the solution descriptor inserted before!
      */
     void declare_solution_ext(const std::string& name, ID id,
         SolutionDescriptor::Type type, SolutionDescriptor::Location location,

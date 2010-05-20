@@ -104,6 +104,8 @@ class DriftDiffusion : public SimulationInterface
       //CBANDEDGEINTR,    /*!< intrinsic conduction band edge */
       //VBANDEDGEINTR,    /*!< intrinsic valence band edge */
       Eg,               /*!< band gap */
+      ConductionBands,  /*!< the conduction band energies */
+      ValenceBands,     /*!< the valence band energies */
       eDensity,         /*!< electron density */
       hDensity,         /*!< hole density */
       eMobility,        /*!< electron mobility */
