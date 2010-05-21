@@ -334,12 +334,12 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 
 
 	      // pot_shift is without "-" because the minus-sign is explicitly set in the
-	      // TB-codes. For Ef,n and Ef,p we need to change sign.
+	      // TB-codes. 
 	      _pot_shift[i] = model.get_potential(_atomistic_structure->
 						  get_structure_atoms()[i].get_elem(), p);
-	      _el_chem_pot[i] = -model.get_el_chem_potential(_atomistic_structure->
+	      _el_chem_pot[i] = model.get_el_chem_potential(_atomistic_structure->
 	                                          get_structure_atoms()[i].get_elem(), p);
-	      _hl_chem_pot[i] = -model.get_hl_chem_potential(_atomistic_structure->
+	      _hl_chem_pot[i] = model.get_hl_chem_potential(_atomistic_structure->
 	                                          get_structure_atoms()[i].get_elem(), p);
 	      //std::cout << " shifting " << _pot_shift[i] << std::endl;
 	    }
