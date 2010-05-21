@@ -229,7 +229,7 @@ PhysicalModelInterface::create(const string& name,
   if (mod == NULL)
   {
     // first try in the module directory
-    if ((module.size() > 0) && ((mod = create_from_library<PhysicalModelInterface>(
+    if ((module.size() == 0) || ((mod = create_from_library<PhysicalModelInterface>(
         module + "/" + name, options)) == 0))
     {
       mod = create_from_library<PhysicalModelInterface>(name, options);
@@ -249,8 +249,8 @@ PhysicalModelInterface::create(const string& name,
     // 2007-08-17
     //    we don't set anymore a default name
     //string defaultname = mod->get_default_name();
-    string defaultname = "";
-    mod->_name = mod->get_options().get_option("name", defaultname);
+    //string defaultname = "";
+    //mod->set_name(mod->get_options().get_option("name", defaultname));
     //mod->get_options().delete_option("name");
 
     ostringstream os;
@@ -267,7 +267,7 @@ PhysicalModelInterface::create(const string& name,
 
 PhysicalModelInterface*
 PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
-    const ModelOptions& options)
+    const ModelOptions& options, const string& module)
 {
   PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
       create_from_function(create_fnc, destroy_fnc, options));
@@ -276,12 +276,17 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
   {
     _register_model(mod);
 
+    // we let it know what's its identifier
+    //mod->_set_type(name);
+
+    mod->_set_module_name(module);
+
     //! set the name
     // 2007-08-17
     //    we don't set anymore a default name
     //string defaultname = mod->get_default_name();
-    string defaultname = "";
-    mod->_name = mod->get_options().get_option("name", defaultname);
+    //string defaultname = "";
+    //mod->set_name(mod->get_options().get_option("name", defaultname));
     mod->get_options().delete_option("name");
 #ifdef DEBUG
     cerr << "Add model (ID = " << mod->get_id() <<
@@ -327,13 +332,14 @@ PhysicalModelInterface::copy(void) const
 {
   PhysicalModelInterface* new_copy = NULL;
 
-  new_copy = this->create_new();
+  // this is safe
+  new_copy = static_cast<PhysicalModelInterface*>(this->create_new());
 
   if (new_copy != NULL)
   {
     new_copy->_id = _id;
     new_copy->_owner = _owner;
-    new_copy->_name = _name;
+    new_copy->set_name(get_name());
     new_copy->_simulator_id = _simulator_id;
 
     new_copy->copy_from(this);
@@ -533,6 +539,12 @@ PhysicalModelInterface::_create_submodels(void)
 
     // we try to create it from the same module
     PhysicalModelInterface* pm = create(name, it->second, get_module_name());
+
+    if (pm == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      pm = create(it->first, it->second, get_module_name());
+    }
 
     if (pm == NULL)
     {

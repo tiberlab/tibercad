@@ -13,7 +13,6 @@ PhysicalObject::PhysicalObject(ObjectType type, const ModelOptions& options)
     _is_initialized(false)
 {
   _database = new Database();
-  _name = options.get_option("name", "");
 }
 
 

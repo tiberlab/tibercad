@@ -668,9 +668,13 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     multimap<const string, ModelOptions>& physmodels =
       model_str->get_physical_model_map();
 
+
+
     //
     // and now... the boundary conditions
     //
+
+
     m.newline();
     m.info("Setup of lower dimensional (boundary) models... ");
     m.indent();
@@ -722,16 +726,42 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
         {
           ostringstream os;
-          os << "Add boundary \'" << data.get_region_name() << "\'";
+          os << "Adding boundary \'" << data.get_region_name() << "\'";
           Messages::info(os.str());
         }
 
-        const ModelOptions& bdopts = data.get_options();
+        ModelOptions bdopts(data.get_options());
 
-        IDSet region_ids; // TODO needed only for old way
+        if (!bdopts.find_option("name"))
+          bdopts.set_option("name", data.get_region_name());
+
+        string boundary_name = bdopts.get_option("name", "");
+
+
+        Boundary* bnd = env->get_boundary(boundary_name);
+        if (bnd == NULL)
+        {
+          bnd = new Boundary(boundary_name, bdopts);
+          bnd->set_region_ids(ids);
+          env->add_boundary(bnd, ids);
+
+          //
+          // this is the old way -->
+
+          BoundaryProperties* bdprop = sim->new_boundary_model(bdopts);
+
+          // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
+          // every simulation necessarily needs a boundary model?
+          if (bdprop != NULL)
+            bnd->add_boundary_properties(bdprop, sim->get_id());
+
+          // <-- end of old way
+          //
+        }
+
+
         for (unsigned int i = 0; i < ids.size(); i++)
         {
-          region_ids.insert(ids[i]);
 
           bool found = false;
 
@@ -743,7 +773,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
             {
               ostringstream os;
               os << "Trying to add already existing boundary \'"
-                << data.get_region_name() << "\' for module "
+                << boundary_name << "\' for module "
                 << sim->get_name();
                throw InitFailedException(os.str());
             }
@@ -752,6 +782,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
             Material* matB = bd->get_material_B();
             pm = sim->new_boundary_model(bdopts, matA, matB);
             bd->add_model(pm, sim->get_id());
+            bnd->add_model(ids[i], pm);
             found = true;
           }
 
@@ -763,13 +794,14 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
             {
               ostringstream os;
               os << "Trying to add already existing boundary \'"
-                << data.get_region_name() << "\' for module "
+                << boundary_name << "\' for module "
                 << sim->get_name();
                throw InitFailedException(os.str());
             }
 
             pm = sim->new_edge_model(bdopts);
             eo->add_model(pm, sim->get_id());
+            bnd->add_model(ids[i], pm);
             found = true;
           }
 
@@ -781,13 +813,14 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
             {
               ostringstream os;
               os << "Trying to add already existing boundary \'"
-                << data.get_region_name() << "\' for module "
+                << boundary_name << "\' for module "
                 << sim->get_name();
                throw InitFailedException(os.str());
             }
 
             pm = sim->new_node_model(bdopts);
             no->add_model(pm, sim->get_id());
+            bnd->add_model(ids[i], pm);
             found = true;
           }
 
@@ -801,21 +834,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
         }
 
-        //
-        // this is the old way -->
-
-        Boundary* bd = new Boundary(data.get_region_name(), env, region_ids);
-        bd->set_area_factor(bdopts.get_option("area_factor", 1.0));
-
-        BoundaryProperties* bdprop = sim->new_boundary_model(bdopts);
-
-        // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
-        // every simulation necessarily needs a boundary model?
-        if (bdprop != NULL)
-          bd->add_boundary_properties(bdprop, sim->get_id());
-
-        // <-- end of old way
-        //
 
       }
     }
@@ -859,6 +877,14 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
           // if it is no boundary region, we continue to the next region name
           if (region_ids.size() == 0)
+          {
+            // it could be the name of the Boundary object
+            Boundary* bnd = env->get_boundary(ids_strings[i]);
+            if (bnd != NULL)
+              bnd->get_region_ids(region_ids);
+          }
+
+          if (region_ids.size() == 0)
             continue;
 
           // now it must be a lower dim model
@@ -885,7 +911,6 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
               // now it's there
               pm->get_options().add_submodel(tmpit->first, bdopts);
-
             }
 
             EdgeObject* eo;

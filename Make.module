@@ -17,17 +17,23 @@ MODULE_LDFLAGS += -L$(topdir)/lib -ltibercad
 
 
 modulelib = $(shell echo `grep TIBER_MODULE $(1) | sed 's/MODULE_NAME/$(MODULE_NAME)/' \
-		| sed -e 's/[[:space:]]//g' -e 's/TIBER_MODULE([a-zA-Z]\+,\([a-zA-Z_,]\+\))/\1/' -e 's/,/_/g'`$(shared_libext))
+		| sed -e 's/[[:space:]]//g' -e 's/.*TIBER_MODULE([a-zA-Z]\+,\([a-zA-Z_,]\+\))/\1/' -e 's/,/_/g'`$(shared_libext))
 
 
+#
+# arguments:
+#  1. list of source files
+#  2. additional compiler / linker flags
+#
 define MODULE
 
 target += $(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1))
 
-$(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1)) $$(patsubst %.C,%$$(obj-suffix),$(2))
+
+$(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1))
 	@echo "Linking module $$(notdir $$@) ..."
 	@[ -d $$(dir $$@) ] || mkdir -p  $$(dir $$@)
-	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) $$(MODULE_LDFLAGS) \
+	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) $(2) $$(MODULE_LDFLAGS) \
 			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 
 endef

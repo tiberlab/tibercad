@@ -15,7 +15,6 @@
 #include "AtomisticStructure.h"
 
 #include "mesh.h"
-#include "mesh_data_elements.h"
 #include "equation_systems.h"
 
 #include "Messages.h"
@@ -124,7 +123,7 @@ Device::setup_mesh(void)
   MeshReader::read_mesh(meshfile, *_mesh, *_mesh_region_info, *_bd_regions);
 
 
-  // only for now (back compatibility)
+  // TODO only for now (back compatibility)
   delete _boundary_nodes;
   _boundary_nodes = new map<unsigned int, vector<ID> >();
   _bd_regions->get_bc_node_map(*_boundary_nodes);
@@ -363,7 +362,7 @@ Device::get_boundary_object(ID id)
         ID idB = *(++(ids.begin()));
         Material* matA = get_material(idA);
         Material* matB = get_material(idB);
-        mb = MaterialBoundary::create(matA, matB, ModelOptions());
+        mb = MaterialBoundary::create(idA, matA, idB, matB, ModelOptions());
         _boundary_map[id] = mb;
       }
     }

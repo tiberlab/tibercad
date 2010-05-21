@@ -98,8 +98,10 @@ class PhysicalModelInterface : public TiberModelObject
      * Use this method only in special cases, e.g. if you don't have single
      * libraries for the different models.
      */
-    static PhysicalModelInterface* create(create_t create_fnc,
-        destroy_t destroy_fnc, const ModelOptions& options = ModelOptions());
+    static PhysicalModelInterface* create(
+        create_t create_fnc, destroy_t destroy_fnc,
+        const ModelOptions& options = ModelOptions(),
+        const std::string& module = xstr(MODULE_NAME));
 
 
     //! Create a new model as a copy of this
@@ -168,10 +170,6 @@ class PhysicalModelInterface : public TiberModelObject
     Material* get_material(void);
 
 
-    //! Get the user defined name of this model
-    const std::string& get_name(void) const;
-
-
     //! Get the type of this model
     /*!
      * The type is the identifying string which defines at creation time
@@ -237,13 +235,6 @@ class PhysicalModelInterface : public TiberModelObject
     PhysicalModelInterface(const ModelOptions& options);
 
 
-    //! Set the name of a model
-    /*!
-     * Use with caution as it could break standard behaviour!
-     */
-    void set_name(const std::string& name);
-
-
     //! Print some info
     /*!
      * The implementation should add 4 spaces at the beginning of
@@ -257,10 +248,6 @@ class PhysicalModelInterface : public TiberModelObject
      * This method should be implemented in derived classes.
      */
     virtual void do_init(void) {};
-
-
-    //! Create a new model of the same type
-    virtual PhysicalModelInterface* create_new(void) const = 0;
 
 
     //! Copy data from another model to this one
@@ -472,13 +459,6 @@ class PhysicalModelInterface : public TiberModelObject
     ID _simulator_id;
 
 
-    //! A user defined name for this model
-    /*!
-     * The name is assigned from the ModelOptions.
-     */
-    std::string _name;
-
-
     //! The identifying string for the type of this model
     std::string _type;
 
@@ -545,7 +525,6 @@ PhysicalModelInterface::PhysicalModelInterface(const ModelOptions& options)
   : TiberModelObject(options),
     _id(INVALID_ID),
     _simulator_id(INVALID_ID),
-    _name(""),
     _owner(NULL),
     _module("")
 {
@@ -631,24 +610,6 @@ void
 PhysicalModelInterface::set_simulator_id(ID id)
 {
   _simulator_id = id;
-}
-
-
-
-inline
-const std::string&
-PhysicalModelInterface::get_name(void) const
-{
-  return _name;
-}
-
-
-
-inline
-void
-PhysicalModelInterface::set_name(const std::string& name)
-{
-  _name = name;
 }
 
 

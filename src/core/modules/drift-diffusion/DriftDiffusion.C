@@ -6,8 +6,10 @@
 #include "Control.h"
 #include "Scaling.h"
 #include "Material.h"
+#include "MaterialBoundary.h"
 #include "Boundary.h"
 #include "ElectricalContact.h"
+#include "DDInterfaceModel.h"
 #include "Constants.h"
 #include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
@@ -188,29 +190,14 @@ DriftDiffusion::create_boundary_model(const ModelOptions& options,
     const Material* material_A, const Material* material_B) const
 {
 
-  return NULL;
-}
+  PhysicalModel* model = NULL;
 
-
-BoundaryProperties*
-DriftDiffusion::create_boundary_model(const ModelOptions& options) const
-throw (ModelErrorException)
-{
-  const string& modelname = options.get_option("type", "");
-
-  ElectricalContact* model = NULL;
-
-  if (modelname != "")
-  {
-    model =  ElectricalContact::create(modelname, options);
-
-    if (model == NULL)
-      throw ModelErrorException(
-          "DriftDiffusion: No such boundary model: " + modelname);
-  }
+  model = DDInterfaceModel::create(options);
 
   return model;
 }
+
+
 
 
 
@@ -269,6 +256,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     sc->reinit(elem);
 
     sc->calculate_densities();
+    sc->calculate_traps();
     sc->calculate_ionized_dopants();
     sc->calculate_mobilities();
 
@@ -455,123 +443,6 @@ DriftDiffusion::set_electric_potential(double pot)
 
 
 void
-DriftDiffusion::find_dirichlet_nodes(void)
-{
-
-  SimulationEnvironment& env = get_environment();
-
-  TiberNonlinearSystem* system;
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-
-  MeshBase& mesh = get_mesh();
-  unsigned int dim = mesh.mesh_dimension();
-  MeshBase::element_iterator it = mesh.active_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_elements_end();
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    for (size_t s = 0; s < elem->n_sides(); s++)
-    {
-      ElementSide side(elem->top_parent(), s);
-
-      if (env.is_boundary(side))
-      {
-        Boundary* boundary = env.get_boundary(side);
-        if (boundary == NULL)
-          continue;
-
-        ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-            boundary->get_boundary_properties(get_id()));
-
-        if (contact != NULL)
-        {
-          if ((contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-              || (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-              || (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET))
-          {
-            AutoPtr<Elem> side_el(elem->build_side(s));
-            if (dim == 1)
-            {
-              dof_indices_u = vector<unsigned int>(1,
-                  elem->get_node(s)->dof_number(system->number(), u_var, 0));
-
-              dof_indices_en = vector<unsigned int>(1,
-                  elem->get_node(s)->dof_number(system->number(), en_var, 0));
-
-              dof_indices_ep = vector<unsigned int>(1,
-                  elem->get_node(s)->dof_number(system->number(), ep_var, 0));
-            }
-            else
-            {
-              dof_map.dof_indices(side_el.get(), dof_indices_u, u_var);
-              dof_map.dof_indices(side_el.get(), dof_indices_en, en_var);
-              dof_map.dof_indices(side_el.get(), dof_indices_ep, ep_var);
-            }
-
-            for (unsigned int i = 0; i < side_el->n_nodes(); i++)
-            {
-              if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-                _dirichlet_dofs.insert(dof_indices_u[i]);
-
-              if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-                _dirichlet_dofs.insert(dof_indices_en[i]);
-
-              if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
-                _dirichlet_dofs.insert(dof_indices_ep[i]);
-            }
-          }
-        }
-      }
-    }
-  }
-
-
-
-  /*{
-  SimulationEnvironment::BoundaryNodeIterator it(env.boundary_nodes_begin());
-  SimulationEnvironment::BoundaryNodeIterator end(env.boundary_nodes_end());
-
-  for ( ; it != end; ++it)
-  {
-    ID id = it->second;
-
-    Boundary* bd = env.get_boundary(id);
-
-    ElectricalContact* contact = NULL;
-    if (bd != NULL)
-      contact = dynamic_cast<ElectricalContact*>(
-          bd->get_boundary_properties(get_id()));
-
-    if (contact != NULL)
-    {
-      if ((contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-          || (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-          || (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET))
-      {
-        _dirichlet_nodes[it->first] = bd;
-      }
-    }
-  }
-  }*/
-}
-
-
-
-void
 DriftDiffusion::find_dielectric_boundary_nodes(void)
 {
   MeshBase& mesh = get_mesh();
@@ -675,15 +546,18 @@ DriftDiffusion::do_solve(void)
     const ContactData::iterator end(_voltages.end());
     for ( ; it != end; ++it)
     {
-      ElectricalContact* bd = static_cast<ElectricalContact*>(
-          it->first->get_boundary_properties(get_id()));
+      ElectricalContact* bd = dynamic_cast<ElectricalContact*>(
+          it->first->models_begin()->second);
 
-      double voltage = bd->get_simulation_voltage();
+      if (bd != NULL)
+      {
+        double voltage = bd->get_simulation_voltage();
 
-      _voltages[it->first] = voltage;
+        _voltages[it->first] = voltage;
 
-      if (voltage != 0.0)
-        equilibrium = false;
+        if (voltage != 0.0)
+          equilibrium = false;
+      }
     }
   }
 
@@ -755,19 +629,9 @@ DriftDiffusion::do_solve(void)
 
   bool field_emission = false;
 
+
   ContactData::iterator it(_boundary_currents.begin());
   const ContactData::iterator end(_boundary_currents.end());
-  for ( ; it != end; ++it)
-  {
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(
-          it->first->get_boundary_properties(get_id()));
-    if (cnt->has_field_emission())
-    {
-      field_emission = true;
-      break;
-    }
-  }
 
   int width = 20;
   {
@@ -776,10 +640,10 @@ DriftDiffusion::do_solve(void)
     os << "contact name:";
     os.width(width - os.tellp());
     os << "";
-    os << "contact voltage:";
+    os << "voltage:";
     os.width(2 * width - os.tellp());
     os << "";
-    os << "contact current:";
+    os << "current:";
     if (field_emission)
     {
       os.width(3 * width - os.tellp());
@@ -792,17 +656,32 @@ DriftDiffusion::do_solve(void)
 
   for (it = _boundary_currents.begin(); it != end; ++it)
   {
+    DDInterfaceModel* ifmod =
+        static_cast<DDInterfaceModel*>(it->first->models_begin()->second);
+
+    // we print only contacts with a current
+    if (!ifmod->has_current())
+      continue;
+
     ostringstream os;
     os << setprecision(6);
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(it->first->get_boundary_properties(get_id()));
     os << it->first->get_name();
-    if (cnt->get_simulation_voltage() < 0)
-      os.width(width - os.tellp() - 1);
+    ElectricalContact* cnt = dynamic_cast<ElectricalContact*>(ifmod);
+    if (cnt != NULL)
+    {
+      if (cnt->get_simulation_voltage() < 0)
+        os.width(width - os.tellp() - 1);
+      else
+        os.width(width - os.tellp());
+      os << "";
+      os << cnt->get_simulation_voltage();
+    }
     else
+    {
       os.width(width - os.tellp());
-    os << "";
-    os << cnt->get_simulation_voltage();
+      os << "" << "-";
+    }
+
 
     if (it->second < 0)
       os.width(2 * width - os.tellp() - 1);
@@ -811,16 +690,6 @@ DriftDiffusion::do_solve(void)
     os << "";
     os << it->second * it->first->get_area_factor();
 
-    if (cnt->has_field_emission())
-    {
-      double iem = cnt->get_field_emission_current();
-      if (iem < 0)
-        os.width(3 * width - os.tellp() - 1);
-      else
-        os.width(3 * width - os.tellp());
-      os << "";
-      os << iem * it->first->get_area_factor();
-    }
     Messages::info(os.str());
   }
 
@@ -894,12 +763,21 @@ DriftDiffusion::do_equilibrium(void)
   for ( ; it != end; ++it)
   {
     const Boundary* bd = it->first;
-    // It's save to static_cast because we know there has to be an
-    // ElectricalContact object
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
-    sim_voltages[bd] = cnt->get_simulation_voltage();
-    cnt->set_simulation_voltage(0.0);
+    vector<ID> ids;
+    bd->get_region_ids(ids);
+    for (unsigned int i = 0; i < ids.size(); i++)
+    {
+      // it must exist
+      MaterialBoundary* mb = get_environment().get_device().get_boundary_object(ids[i]);
+      ElectricalContact* cnt =
+          dynamic_cast<ElectricalContact*>(mb->get_model(get_id()));
+
+      if (cnt != NULL)
+      {
+        sim_voltages[bd] = cnt->get_simulation_voltage();
+        cnt->set_simulation_voltage(0.0);
+      }
+    }
   }
 
   // make a rough guess
@@ -939,9 +817,18 @@ DriftDiffusion::do_equilibrium(void)
   for ( ; it != end; ++it)
   {
     const Boundary* bd = it->first;
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
-    cnt->set_simulation_voltage(sim_voltages[bd]);
+    vector<ID> ids;
+    bd->get_region_ids(ids);
+    for (unsigned int i = 0; i < ids.size(); i++)
+    {
+      // it must exist
+      MaterialBoundary* mb = get_environment().get_device().get_boundary_object(ids[i]);
+      ElectricalContact* cnt =
+          dynamic_cast<ElectricalContact*>(mb->get_model(get_id()));
+
+      if (cnt != NULL)
+        cnt->set_simulation_voltage(sim_voltages[bd]);
+    }
   }
 
   // reset the coupling
@@ -1218,37 +1105,45 @@ DriftDiffusion::do_init(void)
 
   rebuild_equation_system();
 
-  find_dirichlet_nodes();
+  //find_dirichlet_nodes();
   find_dielectric_boundary_nodes();
 
-  set<const Boundary*> real_contacts;
-  // prepare the _boundary_currents
-  // we will rely on the fact that it contains an entry for every boundary
-  // later on !!!
+
+  get_environment().update_boundary_element_map();
+
+
+  // check the boundaries if they are internal or not
+  const set<PhysicalModel*>& pm = get_boundary_models();
+  set<PhysicalModel*>::const_iterator it(pm.begin());
+  const set<PhysicalModel*>::const_iterator end(pm.end());
+  for ( ; it != end; ++it)
   {
-    SimulationEnvironment::BoundaryIterator
-      it(get_environment().boundaries_begin());
-    const SimulationEnvironment::BoundaryIterator
-      end(get_environment().boundaries_end());
-    for ( ; it != end; ++it)
+    DDInterfaceModel* mod = static_cast<DDInterfaceModel*>(*it);
+
+    const MaterialBoundary* bd =
+        static_cast<MaterialBoundary*>(mod->get_owner());
+
+
+    // register the contact if it is a real contact (with current)
+    if (mod->has_current())
     {
-      BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
-      if (bd != NULL)
+      const Boundary* bnd = get_environment().get_boundary(mod->get_name());
+      if (bnd != NULL)
       {
-        ElectricalContact* contact = dynamic_cast<ElectricalContact*>(bd);
-#ifndef DEBUG
-        if (contact->is_real_contact())
-#endif
-        {
-          _boundary_currents[it->second] = 0.0;
-          _voltages[it->second] = 0.0;
-          real_contacts.insert(it->second);
-        }
+        _boundary_currents[bnd] = 0.0;
+        _voltages[bnd] = 0.0;
       }
     }
-  }
 
-  get_environment().update_boundary_element_map(real_contacts);
+
+    // check if the boundary is internal or not
+    ID idA = bd->get_id_A();
+    ID idB = bd->get_id_B();
+
+    if (get_environment().contains_region(idA) &&
+        get_environment().contains_region(idB))
+      mod->internal_bondary(true);
+  }
 
 }
 
@@ -1291,6 +1186,9 @@ DriftDiffusion::do_setup_solution_variables(void)
   declare_solution(IonizedDonors, REAL, NODES, "cm^-3");
   declare_solution(IonizedAcceptors, REAL, NODES, "cm^-3");
 
+  declare_solution(IonizedElectronTraps, REAL, NODES, "cm^-3");
+  declare_solution(IonizedHoleTraps, REAL, NODES, "cm^-3");
+
   declare_solution(eThElPower, REAL, NODES, "eV/K");
   add_alias("Pn", eThElPower);
   declare_solution(hThElPower, REAL, NODES, "eV/K");
@@ -1314,9 +1212,11 @@ DriftDiffusion::do_setup_solution_variables(void)
     //size_t num_vb = 1;
 
     bool plot_rec = plot_solution(NetRecombination);
+
     const set<PhysicalModel*>& pm = get_physical_models();
     set<PhysicalModel*>::const_iterator it(pm.begin());
     set<PhysicalModel*>::const_iterator end(pm.end());
+
     for ( ; it != end; ++it)
     {
       DriftDiffusionProperties* sc =
@@ -1329,6 +1229,9 @@ DriftDiffusion::do_setup_solution_variables(void)
       // the valence bands
       //const vector<double>& vb = sc->get_valence_bands();
       //num_vb = max(num_vb, vb.size());
+
+      // we let it create the recombination models first
+      sc->create_recombination_models();
 
       vector<ID> ids;
       int n = sc->get_net_recombination_rate_IDs(ids);
@@ -1375,14 +1278,18 @@ DriftDiffusion::do_setup_solution_variables(void)
 
     for ( ; it != end; ++it)
     {
-      BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
+      const Boundary* bd = it->second;
       if (bd != NULL)
       {
-        ElectricalContact* contact = dynamic_cast<ElectricalContact*>(bd);
-        if (contact->is_real_contact())
+        // we include only contacts that carry current
+        Boundary::ConstModelIterator modit(bd->models_begin());
+        assert(modit != bd->models_end());
+
+        const DDInterfaceModel* mod = static_cast<const DDInterfaceModel*>(modit->second);
+        if (mod->has_current())
         {
           ID id = static_cast<ID>(ContactCurrent) + i;
-          string name(it->second->get_name() + ".current");
+          string name(bd->get_name() + ".current");
           // if currents should be plotted, add it also to the plot variables
           if (plot_curr) add_plot_variable(name);
           declare_solution_ext(name, id, SolutionDescriptor::REAL,
@@ -1433,6 +1340,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       get_equation_system_name());
 
   const NumericVector<Number>& solution = system->get_solution_vector();
+  const NumericVector<Number>& oldsolution = system->get_vector("old_sol");
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -1502,6 +1410,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     double u  = 0.0;
     double en = 0.0;
     double ep = 0.0;
+    double oldu  = 0.0;
+    double olden = 0.0;
+    double oldep = 0.0;
     double T  = 0.0;
     RealGradient e_field(0);
     RealGradient grad_en_loc(0);
@@ -1514,6 +1425,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       u += phi[i][n] * solution(dof_indices_u[i]);
       en += phi[i][n] * solution(dof_indices_en[i]);
       ep += phi[i][n] * solution(dof_indices_ep[i]);
+
+      oldu += phi[i][n] * oldsolution(dof_indices_u[i]);
+      olden += phi[i][n] * oldsolution(dof_indices_en[i]);
+      oldep += phi[i][n] * oldsolution(dof_indices_ep[i]);
 
       grad_en_loc += dphi[i][n] * solution(dof_indices_en[i]);
       grad_ep_loc += dphi[i][n] * solution(dof_indices_ep[i]);
@@ -1538,6 +1453,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     sc->set_coordinates(real_pts[n]);
 
     sc->set_potentials(u, en, ep);
+    sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
 
     sc->set_electric_field(e_field);
     sc->set_grad_fermi_e(grad_en_loc);
@@ -1624,6 +1540,18 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
       if (ionized_acceptors)
         values[IonizedAcceptors][n] = sc->get_ionized_acceptor_density();
+    }
+
+    bool trapped_electrons = values.count(IonizedElectronTraps);
+    bool trapped_holes = values.count(IonizedHoleTraps);
+    if (trapped_electrons || trapped_holes)
+    {
+      sc->calculate_traps();
+      if (trapped_electrons)
+        values[IonizedElectronTraps][n] = sc->get_ionized_electron_traps();
+
+      if (trapped_holes)
+        values[IonizedHoleTraps][n] = sc->get_ionized_hole_traps();
     }
 
     if (values.count(eJoule))
@@ -1948,7 +1876,7 @@ DriftDiffusion::calculate_currents_rstf(void)
 void
 DriftDiffusion::calculate_field_emission(void)
 {
-
+/*
   ContactData fe_currents;
   ContactData::iterator it = _boundary_currents.begin();
   for ( ; it != _boundary_currents.end(); ++it)
@@ -2033,7 +1961,7 @@ DriftDiffusion::calculate_field_emission(void)
 
     assert(sc != NULL);
 
-    /* we calculate field emission only in dielectrics */
+    // we calculate field emission only in dielectrics
     if (!sc->is_dielectric())
       continue;
 
@@ -2090,6 +2018,7 @@ DriftDiffusion::calculate_field_emission(void)
 
     contact->set_field_emission_current((*it).second);
   }
+*/
 }
 
 
@@ -2377,6 +2306,13 @@ DriftDiffusion::build_local_scaling(void)
   const double C0 = scaling.get_density_scaling();
   const double mu0 = scaling.get_mobility_scaling();
   const double l2 = scaling.get_lambda_squared() * Constants::e0 * 1e-2;
+  // density scaling for electrons
+  double C0_e = C0;
+  // density scaling for holes
+  double C0_h = C0;
+  // scaling for recombination rates
+  double R0_e = C0_e / scaling.get_time_scaling();
+  double R0_h = C0_h / scaling.get_time_scaling();
 
 
   const unsigned int u_var = system->variable_number("potential");
@@ -2411,6 +2347,31 @@ DriftDiffusion::build_local_scaling(void)
 
 
 
+  //
+  // for boundary elements
+  //
+
+  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMeshEnums::Order integration_order = params.integration_order;
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+  AutoPtr<QBase> qface(QBase::build(
+        params.quadrature_type, dim - 1, integration_order));
+  fe_face->attach_quadrature_rule(qface.get());
+
+  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+  //
+  const vector<vector<RealGradient> >&  dphi_face = fe_face->get_dphi();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point_face = fe_face->get_xyz();
+  //
+  const vector<Point>& face_normals = fe_face->get_normals();
+  //
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW_face = fe_face->get_JxW();
+
+
 
   local_scaling_.clear();
   {
@@ -2424,6 +2385,11 @@ DriftDiffusion::build_local_scaling(void)
         local_scaling_[(*it)->get_node(n)] = vector<double>(3, 0.0);
   }
 
+
+  // the dofs that have to be scaled with the penalty value
+  set<const Node*> dirichlet_dofs_u;
+  set<const Node*> dirichlet_dofs_n;
+  set<const Node*> dirichlet_dofs_p;
 
   MeshBase::const_element_iterator it =
     mesh.active_elements_begin();
@@ -2486,6 +2452,8 @@ DriftDiffusion::build_local_scaling(void)
       sc->set_grad_fermi_h(RealGradient(0.0));
 
       sc->calculate_densities();
+      sc->calculate_traps();
+      sc->calculate_ionized_dopants();
       sc->calculate_mobilities();
 
       double epsilon = sc->get_relative_permittivity();
@@ -2500,42 +2468,211 @@ DriftDiffusion::build_local_scaling(void)
 
       double dn_dphi = sc->get_electron_density_derivative();
       double dp_dphi = sc->get_hole_density_derivative();
-      double dNd_dphi = sc->get_ionized_donor_density_derivative();
-      double dNa_dphi = sc->get_ionized_acceptor_density_derivative();
 
-      double drho;
-      drho = JxW[qp] * (dp_dphi - dNa_dphi - dn_dphi + dNd_dphi) * phi0 / C0;
+      double drhovec[2];
+      sc->get_charge_density_derivatives(drhovec);
+      double drho = -JxW[qp] * (drhovec[0] + drhovec[1]) * phi0 / C0;
       if (sc->is_dielectric())
         drho = 0.0;
 
 
-      const double penalty_value = 1e56;
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
-        if (_dirichlet_dofs.count(dof_indices_en[i]))
-          local_scaling_[elem->get_node(i)][0] += penalty_value;
-        else
-          local_scaling_[elem->get_node(i)][0] +=
+        local_scaling_[elem->get_node(i)][0] +=
             sigma_e * (dphi[i][qp] * dphi[i][qp]);
 
-        if (_dirichlet_dofs.count(dof_indices_ep[i]))
-          local_scaling_[elem->get_node(i)][1] += penalty_value;
-        else
         local_scaling_[elem->get_node(i)][1] +=
-          sigma_h * (dphi[i][qp] * dphi[i][qp]);
+            sigma_h * (dphi[i][qp] * dphi[i][qp]);
 
-        if (_dirichlet_dofs.count(dof_indices_u[i]))
-          local_scaling_[elem->get_node(i)][2] += penalty_value;
-        else
         local_scaling_[elem->get_node(i)][2] +=
-          l2_eps * (dphi[i][qp] * dphi[i][qp]) -
-          drho * phi[i][qp] * phi[i][qp];
+            l2_eps * (dphi[i][qp] * dphi[i][qp]) -
+            drho * phi[i][qp] * phi[i][qp];
       }
 
 
     } // end loop over quadrature points
+
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+
+      if (sm != NULL)
+      {
+        for (unsigned int i = 0; i < n_dofs; i++)
+        {
+          if (elem->is_node_on_side(i, s))
+          {
+            if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
+              dirichlet_dofs_u.insert(elem->get_node(i));
+
+            if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
+              dirichlet_dofs_n.insert(elem->get_node(i));
+
+            if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
+              dirichlet_dofs_p.insert(elem->get_node(i));
+          }
+        }
+
+      }
+    }
+
+
+
+
+
+    /*
+    // loop over sides
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+
+      bool true_boundary = get_environment().is_outer_boundary(ElementSide(elem, s));
+
+      if ((sm != NULL) || true_boundary)
+      {
+        fe_face->reinit(elem, s);
+
+        int phi_size = phi_face.size();
+
+
+        // now integrate to include von Neumann and mixed type BCs
+        // and polarization
+        for (unsigned int qp = 0; qp < qface->n_points(); qp++)
+        {
+
+          double epsilon = sc->get_relative_permittivity();
+          double l2_eps = l2 * epsilon;
+
+
+          // get the solution values at the quadrature point
+          Real u  = 0.0;
+          Real en = 0.0;
+          Real ep = 0.0;
+          RealGradient e_field(0);
+          RealGradient grad_en(0);
+          RealGradient grad_ep(0);
+          RealGradient grad_T(0);
+          for (unsigned int i = 0; i < n_dofs; i++)
+          {
+            u  += phi_face[i][qp] * solution(dof_indices_u[i]);
+            en += phi_face[i][qp] * solution(dof_indices_en[i]);
+            ep += phi_face[i][qp] * solution(dof_indices_ep[i]);
+            e_field -= dphi_face[i][qp] * solution(dof_indices_u[i]);
+            grad_en += dphi_face[i][qp] * solution(dof_indices_en[i]);
+            grad_ep += dphi_face[i][qp] * solution(dof_indices_ep[i]);
+          }
+
+          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+          sc->set_coordinates(q_point_face[qp]);
+          sc->set_electric_field(phi0 / x0 * e_field);
+          sc->set_grad_fermi_e(phi0 / x0 * grad_en);
+          sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
+          sc->calculate_densities();
+          sc->calculate_mobilities();
+
+          // we put the phi0 here for convenience
+          double sigma_e = phi0 * sc->get_electron_mobility() *
+              sc->get_electron_density();
+          double sigma_h = phi0 * sc->get_hole_mobility() *
+              sc->get_hole_density();
+
+          / *
+          sc->compute_thermoelectric_powers();
+          double Pn =  sc->get_electron_thermoelectric_power() / phi0;
+          double Pp =  sc->get_hole_thermoelectric_power() / phi0;
+
+          double jn = 0.0;
+          double jp = 0.0;
+          if (coupling & ECURRENT)
+            jn = (sigma_e * grad_en + Pn * grad_T) * face_normals[qp] / x0;
+          if (coupling & HCURRENT)
+            jp = -(sigma_h * grad_ep + Pp * grad_T) * face_normals[qp] / x0;
+          * /
+
+          // the jacobian x weight x scaling
+          double J = JxW_face[qp];
+
+
+          // contribution to the jacobian
+          if (sm != NULL)
+          {
+            sm->compute();
+
+            double scale_u = J * phi0 / x0 / C0;
+            if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
+              scale_u *= _penalty_value;
+
+            double scale_n = J* phi0 / (x0 * R0_e);
+            if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
+              scale_n *= _penalty_value;
+
+            double scale_p = J * phi0 / (x0 * R0_h);
+            if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
+              scale_p *= _penalty_value;
+
+
+            const vector<double>& deriv_u = sm->get_jacobian_row(0);
+            const vector<double>& deriv_en = sm->get_jacobian_row(1);
+            const vector<double>& deriv_ep = sm->get_jacobian_row(2);
+
+
+            for (unsigned int i = 0; i < n_dofs; i++)
+            {
+
+              Real phi_i_x_phi_j =
+                phi_face[i][qp] * phi_face[i][qp];
+
+              local_scaling_[elem->get_node(i)][2] -= scale_u * deriv_u[0] * phi_i_x_phi_j;
+
+
+              ////
+              // NOTE:
+              //   the signs are inverted here because outflow means recombination
+              //   and the normal point outwards, giving a positiv current for
+              //   outflow
+
+              local_scaling_[elem->get_node(i)][0] -= scale_n * deriv_en[1] * phi_i_x_phi_j;
+
+              local_scaling_[elem->get_node(i)][1] += scale_p * deriv_ep[2] * phi_i_x_phi_j;
+            }
+          }
+        }
+      }
+    }
+    */
   } // end loop over elements
+
+
+  /*{
+    map<const Node*, vector<double> >::iterator it(local_scaling_.begin());
+    map<const Node*, vector<double> >::iterator end(local_scaling_.end());
+    for ( ; it != end; ++it)
+    {
+      (it->second)[0] = sqrt((it->second)[0]);
+      (it->second)[1] = sqrt((it->second)[1]);
+      (it->second)[2] = sqrt((it->second)[2]);
+    }
+  }*/
+
+  {
+    set<const Node*>::iterator it(dirichlet_dofs_u.begin());
+    set<const Node*>::iterator end(dirichlet_dofs_u.end());
+    for ( ; it != end; ++it)
+      local_scaling_[*it][2] *= _penalty_value;
+
+    it = dirichlet_dofs_n.begin();
+    end = dirichlet_dofs_n.end();
+    for ( ; it != end; ++it)
+      local_scaling_[*it][0] *= _penalty_value;
+
+    it = dirichlet_dofs_p.begin();
+    end = dirichlet_dofs_p.end();
+    for ( ; it != end; ++it)
+      local_scaling_[*it][1] *= _penalty_value;
+  }
+
 }
 
 
@@ -2552,1159 +2689,8 @@ DriftDiffusion::do_get_solution_vector(void)
 }
 
 
-/*
-// implementation taken from libmesh equation_systems.C
-void
-DriftDiffusion::build_nodal_results(const set<string>& variables,
-    vector<double>& results, vector<string>& legend)
-{
 
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
 
-  const NumericVector<Number>& solution = get_solution_vector();
-  const NumericVector<Number>& oldsolution = system->get_vector("old_sol");
-
-  // aliases for nicer code
-  const Device& device = *(_device);
-  const MeshBase& mesh = get_mesh();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  // TODO if some elements were coarsened, does this still work??
-  const unsigned int nn  = mesh.n_nodes();
-
-  legend.resize(variables.size());
-
-  bool found_variable = false;
-
-  // for each possible variable we set the vector index
-  // -1 means, the variable should not be plotted
-  unsigned int n_vars = 0;
-  const set<string>::const_iterator varend(variables.end());
-
-  int Ec = -1;
-  if (variables.find("Ec") != varend)
-  {
-    Ec = n_vars;
-    legend[n_vars] = "Ec";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Ev = -1;
-  if (variables.find("Ev") != varend)
-  {
-    Ev = n_vars;
-    legend[n_vars] = "Ev";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Ec0 = -1;
-  if (variables.find("Ec0") != varend)
-  {
-    Ec0 = n_vars;
-    legend[n_vars] = "Ec0";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Ev0 = -1;
-  if (variables.find("Ev0") != varend)
-  {
-    Ev0 = n_vars;
-    legend[n_vars] = "Ev0";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-
-  int Efn = -1;
-  if (variables.find("QFermi_e") != varend)
-  {
-    Efn = n_vars;
-    legend[n_vars] = "QFermi_e";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Efp = -1;
-  if (variables.find("QFermi_h") != varend)
-  {
-    Efp = n_vars;
-    legend[n_vars] = "QFermi_h";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int phi = -1;
-  if (variables.find("ElPotential") != varend)
-  {
-    phi = n_vars;
-    legend[n_vars] = "electric_potential";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Eg = -1;
-  if (variables.find("Eg") != varend)
-  {
-    Eg = n_vars;
-    legend[n_vars] = "Eg";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int edens = -1;
-  if (variables.find("eDensity") != varend)
-  {
-    edens = n_vars;
-    legend[n_vars] = "electron_density";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int hdens = -1;
-  if (variables.find("hDensity") != varend)
-  {
-    hdens = n_vars;
-    legend[n_vars] = "hole_density";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Nd = -1;
-  if (variables.find("Nd") != varend)
-  {
-    Nd = n_vars;
-    legend[n_vars] = "ionized_donors";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Na = -1;
-  if (variables.find("Na") != varend)
-  {
-    Na = n_vars;
-    legend[n_vars] = "ionized_acceptors";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Pn = -1;
-  if (variables.find("Pn") != varend)
-  {
-    Pn = n_vars;
-    legend[n_vars] = "Pn";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int Pp = -1;
-  if (variables.find("Pp") != varend)
-  {
-    Pp = n_vars;
-    legend[n_vars] = "Pp";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int rho = -1;
-  if (variables.find("charge_density") != varend)
-  {
-    rho = n_vars;
-    legend[n_vars] = "total_charge_densitity";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int rec = -1;
-  int num_rec = 0;
-  map<ID, string> rec_model_ids;
-  if (variables.find("NetRecombination") != varend)
-  {
-
-    // look for all recombination models
-    const set<PhysicalModel*>& pm = get_physical_models();
-
-    set<PhysicalModel*>::const_iterator it(pm.begin());
-    set<PhysicalModel*>::const_iterator end(pm.end());
-    for ( ; it != end; ++it)
-    {
-      DriftDiffusionProperties* sc =
-        static_cast<DriftDiffusionProperties*>(*it);
-
-        vector<ID> ids;
-
-        int n = sc->get_net_recombination_rate_IDs(ids);
-
-        for (int i = 0; i < n; i++)
-          rec_model_ids[ids[i]] =
-            sc->get_recombination_model(ids[i])->get_default_name();
-    }
-
-    num_rec = rec_model_ids.size();
-    legend.resize(variables.size() + num_rec);
-    if (num_rec != 0)
-    {
-      rec = n_vars;
-
-      map<ID, string>::iterator it = rec_model_ids.begin();
-      map<ID, string>::iterator end = rec_model_ids.end();
-      for ( ; it != end; ++it)
-      {
-        legend[n_vars] = it->second;
-        n_vars++;
-      }
-
-      if (num_rec > 1)
-      {
-        // plot also the total net rate
-        legend[n_vars] = "total_net_recombination";
-        n_vars++;
-      }
-    }
-
-    found_variable = true;
-  }
-
-
-  int mun = -1;
-  if (variables.find("eMob") != varend)
-  {
-    mun = n_vars;
-    legend[n_vars] = "electron_mobility";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-  int mup = -1;
-  if (variables.find("hMob") != varend)
-  {
-    mup = n_vars;
-    legend[n_vars] = "hole_mobility";
-    n_vars++;
-
-    found_variable = true;
-  }
-
-
-  legend.resize(n_vars);
-
-  results.resize(nn * n_vars);
-
-  // We return immediately if there is nothing to plot
-  if (!found_variable)
-    return;
-
-  vector<double> local(results.size());
-  vector<unsigned short int> node_conn(nn);
-
-  vector<double> nodal_val;
-
-  // the scaling parameters to scale back the result
-  const double phi0 = get_scaling().get_potential_scaling();
-
-
-  fill(results.begin(), results.end(), 0.0);
-  fill(local.begin(), local.end(), 0.0);
-
-  // Get the number of elements that share each node.  We will
-  // compute the average value at each node.
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-
-    MeshBase::const_element_iterator it =
-      mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end();
-
-    for ( ; it != end; ++it)
-      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
-	node_conn_local[(*it)->node(n)]++;
-
-#ifdef HAVE_MPI
-    // Gather the distributed node_conn arrays in the case of
-    // multiple processors
-    //
-    // (Note that we use an unsigned short int here even though an
-    // unsigned char would be more that sufficient.  The MPI 1.1
-    // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)
-    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
-		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-
-#else
-    // Without MPI the node_conn_local and the node_conn arrays
-    // are necessarily identical
-    node_conn = node_conn_local;
-
-#endif
-  }
-
-  const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("fermi_e");
-  unsigned int ep_var = system->variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
-  fe->attach_quadrature_rule(&qrule);
-
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end();
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    ID subdomain = elem->subdomain_id();
-
-#ifdef ENABLE_INFINITE_ELEMENTS
-    // infinite elements should be skipped...
-    if (!elem->infinite())
-#endif
-    {
-      dof_map.dof_indices(elem, dof_indices_u, u_var);
-      dof_map.dof_indices(elem, dof_indices_en, en_var);
-      dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-      DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
-      assert(sc != NULL);
-
-      sc->reinit(elem);
-
-      fe->reinit(elem);
-
-      assert(elem->n_nodes() == dof_indices_u.size());
-
-      RealGradient field(0.0);
-      RealGradient grad_Fe(0.0);
-      RealGradient grad_Fh(0.0);
-      for (unsigned int i = 0; i < dof_indices_u.size(); i++)
-      {
-        field += dphi[i][0] * solution(dof_indices_u[i]);
-        grad_Fe += dphi[i][0] * solution(dof_indices_en[i]);
-        grad_Fh += dphi[i][0] * solution(dof_indices_ep[i]);
-      }
-      field *= -phi0;
-      grad_Fe *= -phi0;
-      grad_Fh *= -phi0;
-
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        double u  = phi0 * solution(dof_indices_u[n]);
-        double en = phi0 * solution(dof_indices_en[n]);
-        double ep = phi0 * solution(dof_indices_ep[n]);
-        double oldu  = phi0 * oldsolution(dof_indices_u[n]);
-        double olden = phi0 * oldsolution(dof_indices_en[n]);
-        double oldep = phi0 * oldsolution(dof_indices_ep[n]);
-
-
-        // prepare for calculating local properties
-        sc->set_coordinates(elem->point(n));
-
-
-        sc->set_potentials(u, en, ep);
-        sc->set_old_potentials(oldu, olden, oldep);
-        sc->set_electric_field(field);
-        sc->set_grad_fermi_e(grad_Fe);
-        sc->set_grad_fermi_h(grad_Fh);
-
-        sc->calculate_densities();
-        sc->compute_thermoelectric_powers();
-        sc->calculate_ionized_dopants();
-        sc->calculate_mobilities();
-        sc->calculate_net_recombination_rates();
-
-
-        assert (node_conn[elem->node(n)] != 0);
-        double conn = static_cast<double>(node_conn[elem->node(n)]);
-
-        unsigned int id = n_vars * elem->node(n);
-
-        if (edens != -1)
-        {
-          double nodal_val = sc->get_electron_density();
-          if (sc->is_dielectric())
-            nodal_val = 0.0;
-          local[id + edens] += nodal_val / conn;
-        }
-
-        if (hdens != -1)
-        {
-          double nodal_val = sc->get_hole_density();
-          if (sc->is_dielectric())
-            nodal_val = 0.0;
-          local[id + hdens] += nodal_val / conn;
-        }
-
-        if (Nd != -1)
-        {
-          double nodal_val = sc->get_ionized_donor_density();
-          local[id + Nd] += nodal_val / conn;
-        }
-
-        if (Na != -1)
-        {
-          double nodal_val = sc->get_ionized_acceptor_density();
-          local[id + Na] += nodal_val / conn;
-        }
-
-        if (rho != -1)
-        {
-          double nodal_val = sc->get_charge_density();
-          if (sc->is_dielectric())
-            nodal_val = 0.0;
-          local[id + rho] += nodal_val / conn;
-        }
-
-        if (rec != -1)
-        {
-          // recombination models
-          map<ID, string>::iterator it = rec_model_ids.begin();
-          map<ID, string>::iterator end = rec_model_ids.end();
-          int ctr = id + rec;
-          double tot = 0.0;
-          for ( ; it != end; ++it, ctr++)
-          {
-            double nodal_val = sc->get_net_recombination_rate(it->first);
-            local[ctr] += nodal_val / conn;
-            tot += nodal_val;
-          }
-          if (num_rec > 1)
-            local[ctr] += tot / conn;
-        }
-
-
-        if (mun != -1)
-        {
-          double nodal_val = sc->get_electron_mobility();
-          local[id + mun] += nodal_val / conn;
-        }
-
-        if (mup != -1)
-        {
-          double nodal_val = sc->get_hole_mobility();
-          local[id + mup] += nodal_val / conn;
-        }
-
-	if (Pn != -1)
-        {
-          double nodal_val = sc->get_electron_thermoelectric_power();
-          local[id + Pn] += nodal_val / conn;
-        }
-
-	if (Pp != -1)
-        {
-          double nodal_val = sc->get_hole_thermoelectric_power();
-          local[id + Pp] += nodal_val / conn;
-        }
-
-        if (phi != -1)
-        {
-          local[id + phi] += u / conn;
-        }
-
-        if (Efn != -1)
-          local[id + Efn] += -en / conn;
-
-        if (Efp != -1)
-          local[id + Efp] += -ep / conn;
-
-        if (Ec != -1)
-          local[id + Ec] += (sc->get_conduction_band_edge() - u) / conn;
-
-        if (Ev != -1)
-          local[id + Ev] += (sc->get_valence_band_edge() - u) / conn;
-
-        if (Ec0 != -1)
-          local[id + Ec0] += sc->get_conduction_band_edge() / conn;
-
-        if (Ev0 != -1)
-          local[id + Ev0] += sc->get_valence_band_edge() / conn;
-
-
-        if (Eg != -1)
-          local[id + Eg] +=
-            (sc->get_conduction_band_edge() - sc->get_valence_band_edge()) / conn;
-
-
-      } // end loop over nodes
-    } // end if not infinite element
-  } // end loop over elements
-
-#ifdef HAVE_MPI
-  // Now each processor has computed contriburions to the
-  // soln vector.  Gather them all up.
-  MPI_Allreduce (&local[0], &results[0], results.size(),
-		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
-#else
-  results = local;
-#endif
-
-}
-*/
-
-
-
-
-
-/*
-void
-DriftDiffusion::build_elemental_results(const set<string>& variables,
-    vector<double>& results, vector<string>& legend)
-{
-
-  // we only do something if we are on processor 0
-  // TODO parallelize
-  if (libMesh::processor_id() != 0)
-    return;
-
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-  const NumericVector<Number>& solution = system->get_solution_vector();
-  const NumericVector<Number>& oldsolution = system->get_vector("old_sol");
-
-  // aliases for nicer code
-  const Device& device = *(_device);
-  const MeshBase& mesh = get_mesh();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_active_elem();
-
-  legend.resize(variables.size());
-
-  // for each possible variable we set the vector index
-  // -1 means, the variable should not be plotted
-  unsigned int n_vars = 0;
-  const set<string>::const_iterator varend(variables.end());
-
-  bool found_variable = false;
-
-  int BandEdges = -1;
-  if (variables.find("BandEdges") != varend)
-  {
-    const Elem* elem = *mesh.active_elements_begin();
-
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          get_physical_model(elem->subdomain_id()));
-
-    assert(sc != NULL);
-
-    sc->reinit(elem);
-    sc->calculate_equilibrium_properties();
-
-    const vector<double>& cb = sc->get_conduction_bands();
-    const vector<double>& vb = sc->get_valence_bands();
-    int n_bands = cb.size() + vb.size();
-    legend.resize(legend.size() + n_bands);
-    BandEdges = n_vars;
-
-    for (unsigned int i = 0; i < cb.size(); i++)
-    {
-      ostringstream os;
-      os << "CB" << i;
-      legend[n_vars] = os.str();
-      n_vars++;
-    }
-
-    for (unsigned int i = 0; i < vb.size(); i++)
-    {
-      ostringstream os;
-      os << "VB" << i;
-      legend[n_vars] = os.str();
-      n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-  int EField = -1;
-  if (variables.find("EField") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    EField = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[EField + 2] = "E_z";
-        n_vars++;
-      case 2:
-        legend[EField + 1] = "E_y";
-        n_vars++;
-        legend[EField + dim] = "modE";
-        n_vars++;
-      default:
-        legend[EField] = "E_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-  int GradFermiE = -1;
-  if (variables.find("GradFermiE") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    GradFermiE = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[GradFermiE + 2] = "grad_fermi_e_z";
-        n_vars++;
-      case 2:
-        legend[GradFermiE + 1] = "grad_fermi_e_y";
-        n_vars++;
-        legend[GradFermiE + dim] = "mod_grad_fermi_e";
-        n_vars++;
-      default:
-        legend[GradFermiE] = "grad_fermi_e_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-  int GradFermiH = -1;
-  if (variables.find("GradFermiH") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    GradFermiH = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[GradFermiH + 2] = "grad_fermi_h_z";
-        n_vars++;
-      case 2:
-        legend[GradFermiH + 1] = "grad_fermi_h_y";
-        n_vars++;
-        legend[GradFermiH + dim] = "mod_grad_fermi_h";
-        n_vars++;
-      default:
-        legend[GradFermiH] = "grad_fermi_h_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-  int Jn = -1;
-  if (variables.find("eCurrent") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    Jn = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[Jn + 2] = "Jn_z";
-        n_vars++;
-      case 2:
-        legend[Jn + 1] = "Jn_y";
-        n_vars++;
-        legend[Jn + dim] = "modJn";
-        n_vars++;
-      default:
-        legend[Jn] = "Jn_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-
-  int Jp = -1;
-  if (variables.find("hCurrent") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    Jp = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[Jp + 2] = "Jp_z";
-        n_vars++;
-      case 2:
-        legend[Jp + 1] = "Jp_y";
-        n_vars++;
-        legend[Jp + dim] = "modJp";
-        n_vars++;
-      default:
-        legend[Jp] = "Jp_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-
-  int J = -1;
-  if ((variables.find("CurrentDensity") != varend) ||
-      (variables.find("Current") != varend))
-  {
-    legend.resize(legend.size() + dim);
-    J = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[J + 2] = "J_z";
-        n_vars++;
-      case 2:
-        legend[J + 1] = "J_y";
-        n_vars++;
-        legend[J + dim] = "modJ";
-        n_vars++;
-      default:
-        legend[J] = "J_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-  int dPn = -1;
-  if (variables.find("GradPn") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    dPn = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[dPn + 2] = "GradTepE_z";
-        n_vars++;
-      case 2:
-        legend[dPn + 1] = "GradTepE_y";
-        n_vars++;
-        legend[dPn + dim] = "modGradTepE";
-        n_vars++;
-      default:
-        legend[dPn] = "GradTepE_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-  int dPp = -1;
-  if (variables.find("GradPp") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    dPp = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[dPp + 2] = "GradTepH_z";
-        n_vars++;
-      case 2:
-        legend[dPp + 1] = "GradTepH_y";
-        n_vars++;
-        legend[dPp + dim] = "modGradTepH";
-        n_vars++;
-      default:
-        legend[dPp] = "GradTepH_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-  int Polariz = -1;
-  if ((variables.find("Polarization") != varend) ||
-      (variables.find("polarization") != varend))
-  {
-    legend.resize(legend.size() + dim);
-    Polariz = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[Polariz + 2] = "P_z";
-        n_vars++;
-      case 2:
-        legend[Polariz + 1] = "P_y";
-        n_vars++;
-        legend[Polariz + dim] = "modP";
-        n_vars++;
-      default:
-        legend[Polariz] = "P_x";
-        n_vars++;
-    }
-
-    found_variable = true;
-  }
-
-
-  int PDens = -1;
-  //if (variables.find("PowerDensity") != varend)
-  //{
-  //  PDens = n_vars;
-  //  legend[n_vars] = "power_density[W*cm^-3]";
-  //  n_vars++;
-  //}
-
-
-  legend.resize(n_vars);
-
-  results.resize(nn * n_vars);
-
-  // We return immediately if there are no variables to be plotted
-  if (!found_variable)
-    return;
-
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("fermi_e");
-  unsigned int ep_var = system->variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
-  fe->attach_quadrature_rule(&qrule);
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-
-  // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  // physical coordinates of the quadrature points
-  const vector<Point>& q_point = fe->get_xyz();
-
-  MeshBase::const_element_iterator it =
-    mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end = mesh.active_elements_end();
-
-  unsigned int elem_number = 0;
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    ID subdomain = elem->subdomain_id();
-
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
-
-    assert(sc != NULL);
-
-    sc->reinit(elem);
-
-    fe->reinit(elem);
-
-
-    //Get the temperature given the element
-    vector<double> T_nodes = sc->get_temperature_at_nodes();
-
-
-    unsigned int n_dofs = dof_indices_u.size();
-    // get the solution values at the centroid
-    double en_x = 0.0, ep_x = 0.0;
-    double en_y = 0.0, ep_y = 0.0;
-    double en_z = 0.0, ep_z = 0.0;
-    double dT_x = 0.0;
-    double dT_y = 0.0;
-    double dT_z = 0.0;
-    double u  = 0.0;
-    double en = 0.0;
-    double ep = 0.0;
-    double oldu  = 0.0;
-    double olden = 0.0;
-    double oldep = 0.0;
-    double T = 0.0;
-    RealGradient e_field(0);
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      en_x  += dphi[i][0](0) * solution(dof_indices_en[i]);
-      en_y  += dphi[i][0](1) * solution(dof_indices_en[i]);
-      en_z  += dphi[i][0](2) * solution(dof_indices_en[i]);
-
-      ep_x  += dphi[i][0](0) * solution(dof_indices_ep[i]);
-      ep_y  += dphi[i][0](1) * solution(dof_indices_ep[i]);
-      ep_z  += dphi[i][0](2) * solution(dof_indices_ep[i]);
-
-      dT_x  += dphi[i][0](0) * T_nodes[i];
-      dT_y  += dphi[i][0](1) * T_nodes[i];
-      dT_z  += dphi[i][0](2) * T_nodes[i];
-
-      T += phi[i][0] * T_nodes[i];
-
-      u  += phi[i][0] * solution(dof_indices_u[i]);
-      en += phi[i][0] * solution(dof_indices_en[i]);
-      ep += phi[i][0] * solution(dof_indices_ep[i]);
-      oldu  += phi[i][0] * oldsolution(dof_indices_u[i]);
-      olden += phi[i][0] * oldsolution(dof_indices_en[i]);
-      oldep += phi[i][0] * oldsolution(dof_indices_ep[i]);
-      e_field += dphi[i][0] * solution(dof_indices_u[i]);
-    }
-    e_field *= -phi0;
-    en_x *= phi0;
-    en_y *= phi0;
-    en_z *= phi0;
-    ep_x *= phi0;
-    ep_y *= phi0;
-    ep_z *= phi0;
-
-    // prepare for calculating local properties
-    sc->set_coordinates(elem->centroid());
-
-    sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-    sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
-
-    sc->set_electric_field(e_field);
-    sc->set_grad_fermi_e(RealGradient(en_x, en_y, en_z));
-    sc->set_grad_fermi_h(RealGradient(ep_x, ep_y, ep_z));
-
-    sc->calculate_densities();
-
-    sc->calculate_mobilities();
-
-    sc->compute_thermoelectric_powers();
-
-    sc->compute_thermoelectric_power_gradient();
-
-    double Pn = sc->get_electron_thermoelectric_power();
-    double Pp = sc->get_hole_thermoelectric_power();
-    RealGradient GradPn = sc->get_electron_thermoelectric_power_gradient();
-    RealGradient GradPp = sc->get_hole_thermoelectric_power_gradient();
-
-
-    double sigma_e = Constants::e * sc->get_electron_density() *
-      sc->get_electron_mobility();
-    double sigma_h = Constants::e * sc->get_hole_density() *
-      sc->get_hole_mobility();
-
-    unsigned int id = n_vars * elem_number;
-
-    if (BandEdges != -1)
-    {
-      sc->calculate_equilibrium_properties();
-      const vector<double>& cb = sc->get_conduction_bands();
-      const vector<double>& vb = sc->get_valence_bands();
-
-      for (unsigned int i = 0; i < cb.size(); i++)
-        results[id + BandEdges + i] = cb[i];
-
-      for (unsigned int i = 0; i < vb.size(); i++)
-        results[id + BandEdges + cb.size() + i] = vb[i];
-    }
-
-
-    if (EField != -1)
-    {
-      switch (dim)
-      {
-        case 3:
-          results[id + EField + 2] = e_field(2);
-        case 2:
-          results[id + EField + 1] = e_field(1);
-          results[id + EField + dim] = e_field.size();
-        default:
-          results[id + EField] = e_field(0);
-      }
-    }
-
-
-    if (GradFermiE != -1)
-    {
-      switch (dim)
-      {
-        case 3:
-          results[id + GradFermiE + 2] = en_z;
-        case 2:
-          results[id + GradFermiE + 1] = en_y;
-          results[id + GradFermiE + dim] =  sqrt(en_x * en_x + en_y * en_y + en_z * en_z);
-        default:
-          results[id + GradFermiE] = en_x;
-      }
-    }
-
-
-    if (GradFermiH != -1)
-    {
-      switch (dim)
-      {
-        case 3:
-          results[id + GradFermiH + 2] = ep_z;
-        case 2:
-          results[id + GradFermiH + 1] = ep_y;
-          results[id + GradFermiH + dim] =
-            sqrt(ep_x * ep_x + ep_y * ep_y + ep_z * ep_z);
-        default:
-          results[id + GradFermiH] = ep_x;
-      }
-    }
-
-
-    if (Polariz != -1)
-    {
-      const RealVectorValue& pol = sc->get_total_polarization();
-      switch (dim)
-      {
-        case 3:
-          results[id + Polariz + 2] = pol(2);
-        case 2:
-          results[id + Polariz + 1] = pol(1);
-          results[id + Polariz + dim] = pol.size();
-        default:
-          results[id + Polariz] = pol(0);
-      }
-    }
-
-
-    if (Jn != -1)
-    {
-      double jx = -sigma_e * (en_x + Pn * dT_x);
-      double jy = -sigma_e * (en_y + Pn * dT_y);
-      double jz = -sigma_e * (en_z + Pn * dT_z);
-      switch (dim)
-      {
-        case 3:
-          results[id + Jn + 2] = jz;
-        case 2:
-          results[id + Jn + 1] = jy;
-          results[id + Jn + dim] = sqrt(jx * jx + jy * jy + jz * jz);
-        default:
-          results[id + Jn] = jx;
-      }
-    }
-
-
-    if (Jp != -1)
-    {
-      double jx = -sigma_h * (ep_x + Pp * dT_x);
-      double jy = -sigma_h * (ep_y + Pp * dT_y);
-      double jz = -sigma_h * (ep_z + Pp * dT_z);
-      switch (dim)
-      {
-        case 3:
-          results[id + Jp + 2] = jz;
-        case 2:
-          results[id + Jp + 1] = jy;
-          results[id + Jp + dim] = sqrt(jx * jx + jy * jy + jz * jz);
-        default:
-          results[id + Jp] = jx;
-      }
-    }
-
-    if (J != -1)
-    {
-      double jx = -sigma_e * (en_x + Pn * dT_x) - sigma_h * (ep_x + Pp * dT_x);
-      double jy = -sigma_e * (en_y + Pn * dT_y) - sigma_h * (ep_y + Pp * dT_y);
-      double jz = -sigma_e * (en_z + Pn * dT_z) - sigma_h * (ep_z + Pp * dT_z);
-      switch (dim)
-      {
-        case 3:
-          results[id + J + 2] = jz;
-        case 2:
-          results[id + J + 1] = jy;
-          results[id + J + dim] = sqrt(jx * jx + jy * jy + jz * jz);
-        default:
-          results[id + J] = jx;
-      }
-    }
-
-
-    if (dPn != -1)
-    {
-      double dPn_x = GradPn(0);
-      double dPn_y = GradPn(1);
-      double dPn_z = GradPn(2);
-      switch (dim)
-      {
-        case 3:
-          results[id + dPn + 2] = dPn_z;
-        case 2:
-          results[id + dPn + 1] = dPn_y;
-          results[id + dPn + dim] = sqrt(dPn_x * dPn_x + dPn_y * dPn_y + dPn_z * dPn_z);
-        default:
-          results[id + dPn] = dPn_x;
-      }
-    }
-
-    if (dPp != -1)
-    {
-      double dPp_x = GradPp(0);
-      double dPp_y = GradPp(1);
-      double dPp_z = GradPp(2);
-      switch (dim)
-      {
-        case 3:
-          results[id + dPp + 2] = dPp_z;
-        case 2:
-          results[id + dPp + 1] = dPp_y;
-          results[id + dPp + dim] = sqrt(dPp_x * dPp_x + dPp_y * dPp_y + dPp_z * dPp_z);
-        default:
-          results[id + dPp] = dPp_x;
-      }
-    }
-
-
-    if (PDens != -1)
-    {
-      double jx = sigma_e * (en_x + Pn * dT_x) + sigma_h * (ep_x + Pp * dT_x);
-      double jy = sigma_e * (en_y + Pn * dT_y) + sigma_h * (ep_y + Pp * dT_y);
-      double jz = sigma_e * (en_z + Pn * dT_z) + sigma_h * (ep_z + Pp * dT_z);
-      double P = jx * e_field(0) + jy * e_field(1) + jz  * e_field(2);
-      results[id + PDens] = P;
-    }
-
-    elem_number++;
-  }
-
-  results.resize(elem_number * n_vars);
-}
-*/
 
 
 void
@@ -3831,118 +2817,6 @@ DriftDiffusion::do_maximum_norm_of_difference(ID id)
   double norm = SimulationInterface::do_maximum_norm_of_difference(id);
 
   return norm * get_scaling().get_potential_scaling();
-}
-
-
-
-void
-DriftDiffusion::set_dirichlet_bc(void)
-{
-
-  const Device& device = *_device;
-
-  EquationSystems& es = get_equation_systems();
-
-  // references for nicer code
-  const MeshBase& mesh = get_mesh();
-
-  TiberNonlinearSystem& system = es.get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
-
-
-  // the current solutions
-  NumericVector<Number>& solution = system.get_solution_vector();
-
-  DofList& dirichlet_dofs = _dirichlet_dofs;
-
-  DofList::const_iterator dof_it;
-  const DofList::const_iterator dof_end =
-    dirichlet_dofs.end();
-
-
-  const Scaling& scaling = get_scaling();
-  const double phi0 = scaling.get_potential_scaling();
-
-
-  const DofMap& dof_map = system.get_dof_map();
-
-  const unsigned int u_var = system.variable_number("potential");
-  const unsigned int n_var = system.variable_number("fermi_e");
-  const unsigned int p_var = system.variable_number("fermi_h");
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_n;
-  vector<unsigned int> dof_indices_p;
-
-
-
-  MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
-
-  // loop over all active elements
-  for ( ; el != end_el ; ++el)
-  {
-    const Elem* elem = *el;
-    const Elem* top_parent = (*el)->top_parent();
-
-    ID subdomain = elem->subdomain_id();
-
-    // get DOF indices
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_n, n_var);
-    dof_map.dof_indices(elem, dof_indices_p, p_var);
-
-    unsigned int n_dofs = dof_indices_u.size();
-
-
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
-    assert(sc != NULL);
-
-    sc->reinit(elem);
-
-    {
-      // loop over all nodes and check if it is a dirichlet type node
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        bool is_dirichlet_node =
-            (dirichlet_dofs.find(dof_indices_u[i]) != dof_end) ? true : false;
-        is_dirichlet_node |= (dirichlet_dofs.find(dof_indices_n[i]) != dof_end) ? true : false;
-        is_dirichlet_node |= (dirichlet_dofs.find(dof_indices_p[i]) != dof_end) ? true : false;
-        if (is_dirichlet_node)
-        {
-          Boundary* bd = get_environment().get_boundary(elem->get_node(i));
-          ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-              bd->get_boundary_properties(get_id()));
-          contact->set_material(sc);
-
-          if (contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-          {
-            double val = (contact->get_boundary_value(POTENTIAL)
-                + contact->get_inner_voltage()) / phi0;
-            solution.set(dof_indices_u[i], val);
-          }
-
-          if (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-          {
-            double val = (contact->get_boundary_value(FERMIE)
-                + contact->get_inner_voltage()) / phi0;
-            solution.set(dof_indices_n[i], val);
-          }
-
-          if (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET)
-          {
-            double val = (contact->get_boundary_value(FERMIH)
-                + contact->get_inner_voltage()) / phi0;
-            solution.set(dof_indices_p[i], val);
-          }
-        }
-      }
-    }
-  }
 }
 
 
@@ -4298,6 +3172,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       //double Na = sc->get_ionized_acceptor_density();
 
       // calculate all local properties
+      sc->calculate_traps();
       sc->calculate_ionized_dopants();
       sc->calculate_mobilities();
       sc->calculate_net_recombination_rates();
@@ -4381,14 +3256,17 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       //
       if (jacobian != NULL)
       {
-        long double dn_dphi = sc->get_electron_density_derivative();
-        long double dp_dphi = sc->get_hole_density_derivative();
-        long double dNd_dphi = sc->get_ionized_donor_density_derivative();
-        long double dNa_dphi = sc->get_ionized_acceptor_density_derivative();
+        double dn_dphi = sc->get_electron_density_derivative();
+        double dp_dphi = sc->get_hole_density_derivative();
+        //double dNd_dphi = sc->get_ionized_donor_density_derivative();
+        //double dNa_dphi = sc->get_ionized_acceptor_density_derivative();
 
-        long double drho[3];
-        drho[1] = (dn_dphi - dNd_dphi) * phi0 / C0;
-        drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
+        double drho[3];
+        sc->get_charge_density_derivatives(&drho[1]);
+        //drho[1] = (dn_dphi - dNd_dphi) * phi0 / C0;
+        //drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
+        drho[1] *= phi0 / C0;
+        drho[2] *= phi0 / C0;
         drho[0] = -(drho[1] + drho[2]);
 
         if (_useparticle == 'e')
@@ -4415,7 +3293,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         dRp[1] = -dRp_dn * dn_dphi * phi0 / R0_h;
         dRp[2] = -dRp_dp * dp_dphi * phi0 / R0_h;
         dRp[0] = -(dRp[1] + dRp[2]);
-
 
         if (Rn == 0.0)
           dRn[0] = dRn[1] = dRn[2] = 0.0;
@@ -4639,13 +3516,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
 
 
-    // this is for surface resistance
-    map<unsigned int, double> nodal_flux_n;
-    for (unsigned int i = 0; i < elem->n_nodes(); i++)
-      nodal_flux_n[elem->node(i)] = 0.0;
-    map<unsigned int, double> nodal_flux_p(nodal_flux_n);
-
-
+    map<unsigned int, vector<double> > dirichlet_jac;
+    map<unsigned int, double> dirichlet_res;
 
     // now loop over the element sides to find boundary elements
     // and to include von Neumann and mixed type boundary conditions
@@ -4654,517 +3526,293 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     // we dont apply BC for nabla(Ef) but for the particle
     // flux mu * n * nabla(Ef)
     //
-    // NOTE 2:
-    // 1D case needs special treatment as 0D boundary elements do not
-    // exist in libmesh...
-    //
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
-      ElementSide side(top_parent, s);
 
-      const Elem* neighbour = elem->neighbor(s);
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
 
-      // for the new implementation
-      //PhysicalModel* sm = get_surface_model(elem, s);
+      bool true_boundary = environment.is_outer_boundary(ElementSide(elem, s));
 
-      // is this a boundary?
-      if (environment.is_boundary(side))
+      if ((sm != NULL) || true_boundary)
       {
-        Boundary* boundary = environment.get_boundary(side);
-
-        ElectricalContact* contact = NULL;
-        if (boundary != NULL)
-          contact = dynamic_cast<ElectricalContact*>(
-              boundary->get_boundary_properties(get_id()));
-
-        // we need to know if it is an outer boundary
-        bool true_boundary = environment.is_outer_boundary(side);
-        if (contact != NULL)
-          contact->is_outer_boundary(true_boundary);
-
-        //PhysicalModel* pm = get_surface_model(elem, s);
-
         fe_face->reinit(elem, s);
 
-        // calculate the fluxes on the nodes
-        if ((contact != NULL) && (dim > 1))
+        int phi_size = phi_face.size();
+
+        // now integrate to include von Neumann and mixed type BCs
+        // and polarization
+        for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
-          AutoPtr<Elem> side(elem->build_side(s));
 
-          vector<Point> p(side->n_nodes());
-          for (unsigned int i = 0; i < side->n_nodes(); i++)
-            p[i] = side->point(i);
+          double epsilon = sc->get_relative_permittivity();
+          double l2_eps = l2 * epsilon;
 
-/*
-          fe->reinit(elem, &p);
 
-          for (unsigned int i = 0; i < side->n_nodes(); i++)
+          // get the solution values at the quadrature point
+          Real u  = 0.0;
+          Real en = 0.0;
+          Real ep = 0.0;
+          RealGradient e_field(0);
+          RealGradient grad_en(0);
+          RealGradient grad_ep(0);
+          RealGradient grad_T(0);
+          for (unsigned int i = 0; i < n_dofs; i++)
           {
-            RealGradient e_field(0);
-            RealGradient grad_en(0);
-            RealGradient grad_ep(0);
-            RealGradient grad_T(0);
-            for (unsigned int j = 0; j < n_dofs; j++)
-            {
-              e_field += dphi[j][i] * Xu(j);
-              grad_en += dphi[j][i] * Xn(j);
-              grad_ep += dphi[j][i] * Xp(j);
-            }
-
-            sc->set_potentials(phi0 * Xu(i), phi0 * Xn(i), phi0 * Xp(i));
-            sc->set_coordinates(side->point(i));
-            sc->set_electric_field(-phi0 / x0 * e_field);
-            sc->calculate_densities();
-            sc->calculate_mobilities();
-
-            // we put phi0 here for convenience
-            double sigma_e = phi0 * sc->get_electron_mobility() *
-              sc->get_electron_density();
-            double sigma_h = phi0 * sc->get_hole_mobility() *
-              sc->get_hole_density();
-
-            sc->compute_thermoelectric_powers();
-            double Pn =  sc->get_electron_thermoelectric_power();
-            double Pp =  sc->get_hole_thermoelectric_power();
-
-            if (coupling & ECURRENT)
-              nodal_flux_n[side->node(i)] =
-                (sigma_e * grad_en + Pn * grad_T) * face_normals[0] / x0;
-            if (coupling & HCURRENT)
-              nodal_flux_p[side->node(i)] =
-                -(sigma_h * grad_ep + Pp * grad_T) * face_normals[0] / x0;
+            u  += phi_face[i][qp] * Xu(i);
+            en += phi_face[i][qp] * Xn(i);
+            ep += phi_face[i][qp] * Xp(i);
+            e_field -= dphi_face[i][qp] * Xu(i);
+            grad_en += dphi_face[i][qp] * Xn(i);
+            grad_ep += dphi_face[i][qp] * Xp(i);
           }
-*/
-        }
 
-
-        // for von Neumann or mixed type boundary conditions
-        vector<double> coeff(3, 0.0);
-        vector<double> value(3, 0.0);
-
-        // the derivatives
-        vector<vector<double> > dcoeff(3, vector<double>(3, 0.0));
-        vector<vector<double> > dvalue(3, vector<double>(3, 0.0));
-
-        //
-        // NOTE: we have to integrate over the boundary also if there are
-        //       no contacts because there could be polarization.
-        //
-
-        if (dim > 1)
-        {
-
-          int phi_size = phi_face.size();
-
-          // now integrate to include von Neumann and mixed type BCs
-          // and polarization
-          for (unsigned int qp = 0; qp < qface->n_points(); qp++)
-          {
-
-            double epsilon = sc->get_relative_permittivity();
-            double l2_eps = l2 * epsilon;
-
-            // get the boundary condition coefficients
-            if (contact != NULL)
-            {
-
-              // get the solution values at the quadrature point
-              Real u  = 0.0;
-              Real en = 0.0;
-              Real ep = 0.0;
-              RealGradient e_field(0);
-              RealGradient grad_en(0);
-              RealGradient grad_ep(0);
-              RealGradient grad_T(0);
-              for (unsigned int i = 0; i < n_dofs; i++)
-              {
-                u  += phi_face[i][qp] * Xu(i);
-                en += phi_face[i][qp] * Xn(i);
-                ep += phi_face[i][qp] * Xp(i);
-                e_field -= dphi_face[i][qp] * Xu(i);
-                grad_en += dphi_face[i][qp] * Xn(i);
-                grad_ep += dphi_face[i][qp] * Xp(i);
-              }
-
-              sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-              sc->set_coordinates(q_point_face[qp]);
-              sc->set_electric_field(phi0 / x0 * e_field);
-              sc->set_grad_fermi_e(phi0 / x0 * grad_en);
-              sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
-              sc->calculate_densities();
-              sc->calculate_mobilities();
-
-              // we put the phi0 here for convenience
-              double sigma_e = phi0 * sc->get_electron_mobility() *
-                sc->get_electron_density();
-              double sigma_h = phi0 * sc->get_hole_mobility() *
-                sc->get_hole_density();
-
-              sc->compute_thermoelectric_powers();
-              double Pn =  sc->get_electron_thermoelectric_power() / phi0;
-              double Pp =  sc->get_hole_thermoelectric_power() / phi0;
-
-              double jn = 0.0;
-              double jp = 0.0;
-              if (coupling & ECURRENT)
-                jn = (sigma_e * grad_en + Pn * grad_T) * face_normals[qp] / x0;
-              if (coupling & HCURRENT)
-                jp = -(sigma_h * grad_ep + Pp * grad_T) * face_normals[qp] / x0;
-
-
-              contact->set_material(sc);
-              contact->set_normal_fluxes(jn, jp);
-              double a, c;
-
-              if (coupling & POISSON)
-              {
-                contact->get_normal_derivative(POTENTIAL, a, c);
-                contact->get_derivatives_of_normal_derivative(POTENTIAL,
-                    dcoeff[0], dvalue[0]);
-                //coeff[0] = a * x0;
-                coeff[0] = 0.0;
-                value[0] = c / (x0 * C0);
-              }
-              if (coupling & ECURRENT)
-              {
-                contact->get_normal_derivative(FERMIE, a, c);
-                contact->get_derivatives_of_normal_derivative(FERMIE,
-                    dcoeff[1], dvalue[1]);
-                coeff[1] = a; // ???
-                value[1] = c / (x0 * R0_e);
-              }
-              if (coupling & HCURRENT)
-              {
-                contact->get_normal_derivative(FERMIH, a, c);
-                contact->get_derivatives_of_normal_derivative(FERMIH,
-                    dcoeff[2], dvalue[2]);
-                coeff[2] = a; // ???
-                value[2] = c / (x0 * R0_h);
-              }
-            }
-
-
-
-            // the jacobian x weight x scaling
-            double J = JxW_face[qp];
-/*
-            // first the contributions to Ke_ij
-            for (unsigned int i = 0; i < n_dofs; i++)
-            {
-              for (unsigned int j = 0; j < n_dofs; j++)
-              {
-
-                Real phi_i_x_phi_j =
-                  J * phi_face[i][qp] * phi_face[j][qp];
-
-                if (coupling & POISSON)
-                  Kuu(i,j) += l2_eps * coeff[0] * phi_i_x_phi_j
-                    / local_scaling[i][2];
-
-                //if (coupling & ECURRENT)
-                //  Knn(i,j) += coeff[1] * phi_i_x_phi_j / local_scaling[i][0];
-
-                //if (coupling & HCURRENT)
-                //  Kpp(i,j) += coeff[2] * phi_i_x_phi_j / local_scaling[i][1];
-              }
-            }
-*/
-
-            // contribution to the jacobian
-            if (jacobian != NULL)
-            {
-              double scale_u = J * phi0 / x0 / C0;
-              double scale_n = J * phi0 / (x0 * R0_e);
-              double scale_p = J * phi0 / (x0 * R0_h);
-
-              for (unsigned int i = 0; i < n_dofs; i++)
-              {
-                double fac_u = scale_u / local_scaling[i][2];
-                double fac_n = scale_n / local_scaling[i][0];
-                double fac_p = scale_p / local_scaling[i][1];
-
-                for (unsigned int j = 0; j < n_dofs; j++)
-                {
-
-                  Real phi_i_x_phi_j =
-                    phi_face[i][qp] * phi_face[j][qp];
-
-                  if (coupling & POISSON)
-                  {
-                    Kuu(i,j) -= fac_u * dvalue[0][0] * phi_i_x_phi_j;
-
-                    if (coupling & ECURRENT)
-                      Kun(i,j) -= fac_u * dvalue[0][1] * phi_i_x_phi_j;
-
-                    if (coupling & HCURRENT)
-                      Kup(i,j) -= fac_u * dvalue[0][2] * phi_i_x_phi_j;
-                  }
-
-
-                  ////
-                  // NOTE:
-                  //   the signs are inverted here because outflow means recombination
-                  //   and the normal point outwards, giving a positiv current for
-                  //   outflow
-                  if (coupling & ECURRENT)
-                  {
-                    if (coupling & POISSON)
-                      Knu(i,j) -= fac_n * dvalue[1][0] * phi_i_x_phi_j;
-
-                    Knn(i,j) -= fac_n * dvalue[1][1] * phi_i_x_phi_j;
-
-                    if (coupling & HCURRENT)
-                      Knp(i,j) -= fac_n * dvalue[1][2] * phi_i_x_phi_j;
-                  }
-
-
-                  if (coupling & HCURRENT)
-                  {
-                    if (coupling & POISSON)
-                      Kpu(i,j) += fac_p * dvalue[2][0] * phi_i_x_phi_j;
-
-                    if (coupling & ECURRENT)
-                      Kpn(i,j) += fac_p * dvalue[2][1] * phi_i_x_phi_j;
-
-                    Kpp(i,j) += fac_p * dvalue[2][2] * phi_i_x_phi_j;
-                  }
-
-                }
-              }
-            }
-
-            // contribution to -Fe_i
-            if (residual != NULL)
-            {
-              double Pn = 0.0;
-              if (true_boundary && (contact == NULL))
-              {
-                // If we are on an outer boundary, we have to include
-                // the polarization
-                //
-                // NOTE:
-                // we only include the polarization when no boundary
-                // is defined
-                RealVectorValue P(sc->get_total_polarization());
-                Pn = (P * face_normals[qp]) / P0;
-              }
-              //double value_u = J * (l2_eps * value[0] - Pn);
-              double value_u = J * (value[0] - Pn);
-              double value_n = J * value[1];
-              double value_p = J * value[2];
-
-              for (unsigned int i = 0; i < n_dofs; i++)
-              {
-                if (coupling & POISSON)
-                  Fu(i) -= value_u * phi_face[i][qp] / local_scaling[i][2];
-
-                if (coupling & ECURRENT)
-                  Fn(i) -= value_n * phi_face[i][qp] / local_scaling[i][0];
-
-                if (coupling & HCURRENT)
-                  Fp(i) += value_p * phi_face[i][qp] / local_scaling[i][1];
-              }
-            }
-          }
-        }
-        else // i.e. dim == 1
-        {
-
-          // s is the node of the element lying on the boundary
-          Real u  = Xu(s);
-          Real en = Xn(s);
-          Real ep = Xp(s);
-
-          // calculate densities etc.
-          sc->set_coordinates(elem->point(s));
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-
-          RealGradient e_field(0.0);
-          double grad_en = 0.0;
-          double grad_ep = 0.0;
-          double grad_T = 0.0;
-          for (unsigned int n = 0; n < elem->n_nodes(); n++)
-          {
-            grad_en += dphi_face[n][0](0)* Xn(n);
-            grad_ep += dphi_face[n][0](0) * Xp(n);
-            e_field(0) += dphi_face[n][0](0) * Xu(n);
-
-            grad_T += dphi_face[n][0](0) * T_nodes[n];
-          }
-
+          sc->set_coordinates(q_point_face[qp]);
           sc->set_electric_field(phi0 / x0 * e_field);
-          sc->set_grad_fermi_e(phi0 / x0 * RealGradient(grad_en, 0.0, 0.0));
-          sc->set_grad_fermi_h(phi0 / x0 * RealGradient(grad_ep, 0.0, 0.0));
+          sc->set_grad_fermi_e(phi0 / x0 * grad_en);
+          sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
           sc->calculate_densities();
           sc->calculate_mobilities();
 
           // we put the phi0 here for convenience
           double sigma_e = phi0 * sc->get_electron_mobility() *
-            sc->get_electron_density();
+              sc->get_electron_density();
           double sigma_h = phi0 * sc->get_hole_mobility() *
-            sc->get_hole_density();
+              sc->get_hole_density();
 
           sc->compute_thermoelectric_powers();
           double Pn =  sc->get_electron_thermoelectric_power() / phi0;
           double Pp =  sc->get_hole_thermoelectric_power() / phi0;
 
-          double x_c = elem->centroid()(0);
-          double x_s = elem->point(s)(0);
-          double sign = (x_s > x_c) ? 1 : -1;
-
-          double jn = sign * (sigma_e * grad_en + Pn * grad_T) / x0;
-          double jp = -sign * (sigma_h * grad_ep + Pp * grad_T) / x0;
-
-          double epsilon = sc->get_relative_permittivity();
-          double l2_eps = l2 * epsilon;
-
+          double jn = 0.0;
+          double jp = 0.0;
           if (coupling & ECURRENT)
-            nodal_flux_n[elem->node(s)] = jn;
+            jn = (sigma_e * grad_en + Pn * grad_T) * face_normals[qp] / x0;
           if (coupling & HCURRENT)
-            nodal_flux_p[elem->node(s)] = jp;
-
-          // get the boundary condition coefficients
-          if (contact != NULL)
-          {
-            contact->set_material(sc);
-            contact->set_normal_fluxes(jn, jp);
-
-            double a, c;
-
-            if (coupling & POISSON)
-            {
-              contact->get_normal_derivative(POTENTIAL, a, c);
-              contact->get_derivatives_of_normal_derivative(POTENTIAL,
-                  dcoeff[0], dvalue[0]);
-              //coeff[0] = a * x0;
-              coeff[0] = 0.0;
-              value[0] = c / (x0 * C0);
-            }
-            if (coupling & ECURRENT)
-            {
-              contact->get_normal_derivative(FERMIE, a, c);
-              contact->get_derivatives_of_normal_derivative(FERMIE,
-                  dcoeff[1], dvalue[1]);
-              coeff[1] = a * x0;
-              value[1] = c * x0 / phi0;
-            }
-            if (coupling & HCURRENT)
-            {
-              contact->get_normal_derivative(FERMIH, a, c);
-              contact->get_derivatives_of_normal_derivative(FERMIH,
-                  dcoeff[2], dvalue[2]);
-              coeff[2] = a * x0;
-              value[2] = c * x0 / phi0;
-            }
-          }
+            jp = -(sigma_h * grad_ep + Pp * grad_T) * face_normals[qp] / x0;
 
 
-          // first the contributions to Ke_ij
-          if (coupling & POISSON)
-            Kuu(s,s) += l2_eps * coeff[0] / local_scaling[s][2];
-
-          if (coupling & ECURRENT)
-            Knn(s,s) += coeff[1] / local_scaling[s][0];
-
-          if (coupling & HCURRENT)
-            Kpp(s,s) += coeff[2] / local_scaling[s][1];
+          // the jacobian x weight x scaling
+          double J = JxW_face[qp];
 
 
           // contribution to the jacobian
-          if (jacobian != NULL)
+          if ((sm != NULL) && (jacobian != NULL))
           {
-            double val_uu = dvalue[0][0] / x0 / C0 * phi0;
-            double val_nn = dvalue[1][1] / mu0 / C0 * phi0;
-            double val_pp = dvalue[2][2] / mu0 / C0 * phi0;
+            sm->compute();
 
-            if (coupling & POISSON)
-              Kuu(s,s) -= val_uu / local_scaling[s][2];
+            // for Dirichlet DOFs we do not add anything
+            double scale_u = J * phi0 / x0 / C0;;
+            if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
+              scale_u = 0;
 
-            if (coupling & ECURRENT)
-              Knn(s,s) -= val_nn / local_scaling[s][0];
+            double scale_n = J * phi0 / (x0 * R0_e);
+            if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
+              scale_n = 0;
 
-            if (coupling & HCURRENT)
-              Kpp(s,s) -= val_pp / local_scaling[s][1];
+            double scale_p = J * phi0 / (x0 * R0_h);
+            if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
+              scale_p = 0;
+
+
+            const vector<double>& deriv_u = sm->get_jacobian_row(0);
+            const vector<double>& deriv_en = sm->get_jacobian_row(1);
+            const vector<double>& deriv_ep = sm->get_jacobian_row(2);
+
+
+            for (unsigned int i = 0; i < n_dofs; i++)
+            {
+              double fac_u = scale_u / local_scaling[i][2];
+              double fac_n = scale_n / local_scaling[i][0];
+              double fac_p = scale_p / local_scaling[i][1];
+
+              if (elem->is_node_on_side(i, s))
+              {
+                if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
+                  dirichlet_jac[i] = deriv_u;
+
+                if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
+                  dirichlet_jac[n_dofs + i] = deriv_en;
+
+                if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
+                  dirichlet_jac[2 * n_dofs + i] = deriv_ep;
+              }
+
+
+              for (unsigned int j = 0; j < n_dofs; j++)
+              {
+
+                Real phi_i_x_phi_j =
+                  phi_face[i][qp] * phi_face[j][qp];
+
+                if (coupling & POISSON)
+                {
+                  Kuu(i,j) -= fac_u * deriv_u[0] * phi_i_x_phi_j;
+
+                  if (coupling & ECURRENT)
+                    Kun(i,j) -= fac_u * deriv_u[1] * phi_i_x_phi_j;
+
+                  if (coupling & HCURRENT)
+                    Kup(i,j) -= fac_u * deriv_u[2] * phi_i_x_phi_j;
+                }
+
+
+                ////
+                // NOTE:
+                //   the signs are inverted here because outflow means recombination
+                //   and the normal point outwards, giving a positiv current for
+                //   outflow
+                if (coupling & ECURRENT)
+                {
+                  if (coupling & POISSON)
+                    Knu(i,j) -= fac_n * deriv_en[0] * phi_i_x_phi_j;
+
+                  Knn(i,j) -= fac_n * deriv_en[1] * phi_i_x_phi_j;
+
+                  if (coupling & HCURRENT)
+                    Knp(i,j) -= fac_n * deriv_en[2] * phi_i_x_phi_j;
+                }
+
+
+                if (coupling & HCURRENT)
+                {
+                  if (coupling & POISSON)
+                    Kpu(i,j) += fac_p * deriv_ep[0] * phi_i_x_phi_j;
+
+                  if (coupling & ECURRENT)
+                    Kpn(i,j) += fac_p * deriv_ep[1] * phi_i_x_phi_j;
+
+                  Kpp(i,j) += fac_p * deriv_ep[2] * phi_i_x_phi_j;
+                }
+              }
+            }
           }
-
 
           // contribution to -Fe_i
           if (residual != NULL)
           {
-            double Pn =  0.0;
-            if (true_boundary && (contact == NULL))
+
+            double value_u = 0.0;
+            double value_n = 0.0;
+            double value_p = 0.0;
+
+            if (true_boundary && (sm == NULL))
             {
               // If we are on an outer boundary, we have to include
               // the polarization
               //
               // NOTE:
-              // we only include the polarization when no boundary
-              // is defined
-              Pn = sc->get_total_polarization()(0) / P0;
-
-              // what is the outer normal in this point??
-              // Idea: if x(s) > x(centroid), normal is +1
-              //       else it is -1
-              double x_c = elem->centroid()(0);
-              double x_s = elem->point(s)(0);
-              Pn = (x_s > x_c) ? Pn : -Pn;
+              // we only include the polarization when no dirichlet
+              // boundary is defined
+              RealVectorValue P(sc->get_total_polarization());
+              double Pn = (P * face_normals[qp]) / P0;
+              value_u = -J * Pn;
             }
-            //double value_u = l2_eps * value[0] - Pn;
-            double value_u = value[0] - Pn;
-            double value_n = value[1] / (mu0 * C0_e);
-            double value_p = value[2] / (mu0 * C0_h);
+
+            if (sm != NULL)
+            {
+              sm->compute();
+
+              const vector<double>& coeff_a = sm->get_a();
+              const vector<double>& coeff_g = sm->get_g();
+
+              double tmp = (coeff_g[0] - coeff_a[0] * u * phi0);
+              if (sm->get_type(0) != DDInterfaceModel::DIRICHLET)
+                value_u += J * tmp / (x0 * C0);
+              else
+                value_u = coeff_g[0] / phi0;
+
+              value_n = (coeff_g[1] - coeff_a[1] * en * phi0);
+              if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)
+                value_n *= J / (x0 * R0_e);
+              else
+                value_n = coeff_g[1] / phi0;
 
 
-            if (coupling & POISSON)
-              Fu(s) -= value_u / local_scaling[s][2];
+              value_p = (coeff_g[2] - coeff_a[2] * ep * phi0);
+              if (sm->get_type(2) != DDInterfaceModel::DIRICHLET)
+                value_p *= J / (x0 * R0_h);
+              else
+                value_p = coeff_g[2] / phi0;
 
-            if (coupling & ECURRENT)
-              Fn(s) -= value_n / local_scaling[s][0];
 
-            if (coupling & HCURRENT)
-              Fp(s) -= value_p / local_scaling[s][1];
-          }
-        }
+            }
 
-        if (contact != NULL)
-        {
-          if ((contact->get_type(POTENTIAL) == ElectricalContact::DIRICHLET)
-              || (contact->get_type(FERMIE) == ElectricalContact::DIRICHLET)
-              || (contact->get_type(FERMIH) == ElectricalContact::DIRICHLET))
-          {
-            double valu = (contact->get_boundary_value(POTENTIAL)
-                + contact->get_inner_voltage()) / phi0;
 
-            double valn = (contact->get_boundary_value(FERMIE)
-                + contact->get_inner_voltage()) / phi0;
+            for (unsigned int i = 0; i < n_dofs; i++)
+            {
+              double scale_u = 1.0 / local_scaling[i][2];
+              double scale_n = 1.0 / local_scaling[i][0];
+              double scale_p = 1.0 / local_scaling[i][1];
 
-            double valp = (contact->get_boundary_value(FERMIH)
-                + contact->get_inner_voltage()) / phi0;
-
-            for (size_t n = 0; n < elem->n_nodes(); n++)
-              if (elem->is_node_on_side(n, s))
+              if ((sm != NULL) && elem->is_node_on_side(i, s))
               {
-                if ((coupling & POISSON) &&
-                    (contact->get_type(POTENTIAL) ==
-                     ElectricalContact::DIRICHLET))
-                  Ke.condense(n, n, -valu, Fe);
+                if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
+                {
+                  dirichlet_res[i] = value_u;
+                  scale_u = 0;
+                }
 
-                if ((coupling & ECURRENT) &&
-                    (contact->get_type(FERMIE) ==
-                     ElectricalContact::DIRICHLET))
-                  Ke.condense(n + n_dofs, n + n_dofs, -valn, Fe);
+                if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
+                {
+                  dirichlet_res[n_dofs + i] = value_n;
+                  scale_n = 0;
+                }
 
-                if ((coupling & HCURRENT) &&
-                    (contact->get_type(FERMIH) ==
-                     ElectricalContact::DIRICHLET))
-                  Ke.condense(n + 2 * n_dofs, n + 2 * n_dofs, -valp, Fe);
+                if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
+                {
+                  dirichlet_res[2 * n_dofs + i] = value_p;
+                  scale_p = 0;
+                }
               }
+
+              if (coupling & POISSON)
+                Fu(i) -= value_u * phi_face[i][qp] * scale_u;
+
+              if (coupling & ECURRENT)
+                Fn(i) -= value_n * phi_face[i][qp] * scale_n;
+
+              if (coupling & HCURRENT)
+                Fp(i) += value_p * phi_face[i][qp] * scale_p;
+            }
           }
         }
       }
-    } // end loop over element sides
+    }
 
 
+    // impose Dirichlet BCs
+    if (jacobian != NULL)
+    {
+      map<unsigned int, vector<double> >::iterator it(dirichlet_jac.begin());
+      const map<unsigned int, vector<double> >::iterator end(dirichlet_jac.end());
+      for ( ; it != end; ++it)
+      {
+        unsigned int i = it->first;
+        for (unsigned int j = 0; j < n_dofs_tot; ++j)
+          Ke(i,j) = 0.0;
+
+        unsigned int j = i % n_dofs;
+        Ke(i,j) = -(it->second)[0];
+        Ke(i,n_dofs + j) = -(it->second)[1];
+        Ke(i,2 * n_dofs + j) = -(it->second)[2];
+      }
+    }
+
+    if (residual != NULL)
+    {
+      map<unsigned int, double>::iterator it(dirichlet_res.begin());
+      const map<unsigned int, double>::iterator end(dirichlet_res.end());
+      for ( ; it != end; ++it)
+      {
+        unsigned int i = it->first;
+        for (unsigned int j = 0; j < n_dofs_tot; ++j)
+          Ke(i,j) = 0.0;
+        Ke(i,i) = 1;
+
+        Fe(i) = -(it->second);
+      }
+    }
 
     // check if it is a dielectric
     if (sc->is_dielectric())
@@ -5274,10 +3922,15 @@ DriftDiffusion::save_data(const string& file)
   {
     const Boundary* bd = ctit->first;
     // It's save to static_cast because we know there has to be an
-    // ElectricalContact object
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
-    of << bd->get_name() << " " << cnt->get_simulation_voltage() << endl;
+    // DDInterfaceModel object
+    const DDInterfaceModel* mod =
+        static_cast<const DDInterfaceModel*>(bd->models_begin()->second);
+
+    // if it is an electrical contact, use it
+    const ElectricalContact* cnt =
+      dynamic_cast<const ElectricalContact*>(mod);
+    if (cnt != NULL)
+      of << bd->get_name() << " " << cnt->get_simulation_voltage() << endl;
   }
 
   of << "</contacts>" << endl;
@@ -5377,13 +4030,23 @@ DriftDiffusion::load_data(const string& file)
   for ( ; ctit != ctend; ++ctit)
   {
     const Boundary* bd = ctit->first;
-    // It's save to static_cast because we know there has to be an
-    // ElectricalContact object
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
 
-    cnt->set_simulation_voltage(values[bd->get_name()]);
-    sim_voltages[bd] = cnt->get_simulation_voltage();
+    Boundary::ConstModelIterator modit(bd->models_begin());
+    for ( ; modit != bd->models_end(); ++modit)
+    {
+      // It's save to static_cast because we know there has to be an
+      // DDInterfaceModel object
+      DDInterfaceModel* mod =
+          static_cast<DDInterfaceModel*>(modit->second);
+
+      // if it is an electrical contact, use it
+      ElectricalContact* cnt = dynamic_cast<ElectricalContact*>(mod);
+      if (cnt != NULL)
+      {
+        cnt->set_simulation_voltage(values[bd->get_name()]);
+        sim_voltages[bd] = cnt->get_simulation_voltage();
+      }
+    }
   }
 
   if (!is.good()) throw InitFailedException("Bad datafile");

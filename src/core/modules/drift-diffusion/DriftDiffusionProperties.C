@@ -10,6 +10,7 @@
 #include "Material.h"
 #include "Database.h"
 #include "Dopant.h"
+#include "Trap.h"
 #include "Constants.h"
 #include "InitFailedException.h"
 #include "RotatedCrystal.h"
@@ -66,10 +67,10 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _strain(0),
     _electron_mobility(NULL),
     _hole_mobility(NULL),
-    _eTEpower(0),
-    _hTEpower(0),
     _eTEpowerGrad(0.0),
     _hTEpowerGrad(0.0),
+    _eTEpower(0),
+    _hTEpower(0),
     _pyropolarization(NULL),
     _polarization(3, 0.0),
     _user_defined_polarization(NULL),
@@ -219,26 +220,12 @@ DriftDiffusionProperties::create_submodels(void)
 
 
     //
-    // Recombinations (we can have several models!)
+    // Recombinations
     //
+    create_recombination_models();
 
-    // create recombination models
-    it = get_options().submodels_begin("recombination");
-    end = get_options().submodels_end("recombination");
-    for ( ; it != end; ++it)
-    {
-      const std::string& name = (it->second).get_option("model", "");
-      add_recombination_model(name, it->second);
-    }
-
-    // this is only a logical division
-    it = get_options().submodels_begin("generation");
-    end = get_options().submodels_end("generation");
-    for ( ; it != end; ++it)
-    {
-      const std::string& name = (it->second).get_option("model", "");
-      add_recombination_model(name, it->second);
-    }
+    get_options().delete_submodels("recombination");
+    get_options().delete_submodels("generation");
 
 
     //
@@ -265,7 +252,37 @@ DriftDiffusionProperties::create_submodels(void)
   get_options().delete_submodels("electron_mobility");
   get_options().delete_submodels("hole_mobility");
   get_options().delete_submodels("thermoelectric_power");
-  get_options().delete_submodels("recombination");
+}
+
+
+void
+DriftDiffusionProperties::create_recombination_models(void)
+{
+  // we create them only if they do not exist yet
+  vector<ID> ids;
+  get_net_recombination_rate_IDs(ids);
+  if (!is_dielectric() && !ids.size())
+  {
+    // we can have several models!
+
+    // create recombination models
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("recombination"));
+    ModelOptions::submodel_iterator end(get_options().submodels_end("recombination"));
+    for ( ; it != end; ++it)
+    {
+      const std::string& name = (it->second).get_option("model", "");
+      add_recombination_model(name, it->second);
+    }
+
+    // this is only a logical division
+    it = get_options().submodels_begin("generation");
+    end = get_options().submodels_end("generation");
+    for ( ; it != end; ++it)
+    {
+      const std::string& name = (it->second).get_option("model", "");
+      add_recombination_model(name, it->second);
+    }
+  }
 }
 
 
@@ -278,6 +295,17 @@ DriftDiffusionProperties::do_init(void)
 
   setup_electrons_and_holes();
 
+  SubmodelIterator it = submodels_begin("trap");
+  const SubmodelIterator end = submodels_end("trap");
+  for ( ; it != end; ++it)
+  {
+    Trap* t = static_cast<Trap*>(it->second);
+
+    if (t->get_particle() == 'e')
+      _etraps.insert(t);
+    else if (t->get_particle() == 'h')
+      _htraps.insert(t);
+  }
 
   // read polarization from input
   if (has_parameter("polarization"))
@@ -300,11 +328,10 @@ DriftDiffusionProperties::do_init(void)
 
 
 
-  // DOES NOT WORK
   // calculate the equilibrium
-  //set_lattice_temperature(SimulationOptions::T);
-  //calculate_equilibrium_properties();
-  //setup_band_edges();
+  set_lattice_temperature(SimulationOptions::T);
+  calculate_equilibrium_properties();
+  setup_band_edges();
 }
 
 
@@ -515,6 +542,50 @@ DriftDiffusionProperties::calculate_densities(void)
 }
 
 
+void
+DriftDiffusionProperties::calculate_traps(void)
+{
+  double Ec = get_conduction_band_edge() - _pd->electric_potential;
+  double Ev = get_valence_band_edge() - _pd->electric_potential;
+
+  _pd->ionized_electron_traps = 0.0;
+  _pd->ionized_electron_traps_derivative = 0.0;
+  if (_etraps.size() > 0)
+  {
+    double nt = 0, dnt = 0;
+    double kT = _pd->electron_vt;
+    set<Trap*>::iterator it(_etraps.begin());
+    const set<Trap*>::iterator end(_etraps.end());
+    for ( ; it != end; ++it)
+    {
+      (*it)->set_energies(Ec, Ev, -_pd->fermi_e, kT);
+      nt += (*it)->get_ionized_density();
+      dnt += (*it)->get_ionized_density_derivative();
+    }
+
+    _pd->ionized_electron_traps = nt;
+    _pd->ionized_electron_traps_derivative = dnt;
+  }
+
+  _pd->ionized_hole_traps = 0;
+  _pd->ionized_hole_traps_derivative = 0;
+  if (_htraps.size() > 0)
+  {
+    double nt = 0, dnt = 0;
+    double kT = _pd->hole_vt;
+    set<Trap*>::iterator it(_htraps.begin());
+    const set<Trap*>::iterator end(_htraps.end());
+    for ( ; it != end; ++it)
+    {
+      (*it)->set_energies(Ec, Ev, -_pd->fermi_h, kT);
+      nt += (*it)->get_ionized_density();
+      dnt += (*it)->get_ionized_density_derivative();
+    }
+
+    _pd->ionized_hole_traps = nt;
+    _pd->ionized_hole_traps_derivative = dnt;
+  }
+}
 
 
 void
@@ -723,13 +794,15 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   const BandProperties& cb = conduction_band;
   const BandProperties& vb = valence_band;
+  double Ec = cb.band_edge;
+  double Ev = vb.band_edge;
 
   double kT = get_lattice_temperature();
 
   // for a dielectric we don't need much...
   if (is_dielectric())
   {
-    equilibrium_fermi_level = 0.5 * (cb.band_edge + vb.band_edge);
+    equilibrium_fermi_level = 0.5 * (Ec + Ev);
     double ni2 = cb.effective_DOS * vb.effective_DOS
         * exp(-get_band_gap() / kT);
     double ni = sqrt(ni2);
@@ -761,18 +834,16 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // Hmm... Is there a better guess?
   if (Nd > Na)
   {
-    guess = cb.band_edge - kT *
-      log(cb.effective_DOS / (Nd + ni));
+    guess = Ec - kT * log(cb.effective_DOS / (Nd + ni));
   }
   else
   {
-    guess = vb.band_edge + kT *
-      log(vb.effective_DOS / (Na + ni));
+    guess = Ev + kT * log(vb.effective_DOS / (Na + ni));
   }
 
   // In some cases guess can be Inf or NaN. Then we set it to midband energy
   if (isinf(guess) || isnan(guess))
-    guess = 0.5 * (cb.band_edge + vb.band_edge);
+    guess = 0.5 * (Ec + Ev);
 
   /*
    * We use standard Newton. This should work always, as the density
@@ -787,18 +858,40 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   //set_carrier_temperatures(kT, kT);
 
+  /* for testing
+  ofstream of("charge.dat");
+  double I = Ec + 0.2 - (Ev -0.2);
+  double h = I / 10000;
+  of << "# " << Ec << " " << Ev << "\n";
+  for (unsigned int i = 0; i < 10000; i++)
+  {
+    double x = Ev - 0.2 + i * h;
+    set_potentials(x);
+    calculate_densities();
+    calculate_traps();
+    calculate_ionized_dopants();
+    double f = get_charge_density();
+    double df_fermi[2];
+    get_charge_density_derivatives(df_fermi);
+    double df = -(df_fermi[0] + df_fermi[1]);
+    of << (x-Ec) << " " << f << " " << df <<  "\n";
+  }
+  of.close();
+  */
+
   do
   {
     set_potentials(x);
     calculate_densities();
+    calculate_traps();
     calculate_ionized_dopants();
 
-    double f  = _pd->hole_density - _pd->electron_density +
-      _pd->ionized_donor_density - _pd->ionized_acceptor_density;
-    double df = _pd->hole_density_derivative -
-      _pd->electron_density_derivative +
-      _pd->ionized_donor_density_derivative -
-      _pd->ionized_acceptor_density_derivative;
+    double f = get_charge_density();
+    double df_fermi[2];
+    get_charge_density_derivatives(df_fermi);
+    double df = -(df_fermi[0] + df_fermi[1]);
+
+    residual_dens = fabs(f);
 
     double dx = 0.0;
     if (fabs(f) > 0.0)
@@ -807,18 +900,26 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
       // allow it to be bigger than k*T. At high temperatures this should not
       // have any impact
       dx = - f / df;
-      if (fabs(dx) > kT)
-        if (dx > 0)
-          dx = kT;
-        else
-          dx = -kT;
+
+      y = x + dx;
+      // we limit Ef to (Ec + 0.2, Ev - 0.2)
+      if ((Ec - y) < -0.2)
+        dx = Ec + 0.2 - x;
+      else if ((Ev - y) > 0.2)
+        dx = Ev - 0.2 - x;
+
+
+      //if (residual_dens > kT)
+      //  if (dx > 0)
+      //    dx = kT;
+      //  else
+      //    dx = -kT;
     }
 
     y = x + dx;
 
-    error = fabs(y - x);
-    residual_dens = fabs(f);
-    //cerr << "x = " << y << " error = " << error << " res. dens. = "
+    error = fabs(dx);
+    //cerr << "x = " << y << " error = " << dx << " res. dens. = "
     //  << residual_dens << endl;
 
     x = y;

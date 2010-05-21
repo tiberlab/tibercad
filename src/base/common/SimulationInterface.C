@@ -182,7 +182,7 @@ SimulationInterface::create(const string& type,
     // set the name
     // we use the type name as found in the input file as default name
     string defaultname(type);
-    sim->_name = sim->get_options().get_option("name", defaultname);
+    sim->set_name(sim->get_options().get_option("name", defaultname));
     sim->get_options().delete_option("name");
 
 
@@ -262,8 +262,8 @@ SimulationInterface::new_boundary_model(const ModelOptions& options,
 {
   PhysicalModel* pm = create_boundary_model(options, material_A, material_B);
 
-  //if (pm != NULL)
-  //  _boundary_models.insert(pm);
+  if (pm != NULL)
+    _boundary_models.insert(pm);
 
   return pm;
 }
@@ -321,7 +321,7 @@ SimulationInterface::_get_bulk_model(const Elem* elem) const
 
 
 PhysicalModel*
-SimulationInterface::_get_surface_model(const Elem* elem, int side) const
+SimulationInterface::_get_interface_model(const Elem* elem, int side) const
 {
   PhysicalModel* mod = NULL;
   MaterialBoundary* mb =

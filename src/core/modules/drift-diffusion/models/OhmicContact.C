@@ -1,0 +1,31 @@
+// $Id$
+
+#include "OhmicContact.h"
+#include "DriftDiffusionProperties.h"
+
+
+TIBER_MODULE(OhmicContact, ddbnd, ohmic)
+
+
+
+OhmicContact::OhmicContact(const ModelOptions& options)
+ : ElectricalContact(options)
+{
+  set_type(0, DIRICHLET);
+  //set_type(0, NEUMANN);
+
+  // as default we apply the potential
+  set_type(1, DIRICHLET);
+  set_type(2, DIRICHLET);
+
+}
+
+
+
+void
+OhmicContact::do_compute(void)
+{
+  set_barrier(get_dd_properties()->get_equilibrium_fermi_level());
+
+  ElectricalContact::do_compute();
+}

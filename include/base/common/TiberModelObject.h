@@ -60,6 +60,17 @@ class TiberModelObject
     ModelOptions& get_options(void);
 
 
+    //! Set the name of a model
+    /*!
+     * Use with caution as it could break standard behaviour!
+     */
+    void set_name(const std::string& name);
+
+
+    //! Get the user defined name of this model
+    const std::string& get_name(void) const;
+
+
     //! Destroy an object
     /*!
      * \param p the pointer to the object to destroy
@@ -102,6 +113,10 @@ class TiberModelObject
     //! Create an object from a given creator function
     static TiberModelObject* create_from_function(create_t create, destroy_t destroy,
         const ModelOptions& options = ModelOptions());
+
+
+    //! Create a new model of the same type
+    virtual TiberModelObject* create_new(void) const;
 
 
     //! Tells if a parameter has been specified in the input file
@@ -264,6 +279,13 @@ class TiberModelObject
     //! The destruction method for this object
     destroy_t _destroy;
 
+
+    //! A user defined name for this model
+    /*!
+     * The name is assigned from the ModelOptions.
+     */
+    std::string _name;
+
 };
 
 
@@ -271,17 +293,6 @@ class TiberModelObject
 //
 // inline members
 //
-
-inline
-TiberModelObject::TiberModelObject(const ModelOptions& options)
-  : ReferenceCountedObject<TiberModelObject>(),
-    _options(options),
-    _libhandle(NULL),
-    _create(NULL),
-    _destroy(NULL)
-{
-}
-
 
 
 
@@ -315,6 +326,25 @@ ModelOptions&
 TiberModelObject::get_options(void)
 {
   return _options;
+}
+
+
+
+
+inline
+const std::string&
+TiberModelObject::get_name(void) const
+{
+  return _name;
+}
+
+
+
+inline
+void
+TiberModelObject::set_name(const std::string& name)
+{
+  _name = name;
 }
 
 

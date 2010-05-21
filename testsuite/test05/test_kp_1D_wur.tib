@@ -346,5 +346,5 @@ $Simulation
 
   resultpath = output
   output_format = grace
-  plot = (strain, polarization, Ec, Ev, EField , EigenFunctions, EigenEnergy, EnergyLevels,k-space_dispersion)
+  plot = (strain, polarization, Ec, Ev, ElField , eDensity, hDensity, EigenFunctions, EigenEnergy, EnergyLevels,k-space_dispersion)
 }

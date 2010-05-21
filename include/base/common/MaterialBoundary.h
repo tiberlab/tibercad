@@ -32,8 +32,8 @@ class MaterialBoundary : public PhysicalObject
      * \c mat_B is allowed to be NULL, which corresponds to an external
      * boundary
      */
-    static MaterialBoundary* create(Material* mat_A, Material* mat_B,
-        const ModelOptions& options);
+    static MaterialBoundary* create(ID id_A, Material* mat_A,
+        ID id_B, Material* mat_B, const ModelOptions& options);
 
 
     //! Return the material A
@@ -43,18 +43,17 @@ class MaterialBoundary : public PhysicalObject
     Material* get_material_B(void) const;
 
 
-    //! Return the name of component material A
-    //const std::string& get_name_A(void) const;
+    //! Return the ID of material A
+    ID get_id_A(void) const;
 
-    //! Return the name of component material B
-    //const std::string& get_name_B(void) const;
+    //! Return the ID of material B
+    ID get_id_B(void) const;
 
 
   protected:
 
     //! Construct an  alloy material
-    MaterialBoundary(Material* mat_A, Material* mat_B,
-        const ModelOptions& options);
+    MaterialBoundary(const ModelOptions& options);
 
 
     //! \copydoc PhysicalObject::do_init()
@@ -62,6 +61,14 @@ class MaterialBoundary : public PhysicalObject
 
 
   private:
+
+    //! The ID of region A
+    ID _id_A;
+
+
+    //! The ID of region B
+    ID _id_B;
+
 
     //! The component A
     Material* _mat_A;
@@ -79,22 +86,22 @@ class MaterialBoundary : public PhysicalObject
 //--------------------------------------------------------------
 
 
-/*
+
 inline
-const std::string&
-MaterialBoundary::get_name_A(void) const
+ID
+MaterialBoundary::get_id_A(void) const
 {
-  return _mat_A->get_name();
+  return _id_A;
 }
 
 
 inline
-const std::string&
-MaterialBoundary::get_name_B(void) const
+ID
+MaterialBoundary::get_id_B(void) const
 {
-  return _mat_B->get_name();
+  return _id_B;
 }
-*/
+
 
 
 inline
@@ -111,6 +118,7 @@ MaterialBoundary::get_material_B(void) const
 {
   return _mat_B;
 }
+
 
 
 

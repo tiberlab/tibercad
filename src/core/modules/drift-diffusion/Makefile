@@ -8,11 +8,7 @@ export MODULE_NAME
 include $(topdir)/Make.module
 
 
-mainsrc := DriftDiffusion.C
-srcfiles := $(filter-out $(mainsrc), $(srcfiles))
-
-
-$(eval $(call MODULE, $(mainsrc), $(srcfiles)))
+$(eval $(call MODULE, $(srcfiles)))
 
 
 target += models

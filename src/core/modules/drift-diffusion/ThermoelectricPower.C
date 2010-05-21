@@ -1,13 +1,12 @@
 // $Id$
 
 #include "ThermoelectricPower.h"
-#include "getpot.h"
 #include "Material.h"
 #include "Database.h"
 #include "Constants.h"
 
 
-//TIBER_MODULE(ThermoelectricPower, default)
+//TIBER _ MODULE(ThermoelectricPower, default)
 
 namespace
 {
@@ -43,7 +42,7 @@ ThermoelectricPower::ThermoelectricPower(const ModelOptions& options)
 
 
 ThermoelectricPower*
-ThermoelectricPower::create_model(const std::string& model,
+ThermoelectricPower::create_model(const std::string&,
     const ModelOptions& options)
 {
   return static_cast<ThermoelectricPower*>(

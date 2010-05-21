@@ -11,7 +11,6 @@
 
 class Elem;
 class MeshBase;
-class MeshData_elements;
 
 
 //! A few utilities for operations on a mesh
@@ -19,17 +18,6 @@ class MeshUtils
 {
 
   public:
-
-    //! Assign the right subdomain id to every element
-    /*!
-     * This method loops over all elements in \c meshdata and assigns
-     * the subdomain id to it.
-     *
-     * \param mesh the mesh itself
-     * \param meshdata the meshdata object
-     */
-    static void assign_subdomain_ids(MeshBase& mesh, MeshData_elements& meshdata);
-
 
     //! Get all the subdomain IDs present in the mesh
     /*!

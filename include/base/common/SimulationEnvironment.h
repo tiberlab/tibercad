@@ -53,9 +53,6 @@ class SimulationEnvironment
     //! An iterator for the elements
     typedef ElementList::const_iterator ConstElemIterator;
 
-    //! An iterator for the elements
-    //typedef std::set<const Elem*>::iterator ElemIterator
-
     //! An iterator for the region IDs
     typedef std::set<ID>::const_iterator RegionIDIterator;
 
@@ -85,28 +82,16 @@ class SimulationEnvironment
     MeshBase& get_mesh(void);
 
 
-    //! Add the boundary for a given boundary number
-    /*!
-     * The boundary number has to correspond to a boundary number given
-     * in the meshfile.
-     *
-     * \param boundary the boundary to assign to this
-     * simulation
-     * \param boundary_id the boundary number
-     */
-    void add_boundary(Boundary* boundary, ID boundary_id);
-
 
     //! Add the boundary for a given set of boundary numbers
     /*!
-     * The boundary numbers have to correspond to boundary numbers given
-     * in the meshfile.
+     * The boundary numbers have to correspond to valid boundary numbers.
      *
      * \param boundary the boundary to assign to this
      * simulation
      * \param boundary_ids the set of boundary numbers
      */
-    void add_boundary(Boundary* boundary, const std::set<ID>& boundary_ids);
+    void add_boundary(Boundary* boundary, const std::vector<ID>& boundary_ids);
 
 
     //! Prepare structures that are needed for other setup
@@ -343,6 +328,17 @@ class SimulationEnvironment
 
     //! Creates the boundary element maps
     void create_bc_maps(void);
+
+
+    //! Add the boundary for a given boundary number
+    /*!
+     * The boundary number has to correspond to a valid boundary number.
+     *
+     * \param boundary the boundary to assign to this
+     * simulation
+     * \param boundary_id the boundary number
+     */
+    void add_boundary(Boundary* boundary, ID boundary_id);
 
 
     //! The device

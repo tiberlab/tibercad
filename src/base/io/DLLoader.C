@@ -14,11 +14,11 @@
 #define RTLD_NOLOAD 0
 #endif
 
-#ifdef DEBUG
-#define DLOPENFLAGS RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE
-#else
+//#ifdef DEBUG
+//#define DLOPENFLAGS RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE
+//#else
 #define DLOPENFLAGS RTLD_LAZY | RTLD_GLOBAL | RTLD_NODELETE
-#endif
+//#endif
 
 
 using namespace std;

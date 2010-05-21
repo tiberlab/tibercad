@@ -16,7 +16,6 @@
 #include "ModelErrorException.h"
 #include "Scaling.h"
 #include "FiniteElement.h"
-#include "mesh_data_elements.h"
 
 // LibMesh includes
 #include "numeric_vector.h"
@@ -63,14 +62,6 @@ class SimulationInterface : public TiberModelObject
 
     //! Get the ID of this simulation
     ID get_id(void) const;
-
-
-    //! Set a name for this simulation
-    void set_name(const std::string& name);
-
-
-    //! Get the user defined name of this simulation
-    const std::string& get_name(void) const;
 
 
     //! Get the default name for this simulation
@@ -592,7 +583,7 @@ class SimulationInterface : public TiberModelObject
      * \return \c NULL if no model is present for the given side
      */
     template <typename T>
-    T* get_surface_model(const Elem* elem, int side) const;
+    T* get_interface_model(const Elem* elem, int side) const;
 
 
     //! Get the physical model associated to an element edge
@@ -615,6 +606,10 @@ class SimulationInterface : public TiberModelObject
 
     //! Get a reference to the set of all bulk physical models
     const std::set<PhysicalModel*>& get_physical_models(void) const;
+
+
+    //! Get a reference to the set of all boundary models
+    const std::set<PhysicalModel*>& get_boundary_models(void) const;
 
 
     //! Create an embracing region
@@ -1221,11 +1216,6 @@ class SimulationInterface : public TiberModelObject
     ID _id;
 
 
-
-    //! A user definable name to identify this simulation
-    std::string _name;
-
-
     //! The identifying string for the type of this simulation
     std::string _type;
 
@@ -1256,6 +1246,10 @@ class SimulationInterface : public TiberModelObject
 
     //! A set with all physical models of this simulation
     std::set<PhysicalModel*> _physical_models;
+
+
+    //! A set with all boundary models of this simulation
+    std::set<PhysicalModel*> _boundary_models;
 
 
     //! The level of verbosity
@@ -1310,8 +1304,8 @@ class SimulationInterface : public TiberModelObject
     PhysicalModel* _get_bulk_model(const Elem* elem) const;
 
 
-    //! \see get_surface_model()
-    PhysicalModel* _get_surface_model(const Elem* elem, int side) const;
+    //! \see get_interface_model()
+    PhysicalModel* _get_interface_model(const Elem* elem, int side) const;
 
 
     //! \see get_edge_model()
@@ -1401,29 +1395,21 @@ SimulationInterface::get_physical_models(void) const
 
 
 inline
+const std::set<PhysicalModel*>&
+SimulationInterface::get_boundary_models(void) const
+{
+  return _boundary_models;
+}
+
+
+
+inline
 ID
 SimulationInterface::get_id(void) const
 {
   return _id;
 }
 
-
-
-inline
-const std::string&
-SimulationInterface::get_name(void) const
-{
-  return _name;
-}
-
-
-
-inline
-void
-SimulationInterface::set_name(const std::string& name)
-{
-  _name = name;
-}
 
 
 
@@ -1697,9 +1683,9 @@ SimulationInterface::get_bulk_model(const Elem* elem) const
 template <typename T>
 inline
 T*
-SimulationInterface::get_surface_model(const Elem* elem, int side) const
+SimulationInterface::get_interface_model(const Elem* elem, int side) const
 {
-  return dynamic_cast<T*>(_get_surface_model(elem, side));
+  return dynamic_cast<T*>(_get_interface_model(elem, side));
 }
 
 

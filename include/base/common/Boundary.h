@@ -4,13 +4,14 @@
 #define _BOUNDARY_H_
 
 #include "TypeDefs.h"
+#include "ModelOptions.h"
 
 #include <map>
-#include <set>
+#include <vector>
 #include <string>
 
+class PhysicalModel;
 class BoundaryProperties;
-class SimulationEnvironment;
 
 
 //! The class that contains the models for a simulation boundary
@@ -23,26 +24,67 @@ class SimulationEnvironment;
 class Boundary
 {
 
+  private:
+
+    //! A typedef for convenience
+    typedef std::multimap<ID, PhysicalModel*> ModelMap;
+
+
   public:
+
+    //! An iterator for the associated boundary models
+    typedef ModelMap::iterator ModelIterator;
+
+    //! A const iterator for the associated boundary models
+    typedef ModelMap::const_iterator ConstModelIterator;
+
 
     //! Constructor
     /*!
      * \param name a user defined name to identify this boundary
-     * \param environment the environment
-     * \param region_ids the boundary region IDs
      */
-    Boundary(const std::string& name, SimulationEnvironment* environment,
-        std::set<ID> region_ids);
+    Boundary(const std::string& names, const ModelOptions& options);
 
     //! Destructor
     ~Boundary(void);
 
     //! Add a boundary property for simulation with ID \c simulator_id
+    /*! \deprecated BoundaryProperties are deprecated */
     void add_boundary_properties(BoundaryProperties* properties,
         ID simulator_id);
 
     //! Get the boundary property for simulation with ID \c simulator_id
+    /*! \deprecated BoundaryProperties are deprecated */
     BoundaryProperties* get_boundary_properties(ID simulator_id) const;
+
+
+    //! Add a boundary model and ID
+    void add_model(ID id, PhysicalModel* model);
+
+
+    //! Get the iterator to the first ID/model pair
+    /*!
+     * An ID might be occur several times, if boundaries with
+     * different dimensions share the same ID.
+     */
+    ModelIterator models_begin(void);
+
+
+    //! Get the past-the-end iterator for the model map
+    ModelIterator models_end(void);
+
+
+    //! Get the const iterator to the first ID/model pair
+    /*!
+     * An ID might be occur several times, if boundaries with
+     * different dimensions share the same ID.
+     */
+    ConstModelIterator models_begin(void) const;
+
+
+    //! Get the const past-the-end iterator for the model map
+    ConstModelIterator models_end(void) const;
+
 
     //! Get the user defined name of this boundary
     const std::string& get_name(void) const;
@@ -56,43 +98,41 @@ class Boundary
     //! Get the area factor
     double get_area_factor(void) const;
 
-    //! Get the simulation environment
-    SimulationEnvironment* get_environment(void);
+    //! Set the region IDs
+    void set_region_ids(const std::vector<ID>& region_ids);
 
     //! Get the physical region IDs
-    const std::set<ID>& get_region_ids(void) const;
+    void get_region_ids(std::vector<ID>& ids) const;
 
 
 
   private:
 
-    //! A typedef for convenience
     typedef std::map<ID, BoundaryProperties*> PropertyMap;
 
     //! The models for the different simulations
-    PropertyMap _models;
+    ModelMap _models;
+    PropertyMap _oldmodels;
 
     //! The user defined name of this boundary
     std::string _name;
 
+    //! The options
+    ModelOptions _options;
+
     //! The area factor
     double _area_factor;
 
-    //! The environment this boundary is belonging to
-    SimulationEnvironment* _env;
-
     //! The physical regions this boundary is touching
-    std::set<ID> _region_ids;
+    std::vector<ID> _region_ids;
 
-    //! Find the physical region IDs
-    void find_region_ids(void);
 
 };
 
 
 //
 // inline methods
-// 
+//
 
 
 
@@ -100,13 +140,13 @@ inline
 BoundaryProperties*
 Boundary::get_boundary_properties(ID simulator_id) const
 {
-  PropertyMap::const_iterator it(_models.find(simulator_id));
+  PropertyMap::const_iterator it(_oldmodels.find(simulator_id));
 
-  if (it != _models.end())
+  if (it != _oldmodels.end())
     return it->second;
   else
     return NULL;
-  
+
 }
 
 
@@ -136,18 +176,53 @@ Boundary::get_area_factor(void) const
 
 
 inline
-const std::set<ID>&
-Boundary::get_region_ids(void) const
+void
+Boundary::set_region_ids(const std::vector<ID>& region_ids)
 {
-  return _region_ids;
+  _region_ids = region_ids;
 }
 
 
 inline
-SimulationEnvironment*
-Boundary::get_environment(void)
+void
+Boundary::add_model(ID id, PhysicalModel* model)
 {
-  return _env;
+  _models.insert(std::make_pair(id, model));
+}
+
+
+
+inline
+Boundary::ModelIterator
+Boundary::models_begin(void)
+{
+  return _models.begin();
+}
+
+
+
+inline
+Boundary::ModelIterator
+Boundary::models_end(void)
+{
+  return _models.end();
+}
+
+
+inline
+Boundary::ConstModelIterator
+Boundary::models_begin(void) const
+{
+  return _models.begin();
+}
+
+
+
+inline
+Boundary::ConstModelIterator
+Boundary::models_end(void) const
+{
+  return _models.end();
 }
 
 

@@ -3,28 +3,9 @@
 
 #include "MeshUtils.h"
 
-#include "mesh_data_elements.h"
 #include "mesh.h"
 #include "elem.h"
 
-
-void
-MeshUtils::assign_subdomain_ids(MeshBase& mesh, MeshData_elements& meshdata)
-{
-  MeshBase::element_iterator it = mesh.local_elements_begin();
-  const MeshBase::element_iterator end = mesh.local_elements_end();
-
-  for ( ; it != end; ++it)
-  {
-    Elem* elem = *it;
-
-    if (meshdata.has_data(elem))
-    {
-      int id = static_cast<int>(meshdata(elem));
-      elem->subdomain_id() = id;
-    }
-  }
-}
 
 
 

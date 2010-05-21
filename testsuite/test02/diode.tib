@@ -32,7 +32,7 @@ $Models
     options
     {
      simulation_name = driftdiffusion
-     plot = (Ec, Ev, Eg, ElField, eQFermi, hQFermi, eDensity, hDensity, eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents)
+     plot = (Ec, Ev, Eg, ElField, eQFermi, hQFermi, eDensity, hDensity, NetRecombination, eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents)
     }
 
      physical_model recombination

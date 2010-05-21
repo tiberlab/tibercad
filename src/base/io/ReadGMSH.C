@@ -7,6 +7,7 @@
 #include "ReadGMSH.h"
 #include "MeshRegionInfo.h"
 #include "BoundaryRegions.h"
+#include "Utils.h"
 #include "InitFailedException.h"
 
 
@@ -14,11 +15,14 @@
 #include <fstream>
 #include <sstream>
 #include <set>
-#include <cstring> // std::memcpy, std::strncmp
+#include <cstring> // memcpy, strncmp
 
 // Local includes
 #include "elem.h"
 #include "mesh_base.h"
+
+
+using namespace std;
 
 
 // anonymous namespace to hold local data
@@ -32,7 +36,7 @@ namespace
    * easily compared to another set of nodes (the ones on the element side)
    */
   struct boundaryElementInfo {
-      std::set<unsigned int> nodes;
+      set<unsigned int> nodes;
       unsigned int id;
   };
 
@@ -40,8 +44,8 @@ namespace
    * Defines mapping from libMesh element types to Gmsh element types.
    */
   struct elementDefinition {
-      std::string label;
-      std::vector<unsigned int> nodes;
+      string label;
+      vector<unsigned int> nodes;
       ElemType type;
       unsigned int exptype;
       unsigned int dim;
@@ -54,8 +58,8 @@ namespace
   // here in this anonymous namespace gives us the
   // benefits of a global variable without the nasty
   // side-effects
-  std::map<ElemType, elementDefinition> eletypes_exp;
-  std::map<unsigned int, elementDefinition> eletypes_imp;
+  map<ElemType, elementDefinition> eletypes_exp;
+  map<unsigned int, elementDefinition> eletypes_imp;
 
 
 
@@ -155,7 +159,7 @@ namespace
         eledef.nnodes  = 8;
         eledef.exptype = 100;
         const unsigned int nodes[] = {1,2,3,4,5,6,7,8};
-        std::vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
+        vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
 
         eletypes_exp[QUAD8] = eledef;
         eletypes_imp[10]    = eledef;
@@ -192,7 +196,7 @@ namespace
         eledef.nnodes  = 20;
         eledef.exptype = 101;
         const unsigned int nodes[] = {1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,16};
-        std::vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
+        vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
 
         eletypes_exp[HEX20] = eledef;
         eletypes_imp[12]    = eledef;
@@ -206,7 +210,7 @@ namespace
         eledef.exptype = 12;
         const unsigned int nodes[] = {0,1,2,3,4,5,6,7,8,11,12,9,13,10,14,
             15,16,19,17,18,20,21,24,22,23,25,26};
-        std::vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
+        vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
 
         eletypes_exp[HEX27] = eledef;
         eletypes_imp[12]    = eledef;
@@ -231,7 +235,7 @@ namespace
         eledef.nnodes  = 10;
         eledef.exptype = 11;
         const unsigned int nodes[] = {0,1,2,3,4,5,6,7,9,8};
-        std::vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
+        vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
         eletypes_exp[TET10] = eledef;
         eletypes_imp[11]    = eledef;
       }
@@ -268,7 +272,7 @@ namespace
         eledef.exptype = 13;
         const unsigned int nodes[] = {0,1,2,3,4,5,6,8,9,7,10,11,
             12,14,13,15,17,16};
-        std::vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
+        vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
 
         eletypes_exp[PRISM18] = eledef;
         eletypes_imp[13]      = eledef;
@@ -294,18 +298,18 @@ namespace
 
 
 // ReadGMSH  members
-void ReadGMSH::read(const std::string& name)
+void ReadGMSH::read(const string& name)
 {
-  std::ifstream in(name.c_str());
+  ifstream in(name.c_str());
 
   if (!in.good())
-    throw InitFailedException(std::string("Cannot read mesh file (") + name + ").");
+    throw InitFailedException(string("Cannot read mesh file (") + name + ").");
 
   this->read_mesh(in);
 }
 
 
-void ReadGMSH::read_mesh(std::istream& in)
+void ReadGMSH::read_mesh(istream& in)
 {
   // This is a serial-only process for now;
   // the Mesh should be read on processor 0 and
@@ -335,17 +339,17 @@ void ReadGMSH::read_mesh(std::istream& in)
 
   // map to hold the node numbers for translation
   // note the the nodes can be non-consecutive
-  std::map<unsigned int, unsigned int> nodetrans;
+  map<unsigned int, unsigned int> nodetrans;
 
   // map to hold the physical names and dimensions (if found)
-  std::map<unsigned int, std::string> phys_names;
+  map<unsigned int, string> phys_names;
 
   {
     while (!in.eof())
     {
       in >> buf;
 
-      if (!std::strncmp(buf,"$MeshFormat",11))
+      if (!strncmp(buf,"$MeshFormat",11))
       {
         in >> version >> format >> size;
 
@@ -356,23 +360,35 @@ void ReadGMSH::read_mesh(std::istream& in)
           throw InitFailedException("Unknown data format for mesh.");
       }
 
-      else if (!std::strncmp(buf, "$PhysicalNames", 14))
+      else if (!strncmp(buf, "$PhysicalNames", 14))
       {
         // we get the physical names and try to guess the mesh dimension
         int num_phys_names;
         in >> num_phys_names;
+        Utils::skip_whitespace(in);
 
         for (int i = 0; i < num_phys_names; i++)
         {
+          string linebuf;
+          getline(in, linebuf);
+          vector<string> tokens;
+          Utils::tokenize(linebuf, tokens, " ");
+
           int id, d = -1;
-          std::string name;
-          if (version >= 2.1)
+          string name;
+
+          if (tokens.size() == 3)
           {
-            in >> d >> id >> name;
+            d = Utils::convert<int>(tokens[0]);
+            id = Utils::convert<int>(tokens[1]);
+            name = tokens[2];
             dim = (d > dim) ? d : dim;
           }
-          else
-            in >> id >> name;
+          else if (tokens.size() == 2)
+          {
+            id = Utils::convert<int>(tokens[0]);
+            name = tokens[1];
+          }
 
           // name is double quoted!
           name.erase(0, 1);
@@ -381,22 +397,22 @@ void ReadGMSH::read_mesh(std::istream& in)
           phys_names[id] = name;
         }
 
-        if (version >= 2.1)
-          mesh.set_mesh_dimension(dim);
+        // we might have read it from the file
+        mesh.set_mesh_dimension(dim);
 
       }
 
       // read the node block
-      else if (!std::strncmp(buf,"$NOD",4) ||
-          !std::strncmp(buf,"$NOE",4) ||
-          !std::strncmp(buf,"$Nodes",6))
+      else if (!strncmp(buf,"$NOD",4) ||
+          !strncmp(buf,"$NOE",4) ||
+          !strncmp(buf,"$Nodes",6))
       {
 
         // check the dimension for reasonable value
         if ((dim < 1) || (dim > 3))
         {
-          std::ostringstream os;
-          os << "mesh dimension of " << dim << " is invalid." << std::endl
+          ostringstream os;
+          os << "mesh dimension of " << dim << " is invalid." << endl
             << "Hint: check the option \'dimension\' in the "
             << "device options block.";
           throw InitFailedException(os.str());
@@ -431,12 +447,12 @@ void ReadGMSH::read_mesh(std::istream& in)
        * until the elements are created, and inserted once reading elements is
        * finished
        */
-      else if (!std::strncmp(buf,"$ELM",4) ||
-          !std::strncmp(buf,"$Elements",9))
+      else if (!strncmp(buf,"$ELM",4) ||
+          !strncmp(buf,"$Elements",9))
       {
         unsigned int numElem = 0;
-        std::vector< boundaryElementInfo > boundary_elem;
-        std::vector< boundaryElementInfo > edge_elem;
+        vector< boundaryElementInfo > boundary_elem;
+        vector< boundaryElementInfo > edge_elem;
 
         // read how many elements are there, and reserve space in the mesh
         in >> numElem;
@@ -493,7 +509,7 @@ void ReadGMSH::read_mesh(std::istream& in)
             {
               if (elem->n_nodes() != nnodes)
               {
-                std::cerr << "Number of nodes for element " << id
+                cerr << "Number of nodes for element " << id
                 << " of type " << eletypes_imp[type].type
                 << " (Gmsh type " << type
                 << ") does not match Libmesh definition. "
@@ -537,7 +553,7 @@ void ReadGMSH::read_mesh(std::istream& in)
              */
 
             boundaryElementInfo binfo;
-            std::set<unsigned int>::iterator iter = binfo.nodes.begin();
+            set<unsigned int>::iterator iter = binfo.nodes.begin();
             int nod = 0;
             for (unsigned int i = 0; i < nnodes; i++)
             {
@@ -552,7 +568,7 @@ void ReadGMSH::read_mesh(std::istream& in)
           {
             // this is an edge
             boundaryElementInfo binfo;
-            std::set<unsigned int>::iterator iter = binfo.nodes.begin();
+            set<unsigned int>::iterator iter = binfo.nodes.begin();
             int nod = 0;
             for (unsigned int i = 0; i < nnodes; i++)
             {
@@ -578,9 +594,9 @@ void ReadGMSH::read_mesh(std::istream& in)
           else
           {
             // this means eletype.dim > dim and is an error
-            std::ostringstream os;
+            ostringstream os;
             os << "Trying to add a " << eletype.dim << "D element "
-              << "into a " << dim << "D mesh! " << std::endl
+              << "into a " << dim << "D mesh! " << endl
               << "Hint: check the option \'dimension\' in the "
               << "device options block.";
             throw InitFailedException(os.str());
@@ -594,9 +610,9 @@ void ReadGMSH::read_mesh(std::istream& in)
         // elem_id_counter has to be > 0, otherwise mesh dim was assumed too big
         if (elem_id_counter == 0)
         {
-          std::ostringstream os;
+          ostringstream os;
           os << "The expected mesh dimension of " << dim
-            << " seems to be bigger than the actual one. " << std::endl
+            << " seems to be bigger than the actual one. " << endl
             << "Hint: check the option \'dimension\' in the "
             << "device options block.";
             throw InitFailedException(os.str());
@@ -611,11 +627,11 @@ void ReadGMSH::read_mesh(std::istream& in)
         {
           // create a index of the boundary nodes to easily locate which
           // element might have that boundary
-          TiberCad::HashMap<unsigned int, std::vector<unsigned int> >::Type node_index;
+          TiberCad::HashMap<unsigned int, vector<unsigned int> >::Type node_index;
           for (unsigned int i = 0; i < boundary_elem.size(); i++)
           {
             boundaryElementInfo binfo = boundary_elem[i];
-            std::set<unsigned int>::iterator iter = binfo.nodes.begin();
+            set<unsigned int>::iterator iter = binfo.nodes.begin();
             for ( ; iter != binfo.nodes.end(); ++iter)
               node_index[*iter].push_back(i);
           }
@@ -634,8 +650,8 @@ void ReadGMSH::read_mesh(std::istream& in)
             //if (elem->neighbor(s) == NULL)
             {
               AutoPtr<Elem> side (elem->build_side(s));
-              std::set<unsigned int> side_nodes;
-              std::set<unsigned int>::iterator iter = side_nodes.begin();
+              set<unsigned int> side_nodes;
+              set<unsigned int>::iterator iter = side_nodes.begin();
 
               // make a set with all nodes from this side
               // this allows for easy comparison
@@ -672,11 +688,11 @@ void ReadGMSH::read_mesh(std::istream& in)
         if (edge_elem.size() > 0)
         {
           // create a index of the boundary nodes to easily locate which
-          TiberCad::HashMap<unsigned int, std::vector<unsigned int> >::Type node_index;
+          TiberCad::HashMap<unsigned int, vector<unsigned int> >::Type node_index;
           for (unsigned int i = 0; i < edge_elem.size(); i++)
           {
             boundaryElementInfo binfo = edge_elem[i];
-            std::set<unsigned int>::iterator iter = binfo.nodes.begin();
+            set<unsigned int>::iterator iter = binfo.nodes.begin();
             for ( ; iter != binfo.nodes.end(); ++iter)
               node_index[*iter].push_back(i);
           }
@@ -693,8 +709,8 @@ void ReadGMSH::read_mesh(std::istream& in)
             for (unsigned int s = 0; s < elem->n_edges(); s++)
             {
               AutoPtr<Elem> side (elem->build_edge(s));
-              std::set<unsigned int> side_nodes;
-              std::set<unsigned int>::iterator iter = side_nodes.begin();
+              set<unsigned int> side_nodes;
+              set<unsigned int>::iterator iter = side_nodes.begin();
 
               // make a set with all nodes from this side
               // this allows for easy comparison
@@ -732,7 +748,7 @@ void ReadGMSH::read_mesh(std::istream& in)
   }
 
   // set the physical region names
-  std::map<unsigned int, std::string>::iterator it = phys_names.begin();
+  map<unsigned int, string>::iterator it = phys_names.begin();
   for ( ; it != phys_names.end(); ++it)
   {
     ID id = it->first;

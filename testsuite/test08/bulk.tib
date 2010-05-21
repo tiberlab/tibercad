@@ -60,14 +60,14 @@ $Models
 
     BC_Regions
     {
-        BC_Region reservoir
+        BC_Region reservoir1
    	{
          type = heat_reservoir
          BC_reg_numb = 1
          temperature = 300
    	}
        
-        BC_Region reservoir
+        BC_Region reservoir2
    	{
 	 type = heat_reservoir
          BC_reg_numb = 2

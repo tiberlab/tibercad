@@ -3,11 +3,26 @@
 #include "TiberModelObject.h"
 #include "Variable.h"
 #include "DLLoader.h"
+#include "ModelErrorException.h"
 
 #include <cassert>
+#include <sstream>
 
 
 using namespace std;
+
+
+
+TiberModelObject::TiberModelObject(const ModelOptions& options)
+  : ReferenceCountedObject<TiberModelObject>(),
+    _options(options),
+    _libhandle(NULL),
+    _create(NULL),
+    _destroy(NULL),
+    _name("")
+{
+  _name = options.get_option("name", _name);
+}
 
 
 
@@ -148,6 +163,25 @@ TiberModelObject::create_from_function(create_t create, destroy_t destroy,
 
   return obj;
 }
+
+
+
+TiberModelObject*
+TiberModelObject::create_new(void) const
+{
+  if (_create == NULL)
+  {
+    ostringstream os;
+    //os << "Model " << get_name() << " cannot create a new instance of "
+    os << "Model cannot create a new instance of "
+        "the same type as the method \"create_new()\" is not "
+        "reimplemented.";
+    throw ModelErrorException(os.str());
+  }
+
+  return _create(get_options());
+}
+
 
 
 void

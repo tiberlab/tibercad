@@ -2,12 +2,10 @@
 
 topdir := ../../../..
 
-MODULE_NAME := dssc
 
 include $(topdir)/Make.module
 
-
-$(eval $(call MODULE, DSSC.C, DSSCContact.C DSSCModel.C))
+$(foreach lib, $(srcfiles), $(eval $(call MODULE, $(lib))))
 
 
 include $(topdir)/Make.rules

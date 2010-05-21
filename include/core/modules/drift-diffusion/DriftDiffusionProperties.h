@@ -33,6 +33,7 @@
 // forward declarations
 class Elem;
 class Dopant;
+class Trap;
 class DriftDiffusion;
 class RecombinationModelInterface;
 class MobilityModelInterface;
@@ -122,6 +123,20 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
 
         //! The ionized acceptor density derivative
         double ionized_acceptor_density_derivative;
+
+
+        //! The trapped electron density
+        double ionized_electron_traps;
+
+        //! The trapped electron density derivative
+        double ionized_electron_traps_derivative;
+
+        //! The trapped hole density
+        double ionized_hole_traps;
+
+        //! The trapped hole density derivative
+        double ionized_hole_traps_derivative;
+
 
         //! The total charge density
         double charge_density;
@@ -344,6 +359,10 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
     void calculate_densities(void);
 
 
+    //! Calculated trapped particle densities
+    void calculate_traps(void);
+
+
     //! Calculate the ionized dopant densities and derivatives
     /*!
      * The total density of ionized donors and acceptors is calculated,
@@ -452,6 +471,22 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
       { return _pd->ionized_acceptor_density_derivative; };
 
 
+    //! Get the ionized electron trap density
+    /*!
+     * \return the ionized electron trap density
+     */
+    double get_ionized_electron_traps(void) const
+      { return _pd->ionized_electron_traps; };
+
+
+    //! Get the ionized hole trap density
+    /*!
+     * \return the ionized hole trap density
+     */
+    double get_ionized_hole_traps(void) const
+      { return _pd->ionized_hole_traps; };
+
+
     //! Get the total charge density
     /*!
      *
@@ -461,9 +496,16 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
      *
      * \note
      * The charge density is returned in units of the elementary charge
-     * \f$e\f$, \em not in Coulomb (= As)!
+     * \f$e\f$, \em not in Coulomb!
      */
     double get_charge_density(void) const;
+
+
+    //! Get the derivatives of the total charge density
+    /*!
+     * The derivatives are given w.r.t. the two quasi Fermi levels
+     */
+    void get_charge_density_derivatives(double derivatives[2]) const;
 
 
     //! Get the net electron recombination rate
@@ -684,6 +726,14 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
     //! Set the flag for equilibrium calculation
     void set_driftdiffusion(DriftDiffusion* dd);
 
+    //! Get the point data
+    const PointData& get_point_data(void) const
+        { return get_pd(); }
+
+
+    //! Create the recombination models
+    void create_recombination_models(void);
+
 
   protected:
 
@@ -760,7 +810,7 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
 
 
     //! Get the point data structure
-    PointData& get_pd(void);
+    PointData& get_pd(void) const;
 
 
     //! Get the strain as writable reference
@@ -975,6 +1025,13 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
      * Band properties are assumed to be elemental data, \em not nodal data
      */
     BandProperties valence_band;
+
+
+    //! The electron traps
+    std::set<Trap*> _etraps;
+
+    //! The hole traps
+    std::set<Trap*> _htraps;
 
 
     //! The recombination models
@@ -1200,9 +1257,23 @@ double
 DriftDiffusionProperties::get_charge_density(void) const
 {
   return _pd->hole_density - _pd->electron_density +
-    _pd->ionized_donor_density - _pd->ionized_acceptor_density;
+    _pd->ionized_donor_density - _pd->ionized_acceptor_density
+    + _pd->ionized_electron_traps + _pd->ionized_hole_traps;
 }
 
+
+inline
+void
+DriftDiffusionProperties::get_charge_density_derivatives(
+    double derivatives[2]) const
+{
+  derivatives[0] = get_electron_density_derivative()
+    - get_ionized_donor_density_derivative()
+    - _pd->ionized_electron_traps_derivative;
+  derivatives[1] = -get_hole_density_derivative()
+    + get_ionized_acceptor_density_derivative()
+    - _pd->ionized_hole_traps_derivative;
+}
 
 inline
 RecombinationModelInterface*
@@ -1352,7 +1423,7 @@ DriftDiffusionProperties::create_new(void) const
 
 inline
 DriftDiffusionProperties::PointData&
-DriftDiffusionProperties::get_pd(void)
+DriftDiffusionProperties::get_pd(void) const
 {
   return *_pd;
 }

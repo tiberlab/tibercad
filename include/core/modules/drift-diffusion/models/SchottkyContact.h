@@ -6,16 +6,15 @@
 #include "ElectricalContact.h"
 
 
-
+/*!
+ * \brief A Schottky contact
+ */
 class SchottkyContact : public ElectricalContact
 {
   public:
 
     //! Create a schottky contact
     static SchottkyContact* create(const ModelOptions& options);
-
-    //! \copydoc ElectricalContact::get_boundary_value()
-    virtual double get_boundary_value(DriftDiffusionDefs::DDVariable variable);
 
 
   protected:
@@ -25,6 +24,13 @@ class SchottkyContact : public ElectricalContact
 
     /*! \copydoc ElectricalContact::do_init() */
     virtual void do_init(void);
+
+    //! Create a new one
+    virtual PhysicalModel* create_new(void) const;
+
+
+    //! Calculate all coefficients
+    virtual void do_compute(void);
 
 
   private:
@@ -55,17 +61,13 @@ SchottkyContact::create(const ModelOptions& options)
 }
 
 
-
 inline
-SchottkyContact::SchottkyContact(const ModelOptions& options)
-  : ElectricalContact(options),
-    _band('c'),
-    _fixed_barrier(true)
+PhysicalModel*
+SchottkyContact::create_new(void) const
 {
-  set_type(DriftDiffusionDefs::POTENTIAL, ElectricalContact::DIRICHLET);
-  set_type(DriftDiffusionDefs::FERMIE, ElectricalContact::DIRICHLET);
-  set_type(DriftDiffusionDefs::FERMIH, ElectricalContact::DIRICHLET);
+  return new SchottkyContact(get_options());
 }
+
 
 
 

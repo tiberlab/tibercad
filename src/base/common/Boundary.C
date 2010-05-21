@@ -3,19 +3,26 @@
 
 #include "Boundary.h"
 #include "BoundaryProperties.h"
-#include "SimulationEnvironment.h"
 
 #include <cassert>
 
 
-Boundary::Boundary(const std::string& name, SimulationEnvironment* environment,
-    std::set<ID> region_ids)
+Boundary::Boundary(const std::string& name, const ModelOptions& options)
   : _name(name),
-    _area_factor(1.0),
-    _env(environment)
+    _options(options),
+    _area_factor(1.0)
 {
-  _env->add_boundary(this, region_ids);
+  set_area_factor(_options.get_option("area_factor", _area_factor));
 }
+
+
+
+void
+Boundary::get_region_ids(std::vector<ID>& ids) const
+{
+  ids = _region_ids;
+}
+
 
 
 void
@@ -30,21 +37,22 @@ Boundary::add_boundary_properties(BoundaryProperties* properties,
 
   properties->set_simulation_id(simulator_id);
 
-  PropertyMap::iterator it(_models.find(simulator_id));
+  PropertyMap::iterator it(_oldmodels.find(simulator_id));
 
-  if (it != _models.end())
+  if (it != _oldmodels.end())
   {
     delete it->second;
     it->second = properties;
   }
   else
-    _models[simulator_id] = properties;
+    _oldmodels[simulator_id] = properties;
 }
+
 
 Boundary::~Boundary(void)
 {
-  PropertyMap::iterator it(_models.begin());
-  const PropertyMap::iterator end(_models.end());
+  PropertyMap::iterator it(_oldmodels.begin());
+  const PropertyMap::iterator end(_oldmodels.end());
 
   for ( ; it != end; ++it)
     delete it->second;
@@ -54,29 +62,13 @@ Boundary::~Boundary(void)
 void
 Boundary::init(void)
 {
-  find_region_ids();
 
-  PropertyMap::iterator it(_models.begin());
-  const PropertyMap::iterator end(_models.end());
+  PropertyMap::iterator it(_oldmodels.begin());
+  const PropertyMap::iterator end(_oldmodels.end());
 
   for ( ; it != end; ++it)
     it->second->init();
-  
+
 }
 
 
-void
-Boundary::find_region_ids(void)
-{
-  assert(_env != NULL);
-
-  SimulationEnvironment::BoundarySideIterator it(_env->boundary_sides_begin());
-  const SimulationEnvironment::BoundarySideIterator end(_env->boundary_sides_end());
-
-  for ( ; it != end; ++it)
-  {
-    ID id = it->second;
-    if (_env->get_boundary(id) == this)
-      _region_ids.insert((it->first).elem()->subdomain_id());
-  }
-}

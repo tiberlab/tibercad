@@ -121,6 +121,8 @@ class DriftDiffusion : public SimulationInterface
       hCurrentDensity,  /*!< hole current density */
       IonizedDonors,    /*!< ionized donor density */
       IonizedAcceptors, /*!< ionized acceptor density */
+      IonizedElectronTraps, /*!< trapped electron density */
+      IonizedHoleTraps, /*!< trapped hole density */
       eThElPower,       /*!< electron thermoelectric power */
       hThElPower,       /*!< hole thermoelectric power */
       eJoule,           /*!< electron Joule heat */
@@ -287,11 +289,6 @@ class DriftDiffusion : public SimulationInterface
         const Material* material_A, const Material* material_B) const;
 
 
-    /*! \copydoc SimulationInterface::create_boundary_model() */
-    virtual BoundaryProperties*
-      create_boundary_model(const ModelOptions& options) const
-      throw (ModelErrorException);
-
 
     /**
      * @returns a reference to the simulation options
@@ -354,10 +351,6 @@ class DriftDiffusion : public SimulationInterface
     double get_final_residual(void) const;
 
 
-    //! Get the boundary currents indexed by boundary descriptor
-    const std::map<const Boundary*, double>&
-      get_boundary_currents(void) const;
-
 
 
 
@@ -398,16 +391,6 @@ class DriftDiffusion : public SimulationInterface
 
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
-
-
-    /*! \copydoc SimulationInterface::build_nodal_results() */
-    //virtual void build_nodal_results(const std::set<std::string>& variables,
-    //    std::vector<double>& results, std::vector<std::string>& legend);
-
-
-    /*! \copydoc SimulationInterface::build_elemental_results() */
-    //virtual void build_elemental_results(const std::set<std::string>& variables,
-    //    std::vector<double>& results, std::vector<std::string>& legend);
 
 
     /*! \copydoc SimulationInterface::build_integrated_quantities() */
@@ -463,27 +446,20 @@ class DriftDiffusion : public SimulationInterface
     typedef std::map<const Boundary*, double> ContactData;
     typedef std::set<unsigned int> DofList;
 
+
+    //! The penalty value for Dirichlet BCs
+    const static double _penalty_value = 1e56;
+
+
     //! A static reference to \c this
     /*!
      * This is needed during matrix assembly, which is a static method.
      */
     static DriftDiffusion* _this;
 
+
     //! An internal pointer to the device
     Device* _device;
-
-
-    //! A linear solver
-    /*!
-     * The linear solver is used to get a good guess for the electro-chemical
-     * potentials
-     */
-    //TiberLinearSolver* _linear_solver;
-
-    /*!
-     * A list of nodes with dirichlet boundary conditions
-     */
-    DofList _dirichlet_dofs;
 
 
     /*!
@@ -581,10 +557,6 @@ class DriftDiffusion : public SimulationInterface
 
 
 
-    //! Fills the dirichlet nodes data structure.
-    void find_dirichlet_nodes(void);
-
-
     //! Find nodes on boundary between dielectric/semiconductor
     void find_dielectric_boundary_nodes(void);
 
@@ -604,9 +576,6 @@ class DriftDiffusion : public SimulationInterface
      */
     void reset_solver(void);
 
-
-    //! Sets the Dirichlet type boundary conditions
-    void set_dirichlet_bc(void);
 
 
     //! Cleanup solver environment.
@@ -767,13 +736,6 @@ double
 DriftDiffusion::get_final_residual(void) const
 {
   return _final_residual;
-}
-
-inline
-const std::map<const Boundary*, double>&
-DriftDiffusion::get_boundary_currents() const
-{
-  return _boundary_currents;
 }
 
 
