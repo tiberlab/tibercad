@@ -2,7 +2,7 @@
 
 #include "Trap.h"
 
-TIBER_MODULE(Trap, trap)
+//TIBER_MODULE(Trap, trap)
 
 using namespace std;
 
@@ -10,7 +10,8 @@ Trap::Trap(const ModelOptions& options) :
   PhysicalModelInterface(options),
   _density(0.0),
   _type(NEUTRAL),
- _particle('e')
+  _particle('e'),
+  _level(0.0)
 {
   string type = get_option("type", "");
   if (type == "eNeutral")

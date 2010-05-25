@@ -27,6 +27,8 @@
 
 #include "Utils.h"
 
+#include "Trap.h"
+
 #include "ZbStiffness.h"
 #include "WzStiffness.h"
 #include "ZbPiezoelectricity.h"
@@ -224,6 +226,8 @@ PhysicalModelInterface::create(const string& name,
     mod = ZbPiezoelectricModel::create(options);
   else if  (name == "piezoelectric_model_wz")
     mod = WzPiezoelectricModel::create(options);
+  else if (name == "trap")
+    mod == Trap::create(options);
 
 
   if (mod == NULL)
