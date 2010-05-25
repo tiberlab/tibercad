@@ -64,6 +64,7 @@ class FieldDependentMobility : public MobilityModelInterface
     {
       EFIELD,
       GRADFERMI,
+      FIELDPARAM
     };
 
 

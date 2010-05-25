@@ -270,7 +270,8 @@ DriftDiffusionProperties::create_recombination_models(void)
     ModelOptions::submodel_iterator end(get_options().submodels_end("recombination"));
     for ( ; it != end; ++it)
     {
-      const std::string& name = (it->second).get_option("model", "");
+      std::string name = (it->second).get_option("model", "");
+      name = (it->second).get_option("type", name);
       add_recombination_model(name, it->second);
     }
 
@@ -279,7 +280,8 @@ DriftDiffusionProperties::create_recombination_models(void)
     end = get_options().submodels_end("generation");
     for ( ; it != end; ++it)
     {
-      const std::string& name = (it->second).get_option("model", "");
+      std::string name = (it->second).get_option("model", "");
+      name = (it->second).get_option("type", name);
       add_recombination_model(name, it->second);
     }
   }
@@ -379,7 +381,8 @@ DriftDiffusionProperties::add_recombination_model(
 MobilityModelInterface*
 DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
 {
-  const string& model_name = options.get_option("model", "constant");
+  string model_name = options.get_option("model", "constant");
+  model_name = options.get_option("type", model_name);
 
   MobilityModelInterface* mobility_model =
     MobilityModelInterface::create(model_name, options);

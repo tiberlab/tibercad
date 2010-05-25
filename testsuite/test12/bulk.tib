@@ -1,0 +1,142 @@
+
+# Description of  the  device physical regions
+$Device
+{
+   Options
+   {
+     meshfile = bulk.msh
+   }
+
+
+   Region bulk 
+   {
+     mat = Si
+   }
+
+   Region ndop 
+   {
+     mat = Si
+     doping = 1e19 doping_type = donor
+   }
+
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+
+  model driftdiffusion
+  { 
+              
+    options
+    {
+     simulation_name = driftdiffusion
+     plot = (Ec, Ev, eQFermi, hQFermi, IonizedElectronTraps, IonizedHoleTraps, NetRecombination, eMobility, ContactCurrents)
+
+    }
+
+    physical_model recombination
+    {
+      type = srh
+    }
+
+
+    physical_model trap
+    {
+      type = acceptor
+      Nt = 1e16
+      Et = 0.2
+      reference = midgap
+    }
+
+
+    physical_model trap
+    {
+      type = donor
+      Nt = 2e16
+      Et = 0.4
+      reference = cb
+    }
+
+
+    BC_Regions  
+    {
+      BC_Region anode
+      {
+        type = ohmic
+        voltage = @Vb
+      }
+
+      BC_Region cathode
+      {
+        type = ohmic
+        voltage = 0.0
+      }
+ 
+    }   
+
+  }  
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  driftdiffusion
+  {
+    #nonlinear_solver = tiber
+    #linear_solver = pardiso
+    #ksp_type = bcgsl
+    #pc_type = lu
+    nonlin_max_it = 20
+    nonlin_step_tol = 1e-4
+    #ls_max_step = 20
+  }
+
+
+  sweep
+  {
+    simulation = driftdiffusion
+    variable = Vb
+    start = 0.0
+    stop = 1
+    steps = 10
+  }
+
+}
+
+
+
+# Definition of  Model dependent physical parameters
+$Physics
+{
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  temperature = 300
+  solve = sweep
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

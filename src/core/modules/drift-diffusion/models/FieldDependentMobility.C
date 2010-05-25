@@ -101,6 +101,8 @@ FieldDependentMobility::do_init(void)
     _force = EFIELD;
   else if (force == "grad_fermi")
     _force = GRADFERMI;
+  else if (force == "field_parameter")
+    _force = FIELDPARAM;
   else
   {
     std::string msg("FieldDependentMobility: Unknown driving force '");
@@ -121,10 +123,19 @@ FieldDependentMobility::get_mobility(void)
     get_driftdiffusionproperties().get_grad_fermi_e() :
     get_driftdiffusionproperties().get_grad_fermi_h();
 
-  E = grad_fermi.size();
+  //E = grad_fermi.size();
 
-  if ((_force == EFIELD) && (E > 1))
-    E = grad_fermi * get_driftdiffusionproperties().get_electric_field() / E;
+  //if ((_force == EFIELD) && (E > 1))
+    //E = grad_fermi * get_driftdiffusionproperties().get_electric_field() / E;
+  if (_force == GRADFERMI)
+    E = grad_fermi.size();
+  else if (_force == EFIELD)
+    E = get_driftdiffusionproperties().get_electric_field().size();
+  else if (_force == FIELDPARAM)
+  {
+    E = std::fabs(grad_fermi * get_driftdiffusionproperties().get_electric_field());
+    E = std::sqrt(E);
+  }
 
   double vsat;
   if (_vsat_formula == 1)
