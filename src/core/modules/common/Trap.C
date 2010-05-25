@@ -33,6 +33,10 @@ Trap::Trap(const ModelOptions& options) :
     _particle = 'h';
     set_type(CHARGED);
   }
+  else if (type == "fixed_charge")
+  {
+    set_type(FIXED);
+  }
 }
 
 
@@ -66,6 +70,10 @@ Trap::_trap_level(void) const
       ref = _Ev + _level;
       break;
 
+    case 'm':
+      ref = 0.5 * (_Ev + _Ec) + _level;
+      break;
+
     default:
       ref = _Ec - _level;
       break;
@@ -78,29 +86,33 @@ Trap::_trap_level(void) const
 double
 Trap::get_ionized_density(void) const
 {
-  double f;
-  double arg = _trap_level() - _fermi_level;
-  double g = 1;
-  double Nt = _density;
+  double dens = _density;
 
-  switch (_particle)
+  if (_type != FIXED)
   {
-    case 'h':
-      f = 1.0 / (1.0 + g * exp(-arg / _kT));
-      break;
+    double f;
+    double arg = _trap_level() - _fermi_level;
+    double g = 1;
+    double Nt = _density;
 
-    case 'e':
-    default:
-      Nt = -Nt;
-      f = 1.0 / (1.0 + exp(arg / _kT) / g);
-      break;
+    switch (_particle)
+    {
+      case 'h':
+        f = 1.0 / (1.0 + g * exp(-arg / _kT));
+        break;
+
+      case 'e':
+      default:
+        Nt = -Nt;
+        f = 1.0 / (1.0 + exp(arg / _kT) / g);
+        break;
+    }
+
+    dens = Nt * f;
+
+    if (_type == CHARGED)
+      dens -= Nt;
   }
-
-  double dens = Nt * f;
-
-  if (_type == CHARGED)
-    dens -= Nt;
-
 
   return dens;
 }
@@ -110,26 +122,31 @@ Trap::get_ionized_density(void) const
 double
 Trap::get_ionized_density_derivative(void) const
 {
-  double arg = _trap_level() - _fermi_level;
-  double g = 1;
-  double Nt = _density;
-  double expfac;
+  double deriv = 0.0;
 
-  switch (_particle)
+  if (_type != FIXED)
   {
-    case 'h':
-      expfac = g * exp(-arg / _kT);
-      break;
+    double arg = _trap_level() - _fermi_level;
+    double g = 1;
+    double Nt = _density;
+    double expfac;
 
-    case 'e':
-    default:
-      expfac = exp(arg / _kT) / g;
-      break;
+    switch (_particle)
+    {
+      case 'h':
+        expfac = g * exp(-arg / _kT);
+        break;
+
+      case 'e':
+      default:
+        expfac = exp(arg / _kT) / g;
+        break;
+    }
+
+    double denom = 1.0 + expfac;
+
+    deriv = -Nt / _kT * expfac / (denom * denom);
   }
-
-  double denom = 1.0 + expfac;
-
-  double deriv = -Nt / _kT * expfac / (denom * denom);
 
   return deriv;
 }

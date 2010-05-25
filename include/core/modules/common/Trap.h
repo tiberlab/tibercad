@@ -25,7 +25,8 @@ class Trap : public PhysicalModelInterface
     enum Type
     {
       NEUTRAL,  //!< neutral if unoccupied
-      CHARGED   //!< charged if unoccupied
+      CHARGED,  //!< charged if unoccupied
+      FIXED     //!< a fixed charge density
     };
 
     //! Destructor
