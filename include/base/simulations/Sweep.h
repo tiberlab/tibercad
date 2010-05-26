@@ -82,22 +82,8 @@ class Sweep : public SimulationInterface
     virtual void parse_options(void);
     
 
-    /*! \copydoc SimulationInterface::build_integrated_quantities()
-     *
-     * This will build the integrated quantities from all its
-     * simulations.
-     */
-    virtual void build_integrated_quantities(std::vector<double>& values);
-
-    
-    /*! \copydoc SimulationInterface::build_integrated_quantities()
-     *
-     * This will build the integrated quantities descriptions 
-     * from all its simulations.
-     */
-    virtual void build_integrated_quantities_description(
-        std::vector<std::string>& legend,
-        std::vector<std::string>& description);
+    //! Get global quantities from all sub-simulations
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
 
     //! Get the innermost simulations
@@ -120,8 +106,8 @@ class Sweep : public SimulationInterface
     //! A vector containing all the simulation values
     std::vector<double> _values;
 
-    //! The last simulation value
-    double _last;
+    //! The current simulation goal
+    double _goal;
 
     //! The minimum step size
     double _min_step;
@@ -132,6 +118,10 @@ class Sweep : public SimulationInterface
 
     //! Write results to file after every step if true
     bool _plot_data;
+
+
+    //! The current filename suffix
+    std::string _suffix;
 
 
     //! The ids of the remembered solutions
@@ -151,19 +141,10 @@ class Sweep : public SimulationInterface
         std::vector<std::map<double, std::vector<double> > >& sweep_data);
 
 
-    //! Plot the data
-    void plot_data(std::vector<std::ofstream*>& plotfiles,
-        std::vector<std::map<double, std::vector<double> > >& sweep_data);
+    //! Write the global data to file
+    void write_global_data(SimulationInterface& simulation, std::ofstream*& file);
 
 
-    //! Prepare the plot files
-    /*!
-     * First creates the needed files.
-     * Then writes some information on the data to be written into the header
-     * of the data files.
-     * Return true if there is some data to plot.
-     */
-    bool prepare_plot_files(std::vector<std::ofstream*>& plotfiles);
 };
 
 

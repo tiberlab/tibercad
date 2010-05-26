@@ -175,7 +175,7 @@ Sweep::do_solve(void)
   // we make a plot file for each simulation
   vector<ofstream*> plotfiles(num_sim);
 
-  bool do_plotting = prepare_plot_files(plotfiles);
+  //bool do_plotting = prepare_plot_files(plotfiles);
 
   try
   {
@@ -183,66 +183,43 @@ Sweep::do_solve(void)
   }
   catch (SolveFailedException& e)
   {
-    if (prepare_plot_files(plotfiles))
-      plot_data(plotfiles, sweep_data);
+    //if (prepare_plot_files(plotfiles))
+    //  plot_data(plotfiles, sweep_data);
 
     throw e;
   }
 
-  if (prepare_plot_files(plotfiles))
-    plot_data(plotfiles, sweep_data);
+  //if (prepare_plot_files(plotfiles))
+  //  plot_data(plotfiles, sweep_data);
 }
 
 
 
 
-bool
-Sweep::prepare_plot_files(vector<ofstream*>& plotfiles)
+
+void
+Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
 {
-  int num_sim = _simulations.size();
+  map<ID, vector<double> > data;
+  simulation.get_solution(data);
 
-  assert(plotfiles.size() == num_sim);
-
-  bool do_plotting = false;
-
-  // the filename suffix
-  const string& suffix = get_control().get_filename_suffix();
-  // the output directory
-  string outdir = get_control().get_output_dir();
-
-  for (int i = 0; i < num_sim; i++)
+  if (data.size() > 0)
   {
-    // some sanity check
-    assert(_simulations[i] != NULL);
-    assert(_simulations[i]->is_initialized());
-
-    vector<string> legend;
-    vector<string> description;
-    _simulations[i]->get_integrated_quantities_description(
-        legend, description);
-
-    // should we plot something?
-    if (legend.size() == 0)
-      plotfiles[i] = NULL;
-    else
+    if (plotfile == NULL)
     {
-      if (plotfiles[i] != NULL)
-      {
-        plotfiles[i]->close();
-        delete plotfiles[i];
-      }
+      //
+      // prepare the file
+      //
 
-      ostringstream suff;
-      //suff.precision(6);
-      //suff << fixed << _variable;
-      suff << _variable;
+      // the output directory
+      string outdir = get_control().get_output_dir();
+
       string plotfilename(outdir + "/" + get_name() + "_" +
-          _simulations[i]->get_name() + suffix + ".dat");
+          simulation.get_name() + _suffix + ".dat");
 
-      plotfiles[i] = new ofstream(plotfilename.c_str(), ios_base::trunc);
-      ofstream& file = *plotfiles[i];
+      plotfile = new ofstream(plotfilename.c_str(), ios_base::trunc);
+      ofstream& file = *plotfile;
 
-      //file.open(plotfilename.c_str());
 
       if (!file.good())
         throw SolveFailedException("Sweep: Could not open plotfile " +
@@ -254,76 +231,106 @@ Sweep::prepare_plot_files(vector<ofstream*>& plotfiles)
       //
       ostringstream s;
       s << "# Parameter sweep " << "(" << get_name() << ")" << endl;
-      s << "# Simulation: " << _simulations[i]->get_name() << endl;
+      s << "# Simulation: " << simulation.get_name() << endl;
+      s << "# Sweep variable: " << _variable << endl;
+      s << "# Data:" << endl;
       file << s.str();
 
-      // print the data description
-      file << "# Data:" << endl;
-      for (unsigned int j = 0; j < description.size(); j++)
-        file << "#    * " << description[j] << endl;
+      int width[3] = {25, 15, 10};
+      int tot_width = width[0] + width[1] + width[2];
 
+      ostringstream line;
+      line.width(tot_width);
+      line.fill('-');
+      line << "";
+      file << "# " << line.str() << endl;
+
+      {
+        ostringstream os;
+        os << "# Name";
+        int w = width[0] + 2;
+        os.width(w - os.tellp());
+        os << "" << "Units";
+        w += width[1];
+        os.width(w - os.tellp());
+        os << "" << "Type";
+        w += width[2];
+        file << os.str() << "\n# ";
+        file << line.str() << "\n# ";
+      }
 
       ostringstream l;
-      l << "#" << endl << "# " << _variable << "   ";
-      unsigned int n = legend.size();
-      for (unsigned int j = 0; j < n; j++)
-        l << "  " << legend[j];
-      l << endl;
-      file << l.str();
-
-      do_plotting = true;
-    }
-  }
-
-  return do_plotting;
-}
-
-
-
-
-void
-Sweep::plot_data(vector<ofstream*>& plotfiles,
-    vector<map<double, vector<double> > >& sweep_data)
-{
-  int num_sim = _simulations.size();
-
-  for (int j = 0; j < num_sim; j++)
-  {
-    if (plotfiles[j] != NULL)
-    {
-      // it means we have something to plot
-      map<double, vector<double> >::iterator it(sweep_data[j].begin());
-      map<double, vector<double> >::iterator end(sweep_data[j].end());
-
+      l << "#" << endl << "# " << _variable << " ";
+      map<ID, vector<double> >::iterator it = data.begin();
+      const map<ID, vector<double> >::iterator end = data.end();
       for ( ; it != end; ++it)
       {
-        vector<double>& plotvalues = it->second;
+        const SolutionDescriptor& descr = simulation.get_solution_descriptor(it->first);
+        const string& name = descr.name();
 
-        ostringstream l;
-        l << setprecision(12) << it->first;
-        unsigned int n = plotvalues.size();
+        int w = width[0];
+        ostringstream os;
+        os << name;
+        os.width(w - os.tellp());
+        os << "" << descr.units();
+        w += width[1];
+        os.width(w - os.tellp());
+        os << "" << descr.type();
+        w += width[2];
+        file << os.str() << "\n# ";
 
-        for (unsigned int k = 0; k < n; k++)
-          l << "   " << plotvalues[k];
-        l << endl;
 
-        ofstream& file = *plotfiles[j];
-        file << l.str();
+        switch (descr.type())
+        {
+          case SolutionDescriptor::VECTOR:
+            l << name << "_x "
+            << name << "_y "
+            << name << "_z ";
+            break;
+
+          case SolutionDescriptor::TENSOR:
+            l << name << "_11 "
+            << name << "_22 "
+            << name << "_33 "
+            << name << "_12 "
+            << name << "_23 "
+            << name << "_13 ";
+            break;
+
+          case SolutionDescriptor::NTUPLE:
+            for (unsigned int i = 0; i < descr.n_components(); i++)
+              l << name << "_" << i << " ";
+            break;
+
+          default:
+            l << name << " ";
+            break;
+        }
       }
+      file << line.str() << "\n";
+      l << endl;
+      file << l.str();
     }
-  }
 
-  // clean up
-  for (int j = 0; j < num_sim; j++)
-  {
-    if (plotfiles[j] != NULL)
+    ofstream& file = *plotfile;
+
+    file << _goal;
+
+    map<ID, vector<double> >::iterator it = data.begin();
+    map<ID, vector<double> >::iterator end = data.end();
+    for ( ; it != end; ++it)
     {
-      plotfiles[j]->close();
-      delete plotfiles[j];
+      const vector<double>& values = it->second;
+      for (size_t i = 0; i < values.size(); ++i)
+        file << " " << values[i];
     }
+
+    file << endl;
+
   }
 
 }
+
 
 
 
@@ -379,6 +386,9 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
   // for plotting
   vector<double> plotvalues;
 
+  // the filename suffix
+  _suffix = get_control().get_filename_suffix();
+
   vector<double>::iterator values_begin(values.begin());
   vector<double>::iterator values_end(values.end());
 
@@ -396,11 +406,11 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
 
   for (unsigned int i = 0; i < n; i++)
   {
-    double goal = values[i];
+    _goal = values[i];
 
     {
       ostringstream os;
-      os << "Ramping to sweep value " << _variable << " = " << goal;
+      os << "Ramping to sweep value " << _variable << " = " << _goal;
       Messages::info(os.str());
     }
 
@@ -418,13 +428,13 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
 
     // filename suffix
     ostringstream suffix;
-    suffix << _variable << "_" << goal;
+    suffix << _variable << "_" << _goal;
     get_control().prepend_to_filename_suffix(suffix.str());
 
     bool failed = false;
     try
     {
-      ramp.ramp(goal);
+      ramp.ramp(_goal);
 
       // the loop over the simulations
       for (int j = 0; j < num_sim; j++)
@@ -439,24 +449,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
           _simulations[j]->plot();
 
         // update "something-vs.-sweepvariable" files
-        if (plotfiles[j] != NULL)
-        {
-          // it means we have something to plot
-          _simulations[j]->get_integrated_quantities(plotvalues);
-
-          sweep_data[j][goal] = plotvalues;
-
-          ostringstream l;
-          l << setprecision(12) << goal;
-          unsigned int n_data = plotvalues.size();
-          for (unsigned int k = 0; k < n_data; k++)
-            l << "   " << plotvalues[k];
-          l << endl;
-
-          ofstream& file = *plotfiles[j];
-          file << l.str();
-          file.flush();
-        }
+        write_global_data(*_simulations[j], plotfiles[j]);
 
       }
     }
@@ -473,7 +466,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     if (failed)
     {
       ostringstream os;
-      os << "Sweep failed at " << _variable << " = " << goal;
+      os << "Sweep failed at " << _variable << " = " << _goal;
       throw SolveFailedException(os.str());
     }
   }
@@ -561,35 +554,26 @@ Sweep::do_delete_remembered_solution(ID id)
 }
 
 
+
+
 void
-Sweep::build_integrated_quantities(
-    vector<double>& values)
+Sweep::get_solution_secure(map<ID, vector<double> >& values)
 {
-  vector<double> vals;
+  map<ID, vector<double> > orig(values);
 
   int num_sim = _simulations.size();
   for (int i = 0; i < num_sim; i++)
   {
-    _simulations[i]->get_integrated_quantities(vals);
-    values.insert(values.end(), vals.begin(), vals.end());
+    map<ID, vector<double> > tmp(orig);
+    _simulations[i]->get_solution(tmp);
+
+    map<ID, vector<double> >::iterator it = tmp.begin();
+    const map<ID, vector<double> >::iterator end = tmp.end();
+    for ( ; it != end; ++it)
+    {
+      values[it->first] = it->second;
+    }
   }
 }
 
 
-
-void
-Sweep::build_integrated_quantities_description(
-    vector<string>& legend,
-    vector<string>& description)
-{
-  vector<string> leg;
-  vector<string> desc;
-
-  int num_sim = _simulations.size();
-  for (int i = 0; i < num_sim; i++)
-  {
-    _simulations[i]->get_integrated_quantities_description(leg, desc);
-    legend.insert(legend.end(), leg.begin(), leg.end());
-    description.insert(description.end(), desc.begin(), desc.end());
-  }
-}

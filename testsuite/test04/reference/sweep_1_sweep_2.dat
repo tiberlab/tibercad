@@ -3,7 +3,7 @@
 # Data:
 #    * Contact currents. Units Acm^-1
 #
-# Vb     n_contact  p_contact
+# Vb     n_contact.current  p_contact.current
 0   -6.63344513213e-30   -5.635350109e-29
 0.08   -7.15807205683e-26   1.33783944126e-11
 0.16   1.88508213224e-27   -2.07221519434e-11

@@ -1268,9 +1268,10 @@ DriftDiffusion::do_setup_solution_variables(void)
         break;
     }
 
-    declare_solution(ContactCurrent, REAL, GLOBAL, units);
-    add_alias("ContactCurrents", ContactCurrent);
-    bool plot_curr = plot_solution(ContactCurrent);
+    //declare_solution(ContactCurrent, REAL, GLOBAL, units);
+    //add_alias("ContactCurrents", ContactCurrent);
+    bool plot_curr = plot_solution("ContactCurrent");
+    plot_curr |= plot_solution("ContactCurrents");
 
     SimulationEnvironment::BoundaryIterator it(get_environment().boundaries_begin());
     const SimulationEnvironment::BoundaryIterator end(get_environment().boundaries_end());

@@ -1849,8 +1849,7 @@ SimulationInterface::get_solution(const Elem* elem,
 
 
 bool
-SimulationInterface::get_solution(const Atom*,
-    std::map<ID, std::vector<double> >&)
+SimulationInterface::get_solution(const Atom*, map<ID, vector<double> >&)
 {
   if (!is_solved()) return false;
 
@@ -1860,9 +1859,18 @@ SimulationInterface::get_solution(const Atom*,
 
 
 bool
-SimulationInterface::get_solution(std::map<ID, std::vector<double> >& values)
+SimulationInterface::get_solution(map<ID, vector<double> >& values)
 {
   if (!is_solved()) return false;
+
+  if (values.size() == 0)
+  {
+    IDSet::iterator it(_plotvariable_ids.begin());
+    const IDSet::iterator end(_plotvariable_ids.end());
+    for ( ; it != end; ++it)
+      if (get_solution_descriptor(*it).location() == SolutionDescriptor::GLOBAL)
+        values[*it] = vector<double>(0);
+  }
 
   get_solution_secure(values);
   return true;
