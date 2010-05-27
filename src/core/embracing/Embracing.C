@@ -53,6 +53,7 @@ Embracing::~Embracing(void)
 void
 Embracing::init(const ModelOptions& options)
 {
+  _do_plot = options.get_option("plot_embracing_region", _do_plot);
   _do_plot = options.get_option("plot_embracing_regions", _do_plot);
   _need_mixing = options.get_option("calculate_mixing", _need_mixing);
 

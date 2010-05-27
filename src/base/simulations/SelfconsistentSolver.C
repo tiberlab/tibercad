@@ -34,6 +34,20 @@ SelfconsistentSolver::do_init(void)
     // If it is not already initialized, we initialize now
     if (!_simulations[i]->is_initialized())
       _simulations[i]->init();
+
+
+    // inherit the solution IDs
+    const IDSet& plotvars = _simulations[i]->get_plotvariable_ids();
+    for (IDSet::iterator it(plotvars.begin()); it != plotvars.end(); ++it)
+    {
+      ID id = *it;
+      const SolutionDescriptor& descr = _simulations[i]->get_solution_descriptor(id);
+
+      // adjust ID
+      id = TB_MAX_SIM * id + _simulations[i]->get_id();
+      declare_solution_ext(descr.name(), id, descr.type(), descr.location(),
+          descr.units(), descr.n_components());
+    }
   }
 
   if (!_simulations[num_of_sims - 1]->has_solution_vector())
@@ -195,42 +209,27 @@ SelfconsistentSolver::do_plot(void)
 
 
 
-
 void
-SelfconsistentSolver::build_integrated_quantities(
-    vector<double>& values)
+SelfconsistentSolver::get_solution_secure(map<ID, vector<double> >& values)
 {
-  vector<double> val;
+  //map<ID, vector<double> > orig(values);
+  // we return everything we find
+  values.clear();
 
   int num_sim = _simulations.size();
-
   for (int i = 0; i < num_sim; i++)
   {
-    _simulations[i]->get_integrated_quantities(val);
-    values.insert(values.end(), val.begin(), val.end());
+    map<ID, vector<double> > tmp;
+    _simulations[i]->get_solution(tmp);
+    ID simid = _simulations[i]->get_id();
+
+    map<ID, vector<double> >::iterator it = tmp.begin();
+    const map<ID, vector<double> >::iterator end = tmp.end();
+    for ( ; it != end; ++it)
+      values[TB_MAX_SIM * it->first + simid] = it->second;
   }
 }
 
-
-
-
-void
-SelfconsistentSolver::build_integrated_quantities_description(
-    vector<string>& legend,
-    vector<string>& description)
-{
-  vector<string> leg;
-  vector<string> desc;
-
-  int num_sim = _simulations.size();
-
-  for (int i = 0; i < num_sim; i++)
-  {
-    _simulations[i]->get_integrated_quantities_description(leg, desc);
-    legend.insert(legend.end(), leg.begin(), leg.end());
-    description.insert(description.end(), desc.begin(), desc.end());
-  }
-}
 
 
 

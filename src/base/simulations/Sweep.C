@@ -50,6 +50,20 @@ Sweep::do_init(void)
     // If it is not already initialized, we initialize now
     if (!_simulations[i]->is_initialized())
       _simulations[i]->init();
+
+
+    // inherit the solution IDs
+    const IDSet& plotvars = _simulations[i]->get_plotvariable_ids();
+    for (IDSet::iterator it(plotvars.begin()); it != plotvars.end(); ++it)
+    {
+      ID id = *it;
+      const SolutionDescriptor& descr = _simulations[i]->get_solution_descriptor(id);
+
+      // adjust ID
+      id = TB_MAX_SIM * id + _simulations[i]->get_id();
+      declare_solution_ext(descr.name(), id, descr.type(), descr.location(),
+          descr.units(), descr.n_components());
+    }
   }
 
   // if user didn't provide a simulation name, we take the first available
@@ -175,22 +189,7 @@ Sweep::do_solve(void)
   // we make a plot file for each simulation
   vector<ofstream*> plotfiles(num_sim);
 
-  //bool do_plotting = prepare_plot_files(plotfiles);
-
-  try
-  {
-    do_sweep(_values, plotfiles, sweep_data);
-  }
-  catch (SolveFailedException& e)
-  {
-    //if (prepare_plot_files(plotfiles))
-    //  plot_data(plotfiles, sweep_data);
-
-    throw e;
-  }
-
-  //if (prepare_plot_files(plotfiles))
-  //  plot_data(plotfiles, sweep_data);
+  do_sweep(_values, plotfiles, sweep_data);
 }
 
 
@@ -310,7 +309,12 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
       file << line.str() << "\n";
       l << endl;
       file << l.str();
-    }
+    } // end of preparation
+
+
+    //
+    // simply write all data
+    //
 
     ofstream& file = *plotfile;
 
@@ -559,20 +563,21 @@ Sweep::do_delete_remembered_solution(ID id)
 void
 Sweep::get_solution_secure(map<ID, vector<double> >& values)
 {
-  map<ID, vector<double> > orig(values);
+  //map<ID, vector<double> > orig(values);
+  // we return everything we find
+  values.clear();
 
   int num_sim = _simulations.size();
   for (int i = 0; i < num_sim; i++)
   {
-    map<ID, vector<double> > tmp(orig);
+    map<ID, vector<double> > tmp;
     _simulations[i]->get_solution(tmp);
+    ID simid = _simulations[i]->get_id();
 
     map<ID, vector<double> >::iterator it = tmp.begin();
     const map<ID, vector<double> >::iterator end = tmp.end();
     for ( ; it != end; ++it)
-    {
-      values[it->first] = it->second;
-    }
+      values[TB_MAX_SIM * it->first + simid] = it->second;
   }
 }
 

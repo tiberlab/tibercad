@@ -500,7 +500,8 @@ DriftDiffusionProperties::calculate_densities(void)
     _electrons.use_quantum_density(true);
     /* simpler but slower convergence
     {
-     double arg = (_pd->electric_potential - _pd->old_electric_potential) / kTe;
+     double arg = (_pd->electric_potential - _pd->old_electric_potential
+         - _pd->fermi_e + _pd->old_fermi_e) / kTe;
      double fac = max(0.1, min(10.0, exp(arg)));
      _pd->electron_density *= fac;
      _pd->electron_density_derivative = _pd->electron_density / kTe;

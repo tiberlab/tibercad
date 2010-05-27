@@ -27,6 +27,9 @@
 
 #include "TiberModule.h"
 
+#ifndef TB_MAX_SIM
+#define TB_MAX_SIM 100
+#endif
 
 class SimulationEnvironment;
 class Embracing;
@@ -625,6 +628,10 @@ class SimulationInterface : public TiberModelObject
         bool need_mixing_coeff = false);
 
 
+    //! Get the set of plotvariable IDs
+    const IDSet& get_plotvariable_ids(void) const;
+
+
 
   protected:
 
@@ -682,9 +689,6 @@ class SimulationInterface : public TiberModelObject
      */
     void is_solved(bool flag);
 
-
-    //! Get the set of plotvariables
-    //const std::set<std::string>& get_plotvariables(void) const;
 
     //! Adds a solution name to the plot list
     void add_plot_variable(const std::string& name);
@@ -1439,14 +1443,14 @@ SimulationInterface::is_solved(void) const
   return _is_solved;
 }
 
-/*
+
 inline
-const std::set<std::string>&
-SimulationInterface::get_plotvariables(void) const
+const IDSet&
+SimulationInterface::get_plotvariable_ids(void) const
 {
-  return _plotvariables;
+  return _plotvariable_ids;
 }
-*/
+
 
 inline
 bool

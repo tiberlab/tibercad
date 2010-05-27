@@ -1724,7 +1724,7 @@ DriftDiffusion::calculate_currents_rstf(void)
 
   // aliases for nicer code
   const MeshBase& mesh = system->get_mesh();
-  const Device& device = *(_device);
+  //const Device& device = *(_device);
   SimulationEnvironment& env = get_environment();
 
   const DofMap& dof_map = system->get_dof_map();
@@ -1756,7 +1756,7 @@ DriftDiffusion::calculate_currents_rstf(void)
   const vector<Real>& JxW = fe->get_JxW();
 
   // physical coordinates of the quadrature points
-  const vector<Point>& q_point = fe->get_xyz();
+  //const vector<Point>& q_point = fe->get_xyz();
 
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
@@ -1776,11 +1776,9 @@ DriftDiffusion::calculate_currents_rstf(void)
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
-    const Elem* top_parent = elem->top_parent();
+    //const Elem* top_parent = elem->top_parent();
 
     const Boundary* boundary = el.get_boundary();
-
-    ID subdomain = elem->subdomain_id();
 
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices_u, u_var);
@@ -1788,7 +1786,7 @@ DriftDiffusion::calculate_currents_rstf(void)
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
     DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
+        get_bulk_model<DriftDiffusionProperties>(elem);
 
     assert(sc != NULL);
 

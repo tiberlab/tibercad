@@ -62,14 +62,8 @@ class SelfconsistentSolver : public SimulationInterface
     virtual void do_delete_remembered_solution(ID id);
     
 
-    /*! \copydoc SimulationInterface::build_integrated_quantities() */
-    virtual void build_integrated_quantities(std::vector<double>& values);
-
-
-    /*! \copydoc SimulationInterface::build_integrated_quantities() */
-    virtual void build_integrated_quantities_description(
-        std::vector<std::string>& legend,
-        std::vector<std::string>& description);
+    //! Get global quantities from all sub-simulations
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
 
     //! Returns the solution vector of the last simulation
