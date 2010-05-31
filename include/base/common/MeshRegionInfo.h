@@ -8,6 +8,7 @@
 #include "IDSet.h"
 
 #include <string>
+#include <sstream>
 #include <iostream>
 
 
@@ -25,7 +26,7 @@ class MeshRegionInfo
     virtual ~MeshRegionInfo(void);
 
 
-    //! Associate a name to a ID
+    //! Associate a name to an ID
     /*!
      * Nonexistent IDs will not be added!
      */
@@ -36,14 +37,15 @@ class MeshRegionInfo
     const IDSet& get_ids(const std::string& name) const;
 
 
-    //! Set a ID
+    //! Set an ID
     /*!
-     * A ID that is not yet registered will be added with empty name
+     * A ID that is not yet registered will be added with the ID
+     * as default name.
      */
     void add_id(ID id);
 
 
-    //! Check if an id is present
+    //! Check if id is present
     bool has_id(ID id) const;
 
 
@@ -140,7 +142,13 @@ inline
 void
 MeshRegionInfo::add_id(ID id)
 {
-  _ids_to_names[id];
+  if (_ids_to_names[id].size() == 0)
+  {
+    std::ostringstream os;
+    os << id;
+    _ids_to_names[id] = os.str();
+    _names_to_ids[os.str()].insert(id);
+  }
 }
 
 

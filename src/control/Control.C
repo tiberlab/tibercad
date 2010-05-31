@@ -378,13 +378,16 @@ Control::create_materials(void)
       vector<ID> tmp_id;
       for (unsigned int i = 0; i < n_ids; i++)
       {
-        // either it is a name or a number
-        // try first name
         _device->get_mesh_region_ids(region_ids_str[i], tmp_id);
-        if (tmp_id.size() > 0)
-          region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
-        else
-          region_ids.push_back(Utils::convert<unsigned int>(region_ids_str[i]));
+        if (tmp_id.size() == 0)
+        {
+          ostringstream s;
+          s << "Physical region \'" << region_ids_str[i]
+            << "\' (in Region \'" <<  data.get_region_name()
+            << "\') does not exist in mesh.";
+          throw InitFailedException(s.str());
+        }
+        region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
       }
     }
 
@@ -495,13 +498,16 @@ Control::setup_clusters(void)
     vector<ID> tmp_id;
     for (unsigned int i = 0; i < n_ids; i++)
     {
-      // either it is a name or a number
-      // try first name
       _device->get_active_region_ids(region_ids_str[i], tmp_id);
-      if (tmp_id.size() > 0)
-        region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
-      else
-        region_ids.push_back(Utils::convert<unsigned int>(region_ids_str[i]));
+      if (tmp_id.size() == 0)
+      {
+        ostringstream s;
+        s << "Physical region \'" << region_ids_str[i]
+          << "\' (in Cluster  \'" <<  data.get_region_name()
+          << "\') does not exist in mesh.";
+        throw InitFailedException(s.str());
+      }
+      region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
     }
 
     if (region_ids.size() > 0)
@@ -597,6 +603,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
     if (physreg != "all")
       Messages::warning("physical_regions keyword is deprecated.");
     physreg = simopts.get_option("region", physreg);
+    physreg = simopts.get_option("regions", physreg);
     extract_physical_regions(physreg, phys_regions);
 
     // get the user defined name (if defined...)
@@ -709,10 +716,15 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
             // either it is a name or a number
             // try first name
             _device->get_boundary_region_ids(ids_strings[i], tmp_id);
-            if (tmp_id.size() > 0)
-              ids.insert(ids.end(), tmp_id.begin(), tmp_id.end());
-            else
-              ids.push_back(Utils::convert<unsigned int>(ids_strings[i]));
+            if (tmp_id.size() == 0)
+            {
+              ostringstream s;
+              s << "Physical region \'" << ids_strings[i]
+                << "\' (in boundary  \'" << data.get_region_name()
+                << "\') does not exist in mesh.";
+              throw InitFailedException(s.str());
+            }
+            ids.insert(ids.end(), tmp_id.begin(), tmp_id.end());
           }
         }
 
@@ -855,7 +867,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
         const ModelOptions& bdopts = tmpit->second;
 
-        const string& physreg = bdopts.get_option("region", "all");
+        string physreg = bdopts.get_option("region", "all");
+        physreg = bdopts.get_option("regions", physreg);
 
         // if "all", it cannot be a lower dimensional region
         if (physreg == "all")
@@ -1035,11 +1048,13 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
             if ((mapit->second).find_option("restrict_to_region"))
               throw RuntimeException("\'restrict_to_region\' is deprecated. Use \'region\'");
 
-            if ((mapit->second).find_option("region"))
+            bool has_region_option = (mapit->second).find_option("region") ||
+                (mapit->second).find_option("regions");
+            if (has_region_option)
             {
               IDSet regs;
-              const string& physreg =
-                (mapit->second).get_option("region", "all");
+              string physreg = (mapit->second).get_option("region", "all");
+              physreg = (mapit->second).get_option("regions", physreg);
               extract_physical_regions(physreg, regs);
               if (regs.count(reg_id) == 0) add = false;
             }
@@ -1284,14 +1299,11 @@ Control::extract_physical_regions(const std::string& str, IDSet& ids)
   else
   {
     // we have to get it as vector (for the moment at least)
-    // we read them as strings as they could be region names
     vector<string> preg;
     Utils::extract_vector(str, preg);
 
     vector<ID> preg_ids;
 
-    const IDSet& regs = _device->get_active_region_ids();
-    const IDSet::const_iterator id_end(regs.end());
     unsigned int n = preg.size();
     for (unsigned int i = 0; i < n; i++)
     {
@@ -1304,17 +1316,10 @@ Control::extract_physical_regions(const std::string& str, IDSet& ids)
       }
       else
       {
-        // it has to be a region number
-        ID id = Utils::convert<ID>(preg[i]);
-
-        if (regs.find(id) == id_end)
-        {
-          ostringstream s;
-          s << "Physical region " << preg[i] <<
+        ostringstream s;
+        s << "Physical region " << preg[i] <<
             " does not exist in mesh file.";
-          throw InitFailedException(s.str());
-        }
-        ids.insert(id);
+        throw InitFailedException(s.str());
       }
     }
   }
