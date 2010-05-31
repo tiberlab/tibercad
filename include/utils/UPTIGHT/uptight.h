@@ -233,6 +233,21 @@ inline void f77_upt_lanczosdiag (f77_int const* handler, f77_int const& n_vb,
 }
 
 
+extern "C" void upt_feastsolver_ (f77_int const*, f77_double const&, f77_double 
+    const&, f77_int const&);
+
+// Corresponding F77 arguments for f77_upt_feastsolver:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// real(dp), intent(in) :: emin
+// real(dp), intent(in) :: emax
+// integer, intent(in) :: m0
+inline void f77_upt_feastsolver (f77_int const* handler, f77_double const& 
+    emin, f77_double const& emax, f77_int const& m0)
+{
+  upt_feastsolver_ (handler, emin, emax, m0);
+}
+
+
 extern "C" void upt_write_states_ (f77_int const*);
 
 // Corresponding F77 arguments for f77_upt_write_states:

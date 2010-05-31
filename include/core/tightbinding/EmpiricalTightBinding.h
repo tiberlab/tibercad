@@ -66,11 +66,14 @@ class ETB : public TightBinding
     int min_iter;
     int long_iter;
     int max_iter;
+    int m0;
     double guess_vb;
     double guess_cb;
     double fast_tol;
     double long_tol;
     double ort_tol;
+    double e_min;
+    double e_max;
 
   };
 

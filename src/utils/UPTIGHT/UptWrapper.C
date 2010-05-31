@@ -152,6 +152,13 @@ void UptWrapper::lanczos_diag(int n_vb, int n_cb, double guess_vb, double guess_
 
 }
 
+//! Call FEAST solver
+void UptWrapper::feast(double emin, double emax, int m0) {
+
+  f77_upt_feastsolver(_handler, emin, emax, m0);
+
+}
+
 void UptWrapper::set_num_states(int n_vb, int n_cb)
 {
   f77_upt_set_num_states(_handler,n_vb,n_cb);

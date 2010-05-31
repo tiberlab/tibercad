@@ -20,6 +20,7 @@
 #include <algorithm>
 #include "Material.h"
 #include "Alloy.h"
+#include "Messages.h"
 
 #define complex_dp  std::complex<double>
  
@@ -304,6 +305,12 @@ void ETB::do_solve(void){
 		 _upt_solver_options.long_tol, _upt_solver_options.ort_tol);
 
   }
+
+  if (_upt_solver_options.solver.compare("feast") == 0) 
+    {
+      Messages::info("Solving Tight Binding with FEAST eigensolver");
+      inst->feast(_upt_solver_options.e_min, _upt_solver_options.e_max, _upt_solver_options.m0);
+    } 
 
   if (_upt_solver_options.solver.compare("read_old") == 0) {
 
@@ -594,6 +601,11 @@ void ETB::parse_options(void)
   _upt_solver_options.long_iter =  get_solver_options().get_option("long_iter", 30);
   _upt_solver_options.max_iter =  get_solver_options().get_option("max_iter", 100000);
 
+
+  //Feast options
+ _upt_solver_options.e_min =  get_solver_options().get_option("Emin", 0.0);
+_upt_solver_options.e_max =  get_solver_options().get_option("Emax", 3.0);
+_upt_solver_options.m0 =  get_solver_options().get_option("subspace", 100);
   //---------------------------------------------------------------------------------------
   // output wavevetors format
   std::string out_fmt = get_options().get_option("jmol_output_format", "jvxl");

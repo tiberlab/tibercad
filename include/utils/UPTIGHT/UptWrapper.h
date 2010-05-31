@@ -137,6 +137,8 @@ public:
 
   double real_test();
 
+  void feast(double emin, double emax, int m0) ;
+
 private:
   int _handler[UPT_HSIZE];
 
