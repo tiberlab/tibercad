@@ -22,7 +22,7 @@
 class Point;
 class Elem;
 
-class ExcitonProperties : public PhysicalModel
+class TBDLEXPORT ExcitonProperties : public PhysicalModel
 {
 
   public:

@@ -2,7 +2,7 @@
 
 topdir := ../../../../..
 
-MODULE_LDFLAGS = $(topdir)/lib/modules/$(MODULE_NAME)/driftdiffusion.so
+MODULE_LDFLAGS = $(topdir)/lib/modules/$(MODULE_NAME)/driftdiffusion$(shared_libext)
 
 include $(topdir)/Make.module
 
