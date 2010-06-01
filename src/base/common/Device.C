@@ -544,14 +544,13 @@ void
 Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
 {
   const IDSet& idset = _bd_regions->get_ids(name);
+  ids.clear();
   ids.reserve(idset.size());
 
   IDSet::iterator it(idset.begin());
   const IDSet::iterator end(idset.end());
   for ( ; it != end; ++it)
     ids.push_back(*it);
-
-  ids.reserve(ids.size());
 }
 
 
