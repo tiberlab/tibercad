@@ -9,10 +9,12 @@ make_windows_package () {
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
   mkdir -p ${files}/materials
+  mkdir -p ${files}/lib
 
   # copy all files
   cp ${topdir}/bin/tibercad.exe ${files}
   cp ${topdir}/lib/*.dll ${files}
+  cp -r ${topdir}/lib/modules ${files}/lib
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
@@ -72,7 +74,7 @@ prepare_linux_package () {
   mkdir -m 0755 ${files}
   mkdir -p ${files}/bin
   mkdir -p ${files}/${ARCH}/bin
-  mkdir -p ${files}/${ARCH}/lib/tibermodels
+  mkdir -p ${files}/${ARCH}/lib/modules
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
   mkdir -p ${files}/share
@@ -96,7 +98,7 @@ prepare_linux_package () {
   cp ${topdir}/bin/tibercad.bin ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/lib/lib*.so* ${files}/${ARCH}/lib
-  find ${topdir}/lib/tibermodels -name "*.so" -exec cp {} ${files}/${ARCH}/lib/tibermodels \;
+  cp -r ${topdir}/lib/modules ${files}/${ARCH}/lib
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
