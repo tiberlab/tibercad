@@ -2974,20 +2974,13 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned
 
 
 
+  double exp_arg = (Fermi_energy - Energy) / T_EV;
+
+  if (opt.particle == "hl")
+    exp_arg = -exp_arg;
 
 
-  double prob_factor;
-
-
-  if (opt.particle == "el")
-  {
-    prob_factor = std::log( 1.0 + exp( (Fermi_energy - Energy) / T_EV )  );
-  }
-  else
-  {
-    prob_factor = std::log( 1.0 + exp( -(Fermi_energy - Energy) / T_EV )  );
-  }
-
+  double prob_factor = (exp_arg < -20) ? exp(exp_arg) : std::log(1.0 + exp(exp_arg));
 
 
 

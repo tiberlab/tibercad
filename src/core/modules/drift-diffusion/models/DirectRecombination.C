@@ -40,8 +40,10 @@ DirectRecombination::get_net_recombination_rates(double& recomb_e,
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
   double ni = dd.get_intrinsic_density();
+  double gn = dd.get_point_data().gamma_n;
+  double gp = dd.get_point_data().gamma_p;
 
-  recomb_e = recomb_h = C_ * (n * p - ni * ni);
+  recomb_e = recomb_h = C_ * (n * p - ni * ni * gn * gp);
 }
 
 

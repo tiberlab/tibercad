@@ -144,6 +144,10 @@ class ParticleDensity
     double get_particle_density_derivative(void);
 
 
+    //! Get \f$\gamma = F_{1/2}(\mu)/exp(\mu)\f$
+    double get_gamma(void);
+
+
     //! Set up an embracing region
     void set_embracing(Embracing* embracing);
 
@@ -221,19 +225,16 @@ class ParticleDensity
     double _density_derivative;
 
 
+    //! The parameter \f$\gamma = F_{1/2}(\mu)/exp(\mu)\f$
+    double _gamma;
+
+
     //! The embracing of classical and quantum calculation
     Embracing* _embracing;
 
 
     //! Calculate the particle density
     void calculate_density(void);
-
-
-    //! Calculate the particle density
-    /*!
-     * Always call this after calculate_density()
-     */
-    void calculate_density_derivative(void);
 
 
     //! Calculate the quantum density
@@ -243,23 +244,9 @@ class ParticleDensity
     bool quantum_density(void);
 
 
-    //! Calculate the quantum density derivative
-    /*!
-     * returns \true if the quantum density derivative could be evaluated
-     *
-     * \note For now, quantum density derivative is zero
-     */
-    bool quantum_density_derivative(void);
-
-
     //! Calculate classical particle density
     template <TiberCad::Statistics>
     void classical_density(void);
-
-
-    //! Calculate classical particle density
-    template <TiberCad::Statistics>
-    void classical_density_derivative(void);
 
 };
 
@@ -312,7 +299,7 @@ void
 ParticleDensity::use_quantum_density(bool use_quantum)
 {
   _use_quantum = use_quantum;
-  _density = _density_derivative = -1.0;
+  _density = -1.0;
 }
 
 
@@ -346,7 +333,7 @@ ParticleDensity::set_classical_parameters(double N_eff, double E,
 
   _argument = (_E_F - E) / _kT;
 
-  _density = _density_derivative = -1.0;
+  _density = -1.0;
 }
 
 
@@ -358,7 +345,7 @@ ParticleDensity::set_element_and_point(const Elem* elem, const Point& p)
   _elem = elem;
   _p = p;
 
-  _density = _density_derivative = -1.0;
+  _density = -1.0;
 }
 
 
@@ -379,10 +366,22 @@ inline
 double
 ParticleDensity::get_particle_density_derivative(void)
 {
-  if (_density_derivative < 0)
-    calculate_density_derivative();
+  if (_density < 0)
+    calculate_density();
 
   return _density_derivative;
+}
+
+
+
+inline
+double
+ParticleDensity::get_gamma(void)
+{
+  if (_density < 0)
+    calculate_density();
+
+  return _gamma;
 }
 
 

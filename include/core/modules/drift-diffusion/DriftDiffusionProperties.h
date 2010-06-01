@@ -111,6 +111,11 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
          */
         double hole_density_derivative;
 
+        //! \f$\gamma_n\f$
+        double gamma_n;
+
+        //! \f$\gamma_n\f$
+        double gamma_p;
 
         //! The ionized donor density
         double ionized_donor_density;

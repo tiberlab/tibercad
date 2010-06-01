@@ -480,6 +480,7 @@ DriftDiffusionProperties::calculate_densities(void)
       Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
   _pd->electron_density = _electrons.get_particle_density();
   _pd->electron_density_derivative = _electrons.get_particle_density_derivative();
+  _pd->gamma_n = _electrons.get_gamma();
   if (_electrons.is_quantum_density() && has_solution() && use_predictor())
   {
     _electrons.use_quantum_density(false);
@@ -488,7 +489,7 @@ DriftDiffusionProperties::calculate_densities(void)
     _electrons.set_classical_parameters(cb.effective_DOS,
         Ec - _pd->old_electric_potential, -_pd->old_fermi_e, kTe);
     double old_dens = _electrons.get_particle_density();
-    if (old_dens > 1e-6)
+    //if (old_dens > 1e-6)
     {
       //double fac = max(0.1, min(10.0, dens / old_dens));
       //_pd->electron_density_derivative *= _pd->electron_density / old_dens;
@@ -497,6 +498,15 @@ DriftDiffusionProperties::calculate_densities(void)
       _pd->electron_density_derivative *= qdens / old_dens;
       _pd->electron_density = qdens / old_dens * dens;
     }
+
+    /*
+    double arg_cl = std::log(dens);
+    double arg_q = std::log(_pd->electron_density);
+    double arg = relax * arg_q + (1.0 - relax) * arg_cl;
+    _pd->electron_density = std::exp(arg);
+    _pd->electron_density_derivative = _pd->electron_density / kTe;
+    */
+
     _electrons.use_quantum_density(true);
     /* simpler but slower convergence
     {
@@ -515,6 +525,7 @@ DriftDiffusionProperties::calculate_densities(void)
   _pd->hole_density = _holes.get_particle_density();
   // TODO where to put the sign?
   _pd->hole_density_derivative = -_holes.get_particle_density_derivative();
+  _pd->gamma_p = _holes.get_gamma();
   if (_holes.is_quantum_density() && has_solution() && use_predictor())
   {
     _holes.use_quantum_density(false);
@@ -523,7 +534,7 @@ DriftDiffusionProperties::calculate_densities(void)
     _holes.set_classical_parameters(vb.effective_DOS,
         -Ev + _pd->old_electric_potential, _pd->old_fermi_h, kTh);
     double old_dens = _holes.get_particle_density();
-    if (old_dens > 1e-6)
+    //if (old_dens > 1e-6)
     {
       //double fac = max(0.1, min(10.0, dens / old_dens));
       //_pd->hole_density_derivative *= _pd->hole_density / old_dens;
@@ -930,7 +941,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   }
   while ((error > eps) || (residual_dens > dens_max));
 
-  intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
+  //intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
 
   // for a dielectric we don't need much...
   if (is_dielectric())

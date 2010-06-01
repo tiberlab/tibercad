@@ -105,7 +105,9 @@ AugerRecombination::get_net_recombination_rates(double& recomb_e,
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
   long double ni = dd.get_intrinsic_density();
-  long double ni2 = ni * ni;
+  double gn = dd.get_point_data().gamma_n;
+  double gp = dd.get_point_data().gamma_p;
+  long double ni2 = ni * ni * gn * gp;
   long double np = n * p;
 
   double Cn = get_Cn();
@@ -127,7 +129,9 @@ AugerRecombination::get_net_recombination_rate_derivatives(
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
   long double ni = dd.get_intrinsic_density();
-  long double ni2 = ni * ni;
+  double gn = dd.get_point_data().gamma_n;
+  double gp = dd.get_point_data().gamma_p;
+  long double ni2 = ni * ni * gn * gp;
   long double np = n * p;
 
   double Cn = get_Cn();

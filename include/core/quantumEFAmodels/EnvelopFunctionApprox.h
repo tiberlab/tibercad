@@ -550,9 +550,9 @@ inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy,
   
   double el_fermi;
 
-  if (exp_arg > 20) 
-    el_fermi = 0.0;
-  else
+  //if (exp_arg > 20)
+  //  el_fermi = 0.0;
+  //else
     el_fermi = 1.0/(  1 +  std::exp(exp_arg)  );
 
 

@@ -76,6 +76,8 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
   long double ni = dd.get_intrinsic_density();
+  double gn = dd.get_point_data().gamma_n;
+  double gp = dd.get_point_data().gamma_p;
   double T = dd.get_lattice_temperature();
 
   long double f = std::exp(_E_t / T);
@@ -85,9 +87,9 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   long double tau_p = _tau_p * std::pow(T / T0, _Talpha_h)
     * std::exp(_Tcoeff_h * (T / T0 - 1));
 
-  long double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
+  long double denom = tau_p * (n + gn * ni * f) + tau_n * (p + gp * ni / f);
   long double tmp = n * p / denom;
-  recomb_e = recomb_h = tmp - ni * ni / denom;
+  recomb_e = recomb_h = tmp - gn * gp * ni * ni / denom;
 }
 
 
@@ -101,6 +103,8 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
   long double ni = dd.get_intrinsic_density();
+  double gn = dd.get_point_data().gamma_n;
+  double gp = dd.get_point_data().gamma_p;
   double T = dd.get_lattice_temperature();
 
   long double f = std::exp(_E_t / T);
@@ -110,9 +114,9 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   long double tau_p = _tau_p * std::pow(T / T0, _Talpha_h)
     * std::exp(_Tcoeff_h * (T / T0 - 1));
 
-  long double denom = tau_p * (n + ni * f) + tau_n * (p + ni / f);
+  long double denom = tau_p * (n + gn * ni * f) + tau_n * (p + gp * ni / f);
   long double tmp = n * p / denom;
-  long double SRH = tmp - ni * ni / denom;
+  long double SRH = tmp - gn * gp * ni * ni / denom;
 
   long double a = p / denom;
   a = a - tau_p * SRH / denom;
