@@ -144,7 +144,7 @@ class Utils
      * As default all whitespace is trimmed.
      */
     static void trim(std::string& str,
-        const std::string& chars = " \t\f\v\n\r");
+        const std::string& chars = "");
 
 
     //! A timer class, based on the times() system call
@@ -331,20 +331,6 @@ Utils::bernoulli_inv(double x)
   return res;
 }
 
-
-
-inline
-void
-Utils::trim(std::string& str, const std::string& chars)
-{
-  std::string::size_type pos = str.find_last_not_of(chars);
-  if(pos != std::string::npos) {
-    str.erase(pos + 1);
-    pos = str.find_first_not_of(chars);
-    if(pos != std::string::npos) str.erase(0, pos);
-  }
-  else str.erase(str.begin(), str.end());
-}
 
 
 

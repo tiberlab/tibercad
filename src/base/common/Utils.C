@@ -222,6 +222,27 @@ Utils::skip_whitespace(std::istream& istr)
 
 
 
+void
+Utils::trim(std::string& str, const std::string& chars)
+{
+  if (chars.size() == 0)
+    boost::algorithm::trim(str);
+  else
+    boost::algorithm::trim_if(str, boost::algorithm::is_any_of(chars));
+
+  /*
+  std::string::size_type pos = str.find_last_not_of(chars);
+  if(pos != std::string::npos) {
+    str.erase(pos + 1);
+    pos = str.find_first_not_of(chars);
+    if(pos != std::string::npos) str.erase(0, pos);
+  }
+  else str.erase(str.begin(), str.end());
+  */
+}
+
+
+
 template <typename T>
 void
 Utils::extract_vector(const string& input, vector<T>& vec)
