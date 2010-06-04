@@ -391,8 +391,8 @@ void ReadGMSH::read_mesh(istream& in)
           }
 
           // name is double quoted!
-          name.erase(0, 1);
-          name.erase(name.size() - 1, 1);
+          Utils::trim(name);
+          Utils::trim(name, "\"");
 
           phys_names[id] = name;
         }
