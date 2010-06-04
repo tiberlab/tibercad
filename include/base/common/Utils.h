@@ -139,6 +139,14 @@ class Utils
     static void skip_whitespace(std::istream& istr);
 
 
+    //! Trim leading and trailing set of characters from a string
+    /*!
+     * As default all whitespace is trimmed.
+     */
+    static void trim(std::string& str,
+        const std::string& chars = " \t\f\v\n\r");
+
+
     //! A timer class, based on the times() system call
     class Timer
     {
@@ -322,6 +330,22 @@ Utils::bernoulli_inv(double x)
 
   return res;
 }
+
+
+
+inline
+void
+Utils::trim(std::string& str, const std::string& chars)
+{
+  std::string::size_type pos = str.find_last_not_of(chars);
+  if(pos != std::string::npos) {
+    str.erase(pos + 1);
+    pos = str.find_first_not_of(chars);
+    if(pos != std::string::npos) str.erase(0, pos);
+  }
+  else str.erase(str.begin(), str.end());
+}
+
 
 
 #endif // _UTILS_H_
