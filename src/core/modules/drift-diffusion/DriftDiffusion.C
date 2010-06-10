@@ -730,11 +730,11 @@ DriftDiffusion::do_equilibrium(void)
     {
       DriftDiffusionProperties* sc =
           static_cast<DriftDiffusionProperties*>(*it);
-      
+
       // the conduction bands
       const vector<double>& cb = sc->get_conduction_bands();
       num_cb = max(num_cb, cb.size());
-      
+
       // the valence bands
       const vector<double>& vb = sc->get_valence_bands();
       num_vb = max(num_vb, vb.size());
@@ -1221,11 +1221,11 @@ DriftDiffusion::do_setup_solution_variables(void)
     {
       DriftDiffusionProperties* sc =
           static_cast<DriftDiffusionProperties*>(*it);
-      
+
       // the conduction bands
       //const vector<double>& cb = sc->get_conduction_bands();
       //num_cb = max(num_cb, cb.size());
-      
+
       // the valence bands
       //const vector<double>& vb = sc->get_valence_bands();
       //num_vb = max(num_vb, vb.size());

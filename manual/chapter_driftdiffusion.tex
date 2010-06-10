@@ -14,78 +14,55 @@ $P$ is the electric polarization due to e.g. piezoelectric effects and $R$ is th
 The models for the mobilities and the net recombination rates can be specified in the \texttt{physical\_model} sections as described in the following.
 
 
-\section{Plot variables}
+\section{Solution/Plot variables}
 
-See tables~\ref{table:dd_nodal}, \ref{table:dd_elemental} and \ref{table:dd_scalar}.
+The solution variables available for plotting and for interaction with other models are given in Table~\ref{table:dd_solutions}.
 
 
 \begin{table}[htb]
 \center
 \begin{tabular}{l|p{8cm}|l}
-\multicolumn{3}{c}{\textbf{Nodal quantities}} \\
+Key & Description & Units \\
 \hline 
 \texttt{Ec} & Conduction band edge & eV \\
-\texttt{Ec0} & Conduction band edge without electric potential & eV \\
 \texttt{Ev} & Valence band edge & eV \\
-\texttt{Ev0} & Valence band edge without electric potential & eV \\
-\texttt{Eg} & Band gap & eV \\
 \texttt{QFermi\_e} & Electro-chemical potential of electrons & eV ($-e\phi_n$) \\
 \texttt{QFermi\_h} & Electro-chemical potential of holes & eV ($-e\phi_p$) \\
+\texttt{Ec0} & Conduction band edge without electric potential & eV \\
+\texttt{Ev0} & Valence band edge without electric potential & eV \\
+\texttt{Eg} & Band gap & eV \\
+\texttt{ConductionBands} & Minima of all conduction bands & eV \\
+\texttt{ValenceBands} & Maxima of all valence bands & eV \\
 \texttt{ElPotential} & Electric potential & V \\
 \texttt{eDensity} & Electron density & cm$^{-3}$ \\
 \texttt{hDensity} & Hole density & cm$^{-3}$ \\
-\texttt{eMob} & Electron mobility & cm$^2V^{-1}s^{-1}$ \\
-\texttt{hMob} & Hole mobility & cm$^2V^{-1}s^{-1}$ \\
-\texttt{Nd} & Ionized donor density & cm$^{-3}$ \\
-\texttt{Na} & Ionized acceptor density & cm$^{-3}$ \\
-\texttt{charge\_density} & Total charge density & cm$^{-3}$ \\
-\texttt{Pn} & Electron thermoelectric power & V K$^{-1}$ \\
-\texttt{Pp} & Hole thermoelectric power & V K$^{-1}$ \\
+\texttt{eMobility} & Electron mobility & cm$^2V^{-1}s^{-1}$ \\
+\texttt{hMobility} & Hole mobility & cm$^2V^{-1}s^{-1}$ \\
+\texttt{eConductivity} & Electron conductivity & S/cm \\
+\texttt{hConductivity} & Hole conductivity & S/cm \\
+\texttt{ElField} & Electric Field & Vcm$^{-1}$ \\
+\texttt{Polarization} & Electric Polarization & Cm$^{-2}$ \\
+\texttt{CurrentDensity} & Total current density & Acm$^{-2}$ \\
+\texttt{eCurrentDensity} & Electron current density & Acm$^{-2}$ \\
+\texttt{hCurrentDensity} & Hole current density & Acm$^{-2}$ \\
+\texttt{IonizedDonors} & Ionized donor density & cm$^{-3}$ \\
+\texttt{IonizedAcceptors} & Ionized acceptor density & cm$^{-3}$ \\
+\texttt{IonizedElectronTraps} & Ionized electron trap density & cm$^{-3}$ \\
+\texttt{IonizedHoleTraps} & Ionized hole trap density & cm$^{-3}$ \\
+%\texttt{charge\_density} & Total charge density & cm$^{-3}$ \\
+\texttt{eThElPower} & Electron thermoelectric power & V K$^{-1}$ \\
+\texttt{hThElPower} & Hole thermoelectric power & V K$^{-1}$ \\
 \texttt{NetRecombination} & %\begin{minipage}[t]{8cm}
 %
 %The net recombination rate for each recombination model and the total rate
 %\end{minipage}& cm$^{-3}$s$^{-1}$
  The net recombination rate for each recombination/generation model and the total rate &
- cm$^{-3}$s$^{-1}$
+ cm$^{-3}$s$^{-1}$ \\
+\texttt{ContactCurrents} & The electric current on each contact & A/cm$^{3-d}$
 \end{tabular}
-\caption{Nodal quantities}
-\label{table:dd_nodal}
+\caption{Solution/Plot variables}
+\label{table:dd_solutions}
 \end{table}
-
-\begin{table}[htb]
-\center
-\begin{tabular}{l|p{5cm}|l}
-\multicolumn{3}{c}{\textbf{Elemental quantities}} \\
-\hline 
-\texttt{EField} & Electric Field & Vcm$^{-1}$ \\
-\texttt{GradFermiE} & Gradient of the electron  electro-chemical potential& Vcm$^{-1}$ \\
-\texttt{GradFermiH} & Gradient of the hole  electro-chemical potential& Vcm$^{-1}$ \\
-\texttt{Current} & Total current density & Acm$^{-2}$ \\
-\texttt{eCurrent} & Electron current density & Acm$^{-2}$ \\
-\texttt{hCurrent} & Hole current density & Acm$^{-2}$ \\
-\texttt{Polarization} & Electric Polarization & Cm$^{-2}$ \\
-\texttt{GradPn} & Gradient of electron thermoelectric power & VK$^{-1}$cm$^{-1}$ \\
-\texttt{GradPp} & Gradient of hole thermoelectric power & VK$^{-1}$cm$^{-1}$ 
-
-\end{tabular}
-\caption{Elemental quantities}
-\label{table:dd_elemental}
-\end{table}
-
-\begin{table}[htb]
-\center
-\begin{minipage}{8cm}
-\center
-\begin{tabular}{l|l|l}
-\multicolumn{3}{c}{\textbf{Scalar quantities}} \\
-\hline 
-\texttt{ContactCurrents} & Contact currents & *\footnote{depends on dimension and symmetry}\\ 
-\end{tabular}
-\end{minipage}
-\caption{Scalar quantities}
-\label{table:dd_scalar}
-\end{table}
-
 
 
 
@@ -97,36 +74,36 @@ model driftdiffusion
 {
     options
     {
-         simulation_name = whatever_you_want
-         physical_regions = (2, 3, 4)
+      simulation_name = whatever_you_want
+      physical_regions = (2, 3, 4)
     }
 
     physical_model recombination
     {
-      model = model_to_be_used
+      type = model_to_be_used
       ...
     }
 
     physical_model generation
     {
-      model = model_to_be_used
+      type = model_to_be_used
       ...
     }
 
 
     physical_model electron_mobility
     {
-      model = model_to_be_used
+      type = model_to_be_used
     }
 
     physical_model hole_mobility
     {
-      model = model_to_be_used
+      type = model_to_be_used
     }
 
     physical_model thermoelectric_power
     {
-      model = model_to_be_used
+      type = model_to_be_used
     }
    
  }
@@ -150,7 +127,7 @@ Future releases will relax this restriction.
 
 
 The \physicalmodel{} sections can be omitted.
-In this case default models are used, namely no recombination/generation for the recombination model and constant mobility for the mobility models.
+In this case default models are used, namely no recombination/generation for the recombination models and constant mobility for the mobility models.
 There can be more than one recombination model.
 
 
@@ -165,7 +142,7 @@ The SRH recombination model can be enabled in the input file by
 \begin{verbatim}
 physical_model recombination
 {
-  model = srh
+  type = srh
   ...
 }
 \end{verbatim}
@@ -221,7 +198,7 @@ The direct recombination model can be enabled in the input file by
 \begin{verbatim}
 physical_model recombination
 {
-  model = direct
+  type = direct
   ...
 }
 \end{verbatim}
@@ -241,7 +218,7 @@ The Auger recombination model can be enabled in the input file by
 \begin{verbatim}
 physical_model recombination
 {
-  model = auger
+  type = auger
   ...
 }
 \end{verbatim}
@@ -265,7 +242,7 @@ It is enabled by specifying
 \begin{verbatim}
 physical_model generation
 {
-  model = optical
+  type = optical
   G = ...
 }
 \end{verbatim}
@@ -302,22 +279,33 @@ The default is $P_n = P_p = 0$.
 
 \label{dd:mobility_models}
 
-Mobility models have currently to be defined for electrons and holes independently.
-The corresponding keywords are \texttt{electron\_mobility} and \texttt{hole\_mobility}, i.e.
+The models to be used for electrons and holes can be defined in a single physical\_model
+block or independently using two blocks.
+The corresponding keywords are \texttt{mobility} or \texttt{electron\_mobility} and \texttt{hole\_mobility}, i.e.
 
 \begin{verbatim}
+physical_model mobility
+{
+  type = ...
+  ...
+}
+
 physical_model electron_mobility
 {
-  model = ...
+  type = ...
   ...
 }
 
 physical_model hole_mobility
 {
-  model = ...
+  type = ...
   ...
 }
 \end{verbatim}
+
+When using the first approach, both carriers will use the same model, and parameters
+provided in the input file will also be used by both carriers.
+When mixing the different definitions, the blocks \texttt{electron\_mobility} and \texttt{hole\_mobility} will override the common \texttt{mobility} block.
 
 The default model is the constant mobility model.
 The parameters for the different mobility models are needed for both electrons and holes.
@@ -413,9 +401,10 @@ The field dependent mobility model describes the degradation of mobility at high
 It is identified by the identifier \texttt{field\_dependent}.
 The electric field component in directon of the current flow or the gradient of the electro-chemical potential can be chosen as driving force:
 \begin{verbatim}
-driving_force = efield | grad_fermi
+driving_force = efield | grad_fermi | field_parameter
 \end{verbatim}
-The default driving force is the gradient of the electro-chemical potential.
+The default driving force is the gradient of the corresponding electro-chemical potential $\nabla\phi$.
+\texttt{field\_parameter} uses a field parameter given by $\sqrt{E\cdot\nabla\phi}$ as driving force~\cite{??}.
 
 The model is based on the Caughey-Thomas model, refined by Canali~\cite{canali}:
 \begin{equation}
@@ -480,11 +469,11 @@ By specifying \verb+band = v+ the barrier can be imposed with respect to the val
 Alternatively, the metal work function can be defined using the keyword \keyword{work\_function}. Note, however, that its value has to be aligned with the band energies given in the material files for the other materials.
 The \keyword{fixed\_barrier} controls the behaviour of the barrier height for  strained materials.
 If it is set to \texttt{true}, the barrier will be independent of strain (default behaviour).
-If it is set to \texttt{false}, the given barrier is used as barrier for the unstrained case and and will depend on strain during simulation.
+If it is set to \texttt{false}, the given barrier is used as barrier for the unstrained case and  will depend on strain during simulation.
 If the metal work function is specified, the barrier will be strain dependent as default.
 
-If a contact touches several different regions with different materials, it can be necessary to provide a reference material using the keyword \keyword{reference\_material} and specifying the name of a \TiberCAD{} region.
-\TiberCAD{} will prefer semiconductors over dielectrics if no reference material is specified.
+%If a contact touches several different regions with different materials, it can be necessary to provide a reference material using the keyword \keyword{reference\_material} and specifying the name of a \TiberCAD{} region.
+%\TiberCAD{} will prefer semiconductors over dielectrics if no reference material is specified.
 
 
 The type of boundary model is chosen by the parameter \texttt{type}, e.g. \texttt{type = schottky}.

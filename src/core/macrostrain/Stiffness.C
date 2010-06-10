@@ -2,6 +2,8 @@
 
 
 #include "Stiffness.h"
+#include "ZbStiffness.h"
+#include "WzStiffness.h"
 #include "RotatedCrystal.h"
 #include "Material.h"
 
@@ -14,6 +16,20 @@ Stiffness::Stiffness(const ModelOptions& options) : PhysicalModelInterface(optio
 
 
 
+}
+
+
+
+Stiffness* Stiffness::create( const ModelOptions& options )
+{
+  const std::string& str = options.get_option("crystal_structure", "");
+  Stiffness* mod = NULL;
+  if (str == "zb")
+    mod = ZbStiffness::create(options);
+  else if (str == "wz")
+    mod = WzStiffness::create(options);
+
+  return mod;
 }
 
 //--------------------------------------------------------------------//

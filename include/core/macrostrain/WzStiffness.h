@@ -7,16 +7,16 @@ class WzStiffness : public Stiffness
 {
 
  public:
-  
+
   //! method that sets moduli
   /*!assembles stiffness tensor in crystal system for a wurtzite crystal
-    following Eq (16) J. of Physics Condensed Matter v 14 p.3399 O. Ambacher et al 
+    following Eq (16) J. of Physics Condensed Matter v 14 p.3399 O. Ambacher et al
   z axis is parallel to [0001] direction
-  (x,y,z) - othogonormal system 
+  (x,y,z) - othogonormal system
    \f$ c_{11} = C_{xxxx}, c_{12}=C_{xxyy}, c_{13} = C_{xxzz}, c_{33} = C_{zzzz}, c_{44} = C_{yzxz} \f$
-  */  
+  */
   void set_moduli(double c11, double c12, double c13, double c33, double c44 );
-  
+
 
   static WzStiffness* create(const ModelOptions& options);
 
@@ -24,15 +24,15 @@ class WzStiffness : public Stiffness
 
   //!Empty constructor
   WzStiffness(const ModelOptions& options);
-  
- 
+
+
   virtual void read_database( );
 
 
   virtual PhysicalModelInterface* create_new(void) const;
 
   virtual void do_init(void);
-  
+
 };
 
 

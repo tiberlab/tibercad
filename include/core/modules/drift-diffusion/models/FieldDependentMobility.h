@@ -54,9 +54,6 @@ class FieldDependentMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    /*! \copydoc MobilityModelInterface::do_init_alloy() */
-    virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
-        const PhysicalModelInterface* comp_B, double xa);
 
   private:
 

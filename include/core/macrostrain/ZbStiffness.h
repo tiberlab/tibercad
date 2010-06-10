@@ -28,8 +28,8 @@ class ZbStiffness : public Stiffness
   virtual PhysicalModelInterface* create_new(void) const;
 
   virtual void do_init (void);
-  
-  
+
+
 };
 
 

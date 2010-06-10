@@ -195,34 +195,3 @@ FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
 
   }
 }
-
-
-void
-FieldDependentMobility::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-
-  const FieldDependentMobility* scA =
-    dynamic_cast<const FieldDependentMobility*>(comp_A);
-  const FieldDependentMobility* scB =
-    dynamic_cast<const FieldDependentMobility*>(comp_B);
-
-  if (scA->_vsat_formula != scB->_vsat_formula)
-    throw InitFailedException("Field dependent mobility has to use the same "
-        "formula for both components of the alloy " + get_material()->get_name());
-
-  _vsat_formula = scA->_vsat_formula;
-  _force = scA->_force;
-
-  _beta = alloy(scA->_beta, scB->_beta, xa);
-  _betaexp = alloy(scA->_betaexp, scB->_betaexp, xa);
-  _vsat0 = alloy(scA->_vsat0, scB->_vsat0, xa);
-  _vsat_b = alloy(scA->_vsat_b, scB->_vsat_b, xa);
-  _vsat_min = alloy(scA->_vsat_min, scB->_vsat_min, xa);
-
-  destroy(_low_field_mob);
-  _low_field_mob = create_submodel_copy(scA->_low_field_mob);
-  _low_field_mob->set_driftdiffusionproperties(&get_driftdiffusionproperties());
-  _low_field_mob->init_alloy(scA->_low_field_mob, scB->_low_field_mob, xa);
-}
-

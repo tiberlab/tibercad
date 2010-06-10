@@ -676,6 +676,34 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       model_str->get_physical_model_map();
 
 
+    // physical models can have a type identifier. In some cases
+    // it is useful to specify several types in the same block.
+    // We treat this case here by splitting up the corresponding
+    // models
+    multimap<const string, ModelOptions>::iterator mapit(physmodels.begin());
+    const multimap<const string, ModelOptions>::iterator mapend(physmodels.end());
+    while (mapit != mapend)
+    {
+      multimap<const string, ModelOptions>::iterator curr(mapit);
+      ++mapit;
+
+      ModelOptions& opts = curr->second;
+      vector<string> type;
+      opts.get_option("type", type);
+
+      if (type.size() > 1)
+      {
+        opts.set_option("type", type[0]);
+
+        for (size_t i = 1; i < type.size(); ++i)
+        {
+          ModelOptions newopts(opts);
+          newopts.set_option("type", type[i]);
+          physmodels.insert(make_pair(curr->first, newopts));
+        }
+      }
+    }
+
 
     //
     // and now... the boundary conditions

@@ -16,36 +16,36 @@ class Stiffness : public PhysicalModelInterface
  public:
 
   void rotate_to_calc_system(const Tensor2Gen& RotMatrix);
-  
+
   //! stiffness tensor in calculation system (rank 4, double symmetric, 21 independent components)
-  Tensor4DSym     C_calc  ;   
-  
+  Tensor4DSym     C_calc  ;
+
   //!  Returns subtensor \f$ B_{il} = C_{ijkl}, j = j_0, k = k_0 \f$
   Tensor2Gen get_subtensor(int j, int k);
 
 
-  //!  Returns subtensor \f$ B_{kl} = C_{ijkl}, i = i_0, j = j_0 \f$ 
-  Tensor2Sym get_another_subtensor(int i, int j); 
+  //!  Returns subtensor \f$ B_{kl} = C_{ijkl}, i = i_0, j = j_0 \f$
+  Tensor2Sym get_another_subtensor(int i, int j);
 
-  //! sets stiffness tensor in crystal system [Gpa]  
+  //! sets stiffness tensor in crystal system [Gpa]
   void set_C_tensor_crystal(const Tensor4DSym&     C);
 
   //! creates new object
-  static Stiffness* create(const std::string& name,  const ModelOptions& options);
- 
+  static Stiffness* create(const ModelOptions& options);
+
   void  calculate_strain_from_stress(const Tensor2Sym& stress, Tensor2Sym& strain ) const;
-  
+
 
  private:
 
- 
- 
+
+
  protected:
 
   Stiffness(const ModelOptions& options) ;
 
   //! stiffness tensor in crystal system     (rank 4, double symmetric, 21 independent components) [GPa]
-  Tensor4DSym     C_cr    ;    
+  Tensor4DSym     C_cr    ;
 
 
 
@@ -54,31 +54,26 @@ class Stiffness : public PhysicalModelInterface
 
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
- 
+
 
 
 };
 
-//------------------------------------------------------------------------------------//
-inline Stiffness* Stiffness::create( const std::string& name,  const ModelOptions& options )
-{
-  return dynamic_cast<Stiffness*>(PhysicalModelInterface::create("stiffness_" + name, options));
-}
 
 
 //------------------------------------------------------------------------------------//
-inline  Tensor2Gen Stiffness::get_subtensor(int j, int k) 
+inline  Tensor2Gen Stiffness::get_subtensor(int j, int k)
 {
   //from a tensor C_ijkl gives a tensor with j and k fixed
   Tensor2Gen temp ;
   const Tensor4DSym&  C1 = C_calc;
 
-  for ( int i = 1; i <=3; i++ ) 
+  for ( int i = 1; i <=3; i++ )
     for ( int l = 1; l <=3; l++ )
       {
 	const double  p = C1(i,j,k,l) ; //unfortunatly, I have to work with constant object C1 due to tensor class restriction.
-	                                //may be, I'll modify class in future. 	
-	temp(i,l) = p; 
+	                                //may be, I'll modify class in future.
+	temp(i,l) = p;
       }
   return(temp);
 }
@@ -91,13 +86,13 @@ inline Tensor2Sym Stiffness::get_another_subtensor(const int i, const int j)
   Tensor2Sym temp ;
   const Tensor4DSym&  C1 = C_calc;
 
-  for ( int k = 1; k <=3; k++ ) 
+  for ( int k = 1; k <=3; k++ )
     for ( int l = 1; l <=k; l++ )
       {
 
 	const double  p = C1(i,j,k,l) ; //unfortunatly, I have to work with constant object C1 due to tensor class restriction.
-	                                //may be, I'll modify class in future. 	
-	temp(k,l) = p; 
+	                                //may be, I'll modify class in future.
+	temp(k,l) = p;
       }
   return(temp);
 }

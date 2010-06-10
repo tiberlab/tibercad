@@ -181,15 +181,24 @@ DriftDiffusionProperties::create_submodels(void)
     // mobilities
     //
     ModelOptions::submodel_iterator
-    it(get_options().submodels_begin("electron_mobility"));
+      mobit(get_options().submodels_begin("mobility"));
+
     ModelOptions::submodel_iterator
-    end(get_options().submodels_end("electron_mobility"));
+      it(get_options().submodels_begin("electron_mobility"));
+    ModelOptions::submodel_iterator
+      end(get_options().submodels_end("electron_mobility"));
 
     // create electron mobility model
     if (it != end)
     {
       (it->second).set_option("particle", "e");
       _electron_mobility = create_mobility_model(it->second);
+    }
+    else if (mobit != get_options().submodels_end("mobility"))
+    {
+      (mobit->second).set_option("particle", "e");
+      (mobit->second).set_option("name", string("electron_mobility"));
+      _electron_mobility = create_mobility_model(mobit->second);
     }
     else
     {
@@ -210,6 +219,12 @@ DriftDiffusionProperties::create_submodels(void)
       (it->second).set_option("particle", "h");
       _hole_mobility = create_mobility_model(it->second);
     }
+    else if (mobit != get_options().submodels_end("mobility"))
+    {
+      (mobit->second).set_option("particle", "h");
+      (mobit->second).set_option("name", string("hole_mobility"));
+      _hole_mobility = create_mobility_model(mobit->second);
+    }
     else
     {
       ModelOptions opts;
@@ -223,9 +238,6 @@ DriftDiffusionProperties::create_submodels(void)
     // Recombinations
     //
     create_recombination_models();
-
-    get_options().delete_submodels("recombination");
-    get_options().delete_submodels("generation");
 
 
     //
@@ -249,8 +261,11 @@ DriftDiffusionProperties::create_submodels(void)
   }
 
   // eliminate them from the submodel list
+  get_options().delete_submodels("mobility");
   get_options().delete_submodels("electron_mobility");
   get_options().delete_submodels("hole_mobility");
+  get_options().delete_submodels("recombination");
+  get_options().delete_submodels("generation");
   get_options().delete_submodels("thermoelectric_power");
 }
 
