@@ -180,6 +180,13 @@ AtomisticGenerator::do_init()
   os.str(std::string());
   //----------------------------------------------
 
+  //A translation vector can be specified to modify supercell alignment
+  std::vector<double> translation (3,0.0);
+  if ( _as->get_options().find_option("translation") )
+  {
+   _as->get_options().get_option("translation", translation);
+  }
+
   //Build up supercell structure with proper options
   build();
 
@@ -519,7 +526,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                   if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
                   if (MeshUtils::may_belong_to_element(elem,p))
                   {
-                    if ( (elem->contains_point(p) ) ) (*atom).set_elem(elem);
+                    if ( (elem->contains_point(p) ) ) tmp_atom.set_elem(elem);
                   }
 
                   _structure_basis.push_back(tmp_atom);

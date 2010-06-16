@@ -75,7 +75,7 @@ AtomisticGenerator3D::build()
   }
 
 
-  _local_origin(1) = min_x * scale; _local_origin(2) = min_y * scale; _local_origin(3) = min_z * scale;
+  _local_origin(1) += min_x * scale; _local_origin(2) += min_y * scale; _local_origin(3) += min_z * scale;
 
 
   double l1 = (fabs(max_x - min_x)) * scale;

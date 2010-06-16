@@ -67,7 +67,7 @@ void
      }
   }
 
-  _local_origin(1) = min_x * scale; _local_origin(2) = min_y * scale; _local_origin(3) = 0.0;
+  _local_origin(1) += min_x * scale; _local_origin(2) += min_y * scale; _local_origin(3) += 0.0;
 
 	double l1 = (fabs(max_x - min_x)) * scale;
 	double l2 = (fabs(max_y - min_y)) * scale;
