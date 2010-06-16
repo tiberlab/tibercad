@@ -42,8 +42,8 @@ class ETB : public TightBinding
     char* gen_outfile;
     char* sparse_fmt;
     char* out_format;
-    double* c_axis;
-    //double vb_shift;
+    std::vector<double> c_axis;
+    std::vector<double> k_point;
     double hl_chem_pot;
     double el_chem_pot;
     double temperature;
@@ -92,7 +92,10 @@ class ETB : public TightBinding
   //! initialize or reinitialize the library container's with structure data
   void reinit(void);
 
+  //! assemble the matrix again w/o init overheads
   void reassemble(void);
+
+  void set_kpoint(void);
 
   void set_num_states(int num_vb, int num_cb);
 
@@ -123,7 +126,7 @@ class ETB : public TightBinding
  private:
 
   //! Get options suited for DFTB+ tight binding builder and solver
-  void get_upt_options();
+  void get_upt_options(void);
 
   //! Function for building options from input
   void build_input_options(void);
@@ -254,10 +257,6 @@ bool ETB::is_relativistic(void)
   return _upt_options.relat_flag;
 
 }
-
-
-
-
 
 
 

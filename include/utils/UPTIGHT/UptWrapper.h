@@ -66,20 +66,19 @@ public:
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);
 
+  //!Initialize the Upt instance 
+  //!Read geometry and build n.n. table (call after setting globals and fill_param) 
   //! Get library version
   void get_version(void);
 
   //!Initialize the Upt instance
   int inituptight();
 
-
   //!Clean the Upt instance variable space
   void cleanuptight();
 
-
   //!Get UPTIGHT instance handler
   inline const int* get_handler(void){ return _handler; };
-
 
   //! Add an atom-projected potential to H
   //! Must be called after inituptight and before compute_H
@@ -103,8 +102,8 @@ public:
    * double guess_cb   : folding guess for conduction
    * int min_iter      : minimum number of iterations   (~2)
    * int long_iter     : number of long iterations      (~30)
-   * int max_iter      : maximum number of iterations   (~3000)
-   * double fast_tol   : tolerance for fast loop        (~1e-6)
+   * int max_iter      : maximum number of iterations   (~10000)
+   * double fast_tol   : tolerance for fast loop        (~1e-1)
    * double long_tol   : tolerance on long loop         (~1e-10)
    * double ort_tol    : orthogonality tolerance        (~1e-5)
    */

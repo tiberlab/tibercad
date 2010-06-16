@@ -58,10 +58,15 @@ ETB::UptOptions::UptOptions(void)
  potential_flag(0),
  opt_flag(0),
  poldir(1),
- hybrid_passivation(false)
+ hybrid_passivation(false),
+ dg_scale(0.10),
+ dg_onsite(-200.0),
+ grid_step(0.5)
 {
-  c_axis = new double[3];
+  c_axis.reserve(3);
   c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0;
+  k_point.reserve(3);
+  k_point[0]=0.0; k_point[1]=0.0; k_point[2]=0.0;
   database_path = new char[UPT_LC]; memset(database_path, ' ', UPT_LC);
   work_path = new char[UPT_LC];     memset(work_path, ' ', UPT_LC);
   out_path = new char[UPT_LC];      memset(out_path, ' ', UPT_LC);
@@ -69,14 +74,10 @@ ETB::UptOptions::UptOptions(void)
   gen_outfile = new char[UPT_MC];   memset(gen_outfile, ' ', UPT_MC);
   sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, ' ', UPT_MC);
   out_format = new char[UPT_SC];    memset(out_format, ' ', UPT_SC);
-  dg_scale = 0.10;
-  dg_onsite = -200.0;
-  grid_step = 0.5;
 }
 
 ETB::UptOptions::~UptOptions(void)
 {
-  delete[] c_axis;
   delete[] database_path;
   delete[] work_path;
   delete[] upt_filename;
@@ -177,8 +178,8 @@ ETB::do_init(void){
 
   //std::cout << "(TC) init uptight begins" << std::endl;
 
-  _init = 1;
-  _assemble = 1;
+  _init = 1;      // initialization must be called
+  _assemble = 1;  // matrix assemble must be done
 
 }
 
@@ -239,7 +240,7 @@ void ETB::reinit(void){
 		   _upt_options.max_TB_order, _upt_options.harrison_flag,
 		   _upt_options.relat_flag, _upt_options.potential_flag,
 		   _upt_options.opt_flag, _upt_options.poldir,
-		   _upt_options.c_axis, _upt_options.check_bondmap,
+		   &_upt_options.c_axis.front(), _upt_options.check_bondmap,
                    _upt_options.dg_scale, _upt_options.dg_onsite,
                    _upt_options.hybrid_passivation);
 
@@ -260,11 +261,25 @@ void ETB::reinit(void){
 
   inst->get_ion_numorbitals(_ion_num_orbitals);
 
-
   _N_without_H = _atomistic_structure->get_N_without_H();
 
-}
+  if (has_new_k())
+  {
+    _upt_options.k_point = get_k_vector();
+    inst->set_kpoint(&_upt_options.k_point.front()); 
+    k_is_old();
+  }
 
+  if(_upt_options.verbose>0) print_upt_options();
+
+  _init = 0;
+  _assemble = 1; //must reassemble matrix
+
+}
+//-------------------------------------------------------------------------
+void ETB::set_kpoint(void){ 
+  set_k_vector(_upt_options.k_point);
+}
 
 //-------------------------------------------------------------------------
 void ETB::do_solve(void){
@@ -284,15 +299,9 @@ void ETB::do_solve(void){
 
   std::cerr << "Vb Max= " << _vb_shift << std::endl;  
 
-  print_upt_options();
-
-  if (_init) reinit();
-
-  _init = 0;
+  reinit(); 
 
   if (_assemble) assemble(options);
-
-  _assemble = 0;
 
   if (_upt_solver_options.solver.compare("upt_lanczos") == 0) {
 
@@ -361,7 +370,7 @@ void ETB::do_solve(void){
       _solution[i].eigen_vector[j] = *(eigtmp+j);
     }
 
-    if( (_upt_options.potential_flag) && !(get_options().find_option("hl_qfermi_level")))
+    if( (_upt_options.potential_flag) && !(has_option("hl_qfermi_level")))
     {
       _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
     }
@@ -390,7 +399,7 @@ void ETB::do_solve(void){
       _solution[i].eigen_vector[j] = *(eigtmp+j); 
     }
 
-    if( (_upt_options.potential_flag) && !(get_options().find_option("el_qfermi_level")))
+    if( (_upt_options.potential_flag) && !(has_option("el_qfermi_level")))
     {
       _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
     }
@@ -436,6 +445,7 @@ void ETB::do_solve(void){
 void ETB::assemble(const ModelOptions& options)
 {
 
+
   if( options.get_option("P_matrix",false) )
   {
     int poldir = options.get_option("poldir",0);
@@ -461,6 +471,8 @@ void ETB::assemble(const ModelOptions& options)
     inst->compute_H();
 
   }
+
+  _assemble = 0;
 
 }
 //-------------------------------------------------------------------------
@@ -544,74 +556,77 @@ void ETB::do_plot(void){
 void ETB::parse_options(void)
 {
   std::cout << "(TC) parse_options() begin...";
+  ModelOptions options = get_options();
+  ModelOptions solopts = get_solver_options();
+  
 
-  _upg_filename = get_options().get_option("upg_filename", "none");
+  _upg_filename = options.get_option("upg_filename", "none");
 
-  _upt_options.verbose = get_options().get_option("verbose", verbose());
+  _upt_options.verbose = options.get_option("verbose", verbose());
 
-  _upt_options.etb_dataset = get_options().get_option("dataset","");
-  _upt_options.max_TB_order = get_options().get_option("max_TB_order", 2);
-  std::string sparse_fmt = get_options().get_option("sparse_format", "upper");
+  _upt_options.etb_dataset = options.get_option("dataset","");
+  _upt_options.max_TB_order = options.get_option("max_TB_order", 2);
+  std::string sparse_fmt = options.get_option("sparse_format", "upper");
   sparse_fmt.copy(_upt_options.sparse_fmt, sparse_fmt.size() );
 
-  _upt_options.check_bondmap = get_options().get_option("check_bondmap", false);
-  _upt_options.harrison_flag = get_options().get_option("Harrison_scaling", true);
-  _upt_options.relat_flag = get_options().get_option("relativistic", true);
+  _upt_options.check_bondmap = options.get_option("check_bondmap", false);
+  _upt_options.harrison_flag = options.get_option("Harrison_scaling", true);
+  _upt_options.relat_flag = options.get_option("relativistic", true);
 
-  _upt_options.temperature = get_options().get_option("temperature",
+  _upt_options.temperature = options.get_option("temperature",
 						      SimulationOptions::temperature );
 
-  //_upt_options.opt_flag = get_options().get_option("optical_transitions", false);
-  //_upt_options.poldir = get_options().get_option("polarization_direction", 1);
+  //_upt_options.opt_flag = options.get_option("optical_transitions", false);
+  //_upt_options.poldir = options.get_option("polarization_direction", 1);
   _upt_options.opt_flag = false; // these are set via OpticsTB
   _upt_options.poldir = 1;       //   "    "   "   "    "
 
-  if (get_options().find_option("potential_simulation"))
+  if (options.find_option("potential_simulation"))
   {
-    _upt_options.potential_sim = get_options().get_option("potential_simulation","no_sim");
+    _upt_options.potential_sim = options.get_option("potential_simulation","no_sim");
     _upt_options.potential_flag = true;
   }
 
-  _upt_options.hl_chem_pot = get_options().get_option("hl_qfermi_level", 0.0);
-  _upt_options.el_chem_pot = get_options().get_option("el_qfermi_level", 0.0);
+  _upt_options.hl_chem_pot = options.get_option("hl_qfermi_level", 0.0);
+  _upt_options.el_chem_pot = options.get_option("el_qfermi_level", 0.0);
 
-  _upt_options.strain_sim = get_options().get_option("strain_model_name", "no_sim");
+  _upt_options.strain_sim = options.get_option("strain_model_name", "no_sim");
 
   // Dangling bond scaling
-  _upt_options.dg_scale = get_options().get_option("dangling_bond_scaling",100);
-  _upt_options.dg_onsite = get_options().get_option("dangling_bond_onsite",-200.0);    
+  _upt_options.dg_scale = options.get_option("dangling_bond_scaling",100);
+  _upt_options.dg_onsite = options.get_option("dangling_bond_onsite",-200.0);    
 
   //Choose passivation model
-  std::string passivation_model = get_options().get_option("passivation_model","hydrogen");
+  std::string passivation_model = options.get_option("passivation_model","hydrogen");
   if ( passivation_model == "hybrid" )
       {_upt_options.hybrid_passivation = true;}
 
   // Solver options: "upt_lanczos", "read_old"
-  _upt_solver_options.solver = get_solver_options().get_option("solver", "upt_lanczos");
+  _upt_solver_options.solver = solopts.get_option("solver", "upt_lanczos");
 
-  _upt_solver_options.n_vb =  get_solver_options().get_option("num_valence_eigenvalues", 0);
+  _upt_solver_options.n_vb =  solopts.get_option("num_valence_eigenvalues", 0);
   if( _upt_solver_options.n_vb == 0) {
-    _upt_solver_options.n_vb =  get_solver_options().get_option("num_hole_states", 0);
+    _upt_solver_options.n_vb =  solopts.get_option("num_hole_states", 0);
   }
-  _upt_solver_options.n_cb =  get_solver_options().get_option("num_conduction_eigenvalues", 0);
+  _upt_solver_options.n_cb =  solopts.get_option("num_conduction_eigenvalues", 0);
   if( _upt_solver_options.n_cb == 0) {
-    _upt_solver_options.n_cb =  get_solver_options().get_option("num_electron_states", 0);
+    _upt_solver_options.n_cb =  solopts.get_option("num_electron_states", 0);
   }
-  _upt_solver_options.min_iter =  get_solver_options().get_option("min_iter", 2);
-  _upt_solver_options.long_iter =  get_solver_options().get_option("long_iter", 30);
-  _upt_solver_options.max_iter =  get_solver_options().get_option("max_iter", 100000);
+  _upt_solver_options.min_iter =  solopts.get_option("min_iter", 2);
+  _upt_solver_options.long_iter =  solopts.get_option("long_iter", 30);
+  _upt_solver_options.max_iter =  solopts.get_option("max_iter", 100000);
 
 
   //Feast options
- _upt_solver_options.e_min =  get_solver_options().get_option("Emin", 0.0);
-_upt_solver_options.e_max =  get_solver_options().get_option("Emax", 3.0);
-_upt_solver_options.m0 =  get_solver_options().get_option("subspace", 100);
+  _upt_solver_options.e_min =  solopts.get_option("Emin", 0.0);
+  _upt_solver_options.e_max =  solopts.get_option("Emax", 3.0);
+  _upt_solver_options.m0 =  solopts.get_option("subspace", 100);
   //---------------------------------------------------------------------------------------
   // output wavevetors format
-  std::string out_fmt = get_options().get_option("jmol_output_format", "jvxl");
+  std::string out_fmt = options.get_option("jmol_output_format", "jvxl");
   out_fmt.copy(_upt_options.out_format, out_fmt.size() );
   
-  _upt_options.grid_step = get_options().get_option("jmol_grid_step", 0.5);
+  _upt_options.grid_step = options.get_option("jmol_grid_step", 0.5);
 
   //---------------------------------------------------------------------------------------
   //computes educated guesses for valence and conduction bands edges
@@ -643,22 +658,33 @@ _upt_solver_options.m0 =  get_solver_options().get_option("subspace", 100);
   }
   //---------------------------------------------------------------------------------------
 
-  _upt_options.band_shift_flag = get_options().get_option("add_band_shifts", true);
-  _upt_solver_options.guess_vb = get_solver_options().get_option("guess_valence", vb_max);
-  _upt_solver_options.guess_cb = get_solver_options().get_option("guess_conduction", cb_min);
+  _upt_options.band_shift_flag = options.get_option("add_band_shifts", true);
+  _upt_solver_options.guess_vb = solopts.get_option("guess_valence", vb_max);
+  _upt_solver_options.guess_cb = solopts.get_option("guess_conduction", cb_min);
 
   // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
-  //_upt_options.vb_shift = get_options().get_option("vb_shift", 0.0);
+  //_upt_options.vb_shift = options.get_option("vb_shift", 0.0);
 
-  _upt_solver_options.fast_tol =  get_solver_options().get_option("fast_tolerance", 1e-1);
-  _upt_solver_options.long_tol =  get_solver_options().get_option("long_tolerance", 1e-10);
-  _upt_solver_options.ort_tol =  get_solver_options().get_option("orthogonality_tolerance", 1e-5);
+  _upt_solver_options.fast_tol =  solopts.get_option("fast_tolerance", 1e-1);
+  _upt_solver_options.long_tol =  solopts.get_option("long_tolerance", 1e-10);
+  _upt_solver_options.ort_tol =  solopts.get_option("orthogonality_tolerance", 1e-5);
 
   //Get projection_length for quantum charge projection (nm)
-  _upt_options.projection_length = get_options().get_option("projection_length", 5.0);
+  _upt_options.projection_length = options.get_option("projection_length", 5.0);
 
-std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
+  std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
   std::cout << "done" << std::endl;
+
+  // get kpoint
+  std::vector<double> k_vec(3, 0.0);
+  get_option("k_vector",k_vec);
+  set_k_vector(k_vec);
+
+  // get kpoint as parameter
+  get_parameter("k_x", _upt_options.k_point[0], initializer(&ETB::set_kpoint) );
+  get_parameter("k_y", _upt_options.k_point[1], initializer(&ETB::set_kpoint) );
+  get_parameter("k_z", _upt_options.k_point[2], initializer(&ETB::set_kpoint) );
+
 
 }
 

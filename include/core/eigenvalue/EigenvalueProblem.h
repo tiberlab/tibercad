@@ -34,6 +34,15 @@ class EigenvalueProblem : public SimulationInterface
       double temperature; 
     };
 
+    //! 
+    void set_k_vector(std::vector<double> k_point);
+
+    const std::vector<double>& get_k_vector(void) const;
+  
+    bool has_new_k(void) const;
+
+    void k_is_old(void);
+
     //! get the eigensolution vector
     const std::vector<eigen_problem_solution>& get_eigen_solution() const
       {return _solution;};
@@ -72,6 +81,10 @@ class EigenvalueProblem : public SimulationInterface
 
   private:
 
+  std::vector<double> _k_vector;
+  
+  bool _new_k;
+
 };
 
 
@@ -79,6 +92,8 @@ inline
 EigenvalueProblem::EigenvalueProblem(const ModelOptions& options)
  : SimulationInterface(options)
 {
+  _k_vector.reserve(3);
+  _k_vector[0]=0.0;   _k_vector[1]=0.0;   _k_vector[2]=0.0; 
 }
 
 //inline 
@@ -86,5 +101,31 @@ EigenvalueProblem::EigenvalueProblem(const ModelOptions& options)
 //{ 
 //   return _solution;
 //}
+
+inline
+const std::vector<double>& EigenvalueProblem::get_k_vector() const
+{
+  return _k_vector;
+}
+
+inline 
+void EigenvalueProblem::set_k_vector(std::vector<double> k_point)
+{
+  _k_vector = k_point;
+  _new_k = true;
+}
+
+inline 
+bool EigenvalueProblem::has_new_k(void) const
+{
+  return _new_k;
+}
+
+inline
+void EigenvalueProblem::k_is_old(void)
+{
+  _new_k=false;
+}
+
 
 #endif // _EIGENVALUEPROBLEM_H_

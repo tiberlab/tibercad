@@ -71,9 +71,8 @@ void OpticsKP::parse_options()
   const ModelOptions& mod_opt = get_options();
 
   _initial_eigen_state_numbers.clear();
-  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& in_solution =
-    initial_state_model->get_solution();
-
+  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& in_solution 
+                                               = initial_state_model->get_solution();
   {
     std::vector<unsigned int> temp;
     mod_opt.get_option("initial_eigenstates", temp);
@@ -282,7 +281,7 @@ void OpticsKP::do_solve()
   int verbose = SimulationOptions::verbose();
 
   if (verbose > 0)
-    cout << "calculation of  matrix elelements for dipole optical transition..." << flush;
+    cout << "calculation of  matrix elements for dipole optical transition..." << flush;
 
   parse_options();
 
@@ -358,8 +357,7 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
   unsigned int n2 =  _final_eigen_state_numbers.size();
 
 
-  initial_state_model->get_eigenenergies(is_eigen_values);  // initial =  electrons (?)
-
+  initial_state_model->get_eigenenergies(is_eigen_values);  
 
   final_state_model->get_eigenenergies(fs_eigen_values);
 
@@ -367,9 +365,6 @@ void OpticsKP::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1
   initial_state_model->get_occupations(is_occupations);
 
   final_state_model->get_occupations(fs_occupations);
-
-
-
 
 
 
@@ -625,14 +620,7 @@ void OpticsKP::calculate_matrix(void)
   const MeshBase* mesh = &(es->get_mesh());
 
 
-
-
-
-
   DofMap& dof_map = system->get_dof_map();
-
-
-
 
 
 

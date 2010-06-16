@@ -67,11 +67,11 @@ private:
 
 protected:
 
-  virtual void  do_init (void);
+  virtual void do_init (void);
 
   virtual void do_solve (void);
 
-  virtual void  parse_options(void);
+  virtual void parse_options(void);
 
   //! Get hubbard parameters for species composing atomistic structure
   /*!

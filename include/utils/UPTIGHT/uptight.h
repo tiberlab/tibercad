@@ -413,5 +413,22 @@ inline void f77_complex_test (f77_double& re, f77_double& im, f77_complex& zz)
 }
 
 
+extern "C" void upt_setstrain_ (f77_int const*, f77_int const&, f77_double 
+    const*, f77_double const*, f77_double const*);
+
+// Corresponding F77 arguments for f77_upt_setstrain:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: nAtoms
+// real(dp), intent(in) :: strain_xx(nAtoms)
+// real(dp), intent(in) :: strain_yy(nAtoms)
+// real(dp), intent(in) :: strain_zz(nAtoms)
+inline void f77_upt_setstrain (f77_int const* handler, f77_int const& nAtoms, 
+    f77_double const* strain_xx, f77_double const* strain_yy, f77_double const* 
+    strain_zz)
+{
+  upt_setstrain_ (handler, nAtoms, strain_xx, strain_yy, strain_zz);
+}
+
+
 #endif
 

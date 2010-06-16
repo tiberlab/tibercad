@@ -95,7 +95,7 @@ class OpticsKP: public Optics
 
 
   */
-  void calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
+  virtual void calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
                           std::map<const Elem*, double>& spectrum);
 
   //! get pointer to initial state simulation (to be  used by OpticalSpectrum)

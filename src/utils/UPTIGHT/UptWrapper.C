@@ -13,6 +13,7 @@ UptWrapper::UptWrapper(){
       std::cout << _handler[ii] << " ";
     }
     std::cout << std::endl;
+    f77_upt_getversion(_handler);
 }
 
 
@@ -81,7 +82,6 @@ int UptWrapper::inituptight()
     else
     {
       f77_upt_inituptight(_handler);
-      f77_upt_getversion(_handler);
       return 0;
     }
 }
