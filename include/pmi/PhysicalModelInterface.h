@@ -351,6 +351,9 @@ class PhysicalModelInterface : public TiberModelObject
     void add_submodel(const std::string& key, PhysicalModelInterface* pm);
 
 
+    //! Destroy a submodel
+    void delete_submodel(const std::string& key);
+
 
     //! Get the iterator to the first submodel
     SubmodelIterator submodels_begin(void);

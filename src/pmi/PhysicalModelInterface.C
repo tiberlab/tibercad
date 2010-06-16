@@ -433,6 +433,7 @@ PhysicalModelInterface::init(void)
   read_database();
 
   _create_submodels();
+  Messages::debug("init() of " + get_material()->get_name());
 
   // Now we initialize all "official" submodels
   SubmodelIterator smit(submodels_begin());
@@ -521,6 +522,13 @@ PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterf
   _submodels.insert(SubmodelMap::value_type(key, pm));
 }
 
+
+
+void
+PhysicalModelInterface::delete_submodel(const std::string& key)
+{
+  _submodels.erase(key);
+}
 
 
 void

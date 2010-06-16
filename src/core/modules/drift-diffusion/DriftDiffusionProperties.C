@@ -239,7 +239,6 @@ DriftDiffusionProperties::create_submodels(void)
     //
     create_recombination_models();
 
-
     //
     // Thermoelectric power
     //
@@ -259,6 +258,16 @@ DriftDiffusionProperties::create_submodels(void)
       add_submodel("thermoelectricpower", _thermoelectric_power);
     }
   }
+  else
+  {
+    // a dielectric does not need all this models
+    delete_submodel("thermoelectricpower");
+    delete_submodel("hole_mobility");
+    delete_submodel("electron_mobility");
+    delete_submodel("recombination");
+    delete_submodel("generation");
+    _recombination_models.clear();
+  }
 
   // eliminate them from the submodel list
   get_options().delete_submodels("mobility");
@@ -273,6 +282,7 @@ DriftDiffusionProperties::create_submodels(void)
 void
 DriftDiffusionProperties::create_recombination_models(void)
 {
+
   // we create them only if they do not exist yet
   vector<ID> ids;
   get_net_recombination_rate_IDs(ids);
@@ -870,6 +880,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   {
     guess = Ev + kT * log(vb.effective_DOS / (Na + ni));
   }
+
 
   // In some cases guess can be Inf or NaN. Then we set it to midband energy
   if (isinf(guess) || isnan(guess))

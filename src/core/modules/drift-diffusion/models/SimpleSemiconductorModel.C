@@ -34,8 +34,6 @@ SimpleSemiconductorModel::prepare_element_data(void)
 void
 SimpleSemiconductorModel::do_init(void)
 {
-  DriftDiffusionProperties::do_init();
-
   get_conduction_band().band_edge = get_option("Ec", 2.2288);
   get_conduction_band().band_edges.resize(1);
   get_conduction_band().band_edges[0] = get_conduction_band().band_edge;
@@ -62,6 +60,8 @@ SimpleSemiconductorModel::do_init(void)
     get_valence_band().effective_mass =
       std::pow(Nv / get_DOS_factor(), 2.0/3.0) / kT;
   }
+
+  DriftDiffusionProperties::do_init();
 }
 
 void
