@@ -86,9 +86,9 @@ TiberNonlinLS::do_solve(void)
 
     //cout << "." << flush;
 
-    matrix->vector_mult(*rhs, *solution);
-    double d = rhs->dot(*rhs);
-    cerr << "d = " << d << endl;
+    //matrix->vector_mult(*rhs, *solution);
+    //double d = rhs->dot(*rhs);
+    //cerr << "d = " << d << endl;
 
     // the l2 norm of the current residual
     norm_rhs = rhs->l2_norm();
