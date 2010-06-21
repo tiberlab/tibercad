@@ -1276,12 +1276,19 @@ DriftDiffusion::do_setup_solution_variables(void)
     SimulationEnvironment::BoundaryIterator it(get_environment().boundaries_begin());
     const SimulationEnvironment::BoundaryIterator end(get_environment().boundaries_end());
     unsigned int i = 1;
+    set<const Boundary*> bdset;
 
     for ( ; it != end; ++it)
     {
       const Boundary* bd = it->second;
       if (bd != NULL)
       {
+        // we only add it if it was not yet added
+        // this is because a boundary might be asscoiated to several IDs
+        if (bdset.count(bd)) continue;
+
+        bdset.insert(bd);
+
         // we include only contacts that carry current
         Boundary::ConstModelIterator modit(bd->models_begin());
         assert(modit != bd->models_end());
@@ -1854,10 +1861,8 @@ DriftDiffusion::calculate_currents_rstf(void)
       double Pp =  sc->get_hole_thermoelectric_power() / phi0;
 
       // we put the minus here for convenience
-      double sigma_e = -Constants::e * sc->get_electron_density() *
-        sc->get_electron_mobility();
-      double sigma_h = -Constants::e * sc->get_hole_density() *
-        sc->get_hole_mobility();
+      double sigma_e = -Constants::e * sc->get_electron_conductivity();
+      double sigma_h = -Constants::e * sc->get_hole_conductivity();
 
       RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
       RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
@@ -2459,10 +2464,8 @@ DriftDiffusion::build_local_scaling(void)
       double l2_eps = JxW[qp] * l2 * epsilon;
       //double l2_eps = JxW[qp] * epsilon;
 
-      double sigma_e = JxW[qp] *
-        sc->get_electron_mobility() * sc->get_electron_density() / mu0;
-      double sigma_h = JxW[qp] *
-        sc->get_hole_mobility() * sc->get_hole_density() / mu0;
+      double sigma_e = JxW[qp] * sc->get_electron_conductivity() / mu0;
+      double sigma_h = JxW[qp] * sc->get_hole_conductivity() / mu0;
 
 
       double dn_dphi = sc->get_electron_density_derivative();
@@ -2727,7 +2730,6 @@ void
 DriftDiffusion::get_solution_secure(map<ID, vector<double> >& values)
 {
   vector<string> tokens;
-
   map<ID, vector<double> >::iterator mapit(values.begin());
   const map<ID, vector<double> >::iterator mapend(values.end());
   for ( ; mapit != mapend; ++mapit)
@@ -2735,7 +2737,6 @@ DriftDiffusion::get_solution_secure(map<ID, vector<double> >& values)
     ID id = mapit->first;
     const SolutionDescriptor& descr = get_solution_descriptor(id);
     Utils::tokenize(descr.name(), tokens);
-
     ContactData::iterator it(_boundary_currents.begin());
     const ContactData::iterator end(_boundary_currents.end());
     for (; it != end; ++it)
@@ -3202,8 +3203,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
 
       // NOTE: sigma_e = mu_e * n is the electron conductivity
-      long double sigma_e = mue * n / (mu0 * C0_e);
-      long double sigma_h = muh * p / (mu0 * C0_h);
+      long double sigma_e = sc->get_electron_conductivity() / (mu0 * C0_e);
+      long double sigma_h = sc->get_hole_conductivity() / (mu0 * C0_h);
       long double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
       long double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
 

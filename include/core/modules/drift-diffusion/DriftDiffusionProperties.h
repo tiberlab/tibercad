@@ -572,16 +572,16 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
     /*!
      * \return the electron conductivity \f$\sigma_n = \mu_n n\f$
      */
-    //double get_electron_conductivity(void) const
-    //  { return electron_conductivity; };
+    double get_electron_conductivity(void) const
+      { return _pd->electron_conductivity; };
 
 
     //! Get the hole conductivity
     /*!
      * \return the hole conductivity \f$\sigma_p = \mu_p p\f$
      */
-    //double get_hole_conductivity(void) const
-    //  { return hole_conductivity; };
+    double get_hole_conductivity(void) const
+      { return _pd->hole_conductivity; };
 
 
     //! Get the electron mobility
