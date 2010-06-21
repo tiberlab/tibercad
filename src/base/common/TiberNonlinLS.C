@@ -76,8 +76,8 @@ TiberNonlinLS::do_solve(void)
   {
 
     // prepare jacobian and residual
-    _assemble(u, rhs, NULL);
     _assemble(u, NULL, matrix);
+    _assemble(u, rhs, NULL);
 
     get_linear_solver()->set_linear_rtol(tol);
     
@@ -86,6 +86,9 @@ TiberNonlinLS::do_solve(void)
 
     //cout << "." << flush;
 
+    matrix->vector_mult(*rhs, *solution);
+    double d = rhs->dot(*rhs);
+    cerr << "d = " << d << endl;
 
     // the l2 norm of the current residual
     norm_rhs = rhs->l2_norm();
@@ -181,7 +184,7 @@ TiberNonlinLS::do_solve(void)
       throw (SNESDivergedError(-4, i, norm_rhs));
     }
 
-  
+    ///*
     {
       // check for one more smaller step
       u = u_old;
@@ -207,6 +210,7 @@ TiberNonlinLS::do_solve(void)
       du.scale(alpha);
       norm_du *= alpha;
     }
+    //*/
 
     //if (norm_du > _max_step_size)
     //{

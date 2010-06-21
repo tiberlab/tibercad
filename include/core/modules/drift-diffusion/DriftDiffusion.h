@@ -525,6 +525,14 @@ class DriftDiffusion : public SimulationInterface
     double _final_residual;
 
 
+    //! A guess for the electron fermi level
+    double _el_qfermi_guess;
+
+
+    //! A guess for the hole fermi level
+    double _hl_qfermi_guess;
+
+
     //! disable the copy constructor
     DriftDiffusion(const DriftDiffusion& rhs);
 

@@ -30,17 +30,15 @@ void SBuserHamiltonian::do_init( )
 
   EFAbulkHamiltonian::do_init();
 
-  ModelOptions & options = get_options ();
+  edge = get_option("Edge", 0.0);
 
-  edge = options.get_option("Edge", 0.0);
-
-  const double mass = options.get_option("mass", 1.0);
+  const double mass = get_option("mass", 1.0);
  
   if (mass == 0.0) throw InitFailedException("User-defined Hamiltonian: zero mass");
 
-  imass = (1/mass) * Tensor2Sym(1); 
+  imass = (1.0 / mass) * Tensor2Sym(1.0);
   
-  if (options.find_option("imass"))
+  if (has_option("imass"))
   {//read (1/m) from input
     std::vector < std::vector <double>  > im;
     
@@ -52,7 +50,7 @@ void SBuserHamiltonian::do_init( )
       im[i][i] = 1.0;
     }
 
-    options.get_option("imass", im);
+    get_options().get_option("imass", im);
     
     for (short i = 0; i < 3; i++)
       for (short j = 0; j < i; j++) 
