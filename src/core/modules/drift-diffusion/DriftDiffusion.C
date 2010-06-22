@@ -1018,13 +1018,13 @@ DriftDiffusion::parse_options(void)
   else if (coupling == "electrons")
   {
     myopts.coupling = ECURRENT | POISSON;
-    if (opts.get_option("local_equilibrium", false))
+    if (opts.get_option("local_equilibrium", true))
       _useparticle = 'e';
   }
   else if (coupling == "holes")
   {
     myopts.coupling = HCURRENT | POISSON;
-    if (opts.get_option("local_equilibrium", false))
+    if (opts.get_option("local_equilibrium", true))
       _useparticle = 'h';
   }
   else if (coupling == "current")
