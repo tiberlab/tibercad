@@ -716,9 +716,9 @@ DriftDiffusionProperties::calculate_mobilities(void)
   }
 
   _pd->electron_conductivity =
-    _pd->electron_mobility * _pd->electron_density + 1e2;
+    _pd->electron_mobility * _pd->electron_density + 1e4;
   _pd->hole_conductivity =
-    _pd->hole_mobility * _pd->hole_density + 1e2;
+    _pd->hole_mobility * _pd->hole_density + 1e4;
 }
 
 

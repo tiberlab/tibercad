@@ -2462,10 +2462,8 @@ DriftDiffusion::build_local_scaling(void)
       double l2_eps = JxW[qp] * l2 * epsilon;
       //double l2_eps = JxW[qp] * epsilon;
 
-      double sigma_e = JxW[qp] *
-        sc->get_electron_mobility() * sc->get_electron_density() / mu0;
-      double sigma_h = JxW[qp] *
-        sc->get_hole_mobility() * sc->get_hole_density() / mu0;
+      double sigma_e = JxW[qp] * sc->get_electron_conductivity() / mu0;
+      double sigma_h = JxW[qp] * sc->get_hole_conductivity() / mu0;
 
 
       double dn_dphi = sc->get_electron_density_derivative();
@@ -2676,7 +2674,7 @@ DriftDiffusion::build_local_scaling(void)
     for ( ; it != end; ++it)
       local_scaling_[*it][1] *= _penalty_value;
   }
-//cerr << "local scaling end\n";
+
 }
 
 
