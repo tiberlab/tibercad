@@ -91,6 +91,7 @@ class QuantumDensity : public KspaceIntegration
    
     unsigned int degeneracy;        //!< degeneracy factor to mutiply the charge density 
 
+    unsigned int first_state;
     unsigned int intial_eigenstates_number;  //!< number of required eigenstates for the first call of Schoedinger solver
 
   

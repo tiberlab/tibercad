@@ -276,6 +276,7 @@ void QuantumDensity::parse_options( )
 
   opt.log_output              = mod_opt.get_option("log_output", false);
 
+  opt.first_state = mod_opt.get_option("first_state", 0);
   opt.intial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
 
  
@@ -513,6 +514,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
     quantum_model_opts["job"] = "eigenstates";
 
+    quantum_model_opts.set_option("first_state", opt.first_state);
     quantum_model_opts.set_option("number_of_eigenstates", number_of_eigenstates);
    
     
@@ -577,7 +579,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
     
    
-    for (unsigned int i = 0; i < number_of_eigenstates; i++) 
+    for (unsigned int i = opt.first_state; i < number_of_eigenstates; i++)
     {
       map<const Elem*, double> state_density =
         quantum_model->estimate_density1D(i, effective_mass[i]);
@@ -604,6 +606,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
     quantum_model_opts.set_option("k_vector",  k_vector1);
 
+    quantum_model_opts.set_option("first_state", opt.first_state);
     quantum_model_opts.set_option("initial_eigenstates_number",
         opt.intial_eigenstates_number ); 
 
@@ -646,7 +649,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
 
 
-    for (unsigned int i = 0; i < number_of_eigenstates; i++)
+    for (unsigned int i = opt.first_state; i < number_of_eigenstates; i++)
     {
       map<const Elem*, double> state_density =
         quantum_model->estimate_density2D(i, effective_mass[i]);

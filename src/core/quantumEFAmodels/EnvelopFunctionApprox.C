@@ -589,6 +589,7 @@ void EnvelopFunctionApprox::parse_options()
 
   //---------------------------------------------------------------------------------//
 
+  opt.first_state = mod_opt.get_option("first_state", 0);
   opt.initial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
 
   //---------------------------------------------------------------------------------//
@@ -2522,7 +2523,8 @@ void EnvelopFunctionApprox::calculate_density( )
 
 
 
-  for (unsigned int i = 0; i < number_of_eigenfunctions; i++)
+  // we might specify the lowest state
+  for (unsigned int i = opt.first_state; i < number_of_eigenfunctions; i++)
   {
 
 
@@ -2794,7 +2796,7 @@ double EnvelopFunctionApprox::get_integrated_probability()
 {
   double result = 0;
   unsigned int number_of_eigs = solution.size();
-  for (unsigned int i = 0 ; i <  number_of_eigs; i++)
+  for (unsigned int i = opt.first_state ; i <  number_of_eigs; i++)
     {
 
       result += Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy, solution[i].Temperature);

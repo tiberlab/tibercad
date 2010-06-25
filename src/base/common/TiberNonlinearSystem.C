@@ -5,6 +5,7 @@
 
 // the implemented systems/solvers
 #include "TiberNonlinLS.h"
+#include "TiberNonlinTR.h"
 #include "TiberNonlinBR.h"
 #include "TiberNonlinPetsc.h"
 
@@ -43,8 +44,10 @@ TiberNonlinearSystem::create(EquationSystems& es,
   std::string type(options.get_option("nonlinear_solver", "petsc"));
   if (type == "petsc")
     sys = &(es.add_system<TiberNonlinPetsc>(sysname));
-  else if (type == "tiber")
+  else if ((type == "ls") || (type == "tiber"))
     sys = &(es.add_system<TiberNonlinLS>(sysname));
+  else if (type == "tr")
+    sys = &(es.add_system<TiberNonlinTR>(sysname));
   else if (type == "bankrose")
     sys = &(es.add_system<TiberNonlinBR>(sysname));
   else

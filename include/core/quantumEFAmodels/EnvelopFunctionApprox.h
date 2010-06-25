@@ -62,6 +62,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     bool convergent_density;//!< if true, the number of eigenstates will be increased to reach the tolerance
 
  
+    unsigned int first_state; //!< the first state to consider (>= 0)
     unsigned int initial_eigenstates_number; //!< initial number of eigenstates that is used in an iterative calculation of the density
 
 
