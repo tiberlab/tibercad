@@ -58,7 +58,11 @@ TiberNonlinTR::do_solve(void)
   double eps_res = get_nonlinear_atol();
 
 
-  int max_ls_step = 5;
+  //int max_ls_step = 5;
+
+  double delta_max = 10; // > 0
+  double delta = 1; // = (0, delta)
+  double eta = 0.1; // = [0, 1/4)
 
   // the (final) residual norm
   double norm_res, norm_rhs = 0;
@@ -85,159 +89,119 @@ TiberNonlinTR::do_solve(void)
 
     get_linear_solver()->set_linear_rtol(tol);
     
-    // solve the linear system
-    get_linear_solver()->solve(*matrix, *solution, *rhs);
-
-    //double dumax = du.linfty_norm();
-    //du.scale(log(1 + dumax) / dumax);
-
-    //for (size_t n = 0; n < tmpvec->size(); n++)
-    //{
-    //  double val = du(n);
-    //  val = (val > 0) ? log(1 + val) : - log(1 - val);
-    //  tmpvec->set(n, val);
-    //}
-    //tmpvec->close();
-    //du = *tmpvec;
-
-    //cout << "." << flush;
-
-    // the l2 norm of the current residual
-    norm_rhs = rhs->l2_norm();
-    norm_res = norm_rhs;
-
+    //
+    // calculate cauchy point
+    //
     matrix->get_transpose(*matrix);
     matrix->vector_mult(*gradf, *rhs);
-    double costheta = norm_rhs * norm_rhs / (du.l2_norm() * gradf->l2_norm());
-    if (costheta < 1e-3)
+    double norm_grad = gradf->l2_norm();
+
+    // r'J(J'J)J'r
+    du = *gradf;
+    matrix->get_transpose(*matrix); // J
+    matrix->vector_mult(du, *gradf); // JJ'r
+    matrix->get_transpose(*matrix);  // J'
+    matrix->vector_mult(*tmpvec, du); //J'JJ'r
+    double tmp = delta * gradf->dot(*tmpvec); // r'JJ'JJ'r
+    tmp = norm_grad * norm_grad * norm_grad / tmp;
+    double tau = std::min(1.0, tmp);
+    gradf->scale(-tau * delta / norm_grad);  // Cauchy point
+
+    matrix->get_transpose(*matrix);  // J
+
+    norm_du = gradf->l2_norm();
+
+    cerr << "tau = " << tau << " |du| = " << norm_du << endl;
+
+    if (Utils::almost_equal::compare(norm_du, delta))
+      du = *gradf;
+    else
     {
-      ostringstream os;
-      os << "cos theta = " << costheta << endl;
-      Messages::info(os.str());
-      *solution = *gradf;
-      //*solution *= 10;
+      //
+      // calculate unconstrained minimizer (Newton step)
+      //
+      get_linear_solver()->solve(*matrix, *solution, *rhs);
+      du.scale(-1.0);
+
+      double t = 1.0;
+      norm_du = du.l2_norm();
+      cerr << "  |du| = " << norm_du << " (delta = " << delta << ")\n";
+
+      if (norm_du > delta)
+      {
+        double t0 = 0, t1 = 1;
+        int i = 0, imax = 5;
+        while (i < imax)
+        {
+          double t = 0.5 * (t0 + t1);
+
+          *tmpvec = du;
+          tmpvec->scale(t);
+          tmpvec->add(1 - t, *gradf);
+
+          norm_du = tmpvec->l2_norm();
+
+          if (norm_du > delta)
+            t1 = t;
+          else
+            t0 = t;
+
+          ++i;
+        }
+
+        du = *tmpvec;
+      }
+      cerr << "calculated pc: t = " << t << " |du| = " << norm_du << endl;
     }
-    //double d = rhs->dot(*solution);
-    //matrix->vector_mult(*rhs, *solution);
-    //cerr << "d = " << d << endl;
-    
-    if (norm_res < eps_res)
-    {
-      //cout << endl;
-      norm_du = 0.0;
-      break;
-    }
+
+
+    // now we have the step p_k
+
+    //
+    // calculate rho_k = actual reduction / predicted reduction
+    //
+    double norm_rhs_now = rhs->l2_norm();
 
     u_old = u;
-    norm_du_old = norm_du;
+    u.add(du);
+    _assemble(u, tmpvec.get(), NULL);
 
-    // the initial step length
-    double alpha = 1.0;
-    double c1 = 1.0;
+    norm_rhs = tmpvec->l2_norm();
+
+    matrix->vector_mult(*tmpvec, du);
+    rhs->add(*tmpvec);
+    double rhs_norm_pred = rhs->l2_norm();
+
+    double r = norm_rhs_now * norm_rhs_now;
+    double rho = (r - norm_rhs * norm_rhs) / (r - rhs_norm_pred * rhs_norm_pred);
+
+    cerr << "real = " << (r - norm_rhs * norm_rhs) <<
+        " pred = " << (r - rhs_norm_pred * rhs_norm_pred) << "  rho = " << rho << endl;
+
+    if (rho < 0.25)
+      delta = 0.25 * norm_du;
+    else
+    {
+      if ((rho > 0.75) && Utils::almost_equal::compare(norm_du, delta))
+        delta = std::min(2 * delta, delta_max);
+      //else delta_(k+1) = delta_k
+    }
     
-    // backup the current residual norm
-    double old_norm = norm_res;
-
-    // the merit function for the current solution
-    double fold = 0.5 * norm_res * norm_res;
-
-    /*
-     * Note about the TR algorithm
-     * ---------------------------
-     *
-     * Somehow we have to fix the number of line-search steps. We don't do
-     * this, however, using a fixed maximum number of TR steps. If the
-     * l2 norm of the residual between two TR steps decreases by more than
-     * 50%, we don't increase the step counter.
-     *
-     */
-    int ls_step = 0;
-    for ( ; ls_step < max_ls_step; ls_step++)
-    {
-      // apply step and look at the new residual
-
-      u.add(-alpha, du);
-
-      // evaluate the residual
-      _assemble(u, rhs, NULL);
-
-      norm_res = rhs->l2_norm();
-      norm_du = du.linfty_norm();
+    if (rho < eta)
+      u = u_old;
+    // else u += du
 
 
-      // the new merit function
-      double fnew = 0.5 * norm_res * norm_res;
-
-      // the (linear) prediction of the merit function
-      double fpred = fold + c1 * alpha * gradf->dot(*solution);
-      cerr << "fnew = " << fnew << ", predicted : " << fpred << " (|r| = " << norm_res << ")\n";
-
-
-      //if ((norm_res < norm_rhs) || (norm_du < eps) || (norm_res < eps_res))
-      if ((fnew < fpred) || (norm_du < eps) || (norm_res < eps_res))
-        break;
-      else
-      {
-        // don't accept step
-        u = u_old;
-        alpha *= 0.5;
-
-        // if the norm decreases sufficiently, we don't increase the counter
-        //if (norm_res < 0.5 * old_norm)
-        //  ls_step--;
-      }
-    }
-
-    // check for convergence
-    if ((norm_du < eps) || (norm_res < eps_res))
-    {
-      //cout << endl;
-      break;
-    }
-      
 
     // check for divergence
     //if ((norm_res > norm_rhs) || isnan(norm_res))
-    if (isnan(norm_res))
-    {
-      //cout << endl;
-      throw (SNESDivergedError(-4, i, norm_rhs));
-    }
-
-    /*
-    {
-      // check for one more smaller step
-      u = u_old;
-      u.add(-0.5 * alpha, du);
-
-      // evaluate the residual
-      _assemble(u, rhs, NULL);
-  
-      double norm_res_old = norm_res;
-      norm_res = rhs->l2_norm();
-      //cerr << "        ||r(x + " << alpha << "*dx)|| = " << norm_res_old <<
-      //  ", ||r(x + " << 0.5 * alpha << "*dx)|| = "  << norm_res << endl;
-      if (norm_res > norm_res_old)
-      {
-        // keep the former step
-        u = u_old;
-        u.add(-alpha, du);
-        norm_res = norm_res_old;
-      }
-      else
-        alpha *= 0.5;
-
-      du.scale(alpha);
-      norm_du *= alpha;
-    }
-    */
-
-    //if (norm_du > _max_step_size)
+    //if (isnan(norm_res))
     //{
-    //  du.scale(_max_step_size / norm_du);
-    //  norm_du = _max_step_size;
+      //cout << endl;
+    //  throw (SNESDivergedError(-4, i, norm_rhs));
     //}
 
+    /*
     {
       ostringstream os;
       os << "it " << i << ", |du| = " << norm_du
@@ -261,6 +225,7 @@ TiberNonlinTR::do_solve(void)
       //cout << endl << flush;
       throw (PetscDivergedError(-3, i, norm_rhs));
     }
+    */
 
   }
 
