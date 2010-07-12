@@ -53,22 +53,22 @@ TiberNonlinTR::do_solve(void)
 
   // the l_infty tolerance for the step size
   double eps = get_nonlinear_stol();
-  
+
   // the tolerance for the residual
   double eps_res = get_nonlinear_atol();
 
 
   //int max_ls_step = 5;
 
-  double delta_max = 10; // > 0
+  double delta_max = 50; // > 0
   double delta = 1; // = (0, delta)
-  double eta = 0.1; // = [0, 1/4)
+  double eta = 0.2; // = [0, 1/4)
 
   // the (final) residual norm
-  double norm_res, norm_rhs = 0;
+  double norm_rhs = 1e56;
 
   // the norm of the search step
-  double norm_du = 1e12, norm_du_old; 
+  double norm_du = 1e12;
 
   // let the solver know the options
   get_linear_solver()->set_options(get_options());
@@ -79,6 +79,11 @@ TiberNonlinTR::do_solve(void)
   AutoPtr<NumericVector<double> > gradf = rhs->clone();
   AutoPtr<NumericVector<double> > tmpvec = solution->clone();
 
+  // this is only when l2 norm is used
+  double sqrtn = std::sqrt(du.size());
+  delta_max *= sqrtn;
+  delta *= sqrtn;
+
   unsigned int i = 1;
   for ( ; i <= get_nonlinear_max_it(); i++)
   {
@@ -88,7 +93,7 @@ TiberNonlinTR::do_solve(void)
     _assemble(u, rhs, NULL);
 
     get_linear_solver()->set_linear_rtol(tol);
-    
+
     //
     // calculate cauchy point
     //
@@ -109,11 +114,13 @@ TiberNonlinTR::do_solve(void)
 
     matrix->get_transpose(*matrix);  // J
 
+    //norm_du = gradf->linfty_norm();
     norm_du = gradf->l2_norm();
 
-    cerr << "tau = " << tau << " |du| = " << norm_du << endl;
+    //cerr << "tau = " << tau << " |du| = " << norm_du << endl;
 
-    if (Utils::almost_equal::compare(norm_du, delta))
+    //if (Utils::almost_equal::compare(norm_du, delta, 1e-16))
+    if (tau == 1.0)
       du = *gradf;
     else
     {
@@ -124,13 +131,14 @@ TiberNonlinTR::do_solve(void)
       du.scale(-1.0);
 
       double t = 1.0;
+      //norm_du = du.linfty_norm();
       norm_du = du.l2_norm();
-      cerr << "  |du| = " << norm_du << " (delta = " << delta << ")\n";
+      //cerr << "  |du| = " << norm_du << " (delta = " << delta << ")\n";
 
       if (norm_du > delta)
       {
         double t0 = 0, t1 = 1;
-        int i = 0, imax = 5;
+        int i = 0, imax = 7;
         while (i < imax)
         {
           double t = 0.5 * (t0 + t1);
@@ -139,6 +147,7 @@ TiberNonlinTR::do_solve(void)
           tmpvec->scale(t);
           tmpvec->add(1 - t, *gradf);
 
+          //norm_du = tmpvec->linfty_norm();
           norm_du = tmpvec->l2_norm();
 
           if (norm_du > delta)
@@ -151,7 +160,7 @@ TiberNonlinTR::do_solve(void)
 
         du = *tmpvec;
       }
-      cerr << "calculated pc: t = " << t << " |du| = " << norm_du << endl;
+      //cerr << "calculated pc: t = " << t << " |du| = " << norm_du << endl;
     }
 
 
@@ -175,18 +184,18 @@ TiberNonlinTR::do_solve(void)
     double r = norm_rhs_now * norm_rhs_now;
     double rho = (r - norm_rhs * norm_rhs) / (r - rhs_norm_pred * rhs_norm_pred);
 
-    cerr << "real = " << (r - norm_rhs * norm_rhs) <<
-        " pred = " << (r - rhs_norm_pred * rhs_norm_pred) << "  rho = " << rho << endl;
+    //cerr << "real = " << (r - norm_rhs * norm_rhs) <<
+    //    " pred = " << (r - rhs_norm_pred * rhs_norm_pred) << "  rho = " << rho << endl;
 
     if (rho < 0.25)
       delta = 0.25 * norm_du;
     else
     {
-      if ((rho > 0.75) && Utils::almost_equal::compare(norm_du, delta))
+      if ((rho > 0.75) && Utils::almost_equal::compare(norm_du, delta, 1e-16))
         delta = std::min(2 * delta, delta_max);
       //else delta_(k+1) = delta_k
     }
-    
+
     if (rho < eta)
       u = u_old;
     // else u += du
@@ -201,23 +210,23 @@ TiberNonlinTR::do_solve(void)
     //  throw (SNESDivergedError(-4, i, norm_rhs));
     //}
 
-    /*
+
+    //norm_du = du.linfty_norm();
     {
       ostringstream os;
       os << "it " << i << ", |du| = " << norm_du
-        << ", |r| = " << norm_res;
+        << ", |r| = " << norm_rhs << " delta = " << delta;
       Messages::info(os.str());
     }
 
-    draw_point(i, norm_res);
+    draw_point(i, norm_du);
 
-    tol *= tol;
-      
+    //tol *= tol;
 
-    //if (norm_du < eps)
-    if ((norm_du < eps) || (norm_res < eps_res))
+
+    //if ((norm_du < eps) || (norm_rhs < eps_res))
+    if (norm_du < eps)
     {
-      //cout << endl;
       break;
     }
     else if (i == get_nonlinear_max_it())
@@ -225,20 +234,19 @@ TiberNonlinTR::do_solve(void)
       //cout << endl << flush;
       throw (PetscDivergedError(-3, i, norm_rhs));
     }
-    */
 
   }
 
   _n_nonlin_iterations = i;
-  _final_residual_norm = norm_res;
+  _final_residual_norm = norm_rhs;
   _last_step_size = norm_du;
 
   ostringstream os;
   os << "iterations: " << i << ", |du| = " << norm_du
-    << ", |r| = " << norm_res << Messages::endl;
+    << ", |r| = " << norm_rhs << Messages::endl;
   Messages::newline();
   Messages::info(os.str());
 
-  
+
   update();
 }

@@ -53,7 +53,7 @@ TiberNonlinLS::do_solve(void)
 
   // the l_infty tolerance for the step size
   double eps = get_nonlinear_stol();
-  
+
   // the tolerance for the residual
   double eps_res = get_nonlinear_atol();
 
@@ -64,7 +64,7 @@ TiberNonlinLS::do_solve(void)
   double norm_res, norm_rhs = 0;
 
   // the norm of the search step
-  double norm_du = 1e12, norm_du_old; 
+  double norm_du = 1e12, norm_du_old;
 
   // let the solver know the options
   get_linear_solver()->set_options(get_options());
@@ -80,7 +80,7 @@ TiberNonlinLS::do_solve(void)
     _assemble(u, rhs, NULL);
 
     get_linear_solver()->set_linear_rtol(tol);
-    
+
     // solve the linear system
     get_linear_solver()->solve(*matrix, *solution, *rhs);
 
@@ -93,7 +93,7 @@ TiberNonlinLS::do_solve(void)
     // the l2 norm of the current residual
     norm_rhs = rhs->l2_norm();
     norm_res = norm_rhs;
-    
+
     if (norm_res < eps_res)
     {
       //cout << endl;
@@ -106,7 +106,7 @@ TiberNonlinLS::do_solve(void)
 
     // the relaxation factor
     double alpha = 1.0;
-    
+
     /*
      * Note about the LS algorithm
      * ---------------------------
@@ -144,7 +144,7 @@ TiberNonlinLS::do_solve(void)
       //if (norm_du > get_divergence_tol() * norm_du_old)
       //  throw (SolveFailedException("Line search diverged"));
 
-      //cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " << 
+      //cerr << "       ||r(x)|| = " << norm_rhs << ", ||r(x + " <<
       //  alpha << "*dx)|| = " << norm_res << endl;
 
 
@@ -174,7 +174,7 @@ TiberNonlinLS::do_solve(void)
       //cout << endl;
       break;
     }
-      
+
 
     // check for divergence
     //if ((norm_res > norm_rhs) || isnan(norm_res))
@@ -192,7 +192,7 @@ TiberNonlinLS::do_solve(void)
 
       // evaluate the residual
       _assemble(u, rhs, NULL);
-  
+
       double norm_res_old = norm_res;
       norm_res = rhs->l2_norm();
       //cerr << "        ||r(x + " << alpha << "*dx)|| = " << norm_res_old <<
@@ -221,14 +221,14 @@ TiberNonlinLS::do_solve(void)
     {
       ostringstream os;
       os << "it " << i << ", |du| = " << norm_du
-        << ", |r| = " << norm_res;
+        << ", |r| = " << norm_res << "  alpha = " << alpha;
       Messages::info(os.str());
     }
 
     draw_point(i, norm_res);
 
     tol *= tol;
-      
+
 
     //if (norm_du < eps)
     if ((norm_du < eps) || (norm_res < eps_res))
@@ -254,6 +254,6 @@ TiberNonlinLS::do_solve(void)
   Messages::newline();
   Messages::info(os.str());
 
-  
+
   update();
 }

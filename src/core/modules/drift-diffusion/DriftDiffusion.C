@@ -525,8 +525,14 @@ DriftDiffusion::do_solve(void)
     compute_scaling(get_my_options().scaling_type);
     Messages::info(get_name() + ": Loading state from " + filename);
     load_data(filename);
+
     get_options().set_option("load_state", "");
+
+    // if we do not solve after load, we immediately return
     if (!get_option("solve_after_load", false)) return;
+
+    if (do_local_scaling_)
+      build_local_scaling();
   }
 
   // rebuild the system if needed
@@ -3280,8 +3286,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           drho[2] = -drho[0];
 
 
-        if (sc->is_dielectric())
-          drho[2] = drho[1] = drho[0] = 0.0;
+        //if (sc->is_dielectric())
+        //  drho[2] = drho[1] = drho[0] = 0.0;
 
         long double dRn_dn =
           sc->get_net_electron_recombination_rate_derivatives()[0];
@@ -3452,8 +3458,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         long double J_x_rho;
         J_x_rho = J * sc->get_charge_density() / C0;
 
-        if (sc->is_dielectric())
-          J_x_rho = 0.0;
+        //if (sc->is_dielectric())
+        //  J_x_rho = 0.0;
 
         long double J_x_P0 = J / P0;
 
@@ -3816,7 +3822,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     }
 
     // check if it is a dielectric
-    if (sc->is_dielectric())
+    /*if (sc->is_dielectric())
     {
       for (unsigned int i = 0; i < n_dofs; i++)
       {
@@ -3836,7 +3842,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         Fn(i) = 0.0;
         Fp(i) = 0.0;
       }
-    }
+    }*/
 
 
     // constrain the jacobian and the rhs to account for constrained
