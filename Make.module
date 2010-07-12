@@ -17,7 +17,7 @@ MODULE_LDFLAGS += -L$(topdir)/lib -ltibercad
 
 
 modulelib = $(shell echo `grep TIBER_MODULE $(1) | sed 's/MODULE_NAME/$(MODULE_NAME)/' \
-		| sed -e 's/[[:space:]]//g' -e 's/.*TIBER_MODULE([a-zA-Z]\+,\([a-zA-Z_,]\+\))/\1/' -e 's/,/_/g'`$(shared_libext))
+		| sed -e 's/[[:space:]]//g' -e 's/.*TIBER_MODULE([a-zA-Z]\+,\([-a-zA-Z_,]\+\))/\1/' -e 's/,/_/g'`$(shared_libext))
 
 
 #
