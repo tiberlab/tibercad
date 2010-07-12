@@ -10,11 +10,6 @@
 #include "Alloy.h"
 #include "Embracing.h"
 
-#ifndef BUILD_TIBER_MODULES
-#include "DriftDiffusion.h"
-#include "ExcitonTransport.h"
-#include "DSSC.h"
-#endif
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
 #include "MacroHeatBalance.h"
@@ -108,17 +103,7 @@ SimulationInterface::create(const string& type,
   if (flavour.size() != 0)
     type_name += "_" + flavour;
 
-#ifndef BUILD_TIBER_MODULES
-  if (type_name == "driftdiffusion")
-    sim = DriftDiffusion::create(options);
-  else if (type_name == "dssc")
-    sim = DSSC::create(options);
-  else if (type_name == "excitontransport")
-    sim = ExcitonTransport::create(options);
-  else if (type_name == "macrostrain")
-#else
   if (type_name == "macrostrain")
-#endif
     sim = Macrostrain::create(options);
   else if (type_name == "crackstrain")
     sim = CrackStrain::create(options);

@@ -324,7 +324,7 @@ MyPoisson::do_assemble(EquationSystems& es, const std::string& system_name)
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
       PoissonBoundaryModel* mod =
-        get_surface_model<PoissonBoundaryModel>(elem, s);
+        get_interface_model<PoissonBoundaryModel>(elem, s);
 
       if (mod != NULL)
       {

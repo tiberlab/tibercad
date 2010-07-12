@@ -1,30 +1,9 @@
+// $Id$
+
 #include "tiber_config.h"
 #include "PhysicalModelInterface.h"
 #include "Material.h"
 #include "Variable.h"
-
-#ifndef BUILD_TIBER_MODULES
-#include "SRHRecombination.h"
-#include "AugerRecombination.h"
-#include "DirectRecombination.h"
-#include "ExcitonGeneration.h"
-#include "ExcitonDissociation.h"
-#include "OpticalGeneration.h"
-
-#include "ConstantMobility.h"
-#include "DopingDependentMobility.h"
-#include "FieldDependentMobility.h"
-#include "FieldAssistedMobility.h"
-
-#include "SimpleSemiconductorModel.h"
-#include "SemiconductorModel.h"
-
-#include "ExcitonModel.h"
-
-#include "DSSCModel.h"
-#endif
-
-
 #include "Utils.h"
 
 #include "Trap.h"
@@ -116,39 +95,7 @@ PhysicalModelInterface::create(const string& name,
 
   PhysicalModelInterface* mod = NULL;
 
-#ifndef BUILD_TIBER_MODULES
-  if (name == "recombination_srh")
-    mod = SRHRecombination::create(options);
-  else if (name == "recombination_auger")
-    mod = AugerRecombination::create(options);
-  else if (name == "recombination_direct")
-    mod = DirectRecombination::create(options);
-  else if (name == "recombination_exciton_generation")
-    mod = ExcitonGeneration::create(options);
-  else if (name == "recombination_exciton_dissociation")
-    mod = ExcitonDissociation::create(options);
-  else if (name == "generation_optical")
-    mod = OpticalGeneration::create(options);
-  else if (name == "mobility_constant")
-    mod = ConstantMobility::create(options);
-  else if (name == "mobility_doping_dependent")
-    mod = DopingDependentMobility::create(options);
-  else if (name == "mobility_field_dependent")
-    mod = FieldDependentMobility::create(options);
-  else if (name == "mobility_field_assisted")
-    mod = FieldAssistedMobility::create(options);
-  else if (name == "ddbulk_simple")
-    mod = SimpleSemiconductorModel::create(options);
-  else if (name == "ddbulk_default")
-    mod = SemiconductorModel::create(options);
-  else if (name == "dssc_default")
-    mod = DSSCModel::create(options);
-  else if (name == "ex_simple")
-    mod = ExcitonModel::create(options);
-  else if (name == "stiffness_zb")
-#else
   if (name == "stiffness_zb")
-#endif
     mod = ZbStiffness::create(options);
   else if (name == "stiffness_wz")
     mod = WzStiffness::create(options);
