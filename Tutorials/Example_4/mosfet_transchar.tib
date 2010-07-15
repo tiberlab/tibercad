@@ -65,7 +65,7 @@ $Models
         type = schottky
 	barrier_height = 3.0
 
-        voltage = @Vg[0.0]
+        voltage = @Vg
       }
 
       BC_Region source
@@ -79,7 +79,7 @@ $Models
       {
         type = ohmic
 
-        voltage = @Vd[0.5]
+        voltage = @Vd
       }
    
 
