@@ -6,7 +6,6 @@ $Device
 	x-growth-direction = (0, 0, 1)
 	y-growth-direction = (0, 1, 0)
 	z-growth-direction = (1, 0, 0)
-	dielectric = true
 	}
 
 
@@ -64,6 +63,8 @@ $Models
 	    {
 	     simulation_name = driftdiffusion
 	     physical_regions = all
+             #save_state = true
+             load_state = dd.tsv
 	    }
 
 
