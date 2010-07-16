@@ -58,10 +58,8 @@ TiberNonlinTR::do_solve(void)
   double eps_res = get_nonlinear_atol();
 
 
-  //int max_ls_step = 5;
-
-  double delta_max = 50; // > 0
-  double delta = 1; // = (0, delta)
+  double delta_max = get_max_abs_step(); // > 0
+  double delta =  delta_max / 5.0; // = (0, delta)
   double eta = 0.2; // = [0, 1/4)
 
   // the (final) residual norm
@@ -80,9 +78,9 @@ TiberNonlinTR::do_solve(void)
   AutoPtr<NumericVector<double> > tmpvec = solution->clone();
 
   // this is only when l2 norm is used
-  double sqrtn = std::sqrt(du.size());
-  delta_max *= sqrtn;
-  delta *= sqrtn;
+  //double sqrtn = std::sqrt(du.size());
+  //delta_max *= sqrtn;
+  //delta *= sqrtn;
 
   unsigned int i = 1;
   for ( ; i <= get_nonlinear_max_it(); i++)
@@ -99,7 +97,8 @@ TiberNonlinTR::do_solve(void)
     //
     matrix->get_transpose(*matrix);
     matrix->vector_mult(*gradf, *rhs);
-    double norm_grad = gradf->l2_norm();
+    double norm_grad_l2 = gradf->l2_norm();
+    double norm_grad_infty = gradf->linfty_norm();
 
     // r'J(J'J)J'r
     du = *gradf;
@@ -107,15 +106,15 @@ TiberNonlinTR::do_solve(void)
     matrix->vector_mult(du, *gradf); // JJ'r
     matrix->get_transpose(*matrix);  // J'
     matrix->vector_mult(*tmpvec, du); //J'JJ'r
-    double tmp = delta * gradf->dot(*tmpvec); // r'JJ'JJ'r
-    tmp = norm_grad * norm_grad * norm_grad / tmp;
+    double tmp = delta * gradf->dot(*tmpvec); // delta * r'JJ'JJ'r
+    tmp = norm_grad_l2 * norm_grad_l2 * norm_grad_infty / tmp;
     double tau = std::min(1.0, tmp);
-    gradf->scale(-tau * delta / norm_grad);  // Cauchy point
+    gradf->scale(-tau * delta / norm_grad_infty);  // Cauchy point
 
     matrix->get_transpose(*matrix);  // J
 
-    //norm_du = gradf->linfty_norm();
-    norm_du = gradf->l2_norm();
+    norm_du = gradf->linfty_norm();
+    //norm_du = gradf->l2_norm();
 
     //cerr << "tau = " << tau << " |du| = " << norm_du << endl;
 
@@ -131,8 +130,8 @@ TiberNonlinTR::do_solve(void)
       du.scale(-1.0);
 
       double t = 1.0;
-      //norm_du = du.linfty_norm();
-      norm_du = du.l2_norm();
+      norm_du = du.linfty_norm();
+      //norm_du = du.l2_norm();
       //cerr << "  |du| = " << norm_du << " (delta = " << delta << ")\n";
 
       if (norm_du > delta)
@@ -147,8 +146,8 @@ TiberNonlinTR::do_solve(void)
           tmpvec->scale(t);
           tmpvec->add(1 - t, *gradf);
 
-          //norm_du = tmpvec->linfty_norm();
-          norm_du = tmpvec->l2_norm();
+          norm_du = tmpvec->linfty_norm();
+          //norm_du = tmpvec->l2_norm();
 
           if (norm_du > delta)
             t1 = t;
