@@ -4,10 +4,12 @@
 #include "DLLoader.h"
 #include "Messages.h"
 #include "TiberModule.h"
+#include "RuntimeException.h"
 
 #include <boost/filesystem/operations.hpp>
 
 #include <dlfcn.h>
+#include <sstream>
 
 #ifdef CYGWIN
 #define RTLD_NODELETE 0
@@ -55,7 +57,7 @@ DLLoader::append_to_library_path(const std::string& path)
 
 
 
-bool
+void
 DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 {
 
@@ -100,9 +102,6 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   {
     //Messages::info("Trying to open " + libfile + "... ", false);
 
-    // we will set it to false if something bad happens
-    success = true;
-
     const char* error_msg = 0;
 
     // check if it is already resident
@@ -123,21 +122,21 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
       iface.destroy_fnc = dlsym(iface.handle, TBDESTROYFUNCSYM);
 
       if ((iface.create_fnc == NULL) || (iface.destroy_fnc == NULL))
-        success = false;
+      {
+        ostringstream os;
+        os << "Cannot use dynamic library " << libfile
+            << " (missing creation/destruction methods)";
+        throw RuntimeException(os.str());
+      }
     }
     else
-      success = false;
-
-    //if (success)
-    //  Messages::info("(using " + libfile + ")");
-    //else
-    //  if (error_msg != 0)
-    //    Messages::info("failed: " + string(error_msg));
-    //  else
-    //    Messages::info("failed");
+    {
+      ostringstream os;
+      os << "Error loading dynamic library " << libfile;
+      throw RuntimeException(os.str());
+    }
   }
 
-  return success;
 }
 
 

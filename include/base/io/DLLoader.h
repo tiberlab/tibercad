@@ -37,9 +37,8 @@ class DLLoader
      * \param name the name of the library (\em not the filename)
      * \param iface the LibraryInterface where the interface information will
      * be stored
-     * \return true if the operation was successful
      */
-    static bool open_library(const std::string& name, LibraryInterface& iface);
+    static void open_library(const std::string& name, LibraryInterface& iface);
 
     
     //! Closes a library for the given handle

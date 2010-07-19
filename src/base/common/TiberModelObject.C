@@ -122,24 +122,21 @@ TiberModelObject::_create_from_library(const std::string& name,
 
   DLLoader::LibraryInterface iface;
 
-  bool success = DLLoader::open_library(name, iface);
+  DLLoader::open_library(name, iface);
 
-  if (success)
-  {
-    create_t create = (create_t) iface.create_fnc;
+  create_t create = (create_t) iface.create_fnc;
 
-    assert(create != NULL);
+  if (create != NULL)
     obj = create(options);
 
-    if (obj != NULL)
-    {
-      assert(iface.destroy_fnc != NULL);
-      assert(iface.handle != NULL);
+  if (obj != NULL)
+  {
+    assert(iface.destroy_fnc != NULL);
+    assert(iface.handle != NULL);
 
-      obj->_create = create;
-      obj->_destroy = (destroy_t) iface.destroy_fnc;
-      obj->_libhandle = iface.handle;
-    }
+    obj->_create = create;
+    obj->_destroy = (destroy_t) iface.destroy_fnc;
+    obj->_libhandle = iface.handle;
   }
 
   return obj;
