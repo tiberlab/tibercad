@@ -6,6 +6,8 @@
 #include "MyPoissonModel.h"
 
 
+class ChargeDensityModel;
+
 
 class DefaultModel : public MyPoissonModel
 {
@@ -22,7 +24,7 @@ class DefaultModel : public MyPoissonModel
   protected:
 
     //! Constructor
-    DefaultModel(const ModelOptions& options) : MyPoissonModel(options) {}
+    DefaultModel(const ModelOptions& options);
 
     //! Create a new instance of this type
     virtual PhysicalModelInterface* create_new(void) const;
@@ -40,8 +42,18 @@ class DefaultModel : public MyPoissonModel
 
   private:
 
+    ChargeDensityModel* _charge_density;
+
 
 };
+
+
+inline
+DefaultModel::DefaultModel(const ModelOptions& options) :
+  MyPoissonModel(options),
+  _charge_density(NULL)
+{
+}
 
 
 inline

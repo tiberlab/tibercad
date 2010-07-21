@@ -5,6 +5,9 @@ topdir := ../../../..
 MODULE_NAME := driftdiffusion
 export MODULE_NAME
 
+MODULE_INCLUDES = -I$(topdir)/include/core/modules/drift-diffusion -I$(topdir)/include/core/modules/drift-diffusion/models
+export MODULE_INCLUDES
+
 include $(topdir)/Make.module
 
 

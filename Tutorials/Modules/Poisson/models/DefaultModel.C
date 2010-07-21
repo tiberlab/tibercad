@@ -1,6 +1,7 @@
 // $Id$
 
 #include "DefaultModel.h"
+#include "MyChargeDensityModel.h"
 
 // The first string is the class name, the second one
 // is the type of the model (here it is a bulk model),
@@ -13,6 +14,9 @@ using namespace std;
 void
 DefaultModel::do_init(void)
 {
+  SubmodelIterator it = submodels_begin("charge_density");
+  if (it != submodels_end("charge_density"))
+    _charge_density = dynamic_cast<ChargeDensityModel*>(it->second);
 }
 
 
@@ -30,5 +34,9 @@ DefaultModel::do_calculate(void)
 
   get_polarization().zero();
 
-  set_charge_density(0);
+  double charge = 0.0;
+  if (_charge_density != NULL)
+    charge = _charge_density->get_charge_density(get_element(), get_point());
+
+  set_charge_density(charge);
 }

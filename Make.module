@@ -14,6 +14,7 @@ target :=
 CPPFLAGS += -DMODULE_NAME=$(MODULE_NAME)
 MODULE_CXXFLAGS := -fvisibility=hidden
 MODULE_LDFLAGS += -L$(topdir)/lib -ltibercad
+CPPFLAGS += $(MODULE_INCLUDES)
 
 
 modulelib = $(shell echo `grep TIBER_MODULE $(1) | sed 's/MODULE_NAME/$(MODULE_NAME)/' \

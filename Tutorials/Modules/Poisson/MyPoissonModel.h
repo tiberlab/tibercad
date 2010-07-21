@@ -10,8 +10,9 @@
 #include "vector_value.h"
 
 
-
+class ChargeDensityModel;
 class Elem;
+
 
 //! This is the base class for the Poisson physical model
 class MyPoissonModel : public PhysicalModel
@@ -64,12 +65,17 @@ class MyPoissonModel : public PhysicalModel
   protected:
 
     //! Constructor
-    MyPoissonModel(const ModelOptions& options) : PhysicalModel(options) {}
+    MyPoissonModel(const ModelOptions& options);
+
+    virtual void do_init(void);
 
 
     //! do the actual calculation
-    virtual void do_calculate(void) = 0;
+    virtual void do_calculate(void);
 
+
+    const Elem* get_element(void) const { return _elem; }
+    const Point& get_point(void) const { return _point; }
 
 
   private:
@@ -92,7 +98,22 @@ class MyPoissonModel : public PhysicalModel
     //! The charge density
     double _charge;
 
+
+    //! The charge density model
+    ChargeDensityModel* _charge_density;
+
 };
+
+
+
+
+inline
+MyPoissonModel::MyPoissonModel(const ModelOptions& options) :
+  PhysicalModel(options),
+  _charge_density(NULL)
+{
+}
+
 
 
 inline

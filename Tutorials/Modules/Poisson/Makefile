@@ -7,14 +7,21 @@ export MODULE_NAME
 
 include $(topdir)/Make.module
 
-
-srcfiles := MyPoisson.C MyPoissonModel.C PoissonBoundaryModel.C
-models := DefaultModel.C PoissonDirichlet.C
-
-
 $(eval $(call MODULE, $(srcfiles)))
 
-$(foreach lib, $(models), $(eval $(call MODULE, $(lib))))
 
+target += models
+
+
+.PHONY: models
+models:
+	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
+
+clean:
+	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
+
+distclean:
+	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
+	
 
 include $(topdir)/Make.rules
