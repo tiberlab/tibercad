@@ -307,7 +307,7 @@ MyPoisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
       const RealTensor& eps = mod.get_permittivity();
       const RealVectorValue& pol = mod.get_polarization();
-      double rho = mod.get_charge_density();
+      double rho = Constants::e * mod.get_charge_density();
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {

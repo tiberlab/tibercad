@@ -28,13 +28,19 @@ $Models
       plot = (Potential, Field, Displacement)
     }
 
+    physical_model charge_density
+    {
+      type = constant
+      charge_density = 1e19
+    }
+
 
     BC_Regions  
     {
       BC_Region anode
       {
         type = dirichlet
-        potential = @Va[1]
+        potential = @Va[0.1]
       }
 
       BC_Region cathode
