@@ -1,10 +1,24 @@
 // $Id$
 
 #include "MyPoissonModel.h"
+#include "MyChargeDensityModel.h"
 
 
 using namespace std;
 
+
+TiberModelObject*
+MyPoissonModel::_create(const ModelOptions& options)
+{
+  return new MyPoissonModel(options);
+}
+
+
+void
+MyPoissonModel::_destroy(TiberModelObject* p)
+{
+  delete p;
+}
 
 
 MyPoissonModel*
@@ -12,10 +26,19 @@ MyPoissonModel::create(const ModelOptions& options)
 {
   string type("default");
   options.get_option("type", type);
-  type = "bulk_" + type;
 
-  return dynamic_cast<MyPoissonModel*>(
-      PhysicalModelInterface::create(type, options));
+  PhysicalModelInterface* pm = NULL;
+
+  if (type == "default")
+    // we create the default model from explicit creation method
+    pm = PhysicalModelInterface::create(_create, _destroy, options);
+  else
+  {
+    type = "bulk_" + type;
+    pm = PhysicalModelInterface::create(type, options);
+  }
+
+  return dynamic_cast<MyPoissonModel*>(pm);
 }
 
 
@@ -39,6 +62,6 @@ MyPoissonModel::do_calculate(void)
 
   _charge = 0.0;
   if (_charge_density != NULL)
-    charge = _charge_density->get_charge_density(get_element(), get_point());
+    _charge = _charge_density->get_charge_density(get_element(), get_point());
 
 }
