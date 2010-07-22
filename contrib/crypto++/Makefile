@@ -16,7 +16,8 @@ stamp-h: $(package)
 	@rm -rf build ; mkdir build && unzip $(package) -d build/ && touch stamp-h
 
 clean:
-	@rm -rf build ; rm stamp-h
+	@rm -rf build
+	@-rm stamp-h
 
 distclean: clean
 
