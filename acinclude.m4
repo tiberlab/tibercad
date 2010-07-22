@@ -9,7 +9,7 @@ AC_DEFUN([TC_BUILD_MODULES],
 	  AC_SUBST([BUILD_TIBER_MODULES], ["yes"])
 	 else 
 	  AC_SUBST([BUILD_TIBER_MODULES], ["no"])
-	 fi], [AC_SUBST([BUILD_TIBER_MODULES], ["no"])])
+	 fi], [AC_SUBST([BUILD_TIBER_MODULES], ["yes"])])
 ])dnl
 
 

@@ -7321,7 +7321,7 @@ _ACEOF
 
 	 fi
 else
-  BUILD_TIBER_MODULES="no"
+  BUILD_TIBER_MODULES="yes"
 
 fi
 
