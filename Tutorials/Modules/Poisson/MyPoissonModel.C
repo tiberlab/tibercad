@@ -50,8 +50,6 @@ MyPoissonModel::do_init(void)
   if (it != submodels_end("charge_density"))
   {
     _charge_density = dynamic_cast<ChargeDensityModel*>(it->second);
-    cerr << it->second << "  " << it->second->get_type() << endl;
-    cerr << _charge_density << endl;
   }
 }
 

@@ -5,7 +5,6 @@
 
 #include "PhysicalModel.h"
 
-#define MODULE_PREFIX contact
 
 
 class Elem;
