@@ -32,7 +32,6 @@ CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${sepparch}/
   --with-tao-prefix=/usr/pack/tibercad_dev-2.0-ma/tao-1.10-p1 \
   --with-mkl=/usr/pack/intel_mkl-10.2-gp \
   --with-subversion=svn-1.6.5 \
-  --enable-modules \
   --enable-uptight\
   --enable-pardiso \
   ${CONFIGOPTS} \

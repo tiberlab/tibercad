@@ -7323,6 +7323,10 @@ _ACEOF
 else
   BUILD_TIBER_MODULES="yes"
 
+cat >>confdefs.h <<\_ACEOF
+#define BUILD_TIBER_MODULES 1
+_ACEOF
+
 fi
 
 

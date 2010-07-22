@@ -9,7 +9,9 @@ AC_DEFUN([TC_BUILD_MODULES],
 	  AC_SUBST([BUILD_TIBER_MODULES], ["yes"])
 	 else 
 	  AC_SUBST([BUILD_TIBER_MODULES], ["no"])
-	 fi], [AC_SUBST([BUILD_TIBER_MODULES], ["yes"])])
+	 fi], [AC_SUBST([BUILD_TIBER_MODULES], ["yes"])dnl
+	       AC_DEFINE([BUILD_TIBER_MODULES], [1],
+		[Define to 1 if models should be built as modules])])
 ])dnl
 
 
