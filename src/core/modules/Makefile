@@ -4,7 +4,7 @@
 topdir := ../../..
 
 # we have to compile each module
-subdirs := drift-diffusion excitons dssc common
+subdirs := drift-diffusion excitons dssc common 
 
 include $(topdir)/Make.common
 
