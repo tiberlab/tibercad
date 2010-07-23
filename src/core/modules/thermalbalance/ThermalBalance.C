@@ -15,7 +15,7 @@
 #include "dense_subvector.h"
 #include "SimulationOptions.h"
 #include "fe_interface.h"
-#include "GrayModel.h"
+
 //TODO
 //Eliminate the FE:interface when the point is at the centroid
 
