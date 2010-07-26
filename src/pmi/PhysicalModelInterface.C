@@ -4,8 +4,8 @@
 #include "PhysicalModelInterface.h"
 #include "Material.h"
 #include "Variable.h"
-#include "Utils.h"
 
+#include "Utils.h"
 #include "Trap.h"
 
 #include "ZbStiffness.h"
@@ -26,20 +26,12 @@
 #include "KPbulkHamiltonian.h"
 #include "EFAbulkModel.h"
 
-
-
-#include  "ZbLatticeThermalConductivity.h"
-#include  "WzLatticeThermalConductivity.h"
-#include  "LinearThermalConductivity.h"
-#include  "HeatModel.h"
 #include  "DftbModel.h"
 #include  "EtbModel.h"
 #include  "PoissonModel.h"
 #include  "ChargeDensityModel.h"
 #include  "DielectricModel.h"
-#include  "HeatSourceInterface.h"
-#include  "DriftDiffusionHeatSource.h"
-#include  "ConstantHeatSource.h"
+
 
 #include  "ZbOptDielectricConstant.h"
 #include  "WzOptDielectricConstant.h"
@@ -56,10 +48,12 @@
 #include <WzPiezoelectricModel.h>
 
 
+
 #include "Messages.h"
 
 #include <typeinfo>
 #include <string>
+
 
 
 using namespace std;
@@ -67,7 +61,7 @@ using namespace std;
 
 map<const string, ID>
 PhysicalModelInterface::_model_ids;
-
+ 
 
 
 PhysicalModelInterface::~PhysicalModelInterface(void)
@@ -90,11 +84,13 @@ PhysicalModelInterface*
 PhysicalModelInterface::create(const string& name,
     const ModelOptions& options, const string& module)
 {
-
+  
   // NOTE: for bulk models options contains the crystal structure
 
-  PhysicalModelInterface* mod = NULL;
 
+
+  PhysicalModelInterface* mod = NULL;
+                             
   if (name == "stiffness_zb")
     mod = ZbStiffness::create(options);
   else if (name == "stiffness_wz")
@@ -127,16 +123,6 @@ PhysicalModelInterface::create(const string& name,
     mod = WzDDsemiconductor::create(options);
   else if (name == "EFAmodel")
     mod = EFAbulkModel::create(options);
-  else if (name == "lat_therm_cond_constant_zb")
-    mod = ZbLatticeThermalConductivity::create(options);
-  else if (name == "lat_therm_cond_constant_wz")
-    mod = WzLatticeThermalConductivity::create(options);
-  else if (name == "lat_therm_cond_linear_zb")
-    mod = LinearThermalConductivity::create(options);
-  else if (name == "lat_therm_cond_linear_wz")
-    mod = LinearThermalConductivity::create(options);
-  else if (name == "thermal")
-    mod = HeatModel::create(options);
   else if  (name == "poisson")
     mod = PoissonModel::create(options);
   else if (name == "dftb")
@@ -157,26 +143,22 @@ PhysicalModelInterface::create(const string& name,
     mod = PyroPolarization::create(options);
   else if (name == "pyropolarization_wz")
     mod = WzPyroPolarization::create(options);
-  else if  (name == "drift_diffusion_dissipation")
-    mod = DriftDiffusionHeatSource::create(options);
   else if  (name == "phonon")
     mod = PhononModel::create(options);
-  else if  (name == "constant_heat_source")
-    mod = ConstantHeatSource::create(options);
   else if  (name == "free_dynamical_matrix_zb")
     mod = ZbFreeDynamicalMatrix::create(options);
   else if  (name == "strain_dependent_zb")
     mod = ZbStrainDynamicalMatrix::create(options);
   else if  (name == "raman_tensor_zb")
     mod = ZbRamanTensor::create(options);
-  else if  (name == "piezoelectric_model_zb")
-    mod = ZbPiezoelectricModel::create(options);
-  else if  (name == "piezoelectric_model_wz")
-    mod = WzPiezoelectricModel::create(options);
+  //else if  (name == "piezoelectric_model_zb")
+  //  mod = ZbPiezoelectricModel::create(options);
+  //else if  (name == "piezoelectric_model_wz")
+  //  mod = WzPiezoelectricModel::create(options);
   else if (name == "trap")
     mod = Trap::create(options);
 
-
+ 
   if (mod == NULL)
   {
     // first try in the module directory
@@ -222,6 +204,8 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
 {
   PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
       create_from_function(create_fnc, destroy_fnc, options));
+
+  std::cout<<"MODULE: "<<module<<std::endl;
 
   if (mod != NULL)
   {
@@ -491,13 +475,14 @@ PhysicalModelInterface::_create_submodels(void)
   while (it != end)
   {
     string name(it->first);
+    
     string type((it->second).get_option("model", ""));
     type = ((it->second).get_option("type", type));
     if (type.size() > 0)
       name += string("_") + type;
 
     // we try to create it from the same module
-    PhysicalModelInterface* pm = create(name, it->second, get_module_name());
+     PhysicalModelInterface* pm = create(name, it->second, get_module_name());
 
     if (pm == NULL)
     {
@@ -525,4 +510,5 @@ PhysicalModelInterface::_create_submodels(void)
     get_options().delete_submodel(tmp_it);
   }
 }
+
 
