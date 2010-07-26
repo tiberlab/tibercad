@@ -12,7 +12,6 @@
 
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
-#include "MacroHeatBalance.h"
 #include "QuantumDensity.h"
 #include "OpticsKP.h"
 #include "QuantumDispersion.h"
@@ -25,13 +24,11 @@
 #include "MaxwellEquations.h"
 #include "PhononDispersion.h"
 #include "CrackStrain.h"
-#include "MicroHeatBalance.h"
-
+//#include "MechanicalStructure.h"
 #include "Sweep.h"
 #include "RelaxationMethod.h"
 #include "ModifiedBroyden.h"
 #include "Utils.h"
-
 #include "DataOutput.h"
 #include "Messages.h"
 
@@ -111,8 +108,7 @@ SimulationInterface::create(const string& type,
     sim = EnvelopFunctionApprox::create(options);
   else if (type_name == "sweep")
     sim = Sweep::create(options);
-  else if (type_name == "thermal")
-    sim = MacroHeatBalance::create(options);
+ 
   else if (type_name == "selfconsistent")
     sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_relaxation")
@@ -145,8 +141,9 @@ SimulationInterface::create(const string& type,
     sim = MaxwellEquations::create(options);
   else if (type_name == "phonondispersion")
     sim = PhononDispersion::create(options);
- else if (type_name == "gray_model")
-    sim = MicroHeatBalance::create(options);
+ // else if (type_name == "mechanical_structure")
+  //  sim = MechanicalStructure::create(options);
+
 
   if (sim == NULL)
   {
@@ -154,7 +151,9 @@ SimulationInterface::create(const string& type,
     if ((type.size() > 0 ) && ((sim = create_from_library<SimulationInterface>(
            type + "/" + type_name, options)) == 0))
     {
+        std::cout<<"ENTER"<<std::endl;
       sim = create_from_library<SimulationInterface>(type_name, options);
+        std::cout<<sim<<std::endl;
     }
   }
 
