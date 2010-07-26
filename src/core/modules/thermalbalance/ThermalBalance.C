@@ -572,7 +572,7 @@ void
 ThermalBalance::do_setup_solution_variables(void)
 {
   // we declare our solution variables
-  declare_solution(LatticeTemp, REAL, NODES, "K");
+  declare_solution(temperature, REAL, NODES, "K");
   declare_solution(FourierTemp, REAL, NODES, "K");
   declare_solution(ThermalFlux, VECTOR, NODES, "W/cm^2");
   //declare_solution(ThermlCond, VECTOR, NODES, "W/cm K");
@@ -583,7 +583,7 @@ ThermalBalance::do_setup_solution_variables(void)
   // we can define aliases (but the association name -> id
   // has to be surjective)
   //add_alias("Jq", ThermalFlux);
-  
+  add_alias("LatticeTemp", temperature);
   //  add_alias("ThermCond", ThermalConductivity);
 }
 
@@ -1366,14 +1366,14 @@ ThermalBalance::get_solution_secure(const Elem* elem,
    //  cout<<solution(dof_indices[0])<<endl;
    for (unsigned int n = 0; n < np; n++)
     { 
-     if (values.count(LatticeTemp) ||
+     if (values.count(temperature) ||
          values.count(thermal)  )
      { 
        double T  = 0.0;
        for (unsigned int i = 0; i < n_dofs; i++) 
 	 T += phi[i][n] * solution(dof_indices[i]);
     
-       values[LatticeTemp][n] = T;
+       values[temperature][n] = T;
      }
      
      if (values.count(FourierTemp)||
@@ -1924,7 +1924,7 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
       
        const RealTensor& kappa = mod.get_total_thermal_conductivity();
        double heat_source = mod.get_total_heat_source();
-       
+      
        for (unsigned int i = 0; i < n_dofs; i++)
        {
          for (unsigned int j = 0; j < n_dofs; j++)

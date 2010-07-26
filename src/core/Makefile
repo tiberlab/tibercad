@@ -1,4 +1,4 @@
-# $Id$
+#$Id$
 #
 
 topdir := ../..
@@ -6,14 +6,18 @@ topdir := ../..
 # we have to compile each module
 
 subdirs := macrostrain semiconductormodels
-subdirs += solver-interfaces  macroheatbalance quantumEFAmodels tightbinding
-subdirs += poisson
-subdirs += eigenvalue
-subdirs += maxwell
-subdirs += embracing
+subdirs += solver-interfaces
+#subdirs += quantumEFAmodels tightbinding
+#subdirs += poisson
+#subdirs += eigenvalue
+#subdirs += maxwell
+#subdirs += embracing
 subdirs += models
-subdirs += phonondispersion
-subdirs += microheatbalance
+#subdirs += phonondispersion
+#subdirs += mechanicalstructure
+#subdirs += macroheatbalance
+#subdirs += microheatbalance
+#subdirs += thermalbalance
 
 include $(topdir)/Make.common
 

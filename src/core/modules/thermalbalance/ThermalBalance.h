@@ -265,7 +265,7 @@ class ThermalBalance : public SimulationInterface
 
     enum Solutions
     {
-      LatticeTemp,       /*!< the Lattice Temperature */
+      temperature,       /*!< the Lattice Temperature */
       FourierTemp,       /*!< the Lattice Temperature */
       ThermalFlux,              /*!< the thermal flux */
       HeatSource,                /*!< the HeatSource */
