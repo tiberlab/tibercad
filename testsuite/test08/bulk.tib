@@ -49,7 +49,7 @@ $Models
 
 
 
-  model thermal
+  model thermalbalance
   {
 
     options

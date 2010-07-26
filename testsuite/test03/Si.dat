@@ -130,7 +130,7 @@ N0 = (1.0000e+18,	1.0000e+18)
 
 # Lattice thermal conductivity
 [thermal_conductivity/constant]
-therm_lat_cond = 1.5         
+ThermCond = (1.5,1.5,1.5)
 
 
 therm_lat_cond_a = 0.03      #[(cm k)/(W)]

@@ -205,8 +205,6 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
   PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
       create_from_function(create_fnc, destroy_fnc, options));
 
-  std::cout<<"MODULE: "<<module<<std::endl;
-
   if (mod != NULL)
   {
     _register_model(mod);
