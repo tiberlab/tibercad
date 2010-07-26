@@ -45,9 +45,9 @@ $Models
      statistics = FD
 
      # we only solve for electrons
-     coupling = electrons
+     #coupling = electrons
 
-     plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity,  NetRecombination, ElField, ElPotential, ContactCurrents)
+     plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity,  eMobility, hQFermi, hDensity, hCurrentDensity, hMobility, NetRecombination, ElField, ElPotential, ContactCurrents)
 
     }
 
@@ -56,7 +56,7 @@ $Models
       model = srh
     }
 
-    physical_model electron_mobility
+    physical_model mobility
     {
 
       model = field_dependent
@@ -86,6 +86,13 @@ $Models
         voltage = 0.0
       }
  
+      BC_Region backcontact
+      {
+        type = ohmic
+
+        voltage = 0.0
+      }
+
       BC_Region drain
       {
         type = ohmic
@@ -106,11 +113,12 @@ $Solver
 {
   driftdiffusion
   {
-    nonlinear_solver = tiber
-    ksp_type = bcgsl
+    nonlinear_solver = ls
+    ksp_type = pconly
+    pc_type = lu
     nonlin_max_it = 10
     nonlin_step_tol = 1e-3
-    ls_max_step = 2
+    #ls_max_step = 20
   }
 
 

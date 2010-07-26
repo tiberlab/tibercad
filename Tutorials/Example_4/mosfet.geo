@@ -77,3 +77,4 @@ Physical Surface("oxide") = {46}; // SiO2
 Physical Line("source") = {13}; // source
 Physical Line("gate") = {39,38}; // gate
 Physical Line("drain") = {19}; // drain
+Physical Line("backcontact") = {1,28}; // drain
