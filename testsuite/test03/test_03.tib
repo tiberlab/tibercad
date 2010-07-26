@@ -60,9 +60,9 @@ $Models
     physical_model heat_source
     {
 
-      model = drift_diffusion_dissipation
+      type = driftdiffusion
 
-      drift_diffusion_simulation = dd
+      simulation_name = dd
 
     }
 

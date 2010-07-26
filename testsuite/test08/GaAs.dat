@@ -133,6 +133,11 @@ N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 [thermal_conductivity/constant]
 ThermCond = (0.55,0.55,0.55)
 
+[sound_velocity/constant]
+vg = 8.433e5 #cm/s
+
+[heat_capacity/constant]
+C = 1.00 # j/cm3K
 
 #Thermoelectric power [mV/K]
 eTEpower = -200

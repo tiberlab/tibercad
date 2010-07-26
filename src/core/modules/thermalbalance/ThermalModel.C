@@ -62,9 +62,8 @@ ThermalModel::do_init(void)
   //Lattice Thermal Conductivity
   it = submodels_begin("thermal_conductivity");
   _tcm = dynamic_cast<ThermalConductivityModel*> ((*it).second);
-  //_kappa = _tcm->get_thermal_conductivity();
+
  
-  std::cout<<"MODEL: "<< _tcm<<std::endl;
   
   //Heat Source
   it = submodels_begin("heat_source");
@@ -72,24 +71,30 @@ ThermalModel::do_init(void)
   for ( ; it != it_end ; ++it)
     _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
   
-  //----------------------------------
 
-  Database& db = get_database();
-  //Sound Velocity
-  db.set_section("sound_velocity/constant");
-  _vg = db.get("vg",0.0, true);
-  get_parameter("vg", _vg);
 
-  //Heat Capacity
-  db.set_section("heat_capacity/constant");
-  _cg = db.get("C",0.0, true);
-  get_parameter("C", _cg);
+  //If we do gray
 
-  //Relaxation time
-  //Compute the mean thermal conductivity.
-  double kg = (_kappa(0,0) + _kappa(1,1) + _kappa(2,2))/3.0;
- 
-  _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;
+  if (_htm->get_type() == HeatTransportModel::Gray)
+  {
+    //----------------------------------
+    Database& db = get_database();
+    //Sound Velocity
+    db.set_section("sound_velocity/constant");
+    _vg = db.get("vg",0.0, true);
+    get_parameter("vg", _vg);
+    
+    //Heat Capacity
+    db.set_section("heat_capacity/constant");
+    _cg = db.get("C",0.0, true);
+    get_parameter("C", _cg);
+    
+    //Relaxation time
+    //Compute the mean thermal conductivity.
+    double kg = (_kappa(0,0) + _kappa(1,1) + _kappa(2,2))/3.0;
+    
+    _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;
+  }
 
 }
 
@@ -121,11 +126,14 @@ ThermalModel::do_print_info(void)
     cout<<endl;
     cout<<"kx : "   <<_kappa(0,0) <<" W/cm/K"<<endl;
     cout<<"kz : "   <<_kappa(2,2) <<" W/cm/K"<<endl;
-    cout<<"tg: "  <<_tg * 1e12   <<" ps"<<endl;
-    cout<<"Lg: "<<_tg * _vg * 1e7  <<" nm"<<endl;
-    cout<<"vg: " <<_vg          <<" cm/s"<<endl;
-    cout<<"C : "  <<_cg          <<" j/K/cm3"<<endl;
-    cout<<endl;
+    if (_htm->get_type() == HeatTransportModel::Gray)
+    {
+      cout<<"tg: "  <<_tg * 1e12   <<" ps"<<endl;
+      cout<<"Lg: "<<_tg * _vg * 1e7  <<" nm"<<endl;
+      cout<<"vg: " <<_vg          <<" cm/s"<<endl;
+      cout<<"C : "  <<_cg          <<" j/K/cm3"<<endl;
+      cout<<endl;
+    }
   }
 
   

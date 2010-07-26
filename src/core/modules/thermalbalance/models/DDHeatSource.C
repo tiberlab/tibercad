@@ -24,7 +24,7 @@ DDHeatSource::do_init(void)
 {
 
   
-  string dd_simul_name = get_options().get_option("drift_diffusion_simulation", "");
+  string dd_simul_name = get_options().get_option("simulation_name", "");
   _simul = SimulationInterface::find_simulation(dd_simul_name);
 
   if ( _simul == NULL)

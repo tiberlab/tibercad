@@ -128,14 +128,15 @@ N0 = (1.0000e+18,	1.0000e+18)
 
 
 
-# Lattice thermal conductivity
+# Thermal Properties
 [thermal_conductivity/constant]
 ThermCond = (1.5,1.5,1.5)
 
+[sound_velocity/constant]
+vg = 8.433e5 #cm/s
 
-therm_lat_cond_a = 0.03      #[(cm k)/(W)]
-therm_lat_cond_b = 1.56e-3   #[(cm)/(W)]
-therm_lat_cond_c = 1.65e-6   #[(cm)/(W K)]
+[heat_capacity/constant]
+C = 1.00 # j/cm3K
 
 
 
