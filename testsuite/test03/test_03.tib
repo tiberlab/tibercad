@@ -52,7 +52,7 @@ $Models
 
      options
     { 
-      simulation_name = tt
+      simulation_name = thermal
       physical_regions = all
       plot = (thermal)
     }
@@ -87,7 +87,7 @@ $Models
      simulation_name = dd
      plot = (ContactCurrents, Pn, Pp, RecombHeat, ePeltier, hPeltier, eJoule, hJoule, ePowerFlux, hPowerFlux)
      
-     thermal_simulation = tt
+     thermal_simulation = thermal
     }
 
      physical_model recombination
@@ -139,7 +139,7 @@ $Solver
   {
      flavour = relaxation
      relaxation_factor = 1
-     simulations = (dd,tt)
+     simulations = (dd,thermal)
      abs_tolerance = 1e-5
      rel_tolerance = 1e-5
      max_iterations = 30

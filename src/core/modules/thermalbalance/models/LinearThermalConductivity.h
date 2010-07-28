@@ -26,7 +26,7 @@ public:
   //! Creator function
   static LinearThermalConductivity* create(const ModelOptions& options);
   
-  virtual void calculate(const Elem* elem, const Point& point){};
+  virtual void calculate(const Elem* elem, const Point& point);
   
 protected:
   
@@ -38,11 +38,11 @@ protected:
   //         const PhysicalModelInterface* comp_B);
   
   virtual void do_init_alloy (const PhysicalModelInterface *comp_A,
-			      const PhysicalModelInterface *comp_B, double xa);
+			      const PhysicalModelInterface *comp_B, double xa){};
   
   virtual void  read_database_alloy(void){};
   /* This is not used here: */
-  virtual void read_database(void);
+  virtual void read_database(void){};
   
   
   /* We do not use this here: */
@@ -54,9 +54,12 @@ protected:
   
   
 private:
-  
-  double _kx;
-  double _kz;
+   
+   double kx0;
+   double kz0;
+   double mx;
+   double mz;
+   double z0;
   
   //! Constructor
   LinearThermalConductivity(const ModelOptions& options);

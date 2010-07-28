@@ -575,15 +575,20 @@ ThermalBalance::do_setup_solution_variables(void)
   declare_solution(temperature, REAL, NODES, "K");
   declare_solution(FourierTemp, REAL, NODES, "K");
   declare_solution(ThermalFlux, VECTOR, NODES, "W/cm^2");
-  //declare_solution(ThermlCond, VECTOR, NODES, "W/cm K");
-  declare_solution(HeatSource, REAL, NODES, "W/cm^3");
+  declare_solution(ThermCond, VECTOR, NODES, "W/cm K");
+  declare_solution(HeatSource, REAL, CELL, "W/cm^3");
   declare_solution(SolDir,VECTOR,CELL, "W/cm^3");
   declare_solution(Partition,REAL,CELL, "");
   declare_solution(DomainTest,REAL,CELL, "");
   // we can define aliases (but the association name -> id
   // has to be surjective)
   //add_alias("Jq", ThermalFlux);
-  add_alias("LatticeTemp", temperature);
+  //add_alias("LatticeTemp", temperature);
+  add_alias("thermal", temperature);
+  add_alias("thermal", ThermCond);
+  add_alias("thermal", ThermalFlux);
+  add_alias("thermal", HeatSource);
+  add_alias("thermal", Partition);
   //  add_alias("ThermCond", ThermalConductivity);
 }
 
@@ -1357,15 +1362,17 @@ ThermalBalance::get_solution_secure(const Elem* elem,
    fe->reinit(elem, &p);
 
    dof_map.dof_indices(elem, dof_indices, u_var);
+
    const unsigned int n_dofs = dof_indices.size();
-
-   ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-   mod.calculate(elem,elem->centroid());   
-
+  ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+  
    // do interpolation/
    //  cout<<solution(dof_indices[0])<<endl;
    for (unsigned int n = 0; n < np; n++)
     { 
+      mod.calculate(elem,real_pts[n]);   
+
+
      if (values.count(temperature) ||
          values.count(thermal)  )
      { 
@@ -1402,50 +1409,62 @@ ThermalBalance::get_solution_secure(const Elem* elem,
        
      }       
      
-   }
 
-   if (values.count(SolDir))
-   { 
-     
-     ID dof = elem->dof_number(gray_sys_number,0,0);  
-     values[SolDir][0] = (*sol_dir[4])(dof);
-     values[SolDir][1] = (*sol_dir[10])(dof);
-     values[SolDir][2] = 0.0;
-
-   }  
-   
-   if (values.count(Partition)||
+     if (values.count(ThermCond)||
          values.count(thermal)  )
-   {
+     {
+       const RealTensor& kappa = mod.get_total_thermal_conductivity();
+       values[ThermCond][0 + 3 * n] = kappa(0,0);
+       values[ThermCond][1 + 3 * n] = kappa(1,1);
+       values[ThermCond][2 + 3 * n] = kappa(2,2);
+     }
 
-     double value = 0;
-     if (GrayDomain.count(elem))
-       value = 1;
-      
-    values[Partition][0] = value;
-   }
-
-   if (values.count(ThermCond)||
-         values.count(thermal)  )
-    {
-      const RealTensor& kappa = mod.get_total_thermal_conductivity();
-      values[ThermCond][0] = kappa(0,0);
-      values[ThermCond][1] = kappa(1,1);
-      values[ThermCond][2] = kappa(2,2);
-    }
-
-
-  //  if (values.count(DomainTest))
-  //  {
+    //  if (values.count(HeatSource)||
+//           values.count(thermal)  )
+//     {
  
-  //    Real H = mod.get_total_heat_source();
+//       Real H = mod.get_total_heat_source();
+//       values[HeatSource][n] = H;
 
-  //   //double value = H*tg/cg/T0;
-  //      ID dof = elem->dof_number(gray_sys_number,0,0);
-  //     double T = (*equilibrium_energy)(dof);
-  //      values[DomainTest][0] = T;
+//     }
 
-//    }
+   }
+   //Elemental value
+   std::vector<Point> pp(1);
+   pp[0] = elem->centroid();
+
+   fe->reinit(elem,&pp);
+
+   mod.calculate(elem,real_pts[0]); 
+ //   if (values.count(SolDir))
+//    { 
+     
+//      ID dof = elem->dof_number(gray_sys_number,0,0);  
+//      values[SolDir][0] = (*sol_dir[4])(dof);
+//      values[SolDir][1] = (*sol_dir[10])(dof);
+//      values[SolDir][2] = 0.0;
+
+//    }  
+   
+     if (values.count(Partition)||
+          values.count(thermal)  )
+    {
+
+      double value = 0;
+      if (GrayDomain.count(elem))
+	value = 1;    
+      values[Partition][0] = value;
+     }
+
+
+     if (values.count(HeatSource)||
+          values.count(thermal)  )
+    {
+ 
+      Real H = mod.get_total_heat_source();
+      values[HeatSource][0] = H;
+
+    }
 
 
 

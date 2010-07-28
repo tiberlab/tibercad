@@ -13,98 +13,57 @@ using namespace std;
 
 LinearThermalConductivity::LinearThermalConductivity(const ModelOptions& options):ThermalConductivityModel(options)
 {
-  _kx = 0.0;
-  _kz = 0.0;
+   kx0 = 0.0;
+   kz0 = 0.0;
+   mx  = 0.0;
+   mz  = 0.0;
+   z0  = 0.0;
 }
 
-void 
-LinearThermalConductivity::read_database(void)
-{
-
-  Database& db = get_database();
-  db.set_section("thermal_conductivity/constant");
-
-  _kx = db.get("therm_lat_cond_x",0.0, true);
-
-  if (get_material()->get_structure() == "wz")
-    _kz = db.get("therm_lat_cond_z",0.0, true);
-  else
-    _kz = _kx;
-
-}
 
 
 void
 LinearThermalConductivity::do_init(void)
 {
 
-  get_parameter("therm_lat_cond_x",_kx);
+  const ModelOptions& options = get_options();
+
+
+   kx0 = 0.0;
+   kz0 = 0.0;
+   mx  = 0.0;
+   mz  = 0.0;
+   z0  = 0.0;
+
+ 
+   get_parameter("kx0",kx0);
+   get_parameter("mx",mx);
+   get_parameter("kz0",kz0);
+   get_parameter("mz",mz);
+   get_parameter("z0",z0);
+
+
+
   
-  if (get_material()->get_structure() == "wz")
-    get_parameter("therm_lat_cond_z",_kz);
-  else
-    _kz = _kx;
-
-
-  RealTensor kappa(0);
-  kappa(0,0) = _kx;
-  kappa(1,1) = _kx;
-  kappa(2,2) = _kz;
-
-  set_thermal_conductivity(kappa);
-
- //  // cout<<kappa<<endl;
-//   if (get_material()->get_structure() == "wz")
-//   {
-//     const RotatedCrystal&   cr = get_material()->get_rotated_crystal();
-//     rotate_to_calculation_system(cr.RotMatrix);
-//   }
 }
 
 
-void
-LinearThermalConductivity::do_init_alloy(const PhysicalModelInterface *comp_A,
-                                                const PhysicalModelInterface *comp_B, double xa)
+
+void 
+LinearThermalConductivity::calculate(const Elem* elem, const Point& point)
 {
-   const LinearThermalConductivity* modA = dynamic_cast<const LinearThermalConductivity*>(comp_A);
-   const LinearThermalConductivity* modB = dynamic_cast<const LinearThermalConductivity*>(comp_B);
+   
+  double x = point(0);
+  double y = point(1);
+  double z = point(2);
 
-   _kx = alloy(modA->_kx, modB->_kx, xa);
-   _kz = alloy(modA->_kz, modB->_kz, xa);
+  double kx = kx0  + mx * (z-z0);
+  double kz = kz0  + mz * (z-z0);
 
-   //Read Alloy Database does not work because here however take the linear approximantion. TO FIX IT. 
-   get_parameter("therm_lat_cond_x",_kx);
-   get_parameter("therm_lat_cond_z",_kz);
+
+  _kappa(0,0) = kx;
+  _kappa(1,1) = kx;
+  _kappa(2,2) = kz;
+
 
 }
-
-
-//--------------------------------------------------------//
-//void  
-//ConstantThermalConductivity::read_database_alloy(void)
-//{
-
-//    Database& db = get_database();
-//    //Sound Velocity
-//    db.set_section("thermal_conductivity/constant");
-//    _kx = db.get("therm_lat_cond_x",_kx, true);
-
-//    if (get_material()->get_structure() == "wz")
-//      _kz = db.get("therm_lat_cond_z",_kz, true);
-//    else
-//      _kz = _kx;
-
-//    RealTensor kappa(0);
-//    kappa(0,0) = _kx;
-//    kappa(1,1) = _kx;
-//    kappa(2,2) = _kz;
-//    set_thermal_conductivity(kappa);
-   
-//    // cout<<kappa<<endl;
-//    if (get_material()->get_structure() == "wz")
-//    {
-//      const RotatedCrystal&   cr = get_material()->get_rotated_crystal();
-//      rotate_to_calculation_system(cr.RotMatrix);
-//    }
-
-// } 
