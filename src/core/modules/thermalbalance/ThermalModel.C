@@ -57,6 +57,9 @@ ThermalModel::do_init(void)
   it = submodels_begin("heat_transport");
   _htm = dynamic_cast<HeatTransportModel*> ((*it).second);
   
+  cout<<"TYPE"<<endl;
+  cout<<_htm->get_type()<<endl;
+
   ModelOptions& opts = _htm->get_options();
 
   //Lattice Thermal Conductivity
@@ -74,7 +77,7 @@ ThermalModel::do_init(void)
 
 
   //If we do gray
-
+  _kappa = _tcm->get_thermal_conductivity();
   if (_htm->get_type() == HeatTransportModel::Gray)
   {
     //----------------------------------
@@ -91,6 +94,7 @@ ThermalModel::do_init(void)
     
     //Relaxation time
     //Compute the mean thermal conductivity.
+  
     double kg = (_kappa(0,0) + _kappa(1,1) + _kappa(2,2))/3.0;
     
     _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;

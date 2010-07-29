@@ -38,7 +38,7 @@ class HeatTransportModel : public PhysicalModelInterface
   protected:
 
     //! Constructor
-    HeatTransportModel(const ModelOptions& options);
+  HeatTransportModel(const ModelOptions& options);
 
   void set_type(Type type);
  

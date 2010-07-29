@@ -85,8 +85,6 @@ ThermalBalance::do_init(void)
     }
   }
 
-
-
   //Create node connection
   const unsigned int nn  = mesh.n_nodes();
   node_conn.resize(nn);
@@ -251,6 +249,7 @@ ThermalBalance::do_partition_bis(void)
     MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
     
+    // cout<<"ENTRIED"<<endl;
     for ( ; el != end_el ; ++el)
     {
       const Elem* elem = *el;
@@ -259,15 +258,20 @@ ThermalBalance::do_partition_bis(void)
       //mod.calculate(elem,elem->centroid());   
       
       HeatTransportModel* htm = mod.get_heat_transport_model();
+
+      //cout<<htm->get_type()<<endl;
       if (htm->get_type() == HeatTransportModel::Gray)
       {
 	GrayDomain.insert(elem);
 	gray_opt = htm->get_options();       
       }
-      else if (htm->get_type() == HeatTransportModel::Fourier)
+      else
 	FourierDomain.insert(elem);
+	
+      
     }
   }
+  //cout<<"ECCOLO"<<FourierDomain.size()<<endl;
   //-------------------------------------------
   //Transfering options fro gray model to thermal balance //TO BE CHANGED
   myopts.theta_slices = gray_opt.get_option("theta_slices",0);
@@ -275,7 +279,7 @@ ThermalBalance::do_partition_bis(void)
   myopts.max_error = gray_opt.get_option("max_error",1e-3);
   myopts.max_iter = gray_opt.get_option("max_iter",1);
   myopts.diffusive =  gray_opt.get_option("diffusive_walls",true);
-  myopts.partitioning = gray_opt.get_option("partitioning",false);
+  myopts.partitioning = gray_opt.get_option("partitioning","manual");
   myopts.threshold_value =  gray_opt.get_option("temp_threshold",0.0);
   //-------------------------------------------------------------------------
 
@@ -365,8 +369,23 @@ ThermalBalance::do_partition_bis(void)
 
 
 
+
      
 }
+
+
+NumericVector<double>&
+ThermalBalance::do_get_solution_vector(void)
+{
+ //  TiberNonlinearSystem* system =
+//     &get_equation_systems().get_system<TiberNonlinearSystem>(
+//         get_equation_system_name());
+
+//   system->get_solution_vector().close();
+//   return system->get_solution_vector();
+}
+
+
 
 
 void
@@ -1244,7 +1263,8 @@ ThermalBalance::do_solve(void)
   }
 
  
-  // do_partitio();
+  // do_partition_bis();
+  
   
   //Only here the elemental results are filled
   if (GrayDomain.size() > 0 && opts.ms_iter > 0 )
@@ -1439,7 +1459,7 @@ ThermalBalance::get_solution_secure(const Elem* elem,
  //   if (values.count(SolDir))
 //    { 
      
-//      ID dof = elem->dof_number(gray_sys_number,0,0);  
+//      IDf = elem->dof_number(gray_sys_number,0,0);  
 //      values[SolDir][0] = (*sol_dir[4])(dof);
 //      values[SolDir][1] = (*sol_dir[10])(dof);
 //      values[SolDir][2] = 0.0;

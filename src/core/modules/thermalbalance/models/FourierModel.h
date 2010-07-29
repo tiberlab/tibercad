@@ -31,9 +31,7 @@ class FourierModel : public HeatTransportModel
     //! Initialize
     virtual void do_init(void);
 
-  //! Constructor
-  FourierModel(const ModelOptions& options) : HeatTransportModel(options){} ;
-
+ 
     /* In some cases it might be useful to reimplement this: */
     // virtual void do_init_interface(const PhysicalModelInterface* comp_A,
     //         const PhysicalModelInterface* comp_B);
@@ -53,7 +51,8 @@ class FourierModel : public HeatTransportModel
 
   private:
 
-  
+   //! Constructor
+  FourierModel(const ModelOptions& options);
   
 };
 

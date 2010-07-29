@@ -8,10 +8,11 @@ TIBER_MODULE(FourierModel, heat_transport, fourier)
 using namespace std;
 
 
-//FourierModel::FourierModel(const ModelOptions& options):HeatTransportModel(options)
-//{
-//  set_type(HeatTransportModel::Fourier);
-//}
+FourierModel::FourierModel(const ModelOptions& options):HeatTransportModel(options)
+{
+  cout<<"SET"<<endl;
+  set_type(HeatTransportModel::Fourier);
+}
 
 
 void

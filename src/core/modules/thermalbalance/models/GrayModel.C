@@ -12,6 +12,7 @@ using namespace std;
 
 GrayModel::GrayModel(const ModelOptions& options):HeatTransportModel(options)
 {
+ 
  set_type(HeatTransportModel::Gray);
 
 }

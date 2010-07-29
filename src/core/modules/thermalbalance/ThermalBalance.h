@@ -53,7 +53,8 @@ class ThermalBalance : public SimulationInterface
     //! We need to create a physical model
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
 					   const Material* mat) const;
-  
+   /*! \copydoc SimulationInterface::do_get_solution_vector() */
+    virtual NumericVector<double>& do_get_solution_vector(void);
 
 
     //! We need to create boundary condition model
@@ -303,6 +304,9 @@ class ThermalBalance : public SimulationInterface
 
     //! A static pointer to this
     static ThermalBalance* _this;
+
+
+ 
 
 };
 
