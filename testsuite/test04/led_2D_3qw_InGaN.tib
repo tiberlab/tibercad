@@ -167,7 +167,7 @@ $Device
 $Models
 { 
 
-   model thermal
+   model thermalbalance
   {
 
      options
@@ -176,20 +176,16 @@ $Models
       physical_regions = all
     }
 
-     physical_model Lattice_thermal_conductivity
-     {
-       kappa_model = constant
-     }
      BC_Regions
     {
-        BC_Region reservoir
+        BC_Region heat_reservoir
    	{
     
          BC_reg_numb = 18
          temperature = 300
    	}
 
-        BC_Region reservoir
+        BC_Region heat_reservoir
    	{
     
          BC_reg_numb = 19
@@ -414,7 +410,7 @@ $Simulation
   temperature = 300
 #  solve = (strain,sweep)
 #  solve = (strain,driftdiffusion) # sweep
-  solve = (strain, sweep_1)
+ # before solve = (strain, sweep_1)
 
   #symmetry = cylindrical
   resultpath =  output # output_test_no_ox_no_alinn_relP  #output_test_alinn_no_pyro_relP  #input_siO2_str_noncyl

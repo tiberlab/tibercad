@@ -115,7 +115,7 @@ $Simulation
   dimension = 1
   mesh_units = 1e-9
   temperature = 200
-  solve = (tt,dd)
+  solve = dd   #before (tt,dd) 
   resultpath = output
   output_format = grace
   plot = (Ec, Ev, Eg, LatticeTemp)

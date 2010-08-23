@@ -148,8 +148,8 @@ $Solver
 
   sweep
   {
-    simulation = selfconsistent
-    #simulation = (dd,tt)
+    #simulation = selfconsistent before
+    simulation = (dd)
     variable = Vb
     start = 0.0
     stop = 1.1
