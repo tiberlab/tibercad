@@ -9,6 +9,7 @@
 #include "Atom.h"
 #include "tensor.h"
 #include "Specie.h"
+#include "tiber_dll.h"
 
 #include <vector>
 #include <map>
