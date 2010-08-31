@@ -3,6 +3,8 @@
 #ifndef _DLLOADER_H_
 #define _DLLOADER_H_
 
+#include "tiber_dll.h"
+
 #include <list>
 #include <string>
 
@@ -11,7 +13,7 @@
  * The given library is looked for in well defined paths. If it is found,
  * it is opened and well defined symbols are looked for.
  */
-class DLLoader
+class TBDLLOCAL DLLoader
 {
 
   public:

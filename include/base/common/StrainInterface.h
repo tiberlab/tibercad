@@ -5,6 +5,7 @@
 #define _STRAININTERFACE_H_
 
 #include "TypeDefs.h"
+#include "tiber_dll.h"
 
 #include "vector_value.h"
 

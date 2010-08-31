@@ -3,6 +3,8 @@
 #ifndef _SCALING_H_
 #define _SCALING_H_
 
+#include "tiber_dll.h"
+
 #include <cassert>
 
 #include "Constants.h"

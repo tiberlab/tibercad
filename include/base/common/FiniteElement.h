@@ -6,9 +6,10 @@
 
 
 #include "TiberCad.h"
+#include "tiber_dll.h"
 
 
-#include "fe.h"
+#include <fe.h>
 
 
 //! A finite element extension which adds scaling and symmetry

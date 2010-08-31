@@ -7,6 +7,7 @@
 #include "ElementSide.h"
 #include "HashMap.h"
 #include "HashSet.h"
+#include "tiber_dll.h"
 
 #include <string>
 #include <map>
@@ -22,7 +23,7 @@ class Node;
  * Boundary IDs are assumed to be unique, even if they refer to boundaries
  * of different spatial dimension.
  */
-class BoundaryRegions : public MeshRegionInfo
+class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 {
 
   public:

@@ -7,6 +7,7 @@
 #include "TypeDefs.h"
 #include "Constants.h"
 #include "SimulationOptions.h"
+#include "tiber_dll.h"
 
 #include "point.h"
 
@@ -241,12 +242,12 @@ class ParticleDensity
     /*!
      * returns \true if the quantum density could be evaluated
      */
-    bool quantum_density(void);
+    bool quantum_density(void) TBDLLOCAL;
 
 
     //! Calculate classical particle density
     template <TiberCad::Statistics>
-    void classical_density(void);
+    void classical_density(void) TBDLLOCAL;
 
 };
 

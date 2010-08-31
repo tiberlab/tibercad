@@ -7,6 +7,7 @@
 //#include "libmesh_common.h"
 //#include "mesh_output.h"
 #include "tecplot_io.h"
+#include "tiber_dll.h"
 
 
 // Forward declarations
@@ -25,7 +26,7 @@ class MeshBase;
 // ------------------------------------------------------------
 // TecplotIO_cell class definition
 //class TecplotIO_cell : public MeshOutput<MeshBase>
-class TecplotIO_cell : public TecplotIO
+class TBDLLOCAL TecplotIO_cell : public TecplotIO
 
 {
  public:

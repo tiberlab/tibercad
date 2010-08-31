@@ -9,6 +9,7 @@
 #include "SolveFailedException.h"
 #include "TypeDefs.h"
 #include "IDSet.h"
+#include "tiber_dll.h"
 
 #include <map>
 #include <list>

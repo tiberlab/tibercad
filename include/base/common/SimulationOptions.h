@@ -3,6 +3,7 @@
 #ifndef _SIMULATIONOPTIONS_H_
 #define _SIMULATIONOPTIONS_H_
 
+#include "tiber_dll.h"
 
 class ModelOptions;
 
@@ -11,8 +12,6 @@ class SimulationOptions
 {
 
   public:
-
-    SimulationOptions(void) {};
 
 
     //! The ambient temperature
@@ -30,10 +29,12 @@ class SimulationOptions
 
 
     //! Initialize the simulation options
-    static void initialize(const ModelOptions& opts);
+    static void initialize(const ModelOptions& opts) TBDLLOCAL;
 
 
   private:
+
+    SimulationOptions(void) TBDLLOCAL {};
     
     //! Level of verbosity
     static int _verbose;

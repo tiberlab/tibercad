@@ -9,7 +9,7 @@
 /*!
   Segment Definition.
 */
-class ISE_Element_1D: public  ISE_Element
+class TBDLLOCAL ISE_Element_1D: public  ISE_Element
 {
  public:
 

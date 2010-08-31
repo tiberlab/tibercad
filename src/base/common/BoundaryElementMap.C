@@ -22,7 +22,7 @@ BoundaryElementMap::get(const Boundary* boundary) const
   map<const Boundary*, SetType>::const_iterator it(_map.find(boundary));
   if (it != _map.end())
 
-  return (it == _map.end()) ? _empty_set : it->second;
+  return ((it == _map.end()) ? _empty_set : it->second);
 }
 
 

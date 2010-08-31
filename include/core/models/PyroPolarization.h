@@ -12,7 +12,7 @@ class Elem;
 class Point;
 
 //! A base class for pyropolarization
-class PyroPolarization : public PhysicalModelInterface
+class TBDLEXPORT PyroPolarization : public PhysicalModelInterface
 {
 
   public:

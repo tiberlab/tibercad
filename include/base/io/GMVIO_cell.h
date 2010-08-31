@@ -4,10 +4,11 @@
 #include <vector>
 
 #include "gmv_io.h"
+#include "tiber_dll.h"
 
 class MeshBase;
 
-class GMVIO_cell : public GMVIO
+class TBDLLOCAL GMVIO_cell : public GMVIO
 {
  public:
   GMVIO_cell ( const MeshBase& mesh) : GMVIO(mesh){};

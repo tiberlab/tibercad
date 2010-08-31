@@ -74,7 +74,7 @@ DDInterfaceModel::do_init(void)
 
   // get surface trap models
   SubmodelIterator it = submodels_begin("trap");
-  const SubmodelIterator end = submodels_end("trap");
+  SubmodelIterator end = submodels_end("trap");
   for ( ; it != end; ++it)
   {
     Trap* t = static_cast<Trap*>(it->second);
@@ -83,6 +83,14 @@ DDInterfaceModel::do_init(void)
       _etraps.insert(t);
     else if (t->get_particle() == 'h')
       _htraps.insert(t);
+  }
+
+  // get surface recombination models
+  it = submodels_begin("recombination");
+  end = submodels_end("recombination");
+  for ( ; it != end; ++it)
+  {
+    cerr << "surface recombination: " << it->second->get_type() << endl;
   }
 }
 

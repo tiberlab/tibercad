@@ -43,7 +43,7 @@ class Boundary
     /*!
      * \param name a user defined name to identify this boundary
      */
-    Boundary(const std::string& names, const ModelOptions& options);
+    Boundary(const std::string& names, const ModelOptions& options) TBDLLOCAL;
 
     //! Destructor
     ~Boundary(void);
@@ -51,7 +51,7 @@ class Boundary
     //! Add a boundary property for simulation with ID \c simulator_id
     /*! \deprecated BoundaryProperties are deprecated */
     void add_boundary_properties(BoundaryProperties* properties,
-        ID simulator_id);
+        ID simulator_id) TBDLLOCAL;
 
     //! Get the boundary property for simulation with ID \c simulator_id
     /*! \deprecated BoundaryProperties are deprecated */

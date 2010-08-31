@@ -19,7 +19,7 @@ namespace base64
 		#include "cdecode.h"
 	}
 	
-	struct decoder
+	struct TBDLLOCAL decoder
 	{
 		base64_decodestate _state;
 		int _buffersize;

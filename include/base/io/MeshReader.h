@@ -3,6 +3,8 @@
 #ifndef _MESHREADER_H_
 #define _MESHREADER_H_
 
+#include "tiber_dll.h"
+
 #include <string>
 
 class MeshBase;
@@ -14,7 +16,7 @@ class BoundaryRegions;
 /*!
  *  Calls the  appropriate mesh reading class.  
  */
-class MeshReader
+class TBDLLOCAL MeshReader
 {
 
 

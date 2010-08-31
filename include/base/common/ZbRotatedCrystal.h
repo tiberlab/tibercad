@@ -3,7 +3,7 @@
 
 #include "RotatedCrystal.h"
 
-class ZbRotatedCrystal : public RotatedCrystal
+class TBDLLOCAL ZbRotatedCrystal : public RotatedCrystal
 {
 
  public:

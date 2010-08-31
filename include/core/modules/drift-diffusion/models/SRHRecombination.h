@@ -26,7 +26,7 @@
  *         \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
  * \f]
  */
-class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
+class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 {
 
   public:
@@ -59,7 +59,7 @@ class TBDLEXPORT SRHRecombination : public RecombinationModelInterface
   protected:
 
     //! Constructor
-    TBDLLOCAL SRHRecombination(const ModelOptions& options);
+    SRHRecombination(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void);

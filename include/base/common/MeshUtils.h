@@ -6,6 +6,7 @@
 
 #include "TypeDefs.h"
 #include "point.h"
+#include "tiber_dll.h"
 
 #include <set>
 
@@ -14,7 +15,7 @@ class MeshBase;
 
 
 //! A few utilities for operations on a mesh
-class MeshUtils
+class TBDLLOCAL MeshUtils
 {
 
   public:

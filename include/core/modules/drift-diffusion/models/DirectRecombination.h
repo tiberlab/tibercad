@@ -12,7 +12,7 @@
  * This class implements direct recombination processes that can be
  * modeled by \f[R_{direct}=C(np-n_i^2)\f]
  */
-class DirectRecombination : public RecombinationModelInterface
+class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
 {
 
   public:

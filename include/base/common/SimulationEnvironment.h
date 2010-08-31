@@ -8,6 +8,7 @@
 #include "Device.h"
 #include "BoundaryNodeMap.h"
 #include "BoundaryElementMap.h"
+#include "tiber_dll.h"
 
 #include "elem.h"
 
@@ -91,14 +92,14 @@ class SimulationEnvironment
      * simulation
      * \param boundary_ids the set of boundary numbers
      */
-    void add_boundary(Boundary* boundary, const std::vector<ID>& boundary_ids);
+    void add_boundary(Boundary* boundary, const std::vector<ID>& boundary_ids) TBDLLOCAL;
 
 
     //! Prepare structures that are needed for other setup
     /*!
      * Creates a list with all elements belonging to this simulation
      */
-    void prepare(void);
+    void prepare(void) TBDLLOCAL;
 
 
     //! Initialize the environment
@@ -106,7 +107,7 @@ class SimulationEnvironment
      * Initialization does the following things:
      * \li create data structures to get access to the boundary properties
      */
-    void init(void);
+    void init(void) TBDLLOCAL;
 
 
     //! Prepares the environment for a solve
@@ -323,11 +324,11 @@ class SimulationEnvironment
 
 
     //! Create the list of elements
-    void create_element_list(void);
+    void create_element_list(void) TBDLLOCAL;
 
 
     //! Creates the boundary element maps
-    void create_bc_maps(void);
+    void create_bc_maps(void) TBDLLOCAL;
 
 
     //! Add the boundary for a given boundary number
@@ -338,7 +339,7 @@ class SimulationEnvironment
      * simulation
      * \param boundary_id the boundary number
      */
-    void add_boundary(Boundary* boundary, ID boundary_id);
+    void add_boundary(Boundary* boundary, ID boundary_id) TBDLLOCAL;
 
 
     //! The device

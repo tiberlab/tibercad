@@ -26,7 +26,7 @@ class NodeObject : public PhysicalObject
     /*!
      * \param options options for this boundary
      */
-    static NodeObject* create(const ModelOptions& options);
+    static NodeObject* create(const ModelOptions& options) TBDLLOCAL;
 
 
   protected:

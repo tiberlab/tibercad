@@ -59,7 +59,7 @@
  */
 
 
-class InputParser{
+class TBDLLOCAL InputParser{
 
 
  public:

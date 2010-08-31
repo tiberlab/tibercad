@@ -4,6 +4,7 @@
 #define _TIBERNONLINEARSYSTEM_H_
 
 #include "TiberEqSystem.h"
+#include "tiber_dll.h"
 
 #include "nonlinear_implicit_system.h"
 #include "enum_solver_type.h"

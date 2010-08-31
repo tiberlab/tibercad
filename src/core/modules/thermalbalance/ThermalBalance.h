@@ -5,9 +5,10 @@
 
 #include "SimulationInterface.h"
 #include "ElementSide.h"
-#include "TiberLinearSystem.h"
 #include "SimulationEnvironment.h"
 
+
+class TiberLinearSystem;
 
 /*!
  * 

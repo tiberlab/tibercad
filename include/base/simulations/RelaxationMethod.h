@@ -7,7 +7,7 @@
 
 
 //! Interface for self-consistent calculations
-class RelaxationMethod : public SelfconsistentSolver
+class TBDLLOCAL RelaxationMethod : public SelfconsistentSolver
 {
 
   public:

@@ -14,7 +14,7 @@ class ExcitonTransport;
  * This class implements Exciton generation processes that can be
  * modeled by \f[G_{x}=Cnp\f]
  */
-class ExcitonGeneration : public RecombinationModelInterface
+class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
 {
 
   public:

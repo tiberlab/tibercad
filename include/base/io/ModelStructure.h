@@ -20,7 +20,7 @@
  * region IDs and  their definition.
  */
 
-class ModelStructure{
+class TBDLLOCAL ModelStructure{
 
 
  public:

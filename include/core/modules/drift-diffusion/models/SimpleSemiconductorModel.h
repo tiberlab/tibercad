@@ -19,7 +19,7 @@ class Elem;
 /*!
  * This simple model uses manually provided band properties
  */
-class SimpleSemiconductorModel : public DriftDiffusionProperties
+class TBDLLOCAL SimpleSemiconductorModel : public DriftDiffusionProperties
 {
   public:
 

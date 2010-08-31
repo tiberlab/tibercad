@@ -3,6 +3,7 @@
 #ifndef _VARIABLE_H_
 #define _VARIABLE_H_
 
+#include "tiber_dll.h"
 
 #include <map>
 #include <string>

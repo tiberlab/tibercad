@@ -3,6 +3,8 @@
 #ifndef _DATABASE_H_
 #define _DATABASE_H_
 
+#include "tiber_dll.h"
+
 #include <string>
 #include <vector>
 
@@ -214,23 +216,23 @@ class Database
 
 
     //! Check the data file
-    bool check_data_file(const std::string& name) const;
+    bool check_data_file(const std::string& name) const TBDLLOCAL;
 
     //! Get the automatic data file name
-    const std::string get_data_file(const std::string& material) const;
+    const std::string get_data_file(const std::string& material) const TBDLLOCAL;
 
     //! Open the database
     /*!
      * This method is called by all other methods that
      * access the database
      */
-    void open(void) const;
+    void open(void) const TBDLLOCAL;
 
     //! Does the real opening of the database
-    void do_open(void) const;
+    void do_open(void) const TBDLLOCAL;
 
     //! Check for a variable and throw exception if it is not found
-    void require_variable(const std::string& variable) const;
+    void require_variable(const std::string& variable) const TBDLLOCAL;
 
 };
 

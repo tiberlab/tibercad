@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _BONDMAP_H_
 #define _BONDMAP_H_
 
@@ -63,27 +65,27 @@ private:
   std::vector<std::vector<std::vector<std::vector<unsigned int> > > >  _grid_cell;
 
   //! Set private members related to grid definition
-  void define_grid(const double minimum_spacing, const Tensor1& edge_min, const Tensor1& edge_max);
+  void define_grid(const double minimum_spacing, const Tensor1& edge_min, const Tensor1& edge_max) TBDLLOCAL;
 
   //! Include atom indexes in proper cells
-  void include_atoms(const std::vector<Atom>& basis);
+  void include_atoms(const std::vector<Atom>& basis) TBDLLOCAL;
 
   //! Process atoms in defined cells. Periodicity informations are used internally
   //! for border cells
   void process_cell(const std::vector<Atom>& basis, const unsigned int x1,
       const unsigned int y1, const unsigned int z1,
-      int x2, int y2, int z2);
+      int x2, int y2, int z2) TBDLLOCAL;
 
 
   //!Process a cell with all surrounding cells (only for existing ones, doen't take in account periodicity)
   void process_surrounding_cell(const std::vector<Atom>& basis, const unsigned int x, const unsigned int y,
-      const unsigned int z);
+      const unsigned int z) TBDLLOCAL;
 
 
   //! Process a single atom with all atoms of a cell
   void process_atom_with_cell(const std::vector<Atom>& basis, const unsigned int i,
       const unsigned int x, const unsigned int y,
-      const unsigned int z, const Tensor1& period);
+      const unsigned int z, const Tensor1& period) TBDLLOCAL;
 
   ////! Same as above, but without periodicity (period = 0)
   //void process_atom_with_cell(const std::vector<Atom>& basis, const unsigned int i,
@@ -91,16 +93,16 @@ private:
 
   //! Process two atoms
   void process_atoms(const std::vector<Atom>& basis, const unsigned int i,
-      const unsigned int j, const Tensor1& period);
+      const unsigned int j, const Tensor1& period) TBDLLOCAL;
 
   //! Build cutoff distancies map
-  void set_cutoff();
+  void set_cutoff() TBDLLOCAL;
 
   //! Map for cutoff parameters
   std::map<Specie, double> _cutoff;
 
   //! Clean informations no more useful after bond map calculation
-  void clean();
+  void clean() TBDLLOCAL;
 
   //------------------------------------------------------------------
   //TODO: translation vector and double pointer must be substituted

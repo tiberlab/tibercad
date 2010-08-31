@@ -3,6 +3,7 @@
 #ifndef _RAMP_H_
 #define _RAMP_H_
 
+#include "tiber_dll.h"
 #include "TypeDefs.h"
 
 #include <vector>
@@ -13,7 +14,7 @@ class SimulationInterface;
 
 
 //! Ramp a variable in quasistationary mode
-class Ramp
+class TBDLLOCAL Ramp
 {
 
   public:

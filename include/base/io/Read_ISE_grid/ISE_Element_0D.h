@@ -13,7 +13,7 @@ using namespace  std;
 /*!
   Point Definition.
 */
-class ISE_Element_0D : public ISE_Element
+class TBDLLOCAL ISE_Element_0D : public ISE_Element
 {
  public:
   //! Constructor.

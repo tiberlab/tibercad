@@ -19,7 +19,7 @@ namespace base64
 		#include "cencode.h"
 	}
 	
-	struct encoder
+	struct TBDLLOCAL encoder
 	{
 		base64_encodestate _state;
 		int _buffersize;

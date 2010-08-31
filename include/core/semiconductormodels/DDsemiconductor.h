@@ -8,13 +8,14 @@
      degeneracy 
 */
 
-#include "tensor.h"
-#include <vector>
 #include "PhysicalModelInterface.h"
-
 #include "KPbulkHamiltonian.h"
 
-class DDsemiconductor : public PhysicalModelInterface
+#include "tensor.h"
+
+#include <vector>
+
+class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
 {
  public:
 

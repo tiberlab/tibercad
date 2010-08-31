@@ -172,7 +172,7 @@ class Material : public PhysicalObject
 
 
     //! Clear all doping
-    void clear_doping(void);
+    void clear_doping(void) TBDLLOCAL;
 
 
 };

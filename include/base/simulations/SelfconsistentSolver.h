@@ -9,7 +9,7 @@
 class XMonitor;
 
 //! Interface for self-consistent calculations
-class SelfconsistentSolver : public SimulationInterface
+class TBDLLOCAL SelfconsistentSolver : public SimulationInterface
 {
 
   public:

@@ -5,7 +5,7 @@
 
 #include "ModelOptions.h"
 #include "Initializer.h"
-#include "TypeDefs.h"
+#include "tiber_dll.h"
 
 // For debugging
 #include "reference_counted_object.h"
@@ -107,12 +107,12 @@ class TiberModelObject
      */
     template <typename T>
     static T* create_from_library(const std::string& name,
-        const ModelOptions& options = ModelOptions());
+        const ModelOptions& options = ModelOptions()) TBDLLOCAL;
 
 
     //! Create an object from a given creator function
     static TiberModelObject* create_from_function(create_t create, destroy_t destroy,
-        const ModelOptions& options = ModelOptions());
+        const ModelOptions& options = ModelOptions()) TBDLLOCAL;
 
 
     //! Create a new model of the same type
@@ -242,15 +242,15 @@ class TiberModelObject
 
 
     //! Don't allow default constructor
-    TiberModelObject(void);
+    TiberModelObject(void) TBDLLOCAL;
 
 
     //! Don't allow copy construction
-    TiberModelObject(const TiberModelObject& other);
+    TiberModelObject(const TiberModelObject& other) TBDLLOCAL;
 
 
     //! Don't allow assignment operator
-    TiberModelObject& operator=(const TiberModelObject& rhs);
+    TiberModelObject& operator=(const TiberModelObject& rhs) TBDLLOCAL;
 
 
     //! Try to create an object from a dynamic link library
@@ -260,7 +260,7 @@ class TiberModelObject
      * \return \c NULL if library cannot be opened
      */
     static TiberModelObject* _create_from_library(const std::string& name,
-        const ModelOptions& options = ModelOptions());
+        const ModelOptions& options = ModelOptions()) TBDLLOCAL;
 
 
 
@@ -351,11 +351,9 @@ TiberModelObject::set_name(const std::string& name)
 
 inline
 void
-TiberModelObject::override_parameter_string(const std::string& name,
-        std::string& s) const
+TiberModelObject::override_parameter_string(const std::string&,
+        std::string&) const
 {
-  ignore_unused_variable(name);
-  ignore_unused_variable(s);
 }
 
 

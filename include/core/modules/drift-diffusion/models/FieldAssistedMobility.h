@@ -13,7 +13,7 @@
  * \mu = \mu_0 e^{\sqrt{|E|/E_0}}
  * \f]
  */
-class FieldAssistedMobility : public MobilityModelInterface
+class TBDLLOCAL FieldAssistedMobility : public MobilityModelInterface
 {
 
   public:

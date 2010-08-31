@@ -8,7 +8,7 @@
 
 //! The real initializer class aware of type
 template <typename T>
-class Initializer : public InitializerBase
+class TBDLLOCAL Initializer : public InitializerBase
 {
 
   public:

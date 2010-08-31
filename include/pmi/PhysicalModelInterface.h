@@ -36,7 +36,7 @@ class Material;
  * This method could use the options for instantiation of specialized
  * classes.
  */
-class PhysicalModelInterface : public TiberModelObject
+class TBDLEXPORT PhysicalModelInterface : public TiberModelObject
 {
 
   public:
@@ -210,7 +210,7 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Print some info
-    void print_info(void);
+    void print_info(void) TBDLLOCAL;
 
 
     //! Get the name of the module this object belong to
@@ -444,11 +444,11 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Disable copy constructor
-    PhysicalModelInterface(const PhysicalModelInterface&);
+    PhysicalModelInterface(const PhysicalModelInterface&) TBDLLOCAL;
 
 
     //! Disable assignment operator
-    PhysicalModelInterface& operator=(const PhysicalModelInterface&);
+    PhysicalModelInterface& operator=(const PhysicalModelInterface&) TBDLLOCAL;
 
 
     //! The unique ID of this model
@@ -493,7 +493,7 @@ class PhysicalModelInterface : public TiberModelObject
      * This method registers every new model that gets created and assigns
      * it a unique model ID.
      */
-    static void _register_model(PhysicalModelInterface* model);
+    static void _register_model(PhysicalModelInterface* model) TBDLLOCAL;
 
 
     //! Set the model type (= identifier)

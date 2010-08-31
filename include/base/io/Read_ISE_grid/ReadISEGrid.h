@@ -12,6 +12,7 @@
 #include <InitFailedException.h>
 
 #include "TypeDefs.h"
+#include "tiber_dll.h"
 
 //  LibMesh  include files
 #include "mesh_input.h"
@@ -25,7 +26,7 @@ class ISE_Edge;
 class ISE_Face;
 
 //! Reads an ISE mesh (*.grd file).
-class ReadISEGrid : public MeshInput<MeshBase>
+class TBDLLOCAL ReadISEGrid : public MeshInput<MeshBase>
 {
 
  public:

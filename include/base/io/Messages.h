@@ -3,6 +3,8 @@
 #ifndef _MESSAGES_H_
 #define _MESSAGES_H_
 
+#include "tiber_dll.h"
+
 #include <string>
 #include <iostream>
 #include <fstream>

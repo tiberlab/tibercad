@@ -20,7 +20,7 @@
  * Contains  name,  region ID, material, Options. 
  */
 
-class RegionStructure{
+class TBDLLOCAL RegionStructure{
 
 
  public:

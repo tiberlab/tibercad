@@ -56,7 +56,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Set the simulation environment for this simulation
-    void set_environment(SimulationEnvironment* environment);
+    void set_environment(SimulationEnvironment* environment) TBDLLOCAL;
 
 
     //! Get the simulation environment for this simulation
@@ -84,7 +84,7 @@ class SimulationInterface : public TiberModelObject
      * if the \c typr does not exist.
      */
     static SimulationInterface* create(const std::string& type,
-        const ModelOptions& options = ModelOptions());
+        const ModelOptions& options = ModelOptions()) TBDLLOCAL;
 
 
     //! Initialize the system
@@ -92,7 +92,7 @@ class SimulationInterface : public TiberModelObject
      * This method calls do_init() after some health checks
      * and print_info();
      */
-    void init(void) throw (InitFailedException);
+    void init(void) throw (InitFailedException) TBDLLOCAL;
 
 
     //! Setup the available solution variables
@@ -101,14 +101,14 @@ class SimulationInterface : public TiberModelObject
      * because others could want to know about solution variables
      * during initialisation.
      */
-    void setup_solution_variables(void);
+    void setup_solution_variables(void) TBDLLOCAL;
 
 
     //! Print some useful info
     /*!
      * Calls do_print_info()
      */
-    void print_info(void);
+    void print_info(void) TBDLLOCAL;
 
 
     //! Solve the system for equilibrium
@@ -488,7 +488,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Set the Control object
-    void set_control(Control* control);
+    void set_control(Control* control) TBDLLOCAL;
 
 
     //! Get the Control object
@@ -554,15 +554,15 @@ class SimulationInterface : public TiberModelObject
 
     //! Create a boundary model to be used with this simulation
     PhysicalModel* new_boundary_model(const ModelOptions& options,
-        const Material* material_A, const Material* material_B);
+        const Material* material_A, const Material* material_B) TBDLLOCAL;
 
 
     //! Create an edge model
-    PhysicalModel* new_edge_model(const ModelOptions& options);
+    PhysicalModel* new_edge_model(const ModelOptions& options) TBDLLOCAL;
 
 
     //! Create a nodal model
-    PhysicalModel* new_node_model(const ModelOptions& options);
+    PhysicalModel* new_node_model(const ModelOptions& options) TBDLLOCAL;
 
 
     //! Get the physical model for a certain region ID
@@ -1282,7 +1282,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! create a unique name for the equation system
-    void create_equation_system_name(void);
+    void create_equation_system_name(void) TBDLLOCAL;
 
 
     //! Set the simulation type (= identifier)
@@ -1290,18 +1290,18 @@ class SimulationInterface : public TiberModelObject
      * The identifier is used at creation time to know which type of
      * simulation to create.
      */
-    void set_type(const std::string& type);
+    void set_type(const std::string& type) TBDLLOCAL;
 
 
     //! Print all registered solution variables
-    void print_known_solution_variables(void) const;
+    void print_known_solution_variables(void) const TBDLLOCAL;
 
 
     //! Do not allow copy constructor
-    SimulationInterface(const SimulationInterface&);
+    SimulationInterface(const SimulationInterface&) TBDLLOCAL;
 
     //! Do not allow assignement operator
-    SimulationInterface& operator=(const SimulationInterface&);
+    SimulationInterface& operator=(const SimulationInterface&) TBDLLOCAL;
 
 
     //! \see get_bulk_model()

@@ -5,6 +5,7 @@
 #define _GRACEIO_H_
 
 #include "DataOutput.h"
+#include "tiber_dll.h"
 
 
 // forward declaration
@@ -13,7 +14,7 @@ class Elem;
 
 
 //! Write nodal and elemental data using a grace-compatible format
-class GraceIO : public DataOutput
+class TBDLLOCAL GraceIO : public DataOutput
 {
 
  public:

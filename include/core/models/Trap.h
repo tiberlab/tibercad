@@ -16,7 +16,7 @@
  * \li donor like traps, type = ``donor''
  * \li acceptor like traps, type = ``acceptor''
  */
-class Trap : public PhysicalModelInterface
+class TBDLEXPORT Trap : public PhysicalModelInterface
 {
 
   public:
@@ -113,7 +113,7 @@ class Trap : public PhysicalModelInterface
 
 
     //! Calculate the trap level
-    double _trap_level(void) const;
+    double _trap_level(void) const TBDLLOCAL;
 
 };
 

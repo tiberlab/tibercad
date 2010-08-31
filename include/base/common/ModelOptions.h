@@ -4,6 +4,7 @@
 #define _MODELOPTIONS_H_
 
 #include "Utils.h"
+#include "tiber_dll.h"
 
 #include <map>
 #include <vector>

@@ -5,7 +5,7 @@
 #include "ModifiedBroyden.h"
 
 //! Based on the paper Journal of Chemical Physics v.108 p.4426 (Appendix B)
-class DIISMBmethod: public ModifiedBroyden
+class TBDLLOCAL DIISMBmethod: public ModifiedBroyden
 {
  public:
 

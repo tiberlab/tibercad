@@ -5,6 +5,7 @@
 #define _TEMPERATUREINTERFACE_H_
 
 #include "TypeDefs.h"
+#include "tiber_dll.h"
 
 
 #include <set>

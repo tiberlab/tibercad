@@ -9,7 +9,7 @@
 /*!
  * \brief A Schottky contact
  */
-class SchottkyContact : public ElectricalContact
+class TBDLLOCAL SchottkyContact : public ElectricalContact
 {
   public:
 

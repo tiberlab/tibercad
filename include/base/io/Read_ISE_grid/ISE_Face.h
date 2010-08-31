@@ -13,7 +13,7 @@ using  namespace  std ;
 //! Face Class
 /*! Face Class. Contains edges and orientations.
  */
-class ISE_Face
+class TBDLLOCAL ISE_Face
 {
  public:
 

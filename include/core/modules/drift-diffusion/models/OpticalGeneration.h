@@ -13,7 +13,7 @@
  * modeled by \f[G_{x}= G]
  *
  */
-class OpticalGeneration : public RecombinationModelInterface
+class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
 {
 
   public:

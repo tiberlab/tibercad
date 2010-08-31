@@ -6,6 +6,7 @@
 
 #include "TypeDefs.h"
 #include "DataOutput.h"
+#include "tiber_dll.h"
 
 
 // forward declaration
@@ -14,7 +15,7 @@ class Elem;
 
 
 //! Write data using VTK XML unstructured grid format (.vtu)
-class TiberVTKIO : public DataOutput
+class TBDLLOCAL TiberVTKIO : public DataOutput
 {
 
  public:

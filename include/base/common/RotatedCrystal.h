@@ -3,10 +3,12 @@
 #ifndef _ROTATED_CRYSTAL_H_
 #define _ROTATED_CRYSTAL_H_
 
-#include "tensor.h"
-#include <vector>
-
 #include "PhysicalModelInterface.h"
+#include "tiber_dll.h"
+
+#include "tensor.h"
+
+#include <vector>
 
 
 //! Defines a rotation in space

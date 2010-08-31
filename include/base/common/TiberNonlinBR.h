@@ -11,7 +11,7 @@ class TiberLinearSolver;
 
 
 //! An implementation of line search to solve nonlinear systems
-class TiberNonlinBR : public TiberLineSearch
+class TBDLLOCAL TiberNonlinBR : public TiberLineSearch
 {
 
   public:

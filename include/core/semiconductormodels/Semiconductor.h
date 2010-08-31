@@ -6,14 +6,15 @@
      The class can read parameters database and convert them into kp parameters 
 */
 
-#include "tensor.h"
-#include <vector>
 #include "PhysicalModelInterface.h"
 #include "TemperatureInterface.h"
-
 #include "KPparameters.h"
 
-class Semiconductor : public PhysicalModelInterface
+#include "tensor.h"
+
+#include <vector>
+
+class TBDLEXPORT Semiconductor : public PhysicalModelInterface
 {
  public:
  

@@ -2,7 +2,7 @@
 #define _WZROTATEDCRYSTAL_H_
 
 #include "RotatedCrystal.h"
-class WzRotatedCrystal : public RotatedCrystal
+class TBDLLOCAL WzRotatedCrystal : public RotatedCrystal
 {
  public:
   //!Constructor

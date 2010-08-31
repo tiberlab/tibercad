@@ -98,6 +98,10 @@ ifneq ($(findstring cygwin,$(hostos)),cygwin)
   CXXFLAGS += -pthread
 endif
 
+#ifeq ($(build_modules), yes)
+#  CXXFLAGS += -fvisibility=default
+#endif
+
 vpath %.h $(include_dirs)
 
 

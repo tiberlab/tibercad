@@ -3,6 +3,7 @@
 #include "ThermalBalance.h"
 #include "ThermalModel.h"
 #include "ThermalBoundaryModel.h"
+#include "TiberLinearSystem.h"
 #include "Messages.h"
 #include "ModelOptions.h"
 #include "equation_systems.h"

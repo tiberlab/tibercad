@@ -3,6 +3,8 @@
 #ifndef __READGMSH_H__
 #define __READGMSH_H__
 
+#include "tiber_dll.h"
+
 // libMesh includes
 #include "libmesh_common.h"
 #include "mesh_input.h"
@@ -20,7 +22,7 @@ class MeshRegionInfo;
  * GMSH software see
  * <a href="http://http://www.geuz.org/gmsh/">the Gmsh home page</a>
  */
-class ReadGMSH : public MeshInput<MeshBase>
+class TBDLLOCAL ReadGMSH : public MeshInput<MeshBase>
 {
   public:
 

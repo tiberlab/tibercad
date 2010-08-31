@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _SPECIE_H_
 #define _SPECIE_H_
 

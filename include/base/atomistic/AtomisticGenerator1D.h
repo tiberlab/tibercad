@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef  _ATOMISTICGENERATOR1D_H_
 #define _ATOMISTICGENERATOR1D_H_
 
@@ -6,7 +8,7 @@
 #include "AtomisticGenerator.h"
 
 
-class AtomisticGenerator1D : public AtomisticGenerator
+class TBDLLOCAL AtomisticGenerator1D : public AtomisticGenerator
 {
 
 

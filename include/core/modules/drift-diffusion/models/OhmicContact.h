@@ -6,7 +6,7 @@
 #include "ElectricalContact.h"
 
 
-class OhmicContact : public ElectricalContact
+class TBDLLOCAL OhmicContact : public ElectricalContact
 {
   public:
 

@@ -16,7 +16,7 @@
  * \mu = \mu_{max} \left(\frac{T}{T_0}\right)^{-\gamma}
  * \f]
  */
-class ConstantMobility : public MobilityModelInterface
+class TBDLLOCAL ConstantMobility : public MobilityModelInterface
 {
 
   public:

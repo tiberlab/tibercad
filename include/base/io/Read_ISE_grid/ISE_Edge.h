@@ -9,7 +9,7 @@ using  namespace  std ;
 /*!
   Contains two Vertex pointers.
 */
-class ISE_Edge
+class TBDLLOCAL ISE_Edge
 {
  public:
   //!  Constructor 

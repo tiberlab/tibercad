@@ -13,7 +13,7 @@ using namespace  std;
 /*!
   Contains faces data and orientations.
 */
-class ISE_Element_3D : public ISE_Element
+class TBDLLOCAL ISE_Element_3D : public ISE_Element
 {
  public:
   //!  Constructor

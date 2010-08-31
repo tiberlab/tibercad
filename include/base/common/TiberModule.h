@@ -3,7 +3,9 @@
 #ifndef _TIBERMODULE_H_
 #define _TIBERMODULE_H_
 
+#include "tiber_dll.h"
 
+#ifdef BUILD_TIBER_MODULES
 
 //
 // Provides macros needed to create a shared TiberCAD module
@@ -13,20 +15,6 @@
 #define TBDESTROYFUNC __destroy
 #define TBCREATEFUNCSYM "__create"
 #define TBDESTROYFUNCSYM "__destroy"
-
-#ifdef BUILD_TIBER_MODULES
-# ifdef CYGWIN
-#  define TBDLEXPORT __declspec(dllexport)
-#  define TBDLLOCAL
-# else
-#  ifdef GCC_HASVISIBILITY
-#    define TBDLEXPORT __attribute__ ((visibility("default")))
-#    define TBDLLOCAL __attribute__ ((visibility("hidden")))
-#  else
-#    define TBDLEXPORT
-#    define TBDLLOCAL
-#  endif
-# endif
 
 /*!
  * \def TIBER_MODULE(classname, model [, type])
@@ -57,8 +45,6 @@
 
 #else
 
-# define TBDLEXPORT
-# define TBDLLOCAL
 # define TIBER_MODULE(classname, model, ...)
 
 #endif // BUILD_TIBER_MODULES

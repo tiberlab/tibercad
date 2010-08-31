@@ -1,6 +1,8 @@
 #ifndef ISE_VERTEX_H_
 #define ISE_VERTEX_H_
 
+#include "tiber_dll.h"
+
 #include <vector>
 
 using  namespace std;
@@ -9,7 +11,7 @@ using  namespace std;
 /*! 
   Contains node coordinates and id.
 */
-class ISE_Vertex
+class TBDLLOCAL ISE_Vertex
 {
  public:
   //! Constructor.

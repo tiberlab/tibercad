@@ -16,7 +16,7 @@
  * \mu = \mu_{max} \left(\frac{T}{T_0}\right)^{-\gamma}
  * \f]
  */
-class FieldDependentMobility : public MobilityModelInterface
+class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
 {
 
   public:

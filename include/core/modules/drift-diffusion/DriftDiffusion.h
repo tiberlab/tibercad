@@ -87,7 +87,7 @@ template<typename T> class SparseMatrix;
  * \li \c recombination.total the total net recombination rate
  *
  */
-class DriftDiffusion : public SimulationInterface
+class TBDLLOCAL DriftDiffusion : public SimulationInterface
 {
   public:
 

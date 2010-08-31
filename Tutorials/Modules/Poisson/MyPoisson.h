@@ -7,12 +7,12 @@
 
 /*!
  * 
- * \brief This is an example implementation of the MyPoisson equation to
+ * \brief This is an example implementation of the Poisson equation to
  *        help module development.
  *
  * Illustrates the basic usage of the SimulationInterface API.
  */
-class MyPoisson : public SimulationInterface
+class TBDLLOCAL MyPoisson : public SimulationInterface
 {
 
   public:

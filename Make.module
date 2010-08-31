@@ -12,9 +12,9 @@ target :=
 
 
 CPPFLAGS += -DMODULE_NAME=$(MODULE_NAME)
-MODULE_CXXFLAGS := -fvisibility=hidden
 MODULE_LDFLAGS += -L$(topdir)/lib -ltibercad
 CPPFLAGS += $(MODULE_INCLUDES)
+CXXFLAGS += $(MODULE_CXXFLAGS)
 
 
 modulelib = $(shell echo `grep TIBER_MODULE $(1) | sed 's/MODULE_NAME/$(MODULE_NAME)/' \
@@ -34,7 +34,7 @@ target += $(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1))
 $(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,%$$(obj-suffix),$(1))
 	@echo "Linking module $$(notdir $$@) ..."
 	@[ -d $$(dir $$@) ] || mkdir -p  $$(dir $$@)
-	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $$(MODULE_CXXFLAGS) $(2) $$(MODULE_LDFLAGS) \
+	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $(2) $$(MODULE_LDFLAGS) \
 			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 
 endef

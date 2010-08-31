@@ -34,6 +34,8 @@
 #include <fstream>
 #include <zlib.h>
 
+//#pragma GCC visibility push(hidden)
+
 #ifdef GZSTREAM_NAMESPACE
 namespace GZSTREAM_NAMESPACE {
 #endif
@@ -114,6 +116,8 @@ public:
 #ifdef GZSTREAM_NAMESPACE
 } // namespace GZSTREAM_NAMESPACE
 #endif
+
+//#pragma GCC visibility pop
 
 #endif // GZSTREAM_H
 // ============================================================================

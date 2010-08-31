@@ -11,7 +11,7 @@ using  namespace std;
 /*!
   Contains general methods.
 */
-class ISE_Element : public ReferenceCountedObject<ISE_Element>
+class TBDLLOCAL ISE_Element : public ReferenceCountedObject<ISE_Element>
 {
  public:
 

@@ -4,6 +4,7 @@
 #define _PHYSICALOBJECT_H_
 
 #include "TiberModelObject.h"
+#include "TypeDefs.h"
 
 #include <map>
 

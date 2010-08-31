@@ -20,7 +20,7 @@
  *      \left(1 + H e^{-\{n,p\}/N_0}\right)
  * \f]
  */
-class TBDLEXPORT AugerRecombination : public RecombinationModelInterface
+class TBDLLOCAL AugerRecombination : public RecombinationModelInterface
 {
 
   public:
@@ -44,7 +44,7 @@ class TBDLEXPORT AugerRecombination : public RecombinationModelInterface
   protected:
 
     //! Constructor
-    TBDLLOCAL AugerRecombination(const ModelOptions& options);
+    AugerRecombination(const ModelOptions& options);
 
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void);

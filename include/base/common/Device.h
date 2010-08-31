@@ -54,11 +54,11 @@ class Device
      * \li "meshfile" -> filename
      * \li "mesh_units" -> the units of the mesh (cf. get_mesh_units())
      */
-    static Device* create(const ModelOptions& options);
+    static Device* create(const ModelOptions& options) TBDLLOCAL;
 
 
     //! Destroy a Device object
-    static void destroy(Device* device);
+    static void destroy(Device* device) TBDLLOCAL;
 
 
     //! Get a reference to the mesh
@@ -73,7 +73,7 @@ class Device
     /*!
      * This method will call \c init() of all Materials in this device
      */
-    void init(void);
+    void init(void) TBDLLOCAL;
 
 
     //! Set a material for a number of geometrical regions
@@ -86,16 +86,16 @@ class Device
      * \param region_name the name to be assigned
      */
     void set_material(Material* material, const std::vector<ID>& region_ids,
-        const std::string& region_name);
+        const std::string& region_name) TBDLLOCAL;
 
 
     //! Set an atomistic structure to be kept in structures map
     void set_atomistic_structure(const std::string& name,
-        AtomisticStructure* atomistic_structure);
+        AtomisticStructure* atomistic_structure) TBDLLOCAL;
 
 
     //! Set the Control module which will control this device
-    void set_control(Control* control);
+    void set_control(Control* control) TBDLLOCAL;
 
 
     //! Get the material for a given region ID
@@ -197,7 +197,7 @@ class Device
      * Only active regions are returned (that is regions that have a material
      * associated).
      */
-    const IDSet& get_active_region_ids(void) const;
+    const IDSet& get_active_region_ids(void) const TBDLLOCAL;
 
 
     //! Get the name of a region
@@ -227,14 +227,14 @@ class Device
      * Only active regions are returned (that is regions that have a material
      * associated).
      */
-    void get_active_region_ids(const std::string& name, std::vector<ID>& ids) const;
+    void get_active_region_ids(const std::string& name, std::vector<ID>& ids) const TBDLLOCAL;
 
 
     //! Get the region IDs of the mesh region with name \c name
     /*!
      * This looks only in the list of original mesh region names.
      */
-    void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const;
+    void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const TBDLLOCAL;
 
 
     /* //! Get a const reference to the boundary region descriptor */
@@ -252,7 +252,7 @@ class Device
 
 
     //! Define a cluster
-    void set_cluster(const std::string& name, const std::vector<ID>& ids);
+    void set_cluster(const std::string& name, const std::vector<ID>& ids) TBDLLOCAL;
 
 
     //! Get the type of symmetry
@@ -292,7 +292,7 @@ class Device
      * The \c boundary_nodes map has to contain all nodes for each boundary
      * for which a boundary condition is implied.
      */
-    Device(void);
+    Device(void) TBDLLOCAL;
 
 
     //! Set a material for a physical region
@@ -302,11 +302,11 @@ class Device
      * \throws {InitFailedException if \c region_id is invalid or already
      * used.}
      */
-    void set_material(Material* material, ID region_id);
+    void set_material(Material* material, ID region_id) TBDLLOCAL;
 
 
     //! Set the name for a physical region
-    void set_region_name(const std::string& name, const std::vector<ID>& ids);
+    void set_region_name(const std::string& name, const std::vector<ID>& ids) TBDLLOCAL;
 
 
     //! Set options for this device
@@ -315,11 +315,11 @@ class Device
      * special methods.
      * Options have to be specified at creation time.
      */
-    void set_options(const ModelOptions& options);
+    void set_options(const ModelOptions& options) TBDLLOCAL;
 
 
     //! Get a reference to the model options
-    ModelOptions& get_options(void);
+    ModelOptions& get_options(void) TBDLLOCAL;
 
 
     //! Creates the mesh and the equation system
@@ -327,7 +327,7 @@ class Device
      * This method assumes, that \c _options contain the name of the
      * meshfile and the dimension
      */
-    void setup_mesh(void);
+    void setup_mesh(void) TBDLLOCAL;
 
 
     //! Prepares the boundaries
@@ -335,7 +335,7 @@ class Device
      * Assign to each explicitly or implicitly (region interfaces) defined
      * boundary a unique index.
      */
-    void prepare_boundaries(void);
+    void prepare_boundaries(void) TBDLLOCAL;
 
 
     //! The map that connects region number to material

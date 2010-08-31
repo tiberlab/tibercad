@@ -23,7 +23,7 @@ class DDsemiconductor;
  * interface, which is based on k.p theory.
  * 
  */
-class SemiconductorModel : public DriftDiffusionProperties
+class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
 {
 
   public:

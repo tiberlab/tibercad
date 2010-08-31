@@ -4,7 +4,7 @@
 #define _DOPANT_H_
 
 #include "ModelOptions.h"
-#include "TypeDefs.h"
+#include "tiber_dll.h"
 
 #include <string>
 
@@ -14,7 +14,7 @@ class Point;
 
 
 //! Describes a dopant with a single energy level
-class Dopant
+class TBDLEXPORT Dopant
 {
 
   public:
@@ -216,10 +216,8 @@ Dopant::get_options(void)
 
 inline
 double
-Dopant::do_calculate_doping_density(const Elem* elem, const Point& p)
+Dopant::do_calculate_doping_density(const Elem*, const Point&)
 {
-  ignore_unused_variable(elem);
-  ignore_unused_variable(&p);
   return 0.0;
 }
 

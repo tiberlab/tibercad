@@ -2,8 +2,7 @@
 
 
 #include "SemiconductorModel.h"
-#include "ZbDDsemiconductor.h"
-#include "WzDDsemiconductor.h"
+#include "DDsemiconductor.h"
 
 #include "Material.h"
 #include "Messages.h"

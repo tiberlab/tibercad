@@ -3,13 +3,15 @@
 #ifndef _TIBERCAD_H_
 #define _TIBERCAD_H_
 
+#include "tiber_dll.h"
+
 #include <string>
 
 class Control;
 
 
 //! Some useful common definitions for TiberCAD
-namespace TiberCad
+namespace TiberCad 
 {
 
   //! The statistics to be used
@@ -30,10 +32,10 @@ namespace TiberCad
 
 
   //! We keep a pointer to the command line arguments
-  extern char** cmdline_argv;
+  extern char** cmdline_argv TBDLLOCAL;
 
   //! We remember the number of command line arguments
-  extern int cmdline_argc;
+  extern int cmdline_argc TBDLLOCAL;
 
 
   //! The installation root directory

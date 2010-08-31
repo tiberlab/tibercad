@@ -1,3 +1,5 @@
+// $Id$
+
 #ifndef _ATOMISTICGENERATOR_H_
 #define _ATOMISTICGENERATOR_H_
 
@@ -29,7 +31,7 @@ class BondMap;
 
 
 
-class AtomisticGenerator
+class TBDLLOCAL AtomisticGenerator
 {
 
 public:

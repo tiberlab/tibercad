@@ -3,6 +3,8 @@
 #ifndef _CONSTANTS_H_
 #define _CONSTANTS_H_
 
+#include "tiber_dll.h"
+
 #ifndef M_PI
  #define M_PI		3.14159265358979323846
 #endif
@@ -16,7 +18,7 @@
  * Physical constants are given in SI units
  *
  */
-namespace Constants
+namespace Constants 
 {
   
   //! Boltzmann constant in eV / K

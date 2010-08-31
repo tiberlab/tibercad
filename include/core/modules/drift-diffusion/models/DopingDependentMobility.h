@@ -29,7 +29,7 @@
  * \alpha^\ast & = & \alpha\left(\frac{T}{T_0}\right)^{\alpha_a}
  * \f}
  */
-class DopingDependentMobility : public MobilityModelInterface
+class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
 {
 
   public:

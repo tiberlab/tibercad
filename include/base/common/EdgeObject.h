@@ -26,7 +26,7 @@ class EdgeObject : public PhysicalObject
     /*!
      * \param options options for this boundary
      */
-    static EdgeObject* create(const ModelOptions& options);
+    static EdgeObject* create(const ModelOptions& options) TBDLLOCAL;
 
 
   protected:

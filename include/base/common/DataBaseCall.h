@@ -27,7 +27,7 @@ using namespace   std;
 
 
 
-class DataBaseCall
+class TBDLLOCAL DataBaseCall
 {
  public:
 

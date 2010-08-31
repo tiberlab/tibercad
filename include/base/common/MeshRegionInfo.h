@@ -6,6 +6,7 @@
 #include "TypeDefs.h"
 #include "HashMap.h"
 #include "IDSet.h"
+#include "tiber_dll.h"
 
 #include <string>
 #include <sstream>
@@ -17,7 +18,7 @@
  * Mesh region IDs are assumed to be unique, and the mapping with names
  * one-to-one.
  */
-class MeshRegionInfo
+class TBDLLOCAL MeshRegionInfo
 {
 
   public:
