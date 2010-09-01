@@ -11,6 +11,8 @@ For details, see http://sourceforge.net/projects/libb64
 
 #include <iostream>
 
+#pragma GCC visibility push(hidden)
+
 namespace base64
 {
 	
@@ -19,7 +21,7 @@ namespace base64
 		#include "cencode.h"
 	}
 	
-	struct TBDLLOCAL encoder
+	struct encoder
 	{
 		base64_encodestate _state;
 		int _buffersize;
@@ -70,6 +72,8 @@ namespace base64
 	};
 	
 } // namespace base64
+
+#pragma GCC visibility pop
 
 #endif // BASE64_ENCODE_H
 

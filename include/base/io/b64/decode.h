@@ -11,6 +11,8 @@ For details, see http://sourceforge.net/projects/libb64
 
 #include <iostream>
 
+#pragma GCC visibility push(hidden)
+
 namespace base64
 {
 	
@@ -19,7 +21,7 @@ namespace base64
 		#include "cdecode.h"
 	}
 	
-	struct TBDLLOCAL decoder
+	struct decoder
 	{
 		base64_decodestate _state;
 		int _buffersize;
@@ -62,5 +64,7 @@ namespace base64
 	};
 	
 } // namespace base64
+
+#pragma GCC visibility pop
 
 #endif // BASE64_DECODE_H
