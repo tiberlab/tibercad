@@ -1690,7 +1690,7 @@ void Macrostrain::do_solve()
     }
 
 
-  if (dim > 1) mesh.write("mesh0.ucd");
+  //if (dim > 1) mesh.write("mesh0.ucd");
   //-----------------------------------------------------
 
 

@@ -3,7 +3,6 @@
 #include "ChargeDensityModel.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
-#include "getpot.h"
 #include "Database.h"
 //-------------------------------------------------------------------------//
 

@@ -6,7 +6,7 @@
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 #include "DataOutput.h"
-#include "Control.h"
+#include "TiberCad.h"
 
 #include "mesh.h"
 #include "equation_systems.h"
@@ -57,8 +57,18 @@ Embracing::init(const ModelOptions& options)
   _do_plot = options.get_option("plot_embracing_regions", _do_plot);
   _need_mixing = options.get_option("calculate_mixing", _need_mixing);
 
-  SimulationEnvironment& in = _inner->get_environment();
-  double x0 = (in.get_device()).get_mesh_units();
+  if (!_inner->has_environment() || !_outer->has_environment())
+  {
+    ostringstream msg;
+    msg << "Could not create Embracing between \'"
+        << _inner->get_name() << "\' and \'"
+        << _outer->get_name() << "\'.\n\'"
+        << (_inner->has_environment() ? _outer->get_name() : _inner->get_name())
+        << "\' does not have a mesh.";
+    throw InitFailedException(msg.str());
+  }
+
+  double x0 = _inner->get_mesh_units();
   _lambda = options.get_option("embracing_length", _lambda) / x0;
   // cutoff is read as percentage of embracing region
   _cutoff = options.get_option("cutoff", _cutoff) * _lambda;
@@ -231,8 +241,7 @@ Embracing::find_inner_boundary(void)
 void
 Embracing::prepare_for_solve(void)
 {
-  SimulationEnvironment& in = _inner->get_environment();
-  MeshBase& mesh = in.get_mesh();
+  MeshBase& mesh = _inner->get_mesh();
 
   elem_iterator list_end(elem_end());
 
@@ -255,8 +264,7 @@ Embracing::prepare_for_solve(void)
 void
 Embracing::reactivate_all_elements(void)
 {
-  SimulationEnvironment& in = _inner->get_environment();
-  MeshBase& mesh = in.get_mesh();
+  MeshBase& mesh = _inner->get_mesh();
 
   const map<const Elem*, double>::iterator list_end(_elem_list.end());
 
@@ -278,11 +286,10 @@ Embracing::plot(void)
   // we return immediately if nothing is to be printed
   if (!_do_plot) return;
 
-  SimulationEnvironment& in = _inner->get_environment();
-  const MeshBase& mesh = in.get_mesh();
+  const MeshBase& mesh = _inner->get_mesh();
 
-  DataOutput data_output(mesh, (_inner->get_control()).get_output_format());
-  data_output.set_output_directory((_inner->get_control()).get_output_dir());
+  DataOutput data_output(mesh, TiberCad::get_output_format());
+  data_output.set_output_directory(TiberCad::get_output_dir());
 
 
   vector<double> sol;

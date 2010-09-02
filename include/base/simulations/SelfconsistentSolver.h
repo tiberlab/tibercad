@@ -21,7 +21,7 @@ class TBDLLOCAL SelfconsistentSolver : public SimulationInterface
   protected:
 
     //! An iterator for the simulations
-    typedef std::vector<SimulationInterface*>::iterator SimulationIterator;
+    typedef std::vector<SimulationInterface*>::iterator Iterator;
 
     //! The empty Constructor
     SelfconsistentSolver(const ModelOptions& options);
@@ -135,11 +135,11 @@ class TBDLLOCAL SelfconsistentSolver : public SimulationInterface
 
 
     //! Get an iterator for the first simulation
-    SimulationIterator simulations_begin(void);
+    Iterator simulations_begin(void);
 
 
     //! Get the past-the-end iterator for the simulations
-    SimulationIterator simulations_end(void);
+    Iterator simulations_end(void);
 
 
     //! Get the number of simulations
@@ -243,14 +243,14 @@ SelfconsistentSolver::get_xmonitor(void)
 
 
 inline
-SelfconsistentSolver::SimulationIterator
+SelfconsistentSolver::Iterator
 SelfconsistentSolver::simulations_begin(void)
 {
   return _simulations.begin();
 }
 
 inline
-SelfconsistentSolver::SimulationIterator
+SelfconsistentSolver::Iterator
 SelfconsistentSolver::simulations_end(void)
 {
   return _simulations.end();

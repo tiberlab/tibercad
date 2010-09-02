@@ -3,7 +3,6 @@
 // module includes
 #include "DriftDiffusion.h"
 #include "SimulationEnvironment.h"
-#include "Control.h"
 #include "Scaling.h"
 #include "Material.h"
 #include "MaterialBoundary.h"

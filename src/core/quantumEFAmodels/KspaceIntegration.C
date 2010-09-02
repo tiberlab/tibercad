@@ -1,5 +1,4 @@
 #include "KspaceIntegration.h"
-#include "Control.h"
 #include "gnuplot_io.h"
 #include "SimulationEnvironment.h"
 #include "GMVIO_cell.h"
@@ -37,9 +36,11 @@ void KspaceIntegration::do_plot()
 
     const Device& dev = get_environment().get_device();
 
-    string suffix = get_control().get_filename_suffix();
-    string outdir = get_control().get_output_dir();
-    string format = get_control().get_output_format();
+    string suffix = TiberCad::get_filename_suffix();
+    string outdir = get_output_directory();
+    vector<string> formats;
+    get_output_format(formats);
+    string format = formats[0];
 
     string suff;
 

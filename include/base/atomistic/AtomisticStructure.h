@@ -6,12 +6,12 @@
 #include "tensor.h"
 #include "ModelOptions.h"
 #include "TypeDefs.h"
-#include "Control.h"
 #include "Device.h"
 #include "Database.h"
 #include "Atom.h"
 #include "BondMap.h"
 #include "Messages.h"
+#include "InitFailedException.h"
 
 //! Contains all needed data for an atomic structure
 /*!

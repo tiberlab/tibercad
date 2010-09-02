@@ -1,7 +1,6 @@
 // $Id$
 
 #include "Ramp.h"
-#include "Control.h"
 #include "SimulationInterface.h"
 #include "Variable.h"
 #include "Messages.h"
@@ -30,12 +29,10 @@ Ramp::Ramp(const ModelOptions& options,
     options.get_option("simulation", sims);
     int num_of_sims = sims.size();
 
-    Control& control = TiberCad::get_control();
-
     _simulations.resize(num_of_sims);
     for (int i = 0; i < num_of_sims; i++)
     {
-      _simulations[i] = control.find_simulation(sims[i]);
+      _simulations[i] = SimulationInterface::find_simulation(sims[i]);
       if (_simulations[i] == NULL)
         throw InitFailedException("Sweep: Simulation " + sims[i]
             + " not found.");
@@ -49,7 +46,7 @@ Ramp::Ramp(const ModelOptions& options,
     if (num_of_sims == 0)
     {
       _simulations.resize(1);
-      _simulations[0] = control.find_simulation("");
+      _simulations[0] = SimulationInterface::find_simulation("");
       if (_simulations[0] == NULL)
         throw InitFailedException("Sweep: No simulation found.");
     }

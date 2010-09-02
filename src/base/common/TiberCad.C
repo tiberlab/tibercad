@@ -121,3 +121,61 @@ TiberCad::get_control(void)
   assert(_control != NULL);
   return *_control;
 }
+
+
+const std::string&
+TiberCad::get_output_format(void)
+{
+  return get_control().get_output_format();
+}
+
+
+const std::string&
+TiberCad::get_output_dir(void)
+{
+  return get_control().get_output_dir();
+}
+
+
+
+const std::string&
+TiberCad::get_filename_suffix(void)
+{
+  return get_control().get_filename_suffix();
+}
+
+
+void
+TiberCad::clear_filename_suffix(void)
+{
+  get_control().clear_filename_suffix();
+}
+
+
+void
+TiberCad::append_to_filename_suffix(const std::string& suffix)
+{
+  get_control().append_to_filename_suffix(suffix);
+}
+
+
+
+void
+TiberCad::prepend_to_filename_suffix(const std::string& suffix)
+{
+  get_control().prepend_to_filename_suffix(suffix);
+}
+
+
+void
+TiberCad::drop_first_filename_suffix(void)
+{
+  get_control().drop_first_filename_suffix();
+}
+
+
+void
+TiberCad::drop_last_filename_suffix(void)
+{
+  get_control().drop_last_filename_suffix();
+}

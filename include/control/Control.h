@@ -20,8 +20,6 @@
 
 class Device;
 class Database;
-class SimulationInterface;
-class SimulationEnvironment;
 
 //! The control module of TiberCAD
 /*!
@@ -30,53 +28,8 @@ class SimulationEnvironment;
  */
 class Control
 {
-  // Some typedefs that are needed in the public section
-  private:
-
-    //! Type for the list of simulations
-    typedef std::map<const std::string, SimulationInterface*> SimulationMap;
-
-
-    //! Type for the list of simulation environments
-    typedef std::map<SimulationInterface*,
-            SimulationEnvironment*> EnvironmentMap;
-
 
   public:
-
-    //! An iterator to iterate over all simulations
-    class simulation_iterator
-    {
-      public:
-        simulation_iterator(void) {};
-        simulation_iterator(const simulation_iterator& it) : _it(it._it) {};
-        simulation_iterator(const SimulationMap::iterator& it) : _it(it) {};
-
-        simulation_iterator& operator=(const simulation_iterator& other)
-        {
-          _it = other._it;
-          return *this;
-        };
-
-        simulation_iterator& operator++(void) { ++_it; return *this; };
-
-        simulation_iterator& operator--(void) { --_it; return *this; };
-
-        SimulationInterface* operator*(void) { return _it->second; };
-
-        bool operator==(const simulation_iterator& other)
-        {
-          return (_it == other._it);
-        };
-
-        bool operator!=(const simulation_iterator& other)
-        {
-          return (_it != other._it);
-        };
-
-      private:
-        SimulationMap::iterator _it;
-    };
 
 
     //! The constructor
@@ -118,23 +71,6 @@ class Control
     //! Get a reference to the device
     Device& get_device(void);
 
-
-    //! Find a simulation with name \c name
-    /*!
-     * \param name the name to look for
-     * \return a pointer to the simulation if found, \c NULL otherwise
-     *
-     * \c name can be one of the following:
-     * \li the user defined name of a simulation
-     * \li the identifier of the simulation as used for creation
-     * \li the empty string
-     *
-     * In the second case, the first simulation of this type will be
-     * returned. In the third case, the first of all simulations will
-     * be returned.
-     *
-     */
-    SimulationInterface* find_simulation(const std::string& name) const;
 
 
     //! Get the directory where to put output files
@@ -189,17 +125,6 @@ class Control
     const std::string& get_output_format(void) const;
 
 
-    //! Mark all environments as unprepared
-    void invalidate_environments(void);
-
-
-    //! Get the iterator to the first simulation
-    simulation_iterator simulations_begin(void);
-
-
-    //! Get the past-the-end iterator for the simulations
-    simulation_iterator simulations_end(void);
-
 
   private:
 
@@ -238,18 +163,6 @@ class Control
 
     //! The database we use
     Database* _database;
-
-
-    //! A list of all simulations we control
-    SimulationMap _simulations;
-
-
-    //! A list of all simulation environments we control
-    /*!
-     * \note Not every simulation necessarily has an associated
-     * environment!
-     */
-    EnvironmentMap _simulation_environments;
 
 
     //! The list of simulations to be solved
@@ -405,22 +318,6 @@ Control::get_output_format(void) const
 }
 
 
-
-inline
-Control::simulation_iterator
-Control::simulations_begin(void)
-{
-  return simulation_iterator(_simulations.begin());
-}
-
-
-
-inline
-Control::simulation_iterator
-Control::simulations_end(void)
-{
-  return simulation_iterator(_simulations.end());
-}
 
 
 

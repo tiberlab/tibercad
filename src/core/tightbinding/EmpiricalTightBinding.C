@@ -8,6 +8,7 @@
 #include "PhysicalModel.h"
 #include "EtbModel.h"
 #include "SimulationOptions.h"
+#include "TiberCad.h"
 #include "UptWrapper.h"
 #include "uptight.h"
 #include "mesh.h"
@@ -158,7 +159,7 @@ ETB::do_init(void){
   std::string database_path = Database::get_default_search_path();
   std::string work_path = ".";
   std::string gen_outfile = "out.gen";
-  std::string out_path = get_control().get_output_dir();
+  std::string out_path = get_output_directory();
 
   if (database_path.size() > UPT_LC)
            throw InitFailedException("ETB: database search path too long");
@@ -194,8 +195,9 @@ void ETB::reinit(void){
   // checks that the strain simulation, if specified has been done
   if(_upt_options.strain_sim != "no_sim")
   {
-    if( ! get_control().find_simulation(_upt_options.strain_sim)->is_solved() )
-    throw InitFailedException("Strain model has not been solved");
+    SimulationInterface* strsim = find_simulation(_upt_options.strain_sim);
+    if( (strsim != 0) && (! strsim->is_solved()) )
+      throw InitFailedException("Strain model has not been solved");
   }
 
   std::string upt_filename;
@@ -538,8 +540,7 @@ void ETB::do_plot(void){
 #endif
 
 
-  std::string outdir =get_environment().get_device()
-                                       .get_control().get_output_dir();
+  std::string outdir = get_output_directory();
 
   std::string file_name = outdir + "/states.dat";
   //write eigenvalues and population infos
@@ -1228,9 +1229,8 @@ ETB::build_rho3d(const std::string& particle, const Point& r)
   rho = rho / (8.0 * 3.141592653589793);
 
   //scale rho to q/cm^3 (carrier density)
-  rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
-        ( get_control().get_device().get_mesh_units() * 100.0 ) *
-        ( get_control().get_device().get_mesh_units() * 100.0 ));
+  double mesh_units = 100.0 * get_mesh_units();
+  rho =  rho / ( mesh_units * mesh_units * mesh_units );
 
   return rho;
 
@@ -1286,9 +1286,8 @@ ETB::build_rho2d(const std::string& particle, const Point& r)
   rho = rho / (2.0 * 3.141592653589793);
 
   //scale rho to q/cm^3 (carrier density)
-  rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
-        ( get_control().get_device().get_mesh_units() * 100.0 ) *
-        ( get_control().get_device().get_mesh_units() * 100.0 ));
+  double mesh_units = 100.0 * get_mesh_units();
+  rho =  rho / ( mesh_units * mesh_units * mesh_units );
 
   return rho;
 
@@ -1376,8 +1375,8 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
                       / _atomistic_structure->get_scale() / _atomistic_structure->get_scale();
   rho = rho / normalize;
 
-  rho =  rho / ( get_control().get_device().get_mesh_units() * 100.0 ) / ( get_control().get_device().get_mesh_units() * 100.0 )
-      / ( get_control().get_device().get_mesh_units() * 100.0 );
+  double mesh_units = 100.0 * get_mesh_units();
+  rho =  rho / ( mesh_units * mesh_units * mesh_units );
 
   return rho;
 

@@ -144,7 +144,7 @@ TightBinding::build_rho(const Point& r)
 
       //Also hubbard parameters (and tau) must be scaled in mesh units
       // (uhatom is in (atomic units)^(-1))
-      double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_control().get_device().get_mesh_units();
+      double tau = ( ( uhatom * ( 16.0 / 5.0 ) ) / (Constants::bohr_radius ) ) * get_mesh_units();
 
       if (deltar > deltar_max) continue;
       else
@@ -157,9 +157,8 @@ TightBinding::build_rho(const Point& r)
   rho = -rho / (8.0 * 3.141592653589793);
 
   //scale rho to C/cm^3
-  rho =  rho / (( get_control().get_device().get_mesh_units() * 100.0 ) *
-        ( get_control().get_device().get_mesh_units() * 100.0 ) *
-        ( get_control().get_device().get_mesh_units() * 100.0 ));
+  double mesh_units = 100.0 * get_mesh_units();
+  rho =  rho / (mesh_units * mesh_units * mesh_units);
 
   return rho;
 

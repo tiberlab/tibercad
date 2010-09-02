@@ -2,7 +2,6 @@
 
 #include "QuantumDensity.h"
 #include "SimulationEnvironment.h"
-#include "Control.h"
 #include "Messages.h"
 
 using namespace std;

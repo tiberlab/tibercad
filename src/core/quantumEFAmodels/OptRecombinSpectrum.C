@@ -3,7 +3,6 @@
 #include "OptRecombinSpectrum.h"
 #include "OpticsKP.h"
 #include "SimulationEnvironment.h"
-#include "Control.h"
 #include "DataOutput.h"
 
 using namespace std;
@@ -17,12 +16,12 @@ void OptRecombinSpectrum::do_plot()
   if (plot_solution("optical_spectrum"))
   {
      string filename(get_name() + "_spectrum" +
-         get_control().get_filename_suffix());
+         TiberCad::get_filename_suffix());
 
      string format = get_options().get_option("output_format", "grace");
 
      DataOutput data_output(*_energy_mesh, format);
-     data_output.set_output_directory(get_control().get_output_dir());
+     data_output.set_output_directory(get_output_directory());
 
 
      string dimension;

@@ -21,7 +21,6 @@ class Material;
 class MaterialBoundary;
 class EdgeObject;
 class NodeObject;
-class Control;
 class MeshBase;
 class EquationSystems;
 class AtomisticStructure;
@@ -92,10 +91,6 @@ class Device
     //! Set an atomistic structure to be kept in structures map
     void set_atomistic_structure(const std::string& name,
         AtomisticStructure* atomistic_structure) TBDLLOCAL;
-
-
-    //! Set the Control module which will control this device
-    void set_control(Control* control) TBDLLOCAL;
 
 
     //! Get the material for a given region ID
@@ -186,10 +181,6 @@ class Device
      * where \f$\gamma\f$ is the result of get_mesh_units()
      */
     double get_mesh_units(void) const;
-
-
-    //! Get a reference to the Control module that controls this device
-    Control& get_control(void) const;
 
 
     //! Get the set with all region IDs
@@ -371,10 +362,6 @@ class Device
     double _mesh_units;
 
 
-    //! The control module which controls this device
-    Control* _control;
-
-
     //! The equation systems used for this device
     /*!
      * This is stored here because it has to be consistent with the mesh
@@ -510,22 +497,6 @@ Device::get_mesh(void) const
   return *_mesh;
 }
 
-
-
-inline
-void
-Device::set_control(Control* control)
-{
-  _control = control;
-}
-
-
-inline
-Control&
-Device::get_control(void) const
-{
-  return *_control;
-}
 
 
 inline

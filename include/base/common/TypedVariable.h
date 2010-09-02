@@ -5,6 +5,7 @@
 
 #include "Variable.h"
 #include "InitializerBase.h"
+#include "tiber_dll.h"
 
 #include <sstream>
 #include <set>
@@ -23,7 +24,7 @@
  * member of the TiberModelObject class.
  */
 template <typename T>
-class TypedVariable : public Variable
+class TBDLLOCAL TypedVariable : public Variable
 {
 
   public:

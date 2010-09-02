@@ -123,34 +123,20 @@ Control::Control(void)
 
 Control::~Control(void)
 {
-  simulation_iterator simit(_simulations.begin());
-  const simulation_iterator simend(_simulations.end());
+  SimulationInterface::SimulationIterator
+    simit(SimulationInterface::simulations_begin());
+  const SimulationInterface::SimulationIterator
+    simend(SimulationInterface::simulations_end());
 
   for ( ; simit != simend; ++simit)
     SimulationInterface::destroy(*simit);
 
-  _simulations.clear();
-
-  EnvironmentMap::iterator envit(_simulation_environments.begin());
-  const EnvironmentMap::iterator envend(_simulation_environments.end());
-  for ( ; envit != envend; ++envit)
-    delete envit->second;
-
-  _simulation_environments.clear();
 
   Device::destroy(_device);
 
 }
 
 
-void
-Control::invalidate_environments(void)
-{
-  EnvironmentMap::iterator envit(_simulation_environments.begin());
-  const EnvironmentMap::iterator envend(_simulation_environments.end());
-  for ( ; envit != envend; ++envit)
-    envit->second->invalidate();
-}
 
 
 
@@ -191,16 +177,19 @@ Control::init(void) throw (InitFailedException,
 
 
   // initialize the simulation environments
-  EnvironmentMap::iterator envit(_simulation_environments.begin());
-  const EnvironmentMap::iterator envend(_simulation_environments.end());
-  for ( ; envit != envend; ++envit)
-    envit->second->init();
+  // TODO can be removed, I think
+  //EnvironmentMap::iterator envit(_simulation_environments.begin());
+  //const EnvironmentMap::iterator envend(_simulation_environments.end());
+  //for ( ; envit != envend; ++envit)
+  //  envit->second->init();
 
 
   // initialize the simulations, but only if they are not initialized yet
   // (the latter should not happen, however)
-  simulation_iterator simit(_simulations.begin());
-  const simulation_iterator simend(_simulations.end());
+  SimulationInterface::SimulationIterator
+    simit(SimulationInterface::simulations_begin());
+  const SimulationInterface::SimulationIterator
+    simend(SimulationInterface::simulations_end());
   for ( ; simit != simend; ++simit)
     if (!(*simit)->is_initialized())
       (*simit)->init();
@@ -324,10 +313,6 @@ Control::create_device(void)
 
   // we pass the remaining options to the device
   _device = Device::create(opts);
-
-
-  // tell the device who controls it
-  _device->set_control(this);
 
   Messages::debug("Control::create_device() end");
 }
@@ -659,14 +644,12 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       throw ModelErrorException(
           "Unknown simulation type: " + modelname);
 
-    sim->set_control(this);
 
-    _simulations[sim->get_name()] = sim;
 
     // create the environment
     SimulationEnvironment* env =
       new SimulationEnvironment(device, phys_regions);
-    _simulation_environments[sim] = env;
+    // hands the control over the environment over to SimulationInterface
     sim->set_environment(env);
 
     sim->verbose() = SimulationOptions::verbose();
@@ -1133,15 +1116,20 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   OptionsMap::iterator map_it(solver_opts.find("Selfconsistent"));
   if (map_it != solver_opts.end())
   {
-    ModelOptions& sc_opts = map_it->second;
+    const ModelOptions& sc_opts = map_it->second;
 
     ModelOptions::const_submodel_iterator sc_it(sc_opts.submodels_begin());
     const ModelOptions::const_submodel_iterator sc_end(sc_opts.submodels_end());
 
     for ( ; sc_it != sc_end; ++sc_it)
     {
-      const ModelOptions& solveropts = sc_it->second;
-      if (!solveropts.is_empty())
+      ModelOptions solveropts;
+      solveropts.set_option("resultpath", outputdir);
+      solveropts.set_option("output_format", output_format);
+      solveropts.set_option("binary_output", binaryout);
+      solveropts += sc_it->second;
+
+      if (!sc_it->second.is_empty())
       {
         Messages m;
         m.newline();
@@ -1155,10 +1143,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         if (sim == NULL)
           throw ModelErrorException("Could not create Selfconsistent simulation");
 
-        sim->set_control(this);
         sim->verbose() = 0;
         sim->set_name(sc_it->first);
-        _simulations[sim->get_name()] = sim;
         m.unindent();
       }
     }
@@ -1167,10 +1153,14 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
   map_it = solver_opts.find("selfconsistent");
   if (map_it != solver_opts.end())
   {
-    const ModelOptions& solveropts = map_it->second;
+    ModelOptions solveropts;
+    solveropts.set_option("resultpath", outputdir);
+    solveropts.set_option("output_format", output_format);
+    solveropts.set_option("binary_output", binaryout);
+    solveropts += map_it->second;
 
-    Messages::warning("The definition of a selfconsistent simulation "
-        "outside of a \'Selfconsistent\' block is deprecated.");
+    Messages::warning("The definition of a selfconsistent simulation outside of a \'Selfconsistent\' "
+        "block is deprecated.");
 
     Messages m;
     m.newline();
@@ -1187,10 +1177,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       msg += solveropts.get_option("flavour", "");
       throw ModelErrorException(msg);
     }
-    sim->set_control(this);
     //sim->verbose() = SimulationOptions::verbose();
     sim->verbose() = 0;
-    _simulations[sim->get_name()] = sim;
 
     m.unindent();
   }
@@ -1211,8 +1199,13 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 
       for ( ; sw_it != sw_end; ++sw_it)
       {
-        const ModelOptions& solveropts = sw_it->second;
-        if (!solveropts.is_empty())
+        ModelOptions solveropts;
+        solveropts.set_option("resultpath", outputdir);
+        solveropts.set_option("output_format", output_format);
+        solveropts.set_option("binary_output", binaryout);
+        solveropts += sw_it->second;
+
+        if (!sw_it->second.is_empty())
         {
           Messages m;
           m.newline();
@@ -1226,10 +1219,8 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
           if (sim == NULL)
             throw ModelErrorException("Could not create sweep simulation");
 
-          sim->set_control(this);
           sim->verbose() = 0;
           sim->set_name(sw_it->first);
-          _simulations[sim->get_name()] = sim;
           m.unindent();
         }
       }
@@ -1249,15 +1240,17 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
           + map_it->first + ") ...");
       m.indent();
 
-      ModelOptions sweepopts(map_it->second);
+      ModelOptions sweepopts;
+      sweepopts.set_option("resultpath", outputdir);
+      sweepopts.set_option("output_format", output_format);
+      sweepopts.set_option("binary_output", binaryout);
+      sweepopts += map_it->second;
 
       if (!sweepopts.find_option("name"))
         sweepopts["name"] = "sweep";
       SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-      sim->set_control(this);
       //sim->verbose() = SimulationOptions::verbose();
       sim->verbose() = 0;
-      _simulations[sim->get_name()] = sim;
       m.unindent();
     }
 
@@ -1270,16 +1263,18 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
           + map_it->first + ") ...");
       m.indent();
 
-      ModelOptions sweepopts(map_it->second);
+      ModelOptions sweepopts;
+      sweepopts.set_option("resultpath", outputdir);
+      sweepopts.set_option("output_format", output_format);
+      sweepopts.set_option("binary_output", binaryout);
+      sweepopts += map_it->second;
 
       warning = true;
       if (!sweepopts.find_option("name"))
         sweepopts["name"] = "sweep_1";
       SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-      sim->set_control(this);
       //sim->verbose() = SimulationOptions::verbose();
       sim->verbose() = 0;
-      _simulations[sim->get_name()] = sim;
       m.unindent();
     }
 
@@ -1292,16 +1287,18 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
           + map_it->first + ") ...");
       m.indent();
 
-      ModelOptions sweepopts(map_it->second);
+      ModelOptions sweepopts;
+      sweepopts.set_option("resultpath", outputdir);
+      sweepopts.set_option("output_format", output_format);
+      sweepopts.set_option("binary_output", binaryout);
+      sweepopts += map_it->second;
 
       warning = true;
       if (!sweepopts.find_option("name"))
         sweepopts["name"] = "sweep_2";
       SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-      sim->set_control(this);
       //sim->verbose() = SimulationOptions::verbose();
       sim->verbose() = 0;
-      _simulations[sim->get_name()] = sim;
       m.unindent();
     }
 
@@ -1374,7 +1371,7 @@ Control::run_simulation(void) throw (SolveFailedException)
   // We also let them solve the equilibrium
   for (unsigned int i = 0; i < n; i++)
   {
-    SimulationInterface* sim = find_simulation(_solve_list[i]);
+    SimulationInterface* sim = SimulationInterface::find_simulation(_solve_list[i]);
 
     if (sim == NULL)
       throw SolveFailedException("Simulation not found: " + _solve_list[i]);
@@ -1416,8 +1413,10 @@ Control::run_simulation(void) throw (SolveFailedException)
 void
 Control::plot_all(void)
 {
-  simulation_iterator simit(_simulations.begin());
-  const simulation_iterator simend(_simulations.end());
+  SimulationInterface::SimulationIterator
+    simit(SimulationInterface::simulations_begin());
+  const SimulationInterface::SimulationIterator
+    simend(SimulationInterface::simulations_end());
 
   for ( ; simit != simend; ++simit)
     (*simit)->plot();
@@ -1425,20 +1424,6 @@ Control::plot_all(void)
 
 
 
-SimulationInterface*
-Control::find_simulation(const string& name) const
-{
-  SimulationInterface* sim = SimulationInterface::find_simulation(name);
-
-  if (sim != NULL)
-  {
-    SimulationMap::const_iterator it = _simulations.find(sim->get_name());
-    if (it == _simulations.end())
-      sim = NULL;
-  }
-
-  return sim;
-}
 
 
 

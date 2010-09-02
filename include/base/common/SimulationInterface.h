@@ -36,7 +36,6 @@ class Embracing;
 class EquationSystems;
 class PhysicalModel;
 class BoundaryProperties;
-class Control;
 class Material;
 class MeshBase;
 class Point;
@@ -47,19 +46,80 @@ class Atom;
 class SimulationInterface : public TiberModelObject
 {
 
+  private:
+
+    //! A typedef for convenience
+    typedef TiberCad::HashMap<ID, SimulationInterface*>::Type SimulationMap;
+
+
   public:
     // QUIRK
     double _relaxation;
+
+
+    //! An iterator to iterate over all simulations
+    class SimulationIterator
+    {
+      public:
+        SimulationIterator(void) : _iter(_simulation_map.end()) {}
+        SimulationIterator(const SimulationIterator& it) : _iter(it._iter) {}
+        SimulationIterator(const SimulationMap::iterator& it) TBDLLOCAL : _iter(it) {}
+
+        SimulationIterator& operator++(void)
+        {
+          ++_iter;
+          return *this;
+        }
+
+        SimulationIterator& operator=(const SimulationIterator& it)
+        {
+          _iter = it._iter;
+          return *this;
+        }
+
+        bool operator==(const SimulationIterator& it)
+        {
+          return (_iter == it._iter);
+        }
+
+        bool operator!=(const SimulationIterator& it)
+        {
+          return !this->operator==(it);
+        }
+
+        SimulationInterface* operator*(void)
+        {
+          return _iter->second;
+        }
+
+
+      private:
+        SimulationMap::iterator _iter;
+    };
+
+
 
     //! Destructor
     virtual ~SimulationInterface(void);
 
 
     //! Set the simulation environment for this simulation
+    /*!
+     * The SimulationEnvironment for each simulation is unique
+     */
     void set_environment(SimulationEnvironment* environment) TBDLLOCAL;
 
 
+    //! Check if the simulation has a valid environment
+    bool has_environment(void) const;
+
+
     //! Get the simulation environment for this simulation
+    /*!
+     * \note This method does not check if the environment is valid.
+     * If you use it from the outside of an object, the check with
+     * has_environment() before.
+     */
     SimulationEnvironment& get_environment(void) const;
 
 
@@ -85,6 +145,21 @@ class SimulationInterface : public TiberModelObject
      */
     static SimulationInterface* create(const std::string& type,
         const ModelOptions& options = ModelOptions()) TBDLLOCAL;
+
+
+    //! Destroy a SimulationInterface object
+    /*!
+     * Checks if the given pointer is valid
+     */
+    static void destroy(SimulationInterface* sim);
+
+
+    //! Get the iterator to the first simulation
+    static SimulationIterator simulations_begin(void);
+
+
+    //! Get the past-the-end iterator of the simulation list
+    static SimulationIterator simulations_end(void);
 
 
     //! Initialize the system
@@ -487,18 +562,6 @@ class SimulationInterface : public TiberModelObject
     const std::string& get_type(void) const;
 
 
-    //! Set the Control object
-    void set_control(Control* control) TBDLLOCAL;
-
-
-    //! Get the Control object
-    Control& get_control(void);
-
-
-    //! Get the Control object
-    const Control& get_control(void) const;
-
-
     //! Set the scaling parameters
     void set_scaling(const Scaling& scaling);
 
@@ -512,6 +575,10 @@ class SimulationInterface : public TiberModelObject
      * \return a constant reference to the simulation mesh
      */
     MeshBase& get_mesh(void) const;
+
+
+    //! Get the mesh units (in meters)
+    double get_mesh_units(void) const;
 
 
 
@@ -860,6 +927,9 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get the output data formats
+    /*!
+     * At least one format will always be returned.
+     */
     void get_output_format(std::vector<std::string>& formats) const;
 
 
@@ -874,7 +944,7 @@ class SimulationInterface : public TiberModelObject
     //! Get the whole output filename (except extension)
     /*!
      * \return get_output_filename_prefix() +
-     *    get_control().get_filename_suffix()
+     *    TiberCad::get_filename_suffix()
      */
     std::string get_output_filename(void) const;
 
@@ -1165,10 +1235,6 @@ class SimulationInterface : public TiberModelObject
 
   private:
 
-    //! A typedef for convenience
-    typedef TiberCad::HashMap<ID, SimulationInterface*>::Type SimulationMap;
-
-
     //! A typedef for the embracing region map
     typedef TiberCad::HashMap<SimulationInterface*, Embracing*>::Type EmbracingMap;
 
@@ -1189,10 +1255,6 @@ class SimulationInterface : public TiberModelObject
 
     //! The environment for this simulation
     SimulationEnvironment* _environment;
-
-
-    //! The Control object which controls this simulation
-    Control* _control;
 
 
     //! A flag indicating if the simulator is initialized
@@ -1326,31 +1388,6 @@ class SimulationInterface : public TiberModelObject
 //
 
 
-inline
-void
-SimulationInterface::set_control(Control* control)
-{
-  _control = control;
-}
-
-
-inline
-Control&
-SimulationInterface::get_control(void)
-{
-  assert(_control != NULL);
-  return *_control;
-}
-
-
-inline
-const Control&
-SimulationInterface::get_control(void) const
-{
-  assert(_control != NULL);
-  return *_control;
-}
-
 
 
 inline
@@ -1377,12 +1414,19 @@ SimulationInterface::set_environment(SimulationEnvironment* environment)
 }
 
 
+inline
+bool
+SimulationInterface::has_environment(void) const
+{
+  return (_environment != 0);
+}
+
 
 inline
 SimulationEnvironment&
 SimulationInterface::get_environment(void) const
 {
-  assert(_environment != 0);
+  assert(has_environment());
 
   return *_environment;
 }
@@ -1709,6 +1753,22 @@ T*
 SimulationInterface::get_node_model(const Elem* elem, int node) const
 {
   return dynamic_cast<T*>(_get_node_model(elem, node));
+}
+
+
+inline
+SimulationInterface::SimulationIterator
+SimulationInterface::simulations_begin(void)
+{
+  return SimulationIterator(_simulation_map.begin());
+}
+
+
+inline
+SimulationInterface::SimulationIterator
+SimulationInterface::simulations_end(void)
+{
+  return SimulationIterator();
 }
 
 

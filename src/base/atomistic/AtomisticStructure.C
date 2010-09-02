@@ -8,6 +8,7 @@
 #include "BondMap.h"
 #include "Messages.h"
 #include "MeshUtils.h"
+#include "TiberCad.h"
 
 //C++ includes
 //--------------------
@@ -717,7 +718,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
   // -------------------------------------------
 
-  std::string outdir =get_device()->get_control().get_output_dir();
+  std::string outdir = TiberCad::get_output_dir();
   std::string file_name = outdir + "/" + path;
 
   // --------------------------------------------

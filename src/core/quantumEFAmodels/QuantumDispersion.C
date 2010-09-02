@@ -2,7 +2,6 @@
 
 #include "QuantumDispersion.h"
 #include "SimulationEnvironment.h"
-#include "Control.h"
 #include "DataOutput.h"
 
 
@@ -83,8 +82,9 @@ void QuantumDispersion::do_plot (void)
   //k-space output
   const Device& dev = get_environment().get_device();
 
-  string format = get_control().get_output_format();
-  format = get_options().get_option("output_format", format);
+  vector<string> formats;
+  get_output_format(formats);
+  string format = formats[0];
 
 
 
@@ -98,10 +98,10 @@ void QuantumDispersion::do_plot (void)
 
 
     string filename(get_name() +
-		    "_k_space" + get_control().get_filename_suffix());
+		    "_k_space" + TiberCad::get_filename_suffix());
 
     DataOutput data_output(get_k_mesh(), format);
-    data_output.set_output_directory(get_control().get_output_dir());
+    data_output.set_output_directory(get_output_directory());
 
 
     std::vector<double> results;

@@ -2,7 +2,6 @@
 
 #include "OpticsTB.h"
 #include "EigenvalueProblem.h"
-#include "Control.h"
 #include "DataOutput.h"
 #include "SimulationOptions.h"
 
@@ -422,12 +421,12 @@ void OpticsTB::do_plot()
     }
 
     std::string filename(get_name() +
-			 "_spectrum_k_0" + get_control().get_filename_suffix());
+			 "_spectrum_k_0" + TiberCad::get_filename_suffix());
 
     std::string format = get_options().get_option("output_format", "grace");
 
     DataOutput data_output(*_energy_mesh, format);
-    data_output.set_output_directory(get_control().get_output_dir());
+    data_output.set_output_directory(get_output_directory());
 
     data_output.write_cell_data(filename, results, names);
 

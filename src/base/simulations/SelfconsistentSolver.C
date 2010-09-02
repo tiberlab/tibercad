@@ -1,7 +1,6 @@
 // $Id$
 
 #include "SelfconsistentSolver.h"
-#include "Control.h"
 #include "XMonitor.h"
 
 using namespace std;
@@ -12,7 +11,6 @@ void
 SelfconsistentSolver::do_init(void)
 {
   ModelOptions& opts = get_options();
-  Control& control = get_control();
   
   // get the names of the simulations to be solved
   vector<string> sims;
@@ -26,7 +24,7 @@ SelfconsistentSolver::do_init(void)
   _simulations.resize(num_of_sims);
   for (int i = 0; i < num_of_sims; i++)
   {
-    _simulations[i] = control.find_simulation(sims[i]);
+    _simulations[i] = find_simulation(sims[i]);
     if (_simulations[i] == NULL)
       throw InitFailedException("SelfconsistentSolver: Simulation " +
           sims[i] + " not found.");
@@ -197,14 +195,14 @@ SelfconsistentSolver::do_delete_remembered_solution(ID id)
 void
 SelfconsistentSolver::do_plot(void)
 {
-  get_control().prepend_to_filename_suffix(get_name());
+  TiberCad::prepend_to_filename_suffix(get_name());
 
   int num_sim = _simulations.size();
 
   for (int i = 0; i < num_sim; i++)
     _simulations[i]->plot();
 
-  get_control().drop_first_filename_suffix();
+  TiberCad::drop_first_filename_suffix();
 }
 
 

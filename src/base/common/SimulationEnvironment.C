@@ -13,6 +13,11 @@
 
 using namespace std;
 
+
+SimulationEnvironment::EnvironmentSet
+SimulationEnvironment::_environments;
+
+
 SimulationEnvironment::SimulationEnvironment(
     Device& device, const set<ID>& region_numbers)
   : _device(&device),
@@ -39,6 +44,8 @@ SimulationEnvironment::~SimulationEnvironment(void)
   const set<Boundary*>::iterator bdend(bds.end());
   for ( ; bdit != bdend; ++bdit)
     delete *bdit;
+
+  _environments.erase(this);
 }
 
 
@@ -346,12 +353,30 @@ SimulationEnvironment::prepare_for_solve(void)
       el->set_refinement_flag(Elem::INACTIVE);
   }
 
-  (_device->get_control()).invalidate_environments();
+  invalidate_all();
 
   _is_prepared = true;
 }
 
 
+
+void
+SimulationEnvironment::invalidate_all(void)
+{
+  EnvironmentSet::iterator it(_environments.begin());
+  const EnvironmentSet::iterator end(_environments.end());
+
+  for ( ; it != end; ++it)
+    (*it)->invalidate();
+}
+
+
+void
+SimulationEnvironment::destroy(SimulationEnvironment* env)
+{
+  if (_environments.find(env) != _environments.end())
+    delete env;
+}
 
 
 bool

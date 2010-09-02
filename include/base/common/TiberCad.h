@@ -82,6 +82,58 @@ namespace TiberCad
   //! Get access to the control module
   Control& get_control(void);
 
+
+  //! Get the directory where to put output files
+  const std::string& get_output_dir(void);
+
+
+  //! Get the complete suffix for the output filenames
+  const std::string& get_filename_suffix(void);
+
+
+  //! Clear the suffix for the output filenames
+  void clear_filename_suffix(void);
+
+
+  //! Append something to the suffix for the output filenames
+  /*!
+   * The filename suffix will be appended to all output files which
+   * contain plot data.
+   * The suffix itself will be prepended by a '_'
+   */
+  void append_to_filename_suffix(const std::string& suffix);
+
+
+  //! Prepend something to the suffix for the output filenames
+  /*!
+   * The filename suffix will be appended to all output files which
+   * contain plot data.
+   * The suffix itself will be prepended by a '_'
+   */
+  void prepend_to_filename_suffix(const std::string& suffix);
+
+
+  //! Delete the first output filename suffix part
+  void drop_first_filename_suffix(void);
+
+
+  //! Delete the last output filename suffix part
+  void drop_last_filename_suffix(void);
+
+
+
+  //! Get the output format
+  /*!
+   * \return a string that identifies the type of output files
+   * to generate
+   *
+   * Currently the following formats are supported:
+   * \li \c gmv for GMV
+   * \li \c ise for Tecplot
+   * \li \c gnu for GnuPlot
+   */
+  const std::string& get_output_format(void);
+
 }
 
 

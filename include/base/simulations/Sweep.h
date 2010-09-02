@@ -33,7 +33,7 @@ class TBDLLOCAL Sweep : public SimulationInterface
 
 
     //! Get the list of inner simulations
-    const std::vector<SimulationInterface*>
+    const std::vector<SimulationInterface*>&
       get_simulations(void) const;
 
 
@@ -174,7 +174,7 @@ Sweep::create(const ModelOptions& options)
 
 
 inline
-const std::vector<SimulationInterface*>
+const std::vector<SimulationInterface*>&
 Sweep::get_simulations(void) const
 {
   return _simulations;

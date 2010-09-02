@@ -1,7 +1,6 @@
 // $Id$
 
 #include "RelaxationMethod.h"
-#include "Control.h"
 #include "Messages.h"
 
 

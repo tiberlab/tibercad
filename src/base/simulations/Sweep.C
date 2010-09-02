@@ -4,10 +4,6 @@
 #include "Ramp.h"
 #include "Utils.h"
 #include "Variable.h"
-#include "Boundary.h"
-#include "BoundaryProperties.h"
-#include "SimulationEnvironment.h"
-#include "Control.h"
 #include "Messages.h"
 
 #include <fstream>
@@ -30,8 +26,6 @@ Sweep::do_init(void)
 {
 
   ModelOptions& opts = get_options();
-  Control& control = get_control();
-
 
   // get the names of the simulations to be solved
   vector<string> sims;
@@ -43,7 +37,7 @@ Sweep::do_init(void)
   _simulations.resize(num_of_sims);
   for (int i = 0; i < num_of_sims; i++)
   {
-    _simulations[i] = control.find_simulation(sims[i]);
+    _simulations[i] = find_simulation(sims[i]);
     if (_simulations[i] == NULL)
       throw InitFailedException("Sweep: Simulation " + sims[i] + " not found.");
 
@@ -70,7 +64,7 @@ Sweep::do_init(void)
   if (num_of_sims == 0)
   {
     _simulations.resize(1);
-    _simulations[0] = control.find_simulation("");
+    _simulations[0] = find_simulation("");
     if (_simulations[0] == NULL)
       throw InitFailedException("Sweep: No simulation found.");
   }
@@ -80,7 +74,8 @@ Sweep::do_init(void)
   //
 
   // we set our environment to that of the first simulation
-  set_environment(&_simulations[0]->get_environment());
+  // 02-09-2010 Sweep should not have an environment
+  //set_environment(&_simulations[0]->get_environment());
 
 
   // Now we have to find the model to the variable
@@ -211,7 +206,7 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
       //
 
       // the output directory
-      string outdir = get_control().get_output_dir();
+      string outdir = get_output_directory();
 
       string plotfilename(outdir + "/" + get_name() + "_" +
           simulation.get_name() + _suffix + ".dat");
@@ -391,7 +386,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
   vector<double> plotvalues;
 
   // the filename suffix
-  _suffix = get_control().get_filename_suffix();
+  _suffix = TiberCad::get_filename_suffix();
 
   vector<double>::iterator values_begin(values.begin());
   vector<double>::iterator values_end(values.end());
@@ -433,7 +428,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     // filename suffix
     ostringstream suffix;
     suffix << _variable << "_" << _goal;
-    get_control().prepend_to_filename_suffix(suffix.str());
+    TiberCad::prepend_to_filename_suffix(suffix.str());
 
     bool failed = false;
     try
@@ -465,7 +460,7 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
         throw SolveFailedException("Already first sweep step could not be solved.");
     }
 
-    get_control().drop_first_filename_suffix();
+    TiberCad::drop_first_filename_suffix();
 
     if (failed)
     {

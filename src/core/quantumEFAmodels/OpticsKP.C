@@ -7,7 +7,6 @@
 #include "EFAbulkModel.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
-#include "Control.h"
 #include "DataOutput.h"
 #include "SimulationOptions.h"
 
@@ -1170,12 +1169,12 @@ void OpticsKP::do_plot()
   if (plot_solution("optical_spectrum_k_0"))
   {
     string filename(get_name() +
-        "_spectrum_k_0" + get_control().get_filename_suffix());
+        "_spectrum_k_0" + TiberCad::get_filename_suffix());
 
     string format = get_options().get_option("output_format", "grace");
 
     DataOutput data_output(*_energy_mesh, format);
-    data_output.set_output_directory(get_control().get_output_dir());
+    data_output.set_output_directory(get_output_directory());
 
     data_output.write_cell_data(filename, results, names);
   }

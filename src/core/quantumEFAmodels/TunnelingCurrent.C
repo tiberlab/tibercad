@@ -1,7 +1,6 @@
 #include "QuantumDensity.h"
 #include "SimulationEnvironment.h"
 #include "TunnelingCurrent.h"
-#include "Control.h"
 #include "gnuplot_io.h"
 #include "VTKIO.h"
 #include "mesh_tools.h"
@@ -120,9 +119,11 @@ void TunnelingCurrent::do_plot (void)
   //IV-output
   const Device& dev = get_environment().get_device();
 
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
-  string format = get_control().get_output_format();
+  string suffix = TiberCad::get_filename_suffix();
+  string outdir = get_output_directory();
+  vector<string> formats;
+  get_output_format(formats);
+  string format = formats[0];
 
   string suff;
 
@@ -241,8 +242,8 @@ void TunnelingCurrent::parse_options(void)
   opt.energy_int_zero_limit = mod_opt.get_option("energy_integration_zero_limit", 1e-12);
   opt.energy_int_uniform_refinement = mod_opt.get_option("energy_integral_uniform_refinement", false);
 
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
+  string suffix = TiberCad::get_filename_suffix();
+  string outdir = get_output_directory();
 
   opt.filename = outdir + "/" + get_name() + suffix;
   opt.filename = mod_opt.get_option("filename",opt.filename);
@@ -724,9 +725,11 @@ void TunnelingCurrent::k_space_output(void)
 
   const Device& dev = get_environment().get_device();
 
-  string suffix = get_control().get_filename_suffix();
-  string outdir = get_control().get_output_dir();
-  string format = get_control().get_output_format();
+  string suffix = TiberCad::get_filename_suffix();
+  string outdir = get_output_directory();
+  vector<string> formats;
+  get_output_format(formats);
+  string format = formats[0];
 
   string suff;
   if (format == "gmv")

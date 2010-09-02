@@ -2,7 +2,6 @@
 
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
-#include "Control.h"
 #include "Material.h"
 #include "MaterialBoundary.h"
 #include "EdgeObject.h"
@@ -80,11 +79,27 @@ SimulationInterface::~SimulationInterface(void)
   for ( ; embit != embend; ++embit)
     delete embit->second;
 
+  SimulationEnvironment::destroy(_environment);
+
+  _simulation_map.erase(get_id());
+
   ostringstream os;
   os << "Deleted simulator (ID = " << get_id() <<
     " name = " << get_name() << " / type = " <<
     get_type() << ")" << " address = " << this;
   Messages::debug(os.str());
+
+}
+
+
+void
+SimulationInterface::destroy(SimulationInterface* sim)
+{
+  SimulationMap::iterator it(_simulation_map.begin());
+  for ( ; (it != _simulation_map.end()) && (it->second != sim); ++it);
+
+  if (it != _simulation_map.end())
+    delete it->second;
 
 }
 
@@ -352,6 +367,12 @@ SimulationInterface::get_mesh(void) const
   return get_environment().get_device().get_mesh();
 }
 
+
+double
+SimulationInterface::get_mesh_units(void) const
+{
+  return get_environment().get_device().get_mesh_units();
+}
 
 
 void
@@ -742,6 +763,7 @@ SimulationInterface::get_output_format(vector<string>& formats) const
 {
   // there is at least one format in the string
   get_option("output_format", formats);
+  assert(formats.size() > 0);
 }
 
 
@@ -765,7 +787,7 @@ SimulationInterface::get_output_filename_prefix(void) const
 string
 SimulationInterface::get_output_filename(void) const
 {
-  return get_output_filename_prefix() + get_control().get_filename_suffix();
+  return get_output_filename_prefix() + TiberCad::get_filename_suffix();
 }
 
 
@@ -1119,7 +1141,7 @@ SimulationInterface::do_plot_old(void)
 
   const Device& dev = get_environment().get_device();
 
-  string suffix = get_control().get_filename_suffix();
+  string suffix = TiberCad::get_filename_suffix();
   string outdir = get_output_directory();
 
   vector<double> results;

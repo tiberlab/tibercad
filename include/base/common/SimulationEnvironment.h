@@ -312,8 +312,17 @@ class SimulationEnvironment
     void get_region_names(std::set<std::string>& names) const;
 
 
+    //! Destroy a SimulationEnvironment object
+    /*!
+     * Checks first if the given pointer is valid yet
+     */
+    static void destroy(SimulationEnvironment* env);
+
 
   private:
+
+    typedef std::set<SimulationEnvironment*> EnvironmentSet;
+
 
     //! Disable copy constructor
     SimulationEnvironment(const SimulationEnvironment&);
@@ -340,6 +349,14 @@ class SimulationEnvironment
      * \param boundary_id the boundary number
      */
     void add_boundary(Boundary* boundary, ID boundary_id) TBDLLOCAL;
+
+
+    //! Invalidate all relevant environments
+    /*!
+     * Marks all environments as unprepared
+     */
+    static void invalidate_all(void) TBDLLOCAL;
+
 
 
     //! The device
@@ -386,6 +403,10 @@ class SimulationEnvironment
 
     //! Tells if this environment is prepared for solve
     bool _is_prepared;
+
+
+    //! All environments
+    static EnvironmentSet _environments;
 
 };
 
