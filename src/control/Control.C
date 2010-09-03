@@ -177,19 +177,23 @@ Control::init(void) throw (InitFailedException,
 
 
   // initialize the simulation environments
-  // TODO can be removed, I think
+  // TODO may be removed when all modules use new APIs, I think
   //EnvironmentMap::iterator envit(_simulation_environments.begin());
   //const EnvironmentMap::iterator envend(_simulation_environments.end());
   //for ( ; envit != envend; ++envit)
   //  envit->second->init();
-
-
-  // initialize the simulations, but only if they are not initialized yet
-  // (the latter should not happen, however)
   SimulationInterface::SimulationIterator
     simit(SimulationInterface::simulations_begin());
   const SimulationInterface::SimulationIterator
     simend(SimulationInterface::simulations_end());
+  for ( ; simit != simend; ++simit)
+    if ((*simit)->has_environment()) (*simit)->get_environment().init();
+
+
+
+  // initialize the simulations, but only if they are not initialized yet
+  // (the latter should not happen, however)
+  simit = SimulationInterface::simulations_begin();
   for ( ; simit != simend; ++simit)
     if (!(*simit)->is_initialized())
       (*simit)->init();
