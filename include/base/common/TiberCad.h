@@ -7,8 +7,10 @@
 #include "TiberMath.h"
 
 #include <string>
+#include <list>
 
 class Control;
+class LibMeshInit;
 
 
 //! Entry point and generic stuff for TiberCAD
@@ -34,12 +36,12 @@ class TiberCad
     };
 
 
-    //! Default constructor
-    TiberCad(void) {};
+    //! Constructor
+    TiberCad(int argc, char** argv);
 
 
     //! Destructor
-    ~TiberCad(void) {};
+    ~TiberCad(void);
 
 
 
@@ -47,14 +49,14 @@ class TiberCad
     /*!
      * This routine calls init() of libmesh and other libraries, if needed.
      */
-    static void init(int argc, char** argv);
+    void init(void);
 
 
     //! A cleanup routine
     /*!
      * This routine calls close() of libmesh and other libraries, if needed
      */
-    static int cleanup(void);
+    void cleanup(void);
 
 
     //! The full TiberCAD version string
@@ -82,7 +84,7 @@ class TiberCad
 
 
     //! Get the complete suffix for the output filenames
-    static const std::string& get_filename_suffix(void);
+    static std::string get_filename_suffix(void);
 
 
     //! Clear the suffix for the output filenames
@@ -135,6 +137,10 @@ class TiberCad
 
   private:
 
+    //! Disable default constructor
+    TiberCad(void);
+
+
     //! The TiberCAD major version
     static const int _MajorVersion;
 
@@ -158,12 +164,32 @@ class TiberCad
     static int _cmdline_argc;
 
 
+    //! A counter to assure that there is only one instance of this class
+    static unsigned int _object_counter;
+
+
     //! The installation root directory
     /*!
      * This is read from the environment
      */
     static std::string _tiberroot;
 
+    //! The flow control object
+    static Control* _control;
+
+    //! The libmesh entry point
+    LibMeshInit* _libmeshinit;
+
+
+    //! The list from which the filename suffix gets constructed
+    static std::list<std::string> _filename_suffix;
+
+
+    //! The filename suffix string
+    /*!
+     * This is only a helper variable
+     */
+    static std::string _filename_suffix_str;
 };
 
 

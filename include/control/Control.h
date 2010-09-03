@@ -77,40 +77,6 @@ class Control
     const std::string& get_output_dir(void) const;
 
 
-    //! Get the complete suffix for the output filenames
-    const std::string& get_filename_suffix(void) const;
-
-
-    //! Clear the suffix for the output filenames
-    void clear_filename_suffix(void);
-
-
-    //! Append something to the suffix for the output filenames
-    /*!
-     * The filename suffix will be appended to all output files which
-     * contain plot data.
-     * The suffix itself will be prepended by a '_'
-     */
-    void append_to_filename_suffix(const std::string& suffix);
-
-
-    //! Prepend something to the suffix for the output filenames
-    /*!
-     * The filename suffix will be appended to all output files which
-     * contain plot data.
-     * The suffix itself will be prepended by a '_'
-     */
-    void prepend_to_filename_suffix(const std::string& suffix);
-
-
-    //! Delete the first output filename suffix part
-    void drop_first_filename_suffix(void);
-
-
-    //! Delete the last output filename suffix part
-    void drop_last_filename_suffix(void);
-
-
 
     //! Get the output format
     /*!
@@ -171,17 +137,6 @@ class Control
 
     //! The directory where to put output
     std::string _outputdir;
-
-
-    //! The list from which the filename suffix gets constructed
-    std::list<std::string> _filename_suffix;
-
-
-    //! The filename suffix string
-    /*!
-     * This is only a helper variable
-     */
-    mutable std::string _filename_suffix_str;
 
 
     //! The output format
@@ -263,50 +218,6 @@ Control::get_output_dir(void) const
   return _outputdir;
 }
 
-
-inline
-void
-Control::clear_filename_suffix(void)
-{
-  _filename_suffix.clear();
-}
-
-
-
-inline
-void
-Control::append_to_filename_suffix(const std::string& suffix)
-{
-  if (suffix.size() != 0)
-    _filename_suffix.push_back(suffix);
-}
-
-
-inline
-void
-Control::prepend_to_filename_suffix(const std::string& suffix)
-{
-  if (suffix.size() != 0)
-    _filename_suffix.push_front(suffix);
-}
-
-
-inline
-void
-Control::drop_last_filename_suffix(void)
-{
-  if (_filename_suffix.size() != 0)
-    _filename_suffix.pop_back();
-}
-
-
-inline
-void
-Control::drop_first_filename_suffix(void)
-{
-  if (_filename_suffix.size() != 0)
-    _filename_suffix.pop_front();
-}
 
 
 

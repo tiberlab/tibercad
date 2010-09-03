@@ -121,8 +121,11 @@ int main (int argc, char** argv)
   //
   // here begins real TiberCAD
   //
-  TiberCad::init(argc, argv);
   try {
+
+    TiberCad tibercad(argc, argv);
+
+    tibercad.init();
 
     Control& control = TiberCad::get_control();
     control.set_inputfile(inputfile);
@@ -148,6 +151,6 @@ int main (int argc, char** argv)
 
   Messages::close_log_file();
 
-  return TiberCad::cleanup();
+  return 0;
 }
 

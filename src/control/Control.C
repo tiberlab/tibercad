@@ -177,11 +177,11 @@ Control::init(void) throw (InitFailedException,
 
 
   // initialize the simulation environments
-  // TODO may be removed when all modules use new APIs, I think
   //EnvironmentMap::iterator envit(_simulation_environments.begin());
   //const EnvironmentMap::iterator envend(_simulation_environments.end());
   //for ( ; envit != envend; ++envit)
   //  envit->second->init();
+  // TODO may be removed when all modules use new APIs, I think
   SimulationInterface::SimulationIterator
     simit(SimulationInterface::simulations_begin());
   const SimulationInterface::SimulationIterator
@@ -1429,18 +1429,5 @@ Control::plot_all(void)
 
 
 
-
-
-const std::string&
-Control::get_filename_suffix(void) const
-{
-  _filename_suffix_str = "";
-  list<string>::const_iterator it(_filename_suffix.begin());
-  const list<string>::const_iterator end(_filename_suffix.end());
-  for ( ; it != end; ++it)
-    _filename_suffix_str += "_" + *it;
-
-  return _filename_suffix_str;
-}
 
 

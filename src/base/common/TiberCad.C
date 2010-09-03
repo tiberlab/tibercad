@@ -8,21 +8,33 @@
 #include "EigenSolver.h"
 #include "Database.h"
 #include "DLLoader.h"
+#include "InitFailedException.h"
 
 #include "libmesh.h"
 
-namespace
-{
-  Control* _control = NULL;
 
-  LibMeshInit* _libmeshinit;
-}
+
+std::list<std::string>
+TiberCad::_filename_suffix;
+
+
+
+std::string
+TiberCad::_filename_suffix_str;
+
+
+Control*
+TiberCad::_control = NULL;
+
 
 char**
 TiberCad::_cmdline_argv = 0;
 
 int
 TiberCad::_cmdline_argc = 0;
+
+unsigned int
+TiberCad::_object_counter = 0;
 
 
 std::string
@@ -43,6 +55,27 @@ TiberCad::_SubMinorVersion = TIBERSUBMINORVERSION;
 
 const int
 TiberCad::_SvnRevision = SVNREVISION;
+
+
+
+
+TiberCad::TiberCad(int argc, char** argv) :
+  _libmeshinit(NULL)
+{
+  if (_object_counter > 0)
+    throw InitFailedException("Only one TiberCAD instance may exist in a process!");
+
+  _cmdline_argc = argc;
+  _cmdline_argv = argv;
+
+  _object_counter++;
+}
+
+
+TiberCad::~TiberCad(void)
+{
+  cleanup();
+}
 
 
 
@@ -90,12 +123,8 @@ TiberCad::software_revision(void)
 
 
 void
-TiberCad::init(int argc, char** argv)
+TiberCad::init(void)
 {
-  // perhaps we can use the commandline arguments somewhere?
-  _cmdline_argc = argc;
-  _cmdline_argv = argv;
-
   // read TIBERCADROOT from environment
   char* root = getenv("TIBERCADROOT");
   if (root != NULL)
@@ -130,7 +159,7 @@ TiberCad::init(int argc, char** argv)
 }
 
 
-int
+void
 TiberCad::cleanup(void)
 {
   delete _control;
@@ -140,8 +169,7 @@ TiberCad::cleanup(void)
 
   // close libMesh and return
   delete _libmeshinit;
-  //return libMesh::close();
-  return 0;
+
 }
 
 
@@ -168,24 +196,31 @@ TiberCad::get_output_dir(void)
 
 
 
-const std::string&
+std::string
 TiberCad::get_filename_suffix(void)
 {
-  return get_control().get_filename_suffix();
+  _filename_suffix_str = "";
+  std::list<std::string>::const_iterator it(_filename_suffix.begin());
+  const std::list<std::string>::const_iterator end(_filename_suffix.end());
+  for ( ; it != end; ++it)
+    _filename_suffix_str += "_" + *it;
+
+  return _filename_suffix_str;
 }
 
 
 void
 TiberCad::clear_filename_suffix(void)
 {
-  get_control().clear_filename_suffix();
+  _filename_suffix.clear();
 }
 
 
 void
 TiberCad::append_to_filename_suffix(const std::string& suffix)
 {
-  get_control().append_to_filename_suffix(suffix);
+  if (suffix.size() != 0)
+    _filename_suffix.push_back(suffix);
 }
 
 
@@ -193,19 +228,22 @@ TiberCad::append_to_filename_suffix(const std::string& suffix)
 void
 TiberCad::prepend_to_filename_suffix(const std::string& suffix)
 {
-  get_control().prepend_to_filename_suffix(suffix);
+  if (suffix.size() != 0)
+    _filename_suffix.push_front(suffix);
 }
 
 
 void
 TiberCad::drop_first_filename_suffix(void)
 {
-  get_control().drop_first_filename_suffix();
+  if (_filename_suffix.size() != 0)
+    _filename_suffix.pop_front();
 }
 
 
 void
 TiberCad::drop_last_filename_suffix(void)
 {
-  get_control().drop_last_filename_suffix();
+  if (_filename_suffix.size() != 0)
+    _filename_suffix.pop_front();
 }
