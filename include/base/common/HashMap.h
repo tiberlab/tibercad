@@ -18,8 +18,6 @@
 #endif
 
 
-namespace TiberCad
-{
 
 #if   defined(HAVE_UNORDERED_MAP)
   template <typename Key, typename Value, typename Hash = std::hash<Key> >
@@ -99,6 +97,5 @@ namespace TiberCad
 #endif
   };
 
-}
 
 #endif // _HASHMAP_H_

@@ -33,11 +33,10 @@ class SimulationEnvironment
     typedef std::map<ID, Boundary*> BCMap;
 
     //! A typedef for convenience
-    typedef TiberCad::HashMap<ElementSide, ID,
-      ElementSide::hash>::Type ElemSideMap;
+    typedef HashMap<ElementSide, ID, ElementSide::hash>::Type ElemSideMap;
 
     //! The type of the element list
-    typedef TiberCad::HashSet<const Elem*>::Type ElementList;
+    typedef HashSet<const Elem*>::Type ElementList;
 
 
   public:

@@ -25,6 +25,7 @@ SimulationEnvironment::SimulationEnvironment(
     _is_initialized(false),
     _is_prepared(false)
 {
+  _environments.insert(this);
 }
 
 

@@ -77,13 +77,13 @@ class TBDLLOCAL MeshRegionInfo
      * This map contains all IDs present in the mesh, even those
      * that have not a name assigned.
      */
-    typedef TiberCad::HashMap<ID, std::string>::Type IDToNameMap;
+    typedef HashMap<ID, std::string>::Type IDToNameMap;
 
     //! name to ID map
     /*!
      * Each ID can in principle have different names associated.
      */
-    typedef TiberCad::HashMap<std::string, std::set<ID> >::Type NameToIDMap;
+    typedef HashMap<std::string, std::set<ID> >::Type NameToIDMap;
 
 
 

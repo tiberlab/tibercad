@@ -11,7 +11,7 @@
 typedef std::set<ID> IDSet;
 
 //! A convenient typedef for a hash set of IDs
-typedef TiberCad::HashSet<ID>::Type IDHashSet;
+typedef HashSet<ID>::Type IDHashSet;
 
 
 #endif // _IDSET_H_

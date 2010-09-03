@@ -332,7 +332,7 @@ void MaxwellEquations::parse_options()
 
   double spectrum_shift_in_eV   = mod_opt.get_option("spectrum_shift", 0.0);
  
-  opt.spectrum_shift    = TiberCad::pow_2(  spectrum_shift_in_eV/( Constants::Hartree) * (opt.work_units / Constants::bohr_radius)
+  opt.spectrum_shift    = TiberMath::pow_2(  spectrum_shift_in_eV/( Constants::Hartree) * (opt.work_units / Constants::bohr_radius)
 				      * Constants::fine_structure_constant) ;
 
   solver_opt.solve_ev_problem_twice = mod_opt.get_option("solve_ev_problem_twice",false);

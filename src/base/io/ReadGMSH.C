@@ -627,7 +627,7 @@ void ReadGMSH::read_mesh(istream& in)
         {
           // create a index of the boundary nodes to easily locate which
           // element might have that boundary
-          TiberCad::HashMap<unsigned int, vector<unsigned int> >::Type node_index;
+          HashMap<unsigned int, vector<unsigned int> >::Type node_index;
           for (unsigned int i = 0; i < boundary_elem.size(); i++)
           {
             boundaryElementInfo binfo = boundary_elem[i];
@@ -688,7 +688,7 @@ void ReadGMSH::read_mesh(istream& in)
         if (edge_elem.size() > 0)
         {
           // create a index of the boundary nodes to easily locate which
-          TiberCad::HashMap<unsigned int, vector<unsigned int> >::Type node_index;
+          HashMap<unsigned int, vector<unsigned int> >::Type node_index;
           for (unsigned int i = 0; i < edge_elem.size(); i++)
           {
             boundaryElementInfo binfo = edge_elem[i];

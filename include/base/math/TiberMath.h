@@ -3,49 +3,62 @@
 #ifndef _TIBERMATH_H_
 #define _TIBERMATH_H_
 
+#include "tiber_dll.h"
+
 namespace {
 
   //! The fermi integral of order -1/2
   /*!
    * 
    */
-  extern "C" double fdm0p5_(double&);
+  extern "C" double TBDLLOCAL fdm0p5_(double&);
 
 
   //! The fermi integral of order +1/2
   /*!
    * 
    */
-  extern "C" double fdp0p5_(double&);
+  extern "C" double TBDLLOCAL fdp0p5_(double&);
 }
 
-
-namespace TiberCad
+//! Mathematical functions
+/*!
+ * \note We do not export inlined functions.
+ */
+namespace TiberMath
 {
 
   //! The power of 2
-  extern inline double pow_2(double x) { return x * x; }
+  inline double pow_2(double x);
 
   //! The fermi integral of order +1/2
-  extern inline double fermidirac_half(double x);
+  inline double fermidirac_half(double x);
 
   //! The fermi integral of order -1/2
-  extern inline double fermidirac_mhalf(double x);
+  inline double fermidirac_mhalf(double x);
 
 }
 
 
-extern inline
+inline
 double
-TiberCad::fermidirac_half(double x)
+TiberMath::pow_2(double x)
+{
+  return x * x;
+}
+
+
+inline
+double
+TiberMath::fermidirac_half(double x)
 {
   return fdp0p5_(x);
 }
 
 
-extern inline
+inline
 double
-TiberCad::fermidirac_mhalf(double x)
+TiberMath::fermidirac_mhalf(double x)
 {
   return fdm0p5_(x);
 }

@@ -764,7 +764,7 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
   {
     // create a index of the boundary nodes to easily locate which
     // element might have that boundary
-    TiberCad::HashMap<unsigned int, std::vector<unsigned int> >::Type node_index;
+    HashMap<unsigned int, std::vector<unsigned int> >::Type node_index;
     for (unsigned int i = 0; i < boundary_elem.size(); i++)
     {
       const ISE_Element* el = elements_list[boundary_elem[i]];
@@ -831,7 +831,7 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
   {
     // create a index of the edge nodes to easily locate which
     // element might have that boundary
-    TiberCad::HashMap<unsigned int, std::vector<unsigned int> >::Type node_index;
+    HashMap<unsigned int, std::vector<unsigned int> >::Type node_index;
     for (unsigned int i = 0; i < edge_elem.size(); i++)
     {
       const ISE_Element* el = elements_list[edge_elem[i]];

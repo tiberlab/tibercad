@@ -3028,11 +3028,11 @@ std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density2D(unsigned
 
   if (opt.particle == "el")
   {
-    prob_factor = TiberCad::fermidirac_mhalf( (Fermi_energy - Energy)  / T_EV);
+    prob_factor = TiberMath::fermidirac_mhalf( (Fermi_energy - Energy)  / T_EV);
   }
   else
   {
-    prob_factor = TiberCad::fermidirac_mhalf( -(Fermi_energy - Energy)  / T_EV);
+    prob_factor = TiberMath::fermidirac_mhalf( -(Fermi_energy - Energy)  / T_EV);
   }
 
 

@@ -34,7 +34,7 @@ using namespace std;
 int main (int argc, char** argv)
 {
   cout << endl;
-  cout << "TiberCAD version " << TiberCad::TiberCadVersion() << endl;
+  cout << "TiberCAD version " << TiberCad::version_string() << endl;
   cout << endl;
 
   // take input file from command line or ask for it

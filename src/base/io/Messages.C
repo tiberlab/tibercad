@@ -81,7 +81,7 @@ Messages::set_log_file(const string& logfile)
     throw InitFailedException("cannot open logfile for writing.");
 
   _log << Messages::endl;
-  _log << "TiberCAD version " << TiberCad::TiberCadVersion() << Messages::endl;
+  _log << "TiberCAD version " << TiberCad::version_string() << Messages::endl;
   time_t now;
   time(&now);
   _log << Messages::endl;

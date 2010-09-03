@@ -49,7 +49,7 @@ class SimulationInterface : public TiberModelObject
   private:
 
     //! A typedef for convenience
-    typedef TiberCad::HashMap<ID, SimulationInterface*>::Type SimulationMap;
+    typedef std::map<ID, SimulationInterface*> SimulationMap;
 
 
   public:
@@ -1236,7 +1236,7 @@ class SimulationInterface : public TiberModelObject
   private:
 
     //! A typedef for the embracing region map
-    typedef TiberCad::HashMap<SimulationInterface*, Embracing*>::Type EmbracingMap;
+    typedef std::map<SimulationInterface*, Embracing*> EmbracingMap;
 
 
     //! The type of the solution descriptor map

@@ -33,8 +33,8 @@ BoundaryRegions::prepare_for_use(void)
 {
   // we need a temporary map to know which ID pairs already exist
   typedef std::vector<std::set<ID> > Pairs;
-  typedef TiberCad::HashMap<size_t, ID>::Type KnownPairs;
-  typedef TiberCad::HashMap<ID, KnownPairs>::Type IDToKnownPairs;
+  typedef HashMap<size_t, ID>::Type KnownPairs;
+  typedef HashMap<ID, KnownPairs>::Type IDToKnownPairs;
   IDToKnownPairs pairs;
   Pairs pairvec;
 

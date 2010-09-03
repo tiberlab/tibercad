@@ -112,8 +112,8 @@ ParticleDensity::classical_density<TiberCad::FERMIDIRAC>(void)
   }
   else if (_argument < arg_max)
   {
-    _density = TiberCad::fermidirac_half(_argument);
-    _density_derivative = TiberCad::fermidirac_mhalf(_argument);
+    _density = TiberMath::fermidirac_half(_argument);
+    _density_derivative = TiberMath::fermidirac_mhalf(_argument);
   }
   else
   {

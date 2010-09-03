@@ -29,7 +29,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
   public:
 
     //! A set of nodes
-    typedef TiberCad::HashSet<const Node*>::Type NodeSet;
+    typedef HashSet<const Node*>::Type NodeSet;
 
     //! The type of boundary (side, edge node)
     enum Type
@@ -123,19 +123,19 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
   private:
 
     //! The element side map
-    typedef TiberCad::HashMap<ElementSide, ID, ElementSide::hash>::Type ElemSideMap;
+    typedef HashMap<ElementSide, ID, ElementSide::hash>::Type ElemSideMap;
 
     //! The subdomain IDs on both sides of a boundary
     /*!
      * We use std::set as value type as this can be easily compared
      */
-    typedef TiberCad::HashMap<ID, std::set<ID> >::Type BDMatMap;
+    typedef HashMap<ID, std::set<ID> >::Type BDMatMap;
 
     //! The element edge map
-    typedef TiberCad::HashMap<ElementEdge, ID, ElementEdge::hash>::Type ElemEdgeMap;
+    typedef HashMap<ElementEdge, ID, ElementEdge::hash>::Type ElemEdgeMap;
 
     //! The node map
-    typedef TiberCad::HashMap<const Node*, ID>::Type NodeMap;
+    typedef HashMap<const Node*, ID>::Type NodeMap;
 
 
     //! The sides

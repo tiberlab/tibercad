@@ -258,16 +258,16 @@ class Device
 
 
     //! A typdef for the bulk materials
-    typedef TiberCad::HashMap<ID, Material*>::Type MaterialMap;
+    typedef HashMap<ID, Material*>::Type MaterialMap;
 
     //! A typdef for the material boundaries
-    typedef TiberCad::HashMap<ID, MaterialBoundary*>::Type BoundaryMap;
+    typedef HashMap<ID, MaterialBoundary*>::Type BoundaryMap;
 
     //! A typdef for the edge objects
-    typedef TiberCad::HashMap<ID, EdgeObject*>::Type EdgeObjMap;
+    typedef HashMap<ID, EdgeObject*>::Type EdgeObjMap;
 
     //! A typdef for the node objects
-    typedef TiberCad::HashMap<ID, NodeObject*>::Type NodeObjMap;
+    typedef HashMap<ID, NodeObject*>::Type NodeObjMap;
 
 
 
