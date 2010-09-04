@@ -19,10 +19,6 @@ TiberCad::_filename_suffix;
 
 
 
-std::string
-TiberCad::_filename_suffix_str;
-
-
 Control*
 TiberCad::_control = NULL;
 
@@ -156,7 +152,19 @@ TiberCad::init(void)
 
   // now create a TiberCAD Control object
   _control = new Control();
+
+  _control->set_inputfile(std::string(_cmdline_argv[1]));
+  _control->init();
 }
+
+
+
+void
+TiberCad::run(void)
+{
+  _control->run_simulation();
+}
+
 
 
 void
@@ -173,25 +181,19 @@ TiberCad::cleanup(void)
 }
 
 
-Control&
-TiberCad::get_control(void)
-{
-  assert(_control != NULL);
-  return *_control;
-}
 
 
 const std::string&
 TiberCad::get_output_format(void)
 {
-  return get_control().get_output_format();
+  return _control->get_output_format();
 }
 
 
 const std::string&
 TiberCad::get_output_dir(void)
 {
-  return get_control().get_output_dir();
+  return _control->get_output_dir();
 }
 
 
@@ -199,13 +201,13 @@ TiberCad::get_output_dir(void)
 std::string
 TiberCad::get_filename_suffix(void)
 {
-  _filename_suffix_str = "";
+  std::string suffix_str;
   std::list<std::string>::const_iterator it(_filename_suffix.begin());
   const std::list<std::string>::const_iterator end(_filename_suffix.end());
   for ( ; it != end; ++it)
-    _filename_suffix_str += "_" + *it;
+    suffix_str += "_" + *it;
 
-  return _filename_suffix_str;
+  return suffix_str;
 }
 
 

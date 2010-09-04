@@ -128,8 +128,12 @@ Control::~Control(void)
   const SimulationInterface::SimulationIterator
     simend(SimulationInterface::simulations_end());
 
-  for ( ; simit != simend; ++simit)
-    SimulationInterface::destroy(*simit);
+  while (simit != simend)
+  {
+    SimulationInterface* sim = *simit;
+    ++simit;
+    SimulationInterface::destroy(sim);
+  }
 
 
   Device::destroy(_device);

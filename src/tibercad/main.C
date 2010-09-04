@@ -2,7 +2,6 @@
 
 #include "boost/algorithm/string/trim.hpp"
 
-#include "Control.h"
 #include "DLLoader.h"
 #include "TiberCad.h"
 #include "License.h"
@@ -121,20 +120,19 @@ int main (int argc, char** argv)
   //
   // here begins real TiberCAD
   //
+  int error = 1;
   try {
 
     TiberCad tibercad(argc, argv);
 
     tibercad.init();
 
-    Control& control = TiberCad::get_control();
-    control.set_inputfile(inputfile);
-    control.init();
-    control.run_simulation();
+    tibercad.run();
 
     Messages::info("Simulation finished...");
     Messages::info("Goodbye");
 
+    error = 0;
   }
   catch (exception& e)
   {
@@ -151,6 +149,6 @@ int main (int argc, char** argv)
 
   Messages::close_log_file();
 
-  return 0;
+  return error;
 }
 

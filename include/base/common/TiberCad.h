@@ -52,11 +52,9 @@ class TiberCad
     void init(void);
 
 
-    //! A cleanup routine
-    /*!
-     * This routine calls close() of libmesh and other libraries, if needed
-     */
-    void cleanup(void);
+    //! Start simulations
+    void run(void);
+
 
 
     //! The full TiberCAD version string
@@ -130,15 +128,17 @@ class TiberCad
     static const std::string& get_output_format(void);
 
 
-    //! Get access to the control module
-    static Control& get_control(void);
-
-
 
   private:
 
     //! Disable default constructor
     TiberCad(void);
+
+    //! A cleanup routine
+    /*!
+     * This routine calls close() of libmesh and other libraries, if needed
+     */
+    void cleanup(void);
 
 
     //! The TiberCAD major version
@@ -185,11 +185,6 @@ class TiberCad
     static std::list<std::string> _filename_suffix;
 
 
-    //! The filename suffix string
-    /*!
-     * This is only a helper variable
-     */
-    static std::string _filename_suffix_str;
 };
 
 
