@@ -26,7 +26,7 @@ class Database;
  * This class is responsible for the setup of the device and
  * the flow control of the simulation
  */
-class Control
+class TBDLLOCAL Control
 {
 
   public:

@@ -190,14 +190,14 @@ Control::init(void) throw (InitFailedException,
     simit(SimulationInterface::simulations_begin());
   const SimulationInterface::SimulationIterator
     simend(SimulationInterface::simulations_end());
-  for ( ; simit != simend; ++simit)
-    if ((*simit)->has_environment()) (*simit)->get_environment().init();
+  //for ( ; simit != simend; ++simit)
+  //  if ((*simit)->has_environment()) (*simit)->get_environment().init();
 
 
 
   // initialize the simulations, but only if they are not initialized yet
   // (the latter should not happen, however)
-  simit = SimulationInterface::simulations_begin();
+  //simit = SimulationInterface::simulations_begin();
   for ( ; simit != simend; ++simit)
     if (!(*simit)->is_initialized())
       (*simit)->init();
