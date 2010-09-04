@@ -167,34 +167,7 @@ $Device
 $Models
 { 
 
-   model thermalbalance
-  {
 
-     options
-    { 
-      simulation_name = tt
-      physical_regions = all
-    }
-
-     BC_Regions
-    {
-        BC_Region heat_reservoir
-   	{
-    
-         BC_reg_numb = 18
-         temperature = 300
-   	}
-
-        BC_Region heat_reservoir
-   	{
-    
-         BC_reg_numb = 19
-         temperature = 300
-   	}
- 
-     }
-
-  }
 
  model driftdiffusion
   { 
@@ -282,10 +255,6 @@ $Models
 # Definition of  Model-dependent Solver parameters
 $Solver
 {
-   thermal
-  {
-     kappa_temperature_sc = false   
-  }
  
 
    driftdiffusion   #  fino a V 3.07
@@ -385,22 +354,6 @@ $Solver
 
 
 
-# Definition of  Model dependent physical parameters
-$Physics
-{
-
- thermal
-  {
-    Joule_Effect = true
-    Peltier_Thomson_Effect = false
-    Particle_thermal_conductivity = false
-    current_simulation = driftdiffusion 
-  }
-
-   
-}
-
-
 # Definition of  model-indipendent parameters of the Simulation
 
 
@@ -410,7 +363,7 @@ $Simulation
   temperature = 300
 #  solve = (strain,sweep)
 #  solve = (strain,driftdiffusion) # sweep
- # before solve = (strain, sweep_1)
+  solve = (strain, sweep_1)
 
   #symmetry = cylindrical
   resultpath =  output # output_test_no_ox_no_alinn_relP  #output_test_alinn_no_pyro_relP  #input_siO2_str_noncyl
