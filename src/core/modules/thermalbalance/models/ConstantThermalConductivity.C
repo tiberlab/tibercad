@@ -41,12 +41,6 @@ ConstantThermalConductivity::do_init(void)
 {
   get_parameter("ThermCond",_kappa);
 
-  // get_parameter("therm_lat_cond_x",_kx);
-  
-  //if (get_material()->get_structure() == "wz")
-  //  get_parameter("therm_lat_cond_z",_kz);
-  //else
-  // _kz = _kx;
 
 
   RealTensor kappa_tens(0);
@@ -56,33 +50,36 @@ ConstantThermalConductivity::do_init(void)
 
   set_thermal_conductivity(kappa_tens);
 
-  // cout<<kappa<<endl;
+  //cout<<_kappa[0]<<endl;
   if (get_material()->get_structure() == "wz")
   {
     const RotatedCrystal&   cr = get_material()->get_rotated_crystal();
     rotate_to_calculation_system(cr.RotMatrix);
   }
-}
 
-
-void
-ConstantThermalConductivity::do_init_alloy(const PhysicalModelInterface *comp_A,
-                                                const PhysicalModelInterface *comp_B, double xa)
-{
-   const ConstantThermalConductivity* modA = dynamic_cast<const ConstantThermalConductivity*>(comp_A);
-   const ConstantThermalConductivity* modB = dynamic_cast<const ConstantThermalConductivity*>(comp_B);
-
-   _kappa[0] = alloy(modA->_kappa[0], modB->_kappa[0], xa);
-   _kappa[1] = alloy(modA->_kappa[1], modB->_kappa[1], xa);
-   _kappa[2] = alloy(modA->_kappa[2], modB->_kappa[2], xa);
-
-   // _kz = alloy(modA->_kz, modB->_kz, xa);
-
-   //Read Alloy Database does not work because here however take the linear approximantion. TO FIX IT. 
-   //get_parameter("therm_lat_cond_x",_kx);
-   //get_parameter("therm_lat_cond_z",_kz);
+  std::cout<<"HERE"<<std::endl;
 
 }
+
+
+//void
+// ConstantThermalConductivity::do_init_alloy(const PhysicalModelInterface *comp_A,
+//                                                 const PhysicalModelInterface *comp_B, double xa)
+// {
+//    const ConstantThermalConductivity* modA = dynamic_cast<const ConstantThermalConductivity*>(comp_A);
+//    const ConstantThermalConductivity* modB = dynamic_cast<const ConstantThermalConductivity*>(comp_B);
+
+//    _kappa[0] = alloy(modA->_kappa[0], modB->_kappa[0], xa);
+//    _kappa[1] = alloy(modA->_kappa[1], modB->_kappa[1], xa);
+//    _kappa[2] = alloy(modA->_kappa[2], modB->_kappa[2], xa);
+
+//    // _kz = alloy(modA->_kz, modB->_kz, xa);
+
+//    //Read Alloy Database does not work because here however take the linear approximantion. TO FIX IT. 
+//    //get_parameter("therm_lat_cond_x",_kx);
+//    //get_parameter("therm_lat_cond_z",_kz);
+
+// }
 
 
 //--------------------------------------------------------//

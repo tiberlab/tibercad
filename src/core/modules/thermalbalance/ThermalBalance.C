@@ -597,6 +597,7 @@ ThermalBalance::do_setup_solution_variables(void)
   declare_solution(ThermalFlux, VECTOR, NODES, "W/cm^2");
   declare_solution(ThermCond, VECTOR, NODES, "W/cm K");
   declare_solution(HeatSource, REAL, CELL, "W/cm^3");
+  declare_solution(EffectiveKappa, REAL, NODES, "W/cm^3");
   declare_solution(SolDir,VECTOR,CELL, "W/cm^3");
   declare_solution(Partition,REAL,CELL, "");
   declare_solution(DomainTest,REAL,CELL, "");
@@ -609,6 +610,7 @@ ThermalBalance::do_setup_solution_variables(void)
   add_alias("thermal", ThermalFlux);
   add_alias("thermal", HeatSource);
   add_alias("thermal", Partition);
+  add_alias("thermal", EffectiveKappa);
   //  add_alias("ThermCond", ThermalConductivity);
 }
 
@@ -929,8 +931,8 @@ ThermalBalance::solve_gray(void)
   }
 
  
-  if  (SimulationOptions::verbose() > 2)
-    AngInt.print_info();
+  // if  (SimulationOptions::verbose() > 2)
+  //  AngInt.print_info();
 
   double old_energy_norm = 0.0;
   equilibrium_energy->close();
@@ -1029,7 +1031,7 @@ ThermalBalance::solve_gray(void)
 	
 	for (ID k = 0; k<AngInt.n_slices ; k++ )
 	{  
-	  double value = (*sol_dir[k])(dof) * vg;
+	  double value = (*sol_dir[k])(dof) * vg/(4.0 * M_PI);
 	  
 	  for (ID i = 0; i<dim ; i++ )
 	  {       
@@ -1272,6 +1274,7 @@ ThermalBalance::do_solve(void)
   { 
    
     cout<<"MULTISCALE LOOP...."<<endl;
+
     cout<<endl;
 
     Domain = GlobalDomain;
@@ -1386,7 +1389,7 @@ ThermalBalance::get_solution_secure(const Elem* elem,
 
    const unsigned int n_dofs = dof_indices.size();
   ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-  
+  const RealTensor& kappa = mod.get_total_thermal_conductivity();
    // do interpolation/
    //  cout<<solution(dof_indices[0])<<endl;
    for (unsigned int n = 0; n < np; n++)
@@ -1429,8 +1432,27 @@ ThermalBalance::get_solution_secure(const Elem* elem,
 	 values[ThermalFlux][d + 3 * n] = heat_flux(d);
        
      }       
-     
+      
+    if (values.count(EffectiveKappa)||
+         values.count(thermal)  )
+     { 
+       
+      
 
+       RealGradient heat_flux_gray(0);
+       for (ID i = 0; i < n_dofs; i++)
+	 for (ID d = 0; d < dim; d++)
+	   heat_flux_gray(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
+        
+   
+       RealGradient heat_flux_fourier(0);
+       for (unsigned int i = 0; i < n_dofs; i++) 
+	 heat_flux_fourier += -solution(dof_indices[i]) * (kappa * dphi[i][n]);
+
+       values[EffectiveKappa][n] = heat_flux_gray(2)/heat_flux_fourier(2);
+     
+     }       
+     
      if (values.count(ThermCond)||
          values.count(thermal)  )
      {

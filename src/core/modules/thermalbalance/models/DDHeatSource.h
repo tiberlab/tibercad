@@ -10,13 +10,13 @@
 #include "vector_value.h"
 #include "PhysicalModelInterface.h"
 #include "SimulationInterface.h"
-
+#include "tiber_dll.h"
 
 class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class DDHeatSource : public HeatSourceModel
+class TBDLLOCAL DDHeatSource : public HeatSourceModel
 {
 
   public:

@@ -9,13 +9,13 @@
 #include "tensor_value.h"
 #include "vector_value.h"
 #include "PhysicalModelInterface.h"
-
+#include "tiber_dll.h"
 
 class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class ConstantThermalConductivity : public ThermalConductivityModel
+class TBDLLOCAL ConstantThermalConductivity : public ThermalConductivityModel
 {
   
 public:
@@ -38,7 +38,7 @@ protected:
   //         const PhysicalModelInterface* comp_B);
   
   virtual void do_init_alloy (const PhysicalModelInterface *comp_A,
-			      const PhysicalModelInterface *comp_B, double xa);
+			      const PhysicalModelInterface *comp_B, double xa){};
   
   virtual void  read_database_alloy(void){};
   /* This is not used here: */

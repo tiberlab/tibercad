@@ -9,14 +9,14 @@
 #include "tensor_value.h"
 #include "vector_value.h"
 #include "HeatTransportModel.h"
-//#include "HeatSourceModel.h"
-//#include "ThermalConductivityModel.h"
+#include "tiber_dll.h"
+
 
 class Elem;
 class HeatSourceModel;
 class ThermalConductivityModel;
 
-class ThermalModel : public PhysicalModel
+class TBDLLOCAL ThermalModel : public PhysicalModel
 {
 
   public:
@@ -111,35 +111,16 @@ class ThermalModel : public PhysicalModel
 
 };
 
-
-// inline
-// void
-// ThermalModel::set_element(const Elem* elem)
-// {
-//   _elem = elem;
-// }
-
-
-// inline
-// void
-// ThermalModel::set_point(const Point& point)
-// {
-//   _point = point;
-// }
 inline
 TiberModelObject*  ThermalModel::_create(const ModelOptions& options)
 {
-
   return new ThermalModel(options);
-
 }
 
 inline
 void  ThermalModel::_destroy( TiberModelObject* p)
 {
-
   delete p;
-
 }
 
 
@@ -192,14 +173,6 @@ ThermalModel::get_heat_transport_model(void) const
 
 }
 
-// inline
-// ThermalConductivityModel*
-// ThermalModel::get_thermal_conductivity_model(void) const
-// {
-
-//   return _tcm;
-
-// }
 
 inline
 ThermalModel*

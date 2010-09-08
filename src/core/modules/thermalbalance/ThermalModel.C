@@ -49,7 +49,7 @@ ThermalModel::create_submodels(void)
 
 
 void
-ThermalModel::do_init(void)
+ThermalModel::do_init(void) 
 {
   PhysicalModelInterface::SubmodelIterator  it;
  
@@ -57,8 +57,8 @@ ThermalModel::do_init(void)
   it = submodels_begin("heat_transport");
   _htm = dynamic_cast<HeatTransportModel*> ((*it).second);
   
-  cout<<"TYPE"<<endl;
-  cout<<_htm->get_type()<<endl;
+  //cout<<"TYPE"<<endl;
+  //cout<<_htm->get_type()<<endl;
 
   ModelOptions& opts = _htm->get_options();
 
@@ -95,7 +95,7 @@ ThermalModel::do_init(void)
     //Relaxation time
     //Compute the mean thermal conductivity.
   
-    double kg = (_kappa(0,0) + _kappa(1,1) + _kappa(2,2))/3.0;
+    //double kg = (_kappa(0,0) + _kappa(1,1) + _kappa(2,2))/3.0;
     
     _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;
   }
@@ -166,6 +166,6 @@ ThermalModel::calculate(const Elem* elem, const Point& point)
   _tcm->calculate(elem,point);
   _kappa = _tcm->get_thermal_conductivity();
 
-
+  _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;
 }
 

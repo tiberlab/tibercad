@@ -6,7 +6,7 @@
 #include "SimulationInterface.h"
 #include "ElementSide.h"
 #include "SimulationEnvironment.h"
-
+#include "tiber_dll.h"
 
 class TiberLinearSystem;
 
@@ -17,7 +17,7 @@ class TiberLinearSystem;
  *
  * Illustrates the basic usage of the SimulationInterface API.
  */
-class ThermalBalance : public SimulationInterface
+class TBDLLOCAL ThermalBalance : public SimulationInterface
 {
 
   public:
@@ -274,6 +274,7 @@ class ThermalBalance : public SimulationInterface
       SolDir,
       Partition,
       ThermCond,
+      EffectiveKappa,
       thermal,
       DomainTest
     };

@@ -8,14 +8,14 @@
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
-
+#include "tiber_dll.h"
 
 
 class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class HeatReservoir : public ThermalBoundaryModel
+class TBDLLOCAL HeatReservoir : public ThermalBoundaryModel
 {
 
   public:
