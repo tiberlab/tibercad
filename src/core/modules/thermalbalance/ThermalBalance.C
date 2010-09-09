@@ -429,7 +429,7 @@ ThermalBalance::compact(void)
   
   }
 
-  cout<<"DELETE: "<<del<<endl;
+  //cout<<"DELETE: "<<del<<endl;
 
 }
 
@@ -491,9 +491,9 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
  AngInt.theta_slices = myopts.theta_slices;
  AngInt.phi_slices = myopts.theta_slices;
 
- std::cout<<"CHECK: "<<endl;
- std::cout<< AngInt.theta_slices<<std::endl;
- std::cout<< AngInt.phi_slices<<std::endl;
+ //std::cout<<"CHECK: "<<endl;
+ //std::cout<< AngInt.theta_slices<<std::endl;
+ //std::cout<< AngInt.phi_slices<<std::endl;
 
  //if (myopts.custom)
  //  AngInt.compute_custom_direction(myopts.cd);
@@ -524,17 +524,17 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 ThermalBalance::~ThermalBalance()
 {
   //Release pointers
-  for (ID i = 0; i<dim; i++ )
-    delete thermal_flux[i];
+  // for (ID i = 0; i<dim; i++ )
+  //  delete thermal_flux[i];
   
-  for (ID i = 0; i<dim; i++ )
-    delete thermal_flux_nodal[i];
+  //for (ID i = 0; i<dim; i++ )
+  //  delete thermal_flux_nodal[i];
 
-  for (ID k = 0; k<AngInt.n_slices ; k++ )
-    delete sol_dir[k];
+  // for (ID k = 0; k<AngInt.n_slices ; k++ )
+  //  delete sol_dir[k];
 
 
-  delete  equilibrium_energy;
+  //delete  equilibrium_energy;
 
 
 }

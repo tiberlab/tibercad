@@ -6,7 +6,7 @@
 #include "SimulationInterface.h"
 #include "ElementSide.h"
 #include "SimulationEnvironment.h"
-#include "tiber_dll.h"
+//#include "tiber_dll.h"
 
 class TiberLinearSystem;
 

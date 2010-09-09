@@ -6,8 +6,6 @@
 #include "PhysicalModel.h"
 
 
-//#define TIBER_MODULE_PREFIX thermal_model
-
 class Elem;
 class Point;
 

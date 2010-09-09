@@ -1,0 +1,90 @@
+# diode example
+
+$Device
+{
+
+  Options
+  {
+    meshfile = diode.msh
+    dimension = 1
+    material = Si
+  }
+
+  Region Bulk
+  {
+    doping = 1e12
+  }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models
+{ 
+ 
+  model thermalbalance
+  {
+
+   options
+   {
+    
+    simulation_name = tt
+    #plot = (thermal)
+    #---MULTISCALE ERROR----
+    ms_error = 1e-3
+    ms_iter = 1
+
+   }
+
+
+   physical_model heat_transport
+   {
+     type = gray
+     iter = 1
+   }
+
+   BC_Regions  
+   {
+
+     BC_Region anode
+     {
+       type = heat_reservoir
+       temperature = 300
+     }
+
+     BC_Region cathode
+     {
+       type = heat_reservoir
+       temperature = 400
+     }
+
+   }
+  }
+
+}
+
+
+# Definition of  Model-dependent Solver parameters
+
+$Solver
+{
+
+}
+
+# Definition of  model-indipendent parameters of the Simulation
+
+
+$Simulation
+{
+  searchpath = .
+  temperature = 300
+  verbose = 3
+  solve = (tt)
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
