@@ -144,11 +144,13 @@ N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 #Lattice thermal conductivity
 [thermal_conductivity/constant]
-therm_lat_cond_x = 2.85
-therm_lat_cond_z = 2.85
+ThermCond = (2.85,2.85,2.85)
 
+[sound_velocity/constant]
+vg = 10.127e5 #cm/s
 
-
+[heat_capacity/constant]
+C = 1.00 # j/cm3K
 
 
 #Atomistic structure informations
