@@ -121,9 +121,11 @@ int main (int argc, char** argv)
   // here begins real TiberCAD
   //
   int error = 1;
-  try {
 
-    TiberCad tibercad(argc, argv);
+  // Create the entry point object
+  TiberCad tibercad(argc, argv);
+
+  try {
 
     tibercad.init();
 
