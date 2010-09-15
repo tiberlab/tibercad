@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "MaterialBoundary.h"
 #include "Trap.h"
+#include "RecombinationModelInterface.h"
 #include "DriftDiffusionProperties.h"
 #include "SimulationInterface.h"
 #include "ModelErrorException.h"
@@ -67,10 +68,10 @@ DDInterfaceModel::do_init(void)
 
   assert(mat != NULL);
 
-  _ddprop = static_cast<DriftDiffusionProperties*>(
-      mat->get_model(get_simulator_id()));
+  //_ddprop = static_cast<DriftDiffusionProperties*>(
+  //    mat->get_model(get_simulator_id()));
 
-  assert(_ddprop != NULL);
+  //assert(_ddprop != NULL);
 
   // get surface trap models
   SubmodelIterator it = submodels_begin("trap");
@@ -90,8 +91,11 @@ DDInterfaceModel::do_init(void)
   end = submodels_end("recombination");
   for ( ; it != end; ++it)
   {
-    cerr << "surface recombination: " << it->second->get_type() << endl;
+    RecombinationModelInterface* rec =
+        static_cast<RecombinationModelInterface*>(it->second);
+    _recombination_models.insert(rec);
   }
+    cerr << it->second << "\n";
 }
 
 
@@ -126,13 +130,35 @@ DDInterfaceModel::compute()
     _jacobian[0][1] -= dq_dEfn;
     _jacobian[0][2] -= dq_dEfp;
   }
+
+  {
+    const DriftDiffusionProperties::PointData& pd =
+        get_dd_properties()->get_point_data();
+
+    double rec[6];
+    _calculate_recombination(rec);
+
+    _coeff_g[1] += rec[0];
+    double dRn_dEfn = -rec[1] * pd.electron_density_derivative;
+    double dRn_dEfp = -rec[2] * pd.hole_density_derivative;
+    _jacobian[1][0] -= dRn_dEfn + dRn_dEfp;
+    _jacobian[1][1] += dRn_dEfn;
+    _jacobian[1][2] += dRn_dEfp;
+
+    _coeff_g[2] += rec[3];
+    double dRp_dEfn = -rec[4] * pd.electron_density_derivative;
+    double dRp_dEfp = -rec[5] * pd.hole_density_derivative;
+    _jacobian[2][0] -= dRp_dEfn + dRp_dEfp;
+    _jacobian[2][1] += dRp_dEfn;
+    _jacobian[2][2] += dRp_dEfp;
+  }
 }
 
 
 void
 DDInterfaceModel::_calculate_traps(double& q, double& dq_dEfn, double& dq_dEfp)
 {
-
+  assert(_ddprop != NULL);
   double Ec = _ddprop->get_conduction_band_edge() - _ddprop->get_electric_potential();
   double Ev = _ddprop->get_valence_band_edge() - _ddprop->get_electric_potential();
 
@@ -187,3 +213,38 @@ DDInterfaceModel::_calculate_traps(double& q, double& dq_dEfn, double& dq_dEfp)
   }
 }
 
+
+void
+DDInterfaceModel::_calculate_recombination(double rec[6])
+{
+  rec[0] = rec[1] = rec[2] = rec[3] = rec[4] = rec[5] = 0.0;
+
+  double Re, Rh;
+  vector<double> dRe(3), dRh(3);
+
+  set<RecombinationModelInterface*>::iterator it(_recombination_models.begin());
+  const set<RecombinationModelInterface*>::iterator end(_recombination_models.end());
+  for ( ; it != end; ++it)
+  {
+    (*it)->set_driftdiffusionproperties(get_dd_properties());
+    (*it)->get_net_recombination_rates(Re, Rh);
+    (*it)->get_net_recombination_rate_derivatives(dRe, dRh);
+
+    rec[0] += Re;
+    rec[1] += dRe[0];
+    rec[2] += dRe[1];
+    rec[3] += Rh;
+    rec[4] += dRh[0];
+    rec[5] += dRh[1];
+  }
+
+  if (is_internal_boundary())
+  {
+    rec[0] /= 2;
+    rec[1] /= 2;
+    rec[2] /= 2;
+    rec[3] /= 2;
+    rec[4] /= 2;
+    rec[5] /= 2;
+  }
+}
