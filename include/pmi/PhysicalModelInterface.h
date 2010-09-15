@@ -36,7 +36,7 @@ class Material;
  * This method could use the options for instantiation of specialized
  * classes.
  */
-class TBDLEXPORT PhysicalModelInterface : public TiberModelObject
+class PhysicalModelInterface : public TiberModelObject
 {
 
   public:

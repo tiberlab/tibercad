@@ -3,9 +3,7 @@
 #ifndef _DRIFTDIFFUSIONPROPERTIES_H_
 #define _DRIFTDIFFUSIONPROPERTIES_H_
 
-#ifndef TIBER_MODULE_PREFIX
-#define TIBER_MODULE_PREFIX driftdiffusion
-#endif
+
 
 #include "PhysicalModel.h"
 
@@ -48,7 +46,7 @@ class PyroPolarization;
  * Trying to add to identical models will result in a memory leak. This will
  * be corrected in future. }
  */
-class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
+class DriftDiffusionProperties : public PhysicalModel
 {
 
   public:
@@ -764,13 +762,6 @@ class TBDLEXPORT DriftDiffusionProperties : public PhysicalModel
       std::vector<double> band_edges;
     };
 
-
-    //! The possible variables
-    enum Variables
-    {
-      UNKNOWN = 0,
-      RELAXPOLARIZ //!< Relaxation factor for the polarization
-    };
 
     //! The empty constructor.
     DriftDiffusionProperties(const ModelOptions& options);

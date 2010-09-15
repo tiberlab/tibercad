@@ -10,6 +10,7 @@
 
 
 class DriftDiffusionProperties;
+class RecombinationModelInterface;
 class Trap;
 
 /*!
@@ -24,7 +25,7 @@ class Trap;
  * to allow for Dirichlet boundary conditions. For \f$\beta = 1\f$, the boundary
  * condition is of Robin type, for \f$\beta = 0\f$, it is of Dirichlet type.
  */
-class TBDLEXPORT DDInterfaceModel : public PhysicalModel
+class DDInterfaceModel : public PhysicalModel
 {
 
   public:
@@ -43,6 +44,10 @@ class TBDLEXPORT DDInterfaceModel : public PhysicalModel
 
     //! Create an interface model
     static DDInterfaceModel* create(const ModelOptions& options);
+
+
+    //! Set the drift-diffusion properties object
+    void set_dd_properties(DriftDiffusionProperties* ddprop);
 
 
     //! Compute the coefficients and their derivatives
@@ -150,6 +155,7 @@ class TBDLEXPORT DDInterfaceModel : public PhysicalModel
 
   private:
 
+
     //! The coefficients a
     std::vector<double> _coeff_a;
 
@@ -181,9 +187,16 @@ class TBDLEXPORT DDInterfaceModel : public PhysicalModel
     //! The hole traps
     std::set<Trap*> _htraps;
 
+    //! Recombination models
+    std::set<RecombinationModelInterface*> _recombination_models;
+
 
     //! Calculate the trap contributions
     void _calculate_traps(double& q, double& dq_dEfn, double& dq_dEfp);
+
+
+    //! calculate the recombinations
+    void _calculate_recombination(double rec[6]);
 
 
     //! The creation method
@@ -205,7 +218,12 @@ class TBDLEXPORT DDInterfaceModel : public PhysicalModel
 // inline members
 //
 
-
+inline
+void
+DDInterfaceModel::set_dd_properties(DriftDiffusionProperties* ddprop)
+{
+  _ddprop = ddprop;
+}
 
 
 inline
