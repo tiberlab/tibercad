@@ -157,8 +157,8 @@ TiberCad::init(void)
 
   // now create a TiberCAD Control object
   _control = new Control();
-
-  string inputfile(argv[1]);
+ 
+  std::string inputfile(_cmdline_argv[1]);
 #ifdef CYGWIN
     // we first convert the filename to something more UNIX like
     Utils::convert_win32_path_to_posix(inputfile);
