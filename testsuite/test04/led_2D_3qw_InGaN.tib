@@ -176,7 +176,7 @@ $Models
     {
  
      simulation_name = driftdiffusion
-     plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, ContactCurrent, NetRecombination, eMob, hMob, polarization)
+     plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, eCurrentDensity, hCurrentDensity, ContactCurrent, NetRecombination, eMobility, hMobility, eConductivity, hConductivity, Polarization)
 
      strain_simulation = strain
      relax_polarization = @polariz[0.0]
@@ -260,10 +260,12 @@ $Solver
    driftdiffusion   #  fino a V 3.07
    {
 
+    nonlinear_solver = tiber
     nonlin_max_it = 50 #25
     nonlin_step_tol = 1e-4
     ls_max_step =  2  # 2 #0.8 # 1.5  #1.0 # 1.5  #1.0 #2       # 1.0  fino a P = 0.33
-    pc_type = ilu
+    pc_type = lu
+    ksp_type = pconly
  #   ksp_type = gmres
     #xmonitor = true
 
