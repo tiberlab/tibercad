@@ -66,12 +66,17 @@ ThermalBalance::do_init(void)
 
   dim = get_mesh().mesh_dimension();
 
-  do_partition_bis();
-
+  do_partition();
+  
   do_init_fourier();
 
   do_init_gray();
 
+ 
+
+
+  if  (SimulationOptions::verbose() > 2)
+    AngInt.print_info();
 
   //Create Global Domain
   const MeshBase& mesh = get_mesh();
@@ -107,136 +112,10 @@ ThermalBalance::do_init(void)
 
 }
 
+
+
 void
 ThermalBalance::do_partition(void)
-{
-
-  ModelOptions gray_opt = get_options();
-
-  //------------------------------DOMAIN PARTITIONING---------------------------
-  const MeshBase& mesh = get_mesh();
-  {
-    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-    
-    for ( ; el != end_el ; ++el)
-    {
-      const Elem* elem = *el;
-      
-      ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-      mod.calculate(elem,elem->centroid());   
-      
-      if (opts.automatic_partitioning)  
-      {
-	
-	Real T0 = SimulationOptions::temperature;
-	Real tg = mod.get_relaxation_time();
-	Real vg = mod.get_sound_velocity();
-	Real heat_source = mod.get_total_heat_source();
-
-	ID dof = elem->dof_number(gray_sys_number,0,0);
-	//	double T = (*equilibrium_energy)(dof);
-
-        //Get temperature
-	std::vector<Point>  p(1);
-        p[0] = elem->centroid();
-	std::map<ID, std::vector<double> > values;
-	std::vector<double> value_vec(1);
-       
-        values[FourierTemp] = value_vec;
-	get_solution_secure(elem,values,p);
-	
-        double T = values[FourierTemp][0];
-
-	double value = T;
-
-	if (value>opts.threshold_value)
-	  GrayDomain.insert(elem);
-	else
-	  FourierDomain.insert(elem);
-	
-      }
-      else
-      {
-	HeatTransportModel* htm = mod.get_heat_transport_model();
-	if (htm->get_type() == HeatTransportModel::Gray)
-	{
-	  GrayDomain.insert(elem);
-	  gray_opt = htm->get_options();       
-	}
-	else if (htm->get_type() == HeatTransportModel::Fourier)
-	  FourierDomain.insert(elem);
-      }
-    }
-  }
-
-
-
-  //BTE/Fourier boundary side
-  {
-    set<const Elem*>::iterator el_f = GrayDomain.begin();
-    const set<const Elem*>::iterator end_el_f = GrayDomain.end();
-   
-    for ( ; el_f != end_el_f ; ++el_f)
-    {
-      const Elem* elem = *el_f;  
-      ID neighbor = elem->n_neighbors();
-      
-      for (ID k = 0; k < neighbor; k ++)
-      {
-	const Elem* elem_n = elem->neighbor(k);
-
-	if (FourierDomain.count(elem_n))
-	{ 
-	  const ElementSide elside(elem->top_parent(),k);
-	  BoundarySide.insert(elside);           
-	}
-      }
-
-    }
-  }
-
-  
-  {
-    set<const Elem*>::iterator el_f = FourierDomain.begin();
-    const set<const Elem*>::iterator end_el_f = FourierDomain.end();
-    
-    for ( ; el_f != end_el_f ; ++el_f)
-    {
-      const Elem* elem = *el_f;  
-      ID neighbor = elem->n_neighbors();
-      
-      for (ID k = 0; k < neighbor; k ++)
-      {
-	const Elem* elem_n = elem->neighbor(k);
-	
-	if (GrayDomain.count(elem_n))
-	{ 
-	  const ElementSide elside(elem->top_parent(),k);
-	  BoundarySide.insert(elside);           
-	}
-      }
-
-    }
-  }
-  //-----------
-
-  //Transfering options fro gray model to thermal balance //TO BE CHANGED
-  myopts.theta_slices = gray_opt.get_option("theta_slices",0);
-  myopts.phi_slices = gray_opt.get_option("phi_slices",0);
-  myopts.max_error = gray_opt.get_option("max_error",1e-3);
-  myopts.max_iter = gray_opt.get_option("max_iter",10);
-  myopts.diffusive =  gray_opt.get_option("diffusive_walls",true);
-  myopts.partitioning = gray_opt.get_option("partitioning","manual");
-  myopts.threshold_value =  gray_opt.get_option("threshold_value",0.0);
-  //-------------------------------------------------------------------------
-
-
-     
-}
-
-void
-ThermalBalance::do_partition_bis(void)
 {
 
   ModelOptions gray_opt = get_options();
@@ -250,26 +129,34 @@ ThermalBalance::do_partition_bis(void)
     MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
     
-    // cout<<"ENTRIED"<<endl;
+   
+
+    bool found = false;
+    
     for ( ; el != end_el ; ++el)
     {
       const Elem* elem = *el;
       
-      ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-      //mod.calculate(elem,elem->centroid());   
+      ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);   
       
       HeatTransportModel* htm = mod.get_heat_transport_model();
 
-      //cout<<htm->get_type()<<endl;
       if (htm->get_type() == HeatTransportModel::Gray)
       {
 	GrayDomain.insert(elem);
-	gray_opt = htm->get_options();       
+
+        if (found == false)
+	{
+	  gray_opt = htm->get_options();   
+          cout<<"ENTRIED"<<endl;
+	  found = true;  
+	}
+
       }
       else
 	FourierDomain.insert(elem);
-	
       
+      ++el;
     }
   }
   //cout<<"ECCOLO"<<FourierDomain.size()<<endl;
@@ -279,9 +166,11 @@ ThermalBalance::do_partition_bis(void)
   myopts.phi_slices = gray_opt.get_option("phi_slices",0);
   myopts.max_error = gray_opt.get_option("max_error",1e-3);
   myopts.max_iter = gray_opt.get_option("max_iter",1);
-  myopts.diffusive =  gray_opt.get_option("diffusive_walls",true);
+  myopts.diffusive =  gray_opt.get_option("diffusive_walls",false);
   myopts.partitioning = gray_opt.get_option("partitioning","manual");
   myopts.threshold_value =  gray_opt.get_option("temp_threshold",0.0);
+  myopts.phi_zero = gray_opt.get_option("phi_zero",0);
+
   //-------------------------------------------------------------------------
 
   //AUTOMATIC PARTITIONING
@@ -368,10 +257,6 @@ ThermalBalance::do_partition_bis(void)
 
 
 
-
-
-
-     
 }
 
 
@@ -386,52 +271,6 @@ ThermalBalance::do_get_solution_vector(void)
 //   return system->get_solution_vector();
 }
 
-
-
-
-void
-ThermalBalance::compact(void)
-{
-
-  std::set<const Elem*>& OtherDomain = Domain;
-  std::set<const Elem*>& MainDomain = Domain;
-
-  if (Domain == GrayDomain)
-  {
-    OtherDomain = FourierDomain;
-    MainDomain = GrayDomain;
-  }
-  else
-  {
-    OtherDomain = GrayDomain;
-    MainDomain = FourierDomain;
-  }
-  
-  ID del = 0;
-  set<const Elem*>::iterator el_f = MainDomain.begin();
-  const set<const Elem*>::iterator end_el_f = MainDomain.end();
-  for ( ; el_f != end_el_f ; ++el_f)
-  {
-    const Elem* elem = *el_f;  
-    ID neighbor = elem->n_neighbors();
-    
-    ID nb = 0; 
-    for (ID k = 0; k < neighbor; k ++)
-      if (OtherDomain.count( elem->neighbor(k)))
-	nb ++;
-
-    if (nb>1)
-    {
-      del++;
-      OtherDomain.insert(elem);
-      MainDomain.erase(elem);
-    }
-  
-  }
-
-  //cout<<"DELETE: "<<del<<endl;
-
-}
 
 
 void
@@ -474,6 +313,9 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
  system->attach_assemble_function(assemble_gray);
  system->init();
 
+ 
+
+
 
  //N.B.:Hereafter the dof are elemental
  gray_sys_number = system->number();
@@ -489,15 +331,18 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 
  AngInt.dim = dim;
  AngInt.theta_slices = myopts.theta_slices;
- AngInt.phi_slices = myopts.theta_slices;
+ AngInt.phi_slices = myopts.phi_slices;
+ AngInt.phi_zero = myopts.phi_zero;
+
+ cout<<myopts.phi_slices<<endl;
 
  //std::cout<<"CHECK: "<<endl;
  //std::cout<< AngInt.theta_slices<<std::endl;
  //std::cout<< AngInt.phi_slices<<std::endl;
 
- //if (myopts.custom)
- //  AngInt.compute_custom_direction(myopts.cd);
- //else
+ if (myopts.custom)
+   AngInt.compute_custom_direction(myopts.cd);
+ else
    AngInt.compute_directions();
 
  //Get Gray Options 
@@ -524,17 +369,16 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 ThermalBalance::~ThermalBalance()
 {
   //Release pointers
-  // for (ID i = 0; i<dim; i++ )
-  //  delete thermal_flux[i];
+  for (ID i = 0; i<dim; i++ )
+    delete thermal_flux[i];
   
-  //for (ID i = 0; i<dim; i++ )
-  //  delete thermal_flux_nodal[i];
-
-  // for (ID k = 0; k<AngInt.n_slices ; k++ )
-  //  delete sol_dir[k];
-
-
-  //delete  equilibrium_energy;
+  for (ID i = 0; i<dim; i++ )
+    delete thermal_flux_nodal[i];
+  
+  for (ID k = 0; k<AngInt.n_slices ; k++ )
+    delete sol_dir[k];
+  
+  delete  equilibrium_energy;
 
 
 }
@@ -546,44 +390,41 @@ ThermalBalance::parse_options(void)
 
  opts.ms_error = options.get_option("ms_error",1e-3);
  opts.ms_iter = options.get_option("ms_iter" ,1);
-
- // opts.automatic_partitioning = options.get_option("automatic_partitioning",false);
- //opts.threshold_value = options.get_option("threshold_value",0.0);
-
+ opts.automatic_partitioning = options.get_option("automatic_partitioning",false);
+ opts.threshold_value = options.get_option("threshold_value",0.0);
  opts.fourier_guess = options.get_option("fourier_guess",true);
  opts.do_fourier = options.get_option("do_fourier" ,true);
+ myopts.diffusive = options.get_option("diffusive_walls",true); 
 
 //  myopts.max_error =  options.get_option("max_error",1e-3);
 //  myopts.max_iter =  options.get_option("max_iter",1);
 //  myopts.theta_slices = options.get_option("theta_slices",0);
 //  myopts.phi_slices =    options.get_option("phi_slices",0);
-//  myopts.diffusive = options.get_option("diffusive_walls",true); 
-  
 
   //Custom Dir
-  //myopts.custom = options.get_option("custom_dir",0);
+  myopts.custom = options.get_option("custom_dir",0);
 
-  //int n_dir = options.get_option("n_dir",1);
+  int n_dir = options.get_option("n_dir",1);
 
-  //myopts.cd.resize(n_dir);  
-  //Custom Direction
-  //for (ID n = 0; n<n_dir; n++)
- // {
+  myopts.cd.resize(n_dir);  
+  //  Custom Direction
+  for (ID n = 0; n<n_dir; n++)
+  {
     
- //   std::string str = static_cast<ostringstream*>( &(ostringstream() << n+1) )->str();
- //  std::string opt_vec = "dir_" + str;
+    std::string str = static_cast<ostringstream*>( &(ostringstream() << n+1) )->str();
+    std::string opt_vec = "dir_" + str;
+    std::vector<double> cd(3);
+    cd[0] = 0;
+    cd[1] = 0;
+    cd[2] = 1;
+    options.get_option(opt_vec,cd);
     
- //  std::vector<double> cd(3);
- //   cd[0] = 0;
- //   cd[1] = 0;
- //   cd[2] = 1;
- //   options.get_option(opt_vec,cd);
+    myopts.cd[n](0) = cd[0];
+    myopts.cd[n](1) = cd[1];
+    myopts.cd[n](2) = cd[2];
     
- //   myopts.cd[n](0) = cd[0];
- //   myopts.cd[n](1) = cd[1];
- //   myopts.cd[n](2) = cd[2];
-    
- // }  
+  }  
+
  
 }
 
@@ -592,25 +433,27 @@ void
 ThermalBalance::do_setup_solution_variables(void)
 {
   // we declare our solution variables
-  declare_solution(temperature, REAL, NODES, "K");
+  declare_solution(LatticeTemp, REAL, NODES, "K");
   declare_solution(FourierTemp, REAL, NODES, "K");
   declare_solution(ThermalFlux, VECTOR, NODES, "W/cm^2");
   declare_solution(ThermCond, VECTOR, NODES, "W/cm K");
   declare_solution(HeatSource, REAL, CELL, "W/cm^3");
-  declare_solution(EffectiveKappa, REAL, NODES, "W/cm^3");
+  // declare_solution(EffectiveKappa, REAL, NODES, "W/cm^3");
   declare_solution(SolDir,VECTOR,CELL, "W/cm^3");
   declare_solution(Partition,REAL,CELL, "");
   declare_solution(DomainTest,REAL,CELL, "");
+  declare_solution(GRAY,REAL,CELL, "");
   // we can define aliases (but the association name -> id
   // has to be surjective)
   //add_alias("Jq", ThermalFlux);
   //add_alias("LatticeTemp", temperature);
-  add_alias("thermal", temperature);
+  add_alias("thermal", LatticeTemp);
   add_alias("thermal", ThermCond);
   add_alias("thermal", ThermalFlux);
   add_alias("thermal", HeatSource);
   add_alias("thermal", Partition);
-  add_alias("thermal", EffectiveKappa);
+  add_alias("thermal", FourierTemp);
+  //add_alias("thermal", EffectiveKappa);
   //  add_alias("ThermCond", ThermalConductivity);
 }
 
@@ -956,10 +799,10 @@ ThermalBalance::solve_gray(void)
       d_omega = AngInt.d_omega[k];
       IntDir = AngInt.directions[k];
       dir = AngInt.dir[k];
-      
-      if  (SimulationOptions::verbose() > 2)
-	AngInt.print_info(k);
-      
+
+       if  (SimulationOptions::verbose() > 2)
+	AngInt.print_info(k);  
+
       (system.solution)->zero();
       system.solve();
       
@@ -1037,6 +880,7 @@ ThermalBalance::solve_gray(void)
 	  {       
 	    double flux = value * AngInt.directions[k](i);
 	    thermal_flux[i]->add(dof,flux);
+
 	  }
 	}
       }
@@ -1056,30 +900,6 @@ ThermalBalance::solve_gray(void)
   cout<<"      ...GRAY"<<endl;
   cout<<endl;
   
-//   //----COMPUTE THERMAL FLUX--------------
-//   {
-//     set<const Elem*>::iterator el = Domain.begin();
-//     const set<const Elem*>::iterator end_el = Domain.end();
-//     for ( ; el != end_el ; ++el)
-//     {
-//       const Elem* elem = *el;
-//       ID dof = elem->dof_number(gray_sys_number,0,0);	
-//       ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-//       mod.calculate(elem,elem->centroid());
-//       double vg = mod.get_sound_velocity();
-
-     
-//       for (ID i = 0; i<dim ; i++ )
-//       {
-//         thermal_flux[i]->set(dof,0.0);
-// 	for (ID k = 0; k<AngInt.n_slices ; k++ )
-// 	{  
-// 	  double value = (*sol_dir[k])(dof) * vg * AngInt.directions[k](i)/AngInt.total_angle;
-// 	  thermal_flux[i]->add(dof,value);
-// 	}
-//       }
-//     }
-//   }
 
 }
 
@@ -1368,6 +1188,15 @@ ThermalBalance::get_solution_secure(const Elem* elem,
    const NumericVector<Number>& solution = system->get_solution_vector();
    const DofMap& dof_map = system->get_dof_map();
 
+   //Test Gray
+   TiberLinearSystem* gray_system;
+   gray_system = &get_equation_systems().get_system<TiberLinearSystem>(
+		      					       "gray");
+   const NumericVector<Number>& gray_solution = gray_system->get_solution_vector();
+   const DofMap& dof_map_gray= gray_system->get_dof_map();
+   vector<unsigned int> dof_indices_gray;
+   //-------------
+
 
    const unsigned int u_var = system->variable_number("T");
 
@@ -1397,25 +1226,25 @@ ThermalBalance::get_solution_secure(const Elem* elem,
       mod.calculate(elem,real_pts[n]);   
 
 
-     if (values.count(temperature) ||
+     if (values.count(LatticeTemp) ||
          values.count(thermal)  )
      { 
        double T  = 0.0;
        for (unsigned int i = 0; i < n_dofs; i++) 
 	 T += phi[i][n] * solution(dof_indices[i]);
     
-       values[temperature][n] = T;
+       values[LatticeTemp][n] = T;
      }
      
-     if (values.count(FourierTemp)||
-         values.count(thermal)  )
-     { 
-       double T  = 0.0;
-       for (unsigned int i = 0; i < n_dofs; i++) 
-	 T += phi[i][n] * (*initial_energy)(dof_indices[i]);
+      if (values.count(FourierTemp)||
+          values.count(thermal)  )
+      { 
+        double T  = 0.0;
+        for (unsigned int i = 0; i < n_dofs; i++) 
+ 	 T += phi[i][n] * (*initial_energy)(dof_indices[i]);
     
-       values[FourierTemp][n] = T;
-     }
+        values[FourierTemp][n] = T;
+      }
      
 
      if (values.count(ThermalFlux)||
@@ -1433,25 +1262,25 @@ ThermalBalance::get_solution_secure(const Elem* elem,
        
      }       
       
-    if (values.count(EffectiveKappa)||
-         values.count(thermal)  )
-     { 
+   //  if (values.count(EffectiveKappa)||
+//          values.count(thermal)  )
+//      { 
        
       
 
-       RealGradient heat_flux_gray(0);
-       for (ID i = 0; i < n_dofs; i++)
-	 for (ID d = 0; d < dim; d++)
-	   heat_flux_gray(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
+//        RealGradient heat_flux_gray(0);
+//        for (ID i = 0; i < n_dofs; i++)
+// 	 for (ID d = 0; d < dim; d++)
+// 	   heat_flux_gray(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
         
    
-       RealGradient heat_flux_fourier(0);
-       for (unsigned int i = 0; i < n_dofs; i++) 
-	 heat_flux_fourier += -solution(dof_indices[i]) * (kappa * dphi[i][n]);
+//        RealGradient heat_flux_fourier(0);
+//        for (unsigned int i = 0; i < n_dofs; i++) 
+// 	 heat_flux_fourier += -solution(dof_indices[i]) * (kappa * dphi[i][n]);
 
-       values[EffectiveKappa][n] = heat_flux_gray(2)/heat_flux_fourier(2);
+//        values[EffectiveKappa][n] = heat_flux_gray(2)/heat_flux_fourier(2);
      
-     }       
+//      }       
      
      if (values.count(ThermCond)||
          values.count(thermal)  )
@@ -1461,16 +1290,7 @@ ThermalBalance::get_solution_secure(const Elem* elem,
        values[ThermCond][1 + 3 * n] = kappa(1,1);
        values[ThermCond][2 + 3 * n] = kappa(2,2);
      }
-
-    //  if (values.count(HeatSource)||
-//           values.count(thermal)  )
-//     {
- 
-//       Real H = mod.get_total_heat_source();
-//       values[HeatSource][n] = H;
-
-//     }
-
+    
    }
    //Elemental value
    std::vector<Point> pp(1);
@@ -1509,7 +1329,16 @@ ThermalBalance::get_solution_secure(const Elem* elem,
 
     }
 
+     if (values.count(GRAY)||
+	 values.count(thermal)  )
+     {
+       dof_map_gray.dof_indices (elem, dof_indices_gray);
 
+       double H = (*equilibrium_energy)(dof_indices_gray[0]);
+
+       values[GRAY][0] = H;
+
+     }
 
 
 }
@@ -1568,11 +1397,8 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
 		       get_equation_systems().get_system("gray"));
 
    const MeshBase& mesh = get_mesh();
-  
    DofMap& dof_map =  system.get_dof_map();
-
    const unsigned int tvar = system.variable_number("T");
-
    FEType fe_type = dof_map.variable_type(tvar);
 
 
@@ -1587,7 +1413,7 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
    const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
 
-  //  // the surface finite element
+   // the surface finite element
    AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
    QGauss qface(dim - 1, SIXTH);
    fe_face->attach_quadrature_rule(&qface);
@@ -1629,7 +1455,6 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
 	 std::vector<unsigned int> dof_indices_n;
 	 dof_map.dof_indices (elem_n,dof_indices_n);
 	 dof_indices.push_back(dof_indices_n[0]);
-	
        }
        else
 	 dof_indices.push_back(0);
@@ -1653,8 +1478,8 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
      double e_0 = (*equilibrium_energy)(dof_indices[0]);
      Real cg = mod.get_heat_capacity();
      Real heat_source = mod.get_total_heat_source();
-
-  //   //  //Assembly1
+ 
+     //Assembly1
      Ke(0,0) = 1.0/tg * JxW[0];
      
      ID nb = 0;
@@ -1674,16 +1499,12 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
 	   nb ++;
 	 }
 	 else
-	   Ke(0,ns + 1) += value;
-	
+	   Ke(0,ns + 1) += value;	
        }
        else
 	 Ke(0,0) += value;
 
      }
-     //if (nb>0)
-     // Fe(0)  =Fe(0) / nb;
-     
      Fe(0)   += (e_0/tg  +  heat_source * d_omega) * JxW[0];
 
     // END ASSEMBLY1
@@ -1859,6 +1680,7 @@ ThermalBalance::get_boundary_value(ElementSide elside)
     mod->get_coefficients(a, b, c);
     value = c;
   
+  
   }
   else //Internal boundary or wall
   {
@@ -1875,32 +1697,21 @@ ThermalBalance::get_boundary_value(ElementSide elside)
     }
     else //Wall
     {
+   
       //Diffusive
       if (myopts.diffusive)
       {
 	ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
 	value = (*equilibrium_energy)(dof);
-        //cout<<"Diffusive: "<<endl;
+	//std::cout<<"DIFFUSIVE"<<std::endl;
       }
       else
       {//SPECULAR
         //IMPLEMENT SPECULAR BOUNDARY
 	ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
 	value = SD[elside][vec_spec];
-	//cout<<"Specular: "<<endl;
-        //for (ID n = 0; n<elside.elem()->n_nodes(); n++)
-	//{
-	// if (elside.elem()->is_node_on_side(n,elside.side()))
-	// {
+	//	std::cout<<value<<std::endl; 
 
-	//   Point p = elside.elem()->point(n);
-	//   if (p(1)==-10)
-	//     cout<<value<<endl;
-
-	//}
-        
-	//}
-	//cout<<"Specular: ";
       }
     }
     
@@ -2181,6 +1992,7 @@ ThermalBalance::AngularIntegrator::compute_directions()
       
       n_slices = theta_slices * phi_slices;
       spec.resize(n_slices);
+
       //spec[0] = 1;
       //spec[1] = 0;
       
@@ -2257,7 +2069,7 @@ ThermalBalance::AngularIntegrator::compute_directions()
     for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
     {
       // phi = min_phi + d_phi * 0.5 + d_phi * n_phi;
-      phi = min_phi + d_phi * n_phi;
+      phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
       
       for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
       {
@@ -2285,12 +2097,13 @@ ThermalBalance::AngularIntegrator::compute_directions()
       for (ID k2 = 0;k2<n_slices; k2++)
       {
 	Point sum = directions[k1] + directions[k2];
+	std::cout<<sum.size()<<std::endl;
         if (sum.size() < 1e-4)
 	  spec[k1]=k2;
 	
       }
       
- 
+
 }
 
 

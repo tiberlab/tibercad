@@ -10,7 +10,6 @@ using namespace std;
 
 FourierModel::FourierModel(const ModelOptions& options):HeatTransportModel(options)
 {
-  cout<<"SET"<<endl;
   set_type(HeatTransportModel::Fourier);
 }
 

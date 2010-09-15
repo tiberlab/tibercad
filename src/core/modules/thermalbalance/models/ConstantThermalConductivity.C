@@ -13,8 +13,6 @@ using namespace std;
 
 ConstantThermalConductivity::ConstantThermalConductivity(const ModelOptions& options):ThermalConductivityModel(options)
 {
-  //_kx = 0.0;
-  //_kz = 0.0;
  _kappa.resize(3,0.0);
 }
 
@@ -26,20 +24,12 @@ ConstantThermalConductivity::read_database(void)
   db.set_section("thermal_conductivity/constant");
   db.get("ThermCond", _kappa);
 
-
-  // _kx = db.get("therm_lat_cond_x",0.0, true);
-  //if (get_material()->get_structure() == "wz")
-  //  _kz = db.get("therm_lat_cond_z",0.0, true);
-  //else
-  //  _kz = _kx;
-
-
 }
 
 void
 ConstantThermalConductivity::do_init(void)
 {
-  get_parameter("ThermCond",_kappa);
+  get_parameter("ThermCond",_kappa,true);
 
 
 
@@ -50,14 +40,12 @@ ConstantThermalConductivity::do_init(void)
 
   set_thermal_conductivity(kappa_tens);
 
-  //cout<<_kappa[0]<<endl;
+
   if (get_material()->get_structure() == "wz")
   {
     const RotatedCrystal&   cr = get_material()->get_rotated_crystal();
     rotate_to_calculation_system(cr.RotMatrix);
   }
-
-  std::cout<<"HERE"<<std::endl;
 
 }
 

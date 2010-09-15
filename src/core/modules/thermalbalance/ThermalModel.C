@@ -51,15 +51,14 @@ ThermalModel::create_submodels(void)
 void
 ThermalModel::do_init(void) 
 {
+
   PhysicalModelInterface::SubmodelIterator  it;
  
   //Heat Transport Model
   it = submodels_begin("heat_transport");
   _htm = dynamic_cast<HeatTransportModel*> ((*it).second);
   
-  //cout<<"TYPE"<<endl;
-  //cout<<_htm->get_type()<<endl;
-
+ 
   ModelOptions& opts = _htm->get_options();
 
   //Lattice Thermal Conductivity
@@ -67,16 +66,14 @@ ThermalModel::do_init(void)
   _tcm = dynamic_cast<ThermalConductivityModel*> ((*it).second);
 
  
-  
   //Heat Source
   it = submodels_begin("heat_source");
   const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("heat_source"));
   for ( ; it != it_end ; ++it)
     _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
-  
+ 
 
-
-  //If we do gray
+  //If we do gray we have to get the sound velocity and the relaxation time
   _kappa = _tcm->get_thermal_conductivity();
   if (_htm->get_type() == HeatTransportModel::Gray)
   {
@@ -86,16 +83,12 @@ ThermalModel::do_init(void)
     db.set_section("sound_velocity/constant");
     _vg = db.get("vg",0.0, true);
     get_parameter("vg", _vg);
-    
+
     //Heat Capacity
     db.set_section("heat_capacity/constant");
     _cg = db.get("C",0.0, true);
     get_parameter("C", _cg);
-    
-    //Relaxation time
-    //Compute the mean thermal conductivity.
-  
-    //double kg = (_kappa(0,0) + _kappa(1,1) + _kappa(2,2))/3.0;
+   
     
     _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;
   }
@@ -107,6 +100,9 @@ void
 ThermalModel::do_init_alloy(const PhysicalModelInterface *comp_A,
                                                 const PhysicalModelInterface *comp_B, double xa)
 {
+
+
+
    const ThermalModel* modA = dynamic_cast<const ThermalModel*>(comp_A);
    const ThermalModel* modB = dynamic_cast<const ThermalModel*>(comp_B);
 

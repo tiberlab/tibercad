@@ -6,7 +6,7 @@
 #include "SimulationInterface.h"
 #include "ElementSide.h"
 #include "SimulationEnvironment.h"
-//#include "tiber_dll.h"
+#include "tiber_dll.h"
 
 class TiberLinearSystem;
 
@@ -86,10 +86,6 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
   SideData SD;
   std::vector<unsigned short int> node_conn;
 
-  void compact(void);
-
-  void do_partition_bis(void);
-
   void do_partition(void);
 
   bool is_on_GF_boundary(ElementSide elside);
@@ -144,6 +140,8 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
    
    ID dim;
 
+   double phi_zero;
+
    std::vector<double> d_omega;
 
    std::vector<double> theta_vec;
@@ -187,6 +185,7 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
     double initial_value;
     std::string macro_sim;
     std::vector<int> custom_dir;
+    double phi_zero;
    
     //New
     double equilibrium_energy;
@@ -267,7 +266,7 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
 
     enum Solutions
     {
-      temperature,       /*!< the Lattice Temperature */
+      LatticeTemp,       /*!< the Lattice Temperature */
       FourierTemp,       /*!< the Lattice Temperature */
       ThermalFlux,              /*!< the thermal flux */
       HeatSource,                /*!< the HeatSource */
@@ -276,7 +275,8 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
       ThermCond,
       EffectiveKappa,
       thermal,
-      DomainTest
+      DomainTest,
+     GRAY
     };
 
   //! The constructor

@@ -9,15 +9,14 @@
 #include "tensor_value.h"
 #include "vector_value.h"
 #include "HeatTransportModel.h"
-//#include "tiber_dll.h"
+#include "tiber_dll.h"
 
 
 class Elem;
 class HeatSourceModel;
 class ThermalConductivityModel;
 
-//class TBDLLOCAL ThermalModel : public PhysicalModel
-class ThermalModel : public PhysicalModel
+class TBDLLOCAL ThermalModel : public PhysicalModel
 {
 
   public:

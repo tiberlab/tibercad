@@ -8,24 +8,22 @@
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
-//#include "tiber_dll.h"
+#include "tiber_dll.h"
 
 class Elem;
 
 
 //! The base class for Poisson boundary conditions
-//class TBDLLOCAL GrayModel : public HeatTransportModel
 class TBDLLOCAL GrayModel : public HeatTransportModel
 {
 
   public:
 
- 
+ //! Creator function
+  static GrayModel* create(const ModelOptions& options);
+
   //! Destructor
   ~GrayModel(void) {};
-
-  //! Creator function
-  static GrayModel* create(const ModelOptions& options);
 
 
   protected:
@@ -54,35 +52,24 @@ class TBDLLOCAL GrayModel : public HeatTransportModel
 
   //! Constructor
     GrayModel(const ModelOptions& options);
-  
 
-  struct options
-  {
+ //  struct options
+//   {
     
-    double max_iter;
-    double max_error; //!< Max tollerance for self-consistent loop
-    vector<ID> spec;
-    std::vector<double> d_omega;
-    std::vector<Point> directions;
-    std::vector<Point> dir;
-    std::vector<double> theta_vec;
-    std::vector<double> phi_vec;
-    ID theta_slices;
-    ID phi_slices;
-    //ID N_theta;
-    //ID N_phi;
+//     double max_iter;
+//     double max_error; //!< Max tollerance for self-consistent loop
+//     vector<ID> spec;
+//     std::vector<double> d_omega;
+//     std::vector<Point> directions;
+//     std::vector<Point> dir;
+//     std::vector<double> theta_vec;
+//     std::vector<double> phi_vec;
+//     ID theta_slices;
+//     ID phi_slices;
+   
+//   };
 
-    //std::vector<int> custom_dir;
-    //bool diffusive;
-    //New
-    //double equilibrium_energy;
-    //std::string first_guess;
-    //std::vector<Point> cd;
-    //double s_0;
-    //double t_0;
-  };
-
- options myopts;
+//  options myopts;
 
 
 };
@@ -100,7 +87,6 @@ inline
 GrayModel*
 GrayModel::create(const ModelOptions& options)
 {
-  std::cout<<"GRAY"<<std::endl;
   return new  GrayModel(options);
 }
 

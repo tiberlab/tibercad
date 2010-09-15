@@ -1,7 +1,6 @@
 // $Id$
 
 #include "GrayModel.h"
-#include "SimulationOptions.h"
 
 
 TIBER_MODULE(GrayModel,heat_transport, gray)
