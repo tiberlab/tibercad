@@ -14,9 +14,9 @@
 
 
 
+
 std::list<std::string>
 TiberCad::_filename_suffix;
-
 
 
 Control*
@@ -142,18 +142,29 @@ TiberCad::init(void)
   }
 
 
+  // to the libraries we hand empty cmdline!
+  static int empty_argc = 1;
+  static char** empty_argv = new char*[1];
+  empty_argv[0] = _cmdline_argv[0];
+
+
   // prepare libMesh
-  //libMesh::init(cmdline_argc, cmdline_argv);
-  _libmeshinit = new LibMeshInit(_cmdline_argc, _cmdline_argv);
+  _libmeshinit = new LibMeshInit(empty_argc, empty_argv);
 
   // prepare EigenSolver
-  EigenSolver::slepc_init(_cmdline_argc, _cmdline_argv);
+  EigenSolver::slepc_init(empty_argc, empty_argv);
 
 
   // now create a TiberCAD Control object
   _control = new Control();
 
-  _control->set_inputfile(std::string(_cmdline_argv[1]));
+  string inputfile(argv[1]);
+#ifdef CYGWIN
+    // we first convert the filename to something more UNIX like
+    Utils::convert_win32_path_to_posix(inputfile);
+#endif
+
+  _control->set_inputfile(inputfile);
   _control->init();
 }
 
