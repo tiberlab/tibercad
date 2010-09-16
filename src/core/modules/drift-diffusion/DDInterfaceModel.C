@@ -95,7 +95,6 @@ DDInterfaceModel::do_init(void)
         static_cast<RecombinationModelInterface*>(it->second);
     _recombination_models.insert(rec);
   }
-    cerr << it->second << "\n";
 }
 
 

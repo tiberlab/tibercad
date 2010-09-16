@@ -45,7 +45,9 @@ SRHRecombination::read_database(void)
   double g_e = data[0];
   double g_h = data[1];
 
-  double N = get_material()->get_total_doping_density();
+  double N = 0;
+  if (get_material() != NULL)
+    N = get_material()->get_total_doping_density();
 
   // electrons
   double denom = 1.0 + std::pow(N / Nref_e, g_e);
