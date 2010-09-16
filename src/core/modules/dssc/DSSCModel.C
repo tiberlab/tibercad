@@ -2,6 +2,7 @@
 
 
 #include "DSSCModel.h"
+#include "Database.h"
 
 
 #include "elem.h"
@@ -56,7 +57,7 @@ DSSCModel::do_init(void)
   //double A1 = _perm_elec + 2*_perm_ox + 2*_porosity*_perm_elec - 2*_porosity*_perm_ox;
   //double A2 = _perm_elec + 2*_perm_ox - _porosity*_perm_elec + _porosity*_perm_ox;
   //_permittivity = _perm_ox * A1/A2;
-  
+
   get_parameter("k_e", _ke);
   get_parameter("beta", _beta);
   get_parameter("k_3", _k3);
@@ -77,7 +78,7 @@ DSSCModel::do_init(void)
   get_parameter("D_I", _mobility.I);
   get_parameter("D_I3", _mobility.I3);
   get_parameter("D_C", _mobility.C);
-  
+
   _cation.set_particle_charge(1.0);
 
   //_eq_conc.n = _porosity * get_options().get_option("n_e", _eq_conc.n);
@@ -178,7 +179,7 @@ DSSCModel::calculate_densities(void)
     // generation has to be calculated here
     double exponential = exp( -_alpha * abs(_pd.coordinates(0) - _x0) );
     double gen1 =  1e4 * _alpha * _generation * exponential;
-    
+
     double exponential2 = _alpha2 * exp( -_alpha2 * abs(_pd.coordinates(0) - _x0) );
     _pd.generation_rate =  gen1 + _deltaG * exponential2;
 
@@ -248,7 +249,7 @@ DSSCModel::calculate_net_recombination_rate(void)
   _pd.recombination_rate_derivatives[2] = _ke * 0.5 * r / _pd.density_I3;
 */
 
-  
+
   double n0 = _eq_conc.n;
   // if (n0 <= _generation/_k3)
   // {

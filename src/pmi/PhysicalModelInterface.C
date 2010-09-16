@@ -4,6 +4,7 @@
 #include "PhysicalModelInterface.h"
 #include "Material.h"
 #include "Variable.h"
+#include "Database.h"
 
 #include "Utils.h"
 #include "Trap.h"
@@ -61,7 +62,7 @@ using namespace std;
 
 map<const string, ID>
 PhysicalModelInterface::_model_ids;
- 
+
 
 
 PhysicalModelInterface::~PhysicalModelInterface(void)
@@ -84,13 +85,13 @@ PhysicalModelInterface*
 PhysicalModelInterface::create(const string& name,
     const ModelOptions& options, const string& module)
 {
-  
+
   // NOTE: for bulk models options contains the crystal structure
 
 
 
   PhysicalModelInterface* mod = NULL;
-                             
+
   if (name == "stiffness_zb")
     mod = ZbStiffness::create(options);
   else if (name == "stiffness_wz")
@@ -158,7 +159,7 @@ PhysicalModelInterface::create(const string& name,
   else if (name == "trap")
     mod = Trap::create(options);
 
- 
+
   if (mod == NULL)
   {
     // first try in the module directory
@@ -473,7 +474,7 @@ PhysicalModelInterface::_create_submodels(void)
   while (it != end)
   {
     string name(it->first);
-    
+
     string type((it->second).get_option("model", ""));
     type = ((it->second).get_option("type", type));
     if (type.size() > 0)

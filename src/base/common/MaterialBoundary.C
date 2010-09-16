@@ -3,6 +3,7 @@
 #include "MaterialBoundary.h"
 #include "Material.h"
 #include "PhysicalModel.h"
+#include "Database.h"
 
 #include <cassert>
 

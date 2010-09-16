@@ -17,76 +17,75 @@ SRHRecombination::read_database(void)
 {
   Database& db = get_database();
 
-  if (get_owner()->get_type() == PhysicalObject::BULK)
-  {
-    db.set_section("recombination/SRH");
+  db.set_section("recombination/SRH");
 
-    _E_t = db.get("Etrap", _E_t, true);
+  _E_t = db.get("Etrap", _E_t, true);
 
-    std::vector<double> data(2, 0);
+  std::vector<double> data(2, 0);
 
-    db.get("Talpha", data);
-    _Talpha_e = data[0];
-    _Talpha_h = data[1];
+  db.get("Talpha", data);
+  _Talpha_e = data[0];
+  _Talpha_h = data[1];
 
-    data = std::vector<double>(2, 0);
-    db.get("Tcoeff", data);
-    _Tcoeff_e = data[0];
-    _Tcoeff_h = data[1];
+  data = std::vector<double>(2, 0);
+  db.get("Tcoeff", data);
+  _Tcoeff_e = data[0];
+  _Tcoeff_h = data[1];
 
-    db.get("taumin", data, true);
-    double taumin_e = data[0];
-    double taumin_h = data[1];
-    db.get("taumax", data, true);
-    double taumax_e = data[0];
-    double taumax_h = data[1];
-    db.get("Nref", data, true);
-    double Nref_e = data[0];
-    double Nref_h = data[1];
-    db.get("gamma", data, true);
-    double g_e = data[0];
-    double g_h = data[1];
+  db.get("taumin", data, true);
+  double taumin_e = data[0];
+  double taumin_h = data[1];
+  db.get("taumax", data, true);
+  double taumax_e = data[0];
+  double taumax_h = data[1];
+  db.get("Nref", data, true);
+  double Nref_e = data[0];
+  double Nref_h = data[1];
+  db.get("gamma", data, true);
+  double g_e = data[0];
+  double g_h = data[1];
 
-    double N = get_material()->get_total_doping_density();
+  double N = get_material()->get_total_doping_density();
 
-    // electrons
-    double denom = 1.0 + std::pow(N / Nref_e, g_e);
-    _tau_n = taumin_e + (taumax_e - taumin_e) / denom;
+  // electrons
+  double denom = 1.0 + std::pow(N / Nref_e, g_e);
+  _tau_n = taumin_e + (taumax_e - taumin_e) / denom;
 
-    // holes
-    denom = 1.0 + std::pow(N / Nref_h, g_h);
-    _tau_p = taumin_h + (taumax_h - taumin_h) / denom;
-  }
-  else
-  {
-    db.set_section("recombination/surface_rec");
-
-    _E_t = db.get("Etrap", _E_t, true);
-
-    std::vector<double> data(2, 1e7);
-    db.get("rec_velocity", data);
-    _tau_n = data[0];
-    _tau_p = data[1];
-    std::cerr << "read db\n";
-  }
+  // holes
+  denom = 1.0 + std::pow(N / Nref_h, g_h);
+  _tau_p = taumin_h + (taumax_h - taumin_h) / denom;
 }
 
+
+
+
+void
+SRHRecombination::read_interface_database(void)
+{
+  Database& db = get_database();
+
+  db.set_section("recombination/surface_rec");
+
+  _E_t = db.get("Etrap", _E_t);
+
+  std::vector<double> data(2, 1e7);
+  db.get("rec_velocity", data);
+  _tau_n = data[0];
+  _tau_p = data[1];
+
+}
 
 
 void
 SRHRecombination::do_init(void)
 {
-  if (get_owner()->get_type() == PhysicalObject::BULK)
-  {
-    get_parameter("tau_n", _tau_n);
-    get_parameter("tau_p", _tau_p);
-  }
-  else
-  {
-    get_parameter("rec_velocity_n", _tau_n);
-    get_parameter("rec_velocity_p", _tau_p);
-    std::cerr << "init\n";
-  }
+  get_parameter("tau_n", _tau_n);
+  get_parameter("tau_p", _tau_p);
+
+  // this is for surface recombination only
+  get_parameter("rec_velocity_n", _tau_n);
+  get_parameter("rec_velocity_p", _tau_p);
+
   get_parameter("E_trap", _E_t);
 }
 

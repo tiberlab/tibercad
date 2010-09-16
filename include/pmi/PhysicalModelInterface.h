@@ -7,7 +7,6 @@
 #include "TiberModelObject.h"
 #include "TypeDefs.h"
 #include "ModelOptions.h"
-#include "Database.h"
 #include "InitFailedException.h"
 
 #include <map>
@@ -23,6 +22,7 @@
 
 class PhysicalObject;
 class Material;
+class Database;
 
 
 //! Base class for the different physical models

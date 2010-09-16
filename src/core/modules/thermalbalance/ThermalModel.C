@@ -3,6 +3,7 @@
 #include "ThermalModel.h"
 #include "SimulationOptions.h"
 #include "Material.h"
+#include "Database.h"
 #include "HeatSourceModel.h"
 #include "ThermalConductivityModel.h"
 
@@ -20,21 +21,21 @@ ThermalModel::ThermalModel(const ModelOptions& options)
     _cg(1),
     _heat_source(0)
 {
-  
+
 }
 
 void
 ThermalModel::create_submodels(void)
 {
 
-  
+
 
   //Heat Transport Default
   if (!get_options().has_submodel("heat_transport"))
   {
     ModelOptions opts;
     opts.set_option("type","fourier");
-    get_options().add_submodel("heat_transport",opts);  
+    get_options().add_submodel("heat_transport",opts);
   }
 
    //Thermal Conductivity Default
@@ -49,29 +50,29 @@ ThermalModel::create_submodels(void)
 
 
 void
-ThermalModel::do_init(void) 
+ThermalModel::do_init(void)
 {
 
   PhysicalModelInterface::SubmodelIterator  it;
- 
+
   //Heat Transport Model
   it = submodels_begin("heat_transport");
   _htm = dynamic_cast<HeatTransportModel*> ((*it).second);
-  
- 
+
+
   ModelOptions& opts = _htm->get_options();
 
   //Lattice Thermal Conductivity
   it = submodels_begin("thermal_conductivity");
   _tcm = dynamic_cast<ThermalConductivityModel*> ((*it).second);
 
- 
+
   //Heat Source
   it = submodels_begin("heat_source");
   const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("heat_source"));
   for ( ; it != it_end ; ++it)
     _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
- 
+
 
   //If we do gray we have to get the sound velocity and the relaxation time
   _kappa = _tcm->get_thermal_conductivity();
@@ -88,8 +89,8 @@ ThermalModel::do_init(void)
     db.set_section("heat_capacity/constant");
     _cg = db.get("C",0.0, true);
     get_parameter("C", _cg);
-   
-    
+
+
     _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;
   }
 
@@ -108,10 +109,10 @@ ThermalModel::do_init_alloy(const PhysicalModelInterface *comp_A,
 
    _vg = alloy(modA->_vg, modB->_vg, xa);
    _cg = alloy(modA->_cg, modB->_cg, xa);
-  
+
 }
 
- 
+
 
 
 
@@ -136,7 +137,7 @@ ThermalModel::do_print_info(void)
     }
   }
 
-  
+
 }
 
 void

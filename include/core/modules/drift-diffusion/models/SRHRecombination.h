@@ -10,7 +10,7 @@
 //! Implementation of SRH recombination
 /*!
  * This class implements Shockley-Read-Hall recombination processes that can be
- * modeled by 
+ * modeled by
  * \f{eqnarray*}
  * R_{SRH} & =& \frac{np - n_i^2}{(n+n_i e^{(E_t-E_i)/k_BT})\tau_p +
  * (p+n_i e^{(E_i-E_t)/k_BT})\tau_n} \\
@@ -55,7 +55,7 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
      */
     void set_SRH_parameters(double tau_n, double tau_p);
 
-    
+
   protected:
 
     //! Constructor
@@ -63,6 +63,9 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 
     //! \copydoc RecombinationModelInterface::read_database()
     virtual void read_database(void);
+
+    //! \copydoc RecombinationModelInterface::read_interface_database()
+    virtual void read_interface_database(void);
 
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
@@ -74,7 +77,7 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
 
-    
+
   private:
 
     //! The electron lifetime
@@ -103,7 +106,7 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 
 //
 // inline methods
-// 
+//
 
 
 inline

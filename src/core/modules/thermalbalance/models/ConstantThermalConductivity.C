@@ -2,6 +2,7 @@
 
 
 #include "Material.h"
+#include "Database.h"
 #include "ConstantThermalConductivity.h"
 #include "RotatedCrystal.h"
 
@@ -16,7 +17,7 @@ ConstantThermalConductivity::ConstantThermalConductivity(const ModelOptions& opt
  _kappa.resize(3,0.0);
 }
 
-void 
+void
 ConstantThermalConductivity::read_database(void)
 {
 
@@ -63,7 +64,7 @@ ConstantThermalConductivity::do_init(void)
 
 //    // _kz = alloy(modA->_kz, modB->_kz, xa);
 
-//    //Read Alloy Database does not work because here however take the linear approximantion. TO FIX IT. 
+//    //Read Alloy Database does not work because here however take the linear approximantion. TO FIX IT.
 //    //get_parameter("therm_lat_cond_x",_kx);
 //    //get_parameter("therm_lat_cond_z",_kz);
 
@@ -71,7 +72,7 @@ ConstantThermalConductivity::do_init(void)
 
 
 //--------------------------------------------------------//
-//void  
+//void
 //ConstantThermalConductivity::read_database_alloy(void)
 //{
 
@@ -90,7 +91,7 @@ ConstantThermalConductivity::do_init(void)
 //    kappa(1,1) = _kx;
 //    kappa(2,2) = _kz;
 //    set_thermal_conductivity(kappa);
-   
+
 //    // cout<<kappa<<endl;
 //    if (get_material()->get_structure() == "wz")
 //    {
@@ -98,4 +99,4 @@ ConstantThermalConductivity::do_init(void)
 //      rotate_to_calculation_system(cr.RotMatrix);
 //    }
 
-// } 
+// }
