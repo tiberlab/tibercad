@@ -385,7 +385,9 @@ PhysicalModelInterface::init_interface(const Material* comp_A,
     const Material* comp_B)
 {
 
-  read_database();
+  // sometimes this is not a good idea, and it even may not make
+  // sense at all in general
+  //read_database();
 
   read_interface_database();
 
