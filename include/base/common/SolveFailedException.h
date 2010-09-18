@@ -4,11 +4,13 @@
 #ifndef _SOLVEFAILEDEXCEPTION_H_
 #define _SOLVEFAILEDEXCEPTION_H_
 
+#include "ExceptionTracer.h"
+
 #include <stdexcept>
 #include <string>
 
 //! An exception class for failed solve
-class SolveFailedException : public std::runtime_error
+class SolveFailedException : public std::runtime_error, ExceptionTracer
 {
 
   public:

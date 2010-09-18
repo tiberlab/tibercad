@@ -4,11 +4,13 @@
 #ifndef _RUNTIMEEXCEPTION_H_
 #define _RUNTIMEEXCEPTION_H_
 
+#include "ExceptionTracer.h"
+
 #include <stdexcept>
 #include <string>
 
 //! An exception class for generic runtime errors
-class RuntimeException : public std::runtime_error
+class RuntimeException : public std::runtime_error, ExceptionTracer
 {
 
   public:

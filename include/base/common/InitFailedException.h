@@ -4,11 +4,13 @@
 #ifndef _INITFAILEDEXCEPTION_H_
 #define _INITFAILEDEXCEPTION_H_
 
+#include "ExceptionTracer.h"
+
 #include <stdexcept>
 #include <string>
 
 //! An exception class for failed initialisation
-class InitFailedException : public std::runtime_error
+class InitFailedException : public std::runtime_error, ExceptionTracer
 {
 
   public:

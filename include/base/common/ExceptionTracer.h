@@ -3,11 +3,11 @@
 #ifndef _EXCEPTIONTRACER_H_
 #define _EXCEPTIONTRACER_H_
 
+#ifdef DEBUG
 #include <execinfo.h>
-#include <signal.h>
-
-#include <exception>
 #include <iostream>
+#include <cstdlib>
+#endif
 
 //! A class for exception tracing
 /*!
@@ -22,16 +22,18 @@ class ExceptionTracer
 
     ExceptionTracer(void)
     {
+#ifdef DEBUG
       void* array[25];
       int nSize = backtrace(array, 25);
       char** symbols = backtrace_symbols(array, nSize);
 
       for (int i = 0; i < nSize; i++)
       {
-        std::cerr << symbols[i] << endl;
+        std::cerr << symbols[i] << std::endl;
       }
 
       free(symbols);
+#endif
     }
 };
 

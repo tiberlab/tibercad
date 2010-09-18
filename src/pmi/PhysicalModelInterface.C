@@ -211,7 +211,7 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
     _register_model(mod);
 
     // we let it know what's its identifier
-    //mod->_set_type(name);
+    mod->_set_type(options.get_option("type", ""));
 
     mod->_set_module_name(module);
 
@@ -371,7 +371,7 @@ PhysicalModelInterface::init(void)
   for ( ; smit != smend; ++smit)
   {
     PhysicalModelInterface* pm = smit->second;
-    pm->_simulator_id = _simulator_id;
+    //pm->_simulator_id = _simulator_id;
     Messages::debug("Initializing " + smit->first + " ...");
     pm->init();
   }
@@ -384,7 +384,6 @@ void
 PhysicalModelInterface::init_interface(const Material* comp_A,
     const Material* comp_B)
 {
-
   // sometimes this is not a good idea, and it even may not make
   // sense at all in general
   //read_database();
@@ -393,6 +392,7 @@ PhysicalModelInterface::init_interface(const Material* comp_A,
 
   // setup the submodels
   _create_submodels();
+  Messages::debug("init() of " + get_owner()->get_name());
 
   SubmodelIterator it(submodels_begin());
   const SubmodelIterator end(submodels_end());

@@ -70,6 +70,7 @@ Database::operator=(const Database& rhs)
     _material = rhs._material;
     _datafile = rhs._datafile;
     _is_alloy = rhs._is_alloy;
+    _is_interface = rhs._is_interface;
     _mixing_type = rhs._mixing_type;
     _comp_db = rhs._comp_db;
   }
@@ -350,7 +351,7 @@ Database::get(const string& variable,
 
   size_t n = vec.size();
   if ((data.size() > 0) && (data.size() != n))
-  { 
+  {
     ostringstream msg;
     msg << "Variable \'" << variable << "\' in section \'" << _section
       << "\' of material data file " << _datafile

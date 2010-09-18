@@ -4,11 +4,13 @@
 #ifndef _DATABASEEXCEPTION_H_
 #define _DATABASEEXCEPTION_H_
 
+#include "ExceptionTracer.h"
+
 #include <stdexcept>
 #include <string>
 
 //! An exception class for failed Database operations
-class DatabaseException : public std::runtime_error
+class DatabaseException : public std::runtime_error, ExceptionTracer
 {
 
   public:

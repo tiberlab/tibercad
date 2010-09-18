@@ -4,11 +4,13 @@
 #ifndef _DEVICEEXCEPTION_H_
 #define _DEVICEEXCEPTION_H_
 
+#include "ExceptionTracer.h"
+
 #include <stdexcept>
 #include <string>
 
 //! An exception class for failed initialisation
-class DeviceException : public std::runtime_error
+class DeviceException : public std::runtime_error, ExceptionTracer
 {
 
   public:
