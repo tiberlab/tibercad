@@ -95,6 +95,12 @@ DDInterfaceModel::do_init(void)
         static_cast<RecombinationModelInterface*>(it->second);
     _recombination_models.insert(rec);
   }
+
+  if (!_recombination_models.empty())
+  {
+    set_type(1, NEUMANN);
+    set_type(2, NEUMANN);
+  }
 }
 
 
@@ -130,6 +136,7 @@ DDInterfaceModel::compute()
     _jacobian[0][2] -= dq_dEfp;
   }
 
+  if (!_recombination_models.empty())
   {
     const DriftDiffusionProperties::PointData& pd =
         get_dd_properties()->get_point_data();

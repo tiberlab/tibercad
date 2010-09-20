@@ -18,10 +18,12 @@ ElectricalContact::ElectricalContact(const ModelOptions& options)
 void
 ElectricalContact::do_init(void)
 {
-  DDInterfaceModel::do_init();
 
   if (get_option("zero_field", false))
     set_type(0, NEUMANN);
+
+  DDInterfaceModel::do_init();
+
   if (get_option("zero_grad_fermi_e", false))
     set_type(1, NEUMANN);
   if (get_option("zero_grad_fermi_h", false))
