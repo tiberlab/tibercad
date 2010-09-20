@@ -616,17 +616,27 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the square of the intrinsic density
     double get_intrinsic_density_squared(void) const
-      { return intrinsic_density * intrinsic_density; };
+      { return _intrinsic_density * _intrinsic_density; };
 
 
     //! Get the intrinsic density
     double get_intrinsic_density(void) const
-      { return intrinsic_density; };
+      { return _intrinsic_density; };
+
+
+    //! Get the equilibrium electron density
+    double get_equilibrium_electron_density(void) const
+      { return _equilibrium_n; };
+
+
+    //! Get the equilibrium hole density
+    double get_equilibrium_hole_density(void) const
+      { return _equilibrium_p; };
 
 
     //! Get equilibrium fermi level
     double get_equilibrium_fermi_level(void) const
-      { return equilibrium_fermi_level; };
+      { return _equilibrium_fermi_level; };
 
 
     //! Get the lowest conduction band edge
@@ -819,15 +829,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
 
-    //! The equilibrium fermi level
-    /*!
-     * The fermi level such that \f$n=n_0,\,p=p_0\f$
-     */
-    double equilibrium_fermi_level;
-
-    //! The intrinsic density
-    double intrinsic_density;
-
 
     //! Get the conduction band properties
     const BandProperties& get_conduction_band(void) const
@@ -886,6 +887,17 @@ class DriftDiffusionProperties : public PhysicalModel
     ParticleDensity& get_holes(void);
 
 
+    //! Set the equilibrium Fermi level
+    void set_equilibrium_fermi_level(double Ef)
+      { _equilibrium_fermi_level = Ef; }
+
+
+    //! Set the intrinsic Fermi level
+    /*!
+     * Calculates the associated equilibrium densities
+     */
+    void set_equilibrium_properties(double Ef);
+
 
   private:
 
@@ -906,6 +918,21 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The simulation this model is used for
     DriftDiffusion* _driftdiffusion;
 
+
+    //! The equilibrium fermi level
+    /*!
+     * The fermi level such that \f$n=n_0,\,p=p_0\f$
+     */
+    double _equilibrium_fermi_level;
+
+    //! The intrinsic density
+    double _intrinsic_density;
+
+    //! The equilibrium electron density
+    double _equilibrium_n;
+
+    //! The equilibrium electron density
+    double _equilibrium_p;
 
     //! The point-wise data
     PointData* _pd;

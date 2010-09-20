@@ -101,7 +101,7 @@ SemiconductorModel::prepare_element_data(void)
       elem_data.mc = get_conduction_band().effective_mass;
       elem_data.mv = get_valence_band().effective_mass;
       elem_data.Ef0 = get_equilibrium_fermi_level();
-      elem_data.ni = get_intrinsic_density();
+      //elem_data.ni = get_intrinsic_density();
 
     }
     else
@@ -113,11 +113,10 @@ SemiconductorModel::prepare_element_data(void)
       get_valence_band().band_edge = elem_data.Ev;
       get_valence_band().effective_mass = elem_data.mv;
 
-      equilibrium_fermi_level = elem_data.Ef0;
-      intrinsic_density = elem_data.ni;
-
       // this sets the band edges and the effective DOS in the base class
       setup_band_edges();
+
+      set_equilibrium_properties(elem_data.Ef0);
     }
   }
   else

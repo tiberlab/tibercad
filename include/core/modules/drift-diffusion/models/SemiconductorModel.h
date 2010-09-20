@@ -62,7 +62,7 @@ class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
       double mv;
 
       double Ef0;
-      double ni;
+      //double ni;
 
       RealVectorValue polarization;
     };

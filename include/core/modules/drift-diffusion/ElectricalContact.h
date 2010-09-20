@@ -101,6 +101,14 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     double _barrier;
 
 
+    //! The electron surface recombination velocity
+    double _vrec_n;
+
+
+    //! The hole surface recombination velocity
+    double _vrec_p;
+
+
 };
 
 

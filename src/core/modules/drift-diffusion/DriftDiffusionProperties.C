@@ -55,8 +55,6 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI *
 
 DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
   : PhysicalModel(options),
-    equilibrium_fermi_level(0.0),
-    intrinsic_density(1e10),
     _is_inhomogeneous(false),
     _use_predictor(false),
     _driftdiffusion(NULL),
@@ -65,6 +63,10 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _statistics(TiberCad::BOLTZMANN),
     _coupling(DriftDiffusionDefs::BOTH),
     _strain(0),
+    _equilibrium_fermi_level(0.0),
+    _intrinsic_density(1e10),
+    _equilibrium_n(0.0),
+    _equilibrium_p(0.0),
     _electron_mobility(NULL),
     _hole_mobility(NULL),
     _eTEpowerGrad(0.0),
@@ -847,11 +849,11 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // for a dielectric we don't need much...
   if (is_dielectric())
   {
-    equilibrium_fermi_level = 0.5 * (Ec + Ev);
+    _equilibrium_fermi_level = 0.5 * (Ec + Ev);
     double ni2 = cb.effective_DOS * vb.effective_DOS
         * exp(-get_band_gap() / kT);
     double ni = sqrt(ni2);
-    intrinsic_density = ni;
+    _intrinsic_density = ni;
     return;
   }
 
@@ -873,7 +875,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   double ni2 = cb.effective_DOS * vb.effective_DOS
     * exp(-get_band_gap() / kT);
   double ni = sqrt(ni2);
-  intrinsic_density = ni;
+  _intrinsic_density = ni;
 
   double guess;
   // Hmm... Is there a better guess?
@@ -972,13 +974,15 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   }
   while ((error > eps) || (residual_dens > dens_max));
 
-  //intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
+  _intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
+  _equilibrium_n = _pd->electron_density;
+  _equilibrium_p = _pd->hole_density;
 
   // for a dielectric we don't need much...
   if (is_dielectric())
-    equilibrium_fermi_level = 0.0;
+    _equilibrium_fermi_level = 0.0;
   else
-    equilibrium_fermi_level =  y;
+    _equilibrium_fermi_level =  y;
 
   // restore original coupling
   _coupling = coupling_bkp;
@@ -986,6 +990,25 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   _electrons.use_quantum_density(quantum_el);
   _holes.use_quantum_density(quantum_hl);
 }
+
+
+
+
+
+void
+DriftDiffusionProperties::set_equilibrium_properties(double Ef)
+{
+  _equilibrium_fermi_level = Ef;
+  set_potentials(Ef);
+  calculate_densities();
+
+  _intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
+  _equilibrium_n = _pd->electron_density;
+  _equilibrium_p = _pd->hole_density;
+}
+
+
+
 
 
 void

@@ -1,6 +1,7 @@
 // $Id$
 
 #include "ElectricalContact.h"
+#include "DriftDiffusionProperties.h"
 
 
 
@@ -8,7 +9,9 @@ ElectricalContact::ElectricalContact(const ModelOptions& options)
   : DDInterfaceModel(options),
     _voltage(0.0),
     _surfres(0.0),
-    _barrier(0.0)
+    _barrier(0.0),
+    _vrec_n(-1),
+    _vrec_p(-1)
 {
   // this is a real contact
   has_current(true);
@@ -24,9 +27,12 @@ ElectricalContact::do_init(void)
 
   DDInterfaceModel::do_init();
 
-  if (get_option("zero_grad_fermi_e", false))
+  get_parameter("rec_velocity_n", _vrec_n);
+  get_parameter("rec_velocity_p", _vrec_p);
+
+  if (get_option("zero_grad_fermi_e", false) || (_vrec_n >= 0))
     set_type(1, NEUMANN);
-  if (get_option("zero_grad_fermi_h", false))
+  if (get_option("zero_grad_fermi_h", false) || (_vrec_p >= 0))
     set_type(2, NEUMANN);
 
   get_parameter("contact_resistance", _surfres);
@@ -43,9 +49,35 @@ ElectricalContact::do_compute(void)
 
   if (get_type(1) != NEUMANN)
     coeff_g(1) = get_inner_voltage();
+  else
+  {
+    const DriftDiffusionProperties::PointData& pd =
+        get_dd_properties()->get_point_data();
+
+    double Rn = _vrec_n * (pd.electron_density -
+        get_dd_properties()->get_equilibrium_electron_density());
+    double dRn = _vrec_n * pd.electron_density_derivative;
+
+    coeff_g(1) += Rn;
+    jacobian(1, 0) += dRn;
+    jacobian(1, 1) -= dRn;
+  }
 
   if (get_type(2) != NEUMANN)
     coeff_g(2) = get_inner_voltage();
+  else
+  {
+    const DriftDiffusionProperties::PointData& pd =
+        get_dd_properties()->get_point_data();
+
+    double Rp = _vrec_p * (pd.hole_density -
+        get_dd_properties()->get_equilibrium_hole_density());
+    double dRp = _vrec_p * pd.hole_density_derivative;
+
+    coeff_g(2) += Rp;
+    jacobian(2, 0) += dRp;
+    jacobian(2, 2) -= dRp;
+  }
 
 }
 
