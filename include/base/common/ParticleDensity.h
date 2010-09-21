@@ -38,6 +38,10 @@ class ParticleDensity
 
   public:
 
+    //! The minimum density
+    static const double MINDENSITY = 1e-64;
+
+
     //! Constructor
     /*!
      * \param name the particle name (electron, hole etc.)

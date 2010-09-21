@@ -122,7 +122,10 @@ ParticleDensity::classical_density<TiberCad::FERMIDIRAC>(void)
   }
 
   _density *= _N_eff;
-  _density_derivative *= _N_eff / _kT;
+  if (_density > 0.1 * MINDENSITY)
+    _density_derivative *= _N_eff / _kT;
+  else
+    _density_derivative = 0.0;
 }
 
 

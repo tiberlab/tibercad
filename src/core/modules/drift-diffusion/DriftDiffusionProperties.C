@@ -893,6 +893,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   if (isinf(guess) || isnan(guess))
     guess = 0.5 * (Ec + Ev);
 
+
   /*
    * We use standard Newton. This should work always, as the density
    * is a strictly monotone function of the electric potential with
@@ -927,7 +928,11 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   of.close();
   */
 
-  do
+  // is set to true when calculation is successful
+  bool success = false;
+
+  //cerr << "***\n";
+  for (unsigned int i = 0; i < 100; ++i)
   {
     set_potentials(x);
     calculate_densities();
@@ -942,7 +947,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
     residual_dens = fabs(f);
 
     double dx = 0.0;
-    if (fabs(f) > 0.0)
+    if (residual_dens > ParticleDensity::MINDENSITY)
     {
       // At low temperatures everything is very sensitive on dx, so we don't
       // allow it to be bigger than k*T. At high temperatures this should not
@@ -971,8 +976,22 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
     //  << residual_dens << endl;
 
     x = y;
+
+    if ((error < eps) && (residual_dens < dens_max))
+    {
+      success = true;
+      break;
+    }
   }
-  while ((error > eps) || (residual_dens > dens_max));
+
+  if (!success)
+  {
+    ostringstream os;
+    os << "Could not find equilibrium properties for material "
+        << get_material()->get_name() << " around point "
+        << get_coordinates();
+    throw SolveFailedException(os.str());
+  }
 
   _intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
   _equilibrium_n = _pd->electron_density;
