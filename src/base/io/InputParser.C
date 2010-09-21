@@ -2942,10 +2942,12 @@ void InputParser::read_subblocks(string section_name,
   // *************************************
 
   //  check if  it  is  an optional/obsolete section (e.g.  $Physics)
-  if  ( section_name == "$Physics"  ) //  OR ...... 
+  if  ( section_name == "$Physics" ||
+        section_name == "$Solver"  ) //  OR ...... 
 
   {
     found_optional = find_optional_keyword( in_stream,section_name  );
+
     // optional/obsolete section  not  found (e.g.  $Physics)
     //  ************************
     if  (found_optional == false) return; //  optional/obsolete section not  found;  
@@ -2957,10 +2959,6 @@ void InputParser::read_subblocks(string section_name,
   else
     //find  mandatory  section name
     find_keyword( in_stream,section_name);
-
-
-
-
 
   // -----------------------------
 
