@@ -1114,7 +1114,7 @@ DriftDiffusion::do_init(void)
   rebuild_equation_system();
 
   //find_dirichlet_nodes();
-  find_dielectric_boundary_nodes();
+  //find_dielectric_boundary_nodes();
 
 
   get_environment().update_boundary_element_map();
@@ -1470,8 +1470,10 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     sc->calculate_densities();
 
-    double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
-    double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
+    //double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
+    //double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
+    double edens = sc->get_electron_density();
+    double hdens = sc->get_hole_density();
 
     sc->calculate_mobilities();
 
@@ -1800,8 +1802,8 @@ DriftDiffusion::calculate_currents_rstf(void)
 
 
     // in a dielectric we have no current
-    if (sc->is_dielectric())
-      continue;
+    //if (sc->is_dielectric())
+    //  continue;
 
 
     fe->reinit(elem);
@@ -2477,8 +2479,8 @@ DriftDiffusion::build_local_scaling(void)
       double drhovec[2];
       sc->get_charge_density_derivatives(drhovec);
       double drho = -JxW[qp] * (drhovec[0] + drhovec[1]) * phi0 / C0;
-      if (sc->is_dielectric())
-        drho = 0.0;
+      //if (sc->is_dielectric())
+      //  drho = 0.0;
 
 
 

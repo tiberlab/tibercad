@@ -284,8 +284,6 @@ $Solver
     #simulations = (dd,dens_el)
     simulations = (dens_el,dd)
     #relaxation_factor = 0.1
-    history_length = 5
-    omega_0 = 0.5
     max_iterations = 100
     abs_tolerance = 5e-4
     rel_tolerance = 1e-9

@@ -103,6 +103,8 @@ TiberNonlinTR::do_solve(void)
     double norm_grad_infty = gradf->linfty_norm();
     cerr << "|Z| = " << norm_rhs_now << "  " << " |g| = " << norm_grad_l2 << endl;
 
+    cerr << "|f| = " << norm_rhs_now << "  |g| = " << norm_grad_l2 << endl;
+
     // r'J(J'J)J'r
     //du = *gradf;
     matrix->get_transpose(*matrix); // J
@@ -110,9 +112,9 @@ TiberNonlinTR::do_solve(void)
     matrix->get_transpose(*matrix);  // J'
     matrix->vector_mult(*tmpvec, du); //J'JJ'r
     double tmp = gradf->dot(*tmpvec); // r'JJ'JJ'r
-    double fac = tmp / (norm_grad_l2 * norm_grad_l2);
+    //double fac = tmp / (norm_grad_l2 * norm_grad_l2);
     //cerr << "g'(J'J)g = " << tmp << " fac = "<< fac << endl;
-    //tmp *= delta; // delta * r'JJ'JJ'r
+    tmp *= delta; // delta * r'JJ'JJ'r
     tmp = norm_grad_l2 * norm_grad_l2 * norm_grad_infty / tmp;
     double tau = std::min(1.0, tmp);
     gradf->scale(-tau * delta / norm_grad_infty);  // Cauchy point
@@ -224,7 +226,6 @@ TiberNonlinTR::do_solve(void)
 
     double delta_old = delta;
 
-
     if (rho < 0.25)
       delta = 0.25 * norm_du;
     else
@@ -264,8 +265,16 @@ TiberNonlinTR::do_solve(void)
     //}
 
 
+    //norm_du = du.linfty_norm();
+    {
+      ostringstream os;
+      os << "it " << i << ", |du| = " << norm_du
+        << ", |r| = " << norm_rhs << " delta = " << delta_old;
+      Messages::info(os.str());
+    }
 
 
+    tol *= tol;
 
   }
 

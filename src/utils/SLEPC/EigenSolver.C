@@ -713,6 +713,7 @@ int  EigenSolver::preallocate_H_matrix(unsigned int matrix_size,  int*  non_zero
 
   _size_of_matrix = matrix_size;       
   
+  return(ierr);
 }
 //------------------------------------------------------------------------------------//
 int  EigenSolver::preallocate_S_matrix(unsigned int matrix_size,  int*  non_zeros)
@@ -721,4 +722,5 @@ int  EigenSolver::preallocate_S_matrix(unsigned int matrix_size,  int*  non_zero
   
   ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
  
+  return(ierr);
 }

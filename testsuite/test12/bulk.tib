@@ -87,7 +87,7 @@ $Solver
 {
   driftdiffusion
   {
-    #nonlinear_solver = tiber
+    nonlinear_solver = ls
     #linear_solver = pardiso
     #ksp_type = bcgsl
     #pc_type = lu
