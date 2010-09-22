@@ -68,10 +68,11 @@ DDInterfaceModel::do_init(void)
 
   assert(mat != NULL);
 
-  //_ddprop = static_cast<DriftDiffusionProperties*>(
-  //    mat->get_model(get_simulator_id()));
+  // we set a bulk model, just in case a submodel needs it
+  _ddprop = static_cast<DriftDiffusionProperties*>(
+      mat->get_model(get_simulator_id()));
 
-  //assert(_ddprop != NULL);
+  assert(_ddprop != NULL);
 
   // get surface trap models
   SubmodelIterator it = submodels_begin("trap");
