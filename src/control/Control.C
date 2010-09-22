@@ -682,7 +682,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
       vector<string> type;
       opts.get_option("type", type);
 
-      if (type.size() > 1)
+      if (type.size() > 0)
       {
         opts.set_option("type", type[0]);
 
