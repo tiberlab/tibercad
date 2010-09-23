@@ -971,6 +971,14 @@ class DriftDiffusionProperties : public PhysicalModel
     RealVectorValue* _user_defined_polarization;
 
 
+    //! A background conductivity
+    /*!
+     * Mainly used for stability reasons in pathologic cases
+     * Units are S/cm
+     */
+    double _background_conductivity;
+
+
     //! An iterator for the recombination models
     typedef std::map<ID, RecombinationModelInterface*>::iterator
       recomb_iterator;

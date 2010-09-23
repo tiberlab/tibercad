@@ -76,6 +76,7 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _pyropolarization(NULL),
     _polarization(3, 0.0),
     _user_defined_polarization(NULL),
+    _background_conductivity(0.0),
     _thermoelectric_power(NULL),
     _is_dielectric(false),
     _electrons("electron"),
@@ -339,7 +340,7 @@ DriftDiffusionProperties::do_init(void)
   // read polarization from input
   if (has_parameter("polarization"))
   {
-    _user_defined_polarization = new RealGradient(0);
+    _user_defined_polarization = new RealVectorValue(0);
     vector<double> pol(3, 0.0);
     get_parameter("polarization", pol);
     switch (pol.size())
@@ -353,6 +354,10 @@ DriftDiffusionProperties::do_init(void)
         break;
     }
   }
+
+
+  _background_conductivity =
+      get_option("background_conductivity", 1e4) / Constants::e;
 
 
 
@@ -718,9 +723,9 @@ DriftDiffusionProperties::calculate_mobilities(void)
   }
 
   _pd->electron_conductivity =
-    _pd->electron_mobility * _pd->electron_density + 1e4;
+    _pd->electron_mobility * _pd->electron_density + _background_conductivity;
   _pd->hole_conductivity =
-    _pd->hole_mobility * _pd->hole_density + 1e4;
+    _pd->hole_mobility * _pd->hole_density + _background_conductivity;
 }
 
 
