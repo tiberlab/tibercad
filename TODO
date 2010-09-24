@@ -2,8 +2,8 @@
 	( ) Complete the Elasticity module
 
 2010-09-20 Auf der Maur
-	( ) add possibility to read RealGradient type from input file
-        ( ) add the *operator between tensor.h and tensor_value.h related types.
+	(DONE) add possibility to read RealGradient type from input file
+        (DONE) add the *operator between tensor.h and tensor_value.h related types.
 
 2010-07-20 Auf der Maur
 	( ) add possibility to have independent meshes

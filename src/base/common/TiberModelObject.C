@@ -5,6 +5,8 @@
 #include "DLLoader.h"
 #include "ModelErrorException.h"
 
+#include <vector_value.h>
+
 #include <cassert>
 #include <sstream>
 
@@ -98,6 +100,19 @@ TiberModelObject::get_parameter(const std::string& name,
   string s(_options.get_option(name, ""));
   if (override) override_parameter_string(name, s);
   Utils::extract_vector(s, vec);
+}
+
+
+template<>
+void
+TiberModelObject::get_parameter<RealVectorValue>(const std::string& name,
+    RealVectorValue& vec, bool override, InitializerBase*)
+{
+  string val(_options.get_option(name, ""));
+  // if one needs override from strange other sources
+  if (override) override_parameter_string(name, val);
+  //Variable::check_and_register(val, variable, this, initfunc);
+  Utils::extract_vector(val, vec);
 }
 
 

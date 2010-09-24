@@ -10,6 +10,9 @@
 #include <cmath>
 #include <cstdlib>
 
+template <typename T> class VectorValue;
+typedef VectorValue<double> RealVectorValue;
+
 //! This class contains useful methods for different tasks
 class Utils
 {
@@ -43,6 +46,17 @@ class Utils
      */
     template <typename T>
     static void extract_vector(const std::string& input, std::vector<T>& vec);
+
+
+    //! Extract a real 3D vector
+    /*!
+     * The input string has to be of the form
+     * \li \verbatim ( val1, val2, val3 ) \endverbatim
+     * \li \verbatim [ val1, val2, val3 ] \endverbatim
+     * \li \verbatim { val1, val2, val3 } \endverbatim
+     * \li \verbatim   val1, val2, val3  \endverbatim
+     */
+    static void extract_vector(const std::string& input, RealVectorValue& vec);
 
 
     //! Tokenize a string

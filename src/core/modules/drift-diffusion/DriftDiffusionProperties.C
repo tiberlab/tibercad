@@ -341,18 +341,7 @@ DriftDiffusionProperties::do_init(void)
   if (has_parameter("polarization"))
   {
     _user_defined_polarization = new RealVectorValue(0);
-    vector<double> pol(3, 0.0);
-    get_parameter("polarization", pol);
-    switch (pol.size())
-    {
-      case 3:
-        (*_user_defined_polarization)(2) = pol[2];
-      case 2:
-        (*_user_defined_polarization)(1) = pol[1];
-      default:
-        (*_user_defined_polarization)(0) = pol[0];
-        break;
-    }
+    get_parameter("polarization", *_user_defined_polarization);
   }
 
 

@@ -9,6 +9,7 @@
 
 #include "Utils.h"
 
+#include <vector_value.h>
 
 #include <cctype>
 #include <iostream>
@@ -331,6 +332,40 @@ Utils::extract_vector(const string& input, vector<T>& vec)
     boost::algorithm::trim(comp);
   }
   vec.push_back(convert<T>(comp));
+}
+
+
+
+
+void
+Utils::extract_vector(const string& input, RealVectorValue& vec)
+{
+  vector<double> v;
+  extract_vector<double>(input, v);
+
+  switch (v.size())
+  {
+    case 1:
+      vec(0) = v[0];
+      vec(1) = v[0];
+      vec(2) = v[0];
+      break;
+
+    case 2:
+      vec(0) = v[0];
+      vec(1) = v[0];
+      vec(2) = v[1];
+      break;
+
+    case 3:
+      vec(0) = v[0];
+      vec(1) = v[1];
+      vec(2) = v[2];
+      break;
+
+    default:
+      break;
+  }
 }
 
 
