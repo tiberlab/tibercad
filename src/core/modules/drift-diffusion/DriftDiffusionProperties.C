@@ -357,7 +357,7 @@ DriftDiffusionProperties::do_init(void)
 
 
   _background_conductivity =
-      get_option("background_conductivity", 1e4) / Constants::e;
+      0.5 * get_option("background_conductivity", 2e4 * Constants::e) / Constants::e;
 
 
 
