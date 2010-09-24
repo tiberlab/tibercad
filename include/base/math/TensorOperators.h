@@ -5,6 +5,7 @@
 
 
 #include <tensor.h>
+#include <vector_value.h>
 #include <tensor_value.h>
 
 
@@ -35,6 +36,9 @@ RealVectorValue operator*(const Tensor2Gen& A, const RealVectorValue& x)
 
   return v;
 }
+
+
+RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B);
 
 
 #endif /* _TENSOROPERATORS_H_ */
