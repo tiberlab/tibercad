@@ -38,6 +38,13 @@ RealVectorValue operator*(const Tensor2Gen& A, const RealVectorValue& x)
 }
 
 
+//! Double contraction \f$A_{ijkl}B_{kl}\f$
+RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B);
+
+//! Double contraction \f$A_{ijkl}B_{kl}\f$
+/*!
+ * The result is written to B
+ */
 RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B);
 
 
