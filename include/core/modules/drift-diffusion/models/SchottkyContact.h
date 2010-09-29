@@ -44,6 +44,10 @@ class TBDLLOCAL SchottkyContact : public ElectricalContact
     //! Is this a fixed barrier or not?
     bool _fixed_barrier;
 
+
+    //! Do we include thermionic emission?
+    bool _thermionic_emission;
+
 };
 
 

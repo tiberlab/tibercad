@@ -86,6 +86,13 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     void set_barrier(double barrier);
 
 
+    //! Set the recombination velocities
+    /*!
+     * A value of -1 will not change the current value.
+     */
+    void set_recombination_velocities(double vn, double vp);
+
+
 
   private:
 
@@ -154,6 +161,15 @@ void
 ElectricalContact::set_barrier(double barrier)
 {
   _barrier = barrier;
+}
+
+
+inline
+void
+ElectricalContact::set_recombination_velocities(double vn, double vp)
+{
+  if (vn > 0) _vrec_n = vn;
+  if (vp > 0) _vrec_p = vp;
 }
 
 

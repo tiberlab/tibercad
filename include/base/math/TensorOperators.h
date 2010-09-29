@@ -38,6 +38,46 @@ RealVectorValue operator*(const Tensor2Gen& A, const RealVectorValue& x)
 }
 
 
+//! Multiplication of Tenor types
+inline
+RealTensor operator*(const RealTensor& A, const Tensor2Gen& B)
+{
+  RealTensor R(0);
+  for (unsigned int j = 0; j < 3; j++)
+  {
+    unsigned int J = j + 1;
+    for (unsigned int i = 0; i < 3; i++)
+    {
+      R(i,0) += A(i,j) * B(J,1);
+      R(i,1) += A(i,j) * B(J,2);
+      R(i,2) += A(i,j) * B(J,3);
+    }
+  }
+
+  return R;
+}
+
+
+//! Multiplication of Tenor types
+inline
+RealTensor operator*(const Tensor2Gen& A, const RealTensor& B)
+{
+  RealTensor R(0);
+  for (unsigned int i = 0; i < 3; i++)
+  {
+    unsigned int I = i + 1;
+    for (unsigned int j = 0; j < 3; j++)
+    {
+      R(i,j) += A(I,1) * B(0,j);
+      R(i,j) += A(I,2) * B(1,j);
+      R(i,j) += A(I,3) * B(2,j);
+    }
+  }
+
+  return R;
+}
+
+
 //! Double contraction \f$A_{ijkl}B_{kl}\f$
 RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B);
 

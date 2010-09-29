@@ -24,6 +24,7 @@ SchottkyContact::SchottkyContact(const ModelOptions& options)
 void
 SchottkyContact::do_init(void)
 {
+
   ElectricalContact::do_init();
 
   double barrier = get_option("barrier_height", 0.8);
@@ -57,6 +58,14 @@ SchottkyContact::do_init(void)
       _workfunction -= get_dd_properties()->get_conduction_band_edge();
     else
       _workfunction -= get_dd_properties()->get_valence_band_edge();
+  }
+
+  _thermionic_emission = get_option("thermionic_emission", false);
+  if (_thermionic_emission)
+  {
+    double m = 0.1 * Constants::me;
+    double vth = SimulationOptions::T * Constants::e / (2 * M_PI * m);
+    set_recombination_velocities(vth, -1);
   }
 
 }
