@@ -83,15 +83,12 @@ class SimulationEnvironment
 
 
 
-    //! Add the boundary for a given set of boundary numbers
+    //! Add a boundary
     /*!
-     * The boundary numbers have to correspond to valid boundary numbers.
-     *
      * \param boundary the boundary to assign to this
      * simulation
-     * \param boundary_ids the set of boundary numbers
      */
-    void add_boundary(Boundary* boundary, const std::vector<ID>& boundary_ids) TBDLLOCAL;
+    void add_boundary(Boundary* boundary) TBDLLOCAL;
 
 
     //! Prepare structures that are needed for other setup
@@ -338,16 +335,6 @@ class SimulationEnvironment
     //! Creates the boundary element maps
     void create_bc_maps(void) TBDLLOCAL;
 
-
-    //! Add the boundary for a given boundary number
-    /*!
-     * The boundary number has to correspond to a valid boundary number.
-     *
-     * \param boundary the boundary to assign to this
-     * simulation
-     * \param boundary_id the boundary number
-     */
-    void add_boundary(Boundary* boundary, ID boundary_id) TBDLLOCAL;
 
 
     //! Invalidate all relevant environments

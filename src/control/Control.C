@@ -774,7 +774,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
         {
           bnd = new Boundary(boundary_name, bdopts);
           bnd->set_region_ids(ids);
-          env->add_boundary(bnd, ids);
+          env->add_boundary(bnd);
 
           //
           // this is the old way -->

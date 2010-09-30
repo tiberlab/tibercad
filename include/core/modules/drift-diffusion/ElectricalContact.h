@@ -168,8 +168,16 @@ inline
 void
 ElectricalContact::set_recombination_velocities(double vn, double vp)
 {
-  if (vn > 0) _vrec_n = vn;
-  if (vp > 0) _vrec_p = vp;
+  if (vn > 0)
+  {
+    _vrec_n = vn;
+    set_type(1, NEUMANN);
+  }
+  if (vp > 0)
+  {
+    _vrec_p = vp;
+    set_type(2, NEUMANN);
+  }
 }
 
 

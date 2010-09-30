@@ -65,6 +65,7 @@ SchottkyContact::do_init(void)
   {
     double m = 0.1 * Constants::me;
     double vth = SimulationOptions::T * Constants::e / (2 * M_PI * m);
+    vth = std::sqrt(vth);
     set_recombination_velocities(vth, -1);
   }
 

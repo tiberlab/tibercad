@@ -78,32 +78,31 @@ SimulationEnvironment::init(void)
   }
 }
 
-void
-SimulationEnvironment::add_boundary(Boundary* boundary, ID boundary_id)
-{
-  assert(boundary != NULL);
-  assert(!_is_initialized);
 
-  BCMap::iterator it = _bc_map.find(boundary_id);
-  if (it == _bc_map.end())
-    _bc_map[boundary_id] = boundary;
-  else
+
+void
+SimulationEnvironment::add_boundary(Boundary* boundary)
+{
+  if (boundary == NULL) return;
+
+  vector<ID> ids;
+  boundary->get_region_ids(ids);
+
+  for (unsigned int i = 0; i < ids.size(); ++i)
   {
-    std::ostringstream s;
-    s << "SimulationEnvironment: boundary region " << boundary_id <<
-      " already defined.";
-    throw InitFailedException(s.str());
+    ID boundary_id = ids[i];
+
+    BCMap::iterator it = _bc_map.find(boundary_id);
+    if (it == _bc_map.end())
+      _bc_map[boundary_id] = boundary;
+    else
+    {
+      std::ostringstream s;
+      s << "SimulationEnvironment: boundary region " << boundary_id <<
+        " already defined.";
+      throw InitFailedException(s.str());
+    }
   }
-}
-
-void
-SimulationEnvironment::add_boundary(Boundary* boundary,
-    const vector<ID>& boundary_ids)
-{
-  assert(boundary != NULL);
-
-  for (unsigned int i = 0; i < boundary_ids.size(); ++i)
-    add_boundary(boundary, boundary_ids[i]);
 }
 
 
