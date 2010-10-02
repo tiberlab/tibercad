@@ -1281,13 +1281,17 @@ DriftDiffusion::do_setup_solution_variables(void)
     bool plot_curr = plot_solution("ContactCurrent");
     plot_curr |= plot_solution("ContactCurrents");
 
+    // we put them first into a map so they will be ordered
+    // alphabetically
+    map<string, ID> cnt_map;
+
     SimulationEnvironment::BoundaryIterator it(get_environment().boundaries_begin());
     const SimulationEnvironment::BoundaryIterator end(get_environment().boundaries_end());
     unsigned int i = 1;
 
     for ( ; it != end; ++it)
     {
-      const Boundary* bd = it->second;
+      const Boundary* bd = (*it);
       if (bd != NULL)
       {
         // we include only contacts that carry current
@@ -1301,12 +1305,16 @@ DriftDiffusion::do_setup_solution_variables(void)
           string name(bd->get_name() + ".current");
           // if currents should be plotted, add it also to the plot variables
           if (plot_curr) add_plot_variable(name);
-          declare_solution_ext(name, id, SolutionDescriptor::REAL,
-              SolutionDescriptor::GLOBAL, units);
+          cnt_map[name] = id;
           i++;
         }
       }
     }
+
+    // now we declare them
+    for (map<string, ID>::iterator i(cnt_map.begin()); i != cnt_map.end(); ++i)
+      declare_solution_ext(i->first, i->second, SolutionDescriptor::REAL,
+          SolutionDescriptor::GLOBAL, units);
   }
 }
 

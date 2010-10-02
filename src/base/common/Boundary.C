@@ -18,9 +18,16 @@ Boundary::Boundary(const std::string& name, const ModelOptions& options)
 
 
 void
+Boundary::set_region_ids(const std::vector<ID>& region_ids)
+{
+  _region_ids.insert(region_ids.begin(), region_ids.end());
+}
+
+void
 Boundary::get_region_ids(std::vector<ID>& ids) const
 {
-  ids = _region_ids;
+  ids.clear();
+  ids.insert(ids.begin(), _region_ids.begin(), _region_ids.end());
 }
 
 

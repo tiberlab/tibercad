@@ -7,6 +7,7 @@
 #include "ModelOptions.h"
 
 #include <map>
+#include <set>
 #include <vector>
 #include <string>
 
@@ -104,6 +105,11 @@ class Boundary
     //! Get the physical region IDs
     void get_region_ids(std::vector<ID>& ids) const;
 
+    //! Get the region IDs as a set
+    const std::set<ID>& get_region_ids(void) const;
+
+    //! Check if it contains a region ID
+    bool has_region_id(ID id) const;
 
 
   private:
@@ -124,7 +130,7 @@ class Boundary
     double _area_factor;
 
     //! The physical regions this boundary is touching
-    std::vector<ID> _region_ids;
+    std::set<ID> _region_ids;
 
 
 };
@@ -175,13 +181,6 @@ Boundary::get_area_factor(void) const
 }
 
 
-inline
-void
-Boundary::set_region_ids(const std::vector<ID>& region_ids)
-{
-  _region_ids = region_ids;
-}
-
 
 inline
 void
@@ -226,5 +225,21 @@ Boundary::models_end(void) const
 }
 
 
+
+inline
+const std::set<ID>&
+Boundary::get_region_ids(void) const
+{
+  return _region_ids;
+}
+
+
+
+inline
+bool
+Boundary::has_region_id(ID id) const
+{
+  return static_cast<bool>(_region_ids.count(id));
+}
 
 #endif // _BOUNDARY_H_

@@ -30,7 +30,7 @@ class SimulationEnvironment
   private:
 
     //! A typedef for convenience
-    typedef std::map<ID, Boundary*> BCMap;
+    typedef std::set<Boundary*> BCMap;
 
     //! A typedef for convenience
     typedef HashMap<ElementSide, ID, ElementSide::hash>::Type ElemSideMap;
@@ -47,15 +47,65 @@ class SimulationEnvironment
     //! An iterator for the nodes lying on a boundary
     typedef std::map<const Node*, ID>::const_iterator BoundaryNodeIterator;
 
-    //! An iterator for the boundaries
-    typedef std::map<ID, Boundary*>::const_iterator BoundaryIterator;
-
     //! An iterator for the elements
     typedef ElementList::const_iterator ConstElemIterator;
 
     //! An iterator for the region IDs
     typedef std::set<ID>::const_iterator RegionIDIterator;
 
+    //! An iterator for the boundaries
+    typedef std::set<Boundary*>::iterator BoundaryIterator;
+    /*
+    class BoundaryIterator
+    {
+      public:
+
+        BoundaryIterator(void) {};
+
+        BoundaryIterator(const BCMap& bd, const BCMap::const_iterator it) :
+          _bd_it(it), _bd_end(bd.end()) {}
+
+        BoundaryIterator(const BoundaryIterator& it) :
+          _bd_it(it._bd_it), _bd_end(it._bd_end) {}
+
+        BoundaryIterator& operator++(void)
+        {
+          Boundary* bd = _bd_it->second;
+          while ((_bd_it != _bd_end) && (bd == _bd_it->second))
+            ++_bd_it;
+
+          return *this;
+        }
+
+        BoundaryIterator& operator=(const BoundaryIterator& it)
+        {
+          _bd_it = it._bd_it;
+          _bd_end = it._bd_end;
+        }
+
+        bool operator==(const BoundaryIterator& it)
+        {
+          return ((_bd_it == it._bd_it) || (_bd_it->second == it._bd_it->second));
+        }
+
+        bool operator!=(const BoundaryIterator& it)
+        {
+          return !(*this == it);
+        }
+
+        Boundary* operator*(void)
+        {
+          return ((_bd_it == _bd_end) ? NULL : _bd_it->second);
+        }
+
+
+      private:
+
+        BCMap::const_iterator _bd_it;
+        BCMap::const_iterator _bd_end;
+
+    };
+    */
 
     //! The constructor
     /*!
@@ -530,18 +580,6 @@ SimulationEnvironment::is_inner_boundary(const ElementSide& side) const
 
 
 
-inline
-Boundary*
-SimulationEnvironment::get_boundary(ID boundary_number) const
-{
-  BCMap::const_iterator it(_bc_map.find(boundary_number));
-
-  if (it != _bc_map.end())
-    return it->second;
-  else
-    return NULL;
-}
-
 
 inline
 Boundary*
@@ -670,7 +708,7 @@ inline
 const SimulationEnvironment::BoundaryIterator
 SimulationEnvironment::boundaries_begin(void) const
 {
-  return _bc_map.begin();
+  return BoundaryIterator(_bc_map.begin());
 }
 
 
@@ -678,7 +716,7 @@ inline
 const SimulationEnvironment::BoundaryIterator
 SimulationEnvironment::boundaries_end(void) const
 {
-  return _bc_map.end();
+  return BoundaryIterator(_bc_map.end());
 }
 
 

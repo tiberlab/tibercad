@@ -32,19 +32,10 @@ SimulationEnvironment::SimulationEnvironment(
 
 SimulationEnvironment::~SimulationEnvironment(void)
 {
-  BCMap::iterator it = _bc_map.begin();
-  const BCMap::iterator end = _bc_map.end();
-
-  // we have to put them first into a set, because each boundary
-  // can be associated to several IDs
-  set<Boundary*> bds;
+  BoundaryIterator it(boundaries_begin());
+  const BoundaryIterator end(boundaries_end());
   for ( ; it != end; ++it)
-    bds.insert(it->second);
-
-  set<Boundary*>::iterator bdit(bds.begin());
-  const set<Boundary*>::iterator bdend(bds.end());
-  for ( ; bdit != bdend; ++bdit)
-    delete *bdit;
+    delete *it;
 
   _environments.erase(this);
 }
@@ -72,7 +63,7 @@ SimulationEnvironment::init(void)
     const BCMap::iterator end = _bc_map.end();
 
     for ( ; it != end; ++it)
-      it->second->init();
+      (*it)->init();
 
     _is_initialized = true;
   }
@@ -85,24 +76,9 @@ SimulationEnvironment::add_boundary(Boundary* boundary)
 {
   if (boundary == NULL) return;
 
-  vector<ID> ids;
-  boundary->get_region_ids(ids);
+  _bc_map.insert(boundary);
 
-  for (unsigned int i = 0; i < ids.size(); ++i)
-  {
-    ID boundary_id = ids[i];
-
-    BCMap::iterator it = _bc_map.find(boundary_id);
-    if (it == _bc_map.end())
-      _bc_map[boundary_id] = boundary;
-    else
-    {
-      std::ostringstream s;
-      s << "SimulationEnvironment: boundary region " << boundary_id <<
-        " already defined.";
-      throw InitFailedException(s.str());
-    }
-  }
+  // TODO somewhere we should check if a boundary has already been assigned
 }
 
 
@@ -176,33 +152,39 @@ SimulationEnvironment::create_bc_maps(void)
           // PropertyMap
           for (bc_it = _bc_map.begin(); bc_it != bc_end; ++bc_it)
           {
-            const ID bd_id = bc_it->first;
+            const set<ID>& bd_ids = (*bc_it)->get_region_ids();
 
-            bd_it = bd_nodes.find(bd_id);
-            if (bd_it != bd_end)
+            set<ID>::const_iterator it(bd_ids.begin());
+            for ( ; it != bd_ids.end(); ++it)
             {
-              const vector<ID>& nodes = bd_it->second;
-              const vector<ID>::const_iterator n_begin(nodes.begin());
-              const vector<ID>::const_iterator n_end(nodes.end());
+              ID bd_id = *it;
 
-              if (dim == 1)
+              bd_it = bd_nodes.find(bd_id);
+              if (bd_it != bd_end)
               {
-                // we cannot build the element sides here
-                if (find(n_begin, n_end, elem->node(s)) != n_end)
-                  _element_side_map[ElementSide(elem, s)] = bd_id;
-              }
-              else
-              {
-                bool found = true;
-                AutoPtr<Elem> side = elem->build_side(s);
-                // check if all nodes of the side are in the node map
-                for (unsigned int i = 0; i < side->n_nodes(); i++)
+                const vector<ID>& nodes = bd_it->second;
+                const vector<ID>::const_iterator n_begin(nodes.begin());
+                const vector<ID>::const_iterator n_end(nodes.end());
+
+                if (dim == 1)
                 {
-                  if (find(n_begin, n_end, side->node(i)) == n_end)
-                    found = false;
+                  // we cannot build the element sides here
+                  if (find(n_begin, n_end, elem->node(s)) != n_end)
+                    _element_side_map[ElementSide(elem, s)] = bd_id;
                 }
-                if (found)
-                  _element_side_map[ElementSide(elem, s)] = bd_id;
+                else
+                {
+                  bool found = true;
+                  AutoPtr<Elem> side = elem->build_side(s);
+                  // check if all nodes of the side are in the node map
+                  for (unsigned int i = 0; i < side->n_nodes(); i++)
+                  {
+                    if (find(n_begin, n_end, side->node(i)) == n_end)
+                      found = false;
+                  }
+                  if (found)
+                    _element_side_map[ElementSide(elem, s)] = bd_id;
+                }
               }
             }
           }
@@ -277,12 +259,7 @@ SimulationEnvironment::update_boundary_element_map(
     set<const Boundary*> boundaries)
 {
   if (boundaries.size() == 0)
-  {
-    BCMap::iterator it(_bc_map.begin());
-    const BCMap::iterator end(_bc_map.end());
-    for ( ; it != end; ++it)
-      boundaries.insert(it->second);
-  }
+    boundaries.insert(_bc_map.begin(), _bc_map.end());
 
   set<const Boundary*>::iterator ctit;
   const set<const Boundary*>::iterator ctend(boundaries.end());
@@ -317,8 +294,8 @@ SimulationEnvironment::get_boundary(const string& name) const
   const BCMap::const_iterator end(_bc_map.end());
 
   for ( ; it != end; ++it)
-    if ((it->second)->get_name() == name)
-      bd = it->second;
+    if ((*it)->get_name() == name)
+      bd = *it;
 
     return bd;
 }
@@ -385,21 +362,38 @@ SimulationEnvironment::is_node_on_boundary(const Node* node,
 {
   bool found = false;
 
-  BoundaryIterator it(boundaries_begin());
-  const BoundaryIterator end(boundaries_end());
+  BCMap::const_iterator it(_bc_map.find(const_cast<Boundary*>(boundary)));
+  const BCMap::const_iterator end(_bc_map.end());
 
-  for ( ; it != end; ++it)
-    if (it->second == boundary)
+  if (it != end)
+  {
+    const set<ID>& ids = (*it)->get_region_ids();
+    set<ID>::const_iterator idit(ids.begin());
+    for ( ; idit != ids.end(); ++idit)
     {
-      const BoundaryNodeMap::NodeSet& nodes = _node_map.get_nodes(it->first);
+      const BoundaryNodeMap::NodeSet& nodes = _node_map.get_nodes(*idit);
       if (nodes.count(node))
       {
         found = true;
         break;
       }
     }
+  }
 
   return found;
+}
+
+
+
+Boundary*
+SimulationEnvironment::get_boundary(ID boundary_number) const
+{
+  BCMap::const_iterator it(_bc_map.begin());
+  for ( ; it != _bc_map.end(); ++it)
+    if ((*it)->has_region_id(boundary_number))
+      return *it;
+
+  return NULL;
 }
 
 
@@ -410,15 +404,14 @@ SimulationEnvironment::get_boundary_nodes(const Boundary* boundary,
 {
   nodelist.clear();
 
-  BoundaryIterator it(boundaries_begin());
-  const BoundaryIterator end(boundaries_end());
+  vector<ID> ids;
+  boundary->get_region_ids(ids);
 
-  for ( ; it != end; ++it)
-    if (it->second == boundary)
-    {
-      nodelist = _node_map.get_nodes(it->first);
-      break;
-    }
+  for (size_t i = 0; i < ids.size(); ++i)
+  {
+    const set<const Node*>& list = _node_map.get_nodes(ids[i]);
+      nodelist.insert(list.begin(), list.end());
+  }
 }
 
 

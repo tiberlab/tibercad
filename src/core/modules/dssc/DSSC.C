@@ -741,7 +741,7 @@ DSSC::do_solve(void)
 
   for ( ; it != end; ++it)
   {
-    
+
     ostringstream os;
     os << setprecision(6);
     DSSCContact* cnt =
@@ -754,7 +754,7 @@ DSSC::do_solve(void)
     os << "";
     os << it->second;
     cout << os.str() << endl;
-    
+
   }
 
 }
@@ -1063,14 +1063,14 @@ DSSC::do_init(void)
       //Boundary* bd1 = it->get_boundary(get_id());
 
 
-      BoundaryProperties* bd = it->second->get_boundary_properties(get_id());
+      BoundaryProperties* bd = (*it)->get_boundary_properties(get_id());
       if (bd != NULL)
       {
         DSSCContact* contact = dynamic_cast<DSSCContact*>(bd);
         if (contact != NULL)
         {
-          _boundary_currents[it->second] = 0.0;
-          _voltages[it->second] = 0.0;
+          _boundary_currents[(*it)] = 0.0;
+          _voltages[(*it)] = 0.0;
 
           //if (_light_from == "anode" )
           //{
@@ -2158,7 +2158,7 @@ DSSC::build_local_scaling(void)
     fe->reinit(elem);
 
     sc->reinit(elem);
-   
+
     assert(elem->n_nodes() == dof_indices_u.size());
 
     // loop over the quadrature points
@@ -2206,15 +2206,15 @@ DSSC::build_local_scaling(void)
 
       sc->calculate_densities();
       sc->calculate_net_recombination_rate();
-      
+
       // the jacobian x weight x scaling
       double J = JxW[qp];
-      
+
       double mu_I = sc->get_mobility_I();
       double mu_I3 = sc->get_mobility_I3();
       double mu_C = sc->get_mobility_C();
       double mu_n = sc->get_mobility_n();
-      
+
       double sigma_I = mu_I * sc->get_density_I()* J;
       double sigma_I3 = mu_I3 * sc->get_density_I3() * J;
       double sigma_C = mu_C * sc->get_density_C() * J;
@@ -2229,7 +2229,7 @@ DSSC::build_local_scaling(void)
 
       double R = 0.0;
       R = sc->get_net_recombination_rate();
-      
+
       double drho = dC_dphi - (dn_dphi + dI_dphi + dI3_dphi);
         drho *= phi0;
 
@@ -2244,7 +2244,7 @@ DSSC::build_local_scaling(void)
         double dR_dI3 = sc->get_net_recombination_rate_derivatives()[2];
 
         dR[1] = -dR_dn * dn_dphi * phi0 * J;
-        dR[2] = -dR_dI * dI_dphi * phi0 * J; 
+        dR[2] = -dR_dI * dI_dphi * phi0 * J;
         dR[3] = -dR_dI3 * dI3_dphi * phi0 * J;
         dR[0] = -(dR[1] + dR[2] + dR[3]);
       }
@@ -2254,7 +2254,7 @@ DSSC::build_local_scaling(void)
       {
         //local_scaling_[elem->get_node(i)][0] += sigma_e * phi[i][qp];
         //local_scaling_[elem->get_node(i)][1] += sigma_h * phi[i][qp];
-        local_scaling_[elem->get_node(i)][0] += sigma_n * (dphi[i][qp] * dphi[i][qp]) 
+        local_scaling_[elem->get_node(i)][0] += sigma_n * (dphi[i][qp] * dphi[i][qp])
                                                   - dR[1] * (phi[i][qp] * phi[i][qp]);
         local_scaling_[elem->get_node(i)][1] += sigma_I * (dphi[i][qp] * dphi[i][qp])
                                                   + 1.5 * dR[2] * (phi[i][qp] * phi[i][qp]);
@@ -3131,7 +3131,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   double scaling_I = 1.0;
   // scaling I3
   double scaling_I3 = 1.0;
-  // scaling all charges 
+  // scaling all charges
   double scaling_tot = 1.0;
 
 
@@ -3144,7 +3144,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     scaling_tot = scaling.get_density_scaling();
     C0_tot = C0_e = C0_I = C0_I3 = C0_C = 1.0;
   }
-  
+
 
 
   // scaling for recombination rates
@@ -3617,7 +3617,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               KI3I3(i,j) -= dsigma_I3_x_phi / local_scaling[i][2];
 
               KCu(i,j) += dsigma_C_x_phi / local_scaling[i][3];
-              KCC(i,j) -= dsigma_C_x_phi / local_scaling[i][3]; 
+              KCC(i,j) -= dsigma_C_x_phi / local_scaling[i][3];
             }
 
 
@@ -3709,7 +3709,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           tot_iodine += J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
           //Fa(i) -= J * phi[i][qp] * n_C / C0_C;
           //Fb(i) -= J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
-          
+
           /*cout << "local_scaling n = " << local_scaling[i][0] << "\n";
           cout << "local_scaling I = " << local_scaling[i][1] << "\n";
           cout << "local_scaling I3 = " << local_scaling[i][2] << "\n";
@@ -3922,12 +3922,12 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             }
             else
             {
-             
+
              if (n_cat == NULL)
              {
                n_cat = side->get_node(0);
                //local_scaling_C = local_scaling[s][3];
-               //local_scaling_I = local_scaling[s][1]; 
+               //local_scaling_I = local_scaling[s][1];
              }
 
             }
@@ -4031,7 +4031,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 //KI3I(s,s) += -0.5 * -1.5 * Normal_I3 / res;
                 //KI3I3(s,s) += -0.5 * 0.5 * Normal_I3 / res;
                 KI3u(s,s) += -0.5 * Normal_I3 / res;
-                
+
                 //KIu(s,s) += 1.5 * sign * j0 * ( (1.0 / I3_dark) * dI3_dphi - (1.0 / I_dark) * dI_dphi ) * Normal_I;
                 //KII(s,s) += 1.5 * sign * j0 * (-1.0 / I_dark) * -dI_dphi * Normal_I;
                 //KII3(s,s) += 1.5 * sign * j0 * (1.0 / I3_dark) * -dI3_dphi * Normal_I;
@@ -4039,7 +4039,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 //KI3u(s,s) += -0.5 * sign * j0 * ( (1.0 / I3_dark) * dI3_dphi - (1.0 / I_dark) * dI_dphi ) * Normal_I3;
                 //KI3I(s,s) += -0.5 * sign * j0 * (-1.0 / I_dark) * -dI_dphi * Normal_I3;
                 //KI3I3(s,s) += -0.5 * sign * j0 * (1.0 / I3_dark) * -dI3_dphi * Normal_I3;
-                
+
                 //for (unsigned int n = 0; n < elem->n_nodes(); n++)
                 //{
                 //  KI3u(s,n) += -(1/3) * dsigma_I * XI(n) * dphi_face[n][0](0) * C0_I/C0_I3 ;
@@ -4063,7 +4063,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 	       double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
                //double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
                //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
-               
+
                //double j0 = contact->get_ex_curr();
                //double I_dark = sc->get_equilibrium_concentrations().I;
                //double I3_dark = sc->get_equilibrium_concentrations().I3;
@@ -4076,11 +4076,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                pot =  -Xu(s);
                FI(s) += -1.5 * pot * Normal_I / res ;
                FI3(s) += 0.5 * pot * Normal_I3 / res ;
-              
+
                //FI(s) += -1.5 * sign * j0 * ( density_I3 / I3_dark  - density_I / I_dark ) * Normal_I;
                //FI3(s) += 0.5 * sign * j0 * ( density_I3 / I3_dark  - density_I / I_dark ) * Normal_I3;
                //FI3(s) += (1/3) * sigma_I * XI(s) * dphi_face[s][0](0) * C0_I/C0_I3;
-              
+
                //for (unsigned int n = 0; n < elem->n_nodes(); n++)
                //{
                //  FI(s) += -3 * sigma_I3 * XI3(n) * dphi_face[n][0](0) * C0_I3/C0_I ;
@@ -4092,12 +4092,12 @@ DSSC::do_assembly(const NumericVector<Number>& x,
            }
            else
 	   {
-             
+
              if (n_cat == NULL)
              {
                n_cat = side->get_node(0);
                //local_scaling_C = local_scaling[s][3];
-               //local_scaling_I = local_scaling[s][1]; 
+               //local_scaling_I = local_scaling[s][1];
              }
 
            }
@@ -4171,7 +4171,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             }
             else
             {
-               
+
 
             }
           }
