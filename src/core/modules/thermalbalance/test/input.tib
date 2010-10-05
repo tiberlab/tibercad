@@ -8,6 +8,7 @@ $Device
     meshfile = diode.msh
     dimension = 1
     material = Si
+    mesh_units = 1e-6
   }
 
   Region Bulk
@@ -29,18 +30,25 @@ $Models
    {
     
     simulation_name = tt
-    #plot = (thermal)
+    plot = (LatticeTemp,GRAY)
+    physical_regions = Bulk
     #---MULTISCALE ERROR----
-    ms_error = 1e-3
+    ms_error = 1e-6
     ms_iter = 1
+    fourier_guess = 0
 
+   vg = 1e4
+   custom_dir = 1
+   n_dir = 1
+   dir_1 = (1,0,0)
    }
 
 
    physical_model heat_transport
    {
      type = gray
-     iter = 1
+     max_iter = 1
+     max_error = 1e-6
    }
 
    BC_Regions  
@@ -49,13 +57,13 @@ $Models
      BC_Region anode
      {
        type = heat_reservoir
-       temperature = 300
+       temperature = 0
      }
 
      BC_Region cathode
      {
        type = heat_reservoir
-       temperature = 400
+       temperature = 1
      }
 
    }

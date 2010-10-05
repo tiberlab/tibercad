@@ -82,12 +82,12 @@ ThermalModel::do_init(void)
     Database& db = get_database();
     //Sound Velocity
     db.set_section("sound_velocity/constant");
-    _vg = db.get("vg",0.0, true);
+    _vg = db.get("vg",0.0, false);
     get_parameter("vg", _vg);
 
     //Heat Capacity
     db.set_section("heat_capacity/constant");
-    _cg = db.get("C",0.0, true);
+    _cg = db.get("C",0.0, false);
     get_parameter("C", _cg);
 
 

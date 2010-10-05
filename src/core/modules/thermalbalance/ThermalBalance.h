@@ -80,8 +80,7 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
 
   typedef  std::map<const ElementSide, std::vector<double> >  SideData;
 
-  
-
+  void get_gray_options(void);
 
   SideData SD;
   std::vector<unsigned short int> node_conn;
@@ -102,6 +101,8 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
   bool is_fourier_solved;
 
   bool is_gray_solved;
+
+  bool first_guess;
 
   //------------------Gray solution--------------------------
   ID vec_spec;
@@ -159,10 +160,6 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
    unsigned int theta_slices;
 
    unsigned int phi_slices;
-
-   double d_theta;
-
-   double d_phi;
 
    double total_angle;
 

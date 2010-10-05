@@ -55,9 +55,7 @@ protected:
   
 private:
   
-  //  double _kx;
-  //double _kz;
-   std::vector<double> _kappa;
+  std::vector<double> _kappa;
 
   //! Constructor
   ConstantThermalConductivity(const ModelOptions& options);

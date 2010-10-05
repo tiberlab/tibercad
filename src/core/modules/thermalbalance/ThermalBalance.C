@@ -65,16 +65,12 @@ ThermalBalance::do_init(void)
   get_scaling().set_calc_mesh_units(100.0 * get_scaling().get_calc_mesh_units());
 
   dim = get_mesh().mesh_dimension();
-
-  do_partition();
   
   do_init_fourier();
 
   do_init_gray();
 
  
-
-
   if  (SimulationOptions::verbose() > 2)
     AngInt.print_info();
 
@@ -112,56 +108,35 @@ ThermalBalance::do_init(void)
 
 }
 
-
-
 void
-ThermalBalance::do_partition(void)
+ThermalBalance::get_gray_options(void)
 {
-
+  
   ModelOptions gray_opt = get_options();
-
-  //------------------------------DOMAIN PARTITIONING---------------------------
-
-
-  //CONSTANT PARTITIONING-----------------------
   const MeshBase& mesh = get_mesh();
+  
+  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  
+  bool found = false;
+  
+  for ( ; el != end_el ; ++el)
   {
-    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+    const Elem* elem = *el;
     
-   
-
-    bool found = false;
+    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);   
+    HeatTransportModel* htm = mod.get_heat_transport_model();
     
-    for ( ; el != end_el ; ++el)
+    if (htm->get_type() == HeatTransportModel::Gray)
     {
-      const Elem* elem = *el;
-      
-      ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);   
-      
-      HeatTransportModel* htm = mod.get_heat_transport_model();
-
-      if (htm->get_type() == HeatTransportModel::Gray)
+      if (found == false)
       {
-	GrayDomain.insert(elem);
-
-        if (found == false)
-	{
-	  gray_opt = htm->get_options();   
-          cout<<"ENTRIED"<<endl;
-	  found = true;  
-	}
-
+	gray_opt = htm->get_options();   
+	found = true;  
       }
-      else
-	FourierDomain.insert(elem);
-      
-      ++el;
     }
   }
-  //cout<<"ECCOLO"<<FourierDomain.size()<<endl;
-  //-------------------------------------------
-  //Transfering options fro gray model to thermal balance //TO BE CHANGED
+
   myopts.theta_slices = gray_opt.get_option("theta_slices",0);
   myopts.phi_slices = gray_opt.get_option("phi_slices",0);
   myopts.max_error = gray_opt.get_option("max_error",1e-3);
@@ -171,67 +146,100 @@ ThermalBalance::do_partition(void)
   myopts.threshold_value =  gray_opt.get_option("temp_threshold",0.0);
   myopts.phi_zero = gray_opt.get_option("phi_zero",0);
 
-  //-------------------------------------------------------------------------
 
-  //AUTOMATIC PARTITIONING
-  if (myopts.partitioning.compare("automatic") == 0)  
-  { 
-    
-    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-    
-    for ( ; el != end_el ; ++el)
-    {
-      const Elem* elem = *el;
-	
-	//Real T0 = SimulationOptions::temperature;
-	//Real tg = mod.get_relaxation_time();
-	//Real vg = mod.get_sound_velocity();
-	//Real heat_source = mod.get_total_heat_source();
-	//ID dof = elem->dof_number(gray_sys_number,0,0);
-	//	double T = (*equilibrium_energy)(dof);
-        //Get temperature
-	std::vector<Point>  p(1);
-        p[0] = elem->centroid();
-	std::map<ID, std::vector<double> > values;
-	std::vector<double> value_vec(1);
-        values[FourierTemp] = value_vec;
-	get_solution_secure(elem,values,p);
-        double value = values[FourierTemp][0];
-	if (value>opts.threshold_value)
-	  GrayDomain.insert(elem);
-	else
-	  FourierDomain.insert(elem);
-    }
-  }
+
+
+}
+
+
+void
+ThermalBalance::do_partition(void)
+{
+
+  TiberLinearSystem& system = static_cast<TiberLinearSystem&>(
+							      get_equation_systems().get_system("gray"));
   
+  const MeshBase& mesh = get_mesh();
+  DofMap& dof_map =  system.get_dof_map();
+  const unsigned int tvar = system.variable_number("T");
+  FEType fe_type = dof_map.variable_type(tvar);
+ 
 
-  //BTE/Fourier boundary side
-  {
-    set<const Elem*>::iterator el_f = GrayDomain.begin();
-    const set<const Elem*>::iterator end_el_f = GrayDomain.end();
+  //------------------------------DOMAIN PARTITIONING---------------------------
+
+
+ 
+ MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+ const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+ 
+ for ( ; el != end_el ; ++el)
+ {
+   const Elem* elem = *el;
    
-    for ( ; el_f != end_el_f ; ++el_f)
-    {
-      const Elem* elem = *el_f;  
-      ID neighbor = elem->n_neighbors();
-      
-      for (ID k = 0; k < neighbor; k ++)
-      {
-	const Elem* elem_n = elem->neighbor(k);
+   if (myopts.partitioning.compare("automatic") == 0)  
+   {
 
-	if (FourierDomain.count(elem_n))
-	{ 
-	  const ElementSide elside(elem->top_parent(),k);
-	  BoundarySide.insert(elside);           
-	}
-      }
+     //Get temperature
+     std::vector<Point>  p(1);
+     p[0] = elem->centroid();
 
-    }
-  }
 
-  
-  {
+     vector<Point> points(1);
+     FEInterface::inverse_map(dim, fe_type, elem, p, points);
+     std::map<ID, std::vector<double> > values;
+   
+     std::vector<double> value_vec(1);
+     values[FourierTemp] = value_vec;
+     get_solution_secure(elem,values,points);
+     double value = values[FourierTemp][0];
+     
+     if (value>myopts.threshold_value)
+       GrayDomain.insert(elem);   
+     else
+       FourierDomain.insert(elem);
+   }
+   else
+   {
+    
+     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);   
+     HeatTransportModel* htm = mod.get_heat_transport_model();
+     
+     if (htm->get_type() == HeatTransportModel::Gray)
+       GrayDomain.insert(elem);
+     else
+       FourierDomain.insert(elem);
+   }
+ 
+ }
+
+
+
+ //BTE/Fourier boundary side
+ {
+   set<const Elem*>::iterator el_f = GrayDomain.begin();
+     const set<const Elem*>::iterator end_el_f = GrayDomain.end();
+     
+     for ( ; el_f != end_el_f ; ++el_f)
+     {
+       const Elem* elem = *el_f;  
+       ID neighbor = elem->n_neighbors();
+       
+       for (ID k = 0; k < neighbor; k ++)
+       {
+	 const Elem* elem_n = elem->neighbor(k);
+	 
+	 if (FourierDomain.count(elem_n))
+	 { 
+	   const ElementSide elside(elem->top_parent(),k);
+	   BoundarySide.insert(elside);           
+	 }
+       }
+       
+     }
+   }
+   
+   
+   {
     set<const Elem*>::iterator el_f = FourierDomain.begin();
     const set<const Elem*>::iterator end_el_f = FourierDomain.end();
     
@@ -250,12 +258,13 @@ ThermalBalance::do_partition(void)
 	  BoundarySide.insert(elside);           
 	}
       }
-
+      
     }
-  }
-  //-----------
+   }
+ 
 
-
+ 
+ 
 
 }
 
@@ -263,12 +272,13 @@ ThermalBalance::do_partition(void)
 NumericVector<double>&
 ThermalBalance::do_get_solution_vector(void)
 {
- //  TiberNonlinearSystem* system =
-//     &get_equation_systems().get_system<TiberNonlinearSystem>(
-//         get_equation_system_name());
 
-//   system->get_solution_vector().close();
-//   return system->get_solution_vector();
+  TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
+							"fourier", get_solver_options());
+  
+  system->get_solution_vector().close();
+  return system->get_solution_vector();
+
 }
 
 
@@ -296,9 +306,7 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
     thermal_flux_nodal[i]->close();
   }
 
-
-
-
+ initial_energy = (system->solution)->clone().release();
 
 }
 
@@ -307,6 +315,9 @@ ThermalBalance::do_init_gray(void)
 {
 TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 					     "gray", get_solver_options());
+
+
+ get_gray_options();
 
 
  system->add_variable("T",CONSTANT,MONOMIAL);
@@ -334,11 +345,7 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
  AngInt.phi_slices = myopts.phi_slices;
  AngInt.phi_zero = myopts.phi_zero;
 
- cout<<myopts.phi_slices<<endl;
 
- //std::cout<<"CHECK: "<<endl;
- //std::cout<< AngInt.theta_slices<<std::endl;
- //std::cout<< AngInt.phi_slices<<std::endl;
 
  if (myopts.custom)
    AngInt.compute_custom_direction(myopts.cd);
@@ -436,7 +443,7 @@ ThermalBalance::do_setup_solution_variables(void)
   declare_solution(LatticeTemp, REAL, NODES, "K");
   declare_solution(FourierTemp, REAL, NODES, "K");
   declare_solution(ThermalFlux, VECTOR, NODES, "W/cm^2");
-  declare_solution(ThermCond, VECTOR, NODES, "W/cm K");
+  declare_solution(ThermCond, REAL, NODES, "W/cm K");
   declare_solution(HeatSource, REAL, CELL, "W/cm^3");
   // declare_solution(EffectiveKappa, REAL, NODES, "W/cm^3");
   declare_solution(SolDir,VECTOR,CELL, "W/cm^3");
@@ -471,9 +478,7 @@ ThermalBalance::solve_fourier(void)
   system_fourier.set_options(get_solver_options());
   system_fourier.solve();
 
-
   //Write the nodal flux
-
   const MeshBase& mesh = get_mesh();
  
   DofMap& dof_map_fourier = system_fourier.get_dof_map();
@@ -488,14 +493,17 @@ ThermalBalance::solve_fourier(void)
 
   //--------------------------------------------
   for (ID d = 0; d< dim; d++)
+  { 
+    thermal_flux_nodal[d]->close();
     thermal_flux_nodal[d]->zero();
+  }
    //-----------------------------------------------------
 
    //Fill the temperature and the nodal flux
 
    set<const Elem*>::iterator el = Domain.begin();
    const set<const Elem*>::iterator end_el = Domain.end();
-
+ 
    double max_T = 0.0;
    for ( ; el != end_el; ++el)
    {
@@ -536,6 +544,7 @@ ThermalBalance::solve_fourier(void)
    cout<<"      ...FOURIER"<<endl;
    cout<<endl;
      
+  
 }
 
 
@@ -575,7 +584,7 @@ ThermalBalance::from_nodal_to_cell()
     mod.calculate(elem,elem->centroid());
     const RealTensor& kappa = mod.get_total_thermal_conductivity();
     
-     //Compute temperature at the centroid. Maybe here we can compute value at the centroid by using the JXW.
+    //Compute temperature at the centroid. Maybe here we can compute value at the centroid by using the JXW.
     std::vector<Point> p(1);
     p[0]=elem->centroid();
     vector<Point> points(1);
@@ -597,8 +606,6 @@ ThermalBalance::from_nodal_to_cell()
     for(ID d = 0; d<dim; d++) 
       thermal_flux[d]->set(dof_indices_gray[0],heat_flux(d));
     
-
-
   }
 
 }
@@ -637,7 +644,7 @@ ThermalBalance::from_cell_to_nodal()
     dof_map_gray.dof_indices (elem, dof_indices_gray);
 
     double T = (*equilibrium_energy)(dof_indices_gray[0]);
-   
+
     RealGradient heat_flux(0);
     for (ID d = 0; d< dim; d++)
       heat_flux(d) = (*thermal_flux[d])(dof_indices_gray[0]);
@@ -789,7 +796,7 @@ ThermalBalance::solve_gray(void)
   cout<<"      GRAY..."<<endl;
 
 
-  while (J_err > myopts.max_error & iter < myopts.max_iter)
+  while (E_err > myopts.max_error & iter < myopts.max_iter)
   {
    
     for (ID k = 0; k<AngInt.n_slices; k++ )
@@ -1071,31 +1078,33 @@ ThermalBalance::do_solve(void)
 
   is_fourier_solved = false;
   is_gray_solved = false;
+  first_guess = true;
+
 
   if (opts.fourier_guess)
   {
     Domain = GlobalDomain;
+    cout<<"FOURIER over ALL"<<endl;
     solve_fourier();
     is_fourier_solved = true;
-
+    first_guess = false;
     EquationSystems& es = get_equation_systems();
     TiberLinearSystem& system =
       es.get_system<TiberLinearSystem>("fourier");
     initial_energy = (system.solution)->clone().release();
-
   }
+  
+  do_partition();
 
- 
-  // do_partition_bis();
-  
-  
+  bool do_multiscale = FourierDomain.size() > 0 && opts.do_fourier;
   //Only here the elemental results are filled
   if (GrayDomain.size() > 0 && opts.ms_iter > 0 )
   { 
-   
-    cout<<"MULTISCALE LOOP...."<<endl;
-
-    cout<<endl;
+    if (do_multiscale)
+    {
+      cout<<"MULTISCALE LOOP...."<<endl;
+      cout<<endl;
+    }
 
     Domain = GlobalDomain;
     from_nodal_to_cell();
@@ -1111,11 +1120,20 @@ ThermalBalance::do_solve(void)
     {  
       //-------Self Consistent Loop------------
       Domain = GrayDomain;
+      
+      if (iter>0) //The first guess for gray!
+      { is_gray_solved = false;
+	cout<<"FOURIER over GRAY"<<endl;
+	solve_fourier();
+	from_nodal_to_cell();
+      }
+
       solve_gray();
       is_gray_solved = true;
       
-      if (FourierDomain.size() > 0 && opts.do_fourier)
+      if (do_multiscale)
       {
+        cout<<"FOURIER over FOURIER"<<endl;
 	Domain = FourierDomain;
 	solve_fourier();
 	from_nodal_to_cell();
@@ -1132,11 +1150,17 @@ ThermalBalance::do_solve(void)
       Domain = GlobalDomain;
       from_cell_to_nodal();
 
-      std::cout<<"      Iter: "<<iter<<" Error: "<<err<<std::endl;
+      if (do_multiscale)
+	std::cout<<"      Iter: "<<iter<<" Error: "<<err<<std::endl;
+      else
+        err  = opts.ms_error - 1e-6; //Quit soon
       
     }
-    cout<<endl;
-    cout<<"...MULTISCALE LOOP."<<endl;
+    if (do_multiscale)
+    {
+      cout<<endl;
+      cout<<"...MULTISCALE LOOP."<<endl;
+    }
     
   }
 
@@ -1219,8 +1243,9 @@ ThermalBalance::get_solution_secure(const Elem* elem,
    const unsigned int n_dofs = dof_indices.size();
   ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
   const RealTensor& kappa = mod.get_total_thermal_conductivity();
-   // do interpolation/
-   //  cout<<solution(dof_indices[0])<<endl;
+ 
+
+
    for (unsigned int n = 0; n < np; n++)
     { 
       mod.calculate(elem,real_pts[n]);   
@@ -1282,6 +1307,8 @@ ThermalBalance::get_solution_secure(const Elem* elem,
      
 //      }       
      
+   
+
      if (values.count(ThermCond)||
          values.count(thermal)  )
      {
@@ -1293,12 +1320,12 @@ ThermalBalance::get_solution_secure(const Elem* elem,
     
    }
    //Elemental value
-   std::vector<Point> pp(1);
-   pp[0] = elem->centroid();
+   // std::vector<Point> pp(1);
+   //pp[0] = elem->centroid();
 
-   fe->reinit(elem,&pp);
+   //fe->reinit(elem,&pp);
 
-   mod.calculate(elem,real_pts[0]); 
+   //mod.calculate(elem,real_pts[0]); 
  //   if (values.count(SolDir))
 //    { 
      
@@ -1309,36 +1336,35 @@ ThermalBalance::get_solution_secure(const Elem* elem,
 
 //    }  
    
-     if (values.count(Partition)||
-          values.count(thermal)  )
-    {
+   if (values.count(Partition))
+   {
+     double value = 0;
+     if (GrayDomain.count(elem))
+       value = 1;
+     
+     values[Partition][0] = value;
+   }
 
-      double value = 0;
-      if (GrayDomain.count(elem))
-	value = 1;    
-      values[Partition][0] = value;
-     }
 
-
-     if (values.count(HeatSource)||
-          values.count(thermal)  )
-    {
+//      if (values.count(HeatSource)||
+//           values.count(thermal)  )
+//     {
  
-      Real H = mod.get_total_heat_source();
-      values[HeatSource][0] = H;
+//       Real H = mod.get_total_heat_source();
+//       values[HeatSource][0] = H;
 
-    }
+//     }
 
-     if (values.count(GRAY)||
-	 values.count(thermal)  )
-     {
-       dof_map_gray.dof_indices (elem, dof_indices_gray);
+//      if (values.count(GRAY)||
+// 	 values.count(thermal)  )
+//      {
+//        dof_map_gray.dof_indices (elem, dof_indices_gray);
 
-       double H = (*equilibrium_energy)(dof_indices_gray[0]);
+//        double H = (*equilibrium_energy)(dof_indices_gray[0]);
 
-       values[GRAY][0] = H;
+//        values[GRAY][0] = H;
 
-     }
+//      }
 
 
 }
@@ -1478,18 +1504,19 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
      double e_0 = (*equilibrium_energy)(dof_indices[0]);
      Real cg = mod.get_heat_capacity();
      Real heat_source = mod.get_total_heat_source();
- 
+
      //Assembly1
      Ke(0,0) = 1.0/tg * JxW[0];
-     
+
      ID nb = 0;
      for (ID ns = 0; ns < elem->n_sides(); ns++)
      {
-       
+      
        fe_face->reinit(elem,ns);
        const ElementSide elside(elem->top_parent(),ns);
        double in = dir * normal[0];
-       double value = vg * in * JxW_face[0];
+       double value = vg * (IntDir * normal[0])  * JxW_face[0];
+       
        
        if (in<0.0)
        {
@@ -1503,12 +1530,584 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
        }
        else
 	 Ke(0,0) += value;
+       
 
      }
-     Fe(0)   += (e_0/tg  +  heat_source * d_omega) * JxW[0];
+     //if (nb>0)
+     // Fe(0) /=nb;
+     
+     Fe(0) += (e_0/tg  +  heat_source * d_omega) * JxW[0];
+
+    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+    system.matrix->add_matrix (Ke, dof_indices);
+    system.rhs->add_vector    (Fe, dof_indices);
+
+   }
+
+
+   system.matrix->close();
+   system.matrix->print_matlab("K.m");
+   system.rhs->close();
+   system.rhs->print_matlab("F.m");
+
+
+}
+
+
+
+
+double 
+ThermalBalance::get_boundary_value(ElementSide elside)
+{
+
+  ThermalBoundaryModel* mod =
+    get_interface_model<ThermalBoundaryModel>(elside.elem(), elside.side());
+
+
+  SimulationEnvironment& se = get_environment();
+
+  double value = 0.0;
+  if (mod != NULL)
+  {
+    mod->calculate(elside.elem(), elside.side(), elside.elem()->centroid());
+    double a, b, c;
+
+    //c is the temperature
+    mod->get_coefficients(a, b, c);
+    value = c;
+   
+  }
+  else //Internal boundary or wall
+  {
+    //Internal boundary
+    if (is_on_GF_boundary(elside))
+    {
+  
+      ID dof = (elside.elem()->neighbor(elside.side()))->dof_number(gray_sys_number,0,0);   
+      value = (*equilibrium_energy)(dof);
+      
+    }
+    else //Wall
+    {
+   
+      //Diffusive
+      if (myopts.diffusive)
+      {
+	ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
+	value = (*equilibrium_energy)(dof);
+
+      }
+      else
+      {//SPECULAR
+        //IMPLEMENT SPECULAR BOUNDARY
+	ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
+	value = SD[elside][vec_spec];
+	//	std::cout<<value<<std::endl; 
+
+      }
+    }
+    
+  }
+  //cout<<value<<endl;
+  return value;
+
+
+}
+
+void
+ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& system_name)
+{
+  TiberLinearSystem& system_fourier = static_cast<TiberLinearSystem&>(
+								      get_equation_systems().get_system("fourier"));
+
+   const MeshBase& mesh = get_mesh();
+  
+   DofMap& dof_map =  system_fourier.get_dof_map();
+
+   const unsigned int tvar = system_fourier.variable_number("T");
+
+   FEType fe_type = dof_map.variable_type(tvar);
+
+   SimulationEnvironment& se = get_environment();
+   // the volume finite element
+   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+   QGauss qrule(dim, FIFTH);
+   fe->attach_quadrature_rule(&qrule);
+
+   const vector<Real>& JxW = fe->get_JxW();
+   const vector<Point>& q_point = fe->get_xyz();
+   const vector<vector<Real> >& phi = fe->get_phi();
+   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+   // the surface finite element
+   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   QGauss qface(dim - 1, SIXTH);
+   fe_face->attach_quadrature_rule(&qface);
+
+   const vector<Real>& JxW_face = fe_face->get_JxW();
+   const vector<Point>& qface_point = fe_face->get_xyz();
+   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
+   const vector<Point>& normal = fe_face->get_normals();
+
+   vector<unsigned int> dof_indices;
+
+   DenseMatrix<Number> Ke;
+   DenseVector<Number> Fe;
+
+   //Clear the system (TO FIND ANOTHER METHOD)
+   clear_system("fourier");
+ 
+  
+   set<const Elem*>::iterator el = Domain.begin();
+   const set<const Elem*>::iterator end_el = Domain.end();
+
+   for ( ; el != end_el ; ++el)
+   {
+     
+     const Elem* elem = *el;
+     
+     dof_map.dof_indices(elem, dof_indices);
+     
+     const unsigned int n_dofs = dof_indices.size();
+
+     //resize the element matrix/rhs (does also zero them out)
+     Ke.resize(n_dofs, n_dofs);
+     
+     Fe.resize(n_dofs);
+     fe->reinit(elem);
+
+
+     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+     
+     // loop over the quadrature points
+     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+     {
+      
+       mod.calculate(elem,q_point[qp]);
+      
+       const RealTensor& kappa = mod.get_total_thermal_conductivity();
+       double heat_source = mod.get_total_heat_source();
+      
+       for (unsigned int i = 0; i < n_dofs; i++)
+       {
+         for (unsigned int j = 0; j < n_dofs; j++)
+           Ke(i, j) += JxW[qp] * dphi[i][qp] * (kappa * dphi[j][qp]);
+
+	   Fe(i) += JxW[qp] * heat_source * phi[i][qp];
+       }
+       
+     }
+     
+     // the sides
+      for (unsigned int s = 0; s < elem->n_sides(); s++)
+      {
+       
+	const ElementSide elside(elem->top_parent(),s);
+	bool do_boundary = false;
+
+	if (se.is_outer_boundary(elside) ||
+	    is_on_GF_boundary(elside))
+	  {
+	    ThermalBoundaryModel* mod =
+	      get_interface_model<ThermalBoundaryModel>(elem, s);
+	    
+	    fe_face->reinit(elem, s);
+	    
+	    const ElementSide elside(elem->top_parent(),s);
+	    
+
+	    double a, b, c;
+	    
+	    if (mod != NULL)
+	    {
+	      
+	      mod->calculate(elem, s,elem->centroid() );
+	      mod->get_coefficients(a, b, c);
+	      do_boundary = true;
+	    
+	    }
+	    else
+	    {
+	     
+	      if (is_on_GF_boundary(elside) && !first_guess) //If this an Gray/Fourier Boundary
+	      {
+		ID dof = (elem->neighbor(s))->dof_number(gray_sys_number,0,0);
+		do_boundary = true;
+
+		if (is_gray_solved)
+		{
+		  //-----------Get the Gray flux-------------------------------
+		  RealGradient heat_flux(0);
+		  for (ID i = 0; i < dim; i++)
+		    heat_flux(i) = (*thermal_flux[i])(dof);
+		  
+		  //Put here something
+		  double normal_flux =  heat_flux * normal[0];
+		  
+		  a = 0;
+		  b = 1;
+		  c = -normal_flux;
+                 
+		  
+		}
+		else //Impose the temperature computed 
+		{
+		  
+		  double T = (*equilibrium_energy)(dof);
+		  
+		  //  cout<<T<<endl;
+		  a = 1;
+		  b = 0;
+		  c = T;
+		  
+		}
+	      }
+	    } //if (mod != NULL)
+	    
+	    if (do_boundary)
+	    {
+	      
+	      if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+	      else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+	      a /= b;
+	      c /= b;
+	      
+	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+		for (unsigned int i = 0; i < n_dofs; i++)
+		{
+		  for (unsigned int j = 0; j < n_dofs; j++)
+		    Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
+		  
+		  Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
+		}
+	      
+	    } //if (do_boundary)
+	  } //	if (is_on_any_boundary(elside))
+	    
+      } //Side
+     
+     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+     system_fourier.matrix->add_matrix(Ke, dof_indices);
+     system_fourier.rhs->add_vector(Fe, dof_indices);
+     
+   }//Elem
+   //cout<<n_elem<<endl;
+   system_fourier.matrix->close();
+   system_fourier.matrix->print_matlab("K.m");
+   system_fourier.rhs->close();
+   system_fourier.rhs->print_matlab("F.m");
+}
+
+bool
+ThermalBalance::get_fourier_boundary(ElementSide elside,double a, double b, double c)
+{
+
+  bool boundary = false;
+
+  ThermalBoundaryModel* mod =
+    get_interface_model<ThermalBoundaryModel>(elside.elem(), elside.side());
+
+  if (mod != NULL)
+  { 
+    mod->calculate(elside.elem(), elside.side(),elside.elem()->centroid() );
+    mod->get_coefficients(a, b, c);
+    boundary = true;
+  }
+  else
+  {
+    // if (domain_boundary.count(elside.elem())) //If this an Gray/Fourier Boundary
+    // {
+      
+       
+    // }
+
+  }
+	    
+
+}
+
+
+void
+ThermalBalance::AngularIntegrator::compute_custom_direction(std::vector<Point> custom_dir)
+{
+
+  //Omega is not theta dependent but simply uniform. 
+  weight = 1.0;
+  //total_angle = 4.0 * M_PI;
+ 
+
+  n_slices = custom_dir.size();  
+
+  total_angle = n_slices;
+
+  directions.resize(n_slices);
+  d_omega.resize(n_slices,1);
+  dir.resize(n_slices);
+  theta_vec.resize(n_slices,0);
+  phi_vec.resize(n_slices,0);
+  spec.resize(n_slices);
+  dir = custom_dir;
+  directions = custom_dir;
+
+  // directions = custom_dir * 2*M_PI;
+
+  //for (ID k = 0; k<n_slices; k++)
+    // {
+
+    //directions[k] = custom_dir[k];// * M_PI;
+    //d_omega[k] = 4.0 * M_PI/n_slices;
+  // d_omega[k] = 1;
+    //directions[k] = custom_dir[k] * d_omega[k];
+  //  theta_vec[k] = 0.0;
+  //  phi_vec[k] = 0.0;
+   
+  // }
+  
+  //Spec vectors
+  //for (ID k1 = 0;k1<n_slices; k1++)
+  //  for (ID k2 = 0;k2<n_slices; k2++)
+
+  //  {
+  //   Point sum = directions[k1] + directions[k2];
+  //   if (sum.size() < 1e-4)
+  //spec[k1]=k2;
+  // }
+ 
+
+}
+void
+ThermalBalance::AngularIntegrator::compute_directions()
+{
+  
+
+    double min_theta, max_theta, min_phi, max_phi;
+   
+    switch (dim)
+    {
+      
+    case 1 :
+      
+      theta_slices = 1;
+      phi_slices = 2;
+      
+      min_theta = 0.0;
+      max_theta = M_PI;
+
+      min_phi = M_PI * 0.5;
+      max_phi = M_PI * 2.0 + M_PI * 0.5;
+      
+      weight = 2.0 * M_PI;
+      
+      n_slices = theta_slices * phi_slices;
+      spec.resize(n_slices);
+
+      //spec[0] = 1;
+      //spec[1] = 0;
+      
+      break;
+      
+    case 2 :
+      
+      std::cout<<"2D"<<std::endl;
+      
+      //theta_slices = 1;
+      //if (phi_slices == 0)
+      //	phi_slices = 4;
+      
+      
+      cout<<n_slices<<endl;
+
+      min_theta = 0.0;
+      max_theta = M_PI;
+      
+      min_phi = M_PI * 0.5;
+      max_phi = M_PI * 2.0 + M_PI * 0.5;
+
+      
+      weight =  1.0;
+      
+      n_slices = theta_slices * phi_slices;
+      spec.resize(n_slices);
+    
+      
+      break;
+      
+    case 3 :
+      
+      std::cout<<"3D"<<std::endl;
+      
+      if (theta_slices == 0)
+	theta_slices = 2;
+      
+      if (phi_slices == 0)
+	phi_slices = 4;
+      
+      
+      min_theta = 0.0;
+      max_theta = M_PI;
+      
+      min_phi = 0.0;
+      max_phi = M_PI * 2.0;
+      
+      weight = 1.0;
+      
+      
+      n_slices = theta_slices * phi_slices;
+
+      spec.resize(n_slices);
+
+     
+      
+      break;
+    }
+    
+
+    total_angle = 4.0 * M_PI;
+    directions.resize(n_slices);
+    integrate_directions.resize(n_slices);
+    d_omega.resize(n_slices);
+    dir.resize(n_slices);
+    theta_vec.resize(n_slices);
+    phi_vec.resize(n_slices);
+    
+    double d_theta =  (max_theta - min_theta) / theta_slices;
+    double d_phi =  (max_phi - min_phi) / phi_slices;
+    double theta, phi;
+
+
+    ID k = 0;
+    for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
+    {
+      // phi = min_phi + d_phi * 0.5 + d_phi * n_phi;
+      phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
+      
+      for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
+      {
+	theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
+	
+	d_omega[k] =  2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
+	
+	dir[k](0) = sin(theta) * sin(phi);
+	dir[k](1) = sin(theta) * cos(phi);
+	dir[k](2) = cos(theta);
+	
+	directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+	directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+	directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
+	
+	theta_vec[k] = theta;
+	phi_vec[k] = phi;
+	
+	k++;
+      }
+    }
+
+    //Spec vectors
+    for (ID k1 = 0;k1<n_slices; k1++)
+      for (ID k2 = 0;k2<n_slices; k2++)
+      {
+	Point sum = directions[k1] + directions[k2];
+        if (sum.size() < 1e-4)
+	  spec[k1]=k2;
+	
+      }
+      
+
+}
+
+
+void
+ThermalBalance::AngularIntegrator::print_info(void)
+{
+
+
+  std::cout<<"General:  "<<"theta slices: "<<theta_slices<<" phi slices: "<<phi_slices<<std::endl;
+  //std::cout<<"d_theta:  "<<d_theta / ( M_PI) * 180.0<<"  d_phi:  "<<d_phi / ( M_PI) * 180.0<<std::endl;
+  //std::cout<<"Weight factor:  "<<weight<<std::endl;
+  std::cout<<" "<<std::endl;
+  std::cout<<"  "<<std::endl;
+
+
+  for (ID k =0; k<n_slices; k ++)
+  {
+
+    std::cout<<"Direction: "<<k+1<<std::endl;
+    std::cout<<"  Theta: "<<theta_vec[k] / ( M_PI) * 180.0 <<"  phi: "<<phi_vec[k] / ( M_PI) * 180.0<<std::endl;
+
+    std::cout<<"d_omega:  "<<  d_omega[k]<<std::endl;
+
+
+    std::cout<<"sx:  "<<   dir[k](0)  <<"  sy:  "<<   dir[k](1) <<"  sz:  "<<   dir[k](2)<<std::endl;
+    std::cout<<"six:  "<<   directions[k](0)  <<"  siy:  "<<   directions[k](1) <<"  siz:  "<<   directions[k](2)<<std::endl;
+    std::cout<<"  "<<std::endl;
+
+  }
+
+  std::cout<<"  "<<std::endl;
+
+  //check 1
+  double solid_angle = 0.0;
+  double s0 = 0.0;
+  double s1 = 0.0;
+  double s2 = 0.0;
+  for (ID n = 0; n < n_slices; n++)
+  {
+    solid_angle += d_omega[n] ;
+    s0 += directions[n](0);
+    s1 += directions[n](1);
+    s2 += directions[n](2);
+
+  }
+  std::cout<<"Check:  "<<std::endl;
+  std::cout<<"Solid angle: "<<solid_angle/(4 * M_PI)<<std::endl;
+
+
+  std::cout<<"Directions:  "<<std::endl;
+  std::cout<<s0<<std::endl;
+  std::cout<<s1<<std::endl;
+  std::cout<<s2<<std::endl;
+
+
+
+  std::cout<<"  "<<std::endl;
+  std::cout<<"TotalAngle:  "<<total_angle<<std::endl;
+  std::cout<<"  "<<std::endl;
+  std::cout<<"Specular vector: "<<std::endl;
+  for (ID k =0; k<n_slices;k++)
+    std::cout<<"Dir "<<k<<" : "<<spec[k]<<std::endl;
+  std::cout<<"  "<<std::endl;
+}
+
+
+void
+ThermalBalance::AngularIntegrator::print_info(ID k)
+{
+
+
+
+    std::cout<<"Direction: "<<k<<std::endl;
+    std::cout<<"  Theta: "<<theta_vec[k] / ( M_PI) * 180.0 <<"  phi: "<<phi_vec[k] / ( M_PI) * 180.0<<std::endl;
+
+    std::cout<<"d_omega:  "<<  d_omega[k]/(4.0 * M_PI) <<std::endl;
+
+
+    std::cout<<"sx:  "<<   dir[k](0)  <<"  sy:  "<<   dir[k](1) <<"  sz:  "<<   dir[k](2)<<std::endl;
+    std::cout<<"six:  "<<   directions[k](0)  <<"  siy:  "<<   directions[k](1) <<"  siz:  "<<   directions[k](2)<<std::endl;
+    std::cout<<"  "<<std::endl;
+  
+  
+
+  std::cout<<"  "<<std::endl;
+
+}
+
+
+  //cout<<Fe(0)<<endl;
 
     // END ASSEMBLY1
-
+ 
 
      //ASEEMBLY FINAL-------------
      
@@ -1647,547 +2246,3 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
 //         }
 
     // END ASSEMBLY1
-
-
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-    system.matrix->add_matrix (Ke, dof_indices);
-    system.rhs->add_vector    (Fe, dof_indices);
-
-   }
-
-}
-
-
-
-
-double 
-ThermalBalance::get_boundary_value(ElementSide elside)
-{
-
-  ThermalBoundaryModel* mod =
-    get_interface_model<ThermalBoundaryModel>(elside.elem(), elside.side());
-
-
-  SimulationEnvironment& se = get_environment();
-
-  double value = 0.0;
-  if (mod != NULL)
-  {
-    mod->calculate(elside.elem(), elside.side(), elside.elem()->centroid());
-    double a, b, c;
-
-    //c is the temperature
-    mod->get_coefficients(a, b, c);
-    value = c;
-  
-  
-  }
-  else //Internal boundary or wall
-  {
-    //Internal boundary
-    if (is_on_GF_boundary(elside))
-    {
-  
-      ID dof = (elside.elem()->neighbor(elside.side()))->dof_number(gray_sys_number,0,0);
-   
-      //ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
-      
-      value = (*equilibrium_energy)(dof);
-      
-    }
-    else //Wall
-    {
-   
-      //Diffusive
-      if (myopts.diffusive)
-      {
-	ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
-	value = (*equilibrium_energy)(dof);
-	//std::cout<<"DIFFUSIVE"<<std::endl;
-      }
-      else
-      {//SPECULAR
-        //IMPLEMENT SPECULAR BOUNDARY
-	ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
-	value = SD[elside][vec_spec];
-	//	std::cout<<value<<std::endl; 
-
-      }
-    }
-    
-  }
-  //cout<<value<<endl;
-  return value;
-
-
-}
-
-void
-ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& system_name)
-{
-  TiberLinearSystem& system_fourier = static_cast<TiberLinearSystem&>(
-								      get_equation_systems().get_system("fourier"));
-
-   const MeshBase& mesh = get_mesh();
-  
-   DofMap& dof_map =  system_fourier.get_dof_map();
-
-   const unsigned int tvar = system_fourier.variable_number("T");
-
-   FEType fe_type = dof_map.variable_type(tvar);
-
-   SimulationEnvironment& se = get_environment();
-   // the volume finite element
-   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-   QGauss qrule(dim, FIFTH);
-   fe->attach_quadrature_rule(&qrule);
-
-   const vector<Real>& JxW = fe->get_JxW();
-   const vector<Point>& q_point = fe->get_xyz();
-   const vector<vector<Real> >& phi = fe->get_phi();
-   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-
-   // the surface finite element
-   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-   QGauss qface(dim - 1, SIXTH);
-   fe_face->attach_quadrature_rule(&qface);
-
-   const vector<Real>& JxW_face = fe_face->get_JxW();
-   const vector<Point>& qface_point = fe_face->get_xyz();
-   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
-   const vector<Point>& normal = fe_face->get_normals();
-
-   vector<unsigned int> dof_indices;
-
-   DenseMatrix<Number> Ke;
-   DenseVector<Number> Fe;
-
-   //Clear the system (TO FIND ANOTHER METHOD)
-   clear_system("fourier");
- 
-  
-   set<const Elem*>::iterator el = Domain.begin();
-   const set<const Elem*>::iterator end_el = Domain.end();
-
-   for ( ; el != end_el ; ++el)
-   {
-     
-     const Elem* elem = *el;
-     
-     dof_map.dof_indices(elem, dof_indices);
-     
-     const unsigned int n_dofs = dof_indices.size();
-
-     //resize the element matrix/rhs (does also zero them out)
-     Ke.resize(n_dofs, n_dofs);
-     
-     Fe.resize(n_dofs);
-     fe->reinit(elem);
-
-
-     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-     
-     // loop over the quadrature points
-     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
-     {
-      
-       mod.calculate(elem,q_point[qp]);
-      
-       const RealTensor& kappa = mod.get_total_thermal_conductivity();
-       double heat_source = mod.get_total_heat_source();
-      
-       for (unsigned int i = 0; i < n_dofs; i++)
-       {
-         for (unsigned int j = 0; j < n_dofs; j++)
-           Ke(i, j) += JxW[qp] * dphi[i][qp] * (kappa * dphi[j][qp]);
-
-	   Fe(i) += JxW[qp] * heat_source * phi[i][qp];
-       }
-       
-     }
-     
-     // the sides
-      for (unsigned int s = 0; s < elem->n_sides(); s++)
-      {
-       
-	const ElementSide elside(elem->top_parent(),s);
-	bool do_boundary = false;
-
-	if (se.is_outer_boundary(elside) ||
-	    is_on_GF_boundary(elside))
-	  {
-	    ThermalBoundaryModel* mod =
-	      get_interface_model<ThermalBoundaryModel>(elem, s);
-	    
-	    fe_face->reinit(elem, s);
-	    
-	    const ElementSide elside(elem->top_parent(),s);
-	    
-	    double a, b, c;
-	    
-	    if (mod != NULL)
-	    {
-	      
-	      mod->calculate(elem, s,elem->centroid() );
-	      mod->get_coefficients(a, b, c);
-	      do_boundary = true;
-	    
-	    }
-	    else
-	    {
-	     
-	      if (is_on_GF_boundary(elside) && is_gray_solved) //If this an Gray/Fourier Boundary
-	      {
-	
-		//-----------Get the Gray flux-------------------------------
-		RealGradient heat_flux(0);
-		//ID dof = domain_boundary[elem]->dof_number(gray_sys_number,0,0);
-
-		ID dof = (elem->neighbor(s))->dof_number(gray_sys_number,0,0);
-		for (ID i = 0; i < dim; i++)
-		  heat_flux(i) = (*thermal_flux[i])(dof);
-		
-                //Put here something
-		double normal_flux =  heat_flux * normal[0];
-		
-		a = 0;
-		b = 1;
-		c = -normal_flux;
-	      
-		do_boundary = true;
-	      }
-	    } //if (mod != NULL)
-
-	    
-	    if (do_boundary)
-	    {
-
-	      if ((b < 1e-10) && (b >= 0)) b = 1e-20;
-	      else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
-	      a /= b;
-	      c /= b;
-	      
-	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-		for (unsigned int i = 0; i < n_dofs; i++)
-		{
-		  for (unsigned int j = 0; j < n_dofs; j++)
-		    Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
-	       	  
-		  Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
-		}
-
-	    } //if (do_boundary)
-	  } //	if (is_on_any_boundary(elside))
-	    
-      } //Side
-     
-     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-     system_fourier.matrix->add_matrix(Ke, dof_indices);
-     system_fourier.rhs->add_vector(Fe, dof_indices);
-     
-   }//Elem
-   //cout<<n_elem<<endl;
-   system_fourier.matrix->close();
-   system_fourier.matrix->print_matlab("K.m");
-   system_fourier.rhs->close();
-   system_fourier.rhs->print_matlab("F.m");
-}
-
-bool
-ThermalBalance::get_fourier_boundary(ElementSide elside,double a, double b, double c)
-{
-
-  bool boundary = false;
-
-  ThermalBoundaryModel* mod =
-    get_interface_model<ThermalBoundaryModel>(elside.elem(), elside.side());
-
-  if (mod != NULL)
-  { 
-    mod->calculate(elside.elem(), elside.side(),elside.elem()->centroid() );
-    mod->get_coefficients(a, b, c);
-    boundary = true;
-  }
-  else
-  {
-    // if (domain_boundary.count(elside.elem())) //If this an Gray/Fourier Boundary
-    // {
-      
-       
-    // }
-
-  }
-	    
-
-}
-
-
-void
-ThermalBalance::AngularIntegrator::compute_custom_direction(std::vector<Point> custom_dir)
-{
-
-  //Omega is not theta dependent but simply uniform. 
-  weight = 0.0;
-  total_angle = 4.0 * M_PI;
-  
-  n_slices = custom_dir.size();  
-
-  directions.resize(n_slices);
-  d_omega.resize(n_slices);
-  dir.resize(n_slices);
-  theta_vec.resize(n_slices);
-  phi_vec.resize(n_slices);
-  spec.resize(1);
- 
-  dir = custom_dir;
-  // directions = custom_dir * 2*M_PI;
-
-  for (ID k = 0; k<n_slices; k++)
-  {
-
-    directions[k] = custom_dir[k];// * M_PI;
-    d_omega[k] = 4.0 * M_PI/n_slices;
-    directions[k] = custom_dir[k] * d_omega[k];
-    theta_vec[k] = 0.0;
-    phi_vec[k] = 0.0;
-   
-  }
-  
-  //Spec vectors
-  for (ID k1 = 0;k1<n_slices; k1++)
-    for (ID k2 = 0;k2<n_slices; k2++)
-    {
-      Point sum = directions[k1] + directions[k2];
-      if (sum.size() < 1e-4)
-	spec[k1]=k2;
-      
-    }
- 
-
-}
-void
-ThermalBalance::AngularIntegrator::compute_directions()
-{
-  
-
-    double min_theta, max_theta, min_phi, max_phi;
-   
-    switch (dim)
-    {
-      
-    case 1 :
-      
-      theta_slices = 1;
-      phi_slices = 2;
-      
-      min_theta = 0.0;
-      max_theta = M_PI;
-
-      min_phi = M_PI * 0.5;
-      max_phi = M_PI * 2.0 + M_PI * 0.5;
-      
-      weight = 2.0 * M_PI;
-      
-      n_slices = theta_slices * phi_slices;
-      spec.resize(n_slices);
-
-      //spec[0] = 1;
-      //spec[1] = 0;
-      
-      break;
-      
-    case 2 :
-      
-      std::cout<<"2D"<<std::endl;
-      
-      //theta_slices = 1;
-      if (phi_slices == 0)
-      	phi_slices = 4;
-      
-      
-      min_theta = 0.0;
-      max_theta = M_PI;
-      
-      min_phi = M_PI * 0.5;
-      max_phi = M_PI * 2.0 + M_PI * 0.5;
-
-      
-      weight =  1.0;
-      
-      n_slices = theta_slices * phi_slices;
-      spec.resize(n_slices);
-    
-      
-      break;
-      
-    case 3 :
-      
-      std::cout<<"3D"<<std::endl;
-      
-      if (theta_slices == 0)
-	theta_slices = 2;
-      
-      if (phi_slices == 0)
-	phi_slices = 4;
-      
-      
-      min_theta = 0.0;
-      max_theta = M_PI;
-      
-      min_phi = 0.0;
-      max_phi = M_PI * 2.0;
-      
-      weight = 1.0;
-      
-      
-      n_slices = theta_slices * phi_slices;
-
-      spec.resize(n_slices);
-
-     
-      
-      break;
-    }
-    
-
-    total_angle = 4.0 * M_PI;
-    directions.resize(n_slices);
-    integrate_directions.resize(n_slices);
-    d_omega.resize(n_slices);
-    dir.resize(n_slices);
-    theta_vec.resize(n_slices);
-    phi_vec.resize(n_slices);
-    
-    d_theta =  (max_theta - min_theta) / theta_slices;
-    d_phi =  (max_phi - min_phi) / phi_slices;
-    double theta, phi;
-
-
-    ID k = 0;
-    for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
-    {
-      // phi = min_phi + d_phi * 0.5 + d_phi * n_phi;
-      phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
-      
-      for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
-      {
-	theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
-	
-	d_omega[k] =  2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
-	
-	dir[k](0) = sin(theta) * sin(phi);
-	dir[k](1) = sin(theta) * cos(phi);
-	dir[k](2) = cos(theta);
-	
-	directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
-	directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
-	directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
-	
-	theta_vec[k] = theta;
-	phi_vec[k] = phi;
-	
-	k++;
-      }
-    }
-
-    //Spec vectors
-    for (ID k1 = 0;k1<n_slices; k1++)
-      for (ID k2 = 0;k2<n_slices; k2++)
-      {
-	Point sum = directions[k1] + directions[k2];
-	std::cout<<sum.size()<<std::endl;
-        if (sum.size() < 1e-4)
-	  spec[k1]=k2;
-	
-      }
-      
-
-}
-
-
-void
-ThermalBalance::AngularIntegrator::print_info(void)
-{
-
-
-  std::cout<<"General:  "<<"theta slices: "<<theta_slices<<" phi slices: "<<phi_slices<<std::endl;
-  std::cout<<"d_theta:  "<<d_theta / ( M_PI) * 180.0<<"  d_phi:  "<<d_phi / ( M_PI) * 180.0<<std::endl;
-  std::cout<<"Weight factor:  "<<weight<<std::endl;
-  std::cout<<" "<<std::endl;
-  std::cout<<"  "<<std::endl;
-
-
-  for (ID k =0; k<n_slices; k ++)
-  {
-
-    std::cout<<"Direction: "<<k+1<<std::endl;
-    std::cout<<"  Theta: "<<theta_vec[k] / ( M_PI) * 180.0 <<"  phi: "<<phi_vec[k] / ( M_PI) * 180.0<<std::endl;
-
-    std::cout<<"d_omega:  "<<  d_omega[k]/(4.0 * M_PI) <<std::endl;
-
-
-    std::cout<<"sx:  "<<   dir[k](0)  <<"  sy:  "<<   dir[k](1) <<"  sz:  "<<   dir[k](2)<<std::endl;
-    std::cout<<"six:  "<<   directions[k](0)  <<"  siy:  "<<   directions[k](1) <<"  siz:  "<<   directions[k](2)<<std::endl;
-    std::cout<<"  "<<std::endl;
-
-  }
-
-  std::cout<<"  "<<std::endl;
-
-  //check 1
-  double solid_angle = 0.0;
-  double s0 = 0.0;
-  double s1 = 0.0;
-  double s2 = 0.0;
-  for (ID n = 0; n < n_slices; n++)
-  {
-    solid_angle += d_omega[n] ;
-    s0 += directions[n](0);
-    s1 += directions[n](1);
-    s2 += directions[n](2);
-
-  }
-  std::cout<<"Check:  "<<std::endl;
-  std::cout<<"Solid angle: "<<solid_angle/(4 * M_PI)<<std::endl;
-
-
-  std::cout<<"Directions:  "<<std::endl;
-  std::cout<<s0<<std::endl;
-  std::cout<<s1<<std::endl;
-  std::cout<<s2<<std::endl;
-
-
-
-  std::cout<<"  "<<std::endl;
-  std::cout<<"TotalAngle:  "<<total_angle<<std::endl;
-  std::cout<<"  "<<std::endl;
-  std::cout<<"Specular vector: "<<std::endl;
-  for (ID k =0; k<n_slices;k++)
-    std::cout<<"Dir "<<k<<" : "<<spec[k]<<std::endl;
-  std::cout<<"  "<<std::endl;
-}
-
-
-void
-ThermalBalance::AngularIntegrator::print_info(ID k)
-{
-
-
-
-    std::cout<<"Direction: "<<k<<std::endl;
-    std::cout<<"  Theta: "<<theta_vec[k] / ( M_PI) * 180.0 <<"  phi: "<<phi_vec[k] / ( M_PI) * 180.0<<std::endl;
-
-    std::cout<<"d_omega:  "<<  d_omega[k]/(4.0 * M_PI) <<std::endl;
-
-
-    std::cout<<"sx:  "<<   dir[k](0)  <<"  sy:  "<<   dir[k](1) <<"  sz:  "<<   dir[k](2)<<std::endl;
-    std::cout<<"six:  "<<   directions[k](0)  <<"  siy:  "<<   directions[k](1) <<"  siz:  "<<   directions[k](2)<<std::endl;
-    std::cout<<"  "<<std::endl;
-  
-  
-
-  std::cout<<"  "<<std::endl;
-
-}
