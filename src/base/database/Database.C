@@ -458,6 +458,20 @@ Database::get(const string& variable,
 }
 
 
+void
+Database::get(const std::string& variable, RealVectorValue& data,
+    bool required) const
+{
+  open();
+
+  if (required) require_variable(variable);
+  else if (!has_variable(variable)) return;
+
+  string s(get(variable, ""));
+  Utils::extract_vector(s, data);
+}
+
+
 
 //
 // the specializations of get(...) for double do the mixing in case of alloys

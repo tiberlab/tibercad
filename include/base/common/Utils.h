@@ -55,6 +55,10 @@ class Utils
      * \li \verbatim [ val1, val2, val3 ] \endverbatim
      * \li \verbatim { val1, val2, val3 } \endverbatim
      * \li \verbatim   val1, val2, val3  \endverbatim
+     *
+     * \note If \c input contains only one number, \c vec will be filled with
+     * that number. If it contains only two numbers, the first two components
+     * of \c vec will be assigned both the first of the two.
      */
     static void extract_vector(const std::string& input, RealVectorValue& vec);
 

@@ -10,6 +10,10 @@
 
 class GetPot;
 
+template <typename T> class VectorValue;
+typedef VectorValue<double> RealVectorValue;
+
+
 class Database
 {
 
@@ -143,6 +147,10 @@ class Database
     //! Get string data
     std::string get(const std::string& variable,
         const char* default_value, bool required = false) const;
+
+    //! Get data in a libmesh vector type
+    void get(const std::string& variable, RealVectorValue& data,
+        bool required = false) const;
 
 
     //! Get data array/vector
