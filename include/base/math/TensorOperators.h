@@ -88,4 +88,11 @@ RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B
 RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B);
 
 
+inline
+RealTensorValue operator*(const Tensor4DSym& A, const RealTensorValue& B)
+{
+  return doubleContraction(A, B);
+}
+
+
 #endif /* _TENSOROPERATORS_H_ */
