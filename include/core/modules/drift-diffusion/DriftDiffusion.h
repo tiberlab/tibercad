@@ -176,9 +176,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         Options(void);
 
-        Options(const Options& rhs);
+        //Options(const Options& rhs);
 
-        Options& operator=(const Options& rhs);
+        //Options& operator=(const Options& rhs);
 
         /**
          * Enable or disable mesh refinement
@@ -262,6 +262,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
         bool exact_newton;
 
 
+        //! Whether or not to enforce local charge neutrality
+        bool local_neutrality;
+
+
       private:
 
 
@@ -291,12 +295,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
 
     /**
-     * @returns a reference to the simulation options
-     */
-    Options& get_my_options(void);
-
-
-    /**
      * Enables adaptive mesh refinement.
      */
     void enable_mesh_refinement(void);
@@ -306,12 +304,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      * Disables adaptive mesh refinement.
      */
     void disable_mesh_refinement(void);
-
-
-    /**
-     * Set new simulation options.
-     */
-    void set_my_options(const Options& options);
 
 
     //! Set the electron quasi Fermi level to \c Ef_n
@@ -391,17 +383,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
-
-
-    /*! \copydoc SimulationInterface::build_integrated_quantities() */
-    virtual void build_integrated_quantities(std::vector<double>& values);
-
-
-    /*! \copydoc SimulationInterface::build_integrated_quantities_description()
-     */
-    virtual void build_integrated_quantities_description(
-        std::vector<std::string>& legend,
-        std::vector<std::string>& description);
 
 
     /*! \copydoc SimulationInterface::do_get_solution_vector() */
@@ -551,6 +532,11 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     //! Parse the options which will not change between calls to solve()
     void parse_const_options(void);
 
+
+    /**
+     * @returns a reference to the simulation options
+     */
+    Options& get_my_options(void);
 
 
     //! Rebuild the equation system if needed
@@ -709,12 +695,6 @@ DriftDiffusion::get_my_options(void)
   return _options;
 }
 
-inline
-void
-DriftDiffusion::set_my_options(const DriftDiffusion::Options& options)
-{
-  _options = options;
-}
 
 inline
 void

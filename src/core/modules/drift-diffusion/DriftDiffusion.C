@@ -76,14 +76,15 @@ DriftDiffusion::Options::Options(void)
     scaling_type(Scaling::UNITS),
     coupling(FULLYCOUPLED),
     current_calculation(RSTF),
-    exact_newton(true)
+    exact_newton(true),
+    local_neutrality(false)
 {
 }
 
 
 
 
-
+/*
 DriftDiffusion::Options::Options(const Options& rhs)
   : mesh_refinement(rhs.mesh_refinement),
     max_refinement_steps(rhs.max_refinement_steps),
@@ -98,7 +99,8 @@ DriftDiffusion::Options::Options(const Options& rhs)
     scaling_type(rhs.scaling_type),
     coupling(rhs.coupling),
     current_calculation(rhs.current_calculation),
-    exact_newton(rhs.exact_newton)
+    exact_newton(rhs.exact_newton),
+    local_neutrality(rhs.local_neutrality)
 {
 }
 
@@ -125,10 +127,11 @@ DriftDiffusion::Options::operator=(const Options& rhs)
     coupling = rhs.coupling;
     current_calculation = rhs.current_calculation;
     exact_newton = rhs.exact_newton;
+    local_neutrality = rhs.local_neutrality;
   }
   return *this;
 }
-
+*/
 
 
 
@@ -1034,6 +1037,16 @@ DriftDiffusion::parse_options(void)
   }
   else if (coupling == "current")
     myopts.coupling = CURRENTS;
+
+  // for Poisson only simulations one may want to enforce local
+  // charge neutrality
+  myopts.local_neutrality = get_option("enforce_local_charge_neutrality",
+      myopts.local_neutrality);
+  if (myopts.local_neutrality && (myopts.coupling != POISSON))
+  {
+    Messages::warning("You try to enforce local charge neutrality in " +
+        get_name() + " even if you solve for continuity equations.");
+  }
 
 
   myopts.mesh_refinement = opts.get_option("mesh_refinement",
@@ -2710,34 +2723,6 @@ DriftDiffusion::do_get_solution_vector(void)
 
 
 
-void
-DriftDiffusion::build_integrated_quantities(vector<double>& values)
-{
-
-  if (plot_solution("ContactCurrent") || plot_solution("ContactCurrents")
-      || plot_solution("current"))
-  {
-    calculate_currents();
-
-    values.resize(_boundary_currents.size());
-
-    // we need alphabetic order !!
-    map<string, double> currs;
-
-    ContactData::iterator it(_boundary_currents.begin());
-    const ContactData::iterator end(_boundary_currents.end());
-    for (; it != end; ++it)
-      currs[it->first->get_name()] = it->second * it->first->get_area_factor();
-
-
-    map<string, double>::iterator nameit(currs.begin());
-    map<string, double>::iterator nameend(currs.end());
-    for (unsigned int id = 0; nameit != nameend; ++nameit, id++)
-      values[id] = nameit->second;
-
-  }
-}
-
 
 
 
@@ -2781,49 +2766,6 @@ DriftDiffusion::calculate_currents(void)
   calculate_field_emission();
 }
 
-
-void
-DriftDiffusion::build_integrated_quantities_description(
-    vector<string>& legend,
-    vector<string>& description)
-{
-
-  if (plot_solution("ContactCurrent") || plot_solution("ContactCurrents")
-      || plot_solution("current"))
-  {
-    legend.resize(_boundary_currents.size());
-
-    // we make first a set to order the contacts alphabetically
-    set<string> bds;
-
-    ContactData::iterator it(_boundary_currents.begin());
-    const ContactData::iterator end(_boundary_currents.end());
-    for (; it != end; ++it)
-      bds.insert(it->first->get_name());
-
-    set<string>::iterator nameit(bds.begin());
-    set<string>::iterator nameend(bds.end());
-    for (unsigned int id = 0; nameit != nameend; ++nameit, id++)
-      legend[id] = *nameit;
-
-    description.resize(1);
-    unsigned int dim = get_mesh().mesh_dimension();
-    ostringstream s;
-    s << "Contact currents. Units A";
-    switch (dim)
-    {
-      case 1:
-        s << "cm^-2";
-        break;
-      case 2:
-        if (get_environment().get_device().get_symmetry()
-            != TiberCad::CYLINDRICAL)
-          s << "cm^-1";
-        break;
-    }
-    description[0] = s.str();
-  }
-}
 
 
 
@@ -2900,7 +2842,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const SimulationEnvironment& environment = get_environment();
 
   const Options& params = get_my_options();
-  Options& options = get_my_options();
 
 
   const NumericVector<Number>& oldx = system.get_vector("old_sol");
@@ -3294,6 +3235,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         else if (_useparticle == 'h')
           drho[2] = -drho[0];
 
+        if (params.local_neutrality)
+          drho[0] = drho[1] = drho[2] = 0.0;
+
 
         //if (sc->is_dielectric())
         //  drho[2] = drho[1] = drho[0] = 0.0;
@@ -3467,8 +3411,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         long double J_x_rho;
         J_x_rho = J * sc->get_charge_density() / C0;
 
-        //if (sc->is_dielectric())
-        //  J_x_rho = 0.0;
+
+        if (params.local_neutrality)
+          J_x_rho = 0.0;
 
         long double J_x_P0 = J / P0;
 
