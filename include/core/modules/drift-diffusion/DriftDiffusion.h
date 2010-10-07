@@ -176,10 +176,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         Options(void);
 
-        //Options(const Options& rhs);
-
-        //Options& operator=(const Options& rhs);
-
         /**
          * Enable or disable mesh refinement
          */

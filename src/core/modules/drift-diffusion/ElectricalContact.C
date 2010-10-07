@@ -9,7 +9,7 @@ ElectricalContact::ElectricalContact(const ModelOptions& options)
   : DDInterfaceModel(options),
     _voltage(0.0),
     _surfres(0.0),
-    _barrier(0.0),
+    _workfunction(0.0),
     _vrec_n(-1),
     _vrec_p(-1)
 {
@@ -45,7 +45,7 @@ void
 ElectricalContact::do_compute(void)
 {
   if (get_type(0) != NEUMANN)
-    coeff_g(0) = _barrier + get_inner_voltage();
+    coeff_g(0) = _workfunction + get_inner_voltage();
 
   if (get_type(1) != NEUMANN)
     coeff_g(1) = get_inner_voltage();
@@ -54,8 +54,12 @@ ElectricalContact::do_compute(void)
     const DriftDiffusionProperties::PointData& pd =
         get_dd_properties()->get_point_data();
 
-    double Rn = _vrec_n * (pd.electron_density -
-        get_dd_properties()->get_equilibrium_electron_density());
+    // we have to take the correct equilibrium density!
+    double delta = get_dd_properties()->get_equilibrium_fermi_level() - _workfunction;
+    double n0 = std::exp(-delta / pd.electron_vt) *
+        get_dd_properties()->get_equilibrium_electron_density();
+
+    double Rn = _vrec_n * (pd.electron_density - n0);
     double dRn = _vrec_n * pd.electron_density_derivative;
 
     coeff_g(1) += Rn;
@@ -70,8 +74,12 @@ ElectricalContact::do_compute(void)
     const DriftDiffusionProperties::PointData& pd =
         get_dd_properties()->get_point_data();
 
-    double Rp = _vrec_p * (pd.hole_density -
-        get_dd_properties()->get_equilibrium_hole_density());
+    // we have to take the correct equilibrium density!
+    double delta = get_dd_properties()->get_equilibrium_fermi_level() - _workfunction;
+    double p0 = std::exp(delta / pd.hole_vt) *
+        get_dd_properties()->get_equilibrium_hole_density();
+
+    double Rp = _vrec_p * (pd.hole_density - p0);
     double dRp = _vrec_p * pd.hole_density_derivative;
 
     coeff_g(2) += Rp;

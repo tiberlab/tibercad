@@ -80,10 +80,10 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
 
 
     /*!
-     * \brief Set the barrier (difference between metal fermi
-     *   level and conduction band edge)
+     * \brief Set the metal workfunction
      */
-    void set_barrier(double barrier);
+    void set_workfunction(double wf);
+
 
 
     //! Set the recombination velocities
@@ -104,8 +104,8 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     double _surfres;
 
 
-    //! The barrier (difference between metal fermi level and conduction band edge)
-    double _barrier;
+    //! The metal workfunction
+    double _workfunction;
 
 
     //! The electron surface recombination velocity
@@ -114,6 +114,7 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
 
     //! The hole surface recombination velocity
     double _vrec_p;
+
 
 
 };
@@ -158,9 +159,9 @@ ElectricalContact::get_inner_voltage(void) const
 
 inline
 void
-ElectricalContact::set_barrier(double barrier)
+ElectricalContact::set_workfunction(double wf)
 {
-  _barrier = barrier;
+  _workfunction = wf;
 }
 
 
@@ -179,6 +180,8 @@ ElectricalContact::set_recombination_velocities(double vn, double vp)
     set_type(2, NEUMANN);
   }
 }
+
+
 
 
 #endif // _ELECTRICALCONTACT_H_

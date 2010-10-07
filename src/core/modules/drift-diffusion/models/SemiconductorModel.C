@@ -154,6 +154,7 @@ SemiconductorModel::extract_band_properties(void)
   get_conduction_band().band_edge = cbs[id].energy;
   get_conduction_band().effective_mass = cbs[id].mass_DOS
     * std::pow(cbs[id].degeneracy, 2.0 / 3.0);
+  get_conduction_band().degeneracy = cbs[id].degeneracy;
 
   // treat valence band
   const std::vector<DDsemiconductor::band_extremum>& vbs =
@@ -175,6 +176,7 @@ SemiconductorModel::extract_band_properties(void)
       id = i;
   }
   get_valence_band().band_edge = vbs[id].energy;
+  get_valence_band().degeneracy = vbs[id].degeneracy;
 
   double tmp = 0;
   // include other bands

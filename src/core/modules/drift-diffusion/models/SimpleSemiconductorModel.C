@@ -44,6 +44,8 @@ SimpleSemiconductorModel::do_init(void)
   double deg = std::pow(2.0, 2.0 / 3.0);
   get_conduction_band().effective_mass = deg * get_option("m_dos_e", 1.082);
   get_valence_band().effective_mass = deg * get_option("m_dos_h", 1.1432);
+  get_conduction_band().degeneracy = 2;
+  get_valence_band().degeneracy = 2;
 
   if (has_option("Nc"))
   {

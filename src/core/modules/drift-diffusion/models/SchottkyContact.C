@@ -63,10 +63,22 @@ SchottkyContact::do_init(void)
   _thermionic_emission = get_option("thermionic_emission", false);
   if (_thermionic_emission)
   {
-    double m = 0.1 * Constants::me;
-    double vth = SimulationOptions::T * Constants::e / (2 * M_PI * m);
-    vth = std::sqrt(vth);
-    set_recombination_velocities(vth, -1);
+    if (_band == 'c')
+    {
+      double m = get_dd_properties()->get_conduction_band().effective_mass
+          * Constants::me * std::pow(2.0, -2.0/3.0);
+      double vth = Constants::k_B * SimulationOptions::T * Constants::e / (2 * M_PI * m);
+      vth = std::sqrt(vth);
+      set_recombination_velocities(100 * vth, -1);
+    }
+    else if (_band == 'v')
+    {
+      double m = get_dd_properties()->get_valence_band().effective_mass
+          * Constants::me * std::pow(2.0, -2.0/3.0);
+      double vth = Constants::k_B * SimulationOptions::T * Constants::e / (2 * M_PI * m);
+      vth = std::sqrt(vth);
+      set_recombination_velocities(-1, 100 * vth);
+    }
   }
 
 }
@@ -83,7 +95,7 @@ SchottkyContact::do_compute(void)
     else
       val += get_dd_properties()->get_valence_band_edge();
   }
-  set_barrier(val);
+  set_workfunction(val);
 
   ElectricalContact::do_compute();
 }

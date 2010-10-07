@@ -177,6 +177,32 @@ class DriftDiffusionProperties : public PhysicalModel
     };
 
 
+    /*!
+     * This structure holds the basic properties of a band for given
+     * conditions (temp etc.)
+     */
+    struct BandProperties
+    {
+      //! The effective mass for the DOS
+      /*!
+       * It includes any degeneration, i.e. also spin
+       */
+      double effective_mass;
+
+      //! The effective density of states
+      double effective_DOS;
+
+      //! The band edge energy
+      double band_edge;
+
+      //! The degeneracy
+      unsigned int degeneracy;
+
+      //! All the band energies
+      std::vector<double> band_edges;
+    };
+
+
 
     //! A default (empty) destructor.
     virtual ~DriftDiffusionProperties(void);
@@ -748,29 +774,30 @@ class DriftDiffusionProperties : public PhysicalModel
     void create_recombination_models(void);
 
 
+    //! Get the conduction band properties
+    const BandProperties& get_conduction_band(void) const
+      { return conduction_band; };
+
+
+    //! Get the valence band properties
+    const BandProperties& get_valence_band(void) const
+      { return valence_band; };
+
+
+    //! Get the conduction band properties
+    BandProperties& get_conduction_band(void)
+      { return conduction_band; };
+
+
+    //! Get the valence band properties
+    BandProperties& get_valence_band(void)
+      { return valence_band; };
+
+
+
+
   protected:
 
-    /*!
-     * This structure holds the basic properties of a band for given
-     * conditions (temp etc.)
-     */
-    struct BandProperties
-    {
-      //! The effective mass for the DOS
-      /*!
-       * It includes any degeneration, i.e. also spin
-       */
-      double effective_mass;
-
-      //! The effective density of states
-      double effective_DOS;
-
-      //! The band edge energy
-      double band_edge;
-
-      //! All the band energies
-      std::vector<double> band_edges;
-    };
 
 
     //! The empty constructor.
@@ -827,27 +854,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //RealTensorValue permittivity;
     double permittivity;
 
-
-
-
-    //! Get the conduction band properties
-    const BandProperties& get_conduction_band(void) const
-      { return conduction_band; };
-
-
-    //! Get the valence band properties
-    const BandProperties& get_valence_band(void) const
-      { return valence_band; };
-
-
-    //! Get the conduction band properties
-    BandProperties& get_conduction_band(void)
-      { return conduction_band; };
-
-
-    //! Get the valence band properties
-    BandProperties& get_valence_band(void)
-      { return valence_band; };
 
 
     //! Get the constant factor to calculate the effective density of states

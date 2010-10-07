@@ -84,56 +84,6 @@ DriftDiffusion::Options::Options(void)
 
 
 
-/*
-DriftDiffusion::Options::Options(const Options& rhs)
-  : mesh_refinement(rhs.mesh_refinement),
-    max_refinement_steps(rhs.max_refinement_steps),
-    max_refinement_level(rhs.max_refinement_level),
-    refine_fraction(rhs.refine_fraction),
-    coarsen_fraction(rhs.coarsen_fraction),
-    refinement_tolerance(rhs.refinement_tolerance),
-    quadrature_type(rhs.quadrature_type),
-    integration_order(rhs.integration_order),
-    solver_method(rhs.solver_method),
-    max_gummel_iterations(rhs.max_gummel_iterations),
-    scaling_type(rhs.scaling_type),
-    coupling(rhs.coupling),
-    current_calculation(rhs.current_calculation),
-    exact_newton(rhs.exact_newton),
-    local_neutrality(rhs.local_neutrality)
-{
-}
-
-
-
-
-
-DriftDiffusion::Options&
-DriftDiffusion::Options::operator=(const Options& rhs)
-{
-  if (&rhs != this)
-  {
-    mesh_refinement = rhs.mesh_refinement;
-    max_refinement_steps = rhs.max_refinement_steps;
-    max_refinement_level = rhs.max_refinement_level;
-    refine_fraction = rhs.refine_fraction;
-    coarsen_fraction = rhs.coarsen_fraction;
-    refinement_tolerance = rhs.refinement_tolerance;
-    quadrature_type = rhs.quadrature_type;
-    integration_order = rhs.integration_order;
-    solver_method = rhs.solver_method;
-    max_gummel_iterations = rhs.max_gummel_iterations;
-    scaling_type = rhs.scaling_type;
-    coupling = rhs.coupling;
-    current_calculation = rhs.current_calculation;
-    exact_newton = rhs.exact_newton;
-    local_neutrality = rhs.local_neutrality;
-  }
-  return *this;
-}
-*/
-
-
 
 
 DriftDiffusion::DriftDiffusion(const ModelOptions& options)
