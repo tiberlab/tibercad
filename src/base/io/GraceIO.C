@@ -330,6 +330,12 @@ GraceIO::do_write(void)
 
       const vector<const Elem*>& elvec = it->second;
 
+      map<const Elem*, unsigned int> elem_indices;
+      // loop over all elements and make a map with element
+      // position indices
+      for (unsigned int n = 0; n < elvec.size(); n++)
+        elem_indices[elvec[n]] = n;
+
       // the node counter (regions might not be connected!)
       unsigned int node = 0;
 
@@ -341,9 +347,10 @@ GraceIO::do_write(void)
         //loop over the nodes
         for (int i = 0; i < 2; i++)
         {
+          const Elem* neighbor = elem->neighbor(i);
           ID neighbor_id = INVALID_ID;
-          if (elem->neighbor(i) != NULL)
-            neighbor_id = elem->neighbor(i)->subdomain_id();
+          if (neighbor != NULL)
+            neighbor_id = neighbor->subdomain_id();
 
           // we take only first node, unless it is the last of a connected
           // piece of the region
@@ -380,9 +387,14 @@ GraceIO::do_write(void)
                     vec.push_back(data[index + nc]);
                   else if (i == 0)
                   {
-                    double y1 = data[index - ncomp + nc];
+                    // 1) the left element has the same region index
+                    // 2) there is a left element
+                    // HOWEVER: the elements might not be ordered, therefore
+                    // we get the element index from the elem_indices map
+                    unsigned int left_index = ncomp * elem_indices[neighbor];
+                    double y1 = data[left_index + nc];
                     double y2 = data[index + nc];
-                    double d1 = (x - elem->neighbor(0)->point(0)(0));
+                    double d1 = (x - neighbor->point(0)(0));
                     double d2 = (elem->point(1)(0) - x);
                     double val = (y1 * d2 + y2 * d1) / (d1 + d2);
                     vec.push_back(val);
