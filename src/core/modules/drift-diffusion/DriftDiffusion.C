@@ -1244,13 +1244,12 @@ DriftDiffusion::do_setup_solution_variables(void)
     bool plot_curr = plot_solution("ContactCurrent");
     plot_curr |= plot_solution("ContactCurrents");
 
-    // we put them first into a map so they will be ordered
+    // we put them first into a set so they will be ordered
     // alphabetically
-    map<string, ID> cnt_map;
+    set<string> cnt_set;
 
     SimulationEnvironment::BoundaryIterator it(get_environment().boundaries_begin());
     const SimulationEnvironment::BoundaryIterator end(get_environment().boundaries_end());
-    unsigned int i = 1;
 
     for ( ; it != end; ++it)
     {
@@ -1264,20 +1263,22 @@ DriftDiffusion::do_setup_solution_variables(void)
         const DDInterfaceModel* mod = static_cast<const DDInterfaceModel*>(modit->second);
         if (mod->has_current())
         {
-          ID id = static_cast<ID>(ContactCurrent) + i;
           string name(bd->get_name() + ".current");
           // if currents should be plotted, add it also to the plot variables
           if (plot_curr) add_plot_variable(name);
-          cnt_map[name] = id;
-          i++;
+          cnt_set.insert(name);
         }
       }
     }
 
     // now we declare them
-    for (map<string, ID>::iterator i(cnt_map.begin()); i != cnt_map.end(); ++i)
-      declare_solution_ext(i->first, i->second, SolutionDescriptor::REAL,
+    unsigned int id = static_cast<ID>(ContactCurrent);
+    for (set<string>::iterator i(cnt_set.begin()); i != cnt_set.end(); ++i)
+    {
+      ++id;
+      declare_solution_ext(*i, id, SolutionDescriptor::REAL,
           SolutionDescriptor::GLOBAL, units);
+    }
   }
 }
 
