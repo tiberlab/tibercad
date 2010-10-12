@@ -11,7 +11,9 @@ ElectricalContact::ElectricalContact(const ModelOptions& options)
     _surfres(0.0),
     _workfunction(0.0),
     _vrec_n(-1),
-    _vrec_p(-1)
+    _vrec_p(-1),
+    _fixed_vrec_n(false),
+    _fixed_vrec_p(false)
 {
   // this is a real contact
   has_current(true);
@@ -31,9 +33,16 @@ ElectricalContact::do_init(void)
   get_parameter("rec_velocity_p", _vrec_p);
 
   if (get_option("zero_grad_fermi_e", false) || (_vrec_n >= 0))
+  {
     set_type(1, NEUMANN);
+    _fixed_vrec_n = true;
+  }
   if (get_option("zero_grad_fermi_h", false) || (_vrec_p >= 0))
+  {
     set_type(2, NEUMANN);
+    _fixed_vrec_p = true;
+  }
+
 
   get_parameter("contact_resistance", _surfres);
 

@@ -116,6 +116,14 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     double _vrec_p;
 
 
+    //! vrec_n has been overridden
+    bool _fixed_vrec_n;
+
+
+    //! vrec_p has been overridden
+    bool _fixed_vrec_p;
+
+
 
 };
 
@@ -169,12 +177,12 @@ inline
 void
 ElectricalContact::set_recombination_velocities(double vn, double vp)
 {
-  if (vn > 0)
+  if ((vn > 0) && !_fixed_vrec_n)
   {
     _vrec_n = vn;
     set_type(1, NEUMANN);
   }
-  if (vp > 0)
+  if ((vp > 0) && !_fixed_vrec_p)
   {
     _vrec_p = vp;
     set_type(2, NEUMANN);

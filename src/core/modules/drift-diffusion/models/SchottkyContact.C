@@ -60,25 +60,20 @@ SchottkyContact::do_init(void)
       _workfunction -= get_dd_properties()->get_valence_band_edge();
   }
 
-  _thermionic_emission = get_option("thermionic_emission", false);
+  _thermionic_emission = get_option("thermionic_emission", true);
   if (_thermionic_emission)
   {
-    if (_band == 'c')
-    {
-      double m = get_dd_properties()->get_conduction_band().effective_mass
+      double mn = get_dd_properties()->get_conduction_band().effective_mass
           * Constants::me * std::pow(2.0, -2.0/3.0);
-      double vth = Constants::k_B * SimulationOptions::T * Constants::e / (2 * M_PI * m);
-      vth = std::sqrt(vth);
-      set_recombination_velocities(100 * vth, -1);
-    }
-    else if (_band == 'v')
-    {
-      double m = get_dd_properties()->get_valence_band().effective_mass
+      double vth_n = Constants::k_B * SimulationOptions::T * Constants::e / (2 * M_PI * mn);
+      vth_n = 100.0 * std::sqrt(vth_n);
+
+      double mp = get_dd_properties()->get_valence_band().effective_mass
           * Constants::me * std::pow(2.0, -2.0/3.0);
-      double vth = Constants::k_B * SimulationOptions::T * Constants::e / (2 * M_PI * m);
-      vth = std::sqrt(vth);
-      set_recombination_velocities(-1, 100 * vth);
-    }
+      double vth_p = Constants::k_B * SimulationOptions::T * Constants::e / (2 * M_PI * mp);
+      vth_p = std::sqrt(vth_p);
+
+      set_recombination_velocities(vth_n, vth_p);
   }
 
 }
@@ -96,6 +91,23 @@ SchottkyContact::do_compute(void)
       val += get_dd_properties()->get_valence_band_edge();
   }
   set_workfunction(val);
+
+  if (_thermionic_emission)
+  {
+      double mn = get_dd_properties()->get_conduction_band().effective_mass
+          * Constants::me * std::pow(2.0, -2.0/3.0);
+      double vth_n = Constants::k_B * get_dd_properties()->get_point_data().electron_vt
+          * Constants::e / (2 * M_PI * mn);
+      vth_n = 100.0 * std::sqrt(vth_n);
+
+      double mp = get_dd_properties()->get_valence_band().effective_mass
+          * Constants::me * std::pow(2.0, -2.0/3.0);
+      double vth_p = Constants::k_B * get_dd_properties()->get_point_data().hole_vt
+          * Constants::e / (2 * M_PI * mp);
+      vth_p = std::sqrt(vth_p);
+
+      set_recombination_velocities(vth_n, vth_p);
+  }
 
   ElectricalContact::do_compute();
 }
