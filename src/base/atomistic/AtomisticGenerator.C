@@ -185,6 +185,7 @@ AtomisticGenerator::do_init()
   if ( _as->get_options().find_option("translation") )
   {
    _as->get_options().get_option("translation", translation);
+   _local_origin += translation;
   }
 
   //Build up supercell structure with proper options
@@ -1127,7 +1128,7 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
       _lattice_constant[2] = az_1 * molar_fraction + az_2 * (1.0 - molar_fraction);
 
     }
-
+    std::cout << "lattice constant" << _lattice_constant[0]  << " " <<  _lattice_constant[1]  << " " << _lattice_constant[2]  << std::endl;
     tmp_db = mat_alloy->get_database();
     db = &tmp_db;
     db->set_section("");
