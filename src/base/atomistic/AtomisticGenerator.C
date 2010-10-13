@@ -185,7 +185,7 @@ AtomisticGenerator::do_init()
   if ( _as->get_options().find_option("translation") )
   {
    _as->get_options().get_option("translation", translation);
-   _local_origin += translation;
+   _local_origin(1) += translation[0]; _local_origin(2) += translation[1]; _local_origin(3) += translation[2];
   }
 
   //Build up supercell structure with proper options
