@@ -17,9 +17,12 @@ SRHRecombination::read_database(void)
 {
   Database& db = get_database();
 
-  db.set_section("recombination/SRH");
+  if (get_option("trap", false))
+    db.set_section("recombination/trap");
+  else
+    db.set_section("recombination/SRH");
 
-  _E_t = db.get("Etrap", _E_t, true);
+  _E_t = db.get("Etrap", _E_t);
 
   std::vector<double> data(2, 0);
 
@@ -32,16 +35,20 @@ SRHRecombination::read_database(void)
   _Tcoeff_e = data[0];
   _Tcoeff_h = data[1];
 
-  db.get("taumin", data, true);
+  data[0] = data[1] = 1e-12;
+  db.get("taumin", data);
   double taumin_e = data[0];
   double taumin_h = data[1];
-  db.get("taumax", data, true);
+  data[0] = data[1] = 1e-9;
+  db.get("taumax", data);
   double taumax_e = data[0];
   double taumax_h = data[1];
-  db.get("Nref", data, true);
+  data[0] = data[1] = 1e16;
+  db.get("Nref", data);
   double Nref_e = data[0];
   double Nref_h = data[1];
-  db.get("gamma", data, true);
+  data[0] = data[1] = 2;
+  db.get("gamma", data);
   double g_e = data[0];
   double g_h = data[1];
 
@@ -81,19 +88,35 @@ void
 SRHRecombination::do_init(void)
 {
   // if trap parameters are given
-  get_parameter("sigma_n", _sigma_n);
-  get_parameter("sigma_p", _sigma_p);
+  if (get_option("trap", false))
+  {
+    _trap = true;
+    get_parameter("sigma_n", _sigma_n);
+    get_parameter("sigma_p", _sigma_p);
+  }
 
   get_parameter("tau_n", _tau_n);
   get_parameter("tau_p", _tau_p);
 
-  // this is for surface recombination only
+  get_parameter("E_trap", _E_t);
+
+  std::string tmp("m");
+  tmp[0] = _energy_reference;
+  tmp =  get_option("reference", tmp);
+  _energy_reference = tmp[0];
+
+}
+
+
+
+void
+SRHRecombination::do_init_interface(const Material* comp_A,
+    const Material* comp_B)
+{
   get_parameter("rec_velocity_n", _tau_n, true, new Invert());
   get_parameter("rec_velocity_p", _tau_p, true, new Invert());
 
-  get_parameter("E_trap", _E_t);
 }
-
 
 
 void
@@ -108,13 +131,22 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   double gn = dd.get_point_data().gamma_n;
   double gp = dd.get_point_data().gamma_p;
   double T = dd.get_lattice_temperature();
+  // TODO should take carrier temperatures
 
   long double f = std::exp(_E_t / T);
 
-  long double tau_n = _tau_n * std::pow(T / T0, _Talpha_e)
-    * std::exp(_Tcoeff_e * (T / T0 - 1));
-  long double tau_p = _tau_p * std::pow(T / T0, _Talpha_h)
-    * std::exp(_Tcoeff_h * (T / T0 - 1));
+  double tau_n = _tau_n;
+  double tau_p = _tau_p;
+  if (_trap)
+  {
+    tau_n = 1.0 / (_sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
+    tau_p = 1.0 / (_sigma_p * dd.get_valence_band().get_thermal_velocity(T));
+  }
+  else
+  {
+    tau_n *= std::pow(T / T0, _Talpha_e) * std::exp(_Tcoeff_e * (T / T0 - 1));
+    tau_p *= std::pow(T / T0, _Talpha_h) * std::exp(_Tcoeff_h * (T / T0 - 1));
+  }
 
   long double denom = tau_p * (n + gn * ni * f) + tau_n * (p + gp * ni / f);
   long double tmp = n * p / denom;
@@ -138,10 +170,18 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 
   long double f = std::exp(_E_t / T);
 
-  long double tau_n = _tau_n * std::pow(T / T0, _Talpha_e)
-    * std::exp(_Tcoeff_e * (T / T0 - 1));
-  long double tau_p = _tau_p * std::pow(T / T0, _Talpha_h)
-    * std::exp(_Tcoeff_h * (T / T0 - 1));
+  double tau_n = _tau_n;
+  double tau_p = _tau_p;
+  if (_trap)
+  {
+    tau_n = 1.0 / (_sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
+    tau_p = 1.0 / (_sigma_p * dd.get_valence_band().get_thermal_velocity(T));
+  }
+  else
+  {
+    tau_n *= std::pow(T / T0, _Talpha_e) * std::exp(_Tcoeff_e * (T / T0 - 1));
+    tau_p *= std::pow(T / T0, _Talpha_h) * std::exp(_Tcoeff_h * (T / T0 - 1));
+  }
 
   long double denom = tau_p * (n + gn * ni * f) + tau_n * (p + gp * ni / f);
   long double tmp = n * p / denom;

@@ -152,7 +152,12 @@ Variable::check_and_register(const string& s, T& variable,
 
     }
     else
+    {
       variable = Utils::convert<T>(s);
+
+      if (initfunc != NULL)
+        (*initfunc)(variable);
+    }
   }
 }
 

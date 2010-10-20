@@ -11,7 +11,8 @@ Trap::Trap(const ModelOptions& options) :
   _density(0.0),
   _type(NEUTRAL),
   _particle('e'),
-  _level(0.0)
+  _level(0.0),
+  _energy_reference('m')
 {
   string type = get_option("type", "");
   if (type == "eNeutral")
@@ -50,7 +51,7 @@ Trap::do_init(void)
   else
     _energy_reference = 'c';
 
-  string tmp("c");
+  string tmp("m");
   tmp[0] = _energy_reference;
   tmp =  get_option("reference", tmp);
   _energy_reference = tmp[0];

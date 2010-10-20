@@ -15,6 +15,8 @@
  * \li neutral hole traps, type = ``hNeutral''
  * \li donor like traps, type = ``donor''
  * \li acceptor like traps, type = ``acceptor''
+ *
+ * The trap level is referred to midgap as default.
  */
 class TBDLEXPORT Trap : public PhysicalModelInterface
 {

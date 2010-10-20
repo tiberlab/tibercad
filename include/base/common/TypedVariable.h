@@ -81,6 +81,8 @@ TypedVariable<T>::register_variable(T& variable, const TiberModelObject* ct,
   {
     _variables[&variable] = MapElem(ct, initfunc);
     _value = variable;
+    if (initfunc != NULL)
+      (*initfunc)(variable);
   }
 }
 

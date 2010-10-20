@@ -243,9 +243,11 @@ DriftDiffusionProperties::create_submodels(void)
     for (; it != end; ++it)
     {
       ModelOptions opts(it->second);
+      opts.set_option("trap", true);
+      opts.set_option("type", "srh");
+      opts.set_option("name", "recombination");
       get_options().add_submodel("recombination", opts);
     }
-
 
     //
     // Recombinations

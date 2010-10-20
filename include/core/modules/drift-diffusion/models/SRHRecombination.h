@@ -46,14 +46,6 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h);
 
-    //! Set the carrier lifetimes
-    /*!
-     * \deprecated { parameters will be read only from databeas or
-     * ModelParameters }
-     * \param tau_n electron lifetime
-     * \param tau_p hole lifetime
-     */
-    void set_SRH_parameters(double tau_n, double tau_p);
 
 
   protected:
@@ -70,6 +62,10 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
+    //! \copydoc RecombinationModelInterface::do_init_interface()
+    virtual void do_init_interface(const Material* comp_A,
+            const Material* comp_B);
+
     //! We do the VCA on the recombination times and not on the parameters
     virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
@@ -79,6 +75,9 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 
 
   private:
+
+    //! True if this is a trap generated model
+    bool _trap;
 
     //! The electron lifetime
     double _tau_n;
@@ -92,8 +91,11 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! hole capture cross section
     double _sigma_p;
 
-    //! The trap level (from midgap)
+    //! The trap level
     double _E_t;
+
+    //! The energy reference
+    char _energy_reference;
 
     //! Temperature coefficient for temperature dependence, electrons
     double _Talpha_e;
@@ -116,17 +118,19 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 
 
 inline
-SRHRecombination::SRHRecombination(const ModelOptions& options)
-  : RecombinationModelInterface(options),
-    _tau_n(1e-9),
-    _tau_p(1e-9),
-    _sigma_n(1e-15),
-    _sigma_p(1e-15),
-    _E_t(0.0),
-    _Talpha_e(0.0),
-    _Talpha_h(0.0),
-    _Tcoeff_e(0.0),
-    _Tcoeff_h(0.0)
+SRHRecombination::SRHRecombination(const ModelOptions& options) :
+  RecombinationModelInterface(options),
+  _trap(false),
+  _tau_n(1e-9),
+  _tau_p(1e-9),
+  _sigma_n(1e-15),
+  _sigma_p(1e-15),
+  _E_t(0.0),
+  _energy_reference('m'),
+  _Talpha_e(0.0),
+  _Talpha_h(0.0),
+  _Tcoeff_e(0.0),
+  _Tcoeff_h(0.0)
 {
 }
 
@@ -138,14 +142,6 @@ SRHRecombination::create(const ModelOptions& options)
   return new SRHRecombination(options);
 }
 
-
-inline
-void
-SRHRecombination::set_SRH_parameters(double tau_n, double tau_p)
-{
-  _tau_n = tau_n;
-  _tau_p = tau_p;
-}
 
 
 inline
