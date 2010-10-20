@@ -237,17 +237,6 @@ DriftDiffusionProperties::create_submodels(void)
     }
 
 
-    // for each trap we add an SRH recombination model
-    it = get_options().submodels_begin("trap");
-    end = get_options().submodels_end("trap");
-    for (; it != end; ++it)
-    {
-      ModelOptions opts(it->second);
-      opts.set_option("trap", true);
-      opts.set_option("type", "srh");
-      opts.set_option("name", "recombination");
-      get_options().add_submodel("recombination", opts);
-    }
 
     //
     // Recombinations
@@ -298,6 +287,19 @@ void
 DriftDiffusionProperties::create_recombination_models(void)
 {
 
+  // for each trap we add an SRH recombination model
+  ModelOptions::submodel_iterator it(get_options().submodels_begin("trap"));
+  ModelOptions::submodel_iterator end(get_options().submodels_end("trap"));
+  for (; it != end; ++it)
+  {
+    ModelOptions opts(it->second);
+    opts.set_option("trap", true);
+    opts.set_option("type", "srh");
+    opts.set_option("name", "recombination");
+    get_options().add_submodel("recombination", opts);
+  }
+
+
   // we create them only if they do not exist yet
   vector<ID> ids;
   get_net_recombination_rate_IDs(ids);
@@ -306,8 +308,8 @@ DriftDiffusionProperties::create_recombination_models(void)
     // we can have several models!
 
     // create recombination models
-    ModelOptions::submodel_iterator it(get_options().submodels_begin("recombination"));
-    ModelOptions::submodel_iterator end(get_options().submodels_end("recombination"));
+    it = get_options().submodels_begin("recombination");
+    end = get_options().submodels_end("recombination");
     for ( ; it != end; ++it)
     {
       std::string name = (it->second).get_option("model", "");
