@@ -146,16 +146,4 @@ AugerRecombination::get_net_recombination_rate_derivatives(
 
 
 
-void
-AugerRecombination::do_init_alloy(const PhysicalModelInterface* comp_A,
-    const PhysicalModelInterface* comp_B, double xa)
-{
-  const AugerRecombination* scA =
-    dynamic_cast<const AugerRecombination*>(comp_A);
-  const AugerRecombination* scB =
-    dynamic_cast<const AugerRecombination*>(comp_B);
-
-  _Cn = alloy(scA->_Cn, scB->_Cn, xa);
-  _Cp = alloy(scA->_Cp, scB->_Cp, xa);
-}
 

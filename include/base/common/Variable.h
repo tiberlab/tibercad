@@ -10,7 +10,7 @@
 #include <iostream>
 
 class TiberModelObject;
-class InitializerBase;
+template <typename T> class InitializerBase;
 
 //! Interface for variables
 /*!
@@ -125,7 +125,7 @@ class Variable
     template <typename T>
     static void check_and_register(const std::string& s,
         T& variable, const TiberModelObject* ct = NULL,
-        InitializerBase* initfunc = NULL);
+        InitializerBase<T>* initfunc = NULL);
 
 
     //! Unregister a model

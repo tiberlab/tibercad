@@ -200,6 +200,15 @@ class DriftDiffusionProperties : public PhysicalModel
 
       //! All the band energies
       std::vector<double> band_edges;
+
+      //! Get thermal velocity in cm/s
+      double get_thermal_velocity(double temp) const
+      {
+        const double fac = Constants::k_B * Constants::e
+            / (2 * M_PI * 0.62996052 * Constants::me);
+        double vth = fac * temp / effective_mass;
+        return (100.0 * std::sqrt(vth));
+      }
     };
 
 

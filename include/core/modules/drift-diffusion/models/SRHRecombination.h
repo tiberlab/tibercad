@@ -86,6 +86,12 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! The hole lifetime
     double _tau_p;
 
+    //! electron capture cross section
+    double _sigma_n;
+
+    //! hole capture cross section
+    double _sigma_p;
+
     //! The trap level (from midgap)
     double _E_t;
 
@@ -114,6 +120,8 @@ SRHRecombination::SRHRecombination(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _tau_n(1e-9),
     _tau_p(1e-9),
+    _sigma_n(1e-15),
+    _sigma_p(1e-15),
     _E_t(0.0),
     _Talpha_e(0.0),
     _Talpha_h(0.0),

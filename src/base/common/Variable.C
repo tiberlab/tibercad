@@ -83,7 +83,7 @@ Variable::get_variable_value(const string& var)
 template <typename T>
 void
 Variable::check_and_register(const string& s, T& variable,
-    const TiberModelObject* ct, InitializerBase* initfunc)
+    const TiberModelObject* ct, InitializerBase<T>* initfunc)
 {
   if (s.size() >= 1)
   {
@@ -174,37 +174,37 @@ Variable::unregister(const TiberModelObject* ct)
 template
 void
 Variable::check_and_register<double>(const string&, double&,
-    const TiberModelObject*, InitializerBase* initfunc);
+    const TiberModelObject*, InitializerBase<double>* initfunc);
 
 
 template
 void
 Variable::check_and_register<int>(const string&, int&,
-    const TiberModelObject*, InitializerBase* initfunc);
+    const TiberModelObject*, InitializerBase<int>* initfunc);
 
 
 template
 void
 Variable::check_and_register<string>(const string&, string&,
-    const TiberModelObject*, InitializerBase* initfunc);
+    const TiberModelObject*, InitializerBase<string>* initfunc);
 
 
 template
 void
 Variable::check_and_register<unsigned int>(const string&, unsigned int&,
-    const TiberModelObject*, InitializerBase* initfunc);
+    const TiberModelObject*, InitializerBase<unsigned int>* initfunc);
 
 
 template
 void
 Variable::check_and_register<char>(const string&, char&,
-    const TiberModelObject*, InitializerBase* initfunc);
+    const TiberModelObject*, InitializerBase<char>* initfunc);
 
 
 template
 void
 Variable::check_and_register<bool>(const string&, bool&,
-    const TiberModelObject*, InitializerBase* initfunc);
+    const TiberModelObject*, InitializerBase<bool>* initfunc);
 
 
 

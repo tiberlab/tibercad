@@ -80,12 +80,16 @@ SRHRecombination::read_interface_database(void)
 void
 SRHRecombination::do_init(void)
 {
+  // if trap parameters are given
+  get_parameter("sigma_n", _sigma_n);
+  get_parameter("sigma_p", _sigma_p);
+
   get_parameter("tau_n", _tau_n);
   get_parameter("tau_p", _tau_p);
 
   // this is for surface recombination only
-  get_parameter("rec_velocity_n", _tau_n);
-  get_parameter("rec_velocity_p", _tau_p);
+  get_parameter("rec_velocity_n", _tau_n, true, new Invert());
+  get_parameter("rec_velocity_p", _tau_p, true, new Invert());
 
   get_parameter("E_trap", _E_t);
 }

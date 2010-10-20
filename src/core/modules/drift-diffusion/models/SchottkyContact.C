@@ -63,17 +63,11 @@ SchottkyContact::do_init(void)
   _thermionic_emission = get_option("thermionic_emission", true);
   if (_thermionic_emission)
   {
-      double mn = get_dd_properties()->get_conduction_band().effective_mass
-          * Constants::me * std::pow(2.0, -2.0/3.0);
-      double vth_n = Constants::k_B * SimulationOptions::T * Constants::e / (2 * M_PI * mn);
-      vth_n = 100.0 * std::sqrt(vth_n);
+    double temp = SimulationOptions::T;
+    double vth_n = get_dd_properties()->get_conduction_band().get_thermal_velocity(temp);
+    double vth_p = get_dd_properties()->get_valence_band().get_thermal_velocity(temp);
 
-      double mp = get_dd_properties()->get_valence_band().effective_mass
-          * Constants::me * std::pow(2.0, -2.0/3.0);
-      double vth_p = Constants::k_B * SimulationOptions::T * Constants::e / (2 * M_PI * mp);
-      vth_p = std::sqrt(vth_p);
-
-      set_recombination_velocities(vth_n, vth_p);
+    set_recombination_velocities(vth_n, vth_p);
   }
 
 }
@@ -94,19 +88,13 @@ SchottkyContact::do_compute(void)
 
   if (_thermionic_emission)
   {
-      double mn = get_dd_properties()->get_conduction_band().effective_mass
-          * Constants::me * std::pow(2.0, -2.0/3.0);
-      double vth_n = Constants::k_B * get_dd_properties()->get_point_data().electron_vt
-          * Constants::e / (2 * M_PI * mn);
-      vth_n = 100.0 * std::sqrt(vth_n);
+    const DriftDiffusionProperties* dd = get_dd_properties();
+    const DriftDiffusionProperties::PointData& pd = dd->get_point_data();
 
-      double mp = get_dd_properties()->get_valence_band().effective_mass
-          * Constants::me * std::pow(2.0, -2.0/3.0);
-      double vth_p = Constants::k_B * get_dd_properties()->get_point_data().hole_vt
-          * Constants::e / (2 * M_PI * mp);
-      vth_p = std::sqrt(vth_p);
+    double vth_n = dd->get_conduction_band().get_thermal_velocity(pd.electron_vt);
+    double vth_p = dd->get_valence_band().get_thermal_velocity(pd.hole_vt);
 
-      set_recombination_velocities(vth_n, vth_p);
+    set_recombination_velocities(vth_n, vth_p);
   }
 
   ElectricalContact::do_compute();

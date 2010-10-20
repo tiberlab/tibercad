@@ -25,7 +25,7 @@
 #endif
 
 
-class InitializerBase;
+template <typename T> class InitializerBase;
 
 
 //! The base class for all TiberCAD model classes
@@ -173,7 +173,7 @@ class TiberModelObject
      */
     template <typename T>
     void get_parameter(const std::string& name, T& variable,
-        bool override = true, InitializerBase* initfunc = NULL);
+        bool override = true, InitializerBase<T>* initfunc = NULL);
 
 
     //! Get a parameter which is a vector of values (of the same type)
@@ -229,8 +229,13 @@ class TiberModelObject
 
 
     //! Create an initializer functor from a member function
-    template <typename T>
-    InitializerBase* initializer(void (T::*func)(void));
+    template <class C, typename T = double>
+    InitializerBase<T>* initializer(void (C::*func)(void));
+
+
+    //! Create an initializer functor from a member function
+    template <class C, typename T>
+    InitializerBase<T>* initializer(void (C::*func)(T&));
 
 
 
@@ -358,12 +363,21 @@ TiberModelObject::override_parameter_string(const std::string&,
 
 
 
-template <typename T>
+template <class C, typename T>
 inline
-InitializerBase*
-TiberModelObject::initializer(void (T::*func)(void))
+InitializerBase<T>*
+TiberModelObject::initializer(void (C::*func)(void))
 {
-  return new Initializer<T>(*static_cast<T*>(this), func);
+  return new Initializer<C, T>(static_cast<C*>(this), func);
+}
+
+
+template <class C, typename T>
+inline
+InitializerBase<T>*
+TiberModelObject::initializer(void (C::*func)(T&))
+{
+  return new Initializer<C, T>(static_cast<C*>(this), func);
 }
 
 

@@ -41,7 +41,7 @@ class TBDLLOCAL TypedVariable : public Variable
 
     //! Register a variable
     void register_variable(T& variable, const TiberModelObject* ct,
-        InitializerBase* initfun);
+        InitializerBase<T>* initfun);
 
     //! Get the value in string representation
     virtual std::string get_value_string(void) const;
@@ -56,7 +56,7 @@ class TBDLLOCAL TypedVariable : public Variable
 
   private:
 
-    typedef std::pair<const TiberModelObject*, InitializerBase*> MapElem;
+    typedef std::pair<const TiberModelObject*, InitializerBase<T>*> MapElem;
     typedef std::map<T*, MapElem> VarMap;
 
     //! The map containing all variables
@@ -75,7 +75,7 @@ class TBDLLOCAL TypedVariable : public Variable
 template <typename T>
 void
 TypedVariable<T>::register_variable(T& variable, const TiberModelObject* ct,
-    InitializerBase* initfunc)
+    InitializerBase<T>* initfunc)
 {
   if (_variables.find(&variable) == _variables.end())
   {
@@ -93,10 +93,11 @@ TypedVariable<T>::set_value(const T& value)
   typename VarMap::iterator it(_variables.begin());
   for ( ; it != _variables.end(); ++it)
   {
-    *(it->first) = value;
+    T& val = *(it->first);
+    val = value;
     // call the initializer function
     if ((it->second).second != NULL)
-      (*(it->second).second)();
+      (*(it->second).second)(val);
   }
 }
 

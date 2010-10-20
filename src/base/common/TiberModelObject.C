@@ -56,7 +56,7 @@ TiberModelObject::has_parameter(const std::string& name,
 template <typename T>
 void
 TiberModelObject::get_parameter(const std::string& name,
-    T& variable, bool override, InitializerBase* initfunc)
+    T& variable, bool override, InitializerBase<T>* initfunc)
 {
   string val(_options.get_option(name, ""));
   // if one needs override from strange other sources
@@ -106,7 +106,7 @@ TiberModelObject::get_parameter(const std::string& name,
 template<>
 void
 TiberModelObject::get_parameter<RealVectorValue>(const std::string& name,
-    RealVectorValue& vec, bool override, InitializerBase*)
+    RealVectorValue& vec, bool override, InitializerBase<RealVectorValue>*)
 {
   string val(_options.get_option(name, ""));
   // if one needs override from strange other sources
@@ -223,33 +223,33 @@ TiberModelObject::destroy(TiberModelObject* p)
 template
 void
 TiberModelObject::get_parameter<double>(const string& name,
-    double& val, bool override, InitializerBase* initfunc);
+    double& val, bool override, InitializerBase<double>* initfunc);
 
 template
 void
 TiberModelObject::get_parameter<int>(const string& name,
-    int& val, bool override, InitializerBase* initfunc);
+    int& val, bool override, InitializerBase<int>* initfunc);
 
 template
 void
 TiberModelObject::get_parameter<string>(const string& name,
-    string& val, bool override, InitializerBase* initfunc);
+    string& val, bool override, InitializerBase<string>* initfunc);
 
 
 template
 void
 TiberModelObject::get_parameter<unsigned int>(const string& name,
-    unsigned int& val, bool override, InitializerBase* initfunc);
+    unsigned int& val, bool override, InitializerBase<unsigned int>* initfunc);
 
 template
 void
 TiberModelObject::get_parameter<char>(const string& name,
-    char& val, bool override, InitializerBase* initfunc);
+    char& val, bool override, InitializerBase<char>* initfunc);
 
 template
 void
 TiberModelObject::get_parameter<bool>(const string& name,
-    bool& val, bool override, InitializerBase* initfunc);
+    bool& val, bool override, InitializerBase<bool>* initfunc);
 
 
 

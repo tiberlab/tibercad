@@ -6,6 +6,7 @@
 class TiberModelObject;
 
 //! The base class for initializer functors
+template <typename T>
 class InitializerBase
 {
 
@@ -15,22 +16,11 @@ class InitializerBase
     virtual ~InitializerBase(void) {};
 
     //! The operator to be overloaded
-    virtual void operator()(void) {};
+    virtual void operator()(T& val) {};
 
 
   protected:
 
-    typedef void (TiberModelObject::*CastFunc)(void);
-
-    //! Constructor
-    InitializerBase(TiberModelObject& obj, CastFunc func)
-      : _obj(&obj), _func(func) { };
-
-    //! The object containing the function
-    TiberModelObject* _obj;
-
-    //! The function itself
-    CastFunc _func;
 
 };
 

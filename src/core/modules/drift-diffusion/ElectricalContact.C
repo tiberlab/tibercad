@@ -2,7 +2,7 @@
 
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
-
+#include "Initializer.h"
 
 
 ElectricalContact::ElectricalContact(const ModelOptions& options)

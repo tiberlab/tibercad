@@ -93,7 +93,7 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     void set_recombination_velocities(double vn, double vp);
 
 
-
+void test(double& v) {std::cerr << "changing " << v;}
   private:
 
     //! The boundary value (eg. applied voltage)

@@ -7,33 +7,58 @@
 
 
 //! The real initializer class aware of type
-template <typename T>
-class TBDLLOCAL Initializer : public InitializerBase
+template <class Class, typename T>
+class TBDLLOCAL Initializer : public InitializerBase<T>
 {
 
   public:
 
-    typedef void (T::*InitFunc)(void);
+    typedef void (Class::*VoidInitFunc)(void);
+    typedef void (Class::*InitFunc)(T&);
 
     //! The constructor
-    Initializer(T& obj, InitFunc func)
-      : InitializerBase(obj, static_cast<CastFunc>(func)) {};
+    Initializer(Class* obj, VoidInitFunc func)
+      : _obj(obj), _func(NULL), _voidfunc(func) {};
+
+    //! The constructor
+    Initializer(Class* obj, InitFunc func)
+      : _obj(obj), _func(func), _voidfunc(NULL) {};
 
     //! The operator
-    void operator()(void);
+    void operator()(T& val);
 
+
+  private:
+
+    Class* _obj;
+
+    InitFunc _func;
+
+    VoidInitFunc _voidfunc;
 };
 
 
 
-template <typename T>
+template <class Class, typename T>
 inline
 void
-Initializer<T>::operator()(void)
+Initializer<Class, T>::operator()(T& val)
 {
   if (_func != NULL)
-    (static_cast<T*>(_obj)->*static_cast<InitFunc>(_func))();
+    (_obj->*_func)(val);
+  else if (_voidfunc != NULL)
+    (_obj->*_voidfunc)();
 }
+
+// We provide a few modifier Functors
+
+//! Inversion
+class Invert : public InitializerBase<double>
+{
+  public:
+    void operator()(double& val) { val = 1.0 / val;}
+};
+
 
 
 #endif /* _INITIALIZER_H_ */

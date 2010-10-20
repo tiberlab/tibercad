@@ -237,6 +237,16 @@ DriftDiffusionProperties::create_submodels(void)
     }
 
 
+    // for each trap we add an SRH recombination model
+    it = get_options().submodels_begin("trap");
+    end = get_options().submodels_end("trap");
+    for (; it != end; ++it)
+    {
+      ModelOptions opts(it->second);
+      get_options().add_submodel("recombination", opts);
+    }
+
+
     //
     // Recombinations
     //
