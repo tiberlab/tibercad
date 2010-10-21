@@ -23,7 +23,7 @@ $Models
     {
      simulation_name = dd
      
-     thermal_simulation = tt
+   #  thermal_simulation = tt
 
      coupling = poisson
     }
@@ -49,33 +49,33 @@ $Models
 
 
 
-  model thermalbalance
-  {
+#  model thermalbalance
+ # {
 
-    options
-    { 
-      simulation_name = tt
-      physical_regions = all
-    }
+  #  options
+   # { 
+    #  simulation_name = tt
+    #  physical_regions = all
+    #}
 
-    BC_Regions
-    {
-        BC_Region reservoir1
-   	{
-         type = heat_reservoir
-         BC_reg_numb = 1
-         temperature = 300
-   	}
+   # BC_Regions
+   # {
+    #    BC_Region reservoir1
+   #	{
+    #     type = heat_reservoir
+     #    BC_reg_numb = 1
+      #   temperature = 300
+   #	}
        
-        BC_Region reservoir2
-   	{
-	 type = heat_reservoir
-         BC_reg_numb = 2
-         temperature = 400
-	}
-     }
+    #    BC_Region reservoir2
+   #	{
+#	 type = heat_reservoir
+ #        BC_reg_numb = 2
+  #       temperature = 400
+#	}
+ #    }
      		    
-  }
+  #}
 
 
 
