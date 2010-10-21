@@ -47,35 +47,35 @@ $Models
   
   
   
-  model thermalbalance
-  {
+#  model thermalbalance
+ # {
 
-     options
-    { 
-      simulation_name = thermal
-      physical_regions = all
-      plot = (thermal)
-    }
+  #   options
+   # { 
+  #    simulation_name = thermal
+  #    physical_regions = all
+  #    plot = (thermal)
+  #  }
 
-    physical_model heat_source
-    {
+  #  physical_model heat_source
+  #  {
 
-      type = driftdiffusion
+   #   type = driftdiffusion
 
-      simulation_name = dd
+    #  simulation_name = dd
 
-    }
+   # }
 
-    BC_Regions
-    {
-        BC_Region reservoir
-   	{
-         type = heat_reservoir
-         BC_reg_numb = (1,4)
-         temperature = 300
-   	}
-     }
-  }
+   # BC_Regions
+   # {
+    #    BC_Region reservoir
+   #	{
+    #     type = heat_reservoir
+     #    BC_reg_numb = (1,4)
+      #   temperature = 300
+  # 	}
+   #  }
+ # }
   
   
 
@@ -87,7 +87,7 @@ $Models
      simulation_name = dd
      plot = (ContactCurrents, Pn, Pp, RecombHeat, ePeltier, hPeltier, eJoule, hJoule, ePowerFlux, hPowerFlux)
      
-     thermal_simulation = thermal
+#     thermal_simulation = thermal
     }
 
      physical_model recombination
@@ -135,16 +135,16 @@ $Solver
     ls_max_step = 1
   }
 
-  selfconsistent
-  {
-     flavour = relaxation
-     relaxation_factor = 1
-     simulations = (dd,thermal)
-     abs_tolerance = 1e-5
-     rel_tolerance = 1e-5
-     max_iterations = 30
-     monitor = true
-  }
+#  selfconsistent
+ # {
+ #    flavour = relaxation
+ #    relaxation_factor = 1
+ #    simulations = (dd,thermal)
+ #    abs_tolerance = 1e-5
+ #    rel_tolerance = 1e-5
+ #    max_iterations = 30
+ #    monitor = true
+ # }
 
   sweep
   {
