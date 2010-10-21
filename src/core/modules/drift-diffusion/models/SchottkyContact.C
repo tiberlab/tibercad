@@ -63,11 +63,14 @@ SchottkyContact::do_init(void)
   _thermionic_emission = get_option("thermionic_emission", true);
   if (_thermionic_emission)
   {
-    double temp = SimulationOptions::T;
+    double temp = Constants::k_B * SimulationOptions::T;
     double vth_n = get_dd_properties()->get_conduction_band().get_thermal_velocity(temp);
     double vth_p = get_dd_properties()->get_valence_band().get_thermal_velocity(temp);
 
-    set_recombination_velocities(vth_n, vth_p);
+    // the effective emission velocity is fac * v_thermal
+
+    const double fac = 0.23032943; // std::sqrt(1.0 / (6.0 * M_PI));
+    set_recombination_velocities(fac * vth_n, fac * vth_p);
   }
 
 }
@@ -94,7 +97,8 @@ SchottkyContact::do_compute(void)
     double vth_n = dd->get_conduction_band().get_thermal_velocity(pd.electron_vt);
     double vth_p = dd->get_valence_band().get_thermal_velocity(pd.hole_vt);
 
-    set_recombination_velocities(vth_n, vth_p);
+    const double fac = 0.23032943; // std::sqrt(1.0 / (6.0 * M_PI));
+    set_recombination_velocities(fac * vth_n, fac * vth_p);
   }
 
   ElectricalContact::do_compute();
