@@ -997,11 +997,11 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! An iterator for the recombination models
-    typedef std::map<ID, RecombinationModelInterface*>::iterator
+    typedef std::multimap<ID, RecombinationModelInterface*>::iterator
       recomb_iterator;
 
     //! A const iterator for the recombination models
-    typedef std::map<ID, RecombinationModelInterface*>::const_iterator
+    typedef std::multimap<ID, RecombinationModelInterface*>::const_iterator
       const_recomb_iterator;
 
 
@@ -1083,7 +1083,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! The recombination models
-    std::map<ID, RecombinationModelInterface*> _recombination_models;
+    std::multimap<ID, RecombinationModelInterface*> _recombination_models;
 
     //! The electron mobility
     MobilityModelInterface* _electron_mobility;

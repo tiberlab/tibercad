@@ -402,7 +402,7 @@ DriftDiffusionProperties::add_recombination_model(
     throw InitFailedException("No such recombination model: " + model_name);
 
   ID id = model->get_id();
-  _recombination_models[id] = model;
+  _recombination_models.insert(make_pair(id, model));
 
   model->set_driftdiffusionproperties(this);
   model->set_material(get_material());
@@ -826,14 +826,19 @@ DriftDiffusionProperties::get_net_recombination_rate_IDs(
 double
 DriftDiffusionProperties::get_net_recombination_rate(ID id)
 {
-  double r = 0.0, dummy;
+  double rec = 0.0;
 
-  RecombinationModelInterface* rec =
-    get_recombination_model(id);
-  if (rec != NULL)
-    rec->get_net_recombination_rates(r, dummy);
+  recomb_iterator it = _recombination_models.begin();
+  recomb_iterator end = _recombination_models.end();
+  for ( ; it != end; ++it)
+    if (it->first == id)
+    {
+      double r, dummy;
+      it->second->get_net_recombination_rates(r, dummy);
+      rec += r;
+    }
 
-  return r;
+  return rec;
 }
 
 

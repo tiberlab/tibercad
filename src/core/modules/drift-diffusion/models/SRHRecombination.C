@@ -98,7 +98,8 @@ SRHRecombination::do_init(void)
   get_parameter("tau_n", _tau_n);
   get_parameter("tau_p", _tau_p);
 
-  get_parameter("E_trap", _E_t);
+  get_parameter("Et", _E_t);
+  get_parameter("Nt", _density);
 
   std::string tmp("m");
   tmp[0] = _energy_reference;
@@ -119,28 +120,57 @@ SRHRecombination::do_init_interface(const Material* comp_A,
 }
 
 
+double
+SRHRecombination::get_trap_level(void)
+{
+  double ref;
+  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+  double Ec = dd.get_conduction_band_edge();
+  double Ev = dd.get_valence_band_edge();
+  switch (_energy_reference)
+  {
+    case 'v':
+      ref = Ev + _E_t;
+      break;
+
+    case 'm':
+      ref = 0.5 * (Ev + Ec) + _E_t;
+      break;
+
+    default:
+      ref = Ec - _E_t;
+      break;
+  }
+
+  return ref;
+}
+
+
+
 void
 SRHRecombination::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
-  long double n  = dd.get_electron_density();
-  long double p  = dd.get_hole_density();
-  long double ni = dd.get_intrinsic_density();
+  double n  = dd.get_electron_density();
+  double p  = dd.get_hole_density();
+  double n0 = dd.get_equilibrium_electron_density();
+  double p0 = dd.get_equilibrium_hole_density();
   double gn = dd.get_point_data().gamma_n;
   double gp = dd.get_point_data().gamma_p;
   double T = dd.get_lattice_temperature();
   // TODO should take carrier temperatures
 
-  long double f = std::exp(_E_t / T);
+  double Et = get_trap_level() - dd.get_equilibrium_fermi_level();
+  double f = std::exp(Et / T);
 
   double tau_n = _tau_n;
   double tau_p = _tau_p;
   if (_trap)
   {
-    tau_n = 1.0 / (_sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
-    tau_p = 1.0 / (_sigma_p * dd.get_valence_band().get_thermal_velocity(T));
+    tau_n = 1.0 / (_density * _sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
+    tau_p = 1.0 / (_density * _sigma_p * dd.get_valence_band().get_thermal_velocity(T));
   }
   else
   {
@@ -148,9 +178,9 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
     tau_p *= std::pow(T / T0, _Talpha_h) * std::exp(_Tcoeff_h * (T / T0 - 1));
   }
 
-  long double denom = tau_p * (n + gn * ni * f) + tau_n * (p + gp * ni / f);
-  long double tmp = n * p / denom;
-  recomb_e = recomb_h = tmp - gn * gp * ni * ni / denom;
+  double denom = tau_p * (n + gn * n0 * f) + tau_n * (p + gp * p0 / f);
+  double tmp = n * p / denom;
+  recomb_e = recomb_h = tmp - gn * gp * n0 * p0 / denom;
 }
 
 
@@ -161,21 +191,23 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
-  long double n  = dd.get_electron_density();
-  long double p  = dd.get_hole_density();
-  long double ni = dd.get_intrinsic_density();
+  double n  = dd.get_electron_density();
+  double p  = dd.get_hole_density();
+  double n0 = dd.get_equilibrium_electron_density();
+  double p0 = dd.get_equilibrium_hole_density();
   double gn = dd.get_point_data().gamma_n;
   double gp = dd.get_point_data().gamma_p;
   double T = dd.get_lattice_temperature();
 
-  long double f = std::exp(_E_t / T);
+  double Et = get_trap_level() - dd.get_equilibrium_fermi_level();
+  double f = std::exp(Et / T);
 
   double tau_n = _tau_n;
   double tau_p = _tau_p;
   if (_trap)
   {
-    tau_n = 1.0 / (_sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
-    tau_p = 1.0 / (_sigma_p * dd.get_valence_band().get_thermal_velocity(T));
+    tau_n = 1.0 / (_density * _sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
+    tau_p = 1.0 / (_density * _sigma_p * dd.get_valence_band().get_thermal_velocity(T));
   }
   else
   {
@@ -183,9 +215,9 @@ SRHRecombination::get_net_recombination_rate_derivatives(
     tau_p *= std::pow(T / T0, _Talpha_h) * std::exp(_Tcoeff_h * (T / T0 - 1));
   }
 
-  long double denom = tau_p * (n + gn * ni * f) + tau_n * (p + gp * ni / f);
+  long double denom = tau_p * (n + gn * n0 * f) + tau_n * (p + gp * p0 / f);
   long double tmp = n * p / denom;
-  long double SRH = tmp - gn * gp * ni * ni / denom;
+  long double SRH = tmp - gn * gp * n0 * p0 / denom;
 
   long double a = p / denom;
   a = a - tau_p * SRH / denom;

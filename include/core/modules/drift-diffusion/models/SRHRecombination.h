@@ -94,6 +94,9 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! The trap level
     double _E_t;
 
+    //! The trap density
+    double _density;
+
     //! The energy reference
     char _energy_reference;
 
@@ -109,6 +112,9 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! Temperature coefficient for exponential temp. dependence, holes
     double _Tcoeff_h;
 
+
+    //! Get the trap level
+    double get_trap_level(void);
 };
 
 
@@ -126,6 +132,7 @@ SRHRecombination::SRHRecombination(const ModelOptions& options) :
   _sigma_n(1e-15),
   _sigma_p(1e-15),
   _E_t(0.0),
+  _density(1e16),
   _energy_reference('m'),
   _Talpha_e(0.0),
   _Talpha_h(0.0),
