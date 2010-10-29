@@ -34,13 +34,13 @@ Macrostrain* Macrostrain::static_this;
 
 void Macrostrain::do_setup_solution_variables(void)
 {
-  declare_solution(strain, TENSOR, CELL, "-");
-  declare_solution(stress, TENSOR, CELL, "GPa");
+  declare_solution(Strain, TENSOR, CELL, "-");
+  declare_solution(Stress, TENSOR, CELL, "GPa");
   declare_solution(vonMises, REAL, CELL, "GPa");
-  declare_solution(piezoPolarization, VECTOR, CELL, "C/m^2");
-  declare_solution(strainCrystal, TENSOR, CELL, "-");
-  declare_solution(stressCrystal, TENSOR, CELL, "GPa");
-  declare_solution(energyDensity, REAL, CELL, "J/m^3");
+  declare_solution(PiezoPolarization, VECTOR, CELL, "C/m^2");
+  declare_solution(StrainCrystal, TENSOR, CELL, "-");
+  declare_solution(StressCrystal, TENSOR, CELL, "GPa");
+  declare_solution(EnergyDensity, REAL, CELL, "J/m^3");
 }
 
 
@@ -62,20 +62,20 @@ Macrostrain::get_solution_secure(const Elem* elem,
   const Tensor2Sym& str_cryst = result_strain[elem];
   Tensor2Sym elemstr = sym(RotM * (str_cryst * RotM.transpose()));
 
-  if (values.count(strain))
+  if (values.count(Strain))
   {
-    values[strain][0] = elemstr(1,1);
-    values[strain][1] = elemstr(2,2);
-    values[strain][2] = elemstr(3,3);
-    values[strain][3] = elemstr(2,1);
-    values[strain][4] = elemstr(3,2);
-    values[strain][5] = elemstr(3,1);
+    values[Strain][0] = elemstr(1,1);
+    values[Strain][1] = elemstr(2,2);
+    values[Strain][2] = elemstr(3,3);
+    values[Strain][3] = elemstr(2,1);
+    values[Strain][4] = elemstr(3,2);
+    values[Strain][5] = elemstr(3,1);
   }
 
-  bool do_stress = values.count(stress);
+  bool do_stress = values.count(Stress);
   bool do_vonmises = values.count(vonMises);
-  bool do_stress_cryst = values.count(stressCrystal);
-  bool do_energy = values.count(energyDensity);
+  bool do_stress_cryst = values.count(StressCrystal);
+  bool do_energy = values.count(EnergyDensity);
   Tensor2Sym elemstress;
 
   if (do_stress || do_vonmises || do_stress_cryst || do_energy)
@@ -88,12 +88,12 @@ Macrostrain::get_solution_secure(const Elem* elem,
 
     if (do_stress)
     {
-      values[stress][0] = elemstress(1,1);
-      values[stress][1] = elemstress(2,2);
-      values[stress][2] = elemstress(3,3);
-      values[stress][3] = elemstress(2,1);
-      values[stress][4] = elemstress(3,2);
-      values[stress][5] = elemstress(3,1);
+      values[Stress][0] = elemstress(1,1);
+      values[Stress][1] = elemstress(2,2);
+      values[Stress][2] = elemstress(3,3);
+      values[Stress][3] = elemstress(2,1);
+      values[Stress][4] = elemstress(3,2);
+      values[Stress][5] = elemstress(3,1);
     }
 
     if (do_vonmises)
@@ -114,173 +114,43 @@ Macrostrain::get_solution_secure(const Elem* elem,
     {
       double energy = doubleContraction(elemstress, elemstr);
       // stress is in GPa
-      values[energyDensity][0] = energy * 1e9;
+      values[EnergyDensity][0] = energy * 1e9;
     }
 
     if (do_stress_cryst)
     {
       elemstress = sym(RotM.transpose() * (elemstress * RotM));
-      values[stressCrystal][0] = elemstress(1,1);
-      values[stressCrystal][1] = elemstress(2,2);
-      values[stressCrystal][2] = elemstress(3,3);
-      values[stressCrystal][3] = elemstress(2,1);
-      values[stressCrystal][4] = elemstress(3,2);
-      values[stressCrystal][5] = elemstress(3,1);
+      values[StressCrystal][0] = elemstress(1,1);
+      values[StressCrystal][1] = elemstress(2,2);
+      values[StressCrystal][2] = elemstress(3,3);
+      values[StressCrystal][3] = elemstress(2,1);
+      values[StressCrystal][4] = elemstress(3,2);
+      values[StressCrystal][5] = elemstress(3,1);
     }
   }
 
 
-  if (values.count(piezoPolarization))
+  if (values.count(PiezoPolarization))
   {
     Tensor1 piezo = get_piezopolarization(elem);
 
-    values[piezoPolarization][0] = piezo(1);
-    values[piezoPolarization][1] = piezo(2);
-    values[piezoPolarization][2] = piezo(3);
+    values[PiezoPolarization][0] = piezo(1);
+    values[PiezoPolarization][1] = piezo(2);
+    values[PiezoPolarization][2] = piezo(3);
   }
 
 
-  if (values.count(strainCrystal))
+  if (values.count(StrainCrystal))
   {
-    values[strainCrystal][0] = str_cryst(1,1);
-    values[strainCrystal][1] = str_cryst(2,2);
-    values[strainCrystal][2] = str_cryst(3,3);
-    values[strainCrystal][3] = str_cryst(2,1);
-    values[strainCrystal][4] = str_cryst(3,2);
-    values[strainCrystal][5] = str_cryst(3,1);
+    values[StrainCrystal][0] = str_cryst(1,1);
+    values[StrainCrystal][1] = str_cryst(2,2);
+    values[StrainCrystal][2] = str_cryst(3,3);
+    values[StrainCrystal][3] = str_cryst(2,1);
+    values[StrainCrystal][4] = str_cryst(3,2);
+    values[StrainCrystal][5] = str_cryst(3,1);
   }
 }
 
-
-
-/*
-//-----------------------------------------------------------------//
-void Macrostrain::build_elemental_results(const std::set<std::string>& variables,
-			     std::vector<double>& results, std::vector<std::string>& legend)
-{
-
-  std::vector<std::string> eps_names;
-  std::vector<double> eps_data;
-
-  std::vector<std::string> pol_names;
-  std::vector<double> pol_data;
-
-  std::vector<std::string> stress_names;
-  std::vector<double> stress_data;
-
-  prepare_strain_data_for_output( eps_names,  eps_data);
-  prepare_polarization_data_for_output( pol_names,  pol_data);
-  prepare_stress_data_for_output(stress_names,  stress_data);
-
-
-  unsigned int num_var = 0;
-
-  int st_var = -1;
-  if (variables.count("strain") ||
-      variables.count("StrainVariables") )
-  {
-    st_var = num_var;
-
-    for (unsigned int k = 0; k<6 ; k++)
-    {
-       legend.resize(legend.size() + 1);
-       legend[num_var]=eps_names[k];
-       num_var++;
-    }
-   }
-
-    int stress_var = -1;
-   if (variables.count("stress") ||
-       variables.count("StrainVariables") )
-  {
-    stress_var = num_var;
-
-    for (unsigned int k = 0; k<6 ; k++)
-    {
-       legend.resize(legend.size() + 1);
-       legend[num_var]=stress_names[k];
-       num_var++;
-    }
-   }
-
-  int pol_var = -1;
-  if (variables.count("polarization")||
-      variables.count("StrainVariables")  )
-  {
-    pol_var = num_var;
-
-    for (unsigned int k = 0; k<3 ; k++)
-    {
-       legend.resize(legend.size() + 1);
-       legend[num_var]=pol_names[k];
-       num_var++;
-    }
-   }
-
-  int vonmises_var = -1;
-  if (variables.count("vonMises")||
-      variables.count("StrainVariables")  )
-  {
-    vonmises_var = num_var;
-    legend.resize(legend.size() + 1);
-    legend[num_var] = "vonMises";
-    num_var++;
-  }
-
-  unsigned int num_elem = eps_data.size()/6;
-
-  results.resize(num_var * num_elem);
-  legend.resize(num_var);
-
-  for (unsigned int j = 0; j < num_elem; j++)
-  {
-
-   unsigned int id = num_var * j;
-
-   if (st_var != -1)
-      {
-         for (unsigned int i = 0; i<6 ; i++)
-             {
-               results[id + st_var + i]  =  eps_data[i + j * 6];
-             }
-      }
-
-      if (stress_var != -1)
-      {
-         for (unsigned int i = 0; i<6 ; i++)
-             {
-               results[id + stress_var + i]  =  stress_data[i + j * 6];
-             }
-      }
-
-    if (pol_var != -1)
-      {
-         for (unsigned int i = 0; i<3 ; i++)
-             {
-               results[id + pol_var + i] = pol_data[i + j * 3];
-             }
-      }
-
-    if (vonmises_var != -1)
-    {
-      double e11 = stress_data[0 + j * 6];
-      double e22 = stress_data[2 + j * 6];
-      double e33 = stress_data[5 + j * 6];
-      double e21 = stress_data[1 + j * 6];
-      double e31 = stress_data[3 + j * 6];
-      double e32 = stress_data[4 + j * 6];
-      double I1 = e11 + e22 + e33;
-      double I2 = e11*e22 + e22*e33 + e11*e33 - e21*e21 - e31*e31 - e32*e32;
-      double J2 = I1*I1 / 3.0 - I2;
-      double vm = sqrt(3 * J2);
-      results[id + vonmises_var] = vm;
-    }
-
-
-  } //Elements
-
-}
-*/
 
 //-------------------------------------------------------------------------//
 
@@ -314,10 +184,8 @@ throw (ModelErrorException)
 }
 
 
-//----------------------------------------------------------------------------//
 
 
-//-----------------------------------------------------------------//
 
 
 //-----------------------------------------------------------------//

@@ -144,6 +144,9 @@ class TBDLLOCAL Control
      * see get_output_format() for a detailed description
      */
     std::string _output_format;
+  
+    //! Rotate from xy to xz plane in case of cylindrical symmetry.
+    bool _xy2xz_rotation;
 
     //! Setup global simulation options
     void setup_globals(void);

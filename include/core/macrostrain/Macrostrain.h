@@ -86,13 +86,13 @@ class Macrostrain : public StrainSimulation
     //! The variables that can be provided
     enum Solutions
     {
-      strain,           //!< strain
-      stress,           //!< stress
+      Strain,           //!< strain
+      Stress,           //!< stress
       vonMises,         //!< von Mises stress measure
-      piezoPolarization,//!< piezoelectric polarization
-      strainCrystal,    //!< strain in crystal coordinates
-      stressCrystal,    //!< stress in crystal coordinates
-      energyDensity     //!< elastic energy density
+      PiezoPolarization,//!< piezoelectric polarization
+      StrainCrystal,    //!< strain in crystal coordinates
+      StressCrystal,    //!< stress in crystal coordinates
+      EnergyDensity     //!< elastic energy density
     };
 
 

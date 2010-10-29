@@ -83,8 +83,9 @@ class TBDLLOCAL MyPoisson : public SimulationInterface
     enum Solutions
     {
       Potential,        /*!< the potential */
-      Field,            /*!< the field (negative gradient of potential) */
+      ElField,            /*!< the field (negative gradient of potential) */
       Displacement,     /*!< the electric displacement */
+      Polarization,
       ChargeDensity     /*!< the source (charge density) */
     };
 
@@ -102,6 +103,19 @@ class TBDLLOCAL MyPoisson : public SimulationInterface
 
     //! A static pointer to this
     static MyPoisson* _this;
+
+
+  struct Options
+  {
+    
+    /**
+     * Set the default boundary conditions
+     */
+    std::string default_boundary_conditions;
+    
+  };
+
+  Options myopts;
 
 };
 

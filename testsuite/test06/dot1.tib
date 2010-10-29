@@ -100,8 +100,8 @@ $Models
     options
     {          
       simulation_name = str
+      plot = (Strain, PiezoPolarization)
 
-      physical_regions = all
     }
 
   
@@ -134,6 +134,7 @@ $Models
     options
     {          
       simulation_name = dd
+      plot = (Ec, Ev, eQFermi, hQFermi, ElField, Polarization)
 
       strain_simulation = str
       statistics = FD
@@ -149,6 +150,12 @@ $Models
 
     
   
+    physical_model polarization
+    {
+      type = (piezo, pyro)
+    } 
+  
+
      
 
     physical_model electron_mobility
@@ -178,6 +185,7 @@ $Models
    
     options
     {
+     plot = (EigenFunctions, EigenEnergy, EnergyLevels)
      simulation_name = quantum_el
      physical_regions = (1,2)
     }
@@ -193,6 +201,7 @@ $Models
    
     options
     {
+     plot = (EigenFunctions, EigenEnergy, EnergyLevels)
      simulation_name = quantum_hl
      physical_regions = (1,2)
     }
@@ -318,5 +327,4 @@ $Simulation
  
   resultpath = output
   output_format = (gmv, vtk)
-  plot = (strain, piezoPolarization, Ec, Ev, eQFermi, hQFermi, ElField, Polarization, EigenFunctions, EigenEnergy, EnergyLevels)
 }

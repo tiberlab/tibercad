@@ -24,7 +24,7 @@ StrainSimulation::create_physical_model(const ModelOptions& options,
   return model;
 }
 
-
+/*
 ID StrainSimulation::convert_variable_name_to_id(const std::string& variable_name) const
 {
   
@@ -54,7 +54,7 @@ ID StrainSimulation::convert_variable_name_to_id(const std::string& variable_nam
   return id;
   
 }
-
+*/
 
 void StrainSimulation::get_solution_secure(const Elem* elem,
 				   const std::vector<Point>& p, const std::set<ID>& ids,

@@ -15,7 +15,6 @@
 #include "tensor_value.h"
 
 //class PiezoelectricModel;
-class PyroPolarization;
 
 //!Class that contains all the physical quantities necessary for the POISSON solver
 class PoissonModel: public PhysicalModel
@@ -49,10 +48,6 @@ class PoissonModel: public PhysicalModel
   //Tensor1 get_built_in_polarization(const std::vector<Point> q_point, std::vector<Tensor1>& built_in_polarization);
   //!charge density (electron/cm^3)
   void get_charge_density(const std::vector<Point> q_point, std::vector<double>& charge_density);
-
-
-  //! The pyropolarization
-  PyroPolarization* _pyropolarization;
 
 
 

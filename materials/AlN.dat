@@ -54,14 +54,7 @@ D6 = -3.4
 
 
 [permittivity]
-# static dielectric constant
-permittivity = 8.67
-
-# Optical dielectric constant
-optical_epsilon_x = 1.0 # ?
-optical_epsilon_z = 1.0 # ?
-
-
+permittivity = (8.67,8.67)
 
 # stiffness data
 [elasticity]
@@ -144,7 +137,7 @@ N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 #Lattice thermal conductivity
 [thermal_conductivity/constant]
-ThermCond = (2.85,2.85,2.85)
+ThermCond = (2.85,2.85)
 
 [sound_velocity/constant]
 vg = 10.127e5 #cm/s

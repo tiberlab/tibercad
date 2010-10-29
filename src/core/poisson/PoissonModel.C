@@ -3,13 +3,11 @@
 #include "ChargeDensityModel.h"
 #include "Database.h"
 #include "getpot.h"
-#include "PyroPolarization.h"
 #include "PiezoelectricModel.h"
 
 
 PoissonModel::PoissonModel(const ModelOptions& options) :
   PhysicalModel(options),
-  _pyropolarization(NULL),
   _strain_sim(NULL),
   _chd_sim(NULL),
   _epsilon_model(NULL),
@@ -24,7 +22,6 @@ PoissonModel::~PoissonModel(void)
 {
 
   destroy(_piezo_model);
-  destroy(_pyropolarization);
   destroy(_epsilon_model);
 
 }
@@ -113,25 +110,6 @@ void PoissonModel::create_submodels()
 
   }
 
-  //Pyropolarization-----
-  destroy(_pyropolarization);
-  it = get_options().submodels_begin("pyro_polarization");
-  end = get_options().submodels_end("pyro_polarization");
-
-  if (it != end)
-  {
-
-    _pyropolarization = dynamic_cast<PyroPolarization*>(
-                     PhysicalModelInterface::create("pyroelectric_model_" +
-                     get_material()->get_structure(), it->second));
-
-   if (_pyropolarization == NULL)
-      throw InitFailedException("Could not create pyroelectric model");
-
-   _pyropolarization ->set_material(get_material());
-   _pyropolarization ->init();
-
-  }
 
 
    //Dielectric constant
@@ -314,20 +292,6 @@ PoissonModel::get_pyro_polarization(std::vector<RealGradient>& p,const std::vect
  
  std::vector<RealGradient> _polarization(points.size());
 
-  if (_pyropolarization != NULL)
-    { 
-      
-    for (ID n = 0; n< points.size();n++)
-      {
-	const Point _coord = points[n]; 
-	double temp = SimulationOptions::temperature;
-	
-	_pyropolarization->calculate_polarization(_elem,_coord,temp);
-	_polarization[n](0) += _pyropolarization->get_polarization()(1);
-	_polarization[n](1) += _pyropolarization->get_polarization()(2);
-	_polarization[n](2) += _pyropolarization->get_polarization()(3);
-      }
-  }
 
   for (ID n = 0; n< points.size();n++)
     {

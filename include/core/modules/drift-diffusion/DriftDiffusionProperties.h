@@ -18,7 +18,7 @@
 
 #include "tensor.h"
 
-//#include "tensor_value.h"
+#include "tensor_value.h"
 #include "vector_value.h"
 #include "point.h"
 
@@ -36,8 +36,7 @@ class DriftDiffusion;
 class RecombinationModelInterface;
 class MobilityModelInterface;
 class ThermoelectricPower;
-class PyroPolarization;
-
+class PolarizationModel;
 
 
 //! The base class for all drift-diffusion related semiconductor models
@@ -139,7 +138,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
         //! The trapped hole density derivative
         double ionized_hole_traps_derivative;
-
 
         //! The total charge density
         double charge_density;
@@ -598,9 +596,8 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Get the relative permittivity tensor
-    //const RealTensorValue& get_relative_permittivity(void) const
-    double get_relative_permittivity(void) const
-      { return permittivity; };
+    const RealTensor& get_relative_permittivity(void) const
+      { return _permittivity; };
 
 
     //! Get the electron conductivity
@@ -861,11 +858,6 @@ class DriftDiffusionProperties : public PhysicalModel
     Tensor2Sym& get_strain(void);
 
 
-    //! The relative permittivity tensor
-    //RealTensorValue permittivity;
-    double permittivity;
-
-
 
     //! Get the constant factor to calculate the effective density of states
     /*!
@@ -976,17 +968,11 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The gradient of the hole chemical-potential
     RealGradient _grad_fermi_h;
 
-
-    //! The pyropolarization
-    PyroPolarization* _pyropolarization;
-
     //! The total electric polarization
     RealVectorValue _polarization;
 
-
-    //! A user defined polarization
-    RealVectorValue* _user_defined_polarization;
-
+    //! The relative permittivity tensor
+    RealTensor _permittivity;
 
     //! A background conductivity
     /*!
@@ -1094,6 +1080,10 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! The thermoelectric power
     ThermoelectricPower* _thermoelectric_power;
+
+
+    //! The polarization models
+    std::vector<PolarizationModel*> _pm;
 
 
     //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)

@@ -51,7 +51,7 @@ D6 = -5.5
 
 [permittivity]
 # static dielectric constant
-permittivity = 14.4
+permittivity = (14.4, 14.4)
 
 
 # lattice constants
@@ -152,8 +152,7 @@ N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 [thermal_conductivity/constant]
 #Lattice thermal conductivity
-therm_lat_cond_x = 0.45
-therm_lat_cond_z = 0.45
+ThermCond_x = 0.45
 
 #Atomistic structure informations
 #

@@ -89,7 +89,8 @@ DriftDiffusion::Options::Options(void)
 DriftDiffusion::DriftDiffusion(const ModelOptions& options)
   : SimulationInterface(options),
     _rebuild_eq_system(true),
-    _useparticle('b')
+    _useparticle('b'),
+    _reference_potential(0.0)
 {
 }
 
@@ -106,7 +107,7 @@ DriftDiffusion::~DriftDiffusion(void)
 
 PhysicalModel*
 DriftDiffusion::create_bulk_model(const ModelOptions& options,
-    const Material* mat) const
+    const Material*) const
 {
   string modelname;
 
@@ -229,8 +230,9 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     double ni = sc->get_intrinsic_density();
     ni0 = (ni0 > ni) ? ni0 : ni;
 
-    double eps = sc->get_relative_permittivity();
-    eps0 = (eps0 > eps) ? eps0 : eps;
+    const RealTensor& eps_tens = sc->get_relative_permittivity();
+    eps0 = (eps0 > eps_tens(0,0)) ? eps0 : eps_tens(0,0);
+ 
   }
 
   switch (type)
@@ -469,6 +471,9 @@ DriftDiffusion::cleanup_solver(void)
 void
 DriftDiffusion::do_solve(void)
 {
+
+
+
   __private_counter = 0;
 
   string filename = get_option("load_state", "");
@@ -664,6 +669,9 @@ DriftDiffusion::do_solve(void)
       get_output_filename() + ".tsv";
     save_data(file);
   }
+
+
+
 }
 
 
@@ -792,6 +800,39 @@ DriftDiffusion::do_equilibrium(void)
   get_my_options().coupling = coupling;
 
   solveropts.set_option("nonlin_max_it", max_it);
+
+
+  // compute the reference potential
+  compute_reference_potential();
+
+}
+
+
+
+void
+DriftDiffusion::compute_reference_potential(void)
+{
+  if (get_my_options().reference_contact != "")
+  {
+    SimulationEnvironment& si = get_environment(); 
+    std::set<const Node*> nodelist;
+    si.get_boundary_nodes(get_my_options().reference_contact, nodelist);
+    if (nodelist.size() > 0)
+    {
+      TiberNonlinearSystem* system;
+      system = &get_equation_systems().get_system<TiberNonlinearSystem>(
+          get_equation_system_name());
+
+      const NumericVector<Number>& solution = system->get_solution_vector();
+      const unsigned int system_number = system->number();
+      const unsigned int u_var = system->variable_number("potential");
+
+      const Node* node = *nodelist.begin();
+      const unsigned int n_dof = node->dof_number(system_number, u_var, 0);
+      _reference_potential = solution(n_dof) * get_scaling().get_potential_scaling();
+    }
+  }
+ 
 }
 
 
@@ -1008,6 +1049,21 @@ DriftDiffusion::parse_options(void)
   get_parameter("guess_hl_qfermi", _hl_qfermi_guess);
 
   perf_log.stop_event("parse");
+
+  myopts.reference_contact = opts.get_option("reference_contact", "");
+
+  string s(opts.get_option("default_boundary_condition", "zero_field"));
+  if (s == "zero_field")
+  {
+    myopts.default_boundary_condition = ZEROFIELD;
+  }
+  else if (s == "zero_displacement")
+  {
+    myopts.default_boundary_condition = ZERODISPLACEMENT;
+  }
+  else
+    Messages::warning(s + " is unknown Poisson boundary condition.");
+
 }
 
 
@@ -1359,7 +1415,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   fe->reinit(elem, &points);
 
-
   vector<double> T_nodes = sc->get_temperature_at_nodes();
 
   dof_map.dof_indices(elem, dof_indices_u, u_var);
@@ -1422,6 +1477,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     }
 
+    //cout<<e_field<<endl;
     // scale the potential back
     u *= phi0;
     en *= phi0;
@@ -1471,7 +1527,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
 
     if (values.count(ElPotential))
-      values[ElPotential][n] = u;
+      values[ElPotential][n] = u - _reference_potential;
 
     if (values.count(eQFermi))
       values[eQFermi][n] = -en;
@@ -1634,6 +1690,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   if (values.count(Polarization))
   {
+   
     values[Polarization][0] = polariz(0) / np;
     values[Polarization][1] = polariz(1) / np;
     values[Polarization][2] = polariz(2) / np;
@@ -2437,9 +2494,9 @@ DriftDiffusion::build_local_scaling(void)
       sc->calculate_ionized_dopants();
       sc->calculate_mobilities();
 
-      double epsilon = sc->get_relative_permittivity();
-      double l2_eps = JxW[qp] * l2 * epsilon;
-      //double l2_eps = JxW[qp] * epsilon;
+      const RealTensor& permittivity = sc->get_relative_permittivity();
+
+      double l2_eps = JxW[qp] * l2;
 
       double sigma_e = JxW[qp] * sc->get_electron_conductivity() / mu0;
       double sigma_h = JxW[qp] * sc->get_hole_conductivity() / mu0;
@@ -2465,7 +2522,7 @@ DriftDiffusion::build_local_scaling(void)
             sigma_h * (dphi[i][qp] * dphi[i][qp]);
 
         local_scaling_[elem->get_node(i)][2] +=
-            l2_eps * (dphi[i][qp] * dphi[i][qp]) -
+	  l2_eps * (dphi[i][qp] * (permittivity * dphi[i][qp])) -
             drho * phi[i][qp] * phi[i][qp];
       }
 
@@ -2789,7 +2846,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   const unsigned int dim = mesh.mesh_dimension();
 
-  const Device& device = *_device;
+  //const Device& device = *_device;
   const SimulationEnvironment& environment = get_environment();
 
   const Options& params = get_my_options();
@@ -3092,9 +3149,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       sc->compute_thermoelectric_powers();
       double eTEpower =  sc->get_electron_thermoelectric_power() / phi0;
       double hTEpower =  sc->get_hole_thermoelectric_power() / phi0;
-
-      double epsilon = sc->get_relative_permittivity();
-      double l2_eps = l2 * epsilon;
+    
+      const RealTensor& permittivity = sc->get_relative_permittivity();
 
       long double Rn = sc->get_net_electron_recombination_rate();
       //Rn = (fabs(Rn) < 1.0e-3) ? 0.0 : Rn;
@@ -3140,10 +3196,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         for (unsigned int j = 0; j < n_dofs; j++)
         {
           double laplace =
-            J * (dphi[i][qp] * dphi[j][qp]);
+	    J * (dphi[i][qp] * dphi[j][qp]);
 
-          if (coupling & POISSON)
-            Kuu(i,j) += l2_eps * laplace / local_scaling[i][2];
+	  double laplace_u =
+            J * (dphi[i][qp] * (permittivity * dphi[j][qp]));
+
+	  if (coupling & POISSON)
+            Kuu(i,j) += l2 * laplace_u / local_scaling[i][2];
 
           if (coupling & ECURRENT)
             Knn(i,j) += sigma_e * laplace / local_scaling[i][0];
@@ -3456,10 +3515,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
 
-          double epsilon = sc->get_relative_permittivity();
-          double l2_eps = l2 * epsilon;
-
-
           // get the solution values at the quadrature point
           Real u  = 0.0;
           Real en = 0.0;
@@ -3617,7 +3672,12 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               // NOTE:
               // we only include the polarization when no dirichlet
               // boundary is defined
-              RealVectorValue P(sc->get_total_polarization());
+	      
+	      RealVectorValue P(0.0);
+	      if (params.default_boundary_condition == ZEROFIELD)
+	      {
+		P = sc->get_total_polarization();
+	      }
               double Pn = (P * face_normals[qp]) / P0;
               value_u = -J * Pn;
             }

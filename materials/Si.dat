@@ -59,7 +59,6 @@ uniax_def_pot_L = 16.14
 
 
 [permittivity] # [3]
-# static dielectric constant
 permittivity = 11.7
 
 optical_epsilon = 11.85
@@ -129,7 +128,7 @@ N0 = (1.0000e+18,	1.0000e+18)
 
 # Lattice thermal conductivity
 [thermal_conductivity/constant]
-ThermCond = (1.5,1.5,1.5)
+ThermCond = 1.5
 
 [sound_velocity/constant]
 vg = 8.433e5 #cm/s

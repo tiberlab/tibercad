@@ -199,6 +199,12 @@ $Models
 
     }
 
+    physical_model polarization
+    {
+      type = (piezo, pyro)
+    } 
+  
+
 
     BC_Regions  
     {

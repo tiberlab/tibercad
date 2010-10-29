@@ -163,6 +163,15 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       SURFINT
     };
 
+    //! The default BC for Poisson
+    enum DefaultBC
+    {
+        //! Zero electric field
+        ZEROFIELD,
+
+        //! Zero displacement
+        ZERODISPLACEMENT
+    };
 
 
 
@@ -257,15 +266,21 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
         //! Use exact jacobian or not
         bool exact_newton;
 
+        //! Reference contact for the potential
+        std::string reference_contact;
+
+
+        //! Integrate polarization along the boundary
+        DefaultBC default_boundary_condition;
 
         //! Whether or not to enforce local charge neutrality
         bool local_neutrality;
 
 
-      private:
+        private:
 
 
-        friend class DriftDiffusion;
+          friend class DriftDiffusion;
     };
 
 
@@ -417,8 +432,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
   private:
 
-
-
+  
     // for nicer code
     typedef std::map<const Boundary*, double> ContactData;
     typedef std::set<unsigned int> DofList;
@@ -479,6 +493,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
     //! The voltages of the former solve step
     ContactData _voltages;
+
+
+    //! Reference potential
+    double _reference_potential;
 
 
     //! The local density scaling
@@ -545,6 +563,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      */
     void compute_scaling(Scaling::ScalingType type = Scaling::UNITS);
 
+
+    //! Find the reference potential, if needed
+    void compute_reference_potential(void);
 
 
     //! Find nodes on boundary between dielectric/semiconductor
@@ -669,6 +690,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     //! Write out a vector (e.g. residual)
     void write_nodal_vector(const std::string& filename,
         const NumericVector<double>& vec);
+
+
+ 
+
 };
 
 

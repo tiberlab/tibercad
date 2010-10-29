@@ -186,6 +186,12 @@ $Models
    
     }
   
+    physical_model polarization
+    {
+      type = (piezo, pyro)
+    } 
+  
+
      
     physical_model electron_mobility
     { 

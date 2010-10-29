@@ -404,13 +404,16 @@ SimulationEnvironment::get_boundary_nodes(const Boundary* boundary,
 {
   nodelist.clear();
 
-  vector<ID> ids;
-  boundary->get_region_ids(ids);
-
-  for (size_t i = 0; i < ids.size(); ++i)
+  if (boundary)
   {
-    const set<const Node*>& list = _node_map.get_nodes(ids[i]);
+    vector<ID> ids;
+    boundary->get_region_ids(ids);
+
+    for (size_t i = 0; i < ids.size(); ++i)
+    {
+      const set<const Node*>& list = _node_map.get_nodes(ids[i]);
       nodelist.insert(list.begin(), list.end());
+    }
   }
 }
 

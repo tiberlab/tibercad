@@ -49,7 +49,15 @@ uniax_def_pot_L = 16.14
 
 # Lattice thermal conductivity
 [thermal_conductivity/constant]
-therm_lat_cond = 0.014        
+ThermCond = 0.014        
+
+
+[heat_capacity/constant]
+C = 1.00 # j/cm3K 
+
+
+[sound_velocity/constant]
+vg  = 8.433e5 #cm/s
 
 
 

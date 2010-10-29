@@ -4,6 +4,8 @@
 #include "SimulationInterface.h"
 #include "SimulationOptions.h"
 #include "InitFailedException.h"
+#include "RuntimeException.h"
+#include "Messages.h"
 
 #include "elem.h"
 
@@ -29,26 +31,33 @@ StrainInterface::set_simulation(const std::string& name)
     if (_simulation == NULL)
       throw InitFailedException("No such simulation found: " + name);
 
-    // for now there are 9 variables from strain
-    _strain_ids.resize(9);
-    _id_set.clear();
-    
-    _strain_ids[0] = _simulation->get_solution_id("eps_xx");
-    _strain_ids[1] = _simulation->get_solution_id("eps_yy");
-    _strain_ids[2] = _simulation->get_solution_id("eps_zz");
-    _strain_ids[3] = _simulation->get_solution_id("eps_xy");
-    _strain_ids[4] = _simulation->get_solution_id("eps_yz");
-    _strain_ids[5] = _simulation->get_solution_id("eps_xz");
-    _strain_ids[6] = _simulation->get_solution_id("Px");
-    _strain_ids[7] = _simulation->get_solution_id("Py");
-    _strain_ids[8] = _simulation->get_solution_id("Pz");
+    _strain_id = _simulation->get_solution_id("Strain");
+    _strain_cryst_id = _simulation->get_solution_id("StrainCrystal");
+    _stress_id = _simulation->get_solution_id("Stress");
+    _stress_cryst_id = _simulation->get_solution_id("StressCrystal");
 
+    if (_strain_id == INVALID_ID)
+      Messages::warning("Simulation " + _simulation->get_name() +
+          " does not have variable \'Strain\'.");
+
+    if (_strain_cryst_id == INVALID_ID)
+      Messages::warning("Simulation " + _simulation->get_name() +
+          " does not have variable \'StrainCrystal\'.");
+
+    if (_stress_id == INVALID_ID)
+      Messages::warning("Simulation " + _simulation->get_name() +
+          " does not have variable \'Stress\'.");
+
+    if (_stress_cryst_id == INVALID_ID)
+      Messages::warning("Simulation " + _simulation->get_name() +
+          " does not have variable \'StressCrystal\'.");
+
+    
     for (int i = 0; i < 9; i++)
-      if (_strain_ids[i] == INVALID_ID)
+      if ((_strain_id == INVALID_ID) && (_strain_cryst_id == INVALID_ID) &&
+          (_stress_id == INVALID_ID) && (_stress_cryst_id == INVALID_ID))
         throw InitFailedException("Simulation " + name +
             " is missing strain related variables");
-      else
-        _id_set.insert(_strain_ids[i]);
 
     answer = true;
   }
@@ -57,34 +66,80 @@ StrainInterface::set_simulation(const std::string& name)
 }
 
 
+
 void
-StrainInterface::get_strain_data(const Elem* elem, Tensor2Sym& strain,
-    RealVectorValue& polarization)
+StrainInterface::get_strain(const Elem* elem, const Point& point, Tensor2Sym& strain)
 {
-  assert(elem != NULL);
-
-  strain = 0;
-  polarization = 0;
-
-  if (_simulation != NULL)
+  if (_simulation)
   {
-    std::map<ID, double> data;
-    bool ok = _simulation->get_solution(elem, elem->centroid(),
-        _id_set, data);
+    if (_strain_id == INVALID_ID)
+      throw RuntimeException("Simulation " + _simulation->get_name() +
+          " does not have variable \'Strain\'.");
 
-    if (ok)
-    {
-      strain(1,1) = data[_strain_ids[0]];
-      strain(2,2) = data[_strain_ids[1]];
-      strain(3,3) = data[_strain_ids[2]];
-      strain(2,1) = data[_strain_ids[3]];
-      strain(3,2) = data[_strain_ids[4]];
-      strain(3,1) = data[_strain_ids[5]];
+    _get_data(elem, point, strain, _strain_id);
+  }
+}
 
-      polarization(0) = data[_strain_ids[6]]; 
-      polarization(1) = data[_strain_ids[7]]; 
-      polarization(2) = data[_strain_ids[8]];
-    }
+
+void
+StrainInterface::get_crystal_strain(const Elem* elem, const Point& point, Tensor2Sym& strain)
+{
+  if (_simulation)
+  {
+    if (_strain_id == INVALID_ID)
+      throw RuntimeException("Simulation " + _simulation->get_name() +
+          " does not have variable \'StrainCrystal\'.");
+
+    _get_data(elem, point, strain, _strain_cryst_id);
+  }
+}
+
+
+void
+StrainInterface::get_stress(const Elem* elem, const Point& point, Tensor2Sym& stress)
+{
+  if (_simulation)
+  {
+    if (_strain_id == INVALID_ID)
+      throw RuntimeException("Simulation " + _simulation->get_name() +
+          " does not have variable \'Stress\'.");
+
+    _get_data(elem, point, stress, _stress_id);
+  }
+}
+
+
+void
+StrainInterface::get_crystal_stress(const Elem* elem, const Point& point, Tensor2Sym& stress)
+{
+  if (_simulation)
+  {
+    if (_strain_id == INVALID_ID)
+      throw RuntimeException("Simulation " + _simulation->get_name() +
+          " does not have variable \'StressCrystal\'.");
+
+    _get_data(elem, point, stress, _stress_cryst_id);
+  }
+}
+
+
+
+void
+StrainInterface::_get_data(const Elem* elem, const Point& point,
+    Tensor2Sym& data, ID id)
+{
+  std::vector<Point> p(1);
+  p[0] = point;
+  std::vector<double> values(6);
+
+  if (_simulation->get_solution(elem, id, values, p))
+  {
+    data(1,1) = values[0];
+    data(2,2) = values[1];
+    data(3,3) = values[2];
+    data(2,1) = values[3];
+    data(3,2) = values[4];
+    data(3,1) = values[5];
   }
 }
 

@@ -38,8 +38,6 @@
 #include  "WzOptDielectricConstant.h"
 #include  "MaxwellPhysicalModel.h"
 
-#include "WzPyroPolarization.h"
-
 #include "PhononModel.h"
 #include "ZbFreeDynamicalMatrix.h"
 #include "ZbStrainDynamicalMatrix.h"
@@ -140,10 +138,6 @@ PhysicalModelInterface::create(const string& name,
     mod = WzOptDielectricConstant::create(options);
   else if (name == "maxwell")
     mod = MaxwellPhysicalModel::create(options);
-  else if (name == "pyropolarization_zb")
-    mod = PyroPolarization::create(options);
-  else if (name == "pyropolarization_wz")
-    mod = WzPyroPolarization::create(options);
   else if  (name == "phonon")
     mod = PhononModel::create(options);
   else if  (name == "free_dynamical_matrix_zb")

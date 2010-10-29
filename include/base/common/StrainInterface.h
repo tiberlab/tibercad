@@ -7,13 +7,13 @@
 #include "TypeDefs.h"
 #include "tiber_dll.h"
 
-#include "vector_value.h"
 
 #include <set>
 #include <vector>
 #include <string>
 
 class Elem;
+class Point;
 class SimulationInterface;
 class Tensor2Sym;
 
@@ -41,9 +41,17 @@ class StrainInterface
     bool set_simulation(const std::string& name);
 
     
-    //! Get the strain on an element
-    void get_strain_data(const Elem* elem, Tensor2Sym& strain,
-        RealVectorValue& polarization);
+    //! Get the strain in calculation coordinate system
+    void get_strain(const Elem* elem, const Point& point, Tensor2Sym& strain);
+
+    //! Get the strain in crystal coordinate system
+    void get_crystal_strain(const Elem* elem, const Point& point, Tensor2Sym& strain);
+
+    //! Get the stress in calculation coordinate system
+    void get_stress(const Elem* elem, const Point& point, Tensor2Sym& stress);
+
+    //! Get the stress in crystal coordinate system
+    void get_crystal_stress(const Elem* elem, const Point& point, Tensor2Sym& stress);
 
 
     //! Tells if this interface has a simulation associated
@@ -60,14 +68,23 @@ class StrainInterface
     SimulationInterface* _simulation;
 
 
-    //! The ID as returned from the simulation
-    ID _id;
-    std::vector<ID> _strain_ids;
+    //! The ID for variable Strain
+    ID _strain_id;
+
+    //! The ID for variable StrainCrystal
+    ID _strain_cryst_id;
+
+
+    //! The ID for variable Stress
+    ID _stress_id;
+
+    //! The ID for variable StressCrystal
+    ID _stress_cryst_id;
 
     
-    //! We need the ID in a set for the function calls
-    std::set<ID> _id_set;
 
+    //! Get a tensor
+    void _get_data(const Elem* elem, const Point& point, Tensor2Sym& data, ID id);
 };
 
 

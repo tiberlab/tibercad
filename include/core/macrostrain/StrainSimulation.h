@@ -31,7 +31,7 @@ class StrainSimulation:  public SimulationInterface
 
 
 
-  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+  //virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
 
 
   virtual void get_solution_secure(const Elem* elem,

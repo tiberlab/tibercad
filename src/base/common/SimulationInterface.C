@@ -495,9 +495,10 @@ SimulationInterface::find_simulation(const string& name)
 
   if (it != end)
   {
-    if (name == "") // we just take the first we can find ...
-      sim = it->second;
-    else
+    // this is actually a bad idea
+    //if (name == "") // we just take the first we can find ...
+    //  sim = it->second;
+    //else
     {
       // look for user defined names
       for ( ; (it != end) && ((it->second)->get_name() != name); ++it) {}
@@ -2112,3 +2113,12 @@ SimulationInterface::print_info(void)
 
   if (verbose() > 0) do_print_info();
 }
+
+
+// void 
+// SimulationInterface::allow_extrusion(void)
+// {
+
+
+
+// }

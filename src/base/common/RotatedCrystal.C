@@ -66,7 +66,6 @@ Tensor2Sym RotatedCrystal::get_const_eps0(double lat_cont_substrate[3], Tensor2S
 
  
 
-
   for (int i = 1; i <=3; i++)
     {
       if (eps0_var_log(i,i) == 1)

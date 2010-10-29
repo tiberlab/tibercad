@@ -14,10 +14,11 @@
 #include "Constants.h"
 #include "InitFailedException.h"
 #include "RotatedCrystal.h"
-#include "PyroPolarization.h"
 #include "Embracing.h"
 #include "Messages.h"
 #include "TypeDefs.h"
+#include "PolarizationModel.h"
+#include "PermittivityModel.h"
 
 #include "elem.h"
 #include "getpot.h"
@@ -73,9 +74,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _hTEpowerGrad(0.0),
     _eTEpower(0),
     _hTEpower(0),
-    _pyropolarization(NULL),
-    _polarization(3, 0.0),
-    _user_defined_polarization(NULL),
+    _polarization(0),
+    _permittivity(0),
     _background_conductivity(0.0),
     _thermoelectric_power(NULL),
     _is_dielectric(false),
@@ -93,9 +93,6 @@ DriftDiffusionProperties::read_database(void)
   Database& db = get_database();
   db.set_section("");
   _is_dielectric = db.get("dielectric", _is_dielectric);
-
-  db.set_section("permittivity");
-  permittivity = db.get("permittivity", 1.0);
 
 }
 
@@ -117,7 +114,6 @@ DriftDiffusionProperties::parse_options(void)
   _use_predictor = get_option("use_density_predictor", _use_predictor);
 
   _is_dielectric = get_option("dielectric", _is_dielectric);
-  get_parameter("permittivity", permittivity);
 
 
   // the temperature simulation
@@ -172,11 +168,15 @@ DriftDiffusionProperties::setup_electrons_and_holes(void)
 void
 DriftDiffusionProperties::create_submodels(void)
 {
-  assert(_pyropolarization == NULL);
-  _pyropolarization = PyroPolarization::create(get_material(), ModelOptions());
-  add_submodel("pyropolarization", _pyropolarization);
 
-
+  // permittivity Default
+  if (!get_options().has_submodel("permittivity"))
+  {
+    ModelOptions opts;
+    opts.set_option("type", "constant");
+    get_options().add_submodel("permittivity", opts);
+  }
+  
   if (!is_dielectric())
   {
 
@@ -352,23 +352,36 @@ DriftDiffusionProperties::do_init(void)
   }
 
   // read polarization from input
-  if (has_parameter("polarization"))
-  {
-    _user_defined_polarization = new RealVectorValue(0);
-    get_parameter("polarization", *_user_defined_polarization);
-  }
+ //  if (has_parameter("polarization"))
+//   {
+//     _user_defined_polarization = new RealVectorValue(0);
+//     get_parameter("polarization", *_user_defined_polarization);
+//   }
 
 
   _background_conductivity =
       0.5 * get_option("background_conductivity", 2e4 * Constants::e) / Constants::e;
 
-
-
-
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
   calculate_equilibrium_properties();
   setup_band_edges();
+
+
+  // Polarization 
+  it = submodels_begin("polarization");
+  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("polarization"));
+  for ( ; it != it_end ; ++it)
+    _pm.push_back(dynamic_cast<PolarizationModel*>(it->second));
+  
+
+  // Permittivity 
+  it = submodels_begin("permittivity");
+  PermittivityModel* pm =  dynamic_cast<PermittivityModel*>(it->second);
+  assert(pm != NULL);
+  _permittivity = pm->get_permittivity();
+
+
 }
 
 
@@ -470,21 +483,18 @@ DriftDiffusionProperties::reinit(const Elem* elem)
     _lattice_vt = Constants::k_B *
       _lattice_temp.get_temperature(elem, elem->centroid());
 
-    _strain_if.get_strain_data(elem, _strain, _polarization);
+     _strain_if.get_crystal_strain(elem, elem->centroid(), _strain);
 
-    if (_user_defined_polarization != NULL)
-      set_polarization(*_user_defined_polarization);
-    else
-    {
-      // pyropolarization is Tensor1
-      _pyropolarization->calculate_polarization(_elem, _coord, _lattice_vt);
-      _polarization(0) += _pyropolarization->get_polarization()(1);
-      _polarization(1) += _pyropolarization->get_polarization()(2);
-      _polarization(2) += _pyropolarization->get_polarization()(3);
+      _polarization = 0;
+      for (size_t n = 0; n < _pm.size(); n++)
+      {
+        _pm[n]->set_strain(_strain);
+        _pm[n]->calculate(_elem, _coord);
+        _polarization += _pm[n]->get_polarization();
+      }
       set_polarization(_polarization);
-    }
 
-    this->prepare_element_data();
+      this->prepare_element_data();
   }
 
   // here we assume thermal equilibrium

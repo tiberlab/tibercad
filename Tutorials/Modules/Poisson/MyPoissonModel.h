@@ -10,7 +10,9 @@
 #include "vector_value.h"
 
 
+class PolarizationModel;
 class ChargeDensityModel;
+class PermittivityModel;
 class Elem;
 
 
@@ -69,25 +71,27 @@ class MyPoissonModel : public PhysicalModel
 
     virtual void do_init(void);
 
+    virtual void create_submodels(void);
 
     //! do the actual calculation
     virtual void do_calculate(void);
 
-
     const Elem* get_element(void) const { return _elem; }
+  
     const Point& get_point(void) const { return _point; }
-
+  
 
   private:
 
 
+    //! The polarization models
+    std::vector<PolarizationModel* > _pm;
+
     //! The element we are currently working on
     const Elem* _elem;
 
-
     //! The point we are currently using
     Point _point;
-
 
     //! The relative permittivity
     RealTensor _permittivity;
@@ -98,10 +102,11 @@ class MyPoissonModel : public PhysicalModel
     //! The charge density
     double _charge;
 
+    //! The permittivity model
+    PermittivityModel* _permittivity_model;
 
     //! The charge density model
     ChargeDensityModel* _charge_density;
-
 
     //! The constructor method
     static TiberModelObject* _create(const ModelOptions& options);
@@ -117,7 +122,8 @@ class MyPoissonModel : public PhysicalModel
 inline
 MyPoissonModel::MyPoissonModel(const ModelOptions& options) :
   PhysicalModel(options),
-  _charge_density(NULL)
+  _charge_density(NULL),
+  _permittivity_model(NULL)
 {
 }
 

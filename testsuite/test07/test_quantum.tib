@@ -53,8 +53,8 @@ $Models
     options
     {          
       simulation_name = str
+      plot = (Strain)
 
-      physical_regions = all
     }
 
   
@@ -79,6 +79,7 @@ $Models
     options
     {          
       simulation_name = dd
+      plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, CurrentDensity, NetRecombination)
       
       electron_quantum_density = dens_el
       use_density_predictor = true
@@ -145,6 +146,7 @@ $Models
    
     options
     {
+      plot = (EigenFunctions, EigenEnergy, EnergyLevels)
      simulation_name = quantum_el
      physical_regions = (1, 4, 5)
     }
@@ -160,6 +162,7 @@ $Models
    
     options
     {
+      plot = (EigenFunctions, EigenEnergy, EnergyLevels)
      simulation_name = quantum_hl
      physical_regions = all
     }
@@ -176,6 +179,7 @@ $Models
     {
       simulation_name = dens_el
       physical_regions = (1,4,5)
+      plot = quantum_density
     }
 
 
@@ -329,5 +333,4 @@ $Simulation
   solve = (str, dd, selfconsistent)
   resultpath = output
   output_format = grace
-  plot = (strain, polarization, Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, CurrentDensity, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density, NetRecombination)
 }

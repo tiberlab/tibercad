@@ -701,6 +701,7 @@ class SimulationInterface : public TiberModelObject
 
 
   protected:
+ 
 
     //! Empty constructor
     SimulationInterface(const ModelOptions& options);

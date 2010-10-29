@@ -63,10 +63,12 @@ Sweep::do_init(void)
   // if user didn't provide a simulation name, we take the first available
   if (num_of_sims == 0)
   {
-    _simulations.resize(1);
-    _simulations[0] = find_simulation("");
-    if (_simulations[0] == NULL)
+    SimulationIterator it = simulations_begin();
+    if (it == simulations_end())
       throw InitFailedException("Sweep: No simulation found.");
+
+    _simulations.resize(1);
+    _simulations[0] = *it;
   }
 
   //

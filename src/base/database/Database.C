@@ -7,6 +7,7 @@
 
 #include "getpot.h"
 #include "dense_vector.h"
+#include "vector_value.h"
 
 #include <boost/filesystem/operations.hpp>
 
@@ -458,19 +459,6 @@ Database::get(const string& variable,
 }
 
 
-void
-Database::get(const std::string& variable, RealVectorValue& data,
-    bool required) const
-{
-  open();
-
-  if (required) require_variable(variable);
-  else if (!has_variable(variable)) return;
-
-  string s(get(variable, ""));
-  Utils::extract_vector(s, data);
-}
-
 
 
 //
@@ -674,6 +662,38 @@ Database::get(const string& variable,
 }
 
 
+
+void
+Database::get(const std::string& variable, RealVectorValue& data,
+    bool required) const
+{
+
+  vector<double> data_vec;
+
+  get(variable, data_vec, required);
+
+  switch (data_vec.size())
+  {
+    case 1:
+      data(0) = data(1) = data(2) = data_vec[0];
+      break;
+
+    case 2:
+      data(0) = data(1) = data_vec[0];
+      data(2) = data_vec[1];
+      break;
+
+    case 3:
+      data(0) = data_vec[0];
+      data(1) = data_vec[1];
+      data(2) = data_vec[2];
+      break;
+
+    default:
+      break;
+  }
+
+}
 
 
 

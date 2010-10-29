@@ -68,6 +68,7 @@ MyPoisson::do_init(void)
 void
 MyPoisson::parse_options(void)
 {
+ myopts.default_boundary_conditions = opts.get_option("default_boundary_condition","zero_field");
 }
 
 
@@ -76,13 +77,14 @@ MyPoisson::do_setup_solution_variables(void)
 {
   // we declare our solution variables
   declare_solution(Potential, REAL, NODES, "V");
-  declare_solution(Field, VECTOR, CELL, "V/cm");
+  declare_solution(ElField, VECTOR, CELL, "V/cm");
   declare_solution(Displacement, VECTOR, CELL, "C/cm^2");
+  declare_solution(Polarization, VECTOR, CELL, "C/cm^2");
   declare_solution(ChargeDensity, REAL, NODES, "C/cm^3");
 
   // we can define aliases (but the association name -> id
   // has to be surjective)
-  add_alias("ElectricField", Field);
+  add_alias("ElectricField", ElField);
 }
 
 
@@ -99,6 +101,36 @@ MyPoisson::do_solve(void)
 
   system.set_options(get_solver_options());
   system.solve();
+
+
+  //rotate
+
+  // TiberLinearSystem& system =
+//     es.get_system<TiberLinearSystem>(get_equation_system_name());
+  
+//   const NumericVector<Number>& solution = system.get_solution_vector();
+  
+//   const unsigned int system_number = system.number();
+//   const MeshBase& mesh = get_mesh();
+//   ID  dim = get_mesh().mesh_dimension();
+//   MeshBase::const_node_iterator  nd  = mesh.active_nodes_begin();
+//   const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
+  
+//   for ( ;  nd != nd_end ; ++nd)
+//   {
+//     Node* node = *nd;
+//     Point pos;
+//     for(unsigned int i = 0; i<dim; i++)
+//       pos(i) = (*node)(i);
+    
+//     pos(2) = pos(1);
+//     pos(1) = 0.0;
+
+//     *node = pos;
+//   }
+
+
+
 }
 
 
@@ -166,12 +198,12 @@ MyPoisson::get_solution_secure(const Elem* elem,
   // cell data variable
   RealGradient field(0);
   RealGradient displacement(0);
-
+  RealGradient pol(0);
   MyPoissonModel& mod = *get_bulk_model<MyPoissonModel>(elem);
 
   bool do_displacement = values.count(Displacement);
   bool calculate = false;
-  if (do_displacement || values.count(ChargeDensity))
+  if (do_displacement || values.count(ChargeDensity) || values.count(Polarization))
     calculate = true;
 
   if (calculate)
@@ -202,12 +234,11 @@ MyPoisson::get_solution_secure(const Elem* elem,
       mod.calculate();
 
       const RealTensor& eps = mod.get_permittivity();
-      const RealVectorValue& pol = mod.get_polarization();
+    
       double rho = mod.get_charge_density();
 
       if (do_displacement)
         displacement -= eps * grad;
-
 
       if (values.count(ChargeDensity))
         values[ChargeDensity][n] = rho;
@@ -223,11 +254,19 @@ MyPoisson::get_solution_secure(const Elem* elem,
     values[Displacement][2] = displacement(2) / np;
   }
 
-  if (values.count(Field))
+  if ( values.count(Polarization))
   {
-    values[Field][0] = field(0) / np;
-    values[Field][1] = field(1) / np;
-    values[Field][2] = field(2) / np;
+    const RealVectorValue& pol = mod.get_polarization();
+    values[Polarization][0] = pol(0) / np;
+    values[Polarization][1] = pol(1) / np;
+    values[Polarization][2] = pol(2) / np;
+  }
+
+  if (values.count(ElField))
+  {
+    values[ElField][0] = field(0) / np;
+    values[ElField][1] = field(1) / np;
+    values[ElField][2] = field(2) / np;
   }
 }
 
@@ -247,7 +286,6 @@ MyPoisson::do_assemble(EquationSystems& es, const std::string& system_name)
   const unsigned int uvar = system.variable_number("u");
 
   FEType fe_type = dof_map.variable_type(uvar);
-
 
   // the volume finite element
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
@@ -309,33 +347,36 @@ MyPoisson::do_assemble(EquationSystems& es, const std::string& system_name)
       const RealVectorValue& pol = mod.get_polarization();
       double rho = Constants::e * mod.get_charge_density();
 
+     
+     
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         for (unsigned int j = 0; j < n_dofs; j++)
           Ke(i, j) += JxW[qp] * Constants::e0 * (dphi[i][qp] * (eps * dphi[j][qp]));
-
-        Fe(i) += JxW[qp] * (rho * phi[i][qp] + pol * dphi[i][qp]);
+	
+	Fe(i) += JxW[qp] * (rho * phi[i][qp] + pol * dphi[i][qp]);
       }
 
     }
 
+ 
 
     // the sides
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
-      PoissonBoundaryModel* mod =
+      PoissonBoundaryModel* mod_int =
         get_interface_model<PoissonBoundaryModel>(elem, s);
-
-      if (mod != NULL)
+      
+      if (mod_int != NULL)
       {
         fe_face->reinit(elem, s);
 
         for (unsigned int qp = 0; qp < qface.n_points(); qp++)
         {
-          mod->calculate(elem, s, qface_point[qp]);
+          mod_int->calculate(elem, s, qface_point[qp]);
 
           double a, b, c;
-          mod->get_coefficients(a, b, c);
+          mod_int->get_coefficients(a, b, c);
 
           // we use a penalty approach here for its simplicity
           if ((b < 1e-10) && (b >= 0)) b = 1e-10;
@@ -353,7 +394,27 @@ MyPoisson::do_assemble(EquationSystems& es, const std::string& system_name)
           }
         }
       }
+    //   else//Add the polarization part
+//       {
+// 	if (myopts.default_boundary_conditions == "zero_field")
+// 	{
 
+// 	 //  fe_face->reinit(elem, s);
+// // 	  for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+// // 	  {   
+// // 	    mod.set_point(q_point[qp]);
+// // 	    mod.calculate();
+// // 	    const RealVectorValue& pol = mod.get_polarization();
+	    
+// // 	    for (unsigned int i = 0; i < n_dofs; i++)
+// // 	      Fe(i) += JxW_face[qp] * (pol * dphi_face[i][qp]);
+	    
+// // 	  }
+
+// 	}
+
+ 
+      // }
     }
 
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);

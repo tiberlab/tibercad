@@ -64,11 +64,13 @@ d = -3.4
 
 
 [permittivity]
-# static dielectric constant
 permittivity = 10.064
 
-optical_epsilon = 8.162
+optical_epsilon = 8.16
 
+# Lattice thermal conductivity
+[thermal_conductivity/constant]
+ThermCond = 0.8
 
 # stiffness data
 [elasticity]

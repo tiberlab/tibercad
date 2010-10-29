@@ -131,7 +131,7 @@ N0 = (1.0000e+18,	1.0000e+18)
 
 # Lattice thermal conductivity
 [thermal_conductivity/constant]
-therm_lat_cond = 1.66667 
+ThermCond = 1.66667 
 
 
 #Thermoelectric power [V/k]

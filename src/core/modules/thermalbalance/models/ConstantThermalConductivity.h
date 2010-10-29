@@ -55,7 +55,7 @@ protected:
   
 private:
   
-  std::vector<double> _kappa;
+  RealGradient _kappa;
 
   //! Constructor
   ConstantThermalConductivity(const ModelOptions& options);
@@ -79,5 +79,6 @@ ConstantThermalConductivity::create(const ModelOptions& options)
 
 
 
-
 #endif // _GRAYMODEL_H_
+
+  

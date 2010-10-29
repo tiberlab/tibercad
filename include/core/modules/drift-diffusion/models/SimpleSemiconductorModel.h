@@ -50,8 +50,6 @@ class TBDLLOCAL SimpleSemiconductorModel : public DriftDiffusionProperties
     void set_valence_band_properties(double band_edge,
         double effective_mass, double mobility);
     
-    //! Set the relative permittivity
-    void set_relative_permittivity(double epsilon_r);
     
 
   protected:
@@ -119,13 +117,6 @@ SimpleSemiconductorModel::set_valence_band_properties(double band_edge,
   get_pd().hole_mobility = mobility;
 }
 
-
-inline
-void
-SimpleSemiconductorModel::set_relative_permittivity(double epsilon_r)
-{
-  permittivity = epsilon_r;
-}
 
 
 inline
