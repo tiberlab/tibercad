@@ -66,17 +66,17 @@ $Models
 
    # }
 
-    BC_Regions
-    {
-        BC_Region reservoir
-   	{
-         type = heat_reservoir
-         BC_reg_numb = (1,4)
-
-         temperature = 300
-   	}
-     }
-  }
+  #  BC_Regions
+  #  {
+  #      BC_Region reservoir
+  # 	{
+  #       type = heat_reservoir
+  #       BC_reg_numb = (1,4)
+#
+#         temperature = 300
+#   	}
+#     }
+#  }
   
   
 
