@@ -24,7 +24,7 @@ make_windows_package () {
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
-  cp ${topdir}/materials/[^.]dat ${files}/materials
+  cp ${topdir}/materials/*.dat ${files}/materials
 
   curdir=`pwd`
   cd ${files}
@@ -108,7 +108,7 @@ prepare_linux_package () {
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
-  cp ${topdir}/materials/[^.]* ${files}/materials
+  cp ${topdir}/materials/*.dat ${files}/materials
 
   if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER} ]
   then
