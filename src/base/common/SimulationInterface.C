@@ -951,8 +951,8 @@ SimulationInterface::plot_meshdata(void)
   get_output_format(formats);
   for (unsigned int i = 0; i < formats.size(); i++)
   {
-    DataOutput* writer = DataOutput::create(formats[i]);
-    if ((writer != NULL) && (_solution_descriptors.size() > 0))
+    auto_ptr<DataOutput> writer(DataOutput::create(formats[i]));
+    if ((writer.get() != NULL) && (_solution_descriptors.size() > 0))
     {
       writer->set_output_directory(get_output_directory());
       writer->set_filename(get_output_filename());

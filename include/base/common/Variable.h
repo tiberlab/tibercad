@@ -66,7 +66,7 @@ class Variable
     };
 
     //! Destructor
-    virtual ~Variable(void) { };
+    virtual ~Variable(void);
 
 
     //! Check if \c var is a valid variable variable
@@ -138,6 +138,11 @@ class Variable
 
     //! Get the past the end iterator
     static iterator end(void);
+
+
+    //! Clear all variables
+    static void clear_all(void);
+
 
 
   protected:

@@ -187,6 +187,10 @@ Sweep::do_solve(void)
   vector<ofstream*> plotfiles(num_sim);
 
   do_sweep(_values, plotfiles, sweep_data);
+
+  // clean up
+  for (size_t i = 0; i < num_sim; ++i)
+    delete plotfiles[i];
 }
 
 

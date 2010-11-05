@@ -389,6 +389,7 @@ DriftDiffusionProperties::do_init(void)
 
 DriftDiffusionProperties::~DriftDiffusionProperties(void)
 {
+  delete _pd;
 }
 
 

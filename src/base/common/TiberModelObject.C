@@ -31,6 +31,7 @@ TiberModelObject::TiberModelObject(const ModelOptions& options)
 TiberModelObject::~TiberModelObject(void)
 {
   Variable::unregister(this);
+  DLLoader::close_library(_libhandle);
 }
 
 

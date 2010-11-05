@@ -17,17 +17,9 @@ int EigenSolver::_size_of_matrix;
 //-------------------------------------------------------------//
 void EigenSolver::slepc_init(int argc1, char** argv1)
 {
-  // int argc1 = 0;
-  //char **argv1;
-  //argv1 = (char**) malloc(sizeof(char*));
-  //argv1[0] = (char*) malloc(0);
-  
 
   SlepcInitialize(&argc1,&argv1,NULL,NULL);
 
-
-  // free(argv1[0]);
-  // free(argv1);
 }
 
 //--------------------------------------------------------------//
@@ -499,7 +491,7 @@ int EigenSolver::prepare_slepc()
   ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
 
 
-  ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
+  //ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
 
 
   return(ierr);
@@ -521,7 +513,7 @@ int EigenSolver::clear_slepc()
     if ( generalized)  ierr = MatDestroy(B);CHKERRQ(ierr);
   }
 
-  //ierr = EPSDestroy(eps);CHKERRQ(ierr);
+  ierr = EPSDestroy(eps);CHKERRQ(ierr);
  
 
   

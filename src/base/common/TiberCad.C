@@ -13,6 +13,12 @@
 #include "libmesh.h"
 
 
+// we hand an empty command line to underlying libraries
+namespace
+{
+  int __empty_argc = 1;
+  char** __empty_argv = new char*[1];
+}
 
 
 std::list<std::string>
@@ -117,7 +123,6 @@ TiberCad::software_revision(void)
 
 
 
-
 void
 TiberCad::init(void)
 {
@@ -143,16 +148,14 @@ TiberCad::init(void)
 
 
   // to the libraries we hand empty cmdline!
-  static int empty_argc = 1;
-  static char** empty_argv = new char*[1];
-  empty_argv[0] = _cmdline_argv[0];
+  __empty_argv[0] = _cmdline_argv[0];
 
 
   // prepare libMesh
-  _libmeshinit = new LibMeshInit(empty_argc, empty_argv);
+  _libmeshinit = new LibMeshInit(__empty_argc, __empty_argv);
 
   // prepare EigenSolver
-  EigenSolver::slepc_init(empty_argc, empty_argv);
+  EigenSolver::slepc_init(__empty_argc, __empty_argv);
 
 
   // now create a TiberCAD Control object
@@ -189,6 +192,7 @@ TiberCad::cleanup(void)
   // close libMesh and return
   delete _libmeshinit;
 
+  delete [] __empty_argv;
 }
 
 

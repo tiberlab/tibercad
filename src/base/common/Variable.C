@@ -26,6 +26,25 @@ Variable::Variable(const std::string& name)
 
 
 
+Variable::~Variable(void)
+{
+
+}
+
+
+
+void
+Variable::clear_all(void)
+{
+  VariableMap::iterator it(_variables.begin());
+  for ( ; it != _variables.end(); ++it)
+    delete it->second;
+
+  _variables.clear();
+}
+
+
+
 bool
 Variable::is_variable(const std::string& var)
 {

@@ -12,6 +12,7 @@
 #include "Database.h"
 #include "DLLoader.h"
 #include "Utils.h"
+#include "Variable.h"
 #include "Messages.h"
 #include "SimulationOptions.h"
 #include "Device.h"
@@ -135,6 +136,8 @@ Control::~Control(void)
     SimulationInterface::destroy(sim);
   }
 
+  // clear all variables
+  Variable::clear_all();
 
   Device::destroy(_device);
 
@@ -1083,7 +1086,7 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
             {
               // we add the crystal structure for bulk materials as this could
               // lead to different model implementations
-              (mapit->second)["crystal_structure"] = crystal_structure;
+              (mapit->second).set_option("crystal_structure", crystal_structure);
 
               // we set the name to the model type if not explicitly
               // given by user

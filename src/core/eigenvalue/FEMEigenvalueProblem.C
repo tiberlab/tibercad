@@ -391,7 +391,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
   read_SLEPC_solution(ev_number);
 
-  //int result = EigenSolver::clear_slepc();
+  int result = EigenSolver::clear_slepc();
  
   
 }

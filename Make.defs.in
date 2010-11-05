@@ -31,11 +31,17 @@ SVNREVISION = $(shell $(SVN) info $(topdir) | awk '/^Last Changed Rev/ {print $$
 TIBERVERSION = $(shell echo "`cat $(topdir)/VERSION`.$(SVNREVISION)")
 
 
-# the default method is optimised
+# the default method is developer
 ifeq (x$(METHOD),x)
-  METHOD := opt
+  METHOD := dev
 endif
 
+LIBMESHMETHOD := $(METHOD)
+
+ifeq ($(METHOD),dev)
+  mode := "developer"
+  LIBMESHMETHOD := opt
+endif
 ifeq ($(METHOD),opt)
   mode := "optimized"
 endif
@@ -66,6 +72,12 @@ endif
 
 ifdef PROFILE
   CXXFLAGS += -pg
+endif
+
+ifeq ($(METHOD),dev)
+  FCFLAGS += -g
+  CFLAGS += -g
+  CXXFLAGS += -g
 endif
 ifeq ($(METHOD),dbg)
   FCFLAGS += -g

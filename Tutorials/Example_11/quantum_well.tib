@@ -107,7 +107,8 @@ $Models
       embracing_length = 8e-9
       plot_embracing_regions = true
 
-
+background_conductivity = 0
+#local_scaling = false
     }
 
     physical_model recombination
@@ -135,6 +136,7 @@ $Models
       BC_Region cathode
       {
         type = ohmic
+#rec_velocity_p = 1e7
       
       }
 
@@ -142,6 +144,7 @@ $Models
       BC_Region anode
       {
 	type = ohmic
+#rec_velocity_n = 1e7
 	voltage = @Vb[0.0]  
       }
  

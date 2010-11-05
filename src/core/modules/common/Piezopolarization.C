@@ -36,12 +36,12 @@ Piezopolarization::read_database(void)
       
   if (get_material()->get_structure() == "wz")
   {
-    _e33 = db.get("e33", 0.0, true);
-    _e31 = db.get("e31", 0.0, true);
-    _e15 = db.get("e15", 0.0, true);
+    _e33 = db.get("e33", 0.0);
+    _e31 = db.get("e31", 0.0);
+    _e15 = db.get("e15", 0.0);
   } 
   else if (get_material()->get_structure() == "zb")
-    db.get("e14",0.0, true);
+    db.get("e14", 0.0);
 
 }
 

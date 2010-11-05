@@ -191,6 +191,7 @@ DataOutput::set_data(const std::map<SolutionDescriptor,
   _data.insert(make_pair(zone, &data));
 }
 
+
 bool
 DataOutput::has_data(ID zone)
 {

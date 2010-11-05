@@ -72,7 +72,7 @@ else
 endif
 
 
-INCLUDE  := $(shell export METHOD=$(METHOD) && $(libmesh_config) --include)
+INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --include)
 
 NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ @TAO_INCLUDES@ $(INCLUDE) 
 
@@ -89,8 +89,8 @@ CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 
-CXXFLAGS += $(shell METHOD=$(METHOD) $(libmesh_config) --cxxflags)
-LDFLAGS  += $(shell METHOD=$(METHOD) $(libmesh_config) --ldflags)
+CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags)
+LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags)
 FCFLAGS  += -fPIC
 CFLAGS  += -fPIC
 
