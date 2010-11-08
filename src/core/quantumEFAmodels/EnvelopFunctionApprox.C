@@ -1361,7 +1361,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 void EnvelopFunctionApprox::copy_S_matrix_to_solver()
 {
 
-  EigenSolver::init_S_matrix(number_of_new_dofs);
+  // 2010-11-08 It seems this is just wasting memory
+  //EigenSolver::init_S_matrix(number_of_new_dofs);
 
   int size_matrix = S_real->m();
 

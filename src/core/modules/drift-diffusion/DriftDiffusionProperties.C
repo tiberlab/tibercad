@@ -351,13 +351,6 @@ DriftDiffusionProperties::do_init(void)
       _htraps.insert(t);
   }
 
-  // read polarization from input
- //  if (has_parameter("polarization"))
-//   {
-//     _user_defined_polarization = new RealVectorValue(0);
-//     get_parameter("polarization", *_user_defined_polarization);
-//   }
-
 
   _background_conductivity =
       0.5 * get_option("background_conductivity", 2e4 * Constants::e) / Constants::e;

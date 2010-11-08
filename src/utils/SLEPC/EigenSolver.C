@@ -491,7 +491,7 @@ int EigenSolver::prepare_slepc()
   ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
 
 
-  //ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
+  ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
 
 
   return(ierr);
