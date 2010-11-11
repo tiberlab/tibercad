@@ -59,7 +59,7 @@ class TBDLLOCAL ReadISEGrid : public MeshInput<MeshBase>
    *  Integrity Check. Controls if file Version and Type are correct.
    *  Otherwise aborts program.
    */
-  void integrity_check(int ver, std::string tp);
+  void integrity_check(float ver, std::string tp);
 
   /*!
     Reads Input file.

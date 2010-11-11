@@ -48,9 +48,9 @@ namespace
 
 
 
-void ReadISEGrid::integrity_check(int ver, string tp)
+void ReadISEGrid::integrity_check(float ver, string tp)
 {
-  if (ver == 1.0)
+  if (ver >= 1.0)
   {
     if (tp != "grid")
       throw InitFailedException("Unsupported format for mesh file.");
@@ -95,7 +95,7 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
 
 
   string qualifier, equal, type;
-  unsigned int version;
+  float version;
   unsigned int dimension,
                nb_vertices,
                nb_edges,
