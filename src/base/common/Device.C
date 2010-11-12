@@ -24,6 +24,22 @@
 using namespace std;
 
 
+namespace
+{
+  class IDPair
+  {
+    public:
+      IDPair(ID a, ID b) : _a(a), _b(b) { if (b < a) {_b = a; _a = b;} }
+
+      bool operator==(const IDPair& rhs) const { return ((_a == rhs._a) && (_b == rhs._b)); }
+      bool operator!=(const IDPair& rhs) const { return !(*this == rhs); }
+      bool operator<(const IDPair& rhs) const {return ((_a < rhs._a) && (_b < rhs._b)); }
+
+    private:
+      ID _a, _b;
+  };
+}
+
 Device::Device(void)
   : _mesh(NULL),
     _mesh_units(1e-6),
@@ -167,7 +183,7 @@ Device::setup_mesh(void)
 
 
 
-
+/*
 void
 Device::prepare_boundaries(void)
 {
@@ -204,7 +220,7 @@ Device::prepare_boundaries(void)
   }
 
 }
-
+*/
 
 
 void
@@ -556,7 +572,99 @@ Device::get_mesh_region_ids(const string& name, vector<ID>& ids) const
 void
 Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
 {
-  const IDSet& idset = _bd_regions->get_ids(name);
+  IDSet idset(_bd_regions->get_ids(name));
+
+  // if the set is empty, we try to interpret the string as a specification
+  // of the boundary between two materials
+  if (idset.empty())
+  {
+    vector<string> comp;
+    Utils::tokenize(name, comp, "%");
+
+    // there have to be two _different_ components
+    if ((comp.size() == 2) && (comp[0] != comp[1]))
+    {
+      // it is an interface specification
+
+      // a map to keep track of existing IDs
+      map<IDPair, ID> known_ids;
+
+      // we have to loop over all element sides!
+      // we only look on level zero
+      MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
+      const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
+
+      for ( ; el != el_end; ++el)
+      {
+        Elem* elem = *el;
+        const ID id = elem->subdomain_id();
+
+        // the material of this element
+        const Material* mat = get_material(id);
+
+        // the name of this elements region
+        const string& name = get_region_name(id);
+
+        // the other component
+        size_t other;
+        if ((comp[0] == mat->get_name()) || (comp[0] == name))
+          other = 1;
+        else if ((comp[1] == mat->get_name()) || (comp[1] == name))
+          other = 0;
+        else // go to the next element
+          continue;
+
+
+        // loop over the sides
+        int n_sides = elem->n_sides();
+        for (int s = 0; s < n_sides; s++)
+        {
+
+          // check if the neighbouring element is inexistent (outer boundary)
+          // or in another simulation region (inner boundary)
+          //
+          // we allow inner 'boundaries', i.e. we don't really consider
+          // boundaries but n-1 dimensional domains
+          const Elem* neighbour = elem->neighbor(s);
+          ID neighbour_id = INVALID_ID;
+
+          if ((neighbour == NULL) ||
+              ((neighbour_id = neighbour->subdomain_id()) != id))
+          {
+            map<IDPair, ID>::iterator it(known_ids.find(IDPair(id, neighbour_id)));
+            // if the ID pair already exists, we can just add the elem side
+            if (it != known_ids.end())
+            {
+              _bd_regions->add_side(elem, s, it->second);
+            }
+            else
+            {
+              if (neighbour_id == INVALID_ID)
+              {
+
+              }
+              else if ((comp[other] == get_material(neighbour_id)->get_name()) ||
+                       (comp[other] == get_region_name(neighbour_id)))
+              {
+                // first check if the side has already a boundary ID
+                ID newid = _bd_regions->get_side_id(elem, s);
+                if (newid == INVALID_ID)
+                {
+                  // we have to create a new one
+                  newid = _bd_regions->next_id();
+                  _bd_regions->add_side(elem, s, newid);
+                  _bd_regions->set_name(newid, name);
+                  known_ids[IDPair(id, neighbour_id)] = newid;
+                }
+                idset.insert(newid);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   ids.clear();
   ids.reserve(idset.size());
 

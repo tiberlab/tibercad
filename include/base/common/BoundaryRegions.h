@@ -45,11 +45,11 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     ~BoundaryRegions(void);
 
 
-    //! Add a element side with boundary ID \c id
+    //! Add an element side with boundary ID \c id
     void add_side(const Elem* elem, unsigned int side, ID id);
 
 
-    //! Add a element edge with boundary ID \c id
+    //! Add an element edge with boundary ID \c id
     void add_edge(const Elem* elem, unsigned int edge, ID id);
 
 

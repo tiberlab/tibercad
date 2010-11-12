@@ -57,13 +57,15 @@ class TBDLLOCAL MeshRegionInfo
     //! Cleanup the structure
     void clear(void);
 
+
+    //! Get the next valid ID
+    ID next_id(void) const;
+
+
     void print_info() const;
 
 
   protected:
-
-    //! Get the next valid ID
-    ID next_id(void) const;
 
 
     //! Get the name for a given id

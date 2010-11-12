@@ -233,6 +233,16 @@ class Device
 
 
     //! Get the region IDs of the boundary region with name \c name
+    /*!
+     * \c name can be one of
+     * \li boundary region name
+     * \li material interface specification of type \c matA%matB, e.g. \c Si%Ge
+     * \li region interface specification of type \c regA%regB
+     * \li a mix of the latter two
+     *
+     * \note An interface specification with the two components being the same
+     * is ignored.
+     */
     void get_boundary_region_ids(const std::string& name,
         std::vector<ID>& ids) const;
 
@@ -326,7 +336,7 @@ class Device
      * Assign to each explicitly or implicitly (region interfaces) defined
      * boundary a unique index.
      */
-    void prepare_boundaries(void) TBDLLOCAL;
+    //void prepare_boundaries(void) TBDLLOCAL;
 
 
     //! The map that connects region number to material
