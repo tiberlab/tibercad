@@ -802,6 +802,13 @@ class DriftDiffusionProperties : public PhysicalModel
       { return valence_band; };
 
 
+    //! Get the electrons
+    ParticleDensity& get_electrons(void);
+
+
+    //! Get the holes
+    ParticleDensity& get_holes(void);
+
 
 
   protected:
@@ -887,13 +894,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Tells if we should use a predictor for quantum densities
     bool use_predictor(void) const;
 
-
-    //! Get the electrons
-    ParticleDensity& get_electrons(void);
-
-
-    //! Get the holes
-    ParticleDensity& get_holes(void);
 
 
     //! Set the equilibrium Fermi level

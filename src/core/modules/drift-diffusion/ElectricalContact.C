@@ -64,9 +64,16 @@ ElectricalContact::do_compute(void)
         get_dd_properties()->get_point_data();
 
     // we have to take the correct equilibrium density!
-    double delta = get_dd_properties()->get_equilibrium_fermi_level() - _workfunction;
-    double n0 = std::exp(-delta / pd.electron_vt) *
-        get_dd_properties()->get_equilibrium_electron_density();
+    ParticleDensity& el = get_dd_properties()->get_electrons();
+    DriftDiffusionProperties::BandProperties& cb = get_dd_properties()->get_conduction_band();
+    el.set_classical_parameters(cb.effective_DOS,
+        _workfunction - get_dd_properties()->get_conduction_band_edge(), 0,
+        pd.electron_vt);
+    double n0 = el.get_particle_density();
+
+    //double delta = get_dd_properties()->get_equilibrium_fermi_level() - _workfunction;
+    //double n0 = std::exp(-delta / pd.electron_vt) *
+    //    get_dd_properties()->get_equilibrium_electron_density();
 
     double Rn = _vrec_n * (pd.electron_density - n0);
     double dRn = _vrec_n * pd.electron_density_derivative;
@@ -84,9 +91,15 @@ ElectricalContact::do_compute(void)
         get_dd_properties()->get_point_data();
 
     // we have to take the correct equilibrium density!
-    double delta = get_dd_properties()->get_equilibrium_fermi_level() - _workfunction;
-    double p0 = std::exp(delta / pd.hole_vt) *
-        get_dd_properties()->get_equilibrium_hole_density();
+    ParticleDensity& hl = get_dd_properties()->get_holes();
+    DriftDiffusionProperties::BandProperties& vb = get_dd_properties()->get_valence_band();
+    hl.set_classical_parameters(vb.effective_DOS,
+        get_dd_properties()->get_valence_band_edge() - _workfunction, 0,
+        pd.hole_vt);
+    double p0 = hl.get_particle_density();
+    //double delta = get_dd_properties()->get_equilibrium_fermi_level() - _workfunction;
+    //double p0 = std::exp(delta / pd.hole_vt) *
+    //    get_dd_properties()->get_equilibrium_hole_density();
 
     double Rp = _vrec_p * (pd.hole_density - p0);
     double dRp = _vrec_p * pd.hole_density_derivative;
