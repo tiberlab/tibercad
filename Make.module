@@ -12,7 +12,7 @@ target :=
 
 
 CPPFLAGS += -DMODULE_NAME=$(MODULE_NAME)
-MODULE_LDFLAGS += -L$(topdir)/lib -ltibercad
+MODULE_LDFLAGS += -L$(libdir) -ltibercad
 CPPFLAGS += $(MODULE_INCLUDES)
 CXXFLAGS += $(MODULE_CXXFLAGS)
 
