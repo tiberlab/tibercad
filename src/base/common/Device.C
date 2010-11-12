@@ -579,7 +579,7 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
   if (idset.empty())
   {
     vector<string> comp;
-    Utils::tokenize(name, comp, "%");
+    Utils::tokenize(name, comp, "/");
 
     // there have to be two _different_ components
     if ((comp.size() == 2) && (comp[0] != comp[1]))

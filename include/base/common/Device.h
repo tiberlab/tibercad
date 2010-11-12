@@ -236,8 +236,8 @@ class Device
     /*!
      * \c name can be one of
      * \li boundary region name
-     * \li material interface specification of type \c matA%matB, e.g. \c Si%Ge
-     * \li region interface specification of type \c regA%regB
+     * \li material interface specification of type \c matA/matB, e.g. \c Si/Ge
+     * \li region interface specification of type \c regA/regB
      * \li a mix of the latter two
      *
      * \note An interface specification with the two components being the same
