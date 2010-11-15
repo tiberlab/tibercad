@@ -232,7 +232,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 
     const RealTensor& eps_tens = sc->get_relative_permittivity();
     eps0 = (eps0 > eps_tens(0,0)) ? eps0 : eps_tens(0,0);
- 
+
   }
 
   switch (type)
@@ -814,7 +814,7 @@ DriftDiffusion::compute_reference_potential(void)
 {
   if (get_my_options().reference_contact != "")
   {
-    SimulationEnvironment& si = get_environment(); 
+    SimulationEnvironment& si = get_environment();
     std::set<const Node*> nodelist;
     si.get_boundary_nodes(get_my_options().reference_contact, nodelist);
     if (nodelist.size() > 0)
@@ -832,7 +832,7 @@ DriftDiffusion::compute_reference_potential(void)
       _reference_potential = solution(n_dof) * get_scaling().get_potential_scaling();
     }
   }
- 
+
 }
 
 
@@ -1110,6 +1110,7 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_variable("fermi_h", libMeshEnums::FIRST);
 
   system.add_vector("old_sol");
+  //system.add_matrix("sysmatrix");
 
   // finally initialize the newly created system
   system.init();
@@ -1690,7 +1691,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   if (values.count(Polarization))
   {
-   
+
     values[Polarization][0] = polariz(0) / np;
     values[Polarization][1] = polariz(1) / np;
     values[Polarization][2] = polariz(2) / np;
@@ -2853,6 +2854,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
 
   const NumericVector<Number>& oldx = system.get_vector("old_sol");
+  //SparseMatrix<double>& sysmat = system.get_matrix("sysmatrix");
+  //if (residual != NULL)
+    //sysmat.zero();
 
   //
   // some scaling stuff...
@@ -3149,7 +3153,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       sc->compute_thermoelectric_powers();
       double eTEpower =  sc->get_electron_thermoelectric_power() / phi0;
       double hTEpower =  sc->get_hole_thermoelectric_power() / phi0;
-    
+
       const RealTensor& permittivity = sc->get_relative_permittivity();
 
       long double Rn = sc->get_net_electron_recombination_rate();
@@ -3672,7 +3676,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               // NOTE:
               // we only include the polarization when no dirichlet
               // boundary is defined
-	      
+
 	      RealVectorValue P(0.0);
 	      if (params.default_boundary_condition == ZEROFIELD)
 	      {
@@ -3828,6 +3832,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
 
       residual->add_vector(Fe, dof_indices);
+      //sysmat.add_matrix(Ke, dof_indices);
     }
     else
       jacobian->add_matrix(Ke, dof_indices);
@@ -3854,6 +3859,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   else
   {
     residual->close();
+    //sysmat.close();
+    //sysmat.print_matlab("sysmat.m");
     /*
     if (coupling & ELECTRONS)
     {

@@ -646,6 +646,8 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
               else if ((comp[other] == get_material(neighbour_id)->get_name()) ||
                        (comp[other] == get_region_name(neighbour_id)))
               {
+                cerr << comp[(other+1)%2] << "  " << comp[other] << endl;
+
                 // first check if the side has already a boundary ID
                 ID newid = _bd_regions->get_side_id(elem, s);
                 if (newid == INVALID_ID)
@@ -653,9 +655,10 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
                   // we have to create a new one
                   newid = _bd_regions->next_id();
                   _bd_regions->add_side(elem, s, newid);
-                  _bd_regions->set_name(newid, name);
-                  known_ids[IDPair(id, neighbour_id)] = newid;
                 }
+                _bd_regions->set_name(newid, name);
+                known_ids[IDPair(id, neighbour_id)] = newid;
+                cerr << " " << id << " " << neighbour_id << " : " << newid << endl;
                 idset.insert(newid);
               }
             }
