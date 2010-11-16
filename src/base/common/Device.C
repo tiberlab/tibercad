@@ -29,11 +29,15 @@ namespace
   class IDPair
   {
     public:
-      IDPair(ID a, ID b) : _a(a), _b(b) { if (b < a) {_b = a; _a = b;} }
+      IDPair(ID a, ID b) : _a(a), _b(b)
+      { if (b < a) {_b = a; _a = b;} }
 
-      bool operator==(const IDPair& rhs) const { return ((_a == rhs._a) && (_b == rhs._b)); }
-      bool operator!=(const IDPair& rhs) const { return !(*this == rhs); }
-      bool operator<(const IDPair& rhs) const {return ((_a < rhs._a) && (_b < rhs._b)); }
+      bool operator==(const IDPair& rhs) const
+          { return ((_a == rhs._a) && (_b == rhs._b)); }
+      bool operator!=(const IDPair& rhs) const
+          { return !(*this == rhs); }
+      bool operator<(const IDPair& rhs) const
+          { return (_a < rhs._a) || (!(rhs._a < _a) && (_b < rhs._b)); }
 
     private:
       ID _a, _b;
@@ -603,13 +607,13 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
         const Material* mat = get_material(id);
 
         // the name of this elements region
-        const string& name = get_region_name(id);
+        const string& reg_name = get_region_name(id);
 
         // the other component
         size_t other;
-        if ((comp[0] == mat->get_name()) || (comp[0] == name))
+        if ((comp[0] == mat->get_name()) || (comp[0] == reg_name))
           other = 1;
-        else if ((comp[1] == mat->get_name()) || (comp[1] == name))
+        else if ((comp[1] == mat->get_name()) || (comp[1] == reg_name))
           other = 0;
         else // go to the next element
           continue;
@@ -646,8 +650,6 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
               else if ((comp[other] == get_material(neighbour_id)->get_name()) ||
                        (comp[other] == get_region_name(neighbour_id)))
               {
-                cerr << comp[(other+1)%2] << "  " << comp[other] << endl;
-
                 // first check if the side has already a boundary ID
                 ID newid = _bd_regions->get_side_id(elem, s);
                 if (newid == INVALID_ID)
@@ -658,7 +660,6 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
                 }
                 _bd_regions->set_name(newid, name);
                 known_ids[IDPair(id, neighbour_id)] = newid;
-                cerr << " " << id << " " << neighbour_id << " : " << newid << endl;
                 idset.insert(newid);
               }
             }

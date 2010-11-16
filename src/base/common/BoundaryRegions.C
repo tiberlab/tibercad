@@ -23,6 +23,9 @@ BoundaryRegions::add_side(const Elem* elem, unsigned int side, ID id)
       cont_ids.insert(neighbor->subdomain_id());
     else
       cont_ids.insert(INVALID_ID);
+
+    if (_contiguous_regions.find(id) == _contiguous_regions.end())
+      _contiguous_regions[id] = cont_ids;
   }
 }
 
