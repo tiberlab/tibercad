@@ -1133,7 +1133,6 @@ DriftDiffusion::do_init(void)
 
   rebuild_equation_system();
 
-  //find_dirichlet_nodes();
   //find_dielectric_boundary_nodes();
 
 
@@ -3252,9 +3251,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         if (params.local_neutrality)
           drho[0] = drho[1] = drho[2] = 0.0;
 
-
         //if (sc->is_dielectric())
         //  drho[2] = drho[1] = drho[0] = 0.0;
+
 
         long double dRn_dn =
           sc->get_net_electron_recombination_rate_derivatives()[0];
@@ -3428,6 +3427,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
         if (params.local_neutrality)
           J_x_rho = 0.0;
+        //if (sc->is_dielectric())
+        //  J_x_rho = 0.0;
 
         long double J_x_P0 = J / P0;
 
