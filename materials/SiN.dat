@@ -11,9 +11,9 @@ c = 0.5185
 
 
 [valenceband]
-#E_v = -2.64
-# from Nextnano
-E_v = 0.0
+# One publication claims that GaN/SiN is type II
+# E_v = 0.0
+E_v = -1.8
 
 
 [conductionband]
