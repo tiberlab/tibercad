@@ -353,7 +353,7 @@ DriftDiffusionProperties::do_init(void)
 
 
   _background_conductivity =
-      0.5 * get_option("background_conductivity", 1e-6 * Constants::e) / Constants::e;
+      0.5 * get_option("background_conductivity", 2e4 * Constants::e) / Constants::e;
 
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
