@@ -218,7 +218,7 @@ class Device
      * Only active regions are returned (that is regions that have a material
      * associated).
      */
-    void get_active_region_ids(const std::string& name, std::vector<ID>& ids) const TBDLLOCAL;
+    void get_active_region_ids(const std::string& name, std::set<ID>& ids) const TBDLLOCAL;
 
 
     //! Get the region IDs of the mesh region with name \c name

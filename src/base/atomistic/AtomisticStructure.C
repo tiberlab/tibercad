@@ -207,9 +207,9 @@ AtomisticStructure::parse_regions(void)
   //Build an array of physical regions ID
   for (std::set<std::string>::iterator i = _regionset.begin(); i != _regionset.end(); i++)
   {
-    std::vector<ID> tmp_ID;
+    std::set<ID> tmp_ID;
     get_device()->get_active_region_ids( (*i), tmp_ID);
-    for (unsigned int j = 0; j < tmp_ID.size(); j++) {_IDset.insert(tmp_ID[j]);}
+    _IDset.insert(tmp_ID.begin(), tmp_ID.end());
   }
 
 }

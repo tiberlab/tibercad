@@ -491,7 +491,7 @@ Control::setup_clusters(void)
     vector<ID> region_ids;
 
     unsigned int n_ids = region_ids_str.size();
-    vector<ID> tmp_id;
+    set<ID> tmp_id;
     for (unsigned int i = 0; i < n_ids; i++)
     {
       _device->get_active_region_ids(region_ids_str[i], tmp_id);
@@ -1329,36 +1329,44 @@ Control::setup_models(void) throw (InitFailedException, ModelErrorException)
 void
 Control::extract_physical_regions(const std::string& str, IDSet& ids)
 {
+  ids.clear();
 
-  if (str == "all")
-    ids = _device->get_active_region_ids();
-  else
+  // the IDs that have to be excluded ("-pippo" syntax)
+  IDSet exclude;
+
+  // we have to get it as vector (for the moment at least)
+  vector<string> preg;
+  Utils::extract_vector(str, preg);
+
+  set<ID> preg_ids;
+
+  unsigned int n = preg.size();
+  for (unsigned int i = 0; i < n; i++)
   {
-    // we have to get it as vector (for the moment at least)
-    vector<string> preg;
-    Utils::extract_vector(str, preg);
-
-    vector<ID> preg_ids;
-
-    unsigned int n = preg.size();
-    for (unsigned int i = 0; i < n; i++)
-    {
-      // first check if it is a region name
+    if (preg[i].at(0) == '-')
+      _device->get_active_region_ids(preg[i].substr(1), preg_ids);
+    else
       _device->get_active_region_ids(preg[i], preg_ids);
-      if (preg_ids.size() != 0)
-      {
-        for (unsigned int j = 0; j < preg_ids.size(); j++)
-          ids.insert(preg_ids[j]);
-      }
-      else
-      {
-        ostringstream s;
-        s << "Physical region " << preg[i] <<
-            " does not exist in mesh file.";
-        throw InitFailedException(s.str());
-      }
+
+    if (preg_ids.size() == 0)
+    {
+      ostringstream s;
+      s << "Physical region " << preg[i] <<
+      " does not exist in mesh file.";
+      throw InitFailedException(s.str());
     }
+
+    if (preg[i].at(0) == '-')
+      exclude.insert(preg_ids.begin(), preg_ids.end());
+    else
+      ids.insert(preg_ids.begin(), preg_ids.end());
   }
+
+  if (ids.empty() && !exclude.empty())
+    ids = _device->get_active_region_ids();
+
+  for (IDSet::iterator it(exclude.begin()); it != exclude.end(); ++it)
+    ids.erase(*it);
 }
 
 

@@ -94,13 +94,13 @@ AtomisticGenerator::do_init()
   if (!(_as->get_options().find_option("reference_region"))){
     Messages::warning("No material could be set: reference_region is mandatory in Atomistic section"
         "when no structure path is specified ");}
-  std::vector<ID> ids;
+  std::set<ID> ids;
   std::string ref_region;
   ref_region = _as->get_options().get_option("reference_region", "None");
   _as->get_device()->get_active_region_ids(ref_region, ids);
   if (ids.size() == 0)
     throw InitFailedException("Reference region badly defined for structure " +  _as->get_name() );
-  _reference_material = _as->get_device()->get_material(ids[0]);
+  _reference_material = _as->get_device()->get_material(*ids.begin());
   structure =  _reference_material->get_structure();
 
   Messages::debug("Parsing atomistic structure parameters");

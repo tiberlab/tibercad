@@ -124,7 +124,7 @@ SimulationInterface::create(const string& type,
     sim = EnvelopFunctionApprox::create(options);
   else if (type_name == "sweep")
     sim = Sweep::create(options);
- 
+
   else if (type_name == "selfconsistent")
     sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_relaxation")
@@ -432,10 +432,10 @@ SimulationInterface::init(void) throw (InitFailedException)
     for (set<string>::const_iterator it(names.begin()); it != names.end(); ++it)
     {
       Device& dev = get_environment().get_device();
-      vector<ID> ids;
+      set<ID> ids;
       dev.get_active_region_ids(*it, ids);
       assert(ids.size() != 0);
-      const Material* mat = dev.get_material(ids[0]);
+      const Material* mat = dev.get_material(*ids.begin());
       PhysicalModel* mod =
         mat->get_model(get_id());
       if (mod != NULL)
@@ -939,7 +939,7 @@ SimulationInterface::plot_meshdata(void)
       const SolutionDescriptor& descr = dit->first;
       vector<double>& vec = dit->second;
       vector<double>& sol = solutions[descr.id()];
-      
+
       if (sol.size() == 0)
         continue;
 
@@ -2313,7 +2313,7 @@ SimulationInterface::print_info(void)
 }
 
 
-// void 
+// void
 // SimulationInterface::allow_extrusion(void)
 // {
 

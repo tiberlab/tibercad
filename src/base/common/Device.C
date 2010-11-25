@@ -512,43 +512,51 @@ Device::get_node_object(const Node* node)
 
 
 void
-Device::get_active_region_ids(const string& name, vector<ID>& ids) const
+Device::get_active_region_ids(const string& name, set<ID>& ids) const
 {
-  ids.resize(0);
+  ids.clear();
 
-  ClusterMap::const_iterator clit(_cluster_map.find(name));
-  if (clit != _cluster_map.end())
-    ids = clit->second;
+  if (name == "all")
+    ids = get_active_region_ids();
   else
   {
-    map<ID, string>::const_iterator it(_region_names.begin());
-    const map<ID, string>::const_iterator end(_region_names.end());
-
-    for ( ; it != end; ++it)
-      if (it->second == name)
-        ids.push_back(it->first);
-
-    // next we look in the mesh region list
-    if (ids.size() == 0)
+    ClusterMap::const_iterator clit(_cluster_map.find(name));
+    if (clit != _cluster_map.end())
     {
-      const IDSet& idset = _mesh_region_info->get_ids(name);
-      IDSet::iterator it(idset.begin());
-      const IDSet::iterator end(idset.end());
-
-      for ( ; it != end; ++it)
-        if (_region_names.count(*it))
-          ids.push_back(*it);
+      for (size_t i = 0; i < clit->second.size(); ++i)
+        ids.insert((clit->second)[i]);
     }
-
-    // as last resort we look for material names
-    if (ids.size() == 0)
+    else
     {
-      MaterialMap::const_iterator it(_material_map.begin());
-      const MaterialMap::const_iterator end(_material_map.end());
+      map<ID, string>::const_iterator it(_region_names.begin());
+      const map<ID, string>::const_iterator end(_region_names.end());
 
       for ( ; it != end; ++it)
-        if (it->second->get_name() == name)
-          ids.push_back(it->first);
+        if (it->second == name)
+          ids.insert(it->first);
+
+      // next we look in the mesh region list
+      if (ids.size() == 0)
+      {
+        const IDSet& idset = _mesh_region_info->get_ids(name);
+        IDSet::iterator it(idset.begin());
+        const IDSet::iterator end(idset.end());
+
+        for ( ; it != end; ++it)
+          if (_region_names.count(*it))
+            ids.insert(*it);
+      }
+
+      // as last resort we look for material names
+      if (ids.size() == 0)
+      {
+        MaterialMap::const_iterator it(_material_map.begin());
+        const MaterialMap::const_iterator end(_material_map.end());
+
+        for ( ; it != end; ++it)
+          if (it->second->get_name() == name)
+            ids.insert(it->first);
+      }
     }
   }
 }
