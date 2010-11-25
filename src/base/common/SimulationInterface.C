@@ -8,6 +8,7 @@
 #include "NodeObject.h"
 #include "Alloy.h"
 #include "Embracing.h"
+#include "Variable.h"
 
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
@@ -602,7 +603,11 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 
   try
   {
-    do_solve();
+    if (!load_state() || get_option("solve_after_load", false))
+    {
+      do_solve();
+      save_state();
+    }
   }
   catch (runtime_error& e)
   {
@@ -1133,6 +1138,160 @@ SimulationInterface::plot_globaldata(void)
     }
   }
 }
+
+
+
+void
+SimulationInterface::save_state(const string& file)
+{
+  if (get_option("save_state", false) || !file.empty())
+  {
+    string f(file);
+    if (f.empty())
+      f = get_output_directory() + "/" +
+        get_output_filename() + ".tsv";
+
+    ofstream of(f.c_str());
+    if (!of.good()) throw InitFailedException("Cannot use " + f + " for writing.");
+
+    Messages::info("Writing state to " + f);
+    do_save_data(of);
+  }
+}
+
+
+
+bool
+SimulationInterface::load_state(const string& file)
+{
+  bool loaded = false;
+
+  string f(file);
+  if (f.empty())
+    f = get_option("load_state", "");
+
+  if (!f.empty())
+  {
+
+    ifstream in(f.c_str());
+    if (!in.good()) throw InitFailedException("Cannot use " + f + " for reading.");
+
+    Messages::info("Reading state from " + f);
+    do_load_data(in);
+    loaded = true;
+
+    get_options().set_option("load_state", "");
+
+  }
+
+  return loaded;
+}
+
+
+
+void
+SimulationInterface::do_save_data(ostream& os)
+{
+  // first write all variables
+  os << "<variables>" << endl;
+  Variable::iterator vit(Variable::begin());
+  const Variable::iterator vend(Variable::end());
+  for ( ; vit != vend; ++vit)
+  {
+    os << (*vit)->get_name() << " " << (*vit)->get_value_string() << endl;
+  }
+  os << "</variables>" << endl;
+
+
+  if (has_solution_vector())
+  {
+    // then the data
+    os << "<data>" << endl;
+
+    const NumericVector<Number>& solution = get_solution_vector();
+
+    for (size_t i = 0; i < solution.size(); ++i)
+    {
+      double val = solution(i);
+      os.write(reinterpret_cast<char*>(&val), sizeof(double));
+    }
+
+    os << "\n</data>" << endl << flush;
+  }
+}
+
+
+
+
+void
+SimulationInterface::do_load_data(istream& is)
+{
+
+  const streamsize bufsize = 256;
+  char buf[bufsize];
+
+  map<string, double> values;
+
+  string keyword("<variables>");
+
+  is.getline(buf, bufsize);
+  while (is.good() && (keyword.compare(buf) != 0))
+  {
+    is.getline(buf, bufsize);
+  }
+
+  if (!is.good()) throw InitFailedException("Bad datafile");
+
+  keyword = "</variables>";
+  is.getline(buf, bufsize);
+  while (is.good() && (keyword.compare(buf) != 0))
+  {
+    istringstream ss(buf);
+    string name;
+    double value;
+    ss >> name >> value;
+    values[name] = value;
+    is.getline(buf, bufsize);
+  }
+
+  map<string, double>::iterator vit(values.begin());
+  const map<string, double>::iterator vend(values.end());
+  for ( ; vit != vend; ++vit)
+  {
+    Variable::set_variable_value(vit->first, vit->second);
+  }
+
+  if (!is.good()) throw InitFailedException("Bad datafile");
+  values.clear();
+
+  if (has_solution_vector())
+  {
+    keyword = "<data>";
+    is.getline(buf, bufsize);
+    while (is.good() && (keyword.compare(buf) != 0))
+    {
+      is.getline(buf, bufsize);
+    }
+
+    NumericVector<Number>& solution = get_solution_vector();
+
+    for (size_t i = 0; i < solution.size(); ++i)
+    {
+      if (!is.good()) throw InitFailedException("Bad datafile");
+
+      double val;
+      is.read(buf, sizeof(double));
+      val = *(reinterpret_cast<double*>(buf));
+
+      solution.set(i, val);
+    }
+
+    equilibrium_done(true);
+    is_solved(true);
+  }
+}
+
+
 
 
 

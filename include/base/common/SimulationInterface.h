@@ -208,6 +208,17 @@ class SimulationInterface : public TiberModelObject
     void plot(void);
 
 
+    //! Save the current state
+    void save_state(const std::string& file = "");
+
+
+    //! Load a saved state
+    /*!
+     * \return true if a state has been loaded
+     */
+    bool load_state(const std::string& file = "");
+
+
     //! Remember current solution (on the current mesh!)
     /*!
      * Calls do_remember_current_solution()
@@ -1231,6 +1242,24 @@ class SimulationInterface : public TiberModelObject
 
     //! Set or unset the \c equilibrium_done flag
     void equilibrium_done(bool flag);
+
+
+    //! Save the current state
+    /*!
+     * This method may be overridden. The default implementation
+     * writes the vector obtained from get_solution_vector()
+     * (if available) into a file.
+     */
+    virtual void do_save_data(std::ostream& os);
+
+
+    //! Reload the current state
+    /*!
+     * This method may be overridden. The default implementation
+     * reads data into the vector obtained from get_solution_vector()
+     * (if available).
+     */
+    virtual void do_load_data(std::istream& is);
 
 
 

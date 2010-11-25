@@ -20,6 +20,7 @@
 // TODO should be replaced by boost methods
 #include "gzstream.h"
 
+
 // libmesh includes
 #include "node.h"
 #include "mesh.h"
@@ -40,6 +41,7 @@
 
 // C++ includes
 #include <fstream>
+
 
 //
 // Module interface
@@ -472,25 +474,7 @@ void
 DriftDiffusion::do_solve(void)
 {
 
-
-
   __private_counter = 0;
-
-  string filename = get_option("load_state", "");
-  if (filename != "")
-  {
-    compute_scaling(get_my_options().scaling_type);
-    Messages::info(get_name() + ": Loading state from " + filename);
-    load_data(filename);
-
-    get_options().set_option("load_state", "");
-
-    // if we do not solve after load, we immediately return
-    if (!get_option("solve_after_load", false)) return;
-
-    if (do_local_scaling_)
-      build_local_scaling();
-  }
 
   // rebuild the system if needed
   //rebuild_equation_system();
@@ -529,13 +513,6 @@ DriftDiffusion::do_solve(void)
   {
     solve_equilibrium();
 
-    bool save = get_option("save_state", false);
-    if (save)
-    {
-      string file = get_output_directory() + "/" +
-      get_output_filename_prefix() + "_equilibrium.tsv";
-      save_data(file);
-    }
 
     if (do_local_scaling_)
       build_local_scaling();
@@ -662,16 +639,6 @@ DriftDiffusion::do_solve(void)
     Messages::info(os.str());
   }
 
-  bool save = get_option("save_state", false);
-  if (save)
-  {
-    string file = get_output_directory() + "/" +
-      get_output_filename() + ".tsv";
-    save_data(file);
-  }
-
-
-
 }
 
 
@@ -717,8 +684,9 @@ DriftDiffusion::do_equilibrium(void)
   }
 
 
+  // CANNOT call compute_scaling() two times !!
   // first we have to compute the scaling
-  compute_scaling(get_my_options().scaling_type);
+  //compute_scaling(get_my_options().scaling_type);
 
 
   ModelOptions& solveropts = get_solver_options();
@@ -1171,6 +1139,8 @@ DriftDiffusion::do_init(void)
         get_environment().contains_region(idB))
       mod->internal_bondary(true);
   }
+
+  compute_scaling(get_my_options().scaling_type);
 
 }
 
@@ -3882,240 +3852,17 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
 
 
-void
-DriftDiffusion::save_data(const string& file)
-{
-  //using namespace boost::iostreams;
-  //using namespace boost::iostreams::gzip;
-
-  const MeshBase& mesh = get_mesh();
-  EquationSystems& eq_sys = get_equation_systems();
-  TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
-      eq_sys.get_system(get_equation_system_name()));
-
-  unsigned int sys_num = system.number();
-
-  const NumericVector<Number>& solution = get_solution_vector();
-
-  double phi0 = get_scaling().get_potential_scaling();
-
-  ogzstream of(file.c_str());
-  //ofstream of(file.c_str(), ios_base::out | ios_base::binary);
-  //filtering_streambuf<output> out;
-  //out.push(gzip_compressor());
-  //out.push(of);
-
-  // write contact voltages
-  of << "<contacts>" << endl;
-
-  ContactData sim_voltages(_boundary_currents);
-  ContactData::iterator ctit(sim_voltages.begin());
-  const ContactData::iterator ctend(sim_voltages.end());
-  for ( ; ctit != ctend; ++ctit)
-  {
-    const Boundary* bd = ctit->first;
-    // It's save to static_cast because we know there has to be an
-    // DDInterfaceModel object
-    const DDInterfaceModel* mod =
-        static_cast<const DDInterfaceModel*>(bd->models_begin()->second);
-
-    // if it is an electrical contact, use it
-    const ElectricalContact* cnt =
-      dynamic_cast<const ElectricalContact*>(mod);
-    if (cnt != NULL)
-      of << bd->get_name() << " " << cnt->get_simulation_voltage() << endl;
-  }
-
-  of << "</contacts>" << endl;
-
-
-  // write all variables
-  of << "<variables>" << endl;
-  Variable::iterator vit(Variable::begin());
-  const Variable::iterator vend(Variable::end());
-  for ( ; vit != vend; ++vit)
-  {
-    of << (*vit)->get_name() << " " << (*vit)->get_value_string() << endl;
-  }
-  of << "</variables>" << endl;
-
-  const DofMap& dof_map = system.get_dof_map();
-
-  // numeric ids corresponding to the variables
-  const unsigned int u_var = system.variable_number("potential");
-  unsigned int en_var = system.variable_number("fermi_e");
-  unsigned int ep_var = system.variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
-
-  of << "<data>" << endl;
-
-  Mesh::const_node_iterator it(mesh.active_nodes_begin());
-  const Mesh::const_node_iterator end(mesh.active_nodes_end());
-  for ( ; it != end; ++it)
-  {
-    const Node& node = *(*it);
-    unsigned int dof_u  = node.dof_number(sys_num, u_var, 0);
-    unsigned int dof_en = node.dof_number(sys_num, en_var, 0);
-    unsigned int dof_ep = node.dof_number(sys_num, ep_var, 0);
-
-    of << phi0 * solution(dof_u) << " " << phi0 * solution(dof_en) << " "
-      << phi0 * solution(dof_ep) << endl << flush;
-  }
-
-  of << "</data>" << endl;
-}
-
 
 
 void
-DriftDiffusion::load_data(const string& file)
+DriftDiffusion::do_load_data(istream& is)
 {
-  const MeshBase& mesh = get_mesh();
-  EquationSystems& eq_sys = get_equation_systems();
-  TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
-      eq_sys.get_system(get_equation_system_name()));
+  SimulationInterface::do_load_data(is);
 
-  unsigned int sys_num = system.number();
-
-  NumericVector<Number>& solution = get_solution_vector();
-
-  double phi0 = get_scaling().get_potential_scaling();
-  if (!get_option("scale_after_load", true))
-    phi0 = 1.0;
-
-  //ifstream is(file.c_str());
-  igzstream is(file.c_str());
-  if (!is.good()) throw InitFailedException("Bad datafile");
-
-  string keyword("<contacts>");
-  const streamsize bufsize = 256;
-  char buf[bufsize];
-
-  is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
-  {
-    is.getline(buf, bufsize);
-  }
-
-  if (!is.good()) throw InitFailedException("Bad datafile");
-
-  map<string, double> values;
-
-  keyword = "</contacts>";
-  is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
-  {
-    istringstream ss(buf);
-    string name;
-    double value;
-    ss >> name >> value;
-    values[name] = value;
-    is.getline(buf, bufsize);
-  }
-
-
-  ContactData sim_voltages(_boundary_currents);
-  ContactData::iterator ctit(sim_voltages.begin());
-  const ContactData::iterator ctend(sim_voltages.end());
-  for ( ; ctit != ctend; ++ctit)
-  {
-    const Boundary* bd = ctit->first;
-
-    Boundary::ConstModelIterator modit(bd->models_begin());
-    for ( ; modit != bd->models_end(); ++modit)
-    {
-      // It's save to static_cast because we know there has to be an
-      // DDInterfaceModel object
-      DDInterfaceModel* mod =
-          static_cast<DDInterfaceModel*>(modit->second);
-
-      // if it is an electrical contact, use it
-      ElectricalContact* cnt = dynamic_cast<ElectricalContact*>(mod);
-      if (cnt != NULL)
-      {
-        cnt->set_simulation_voltage(values[bd->get_name()]);
-        sim_voltages[bd] = cnt->get_simulation_voltage();
-      }
-    }
-  }
-
-  if (!is.good()) throw InitFailedException("Bad datafile");
-
-  keyword = "<variables>";
-  is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
-  {
-    is.getline(buf, bufsize);
-  }
-
-  if (!is.good()) throw InitFailedException("Bad datafile");
-
-  values.clear();
-
-  keyword = "</variables>";
-  is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
-  {
-    istringstream ss(buf);
-    string name;
-    double value;
-    ss >> name >> value;
-    values[name] = value;
-    is.getline(buf, bufsize);
-  }
-
-  map<string, double>::iterator vit(values.begin());
-  const map<string, double>::iterator vend(values.end());
-  for ( ; vit != vend; ++vit)
-  {
-    Variable::set_variable_value(vit->first, vit->second);
-  }
-
-  if (!is.good()) throw InitFailedException("Bad datafile");
-  values.clear();
-
-  keyword = "<data>";
-  is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
-  {
-    is.getline(buf, bufsize);
-  }
-
-  const DofMap& dof_map = system.get_dof_map();
-
-  // numeric ids corresponding to the variables
-  const unsigned int u_var = system.variable_number("potential");
-  const unsigned int en_var = system.variable_number("fermi_e");
-  const unsigned int ep_var = system.variable_number("fermi_h");
-
-  MeshBase::const_node_iterator it(mesh.active_nodes_begin());
-  const MeshBase::const_node_iterator end(mesh.active_nodes_end());
-  for ( ; it != end; ++it)
-  {
-    const Node& node = *(*it);
-    unsigned int dof_u  = node.dof_number(sys_num, u_var, 0);
-    unsigned int dof_en = node.dof_number(sys_num, en_var, 0);
-    unsigned int dof_ep = node.dof_number(sys_num, ep_var, 0);
-
-    if (!is.good()) throw InitFailedException("Bad datafile");
-
-    is.getline(buf, bufsize);
-    istringstream ss(buf);
-
-    double u, en, ep;
-    ss >> u >> en >> ep;
-
-    solution.set(dof_u, u / phi0);
-    solution.set(dof_en, en / phi0);
-    solution.set(dof_ep, ep / phi0);
-  }
-
-  equilibrium_done(true);
-  is_solved(true);
+  if (do_local_scaling_)
+    build_local_scaling();
 }
+
 
 
 

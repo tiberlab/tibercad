@@ -429,6 +429,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     virtual void do_set_to_remembered_solution(ID id);
 
 
+    //! Reload the current state
+    virtual void do_load_data(std::istream& is);
+
+
 
   private:
 
@@ -679,12 +683,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     void do_assembly(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
-
-    //! Save the current state
-    void save_data(const std::string& file);
-
-    //! Reload the current state
-    void load_data(const std::string& file);
 
 
     //! Write out a vector (e.g. residual)

@@ -551,22 +551,6 @@ class Macrostrain : public StrainSimulation
 
 
 
-
-  /*!
-    \copydoc SimulationInterface::build_elemental_results()
-    The variables are: "strain", "polarization"
-    This means strain tensor components:
-    \f$ \varepsilon_{xx}, \varepsilon_{yy},\varepsilon_{zz}, \varepsilon_{xy}, \varepsilon_{xz}, \varepsilon_{yz}\f$,
-    and polarization vector \f$ \bf P \f$ components.
-    \f$ x, y,  z\f$ refer to calculation coordinate system.
-   */
-  //virtual void build_elemental_results(const std::set<std::string>& variables,
-//				       std::vector<double>& results, std::vector<std::string>& legend) ;
-
-
-
-
-
     /*!
      * \copydoc SimulationInterface::get_solution_secure(const Elem*,
      *  std::map<ID, std::vector<double> >&, const std::vector<Point>&)

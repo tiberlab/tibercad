@@ -354,10 +354,10 @@ DriftDiffusionProperties::do_init(void)
 
   if (_is_dielectric)
     _background_conductivity =
-        0.5 * get_option("background_conductivity", 1e-6 * Constants::e) / Constants::e;
+        0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
   else
-  _background_conductivity =
-      0.5 * get_option("background_conductivity", 2e4 * Constants::e) / Constants::e;
+    _background_conductivity =
+        0.5 * get_option("background_conductivity", 2e4 * Constants::e) / Constants::e;
 
 
   // calculate the equilibrium
