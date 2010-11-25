@@ -1178,6 +1178,7 @@ SimulationInterface::save_state(const string& file)
     ofstream of(f.c_str());
     if (!of.good()) throw InitFailedException("Cannot use " + f + " for writing.");
 
+    Messages::newline();
     Messages::info("Writing state to " + f);
     do_save_data(of);
   }
