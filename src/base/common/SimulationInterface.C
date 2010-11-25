@@ -2,6 +2,7 @@
 
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
+#include "TiberEqSystem.h"
 #include "Material.h"
 #include "MaterialBoundary.h"
 #include "EdgeObject.h"
@@ -24,7 +25,6 @@
 #include "MaxwellEquations.h"
 #include "PhononDispersion.h"
 #include "CrackStrain.h"
-//#include "MechanicalStructure.h"
 #include "Sweep.h"
 #include "RelaxationMethod.h"
 #include "ModifiedBroyden.h"
@@ -468,7 +468,6 @@ SimulationInterface::init(void) throw (InitFailedException)
 
 
 
-
 void
 SimulationInterface::create_equation_system_name(void)
 {
@@ -532,6 +531,31 @@ SimulationInterface::get_equation_systems(void) const
 }
 
 
+void
+SimulationInterface::clear_systems(void)
+{
+  for (size_t i = 0; i < _systems.size(); ++i)
+    delete _systems[i];
+
+  _systems.clear();
+}
+
+
+ID
+SimulationInterface::create_equation_system(const std::string& type)
+{
+  ID newid = _systems.size();
+
+  ostringstream os(get_equation_system_name());
+  os << "_" << newid;
+
+  TiberEqSystem* sys = TiberEqSystem::create(get_equation_systems(),
+      os.str(), type, get_solver_options());
+
+  _systems.push_back(sys);
+
+  return newid;
+}
 
 
 void
@@ -662,10 +686,10 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 NumericVector<double>&
 SimulationInterface::do_get_solution_vector(void)
 {
-  const EquationSystems& eq = get_equation_systems();
-  const System& sys = eq.get_system(get_equation_system_name());
+  assert(_systems.size() > 0);
 
-  return *sys.solution;
+  get_equation_system(0).get_solution_vector().close();
+  return get_equation_system(0).get_solution_vector();
 }
 
 
@@ -1203,12 +1227,13 @@ SimulationInterface::do_save_data(ostream& os)
   os << "</variables>" << endl;
 
 
-  if (has_solution_vector())
+  for (size_t i = 0; i < _systems.size(); ++i)
   {
     // then the data
     os << "<data>" << endl;
 
-    const NumericVector<Number>& solution = get_solution_vector();
+    const NumericVector<Number>& solution =
+        get_equation_system(i).get_solution_vector();
 
     for (size_t i = 0; i < solution.size(); ++i)
     {
@@ -1264,7 +1289,9 @@ SimulationInterface::do_load_data(istream& is)
   if (!is.good()) throw InitFailedException("Bad datafile");
   values.clear();
 
-  if (has_solution_vector())
+  bool has_read = false;
+
+  for (size_t i = 0; i < _systems.size(); ++i)
   {
     keyword = "<data>";
     is.getline(buf, bufsize);
@@ -1285,7 +1312,18 @@ SimulationInterface::do_load_data(istream& is)
 
       solution.set(i, val);
     }
+    keyword = "</data>";
+    is.getline(buf, bufsize);
+    while (is.good() && (keyword.compare(buf) != 0))
+    {
+      is.getline(buf, bufsize);
+    }
 
+    has_read = true;
+  }
+
+  if (has_read)
+  {
     equilibrium_done(true);
     is_solved(true);
   }

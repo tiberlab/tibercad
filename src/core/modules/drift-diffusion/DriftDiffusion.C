@@ -162,7 +162,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 {
 
   // we calculate in cm!
-  double mesh_units = 100 * get_scaling().get_calc_mesh_units();
+  double mesh_units = 100 * get_mesh_units();
   get_scaling().set_calc_mesh_units(mesh_units);
 
   if (type == Scaling::NONE)
@@ -304,11 +304,9 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 void
 DriftDiffusion::set_electron_fermi_level(double Ef_n)
 {
-  TiberNonlinearSystem& system =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  NumericVector<Number>& solution = system.get_solution_vector();
+  NumericVector<Number>& solution = get_solution_vector();
 
   const unsigned int var = system.variable_number("fermi_e");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -336,11 +334,9 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
 void
 DriftDiffusion::set_hole_fermi_level(double Ef_p)
 {
-  TiberNonlinearSystem& system =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  NumericVector<Number>& solution = system.get_solution_vector();
+  NumericVector<Number>& solution = get_solution_vector();
 
   const unsigned int var = system.variable_number("fermi_h");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -368,11 +364,9 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
 void
 DriftDiffusion::set_electric_potential(double pot)
 {
-  TiberNonlinearSystem& system =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  NumericVector<Number>& solution = system.get_solution_vector();
+  NumericVector<Number>& solution = get_solution_vector();
 
   const unsigned int var = system.variable_number("potential");
   const double phi0 = get_scaling().get_potential_scaling();
@@ -523,9 +517,8 @@ DriftDiffusion::do_solve(void)
   }
 
   // set the old solution
-  EquationSystems& es = get_equation_systems();
-  TiberNonlinearSystem& system =
-    es.get_system<TiberNonlinearSystem>(get_equation_system_name());
+  //EquationSystems& es = get_equation_systems();
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
   get_solution_vector().close();
   system.get_vector("old_sol") = get_solution_vector();
 
@@ -787,13 +780,11 @@ DriftDiffusion::compute_reference_potential(void)
     si.get_boundary_nodes(get_my_options().reference_contact, nodelist);
     if (nodelist.size() > 0)
     {
-      TiberNonlinearSystem* system;
-      system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-          get_equation_system_name());
+      TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-      const NumericVector<Number>& solution = system->get_solution_vector();
-      const unsigned int system_number = system->number();
-      const unsigned int u_var = system->variable_number("potential");
+      const NumericVector<Number>& solution = get_solution_vector();
+      const unsigned int system_number = system.number();
+      const unsigned int u_var = system.variable_number("potential");
 
       const Node* node = *nodelist.begin();
       const unsigned int n_dof = node->dof_number(system_number, u_var, 0);
@@ -812,9 +803,7 @@ DriftDiffusion::guess_equilibrium(void)
   // equation system needs to be active
   rebuild_equation_system();
 
-  TiberNonlinearSystem& poisson =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& poisson = get_equation_system<TiberNonlinearSystem>();
 
   const unsigned int u_var = poisson.variable_number("potential");
   const DofMap& dof_map_u = poisson.get_dof_map();
@@ -1044,8 +1033,8 @@ DriftDiffusion::rebuild_equation_system(void)
   if (!_rebuild_eq_system) return;
 
 
-  EquationSystems& equation_systems = get_equation_systems();
-
+  //EquationSystems& equation_systems = get_equation_systems();
+  clear_systems();
 
   // default is bcgsl
   ModelOptions& solveropts = get_solver_options();
@@ -1066,9 +1055,11 @@ DriftDiffusion::rebuild_equation_system(void)
 
 
   // the coupled DD system
-  TiberNonlinearSystem& system =
-    *TiberNonlinearSystem::create(equation_systems,
-      get_equation_system_name(), get_solver_options());
+  //TiberNonlinearSystem& system =
+  //  *TiberNonlinearSystem::create(equation_systems,
+  //    get_equation_system_name(), get_solver_options());
+  create_equation_system("nonlinear");
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
   system.attach_assembly_routine(assemble_system);
 
@@ -1317,11 +1308,7 @@ void
 DriftDiffusion::do_newton(void)
 {
 
-  EquationSystems& es = get_equation_systems();
-
-  TiberNonlinearSystem& system =
-    es.get_system<TiberNonlinearSystem>(get_equation_system_name());
-
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
   system.set_options(get_solver_options());
   system.solve();
@@ -1342,9 +1329,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   unsigned int np = points.size();
 
-  TiberNonlinearSystem* system;
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>(0);
 
   const NumericVector<Number>& solution = system->get_solution_vector();
   const NumericVector<Number>& oldsolution = system->get_vector("old_sol");
@@ -1725,9 +1710,7 @@ DriftDiffusion::calculate_currents_rstf(void)
       (*it).second = 0.0;
   }
 
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>(0);
 
   const NumericVector<Number>& solution = system->get_solution_vector();
 
@@ -2046,11 +2029,9 @@ DriftDiffusion::calculate_currents_surfint(void)
   for ( ; it != _boundary_currents.end(); ++it)
     (*it).second = 0.0;
 
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-  const NumericVector<Number>& solution = system->get_solution_vector();
+  const NumericVector<Number>& solution = get_solution_vector();
 
   // aliases for nicer code
   const MeshBase& mesh = system->get_mesh();
@@ -2292,16 +2273,14 @@ void
 DriftDiffusion::build_local_scaling(void)
 {
 
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
-  const NumericVector<Number>& solution = system->get_solution_vector();
+  const NumericVector<Number>& solution = get_solution_vector();
 
   // aliases for nicer code
   const MeshBase& mesh = get_mesh();
 
-  const DofMap& dof_map = system->get_dof_map();
+  const DofMap& dof_map = system.get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -2323,9 +2302,9 @@ DriftDiffusion::build_local_scaling(void)
   double R0_h = C0_h / scaling.get_time_scaling();
 
 
-  const unsigned int u_var = system->variable_number("potential");
-  unsigned int en_var = system->variable_number("fermi_e");
-  unsigned int ep_var = system->variable_number("fermi_h");
+  const unsigned int u_var = system.variable_number("potential");
+  unsigned int en_var = system.variable_number("fermi_e");
+  unsigned int ep_var = system.variable_number("fermi_h");
   if (_useparticle == 'e')
     ep_var = en_var;
   else if (_useparticle == 'h')
@@ -2335,7 +2314,7 @@ DriftDiffusion::build_local_scaling(void)
   vector<unsigned int> dof_indices_en;
   vector<unsigned int> dof_indices_ep;
 
-  FEType fe_type = system->variable_type(u_var);
+  FEType fe_type = system.variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
   AutoPtr<QBase> qrule(QBase::build(
         params.quadrature_type, dim, params.integration_order));
@@ -2685,17 +2664,6 @@ DriftDiffusion::build_local_scaling(void)
 
 
 
-NumericVector<double>&
-DriftDiffusion::do_get_solution_vector(void)
-{
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-  system->get_solution_vector().close();
-  return system->get_solution_vector();
-}
-
 
 
 
@@ -2810,9 +2778,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   // references for nicer code
   const MeshBase& mesh = get_mesh();
-  EquationSystems& eq_sys = get_equation_systems();
-  TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
-      eq_sys.get_system(get_equation_system_name()));
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -3870,9 +3836,7 @@ void
 DriftDiffusion::write_nodal_vector(const string& filename, const NumericVector<double>& vec)
 {
 
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
   // aliases for nicer code
   const Device& device = *(_device);

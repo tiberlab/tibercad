@@ -9,6 +9,8 @@
 #include <string>
 
 class EquationSystems;
+template <typename T> class NumericVector;
+
 
 //! A base class for linear and nonlinear equation systems in TiberCAD
 /*!
@@ -43,7 +45,7 @@ class TiberEqSystem
     //! Create a system
     /*!
      * \param[in] es the EquationSystems object
-     * \param[in] sysname the name of teh new system
+     * \param[in] sysname the name of the new system
      * \param[in] type the type of system (linear, nonlinear)
      * \param[in] options the options for the new system
      * \return a reference to the newly created system
@@ -85,6 +87,10 @@ class TiberEqSystem
 
     //! Get the type of this system
     SystemType get_type(void) const;
+
+
+    //! Get the solution vector
+    virtual NumericVector<double>& get_solution_vector(void) = 0;
 
 
 

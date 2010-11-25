@@ -14,6 +14,7 @@
 #include "InitFailedException.h"
 #include "SolveFailedException.h"
 #include "ModelErrorException.h"
+#include "RuntimeException.h"
 #include "Scaling.h"
 #include "FiniteElement.h"
 
@@ -34,6 +35,7 @@
 class SimulationEnvironment;
 class Embracing;
 class EquationSystems;
+class TiberEqSystem;
 class PhysicalModel;
 class BoundaryProperties;
 class Material;
@@ -722,6 +724,31 @@ class SimulationInterface : public TiberModelObject
     EquationSystems& get_equation_systems(void) const;
 
 
+    //! Clear systems
+    void clear_systems(void);
+
+
+    //! Get the unique name for the equation system
+    const std::string& get_equation_system_name(void) const;
+
+
+    //! Create a new equation system object
+    /*!
+     * \param type the type as string (linear, nonlinear, eigen)
+     * The systems are stored in sequence of creation.
+     */
+    ID create_equation_system(const std::string& type);
+
+
+    //! Get the equation system with number \c i
+    /*!
+     * \param i the index of the equation system
+     * (the same as the sequence number at creation time)
+     */
+    template <typename T = TiberEqSystem>
+    T& get_equation_system(ID i = 0);
+
+
     //! Get the solver options
     ModelOptions& get_solver_options(void);
 
@@ -963,10 +990,6 @@ class SimulationInterface : public TiberModelObject
 
     //! Check if binary data should be written
     bool binary_output(void) const;
-
-
-    //! Get the unique name for the equation system
-    const std::string& get_equation_system_name(void) const;
 
 
     //! Get the ID for a given variable name
@@ -1372,6 +1395,9 @@ class SimulationInterface : public TiberModelObject
     static SolutionDescriptor _invalid_descr;
 
 
+    //! The equation systems
+    std::vector<TiberEqSystem*> _systems;
+
 
     //! create a unique name for the equation system
     void create_equation_system_name(void) TBDLLOCAL;
@@ -1433,6 +1459,21 @@ SimulationInterface::get_simulation(ID id)
   return sim;
 }
 
+
+template <typename T>
+inline
+T&
+SimulationInterface::get_equation_system(ID i)
+{
+  if (i >= _systems.size())
+    throw RuntimeException("Trying to access inexistent system.");
+
+#ifdef DEBUG
+  return dynamic_cast<T&>(*_systems[i]);
+#else
+  return static_cast<T&>(*_systems[i]);
+#endif
+}
 
 
 inline

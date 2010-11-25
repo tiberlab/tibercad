@@ -60,7 +60,7 @@ class TiberLinearSystem : public TiberEqSystem, public LinearImplicitSystem
 
 
     //! Get the solution vector
-    NumericVector<double>& get_solution_vector(void);
+    virtual NumericVector<double>& get_solution_vector(void);
 
 
 
