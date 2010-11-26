@@ -688,8 +688,8 @@ SimulationInterface::do_get_solution_vector(void)
 {
   assert(_systems.size() > 0);
 
-  get_equation_system(0).get_solution_vector().close();
-  return get_equation_system(0).get_solution_vector();
+  get_equation_system<TiberEqSystem>(0).get_solution_vector().close();
+  return get_equation_system<TiberEqSystem>(0).get_solution_vector();
 }
 
 
@@ -1234,7 +1234,7 @@ SimulationInterface::do_save_data(ostream& os)
     os << "<data>" << endl;
 
     const NumericVector<Number>& solution =
-        get_equation_system(i).get_solution_vector();
+        get_equation_system<TiberEqSystem>(i).get_solution_vector();
 
     for (size_t i = 0; i < solution.size(); ++i)
     {

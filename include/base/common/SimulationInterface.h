@@ -745,7 +745,7 @@ class SimulationInterface : public TiberModelObject
      * \param i the index of the equation system
      * (the same as the sequence number at creation time)
      */
-    template <typename T = TiberEqSystem>
+    template <typename T>
     T& get_equation_system(ID i = 0);
 
 
