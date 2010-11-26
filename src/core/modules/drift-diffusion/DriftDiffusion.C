@@ -677,9 +677,8 @@ DriftDiffusion::do_equilibrium(void)
   }
 
 
-  // CANNOT call compute_scaling() two times !!
   // first we have to compute the scaling
-  //compute_scaling(get_my_options().scaling_type);
+  compute_scaling(get_my_options().scaling_type);
 
 
   ModelOptions& solveropts = get_solver_options();
@@ -1130,8 +1129,6 @@ DriftDiffusion::do_init(void)
         get_environment().contains_region(idB))
       mod->internal_bondary(true);
   }
-
-  compute_scaling(get_my_options().scaling_type);
 
 }
 
@@ -3824,6 +3821,8 @@ void
 DriftDiffusion::do_load_data(istream& is)
 {
   SimulationInterface::do_load_data(is);
+
+  compute_scaling(get_my_options().scaling_type);
 
   if (do_local_scaling_)
     build_local_scaling();
