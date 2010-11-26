@@ -41,6 +41,9 @@ BoundaryRegions::prepare_for_use(void)
   IDToKnownPairs pairs;
   Pairs pairvec;
 
+  // We have to start from an empty _contiguous_regions structure
+  _contiguous_regions.clear();
+
   ElemSideMap::iterator it(_sides.begin());
   const ElemSideMap::iterator end(_sides.end());
   for ( ; it != end; ++it)

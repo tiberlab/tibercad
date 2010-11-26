@@ -65,7 +65,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     /*!
      * The size of the set returned is always 2 (unless the side ID does
      * not exist, in which case an empty set is returned).
-     * If one of the IDs is * INVALID_ID it means that \c ID belongs
+     * If one of the IDs is INVALID_ID it means that \c ID belongs
      * to an external boundary.
      */
     const std::set<ID>& get_contiguous_regions_for_side(ID id);
