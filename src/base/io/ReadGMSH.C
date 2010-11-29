@@ -353,7 +353,7 @@ void ReadGMSH::read_mesh(istream& in)
       {
         in >> version >> format >> size;
 
-        if (version > 2.1)
+        if (version > 2.2)
           throw InitFailedException("Unsupported msh file version.");
 
         if (format)
