@@ -176,7 +176,7 @@ DriftDiffusionProperties::create_submodels(void)
     opts.set_option("type", "constant");
     get_options().add_submodel("permittivity", opts);
   }
-  
+
   if (!is_dielectric())
   {
 
@@ -366,14 +366,14 @@ DriftDiffusionProperties::do_init(void)
   setup_band_edges();
 
 
-  // Polarization 
+  // Polarization
   it = submodels_begin("polarization");
   const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("polarization"));
   for ( ; it != it_end ; ++it)
     _pm.push_back(dynamic_cast<PolarizationModel*>(it->second));
-  
 
-  // Permittivity 
+
+  // Permittivity
   it = submodels_begin("permittivity");
   PermittivityModel* pm =  dynamic_cast<PermittivityModel*>(it->second);
   assert(pm != NULL);
@@ -923,8 +923,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
    */
 
   double x = guess;
-  // 1e-6 V error seems to be good enough...
-  double eps = 1e-6, dens_max = 1e6;
+  // 1e-4 V error seems to be good enough...
+  double eps = 1e-4, dens_max = 1e6;
   double error, residual_dens, y;
 
   //set_carrier_temperatures(kT, kT);
@@ -954,7 +954,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   bool success = false;
 
   //cerr << "***\n";
-  for (unsigned int i = 0; i < 100; ++i)
+  for (unsigned int i = 0; i < 200; ++i)
   {
     set_potentials(x);
     calculate_densities();

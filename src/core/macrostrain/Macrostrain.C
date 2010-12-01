@@ -84,7 +84,9 @@ Macrostrain::get_solution_secure(const Elem* elem,
     Stiffness* C_tensor_el = macrostrain_model->get_stiffness();
     const Tensor4DSym& C_calc =  C_tensor_el->C_calc;
 
-    elemstress = elemstr * C_calc;
+    // add converse piezo stress
+    macrostrain_model->get_converse_piezo_stress(elemstress, elem);
+    elemstress = elemstr * C_calc - elemstress;
 
     if (do_stress)
     {
@@ -4335,7 +4337,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
           if (dim >= 2) tmp(2) = new_pos_of_atom[1] * as->get_scale();
 	  else tmp(2) = as->get_structure_atoms()[i].get_position()(2);
-          
+
 	  if (dim == 3) tmp(3) = new_pos_of_atom[2] * as->get_scale();
 	  else tmp(3) = as->get_structure_atoms()[i].get_position()(3);
 
