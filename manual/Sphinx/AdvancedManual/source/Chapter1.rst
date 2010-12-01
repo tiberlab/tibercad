@@ -5,7 +5,7 @@ Chapter 1 - Overview
 | 
 | 
 
-1.1 Introduction to numerical Simulation with TiberCAD
+Introduction to numerical Simulation with TiberCAD
 ------------------------------------------------------
 
 | 
@@ -18,7 +18,7 @@ In the last step the actual Simulations are performed. Together with the mesh in
 Details about the Modeler and *mesher* tools can be found in the specific user-manuals.
 Here we deal primarily with the TiberCAD input file. However, in discussing examples of 1D, 2D and 3D Simulations, we will also describe in some detail the geometry input files used to run **GMSH**.
 
-1.1.1 Input File structure
+Input File structure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 | 
@@ -48,7 +48,7 @@ The section **Device** is used to associate one or more *mesh regions* to a mate
 The section Model is used to define the physical **Modules** to be solved. Each physical Model can be applied to the whole **Device**, or to a set of regions of the **Device**, (defined in **Device** section). Finally, **Simulation** section states the type of calculation to be executed, that is the *simulation* to be *solved*. These sections will be described in full details in the following.
 Besides these main sections, there other other two, called **Solver** and **Physics**, where some parameters can be set, respectively for the numerical solvers and for the physical **Modules**. The aim of these sections is to give the user the maximum of exibility to tune his/her Simulation. Especially regarding the **Solver** case, values of the numerical parameters have been already tuned for each application and should be modified only by an advanced user.
 
-1.2 Definition of physical and boundary regions in TiberCAD
+Definition of physical and boundary regions in TiberCAD
 -----------------------------------------------------------
 
 | 
@@ -61,7 +61,7 @@ As for *boundary regions*, they are needed to specify boundary conditions (b.c.)
 It is important to know that the information about the physical and boundary regions must be present in the mesh file before it is read by TIBERCAD, and thus have to be produced by making use of the Modeling/*mesher* software. As for now, TIBERCAD supports the mesh output of the following software tools: **GMSH** **v.2** and **ISE-TCAD** **v.9.5**.
 
 
-1.2.1 Using ISE-TCAD
+Using ISE-TCAD
 ^^^^^^^^^^^^^^^^^^^^
 
 | 
@@ -71,7 +71,7 @@ This name should be unique in the whole Device.
 In the same way, ISE TCAD *boundary regions* (*Contacts*) can be referred to in TIBERCAD by means of their user-defined name, present in the *.grd* output file, too.
 
 
-1.2.2 Using GMSH
+Using GMSH
 ^^^^^^^^^^^^^^^^
 
 | 
@@ -129,7 +129,7 @@ Finally, in 3D case, Physical Volume is used to define *mesh regions*, while **P
 | 
 | 
 
-1.3 Simulation environments
+Simulation environments
 ---------------------------
 
 | 
