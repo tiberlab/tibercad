@@ -33,8 +33,8 @@ ConversePiezo::calculate(const Elem* elem, const Point& point)
   ElField(1) = values[1];
   ElField(2) = values[2];
 
-  //From V/cm to V/m
-  ElField *= 100.0;
+  //From V/cm to V/m, and from Pa to GPa
+  ElField *= 100.0 * 1e-9;
   //Rotate to crystal system
   Material* mat = get_material();
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
@@ -49,13 +49,13 @@ ConversePiezo::calculate(const Elem* elem, const Point& point)
   stress(1,2) = stress(2,1);
   stress(0,0) = ElField(2) * _e31;
   stress(1,1) = ElField(2) * _e31;
-  stress(2,2) = ElField(3) * _e33;
+  stress(2,2) = ElField(2) * _e33;
 
   //Rotate the converse piezo stress
   stress =  cr.RotMatrix * (stress * cr.RotMatrix.transpose());
 
   //From Pa tp GPa
-  stress *= 1e-9;
+  //stress *= 1e-9;
   set_stress_source(stress);
 
   RealTensor dummy_tens(0);
@@ -79,7 +79,7 @@ ConversePiezo::do_init(void)
   _e15 = get_option("e15", _e15);
 
   std::string _sim_name = "null";
-  get_parameter("simulation_name", _sim_name);
+  get_parameter("poisson_simulation", _sim_name);
   _simul = SimulationInterface::find_simulation(_sim_name);
 
 

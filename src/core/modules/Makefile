@@ -4,7 +4,7 @@
 topdir := ../../..
 
 # we have to compile each module
-subdirs :=  excitons dssc common thermalbalance drift-diffusion
+subdirs :=  excitons dssc common thermalbalance drift-diffusion elasticity
 
 include $(topdir)/Make.common
 
