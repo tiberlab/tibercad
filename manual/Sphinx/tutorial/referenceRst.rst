@@ -258,13 +258,13 @@ Coding
 
 If you want to highlight a piece of code in a known format, use: ::
 
-    .. code-block:: [language]
+    .. code-block:: python
        :linenos:
 
        [body]
 
 ..
-  .. code-block:: [python]
+  .. code-block:: python
      :linenos:
 
      # The short X.Y version.
