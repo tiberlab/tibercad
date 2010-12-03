@@ -479,8 +479,10 @@ void Macrostrain::do_init( )
 
   //--------------------------------------------------------------------------------------//
   //add new system
-  my_system = TiberLinearSystem::create(*equation_systems,
-      get_equation_system_name(), get_solver_options());
+  //my_system = TiberLinearSystem::create(*equation_systems,
+  //    get_equation_system_name(), get_solver_options());
+  create_equation_system("linear");
+  my_system = &get_equation_system<TiberLinearSystem>();
 
   //--------------------------------------------------------------------------------------//
 
