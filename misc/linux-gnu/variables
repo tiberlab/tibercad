@@ -13,29 +13,31 @@ SLEPCPATCHLEVEL="-p7"
 LIBMESHVERSION="svn"
 
 # GMSH version
-GMSHVERSION=2.3.0
+GMSHVERSION=2.4.2
 
 # whether to compile debug mode or not (y/n)
-DEBUG=n
+DEBUG=y
 
 # build shared libs (yes/no)
 shared_libs=y
 
 # use MKL (yes/no)
-MKL=y
+MKL=n
 MKLDIR=/usr/pack/intel_mkl-10.2-gp
 
 # compilers
-v=-4.3.2
+#v=-4.3.2
+v=
 CC=gcc$v
 CXX=g++$v
-F77=ifort-11.1
+#F77=ifort-11.1
+F77=gfortran
 F90=$F77
 FC=$F77
-FORTRANDIR=/usr/pack/intel_fc-11.1-gp
+#FORTRANDIR=/usr/pack/intel_fc-11.1-gp
 
 #TIBEROPTS="--enable-uptight --disable-license-check --disable-hetero"
-TIBEROPTS="--disable-uptight --enable-license-check --disable-hetero"
+TIBEROPTS="--disable-uptight --disable-license-check --disable-hetero"
 
 # MPI
 MPI=n

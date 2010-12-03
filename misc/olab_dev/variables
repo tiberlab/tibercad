@@ -33,6 +33,7 @@ F77=ifort-11.1
 F90=$F77
 FC=$F77
 FORTRANDIR=/usr/pack/intel_fc-11.1-gp
+FFLAGS="-gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
 
 TIBEROPTS="--enable-uptight --disable-license-check --disable-hetero"
 

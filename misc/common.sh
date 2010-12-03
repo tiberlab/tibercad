@@ -60,18 +60,15 @@ FC=${FC:-$F77}
 export CC CXX F77 F90 FC
 
 # compiler flags
-CXXFLAGS=
-CFLAGS="-fexceptions"
-FFLAGS="-fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
-FCFLAGS="-fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
+CFLAGS="${CFLAGS} -fexceptions"
+FFLAGS="${FFLAGS} -fexceptions"
 if [ $march == "x86_64" ]; then
   CXXFLAGS="-fPIC ${CXXFLAGS}"
   CFLAGS="-fPIC ${CFLAGS}"
   FFLAGS="-fPIC ${FFLAGS}"
-  CFLAGS="-fPIC ${CFLAGS}"
-  FCFLAGS="-fPIC ${FCFLAGS}"
 fi
-export CXXFLAGS CFLAGS FFLAGS CFLAGS FCFLAGS
+FCFLAGS=${FFFLAGS}
+export CXXFLAGS CFLAGS FFLAGS FCFLAGS
 
 
 if [ "x$FORTRANDIR" != "x" ]; then
