@@ -10,6 +10,7 @@ Welcome to TiberCAD's documentation!
 Contents:
 
 .. toctree::
+   :numbered:
    :maxdepth: 2
 
    Chapter1
