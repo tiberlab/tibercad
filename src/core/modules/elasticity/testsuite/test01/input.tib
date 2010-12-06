@@ -1,0 +1,133 @@
+# diode example
+
+# Description of  the  device physical regions
+$Device
+{
+  Options
+  {
+    meshfile = mesh.msh
+    mesh_units = 1e-9
+    dimension = 3    
+    x-growth-direction = (1,0,0,0)
+    y-growth-direction = (0,1,-1,0)
+    z-growth-direction = (0,0,0,1)
+    structure = wz
+  }
+
+  Region Well
+  {
+    material = GaN
+    structure = wz
+  }
+  
+  Region  Contact
+  {
+    material = AlGaN
+    x = 0.2
+    structure = wz
+  }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+$Models 
+{ 
+
+
+  model elasticity
+  {
+    options
+    { 
+      simulation_regions = all
+      simulation_name = mec
+      plot = all
+    }
+
+    #physical_model boundary
+    #{ 
+    #  type = surface_force
+    #  force = (1,0,0)
+    #  region = Base
+    #}
+
+    physical_model body_force
+    {  
+     type = lattice_mismatch
+     reference_material = AlGaN 
+     structure = wz
+     x = 0.2 
+     x-growth-direction = (1,0,0,0)
+     y-growth-direction = (0,1,-1,0)
+     z-growth-direction = (0,0,0,1)
+
+    }
+
+
+   }
+
+
+  model macrostrain
+  {
+
+    options
+    { 
+      simulation_regions = all
+      simulation_name = strain
+      plot = all
+    }
+   
+
+ 
+    BC_Regions  
+    {
+      BC_Region Base
+      {
+	type = substrate
+	material = AlGaN
+	x = 0.2
+	structure = wz
+
+     x-growth-direction = (1,0,0,0)
+     y-growth-direction = (0,1,-1,0)
+     z-growth-direction = (0,0,0,1)
+
+      }
+    }
+  }
+
+
+
+}  
+
+
+
+# Definition of  Model-dependent Solver parameters
+$Solver
+{
+  macrostrain
+  {
+    reference_material_point = (0,0,0)
+    fixed_point1 = (0,0,0)
+    fixed_point2 = (0,5,0)
+    fixed_point3 = (0,0,220)
+    substrate = substrate
+    lin_rel_tol = 1e-6  
+  } 
+}
+
+
+
+# Definition of  model-indipendent parameters of the Simulation
+$Simulation
+{
+  temperature = 300
+  verbose = 2
+  solve = (strain,mec) 
+  output_format = vtk
+}
+
+
+
+
+
