@@ -116,7 +116,7 @@ Macrostrain::get_solution_secure(const Elem* elem,
     {
       double energy = doubleContraction(elemstress, elemstr);
       // stress is in GPa
-      values[EnergyDensity][0] = energy * 1e9;
+      values[EnergyDensity][0] = 0.5 * energy * 1e9;
     }
 
     if (do_stress_cryst)
