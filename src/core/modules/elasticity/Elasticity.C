@@ -295,16 +295,16 @@ Elasticity::get_solution_secure(const Elem* elem,
 	   strain(i,j) = 0.5 * (der1 + der2);
 	   
 	 }
- 
- 
+       //cout<<strain_source<<endl;
+       //strain_source(0);
        if (values.count(Strain))
        {
-	 values[Strain][6*n] = strain(0,0);
-	 values[Strain][6*n+1] = strain(1,1);
-	 values[Strain][6*n+2] = strain(2,2); 
-	 values[Strain][6*n+3] = strain(1,0);
-	 values[Strain][6*n+4] = strain(2,1);
-	 values[Strain][6*n+5] = strain(2,0); 
+	 values[Strain][6*n] = strain(0,0)  -strain_source(0,0) ;
+	 values[Strain][6*n+1] = strain(1,1) - strain_source(1,1);
+	 values[Strain][6*n+2] = strain(2,2) - strain_source(2,2); 
+	 values[Strain][6*n+3] = strain(1,0) - strain_source(1,0);
+	 values[Strain][6*n+4] = strain(2,1) - strain_source(2,1);
+	 values[Strain][6*n+5] = strain(2,0) - strain_source(2,0); 
        }
 
        if (values.count(StrainCrystal))
@@ -334,12 +334,12 @@ Elasticity::get_solution_secure(const Elem* elem,
 
        if (values.count(Stress))
 	 {
-	   values[Stress][6*n] = stress(0,0);
-	   values[Stress][6*n+1] = stress(1,1);
-	   values[Stress][6*n+2] = stress(2,2); 
-	   values[Stress][6*n+3] = stress(1,0);
-	   values[Stress][6*n+4] = stress(2,1);
-	   values[Stress][6*n+5] = stress(2,0); 
+	   values[Stress][6*n] = stress(0,0) + stress_source(0,0);
+	   values[Stress][6*n+1] = stress(1,1)+ stress_source(1,1) ;
+	   values[Stress][6*n+2] = stress(2,2)+ stress_source(2,2) ; 
+	   values[Stress][6*n+3] = stress(1,0)+ stress_source(1,0) ;
+	   values[Stress][6*n+4] = stress(2,1)+ stress_source(2,1) ;
+	   values[Stress][6*n+5] = stress(2,0)+ stress_source(2,0) ; 
 	 }
      }
 

@@ -35,8 +35,6 @@ LatticeMismatch::do_init(void)
   //  get_options().print_all();
   if (name == "none") throw InitFailedException("Lattice mismatch: reference material is not defined");
 
-  //  cout<<get_material()->get_name()<<endl;
-
   Material* ref_mat = Material::create (name,get_options());
   ref_mat->init();
 
@@ -55,10 +53,13 @@ LatticeMismatch::do_init(void)
   Tensor2Sym _eps0 = crystal_el->get_eps0(ref_lat_const);
 
 
+  cout<<get_material()->get_name()<<endl;
   cout<<_eps0(1,1)<<endl;
   cout<<_eps0(2,2)<<endl;
   cout<<_eps0(3,3)<<endl;
   cout<<endl;
+
+  
 
   //double loc_lat_const[3];
   //crystal_el->get_lat_const(loc_lat_const);
@@ -75,9 +76,9 @@ LatticeMismatch::do_init(void)
   double relax = get_options().get_option("relaxation_factor", 1.0);
 
   eps0 *=relax;
-  //eps0 *= -1.0;
+  eps0 *= -1.0;
 
-  cout<<eps0<<endl;
+  
   set_strain_source(eps0);
 
   RealTensor dummy_tens(0);
