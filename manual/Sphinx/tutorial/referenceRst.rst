@@ -429,6 +429,7 @@ Once you have put the marker at the end of the Document, you can insert the cita
 
 .. [CIT2002] Just like a footnote, except the label is textual.
 
+
 | 
 | back to Contents_
 
@@ -452,6 +453,25 @@ After that you can write a directive to suggest the substitution: ::
 
    "|" substitution text "|" directive type "::" data directive block 
 
+----
+
+if you want to perform a text substitution, you can write it in this way: ::
+
+    The result equals to |varepsilon|.
+
+it will be displayed:
+       
+The result equals to |varepsilon|.
+   
+if you add at the end of the page, this code: ::
+
+    .. |varepsilon| replace:: :math:`\sum_{n=0}^N` 
+
+.. |varepsilon| replace:: :math:`\sum_{n=0}^N`
+
+----
+
+   
 | 
 | back to Contents_
 
