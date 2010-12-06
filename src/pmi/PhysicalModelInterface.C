@@ -269,6 +269,7 @@ PhysicalModelInterface::copy(void) const
     new_copy->_owner = _owner;
     new_copy->set_name(get_name());
     new_copy->_simulator_id = _simulator_id;
+    new_copy->_set_module_name(get_module_name());
 
     new_copy->copy_from(this);
   }
@@ -477,7 +478,7 @@ PhysicalModelInterface::_create_submodels(void)
       name += string("_") + type;
 
     // we try to create it from the same module
-     PhysicalModelInterface* pm = create(name, it->second, get_module_name());
+    PhysicalModelInterface* pm = create(name, it->second, get_module_name());
 
     if (pm == NULL)
     {
