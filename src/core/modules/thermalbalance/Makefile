@@ -2,7 +2,7 @@
 
 topdir := ../../../..
 
-MODULE_NAME := thermalbalance
+MODULE_NAME := thermal
 export MODULE_NAME
 
 include $(topdir)/Make.module
