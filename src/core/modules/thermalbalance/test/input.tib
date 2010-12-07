@@ -72,13 +72,6 @@ $Models
 }
 
 
-# Definition of  Model-dependent Solver parameters
-
-$Solver
-{
-
-}
-
 # Definition of  model-indipendent parameters of the Simulation
 
 
@@ -91,8 +84,5 @@ $Simulation
   resultpath = output
   output_format = grace
 }
-
-
-
 
 
