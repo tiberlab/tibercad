@@ -53,14 +53,6 @@ LatticeMismatch::do_init(void)
   Tensor2Sym _eps0 = crystal_el->get_eps0(ref_lat_const);
 
 
-  cout<<get_material()->get_name()<<endl;
-  cout<<_eps0(1,1)<<endl;
-  cout<<_eps0(2,2)<<endl;
-  cout<<_eps0(3,3)<<endl;
-  cout<<endl;
-
-  
-
   //double loc_lat_const[3];
   //crystal_el->get_lat_const(loc_lat_const);
 

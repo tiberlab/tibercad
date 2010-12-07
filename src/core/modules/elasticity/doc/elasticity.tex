@@ -1,0 +1,85 @@
+\chapter{Elasticity}
+\label{chap:elasticity}
+%\section{Theory}
+The Elasticity module computes the mechanical equilibrium equation 
+\begin{equation}
+\frac{ \partial \sigma_{ij}}{\partial x_j} = f_i
+\end{equation}
+where $\mathbf{f}$ is the total body force and  $\sigma$ is the stress tensor given by 
+\begin{equation}
+\sigma_{ij} =C_{ijlk} \epsilon_{lk}
+\end{equation}
+$C$ is the fourth-rank stiffness tensor and $\epsilon$ is the strain tensor expressed in terms of displacements $u$ by
+\begin{equation}
+\epsilon_{lk} =\frac{1}{2} \left( \frac{\partial u_l}{\partial x_k} + \frac{\partial u_k}{\partial x_l}\right)
+\end{equation}
+
+\section{Options}
+
+The option \emph{shape\_itarations} sets the number of iterations for the strain calculation (1 means no deformation and is the default). The option \emph{shape\_error} is max allowed error for the deformation (default = 1e-2).
+
+
+\section{Models}
+Scheme:
+\begin{verbatim}
+Physical_model Name
+{
+   Type = 
+   Options
+}
+\end{verbatim}
+\noindent Bulk: apply for physical regions wit dim = N\\
+Inteface: apply for physical regions with dim = N-1\\
+N: dimension of the mesh.
+\subsection{Stiffness/Isotropic} 
+Kind: bulk \\
+Name: \emph{stiffness}\\
+Type: \emph{isotropic}\\
+Options:  \emph{young = 129} (Young modulus), \emph{poisson = 0.349} (Poisson ration) 
+
+\subsection{Stiffness/Anisotropic (default)}
+Kind: bulk \\
+Name: \emph{stiffness}\\
+Type: \emph{anisotropic} 
+
+\subsection{Body force/constant}
+Kind: bulk \\
+Name: \emph{body\_force}\\
+Type: \emph{constant}\\
+Options: \emph{force = (1,0,0)}\\
+
+\subsection{Body force/Lattice mismatch}
+Kind: bulk \\
+Name: \emph{body\_force}\\
+Type: \emph{lattice\_mismatch}\\
+Options: material options with the same format of the device section.
+
+\subsection{Body force/Converse}
+
+Kind: bulk \\
+Name: \emph{body\_force}\\
+Type: \emph{converse} \\
+Options: \emph{poisson\_simulation}\\
+Description: includes the converse piezo body force.
+
+\subsection{Boundary/Clamp}
+Kind: interface \\
+Name: \emph{boundary}\\
+Type: \emph{clamp} \\
+Options: none \\
+Description: fixes the node to have zero displacements.
+
+\subsection{Boundary/Surface force}
+Kind: interface \\
+Name: \emph{boundary}\\
+Type: \emph{surface\_force} \\
+Options: \emph{force = (0,0,1)} \\
+Description: applies a surface force
+
+\section{Output}
+
+All data are plotted on nodes. Keywords: \emph{Displacement,Strain,Stress,ForceSource,StressSource,StrainSource}
+
+
+
+
