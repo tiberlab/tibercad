@@ -7,6 +7,7 @@
 
 #include "tensor_value.h"
 #include "tensor.h"
+#include "point.h"
 #include "RotatedCrystal.h"
 #include "Material.h"
 #include "TensorOperators.h"
@@ -36,10 +37,14 @@ class BoundaryModel : public PhysicalModelInterface
   const void get_coefficients(RealTensor& H, double& A, RealGradient& R);
 
 
+ void set_normal(const Point p);
+
   protected:
 
     //! Constructor
   BoundaryModel(const ModelOptions& options);
+
+  Point _normal;
 
   void set_coefficients(RealTensor H, double A, RealGradient R);
 
@@ -83,6 +88,14 @@ BoundaryModel::BoundaryModel(const ModelOptions& options) :
   _A(0)
 {
 }
+
+inline
+void
+BoundaryModel::set_normal(const Point normal)
+{
+  _normal = normal;
+}
+
 
 
 #endif // _THERMALCONDUCTIVITYMODEL_H_

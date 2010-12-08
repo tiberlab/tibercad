@@ -585,30 +585,6 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	      (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
 	    
 
-    //   bool cylindrical = true;
-//       // if (_device->get_symmetry() == TiberCad::CYLINDRICAL)
-//       if (cylindrical)
-//       {
-
-// 	double rho = q_point[qp](0);
-	
-// 	vector<RealGradient> transform(3);
-// 	transform[0] = RealGradient(0);
-// 	transform[0](0) = 1.0/rho;
-// 	transform[0](1) = 1.0/rho;
-	
-// 	transform[1] = RealGradient(0);
-// 	transform[0](0) = 1.0/rho;
-	
-	
-//        for (ID i = 0;i <3; i++)
-// 	 for (ID j = 0;j <3; j++)
-// 	   for (ID alpha=0; alpha<n_dofs_vec[i]; alpha++)
-// 	     for (ID beta=0; beta<n_dofs_vec[j]; beta++)
-// 	       (*(K[i][j]))(alpha,beta) -= JxW[qp] * phi[alpha][qp]  * (transform[i] * (get_subtensor(C,i,j) * dphi[beta][qp]));
-
-//       }
-
 
       //Body force of previous iteration
       for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
@@ -649,6 +625,8 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    RealTensor H(0);
 	    RealGradient R(0);
 	    double A(0);
+
+            boundary_mod->set_normal(normal[qp]);
 	    boundary_mod->get_coefficients(H, A, R);
 	    
 	  

@@ -18,13 +18,28 @@ ElasticityBoundaryModel::do_init(void)
   it = submodels_begin("boundary"); 
   if ((*it).second != NULL)
   {
-    BoundaryModel* _bm = dynamic_cast<BoundaryModel*> ((*it).second);
+    _bm = dynamic_cast<BoundaryModel*> ((*it).second);
     _bm->get_coefficients(_H, _A, _R);
   }
-  cout<<_R<<endl;
+  
 
 }
 
+//! Calculate properties 
+void 
+ElasticityBoundaryModel::calculate(const Elem* elem, unsigned int side,
+		   const Point& point)
+{
+
+  if (_bm != NULL)
+  {
+    _bm->set_normal(_normal);
+    _bm->calculate(elem,side,point);
+    _bm->get_coefficients(_H, _A, _R);
+  }
+
+
+}
 
 // void
 // ElasticityBoundaryModel::create_submodels(void)

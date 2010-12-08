@@ -25,5 +25,4 @@ Clamp::do_init(void)
   H(2,2) = 1;
   double A = 0.0;
   set_coefficients(H,A,R);
-
 }

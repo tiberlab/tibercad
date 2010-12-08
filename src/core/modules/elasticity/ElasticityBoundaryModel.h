@@ -24,13 +24,15 @@ class TBDLLOCAL ElasticityBoundaryModel : public PhysicalModel
   
     //! Calculate properties 
     void calculate(const Elem* elem, unsigned int side,
-		   const Point& point){};
+		   const Point& point);
 
     //! Creator function
     static ElasticityBoundaryModel* create(const ModelOptions& options);
 
     const void get_coefficients(RealTensor& H, double& A, RealGradient& R);
- 
+
+    void set_normal(const Point p);
+
   protected:
 
     //! Constructor
@@ -40,7 +42,11 @@ class TBDLLOCAL ElasticityBoundaryModel : public PhysicalModel
 
     virtual void create_submodels(void){};
 
+  Point _normal;
+
   private:
+
+  BoundaryModel* _bm;
 
   static TiberModelObject*  _create(const ModelOptions& options);
   
@@ -64,6 +70,12 @@ ElasticityBoundaryModel::get_coefficients(RealTensor& H, double& A, RealGradient
   A = _A;
 }
 
+inline
+void
+ElasticityBoundaryModel::set_normal(const Point normal)
+{
+  _normal = normal;
+}
 
 
 

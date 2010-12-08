@@ -44,12 +44,11 @@ $Models
       plot = all
     }
 
-    #physical_model boundary
-    #{ 
-    #  type = surface_force
-    #  force = (1,0,0)
-    #  region = Base
-    #}
+    physical_model boundary
+    { 
+      type = substrate
+      region = Base
+    }
 
     physical_model body_force
     {  
@@ -61,7 +60,7 @@ $Models
      y-growth-direction = (0,1,-1,0)
      z-growth-direction = (0,0,0,1)
 
-    }
+ }
 
 
    }
@@ -123,7 +122,7 @@ $Simulation
 {
   temperature = 300
   verbose = 2
-  solve = (strain,mec) 
+  solve = (mec) 
   output_format = vtk
 }
 
