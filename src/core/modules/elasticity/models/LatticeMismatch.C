@@ -68,7 +68,7 @@ LatticeMismatch::do_init(void)
   double relax = get_options().get_option("relaxation_factor", 1.0);
 
   eps0 *=relax;
-  eps0 *= -1.0;
+  eps0 *= 1.0;
 
   
   set_strain_source(eps0);

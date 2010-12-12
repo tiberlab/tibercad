@@ -28,7 +28,6 @@ TIBER_MODULE(Elasticity, MODULE_NAME)
 
 using namespace std;
 
-
 Elasticity*
 Elasticity::_this = NULL;
 
@@ -299,12 +298,12 @@ Elasticity::get_solution_secure(const Elem* elem,
        //strain_source(0);
        if (values.count(Strain))
        {
-	 values[Strain][6*n] = strain(0,0)  -strain_source(0,0) ;
-	 values[Strain][6*n+1] = strain(1,1) - strain_source(1,1);
-	 values[Strain][6*n+2] = strain(2,2) - strain_source(2,2); 
-	 values[Strain][6*n+3] = strain(1,0) - strain_source(1,0);
-	 values[Strain][6*n+4] = strain(2,1) - strain_source(2,1);
-	 values[Strain][6*n+5] = strain(2,0) - strain_source(2,0); 
+	 values[Strain][6*n] = strain(0,0)  +  strain_source(0,0) ;
+	 values[Strain][6*n+1] = strain(1,1) + strain_source(1,1);
+	 values[Strain][6*n+2] = strain(2,2) + strain_source(2,2); 
+	 values[Strain][6*n+3] = strain(1,0) + strain_source(1,0);
+	 values[Strain][6*n+4] = strain(2,1) + strain_source(2,1);
+	 values[Strain][6*n+5] = strain(2,0) + strain_source(2,0); 
        }
 
        if (values.count(StrainCrystal))
@@ -330,7 +329,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      if (values.count(Stress) || values.count(Energy))
      {
        
-       stress = C * strain;
+       stress = C * (strain + strain_source);
 
        if (values.count(Stress))
 	 {
@@ -597,9 +596,9 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
       // Total source
       for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
       {  
-	RealGradient tmp = -force *  phi[alpha][qp] + (stress  + (C * strain)) * dphi[alpha][qp];
+	RealGradient tmp = force *  phi[alpha][qp] + (stress  + (C * strain)) * dphi[alpha][qp];
 	for (unsigned int i = 0;i <3; i++)
-	  (*(F[i]))(alpha) += JxW[qp] * tmp(i);
+	  (*(F[i]))(alpha) -= JxW[qp] * tmp(i);
       }
 
       
