@@ -88,6 +88,7 @@ class Macrostrain : public StrainSimulation
     {
       Strain,           //!< strain
       Stress,           //!< stress
+      Displacement,     //!< displacement
       vonMises,         //!< von Mises stress measure
       PiezoPolarization,//!< piezoelectric polarization
       StrainCrystal,    //!< strain in crystal coordinates

@@ -36,6 +36,7 @@ void Macrostrain::do_setup_solution_variables(void)
 {
   declare_solution(Strain, TENSOR, CELL, "-");
   declare_solution(Stress, TENSOR, CELL, "GPa");
+  declare_solution(Displacement, VECTOR, NODES, "m");
   declare_solution(vonMises, REAL, CELL, "GPa");
   declare_solution(PiezoPolarization, VECTOR, CELL, "C/m^2");
   declare_solution(StrainCrystal, TENSOR, CELL, "-");
@@ -61,6 +62,57 @@ Macrostrain::get_solution_secure(const Elem* elem,
   // this is in crystal system
   const Tensor2Sym& str_cryst = result_strain[elem];
   Tensor2Sym elemstr = sym(RotM * (str_cryst * RotM.transpose()));
+
+
+  if (values.count(Displacement))
+  {
+    // Get a reference to the LinearImplicitSystem we are solving
+    LinearImplicitSystem& system = *my_system;
+    const NumericVector<Number>& solution = *(system.solution);
+
+    double x0 = get_scaling().get_length_scaling();
+
+        unsigned int uvar[3] ;
+
+    for (unsigned int i = 0; i < 3; i++)
+      uvar[i] = system.variable_number(uname_vec[i]);
+
+    DofMap& dof_map = system.get_dof_map();
+    FEType fe_type = dof_map.variable_type(uvar[0]);
+    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    const vector<vector<double> >& phi = fe->get_phi();
+
+    vector<unsigned int> dof_indices_x;
+    vector<unsigned int> dof_indices_y;
+    vector<unsigned int> dof_indices_z;
+    dof_map.dof_indices(elem, dof_indices_x, uvar[0]);
+    dof_map.dof_indices(elem, dof_indices_y, uvar[1]);
+    dof_map.dof_indices(elem, dof_indices_z, uvar[2]);
+
+    fe->reinit(elem, &points);
+
+    const unsigned int n_points = points.size();
+
+    for (unsigned int i = 0; i < n_points; i++)
+    {
+      double ux = 0;
+      double uy = 0;
+      double uz = 0;
+
+      for (unsigned int j = 0; j < dof_indices_x.size(); j++)
+      {
+        ux += solution(dof_indices_x[j]) * phi[j][i];
+        uy += solution(dof_indices_y[j]) * phi[j][i];
+        uz += solution(dof_indices_z[j]) * phi[j][i];
+      }
+
+      values[Displacement][3 * i]   = ux * x0;
+      values[Displacement][3 * i + 1] = uy * x0;
+      values[Displacement][3 * i + 2] = uz * x0;
+    }
+  }
+
+
 
   if (values.count(Strain))
   {
