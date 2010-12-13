@@ -29,7 +29,7 @@ class TBDLLOCAL ElasticityBoundaryModel : public PhysicalModel
     //! Creator function
     static ElasticityBoundaryModel* create(const ModelOptions& options);
 
-    const void get_coefficients(RealTensor& H, double& A, RealGradient& R);
+    const void get_coefficients(RealTensor& H, RealGradient& R);
 
     void set_normal(const Point p);
 
@@ -63,11 +63,10 @@ class TBDLLOCAL ElasticityBoundaryModel : public PhysicalModel
 inline
 const
 void
-ElasticityBoundaryModel::get_coefficients(RealTensor& H, double& A, RealGradient& R)
+ElasticityBoundaryModel::get_coefficients(RealTensor& H, RealGradient& R)
 {
   H = _H;
   R = _R;
-  A = _A;
 }
 
 inline

@@ -36,7 +36,8 @@ void Substrate::calculate(const Elem* elem, unsigned int side,
   H(2,1) = x;
   H(2,2) = 0.0;
 
-  double A = 0.0;
-  set_coefficients(H,A,R);
+  H *=1e15;
+ 
+  set_coefficients(H,R);
 
 }

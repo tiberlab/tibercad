@@ -46,7 +46,7 @@ $Models
 
     physical_model boundary
     { 
-      type = substrate
+      type = clamp
       region = Base
     }
 
@@ -110,7 +110,7 @@ $Solver
     fixed_point1 = (0,0,0)
     fixed_point2 = (0,5,0)
     fixed_point3 = (0,0,220)
-    substrate = substrate
+    substrate = Base
     lin_rel_tol = 1e-6  
   } 
 }

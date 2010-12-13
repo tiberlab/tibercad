@@ -18,11 +18,9 @@ SurfaceForce::do_init(void)
   
   RealGradient  R(0);
   RealTensor H(0);
-  double A = 1.0;
   
-
   get_parameter("force",R,false);
 
-  set_coefficients(H,A,R);
+  set_coefficients(H,R);
 
 }

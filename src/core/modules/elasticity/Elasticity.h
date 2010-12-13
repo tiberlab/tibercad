@@ -109,7 +109,8 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
     enum Solutions
     {
-      Strain,        /*!< the strain */
+      Strain,        /*!< the strain */ 
+      StrainCell,        /*!< the strain */
       StrainCrystal,  /*!< the strain in the crystal system*/
       Stress,            /*!< the stress */
       Displacement,     /*!< the displacement */

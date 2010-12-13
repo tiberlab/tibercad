@@ -32,6 +32,7 @@ Elasticity*
 Elasticity::_this = NULL;
 
 
+
 Elasticity::Elasticity(const ModelOptions& options) :
   SimulationInterface(options)
 {
@@ -113,6 +114,7 @@ Elasticity::do_setup_solution_variables(void)
   // we declare our solution variables
 
   declare_solution(Strain, TENSOR, NODES, "");
+  declare_solution(StrainCell, TENSOR, CELL, "");
   declare_solution(StrainCrystal, TENSOR, NODES, "");
   declare_solution(Energy, REAL, NODES, "Joule");
   declare_solution(Stress, TENSOR, NODES, "GPa");
@@ -134,7 +136,6 @@ Elasticity::do_solve(void)
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>(get_equation_system_name());
 
-  system.set_options(get_solver_options());
 
   sol =  (system.solution)->clone();
   sol->zero();
@@ -242,30 +243,27 @@ Elasticity::get_solution_secure(const Elem* elem,
    const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   
    fe->reinit(elem, &p);
-
+  
    ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);
    
-
-
+   RealTensor total_strain(0);
+   RealTensor total_stress(0);
 
    for (ID n = 0; n < np; n++)
    {
-
      mod.calculate(elem,p[n]);   
      
      const Tensor4DSym& C = mod.get_stiffness();
      const RealGradient& force_source =  mod.get_force_source();
-     const RealTensor& strain_source =  mod.get_strain_source();
-     const RealTensor& stress_source =  mod.get_stress_source();
+     const RealTensor& strain_source  =  mod.get_strain_source();
+     const RealTensor& stress_source  =  mod.get_stress_source();
     
-
-
      //----Displacemet--------
      if (values.count(Displacement))
      {
-       //----Displacemet--------
+       //----Displacemet-------- 
        RealGradient u(0);
-       for (unsigned int i = 0;i<3; i ++)
+     for (unsigned int i = 0;i<3; i ++)
 	 for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
 	   u(i) +=(solution)(dof_indices[i][alpha]) * phi[alpha][n];
        
@@ -294,16 +292,17 @@ Elasticity::get_solution_secure(const Elem* elem,
 	   strain(i,j) = 0.5 * (der1 + der2);
 	   
 	 }
-       //cout<<strain_source<<endl;
-       //strain_source(0);
+
+
+       total_strain = strain + strain_source;
        if (values.count(Strain))
        {
-	 values[Strain][6*n] = strain(0,0)  +  strain_source(0,0) ;
-	 values[Strain][6*n+1] = strain(1,1) + strain_source(1,1);
-	 values[Strain][6*n+2] = strain(2,2) + strain_source(2,2); 
-	 values[Strain][6*n+3] = strain(1,0) + strain_source(1,0);
-	 values[Strain][6*n+4] = strain(2,1) + strain_source(2,1);
-	 values[Strain][6*n+5] = strain(2,0) + strain_source(2,0); 
+	 values[Strain][6*n] =   total_strain(0,0);
+	 values[Strain][6*n+1] = total_strain(1,1);
+	 values[Strain][6*n+2] = total_strain(2,2); 
+	 values[Strain][6*n+3] = total_strain(1,0);
+	 values[Strain][6*n+4] = total_strain(2,1);
+	 values[Strain][6*n+5] = total_strain(2,0); 
        }
 
        if (values.count(StrainCrystal))
@@ -312,7 +311,7 @@ Elasticity::get_solution_secure(const Elem* elem,
 	 Material* mat = mod.get_material();
 	 const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 	 Tensor2Gen rotate = cr.RotMatrix;
-	 RealTensor crystal_strain = rotate.transpose() * (strain * rotate.transpose());
+	 RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate.transpose());
 
 	 values[StrainCrystal][6*n] =   crystal_strain(0,0);
 	 values[StrainCrystal][6*n+1] = crystal_strain(1,1);
@@ -325,20 +324,19 @@ Elasticity::get_solution_secure(const Elem* elem,
      }
      
      //Stress
-     RealTensor stress(0);
      if (values.count(Stress) || values.count(Energy))
      {
        
-       stress = C * (strain + strain_source);
+       total_stress = C * total_strain + stress_source;
 
        if (values.count(Stress))
 	 {
-	   values[Stress][6*n] = stress(0,0) + stress_source(0,0);
-	   values[Stress][6*n+1] = stress(1,1)+ stress_source(1,1) ;
-	   values[Stress][6*n+2] = stress(2,2)+ stress_source(2,2) ; 
-	   values[Stress][6*n+3] = stress(1,0)+ stress_source(1,0) ;
-	   values[Stress][6*n+4] = stress(2,1)+ stress_source(2,1) ;
-	   values[Stress][6*n+5] = stress(2,0)+ stress_source(2,0) ; 
+	   values[Stress][6*n] = total_stress(0,0);
+	   values[Stress][6*n+1] = total_stress(1,1);
+	   values[Stress][6*n+2] = total_stress(2,2); 
+	   values[Stress][6*n+3] = total_stress(1,0);
+	   values[Stress][6*n+4] = total_stress(2,1);
+	   values[Stress][6*n+5] = total_stress(2,0); 
 	 }
      }
 
@@ -374,10 +372,23 @@ Elasticity::get_solution_secure(const Elem* elem,
      {
        for (ID i = 0; i<dim; i++)
 	 for (ID j = 0; j<dim; j++)
-	   values[Energy][n] += 0.5 * stress(i,j) * strain(i,j);
+	   values[Energy][n] += 0.5 * (total_stress(i,j)) * (total_strain(i,j));
      }
+
    }
-   
+
+
+    if (values.count(StrainCell))
+    {
+      values[StrainCell][0] = total_strain(0,0);
+      values[StrainCell][1] = total_strain(1,1);
+      values[StrainCell][2] = total_strain(2,2); 
+      values[StrainCell][3] = total_strain(1,0);
+      values[StrainCell][4] = total_strain(2,1);
+      values[StrainCell][5] = total_strain(2,0); 
+     }
+    
+
 }
 
 
@@ -523,7 +534,6 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
     F[i] = new DenseSubVector<Number> (Fe) ;
   }
   //----------------------------------------------------------
-  // double penalty = 1e15;
   std::vector< std::vector<unsigned int> > dof_indices_vec(3);
   std::vector<unsigned int> dof_indices;
 
@@ -626,16 +636,8 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    double A(0);
 
             boundary_mod->set_normal(normal[qp]);
-	    boundary_mod->get_coefficients(H, A, R);
+	    boundary_mod->get_coefficients(H, R);
 	    
-	  
-	    // we use a penalty approach here for its simplicity
-	    if ((A < 1e-10) && (A >= 0)) A = 1e-10;
-	    else if ((A > -1e-10) && (A<= 0)) A = -1e-10;
-	    
-	    H /= A;
-	    R /= A;
-	   
 	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	    {
 	      for (unsigned int i =0; i<3; i++)
