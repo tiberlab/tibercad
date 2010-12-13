@@ -203,7 +203,7 @@ class PhysicalModelInterface : public TiberModelObject
 
     //! Initialize this model as interface model
     /*!
-     * It calls read_interface_database(), do_init_interface() and do_init()
+     * It calls read_interface_database() and do_init_interface()
      */
     void init_interface(const Material* comp_A,
         const Material* comp_B);
@@ -308,7 +308,10 @@ class PhysicalModelInterface : public TiberModelObject
     /*!
      * Calculates all parameters of an interface.
      *
-     * \note do_init() will be called after do_init_interface()
+     * \note do_init() will \emph not be called automatically
+     *      after do_init_interface()
+     *
+     * \note The default implementation calls do_init()
      */
     virtual void do_init_interface(const Material* comp_A,
         const Material* comp_B);
@@ -702,6 +705,7 @@ void
 PhysicalModelInterface::do_init_interface(const Material*,
     const Material*)
 {
+  do_init();
 }
 
 

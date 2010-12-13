@@ -121,6 +121,10 @@ class DDInterfaceModel : public PhysicalModel
     virtual void do_init(void);
 
 
+    //! Create some of the submodels
+    virtual void create_submodels(void);
+
+
     //! Set the BC type for variable \c i
     void set_type(unsigned int var, BCType type);
 

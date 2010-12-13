@@ -395,10 +395,8 @@ PhysicalModelInterface::init_interface(const Material* comp_A,
   for ( ; it != end; ++it)
     it->second->init_interface(comp_A, comp_B);
 
-  // some models might treat alloys in a special way
+  // some models might treat interfaces in a special way
   do_init_interface(comp_A, comp_B);
-
-  do_init();
 }
 
 
