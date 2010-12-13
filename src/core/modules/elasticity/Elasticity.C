@@ -634,7 +634,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    else if ((A > -1e-10) && (A<= 0)) A = -1e-10;
 	    
 	    H /= A;
-	    //R /= A;
+	    R /= A;
 	   
 	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	    {
