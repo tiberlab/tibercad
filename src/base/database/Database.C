@@ -74,6 +74,7 @@ Database::operator=(const Database& rhs)
     _is_interface = rhs._is_interface;
     _mixing_type = rhs._mixing_type;
     _comp_db = rhs._comp_db;
+    _comp_fractions = rhs._comp_fractions;
   }
 
   return *this;

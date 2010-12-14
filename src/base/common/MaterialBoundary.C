@@ -25,25 +25,29 @@ MaterialBoundary::create(ID id_A, Material* mat_A,
 {
   assert(mat_A != NULL);
 
-  // TODO how to use database correctly in this case?
-
-  string name(mat_A->get_name());
-  if (mat_B != NULL)
-    name += "%" +  mat_B->get_name();
-
-  Database db(name, options.get_option("datafile", ""));
-  db.set_section("");
-
   MaterialBoundary* mat = new MaterialBoundary(options);
 
   assert(mat != NULL);
+
+  // If it is an internal boundary, then we create a new
+  // database, otherwise we copy that of material A
+  Database db;
+  string name(mat_A->get_name());
+  if (mat_B != NULL)
+  {
+    name += "%" +  mat_B->get_name();
+    db.set_material(name, options.get_option("datafile", ""));
+  }
+  else
+    db = mat_A->get_database();
+
+  db.set_section("");
+  mat->set_database(db);
 
   mat->_id_A = id_A;
   mat->_id_B = id_B;
   mat->_mat_A = mat_A;
   mat->_mat_B = mat_B;
-
-  mat->set_database(db);
 
   return mat;
 }
