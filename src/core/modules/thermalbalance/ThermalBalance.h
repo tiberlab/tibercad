@@ -11,7 +11,7 @@
 class TiberLinearSystem;
 
 /*!
- * 
+ *
  * \brief This is an example implementation of the MyPoisson equation to
  *        help module development.
  *
@@ -68,6 +68,8 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
         std::map<ID, std::vector<double> >& values,
         const std::vector<Point>& p);
 
+    //! Get a mesh independent solution variable
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
   //! Order the solution in correct mode
   virtual void build_elemental_results(const std::set<std::string>& variables,
@@ -138,7 +140,7 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
    void print_info(void);
 
    void print_info(ID k);
-   
+
    ID dim;
 
    double phi_zero;
@@ -183,7 +185,7 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
     std::string macro_sim;
     std::vector<int> custom_dir;
     double phi_zero;
-   
+
     //New
     double equilibrium_energy;
     std::string first_guess;
@@ -195,7 +197,7 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
     double t_0;
     ID theta_slices;
     ID phi_slices;
-   
+
     std::string partitioning;
     double threshold_value;
   };
@@ -222,7 +224,7 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
 
   struct thermal_options
   {
-    
+
     bool automatic_partitioning;
     double threshold_value;
     double ms_error;
@@ -246,13 +248,13 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
   std::set<const Elem*> Domain;
 
   std::set<const Elem*> GlobalDomain;
-  
+
   std::set<const Elem*> GrayDomain;
 
     //! These are the known solution variables
     /*!
-     * This is an enum, but we use the string representation of 
-     * the enum values to refer to solutions for plotting or 
+     * This is an enum, but we use the string representation of
+     * the enum values to refer to solutions for plotting or
      * for data exchange with other modules.
      *
      * \note Do \em not use (\c INVALID_ID - 1) or the strings \c RegionIDs
@@ -273,7 +275,8 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
       EffectiveKappa,
       thermal,
       DomainTest,
-     GRAY
+     GRAY,
+      MaxTemp
     };
 
   //! The constructor
@@ -305,7 +308,7 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
     static ThermalBalance* _this;
 
 
- 
+
 
 };
 
@@ -318,7 +321,7 @@ ThermalBalance::is_on_GF_boundary(ElementSide elside)
   //if (domain_boundary.count(elside.elem()))
   // if (elside.elem()->neighbor(elside.side()) ==  domain_boundary[elside.elem()])
   //  is_on_GF_boundary = true;
-  //----------------------------------	 
+  //----------------------------------
   //return is_on_GF_boundary;
 
   return BoundarySide.count(elside);
@@ -336,8 +339,8 @@ ThermalBalance::is_on_any_boundary(ElementSide elside)
   if (domain_boundary.count(elside.elem()))
     if (elside.elem()->neighbor(elside.side()) ==  domain_boundary[elside.elem()])
       is_on_GF_boundary = true;
-  //----------------------------------	   
-  
+  //----------------------------------
+
   return se.is_outer_boundary(elside) || is_on_GF_boundary;
 
 }

@@ -8,7 +8,7 @@
 #include "elem.h"
 
 std::string
-TemperatureInterface::_variable_name = "temperature";
+TemperatureInterface::_variable_name = "LatticeTemp";
 
 
 
@@ -30,14 +30,11 @@ TemperatureInterface::set_simulation(const std::string& name)
     if (_simulation == NULL)
       throw InitFailedException("No such simulation found: " + name);
 
-    _id_set.clear();
     _id = _simulation->get_solution_id(_variable_name);
 
     if (_id == INVALID_ID)
       throw InitFailedException("Simulation " + name +
           " has no variable '" + _variable_name + "'");
-
-    _id_set.insert(_id);
 
     answer = true;
   }
@@ -51,30 +48,14 @@ TemperatureInterface::get_temperature(const Elem* elem,
     std::vector<double>& temperatures)
 {
   assert(elem != NULL);
-  
+
   int nn = elem->n_nodes();
+  std::vector<Point> nodes(nn);
 
-  temperatures.resize(nn);
+  for (unsigned int i = 0; i < nn; ++i)
+    nodes[i] = elem->point(i);
 
-
-  if (_simulation == NULL)
-  {
-    for (int i = 0; i < nn; i++)
-      temperatures[i] = SimulationOptions::temperature;
-  }
-  else
-  {
-    std::vector<std::map<ID, double> > temp;
-
-    if (_simulation->get_solution(elem, _id_set, temp))
-      for (int i = 0; i < nn; i++)
-        temperatures[i] = temp[i][_id];
-    
-    else
-      for (int i = 0; i < nn; i++)
-        temperatures[i] = SimulationOptions::temperature;
-     
-  }
+  get_temperature(elem, nodes, temperatures);
 }
 
 
@@ -95,10 +76,11 @@ TemperatureInterface::get_temperature(const Elem* elem,
   }
   else
   {
-    std::vector<std::map<ID, double> > temp;
-    if (_simulation->get_solution(elem, p, _id_set, temp))
-      for (int i = 0; i < nn; i++)
-        temperatures[i] = temp[i][_id];
+    std::map<ID, std::vector<double> > temp;
+    temp[_id] = std::vector<double>();
+
+    if (_simulation->get_solution(elem, temp, p))
+      temperatures = temp[_id];
     else
       for (int i = 0; i < nn; i++)
         temperatures[i] = SimulationOptions::temperature;
@@ -113,9 +95,10 @@ TemperatureInterface::get_temperature(const Elem* elem, const Point& p)
   std::vector<double> temp(1);
 
   get_temperature(elem, ps, temp);
-  
+
   return temp[0];
 }
+
 bool
 TemperatureInterface::is_solved(void) const
 {

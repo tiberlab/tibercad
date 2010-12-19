@@ -8,7 +8,6 @@
 #include "tiber_dll.h"
 
 
-#include <set>
 #include <vector>
 #include <string>
 
@@ -39,7 +38,7 @@ class TemperatureInterface
      */
     bool set_simulation(const std::string& name);
 
-    
+
     //! Get the nodal temperatures
     void get_temperature(const Elem* elem, std::vector<double>& temperatures);
 
@@ -77,9 +76,6 @@ class TemperatureInterface
     //! The ID as returned from the simulation
     ID _id;
 
-    
-    //! We need the ID in a set for the function calls
-    std::set<ID> _id_set;
 
 };
 
