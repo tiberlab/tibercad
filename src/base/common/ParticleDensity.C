@@ -16,7 +16,7 @@ ParticleDensity::ParticleDensity(const ModelOptions& options) :
   PhysicalModelInterface(options),
   _name(""),
   _charge(-1),
-  _statistics(TiberCad::FERMIDIRAC),
+  _statistics(TiberCad::BOLTZMANN),
   _use_quantum(false),
   _is_quantum(false),
   _density_id(INVALID_ID),
@@ -74,12 +74,12 @@ ParticleDensity::do_init(void)
 
   _charge = get_option("charge", _charge);
 
-  string stat("fermidirac");
+  string stat("boltzmann");
   stat = get_option("statistics", stat);
-  if (stat == "fermidirac")
-    _statistics = TiberCad::FERMIDIRAC;
-  else if (stat == "boltzmann")
+  if (stat == "boltzmann")
     _statistics = TiberCad::BOLTZMANN;
+  else if (stat == "fermidirac")
+    _statistics = TiberCad::FERMIDIRAC;
 
 
   vector<string> qd;

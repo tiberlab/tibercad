@@ -138,6 +138,7 @@ DriftDiffusionProperties::create_submodels(void)
   // particle densities
   {
     ModelOptions opts;
+    opts.set_option("statistics", "fermidirac");
 
     bool e_done = false;
     bool h_done = false;
@@ -155,6 +156,8 @@ DriftDiffusionProperties::create_submodels(void)
       ++it;
 
       const string& particle = o.get_option("particle", "");
+      if (!o.find_option("statistics"))
+        o.set_option("statistics", "fermidirac");
 
       if (particle == "electron")
       {
