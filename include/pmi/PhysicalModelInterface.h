@@ -236,10 +236,6 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Print some info
-    /*!
-     * The implementation should add 4 spaces at the beginning of
-     * each line.
-     */
     virtual void do_print_info(void){};
 
 

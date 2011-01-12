@@ -3,6 +3,7 @@
 #ifndef _PARTICLEDENSITY_H_
 #define _PARTICLEDENSITY_H_
 
+#include "PhysicalModelInterface.h"
 #include "TiberCad.h"
 #include "TypeDefs.h"
 #include "Constants.h"
@@ -33,7 +34,7 @@ class Elem;
  * 1/2, according to carrier statistics.
  *
  */
-class ParticleDensity
+class ParticleDensity : public PhysicalModelInterface
 {
 
   public:
@@ -43,6 +44,9 @@ class ParticleDensity
 
 
     //! Constructor
+    ParticleDensity(const ModelOptions& options);
+
+
     /*!
      * \param name the particle name (electron, hole etc.)
      * \param statistics the statistics to be used for classical densities
@@ -51,8 +55,16 @@ class ParticleDensity
         TiberCad::Statistics statistics = TiberCad::BOLTZMANN);
 
 
+    //! Create a ParticleDensity object
+    static ParticleDensity* create(const ModelOptions& options);
+
+
     // Destructor
     ~ParticleDensity(void) {};
+
+
+    //! Get the particle name
+    const std::string& get_particle_name(void);
 
 
     //! Set the charge per particle
@@ -162,6 +174,13 @@ class ParticleDensity
 
 
 
+  protected:
+
+    //! Do initialization
+    virtual void do_init(void);
+
+
+
   private:
 
     //! The name of the particle
@@ -261,6 +280,13 @@ class ParticleDensity
 // inline methods
 //
 
+
+inline
+const std::string&
+ParticleDensity::get_particle_name(void)
+{
+  return _name;
+}
 
 
 inline

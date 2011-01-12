@@ -8,6 +8,7 @@
 
 #include "Utils.h"
 #include "Trap.h"
+#include "ParticleDensity.h"
 
 #include "ZbStiffness.h"
 #include "WzStiffness.h"
@@ -152,6 +153,8 @@ PhysicalModelInterface::create(const string& name,
   //  mod = WzPiezoelectricModel::create(options);
   else if (name == "trap")
     mod = Trap::create(options);
+  else if (name == "particle_density")
+    mod = ParticleDensity::create(options);
 
 
   if (mod == NULL)

@@ -102,6 +102,12 @@ $Models
       integration_order = 2
     }
 
+     physical_model particle_density
+     { 
+       statistics = boltzmann
+     }
+
+
     physical_model recombination
     { 
       model = srh

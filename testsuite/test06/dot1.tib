@@ -137,10 +137,14 @@ $Models
       plot = (Ec, Ev, eQFermi, hQFermi, ElField, Polarization)
 
       strain_simulation = str
-      statistics = FD
 
       coupling = poisson
       integration_order = 2
+    }
+
+    physical_model particle_density
+    {
+      statistics = fermidirac
     }
 
     physical_model recombination

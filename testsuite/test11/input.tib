@@ -67,6 +67,11 @@ $Models
              load_state = dd.tsv
 	    }
 
+            physical_model particle_density
+            {
+              statistics = fermidirac
+            }
+
 
 	    BC_Regions  
 	    {
@@ -168,18 +173,7 @@ $Solver
     }
 
 }
-# Definition of  Model dependent physical parameters
-$Physics
-{
-  driftdiffusion 
-  {
-    statistics = FD
-  } 
 
-
-}
-
-# Definition of  model-indipendent parameters of the Simulation
 
 
 $Simulation

@@ -41,8 +41,6 @@ $Models
     {
      simulation_name = driftdiffusion
 
-     # use Fermi-Dirac statistics
-     statistics = FD
 
      # we only solve for electrons
      #coupling = electrons
@@ -50,6 +48,13 @@ $Models
      plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity,  eMobility, hQFermi, hDensity, hCurrentDensity, hMobility, NetRecombination, ElField, ElPotential, ContactCurrents)
 
     }
+
+    physical_model particle_density
+    {
+      # use Fermi-Dirac statistics
+      statistics = fermidirac
+    }
+
 
     physical_model recombination
     {

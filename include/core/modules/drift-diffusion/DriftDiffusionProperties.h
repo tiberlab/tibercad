@@ -7,7 +7,6 @@
 
 #include "PhysicalModel.h"
 
-#include "ParticleDensity.h"
 #include "TemperatureInterface.h"
 #include "StrainInterface.h"
 #include "SimulationOptions.h"
@@ -32,11 +31,13 @@
 class Elem;
 class Dopant;
 class Trap;
+class SimulationInterface;
 class DriftDiffusion;
 class RecombinationModelInterface;
 class MobilityModelInterface;
 class ThermoelectricPower;
 class PolarizationModel;
+class ParticleDensity;
 
 
 //! The base class for all drift-diffusion related semiconductor models
@@ -230,18 +231,6 @@ class DriftDiffusionProperties : public PhysicalModel
         const ModelOptions& options = ModelOptions());
 
 
-    //! Set the statistics to be used
-    /*!
-     * \param statistics the statistics
-     */
-    void set_statistics(TiberCad::Statistics statistics);
-
-
-    //! Get the statistics to be used
-    /*!
-     * \return the statistics
-     */
-    TiberCad::Statistics get_statistics(void) const;
 
 
     //! Lock the parameters
@@ -770,9 +759,6 @@ class DriftDiffusionProperties : public PhysicalModel
       { return _pd->old_fermi_h; };
 
 
-    //! Set the flag for equilibrium calculation
-    void set_driftdiffusion(DriftDiffusion* dd);
-
     //! Get the point data
     const PointData& get_point_data(void) const
         { return get_pd(); }
@@ -849,10 +835,6 @@ class DriftDiffusionProperties : public PhysicalModel
     virtual PhysicalModelInterface* create_new(void) const;
 
 
-    //! \copydoc PhysicalModel::copy_from()
-    virtual void copy_from(const PhysicalModelInterface* rhs);
-
-
     //! \copydoc PhysicalModel::do_print_info(void)
     virtual void do_print_info(void);
 
@@ -923,9 +905,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! \c true if we should use a predictor for quantum densities
     bool _use_predictor;
-
-    //! The simulation this model is used for
-    DriftDiffusion* _driftdiffusion;
 
 
     //! The equilibrium fermi level
@@ -1003,10 +982,6 @@ class DriftDiffusionProperties : public PhysicalModel
     void parse_options(void);
 
 
-    //! Setup the electron and hole ParticleDensity structures
-    void setup_electrons_and_holes(void);
-
-
     //! Add a recombination model
     /*!
      * Creates and adds a new recombination model from the given name and
@@ -1036,8 +1011,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The coordinates of the point we are working on
     Point _coord;
 
-    //! The statistics used
-    TiberCad::Statistics _statistics;
 
     //! Type of coupling (particles) we want to study
     /*!
@@ -1106,11 +1079,11 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! The electrons
-    ParticleDensity _electrons;
+    ParticleDensity* _electrons;
 
 
     //! The holes
-    ParticleDensity _holes;
+    ParticleDensity* _holes;
 
 
     //! The relaxation factor for the polarization
@@ -1364,21 +1337,6 @@ DriftDiffusionProperties::get_strain(void)
 
 
 
-inline
-void
-DriftDiffusionProperties::set_statistics(TiberCad::Statistics statistics)
-{
-  _statistics = statistics;
-}
-
-
-inline
-TiberCad::Statistics
-DriftDiffusionProperties::get_statistics(void) const
-{
-  return _statistics;
-}
-
 
 
 
@@ -1498,19 +1456,12 @@ DriftDiffusionProperties::use_predictor(void) const
 }
 
 
-inline
-void
-DriftDiffusionProperties::set_driftdiffusion(DriftDiffusion* dd)
-{
-  _driftdiffusion = dd;
-}
-
 
 inline
 ParticleDensity&
 DriftDiffusionProperties::get_electrons(void)
 {
-  return _electrons;
+  return *_electrons;
 }
 
 
@@ -1518,7 +1469,7 @@ inline
 ParticleDensity&
 DriftDiffusionProperties::get_holes(void)
 {
-  return _holes;
+  return *_holes;
 }
 
 

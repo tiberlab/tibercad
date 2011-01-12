@@ -797,7 +797,15 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Adds a solution name to the plot list
+    /*!
+     * This needs to be done \em before calling
+     * declare_solution()
+     */
     void add_plot_variable(const std::string& name);
+
+
+    //! Adds a solution id to the plot variable list
+    void add_plot_variable(ID id);
 
 
     //! Checks if a solution variable should be plotted

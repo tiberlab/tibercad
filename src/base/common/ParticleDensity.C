@@ -12,10 +12,28 @@ using namespace std;
 
 
 
+ParticleDensity::ParticleDensity(const ModelOptions& options) :
+  PhysicalModelInterface(options),
+  _name(""),
+  _charge(-1),
+  _statistics(TiberCad::FERMIDIRAC),
+  _use_quantum(false),
+  _is_quantum(false),
+  _density_id(INVALID_ID),
+  _elem(NULL),
+  _density(-1.0),
+  _density_derivative(-1.0),
+  _gamma(1.0),
+  _embracing(NULL)
+{
+
+}
+
 
 ParticleDensity::ParticleDensity(const string& name,
     TiberCad::Statistics statistics)
-: _name(name),
+: PhysicalModelInterface(ModelOptions()),
+  _name(name),
   _statistics(statistics),
   _use_quantum(false),
   _is_quantum(false),
@@ -35,6 +53,50 @@ ParticleDensity::ParticleDensity(const string& name,
 }
 
 
+
+
+ParticleDensity*
+ParticleDensity::create(const ModelOptions& options)
+{
+  return new ParticleDensity(options);
+}
+
+
+void
+ParticleDensity::do_init(void)
+{
+  _name = get_option("particle", _name);
+
+  if (_name == "electron")
+    _charge = -1;
+  else if (_name == "hole")
+    _charge = 1;
+
+  _charge = get_option("charge", _charge);
+
+  string stat("fermidirac");
+  stat = get_option("statistics", stat);
+  if (stat == "fermidirac")
+    _statistics = TiberCad::FERMIDIRAC;
+  else if (stat == "boltzmann")
+    _statistics = TiberCad::BOLTZMANN;
+
+
+  vector<string> qd;
+  get_option("quantum_density", qd);
+  for (size_t i = 0; i < qd.size(); i++)
+    add_quantum_density(qd[i]);
+
+  if (get_quantum_simulation() != NULL)
+  {
+    SimulationInterface* owner =
+        SimulationInterface::get_simulation(get_simulator_id());
+    Embracing* emb =
+      owner->create_embracing_region(
+          get_quantum_simulation(), get_options(), true);
+    set_embracing(emb);
+  }
+}
 
 
 void

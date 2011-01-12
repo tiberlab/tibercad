@@ -70,10 +70,10 @@ $Models
      physical_regions = all
   
       coupling = poisson
-      statistics = FD
 
       strain_simulation = strain
     }
+
 
     physical_model recombination
     {

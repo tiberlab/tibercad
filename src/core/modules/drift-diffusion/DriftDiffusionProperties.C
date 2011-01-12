@@ -1,7 +1,6 @@
 // $Id$
 
 #include "DriftDiffusionProperties.h"
-#include "DriftDiffusion.h"
 #include "ParticleDensity.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
@@ -58,10 +57,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
   : PhysicalModel(options),
     _is_inhomogeneous(false),
     _use_predictor(false),
-    _driftdiffusion(NULL),
     _pd(NULL),
     _elem(NULL),
-    _statistics(TiberCad::BOLTZMANN),
     _coupling(DriftDiffusionDefs::BOTH),
     _strain(0),
     _equilibrium_fermi_level(0.0),
@@ -79,8 +76,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _background_conductivity(0.0),
     _thermoelectric_power(NULL),
     _is_dielectric(false),
-    _electrons("electron"),
-    _holes("hole"),
+    _electrons(NULL),
+    _holes(NULL),
     _relax_polariz(1.0)
 {
   _pd = new PointData();
@@ -104,11 +101,6 @@ void
 DriftDiffusionProperties::parse_options(void)
 {
 
-  const string stat("B");
-  if (get_options().get_option("statistics", stat) == "FD")
-    set_statistics(TiberCad::FERMIDIRAC);
-
-
   get_parameter("relax_polarization", _relax_polariz);
 
   _use_predictor = get_option("use_density_predictor", _use_predictor);
@@ -129,41 +121,6 @@ DriftDiffusionProperties::parse_options(void)
 
 
 
-void
-DriftDiffusionProperties::setup_electrons_and_holes(void)
-{
-  _holes.set_statistics(_statistics);
-  _electrons.set_statistics(_statistics);
-
-  // we could have quantum density simulations for them
-  {
-    vector<string> qd;
-    get_option("electron_quantum_density", qd);
-    for (size_t i = 0; i < qd.size(); i++)
-      _electrons.add_quantum_density(qd[i]);
-
-    if (_electrons.get_quantum_simulation() != NULL)
-    {
-      Embracing* emb =
-        _driftdiffusion->create_embracing_region(
-            _electrons.get_quantum_simulation(), get_options(), true);
-      _electrons.set_embracing(emb);
-    }
-
-    qd.resize(0);
-    get_option("hole_quantum_density", qd);
-    for (size_t i = 0; i < qd.size(); i++)
-      _holes.add_quantum_density(qd[i]);
-    if (_holes.get_quantum_simulation() != NULL)
-    {
-      Embracing* emb =
-        _driftdiffusion->create_embracing_region(
-            _holes.get_quantum_simulation(), get_options(), true);
-      _holes.set_embracing(emb);
-    }
-  }
-}
-
 
 void
 DriftDiffusionProperties::create_submodels(void)
@@ -176,6 +133,76 @@ DriftDiffusionProperties::create_submodels(void)
     opts.set_option("type", "constant");
     get_options().add_submodel("permittivity", opts);
   }
+
+
+  // particle densities
+  {
+    ModelOptions opts;
+
+    bool e_done = false;
+    bool h_done = false;
+
+    ModelOptions::submodel_iterator
+      it(get_options().submodels_begin("particle_density"));
+    ModelOptions::submodel_iterator
+      end(get_options().submodels_end("particle_density"));
+
+
+
+    while (it != end)
+    {
+      ModelOptions& o = it->second;
+      ++it;
+
+      const string& particle = o.get_option("particle", "");
+
+      if (particle == "electron")
+      {
+        if (e_done)
+          throw InitFailedException("Only one particle_density model per "
+              "particle and region is allowed");
+
+        e_done = true;
+      }
+      else if (particle == "hole")
+      {
+        if (h_done)
+          throw InitFailedException("Only one particle_density model per "
+              "particle and region is allowed");
+
+        h_done = true;
+      }
+      else
+      {
+        if (e_done || h_done)
+          throw InitFailedException("Only one particle_density model per "
+              "particle and region is allowed");
+
+        // this case is valid for both
+
+        o.set_option("particle", "electron");
+
+        opts = o;
+        opts.set_option("particle", "hole");
+        get_options().add_submodel("particle_density", opts);
+
+        e_done = h_done = true;
+      }
+    }
+
+    if (!e_done)
+    {
+      opts.set_option("particle", "electron");
+      get_options().add_submodel("particle_density", opts);
+    }
+
+    if (!h_done)
+    {
+      opts.set_option("particle", "hole");
+      get_options().add_submodel("particle_density", opts);
+    }
+  }
+
 
   if (!is_dielectric())
   {
@@ -333,14 +360,26 @@ DriftDiffusionProperties::create_recombination_models(void)
 void
 DriftDiffusionProperties::do_init(void)
 {
-  assert(_driftdiffusion != NULL);
 
   parse_options();
 
-  setup_electrons_and_holes();
+  // they must be here
+  SubmodelIterator it = submodels_begin("particle_density");
+  SubmodelIterator end = submodels_end("particle_density");
+  for ( ; it != end; ++it)
+  {
+    ParticleDensity* pd = static_cast<ParticleDensity*>(it->second);
 
-  SubmodelIterator it = submodels_begin("trap");
-  const SubmodelIterator end = submodels_end("trap");
+    if (pd->get_particle_name() == "electron")
+      _electrons = pd;
+    else if (pd->get_particle_name() == "hole")
+      _holes = pd;
+  }
+
+  //setup_electrons_and_holes();
+
+  it = submodels_begin("trap");
+  end = submodels_end("trap");
   for ( ; it != end; ++it)
   {
     Trap* t = static_cast<Trap*>(it->second);
@@ -350,6 +389,7 @@ DriftDiffusionProperties::do_init(void)
     else if (t->get_particle() == 'h')
       _htraps.insert(t);
   }
+
 
 
   if (_is_dielectric)
@@ -368,8 +408,8 @@ DriftDiffusionProperties::do_init(void)
 
   // Polarization
   it = submodels_begin("polarization");
-  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("polarization"));
-  for ( ; it != it_end ; ++it)
+  end = submodels_end("polarization");
+  for ( ; it != end ; ++it)
     _pm.push_back(dynamic_cast<PolarizationModel*>(it->second));
 
 
@@ -395,7 +435,7 @@ DriftDiffusionProperties::~DriftDiffusionProperties(void)
 bool
 DriftDiffusionProperties::has_solution(void) const
 {
-  return _driftdiffusion->is_solved();
+  return SimulationInterface::get_simulation(get_simulator_id())->is_solved();
 }
 
 
@@ -517,22 +557,22 @@ DriftDiffusionProperties::calculate_densities(void)
   double Ec = get_conduction_band_edge();
   double Ev = get_valence_band_edge();
 
-  double relax = _driftdiffusion->_relaxation;
+  double relax = SimulationInterface::get_simulation(get_simulator_id())->_relaxation;
 
-  _electrons.set_element_and_point(_elem, _coord);
-  _electrons.set_classical_parameters(cb.effective_DOS,
+  _electrons->set_element_and_point(_elem, _coord);
+  _electrons->set_classical_parameters(cb.effective_DOS,
       Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
-  _pd->electron_density = _electrons.get_particle_density();
-  _pd->electron_density_derivative = _electrons.get_particle_density_derivative();
-  _pd->gamma_n = _electrons.get_gamma();
-  if (_electrons.is_quantum_density() && has_solution() && use_predictor())
+  _pd->electron_density = _electrons->get_particle_density();
+  _pd->electron_density_derivative = _electrons->get_particle_density_derivative();
+  _pd->gamma_n = _electrons->get_gamma();
+  if (_electrons->is_quantum_density() && has_solution() && use_predictor())
   {
-    _electrons.use_quantum_density(false);
-    double dens = _electrons.get_particle_density();
-    _pd->electron_density_derivative = _electrons.get_particle_density_derivative();
-    _electrons.set_classical_parameters(cb.effective_DOS,
+    _electrons->use_quantum_density(false);
+    double dens = _electrons->get_particle_density();
+    _pd->electron_density_derivative = _electrons->get_particle_density_derivative();
+    _electrons->set_classical_parameters(cb.effective_DOS,
         Ec - _pd->old_electric_potential, -_pd->old_fermi_e, kTe);
-    double old_dens = _electrons.get_particle_density();
+    double old_dens = _electrons->get_particle_density();
     //if (old_dens > 1e-6)
     {
       //double fac = max(0.1, min(10.0, dens / old_dens));
@@ -551,7 +591,7 @@ DriftDiffusionProperties::calculate_densities(void)
     _pd->electron_density_derivative = _pd->electron_density / kTe;
     */
 
-    _electrons.use_quantum_density(true);
+    _electrons->use_quantum_density(true);
     /* simpler but slower convergence
     {
      double arg = (_pd->electric_potential - _pd->old_electric_potential
@@ -563,21 +603,21 @@ DriftDiffusionProperties::calculate_densities(void)
     */
   }
 
-  _holes.set_element_and_point(_elem, _coord);
-  _holes.set_classical_parameters(vb.effective_DOS,
+  _holes->set_element_and_point(_elem, _coord);
+  _holes->set_classical_parameters(vb.effective_DOS,
       -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
-  _pd->hole_density = _holes.get_particle_density();
+  _pd->hole_density = _holes->get_particle_density();
   // TODO where to put the sign?
-  _pd->hole_density_derivative = -_holes.get_particle_density_derivative();
-  _pd->gamma_p = _holes.get_gamma();
-  if (_holes.is_quantum_density() && has_solution() && use_predictor())
+  _pd->hole_density_derivative = -_holes->get_particle_density_derivative();
+  _pd->gamma_p = _holes->get_gamma();
+  if (_holes->is_quantum_density() && has_solution() && use_predictor())
   {
-    _holes.use_quantum_density(false);
-    double dens = _holes.get_particle_density();
-    _pd->hole_density_derivative = -_holes.get_particle_density_derivative();
-    _holes.set_classical_parameters(vb.effective_DOS,
+    _holes->use_quantum_density(false);
+    double dens = _holes->get_particle_density();
+    _pd->hole_density_derivative = -_holes->get_particle_density_derivative();
+    _holes->set_classical_parameters(vb.effective_DOS,
         -Ev + _pd->old_electric_potential, _pd->old_fermi_h, kTh);
-    double old_dens = _holes.get_particle_density();
+    double old_dens = _holes->get_particle_density();
     //if (old_dens > 1e-6)
     {
       //double fac = max(0.1, min(10.0, dens / old_dens));
@@ -587,7 +627,7 @@ DriftDiffusionProperties::calculate_densities(void)
       _pd->hole_density_derivative *= qdens / old_dens;
       _pd->hole_density = qdens / old_dens * dens;
     }
-    _holes.use_quantum_density(true);
+    _holes->use_quantum_density(true);
     /* simpler but slower convergence
     {
      double arg = (_pd->electric_potential - _pd->old_electric_potential) / kTe;
@@ -883,10 +923,10 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   int coupling_bkp = _coupling;
   _coupling = DriftDiffusionDefs::BOTH;
 
-  bool quantum_el = _electrons.has_quantum_density();
-  bool quantum_hl = _holes.has_quantum_density();
-  _electrons.use_quantum_density(false);
-  _holes.use_quantum_density(false);
+  bool quantum_el = _electrons->has_quantum_density();
+  bool quantum_hl = _holes->has_quantum_density();
+  _electrons->use_quantum_density(false);
+  _holes->use_quantum_density(false);
 
 
 
@@ -1028,8 +1068,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // restore original coupling
   _coupling = coupling_bkp;
 
-  _electrons.use_quantum_density(quantum_el);
-  _holes.use_quantum_density(quantum_hl);
+  _electrons->use_quantum_density(quantum_el);
+  _holes->use_quantum_density(quantum_hl);
 }
 
 
@@ -1051,24 +1091,6 @@ DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 
 
 
-
-void
-DriftDiffusionProperties::copy_from(const PhysicalModelInterface* rhs)
-{
-
-  const DriftDiffusionProperties* mod =
-    dynamic_cast<const DriftDiffusionProperties*>(rhs);
-
-  //equilibrium_fermi_level = mod->get_equilibrium_fermi_level();
-  //intrinsic_density = mod->get_intrinsic_density();
-  _driftdiffusion = mod->_driftdiffusion;
-  //_coupling = mod->_coupling;
-  //_statistics = mod->_statistics;
-  //_strain = mod->_strain;
-  //conduction_band = mod->conduction_band;
-  //valence_band = mod->valence_band;
-
-}
 
 
 

@@ -2,6 +2,7 @@
 
 #include "ElectricalContact.h"
 #include "DriftDiffusionProperties.h"
+#include "ParticleDensity.h"
 #include "Initializer.h"
 
 

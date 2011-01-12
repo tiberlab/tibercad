@@ -165,14 +165,14 @@ $Models
       simulation_name = dd
 
       strain_simulation = str
-      statistics = FD
-    
-      #electron_quantum_density = dens_el
-      #use_density_predictor = true
-      #embracing_length = 3e-9
-      #plot_embracing_regions = true
-
     }
+
+
+    physical_model particle_density
+    {
+      statistics = fermidirac
+    }
+
 
     physical_model recombination
     { 

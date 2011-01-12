@@ -81,9 +81,7 @@ $Models
       simulation_name = dd
       plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, CurrentDensity, NetRecombination)
       
-      electron_quantum_density = dens_el
       use_density_predictor = true
-      statistics = FD
       strain_simulation = str
 
       coupling = poisson
@@ -96,6 +94,12 @@ $Models
     }
 
     
+    physical_model particle_density
+    {
+      particle = electron
+      quantum_density = dens_el
+      statistics = fermidirac
+    }
   
      
 

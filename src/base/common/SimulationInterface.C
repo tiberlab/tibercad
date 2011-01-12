@@ -593,6 +593,15 @@ SimulationInterface::add_plot_variable(const std::string& name)
 }
 
 
+
+void
+SimulationInterface::add_plot_variable(ID id)
+{
+  _plotvariable_ids.insert(id);
+}
+
+
+
 void
 SimulationInterface::solve(void) throw (SolveFailedException)
 {
