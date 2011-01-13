@@ -105,7 +105,7 @@ void PoissonModel::create_submodels()
    if (_piezo_model == NULL)
       throw InitFailedException("Could not create piezoelectric model");
 
-   _piezo_model->set_material(get_material());
+   _piezo_model->set_owner(get_material());
    _piezo_model->init();
 
   }
@@ -117,7 +117,7 @@ void PoissonModel::create_submodels()
 
    const ModelOptions& opt =  get_options ();
    _epsilon_model = OptDielectricConstant::create(get_material()->get_structure(), opt);
-   _epsilon_model->set_material(get_material());
+   _epsilon_model->set_owner(get_material());
    _epsilon_model->init();
    _epsilon_model->get_dielectric_real(_epsilon);
 
@@ -228,7 +228,7 @@ PoissonModel::get_dielectric_constant(RealTensor& epsilon)
     }
 
 
-   
+
   epsilon *=  Constants::epsilon * 1e-2;
 
 }
@@ -255,13 +255,13 @@ PoissonModel::get_piezo_polarization(std::vector<RealGradient>& p,const std::vec
  std::vector<RealGradient> _polarization(points.size());
 
   if (_piezo_model != NULL)
-  {  
+  {
 
     for (ID n = 0; n< points.size(); n++)
       {
-	const Point p = points[n]; 
+	const Point p = points[n];
 	_piezo_model->calculate_piezopolarization(_elem,p);
-	
+
 	Tensor1 piezo(0);
 	_piezo_model->get_piezopolarization(piezo);
 
@@ -270,7 +270,7 @@ PoissonModel::get_piezo_polarization(std::vector<RealGradient>& p,const std::vec
 	_polarization[n](1) = piezo(2);
 	_polarization[n](2) = piezo(3);
       }
-    
+
   }
 
   for (ID n = 0; n< points.size();n++)
@@ -282,14 +282,14 @@ PoissonModel::get_piezo_polarization(std::vector<RealGradient>& p,const std::vec
     }
 
   p = _polarization;
- 
+
 
 }
 
 void
 PoissonModel::get_pyro_polarization(std::vector<RealGradient>& p,const std::vector< Point >& points)
 {
- 
+
  std::vector<RealGradient> _polarization(points.size());
 
 

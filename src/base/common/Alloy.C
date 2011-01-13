@@ -103,7 +103,7 @@ Alloy::do_init(void)
 
   RotatedCrystal* crystal = static_cast<RotatedCrystal*>(
       _mat_A->get_rotated_crystal().copy());
-  crystal->set_material(this);
+  crystal->set_owner(this);
   crystal->init_alloy(&_mat_A->get_rotated_crystal(),
       &_mat_B->get_rotated_crystal(), _molar_fraction);
   set_crystal(crystal);
