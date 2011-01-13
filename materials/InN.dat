@@ -59,7 +59,7 @@ permittivity = (14.4, 14.4)
 a = 0.3545
 c = 0.5703
 
-# stiffness data
+# stiffness data [6]
 [elasticity]
 C11 = 223
 C12 =  115

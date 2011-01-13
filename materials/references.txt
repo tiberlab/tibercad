@@ -14,3 +14,8 @@ References for material parameters
 [5] E. Sijercic and B. Pejcinovic: "Investigation of scaling of InSb MOSFETs through
     drift-diffusion simulation", Solid-State Electronics, Vol. 50, Nr. 9-10,
     2006, pp. 1634-1639
+
+[6] O Ambacher, J Majewski, C Miskys, A Link, M Hermann,
+    M Eickhoff, M Stutzmann F Bernardini V Fiorentini, V Tilak,
+    B Schaff and L F Eastman: "Pyroelectric properties of Al(In)GaN/GaN hetero- and
+    quantum well structures", J. Phys.: Condens. Matter, Vol. 14, 2002, pp. 3399-3434

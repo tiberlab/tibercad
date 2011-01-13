@@ -56,7 +56,7 @@ D6 = -3.4
 [permittivity]
 permittivity = (8.67,8.67)
 
-# stiffness data
+# stiffness data [6]
 [elasticity]
 C11 = 396.0
 C12 = 137.0

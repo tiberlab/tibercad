@@ -62,7 +62,7 @@ optical_epsilon_x = 7.3
 optical_epsilon_z = 7.3
 
 
-# stiffness data Ambacher theory1 
+# stiffness data [6]
 [elasticity]
 C11 = 367.0
 C12 = 135.0
