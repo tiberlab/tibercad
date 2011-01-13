@@ -51,8 +51,6 @@ class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
     //! Create low field mobility model
     virtual void create_submodels(void);
 
-    //! \copydoc MobilityModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
 
 
   private:
@@ -125,13 +123,6 @@ FieldDependentMobility::create(const ModelOptions& options)
   return new FieldDependentMobility(options);
 }
 
-
-inline
-PhysicalModelInterface*
-FieldDependentMobility::create_new(void) const
-{
-  return new FieldDependentMobility(get_options());
-}
 
 
 inline

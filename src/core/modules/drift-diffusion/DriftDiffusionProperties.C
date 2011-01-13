@@ -224,19 +224,19 @@ DriftDiffusionProperties::create_submodels(void)
     // create electron mobility model
     if (it != end)
     {
-      (it->second).set_option("particle", "e");
+      (it->second).set_option("particle", "electron");
       _electron_mobility = create_mobility_model(it->second);
     }
     else if (mobit != get_options().submodels_end("mobility"))
     {
-      (mobit->second).set_option("particle", "e");
+      (mobit->second).set_option("particle", "electron");
       (mobit->second).set_option("name", string("electron_mobility"));
       _electron_mobility = create_mobility_model(mobit->second);
     }
     else
     {
       ModelOptions opts;
-      opts.set_option("particle", "e");
+      opts.set_option("particle", "electron");
       opts.set_option("name", string("electron_mobility"));
       _electron_mobility = create_mobility_model(opts);
     }
@@ -249,19 +249,19 @@ DriftDiffusionProperties::create_submodels(void)
 
     if (it != end)
     {
-      (it->second).set_option("particle", "h");
+      (it->second).set_option("particle", "hole");
       _hole_mobility = create_mobility_model(it->second);
     }
     else if (mobit != get_options().submodels_end("mobility"))
     {
-      (mobit->second).set_option("particle", "h");
+      (mobit->second).set_option("particle", "hole");
       (mobit->second).set_option("name", string("hole_mobility"));
       _hole_mobility = create_mobility_model(mobit->second);
     }
     else
     {
       ModelOptions opts;
-      opts.set_option("particle", "h");
+      opts.set_option("particle", "hole");
       opts.set_option("name", string("hole_mobility"));
       _hole_mobility = create_mobility_model(opts);
     }

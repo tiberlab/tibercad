@@ -86,13 +86,13 @@ DriftDiffusionModelInterface::set_driftdiffusionproperties(
 }
 
 
-inline
+/*inline
 DriftDiffusionProperties&
 DriftDiffusionModelInterface::get_driftdiffusionproperties(void)
 {
   assert(_dd_prop != 0);
   return *_dd_prop;
-}
+}*/
 
 
 #endif // _DRIFTDIFFUSIONMODELINTERFACE_H_

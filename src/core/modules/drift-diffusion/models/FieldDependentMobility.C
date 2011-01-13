@@ -61,17 +61,19 @@ void
 FieldDependentMobility::create_submodels(void)
 {
   assert(_low_field_mob == NULL);
+
+  ModelOptions opts;
   std::string low_field_model = get_option("low_field_model", "doping_dependent");
-  _low_field_mob = MobilityModelInterface::create(low_field_model);
+  opts.set_option("type", low_field_model);
+  opts.set_option("particle", get_option("particle", "electron"));
+
+  _low_field_mob = MobilityModelInterface::create(low_field_model, opts);
   if (_low_field_mob == NULL)
   {
     std::string msg("FieldDependentMobility: Could not ");
     msg += "create low-field mobility model '" + low_field_model + "'.";
     throw InitFailedException(msg);
   }
-
-  _low_field_mob->set_driftdiffusionproperties(&get_driftdiffusionproperties());
-  _low_field_mob->set_carrier_type(get_carrier_type());
 
   add_submodel("lowfield_mob", _low_field_mob);
 }

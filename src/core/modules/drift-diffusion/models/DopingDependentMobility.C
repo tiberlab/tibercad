@@ -103,20 +103,21 @@ void
 DopingDependentMobility::create_submodels(void)
 {
   if (formula_ == 1)
-   {
-     const_mob_ = MobilityModelInterface::create("constant");
-     if (const_mob_ == NULL)
-     {
-       std::string msg("DopingDependentMobility: Could not ");
-       msg += "create constant mobility model needed for formula of Masetti.";
-       throw InitFailedException(msg);
-     }
+  {
+    ModelOptions opts;
+    opts.set_option("type", "constant");
+    opts.set_option("particle", get_option("particle", "electron"));
 
-     const_mob_->set_driftdiffusionproperties(&get_driftdiffusionproperties());
-     const_mob_->set_carrier_type(get_carrier_type());
-     const_mob_->set_material(get_material());
-     const_mob_->init();
-   }
+    const_mob_ = MobilityModelInterface::create("constant", opts);
+    if (const_mob_ == NULL)
+    {
+      std::string msg("DopingDependentMobility: Could not ");
+      msg += "create constant mobility model needed for formula of Masetti.";
+      throw InitFailedException(msg);
+    }
+
+    add_submodel("const_mobility", const_mob_);
+  }
 }
 
 
@@ -124,7 +125,6 @@ DopingDependentMobility::create_submodels(void)
 void
 DopingDependentMobility::do_init(void)
 {
-
 }
 
 

@@ -171,7 +171,6 @@ DopingDependentMobility::create_new(void) const
 inline
 DopingDependentMobility::~DopingDependentMobility(void)
 {
-  destroy(const_mob_);
 }
 
 #endif // _DOPINGDEPENDENTMOBILITY_H_
