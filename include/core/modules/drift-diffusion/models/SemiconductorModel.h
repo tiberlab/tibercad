@@ -77,9 +77,6 @@ class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
     //! Read the from database
     virtual void create_submodels(void);
 
-    /*! \copydoc DriftDiffusionProperties::create_new() */
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
     //! Get the physical semiconductor model
     /*!
@@ -168,12 +165,6 @@ SemiconductorModel::set_to_unprepared(void)
   _is_prepared = false;
 }
 
-inline
-PhysicalModelInterface*
-SemiconductorModel::create_new(void) const
-{
-  return new SemiconductorModel(get_options());
-}
 
 
 

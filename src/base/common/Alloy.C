@@ -61,7 +61,6 @@ Alloy::do_preinit(void)
   _mat_A->set_database(get_database().get_component_database(0));
   _mat_B->set_database(get_database().get_component_database(1));
 
-
   // a sanity check on the crystal structure
   if ((_mat_A->get_structure() != get_structure()) ||
       (_mat_B->get_structure() != get_structure()))

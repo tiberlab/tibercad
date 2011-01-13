@@ -25,9 +25,6 @@ class TBDLLOCAL SchottkyContact : public ElectricalContact
     /*! \copydoc ElectricalContact::do_init() */
     virtual void do_init(void);
 
-    //! Create a new one
-    virtual PhysicalModel* create_new(void) const;
-
 
     //! Calculate all coefficients
     virtual void do_compute(void);
@@ -64,13 +61,6 @@ SchottkyContact::create(const ModelOptions& options)
   return new SchottkyContact(options);
 }
 
-
-inline
-PhysicalModel*
-SchottkyContact::create_new(void) const
-{
-  return new SchottkyContact(get_options());
-}
 
 
 

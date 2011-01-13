@@ -831,10 +831,6 @@ class DriftDiffusionProperties : public PhysicalModel
     virtual void prepare_element_data(void) {};
 
 
-    //! \copydoc PhysicalModel::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
-
-
     //! \copydoc PhysicalModel::do_print_info(void)
     virtual void do_print_info(void);
 
@@ -1404,15 +1400,6 @@ DriftDiffusionProperties::get_hole_thermoelectric_power_gradient(void) const
 
   return  _hTEpowerGrad;
 
-}
-
-
-
-inline
-PhysicalModelInterface*
-DriftDiffusionProperties::create_new(void) const
-{
-  return new DriftDiffusionProperties(get_options());
 }
 
 

@@ -48,9 +48,6 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
-    //! \copydoc RecombinationModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
 
@@ -88,13 +85,6 @@ DirectRecombination::set_parameters(double C)
   C_ = C;
 }
 
-
-inline
-PhysicalModelInterface*
-DirectRecombination::create_new(void) const
-{
-  return new DirectRecombination(get_options());
-}
 
 
 

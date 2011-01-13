@@ -18,9 +18,6 @@ class TBDLLOCAL OhmicContact : public ElectricalContact
     //! The constructor
     OhmicContact(const ModelOptions& options);
 
-    //! Create a new object
-    virtual PhysicalModel* create_new(void) const;
-
 
     //! Calculate all coefficients
     virtual void do_compute(void);
@@ -41,12 +38,6 @@ OhmicContact::create(const ModelOptions& options)
 }
 
 
-inline
-PhysicalModel*
-OhmicContact::create_new(void) const
-{
-  return new OhmicContact(get_options());
-}
 
 
 

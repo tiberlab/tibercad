@@ -2997,9 +2997,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     oldXp.reposition(2 * n_dofs, n_dofs);
 
 
-
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
+    DriftDiffusionProperties* sc = get_bulk_model<DriftDiffusionProperties>(elem);
 
     assert(sc != NULL);
     sc->reinit(elem);
@@ -3435,6 +3433,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
 
+      Material* mat = get_material(elem);
       DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
 
       bool true_boundary = environment.is_outer_boundary(ElementSide(elem, s));
@@ -3501,7 +3500,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           // contribution to the jacobian
           if ((sm != NULL) && (jacobian != NULL))
           {
-            sm->set_dd_properties(sc);
+            sm->set_bulk_material(mat);
             sm->compute();
 
             // for Dirichlet DOFs we do not add anything
@@ -3619,7 +3618,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
             if (sm != NULL)
             {
-              sm->set_dd_properties(sc);
+              sm->set_bulk_material(mat);
               sm->compute();
 
               const vector<double>& coeff_a = sm->get_a();

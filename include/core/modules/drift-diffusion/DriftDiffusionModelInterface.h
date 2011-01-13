@@ -25,12 +25,6 @@ class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModelInterface
     //! Destructor
     virtual ~DriftDiffusionModelInterface(void) {};
 
-    //! Set the link to the DriftDiffusionProperties object
-    /*!
-     * \param dd_prop a pointer to the DriftDiffusionProperties object this
-     * model belongs to
-     */
-    void set_driftdiffusionproperties(DriftDiffusionProperties* dd_prop);
 
     //! Get a reference to the DriftDiffusionProperties object
     /*!
@@ -56,43 +50,19 @@ class TBDLEXPORT DriftDiffusionModelInterface : public PhysicalModelInterface
 
   private:
 
-    //! Disable copy constructor
-    DriftDiffusionModelInterface(const DriftDiffusionModelInterface&);
-
-    //! Disable assignment operator
-    DriftDiffusionModelInterface& operator=(const DriftDiffusionModelInterface&);
     
-    //! The DriftDiffusionProperties object this model belongs to
-    DriftDiffusionProperties* _dd_prop;
-
 };
 
 
 inline
 DriftDiffusionModelInterface::DriftDiffusionModelInterface(const ModelOptions& options)
-  : PhysicalModelInterface(options),
-    _dd_prop(0)
+  : PhysicalModelInterface(options)
 {
 }
 
 
-inline
-void
-DriftDiffusionModelInterface::set_driftdiffusionproperties(
-    DriftDiffusionProperties* dd_prop)
-{
-  assert(dd_prop != 0);
-  _dd_prop = dd_prop;
-}
 
 
-/*inline
-DriftDiffusionProperties&
-DriftDiffusionModelInterface::get_driftdiffusionproperties(void)
-{
-  assert(_dd_prop != 0);
-  return *_dd_prop;
-}*/
 
 
 #endif // _DRIFTDIFFUSIONMODELINTERFACE_H_

@@ -57,9 +57,6 @@ class TBDLLOCAL SimpleSemiconductorModel : public DriftDiffusionProperties
     //! \copydoc DriftDiffusionProperties::do_init()
     virtual void do_init();
 
-    //! \copydoc DriftDiffusionProperties::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
     //! \copydoc DriftDiffusionProperties::prepare_element_data()
     /*!
@@ -118,13 +115,6 @@ SimpleSemiconductorModel::set_valence_band_properties(double band_edge,
 }
 
 
-
-inline
-PhysicalModelInterface*
-SimpleSemiconductorModel::create_new(void) const
-{
-  return new SimpleSemiconductorModel(get_options());
-}
 
 
 

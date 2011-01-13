@@ -15,8 +15,7 @@ using namespace std;
 DDInterfaceModel::DDInterfaceModel(const ModelOptions& options) :
   PhysicalModel(options),
   _internal_bd(false),
-  _has_current(false),
-  _ddprop(NULL)
+  _has_current(false)
 {
   _coeff_a.resize(3, 0);
   _coeff_b.resize(3, NEUMANN);
@@ -28,6 +27,18 @@ DDInterfaceModel::DDInterfaceModel(const ModelOptions& options) :
 
 }
 
+
+DriftDiffusionProperties*
+DDInterfaceModel::get_dd_properties(void) const
+{
+  DriftDiffusionProperties* ddprop = NULL;
+
+  if (get_bulk_material() != NULL)
+    ddprop = static_cast<DriftDiffusionProperties*>(
+        get_bulk_material()->get_model(get_simulator_id()));
+
+  return ddprop;
+}
 
 
 void
@@ -86,11 +97,9 @@ DDInterfaceModel::do_init(void)
 
   assert(mat != NULL);
 
-  // we set a bulk model, just in case a submodel needs it
-  _ddprop = static_cast<DriftDiffusionProperties*>(
-      mat->get_model(get_simulator_id()));
+  // we set a bulk material, just in case a submodel needs it
+  set_bulk_material(mat);
 
-  assert(_ddprop != NULL);
 
   // get surface trap models
   SubmodelIterator it = submodels_begin("trap");
@@ -183,11 +192,13 @@ DDInterfaceModel::compute()
 void
 DDInterfaceModel::_calculate_traps(double& q, double& dq_dEfn, double& dq_dEfp)
 {
-  assert(_ddprop != NULL);
-  double Ec = _ddprop->get_conduction_band_edge() - _ddprop->get_electric_potential();
-  double Ev = _ddprop->get_valence_band_edge() - _ddprop->get_electric_potential();
+  DriftDiffusionProperties* ddprop = get_dd_properties();
+  assert(ddprop != NULL);
 
-  const DriftDiffusionProperties::PointData& pd = _ddprop->get_point_data();
+  double Ec = ddprop->get_conduction_band_edge() - ddprop->get_electric_potential();
+  double Ev = ddprop->get_valence_band_edge() - ddprop->get_electric_potential();
+
+  const DriftDiffusionProperties::PointData& pd = ddprop->get_point_data();
 
   double ionized_electron_traps = 0.0;
   double ionized_electron_traps_derivative = 0.0;
@@ -251,7 +262,7 @@ DDInterfaceModel::_calculate_recombination(double rec[6])
   const set<RecombinationModelInterface*>::iterator end(_recombination_models.end());
   for ( ; it != end; ++it)
   {
-    (*it)->set_driftdiffusionproperties(get_dd_properties());
+    (*it)->set_bulk_material(get_bulk_material());
     (*it)->get_net_recombination_rates(Re, Rh);
     (*it)->get_net_recombination_rate_derivatives(dRe, dRh);
 

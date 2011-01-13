@@ -52,10 +52,6 @@ class TBDLLOCAL AugerRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
-    //! \copydoc RecombinationModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
-
-
     
   private:
 
@@ -138,12 +134,6 @@ AugerRecombination::create(const ModelOptions& options)
 }
 
 
-inline
-PhysicalModelInterface*
-AugerRecombination::create_new(void) const
-{
-  return new AugerRecombination(get_options());
-}
 
 
 

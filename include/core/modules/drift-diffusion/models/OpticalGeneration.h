@@ -43,9 +43,6 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
-    //! \copydoc RecombinationModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
 
@@ -75,14 +72,6 @@ OpticalGeneration::create(const ModelOptions& options)
   return new OpticalGeneration(options);
 }
 
-
-
-inline
-PhysicalModelInterface*
-OpticalGeneration::create_new(void) const
-{
-  return new OpticalGeneration(get_options());
-}
 
 
 

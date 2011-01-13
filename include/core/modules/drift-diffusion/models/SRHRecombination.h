@@ -70,9 +70,6 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     virtual void do_init_alloy(const PhysicalModelInterface* comp_A,
         const PhysicalModelInterface* comp_B, double xa);
 
-    //! \copydoc RecombinationModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
 
@@ -150,13 +147,6 @@ SRHRecombination::create(const ModelOptions& options)
 }
 
 
-
-inline
-PhysicalModelInterface*
-SRHRecombination::create_new(void) const
-{
-  return new SRHRecombination(get_options());
-}
 
 
 #endif // _SRHRECOMBINATION_H_

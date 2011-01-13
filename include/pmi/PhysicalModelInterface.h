@@ -144,6 +144,14 @@ class PhysicalModelInterface : public TiberModelObject
     void set_material(Material* owner);
 
 
+    //! Set the bulk material
+    void set_bulk_material(Material* mat);
+
+
+    //! Get the bulk material
+    Material* get_bulk_material(void) const;
+
+
     //! Set a reference to the physical object this model belongs to
     void set_owner(PhysicalObject* owner);
 
@@ -472,6 +480,10 @@ class PhysicalModelInterface : public TiberModelObject
     PhysicalObject* _owner;
 
 
+    //! Lower dimensional objects can have a bulk material assigned
+    Material* _bulk_material;
+
+
     //! The name of the module this object is part of
     std::string _module;
 
@@ -528,6 +540,7 @@ PhysicalModelInterface::PhysicalModelInterface(const ModelOptions& options)
     _id(INVALID_ID),
     _simulator_id(INVALID_ID),
     _owner(NULL),
+    _bulk_material(NULL),
     _module("")
 {
 }
@@ -621,16 +634,18 @@ void
 PhysicalModelInterface::set_material(Material* owner)
 {
   // the cast is only to not produce a compiler error
-  _owner = reinterpret_cast<PhysicalObject*>(owner);
+  set_owner(reinterpret_cast<PhysicalObject*>(owner));
 }
+
 
 
 inline
-void
-PhysicalModelInterface::set_owner(PhysicalObject* owner)
+Material*
+PhysicalModelInterface::get_bulk_material(void) const
 {
-  _owner = owner;
+  return _bulk_material;
 }
+
 
 
 inline
@@ -667,6 +682,7 @@ PhysicalModelInterface::create_submodel_copy(const T* other) const
   T* newmod = static_cast<T*>(other->copy());
   assert(newmod != NULL);
   newmod->set_owner(_owner);
+  newmod->set_bulk_material(_bulk_material);
   return newmod;
 }
 

@@ -46,10 +46,6 @@ class DDInterfaceModel : public PhysicalModel
     static DDInterfaceModel* create(const ModelOptions& options);
 
 
-    //! Set the drift-diffusion properties object
-    void set_dd_properties(DriftDiffusionProperties* ddprop);
-
-
     //! Compute the coefficients and their derivatives
     void compute();
 
@@ -181,10 +177,6 @@ class DDInterfaceModel : public PhysicalModel
     bool _has_current;
 
 
-    //! The driftdiffusion properties
-    DriftDiffusionProperties* _ddprop;
-
-
     //! The electron traps
     std::set<Trap*> _etraps;
 
@@ -222,12 +214,6 @@ class DDInterfaceModel : public PhysicalModel
 // inline members
 //
 
-inline
-void
-DDInterfaceModel::set_dd_properties(DriftDiffusionProperties* ddprop)
-{
-  _ddprop = ddprop;
-}
 
 
 inline
@@ -348,12 +334,6 @@ DDInterfaceModel::has_current(bool hascurrent)
 }
 
 
-inline
-DriftDiffusionProperties*
-DDInterfaceModel::get_dd_properties(void) const
-{
-  return _ddprop;
-}
 
 
 inline

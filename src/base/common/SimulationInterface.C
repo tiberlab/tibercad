@@ -307,6 +307,14 @@ SimulationInterface::get_physical_model(ID region_id) const
 
 
 
+Material*
+SimulationInterface::get_material(const Elem* elem) const
+{
+  return get_environment().get_device().get_material(elem);
+}
+
+
+
 PhysicalModel*
 SimulationInterface::_get_bulk_model(const Elem* elem) const
 {

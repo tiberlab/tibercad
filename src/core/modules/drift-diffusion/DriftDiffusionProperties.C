@@ -287,8 +287,6 @@ DriftDiffusionProperties::create_submodels(void)
       if (_thermoelectric_power == NULL)
         throw InitFailedException("Could not create thermoelectric power model");
 
-      _thermoelectric_power->set_material(get_material());
-      _thermoelectric_power->set_driftdiffusionproperties(this);
       add_submodel("thermoelectricpower", _thermoelectric_power);
     }
   }
@@ -459,9 +457,6 @@ DriftDiffusionProperties::add_recombination_model(
   ID id = model->get_id();
   _recombination_models.insert(make_pair(id, model));
 
-  model->set_driftdiffusionproperties(this);
-  model->set_material(get_material());
-
   add_submodel("recombination", model);
 }
 
@@ -479,9 +474,6 @@ DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
 
   if (mobility_model == NULL)
     throw InitFailedException("No such mobility model: " + model_name);
-
-  mobility_model->set_driftdiffusionproperties(this);
-  mobility_model->set_material(get_material());
 
   add_submodel(options.get_option("name",""), mobility_model);
 
@@ -904,10 +896,12 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // and energy
   setup_band_edges();
 
+cerr << get_material()->get_name() << endl;
   const BandProperties& cb = conduction_band;
   const BandProperties& vb = valence_band;
   double Ec = cb.band_edge;
   double Ev = vb.band_edge;
+  cerr << Ec << " " << Ev << endl;
 
   double kT = get_lattice_temperature();
 
@@ -930,7 +924,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   bool quantum_hl = _holes->has_quantum_density();
   _electrons->use_quantum_density(false);
   _holes->use_quantum_density(false);
-
 
 
   double Nd = get_material()->get_total_donor_density();
@@ -1037,8 +1030,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
     y = x + dx;
 
     error = fabs(dx);
-    //cerr << "x = " << y << " error = " << dx << " res. dens. = "
-    //  << residual_dens << endl;
+    cerr << "x = " << y << " error = " << dx << " res. dens. = "
+      << residual_dens << endl;
 
     x = y;
 

@@ -653,6 +653,10 @@ class SimulationInterface : public TiberModelObject
     PhysicalModel* get_physical_model(ID region_id) const;
 
 
+    //! Get the material for a given element
+    Material* get_material(const Elem* elem) const;
+
+
     //! Get the physical model for a given element
     /*!
      * \return \c NULL if no model is present for \c elem
