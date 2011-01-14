@@ -24,7 +24,7 @@
 
 // forward declarations
 class Elem;
-
+//class Trap;
 
 
 //! The base class for DSSC models
@@ -351,6 +351,8 @@ class DSSCModel : public PhysicalModel
 
       //! The generation
       double generation_rate;
+
+
     };
 
 

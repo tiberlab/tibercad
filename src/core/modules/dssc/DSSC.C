@@ -48,7 +48,6 @@ DSSC::_this;
 
 
 
-
 DSSC::DSSC(const ModelOptions& options)
   : SimulationInterface(options),
     _rebuild_eq_system(true),
@@ -109,7 +108,6 @@ throw (ModelErrorException)
 
   return model;
 }
-
 
 
 
@@ -698,7 +696,9 @@ DSSC::do_solve(void)
     solve_equilibrium();
   }
 
-
+// Here the distance between light and   
+//  do optical();
+  
 
   if (do_local_scaling_)
     build_local_scaling();
@@ -1071,6 +1071,8 @@ DSSC::do_init(void)
         {
           _boundary_currents[(*it)] = 0.0;
           _voltages[(*it)] = 0.0;
+
+          
 
           //if (_light_from == "anode" )
           //{
@@ -2028,6 +2030,8 @@ DSSC::calculate_currents_rstf(void)
       double sigma_I = -Constants::e * sc->get_mobility_I() * sc->get_density_I() ;
       double sigma_I3 = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() ;
       double sigma_n = -Constants::e * sc->get_mobility_n() * sc->get_density_n() ;
+      double ne = sc->get_density_n() ;
+      //double sigma_n = -Constants::e * sc->get_mobility_n() * pow(ne,1.4);
 
       //RealGradient j(JxW[qp] * phi0 *
       //    (sigma_n * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT)));
@@ -2284,7 +2288,7 @@ DSSC::do_get_solution_vector(void)
 }
 
 
-
+/*
 // implementation taken from libmesh equation_systems.C
 void
 DSSC::build_nodal_results(const set<string>& variables,
@@ -2661,7 +2665,7 @@ DSSC::build_elemental_results(const set<string>& variables,
         n_vars++;
     }
   }
-*/
+*
 
 
   int Jn = -1;
@@ -2739,7 +2743,7 @@ DSSC::build_elemental_results(const set<string>& variables,
         n_vars++;
     }
   }
-*/
+*
 
   legend.resize(n_vars);
 
@@ -2890,7 +2894,7 @@ DSSC::build_elemental_results(const set<string>& variables,
           results[id + GradFermiE] = en_x;
       }
     }
-*/
+*
 
 
     if (Jn != -1)
@@ -2940,7 +2944,7 @@ DSSC::build_elemental_results(const set<string>& variables,
 
 }
 
-
+*/
 
 void
 DSSC::build_integrated_quantities(
@@ -3117,6 +3121,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   const double mu0 = scaling.get_mobility_scaling();
   // scaling for electrons
   double C0_e = _cond_scaling.n;
+  //double C0_e = _cond_scaling.C;
   // scaling for I
   double C0_I = _cond_scaling.I;
   // scaling for I3
@@ -3466,10 +3471,13 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
 
       // NOTE: sigma_e = mu_e * n is the electron conductivity
-      double sigma_n = mu_n * n_e / C0_e;
-      double sigma_I = mu_I * n_I / C0_I;
-      double sigma_I3 = mu_I3 * n_I3 / C0_I3;
-      double sigma_C = mu_C * n_C / C0_C;
+      //double sigma_n = (mu_n * n_e ) / C0_e;
+      //double n_eq = sc->get_equilibrium_concentrations().n;
+      //double sigma_n = (mu_n * pow(n_e, 1.4) ) / C0_e;
+      double sigma_n = (mu_n * n_e ) / C0_e;
+      double sigma_I = (mu_I * n_I ) / C0_I;
+      double sigma_I3 = (mu_I3 * n_I3 ) / C0_I3;
+      double sigma_C = (mu_C * n_C ) / C0_C;
 
       //
       // The residual looks like this:
@@ -3558,6 +3566,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
         // the factor phi_0 comes from the derivative with respect to the potential
+        //double n_eq = sc->get_equilibrium_concentrations().n;
+        //double dsigma_n = J * phi0 / C0_e * mu_n *  (1.4 * pow(n_e , 0.4)) * dn_dphi;
         double dsigma_n = J * phi0 / C0_e * mu_n * dn_dphi;
         double dsigma_I = J * phi0 / C0_I * mu_I * dI_dphi;
         double dsigma_I3 = J * phi0 / C0_I3 * mu_I3 * dI3_dphi;
@@ -4006,7 +4016,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           {
 
             if (jacobian != NULL)
-            {
+             {
 
                 double res = contact->get_load() * x0;
                 //double j0 = contact->get_ex_curr();
@@ -4026,6 +4036,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 //KII(s,s) += 1.5 * -1.5 * Normal_I / res;
                 //KII3(s,s) += 1.5 * 0.5 * Normal_I / res;
                 KIu(s,s) += 1.5 * Normal_I / res;
+                 
+               
 
                 //KI3u(s,s) += -0.5 * 2 * Normal_I3 / res;
                 //KI3I(s,s) += -0.5 * -1.5 * Normal_I3 / res;
@@ -4161,13 +4173,20 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           if (nodes_on_boundary_sides.find(elem->node(i)) !=
               nodes_on_boundary_sides.end())
           {
-            if (!contact->is_cathode())
+          //if (!contact->is_cathode())
+            if ( (!contact->is_cathode()) && (!contact->is_gate()) )
             {
 
                double bias = contact->get_potential();
 
                Ke.condense(i + n_dofs, i + n_dofs, bias, Fe);
 
+            }
+            else if (contact->is_gate())
+            {
+               double bias = contact->get_potential();
+
+               Ke.condense(i, i, bias, Fe);
             }
             else
             {
@@ -4204,6 +4223,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   if (jacobian != NULL)
   {
+
     jacobian->close();
 
     assert(n_cat != NULL);
@@ -4219,8 +4239,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   }
   else
   {
-    residual->set(dof_cat, tot_cat / scaling_C - _cation_amount / C0_C / scaling_C);
-    residual->set(dof_iodine, tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot);
+    residual->set(dof_cat, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
+    residual->set(dof_iodine, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
     residual->close();
     residual->print_matlab("F.m");
   }
@@ -4231,4 +4251,546 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 }
 
 
+
+
+
+void
+DSSC::do_setup_solution_variables(void)
+{
+
+  if (plot_solution("Potential"))
+  { 
+     add_plot_variable("ElPotential");
+     add_plot_variable("eQFermi");
+     add_plot_variable("IQFermi");
+     add_plot_variable("I3QFermi");
+     add_plot_variable("CQFermi");
+     add_plot_variable("Eredox");
+  }
+
+  if (plot_solution("Density"))
+  { 
+     add_plot_variable("eDensity");
+     add_plot_variable("IDensity");
+     add_plot_variable("I3Density");
+     add_plot_variable("CDensity");
+     add_plot_variable("NetRecombination");
+     add_plot_variable("Generation");
+  }
+
+  if (plot_solution("Current"))
+  { 
+     add_plot_variable("ElField");
+     add_plot_variable("CurrentDensity");
+     add_plot_variable("eCurrentDensity");
+     add_plot_variable("ICurrentDensity");
+     add_plot_variable("I3CurrentDensity");
+     add_plot_variable("CCurrentDensity");
+  }  
+
+
+  // the contact currents/voltages
+   
+  // declare solution variables
+  declare_solution(ElPotential, REAL, NODES, "V");
+  declare_solution(eQFermi, REAL, NODES, "eV");
+  declare_solution(IQFermi, REAL, NODES, "eV");
+  declare_solution(I3QFermi, REAL, NODES, "eV");
+  declare_solution(CQFermi, REAL, NODES, "eV");
+  declare_solution(Eredox, REAL, NODES, "eV");
+  
+  declare_solution(ElField, VECTOR, CELL, "V/cm");
+  //declare_solution(Eg, REAL, NODES, "eV");
+  //declare_solution(Ec, REAL, NODES, "eV");
+  //declare_solution(Ev, REAL, NODES, "eV");
+  //declare_solution(Ec0, REAL, NODES, "eV");
+  //declare_solution(Ev0, REAL, NODES, "eV");
+
+  declare_solution(eDensity, REAL, NODES, "cm^-3");
+  declare_solution(IDensity, REAL, NODES, "cm^-3");
+  declare_solution(I3Density, REAL, NODES, "cm^-3");
+  declare_solution(CDensity, REAL, NODES, "cm^-3");
+
+  //declare_solution(eMobility, REAL, NODES, "cm^2/(V*s)");
+
+  //declare_solution(eConductivity, REAL, NODES, "S/cm");
+
+  declare_solution(CurrentDensity, VECTOR, CELL, "A/cm^2");
+  declare_solution(eCurrentDensity, VECTOR, CELL, "A/cm^2");
+  declare_solution(ICurrentDensity, VECTOR, CELL, "A/cm^2");
+  declare_solution(I3CurrentDensity, VECTOR, CELL, "A/cm^2");
+  declare_solution(CCurrentDensity, VECTOR, CELL, "A/cm^2");
+  //declare_solution(eFlux, VECTOR, CELL, "1/(s*cm^2)");
+  //declare_solution(hFlux, VECTOR, CELL, "1/(s*cm^2)");
+
+  //declare_solution(IonizedElectronTraps, REAL, NODES, "cm^-3");
+
+  declare_solution(Generation, REAL, NODES, "1/(s*cm^3)");
+  declare_solution(NetRecombination, REAL, NODES, "1/(s*cm^3)");
+
+    //bool plot_rec = plot_solution(NetRecombination);
+/*
+    const set<PhysicalModel*>& pm = get_physical_models();
+    set<PhysicalModel*>::const_iterator it(pm.begin());
+    set<PhysicalModel*>::const_iterator end(pm.end());
+
+    for ( ; it != end; ++it)
+    {
+      DSSCModel* sc =
+          static_cast<DSSCModel*>(*it);
+
+     
+
+
+      //vector<ID> ids;
+      int n = sc->get_net_recombination_rate_IDs(ids);
+
+      for (int i = 0; i < n; i++)
+      {
+        ID id = static_cast<ID>(NetRecombination) + ids[i];
+        const std::string& name =
+            sc->get_recombination_model(ids[i])->get_default_name();
+        // if recombination should be plotted, add it also to the plot variables
+        if (plot_rec) add_plot_variable(name);
+        declare_solution_ext(name, id, SolutionDescriptor::REAL,
+            SolutionDescriptor::NODES, "1/(s*cm^3)");
+        _recombination_ids.insert(id);
+      }    
+    }
+*/
+  
+  // the contact currents/voltages
+   
+/*    unsigned int dim = get_mesh().mesh_dimension();
+    
+    string units("A");
+    switch (dim)
+    {
+      case 1:
+        units = "A/cm^2";
+        break;
+      case 2:
+        if (get_environment().get_device().get_symmetry()
+            != TiberCad::CYLINDRICAL)
+          units = "A/cm";
+        break;
+      default:
+        break;
+    }
+*/
+//    declare_solution(ContactCurrent, REAL, GLOBAL, units);
+//    add_alias("ContactCurrents", ContactCurrent);
+    bool plot_curr = plot_solution("ContactCurrent");
+    plot_curr |= plot_solution("ContactCurrents");
+
+    // we put them first into a set so they will be ordered
+    // alphabetically
+    set<string> cnt_set;
+
+    SimulationEnvironment::BoundaryIterator it(get_environment().boundaries_begin());
+    const SimulationEnvironment::BoundaryIterator end(get_environment().boundaries_end());
+
+    for ( ; it != end; ++it)
+    {
+      const Boundary* bd = (*it);
+      if (bd != NULL)
+      {
+        // we include only contacts that carry current
+        Boundary::ConstModelIterator modit(bd->models_begin());
+        assert(modit != bd->models_end());
+
+        //const DSSCContact* mod = static_cast<const DSSCContact*>(modit->second);
+        //const DSSCContact* mod =
+        //  static_cast<const DSSCContact*>(it->first->get_boundary_properties(get_id()));
+        //  const DSSCContact* mod =
+         //  static_cast<const DSSCContact*>(modit->second);
+        //if (mod->has_current())
+        //{
+          string name(bd->get_name() + ".current");
+          // if currents should be plotted, add it also to the plot variables
+          if (plot_curr) add_plot_variable(name);
+          cnt_set.insert(name);
+        //}
+      }
+    }
+    string units = "A/cm^2";
+   
+    // now we declare them
+    unsigned int id = static_cast<ID>(ContactCurrent);
+    for (set<string>::iterator i(cnt_set.begin()); i != cnt_set.end(); ++i)
+    {
+      ++id;
+      declare_solution_ext(*i, id, SolutionDescriptor::REAL,
+          SolutionDescriptor::GLOBAL, units);
+    }
+
+}
+
+
+
+
+
+
+
+void
+DSSC::get_solution_secure(const Elem* elem,
+    std::map<ID, std::vector<double> >& values,
+    const std::vector<Point>& points)
+{
+
+  unsigned int np = points.size();
+
+  TiberNonlinearSystem* system;
+  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
+      get_equation_system_name());
+
+  const NumericVector<Number>& solution = system->get_solution_vector();
+//  const NumericVector<Number>& oldsolution = system->get_vector("old_sol");
+
+  const unsigned int dim = get_mesh().mesh_dimension();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int u_var = system->variable_number("potential");
+  unsigned int en_var = system->variable_number("fermi_n");
+  unsigned int eI_var = system->variable_number("fermi_I");
+  unsigned int eI3_var = system->variable_number("fermi_I3");
+  unsigned int eC_var = system->variable_number("fermi_C");
+
+  FEType fe_type = system->variable_type(u_var);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_eI;
+  vector<unsigned int> dof_indices_eI3;
+  vector<unsigned int> dof_indices_eC;
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<Point>& real_pts = fe->get_xyz();
+
+  ID subdomain = elem->subdomain_id();
+
+  DSSCModel* sc =
+    dynamic_cast<DSSCModel*>(
+        get_physical_model(subdomain));
+
+  assert(sc != NULL);
+
+  sc->reinit(elem);
+
+  fe->reinit(elem, &points);
+
+  dof_map.dof_indices(elem, dof_indices_u, u_var);
+  dof_map.dof_indices(elem, dof_indices_en, en_var);
+  dof_map.dof_indices(elem, dof_indices_eI, eI_var);
+  dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
+  dof_map.dof_indices(elem, dof_indices_eC, eC_var);
+
+  const unsigned int n_dofs = dof_indices_u.size();
+
+  // the scaling parameters to scale back the result
+  double phi0 = get_scaling().get_potential_scaling();
+  double vol0 = get_scaling().get_calc_mesh_units();
+  switch (dim)
+  {
+    case 3:
+      vol0 *= get_scaling().get_calc_mesh_units();
+    case 2:
+      vol0 *= get_scaling().get_calc_mesh_units();
+      break;
+  }
+
+  // cell data variables (to be integrated)
+  RealGradient jn(0);
+  RealGradient jI(0);
+  RealGradient jI3(0);
+  RealGradient jC(0);
+  RealGradient el_field(0);
+  //RealVectorValue polariz(0);
+
+  for (unsigned int n = 0; n < np; n++)
+  {
+    double u  = 0.0;
+    double en = 0.0;
+    double eI = 0.0;
+    double eI3 = 0.0;
+    double eC = 0.0;
+    //double oldu  = 0.0;
+    //double olden = 0.0;
+    //double oldeI = 0.0;
+    //double oldeI3 = 0.0;
+    //double oldeC = 0.0;
+    RealGradient e_field(0);
+    RealGradient grad_en_loc(0);
+    RealGradient grad_eI_loc(0);
+    RealGradient grad_eI3_loc(0);
+    RealGradient grad_eC_loc(0);
+
+    // do interpolation
+    for (unsigned int i = 0; i < n_dofs; i++)
+    {
+      u += phi[i][n] * solution(dof_indices_u[i]);
+      en += phi[i][n] * solution(dof_indices_en[i]);
+      eI += phi[i][n] * solution(dof_indices_eI[i]);
+      eI3 += phi[i][n] * solution(dof_indices_eI3[i]);
+      eC += phi[i][n] * solution(dof_indices_eC[i]);
+
+      //oldu += phi[i][n] * oldsolution(dof_indices_u[i]);
+      //olden += phi[i][n] * oldsolution(dof_indices_en[i]);
+      //oldeI += phi[i][n] * oldsolution(dof_indices_eI[i]);
+      //oldeI3 += phi[i][n] * oldsolution(dof_indices_eI3[i]);
+      //oldeC += phi[i][n] * oldsolution(dof_indices_eC[i]);
+
+      grad_en_loc += dphi[i][n] * solution(dof_indices_en[i]);
+      grad_eI_loc += dphi[i][n] * solution(dof_indices_eI[i]);
+      grad_eI3_loc += dphi[i][n] * solution(dof_indices_eI3[i]);
+      grad_eC_loc += dphi[i][n] * solution(dof_indices_eC[i]);
+
+      e_field += dphi[i][n] * solution(dof_indices_u[i]);
+
+    }
+
+    //cout<<e_field<<endl;
+    // scale the potential back
+    u *= phi0;
+    en *= phi0;
+    eI *= phi0;
+    eI3 *= phi0;
+    eC *= phi0;
+    e_field *= -phi0;
+    grad_en_loc *= phi0;
+    grad_eI_loc *= phi0;
+    grad_eI3_loc *= phi0;
+    grad_eC_loc *= phi0;
+
+
+    sc->set_coordinates(real_pts[n]);
+
+    sc->set_potentials(u, en, eI, eI3, eC);
+    //sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldeI, phi0 * oldeI, phi0 * oldeI3, phi0 * oldeC);
+
+    sc->set_electric_field(e_field);
+    sc->set_grad_fermi_n(grad_en_loc);
+    sc->set_grad_fermi_I(grad_eI_loc);
+    sc->set_grad_fermi_I3(grad_eI3_loc);
+    sc->set_grad_fermi_C(grad_eC_loc);
+
+    sc->calculate_densities();
+
+    //double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
+    //double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
+    double edens = sc->get_density_n();
+    double Idens = sc->get_density_I();
+    double I3dens = sc->get_density_I3();
+    double Cdens = sc->get_density_C();
+
+    //sc->calculate_mobilities();
+
+    sc->calculate_net_recombination_rate();
+
+    double sigma_e = Constants::e * edens * sc->get_mobility_n();
+    double sigma_I = Constants::e * Idens * sc->get_mobility_I();
+    double sigma_I3 = Constants::e * I3dens * sc->get_mobility_I3();
+    double sigma_C = Constants::e * Cdens * sc->get_mobility_C();
+
+    RealGradient dfn = grad_en_loc;
+    RealGradient dfI = grad_eI_loc;
+    RealGradient dfI3 = grad_eI3_loc;
+    RealGradient dfC = grad_eC_loc;
+    RealGradient jn_loc = -sigma_e * dfn;
+    RealGradient jI_loc = -sigma_I * dfI;
+    RealGradient jI3_loc = -sigma_I3 * dfI3;
+    RealGradient jC_loc = sigma_C * dfC;
+    jn += jn_loc;
+    jI += jI_loc;
+    jI3 += jI3_loc;
+    jC += jC_loc;
+
+    el_field += e_field;
+
+
+    if (values.count(ElPotential))
+      values[ElPotential][n] = u;
+
+    if (values.count(eQFermi))
+      values[eQFermi][n] = -en;
+
+    if (values.count(IQFermi))
+      values[IQFermi][n] = -eI;
+
+    if (values.count(I3QFermi))
+      values[I3QFermi][n] = -eI3;
+
+    if (values.count(CQFermi))
+      values[CQFermi][n] = -eC;
+
+    if (values.count(Eredox))
+      values[Eredox][n] = 0.5*(3*eI - eI3 - 2*u);
+
+//    if (values.count(Ec))
+//      values[Ec][n] = sc->get_conduction_band_edge() - u;
+
+//    if (values.count(Ev))
+//      values[Ev][n] = sc->get_valence_band_edge() - u;
+
+//    if (values.count(Ec0))
+//      values[Ec0][n] = sc->get_conduction_band_edge();
+
+//    if (values.count(Ev0))
+//      values[Ev0][n] = sc->get_valence_band_edge();
+
+//    if (values.count(Eg))
+//      values[Eg][n] =
+//        sc->get_conduction_band_edge() - sc->get_valence_band_edge();
+
+    if (values.count(eDensity))
+      values[eDensity][n] = edens;
+
+    if (values.count(IDensity))
+      values[IDensity][n] = Idens;
+
+    if (values.count(I3Density))
+      values[I3Density][n] = I3dens;
+    
+    if (values.count(CDensity))
+      values[CDensity][n] = Cdens;
+    
+    
+    //if (values.count(eMobility))
+    //  values[eMobility][n] = sc->get_electron_mobility();
+
+
+    //if (values.count(eConductivity))
+    //  values[eConductivity][n] = sigma_e;
+
+    //if (values.count(hConductivity))
+    //  values[hConductivity][n] = sigma_h;
+
+
+    //bool trapped_electrons = values.count(IonizedElectronTraps);
+    //if (trapped_electrons || trapped_holes)
+    //{
+    //  sc->calculate_traps();
+    //  if (trapped_electrons)
+    //    values[IonizedElectronTraps][n] = sc->get_ionized_electron_traps();
+    //}
+
+    
+     // bool get_recomb = values.count(NetRecombination);
+     // double tot_rec = 0;
+
+      // loop over all recombination ids
+      //set<ID>::const_iterator rec_it(_recombination_ids.begin());
+      //for ( ; rec_it != _recombination_ids.end(); ++rec_it)
+      //{
+      //  bool requested = values.count(*rec_it);
+      //  double rec = 0;
+      //  if (get_recomb || requested)
+      //  rec = sc->get_net_recombination_rate();
+      // 
+      //  if (requested)
+      //    values[*rec_it][n] = rec;
+
+    //if (get_recomb)
+    //  tot_rec += sc->get_recombination_rate();  
+
+    if (values.count(NetRecombination))
+      values[NetRecombination][n] = sc->get_recombination_rate();
+    
+    if (values.count(Generation))
+      values[Generation][n] = sc->get_generation_rate();
+
+  }
+
+
+  // the cell based solutions
+  // for now, we make a mean value
+
+ 
+  if (values.count(ElField))
+  {
+    values[ElField][0] = el_field(0) / np;
+    values[ElField][1] = el_field(1) / np;
+    values[ElField][2] = el_field(2) / np;
+  }
+
+  if (values.count(CurrentDensity))
+  {
+    values[CurrentDensity][0] = (jn(0) + jI(0) + jI3(0)) / np;
+    values[CurrentDensity][1] = (jn(1) + jI(1) + jI3(1)) / np;
+    values[CurrentDensity][2] = (jn(2) + jI(2) + jI3(2)) / np;
+  }
+
+  if (values.count(eCurrentDensity))
+  {
+    values[eCurrentDensity][0] = jn(0) / np;
+    values[eCurrentDensity][1] = jn(1) / np;
+    values[eCurrentDensity][2] = jn(2) / np;
+  }
+
+  if (values.count(ICurrentDensity))
+  {
+    values[ICurrentDensity][0] = jI(0) / np;
+    values[ICurrentDensity][1] = jI(1) / np;
+    values[ICurrentDensity][2] = jI(2) / np;
+  }
+
+  if (values.count(I3CurrentDensity))
+  {
+    values[I3CurrentDensity][0] = jI3(0) / np;
+    values[I3CurrentDensity][1] = jI3(1) / np;
+    values[I3CurrentDensity][2] = jI3(2) / np;
+  }
+
+  if (values.count(CCurrentDensity))
+  {
+    values[CCurrentDensity][0] = jC(0) / np;
+    values[CCurrentDensity][1] = jC(1) / np;
+    values[CCurrentDensity][2] = jC(2) / np;
+  }
+  
+//  if (values.count(ConductionBands))
+//  {
+//    const vector<double>& cb = sc->get_conduction_bands();
+//    for (size_t i = 0; i < cb.size(); ++i)
+//      values[ConductionBands][i] = cb[i];
+//  }
+
+}
+
+
+
+
+void
+DSSC::get_solution_secure(map<ID, vector<double> >& values)
+{
+
+  
+  vector<string> tokens;
+
+  map<ID, vector<double> >::iterator mapit(values.begin());
+  const map<ID, vector<double> >::iterator mapend(values.end());
+  for ( ; mapit != mapend; ++mapit)
+  {
+    ID id = mapit->first;
+    const SolutionDescriptor& descr = get_solution_descriptor(id);
+    Utils::tokenize(descr.name(), tokens);
+
+    ContactData::iterator it(_boundary_currents.begin());
+    const ContactData::iterator end(_boundary_currents.end());
+    for (; it != end; ++it)
+    {
+      if (tokens[0] == it->first->get_name())
+      {
+        double curr = it->second * it->first->get_area_factor();
+        values[id] = vector<double>(1, curr);
+        break;
+      }
+    }
+  }
+
+}
 

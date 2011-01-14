@@ -26,6 +26,9 @@ DSSCContact::create(const std::string& name,
   if (name == "Pt")
     ct->is_cathode() = true;
 
+  if (name == "Gate")
+    ct->is_gate() = true;
+
   return ct;
 }
 

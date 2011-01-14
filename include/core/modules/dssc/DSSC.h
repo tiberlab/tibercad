@@ -40,19 +40,58 @@ class DSSC : public SimulationInterface
 
   public:
 
+  public:
 
     //! The variables that can be provided
-    enum Variables
+    enum Solutions
     {
-      UNKNOWN = 0,
-      ELPOTENTIAL,      /*!< electric potential */
-      QFERMIE           /*!< electron electro-chemical potential */
+      //Ec,             /*!< conduction band edge */
+      //Ev,             /*!< valence band edge */
+      eQFermi,          /*!< electron electro-chemical potential */
+      IQFermi,          /*!< iodide electro-chemical potential */
+      I3QFermi,         /*!< triiodide electro-chemical potential */
+      CQFermi,           /*!< cation electro-chemical potential */
+      ElPotential,      /*!< electric potential */
+      Eredox,           /*!< Eredox potential > */
+      //Ec0,              /*!< bare conduction band edge */
+      //Ev0,              /*!< bare valence band edge */
+      //Eg,               /*!< band gap */
+      //ConductionBands,  /*!< the conduction band energies */
+      //ValenceBands,     /*!< the valence band energies */
+      eDensity,         /*!< electron density */
+      IDensity,         /*!< iodide density */
+      I3Density,         /*!< triiodide density */
+      CDensity,         /*!< cation density */
+      //eMobility,        /*!< electron mobility */
+      //eConductivity,    /*!< electron conductivity */
+      ElField,          /*!< electric field vector */
+      CurrentDensity,   /*!< total electric current density */
+      //eFlux,            /*!< electron flux */
+      //hFlux,            /*!< hole flux */
+      eCurrentDensity,  /*!< electron current density */
+      ICurrentDensity,  /*!< iodide current density */
+      I3CurrentDensity,  /*!< triiodide current density */
+      CCurrentDensity,  /*!< cation current density */
+      //IonizedElectronTraps, /*!< trapped electron density */
+      Generation,        /*!< generation term > */
+      NetRecombination = 100,  /*!< base number for recombination models */
+      ContactCurrent   = 200,  /*!< base number for contact currents */
+      ContactVoltage   = 300   /*!< base number for contact voltages */
     };
 
 
-    //! Constructor
-    DSSC(const ModelOptions& options);
 
+    //! The variables that can be provided
+    //enum Variables
+    //{
+    //  UNKNOWN = 0,
+    //  ELPOTENTIAL,      /*!< electric potential */
+    //  QFERMIE           /*!< electron electro-chemical potential */
+    //};
+
+
+    //! Constructo(const ModelOptions& options);
+    DSSC(const ModelOptions& options);
 
     //! Destructor
     virtual ~DSSC(void);
@@ -138,14 +177,35 @@ class DSSC : public SimulationInterface
     virtual NumericVector<double>& solution_vector(void);
 
 
-    /*! \copydoc SimulationInterface::build_nodal_results() */
-    virtual void build_nodal_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
+//    /*! \copydoc SimulationInterface::build_nodal_results() */
+//    virtual void build_nodal_results(const std::set<std::string>& variables,
+//        std::vector<double>& results, std::vector<std::string>& legend);
 
 
-    /*! \copydoc SimulationInterface::build_elemental_results() */
-    virtual void build_elemental_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
+//    /*! \copydoc SimulationInterface::build_elemental_results() */
+//    virtual void build_elemental_results(const std::set<std::string>& variables,
+//        std::vector<double>& results, std::vector<std::string>& legend);
+
+    //! Setup the available variables
+    virtual void do_setup_solution_variables(void); 
+
+
+
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
+     *  std::map<ID, std::vector<double> >&, const std::vector<Point>&)
+     */
+    virtual void get_solution_secure(const Elem* elem,
+        std::map<ID, std::vector<double> >& values,
+        const std::vector<Point>& p);
+
+
+    /*!
+     * \copydoc SimulationInterface::get_solution_secure(
+     *  std::map<ID, std::vector<double> >&)
+     */
+    virtual void get_solution_secure(
+        std::map<ID, std::vector<double> >& values);
 
 
     /*! \copydoc SimulationInterface::build_integrated_quantities() */

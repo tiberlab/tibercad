@@ -3,6 +3,7 @@
 
 #include "DSSCModel.h"
 #include "Database.h"
+//#include "Traps.h"
 
 
 #include "elem.h"
@@ -33,7 +34,7 @@ DSSCModel::DSSCModel(const ModelOptions& options)
     _x0(0.0),
     _perm_ox(85.0),
     _perm_elec(117.0),
-    _permittivity(100.0),
+    //_permittivity(100.0),
     _elem(NULL)
 {
 }
@@ -54,15 +55,17 @@ DSSCModel::do_init(void)
     _porosity = 0.0;
 
   // Maxwell-Garnet model permittivity
-  //double A1 = _perm_elec + 2*_perm_ox + 2*_porosity*_perm_elec - 2*_porosity*_perm_ox;
-  //double A2 = _perm_elec + 2*_perm_ox - _porosity*_perm_elec + _porosity*_perm_ox;
-  //_permittivity = _perm_ox * A1/A2;
+  double A1 = _perm_elec + 2*_perm_ox + 2*_porosity*_perm_elec - 2*_porosity*_perm_ox;
+  double A2 = _perm_elec + 2*_perm_ox - _porosity*_perm_elec + _porosity*_perm_ox;
+  _permittivity = _perm_ox * A1/A2;
 
   get_parameter("k_e", _ke);
   get_parameter("beta", _beta);
   get_parameter("k_3", _k3);
 
   get_parameter("permittivity", _permittivity);
+  get_parameter("perm_oxide", _perm_ox);
+  get_parameter("perm_electrolyte", _perm_elec);
 
   get_parameter("generation", _generation);
   get_parameter("alpha", _alpha);
@@ -182,6 +185,7 @@ DSSCModel::calculate_densities(void)
 
     double exponential2 = _alpha2 * exp( -_alpha2 * abs(_pd.coordinates(0) - _x0) );
     _pd.generation_rate =  gen1 + _deltaG * exponential2;
+    //_pd.generation_rate =  _generation;
 
   }
 
@@ -251,10 +255,10 @@ DSSCModel::calculate_net_recombination_rate(void)
 
 
   double n0 = _eq_conc.n;
-  // if (n0 <= _generation/_k3)
-  // {
-  //   n0 = _generation/_k3;
-  // }
+  if (n0 <= _generation/_k3)
+  {
+     n0 = _generation/_k3;
+  }
   if (n0 <= 1e-3)
   {
     n0 = 100;
@@ -281,3 +285,33 @@ DSSCModel::calculate_net_recombination_rate(void)
   _pd.recombination_rate_derivatives[2] = _ke * 0.5 * r / _pd.density_I3;
 
 }
+
+
+/*void
+DSSCModel::calculate_traps(void)
+{
+  //double Ec = get_conduction_band_edge() - _pd->electric_potential;
+  //double Ev = get_valence_band_edge() - _pd->electric_potential;
+  double Ec = 0.93 - _pd->electric_potential;
+  double Ev = (0.93 - 3.2)  - _pd->electric_potential;
+
+  _pd->ionized_electron_traps = 0.0;
+  _pd->ionized_electron_traps_derivative = 0.0;
+  if (_etraps.size() > 0)
+  {
+    double nt = 0, dnt = 0;
+    double kT = Constants::k_B * SimulationOptions::T;
+    set<Trap*>::iterator it(_etraps.begin());
+    const set<Trap*>::iterator end(_etraps.end());
+    for ( ; it != end; ++it)
+    {
+      (*it)->set_energies(Ec, Ev, -_pd->fermi_n, kT);
+      nt += (*it)->get_ionized_density();
+      dnt += (*it)->get_ionized_density_derivative();
+    }
+
+    _pd->ionized_electron_traps = nt;
+    _pd->ionized_electron_traps_derivative = dnt;
+  }
+}*/
+

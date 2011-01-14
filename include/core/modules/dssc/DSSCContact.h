@@ -46,6 +46,7 @@ class DSSCContact : public BoundaryProperties
 
     bool& is_cathode(void);
 
+    bool& is_gate(void);
 
     void set_values(double I, double Idark, double I3, double I3dark);
 
@@ -75,6 +76,9 @@ class DSSCContact : public BoundaryProperties
 
 
     bool _cathode;
+    
+    
+    bool _gate;
 
 
     double _Ioc;
@@ -115,6 +119,7 @@ DSSCContact::DSSCContact(const ModelOptions& options)
     _bias(0.0),
     _res(1e10),
     _cathode(false),
+    _gate(false),
     _j0(0.1),
     _beta(1.0),
     _current(0.0)
@@ -153,6 +158,14 @@ bool&
 DSSCContact::is_cathode(void)
 {
   return _cathode;
+}
+
+
+inline
+bool&
+DSSCContact::is_gate(void)
+{
+  return _gate;
 }
 
 
