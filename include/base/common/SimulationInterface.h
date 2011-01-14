@@ -668,6 +668,9 @@ class SimulationInterface : public TiberModelObject
     //! Get the physical model associated to an element side
     /*!
      * \return \c NULL if no model is present for the given side
+     *
+     * The model will have the bulk material set to the material
+     * of \c elem
      */
     template <typename T>
     T* get_interface_model(const Elem* elem, int side) const;
@@ -676,6 +679,9 @@ class SimulationInterface : public TiberModelObject
     //! Get the physical model associated to an element edge
     /*!
      * \return \c NULL if no model is present for the given edge
+     *
+     * The model will have the bulk material set to the material
+     * of \c elem
      */
     template <typename T>
     T* get_edge_model(const Elem* elem, int edge) const;
@@ -684,6 +690,9 @@ class SimulationInterface : public TiberModelObject
     //! Get the physical model associated to an element node
     /*!
      * \return \c NULL if no model is present for the given node
+     *
+     * The model will have the bulk material set to the material
+     * of \c elem
      */
     template <typename T>
     T* get_node_model(const Elem* elem, int node) const;

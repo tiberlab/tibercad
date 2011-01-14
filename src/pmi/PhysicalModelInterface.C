@@ -468,7 +468,7 @@ PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterf
   assert(pm != NULL);
   pm->set_simulator_id(get_simulator_id());
   pm->set_owner(get_owner());
-  pm->set_bulk_material(_bulk_material);
+  pm->set_bulk_material(get_bulk_material());
   _submodels.insert(SubmodelMap::value_type(key, pm));
 }
 

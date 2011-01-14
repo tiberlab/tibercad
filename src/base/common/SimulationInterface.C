@@ -337,6 +337,9 @@ SimulationInterface::_get_interface_model(const Elem* elem, int side) const
   if (mb != NULL)
     mod = mb->get_model(get_id());
 
+  if (mod != NULL)
+    mod->set_bulk_material(get_material(elem));
+
   return mod;
 }
 
@@ -351,6 +354,9 @@ SimulationInterface::_get_edge_model(const Elem* elem, int edge) const
   if (eo != NULL)
     mod = eo->get_model(get_id());
 
+  if (mod != NULL)
+    mod->set_bulk_material(get_material(elem));
+
   return mod;
 }
 
@@ -364,6 +370,9 @@ SimulationInterface::_get_node_model(const Elem* elem, int node) const
       get_environment().get_device().get_node_object(elem, node);
   if (no != NULL)
     mod = no->get_model(get_id());
+
+  if (mod != NULL)
+    mod->set_bulk_material(get_material(elem));
 
   return mod;
 }
