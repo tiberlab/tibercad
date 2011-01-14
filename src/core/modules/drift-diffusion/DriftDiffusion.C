@@ -3500,7 +3500,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           // contribution to the jacobian
           if ((sm != NULL) && (jacobian != NULL))
           {
-            sm->set_bulk_material(mat);
             sm->compute();
 
             // for Dirichlet DOFs we do not add anything
@@ -3618,7 +3617,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
             if (sm != NULL)
             {
-              sm->set_bulk_material(mat);
               sm->compute();
 
               const vector<double>& coeff_a = sm->get_a();

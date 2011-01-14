@@ -136,14 +136,6 @@ class PhysicalModelInterface : public TiberModelObject
     Database& get_database(void);
 
 
-    //! Set a reference to the Material this model belongs to
-    /*!
-     * \deprecated
-     * This can be used for bulk models only.
-     */
-    void set_material(Material* owner);
-
-
     //! Set the bulk material
     /*!
      * A model, even defined on a lower dimensional region, should
@@ -152,7 +144,7 @@ class PhysicalModelInterface : public TiberModelObject
      * automatically when obtaining the model using one of the
      * methods provided in SimulationInterface.
      */
-    void set_bulk_material(Material* mat);
+    void set_material(Material* mat);
 
 
     //! Get the bulk material
@@ -163,7 +155,7 @@ class PhysicalModelInterface : public TiberModelObject
      * but it will be set automatically when obtaining the model
      * using one of the methods provided in SimulationInterface.
      */
-    Material* get_bulk_material(void) const;
+    Material* get_material(void) const;
 
 
     //! Set a reference to the physical object this model belongs to
@@ -177,19 +169,6 @@ class PhysicalModelInterface : public TiberModelObject
     //! Get a reference to the physical object this model belongs to
      const PhysicalObject* get_owner(void) const;
 
-
-    //! Get a reference to the material this model belongs to
-    /*!
-     * \return \c NULL if the owning object is not a bulk material (= Material)
-     */
-    const Material* get_material(void) const;
-
-
-    //! Get a writeable reference to the material this model belongs to
-    /*!
-     * \return \c NULL if the owning object is not a bulk material (= Material)
-     */
-    Material* get_material(void);
 
 
     //! Get the type of this model
@@ -643,19 +622,11 @@ PhysicalModelInterface::set_simulator_id(ID id)
 
 
 
-inline
-void
-PhysicalModelInterface::set_material(Material* owner)
-{
-  // the cast is only to not produce a compiler error
-  set_owner(reinterpret_cast<PhysicalObject*>(owner));
-}
-
 
 
 inline
 Material*
-PhysicalModelInterface::get_bulk_material(void) const
+PhysicalModelInterface::get_material(void) const
 {
   return _bulk_material;
 }
@@ -696,7 +667,7 @@ PhysicalModelInterface::create_submodel_copy(const T* other) const
   T* newmod = static_cast<T*>(other->copy());
   assert(newmod != NULL);
   newmod->set_owner(_owner);
-  newmod->set_bulk_material(_bulk_material);
+  newmod->set_material(_bulk_material);
   return newmod;
 }
 

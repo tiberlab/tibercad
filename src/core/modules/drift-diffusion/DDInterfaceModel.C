@@ -33,9 +33,9 @@ DDInterfaceModel::get_dd_properties(void) const
 {
   DriftDiffusionProperties* ddprop = NULL;
 
-  if (get_bulk_material() != NULL)
+  if (get_material() != NULL)
     ddprop = static_cast<DriftDiffusionProperties*>(
-        get_bulk_material()->get_model(get_simulator_id()));
+        get_material()->get_model(get_simulator_id()));
 
   return ddprop;
 }
@@ -98,7 +98,7 @@ DDInterfaceModel::do_init(void)
   assert(mat != NULL);
 
   // we set a bulk material, just in case a submodel needs it
-  set_bulk_material(mat);
+  set_material(mat);
 
 
   // get surface trap models
@@ -262,7 +262,6 @@ DDInterfaceModel::_calculate_recombination(double rec[6])
   const set<RecombinationModelInterface*>::iterator end(_recombination_models.end());
   for ( ; it != end; ++it)
   {
-    (*it)->set_bulk_material(get_bulk_material());
     (*it)->get_net_recombination_rates(Re, Rh);
     (*it)->get_net_recombination_rate_derivatives(dRe, dRh);
 

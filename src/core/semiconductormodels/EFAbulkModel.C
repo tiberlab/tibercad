@@ -26,7 +26,7 @@ void EFAbulkModel::do_init()
 
     _bulkHamiltonian = EFAbulkHamiltonian::create(get_material() -> get_structure(), opt);
 
-    _bulkHamiltonian->set_material(get_material());
+    _bulkHamiltonian->set_owner(get_owner());
 
     _bulkHamiltonian->init();
   }
@@ -45,6 +45,6 @@ void EFAbulkModel::do_init_alloy (const PhysicalModelInterface *comp_A, const Ph
   destroy(_bulkHamiltonian);
   _bulkHamiltonian = static_cast<EFAbulkHamiltonian*>(matA->_bulkHamiltonian->copy());
   assert(_bulkHamiltonian != NULL);
-  _bulkHamiltonian->set_material(get_material());
+  _bulkHamiltonian->set_owner(get_owner());
   _bulkHamiltonian->init_alloy(matA->_bulkHamiltonian, matB->_bulkHamiltonian,xa);
 }

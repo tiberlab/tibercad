@@ -77,7 +77,7 @@ Material::do_init(void)
   // first we set up RotatedCrystal because it will be
   // needed by others
   _rotated_crystal = RotatedCrystal::create(get_structure(), opts);
-  _rotated_crystal->set_material(this);
+  _rotated_crystal->set_owner(this);
   _rotated_crystal->init();
 
   setup_doping();

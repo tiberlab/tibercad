@@ -92,7 +92,7 @@ void PhononModel::do_init(void)
     throw InitFailedException("No such raman tensor model" + model_name);
 
   raman_tensor_model->set_phonon_model(this);
-  raman_tensor_model->set_material(get_material());
+  raman_tensor_model->set_owner(get_owner());
   raman_tensor_model->set_simulator_id(get_simulator_id());
   raman_tensor_model->init();
 
@@ -150,7 +150,7 @@ PhononModel::add_dynamical_matrix_model(const std::string& model_name,
     throw InitFailedException("No such dynamical matrix model" + model_name);
 
   model->set_phonon_model(this);
-  model->set_material(get_material());
+  model->set_owner(get_owner());
   model->set_simulator_id(get_simulator_id());
   model->init();
 

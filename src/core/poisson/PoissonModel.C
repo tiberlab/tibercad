@@ -39,7 +39,6 @@ void PoissonModel::do_init()
 }
   //const ModelOptions& opt =  get_options ();
 
-// <<<<<<< .mine
 
 //    model_opt.piezo_pol = get_options().get_option("piezoelectric_field", false);
 
@@ -60,8 +59,6 @@ void PoissonModel::do_init()
 //     _pyropolarization->init();
 //   }
 
-// =======
-// >>>>>>> .r1571
 
    //Density Charge Model
 
@@ -105,7 +102,7 @@ void PoissonModel::create_submodels()
    if (_piezo_model == NULL)
       throw InitFailedException("Could not create piezoelectric model");
 
-   _piezo_model->set_owner(get_material());
+   _piezo_model->set_owner(get_owner());
    _piezo_model->init();
 
   }
@@ -117,7 +114,7 @@ void PoissonModel::create_submodels()
 
    const ModelOptions& opt =  get_options ();
    _epsilon_model = OptDielectricConstant::create(get_material()->get_structure(), opt);
-   _epsilon_model->set_owner(get_material());
+   _epsilon_model->set_owner(get_owner());
    _epsilon_model->init();
    _epsilon_model->get_dielectric_real(_epsilon);
 

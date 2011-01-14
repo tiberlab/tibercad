@@ -279,7 +279,7 @@ PhysicalModelInterface::copy(void) const
   {
     new_copy->_id = _id;
     new_copy->set_owner(_owner);
-    new_copy->set_bulk_material(_bulk_material);
+    new_copy->set_material(_bulk_material);
     new_copy->set_name(get_name());
     new_copy->_simulator_id = _simulator_id;
     new_copy->_set_module_name(get_module_name());
@@ -342,26 +342,6 @@ PhysicalModelInterface::override_parameter_string(const std::string& name,
 
 
 
-
-Material*
-PhysicalModelInterface::get_material(void)
-{
-  Material* mat = NULL;
-  if (_owner->get_type() == PhysicalObject::BULK)
-    mat = static_cast<Material*>(_owner);
-  return mat;
-}
-
-
-
-const Material*
-PhysicalModelInterface::get_material(void) const
-{
-  const Material* mat = NULL;
-  if (_owner->get_type() == PhysicalObject::BULK)
-    mat = static_cast<const Material*>(_owner);
-  return mat;
-}
 
 
 
@@ -451,14 +431,14 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
 
 
 void
-PhysicalModelInterface::set_bulk_material(Material* mat)
+PhysicalModelInterface::set_material(Material* mat)
 {
   _bulk_material = mat;
 
   SubmodelIterator it(_submodels.begin());
   const SubmodelIterator end(_submodels.end());
   for ( ; it != end; ++it)
-    it->second->set_bulk_material(mat);
+    it->second->set_material(mat);
 }
 
 
@@ -468,7 +448,7 @@ PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterf
   assert(pm != NULL);
   pm->set_simulator_id(get_simulator_id());
   pm->set_owner(get_owner());
-  pm->set_bulk_material(get_bulk_material());
+  pm->set_material(get_material());
   _submodels.insert(SubmodelMap::value_type(key, pm));
 }
 
