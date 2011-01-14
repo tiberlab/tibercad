@@ -896,12 +896,10 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // and energy
   setup_band_edges();
 
-cerr << get_material()->get_name() << endl;
   const BandProperties& cb = conduction_band;
   const BandProperties& vb = valence_band;
   double Ec = cb.band_edge;
   double Ev = vb.band_edge;
-  cerr << Ec << " " << Ev << endl;
 
   double kT = get_lattice_temperature();
 
@@ -1030,8 +1028,8 @@ cerr << get_material()->get_name() << endl;
     y = x + dx;
 
     error = fabs(dx);
-    cerr << "x = " << y << " error = " << dx << " res. dens. = "
-      << residual_dens << endl;
+    //cerr << "x = " << y << " error = " << dx << " res. dens. = "
+    //  << residual_dens << endl;
 
     x = y;
 

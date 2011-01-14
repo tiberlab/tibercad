@@ -145,10 +145,24 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Set the bulk material
+    /*!
+     * A model, even defined on a lower dimensional region, should
+     * always have a reference to a bulk material. This reference
+     * can be set using this method explicitly, but it will be set
+     * automatically when obtaining the model using one of the
+     * methods provided in SimulationInterface.
+     */
     void set_bulk_material(Material* mat);
 
 
     //! Get the bulk material
+    /*!
+     * A model, even defined on a lower dimensional region, should
+     * always have a reference to a bulk material. This reference
+     * can be set using this method explicitly using set_bulk_material(),
+     * but it will be set automatically when obtaining the model
+     * using one of the methods provided in SimulationInterface.
+     */
     Material* get_bulk_material(void) const;
 
 
