@@ -61,5 +61,9 @@ MaterialBoundary::do_init(void)
   ModelMap::const_iterator end(models_end());
 
   for ( ; it != end; ++it)
+  {
+    // the initialization might need a material
+    (it->second)->set_material(_mat_A);
     (it->second)->init_interface(_mat_A, _mat_B);
+  }
 }

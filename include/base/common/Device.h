@@ -148,7 +148,7 @@ class Device
     EdgeObject* get_edge_object(ID id);
 
 
-    //! Get the EdgeObject for a given element side
+    //! Get the EdgeObject for a given element edge
     EdgeObject* get_edge_object(const Elem*, int edge);
 
 
@@ -160,11 +160,11 @@ class Device
     NodeObject* get_node_object(ID id);
 
 
-    //! Get the NodeObject for a given element side
+    //! Get the NodeObject for a given element node
     NodeObject* get_node_object(const Elem*, int node);
 
 
-    //! Get the NodeObject for a given element side
+    //! Get the NodeObject for a given node
     NodeObject* get_node_object(const Node* node);
 
 

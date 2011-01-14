@@ -35,6 +35,11 @@ class Database;
  *  static PhysicalModelInterface* create(const ModelOptions&)
  * This method could use the options for instantiation of specialized
  * classes.
+ *
+ *
+ * Every physical model is owned by a PhysicalObject object. In the case of
+ * interface, edge and node models, they get the according bulk material assigned
+ * during calculations which can be obtained with get_material().
  */
 class PhysicalModelInterface : public TiberModelObject
 {
