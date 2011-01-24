@@ -9,5 +9,8 @@ include $(topdir)/Make.module
 
 $(eval $(call MODULE, DSSC.C, DSSCContact.C DSSCModel.C))
 
+MODULE_NAME := dssc_generation
+$(eval $(call MODULE, DSSCGeneration.C))
+
 
 include $(topdir)/Make.rules

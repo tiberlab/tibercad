@@ -3,21 +3,18 @@
 #include "SimulationInterface.h"
 
 
+
 class DSSCGeneration : public SimulationInterface
 {
 
-  public:
 
-    enum Solutions
-    {
-      Generation
-    };
+  public:
 
     //! Create an DSSCGeneration object
     static DSSCGeneration* create(const ModelOptions& options);
 
 
-    virtual ~DSSCGeneration(void) {};
+    virtual ~DSSCGeneration(void);
 
     
     //! Create the bulk model
@@ -66,6 +63,13 @@ class DSSCGeneration : public SimulationInterface
 
 
   private:
+
+    enum Solutions
+    {
+      Generation,
+      Distance
+    };
+
 
     //! \c true if distances have been calculated
     bool _d_calculated;
