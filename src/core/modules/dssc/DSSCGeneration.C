@@ -19,22 +19,6 @@ DSSCGeneration::DSSCGeneration(const ModelOptions& options) :
   _direction(0),
   _intensity(0)
 {
-  int dim = get_mesh().mesh_dimension();
-  switch (dim)
-  {
-    case 2:
-      _direction(1) = -1;
-      break;
-
-    case 3:
-      _direction(2) = -1;
-      break;
-
-    default:
-      _direction(0) = 1;
-      break;
-  }
-
 }
 
 DSSCGeneration::~DSSCGeneration(void)
@@ -52,6 +36,22 @@ DSSCGeneration::parse_options(void)
 void
 DSSCGeneration::do_init(void)
 {
+  // a sensible default
+  int dim = get_mesh().mesh_dimension();
+  switch (dim)
+  {
+    case 2:
+      _direction(1) = -1;
+      break;
+
+    case 3:
+      _direction(2) = -1;
+      break;
+
+    default:
+      _direction(0) = 1;
+      break;
+  }
 
   get_parameter("light_direction", _direction);
   double len = _direction.size();
@@ -184,11 +184,11 @@ DSSCGeneration::_calculate_distances(void)
     const SimulationEnvironment::BoundarySideIterator bend(env.boundary_sides_end());
     for ( ; bit != bend; ++bit)
     {
-      const Elem* elem = (bit->first).elem();
+      const Elem* sideelem = (bit->first).elem();
       unsigned int s = (bit->first).side();
       if (get_mesh().mesh_dimension() == 1)
       {
-        Point dp = elem->point(s) - *node;
+        Point dp = *node - sideelem->point(s);
         double dd = dp * _direction;
         if (dd >= 0) d = dd;
       }
