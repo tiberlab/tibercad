@@ -7,6 +7,7 @@
 #include "mesh_base.h"
 #include "dof_map.h"
 
+#include <limits>
 
 TIBER_MODULE(DSSCGeneration, dssc_generation)
 
@@ -194,7 +195,7 @@ DSSCGeneration::_calculate_distances(void)
     const Node& node = *(*it);
     unsigned int dof = node.dof_number(system.number(), var, 0);
 
-    double d = -1.0;
+    double d = numeric_limits<double>::max();
 
     SimulationEnvironment::BoundarySideIterator bit(env.boundary_sides_begin());
     const SimulationEnvironment::BoundarySideIterator bend(env.boundary_sides_end());
@@ -207,7 +208,7 @@ DSSCGeneration::_calculate_distances(void)
       {
         Point dp = node - sideelem->point(s);
         double dd = dp * _direction;
-        if (dd >= 0) d = dd;
+        d = dd < d ? dd : d;
       }
       else if (dim == 2)
       {
@@ -238,7 +239,7 @@ DSSCGeneration::_calculate_distances(void)
           double t2 = (vy*xb - vx*yb)/(vy*xa - vx*ya);
 
           if ((t1 >= 0) && (t2 >= 0) && (t2 <= 1))
-            d = t1;
+            d = t1 < d ? t1 : d;
         }
       }
       else // dim = 3
@@ -282,7 +283,7 @@ DSSCGeneration::_calculate_distances(void)
           {
             Point p(node - t1 * _direction);
             if (side_el->contains_point(p))
-              d = t1;
+              d = t1 < d ? t1 : d;
           }
 
         }
