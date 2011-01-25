@@ -193,6 +193,7 @@ $Models
 
 
         type = ohmic
+        rec_velocity_p = 1e9
 
       }
 
@@ -204,6 +205,7 @@ $Models
 	type = ohmic
 
 	voltage = @bias
+        rec_velocity_n = 1e9
       }
  
     }   

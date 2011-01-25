@@ -194,6 +194,7 @@ $Models
         BC_reg_numb = 2
 
         type = ohmic
+        rec_velocity_p = 1e9
 
 	voltage = 0.0
       }
@@ -205,6 +206,7 @@ $Models
 
 	
 	type = ohmic
+        rec_velocity_n = 1e9
 	
 	voltage = @bias[0.0]
       }
