@@ -54,6 +54,20 @@ DSSCGeneration::do_init(void)
   }
 
   get_parameter("light_direction", _direction);
+
+  // assure it is orthogonal to the "missing" dimensions
+  switch (dim)
+  {
+    case 1:
+      _direction(1) = 0;
+
+    case 2:
+      _direction(2) = 0;
+
+    default:
+      break;
+  }
+
   double len = _direction.size();
   _direction /= len;
 
@@ -170,13 +184,15 @@ DSSCGeneration::_calculate_distances(void)
 
   NumericVector<double>& solution = system.get_solution_vector();
 
+  const unsigned int dim = get_mesh().mesh_dimension();
+
   MeshBase::const_node_iterator it(get_mesh().local_nodes_begin());
   const MeshBase::const_node_iterator end(get_mesh().local_nodes_end());
 
   for ( ; it != end; ++it)
   {
-    const Node* node = *it;
-    unsigned int dof = node->dof_number(system.number(), var, 0);
+    const Node& node = *(*it);
+    unsigned int dof = node.dof_number(system.number(), var, 0);
 
     double d = -1.0;
 
@@ -186,18 +202,91 @@ DSSCGeneration::_calculate_distances(void)
     {
       const Elem* sideelem = (bit->first).elem();
       unsigned int s = (bit->first).side();
-      if (get_mesh().mesh_dimension() == 1)
+
+      if (dim == 1)
       {
-        Point dp = *node - sideelem->point(s);
+        Point dp = node - sideelem->point(s);
         double dd = dp * _direction;
         if (dd >= 0) d = dd;
       }
-      else if (get_mesh().mesh_dimension() == 2)
+      else if (dim == 2)
       {
+        AutoPtr<Elem> side_el(sideelem->build_side(s));
 
+        /*
+         * have to solve: p0 = node; p1, p2 nodes of side elem
+         *
+         * -vx * t1 + x0 = x1 + (x2 - x1) * t2
+         * -vy * t1 + y0 = y1 + (y2 - y1) * t2
+         *
+         * t1 >= 0, 0 <= t2 <= 1
+         */
+
+        double vx = _direction(0);
+        double vy = _direction(1);
+
+        double xa = side_el->point(1)(0) - side_el->point(0)(0);
+        double ya = side_el->point(1)(1) - side_el->point(0)(1);
+
+        double xb = node(0) - side_el->point(0)(0);
+        double yb = node(1) - side_el->point(0)(1);
+
+        double det = (vy*xa - vx*ya);
+        if (det != 0.0)
+        {
+          double t1 = (xa*yb - xb*ya)/(vy*xa - vx*ya);
+          double t2 = (vy*xb - vx*yb)/(vy*xa - vx*ya);
+
+          if ((t1 >= 0) && (t2 >= 0) && (t2 <= 1))
+            d = t1;
+        }
       }
       else // dim = 3
       {
+        AutoPtr<Elem> side_el(sideelem->build_side(s));
+
+        /*
+         * have to solve: p0 = node; p1, p2, p3 nodes of side elem (TRI3)
+         *
+         * -vx * t1 + x0 = x1 + (x2 - x1) * t2 + (x3 - x1) * t3
+         * -vy * t1 + y0 = y1 + (y2 - y1) * t2 + (y3 - y1) * t3
+         * -vz * t1 + z0 = y1 + (z2 - z1) * t2 + (z3 - z1) * t3
+         *
+         * t1 > 0, and (p0 - v * t1) inside the side element
+         */
+
+        double vx = _direction(0);
+        double vy = _direction(1);
+        double vz = _direction(2);
+
+        double xa = side_el->point(1)(0) - side_el->point(0)(0);
+        double ya = side_el->point(1)(1) - side_el->point(0)(1);
+        double za = side_el->point(1)(2) - side_el->point(0)(2);
+
+        double xb = side_el->point(2)(0) - side_el->point(0)(0);
+        double yb = side_el->point(2)(1) - side_el->point(0)(1);
+        double zb = side_el->point(2)(2) - side_el->point(0)(2);
+
+        double xc = node(0) - side_el->point(0)(0);
+        double yc = node(1) - side_el->point(0)(1);
+        double zc = node(2) - side_el->point(0)(2);
+
+        double det = (vz*xa*yb - vz*xb*ya - vy*xa*zb + vy*xb*za + vx*ya*zb - vx*yb*za);
+        if (det != 0.0)
+        {
+          double t1 = (xa*yb*zc - xa*yc*zb - xb*ya*zc + xb*yc*za + xc*ya*zb - xc*yb*za) / det;
+          double t2 = -(vz*xb*yc - vz*xc*yb - vy*xb*zc + vy*xc*zb + vx*yb*zc - vx*yc*zb) / det;
+          double t3 = (vz*xa*yc - vz*xc*ya - vy*xa*zc + vy*xc*za + vx*ya*zc - vx*yc*za) / det;
+
+          if ((t1 >= 0) && (t2 >= 0) && (t3 >= 0))
+          {
+            Point p(node - t1 * _direction);
+            if (side_el->contains_point(p))
+              d = t1;
+          }
+
+        }
+
 
       }
 
