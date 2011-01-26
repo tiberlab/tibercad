@@ -97,7 +97,7 @@ class TBDLLOCAL Sweep : public SimulationInterface
 
   private:
 
-    //! The simulations for which wew do the sweep
+    //! The simulations for which we do the sweep
     std::vector<SimulationInterface*> _simulations;
 
     //! A pointer to the sweepable variable

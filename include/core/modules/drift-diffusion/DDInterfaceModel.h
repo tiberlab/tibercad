@@ -5,6 +5,8 @@
 
 #include "PhysicalModel.h"
 
+#include "point.h"
+
 #include <cassert>
 #include <set>
 
@@ -12,6 +14,7 @@
 class DriftDiffusionProperties;
 class RecombinationModelInterface;
 class Trap;
+class FowlerNordheim;
 
 /*!
  * \brief The base class for the Drift-Diffusion boundary models
@@ -44,6 +47,10 @@ class DDInterfaceModel : public PhysicalModel
 
     //! Create an interface model
     static DDInterfaceModel* create(const ModelOptions& options);
+
+
+    //! Set the current face normal
+    void set_face_normal(const Point& n);
 
 
     //! Compute the coefficients and their derivatives
@@ -103,6 +110,14 @@ class DDInterfaceModel : public PhysicalModel
     bool has_current(void) const;
 
 
+    //! \c true if field emission model is defined
+    bool has_field_emission(void) const;
+
+
+    //! Get the field emission current
+    double get_field_emission(void);
+
+
 
   protected:
 
@@ -153,6 +168,11 @@ class DDInterfaceModel : public PhysicalModel
     DriftDiffusionProperties* get_dd_properties(void) const;
 
 
+    //! Get the current face normal
+    const Point& get_face_normal(void) const;
+
+
+
   private:
 
 
@@ -177,6 +197,10 @@ class DDInterfaceModel : public PhysicalModel
     bool _has_current;
 
 
+    //! The current face normal
+    Point _normal;
+
+
     //! The electron traps
     std::set<Trap*> _etraps;
 
@@ -185,6 +209,9 @@ class DDInterfaceModel : public PhysicalModel
 
     //! Recombination models
     std::set<RecombinationModelInterface*> _recombination_models;
+
+    //! If we use Fowler-Nordheim emission
+    FowlerNordheim* _emission;
 
 
     //! Calculate the trap contributions
@@ -263,6 +290,23 @@ DDInterfaceModel::get_jacobian_row(unsigned int i) const
 
 inline
 void
+DDInterfaceModel::set_face_normal(const Point& n)
+{
+  _normal = n;
+}
+
+
+inline
+const Point&
+DDInterfaceModel::get_face_normal(void) const
+{
+  return _normal;
+}
+
+
+
+inline
+void
 DDInterfaceModel::set_type(unsigned int var, BCType type)
 {
   assert(var < _coeff_b.size());
@@ -334,6 +378,12 @@ DDInterfaceModel::has_current(bool hascurrent)
 }
 
 
+inline
+bool
+DDInterfaceModel::has_field_emission(void) const
+{
+  return (_emission != NULL);
+}
 
 
 inline

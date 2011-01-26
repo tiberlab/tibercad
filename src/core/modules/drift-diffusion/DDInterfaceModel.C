@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "MaterialBoundary.h"
 #include "Trap.h"
+#include "FowlerNordheim.h"
 #include "RecombinationModelInterface.h"
 #include "DriftDiffusionProperties.h"
 #include "SimulationInterface.h"
@@ -15,7 +16,8 @@ using namespace std;
 DDInterfaceModel::DDInterfaceModel(const ModelOptions& options) :
   PhysicalModel(options),
   _internal_bd(false),
-  _has_current(false)
+  _has_current(false),
+  _emission(NULL)
 {
   _coeff_a.resize(3, 0);
   _coeff_b.resize(3, NEUMANN);
@@ -129,6 +131,12 @@ DDInterfaceModel::do_init(void)
     set_type(1, NEUMANN);
     set_type(2, NEUMANN);
   }
+
+
+  if (get_option("field_emission", "") == "fowler_nordheim")
+  {
+    _emission = new FowlerNordheim(get_option("work_function", 4.0));
+  }
 }
 
 
@@ -186,6 +194,22 @@ DDInterfaceModel::compute()
     _jacobian[2][1] += dRp_dEfn;
     _jacobian[2][2] += dRp_dEfp;
   }
+
+}
+
+
+double
+DDInterfaceModel::get_field_emission(void)
+{
+  double j = 0;
+
+  if (_emission != NULL)
+  {
+    double F = get_dd_properties()->get_electric_field() * _normal;
+    j = _emission->get_emission_current(F);
+  }
+
+  return j;
 }
 
 

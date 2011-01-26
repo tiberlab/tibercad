@@ -119,7 +119,8 @@ Ramp::ramp(void)
   step *= sign;
 
   double min_step = _min_step * step;
-  double max_step = _max_step * step;
+  //double max_step = _max_step * step;
+  double max_step = _max_step;
   double initial_step = _initial_step * step;
 
   double oldvalue = _last;

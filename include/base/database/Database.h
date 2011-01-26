@@ -39,7 +39,7 @@ class Database
     //! Destructor
     ~Database(void);
 
-    //! Assignement operator
+    //! Assignment operator
     Database& operator=(const Database& rhs);
 
 
