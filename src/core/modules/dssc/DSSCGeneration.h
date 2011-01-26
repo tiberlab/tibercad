@@ -83,6 +83,10 @@ class DSSCGeneration : public SimulationInterface
     double _intensity;
 
 
+    //! The photoactive material
+    //std::set<ID> _active_regions;
+
+
     //! Calculates the distances
     void _calculate_distances(void);
 

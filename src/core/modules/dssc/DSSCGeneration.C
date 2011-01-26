@@ -3,6 +3,7 @@
 #include "DSSCGeneration.h"
 #include "TiberLinearSystem.h"
 #include "SimulationEnvironment.h"
+#include "Material.h"
 
 #include "mesh_base.h"
 #include "dof_map.h"
@@ -75,6 +76,10 @@ DSSCGeneration::do_init(void)
   get_parameter("light_intensity", _intensity);
 
 
+  // length units in cm
+  double mesh_units = 100 * get_mesh_units();
+  get_scaling().set_calc_mesh_units(mesh_units);
+
   create_equation_system("linear");
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(0);
 
@@ -83,7 +88,7 @@ DSSCGeneration::do_init(void)
 
   system.add_variable("d", libMeshEnums::FIRST);
 
-  system.add_vector("G");
+  //system.add_vector("G");
 
   system.init();
 
@@ -156,6 +161,14 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
 
     if (values.count(Distance))
       values[Distance][n] = d;
+
+    if (values.count(Generation))
+    {
+      double generation = 0.0;
+      generation = _intensity * exp(-d * 100.0);
+
+      values[Generation][n] = generation;
+    }
   }
 }
 
@@ -171,8 +184,6 @@ DSSCGeneration::do_solve(void)
     _d_calculated = true;
   }
 
-
-
 }
 
 
@@ -186,6 +197,8 @@ DSSCGeneration::_calculate_distances(void)
   NumericVector<double>& solution = system.get_solution_vector();
 
   const unsigned int dim = get_mesh().mesh_dimension();
+
+  const double x0 = get_scaling().get_calc_mesh_units();
 
   MeshBase::const_node_iterator it(get_mesh().local_nodes_begin());
   const MeshBase::const_node_iterator end(get_mesh().local_nodes_end());
@@ -293,7 +306,7 @@ DSSCGeneration::_calculate_distances(void)
 
     }
 
-    solution.set(dof, d);
+    solution.set(dof, x0 * d);
 
   }
 
