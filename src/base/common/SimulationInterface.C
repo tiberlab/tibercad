@@ -662,6 +662,17 @@ SimulationInterface::solve(void)
       save_state();
     }
   }
+  catch (SolveFailedException& e)
+  {
+    ostringstream os;
+    os << "Solve time: " << tt.elapsed_string();
+    Messages::newline();
+    Messages::info(os.str());
+
+    ostringstream s;
+    s << get_name() << ": " << e.what();
+    throw SolveFailedException(s.str());
+  }
   catch (runtime_error& e)
   {
     ostringstream os;

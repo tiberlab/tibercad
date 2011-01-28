@@ -166,7 +166,10 @@ extern "C"
     os << "PETSc error in " << file << ", line " << line;
     Messages::error(os.str());
 #endif
-    throw(PetscRuntimeError(n));
+    if ((n != 71) && (n != 81) && (n != 82))
+      throw(PetscRuntimeError(n));
+    else
+      throw(SolverException("PETSc solver failed."));
   }
 
 
