@@ -135,7 +135,8 @@ DDInterfaceModel::do_init(void)
 
   if (get_option("field_emission", "") == "fowler_nordheim")
   {
-    _emission = new FowlerNordheim(get_option("work_function", 4.0));
+    _emission = new FowlerNordheim(get_option("work_function", 4.7));
+    _emission->set_velocity(get_option("emission_velocity", 1.5e8));
   }
 }
 
@@ -198,19 +199,6 @@ DDInterfaceModel::compute()
 }
 
 
-double
-DDInterfaceModel::get_field_emission(void)
-{
-  double j = 0;
-
-  if (_emission != NULL)
-  {
-    double F = get_dd_properties()->get_electric_field() * _normal;
-    j = _emission->get_emission_current(F);
-  }
-
-  return j;
-}
 
 
 void

@@ -394,7 +394,7 @@ SimulationInterface::get_mesh_units(void) const
 
 
 void
-SimulationInterface::init(void) throw (InitFailedException)
+SimulationInterface::init(void)
 {
   if (!_is_initialized)
   {
@@ -563,8 +563,11 @@ SimulationInterface::create_equation_system(const std::string& type)
 {
   ID newid = _systems.size();
 
-  ostringstream os(get_equation_system_name());
-  os << "_" << newid;
+  ostringstream os;
+  os << get_equation_system_name();
+  
+  if (newid > 0)
+    os << "_" << newid;
 
   TiberEqSystem* sys = TiberEqSystem::create(get_equation_systems(),
       os.str(), type, get_solver_options());
@@ -620,7 +623,7 @@ SimulationInterface::add_plot_variable(ID id)
 
 
 void
-SimulationInterface::solve(void) throw (SolveFailedException)
+SimulationInterface::solve(void)
 {
 
 
@@ -668,7 +671,7 @@ SimulationInterface::solve(void) throw (SolveFailedException)
 
     ostringstream s;
     s << get_name() << ": " << e.what();
-    throw SolveFailedException(s.str());
+    throw RuntimeException(s.str());
   }
   catch (...)
   {

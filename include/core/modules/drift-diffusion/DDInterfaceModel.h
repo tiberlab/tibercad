@@ -115,7 +115,7 @@ class DDInterfaceModel : public PhysicalModel
 
 
     //! Get the field emission current
-    double get_field_emission(void);
+    FowlerNordheim* get_field_emission_model(void);
 
 
 
@@ -383,6 +383,14 @@ bool
 DDInterfaceModel::has_field_emission(void) const
 {
   return (_emission != NULL);
+}
+
+
+inline
+FowlerNordheim*
+DDInterfaceModel::get_field_emission_model(void)
+{
+  return _emission;
 }
 
 

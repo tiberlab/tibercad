@@ -28,10 +28,21 @@ class FowlerNordheim
     double get_emission_current(double F);
 
 
+    //! Get the emission particle velocity
+    void set_velocity(double velocity);
+
+    //! Get the emission particle velocity
+    double get_velocity(void) const;
+
+
   private:
 
-    //! The metal work function
+    //! The metal work function in eV
     double _workfunction;
+
+
+    //! Emission velocity in cm/s
+    double _velocity;
 
 };
 
@@ -54,5 +65,19 @@ FowlerNordheim::set_workfunction(double workfunction)
   _workfunction = workfunction;
 }
 
+
+inline
+double
+FowlerNordheim::get_velocity(void) const
+{
+  return _velocity;
+}
+
+inline
+void
+FowlerNordheim::set_velocity(double velocity)
+{
+  _velocity = velocity;
+}
 
 #endif // _FOWLERNORDHEIM_H_

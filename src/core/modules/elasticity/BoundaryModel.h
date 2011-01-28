@@ -34,7 +34,7 @@ class BoundaryModel : public PhysicalModelInterface
    virtual void calculate(const Elem* elem, unsigned int side,
         const Point& point) = 0;
 
-  const void get_coefficients(RealTensor& H, RealGradient& R);
+  void get_coefficients(RealTensor& H, RealGradient& R);
 
 
  void set_normal(const Point p);
@@ -67,7 +67,6 @@ BoundaryModel::set_coefficients(RealTensor H, RealGradient R)
 
 
 inline
-const
 void
 BoundaryModel::get_coefficients(RealTensor& H, RealGradient& R)
 {

@@ -16,6 +16,7 @@
 #include "TiberNonlinearSystem.h"
 #include "SolveFailedException.h"
 #include "Variable.h"
+#include "FowlerNordheim.h"
 
 // TODO should be replaced by boost methods
 #include "gzstream.h"
@@ -291,8 +292,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   get_scaling().set_potential_scaling(phi0);
   //get_scaling.set_potential_scaling(1.0);
   get_scaling().set_length_scaling(x0 * mesh_units);
-  get_scaling().set_mobility_scaling(mu0);
-  get_scaling().set_density_scaling(C0);
+  get_scaling().set_mobility_scaling(mu0 > 0 ? mu0 : 1.0);
+  get_scaling().set_density_scaling(C0 > 0 ? C0 : 1.);
 }
 
 
@@ -628,6 +629,8 @@ DriftDiffusion::do_solve(void)
 
     Messages::info(os.str());
   }
+
+  calculate_field_emission();
 
 }
 
@@ -1095,7 +1098,7 @@ DriftDiffusion::do_init(void)
 
 
   // check the boundaries if they are internal or not
-  const set<PhysicalModel*>& pm = get_boundary_models();
+  const set<PhysicalModel*>& pm = get_interface_models();
   set<PhysicalModel*>::const_iterator it(pm.begin());
   const set<PhysicalModel*>::const_iterator end(pm.end());
   for ( ; it != end; ++it)
@@ -1861,16 +1864,53 @@ DriftDiffusion::calculate_currents_rstf(void)
 void
 DriftDiffusion::calculate_field_emission(void)
 {
-/*
+
+  const SimulationEnvironment& env = get_environment();
+
   ContactData fe_currents;
-  ContactData::iterator it = _boundary_currents.begin();
-  for ( ; it != _boundary_currents.end(); ++it)
+
+  const set<PhysicalModel*>& pm = get_interface_models();
+  set<PhysicalModel*>::const_iterator it(pm.begin());
+  const set<PhysicalModel*>::const_iterator end(pm.end());
+  for ( ; it != end; ++it)
   {
-    ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-        (*it).first->get_boundary_properties(get_id()));
-    if (contact->has_field_emission())
-      fe_currents[(*it).first] = 0.0;
+    DDInterfaceModel* mod = static_cast<DDInterfaceModel*>(*it);
+
+    // register the contact if it is a real contact (with current)
+    if (mod->has_field_emission())
+    {
+      const Boundary* bnd = get_environment().get_boundary(mod->get_name());
+      if (bnd != NULL)
+      {
+        fe_currents[bnd] = 0.0;
+      }
+    }
   }
+
+  // if there is nothing to do we return immediately
+  if (fe_currents.empty()) return;
+
+  // otherwise we have to calculate it
+
+  string file = get_option("field_emission_file", "");
+
+  bool write_emission = file.empty() ? false : true;
+
+  ofstream of;
+  if (write_emission)
+  {
+    file = get_output_directory() + "/" + file;
+    of.open(file.c_str());
+    if (!of.good())
+      throw RuntimeException("Cannot open file " + file + " for writing.");
+
+    of << "% Field emission currents calculated by TiberCAD\n"
+       << "% units: SI\n"
+       << "%\n"
+       << "% Columns:\n"
+       << "% pos_x  pos_y  pos_z  mom_x  mom_y  mom_z  mass  charge  current\n";
+  }
+
 
   TiberNonlinearSystem* system =
     &get_equation_systems().get_system<TiberNonlinearSystem>(
@@ -1879,9 +1919,7 @@ DriftDiffusion::calculate_field_emission(void)
   const NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
-  const MeshBase& mesh = system->get_mesh();
-  const Device& device = *(_device);
-  const SimulationEnvironment& env = get_environment();
+  const MeshBase& mesh = get_mesh();
 
   const DofMap& dof_map = system->get_dof_map();
 
@@ -1901,7 +1939,7 @@ DriftDiffusion::calculate_field_emission(void)
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
   else
-    integration_order = get_my_options().integration_order;
+    integration_order = libMeshEnums::FIRST;
 
   AutoPtr<QBase> qface(QBase::build(
         get_my_options().quadrature_type, dim - 1, integration_order));
@@ -1926,6 +1964,11 @@ DriftDiffusion::calculate_field_emission(void)
   vector<unsigned int> dof_indices_u;
 
 
+  // Note: the following is not very general at the moment
+
+  // we only loop over the boundary sides
+
+
   MeshBase::const_element_iterator el =
                                   mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el =
@@ -1936,17 +1979,16 @@ DriftDiffusion::calculate_field_emission(void)
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
 
-    ID subdomain = elem->subdomain_id();
+    //ID subdomain = elem->subdomain_id();
 
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices_u, u_var);
 
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
+    DriftDiffusionProperties* sc = get_bulk_model<DriftDiffusionProperties>(elem);
 
     assert(sc != NULL);
 
-    // we calculate field emission only in dielectrics
+    // for now, we calculate field emission only in dielectrics
     if (!sc->is_dielectric())
       continue;
 
@@ -1961,11 +2003,10 @@ DriftDiffusion::calculate_field_emission(void)
         if (boundary == NULL)
           continue;
 
-        ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-            boundary->get_boundary_properties(get_id()));
+        DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
 
         // check if we should do something
-        if (!contact->has_field_emission())
+        if (!sm->has_field_emission())
           break;
 
         sc->reinit(elem);
@@ -1976,19 +2017,35 @@ DriftDiffusion::calculate_field_emission(void)
 
         double current = 0.0;
 
+        FowlerNordheim* em = sm->get_field_emission_model();
+
         for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
-          // get the solution value at the quadrature point
-          double e_field = 0.0;
-          for (unsigned int i = 0; i < phi_size; i++)
-          {
-            double tmp = dphi[i][qp] * face_normals[qp];
-            e_field += tmp * solution(dof_indices_u[i]);
-          }
+          sm->set_face_normal(face_normals[qp]);
 
-          double F = phi0 * e_field;
-          current += JxW[qp] * contact->calculate_field_emission(F);
+          // get the solution value at the quadrature point
+          RealGradient e_field(0.0);
+          for (unsigned int i = 0; i < phi_size; i++)
+            e_field += dphi[i][qp] * solution(dof_indices_u[i]);
+
+          sc->set_electric_field(phi0 * e_field);
+
+          double F = phi0 * e_field * face_normals[qp];
+          double curr = em->get_emission_current(F);
+          current += JxW[qp] * curr;
+
         } // end loop over quadrature points
+
+        if (write_emission)
+        {
+          double v = em->get_velocity() / 100.0;
+          v /= (Constants::c);
+          v /= -sqrt(1.0 - v * v); // need inward direction
+          RealVectorValue(q_point[0] *
+              get_scaling().get_calc_mesh_units()).write_unformatted(of, false);
+          RealVectorValue(face_normals[0] * v).write_unformatted(of, false);
+          of << "9.11e-31 -1.6e-19 " << current << "\n";
+        }
 
         fe_currents[boundary] += current;
       }
@@ -1996,14 +2053,15 @@ DriftDiffusion::calculate_field_emission(void)
   } // end loop over elements
 
 
-  for (it = fe_currents.begin(); it != fe_currents.end(); ++it)
+  Messages m;
+  m.info("Field emission currents:");
+  m.indent();
+  for (ContactData::iterator it(fe_currents.begin()); it != fe_currents.end(); ++it)
   {
-    ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
-        (*it).first->get_boundary_properties(get_id()));
-
-    contact->set_field_emission_current((*it).second);
+    ostringstream os;
+    os << (*it).first->get_name() << ": " << (*it).second << "" << endl;
+    m.info(os.str());
   }
-*/
 }
 
 
@@ -2704,8 +2762,6 @@ DriftDiffusion::calculate_currents(void)
     calculate_currents_rstf();
   else
     calculate_currents_surfint();
-
-  calculate_field_emission();
 }
 
 

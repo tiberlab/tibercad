@@ -169,7 +169,7 @@ class SimulationInterface : public TiberModelObject
      * This method calls do_init() after some health checks
      * and print_info();
      */
-    void init(void) throw (InitFailedException) TBDLLOCAL;
+    void init(void) TBDLLOCAL;
 
 
     //! Setup the available solution variables
@@ -200,7 +200,7 @@ class SimulationInterface : public TiberModelObject
     /*!
      * This method calls do_solve() after some health checks
      */
-    void solve(void) throw (SolveFailedException);
+    void solve(void);
 
 
     //! Write results to file
@@ -704,8 +704,8 @@ class SimulationInterface : public TiberModelObject
     const std::set<PhysicalModel*>& get_physical_models(void) const;
 
 
-    //! Get a reference to the set of all boundary models
-    const std::set<PhysicalModel*>& get_boundary_models(void) const;
+    //! Get a reference to the set of all interface models
+    const std::set<PhysicalModel*>& get_interface_models(void) const;
 
 
     //! Create an embracing region
@@ -1536,7 +1536,7 @@ SimulationInterface::get_physical_models(void) const
 
 inline
 const std::set<PhysicalModel*>&
-SimulationInterface::get_boundary_models(void) const
+SimulationInterface::get_interface_models(void) const
 {
   return _boundary_models;
 }
