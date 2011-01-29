@@ -7,7 +7,7 @@ MODULE_NAME := dssc
 include $(topdir)/Make.module
 
 
-$(eval $(call MODULE, DSSC.C, DSSCContact.C DSSCModel.C))
+$(eval $(call MODULE, DSSC.C DSSCContact.C DSSCModel.C))
 
 MODULE_NAME := dssc_generation
 $(eval $(call MODULE, DSSCGeneration.C))

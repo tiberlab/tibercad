@@ -487,6 +487,13 @@ class DSSCModel : public PhysicalModel
     double _generation;
 
 
+    //! The generation model
+    SimulationInterface* _generation_model;
+
+    //! The solution ID of the generation models variable
+    ID _gen_id;
+
+
     //! coordinate of the contact under illumination
     double _x0;
 

@@ -3,6 +3,7 @@
 
 #include "DSSCModel.h"
 #include "Database.h"
+#include "SimulationInterface.h"
 //#include "Traps.h"
 
 
@@ -28,13 +29,14 @@ DSSCModel::DSSCModel(const ModelOptions& options)
     _beta(1.0),
     _k3(1e8),
     _generation(0.0),
+    _generation_model(NULL),
+    _gen_id(INVALID_ID),
     _alpha(0.2),
     _alpha2(0.0),
     _deltaG(0.0),
     _x0(0.0),
     _perm_ox(85.0),
     _perm_elec(117.0),
-    //_permittivity(100.0),
     _elem(NULL)
 {
 }
@@ -67,7 +69,24 @@ DSSCModel::do_init(void)
   get_parameter("perm_oxide", _perm_ox);
   get_parameter("perm_electrolyte", _perm_elec);
 
-  get_parameter("generation", _generation);
+  string gen_str(get_option("generation", ""));
+  istringstream is(gen_str);
+  double val;
+  if ((is >> val) || (gen_str[0] == '@'))
+  {
+    get_parameter("generation", _generation);
+  }
+  else
+  {
+    _generation_model = SimulationInterface::find_simulation(gen_str);
+    if (_generation_model == NULL)
+      throw InitFailedException("Cannot find generation model: " + gen_str);
+
+    _gen_id = _generation_model->get_solution_id("Generation");
+  }
+
+
+
   get_parameter("alpha", _alpha);
   get_parameter("Light", _x0);
   get_parameter("alpha2", _alpha2);
@@ -180,12 +199,22 @@ DSSCModel::calculate_densities(void)
     _pd.density_n = _electrons.get_particle_density();
 
     // generation has to be calculated here
-    double exponential = exp( -_alpha * abs(_pd.coordinates(0) - _x0) );
-    double gen1 =  1e4 * _alpha * _generation * exponential;
+    //double exponential = exp( -_alpha * abs(_pd.coordinates(0) - _x0) );
+    //double gen1 =  1e4 * _alpha * _generation * exponential;
 
-    double exponential2 = _alpha2 * exp( -_alpha2 * abs(_pd.coordinates(0) - _x0) );
-    _pd.generation_rate =  gen1 + _deltaG * exponential2;
-    //_pd.generation_rate =  _generation;
+    //double exponential2 = _alpha2 * exp( -_alpha2 * abs(_pd.coordinates(0) - _x0) );
+    //_pd.generation_rate =  gen1 + _deltaG * exponential2;
+    if (_generation_model != NULL)
+    {
+      vector<double> tmp(1);
+      if (_generation_model->get_solution(_elem, _gen_id, tmp,
+          vector<Point>(1, _pd.coordinates)))
+        _generation = tmp[0];
+      else
+        _generation = 0;
+
+    }
+    _pd.generation_rate =  _generation;
 
   }
 

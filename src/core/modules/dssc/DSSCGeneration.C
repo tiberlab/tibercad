@@ -19,7 +19,9 @@ using namespace std;
 DSSCGeneration::DSSCGeneration(const ModelOptions& options) :
   SimulationInterface(options),
   _direction(0),
-  _intensity(0)
+  _intensity(1),
+  _intensity_factor(1),
+  _alpha(-1)
 {
 }
 
@@ -74,6 +76,23 @@ DSSCGeneration::do_init(void)
   _direction /= len;
 
   get_parameter("light_intensity", _intensity);
+  get_parameter("intensity_factor", _intensity_factor);
+  if (_intensity_factor > 1 || _intensity_factor < 0)
+    throw InitFailedException("intensity factor has to be between 0 and 1");
+
+  string model(get_option("model", "simple"));
+  if (model == "simple")
+  {
+    _intensity *= 1e16;
+    _alpha = 100.0;
+    get_parameter("alpha", _alpha);
+  }
+  else
+  {
+
+  }
+
+
 
 
   // length units in cm
@@ -165,9 +184,14 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
     if (values.count(Generation))
     {
       double generation = 0.0;
-      generation = _intensity * exp(-d * 100.0);
+      if (_alpha >= 0)
+       generation = _intensity * _alpha * exp(-d * _alpha);
+      else
+      {
+        generation = 0.0;
+      }
 
-      values[Generation][n] = generation;
+      values[Generation][n] = _intensity_factor * generation;
     }
   }
 }

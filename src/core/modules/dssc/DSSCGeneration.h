@@ -83,8 +83,12 @@ class DSSCGeneration : public SimulationInterface
     double _intensity;
 
 
-    //! The photoactive material
-    //std::set<ID> _active_regions;
+    //! A scalar factor for the intensity (0 <= x <= 1)
+    double _intensity_factor;
+
+
+    //! the absorption coefficient for the simple model
+    double _alpha;
 
 
     //! Calculates the distances
