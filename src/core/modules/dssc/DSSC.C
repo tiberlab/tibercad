@@ -11,6 +11,7 @@
 #include "DSSCContact.h"
 #include "TiberNonlinearSystem.h"
 #include "SolveFailedException.h"
+#include "Messages.h"
 
 
 // libmesh includes
@@ -285,8 +286,10 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   get_scaling().set_mobility_scaling(mu0);
   get_scaling().set_density_scaling(C0);
 
-  cout << "total amount cation: " << _cation_amount << endl;
-  cout << "total amount iodine: " << _iodine_amount << endl;
+  ostringstream os;
+  os << "total amount cation: " << _cation_amount << endl;
+  os << "total amount iodine: " << _iodine_amount << endl;
+  Messages::info(os.str());
 }
 
 
@@ -725,7 +728,7 @@ DSSC::do_solve(void)
   ContactData::iterator it(_boundary_currents.begin());
   const ContactData::iterator end(_boundary_currents.end());
 
-  cout << endl;
+  Messages::newline();
   int width = 20;
   {
     ostringstream os;
@@ -736,7 +739,7 @@ DSSC::do_solve(void)
     os.width(2 * width - os.tellp());
     os << "";
     os << "contact current:";
-    cout << os.str() << endl;
+    Messages::info(os.str());
   }
 
   for ( ; it != end; ++it)
@@ -753,7 +756,7 @@ DSSC::do_solve(void)
     os.width(2 * width - os.tellp());
     os << "";
     os << it->second;
-    cout << os.str() << endl;
+    Messages::info(os.str());
 
   }
 
@@ -938,10 +941,8 @@ DSSC::do_print_info(void)
   parse_const_options();
   parse_options();
 
-  string space("  ");
-
   if (do_local_scaling_)
-    cout << space << "using local scaling" << endl;
+    Messages::info("using local scaling");
 
 
 }

@@ -18,6 +18,7 @@ using namespace std;
 
 DSSCGeneration::DSSCGeneration(const ModelOptions& options) :
   SimulationInterface(options),
+  _d_calculated(false),
   _direction(0),
   _intensity(1),
   _intensity_factor(1),
