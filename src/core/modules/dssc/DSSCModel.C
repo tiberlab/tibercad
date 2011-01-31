@@ -10,7 +10,6 @@
 #include "elem.h"
 
 
-//TIBER_MODULE(DSSCModel, dscbulk, default)
 
 
 using namespace std;
