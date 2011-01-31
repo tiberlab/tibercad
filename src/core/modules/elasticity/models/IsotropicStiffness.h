@@ -52,8 +52,8 @@ class TBDLLOCAL IsotropicStiffness : public StiffnessModel
 
   private:
   
-  double _E;
-  double _P;
+  double _young;
+  double _poisson;
   
 
   //! Constructor

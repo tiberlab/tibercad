@@ -19,7 +19,7 @@ ElasticityBoundaryModel::do_init(void)
   if ((*it).second != NULL)
   {
     _bm = dynamic_cast<BoundaryModel*> ((*it).second);
-    _bm->get_coefficients(_H, _R);
+    _bm->get_coefficients(_H_tens, _R_vec);
   }
   
 
@@ -35,7 +35,7 @@ ElasticityBoundaryModel::calculate(const Elem* elem, unsigned int side,
   {
     _bm->set_normal(_normal);
     _bm->calculate(elem,side,point);
-    _bm->get_coefficients(_H, _R);
+    _bm->get_coefficients(_H_tens, _R_vec);
   }
 
 

@@ -199,8 +199,8 @@ $Models
     {
       BC_Region n_contact
       {
-     #   BC_reg_numb = 1
         type = ohmic
+        rec_velocity_p = 1e7
       
         voltage = 0.0
       }
@@ -208,8 +208,8 @@ $Models
       
       BC_Region p_contact
       {
-     #   BC_reg_numb = 2
         type = ohmic
+        rec_velocity_n = 1e7
 
   
 	voltage = @Vb[0.0]  

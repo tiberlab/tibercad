@@ -1,7 +1,7 @@
 // $Id$
 
-#ifndef _ELASTICITYBOUNDARYMODEL_H_
-#define _ELASTICITYBOUNDARYMODEL_H_
+#ifndef _ELASTICITYBOUNDARYMODEL_H_tens_
+#define _ELASTICITYBOUNDARYMODEL_H_tens_
 
 #include "PhysicalModel.h"
 
@@ -52,11 +52,11 @@ class TBDLLOCAL ElasticityBoundaryModel : public PhysicalModel
   
   static void  _destroy( TiberModelObject* p);
 
-  RealTensor _H;
+  RealTensor _H_tens;
 
-  RealGradient _R;
+  RealGradient _R_vec;
 
-  double _A;
+  double _A_scal;
    
 };
 
@@ -65,8 +65,8 @@ const
 void
 ElasticityBoundaryModel::get_coefficients(RealTensor& H, RealGradient& R)
 {
-  H = _H;
-  R = _R;
+  H = _H_tens;
+  R = _R_vec;
 }
 
 inline
@@ -81,9 +81,9 @@ ElasticityBoundaryModel::set_normal(const Point normal)
 inline
 ElasticityBoundaryModel::ElasticityBoundaryModel(const ModelOptions& options) :
   PhysicalModel(options),
-  _H(0),
-  _R(0),
-  _A(0)
+  _H_tens(0),
+  _R_vec(0),
+  _A_scal(0)
 {
 }
 
@@ -113,4 +113,4 @@ ElasticityBoundaryModel::create(const ModelOptions& options)
   
 }
 
-#endif // _MYPOISSONMODEL_H_
+#endif // _MYPOISSONMODEL_H_tens_

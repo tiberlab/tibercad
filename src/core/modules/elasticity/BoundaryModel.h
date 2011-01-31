@@ -1,7 +1,7 @@
 // $Id$
 
-#ifndef _BOUNDARYMODEL_H_
-#define _BOUNDARYMODEL_H_
+#ifndef _BOUNDARYMODEL_H_tensor_
+#define _BOUNDARYMODEL_H_tensor_
 
 #include "PhysicalModelInterface.h"
 
@@ -50,9 +50,9 @@ class BoundaryModel : public PhysicalModelInterface
 
   private:
 
-  RealTensor _H;
+  RealTensor _H_tensor;
 
-  RealGradient _R;
+  RealGradient _R_vec;
 
 };
 
@@ -61,8 +61,8 @@ inline
 void
 BoundaryModel::set_coefficients(RealTensor H, RealGradient R)
 {
-  _H = H;
-  _R = R;
+  _H_tensor = H;
+  _R_vec = R;
 }
 
 
@@ -70,15 +70,15 @@ inline
 void
 BoundaryModel::get_coefficients(RealTensor& H, RealGradient& R)
 {
-  H = _H;
-  R = _R;
+  H = _H_tensor;
+  R = _R_vec;
 }
 
 inline
 BoundaryModel::BoundaryModel(const ModelOptions& options) :
   PhysicalModelInterface(options),
-  _H(0),
-  _R(0)
+  _H_tensor(0),
+  _R_vec(0)
 {
 }
 
@@ -91,4 +91,4 @@ BoundaryModel::set_normal(const Point normal)
 
 
 
-#endif // _THERMALCONDUCTIVITYMODEL_H_
+#endif // _THERMALCONDUCTIVITYMODEL_H_tensor_
