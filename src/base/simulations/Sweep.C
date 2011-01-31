@@ -99,8 +99,8 @@ Sweep::parse_options(void)
 {
   ModelOptions& opts = get_options();
 
-  _min_step = opts.get_option("min_step", _min_step);
-  _max_step = opts.get_option("max_step", _max_step);
+  //_min_step = opts.get_option("min_step", _min_step);
+  //_max_step = opts.get_option("max_step", _max_step);
 
   double start = opts.get_option("start", 0.0);
   double stop = opts.get_option("stop", 0.0);

@@ -50,14 +50,25 @@ class TBDLLOCAL Ramp
     //! The last simulation value
     double _last;
 
-    //! The initial step size 0 < _initial_step < 1
+    //! The initial relative step size 0 < _initial_step < 1
     double _initial_step;
 
-    //! The minimum step size 0 < _min_step < 1
+    //! The minimum relative step size 0 < _min_step < 1
     double _min_step;
 
-    //! The maximum step size 0 < _max_step < 1
+    //! The maximum relative step size 0 < _max_step < 1
     double _max_step;
+
+
+    //! The initial absolute step size 0 < _initial_step < 1
+    double _initial_abs_step;
+
+    //! The minimum absolute step size 0 < _min_step < 1
+    double _min_abs_step;
+
+    //! The maximum absolute step size 0 < _max_step < 1
+    double _max_abs_step;
+
 
     //! Whether to plot results or not
     bool _plot_data;

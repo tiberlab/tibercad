@@ -110,10 +110,10 @@ class TBDLLOCAL Sweep : public SimulationInterface
     double _goal;
 
     //! The minimum step size
-    double _min_step;
+    //double _min_step;
 
     //! The maximum step size
-    double _max_step;
+    //double _max_step;
 
 
     //! Write results to file after every step if true
@@ -157,8 +157,8 @@ inline
 Sweep::Sweep(const ModelOptions& options)
   : SimulationInterface(options),
     _variable(""),
-    _min_step(1e-3),
-    _max_step(10),
+    //_min_step(1e-3),
+    //_max_step(10),
     _plot_data(false)
 {
   has_solution_vector(false);

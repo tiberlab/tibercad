@@ -5,6 +5,7 @@
 #include "Variable.h"
 #include "Messages.h"
 
+#include <limits>
 
 using namespace std;
 
@@ -19,6 +20,9 @@ Ramp::Ramp(const ModelOptions& options,
     _initial_step(1.0),
     _min_step(1e-3),
     _max_step(1.0),
+    _initial_abs_step(numeric_limits<double>::max()),
+    _min_abs_step(numeric_limits<double>::min()),
+    _max_abs_step(numeric_limits<double>::max()),
     _plot_data(false)
 {
 
@@ -68,12 +72,19 @@ Ramp::Ramp(const ModelOptions& options,
 
 
   _goal = options.get_option("goal", _goal);
-  _min_step = options.get_option("min_step", _min_step);
+
+  _min_step = options.get_option("min_relative_step", _min_step);
   _min_step = min(max(_min_step, 0.0), 1.0);
-  _max_step = options.get_option("max_step", _max_step);
+  _min_abs_step = options.get_option("min_step", _min_abs_step);
+
+  _max_step = options.get_option("max_relative_step", _max_step);
   _max_step = min(max(_max_step, 0.0), 1.0);
-  _initial_step = options.get_option("initial_step", _initial_step);
+  _max_abs_step = options.get_option("max_step", _max_abs_step);
+
+  _initial_step = options.get_option("initial_relative_step", _initial_step);
   _initial_step = min(max(_initial_step, 0.0), 1.0);
+  _initial_abs_step = options.get_option("initial_step", _initial_abs_step);
+
   //_plot_data = options.get_option("plot_data", _plot_data);
 
 }
@@ -118,9 +129,11 @@ Ramp::ramp(void)
   double sign = (step < 0) ? -1.0 : 1.0;
   step *= sign;
 
+  //double min_step = max(_min_abs_step, _min_step * step);
+  //double max_step = min(_max_abs_step, _max_step * step);
+  //double initial_step = min(_initial_step * step, _initial_abs_step);
   double min_step = _min_step * step;
-  //double max_step = _max_step * step;
-  double max_step = _max_step;
+  double max_step = _max_step * step;
   double initial_step = _initial_step * step;
 
   double oldvalue = _last;
@@ -130,7 +143,7 @@ Ramp::ramp(void)
 
   do
   {
-    if (currstep < min_step)
+    if ((currstep < min_step) && (step > 0))
     {
       ostringstream os;
       os << "Ramp of " << _variable << " failed: step size too small.";
