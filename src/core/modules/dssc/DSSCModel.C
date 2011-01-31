@@ -4,6 +4,7 @@
 #include "DSSCModel.h"
 #include "Database.h"
 #include "SimulationInterface.h"
+#include "Messages.h"
 //#include "Traps.h"
 
 
@@ -177,10 +178,12 @@ DSSCModel::copy_from(const PhysicalModelInterface* rhs)
 void
 DSSCModel::do_print_info(void)
 {
-  cerr << "n_e_0 = " << _eq_conc.n << "  mu_n = " << _mobility.n << endl;
-  cerr << "n_I_0 = " << _eq_conc.I << "  mu_I = " << _mobility.I << endl;
-  cerr << "n_I3_0 = " << _eq_conc.I3 << "  mu_I3 = " << _mobility.I3 << endl;
-  cerr << "n_C_0 = " << _eq_conc.C << "  mu_C = " << _mobility.C << endl;
+  ostringstream os;
+  os << "n_e_0 = " << _eq_conc.n << "  mu_n = " << _mobility.n << endl;
+  os << "n_I_0 = " << _eq_conc.I << "  mu_I = " << _mobility.I << endl;
+  os << "n_I3_0 = " << _eq_conc.I3 << "  mu_I3 = " << _mobility.I3 << endl;
+  os << "n_C_0 = " << _eq_conc.C << "  mu_C = " << _mobility.C << endl;
+  Messages::info(os.str());
 }
 
 
@@ -213,6 +216,7 @@ DSSCModel::calculate_densities(void)
         _generation = 0;
 
     }
+
     _pd.generation_rate =  _generation;
 
   }

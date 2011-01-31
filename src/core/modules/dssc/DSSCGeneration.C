@@ -93,8 +93,6 @@ DSSCGeneration::do_init(void)
   }
 
 
-
-
   // length units in cm
   double mesh_units = 100 * get_mesh_units();
   get_scaling().set_calc_mesh_units(mesh_units);
@@ -216,6 +214,7 @@ DSSCGeneration::_calculate_distances(void)
 {
   SimulationEnvironment& env = get_environment();
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(0);
+  unsigned short sysnr = system.number();
   unsigned short var = system.variable_number("d");
 
   NumericVector<double>& solution = system.get_solution_vector();
@@ -230,7 +229,10 @@ DSSCGeneration::_calculate_distances(void)
   for ( ; it != end; ++it)
   {
     const Node& node = *(*it);
-    unsigned int dof = node.dof_number(system.number(), var, 0);
+    unsigned short ncomp = node.n_comp(sysnr, var);
+    if (ncomp == 0) continue;
+
+    unsigned int dof = node.dof_number(sysnr, var, 0);
 
     double d = numeric_limits<double>::max();
 
