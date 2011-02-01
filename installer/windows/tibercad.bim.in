@@ -45,9 +45,9 @@ Entry0 = English¶Bytessence/Michel Van Passel¶@BINSTALLMAKERDIR@\Localization\En
 [InstTasks]
 fileassoc = ASSOCIATEEXTENSION¶tib¶TiberCAD input file¶<DefaultInstallPath>\tibercad.exe¶1
 mklicdir = CREATEFOLDER¶<DefaultInstallPath>\license
-assocgeo = ASSOCIATEEXTENSION¶geo¶GMSH geo file¶<DefaultInstallPath>/tools/gmsh-2.3.0/gmsh.exe¶0
-linkgmsh = NORMALLINK¶17¶gmsh¶<DefaultInstallPath>/tools/gmsh-2.3.0/gmsh.exe¶0¶0¶GMSH 2.3.0
-linkgmshmanual = NORMALLINK¶17¶GMSH manual¶<DefaultInstallPath>/tools/gmsh-2.3.0/gmsh.pdf¶0¶0¶GMSH 2.3.0 Manual
+assocgeo = ASSOCIATEEXTENSION¶geo¶GMSH geo file¶<DefaultInstallPath>/tools/gmsh-2.4.2/gmsh.exe¶0
+linkgmsh = NORMALLINK¶17¶gmsh¶<DefaultInstallPath>/tools/gmsh-2.4.2/gmsh.exe¶0¶0¶GMSH 2.4.2
+linkgmshmanual = NORMALLINK¶17¶GMSH manual¶<DefaultInstallPath>/tools/gmsh-2.4.2/gmsh.pdf¶0¶0¶GMSH 2.4.2 Manual
 ; 
 [UninstTasks]
 ; 
