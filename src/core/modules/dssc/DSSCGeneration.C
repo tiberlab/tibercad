@@ -76,6 +76,7 @@ DSSCGeneration::do_init(void)
   double len = _direction.size();
   _direction /= len;
 
+  // light intensity is given in x sun
   get_parameter("light_intensity", _intensity);
   get_parameter("intensity_factor", _intensity_factor);
   if (_intensity_factor > 1 || _intensity_factor < 0)
@@ -84,8 +85,8 @@ DSSCGeneration::do_init(void)
   string model(get_option("model", "simple"));
   if (model == "simple")
   {
-    _intensity *= 1e16;
-    _alpha = 100.0;
+    // alpha is given in um^-1
+    _alpha = 0.15;
     get_parameter("alpha", _alpha);
   }
   else
@@ -184,7 +185,7 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
     {
       double generation = 0.0;
       if (_alpha >= 0)
-       generation = _intensity * _alpha * exp(-d * _alpha);
+       generation = 1e4 * 1.5e17 * _intensity * _alpha * exp(-d * 1e4 *_alpha);
       else
       {
         generation = 0.0;

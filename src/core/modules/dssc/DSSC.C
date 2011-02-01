@@ -2946,7 +2946,7 @@ DSSC::build_elemental_results(const set<string>& variables,
 }
 
 */
-
+/*
 void
 DSSC::build_integrated_quantities(
     vector<double>& values)
@@ -2968,7 +2968,7 @@ DSSC::build_integrated_quantities(
 
   }
 }
-
+*/
 
 void
 DSSC::calculate_currents(void)
@@ -2976,7 +2976,7 @@ DSSC::calculate_currents(void)
   calculate_currents_rstf();
 }
 
-
+/*
 void
 DSSC::build_integrated_quantities_description(
     std::vector<std::string>& legend,
@@ -3008,7 +3008,7 @@ DSSC::build_integrated_quantities_description(
     description[0] = s.str();
   }
 }
-
+*/
 
 
 

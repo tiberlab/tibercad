@@ -61,14 +61,8 @@ Device::~Device()
   // to several IDs
   MaterialMap::iterator it(_material_map.begin());
   const MaterialMap::iterator end(_material_map.end());
-  set<Material*> mats;
   for ( ; it != end; ++it)
-    mats.insert(it->second);
-
-  set<Material*>::iterator matit(mats.begin());
-  const set<Material*>::iterator matend(mats.end());
-  for ( ; matit != matend; ++matit)
-    delete *matit;
+    delete it->second;
 
   // every ID has its own object
   BoundaryMap::iterator bdit(_boundary_map.begin());
@@ -88,7 +82,6 @@ Device::~Device()
   for ( ; nit != nend; ++nit)
     delete nit->second;
 
-  _material_map.clear();
 
   delete _eq_system;
   delete _boundary_nodes;

@@ -209,14 +209,14 @@ class DSSC : public SimulationInterface
 
 
     /*! \copydoc SimulationInterface::build_integrated_quantities() */
-    virtual void build_integrated_quantities(std::vector<double>& values);
+    //virtual void build_integrated_quantities(std::vector<double>& values);
 
 
     /*! \copydoc SimulationInterface::build_integrated_quantities_description()
      */
-    virtual void build_integrated_quantities_description(
-        std::vector<std::string>& legend,
-        std::vector<std::string>& description);
+    //virtual void build_integrated_quantities_description(
+    //    std::vector<std::string>& legend,
+    //    std::vector<std::string>& description);
 
 
     /*! \copydoc SimulationInterface::do_get_solution_vector() */
