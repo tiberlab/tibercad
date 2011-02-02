@@ -5,7 +5,7 @@
 #include "Database.h"
 #include "SimulationInterface.h"
 #include "Messages.h"
-//#include "Traps.h"
+#include "Trap.h"
 
 
 #include "elem.h"
@@ -319,16 +319,17 @@ DSSCModel::calculate_net_recombination_rate(void)
 }
 
 
-/*void
+
+void
 DSSCModel::calculate_traps(void)
 {
   //double Ec = get_conduction_band_edge() - _pd->electric_potential;
   //double Ev = get_valence_band_edge() - _pd->electric_potential;
-  double Ec = 0.93 - _pd->electric_potential;
-  double Ev = (0.93 - 3.2)  - _pd->electric_potential;
+  double Ec = 0.93 - _pd.electric_potential;
+  double Ev = (0.93 - 3.2)  - _pd.electric_potential;
 
-  _pd->ionized_electron_traps = 0.0;
-  _pd->ionized_electron_traps_derivative = 0.0;
+  _pd.ionized_electron_traps = 0.0;
+  _pd.ionized_electron_traps_derivative = 0.0;
   if (_etraps.size() > 0)
   {
     double nt = 0, dnt = 0;
@@ -337,13 +338,13 @@ DSSCModel::calculate_traps(void)
     const set<Trap*>::iterator end(_etraps.end());
     for ( ; it != end; ++it)
     {
-      (*it)->set_energies(Ec, Ev, -_pd->fermi_n, kT);
+      (*it)->set_energies(Ec, Ev, -_pd.fermi_n, kT);
       nt += (*it)->get_ionized_density();
       dnt += (*it)->get_ionized_density_derivative();
     }
 
-    _pd->ionized_electron_traps = nt;
-    _pd->ionized_electron_traps_derivative = dnt;
+    _pd.ionized_electron_traps = nt;
+    _pd.ionized_electron_traps_derivative = dnt;
   }
-}*/
+}
 
