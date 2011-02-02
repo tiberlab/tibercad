@@ -79,20 +79,34 @@ class DSSCGeneration : public SimulationInterface
     RealVectorValue _direction;
 
 
-    //! Light intensity
+    //! Light intensity in units of 1 sun
     double _intensity;
-
-
-    //! A scalar factor for the intensity (0 <= x <= 1)
-    double _intensity_factor;
 
 
     //! the absorption coefficient for the simple model
     double _alpha;
 
 
+    //! The wavelengths
+    std::vector<double> _lambda;
+
+
+    //! The solar spectrum
+    std::vector<double> _spectrum;
+
+
+    //! The absorption spectrum
+    std::vector<double> _absorption;
+
+
     //! Calculates the distances
     void _calculate_distances(void);
+
+    //! Read the spectrum
+    void _read_spectrum(void);
+
+    //! Integrate the spectrum for a given distance
+    double _integrate(double d);
 
 };
 

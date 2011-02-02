@@ -226,8 +226,8 @@ class Database
     //! Check the data file
     bool check_data_file(const std::string& name) const TBDLLOCAL;
 
-    //! Get the automatic data file name
-    const std::string get_data_file(const std::string& material) const TBDLLOCAL;
+    //! Find a file in the search path
+    const std::string find_file(const std::string& file) const TBDLLOCAL;
 
     //! Open the database
     /*!

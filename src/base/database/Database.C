@@ -87,7 +87,7 @@ Database::set_material(const string& material,
 {
   string df(datafile);
   if (df.size() == 0)
-    df = get_data_file(material);
+    df = find_file(material + ".dat");
 
   if ((_material != material) || (_datafile != df))
   {
@@ -238,14 +238,14 @@ Database::set_default_search_path(const string& path)
 
 
 const string
-Database::get_data_file(const string& material) const
+Database::find_file(const string& file) const
 {
   string s(_path);
-  s += "/" + material + ".dat";
+  s += "/" + file;
 
   if ((_path.size() == 0) || !check_data_file(s))
   {
-    s = _default_path + "/" + material + ".dat";
+    s = _default_path + "/" + file;
 
     if ((_default_path.size() == 0) || (!check_data_file(s)))
     {

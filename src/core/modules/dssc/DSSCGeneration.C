@@ -4,6 +4,7 @@
 #include "TiberLinearSystem.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
+#include "Database.h"
 
 #include "mesh_base.h"
 #include "dof_map.h"
@@ -20,8 +21,7 @@ DSSCGeneration::DSSCGeneration(const ModelOptions& options) :
   SimulationInterface(options),
   _d_calculated(false),
   _direction(0),
-  _intensity(1),
-  _intensity_factor(1),
+  _intensity(0),
   _alpha(-1)
 {
 }
@@ -78,20 +78,14 @@ DSSCGeneration::do_init(void)
 
   // light intensity is given in x sun
   get_parameter("light_intensity", _intensity);
-  get_parameter("intensity_factor", _intensity_factor);
-  if (_intensity_factor > 1 || _intensity_factor < 0)
-    throw InitFailedException("intensity factor has to be between 0 and 1");
 
-  string model(get_option("model", "simple"));
-  if (model == "simple")
+  if (get_options().find_option("dye"))
+    _read_spectrum();
+  else
   {
     // alpha is given in um^-1
     _alpha = 0.15;
     get_parameter("alpha", _alpha);
-  }
-  else
-  {
-
   }
 
 
@@ -188,10 +182,10 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
        generation = 1e4 * 1.5e17 * _intensity * _alpha * exp(-d * 1e4 *_alpha);
       else
       {
-        generation = 0.0;
+        generation = _intensity * _integrate(d);
       }
 
-      values[Generation][n] = _intensity_factor * generation;
+      values[Generation][n] = generation;
     }
   }
 }
@@ -340,3 +334,178 @@ DSSCGeneration::_calculate_distances(void)
 
 }
 
+
+void
+DSSCGeneration::_read_spectrum(void)
+{
+  // we read the solar spectrum and the absorption spectrum, and
+  // then we interpolate the latter at the wavelength given in
+  // the former.
+
+
+  // a line buffer
+  const size_t buf_len = 256;
+  char buf[buf_len];
+
+  Database db(get_option("dye", ""));
+  ifstream is(db.get_data_file().c_str());
+  if (is.fail() || !is.good())
+    throw InitFailedException("Cannot read absorption "
+        "spectrum from file " + db.get_data_file());
+
+  double gap = 0;
+
+  size_t i = 0;
+  vector<double> l_tmp;
+  vector<double> a_tmp;
+  while (is.good())
+  {
+    if (i == l_tmp.size())
+    {
+      size_t n_new = l_tmp.size() + 100;
+      l_tmp.reserve(n_new);
+      a_tmp.reserve(n_new);
+    }
+
+    is.getline(buf, buf_len);
+    if (buf[0] != '#')
+    {
+      istringstream in(buf);
+
+      double l, s;
+      if (in >> l)
+      {
+        if (in >> s)
+        {
+          l_tmp.push_back(l);
+          // alpha given in um^-1
+          a_tmp.push_back(1e4 * s);
+          i++;
+        }
+        else
+        {
+          gap = Constants::e * l;
+        }
+      }
+    }
+  }
+  is.close();
+
+  l_tmp.resize(l_tmp.size());
+  a_tmp.resize(a_tmp.size());
+
+  if (gap == 0)
+    throw InitFailedException("No energy gap specified "
+        "in file " + db.get_data_file());
+
+
+  // now read the solar spectrum
+
+  db.set_material("Sun1p5am", get_option("illumination_spectrum", ""));
+  is.open(db.get_data_file().c_str());
+
+  if (is.fail() || !is.good())
+    throw InitFailedException("Cannot read spectrum "
+        "from file " + db.get_data_file());
+
+  i = 0;
+  while (is.good())
+  {
+    if (i == _lambda.size())
+    {
+      size_t n_new = _lambda.size() + 100;
+      _lambda.reserve(n_new);
+      _spectrum.reserve(n_new);
+    }
+
+    is.getline(buf, buf_len);
+    if (buf[0] != '#')
+    {
+      istringstream in(buf);
+
+      double l, s;
+      if (in >> l >> s)
+      {
+        _lambda.push_back(l);
+        _spectrum.push_back(1e-7 * s / gap);
+        i++;
+      }
+    }
+  }
+  is.close();
+
+  _lambda.resize(_lambda.size());
+  _spectrum.resize(_spectrum.size());
+
+
+
+  _absorption.resize(_lambda.size());
+  size_t j = 0;
+  size_t jmin = 0;
+  size_t k = 0;
+  while (j < _lambda.size())
+  {
+    while ((k < l_tmp.size()) && (l_tmp[k] < _lambda[j]))
+      k++;
+
+    if (k == l_tmp.size()) break;
+
+    if (k == 0)
+    {
+      jmin = j;
+      _absorption[j] = 0;
+    }
+    else
+    {
+      double dl = l_tmp[k] - l_tmp[k - 1];
+      double x  = (_lambda[j] - l_tmp[k - 1]) / dl;
+
+      _absorption[j] = x * a_tmp[k] + (1 - x) * a_tmp[k - 1];
+    }
+    j++;
+  }
+
+  // limit to the part that is non zero
+  l_tmp.resize(j - jmin);
+  a_tmp.resize(j - jmin);
+  vector<double> s_tmp(j - jmin);
+  for (size_t i = 0; i < l_tmp.size(); i++)
+  {
+    size_t idx = jmin + i;
+    l_tmp[i] = _lambda[idx];
+    a_tmp[i] = _absorption[idx];
+    s_tmp[i] = _spectrum[idx];
+  }
+
+  _lambda = l_tmp;
+  _absorption = a_tmp;
+  _spectrum = s_tmp;
+
+  //for (size_t i = 0; i < l_tmp.size(); i++)
+  //  cerr << _lambda[i] << " " << _spectrum[i] << "  " << _absorption[i] << endl;
+}
+
+
+
+double
+DSSCGeneration::_integrate(double d)
+{
+  double gen = 0.0;
+
+  size_t N = _lambda.size();
+
+  for (size_t i = 0; i < N - 1; i++)
+  {
+    double dl = _lambda[i + 1] - _lambda[i];
+
+    double a1 = _absorption[i + 1];
+    double f1 = _spectrum[i + 1] * a1 * exp(-a1 * d);
+
+    double a0 = _absorption[i];
+    double f0 = _spectrum[i] * a0 * exp(-a0 * d);
+
+    gen += 0.5 * dl * (f1 + f0);
+  }
+
+  return gen;
+}
