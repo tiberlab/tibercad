@@ -24,7 +24,7 @@
 
 // forward declarations
 class Elem;
-//class Trap;
+class Trap;
 
 
 //! The base class for DSSC models
@@ -209,6 +209,10 @@ class DSSCModel : public PhysicalModel
     void calculate_net_recombination_rate(void);
 
 
+      //! Calculate trap density
+    void calculate_traps(void);
+
+
     //! Get the electron density
     double get_density_n(void) const;
 
@@ -260,6 +264,14 @@ class DSSCModel : public PhysicalModel
     //! Get the net recombination rate derivatives
     const std::vector<double>&
       get_net_recombination_rate_derivatives(void) const;
+
+
+    //! Get electron trapped density
+    double get_ionized_electron_traps(void) const; 
+
+
+    //! Get electron trapped density derivative
+    double  get_ionized_electron_traps_derivative(void) const;
 
 
     //! Get generation rate
@@ -352,6 +364,8 @@ class DSSCModel : public PhysicalModel
       //! The generation
       double generation_rate;
 
+      double ionized_electron_traps;
+      double ionized_electron_traps_derivative;
 
     };
 
@@ -445,7 +459,9 @@ class DSSCModel : public PhysicalModel
     
     //! The nodal lattice temperature
     //std::vector<double> _nodal_lattice_vt;
-
+ 
+    //! The electron traps
+    std::set<Trap*> _etraps;
 
     //! The electrons
     ParticleDensity _electrons;
@@ -512,6 +528,7 @@ class DSSCModel : public PhysicalModel
 
     //! beta factor
     double _beta;
+
 
 };
 
@@ -725,8 +742,24 @@ inline
 double
 DSSCModel::get_charge_density(void) const
 {
-  return _pd.density_C - _pd.density_n + _eq_conc.n +
-    _pd.ionized_dye - _pd.density_I - _pd.density_I3;
+ return _pd.density_C - _pd.density_n + _eq_conc.n +
+    _pd.ionized_dye - _pd.density_I - _pd.density_I3 + _pd.ionized_electron_traps;
+}
+
+
+inline
+double
+DSSCModel::get_ionized_electron_traps(void) const
+{ 
+  return _pd.ionized_electron_traps; 
+}
+
+
+inline
+double
+DSSCModel::get_ionized_electron_traps_derivative(void) const
+{ 
+  return _pd.ionized_electron_traps_derivative; 
 }
 
 

@@ -200,6 +200,10 @@ class DSSC : public SimulationInterface
         const std::vector<Point>& p);
 
 
+    //! We override this to not produce too many files ...
+    virtual void plot_globaldata(void) {};
+
+
     /*!
      * \copydoc SimulationInterface::get_solution_secure(
      *  std::map<ID, std::vector<double> >&)
