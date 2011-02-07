@@ -986,6 +986,12 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // is set to true when calculation is successful
   bool success = false;
 
+  // the minimum x (below the zero, f > 0)
+  double xmin = Ev - 0.5;
+
+  // the maximum x (above the zero, f < 0)
+  double xmax = Ec + 0.5;
+
   //cerr << "***\n";
   for (unsigned int i = 0; i < 200; ++i)
   {
@@ -999,6 +1005,9 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
     get_charge_density_derivatives(df_fermi);
     double df = -(df_fermi[0] + df_fermi[1]);
 
+    if (f > 0) xmin = x;
+    else if (f < 0) xmax = x;
+
     residual_dens = fabs(f);
 
     double dx = 0.0;
@@ -1010,13 +1019,11 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
       dx = - f / df;
 
       y = x + dx;
-      // we limit Ef to (Ec + 0.5, Ev - 0.5)
-      // this is a primitive dissection, without updating
-      // boundaries
-      if ((Ec - y) < -0.5)
-        dx = 0.5 * (Ec + 0.5 - x);
-      else if ((Ev - y) > 0.5)
-        dx = 0.5 * (Ev - 0.5 - x);
+      // we limit Ef to (xmin, xmax)
+      if (y > xmax)
+        dx = 0.5 * (xmax - x);
+      else if (y < xmin)
+        dx = 0.5 * (xmin - x);
 
     }
 

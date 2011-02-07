@@ -287,35 +287,12 @@ void Macrostrain::parse_options( )
  // set default options for solver
  ModelOptions& solver_opts = get_solver_options();
 
- if (solver_opts.find_option("tolerance"))
- {
-   cerr << "Macrostrain: Solver option \'tolerance\' is deprecated. "
-     << "Use \'lin_rel_tol\' instead." << endl;
-   solver_opts["lin_rel_tol"] = solver_opts["tolerance"];
-   solver_opts.delete_option("tolerance");
- }
 
- if (solver_opts.find_option("max_iterations"))
- {
-   cerr << "Macrostrain: Solver option \'max_iterations\' is deprecated. "
-     << "Use \'lin_max_it\' instead." << endl;
-   solver_opts["lin_max_it"] = solver_opts["max_iterations"];
-   solver_opts.delete_option("max_iterations");
- }
+ if (solver_opts.get_option("method", "") == "")
+   solver_opts["method"] = (dim == 1) ? "gmres" : "bcgsl";
 
- if (solver_opts.find_option("pc"))
- {
-   cerr << "Macrostrain: Solver option \'pc\' is obsolete. "
-     << "Use \'pc_type\' instead." << endl;
-   solver_opts["pc_type"] = solver_opts["pc"];
-   solver_opts.delete_option("pc");
- }
-
- if (solver_opts.get_option("ksp_type", "") == "")
-   solver_opts["ksp_type"] = (dim == 1) ? "gmres" : "bcgsl";
-
- if (solver_opts.get_option("pc_type", "") == "")
-   solver_opts["pc_type"] = (dim == 1) ? "ilu" : "jacobi";
+ if (solver_opts.get_option("preconditioner", "") == "")
+   solver_opts["preconditioner"] = (dim == 1) ? "ilu" : "jacobi";
 
 
 

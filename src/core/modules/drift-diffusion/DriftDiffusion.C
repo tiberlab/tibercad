@@ -682,8 +682,8 @@ DriftDiffusion::do_equilibrium(void)
 
 
   ModelOptions& solveropts = get_solver_options();
-  int max_it = solveropts.get_option("nonlin_max_it", 15);
-  solveropts.set_option("nonlin_max_it", 150);
+  int max_it = solveropts.get_option("max_iterations", 15);
+  solveropts.set_option("max_iterations", 150);
 
   int coupling = get_my_options().coupling;
   get_my_options().coupling = POISSON;
@@ -759,7 +759,7 @@ DriftDiffusion::do_equilibrium(void)
   // reset the coupling
   get_my_options().coupling = coupling;
 
-  solveropts.set_option("nonlin_max_it", max_it);
+  solveropts.set_option("max_iterations", max_it);
 
 
   // compute the reference potential
@@ -1035,20 +1035,35 @@ DriftDiffusion::rebuild_equation_system(void)
   //EquationSystems& equation_systems = get_equation_systems();
   clear_systems();
 
+  ModelOptions linopts;
+  ModelOptions::submodel_iterator linit(
+      get_solver_options().submodels_begin("LinearSolver"));
+  ModelOptions::submodel_iterator linend(
+      get_solver_options().submodels_end("LinearSolver"));
+
+  if (linit != linend)
+    linopts = linit->second;
+
   // default is bcgsl
-  ModelOptions& solveropts = get_solver_options();
-  if (!solveropts.find_option("ksp_type"))
-    solveropts["ksp_type"] = "bcgsl";
+  if (!linopts.find_option("method"))
+    linopts["method"] = "bcgsl";
 
   // in 1D bcgs seems to work better than bcgsl
   const unsigned int dim = get_mesh().mesh_dimension();
-  if ((dim == 1) && (solveropts["ksp_type"] == "bcgsl"))
-    solveropts["ksp_type"] = "bcgs";
+  if ((dim == 1) && (linopts["method"] == "bcgsl"))
+    linopts["method"] = "bcgs";
+
+  if (!linopts.find_option("preconditioner"))
+    if (dim < 3)
+      linopts["preconditioner"] = "lu";
+    else
+      linopts["preconditioner"] = "ilu";
 
 
-  if (solveropts.get_option("lin_abs_tol", -1.0) < 0)
-    solveropts["lin_abs_tol"] = "1e-15";
+  if (linopts.get_option("absolute_tolerance", -1.0) < 0)
+    linopts["absolute_tolerance"] = "1e-15";
 
+  ModelOptions& solveropts = get_solver_options();
   if (solveropts.get_option("absolute_tolerance", -1.0) < 0)
     solveropts["absolute_tolerance"] = "1e-15";
 
