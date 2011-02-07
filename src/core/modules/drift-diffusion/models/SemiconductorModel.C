@@ -50,6 +50,8 @@ SemiconductorModel::create_submodels(void)
   // this is dirty as for now the band parameters are not given
   // by a physical_model
   ModelOptions opt(get_options());
+  opt.delete_option("relax_polarization");
+  opt.delete_option("strain_simulation");
   opt.delete_all_submodels();
 
   if (_bulk_model == NULL)

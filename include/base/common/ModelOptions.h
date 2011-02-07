@@ -7,6 +7,7 @@
 #include "tiber_dll.h"
 
 #include <map>
+#include <list>
 #include <vector>
 #include <string>
 
@@ -25,7 +26,7 @@ class ModelOptions
     typedef std::map<const std::string, std::string> OptionsMap;
 
     //! typedef for options iterator
-    typedef OptionsMap::const_iterator const_option_iterator;
+    //typedef OptionsMap::const_iterator const_option_iterator;
 
     //! typedef for the map of submodels
     typedef std::multimap<const std::string, ModelOptions> SubmodelMap;
@@ -38,7 +39,7 @@ class ModelOptions
 
 
     //! The default constructor
-    ModelOptions(void) {};
+    ModelOptions(void);
 
 
     //! The copy constructor
@@ -55,6 +56,25 @@ class ModelOptions
 
     //! Check if it is empty
     bool is_empty(void) const;
+
+
+    //! Set the input file block keyword
+    void set_key(const std::string& key);
+
+
+    //! Get the input file block keyword
+    const std::string& get_key(void) const;
+
+
+    //! Set the name
+    /*!
+     * Sets also the option \c name to the given value
+     */
+    void set_name(const std::string& modifier);
+
+
+    //! Get the name
+    const std::string& get_name(void) const;
 
 
     //! Get the value of an option
@@ -232,20 +252,49 @@ class ModelOptions
 
 
     //! Get the const iterator to the first option
-    const_option_iterator options_begin(void) const;
+    //const_option_iterator options_begin(void) const;
 
 
     //! Get the past-the-end iterator for the options
-    const_option_iterator options_end(void) const;
+    //const_option_iterator options_end(void) const;
+
+
+    //! Check if there are unused options
+    /*!
+     * mode = 0, do nothing
+     * mode = 1, warn
+     * mode = 2, throw exception
+     *
+     * return \c true if unused options are found
+     */
+    bool check_unused(int mode) const;
 
 
   private:
+
+    //! The block keyword
+    /*!
+     * This is the first keyword in the input file
+     */
+    std::string _key;
+
+    //! A name
+    /*!
+     * This is set from the second keyword in the input file
+     */
+    std::string _name;
 
     //! The map holding all options
     OptionsMap _options;
 
     //! A map containing submodels
     SubmodelMap _submodels;
+
+    //! Get the iterator for an option
+    OptionsMap::const_iterator _find(const std::string& name) const;
+
+
+    mutable std::list<OptionsMap::const_iterator> _used;
 
 };
 
@@ -255,6 +304,43 @@ class ModelOptions
 //
 // inline methods
 //
+
+inline
+ModelOptions::ModelOptions(void) :
+  _key(""),
+  _name("")
+{
+
+}
+
+
+
+
+
+inline
+const std::string&
+ModelOptions::get_name(void) const
+{
+  return _name;
+}
+
+
+inline
+void
+ModelOptions::set_key(const std::string& key)
+{
+  _key = key;
+}
+
+
+inline
+const std::string&
+ModelOptions::get_key(void) const
+{
+  return _key;
+}
+
+
 
 
 inline
@@ -281,9 +367,7 @@ ModelOptions::find_option(const std::string& name) const
 {
   bool res = true;
 
-  OptionsMap::const_iterator it(_options.find(name));
-
-  if (it == _options.end())
+  if (_find(name) == _options.end())
     res = false;
 
   return res;
@@ -304,7 +388,7 @@ inline
 T
 ModelOptions::get_option(const std::string& name, T default_value) const
 {
-  OptionsMap::const_iterator it = _options.find(name);
+  OptionsMap::const_iterator it(_find(name));
 
   if (it != _options.end())
     return Utils::convert<T>(it->second);
@@ -398,15 +482,6 @@ ModelOptions::submodels_end(const std::string& name)
 
 
 
-inline
-void
-ModelOptions::add_submodel(const std::string& name,
-    const ModelOptions& options)
-{
-  _submodels.insert(SubmodelMap::value_type(name, options));
-}
-
-
 
 inline
 bool
@@ -420,7 +495,7 @@ ModelOptions::has_submodel(const std::string& name)
 }
 
 
-
+/*
 inline
 ModelOptions::const_option_iterator
 ModelOptions::options_begin(void) const
@@ -435,6 +510,6 @@ ModelOptions::options_end(void) const
 {
   return _options.end();
 }
-
+*/
 
 #endif // _MODELOPTIONS_H_

@@ -82,15 +82,6 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
     //! Get the maximum number of nonlinear iterations
     int get_nonlinear_max_it(void) const;
 
-    //! Get the relative linear tolerance
-    double get_linear_rtol(void) const;
-
-    //! Get the absolute linear tolerance
-    double get_linear_atol(void) const;
-
-    //! Get the maximum number of linear iterations
-    int get_linear_max_it(void) const;
-
 
     //! Set the relative nonlinear tolerance
     void set_nonlinear_rtol(double rtol);
@@ -103,15 +94,6 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
 
     //! Set the maximum number of nonlinear iterations
     void set_nonlinear_max_it(int max_it);
-
-    //! Set the relative linear tolerance
-    void set_linear_rtol(double rtol);
-
-    //! Set the absolute linear tolerance
-    void set_linear_atol(double atol);
-
-    //! Set the maximum number of linear iterations
-    void set_linear_max_it(int max_it);
 
 
     //! Set a pointer to the X monitor to be used
@@ -153,16 +135,6 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
     //! The maximum number of nonlinear iterations
     int _nonlinear_max_it;
 
-    //! The linear relative tolerance
-    double _linear_rtol;
-
-    //! The linear absolute tolerance
-    double _linear_atol;
-      
-    //! The maximum number of linear iterations
-    int _linear_max_it;
-
-    
     //! The X monitor
     XMonitor* _xmonitor;
 };
@@ -214,27 +186,6 @@ TiberNonlinearSolver::get_nonlinear_max_it(void) const
 }
 
 
-inline
-double
-TiberNonlinearSolver::get_linear_rtol(void) const
-{
-  return _linear_rtol;
-}
-
-
-inline
-double
-TiberNonlinearSolver::get_linear_atol(void) const
-{
-  return _linear_atol;
-}
-
-inline
-int
-TiberNonlinearSolver::get_linear_max_it(void) const
-{
-  return _linear_max_it;
-}
 
 
 inline
@@ -265,26 +216,7 @@ TiberNonlinearSolver::set_nonlinear_max_it(int max_it)
   _nonlinear_max_it = max_it;
 }
 
-inline
-void
-TiberNonlinearSolver::set_linear_rtol(double rtol)
-{
-  _linear_rtol = rtol;
-}
 
-inline
-void
-TiberNonlinearSolver::set_linear_atol(double atol)
-{
-  _linear_atol = atol;
-}
-
-inline
-void
-TiberNonlinearSolver::set_linear_max_it(int max_it)
-{
-  _linear_max_it = max_it;
-}
 
 
 inline

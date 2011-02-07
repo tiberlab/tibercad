@@ -13,7 +13,6 @@
 #include "InitFailedException.h"
 
 
-#include "linear_solver.h"
 #include "equation_systems.h"
 
 #include <cassert>
@@ -41,19 +40,23 @@ TiberNonlinearSystem::create(EquationSystems& es,
 {
   TiberNonlinearSystem* sys = NULL;
 
-  std::string type(options.get_option("nonlinear_solver", "petsc"));
+  std::string type(options.get_name());
+  if (type.empty())
+    type = "linesearch";
+  type = options.get_option("type", type);
+
   if (type == "petsc")
     sys = &(es.add_system<TiberNonlinPetsc>(sysname));
-  else if ((type == "ls") || (type == "tiber"))
+  else if (type == "linesearch")
     sys = &(es.add_system<TiberNonlinLS>(sysname));
-  else if (type == "tr")
+  else if (type == "trustregion")
     sys = &(es.add_system<TiberNonlinTR>(sysname));
   else if (type == "bankrose")
     sys = &(es.add_system<TiberNonlinBR>(sysname));
   else
   {
     std::string s = "Unknown type '" +
-      type + "' for nonlinear system system " + sysname;
+      type + "' for nonlinear system " + sysname;
     throw InitFailedException(s);
   }
 

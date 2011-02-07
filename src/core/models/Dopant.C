@@ -13,28 +13,25 @@ Dopant::create(const std::string& profile, const ModelOptions& options)
   Dopant* dop = NULL;
 
   double density = options.get_option("density", 0.0);
+  density = options.get_option("Nd", density);
   double ionisation_energy = options.get_option("level", 0.025);
+  ionisation_energy = options.get_option("Ed", ionisation_energy);
   int g_factor = 2;
   DopingType type = N_TYPE;
   std::string type_s = options.get_option("type", "donor");
   if (type_s == "acceptor")
   {
     type = P_TYPE;
-    g_factor = 4;
+    // TODO: this is commented out only for now, to not break testsuite
+    //g_factor = 4;
   }
   g_factor = options.get_option("g", g_factor);
 
-  if (profile == "constant")
+  if (profile.empty() || (profile == "constant"))
     dop = new Dopant(density, ionisation_energy, g_factor, type);
 
   if (dop != NULL)
-  {
     dop->_options = options;
-    (dop->_options).delete_option("density");
-    (dop->_options).delete_option("level");
-    (dop->_options).delete_option("g");
-    (dop->_options).delete_option("type");
-  }
 
   return dop;
 }

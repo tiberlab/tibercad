@@ -14,8 +14,8 @@
 
 TiberPetscLinearSolver::TiberPetscLinearSolver(void)
   : _ksp(NULL),
-    _ksp_type((char*) KSPBCGS),
-    _pc_type((char*) PCILU),
+    _ksp_type(KSPBCGS),
+    _pc_type(PCILU),
     _monitor(false),
     _xmonitor(true),
     _xmonitor_open(false)
@@ -130,17 +130,17 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
 
 
   // Set user-specified solver and preconditioner types
-  ierr = KSPSetType(_ksp, _ksp_type);
+  ierr = KSPSetType(_ksp, _ksp_type.c_str());
   TiberPetscUtils::checkerr(ierr);
 
   PC pc;
   ierr = KSPGetPC(_ksp, &pc);
   TiberPetscUtils::checkerr(ierr);
 
-  ierr = PCSetType(pc, _pc_type);
+  ierr = PCSetType(pc, _pc_type.c_str());
   TiberPetscUtils::checkerr(ierr);
   // for composite type, do some extra stuff
-  if (strcmp(_pc_type, PCCOMPOSITE) == 0)
+  if (_pc_type.compare(PCCOMPOSITE) == 0)
   {
     ierr = PCCompositeSetType(pc, PC_COMPOSITE_MULTIPLICATIVE);
     TiberPetscUtils::checkerr(ierr);
@@ -354,6 +354,9 @@ TiberPetscLinearSolver::parse_options(const ModelOptions& options)
   _ksp_type = TiberPetscUtils::extract_KSPType(options);
 
   _pc_type = TiberPetscUtils::extract_PCType(options);
+
+  if (_pc_type == PCLU)
+    _ksp_type = KSPPREONLY;
 
   _monitor = options.get_option("monitor", false);
   _xmonitor = options.get_option("linear_xmonitor", false);

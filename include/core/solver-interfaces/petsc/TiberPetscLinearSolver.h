@@ -110,10 +110,10 @@ class TiberPetscLinearSolver : public TiberLinearSolver
     KSP _ksp;
 
     //! The KSP type
-    KSPType _ksp_type;
+    std::string _ksp_type;
 
     //! The PC type
-    PCType _pc_type;
+    std::string _pc_type;
 
     //! The graphical monitor
     PetscDrawLG _LG_monitor;

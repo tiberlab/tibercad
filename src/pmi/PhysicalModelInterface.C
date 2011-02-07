@@ -365,6 +365,14 @@ PhysicalModelInterface::init(void)
   }
 
   do_init();
+
+  // dummy read
+  get_option("crystal_structure", "");
+  get_option("regions", "");
+  get_option("type", "");
+  get_option("name", "");
+
+  get_options().check_unused(1);
 }
 
 
@@ -390,6 +398,13 @@ PhysicalModelInterface::init_interface(const Material* comp_A,
 
   // some models might treat interfaces in a special way
   do_init_interface(comp_A, comp_B);
+
+  // dummy read
+  get_option("regions", "");
+  get_option("type", "");
+  get_option("name", "");
+
+  get_options().check_unused(1);
 }
 
 
@@ -427,6 +442,14 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
   do_init_alloy(comp_A, comp_B, xa);
 
   do_init();
+
+  // dummy read
+  get_option("crystal_structure", "");
+  get_option("regions", "");
+  get_option("type", "");
+  get_option("name", "");
+
+  get_options().check_unused(1);
 }
 
 
@@ -449,6 +472,7 @@ PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterf
   pm->set_simulator_id(get_simulator_id());
   pm->set_owner(get_owner());
   pm->set_material(get_material());
+  pm->get_options().set_key(key);
   _submodels.insert(SubmodelMap::value_type(key, pm));
 }
 
@@ -475,8 +499,9 @@ PhysicalModelInterface::_create_submodels(void)
   {
     string name(it->first);
 
-    string type((it->second).get_option("model", ""));
-    type = ((it->second).get_option("type", type));
+    string type = ((it->second).get_option("type", (it->second).get_name()));
+    (it->second).set_option("type", type);
+
     if (type.size() > 0)
       name += string("_") + type;
 

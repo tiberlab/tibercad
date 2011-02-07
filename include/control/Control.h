@@ -20,6 +20,8 @@
 
 class Device;
 class Database;
+class ModelOptions;
+class SimulationInterface;
 
 //! The control module of TiberCAD
 /*!
@@ -144,51 +146,20 @@ class TBDLLOCAL Control
      * see get_output_format() for a detailed description
      */
     std::string _output_format;
-  
-    //! Rotate from xy to xz plane in case of cylindrical symmetry.
-    bool _xy2xz_rotation;
+
 
     //! Setup global simulation options
-    void setup_globals(void);
-
-    //! Create the device
-    /*!
-     * The creation of a device involves the following function calls
-     * in the order as given here:
-     * \code
-     * create_device();
-     * create_materials();
-     * create_atomistic_structures();
-     * setup_clusters();
-     * setup_models();
-     * \endcode
-     */
-    void create_device(void);
+    void setup_globals(const ModelOptions& opts);
 
 
-    //! Create all the materials
-    void create_materials(void);
+    //! Setup a model
+    void setup_module(Device* device, const ModelOptions& opts);
 
 
-    //! Create all atomistic structures
-    void create_atomistic_structures(void);
+    //! Create a boundary object
+    void create_boundary(SimulationInterface* sim, const ModelOptions& opts);
 
 
-    //! Create and setup the models
-    void setup_models(void) throw (InitFailedException, ModelErrorException);
-
-
-    //! Setup region clusters
-    /*!
-     * A region cluster contains different physical regions of the mesh
-     * which possibly overlap with the material regions described in the
-     * \c Region sections
-     */
-    void setup_clusters(void);
-
-
-    //! Extract physical regions from a string
-    void extract_physical_regions(const std::string& str, IDSet& ids);
 };
 
 

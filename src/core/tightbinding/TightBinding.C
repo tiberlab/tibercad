@@ -292,7 +292,6 @@ TightBinding::build_elemental_results(const std::set<std::string>& variables,
 void
 TightBinding::project_potential(const std::string model_name, const std::string mode)
 {
-
   Point p;
 
   //Use PotentialInterface to get the right simulation

@@ -1,3 +1,19 @@
+Version 2.0.0
+-------------
+
+New features:
+
+	- new input file syntax
+	- new physical models (polarization, particle_density)
+	- new modules
+
+changes:
+xx_rel_tol -> relative_tolerance
+xx_abs_tol -> absolute_tolerance
+xx_max_it  -> max_iterations
+pc_type -> preconditioner
+ksp_type -> method
+
 Version 1.X.X
 -------------
 

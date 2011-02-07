@@ -1,12 +1,12 @@
-$Device
+Device
 {
+  meshfile = well.msh 
+  mesh_units = 1e-10
+  dimension = 1
 
-	Options
-	{
-	x-growth-direction = (0, 0, 1)
-	y-growth-direction = (0, 1, 0)
-	z-growth-direction = (1, 0, 0)
-	}
+  x-growth-direction = (0, 0, 1)
+  y-growth-direction = (0, 1, 0)
+  z-growth-direction = (1, 0, 0)
 
 
 	Region QW
@@ -37,108 +37,76 @@ $Device
 	# group together the regions for the quantum simulation
 	Cluster Quantum
 	{
-	mesh_regions = (barrier_left, barrier_right, QW)
+	regions = (barrier_left, barrier_right, QW)
 	}
-}
 
-$Scale
-{
+
+
 	Atomistic tb
 	{
 	  reference_region = barrier_left
-	  physical_regions = Quantum
+	  regions = Quantum
 	  passivation = yes
 	  print = (xyb, xyz, gen, tgn)
 	}
 
 }
 
-$Models
+
+Module driftdiffusion
 { 
 
-	model driftdiffusion
-	  { 
+  name = driftdiffusion
+  coupling = poisson
 
-	    options
-	    {
-	     simulation_name = driftdiffusion
-	     physical_regions = all
-             #save_state = true
-             load_state = dd.tsv
-	    }
+  #save_state = true
+  load_state = dd.tsv
 
-            physical_model particle_density
-            {
-              statistics = fermidirac
-            }
+  plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, Polarization)
 
+  Solver linesearch
+  {
+    relative_tolerance = 1e-14  
+    absolute_tolerance =  1e-50  
+    step_tolerance = 1e-3
+    max_step = 1.0 
+    max_iterations = 30
+  }
 
-	    BC_Regions  
-	    {
-	      BC_Region anode
-	      {
-		type = ohmic
-		voltage = 0.0
-	      }
+  Physics
+  {
+    particle_density
+    {
+      statistics = fermidirac
+    }
+
+    Contact anode
+    {
+      type = ohmic
+      voltage = 0.0
+    }
       
       
-	      BC_Region cathode
-	      {
-		type = ohmic
-		voltage = @Vb[0.0]  
-	      }
-	    }   
-
- } 
+    Contact cathode
+    {
+      type = ohmic
+      voltage = $Vb[0.0]  
+    }
+  }   
+} 
 
 
  
-   model empirical_tb
-  {
-    options
-     {
-       physical_regions = Quantum
-       simulation_name = tb
-       atomistic_structure = tb
-       Harrison_scaling = false
-     }
-  }
-
-
-  model efaschroedinger
-	{
-	       options
-		{
-		simulation_name = kp_electrons
-		physical_regions = (barrier_left, barrier_right, QW)
-		particle = el
-		model = kp
-		kp_model = 8x8
-		spectrum_shift = -0.2
-		}
-	}
-
-  model efaschroedinger
-      {
-          options
-          {
-           simulation_name = kp_holes
-           physical_regions = (barrier_left, barrier_right, QW)
-	   particle = hl
-	   model = kp
-	   kp_model = 8x8
-	   spectrum_shift = -0.4
-	  }
-      }
-
-
-}
-
-# Definition of  Model-dependent Solver parameters
-$Solver
+Module empirical_tb
 {
-  
-  tb
+  regions = Quantum
+  name = tb
+  atomistic_structure = tb
+  Harrison_scaling = false
+
+  plot = (tbstates)
+
+  Solver
   {
     num_valence_eigenvalues = 4
     num_conduction_eigenvalues = 4
@@ -146,48 +114,70 @@ $Solver
     relativistic = true
   }
 
+}
 
-  driftdiffusion
+
+Module efaschroedinger
+{
+  name = kp_electrons
+  regions = (barrier_left, barrier_right, QW)
+  particle = el
+  spectrum_shift = -0.2
+
+  plot = (EigenFunctions, EigenEnergy,EnergyLevels)
+
+  Solver
   {
-    nonlinear_solver = tiber
-    coupling = poisson
-    nonlin_rel_tol = 1e-14  
-    nonlin_abs_tol =  1e-50  
-    nonlin_step_tol = 1e-3
-
-    lin_rel_tol = 1e-6
-    nonlin_max_it = 30
-    discretization = fem
-    ls_max_step = 1.0 
-    pc_type = lu 
-
-  }
- 
-  efaschroedinger
-    {
     x-periodicity = false
     Dirichlet_bc_everywhere = true   # if  false -&gt;  Neumann everywhere
     number_of_eigenstates = 4 
     poisson_model_name = driftdiffusion  #  potential from driftdiffusion
     log_output= false
-    }
+  }
 
+  Physics
+  {
+    model = kp
+    kp_model = 8x8
+  }
+}
+
+Module efaschroedinger
+{
+  simulation_name = kp_holes
+  physical_regions = (barrier_left, barrier_right, QW)
+  particle = hl
+  spectrum_shift = -0.4
+
+  log_output= false
+
+  plot = (EigenFunctions, EigenEnergy,EnergyLevels)
+
+  poisson_model_name = driftdiffusion  #  potential from driftdiffusion
+ 
+  #Solver
+  #{
+    x-periodicity = false
+    Dirichlet_bc_everywhere = true   # if  false -&gt;  Neumann everywhere
+    number_of_eigenstates = 4 
+  #}
+
+  Physics
+  {
+    model = kp
+    kp_model = 8x8
+  }
 }
 
 
 
-$Simulation
+
+Simulation
 {
-  meshfile = well.msh 
-  mesh_units = 1e-10
-  dimension = 1
   temperature = 1
   #solve = (driftdiffusion, kp_electrons, kp_holes,  tb)
   solve = (driftdiffusion, tb)
   resultpath =  output
-
-  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, polarization, EigenFunctions, EigenEnergy,EnergyLevels,  tbstates, EigenFunctions, EigenEnergy,EnergyLevels)
- 
   output_format = grace
 
 }

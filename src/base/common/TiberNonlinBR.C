@@ -71,8 +71,6 @@ TiberNonlinBR::do_solve(void)
     _assemble(u, rhs, NULL);
     _assemble(u, NULL, matrix);
 
-    get_linear_solver()->set_options(get_options());
-    
     // solve the linear system
     get_linear_solver()->solve(*matrix, *solution, *rhs);
 

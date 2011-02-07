@@ -54,6 +54,7 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
     _environment(0),
     _is_initialized(false),
     _is_solved(false),
+    _is_task(false),
     _equilibrium_is_solved(false),
     _has_solution_vector(true),
     _verbosity(1)
@@ -65,6 +66,9 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
 
   // register in the map of simulations
   _simulation_map[new_id] = this;
+
+  // dummy read
+  get_options().get_option("regions", "");
 }
 
 
@@ -157,8 +161,6 @@ SimulationInterface::create(const string& type,
     sim = MaxwellEquations::create(options);
   else if (type_name == "phonondispersion")
     sim = PhononDispersion::create(options);
- // else if (type_name == "mechanical_structure")
-  //  sim = MechanicalStructure::create(options);
 
 
   if (sim == NULL)
@@ -167,9 +169,7 @@ SimulationInterface::create(const string& type,
     if ((type.size() > 0 ) && ((sim = create_from_library<SimulationInterface>(
            type + "/" + type_name, options)) == 0))
     {
-        std::cout<<"ENTER"<<std::endl;
       sim = create_from_library<SimulationInterface>(type_name, options);
-        std::cout<<sim<<std::endl;
     }
   }
 
@@ -407,9 +407,6 @@ SimulationInterface::init(void)
     {
       _environment->prepare_for_solve();
       _scaling.set_calc_mesh_units((_environment->get_device()).get_mesh_units());
-
-      // plot the regions
-      //plot_regions();
     }
 
 
@@ -445,29 +442,34 @@ SimulationInterface::init(void)
     m.newline();
 
     set<string> names;
-    get_environment().get_region_names(names);
-    for (set<string>::const_iterator it(names.begin()); it != names.end(); ++it)
+    if (has_environment())
     {
-      Device& dev = get_environment().get_device();
-      set<ID> ids;
-      dev.get_active_region_ids(*it, ids);
-      assert(ids.size() != 0);
-      const Material* mat = dev.get_material(*ids.begin());
-      PhysicalModel* mod =
-        mat->get_model(get_id());
-      if (mod != NULL)
+      get_environment().get_region_names(names);
+      for (set<string>::const_iterator it(names.begin()); it != names.end(); ++it)
       {
-        ostringstream os;
-        os << "Region " << *it << ", " << mat->get_name();
-        if (mat->is_alloy())
-          os << " (x = " <<
+        Device& dev = get_environment().get_device();
+        set<ID> ids;
+        dev.get_active_region_ids(*it, ids);
+        assert(ids.size() != 0);
+        const Material* mat = dev.get_material(*ids.begin());
+        PhysicalModel* mod =
+            mat->get_model(get_id());
+        if (mod != NULL)
+        {
+          ostringstream os;
+          os << "Region " << *it << ", " << mat->get_name();
+          if (mat->is_alloy())
+            os << " (x = " <<
             static_cast<const Alloy*>(mat)->get_molar_fraction() << ")";
-        m.info(os.str());
-        m.indent();
-        mod->print_info();
-        m.unindent();
+          m.info(os.str());
+          m.indent();
+          mod->print_info();
+          m.unindent();
+        }
       }
     }
+
+    get_options().check_unused(1);
 
     m.unindent();
     m.newline();
@@ -1378,6 +1380,7 @@ void
 SimulationInterface::do_plot_old(void)
 {
 
+  if (!has_environment()) return;
   const Device& dev = get_environment().get_device();
 
   string suffix = TiberCad::get_filename_suffix();
@@ -2245,10 +2248,10 @@ SimulationInterface::convert_variable_name_to_id(
 ModelOptions&
 SimulationInterface::get_solver_options(void)
 {
-  if (!get_options().has_submodel("$Solver"))
-    get_options().add_submodel("$Solver", ModelOptions());
+  if (!get_options().has_submodel("Solver"))
+    get_options().add_submodel("Solver", ModelOptions());
 
-  ModelOptions::submodel_iterator it(get_options().submodels_begin("$Solver"));
+  ModelOptions::submodel_iterator it(get_options().submodels_begin("Solver"));
 
   return it->second;
 }
@@ -2284,60 +2287,63 @@ SimulationInterface::print_info(void)
 {
   if (verbose() > 0)
   {
-    int width[5] = {25, 15, 10, 12, 4};
-    int tot_width = width[0] + width[1] + width[2] + width[3] + width[4];
-
-    Messages::newline();
-    Messages::info("Available solution variables:");
-    ostringstream line;
-    line.width(tot_width);
-    line.fill('-');
-    line << "";
-    Messages::info(line.str());
-
+    if (_solution_descriptors.size() > 1)
     {
-      ostringstream os;
-      os << "Name";
-      int w = width[0];
-      os.width(w - os.tellp());
-      os << "" << "Units";
-      w += width[1];
-      os.width(w - os.tellp());
-      os << "" << "Type";
-      w += width[2];
-      os.width(w - os.tellp());
-      os << "" << "Association";
-      w += width[3];
-      os.width(w - os.tellp());
-      os << "" << "Plot" << Messages::endl;
-      os.width(w + width[4]);
-      os.fill('-');
-      os << "";
-      Messages::info(os.str());
-    }
+      int width[5] = {25, 15, 10, 12, 4};
+      int tot_width = width[0] + width[1] + width[2] + width[3] + width[4];
 
-    SolutionDescrMap::const_iterator it(_solution_descriptors.begin());
-    for ( ; it != _solution_descriptors.end(); ++it)
-    {
-      if (it->first == INVALID_ID) continue;
+      Messages::newline();
+      Messages::info("Available solution variables:");
+      ostringstream line;
+      line.width(tot_width);
+      line.fill('-');
+      line << "";
+      Messages::info(line.str());
 
-      int w = width[0];
-      ostringstream os;
-      os << it->second.name();
-      os.width(w - os.tellp());
-      os << "" << it->second.units();
-      w += width[1];
-      os.width(w - os.tellp());
-      os << "" << it->second.type();
-      w += width[2];
-      os.width(w - os.tellp());
-      os << "" << it->second.location();
-      w += width[3];
-      os.width(w - os.tellp());
-      os << "" << (plot_solution(it->first) ? "y" : "n");
-      Messages::info(os.str());
+      {
+        ostringstream os;
+        os << "Name";
+        int w = width[0];
+        os.width(w - os.tellp());
+        os << "" << "Units";
+        w += width[1];
+        os.width(w - os.tellp());
+        os << "" << "Type";
+        w += width[2];
+        os.width(w - os.tellp());
+        os << "" << "Association";
+        w += width[3];
+        os.width(w - os.tellp());
+        os << "" << "Plot" << Messages::endl;
+        os.width(w + width[4]);
+        os.fill('-');
+        os << "";
+        Messages::info(os.str());
+      }
+
+      SolutionDescrMap::const_iterator it(_solution_descriptors.begin());
+      for ( ; it != _solution_descriptors.end(); ++it)
+      {
+        if (it->first == INVALID_ID) continue;
+
+        int w = width[0];
+        ostringstream os;
+        os << it->second.name();
+        os.width(w - os.tellp());
+        os << "" << it->second.units();
+        w += width[1];
+        os.width(w - os.tellp());
+        os << "" << it->second.type();
+        w += width[2];
+        os.width(w - os.tellp());
+        os << "" << it->second.location();
+        w += width[3];
+        os.width(w - os.tellp());
+        os << "" << (plot_solution(it->first) ? "y" : "n");
+        Messages::info(os.str());
+      }
+      Messages::info(line.str());
     }
-    Messages::info(line.str());
 
 
     Messages::newline();
@@ -2347,6 +2353,8 @@ SimulationInterface::print_info(void)
     os << "Output file basename  : " << get_output_filename_prefix() << endl;
     Messages::info(os.str());
     Messages::newline();
+
+    get_option("binary_output", true);
   }
 
   if (verbose() > 0) do_print_info();

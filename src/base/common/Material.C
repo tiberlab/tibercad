@@ -38,19 +38,14 @@ void
 Material::setup_doping(void)
 {
   // now the doping
-  double doping = get_options().get_option("doping", 0.0);
-  if (doping > 0.0)
+  ModelOptions::const_submodel_iterator
+      it(get_options().submodels_begin("Doping"));
+  ModelOptions::const_submodel_iterator
+      end(get_options().submodels_end("Doping"));
+  for ( ; it != end; ++it)
   {
-    double level = get_options().get_option("doping_level", 0.025);
-    int g = get_options().get_option("doping_degen", 2);
-    // allow simplified name
-    g = get_options().get_option("g", g);
-    Dopant::DopingType type = Dopant::N_TYPE;
-    const std::string& doptype = get_options().get_option("doping_type", "");
-    if (doptype == "acceptor")
-      type = Dopant::P_TYPE;
-
-    add_dopant(new Dopant(doping, level, g, type));
+    const ModelOptions& opts = it->second;
+    add_dopant(Dopant::create(opts.get_name(), opts));
   }
 }
 

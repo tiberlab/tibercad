@@ -1,0 +1,52 @@
+
+@include mosfet.tib
+
+Module sweep
+{
+  name = sweep_drain
+  solve = driftdiffusion
+
+  variable = $Vd
+  start = 0.0 # 0.2
+  stop = 1.0 
+  steps = 5 # 4 
+}
+
+Module sweep
+{
+  name = sweep_gate
+  solve = driftdiffusion
+
+  variable = $Vg
+  start = -1.0
+  stop = 0.5
+  steps = 150 # 
+  
+  plot_data = true
+}
+
+
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  solve = (sweep_drain, sweep_gate)
+  resultpath = output_transchar 
+  
+  output_format = vtk
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

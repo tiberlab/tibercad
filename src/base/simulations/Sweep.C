@@ -29,7 +29,6 @@ Sweep::do_init(void)
 
   // get the names of the simulations to be solved
   vector<string> sims;
-  opts.get_option("simulation", sims);
   opts.get_option("solve", sims);
   int num_of_sims = sims.size();
 
@@ -46,18 +45,6 @@ Sweep::do_init(void)
       _simulations[i]->init();
 
 
-    // inherit the solution IDs
-    const IDSet& plotvars = _simulations[i]->get_plotvariable_ids();
-    for (IDSet::iterator it(plotvars.begin()); it != plotvars.end(); ++it)
-    {
-      ID id = *it;
-      const SolutionDescriptor& descr = _simulations[i]->get_solution_descriptor(id);
-
-      // adjust ID
-      id = TB_MAX_SIM * id + _simulations[i]->get_id();
-      declare_solution_ext(descr.name(), id, descr.type(), descr.location(),
-          descr.units(), descr.n_components());
-    }
   }
 
   // if user didn't provide a simulation name, we take the first available
@@ -88,9 +75,35 @@ Sweep::do_init(void)
     msg += "the sweep variable.";
     throw InitFailedException(msg);
   }
+
+  parse_options();
 }
 
 
+
+
+void
+Sweep::do_print_info(void)
+{
+  // this is a dirty trick to not have the variables in the command
+  // line output
+
+  for (int i = 0; i < _simulations.size(); i++)
+  {
+    // inherit the solution IDs
+    const IDSet& plotvars = _simulations[i]->get_plotvariable_ids();
+    for (IDSet::iterator it(plotvars.begin()); it != plotvars.end(); ++it)
+    {
+      ID id = *it;
+      const SolutionDescriptor& descr = _simulations[i]->get_solution_descriptor(id);
+
+      // adjust ID
+      id = TB_MAX_SIM * id + _simulations[i]->get_id();
+      declare_solution_ext(descr.name(), id, descr.type(), descr.location(),
+          descr.units(), descr.n_components());
+    }
+  }
+}
 
 
 
@@ -231,7 +244,8 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
       //
       ostringstream s;
       s << "# Parameter sweep " << "(" << get_name() << ")" << endl;
-      s << "# Simulation: " << simulation.get_name() << endl;
+      s << "# Simulation    : " << simulation.get_name() << endl;
+      //s << "# Device        : " << simulation.get_device()->get_name() << endl;
       s << "# Sweep variable: " << _variable << endl;
       s << "# Data:" << endl;
       file << s.str();
@@ -432,8 +446,9 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     }
 
     // filename suffix
+    // we strip the leading '$' for the filename
     ostringstream suffix;
-    suffix << _variable << "_" << _goal;
+    suffix << _variable.substr(1, string::npos) << "_" << _goal;
     TiberCad::prepend_to_filename_suffix(suffix.str());
 
     bool failed = false;

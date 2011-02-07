@@ -68,6 +68,14 @@ class Device
     EquationSystems& get_equation_systems(void) const;
 
 
+    //! Prepare the device
+    /*!
+     * This creates all device regions, materials and
+     * atomistic structures.
+     */
+    void prepare(void);
+
+
     //! Initialize this device
     /*!
      * This method will call \c init() of all Materials in this device
@@ -86,11 +94,6 @@ class Device
      */
     void set_material(Material* material, const std::vector<ID>& region_ids,
         const std::string& region_name) TBDLLOCAL;
-
-
-    //! Set an atomistic structure to be kept in structures map
-    void set_atomistic_structure(const std::string& name,
-        AtomisticStructure* atomistic_structure) TBDLLOCAL;
 
 
     //! Get the material for a given region ID
@@ -228,6 +231,10 @@ class Device
     void get_mesh_region_ids(const std::string& name, std::vector<ID>& ids) const TBDLLOCAL;
 
 
+    //! Extract physical regions from a string
+    void extract_physical_regions(const std::string& str, IDSet& ids) const;
+
+
     /* //! Get a const reference to the boundary region descriptor */
     //const BoundaryRegions& get_boundary_regions(void) const;
 
@@ -329,6 +336,23 @@ class Device
      * meshfile and the dimension
      */
     void setup_mesh(void) TBDLLOCAL;
+
+
+    //! Setup all regions and materials
+    void setup_regions(void);
+
+
+    //! Setup clusters
+    /*!
+     * A region cluster contains different physical regions of the mesh
+     * which possibly overlap with the material regions described in the
+     * \c Region sections
+     */
+    void setup_clusters(void);
+
+
+    //! Setup atomistic structures
+    void setup_atomistic_structures(void);
 
 
     //! Prepares the boundaries
@@ -592,13 +616,6 @@ Device::get_symmetry(void) const
 }
 
 
-
-inline
-void
-Device::set_atomistic_structure(const std::string& name, AtomisticStructure* atomistic_structure)
-{
-  _atomistic_structure_map[name] = atomistic_structure;
-}
 
 
 inline

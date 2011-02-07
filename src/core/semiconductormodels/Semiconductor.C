@@ -16,6 +16,8 @@ Semiconductor::Semiconductor(const ModelOptions& options)
 
   modelB = NULL;
 
+  get_options().get_option("kp_model","");
+  get_options().get_option("model","");
 }
 
 //--------------------------------------------------------------------------------------------//

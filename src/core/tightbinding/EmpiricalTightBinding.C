@@ -733,6 +733,7 @@ ETB::print_upt_options(void)
 void
 ETB::add_pot_shifts(void)
 {
+
   project_potential(_upt_options.potential_sim, "point");
 
   inst->add_potential(_pot_shift);

@@ -195,6 +195,7 @@ SelfconsistentSolver::SelfconsistentSolver(const ModelOptions& options)
     _abs_tol(1e-3),
     _xmonitor(NULL)
 {
+  is_task(true);
 }
 
 inline

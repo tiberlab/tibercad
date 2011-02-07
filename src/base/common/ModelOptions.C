@@ -1,9 +1,12 @@
 // $Id$
 
 #include "ModelOptions.h"
+#include "Messages.h"
+#include "InitFailedException.h"
 
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 
 using namespace std;
@@ -18,6 +21,18 @@ ModelOptions::ModelOptions(map<const string, string> options)
 ModelOptions::ModelOptions(const ModelOptions& other)
 {
   operator+=(other);
+
+  _key = other._key;
+  _name = other._name;
+}
+
+
+
+void
+ModelOptions::set_name(const std::string& name)
+{
+  _name = name;
+  set_option("name", get_option("name", name));
 }
 
 
@@ -27,7 +42,7 @@ ModelOptions::set_option(const string& name, const T& value)
 {
   ostringstream s;
   s << value;
-  
+
   _options[name] = s.str();
 }
 
@@ -52,6 +67,37 @@ ModelOptions::set_option(const string& name, const vector<T>& value)
 
 
 
+ModelOptions::OptionsMap::const_iterator
+ModelOptions::_find(const std::string& name) const
+{
+  OptionsMap::const_iterator it(_options.find(name));
+  _used.push_back(it);
+
+  return it;
+/*
+  size_t idx = 0;
+  for ( ; (idx < name.size()) && (name[idx] != '!'); idx++);
+
+  // this is the most usual case, I guess
+  if (idx == name.size())
+    return _options.find(name);
+
+  string s(name.substr(0, idx));
+
+  const OptionsMap::const_iterator end(_options.end());
+  OptionsMap::const_iterator it(end);
+
+  idx++;
+  for ( ; (it == end) && (idx < name.size()); idx++)
+  {
+    s.push_back(name[idx]);
+    it = _options.find(s);
+  }
+  return it;
+*/
+}
+
+
 
 template <typename T>
 void
@@ -59,7 +105,7 @@ ModelOptions::get_option(const string& name,
     vector<T>& vec) const
 {
 
-  OptionsMap::const_iterator it = _options.find(name);
+  OptionsMap::const_iterator it(_find(name));
 
   if (it != _options.end())
     Utils::extract_vector(it->second, vec);
@@ -76,11 +122,22 @@ ModelOptions::get_option(const string& name,
 
   int n = vec.size();
   array.resize(n);
-  
+
   for (int i = 0; i < n; i++)
     Utils::extract_vector(vec[i], array[i]);
 
 }
+
+
+
+
+void
+ModelOptions::add_submodel(const string& name,
+    const ModelOptions& options)
+{
+  _submodels.insert(SubmodelMap::value_type(name, options));
+}
+
 
 
 
@@ -169,12 +226,65 @@ ModelOptions::delete_submodel(submodel_iterator it)
 }
 
 
+
+
 void
 ModelOptions::delete_submodels(const std::string& name)
 {
   _submodels.erase(name);
 }
 
+
+
+
+bool
+ModelOptions::check_unused(int mode) const
+{
+  bool found = false;
+
+  // the following is based on the assumption that
+  // set iterators remain valid upon inserting/erasing
+  // of elements
+  list<OptionsMap::const_iterator> unused;
+
+  OptionsMap::const_iterator it(_options.begin());
+  OptionsMap::const_iterator end(_options.end());
+  for ( ; it != end; ++it)
+    if (find(_used.begin(), _used.end(), it) == _used.end())
+      unused.push_back(it);
+
+  if (!unused.empty())
+  {
+    found = true;
+
+    if (mode > 0)
+    {
+      ostringstream os;
+      os << "found unused options in block "
+          << get_key() << " " << get_name() << ": ";
+      list<OptionsMap::const_iterator>::iterator uit(unused.begin());
+      os << (*uit)->first;
+      ++uit;
+      const list<OptionsMap::const_iterator>::iterator uend(unused.end());
+      for ( ; uit != uend; ++uit)
+        os << ", " << (*uit)->first;
+
+      switch (mode)
+      {
+        case 1:
+          Messages::warning(os.str());
+          break;
+
+        default:
+          throw InitFailedException(os.str());
+          break;
+      }
+
+    }
+  }
+
+  return found;
+}
 
 
 // explicit instantiations

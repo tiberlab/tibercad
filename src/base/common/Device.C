@@ -106,9 +106,17 @@ Device::create(const ModelOptions& options)
 
   device->set_options(options);
 
-  device->setup_mesh();
-
   return device;
+}
+
+
+void
+Device::prepare(void)
+{
+  setup_mesh();
+  setup_regions();
+  setup_clusters();
+  setup_atomistic_structures();
 }
 
 
@@ -185,6 +193,218 @@ Device::setup_mesh(void)
   _eq_system = new EquationSystems(*_mesh);
 }
 
+
+
+
+
+void
+Device::setup_regions(void)
+{
+
+  Messages::debug("Control::create_materials() begin");
+
+  Messages m;
+  m.info("Create materials ...");
+  m.indent();
+
+  //
+  // first we process the physical regions
+  //
+
+  // iterate the regions and create the materials
+  ModelOptions::const_submodel_iterator rit(_options.submodels_begin("Region"));
+  const ModelOptions::const_submodel_iterator rend(_options.submodels_end("Region"));
+  for ( ; rit != rend; ++rit)
+  {
+    ModelOptions data(rit->second);
+
+    // we read the region numbers as strings as they could be region names
+    vector<string> region_ids_str;
+    string reg("");
+    reg = data.get_option("mesh_regions", reg);
+    Utils::extract_vector(reg, region_ids_str);
+
+    // for the numeric region IDs
+    vector<ID> region_ids;
+
+    unsigned int n_ids = region_ids_str.size();
+    // if no numbers are specified we try to get them from the region name
+    if (n_ids == 0)
+      get_mesh_region_ids(data.get_name(), region_ids);
+    else
+    {
+      vector<ID> tmp_id;
+      for (unsigned int i = 0; i < n_ids; i++)
+      {
+        get_mesh_region_ids(region_ids_str[i], tmp_id);
+        if (tmp_id.size() == 0)
+        {
+          ostringstream s;
+          s << "Physical region \'" << region_ids_str[i]
+            << "\' (in Region \'" <<  data.get_name()
+            << "\') does not exist in mesh.";
+          throw InitFailedException(s.str());
+        }
+        region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
+      }
+    }
+
+
+    if (region_ids.size() == 0)
+    {
+      ostringstream s;
+      s << "Physical region \'" << data.get_name() <<
+        "\' is not consistent with mesh.";
+      throw InitFailedException(s.str());
+    }
+
+    // some options can be provided globally for all regions
+
+    // The default material is Si
+    string material = _options.get_option("material", "Si");
+    string xdir = _options.get_option("x-growth-direction", "");
+    string ydir = _options.get_option("y-growth-direction", "");
+    string zdir = _options.get_option("z-growth-direction", "");
+
+
+    material = data.get_option("material", material);
+    data["material"] = material;
+    xdir = data.get_option("x-growth-direction", xdir);
+    if (!xdir.empty())
+      data["x-growth-direction"] = xdir;
+    ydir = data.get_option("y-growth-direction", ydir);
+    if (!ydir.empty())
+      data["y-growth-direction"] = ydir;
+    zdir = data.get_option("z-growth-direction", zdir);
+    if (!zdir.empty())
+      data["z-growth-direction"] = zdir;
+
+    Material* mat = Material::create(material, data);
+    set_material(mat, region_ids, data.get_name());
+  }
+
+  m.unindent();
+  m.info("Creation of materials done.");
+
+  Messages::debug("Control::create_materials() end");
+}
+
+
+
+
+void
+Device::setup_clusters(void)
+{
+
+  ModelOptions::const_submodel_iterator it(_options.submodels_begin("Cluster"));
+  const ModelOptions::const_submodel_iterator end(_options.submodels_end("Cluster"));
+  for ( ; it != end; ++it)
+  {
+    const ModelOptions& data = it->second;
+
+    // we read the region numbers as strings as they could be region names
+    string region_ids_str("");
+    region_ids_str = data.get_option("regions", region_ids_str);
+
+    // for the numeric region IDs
+    set<ID> ids;
+    extract_physical_regions(region_ids_str, ids);
+    vector<ID> region_ids;
+    region_ids.reserve(ids.size());
+    region_ids.insert(region_ids.begin(), ids.begin(), ids.end());
+
+
+    if (region_ids.size() > 0)
+    {
+      ostringstream os;
+      os << "Setting up Cluster \'" << data.get_name()
+        << "\' containing regions " << region_ids[0];
+      for (size_t i = 1; i < region_ids.size(); i++)
+        os << ", " << region_ids[i];
+      Messages::info(os.str());
+
+      set_cluster(data.get_name(), region_ids);
+    }
+    else
+      Messages::warning("Cluster \'" + data.get_name() + "\' is empty.");
+  }
+}
+
+
+
+void
+Device::setup_atomistic_structures(void)
+{
+
+  Messages::debug("Control::create_atomistic_structures() begin");
+
+  ModelOptions::const_submodel_iterator it(_options.submodels_begin("Atomistic"));
+  const ModelOptions::const_submodel_iterator end(_options.submodels_end("Atomistic"));
+  for ( ; it != end; ++it)
+  {
+    const ModelOptions& data = it->second;
+
+    const string& st_name = data.get_name();
+
+    AtomisticStructure* st = AtomisticStructure::create();
+
+    //WARNING: For debugging purposes, initialization of
+    //atomistic structures is here, but it's not the right place! (maybe it is...)
+    st->init(st_name, this, data);
+
+    // Defined atomistic structure is put in the atomistic_structure_map
+    _atomistic_structure_map[st_name] = st;
+
+  }
+
+  Messages::debug("Control::create_atomistic_structures() end");
+}
+
+
+
+
+void
+Device::extract_physical_regions(const std::string& str, IDSet& ids) const
+{
+  ids.clear();
+
+  // the IDs that have to be excluded ("-pippo" syntax)
+  IDSet exclude;
+
+  // we have to get it as vector (for the moment at least)
+  vector<string> preg;
+  Utils::extract_vector(str, preg);
+
+  set<ID> preg_ids;
+
+  unsigned int n = preg.size();
+  for (unsigned int i = 0; i < n; i++)
+  {
+    if (preg[i].at(0) == '-')
+      get_active_region_ids(preg[i].substr(1), preg_ids);
+    else
+      get_active_region_ids(preg[i], preg_ids);
+
+    if (preg_ids.size() == 0)
+    {
+      ostringstream s;
+      s << "Physical region " << preg[i] <<
+      " does not exist in mesh file.";
+      throw InitFailedException(s.str());
+    }
+
+    if (preg[i].at(0) == '-')
+      exclude.insert(preg_ids.begin(), preg_ids.end());
+    else
+      ids.insert(preg_ids.begin(), preg_ids.end());
+  }
+
+  if (ids.empty() && !exclude.empty())
+    ids = get_active_region_ids();
+
+  for (IDSet::iterator it(exclude.begin()); it != exclude.end(); ++it)
+    ids.erase(*it);
+}
 
 
 /*

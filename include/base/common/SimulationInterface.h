@@ -129,6 +129,20 @@ class SimulationInterface : public TiberModelObject
     ID get_id(void) const;
 
 
+    //! Returns true if this is a task module
+    /*!
+     * A task module is a simulation module which performs
+     * tasks like sweep, selfconsistent cycle etc. on other
+     * simulation modules. Such a module typically does not
+     * have an associated environment, and may have no
+     * solution variables.
+     *
+     * A module that is a task module has to declare this
+     * explicitly by calling \c is_task(true).
+     */
+    bool is_task(void) const;
+
+
     //! Get the default name for this simulation
     /*!
      * This can be useful to identify a named simulation for which
@@ -809,6 +823,10 @@ class SimulationInterface : public TiberModelObject
     void is_solved(bool flag);
 
 
+    //! Declare this module to be a task or not
+    void is_task(bool task);
+
+
     //! Adds a solution name to the plot list
     /*!
      * This needs to be done \em before calling
@@ -1339,6 +1357,10 @@ class SimulationInterface : public TiberModelObject
     bool _is_solved;
 
 
+    //! \c true if this module is a task module
+    bool _is_task;
+
+
     //! A flag indicating that equilibrium has been done
     bool _equilibrium_is_solved;
 
@@ -1577,6 +1599,26 @@ bool
 SimulationInterface::is_solved(void) const
 {
   return _is_solved;
+}
+
+
+
+
+inline
+bool
+SimulationInterface::is_task(void) const
+{
+  return _is_task;
+}
+
+
+
+
+inline
+void
+SimulationInterface::is_task(bool task)
+{
+  _is_task = task;
 }
 
 

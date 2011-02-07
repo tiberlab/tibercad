@@ -99,6 +99,8 @@ Variable::get_variable_value(const string& var)
 
 
 
+
+
 template <typename T>
 void
 Variable::check_and_register(const string& s, T& variable,
@@ -106,13 +108,13 @@ Variable::check_and_register(const string& s, T& variable,
 {
   if (s.size() >= 1)
   {
-    if (s[0] == '@')
+    if (s[0] == '$')
     {
       string str(s);
       boost::algorithm::trim(str);
 
       // the regexp to match
-      static const boost::regex regexp("@([a-zA-Z0-9_]+)(\\[([^\\]]+)\\])?");
+      static const boost::regex regexp("(\\$[a-zA-Z0-9_]+)(\\[([^\\]]+)\\])?");
 
       boost::cmatch matches;
       if (boost::regex_match(str.c_str(), matches, regexp))

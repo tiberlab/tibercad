@@ -210,7 +210,7 @@ private:
 
   //! Set of regions covered by atomistic structure (names: TiberCAD
   //! defined regions)
-  std::set <std::string> _regionset;
+  //std::set <std::string> _regionset;
 
   //! Set of mesh regions covered by atomistic structure (numbers: mesh
   //! regiones)
@@ -320,12 +320,14 @@ void AtomisticStructure::set_device(const Device* const device)
 }
 
 
+/*
 inline
 const std::set<std::string>&
 AtomisticStructure::get_region(void)
 {
   return _regionset;
 }
+*/
 
 
 inline

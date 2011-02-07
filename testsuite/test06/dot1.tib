@@ -1,10 +1,14 @@
-$Device
+Device qdot
 {
+
+  meshfile = dot5.msh
+  mesh_units = 1e-9
+  dimension = 3
 
   Region dot
   {
-    reg_numb = 1
-    mat = GaN
+    mesh_regions = 1
+    material = GaN
     x = 0.0
 
     structure = wz
@@ -17,18 +21,18 @@ $Device
     z-growth-direction = (0,0,0,1)
 
    
-    
-
-    doping = 1e15
-    doping_type = acceptor
-    doping_level = 0.025
+   Doping { 
+    Nd = 1e15
+    type = acceptor
+    Ed = 0.025
+  }
 
   }
 
   Region  buffer
   {
-    reg_numb = 2
-    mat = AlGaN
+    mesh_regions = 2
+    material = AlGaN
     x = 0.3
     structure = wz
    
@@ -38,17 +42,19 @@ $Device
     z-growth-direction = (0,0,0,1)
    
 
-    doping = 1e15
-    doping_type = acceptor
-    doping_level = 0.025
+   Doping { 
+    Nd = 1e15
+    type = acceptor
+    Ed = 0.025
+   }
     
    
   }
 
   Region  buffer1
   {
-    reg_numb = 3
-    mat = AlGaN
+    mesh_regions = 3
+    material = AlGaN
     x = 0.3
     structure = wz
    
@@ -56,17 +62,19 @@ $Device
     x-growth-direction = (-1,2,-1,0)   
     z-growth-direction = (0,0,0,1)
 
-    doping = 1e15
-    doping_type = acceptor
-    doping_level = 0.025
+   Doping { 
+    Nd = 1e15
+    type = acceptor
+    Ed = 0.025
+   }
     
    
   }
   
   Region  buffer2
   {
-    reg_numb = 4
-    mat = AlGaN
+    mesh_regions = 4
+    material = AlGaN
     x = 0.3
     structure = wz
    
@@ -75,256 +83,157 @@ $Device
     z-growth-direction = (0,0,0,1)
 
 
-
-    doping = 1e15
-    doping_type = acceptor
-    doping_level = 0.025
-    
+   Doping {
+    Nd = 1e15
+    type = acceptor
+    Ed = 0.025
+   }
    
   }
-  
-  
-
-
-
-  
-
-}
-
-$Models
-{
-
-  model macrostrain
-  {
-
-    options
-    {          
-      simulation_name = str
-      plot = (Strain, PiezoPolarization)
-
-    }
-
-  
-  
-    
-    BC_Regions  
-    {
-      BC_Region substrate
-      {
-	BC_reg_numb = 1
-	type = substrate
-	material = AlGaN
-	x = 0.3
-	structure = wz
-
-	y-growth-direction = (-1,0,1,0)
-	x-growth-direction = (-1,2,-1,0)   
-	z-growth-direction = (0,0,0,1)
-
-
-      }
-    }
-
-  } 
-
-
-  model  driftdiffusion
-  { 
-
-    options
-    {          
-      simulation_name = dd
-      plot = (Ec, Ev, eQFermi, hQFermi, ElField, Polarization)
-
-      strain_simulation = str
-
-      coupling = poisson
-      integration_order = 2
-    }
-
-    physical_model particle_density
-    {
-      statistics = fermidirac
-    }
-
-    physical_model recombination
-    { 
-      model = srh
-    }
-
-    
-  
-    physical_model polarization
-    {
-      type = (piezo, pyro)
-    } 
-  
-
-     
-
-    physical_model electron_mobility
-    { 
-      model = doping_dependent
-    }
-
-
-    physical_model hole_mobility
-    { 
-      model = doping_dependent
-    }
-
-
-   
-
-  }
-
-
- 
-
-
-  model efaschroedinger
-
-  {
-
-   
-    options
-    {
-     plot = (EigenFunctions, EigenEnergy, EnergyLevels)
-     simulation_name = quantum_el
-     physical_regions = (1,2)
-    }
-
-
-  }
-
-
-  model efaschroedinger
-
-  {
-
-   
-    options
-    {
-     plot = (EigenFunctions, EigenEnergy, EnergyLevels)
-     simulation_name = quantum_hl
-     physical_regions = (1,2)
-    }
-
-  
-  }
-  
-
- 
-
-
-
-}
-
-$Solver
-{
-
- macrostrain
-  {
-   substrate = substrate
-
-   tolerance = 1e-6
-
- 
-  }
-
- 
-  driftdiffusion
-  {
-    nonlin_max_it = 70
-    nonlin_rel_tol = 1e-10
-    nonlin_abs_tol = 1e-10
-    nonlin_step_tol = 1e-9
-    ls_max_step = 2
-   
-   
-    ksp_type = bcgs
-  
-  }
-
-
-
-  quantum_el
-  {
-   
-    Dirichlet_bc_everywhere = true
-    particle = el
-    number_of_eigenstates = 5
-    poisson_model_name = dd
-    strain_model_name = macrostrain
-    convergent_density = true
-    log_output = true
-   
-    solver = krylovshur 
-   
-    monitor = true
-    ksp_type = bcgsl
-    pc_type =  jacobi
-  }
-
-  quantum_hl
-  {
-    x-periodicity = false
-    Dirichlet_bc_everywhere = true
-    particle = hl
-    number_of_eigenstates = 8
-    poisson_model_name = dd
-    strain_model_name = macrostrain
-    convergent_density = true
-   
-    solver = krylovshur
- 
-    log_output = true
-    monitor = true
-
-    ksp_type = bcgsl
-    pc_type =  jacobi
-
-  }
-
-
-
-
-
-
- 
-
-
-
 }
 
 
-$Physics
+
+Module macrostrain
 {
 
- 
-  quantum_el 
+  name = str
+  plot = (Strain, PiezoPolarization)
+  substrate = substrate
+
+  Solver
   {
-    model = conduction_band  
-
-    particle = el
-
+    relative_tolerance = 1e-6
   }
 
-
-  quantum_hl
+  Physics
   {
-    particle = hl
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
+
+    Boundary substrate
+    {
+      regions = 1
+      type = substrate
+      material = AlGaN
+      x = 0.3
+      structure = wz
+
+      y-growth-direction = (-1,0,1,0)
+      x-growth-direction = (-1,2,-1,0)   
+      z-growth-direction = (0,0,0,1)
+    }
   }
 
 } 
 
-$Simulation
+
+Module driftdiffusion
+{ 
+
+  name = dd
+  plot = (Ec, Ev, eQFermi, hQFermi, ElField, Polarization)
+
+  coupling = poisson
+  integration_order = 2
+
+  Solver
+  {
+    max_iterations = 70
+    relative_tolerance = 1e-10
+    absolute_tolerance = 1e-10
+    step_tolerance = 1e-9
+    max_step = 2
+  }
+
+
+  Physics
+  {
+ 
+    strain_simulation = str
+
+    particle_density
+    {
+      statistics = fermidirac
+    }
+
+    recombination srh { }
+
+    polarization (piezo, pyro) { } 
+  
+    electron_mobility doping_dependent { }
+
+
+    hole_mobility doping_dependent { }
+
+  }
+}
+
+
+ 
+
+
+Module efaschroedinger
 {
-  meshfile = dot5.msh
-  mesh_units = 1e-9
-  dimension = 3
+  name = quantum_el
+  regions = (1,2)
+  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+
+  Dirichlet_bc_everywhere = true
+  particle = el
+  number_of_eigenstates = 5
+  poisson_model_name = dd
+  strain_model_name = macrostrain
+  convergent_density = true
+  log_output = true
+
+  solver = krylovshur 
+
+  monitor = true
+  ksp_type = bcgsl
+  pc_type =  jacobi
+
+  Physics
+  {
+    model = conduction_band
+    particle = el
+  }
+}
+
+
+Module efaschroedinger
+{
+  name = quantum_hl
+  regions = (1,2)
+  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+
+  x-periodicity = false
+  Dirichlet_bc_everywhere = true
+  particle = hl
+  number_of_eigenstates = 8
+  poisson_model_name = dd
+  strain_model_name = macrostrain
+  convergent_density = true
+
+  solver = krylovshur
+
+  log_output = true
+  monitor = true
+
+  ksp_type = bcgsl
+  pc_type =  jacobi
+
+  Physics
+  {
+    particle = hl
+    model = kp
+    kp_model = 6x6
+  }
+}
+
+
+
+
+Simulation
+{
   temperature = 300
 
   solve = (str, dd,quantum_el, quantum_hl)

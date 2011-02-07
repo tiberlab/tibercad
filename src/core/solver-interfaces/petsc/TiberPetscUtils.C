@@ -8,10 +8,10 @@
 #include <iostream>
 
 
-KSPType
+const KSPType
 TiberPetscUtils::extract_KSPType(const ModelOptions& options)
 {
-  const std::string& ksp(options.get_option("ksp_type", "bcgs"));
+  const std::string& ksp(options.get_option("method", "bcgs"));
   if (ksp == "bcgs")
     return KSPBCGS;
   else if (ksp == "bcgsl")
@@ -38,10 +38,10 @@ TiberPetscUtils::extract_KSPType(const ModelOptions& options)
 }
 
 
-PCType
+const PCType
 TiberPetscUtils::extract_PCType(const ModelOptions& options)
 {
-  const std::string& pc(options.get_option("pc_type", "ilu"));
+  const std::string& pc(options.get_option("preconditioner", "ilu"));
   if (pc == "ilu")
     return PCILU;
   else if (pc == "lu")

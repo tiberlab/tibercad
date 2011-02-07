@@ -42,6 +42,7 @@ $Models
       simulation_regions = all
       simulation_name = mec
       plot = all
+      do_deformation = false
     }
 
     physical_model boundary
@@ -106,13 +107,18 @@ $Solver
 {
   macrostrain
   {
-    reference_material_point = (0,0,0)
-    fixed_point1 = (0,0,0)
-    fixed_point2 = (0,5,0)
-    fixed_point3 = (0,0,220)
+    #reference_material_point = (0,0,0)
+    #fixed_point1 = (0,0,0)
+    #fixed_point2 = (0,5,0)
+    #fixed_point3 = (0,0,220)
     substrate = Base
-    lin_rel_tol = 1e-6  
+    lin_rel_tol = 1e-12  
   } 
+
+  elasticity
+  {
+    lin_rel_tol = 1e-12
+  }
 }
 
 
@@ -122,7 +128,8 @@ $Simulation
 {
   temperature = 300
   verbose = 2
-  solve = (mec) 
+  solve = (mec, strain) 
+  #solve = (strain) 
   output_format = vtk
 }
 

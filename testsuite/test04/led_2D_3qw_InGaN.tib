@@ -3,28 +3,29 @@
 # y-growth-direction !!!!
 #
 
-$Device
+Device
 {
 
-  Options
-  {
-    meshfile =  mesh_led_tri_msh.grd
-    mesh_units = 1e-6      
-  }
+  meshfile =  mesh_led_tri_msh.grd
+  mesh_units = 1e-6      
+
+  material = GaN
+
+  structure = wz
+  z-growth-direction = (1,0,-1,0)
+  x-growth-direction = (-1,2,-1,0)
+  y-growth-direction = (0,0,0,-1)
 
 
- Region region_1  #pGaN_pcontact
+   Region region_1  #pGaN_pcontact
    {
-   #  reg_numb = 10
-     structure = wz
-     z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
-     y-growth-direction = (0,0,0,-1)
 
-     mat = GaN
-     doping = 3e19
-     doping_type = acceptor 
-     doping_level = 0.170
+     Doping
+     {
+       Nd = 3e19
+       type = acceptor 
+       Ed = 0.170
+     }
    }
 
 
@@ -33,16 +34,15 @@ $Device
    Region region_2   #  AlGaN
    {
 
- #    reg_numb = 11
-     structure = wz
-     z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
-     y-growth-direction = (0,0,0,-1)
-     mat = AlGaN
+     material = AlGaN
      x=0.2
-     doping = 3e19  
-     doping_type =  acceptor 
-     doping_level = 0.170
+
+     Doping
+     {
+       Nd = 3e19
+       type = acceptor 
+       Ed = 0.170
+     }
 
    }
 
@@ -50,32 +50,29 @@ $Device
 
    Region region_3   # GaN_barr_intrinsic
    {
- #    reg_numb = 12
-     structure = wz
-     z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
-     y-growth-direction = (0,0,0,-1)
-     mat = GaN
-     doping = 1e15
-     doping_type = donor 
-     doping_level = 0.025
-
+     Doping
+     {
+       Nd = 1e15
+       type = donor 
+       Ed = 0.025
+     }
    }
 
 
 
    Region InGaN_QW
    {
-     reg_numb =   (3,8,16)           #(3,8,13)
-     structure = wz
-     z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
-     y-growth-direction = (0,0,0,-1)
-     mat = InGaN
+     mesh_regions =   (3,8,16)           #(3,8,13)
+
+     material = InGaN
      x = 0.14
-     doping = 1e15
-     doping_type = donor 
-     doping_level = 0.025
+
+     Doping
+     {
+       Nd = 1e15
+       type = donor 
+       Ed = 0.025
+     }
 
    }
 
@@ -83,15 +80,15 @@ $Device
 
    Region GaN_Barrier
    {
-     reg_numb = (1,4,5,11,13,15,17)        #(1,4,5)
-     structure = wz
-    z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
-     y-growth-direction = (0,0,0,-1)
-     mat = GaN
-     doping = 3e18  
-     doping_type = donor 
-     doping_level = 0.025
+     mesh_regions = (1,4,5,11,13,15,17)        #(1,4,5)
+
+     Doping
+     {
+       Nd = 3e18
+       type = donor 
+       Ed = 0.025
+     }
+
    }
 
 
@@ -108,16 +105,14 @@ $Device
 
    Region Ex_AlInN_OX  # OX
    {
-     reg_numb = 2 
-     structure = wz
-     z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
-     y-growth-direction = (0,0,0,-1)
-     mat =  GaN # AlInN #SiO2 
- #    x = 0.82 # 0.78
-     doping = 3e18 # 1e19 
-     doping_type = donor 
-     doping_level = 0.025
+     mesh_regions = 2 
+
+     Doping
+     {
+       Nd = 3e18
+       type = donor 
+       Ed = 0.025
+     }
    }
 
 
@@ -125,37 +120,28 @@ $Device
 
    Region AlInN  #AlInN
    {
-   #  reg_numb = 7  
-     structure = wz
-     z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
-     y-growth-direction = (0,0,0,-1)
-     mat =  GaN # AlInN
-   #  x = 0.82 # 0.78 # 0.82 # 0.70 #0.82   nominal  0.82 
-     doping = 3e18 # 1e19 
-     doping_type = donor 
-     doping_level = 0.025
-     
+     Doping
+     {
+       Nd = 3e18
+       type = donor 
+       Ed = 0.025
+     }
    }
 
 
    Region region_10_lump_2 #GaN_ncontact
    {
-  #   reg_numb = 6
-     structure = wz
-     z-growth-direction = (1,0,-1,0)
-     x-growth-direction = (-1,2,-1,0)
-     y-growth-direction = (0,0,0,-1)
-     mat = GaN 
-     doping = 3e18  
-     doping_type = donor
-     doping_level = 0.025
+     Doping
+     {
+       Nd = 3e18
+       type = donor 
+       Ed = 0.025
+     }
    }
 
 
    Region region_0 #AIR
    {
-   #  reg_numb = 9
      mat = Air 
    }
 
@@ -164,222 +150,146 @@ $Device
 
 
 # Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
-{ 
-
-
-
- model driftdiffusion
+ Module driftdiffusion
   { 
 
-    options
-    {
- 
-     simulation_name = driftdiffusion
+     name = driftdiffusion
      plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, eCurrentDensity, hCurrentDensity, ContactCurrent, NetRecombination, eMobility, hMobility, eConductivity, hConductivity, Polarization)
 
-     strain_simulation = strain
-     relax_polarization = @polariz[0.0]
+     regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
 
-     physical_regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
+   Solver linesearch
+   {
+    max_iterations = 50
+    step_tolerance = 1e-4
+    max_step =  2 
 
-    }
-
-
-    physical_model particle_density
+    LinearSolver
     {
-      statistics = fermidirac
+      preconditioner = lu
+      ksp_type = pconly
     }
+   }
 
 
-    physical_model recombination
+    Physics
     {
-      model = srh
-    }
+      strain_simulation = strain
+      relax_polarization = $polariz[0.0]
 
-    physical_model recombination
-    {
-      model = direct
-      C =  0.47e-10  
 
-    }
+      particle_density
+      {
+        statistics = fermidirac
+      }
 
-    physical_model polarization
-    {
-      type = (piezo, pyro)
-    } 
+
+      recombination srh {}
+
+      recombination direct
+      {
+        C =  0.47e-10  
+      }
+
+      polarization (piezo, pyro) {}
   
 
 
-    BC_Regions  
-    {
-      BC_Region p_contact
+      Contact p_contact
       {
-        BC_reg_numb = 21
+        regions = 21
         type = ohmic
       	zero_grad_fermi_e = true
-	voltage = @Vb[0.0] 
+	voltage = $Vb[0.0] 
       }
       
       
-      BC_Region n_contact
+      Contact n_contact
       {
-        BC_reg_numb = 20
+        regions = 20
         type = ohmic
  	zero_grad_fermi_h = true
         voltage = 0.0
       }
-
-      
  
     }   
+} 
 
- } 
 
- model macrostrain
+
+
+Module macrostrain
+{
+      name = strain
+      plot = (Strain, PiezoPolarization)
+      regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
+
+  substrate = substr
+
+  Solver
   {
-    options
-    {
-      simulation_name = strain
-      plot = (strain, polarization)
-      physical_regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
-    }
+    relative_tolerance = 1e-6 # 1e-8 ok senza  oxide
+    #ksp_type = cg #gmres
+    max_iterations = 15000
+    preconditioner = composite
+  }
 
-    BC_Regions  
+
+  Physics
+  {
+    Contact substr
     {
-      BC_Region substr
-      {
-        BC_reg_numb = 19
-	type = substrate
-        material = GaN
-	structure = wz
-        z-growth-direction = (1,0,-1,0)
-        x-growth-direction = (-1,2,-1,0)
-        y-growth-direction = (0,0,0,-1)
-      }
+      regions = 19
+      type = substrate
+      material = GaN
+      structure = wz
+      z-growth-direction = (1,0,-1,0)
+      x-growth-direction = (-1,2,-1,0)
+      y-growth-direction = (0,0,0,-1)
     }
   }
  
 }
 
 
-# Definition of  Model-dependent Solver parameters
-$Solver
+Module sweep
 {
- 
-
-   driftdiffusion   #  fino a V 3.07
-   {
-
-    nonlinear_solver = tiber
-    nonlin_max_it = 50 #25
-    nonlin_step_tol = 1e-4
-    ls_max_step =  2  # 2 #0.8 # 1.5  #1.0 # 1.5  #1.0 #2       # 1.0  fino a P = 0.33
-    pc_type = lu
-    ksp_type = pconly
- #   ksp_type = gmres
-    #xmonitor = true
-
-   }
-
-#  driftdiffusion
-#  {
-#    nonlinear_solver = tiber
-# #   linear_solver = pardiso
-#    coupling = full
-#    nonlin_rel_tol = 1e-12  #1e-14  
-#    nonlin_abs_tol =  1e-50  
-#    nonlin_step_tol = 1e-3
-
-#    lin_rel_tol = 1e-6
-#    nonlin_max_it = 30
-#    discretization = fem
-#    ls_max_step = 3 #4 #1.0 
-#    pc_type = lu  #lu   #  ilu  =  incomplete lu,  better for  big  problems
-
-#  }
-
-
-
-#sweep_1  # inner
-#{
-#  simulation = dd
-#  variable = ...
-#  etc etc
-#}
-
-#sweep_2 # outer
-#{
-#  simulation = sweep_1
-#  etc etc
-#} 
-
-
-  sweep_1 # outer
-   {
- #   simulation = (driftdiffusion,tt)
-     simulation = sweep_2 # driftdiffusion
-    variable = Vb
+    name = sweep_1
+    solve = sweep_2 # driftdiffusion
+    variable = $Vb
     start = 0
     stop = 4  #5
     steps =  50 # 25
     plot_data = true
+}
 
-  }
-
-   sweep_2 
-   {
-     simulation = driftdiffusion #sweep_1
-     variable = polariz
+Module sweep 
+{
+    name = sweep_2
+     solve = driftdiffusion #sweep_1
+     variable = $polariz
      values = (0, 0.2, 0.4, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0)
     # start = 0
     # stop = 1
     # steps =  10 #20 # 5
   #   plotvariable = current
 
-   }
-
-
-
-
-
-  
-
-
-  macrostrain
-  {
-    substrate = substr
-    #xmonitor =  true
-    #monitor = true
-
-
-    tolerance = 1e-6 # 1e-8 ok senza  oxide
-    lin_rel_tol = 1e-6
-  # ksp_type = cg #gmres
-    #max_iterations = 15000
-    lin_max_it = 15000
-   pc_type = composite
-
-
-  }
-
 }
 
 
 
-# Definition of  model-indipendent parameters of the Simulation
 
 
-$Simulation
+
+
+Simulation
 {
 
   temperature = 300
-#  solve = (strain,sweep)
-#  solve = (strain,driftdiffusion) # sweep
   solve = (strain, sweep_1)
 
   #symmetry = cylindrical
-  resultpath =  output # output_test_no_ox_no_alinn_relP  #output_test_alinn_no_pyro_relP  #input_siO2_str_noncyl
+  resultpath =  output
   output_format = vtk
 }
 

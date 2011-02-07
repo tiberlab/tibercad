@@ -126,6 +126,7 @@ void
 DriftDiffusionProperties::create_submodels(void)
 {
 
+
   // permittivity Default
   if (!get_options().has_submodel("permittivity"))
   {
@@ -340,8 +341,7 @@ DriftDiffusionProperties::create_recombination_models(void)
     end = get_options().submodels_end("recombination");
     for ( ; it != end; ++it)
     {
-      std::string name = (it->second).get_option("model", "");
-      name = (it->second).get_option("type", name);
+      std::string name = (it->second).get_option("type", (it->second).get_name());
       add_recombination_model(name, it->second);
     }
 
@@ -350,8 +350,7 @@ DriftDiffusionProperties::create_recombination_models(void)
     end = get_options().submodels_end("generation");
     for ( ; it != end; ++it)
     {
-      std::string name = (it->second).get_option("model", "");
-      name = (it->second).get_option("type", name);
+      std::string name = (it->second).get_option("type", (it->second).get_name());
       add_recombination_model(name, it->second);
     }
   }
@@ -1011,18 +1010,14 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
       dx = - f / df;
 
       y = x + dx;
-      // we limit Ef to (Ec + 0.2, Ev - 0.2)
-      if ((Ec - y) < -0.2)
-        dx = Ec + 0.2 - x;
-      else if ((Ev - y) > 0.2)
-        dx = Ev - 0.2 - x;
+      // we limit Ef to (Ec + 0.5, Ev - 0.5)
+      // this is a primitive dissection, without updating
+      // boundaries
+      if ((Ec - y) < -0.5)
+        dx = 0.5 * (Ec + 0.5 - x);
+      else if ((Ev - y) > 0.5)
+        dx = 0.5 * (Ev - 0.5 - x);
 
-
-      //if (residual_dens > kT)
-      //  if (dx > 0)
-      //    dx = kT;
-      //  else
-      //    dx = -kT;
     }
 
     y = x + dx;

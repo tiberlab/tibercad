@@ -7,7 +7,6 @@
 #include <boost/algorithm/string/case_conv.hpp>
 
 #include "InputParser.h"
-#include "RegionStructure.h"
 #include "Control.h"
 #include "Database.h"
 #include "DLLoader.h"
@@ -25,7 +24,6 @@
 #include "SimulationEnvironment.h"
 #include "SimulationInterface.h"
 #include "RuntimeException.h"
-#include "AtomisticStructure.h"
 
 #include <sstream>
 #include <vector>
@@ -160,24 +158,49 @@ Control::init(void) throw (InitFailedException,
   //SignalHandler::activate_sigint();
 
 
-  // we check here if the input file exists
-  ifstream infile;
-  infile.open(_inputfile.c_str());
-  if (infile.fail() || !infile.good())
+
+  ModelOptions input;
+  InputParser parser;
+  parser.parse_file(_inputfile, input);
+
+  ModelOptions::submodel_iterator it(input.submodels_begin("Simulation"));
+  if (it == input.submodels_end("Simulation"))
+    throw InitFailedException("\'Simulation\' block missing in input file.");
+  const ModelOptions& global_opts = it->second;
+
+  // setup global options
+  setup_globals(global_opts);
+
+  it = input.submodels_begin("Device");
+  if (it == input.submodels_end("Device"))
+    throw InitFailedException("\'Device\' block missing in input file.");
+  const ModelOptions& device_opts = it->second;
+
+  // create and prepare the device
+  _device = Device::create(device_opts);
+  _device->prepare();
+
+  // create and prepare modules
+  it = input.submodels_begin("Module");
+  ModelOptions::submodel_iterator end = input.submodels_end("Module");
+  for ( ; it != end; ++it)
   {
-    infile.close();
-    throw InitFailedException("Input file is invalid.");
+    ModelOptions opts(it->second);
+
+    // some global variables
+    if (!opts.find_option("resultpath"))
+      opts.set_option("resultpath", global_opts.get_option("resultpath", "."));
+
+    if (!opts.find_option("output_format"))
+      opts.set_option("output_format", global_opts.get_option("output_format", "vtk"));
+
+    if (!opts.find_option("binary_output"))
+      opts.set_option("binary_output", global_opts.get_option("binary_output", "true"));
+
+
+    setup_module(_device, opts);
   }
-  infile.close();
 
-
-  // create the device, simulations and models
-  setup_globals();
-  create_device();
-  create_materials();
-  setup_clusters();
-  create_atomistic_structures();
-  setup_models();
 
   // initialize the device
   _device->init();
@@ -210,33 +233,28 @@ Control::init(void) throw (InitFailedException,
 
 
 void
-Control::setup_globals(void)
+Control::setup_globals(const ModelOptions& opts)
 {
   using namespace boost::filesystem;
-
-  InputParser parser(_inputfile);
-
-  ModelOptions opts;
-  parser.get_simulation_options(opts);
 
   // setup the logfile
   string logfile(Utils::basename(_inputfile) + ".log");
   logfile = opts.get_option("logfile", logfile);
-  opts.delete_option("logfile");
+  //opts.delete_option("logfile");
   Messages::set_log_file(logfile);
 
   Messages::info("Input file: " + _inputfile);
   Messages::newline();
 
   Database::set_search_path(opts.get_option("searchpath", ""));
-  opts.delete_option("searchpath");
+  //opts.delete_option("searchpath");
 
   DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
-  opts.delete_option("modellibpath");
+  //opts.delete_option("modellibpath");
 
 
   _outputdir = opts.get_option("resultpath", _outputdir);
-  opts.delete_option("resultpath");
+  //opts.delete_option("resultpath");
 
   _output_format = opts.get_option("output_format", "vtk");
 
@@ -289,1085 +307,473 @@ Control::setup_globals(void)
 }
 
 
-void
-Control::create_device(void)
-{
-  Messages::debug("Control::create_device() begin");
-
-  InputParser parser(_inputfile);
-
-  ModelOptions opts;
-  parser.get_simulation_options(opts);
-  if (opts.find_option("mesh_units"))
-  {
-    Messages::warning("\"mesh_units\" in $Simulation section is deprecated "
-        " and should be moved to the device options.");
-  }
-  if (opts.find_option("dimension"))
-  {
-    Messages::warning("\"dimension\" in $Simulation section is deprecated "
-        " and should be moved to the device options.");
-  }
-  if (opts.find_option("meshfile"))
-  {
-    Messages::warning("\"meshfile\" in $Simulation section is deprecated "
-        " and should be moved to the device options.");
-  }
-  if (opts.find_option("symmetry"))
-  {
-    Messages::warning("\"symmetry\" in $Simulation section is deprecated "
-        " and should be moved to the device options.");
-  }
-
-  parser.read_device();
-  opts += parser.get_device_options();
-
-  // we pass the remaining options to the device
-  _device = Device::create(opts);
-
-  Messages::debug("Control::create_device() end");
-}
-
 
 
 void
-Control::create_materials(void)
+Control::setup_module(Device* device, const ModelOptions& opts)
 {
+  string modelname = opts.get_name();
 
-  Messages::debug("Control::create_materials() begin");
+  IDSet phys_regions;
+  string physreg = opts.get_option("regions", "all");
+  device->extract_physical_regions(physreg, phys_regions);
 
-  assert(_device != NULL);
-
-  InputParser parser(_inputfile);
-
-  parser.read_device();
+  // get the user defined name (if defined...)
+  string simulation_name = opts.get_option("name", modelname);
 
   Messages m;
-  m.info("Create materials ...");
+
+  m.newline();
+  m.info("Setting up simulation of type \'"
+      + modelname + "\' ...");
   m.indent();
 
-  //
-  // first we process the physical regions
-  //
-  const map<ID, RegionStructure>& device_map = parser.get_device_map();
-
-  // iterate the map and create the materials
-  map<ID, RegionStructure>::const_iterator mapit(device_map.begin());
-  const map<ID, RegionStructure>::const_iterator mapend(device_map.end());
-  for ( ; mapit != mapend; ++mapit)
-  {
-    const RegionStructure& data = mapit->second;
-
-    // we read the region numbers as strings as they could be region names
-    vector<string> region_ids_str;
-    Utils::extract_vector(data.get_region_ID(), region_ids_str);
-
-    // for the numeric region IDs
-    vector<ID> region_ids;
-
-    unsigned int n_ids = region_ids_str.size();
-    // if no numbers are specified we try to get them from the region name
-    if (n_ids == 0)
-      _device->get_mesh_region_ids(data.get_region_name(), region_ids);
-    else
-    {
-      vector<ID> tmp_id;
-      for (unsigned int i = 0; i < n_ids; i++)
-      {
-        _device->get_mesh_region_ids(region_ids_str[i], tmp_id);
-        if (tmp_id.size() == 0)
-        {
-          ostringstream s;
-          s << "Physical region \'" << region_ids_str[i]
-            << "\' (in Region \'" <<  data.get_region_name()
-            << "\') does not exist in mesh.";
-          throw InitFailedException(s.str());
-        }
-        region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
-      }
-    }
-
-
-    if (region_ids.size() == 0)
-    {
-      ostringstream s;
-      s << "Physical region \'" << data.get_region_name() <<
-        "\' is not consistent with mesh.";
-      throw InitFailedException(s.str());
-    }
-
-    // get the common device options
-    ModelOptions opts(parser.get_device_options());
-    // The default material is Si
-    // backwards compatibility
-    string material = opts.get_option("mat", "Si");
-    material = opts.get_option("material", material);
-
-    opts += data.get_options();
-
-    // backwards compatibility
-    material = data.get_options().get_option("mat", material);
-    material = data.get_options().get_option("material", material);
-    opts.delete_option("mat");
-    opts["material"] = material;
-
-    Material* mat = Material::create(material, opts);
-    _device->set_material(mat, region_ids, data.get_region_name());
-  }
-
-  m.unindent();
-  m.info("Creation of materials done.");
-
-  Messages::debug("Control::create_materials() end");
-}
-
-
-
-void
-Control::create_atomistic_structures(void)
-{
-
-  Messages::debug("Control::create_atomistic_structures() begin");
-
-  assert(_device != NULL);
-
-  InputParser parser(_inputfile);
-
-  parser.read_scale();
 
   //
-  // and now we look for atomistic structures
+  // now create the simulation
   //
-  const map<ID, RegionStructure>& atomistic_map = parser.get_atomistic_map();
+  SimulationInterface* sim = SimulationInterface::create(modelname, opts);
+  if (sim == NULL)
+    throw ModelErrorException(
+        "Unknown simulation type: " + modelname);
 
-  ModelOptions atomistic_options;
 
-  // iterate the map and create the structures
-  map<ID, RegionStructure>::const_iterator mapit(atomistic_map.begin());
-  const map<ID, RegionStructure>::const_iterator mapend(atomistic_map.end());
-  for ( ; mapit != mapend; ++mapit)
+  SimulationEnvironment* env = NULL;
+  // create the environment (only if it is not a task)
+  if (!sim->is_task())
   {
-    const RegionStructure& data = mapit->second;
-
-    ModelOptions options = data.get_options();
-
-    const string& st_name = data.get_region_name();
-    AtomisticStructure* st = AtomisticStructure::create();
-
-    //WARNING: For debugging purposes, initialization of
-    //atomistic structures is here, but it's not the right place! (maybe it is...)
-    st->init(st_name, _device, options);
-
-    // Defined atomistic structure is put in the atomistic_structure_map
-    _device->set_atomistic_structure(st_name, st);
-
-  }
-
-  Messages::debug("Control::create_atomistic_structures() end");
-}
-
-
-
-void
-Control::setup_clusters(void)
-{
-  InputParser parser(_inputfile);
-
-  parser.read_device();
-
-  const map<ID, RegionStructure>& cluster_map = parser.get_cluster_map();
-
-  map<ID, RegionStructure>::const_iterator mapit(cluster_map.begin());
-  const map<ID, RegionStructure>::const_iterator mapend(cluster_map.end());
-  for ( ; mapit != mapend; ++mapit)
-  {
-    const RegionStructure& data = mapit->second;
-
-    // we read the region numbers as strings as they could be region names
-    vector<string> region_ids_str;
-    Utils::extract_vector(data.get_region_ID(), region_ids_str);
-
-    // for the numeric region IDs
-    vector<ID> region_ids;
-
-    unsigned int n_ids = region_ids_str.size();
-    set<ID> tmp_id;
-    for (unsigned int i = 0; i < n_ids; i++)
-    {
-      _device->get_active_region_ids(region_ids_str[i], tmp_id);
-      if (tmp_id.size() == 0)
-      {
-        ostringstream s;
-        s << "Physical region \'" << region_ids_str[i]
-          << "\' (in Cluster  \'" <<  data.get_region_name()
-          << "\') does not exist in mesh.";
-        throw InitFailedException(s.str());
-      }
-      region_ids.insert(region_ids.end(), tmp_id.begin(), tmp_id.end());
-    }
-
-    if (region_ids.size() > 0)
-    {
-      ostringstream os;
-      os << "Setting up Cluster \'" << data.get_region_name()
-        << "\' containing regions " << region_ids[0];
-      for (size_t i = 1; i < region_ids.size(); i++)
-        os << ", " << region_ids[i];
-      Messages::info(os.str());
-
-      _device->set_cluster(data.get_region_name(), region_ids);
-    }
-    else
-      Messages::warning("Cluster \'" + data.get_region_name() + "\' is empty.");
-  }
-}
-
-
-
-
-
-void
-Control::setup_models(void) throw (InitFailedException, ModelErrorException)
-{
-
-  Messages::debug("Control::setup_models() begin");
-
-  assert(_device != NULL);
-
-  // a reference to the device
-  Device& device = *_device;
-
-  InputParser parser(_inputfile);
-
-  // global variables
-  string plotvars;
-  string outputdir;
-  string output_format;
-  string binaryout;
-  {
-    ModelOptions opts;
-    parser.get_simulation_options(opts);
-    plotvars = opts["plot"];
-    if (plotvars.size() > 0)
-      Messages::warning("The specification of plot variables in the"
-          "$Simulation section is deprecated. Put them into the model options");
-
-
-    // gloabl options for output
-    outputdir = opts.get_option("resultpath", ".");
-    output_format = opts.get_option("output_format", "vtk");
-    binaryout = opts.get_option("binary_output", "true");
-  }
-
-  typedef multimap<const string, ModelStructure*> ModelsMap;
-  typedef map<string, ModelOptions> OptionsMap;
-
-  // parse the models section
-  const ModelsMap& models = parser.read_models();
-
-  // get the blocks of the Physics section
-  OptionsMap physics_opts;
-  parser.get_physics_options_map(physics_opts);
-
-  // get the blocks of the Solver section
-  OptionsMap solver_opts;
-  parser.get_solver_options_map(solver_opts);
-
-
-  // we loop over all simulations to setup the models
-  ModelsMap::const_iterator modit(models.begin());
-  const ModelsMap::const_iterator modend(models.end());
-
-  for ( ; modit != modend; ++modit)
-  {
-    ModelStructure* model_str = modit->second;
-
-    ModelOptions simopts;
-    simopts.set_option("plot", plotvars);
-    simopts.set_option("resultpath", outputdir);
-    simopts.set_option("output_format", output_format);
-    simopts.set_option("binary_output", binaryout);
-    simopts += model_str->get_model_options();
-    const string& modelname = model_str->get_model_name();
-
-    //
-    // extract the physical regions
-    //
-
-    IDSet phys_regions;
-    string physreg = simopts.get_option("physical_regions", "all");
-    if (physreg != "all")
-      Messages::warning("physical_regions keyword is deprecated.");
-    physreg = simopts.get_option("region", physreg);
-    physreg = simopts.get_option("regions", physreg);
-    extract_physical_regions(physreg, phys_regions);
-
-    // get the user defined name (if defined...)
-    string simulation_name = simopts.get_option("simulation_name", "");
-    simulation_name = simopts.get_option("name", simulation_name);
-
-    // some cleanup
-    if (!simulation_name.empty())
-      simopts["name"] = simulation_name;
-    simopts.delete_option("simulation_name");
-    simopts.delete_option("physical_regions");
-
-    Messages m;
-
-    //
-    // now create the simulation
-    //
-    m.newline();
-    m.info("Setting up simulation of type \'"
-        + modelname + "\' ...");
-    m.indent();
-
-    // read solver options for this simulation (from Solver section)
-    ModelOptions solveropts;
-
-    OptionsMap::iterator map_it(solver_opts.find(modelname));
-    if (map_it != solver_opts.end())
-      solveropts += map_it->second;
-
-    // read also section with user defined name as label
-    if (!simulation_name.empty())
-    {
-      map_it = solver_opts.find(simulation_name);
-      if ((simulation_name != modelname) && (map_it != solver_opts.end()))
-        solveropts += map_it->second;
-    }
-
-    // the main physical model -> PhysicalModel
-    // we need this below
-    ModelOptions physopts(simopts);
-
-
-    // we put the parameters in the $Solver section as submodel parameters
-    // so we can hand them over in a cleaner way
-    simopts.add_submodel("$Solver", solveropts);
-    // for compatibility we add also the solver options
-    simopts += solveropts;
-
-
-    SimulationInterface* sim =
-      SimulationInterface::create(modelname, simopts);
-    if (sim == NULL)
-      throw ModelErrorException(
-          "Unknown simulation type: " + modelname);
-
-
-
-    // create the environment
-    SimulationEnvironment* env =
-      new SimulationEnvironment(device, phys_regions);
+    env = new SimulationEnvironment(*device, phys_regions);
     // hands the control over the environment over to SimulationInterface
     sim->set_environment(env);
+  }
 
-    sim->verbose() = SimulationOptions::verbose();
-
-    // this map contains all sub- and boundary models
-    multimap<const string, ModelOptions>& physmodels =
-      model_str->get_physical_model_map();
+  sim->verbose() = SimulationOptions::verbose();
 
 
-    // physical models can have a type identifier. In some cases
-    // it is useful to specify several types in the same block.
-    // We treat this case here by splitting up the corresponding
-    // models
-    multimap<const string, ModelOptions>::iterator mapit(physmodels.begin());
-    const multimap<const string, ModelOptions>::iterator mapend(physmodels.end());
-    while (mapit != mapend)
+  // the physical models
+  ModelOptions physopts;
+
+  // put them all together, if someone makes more than one Physics block ...
+  {
+    ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
+    const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
+    for ( ; it != end; ++it)
+      physopts += it->second;
+  }
+
+
+  //
+  // and now... the boundary conditions
+  //
+
+  // we accept the following keywords for boundaries:
+  //   Contact, Boundary, Interface
+  vector<string> keys(3);
+  keys[0] = "Contact";
+  keys[1] = "Boundary";
+  keys[2] = "Interface";
+
+  for (size_t i = 0; i < keys.size(); ++i)
+  {
+    ModelOptions::submodel_iterator it = physopts.submodels_begin(keys[i]);
+    const ModelOptions::submodel_iterator end = physopts.submodels_end(keys[i]);
+    for ( ; it != end; ++it)
+      create_boundary(sim, it->second);
+
+    // we remove them, so in the following we have only models
+    physopts.delete_submodels(keys[i]);
+  }
+
+
+
+  //
+  // Next, we create all lower dimensional submodels
+  //
+  // NOTE: only definitions with correct space dimensions will be
+  //       added to the different PhysicalObject instances
+
+  {
+
+    ModelOptions::submodel_iterator it = physopts.submodels_begin();
+    const ModelOptions::submodel_iterator end = physopts.submodels_end();
+    while (it != end)
     {
-      multimap<const string, ModelOptions>::iterator curr(mapit);
-      ++mapit;
+      ModelOptions::submodel_iterator tmpit(it);
+      ++it;
 
-      ModelOptions& opts = curr->second;
-      vector<string> type;
-      opts.get_option("type", type);
+      const ModelOptions& bdopts = tmpit->second;
 
-      if (type.size() > 0)
+      string physreg = bdopts.get_option("regions", "all");
+
+      // if "all", it cannot be a lower dimensional region
+      if (physreg == "all")
+        continue;
+
+      bool add = false;
+
+      // It might be some lower dim model
+
+      vector<string> ids_strings;
+      Utils::extract_vector(physreg, ids_strings);
+
+      for (unsigned int i = 0; i < ids_strings.size(); i++)
       {
-        opts.set_option("type", type[0]);
+        vector<ID> region_ids;
+        device->get_boundary_region_ids(ids_strings[i], region_ids);
 
-        for (size_t i = 1; i < type.size(); ++i)
+        // if it is no boundary region, we continue to the next region name
+        if (region_ids.size() == 0)
         {
-          ModelOptions newopts(opts);
-          newopts.set_option("type", type[i]);
-          physmodels.insert(make_pair(curr->first, newopts));
-        }
-      }
-    }
-
-
-    //
-    // and now... the boundary conditions
-    //
-
-
-    m.newline();
-    m.info("Setup of lower dimensional (boundary) models... ");
-    m.indent();
-
-    {
-      // TODO adapt to new input file syntax
-      map<ID, RegionStructure>& bc_map = model_str->get_model_BC_map();
-      map<ID, RegionStructure>::iterator bdit(bc_map.begin());
-      const map<ID, RegionStructure>::iterator bdend(bc_map.end());
-
-      for ( ; bdit != bdend; ++bdit)
-      {
-        //ID id = bdit->first;
-        const RegionStructure& data = bdit->second;
-
-        // first get region names
-        vector<string> ids_strings;
-        Utils::extract_vector(data.get_region_ID(), ids_strings);
-
-        // for the numeric IDs
-        vector<ID> ids;
-
-        unsigned int n_ids = ids_strings.size();
-        // if no numbers are specified we try to get them from the region name
-        if (n_ids == 0)
-          _device->get_boundary_region_ids(data.get_region_name(), ids);
-        else
-        {
-          vector<ID> tmp_id;
-          for (unsigned int i = 0; i < n_ids; i++)
-          {
-            // either it is a name or a number
-            // try first name
-            _device->get_boundary_region_ids(ids_strings[i], tmp_id);
-            if (tmp_id.size() == 0)
-            {
-              ostringstream s;
-              s << "Physical region \'" << ids_strings[i]
-                << "\' (in boundary  \'" << data.get_region_name()
-                << "\') does not exist in mesh.";
-              throw InitFailedException(s.str());
-            }
-            ids.insert(ids.end(), tmp_id.begin(), tmp_id.end());
-          }
+          // it could be the name of the Boundary object
+          Boundary* bnd = env->get_boundary(ids_strings[i]);
+          if (bnd != NULL)
+            bnd->get_region_ids(region_ids);
         }
 
-        if (ids.size() == 0)
+        if (region_ids.size() == 0)
+          continue;
+
+        // now it must be a lower dim model
+        add = true;
+
+        // NOTE: the model will only be added if a corresponding boundary ID
+        // has been found
+        for (unsigned int reg = 0; reg < region_ids.size(); reg++)
         {
-          ostringstream s;
-          s << "Boundary region \'" << data.get_region_name() <<
-          "\' is not consistent with mesh.";
-          throw InitFailedException(s.str());
-        }
-
-        {
-          ostringstream os;
-          os << "Adding boundary \'" << data.get_region_name() << "\'";
-          Messages::info(os.str());
-        }
-
-        ModelOptions bdopts(data.get_options());
-
-        if (!bdopts.find_option("name"))
-          bdopts.set_option("name", data.get_region_name());
-
-        string boundary_name = bdopts.get_option("name", "");
-
-
-        Boundary* bnd = env->get_boundary(boundary_name);
-        if (bnd == NULL)
-        {
-          bnd = new Boundary(boundary_name, bdopts);
-          bnd->set_region_ids(ids);
-          env->add_boundary(bnd);
-
-          //
-          // this is the old way -->
-
-          BoundaryProperties* bdprop = sim->new_boundary_model(bdopts);
-
-          // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
-          // every simulation necessarily needs a boundary model?
-          if (bdprop != NULL)
-            bnd->add_boundary_properties(bdprop, sim->get_id());
-
-          // <-- end of old way
-          //
-        }
-
-
-        for (unsigned int i = 0; i < ids.size(); i++)
-        {
-
-          bool found = false;
+          ID id = region_ids[reg];
 
           MaterialBoundary* bd;
-          if ((bd = device.get_boundary_object(ids[i])) != NULL)
+          if ((bd = device->get_boundary_object(id)) != NULL)
           {
             PhysicalModel* pm = bd->get_model(sim->get_id());
-            if (pm != NULL)
+            if (pm == NULL)
             {
-              ostringstream os;
-              os << "Trying to add already existing boundary \'"
-                << boundary_name << "\' for module "
-                << sim->get_name();
-               throw InitFailedException(os.str());
+              // create the default model on the fly
+              Material* matA = bd->get_material_A();
+              Material* matB = bd->get_material_B();
+              pm = sim->new_boundary_model(ModelOptions(), matA, matB);
+              bd->add_model(pm, sim->get_id());
             }
 
-            Material* matA = bd->get_material_A();
-            Material* matB = bd->get_material_B();
-            pm = sim->new_boundary_model(bdopts, matA, matB);
-            bd->add_model(pm, sim->get_id());
-            bnd->add_model(ids[i], pm);
-            found = true;
+            // now it's there
+            pm->get_options().add_submodel(tmpit->first, bdopts);
           }
 
           EdgeObject* eo;
-          if ((eo = device.get_edge_object(ids[i])) != NULL)
+          if ((eo = device->get_edge_object(id)) != NULL)
           {
             PhysicalModel* pm = eo->get_model(sim->get_id());
-            if (pm != NULL)
+            if (pm == NULL)
             {
-              ostringstream os;
-              os << "Trying to add already existing boundary \'"
-                << boundary_name << "\' for module "
-                << sim->get_name();
-               throw InitFailedException(os.str());
+              // create the default model on the fly
+              pm = sim->new_edge_model(ModelOptions());
+              eo->add_model(pm, sim->get_id());
             }
 
-            pm = sim->new_edge_model(bdopts);
-            eo->add_model(pm, sim->get_id());
-            bnd->add_model(ids[i], pm);
-            found = true;
+            // now it's there
+            pm->get_options().add_submodel(tmpit->first, bdopts);
           }
 
           NodeObject* no;
-          if ((no = device.get_node_object(ids[i])) != NULL)
+          if ((no = device->get_node_object(id)) != NULL)
           {
             PhysicalModel* pm = no->get_model(sim->get_id());
-            if (pm != NULL)
+            if (pm == NULL)
             {
-              ostringstream os;
-              os << "Trying to add already existing boundary \'"
-                << boundary_name << "\' for module "
-                << sim->get_name();
-               throw InitFailedException(os.str());
+              // create the default model on the fly
+              pm = sim->new_node_model(ModelOptions());
+              no->add_model(pm, sim->get_id());
             }
 
-            pm = sim->new_node_model(bdopts);
-            no->add_model(pm, sim->get_id());
-            bnd->add_model(ids[i], pm);
-            found = true;
-          }
-
-          if (!found)
-          {
-            ostringstream os;
-            os << "Boundary \'" << data.get_region_name()
-              << "\' does not exist.";
-            throw InitFailedException(os.str());
-          }
-
-        }
-
-
-      }
-    }
-
-
-    //
-    // Next, we create all lower dimensional submodels
-    //
-    {
-
-      multimap<const string,
-        ModelOptions>::iterator mapit(physmodels.begin());
-      multimap<const string,
-        ModelOptions>::iterator mapend(physmodels.end());
-      while (mapit != mapend)
-      {
-        multimap<const string, ModelOptions>::iterator tmpit(mapit);
-        ++mapit;
-
-        const ModelOptions& bdopts = tmpit->second;
-
-        string physreg = bdopts.get_option("region", "all");
-        physreg = bdopts.get_option("regions", physreg);
-
-        // if "all", it cannot be a lower dimensional region
-        if (physreg == "all")
-          continue;
-
-        bool add = false;
-
-        // It might be some lower dim model
-
-        vector<string> ids_strings;
-        Utils::extract_vector(physreg, ids_strings);
-
-        // TODO the following is not complete! It depends on input file
-        // details (there should be a generic interface section)
-        for (unsigned int i = 0; i < ids_strings.size(); i++)
-        {
-          vector<ID> region_ids;
-          device.get_boundary_region_ids(ids_strings[i], region_ids);
-
-          // if it is no boundary region, we continue to the next region name
-          if (region_ids.size() == 0)
-          {
-            // it could be the name of the Boundary object
-            Boundary* bnd = env->get_boundary(ids_strings[i]);
-            if (bnd != NULL)
-              bnd->get_region_ids(region_ids);
-          }
-
-          if (region_ids.size() == 0)
-            continue;
-
-          // now it must be a lower dim model
-          add = true;
-
-          // NOTE: the model will only be added if a corresponding boundary ID
-          // has been found
-          for (unsigned int reg = 0; reg < region_ids.size(); reg++)
-          {
-            ID id = region_ids[reg];
-
-            MaterialBoundary* bd;
-            if ((bd = device.get_boundary_object(id)) != NULL)
-            {
-              PhysicalModel* pm = bd->get_model(sim->get_id());
-              if (pm == NULL)
-              {
-                // create the default model on the fly
-                Material* matA = bd->get_material_A();
-                Material* matB = bd->get_material_B();
-                pm = sim->new_boundary_model(ModelOptions(), matA, matB);
-                bd->add_model(pm, sim->get_id());
-              }
-
-              // now it's there
-              pm->get_options().add_submodel(tmpit->first, bdopts);
-            }
-
-            EdgeObject* eo;
-            if ((eo = device.get_edge_object(id)) != NULL)
-            {
-              PhysicalModel* pm = eo->get_model(sim->get_id());
-              if (pm == NULL)
-              {
-                // create the default model on the fly
-                pm = sim->new_edge_model(ModelOptions());
-                eo->add_model(pm, sim->get_id());
-              }
-
-              // now it's there
-              pm->get_options().add_submodel(tmpit->first, bdopts);
-            }
-
-            NodeObject* no;
-            if ((no = device.get_node_object(id)) != NULL)
-            {
-              PhysicalModel* pm = no->get_model(sim->get_id());
-              if (pm == NULL)
-              {
-                // create the default model on the fly
-                pm = sim->new_node_model(ModelOptions());
-                no->add_model(pm, sim->get_id());
-              }
-
-              // now it's there
-              pm->get_options().add_submodel(tmpit->first, bdopts);
-            }
+            // now it's there
+            pm->get_options().add_submodel(tmpit->first, bdopts);
           }
         }
-
-        // remove it from the map
-        if (add)
-          physmodels.erase(tmpit);
       }
+
+      // remove it from the map
+      // NOTE: this means, we cannot specify the same model for bulk
+      //       boundaries in a single block
+      // TODO: maybe this can be relaxed?
+      if (add)
+        physopts.delete_submodel(tmpit);
     }
-    m.unindent();
+  }
+  m.unindent();
 
 
-    //
-    // now we have to create the bulk models
-    //
-    m.newline();
-    m.info("Creating bulk models... ");
-    m.indent();
+  //
+  // now we have to create the bulk models
+  //
+  m.newline();
+  m.info("Creating bulk models... ");
+  m.indent();
 
-    // TODO only for backwards compatibility
-    map_it = physics_opts.find(modelname);
-    if (map_it != physics_opts.end())
+  // we have to do this for each material!
+  IDSet::iterator reg_it(phys_regions.begin());
+  const IDSet::iterator reg_end(phys_regions.end());
+  for ( ; reg_it != reg_end; ++reg_it)
+  {
+    ID reg_id = *reg_it;
+    Material* mat = device->get_material(reg_id);
+
+    if (mat == NULL)
     {
-      physopts += map_it->second;
-      Messages::warning("The $Physics section is deprecated. \nOptions should be put"
-          " into the \'options\' block of the model instead.");
-    }
-
-    // read also section with user defined name as label
-    map_it = physics_opts.find(simulation_name);
-    if (!simulation_name.empty() && (simulation_name != modelname) &&
-        (map_it != physics_opts.end()))
-    {
-      physopts += map_it->second;
-      Messages::warning("The $Physics section is deprecated. Options should be put"
-          " into the \'options\' block of the model instead.");
-    }
-
-
-    // we have to do this for each material!
-    IDSet::iterator it(phys_regions.begin());
-    const IDSet::iterator end(phys_regions.end());
-    for ( ; it != end; ++it)
-    {
-      ID reg_id = *it;
-      Material* mat = device.get_material(reg_id);
-
-      if (mat == NULL)
-      {
-        ostringstream s;
-        s << "Physical region " << reg_id <<
+      ostringstream s;
+      s << "Physical region " << reg_id <<
           " has no material associated!";
-        Messages::warning(s.str());
-        continue;
-        //throw InitFailedException(s.str());
-      }
+      Messages::warning(s.str());
+      continue;
+      //throw InitFailedException(s.str());
+    }
 
-      // TODO this is incomplete. The input file should contain a block
-      // describing the basic model
+    // we only continue if the model has not already been added
+    // this is important as a material can be assigned to different
+    // regions
+    // TODO (Is this true ??)
+    if (mat->get_model(sim->get_id()) == NULL)
+    {
 
-      // we only continue if the model has not already been added
-      // this is important as a material can be assigned to different
-      // regions
-      // TODO (Is this true ??)
-      if (mat->get_model(sim->get_id()) == NULL)
+      // the crystal structure
+      string crystal_structure(mat->get_structure());
+
+      // that's not elegant, but it works
+      ModelOptions opts(physopts);
+      opts.delete_all_submodels();
+
+      // we add the crystal structure for bulk materials as this could
+      // lead to different model implementations
+      opts["crystal_structure"] = crystal_structure;
+
+      //
+      // we parse the submodels for each region as they could be associated
+      // one-by-one
+      // NOTE: different submodels could have the same identifier
+      //
       {
-
-        // the crystal structure
-        string crystal_structure(mat->get_structure());
-
-        ModelOptions opts(physopts);
-        // we add the crystal structure for bulk materials as this could
-        // lead to different model implementations
-        opts["crystal_structure"] = crystal_structure;
-
-        //
-        // we parse the submodels for each region as they could be associated
-        // one-by-one
-        // NOTE: different submodels could have the same identifier
-        //
+        ModelOptions::submodel_iterator it = physopts.submodels_begin();
+        const ModelOptions::submodel_iterator end = physopts.submodels_end();
+        for ( ; it != end; ++it)
         {
-          multimap<const string,
-            ModelOptions>::iterator mapit(physmodels.begin());
-          multimap<const string,
-            ModelOptions>::iterator mapend(physmodels.end());
-          for ( ; mapit != mapend; ++mapit)
+          bool add = true;
+
+          ModelOptions modopts(it->second);
+
+          // we have to check if it should be built for the current region
+          // TODO to not allow for errors
+
+          bool has_region_option = modopts.find_option("region") ||
+              modopts.find_option("regions");
+          if (has_region_option)
           {
-            bool add = true;
-
-            // we have to check if it should be built for the current region
-            // TODO to not allow for errors
-            if ((mapit->second).find_option("restrict_to_region"))
-              throw RuntimeException("\'restrict_to_region\' is deprecated. Use \'region\'");
-
-            bool has_region_option = (mapit->second).find_option("region") ||
-                (mapit->second).find_option("regions");
-            if (has_region_option)
-            {
-              IDSet regs;
-              string physreg = (mapit->second).get_option("region", "all");
-              physreg = (mapit->second).get_option("regions", physreg);
-              extract_physical_regions(physreg, regs);
-              if (regs.count(reg_id) == 0) add = false;
-            }
+            IDSet regs;
+            string physreg = modopts.get_option("regions", "all");
+            device->extract_physical_regions(physreg, regs);
+            if (regs.count(reg_id) == 0) add = false;
+          }
 
 
-            if (add)
-            {
-              // we add the crystal structure for bulk materials as this could
-              // lead to different model implementations
-              (mapit->second).set_option("crystal_structure", crystal_structure);
+          if (add)
+          {
+            // we add the crystal structure for bulk materials as this could
+            // lead to different model implementations
+            modopts.set_option("crystal_structure", crystal_structure);
 
-              // we set the name to the model type if not explicitly
-              // given by user
-              if (!(mapit->second).find_option("name"))
-                (mapit->second)["name"] = mapit->first;
-              opts.add_submodel(mapit->first, mapit->second);
-            }
+            // we set the name to the model type if not explicitly
+            // given by user
+            //if (!(mapit->second).find_option("name"))
+            //  (mapit->second)["name"] = mapit->first;
+            opts.add_submodel(it->first, modopts);
           }
         }
-
-
-        // here we actually create the model
-        PhysicalModel* model = sim->new_bulk_model(opts, mat);
-
-        // NOTE: model could be NULL, but we don't care about. Who tells us that
-        // every simulation necessarily needs a model?
-        mat->add_model(model, sim->get_id());
       }
-    }
-    m.unindent();
 
 
+      // here we actually create the model
+      PhysicalModel* model = sim->new_bulk_model(opts, mat);
 
-
-    // prepare some of the environments internals (lists of elements etc.)
-    env->prepare();
-
-    // setup the solution variables
-    sim->setup_solution_variables();
-
-  } // end loop over simulations
-
-  //
-  // check for some special simulations (sweep, selfconsistency)
-  //
-
-  // first selfconsistency
-  OptionsMap::iterator map_it(solver_opts.find("Selfconsistent"));
-  if (map_it != solver_opts.end())
-  {
-    const ModelOptions& sc_opts = map_it->second;
-
-    ModelOptions::const_submodel_iterator sc_it(sc_opts.submodels_begin());
-    const ModelOptions::const_submodel_iterator sc_end(sc_opts.submodels_end());
-
-    for ( ; sc_it != sc_end; ++sc_it)
-    {
-      ModelOptions solveropts;
-      solveropts.set_option("resultpath", outputdir);
-      solveropts.set_option("output_format", output_format);
-      solveropts.set_option("binary_output", binaryout);
-      solveropts += sc_it->second;
-
-      if (!sc_it->second.is_empty())
-      {
-        Messages m;
-        m.newline();
-        m.info("Setting up a selfconsistent simulation ("
-            + sc_it->first + ") ...");
-        m.indent();
-
-        SimulationInterface* sim =
-          SimulationInterface::create("selfconsistent", solveropts);
-
-        if (sim == NULL)
-          throw ModelErrorException("Could not create Selfconsistent simulation");
-
-        sim->verbose() = 0;
-        sim->set_name(sc_it->first);
-        m.unindent();
-      }
+      // NOTE: model could be NULL, but we don't care about. Who tells us that
+      // every simulation necessarily needs a model?
+      mat->add_model(model, sim->get_id());
     }
   }
-
-  map_it = solver_opts.find("selfconsistent");
-  if (map_it != solver_opts.end())
-  {
-    ModelOptions solveropts;
-    solveropts.set_option("resultpath", outputdir);
-    solveropts.set_option("output_format", output_format);
-    solveropts.set_option("binary_output", binaryout);
-    solveropts += map_it->second;
-
-    Messages::warning("The definition of a selfconsistent simulation outside of a \'Selfconsistent\' "
-        "block is deprecated.");
-
-    Messages m;
-    m.newline();
-    m.info("Setting up a selfconsistent simulation ("
-        + map_it->first + ") ...");
-    m.indent();
-
-    SimulationInterface* sim =
-      SimulationInterface::create("selfconsistent", solveropts);
-
-    if (sim == NULL)
-    {
-      string msg("No such simulation type: selfconsistent (flavour: ");
-      msg += solveropts.get_option("flavour", "");
-      throw ModelErrorException(msg);
-    }
-    //sim->verbose() = SimulationOptions::verbose();
-    sim->verbose() = 0;
-
-    m.unindent();
-  }
+  m.unindent();
 
 
 
-  // then the sweeps
 
-  {
-    OptionsMap::iterator map_it(solver_opts.find("Sweep"));
-    if (map_it != solver_opts.end())
-    {
-      ModelOptions& sw_opts = map_it->second;
+  // prepare some of the environments internals (lists of elements etc.)
+  if (env != NULL) env->prepare();
 
-      ModelOptions::const_submodel_iterator sw_it(sw_opts.submodels_begin());
-      const ModelOptions::const_submodel_iterator sw_end(sw_opts.submodels_end());
-
-
-      for ( ; sw_it != sw_end; ++sw_it)
-      {
-        ModelOptions solveropts;
-        solveropts.set_option("resultpath", outputdir);
-        solveropts.set_option("output_format", output_format);
-        solveropts.set_option("binary_output", binaryout);
-        solveropts += sw_it->second;
-
-        if (!sw_it->second.is_empty())
-        {
-          Messages m;
-          m.newline();
-          m.info("Setting up a parameter sweep ("
-              + sw_it->first + ") ...");
-          m.indent();
-
-          SimulationInterface* sim =
-            SimulationInterface::create("sweep", solveropts);
-
-          if (sim == NULL)
-            throw ModelErrorException("Could not create sweep simulation");
-
-          sim->verbose() = 0;
-          sim->set_name(sw_it->first);
-          m.unindent();
-        }
-      }
-    }
-
-    // we look for other definitions to
-    // be compatible with older TiberCAD version
-    bool warning = false;
-
-    // the following is allowed for ease of use
-    map_it = solver_opts.find("sweep");
-    if (map_it != solver_opts.end())
-    {
-      Messages m;
-      m.newline();
-      m.info("Setting up a parameter sweep ("
-          + map_it->first + ") ...");
-      m.indent();
-
-      ModelOptions sweepopts;
-      sweepopts.set_option("resultpath", outputdir);
-      sweepopts.set_option("output_format", output_format);
-      sweepopts.set_option("binary_output", binaryout);
-      sweepopts += map_it->second;
-
-      if (!sweepopts.find_option("name"))
-        sweepopts["name"] = "sweep";
-      SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-      //sim->verbose() = SimulationOptions::verbose();
-      sim->verbose() = 0;
-      m.unindent();
-    }
-
-    map_it = solver_opts.find("sweep_1");
-    if (map_it != solver_opts.end())
-    {
-      Messages m;
-      m.newline();
-      m.info("Setting up a parameter sweep ("
-          + map_it->first + ") ...");
-      m.indent();
-
-      ModelOptions sweepopts;
-      sweepopts.set_option("resultpath", outputdir);
-      sweepopts.set_option("output_format", output_format);
-      sweepopts.set_option("binary_output", binaryout);
-      sweepopts += map_it->second;
-
-      warning = true;
-      if (!sweepopts.find_option("name"))
-        sweepopts["name"] = "sweep_1";
-      SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-      //sim->verbose() = SimulationOptions::verbose();
-      sim->verbose() = 0;
-      m.unindent();
-    }
-
-    map_it = solver_opts.find("sweep_2");
-    if (map_it != solver_opts.end())
-    {
-      Messages m;
-      m.newline();
-      m.info("Setting up a parameter sweep ("
-          + map_it->first + ") ...");
-      m.indent();
-
-      ModelOptions sweepopts;
-      sweepopts.set_option("resultpath", outputdir);
-      sweepopts.set_option("output_format", output_format);
-      sweepopts.set_option("binary_output", binaryout);
-      sweepopts += map_it->second;
-
-      warning = true;
-      if (!sweepopts.find_option("name"))
-        sweepopts["name"] = "sweep_2";
-      SimulationInterface* sim = SimulationInterface::create("sweep", sweepopts);
-      //sim->verbose() = SimulationOptions::verbose();
-      sim->verbose() = 0;
-      m.unindent();
-    }
-
-    if (warning)
-    {
-      Messages::warning("The definition of sweeps outside of a \'Sweep\' "
-          "block is deprecated.");
-    }
-  }
-
-  Messages::debug("Control::setup_models() end");
+  // setup the solution variables
+  sim->setup_solution_variables();
 }
+
 
 
 
 
 void
-Control::extract_physical_regions(const std::string& str, IDSet& ids)
+Control::create_boundary(SimulationInterface* sim, const ModelOptions& opts)
 {
-  ids.clear();
+  if (sim->is_task()) return;
 
-  // the IDs that have to be excluded ("-pippo" syntax)
-  IDSet exclude;
+  SimulationEnvironment* env = &(sim->get_environment());
 
-  // we have to get it as vector (for the moment at least)
-  vector<string> preg;
-  Utils::extract_vector(str, preg);
+  if (env == NULL) return;
 
-  set<ID> preg_ids;
+  Device& device = env->get_device();
 
-  unsigned int n = preg.size();
-  for (unsigned int i = 0; i < n; i++)
+  // first get region names
+  string id_str = opts.get_option("regions", "");
+  vector<string> ids_strings;
+  Utils::extract_vector(id_str, ids_strings);
+
+  string boundary_name = opts.get_name();
+
+  // for the numeric IDs
+  vector<ID> ids;
+
+  unsigned int n_ids = ids_strings.size();
+  // if no numbers are specified we try to get them from the region name
+  if (n_ids == 0)
+    device.get_boundary_region_ids(boundary_name, ids);
+  else
   {
-    if (preg[i].at(0) == '-')
-      _device->get_active_region_ids(preg[i].substr(1), preg_ids);
-    else
-      _device->get_active_region_ids(preg[i], preg_ids);
-
-    if (preg_ids.size() == 0)
+    vector<ID> tmp_id;
+    for (unsigned int i = 0; i < n_ids; i++)
     {
-      ostringstream s;
-      s << "Physical region " << preg[i] <<
-      " does not exist in mesh file.";
-      throw InitFailedException(s.str());
+      // either it is a name or a number
+      // try first name
+      device.get_boundary_region_ids(ids_strings[i], tmp_id);
+      if (tmp_id.size() == 0)
+      {
+        ostringstream s;
+        s << "Physical region \'" << ids_strings[i]
+          << "\' (in boundary  \'" << boundary_name
+          << "\') does not exist in mesh.";
+        throw InitFailedException(s.str());
+      }
+      ids.insert(ids.end(), tmp_id.begin(), tmp_id.end());
     }
-
-    if (preg[i].at(0) == '-')
-      exclude.insert(preg_ids.begin(), preg_ids.end());
-    else
-      ids.insert(preg_ids.begin(), preg_ids.end());
   }
 
-  if (ids.empty() && !exclude.empty())
-    ids = _device->get_active_region_ids();
+  if (ids.size() == 0)
+  {
+    ostringstream s;
+    s << "Boundary region \'" << boundary_name <<
+        "\' is not consistent with mesh.";
+    throw InitFailedException(s.str());
+  }
 
-  for (IDSet::iterator it(exclude.begin()); it != exclude.end(); ++it)
-    ids.erase(*it);
+  {
+    ostringstream os;
+    os << "Adding boundary \'" << boundary_name << "\'";
+    Messages::info(os.str());
+  }
+
+
+  Boundary* bnd = env->get_boundary(boundary_name);
+  if (bnd == NULL)
+  {
+    bnd = new Boundary(boundary_name, opts);
+    bnd->set_region_ids(ids);
+    env->add_boundary(bnd);
+
+    //
+    // this is the old way -->
+
+    BoundaryProperties* bdprop = sim->new_boundary_model(opts);
+
+    // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
+    // every simulation necessarily needs a boundary model?
+    if (bdprop != NULL)
+      bnd->add_boundary_properties(bdprop, sim->get_id());
+
+    // <-- end of old way
+    //
+  }
+
+
+  for (unsigned int i = 0; i < ids.size(); i++)
+  {
+
+    bool found = false;
+
+    MaterialBoundary* bd;
+    if ((bd = device.get_boundary_object(ids[i])) != NULL)
+    {
+      PhysicalModel* pm = bd->get_model(sim->get_id());
+      if (pm != NULL)
+      {
+        ostringstream os;
+        os << "Trying to add already existing boundary \'"
+            << boundary_name << "\' for module "
+            << sim->get_name();
+        throw InitFailedException(os.str());
+      }
+
+      Material* matA = bd->get_material_A();
+      Material* matB = bd->get_material_B();
+      pm = sim->new_boundary_model(opts, matA, matB);
+      bd->add_model(pm, sim->get_id());
+      bnd->add_model(ids[i], pm);
+      found = true;
+    }
+
+    EdgeObject* eo;
+    if ((eo = device.get_edge_object(ids[i])) != NULL)
+    {
+      PhysicalModel* pm = eo->get_model(sim->get_id());
+      if (pm != NULL)
+      {
+        ostringstream os;
+        os << "Trying to add already existing boundary \'"
+            << boundary_name << "\' for module "
+            << sim->get_name();
+        throw InitFailedException(os.str());
+      }
+
+      pm = sim->new_edge_model(opts);
+      eo->add_model(pm, sim->get_id());
+      bnd->add_model(ids[i], pm);
+      found = true;
+    }
+
+    NodeObject* no;
+    if ((no = device.get_node_object(ids[i])) != NULL)
+    {
+      PhysicalModel* pm = no->get_model(sim->get_id());
+      if (pm != NULL)
+      {
+        ostringstream os;
+        os << "Trying to add already existing boundary \'"
+            << boundary_name << "\' for module "
+            << sim->get_name();
+        throw InitFailedException(os.str());
+      }
+
+      pm = sim->new_node_model(opts);
+      no->add_model(pm, sim->get_id());
+      bnd->add_model(ids[i], pm);
+      found = true;
+    }
+
+    if (!found)
+    {
+      ostringstream os;
+      os << "Boundary \'" << boundary_name
+                  << "\' does not exist.";
+      throw InitFailedException(os.str());
+    }
+
+  }
+
 }
+
+
+
+
 
 
 

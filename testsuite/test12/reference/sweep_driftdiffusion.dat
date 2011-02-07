@@ -9,7 +9,7 @@
 # cathode.current          A/cm^2         real
 # --------------------------------------------------
 #
-# Vb anode.current cathode.current 
+# $Vb anode.current cathode.current 
 0 -7.80259e-24 2.28064e-25
 0.1 -6.09659 6.09659
 0.2 -10.4851 10.4851

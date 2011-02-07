@@ -1,131 +1,95 @@
 
 # Description of  the  device physical regions
-$Device
+Device
 {
-   Options
-   {
-     meshfile = bulk.msh
-   }
+  meshfile = bulk.msh
+  material = Si
 
 
-   Region bulk 
-   {
-     mat = Si
-   }
+   Region bulk { }
 
    Region ndop 
    {
-     mat = Si
-     doping = 1e19 doping_type = donor
+     Doping { Nd = 1e19 type = donor }
    }
 
 
 }
 
 
-# Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
+Module driftdiffusion
 { 
-
-  model driftdiffusion
-  { 
               
-    options
-    {
-     simulation_name = driftdiffusion
-     plot = (Ec, Ev, eQFermi, hQFermi, IonizedElectronTraps, IonizedHoleTraps, NetRecombination, eMobility, ContactCurrents)
+  name = driftdiffusion
+  plot = (Ec, Ev, eQFermi, hQFermi, NetRecombination, ContactCurrents, IonizedElectronTraps, IonizedHoleTraps)
 
-    }
+  Solver
+  {
+    nonlinear_solver = linesearch
+    #linear_solver = pardiso
+    #ksp_type = bcgsl
+    #pc_type = lu
+    max_iterations = 20
+    step_tolerance = 1e-4
+    #max_step = 20
+  }
 
-    physical_model particle_density
+
+  Physics
+  {
+
+    particle_density
     { 
       statistics = boltzmann
     }
 
 
-    physical_model recombination
-    {
-      type = srh
-    }
+    recombination srh {}
 
-
-    physical_model trap
+    trap acceptor
     {
-      type = acceptor
       Nt = 1e16
       Et = 0.2
       reference = midgap
     }
 
-
-    physical_model trap
+    trap donor
     {
-      type = donor
       Nt = 2e16
       Et = 0.4
       reference = cb
     }
 
-
-    BC_Regions  
+    Contact anode
     {
-      BC_Region anode
-      {
-        type = ohmic
-        voltage = @Vb
-      }
+      type = ohmic
+      voltage = $Vb
+    }
 
-      BC_Region cathode
-      {
-        type = ohmic
-        voltage = 0.0
-      }
+    Contact cathode
+    {
+      type = ohmic
+      voltage = 0.0
+    }
  
-    }   
+  }   
 
-  }  
-
-}
+}  
 
 
-# Definition of  Model-dependent Solver parameters
-$Solver
+
+Module sweep
 {
-  driftdiffusion
-  {
-    nonlinear_solver = ls
-    #linear_solver = pardiso
-    #ksp_type = bcgsl
-    #pc_type = lu
-    nonlin_max_it = 20
-    nonlin_step_tol = 1e-4
-    #ls_max_step = 20
-  }
-
-
-  sweep
-  {
-    simulation = driftdiffusion
-    variable = Vb
-    start = 0.0
-    stop = 1
-    steps = 10
-  }
-
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 1
+  steps = 10
 }
 
 
 
-# Definition of  Model dependent physical parameters
-$Physics
-{
-}
-
-
-# Definition of  model-indipendent parameters of the Simulation
-
-
-$Simulation
+Simulation
 {
   temperature = 300
   solve = sweep

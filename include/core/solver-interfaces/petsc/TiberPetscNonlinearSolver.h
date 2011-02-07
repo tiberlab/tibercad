@@ -79,10 +79,20 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
 
 
     //! The KSP type
-    KSPType _ksp_type;
+    std::string _ksp_type;
 
     //! The PC type
-    PCType _pc_type;
+    std::string _pc_type;
+
+    //! The linear relative tolerance
+    double _linear_rtol;
+
+    //! The linear absolute tolerance
+    double _linear_atol;
+
+    //! The maximum number of linear iterations
+    int _linear_max_it;
+
 
     //! Nonlinear solver context
     SNES _snes;

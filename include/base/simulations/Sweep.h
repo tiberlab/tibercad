@@ -65,6 +65,10 @@ class TBDLLOCAL Sweep : public SimulationInterface
     virtual void do_plot(void);
 
 
+    //! Abused here for the inheritance of variables
+    virtual void do_print_info(void);
+
+
     /*! \copydoc SimulationInterface::do_remember_current_solution() */
     virtual ID do_remember_current_solution(ID id = 0);
 
@@ -162,6 +166,7 @@ Sweep::Sweep(const ModelOptions& options)
     _plot_data(false)
 {
   has_solution_vector(false);
+  is_task(true);
 }
 
 

@@ -65,6 +65,10 @@ void DDsemiconductor::create_submodels(void)
     throw InitFailedException(string("Cannot create bulk hamiltonian for ")
         + get_material()->get_name());
 
+  // dummy reads
+  bulk_ham->get_options().get_option("kp_model", "");
+  bulk_ham->get_options().get_option("model", "");
+
   add_submodel("bulk_ham", bulk_ham);
 }
 

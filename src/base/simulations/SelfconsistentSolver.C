@@ -14,7 +14,7 @@ SelfconsistentSolver::do_init(void)
   
   // get the names of the simulations to be solved
   vector<string> sims;
-  opts.get_option("simulations", sims);
+  opts.get_option("solve", sims);
   int num_of_sims = sims.size();
 
   if (num_of_sims == 0)

@@ -448,8 +448,6 @@ void EnvelopFunctionApprox::parse_options()
   opt.eigen_number_increase_factor = mod_opt.get_option("eigen_number_increase_factor",1.2);
 
 
-  opt.spectrum_shift          = mod_opt.get_option("spectrum_shift", 0.0);
-
 
   opt.relative_density_tolerance =  mod_opt.get_option("relative_density_tolerance", 1e-2);
 

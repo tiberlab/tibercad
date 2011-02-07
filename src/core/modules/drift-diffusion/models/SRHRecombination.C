@@ -170,6 +170,7 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   double tau_p = _tau_p;
   if (_trap)
   {
+    if (_density == 0.0) _density = 1e-32;
     tau_n = 1.0 / (_density * _sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
     tau_p = 1.0 / (_density * _sigma_p * dd.get_valence_band().get_thermal_velocity(T));
   }
@@ -207,6 +208,7 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   double tau_p = _tau_p;
   if (_trap)
   {
+    if (_density == 0.0) _density = 1e-32;
     tau_n = 1.0 / (_density * _sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
     tau_p = 1.0 / (_density * _sigma_p * dd.get_valence_band().get_thermal_velocity(T));
   }

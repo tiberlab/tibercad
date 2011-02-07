@@ -1049,8 +1049,8 @@ DriftDiffusion::rebuild_equation_system(void)
   if (solveropts.get_option("lin_abs_tol", -1.0) < 0)
     solveropts["lin_abs_tol"] = "1e-15";
 
-  if (solveropts.get_option("nonlin_abs_tol", -1.0) < 0)
-    solveropts["nonlin_abs_tol"] = "1e-15";
+  if (solveropts.get_option("absolute_tolerance", -1.0) < 0)
+    solveropts["absolute_tolerance"] = "1e-15";
 
 
   // the coupled DD system

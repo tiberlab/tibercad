@@ -1,111 +1,100 @@
-# diode example
-
-$Device
+Device
 {
 
-  Options
-  {
-    meshfile = diode.msh
-    dimension = 1
-    material = Si
-  }
+  meshfile = diode.msh
+  dimension = 1
+  material = Si
 
    Region n_side 
    {
-     doping = 1e18 doping_type = donor
+     Doping
+     {
+       Nd = 1e18
+       type = donor
+     }
    }
 
    Region p_side 
    {
-     doping = 1e18 doping_type = acceptor
+     Doping
+     {
+       Nd = 1e18
+       type = acceptor
+     }
    }
 
 }
 
 
 # Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
+Module driftdiffusion
 { 
-  model driftdiffusion
-  { 
               
-    options
-    {
-     simulation_name = driftdiffusion
-     plot = (Ec, Ev, Eg, ElField, eQFermi, hQFermi, eDensity, hDensity, NetRecombination, eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents)
-    }
+   plot = (Ec, Ev, Eg, ElField, eQFermi, hQFermi, eDensity, hDensity, NetRecombination, eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents, eMobility, hMobility, IonizedDonors, IonizedAcceptors)
 
-    physical_model particle_density
-    { 
+  Solver linesearch
+  {
+    relative_tolerance = 1e-12
+    step_tolerance = 1e-6
+
+    linear_solver petsc
+    {
+      relative_tolerance = 1e-6
+      pc_type = lu
+    }
+  }
+
+  Physics
+  {
+    particle_density
+    {
       statistics = boltzmann
     }
 
+     recombination srh {}
 
-     physical_model recombination
+     mobility
      { 
-       model  =  srh
+       type  =  doping_dependent
      }
 
-     physical_model electron_mobility
+     hole_mobility
      { 
-       model  =  doping_dependent
-     }
-
-     physical_model hole_mobility
-     { 
-       model  =  doping_dependent
+       type  =  doping_dependent
      }
 
 
 
-    BC_Regions  
-    {
-      BC_Region anode
+      Contact anode
       {
         type = ohmic
-        voltage = @Vb[0.0]
+        voltage = $Vb[0.0]
       }
 
-      BC_Region cathode
+      Contact cathode
       {
         type = ohmic
         voltage = 0.0
       }
  
     }   
-  }  
-}
+}  
 
 
-# Definition of  Model-dependent Solver parameters
-$Solver
-
+Module sweep
 {
-  driftdiffusion
-  {
-    nonlin_rel_tol = 1e-12
-    nonlin_step_tol = 1e-6
-    #nonlin_max_it = 30
-    #ls_max_step = 1
-    #xmonitor = true
-  }
-
-  sweep
-  {
-    variable = Vb
+    variable = $Vb
     start = 0.0
     stop = 2.0
     steps = 40
     plot_data = true
-  }
 }
 
 
 
-# Definition of  model-indipendent parameters of the Simulation
 
 
-$Simulation
+Simulation
 {
   temperature = 300
   verbose = 3

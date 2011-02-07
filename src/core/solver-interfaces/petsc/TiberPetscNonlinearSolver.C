@@ -247,7 +247,6 @@ extern "C"
 
 
 
-
 TiberPetscNonlinearSolver::TiberPetscNonlinearSolver(sys_type& s)
   : TiberNonlinearSolver(s),
     _emergency_fnorm(1e-3),
@@ -255,8 +254,11 @@ TiberPetscNonlinearSolver::TiberPetscNonlinearSolver(sys_type& s)
     _ls_maxstep(1e5),
     _old_gnorm(1e96),
     _divergence_tol(2.0),
-    _ksp_type((char*) KSPBCGSL),
-    _pc_type((char*) PCILU)
+    _ksp_type(KSPBCGSL),
+    _pc_type(PCILU),
+    _linear_rtol(1e-6),
+    _linear_atol(1e-50),
+    _linear_max_it(500)
 {
 }
 
@@ -266,12 +268,20 @@ TiberPetscNonlinearSolver::parse_options(const ModelOptions& options)
 {
   _ls_type = TiberPetscUtils::extract_LSType(options);
 
-  _ksp_type = TiberPetscUtils::extract_KSPType(options);
-
-  _pc_type = TiberPetscUtils::extract_PCType(options);
-
   _ls_maxstep = options.get_option("max_step", _ls_maxstep);
-  _divergence_tol = options.get_option("divergence_tol", _divergence_tol);
+  _divergence_tol = options.get_option("divergence_tolerance", _divergence_tol);
+
+  ModelOptions::const_submodel_iterator it = options.submodels_begin("linear_solver");
+  if (it != options.submodels_end("linear_solver"))
+  {
+    const ModelOptions& linoptions = it->second;
+    _linear_rtol = linoptions.get_option("lin_rel_tol", 1e-6);
+    _linear_atol = linoptions.get_option("lin_abs_tol", 1e-50);
+    _linear_max_it = linoptions.get_option("lin_max_it", 500);
+
+    _ksp_type = TiberPetscUtils::extract_KSPType(linoptions);
+    _pc_type = TiberPetscUtils::extract_PCType(linoptions);
+  }
 }
 
 
@@ -380,7 +390,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
 
   // set solver options
   SNESSetTolerances(_snes, get_nonlinear_atol(), get_nonlinear_rtol(),
-      get_nonlinear_stol(), get_nonlinear_max_it(), get_linear_max_it());
+      get_nonlinear_stol(), get_nonlinear_max_it(), _linear_max_it);
 
 # if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) && \
     (PETSC_VERSION_SUBMINOR >= 2)) || (PETSC_VERSION_MAJOR >= 3)
@@ -424,11 +434,11 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   KSP ksp;
   SNESGetKSP(_snes, &ksp);
 
-  ierr = KSPSetType(ksp, _ksp_type);
+  ierr = KSPSetType(ksp, _ksp_type.c_str());
   TiberPetscUtils::checkerr(ierr);
 
-  KSPSetTolerances(ksp, get_linear_rtol(), get_linear_atol(), PETSC_DEFAULT,
-      get_linear_max_it());
+  KSPSetTolerances(ksp, _linear_rtol, _linear_atol, PETSC_DEFAULT,
+      _linear_max_it);
 
   PC pc;
   KSPGetPC(ksp, &pc);
@@ -439,10 +449,10 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
 
   // - the very first time, there's no preconditioner yet
   // - if we changed the preconditioner, then we create it from scratch
-  //if ((pc_type == NULL) || (strcmp(_pc_type, pc_type) != 0))
-  if (0)
+  if ((pc_type == NULL) || (_pc_type.compare(pc_type) != 0))
+  //if (0)
   {
-    ierr = PCSetType(pc, _pc_type);
+    ierr = PCSetType(pc, _pc_type.c_str());
     TiberPetscUtils::checkerr(ierr);
     PCGetType(pc, &pc_type);
 

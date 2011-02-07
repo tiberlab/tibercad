@@ -134,15 +134,15 @@ AtomisticStructure::init(const std::string& name,
  }
 
   // Build material representation
-  else if ( (_options.find_option("reference_region"))
-      && (! _options.find_option("physical_regions")) )
-  {
+  //else if ( (_options.find_option("reference_region"))
+  //    && (! _options.find_option("regions")) )
+  //{
 
-  }
+  //}
 
   // Build mesh based representation
   else if ( (_options.find_option("reference_region"))
-      && ( _options.find_option("physical_regions")) )
+      && ( _options.find_option("regions")) )
   {
     init_mesh_structure();
   }
@@ -150,8 +150,8 @@ AtomisticStructure::init(const std::string& name,
   else
   {
     //------------------------------------------------------------
-    os << "Error in Atomistic " << _name <<
-    "input block. Too few arguments defined." << std::endl;
+    os << "Error in Atomistic structure " << _name <<
+    "input block. You need to define reference_region and regions." << std::endl;
     Messages::info(os.str(), true);
     os.str(std::string());
     //---------------------------------------------------------------
@@ -174,6 +174,10 @@ AtomisticStructure::init(const std::string& filename)
 void
 AtomisticStructure::parse_regions(void)
 {
+  std::string physreg = _options.get_option("regions", "all");
+  _device->extract_physical_regions(physreg, _IDset);
+
+  /*
 
   //If no physical regions are specified, "all" is the default
   if ( (get_options().is_empty()) || (!get_options().find_option("physical_regions")) )
@@ -211,7 +215,7 @@ AtomisticStructure::parse_regions(void)
     get_device()->get_active_region_ids( (*i), tmp_ID);
     _IDset.insert(tmp_ID.begin(), tmp_ID.end());
   }
-
+  */
 }
 
 

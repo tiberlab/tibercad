@@ -67,6 +67,9 @@ DDInterfaceModel::create(const ModelOptions& options)
   DDInterfaceModel* model = NULL;
 
   string name("interface");
+  if (options.get_key() == "Contact")
+    name = "ohmic";
+
   name = options.get_option("type", name);
 
   if (name == "interface")

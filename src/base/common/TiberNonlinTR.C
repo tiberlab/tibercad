@@ -68,8 +68,6 @@ TiberNonlinTR::do_solve(void)
   // the norm of the search step
   double norm_du = 1e12;
 
-  // let the solver know the options
-  get_linear_solver()->set_options(get_options());
   double tol = get_linear_solver()->get_linear_rtol();
 
   // for testing

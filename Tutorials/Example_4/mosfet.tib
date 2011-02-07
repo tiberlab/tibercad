@@ -1,124 +1,53 @@
 
 # Description of  the  device physical regions
-$Device
+Device mosfet
 {
 
-  Options
+  meshfile = mosfet.msh
+  dimension = 2
+  
+  material = Si
+
+  Region substrate 
   {
-    meshfile = mosfet.msh
-    dimension = 2
+    Doping
+    {
+      Nd = 1e18
+      type = acceptor
+    }
+  }
+   
+  Region contact
+  {
+    Doping
+    {
+      Nd = 5e19
+      type = donor
+    }
   }
 
-   Region substrate 
-   {
-     material = Si
-     doping = 1e18 doping_type = acceptor
-   }
-   
-   Region contact
-   {
-     material = Si
-     doping = 5e19 doping_type = donor
-   }
-
-   Region oxide
-   {
-     material = SiO2
-  
-   }
+  Region oxide
+  {
+    material = SiO2
+  }
 
 }
 
 
 # Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
+Module driftdiffusion
 { 
-
-  model driftdiffusion
-  { 
               
-    options
-    {
-     simulation_name = driftdiffusion
+  # we can solve only for electrons
+  #coupling = electrons
 
+  plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+          hQFermi, hDensity, hCurrentDensity, hMobility,
+          NetRecombination, ElField, ElPotential, ContactCurrents)
 
-     # we only solve for electrons
-     #coupling = electrons
-
-     plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity,  eMobility, hQFermi, hDensity, hCurrentDensity, hMobility, NetRecombination, ElField, ElPotential, ContactCurrents)
-
-    }
-
-    physical_model particle_density
-    {
-      # use Fermi-Dirac statistics
-      statistics = fermidirac
-    }
-
-
-    physical_model recombination
-    {
-      model = srh
-    }
-
-    physical_model mobility
-    {
-
-      model = field_dependent
-
-
-      low_field_model = doping_dependent
-
-    }
-
-
-
-
-    BC_Regions  
-    {
-      BC_Region gate
-      {
-        type = schottky
-	barrier_height = 3.0
-
-        voltage = @Vg
-      }
-
-      BC_Region source
-      {
-        type = ohmic
-
-        voltage = 0.0
-      }
- 
-      BC_Region backcontact
-      {
-        type = ohmic
-
-        voltage = 0.0
-      }
-
-      BC_Region drain
-      {
-        type = ohmic
-
-        voltage = @Vd
-      }
-   
-
-    }   
-
-  }  
-
-}
-
-
-# Definition of  Model-dependent Solver parameters
-$Solver
-{
-  driftdiffusion
+  Solver
   {
-    nonlinear_solver = ls
+    type = linesearch
     ksp_type = pconly
     pc_type = lu
     nonlin_max_it = 10
@@ -127,55 +56,52 @@ $Solver
   }
 
 
-  Sweep
+  Physics
   {
 
-    sweep_drain
+    particle_density
     {
-      simulation = driftdiffusion
-      variable = Vd
-      start = 0.0
-      stop = 2.0 
-      steps = 20 
-
-      #plot_data = true
+      # use Fermi-Dirac statistics
+      statistics = fermidirac
     }
 
-    sweep_gate
+
+    recombination srh {}
+
+    mobility
     {
-      variable = Vg
-      start = -0.1
-      stop = 1.0 #0.5
-      steps = 11 # 6
-      simulation = sweep_drain
-      plot_data = true
+      type = field_dependent
+      low_field_model = doping_dependent
     }
-  }
-}
 
 
+    Contact gate
+    {
+      type = schottky
+      barrier_height = 3.0
 
+      voltage = $Vg
+    }
 
-# Definition of  model-indipendent parameters of the Simulation
-$Simulation
-{
-  temperature = 300
-  solve = sweep_gate
-  resultpath = output_IV_char  
-  #output_format = gmv
-  output_format = vtk
-}
+    Contact source
+    {
+      type = ohmic
 
+      voltage = 0.0
+    }
+ 
+    Contact backcontact
+    {
+      type = ohmic
 
+      voltage = 0.0
+    }
 
+    Contact drain
+    {
+      type = ohmic
 
-
-
-
-
-
-
-
-
-
-
+      voltage = $Vd
+    }
+  }   
+}  

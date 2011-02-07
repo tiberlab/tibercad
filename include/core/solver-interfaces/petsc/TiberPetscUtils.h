@@ -18,11 +18,11 @@ class TiberPetscUtils
   public:
 
     //! Extract KSPType from options
-    static KSPType extract_KSPType(const ModelOptions& options);
+    static const KSPType extract_KSPType(const ModelOptions& options);
 
 
     //! Extract PCType from options
-    static PCType extract_PCType(const ModelOptions& options);
+    static const PCType extract_PCType(const ModelOptions& options);
 
 
     //! Extract line search type (none, cubic, quadratic) from options

@@ -45,7 +45,10 @@ TiberLinearSolver::create(const ModelOptions& options)
 {
   TiberLinearSolver* solver = NULL;
 
-  std::string type(options.get_option("linear_solver", "petsc"));
+  std::string type(options.get_name());
+  if (type.empty())
+    type = "petsc";
+  type = options.get_option("type", type);
 
   if (type == "petsc")
     solver = new TiberPetscLinearSolver();
@@ -64,6 +67,8 @@ TiberLinearSolver::create(const ModelOptions& options)
   std::cerr << "Created linear solver type " << type << std::endl;
 #endif
 
+  solver->set_options(options);
+
   return solver;
 }
          
@@ -71,9 +76,9 @@ TiberLinearSolver::create(const ModelOptions& options)
 void
 TiberLinearSolver::set_options(const ModelOptions& options)
 {
-  _linear_rtol = options.get_option("lin_rel_tol", default_linear_rtol);
-  _linear_atol = options.get_option("lin_abs_tol", default_linear_atol);
-  _linear_max_it = options.get_option("lin_max_it", default_linear_max_it);
+  _linear_rtol = options.get_option("relative_tolerance", default_linear_rtol);
+  _linear_atol = options.get_option("absolute_tolerance", default_linear_atol);
+  _linear_max_it = options.get_option("max_iterations", default_linear_max_it);
 
   _sim_name = options.get_option("name", "?");
 
