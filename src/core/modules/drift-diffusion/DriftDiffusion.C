@@ -1035,14 +1035,16 @@ DriftDiffusion::rebuild_equation_system(void)
   //EquationSystems& equation_systems = get_equation_systems();
   clear_systems();
 
-  ModelOptions linopts;
   ModelOptions::submodel_iterator linit(
       get_solver_options().submodels_begin("LinearSolver"));
-  ModelOptions::submodel_iterator linend(
-      get_solver_options().submodels_end("LinearSolver"));
 
-  if (linit != linend)
-    linopts = linit->second;
+  if (linit == get_solver_options().submodels_end("LinearSolver"))
+  {
+    get_solver_options().add_submodel("LinearSolver", ModelOptions());
+    linit = get_solver_options().submodels_begin("LinearSolver");
+  }
+
+  ModelOptions& linopts = linit->second;
 
   // default is bcgsl
   if (!linopts.find_option("method"))
@@ -1059,9 +1061,10 @@ DriftDiffusion::rebuild_equation_system(void)
     else
       linopts["preconditioner"] = "ilu";
 
-
   if (linopts.get_option("absolute_tolerance", -1.0) < 0)
     linopts["absolute_tolerance"] = "1e-15";
+
+
 
   ModelOptions& solveropts = get_solver_options();
   if (solveropts.get_option("absolute_tolerance", -1.0) < 0)
