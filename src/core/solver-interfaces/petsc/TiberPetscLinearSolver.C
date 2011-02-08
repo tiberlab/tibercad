@@ -12,8 +12,9 @@
 
 
 
-TiberPetscLinearSolver::TiberPetscLinearSolver(void)
-  : _ksp(NULL),
+TiberPetscLinearSolver::TiberPetscLinearSolver(const ModelOptions& options)
+  : TiberLinearSolver(options),
+    _ksp(NULL),
     _ksp_type(KSPBCGS),
     _pc_type(PCILU),
     _monitor(false),
@@ -100,7 +101,7 @@ void TiberPetscLinearSolver::init(void)
 
 
 std::pair<unsigned int, double> 
-TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
+TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
 			     SparseMatrix<Number>&  precond_in,
 			     NumericVector<Number>& solution_in,
 			     NumericVector<Number>& rhs_in)
@@ -170,7 +171,6 @@ TiberPetscLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
   PCFactorSetZeroPivot(pc, 1e-54);
   //PCILUReorderForNonzeroDiagonal(pc, 1e-32);
 #endif
-
 
   setup_monitors();
 
@@ -349,17 +349,17 @@ TiberPetscLinearSolver::setup_monitors(void)
 
 
 void
-TiberPetscLinearSolver::parse_options(const ModelOptions& options)
+TiberPetscLinearSolver::do_parse_options(void)
 {
-  _ksp_type = TiberPetscUtils::extract_KSPType(options);
+  _ksp_type = TiberPetscUtils::extract_KSPType(get_options());
 
-  _pc_type = TiberPetscUtils::extract_PCType(options);
+  _pc_type = TiberPetscUtils::extract_PCType(get_options());
 
   if (_pc_type == PCLU)
     _ksp_type = KSPPREONLY;
 
-  _monitor = options.get_option("monitor", false);
-  _xmonitor = options.get_option("linear_xmonitor", false);
+  _monitor = get_option("monitor", false);
+  _xmonitor = get_option("xmonitor", false);
 }
 
 

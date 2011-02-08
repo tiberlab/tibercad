@@ -34,11 +34,6 @@ TiberLinearSystem::create(EquationSystems& es,
     throw InitFailedException("Could not create linear system " + sysname);
 
   sys->set_options(options);
-  if (options.find_option("xmonitor"))
-  {
-    sys->get_options()["linear_xmonitor"] = sys->get_options()["xmonitor"];
-    sys->get_options().delete_option("xmonitor");
-  }
 
   return sys;
 }

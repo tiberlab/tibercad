@@ -23,7 +23,7 @@ class PardisoLinearSolver : public TiberLinearSolver
   public:
 
     //!  Constructor. Initializes Pardiso data structures
-    PardisoLinearSolver(void);
+    PardisoLinearSolver(const ModelOptions& options);
 
 
     //! Destructor.
@@ -37,9 +37,12 @@ class PardisoLinearSolver : public TiberLinearSolver
     virtual void init(void);
 
 
+
+  protected:
+
     //! Call the linear solver specifying explicitly the preconditioner matrix
     virtual std::pair<unsigned int, Real> 
-      solve (SparseMatrix<Number>  &matrix,
+      do_solve (SparseMatrix<Number>  &matrix,
           SparseMatrix<Number>  &preconditioner,
           NumericVector<Number> &solution,
           NumericVector<Number> &rhs);
@@ -98,7 +101,8 @@ PardisoLinearSolver::_checkerr(int errorcode)
 
 
 inline
-PardisoLinearSolver::PardisoLinearSolver(void)
+PardisoLinearSolver::PardisoLinearSolver(const ModelOptions& options) :
+  TiberLinearSolver(options)
 {
 }
 

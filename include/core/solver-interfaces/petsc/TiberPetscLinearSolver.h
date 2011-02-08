@@ -33,7 +33,7 @@ class TiberPetscLinearSolver : public TiberLinearSolver
   public:
 
     //!  Constructor. Initializes Petsc data structures
-    TiberPetscLinearSolver(void);
+    TiberPetscLinearSolver(const ModelOptions& options);
 
 
     //! Destructor.
@@ -46,29 +46,6 @@ class TiberPetscLinearSolver : public TiberLinearSolver
 
     //! Initialize data structures if not done so already.
     virtual void init(void);
-
-
-    //! Solve the linear system
-    virtual std::pair<unsigned int, Real>
-      solve(SparseMatrix<Number> &matrix,
-          SparseMatrix<Number> &preconditioner,
-          NumericVector<Number> &solution,
-          NumericVector<Number> &rhs);
-
-
-    //! Dummy implementation
-    virtual std::pair<unsigned int, Real>
-      solve(const ShellMatrix<Number>&,
-          const SparseMatrix<Number>&,
-          NumericVector<Number>&,
-          NumericVector<Number>&, double, unsigned int) {};
-
-
-    //! Dummy implementation
-    virtual std::pair<unsigned int, Real>
-      solve(const ShellMatrix<Number>&,
-          NumericVector<Number>&,
-          NumericVector<Number>&, double, unsigned int) {};
 
 
     //! Dummy implementation
@@ -95,7 +72,16 @@ class TiberPetscLinearSolver : public TiberLinearSolver
   protected:
 
     /*!  \copydoc TiberLinearSolver::parse_options() */
-    virtual void parse_options(const ModelOptions& options);
+    virtual void do_parse_options(void);
+
+
+
+    //! Solve the linear system
+    virtual std::pair<unsigned int, Real>
+      do_solve(SparseMatrix<Number> &matrix,
+          SparseMatrix<Number> &preconditioner,
+          NumericVector<Number> &solution,
+          NumericVector<Number> &rhs);
 
 
     //! Setup the textual and graphical convergence monitors

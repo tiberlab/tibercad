@@ -267,7 +267,7 @@ class ModelOptions
      *
      * return \c true if unused options are found
      */
-    bool check_unused(int mode) const;
+    bool check_unused(int mode = 1) const;
 
 
   private:

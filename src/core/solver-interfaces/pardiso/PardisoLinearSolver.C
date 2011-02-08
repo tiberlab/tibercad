@@ -99,13 +99,13 @@ PardisoLinearSolver::init(void)
 
 
 std::pair<unsigned int, Real> 
-PardisoLinearSolver::solve(SparseMatrix<Number>&  matrix_in,
+PardisoLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
 			     SparseMatrix<Number>&  precond_in,
 			     NumericVector<Number>& solution_in,
 			     NumericVector<Number>& rhs_in)
 {
 
-  this->init ();
+  this->init();
 
   PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(&matrix_in); 
   PetscMatrix<Number>* precond  = dynamic_cast<PetscMatrix<Number>*>(&precond_in);

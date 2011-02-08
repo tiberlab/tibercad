@@ -5,6 +5,7 @@
 #define _TIBERLINEARSOLVER_H_
 
 //#include "TypeDefs.h"
+#include "TiberModelObject.h"
 
 // Libmesh includes
 #include "linear_solver.h"
@@ -19,21 +20,17 @@ class ModelOptions;
  * It is derived from the libmesh LinearSolver class
  *
  */
-class TiberLinearSolver : public LinearSolver<Number>
+class TiberLinearSolver : public TiberModelObject, public LinearSolver<Number>
 {
 
   public:
 
     //!  Constructor. Initializes  data structures
-    TiberLinearSolver(void);
+    TiberLinearSolver(const ModelOptions& options);
 
 
     //! Destructor.
     virtual ~TiberLinearSolver(void);
-
-    
-    //! Create a linear solver
-    static TiberLinearSolver* create(const std::string& type);
 
     
     //! Create a linear solver
@@ -48,28 +45,36 @@ class TiberLinearSolver : public LinearSolver<Number>
     virtual void init(void) = 0;
 
 
-    //! Set the options for the linear solver
+
+    //! Solve the linear system
     /*!
-     * \deprecated This method will disappear
+     * In TiberCAD, this method should be used instead of the
+     * ones defined in libMesh
      */
-    void set_ksp_options(double rtol = 1e-6, unsigned int max_it = 1000);
+    std::pair<unsigned int, Real>
+      solve(SparseMatrix<Number> &matrix,
+          SparseMatrix<Number> &preconditioner,
+          NumericVector<Number> &solution,
+          NumericVector<Number> &rhs)
+      {
+        parse_options();
+        return this->do_solve(matrix, matrix, solution, rhs);
+      }
 
 
-    //! Set the options for the linear solver
+    //! Solve the linear system
     /*!
-     * \deprecated This method will disappear
+     * In TiberCAD, this method should be used instead of the
+     * ones defined in libMesh
      */
-    void set_ksp_options(double rtol, double atol, unsigned int max_it = 1000);
-
-
-    //! Set options
-    /*!
-     * Call this method before calling solve().
-     *
-     * Unspecified options are set to there default values,
-     * \em not to their current values!
-     */
-    void set_options(const ModelOptions& options);
+    std::pair<unsigned int, Real>
+      solve(SparseMatrix<Number> &matrix,
+          NumericVector<Number> &solution,
+          NumericVector<Number> &rhs)
+      {
+        parse_options();
+        return this->do_solve(matrix, matrix, solution, rhs);
+      }
 
 
     //! Call the  solver.
@@ -90,6 +95,7 @@ class TiberLinearSolver : public LinearSolver<Number>
       }
 
 
+
     //! Call the linear solver specifying explicitly the preconditioner matrix
     /*!
      * This method is used only for compatibility with libMesh.
@@ -103,20 +109,6 @@ class TiberLinearSolver : public LinearSolver<Number>
           const unsigned int)
       {
         return this->solve(matrix, preconditioner, solution, rhs);
-      }
-
-
-    //! Solve the linear system
-    /*!
-     * In TiberCAD, this method should be used instead of the
-     * ones defined in libMesh
-     */
-    virtual std::pair<unsigned int, Real>
-      solve(SparseMatrix<Number> &matrix,
-          NumericVector<Number> &solution,
-          NumericVector<Number> &rhs)
-      {
-        return this->solve(matrix, matrix, solution, rhs);
       }
 
 
@@ -142,17 +134,6 @@ class TiberLinearSolver : public LinearSolver<Number>
   
 
 
-
-    //! Solve the linear system
-    /*!
-     * In TiberCAD, this method should be used instead of the
-     * ones defined in libMesh
-     */
-    virtual std::pair<unsigned int, Real>
-      solve(SparseMatrix<Number> &matrix,
-          SparseMatrix<Number> &preconditioner,
-          NumericVector<Number> &solution,
-          NumericVector<Number> &rhs) = 0;
 
     //! Print a message on convergence
     virtual void print_converged_reason() {};
@@ -185,8 +166,40 @@ class TiberLinearSolver : public LinearSolver<Number>
   protected:
 
     //! Parse the options for solver specific stuff
-    virtual void parse_options(const ModelOptions& options);
+    /*!
+     * Calls do_parse_options()
+     */
+    void parse_options(void);
 
+
+    //! Parse the options for solver specific stuff
+    virtual void do_parse_options(void);
+
+
+    //! Solve the linear system
+    /*!
+     * In TiberCAD, this method should be used instead of the
+     * ones defined in libMesh
+     */
+    virtual std::pair<unsigned int, Real>
+      do_solve(SparseMatrix<Number> &matrix,
+          SparseMatrix<Number> &preconditioner,
+          NumericVector<Number> &solution,
+          NumericVector<Number> &rhs) = 0;
+
+
+    //! Solve the linear system
+    /*!
+     * In TiberCAD, this method should be used instead of the
+     * ones defined in libMesh
+     */
+    virtual std::pair<unsigned int, Real>
+      do_solve(SparseMatrix<Number> &matrix,
+          NumericVector<Number> &solution,
+          NumericVector<Number> &rhs)
+      {
+        return this->do_solve(matrix, matrix, solution, rhs);
+      }
 
 
   private:
@@ -219,27 +232,6 @@ TiberLinearSolver::~TiberLinearSolver(void)
 }
 
 
-///*
-inline
-void
-TiberLinearSolver::set_ksp_options(double rtol,
-    unsigned int max_it)
-{
-  set_ksp_options(rtol, 1e-50, max_it);
-}
-
-
-
-inline
-void
-TiberLinearSolver::set_ksp_options(double rtol, double atol,
-    unsigned int max_it)
-{
-  _linear_rtol = rtol;
-  _linear_atol = atol;
-  _linear_max_it = max_it;
-}
-//*/
 
 inline
 double
@@ -269,6 +261,7 @@ inline
 void
 TiberLinearSolver::set_linear_rtol(double rtol)
 {
+  get_options().set_option("relative_tolerance", rtol);
   _linear_rtol = rtol;
 }
 
@@ -277,6 +270,7 @@ inline
 void
 TiberLinearSolver::set_linear_atol(double atol)
 {
+  get_options().set_option("absolute_tolerance", atol);
   _linear_atol = atol;
 }
 
@@ -285,24 +279,17 @@ inline
 void
 TiberLinearSolver::set_linear_max_it(int max_it)
 {
+  get_options().set_option("max_iterations", max_it);
   _linear_max_it = max_it;
 }
 
 
+
 inline
 void
-TiberLinearSolver::parse_options(const ModelOptions& options)
+TiberLinearSolver::do_parse_options(void)
 {
-  static_cast<const void*>(&options);
 }
-
-inline
-const std::string&
-TiberLinearSolver::get_simulation_name(void) const
-{
-  return _sim_name;
-}
-
 
 
 #endif // _TIBERLINEARSOLVER_H_

@@ -69,6 +69,7 @@ TiberNonlinTR::do_solve(void)
   double norm_du = 1e12;
 
   double tol = get_linear_solver()->get_linear_rtol();
+  double tol_orig = tol;
 
   // for testing
   //AutoPtr<SparseMatrix<Number> > transpose;
@@ -275,6 +276,9 @@ TiberNonlinTR::do_solve(void)
     tol *= tol;
 
   }
+
+  // reset the original tolerance
+  get_linear_solver()->set_linear_rtol(tol_orig);
 
   _n_nonlin_iterations = i;
   _final_residual_norm = norm_rhs;

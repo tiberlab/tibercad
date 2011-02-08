@@ -67,6 +67,7 @@ TiberNonlinLS::do_solve(void)
   double norm_du = 1e12, norm_du_old;
 
   double tol = get_linear_solver()->get_linear_rtol();
+  double tol_orig = tol;
 
 
   unsigned int i = 1;
@@ -241,6 +242,9 @@ TiberNonlinLS::do_solve(void)
     }
 
   }
+
+  // reset the old linear tolerance
+  get_linear_solver()->set_linear_rtol(tol_orig);
 
   _n_nonlin_iterations = i;
   _final_residual_norm = norm_res;

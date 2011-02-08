@@ -21,8 +21,9 @@ namespace
 
 
 
-TiberLinearSolver::TiberLinearSolver(void)
-  : _linear_rtol(default_linear_rtol),
+TiberLinearSolver::TiberLinearSolver(const ModelOptions& options)
+  : TiberModelObject(options),
+    _linear_rtol(default_linear_rtol),
     _linear_atol(default_linear_atol),
     _linear_max_it(default_linear_max_it)
 {
@@ -30,15 +31,6 @@ TiberLinearSolver::TiberLinearSolver(void)
 
 
 
-TiberLinearSolver*
-TiberLinearSolver::create(const std::string& type)
-{
-  ModelOptions opts;
-  opts["linear_solver"] = type;
-  
-  return create(opts);
-}
- 
 
 TiberLinearSolver*
 TiberLinearSolver::create(const ModelOptions& options)
@@ -51,10 +43,10 @@ TiberLinearSolver::create(const ModelOptions& options)
   type = options.get_option("type", type);
 
   if (type == "petsc")
-    solver = new TiberPetscLinearSolver();
+    solver = new TiberPetscLinearSolver(options);
 #ifdef ENABLE_PARDISO
   else if (type == "pardiso")
-    solver = new PardisoLinearSolver();
+    solver = new PardisoLinearSolver(options);
 #endif
 
   if (solver == NULL)
@@ -67,22 +59,34 @@ TiberLinearSolver::create(const ModelOptions& options)
   std::cerr << "Created linear solver type " << type << std::endl;
 #endif
 
-  solver->set_options(options);
+  // dummy read
+  solver->get_option("type", "");
+  solver->get_option("simulation", "");
 
   return solver;
 }
-         
+
+
+
 
 void
-TiberLinearSolver::set_options(const ModelOptions& options)
+TiberLinearSolver::parse_options(void)
 {
-  _linear_rtol = options.get_option("relative_tolerance", default_linear_rtol);
-  _linear_atol = options.get_option("absolute_tolerance", default_linear_atol);
-  _linear_max_it = options.get_option("max_iterations", default_linear_max_it);
+  _linear_rtol = get_option("relative_tolerance", default_linear_rtol);
+  _linear_atol = get_option("absolute_tolerance", default_linear_atol);
+  _linear_max_it = get_option("max_iterations", default_linear_max_it);
 
-  _sim_name = options.get_option("name", "?");
+  do_parse_options();
 
-  parse_options(options);
+  get_options().check_unused();
+}
+
+
+
+const std::string&
+TiberLinearSolver::get_simulation_name(void) const
+{
+  return get_option("simulation", "");
 }
 
 
@@ -109,4 +113,5 @@ TiberLinearSolver::solve(const ShellMatrix<Number>& shell_matrix,
   Messages::error("Solving with shell matrix is not implemented");
 }
   
+
 
