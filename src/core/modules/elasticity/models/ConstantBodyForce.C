@@ -9,7 +9,7 @@
 // the third one is the specific model implementation.
 // The library name will then be bulk_default.so
 
-TIBER_MODULE(ConstantBodyForce, body_force, constant)
+TIBER_MODULE(ConstantBodyForce, BodyForce, constant)
 
 using namespace std;
 
