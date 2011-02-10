@@ -9,7 +9,7 @@
 // the third one is the specific model implementation.
 // The library name will then be bulk_default.so
 
-TIBER_MODULE(ConstantHeatSource, heat_source, constant)
+TIBER_MODULE(ConstantHeatSource,HeatSource, constant)
 
 using namespace std;
 

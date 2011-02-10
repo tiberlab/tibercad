@@ -10,7 +10,7 @@
 // the third one is the specific model implementation.
 // The library name will then be bulk_default.so
 
-TIBER_MODULE(DDHeatSource, heat_source, driftdiffusion)
+TIBER_MODULE(DDHeatSource, HeatSource, driftdiffusion)
 using namespace std;
 
 
@@ -24,7 +24,7 @@ DDHeatSource::do_init(void)
 {
 
   
-  string dd_simul_name = get_options().get_option("simulation_name", "");
+  string dd_simul_name = get_options().get_option("simulation_name", driftdiffusion);
   _simul = SimulationInterface::find_simulation(dd_simul_name);
 
   if ( _simul == NULL)
