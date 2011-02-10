@@ -23,7 +23,7 @@ TiberModelObject::TiberModelObject(const ModelOptions& options)
     _destroy(NULL),
     _name("")
 {
-  _name = options.get_option("name", _name);
+  _name = _options.get_option("name", _name);
 }
 
 

@@ -72,7 +72,7 @@ TiberNonlinearSystem::solve(void)
 {
   if (get_options().get_option("xmonitor", false))
   {
-    _xmonitor = XMonitor::create(string(get_options().get_option("name", "?"))
+    _xmonitor = XMonitor::create(string(get_options().get_option("simulation", "?"))
         + ": nonlinear convergence monitor");
     _xmonitor->set_axis_labels("iteration nr.", "Logarithm of residual norm");
   }

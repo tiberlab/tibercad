@@ -63,7 +63,7 @@
 #undef LICENSE_CHECK
 
 /* Define to 1 if gcc has the -fvisibility flag is enabled */
-#define GCC_HASVISIBILITY 1
+#undef GCC_HASVISIBILITY 
 
 /* define if the compiler supports __gnu_cxx::hash_map */
 #undef HAVE_EXT_HASH_MAP
@@ -88,5 +88,6 @@
 
 /* define if the compiler supports std::unordered_set */
 #undef HAVE_UNORDERED_SET
+
 
 

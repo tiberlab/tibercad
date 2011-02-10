@@ -85,6 +85,9 @@ endif
 
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
+# the machine architecture
+CPPFLAGS += -DARCH="$(shell $(topdir)/share/arch.sh)"
+
 CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
