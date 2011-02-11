@@ -1,0 +1,57 @@
+# diode example
+
+Device
+{
+
+    meshfile = diode.msh
+    dimension = 1
+    material = Si
+    mesh_units = 1e-6
+
+  Region Bulk
+  {
+    material = SiO2
+    doping = 1e12
+  }
+
+}
+
+
+# Definition of  Simulation Models  and ssociated Boundary Conditions 
+Module thermal
+{
+
+ Physics
+ {
+  
+  Boundary heat_reservoir
+  {
+    regions = anode
+    temperature =  300
+  }
+
+  Boundary heat_reservoir
+  {
+    regions = cathode
+    temperature =  400
+  }
+
+
+ }
+}
+
+
+Simulation
+{
+  searchpath = .
+  temperature = 300
+  verbose = 3
+  solve = (thermal)
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
