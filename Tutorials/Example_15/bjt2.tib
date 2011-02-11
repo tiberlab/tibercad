@@ -11,18 +11,27 @@ Device bjt2
 
   Region coll # the collector region
   {
-    Doping donor { Nd = 5e15 }
+    Doping {
+      type = donor
+      Nd = 5e15
+    }
   }
 
 
   Region b_reg # the base region
   {
-    Doping acceptor { density = 1e17 }
+    Doping {
+      type = acceptor
+      density = 1e17
+    }
   }
 
   Region e_reg # the emitter region
   {
-    Doping donor { density = 1e19 }
+    Doping {
+      type = donor
+      density = 1e19
+    }
   }
 
 
@@ -124,7 +133,7 @@ Module sweep
   steps = 60
 
   solve = dd
-  #plot_data = true
+  plot_data = true
 }
 
 
