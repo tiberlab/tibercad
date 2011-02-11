@@ -57,7 +57,9 @@ SelfconsistentSolver::do_init(void)
   }
   
   // we set our environment to that of the first simulation
-  set_environment(&_simulations[0]->get_environment());
+  //set_environment(&_simulations[0]->get_environment());
+
+  parse_options();
 }
 
 
