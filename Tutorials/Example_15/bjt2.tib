@@ -57,7 +57,9 @@ Module driftdiffusion
 
    plot = (Ec, Ev, ElPotential, ElField, eQFermi, hQFermi, eDensity, hDensity,
            eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents,
-           NetRecombination, eMobility, hMobility)
+           NetRecombination, eMobility, hMobility,
+           IonizedDonors, IonizedAcceptors,
+           IonizedElectronTraps)
 
 
   Solver linesearch
