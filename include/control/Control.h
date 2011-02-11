@@ -54,8 +54,7 @@ class TBDLLOCAL Control
      * This method calls create_device(), create_materials() and
      * setup_models()
      */
-    void init(void) throw (InitFailedException,
-        ModelErrorException, DatabaseException);
+    void init(void);
 
 
     //! Runs the simulation
@@ -63,7 +62,7 @@ class TBDLLOCAL Control
      * Calls solve() of the simulations according to the rules given
      * in the input file
      */
-    void run_simulation(void) throw (SolveFailedException);
+    void run_simulation(void);
 
 
     //! Plots the results of all simulation models

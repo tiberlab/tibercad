@@ -44,11 +44,22 @@ Variable::clear_all(void)
 }
 
 
+void
+Variable::check_name(const std::string& name)
+{
+  if ((name.size() < 2) || (name[0] != '$'))
+  {
+    throw RuntimeException("\'" + name + "\' is not a valid variable name. "
+        "Variables hav to start with \'$\'");
+  }
+}
+
 
 bool
 Variable::is_variable(const std::string& var)
 {
   bool result = false;
+  check_name(var);
   VariableMap::iterator it(_variables.find(var));
   if (it != _variables.end())
     result = true;
@@ -62,6 +73,8 @@ template <typename T>
 void
 Variable::set_variable_value(const string& var, const T& value)
 {
+  check_name(var);
+
   // we have to set the value in all objects
   VariableMap::iterator it(_variables.find(var));
   if (it != _variables.end())
@@ -81,6 +94,8 @@ template <typename T>
 T
 Variable::get_variable_value(const string& var)
 {
+  check_name(var);
+
   T val;
 
   VariableMap::iterator it(_variables.find(var));

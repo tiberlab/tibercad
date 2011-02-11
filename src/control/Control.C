@@ -146,8 +146,7 @@ Control::~Control(void)
 
 
 void
-Control::init(void) throw (InitFailedException,
-    ModelErrorException, DatabaseException)
+Control::init(void)
 {
 
   // TODO this is currently broken
@@ -774,7 +773,7 @@ Control::create_boundary(SimulationInterface* sim, const ModelOptions& opts)
 
 
 void
-Control::run_simulation(void) throw (SolveFailedException)
+Control::run_simulation(void)
 {
 
   ostringstream os;

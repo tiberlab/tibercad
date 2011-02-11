@@ -1,147 +1,130 @@
-# bjt2 example
-
-$Device
+# bjt example
+Device bjt2
 {
-   Options
-   {
-     material = Si
-   }
+  material = Si
+  meshfile = bjt2.msh 
 
-   Region coll_doped 
-   {
-     doping = 1e19 doping_type = donor
-   }
+  Region coll_doped  # the buried doping
+  {
+    Doping donor { density = 1e19 }
+  }
 
-   Region coll
-   {
-     doping = 5e15 doping_type = donor
-   }
+  Region coll # the collector region
+  {
+    Doping donor { Nd = 5e15 }
+  }
 
 
-   Region b_reg 
-   {
-     doping = 1e17 doping_type = acceptor
-   }
+  Region b_reg # the base region
+  {
+    Doping acceptor { density = 1e17 }
+  }
 
-   Region e_reg
-   {
-     doping = 1e19 doping_type = donor
-   }
+  Region e_reg # the emitter region
+  {
+    Doping donor { density = 1e19 }
+  }
 
-   Region oxide
-   {
-     material = SiO2
-   }
 
+  Region oxide
+  {
+    material = SiO2
+  }
 
 }
 
 
-$Models
+Module driftdiffusion
 { 
-  model driftdiffusion
-  { 
               
-    options
-    {
-     simulation_name = dd
+   name = dd
+
+   # you may want to save the results to reload them in future
+   #save_state = true
+
+   # we use a different quadrature rule to avoid density peaks
+   # where the mesh is not so dense
+   quadrature_rule = trapez
+
+   plot = (Ec, Ev, ElPotential, ElField, eQFermi, hQFermi, eDensity, hDensity,
+           eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents,
+           NetRecombination, eMobility, hMobility)
+
+
+  Solver linesearch
+  {
+  }
+
+
+  Physics
+  {
 
      # use Fermi-Dirac statistics
      statistics =  FD
 
-     # we use a different quadrature rule to avoid density peaks
-     # where the mesh is not so dense
-     quadrature_rule = trapez
-
-     plot = (Ec, Ev, ElPotential, ElField, eQFermi, hQFermi, eDensity, hDensity, eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents, eMobility, hMobility, NetRecombination)
-
-    }
-
-
            
-    physical_model electron_mobility
-    {
-      model = doping_dependent 
-    }
+     mobility doping_dependent {}
 
-    physical_model hole_mobility
-    {      
-      model = doping_dependent
-    }
+     recombination (srh, auger) {}
 
-
-     physical_model recombination
-     { 
-       model  =  srh
+     trap eNeutral
+     {
+       regions = Si/SiO2
+       Nt = 2e12
+       Et = 0.5
+       reference = cb
      }
 
-   
-     physical_model recombination
-     { 
-       model  =  auger
+
+     Contact base
+     {
+       type = ohmic
+       voltage = $Vb
      }
 
-                
-
-    BC_Regions  
-    {
-      BC_Region base
-      {
-        type = ohmic
-        voltage = @Vb
-      }
-
-      BC_Region collector
-      {
-        type = ohmic
-        voltage = @Vc
-      }
+     Contact collector
+     {
+       type = ohmic
+       voltage = $Vc
+     }
  
-      BC_Region emitter
-      {
-        type = ohmic
-        voltage = 0.0
-      }
+     Contact emitter
+     {
+       type = ohmic
+       voltage = 0.0
+     }
  
 
-    }   
-  }  
+  }   
 }
 
 
-$Solver
+
+Module sweep
 {
-  driftdiffusion
-  {
+  name = sweep_base
+  variable = $Vb
+  start = 0.5
+  stop = 0.7  
+  steps = 10
 
-    # we use the "tiber" nonlinear solver (a linesearch)
-    nonlinear_solver = tiber
-  }
+  # we calculate the output characteristics
+  solve = sweep_coll
 
-  Sweep
-  {
-    sweep_base
-    {
-      variable = Vb
-      start = 0.5
-      stop = 0.7  
-      steps = 10
-      # we calculate the output characteristics
-      simulation = sweep_coll
-      # plot only for the last collector bias
-      plot_data = true
-    }
-    sweep_coll
-    {
-      variable = Vc
-      start = 0.0
-      stop = 3
-      steps = 60
-      simulation = dd
-      #plot_data = true
-    }
+  # plot only for the last collector bias
+  plot_data = true
+}
 
-  }
+Module sweep
+{
+  name = sweep_coll
+  variable = $Vc
+  start = 0.0
+  stop = 3
+  steps = 60
+
+  solve = dd
+  #plot_data = true
 }
 
 
@@ -149,13 +132,15 @@ $Solver
 
 
 
-$Simulation
+
+Simulation
 {
-  meshfile = bjt2.msh 
-  dimension = 2
   verbose = 3
-  #temperature = 300
+
+  #temperature = 300 # this is the default
+
   solve = sweep_base
+
   resultpath = output2
   output_format = vtk
 }

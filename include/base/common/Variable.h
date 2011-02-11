@@ -171,6 +171,10 @@ class Variable
      */
     static VariableMap _variables;
 
+
+    //! Check the name for valid syntax
+    static void check_name(const std::string& name);
+
 };
 
 
