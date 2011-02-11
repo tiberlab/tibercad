@@ -1036,12 +1036,12 @@ DriftDiffusion::rebuild_equation_system(void)
   clear_systems();
 
   ModelOptions::submodel_iterator linit(
-      get_solver_options().submodels_begin("LinearSolver"));
+      get_solver_options().submodels_begin("linear_solver"));
 
-  if (linit == get_solver_options().submodels_end("LinearSolver"))
+  if (linit == get_solver_options().submodels_end("linear_solver"))
   {
-    get_solver_options().add_submodel("LinearSolver", ModelOptions());
-    linit = get_solver_options().submodels_begin("LinearSolver");
+    get_solver_options().add_submodel("linear_solver", ModelOptions());
+    linit = get_solver_options().submodels_begin("linear_solver");
   }
 
   ModelOptions& linopts = linit->second;
