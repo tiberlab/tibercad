@@ -235,8 +235,8 @@ Module selfconsistent
   solve = (dens_el,dd)
   #relaxation_factor = 0.1
   max_iterations = 100
-  abs_tolerance = 5e-4
-  rel_tolerance = 1e-9
+  absolute_tolerance = 5e-4
+  relative_tolerance = 1e-9
   monitor = true
 }
 
