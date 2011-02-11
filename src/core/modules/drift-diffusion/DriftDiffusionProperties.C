@@ -465,8 +465,10 @@ DriftDiffusionProperties::add_recombination_model(
 MobilityModelInterface*
 DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
 {
-  string model_name = options.get_option("model", "constant");
+  string model_name = options.get_name();
   model_name = options.get_option("type", model_name);
+  if (model_name.empty())
+    model_name = "constant";
 
   MobilityModelInterface* mobility_model =
     MobilityModelInterface::create(model_name, options);

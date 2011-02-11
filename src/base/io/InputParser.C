@@ -168,9 +168,10 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
       Utils::extract_vector(token_2, tok2);
       for (size_t i = 0; i < tok2.size(); ++i)
       {
-        submodel.set_name(tok2[i]);
+        ModelOptions opts(submodel);
+        opts.set_name(tok2[i]);
         // add  the  subblock ModelOptions to  the current-level  options, as  a  submodel
-        options.add_submodel(model_name,submodel);
+        options.add_submodel(model_name, opts);
       }
 
     }

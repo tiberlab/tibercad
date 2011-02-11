@@ -361,7 +361,6 @@ Control::setup_module(Device* device, const ModelOptions& opts)
       physopts += it->second;
   }
 
-
   //
   // and now... the boundary conditions
   //
@@ -562,15 +561,11 @@ Control::setup_module(Device* device, const ModelOptions& opts)
           // we have to check if it should be built for the current region
           // TODO to not allow for errors
 
-          bool has_region_option = modopts.find_option("region") ||
-              modopts.find_option("regions");
-          if (has_region_option)
-          {
-            IDSet regs;
-            string physreg = modopts.get_option("regions", "all");
-            device->extract_physical_regions(physreg, regs);
-            if (regs.count(reg_id) == 0) add = false;
-          }
+          IDSet regs;
+          string physreg = modopts.get_option("regions", "all");
+          device->extract_physical_regions(physreg, regs);
+
+          if (regs.count(reg_id) == 0) add = false;
 
 
           if (add)

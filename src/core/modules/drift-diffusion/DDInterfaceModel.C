@@ -141,6 +141,8 @@ DDInterfaceModel::do_init(void)
     _emission = new FowlerNordheim(get_option("work_function", 4.7));
     _emission->set_velocity(get_option("emission_velocity", 1.5e8));
   }
+
+  get_option("area_factor", "");
 }
 
 

@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 
 using namespace std;
@@ -135,7 +136,9 @@ void
 ModelOptions::add_submodel(const string& name,
     const ModelOptions& options)
 {
-  _submodels.insert(SubmodelMap::value_type(name, options));
+  SubmodelMap::iterator it(_submodels.insert(SubmodelMap::value_type(name, options)));
+  assert(it != _submodels.end());
+  it->second.set_key(name);
 }
 
 

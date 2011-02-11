@@ -469,6 +469,11 @@ SimulationInterface::init(void)
       }
     }
 
+    // some dummy reads to shut up the automatic check
+    get_option("save_state", "");
+    if (has_option("load_state", ""))
+      get_option("solve_after_load", "");
+
     get_options().check_unused(1);
 
     m.unindent();
