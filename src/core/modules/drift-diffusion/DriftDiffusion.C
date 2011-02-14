@@ -570,7 +570,7 @@ DriftDiffusion::do_solve(void)
 
   // calculate the currents to print them on screen
   calculate_currents();
-
+  calculate_iqe();
 
 
   ContactData::iterator it(_boundary_currents.begin());
@@ -793,6 +793,118 @@ DriftDiffusion::compute_reference_potential(void)
 
 }
 
+
+
+void
+DriftDiffusion::calculate_iqe(void)
+{
+  _iqe = 0;
+
+  set<ID> active_regs = get_environment().get_region_ids();
+
+  ModelOptions::submodel_iterator opts(get_options().submodels_begin("iqe"));
+  if (opts != get_options().submodels_end("iqe"))
+  {
+    string reg = (opts->second).get_option("active_regions", "all");
+    set<ID> tmp;
+    get_environment().get_device().extract_physical_regions("reg", tmp);
+
+    set<ID>::iterator it(active_regs.begin());
+    set<ID>::iterator end(active_regs.end());
+    while (it != end)
+    {
+      set<ID>::iterator tmpit(it);
+      ++it;
+      if (!tmp.count(*tmpit)) active_regs.erase(tmpit);
+    }
+  }
+
+  ID rec_id = get_solution_id("DirectRecombination");
+
+  if (rec_id == INVALID_ID)
+  {
+    if (plot_solution(IQE))
+    {
+      Messages::warning("Cannot calculate IQE: no direct recombination model present.");
+    }
+    return;
+    //throw RuntimeException("Recombination model \'DirectRecombination\' "
+    //    "is not defined in Drift-Diffusion simulation.");
+  }
+
+  const MeshBase& mesh = get_mesh();
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const unsigned int u_var = system.variable_number("potential");
+
+  FEType fe_type = system.variable_type(u_var);
+
+  const Options& params = get_my_options();
+
+  libMeshEnums::Order integration_order = params.integration_order;
+
+  // the finite element
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  AutoPtr<QBase> qrule(QBase::build(
+        params.quadrature_type, dim, integration_order));
+  fe->attach_quadrature_rule(qrule.get());
+
+  const vector<Real>& JxW = fe->get_JxW();
+
+  MeshBase::const_element_iterator el =
+      get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+      get_mesh().active_elements_end();
+
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+
+    ID subdomain = elem->subdomain_id();
+
+    fe->reinit(elem);
+
+    map<ID, vector<double> > datamap;
+    datamap[rec_id] = vector<double>(qrule->n_points());
+    vector<double>& data = datamap[rec_id];
+
+    DriftDiffusion::get_solution_secure(elem, datamap, qrule->get_points());
+
+    double iqe_el = 0;
+
+    // loop over the quadrature points
+    for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
+    {
+      iqe_el += JxW[qp] * data[qp];
+    }
+
+    _iqe += iqe_el;
+  }
+
+  double current = 0;
+
+  // now take the total outflowing current
+  ContactData::const_iterator it(_boundary_currents.begin());
+  for ( ; it != _boundary_currents.end(); ++it)
+  {
+    DDInterfaceModel* ifmod =
+        static_cast<DDInterfaceModel*>(it->first->models_begin()->second);
+
+    // we print only contacts with a current
+    if (!ifmod->has_current())
+      continue;
+
+    if (it->second > 0)
+      current += it->second;
+  }
+
+  if (current > 0)
+    _iqe *= Constants::e / current;
+  else
+    _iqe = 0;
+}
 
 
 void
@@ -1312,6 +1424,8 @@ DriftDiffusion::do_setup_solution_variables(void)
           SolutionDescriptor::GLOBAL, units);
     }
   }
+
+  declare_solution(IQE, REAL, GLOBAL, "");
 }
 
 
@@ -2754,18 +2868,27 @@ DriftDiffusion::get_solution_secure(map<ID, vector<double> >& values)
   for ( ; mapit != mapend; ++mapit)
   {
     ID id = mapit->first;
-    const SolutionDescriptor& descr = get_solution_descriptor(id);
-    Utils::tokenize(descr.name(), tokens);
 
-    ContactData::iterator it(_boundary_currents.begin());
-    const ContactData::iterator end(_boundary_currents.end());
-    for (; it != end; ++it)
+    if (id == IQE)
     {
-      if (tokens[0] == it->first->get_name())
+      values[id] = vector<double>(1, _iqe);
+    }
+    else
+    {
+      // for now it can only be currents
+      const SolutionDescriptor& descr = get_solution_descriptor(id);
+      Utils::tokenize(descr.name(), tokens);
+
+      ContactData::iterator it(_boundary_currents.begin());
+      const ContactData::iterator end(_boundary_currents.end());
+      for (; it != end; ++it)
       {
-        double curr = it->second * it->first->get_area_factor();
-        values[id] = vector<double>(1, curr);
-        break;
+        if (tokens[0] == it->first->get_name())
+        {
+          double curr = it->second * it->first->get_area_factor();
+          values[id] = vector<double>(1, curr);
+          break;
+        }
       }
     }
   }

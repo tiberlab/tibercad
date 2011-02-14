@@ -132,6 +132,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       ePeltier,         /*!< Electron Peltier-Thomson heat source */
       hPeltier,         /*!< Electron Peltier-Thomson heat source */
       RecombHeat,       /*!< Recombination heat  */
+      IQE,              /*!< Internal quantum efficiency */
       NetRecombination = 100,  /*!< base number for recombination models */
       ContactCurrent   = 200,  /*!< base number for contact currents */
       ContactVoltage   = 300   /*!< base number for contact voltages */
@@ -495,6 +496,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     ContactData _voltages;
 
 
+    //! The IQE
+    double _iqe;
+
+
     //! Reference potential
     double _reference_potential;
 
@@ -656,6 +661,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      * \f[h_l = \sum_{i \in \Gamma_l}\psi_i\f]
      */
     void calculate_currents_rstf(void);
+
+
+    //! Calculates internal quantum efficiency
+    void calculate_iqe(void);
 
 
     //! Assemble the residual vector or the jacobian matrix
