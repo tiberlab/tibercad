@@ -116,15 +116,6 @@ DriftDiffusion::create_bulk_model(const ModelOptions& options,
 
   modelname = options.get_option("model", "default");
 
-  if ((modelname == "unstrained") || (modelname == "strained"))
-  {
-    ostringstream os;
-    os << "drift-diffusion model '" << modelname << "' is deprecated."
-      << endl << "Use 'model = default' instead or don't specify explicitly."
-      << endl;
-    Messages::warning(os.str());
-    modelname = "default";
-  }
 
   DriftDiffusionProperties* model =
     DriftDiffusionProperties::create(modelname, options);
@@ -863,6 +854,8 @@ DriftDiffusion::calculate_iqe(void)
     const Elem* elem = *el;
 
     ID subdomain = elem->subdomain_id();
+
+    if (!active_regs.count(subdomain)) continue;
 
     fe->reinit(elem);
 

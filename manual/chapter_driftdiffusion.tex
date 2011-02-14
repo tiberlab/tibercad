@@ -58,62 +58,33 @@ Key & Description & Units \\
 %\end{minipage}& cm$^{-3}$s$^{-1}$
  The net recombination rate for each recombination/generation model and the total rate &
  cm$^{-3}$s$^{-1}$ \\
-\texttt{ContactCurrents} & The electric current on each contact & A/cm$^{3-d}$
+\texttt{ContactCurrent} & The electric current on each contact & A/cm$^{3-d}$
 \end{tabular}
 \caption{Solution/Plot variables}
 \label{table:dd_solutions}
 \end{table}
 
 
+\section{Module options}
 
-\section{\texttt{Models} section}
-The \Models{} section looks as given in~\inputref{dd:models}
-\begin{inputfile}
-\begin{verbatim}
-model driftdiffusion
-{
-    options
-    {
-      simulation_name = whatever_you_want
-      physical_regions = (2, 3, 4)
-    }
+The following options influence the behaviour of the Drift-Diffusion module:
 
-    physical_model recombination
-    {
-      type = model_to_be_used
-      ...
-    }
-
-    physical_model generation
-    {
-      type = model_to_be_used
-      ...
-    }
-
-
-    physical_model electron_mobility
-    {
-      type = model_to_be_used
-    }
-
-    physical_model hole_mobility
-    {
-      type = model_to_be_used
-    }
-
-    physical_model thermoelectric_power
-    {
-      type = model_to_be_used
-    }
-   
- }
-\end{verbatim}
-\caption{\Models{} section for drift-diffusion}
-\label{dd:models}
-\end{inputfile}
-
-The \keyword{options} block supports three special keywords:
 \begin{description}
+
+\item[\keyword{coupling = }\Value{string}] defines which equations to solve. The default is \Value{full}, meaning that the full system consisting of the Poisson, electron continuity and hole continuity equations is solved. Other possible values are \Value{poisson} (for equilibrium calculations), \Value{electrons} or \Value{holes}. For the last two cases local equilibrium is assumed such that $\phi_n = \phi_p$.
+
+%\item[\keyword{local\_equilibrium = }\Value{bool}] If \keyword{coupling} is set to \Value{electrons} or \Value{holes}, local equilibrium is assumed such that $\phi_n = \phi_p$. 
+
+\item\keyword{enforce\_local\_charge\_neutrality = }\Value{bool}] If set to \Value{true}, local charge neutrality will be enforced by setting the charge density to zero. This may be useful for solving the Poisson equation involving only dielectrics.
+
+\item\keyword{guess\_el\_qfermi = }\Value{double}] If this option is set, then before resolving the system the given number will be set as a guess for the electron electro-chemical potential.
+
+\item\keyword{guess\_hl\_qfermi = }\Value{double}] If this option is set, then before resolving the system the given number will be set as a guess for the hole electro-chemical potential.
+
+\item\keyword{default\_boundary\_condition = }\Value{string}] With this option the user can control the default boundary condition for the electric field on all external boundaries without explicit boundary model. Possible values are \Value{zero\_field} (default), or \Value{zero\_displacement}. The two differ only in presence of electric polarization fields.
+
+\item\keyword{quadrature\_rule = }\Value{string}] This option allows to chose between trapezoidal and Gauss type numeric integration rules. The default rule is \Value{gauss}, but in some cases \Value{trapez} may prevent density peaks near badly resolved material interfaces.
+
 \item[\keyword{save\_state = }\Value{boolean}] If set to \texttt{true} the current solution will be written to a compressed file after each solve. The file name follows the same rules as the result files, having file extension \texttt{.tsv}.
 
 \item[\keyword{load\_state = }\Value{file}] Reload a formerly saved solution. \Value{filename} can be a filename (to reside in the current working directory), a relative or an absolute path to a file. The file needs to have been created with \keyword{save\_state = true}.
@@ -121,32 +92,75 @@ The \keyword{options} block supports three special keywords:
 \item[\keyword{solve\_after\_load = }\Value{boolean}] If set to \texttt{true}, the system will be solved after having reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
 \end{description}
 
-It is important that currently the reload of saved solutions {\em only works correctly when using the identical mesh}.
+ATTENTION: Currently the reload of saved solutions {\em only works correctly when using the identical mesh}.
 Otherwise there will be undefined behaviour or failure.
 Future releases will relax this restriction.
 
 
-The \physicalmodel{} sections can be omitted.
-In this case default models are used, namely no recombination/generation for the recombination models and constant mobility for the mobility models.
-There can be more than one recombination model.
+\section{\texttt{Solver} section}
+The \textttt{Solver} section of the Drift-Diffusion module refers to a nonlinear solver (see the description of solvers \ref{??}).
+
+
+\section{\texttt{Physics} section}
+
+The Physics block contains generic options for the bulk physical model and the definition of submodels.
+The generic options are:
+
+\begin{description}
+\item[\keyword{model = }\Value{string}] Specify the semiconductor model to be used. Possible values are \keyword{default} and \keyword{simple}. The former uses k.p to calculate the (strain corrected) band parameters. 
+
+\item[\keyword{thermal\_simulation = }\Value{string}] If you are doing coupled electrothermal simulations, you have to specify the name of the thermal simulation providing the lattice temperature. 
+
+\item[\keyword{strain\_simulation = }\Value{string}] If you are doing simulations on strained systems, you can specify the name of a strain simulation. The band parameters will then be calculated taking local strain corrections into account.
+
+%\item[\keyword{use\_density\_predictor = }\Value{bool}] This controls the selfconsistent Schr\"odinger/Poisson calculations. The default approach is based on a predictor-corrector scheme.
+
+\item[\keyword{relax\_polarization = }\Value{double}] With this option one can specify a relaxation factor for the electric polarization field. This can be useful if the amount of total electric polarization has to be treated as fitting parameter.
+\end{description}
+
+
+For the simple semiconductor model one has to provide conduction and valence band edges and the effective density of states masses in the \texttt{Region} sections.
+The corresponding keywords are given in table~\ref{table:simple_sc}.
+\begin{table}[htb]
+\center
+\begin{tabular}{l||l}
+\textit{keyword} & \textit{description} \\
+\hline \hline
+\keyword{Ec} & conduction band edge (eV) \\
+\keyword{Ev} & valence band edge (eV) \\
+\keyword{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
+\keyword{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
+\end{tabular}
+\caption{Parameters for the simple semiconductor model}
+\label{table:simple_sc}
+\end{table}
+
+
+
+
+
+
+In the following we describe the submodels. All submodels can be restricted to a subset of simulation regions as described in section ??.
+
+
+
 
 
 \subsection{Recombination/generation models}
-
 \label{dd:recomb_models}
 
 This section describes the currently available generation/recombination models.
 Note that all recombination models can be applied also to surfaces/interfaces.
 
-\subsubsection{Shockley-Read-Hall (SRH) recombination}
-The SRH recombination model can be enabled in the input file by
+Recombination models are controlled by means of \texttt{recombination} submodel blocks inside the Physics section.
+Different recombination models having the same (or no) options can be enabled in a single statement writing
 \begin{verbatim}
-physical_model recombination
-{
-  type = srh
-  ...
-}
+recombination (model1, model2, ...) {}
 \end{verbatim}
+
+
+\subsubsection{Shockley-Read-Hall (SRH) recombination}
+The SRH recombination model can be enabled by defining a \texttt{recombination} submodel of type \texttt{srh}
 
 SRH recombination is defined as follows:
 \begin{equation}
@@ -199,14 +213,7 @@ In this case, you can provide the recombination velocities using the keywords \k
 
 
 \subsubsection{Direct (radiative) recombination}
-The direct recombination model can be enabled in the input file by 
-\begin{verbatim}
-physical_model recombination
-{
-  type = direct
-  ...
-}
-\end{verbatim}
+The direct recombination model can be enabled in the input file by by defining a \texttt{recombination} submodel of type \texttt{direct}
 
 Direct recombination is modeled as follows:
 \begin{equation}
@@ -219,14 +226,7 @@ The database value can be overridden from the input file as described for SRH re
 
 
 \subsubsection{Auger recombination}
-The Auger recombination model can be enabled in the input file by
-\begin{verbatim}
-physical_model recombination
-{
-  type = auger
-  ...
-}
-\end{verbatim}
+The Auger recombination model can be enabled in the input file by defining a \texttt{recombination} submodel of type \texttt{auger}
 
 Auger recombination is modeled by the following equation
 \begin{equation}
@@ -243,15 +243,9 @@ The calculated values for $C_n$ and $C_p$ can be overridden from the input file 
 
 \subsubsection{Optical generation}
 A very simple model for photoelectric generation of electron-hole pairs is implemented in \TiberCAD{}.
-It is enabled by specifying
-\begin{verbatim}
-physical_model generation
-{
-  type = optical
-  G = ...
-}
-\end{verbatim}
-The model imnposes a constant generation rate which has to be provided by the keyword \verb+G+ in units of (cm$\cdot$s)$^{-1}$.
+It is enabled by specifying a \texttt{generation} submodel of type \texttt{optical}
+The model imposes a constant generation rate which has to be provided by the keyword \verb+G+ in units of (cm$\cdot$s)$^{-1}$.
+Note that the simulation usually should define a sweep on the value of \verb+G+ from 0 to the desired generation.
 
 
 
@@ -261,9 +255,8 @@ The model imnposes a constant generation rate which has to be provided by the ke
 The thermoelectric power models are the same for electrons and holes.
 The keyword is \texttt{thermoelectric\_power}, i.e
 \begin{verbatim}
-physical_model thermoelectric_power
+thermoelectric_power [type]
 {
-  model = ...
 }
 
 \end{verbatim}
@@ -280,31 +273,26 @@ P_p = \frac{k_b}{q}\left( \frac{5}{2} - \frac{e \phi_p + E_v - e \varphi}{k_b T}
 
 The default is $P_n = P_p = 0$.
 
+
 \subsection{Mobility models}
 
 \label{dd:mobility_models}
 
-The models to be used for electrons and holes can be defined in a single physical\_model
+The models to be used for electrons and holes can be defined in a single submodel
 block or independently using two blocks.
 The corresponding keywords are \texttt{mobility} or \texttt{electron\_mobility} and \texttt{hole\_mobility}, i.e.
 
 \begin{verbatim}
-physical_model mobility
+mobility [type]
 {
-  type = ...
-  ...
 }
 
-physical_model electron_mobility
+electron_mobility [type]
 {
-  type = ...
-  ...
 }
 
-physical_model hole_mobility
+hole_mobility [type]
 {
-  type = ...
-  ...
 }
 \end{verbatim}
 
@@ -452,7 +440,42 @@ $v_{min}$ &  \verb+vsat_min+ \\
 \end{table}
 
 
+\subsection{Polarization models}
+For simulations involving materials with nonzero electric polarization (such as nitrides) it is important to include the effect of polarization.
+This is done by specifying the models for spontaneous and piezoelectric polarization using the keywords \keyword{polarization} with the types \keyword{pyro} and \keyword{piezo}:
+\begin{verbatim}
+polarization pyro {}
+polarization piezo {}
+\end{verbatim}
 
+As for all models, if they do not have individual options, they can be specified together by writing \verb+polarization (pyro, piezo) {}+.
+
+\subsection{particle density}
+Details for the calculation of the electron and hole densities can be given in the \keyword{particle\_density} submodel.
+Its options are
+\begin{description}
+\item[\keyword{particle = }\Value{string}] The particle this model is describing. Can be \Value{electron} or \Value{hole}. 
+\item[\keyword{statistics = }\Value{string}] The statistics. Can be \Value{fermidirac} (default) or \Value{boltzmann}. 
+\item[\keyword{quantum\_density = }\Value{string}] The name of a quantum density simulation. This will use the quantum mechanical particle density in the regions it was calculated.
+\end{description}
+
+If a quantum density is used, then it is useful to define also an embracing region where the model gradually switches from a fully classical to a fully quantum density.
+The options for the embracing are specified in a block with keyword \keyword{embracing}. It accepts the following options:
+\begin{description}
+\item[\keyword{embracing\_length =} \Unit{double}] When the domain of the quantum simulation is smaller than the domain of the full simulation, the boundary conditions for the Schr\"odinger equation will disturb the transfer from classical to quantum density.
+By defining an embracing region of a certain extension (specified in meters), a gradual transition from classical to quantum density will be done instead of an abrupt one, using as effective density $\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}$. The default is no embracing region at all (zero extension).
+
+\item[\keyword{cutoff =} \Unit{double}] if an embracing region is used, a part of this region near the boundary of the quantum region can be cut off so that only the classical density is considered in that part. \keyword{cutoff} is specified as a percentage of the embracing length and should therefore be between 0.0 and 1.0.
+
+\item[\keyword{plot\_embracing\_regions =} \Unit{bool}] Whereas the automatic creation of the embracing region in 1D is a very simple task, it is a more difficult one in higher dimensions.
+By setting this flag to \texttt{true}, the embracing region and the mixing coefficient $x$ will be plotted for a visual control of the quality of the embracing region.
+The default is \texttt{false}.
+\end{description}
+
+
+\subsection{Trap models}
+
+Traps 
 
 
 
@@ -463,11 +486,34 @@ Contacts are boundary models that allow a nonzero normal electrical current.
 %For this type of boundaries one can define a contact resistance using the \texttt{contact\_resistance} option.
 %The contact resistance has units $\Omega\mathrm{cm}^2$.
 The applied voltage is specified with the option \texttt{voltage}.
-A variable can be assigned to this, using the \verb+@+-syntax.
+A variable can be assigned to this, using the \verb+$+-syntax.
+On ohmic or schottky contacts one can define surface recombination velocities for electrons and holes using the options \keyword{rec\_velocity\_e} and \keyword{rec\_velocity\_h}. This will impose Robin type boundary conditions for the continuity equations of the form
+\begin{eqnarray}
+-\nabla(\mu_n n \nabla\phi_n ) & = & v_n(n - n_0) \\
+-\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & = & -v_p(p - p0)
+\end{eqnarray}
 
-For a finer control of the behaviour at electrical contacts, the options \keyword{zero\_field}, \keyword{zero\_grad\_fermi\_e} and \keyword{zero\_grad\_fermi\_h} can be used, which when set to \verb+true+ will impose zero normal electric field and zero normal gradient of the electron and hole electro-chemical potential, respectively.
+The options \keyword{zero\_field}, \keyword{zero\_grad\_fermi\_e} and \keyword{zero\_grad\_fermi\_h} can be used, which when set to \verb+true+ will impose zero normal electric field and zero normal gradient of the electron and hole electro-chemical potential, respectively.
+The latter are special cases of surface recombination velocities ($v_rec = 0$).
+
+Contacts are defined by blocks with keyword \keyword{Contact}, for example:
+\begin{verbatim}
+Contact anode {
+  type = ohmic
+  [regions = (anode1, anode2)]
+  voltage = $Vd
+}
+\end{verbatim}
+
+An area factor can be specified for contacts using the keyword \keyword{area\_factor}. The contact current will be multiplied by this factor.
+
+For interfaces and surfaces, the same syntax can be used (optionally one can use the keywords \keyword{Interface} or \keyword{Boundary}), however they do usually not need to be defined explicitly.
+
+\subsubsection{Ohmic contact}
 The ohmic contact (identifier \texttt{ohmic}) has no further parameters.
 
+
+\subsubsection{Schottky contact}
 A Schottky contact  (identifier \texttt{schottky}) has the additional parameter \keyword{barrier}, which signifies the energy difference between the semiconductor band edge and the fermi energy in the metal.
 As default, the barrier is taken with respect to the conduction band.
 By specifying \verb+band = v+ the barrier can be imposed with respect to the valence band (p-type contact).
@@ -477,107 +523,30 @@ If it is set to \texttt{true}, the barrier will be independent of strain (defaul
 If it is set to \texttt{false}, the given barrier is used as barrier for the unstrained case and  will depend on strain during simulation.
 If the metal work function is specified, the barrier will be strain dependent as default.
 
+WARNING: if the contact is touching different materials, one should specify the work function instead of the barrier.
+
 %If a contact touches several different regions with different materials, it can be necessary to provide a reference material using the keyword \keyword{reference\_material} and specifying the name of a \TiberCAD{} region.
 %\TiberCAD{} will prefer semiconductors over dielectrics if no reference material is specified.
 
-
-The type of boundary model is chosen by the parameter \texttt{type}, e.g. \texttt{type = schottky}.
-
-A surface recombination can be specified for electrons and holes by using the keywords \keyword{rec\_velocity\_n} and \keyword{rec\_velocity\_p}.
-
-The free surface or interface model (identifier \texttt{interface}) models surface charges and surface recombination.
-Two modes are possible for the surface charge model:
-\begin{description}
- \item[constant charge] a constant charge can be assigned by specifying only the sheet 
-  carrier density \texttt{Ns} in $cm^{-2}$.
-  The sheet charge density will then  equal \texttt{Ns} multiplied by the elementary
-  charge $e$. A positive \texttt{Ns} produces a positive surface charge.
- 
- \item[electronic surface states] in this case the surface charge is produced by
-  electrons occupying a surface state with a density of states in form of a delta function.
-  The density of occupied states then reads
-  \[
-  n_s = \frac{N_s}{1 + \frac{1}{g}\exp(\frac{E_c - \Delta E_s - e\varphi + e\phi_n}{k_BT})}
-  \]
-  The density of states $N_s$ is specified by \verb+Ns+, the energy of the state with respect to the conduction band $\Delta E_s$ by \verb+Es+.
-  $g$ denotes the multiplicity of the state and defaults to 2.
-  It can be changed by assigning a value to \verb+g+.
-
-\end{description}
-
-Surface recombination is switched on by setting the keyword \keyword{surface\_rec} to \texttt{true}.
-The model used for surface recombination is formally the same as the bulk SRH recombination.
-However, the only parameters are the recombination velocities, which have to be specified (in cm/s) in the input file using the keywords \keyword{rec\_vel\_e} and \keyword{rec\_vel\_h}.
+Thermionic emission is by default switched on, but can be disabled by specifying \texttt{thermionic\_emission = false}.
 
 
-\section{\texttt{Physics} section}
-\label{Driftdiff:physics}
-Options for controlling the drift-diffusion semiconductor models can be specified in the \texttt{Physics} section.
-The corresponding paramaters are given in table~\ref{table:dd_common}.
-\begin{table}[htb]
-\center
-\begin{tabular}{l||p{2.5cm}|p{6cm}}
-\textit{keyword} & \textit{possible values} & \textit{description} \\
-\hline \hline
-\keyword{model} & (see following subsections) & the model to use for the description of the conduction and valence band properties\\
-\keyword{statistics} & \texttt{B} $\vert$ \texttt{FD} & Boltzmann (default) or
-Fermi-Dirac statistics \\
-\keyword{strain\_simulation} & \textsl{name} & the strain simulation to be used \\
-\keyword{thermal\_simulation} & \textsl{name} & the thermal simulation to be used \\
-\keyword{electron\_quantum\_density} & \textsl{name} & the quantum density simulation to be used for the electron density \\
-\keyword{hole\_quantum\_density} & \textsl{name} & the quantum density simulation to be used for the hole density
-\end{tabular}
-\caption{Common options for the drift-diffusion semiconductor models}
-\label{table:dd_common}
-\end{table}
-When \keyword{model} is not specified, the default semiconductor model based on bulk $\mathbf{k}\cdot\mathbf{p}$ theory is used.
+\subsubsection{Interface/surface model}
+The free surface or interface model (identifier \texttt{interface}) can include surface charges due to traps and surface recombination.
+Their definition can be found in section (vedi sopra).
 
-The \keyword{electron\_quantum\_density} and \keyword{hole\_quantum\_density} will use the particle densities calculated from the corresponding \texttt{quantum\_density} simulation.
-In regions where no quantum density is available, the classical density will be used.
-The \keyword{electron\_quantum\_density} and \keyword{hole\_quantum\_quantum\_density} keywords can be used also in the \Region{} sections to be able to use different quantum density simulations in different regions.
-For further options regarding selfconsistent Schr\"odinger-Poisson/Drift-Diffusion calculations see Sec.~\ref{DD:schrpoiss}.
-
-The \keyword{strain\_simulation} option is used to specify the simulation that provides strain in the case of strained systems.
-If it is omitted, an unstrained system is assumed for the drift-diffusion calculation.
-
-The \keyword{thermal\_simulation} option is used to specify the simulation that provides the lattice temperature for non-isothermal simulations.
-If it is omitted, the simulation temperature as provided in the \Simulation{} section of the input file (or, if not provided, the default value of 300 K) is used.
+Each trap model will induce automatically a SRH recombination model as in the bulk case.
 
 
-\subsection{Simple semiconductor model}
-
-When specifying \texttt{model = simple} a very simple semiconductor model is used.
-For this model one has to provide conduction and valence band edges and the effective density of states masses in the \texttt{Region} sections.
-The corresponding keywords are given in table~\ref{table:simple_sc}.
-\begin{table}[htb]
-\center
-\begin{tabular}{l||l}
-\textit{keyword} & \textit{description} \\
-\hline \hline
-\keyword{Ec} & conduction band edge (eV) \\
-\keyword{Ev} & valence band edge (eV) \\
-\keyword{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
-\keyword{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
-\end{tabular}
-\caption{Parameters for the simple semiconductor model}
-\label{table:simple_sc}
-\end{table}
 
 
-\subsection{Default semiconductor model}
-
-The default semiconductor model uses a bulk $\mathbf{k}\cdot\mathbf{p}$ model to calculate the band parameters.
-It can be chosen explicitly by \texttt{model = default}.
-The model reads all needed parameters from the material data file.
-
-The band parameters are calculated considering locally strain and lattice temperature as obtained from the corresponding simulations specified using the \keyword{strain\_simulation} and \keyword{thermal\_simulation} keywords.
 
 
-\subsection{Special options for Schr\"odinger-Poisson calculations}
+\section{Schr\"odinger/Poisson/Drift-Diffusion calculations}
 \label{DD:schrpoiss}
 \TiberCAD{} is able to do selfconsistent Schr\"odinger-Poisson or Schr\"odinger-Drift-Diffusion calculations.
-For this purpose, \keyword{electron\_quantum\_density} or \keyword{hole\_quantum\_density} has to be specified for at least one region, and a selfconsistent simulation should be defined in the \Selfconsistent{} block.
-The following options -- to be specified in the \Physics{} section -- control the behaviour of the selfconsistent simulation.
+For this purpose, \keyword{quantum\_density} has to be specified for at least one of the carriers, and a selfconsistent simulation should be defined in the \Selfconsistent{} block.
+The following options -- to be specified in the \texttt{Physics} section -- control the behaviour of the selfconsistent simulation.
 \begin{description}
 \item[\keyword{use\_density\_predictor =} \Unit{bool}] When set to \texttt{true}, a predictor-corrector scheme will be adopted in the selfconsistent cycle.
 The Poisson/Drift-Diffusion solver does not just take the particle densities as given by the Schr\"odinger calculation, but it will assume a dependency of the density on the potentials of the form
@@ -585,145 +554,30 @@ The Poisson/Drift-Diffusion solver does not just take the particle densities as 
 \rho(\varphi, \phi_n, \phi_p) = \frac{\rho_{\mathrm{quantum}}(\varphi^0, \phi_n^0, \phi_p^0)}{\rho_{\mathrm{classical}}(\varphi^0, \phi_n^0, \phi_p^0)}\rho_{\mathrm{classical}}(\varphi, \phi_n, \phi_p)
 \end{equation}
 where $(\varphi^0, \phi_n^0, \phi_p^0)$ are the potentials for which the quantum density was calculated.
-\keyword{use\_density\_predictor = true} is the preferred method for selfconsistent Schr\"odinger-Poisson/Drift-Diffusion calculations, however it is not enabled by default. 
-
-\item[\keyword{embracing\_length =} \Unit{double}] When the domain of the quantum simulation is smaller than the domain of the full simulation, the boundary conditions for the Schr\"odinger equation will disturb the transfer from classical to quantum density.
-By defining an embracing region of a certain extension (specified in meters), a gradual transition from classical to quantum density will be done instead of an abrupt one, using as effective density $\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}$. The default is no embracing region at all (zero extension).
-
-\item[\keyword{cutoff =} \Unit{double}] if an embracing region is used, a part of this region near the boundary of the quantum region can be cut off so that only the classical density is considered in that part. \keyword{cutoff} is specified as a percentage of the embracing length and should therefore be between 0.0 and 1.0.
-
-\item[\keyword{plot\_embracing\_regions =} \Unit{bool}] Whereas the automatic creation of the embracing region in 1D is a very simple task, it is a more difficult one in higher dimensions.
-By setting this flag to \texttt{true}, the embracing region and the mixing coefficient $x$ will be plotted for a visual control of the quality of the embracing region.
-The default is \texttt{false}.
-
+\keyword{use\_density\_predictor = true} is the preferred method for selfconsistent Schr\"odinger-Poisson/Drift-Diffusion calculations and is enabled by default. 
 \end{description}
 
 
 
-\section{\texttt{Solver} section}
+\section{Example}
 
-Many of parameters for the numerical solver depend on the type of solver being used and on the device to be simulated.
-Table~\ref{tab:dd_solver} lists the options that are independent on the type of solver used.
-\begin{table}[htb]
-\center
-\begin{minipage}{0.9\textwidth}
-\begin{tabular}{l||p{8cm}}
-\textit{keyword} & \textit{description}\footnote{the default is given in brackets} \\
-\hline \hline
-\keyword{coupling} & defines which equations to couple together. \texttt{poisson}: solve only poisson eq., \texttt{electrons}: electrons and poisson, \texttt{holes}: holes and poisson, \texttt{current}: only electron and hole currents, \texttt{<full>}: the fully coupled system \\
-\keyword{el\_qfermi\_level} & the spatially constant electrochemical potential for the electrons (for quasi-equilibrium calculations) \\
-\keyword{hl\_qfermi\_level} & the spatially constant electrochemical potential for the holes (for quasi-equilibrium calculations) \\
-\keyword{integration\_order} & order of the numerical gauss integration. Default is \texttt{2} \\
-\keyword{current\_integration\_method} & method for the calculation of the contact cutrrents. \texttt{surfint}: integrate the local current density over the contact surface, \texttt{<rstf>}: use the Ramo-Shockley test functions, gives better results \\
-\keyword{local\_scaling} & apply a local scaling scheme which leads to better scaled matrices. \texttt{<true>} or \texttt{false} \\
-\keyword{exact\_newton} & use exact or approximate (without some parts in the jacobian) Newton. \texttt{<true>} or \texttt{false}
-\end{tabular}
-\end{minipage}
-\caption{Solver independent parameters}
-\label{tab:dd_solver}
-\end{table}
-
-
-The linear and nonlinear solvers to be used can be chosen using the keywords \texttt{linear\_solver} and \texttt{nonlinear\_solver}, respectively.
-For the nonlinear solver one can chose between the PETSc implementation (\texttt{petsc}) and the \TiberCAD{} implementation (\texttt{tiber}) of line search.
-When using the \TiberCAD{} nonlinear solver, one can additionally chose between the PETSc (\texttt{petsc}) or PARDISO  (\texttt{pardiso}) linear solvers.
-The possible combinations are:
+\begin{inputfile}
 \begin{verbatim}
-nonlinear_solver = petsc
+Module driftdiffusion
+{
+  name = dd
+  #regions = (pside, nside)
+
+  Solver linesearch {}
+
+  Physics
+  {
+  }
+   
+}
 \end{verbatim}
-or
-\begin{verbatim}
-nonlinear_solver = tiber
-linear_solver = petsc | pardiso
-\end{verbatim}
-
-\subsection{Parameters for PETSc solvers}
-
-Tables~\ref{tab:petsc_nonlin_params} and~\ref{tab:petsc_lin_params} list all solver parameters significant for the PETSc linear and nonlinear solvers.
-A more detailed description of the most important parameters follows.
-\begin{table}[htb]
-\center
-\begin{minipage}{0.9\textwidth}
-\begin{tabular}{l||p{8cm}|l}
-\textit{keyword} & \textit{description} & \textit{default} \\
-\hline \hline
-\texttt{nonlin\_rel\_tol} & relative tolerance for the residual $l_2$-norm (with respect to first nonlinear step) & \texttt{10e-9} \\
-\texttt{nonlin\_abs\_tol} & absolute tolerance for the residual $l_2$-norm & \texttt{10e-15} \\
-\texttt{nonlin\_step\_tol} & tolerance for the $l_2$-norm of the nonlinear step & \texttt{10e-3} \\
-\texttt{ls\_max\_step} & the maximum $l_2$-norm for the line search step, in units of eV & \texttt{1} \\
-\texttt{nonlin\_max\_it} & maximum number of nonlinear iterations & \texttt{20} \\
-\end{tabular}
-\end{minipage}
-\caption{Parameters for the PETSc nonlinear solver}
-\label{tab:petsc_nonlin_params}
-\end{table}
-
-\begin{table}[htb]
-\center
-\begin{minipage}{0.9\textwidth}
-\begin{tabular}{l||p{8cm}|l}
-\textit{keyword} & \textit{description} & \textit{default} \\
-\hline \hline
-\texttt{ksp\_type} & the linear solver type & \texttt{bcgsl} \\
-\texttt{pc\_type} & the preconditioner type & \texttt{ilu} \\
-\texttt{lin\_rel\_tol} & relative tolerance for the linear solver & \texttt{1e-6}\protect\footnote{The linear tolerance gets automatically decreased after each nonlinear step.} \\
-\texttt{lin\_abs\_tol} & absolute tolerance for the linear solver & \texttt{10e-50} \\
-\texttt{lin\_max\_it} & maximum number of linear iterations & \texttt{500} 
-\end{tabular}
-\end{minipage}
-\caption{Parameters for the PETSc linear solver}
-\label{tab:petsc_lin_params}
-\end{table}
+\caption{\Models{} section for drift-diffusion}
+\label{dd:models}
+\end{inputfile}
 
 
-The \texttt{ksp\_type} specifies the type of Krylov subspace method to be used.
-The mostly used methods are
-\begin{description}
-\item{\texttt{bcgs}} A stabilized version of the biconjugate gradient method. This one works better in 1D than \texttt{bcgsl}.
-\item{\texttt{bcgsl}} (default) A modified version of  \texttt{bcgs}.
-\item{\texttt{gmres}} Generalized minimal residual method.
-\end{description}
-
-The \texttt{pc\_type} specifies the type of preconditioner to be used.
-The most useful ones are
-\begin{description}
-\item{\texttt{ilu}} (default) Incomplete LU factorization. Does not work for materials with high band gap.
-\item{\texttt{jacobi}} Jacobi preconditioning (diagonal scaling).
-\item{\texttt{composite}} Combination of \texttt{ilu} and \texttt{jacobi}.
-\end{description}
-
-The \texttt{ls\_max\_step} parameter defines an upper bound of the $l_2$-norm of the nonlinear line search step.
-It should be not too big to prevent the algorithm from diverging, but also not too small to minimize the number of iterations.
-Values between 1 and 10 should be a good choice.
-
-The \texttt{nonlin\_step\_tol} defines at which line search step size (in $l_2$-norm) the algorithm stops, i.e. assumes to have reached convergence.
-\texttt{nonlin\_step\_tol} is measured in eV.
-
-
-\subsection{Parameters for the \TiberCAD{} nonlinear solver}
-Table~\ref{tab:tiber_params} summarizes the parameters used for the \TiberCAD{} implementation of the line search algorithm.
-\begin{table}[htb]
-\center
-\begin{minipage}{0.9\textwidth}
-\begin{tabular}{l||p{8cm}|l}
-\textit{keyword} & \textit{description} & \textit{default} \\
-\hline \hline
-\texttt{nonlin\_rel\_tol} & relative tolerance for the residual $l_2$-norm (with respect to first nonlinear step) & \texttt{10e-9} \\
-\texttt{nonlin\_abs\_tol} & absolute tolerance for the residual $l_2$-norm & \texttt{10e-15} \\
-\texttt{nonlin\_step\_tol} & tolerance for the maximum norm of the nonlinear step (eV) & \texttt{10e-3} \\
-\texttt{nonlin\_max\_it} & maximum number of nonlinear iterations & \texttt{20} \\
-\end{tabular}
-\end{minipage}
-\caption{Parameters for the \TiberCAD{} line search}
-\label{tab:tiber_params}
-\end{table}
-
-The stopping criterion based on the line search step uses the maximum norm of the nonlinear step, i.e. convergence is controlled locally.
-In addition to the parameters in table~\ref{tab:tiber_params} one has to provide also parameters for the linear solver.
-
-\subsection{Parameters for the PARDISO linear solver}
-
-\textbf{NOTE:} the PARDISO linear solver is currently not included in the distribution.
-
-
-\noindent Currently the PARDISO interface has no adjustable parameters.

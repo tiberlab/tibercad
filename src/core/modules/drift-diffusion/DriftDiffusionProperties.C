@@ -56,7 +56,7 @@ DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI *
 DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
   : PhysicalModel(options),
     _is_inhomogeneous(false),
-    _use_predictor(false),
+    _use_predictor(true),
     _pd(NULL),
     _elem(NULL),
     _coupling(DriftDiffusionDefs::BOTH),

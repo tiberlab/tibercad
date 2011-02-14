@@ -89,12 +89,16 @@ ParticleDensity::do_init(void)
 
   if (get_quantum_simulation() != NULL)
   {
-    SimulationInterface* owner =
-        SimulationInterface::get_simulation(get_simulator_id());
-    Embracing* emb =
-      owner->create_embracing_region(
-          get_quantum_simulation(), get_options(), true);
-    set_embracing(emb);
+    ModelOptions::const_submodel_iterator embit(get_options().submodels_begin("embracing"));
+    if (embit != get_options().submodels_end("embracing"))
+    {
+      SimulationInterface* owner =
+          SimulationInterface::get_simulation(get_simulator_id());
+      Embracing* emb =
+        owner->create_embracing_region(
+            get_quantum_simulation(), embit->second, true);
+      set_embracing(emb);
+    }
   }
 }
 

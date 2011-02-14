@@ -115,8 +115,11 @@ $Models
 
       # we use an embracing region to get a continuous transition from 
       # classical to quantum density
-      embracing_length = 8e-9
-      plot_embracing_regions = true
+      embracing
+      {
+        embracing_length = 8e-9
+        plot_embracing_regions = true
+      }
     }
 
    
@@ -130,8 +133,11 @@ $Models
 
       # we use an embracing region to get a continuous transition from 
       # classical to quantum density
-      embracing_length = 8e-9
-      plot_embracing_regions = true
+      embracing
+      {
+        embracing_length = 8e-9
+        plot_embracing_regions = true
+      }
     }
 
   
