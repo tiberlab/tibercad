@@ -9,7 +9,7 @@
 // the third one is the specific model implementation.
 // The library name will then be bulk_default.so
 
-TIBER_MODULE(IsotropicStiffness, Stiffness, isotropic)
+TIBER_MODULE(IsotropicStiffness, stiffness, isotropic)
 
 using namespace std;
 

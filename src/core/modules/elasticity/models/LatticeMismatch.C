@@ -9,7 +9,7 @@
 // the third one is the specific model implementation.
 // The library name will then be bulk_default.so
 
-TIBER_MODULE(LatticeMismatch,BbodyForce, lattice_mismatch)
+TIBER_MODULE(LatticeMismatch, body_force, lattice_mismatch)
 
 using namespace std;
 
