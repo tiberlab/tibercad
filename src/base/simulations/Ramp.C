@@ -129,12 +129,12 @@ Ramp::ramp(void)
   double sign = (step < 0) ? -1.0 : 1.0;
   step *= sign;
 
-  //double min_step = max(_min_abs_step, _min_step * step);
-  //double max_step = min(_max_abs_step, _max_step * step);
-  //double initial_step = min(_initial_step * step, _initial_abs_step);
-  double min_step = _min_step * step;
-  double max_step = _max_step * step;
-  double initial_step = _initial_step * step;
+  double min_step = max(_min_abs_step, _min_step * step);
+  double max_step = min(_max_abs_step, _max_step * step);
+  double initial_step = min(_initial_step * step, _initial_abs_step);
+  //double min_step = _min_step * step;
+  //double max_step = _max_step * step;
+  //double initial_step = _initial_step * step;
 
   double oldvalue = _last;
   double value = oldvalue;
@@ -194,8 +194,14 @@ Ramp::ramp(void)
       value = oldvalue;
     }
   }
-  while (sign * (_goal - value) > 0);
+  while (sign * (_goal - value) > 1e3 * numeric_limits<double>::min());
+  // the min() here prevents from resolving two times the same sweep value
+  // due to fixed point numerics
 
+  // At the next call, we begin with the last succseful step size,
+  // if this is smaller than the original initla step
+  if (currstep >= min_step)
+    _initial_abs_step = min(_initial_abs_step, oldstep);
 
   // plot results
   if (_plot_data)

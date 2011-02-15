@@ -18,9 +18,12 @@ Module sweep
   solve = driftdiffusion
 
   variable = $Vg
-  start = -1.0
-  stop = 0.5
-  steps = 150 # 
+  start = -0.5
+  stop = 1.5
+  steps = 100 
+
+  # at maximum make steps of 0.1 V
+  max_step = 0.1
   
   plot_data = true
 }

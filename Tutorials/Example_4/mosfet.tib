@@ -4,7 +4,6 @@ Device mosfet
 {
 
   meshfile = mosfet.msh
-  dimension = 2
   
   material = Si
 
@@ -81,27 +80,27 @@ Module driftdiffusion
       barrier_height = 3.0
 
       voltage = $Vg
+
+      # assume a gate width of 1 mm = 0.1 cm
+      area_factor = 0.1
     }
 
     Contact source
     {
-      type = ohmic
-
       voltage = 0.0
+      area_factor = 0.1
     }
  
     Contact backcontact
     {
-      type = ohmic
-
       voltage = 0.0
+      area_factor = 0.1
     }
 
     Contact drain
     {
-      type = ohmic
-
       voltage = $Vd
+      area_factor = 0.1
     }
   }   
 }  

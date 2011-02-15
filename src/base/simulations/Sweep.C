@@ -114,7 +114,11 @@ Sweep::parse_options(void)
 
   // dummy reads
   opts.get_option("min_step", "");
+  opts.get_option("min_relative_step", "");
   opts.get_option("max_step", "");
+  opts.get_option("max_relative_step", "");
+  opts.get_option("initial_step", "");
+  opts.get_option("initial_relative_step", "");
 
   double start = opts.get_option("start", 0.0);
   double stop = opts.get_option("stop", 0.0);

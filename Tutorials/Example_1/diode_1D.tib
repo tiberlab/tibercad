@@ -1,114 +1,101 @@
-# diode example
+#
+# This example calculates the IV of a silicon
+# pn junction in 1D
+#
 
-$Device
+
+Device
 {
-   Region n_side 
-   {
-     material = Si
-     doping = 1e18 doping_type = donor
-   }
+  meshfile = diode_1D.msh 
+  material = Si
 
-   Region p_side 
-   {
-     material  = Si
-     doping = 1e18 doping_type = acceptor
-   }
-
-}
-
-
-# Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
-{ 
-  model driftdiffusion
-  { 
-              
-    options
-    {
-     simulation_name = dd
-
-     # use Fermi-Dirac statistics
-     statistics =  FD
-    }
-
-
-           
-    physical_model electron_mobility
-    {
-
-      model = field_dependent
-      
-
-      low_field_model = doping_dependent   #Masetti  model for Si !!!
-
-    }
-
-    physical_model hole_mobility
-    {
-      model = field_dependent
-
-      
-      low_field_model = doping_dependent
-
-
-    }
-
-
-     physical_model recombination
-     {
-       model  =  srh
-     }
-
-    BC_Regions  
-    {
-      BC_Region anode
-      {
-        type = ohmic
-        voltage = @Vb[0.0]
-      }
-
-      BC_Region cathode
-      {
-        type = ohmic
-        voltage = 0.0
-      }
- 
-    }   
-  }  
-}
-
-
-# Definition of  Model-dependent Solver parameters
-$Solver
-
-{
-
-  sweep
+  Region n_side 
   {
-    variable = Vb
-    start = 0.0
-    stop = 1.2  
-    steps = 120
-    plot_data = true  #  to  write  data  for  each  step
-    simulation = dd
+    Doping
+    {
+     Nd = 1e18
+     type = donor
+    }
+  }
+
+  Region p_side 
+  {
+    Doping
+    {
+     Nd = 1e18
+     type = acceptor
+    }
   }
 }
 
 
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{ 
+  name = dd
 
-# Definition of  model-indipendent parameters of the Simulation
-$Simulation
+  plot = (Ec, Ev, Eg, ElField, ElPotential, eQFermi, hQFermi, eDensity, hDensity,
+          NetRecombination, eCurrentDensity, hCurrentDensity, CurrentDensity,
+          ContactCurrent, eMobility, hMobility, IonizedDonors, IonizedAcceptors)
+
+
+  Physics
+  {
+    particle_density
+    {
+      statistics = boltzmann
+    }
+
+    # use a field dependent mobility model with the
+    # gradient of the electrochem. potential as field
+    # parameter
+    mobility field_dependent
+    {
+      low_field_model = doping_dependent 
+    }
+
+    # use SRH and Auger recombination
+    recombination (srh, auger) {}
+
+
+    Contact anode
+    {
+      type = ohmic
+      voltage = $Vb[0.0]
+    }
+
+    Contact cathode
+    {
+      type = ohmic
+      voltage = 0.0
+    }
+  }  
+}
+
+
+Module sweep
 {
-  #searchpath = ../../materials
-  meshfile = diode_1D.msh 
-  dimension = 1
+  variable = $Vb
+  solve = dd
+
+  start = 0.0
+  stop = 1.2  
+  steps = 60
+
+  plot_data = true  # to write data for each step
+}
+
+
+
+Simulation
+{
   verbose = 2
-  temperature = 300
+
   solve = sweep
-  resultpath = out_diode_1D
+
+  resultpath = diode1D_results
   output_format = grace
 
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, ContactCurrents, eMob, hMob)
 }
 
 
