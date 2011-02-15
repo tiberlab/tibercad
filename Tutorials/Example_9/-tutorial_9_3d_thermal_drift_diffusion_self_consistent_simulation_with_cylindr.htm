@@ -1,0 +1,150 @@
+ <div class="content"> 
+    <p> <a title="contents" name="contents"></a> </p> 
+<ul> 
+<li><a href="#introduction">Introduction »</a> </li> 
+<li><a href="#device">Device Section</a></li> 
+<li><a href="#model">Model section</a></li> 
+<li><a href="#solver">Solver section</a></li> 
+<li><a href="#physics">Physics section</a></li> 
+<li><a href="#simulation">Simulation section</a></li> 
+<li><a href="#output">Output</a> </li> 
+</ul> 
+<p> &nbsp; </p> 
+<p> <a title="introduction" name="introduction"></a> </p> 
+<h2>Introduction (<a href="#contents">up</a>)</h2> 
+<p> &nbsp; </p> 
+<p> In this tutorial we will see how to perform a thermal-driftdiffusion self-consistent simulation. </p> 
+<p> We include the Seebeck and Peltier effects. </p> 
+<p> In order to execute correctly the example you should have the following files in the working directory:<br /> <a href="#file"></a> </p> 
+<p> <a href="#file">tut_09.tib</a>: input file for <b>TiberCAD</b><br /> <a href="#file">tut_09.msh </a>: mesh file produced by GMSH from the script<a href="#file"> tut_09.geo</a>. </p> 
+<p> The heat conduction through the environment is modelled by adding an <b>air </b>region all around the diode. </p> 
+<p> We assume that far from the junction the system is in thermal equilibrium with a thermal bath at 300 K.  </p> 
+<p> The heat dissipation through the substrate is taken into acount by introducing a <img class="teximage" src="/files/tex/cbd567f30ce232cac824b11412a187c232fa29ac.png" alt="$ 0.5 cm^2 K/W $" />  thermal surface resistance. </p> 
+<p> Furthermore, we rely on the cylindrical symmetry with respect  to the axis growth and consider only a 2D <i>slice</i> of the system. In this way we simulate a 3D device by performing a 2D simulation (with much less computational time). </p> 
+<p> The mesh corresponding to the whole system (diode plus air region) is shown below.  </p> 
+<p> &nbsp; </p> 
+<div align="center"> <img src="/files/u8/tut_09_mesh.png" height="494" width="454" /> </div> 
+<p> &nbsp; </p> 
+<p> &nbsp; </p> 
+<p> <a title="device" name="device"></a> </p> 
+<h2>Device section (<a href="#contents">up</a>)</h2> 
+<p> &nbsp; </p> 
+<p> 
+<div class="codeblock"><code>$Device<br />{<br />Region n_side<br />{ <br />material = Si<br />doping = 1e18 doping_type = donor<br />}<br />Region p_side<br />{ <br />material = Si<br />doping = 1e19 doping_type = acceptor<br />}<br />Region air<br />{ <br />material = Air<br />}<br />}</code></div> 
+</p> 
+<p> <code>Region n-side</code> corresponds to the n-doped region situated at the bottom of the device, while  the <code>region p-side</code> refers  to the top p-doped  region. Air is modelled with Region Air (mesh region 3 in <a href="#file">  2Ddiode.geo</a> ). </p> 
+<p> &nbsp; </p> 
+<p> <a title="model" name="model"></a> </p> 
+<h2>Model section (<a href="#contents">up</a>)</h2> 
+<p> &nbsp; </p> 
+<p> The drift diffusion simulation is performed only over the device domain (excluding the Air region). Therefore, in <code>option</code> subsection </p> 
+<p> we have to indicate <code>physical_regions = (n_side,p_side)</code> . </p> 
+<p> 
+<div class="codeblock"><code>options<br />{<br />simulation_name = dd<br />physical_regions = (n_side,p_side)<br />}</code></div> 
+</p> 
+<p> The non-radiative recombination model used is the Shockley-Reed-Hall model. The related physical model section looks as   </p> 
+<p> 
+<div class="codeblock"><code>physical_model recombination<br />{<br />model&nbsp; =&nbsp; srh<br />}</code></div> 
+</p> 
+<p> The mobility models used for both electrons and holes are doping dependent.  </p> 
+<p> These models can be include with the notation  </p> 
+<p> 
+<div class="codeblock"><code>physical_model electron_mobility<br />{<br />model =&nbsp; doping_dependent<br />}<br />physical_model hole_mobility<br />{<br />model = doping_dependent<br />}</code></div> 
+</p> 
+<p> The thermoelectric power model used is named <code>diffusivity_model</code> (see the reference manual for detail) and we can include it by the notation  </p> 
+<p> 
+<div class="codeblock"><code>physical_model thermoelectric_power<br />{<br />model = diffusivity_model<br />}</code></div> 
+</p> 
+<p> The default is <img class="teximage" src="/files/tex/de68b5428ce4dbadc71da722664b21209c353585.png" alt="$ P_n = P_p = 0 $" />.  </p> 
+<p> Direct bias applied to the diode is obtained by using the following boundary conditions   </p> 
+<p> 
+<div class="codeblock"><code>BC_Regions<br />{<br />BC_Region anode<br />{<br />type = ohmic<br />voltage = @Vb[0.0]<br />}<br />BC_Region cathode<br />{<br />type = ohmic<br />}<br />}</code></div> 
+</p> 
+<p> As for the <code>thermal</code> model, we start from <code>option</code> subsection.  </p> 
+<p> Unlike the drift diffusion case, the thermal simulation has to be performed over the whole simulation domain (including the Air region).  We can refer to all regions simply by writing <code>all</code> . </p> 
+<p> 
+<div class="codeblock"><code>model thermal<br />{ <br />options<br />{ <br />simulation_name = tt<br />physical_regions = all<br />}</code></div> 
+<p> The connection with the drift diffusion simulation is specified in <code>physical_model heat_source</code> (<code>drift_diffusion_simulation = dd</code>).  Here we define the heat source model (<code>model = drift_diffusion_dissipation</code>). </p> 
+<p> 
+<div class="codeblock"><code>physical_model heat_source<br />{<br />model = drift_diffusion_dissipation<br />drift_diffusion_simulation = dd<br />}</code></div> 
+</p> 
+<p> &nbsp; </p> 
+<p> The dirichlet boundary condition is set with the type <code>heat_reservoir</code> and the temperature must be specified with <code>temperature = 300</code>. </p> 
+<p> The thermal surface resistance is associated to <code>thermal_surface_resistance</code> type. Its value is given by   <code>r_surf</code>. </p> 
+<p> The default boundary conditions fix the normal thermal flux to zero. </p> 
+<p> <br /> 
+<div class="codeblock"><code>BC_Region reservoir<br />{<br />type = heat_reservoir <br />temperature = 300<br />}<br />BC_Region dissipator<br />{<br />r_surf = 0.5<br />type = thermal_surface_resistance<br />temperature = 300<br />}</code></div> 
+</p> 
+<p> &nbsp; </p> 
+<p> <a title="solver" name="solver"></a> </p> 
+<h2>Solver section (<a href="#contents">up</a>)</h2> 
+<p> &nbsp; </p> 
+<p> 
+<div class="codeblock"><code>$Solver<br />{<br />driftdiffusion<br />{<br />nonlin_max_it = 25<br />nonlin_step_tol = 1e-5<br />ls_max_step = 2<br />}</code></div> 
+</p> 
+<p> The  <code>selfconsistent</code> simulation solves the thermal and the drift diffusion simulations (named <code>tt</code> and <code>dd</code> respectively) in a self consistent way.<br /> <code>Monitor = true</code> allows to visualize convergence flow. </p> 
+<p> 
+<div class="codeblock"><code>selfconsistent<br />{<br />flavour = relaxation<br />simulations = (dd,tt)<br />abs_tolerance = 1e-5<br />monitor = true<br />}</code></div> 
+<p> </p> 
+<p> The <code>sweep</code> section runs the <code>selfconsistent</code> simulation for each anode bias step. </p> 
+<p> 
+<div class="codeblock"><code>sweep<br />{<br />simulation = selfconsistent<br />variable = Vb<br />start = 0.0<br />stop = 1.0<br />steps = 10<br />plot_data = true<br />plotvariable = current<br />}<br />}</code></div> 
+</p> 
+<p> &nbsp; </p> 
+<p> <a title="physics" name="physics"></a> </p> 
+<h2>Physics section (<a href="#contents">up</a>)</h2> 
+<p> &nbsp; </p> 
+<p> In order to make the <code>drift-diffusion</code> simulation use the results of the chosen <code>thermal</code> simulation model, we write <code>thermal_simulation = tt</code> . </p> 
+<p> 
+<div class="codeblock"><code>$Physics<br />{<br />driftdiffusion<br />{<br />statistics = FD<br />thermal_simulation = tt<br />}<br />}</code></div> 
+</p> 
+<p> &nbsp; </p> 
+<p> <a title="simulation" name="simulation"></a><br /> 
+<h2>Simulation section (<a href="#contents">up</a>)</h2> 
+<p> &nbsp; </p> 
+<p> 
+<div class="codeblock"><code>$Simulation<br />{<br />meshfile = tut_09.msh<br />dimension = 2<br />temperature = 300<br />solve = sweep<br />resultpath = output_tut9<br />symmetry = cylindrical<br />output_format = vtk<br />plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, Current, eMob, hMob, current, NetRecombination, Pn, Pp, thermal)<br />}</code></div> 
+</p> 
+<p> We select a 2D dimension for  our simulation (<code>dimension = 2</code>), but  then we specify the cylindrical symmetry with   </p> 
+<p> <code>symmetry = cylindrical</code> </p> 
+<p> Since we have to solve <code>a sweep</code> simulation, we write  <code>solve = sweep</code> . </p> 
+<p> In the <i>plot  </i>statement,  through the keyword <code>thermal</code> we send in output all the  thermal quantities, i.e the temperature, the heat sources and the power fluxes. </p> 
+<p> &nbsp; </p> 
+<p> <a title="output" name="output"></a> </p> 
+<h2>Output (<a href="#contents">up</a>)</h2> 
+<p> &nbsp; </p> 
+<p> All results displayed are calculated at 1.2 V bias value. </p> 
+<p> <u>Temperature map</u> (<i>tt_nodal.dat</i>) and <u>thermal flux </u>(<i>tt_elemental.dat</i>): </p> 
+<div align="center"> <img src="/files/u8/tut_09_temperature.png" height="461" width="571" /> </div> 
+<div> </div> 
+<div> The substrate removes most of the heat generated. </div> 
+<div> The name of the filter to be used in Paraview for constructing the flux lines is <i>warp.</i> </div> 
+<div> <i>Runge-kutta 4-5</i> algorithm is recommended. </div> 
+<p> &nbsp; </p> 
+<p> <u>Heat sources</u> (<i>tt_elemental.dat</i>) :  </p> 
+<div align="center"> <img src="/files/u8/tut_09_heat.png" height="705" width="574" /> </div> 
+<p> &nbsp; </p> 
+<p> &nbsp; </p> 
+<p> <u>Thermoelectric power</u> (<i>dd_nodal.dat</i>) : </p> 
+<div align="center"> <img src="/files/u8/tut_09_TEP.png" height="586" width="566" /> </div> 
+<p> &nbsp; </p> 
+<p> <a title="file" name="file"></a> </p> 
+<table id="attachments"> 
+ <thead><tr><th>Attachment</th><th>Size</th> </tr></thead> 
+<tbody> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/tut_09_2.geo">tut_09.geo</a></td><td>2.11 KB</td> </tr> 
+ <tr class="even"><td><a href="http://www.tibercad.org/files/tut_09_3.msh">tut_09.msh</a></td><td>411.14 KB</td> </tr> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/tut_09_7.tib">tut_09.tib</a></td><td>2.43 KB</td> </tr> 
+</tbody> 
+</table> 
+  </div> 
+ 
+  <div class="clear-block clear"> 
+    <div class="meta"> 
+          <div class="terms"><ul class="links inline"><li  class="first last taxonomy_term_20"><a href="/documentation/tutorial" rel="tag" title="Tag for detailed tutorial" class="taxonomy_term_20">Tutorial</a></li> 
+</ul></div> 
+        </div> 
+ 
+      </div> 
+ 
+</div>          <span class="clear"></span> 

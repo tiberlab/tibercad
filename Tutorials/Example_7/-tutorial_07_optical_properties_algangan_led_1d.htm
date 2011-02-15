@@ -1,0 +1,289 @@
+ <div class="content"> 
+    <p> 
+In this  tutorial we  will  see how  to calculate quantum  and  optical properties  of  a  <b>AlGaN/GaN  LED diode </b>with three GaN quantum wells. 
+</p> 
+<p> 
+First of  all, strain and polarization fields are  calculated for  this  wurtzite heterostructure, then an increasing  bias is  applied  to the  diode until conduction regime is reached. Schroedinger equation is solved, with a single-band effective mass model for conduction band and with a 6-band <i><b>k.p</b></i> model for valence band.
+Eigenvalues and eigenfunctions are calculated to get energy levels and wavefunctions in the three quantum wells; then k.p optical matrix elements are calculated and used to find the emission spectrum, which finally is integrated in k-space.
+</p> 
+ 
+<p> 
+In order to execute correctly the  example you  should have the  following  files in  the  same  working directory:<br /> 
+<a href="#input_file">led_spectrum.tib</a>  :  input  file  for  TiberCAD<br /> 
+<a href="#input_file">led_spectrum.msh</a>  :  mesh  file  produced  by  GMSH   from the  script <a href="#input_file">led_spectrum.geo </a><br /> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/mesh_spectrum2.png" height="152" width="830" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<br /> 
+Let's see the input file:
+</p> 
+<h1><b>Device  structure </b></h1> 
+<p> 
+After a  buffer  n-doped  AlGaN  layer    (<b>Region n-AlGaN </b>), a   Al<sub>0.78</sub>InN barrier  layer  is  present   (<b>Region AlInN</b>), then  a  series of  three  AlGaN/GaN  quantum  wells, each 2 nm-wide. <br /> 
+The AlGaN barriers  are described with  several   <b>Regions,</b>  in  order to  distinguish regions  where  quantum calculations will be  applied.<br /> 
+For  example, the  <b>Region</b> <code>AlGaN_barrier_quantum</code> comprises all  the GMSH mesh regions corresponding to barrier layers  and which will be associated to quantum calculations:<br /> 
+<br /> 
+<div class="codeblock"><code>Region&nbsp; AlGaN_barrier_quantum<br />{<br />mesh_regions = (algan_barr_quantum1, algan_barr_quantum2, algan_barr_quantum3)<br />structure = wz<br />y-growth-direction = (1,0,-1,0)<br />z-growth-direction = (-1,2,-1,0)<br />x-growth-direction = (0,0,0,1)<br />mat = AlGaN<br />x = 0.2<br />doping = 3e18 <br />doping_type = donor<br />doping_level = 0.025<br />}</code></div> 
+</p> 
+<ul> 
+	<li> 
+	The  <b>Region GaN_QWell</b> , instead,   comprises  in a unique <b>TiberCAD region </b>all  the  GMSH mesh  regions corresponding to GaN well  layers:   
+	</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<div class="codeblock"><code>Region GaN_QWell<br />{<br />mesh_regions = (GaN_QW1, GaN_QW2, GaN_QW3)<br />structure = wz<br />y-growth-direction = (1,0,-1,0)<br />z-growth-direction = (-1,2,-1,0)<br />x-growth-direction = (0,0,0,1)<br />material = GaN<br />doping = 1e15&nbsp; #&nbsp; intrinsic&nbsp; !!<br />doping_type = donor #<br /># doping_level = 0.025<br />}</code></div> 
+</p> 
+<p> 
+<b> </b> 
+</p> 
+<ul> 
+	<li> 
+	Finally, the p-doped AlGaN  layer is  described in  this  way by  <b> Region p_AlGaN:</b></li> 
+</ul> 
+<p> 
+<div class="codeblock"><code>Region p_AlGaN<br />{<br />structure = wz<br />y-growth-direction = (1,0,-1,0)<br />z-growth-direction = (-1,2,-1,0)<br />x-growth-direction = (0,0,0,1)<br />material = AlGaN<br />x = 0.250 <br />doping = 3e19<br />doping_type = acceptor<br />doping_level = 0.170&nbsp;&nbsp; g = 4&nbsp;&nbsp;&nbsp; #p-doped Mg : Ea=170 meV <br />}</code></div> 
+</p> 
+<ul> 
+	<li> 
+	For convenience, we  define  3  <b>Clusters</b>, to  collect  the  mesh regions (with different materials) which will be  associated to each quantum calculation:
+	</li> 
+</ul> 
+<p> 
+<div class="codeblock"><code>Cluster Quantum_1<br />{<br />mesh_regions = (algan_barr_quantum1,GaN_QW1)<br />}</code></div> 
+</p> 
+<p> 
+<b><code>Quantum_1</code></b>  collects  the  regions related  to the  first quantum well.
+</p> 
+<p> 
+<div class="codeblock"><code>Cluster Quantum_2<br />{<br />mesh_regions = (algan_barr_quantum2, GaN_QW2 ) <br />}<br />Cluster Quantum_3<br />{<br />mesh_regions = (algan_barr_quantum3,GaN_QW3, i_AlGaN1_quantum)&nbsp; <br />}</code></div> 
+</p> 
+<p> 
+<b><code>Quantum_2</code></b> and <b><code>Quantum_3</code></b> collect  respectively the  mesh  regions related to  the  second  and  to the third quantum well.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h1><b>Simulation Models</b></h1> 
+<p> 
+&nbsp;
+</p> 
+<h2>1. Drift-diffusion<br /> 
+</h2> 
+<p> 
+A simulation model for  drift-diffusion calculation is  defined.<br /> 
+Physical models for  <i>srh</i>  recombination and  <i>direct</i> (radiative) recombination  are declared inside it.
+</p> 
+<p> 
+<div class="codeblock"><code>physical_model recombination<br />{<br />model = direct<br />C =&nbsp; 0.47e-10&nbsp; #&nbsp; GaN <br />}</code></div> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h2>2. Strain</h2> 
+<p> 
+A  <b>macrostrain</b>  simulation  (<code>simulation_name = strain</code>)  is  defined with a  boundary condition  located in the  AlGaN substrate  (<b>BC_Region  <i>n_contact </i></b>).
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h2>3. Quantum </h2> 
+<p> 
+For the  quantum calculations,  we  define several   <i><b>efaschroedinger</b></i><b> model</b>  simulations, two (one for  <b>electrons</b> and one  for  <b>holes</b>)  for  each  quantum  well.
+</p> 
+<p> 
+<div class="codeblock"><code>model efaschroedinger<br />{<br />options<br />{<br />simulation_name = QW1_electrons<br />physical_regions = Quantum_1&nbsp; <br />}<br />}<br />model efaschroedinger<br />{<br />options<br />{<br />simulation_name = QW1_holes<br />physical_regions = Quantum_1&nbsp; <br />}<br />}<br />.................................</code></div> 
+</p> 
+<p> 
+<br /> 
+To  each simulation, one  <b>Cluster</b> is  associated,  for  example <br /> 
+<code>physical_regions = Quantum_1</code> for  simulations <code>QW1_electrons</code> and <code>QW1_holes</code>.
+</p> 
+<p> 
+In <b>Solver</b>  section, we set  <i>Dirichlet b.c.</i> and  <code>number_of_eigenstates = 20</code>:<br /> 
+</p> 
+<p> 
+<div class="codeblock"><code>efaschroedinger<br />{<br />x-periodicity = false<br />Dirichlet_bc_everywhere = true&nbsp;&nbsp; # if&nbsp; false -&amp;gt;&nbsp; Neumann everywhere<br />number_of_eigenstates = 20 #60&nbsp; #30<br />poisson_model_name = driftdiffusion&nbsp; #&nbsp; potential from driftdiffusion <br />strain_model_name = macrostrain<br />convergent_density = true<br />log_output= false<br />} </code></div> 
+</p> 
+<p> 
+These settings  are  valid for all the  <b><i>efaschroedinger</i></b> simulations; each simulation, instead, needs the proper <code>particle </code>specification (<code>el</code> or <code>hl</code>)
+</p> 
+<p> 
+<div class="codeblock"><code>QW1_electrons<br />{<br />particle = el<br />}<br />QW1_holes<br />{<br />particle = hl <br />} </code></div> 
+</p> 
+<p> 
+In  <b>$Physics</b>, we  choose  to  use <b>single-band  model</b> for  <b>conduction</b> band: 
+</p> 
+<p> 
+<div class="codeblock"><code>QW1_electrons<br />{<br />particle = el<br />model = conduction_band&nbsp;&nbsp; #eff mass&nbsp; cb <br />} </code></div> 
+</p> 
+<p> 
+and  <b>6x6 kp model </b> for  <b>valence</b>  bands 
+</p> 
+<p> 
+<div class="codeblock"><code>QW1_holes<br />{<br />particle = hl<br />model = kp&nbsp;&nbsp; #&nbsp; k.p&nbsp; for&nbsp; valence&nbsp; band<br />kp_model = 6x6<br />} </code></div> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h2>4. Optical properties</h2> 
+<p> 
+For the <b>optical  properties</b>,  a  simulation   of  the    model <b>opticskp </b>is to be  defined:<br /> 
+<code>simulation_name = optics</code>,<br /> 
+for one  of the quantum  clusters (in this  case <code>physical_regions = Quantum_3</code>).
+</p> 
+<p> 
+<div class="codeblock"><code>model opticskp<br />{<br />options<br />{<br />simulation_name = optics<br />physical_regions = Quantum_3 # ( 8,9,10&nbsp; )&nbsp;&nbsp;&nbsp; #&nbsp; 6,7&nbsp; # 4,5<br />}<br />} </code></div> 
+</p> 
+<p> 
+We  want  to  calculate the  (k-space integrated)  optical spectrum,  so  we  need an  <b>opticalspectrum</b>  simulation : 
+</p> 
+<p> 
+<div class="codeblock"><code>model opticalspectrum<br />{<br />options<br />{<br />simulation_name = spectrum<br />}<br />} </code></div> 
+</p> 
+<p> 
+In  <b>Solver</b>  section,  we  specify, in <code>optics</code> block:  
+</p> 
+<ul> 
+	<li>the  quantum  simulations related to the  initial and  final  state (<code>initial_state_model = QW3_electrons</code>, <code>final_state_model = QW3_holes</code>), which give the electron and hole states used in  optical  calculations; </li> 
+	<li>which of  the  eigenstates we  want  to  take in  account for the transitions : <code>initial_eigenstates = (0, 19)</code>, <code>final_eigenstates = (0, 19)</code></li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<div class="codeblock"><code>optics<br />{<br />initial_state_model = QW3_electrons # quantum_el<br />final_state_model =&nbsp;&nbsp; QW3_holes # quantum_hl<br />initial_eigenstates = (0, 19)<br />final_eigenstates&nbsp;&nbsp; = (0, 19)<br />} </code></div> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+As  for <b>optical spectrum</b> calculation,  we need to specify several information for <i><b>spectrum</b></i> simulation:
+</p> 
+<ul> 
+	<li><b>dimension of  k-space</b> ( =2  for  1D simulation, <code>k_space_dimension = 2</code>) and corresponding <i>k vectors</i></li> 
+	<li>parameters for  the <b>adaptive  refimement</b> of  the  <i>k-space mesh </i> (<code>refine_fraction</code>, <code>number_of_nodes </code>, etc.)</li> 
+	<li>name of  the  simulation from  which <i><b>optical  matrix  elements</b></i> are taken  (<code>optical_matr_elem_model = optics</code>)</li> 
+	<li>light polarization and  energy range (<code>Emin</code>, <code>Emax</code>, <code>dE</code>) for the  spectrum calculation
+	</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<div class="codeblock"><code>spectrum<br />{<br />k_space_dimension = 2<br />k-space_basis = true<br />k1 = (0, 0, 0.1)<br />k2 = (0, 0.1, 0)<br />refine_fraction =&nbsp; 0.30&nbsp; # 1.0 # 0.30 #&nbsp; 0.20&nbsp;&nbsp; 1.0 -&amp;gt;&nbsp; uniform refinement !!<br />relative_accuracy =&nbsp; 0.01&nbsp; # 0.07&nbsp; # 0.01<br />refine_k_space = true<br />number_of_nodes = (2,2)&nbsp; # 4 4&nbsp;&nbsp; nodes&nbsp; =&nbsp; numb. of&nbsp; elememts in k mesh, along x and y<br />wedge = quarter<br />optical_matr_elem_model=optics<br />polarization =&nbsp; (0, 0, 1)<br />Emin = 3.0<br />Emax&nbsp; = 5.0<br />dE = 0.001<br />}</code></div> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h1><b>Run simulations</b></h1> 
+<p> 
+In  <b>Simulation </b>section we  define  the  <u><i><b>flow scheme </b></i></u>  of  our  calculations:
+</p> 
+<p> 
+<b><code>solve = (strain, sweep, QW3_electrons,QW3_holes, spectrum)</code></b> 
+</p> 
+<p> 
+First we  run  <b>strain </b>simulation,  to  get deformation potentials and piezopolarization, than a  <b>sweep </b>on  drift-diffusion,  until the  diode is in conduction, than <b>quantum efa</b> calculations are performed  (<b>QW3_electrons, QW3_holes</b>),  to get the states in  the  third quantum well, which are finally  used in  optical calculations (<b>spectrum</b>, which by  itself runs  the <b>opticskp</b> model simulation as  defined in  <b>Solver</b> section).
+</p> 
+<p> 
+<span style="color: #ff0000"><b><i>tibercad  led_spectrum.tib</i></b></span> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<hr /> 
+<p> 
+&nbsp;
+</p> 
+<h1><b>Output</b></h1> 
+<p> 
+As usual,  we get the  output files for  drift-diffusion 
+</p> 
+<ul> 
+	<li><b>driftdiffusion_elemental.dat</b>: current vectors, etc.</li> 
+	<li><b>driftdiffusion_nodal.dat</b>: bands profiles,  densities, etc.</li> 
+	<li><b>sweep_driftdiffusion_Vb.dat</b>: integrated currents at  contacts (IV characteristic)</li> 
+</ul> 
+<p> 
+and for  strain:
+</p> 
+<ul> 
+	<li><b>strain_elemental.dat</b>: strain tensor components</li> 
+</ul> 
+<br /> 
+<br /> 
+<div align="center"> 
+<img src="/files/u6/bands_V4.png" height="475" width="661" /> 
+</div> 
+<br /> 
+<b> 
+Conduction and valence  band  </b>profile for  an  applied bias Vb=4 V; quasi-fermi levels for electrons  and  holes are indicated, showing that the three  GaN  quantum wells levels are  populated both in conduction and  in  valence  band.<br /> 
+<br /> 
+<p> 
+for  quantum:
+</p> 
+<ul> 
+	<li><b> QW3_electrons.dat</b>, <b>QW3_electrons_nodal.dat</b></li> 
+	<li><b> QW3_holes.dat, QW3_holes_nodal.dat</b></li> 
+</ul> 
+<br /> 
+<br /> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/states_V4_QW3_300k_0.png" height="479" width="675" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+First conduction band state (left) and  valence band  state (right) in  the  third  quantum  well. 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+Finally,  since the  plot  variables  <i>optical_spectrum</i> and  <i>k-space   </i>are defined,  we get the  output files 
+</p> 
+<ul> 
+	<li><b>spectrum_spectrum.dat</b>:  emission spectrum in  the  defined  energy  range</li> 
+	<li><b>spectrum_k_space.gmv</b>:  k-space mesh</li> 
+</ul> 
+<br /> 
+<div align="center"> 
+<img src="/files/u6/spectrum_qw3.png" height="475" width="692" /><br /> 
+</div> 
+<br /> 
+<br /> 
+<a title="input_file" name="input_file"></a><br /> 
+<table id="attachments"> 
+ <thead><tr><th>Attachment</th><th>Size</th> </tr></thead> 
+<tbody> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/led_spectrum_1.geo">led_spectrum.geo</a></td><td>2.34 KB</td> </tr> 
+ <tr class="even"><td><a href="http://www.tibercad.org/files/led_spectrum_2.tib">led_spectrum.tib</a></td><td>8.83 KB</td> </tr> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/led_spectrum_2.msh">led_spectrum.msh</a></td><td>113.14 KB</td> </tr> 
+</tbody> 
+</table> 
+  </div> 
+ 
+  <div class="clear-block clear"> 
+    <div class="meta"> 
+          <div class="terms"><ul class="links inline"><li  class="first last taxonomy_term_20"><a href="/documentation/tutorial" rel="tag" title="Tag for detailed tutorial" class="taxonomy_term_20">Tutorial</a></li> 
+</ul></div> 
+        </div> 
+ 
+      </div> 
+ 
+</div>          <span class="clear"></span> 

@@ -1,0 +1,263 @@
+ <div class="content"> 
+    <p> 
+In this  tutorial,  we  will see how  to perform  <b>3D</b> calculations of  <b>strain </b>and<b> 
+transport properties </b>of  an <b>AlGaN nanocolumn</b>  heterostructure 
+<b>diode</b> with  a  <b>GaN  quantum 
+disk</b>.  Since the nitride materials present  a wurtzite crystal structure, strain generated piezoelectric  properties are found  and  taken in  account  in the  calculation of  current.<br /> 
+Here we  consider  only  classical  calculations,  for a quantum treatment of this kind of structure you can refer to <a href="/documentation/tutorial/tutorial12_gan_qdisk_quantum_optical_properties_3d">Tutorial 12</a>.
+</p> 
+<p> 
+In order to execute correctly  this   example you  should have the  following  files in  the  same  working directory:<br /> 
+<a href="#input_file"> 
+nanocolumn.tib  </a>:  input  file  for  TiberCAD<br /> 
+<a href="#input_file"> 
+nanocolumn.msh</a>  :  mesh  file  produced  by   the GMSH script <a href="#input_file">nanocolumn.geo</a> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/geo_nanocol2_fig_scaled.png" height="548" width="862" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+ 
+<h1><b>Device  structure</b> </h1> 
+<p> 
+In  the  following,  some  features of  the  input  file  will  be  described ; for  further details you can refer to the program reference  manual.<br /> 
+In the  <b>Device</b>  section,  the  structure  of the   nanocolumn is  described: the   GaN quantum disk region ,  the  AlGaN  barriers and<br /> 
+two high doped AlGaN  contact  regions .<br /> 
+For  example,  here is  the  GaN well  region:
+</p> 
+<p> 
+<div class="codeblock"><code>Region GaN_qdisc&nbsp; #well<br />{<br />material = GaN<br />structure = wz<br />x-growth-direction = (1,0,-1,0)<br />y-growth-direction = (-1,2,-1,0)<br />z-growth-direction = (0,0,0,1) <br />} </code></div> 
+</p> 
+<p> 
+Note that crystal structure is defined as wurtzite (<code>structure = wz</code>) and the crystal orientation is defined by the 3 vectors <code>x-growth-direction</code>, <code>y-growth-direction</code> and  <code>z-growth-direction</code>. 
+</p> 
+<p> 
+When in the modeling script file <a href="#input_file">nanocolumn.geo</a> we have defined  
+</p> 
+<p> 
+<div class="codeblock"><code>Physical Volume(GaN_qdisc) = GaN_volumes[0] </code></div> 
+</p> 
+<p> 
+we have created in the  mesh a   <i>physical region </i> with  the name <code>GaN_qdisc</code>;  we  can refer  to  this  GMSH<b> </b><i>physical region </i>(which is  a  <i>volume,</i> in this  3D example),  by writing     <code>Region GaN_qdisc</code>  <br /> 
+In the  same way we can  refer to  the  AlGaN  volume  regions,  for  example for the  one defined with :
+</p> 
+<p> 
+<div class="codeblock"><code>Physical Volume(p_algan) = AlGaN_volumes[3]</code></div> 
+</p> 
+<p> 
+we  write   
+</p> 
+<p> 
+<div class="codeblock"><code>Region p_algan&nbsp; </code></div> 
+</p> 
+<p> 
+in  the  <b>TiberCAD</b>  <b>region</b>  <code>p_algan </code>:
+</p> 
+<p> 
+<div class="codeblock"><code>Region p_algan <br />{<br />material = AlGaN<br />x = 0.2<br />structure = wz<br />x-growth-direction = (1,0,-1,0)<br />y-growth-direction = (-1,2,-1,0)<br />z-growth-direction = (0,0,0,1)<br />doping = 1e19 doping_type = acceptor doping_level = 0.17 g = 4 <br />} </code></div> 
+</p> 
+<p> 
+In this high doped contact  region,  note  that  the  AlGaN alloy composition  is  defined by  <code>x = 0.2</code> . Energy level of  the  dopant is  defined  by <code>doping_level = 0.17</code> (it determines incomplete dopant ionization at room temperature).
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h1><b>Simulation models</b></h1> 
+<p> 
+&nbsp;
+</p> 
+<h2>1. Strain </h2> 
+<p> 
+We want strain calculation,  so  we  define  a   simulation  (<code>simulation_name = strain</code>)  belonging  to  the  model  <b><code>macrostrain</code></b>, to  be  associated to the  whole device (<code>physical_regions = all</code>);  a  <b><code>substrate</code></b>  type boundary condition is  defined, related to the  <code>BC_Region&nbsp;&nbsp; ncontact </code><code> </code> and to AlGaN material : 
+</p> 
+<p> 
+<div class="codeblock"><code>model macrostrain<br />{ <br />options<br />{<br />simulation_name = strain<br />physical_regions = all<br />} <br />...................... <br />BC_Regions<br />{<br />BC_Region&nbsp;&nbsp; ncontact&nbsp; <br />{<br />type = substrate<br />material = AlGaN<br />x = 0.2<br />structure = wz<br />x-growth-direction = (1,0,-1,0)<br />y-growth-direction = (-1,2,-1,0)<br />z-growth-direction = (0,0,0,1)<br />}</code></div> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h2>2. Drift-diffusion</h2> 
+<p> 
+As  for  drift-diffusion,  as  usual we  define  a  simulation (<code>simulation_name = dd</code>) belonging  to  the  model  <b>driftdiffusion </b>and associated to  the  whole  device (<code>physical_regions = all</code>).
+</p> 
+<ul> 
+	<li> 
+	A <b>srh  recombination </b>model  is  implemented  and also one for <b>radiative  (direct)</b> recombination, in  this  way:</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<div class="codeblock"><code>physical_model recombination<br />{<br />model = direct<br />C = 1.1e-8<br />}</code></div> 
+</p> 
+<p> 
+<b>Field dependent  mobility </b>model is  chosen for  both  holes and  electrons.
+</p> 
+<p> 
+The <b>BC Regions</b>  for  drift-diffusion are  the  the  two  contact regions,  defined  by  the  two boundary surfaces <b>BC_Region ncontact </b>    and  <b>BC_Region p_contact </b> <b></b><b> </b> 
+</p> 
+<p> 
+In  <b>Physics</b> section,  note that for   (all the  simulations of  the  kind)<b> driftdiffusion </b>model ,  we  choose  the  strained implementation : 
+</p> 
+<p> 
+<div class="codeblock"><code>driftdiffusion<br />{<br />strain_simulation = strain<br />statistics = FD<br />}</code></div> 
+</p> 
+<p> 
+Thus,  with  <code>strain_simulation = strain</code>,  we  specify  that  strain  effects will  be  taken in  account correctly in   the calculation of current.  <br /> 
+In particular,  the  piezoelectric  polarization arising  from  strain in  the wurtzite nitrides materials of  this  nanocolumn will  enter in Poisson  equation and heavily  modify  the  band  profiles.
+</p> 
+<ul> 
+	<li> 
+	Note  that  if <code>strain_simulation = strain</code> is  <b>not</b> defined,  strain results,  even  if  calculated,  will  <b>NOT  </b>be  used in  drift-diffusion model.
+	</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<h1><b>Run simulations</b></h1> 
+<p> 
+Let's now  <b>run  TiberCAD  </b>to  calculate  strain (<b>strain </b> simulation )  and  driftdiffusion (<b>sweep</b>  for<b>  dd</b> simulation)
+</p> 
+<p> 
+<div class="codeblock"><code>solve = (strain, sweep)</code></div> 
+</p> 
+<p> 
+<b><span style="color: #ff0000"><i>tibercad  nanocolumn.tib</i></span></b> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<hr /> 
+<p> 
+&nbsp;
+</p> 
+<h1> <b>Output</b></h1> 
+<p> 
+TiberCAD supports  3 packages  for 2D and 3D  data visualization and  post-processing:
+</p> 
+<p> 
+Free:<br /> 
+1) GMV, <a href="http://www-xdiv.lanl.gov/XCM/gmv/GMVHome.html">http://www-xdiv.lanl.gov/XCM/gmv/GMVHome.html</a><br /> 
+<i>output_format = gmv</i><br /> 
+2) Paraview, <a href="http://www.paraview.org/New/index.html">http://www.paraview.org/New/index.html</a><br /> 
+<i>output_format = vtk</i><br /> 
+<br /> 
+Commercial:<br /> 
+3) Tecplot-ise, <a href="http://www.amtec.com/">http://www.amtec.com/</a><br /> 
+<i>output_format = ise</i> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+After a successful  execution,  the  following output  files are  present in the  working  directory:
+</p> 
+<ul> 
+	<li><b>strain_elemental.plt</b> :   <b>strain</b> tensor and  <b>polarization</b> vector components;</li> 
+</ul> 
+<p> 
+here are,  for  example, the in-plane components eps_11  and eps_22  of  the  strain tensor: they  are are negative in  GaN, since GaN is  subjected  to compressive  strain.  
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/strain_2_0.png" height="512" width="726" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+These are the Polarization components Pz  and  Px: piezoelectric polarization arises in correspondance to the AlGaN/GaN interfaces,  where the  strain is large. Both pyro and piezo polarizations are included in the drift-diffusion calculations.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/piezo_1.png" height="433" width="688" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<ul> 
+	<li><b>dd_nodal_bias_<i>biasvalue</i>.plt: </b>drift-diffusion nodal  quantities for  each  sweep  step,  given  by  <i>biasvalue</i></li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/el_hl_dens_3.png" height="475" width="691" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+Here are  the  electron and hole density distribution  for a bias Vd = 5V, which  show a peak in the quantum disk region.
+</p> 
+<p> 
+Since we have contacted  the  two extremes of  the  nanocolumn, we have   calculated the diode IV characteristic. <br /> 
+By defining <i>ContactCurrents  </i>output  variable in <i>plot</i>, <b>TiberCAD</b>  generates  the  output  file   <b>sweep_dd_bias.dat, </b>where <b>dd</b> is  the name  of  the  drift-diffusion simulation and <i>bias</i> is  the  variable used in the  <i>sweep</i>  calculation. In this  file, the currents integrated  on the  two contacts  are  reported, for  each  value  of   the cathode voltage (<i>bias</i>).
+</p> 
+<table border="0"> 
+	<tbody> 
+		<tr> 
+			<td> <img src="/files/u6/nanocolumn_diode2.png" height="258" width="373" /></td> 
+			<td> 
+			<p> 
+			<img src="/files/u6/IV_char_1.png" height="279" width="405" /> 
+			</p> 
+			</td> 
+		</tr> 
+	</tbody> 
+</table> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<a name="input_file" title="input_file"></a> 
+</p> 
+<table id="attachments"> 
+ <thead><tr><th>Attachment</th><th>Size</th> </tr></thead> 
+<tbody> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/nanocolumn_1.msh">nanocolumn.msh</a></td><td>950.8 KB</td> </tr> 
+ <tr class="even"><td><a href="http://www.tibercad.org/files/nanocolumn_3.tib">nanocolumn.tib</a></td><td>3.69 KB</td> </tr> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/nanocolumn_1.geo">nanocolumn.geo</a></td><td>3.08 KB</td> </tr> 
+</tbody> 
+</table> 
+  </div> 
+ 
+  <div class="clear-block clear"> 
+    <div class="meta"> 
+          <div class="terms"><ul class="links inline"><li  class="first last taxonomy_term_20"><a href="/documentation/tutorial" rel="tag" title="Tag for detailed tutorial" class="taxonomy_term_20">Tutorial</a></li> 
+</ul></div> 
+        </div> 
+ 
+      </div> 
+ 
+</div>          <span class="clear"></span> 
