@@ -98,7 +98,7 @@ Future releases will relax this restriction.
 
 
 \section{\texttt{Solver} section}
-The \textttt{Solver} section of the Drift-Diffusion module refers to a nonlinear solver (see the description of solvers \ref{??}).
+The \texttt{Solver} section of the Drift-Diffusion module refers to a nonlinear solver (see the description of solvers \ref{??}).
 
 
 \section{\texttt{Physics} section}
@@ -119,7 +119,7 @@ The generic options are:
 \end{description}
 
 
-For the simple semiconductor model one has to provide conduction and valence band edges and the effective density of states masses in the \texttt{Region} sections.
+For the simple semiconductor model one has to provide conduction and valence band edges and the effective density of states masses (or the effective density of states itself) in the \texttt{Region} sections.
 The corresponding keywords are given in table~\ref{table:simple_sc}.
 \begin{table}[htb]
 \center
@@ -130,6 +130,8 @@ The corresponding keywords are given in table~\ref{table:simple_sc}.
 \keyword{Ev} & valence band edge (eV) \\
 \keyword{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
 \keyword{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
+\keyword{Nc} & conduction band effective DOS (cm$^-3$) \\
+\keyword{Nv} & valence band effective DOS (cm$^-3$) \\
 \end{tabular}
 \caption{Parameters for the simple semiconductor model}
 \label{table:simple_sc}
@@ -195,7 +197,7 @@ $\beta$ & \texttt{Tcoeff} \\
 \label{table:srh_params_db}
 \end{table}
 
-The recombination times and trap level can be overridden from the input file by using the keywords of table~\ref{table:srh_params_input} in the appropriate \texttt{physical\_model} section or in the \texttt{Region} section (the latter overrides the former).
+The recombination times and trap level can be overridden from the input file by using the keywords of table~\ref{table:srh_params_input}.
 \begin{table}[htb]
 \center
 \begin{tabular}{l||l}
@@ -442,7 +444,7 @@ $v_{min}$ &  \verb+vsat_min+ \\
 
 \subsection{Polarization models}
 For simulations involving materials with nonzero electric polarization (such as nitrides) it is important to include the effect of polarization.
-This is done by specifying the models for spontaneous and piezoelectric polarization using the keywords \keyword{polarization} with the types \keyword{pyro} and \keyword{piezo}:
+This is done by specifying the models for spontaneous (pyro-) and piezoelectric polarization using the keywords \keyword{polarization} with the types \keyword{pyro} and \keyword{piezo}:
 \begin{verbatim}
 polarization pyro {}
 polarization piezo {}
@@ -450,12 +452,31 @@ polarization piezo {}
 
 As for all models, if they do not have individual options, they can be specified together by writing \verb+polarization (pyro, piezo) {}+.
 
+\subsubsection{Spontaneous (pyro-) polarization}
+
+The spontaneous polarization model imposes a constant electric polarization $P$ along the symmetry-braking direction of the crystal.
+Crystals with wurtzite structure like Nitrides have strong piezoelectric fields along the c-direction.
+The value of the polarization usually is taken from the database, but it can be overridden from the input file by specifying the option \keyword{Pz}, meaning the value of the spontaneous polarization along c-direction ($[0001]$).
+Alternatively, one can specify explicitly a polarization vector using the option \verb+P = (Px, Py, Pz)+.
+This is useful to impose an arbitrary constant polarization field.
+
+\subsubsection{Piezopolarization}
+The piezoelectric polarization is strain induced and given by
+\begin{equation}
+P^{pz} = e_{ikl}\varepsilon_{kl}
+\end{equation}
+where $\varepsilon_{kl}$ is the strain tensor.
+The piezoelectric moduli $e_{ikl}$ are stored in the database.
+The strain is obtained from the simulation specified in the \texttt{Physics} section, but it can be overridden by providing a name
+for the strain simulation inside the polarization block using the \keyword{strain\_simulation} option.
+
+
 \subsection{particle density}
 Details for the calculation of the electron and hole densities can be given in the \keyword{particle\_density} submodel.
 Its options are
 \begin{description}
-\item[\keyword{particle = }\Value{string}] The particle this model is describing. Can be \Value{electron} or \Value{hole}. 
-\item[\keyword{statistics = }\Value{string}] The statistics. Can be \Value{fermidirac} (default) or \Value{boltzmann}. 
+\item[\keyword{particle = }\Value{string}] The particle this model is describing. Can be \keyword{electron} or \keyword{hole}. 
+\item[\keyword{statistics = }\Value{string}] The statistics. Can be \keyword{fermidirac} (default) or \keyword{boltzmann}. 
 \item[\keyword{quantum\_density = }\Value{string}] The name of a quantum density simulation. This will use the quantum mechanical particle density in the regions it was calculated.
 \end{description}
 
@@ -467,7 +488,7 @@ By defining an embracing region of a certain extension (specified in meters), a 
 
 \item[\keyword{cutoff =} \Unit{double}] if an embracing region is used, a part of this region near the boundary of the quantum region can be cut off so that only the classical density is considered in that part. \keyword{cutoff} is specified as a percentage of the embracing length and should therefore be between 0.0 and 1.0.
 
-\item[\keyword{plot\_embracing\_regions =} \Unit{bool}] Whereas the automatic creation of the embracing region in 1D is a very simple task, it is a more difficult one in higher dimensions.
+\item[\keyword{plot\_embracing\_region =} \Unit{bool}] Whereas the automatic creation of the embracing region in 1D is a very simple task, it is a more difficult one in higher dimensions.
 By setting this flag to \texttt{true}, the embracing region and the mixing coefficient $x$ will be plotted for a visual control of the quality of the embracing region.
 The default is \texttt{false}.
 \end{description}
@@ -475,7 +496,49 @@ The default is \texttt{false}.
 
 \subsection{Trap models}
 
-Traps 
+Currently single level traps are implemented in \TiberCAD{}.
+Traps can be normally neutral or normally charged electron or hole traps, or a fixed charge.
+Common options for all models are
+\begin{description}
+\item[\keyword{type = }\Value{string}] (If not provided as second keyword). The type of traps. One of \keyword{eNeutral}, \keyword{hNeutral}, \keyword{donor}, \keyword{acceptor} or \keyword{fixed\_charge}.
+\item[\keyword{Nt = }\Value{double}] The trap density in cm$^-3$ (or cm$^-2$ for surface traps).
+\item[\keyword{Et = }\Value{double}] The trap level with respect to a reference energy.
+\item[\keyword{reference = }\Value{string}] The reference energy. The default is \keyword{m}. The trap energy in this case is given as $E_{trap} = E_{midgap} + Et$. Other possible values are \keyword{c} ($E_{trap} = E_c - Et$) or \keyword{v} ($E_{trap} = E_v + Et$).
+\end{description}
+
+\begin{description}
+\item[\keyword{eNeutral}] The trapped electron density is given by
+\begin{equation}
+n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+\end{equation}
+\item[\keyword{hNeutral}] The trapped hole density is given by
+\begin{equation}
+p_t = \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
+\end{equation}
+\item[\keyword{donor}] The density of ionized traps is given by
+\begin{equation}
+N^+_t = N_t - \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+\end{equation}
+\item[\keyword{acceptor}] The density of ionized traps is given by
+\begin{equation}
+N^-_t = N_t - \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
+\end{equation}
+\end{description}
+
+If traps are specified, the total charge density in the Poisson equation is modified to include the charged trap densities:
+\begin{equation}
+\rho = e\left(p - n + N^+_D - N^-_A - \sum n_t + \sum p_t + \sum N^+_t - \sum N^-_t \right)
+\end{equation}
+
+Additionally, each trap induces a SRH recombination term of the form
+\begin{equation}
+R_t = N_t \frac{v_{th}^n\sigma^nv_{th}^p\sigma^p(np -n_i^2)}{v_{th}^n\sigma^n(n+n_1) + v_{th}^p\sigma^p(p+p1)}
+\end{equation}
+where $\sigma^{n,p}$ are the capture cross sections, $v_{th}^{n,p}$ the thermal velocities and (for Boltzmann statistics)
+\begin{equation}
+n_1 = n_{i,eff} \exp(E_{trap}/k_BT),\quad p_1 = n_{i,eff} \exp(-E_{trap}/k_BT)
+\end{equation}
+
 
 
 
@@ -561,6 +624,7 @@ where $(\varphi^0, \phi_n^0, \phi_p^0)$ are the potentials for which the quantum
 
 \section{Example}
 
+The following example shows the Drift-Diffusion module definition for a pn junction.
 \begin{inputfile}
 \begin{verbatim}
 Module driftdiffusion
@@ -572,6 +636,12 @@ Module driftdiffusion
 
   Physics
   {
+    recombination srh {}
+
+    mobility doping_dependent {}
+
+    Contact anode { voltage = $Vd }
+    Contact cathode { voltage = 0 }
   }
    
 }

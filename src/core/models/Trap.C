@@ -46,13 +46,7 @@ Trap::Trap(const ModelOptions& options) :
 void
 Trap::do_init(void)
 {
-  if (_particle == 'h')
-    _energy_reference = 'v';
-  else
-    _energy_reference = 'c';
-
   string tmp("m");
-  tmp[0] = _energy_reference;
   tmp =  get_option("reference", tmp);
   _energy_reference = tmp[0];
 

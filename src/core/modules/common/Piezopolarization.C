@@ -21,7 +21,7 @@ Piezopolarization::do_init(void)
 {
 
   std::string sim_name = "";
-  get_parameter("simulation_name", sim_name);
+  get_parameter("strain_simulation", sim_name);
   _strain.set_simulation(sim_name);
 
 }
