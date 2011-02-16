@@ -707,6 +707,13 @@ Control::create_boundary(SimulationInterface* sim, const ModelOptions& opts)
         throw InitFailedException(os.str());
       }
 
+      ID ida = bd->get_id_A();
+      ID idb = bd->get_id_B();
+      if (!sim->includes_region(ida) && !sim->includes_region(idb))
+        throw InitFailedException("Boundary \'" + boundary_name +
+            "\' does not touch any region of simulation \'" +
+            sim->get_name() + "\'");
+
       Material* matA = bd->get_material_A();
       Material* matB = bd->get_material_B();
       pm = sim->new_boundary_model(opts, matA, matB);
