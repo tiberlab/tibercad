@@ -59,21 +59,20 @@ Module driftdiffusion
       Et = 0.4
       reference = cb
     }
+  }
 
-    Contact anode
-    {
-      type = ohmic
-      voltage = $Vb
-    }
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb
+  }
 
-    Contact cathode
-    {
-      type = ohmic
-      voltage = 0.0
-    }
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
  
-  }   
-
 }  
 
 

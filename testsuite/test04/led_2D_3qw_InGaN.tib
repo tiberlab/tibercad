@@ -193,26 +193,26 @@ Device
 
       polarization (piezo, pyro) {}
   
-
-
-      Contact p_contact
-      {
-        regions = 21
-        type = ohmic
-      	zero_grad_fermi_e = true
-	voltage = $Vb[0.0] 
-      }
-      
-      
-      Contact n_contact
-      {
-        regions = 20
-        type = ohmic
- 	zero_grad_fermi_h = true
-        voltage = 0.0
-      }
- 
     }   
+
+
+    Contact p_contact
+    {
+      regions = 21
+      type = ohmic
+      zero_grad_fermi_e = true
+      voltage = $Vb[0.0] 
+    }
+      
+      
+    Contact n_contact
+    {
+      regions = 20
+      type = ohmic
+      zero_grad_fermi_h = true
+      voltage = 0.0
+    }
+ 
 } 
 
 

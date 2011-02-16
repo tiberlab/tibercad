@@ -70,43 +70,41 @@ Module driftdiffusion
   Physics
   {
 
-     # use Fermi-Dirac statistics
-     statistics =  FD
+    # use Fermi-Dirac statistics
+    statistics =  FD
 
            
-     mobility doping_dependent {}
+    mobility doping_dependent {}
 
-     recombination (srh, auger) {}
+    recombination (srh, auger) {}
 
-     trap eNeutral
-     {
-       regions = Si/SiO2
-       Nt = 2e12
-       Et = 0.5
-       reference = cb
-     }
-
-
-     Contact base
-     {
-       type = ohmic
-       voltage = $Vb
-     }
-
-     Contact collector
-     {
-       type = ohmic
-       voltage = $Vc
-     }
- 
-     Contact emitter
-     {
-       type = ohmic
-       voltage = 0.0
-     }
- 
-
+    trap eNeutral
+    {
+      regions = Si/SiO2
+      Nt = 2e12
+      Et = 0.5
+      reference = cb
+    }
   }   
+
+
+  Contact base
+  {
+    type = ohmic
+    voltage = $Vb
+  }
+
+  Contact collector
+  {
+    type = ohmic
+    voltage = $Vc
+  }
+ 
+  Contact emitter
+  {
+    type = ohmic
+    voltage = 0.0
+  }
 }
 
 

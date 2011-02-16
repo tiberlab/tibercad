@@ -194,8 +194,9 @@ Ramp::ramp(void)
       value = oldvalue;
     }
   }
-  while (sign * (_goal - value) > 1e3 * numeric_limits<double>::min());
-  // the min() here prevents from resolving two times the same sweep value
+  while (abs(_goal - value) > 1e3 * (abs(_goal) * numeric_limits<double>::epsilon()
+      + numeric_limits<double>::min()));
+  // the epsilon() here prevents from resolving two times the same sweep value
   // due to fixed point numerics
 
   // At the next call, we begin with the last succseful step size,

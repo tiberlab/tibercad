@@ -36,11 +36,8 @@ Module driftdiffusion
   plot = (Ec, Ev, eQFermi, hQFermi, ContactCurrent)
 
 
-  Physics
-  {
-    Contact anode { voltage = $Vb }
-    Contact cathode { }
-  }   
+  Contact anode { voltage = $Vb }
+  Contact cathode { }
 
 }
 

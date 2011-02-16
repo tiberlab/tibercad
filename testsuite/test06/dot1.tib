@@ -106,21 +106,18 @@ Module macrostrain
     relative_tolerance = 1e-6
   }
 
-  Physics
+
+  Boundary substrate
   {
+    regions = 1
+    type = substrate
+    material = AlGaN
+    x = 0.3
+    structure = wz
 
-    Boundary substrate
-    {
-      regions = 1
-      type = substrate
-      material = AlGaN
-      x = 0.3
-      structure = wz
-
-      y-growth-direction = (-1,0,1,0)
-      x-growth-direction = (-1,2,-1,0)   
-      z-growth-direction = (0,0,0,1)
-    }
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
   }
 
 } 

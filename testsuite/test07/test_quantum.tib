@@ -60,15 +60,12 @@ Module macrostrain
   substrate = substrate
 
     
-  Physics
+  Boundary substrate 
   {
-    Boundary substrate 
-    {
-      regions = 1
-      type = substrate
-      material = GaAs
-    }
-  } 
+    regions = 1
+    type = substrate
+    material = GaAs
+  }
 }
 
 
@@ -112,24 +109,24 @@ Module driftdiffusion
      
     mobility doping_dependent { }
 
-
-    Boundary cathode
-    {
-      regions = 1
-      #zero_grad_fermi_e = true
-      type = ohmic
-    }
-
-
-    Boundary anode
-    {
-      regions = 2
-      #zero_grad_fermi_e = true
-      type = ohmic
-      voltage = $Vb[0.0]  
-    }
- 
   }
+
+  Boundary cathode
+  {
+    regions = 1
+    #zero_grad_fermi_e = true
+    type = ohmic
+  }
+
+
+  Boundary anode
+  {
+    regions = 2
+    #zero_grad_fermi_e = true
+    type = ohmic
+    voltage = $Vb[0.0]  
+  }
+ 
 
 }
 

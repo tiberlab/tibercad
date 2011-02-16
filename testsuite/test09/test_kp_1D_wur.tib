@@ -82,19 +82,16 @@ Module macrostrain
 
   substrate = substrate
 
-  Physics
+  Boundary substrate
   {
-    Boundary substrate
-    {
-	regions = 1
-	type = substrate
-	material = AlGaN
-	x = 0.3
-	structure = wz
-	y-growth-direction = (1,0,-1,0)
-	z-growth-direction = (-1,2,-1,0)
-	x-growth-direction = (0,0,0,1)
-    }
+    regions = 1
+    type = substrate
+    material = AlGaN
+    x = 0.3
+    structure = wz
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+    x-growth-direction = (0,0,0,1)
   }
 
 } 
@@ -139,22 +136,22 @@ Module  driftdiffusion
   
     mobility doping_dependent {}
 
+  }
 
-    Contact cathode
-    {
-      regions = 1
-      #zero_grad_fermi_e = true
-      type = ohmic
-    }
+  Contact cathode
+  {
+    regions = 1
+    #zero_grad_fermi_e = true
+    type = ohmic
+  }
 
 
-    Contact anode
-    {
-      regions = 2
-      #zero_grad_fermi_e = true
-      type = ohmic
-      voltage = $Vb[0.0]  
-    }
+  Contact anode
+  {
+    regions = 2
+    #zero_grad_fermi_e = true
+    type = ohmic
+    voltage = $Vb[0.0]  
   }
 }
 

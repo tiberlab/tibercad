@@ -133,18 +133,14 @@ Module macrostrain
    #xmonitor =  true
   }
 
-
-  Physics
+  Boundary cathode
   {
-    Boundary cathode
-    {
-      type = substrate
-      material = AlN  # GaN
+    type = substrate
+    material = AlN  # GaN
 
-      y-growth-direction = (-1,0,1,0)
-      x-growth-direction = (-1,2,-1,0)   
-      z-growth-direction = (0,0,0,1)
-    }
+    y-growth-direction = (-1,0,1,0)
+    x-growth-direction = (-1,2,-1,0)   
+    z-growth-direction = (0,0,0,1)
   }
 } 
 
@@ -191,19 +187,19 @@ Module  driftdiffusion
 
      
     mobility doping_dependent {}
+  }
 
 
-    Contact anode
-    {
-      type = ohmic
-      voltage = $Vb[0.0]
-    }
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]
+  }
 
-    Contact cathode
-    {
-      type = ohmic
-      voltage = 0.0
-    }
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
   }
 }
 

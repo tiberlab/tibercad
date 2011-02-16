@@ -68,27 +68,25 @@ Module driftdiffusion
      mobility doping_dependent {}
 
      recombination (srh, auger) {}
+  }
 
-     Contact base
-     {
-       type = ohmic
-       voltage = $Vb
-     }
+  Contact base
+  {
+    type = ohmic
+    voltage = $Vb
+  }
 
-     Contact collector
-     {
-       type = ohmic
-       voltage = $Vc
-     }
+  Contact collector
+  {
+    type = ohmic
+    voltage = $Vc
+  }
  
-     Contact emitter
-     {
-       type = ohmic
-       voltage = 0.0
-     }
- 
-
-  }   
+  Contact emitter
+  {
+    type = ohmic
+    voltage = 0.0
+  }
 }
 
 

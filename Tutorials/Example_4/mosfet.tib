@@ -72,35 +72,35 @@ Module driftdiffusion
       type = field_dependent
       low_field_model = doping_dependent
     }
+  }
 
 
-    Contact gate
-    {
-      type = schottky
-      barrier_height = 3.0
+  Contact gate
+  {
+    type = schottky
+    barrier_height = 3.0
 
-      voltage = $Vg
+    voltage = $Vg
 
-      # assume a gate width of 1 mm = 0.1 cm
-      area_factor = 0.1
-    }
+    # assume a gate width of 1 mm = 0.1 cm
+    area_factor = 0.1
+  }
 
-    Contact source
-    {
-      voltage = 0.0
-      area_factor = 0.1
-    }
+  Contact source
+  {
+    voltage = 0.0
+    area_factor = 0.1
+  }
  
-    Contact backcontact
-    {
-      voltage = 0.0
-      area_factor = 0.1
-    }
+  Contact backcontact
+  {
+    voltage = 0.0
+    area_factor = 0.1
+  }
 
-    Contact drain
-    {
-      voltage = $Vd
-      area_factor = 0.1
-    }
-  }   
+  Contact drain
+  {
+    voltage = $Vd
+    area_factor = 0.1
+  }
 }  

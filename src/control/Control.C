@@ -366,20 +366,21 @@ Control::setup_module(Device* device, const ModelOptions& opts)
 
   // we accept the following keywords for boundaries:
   //   Contact, Boundary, Interface
-  vector<string> keys(3);
+  vector<string> keys(4);
   keys[0] = "Contact";
   keys[1] = "Boundary";
   keys[2] = "Interface";
+  keys[2] = "BoundaryCondition";
 
   for (size_t i = 0; i < keys.size(); ++i)
   {
-    ModelOptions::submodel_iterator it = physopts.submodels_begin(keys[i]);
-    const ModelOptions::submodel_iterator end = physopts.submodels_end(keys[i]);
+    ModelOptions::const_submodel_iterator it = opts.submodels_begin(keys[i]);
+    const ModelOptions::const_submodel_iterator end = opts.submodels_end(keys[i]);
     for ( ; it != end; ++it)
       create_boundary(sim, it->second);
 
     // we remove them, so in the following we have only models
-    physopts.delete_submodels(keys[i]);
+    //physopts.delete_submodels(keys[i]);
   }
 
 
