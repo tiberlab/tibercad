@@ -314,8 +314,8 @@ Simulation
 {
   verbose = 3
 
-  solve = (str, sweep, quantum_el, quantum_hl, dens_el, dens_hl)
-  #solve = (str, sweep, selfconsistent)
+  #solve = (str, sweep, quantum_el, quantum_hl, dens_el, dens_hl)
+  solve = (str, sweep, selfconsistent)
 
   resultpath = output
   output_format = grace
