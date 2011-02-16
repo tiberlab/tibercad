@@ -725,6 +725,11 @@ Elasticity::apply_shape_deformation()
   for ( ;  nd != nd_end ; ++nd)
   {
     Node* node = *nd;
+
+    // If there are no DOFs, it's not a node of the simulation domain
+    if (node->n_dofs(system_number, uvar[0]) == 0)
+      continue;
+
     Point pos;
     for(unsigned int i = 0; i<dim; i++)
       pos(i) = (*node)(i);

@@ -514,24 +514,28 @@ PhysicalModelInterface::_create_submodels(void)
       pm = create(it->first, it->second, get_module_name());
     }
 
-    if (pm == NULL)
-    {
-      ostringstream os;
-      os << "Unknown physical model \'" << it->first << "\' (type \'"
-        << type << "\')";
-      throw InitFailedException(os.str());
-    }
-
-    add_submodel(it->first, pm);
-
     // a temporary iterator as we cannot delete the loop iterator
     ModelOptions::submodel_iterator tmp_it(it);
 
     // next entry
     ++it;
 
-    // we delete the options from the ModelOptions object
-    get_options().delete_submodel(tmp_it);
+    if (pm == NULL)
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << tmp_it->first << "\' (type \'"
+        << type << "\')";
+      //throw InitFailedException(os.str());
+
+      Messages::warning(os.str());
+    }
+    else
+    {
+      add_submodel(tmp_it->first, pm);
+
+      // we delete the options from the ModelOptions object
+      get_options().delete_submodel(tmp_it);
+    }
   }
 }
 

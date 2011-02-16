@@ -103,6 +103,10 @@ vsat0   = (1.07e7,	8.37e6)
 vsatexp = (0.87,	0.52)
 
 
+# radiative recombination
+[recombination/direct]
+C = 1.1e-14
+
 # SRH recombination
 [recombination/SRH]
 Etrap  = 0.0

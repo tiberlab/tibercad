@@ -172,7 +172,8 @@ Ramp::ramp(void)
         _simulations[i]->remember_current_solution(_old_sol_ids[i]);
 
       oldvalue = value;
-      double factor = (currstep == oldstep) ? 2.0 : 1.0;
+      double factor = 2;
+      //double factor = (currstep == oldstep) ? 2.0 : 1.0;
       oldstep = currstep;
       currstep = min(factor * currstep, max_step);
     }
@@ -199,8 +200,8 @@ Ramp::ramp(void)
   // the epsilon() here prevents from resolving two times the same sweep value
   // due to fixed point numerics
 
-  // At the next call, we begin with the last succseful step size,
-  // if this is smaller than the original initla step
+  // At the next call, we begin with the last successful step size,
+  // if this is smaller than the original initial step
   if (currstep >= min_step)
     _initial_abs_step = min(_initial_abs_step, oldstep);
 
