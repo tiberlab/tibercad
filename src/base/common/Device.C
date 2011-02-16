@@ -262,6 +262,7 @@ Device::setup_regions(void)
 
     // The default material is Si
     string material = _options.get_option("material", "Si");
+    string x_frac = _options.get_option("x", "0.5");
     string xdir = _options.get_option("x-growth-direction", "");
     string ydir = _options.get_option("y-growth-direction", "");
     string zdir = _options.get_option("z-growth-direction", "");
@@ -269,6 +270,8 @@ Device::setup_regions(void)
 
     material = data.get_option("material", material);
     data["material"] = material;
+    x_frac = data.get_option("x", x_frac);
+    data["x"] = x_frac;
     xdir = data.get_option("x-growth-direction", xdir);
     if (!xdir.empty())
       data["x-growth-direction"] = xdir;

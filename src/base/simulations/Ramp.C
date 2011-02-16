@@ -202,9 +202,9 @@ Ramp::ramp(void)
 
   // At the next call, we begin with the last successful step size,
   // if this is smaller than the original initial step
-  //if (currstep >= min_step)
+  if (currstep >= min_step)
   //  _initial_abs_step = min(_initial_abs_step, oldstep);
-  _initial_abs_step = oldstep;
+    _initial_abs_step = oldstep;
 
   // plot results
   if (_plot_data)
