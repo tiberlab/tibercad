@@ -1,0 +1,376 @@
+ <div class="content"> 
+    <p> 
+<a title="up" name="up"></a> 
+</p> 
+<p> 
+In this tutorial we  will  show  an   example  of  <span style="color: #ff0000"><b>2D</b> </span>simulation of  a    <b><span style="color: #ff0000">Si  n-MOSFET</span></b> device.<br /> 
+We will  calculate :<a href="#transferchar"><br /> 
+</a> 
+</p> 
+<ul> 
+	<li><a href="#IVchar">IV  drain  characteristic</a>,</li> 
+	<li><a href="#transferchar">Id/Vg  transfer  characteristic</a>.</li> 
+</ul> 
+<p> 
+<br /> 
+In order to execute correctly the  example you  should have the  following  files in  the   working directory:<br /> 
+<a href="#files"><span style="color: #3366ff">mosfet.tib</span></a>   :  input  file  for  TiberCAD<br /> 
+<a href="#files"><span style="color: #3366ff">mosfet.msh</span></a>   :  mesh  file  produced  by  GMSH   from  the scrip<a href="#files">t</a><a href="#files"><span style="color: #3366ff"> mosfet.geo</span></a> 
+</p> 
+<p> 
+For a  detailed tutorial of the geometrical modelling  with GMSH,  see <a href="/content/getting_started_2">Getting started 2</a> <a href="/content/getting_started_2d"></a> 
+</p> 
+<p> 
+Here is  the  geometry of  the  Mosfet  device as it is  meshed  by  GMSH.
+</p> 
+<div align="center"> 
+<img src="/files/u6/mosfet_mesh_fig.png" alt="mesh" align="middle" height="588" width="704" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<br /> 
+Let's give now a look to the input file; for  further details you can refer to the program reference  manual.
+</p> 
+ 
+<h1><b>Device  structure</b></h1> 
+<p> 
+<br /> 
+<div class="codeblock"><code>$Device<br />{<br />Region substrate <br />{<br />material = Si<br />doping = 1e18 doping_type = acceptor<br />}<br />Region contact<br />{<br />material = Si<br />doping = 5e19 doping_type = donor<br />}<br />Region oxide<br />{<br />material = SiO2<br />}<br />}</code></div> 
+</p> 
+<p> 
+First we  define  the  device  structure: it  is  composed by  three  <b>TiberCAD Regions</b>: <b>substrate</b>  and <b>contact</b>, both made of Silicon,  and <b>oxide</b> (SiO<sub>2</sub>).<br /> 
+The <b>substrate</b> region (which include  channel) is  doped p-type 10<sup>18</sup> cm<sup>-3</sup>; <b>contact</b> region is  composed by  the  two  regions around  source  and  drain,  both  heavily doped  n-type  5x10<sup>19</sup> cm<sup>-3</sup> ; finally, <b>oxide</b> is  the  gate dielectric.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h1><b>Drift-diffusion  simulation </b></h1> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+Now, we  define  the  <b>TiberCAD <i>simulation  models</i></b> which will  be  used in this  example.<br /> 
+We are  going  to  calculate Poisson and  Drift-diffusion (model <b>driftdiffusion</b>) for all the  device 
+(<code>physical_regions = all</code> in  options).  <br /> 
+A  field  dependent  model for  <b>mobility</b> is applied.  
+</p> 
+<p> 
+<br /> 
+<div class="codeblock"><code>$Models<br />{<br />model driftdiffusion<br />{<br />options<br />{<br />simulation_name = driftdiffusion<br />physical_regions = all<br />}<br />physical_model recombination<br />{<br />model = srh<br />}<br />physical_model electron_mobility<br />{<br />model = field_dependent<br />low_field_model = doping_dependent<br />}</code></div> 
+<br /> 
+Then, we have to  specify the the  three <b>contacts</b> of  our Mosfet:
+</p> 
+<p> 
+<br /> 
+<div class="codeblock"><code>BC_Regions&nbsp; <br />{<br />BC_Region gate<br />{<br />type = schottky<br />barrier_height = 3.0<br />voltage = @Vg[0.0]<br />}<br />BC_Region source<br />{<br />type = ohmic<br />voltage = 0.0<br />}<br />BC_Region drain<br />{<br />type = ohmic<br />voltage = @Vd[0.5]<br />}<br />}&nbsp;&nbsp; </code></div> 
+<br /> 
+<br /> 
+The contacts  (boundary  regions for this  model) have to be    associated   each to the  corresponding   region defined in  the  mesher program (here GMSH) as  a Boundary  region (which in the present case of 2D  simulation is  a  line (<code>Physical Line</code> in  GMSH)). This  is  made  simply  with <br /> 
+<div class="codeblock"><code>BC_Region gate</code></div> 
+<br /> 
+and  so  on  for  the  other  contacts <br /> 
+The  <b>gate</b>  contact  is  defined as a  <b>schottky</b> contact, with a  barrier value depending on the gate metal workfunction ( <code>barrier_height</code>).  <br /> 
+The  gate voltage is  expressed by the  notation <code>@Vg[0.0]</code>. This  means that  the  gate voltage will be  given the  value of  the  variable <i>Vg</i>, specified in one  of the   sweep block (see after). [0.0] means that the default voltage  value  is  0.0 V.<br /> 
+Source and  drain  contacts are  defined   as  <b>ohmic;</b>  while  source  is  fixed  to  0 (<code>voltage = 0.0)</code>,  drain voltage  is  expressed, as  for  the gate,  by  the  value  of  the  <b>sweep</b>  variable  <i>Vd</i> ( <code>voltage = @Vd[0.5]</code>).<br /> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h1><b><b><a href="#up"><br /> 
+</a></b></b></h1> 
+<p> 
+&nbsp;
+</p> 
+<h1><b><a href="#up">UP</a></b></h1> 
+<p> 
+&nbsp;
+</p> 
+<h1><a title="IVchar" name="IVchar"></a><b>Calculation of  IV drain characteristic</b></h1> 
+<p> 
+<br /> 
+<div class="codeblock"><code># Definition of&nbsp; Model-dependent Solver parameters<br />$Solver<br />{<br />driftdiffusion<br />{<br />nonlinear_solver = tiber<br />coupling = electrons<br />ksp_type = bcgsl<br />nonlin_max_it = 10<br />nonlin_step_tol = 1e-3<br />ls_max_step = 2 <br />}<br />Sweep<br />{<br />sweep_drain<br />{<br />simulation = driftdiffusion<br />variable = Vd<br />start = 0.0<br />stop = 2.0 <br />steps = 20 <br />#plot_data = true<br />}<br />sweep_gate<br />{<br />variable = Vg<br />start = -0.1<br />stop = 1.0 #0.5<br />steps = 11 # 6<br />simulation = sweep_drain<br />plot_data = true<br />}<br />}</code></div> 
+</p> 
+<p> 
+Now,  the  parameters for  the  solver are defined, for the  driftdiffusion model.<br /> 
+<code>coupling = electrons</code>   specifies   that  only  one  type  of  carrier  is  considered. <code>ksp_type = bcgsl</code> defines the  solver type,  <code>nonlinear_solver = tiber</code> specifies  the non-linear  solver.<br /> 
+</p> 
+<ul> 
+	<li> 
+	As a  first  step, we  are  going  to  calculate <u><b>Id/Vd  drain   current characteristic</b></u>.</li> 
+</ul> 
+<p> 
+We include  the  optional  <b>Sweep</b>  block, whose  syntax  is  the  following:
+<div class="codeblock"><code>Sweep<br />{<br />sweep_name1<br />{<br />.....................<br />}<br />sweep_name2<br />{<br />.............................<br />}<br />}</code></div> 
+</p> 
+<p> 
+Her we define two nested  <b>sweeps</b>:  the  external  sweep (<code>sweep_gate</code>) calculates  the  drain  current for  a  series of gate voltages,  from -0.1  to 0.5 V;  for  each calculation,  a  sweep  on  drain voltages  is  performed (<code>simulation = sweep_drain</code>),  defined  by   <code>sweep_drain</code>.  In  <code>sweep_drain, </code>  driftdiffusion is  calculated (<code>simulation = driftdiffusion</code>)  for  a  series of drain   voltages from  0 to 2 V.<br /> 
+<br /> 
+In  the  <b>Physics</b> section usually  some  physical parameters are defined.<br /> 
+In this  case we  just  state that we want to use the  <b>unstrained</b> model for  driftdiffusion (since  no  strain  calculation is  intended) and that we use Fermi-Dirac  statistic 
+<br /> 
+<br /> 
+<div class="codeblock"><code>$Physics<br />{<br />driftdiffusion <br />{<br />statistics =&nbsp; FD<br />}<br />}</code></div> 
+<br /> 
+<br /> 
+Finally,  in  <b>Simulation</b> section,  we  define the   2D (<code>dimension = 2</code>) simulation to  be  performed,  specified by <br /> 
+<code>solve = sweep_gate</code>:  this  means that we  are going  to  perform a  calculation of  <b>Poisson</b> and  <b>drift-diffusion</b> <br /> 
+with a  double  sweep  on gate   and drain  voltage,   to  calculate  <b>Id/Vd  drain current characteristics.</b> 
+<br /> 
+<br /> 
+Results of  calculation will  be  in the  format of  <b>paraview</b> data visualization and  post-processing program  (<code>output_format = vtk</code>)<br /> 
+In  <b>plot</b> we  define the  output variables to  be calculated. 
+</p> 
+<p> 
+<br /> 
+<div class="codeblock"><code>$Simulation<br />{<br />searchpath =&nbsp; ../../materials <br />meshfile = mosfet.msh<br />dimension = 2<br />temperature = 300<br />solve = sweep_gate<br />resultpath = output_IV_char&nbsp; <br />#output_format = gmv<br />output_format = vtk<br />plot = (Ec, Ev, QFermi_e, eDensity, eCurrent,&nbsp; NetRecombination, EField, ElPotential, ContactCurrents)<br />}</code></div> 
+<br /> 
+<br /> 
+Now  we  can  run TiberCAD....<br /> 
+<br /> 
+<b><span style="color: #ff0000"><i> 
+tibercad mosfet.tib</i></span></b> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<hr /> 
+<p> 
+&nbsp;
+</p> 
+<h1><b>Output</b>  </h1> 
+<p> 
+After the execution,  the  output  directory  contain the  simulation results,  as  defined in  <br /> 
+output_format  and  plot.
+</p> 
+<p> 
+TiberCAD supports  3
+packages  for 2D and 3D  data visualization and  post-processing:
+</p> 
+<p> 
+Free:<br /> 
+1) GMV, <a href="http://www-xdiv.lanl.gov/XCM/gmv/GMVHome.html">http://www-xdiv.lanl.gov/XCM/gmv/GMVHome.html</a><br /> 
+<i>output_format = gmv</i><br /> 
+2) Paraview, <a href="http://www.paraview.org/New/index.html">http://www.paraview.org/New/index.html</a><br /> 
+<i>output_format = vtk</i> 
+<br /> 
+<br /> 
+Commercial:<br /> 
+3) Tecplot-ise, <a href="http://www.amtec.com/">http://www.amtec.com/</a><br /> 
+<i>output_format = ise</i><br /> 
+</p> 
+<p> 
+<br /> 
+Let's  see  how  to use Paraview to  plot  TiberCAD 2D results:
+</p> 
+<p> 
+FIrst, open the  .vtk file from your  directory:
+<br /> 
+</p> 
+<div align="center"> 
+<img src="/files/u6/paraview_1.png" height="413" width="543" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+The name of  the loaded files will be  shown in the  Pipeline browser.
+</p> 
+<p> 
+To visualize  the  content of  the  file,  you  should  click on  the  <span style="color: #ff0000"><b>Apply</b></span> button in  the <b>Properties</b> tab in <b>Object Inspector</b> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/paraview_2_b.png" height="612" width="803" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+To  select  the  output  variable ,  go to  <b>Display</b> and choose from the  menu  &quot;Color by&quot;,  e.g.  electron _density.  Also, in Display section Scale and  legend  bar can be setted.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/paraview_3_b.png" height="614" width="802" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/regions_mosfet_fig.png" height="382" width="652" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+Thus, in  <b>driftdiffusion_materials.vtk </b> we  have  the information about the  material  regions of  the device: here, <b>1 </b>indicates the substrate Region , <b>2</b> the  contacts  region and  <b>3 </b>the  SiO<sub>2</sub>  gate  dielectric.
+</p> 
+<p> 
+In  <b>driftdiffusion_nodal.vtk </b>and all the  other files for  each  bias  step,  we  have 
+the  output for  the nodal  quantities which  have  been  calculated,  e.g.  conduction and  valence bands,  (quasi)fermi levels, electron  and  hole  density  and  mobility.
+</p> 
+<p> 
+For  example, this is  the electron density  for a drain voltage = 2V and  a  gate  bias Vg = 1V.<br /> 
+You can  see the large  increase of  electron  density  in  the  channel, which is  pinched off  close  to  drain contact due to the high drain voltage.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/el_dens_Vg_1_fig_0.png" height="446" width="655" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<br /> 
+<p> 
+In<b> sweep_2_driftdiffusion_Vg_0.000_Vd.dat</b> and all the  other files for  each  <i>Vg</i> bias  step (sweep_2_driftdiffusion_<i>Vg_step</i>_Vd.dat) we  have the  IV  drain characteristics for  each <i>Vg</i> bias.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<div align="center"> 
+<img src="/files/u6/IV_char_mosfet_sio2_fig.png" height="466" width="662" /> 
+</div> 
+Here are the  IV  characteristics obtained for a gate voltage  Vg between -0.1 and  0,5 V.
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<hr size="5" width="100%" /> 
+<p> 
+<a title="transferchar" name="transferchar"></a> 
+</p> 
+<h1> </h1> 
+<h1><b><b><a href="#up">UP</a></b></b></h1> 
+<h1><b>Calculation of  transfer characteristic</b></h1> 
+<h1><b><b><a href="#up"><br /> 
+</a></b></b></h1> 
+<p> 
+&nbsp;
+</p> 
+<ul> 
+	<li> 
+	As a second   step, we  are  going  to  calculate <u><b>Id/Vg transfer characteristic</b></u>.(see input file <a href="#input_file"><b><span style="color: #3366ff">mosfet_transchar.tib</span></b></a>)</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<br /> 
+To do so, the two <b>sweeps</b> have to be defined in this way:  
+</p> 
+<p> 
+<div class="codeblock"><code>Sweep&nbsp; {<br />sweep_drain<br />{<br />simulation = driftdiffusion <br />variable = Vd<br />start = 0.0<br />stop = 1.0 <br />steps = 5 <br />}<br />sweep_gate<br />{<br />variable = Vg<br />start = -1.0<br />stop = 0.5<br />steps = 150&nbsp; <br />simulation = driftdiffusion<br />}<br />}</code></div> 
+<br /> 
+</p> 
+<p> 
+the first  sweep (<code>sweep_drain</code>) calculates the drain current (<code>simulation = driftdiffusion</code>) for a series of drain voltages, from 0 to 1 V,  while  Vg is  kept  at  its  initial  value  Vg=0; at  the  end  of this  calculation we have  polarized the  mosfet  at  a  drain  voltage of  1 V.  Then a sweep on gate voltages is performed,  defined  by <code>sweep_gate</code>.  In  <code>sweep_gate</code>  , driftdiffusion is  calculated (<code>simulation = driftdiffusion</code>)  for  a  series of  gate  voltages from  -1 to 0.5 V,  by  keeping  the  drain  voltage at  Vd = 1 V.<br /> 
+At  the  end,  the  Id/Vg transfer  characteristic  for   Vd=1 V  is  obtained. 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+This  time,  in  <b>Simulation</b> section,  we  define the   2D  simulation to  be  performed by  writing <b><code>solve=(sweep_drain,sweep_gate)</code></b>:  this  means that we  are going  to  perform a  calculation of  <b>Poisson</b> and  <b>drift-diffusion</b> <br /> 
+with  two  sweeps  in  series,  first a   sweep  on  drain  and  than  a  sweep  on gate  voltage,   to  calculate  <b>Id/Vg  transfer characteristic</b>.
+</p> 
+<p> 
+<div class="codeblock"><code>$Simulation<br />{<br />meshfile = mosfet.msh<br />dimension = 2<br />temperature = 300<br />solve = (sweep_drain, sweep_gate) <br />resultpath = output_transf_char<br />output_format = vtk<br />plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,&nbsp; NetRecombination, EField, ElPotential, ContactCurrents)<br />}</code></div> 
+</p> 
+<p> 
+The  rest  of  the  input  file  remains  unchanged.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+Now  we  can  run TiberCAD  another time....<br /> 
+<br /> 
+<span style="color: #ff0000"><b><i> 
+tibercad mosfet.tib</i></b></span> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<ul> 
+	<li> 
+	Now,  in  the  files   <b>sweep_1_driftdiffusion_<i>Vd_step</i>_Vg.dat</b>    (e.g. sweep_1_driftdiffusion_Vd_1.000_Vg.dat) ,  
+	we  have the Id/Vg transfer  characteristics for  each <i>Vd_step </i> bias.
+	</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+Here is the <b>Id/Vg transfer characteristic </b>for a drain voltage Vd = 1 V .
+</p> 
+<div align="center"> 
+<img src="/files/u6/IV_transferchar_mosfet_sio2_fig.png" height="472" width="694" /> 
+</div> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+As  before, in  <b>driftdiffusion_elemental.vtk  </b>and <b>driftdiffusion_nodal.vtk</b>, we  have the output for  respectively the nodal and  the  elemental quantities which have been calculated.
+</p> 
+<p> 
+The <b><span style="color: #ff0000">subthreshold  S</span>  parameter</b>, given by
+</p> 
+<p> 
+<img src="/files/u6/par_S_formula.png" align="left" height="66" width="170" /> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+in  this  case results  to  be<b> ~80<span style="color: #ff0000">  mV/dec</span></b><span style="color: #ff0000">.</span> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h1> 
+<a href="#up"><b>UP</b></a><br /> 
+</h1> 
+<p> 
+<a title="files" name="files"></a> 
+</p> 
+<table id="attachments"> 
+ <thead><tr><th>Attachment</th><th>Size</th> </tr></thead> 
+<tbody> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/mosfet_0.msh">mosfet.msh</a></td><td>309.63 KB</td> </tr> 
+ <tr class="even"><td><a href="http://www.tibercad.org/files/mosfet_0.geo">mosfet.geo</a></td><td>1.67 KB</td> </tr> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/mosfet_2.tib">mosfet.tib</a></td><td>2.28 KB</td> </tr> 
+ <tr class="even"><td><a href="http://www.tibercad.org/files/mosfet_transchar_2.tib">mosfet_transchar.tib</a></td><td>2.14 KB</td> </tr> 
+</tbody> 
+</table> 
+  </div> 
+ 
+  <div class="clear-block clear"> 
+    <div class="meta"> 
+          <div class="terms"><ul class="links inline"><li  class="first last taxonomy_term_20"><a href="/documentation/tutorial" rel="tag" title="Tag for detailed tutorial" class="taxonomy_term_20">Tutorial</a></li> 
+</ul></div> 
+        </div> 
+ 
+      </div> 
+ 
+</div>          <span class="clear"></span> 

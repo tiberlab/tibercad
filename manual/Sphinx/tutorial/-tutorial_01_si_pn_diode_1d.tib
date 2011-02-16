@@ -1,0 +1,104 @@
+#
+# This example calculates the IV of a silicon
+# pn junction in 1D
+#
+
+
+Device
+{
+  meshfile = diode_1D.msh 
+  material = Si
+
+  Region n_side 
+  {
+    Doping
+    {
+     Nd = 1e18
+     type = donor
+    }
+  }
+
+  Region p_side 
+  {
+    Doping
+    {
+     Nd = 1e18
+     type = acceptor
+    }
+  }
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{ 
+  name = dd
+
+  plot = (Ec, Ev, Eg, ElField, ElPotential, eQFermi, hQFermi, eDensity, hDensity,
+          NetRecombination, eCurrentDensity, hCurrentDensity, CurrentDensity,
+          ContactCurrent, eMobility, hMobility, IonizedDonors, IonizedAcceptors)
+
+
+  Physics
+  {
+    particle_density
+    {
+      statistics = boltzmann
+    }
+
+    # use a field dependent mobility model with the
+    # gradient of the electrochem. potential as field
+    # parameter
+    mobility field_dependent
+    {
+      low_field_model = doping_dependent 
+    }
+
+    # use SRH and Auger recombination
+    recombination (srh, auger) {}
+  }
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+}
+
+
+Module sweep
+{
+  variable = $Vb
+  solve = dd
+
+  start = 0.0
+  stop = 1.2  
+  steps = 60
+
+  plot_data = true  # to write data for each step
+}
+
+
+
+Simulation
+{
+  verbose = 2
+
+  solve = sweep
+
+  resultpath = diode1D_results
+  output_format = grace
+
+}
+
+
+
+
+

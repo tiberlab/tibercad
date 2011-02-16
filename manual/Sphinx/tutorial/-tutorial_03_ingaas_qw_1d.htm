@@ -1,0 +1,317 @@
+  <div class="content"> 
+    <p> 
+In this tutorial we  will  see  how  to calculate quantum  properties of  a  <b>GaAs/InGaAs  QW.</b><br /> 
+Schroedinger  equation is  solved, with  a  single-band  effective  mass model for  conduction band and  with  a  6 band-kp model  for  valence  band.  Eigenvalues and  eigenfunctions are  calculated to get  energy  levels and  wavefunctions in the  quantum well. <br /> 
+Simulation is  performed at  equilibrium,  and  first a  strain  calculation for the GaAs/InGaAs/GaAs heterostructure,  with  GaAs as a  reference  substrate, is  performed. <br /> 
+<br /> 
+<br /> 
+ 
+In order to execute correctly the  example you  should have the  following  files in  the  same  working directory:<br /> 
+<b><a href="#InGaAs_1D.tib">InGaAs_1D.tib</a></b> :  input  file  for  TiberCAD<br /> 
+<a href="#InGaAs_1D.tib"><b>InGaAs_1D.msh</b></a>  :  mesh  file  produced  by  GMSH<br /> 
+<a href="#InGaAs_1D.tib"><b>InGaAs_1D.geo</b></a> : GMSH  .geo file <br /> 
+<br /> 
+</p> 
+<p> 
+In  the  following,  the  input  file  will  be  described in  details; for  further details you can refer to the program reference  manual.
+</p> 
+<p> 
+First,  let's see  the  device's structure:
+</p> 
+<p> 
+<br /> 
+<div class="codeblock"><code>$Device<br />{<br />Region buffer<br />{<br />material = GaAs<br />}<br />Region barrier_1<br />{<br />mesh_regions = (barrier1_cl, barrier1_q)<br />material =&nbsp; GaAs<br />}<br />Region QWell<br />{<br />material = InGaAs <br />x = 0.40 <br />}<br />Region barrier_2<br />{<br />mesh_regions = (barrier2_q, barrier2_cl)<br />material = GaAs<br />}<br /># group together the regions for the quantum simulation<br />Cluster Quantum_1<br />{<br />mesh_regions = (barrier1_q, QWell, barrier2_q)<br />}<br />}</code></div> 
+<br /> 
+Region <b>QWell </b>defines the  quantum well,  constituted by  InGaAs ;  since it  is  an  alloy, definition of alloy  composition is  required  (<i>x=0.40</i>),  where  <b>x</b> is  the  In concentration in  In <sub>(x)</sub>GaAs.<br /> 
+Note that the Regions  <b>barrier_1</b> and  <b>barrier_2 </b>(defining the  GaAs barriers) are composed each by two mesh regions<i> 
+(mesh_regions  = (</i><code>barrier1_cl, barrier1_q</code><i>)</i>  and  <i> 
+mesh_regions = (</i><code>barrier2_q, barrier2_cl</code>).  This is  useful for the proper definition of  the  quantum region, that is  the  set of mesh regions,  where  quantum calculation is   to be performed.
+</p> 
+<p> 
+<img src="/files/u6/geo_ingaas_0.png" height="225" width="981" /> 
+</p> 
+<p> 
+<br /> 
+In fact,  usually  it  is  convenient   to  apply  the  quantum calculations to a region including  both the InGaAs quantum well  and  a part of  the two GaAs barriers.<br /> 
+To be  able to  do  this,  we  define a  <b>Cluster </b> composed by  the  <b>mesh  regions</b>  <b>(barrier1_q, QWell, barrier2_q)</b>: region <b>barrier1_q</b><b> </b>and <b>barrier2_q </b>are part of the  GaAs barriers,  while region <b>QWell</b>is the  InGaAs quantum well  . 
+In  this  way, in the  rest of  input  file, it  will  be  possible to  refer to  all  the set of  these  mesh  regions by the label  <b>Quantum_1</b>.<br /> 
+<div class="codeblock"><code>Cluster Quantum_1<br />{<br />mesh_regions = (barrier1_q, QWell, barrier2_q)<br />}</code></div> 
+<br /> 
+We pass now to the  definition of   the  TiberCAD simulation  models which will  be  used in this  example.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h1> <b>Poisson  calculation</b><br /> 
+</h1> 
+<p> 
+The band profile calculation needs the Poisson equation to be solved. Therefore, we have to define a drift-diffusion model and solve it without any voltage applied.<br /> 
+Thus, a  <b>simulation</b> which runs the <b> driftdiffusion</b> model is defined,  with two <b>ohmic</b>  contacts fixed at  zero voltage:
+</p> 
+<p> 
+<br /> 
+<div class="codeblock"><code>$Models<br />{<br />model driftdiffusion<br />{ <br />.......................<br />BC_Regions<br />{<br />BC_Region cathode<br />{ <br />type = ohmic <br />voltage = 0.0<br />}<br />BC_Region anode <br />{ <br />type = ohmic <br />voltage = 0.0<br />}</code></div> 
+</p> 
+<p> 
+Alternatively, we  could  choose  the  default <i>flat-band  boundary conditions </i>(see <a href="/documentation/tutorial/tutorial_06_quantized_states_a_ganalgan_quantum_well">Tutorial 6 </a> ), simply  by  omitting completely the 
+<b><code>BC_Regions</code></b> section; if the substrate and top regions are wide enough (that is if  the  'active'  region of  the  device  is  far from the boundaries), the  results obtained with the  two  choices should  tend  to  coincide. 
+</p> 
+<p> 
+Later,  in  <b>$Solver</b> section,  with <code>coupling = poisson</code> we  declare that we  want  just the  Poisson equation to  be  solved <br /> 
+</p> 
+<p> 
+<div class="codeblock"><code>$Solver<br />{<br />driftdiffusion<br />{<br />coupling = poisson<br />........................................</code></div><br /> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h1><b> 
+Strain calculation</b> </h1> 
+<p> 
+<br /> 
+Then,  we  define  a   simulation  called  <b><code>strain</code></b>,  belonging to the   model <b><span style="color: #3366ff">macrostrain</span> ,</b>  which  will  be  used to  calculate strain  tensor:<br /> 
+<br /> 
+<div class="codeblock"><code>model macrostrain<br />{<br />options<br />{<br />simulation_name = strain<br />physical_regions = all<br />}<br />BC_Regions<br />{<br />BC_Region cathode <br />{ <br />type = substrate<br />material = GaAs<br />structure = zb&nbsp; </code></div> 
+<br /> 
+<br /> 
+This  model needs a  boundary condition (<code>type = substrate</code>) to be  defined, to  indicate the  reference lattice  material. In this  example GaAs is  the  reference material, and  so the substrate  layer contact is taken as the  strain boundary condition. This is made by associating  the boundary region  with the  GMSH physical point   <i>cathode </i> 
+(<code>BC_Region cathode</code>.
+</p> 
+<h1> </h1> 
+<p> 
+&nbsp;
+</p> 
+<h1> 
+<b>Quantum calculation</b><br /> 
+</h1> 
+<p> 
+&nbsp;
+</p> 
+<h2>1.Simulation Models</h2> 
+<p> 
+Finally,  the  model <span style="color: #3366ff"><b>efaschroedinger,</b></span>  for  quantum effective mass calculations, is  defined.<br /> 
+We are going to study quantized states of electrons and holes in the quantum well. Since the structure is 1D, the eigenstate is characterized by the energy level number <b>n </b>and the <b>k<sub>||</sub></b> vector that is perpendicular to the growth direction.  In this tutorial, we define two simulations that solve Schrödinger equation for a single k-vector (<b>k<sub>||</sub></b> = 0) , for electrones and holes. See  <a href="/documentation/tutorial/tutorial_06_quantized_states_a_ganalgan_quantum_well">Tutorial 6 </a>for an  example of  dispersion calculation. <br /> 
+For  <b><span style="color: #ff0000">electrons</span>:</b> <br /> 
+<br /> 
+<div class="codeblock"><code>model efaschroedinger<br />{<br />options<br />{<br />simulation_name = quantum_electrons<br />physical_regions = Quantum_1 <br />}<br />}</code></div> 
+<br /> 
+<br /> 
+and for  <b><span style="color: #ff0000">holes</span>:</b> <br /> 
+<br /> 
+<div class="codeblock"><code>model efaschroedinger<br />{<br />option<br />{<br />simulation_name = quantum_holes<br />physical_regions = Quantum_1 <br />}<br />}</code></div><br /> 
+</p> 
+<p> 
+<br /> 
+In this way,  two  simulation models have  been defined, <span style="color: #ff0000"><b><code>quantum_electrons</code></b></span>and <span style="color: #ff0000"><b><code>quantum_holes</code></b></span>, both of  the  class   <span style="color: #3366ff"><b><code>efaschroedinger</code></b></span>.  To  both the  models the  same  TiberCAD <b>Cluster</b> is  associated<br /> 
+(<code>Quantum_1</code>).
+</p> 
+<p> 
+&nbsp;
+</p> 
+<h2> 2.Solver parameters<br /> 
+</h2> 
+<p> 
+Now,   we  define the  parameters for  the  solvers, in the  <b>Solver</b>  section. 
+</p> 
+<p> 
+After the block for  <b>driftdiffusion,</b> a block for  <b>macrostrain</b> is  present,  to  specify the  substrate  reference.<br /> 
+<br /> 
+<div class="codeblock"><code>macrostrain<br />{<br />substrate = cathode<br />}</code></div><br /> 
+<br /> 
+Then  the  <b>solver</b>  parameters for  quantum calculations:<br /> 
+first, the  parameters  which  are  common to  <b>all</b>  the defined<span style="color: #3366ff">  <b>efaschroedinger</b></span> simulations.<br /> 
+<br /> 
+<div class="codeblock"><code>efaschroedinger<br />{<br />x-periodicity = false<br />Dirichlet_bc_everywhere = true poisson_model_name = driftdiffusion&nbsp; <br />strain_model_name = macrostrain<br />convergent_density = true<br />}</code></div> 
+<br /> 
+Here, one  can  specify  the  numerical solvers for  the  schroedinger problem: if  they are not  explicitly specified, the  default will be  used. 
+</p> 
+<p> 
+In particular,  one  can choose  an <b>eigensolver</b> (e.g.<code> solver = lapack</code>) :  <b>lapack</b>, <b>krylovshur</b> (default) , <b>arnoldi</b>,  <b>lanczos</b>.
+</p> 
+<p> 
+<b>Pre-conditioners</b> and <b>linear solvers</b> are also needed in  general (they are neglected if lapack solver is used); they can  be  defined explicitly, respectively  with <code>pc_type = ...</code> and <code>ksp_type = ...</code> .  Alternatively, one  can  specify a  convenient combination  of  pre-conditioner and linear solver by  using  the  keyword <b><code>solution_method</code></b>.    <br /> 
+In this example, we use the default in 1D,  <code>solution_method = combined</code>, which means  <code>pc_type = cholesky</code> and <code>ksp_type = bcgsl</code>. <br /> 
+Other possible  choices are  <code>solution_method = matlab</code> (<code>pc_type = cholesky</code> and <code>ksp_type = preonly</code>) ; <br /> 
+<code>solution_method = general</code> (default in  2 and 3D)  (<code>pc_type = jacobi</code> and <code>ksp_type = bcgsl</code>).<br /> 
+</p> 
+<p> 
+<b>N.B.</b>: We have to specify the names of  a  &quot;Poisson&quot;  and/or  of  a  strain model which we have  previously defined, if we want that the  results of  these models will be  used in  quantum  calculations (e.g. potential and strain effects  on  band structure) : <code>strain_model_name = macrostrain</code>, <code>poisson_model_name = driftdiffusion</code>.<br /> 
+<br /> 
+Then, we  can set some  parameters specifical for each  of  the  two  <span style="color: #3366ff"><b>efaschroedinger</b> simulations:<br /> 
+</span> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<ul> 
+	<li>for <span style="color: #ff0000"><b>quantum_electrons</b></span> we  specify the  calculation of  electrons (<code>particle = el</code>)  and  set to 6 the <b>number of  eigenvalues</b> to  be  calculated (<code>number_of_eigenstates = 6</code>).</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<div class="codeblock"><code>quantum_electrons<br />{<br />particle = el<br />number_of_eigenstates = 6<br />}</code></div> 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<ul> 
+	<li>for <span style="color: #ff0000"><b>quantum_holes</b></span>, we  specify the  calculation of  holes  (<code>particle = hl</code>) and  choose  to  calculate the  first  12 <b>eigenvalues</b> (<code>number_of_eigenstates = 12</code>).</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<br /> 
+<div class="codeblock"><code>quantum_holes<br />{<br />particle = hl<br />number_of_eigenstates = 12<br />}</code></div> 
+</p> 
+<h2> 
+3.Physics  parameters.</h2> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+In  the  <span style="color: #3366ff"><b>Physics</b></span> section: 
+</p> 
+<ul> 
+	<li> 
+	For  the  <b>driftdiffusion </b>simulation, we state that we want to use the  results from the macrostrain  simulation (whose name here is  <code>strain</code>). Note that, if this declaration is absent, strain results (if any) are NOT included in driftdiffusion calculations.</li> 
+</ul> 
+<p> 
+<br /> 
+<div class="codeblock"><code>strain_simulation = strain</code></div><br /> 
+<br /> 
+</p> 
+<ul> 
+	<li> 
+	For  the  <span style="color: #3366ff"><b>efaschroedinger</b></span> simulation <b><span style="color: #ff0000">quantum_electrons</span></b>,  we  choose  a <b>single band model</b> (<code>model = conduction_band</code>)  for  electrons (<code>particle = el</code>)</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<br /> 
+<div class="codeblock"><code>quantum_electrons<br />{<br />particle = el<br />model = conduction_band&nbsp;&nbsp; #eff mass&nbsp; cb<br />}</code></div> 
+</p> 
+<ul> 
+	<li> 
+	For  the  <b><span style="color: #3366ff">efaschroedinger</span></b> simulation <b><span style="color: #ff0000">quantum_holes,</span></b>   instead, we  choose  a <b>6 band kp  mode</b>l (<code>model =&nbsp; kp</code>, <code>kp_model = 6x6</code>)  for  holes (<code>particle = hl</code>).</li> 
+</ul> 
+<p> 
+<br /> 
+<div class="codeblock"><code>quantum_holes<br />{<br />particle = hl<br />model = kp&nbsp;&nbsp; #&nbsp; k.p&nbsp; for&nbsp; valence&nbsp; band<br />kp_model = 6x6<br />}</code></div> 
+<br /> 
+<br /> 
+</p> 
+<h1><b>Run simulations</b></h1> 
+<p> 
+Finally,  in  <b>Simulation</b> section,  we  define all the simulations to  be  performed,  specified by <br /> 
+<br /> 
+<span style="color: #ff0000"><b><div class="codeblock"><code>solve =&nbsp; (strain, driftdiffusion, quantum_electrons, quantum_holes )</code></div></b></span><br /> 
+<br /> 
+this  means that we  are going  to  perform first a  <span style="color: #ff0000"><b>strain</b></span>  calculation, then a  calculation of   <span style="color: #ff0000"><b>drift-diffusion</b></span>  <b>(</b>which in this  case consists only in solving <b>Poisson</b>, since we have defined  <code>coupling = poisson</code> in  <b>Solver</b> section ),  then  a  quantum calculation for  electrons (<b><span style="color: #ff0000"><code>quantum_electrons</code></span></b>) and for holes (<span style="color: #ff0000"><b><code>quantum_holes</code></b></span>).<br /> 
+<br /> 
+<br /> 
+Results of  calculations will  be  in the  format of  xmgr (<code>output_format = grace</code>).<br /> 
+In  <b>plot</b> we  define the  output variables to  be calculated. <br /> 
+In particular, <b>strain</b> indicates  strain tensor  ouput, <b>EigenFunctions,</b> <b>EigenEnergy, EnergyLevels</b> refer respectively to  the output of  wavefunctions  and energy levels.<br /> 
+<br /> 
+<br /> 
+<br /> 
+Now  we  can  run TiberCAD....<br /> 
+<br /> 
+<span style="color: #ff0000"><b> 
+tibercad InGaAs_1D.tib </b></span> 
+</p> 
+<hr /> 
+<p> 
+&nbsp;
+</p> 
+<h1><b>Output</b> </h1> 
+<p> 
+At the  end of the  simulation,  the output  directory  contains the  simulation results,  as  defined in  <b>output_format</b>  and  <b>plot</b>.<br /> 
+In  ths case,  beside the  driftdiffusion output with the  equibrium  results, the  following  files should  be  present:
+</p> 
+<p> 
+&nbsp;
+</p> 
+<ul> 
+	<li><span style="color: #3366ff"><b> 
+	strain_elemental.dat</b></span>:  strain tensor  components.</li> 
+	<li><span style="color: #3366ff"><b> 
+	quantum_electrons_nodal.dat</b></span> and <b><span style="color: #3366ff">quantum_holes_nodal.dat</span>:</b>  wavefunctions and  energy levels in  the  quantum well, for electrons and  holes.</li> 
+	<li><b><span style="color: #3366ff"> 
+	quantum_electrons.dat</span> </b>and <span style="color: #3366ff"><b>quantum_holes.dat</b> </span>:   eigenenergies for  all  the  chosen  states, for electrons and  holes.</li> 
+</ul> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<img src="/files/u6/bands_fig_0.png" align="middle" height="473" width="673" /> 
+</p> 
+<p> 
+First  we  look  at  the  output of  driftdiffusion calculation; here are  the conduction and  valence  bands profile in  equilibrium  condition (contained in  the  output file driftdiffusion_nodal.dat)  ; the  Fermi level is  in  correspondance of  the  zero of  energy. 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<img src="/files/u6/CB_levels_qw8nm_fig_0.png" align="middle" height="474" width="677" /> 
+</p> 
+<p> 
+Here  we  show the  conduction band  profile  and  the  the  quantized  levels for electrons (from the  file<span style="color: #3366ff"><b> 
+quantum_electrons_nodal.dat) </b></span> in the  InGaAs  quantum  well; for  this  8 nm-wide  quantum well only  the  first  two energy levels  are  confined.   
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<img src="/files/u6/VB_levels_qw8nm_fig_0.png" align="middle" height="474" width="683" /> 
+</p> 
+<p> 
+Here is  the  valence band  profile (again  from   the  output file driftdiffusion_nodal.dat).  The  first 12 quantized  levels  for  the holes  (from the  file<b><span style="color: #3366ff"> quantum_holes_nodal.dat</span></b>)  in the  InGaAs  quantum  well are  shown (there  are  6  couples of  degenerated energy  levels).
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<img src="/files/u6/CB_waves_qw8nm_fig2.png" align="middle" height="474" width="699" /> 
+</p> 
+<p> 
+These are  the  wavefunctions (square module) for the energy states in  the conduction   band: only  the first   two states are  confined in  the conduction  band and are shown here. 
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<img src="/files/u6/VB_waves_qw8nm_2_fig.png" align="middle" height="474" width="700" /> 
+</p> 
+<p> 
+Here are the  wavefunctions  for the  first 12  confined energy states  in  the  valence band. The first of each couple   of  degenerated states is shown.<br /> 
+States from the heavy hole  and the light  hole bands are visible.
+</p> 
+<p> 
+&nbsp;
+</p> 
+<p> 
+<a name="InGaAs_1D.tib" title="InGaAs_1D.tib"></a> 
+</p> 
+<table id="attachments"> 
+ <thead><tr><th>Attachment</th><th>Size</th> </tr></thead> 
+<tbody> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/InGaAs_1D_1.tib">InGaAs_1D.tib</a></td><td>3.12 KB</td> </tr> 
+ <tr class="even"><td><a href="http://www.tibercad.org/files/InGaAs_1D_0.geo">InGaAs_1D.geo</a></td><td>1.02 KB</td> </tr> 
+ <tr class="odd"><td><a href="http://www.tibercad.org/files/InGaAs_1D_1.msh">InGaAs_1D.msh</a></td><td>26.04 KB</td> </tr> 
+</tbody> 
+</table> 
+  </div> 
+ 
+  <div class="clear-block clear"> 
+    <div class="meta"> 
+          <div class="terms"><ul class="links inline"><li  class="first last taxonomy_term_20"><a href="/documentation/tutorial" rel="tag" title="Tag for detailed tutorial" class="taxonomy_term_20">Tutorial</a></li> 
+</ul></div> 
+        </div> 
+ 
+      </div> 
+ 
+</div>          <span class="clear"></span> 
