@@ -16,7 +16,7 @@ ElasticityBoundaryModel::do_init(void)
  
   PhysicalModelInterface::SubmodelIterator  it;
   it = submodels_begin("boundary"); 
-  if ((*it).second != NULL)
+  if (it != submodels_end("boundary"))
   {
     _bm = dynamic_cast<BoundaryModel*> ((*it).second);
     _bm->get_coefficients(_H_tens, _R_vec);

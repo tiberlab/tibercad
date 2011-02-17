@@ -72,7 +72,7 @@ DSSCModel::do_init(void)
   string gen_str(get_option("generation", ""));
   istringstream is(gen_str);
   double val;
-  if ((is >> val) || (gen_str[0] == '@'))
+  if ((is >> val) || (gen_str[0] == '$'))
   {
     get_parameter("generation", _generation);
   }

@@ -69,6 +69,31 @@ Module macrostrain
 }
 
 
+Module elasticity
+{
+
+  name = str_el
+  plot = (Strain)
+
+  Physics
+  {
+    body_force lattice_mismatch
+    {
+      reference_material = GaAs
+    }
+
+    boundary substrate
+    {
+      regions = 1
+      type = clamp
+    }
+  }
+    
+}
+
+
+
+
 Module driftdiffusion
 { 
 
@@ -242,7 +267,7 @@ Module selfconsistent
 Simulation
 {
   temperature = 300
-  solve = (str, dd, selfconsistent)
+  solve = (str, str_el, dd, selfconsistent)
   resultpath = output
   output_format = grace
 }

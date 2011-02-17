@@ -310,8 +310,8 @@ Elasticity::get_solution_secure(const Elem* elem,
 
 	 Material* mat = mod.get_material();
 	 const RotatedCrystal&   cr = mat->get_rotated_crystal ();
-	 Tensor2Gen rotate = cr.RotMatrix;
-	 RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate.transpose());
+	 const Tensor2Gen& rotate = cr.RotMatrix;
+	 RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate);
 
 	 values[StrainCrystal][6*n] =   crystal_strain(0,0);
 	 values[StrainCrystal][6*n+1] = crystal_strain(1,1);

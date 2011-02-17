@@ -6,7 +6,10 @@ Device bjt2
 
   Region coll_doped  # the buried doping
   {
-    Doping donor { density = 1e19 }
+    Doping {
+      type = donor
+      Nd = 1e19
+    }
   }
 
   Region coll # the collector region

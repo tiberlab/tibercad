@@ -325,9 +325,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
     const MeshBase::const_element_iterator end_el =
                                   get_mesh().active_local_elements_end();
 
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
   const NumericVector<Number>& solution = get_solution_vector();
 
@@ -992,29 +990,50 @@ DSSC::rebuild_equation_system(void)
 
   EquationSystems& equation_systems = get_equation_systems();
 
+  ModelOptions::submodel_iterator linit(
+      get_solver_options().submodels_begin("linear_solver"));
+
+  if (linit == get_solver_options().submodels_end("linear_solver"))
+  {
+    get_solver_options().add_submodel("linear_solver", ModelOptions());
+    linit = get_solver_options().submodels_begin("linear_solver");
+  }
+
+  ModelOptions& linopts = linit->second;
 
   // default is bcgsl
-  ModelOptions& solveropts = get_solver_options();
-  if (!solveropts.find_option("ksp_type"))
-    solveropts["ksp_type"] = "bcgsl";
+  if (!linopts.find_option("method"))
+    linopts["method"] = "bcgsl";
 
   // in 1D bcgs seems to work better than bcgsl
   const unsigned int dim = get_mesh().mesh_dimension();
-  if ((dim == 1) && (solveropts["ksp_type"] == "bcgsl"))
-    solveropts["ksp_type"] = "bcgs";
+  if ((dim == 1) && (linopts["method"] == "bcgsl"))
+    linopts["method"] = "bcgs";
+
+  if (!linopts.find_option("preconditioner"))
+    if (dim < 3)
+      linopts["preconditioner"] = "lu";
+    else
+      linopts["preconditioner"] = "ilu";
+
+  if (linopts.get_option("absolute_tolerance", -1.0) < 0)
+    linopts["absolute_tolerance"] = "1e-15";
 
 
-  if (solveropts.get_option("lin_abs_tol", -1.0) < 0)
-    solveropts["lin_abs_tol"] = "1e-15";
 
-  if (solveropts.get_option("nonlin_abs_tol", -1.0) < 0)
-    solveropts["nonlin_abs_tol"] = "1e-15";
+
+  ModelOptions& solveropts = get_solver_options();
+  if (solveropts.get_option("absolute_tolerance", -1.0) < 0)
+    solveropts["absolute_tolerance"] = "1e-15";
+
 
 
   // the coupled DD system
-  TiberNonlinearSystem& system =
-    *TiberNonlinearSystem::create(equation_systems,
-      get_equation_system_name(), get_solver_options());
+  create_equation_system("nonlinear");
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+  //TiberNonlinearSystem& system =
+  //  *TiberNonlinearSystem::create(equation_systems,
+  //    get_equation_system_name(), get_solver_options());
 
   system.attach_assembly_routine(assemble_system);
 
@@ -3091,9 +3110,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   // references for nicer code
   const MeshBase& mesh = get_mesh();
-  EquationSystems& eq_sys = get_equation_systems();
-  TiberNonlinearSystem& system = static_cast<TiberNonlinearSystem&>(
-      eq_sys.get_system(get_equation_system_name()));
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -4441,9 +4458,7 @@ DSSC::get_solution_secure(const Elem* elem,
 
   unsigned int np = points.size();
 
-  TiberNonlinearSystem* system;
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
   const NumericVector<Number>& solution = system->get_solution_vector();
 //  const NumericVector<Number>& oldsolution = system->get_vector("old_sol");
