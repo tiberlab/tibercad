@@ -34,12 +34,12 @@ Macrostrain* Macrostrain::static_this;
 
 void Macrostrain::do_setup_solution_variables(void)
 {
-  declare_solution(Strain, TENSOR, CELL, "-");
+  declare_solution(Strain, TENSOR, CELL, "");
   declare_solution(Stress, TENSOR, CELL, "GPa");
   declare_solution(Displacement, VECTOR, NODES, "m");
   declare_solution(vonMises, REAL, CELL, "GPa");
   declare_solution(PiezoPolarization, VECTOR, CELL, "C/m^2");
-  declare_solution(StrainCrystal, TENSOR, CELL, "-");
+  declare_solution(StrainCrystal, TENSOR, CELL, "");
   declare_solution(StressCrystal, TENSOR, CELL, "GPa");
   declare_solution(EnergyDensity, REAL, CELL, "J/m^3");
 }
