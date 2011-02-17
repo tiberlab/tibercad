@@ -23,6 +23,16 @@ MaterialBoundary*
 MaterialBoundary::create(ID id_A, Material* mat_A,
     ID id_B, Material* mat_B, const ModelOptions& options)
 {
+  // if it is an outer boundary, one of the two materials is NULL
+  if (mat_A == NULL)
+  {
+    if (mat_B == NULL)
+      throw InitFailedException("Trying to create boundary object touching "
+          "no regions at all! Check your boundary regions.");
+
+    std::swap(mat_A, mat_B);
+    std::swap(id_A, id_B);
+  }
   assert(mat_A != NULL);
 
   MaterialBoundary* mat = new MaterialBoundary(options);
