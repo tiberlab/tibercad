@@ -41,7 +41,7 @@ class StiffnessModel : public PhysicalModelInterface
 //! Calculate for a point on the given side
   //void calculate(const Elem* elem, const Point& point);
 
-  void set_stiffness_constant(Tensor4DSym heat_source);
+  void set_stiffness_constant(const Tensor4DSym& C);
 
   void rotate(void);
 
@@ -61,7 +61,7 @@ StiffnessModel::get_stiffness(void) const
 
 inline 
 void 
-StiffnessModel::set_stiffness_constant(Tensor4DSym C)
+StiffnessModel::set_stiffness_constant(const Tensor4DSym& C)
 {
  
   _stiffness = C;

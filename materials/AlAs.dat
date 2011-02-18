@@ -78,6 +78,12 @@ C11 = 125.0
 C12 = 53.4
 C44 = 54.2
 
+[stiffness]
+C11 = 125.0
+C12 = 53.4
+C44 = 54.2
+
+
 # piezoelectricity
 [piezoelectricity]
 e14 = -0.015

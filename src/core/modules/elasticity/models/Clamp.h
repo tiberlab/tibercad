@@ -37,22 +37,6 @@ class Clamp : public BoundaryModel
     //! Initialize
   virtual void do_init(void);
 
-    /* In some cases it might be useful to reimplement this: */
-    // virtual void do_init_interface(const PhysicalModelInterface* comp_A,
-    //         const PhysicalModelInterface* comp_B);
-
-
-    /* This is not used here: */
-    // virtual void read_database(void);
-
-
-    /* We do not use this here: */
-    // virtual void read_interface_database(void);
-
-
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
 
@@ -83,11 +67,5 @@ Clamp::create(const ModelOptions& options)
 
 
 
-inline
-PhysicalModelInterface*
-Clamp::create_new(void) const
-{
-  return new Clamp(get_options());
-}
 
 #endif // _POISSONDIRICHLET_H_

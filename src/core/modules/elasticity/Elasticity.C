@@ -193,7 +193,7 @@ Elasticity::do_solve(void)
 void
 Elasticity::do_print_info(void)
 {
-  Messages::info("ELASTICITY MODULE");
+  //Messages::info("ELASTICITY MODULE");
 }
 
 
