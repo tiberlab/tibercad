@@ -1,0 +1,101 @@
+Device
+{
+
+  meshfile = well.msh
+  mesh_units = 1e-9
+  dimension = 1
+
+
+  Region well
+  {
+    mesh_regions = 1
+    material = GaAs
+
+    Doping {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+    }
+
+  }
+
+  Region  buffer
+  {
+    mesh_regions = (2, 3)
+    material = AlGaAs
+    x = 0.3
+
+    Doping {
+      Nd = 1e17
+      type = donor
+      Ed = 0.025
+    }
+  }
+  
+
+  Region  buffer
+  {
+    mesh_regions = (4, 5)
+    material = AlGaAs
+    x = 0.3
+
+    Doping {
+      Nd = 1e17
+      type = donor
+      Ed = 0.025
+    }
+  }
+
+}
+
+
+
+
+
+Module macrostrain
+{
+
+  name = str
+  plot = (Strain, Stress, Displacement)
+  substrate = substrate
+
+    
+  Boundary substrate 
+  {
+    regions = 1
+    type = substrate
+    material = GaAs
+  }
+}
+
+
+Module elasticity
+{
+
+  name = str_el
+  plot = (Strain, Stress, Displacement)
+
+  Physics
+  {
+    body_force lattice_mismatch
+    {
+      reference_material = GaAs
+    }
+
+    boundary clamp
+    {
+      regions = 1
+    }
+  }
+    
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = (str, str_el)
+  resultpath = output
+  output_format = grace
+}
