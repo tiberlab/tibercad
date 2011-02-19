@@ -72,6 +72,9 @@ TiberModelObject::get_option(const std::string& name,
     T default_value, bool override) const
 {
   string s(_options.get_option(name, ""));
+  if (Variable::check_string(s))
+    throw ModelErrorException("Option \'" + name + "\' cannot "
+        " be used as variable (" + s +")");
   if (override) override_parameter_string(name, s);
 
   T val(default_value);

@@ -56,7 +56,7 @@ Module macrostrain
 {
 
   name = str
-  plot = (Strain)
+  plot = (Strain, Stress)
   substrate = substrate
 
     
@@ -73,7 +73,7 @@ Module elasticity
 {
 
   name = str_el
-  plot = (Strain)
+  plot = (Strain, Stress)
 
   Physics
   {
@@ -82,10 +82,9 @@ Module elasticity
       reference_material = GaAs
     }
 
-    boundary substrate
+    boundary clamp
     {
       regions = 1
-      type = clamp
     }
   }
     
@@ -267,7 +266,7 @@ Module selfconsistent
 Simulation
 {
   temperature = 300
-  solve = (str, str_el, dd, selfconsistent)
+  solve = (str, dd, selfconsistent)
   resultpath = output
   output_format = grace
 }

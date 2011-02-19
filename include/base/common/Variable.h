@@ -144,6 +144,10 @@ class Variable
     static void clear_all(void);
 
 
+    //! Check if a string may define a variable
+    static bool check_string(const std::string& s);
+
+
 
   protected:
 
@@ -202,5 +206,12 @@ Variable::end(void)
   return iterator(_variables.end());
 }
 
+
+inline
+bool
+Variable::check_string(const std::string& s)
+{
+  return (!s.empty() && (s[0] == '$'));
+}
 
 #endif // _VARIABLE_H_

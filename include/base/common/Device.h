@@ -36,9 +36,18 @@ class BoundaryRegions;
 class Device
 {
 
+  private:
+
+    //! A typedef for the map containing atomistic structures
+    typedef std::map<std::string,  AtomisticStructure*> AtomStructMap;
+
+
   public:
 
     typedef std::map<ID, std::vector<ID> > BCNodeMap;
+
+    //! The atomistic structures iterator type
+    typedef AtomStructMap::iterator atomistic_structure_iterator;
 
 
     //! Destructor
@@ -271,6 +280,14 @@ class Device
     AtomisticStructure* get_atomistic_structure(const std::string&);
 
 
+    //! Get the iterator to the first atomistic structure
+    atomistic_structure_iterator atomistic_structures_begin(void);
+
+    //! Get the past-the-end iterator for the atomistic structures
+    atomistic_structure_iterator atomistic_structures_end(void);
+
+
+
   private:
 
 
@@ -285,7 +302,6 @@ class Device
 
     //! A typdef for the node objects
     typedef HashMap<ID, NodeObject*>::Type NodeObjMap;
-
 
 
     //! A typdef for convenience
@@ -382,7 +398,7 @@ class Device
 
     //! The map that connects atomistic structure names to pointers
     /*! (keep track of existing atomistic struxctures) */
-    std::map<std::string,  AtomisticStructure*> _atomistic_structure_map;
+    AtomStructMap _atomistic_structure_map;
 
 
     //! The mesh for this device
@@ -615,6 +631,20 @@ Device::get_symmetry(void) const
   return _symmetry;
 }
 
+
+inline
+Device::atomistic_structure_iterator
+Device::atomistic_structures_begin(void)
+{
+  return _atomistic_structure_map.begin();
+}
+
+inline
+Device::atomistic_structure_iterator
+Device::atomistic_structures_end(void)
+{
+  return _atomistic_structure_map.end();
+}
 
 
 

@@ -53,11 +53,10 @@ StrainInterface::set_simulation(const std::string& name)
           " does not have variable \'StressCrystal\'.");
 
     
-    for (int i = 0; i < 9; i++)
-      if ((_strain_id == INVALID_ID) && (_strain_cryst_id == INVALID_ID) &&
-          (_stress_id == INVALID_ID) && (_stress_cryst_id == INVALID_ID))
-        throw InitFailedException("Simulation " + name +
-            " is missing strain related variables");
+    if ((_strain_id == INVALID_ID) && (_strain_cryst_id == INVALID_ID) &&
+        (_stress_id == INVALID_ID) && (_stress_cryst_id == INVALID_ID))
+      throw InitFailedException("Simulation " + name +
+          " is missing strain related variables");
 
     answer = true;
   }

@@ -273,7 +273,8 @@ Elasticity::get_solution_secure(const Elem* elem,
      }
 
      RealTensor strain(0);
-     if (values.count(Strain) || values.count(Stress) || values.count(Energy) )
+     if (values.count(Strain) || values.count(StrainCrystal) ||
+         values.count(Stress) || values.count(Energy) )
      {
        //------Strain-------------------------
       
