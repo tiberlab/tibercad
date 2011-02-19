@@ -1,69 +1,59 @@
 
 # Description of  the  device physical regions
-$Device
+Device
 {
-  Options
-  {
-    meshfile = bulk.msh
-  }
+   meshfile = bulk.msh
 
    Region bulk 
    {
      material = Si
-     doping = 1e16 doping_type = donor
+     Doping {
+       density = 1e16
+       type = donor
+     }
    }
 
 }
 
 
-# Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
+Module mypoisson
 { 
-
-  model mypoisson
-  { 
               
-    options
+  plot = (Potential, ElField, Displacement)
+
+
+  Physics
+  {
+  
+    charge_density constant
     {
-      plot = (Potential, Field, Displacement)
+      charge_density = 0e19
     }
 
-    physical_model charge_density
-    {
-      type = constant
-      charge_density = 1e19
-    }
+  }
+  
 
+  Contact anode
+  {
+    type = dirichlet
+    potential = $Va[0.0]
+  }
 
-    BC_Regions  
-    {
-      BC_Region anode
-      {
-        type = dirichlet
-        potential = @Va[0.1]
-      }
-
-      BC_Region cathode
-      {
-        type = dirichlet
-        potential = 0.0
-      }
-    }
-
-  }  
-
+  Contact cathode
+  {
+    type = dirichlet
+    potential = 0.0
+  }
 }
 
-$Solver
-{
-}
 
-# Definition of  model-indipendent parameters of the Simulation
-$Simulation
+Simulation
 {
   verbose = 2
   temperature = 300
+  
   solve = mypoisson
+  
   resultpath = output
   output_format = dat
 }

@@ -1,7 +1,7 @@
-// $Id$
+// $Id: PoissonNeumann.h 2029 2010-07-21 13:01:58Z maufder $
 
-#ifndef _POISSONDIRICHLET_H_
-#define _POISSONDIRICHLET_H_
+#ifndef _POISSONNEUMANN_H_
+#define _POISSONNEUMANN_H_
 
 #include "PoissonBoundaryModel.h"
 
@@ -15,16 +15,16 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class PoissonDirichlet : public PoissonBoundaryModel
+class PoissonNeumann : public PoissonBoundaryModel
 {
 
   public:
 
     //! Destructor
-    ~PoissonDirichlet(void) {};
+    ~PoissonNeumann(void) {};
 
     //! Creator function
-    static PoissonDirichlet* create(const ModelOptions& options);
+    static PoissonNeumann* create(const ModelOptions& options);
 
 
     //! Calculate for a point on the given side
@@ -54,31 +54,31 @@ class PoissonDirichlet : public PoissonBoundaryModel
   private:
 
     //! Constructor
-    PoissonDirichlet(const ModelOptions& options);
+    PoissonNeumann(const ModelOptions& options);
 
-    //! The boundary potential
-    double _potential;
+    //! The normal field on the boundary
+    double _field;
 
 };
 
 
 
 inline
-PoissonDirichlet::PoissonDirichlet(const ModelOptions& options) :
+PoissonNeumann::PoissonNeumann(const ModelOptions& options) :
   PoissonBoundaryModel(options),
-  _potential(0)
+  _field(0)
 {
 }
 
 
 
 inline
-PoissonDirichlet*
-PoissonDirichlet::create(const ModelOptions& options)
+PoissonNeumann*
+PoissonNeumann::create(const ModelOptions& options)
 {
-  return new PoissonDirichlet(options);
+  return new PoissonNeumann(options);
 }
 
 
 
-#endif // _POISSONDIRICHLET_H_
+#endif // _POISSONNEUMANN_H_

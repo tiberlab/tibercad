@@ -11,7 +11,7 @@
 
 
 class PolarizationModel;
-class ChargeDensityModel;
+class MyChargeDensityModel;
 class PermittivityModel;
 class Elem;
 
@@ -106,7 +106,7 @@ class MyPoissonModel : public PhysicalModel
     PermittivityModel* _permittivity_model;
 
     //! The charge density model
-    ChargeDensityModel* _charge_density;
+    MyChargeDensityModel* _charge_density;
 
     //! The constructor method
     static TiberModelObject* _create(const ModelOptions& options);

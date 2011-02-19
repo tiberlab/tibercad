@@ -49,7 +49,7 @@ MyPoissonModel::do_init(void)
 {
   SubmodelIterator it = submodels_begin("charge_density");
   if (it != submodels_end("charge_density"))
-    _charge_density = dynamic_cast<ChargeDensityModel*>(it->second);
+    _charge_density = dynamic_cast<MyChargeDensityModel*>(it->second);
   
   it = submodels_begin("polarization");
   const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("polarization"));
@@ -61,7 +61,6 @@ MyPoissonModel::do_init(void)
     _permittivity_model = dynamic_cast<PermittivityModel*>(it->second);
 
   _permittivity = _permittivity_model->get_permittivity();
-  cout<<_permittivity<<endl;
 }
 
 void

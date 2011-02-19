@@ -10,33 +10,33 @@ class Elem;
 class Point;
 
 // Base class for charge density models
-class ChargeDensityModel : public PhysicalModelInterface
+class MyChargeDensityModel : public PhysicalModelInterface
 {
 
   public:
 
-    virtual ~ChargeDensityModel(void) {};
+    virtual ~MyChargeDensityModel(void) {};
 
     double get_charge_density(const Elem* elem, const Point&);
 
 
   protected:
 
-    ChargeDensityModel(const ModelOptions& options);
+    MyChargeDensityModel(const ModelOptions& options);
 
     virtual double calculate_charge_density(const Elem* elem, const Point& point) = 0;
 
 };
 
 
-ChargeDensityModel::ChargeDensityModel(const ModelOptions& options) :
+MyChargeDensityModel::MyChargeDensityModel(const ModelOptions& options) :
   PhysicalModelInterface(options)
 {
 }
 
 
 double
-ChargeDensityModel::get_charge_density(const Elem* elem, const Point& point)
+MyChargeDensityModel::get_charge_density(const Elem* elem, const Point& point)
 {
   return calculate_charge_density(elem, point);
 }

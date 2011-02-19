@@ -10,7 +10,7 @@ class Elem;
 class Point;
 
 // Base class for charge density models
-class ConstantChargeDensity : public ChargeDensityModel
+class ConstantChargeDensity : public MyChargeDensityModel
 {
 
   public:
@@ -37,7 +37,7 @@ class ConstantChargeDensity : public ChargeDensityModel
 
 inline
 ConstantChargeDensity::ConstantChargeDensity(const ModelOptions& options) :
-  ChargeDensityModel(options),
+  MyChargeDensityModel(options),
   _charge_density(0.0)
 {
 }

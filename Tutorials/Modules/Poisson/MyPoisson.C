@@ -69,7 +69,8 @@ MyPoisson::do_init(void)
 void
 MyPoisson::parse_options(void)
 {
- myopts.default_boundary_conditions = opts.get_option("default_boundary_condition","zero_field");
+ myopts.default_boundary_conditions =
+   get_options().get_option("default_boundary_condition","zero_field");
 }
 
 
