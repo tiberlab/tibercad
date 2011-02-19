@@ -14,7 +14,8 @@ TIBER_MODULE(PoissonNeumann, contact, neumann)
 void
 PoissonNeumann::do_init(void)
 {
-  get_parameter("normal_field", _field);
+  // taken in C/m^2
+  get_parameter("displacement", _field);
 }
 
 
