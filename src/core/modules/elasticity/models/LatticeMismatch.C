@@ -31,6 +31,13 @@ LatticeMismatch::do_init(void)
  //Get reference lattice
   const std::string name = get_option("reference_material", "none"); 
  
+  // maybe the reference material should be defined in a subblock
+  // but this should be done after a change in the core
+  // dummy reads
+  get_option("x-growth-direction", "");
+  get_option("y-growth-direction", "");
+  get_option("z-growth-direction", "");
+  get_option("x", "");
 
   //  get_options().print_all();
   if (name == "none") throw InitFailedException("Lattice mismatch: reference material is not defined");

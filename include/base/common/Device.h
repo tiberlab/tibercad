@@ -277,7 +277,11 @@ class Device
 
 
     //! Get the pointer for the atomistic structure defined with \c name
-    AtomisticStructure* get_atomistic_structure(const std::string&);
+    AtomisticStructure* get_atomistic_structure(const std::string& name);
+
+    //! Get the requested atomistic structures in a vector
+    void get_atomistic_structures(const std::string& names,
+        std::vector<AtomisticStructure*>& structures);
 
 
     //! Get the iterator to the first atomistic structure

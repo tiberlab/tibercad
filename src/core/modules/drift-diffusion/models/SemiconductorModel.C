@@ -52,6 +52,7 @@ SemiconductorModel::create_submodels(void)
   ModelOptions opt(get_options());
   opt.delete_option("relax_polarization");
   opt.delete_option("strain_simulation");
+  opt.delete_option("recompute_band_parameters");
   opt.delete_option("statistics");
   opt.delete_all_submodels();
 

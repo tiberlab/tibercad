@@ -489,6 +489,29 @@ Device::init(void)
 
 
 
+void
+Device::get_atomistic_structures(const string& names,
+    vector<AtomisticStructure*>& structures)
+{
+  if (names == "all")
+  {
+    structures.resize(_atomistic_structure_map.size());
+    atomistic_structure_iterator it(_atomistic_structure_map.begin());
+    for (size_t i = 0; it != _atomistic_structure_map.end(); ++it, ++i)
+      structures[i] = it->second;
+  }
+  else
+  {
+    vector<string> ns;
+    Utils::extract_vector(names, ns);
+    structures.resize(ns.size());
+    for (size_t i = 0; i < ns.size(); ++i)
+      structures[i] = get_atomistic_structure(ns[i]);
+  }
+}
+
+
+
 
 
 void

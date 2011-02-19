@@ -63,8 +63,8 @@ Elasticity::do_init(void)
 
   parse_options();
  
-  TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
-      get_equation_system_name(), get_solver_options());
+  create_equation_system("linear");
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   const MeshBase& mesh = get_mesh();
 
@@ -75,18 +75,18 @@ Elasticity::do_init(void)
   //switch (dim)
   // {
   //case 3:
-    system->add_variable("uz", FIRST);
-    uvar[2] =  system->variable_number("uz");
+    system.add_variable("uz", FIRST);
+    uvar[2] =  system.variable_number("uz");
     // case 2:
-    system->add_variable("uy", FIRST);
-    uvar[1] =  system->variable_number("uy");
+    system.add_variable("uy", FIRST);
+    uvar[1] =  system.variable_number("uy");
     //default:
-    system->add_variable("ux", FIRST);
-    uvar[0] =  system->variable_number("ux");
+    system.add_variable("ux", FIRST);
+    uvar[0] =  system.variable_number("ux");
     // }
 
-  system->attach_assemble_function(assemble);
-  system->init();
+  system.attach_assemble_function(assemble);
+  system.init();
 
 }
 
@@ -131,11 +131,7 @@ Elasticity::do_solve(void)
 {
   _this = this;
 
-  EquationSystems& es = get_equation_systems();
-
-  TiberLinearSystem& system =
-    es.get_system<TiberLinearSystem>(get_equation_system_name());
-
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   sol =  (system.solution)->clone();
   sol->zero();
@@ -224,8 +220,7 @@ Elasticity::get_solution_secure(const Elem* elem,
  
    unsigned int np = p.size();
 
-   TiberLinearSystem* system;
-   system = &get_equation_systems().get_system<TiberLinearSystem>(get_equation_system_name());
+   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
 
    //const NumericVector<Number>& solution = system->get_solution_vector();
    const NumericVector<Number>& solution = *sol;
@@ -399,8 +394,7 @@ Elasticity::compute_elastic_energy(void)
 {
 
 
-  TiberLinearSystem& system = static_cast<TiberLinearSystem&>(
-		 get_equation_systems().get_system(get_equation_system_name()));
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
@@ -478,8 +472,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 {
 
 
-  TiberLinearSystem& system = static_cast<TiberLinearSystem&>(
-      get_equation_systems().get_system(get_equation_system_name()));
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   const MeshBase& mesh = get_mesh();
   //const unsigned int dim = mesh.mesh_dimension();
@@ -712,8 +705,7 @@ Elasticity::apply_shape_deformation()
 
 
   //MeshDeformation----
-  TiberLinearSystem* system;
-  system = &get_equation_systems().get_system<TiberLinearSystem>(get_equation_system_name());
+  TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   
   const NumericVector<Number>& solution = system->get_solution_vector();
   
@@ -752,8 +744,7 @@ Elasticity::restore_shape()
 
 
   //MeshDeformation----
-  TiberLinearSystem* system;
-  system = &get_equation_systems().get_system<TiberLinearSystem>(get_equation_system_name());
+  TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   
   const NumericVector<Number>& solution = *sol;
 
