@@ -3,19 +3,13 @@
 #ifndef _CLAMP_H_
 #define _CLAMP_H_
 
-#include "BoundaryModel.h"
-
-#include "point.h"
-#include "tensor_value.h"
-#include "vector_value.h"
-
-
+#include "ElasticityBoundaryModel.h"
 
 class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class Clamp : public BoundaryModel
+class Clamp : public ElasticityBoundaryModel
 {
 
   public:
@@ -31,7 +25,6 @@ class Clamp : public BoundaryModel
     virtual void calculate(const Elem* elem, unsigned int side,
 			   const Point& point){};
 
-
   protected:
 
     //! Initialize
@@ -43,19 +36,15 @@ class Clamp : public BoundaryModel
     //! Constructor
     Clamp(const ModelOptions& options);
 
-    //! The boundary potential
-    //double _potential;
-
 };
 
 
 
 inline
 Clamp::Clamp(const ModelOptions& options) :
-  BoundaryModel(options)
+  ElasticityBoundaryModel(options)
 {
 }
-
 
 
 inline
@@ -64,8 +53,6 @@ Clamp::create(const ModelOptions& options)
 {
   return new Clamp(options);
 }
-
-
 
 
 #endif // _POISSONDIRICHLET_H_

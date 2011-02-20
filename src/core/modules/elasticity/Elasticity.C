@@ -18,6 +18,7 @@
 #include "SimulationEnvironment.h"
 #include "TensorOperators.h"
 #include "RotatedCrystal.h"
+#include "AtomisticStructure.h"
 
 // This is needed in order to create the shared module library
 // The first string is the class name of the object to be created,
@@ -100,9 +101,10 @@ Elasticity::parse_options(void)
 
   myopt.shape_error = opt.get_option("shape_error",1e-2);
   myopt.shape_iterations = opt.get_option("shape_iterations",1);
-  myopt.deformation = opt.get_option("do_deformation",true);
+  myopt.deformation = opt.get_option("do_deformation",false);
   myopt.magnification = opt.get_option("magnification",1);
-
+  myopt.structure_to_be_strained = opt.get_option("strain_atomistic_structure", "all");
+ 
 
 
 }
@@ -142,11 +144,11 @@ Elasticity::do_solve(void)
   //double tot_norm = 0.0;
   double energy = 0.0;
 
-  //if ((SimulationOptions::verbose() > 2) &&  myopt.shape_iterations>1)
-  // {
-  //  cout<<"| Iteration | Elastic energy [Joule] | norm(u) [m] | Energy error | Displacement error |"<<endl;
-  //  cout<<"-----------------------------------------------------------------------------------------------"<<endl;
-  // }
+  if ((SimulationOptions::verbose() > 2) &&  myopt.shape_iterations>0)
+  {
+    cout<<"| Iteration | Elastic energy [Joule] | norm(u) [m] | Energy error | Displacement error |"<<endl;
+    cout<<"-----------------------------------------------------------------------------------------------"<<endl;
+  }
 
   do {
     iter +=1;
@@ -158,31 +160,17 @@ Elasticity::do_solve(void)
     //tot_norm +=norm;
     //error = norm/tot_norm;
   
+    //The error is on the elastic energy
     double new_energy = compute_elastic_energy();
     error = abs(new_energy - energy)/new_energy;
     energy = new_energy;
 
-    if ((SimulationOptions::verbose() > 2))
-    {
-      if (myopt.shape_iterations > 1)
-	cout<<"Iter: "<<iter;
-	  
-      cout<<" Elastic energy: "<<energy<<" Joule";
-    
-      if ( iter>1 )
-	cout<<" Relative error: "<< error;
-
-      cout<<endl;
-    }
-
     if (myopt.deformation)
       apply_shape_deformation();
     
-    //  iter +=1;
   } while (error > myopt.shape_error & iter < myopt.shape_iterations);
 
-  // if (!myopt.deformation)
-  // restore_shape();
+ 
 }
 
 
@@ -219,7 +207,8 @@ Elasticity::get_solution_secure(const Elem* elem,
 {
  
    unsigned int np = p.size();
-
+   
+ 
    TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
 
    //const NumericVector<Number>& solution = system->get_solution_vector();
@@ -244,6 +233,7 @@ Elasticity::get_solution_secure(const Elem* elem,
    RealTensor total_strain(0);
    RealTensor total_stress(0);
 
+  
    for (ID n = 0; n < np; n++)
    {
      mod.calculate(elem,p[n]);   
@@ -256,12 +246,13 @@ Elasticity::get_solution_secure(const Elem* elem,
      //----Displacemet--------
      if (values.count(Displacement))
      {
+      
        //----Displacemet-------- 
        RealGradient u(0);
-     for (unsigned int i = 0;i<3; i ++)
+       for (unsigned int i = 0;i<3; i ++)
 	 for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
 	   u(i) +=(solution)(dof_indices[i][alpha]) * phi[alpha][n];
-       
+        
        values[Displacement][3*n]   = u(0);
        values[Displacement][3*n+1] = u(1);
        values[Displacement][3*n+2] = u(2);
@@ -272,7 +263,7 @@ Elasticity::get_solution_secure(const Elem* elem,
          values.count(Stress) || values.count(Energy) )
      {
        //------Strain-------------------------
-      
+   
        for (unsigned int i = 0;i<3; i ++)
 	 for (unsigned int j = 0;j<=i; j ++)
 	 {
@@ -382,8 +373,8 @@ Elasticity::get_solution_secure(const Elem* elem,
       values[StrainCell][3] = total_strain(1,0);
       values[StrainCell][4] = total_strain(2,1);
       values[StrainCell][5] = total_strain(2,0); 
-     }
-    
+    }
+      
 
 }
 
@@ -630,13 +621,23 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    double A(0);
 
             boundary_mod->set_normal(normal[qp]);
-	    boundary_mod->get_coefficients(H, R);
-	    
+	    boundary_mod->get_coefficients(H, R, A);
+             
+	    mod.calculate(elem,qface_point[qp]);   
+	    const RealTensor& strain =  mod.get_strain_source();
+	    const RealTensor& stress =  mod.get_stress_source();	    
+	    const Tensor4DSym& C = mod.get_stiffness();
+
 	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	    {
+	      RealGradient tmp = phi_face[alpha][qp] * ((stress + (C * strain)) * normal[qp]);
+
 	      for (unsigned int i =0; i<3; i++)
 	      {
-		
+		 
+                //Add the surface integral if this contact is "extended", i. e. A = 1
+		(*(F[i]))(alpha) -= A *  JxW_face[qp] * tmp(i);
+                 
 		(*(F[i]))(alpha) +=  JxW_face[qp] * R(i) * phi_face[alpha][qp];
 		
 		for (unsigned int j =0; j<3; j++)
@@ -645,6 +646,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 		
 	      }
 	    }
+
 	  }
 	}
     }
@@ -664,54 +666,70 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 void
 Elasticity::apply_shape_deformation()
 {
-
+  
   //Atomistics deformation-----
+  vector<AtomisticStructure*> atom_structures;
 
-//   as = get_atomistic_structure();
-
-//   Device::StructureMap::iterator str_start = as.begin();
-//   const  Device::StructureMap::iterator str_end = as.end();
-
-//   for ( ;  str_start != str_end ; ++str_start)
-//   {
-//     double scale =  (str_start->second)->get_scale();
-//     std::vector< Atom >& structure =  (str_start->second)->get_structure_atoms();
-
-//     for (unsigned int na = 0; na < structure.size(); na++)
-//     {
-
-//       std::vector<Point> old_pos(1);
-//       old_pos[0](0) = structure[na].get_position()(1) / scale;
-//       old_pos[0](1) = structure[na].get_position()(2) / scale;
-//       old_pos[0](2) = structure[na].get_position()(3) / scale;
-
-//       std::vector<Tensor1> disp(1);
-//       get_displacement(structure[na].get_elem(),old_pos,disp);
-
-
-//        disp[0] /= get_scaling().get_calc_mesh_units(); //To mesh units
-
-//       Tensor1 new_pos(0);
-//       new_pos(1) = disp[0](1) + old_pos[0](0);
-//       new_pos(2) = disp[0](2) + old_pos[0](1);
-//       new_pos(3) = disp[0](3) + old_pos[0](2);
-
-//       new_pos *=scale;
-//       structure[na].set_position(new_pos);
-
-//     }
-//     (str_start->second)->print_structure("strained.xyz");
-//   }
-
-
-  //MeshDeformation----
+  get_environment().get_device().get_atomistic_structures(myopt.structure_to_be_strained,atom_structures);
+   
   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   
-  const NumericVector<Number>& solution = system->get_solution_vector();
+  const NumericVector<Number>& solution = *sol;
+  const unsigned int dim = get_mesh().mesh_dimension();
+  const DofMap& dof_map = system->get_dof_map();
   
+  std::vector<std::vector<unsigned int> > dof_indices(3);
+  
+  FEType fe_type = system->variable_type(uvar[0]);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+
+  for (unsigned int ns = 0; ns < atom_structures.size(); ns++)
+  {
+  
+    std::vector< Atom >& structure =  atom_structures[ns]->get_structure_atoms();
+    double scale = atom_structures[ns]->get_scale();
+   
+    for (unsigned int na = 0; na < structure.size(); na++)
+    {
+      vector<Point> old_pos(1);     
+      old_pos[0](0) = structure[na].get_position()(1) / scale;
+      old_pos[0](1) = structure[na].get_position()(2) / scale;
+      old_pos[0](2) = structure[na].get_position()(3) / scale;
+       
+      const Elem* elem = structure[na].get_elem();
+      for (unsigned int i = 0; i< 3 ; i++)
+	dof_map.dof_indices(elem, dof_indices[i],uvar[i]);
+
+      vector<Point> p(old_pos);     
+      FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, old_pos, p);
+
+      fe->reinit(elem, &p);
+  
+      Tensor1 displ(0);
+      for (unsigned int i = 0;i<3; i ++)
+	for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
+	  displ(i) +=(solution)(dof_indices[i][alpha]) * phi[alpha][0];
+        
+      displ /= get_scaling().get_calc_mesh_units();
+
+      Tensor1 new_pos(0);
+      new_pos(1) = displ(1) + old_pos[0](0);
+      new_pos(2) = displ(2) + old_pos[0](1);
+      new_pos(3) = displ(3) + old_pos[0](2);
+       
+      new_pos *=scale;
+      
+      structure[na].set_position(new_pos);
+      
+    }
+    atom_structures[ns]->print_structure("strained.xyz");
+ 
+  }
+      
   const unsigned int system_number = system->number();
   const MeshBase& mesh = get_mesh();
-  ID  dim = get_mesh().mesh_dimension();
   MeshBase::const_node_iterator  nd  = mesh.active_nodes_begin();
   const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
   
@@ -735,6 +753,7 @@ Elasticity::apply_shape_deformation()
     
     *node = pos;
   }
+ 
 
 }
 
@@ -792,133 +811,6 @@ Elasticity::get_subtensor(const Tensor4DSym& C_calc,unsigned int i,unsigned  int
     }
   }
 
-
   return a;
 
 }
-//    //Adjusting the point lieing on nodes.
-//    vector<Point> global_point(elem->n_nodes());
-//    for (ID node = 0; node < elem->n_nodes(); node++)
-//      global_point[node] =  elem->point(node);
-   
-     
-//    std::vector<Point> local_point(elem->n_nodes()+1);
-//    FEInterface::inverse_map(dim, fe_type, elem, global_point,local_point);
-   
-//    std::vector<Point> point_new(np);
-//    for (ID n = 0; n < np; n++)
-//    {
-//      bool is_on_node = false;
-//      for (ID node = 0; node < elem->n_nodes(); node++)
-//      {
-//        Point p_node = elem->node(node);
-       
-//        Tensor1 diff(0);
-//        for (ID d = 0;d <3; d++) 
-// 	 diff(d+1) = local_point[node](d) - p[n](d);
-       
-//        double dist = norm(diff);
-      
-//        if (dist < 1E-8 && dist > -1E-8 )
-//          is_on_node = true;
-//      }
-     
-   
-//      if (is_on_node)
-//        point_new[n] =   p[n] * (1.0);
-//      else
-//        point_new[n] =   p[n];
-
-//      //cout<< point_new[n]<<endl;
-//    }
-//    //------------------------------------------------
-   //Surface contribution of internal body force
- //    for (unsigned int side = 0; side<elem->n_sides(); side++)
-//     {
-//       const ElementSide elside(elem->top_parent(), side);
-//       if (si.is_on_boundary(elside))
-//       {
-//         bool do_int = false;
-
-// 	ElasticityBoundaryModel*  boundary_mod =
-// 	  get_interface_model<ElasticityBoundaryModel>(elem, side);
-	
-// 	if (boundary_mod != NULL)
-// 	  if  (boundary_mod->get_type() == ElasticityBoundaryModel::SurfaceForce)
-// 	    do_int = true;
-	
-// 	if (do_int)
-// 	{
-// 	  fe_face->reinit(elem,side);
-// 	  for (unsigned int qp=0; qp<qface.n_points(); qp++)
-// 	  {
-// 	    RealGradient tmp =   get_stress(elem,ref_face_points[qp]) * normal[qp];
-// 	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
-// 	      for (ID i = 0;i <dim; i++)
-// 		(*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * tmp(i);
-// 	  }
-// 	}
-	
-//       }
-//     }
-
-
-
-	//------------------------
-	//}
-	// else
-	// {
-
-	
-// 	if (boundary_mod != NULL)
-// 	{
-	  
-// 	  if (boundary_mod->get_type() == ElasticityBoundaryModel::SurfaceForce)
-// 	  {
-// 	    fe_face->reinit(elem, s);
-	    
-// 	    RealTensor H(0);
-// 	    RealGradient R(0);
-// 	    boundary_mod->get_coefficients(H,R);
-	    
-	    
-// 	    for (unsigned int qp=0; qp<qface.n_points(); qp++)
-// 	      for (unsigned int k =0; k<3; k++)
-// 		for (unsigned int alpha=0; alpha<n_dofs_vec[k]; alpha++)
-// 		  (*(F[k]))(alpha) +=  JxW_face[qp] * R(k) * phi_face[alpha][qp];
-	    
-// 	  }
-// 	  else     
-// 	  {
-	    
-// 	    //  //--------------
-// 	    RealTensor H(0);
-// 	    RealGradient R(0);
-// 	    boundary_mod->get_coefficients(H,R);
-	    
-// 	    for (unsigned int i = 0;i <3; i++)
-// 	    {
-// 	      for (unsigned int alpha=0; alpha<n_dofs_vec[i]; alpha++)
-// 	      {
-// 		if (elem->is_node_on_side(alpha,s))
-// 		{
-// 		  for (unsigned int j = 0;j <3; j++)
-// 		    for (unsigned int beta=0; beta<n_dofs_vec[j]; beta++)
-// 		      (*(K[i][j]))(alpha,beta) = 0.0;
-		  
-// 		  for (unsigned int j = 0;j <3; j++)
-// 		    (*(K[i][j]))(alpha,alpha) = H(i,j);
-		  
-// 		  (*(F[i]))(alpha) = R(i);
-		  
-// 		}// if (elem->is_node_on_side(alpha,side))
-// 	      }
-// 	    }
-// 	  //-----------------
-// 	  }
-//	}
-	
-	//     }
-
-	//   }
-    

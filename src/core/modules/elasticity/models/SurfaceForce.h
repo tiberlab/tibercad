@@ -3,7 +3,7 @@
 #ifndef _SURFACEFORCE_H_
 #define _SURFACEFORCE_H_
 
-#include "BoundaryModel.h"
+#include "ElasticityBoundaryModel.h"
 
 #include "point.h"
 #include "tensor_value.h"
@@ -15,7 +15,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class TBDLLOCAL SurfaceForce : public BoundaryModel
+class TBDLLOCAL SurfaceForce : public ElasticityBoundaryModel
 {
 
   public:
@@ -68,7 +68,7 @@ class TBDLLOCAL SurfaceForce : public BoundaryModel
 
 inline
 SurfaceForce::SurfaceForce(const ModelOptions& options) :
-  BoundaryModel(options)
+  ElasticityBoundaryModel(options)
 {
 }
 

@@ -102,7 +102,8 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     bool deformation;
     double shape_error; //!< Max tollerance for shape deformation
     unsigned int shape_iterations; //! Max number of shape itarations
-  };
+    std::string structure_to_be_strained; //!Atomistic strucure to be strained
+   };
 
   options myopt;
 
