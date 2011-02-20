@@ -1,9 +1,15 @@
+2011-02-20 Auf der Maur
+	( ) get rid of read_database(), put database access into get_option()
+		and get_parameter()
+	( ) throw exception if get_option() gets a string with "$"
+	( ) add something like @define, @if etc. in InputParser
+
 2010-09-21 Romano
 	( ) Complete the Elasticity module
 
 2010-09-20 Auf der Maur
 	(DONE) add possibility to read RealGradient type from input file
-        (DONE) add the *operator between tensor.h and tensor_value.h related types.
+    (DONE) add the *operator between tensor.h and tensor_value.h related types.
 
 2010-07-20 Auf der Maur
 	( ) add possibility to have independent meshes
@@ -48,10 +54,10 @@
 	(DONE) change surface charge model so it can work at the interior
 
 2008-06-05 Auf der Maur
-	(PARTLY DONE) improve drift-diffusion for electron-only calculations
+	(DONE) improve drift-diffusion for electron-only calculations
 
 2008-06-03 Povolotskyi
-        ( ) immplement quantum Hamiltonian model for X and L valleys
+	( ) immplement quantum Hamiltonian model for X and L valleys
 
 2008-05-30 Auf der Maur
 	(PARTLY DONE) put field dependent mobility into jacobian

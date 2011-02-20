@@ -8,6 +8,7 @@
 #include <string>
 
 #include "InputParser.h"
+#include "Messages.h"
 #include "Utils.h"
 #include "InitFailedException.h"
 
@@ -97,6 +98,7 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
     if (token_1 == "@include")
     {
       ModelOptions tmp;
+      Messages::info("Including file " + token_2);
       InputParser().parse_file(token_2, tmp);
       options += tmp;
     }
