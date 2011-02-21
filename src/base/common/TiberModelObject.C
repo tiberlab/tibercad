@@ -102,7 +102,13 @@ TiberModelObject::get_parameter(const std::string& name,
     std::vector<T>& vec, bool override)
 {
   string s(_options.get_option(name, ""));
+  if (Variable::check_string(s))
+    throw ModelErrorException("Option \'" + name + "\' cannot "
+        " be used as variable (" + s +")");
   if (override) override_parameter_string(name, s);
+
+  if (s.empty()) return;
+
   Utils::extract_vector(s, vec);
 }
 
@@ -113,12 +119,37 @@ TiberModelObject::get_parameter<RealVectorValue>(const std::string& name,
     RealVectorValue& vec, bool override, InitializerBase<RealVectorValue>*)
 {
   string val(_options.get_option(name, ""));
+  if (Variable::check_string(val))
+    throw ModelErrorException("Option \'" + name + "\' cannot "
+        " be used as variable (" + val +")");
   // if one needs override from strange other sources
   if (override) override_parameter_string(name, val);
+
+  if (val.empty()) return;
+
   //Variable::check_and_register(val, variable, this, initfunc);
   Utils::extract_vector(val, vec);
 }
 
+
+template<>
+void
+TiberModelObject::get_parameter<RealTensor>(const std::string& name,
+    RealTensor& vec, bool override, InitializerBase<RealTensor>*)
+{
+  string val(_options.get_option(name, ""));
+  if (Variable::check_string(val))
+    throw ModelErrorException("Option \'" + name + "\' cannot "
+        " be used as variable (" + val +")");
+  // if one needs override from strange other sources
+  if (override) override_parameter_string(name, val);
+
+  if (val.empty()) return;
+
+  //Variable::check_and_register(val, variable, this, initfunc);
+  Utils::extract_tensor(val, vec);
+
+}
 
 
 template <typename T>

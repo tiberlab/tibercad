@@ -146,8 +146,8 @@ Elasticity::do_solve(void)
 
   if ((SimulationOptions::verbose() > 2) &&  myopt.shape_iterations>0)
   {
-    cout<<"| Iteration | Elastic energy [Joule] | norm(u) [m] | Energy error | Displacement error |"<<endl;
-    cout<<"-----------------------------------------------------------------------------------------------"<<endl;
+    //cout<<"| Iteration | Elastic energy [Joule] | norm(u) [m] | Energy error | Displacement error |"<<endl;
+    //cout<<"-----------------------------------------------------------------------------------------------"<<endl;
   }
 
   do {

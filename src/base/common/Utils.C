@@ -8,6 +8,7 @@
 #include "boost/filesystem/convenience.hpp"
 
 #include "Utils.h"
+#include "RuntimeException.h"
 
 #include <vector_value.h>
 
@@ -286,6 +287,7 @@ Utils::extract_vector(const string& input, vector<T>& vec)
       istr.unget();
       delete_closing = false;
   }
+  skip_whitespace(istr);
 
   // now we are sure to have at least one component and we have for sure
   // one symbol in the stream
@@ -311,11 +313,23 @@ Utils::extract_vector(const string& input, vector<T>& vec)
         comp += '[' + get_until_matching_symbol(istr, '[', ']');
         break;
 
+      case '"':
+        comp += get_until_matching_symbol(istr, '"', '"');
+        break;
+
       case ',':
+      case ' ':
+      case '\t':
+      case '\n':
         // we found a complete vector component
         boost::algorithm::trim(comp);
         vec.push_back(convert<T>(comp));
         comp.clear();
+        // get rid of white space
+        tmp = istr.get();
+        while ((tmp != EOF) && (std::isspace(tmp) || (tmp == ',')))
+          tmp = istr.get();
+        istr.unget();
         break;
 
       default:
@@ -364,9 +378,23 @@ Utils::extract_vector(const string& input, RealVectorValue& vec)
       break;
 
     default:
+      throw RuntimeException("\'" + input + "\' does not represent a 3-Vector.");
       break;
   }
 }
+
+
+
+void
+Utils::extract_tensor(const std::string& input, RealTensor& tensor)
+{
+  // first, extract rows
+  vector<string> rows;
+  extract_vector(input, rows);
+
+}
+
+
 
 
 template <>

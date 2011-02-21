@@ -13,6 +13,9 @@
 template <typename T> class VectorValue;
 typedef VectorValue<double> RealVectorValue;
 
+template <typename T> class TensorValue;
+typedef TensorValue<double> RealTensor;
+
 //! This class contains useful methods for different tasks
 class Utils
 {
@@ -37,6 +40,8 @@ class Utils
      * \li \verbatim { val1, val2, ..., valN } \endverbatim
      * \li \verbatim   val1, val2, ..., valN  \endverbatim
      *
+     * The commas are optional
+     *
      * The vector components can contain any character sequencies which do not
      * contain the type of braces used to define the vector. When a component
      * should contain a comma, it has to be quoted with \c ", when it should
@@ -48,7 +53,7 @@ class Utils
     static void extract_vector(const std::string& input, std::vector<T>& vec);
 
 
-    //! Extract a real 3D vector
+    //! Extract a real 3D vector from a string
     /*!
      * The input string has to be of the form
      * \li \verbatim ( val1, val2, val3 ) \endverbatim
@@ -56,11 +61,27 @@ class Utils
      * \li \verbatim { val1, val2, val3 } \endverbatim
      * \li \verbatim   val1, val2, val3  \endverbatim
      *
+     * The commas are optional
+     *
      * \note If \c input contains only one number, \c vec will be filled with
      * that number. If it contains only two numbers, the first two components
      * of \c vec will be assigned both the first of the two.
+     *
+     * \return \c true if successful , \c false otherwise
      */
     static void extract_vector(const std::string& input, RealVectorValue& vec);
+
+
+    //! Extract a real tensor from a string
+    /*!
+     * The input string has to be of the form
+     * \li \verbatim ( a b c; d e f; g h i ) \endverbatim
+     *
+     * Any of the syntax of the  extract_vector() method can be used for
+     * the row data.
+     */
+    static void extract_tensor(const std::string& input, RealTensor& tensor);
+
 
 
     //! Tokenize a string
