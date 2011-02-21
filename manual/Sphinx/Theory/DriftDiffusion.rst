@@ -81,7 +81,7 @@ The following options infuence the behaviour of the Drift-Diffusion module:
   ``solve_after_load = boolean`` If set to true, the system will be solved after having
     reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
 
-     |note|  Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
+     |warn|  Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
              Otherwise there will be undefined behaviour or failure. 
              Future releases will relax this restriction.
 
@@ -230,7 +230,7 @@ in TIBERCAD. It is enabled by specifying a ``generation`` submodel of type optic
 model imposes a constant generation rate which has to be provided by the keyword G in
 units of :math:`(cm*s)^{-1}` . 
 
-  |note| Note that the simulation usually should define a sweep on the value
+  |warn| Note that the simulation usually should define a sweep on the value
          of G from 0 to the desired generation.
 
 Thermoelectric power models

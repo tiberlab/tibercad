@@ -104,7 +104,7 @@ This is the description of  the  device physical regions::
        }
     }
 
-    |note| for both region ( :math:`TiO_2`  and electrolyte) the same material for the database is used 
+    |warn| for both region ( :math:`TiO_2`  and electrolyte) the same material for the database is used 
             TiO2mes), the parameter porosity defines which porosity has the material. 
             The flag TiO2 = false defines instead that in the electrolyte region only the electrolyte 
             is present and there is no semiconductor. By default the dssc module assumes that a certain region 
@@ -249,7 +249,7 @@ all the currents (flag Current) which include the x, y and z components of the c
 
 Finally the flag (ContactCurrents) allows the plot of the current flowing through the contacts.
     
-    |note|  In a DSC the current Is fundamentally diffusion driven, the electric field and the consequent drift current is rather small.
+    |warn|  In a DSC the current Is fundamentally diffusion driven, the electric field and the consequent drift current is rather small.
 
 
 ..  figure:: ../data/DscEx04.png

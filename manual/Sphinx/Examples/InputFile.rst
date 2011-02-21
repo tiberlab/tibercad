@@ -137,7 +137,7 @@ thus we write x = 0.2.
   ``x-growth-direction, y-growth-direction, z-growth-direction`` : Bravais vectors with Miller
 indexes for wurtzite crystal (4 element vectors) or zincblende crystal (3 element vectors).
 
-  |note| A common crystal structure and growth directions definition may be applied to
+  |warn| A common crystal structure and growth directions definition may be applied to
          all the Regions of the Device, just by defining them everywhere in the Device block, but
          outside any specific Region block.
 
