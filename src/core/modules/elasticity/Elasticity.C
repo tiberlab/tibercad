@@ -96,16 +96,13 @@ void
 Elasticity::parse_options(void)
 {
 
-
   const ModelOptions& opt = get_options();
 
   myopt.shape_error = opt.get_option("shape_error",1e-2);
-  myopt.shape_iterations = opt.get_option("shape_iterations",1);
+  myopt.shape_iterations = opt.get_option("shape_iterations",0);
   myopt.deformation = opt.get_option("do_deformation",false);
   myopt.magnification = opt.get_option("magnification",1);
   myopt.structure_to_be_strained = opt.get_option("strain_atomistic_structure", "all");
- 
-
 
 }
 
@@ -120,6 +117,7 @@ Elasticity::do_setup_solution_variables(void)
   declare_solution(StrainCrystal, TENSOR, NODES, "");
   declare_solution(Energy, REAL, NODES, "Joule");
   declare_solution(Stress, TENSOR, NODES, "GPa");
+  declare_solution(StressCrystal, TENSOR, NODES, "");
   declare_solution(Displacement, VECTOR, NODES, "m");
   declare_solution(StrainSource, TENSOR, NODES, "");
   declare_solution(StressSource, TENSOR, NODES, "GPa");
@@ -138,39 +136,61 @@ Elasticity::do_solve(void)
   sol =  (system.solution)->clone();
   sol->zero();
 
-  
   iter = 0;
-  double error = 0.0;
-  //double tot_norm = 0.0;
+  double error_energy = 0.0;
+  double error_u = 0.0;
+  double tot_norm = 0.0;
   double energy = 0.0;
 
-  if ((SimulationOptions::verbose() > 2) &&  myopt.shape_iterations>0)
-  {
-    //cout<<"| Iteration | Elastic energy [Joule] | norm(u) [m] | Energy error | Displacement error |"<<endl;
-    //cout<<"-----------------------------------------------------------------------------------------------"<<endl;
-  }
+  //if ((SimulationOptions::verbose() > 2) &&  myopt.shape_iterations>1)
+  // {
+  //  cout<<"| Iteration | Elastic energy [J] | norm(u) [m] | Energy error [%] | Displ error [%] |"<<endl;
+  //  cout<<"-----------------------------------------------------------------------------------------------"<<endl;
+  // }
 
   do {
-    iter +=1;
-    //system.solution->zero();
+
+    // system.solution->zero();
+    //apply_shape_deformation();
+ 
     system.solve();
     sol->add(1.0,*(system.solution));
     
-    //double norm = (system.solution)->l2_norm();
-    //tot_norm +=norm;
-    //error = norm/tot_norm;
+    double tot_norm = sol->l2_norm();
+    double norm = (system.solution)->l2_norm();
+    error_u = norm/tot_norm * 100.0;
+
   
     //The error is on the elastic energy
-    double new_energy = compute_elastic_energy();
-    error = abs(new_energy - energy)/new_energy;
-    energy = new_energy;
+    //double elastic_energy = abs(compute_elastic_energy());
+    //error_energy = abs((new_energy - energy)/energy) * 100.0;
+    //energy = new_energy;
+
+    if ((SimulationOptions::verbose() > 2) && iter > 0) 
+    {
+      cout<<"Iter: "<<iter<<"  Error:  "<<error_u<<endl;
+    //  cout<<"|    "<<iter<<"      ";
+    //  cout<<"|    "<<new_energy<<"     ";
+    //  cout<<"| "<<error_energy<<" ";
+    //  cout<<"| "<<norm<<"  ";
+    //  cout<<"| "<<error_u<<" |";
+    //  cout<<endl;
+    }
+    cout<<endl;
 
     if (myopt.deformation)
-      apply_shape_deformation();
+       apply_shape_deformation();
     
-  } while (error > myopt.shape_error & iter < myopt.shape_iterations);
+   
+ iter +=1;
+
+  } while (error_u > myopt.shape_error & iter < myopt.shape_iterations);
 
  
+  double elastic_energy = abs(compute_elastic_energy());
+  if ((SimulationOptions::verbose() > 2) && myopt.shape_iterations > 1)
+    cout<<"Elastic Energy: "<<elastic_energy<<endl;
+
 }
 
 
@@ -326,7 +346,23 @@ Elasticity::get_solution_secure(const Elem* elem,
 	   values[Stress][6*n+5] = total_stress(2,0); 
 	 }
      }
-
+  
+     //----------Stress crystal
+     if (values.count(StrainCrystal))
+     {
+       
+       Material* mat = mod.get_material();
+       const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+       const Tensor2Gen& rotate = cr.RotMatrix;
+       RealTensor crystal_stress = rotate.transpose() * (total_stress * rotate);
+       
+       values[StressCrystal][6*n] =   crystal_stress(0,0);
+       values[StressCrystal][6*n+1] = crystal_stress(1,1);
+       values[StressCrystal][6*n+2] = crystal_stress(2,2);
+       values[StressCrystal][6*n+3] = crystal_stress(1,0);
+       values[StressCrystal][6*n+4] = crystal_stress(2,1);
+       values[StressCrystal][6*n+5] = crystal_stress(2,0);
+     }
      //----Force source--------
      if (values.count(ForceSource))
      { 
@@ -428,8 +464,8 @@ Elasticity::get_stress(const Elem* elem, const Point& p)
   
   RealTensor stress(0);
 
-  if (iter>1)
-  {
+  //if (iter>1)
+  //{
    
     std::vector<double> stress_p(6,0.0);
     std::map<ID, std::vector<double> > values;
@@ -438,7 +474,6 @@ Elasticity::get_stress(const Elem* elem, const Point& p)
     std::vector<Point>  points(1);  points[0] = p;
     get_solution_secure(elem,values,points);
 
-  
     stress(0,0) = values[Stress][0];
     stress(1,1) = values[Stress][1];
     stress(2,2) = values[Stress][2];
@@ -450,7 +485,7 @@ Elasticity::get_stress(const Elem* elem, const Point& p)
     stress(2,1) = stress(1,2);
 
    
-  }
+    //}
 
   return stress;
 }
@@ -559,12 +594,10 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
     //Bulk
     ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);    
   
-    
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
      
-
        mod.calculate(elem,q_point[qp]);   
        const Tensor4DSym& C = mod.get_stiffness();
        const RealGradient& force =  mod.get_force_source();
@@ -579,29 +612,16 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	      (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
 	    
 
-
-      //Body force of previous iteration
-      for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
-      {  
-	RealGradient tmp =   get_stress(elem,ref_points[qp]) * dphi[alpha][qp];
-	for (unsigned int i = 0;i <3; i++)
-	  (*(F[i]))(alpha) -= JxW[qp] * tmp(i);
-      }
-
-      // Total source
-      for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
-      {  
-	RealGradient tmp = force *  phi[alpha][qp] + (stress  + (C * strain)) * dphi[alpha][qp];
-	for (unsigned int i = 0;i <3; i++)
-	  (*(F[i]))(alpha) -= JxW[qp] * tmp(i);
-      }
-
+	for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
+	{  
+          //Total stress -> internal plus external
+	  RealGradient tmp =  get_stress(elem,ref_points[qp]) * dphi[alpha][qp] + force *  phi[alpha][qp];
+	  for (ID i = 0;i <3; i++)
+	    (*(F[i]))(alpha) -= JxW[qp] * tmp(i);
+	}
       
     }//End QP
 
-
-
-    // bool newb = true;
     //Boundary Conditions
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
@@ -622,7 +642,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
             boundary_mod->set_normal(normal[qp]);
 	    boundary_mod->get_coefficients(H, R, A);
-             
+
 	    mod.calculate(elem,qface_point[qp]);   
 	    const RealTensor& strain =  mod.get_strain_source();
 	    const RealTensor& stress =  mod.get_stress_source();	    
@@ -632,13 +652,13 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    {
 	      RealGradient tmp = phi_face[alpha][qp] * ((stress + (C * strain)) * normal[qp]);
 
+              //Get the total stress (internal and external)
+              //RealGradient tmp = phi_face[alpha][qp] * (get_stress(elem,ref_face_points[qp]) * normal[qp]);
+
 	      for (unsigned int i =0; i<3; i++)
-	      {
-		 
+	      { 
                 //Add the surface integral if this contact is "extended", i. e. A = 1
-		(*(F[i]))(alpha) -= A *  JxW_face[qp] * tmp(i);
-                 
-		(*(F[i]))(alpha) +=  JxW_face[qp] * R(i) * phi_face[alpha][qp];
+		(*(F[i]))(alpha) +=  JxW_face[qp] *  phi_face[alpha][qp] * (R(i) - A * tmp(i));
 		
 		for (unsigned int j =0; j<3; j++)
 		  for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)

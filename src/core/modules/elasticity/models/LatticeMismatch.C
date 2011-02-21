@@ -87,6 +87,7 @@ LatticeMismatch::do_init(void)
   set_force_source(dummy_grad);
 
  
+ 
 }
 
 

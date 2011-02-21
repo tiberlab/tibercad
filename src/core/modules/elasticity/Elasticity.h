@@ -114,6 +114,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
       StrainCell,        /*!< the strain */
       StrainCrystal,  /*!< the strain in the crystal system*/
       Stress,            /*!< the stress */
+      StressCrystal,  /*!< the stress in the crystal system*/
       Displacement,     /*!< the displacement */
       ForceSource,      /*!< force source */
       StrainSource,     /*!< strain source */
