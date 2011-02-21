@@ -178,7 +178,7 @@ htmlhelp_basename = 'TiberCADdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'TiberCAD.tex', u'TiberCAD Theory Module',
+  ('index', 'TiberCAD.tex', u'TiberCAD Trial Manual',
    u'TiberLAB srl', 'manual'),
 ]
 

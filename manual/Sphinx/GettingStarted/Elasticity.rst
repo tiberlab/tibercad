@@ -1,6 +1,6 @@
 .. _Elasticity:
 
-Elasticity®
+Elasticity
 =================================================
 
 
@@ -89,7 +89,7 @@ Output data about strain are shown below.
 
 .. _fig.elasticity01: 
 
-.. figure:: ../data/elasticity01.*
+.. figure:: ../data/elasticity01.png
    :align: center
    :scale: 50%
 
@@ -97,7 +97,7 @@ Output data about strain are shown below.
    
 .. _fig.elasticity02: 
 
-.. figure:: ../data/elasticity02.*
+.. figure:: ../data/elasticity02.png
    :align: center
    :scale: 50%
 

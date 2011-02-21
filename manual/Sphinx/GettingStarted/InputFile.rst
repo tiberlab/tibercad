@@ -1,3 +1,114 @@
+..  _install:
+
+
+Installation instructions
+===================================
+
+In the following, VERSION denotes the version number of the TIBERCAD release you
+downloaded and INSTALLPATH denotes the directory where TIBERCAD gets installed.
+Version 2.3.0 of **GMSH** (http://www.geuz.org/gmsh) will be installed together with
+TIBERCAD. For the Linux version of GMSH you need OpenGL libraries installed on
+your system.
+
+Prerequisites
+-------------------
+
+Get the installer package for your OS/architecture from http://www.tibercad.org or
+by contacting support@tibercad.org. Table 1 lists the packages available for download.
+To run TIBERCAD you will also need a license file that you will have to copy into the
+installation directory of TIBERCAD.
+In the Windows version, some graphical features such as graphical convergence 
+monitors are only available if an X Window server is installed and running.
+
+Windows installation procedure
+--------------------------------------
+
+To install TIBERCAD in Windows, run the setup program ``tibercad-version_setup.exe`` .
+
+During the installation you can choose the installation directory. 
+After finishing installation, copy your license file *(tibercad.lic)* into the 
+ **license** subdirectory of the TIBERCAD
+installation directory (INSTALLPATH/license), without changing its filename.
+
++--------------------------------+----------------------------------------+
+| *installer package name*       | *Target architecture*                  |
++--------------------------------+----------------------------------------+
+| tibercad-version_setup.exe     | Windows 32-bit                         |
++--------------------------------+----------------------------------------+
+| tibercad-version_installer.bin | Linux 32-bit self-extracting installer |
++--------------------------------+----------------------------------------+
+
+Table 1: Installer packages
+
+
+Linux installation procedure
+------------------------------------
+
+To install TIBERCAD in Linux, download and run the self-extracting installer 
+ ``tibercad-version_installer.bin`` and follow the installation instructions.
+After installation, copy your license file *(tibercad.lic)* into the ‘license’ subdirectory
+of the TIBERCAD installation directory (INSTALLPATH/license) without changing the filename. 
+You can also provide the license file during installation.
+The standard method to launch TIBERCAD is by means of a shell script that is
+installed alongside the TiberCAD executable. It takes care of setting all necessary 
+environment variables. If for some reason you have to run the executable directly, remember
+to set TIBERCADROOT to the TiberCAD installation directory (INSTALLPATH).
+
+Quick start guide
+----------------------
+
+In the ‘examples’ subdirectory you can find several examples ready to run. They are the
+same as the tutorials on http://www.tibercad.org/documentation/tutorial/list.
+
+Windows
+^^^^^^^^^^^^^^^^^^^^^
+
+Open Windows Explorer and go to the TIBERCAD installation directory. If you have
+write permission in the installation directory, you can browse to an examples directory
+and start the simulation by double clicking the input file, e.g. bulk.tib in Example 0. If
+not, copy the whole directory to a location in your personal area and run the examples
+from there.
+If you cannot run TIBERCAD by double clicking an input file *(*.tib)* , then the input
+files are probably not correctly associated with the TIBERCAD executable. In this case,
+try to establish the association by right-clicking the input file, choosing ``open with...`` 
+
+  ``>> Choose Program... >> Browse...`` , browsing to the TIBERCAD installation directory
+
+and choosing the TIBERCAD executable, tibercad.exe. A directory containing the
+simulation results will be created with the name provided in the input file.
+
+Linux
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After the correct installation of TIBERCAD you should be able to run TIBERCAD from the
+command line using the command tibercad. If not, you probably have to add the bin
+subdirectory of the TIBERCAD installation directory to your PATH environment variable or
+start the TIBERCAD executable using the absolute path (INSTALLPATH/bin/tibercad).
+Copy the directory of the example you want to run, e.g. bulk Si, to your home directory
+or any place you have write permissions for. Change to the newly created directory and
+run TIBERCAD by (assuming Example_0)
+
+  ``$ tibercad bulk.tib``
+
+A directory containing the simulation results will be created with the name provided in
+the input file.
+
+Bug reports / Feedback
+-------------------------------------
+
+Please send bug reports, feedback or suggestions to support@tibercad.org. When
+submitting bug reports, please always include the full version number of TIBERCAD you
+are running. The full version number appears in the first line of output when running
+the program:
+
+    $ tibercad
+
+    TiberCAD version 1.0.0-961
+
+    Usage: ``tibercad`` <inputfile>
+
+
+
 .. _InputFile:
 
 Input for TiberCAD
