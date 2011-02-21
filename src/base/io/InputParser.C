@@ -312,21 +312,20 @@ const string InputParser::get_until_closing_brace(ifstream& in_stream)
 {
 
   string str = "";
-  int    temp = 0;
+  int temp = 0;
 
   while (true)
   {
-
     temp = in_stream.get();
-    if (temp == EOF) return str;
-    else if (temp == ')')
-    {
-      return (str + ')') ;
-    }
-    else if (temp == '\n')
+    if (temp == EOF)
+      return str;
+
+    str += temp;
+    if (temp == ')')
+      return str;
+
+    if (temp == '\n')
       line_counter++;
-    else
-      str += temp;
   }
 
 }

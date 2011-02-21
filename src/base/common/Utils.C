@@ -11,6 +11,7 @@
 #include "RuntimeException.h"
 
 #include <vector_value.h>
+#include <tensor_value.h>
 
 #include <cctype>
 #include <iostream>
@@ -378,7 +379,7 @@ Utils::extract_vector(const string& input, RealVectorValue& vec)
       break;
 
     default:
-      throw RuntimeException("\'" + input + "\' does not represent a 3-Vector.");
+      throw RuntimeException("\'" + input + "\' does not represent a 3-vector.");
       break;
   }
 }
@@ -388,10 +389,26 @@ Utils::extract_vector(const string& input, RealVectorValue& vec)
 void
 Utils::extract_tensor(const std::string& input, RealTensor& tensor)
 {
+  string in(input);
+  trim(in, "() \t\n\r");
+
   // first, extract rows
   vector<string> rows;
-  extract_vector(input, rows);
+  tokenize(in, rows, ";\n");
 
+  if (rows.size() != 3)
+    throw RuntimeException("\'" + input + "\' does not represent a 3-tensor.");
+
+  vector<double> row;
+  for (size_t i = 0; i < 3; ++i)
+  {
+    extract_vector<double>(rows[i], row);
+    if (row.size() != 3)
+      throw RuntimeException("\'" + input + "\' does not represent a 3-tensor.");
+
+    for (size_t j = 0; j < 3; ++j)
+      tensor(i, j) = row[j];
+  }
 }
 
 
