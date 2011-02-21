@@ -2,13 +2,12 @@
 
 #include "HeatReservoir.h"
 
-TIBER_MODULE(HeatReservoir,Boundary,heat_reservoir)
+TIBER_MODULE(HeatReservoir,tbnd,heat_reservoir)
 
 void
 HeatReservoir::do_init(void)
 {
   get_parameter("temperature", _temperature);
-
 }
 
 void

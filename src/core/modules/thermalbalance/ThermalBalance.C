@@ -444,7 +444,7 @@ ThermalBalance::do_setup_solution_variables(void)
   declare_solution(FourierTemp, REAL, NODES, "K");
   declare_solution(MaxTemp, REAL, GLOBAL, "K");
   declare_solution(ThermalFlux, VECTOR, NODES, "W/cm^2");
-  declare_solution(ThermCond, REAL, NODES, "W/cm K");
+  declare_solution(ThermCond, VECTOR, NODES, "W/cm K");
   declare_solution(HeatSource, REAL, CELL, "W/cm^3");
   // declare_solution(EffectiveKappa, REAL, NODES, "W/cm^3");
   declare_solution(SolDir,VECTOR,CELL, "W/cm^3");
@@ -455,12 +455,12 @@ ThermalBalance::do_setup_solution_variables(void)
   // has to be surjective)
   //add_alias("Jq", ThermalFlux);
   //add_alias("LatticeTemp", temperature);
-  add_alias("thermal", LatticeTemp);
-  add_alias("thermal", ThermCond);
-  add_alias("thermal", ThermalFlux);
-  add_alias("thermal", HeatSource);
-  add_alias("thermal", Partition);
-  add_alias("thermal", FourierTemp);
+  //add_alias("thermal", LatticeTemp);
+  //add_alias("thermal", ThermCond);
+  //add_alias("thermal", ThermalFlux);
+  //add_alias("thermal", HeatSource);
+  //add_alias("thermal", Partition);
+  //add_alias("thermal", FourierTemp);
   //add_alias("thermal", EffectiveKappa);
   //  add_alias("ThermCond", ThermalConductivity);
 }
@@ -1269,8 +1269,7 @@ ThermalBalance::get_solution_secure(const Elem* elem,
       mod.calculate(elem,real_pts[n]);
 
 
-     if (values.count(LatticeTemp) ||
-         values.count(thermal)  )
+      if (values.count(LatticeTemp))
      {
        double T  = 0.0;
        for (unsigned int i = 0; i < n_dofs; i++)
@@ -1279,8 +1278,7 @@ ThermalBalance::get_solution_secure(const Elem* elem,
        values[LatticeTemp][n] = T;
      }
 
-      if (values.count(FourierTemp)||
-          values.count(thermal)  )
+      if (values.count(FourierTemp))
       {
         double T  = 0.0;
         for (unsigned int i = 0; i < n_dofs; i++)
@@ -1289,9 +1287,7 @@ ThermalBalance::get_solution_secure(const Elem* elem,
         values[FourierTemp][n] = T;
       }
 
-
-     if (values.count(ThermalFlux)||
-         values.count(thermal)  )
+      if (values.count(thermal))  
      {
 
        RealGradient heat_flux(0);
@@ -1305,27 +1301,6 @@ ThermalBalance::get_solution_secure(const Elem* elem,
 
      }
 
-   //  if (values.count(EffectiveKappa)||
-//          values.count(thermal)  )
-//      {
-
-
-
-//        RealGradient heat_flux_gray(0);
-//        for (ID i = 0; i < n_dofs; i++)
-// 	 for (ID d = 0; d < dim; d++)
-// 	   heat_flux_gray(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
-
-
-//        RealGradient heat_flux_fourier(0);
-//        for (unsigned int i = 0; i < n_dofs; i++)
-// 	 heat_flux_fourier += -solution(dof_indices[i]) * (kappa * dphi[i][n]);
-
-//        values[EffectiveKappa][n] = heat_flux_gray(2)/heat_flux_fourier(2);
-
-//      }
-
-
 
      if (values.count(ThermCond)||
          values.count(thermal)  )
@@ -1337,22 +1312,6 @@ ThermalBalance::get_solution_secure(const Elem* elem,
      }
 
    }
-   //Elemental value
-   // std::vector<Point> pp(1);
-   //pp[0] = elem->centroid();
-
-   //fe->reinit(elem,&pp);
-
-   //mod.calculate(elem,real_pts[0]);
- //   if (values.count(SolDir))
-//    {
-
-//      IDf = elem->dof_number(gray_sys_number,0,0);
-//      values[SolDir][0] = (*sol_dir[4])(dof);
-//      values[SolDir][1] = (*sol_dir[10])(dof);
-//      values[SolDir][2] = 0.0;
-
-//    }
 
    if (values.count(Partition))
    {
