@@ -1,23 +1,21 @@
 
 .. _contents:
 
-Welcome to TiberCAD's documentation!
-====================================
+Welcome to TiberCAD's Getting Started
+===========================================
 
 
 .. toctree::
    :maxdepth: 2
 
    InputFile
-   DriftDiffusion
-   EFA
    Elasticity
-   Thermal 
+   DriftDiffusion
+   Thermal
+   EFA
    Dsc
    
    
-
-
    Glossary
    Bibliography
    Index

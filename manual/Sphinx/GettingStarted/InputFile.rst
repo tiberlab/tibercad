@@ -236,10 +236,10 @@ Here are the description of the available keywords for a **Region** block.
 it may be a ternary alloy, e.g AlGaAs, in this case keyword x described in the following
 has to be present.
 
-  x : alloy concentration, expressed as the molar fraction of the first component of
-the alloy; e.g. to express an alloy :math:`Al_xGa_{1-x}As` with molar fraction x = 0.2, that is
- :math:`Al_{0.2}Ga_{0.8}As` , we select **AlGaAs** for the keyword material, and 0.2 for the keyword x,
-thus we write x = 0.2.
+  **x** : alloy concentration, expressed as the molar fraction of the first component of
+  the alloy; e.g. to express an alloy :math:`Al_xGa_{1-x}As` with molar fraction x = 0.2, that is
+  :math:`Al_{0.2}Ga_{0.8}As` , we select **AlGaAs** for the keyword material, and 0.2 for the keyword x,
+  thus we write x = 0.2.
 
   ``mesh_regions`` : (a list of) region physical name(s) as specified in the meshing program.
 
@@ -248,9 +248,9 @@ thus we write x = 0.2.
   ``x-growth-direction, y-growth-direction, z-growth-direction`` : Bravais vectors with Miller
 indexes for wurtzite crystal (4 element vectors) or zincblende crystal (3 element vectors).
 
-  |note| A common crystal structure and growth directions definition may be applied to
-         all the Regions of the Device, just by defining them everywhere in the Device block, but
-         outside any specific Region block.
+  |warn| A common crystal structure and growth directions definition may be applied to
+  all the Regions of the Device, just by defining them everywhere in the Device block, but
+  outside any specific Region block.
 
 Subblock doping, with the keywords:
 
@@ -486,7 +486,7 @@ calculation to be run, such as the temperature, the process-flow of simulation, 
   ``searchpath`` : path for material files
 
   ``mesh units`` : units of measurements used in the meshing (relative to meters): e.g.,
-:math:`10^{-6}` for µm
+:math:`10^{-6}` for :math:`\mu m`
 
   ``dimension`` : dimension of simulation (1,2,3)
 

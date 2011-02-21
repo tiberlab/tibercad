@@ -14,7 +14,7 @@ The coupled treatment of the electro-mechanical problem within a unique framewor
 Mini theoretical intro
 ----------------------
 
-Assuming a small displacement, Elasticity® elasticity computed the strain by solving the equation
+Assuming a small displacement, Elasticity  elasticity computed the strain by solving the equation
 
 .. math::
    :nowrap:
@@ -41,7 +41,7 @@ Example
 -------
 
 In the following we will compute the strain induced by the lattice mismatch in a system comprising a layer of GaN between two contacts of :math:`Al_{x}Ga_{1-x}N` . 
-Once the mesh is created with gmsh (distributed along TiberCAD®) we may start to build the input file. 
+Once the mesh is created with gmsh (distributed along TiberCAD ) we may start to build the input file. 
 First, we have to insert the region section ::
 
   Device
