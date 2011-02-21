@@ -14,6 +14,6 @@ Line (4) = {4, 5};
 Line (5) = {5, 6};
 
 Physical Point ("left") = {1};
-Physical Line ("well") = {1};
-Physical Line ("buffer") = {2,3,4,5};
+Physical Line ("well") = {3};
+Physical Line ("buffer") = {2,1,4,5};
 Physical Point ("right") = {6};

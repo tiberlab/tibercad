@@ -34,7 +34,10 @@ Module driftdiffusion
   { 
    
    
-   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, eMob, hMob, ContactCurrents,NetRecombination,thermal)
+   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity,
+           eCurrent, hCurrent, CurrentDensity, eMob, hMob,
+           ContactCurrents,NetRecombination,thermal)
+
    Physics{
 
       thermal_simulation = thermal

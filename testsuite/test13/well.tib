@@ -34,10 +34,21 @@ Module elasticity
 }
 
 
+Module driftdiffusion
+{
+  coupling = poisson
+  plot = (Ec, Ev)
+
+  Physics
+  {
+    strain_simulation = elasticity
+  }
+}
+
 
 Simulation
 {
-  solve = (elasticity)
+  solve = (elasticity, driftdiffusion)
   resultpath = output
   output_format = grace
 }
