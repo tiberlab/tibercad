@@ -106,12 +106,14 @@ distribution and mean electrochemical potential and temperature:
 
 ..  math::
     :nowrap:
-	:label:
+    :label:
 
-    \begin{gather}
+
+    \begin{equation}
     \bar \mu = \langle \psi|\mu({\bf r})|\psi \rangle \\
     \bar T = \langle \psi|T({\bf r})|\psi \rangle 
-    \end{gather}
+    \end{equation}
+
 
 * EnergyLevels graphical output used for showing the energy level over the band
 diagram.
@@ -280,13 +282,15 @@ calculate as follows:
 
 ..  math::
     :nowrap:
-	:label:
+    :label:
 
-    \begin{gather}
+
+    \begin{equation}
     \rho_{1D}({\bf r}) = g\frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln \left(1 + 
     \exp \left( \pm \frac{\mu - E}{kT} \right) \right) \\      
     \rho_{2D}({\bf r}) = g|\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  F_{-1/2}\left( \pm \frac{\mu - E}{kT}         \right),       
-    \end{gather}
+    \end{equation}
+
 
 where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; m is the averaged mass (the mass
 is different for each quantized state and is position independent); g is the degeneracy of
@@ -343,7 +347,7 @@ equation
 otherwise numerically.
 
 Output
-====================
+----------------------
 
 The output parameter is **quantum_density**.
 
@@ -354,20 +358,13 @@ The output parameter is **quantum_density**.
 
 
 
-
-
-
-
-
-
-
-.. |more| image:: ../data/more.*
+.. |more| image:: ../data/more.png
     :scale: 50%
 
-.. |warn| image:: ../data/warn.*
+.. |warn| image:: ../data/warn.png
     :scale: 50%
 
-.. |idea| image:: ../data/idea.*
+.. |idea| image:: ../data/idea.png
     :scale: 50%
 
 

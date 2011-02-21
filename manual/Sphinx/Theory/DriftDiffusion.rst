@@ -297,7 +297,7 @@ specified with a common keyword in arrays, e.g.
 +------------+------------------+
 | mobility   | constant         |
 +------------+------------------+
-|             # electrons holes |
+|            | electrons holes  |
 +------------+------------------+
 | mu_max     | (1400.0 , 250.0) |
 +------------+------------------+
@@ -338,14 +338,15 @@ formula:
 .. math::
    :nowrap:
    :label:
+    
 
     \begin{align}
     \mu = \mu_{min,1} * \mathrm{e}^{-P_c/N} +
     \frac{\mu_{const} - \mu_{min,2}}{1 + (N/C_r)^\alpha} -
     \frac{\mu_1}{1 + (C_s/N)^\beta}
-    \end{align}
+    \end{align}
 
-where N is the total doping density and :math:`\muconst` the mobility obtained from the constant
+where N is the total doping density and :math:`\mu_{const}` the mobility obtained from the constant
 mobility model. The parameters are specified in the material file as given in table 7.5.
 
 
@@ -358,10 +359,10 @@ The model by Arora is identified by ``mobility_formula`` = 2. It reads:
    :label:
 
     \begin{align}
-    \mu = \mu_{min} +& \frac{\mu_d}{1+(N/N_0)^{A^*}} \\
+    \mu = \mu_{min} + & \frac{\mu_d}{1+(N/N_0)^{A^*}} \\
     \text{with} \nonumber \\
-    \mu_{min} = A_{min}(T/T_0)^{\alpha_m},& \quad \mu_d = A_d(T/T_0)^{\alpha_d} \nonumber \\
-    N_0 = A_N(T/T_0)^{\alpha_N},& \quad A^* = A_a(T/T_0)^{\alpha_a} \nonumber 
+    \mu_{min} = A_{min}(T/T_0)^{\alpha_m}, & \quad \mu_d = A_d(T/T_0)^{\alpha_d} \nonumber \\
+    N_0 = A_N(T/T_0)^{\alpha_N}, & \quad A^* = A_a(T/T_0)^{\alpha_a} \nonumber 
     \end{align}
 
 The parameters are given in table 7.6.
@@ -532,9 +533,9 @@ or :math:`E_{trap} = E_v + Et` .
     :nowrap:
     :label:
 	
-    \begin{equation}
+
     n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
-    \end{equation}
+
 
   ``hNeutral`` The trapped hole density is given by
 
@@ -542,9 +543,9 @@ or :math:`E_{trap} = E_v + Et` .
     :nowrap:
     :label:
 	
-    \begin{equation}
+
     p_t = \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
-    \end{equation}
+
 
   ``donor`` The density of ionized traps is given by
 
@@ -552,9 +553,9 @@ or :math:`E_{trap} = E_v + Et` .
     :nowrap:
     :label:
 	
-    \begin{equation}
+
     N^+_t = N_t - \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
-    \end{equation}
+
 
   ``acceptor`` The density of ionized traps is given by
 
@@ -587,7 +588,7 @@ Additionally, each trap induces a SRH recombination term of the form
    R_t = N_t \frac{v_{th}^n\sigma^nv_{th}^p\sigma^p(np -n_i^2)}{v_{th}^n\sigma^n(n+n_1) + v_{th}^p\sigma^p(p+p1)}
    \end{equation}
 
-where :msth:`\sigma^{n,p}` are the capture cross sections, :math:`v_{th}^{n,p}` the thermal velocities and (for Boltzmann statistics)
+where :math:`\sigma^{n,p}` are the capture cross sections, :math:`v_{th}^{n,p}` the thermal velocities and (for Boltzmann statistics)
 
 .. math::
    :nowrap:
@@ -910,20 +911,15 @@ Listing 3: Models section for drift-diffusion
 	
 	
 	
-.. |more| image:: ../data/more.*
+.. |more| image:: ../data/more.png
     :scale: 50%
 
-.. |warn| image:: ../data/warn.*
+.. |warn| image:: ../data/warn.png
     :scale: 50%
 
-.. |idea| image:: ../data/idea.*
+.. |idea| image:: ../data/idea.png
     :scale: 50%
 
-.. |61.A| replace:: :math:`\phi_n`
-
-.. |61.B| replace:: :math:`\phi_p`
-
-.. _fastlink: http://www.tibercad.org/documentation/tutorial/
 
 .. rubric:: Footnotes
 
