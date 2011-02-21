@@ -89,7 +89,7 @@ Module  sweep
 
 
 
-$Simulation
+Simulation
 {
   temperature = 300
   solve = sweep
