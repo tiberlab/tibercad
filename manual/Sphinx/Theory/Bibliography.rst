@@ -15,3 +15,7 @@
 .. [Wang] Wang et al. Science (2006).
 
 .. [Gao] Gao et al NanoLetter (2009).
+
+.. [Selberherr] Siegfried Selberherr, Analysis and Simulation of Semiconductor Devices, SpringerVerlag Wien New York, 1st edition, 1984.
+
+.. [Wachutka] Gerhard K. Wachutka, Rigorous thermodynamic treatment of heat generation and conduction in semiconductor device modeling," IEEE Transaction on Computer-aided Design., vol. 9, pp. 11, 1990.

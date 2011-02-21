@@ -8,7 +8,7 @@ Theory
 
 
 The semi-classical transport simulation of electrons and holes is based on the drift-
-diffusion approximation (see [Cit-C]_ ).
+diffusion approximation (see [Selberherr]_ ).
 
 Beside the electric potential the electro-chemical potentials are used as variables such
 that the system of PDEs to be solved reads as follows
@@ -45,40 +45,49 @@ Module options
 
 The following options infuence the behaviour of the Drift-Diffusion module:
 
-  ``coupling = string`` defines which equations to solve. The default is full, meaning that
+  ``coupling = string`` defines which equations to solve. 
+    The default is full, meaning that
     the full system consisting of the Poisson, electron continuity and hole continuity
     equations is solved. Other possible values are poisson (for equilibrium calculations),
     electrons or holes. For the last two cases local equilibrium is assumed such that
     :math:`\phi_n  =  \phi_p` .
  
-  ``enforce_local_charge_neutrality = bool`` If set to true, local charge neutrality will
+  ``enforce_local_charge_neutrality = bool`` 
+    If set to true, local charge neutrality will
     be enforced by setting the charge density to zero. This may be useful for solving
     the Poisson equation involving only dielectrics.
 
-  ``guess_el_qfermi = double`` If this option is set, then before resolving the system the
+  ``guess_el_qfermi = double`` 
+    If this option is set, then before resolving the system the
     given number will be set as a guess for the electron electro-chemical potential.
 
-  ``guess_hl_qfermi = double`` If this option is set, then before resolving the system the
+  ``guess_hl_qfermi = double`` 
+    If this option is set, then before resolving the system the
     given number will be set as a guess for the hole electro-chemical potential.
 
-  ``default_boundary_condition = string`` With this option the user can control the default 
+  ``default_boundary_condition = string`` 
+    With this option the user can control the default 
     boundary condition for the electric field on all external boundaries without explicit boundary model. 
-	Possible values are zero field (default), or zero displacement.
+    Possible values are zero field (default), or zero displacement.
     The two differ only in presence of electric polarization fields.
 
-  ``quadrature_rule = string`` This option allows to chose between trapezoidal and Gauss
+  ``quadrature_rule = string`` 
+    This option allows to chose between trapezoidal and Gauss
     type numeric integration rules. The default rule is gauss, but in some cases trapez
     may prevent density peaks near badly resolved material interfaces.
 
-  ``save_state = boolean`` If set to *true* the current solution will be written to a compressed 
+  ``save_state = boolean`` 
+    If set to *true* the current solution will be written to a compressed 
     file after each solve. The file name follows the same rules as the result files,
     having file extension ``.tsv`` .
 
-  ``load_state = file`` Reload a formerly saved solution. filename can be a filename (to
+  ``load_state = file`` 
+    Reload a formerly saved solution. filename can be a filename (to
     reside in the current working directory), a relative or an absolute path to a file.
     The file needs to have been created with ``save_state = true`` .
 
-  ``solve_after_load = boolean`` If set to true, the system will be solved after having
+  ``solve_after_load = boolean`` 
+    If set to true, the system will be solved after having
     reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
 
      |warn|  Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
@@ -96,24 +105,28 @@ Physics section
 The Physics block contains generic options for the bulk physical model and the definition
 of submodels. The generic options are:
 
-  ``model = string`` Specify the semiconductor model to be used. Possible values are default
+  ``model = string`` 
+    Specify the semiconductor model to be used. Possible values are default
     and simple. The former uses k.p to calculate the (strain corrected) band parame-
     ters.
 
-  ``thermal_simulation = string`` If you are doing coupled electrothermal simulations,
+  ``thermal_simulation = string`` 
+    If you are doing coupled electrothermal simulations,
     you have to specify the name of the thermal simulation providing the lattice temperature.
 
-  ``strain_simulation = string`` If you are doing simulations on strained systems, you
+  ``strain_simulation = string`` 
+    If you are doing simulations on strained systems, you
     can specify the name of a strain simulation. The band parameters will then be
     calculated taking local strain corrections into account.
 
-  ``relax_polarization = double`` With this option one can specify a relaxation factor
+  ``relax_polarization = double`` 
+    With this option one can specify a relaxation factor
     for the electric polarization field. This can be useful if the amount of total electric
     polarization has to be treated as fitting parameter.
 
 For the simple semiconductor model one has to provide conduction and valence band
 edges and the effective density of states masses (or the effective density of states itself)
-in the ``Region`` sections. The corresponding keywords are given in table 7.2.
+in the ``Region`` sections. The corresponding keywords are given in table 2.2 .
 In the following we describe the submodels. All submodels can be restricted to a
 subset of simulation regions.
 
@@ -137,8 +150,8 @@ of type ``srh`` .
 
 ..  math::
     :nowrap:
-	:label:
-	
+    :label:
+    
     \begin{equation}
     R_{SRH} = \frac{np - n_i^2}{(n + n_i e^{E^*/k_BT})\tau_p +
     (p + n_i e^{-E^*/k_BT})\tau_n}
@@ -151,22 +164,22 @@ doping density, e.g.
 
 ..  math::
     :nowrap:
-	:label:
-	
+    :label:
+    
     \begin{eqnarray}
     \tau_n & = & \tau_n^0 \left(\frac{T}{T_0}\right)^{\alpha_n} e^{\beta(T/T0 - 1)} \\
     \tau_n^0 & = & \tau_{min,n} + \frac{\tau_{max,n} - 
     \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
     \end{eqnarray}
 
-where :math:`T_0` is the reference temperature (300 K). Table 7.3 shows the corresponding parameters 
+where :math:`T_0` is the reference temperature (300 K). Table 2.3 shows the corresponding parameters 
 for the material data files. The parameters for holes and electrons have to be
 specified in an array, e.g. :math:`\tau_min = (1e-5, 3e-6)`
 
-	
+    
 
 The recombination times and trap level can be overridden from the input file by using
-the keywords of table 7.4.
+the keywords of Table 2.4.
 
 
 
@@ -231,18 +244,18 @@ model imposes a constant generation rate which has to be provided by the keyword
 units of :math:`(cm*s)^{-1}` . 
 
   |warn| Note that the simulation usually should define a sweep on the value
-         of G from 0 to the desired generation.
+  of G from 0 to the desired generation.
 
 Thermoelectric power models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The thermoelectric power models are the same for electrons and holes. The keyword is
- ``thermoelectric_power`` , i.e ::
+The thermoelectric power models are the same for electrons and holes. 
+The keyword is  ``thermoelectric_power`` , i.e ::
 
   thermoelectric_power [type]
     {
     }
-	
+    
 The model keyword can be ``constant`` (i.e. the thermoelectric powers are read from the
 database) or ``diffusivity_model`` where the thermoelectric powers are computed by
 
@@ -257,7 +270,7 @@ database) or ``diffusivity_model`` where the thermoelectric powers are computed 
 .. math::
    :nowrap:
    :label:
-	
+    
     \begin{equation}
     P_p = \frac{k_b}{q}\left( \frac{5}{2} - \frac{e \phi_p + E_v - e \varphi}{k_b T} \right)
     \end{equation}
@@ -276,15 +289,15 @@ block or independently using two blocks. The corresponding keywords are mobility
   mobility [type]
     {
     }
-	
+    
   electron_mobility [type]
     {
     }
-	
+    
   hole_mobility [type]
     {
     }
-	
+    
 When using the first approach, both carriers will use the same model, and param-
 eters provided in the input file will also be used by both carriers. When mixing the
 difierent definitions, the blocks ``electron_mobility`` and ``hole_mobility`` will override
@@ -347,7 +360,7 @@ formula:
     \end{align}
 
 where N is the total doping density and :math:`\mu_{const}` the mobility obtained from the constant
-mobility model. The parameters are specified in the material file as given in table 7.5.
+mobility model. The parameters are specified in the material file as given in Table 2.5.
 
 
 
@@ -365,8 +378,10 @@ The model by Arora is identified by ``mobility_formula`` = 2. It reads:
     N_0 = A_N(T/T_0)^{\alpha_N}, & \quad A^* = A_a(T/T_0)^{\alpha_a} \nonumber 
     \end{align}
 
-The parameters are given in table 7.6.
+The parameters are given in table below.
 
+| 
+| 
 
 
 **Field dependent mobility model**
@@ -391,7 +406,7 @@ The model is based on the Caughey-Thomas model, refined by Canali [6]:
     \begin{equation}
     \mu = \frac{\mu_{lowfield}}{\left(1 + \left(\frac{\mu_{lowfield} |\mathbf{E}|}{v_{sat}}\right)^\beta \right)^{1/\beta}}
     \end{equation}
-	
+    
 with
 
 .. math::
@@ -402,7 +417,7 @@ with
     \beta = \beta_0(T/T_0)^b 
     \]
 
-:math:`|E|` is the modulus of the driving field, :math:`\mu_lowfield` is the low-field mobility. For the latter
+:math:`|E|` is the modulus of the driving field, :math:`\mu_{lowfield}` is the low-field mobility. For the latter
 one can specify the model to be used using the parameter ``lowfield_model`` . As default
 the doping dependent model is used.
 There are two models for vsat, identified with ``Vsat_Formula`` = 1 and 2. 
@@ -428,7 +443,7 @@ Formula 2 reads
     v_{sat} = \max(A_{vsat} - B_{vsat} (T/T_0), v_{min})
     \]
 
-The parameters for the field dependent mobility model are summarized in table 7.7.
+The parameters for the field dependent mobility model are summarized in Table 2.7.
 
 
 
@@ -491,7 +506,8 @@ where the model gradually switches from a fully classical to a fully quantum den
 The options for the embracing are specified in a block with keyword ``embracing`` . It
 accepts the following options:
 
-  ``embracing_length = double`` When the domain of the quantum simulation is smaller
+  ``embracing_length = double`` 
+    When the domain of the quantum simulation is smaller
     than the domain of the full simulation, the boundary conditions for the Schroedinger
     equation will disturb the transfer from classical to quantum density. By defining an
     embracing region of a certain extension (specified in meters), a gradual transition
@@ -499,12 +515,14 @@ accepts the following options:
     effective density :math:`\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}` . The default is no embracing
     region at all (zero extension).
 
-  ``cutoff = double`` if an embracing region is used, a part of this region near the boundary
+  ``cutoff = double`` 
+    if an embracing region is used, a part of this region near the boundary
     of the quantum region can be cut off so that only the classical density is considered
     in that part. ``cutoff`` is specified as a percentage of the embracing length and should
     therefore be between 0.0 and 1.0.
 
-  ``plot_embracing_region = bool`` Whereas the automatic creation of the embracing region 
+  ``plot_embracing_region = bool`` 
+    Whereas the automatic creation of the embracing region 
     in 1D is a very simple task, it is a more difficult one in higher dimensions. By
     setting this flag to true, the embracing region and the mixing coefficient x will be
     plotted for a visual control of the quality of the embracing region. The default is 
@@ -518,7 +536,7 @@ or normally charged electron or hole traps, or a fixed charge. Common options fo
 models are
 
   ``type = string`` (If not provided as second keyword). The type of traps. One of eNeutral,
-    hNeutral, donor, acceptor or fixed_charge.
+hNeutral, donor, acceptor or fixed_charge.
 
   ``Nt = double`` The trap density in cm 3 (or cm 2 for surface traps).
 
@@ -527,37 +545,37 @@ reference = string The reference energy. The default is m. The trap energy in th
 case is given as :math:`E_{trap} = E_{midgap} + Et` . Other possible values are :math:`E_{trap} = E_c - Et` 
 or :math:`E_{trap} = E_v + Et` .
 
-  ``eNeutral`` The trapped electron density is given by
+    ``eNeutral`` The trapped electron density is given by
 
 ..  math::
     :nowrap:
     :label:
-	
-
+    
+    \[
     n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+    \]
 
-
-  ``hNeutral`` The trapped hole density is given by
+    ``hNeutral`` The trapped hole density is given by
 
 ..  math::
     :nowrap:
     :label:
-	
-
+    
+    \[
     p_t = \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
+    \]
 
-
-  ``donor`` The density of ionized traps is given by
+    ``donor`` The density of ionized traps is given by
 
 ..  math::
     :nowrap:
     :label:
-	
 
+    \[
     N^+_t = N_t - \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+    \]
 
-
-  ``acceptor`` The density of ionized traps is given by
+    ``acceptor`` The density of ionized traps is given by
 
 ..  math::
     :nowrap:
@@ -605,8 +623,8 @@ Boundary conditions are implemented for ohmic contacts, Schottky contacts, free 
 and interfaces. Contacts are boundary models that allow a nonzero normal electrical
 current. The applied voltage is specified with the option ``voltage`` . A variable can be
 assigned to this, using the $-syntax. On ohmic or schottky contacts one can define surface
-recombination velocities for electrons and holes using the options ``rec_velocity_e`` and
- ``rec_velocity_h`` . This will impose Robin type boundary conditions for the continuity
+recombination velocities for electrons and holes using the options ``rec_velocity_e`` and 
+``rec_velocity_h`` . This will impose Robin type boundary conditions for the continuity
 equations of the form
 
 .. math::
@@ -631,7 +649,7 @@ Contacts are defined by blocks with keyword Contact, for example::
      [regions = (anode1, anode2)]
      voltage = $Vd
     }
-	
+    
 An area factor can be specified for contacts using the keyword ``area_factor`` . The
 contact current will be multiplied by this factor.
 For interfaces and surfaces, the same syntax can be used (optionally one can use
@@ -657,7 +675,7 @@ used as barrier for the unstrained case and will depend on strain during simulat
 the metal work function is specified, the barrier will be strain dependent as default.
 
   |warn| if the contact is touching different materials, one should specify the work
-          function instead of the barrier.
+  function instead of the barrier.
 
 Thermionic emission is by default switched on, but can be disabled by specifying
 thermionic_emission = false.
@@ -680,7 +698,8 @@ the carriers, and a selfconsistent simulation should be defined in the Selfconsi
 block. The following options { to be specified in the Physics section { control the
 behaviour of the selfconsistent simulation.
 
-  ``use_density_predictor = bool`` When set to true, a predictor-corrector scheme will
+  ``use_density_predictor = bool`` 
+    When set to true, a predictor-corrector scheme will
     be adopted in the selfconsistent cycle. The Poisson/Drift-Diffusion solver does not
     just take the particle densities as given by the Schroedinger calculation, but it will
     assume a dependency of the density on the potentials of the form
@@ -710,23 +729,23 @@ The following example shows the Drift-Diffusion module definition for a pn junct
      name = dd
      #regions = (pside, nside)
      Solver linesearch 
-	   {
-	   }
+       {
+       }
      Physics
        {
         recombination srh {}
         
-		mobility doping_dependent {}
+        mobility doping_dependent {}
         
-		Contact anode 
-		  { 
-		   voltage = $Vd 
-		  }
+        Contact anode 
+          { 
+           voltage = $Vd 
+          }
 
-		  Contact cathode 
-		    { 
-			 voltage = 0 
-			}
+          Contact cathode 
+            { 
+             voltage = 0 
+            }
        }
     }
 
@@ -736,110 +755,109 @@ Listing 3: Models section for drift-diffusion
 
 ..  math::
     :nowrap:
-	:label:
-	
-    \begin{table}[htb]
-    \center
-    \begin{tabular}{l|p{8cm}|l}
-    Key & Description & Units \\
-    \hline 
-    \texttt{Ec} & Conduction band edge & eV \\
-    \texttt{Ev} & Valence band edge & eV \\
-    \texttt{eQFermi} & Electro-chemical potential of electrons & eV ($-e\phi_n$) \\
-    \texttt{hQFermi} & Electro-chemical potential of holes & eV ($-e\phi_p$) \\
-    \texttt{Ec0} & Conduction band edge without electric potential & eV \\
-    \texttt{Ev0} & Valence band edge without electric potential & eV \\
-    \texttt{Eg} & Band gap & eV \\
-    \texttt{ConductionBands} & Minima of all conduction bands & eV \\
-    \texttt{ValenceBands} & Maxima of all valence bands & eV \\
-    \texttt{ElPotential} & Electric potential & V \\
-    \texttt{eDensity} & Electron density & cm$^{-3}$ \\
-    \texttt{hDensity} & Hole density & cm$^{-3}$ \\
-    \texttt{eMobility} & Electron mobility & cm$^2V^{-1}s^{-1}$ \\
-    \texttt{hMobility} & Hole mobility & cm$^2V^{-1}s^{-1}$ \\
-    \texttt{eConductivity} & Electron conductivity & S/cm \\
-    \texttt{hConductivity} & Hole conductivity & S/cm \\
-    \texttt{ElField} & Electric Field & Vcm$^{-1}$ \\
-    \texttt{Polarization} & Electric Polarization & Cm$^{-2}$ \\
-    \texttt{CurrentDensity} & Total current density & Acm$^{-2}$ \\
-    \texttt{eCurrentDensity} & Electron current density & Acm$^{-2}$ \\
-    \texttt{hCurrentDensity} & Hole current density & Acm$^{-2}$ \\
-    \texttt{IonizedDonors} & Ionized donor density & cm$^{-3}$ \\
-    \texttt{IonizedAcceptors} & Ionized acceptor density & cm$^{-3}$ \\
-    \texttt{IonizedElectronTraps} & Ionized electron trap density & cm$^{-3}$ \\
-    \texttt{IonizedHoleTraps} & Ionized hole trap density & cm$^{-3}$ \\
-    %\texttt{charge\_density} & Total charge density & cm$^{-3}$ \\
-    \texttt{eThElPower} & Electron thermoelectric power & V K$^{-1}$ \\
-    \texttt{hThElPower} & Hole thermoelectric power & V K$^{-1}$ \\
-    \texttt{NetRecombination} & %\begin{minipage}[t]{8cm}
-    %
-    %The net recombination rate for each recombination model and the total rate
-    %\end{minipage}& cm$^{-3}$s$^{-1}$
+    :label:
+    
+     \begin{table}[htb]
+     \center
+     \begin{tabular}{l|p{8cm}|l}
+     Key & Description & Units \\
+     \hline 
+     \texttt{Ec} & Conduction band edge & eV \\
+     \texttt{Ev} & Valence band edge & eV \\
+     \texttt{eQFermi} & Electro-chemical potential of electrons & eV ($-e\phi_n$) \\
+     \texttt{hQFermi} & Electro-chemical potential of holes & eV ($-e\phi_p$) \\
+     \texttt{Ec0} & Conduction band edge without electric potential & eV \\
+     \texttt{Ev0} & Valence band edge without electric potential & eV \\
+     \texttt{Eg} & Band gap & eV \\
+     \texttt{ConductionBands} & Minima of all conduction bands & eV \\
+     \texttt{ValenceBands} & Maxima of all valence bands & eV \\
+     \texttt{ElPotential} & Electric potential & V \\
+     \texttt{eDensity} & Electron density & cm$^{-3}$ \\
+     \texttt{hDensity} & Hole density & cm$^{-3}$ \\
+     \texttt{eMobility} & Electron mobility & cm$^2V^{-1}s^{-1}$ \\
+     \texttt{hMobility} & Hole mobility & cm$^2V^{-1}s^{-1}$ \\
+     \texttt{eConductivity} & Electron conductivity & S/cm \\
+     \texttt{hConductivity} & Hole conductivity & S/cm \\
+     \texttt{ElField} & Electric Field & Vcm$^{-1}$ \\
+     \texttt{Polarization} & Electric Polarization & Cm$^{-2}$ \\
+     \texttt{CurrentDensity} & Total current density & Acm$^{-2}$ \\
+     \texttt{eCurrentDensity} & Electron current density & Acm$^{-2}$ \\
+     \texttt{hCurrentDensity} & Hole current density & Acm$^{-2}$ \\
+     \texttt{IonizedDonors} & Ionized donor density & cm$^{-3}$ \\
+     \texttt{IonizedAcceptors} & Ionized acceptor density & cm$^{-3}$ \\
+     \texttt{IonizedElectronTraps} & Ionized electron trap density & cm$^{-3}$ \\
+     \texttt{IonizedHoleTraps} & Ionized hole trap density & cm$^{-3}$ \\
+     %\texttt{charge\_density} & Total charge density & cm$^{-3}$ \\
+     \texttt{eThElPower} & Electron thermoelectric power & V K$^{-1}$ \\
+     \texttt{hThElPower} & Hole thermoelectric power & V K$^{-1}$ \\
+     \texttt{NetRecombination} & %\begin{minipage}[t]{8cm}
+     %
+     %The net recombination rate for each recombination model and the total rate
+     %\end{minipage}& cm$^{-3}$s$^{-1}$
      The net recombination rate for each recombination/generation model and the total rate &
      cm$^{-3}$s$^{-1}$ \\
-    \texttt{ContactCurrent} & The electric current on each contact & A/cm$^{3-d}$
-    \end{tabular}
-    \caption{Solution/Plot variables}
-    \label{table:dd_solutions}
-    \end{table}
+     \texttt{ContactCurrent} & The electric current on each contact & A/cm$^{3-d}$
+     \end{tabular}
+     \caption{Solution/Plot variables}
+     \label{table:dd_solutions}
+     \end{table}
 
 ..  math::
     :nowrap:
-	:label:
-	
-
-    \begin{table}[htb]
-    \center
-    \begin{tabular}{l||l}
-    \textit{keyword} & \textit{description} \\
-    \hline \hline
-    \keyword{Ec} & conduction band edge (eV) \\
-    \keyword{Ev} & valence band edge (eV) \\
-    \keyword{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
-    \keyword{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
-    \keyword{Nc} & conduction band effective DOS (cm$^-3$) \\
-    \keyword{Nv} & valence band effective DOS (cm$^-3$) \\
-    \end{tabular}
-    \caption{Parameters for the simple semiconductor model}
-    \label{table:simple_sc}
-    \end{table}
+    :label:
+    
+     \begin{table}[htb]
+     \center
+     \begin{tabular}{l||l}
+     \textit{keyword} & \textit{description} \\
+     \hline \hline
+     \texttt{Ec} & conduction band edge (eV) \\
+     \texttt{Ev} & valence band edge (eV) \\
+     \texttt{m\_dos\_e} & conduction band effective DOS mass (m$_e$) \\
+     \texttt{m\_dos\_h} & valence band effective DOS mass (m$_e$) \\
+     \texttt{Nc} & conduction band effective DOS (cm$^-3$) \\
+     \texttt{Nv} & valence band effective DOS (cm$^-3$) \\
+     \end{tabular}
+     \caption{Parameters for the simple semiconductor model}
+     \label{table:simple_sc}
+     \end{table}
 
 ..  math::
     :nowrap:
-	:label:
-	
-	\begin{table}[htb]
-    \center
-    \begin{tabular}{l||l|l}
-    \textit{parameter} & \textit{keyword} \\
-    \hline\hline
-    $\tau_{min}$ & \texttt{taumin} \\
-    $\tau_{max}$ & \texttt{taumax} \\
-    $N_{ref}$ & \texttt{Nref} \\
-    $\gamma$ & \texttt{gamma} \\
-    $E^*$ & \texttt{Etrap} \\
-    $\alpha$ & \texttt{Talpha} \\
-    $\beta$ & \texttt{Tcoeff} \\
-    \end{tabular}
-    \caption{SRH material data file parameters}
-    \label{table:srh_params_db}
-    \end{table}
-	
+    :label:
+    
+     \begin{table}[htb]
+     \center
+     \begin{tabular}{l||l|l}
+     \textit{parameter} & \textit{keyword} \\
+     \hline\hline
+     $\tau_{min}$ & \texttt{taumin} \\
+     $\tau_{max}$ & \texttt{taumax} \\
+     $N_{ref}$ & \texttt{Nref} \\
+     $\gamma$ & \texttt{gamma} \\
+     $E^*$ & \texttt{Etrap} \\
+     $\alpha$ & \texttt{Talpha} \\
+     $\beta$ & \texttt{Tcoeff} \\
+     \end{tabular}
+     \caption{SRH material data file parameters}
+     \label{table:srh_params_db}
+     \end{table}
+    
 ..  math::
     :nowrap:
-	:label:
-	
-    \begin{table}[htb]
-    \center
-    \begin{tabular}{l||l}
-    $tau_n$ & \texttt{tau\_n} \\
-    $tau_p$ & \texttt{tau\_p} \\
-    $E^*$ & \texttt{E\_t}
-    \end{tabular}
-    \caption{SRH input file parameters}
-    \label{table:srh_params_input}
-    \end{table}
-	
+    :label:
+    
+     \begin{table}[htb]
+     \center
+     \begin{tabular}{l||l}
+     $tau_n$ & \texttt{tau\_n} \\
+     $tau_p$ & \texttt{tau\_p} \\
+     $E^*$ & \texttt{E\_t}
+     \end{tabular}
+     \caption{SRH input file parameters}
+     \label{table:srh_params_input}
+     \end{table}
+    
 
 .. math::
    :nowrap:
@@ -862,8 +880,8 @@ Listing 3: Models section for drift-diffusion
     \caption{Data file parameters for the mobility model by Masetti et al.}
     \label{table:mobility_masetti}
     \end{table}
-	
-	
+    
+    
 .. math::
    :nowrap:
    :label:
@@ -885,8 +903,8 @@ Listing 3: Models section for drift-diffusion
     \caption{Data file parameters for the mobility model by Arora.}
     \label{table:mobility_arora}
     \end{table}
-	
-	
+    
+    
 .. math::
    :nowrap:
    :label:
@@ -907,10 +925,10 @@ Listing 3: Models section for drift-diffusion
     \caption{Data file parameters for the mobility model by Arora.}
     \label{table:mobility_field_dep}
     \end{table}
-	
-	
-	
-	
+    
+    
+    
+    
 .. |more| image:: ../data/more.png
     :scale: 50%
 
