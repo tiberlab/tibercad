@@ -52,10 +52,8 @@ for any details please refer to GMSH manual GMSH (http://geuz.org/gmsh/).
 
 
   |warn|: In a **1D** simulation it is assumed that the geometrical model is restricted to the **x axis** .
-
-          In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
-
-          Any other geometrical orientation could give impredictable results
+  In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
+  Any other geometrical orientation could give impredictable results
 
  
 
@@ -116,7 +114,7 @@ Definition of two physical entities Physical Point::
  
 
   |warn| : In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
-   are used by TiberCAD to impose the required boundary conditions.
+  are used by TiberCAD to impose the required boundary conditions.
 
    Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
    through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
@@ -646,9 +644,9 @@ and
 Besides, the type of Boundary condition is assigned (in this case **ohmic** ) with 
 its (initial) value, given by **voltage** .
 
-|warn| The anode voltage is expressed by the notation **@Vb[0.0]**.
-        This means that the anode voltage will be given the value of the variable **Vb** , 
-        specified in the **sweep** block (see after). **[0.0]** means that the default voltage value is 0.0 V.
+  |warn| The anode voltage is expressed by the notation **@Vb[0.0]**.
+  This means that the anode voltage will be given the value of the variable **Vb** , 
+  specified in the **sweep** block (see after). **[0.0]** means that the default voltage value is 0.0 V.
 
 		
 ..  index:: double:Si-Pn Diode;solver
@@ -787,6 +785,7 @@ The simulation ends correctly (hopefully...) with the Sweep value Vb = 1.2.
 ..  _tut1step6:
 
 Output  
+^^^^^^^^^^^^^^^^
 
 Now, the output directory contain the simulation results, as defined 
 in output_format and plot.
@@ -847,9 +846,9 @@ of a **Si n-MOSFET** device.
 
 We will calculate :
 
-* :ref:`tut4step3<IV drain characteristic>`_ ,
+* IV drain characteristic,
 
-* :ref:`tut4step6<Id/Vg transfer characteristic>`_ .
+* Id/Vg transfer characteristic.
 
 In order to execute correctly the example you should have 
 the following files in the working directory:

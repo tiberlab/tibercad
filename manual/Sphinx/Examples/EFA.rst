@@ -14,7 +14,7 @@ The structure is grown on a :math:`Al_{0.3}Ga_{0.7}N` substrate.
  
 ..  figure:: ../data/structure.png
     :align: center
-	:scale: 50%
+    :scale: 50%
 
 
 The structure geometry file is quantum_well.geo_ .
@@ -125,7 +125,7 @@ The  Solver section defines that the structure has a substrate::
     {
      substrate = substrate
     }
-	
+    
 In the output section we specify the variable name **strain** .
 
 The results look as follows:
@@ -133,7 +133,7 @@ The results look as follows:
  
 ..  figure:: ../data/strain.png
     :align: center
-	:scale: 50%
+    :scale: 50%
 
  
 
@@ -191,7 +191,7 @@ in the model  Physics, that reads as follows::
     {
      strain_simulation = str
     }
-	
+    
 Here we impose that the drift diffusion model takes into account both 
 the deformation potential effect and the piezoelectric effect. 
 The latter is very important for wurtzite materials. 
@@ -201,7 +201,7 @@ The band diagram calculated with and without taking into account the effect of s
  
 ..  figure:: ../data/band_diagram.png
     :align: center
-	:scale: 50%
+    :scale: 50%
 
  
 
@@ -233,7 +233,7 @@ The  Models section reads::
         physical_regions = all
        }
     }
-	
+    
 The Solver section reads as follows::
 
   quantum_el
@@ -278,19 +278,19 @@ The  Physics section defines the 8x8 :math:`k \cdot p` model for electrons and h
      model = kp
      kp_model = 8x8
     }
-	
+    
 We choose to plot the following variables: EigenEnergy, EnergyLevels, EigenFunctions.
 
 The results (levels and :math:`|\Psi|^2` ) for electrons and holes are shown:
 
 ..  figure:: ../data/el_states.png
     :align: center
-	:scale: 50%
+    :scale: 50%
  
 
 ..  figure:: ../data/hl_states.png
     :align: center
-	:scale: 50%
+    :scale: 50%
  
 Now we would like to study the dispersion of the two first electron and hole states. 
 In this tutorial we show how to define different k-spaces and calculate the particle dispersion over them.
@@ -332,7 +332,7 @@ Thus, in  Solver section::
      min_eigenvalue_number = 0
      max_eigenvalue_number = 1
     }
-	
+    
   dispersion1D_hl
     {
      quantum_simulation = quantum_hl
@@ -346,20 +346,20 @@ Thus, in  Solver section::
  
 ..  figure:: ../data/disp1D.png
     :align: center
-	:scale: 50%
+    :scale: 50%
 
 ..  figure:: ../data/el_disp2D.png
     :align: center
-	:scale: 50%
+    :scale: 50%
 
 ..  figure:: ../data/hl_disp2D.png
     :align: center
-	:scale: 50%
-	
-  Attachment	        Size
+    :scale: 50%
+    
+|  Attachment            Size
   
-* quantum_well.geo_	    352 bytes
-* tutorial6.tib_	    4.53 KB
+* quantum_well.geo_     352 bytes
+* tutorial6.tib_        4.53 KB
 
 
 ..  _quantum_well.geo: http://www.tibercad.org/files/quantum_well_0.geo

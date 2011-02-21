@@ -138,8 +138,8 @@ thus we write x = 0.2.
 indexes for wurtzite crystal (4 element vectors) or zincblende crystal (3 element vectors).
 
   |warn| A common crystal structure and growth directions definition may be applied to
-         all the Regions of the Device, just by defining them everywhere in the Device block, but
-         outside any specific Region block.
+  all the Regions of the Device, just by defining them everywhere in the Device block, but
+  outside any specific Region block.
 
 Subblock doping, with the keywords:
 

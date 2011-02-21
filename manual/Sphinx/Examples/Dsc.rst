@@ -105,10 +105,10 @@ This is the description of  the  device physical regions::
     }
 
     |warn| for both region ( :math:`TiO_2`  and electrolyte) the same material for the database is used 
-            TiO2mes), the parameter porosity defines which porosity has the material. 
-            The flag TiO2 = false defines instead that in the electrolyte region only the electrolyte 
-            is present and there is no semiconductor. By default the dssc module assumes that a certain region 
-            contains both the semiconductor and the electrolyte.
+    TiO2mes), the parameter porosity defines which porosity has the material. 
+    The flag TiO2 = false defines instead that in the electrolyte region only the electrolyte 
+    is present and there is no semiconductor. By default the dssc module assumes that a certain region 
+    contains both the semiconductor and the electrolyte.
 
 This is the definition of  Simulation Models  and associated Boundary Conditions::
 
