@@ -1,184 +1,42 @@
+
 # diode example
 
-$Device
+Device
 {
-  Options
-  {
-    meshfile = test_03.msh
-    dimension = 1
-  }
-
-   Region Air
-   {
-     reg_numb = 1
-     mat = Si
-     doping = 1e18 doping_type = acceptor
-
-   }
-
-   Region p_side 
-   {
-     reg_numb = 2
-     mat = Si
-     doping = 1e18 doping_type = acceptor
-   }
-
-   Region n_side 
-   {
-     reg_numb = 3
-     mat = Si
-     doping = 1e18 doping_type = donor
-   }
-
-   Region Air2
-   {
-     reg_numb = 4
-     mat = Si
-     doping = 1e18 doping_type = donor
-
-   }
+   meshfile = test_03.msh
+   dimension = 1
+   material = Si
+   
+   Region rod{}
 
 }
 
 
 # Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
+  
+Module thermal
 {
-  
-  
-  
-#  model thermalbalance
- # {
 
-  #   options
-   # { 
-  #    simulation_name = thermal
-  #    physical_regions = all
-  #    plot = (thermal)
-  #  }
-
-  #  physical_model heat_source
-  #  {
-
-   #   type = driftdiffusion
-
-    #  simulation_name = dd
-
-   # }
-
-  #  BC_Regions
-  #  {
-  #      BC_Region reservoir
-  # 	{
-  #       type = heat_reservoir
-  #       BC_reg_numb = (1,4)
-#
-#         temperature = 300
-#   	}
-#     }
-#  }
-  
-  
-
-  model driftdiffusion
-  { 
-              
-    options
-    {
-     simulation_name = dd
-     plot = (ContactCurrents, Pn, Pp, RecombHeat, ePeltier, hPeltier, eJoule, hJoule, ePowerFlux, hPowerFlux)
-     
-#     thermal_simulation = thermal
-    }
-
-    physical_model particle_density
-    { 
-      statistics = boltzmann
-    }
-
-
-     physical_model recombination
-     { 
-       model  =  srh
-     }
-     
-     physical_model thermoelectric_power
-     {
-       model = diffusivity_model
-     }
-
-    BC_Regions  
-    {
-      BC_Region anode
-      {
-        BC_reg_numb = 1
-        type = ohmic
-        voltage = @Vb[0.0]
-      }
-
-      BC_Region cathode
-      {
-        BC_reg_numb = 4
-        type = ohmic
-        voltage = 0.0
-      }
+  plot = LatticeTemp
  
-    }   
-  }  
-}
-
-
-# Definition of  Model-dependent Solver parameters
-$Solver
-
-{
-
-
-  driftdiffusion
-  {
-    nonlin_rel_tol = 1e-12
-    nonlin_step_tol = 1e-6
-    nonlin_max_it = 50
-    ls_max_step = 1
-  }
-
-#  selfconsistent
- # {
- #    flavour = relaxation
- #    relaxation_factor = 1
- #    simulations = (dd,thermal)
- #    abs_tolerance = 1e-5
- #    rel_tolerance = 1e-5
- #    max_iterations = 30
- #    monitor = true
- # }
-
-  sweep
-  {
-    #simulation = selfconsistent before
-    simulation = (dd)
-    variable = Vb
-    start = 0.0
-    stop = 1.1
-    steps = 11
-  }
-}
-
-
-
-# Definition of  model-indipendent parameters of the Simulation
-
-
-$Simulation
-{
+   Contact right
+   {
+     type = heat_reservoir
+     temperature = 500
+   }
   
-  temperature = 300
-  solve = sweep
+   Contact left
+   {
+     type = heat_reservoir
+     temperature = 400
+   }
+}  
+  
+Simulation
+{
+  solve = thermal
   resultpath = output
   output_format = grace
 }
-
-
-
 
 

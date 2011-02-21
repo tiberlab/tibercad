@@ -1,0 +1,103 @@
+# diode example
+
+Device
+{
+  
+  meshfile = diode.msh
+  dimension = 1
+
+  material = Si   
+
+   Region p_side 
+   {
+     doping
+     {
+      Nd = 1e18
+      type = acceptor
+     } 
+   }
+
+   Region n_side 
+   {
+     doping
+     {
+        Nd = 1e18
+        type = donor
+     } 
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+  { 
+   
+   
+   plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, eMob, hMob, ContactCurrents,NetRecombination,thermal)
+   Physics{
+
+      thermal_simulation = thermal
+      recombination srh{}
+     
+     } 
+ 
+   Contact anode
+      {
+        type = ohmic
+        voltage = @Vb[0.0]
+      }
+ 
+  Contact cathode
+      {
+        type = ohmic
+        voltage = 0.0
+      }
+} 
+
+Module thermal
+{
+
+  Physics
+  {
+    HeatSource joule{DD_simulation = dd}
+  }
+
+  Contact anode
+  {
+   type = heat_reservoir
+   temperature = 300 
+  }
+
+  Contact cathode
+  {
+   type = heat_reservoir
+   temperature = 300 
+  }
+
+}
+
+
+Module  sweep
+{
+    simulation = (dd, tt)
+    variable = $Vb
+    start = 0.0
+    stop = 1.2
+    steps = 12
+}
+
+
+
+$Simulation
+{
+  temperature = 300
+  solve = sweep
+  resultpath = output_tut
+  output_format = grace
+
+}
+
+
+
+

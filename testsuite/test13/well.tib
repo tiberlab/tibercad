@@ -1,0 +1,43 @@
+Device
+{
+
+  meshfile = well.msh
+  mesh_units = 1e-9
+  dimension = 1
+  material = AlGaAs
+  x = 0.3
+
+  Region well{material = GaAs}
+
+  Region buffer{}
+
+}
+
+
+Module elasticity
+{
+
+  plot = (Strain, Stress, Displacement)
+
+  Physics
+  {
+    body_force lattice_mismatch
+    {
+      reference_material = GaAs
+    }
+  }
+
+   Contact left{type = clamp}
+
+   Contact right{type = extended}
+    
+}
+
+
+
+Simulation
+{
+  solve = (elasticity)
+  resultpath = output
+  output_format = grace
+}

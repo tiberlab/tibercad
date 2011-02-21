@@ -1,136 +1,115 @@
 
-# Description of  the  device physical regions
-$Device
+Device
 {
-   Region bulk 
+
+  material = Si
+  
+  meshfile = diode.msh
+  dimension = 2
+  temperature = 300
+  symmetry = cylindrical
+
+  Region n_side{
+   doping
    {
-     reg_numb = 1
-     mat = GaAs
-     doping = 1e15 doping_type = donor
+     type = donor 
+     Nd = 1e18
    }
-
-}
-
-
-# Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
-{ 
-
-  model driftdiffusion
-  { 
-              
-    options
-    {
-     simulation_name = dd
-     
-   #  thermal_simulation = tt
-
-     coupling = poisson
-    }
-
-
-    BC_Regions  
-    {
-      BC_Region anode
-      {
-        BC_reg_numb = 1
-        type = ohmic
-        voltage = 0.0
-      }
-
-      BC_Region cathode
-      {
-        BC_reg_numb = 2
-        type = ohmic
-        voltage = 0.0
-      }
-    }   
-  }  
-
-
-
-#  model thermalbalance
- # {
-
-  #  options
-   # { 
-    #  simulation_name = tt
-    #  physical_regions = all
-    #}
-
-   # BC_Regions
-   # {
-    #    BC_Region reservoir1
-   #	{
-    #     type = heat_reservoir
-     #    BC_reg_numb = 1
-      #   temperature = 300
-   #	}
-       
-    #    BC_Region reservoir2
-   #	{
-#	 type = heat_reservoir
- #        BC_reg_numb = 2
-  #       temperature = 400
-#	}
- #    }
-     		    
-  #}
-
-
-
-
-}
-
-
-# Definition of  Model-dependent Solver parameters
-$Solver
-{
-  driftdiffusion
-  {
-    nonlinear_solver = tiber
-    ksp_type = bcgs
-    nonlin_max_it = 20
-    nonlin_step_tol = 1e-4
-    ls_max_step = 2
   }
 
+  Region p_side{
+   doping
+   {
+     type = acceptor 
+     Nd = 1e18
+   }
+  }
+
+   Region air{material = Air}
+
 }
 
 
-
-# Definition of  Model dependent physical parameters
-$Physics
+Module driftdiffusion
 {
- 
+                
+  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, NetRecombination,Pn,Pp,thermal,ContactCurrents)
+
+  regions = (n_side,p_side)
+
+
+  Physics
+  {
+    
+    thermal_simulation = thermal
+    recombination srh{}
+    thermoelectric_power diffusivity_model{}
+    electron_mobility doping_dependent{}
+    hole_mobility doping_dependent{}
+  }  
+
+  Contact anode
+  {
+     type = ohmic
+     voltage = $Vb[0.0]
+  }
+
+  Contact cathode
+  {
+     type = ohmic
+     voltage = 0.0
+  }
+
+} 
+  
+Module thermal
+{
+
+   plot = (LatticeTemp,ThermalFlux)
+
+   Physics   
+   {
+     HeatSource joule{DD_simulation = driftdiffusion}
+   }
+
+   Contact reservoir
+   {
+     type = heat_reservoir
+     temperature = 300
+   }
+
+   Contact dissipator
+   {
+     r_surf = 0.5
+     type = surface_resistance
+     temperature = 300
+   }
+}
+
+Module selfconsistent
+{
+   flavour = relaxation
+   simulations = (dd,tt)
+   abs_tolerance = 1e-5
+   monitor = true
+}
+
+Module sweep
+{
+  
+  solve = (driftdiffusion,thermal)
+  variable = $Vb
+  start = 0.0
+  stop = 1.2
+  steps = 12
 }
 
 
-# Definition of  model-indipendent parameters of the Simulation
-
-
-$Simulation
+Simulation
 {
-  meshfile = bulk.msh
-  dimension = 1
-  mesh_units = 1e-9
-  temperature = 200
-  solve = dd   #before (tt,dd) 
+  temperature = 300
+  solve = sweep
   resultpath = output
-  output_format = grace
-  plot = (Ec, Ev, Eg, LatticeTemp)
+  output_format = vtu
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
