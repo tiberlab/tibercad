@@ -57,7 +57,6 @@ $(libdir)/libtibercad.a:
 
 
 clean: src
-	@$(MAKE) --no-print-directory -C examples clean
 	@$(MAKE) --no-print-directory -C src/tibercad clean
 	@$(MAKE) --no-print-directory -C src/core/modules clean
 
@@ -65,7 +64,6 @@ clean: src
 
 distclean: src doc
 	@$(MAKE) --no-print-directory -C manual distclean
-	@$(MAKE) --no-print-directory -C examples distclean
 	@$(MAKE) --no-print-directory -C src/tibercad distclean
 	@$(MAKE) --no-print-directory -C src/core/modules distclean
 	@rm -rf lib/*
@@ -94,12 +92,6 @@ endif
 doc:
 	@$(MAKE) --no-print-directory -C doc $(MAKECMDGOALS)
 
-
-
-
-.PHONY: examples
-examples: all
-	@$(MAKE) --no-print-directory -C examples
 
 
 run_tests:
