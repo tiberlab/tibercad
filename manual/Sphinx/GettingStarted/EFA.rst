@@ -293,7 +293,7 @@ equation
 otherwise numerically.
 
 Output
-====================
+------------------------
 
 The output parameter is **quantum_density**.
 
