@@ -348,7 +348,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      }
   
      //----------Stress crystal
-     if (values.count(StrainCrystal))
+     if (values.count(StressCrystal))
      {
        
        Material* mat = mod.get_material();

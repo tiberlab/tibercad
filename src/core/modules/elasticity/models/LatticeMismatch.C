@@ -29,7 +29,7 @@ LatticeMismatch::do_init(void)
   RealGradient body_force(0);
   
  //Get reference lattice
-  const std::string name = get_option("reference_material", "none"); 
+  const std::string name = get_option("reference_material", "");
  
   // maybe the reference material should be defined in a subblock
   // but this should be done after a change in the core
@@ -40,11 +40,18 @@ LatticeMismatch::do_init(void)
   get_option("x", "");
 
   //  get_options().print_all();
-  if (name == "none") throw InitFailedException("Lattice mismatch: reference material is not defined");
+  if (name.empty())
+    throw InitFailedException("Lattice mismatch: reference material is not defined");
 
-  Material* ref_mat = Material::create (name,get_options());
+  ModelOptions matopts(get_options());
+
+  matopts.set_option("dimension", get_owner()->get_dimension());
+
+  Material* ref_mat = Material::create(name, matopts);
   ref_mat->init();
 
+
+  const Material* mat = get_material();
   const RotatedCrystal* ref_crystal =  &(ref_mat->get_rotated_crystal());
   
   double ref_lat_const[3];
@@ -53,7 +60,6 @@ LatticeMismatch::do_init(void)
  
   //Get local lattice
 
-  const Material* mat = get_material();
   
   const RotatedCrystal* crystal_el = &(mat->get_rotated_crystal());
        

@@ -50,10 +50,6 @@ class Plane : public ElasticityBoundaryModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
-
   private:
 
     //! Constructor
@@ -81,11 +77,5 @@ Plane::create(const ModelOptions& options)
 
 
 
-inline
-PhysicalModelInterface*
-Plane::create_new(void) const
-{
-  return new Plane(get_options());
-}
 
 #endif // _POISSONDIRICHLET_H_

@@ -4,15 +4,15 @@ Device
   mesh_units = 1e-9
   dimension = 1
 
+#  y-growth-direction = (1,0,-1,0)
+#  z-growth-direction = (-1,2,-1,0)
+#  x-growth-direction = (0,0,0,1)
+
   Region well
   {
     mesh_regions = 1
     material = GaN
 
-    structure = wz
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
 
    
     Doping {
@@ -28,10 +28,6 @@ Device
     mesh_regions = 2
     material = AlGaN
     x = 0.3
-    structure = wz
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
 
 
    
@@ -52,10 +48,6 @@ Device
     mesh_regions = 3
     material = AlGaN
     x = 0.3
-    structure = wz
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
    
    
    Doping {

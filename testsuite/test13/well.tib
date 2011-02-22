@@ -17,8 +17,6 @@ Device
 Module elasticity
 {
 
-  shape_iterations = 10
-  shape_error = 1e-20
   plot = (Strain, Stress, Displacement)
 
   Physics
@@ -31,7 +29,6 @@ Module elasticity
 
    Contact left{type = clamp}
 
-   Contact right{type = extended}
     
 }
 
@@ -47,10 +44,10 @@ Module driftdiffusion
   }
 }
 
+
 Simulation
 {
-  verbose = 3
-  solve = (elasticity)
+  solve = (elasticity, driftdiffusion)
   resultpath = output
   output_format = grace
 }

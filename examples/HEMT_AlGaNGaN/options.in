@@ -1,8 +1,0 @@
-$Options
-
-  meshfile = hemt.msh
-  mesh_units = 1e-4
-  searchpath = ../materials
-
-
-End

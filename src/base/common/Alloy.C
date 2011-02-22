@@ -117,6 +117,14 @@ Alloy::do_init(void)
 }
 
 
+void
+Alloy::do_info(void) const
+{
+  std::ostringstream os;
+  os << "alloy with " << _molar_fraction << " " << _mat_A->get_name()
+      << ", " << (1 - _molar_fraction) << " " << _mat_B->get_name();
+  Messages::info(os.str());
+}
 
 
 

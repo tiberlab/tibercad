@@ -32,8 +32,34 @@ SelfconsistentSolver::do_init(void)
     // If it is not already initialized, we initialize now
     if (!_simulations[i]->is_initialized())
       _simulations[i]->init();
+  }
 
 
+  if (!_simulations[num_of_sims - 1]->has_solution_vector())
+  {
+    ostringstream s;
+    s << "SelfconsistentSolver: Simulation "
+      << _simulations[num_of_sims - 1]->get_name() << " has no solution vector!";
+    throw InitFailedException(s.str());
+  }
+
+  // we set our environment to that of the first simulation
+  //set_environment(&_simulations[0]->get_environment());
+
+  parse_options();
+}
+
+
+
+
+void
+SelfconsistentSolver::do_print_info(void)
+{
+  // this is a dirty trick to not have the variables in the command
+  // line output
+
+  for (int i = 0; i < _simulations.size(); i++)
+  {
     // inherit the solution IDs
     const IDSet& plotvars = _simulations[i]->get_plotvariable_ids();
     for (IDSet::iterator it(plotvars.begin()); it != plotvars.end(); ++it)
@@ -47,19 +73,6 @@ SelfconsistentSolver::do_init(void)
           descr.units(), descr.n_components());
     }
   }
-
-  if (!_simulations[num_of_sims - 1]->has_solution_vector())
-  {
-    ostringstream s;
-    s << "SelfconsistentSolver: Simulation "
-      << _simulations[num_of_sims - 1]->get_name() << " has no solution vector!";
-    throw InitFailedException(s.str());
-  }
-  
-  // we set our environment to that of the first simulation
-  //set_environment(&_simulations[0]->get_environment());
-
-  parse_options();
 }
 
 

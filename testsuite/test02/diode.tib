@@ -42,7 +42,6 @@ Module driftdiffusion
     linear_solver petsc
     {
       relative_tolerance = 1e-6
-      pc_type = lu
     }
   }
 

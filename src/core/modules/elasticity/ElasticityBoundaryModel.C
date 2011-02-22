@@ -10,11 +10,10 @@ ElasticityBoundaryModel::create(const ModelOptions& options)
 {
  
 
-   std::string type = options.get_option("type", "clamp");
+  std::string type = options.get_option("type", "clamp");
 
-   std::cout<<"ebnd_" + type<<std::endl;
-  ElasticityBoundaryModel* mod = dynamic_cast<ElasticityBoundaryModel*>(
-      PhysicalModelInterface::create("ebnd_" + type, options));
+  PhysicalModelInterface* pmod = PhysicalModelInterface::create("ebnd_" + type, options);
+  ElasticityBoundaryModel* mod = dynamic_cast<ElasticityBoundaryModel*>(pmod);
 
   if (mod == NULL)
   {

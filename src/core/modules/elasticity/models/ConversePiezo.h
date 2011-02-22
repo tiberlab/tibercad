@@ -47,9 +47,6 @@ class TBDLLOCAL ConversePiezo : public BodyForceModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
   
@@ -68,12 +65,7 @@ class TBDLLOCAL ConversePiezo : public BodyForceModel
 };
 
 
-inline
-PhysicalModelInterface*
-ConversePiezo::create_new(void) const
-{
-  return new  ConversePiezo(get_options());
-}
+
 
 inline
 ConversePiezo*

@@ -1,9 +1,0 @@
-A piece of bulk semiconductor
------------------------------
-
-To run the 1D example, hit 'make run1d'
-
-To run the 2D example, hit 'make run2d'
-(or 'make run2d_tri' for a triangular mesh)
-
-To run the 3D example, hit 'make run3d'

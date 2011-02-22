@@ -50,9 +50,6 @@ class TBDLLOCAL SurfaceForce : public ElasticityBoundaryModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
 
@@ -81,13 +78,5 @@ SurfaceForce::create(const ModelOptions& options)
   return new SurfaceForce(options);
 }
 
-
-
-inline
-PhysicalModelInterface*
-SurfaceForce::create_new(void) const
-{
-  return new SurfaceForce(get_options());
-}
 
 #endif // _POISSONDIRICHLET_H_

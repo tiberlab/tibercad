@@ -46,9 +46,6 @@ class TBDLLOCAL ConstantBodyForce : public BodyForceModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
   
@@ -59,12 +56,7 @@ class TBDLLOCAL ConstantBodyForce : public BodyForceModel
 };
 
 
-inline
-PhysicalModelInterface*
-ConstantBodyForce::create_new(void) const
-{
-  return new   ConstantBodyForce(get_options());
-}
+
 
 inline
 ConstantBodyForce*

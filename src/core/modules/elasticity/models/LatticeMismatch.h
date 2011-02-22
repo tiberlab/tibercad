@@ -46,9 +46,6 @@ class TBDLLOCAL LatticeMismatch : public BodyForceModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
   
@@ -59,12 +56,7 @@ class TBDLLOCAL LatticeMismatch : public BodyForceModel
 };
 
 
-inline
-PhysicalModelInterface*
-LatticeMismatch::create_new(void) const
-{
-  return new   LatticeMismatch(get_options());
-}
+
 
 inline
 LatticeMismatch*

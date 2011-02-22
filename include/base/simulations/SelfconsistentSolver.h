@@ -73,6 +73,10 @@ class TBDLLOCAL SelfconsistentSolver : public SimulationInterface
     //! Returns the solution vector of the last simulation
     virtual void do_set_solution_vector(const NumericVector<double>& new_solution);
 
+
+    //! Abused here for the inheritance of variables
+    virtual void do_print_info(void);
+
     
     //! Initialize the solver
     /*!

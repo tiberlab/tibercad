@@ -46,9 +46,6 @@ class TBDLLOCAL IsotropicStiffness : public StiffnessModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
   
@@ -62,12 +59,7 @@ class TBDLLOCAL IsotropicStiffness : public StiffnessModel
 };
 
 
-inline
-PhysicalModelInterface*
-IsotropicStiffness::create_new(void) const
-{
-  return new   IsotropicStiffness(get_options());
-}
+
 
 inline
 IsotropicStiffness*

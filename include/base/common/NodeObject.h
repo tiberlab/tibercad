@@ -9,7 +9,7 @@
 class Material;
 
 
-//! Description of an edge, i.e. (n-2)-D object.
+//! Description of a node, i.e. (n-3)-D object.
 class NodeObject : public PhysicalObject
 {
 

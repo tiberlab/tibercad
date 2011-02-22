@@ -114,6 +114,11 @@ class Material : public PhysicalObject
     dopant_iterator acceptors_end(void) const;
 
 
+    //! Print some information
+    void info(void) const;
+
+
+
   protected:
 
     //! Construct a material
@@ -126,7 +131,10 @@ class Material : public PhysicalObject
 
 
     //! The real preinit function
-    virtual void do_preinit(void) {};
+    /*!
+     * Prepares the rotated crystal object
+     */
+    virtual void do_preinit(void);
 
 
     //! The real init function
@@ -135,6 +143,10 @@ class Material : public PhysicalObject
 
     //! Setup the doping
     void setup_doping(void);
+
+
+    //! Can be used to print specific information
+    virtual void do_info(void) const {};
 
 
     //! Get a writable pointer to the RotatedCrystal

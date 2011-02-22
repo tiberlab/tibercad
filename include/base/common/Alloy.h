@@ -62,6 +62,9 @@ class Alloy : public Material
     virtual void do_init(void);
 
 
+    //! Print info on Alloy composition
+    virtual void do_info(void) const;
+
   private:
 
     //! Molar fraction x of the \c Alloy

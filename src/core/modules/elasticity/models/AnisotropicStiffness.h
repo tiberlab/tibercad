@@ -46,8 +46,6 @@ class TBDLLOCAL AnisotropicStiffness : public StiffnessModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
 
 
   private:
@@ -65,12 +63,7 @@ class TBDLLOCAL AnisotropicStiffness : public StiffnessModel
 };
 
 
-inline
-PhysicalModelInterface*
-AnisotropicStiffness::create_new(void) const
-{
-  return new   AnisotropicStiffness(get_options());
-}
+
 
 inline
 AnisotropicStiffness*

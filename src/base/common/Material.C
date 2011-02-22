@@ -55,29 +55,32 @@ Material::setup_doping(void)
 void
 Material::do_init(void)
 {
+  setup_doping();
+
+  PhysicalObject::do_init();
+}
+
+
+
+void
+Material::do_preinit(void)
+{
   ModelOptions opts;
 
   if (get_options().find_option("a"))
     opts["a"] = get_options()["a"];
   if (get_options().find_option("c"))
     opts["c"] = get_options()["c"];
-  if (get_options().find_option("x-growth-direction"))
-    opts["x-growth-direction"] = get_options()["x-growth-direction"];
-  if (get_options().find_option("y-growth-direction"))
-    opts["y-growth-direction"] = get_options()["y-growth-direction"];
-  if (get_options().find_option("z-growth-direction"))
-    opts["z-growth-direction"] = get_options()["z-growth-direction"];
 
+  opts["x-growth-direction"] = get_options()["x-growth-direction"];
+  opts["y-growth-direction"] = get_options()["y-growth-direction"];
+  opts["z-growth-direction"] = get_options()["z-growth-direction"];
 
   // first we set up RotatedCrystal because it will be
   // needed by others
   _rotated_crystal = RotatedCrystal::create(get_structure(), opts);
   _rotated_crystal->set_owner(this);
   _rotated_crystal->init();
-
-  setup_doping();
-
-  PhysicalObject::do_init();
 }
 
 
@@ -144,11 +147,71 @@ Material::preinit(void)
   // set the crystal structure at this point
   _structure = get_database().get("structure", "zb");
 
+  bool hasx = get_options().find_option("x-growth-direction");
+  bool hasy = get_options().find_option("y-growth-direction");
+  bool hasz = get_options().find_option("z-growth-direction");
+
+  // if one is given, all three should be provided
+  if (((hasx || hasy) && !(hasx && hasy)) ||
+      ((hasy || hasz) && !(hasy && hasz)))
+    throw InitFailedException("You have to provide all growth directions "
+        "in material " + get_name());
+
+  bool use_defaults = !hasx;
+
+  // read or set default growth directions for wurtzite
+  if (_structure == "wz")
+  {
+    if (use_defaults)
+    {
+      switch (get_dimension())
+      {
+        case 3:
+          get_options()["x-growth-direction"] = "( 1,0,-1,0)";
+          get_options()["y-growth-direction"] = "(-1,2,-1,0)";
+          get_options()["z-growth-direction"] = "( 0,0, 0,1)";
+          break;
+
+        case 2:
+          get_options()["z-growth-direction"] = "( 1,0,-1,0)";
+          get_options()["x-growth-direction"] = "(-1,2,-1,0)";
+          get_options()["y-growth-direction"] = "( 0,0, 0,1)";
+          break;
+
+        case 1:
+        default:
+          get_options()["y-growth-direction"] = "( 1,0,-1,0)";
+          get_options()["z-growth-direction"] = "(-1,2,-1,0)";
+          get_options()["x-growth-direction"] = "( 0,0, 0,1)";
+      }
+    }
+
+  }
+
+
   do_preinit();
 
   get_database().close();
 }
 
+
+
+
+void
+Material::info(void) const
+{
+  std::ostringstream os;
+  Messages m;
+  m.indent();
+
+  do_info();
+
+  os << "x growth direction : " << get_option("x-growth-direction", "") << std::endl;
+  os << "y growth direction : " << get_option("y-growth-direction", "") << std::endl;
+  os << "z growth direction : " << get_option("z-growth-direction", "") << std::endl;
+
+  m.info(os.str());
+}
 
 
 double

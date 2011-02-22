@@ -282,6 +282,8 @@ Device::setup_regions(void)
     if (!zdir.empty())
       data["z-growth-direction"] = zdir;
 
+    data.set_option("dimension", get_mesh().mesh_dimension());
+
     Material* mat = Material::create(material, data);
     set_material(mat, region_ids, data.get_name());
   }
@@ -565,6 +567,7 @@ Device::set_material(Material* material, const vector<ID>& region_ids,
     os << ", " << region_ids[i];
   os << ")" << endl;
   Messages::info(os.str());
+  material->info();
 }
 
 
@@ -628,7 +631,9 @@ Device::get_boundary_object(ID id)
         ID idB = *(++(ids.begin()));
         Material* matA = get_material(idA);
         Material* matB = get_material(idB);
-        mb = MaterialBoundary::create(idA, matA, idB, matB, ModelOptions());
+        ModelOptions opts;
+        opts.set_option("dimension", get_mesh().mesh_dimension() - 1);
+        mb = MaterialBoundary::create(idA, matA, idB, matB, opts);
         _boundary_map[id] = mb;
       }
     }
@@ -670,7 +675,9 @@ Device::get_edge_object(ID id)
     {
       if (_bd_regions->is_edge(id))
       {
-        mb = EdgeObject::create(ModelOptions());
+        ModelOptions opts;
+        opts.set_option("dimension", get_mesh().mesh_dimension() - 2);
+        mb = EdgeObject::create(opts);
         _edge_map[id] = mb;
       }
     }
@@ -712,7 +719,9 @@ Device::get_node_object(ID id)
     {
       if (_bd_regions->is_node(id))
       {
-        mb = NodeObject::create(ModelOptions());
+        ModelOptions opts;
+        opts.set_option("dimension", get_mesh().mesh_dimension() - 3);
+        mb = NodeObject::create(opts);
         _node_map[id] = mb;
       }
     }
