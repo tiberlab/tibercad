@@ -1,4 +1,4 @@
-.. _EFA:
+.. _EFA_Getting:
 
 
 
@@ -6,8 +6,8 @@ Module efaschroedinger
 =================================
 
 
-The EFA calculations are performed by the **Module** efaschroedinger A typical ex-
-ample is the following::
+The EFA calculations are performed by the **Module** efaschroedinger A typical example 
+is the following::
 
   Module efaschroedinger
     {
@@ -33,7 +33,9 @@ Module options
 The following options infiuence the behaviour of the Module efaschroedinger:
 
   ``particle = string`` defines for which particle (electron or hole) Schroedinger equation is
-solved Possible values are el and hl. A different Module efaschroedinger has to be
+solved. 
+
+Possible values are el and hl. A different Module efaschroedinger has to be
 defined for each particle to be solved.
 
   ``poisson_model_name = string`` defines the name of the simulation (Module driftdiffu-
@@ -43,6 +45,10 @@ sion) that can provide electric potential
 that can provide elastic strain
 
   ``regions = string`` defines the regions associated to this EFA simulation
+
+| 
+| 
+| 
 
 Solver section
 --------------------------
@@ -56,6 +62,7 @@ conditions are imposed over all the boundaries of the simulation region
 
   ``solver = string`` : defines the solver for the eigenvalue problem, possible values are:
 arnoldi, lapack, krylovshur. The default value is **krylovshur** . 
+
 In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur
 solver it is necessary to specify which and how many eigenvalues have to be computed. 
 The idea is that the iterative solver calculates several eigenvalues that are
@@ -177,13 +184,13 @@ the associated (emission) spectrum with a k-space integration.
 
 The parameters are the following:
 
-  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
- **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
+  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is 
+**true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
 real space
 
   If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the el-
 ements whose error is greater than the value (1-refine fraction)* (maximum error) are
-going to be refined. In this case, ’Error’ is just the integrated quantity. The refinement
+going to be refined. In this case, "Error" is just the integrated quantity. The refinement
 will end when the *relative_accuracy* is obtained.
 
   ``number_of_nodes`` = numb. of elements in k mesh, along each direction
@@ -206,8 +213,8 @@ The output variables for optics calculations are:
 Module quantumdispersion
 =============================
 
-With the Module quantumdispersion it is possible to calculate the dependence of quan-
-tum eigenstates on **k** -vector. Such dependence gives the *quantum state dispersion* . The
+With the Module quantumdispersion it is possible to calculate the dependence of quantum 
+eigenstates on **k** -vector. Such dependence gives the *quantum state dispersion* . The
 simulation name is **quantumdispersion** .
 
 ::

@@ -1,4 +1,4 @@
-.. _DriftDiffusion:
+.. _DriftDiffusion_Getting:
 
 Drift Diffusion
 =================================================
@@ -6,7 +6,7 @@ Drift Diffusion
 
 In this example we will see a very simple TiberCAD simulation:
 
-1D calculation of Poisson and drift-diffusion for a bulk Silicon sample.
+  1D calculation of Poisson and drift-diffusion for a bulk Silicon sample.
 
 The following files should be in your working directory:
 
@@ -49,7 +49,7 @@ for any details please refer to GMSH manual GMSH (http://geuz.org/gmsh/).
 
   |warn|: In a **1D** simulation it is assumed that the geometrical model is restricted to the **x axis** .
   In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
-  Any other geometrical orientation could give impredictable results
+  Any other geometrical orientation could give unpredictable results
 
  
 
@@ -108,13 +108,15 @@ Definition of two physical entities Physical Point::
   Physical Point("anode2)   = {1}
   Physical Point("cathode") = {2}
  
+| 
+| 
 
   |warn| : In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
   are used by TiberCAD to impose the required boundary conditions.
 
-   Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
-   through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
-   to two **Contact** regions (see in the following).
+Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
+through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
+to two **Contact** regions (see in the following).
  
 
 ..  _tut0step2:
@@ -176,7 +178,7 @@ of the device featuring the same material and possibly the same doping.
        }
     }
     
-The TiberCAD Region bulk is made of Silicon and n-doped with a concentration :math:`1 x 10^{16} cm^{-3}` .
+The TiberCAD Region bulk is made of Silicon and n-doped with a concentration 1 x :math:`10^{16} cm^{-3}` .
 
 Through the keyword **Region** , one GMSH physical region (Physical Lines in 1D, Physical Surfaces in 2D, 
 Physical Volumes in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be associated 
@@ -240,12 +242,12 @@ Through the keyword Contact , one (n-1) -dimension GMSH physical region (Physica
 Physical Line in 2D, Physical Surface in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be 
 associated to the present TiberCAD Contact, in this way:
 
-Contact  GMSH_physical_region_name 
+  Contact  ``GMSH_physical_region_name`` 
 
 In this case, the *Physical Point* **anode** is associated to the TiberCAD Contact anode and the Physical 
 Point cathode is associated to the TiberCAD Contact cathode.
 
-Both contacts are defined as *ohmic* , cathod is assigned a fixed ``voltage = 0.0`` , while anode voltage is given 
+Both contacts are defined as *ohmic* , cathode is assigned a fixed ``voltage = 0.0`` , while anode voltage is given 
 by the value of the variable *Vb* ::
 
 
@@ -255,24 +257,23 @@ by the value of the variable *Vb* ::
 Definition of Simulation parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Vb is specified in the sweep block, in the Solver section ::
+Vb is specified in the sweep block, in the Solver section::
 
-
-Module sweep
-{
-  solve = driftdiffusion
-  variable = $Vb
-  start = 0.0
-  stop = 1
-  steps = 10
-  plot_data = true
-}
+  Module sweep
+    {
+     solve = driftdiffusion
+     variable = $Vb
+     start = 0.0
+     stop = 1
+     steps = 10
+     plot_data = true
+    }
     
-In this way, the simulation driftdiffusion_1 is performed for 10 ( steps = 10) values of the anode 
+In this way, the simulation ``driftdiffusion_1`` is performed for 10 ( steps = 10) values of the anode 
 voltage (variable = Vb), between 0 and 1.
 
 For each step we want to plot the solution variables specified in the driftdiffusion module 
-(plot_data = true).
+( ``plot_data = true`` ).
  
 
 Definition of Execution parameters
@@ -306,9 +307,9 @@ Step 4 - Run TiberCAD
 
 Now we can run TiberCAD
 
-|  by double clicking on bulk.tib file (in Windows)
-|  
-|  or by command line in linux: tibercad bulk.tib
+  |  by double clicking on bulk.tib file (in Windows)
+  |  
+  |  or by command line in linux: tibercad bulk.tib
 
 
 ..  _tut0step5:
@@ -318,15 +319,15 @@ Output
 
 The generated Output files are:
 
-* driftdiffusion_materials.dat  : material (mesh) regions, in this case just region 1
+* ``driftdiffusion_materials.dat``  : material (mesh) regions, in this case just region 1
 
-* driftdiffusion_nodal.dat      : nodal quantities (here conduction and valence band)
+* ``driftdiffusion_nodal.dat``      : nodal quantities (here conduction and valence band)
 
-* sweep_driftdiffusion_Vb.dat   : integrated current at the two contacts for each sweep step
+* ``sweep_driftdiffusion_Vb.dat``   : integrated current at the two contacts for each sweep step
  
 
 
-Attachment	Size
+    Attachment    Size
 
 * bulk.tib_	1.16 KB
 * bulk.geo_	181 bytes

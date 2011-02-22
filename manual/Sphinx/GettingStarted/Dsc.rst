@@ -1,4 +1,4 @@
-.. _Dsc:
+.. _Dsc_Getting:
 
 
 Simulation Dye Solar Cells
@@ -56,7 +56,7 @@ under dark conditions where an external bias only is applied ``load = 1.0`` .
 Generation model
 ^^^^^^^^^^^^^^^^
 
-The generation term is related to the flux of photons which reaches the active :math:`TiO_2`
+The generation term is related to the flux of photons which reaches the active :math:`TiO_2` 
 regions and the dye present in the cell. We assume a simple Beer-Lambert exponential
 decay for charge generation of the form:
 
@@ -70,10 +70,10 @@ decay for charge generation of the form:
     d\lambda
     \end{equation}
 
-where :math:`\alpha` is the absorption coeflcient (in :math:`\mu^{-1}` ) 
+where :math:`\alpha` is the absorption coefficient (in :math:`\mu^{-1}` ) 
 of the chosen Dye, :math:`\Phi(\lambda)` the intensity of the light power at that 
 wavelength for the spectrum of the sun.
-The part of the input flle for the generation model::
+The part of the input file for the generation model::
 
   model dssc_generation
     {
@@ -94,13 +94,13 @@ The part of the input flle for the generation model::
        }
     }
     
-In the generation input flle must be specifled:
+In the generation input flle must be specified:
 
 *  ( **regions** ) the regions where we want that there is generation (where the Dye is present);
 
 *  ( **plot** ) if we want to plot the generation;
 
-*  ( **light_direction** ) the vector which flxes the direction from where the light comes;
+*  ( **light_direction** ) the vector which fixes the direction from where the light comes;
 
 *  ( **light_intensity** ) the light intensity;
 
@@ -109,16 +109,16 @@ In the generation input flle must be specifled:
 *  ( **dye** ) the dye used in the cell;
 
 
-The light intensity is deflned in a sweep ( see section :ref:`Solver_Dsc` ). It can be set to reach 1
+The light intensity is defined in a sweep ( see section :ref:`Solver_Dsc` ). It can be set to reach 1
 that means one Sun, or a larger or smaller illumination intensity (0.1, 2.0, etc.).
 There is another flag called **illumination_spectrum** that can be used if we want to
-change the spectrum proflle F with another illumination source (for example if we assume
-the cell under concentration of light). The flle used by default for :math:`\Phi` is the standard 1.5
-AM spectrum of the sun contained in the material database in the flle ``Sun1p5am`` .
+change the spectrum profile F with another illumination source (for example if we assume
+the cell under concentration of light). The file used by default for :math:`\Phi` is the standard 1.5
+AM spectrum of the sun contained in the material database in the file ``Sun1p5am`` .
 
-The last part of the generation is the deflnition of the boundary. This boundary says
+The last part of the generation is the definition of the boundary. This boundary says
 to the code which is the boundary region of the grid from where the light penetrates in
-the device. The information given by the boundary and the light direction vector deflnes
+the device. The information given by the boundary and the light direction vector defines
 the coming of light and direction of rays.
 
 Device
@@ -140,21 +140,25 @@ Device section for a DSC simulation::
        }
     }
     
-For every region of the device it is specifled the material flle from the database (the
+For every region of the device it is specified the material file from the database (the
 TiO2mes contains standard parameters for both :math:`TiO_2` and electrolyte, so it can be used
-for both regions). For every region must be specifled if it contains :math:`TiO_2`, or electrolyte
-or both. This can be done setting two flags called ``TiO2`` and ``electrolyte`` . If set true
+for both regions). For every region must be specified if it contains :math:`TiO_2`, or electrolyte
+or both. 
+
+This can be done setting two flags called ``TiO2`` and ``electrolyte`` . If set true
 the material is present in the region, if set **false** it is not present. By default they are
 assumed both **true** (porous region). In the second region of the example showed there
-is electrolyte only and ``TiO2`` = **false** is explicitly specifled. In case both materials are
-present (porous region) a porosity must be specifled (in the range between 0, :math:`TiO_2` only,
-and 1, electrolyte only). If one material is not present the porosity is automatically set
+is electrolyte only and ``TiO2`` = **false** is explicitly specified. In case both materials are
+present (porous region) a porosity must be specified (in the range between 0, :math:`TiO_2` only,
+and 1, electrolyte only). 
+
+If one material is not present the porosity is automatically set
 to 0 or 1.
 
 Physics
 -----------
 
-The set of parameters that can be deflned for the entire device are enlisted in table 3.1.
+The set of parameters that can be defined for the entire device are enlisted in table 3.1.
 For the generation::
 
   dssc
@@ -167,7 +171,7 @@ For the generation::
 Solver
 ----------
 
-Three sweeps are needed for the plot of the entire I-V under illumiantion. The flrst sweep
+Three sweeps are needed for the plot of the entire I-V under illumination. The first sweep
 is needed to make the transition from dark conditions to full open-circuit conditions under
 
 .. _dsc_parameters:
@@ -213,7 +217,7 @@ illumination. The high value of the load R maintains the current to zero. Then a
 sweep is used to pass from open circuit condition to short circuit condition lowering the
 external load from a high external load to a small one (R = 1). Finally, the voltage
 sweep compute the I-V characteristics under illumination. In case of dark simulation
-(application of an external bias without illumination) the flrst and second sweep are not
+(application of an external bias without illumination) the first and second sweep are not
 needed. The external load for the cathode can be set directly to R = 1.
 
 ::
@@ -246,7 +250,7 @@ needed. The external load for the cathode can be set directly to R = 1.
         }
     }
     
-The intensity of illumination can be changed sweeping the value of x diflerent to 1 (1 =
+The intensity of illumination can be changed sweeping the value of x different to 1 (1 =
 1 Sun of power).
 
 Output
