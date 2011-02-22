@@ -17,6 +17,8 @@ Device
 Module elasticity
 {
 
+  shape_iterations = 10
+  shape_error = 1e-20
   plot = (Strain, Stress, Displacement)
 
   Physics
@@ -45,10 +47,10 @@ Module driftdiffusion
   }
 }
 
-
 Simulation
 {
-  solve = (elasticity, driftdiffusion)
+  verbose = 3
+  solve = (elasticity)
   resultpath = output
   output_format = grace
 }

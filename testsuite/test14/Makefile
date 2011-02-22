@@ -2,7 +2,7 @@
 
 topdir := ../..
 
-inputfile = put_your_filename_here.tib
+inputfile = input.tib
 
 
 .PHONY: run clean distclean
