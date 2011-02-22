@@ -1,8 +1,8 @@
 // $Id$
 
 #include "ZbRotatedCrystal.h"
-#include "Material.h"
 #include "Database.h"
+#include "InitFailedException.h"
 
 ZbRotatedCrystal::ZbRotatedCrystal(const ModelOptions& options) :
   RotatedCrystal(options)
@@ -135,6 +135,12 @@ void ZbRotatedCrystal::do_init(void)
    options.get_option("x-growth-direction", x_miller);
    options.get_option("y-growth-direction", y_miller);
    options.get_option("z-growth-direction", z_miller); 
+
+  if (x_miller.size() != 3 ||
+      y_miller.size() != 3 ||
+      z_miller.size() != 3)
+    throw InitFailedException("Zincblende growth directions are wrong."
+        " (Need exactly 3 miller indices)");
 
    calculate_lat_consts();
 

@@ -2,6 +2,7 @@
 
 #include "WzRotatedCrystal.h"
 #include "Database.h"
+#include "InitFailedException.h"
 
 WzRotatedCrystal::WzRotatedCrystal(const ModelOptions& options) :
   RotatedCrystal(options)
@@ -228,6 +229,11 @@ void WzRotatedCrystal::do_init(void)
   options.get_option("y-growth-direction", y_miller);
   options.get_option("z-growth-direction", z_miller);
   
+  if (x_miller.size() != 4 ||
+      y_miller.size() != 4 ||
+      z_miller.size() != 4)
+    throw InitFailedException("Wurtzite growth directions are wrong."
+        " (Need exactly 4 miller indices)");
 
   calculate_lat_consts();
 
