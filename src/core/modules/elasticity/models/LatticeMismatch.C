@@ -45,7 +45,9 @@ LatticeMismatch::do_init(void)
 
   ModelOptions matopts(get_options());
 
-  matopts.set_option("dimension", get_owner()->get_dimension());
+  // for "official" materials (created from Device) this is always present
+  unsigned int dim = get_material()->get_options().get_option("dimension", 3);
+  matopts.set_option("dimension", dim);
 
   Material* ref_mat = Material::create(name, matopts);
   ref_mat->init();

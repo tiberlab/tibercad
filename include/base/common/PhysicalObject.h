@@ -87,9 +87,6 @@ class PhysicalObject : public TiberModelObject
     ObjectType get_type(void) const;
 
 
-    //! Get the mesh dimension of this object
-    unsigned int get_dimension(void) const;
-
 
   protected:
 
@@ -132,10 +129,6 @@ class PhysicalObject : public TiberModelObject
 
     //! The type of this object
     ObjectType _type;
-
-
-    //! The space dimensions of this object
-    unsigned int _dim;
 
 
     //! A flag to tell if the material is already initialized
@@ -189,12 +182,6 @@ PhysicalObject::get_database(void)
 }
 
 
-inline
-unsigned int
-PhysicalObject::get_dimension(void) const
-{
-  return _dim;
-}
 
 
 inline

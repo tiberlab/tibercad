@@ -13,10 +13,6 @@ PhysicalObject::PhysicalObject(ObjectType type, const ModelOptions& options)
     _is_initialized(false)
 {
   _database = new Database();
-  _dim = get_option("dimension", -1);
-  if ((_dim < 0) || (_dim > 3))
-    throw InitFailedException("Tried to create PhysicalObject "
-        "without specifying correct dimension");
 }
 
 

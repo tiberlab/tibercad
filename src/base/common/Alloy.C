@@ -70,6 +70,14 @@ Alloy::do_preinit(void)
        << " and its components are inconsistent.";
     throw InitFailedException(os.str());
   }
+
+  RotatedCrystal* crystal = static_cast<RotatedCrystal*>(
+      _mat_A->get_rotated_crystal().copy());
+  crystal->set_owner(this);
+  crystal->init_alloy(&_mat_A->get_rotated_crystal(),
+      &_mat_B->get_rotated_crystal(), _molar_fraction);
+  set_crystal(crystal);
+
 }
 
 
@@ -100,13 +108,6 @@ Alloy::do_init(void)
   //
   // build VCA of the models
   //
-
-  RotatedCrystal* crystal = static_cast<RotatedCrystal*>(
-      _mat_A->get_rotated_crystal().copy());
-  crystal->set_owner(this);
-  crystal->init_alloy(&_mat_A->get_rotated_crystal(),
-      &_mat_B->get_rotated_crystal(), _molar_fraction);
-  set_crystal(crystal);
 
 
   for (it = models_begin(); it != end; ++it)

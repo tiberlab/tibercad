@@ -159,12 +159,18 @@ Material::preinit(void)
 
   bool use_defaults = !hasx;
 
+  unsigned int dim = get_option("dimension", 4);
+
   // read or set default growth directions for wurtzite
   if (_structure == "wz")
   {
+    if (dim == 4)
+      Messages::warning("Material " + get_name() + " has no mesh dimension "
+          "associated. Cannot guess crystal directions.");
+
     if (use_defaults)
     {
-      switch (get_dimension())
+      switch (dim)
       {
         case 3:
           get_options()["x-growth-direction"] = "( 1,0,-1,0)";

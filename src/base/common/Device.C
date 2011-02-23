@@ -632,7 +632,6 @@ Device::get_boundary_object(ID id)
         Material* matA = get_material(idA);
         Material* matB = get_material(idB);
         ModelOptions opts;
-        opts.set_option("dimension", get_mesh().mesh_dimension() - 1);
         mb = MaterialBoundary::create(idA, matA, idB, matB, opts);
         _boundary_map[id] = mb;
       }
@@ -676,7 +675,6 @@ Device::get_edge_object(ID id)
       if (_bd_regions->is_edge(id))
       {
         ModelOptions opts;
-        opts.set_option("dimension", get_mesh().mesh_dimension() - 2);
         mb = EdgeObject::create(opts);
         _edge_map[id] = mb;
       }
@@ -720,7 +718,6 @@ Device::get_node_object(ID id)
       if (_bd_regions->is_node(id))
       {
         ModelOptions opts;
-        opts.set_option("dimension", get_mesh().mesh_dimension() - 3);
         mb = NodeObject::create(opts);
         _node_map[id] = mb;
       }
