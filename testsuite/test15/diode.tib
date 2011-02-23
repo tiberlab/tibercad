@@ -48,7 +48,7 @@ Module driftdiffusion
    Contact anode
       {
         type = ohmic
-        voltage = @Vb[0.0]
+        voltage = $Vb
       }
  
   Contact cathode
@@ -63,7 +63,7 @@ Module thermal
 
   Physics
   {
-    HeatSource joule{DD_simulation = dd}
+    HeatSource joule { DD_simulation = driftdiffusion }
   }
 
   Contact anode
@@ -83,7 +83,7 @@ Module thermal
 
 Module  sweep
 {
-    simulation = (dd, tt)
+    solve = (driftdiffusion, thermal)
     variable = $Vb
     start = 0.0
     stop = 1.2

@@ -1,11 +1,13 @@
 # $Id$
 
 # the definitions and rules needed to compile modules
+module := yes
 
 # include common Makefile
 include $(topdir)/Make.common
 
 ifeq ($(build_modules), yes)
+
 
 # reset the target
 target :=

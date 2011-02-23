@@ -9,7 +9,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class Clamp : public ElasticityBoundaryModel
+class TBDLLOCAL Clamp : public ElasticityBoundaryModel
 {
 
   public:

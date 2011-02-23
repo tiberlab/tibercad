@@ -15,7 +15,7 @@ class Elem;
 
 
 //! The base class for Poisson boundary conditions
-class Plane : public ElasticityBoundaryModel
+class TBDLLOCAL Plane : public ElasticityBoundaryModel
 {
 
   public:

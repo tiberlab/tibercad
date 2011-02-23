@@ -4,7 +4,7 @@ Device
 
   material = Si
   
-  meshfile = diode.msh
+  meshfile = bulk.msh
   dimension = 2
   temperature = 300
   symmetry = cylindrical
@@ -88,8 +88,7 @@ Module thermal
 
 Module selfconsistent
 {
-   flavour = relaxation
-   simulations = (dd,tt)
+   solve = (driftdiffusion,thermal)
    abs_tolerance = 1e-5
    monitor = true
 }

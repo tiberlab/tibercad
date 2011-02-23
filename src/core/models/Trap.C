@@ -2,7 +2,7 @@
 
 #include "Trap.h"
 
-//TIBER_MODULE(Trap, trap)
+//TIBER _MODULE(Trap, trap)
 
 using namespace std;
 
