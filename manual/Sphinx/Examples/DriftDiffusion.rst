@@ -22,14 +22,14 @@ The mesh file can be obtained from the following GMSH geo file : bulk.geo_
 
 This is the summary of the Sections of this Tutorial :
 
-*  :ref:`tut0step1` 
+*  :ref:`tut0step1_ex` 
 *  :ref:`tut0step2` 
 *  :ref:`tut0step3` 
 *  :ref:`tut0step4` 
 *  :ref:`tut0step5` 
  
 .. index:: double:Bulk Si;modeling
-..  _tut0step1:
+..  _tut0step1_ex :
  
 Step 1 - Modeling the device
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -184,7 +184,7 @@ of the device featuring the same material and possibly the same doping.
 The TiberCAD Region bulk is made of Silicon and n-doped with a concentration :math:`1 x 10^{16} cm^{-3}` .
 
 Through the keyword **Region** , one GMSH physical region (Physical Lines in 1D, Physical Surfaces in 2D, 
-Physical Volumes in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be associated 
+Physical Volumes in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1_ex` ), can be associated 
 to the present TiberCAD Region, in this way::
 
 
@@ -242,7 +242,7 @@ Module driftdiffusion
 }
     
 Through the keyword Contact , one (n-1) -dimension GMSH physical region (Physical Point in 1D, 
-Physical Line in 2D, Physical Surface in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be 
+Physical Line in 2D, Physical Surface in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1_ex` ), can be 
 associated to the present TiberCAD Contact, in this way:
 
 Contact  GMSH_physical_region_name 

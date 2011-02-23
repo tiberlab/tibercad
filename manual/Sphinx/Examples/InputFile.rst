@@ -14,7 +14,7 @@ Description of Input file structure
 -------------------------------------------
 
 A valid input file for TIBERCAD is a text file with the structure described in the following.
-In the whole input file, everything following a ’#’ is considered as a comment and is
+In the whole input file, everything following a "#" is considered as a comment and is
 disregarded; blank lines can be present anywhere and are disregarded too.
 Input file is composed by several **blocks** :
 A block is enclosed between **"{"** and **"}"** brackets and may include one or more blocks.
@@ -30,7 +30,7 @@ form:
 parenthesis and separated by commas. e.g. ( *cathode, anode* )
 
 Format is free for the parameter assignements, provided that they are separated by
-spaces. Everything which follows a ’#’ is considered as a comment and is disregarded.
+spaces. Everything which follows a "#" is considered as a comment and is disregarded.
 For example::
 
   electron_mobility field_dependent

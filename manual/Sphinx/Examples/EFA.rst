@@ -28,9 +28,9 @@ The structure geometry file is quantum_well.geo_ .
   Line (1) = {1, 2};
   Line (2) = {2, 3};
   Line (3) = {3, 4};
-  Physical Line  ("well") = {2};
-  Physical Line  ("buffer1") = {1};
-  Physical Line  ("buffer2") = {3};
+  Physical Line  (&quot;well&quot;) = {2};
+  Physical Line  (&quot;buffer1&quot;) = {1};
+  Physical Line  (&quot;buffer2&quot;) = {3};
  
 
 There are three physical regions (the well and two barriers, defined by means 
@@ -50,58 +50,40 @@ The Device section of the input file reads::
 
   Device
     {
-
-        meshfile = well.msh
-        mesh_units = 1e-9
-
+     Region well
+       {
+        material = GaN
         structure = wz
         y-growth-direction = (1,0,-1,0)
         z-growth-direction = (-1,2,-1,0)
         x-growth-direction = (0,0,0,1)
-
-
-     Region well
-       {
-        material = GaN
-       
-        Doping
-        {
-         density = 1e18 
-         type = acceptor
-         level = 0.025 
-       
-        }
-
-        
+        doping = 1e18
+        doping_type = acceptor
+        doping_level = 0.025
        }
      Region  buffer1
        {
         material = AlGaN
         x = 0.3
-       
-        Doping
-        {
-         density = 5e16 
-         type = acceptor
-         level = 0.025 
-       
-        }
-
-       
+        structure = wz
+        y-growth-direction = (1,0,-1,0)
+        z-growth-direction = (-1,2,-1,0)
+        x-growth-direction = (0,0,0,1)
+        doping = 5e16 
+        doping_type = acceptor
+        doping_level = 0.025
        }
      Region  buffer2
        {
         material = AlGaN
         x = 0.3
-
-        Doping
-        {
-         density = 5e16 
-         type = acceptor
-         level = 0.025        
-        }
-
-       
+        structure = wz
+        y-growth-direction = (1,0,-1,0)
+        z-growth-direction = (-1,2,-1,0)
+        x-growth-direction = (0,0,0,1)
+        doping = 5e16
+        doping_type = acceptor
+        doping_level = 0.025
        }
     }
  
@@ -114,18 +96,17 @@ over a substrate, we define an appropriate boundary condition.
 The substrate boundary condition is associated with Physical Point **1** . 
 The  Models section reads::
 
-  Module macrostrain
+  model macrostrain
     {
-    
-      name = str
-      regions = all
-      plot = (Strain, PiezoPolarization)
-
-      substrate = cathode
-
-
-      Boundary   cathode
-        {
+     options
+       {
+        simulation_name = str
+        physical_regions = all
+       }
+     BC_Regions
+       {
+        BC_Region  substrate
+          {
            type = substrate
            material = AlGaN
            x = 0.3
@@ -133,15 +114,19 @@ The  Models section reads::
            y-growth-direction = (1,0,-1,0)
            z-growth-direction = (-1,2,-1,0)
            x-growth-direction = (0,0,0,1)
-        }
-
-       
+          }
+       }
     }
  
 
+The  Solver section defines that the structure has a substrate::
 
+  macrostrain
+    {
+     substrate = substrate
+    }
     
-In the output section we specify the variable name **Strain** and **PiezoPolarization**.
+In the output section we specify the variable name **strain** .
 
 The results look as follows:
 
@@ -164,27 +149,16 @@ The band profile calculation needs the Poisson equation to be solved.
 Therefore, we have to define a drift-diffusion model and solve it 
 without any voltage applied. The  Models section reads::
 
-  Module driftdiffusion
+  model driftdiffusion
     { 
-    
-      name = dd
-      regions = all
-
-      coupling = poisson
-       
-      Solver
-        {
-        ...
-        }
-        Physics
-        {
-        ...
-        }
+     options
+       { 
+        simulation_name = dd
+        physical_regions = all
+       }
     }
 
-
-
-In this  case  we  do not  define   any boundary conditions (**Contacts**)  for  driftdiffusion  Module . It means that 
+This section does not contain any boundary conditions. It means that 
 we rely on the *default* boundary condition, that require zero gradient 
 of electric potential near the boundary. This boundary condition, 
 known as the *flat band boundary condition* , is usually applied if the 
@@ -193,14 +167,11 @@ simulation domain represents a small part of a real heterostructure.
 It assumes that the free charge accumulated somewhere outside of the 
 simulation domain screens the electric field.
 
-An important parameter is *coupling = poisson* that defines that 
-no transport equation is solved.
+The  Solver section reads::
 
-The  Solver block reads::
-
-  Solver
+  driftdiffusion
     {
-     
+     coupling = poisson
      nonlin_max_it = 70
      nonlin_rel_tol = 1e-10
      nonlin_abs_tol = 1e-10
@@ -211,15 +182,15 @@ The  Solver block reads::
      ksp_type = bcgs
     }
 
+The most important parameter is coupling = poisson that defines that 
+no transport equation is solved. The rest of the parameters define properties 
+of the numerical solver. The important thing is to define a physical model 
+in the model  Physics, that reads as follows::
 
-
-The parameters define properties of the numerical solver. Then, It is  important  to define, in   Physics block ::
-
-  
-     Physics
-      {
-       strain_simulation = str
-      }
+  driftdiffusion
+    {
+     strain_simulation = str
+    }
     
 Here we impose that the drift diffusion model takes into account both 
 the deformation potential effect and the piezoelectric effect. 
@@ -241,95 +212,73 @@ We are going to study quantized states of electrons and holes in the quantum wel
 Since the structure is 1D, the eigenstate is characterized by the energy level number *n* 
 and the :math:`k_{||}` vector that is perpendicular to the growth direction. 
 First, we define two simulations that solve Schrödinger for a single **k** -vector, 
-for electrons and holes. In order to simplify the tutorial we solve the Schrödinger equation 
+for electrones and holes. In order to simplify the tutorial we solve the Schrödinger equation 
 over all the structure. 
 
-We define two efaschroedinger Modules, one  for electrons and  one  for  holes.
-For  electrons::
+The  Models section reads::
 
-  Module efaschroedinger
+  model efaschroedinger
     {
-    
-        name = quantum_el
-        regions = all
-
-         particle = el
-        poisson_model_name = dd
-        strain_model_name = strain
-        plot = (EigenFunctions, EigenEnergy, EnergyLevels)
-
-
-        Solver
-
-        {
-        Dirichlet_bc_everywhere = true
-        number_of_eigenstates = 10
-        solver = krylovshur
-
-        }
-
-        Physics
-        {
-        model =   kp   #  
-        kp_model = 8x8
-        }
-
-     
+     options
+       {
+        simulation_name = quantum_el
+        physical_regions = all
+       }
     }
-
-
-
-For  holes::
-
-  Module efaschroedinger
+  model efaschroedinger
     {
-     
-        name = quantum_hl
-        regions = all
-
-        particle = hl   
-        poisson_model_name = dd
-        strain_model_name = strain
-       
-        plot = (EigenFunctions, EigenEnergy, EnergyLevels)
-
-       
-        Solver
-
-        {
-                Dirichlet_bc_everywhere = true
-                number_of_eigenstates = 15
-                solver = krylovshur
-
-        }
-
-        Physics
-        {
-                model =   kp   #  
-                kp_model = 8x8
-        }
-
-
-
+     options
+       {
+        simulation_name = quantum_hl
+        physical_regions = all
+       }
     }
     
+The Solver section reads as follows::
 
+  quantum_el
+    {
+     Dirichlet_bc_everywhere = true
+     particle = el
+     number_of_eigenstates = 10
+     poisson_model_name = dd
+     strain_model_name = macrostrain
+     solution_method = general
+     solver = krylovshur
+    }
+  quantum_hl
+    {
+     Dirichlet_bc_everywhere = true
+     particle = hl
+     number_of_eigenstates = 15
+     poisson_model_name = dd
+     strain_model_name = macrostrain
+     solver = krylovshur
+     solution_method = general
+    }
 
- 
+Here we defined two different option sets for electrons and holes. 
 We specified that
 
-* Dirichlet boundary condition is imposed at the simulation domain boundary (which is  the  default)
+* Dirichlet boundary condition is imposed at the simulation domain boundary
 
-* Electric potential and strain is applied::
+* Electric potential and strain is applied
 
-        poisson_model_name = dd
-        strain_model_name = strain
+The  Physics section defines the 8x8 :math:`k \cdot p` model for electrons and holes::
 
- 
-
-The  Physics block defines the 8x8 :math:`k \cdot p` model for electrons and holes::
-
-  
+  quantum_el
+    {
+     particle = el
+     model = kp
+     kp_model = 8x8
+    }
+  quantum_hl
+    {
+     particle = hl
+     model = kp
+     kp_model = 8x8
+    }
+    
 We choose to plot the following variables: EigenEnergy, EnergyLevels, EigenFunctions.
 
 The results (levels and :math:`|\Psi|^2` ) for electrons and holes are shown:
@@ -352,45 +301,48 @@ We define two simulations belonging to the model **quantumdispersion** :
 
 ::
 
-  Module quantumdispersion
+  model quantumdispersion
     {
-    
-        name = dispersion1D_el
-        regions = all
-        quantum_simulation = quantum_el
-        wedge = half
-        k_space_dimension = 1
-        k1 = (0, 0.1, 0)
-        number_of_nodes = (10)
-        min_eigenvalue_number = 0
-        max_eigenvalue_number = 1
-
-       
+     options
+       {
+        simulation_name = dispersion1D_el
+        physical_regions = all
+       }
+    }
+  model quantumdispersion
+    {
+     options
+       {
+        simulation_name = dispersion1D_hl
+        physical_regions = all
+       }
     }
 
+We have to connect the ``quantumdispersion`` simulations to the related quantum 
+( **efaschroedinger** ) ones.
+Thus, in  Solver section::
 
-With  *quantum_simulation = quantum_el*,    we connect the ``quantumdispersion`` simulation  to the related quantum 
-( **efaschroedinger** ) one (in this  case the  one  for  electrons).
-
-The  same  for  holes::
-
-  Module quantumdispersion
+  dispersion1D_el
     {
-    
-        name = dispersion1D_hl
-        regions = all
-
-        quantum_simulation = quantum_hl
-        wedge = half
-        k_space_dimension = 1
-        k1 = (0, 0.1, 0)
-        number_of_nodes = (10)
-        min_eigenvalue_number = 0
-        max_eigenvalue_number = 1
-            
+     quantum_simulation = quantum_el
+     wedge = half
+     k_space_dimension = 1
+     k1 = (0, 0.1, 0)
+     number_of_nodes = (10)
+     min_eigenvalue_number = 0
+     max_eigenvalue_number = 1
     }
-
-
+    
+  dispersion1D_hl
+    {
+     quantum_simulation = quantum_hl
+     wedge = half
+     k_space_dimension = 1
+     k1 = (0, 0.1, 0)
+     number_of_nodes = (10)
+     min_eigenvalue_number = 0
+     max_eigenvalue_number = 1
+    }
  
 ..  figure:: ../data/disp1D.png
     :align: center
