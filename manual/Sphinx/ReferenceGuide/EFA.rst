@@ -129,7 +129,106 @@ distribution and mean electrochemical potential and temperature:
 diagram.
 
 
+<<<<<<< .mine
+By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
+the optical kp matrix elements are calculated from the quantum models specified in the Module.
+
+The optical spectrum from spontaneous emission is calculated in the following way:
+
+
+
+where :math:`f_i` and :math:`f_j` are the Fermi distributions.
+
+::
+
+  Module opticskp
+    {
+     name = optics
+     regions = quantum
+     plot = (optical_spectrum_k_0 )
+     initial_state_model = quantum_el
+     final_state_model = quantum_hl
+     initial_eigenstates = (0, 9)
+     final_eigenstates = (0, 15)
+     polarization = (0, 0, 1)
+     Emin = 2.8
+     Emax = 3.6
+     dE = 0.001
+    }
+
+Here, *initial_state_model* and *final_state_model* are, respectively, the quantum simulations 
+( **efaschroedinger** module) associated respectively to the initial state of optical
+transition (e.g. electron), and to the final state of optical transition (e.g. hole). 
+*initial_eigenstates* and *final_eigenstates* refer to the range of eigenstates to be taken in
+account for optical calculations.
+
+By specifying a range of energy values in this way::
+
+  Emin = 3.0
+  Emax = 5.0
+  dE = 0.001
+
+the emission optical spectrum for **k=0** is calculated.
+
+Output
+---------------------------
+
+The output variables for optics calculations are:
+
+* **optical_spectrum_k_0** : optical emission spectrum for *k=0*.
+
+Module opticalspectrum
+================================
+
+By defining the Module **opticalspectrum** , optical matrix elements are used to calculate
+the associated (emission) spectrum with a k-space integration.
+
+::
+
+  Module opticalspectrum
+    {
+     k_space_dimension = 2
+     k-space_basis = true
+     k1 = (0, 0, 0.1)
+     k2 = (0, 0.1, 0)
+     refine_fraction = 0.30
+     relative_accuracy = 0.01
+     refine_k_space = true
+     number_of_nodes = (2, 2)
+     wedge = quarter
+     plot = (optical_spectrum)
+     optical_matr_elem_model = opticskp
+     polarization = (0, 0, 1)
+     Emin = 3.0
+     Emax = 5.0
+     dE = 0.001
+    }
+
+The parameters are the following:
+
+  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
+ **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
+real space
+
+  If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the el-
+ements whose error is greater than the value (1-refine fraction)* (maximum error) are
+going to be refined. In this case, "Error" is just the integrated quantity. The refinement
+will end when the *relative_accuracy* is obtained.
+
+  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
+
+  ``wedge`` = half | quarter, to reduce calculation time, by exploiting symmetry.
+
+  ``optical_matr_elem_model`` = name of the *opticskp* model associated
+
+  ``polarization`` = light polarization (vector)
+
+  ``Emin, Emax, dE`` : energy range and step of spectrum calculation.
+
+Output
+=======
 Module quantumdispersion
+>>>>>>> .r2404
 ---------------------
 
 
