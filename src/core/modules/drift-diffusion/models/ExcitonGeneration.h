@@ -47,9 +47,6 @@ class TBDLLOCAL ExcitonGeneration : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
-    //! \copydoc RecombinationModelInterface::create_new()
-    virtual PhysicalModelInterface* create_new(void) const;
-
     
   private:
 
@@ -87,13 +84,6 @@ ExcitonGeneration::set_parameters(double C)
   C_ = C;
 }
 
-
-inline
-PhysicalModelInterface*
-ExcitonGeneration::create_new(void) const
-{
-  return new ExcitonGeneration(get_options());
-}
 
 
 #endif // _EXCITONGENERATION_H_

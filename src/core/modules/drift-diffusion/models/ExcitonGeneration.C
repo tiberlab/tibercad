@@ -2,8 +2,6 @@
 
 #include "ExcitonGeneration.h"
 
-#include "ExcitonTransport.h"
-#include "ExcitonProperties.h"
 #include "DriftDiffusionProperties.h"
 
 
