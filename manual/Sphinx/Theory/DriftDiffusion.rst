@@ -35,15 +35,13 @@ Solution/Plot variables
 -----------------------
 
 The solution variables available for plotting and for interaction with other models are
-given in :ref:`Table61` .
-
-..  index:: double:DriftDiffusion;Models
+given in :ref:`Table Plotting variables<dd_solutions>` .
 
 
 Module options
 ---------------------
 
-The following options infuence the behaviour of the Drift-Diffusion module:
+The following options influence the behaviour of the Drift-Diffusion module:
 
   ``coupling = string`` defines which equations to solve. 
     The default is full, meaning that
@@ -91,8 +89,8 @@ The following options infuence the behaviour of the Drift-Diffusion module:
     reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
 
      |warn|  Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
-             Otherwise there will be undefined behaviour or failure. 
-             Future releases will relax this restriction.
+     Otherwise there will be undefined behaviour or failure. 
+     Future releases will relax this restriction.
 
 Solver section
 --------------------
@@ -157,9 +155,11 @@ of type ``srh`` .
     (p + n_i e^{-E^*/k_BT})\tau_n}
     \end{equation}
 
-:math:`E^* = E_{trap} - (E_c + E_v)/2` is the trap level with respect to the midband energy. :math:`n_i` is the
-intrinsic carrier density, :math:`\tau_n` and :math:`\tau_p` are the recombination times. The parameters are taken
-from the material database. The recombination times are dependent on temperature and
+:math:`E^* = E_{trap} - (E_c + E_v)/2` is the trap level with respect to the midband energy. 
+
+:math:`n_i` is the intrinsic carrier density, :math:`\tau_n` and :math:`\tau_p` are the recombination times. 
+
+The parameters are taken from the material database. The recombination times are dependent on temperature and
 doping density, e.g.
 
 ..  math::
@@ -187,7 +187,7 @@ The SRH recombination model can be applied also to surfaces and interfaces. In t
 case, you can provide the recombination velocities using the keywords rec_velocity_n
 and ``rec_velocity_p`` instead of ``tau_n`` and ``tau_p`` .
 
-**Direct (radiative) recombination**
+  **Direct (radiative) recombination**
 
 The direct recombination model can be enabled in the input file by by defining a
  ``recombination`` submodel of type ``direct`` .
@@ -235,6 +235,8 @@ The parameters A;B;C;H and :math:`N_0` are taken exclusively from the database. 
 different for :math:`C_n` and :math:`C_p` and have to be specified as arrays with keywords A, B, C, H, N0,
 e.g. A = (1e-31, 1e-32). The calculated values for :math:`C_n` and :math:`C_p` can be overridden from
 the input file by specifying values for the keywords :math:`C_n` and :math:`C_p` .
+
+| 
 
 **Optical generation**
 
@@ -307,15 +309,15 @@ The default model is the constant mobility model. The parameters for the difiere
 mobility models are needed for both electrons and holes. In the material files they are
 specified with a common keyword in arrays, e.g.
 
-+------------+------------------+
-| mobility   | constant         |
-+------------+------------------+
-|            | electrons holes  |
-+------------+------------------+
-| mu_max     | (1400.0 , 250.0) |
-+------------+------------------+
-| exponent   | (1.0    , 2.1)   |
-+------------+------------------+
++------------+---------------------+
+| mobility   |        constants    |
++------------+---------------------+
+|            |   electrons holes   |
++------------+---------------------+
+| mu_max     |   (1400.0 , 250.0)  |
++------------+---------------------+
+| exponent   |   (1.0    , 2.1)    |
++------------+---------------------+
 
 Constant mobility model
 -------------------------------
@@ -357,7 +359,8 @@ formula:
     \mu = \mu_{min,1} * \mathrm{e}^{-P_c/N} +
     \frac{\mu_{const} - \mu_{min,2}}{1 + (N/C_r)^\alpha} -
     \frac{\mu_1}{1 + (C_s/N)^\beta}
-    \end{align}
+    \end{align}
+
 
 where N is the total doping density and :math:`\mu_{const}` the mobility obtained from the constant
 mobility model. The parameters are specified in the material file as given in Table 2.5.
@@ -752,6 +755,8 @@ The following example shows the Drift-Diffusion module definition for a pn junct
 ----
 
 Listing 3: Models section for drift-diffusion
+
+..  _dd_solutions :
 
 ..  math::
     :nowrap:

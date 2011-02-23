@@ -7,7 +7,7 @@ Simulation Dye Solar Cells
 For a brief list of literature to understand Dye Solar cells (DSC) see [Kalyanasundaram]_ . For a review
 of the model see [Gagliardi]_ .
 
-The model consists in a set of drift-diflusion equations for the description of the
+The model consists in a set of drift-diffusion equations for the description of the
 propagation of different ions and for the electrons coupled with Poisson equation:
 
 ..  math::
@@ -61,8 +61,7 @@ function of the mixed medium becomes:
 
 where :math:`\epsilon_s` and :math:`\epsilon_e` are the dielectric constants of the semiconductor and the electrolyte,
 respectively, and :math:`\epsilon_p` is the porosity of the medium. The recombination term depends
-largely on the loss mechanisms at the electrolyte/oxide interface which follows the reac-
-tion chain:
+largely on the loss mechanisms at the electrolyte/oxide interface which follows the reaction chain:
 
 ..  math::
     :nowrap:
@@ -76,7 +75,7 @@ tion chain:
     \end{eqnarray}
 
 From the chemical path we can get a formula for the interface recombination (considering
-that the flrst chemical reaction is the slow process):
+that the first chemical reaction is the slow process):
 
 ..  math::
     :nowrap:
@@ -93,8 +92,8 @@ where the electron rate :math:`k_e` is the recombination rate constant.
 For the boundary conditions of the model we assume at the photoanode:
 
 *  :math:`\phi_{e} = V` : electrochemical potential of electrons set with the voltage applied;
-*  :math:`\nabla\phi_{I^{-}}  = 0` : no iodide current at the photoande;
-*  :math:`\nabla\phi_{I_{3}^{-}} = 0` : no triiodide current at the photoande;
+*  :math:`\nabla\phi_{I^{-}}  = 0` : no iodide current at the photoanode;
+*  :math:`\nabla\phi_{I_{3}^{-}} = 0` : no triiodide current at the photoanode;
 *  :math:`\nabla\phi_{c} = 0` : no cationic current;
 *  :math:`\nabla\varphi = 0` : no charged layer at the photoanode;
 
@@ -212,7 +211,9 @@ For the generation:
   ``generation = dssc_generation``
 
 The **Physics** section must contain at least the setting of the generation module. The
-set of parameters that can be defined for the entire device are enlisted in table 1.1.
+set of parameters that can be defined for the entire device are enlisted in table :ref:`below<tableDsc01>` .
+
+..  _tableDsc01
 
 ..  math::
     :nowrap:
@@ -250,8 +251,6 @@ set of parameters that can be defined for the entire device are enlisted in tabl
     \label{table:dsc_parameters}
     \end{table}
 
-Table 1.1: Physical parameters that can be set for the model divided in subsets relative to
-different processes in the cell.
 
 Generation module
 ------------------------
@@ -337,16 +336,20 @@ Device section for a DSC simulation::
        }
     }
     
-The Device section must contain the name of the mesh file ``meshfile = <name_of_the_mesh>`` .
+The Device section must contain the name of the mesh file 
 
-For every region of the device it is specifid the material file from the database (the
- **TiO2mes** contains standard parameters for both TiO2 and electrolyte, so it can be used
-for both regions). For every region must be specifid if it contains TiO2, or electrolyte
+  ``meshfile = <name_of_the_mesh>`` .
+
+For every region of the device it is specified the material file from the database (the 
+**TiO2mes** contains standard parameters for both TiO2 and electrolyte, so it can be used
+for both regions). 
+
+For every region must be specified if it contains TiO2, or electrolyte
 or both. This can be done setting two flags called ``TiO2`` and ``electrolyte`` . If set **true** 
 the material is present in the region, if set **false** it is not present. By default they are
 assumed both **true** (porous region). In the second region of the example showed here
-there is electrolyte only and **TiO2 = false** is explicitly specifid. In case both materials
-are present (porous region) a porosity must be specifid (in the range between 0, TiO2
+there is electrolyte only and **TiO2 = false** is explicitly specified. In case both materials
+are present (porous region) a porosity must be specified (in the range between 0, TiO2
 only, and 1, electrolyte only). If one material is not present the porosity is automatically
 set to 0 or 1.
 

@@ -67,7 +67,9 @@ The Solver section of the Module efaschroedinger contains the following options:
 conditions are imposed over all the boundaries of the simulation region
 
   ``solver = string`` : defines the solver for the eigenvalue problem, possible values are:
-arnoldi, lapack, krylovshur. The default value is **krylovshur** . 
+arnoldi, lapack, krylovshur. 
+The default value is **krylovshur** . 
+
 In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur
 solver it is necessary to specify which and how many eigenvalues have to be computed. 
 The idea is that the iterative solver calculates several eigenvalues that are
@@ -197,13 +199,13 @@ the associated (emission) spectrum with a k-space integration.
 
 The parameters are the following:
 
-  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
- **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
+  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is 
+**true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
 real space
 
   If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the el-
-ements whose error is greater than the value (1-refine fraction)* (maximum error) are
-going to be refined. In this case, ’Error’ is just the integrated quantity. The refinement
+ements whose error is greater than the value **(1-refine fraction)** (maximum error) are
+going to be refined. In this case, "Error" is just the integrated quantity. The refinement
 will end when the *relative_accuracy* is obtained.
 
   ``number_of_nodes`` = numb. of elements in k mesh, along each direction
@@ -221,7 +223,7 @@ Output
 
 The output variables for optics calculations are:
 
-* **optical_spectrum** : k-space integrated optical emission spectrum.Chapter 5
+* **optical_spectrum** : k-space integrated optical emission spectrum.
 
 Module quantumdispersion
 =============================
