@@ -16,7 +16,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  tibercad   to make standalone Module Manual"
+	@echo "  tibercad   to make standalone Module Manual either in PDF or HTML"
 	@echo "  html       to make standalone HTML files"
 	@echo "  dirhtml    to make HTML files named index.html in directories"
 	@echo "  singlehtml to make a single large HTML file"
@@ -41,7 +41,9 @@ tibercad:
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) $(BUILDDIR)/latex
 	@echo "Running LaTeX files through pdflatex..."
 	make -C $(BUILDDIR)/latex all-pdf
-	@echo "pdflatex finished; the TiberCAD manual is in $(BUILDDIR)/latex."
+	@echo "pdflatex finished; Running HTML parser..."
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
+	@echo "The TiberCAD manual is in $(BUILDDIR)/latex while HTML is in $(BUILDDIR)/html."
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
