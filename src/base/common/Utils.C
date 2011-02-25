@@ -322,15 +322,20 @@ Utils::extract_vector(const string& input, vector<T>& vec)
       case ' ':
       case '\t':
       case '\n':
-        // we found a complete vector component
-        boost::algorithm::trim(comp);
-        vec.push_back(convert<T>(comp));
-        comp.clear();
-        // get rid of white space
+        // get rid of white space and empty elements
         tmp = istr.get();
         while ((tmp != EOF) && (std::isspace(tmp) || (tmp == ',')))
           tmp = istr.get();
         istr.unget();
+
+      case ')':
+      case ']':
+      case '}':
+        // we found a complete vector component
+        boost::algorithm::trim(comp);
+        if (!comp.empty())
+          vec.push_back(convert<T>(comp));
+        comp.clear();
         break;
 
       default:
@@ -339,14 +344,19 @@ Utils::extract_vector(const string& input, vector<T>& vec)
     tmp = istr.get();
   }
 
-  // we have to get rid of the closing symbol
+  // if there is only a single word
   boost::algorithm::trim(comp);
-  if (delete_closing)
-  {
-    comp.erase(comp.size() - 1, 1);
-    boost::algorithm::trim(comp);
-  }
-  vec.push_back(convert<T>(comp));
+  if (!comp.empty())
+    vec.push_back(convert<T>(comp));
+
+  // we have to get rid of the closing symbol
+  //boost::algorithm::trim(comp);
+  //if (delete_closing)
+  //{
+  //  comp.erase(comp.size() - 1, 1);
+  //  boost::algorithm::trim(comp);
+  //}
+  //vec.push_back(convert<T>(comp));
 }
 
 

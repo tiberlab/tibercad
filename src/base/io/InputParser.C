@@ -98,7 +98,7 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
     if (token_1 == "@include")
     {
       ModelOptions tmp;
-      Messages::info("Including file " + token_2);
+      //Messages::info("Including file " + token_2);
       InputParser().parse_file(token_2, tmp);
       options += tmp;
     }
@@ -250,8 +250,10 @@ const string InputParser::get_token(ifstream& in_stream)
   {
     temp = in_stream.get();
 
-    if ((temp == EOF) || (temp == '{' || temp == '}' || temp  == '='
-        || temp  == ' ' || temp  == '\n') || (temp == '\r') || (temp == '#' ))
+    if ((temp == EOF) ||
+        (temp == '{' || temp == '}' || temp  == '=' ||
+            temp  == ' ' || temp  == '\n') ||
+        (temp == '\r') || (temp == '#' ) || (temp == '\t'))
     {
       in_stream.unget();
       return token;
