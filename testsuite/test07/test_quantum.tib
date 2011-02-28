@@ -234,7 +234,7 @@ Module quantumdensity
     uniform_refinement = false
     mesh_order = FIRST
 
-    initial_eigenstates_number = 20
+    initial_eigenstates_number = 5
     analytic = true
 
 }
@@ -266,7 +266,7 @@ Module selfconsistent
 Simulation
 {
   temperature = 300
-  solve = (str, dd, selfconsistent)
+  solve = (str, dd, selfconsistent, quantum_el)
   resultpath = output
   output_format = grace
 }
