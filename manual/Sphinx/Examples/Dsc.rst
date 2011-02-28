@@ -253,20 +253,20 @@ Finally the flag (ContactCurrents) allows the plot of the current flowing throug
 
 
 ..  figure:: ../data/DscEx04.png
-     :scale: 80%
-     :align: center
+    :scale: 80%
+    :align: center
 
     Fig. 4: Potential profiles for the ionic species and the electrostatic potential (short-circuit condition).
 
 ..  figure:: ../data/DscEx05.png
-     :scale: 80%
-     :align: center
+    :scale: 80%
+    :align: center
  
     Fig. 5: Current contributions within the cell (short-circuit condition).
 
 ..  figure:: ../data/DscEx06.png
-     :scale: 80%
-     :align: center
+    :scale: 80%
+    :align: center
  
     Fig. 6: I-V characteristic of the device.
 
