@@ -395,6 +395,7 @@ where :math:`f_i` and :math:`f_j` are the Fermi distributions.
 Here, *initial_state_model* and *final_state_model* are, respectively, the quantum simulations 
 ( **efaschroedinger** module) associated respectively to the initial state of optical
 transition (e.g. electron), and to the final state of optical transition (e.g. hole). 
+
 *initial_eigenstates* and *final_eigenstates* refer to the range of eigenstates to be taken in
 account for optical calculations.
 
@@ -449,8 +450,8 @@ The parameters are the following:
  **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
 real space
 
-  If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the el-
-ements whose error is greater than the value (1-refine fraction)* (maximum error) are
+If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the elements 
+whose error is greater than the value (1-refine fraction) (maximum error) are
 going to be refined. In this case, Error is just the integrated quantity. The refinement
 will end when the *relative_accuracy* is obtained.
 
@@ -469,7 +470,7 @@ Output
 
 The output variables for optics calculations are:
 
-* **optical_spectrum** : k-space integrated optical emission spectrum.Chapter 5
+* **optical_spectrum** : k-space integrated optical emission spectrum. 
 
 
 
