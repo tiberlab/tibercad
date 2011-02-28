@@ -10,7 +10,7 @@ Tutorial Bulk Si
 
 In this example we will see a very simple TiberCAD simulation:
 
-1D calculation of Poisson and drift-diffusion for a bulk Silicon sample.
+**1D** calculation of Poisson and drift-diffusion for a bulk Silicon sample.
 
 The following files should be in your working directory:
 
@@ -109,16 +109,16 @@ one or more physical regions to a **TiberCAD region** through the keyword *mesh_
 
 Definition of two physical entities Physical Point::
 
-  Physical Point("anode2)   = {1}
-  Physical Point("cathode") = {2}
+    Physical Point("anode2)   = {1}
+    Physical Point("cathode") = {2}
  
 
   |warn| : In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
   are used by TiberCAD to impose the required boundary conditions.
 
-   Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
-   through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
-   to two **Contact** regions (see in the following).
+Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
+through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
+to two **Contact** regions (see in the following).
  
 ..  index:: double:Bulk Si;meshing
 ..  _tut0step2:
@@ -263,17 +263,17 @@ Definition of Simulation parameters
 Vb is specified in the sweep block, in the Solver section ::
 
 
-Module sweep
-{
-  solve = driftdiffusion
-  variable = $Vb
-  start = 0.0
-  stop = 1
-  steps = 10
-  plot_data = true
-}
+  Module sweep
+    {
+     solve = driftdiffusion
+     variable = $Vb
+     start = 0.0
+     stop = 1
+     steps = 10
+     plot_data = true
+    }
     
-In this way, the simulation driftdiffusion_1 is performed for 10 ( steps = 10) values of the anode 
+In this way, the simulation driftdiffusion_1 is performed for 10 (steps = 10) values of the anode 
 voltage (variable = Vb), between 0 and 1.
 
 For each step we want to plot the solution variables specified in the driftdiffusion module 
@@ -325,11 +325,11 @@ Output
 
 The generated Output files are:
 
-* driftdiffusion_materials.dat  : material (mesh) regions, in this case just region 1
+*  ``driftdiffusion_materials.dat``  : material (mesh) regions, in this case just region 1
 
-* driftdiffusion_nodal.dat      : nodal quantities (here conduction and valence band)
+*  ``driftdiffusion_nodal.dat``      : nodal quantities (here conduction and valence band)
 
-* sweep_driftdiffusion_Vb.dat   : integrated current at the two contacts for each sweep step
+*  ``sweep_driftdiffusion_Vb.dat``   : integrated current at the two contacts for each sweep step
  
 
 
@@ -482,9 +482,7 @@ refer to the reference manual.
 First we define the device structure: it is composed by two Regions, 
 both constituted of the material Silicon, respectively n and p doped with a concentration of 1e18 cm-3.
 
-    With Region n_side
-
-    and Region p_side
+    With **Region n_side** and **Region p_side**
 
 the physical regions previously defined in GMSH are associated to 
 the respective **TiberCAD Region** .
@@ -518,9 +516,10 @@ model** class to which our simulation belongs::
     { 
      name = dd
 
-     plot = (Ec, Ev, Eg, ElField, ElPotential, eQFermi, hQFermi, eDensity, hDensity,
-             NetRecombination, eCurrentDensity, hCurrentDensity, CurrentDensity,
-             ContactCurrent, eMobility, hMobility, IonizedDonors, IonizedAcceptors)
+     plot = (Ec, Ev, Eg, ElField, ElPotential, eQFermi, hQFermi, eDensity,
+             hDensity, NetRecombination, eCurrentDensity, hCurrentDensity,
+             CurrentDensity, ContactCurrent, eMobility, hMobility, 
+             IonizedDonors, IonizedAcceptors)
 
 	   
 Here, we declare that the simulation to be created will belong to the 
@@ -528,7 +527,7 @@ model class **driftdiffusion** ( ``model driftdiffusion`` )
 
 In the next Options block, we define the name of the TiberCAD simulation 
 ( ``name = dd`` ) and the TiberCAD regions to which it 
-will be applied ( ``region = Regiona_Name``  if you don't specify anything, it means the whole device).
+will be applied ( ``region = Regiona_Name`` )  if you don't specify anything, it means the whole device).
 
 After we specify types of data we want in our Output file.
 
@@ -774,9 +773,13 @@ The voltage and current found for each contact is displayed:
   .....
   iterations: 5, residual = 1.17131e-10
 
-  contact name: contact voltage: contact current:
-  cathode 0 6.31825e-05
-  anode 0.05 -6.3187e-05``
+  +---------------+-----------------+-----------------+
+  | contact name  | contact voltage | contact current |
+  +---------------+-----------------+-----------------+
+  | cathode       | 0               | 6.31825e-05     |
+  +---------------+-----------------+-----------------+
+  | anode         | 0.05            | -6.3187e-05     |
+  +---------------+-----------------+-----------------+
 
 The simulation ends correctly (hopefully...) with the Sweep value Vb = 1.2.
 
@@ -788,7 +791,7 @@ Output
 ^^^^^^^^^^^^^^^^
 
 Now, the output directory contain the simulation results, as defined 
-in output_format and plot.
+in  ``output_format`` and **plot** .
 
 ..  figure:: ../data/material_output_fig.png
     :align: center
@@ -807,14 +810,14 @@ for V = 1.2V.
     :align: center
     :scale: 50%
 
-The IV characteristic of the diode is contained in the file sweep_driftdiffusion_Vb.dat, 
+The IV characteristic of the diode is contained in the file ``sweep_driftdiffusion_Vb.dat`` , 
 where the currents at both the contacts are reported.
 
 ..  figure:: ../data/IV_1D_fig.png
     :align: center
     :scale: 50%
 
-In the file driftdiffusion_elemental_Vb_0.200.dat etc., you can find the elemental 
+In the file ``driftdiffusion_elemental_Vb_0.200.dat`` etc., you can find the elemental 
 quantities which have been calculated, in this case the electron, hole and 
 total current density (Jn_x, Jp_x , J_x).
 
@@ -854,6 +857,7 @@ In order to execute correctly the example you should have
 the following files in the working directory:
 
 mosfet.tib_  : input file for TiberCAD
+
 mosfet.msh_  : mesh file produced by GMSH from the script mosfet.geo_ 
 
 Here is the geometry of the Mosfet device as it is meshed by GMSH.
