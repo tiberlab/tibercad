@@ -490,7 +490,6 @@ ThermalBalance::solve_fourier(void)
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
-
   //--------------------------------------------
   for (ID d = 0; d< dim; d++)
   {
@@ -1012,6 +1011,7 @@ ThermalBalance::energy_conservation_check_traditional()
 
     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
 
+    //Energy emitted
     for (ID qp = 0; qp <  qrule.n_points(); qp++)
     {
       mod.calculate(elem,q_point[qp]);
@@ -1054,6 +1054,165 @@ ThermalBalance::energy_conservation_check_traditional()
 
 }
 
+double
+ThermalBalance::compute_power_dissipated()
+{
+
+  //Gray System
+  EquationSystems& es = get_equation_systems();
+  TiberLinearSystem& system =
+    es.get_system<TiberLinearSystem>("fourier");
+
+  const NumericVector<double>& solution = *(system.solution);
+
+  DofMap& dof_map = system.get_dof_map();
+  std::vector<unsigned int> dof_indices;
+  //-----------------------------------------------
+
+
+  const unsigned int tvar = system.variable_number("T");
+  FEType fe_type = dof_map.variable_type(tvar);
+
+  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  QGauss qrule_face(dim-1,FIFTH);
+  fe_face->attach_quadrature_rule(&qrule_face);
+  
+  const std::vector<Point>& q_point_face = fe_face->get_xyz();
+  const std::vector<std::vector<RealGradient> >&  dphi = fe_face->get_dphi();
+  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+  const std::vector<Point>& normal = fe_face->get_normals();
+  
+  double power_dissipated= 0.0;
+
+  set<const Elem*>::iterator it = Domain.begin();
+  const set<const Elem*>::iterator end = Domain.end();
+
+ 
+  for ( ; it != end; ++it)
+  {
+
+    const Elem* elem = *it;
+    dof_map.dof_indices(elem, dof_indices);
+    
+    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+
+   
+    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+ 
+    for (ID ns = 0; ns<elem->n_sides(); ns++)
+    {
+      const ElementSide elside(elem->top_parent(),ns);
+      if (is_on_any_boundary(elside))
+      {
+	fe_face->reinit(elem,ns);
+	for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
+	{ 
+	  mod.calculate(elem, q_point_face[qp]);
+	  for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
+	    power_dissipated -= solution(dof_indices[alpha]) * ((kappa * dphi[alpha][0]) * normal[qp]);  
+	  
+	  
+	}
+      }
+    }
+    
+  }
+
+  return power_dissipated;
+
+}
+
+double
+ThermalBalance::compute_power_emitted()
+{
+
+  //Gray System
+  EquationSystems& es = get_equation_systems();
+  TiberLinearSystem& system =
+    es.get_system<TiberLinearSystem>("fourier");
+  DofMap& dof_map = system.get_dof_map();
+  std::vector<unsigned int> dof_indices;
+  //-----------------------------------------------
+
+
+  const unsigned int tvar = system.variable_number("T");
+  FEType fe_type = dof_map.variable_type(tvar);
+
+  //------------BULK----------
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  QGauss qrule(dim,FIFTH);
+  fe->attach_quadrature_rule(&qrule);
+  const std::vector<Real>& JxW = fe->get_JxW();
+  const std::vector<Point>& q_point = fe->get_xyz();
+  //--------------------------
+
+
+  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  QGauss qrule_face(dim-1,CONSTANT);
+  fe_face->attach_quadrature_rule(&qrule_face);
+
+  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+  const std::vector<Point>& normal = fe_face->get_normals();
+
+  double power_dissipated= 0.0;
+  double check_abs = 0.0;
+
+  set<const Elem*>::iterator it = Domain.begin();
+  const set<const Elem*>::iterator end = Domain.end();
+
+  Real total_heat_source = 0.0;
+  for ( ; it != end; ++it)
+  {
+
+    const Elem* elem = *it;
+    dof_map.dof_indices(elem, dof_indices);
+
+    fe->reinit(elem);
+
+    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+
+    //Energy emitted
+    for (ID qp = 0; qp <  qrule.n_points(); qp++)
+    {
+      mod.calculate(elem,q_point[qp]);
+      Real H = mod.get_total_heat_source();
+      total_heat_source += H * JxW[qp];
+    }
+    //-------------------------PowerDissipated------------------------------------------------
+
+ //    for (ID ns = 0; ns<elem->n_sides(); ns++)
+//     {
+//       const ElementSide elside(elem->top_parent(),ns);
+//       if (is_on_any_boundary(elside))
+//       {
+// 	fe_face->reinit(elem,ns);
+
+// 	for (ID d = 0; d<dim; d++)
+// 	{
+//           double value = JxW_face[0] *(*thermal_flux[d])(dof_indices[0]) * normal[0](d);
+// 	  power_dissipated += value;
+//           check_abs += abs(value);
+// 	}
+//       }
+
+//     }
+  }
+
+  //double error = 0.0;
+  //if (total_heat_source>0)
+  //  error = std::abs(1.0 - power_dissipated/total_heat_source) ;
+  //else
+  //  error = 2.0 * std::abs(power_dissipated/check_abs);
+
+  // if (SimulationOptions::verbose() > 1)
+  // {
+  //  std::cout<<"Power Emitted: "<<total_heat_source<<" W"<<std::endl;
+  //  std::cout<<"Power Dissipated: "<<power_dissipated<<" W"<<std::endl;
+  // }
+
+  return  total_heat_source;
+
+}
 
 // double
 // ThermalBalance::compute_power_emitted()
@@ -1249,7 +1408,14 @@ ThermalBalance::do_solve(void)
     }
   } //if is_gray
 
-  double a = energy_conservation_check();
+ if  (SimulationOptions::verbose() > 2)
+ {
+  double pe = compute_power_emitted();
+  double pd = compute_power_dissipated();
+
+  cout<<"Power Emitted:    "<<pe<<" W"<<endl;
+  cout<<"Power Dissipated: "<<pd<<" W"<<endl; 
+ }
   //J_err = energy_conservation_check();
 }
 
@@ -1738,7 +1904,7 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 
        const RealTensor& kappa = mod.get_total_thermal_conductivity();
        double heat_source = mod.get_total_heat_source();
-       cout<<heat_source<<endl;
+       
        for (unsigned int i = 0; i < n_dofs; i++)
        {
          for (unsigned int j = 0; j < n_dofs; j++)
@@ -1784,7 +1950,7 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 	      {
 		ID dof = (elem->neighbor(s))->dof_number(gray_sys_number,0,0);
 		do_boundary = true;
-
+	
 		if (is_gray_solved)
 		{
 		  //-----------Get the Gray flux-------------------------------
@@ -1816,7 +1982,7 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 
 	    if (do_boundary)
 	    {
-
+	     
 	      if ((b < 1e-10) && (b >= 0)) b = 1e-20;
 	      else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
 	      a /= b;

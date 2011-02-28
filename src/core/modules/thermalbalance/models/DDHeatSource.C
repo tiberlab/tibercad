@@ -44,8 +44,6 @@ DDHeatSource::do_init(void)
   for(; it!=end; ++it)
     ID_set.insert(it->second);
   
-  
-
 
 }
 

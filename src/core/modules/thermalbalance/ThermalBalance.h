@@ -89,6 +89,10 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
   SideData SD;
   std::vector<unsigned short int> node_conn;
 
+  double compute_power_dissipated();
+
+  double compute_power_emitted();
+
   void do_partition(void);
 
   bool is_on_GF_boundary(ElementSide elside);
