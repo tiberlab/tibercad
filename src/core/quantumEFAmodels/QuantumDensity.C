@@ -539,7 +539,7 @@ void QuantumDensity::estimate_analitic_density(void)
       Messages::info(os.str());
     }
     
-    quantum_model_opts.set_option("k_vector2",  k_vector2);
+    quantum_model_opts.set_option("k_vector",  k_vector2);
     quantum_model->set_options(quantum_model_opts);
     
     quantum_model->solve();
