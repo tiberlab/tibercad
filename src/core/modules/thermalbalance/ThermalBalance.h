@@ -74,11 +74,13 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
   //! Order the solution in correct mode
   virtual void build_elemental_results(const std::set<std::string>& variables,
 				       std::vector<double>& results,
-				       std::vector<std::string>& legend);
+				       std::vector<std::string>& legend){};
 
 
   private:
 
+  //! Check if the gray simulation should be solved
+  bool is_gray;
 
   typedef  std::map<const ElementSide, std::vector<double> >  SideData;
 
