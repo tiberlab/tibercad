@@ -4,15 +4,15 @@
 Simulation Dye Solar Cells
 ==============================
 
-In this Tutorial we will show how to model and simulate a 
-Dye Sensitized Solar Cell (DSC).
+In this Tutorial we will show how to model and simulate a
+ **Dye Sensitized Solar Cell** (DSC).
 
 The basic structure of a DSC is the following:
 
-#)  A photoanode made of a semiconductor mesoporous medium ( :math:`TiO_2` ) 
+#.  A photoanode made of a semiconductor mesoporous medium ( :math:`TiO_2` ) 
     plunged into a liquid electrolyte.
 
-#)  A region of liquid electrolyte only in contact with a counter-electrode 
+#.  A region of liquid electrolyte only in contact with a counter-electrode 
     covered by a thin platinum layer.
 
 The surface of the semiconductor is covered by a mono-layer of dye molecules 
@@ -28,7 +28,7 @@ moreover the porosity of the semiconductor allows the electrolyte to be in conta
      :scale: 80%
      :align: center
  
-Fig. 1: Scheme of a DSC (in the inset: a typical Dye molecule).
+    Fig. 1: Scheme of a DSC (in the inset: a typical Dye molecule).
 
 The functioning of the device is the following: when a photon is absorbed by a dye, 
 it excites an electron which is transferred into the conduction band of the porous material. 
@@ -104,11 +104,11 @@ This is the description of  the  device physical regions::
        }
     }
 
-    |warn| for both region ( :math:`TiO_2`  and electrolyte) the same material for the database is used 
-    TiO2mes), the parameter porosity defines which porosity has the material. 
-    The flag TiO2 = false defines instead that in the electrolyte region only the electrolyte 
-    is present and there is no semiconductor. By default the dssc module assumes that a certain region 
-    contains both the semiconductor and the electrolyte.
+  |warn| for both region ( :math:`TiO_2`  and electrolyte) the same material for the database is used 
+  TiO2mes), the parameter porosity defines which porosity has the material. 
+  The flag TiO2 = false defines instead that in the electrolyte region only the electrolyte 
+  is present and there is no semiconductor. By default the dssc module assumes that a certain region 
+  contains both the semiconductor and the electrolyte.
 
 This is the definition of  Simulation Models  and associated Boundary Conditions::
 
@@ -154,7 +154,7 @@ The non linear exponent in the electron density recombination is assumed to 1 (l
 but can be a changed to a different value for non-linear recombination. 
 The contact modules must be two: photoanode and counter-electrode. 
 
-The two contacts are type = ohmic (photoanode) and Pt (counter-electrode). 
+The two contacts are ``type = ohmic`` (photoanode) and Pt (counter-electrode). 
 The external bias is applied at the photoanode (bias), while the counter-electrode is closed 
 over an external resistance (load). In case it is wanted to simulate a cell under illumination 
 the load must be set to a high value (open-circuit condition) and then switched to a load = 1 value (short-circuit condition). 
@@ -256,20 +256,19 @@ Finally the flag (ContactCurrents) allows the plot of the current flowing throug
      :scale: 80%
      :align: center
 
-Fig. 4: Potential profiles for the ionic species and the electrostatic potential (short-circuit condition).
+    Fig. 4: Potential profiles for the ionic species and the electrostatic potential (short-circuit condition).
 
 ..  figure:: ../data/DscEx05.png
      :scale: 80%
      :align: center
  
-
-Fig. 5: Current contributions within the cell (short-circuit condition).
+    Fig. 5: Current contributions within the cell (short-circuit condition).
 
 ..  figure:: ../data/DscEx06.png
      :scale: 80%
      :align: center
  
-Fig. 6: I-V characteristic of the device.
+    Fig. 6: I-V characteristic of the device.
 
 .. |more| image:: ../data/more.png
     :scale: 50%
