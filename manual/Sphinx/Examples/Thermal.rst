@@ -77,8 +77,8 @@ Heat sources
 ------------
 
     
-In this example we will see how to perform a thermal-driftdiffusion self-consistent sim 
-ulation. We include the Seebeck and Peltier effects. The heat conduction through the
+In this example we will see how to perform a thermal-driftdiffusion self-consistent simulation. 
+We include the Seebeck and Peltier effects. The heat conduction through the
 environment is modelled by adding an air region all around the diode. We assume that
 far from the junction the system is in thermal equilibrium with a thermal bath at 300 K.
 
