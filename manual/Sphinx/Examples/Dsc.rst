@@ -25,8 +25,8 @@ is necessary to have a large effective area that can be obtained only with a por
 moreover the porosity of the semiconductor allows the electrolyte to be in contact with the dye molecules.
 
 ..  figure:: ../data/DscEx01.png
-     :scale: 80%
-     :align: center
+    :scale: 80%
+    :align: center
  
     Fig. 1: Scheme of a DSC (in the inset: a typical Dye molecule).
 
