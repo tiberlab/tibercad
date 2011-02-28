@@ -20,7 +20,6 @@
 #include "EmpiricalTightBinding.h"
 #include "OpticsTB.h"
 #include "OptRecombinSpectrum.h"
-#include "Poisson.h"
 #include "TunnelingCurrent.h"
 #include "MaxwellEquations.h"
 #include "PhononDispersion.h"
@@ -155,8 +154,6 @@ SimulationInterface::create(const string& type,
 #endif
   else if (type_name == "opticalspectrum")
     sim = OptRecombinSpectrum::create(options);
-  else if (type_name == "poisson")
-    sim = Poisson::create(options);
   else if (type_name == "maxwell")
     sim = MaxwellEquations::create(options);
   else if (type_name == "phonondispersion")

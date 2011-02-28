@@ -76,7 +76,8 @@ class QuantumDensity : public KspaceIntegration
   
   enum Variables
   {
-    DENSITY = 0
+    Density = 0,
+    BandEdge3D
   };
   
 
@@ -133,17 +134,17 @@ class QuantumDensity : public KspaceIntegration
 
 
 
-  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+  //virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
      
      
  
-  virtual void get_solution_secure(const Elem* elem,
-         const std::set<ID>& ids, std::vector<std::map<ID, double> >& values); 
+  //virtual void get_solution_secure(const Elem* elem,
+  //       const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
 
  
-  virtual void get_solution_secure(const Elem* elem,
-				   const std::vector<Point>& p, const std::set<ID>& ids,
-				   std::vector<std::map<ID, double> >& values);
+  //virtual void get_solution_secure(const Elem* elem,
+	//			   const std::vector<Point>& p, const std::set<ID>& ids,
+	//			   std::vector<std::map<ID, double> >& values);
   
 
 
@@ -188,6 +189,8 @@ class QuantumDensity : public KspaceIntegration
    //!vector of solution necessary for self-consistent solver
    AutoPtr< NumericVector<double> >  _solution_vector;
 
+   //! The eigenenergy after the last eigenstate used for the density
+   double _next_energy;
 
  protected:
 
@@ -195,8 +198,8 @@ class QuantumDensity : public KspaceIntegration
    /*!
      Significant variable for this class is "quantum_density"
    */
-   virtual void build_elemental_results(const std::set<std::string>& variables,
-				   std::vector<double>& results, std::vector<std::string>& legend);
+   //virtual void build_elemental_results(const std::set<std::string>& variables,
+	//			   std::vector<double>& results, std::vector<std::string>& legend);
 
  
    virtual void 	do_init(void);
@@ -221,6 +224,12 @@ class QuantumDensity : public KspaceIntegration
    //!here it copies new_solution both into _solution_vector and KspaceIntegration::real_space_density
    virtual void do_set_solution_vector(const NumericVector<double> & new_solution);
 
+   virtual void do_setup_solution_variables(void);
+
+   void get_solution_secure(const Elem* elem, std::map<ID, std::vector<double> >& values,
+       const std::vector<Point>& points);
+
+   void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
 };
 

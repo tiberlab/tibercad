@@ -24,6 +24,7 @@ QuantumDensity:: ~QuantumDensity()
 }
 
 //============================================//
+/*
 ID  QuantumDensity::convert_variable_name_to_id(const std::string& variable_name) const
 {
   ID id = INVALID_ID;
@@ -38,7 +39,45 @@ ID  QuantumDensity::convert_variable_name_to_id(const std::string& variable_name
 
   
 }
+*/
 
+
+
+
+void
+QuantumDensity::get_solution_secure(const Elem* elem,
+    std::map<ID, std::vector<double> >& values,
+    const std::vector<Point>& points)
+{
+  unsigned int np = points.size();
+
+  if (values.count(Density))
+  {
+    double a_B =  Constants::bohr_radius;
+    double coeff =  1.0 / (a_B * a_B * a_B * 1.0e6 );
+
+    std::vector<double> density;
+    get_particle_density(elem,  points, density);
+
+    //for (unsigned int i = 0; i < np; i++)
+    //{
+      //values[Density][i] = density[i] * coeff;
+      values[Density][0] = density[0] * coeff;
+    //}
+
+  }
+}
+
+
+void
+QuantumDensity::get_solution_secure(std::map<ID, std::vector<double> >& values)
+{
+  if (values.count(BandEdge3D))
+    values[BandEdge3D][0] = _next_energy;
+}
+
+
+/*
 //============================================//
 void QuantumDensity::get_solution_secure(const Elem* elem,
          const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
@@ -79,7 +118,7 @@ void QuantumDensity::get_solution_secure(const Elem* elem,
 }
 
 //============================================//
-
+*/
 
 
 
@@ -164,6 +203,7 @@ void QuantumDensity::get_particle_density(const Elem* element, const std::vector
   }
 }
 
+/*
 //==================================================================================//
 void QuantumDensity::build_elemental_results(const std::set<std::string>& variables,
 				   std::vector<double>& results, std::vector<std::string>& legend)
@@ -223,7 +263,15 @@ void QuantumDensity::build_elemental_results(const std::set<std::string>& variab
 
 
 }
+*/
 
+
+void
+QuantumDensity::do_setup_solution_variables(void)
+{
+  declare_solution(Density, REAL, CELL, "cm^-3");
+  declare_solution(BandEdge3D, REAL, GLOBAL, "eV");
+}
 
 
 //=======================================================================================//
@@ -425,7 +473,7 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
 
 
-  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number );
+  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number + 1);
 
   
 
@@ -479,7 +527,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
 
   quantum_model_opts.set_option("initial_eigenstates_number",
-      opt.intial_eigenstates_number ); 
+      opt.intial_eigenstates_number + 1);
   quantum_model_opts["job"] = "density";
   quantum_model->set_options(quantum_model_opts);
  
@@ -490,8 +538,14 @@ void QuantumDensity::estimate_analitic_density(void)
 
   quantum_model->get_eigenenergies (energy_k_0);
 
-  unsigned int number_of_eigenstates = energy_k_0.size();
 
+  unsigned int number_of_eigenstates = opt.intial_eigenstates_number;
+  //unsigned int number_of_eigenstates = energy_k_0.size();
+
+  cerr << "# EV requested: " << number_of_eigenstates << "  # EV obtained: " << energy_k_0.size() << endl;
+  cerr << "last EVs: " << energy_k_0[number_of_eigenstates - 2] << "  " << energy_k_0[number_of_eigenstates - 1] << endl;
+
+  _next_energy = energy_k_0[number_of_eigenstates - 1];
   
 
   vector<double> effective_mass(number_of_eigenstates);
@@ -514,7 +568,7 @@ void QuantumDensity::estimate_analitic_density(void)
     quantum_model_opts["job"] = "eigenstates";
 
     quantum_model_opts.set_option("first_state", opt.first_state);
-    quantum_model_opts.set_option("number_of_eigenstates", number_of_eigenstates);
+    quantum_model_opts.set_option("number_of_eigenstates", number_of_eigenstates + 1);
    
     
     double k_max1 = sqrt( k_vector1[0]*k_vector1[0] + k_vector1[1]*k_vector1[1] + k_vector1[2]*k_vector1[2]  );
@@ -552,9 +606,9 @@ void QuantumDensity::estimate_analitic_density(void)
       Messages::info(os.str());
     }
 
-    number_of_eigenstates = (quantum_model->get_solution()).size();
+    //number_of_eigenstates = (quantum_model->get_solution()).size();
 
-    for (short i = 0; i < number_of_eigenstates; i++)
+    for (short i = 0; i < number_of_eigenstates - 1; i++)
     {
        
      
@@ -607,7 +661,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
     quantum_model_opts.set_option("first_state", opt.first_state);
     quantum_model_opts.set_option("initial_eigenstates_number",
-        opt.intial_eigenstates_number ); 
+        opt.intial_eigenstates_number  + 1);
 
     quantum_model_opts["job"] = "eigenstates";
 

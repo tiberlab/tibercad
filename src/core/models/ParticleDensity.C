@@ -19,7 +19,6 @@ ParticleDensity::ParticleDensity(const ModelOptions& options) :
   _statistics(TiberCad::BOLTZMANN),
   _use_quantum(false),
   _is_quantum(false),
-  _density_id(INVALID_ID),
   _elem(NULL),
   _density(-1.0),
   _density_derivative(-1.0),
@@ -37,7 +36,6 @@ ParticleDensity::ParticleDensity(const string& name,
   _statistics(statistics),
   _use_quantum(false),
   _is_quantum(false),
-  _density_id(INVALID_ID),
   _elem(NULL),
   _density(-1.0),
   _density_derivative(-1.0),
@@ -117,9 +115,9 @@ ParticleDensity::add_quantum_density(const std::string& name)
     }
 
     // we assume that the density variable has this name:
-    string density_name("density");
+    string density_name("Density");
 
-    _density_id = qd->get_solution_id(density_name);
+    ID density_id = qd->get_solution_id(density_name);
 
     // We let it override with a more specific name
     if (_name == "electron")
@@ -129,10 +127,10 @@ ParticleDensity::add_quantum_density(const std::string& name)
 
     ID spec_id = qd->get_solution_id(density_name);
     if (spec_id != INVALID_ID)
-      _density_id = spec_id;
+      density_id = spec_id;
 
 
-    if (_density_id == INVALID_ID)
+    if (density_id == INVALID_ID)
     {
       string msg("ParticleDensity: ");
       msg += "quantum density simulation '" + name +
@@ -142,7 +140,12 @@ ParticleDensity::add_quantum_density(const std::string& name)
 
     // at this point we have for sure a quantum density simulation
 
+    ID cont_id = qd->get_solution_id("BandEdge3D");
+
     _quantum_density.push_back(qd);
+    _density_ids.push_back(density_id);
+    _3D_edge.push_back(cont_id);
+
     use_quantum_density();
 
   }
@@ -204,14 +207,45 @@ ParticleDensity::quantum_density(void)
   bool flag = false;
   _density = 0.0;
 
-  for (int i = 0; i < _quantum_density.size(); i++)
-  {
-    double density = 0.0;
-    if (_quantum_density[i]->is_solved())
-      flag |= _quantum_density[i]->get_solution(_elem, _p, _density_id, density);
+  double qdens = 0.0;
+  double continuum = -1000;
 
-    _density += density;
+  for (size_t i = 0; i < _quantum_density.size(); i++)
+  {
+    vector<Point> p(1, _p);
+    vector<double> values(1, 0.0);
+
+    if (_quantum_density[i]->is_solved())
+      flag |= _quantum_density[i]->get_solution(_elem, _density_ids[i], values, p);
+
+    qdens += values[0];
+
+    if (_3D_edge[i] != INVALID_ID)
+    {
+      map<ID, vector<double> > tmp;
+      tmp[_3D_edge[i]] = vector<double>(1);
+      _quantum_density[i]->get_solution(tmp);
+      continuum = max(continuum, tmp[_3D_edge[i]][0]);
+    }
   }
+
+  if (flag && (continuum > -1000))
+  {
+    _argument = (_E_F - continuum) / _kT;
+
+    switch (_statistics)
+    {
+      case TiberCad::FERMIDIRAC:
+        classical_density<TiberCad::FERMIDIRAC>();
+        break;
+      default: // Boltzmann
+        classical_density<TiberCad::BOLTZMANN>();
+        break;
+    }
+    _argument = (_E_F - _E) / _kT;
+  }
+
+  _density += qdens;
 
   return flag;
 }

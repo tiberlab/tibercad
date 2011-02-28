@@ -213,7 +213,7 @@ Module quantumdensity
   name = dens_el
   regions = (1,4,5)
 
-  plot = quantum_density
+  plot = Density
 
     k_space_dimension = 2
     k-space_basis = true

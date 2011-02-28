@@ -206,8 +206,12 @@ class ParticleDensity : public PhysicalModelInterface
     std::vector<SimulationInterface*> _quantum_density;
 
 
-    //! The ID of the density variable
-    ID _density_id;
+    //! The ID of the Density variable
+    std::vector<ID> _density_ids;
+
+
+    //! The ID for the BandEdge3D variable
+    std::vector<ID> _3D_edge;
 
 
     //! The element we are currently working on

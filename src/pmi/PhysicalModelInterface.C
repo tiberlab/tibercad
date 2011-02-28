@@ -30,9 +30,6 @@
 
 #include  "DftbModel.h"
 #include  "EtbModel.h"
-#include  "PoissonModel.h"
-#include  "ChargeDensityModel.h"
-#include  "DielectricModel.h"
 
 
 #include  "ZbOptDielectricConstant.h"
@@ -43,9 +40,6 @@
 #include "ZbFreeDynamicalMatrix.h"
 #include "ZbStrainDynamicalMatrix.h"
 #include "ZbRamanTensor.h"
-
-#include <ZbPiezoelectricModel.h>
-#include <WzPiezoelectricModel.h>
 
 
 
@@ -123,16 +117,10 @@ PhysicalModelInterface::create(const string& name,
     mod = WzDDsemiconductor::create(options);
   else if (name == "EFAmodel")
     mod = EFAbulkModel::create(options);
-  else if  (name == "poisson")
-    mod = PoissonModel::create(options);
   else if (name == "dftb")
     mod = DftbModel::create(options);
   else if (name == "etb")
     mod = ETBModel::create(options);
-  else if  (name == "charge_density_model")
-    mod = ChargeDensityModel::create(options);
-  else if  (name == "dielectric_model")
-    mod = DielectricModel::create(options);
   else if (name == "opt_dielectric_constant_zb")
     mod = ZbOptDielectricConstant::create(options);
   else if (name == "opt_dielectric_constant_wz")
