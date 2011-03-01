@@ -1762,9 +1762,9 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
 
 
    system.matrix->close();
-   system.matrix->print_matlab("K.m");
+   //system.matrix->print_matlab("K.m");
    system.rhs->close();
-   system.rhs->print_matlab("F.m");
+   //system.rhs->print_matlab("F.m");
 
 
 }
