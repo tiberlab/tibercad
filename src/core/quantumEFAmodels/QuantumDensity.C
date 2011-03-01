@@ -483,8 +483,6 @@ void QuantumDensity::estimate_analitic_density(void)
   unsigned int number_of_eigenstates = opt.intial_eigenstates_number;
   //unsigned int number_of_eigenstates = energy_k_0.size();
 
-  cerr << "# EV requested: " << number_of_eigenstates << "  # EV obtained: " << energy_k_0.size() << endl;
-  cerr << "last EVs: " << energy_k_0[number_of_eigenstates - 1] << "  " << energy_k_0[number_of_eigenstates + opt.degeneracy - 1] << endl;
 
   if (energy_k_0.size() >= number_of_eigenstates + opt.degeneracy)
     _next_energy = energy_k_0[number_of_eigenstates + opt.degeneracy - 1];
