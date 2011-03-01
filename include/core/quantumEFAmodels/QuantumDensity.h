@@ -134,21 +134,6 @@ class QuantumDensity : public KspaceIntegration
 
 
 
-  //virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
-     
-     
- 
-  //virtual void get_solution_secure(const Elem* elem,
-  //       const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
-
- 
-  //virtual void get_solution_secure(const Elem* elem,
-	//			   const std::vector<Point>& p, const std::set<ID>& ids,
-	//			   std::vector<std::map<ID, double> >& values);
-  
-
-
-
 
   //!returns particle charge
   inline double get_particle_charge() const;
@@ -194,12 +179,6 @@ class QuantumDensity : public KspaceIntegration
 
  protected:
 
-   //!in this class  outputs particle density in a real space
-   /*!
-     Significant variable for this class is "quantum_density"
-   */
-   //virtual void build_elemental_results(const std::set<std::string>& variables,
-	//			   std::vector<double>& results, std::vector<std::string>& legend);
 
  
    virtual void 	do_init(void);

@@ -2830,7 +2830,8 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
   {
     unsigned int number_of_states = opt.initial_eigenstates_number;
 
-    solve_eigen_value_problem(number_of_states);
+    // we let him solve two more states
+    solve_eigen_value_problem(number_of_states + 2);
 
 
 
@@ -2859,7 +2860,7 @@ void EnvelopFunctionApprox::calculate_convergent_density( )
 
 
 
-      solve_eigen_value_problem(number_of_states);
+      solve_eigen_value_problem(number_of_states + 2);
 
       double total_density1 = get_integrated_probability();
 

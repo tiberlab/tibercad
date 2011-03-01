@@ -23,23 +23,6 @@ QuantumDensity:: ~QuantumDensity()
  
 }
 
-//============================================//
-/*
-ID  QuantumDensity::convert_variable_name_to_id(const std::string& variable_name) const
-{
-  ID id = INVALID_ID;
-
-  // for an empty string we return immediately
-  //if (variable_name == "") return id;
-
-  if (variable_name == "density")
-    id = DENSITY;
-
-  return id;
-
-  
-}
-*/
 
 
 
@@ -77,48 +60,6 @@ QuantumDensity::get_solution_secure(std::map<ID, std::vector<double> >& values)
 }
 
 
-/*
-//============================================//
-void QuantumDensity::get_solution_secure(const Elem* elem,
-         const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
-{
- 
-  
-
-}
-//============================================//
-void QuantumDensity::get_solution_secure(const Elem* elem,
-			 const std::vector<Point>& p, const std::set<ID>& ids,
-			 std::vector<std::map<ID, double> >& values)
-{
-
-  if (ids.find(DENSITY) != ids.end())
-  {
-    const double coeff =  1.0/ ( (Constants::bohr_radius) * (Constants::bohr_radius) * (Constants::bohr_radius) * 1.0e6 );
-
-    std::vector<double> density;
-
-    get_particle_density( elem,  p,  density);
-
-    unsigned int n = density.size();
-
-    //values.resize(n);
-
-    for (unsigned int i = 0; i < n; i++)
-    {
-      std::map<ID, double> point_map;
-
-      point_map.insert(pair<ID, double>(DENSITY, density[i]*coeff));
-
-      values[i] = point_map;
-    }
-   
-  }
- 
-}
-
-//============================================//
-*/
 
 
 

@@ -231,6 +231,10 @@ ParticleDensity::quantum_density(void)
 
   if (flag && (continuum > -1000))
   {
+    // for positive charge we have to change sign
+    if (_charge > 0)
+      continuum *= -1.0;
+
     _argument = (_E_F - continuum) / _kT;
 
     switch (_statistics)
