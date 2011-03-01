@@ -2518,7 +2518,7 @@ void EnvelopFunctionApprox::calculate_density( )
 
   vector<double> density_of_state;
 
-  unsigned int number_of_eigenfunctions = opt.initial_eigenstates_number - 1;
+  unsigned int number_of_eigenfunctions = opt.initial_eigenstates_number;
   //unsigned int number_of_eigenfunctions = solution.size();
 
 

@@ -473,7 +473,7 @@ void QuantumDensity::calculate_for_k_point(const Point& k_point,
 
 
 
-  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number + 1);
+  quantum_model_opts.set_option("initial_eigenstates_number",opt.intial_eigenstates_number + opt.degeneracy);
 
   
 
@@ -527,7 +527,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
 
   quantum_model_opts.set_option("initial_eigenstates_number",
-      opt.intial_eigenstates_number + 1);
+      opt.intial_eigenstates_number);
   quantum_model_opts["job"] = "density";
   quantum_model->set_options(quantum_model_opts);
  
@@ -543,10 +543,13 @@ void QuantumDensity::estimate_analitic_density(void)
   //unsigned int number_of_eigenstates = energy_k_0.size();
 
   cerr << "# EV requested: " << number_of_eigenstates << "  # EV obtained: " << energy_k_0.size() << endl;
-  cerr << "last EVs: " << energy_k_0[number_of_eigenstates - 2] << "  " << energy_k_0[number_of_eigenstates - 1] << endl;
+  cerr << "last EVs: " << energy_k_0[number_of_eigenstates - 1] << "  " << energy_k_0[number_of_eigenstates + opt.degeneracy - 1] << endl;
 
-  _next_energy = energy_k_0[number_of_eigenstates - 1];
-  
+  if (energy_k_0.size() >= number_of_eigenstates + opt.degeneracy)
+    _next_energy = energy_k_0[number_of_eigenstates + opt.degeneracy - 1];
+  else
+    _next_energy = energy_k_0[number_of_eigenstates - 1];
+
 
   vector<double> effective_mass(number_of_eigenstates);
 
@@ -568,7 +571,7 @@ void QuantumDensity::estimate_analitic_density(void)
     quantum_model_opts["job"] = "eigenstates";
 
     quantum_model_opts.set_option("first_state", opt.first_state);
-    quantum_model_opts.set_option("number_of_eigenstates", number_of_eigenstates + 1);
+    quantum_model_opts.set_option("number_of_eigenstates", number_of_eigenstates);
    
     
     double k_max1 = sqrt( k_vector1[0]*k_vector1[0] + k_vector1[1]*k_vector1[1] + k_vector1[2]*k_vector1[2]  );
@@ -608,7 +611,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
     //number_of_eigenstates = (quantum_model->get_solution()).size();
 
-    for (short i = 0; i < number_of_eigenstates - 1; i++)
+    for (short i = 0; i < number_of_eigenstates; i++)
     {
        
      
@@ -661,7 +664,7 @@ void QuantumDensity::estimate_analitic_density(void)
 
     quantum_model_opts.set_option("first_state", opt.first_state);
     quantum_model_opts.set_option("initial_eigenstates_number",
-        opt.intial_eigenstates_number  + 1);
+        opt.intial_eigenstates_number);
 
     quantum_model_opts["job"] = "eigenstates";
 
@@ -678,7 +681,7 @@ void QuantumDensity::estimate_analitic_density(void)
         k_vector1[1]*k_vector1[1] + k_vector1[2]*k_vector1[2]  );
 
 
-    number_of_eigenstates = (quantum_model->get_solution()).size();
+    //number_of_eigenstates = (quantum_model->get_solution()).size();
     {
       ostringstream os;
       os << "number of eigenstates in k = k1 : " <<  number_of_eigenstates;

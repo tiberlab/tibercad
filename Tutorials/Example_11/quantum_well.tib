@@ -245,7 +245,7 @@ Module quantumdensity
   uniform_refinement = false
   mesh_order = FIRST
 
-  initial_eigenstates_number = 20
+  initial_eigenstates_number = 4
   analytic = true
 }
 
@@ -276,7 +276,7 @@ Module quantumdensity
   uniform_refinement = false
   mesh_order = FIRST
 
-  initial_eigenstates_number = 20
+  initial_eigenstates_number = 12
   analytic = true
 }
 
