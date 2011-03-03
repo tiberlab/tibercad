@@ -138,7 +138,7 @@ sub send_email($);
 ##
 ## Returns 1 in case of error, 0 otherwise
 ##
-sub run_executable;
+sub run_executable($);
 
 
 ##
@@ -152,7 +152,7 @@ sub cleanup_test_dir($);
 ##
 ## Returns 1 in case of error, 0 otherwise
 ##
-sub compare_results_with_reference;
+sub compare_results_with_reference($);
 
 
 ##
@@ -191,7 +191,7 @@ sub compare_data_vectors($$$);
 ##
 ## Reads the check sections from the config file
 ##
-sub read_checks_from_config($);
+sub read_checks_from_config($$);
 
 
 ##
@@ -257,7 +257,7 @@ sub read_configuration($) {
          last SWITCH;
 
        /\s*topdir\s*=(.+)/ && do {
-         $options{'topdir'} = trim($1);
+         $options{'topdir'} = getcwd() . "/" . trim($1);
          last SWITCH;
        };
        
@@ -329,11 +329,22 @@ sub run_test($) {
   chdir($dir);
   print("\nRunning test in $dir ...\n") if verbose();
 
+  my %checks = ();
+  my %opts = ();
+  # read the configuration
+  read_checks_from_config(\%checks, \%opts) && return 0;
+
+  my $infile = "";
+  (defined $opts{"inputfile"}) && ($infile = $opts{"inputfile"});
+
+  my $out = $opts{"outputdir"};
+  if (defined $out && $out ne "") { $outdir = $out };
+ 
   my $failure = 0;
   if (not $options{'testonly'}) {
-    $failure = run_executable();
+    $failure = run_executable($infile);
   }
-  $failure = compare_results_with_reference() unless $failure;
+  $failure = compare_results_with_reference(\%checks) unless $failure;
 
   chdir($olddir);
 
@@ -342,17 +353,25 @@ sub run_test($) {
 
 
 
-sub run_executable {
+sub run_executable($) {
 
+  my $infile = $_[0];
   my $fail = 0;
 
-  if (not -e $makefile) {
-    return 1;
+  if (($infile ne "") && -f $infile) {
+    print(pad_to_textwidth("Run", $padchar)) if verbose();
+    $fail = system("$options{'topdir'}/bin/tibercad $infile $to_log_file");
   } 
+  else {
 
-  print(pad_to_textwidth("Run", $padchar)) if verbose();
+    if (not -e $makefile) {
+      return 1;
+    } 
 
-  $fail = system("$make_run $to_log_file");
+    print(pad_to_textwidth("Run", $padchar)) if verbose();
+
+    $fail = system("$make_run $to_log_file");
+  }
 
   print_result($fail) if verbose();
 
@@ -368,21 +387,19 @@ sub cleanup_test_dir($) {
 
 
 
-sub compare_results_with_reference {
+sub compare_results_with_reference($) {
 
   my $result = 0;
 
   
-  my %checks = ();
-  # read the configuration
-  read_checks_from_config(\%checks) && return 0;
- 
+  my $checks = $_[0];
+
   # the number of checks
-  my $num_checks = scalar(keys(%checks));
+  my $num_checks = scalar(keys(%$checks));
   
   print("Check data:\n") if verbose();
   
-  while ( my ($file, $vars) = each(%checks)) {
+  while ( my ($file, $vars) = each(%$checks)) {
     my $datafile = "$outdir/$file";
     my $reffile = "$refdir/$file";
 
@@ -654,9 +671,10 @@ sub compare_data_vectors($$$) {
 
 
 
-sub read_checks_from_config($) {
+sub read_checks_from_config($$) {
 
   my $mine = $_[0];
+  my $opts = $_[1];
 
   open(CF, $config) || return 1;
   
@@ -671,6 +689,12 @@ sub read_checks_from_config($) {
      if (/\s*check\s*=([^=:]+):?([^=:]*)/) {
        my @words = parse_line('\s+', 1, trim($2));
        $mine->{trim($1)} = [@words];
+     }
+     elsif (/\s*inputfile\s*=([^=]+)/) {
+       $opts->{"inputfile"} = trim($1);
+     }
+     elsif (/\s*outputdir\s*=([^=]+)/) {
+       $opts->{"outputdir"} = trim($1);
      }
   }
   close CF;

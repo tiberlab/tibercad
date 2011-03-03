@@ -137,20 +137,28 @@ if (scalar grep(/^compile$|^all$/, @tests)) {
 }
 
 
-opendir CWD, ".";
-foreach (sort(readdir CWD)) {
+if (scalar grep(/^all$/, @tests)) {
+  opendir CWD, ".";
+  foreach (sort(readdir CWD)) {
+    my $dir = $_;
+
+    (($dir =~ /^test[0-9]+/) && (-d $dir)) || next;
+    push(@tests, $dir);
+  }
+}
+
+
+foreach (@tests) {
   my $dir = $_;
 
-  (($dir =~ /^test[0-9]+/) && (-d $dir)) || next;
+  (-d $dir) || next;
 
-  if (scalar grep(/$dir|^all$/, @tests)) {
-    my $result = run_test($dir);
-    check($result);
-    $checklist{$dir} = $result;
+  my $result = run_test($dir);
+  check($result);
+  $checklist{$dir} = $result;
 
-    if (($purge > 1) || ($purge && not $result)) {
-      cleanup_test_dir($dir);
-    }
+  if (($purge > 1) || ($purge && not $result)) {
+    cleanup_test_dir($dir);
   }
 }
 
