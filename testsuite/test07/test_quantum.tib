@@ -126,8 +126,10 @@ Module driftdiffusion
     particle_density
     {
       particle = electron
-      quantum_density = dens_el
       statistics = fermidirac
+
+      quantum_density = dens_el
+      barrier_regions = buffer
     }
   
      
@@ -163,7 +165,7 @@ Module efaschroedinger
   name = quantum_el
   regions = (1, 4, 5)
 
-  Dirichlet_bc_everywhere = false
+  Dirichlet_bc_everywhere = true
   particle = el
   number_of_eigenstates = 22
   poisson_model_name = dd
