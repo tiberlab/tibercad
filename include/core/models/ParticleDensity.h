@@ -7,6 +7,7 @@
 #include "TiberCad.h"
 #include "TypeDefs.h"
 #include "Constants.h"
+#include "IDSet.h"
 #include "SimulationOptions.h"
 #include "tiber_dll.h"
 
@@ -206,6 +207,10 @@ class ParticleDensity : public PhysicalModelInterface
     std::vector<SimulationInterface*> _quantum_density;
 
 
+    //! The region IDs of the barrier
+    IDSet _barrier_ids;
+
+
     //! The ID of the Density variable
     std::vector<ID> _density_ids;
 
@@ -259,6 +264,10 @@ class ParticleDensity : public PhysicalModelInterface
 
     //! The embracing of classical and quantum calculation
     Embracing* _embracing;
+
+
+    //! If \c true a continuum will be added on top of the quantum density
+    bool _add_continuum;
 
 
     //! Calculate the particle density

@@ -556,6 +556,44 @@ DriftDiffusionProperties::calculate_densities(void)
   double relax = SimulationInterface::get_simulation(get_simulator_id())->_relaxation;
 
   _electrons->set_element_and_point(_elem, _coord);
+
+  if (_electrons->is_quantum_density() && has_solution() && use_predictor())
+  {
+    // set the OLD potentials
+    _electrons->set_classical_parameters(cb.effective_DOS,
+        Ec - _pd->old_electric_potential, -_pd->old_fermi_e, kTe);
+
+    double qdens = _electrons->get_particle_density();
+
+    // now get the old classical density
+    _electrons->use_quantum_density(false);
+    double old_dens = _electrons->get_particle_density();
+
+    // now get the new classical density and derivative
+    _electrons->set_classical_parameters(cb.effective_DOS,
+        Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
+    _pd->electron_density = _electrons->get_particle_density();
+    _pd->electron_density_derivative = _electrons->get_particle_density_derivative();
+
+    double fac = qdens / old_dens;
+    _pd->electron_density *= fac;
+    _pd->electron_density_derivative *= fac;
+    _pd->gamma_n = _electrons->get_gamma();
+
+    _electrons->use_quantum_density(true);
+
+  }
+  else
+  {
+    _electrons->set_classical_parameters(cb.effective_DOS,
+        Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
+    _pd->electron_density = _electrons->get_particle_density();
+    _pd->electron_density_derivative = _electrons->get_particle_density_derivative();
+    _pd->gamma_n = _electrons->get_gamma();
+  }
+
+
+/*
   _electrons->set_classical_parameters(cb.effective_DOS,
       Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
   _pd->electron_density = _electrons->get_particle_density();
@@ -579,16 +617,16 @@ DriftDiffusionProperties::calculate_densities(void)
       _pd->electron_density = qdens / old_dens * dens;
     }
 
-    /*
+    / *
     double arg_cl = std::log(dens);
     double arg_q = std::log(_pd->electron_density);
     double arg = relax * arg_q + (1.0 - relax) * arg_cl;
     _pd->electron_density = std::exp(arg);
     _pd->electron_density_derivative = _pd->electron_density / kTe;
-    */
+    * /
 
     _electrons->use_quantum_density(true);
-    /* simpler but slower convergence
+    / * simpler but slower convergence
     {
      double arg = (_pd->electric_potential - _pd->old_electric_potential
          - _pd->fermi_e + _pd->old_fermi_e) / kTe;
@@ -596,10 +634,48 @@ DriftDiffusionProperties::calculate_densities(void)
      _pd->electron_density *= fac;
      _pd->electron_density_derivative = _pd->electron_density / kTe;
     }
-    */
+    * /
   }
+*/
 
   _holes->set_element_and_point(_elem, _coord);
+
+  if (_holes->is_quantum_density() && has_solution() && use_predictor())
+  {
+    // set the OLD potentials
+    _holes->set_classical_parameters(vb.effective_DOS,
+        -Ev + _pd->old_electric_potential, _pd->old_fermi_h, kTh);
+
+    double qdens = _holes->get_particle_density();
+
+    // now get the old classical density
+    _holes->use_quantum_density(false);
+    double old_dens = _holes->get_particle_density();
+
+    // now get the new classical density and derivative
+    _holes->set_classical_parameters(vb.effective_DOS,
+        -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
+    _pd->hole_density = _holes->get_particle_density();
+    _pd->hole_density_derivative = -_holes->get_particle_density_derivative();
+
+    double fac = qdens / old_dens;
+    _pd->hole_density *= fac;
+    _pd->hole_density_derivative *= fac;
+    _pd->gamma_p = _holes->get_gamma();
+
+    _holes->use_quantum_density(true);
+
+  }
+  else
+  {
+    _holes->set_classical_parameters(vb.effective_DOS,
+        -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
+    _pd->hole_density = _holes->get_particle_density();
+    _pd->hole_density_derivative = -_holes->get_particle_density_derivative();
+    _pd->gamma_p = _holes->get_gamma();
+  }
+
+  /*
   _holes->set_classical_parameters(vb.effective_DOS,
       -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
   _pd->hole_density = _holes->get_particle_density();
@@ -624,15 +700,16 @@ DriftDiffusionProperties::calculate_densities(void)
       _pd->hole_density = qdens / old_dens * dens;
     }
     _holes->use_quantum_density(true);
-    /* simpler but slower convergence
+    / * simpler but slower convergence
     {
      double arg = (_pd->electric_potential - _pd->old_electric_potential) / kTe;
      double fac = max(0.1, min(10.0, exp(arg)));
      _pd->electron_density *= fac;
      _pd->electron_density_derivative = _pd->electron_density / kTe;
     }
-    */
+    * /
   }
+  */
 
 }
 

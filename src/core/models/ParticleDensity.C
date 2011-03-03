@@ -2,6 +2,8 @@
 
 #include "ParticleDensity.h"
 #include "SimulationInterface.h"
+#include "SimulationEnvironment.h"
+#include "Device.h"
 #include "TiberMath.h"
 #include "Embracing.h"
 #include "Messages.h"
@@ -23,7 +25,8 @@ ParticleDensity::ParticleDensity(const ModelOptions& options) :
   _density(-1.0),
   _density_derivative(-1.0),
   _gamma(1.0),
-  _embracing(NULL)
+  _embracing(NULL),
+  _add_continuum(true)
 {
 
 }
@@ -40,7 +43,8 @@ ParticleDensity::ParticleDensity(const string& name,
   _density(-1.0),
   _density_derivative(-1.0),
   _gamma(1.0),
-  _embracing(NULL)
+  _embracing(NULL),
+  _add_continuum(true)
 {
   if (name == "electron")
     _charge = -1;
@@ -87,16 +91,25 @@ ParticleDensity::do_init(void)
 
   if (get_quantum_simulation() != NULL)
   {
+    SimulationInterface* owner =
+        SimulationInterface::get_simulation(get_simulator_id());
+
     ModelOptions::const_submodel_iterator embit(get_options().submodels_begin("embracing"));
     if (embit != get_options().submodels_end("embracing"))
     {
-      SimulationInterface* owner =
-          SimulationInterface::get_simulation(get_simulator_id());
       Embracing* emb =
         owner->create_embracing_region(
             get_quantum_simulation(), embit->second, true);
       set_embracing(emb);
     }
+
+    if (owner->has_environment())
+    {
+      Device& dev = owner->get_environment().get_device();
+      dev.extract_physical_regions(get_option("barrier_regions", ""), _barrier_ids);
+    }
+
+    _add_continuum = get_option("add_continuum_in_well", _add_continuum);
   }
 }
 
@@ -220,7 +233,7 @@ ParticleDensity::quantum_density(void)
 
     qdens += values[0];
 
-    if (_3D_edge[i] != INVALID_ID)
+    if ((_3D_edge[i] != INVALID_ID) && _add_continuum)
     {
       map<ID, vector<double> > tmp;
       tmp[_3D_edge[i]] = vector<double>(1);
@@ -229,24 +242,46 @@ ParticleDensity::quantum_density(void)
     }
   }
 
-  if (flag && (continuum > -1000))
+  if (flag)
   {
-    // for positive charge we have to change sign
-    if (_charge > 0)
-      continuum *= -1.0;
+    ID subdomid = _elem->subdomain_id();
 
-    _argument = (_E_F - continuum) / _kT;
-
-    switch (_statistics)
+    if ((_barrier_ids.size() > 0) && _barrier_ids.count(subdomid))
     {
-      case TiberCad::FERMIDIRAC:
-        classical_density<TiberCad::FERMIDIRAC>();
-        break;
-      default: // Boltzmann
-        classical_density<TiberCad::BOLTZMANN>();
-        break;
+      // in the barrier (if specified), add the classical density
+      switch (_statistics)
+      {
+        case TiberCad::FERMIDIRAC:
+          classical_density<TiberCad::FERMIDIRAC>();
+          break;
+        default: // Boltzmann
+          classical_density<TiberCad::BOLTZMANN>();
+          break;
+      }
     }
-    _argument = (_E_F - _E) / _kT;
+    else if (continuum > -1000)
+    {
+      // in the well (or everywhere, if no barrier has been specified)
+      // add a continuum from the next available energy level
+
+      // for positive charge we have to change sign
+      if (_charge > 0)
+        continuum *= -1.0;
+
+      _argument = (_E_F - continuum) / _kT;
+
+      switch (_statistics)
+      {
+        case TiberCad::FERMIDIRAC:
+          classical_density<TiberCad::FERMIDIRAC>();
+          break;
+        default: // Boltzmann
+          classical_density<TiberCad::BOLTZMANN>();
+          break;
+      }
+      _argument = (_E_F - _E) / _kT;
+
+    }
   }
 
   _density += qdens;

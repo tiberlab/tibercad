@@ -195,7 +195,7 @@ Ramp::ramp(void)
       value = oldvalue;
     }
   }
-  while (abs(_goal - value) > 1e3 * (abs(_goal) * numeric_limits<double>::epsilon()
+  while (abs(_goal - value) > 1e9 * (abs(_goal) * numeric_limits<double>::epsilon()
       + numeric_limits<double>::min()));
   // the epsilon() here prevents from resolving two times the same sweep value
   // due to fixed point numerics
