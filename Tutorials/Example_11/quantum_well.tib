@@ -112,14 +112,15 @@ Module driftdiffusion
 
       # where to get the quantum density from
       quantum_density = dens_el
+      barrier_regions = buffer_quantum
 
       # we use an embracing region to get a continuous transition from 
       # classical to quantum density
-      embracing
-      {
-        embracing_length = 8e-9
-        plot_embracing_regions = true
-      }
+      #embracing
+      #{
+      #  embracing_length = 8e-9
+      #  plot_embracing_regions = true
+      #}
     }
 
    
@@ -130,14 +131,15 @@ Module driftdiffusion
 
       # where to get the quantum density from
       quantum_density = dens_hl
+      barrier_regions = buffer_quantum
 
       # we use an embracing region to get a continuous transition from 
       # classical to quantum density
-      embracing
-      {
-        embracing_length = 8e-9
-        plot_embracing_regions = true
-      }
+      #embracing
+      #{
+      #  embracing_length = 8e-9
+      #  plot_embracing_regions = true
+      #}
     }
 
   
@@ -225,7 +227,7 @@ Module quantumdensity
   name = dens_el
   regions = quantum
 
-  plot = quantum_density
+  plot = Density
 
   k_space_dimension = 2
   k-space_basis = true
@@ -245,7 +247,7 @@ Module quantumdensity
   uniform_refinement = false
   mesh_order = FIRST
 
-  initial_eigenstates_number = 4
+  initial_eigenstates_number = 3
   analytic = true
 }
 
@@ -256,7 +258,7 @@ Module quantumdensity
   name = dens_hl
   regions = quantum
 
-  plot = quantum_density
+  plot = Density
 
   k_space_dimension = 2
   k-space_basis = true
@@ -301,8 +303,8 @@ Module selfconsistent
   # we do not use relaxation, but a predictor-corrector scheme
   #relaxation_factor = 0.5
   max_iterations = 10
-  abs_tolerance = 1e-4
-  rel_tolerance = 1e-8
+  absolute_tolerance = 1e-4
+  relative_tolerance = 1e-8
   monitor = true
   #xmonitor = true
 }
@@ -315,7 +317,7 @@ Simulation
   verbose = 3
 
   #solve = (str, sweep, quantum_el, quantum_hl, dens_el, dens_hl)
-  solve = (str, sweep, selfconsistent)
+  solve = (str, sweep, selfconsistent, quantum_el, quantum_hl)
 
   resultpath = output
   output_format = grace
