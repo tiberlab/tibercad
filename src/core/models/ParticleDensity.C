@@ -264,9 +264,13 @@ ParticleDensity::quantum_density(void)
       // in the well (or everywhere, if no barrier has been specified)
       // add a continuum from the next available energy level
 
+
       // for positive charge we have to change sign
       if (_charge > 0)
         continuum *= -1.0;
+
+      // we do not accept it if it is lower than the bulk band edge
+      continuum = max(_E, continuum);
 
       _argument = (_E_F - continuum) / _kT;
 
