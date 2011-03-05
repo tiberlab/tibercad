@@ -28,7 +28,7 @@ ConversePiezo::calculate(const Elem* elem, const Point& point)
   std::vector<Point> p(1);
   p[0] = point;
   std::vector<double> values(3);
-  _simul->get_solution(elem,ElFieldID,values,p);
+  _simul->get_solution(elem, ElFieldID, values, p, true);
   ElField(0) = values[0];
   ElField(1) = values[1];
   ElField(2) = values[2];
@@ -58,11 +58,11 @@ ConversePiezo::calculate(const Elem* elem, const Point& point)
   //stress *= 1e-9;
   set_stress_source(stress);
 
-  RealTensor dummy_tens(0);
-  set_strain_source(dummy_tens);
+  //RealTensor dummy_tens(0);
+  //set_strain_source(dummy_tens);
 
-  RealGradient dummy_grad(0);
-  set_force_source(dummy_grad);
+  //RealGradient dummy_grad(0);
+  //set_force_source(dummy_grad);
 
 }
 

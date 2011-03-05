@@ -32,6 +32,11 @@ class BodyForceModel : public PhysicalModelInterface
     const RealTensor& get_strain_source(void) const;
 
 
+    //! Calculate local body force
+    /*!
+     * \param elem pointer to the current element
+     * \param point the coordinates in the reference element
+     */
     virtual void calculate(const Elem* elem, const Point& point){};
 
   protected:

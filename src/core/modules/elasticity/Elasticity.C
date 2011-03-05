@@ -223,7 +223,7 @@ Elasticity::create_boundary_model(const ModelOptions& options,
 void
 Elasticity::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
-				const std::vector<Point>& p)
+    const std::vector<Point>& p)
 {
  
    unsigned int np = p.size();
@@ -256,7 +256,7 @@ Elasticity::get_solution_secure(const Elem* elem,
   
    for (ID n = 0; n < np; n++)
    {
-     mod.calculate(elem,p[n]);   
+     mod.calculate(elem, p[n]);
      
      const Tensor4DSym& C = mod.get_stiffness();
      const RealGradient& force_source =  mod.get_force_source();
@@ -598,7 +598,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
      
-       mod.calculate(elem,q_point[qp]);   
+       mod.calculate(elem, qrule.qp(qp));
        const Tensor4DSym& C = mod.get_stiffness();
        const RealGradient& force =  mod.get_force_source();
        const RealTensor& strain =  mod.get_strain_source();
@@ -634,7 +634,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	  
 	  for (unsigned int qp = 0; qp < qface.n_points(); qp++)
 	  {
-	    boundary_mod->calculate(elem, s, qface_point[qp]);
+	    boundary_mod->calculate(elem, s, qface.qp(qp));
 	    
 	    RealTensor H(0);
 	    RealGradient R(0);
@@ -643,7 +643,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
             boundary_mod->set_normal(normal[qp]);
 	    boundary_mod->get_coefficients(H, R, A);
 
-	    mod.calculate(elem,qface_point[qp]);   
+	    mod.calculate(elem, qface.qp(qp));
 	    const RealTensor& strain =  mod.get_strain_source();
 	    const RealTensor& stress =  mod.get_stress_source();	    
 	    const Tensor4DSym& C = mod.get_stiffness();
