@@ -62,7 +62,7 @@ c = 0.5703
 # stiffness data [6]
 [elasticity]
 C11 = 223
-C12 =  115
+C12 = 115
 C13 = 92
 C33 = 224
 C44 = 48

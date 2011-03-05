@@ -22,13 +22,13 @@ void AnisotropicStiffness::read_database( )
 {
 
   Database& db = get_database();
-  db.set_section("stiffness");
+  db.set_section("elasticity");
 
-  _c11 = db.get("C11", 0.0,false);
-  _c12 = db.get("C12", 0.0, false);
-  _c13 = db.get("C13", 0.0, false);
-  _c33 = db.get("C33", 0.0, false);
-  _c44 = db.get("C44", 0.0, false);
+  _c11 = db.get("C11", 0.0, true);
+  _c12 = db.get("C12", 0.0, true);
+  _c13 = db.get("C13", 0.0, true);
+  _c33 = db.get("C33", 0.0, true);
+  _c44 = db.get("C44", 0.0, true);
 
 }
 
