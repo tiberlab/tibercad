@@ -21,7 +21,7 @@ class TBDLLOCAL LatticeMismatch : public BodyForceModel
   public:
  
   //! Destructor
-  ~LatticeMismatch(void){};
+  ~LatticeMismatch(void);
   
   //! Creator function
   static LatticeMismatch* create(const ModelOptions& options);

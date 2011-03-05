@@ -14,11 +14,15 @@ TIBER_MODULE(LatticeMismatch, body_force, lattice_mismatch)
 using namespace std;
 
 
-LatticeMismatch::LatticeMismatch(const ModelOptions& options):BodyForceModel(options)
+LatticeMismatch::LatticeMismatch(const ModelOptions& options) :
+    BodyForceModel(options)
 {
 }
 
+LatticeMismatch::~LatticeMismatch(void)
+{
 
+}
 
 
 void
@@ -80,21 +84,20 @@ LatticeMismatch::do_init(void)
     }
 
 
-  double relax = get_options().get_option("relaxation_factor", 1.0);
+  double relax = get_option("relaxation_factor", 1.0);
 
-  eps0 *=relax;
-  eps0 *= 1.0;
+  eps0 *= relax;
 
   
   set_strain_source(eps0);
 
-  RealTensor dummy_tens(0);
-  set_stress_source(dummy_tens);
+  //RealTensor dummy_tens(0);
+  //set_stress_source(dummy_tens);
 
-  RealGradient dummy_grad(0);
-  set_force_source(dummy_grad);
+  //RealGradient dummy_grad(0);
+  //set_force_source(dummy_grad);
 
- 
+  delete ref_mat;
  
 }
 

@@ -13,47 +13,47 @@ class Point;
 
 using namespace std;
 
-//! The base class for Poisson boundary conditions
+//! The base class for body force models
 class BodyForceModel : public PhysicalModelInterface
 {
 
   public:
 
     //! Destructor
-    ~BodyForceModel(void) {};
+    virtual ~BodyForceModel(void) {};
 
-     //! Creator function
-   static BodyForceModel* create(const ModelOptions& options);
+    //! Creator function
+    static BodyForceModel* create(const ModelOptions& options);
 
-  const RealGradient& get_force_source(void) const;
+    const RealGradient& get_force_source(void) const;
 
-  const RealTensor& get_stress_source(void) const;
+    const RealTensor& get_stress_source(void) const;
 
-  const RealTensor& get_strain_source(void) const;
+    const RealTensor& get_strain_source(void) const;
 
 
-  virtual void calculate(const Elem* elem, const Point& point){};
+    virtual void calculate(const Elem* elem, const Point& point){};
 
   protected:
 
     //! Constructor
-  BodyForceModel(const ModelOptions& options);
+    BodyForceModel(const ModelOptions& options);
 
-  void set_force_source(const RealGradient& force_source);
+    void set_force_source(const RealGradient& force_source);
 
-  void set_strain_source(const RealTensor& strain_source);
+    void set_strain_source(const RealTensor& strain_source);
 
-  void set_stress_source(const RealTensor& stress_source);
+    void set_stress_source(const RealTensor& stress_source);
 
 
 
   private:
 
-  RealGradient _force_source;
+    RealGradient _force_source;
 
-  RealTensor _strain_source;
-  
-  RealTensor _stress_source;
+    RealTensor _strain_source;
+
+    RealTensor _stress_source;
 
 };
 
@@ -103,7 +103,10 @@ BodyForceModel::set_stress_source(const RealTensor& stress_source)
 
 inline
 BodyForceModel::BodyForceModel(const ModelOptions& options) :
-PhysicalModelInterface(options)
+  PhysicalModelInterface(options),
+  _force_source(0),
+  _strain_source(0),
+  _stress_source(0)
 {
 }
 
