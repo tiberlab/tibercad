@@ -26,8 +26,11 @@ void AnisotropicStiffness::read_database( )
 
   _c11 = db.get("C11", 0.0, true);
   _c12 = db.get("C12", 0.0, true);
-  _c13 = db.get("C13", 0.0, true);
-  _c33 = db.get("C33", 0.0, true);
+  if (get_material()->get_structure() == "wz")
+  {
+    _c13 = db.get("C13", 0.0, true);
+    _c33 = db.get("C33", 0.0, true);
+  }
   _c44 = db.get("C44", 0.0, true);
 
 }
