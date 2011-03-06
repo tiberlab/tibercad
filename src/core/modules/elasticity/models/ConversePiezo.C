@@ -33,8 +33,9 @@ ConversePiezo::calculate(const Elem* elem, const Point& point)
   ElField(1) = values[1];
   ElField(2) = values[2];
 
-  //From V/cm to V/m, and from Pa to GPa
-  ElField *= 100.0 * 1e-9;
+  // From V/cm to V/m, and from Pa to GPa, and negative sign because
+  // sigma_ij = - e_ijk E_k
+  ElField *= -100.0 * 1e-9;
   //Rotate to crystal system
   Material* mat = get_material();
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
