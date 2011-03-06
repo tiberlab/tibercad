@@ -334,7 +334,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      if (values.count(Stress) || values.count(Energy))
      {
        
-       total_stress = C * total_strain + stress_source;
+       total_stress = C * total_strain - stress_source;
 
        if (values.count(Stress))
 	 {
@@ -650,7 +650,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
 	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	    {
-	      RealGradient tmp = phi_face[alpha][qp] * ((stress + (C * strain)) * normal[qp]);
+	      RealGradient tmp = phi_face[alpha][qp] * ((-stress + (C * strain)) * normal[qp]);
 
               //Get the total stress (internal and external)
               //RealGradient tmp = phi_face[alpha][qp] * (get_stress(elem,ref_face_points[qp]) * normal[qp]);
@@ -658,7 +658,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	      for (unsigned int i =0; i<3; i++)
 	      { 
                 //Add the surface integral if this contact is "extended", i. e. A = 1
-		(*(F[i]))(alpha) +=  JxW_face[qp] *  phi_face[alpha][qp] * (R(i) - A * tmp(i));
+		(*(F[i]))(alpha) +=  JxW_face[qp] * (R(i) - A * tmp(i));
 		
 		for (unsigned int j =0; j<3; j++)
 		  for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)
