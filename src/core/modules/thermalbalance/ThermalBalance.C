@@ -19,14 +19,10 @@
 
 //TODO
 //Eliminate the FE:interface when the point is at the centroid
-
-
-
 // This is needed in order to create the shared module library
 // The first string is the class name of the object to be created,
 // the second one is the name of the module as it should be referred
 // in the input file (the Makefile defines MODULE_NAME, which can be used here).
-
 TIBER_MODULE(ThermalBalance, MODULE_NAME)
 using namespace std;
 
@@ -499,39 +495,38 @@ ThermalBalance::solve_fourier(void)
    //-----------------------------------------------------
 
    //Fill the temperature and the nodal flux
-
-   set<const Elem*>::iterator el = Domain.begin();
-   const set<const Elem*>::iterator end_el = Domain.end();
-
-   double max_T = 0.0;
-   for ( ; el != end_el; ++el)
-   {
-     const Elem* elem = *el;
-     dof_map_fourier.dof_indices (elem, dof_indices_fourier);
-
-     std::vector<Point> p(1);
-     p[0]=elem->centroid();
-     vector<Point> points(1);
-     FEInterface::inverse_map(dim, fe_type, elem, p, points);
-     fe->reinit(elem, &points);
-
-     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-     mod.calculate(elem,elem->centroid());
-     const RealTensor& kappa = mod.get_total_thermal_conductivity();
-
-     RealGradient heat_flux(0);
-     for (ID alpha = 0; alpha<dof_indices_fourier.size() ;alpha ++)
-       heat_flux -= solution_fourier(dof_indices_fourier[alpha]) * (kappa * dphi[alpha][0]);
-     
-
-     for (int n = 0; n < elem->n_nodes(); n++)
-       for (ID d = 0; d< dim; d++)
-	 thermal_flux_nodal[d]->add(dof_indices_fourier[n],heat_flux(d)/node_conn[elem->node(n)]);
-
-   }
-
-   for (ID d = 0; d< dim; d++)
-     thermal_flux_nodal[d]->close();
+  set<const Elem*>::iterator el = Domain.begin();
+  const set<const Elem*>::iterator end_el = Domain.end();
+  
+  double max_T = 0.0;
+  for ( ; el != end_el; ++el)
+  {
+    const Elem* elem = *el;
+    dof_map_fourier.dof_indices (elem, dof_indices_fourier);
+    
+    std::vector<Point> p(1);
+    p[0]=elem->centroid();
+    vector<Point> points(1);
+    FEInterface::inverse_map(dim, fe_type, elem, p, points);
+    fe->reinit(elem, &points);
+    
+    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    mod.calculate(elem,elem->centroid());
+    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+    
+    RealGradient heat_flux(0);
+    for (ID alpha = 0; alpha<dof_indices_fourier.size() ;alpha ++)
+      heat_flux -= solution_fourier(dof_indices_fourier[alpha]) * (kappa * dphi[alpha][0]);
+    
+    
+    for (int n = 0; n < elem->n_nodes(); n++)
+      for (ID d = 0; d< dim; d++)
+	thermal_flux_nodal[d]->add(dof_indices_fourier[n],heat_flux(d)/node_conn[elem->node(n)]);
+    
+  }
+  
+  for (ID d = 0; d< dim; d++)
+    thermal_flux_nodal[d]->close();
  
 
 }
@@ -1082,7 +1077,7 @@ ThermalBalance::compute_power_dissipated()
   const std::vector<Real>& JxW_face = fe_face->get_JxW();
   const std::vector<Point>& normal = fe_face->get_normals();
   
-  double power_dissipated= 0.0;
+  double power_dissipated = 0.0;
 
   set<const Elem*>::iterator it = Domain.begin();
   const set<const Elem*>::iterator end = Domain.end();
@@ -1095,7 +1090,6 @@ ThermalBalance::compute_power_dissipated()
     dof_map.dof_indices(elem, dof_indices);
     
     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-
    
     const RealTensor& kappa = mod.get_total_thermal_conductivity();
  
@@ -1104,15 +1098,21 @@ ThermalBalance::compute_power_dissipated()
       const ElementSide elside(elem->top_parent(),ns);
       if (is_on_any_boundary(elside))
       {
+
+	//ThermalBoundaryModel* mod_b =
+	// get_interface_model<ThermalBoundaryModel>(elem, ns);
+	
+	//if (mod_b != NULL)
+	//{
 	fe_face->reinit(elem,ns);
 	for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
 	{ 
-	  mod.calculate(elem, q_point_face[qp]);
+	
 	  for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
-	    power_dissipated -= solution(dof_indices[alpha]) * ((kappa * dphi[alpha][0]) * normal[qp]);  
-	  
+	    power_dissipated -= JxW_face[qp] * solution(dof_indices[alpha]) * ((kappa * dphi[alpha][qp]) * normal[qp]);  
 	  
 	}
+       
       }
     }
     
@@ -1122,6 +1122,155 @@ ThermalBalance::compute_power_dissipated()
 
 }
 
+double
+ThermalBalance::compute_effective_thermal_conductivity()
+{
+
+  //Gray System
+  EquationSystems& es = get_equation_systems();
+  TiberLinearSystem& system =
+    es.get_system<TiberLinearSystem>("fourier");
+
+  const NumericVector<double>& solution = *(system.solution);
+
+  DofMap& dof_map = system.get_dof_map();
+  std::vector<unsigned int> dof_indices;
+  //-----------------------------------------------
+
+  const unsigned int tvar = system.variable_number("T");
+  FEType fe_type = dof_map.variable_type(tvar);
+
+
+   //------------BULK----------
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  QGauss qrule(dim,FIFTH);
+  fe->attach_quadrature_rule(&qrule);
+  const std::vector<Real>& JxW = fe->get_JxW();
+  const std::vector<Point>& q_point = fe->get_xyz();
+
+  //--------------SURFACE-----------------
+  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  QGauss qrule_face(dim-1,FIFTH);
+  fe_face->attach_quadrature_rule(&qrule_face);
+  
+  const std::vector<Point>& q_point_face = fe_face->get_xyz();
+  const std::vector<std::vector<RealGradient> >&  dphi = fe_face->get_dphi();
+  const std::vector<std::vector<double> >&  phi = fe_face->get_phi();
+  
+  const std::vector<Real>& JxW_face = fe_face->get_JxW();
+  const std::vector<Point>& normal = fe_face->get_normals();
+  
+  double abs_J = 0.0;
+  double area = 0.0;
+  double DeltaT = 0.0;
+
+  double Phot = 0.0;
+  double Pcold = 0.0;
+  double Ahot = 0.0;
+  double Acold = 0.0;
+  double Thot = 0.0;
+  double Tcold = 0.0;
+
+  Point Point_hot(0);
+  Point Point_cold(0);
+	
+//    double power = 0.0;
+//           string name = mod_b->get_name();
+// 	  if (!BoundaryPower.count(name))
+// 	  {
+// 	    BoundaryPower[name] = 0.0;
+//             BoundaryArea[name]  = 0.0;
+// 	    BoundaryTemp[name]  = 0.0;
+// 	  }  
+// 	    BoundaryPower[name] += power;
+//   map<string,double> BoundaryPower;
+//   map<string,double> BoundaryArea;
+//   map<string,double> BoundaryTemp;
+//   map<string,Point> BoundaryPoint;
+
+  set<const Elem*>::iterator it = Domain.begin();
+  const set<const Elem*>::iterator end = Domain.end();
+  
+  double total_heat_source = 0.0;
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    dof_map.dof_indices(elem, dof_indices);
+    fe->reinit(elem);
+    
+    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+
+    //Power emitted
+    for (ID qp = 0; qp <  qrule.n_points(); qp++)
+    {
+      mod.calculate(elem,q_point[qp]);
+      Real H = mod.get_total_heat_source();
+      total_heat_source += H * JxW[qp];
+    }
+    
+    for (ID ns = 0; ns<elem->n_sides(); ns++)
+    {
+      const ElementSide elside(elem->top_parent(),ns);
+      if (is_on_any_boundary(elside))
+      {
+	ThermalBoundaryModel* mod_b =
+	  get_interface_model<ThermalBoundaryModel>(elem, ns);
+	
+	fe_face->reinit(elem,ns);
+	if (mod_b != NULL)
+	{
+	  if (mod_b->get_name() == "Cold")
+	  {
+	    double a,b,c; 
+	    mod_b->get_coefficients(a,b,c);
+	    Tcold = c;
+	    for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
+	    { 
+	      Acold += JxW_face[qp];
+              Point_cold = q_point_face[0];
+              Tcold = solution(dof_indices[0]);
+	      for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
+	      {
+                double Px = (*thermal_flux_nodal[0])(dof_indices[alpha]) * normal[qp](0);
+		double Py = (*thermal_flux_nodal[1])(dof_indices[alpha]) * normal[qp](1);
+		double Pz = (*thermal_flux_nodal[2])(dof_indices[alpha]) * normal[qp](2);
+                Pcold -=  JxW_face[qp] * phi[alpha][qp] * (Px + Py + Pz);
+	      } 
+	    }
+	  }
+	  if (mod_b->get_name() == "Hot")
+	  {
+	    for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
+	    {
+	      double a,b,c; 
+	      mod_b->get_coefficients(a,b,c);
+	      Thot = c;
+	      Ahot += JxW_face[qp];
+	      Point_hot = q_point_face[0];
+	      Thot = solution(dof_indices[0]);
+	      for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
+	      {
+		double Px = (*thermal_flux_nodal[0])(dof_indices[alpha]) * normal[qp](0);
+		double Py = (*thermal_flux_nodal[1])(dof_indices[alpha]) * normal[qp](1);
+		double Pz = (*thermal_flux_nodal[2])(dof_indices[alpha]) * normal[qp](2);
+	      Phot -=  JxW_face[qp] * phi[alpha][qp] * (Px + Py + Pz);
+	      } 
+	    }
+	  }   
+	}
+      }
+    }
+  }
+  
+  cout<<"Pcold: "<<Pcold<<" W"<<endl;
+  cout<<"Phot: "<<Phot<<" W"<<endl;
+  cout<<"Power emitted: "<<total_heat_source*1e-6<<" W"<<endl;
+  double effective_kappa = Phot/Ahot/(abs(Thot - Tcold)) * abs(Point_hot(2) - Point_cold(2))* get_scaling().get_calc_mesh_units();
+
+  return effective_kappa;
+
+}
 double
 ThermalBalance::compute_power_emitted()
 {
@@ -1188,7 +1337,7 @@ ThermalBalance::compute_power_emitted()
 // 	fe_face->reinit(elem,ns);
 
 // 	for (ID d = 0; d<dim; d++)
-// 	{
+// 	{ solution(dof_indices[alpha]) * (dphi[alpha][qp] * normal[qp])
 //           double value = JxW_face[0] *(*thermal_flux[d])(dof_indices[0]) * normal[0](d);
 // 	  power_dissipated += value;
 //           check_abs += abs(value);
@@ -1410,11 +1559,15 @@ ThermalBalance::do_solve(void)
 
  if  (SimulationOptions::verbose() > 2)
  {
-  double pe = compute_power_emitted();
-  double pd = compute_power_dissipated();
+   //double pe = compute_power_emitted();
+   //double pd = compute_power_dissipated();
 
-  cout<<"Power Emitted:    "<<pe<<" W"<<endl;
-  cout<<"Power Dissipated: "<<pd<<" W"<<endl; 
+   //cout<<"Power Emitted:    "<<pe<<" W"<<endl;
+   //cout<<"Power Dissipated: "<<pd<<" W"<<endl; 
+
+   //double kappa = compute_effective_thermal_conductivity();
+   //cout<<"Effettive thermal conductivity:    "<<kappa* 100.0<<" W/(m K)"<<endl;
+
  }
   //J_err = energy_conservation_check();
 }
@@ -1904,7 +2057,7 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 
        const RealTensor& kappa = mod.get_total_thermal_conductivity();
        double heat_source = mod.get_total_heat_source();
-       
+      
        for (unsigned int i = 0; i < n_dofs; i++)
        {
          for (unsigned int j = 0; j < n_dofs; j++)
@@ -1915,92 +2068,152 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 
      }
 
-       // the sides
-      for (unsigned int s = 0; s < elem->n_sides(); s++)
-      {
+     // the sides
+     for (unsigned int s = 0; s < elem->n_sides(); s++)
+     {
+       const ElementSide elside(elem->top_parent(),s);
+       if (se.is_outer_boundary(elside) ||
+	   is_on_GF_boundary(elside))
+       {
+	 
+	 ThermalBoundaryModel* mod =
+	   get_interface_model<ThermalBoundaryModel>(elem, s);
+	 
+	 bool do_boundary = false;
+	 double a, b, c;
+	 if (mod != NULL)
+	 {
+	   mod->calculate(elem,s,elem->centroid() );
+	   mod->get_coefficients(a, b, c);
+	   do_boundary = true;  
+	 }
+	 else
+	 {             
+	   if (is_on_GF_boundary(elside) && !first_guess) //If this an Gray/Fourier Boundary
+	   {
+	   
+ 	      ID dof = (elem->neighbor(s))->dof_number(gray_sys_number,0,0);
+ 	      do_boundary = true;
 
-	const ElementSide elside(elem->top_parent(),s);
-	bool do_boundary = false;
+ 	      if (is_gray_solved)  //-----------Get the Gray flux-------------------------------
+ 	      {
+		RealGradient heat_flux(0);
+		for (ID i = 0; i < dim; i++)
+		  heat_flux(i) = (*thermal_flux[i])(dof);
 
-	if (se.is_outer_boundary(elside) ||
-	    is_on_GF_boundary(elside))
-	  {
-	    ThermalBoundaryModel* mod =
-	      get_interface_model<ThermalBoundaryModel>(elem, s);
-
-	    fe_face->reinit(elem, s);
-
-	    const ElementSide elside(elem->top_parent(),s);
-
-
-	    double a, b, c;
-
-	    if (mod != NULL)
-	    {
-
-	      mod->calculate(elem, s,elem->centroid() );
-	      mod->get_coefficients(a, b, c);
-	      do_boundary = true;
-
-	    }
-	    else
-	    {
-
-	      if (is_on_GF_boundary(elside) && !first_guess) //If this an Gray/Fourier Boundary
-	      {
-		ID dof = (elem->neighbor(s))->dof_number(gray_sys_number,0,0);
-		do_boundary = true;
-	
-		if (is_gray_solved)
-		{
-		  //-----------Get the Gray flux-------------------------------
-		  RealGradient heat_flux(0);
-		  for (ID i = 0; i < dim; i++)
-		    heat_flux(i) = (*thermal_flux[i])(dof);
-
-		  //Put here something
-		  double normal_flux =  heat_flux * normal[0];
-
-		  a = 0;
-		  b = 1;
-		  c = -normal_flux;
-
-
-		}
-		else //Impose the computed temperature 
-		{
-
-		  double T = (*equilibrium_energy)(dof);
+		//Put here something
+	        double normal_flux =  heat_flux * normal[0];
 		
-		  a = 1;
-		  b = 0;
-		  c = T;
-
-		}
+	        a = 0;
+		b = 1;
+		c = -normal_flux;
 	      }
-	    } //if (mod != NULL)
+	      else //Impose the computed temperature 
+	      {
+	        double T = (*equilibrium_energy)(dof);
+		
+	        a = 1;
+	      	b = 0;
+	        c = T;
+		
+	      }
+	   }
+	 }//if (is_on_GF_boundary(elside) && !first_guess
+	 
+	 if (do_boundary)
+	 {
+	   fe_face->reinit(elem, s);
+	   if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+	   else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+	   a /= b;
+	   c /= b;
+	   
+	   for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+	     for (unsigned int i = 0; i < n_dofs; i++)
+	     {
+	       for (unsigned int j = 0; j < n_dofs; j++)
+		 Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
+	       
+	       Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
+	     } 
+	 } 
+       }
+       
+     }
+     
+// 	if (se.is_outer_boundary(elside) ||
+// 	    is_on_GF_boundary(elside))
+// 	  {
+// 	    ThermalBoundaryModel* mod =
+// 	      get_interface_model<ThermalBoundaryModel>(elem, s);
 
-	    if (do_boundary)
-	    {
+// 	    fe_face->reinit(elem, s);
+
+// 	    const ElementSide elside(elem->top_parent(),s);
+
+
+// 	    double a, b, c;
+
+// 	    if (mod != NULL)
+// 	    {
+
+// 	      mod->calculate(elem, s,elem->centroid() );
+// 	      mod->get_coefficients(a, b, c);
+// 	      do_boundary = true;
+
+// 	    }
+// 	    else
+// 	    {
+	      
+// 	      if (is_on_GF_boundary(elside) && !first_guess) //If this an Gray/Fourier Boundary
+// 	      {
+// 	      	ID dof = (elem->neighbor(s))->dof_number(gray_sys_number,0,0);
+// 		do_boundary = true;
+	
+// 	      if (is_gray_solved)
+// 	      {
+// 		  //-----------Get the Gray flux-------------------------------
+// 	      RealGradient heat_flux(0);
+// 	      for (ID i = 0; i < dim; i++)
+// 		heat_flux(i) = (*thermal_flux[i])(dof);
+
+// 		  //Put here something
+// 	        double normal_flux =  heat_flux * normal[0];
+
+// 	        a = 0;
+// 		b = 1;
+// 		c = -normal_flux;
+// 	      	}
+// 	      	else //Impose the computed temperature 
+// 	     	{
+// 	        double T = (*equilibrium_energy)(dof);
 	     
-	      if ((b < 1e-10) && (b >= 0)) b = 1e-20;
-	      else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
-	      a /= b;
-	      c /= b;
+// 	        a = 1;
+// 	      	b = 0;
+// 	        c = T;
 
-	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-		for (unsigned int i = 0; i < n_dofs; i++)
-		{
-		  for (unsigned int j = 0; j < n_dofs; j++)
-		    Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
+// 	      	}
+// 	      }
+// 	    } //if (mod != NULL)
 
-		  Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
-		}
-
-	    } //if (do_boundary)
-	  } //	if (is_on_any_boundary(elside))
-
-      } //Side
+// 	    if (do_boundary)
+// 	    {
+	     
+// 	      if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+// 	      else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+// 	      //a /= b;
+// 	      //c /= b;
+              
+// 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+// 		for (unsigned int i = 0; i < n_dofs; i++)
+// 		{
+// 		  for (unsigned int j = 0; j < n_dofs; j++)
+// 		    Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
+// 		  Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
+// 		}
+// 	    } //if (do_boundary)
+      //  } //	if (is_on_any_boundary(elside))
+   //   } //Side
 
      dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
      system_fourier.matrix->add_matrix(Ke, dof_indices);

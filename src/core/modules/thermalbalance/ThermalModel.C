@@ -28,51 +28,52 @@ void
 ThermalModel::create_submodels(void)
 {
 
-
-
   //Heat Transport Default
-  if (!get_options().has_submodel("heat_transport"))
+  if (!get_options().has_submodel("HeatTransport"))
   {
     ModelOptions opts;
     opts.set_option("type","fourier");
-    get_options().add_submodel("heat_transport",opts);
+    get_options().add_submodel("HeatTransport",opts);
+  }
+  
+  //Thermal Conductivity Default
+  if (!get_options().has_submodel("ThermalConductivity"))
+  {
+    ModelOptions opts;
+    opts.set_option("type","constant");
+    get_options().add_submodel("ThermalConductivity",opts);
   }
 
-   //Thermal Conductivity Default
-   if (!get_options().has_submodel("thermal_conductivity"))
-   {
-     ModelOptions opts;
-     opts.set_option("type","constant");
-     get_options().add_submodel("thermal_conductivity",opts);
-   }
-
 }
-
 
 void
 ThermalModel::do_init(void)
 {
 
+  //PhysicalModelInterface::SubmodelIterator  it;
+
   PhysicalModelInterface::SubmodelIterator  it;
 
-  //Heat Transport Model
-  it = submodels_begin("heat_transport");
+  it = submodels_begin("HeatTransport");  
   _htm = dynamic_cast<HeatTransportModel*> ((*it).second);
 
 
-  ModelOptions& opts = _htm->get_options();
-
   //Lattice Thermal Conductivity
-  it = submodels_begin("thermal_conductivity");
+  it = submodels_begin("ThermalConductivity");  
   _tcm = dynamic_cast<ThermalConductivityModel*> ((*it).second);
 
+  //---------------------------------------
+  ModelOptions::submodel_iterator
+    it_hs(get_options().submodels_begin("HeatSource"));
+  ModelOptions::submodel_iterator
+    end_hs(get_options().submodels_end("HeatSource"));
 
   //Heat Source
-  it = submodels_begin("heat_source");
-  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("heat_source"));
+
+  it = submodels_begin("HeatSource");
+  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("HeatSource"));
   for ( ; it != it_end ; ++it)
     _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
-
 
   //If we do gray we have to get the sound velocity and the relaxation time
   _kappa = _tcm->get_thermal_conductivity();
@@ -90,7 +91,6 @@ ThermalModel::do_init(void)
     _cg = db.get("C",0.0, false);
     get_parameter("C", _cg);
 
-
     _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;
   }
 
@@ -102,8 +102,6 @@ ThermalModel::do_init_alloy(const PhysicalModelInterface *comp_A,
                                                 const PhysicalModelInterface *comp_B, double xa)
 {
 
-
-
    const ThermalModel* modA = dynamic_cast<const ThermalModel*>(comp_A);
    const ThermalModel* modB = dynamic_cast<const ThermalModel*>(comp_B);
 
@@ -111,10 +109,6 @@ ThermalModel::do_init_alloy(const PhysicalModelInterface *comp_A,
    _cg = alloy(modA->_cg, modB->_cg, xa);
 
 }
-
-
-
-
 
 
 
@@ -140,20 +134,14 @@ ThermalModel::do_print_info(void)
 
 }
 
-void
-ThermalModel::read_database(void)
-{
-
-
-
-}
-
 
 void
 ThermalModel::calculate(const Elem* elem, const Point& point)
 {
   //Heat Source
+ 
   _heat_source = 0.0;
+ 
   for (ID n = 0 ; n <_hsm.size() ; n++)
   {
     _hsm[n]->calculate(elem,point);

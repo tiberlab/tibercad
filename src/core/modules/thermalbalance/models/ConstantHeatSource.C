@@ -22,7 +22,9 @@ void
 ConstantHeatSource::do_init(void)
 {
   double heat_source = 0.0;
-  get_parameter("H", heat_source,true);
+ 
+  get_parameter("H",heat_source);  
+
   set_heat_source(heat_source);
 
 }

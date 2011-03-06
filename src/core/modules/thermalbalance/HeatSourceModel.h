@@ -51,6 +51,7 @@ inline
 Real
 HeatSourceModel::get_heat_source(void) const
 {
+
   return _heat_source;
 }
 

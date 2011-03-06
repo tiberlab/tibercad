@@ -91,6 +91,8 @@ class TBDLLOCAL ThermalBalance : public SimulationInterface
 
   double compute_power_dissipated();
 
+  double compute_effective_thermal_conductivity();
+
   double compute_power_emitted();
 
   void do_partition(void);

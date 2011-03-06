@@ -42,17 +42,10 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 
   const double get_relaxation_time(void) const;
 
-  //! Reinit for element \c elem
-  // void set_element(const Elem* elem);
   
-  //! Set the current point
-  //  void set_point(const Point& point);
-  
-  //! Calculate everything
-  //void calculate(void);
 
  //! Calculate for a point on the given side
-  virtual void calculate(const Elem* elem, const Point& point);
+  void calculate(const Elem* elem, const Point& point);
 
   protected:
 
@@ -68,10 +61,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
     virtual void do_init(void);
 
     //! Read database
-    virtual void read_database(void);
-
-//     //! do the actual calculation
-//     virtual void do_calculate(void);
+  virtual void read_database(void){};
 
     virtual void create_submodels(void);
 
