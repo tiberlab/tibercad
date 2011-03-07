@@ -1,4 +1,6 @@
-.. _EFA:
+..   <marker>
+
+.. _EFAReferenceGuide:
 
 
 Quantum  EFA  calculations
@@ -473,6 +475,9 @@ The output variables for optics calculations are:
 * **optical_spectrum** : k-space integrated optical emission spectrum. 
 
 
+.. rubric:: Footnotes
+
+
 
 
 .. |more| image:: ../data/more.*
@@ -484,5 +489,5 @@ The output variables for optics calculations are:
 .. |idea| image:: ../data/idea.*
     :scale: 50%
 
-.. rubric:: Footnotes
 
+..   </marker>

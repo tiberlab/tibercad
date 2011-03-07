@@ -1,4 +1,6 @@
-.. _Thermal:
+..   <marker>
+
+.. _ThermalReferenceGuide:
 
 Thermal
 =================================================
@@ -53,3 +55,6 @@ Thermal
 | database_section: none
 | Options: 
 | Flux  (double vector (W/cm2, (0.0,0.0,0.0))
+
+
+..   </marker>

@@ -1,4 +1,6 @@
-.. _DriftDiffusion:
+..   <marker>
+
+.. _DriftDiffusionReferenceGuide:
 
 Solvers
 =========================
@@ -6,8 +8,8 @@ Solvers
 Numerical Solvers
 -------------------------
 
-the “Solver” block inside a module description contains the options for the numerical solver.
-The solver type the “Solver” block is describing (linear, nonlinear, eigenvalue solver) depends on the module.
+the "Solver" block inside a module description contains the options for the numerical solver.
+The solver type the "Solver" block is describing (linear, nonlinear, eigenvalue solver) depends on the module.
 For nonlinear and linear solvers, the following options exist:
 
 .. index:: double:Solvers;nonlinear
@@ -22,7 +24,7 @@ type :
   :ref:`linesearch` =  uses a linear linesearch implemented in TiberCAD
 
 Nonlinear solvers  are based on iterative methods, solving in each iteration a linear system. 
-The linear solver used for this can be controlled by providing a block with keyword “linear_solver” 
+The linear solver used for this can be controlled by providing a block with keyword "linear_solver" 
 containing the options for the linear solver (see linear solvers).
 
 .. _petsc:
@@ -158,5 +160,5 @@ options:
 Currently, the observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in 'solve'.
 
 
-
+..   </marker>
 
