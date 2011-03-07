@@ -1,4 +1,6 @@
-.. _Dsc:
+..   <marker>
+
+.. _DscTheory:
 
 
 Simulation Dye Solar Cells
@@ -482,3 +484,6 @@ See tables:
     \end{minipage}
     \caption{Scalar quantities.} \label{table:dsc_scalar}
     \end{table}
+    
+    
+    ..   </marker>

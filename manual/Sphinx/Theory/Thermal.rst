@@ -1,4 +1,6 @@
-.. _Thermal:
+..   <marker>
+
+.. _ThermalTheory:
 
 Thermal
 =================================================
@@ -81,4 +83,4 @@ Example::
     :align: center
     :scale: 50%
 
-    
+..   </marker>

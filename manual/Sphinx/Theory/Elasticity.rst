@@ -1,4 +1,6 @@
-.. _Elasticity:
+..   <marker>
+
+..  _ElasticityTheory:
 
 Elasticity
 =================================================
@@ -227,3 +229,4 @@ Considering all the above mentioned force sources, the plotted total stress and 
     \]
 
 
+..   </marker>

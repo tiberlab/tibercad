@@ -1,4 +1,6 @@
-.. _DriftDiffusion:
+..   <marker>
+
+.. _DriftDiffusionTheory:
 
 Drift-diffusion simulation of electrons and holes
 =================================================
@@ -931,8 +933,14 @@ Listing 3: Models section for drift-diffusion
     \label{table:mobility_field_dep}
     \end{table}
     
-    
-    
+.. rubric:: Footnotes
+
+.. [#] the Default value is given in brackets.
+.. [#] the linear tolerance gets automatically decreased after each nonlinear step.
+
+
+..   </marker>
+
     
 .. |more| image:: ../data/more.png
     :scale: 50%
@@ -944,7 +952,4 @@ Listing 3: Models section for drift-diffusion
     :scale: 50%
 
 
-.. rubric:: Footnotes
 
-.. [#] the Default value is given in brackets.
-.. [#] the linear tolerance gets automatically decreased after each nonlinear step.
