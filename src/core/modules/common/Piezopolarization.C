@@ -41,7 +41,7 @@ Piezopolarization::read_database(void)
     _e15 = db.get("e15", 0.0);
   } 
   else if (get_material()->get_structure() == "zb")
-    db.get("e14", 0.0);
+    _e14 = db.get("e14", 0.0);
 
 }
 
