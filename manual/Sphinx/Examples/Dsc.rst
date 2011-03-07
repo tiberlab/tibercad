@@ -1,4 +1,6 @@
-.. _Dsc:
+..   <marker>
+
+.. _DscExamples:
 
 
 Simulation Dye Solar Cells
@@ -270,6 +272,9 @@ Finally the flag (ContactCurrents) allows the plot of the current flowing throug
  
     Fig. 6: I-V characteristic of the device.
 
+.. rubric:: Footnotes
+
+
 .. |more| image:: ../data/more.png
     :scale: 50%
 
@@ -279,4 +284,5 @@ Finally the flag (ContactCurrents) allows the plot of the current flowing throug
 .. |idea| image:: ../data/idea.png
     :scale: 50%
 
-.. rubric:: Footnotes
+
+..   </marker>

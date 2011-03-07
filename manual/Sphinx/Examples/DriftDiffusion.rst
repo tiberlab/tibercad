@@ -1,4 +1,6 @@
-.. _DriftDiffusion:
+..   <marker>
+
+.. _DriftDiffusionExamples:
 
 Drift Diffusion
 =================================================
@@ -1684,6 +1686,12 @@ The temperature = 300  is the default ::
 ..  _mosfet.tib: http://www.tibercad.org/files/mosfet_2.tib
 ..  _mosfet_transchar.tib: http://www.tibercad.org/files/mosfet_transchar_2.tib
 
+
+.. rubric:: Footnotes
+
+
+..   </marker>
+
 .. |more| image:: ../data/more.png
     :scale: 50%
 
@@ -1692,5 +1700,3 @@ The temperature = 300  is the default ::
 
 .. |idea| image:: ../data/idea.png
     :scale: 50%
-
-.. rubric:: Footnotes

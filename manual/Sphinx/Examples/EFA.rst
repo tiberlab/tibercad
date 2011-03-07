@@ -1,4 +1,6 @@
-.. _EFA:
+..   <marker>
+
+.. _EFAExamples:
 
 Envelope Function Approximation
 =================================================
@@ -365,6 +367,10 @@ Thus, in  Solver section::
 ..  _quantum_well.geo: http://www.tibercad.org/files/quantum_well_0.geo
 ..  _tutorial6.tib:    http://www.tibercad.org/files/tutorial6_2.tib
 
+.. rubric:: Footnotes
+
+..   </marker>
+
 
 .. |more| image:: ../data/more.png
     :scale: 50%
@@ -375,4 +381,4 @@ Thus, in  Solver section::
 .. |idea| image:: ../data/idea.png
     :scale: 50%
 
-.. rubric:: Footnotes
+

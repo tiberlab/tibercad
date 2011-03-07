@@ -1,4 +1,6 @@
-.. _Thermal:
+..   <marker>
+
+.. _ThermalExamples:
 
 Thermal
 =================================================
@@ -159,4 +161,4 @@ specified with
     }
   
 
-
+..   </marker>

@@ -1,4 +1,6 @@
-.. _Elasticity:
+..   <marker>
+
+.. _ElasticityExamples:
 
 Elasticity
 =================================================
@@ -105,3 +107,5 @@ tend to screen the output potential. The potential profile is shown below.
 ..  figure:: ../data/elasticpotential.png
     :align: center
     :scale: 50%
+    
+..   </marker>
