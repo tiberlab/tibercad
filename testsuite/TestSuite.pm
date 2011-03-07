@@ -152,7 +152,7 @@ sub cleanup_test_dir($);
 ##
 ## Returns 1 in case of error, 0 otherwise
 ##
-sub compare_results_with_reference($);
+sub compare_results_with_reference($$);
 
 
 ##
@@ -337,14 +337,14 @@ sub run_test($) {
   my $infile = "";
   (defined $opts{"inputfile"}) && ($infile = $opts{"inputfile"});
 
-  my $out = $opts{"outputdir"};
-  if (defined $out && $out ne "") { $outdir = $out };
+  my $out = $outdir;
+  (defined $opts{"outputdir"}) && ($out = $opts{"outputdir"});
  
   my $failure = 0;
   if (not $options{'testonly'}) {
     $failure = run_executable($infile);
   }
-  $failure = compare_results_with_reference(\%checks) unless $failure;
+  $failure = compare_results_with_reference(\%checks, $out) unless $failure;
 
   chdir($olddir);
 
@@ -387,12 +387,13 @@ sub cleanup_test_dir($) {
 
 
 
-sub compare_results_with_reference($) {
+sub compare_results_with_reference($$) {
 
   my $result = 0;
 
   
   my $checks = $_[0];
+  my $outputdir = $_[1];
 
   # the number of checks
   my $num_checks = scalar(keys(%$checks));
@@ -400,7 +401,7 @@ sub compare_results_with_reference($) {
   print("Check data:\n") if verbose();
   
   while ( my ($file, $vars) = each(%$checks)) {
-    my $datafile = "$outdir/$file";
+    my $datafile = "$outputdir/$file";
     my $reffile = "$refdir/$file";
 
     my ($filename, $path, $suffix) = fileparse($file, @known_suffixes);
