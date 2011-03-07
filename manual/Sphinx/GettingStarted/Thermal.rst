@@ -1,4 +1,6 @@
-.. _Thermal_Getting:
+..   <marker>
+
+.. _ThermalGetting:
 
 Thermal
 =================================================
@@ -113,4 +115,4 @@ Example::
      dd_simulation = dd
     }
 
-
+..   </marker>

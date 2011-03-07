@@ -1,4 +1,6 @@
-..  _install:
+..   <marker>
+
+..  _installGetting:
 
 
 Installation instructions
@@ -120,7 +122,7 @@ the program:
 
 
 
-.. _InputFile:
+.. _InputFileGetting:
 
 Input for TiberCAD
 =================================================
@@ -774,6 +776,12 @@ Here is an example of the input file template::
      output_format = vtk
     }
 	
+	
+.. rubric:: Footnotes
+
+	
+..   </marker>
+
 
 .. |more| image:: ../data/more.png
     :scale: 50%
@@ -784,4 +792,3 @@ Here is an example of the input file template::
 .. |idea| image:: ../data/idea.png
     :scale: 50%
 
-.. rubric:: Footnotes

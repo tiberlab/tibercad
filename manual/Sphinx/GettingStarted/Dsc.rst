@@ -1,4 +1,6 @@
-.. _Dsc_Getting:
+..   <marker>
+
+.. _DscGetting:
 
 
 Simulation Dye Solar Cells
@@ -339,3 +341,14 @@ The output that want to be plotted are enlisted in section Model within option. 
     \caption{Scalar quantities.} \label{table:dsc_scalar}
     \end{table}
 
+
+.. |more| image:: ../data/more.png
+    :scale: 50%
+
+.. |warn| image:: ../data/warn.png
+    :scale: 50%
+
+.. |idea| image:: ../data/idea.png
+    :scale: 50%
+
+..   </marker>

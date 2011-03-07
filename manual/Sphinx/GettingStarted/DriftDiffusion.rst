@@ -1,4 +1,6 @@
-.. _DriftDiffusion_Getting:
+..   <marker>
+
+.. _DriftDiffusionGetting:
 
 Drift Diffusion
 =================================================
@@ -341,6 +343,12 @@ The generated Output files are:
 ..  _bulk.geo: http://www.tibercad.org/files/bulk_0.geo
 ..  _bulk.msh: http://www.tibercad.org/files/bulk_0.msh
 
+.. rubric:: Footnotes
+
+
+..   </marker>
+
+
 .. |more| image:: ../data/more.png
     :scale: 50%
 
@@ -350,4 +358,3 @@ The generated Output files are:
 .. |idea| image:: ../data/idea.png
     :scale: 50%
 
-.. rubric:: Footnotes

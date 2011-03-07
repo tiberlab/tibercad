@@ -1,4 +1,6 @@
-.. _EFA_Getting:
+..   <marker>
+
+.. _EFAGetting:
 
 
 
@@ -332,6 +334,11 @@ The output variables for optics calculations are:
 
 * **optical_spectrum** : k-space integrated optical emission spectrum.
 
+.. rubric:: Footnotes
+
+
+
+..   </marker>
 
 
 
@@ -345,5 +352,5 @@ The output variables for optics calculations are:
     :scale: 50%
 
 
-.. rubric:: Footnotes
+
 

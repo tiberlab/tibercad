@@ -1,4 +1,6 @@
-.. _Elasticity_Getting:
+..   <marker>
+
+.. _ElasticityGetting:
 
 Elasticity
 =================================================
@@ -100,4 +102,7 @@ Output data about strain are shown below.
 .. figure:: ../data/elasticity02.png
    :align: center
    :scale: 50%
+   
+   
+..   </marker>
 
