@@ -6,11 +6,10 @@ Device
   
   meshfile = bulk.msh
   dimension = 2
-  temperature = 300
   symmetry = cylindrical
 
   Region n_side{
-   doping
+   Doping
    {
      type = donor 
      Nd = 1e18
@@ -18,14 +17,14 @@ Device
   }
 
   Region p_side{
-   doping
+   Doping
    {
      type = acceptor 
      Nd = 1e18
    }
   }
 
-   Region air{material = Air}
+   Region air { material = Air }
 
 }
 
@@ -33,7 +32,7 @@ Device
 Module driftdiffusion
 {
                 
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, NetRecombination,Pn,Pp,thermal,ContactCurrents)
+  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity, NetRecombination,Pn,Pp,thermal,ContactCurrents)
 
   regions = (n_side,p_side)
 
@@ -44,8 +43,7 @@ Module driftdiffusion
     thermal_simulation = thermal
     recombination srh{}
     thermoelectric_power diffusivity_model{}
-    electron_mobility doping_dependent{}
-    hole_mobility doping_dependent{}
+    mobility doping_dependent{}
   }  
 
   Contact anode
@@ -69,7 +67,7 @@ Module thermal
 
    Physics   
    {
-     HeatSource joule{DD_simulation = driftdiffusion}
+     HeatSource joule {DD_simulation = driftdiffusion}
    }
 
    Contact reservoir
@@ -89,7 +87,7 @@ Module thermal
 Module selfconsistent
 {
    solve = (driftdiffusion,thermal)
-   abs_tolerance = 1e-5
+   absolute_tolerance = 1e-5
    monitor = true
 }
 
@@ -101,6 +99,7 @@ Module sweep
   start = 0.0
   stop = 1.2
   steps = 12
+  plot_data = true
 }
 
 
@@ -109,6 +108,6 @@ Simulation
   temperature = 300
   solve = sweep
   resultpath = output
-  output_format = vtu
+  output_format = vtk
 }
 
