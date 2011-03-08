@@ -269,171 +269,222 @@ Glossary
       | Description : 
 
       
-   Parameter
+   Module efaschroedinger
    
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
+      The EFA calculation  of eigenstates and  eigenfunctions are performed by the **Module** efaschroedinger.
+
       | Options: 
-      |     
-      | 
-      | Description :
+      |   particle = el | ..
+      |      particle = string defines for which particle (electron or hole) Schroedinger equation is solved Possible values are el and hl. A different Module efaschroedinger has to be defined for each particle to be solved.
+      |
+      |   poisson_model_name = dd | ..
+      |      poisson_model_name = string defines the name of the simulation (Module driftdiffusion) that can provide electric potential
+      |
+      |   strain_model_name = strain | macrostrain
+      |      strain_model_name = string defines the name of the simulation (Module macrostrain) that can provide elastic strain
+      |
+      |   name = quantum_el | ..
+      |
+      |   regions = quantum | ..
+      |      regions = string defines the regions associated to this EFA simulation
+      |
+      |   plot = EigenFunctions | EigenEnergy | EnergyLevels
+      
+      can include a Solver Sub-Block 
+      
+      |    Options: 
+      |       number_of_eigenstates = 10 | 30 
+
+      can include a Physics Sub-Block 
+      
+      |    Options: 
+      |       model = conduction_band | ..
+
 
       
-   Parameter
+   Module quantumdispersion
    
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
+   With the Module quantumdispersion it is possible to calculate the dependence of quantum eigenstates on **k** -vector. Such dependence gives the *quantum state dispersion* . The simulation name is **quantumdispersion** .
+     
       | Options: 
-      |     
-      | 
-      | Description :
+      |   simulation_name = dispersion1D_el | ..
+      |      
+      |
+      |   regions = all | ..
+      |      
+      |
+      |   quantum_simulation = quantum_el | ..
+      |      quantum simulation is the name of the efaschroedinger simulation.
+      |
+      |   min_eigenvalue_number = [int] i.e. 0
+      |      the dispersion is calculated for the states number **i** , where i is included between the values of min_ and max_ eigen numbers.
+      |
+      |   max_eigenvalue_number = [int] larger than min_eigenvalue_number i.e. 5
+      |      the dispersion is calculated for the states number **i** , where i is included between the values of min_ and max_ eigen numbers.
+      |
+      |   wedge = half
+      |      defines properties of K-space.
+      |
+      |   k_space_dimension = 1
+      |      defines properties of K-space.
+      |
+      |   k1 = (0, 0.1, 0)
+      |      defines properties of K-space.
+      |
+      |   number_of_nodes = (10)
+      |
+      |   output_format = grace
+      |      the main format to view data with Grace software
+      |
+      |   plot = k-space_dispersion | ..
+      |      variables to include in the plot graphs
+      
 
       
-   Parameter
+   Module quantumdensity
    
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
+   In Module quantumdensity you can define the calculation of particle (electron,hole) density, 
+   based on the result of a previous calculation of the system eigenstates (e.g. with
+   efaschroedinger module). Quantum density may be obtained with an analytical or a
+   numerical calculation.
+   
       | Options: 
-      |     
-      | 
-      | Description :
+      |   name = dens_el | ..
+      |      
+      |
+      |   regions = quantum | ..
+      |      
+      |
+      |   quantum_simulation = quantum_el | ..
+      |      quantum simulation is the name of the efaschroedinger simulation.
+      |
+      |   initial_eigenstates_number = [int] i.e. 10
+      |      initial number of eigenstates for the Schroedinger equation
+      |
+      |   degeneracy = [int] i.e. 2 [int] 
+      |      degeneracy of the quantum state
+      |
+      |   refine_fraction = [double] i.e. 0.20
+      |      
+      |   relative_accuracy = [double] i.e. 0.01
+      |      
+      |   refine_k_space = [bool] i.e. true
+      |      
+      |   output_density_in_k_space = [bool] i.e. true
+      |      
+      |   uniform_refinement = [bool] i.e. false
+      |      
+      |   mesh_order = FIRST | ..
+      |      
+      |   first_state = [int] i.e. 3
+      |
+      |   analytic = [bool] i.e. true
+      |      If true then the density is calculated analytically, otherwise numerically.
+      |
+      |   wedge = half
+      |      defines properties of K-space.
+      |
+      |   k_space_dimension = 0
+      |      defines properties of K-space.
+      |
+      |   k1 = (0, 0.1, 0)
+      |      defines properties of K-space.
+      |
+      |   number_of_nodes = (4)
+      |
+      |
+      |   plot = quantum_density | ..
+      |      variables to include in the plot graphs
 
       
-   Parameter
+   Module opticskp
    
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
+   By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
+   the optical kp matrix elements are calculated from the quantum models specified in the Module.
+     
       | Options: 
-      |     
-      | 
-      | Description :
+      |   name = optics
+      |      
+      |
+      |   regions = quantum
+      |      
+      |
+      |   initial_state_model = quantum_el 
+      |      quantum simulation associated to the initial state of optical transition (e.g. electron)
+      |
+      |   final_state_model = quantum_hl
+      |      quantum simulation associated to the final state of optical transition (e.g. hole)
+      |
+      |   initial_eigenstates = (0, 9)
+      |      referred to the range of eigenstates to be taken in account for optical calculations
+      |
+      |   final_eigenstates = (0, 15)
+      |      referred to the range of eigenstates to be taken in account for optical calculations
+      |
+      |   polarization = (0, 0, 1)
+      |      
+      |
+      |   Emin = [int] i.e. 2.8
+      |      minimum value for the range of energy
+      |
+      |   Emax = [int] greater than Emin i.e.3.6
+      |      maximum value for the range of energy
+      |
+      |   dE = 0.001
+      |      incresing step selected for the range of energy
+      |
+      |   plot = (optical_spectrum_k_0 ) | ..
+      |      optical emission spectrum for *k=0*
 
       
-   Parameter
+   Module opticalspectrum
    
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
+By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
+   the optical kp matrix elements are calculated from the quantum models specified in the Module.
+     
       | Options: 
-      |     
-      | 
-      | Description :
+      |   k_space_dimension = 2
+      |        k_space_dimension = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
+      |        **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
+      |        real space
+      |
+      |   k1 = (0, 0, 0.1)
+      |   k2 = (0, 0.1, 0)
+      |
+      |   refine_fraction = 0.30 
+      |      
+      |
+      |   relative_accuracy = 0.01
+      |      
+      |
+      |   refine_k_space = true
+      |      **true** , that is adaptive k-mesh refinement is enabled, all the elements 
+      |      whose error is greater than the value (1-refine fraction) (maximum error) are
+      |      going to be refined. In this case, Error is just the integrated quantity. 
+      |      The refinement will end when the *relative_accuracy* is obtained.
+      |
+      |   number_of_nodes = (2, 2)
+      |      number of elements in k mesh, along each direction
+      |
+      |   wedge = half | quarter
+      |      to reduce calculation time, by exploiting symmetry
+      |   
+      |   optical_matr_elem_model = opticskp
+      |      name of the *opticskp* model associated
+      |   
+      |   polarization = (0, 0, 1)
+      |      light polarization (vector)
+      |   
+      |   Emin = [int] i.e. 3.0
+      |      minimum value for the range of energy
+      |
+      |   Emax = [int] greater than Emin i.e. 5.0
+      |      maximum value for the range of energy
+      |
+      |   dE = 0.001
+      |      incresing step selected for the range of energy
+      |
+      |   plot = (optical_spectrum  | .. )
+      |      k-space integrated optical emission spectrum
 
       
-   Parameter
-   
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
-      | Options: 
-      |     
-      | 
-      | Description :
-
-      
-   Parameter
-   
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
-      | Options: 
-      |     
-      | 
-      | Description :
-
-      
-   Parameter
-   
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
-      | Options: 
-      |     
-      | 
-      | Description :
-
-      
-   Parameter
-   
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
-      | Options: 
-      |     
-      | 
-      | Description :
-
-      
-   Parameter
-   
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
-      | Options: 
-      |     
-      | 
-      | Description :
-
-      
-   Parameter
-   
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
-      | Options: 
-      |     
-      | 
-      | Description :
-
-      
-   Parameter
-   
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
-      | Options: 
-      |     
-      | 
-      | Description :
-
-      
-   Parameter
-   
-      | Level: 
-      | Kind:
-      | Name: 
-      | Type: 
-      | database_section: none
-      | Options: 
-      |     
-      | 
-      | Description :
-
