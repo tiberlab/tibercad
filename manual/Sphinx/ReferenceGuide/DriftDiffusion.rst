@@ -41,7 +41,7 @@ containing the options for the linear solver (see linear solvers).
 
 * ``max_step`` =  maximum linesearch step (l_2-norm)
 
-* ``divergence_tolerance	=  divergence criterion
+* ``divergence_tolerance``	=  divergence criterion
 
 ..  _linesearch:
 
@@ -49,7 +49,7 @@ containing the options for the linear solver (see linear solvers).
 
 * ``absolute_tolerance`` =  convergence criterion based on the l_2-norm of the residual
 
-* ``step_tolerance`` =  tolerance criterion based on the l\infinity-norm of the correction step
+* ``step_tolerance`` =  tolerance criterion based on the l_infinity-norm of the correction step
 
 * ``max_iterations`` =  maximum number of iterations
 
