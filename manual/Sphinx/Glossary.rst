@@ -160,30 +160,113 @@ Glossary
       | Description : Linear solvers  are based on iterative methods, solving in each iteration a linear system.
  
       
-   Parameter
+   Simulations;sweep
    
-      | Level: 
+      | Level: Sub-Block
       | Kind:
-      | Name: 
-      | Type: 
+      | Name: sweep
+      | Type: simulation block
       | database_section: none
       | Options: 
-      |     
+      |   solve = a list of simulations to be solved, eg. (strain, dd)
+      |   variable =  the sweep variable, eg. $Vd
+      |   start =  the first value of the sweep
+      |   stop =  the last value of the sweep
+      |   steps =  the number of steps the interval (start, stop) gets subdivided in
+      |   values =  instead of start, stop and steps, provide the sweep values explicitly
+      |   plot_data =  set to true if you want to plot after each step the simulation results (default is false)
+      |   min_step =  the minimum absolute step size
+      |   max_step = the maximum absolute step size
+      |   initial_step = the absolute initial step size
+      |   min_relative_step =  minimum relative step size, default is 1e-3
+      |   max_relative_step =  maximum relative step size, default is 1
+      |   initial_relative_step =  initial relative step size, default is 1
       | 
-      | Description :
+      | Description : Performs a linear sweep for a given variable.
 
       
-   Parameter
+   Solvers;selfconsistent
    
-      | Level: 
+      | Level: Sub-Block
       | Kind:
-      | Name: 
-      | Type: 
+      | Name: selfconsistent
+      | Type: solvers
       | database_section: none
       | Options: 
-      |     
+      |   max_iteration =  the maximum number of iterations. Currently, when the maximum number of iterations is reached, the program only issues a warning and proceeds.
+      |   relative_tolerance =  the relative convergence tolerance for the observed variable in terms of the l2-norm
+      |   absolute_tolerance =  the absolute convergence tolerance for the observed variable in terms of the maximum-norm
+      |   relaxation_factor =  an optional relaxation factor (default is 1) to be applied to the observed variable
+      |   solve =  the simulations to be solved
       | 
-      | Description :
+      | Description : Solves models in an iterative way to obtain a selfconsistent solution, optionally using a relaxation approach.
+
+   Heat Source;constant
+
+      | Level: Sub-Block
+      | Heat Source/constant
+      | Kind: bulk 
+      | Name: HeatSource
+      | Type: constant
+      | database_section: none
+      | Options: 
+      |   H (double,0.0)
+      | 
+      | Description : 
+
+
+   Heat Source;joule
+
+      | Level: Sub-Block
+      | Heat Source/joule
+      | Kind: bulk 
+      | Name: HeatSource
+      | Type: joule
+      | database_section: none
+      | Options: 
+      |   dd_simulation (string,"driftdiffusion")
+      | 
+      | Description : 
+
+   Boundary;Heat reservoir
+
+      | Level: Sub-Block
+      | Boundary/Heat reservoir
+      | Kind: interface
+      | Name: Contact
+      | Type: heat_reservoir
+      | database_section: none
+      | Options: 
+      |   temperature (positive double,300)
+      | 
+      | Description : 
+
+   Boundary;Surface Thermal Resistance
+
+      | Level: Sub-Block
+      | Boundary/Surface Thermal Resistance
+      | Kind: interface
+      | Name: Contact
+      | Type: surface_resistance
+      | database_section: none
+      | Options: 
+      |   r_surf (positive double 0.0)
+      |   temperature (positive double (K),300)
+      | 
+      | Description : 
+
+   Boundary;Flux
+
+      | Level: Sub-Block
+      | Boundary/Flux
+      | Kind: interface
+      | Name: Contact
+      | Type: flux
+      | database_section: none
+      | Options: 
+      |   Flux  (double vector (W/cm2, (0.0,0.0,0.0))
+      | 
+      | Description : 
 
       
    Parameter
