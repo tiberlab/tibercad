@@ -16,8 +16,8 @@ Welcome to TiberCAD's Getting Started
    Dsc
    
    
-   Glossary
-   Bibliography
+   /appendix/Glossary
+   /appendix/Bibliography
    Index
    
 
