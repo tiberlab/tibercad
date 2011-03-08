@@ -123,18 +123,42 @@ Glossary
       | 
       | Description : Nonlinear solvers  are based on iterative methods, solving in each iteration a linear system.
       
-   Parameter
+   Solvers;linear
    
       | Level: 
       | Kind:
       | Name: 
-      | Type: 
+      | Type: solvers
       | database_section: none
       | Options: 
+      |     petsc (string) : uses the PETSc linear solver (SNES) (default)
+      |               method : the Krylov subspace method to be used     
+      |                  bcgs =  BiCGSTAB
+      |                  bcgsl =
+      |                  gmres =  Generalized Minimal Residual
+      |                  bicg =  BiConjugate Gradient
+      |                  cg =  Conjugate Gradient
+      |                  cgs =  Conjugate Gradient Squared
+      |                  richardson =  Richardson
+      |                  pconly = only apply preconditioner
       |     
+      |     relative_tolerance : convergence criterion based on relative residual l_2-norm
+      |     
+      |     absolute_tolerance : convergence criterion based on the l_2-norm of the residual
+      |     
+      |     max_iterations : maximum number of iterations
+      |     
+      |     preconditioner (string) : attribute of pconly
+      |               method : the Krylov subspace method to be used     
+      |                  lu =  LU
+      |                  ilu = incomplete LU
+      |                  jacobi =  Jacobi
+      |                  cholesky =  Cholesky
+      |                  none =  no preconditioning
+      |                  composite =  use a combination of Jacobi and iLU
       | 
-      | Description :
-
+      | Description : Linear solvers  are based on iterative methods, solving in each iteration a linear system.
+ 
       
    Parameter
    
