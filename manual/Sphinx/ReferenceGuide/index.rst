@@ -14,8 +14,8 @@ Welcome to TiberCAD's Reference Guide
    EFA
    Dsc
    
-   /appendix/Glossary
-   /appendix/Bibliography
+   Glossary
+   Bibliography
    index
    
 
