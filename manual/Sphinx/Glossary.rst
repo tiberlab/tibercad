@@ -7,7 +7,6 @@ Glossary
    :sorted:
    
    Stiffness;Isotropic
-
       | Level:
       | Kind: bulk 
       | Name: Stiffness
@@ -18,10 +17,10 @@ Glossary
       |      poisson (double [-0.5,1.0],0.0)
       | 
       | Description :
+      | 
 
 
    Stiffness;Anisotropic
-
       | Level:
       | Kind: bulk 
       | Name: Stiffness
@@ -31,9 +30,9 @@ Glossary
       |     none
       | 
       | Description :
-
+      | 
+      
    Body Force;constant
-
       | Level:
       | Kind: bulk 
       | Name: BodyForce
@@ -43,10 +42,9 @@ Glossary
       |      force (double vector,(0.0,0.0,0.0))
       | 
       | Description :
-
+      | 
 
    Body Force;Lattice Mismatch
-
       | Level:
       | Kind: bulk 
       | Name: BodyForce
@@ -59,10 +57,9 @@ Glossary
       |     z-growth-direction (double vector)
       | 
       | Description :
-
+      | 
 
    Body Force;Converse
-
       | Level:
       | Kind: bulk 
       | Name: BodyForce
@@ -72,10 +69,9 @@ Glossary
       |     poisson_simulation (string,"none")
       | 
       | Description :
-
+      | 
 
    Boundary;clamp
-
       | Level:
       | Kind: interface
       | Name: Contact
@@ -85,10 +81,9 @@ Glossary
       |     poisson_simulation (string,"none")
       | 
       | Description :
-
+      | 
 
    Boundary;Surface Force
-
       | Level:
       | Kind: interface
       | Name: Contact
@@ -98,10 +93,9 @@ Glossary
       |     force (double vector,(0.0,0.0,0.0)
       | 
       | Description :
-      
+      | 
 
    Solvers;nonlinear
-   
       | Level: 
       | Kind:
       | Name: 
@@ -122,9 +116,9 @@ Glossary
       |               max_iterations : maximum number of iterations
       | 
       | Description : Nonlinear solvers  are based on iterative methods, solving in each iteration a linear system.
+      | 
       
    Solvers;linear
-   
       | Level: 
       | Kind:
       | Name: 
@@ -158,10 +152,9 @@ Glossary
       |                  composite =  use a combination of Jacobi and iLU
       | 
       | Description : Linear solvers  are based on iterative methods, solving in each iteration a linear system.
- 
+      |  
       
    Simulations;sweep
-   
       | Level: Sub-Block
       | Kind:
       | Name: sweep
@@ -183,10 +176,9 @@ Glossary
       |   initial_relative_step =  initial relative step size, default is 1
       | 
       | Description : Performs a linear sweep for a given variable.
-
+      | 
       
    Solvers;selfconsistent
-   
       | Level: Sub-Block
       | Kind:
       | Name: selfconsistent
@@ -200,9 +192,9 @@ Glossary
       |   solve =  the simulations to be solved
       | 
       | Description : Solves models in an iterative way to obtain a selfconsistent solution, optionally using a relaxation approach.
+      | 
 
    Heat Source;constant
-
       | Level: Sub-Block
       | Heat Source/constant
       | Kind: bulk 
@@ -213,10 +205,9 @@ Glossary
       |   H (double,0.0)
       | 
       | Description : 
-
+      | 
 
    Heat Source;joule
-
       | Level: Sub-Block
       | Heat Source/joule
       | Kind: bulk 
@@ -227,9 +218,9 @@ Glossary
       |   dd_simulation (string,"driftdiffusion")
       | 
       | Description : 
+      | 
 
    Boundary;Heat reservoir
-
       | Level: Sub-Block
       | Boundary/Heat reservoir
       | Kind: interface
@@ -240,9 +231,9 @@ Glossary
       |   temperature (positive double,300)
       | 
       | Description : 
+      | 
 
    Boundary;Surface Thermal Resistance
-
       | Level: Sub-Block
       | Boundary/Surface Thermal Resistance
       | Kind: interface
@@ -254,9 +245,9 @@ Glossary
       |   temperature (positive double (K),300)
       | 
       | Description : 
+      | 
 
    Boundary;Flux
-
       | Level: Sub-Block
       | Boundary/Flux
       | Kind: interface
@@ -267,12 +258,11 @@ Glossary
       |   Flux  (double vector (W/cm2, (0.0,0.0,0.0))
       | 
       | Description : 
-
+      | 
       
    Module efaschroedinger
-   
-      The EFA calculation  of eigenstates and  eigenfunctions are performed by the **Module** efaschroedinger.
-
+      | The EFA calculation  of eigenstates and  eigenfunctions are performed by the **Module** efaschroedinger.
+      | 
       | Options: 
       |   particle = el | ..
       |      particle = string defines for which particle (electron or hole) Schroedinger equation is solved Possible values are el and hl. A different Module efaschroedinger has to be defined for each particle to be solved.
@@ -289,23 +279,22 @@ Glossary
       |      regions = string defines the regions associated to this EFA simulation
       |
       |   plot = EigenFunctions | EigenEnergy | EnergyLevels
-      
-      can include a Solver Sub-Block 
-      
+      | 
+      | can include a Solver Sub-Block 
+      | 
       |    Options: 
       |       number_of_eigenstates = 10 | 30 
-
-      can include a Physics Sub-Block 
-      
+      | 
+      | can include a Physics Sub-Block 
+      | 
       |    Options: 
       |       model = conduction_band | ..
-
+      | 
 
       
    Module quantumdispersion
-   
-   With the Module quantumdispersion it is possible to calculate the dependence of quantum eigenstates on **k** -vector. Such dependence gives the *quantum state dispersion* . The simulation name is **quantumdispersion** .
-     
+      | With the Module quantumdispersion it is possible to calculate the dependence of quantum eigenstates on **k** -vector. Such dependence gives the *quantum state dispersion* . The simulation name is **quantumdispersion** .
+      | 
       | Options: 
       |   simulation_name = dispersion1D_el | ..
       |      
@@ -317,10 +306,10 @@ Glossary
       |      quantum simulation is the name of the efaschroedinger simulation.
       |
       |   min_eigenvalue_number = [int] i.e. 0
-      |      the dispersion is calculated for the states number **i** , where i is included between the values of min_ and max_ eigen numbers.
+      |      the dispersion is calculated for the states number **i** , where i is included between the values of min and max eigen numbers.
       |
       |   max_eigenvalue_number = [int] larger than min_eigenvalue_number i.e. 5
-      |      the dispersion is calculated for the states number **i** , where i is included between the values of min_ and max_ eigen numbers.
+      |      the dispersion is calculated for the states number **i** , where i is included between the values of min and max eigen numbers.
       |
       |   wedge = half
       |      defines properties of K-space.
@@ -338,16 +327,15 @@ Glossary
       |
       |   plot = k-space_dispersion | ..
       |      variables to include in the plot graphs
-      
+      | 
 
       
    Module quantumdensity
-   
-   In Module quantumdensity you can define the calculation of particle (electron,hole) density, 
-   based on the result of a previous calculation of the system eigenstates (e.g. with
-   efaschroedinger module). Quantum density may be obtained with an analytical or a
-   numerical calculation.
-   
+      | In Module quantumdensity you can define the calculation of particle (electron,hole) density, 
+      | based on the result of a previous calculation of the system eigenstates (e.g. with
+      | efaschroedinger module). Quantum density may be obtained with an analytical or a
+      | numerical calculation.
+      | 
       | Options: 
       |   name = dens_el | ..
       |      
@@ -395,13 +383,12 @@ Glossary
       |
       |   plot = quantum_density | ..
       |      variables to include in the plot graphs
-
+      | 
       
    Module opticskp
-   
-   By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
-   the optical kp matrix elements are calculated from the quantum models specified in the Module.
-     
+      | By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
+      | the optical kp matrix elements are calculated from the quantum models specified in the Module.
+      | 
       | Options: 
       |   name = optics
       |      
@@ -435,13 +422,12 @@ Glossary
       |
       |   plot = (optical_spectrum_k_0 ) | ..
       |      optical emission spectrum for *k=0*
-
+      | 
       
    Module opticalspectrum
-   
-By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
-   the optical kp matrix elements are calculated from the quantum models specified in the Module.
-     
+      | By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
+      | the optical kp matrix elements are calculated from the quantum models specified in the Module.
+      | 
       | Options: 
       |   k_space_dimension = 2
       |        k_space_dimension = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
@@ -486,5 +472,5 @@ By defining the Module **opticskp** , calculation of optical properties is enabl
       |
       |   plot = (optical_spectrum  | .. )
       |      k-space integrated optical emission spectrum
-
+      | 
       
