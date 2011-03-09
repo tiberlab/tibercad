@@ -639,10 +639,18 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    
 	    RealTensor H(0);
 	    RealGradient R(0);
-	    double A(0);
+	    double b(0);
 
             boundary_mod->set_normal(normal[qp]);
-	    boundary_mod->get_coefficients(H, R, A);
+	    boundary_mod->get_coefficients(H, b, R);
+            bool is_extended = boundary_mod->is_extended();
+
+	    // we use a penalty approach here for its simplicity
+	    if ((b < 1e-10) && (b >= 0)) b = 1e-10;
+	    else if ((b > -1e-10) && (b<= 0)) b = -1e-10;
+
+	    H /= b;
+	    R /= b;
 
 	    mod.calculate(elem, qface.qp(qp));
 	    const RealTensor& strain =  mod.get_strain_source();
@@ -651,15 +659,18 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
 	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	    {
-	      RealGradient tmp = (stress + (C * strain)) * normal[qp];
+	      RealGradient tmp(0);
+
+              if (is_extended)
+		tmp = (stress + (C * strain)) * normal[qp];
 
               //Get the total stress (internal and external)
-              //RealGradient tmp = phi_face[alpha][qp] * (get_stress(elem,ref_face_points[qp]) * normal[qp]);
+              //RealGradient tmp = (get_stress(elem,ref_face_points[qp]) * normal[qp]);
 
 	      for (unsigned int i =0; i<3; i++)
 	      { 
-                //Add the surface integral if this contact is "extended", i. e. A = 1
-		(*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * (R(i) + A * tmp(i));
+              
+		(*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * (R(i) + tmp(i));
 		
 		for (unsigned int j =0; j<3; j++)
 		  for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)

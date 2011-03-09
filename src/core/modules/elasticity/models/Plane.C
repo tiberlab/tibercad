@@ -19,6 +19,7 @@ void Plane::calculate(const Elem* elem, unsigned int side,
   RealTensor H(0);
   RealGradient  R(0);
   double A(0);
+  set_is_extended(false);
 
   double x = _normal(0);
   double y = _normal(1);
@@ -39,6 +40,6 @@ void Plane::calculate(const Elem* elem, unsigned int side,
 
   H *=1e15;
  
-  set_coefficients(H,R,A);
+  set_coefficients(H,A,R);
 
 }

@@ -18,7 +18,10 @@ Extended::do_init(void)
   
   RealTensor H(0);
   RealGradient  R(0);
-  double A = 1;
+  double A(0);
 
-  set_coefficients(H,R,A);
+  set_is_extended(true);
+  
+  set_coefficients(H,A,R);
+
 }

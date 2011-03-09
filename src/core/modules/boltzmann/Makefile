@@ -1,8 +1,8 @@
-# $Id$
+# $Id: Makefile 2212 2010-12-07 18:53:51Z gromano $
 
 topdir := ../../../..
 
-MODULE_NAME := thermal_balance
+MODULE_NAME := boltzmann
 export MODULE_NAME
 
 include $(topdir)/Make.module

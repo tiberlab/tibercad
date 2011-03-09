@@ -28,7 +28,9 @@ class ElasticityBoundaryModel : public PhysicalModel
     //! Creator function
     static ElasticityBoundaryModel* create(const ModelOptions& options);
 
-    const void get_coefficients(RealTensor& H, RealGradient& R, double& A);
+  const bool is_extended(void);
+
+  const void get_coefficients(RealTensor& H, double& A,RealGradient& R);
 
     void set_normal(const Point p);
 
@@ -38,22 +40,28 @@ class ElasticityBoundaryModel : public PhysicalModel
     //! Constructor
     ElasticityBoundaryModel(const ModelOptions& options);
 
-    //virtual void do_init(void);
-
-    //virtual void create_submodels(void){};
-
-  void set_coefficients(RealTensor H, RealGradient R, double A);
+  void set_coefficients(RealTensor H,double A, RealGradient R);
+  
+  void set_is_extended(bool is_extended);
 
   Point _normal; 
 
   private:
 
 
-  double _is_extended;
+ 
 
-  RealTensor _H_tens;
+  //! constrain matrix
+  RealTensor _H_tens; 
+ 
+  //! is extended
+  double _coeff;
 
+  //! contrain vector
   RealGradient _R_vec;
+
+  //! is extended
+  bool _is_extended;
 
   static TiberModelObject*  _create(const ModelOptions& options);
   
@@ -64,11 +72,11 @@ class ElasticityBoundaryModel : public PhysicalModel
 inline
 const
 void
-ElasticityBoundaryModel::get_coefficients(RealTensor& H, RealGradient& R, double& A)
+ElasticityBoundaryModel::get_coefficients(RealTensor& H, double& A, RealGradient& R)
 {
   H = _H_tens;
   R = _R_vec;
-  A = _is_extended;
+  A = _coeff;
 }
 
 inline
@@ -79,14 +87,28 @@ ElasticityBoundaryModel::set_normal(const Point normal)
 }
 
 
+inline
+void
+ElasticityBoundaryModel::set_is_extended(bool is_extended)
+{
+  _is_extended = is_extended;
+}
+
+inline
+const
+bool 
+ElasticityBoundaryModel::is_extended(void)
+{
+  return _is_extended;
+}
 
 inline
 void
-ElasticityBoundaryModel::set_coefficients(RealTensor H, RealGradient R, double A)
+ElasticityBoundaryModel::set_coefficients(RealTensor H, double A, RealGradient R)
 {
   _H_tens = H;
   _R_vec = R;
-  _is_extended = A;
+  _coeff = A;
 }
 
 inline

@@ -1,8 +1,8 @@
-// $Id$
+// $Id: ThermalBalance.C 2457 2011-03-06 23:52:12Z gromano $
 
-#include "ThermalBalance.h"
-#include "ThermalModel.h"
-#include "ThermalBoundaryModel.h"
+#include "Boltzmann.h"
+#include "BoltzmannModel.h"
+#include "BoltzmannBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
 #include "ModelOptions.h"
@@ -23,16 +23,16 @@
 // The first string is the class name of the object to be created,
 // the second one is the name of the module as it should be referred
 // in the input file (the Makefile defines MODULE_NAME, which can be used here).
-TIBER_MODULE(ThermalBalance, MODULE_NAME)
+TIBER_MODULE(Boltzmann, MODULE_NAME)
 using namespace std;
 
 
-ThermalBalance*
-ThermalBalance::_this = NULL;
+Boltzmann*
+Boltzmann::_this = NULL;
 
 
 
-ThermalBalance::ThermalBalance(const ModelOptions& options) :
+Boltzmann::Boltzmann(const ModelOptions& options) :
   SimulationInterface(options),
   dim(0),
   is_gray_solved(false),
@@ -43,18 +43,18 @@ ThermalBalance::ThermalBalance(const ModelOptions& options) :
 
 
 
-ThermalBalance*
-ThermalBalance::create(const ModelOptions& options)
+Boltzmann*
+Boltzmann::create(const ModelOptions& options)
 {
   // we could use the options to create different implementations
   // or something like that.
-  return new ThermalBalance(options);
+  return new Boltzmann(options);
 }
 
 
 
 void
-ThermalBalance::do_init(void)
+Boltzmann::do_init(void)
 {
   parse_options();
 
@@ -105,7 +105,7 @@ ThermalBalance::do_init(void)
 }
 
 void
-ThermalBalance::get_gray_options(void)
+Boltzmann::get_gray_options(void)
 {
 
   ModelOptions gray_opt = get_options();
@@ -120,7 +120,7 @@ ThermalBalance::get_gray_options(void)
   {
     const Elem* elem = *el;
 
-    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
     HeatTransportModel* htm = mod.get_heat_transport_model();
 
     if (htm->get_type() == HeatTransportModel::Gray)
@@ -151,7 +151,7 @@ ThermalBalance::get_gray_options(void)
 
 
 void
-ThermalBalance::do_partition(void)
+Boltzmann::do_partition(void)
 {
 
   TiberLinearSystem& system = static_cast<TiberLinearSystem&>(
@@ -193,7 +193,7 @@ ThermalBalance::do_partition(void)
    else
    {
 
-     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
      HeatTransportModel* htm = mod.get_heat_transport_model();
 
      if (htm->get_type() == HeatTransportModel::Gray)
@@ -262,7 +262,7 @@ ThermalBalance::do_partition(void)
 
 
 NumericVector<double>&
-ThermalBalance::do_get_solution_vector(void)
+Boltzmann::do_get_solution_vector(void)
 {
 
   TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
@@ -276,7 +276,7 @@ ThermalBalance::do_get_solution_vector(void)
 
 
 void
-ThermalBalance::do_init_fourier(void)
+Boltzmann::do_init_fourier(void)
 {
 
 
@@ -303,7 +303,7 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 }
 
 void
-ThermalBalance::do_init_gray(void)
+Boltzmann::do_init_gray(void)
 {
 
  if (is_gray)
@@ -362,7 +362,7 @@ ThermalBalance::do_init_gray(void)
 
 
 //-------------------------------------------------------------------------//
-ThermalBalance::~ThermalBalance()
+Boltzmann::~Boltzmann()
 {
   //Release pointers
   
@@ -383,7 +383,7 @@ ThermalBalance::~ThermalBalance()
 
 }
 void
-ThermalBalance::parse_options(void)
+Boltzmann::parse_options(void)
 {
 
  const ModelOptions& options = SimulationInterface::get_options();
@@ -430,7 +430,7 @@ ThermalBalance::parse_options(void)
 
 
 void
-ThermalBalance::do_setup_solution_variables(void)
+Boltzmann::do_setup_solution_variables(void)
 {
   // we declare our solution variables
   declare_solution(LatticeTemp, REAL, NODES, "K");
@@ -461,7 +461,7 @@ ThermalBalance::do_setup_solution_variables(void)
 
 
 void
-ThermalBalance::solve_fourier(void)
+Boltzmann::solve_fourier(void)
 {
 
   //cout<<endl;
@@ -510,7 +510,7 @@ ThermalBalance::solve_fourier(void)
     FEInterface::inverse_map(dim, fe_type, elem, p, points);
     fe->reinit(elem, &points);
     
-    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
     mod.calculate(elem,elem->centroid());
     const RealTensor& kappa = mod.get_total_thermal_conductivity();
     
@@ -533,7 +533,7 @@ ThermalBalance::solve_fourier(void)
 
 
 void
-ThermalBalance::from_nodal_to_cell()
+Boltzmann::from_nodal_to_cell()
 {
 
   //Fourier System
@@ -564,7 +564,7 @@ ThermalBalance::from_nodal_to_cell()
     dof_map_fourier.dof_indices (elem, dof_indices_fourier);
     dof_map_gray.dof_indices (elem, dof_indices_gray);
 
-    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
     mod.calculate(elem,elem->centroid());
     const RealTensor& kappa = mod.get_total_thermal_conductivity();
 
@@ -596,7 +596,7 @@ ThermalBalance::from_nodal_to_cell()
 
 
 void
-ThermalBalance::from_cell_to_nodal()
+Boltzmann::from_cell_to_nodal()
 {
   const MeshBase& mesh = get_mesh();
   //Fourier System
@@ -649,7 +649,7 @@ ThermalBalance::from_cell_to_nodal()
 
 
 //   //! Order the solution in correct mode
-// void ThermalBalance::build_elemental_results(const std::set<std::string>& variables,
+// void Boltzmann::build_elemental_results(const std::set<std::string>& variables,
 // 				     std::vector<double>& results,
 // 				     std::vector<std::string>& legend)
 // {
@@ -723,7 +723,7 @@ ThermalBalance::from_cell_to_nodal()
 // }
 
 void
-ThermalBalance::solve_gray(void)
+Boltzmann::solve_gray(void)
 {
 
 
@@ -862,7 +862,7 @@ ThermalBalance::solve_gray(void)
       {
 	const Elem* elem = *el;
 	ID dof = elem->dof_number(gray_sys_number,0,0);
-	ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+	BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
 	mod.calculate(elem,elem->centroid());
 	double vg = mod.get_sound_velocity();
 
@@ -903,7 +903,7 @@ ThermalBalance::solve_gray(void)
 }
 
 double
-ThermalBalance::energy_conservation_check()
+Boltzmann::energy_conservation_check()
 {
 
   SimulationEnvironment& se = get_environment();
@@ -967,7 +967,7 @@ ThermalBalance::energy_conservation_check()
 }
 
 double
-ThermalBalance::energy_conservation_check_traditional()
+Boltzmann::energy_conservation_check_traditional()
 {
 
   //Gray System
@@ -1015,7 +1015,7 @@ ThermalBalance::energy_conservation_check_traditional()
 
     fe->reinit(elem);
 
-    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
 
     //Energy emitted
     for (ID qp = 0; qp <  qrule.n_points(); qp++)
@@ -1061,7 +1061,7 @@ ThermalBalance::energy_conservation_check_traditional()
 }
 
 double
-ThermalBalance::compute_power_dissipated()
+Boltzmann::compute_power_dissipated()
 {
 
   //Gray System
@@ -1100,7 +1100,7 @@ ThermalBalance::compute_power_dissipated()
     const Elem* elem = *it;
     dof_map.dof_indices(elem, dof_indices);
     
-    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
    
     const RealTensor& kappa = mod.get_total_thermal_conductivity();
  
@@ -1110,8 +1110,8 @@ ThermalBalance::compute_power_dissipated()
       if (is_on_any_boundary(elside))
       {
 
-	//ThermalBoundaryModel* mod_b =
-	// get_interface_model<ThermalBoundaryModel>(elem, ns);
+	//BoltzmannBoundaryModel* mod_b =
+	// get_interface_model<BoltzmannBoundaryModel>(elem, ns);
 	
 	//if (mod_b != NULL)
 	//{
@@ -1134,7 +1134,7 @@ ThermalBalance::compute_power_dissipated()
 }
 
 double
-ThermalBalance::compute_effective_thermal_conductivity()
+Boltzmann::compute_effective_thermal_conductivity()
 {
  EquationSystems& es = get_equation_systems();
 
@@ -1233,7 +1233,7 @@ ThermalBalance::compute_effective_thermal_conductivity()
     
     fe->reinit(elem);
     
-    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
     const RealTensor& kappa = mod.get_total_thermal_conductivity();
     
     //Power emitted
@@ -1249,8 +1249,8 @@ ThermalBalance::compute_effective_thermal_conductivity()
       const ElementSide elside(elem->top_parent(),ns);
       if (is_on_any_boundary(elside))
       {
-	ThermalBoundaryModel* mod_b =
-	  get_interface_model<ThermalBoundaryModel>(elem, ns);
+	BoltzmannBoundaryModel* mod_b =
+	  get_interface_model<BoltzmannBoundaryModel>(elem, ns);
 	
 	fe_face->reinit(elem,ns);
 
@@ -1335,7 +1335,7 @@ ThermalBalance::compute_effective_thermal_conductivity()
 
 }
 double
-ThermalBalance::compute_power_emitted()
+Boltzmann::compute_power_emitted()
 {
 
   //Gray System
@@ -1381,7 +1381,7 @@ ThermalBalance::compute_power_emitted()
 
     fe->reinit(elem);
 
-    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
 
     //Energy emitted
     for (ID qp = 0; qp <  qrule.n_points(); qp++)
@@ -1427,7 +1427,7 @@ ThermalBalance::compute_power_emitted()
 }
 
 // double
-// ThermalBalance::compute_power_emitted()
+// Boltzmann::compute_power_emitted()
 // {
 
 //   //Gray System
@@ -1475,7 +1475,7 @@ ThermalBalance::compute_power_emitted()
 
 //     fe->reinit(elem);
 
-//     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+//     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
 
 //     for (ID qp = 0; qp <  qrule.n_points(); qp++)
 //     {
@@ -1525,7 +1525,7 @@ ThermalBalance::compute_power_emitted()
 
 
 void
-ThermalBalance::do_solve(void)
+Boltzmann::do_solve(void)
 {
   _this = this;
 
@@ -1636,34 +1636,34 @@ ThermalBalance::do_solve(void)
 
 
 void
-ThermalBalance::do_print_info(void)
+Boltzmann::do_print_info(void)
 {
   // Messages::info("THERMONEO");
 }
 
 
 PhysicalModel*
-ThermalBalance::create_bulk_model(const ModelOptions& options,
+Boltzmann::create_bulk_model(const ModelOptions& options,
     const Material* mat) const
 {
 
-  return  ThermalModel::create(options);
+  return  BoltzmannModel::create(options);
 
 }
 
 
 
 PhysicalModel*
-ThermalBalance::create_boundary_model(const ModelOptions& options,
+Boltzmann::create_boundary_model(const ModelOptions& options,
     const Material* material_A, const Material* material_B) const
 {
-  return ThermalBoundaryModel::create(options);
+  return BoltzmannBoundaryModel::create(options);
 }
 
 
 
 void
-ThermalBalance::get_solution_secure(std::map<ID, std::vector<double> >& values)
+Boltzmann::get_solution_secure(std::map<ID, std::vector<double> >& values)
 {
   if (values.count(MaxTemp))
   {
@@ -1678,7 +1678,7 @@ ThermalBalance::get_solution_secure(std::map<ID, std::vector<double> >& values)
 
 
 void
-ThermalBalance::get_solution_secure(const Elem* elem,
+Boltzmann::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
     const std::vector<Point>& p)
 {
@@ -1717,7 +1717,7 @@ ThermalBalance::get_solution_secure(const Elem* elem,
    dof_map.dof_indices(elem, dof_indices, u_var);
 
    const unsigned int n_dofs = dof_indices.size();
-   ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+   BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
    const RealTensor& kappa = mod.get_total_thermal_conductivity();
 
    for (unsigned int n = 0; n < np; n++)
@@ -1804,7 +1804,7 @@ ThermalBalance::get_solution_secure(const Elem* elem,
 
 
 void
-ThermalBalance::clear_system(const std::string& system_name)
+Boltzmann::clear_system(const std::string& system_name)
 {
   TiberLinearSystem& system = static_cast<TiberLinearSystem&>(
 		      get_equation_systems().get_system(system_name));
@@ -1842,13 +1842,13 @@ ThermalBalance::clear_system(const std::string& system_name)
 }
 
 void
-ThermalBalance::do_assemble_global(EquationSystems& es, const std::string& system_name)
+Boltzmann::do_assemble_global(EquationSystems& es, const std::string& system_name)
 {
 
 }
 
 void
-ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_name)
+Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
 {
 
 
@@ -1929,7 +1929,7 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
 
      const unsigned int num_sides = elem->n_sides();
 
-     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
      mod.calculate(elem,elem->centroid());
 
      double tg = mod.get_relaxation_time();
@@ -1990,11 +1990,11 @@ ThermalBalance::do_assemble_gray(EquationSystems& es, const std::string& system_
 
 
 double
-ThermalBalance::get_boundary_value(ElementSide elside)
+Boltzmann::get_boundary_value(ElementSide elside)
 {
 
-  ThermalBoundaryModel* mod =
-    get_interface_model<ThermalBoundaryModel>(elside.elem(), elside.side());
+  BoltzmannBoundaryModel* mod =
+    get_interface_model<BoltzmannBoundaryModel>(elside.elem(), elside.side());
 
 
   SimulationEnvironment& se = get_environment();
@@ -2048,7 +2048,7 @@ ThermalBalance::get_boundary_value(ElementSide elside)
 }
 
 void
-ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& system_name)
+Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_name)
 {
   TiberLinearSystem& system_fourier = static_cast<TiberLinearSystem&>(
 								      get_equation_systems().get_system("fourier"));
@@ -2111,7 +2111,7 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
      Fe.resize(n_dofs);
      fe->reinit(elem);
 
-     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
+     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
 
      // loop over the quadrature points
      for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -2140,8 +2140,8 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 	   is_on_GF_boundary(elside))
        {
 	 
-	 ThermalBoundaryModel* mod =
-	   get_interface_model<ThermalBoundaryModel>(elem, s);
+	 BoltzmannBoundaryModel* mod =
+	   get_interface_model<BoltzmannBoundaryModel>(elem, s);
 	 
 	 bool do_boundary = false;
 	 double a, b, c;
@@ -2187,8 +2187,8 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 	 if (do_boundary)
 	 {
 	   fe_face->reinit(elem, s);
-	   if ((b < 1e-10) && (b >= 0)) b = 1e-20;
-	   else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+	   if ((b < 1e-10) && (b >= 0)) b = 1e-10;
+	   else if ((b > -1e-10) && (b<= 0)) b = -1e-10;
 	   a /= b;
 	   c /= b;
 	   
@@ -2208,8 +2208,8 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 // 	if (se.is_outer_boundary(elside) ||
 // 	    is_on_GF_boundary(elside))
 // 	  {
-// 	    ThermalBoundaryModel* mod =
-// 	      get_interface_model<ThermalBoundaryModel>(elem, s);
+// 	    BoltzmannBoundaryModel* mod =
+// 	      get_interface_model<BoltzmannBoundaryModel>(elem, s);
 
 // 	    fe_face->reinit(elem, s);
 
@@ -2292,13 +2292,13 @@ ThermalBalance::do_assemble_fourier(EquationSystems& es, const std::string& syst
 }
 
 bool
-ThermalBalance::get_fourier_boundary(ElementSide elside,double a, double b, double c)
+Boltzmann::get_fourier_boundary(ElementSide elside,double a, double b, double c)
 {
 
   bool boundary = false;
 
-  ThermalBoundaryModel* mod =
-    get_interface_model<ThermalBoundaryModel>(elside.elem(), elside.side());
+  BoltzmannBoundaryModel* mod =
+    get_interface_model<BoltzmannBoundaryModel>(elside.elem(), elside.side());
 
   if (mod != NULL)
   {
@@ -2321,7 +2321,7 @@ ThermalBalance::get_fourier_boundary(ElementSide elside,double a, double b, doub
 
 
 void
-ThermalBalance::AngularIntegrator::compute_custom_direction(std::vector<Point> custom_dir)
+Boltzmann::AngularIntegrator::compute_custom_direction(std::vector<Point> custom_dir)
 {
 
   //Omega is not theta dependent but simply uniform.
@@ -2369,7 +2369,7 @@ ThermalBalance::AngularIntegrator::compute_custom_direction(std::vector<Point> c
 
 }
 void
-ThermalBalance::AngularIntegrator::compute_directions()
+Boltzmann::AngularIntegrator::compute_directions()
 {
 
 
@@ -2503,7 +2503,7 @@ ThermalBalance::AngularIntegrator::compute_directions()
 
 
 void
-ThermalBalance::AngularIntegrator::print_info(void)
+Boltzmann::AngularIntegrator::print_info(void)
 {
 
 
@@ -2566,7 +2566,7 @@ ThermalBalance::AngularIntegrator::print_info(void)
 
 
 void
-ThermalBalance::AngularIntegrator::print_info(ID k)
+Boltzmann::AngularIntegrator::print_info(ID k)
 {
 
 
@@ -2603,8 +2603,8 @@ ThermalBalance::AngularIntegrator::print_info(ID k)
 //        double in = dir * normal[0];
 //        const ElementSide elside(elem->top_parent(),ns);
 
-//        ThermalBoundaryModel* b_mod =
-// 	 get_surface_model<ThermalBoundaryModel>(elem,ns);
+//        BoltzmannBoundaryModel* b_mod =
+// 	 get_surface_model<BoltzmannBoundaryModel>(elem,ns);
 
 //        if (in<0.0)
 // 	 if (se.is_outer_boundary(elside) && (b_mod == NULL))
@@ -2629,8 +2629,8 @@ ThermalBalance::AngularIntegrator::print_info(ID k)
 //        {
 
 // 	 fe_face->reinit(elem,ns);
-// 	 ThermalBoundaryModel* b_mod =
-//     	   get_surface_model<ThermalBoundaryModel>(elem,ns);
+// 	 BoltzmannBoundaryModel* b_mod =
+//     	   get_surface_model<BoltzmannBoundaryModel>(elem,ns);
 // 	 const ElementSide elside(elem->top_parent(),ns);
 // 	 double in = dir * normal[0];
 // 	 double value = vg * (IntDir * normal[0]) * JxW_face[0];
@@ -2675,8 +2675,8 @@ ThermalBalance::AngularIntegrator::print_info(ID k)
 //        double in = dir * normal[0];
 //        const ElementSide elside(elem->top_parent(),ns);
 
-//        ThermalBoundaryModel* b_mod =
-// 	 get_surface_model<ThermalBoundaryModel>(elem,ns);
+//        BoltzmannBoundaryModel* b_mod =
+// 	 get_surface_model<BoltzmannBoundaryModel>(elem,ns);
 
 //        if (in<0.0)
 // 	 if (se.is_outer_boundary(elside) && (b_mod == NULL))
@@ -2701,8 +2701,8 @@ ThermalBalance::AngularIntegrator::print_info(ID k)
 //        {
 
 // 	 fe_face->reinit(elem,ns);
-// 	 ThermalBoundaryModel* b_mod =
-// 	   get_surface_model<ThermalBoundaryModel>(elem,ns);
+// 	 BoltzmannBoundaryModel* b_mod =
+// 	   get_surface_model<BoltzmannBoundaryModel>(elem,ns);
 
 // 	 const ElementSide elside(elem->top_parent(),ns);
 // 	 double in = dir * normal[0];

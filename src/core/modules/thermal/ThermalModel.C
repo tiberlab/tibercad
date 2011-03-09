@@ -1,0 +1,90 @@
+// $Id: ThermalModel.C 2457 2011-03-06 23:52:12Z gromano $
+
+#include "ThermalModel.h"
+#include "SimulationOptions.h"
+#include "Material.h"
+#include "Database.h"
+#include "HeatSourceModel.h"
+#include "ThermalConductivityModel.h"
+
+
+using namespace std;
+
+
+
+ThermalModel::ThermalModel(const ModelOptions& options)
+  : PhysicalModel(options),
+    _tcm(NULL),
+    _kappa(0),
+    _heat_source(0)
+{
+
+}
+
+void
+ThermalModel::create_submodels(void)
+{
+  
+  //Thermal Conductivity Default
+  if (!get_options().has_submodel("ThermalConductivity"))
+  {
+    ModelOptions opts;
+    opts.set_option("type","constant");
+    get_options().add_submodel("ThermalConductivity",opts);
+  }
+
+}
+
+void
+ThermalModel::do_init(void)
+{
+
+   PhysicalModelInterface::SubmodelIterator  it;
+  //Lattice Thermal Conductivity
+  it = submodels_begin("ThermalConductivity");  
+  _tcm = dynamic_cast<ThermalConductivityModel*> ((*it).second);
+  _kappa = _tcm->get_thermal_conductivity();
+  //---------------------------------------
+  ModelOptions::submodel_iterator
+    it_hs(get_options().submodels_begin("HeatSource"));
+  ModelOptions::submodel_iterator
+    end_hs(get_options().submodels_end("HeatSource"));
+
+  //Heat Source
+  it = submodels_begin("HeatSource");
+  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("HeatSource"));
+  for ( ; it != it_end ; ++it)
+    _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
+}
+
+
+
+void
+ThermalModel::calculate(const Elem* elem, const Point& point)
+{
+  //Heat Source
+  _heat_source = 0.0;
+ 
+  for (ID n = 0 ; n <_hsm.size() ; n++)
+  {
+    _hsm[n]->calculate(elem,point);
+    _heat_source +=  _hsm[n]->get_heat_source();
+  }
+
+  _tcm->calculate(elem,point);
+  _kappa = _tcm->get_thermal_conductivity();
+
+}
+
+
+    //! Print some useful information
+void 
+ThermalModel::do_print_info(void)
+{
+  cout<<"Thermal conductivity: "<<endl;
+  cout<<endl; 
+  cout<<"Kxx: "<<_kappa(0,0)<<" W/cm K"<<endl;
+  cout<<"Kyy: "<<_kappa(1,1)<<" W/cm K"<<endl;
+  cout<<"Kzz: "<<_kappa(2,2)<<" W/cm K"<<endl;
+  cout<<endl;
+}
