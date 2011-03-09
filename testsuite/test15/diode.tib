@@ -60,7 +60,7 @@ Module driftdiffusion
 
 Module thermal
 {
-
+  plot = LatticeTemp
   Physics
   {
     HeatSource joule { DD_simulation = driftdiffusion }
@@ -83,7 +83,7 @@ Module thermal
 
 Module  sweep
 {
-    solve = (driftdiffusion, thermal)
+    solve = (driftdiffusion)
     variable = $Vb
     start = 0.0
     stop = 1.2
@@ -95,8 +95,8 @@ Module  sweep
 Simulation
 {
   temperature = 300
-  solve = sweep
-  resultpath = output_tut
+  solve = (sweep,thermal)
+  resultpath = output
   output_format = grace
 
 }

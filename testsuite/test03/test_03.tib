@@ -37,6 +37,7 @@ Simulation
   solve = thermal
   resultpath = output
   output_format = grace
+  verbose = 3
 }
 
 

@@ -1,0 +1,53 @@
+
+# diode example
+
+Device
+{
+   meshfile = mesh.msh
+   dimension = 3
+   material = Si
+   mesh_units = 1e-6
+   Region Bulk{}
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+
+
+Module boltzmann
+{
+
+  regions = Bulk
+  plot = (LatticeTemp,ThermalFlux)
+
+  Physics
+  { 
+    HeatTransport
+    {
+      type = gray
+    }
+  }
+ 
+   Contact Hot
+   {
+     type = heat_reservoir
+     temperature =  400
+   }
+  
+   Contact Cold
+   {
+     type = heat_reservoir
+     temperature = 300
+   }
+}  
+  
+Simulation
+{
+  solve = (boltzmann)
+  output_format = vtk
+  resultpath = output 
+  verbose = 3
+}
+
+
