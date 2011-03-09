@@ -14,8 +14,8 @@ Welcome to TiberCAD's Theory Module
    EFA
    Dsc
    
-   /appendix/Glossary
-   /appendix/Bibliography
+   Glossary
+   Bibliography
    Index
 
    
