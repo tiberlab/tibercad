@@ -1,4 +1,3 @@
-
 Device
 {
 
@@ -63,11 +62,11 @@ Module driftdiffusion
 Module thermal
 {
 
-   plot = (LatticeTemp,ThermalFlux)
+   plot = (LatticeTemp,ThermalFlux,HeatSource)
 
    Physics   
    {
-     HeatSource joule {DD_simulation = driftdiffusion}
+      HeatSource joule {DD_simulation = driftdiffusion}
    }
 
    Contact reservoir
@@ -81,7 +80,8 @@ Module thermal
      r_surf = 0.5
      type = surface_resistance
      temperature = 300
-   }
+  }
+
 }
 
 Module selfconsistent
@@ -93,8 +93,7 @@ Module selfconsistent
 
 Module sweep
 {
-  
-  solve = (driftdiffusion,thermal)
+  solve = driftdiffusion
   variable = $Vb
   start = 0.0
   stop = 1.2
@@ -105,8 +104,8 @@ Module sweep
 
 Simulation
 {
-  temperature = 300
-  solve = sweep
+  verbose = 3
+  solve = (sweep,selfconsistent)
   resultpath = output
   output_format = vtk
 }
