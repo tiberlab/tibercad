@@ -426,6 +426,8 @@ EnvelopFunctionApprox::EnvelopFunctionApprox(const ModelOptions& options)
   strain = NULL;
 
   _bulk_mat_element = NULL;
+
+  has_solution_vector(false);
 }
 //===================================================//
 void EnvelopFunctionApprox::parse_options()
