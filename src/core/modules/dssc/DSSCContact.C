@@ -39,6 +39,8 @@ DSSCContact::do_init(void)
 {
   get_parameter("load", _res);
   get_parameter("bias", _bias);
+  get_parameter("barrier", _barrier);
+  get_parameter("kinetic_rate", _kinetic_rate);
   get_parameter("j0", _j0);
   //get_parameter("beta", _beta);
 }

@@ -31,13 +31,17 @@ DSSCModel::DSSCModel(const ModelOptions& options)
     _generation(0.0),
     _generation_model(NULL),
     _gen_id(INVALID_ID),
+//obsolete++
     _alpha(0.2),
     _alpha2(0.0),
     _deltaG(0.0),
     _x0(0.0),
+//++++++++++
     _perm_ox(85.0),
     _perm_elec(117.0),
-    _elem(NULL)
+    _elem(NULL),
+    _trap_DOS(1e17),
+    _exp_trap(1.0)
 {
 }
 
@@ -62,8 +66,8 @@ DSSCModel::do_init(void)
   _permittivity = _perm_ox * A1/A2;
 
   get_parameter("k_e", _ke);
-  get_parameter("beta", _beta);
-  get_parameter("k_3", _k3);
+  get_parameter("rec_non_linearity", _beta);
+  get_parameter("k_dye", _k3);
 
   get_parameter("permittivity", _permittivity);
   get_parameter("perm_oxide", _perm_ox);
@@ -86,15 +90,19 @@ DSSCModel::do_init(void)
   }
 
 
-
+// obsolete ========================
   get_parameter("alpha", _alpha);
   get_parameter("Light", _x0);
   get_parameter("alpha2", _alpha2);
   get_parameter("deltaG", _deltaG);
+// =================================
 
   get_parameter("ne", _eq_conc.n);
   get_parameter("nI", _eq_conc.I);
   get_parameter("nI3", _eq_conc.I3);
+  
+  get_parameter("trap_exp", _exp_trap);
+  get_parameter("trap_DOS", _trap_DOS);
 
   get_parameter("mu_e", _mobility.n);
   get_parameter("D_I", _mobility.I);
@@ -287,14 +295,17 @@ DSSCModel::calculate_net_recombination_rate(void)
 
 
   double n0 = _eq_conc.n;
-  if (n0 <= _generation/_k3)
-  {
-     n0 = _generation/_k3;
-  }
+
+//  if (n0 <= _generation/_k3)
+//  {
+//     n0 = _generation/_k3;
+//  }
+
   if (n0 <= 1e-3)
   {
     n0 = 100;
   }
+
   double dens_norm = _pd.density_n/n0;
   double dens_norm_dark = _eq_conc.n/n0;
 
@@ -316,6 +327,16 @@ DSSCModel::calculate_net_recombination_rate(void)
      dens_dark_beta * sqrt_I3_I_eq);
   _pd.recombination_rate_derivatives[2] = _ke * 0.5 * r / _pd.density_I3;
 
+/*
+ double r = pow(_pd.density_n/n0, _beta) * n0;
+ double g = _eq_conc.n; 
+ _pd.recombination_rate = _ke * (r - g);
+ // derivative
+ _pd.recombination_rate_derivatives = vector<double>(4, 0.0);
+ _pd.recombination_rate_derivatives[0] = _ke * _beta * pow(_pd.density_n, _beta - 1.0) * pow(n0, 1 - _beta) ;
+ _pd.recombination_rate_derivatives[1] = 0.0;
+ _pd.recombination_rate_derivatives[2] = 0.0;
+*/
 }
 
 

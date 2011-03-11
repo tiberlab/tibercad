@@ -28,6 +28,14 @@ class DSSCContact : public BoundaryProperties
     double get_potential(void) const;
 
 
+    //! Get eletrical potential barrier
+    double get_barrier(void) const;
+
+
+    //! Get barrier kinetic rate
+    double get_kinetic(void) const;
+
+
     //! Get the contact load
     double get_load(void) const;
     
@@ -95,6 +103,12 @@ class DSSCContact : public BoundaryProperties
     double _current;
 
 
+    double _kinetic_rate;
+
+
+    double _barrier;
+
+
     static bool _open_circuit;
 
 
@@ -122,7 +136,9 @@ DSSCContact::DSSCContact(const ModelOptions& options)
     _gate(false),
     _j0(0.1),
     _beta(1.0),
-    _current(0.0)
+    _current(0.0),
+    _barrier(0.0),
+    _kinetic_rate(1e3)
 {
 }
 
@@ -141,6 +157,22 @@ double
 DSSCContact::get_potential(void) const
 {
   return _bias;
+}
+
+
+inline
+double
+DSSCContact::get_barrier(void) const
+{
+  return _barrier;
+}
+
+
+inline
+double
+DSSCContact::get_kinetic(void) const
+{
+  return _kinetic_rate;
 }
 
 

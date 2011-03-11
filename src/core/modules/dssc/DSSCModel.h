@@ -215,10 +215,18 @@ class DSSCModel : public PhysicalModel
 
     //! Get the electron density
     double get_density_n(void) const;
+    
 
+    //! Get the electron density exponential DOS
+    double get_density_n_exp_DOS(void) const;
+    
 
     //! Get the electron density derivative
     double get_density_derivative_n(void) const;
+
+
+    //! Get the electron density derivative exponential DOS
+    double get_density_derivative_n_exp_DOS(void) const;
 
 
     //! Get the iodide density
@@ -499,6 +507,14 @@ class DSSCModel : public PhysicalModel
     double _k3;
 
 
+    //! exponential trap density
+    double _trap_DOS;
+
+
+    //! trap exponent
+    double _exp_trap;
+
+
     //! The generation rate
     double _generation;
 
@@ -742,8 +758,11 @@ inline
 double
 DSSCModel::get_charge_density(void) const
 {
- return _pd.density_C - _pd.density_n + _eq_conc.n +
+ return _pd.density_C - get_density_n_exp_DOS() + _trap_DOS * pow(_eq_conc.n/_trap_DOS,_exp_trap) +
     _pd.ionized_dye - _pd.density_I - _pd.density_I3 + _pd.ionized_electron_traps;
+      
+// return _pd.density_C - _pd.density_n + _eq_conc.n +
+//    _pd.ionized_dye - _pd.density_I - _pd.density_I3 + _pd.ionized_electron_traps;
 }
 
 
@@ -845,9 +864,25 @@ DSSCModel::get_density_derivative_C(void) const
 
 inline
 double
+DSSCModel::get_density_n_exp_DOS(void) const
+{
+  return _trap_DOS * pow(_pd.density_n/_trap_DOS, _exp_trap);
+}
+
+
+inline
+double
 DSSCModel::get_density_n(void) const
 {
   return _pd.density_n;
+}
+
+
+inline
+double
+DSSCModel::get_density_derivative_n_exp_DOS(void) const
+{
+  return pow(_trap_DOS, 1 - _exp_trap) * _exp_trap * pow(get_density_n(), _exp_trap) / _pd.kT;
 }
 
 
