@@ -7,6 +7,7 @@ Kspace::Kspace(const ModelOptions& options)
  : SimulationInterface(options)
 {
   kmesh = NULL;
+  has_solution_vector(false);
 }
 
 

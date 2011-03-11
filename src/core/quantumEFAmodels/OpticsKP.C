@@ -61,6 +61,7 @@ OpticsKP::OpticsKP(const ModelOptions& options)
   final_state_model = NULL;
   _energy_mesh = NULL;
 
+  has_solution_vector(false);
 }
 
 //==============================================//

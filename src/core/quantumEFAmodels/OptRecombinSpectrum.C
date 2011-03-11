@@ -101,6 +101,7 @@ OptRecombinSpectrum::OptRecombinSpectrum(const ModelOptions& options)
 
   _energy_mesh = NULL;
 
+  has_solution_vector(false);
 }
 
 
