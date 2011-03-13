@@ -72,6 +72,9 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
   private:
 
+  //!node connection
+  std::vector<unsigned short int> node_conn;
+
   //! A pointer to device
   Device* _device;
 

@@ -89,6 +89,26 @@ Elasticity::do_init(void)
   system.attach_assemble_function(assemble);
   system.init();
 
+  
+  //Create node connection
+  const unsigned int nn  = get_mesh().n_nodes();
+  node_conn.resize(nn);
+  {
+    vector<unsigned short int> node_conn_local(node_conn.size());
+    
+    
+    MeshBase::const_element_iterator       el     = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    
+    for ( ; el != end_el; ++el)
+      for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
+	node_conn_local[(*el)->node(n)]++;
+
+    node_conn = node_conn_local;
+  }
+  
+
+
 }
 
 
