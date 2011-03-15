@@ -1,6 +1,6 @@
 #!/bin/sh
 
-GMSHVER=2.4.2
+GMSHVER=2.5.0
 
 
 make_windows_package () {
@@ -69,7 +69,7 @@ make_windows_package () {
 
 prepare_linux_package () {
 
-  ARCH=i386-linux
+  ARCH=`uname -m`-linux
 
   mkdir -m 0755 ${files}
   mkdir -p ${files}/bin
@@ -94,6 +94,9 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep g2c | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep intel | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep mkl | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep libmesh | awk '{print $3}'`"
   cp $libs ${files}/${ARCH}/lib
   cp ${topdir}/bin/tibercad.bin ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
@@ -106,25 +109,27 @@ prepare_linux_package () {
     cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  # for now:
+  rm -rf ${files}/examples/Modules
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   cp ${topdir}/materials/*.dat ${files}/materials
 
-  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER} ]
+  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
   then
     wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux.tgz
     tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux.tgz
     rm -f gmsh-${GMSHVER}-Linux.tgz
   fi
-  if [ -d ${topdir}/contrib/gmsh-${GMSHVER} ]
+  if [ -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
   then
-    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf ]
+    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}-Linux/gmsh.pdf ]
     then
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}
+      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}-Linux
     fi
-    cp -r  ${topdir}/contrib/gmsh-${GMSHVER} ${files}/tools
-    chmod a+x ${files}/tools/gmsh-${GMSHVER}/gmsh
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux ${files}/tools
+    chmod a+x ${files}/tools/gmsh-${GMSHVER}-Linux/bin/gmsh
   fi
 
 

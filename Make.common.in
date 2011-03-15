@@ -50,7 +50,7 @@ include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
 TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
-LDFLAGS := -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir) -L$(libdir)
+LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir)
 #ifeq ($(build_modules), yes)
 # LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
 #endif
@@ -86,7 +86,7 @@ endif
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
 # the machine architecture
-CPPFLAGS += -DARCH="$(shell $(topdir)/share/arch.sh)"
+CPPFLAGS += -DARCH="$(ARCH)"
 
 CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)

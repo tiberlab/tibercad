@@ -63,8 +63,6 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   using namespace boost::filesystem;
 
-  // we are not very optimistic
-  bool success = false;
 
   // construct the library name
 #ifdef CYGWIN
@@ -75,7 +73,6 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
   bool file_exists = false;
 
-  Messages::debug("Looking for library " + libfile + "... ");
 
   // we search for the library, as soon as we find it, we return
   // so it has the same behaviour as e.g. LD_LIBRARY_PATH
@@ -84,6 +81,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   for ( ; it != end; ++it)
   {
     path p(*it + "/" + libfile, native);
+    Messages::debug("Looking for library " + p.string() + "... ");
     if (exists(p))
     {
       libfile = *it + "/" + libfile;
@@ -101,8 +99,6 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   if (file_exists)
   {
     //Messages::info("Trying to open " + libfile + "... ", false);
-
-    const char* error_msg = 0;
 
     // check if it is already resident
     iface.handle = dlopen(libfile.c_str(), RTLD_NOLOAD | DLOPENFLAGS);

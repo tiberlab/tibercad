@@ -10,8 +10,9 @@ case $os in
 
   Linux) arch=`uname -m`-linux ;;
 
-  *) arch=unknown ;;
+  *) arch= ;;
 
 esac
+
 
 echo $arch

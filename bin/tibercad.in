@@ -11,14 +11,14 @@ usage () {
   echo ""
 }
 
-executable=tibercad.bin
+executable=tibercad
 usegdb=0
 
 opts="dg"
 while getopts $opts flag
 do
   case "$flag" in
-    d) executable=tibercad_dbg.bin ;;
+    d) executable=tibercad_dbg ;;
     g) usegdb=1 ;;
     *) usage
        exit 1 ;;
@@ -33,7 +33,10 @@ then
   exit 1
 fi
 
-if [ ! -x ${TIBERCADROOT}/bin/${executable} ]
+ARCH=`${TIBERCADROOT}/share/arch.sh`
+
+executable=${TIBERCADROOT}/${ARCH}/bin/${executable}
+if [ ! -x ${executable} ]
 then
   echo "${executable} does not exist"
   exit 1
@@ -45,7 +48,7 @@ ulimit -v unlimited -s unlimited -c 0
 
 if [ $usegdb -eq 1 ]
 then
-  gdb -nx -ex run --args ${TIBERCADROOT}/bin/${executable} $@
+  gdb -nx -ex run --args ${executable} $@
 else
-  exec ${TIBERCADROOT}/bin/${executable} $@
+  exec ${executable} $@
 fi

@@ -13,6 +13,14 @@
 #include "libmesh.h"
 
 
+#ifndef stringify
+#define stringify(a) #a
+#endif
+#ifndef xstr
+#define xstr(a) stringify(a)
+#endif
+
+
 // we hand an empty command line to underlying libraries
 namespace
 {
@@ -137,11 +145,11 @@ TiberCad::init(void)
     Database::set_default_search_path(_tiberroot + "/materials");
 
     // setup DLLoader paths
-    DLLoader::set_library_path(_tiberroot + "/lib/modules");
+    DLLoader::set_library_path(_tiberroot + "/" + xstr(ARCH) + "/lib/modules");
 #ifdef DEBUG
-    DLLoader::prepend_to_library_path(_tiberroot + "/lib/debug/modules");
+    DLLoader::prepend_to_library_path(_tiberroot + "/" + xstr(ARCH) + "/lib/debug/modules");
 #endif
-    char* modelpath = getenv("TIBERMODELPATH");
+    char* modelpath = getenv("TIBERMODULEPATH");
     if (modelpath != NULL)
       DLLoader::prepend_to_library_path(modelpath);
   }

@@ -7,6 +7,7 @@ fi
 
 . common.sh
 
+
 #export CXX=mpicxx
 
 REVISION=3581
@@ -58,13 +59,13 @@ export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 export PETSC_ARCH=${ARCH}
 
 SHARED=--enable-shared
-if [ $shared_libs == 'n' ]
-then
-  SHARED=--disable-shared
-fi
+#if [ $shared_libs == 'n' ]
+#then
+#  SHARED=--disable-shared
+#fi
   
 
-./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-nemesis --disable-exodus --disable-netcdf --disable-libHilbert
 
 
 # delete the -pedantic flag because it makes problems with mpi

@@ -16,6 +16,7 @@ hostos := @host_os@
 # The architecture
 hostcpu := @host_cpu@
 
+ARCH := $(shell $(topdir)/share/arch.sh)
 
 # the compilers
 CXX := @CXX@
@@ -61,7 +62,7 @@ relative_libdir := lib
 ifeq ($(METHOD),dbg)
   relative_libdir := $(relative_libdir)/debug
 endif
-libdir := $(topdir)/$(relative_libdir)
+libdir := $(topdir)/$(ARCH)/$(relative_libdir)
 
 
 # shared library extension

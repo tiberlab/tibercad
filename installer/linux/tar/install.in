@@ -2,27 +2,27 @@
 
 TIBERVER=@TIBERVERSION@
 
-ARCH=i386-linux
+ARCH=`uname -m`-linux
 
-GMSHVER=2.3.0
+GMSHVER=2.5.0
 
 
 
 install_gmsh ()
 {
 
-  echo "Installing GMSH to ${instpath}/tools/gmsh-$GMSHVER"
+  echo "Installing GMSH to ${instpath}/tools/gmsh-$GMSHVER-Linux"
   install_files ${srcpath}/tools ${instpath}
 
   here=`pwd`
 
   cd ${instpath}/bin && ln -s TiberCAD.sh gmsh
-  mkdir -p ${instpath}/man/man.1
-  cd ${instpath}/man/man.1 && ln -s ${instpath}/tools/gmsh-$GMSHVER/gmsh.1 gmsh.1
+  mkdir -p ${instpath}/man/man1
+  cd ${instpath}/man/man1 && ln -s ${instpath}/tools/gmsh-$GMSHVER-Linux/share/man/man1/gmsh.1 gmsh.1
 
   echo "- ${instpath}/bin/gmsh" >> ${instpath}/files.lst
-  echo "- ${instpath}/man/man.1/gmsh.1" >> ${instpath}/files.lst
-  echo "- ${instpath}/man/man.1" >> ${instpath}/files.lst
+  echo "- ${instpath}/man/man1/gmsh.1" >> ${instpath}/files.lst
+  echo "- ${instpath}/man/man1" >> ${instpath}/files.lst
 
 
   echo ""
@@ -254,7 +254,7 @@ case \$prog in
 
   gmsh*)
     progname="gmsh"
-    executable="\${TIBERCADROOT}/tools/gmsh-\${GMSHVER}/\$progname"
+    executable="\${TIBERCADROOT}/tools/gmsh-\${GMSHVER}-Linux/bin/\$progname"
     ;;
 
   *)
@@ -265,17 +265,11 @@ case \$prog in
 esac
 
 
-# prepend our LD_LIBRARY_PATH stuff
-#TIBER_LD_LIBRARY_PATH=\${TIBERCADROOT}/\${ARCH}/lib
-#if [ -z \$LD_LIBRARY_PATH ]
-#then
-#  LD_LIBRARY_PATH=\$TIBER_LD_LIBRARY_PATH
-#else
-#  LD_LIBRARY_PATH=\${TIBER_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
-#fi
-#export LD_LIBRARY_PATH
-
 export TIBERCADROOT
+
+
+# stack size limit / VM may be too small 
+ulimit -v unlimited -s unlimited -c 0
 
 
 if [ -x \$executable ]
