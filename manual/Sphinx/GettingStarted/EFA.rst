@@ -160,9 +160,9 @@ in k-space.
 
 The main parameters are:
 
-* **quantum simulation** : name of the efaschroedinger simulation.
+* **quantum_simulation** : name of the efaschroedinger simulation.
 
-* **min eigenvalue number** , **max eigenvalue number** : the dispersion is calculated 
+* **min_eigenvalue_number** , **max_eigenvalue_number** : the dispersion is calculated 
 for the states number *i* , where 
 
   max_eigenvalue_number :math:`\ge i \ge`  min_eigenvalue_number
