@@ -522,7 +522,6 @@ Glossary
       | 
       | Example: 
       |   reference_material = AlGaN
-
       | 
       
    temperature
@@ -714,16 +713,6 @@ Glossary
       | 
       | Example: 
       |   degeneracy = 2
-      | 
-      
-   abs_tolerance
-      | Level: paragraph
-      | 
-      | Description: 
-      | 
-      | 
-      | Example: 
-      |   abs_tolerance = 1e-3
       | 
       
    refine_fraction
@@ -1238,7 +1227,7 @@ Glossary
       |        }
       |      }
       |    }
-      |
+      | 
       
    Modules/driftdiffusion
       | Level: Super-Block
@@ -1442,9 +1431,9 @@ Glossary
       |         regions = HotSpot
       |         H = 1e10
       |        }
-      |
+      | 
       
-   Modules/Hefaschroedinger
+   Modules/efaschroedinger
       | Level: Block
       | 
       | Description: 
@@ -1460,15 +1449,10 @@ Glossary
       |        regions = quantum
       |        plot = (EigenFunctions, EigenEnergy, EnergyLevels)
       |        Solver
-      |          {
-      |           number_of_eigenstates = 10 # 30 
-      |          }
+      |          { number_of_eigenstates = 10 # 30 }
       |        Physics
-      |          {
-      |           model = conduction_band
-      |          }
-      |       }
-      |
+      |          { model = conduction_band }
+      | 
       
    Modules/quantumdispersion
       | Level: Block
@@ -1588,7 +1572,191 @@ Glossary
       |          }
       |       ...
       |       }
+      
+   Contact/anode
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |     Contact anode 
+      |       {
+      |         type = ohmic
+      |         voltage = $Vb[0.0]
+      |       }
       |
+      
+   Contact/cathode
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |     Contact cathode
+      |       {
+      |             type = ohmic
+      |             voltage = 0.0
+      |       }
+      |
+      
+   Contact/gate
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |    Contact gate
+      |      {
+      |       regions = (gate1, gate2)
+      |       type = schottky
+      |       work_function = 1.5272
+      |       voltage = @Vg
+      |      }
+      |
+      
+   Contact/Base
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |    Contact Base
+      |      {
+      |       type = clamp
+      |      }
+      |
+      
+   Contact/left
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |    Contact left
+      |      {
+      |       type = heat_reservoir
+      |       temperature = 300
+      |      }
+      |
+      
+   Contact/right
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |    Contact right
+      |      {
+      |       type = heat_reservoir
+      |       temperature = 300
+      |      }
+      |
+      
+   Contact/heat_reservoir
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |    Contact heat_reservoir
+      |      {
+      |       region = substrate  
+      |       temperature = 300
+      |      }
+      |
+      
+   Contact/substrate
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |     Contact substrate
+      |       {
+      |        type = surface_resistance
+      |        r_surf = 0. 05 
+      |        temperature = 300
+      |       }
+      |
+      
+   Contact/reservoir
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |     Contact reservoir
+      |       {
+      |        temperature = 300
+      |       }
+      |
+      
+   Contact/surface_resistance
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |     Contact surface_resistance
+      |       {
+      |        r_surf = 0.01
+      |        temperature = 300
+      |       }
+      |
+      
+   Contact/Top
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |     Contact Top
+      |       {
+      |        type = surface_force
+      |        force = (0.0, 0.0625,0.0)
+      |       }
+      |
+      
+   Contact/backcontact
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |     Contact backcontact
+      |       {
+      |        voltage = 0.0
+      |        area_factor = 0.1
+      |       }
+      |
+      
+   Contact/dissipator
+      | Level: Block
+      | 
+      | Description: 
+      | 
+      | 
+      | Example: 
+      |     Contact dissipator
+      |       {
+      |        r_surf = 0.5
+      |        type = surface_resistance
+      |        temperature = 300
+      |       }
+      |
+      
       
    Modules/dssc_generation
       | Level: Block
@@ -1697,7 +1865,7 @@ Glossary
       |        monitor = true
       |       }
       |
-   
+     
    Region/bulk
       | Level: Block
       | 
