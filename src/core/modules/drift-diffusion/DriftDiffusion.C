@@ -621,6 +621,17 @@ DriftDiffusion::do_solve(void)
     Messages::info(os.str());
   }
 
+  if (plot_solution(IQE))
+  {
+    ostringstream os;
+    os << setprecision(6);
+    os << "IQE: " << _iqe;
+
+    Messages::newline();
+    Messages::info(os.str());
+
+  }
+
   calculate_field_emission();
 
 }
