@@ -1133,11 +1133,65 @@ Boltzmann::compute_power_dissipated()
 
 }
 
+double 
+Boltzmann::compute_porosity()
+{
+
+  EquationSystems& es = get_equation_systems();
+  TiberLinearSystem& system =
+    es.get_system<TiberLinearSystem>("fourier");
+  DofMap& dof_map = system.get_dof_map();
+  std::vector<unsigned int> dof_indices;
+  //-----------------------------------------------
+
+  const unsigned int tvar = system.variable_number("T");
+  FEType fe_type = dof_map.variable_type(tvar);
+  
+  //------------BULK----------
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  QGauss qrule(dim,FIFTH);
+  fe->attach_quadrature_rule(&qrule);
+  const std::vector<Real>& JxW = fe->get_JxW();
+  const std::vector<Point>& q_point = fe->get_xyz();
+  //--------------------------
+
+  set<const Elem*>::iterator it = Domain.begin();
+  const set<const Elem*>::iterator end = Domain.end();
+
+  Real total_volume = 0.0;
+  for ( ; it != end; ++it)
+  {
+
+    const Elem* elem = *it;
+    dof_map.dof_indices(elem, dof_indices);
+
+    fe->reinit(elem);
+
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
+
+    for (ID qp = 0; qp <  qrule.n_points(); qp++)
+    {
+      total_volume += JxW[qp];
+    }
+  }
+
+  total_volume *= get_scaling().get_calc_mesh_units();
+  total_volume *= get_scaling().get_calc_mesh_units();
+  total_volume *= get_scaling().get_calc_mesh_units();
+
+  cout<<"Total Volume: "<<total_volume<<" m3";
+
+
+
+ return  total_volume;
+
+}
+
+
 double
 Boltzmann::compute_effective_thermal_conductivity()
 {
  EquationSystems& es = get_equation_systems();
-
 
  if (is_gray)
  {
@@ -1330,6 +1384,13 @@ Boltzmann::compute_effective_thermal_conductivity()
   cout<<"Thot: "<<Thot<<" K"<<endl;
   cout<<"Power emitted: "<<total_heat_source*1e-6<<" W"<<endl;
   double effective_kappa = Pcold/Ahot/(abs(Thot - Tcold)) * abs(Point_hot(2) - Point_cold(2))* get_scaling().get_calc_mesh_units();
+
+   
+  ofstream myfile;
+
+  myfile.open ("kappa.dat",ios_base::app);
+  myfile << effective_kappa * 100.0<<"\n";
+  myfile.close();
 
   return effective_kappa;
 
@@ -1629,6 +1690,8 @@ Boltzmann::do_solve(void)
 
    double kappa = compute_effective_thermal_conductivity();
    cout<<"Effettive thermal conductivity:    "<<kappa* 100.0<<" W/(m K)"<<endl;
+   double  porosity = compute_porosity();
+  //cout<<"Porosity:    "<<compute_porosity()<<endl;
 
  }
   //J_err = energy_conservation_check();

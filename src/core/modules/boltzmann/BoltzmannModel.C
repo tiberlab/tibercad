@@ -91,7 +91,17 @@ BoltzmannModel::do_init(void)
     _cg = db.get("C",0.0, false);
     get_parameter("C", _cg);
 
+    //Avarage Kappa
+    double kappam = (_kappa(0,0) + _kappa(0,0)  + _kappa(0,0))/3.0;
+
+    double mfp(0);
+    get_parameter("mfp", mfp);
+
+    if (mfp != 0.0)
+      _vg = kappam * 3.0/_cg/mfp;
+
     _tg = 3.0 * _kappa(0,0) / _vg / _vg / _cg;
+ 
   }
 
 }

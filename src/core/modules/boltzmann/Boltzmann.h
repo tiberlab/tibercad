@@ -89,6 +89,12 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
   SideData SD;
   std::vector<unsigned short int> node_conn;
 
+  //! Compute porosity
+  double compute_porosity();
+
+  //! Compute surface to volume ratio
+  double surface_to_volume_ratio();
+
   double compute_power_dissipated();
 
   double compute_effective_thermal_conductivity();
