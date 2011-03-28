@@ -9,17 +9,17 @@ Quantum  EFA  calculations
 
 In  TiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates and  eigenfunctions  of  a  given system,   dispersion  of  quantum  states and   particle  quantum  density can  be  obtained   respectively by means  of the   following Modules:
 
-* Module efaschroedinger
+* ``Module efaschroedinger``
 
-* Module quantumdispersion
+* ``Module quantumdispersion``
 
-* Module quantumdensity
+* ``Module quantumdensity``
 
 The  optical properties  are  calculated by  the  following modules 
 
-* Module opticskp
+* ``Module opticskp``
 
-* Module opticalspectrum
+* ``Module opticalspectrum``
 
 
 Module efaschroedinger
@@ -109,9 +109,9 @@ Output
 
 The available output variables, to be specified in the plot option, are the following:
 
-* EigenEnergy Eigen energy in eV
+* ``EigenEnergy`` : Eigen energy in eV
 
-* EigenFunctions :math:`|\psi({\bf r})|^2` function of the eigenstate
+* ``EigenFunctions`` : :math:`|\psi({\bf r})|^2` function of the eigenstate
 
 * Occupation probability to find the state occupied. It is calculated assuming Fermi
 distribution and mean electrochemical potential and temperature:
@@ -160,9 +160,9 @@ in k-space.
 
 The main parameters are:
 
-* **quantum_simulation** : name of the efaschroedinger simulation.
+* ``quantum_simulation`` : name of the efaschroedinger simulation.
 
-* **min_eigenvalue_number** , **max_eigenvalue_number** : the dispersion is calculated 
+* ``min_eigenvalue_number`` , **max_eigenvalue_number** : the dispersion is calculated 
 for the states number *i* , where 
 
   max_eigenvalue_number :math:`\ge i \ge`  min_eigenvalue_number
@@ -212,14 +212,14 @@ efaschroedinger module).
 
 The available options are:
 
-* **quantum_simulation** : name of the efaschroedinger simulation.
+* ``quantum_simulation`` : name of the efaschroedinger simulation.
 
-* degeneracy: degeneracy of the quantum state
+* ``degeneracy`` : degeneracy of the quantum state
 
-* **initial_eigenstates_number** : initial number of eigenstates for the Schroedinger
+* ``initial_eigenstates_number`` : initial number of eigenstates for the Schroedinger
 equation
 
-* **analytic** = { true | false } If true then the density is calculated analytically,
+* ``analytic`` = { true | false } If true then the density is calculated analytically,
 otherwise numerically.
 
 Output
@@ -254,7 +254,7 @@ calculation of optical properties is enabled.
     }
 
 Here, *initial_state_model* and *final_state_model* are, respectively, the quantum simulations 
-( **efaschroedinger** module) associated respectively to the initial state of optical
+( ``efaschroedinger`` module) associated respectively to the initial state of optical
 transition (e.g. electron), and to the final state of optical transition (e.g. hole). 
 *initial_eigenstates* and *final_eigenstates* refer to the range of eigenstates to be taken in
 account for optical calculations.
@@ -273,7 +273,7 @@ Output
 
 The output variables for optics calculations are:
 
-* **optical_spectrum_k_0** : optical emission spectrum for *k=0*.
+* ``optical_spectrum_k_0`` : optical emission spectrum for *k=0*.
 
 
 
@@ -281,7 +281,7 @@ Module opticalspectrum
 ----------------------
 
 
-By defining the Module **opticalspectrum** , optical matrix elements are used to calculate
+By defining the Module ``opticalspectrum`` , optical matrix elements are used to calculate
 the associated (emission) spectrum with a k-space integration.
 
 ::
@@ -307,7 +307,7 @@ the associated (emission) spectrum with a k-space integration.
 
 The parameters are the following:
 
-  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
+|  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
  **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
 real space
 
@@ -316,15 +316,15 @@ ements whose error is greater than the value (1-refine fraction)* (maximum error
 going to be refined. In this case, Error is just the integrated quantity. The refinement
 will end when the *relative_accuracy* is obtained.
 
-  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
+|  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
 
-  ``wedge`` = half | quarter, to reduce calculation time, by exploiting symmetry.
+|  ``wedge`` = half | quarter, to reduce calculation time, by exploiting symmetry.
 
-  ``optical_matr_elem_model`` = name of the *opticskp* model associated
+|  ``optical_matr_elem_model`` = name of the *opticskp* model associated
 
-  ``polarization`` = light polarization (vector)
+|  ``polarization`` = light polarization (vector)
 
-  ``Emin, Emax, dE`` : energy range and step of spectrum calculation.
+|  ``Emin, Emax, dE`` : energy range and step of spectrum calculation.
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -332,7 +332,7 @@ Output
 
 The output variables for optics calculations are:
 
-* **optical_spectrum** : k-space integrated optical emission spectrum.
+* ``optical_spectrum`` : k-space integrated optical emission spectrum.
 
 .. rubric:: Footnotes
 

@@ -12,9 +12,9 @@ In this example we will see a very simple TiberCAD simulation:
 
 The following files should be in your working directory:
 
-|   bulk.tib_ : **TiberCAD** input file 
+|   ``bulk.tib_`` : **TiberCAD** input file 
 |
-|   bulk.msh_ : mesh file
+|   ``bulk.msh_`` : mesh file
 
 The mesh file can be obtained from the following GMSH geo file : bulk.geo_ 
 
@@ -49,9 +49,10 @@ for any details please refer to GMSH manual GMSH (http://geuz.org/gmsh/).
 | 
 
 
-  |warn|: In a **1D** simulation it is assumed that the geometrical model is restricted to the **x axis** .
-  In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
-  Any other geometrical orientation could give unpredictable results
+  |warn|: 
+          In a **1D** simulation it is assumed that the geometrical model is restricted to the **x axis** .
+          In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
+          Any other geometrical orientation could give unpredictable results
 
  
 
@@ -80,7 +81,7 @@ The size of the mesh elements will then be computed in GMSH by linearly interpol
 these characteristic lengths in the whole mesh.
  
 
-Definition of a geometrical entity **Line** ::
+Definition of a geometrical entity ``Line`` ::
 
   Line(1) = {1, 2}
 
@@ -113,8 +114,9 @@ Definition of two physical entities Physical Point::
 | 
 | 
 
-  |warn| : In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
-  are used by TiberCAD to impose the required boundary conditions.
+  |warn| 
+         In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
+         are used by TiberCAD to impose the required boundary conditions.
 
 Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
 through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
@@ -226,19 +228,19 @@ The anode and cathode contacts of our 1D Si sample are defined as **Boundary con
 (``Contact anode, Contact cathode``) in the following way::
 
 
-Module driftdiffusion
-{ 
+  Module driftdiffusion
+    { 
               
-  name = driftdiffusion  
+     name = driftdiffusion  
 
-  regions = all
+     regions = all
 
-  plot = (Ec, Ev, eQFermi, hQFermi, ContactCurrent)
+     plot = (Ec, Ev, eQFermi, hQFermi, ContactCurrent)
 
-  Contact anode { voltage = $Vb }
-  Contact cathode { }
+     Contact anode { voltage = $Vb }
+     Contact cathode { }
 
-}
+    }
     
 Through the keyword Contact , one (n-1) -dimension GMSH physical region (Physical Point in 1D, 
 Physical Line in 2D, Physical Surface in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be 
@@ -253,7 +255,7 @@ Both contacts are defined as *ohmic* , cathode is assigned a fixed ``voltage = 0
 by the value of the variable *Vb* ::
 
 
-  voltage = @Vb
+  ``voltage = @Vb``
 
 
 Definition of Simulation parameters

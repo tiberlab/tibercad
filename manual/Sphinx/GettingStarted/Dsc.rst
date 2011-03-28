@@ -9,7 +9,7 @@ Simulation Dye Solar Cells
 Model DSC
 ^^^^^^^^^
 
-The DSC model is tagged as *dssc* . In **options** subsection we indicate the simulation name::
+The DSC model is tagged as ``dssc`` . In **options** subsection we indicate the simulation name::
 
   model dssc
     {
@@ -98,22 +98,22 @@ The part of the input file for the generation model::
     
 In the generation input flle must be specified:
 
-*  ( **regions** ) the regions where we want that there is generation (where the Dye is present);
+*  ``regions`` : the regions where we want that there is generation (where the Dye is present);
 
-*  ( **plot** ) if we want to plot the generation;
+*  ``plot`` : if we want to plot the generation;
 
-*  ( **light_direction** ) the vector which fixes the direction from where the light comes;
+*  ``light_direction`` : the vector which fixes the direction from where the light comes;
 
-*  ( **light_intensity** ) the light intensity;
+*  ``light_intensity`` : the light intensity;
 
-*  ( **light_intensity** ) the light intensity;
+*  ``light_intensity`` : the light intensity;
 
-*  ( **dye** ) the dye used in the cell;
+*  ``dye`` : the dye used in the cell;
 
 
 The light intensity is defined in a sweep ( see section :ref:`Solver_Dsc` ). It can be set to reach 1
 that means one Sun, or a larger or smaller illumination intensity (0.1, 2.0, etc.).
-There is another flag called **illumination_spectrum** that can be used if we want to
+There is another flag called ``illumination_spectrum`` that can be used if we want to
 change the spectrum profile F with another illumination source (for example if we assume
 the cell under concentration of light). The file used by default for :math:`\Phi` is the standard 1.5
 AM spectrum of the sun contained in the material database in the file ``Sun1p5am`` .

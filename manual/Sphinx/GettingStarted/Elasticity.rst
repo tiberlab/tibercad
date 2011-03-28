@@ -85,7 +85,7 @@ In our case, with BodyForce lattice mismatch we are adding a body force into the
 induced by the lattice mismatch with the reference lattice which in this case is :math:`Al_{0.2}Ga_{0.8}N` . 
 In order to avoid a free standing device we may want to freeze a surface. With Boundary Clamp we fix, in this case, the region Base.
 
-The third part is simply Simulation **{solve = elasticity}** where the default name *elasticity* is used. 
+The third part is simply Simulation ``{solve = elasticity}`` where the default name *elasticity* is used. 
 By default, files for 3D system are written in vtu which can be read from Paraview. 
 Output data about strain are shown below.
 
