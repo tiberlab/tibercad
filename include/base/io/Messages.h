@@ -106,7 +106,7 @@ Messages::Messages(void) : _indent_loc(0) { }
 inline
 Messages::~Messages(void)
 {
-  newline();
+  //newline();
   _indent -= _indent_loc;
 }
 

@@ -13,14 +13,12 @@
 
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
-#include "QuantumDensity.h"
 #include "OpticsKP.h"
 #include "QuantumDispersion.h"
 #include "Dftb.h"
 #include "EmpiricalTightBinding.h"
 #include "OpticsTB.h"
 #include "OptRecombinSpectrum.h"
-#include "TunnelingCurrent.h"
 #include "MaxwellEquations.h"
 #include "PhononDispersion.h"
 #include "CrackStrain.h"
@@ -134,14 +132,10 @@ SimulationInterface::create(const string& type,
     sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_broyden")
     sim = ModifiedBroyden::create(options);
-  else if (type_name == "quantumdensity")
-    sim = QuantumDensity::create(options);
   else if (type_name == "opticskp")
     sim = OpticsKP::create(options);
   else if (type_name == "quantumdispersion")
     sim = QuantumDispersion::create(options);
-  else if (type_name == "tunnelingcurrent")
-    sim = TunnelingCurrent::create(options);
 #ifdef ENABLE_DFTB
   else if (type_name == "densityfunctional_tb")
     sim = Dftb::create(options);
@@ -570,8 +564,8 @@ SimulationInterface::create_equation_system(const std::string& type)
   ostringstream os;
   os << get_equation_system_name();
   
-  if (newid > 0)
-    os << "_" << newid;
+  //if (newid > 0)
+  os << "_" << newid;
 
   get_solver_options().set_option("simulation", get_name());
 
@@ -1070,8 +1064,9 @@ SimulationInterface::plot_globaldata(void)
   for ( ; it != end; ++it)
   {
     ID id = *it;
-    if (get_solution_descriptor(id).location() == SolutionDescriptor::GLOBAL)
-      values.insert(make_pair(id, vector<double>(0)));
+    const SolutionDescriptor& sd = get_solution_descriptor(id);
+    if (sd.location() == SolutionDescriptor::GLOBAL)
+      values.insert(make_pair(id, vector<double>(sd.n_components())));
   }
 
   get_solution_secure(values);
@@ -1090,59 +1085,31 @@ SimulationInterface::plot_globaldata(void)
     if (file.good())
     {
       // header
-      int width[5] = {22, 15, 10};
       file << "# Global data for simulation: " << get_name() << endl;
       //file << "# Data:" << endl;
-      file << "#" << endl;
-      {
-        ostringstream os;
-        os << "# name";
-        int w = width[0];
-        os.width(w - os.tellp());
-        os << "" << "units";
-        w += width[1];
-        os.width(w - os.tellp());
-        os << "" << "type" << endl;
-        file << os.str();
-      }
+      file << "#\n";
 
       map<ID, vector<double> >::iterator it(values.begin());
-      for ( ; it != values.end(); ++it)
+
+
+      for (it = values.begin(); it != values.end(); ++it)
       {
         const SolutionDescriptor& descr = get_solution_descriptor(it->first);
-        ostringstream os;
-        os << "# " << descr.name();
-        int w = width[0];
-        os.width(w - os.tellp());
-        os << "" << descr.units();
-        w += width[1];
-        os.width(w - os.tellp());
-        os << "";
+        file << "\n# " << descr.name() << "  ";
+        if (descr.units() != "")
+          file << "(" << descr.units() << ")  ";
         if (descr.type() == SolutionDescriptor::NTUPLE)
-          os << descr.n_components() << "-tuple";
+          file << descr.n_components() << "-tuple";
         else
-          os << descr.type();
+          file << descr.type();
+        file << "\n";
 
-        file << os.str() << endl;
-      }
-
-      file << "#" << endl;
-      file << "# ";
-      for (it = values.begin(); it != values.end(); ++it)
-      {
-        const SolutionDescriptor& descr = get_solution_descriptor(it->first);
-        file << descr.name() << "  ";
-      }
-      file << endl;
-
-      for (it = values.begin(); it != values.end(); ++it)
-      {
         const vector<double>& vals = it->second;
         for (unsigned int i = 0; i < vals.size(); i++)
           file << vals[i] << "  ";
-      }
 
-      file << endl;
+        file << "\n";
+      }
 
       file.close();
     }
@@ -2122,6 +2089,26 @@ SimulationInterface::get_solution(map<ID, vector<double> >& values)
     for ( ; it != end; ++it)
       if (get_solution_descriptor(*it).location() == SolutionDescriptor::GLOBAL)
         values[*it] = vector<double>(0);
+  }
+
+  // first resize all data vectors to the right size
+  map<ID, vector<double> >::iterator it(values.begin());
+  map<ID, vector<double> >::iterator end(values.end());
+  for ( ; it != end; ++it)
+  {
+    const SolutionDescriptor& sd = get_solution_descriptor(it->first);
+    assert(sd.id() != INVALID_ID);
+    unsigned int n_comp = sd.n_components();
+    if (sd.location() != SolutionDescriptor::GLOBAL)
+    {
+      ostringstream os;
+      os << "In simulation \'" << get_name() << "\' :"
+          << "cannot access solution variable \'" << sd.name()
+          << "\' as global (mesh-independent) quantity.";
+      throw RuntimeException(os.str());
+    }
+
+    values[it->first].resize(n_comp);
   }
 
   get_solution_secure(values);

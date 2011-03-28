@@ -193,6 +193,15 @@ Material::preinit(void)
     }
 
   }
+  else if (_structure == "zb")
+  {
+    if (use_defaults)
+    {
+      get_options()["x-growth-direction"] = "(1,0,0)";
+      get_options()["y-growth-direction"] = "(0,1,0)";
+      get_options()["z-growth-direction"] = "(0,0,1)";
+    }
+  }
 
 
   do_preinit();

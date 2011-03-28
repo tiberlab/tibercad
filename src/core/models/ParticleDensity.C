@@ -128,7 +128,7 @@ ParticleDensity::add_quantum_density(const std::string& name)
     }
 
     // we assume that the density variable has this name:
-    string density_name("Density");
+    string density_name("QuantumDensity");
 
     ID density_id = qd->get_solution_id(density_name);
 
@@ -153,7 +153,8 @@ ParticleDensity::add_quantum_density(const std::string& name)
 
     // at this point we have for sure a quantum density simulation
 
-    ID cont_id = qd->get_solution_id("BandEdge3D");
+    // we take the eigenenergies to add a continuum
+    ID cont_id = qd->get_solution_id("EigenEnergy");
 
     _quantum_density.push_back(qd);
     _density_ids.push_back(density_id);
@@ -233,12 +234,14 @@ ParticleDensity::quantum_density(void)
 
     qdens += values[0];
 
-    if ((_3D_edge[i] != INVALID_ID) && _add_continuum)
+    if (flag && (_3D_edge[i] != INVALID_ID) && _add_continuum)
     {
       map<ID, vector<double> > tmp;
-      tmp[_3D_edge[i]] = vector<double>(1);
+      tmp[_3D_edge[i]] = vector<double>();
       _quantum_density[i]->get_solution(tmp);
-      continuum = max(continuum, tmp[_3D_edge[i]][0]);
+      size_t n = tmp[_3D_edge[i]].size();
+      if (n > 0)
+        continuum = max(continuum, tmp[_3D_edge[i]][n - 1]);
     }
   }
 

@@ -38,14 +38,12 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
     std::string particle;   //!< particle name "el" or "hl"
 
+    unsigned int degeneracy; //!< the degeneracy factor
+
     //double  length_scale;   //!< mesh length scale [Bohr radius]
 
 
     //bool periodicity[3];    //!< periodic boundary conditions
-
-   
-
-    std::string output_type; //!< output type 
 
    
 
@@ -62,17 +60,12 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     bool convergent_density;//!< if true, the number of eigenstates will be increased to reach the tolerance
 
  
-    unsigned int first_state; //!< the first state to consider (>= 0)
     unsigned int initial_eigenstates_number; //!< initial number of eigenstates that is used in an iterative calculation of the density
 
 
     double relative_density_tolerance; //!< stops itarations if \f$ \rho_i / \rho_{i+1} < \varepsilon    \f$, where \f$ \rho \f$ is the                                              total density 
  
     double eigen_number_increase_factor; //!< to increase number of eigenstates for the next iteration 
-
-
-    bool log_output; //!< to do a lot of output on screen
-
 
 
     JobKind job; //!< a job to do
@@ -125,29 +118,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   virtual void calculate_Hamiltonian_and_S(void); 
 
 
-
-  
-
- 
-
-  //!writes on disk the eigenfunction
-  /*!
-    \param state_number eigenstate number
-    \param filename name of file
-  */
-  void output_eigen_function(unsigned int state_number,  const std::string& filename);
-
-
-  //!writes on disk the probability function \f$  \sum_i |\psi({\bf r})|^2   \f$
-  /*!
-    \param state_number eigenstate number
-    \param filename name of file
-  */
-  void output_probability_function(unsigned int state_number,  const std::string& filename);
-
-
-  
-
   //! returns a reference to solutions
   const std::vector<eigen_propblem_solution>& get_solution() const;
  
@@ -174,35 +144,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   double calculate_temperature_averaged(unsigned int i);
   
  
-  //! claculate total density
-  /*!
-    \f$ \rho = \sum_i F_{\rm{Fermi}}(E_i) \f$
-    
-  */
-  double get_integrated_probability();
-
-
-
-  //!obtain convergent density
-  /*!
-    
-   
-  */
-  void  calculate_convergent_density( void );
-  
-
-
-   //! calculate cell density  (in atomic units) for a single \f$ {\bf k}_{\|}\f$ vector.  
-  /*!
-    The nodal density reads: \f$ \rho({\bf r}) = \sum_i   |\psi_i({\bf r})|^2 F_{fermi}(E_i) \f$ 
-    The cell density reads:  \f$ \rho = \frac{1}{\Omega_0} \int_{\Omega_0}  \sum_i   |\psi_i({\bf r})|^2 \, dV  F_{fermi}(E_i), \f$
-    where \f$ \Omega_0 \f$ is the element volume.
-
-   
-  
-
-  */
-  void  calculate_density(void);
 
 
   //! sets opt.initial_eigestates_number
@@ -218,14 +159,10 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
   virtual PhysicalModel*
-    create_physical_model(const ModelOptions& options,
-        const Material* mat) const throw (ModelErrorException);
+    create_bulk_model(const ModelOptions& options,
+        const Material* mat) const;
     
    
-  virtual BoundaryProperties*
-    create_boundary_model(const ModelOptions& options) const
-    throw (ModelErrorException);
-
 
   //!returns a constant reference calculated density
   const std::map<const Elem*, double>& get_density(void) const 
@@ -247,19 +184,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
 
-  //!calculates analitycal charge density for a 1D quantum structure (e.g. quantum well)
-  /*!
-    \f$  \rho({\bf r}) = \frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln (1 + \exp (\frac{\mu - E}{kT}) )    \f$
-  */
-  std::map<const Elem*,  double> estimate_density1D(unsigned int state_number, double parallel_mass);
-
-
-  //!calculates analitycal charge density for a 1D quantum structure (e.g. quantum wire)
-  /*!
-    \f$  \rho({\bf r}) = |\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  
-    F_{-1/2}\left(  \frac{\mu - E}{kT}         \right)       \f$
-  */
-  std::map<const Elem*, double> estimate_density2D(unsigned int state_number, double parallel_mass);
 
 
   inline double get_particle_charge(void) const;
@@ -272,19 +196,24 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
  private:
 
+  enum Variables
+  {
+    ProbabilityDensity,
+    EigenEnergy,
+    Occupation,
+    EigenEnergyOnMesh,
+    QuantumDensity
+  };
+
   //!pointer to the device object
   static  Device* _device;
 
   //! interface for temperature acquisition
   TemperatureInterface temp_interface;
  
-  //!pointer to mesh of the equation systems
-  //Mesh* mesh;
 
   options opt;
 
-  //!pointer to meshdata of the equation systems
-  MeshData*  meshdata;
 
   //!pointer the equation systems object
   //EquationSystems* es;
@@ -315,31 +244,21 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //!pointer to the macrostrain object that is used to get strain data 
   Macrostrain* strain;
 
-  //!system that we add to the equation systems
-  //LinearImplicitSystem* system;
-
-  //!diriclet nodes vector
-  // std::vector<unsigned int>  dirichlet_nodes;
-
- 
   
-  //!my Jacobian because I calculate everything in atomic units
-  //double my_Jacobian; 
-
+  //! If \c true we have to calculate the density
+  bool _calculate_density;
   
  
 
+  void set_k_vector(const RealVectorValue& k_vec);
 
-  //!calculates \f$ |\langle \psi|\psi \rangle|^2 \f$ of an eigenstate
+  //!calculates analytical charge density for a 1D/2D structures
   /*!
-    \param state_number eigenstate number
-    \param prob_data \f$ |\langle \psi|\psi \rangle|^2 \f$ of an eigenstate
+    \f$  \rho({\bf r}) = |\psi({\bf r})|^2 \frac{mkT}{2 \pi \hbar^2}\ln (1 + \exp (\frac{\mu - E}{kT}) )    \f$
+    \f$  \rho({\bf r}) = |\psi({\bf r})|^2 \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}
+    F_{-1/2}\left(  \frac{\mu - E}{kT}         \right)       \f$
   */
-  void prepare_probability_function(const unsigned int state_number, std::vector<double>& prob_data);
-
-
-
-
+  void calculate_density_analytic(void);
 
 
   //!bands names
@@ -398,10 +317,10 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   
   //! compares eigenstate energy for electrons 
-  static bool compare_eigen_energy_electrons1(eigen_energy state1, eigen_energy state2);
+  static bool compare_eigen_energy_electrons1(const eigen_energy& state1, const eigen_energy& state2);
 
   //! compares eigenstate energy for holes 
-  static bool compare_eigen_energy_holes1(eigen_energy state1, eigen_energy state2);
+  static bool compare_eigen_energy_holes1(const eigen_energy& state1, const eigen_energy& state2);
   
 
   //! solutions of the eigenvalue problem
@@ -431,19 +350,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   double eigenstate_norm(unsigned int state_number);
 
  
-  
-  //! calculate density \f$ | \psi_i (r) |^2 \f$
-  /*!
-    \param i number of the eigenstate
-   */
-  std::vector<double> calculate_prob_function(unsigned int i);
-
-
-  //! calculate density  \f$ \frac{1}{\Sigma_0} \int_{\Sigma_0} | \psi_i (r) |^2 /,dV \f$
-  /*!
-    \param i number of the eigenstate
-  */
-  std::vector<double> calculate_cell_prob_function(unsigned int i);
 
 
   //!Calculates Fermi Dirac probability
@@ -500,32 +406,15 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
  protected:
 
 
-  //!in this class  outputs \f$ |<\psi|\psi>|^2 \f$ for each eigenstate
-  virtual void build_nodal_results(const std::set<std::string>& variables,
-				   std::vector<double>& results, std::vector<std::string>& legend);
+  virtual void get_solution_secure(const Elem* elem,
+      std::map<ID, std::vector<double> >& values,
+      const std::vector<Point>& points);
+
+  virtual void get_solution_secure(
+      std::map<ID, std::vector<double> >& values);
 
 
-  virtual void 	build_elemental_results (const std::set< std::string > &variables, 
-					 std::vector< double > &results, std::vector< std::string > &legend);
-
-
-  //!in this class it outputs eigen energies
-  virtual void 	build_integrated_quantities (std::vector< double > &values);
-
-  //!in this class it builds descriotion for eigen energies
-  virtual void 	build_integrated_quantities_description (
-      std::vector< std::string > &legend,
-      std::vector< std::string > &description);
- 
-
-
-
-  //!in this class outputs eigenvalues 
-  void get_integrated_quantities(const std::set<std::string>& names,
-				 std::vector<double>& values);
-
-
- 
+  virtual void do_setup_solution_variables(void);
 
 
   virtual void 	do_init(void);
@@ -534,6 +423,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   virtual void 	parse_options (void);
 
+
+  //! We override this to write in our own format
+  virtual void plot_globaldata(void);
 
  
 

@@ -1,6 +1,10 @@
-# Simulation: quantum_el
-# Data:
-#    * Eigen energy [eV]
+# EFA eigenstates (quantum_el)
+# Particle: electron
 #
-# 0   1   2   3   4   5   
-2.23508284686   2.23508284686   2.47000707266   2.47000707266   2.56303521005   2.56303521005   
+# Index EigenEnergy     Occupation  FermiLevel Temperature
+      0      2.2351    2.83136e-38           0         300
+      1      2.2351    2.83136e-38           0         300
+      2     2.47003     3.2022e-42           0         300
+      3     2.47003     3.2022e-42           0         300
+      4     2.56305      8.763e-44           0         300
+      5     2.56305      8.763e-44           0         300

@@ -151,19 +151,15 @@ Module efaschroedinger
 {
   name = quantum_el
   regions = (1,2)
-  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+  plot = (ProbabilityDensity, EigenEnergy)
 
-  Dirichlet_bc_everywhere = true
   particle = el
   number_of_eigenstates = 5
   poisson_model_name = dd
   strain_model_name = macrostrain
-  convergent_density = true
-  log_output = true
 
   solver = krylovshur 
 
-  monitor = true
   ksp_type = bcgsl
   pc_type =  jacobi
 
@@ -179,20 +175,14 @@ Module efaschroedinger
 {
   name = quantum_hl
   regions = (1,2)
-  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+  plot = (ProbabilityDensity, EigenEnergy)
 
-  x-periodicity = false
-  Dirichlet_bc_everywhere = true
   particle = hl
   number_of_eigenstates = 8
   poisson_model_name = dd
   strain_model_name = macrostrain
-  convergent_density = true
 
   solver = krylovshur
-
-  log_output = true
-  monitor = true
 
   ksp_type = bcgsl
   pc_type =  jacobi
@@ -215,5 +205,5 @@ Simulation
   solve = (str, dd,quantum_el, quantum_hl)
  
   resultpath = output
-  output_format = (gmv, vtk)
+  output_format = vtk
 }

@@ -99,6 +99,13 @@ class ModelOptions
     void get_option(const std::string& name, std::vector<T>& vec) const;
 
 
+    //! Get an option which is a three component vector
+    /*!
+     * \param name the name of the option
+     * \param vec the vector, where the values will be stored.
+     */
+    void get_option(const std::string& name, RealVectorValue& vec) const;
+
     //! Get an option which is a vector of vectors (with the same type)
     /*!
      * \param name the name of the option

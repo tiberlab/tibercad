@@ -99,13 +99,22 @@ ModelOptions::_find(const std::string& name) const
 }
 
 
+void
+ModelOptions::get_option(const string& name,
+    RealVectorValue& vec) const
+{
+  OptionsMap::const_iterator it(_find(name));
+
+  if (it != _options.end())
+    Utils::extract_vector(it->second, vec);
+}
+
 
 template <typename T>
 void
 ModelOptions::get_option(const string& name,
     vector<T>& vec) const
 {
-
   OptionsMap::const_iterator it(_find(name));
 
   if (it != _options.end())

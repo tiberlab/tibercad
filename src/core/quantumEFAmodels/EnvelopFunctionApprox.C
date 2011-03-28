@@ -7,6 +7,7 @@
 #include "Material.h"
 #include "Boundary.h"
 #include "TiberMath.h"
+#include "TiberLinearSystem.h"
 #include <gnuplot_io.h>
 #include "SimulationOptions.h"
 
@@ -80,202 +81,10 @@ inline double EnvelopFunctionApprox::get_electro_chem_potential(const Elem* elem
 
 
 
-//---------------------------------------------------------------------------------//
-void EnvelopFunctionApprox::build_integrated_quantities (std::vector< double > &values)
-{
 
 
 
-  values.resize(0);
 
-
-
-
-  if (plot_solution("EigenEnergy"))
-  {
-    unsigned int n = solution.size();
-    values.resize(n);
-    for (unsigned int i = 0; i < n; i++)
-    {
-      values[i] = solution[i].eigen_energy;
-    }
-  }
-
-
-  if (plot_solution("Occupation"))
-  {
-    unsigned int n = solution.size();
-    unsigned int m = values.size();
-    values.resize(n + m);
-    for (unsigned int i = 0; i < n; i++)
-    {
-      values[i + m] = Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy,solution[i].Temperature);
-    }
-  }
-
-}
-
-//---------------------------------------------------------------------------------//
-
-void EnvelopFunctionApprox::build_integrated_quantities_description (
-    std::vector< std::string > &legend,
-    std::vector< std::string > &description)
-{
-
-  legend.resize(0);
-
-  if (plot_solution("EigenEnergy"))
-  {
-    unsigned int n = solution.size();
-    legend.resize(n);
-    for (unsigned int i = 0; i < n; i++)
-    {
-
-
-      ostringstream temp;
-      temp << i ;
-      legend[i] = temp.str();
-    }
-  }
-
-  description.resize(1);
-  description[0] = "Eigen energy [eV]";
-
-  if (plot_solution("Occupation"))
-  {
-    unsigned int n = solution.size();
-    unsigned int m = legend.size();
-    legend.resize(m + n);
-    for (unsigned int i = 0; i < n; i++)
-    {
-      ostringstream temp;
-      temp << i ;
-      legend[i+m] =  temp.str() ;
-    }
-
-    description.push_back("Occupation Probability");
-
-  }
-
-
-}
-
-
-
-
-//---------------------------------------------------------------------------------//
-
-void EnvelopFunctionApprox::build_elemental_results (const std::set< std::string > &variables,
-					 std::vector< double > &results, std::vector< std::string > &legend)
-{
- /*
-  double parallel_mass = 0.067* 0.95 +  0.026 * 0.05;
-  const set<string>::const_iterator varend(variables.end());
-  if (variables.find("test_density") != varend)
-  {
-
-    results = estimate_density( parallel_mass);
-
-    legend.resize(1);
-    legend[0] = string("density");
-  }
-*/
-
-}
-
-//---------------------------------------------------------------------------------//
-void EnvelopFunctionApprox::build_nodal_results(const std::set<std::string>& variables,
-						std::vector<double>& results, std::vector<std::string>& legend)
-{
-
-  if (! (opt.job == BULKEIGENSTATES || opt.job == BULKDENSITY ) )
-  {
-
-    const set<string>::const_iterator varend(variables.end());
-
-    const MeshBase& mesh1 = system->get_mesh();
-
-
-    const bool output_psi = variables.find("EigenFunctions") != varend ;
-    const bool output_level = variables.find("EnergyLevels") != varend ;
-
-    MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-    const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
-
-    unsigned int number_of_points = 0;
-    unsigned int num_var = 0;
-    const unsigned int num_functions = solution.size();
-    unsigned int temp = 0;
-
-    for ( ; nd != nd_el ; ++nd)  number_of_points++;
-
-    if (output_psi)  num_var += num_functions;
-
-    if (output_level)  num_var += num_functions;
-
-    if (output_psi || output_level)
-    {
-
-      legend.resize(num_var);
-      results.resize(number_of_points * num_var);
-
-
-      if (output_psi)
-      {
-	temp = num_functions;
-	for (unsigned int i = 0; i < num_functions; i++)
-	{
-	  std::ostringstream i_str;
-	  i_str << "state_number_" << i ; //The states are numbered starting from 0
-	  legend[i] = i_str.str();
-
-	  std::vector<double> prob_data(number_of_points, 0.0);
-
-
-
-	  prepare_probability_function(i,  prob_data);
-
-	  for (unsigned int i1 = 0; i1<number_of_points; i1++)
-	    results[num_var * i1 + i] = prob_data[i1];
-
-
-	}
-      }
-
-      if (output_level)
-      {
-	for (unsigned int i = 0; i < num_functions; i++)
-	{
-	  std::ostringstream i_str;
-	  i_str << "energy_number_" << i ; //The states are numbered starting from 0
-	  legend[i + temp] = i_str.str();
-
-
-	  for (unsigned int i1 = 0; i1<number_of_points; i1++)
-	    results[num_var * i1 + i + temp] = solution[i].eigen_energy;
-
-	}
-      }
-
-
-
-    }
-
-  }
-
-
-}
-
-//---------------------------------------------------------------------------------//
-
-
-
-void EnvelopFunctionApprox::get_integrated_quantities(const std::set<std::string>& names,
-						      std::vector<double>& values)
-{
-
-
-}
 
 //---------------------------------------------------------------------------------//
 
@@ -321,8 +130,8 @@ const std::vector< EnvelopFunctionApprox::eigen_propblem_solution >& EnvelopFunc
 
 
 //====================================================//
-PhysicalModel* EnvelopFunctionApprox::create_physical_model(const ModelOptions& options,
-    const Material* mat) const throw (ModelErrorException)
+PhysicalModel* EnvelopFunctionApprox::create_bulk_model(const ModelOptions& options,
+    const Material* mat) const
 {
 
 
@@ -334,12 +143,148 @@ PhysicalModel* EnvelopFunctionApprox::create_physical_model(const ModelOptions& 
   return(model);
 
 }
-//=====================================================//
-BoundaryProperties* EnvelopFunctionApprox::create_boundary_model(const ModelOptions& options) const  throw (ModelErrorException)
+
+
+
+void
+EnvelopFunctionApprox::do_setup_solution_variables(void)
+{
+  // declare solution variables
+  declare_solution(ProbabilityDensity, NTUPLE, NODES, "");
+  add_alias("EigenFunctions", ProbabilityDensity);
+  declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV");
+  declare_solution(Occupation, NTUPLE, GLOBAL, "");
+  declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV");
+  if (plot_solution(EigenEnergy) &&
+      plot_solution(ProbabilityDensity))
+    add_plot_variable(EigenEnergyOnMesh);
+
+  if (plot_solution("QuantumDensity") || get_options().has_submodel("QuantumDensity"))
+    _calculate_density = true;
+  if (_calculate_density) declare_solution(QuantumDensity, REAL, NODES, "");
+}
+
+
+void
+EnvelopFunctionApprox::get_solution_secure(map<ID, vector<double> >& values)
+{
+  if (values.count(EigenEnergy))
+  {
+    // number of states
+    const unsigned int num_states = solution.size();
+    for (unsigned int sn = 0; sn < num_states; sn++)
+    {
+      values[EigenEnergy][sn] = solution[sn].eigen_energy;
+    }
+  }
+
+  if (values.count(Occupation))
+  {
+    // number of states
+    const unsigned int num_states = solution.size();
+    for (unsigned int sn = 0; sn < num_states; sn++)
+      values[Occupation][sn] =
+          Fermi_statistics_probability(solution[sn].eigen_energy,
+              solution[sn].Fermi_energy,
+              solution[sn].Temperature);
+  }
+}
+
+
+void
+EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
+    map<ID, vector<double> >& values, const vector<Point>& points)
 {
 
-  return NULL;
+  unsigned int np = points.size();
+
+  if (values.count(ProbabilityDensity))
+  {
+    FEType fe_type = system->variable_type(0);
+    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    const vector<vector<Real> >& phi = fe->get_phi();
+
+    fe->reinit(elem, &points);
+
+    DofMap& dof_map = system->get_dof_map();
+    std::vector<unsigned int> dof_indices;
+
+    // number of states
+    const unsigned int num_states = solution.size();
+    values[ProbabilityDensity] = vector<double>(np * num_states, 0.0);
+
+    // they should all be the same size
+    unsigned int n_dofs = phi.size();
+
+    vector<double> prob_dens(np, 0.0);
+
+    for (int psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+    {
+      dof_map.dof_indices(elem, dof_indices, psi_index);
+
+      for (unsigned int n = 0; n < np; n++)
+      {
+        for (unsigned int sn = 0; sn < num_states; sn++)
+        {
+          Complex value(0.0);
+
+          // interpolate
+          for (unsigned int i = 0; i < n_dofs; i++)
+          {
+            value += phi[i][n] * solution[sn].eigen_vector[dof_indices[i]];
+          }
+
+          // calculate probability density
+          double tmp = abs(value);
+
+          // the number of components should be set already to the right number
+          values[ProbabilityDensity][num_states * n + sn] += tmp * tmp;
+        }
+      }
+    }
+  }
+
+  if (values.count(EigenEnergyOnMesh))
+  {
+    // number of states
+    const unsigned int num_states = solution.size();
+
+    for (unsigned int n = 0; n < np; n++)
+      for (unsigned int sn = 0; sn < num_states; sn++)
+        values[EigenEnergyOnMesh][num_states * n + sn] = solution[sn].eigen_energy;
+  }
+
+  if (values.count(QuantumDensity))
+  {
+    TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>(0);
+    NumericVector<Number>& qdens = *qdens_sys.solution;
+
+    FEType fe_type = qdens_sys.variable_type(0);
+    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    const vector<vector<Real> >& phi = fe->get_phi();
+
+    fe->reinit(elem, &points);
+
+    DofMap& dof_map = qdens_sys.get_dof_map();
+    std::vector<unsigned int> dof_indices;
+    dof_map.dof_indices(elem, dof_indices, 0);
+    unsigned int n_dofs = phi.size();
+
+    for (unsigned int n = 0; n < np; n++)
+    {
+      double value = 0;
+
+      for (unsigned int i = 0; i < n_dofs; i++)
+        value += phi[i][n] * phi[i][n] * qdens(dof_indices[i]);
+
+      values[QuantumDensity][n] = value;
+    }
+
+  }
 }
+
+
+
 
 
 //====================================================//
@@ -417,7 +362,8 @@ double EnvelopFunctionApprox::get_band_edge() const
 
 //===================================================//
 EnvelopFunctionApprox::EnvelopFunctionApprox(const ModelOptions& options)
- : FEMEigenvalueProblem(options)
+ : FEMEigenvalueProblem(options),
+   _calculate_density(false)
 {
   poisson_equation = NULL;
 
@@ -428,7 +374,14 @@ EnvelopFunctionApprox::EnvelopFunctionApprox(const ModelOptions& options)
   _bulk_mat_element = NULL;
 
   has_solution_vector(false);
+
+
 }
+
+
+
+
+
 //===================================================//
 void EnvelopFunctionApprox::parse_options()
 {
@@ -440,12 +393,8 @@ void EnvelopFunctionApprox::parse_options()
 
 
   opt.particle                = mod_opt.get_option("particle", "el");
+  opt.degeneracy              = mod_opt.get_option("degeneracy", opt.degeneracy);
 
-
-  opt.log_output              = mod_opt.get_option("log_output", false);
-
-
-  opt.output_type             = mod_opt.get_option("output_type","GMV");
 
   opt.eigen_number_increase_factor = mod_opt.get_option("eigen_number_increase_factor",1.2);
 
@@ -472,6 +421,7 @@ void EnvelopFunctionApprox::parse_options()
   {
     opt.consider_strain = false;
   }
+
 
 
   //-------------------------------------------------------------------------------------------//
@@ -531,26 +481,10 @@ void EnvelopFunctionApprox::parse_options()
 
   //--------------------------------------------------------------------------------------------//
 
-  if (opt.estimate_spectrum_shift)
-  {
-    opt.spectrum_shift = get_band_edge();
 
-  }
     //--------------------------------------------------------------------------------------------//
 
 
-  //k-vector
-  std::vector<double> k_vec(3, 0.0);
-  mod_opt.get_option("k_vector",k_vec);
-  if (k_vec.size() == 3)
-  {
-
-    for (short i = 0; i < 3; i++) k_vector[i] = k_vec[i];
-
-
-  }
-  else
-    throw InitFailedException( "EnvelopeFunctionApprox: k_vector size must be equal to 3 instead of " + k_vec.size());
 
   //--------------------------------------------------------------------------------//
   std::string  job_name = mod_opt.get_option("job","eigenstates");
@@ -589,7 +523,6 @@ void EnvelopFunctionApprox::parse_options()
 
   //---------------------------------------------------------------------------------//
 
-  opt.first_state = mod_opt.get_option("first_state", 0);
   opt.initial_eigenstates_number = mod_opt.get_option("initial_eigenstates_number", 6);
 
   //---------------------------------------------------------------------------------//
@@ -650,6 +583,16 @@ void EnvelopFunctionApprox::do_init( )
 
   FEMEigenvalueProblem::do_init();
 
+  // adjust the degeneracy (in a quirky way, I must admit...)
+  opt.degeneracy = 1;
+  if (get_options().has_submodel("Physics"))
+  {
+    ModelOptions::const_submodel_iterator it(get_options().submodels_begin("Physics"));
+    const ModelOptions& opts = it->second;
+
+    string model = opts.get_option("model", "kp");
+    if (model == "conduction_band") opt.degeneracy = 2;
+  }
 
   SimulationEnvironment& si = get_environment();
 
@@ -758,6 +701,13 @@ void EnvelopFunctionApprox::do_init( )
 
 
 
+   // We add a second system just to contain the density
+   create_equation_system("linear");
+   TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(0);
+   linsys.add_variable("qdens", libMeshEnums::FIRST);
+   linsys.init();
+
+
    //------------------------------------------------------------------------------------------------------//
    //peiodicity can not be changed between runs because that will require cleaning of the DOF constraint table
 
@@ -786,12 +736,34 @@ void EnvelopFunctionApprox::do_init( )
    //------------------------------------------------------------------------------------------------------//
 
 
+
+  parse_options();
+
 }
+
+
+void EnvelopFunctionApprox::set_k_vector(const RealVectorValue& k_vec)
+{
+  for (short i = 0; i < 3; i++) k_vector[i] = k_vec(i);
+}
+
+
+
 //===========================================================//
 void EnvelopFunctionApprox::do_solve()
 {
 
- parse_options();
+ //parse_options();
+
+ if (opt.estimate_spectrum_shift)
+   opt.spectrum_shift = get_band_edge();
+
+
+ //k-vector
+ RealVectorValue k_vec(0.0);
+ get_parameter("k_vector", k_vec);
+ set_k_vector(k_vec);
+
 
  if (opt.job == BULKEIGENSTATES )
  {
@@ -805,33 +777,42 @@ void EnvelopFunctionApprox::do_solve()
  else
  {
 
-   if  ( opt.job ==   EIGENSTATES || opt.job == DENSITY )
-   {
-     if (solver_opt.Dirichlet_bc_everywhere)
-       apply_diriclet_bc_at_all_boundaries();
-     else
-       create_dirichlet_dofs();
+   if (solver_opt.Dirichlet_bc_everywhere)
+     apply_diriclet_bc_at_all_boundaries();
+   else
+     create_dirichlet_dofs();
 
 
-     make_constraints(); //creates a copy of them
+   make_constraints(); //creates a copy of them
 
 
-     make_nodes_periodic();
+   make_nodes_periodic();
 
-     apply_periodic_bc();
+   apply_periodic_bc();
 
-     make_new_dofs();
-   }
+   make_new_dofs();
 
 
-   if ( opt.job ==   EIGENSTATES )
-     solve_eigen_value_problem( solver_opt.number_of_eigenstates);
-   else if ( opt.job == DENSITY || opt.job == BULKDENSITY)
-     calculate_convergent_density();
+   if (_calculate_density)
+     calculate_density_analytic();
+   else
+     solve_eigen_value_problem(solver_opt.number_of_eigenstates);
 
+
+   // we have to redeclare the solution variables to adjust the number
+   // of eigenstates
+   const unsigned int num_states = solution.size();
+   declare_solution(ProbabilityDensity, NTUPLE, NODES, "", num_states);
+   declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
+   declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
+   declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
  }
 
 }
+
+
+
+
 //===========================================================//
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
@@ -1472,8 +1453,10 @@ double EnvelopFunctionApprox::get_new_spectrum_shift(void)
 {
   double st_shift_value ;
 
-
+  int v = verbose();
+  verbose() = 0;
   read_SLEPC_solution(1);
+  verbose() = v;
 
   assert(solution.size() == 1);
 
@@ -1523,13 +1506,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
   number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
 
-  if (opt.log_output)
-  {
-    ostringstream os;
-    os << "Number of converged solutions: "
-      << number_of_converged_solutions;
-    Messages::info(os.str());
-  }
+  if (number_of_converged_solutions < number_of_ev)
+    throw SolveFailedException(get_name() + " obtained less eigenvalues than requested.");
 
 
 
@@ -1540,30 +1518,36 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
   for (unsigned ind = 0; ind < number_of_converged_solutions; ind++)
   {
-
     ev[ind].energy =  EigenSolver::get_eigenvalue(ind) * Hartree + opt.spectrum_shift;
-
-
     ev[ind].global_number = ind;
-
-    if (opt.log_output)
-    {
-      ostringstream os;
-      os << ev[ind].global_number  << "    " << ev[ind].energy;
-      Messages::info(os.str());
-    }
-
-
-
   }
 
   //---------------------------------------------------------------------
   //sorting of the solutions
 
-
   if (opt.particle == "el") sort( ev.begin(), ev.end(), compare_eigen_energy_electrons1);
 
   if (opt.particle == "hl") sort( ev.begin(), ev.end(), compare_eigen_energy_holes1 );
+
+  if (verbose() > 0)
+  {
+    Messages m;
+    ostringstream os;
+    os << "eigenenergies (" << number_of_ev
+        << "):";
+    m.info(os.str());
+    m.indent();
+
+    os.str("");
+    for (unsigned int i = 0; i < number_of_ev; ++i)
+    {
+      os << ev[i].energy << " ";
+      if (i%8 == 7)
+        os << "\n";
+    }
+    Messages::info(os.str());
+    m.newline();
+  }
 
 
   //----------------------------------------------------------------------
@@ -1770,280 +1754,40 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
 
 
-//=======================================================================//
-
-void EnvelopFunctionApprox::output_eigen_function(unsigned int state_number,  const std::string& filename)
-{
-  //===========================================
-
-  DofMap& dof_map = system->get_dof_map();
-
-  const MeshBase& mesh1 = system->get_mesh();
-
-
-  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
-
-
-  unsigned int number_of_points = 0;
-
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
-
-
-
-
-  //vector of names
-  vector<string> output_names(psi_name.size() * 2);
-
-
-  unsigned int number_output_data = output_names.size() ;
-
-  for (short i = 0; i < number_output_data/2; i++)
-    {
-      output_names[i*2    ] = psi_name[i] + "_r";
-      output_names[i*2 + 1] = psi_name[i] + "_i";
-    }
-
-
-
-
-  //vector
-  unsigned int  point_index = 0;
-
-  unsigned int output_size = mesh->n_nodes()  * opt.number_of_bands * 2;
-
-  vector<double>  psi_data(output_size);
-
-
-  MeshBase::const_element_iterator it = mesh1.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh1.active_local_elements_end();
-
-  std::vector<unsigned int> dof_indices;
-
-
-
-  for ( ; it != end; ++it)
-    {
-      const Elem* elem = *it;
-
-
-      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
-	{
-	  dof_map.dof_indices (elem, dof_indices, psi_index);
-	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
-	    {
-	      unsigned int  node_id =  elem->node(n);
-	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
-
-	      psi_data[psi_index*2 + node_id*number_output_data] = value.real();
-
-	      psi_data[psi_index*2 + 1  + node_id*number_output_data] = value.imag();
-
-
-
-	    }
-	}
-    }
-
-
-
-
-
-  //std :: cout << filename << "\n";
-
-
-  if (opt.output_type == "GMV")
-    GMVIO(mesh1).write_nodal_data(filename, psi_data, output_names);
-
-  if (opt.output_type == "tecplot")
-    TecplotIO(mesh1,false).write_nodal_data(filename,psi_data,output_names);
-
-  if (opt.output_type == "gnuplot" || opt.output_type == "GNUplot")
-    GnuPlotIO(mesh1).write_nodal_data(filename, psi_data, output_names);
-
-
-}
-
-//=======================================================================//
-
-void  EnvelopFunctionApprox::prepare_probability_function(const unsigned int state_number, std::vector<double>& prob_data)
+void
+EnvelopFunctionApprox::plot_globaldata(void)
 {
 
-  DofMap& dof_map = system->get_dof_map();
+  string outdir = get_output_directory();
 
-  const MeshBase& mesh1 = system->get_mesh();
-
-
-  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
-
-
-  unsigned int number_of_points = 0;
-
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
-
-
-
-
-
-  prob_data.clear();
-
-  prob_data.resize(number_of_points, 0.0);
-
-
-  vector< vector<Complex> >  psi_data;
-  psi_data.resize(number_of_points);
-  for (unsigned int i = 0; i < number_of_points; i++) psi_data[i].resize( opt.number_of_bands, Complex(0.0, 0.0) );
-
-
-  MeshBase::const_element_iterator it = mesh1.active_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh1.active_elements_end();
-
-  std::vector<unsigned int> dof_indices;
-
-
-  //!calculation of probability function
-  for ( ; it != end; ++it)
-    {
-      const Elem* elem = *it;
-
-
-      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
-	{
-	  dof_map.dof_indices (elem, dof_indices, psi_index);
-	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
-	    {
-	      unsigned int  node_id =  elem->node(n);
-
-	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
-
-	      psi_data[node_id][psi_index] = value;
-
-
-
-	    }
-	}
-    }
-
-  //done
-  //calculation of |psi|^2
-  double t1;
-  for (unsigned int i = 0; i < number_of_points; i++)
+  string filename(outdir + "/" + get_output_filename() + ".dat");
+  ofstream file;
+  file.open(filename.c_str());
+  if (file.good())
   {
-    //prob_data[i] = 0;
-    for (unsigned int j = 0; j < opt.number_of_bands; j++)
-    {
+    // header
+    file << "# EFA eigenstates (" << get_name() << ")\n";
+    file << "# Particle: ";
+    if (opt.particle == "el")
+      file << "electron";
+    else
+      file << "hole";
+    file << "\n#\n";
+    file << "# Index" << setw(12) << "EigenEnergy" << setw(15) << "Occupation"
+        << setw(12) << "FermiLevel" << setw(12) << "Temperature" << "\n";
 
-      t1 = std::abs(psi_data[i][j]);
-      prob_data[i] += t1 * t1;
+    for (unsigned int i = 0; i < solution.size(); i++)
+    {
+      file << setw(7) << i << " "
+          << setw(11) << solution[i].eigen_energy << " "
+          << setw(14) << Fermi_statistics_probability(solution[i].eigen_energy,
+              solution[i].Fermi_energy, solution[i].Temperature) << " "
+          << setw(11) << solution[i].Fermi_energy << " "
+          << setw(11) << solution[i].Temperature << "\n";
     }
-    // if (state_number == 0) cerr << prob_data[i] << "\n";
   }
-}
-
-
-
-
-void EnvelopFunctionApprox::output_probability_function(unsigned int state_number,  const std::string& filename)
-{
-  //===========================================
-
-  DofMap& dof_map = system->get_dof_map();
-
-  const MeshBase& mesh1 = system->get_mesh();
-
-  MeshBase::const_node_iterator       nd     = mesh1.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_el  = mesh1.active_nodes_end();
-
-
-  unsigned int number_of_points = 0;
-
-  for ( ; nd != nd_el ; ++nd)  number_of_points++;
-
-
-
-
-  //vector of names
-  vector<string> output_names(1);
-  output_names[0] = "|psi|^2";
-
-
-  unsigned int  point_index = 0;
-
-
-
-  vector< vector<Complex> >  psi_data;
-  psi_data.resize(number_of_points);
-  for (unsigned int i = 0; i < number_of_points; i++) psi_data[i].resize( opt.number_of_bands, Complex(0.0, 0.0) );
-
-  vector<double>  probability_data(number_of_points, 0.0);
-
-  MeshBase::const_element_iterator it = mesh1.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh1.active_local_elements_end();
-
-  std::vector<unsigned int> dof_indices;
-
-
-  //!calculation of psi
-
-  for ( ; it != end; ++it)
-    {
-      const Elem* elem = *it;
-
-
-      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
-	{
-	  dof_map.dof_indices (elem, dof_indices, psi_index);
-	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
-	    {
-	      unsigned int  node_id =  elem->node(n);
-	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
-
-	      psi_data[node_id][psi_index] = value;
-
-
-
-
-
-	    }
-	}
-    }
-
-
-  //calculation of |psi|^2
-  double t1;
-  for (unsigned int i = 0; i < number_of_points; i++)
-    for (unsigned int j = 0; j < opt.number_of_bands; j++)
-      {
-	t1 = std::abs(psi_data[i][j]);
-	probability_data[i] += t1 * t1;
-      }
-
-
-  //std :: cout << filename << "\n";
-
-
-
-  if (opt.output_type == "GMV")
-    GMVIO(mesh1).write_nodal_data(filename, probability_data, output_names);
-
-  if (opt.output_type == "tecplot")
-    TecplotIO(mesh1,false).write_nodal_data(filename, probability_data,output_names);
-
-  if (opt.output_type == "gnuplot" || opt.output_type == "GNUplot")
-    GnuPlotIO(mesh1).write_nodal_data(filename, probability_data,output_names);
 
 }
-
-
-
-//=======================================================================//
-
-
-//=======================================================================//
-
-
-
 
 
 //=======================================================================//
@@ -2104,13 +1848,16 @@ bool EnvelopFunctionApprox::compare_eigen_energy_holes(eigen_propblem_solution s
 
 //=======================================================================//
 
-bool EnvelopFunctionApprox::compare_eigen_energy_holes1(eigen_energy state1, eigen_energy state2)
+inline
+bool EnvelopFunctionApprox::compare_eigen_energy_holes1(const eigen_energy& state1, const eigen_energy& state2)
 {
   return(state1.energy> state2.energy );
 }
 
 //=======================================================================//
-bool EnvelopFunctionApprox::compare_eigen_energy_electrons1(eigen_energy state1, eigen_energy state2)
+
+inline
+bool EnvelopFunctionApprox::compare_eigen_energy_electrons1(const eigen_energy& state1, const eigen_energy& state2)
 {
   return(state1.energy<  state2.energy );
 }
@@ -2506,386 +2253,297 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 //--------------------------------------------------------------------------//
 
 
-//------------------------------------------------------------------------------//
-
-void EnvelopFunctionApprox::calculate_density( )
-{
-  DofMap& dof_map = system->get_dof_map();
-
-  const MeshBase& mesh1 = system->get_mesh();
 
 
-  _density.clear();
-
-
-  vector<double> density_of_state;
-
-  unsigned int number_of_eigenfunctions = opt.initial_eigenstates_number;
-  //unsigned int number_of_eigenfunctions = solution.size();
-
-
-
-  // we might specify the lowest state
-  for (unsigned int i = opt.first_state; i < number_of_eigenfunctions; i++)
-  {
-
-
-
-    const double Fermi_energy = solution[i].Fermi_energy;
-
-    const double Energy = solution[i].eigen_energy;
-
-    double prob_factor = Fermi_statistics_probability(Energy, Fermi_energy, solution[i].Temperature); //Thermal probability
-
-
-    density_of_state = calculate_cell_prob_function(i);
-
-
-    const MeshBase::const_element_iterator it_end  = mesh1.active_elements_end();
-    const MeshBase::const_element_iterator it_begin  = mesh1.active_elements_begin();
-
-    MeshBase::const_element_iterator       it     =  it_begin;
-
-    unsigned int el_number = 0;
-
-    for( ;it !=  it_end ;++it)
-    {
-      const Elem* el = *it;
-
-
-
-      if (opt.local_occupation)
-      {
-
-	Point center = el->centroid();
-
-	double chem_pot_value_eV = get_electro_chem_potential(el);
-
-
-	prob_factor = Fermi_statistics_probability(Energy,  chem_pot_value_eV, solution[i].Temperature); //Thermal probability
-      }
-
-
-      double temp = density_of_state[el_number] * prob_factor;
-
-      if (it == it_begin && i == 0)
-      {
-
-	_density.insert(pair<const Elem*, double> (el, temp));
-      }
-      else
-	_density[el] += temp;
-
-
-
-      el_number++;
-      }
-
-
-
-
-    }
-
-
-
-
-}
 
 //===========================================================//
-vector<double>  EnvelopFunctionApprox::calculate_cell_prob_function(unsigned int state_number)
-{
 
-  const vector< Complex > &  eigen_vector =  solution[state_number].eigen_vector;
+
+
+
+
+//=================================================================//
+
+
+void EnvelopFunctionApprox::calculate_density_analytic(void)
+{
+  unsigned int dim = get_mesh().mesh_dimension();
+
+  unsigned int first_state = 0;
+  unsigned int num_states = solver_opt.number_of_eigenstates;
+
+  // for degeneracy = 1 we assure that number of states is even,
+  // so we take both spin states
+  if ((opt.degeneracy == 1) && (num_states % 2 == 1))
+    num_states += 1;
+
+  double k_val = 0.01;
+  bool assume_paraboloid = false;
+
+  if (get_options().has_submodel("QuantumDensity"))
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("QuantumDensity"));
+    ModelOptions& opts = it->second;
+
+    //opts.get_option("k1", kvector_1);
+    //opts.get_option("k2", kvector_2);
+    //opts.get_option("k3", kvector_3);
+    first_state = opts.get_option("first_state", first_state);
+    k_val = opts.get_option("k_value", k_val);
+    assume_paraboloid = opts.get_option("assume_diagonal_mass_matrix", assume_paraboloid);
+  }
+
+  RealVectorValue kvector_0(0.0);
+  RealVectorValue kvector_1(0.0);
+  RealVectorValue kvector_2(0.0);
+  if (dim < 3)
+    kvector_1(2) = k_val;
+  if (dim < 2)
+    kvector_2(1) = k_val;
+
+
+  // for now, this does only analytic integration
+
+  Messages m;
+  m.info("Calculating quantum density");
+  m.indent();
+
+  double a_B =  Constants::bohr_radius;
+  double scaling =  1.0 / (a_B * a_B * a_B * 1.0e6 );
+
+  vector<double> energy_k_0;
+  vector<double> energy_k_1;
+  vector<double> energy_k_2;
+  vector<double> energy_k_3;
+  vector<double> effective_mass(num_states);
+
+  bool solve_twice = solver_opt.solve_ev_problem_twice;
+  double spectrum_shift = 0.0;
+
+  if (solver_opt.solve_ev_problem_twice)
+  {
+    solver_opt.solve_ev_problem_twice = false;
+
+    set_k_vector(kvector_0);
+
+    if (verbose() > 0)
+      Messages::info("Solve to obtain spectrum shift ... ", false);
+
+    int v = verbose();
+    verbose() = 0;
+    solve_eigen_value_problem(1, 0.0);
+    verbose() = v;
+
+    get_eigenenergies(energy_k_0);
+
+    spectrum_shift = solution[0].eigen_energy - opt.spectrum_shift;
+
+    if (opt.particle == "el")
+      spectrum_shift -= 0.01;
+    else
+      spectrum_shift += 0.01;
+
+    if (verbose() > 0)
+    {
+      ostringstream os;
+      os << "done"; // " (shift = " << spectrum_shift << " eV)";
+      Messages::info(os.str());
+    }
+    spectrum_shift /= Hartree;
+  }
+
+
+  // [0 0 1]
+  if (dim < 3)
+  {
+    ostringstream os;
+    os << "Solving for k1 = ( ";
+    kvector_1.write_unformatted(os, false);
+    os << ")";
+    if (verbose() > 0) m.info(os.str());
+
+    set_k_vector(kvector_1);
+    solve_eigen_value_problem(num_states, spectrum_shift);
+    get_eigenenergies(energy_k_1);
+  }
+
+  // [0 1 0]
+  if (dim < 2)
+  {
+    ostringstream os;
+    os << "Solving for k2 = ( ";
+    kvector_2.write_unformatted(os, false);
+    os << ")";
+    if (verbose() > 0) m.info(os.str());
+
+    set_k_vector(kvector_2);
+    solve_eigen_value_problem(num_states, spectrum_shift);
+    get_eigenenergies(energy_k_2);
+
+    // [0 1 1]
+    if (!assume_paraboloid)
+    {
+      kvector_2(2) = k_val;
+
+      ostringstream os;
+      os << "Solving for k3 = ( ";
+      kvector_2.write_unformatted(os, false);
+      os << ")";
+      if (verbose() > 0) m.info(os.str());
+
+      set_k_vector(kvector_2);
+      solve_eigen_value_problem(num_states, spectrum_shift);
+      get_eigenenergies(energy_k_3);
+    }
+  }
+
+  ostringstream os;
+  os << "Solving for k0 = ( ";
+  kvector_0.write_unformatted(os, false);
+  os << ")";
+  if (verbose() > 0) m.info(os.str());
+
+  set_k_vector(kvector_0);
+  solve_eigen_value_problem(num_states + 1, spectrum_shift);
+  get_eigenenergies(energy_k_0);
+
+  solver_opt.solve_ev_problem_twice = solve_twice;
+
+
+  double Eh_k2 = Constants::Hartree * k_val * k_val;
+
+  if (dim == 1)
+  {
+    for (unsigned int i = first_state; i < num_states; i++)
+    {
+      double imass11 = 2.0 * (energy_k_0[i] - energy_k_1[i]) / Eh_k2;
+      double imass22 = 2.0 * (energy_k_0[i] - energy_k_2[i]) / Eh_k2;
+      double imass12 = 0;
+
+      if (!assume_paraboloid)
+      {
+        imass12 = (energy_k_0[i] - energy_k_3[i]) / Eh_k2
+            - 0.5 * (imass11 + imass22);
+      }
+      double det = abs(imass11 * imass22 - imass12 * imass12);
+
+      effective_mass[i] = 1.0 / sqrt(det);
+    }
+  }
+  else if (dim == 2)
+  {
+    for (unsigned int i = first_state; i < num_states; i++)
+    {
+      double imass = 2.0 * abs(energy_k_0[i] - energy_k_1[i]) / Eh_k2;
+      effective_mass[i] = 1.0 / imass;
+    }
+  }
+  if ((verbose() > 1) && (dim < 3))
+  {
+    m.info("effective masses:");
+    m.indent();
+
+    stringstream os;
+    for (unsigned int i = 0; i < num_states; ++i)
+    {
+      os << effective_mass[i] << " ";
+      if (i%8 == 7)
+        os << "\n";
+    }
+    Messages::info(os.str());
+    m.newline();
+  }
+
+
+  FEType fe_type = system->variable_type(0);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
 
   DofMap& dof_map = system->get_dof_map();
-
-  const MeshBase& mesh = system->get_mesh();
-
-  FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
-
-  // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
-  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
-
-  QGauss qrule (dim, FIFTH);
-
-  fe -> attach_quadrature_rule (&qrule);
-
-
-  const std::vector<Real>& JxW = fe->get_JxW();
-
-  const std::vector<std::vector<Real> >& phi = fe->get_phi();
-
   std::vector<unsigned int> dof_indices;
 
+  TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>();
+  DofMap& dof_map_qdens = qdens_sys.get_dof_map();
+  std::vector<unsigned int> dof_indices_qdens;
+  NumericVector<Number>& qdens = *qdens_sys.solution;
+  qdens.zero();
 
-  MeshBase::const_element_iterator       el1     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el1 = mesh.active_elements_end();
-
-  //--------------------------------------------------------------//
-  //define results
-  unsigned int active_el_number = 0;
-
-  for ( ; el1 != end_el1; ++el1) active_el_number++;
-
-  vector<double> result(active_el_number, 0);
-  vector<Complex> result_complex(active_el_number, Complex(0.0, 0.0));
-  //--------------------------------------------------------------//
-
-
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-
-
-
-
-
-  Complex eigen_f_value1, eigen_f_value2;
-  unsigned int el_number = 0;
-
-  for ( ; el != end_el ; ++el)
-    {//el
-
-      double el_volume = 0;
-
+  // we need the connectivity of the nodes to not double count
+  vector<int> connectivity(qdens.size(), 0.0);
+  {
+    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    for ( ; el != end_el; ++el)
+    {
       const Elem* elem = *el;
-      fe->reinit (elem);
-
-
-
-      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
-      {
-	  dof_map.dof_indices (elem, dof_indices, psi_index);
-	  const unsigned int n_psi_dofs = dof_indices.size();
-
-	  for (unsigned int qp=0; qp<qrule.n_points(); qp++)
-	    {//qp
-
-
-	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-		{
-		  eigen_f_value1 = eigen_vector[dof_indices[p1]];
-
-		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-		    {
-		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
-
-		      Complex temp =  eigen_f_value1 * conj(eigen_f_value2);
-
-		      // result[el_number] +=  JxW[qp] * phi[p1][qp] *  phi[p2][qp] * temp.real();
-		      result_complex[el_number] +=  JxW[qp] * phi[p1][qp] *  phi[p2][qp] * temp;
-		    }
-
-		}
-
-
-
-	    }
-
-
-
-
-	}
-
-      //-------------------------------------------------//
-      //has to be removed for the new libmesh
-
-      for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
-	el_volume += JxW[qp];
-
-      result[el_number] = std::abs(result_complex[el_number])/el_volume;
-
-      el_number++;
-
+      dof_map_qdens.dof_indices(elem, dof_indices_qdens, 0);
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+        connectivity[dof_indices_qdens[n]]++;
     }
-
-
-
-
-
-
-
-  return(result);
-
-}
-
-
-
-
-//===========================================================//
-
-
-
-vector<double> EnvelopFunctionApprox::calculate_prob_function(unsigned int state_number)
-{
-//===========================================
-
-
-
-  DofMap& dof_map = system->get_dof_map();
-
-  const MeshBase& mesh1 = system->get_mesh();
-
-
-  unsigned int number_of_points = number_of_nodes;
-
-
-
-  unsigned int  point_index = 0;
-
-
-  vector< vector<Complex> >  psi_data;
-  psi_data.resize(number_of_points);
-  for (unsigned int i = 0; i < number_of_points; i++) psi_data[i].resize( opt.number_of_bands, Complex(0.0, 0.0) );
-
-  vector<double>  probability_data(number_of_points, 0.0);
-
-  MeshBase::const_element_iterator it = mesh1.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh1.active_local_elements_end();
-
-  std::vector<unsigned int> dof_indices;
-
-
-  //!calculation of psi
-
-  for ( ; it != end; ++it)
-    {
-      const Elem* elem = *it;
-
-
-      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
-	{
-	  dof_map.dof_indices (elem, dof_indices, psi_index);
-	  for (unsigned int n = 0; n < elem->n_nodes(); n++)
-	    {
-	      unsigned int  node_id =  elem->node(n);
-	      Complex value =  (solution[state_number].eigen_vector[ dof_indices[n] ]);
-
-	      psi_data[node_id][psi_index] = value;
-
-
-
-
-
-	    }
-	}
-    }
-
-
-  //calculation of |psi|^2
-  double t1;
-  for (unsigned int i = 0; i < number_of_points; i++)
-    for (unsigned int j = 0; j < opt.number_of_bands; j++)
-      {
-	t1 = std::abs(psi_data[i][j]);
-	probability_data[i] += t1 * t1;
-      }
-
-
-
-  //------
-
-  return(probability_data);
-
-  //-----
-
-}
-
-
-//=================================================================//
-
-double EnvelopFunctionApprox::get_integrated_probability()
-{
-  double result = 0;
-  unsigned int number_of_eigs = solution.size();
-  for (unsigned int i = opt.first_state ; i <  number_of_eigs; i++)
-    {
-
-      result += Fermi_statistics_probability(solution[i].eigen_energy, solution[i].Fermi_energy, solution[i].Temperature);
-    }
-
-  return(result);
-}
-
-
-//=================================================================//
-void EnvelopFunctionApprox::calculate_convergent_density( )
-{
-
-  if (opt.job == BULKDENSITY)
-  {
-    //temporary solution
-
-    solve_bulk();
-
-    double total_density =  get_integrated_probability();
-
-    _density.clear();
-
-    _density[NULL] = total_density;
-
-
-
 
   }
-  else
+
+
+  for (unsigned int i = first_state; i < num_states; i++)
   {
-    unsigned int number_of_states = opt.initial_eigenstates_number;
+    double fermi_energy = solution[i].Fermi_energy;
+    double kT = solution[i].Temperature * Constants::k_Boltzmann;
 
-    // we let him solve two more states
-    solve_eigen_value_problem(number_of_states + 2);
+    double energy = solution[i].eigen_energy;
+    double mass_factor = 1.0;
+    double dos_factor = 1.0;
 
-
-
-    double total_density =  get_integrated_probability();
-
-    bool converged = false;
-
-
-    for  ( ; opt.convergent_density && (!converged); )
+    if (dim == 1)
     {
+      // 1D is correct and tested
+      mass_factor = effective_mass[i] * kT / (2.0 * M_PI * Constants::Hartree);
 
+      double exp_arg = (fermi_energy - energy) / kT;
+      if (opt.particle == "hl")
+        exp_arg = -exp_arg;
 
-      number_of_states = (unsigned int) (number_of_states * opt.eigen_number_increase_factor) + 1;
-
-
-
-      //TODO:
-
-      // this is to think about why it does not work!
-
-      //opt.solve_ev_problem_twice = false;
-
-      //double st_shift_value = (solution[0].eigen_energy - opt.spectrum_shift)/Hartree;
-
-      //solve_eigen_value_problem(number_of_states, st_shift_value);
-
-
-
-      solve_eigen_value_problem(number_of_states + 2);
-
-      double total_density1 = get_integrated_probability();
-
-
-      if (total_density1 < 1e-14)
-      {
-        converged = true;
-      }
-      else if ( abs(total_density1 - total_density)/total_density < opt.relative_density_tolerance )
-      {
-        converged = true;
-      }
-
-      total_density = total_density1;
-
-
+      dos_factor = (exp_arg < -20) ? exp(exp_arg) : log(1.0 + exp(exp_arg));
     }
+    else if (dim == 2)
+    {
+      // 2D is correct and tested
+      mass_factor = sqrt(kT *  effective_mass[i] / (2.0 * M_PI * Constants::Hartree));
+      double exp_arg = (fermi_energy - energy) / kT;
+      if (opt.particle == "hl")
+        exp_arg = -exp_arg;
+
+      dos_factor = TiberMath::fermidirac_mhalf(exp_arg);
+    }
+    else if (dim == 3)
+      dos_factor = Fermi_statistics_probability(energy, fermi_energy,
+          solution[i].Temperature);
+
+    dos_factor *= mass_factor * scaling * opt.degeneracy;
 
 
-    calculate_density( );
+    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    for ( ; el != end_el; ++el)
+    {
+      const Elem* elem = *el;
+      dof_map_qdens.dof_indices(elem, dof_indices_qdens, 0);
 
+      for (int psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+      {
+        dof_map.dof_indices(elem, dof_indices, psi_index);
+
+        for (unsigned int n = 0; n < elem->n_nodes(); n++)
+        {
+          double psi = abs(solution[i].eigen_vector[dof_indices[n]]);
+          double val = dos_factor * psi * psi / connectivity[dof_indices_qdens[n]];
+          qdens.add(dof_indices_qdens[n], val);
+        }
+
+      }
+    }
   }
+  qdens.close();
 }
+
 
 //==============================================================================//
 
@@ -2955,112 +2613,6 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
 }
 
-
-//========================================================================================//
-
-std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density1D(unsigned int state_number, double parallel_mass)
-{
-
-
-  vector<double> result;
-  map<const Elem*, double> result_map;
-
-
-
-
-
-  const double T_EV = opt.Temperature * Constants::k_Boltzmann;
-
-  const double mass_factor = 0.5 * parallel_mass/M_PI * (T_EV /Constants::Hartree);
-
-  const double Fermi_energy = solution[state_number].Fermi_energy;
-
-  const double Energy = solution[state_number].eigen_energy;
-
-
-
-  double exp_arg = (Fermi_energy - Energy) / T_EV;
-
-  if (opt.particle == "hl")
-    exp_arg = -exp_arg;
-
-
-  double prob_factor = (exp_arg < -20) ? exp(exp_arg) : std::log(1.0 + exp(exp_arg));
-
-
-
-  result  = calculate_cell_prob_function(state_number);
-
-
-  unsigned int n = 0;
-
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-
-  for ( ; el !=end_el; ++el)
-  {
-
-    result_map[*el] = result[n] *  prob_factor * mass_factor  ;
-
-    n++;
-  }
-
-
-  return(result_map);
-
-}
-
-//========================================================================================//
-
-std::map<const Elem*, double> EnvelopFunctionApprox::estimate_density2D(unsigned int state_number, double parallel_mass)
-{
-
-
-  vector<double> result;
-
-  map<const Elem*, double> result_map;
-
-  const double T_EV = opt.Temperature * Constants::k_Boltzmann;
-
-  const double Fermi_energy = solution[state_number].Fermi_energy;
-
-  const double Energy = solution[state_number].eigen_energy;
-
-  double prob_factor;
-
-  if (opt.particle == "el")
-  {
-    prob_factor = TiberMath::fermidirac_mhalf( (Fermi_energy - Energy)  / T_EV);
-  }
-  else
-  {
-    prob_factor = TiberMath::fermidirac_mhalf( -(Fermi_energy - Energy)  / T_EV);
-  }
-
-
-
-  const double mass_factor = 0.5*sqrt( T_EV *  parallel_mass / (2.0*M_PI) );
-
-  result  = calculate_cell_prob_function(state_number);
-
-
-  unsigned int n = 0;
-
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-
-  for (  ; el !=end_el; ++el )
-  {
-
-    result_map[*el] = result[n] *  prob_factor * mass_factor ;
-
-    n++;
-  }
-
-  return(result_map);
-}
 
 //=======================================================================================//
 

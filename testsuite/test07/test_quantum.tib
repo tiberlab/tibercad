@@ -128,7 +128,7 @@ Module driftdiffusion
       particle = electron
       statistics = fermidirac
 
-      quantum_density = dens_el
+      quantum_density = quantum_el
       barrier_regions = buffer
     }
   
@@ -167,7 +167,7 @@ Module efaschroedinger
 
   Dirichlet_bc_everywhere = true
   particle = el
-  number_of_eigenstates = 22
+  number_of_eigenstates = 5
   poisson_model_name = dd
   strain_model_name = macrostrain
   convergent_density = true
@@ -176,7 +176,8 @@ Module efaschroedinger
   solver = lapack
   #k_vector = (0,   0.00985844,    0.0223584)
 
-  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
 
   Physics
   {
@@ -210,39 +211,6 @@ Module efaschroedinger
 }
   
 
-Module quantumdensity
-{
-  name = dens_el
-  regions = (1,4,5)
-
-  plot = Density
-
-    k_space_dimension = 2
-    k-space_basis = true
-    k1 = (0, 0, 0.1)
-    k2 = (0, 0.1, 0)
-    
-
-    number_of_nodes = (4,4)
-    wedge = quarter
-
-    quantum_simulation = quantum_el
-
-    degeneracy = 2
-    refine_fraction = 0.20
-    relative_accuracy = 0.01
-    refine_k_space = true
-    output_density_in_k_space = true
-    uniform_refinement = false
-    mesh_order = FIRST
-
-    initial_eigenstates_number = 5
-    analytic = true
-
-}
-
-  
-
 
 
 Module sweep
@@ -255,7 +223,7 @@ Module sweep
 
 Module selfconsistent
 {
-  solve = (dens_el,dd)
+  solve = (quantum_el, dd)
   #relaxation_factor = 0.1
   max_iterations = 100
   absolute_tolerance = 5e-4
@@ -268,7 +236,7 @@ Module selfconsistent
 Simulation
 {
   temperature = 300
-  solve = (str, dd, selfconsistent, quantum_el)
+  solve = (str, dd, selfconsistent)
   resultpath = output
   output_format = grace
 }

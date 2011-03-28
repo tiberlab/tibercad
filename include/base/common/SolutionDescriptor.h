@@ -141,7 +141,7 @@ SolutionDescriptor::SolutionDescriptor(const std::string& name, ID id,
 
     case NTUPLE:
     default:
-      assert(_n_comp > 0);
+      //assert(_n_comp > 0);
       break;
   }
 }

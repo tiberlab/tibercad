@@ -4,6 +4,7 @@
 #include "Boundary.h"
 #include "SimulationEnvironment.h"
 #include "EigenSolver.h"
+#include "Messages.h"
 
 #include "equation_systems.h"
 
@@ -332,6 +333,9 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
    
 
     {
+      if (verbose() > 0)
+        Messages::info("Solve to obtain spectrum shift ... ", false);
+
       int result;
       if (solver_opt.discretization_method == FEM) 
 	result = EigenSolver::eig_value_problem_general(slep_opt);
@@ -344,11 +348,13 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 	throw SolveFailedException("Eigensolver problem\n");
       }
 
+      if (verbose() > 0)
+        Messages::info("done");
+
     
     }
    
     st_shift_value = get_new_spectrum_shift();
-
     
     EigenSolver::get_eigen_vector( 0, initial_vector);
     
@@ -381,7 +387,6 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
     if (result !=0 )
     {
-      cerr << "result of EigenSolver is bad:  " << result << "\n";
       throw SolveFailedException("Eigensolver problem\n");
     }
   }
@@ -417,7 +422,7 @@ void FEMEigenvalueProblem::parse_options()
 
 
 
-  solver_opt.Dirichlet_bc_everywhere = mod_opt.get_option("Dirichlet_bc_everywhere",false);
+  solver_opt.Dirichlet_bc_everywhere = mod_opt.get_option("Dirichlet_bc_everywhere", true);
 
 
   solver_opt.monitor = mod_opt.get_option("monitor", false);

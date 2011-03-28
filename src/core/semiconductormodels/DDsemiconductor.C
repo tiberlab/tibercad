@@ -30,7 +30,7 @@ DDsemiconductor::DDsemiconductor(const ModelOptions& options)
     bulk_ham(NULL),
     energy_cutoff(4.0),
     strained(false),
-    k_max(1e-3)
+    k_max(1e-4)
 {
 }
 

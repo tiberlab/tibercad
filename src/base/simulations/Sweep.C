@@ -252,6 +252,7 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
       s << "# Simulation    : " << simulation.get_name() << endl;
       //s << "# Device        : " << simulation.get_device()->get_name() << endl;
       s << "# Sweep variable: " << _variable << endl;
+      s << "# Data ordering : " << "column" << endl;
       s << "# Data:" << endl;
       file << s.str();
 

@@ -122,18 +122,16 @@ Module efaschroedinger
   name = kp_electrons
   regions = (barrier_left, barrier_right, QW)
   particle = el
-  spectrum_shift = -0.2
 
-  plot = (EigenFunctions, EigenEnergy,EnergyLevels)
+#  spectrum_shift = -0.2
 
-  Solver
-  {
-    x-periodicity = false
-    Dirichlet_bc_everywhere = true   # if  false -&gt;  Neumann everywhere
+  plot = (EigenFunctions, EigenEnergy)
+
+#  Solver
+#  {
     number_of_eigenstates = 4 
     poisson_model_name = driftdiffusion  #  potential from driftdiffusion
-    log_output= false
-  }
+#  }
 
   Physics
   {
@@ -147,18 +145,17 @@ Module efaschroedinger
   simulation_name = kp_holes
   physical_regions = (barrier_left, barrier_right, QW)
   particle = hl
-  spectrum_shift = -0.4
+
+#  spectrum_shift = -0.4
 
   log_output= false
 
-  plot = (EigenFunctions, EigenEnergy,EnergyLevels)
+  plot = (EigenFunctions, EigenEnergy)
 
   poisson_model_name = driftdiffusion  #  potential from driftdiffusion
  
   #Solver
   #{
-    x-periodicity = false
-    Dirichlet_bc_everywhere = true   # if  false -&gt;  Neumann everywhere
     number_of_eigenstates = 4 
   #}
 
