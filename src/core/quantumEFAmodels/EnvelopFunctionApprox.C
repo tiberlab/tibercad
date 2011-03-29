@@ -803,7 +803,14 @@ void EnvelopFunctionApprox::do_solve()
    if (calc_density)
      calculate_density_analytic();
    else
+   {
+     ostringstream os;
+     os << "Solving for k = ( ";
+     k_vec.write_unformatted(os, false);
+     os << ")";
+     if (verbose() > 0) Messages::info(os.str());
      solve_eigen_value_problem(solver_opt.number_of_eigenstates);
+   }
 
 
    // we have to redeclare the solution variables to adjust the number
