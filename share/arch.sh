@@ -4,11 +4,13 @@
 
 arch=unknown
 
-os=`uname`
+os=`uname -o`
 
 case $os in
 
-  Linux) arch=`uname -m`-linux ;;
+  *Linux*) arch=`uname -m`-linux ;;
+
+  *Cygwin*) arch=`uname -m`-cygwin ;;
 
   *) arch= ;;
 
