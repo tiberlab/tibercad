@@ -759,10 +759,17 @@ void EnvelopFunctionApprox::do_solve()
    opt.spectrum_shift = get_band_edge();
 
 
- //k-vector
+ // k-vector
  RealVectorValue k_vec(0.0);
  get_parameter("k_vector", k_vec);
  set_k_vector(k_vec);
+ bool calc_density = _calculate_density;
+ if (has_option("k_vector"))
+ {
+   Messages::info("k-vector given, will skip density calculation.");
+   calc_density = false;
+   get_options().delete_option("k_vector");
+ }
 
 
  if (opt.job == BULKEIGENSTATES )
@@ -793,7 +800,7 @@ void EnvelopFunctionApprox::do_solve()
    make_new_dofs();
 
 
-   if (_calculate_density)
+   if (calc_density)
      calculate_density_analytic();
    else
      solve_eigen_value_problem(solver_opt.number_of_eigenstates);
