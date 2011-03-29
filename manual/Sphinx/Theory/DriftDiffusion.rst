@@ -45,54 +45,64 @@ Module options
 
 The following options influence the behaviour of the Drift-Diffusion module:
 
-  ``coupling = string`` defines which equations to solve. 
-    The default is full, meaning that
-    the full system consisting of the Poisson, electron continuity and hole continuity
-    equations is solved. Other possible values are poisson (for equilibrium calculations),
-    electrons or holes. For the last two cases local equilibrium is assumed such that
-    :math:`\phi_n  =  \phi_p` .
+|  ``coupling = string`` defines which equations to solve. 
+| 
+|          The default is full, meaning that
+           the full system consisting of the Poisson, electron continuity and hole continuity
+           equations is solved. Other possible values are poisson (for equilibrium calculations),
+           electrons or holes. For the last two cases local equilibrium is assumed such that
+           :math:`\phi_n  =  \phi_p` .
  
-  ``enforce_local_charge_neutrality = bool`` 
-    If set to true, local charge neutrality will
-    be enforced by setting the charge density to zero. This may be useful for solving
-    the Poisson equation involving only dielectrics.
+|  ``enforce_local_charge_neutrality = bool`` 
+| 
+|        If set to true, local charge neutrality will
+         be enforced by setting the charge density to zero. This may be useful for solving
+         the Poisson equation involving only dielectrics.
 
-  ``guess_el_qfermi = double`` 
-    If this option is set, then before resolving the system the
-    given number will be set as a guess for the electron electro-chemical potential.
+|  ``guess_el_qfermi = double`` 
+|  
+|        If this option is set, then before resolving the system the
+         given number will be set as a guess for the electron electro-chemical potential.
 
-  ``guess_hl_qfermi = double`` 
-    If this option is set, then before resolving the system the
-    given number will be set as a guess for the hole electro-chemical potential.
+|  ``guess_hl_qfermi = double`` 
+| 
+|        If this option is set, then before resolving the system the
+|        given number will be set as a guess for the hole electro-chemical potential.
 
-  ``default_boundary_condition = string`` 
-    With this option the user can control the default 
-    boundary condition for the electric field on all external boundaries without explicit boundary model. 
-    Possible values are zero field (default), or zero displacement.
-    The two differ only in presence of electric polarization fields.
+|  ``default_boundary_condition = string`` 
+| 
+|        With this option the user can control the default 
+         boundary condition for the electric field on all external boundaries without explicit boundary model. 
+         Possible values are zero field (default), or zero displacement.
+         The two differ only in presence of electric polarization fields.
 
-  ``quadrature_rule = string`` 
-    This option allows to chose between trapezoidal and Gauss
-    type numeric integration rules. The default rule is gauss, but in some cases trapez
-    may prevent density peaks near badly resolved material interfaces.
+|  ``quadrature_rule = string`` 
+| 
+|        This option allows to chose between trapezoidal and Gauss
+         type numeric integration rules. The default rule is gauss, but in some cases trapez
+         may prevent density peaks near badly resolved material interfaces.
 
-  ``save_state = boolean`` 
-    If set to *true* the current solution will be written to a compressed 
-    file after each solve. The file name follows the same rules as the result files,
-    having file extension ``.tsv`` .
+|  ``save_state = boolean`` 
+|
+|        If set to *true* the current solution will be written to a compressed 
+         file after each solve. The file name follows the same rules as the result files,
+         having file extension ``.tsv`` .
 
-  ``load_state = file`` 
-    Reload a formerly saved solution. filename can be a filename (to
-    reside in the current working directory), a relative or an absolute path to a file.
-    The file needs to have been created with ``save_state = true`` .
+|  ``load_state = file`` 
+| 
+|       Reload a formerly saved solution. filename can be a filename (to
+        reside in the current working directory), a relative or an absolute path to a file.
+        The file needs to have been created with ``save_state = true`` .
 
-  ``solve_after_load = boolean`` 
-    If set to true, the system will be solved after having
-    reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
+|  ``solve_after_load = boolean`` 
+| 
+|       If set to true, the system will be solved after having
+        reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
 
-     |warn|  Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
-     Otherwise there will be undefined behaviour or failure. 
-     Future releases will relax this restriction.
+     |warn|  
+                Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
+                Otherwise there will be undefined behaviour or failure. 
+                Future releases will relax this restriction.
 
 Solver section
 --------------------
