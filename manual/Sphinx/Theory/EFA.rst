@@ -8,17 +8,17 @@ Quantum  EFA  calculations
 
 In  TiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates and  eigenfunctions  of  a  given system,   dispersion  of  quantum  states and   particle  quantum  density can  be  obtained   respectively by means  of the   following Modules:
 
-* Module efaschroedinger
+* ``Module efaschroedinger``
 
-* Module quantumdispersion
+* ``Module quantumdispersion``
 
-* Module quantumdensity
+* ``Module quantumdensity``
 
 The  optical properties  are  calculated by  the  following modules 
 
-* Module opticskp
+* ``Module opticskp``
 
-* Module opticalspectrum
+* ``Module opticalspectrum``
 
 
 Module efaschroedinger
@@ -27,8 +27,8 @@ Module efaschroedinger
 
 
 The efaschroedinger  simulation tool of TIBERCAD is developed
-in order to solve a single-particle Schroedinger equation for electrons and holes in a semi-
-conductor crystal. This problem is an eigenvalue problem that is treated as a generalized
+in order to solve a single-particle Schroedinger equation for electrons and holes in a semiconductor crystal. 
+This problem is an eigenvalue problem that is treated as a generalized
 complex eigenvalue problem
 
 ..  math::
@@ -41,8 +41,8 @@ complex eigenvalue problem
     \end{equation}
 
 where H and S are the Hamiltonian and S-matrix, respectively.
-The EFA calculations are performed by the **Module** efaschroedinger A typical ex-
-ample is the following::
+The EFA calculations are performed by the **Module** ``efaschroedinger`` A typical example
+ is the following::
 
   Module efaschroedinger
     {
@@ -69,17 +69,16 @@ Module options
 
 The following options infiuence the behaviour of the Module efaschroedinger:
 
-  ``particle = string`` defines for which particle (electron or hole) Schroedinger equation is
-solved Possible values are el and hl. A different Module efaschroedinger has to be
-defined for each particle to be solved.
+|  ``particle = string`` defines for which particle (electron or hole) Schroedinger equation is solved. 
+| 
+|        Possible values are el and hl. A different Module efaschroedinger has to be
+         defined for each particle to be solved.
 
-  ``poisson_model_name = string`` defines the name of the simulation (Module driftdiffu-
-sion) that can provide electric potential
+|  ``poisson_model_name = string`` defines the name of the simulation (Module driftdiffusion) that can provide electric potential
 
-  ``strain_model_name = string`` defines the name of the simulation (Module macrostrain)
-that can provide elastic strain
+|  ``strain_model_name = string`` defines the name of the simulation (Module macrostrain) that can provide elastic strain
 
-  ``regions = string`` defines the regions associated to this EFA simulation
+|  ``regions = string`` defines the regions associated to this EFA simulation
 
 Solver section
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -87,39 +86,46 @@ Solver section
 
 The Solver section of the Module efaschroedinger contains the following options:
 
-  ``number_of_eigenstates = integer`` defines the number of eigenvalues and eigenfunctions to be found.
+|  ``number_of_eigenstates = integer`` defines the number of eigenvalues and eigenfunctions to be found.
 
-  ``Dirichlet_bc_everywhere = boolean`` : if true (default value), Dirichlet boundary
-conditions are imposed over all the boundaries of the simulation region
+|  ``Dirichlet_bc_everywhere = boolean`` : 
+| 
+|                if true (default value), Dirichlet boundary
+                 conditions are imposed over all the boundaries of the simulation region
 
-  ``solver = string`` : defines the solver for the eigenvalue problem, possible values are:
-arnoldi, lapack, krylovshur. 
-The default value is **krylovshur** . 
+|  ``solver = string`` : 
+| 
+|                defines the solver for the eigenvalue problem, possible values are:
+|                arnoldi, lapack, krylovshur. 
+|                The default value is **krylovshur** . 
 
 In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur
 solver it is necessary to specify which and how many eigenvalues have to be computed. 
 The idea is that the iterative solver calculates several eigenvalues that are
 close to a specific number, refered to as the *spectral_shift*
 
-  ``max_iteration_number = integer`` : maximum number of iteration, used as a stop condition
+|  ``max_iteration_number = integer`` : maximum number of iteration, used as a stop condition
 
-  ``eigen_solver_tolerance = double`` :numerical eigensolver tolerance used as a convergence criteria
+|  ``eigen_solver_tolerance = double`` :numerical eigensolver tolerance used as a convergence criteria
 
-  ``spectral_shift = double`` :the closest eigenvalues to this value (eV) are found. If not
-defined, then it will be calculated internally from the band edges.
+|  ``spectral_shift = double`` :the closest eigenvalues to this value (eV) are found. 
+| 
+|                  If not defined, then it will be calculated internally from the band edges.
 
-  ``ksp_type = string`` : Krylov subspace method type; bcgsl, gmres, cg
+|  ``ksp_type = string`` : Krylov subspace method type; bcgsl, gmres, cg
 
-  ``pc_type = string`` : preconditioner type: cholesky, jacobi, ilu , composite.
+|  ``pc_type = string`` : preconditioner type: cholesky, jacobi, ilu , composite.
 
 Physics section
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-  ``model = string`` : possible values are : conduction band , for single conduction band
-model ( :math:`\Gamma` point) ;  kp for :math:`{\bf k \cdot p}` model
+|  ``model = string`` : possible values are : 
+| 
+|                   conduction band , for single conduction band
+                    model ( :math:`\Gamma` point) ;  kp for :math:`{\bf k \cdot p}` model
 
-  ``kp_model = string`` : possible values are : 6×6 , 8×8.
+|  ``kp_model = string`` : possible values are : 6×6 , 8×8.
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -128,11 +134,11 @@ Output
 
 The available output variables, to be specified in the plot option, are the following:
 
-* EigenEnergy Eigen energy in eV
+| ``EigenEnergy`` Eigen energy in eV
 
-* EigenFunctions :math:`|\psi({\bf r})|^2` function of the eigenstate
+| ``EigenFunctions`` :math:`|\psi({\bf r})|^2` function of the eigenstate
 
-* Occupation probability to find the state occupied. It is calculated assuming Fermi
+Occupation probability to find the state occupied. It is calculated assuming Fermi
 distribution and mean electrochemical potential and temperature:
 
 ..  math::
@@ -146,8 +152,7 @@ distribution and mean electrochemical potential and temperature:
     \end{equation}
 
 
-* EnergyLevels graphical output used for showing the energy level over the band
-diagram.
+| ``EnergyLevels`` graphical output used for showing the energy level over the band diagram.
 
 
 
@@ -157,7 +162,7 @@ Module quantumdispersion
 
 With the Module quantumdispersion it is possible to calculate the dependence of quan-
 tum eigenstates on **k** -vector. Such dependence gives the *quantum state dispersion* . The
-simulation name is **quantumdispersion** .
+simulation name is ``quantumdispersion`` .
 
 ::
 
@@ -181,10 +186,11 @@ in k-space.
 
 The main parameters are:
 
-* **quantum simulation** : name of the efaschroedinger simulation.
+| ``quantum simulation`` : name of the efaschroedinger simulation.
 
-* **min eigenvalue number** , **max eigenvalue number** : the dispersion is calculated 
-for the states number *i* , where 
+| ``min eigenvalue number`` , ``max eigenvalue number`` : 
+| 
+|                the dispersion is calculated for the states number *i* , where 
 
   max_eigenvalue_number :math:`\ge i \ge`  min_eigenvalue_number
 
@@ -195,7 +201,7 @@ Output
 
 
 
-The output variable name is **k-space_dispersion** . The output format for the dispersion
+The output variable name is ``k-space_dispersion`` . The output format for the dispersion
 can be controlled independently of the general specification in the ``Simulation`` section
 by redefining the ``output_format`` keyword.
 
@@ -268,15 +274,17 @@ The integration is performed on a mesh in the k-space.
 
 The available options are:
 
-* **quantum_simulation** : name of the efaschroedinger simulation.
+| ``quantum_simulation`` : name of the efaschroedinger simulation.
 
-* degeneracy: degeneracy of the quantum state
+| ``degeneracy`` : degeneracy of the quantum state
 
-* **initial_eigenstates_number** : initial number of eigenstates for the Schroedinger
+| ``initial_eigenstates_number`` : initial number of eigenstates for the Schroedinger
 equation
 
-* **analytic** = { true | false } If true then the density is calculated analytically,
-otherwise numerically.
+| ``analytic``* = { true | false } 
+| 
+|         If true then the density is calculated analytically,
+          otherwise numerically.
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -293,7 +301,7 @@ Module opticskp
 -----------------------
 
 
-By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
+By defining the Module ``opticskp`` , calculation of optical properties is enabled; in particular, 
 the optical kp matrix elements are calculated from the quantum models specified in the Module.
 
 The optical spectrum from spontaneous emission is calculated in the following way:
@@ -320,7 +328,7 @@ where :math:`f_i` and :math:`f_j` are the Fermi distributions.
     }
 
 Here, *initial_state_model* and *final_state_model* are, respectively, the quantum simulations 
-( **efaschroedinger** module) associated respectively to the initial state of optical
+( ``efaschroedinger`` module) associated respectively to the initial state of optical
 transition (e.g. electron), and to the final state of optical transition (e.g. hole). 
 *initial_eigenstates* and *final_eigenstates* refer to the range of eigenstates to be taken in
 account for optical calculations.
@@ -340,7 +348,7 @@ Output
 
 The output variables for optics calculations are:
 
-* **optical_spectrum_k_0** : optical emission spectrum for *k=0*.
+| ``optical_spectrum_k_0`` : optical emission spectrum for *k=0*.
 
 Module opticalspectrum
 -----------------------
@@ -382,15 +390,15 @@ ements whose error is greater than the value **(1-refine fraction)** (maximum er
 going to be refined. In this case, "Error" is just the integrated quantity. The refinement
 will end when the *relative_accuracy* is obtained.
 
-  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
+|  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
 
-  ``wedge`` = half | quarter, to reduce calculation time, by exploiting symmetry.
+|  ``wedge`` = half | quarter, to reduce calculation time, by exploiting symmetry.
 
-  ``optical_matr_elem_model`` = name of the *opticskp* model associated
+|  ``optical_matr_elem_model`` = name of the *opticskp* model associated
 
-  ``polarization`` = light polarization (vector)
+|  ``polarization`` = light polarization (vector)
 
-  ``Emin, Emax, dE`` : energy range and step of spectrum calculation.
+|  ``Emin, Emax, dE`` : energy range and step of spectrum calculation.
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -401,7 +409,7 @@ Output
 
 The output variables for optics calculations are:
 
-* **optical_spectrum** : k-space integrated optical emission spectrum.
+| ``optical_spectrum`` : k-space integrated optical emission spectrum.
 
 
 .. rubric:: Footnotes

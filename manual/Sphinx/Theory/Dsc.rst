@@ -212,7 +212,7 @@ For the generation:
 
   ``generation = dssc_generation``
 
-The **Physics** section must contain at least the setting of the generation module. The
+The ``Physics`` section must contain at least the setting of the generation module. The
 set of parameters that can be defined for the entire device are enlisted in table :ref:`below<tableDsc01>` .
 
 ..  _tableDsc01
@@ -221,7 +221,7 @@ set of parameters that can be defined for the entire device are enlisted in tabl
     :nowrap:
     :label:
 
-    \begin{table}[!htb]
+    \begin{table}[!h]
     \center
     \begin{tabular}{l|p{8cm}|l}
     \multicolumn{3}{c}{\textbf{Parameters}} \\
@@ -292,17 +292,17 @@ The part of the input file for the generation module::
     
 In the generation module must be specified:
 
-*  ( ``regions`` ) the regions where we want that there is generation (where the Dye is present);
+|  ``regions`` the regions where we want that there is generation (where the Dye is present);
 
-*  ( ``plot`` ) if we want to plot the generation;
+|   ``plot`` if we want to plot the generation;
 
-*  ( ``light_direction`` ) the vector which fixes the direction from where the light comes;
+|   ``light_direction``  the vector which fixes the direction from where the light comes;
 
-*  ( ``light_intensity`` ) the light intensity;
+|   ``light_intensity``  the light intensity;
 
-*  ( ``dye`` ) the dye used in the cell;
+|   ``dye``  the dye used in the cell;
 
-*  ( ``illumination_spectrum`` ) the source spectrum, by default a 1.5 AM solar spectrum;
+|   ``illumination_spectrum``  the source spectrum, by default a 1.5 AM solar spectrum;
 
 The light intensity is defined in a sweep. It can be set to reach 1 that means one Sun,
 or a larger or smaller illumination intensity (0.1, 2.0, etc.).
@@ -414,7 +414,7 @@ See tables:
     :nowrap:
     :label:
     
-    \begin{table}[!htb]
+    \begin{table}[!h]
     \center
     \begin{tabular}{l|p{8cm}|l}
     \multicolumn{3}{c}{\textbf{Nodal quantities}} \\
