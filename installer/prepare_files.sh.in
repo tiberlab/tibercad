@@ -13,8 +13,8 @@ make_windows_package () {
 
   # copy all files
   cp ${topdir}/bin/tibercad.exe ${files}
-  cp ${topdir}/lib/*.dll ${files}
-  cp -r ${topdir}/lib/modules ${files}/lib
+  cp ${topdir}/${ARCH}/lib/*.dll ${files}
+  cp -r ${topdir}/${ARCH}/lib/modules ${files}/lib
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
