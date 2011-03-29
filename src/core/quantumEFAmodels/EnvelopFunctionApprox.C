@@ -10,11 +10,14 @@
 #include "TiberLinearSystem.h"
 #include <gnuplot_io.h>
 #include "SimulationOptions.h"
+#include "tensor.h"
 
 #include "EigenSolver.h"
 
 
 #include <edge_edge2.h>
+#include <equation_systems.h>
+#include <dense_submatrix.h>
 
 
 #include "Messages.h"
@@ -29,8 +32,6 @@ extern "C"
 
 using namespace std;
 using namespace Constants;
-
-Device*   EnvelopFunctionApprox:: _device;
 
 
 //---------------------------------------------------------------------------------//
@@ -367,10 +368,6 @@ EnvelopFunctionApprox::EnvelopFunctionApprox(const ModelOptions& options)
 {
   poisson_equation = NULL;
 
-  temperature_simulation = NULL;
-
-  strain = NULL;
-
   _bulk_mat_element = NULL;
 
   has_solution_vector(false);
@@ -404,30 +401,16 @@ void EnvelopFunctionApprox::parse_options()
 
   //-------------------------------------------------------------------------------------------//
   //strain model
-  std::string  strain_model_name = mod_opt.get_option("strain_model_name","no_strain");
-
-  if (strain_model_name != "no_strain" )
-  {
-    opt.consider_strain = true;
-
-    strain = dynamic_cast< Macrostrain* > ( find_simulation( strain_model_name )   );
-
-    if (strain == NULL)
-      throw InitFailedException("Unknown strain model" + strain_model_name);
-
-
-  }
-  else
-  {
-    opt.consider_strain = false;
-  }
-
+  std::string strain_model_name = mod_opt.get_option("strain_model_name","no_strain");
+  strain_model_name = mod_opt.get_option("strain_simulation", strain_model_name);
+  _strain_interface.set_simulation(strain_model_name);
 
 
   //-------------------------------------------------------------------------------------------//
   //-------------------------------------------------------------------------------------------//
   //poisson
   std::string  poisson_model_name = mod_opt.get_option("poisson_model_name","no_poisson");
+  poisson_model_name = mod_opt.get_option("poisson_simulation", poisson_model_name);
   if ( poisson_model_name != "no_poisson" )
   {
     opt.consider_potential = true;
@@ -499,25 +482,11 @@ void EnvelopFunctionApprox::parse_options()
   else
     throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );
   //---------------------------------------------------------------------------------//
-  std::string  heat_model_name = mod_opt.get_option("heat_model","");
 
-  if ( heat_model_name != "" )
-  {
-    temperature_simulation  = find_simulation ( heat_model_name );
+  std::string heat_model_name = mod_opt.get_option("heat_model","");
+  heat_model_name = mod_opt.get_option("temperature_simulation", heat_model_name);
 
-    if (temperature_simulation == NULL)
-      throw InitFailedException( "Unknown heat model " + heat_model_name);
-
-    temperature_ID = temperature_simulation->get_solution_id("temperature");
-
-  }
-
-
-  temp_interface.set_simulation(heat_model_name);
-
-  //default value for temperature
-  opt.Temperature = mod_opt.get_option("Temperature", SimulationOptions::temperature);
-
+  _temp_interface.set_simulation(heat_model_name);
 
 
 
@@ -594,13 +563,6 @@ void EnvelopFunctionApprox::do_init( )
     if (model == "conduction_band") opt.degeneracy = 2;
   }
 
-  SimulationEnvironment& si = get_environment();
-
-  _device = &( si.get_device() );
-
-
-
-
   es = &(get_equation_systems());
 
   mesh = &(es->get_mesh());
@@ -655,7 +617,7 @@ void EnvelopFunctionApprox::do_init( )
 
   scaling.set_length_scaling(Constants::bohr_radius);
 
-  scaling.set_calc_mesh_units(_device->get_mesh_units());
+  scaling.set_calc_mesh_units(get_mesh_units());
 
 
 
@@ -724,11 +686,9 @@ void EnvelopFunctionApprox::do_init( )
    {
      MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
      const Elem* elem = *el;
-      const ID subdomain = elem->subdomain_id();
-      const Material* mat = _device->get_material(subdomain);
 
       EFAbulkHamiltonian* element_hamiltonian =
-	(  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model();
+          get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
 
       opt.kp_bands = element_hamiltonian->get_kp_bands_map();
 
@@ -994,7 +954,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
-  Tensor2Sym strain_crystal_system(0);
   double electric_potential = 0;
 
   EFAbulkHamiltonian* element_hamiltonian;
@@ -1013,14 +972,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       // working on.  This allows for nicer syntax later.
       const Elem* elem = *el;
 
-      const ID subdomain = elem->subdomain_id();
-      const Material* mat = _device->get_material(subdomain);
+      element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
 
-
-
-      element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model();
-
-      element_hamiltonian->set_temperature(temp_interface.get_temperature( elem, elem->centroid()));
+      element_hamiltonian->set_temperature(_temp_interface.get_temperature( elem, elem->centroid()));
 
       element_hamiltonian->set_k_vector(k_vector);
 
@@ -1046,11 +1000,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	    We assume that strain and electric potential may be different for different quadrature points
 	    It is done for a sake of a multiscale generalization
 	  */
-	  if (opt.consider_strain)
-	  {
-
-	    strain_crystal_system = strain->get_strain_crystal(elem , q_point[qp]);
-	  }
+	  Tensor2Sym strain_crystal_system(0);
+	  _strain_interface.get_crystal_strain(elem, q_point[qp], strain_crystal_system);
 
 
 	  if (opt.consider_potential)
@@ -1157,17 +1108,13 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	}
 
       }
-
-      if (solver_opt.discretization_method == BIM)
+      else if (solver_opt.discretization_method == BIM)
       {//BIM
 
 	Point center = elem->centroid();
 
-	if (opt.consider_strain)
-	{
-
-	  strain_crystal_system = strain->get_strain_crystal(elem, center);
-	}
+	Tensor2Sym strain_crystal_system(0);
+	_strain_interface.get_crystal_strain(elem, center, strain_crystal_system);
 
 
 	if (opt.consider_potential)
@@ -1611,7 +1558,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     EnvelopFunctionApprox::eigen_propblem_solution temp1;
     temp1.eigen_energy = 0;
     temp1.Fermi_energy = 0;
-    temp1.Temperature = opt.Temperature;
+    temp1.Temperature = SimulationOptions::temperature;
     temp1.eigen_vector.resize(number_of_all_dofs, Complex(0.0, 0.0));
 
     solution.clear();
@@ -1754,7 +1701,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
 
   //Temperature calculation
-  if (temperature_simulation != NULL)
+  if (_temp_interface.has_simulation())
     for (unsigned int i = 0; i < solution_size; i++)
     {
       solution[i].Temperature = calculate_temperature_averaged(i);
@@ -2201,8 +2148,6 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 
 
   double Temperature;
-  vector<double> values;
-  vector<Point> qp(1);
 
   for ( ; el != end_el ; ++el)
     {//el
@@ -2212,11 +2157,7 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 
 
       Point center = elem->centroid();
-      qp[0] = center;
-
-      temperature_simulation->get_solution(elem, qp, temperature_ID, values);
-
-      Temperature = values[0];
+      Temperature = _temp_interface.get_temperature(elem, center);
 
 
 
@@ -2589,11 +2530,7 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
   EFAbulkHamiltonian* element_hamiltonian;
 
   const Elem* elem = *el;
-  const ID subdomain = elem->subdomain_id();
-  const Material* mat = _device->get_material(subdomain);
-
-
-  element_hamiltonian = (  dynamic_cast<EFAbulkModel*> ( mat ->get_model(get_id()) )    ) -> get_Hamiltonian_model() ;
+  element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
 
   std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
 	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
@@ -2606,11 +2543,8 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
   {
     const Elem* elem = *el;
 
-    const ID subdomain = elem->subdomain_id();
-    const Material* mat = _device->get_material(subdomain);
+    element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
 
-
-    element_hamiltonian = ( dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) ) )->get_Hamiltonian_model() ;
 
     const std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
       model_Ham = ( element_hamiltonian->get_Hamiltonian() );
@@ -2657,32 +2591,19 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   EFAbulkHamiltonian* element_hamiltonian;
 
-  const ID subdomain = mat_elem->subdomain_id();
 
-  const Material* mat = _device->get_material(subdomain);
-
-  element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model();
+  element_hamiltonian = get_bulk_model<EFAbulkModel>(mat_elem)->get_Hamiltonian_model();
 
   element_hamiltonian->set_k_vector(k_vector);
 
   element_hamiltonian->calculate_Hamiltonian_k_par();
 
   Tensor2Sym strain_crystal_system(0);
+  _strain_interface.get_crystal_strain(mat_elem, qp, strain_crystal_system);
 
   double electric_potential = 0;
-
-  if (opt.consider_strain)
-  {
-
-    strain_crystal_system = strain->get_strain_crystal(mat_elem , qp);
-  }
-
   if (opt.consider_potential)
-  {
-
-
     electric_potential = get_electric_potential( mat_elem, qp );
-  }
 
 
 
@@ -2744,32 +2665,12 @@ void EnvelopFunctionApprox::solve_bulk(void)
   for (unsigned int i = 0; i < n ; i++)
   {
     solution[i].Fermi_energy = 0;
-    solution[i].Temperature = opt.Temperature;
-
 
     if (poisson_equation != NULL)
     	solution[i].Fermi_energy = get_electro_chem_potential(mat_elem);
 
-
-
-    //Temperature calculation
-
-    if (temperature_simulation != NULL)
-    {
-
-      Point center = mat_elem->centroid();
-
-      vector<double> values;
-      vector<Point> qp(1);
-
-      qp[0] = center;
-
-      temperature_simulation->get_solution(mat_elem, qp, temperature_ID, values);
-
-      solution[i].Temperature = values[0];
-
-    }
-
+    solution[i].Temperature =
+        _temp_interface.get_temperature(mat_elem, mat_elem->centroid());
   }
 
 

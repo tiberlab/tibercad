@@ -159,7 +159,7 @@ class TiberLinearSolver : public TiberModelObject, public LinearSolver<Number>
 
 
     //! Get simulation name
-    const std::string& get_simulation_name(void) const;
+    std::string get_simulation_name(void) const;
 
 
 

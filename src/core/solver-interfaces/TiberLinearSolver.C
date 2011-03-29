@@ -83,7 +83,7 @@ TiberLinearSolver::parse_options(void)
 
 
 
-const std::string&
+std::string
 TiberLinearSolver::get_simulation_name(void) const
 {
   return get_option("simulation", "");

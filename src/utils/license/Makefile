@@ -4,30 +4,30 @@ topdir := ../../..
 
 include $(topdir)/Make.common
 
-CPPFLAGS += -I$(topdir)/contrib/crypto++/build
+CPPFLAGS += -I$(topdir)/contrib/crypto++/$(ARCH)
 
-target := liblicense.a $(topdir)/bin/create_license
+target := .$(ARCH)/liblicense.a $(topdir)/bin/create_license
 
 
 # we take the library of crypto++ and add our stuff...
-liblicense.a: $(topdir)/contrib/crypto++/build/libcryptopp.a $(objects)
+.$(ARCH)/liblicense.a: $(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a $(objects)
 	@echo "Creating $@ ..."
-	@cp $(topdir)/contrib/crypto++/build/libcryptopp.a $@
+	@cp $(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a $@
 	@ar ru $@ $(objects)
 	@ranlib $@
 
 
-$(topdir)/bin/create_license: create_license$(obj-suffix) liblicense.a
-	@$(CXX) -o $@ $< liblicense.a -lpthread
+$(topdir)/bin/create_license: .$(ARCH)/create_license$(obj-suffix) .$(ARCH)/liblicense.a
+	@$(CXX) -o $@ $< .$(ARCH)/liblicense.a -lpthread
 
 
-$(topdir)/contrib/crypto++/build/libcryptopp.a:
+$(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a:
 	@$(MAKE) -C $(topdir)/contrib/crypto++
 
 
 
 distclean:
-	@rm -f liblicense.a $(topdir)/bin/create_license
+	@rm -f .$(ARCH)/liblicense.a $(topdir)/bin/create_license
 	@$(MAKE) -C $(topdir)/contrib/crypto++ clean
 
 

@@ -6,6 +6,8 @@
 
 #include "EnvelopFunctionApprox.h"
 class  KPbulkHamiltonian;
+class  Device;
+class  Tensor1;
 
 
 
@@ -110,10 +112,6 @@ class OpticsKP: public Optics
   //!equation systems object
   EquationSystems* es ;
   
-
-  //!pointer to the device object
-  static  Device* _device;
-
 
   //!numbers of eigensates that are considered as intial states for optical transition
   std::vector<unsigned int> _initial_eigen_state_numbers;

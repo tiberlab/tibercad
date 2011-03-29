@@ -25,13 +25,15 @@ distclean-recursive: $(subdirs)
 src-clean:
 	@echo -n "Cleaning up ."
 	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
-	-@rm -f *.o *~ .*.d* *~
+	-@rm -f *.o *~ *.d* *~
+	-@rm -rf .$(ARCH)
 
 .PHONY: src-distclean
 src-distclean:
 	@echo -n "Cleaning up ."
 	@echo `expr "$$PWD" : "$(topdir)\(.*\)"`
-	-@rm -f *.so *.dll *.a *.o .*.d* *~
+	-@rm -f *.so *.dll *.a *.o *.d* *~
+	-@rm -rf .$(ARCH)
 
 
 .PHONY: $(subdirs)
@@ -40,31 +42,33 @@ $(subdirs):
 
 
 
-%$(obj-suffix) : %.C
+.$(ARCH)/%$(obj-suffix) : %.C $(filter-out $(wildcard .$(ARCH)), .$(ARCH))
 	@echo "Compiling C++ (in "$(mode)" mode) "$<" ..."
 	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 
 
-%$(obj-suffix) : %.cpp
+.$(ARCH)/%$(obj-suffix) : %.cpp $(filter-out $(wildcard .$(ARCH)), .$(ARCH))
 	@echo "Compiling C++ (in "$(mode)" mode) "$<" ..."
 	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 
 
-%$(obj-suffix): %.c
+.$(ARCH)/%$(obj-suffix): %.c $(filter-out $(wildcard .$(ARCH)), .$(ARCH))
 	@echo "Compiling C (in "$(mode)" mode) "$<" ..."
 	@$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 	
 
-%$(obj-suffix): %.f
+.$(ARCH)/%$(obj-suffix): %.f $(filter-out $(wildcard .$(ARCH)), .$(ARCH))
 	@echo "Compiling F77 (in "$(mode)" mode) "$<" ..."
 	@$(FC) $(FCFLAGS) $(CPPFLAGS) -c $< -o $@
 	
+.$(ARCH):
+	@mkdir -p .$(ARCH)
+	
 
-
-.%.d: %.C
-	@$(CC) -MG -MT $(basename $<)$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$ ; \
+.$(ARCH)/%.d: %.C $(wildcard .$(ARCH)), .$(ARCH))
+	@$(CC) -MG -MT .$(ARCH)/$(basename $<)$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$ ; \
 	 sed -e 's,\($*\)\$(obj-suffix)[ :]*,\1.\*\.o : $@ ,g' < $@.$$$$ > $@ ; \
 	 sed -e 's/.*://' -e 's/\\$$//' < $@.$$$$ | fmt -1 \
 	 | sed -e 's/^ *//' -e 's/$$/:/' >> $@ ; \
@@ -76,13 +80,13 @@ $(subdirs):
 
 
 
-%.s: %.C .%.d
+%.s: %.C %.d
 	@$(CXX) $(CPPFLAGS) -S $<
 
 
 ifeq (,$(findstring clean,$(MAKECMDGOALS)))
 ifneq (x$(srcfiles),x)
--include $(patsubst %,.%,$(srcfiles:.C=.d))
+-include $(addprefix .$(ARCH)/,$(srcfiles:.C=.d))
 endif
 endif
 

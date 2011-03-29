@@ -6,17 +6,17 @@ include $(topdir)/Make.common
 #package := cryptopp552.zip
 package := cryptopp560.zip
 
-all: build/libcryptopp.a
+all: $(ARCH)/libcryptopp.a
 
-build/libcryptopp.a: stamp-h
-	@$(MAKE) CC=$(CC) CXX=$(CXX) -C build
+$(ARCH)/libcryptopp.a: stamp-h
+	@$(MAKE) CC=$(CC) CXX=$(CXX) -C $(ARCH)
 
 
 stamp-h: $(package)
-	@rm -rf build ; mkdir build && unzip $(package) -d build/ && touch stamp-h
+	@rm -rf $(ARCH) ; mkdir $(ARCH) && unzip $(package) -d $(ARCH)/ && touch stamp-h
 
 clean:
-	@rm -rf build
+	@rm -rf $(ARCH)
 	@-rm stamp-h
 
 distclean: clean

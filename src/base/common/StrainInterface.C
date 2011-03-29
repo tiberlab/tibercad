@@ -122,7 +122,7 @@ StrainInterface::get_crystal_stress(const Elem* elem, const Point& point, Tensor
 }
 
 
-
+inline
 void
 StrainInterface::_get_data(const Elem* elem, const Point& point,
     Tensor2Sym& data, ID id)

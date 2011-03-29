@@ -114,7 +114,7 @@ srcfiles := $(wildcard *.C)
 
 #
 # object files
-objects	:= $(patsubst %.C, %$(obj-suffix), $(srcfiles))
+objects	:= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(srcfiles))
 target := $(objects)
 
 

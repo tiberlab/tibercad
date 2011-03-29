@@ -108,7 +108,7 @@ wininstaller linuxinstaller deb tgz tbz: manual
 
 
 clean-dep:
-	@find . -name ".*.d*" -exec rm -f {} \;
+	@find . -name "*.d" -exec rm -f {} \;
 
 
 tags:

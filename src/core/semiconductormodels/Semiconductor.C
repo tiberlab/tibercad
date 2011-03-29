@@ -18,6 +18,7 @@ Semiconductor::Semiconductor(const ModelOptions& options)
 
   get_options().get_option("kp_model","");
   get_options().get_option("model","");
+  get_options().get_option("particle","");
 }
 
 //--------------------------------------------------------------------------------------------//

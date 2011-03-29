@@ -11,7 +11,7 @@ srcfiles 	:= $(wildcard *.cpp)
 
 #
 # object files
-objects		:= $(patsubst %.cpp, %$(obj-suffix), $(srcfiles))
+objects		:= $(patsubst %.cpp, .$(ARCH)/%$(obj-suffix), $(srcfiles))
 
 
 target := $(libdir)/libnewmat.a

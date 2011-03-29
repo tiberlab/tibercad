@@ -26,7 +26,7 @@ endif
 target := $(libdir)/libeigen_solver$(shared_libext)
 
 
-$(libdir)/libeigen_solver$(shared_libext):  EigenSolver$(obj-suffix)
+$(libdir)/libeigen_solver$(shared_libext):  .$(ARCH)/EigenSolver$(obj-suffix)
 	@echo "Linking libeigen_solver$(shared_libext) ..."
 	@mkdir -p $(libdir)
 	@$(CXX) -shared -o $@ $<  \

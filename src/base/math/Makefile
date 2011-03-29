@@ -12,8 +12,8 @@ csrcfiles := $(wildcard *.C)
 
 #
 # object files
-target	:= $(patsubst %.f, %$(obj-suffix), $(fsrcfiles))
-target	+= $(patsubst %.C, %$(obj-suffix), $(csrcfiles))
+target	:= $(patsubst %.f, .$(ARCH)/%$(obj-suffix), $(fsrcfiles))
+target	+= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(csrcfiles))
 
 
 

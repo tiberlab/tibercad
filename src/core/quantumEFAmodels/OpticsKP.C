@@ -10,12 +10,15 @@
 #include "DataOutput.h"
 #include "SimulationOptions.h"
 
+#include <equation_systems.h>
+#include <dense_submatrix.h>
+#include <mesh_generation.h>
+
 #include <stdlib.h>
 
 using namespace std;
 using namespace Constants;
 
-Device*   OpticsKP:: _device;
 
 OpticsKP::~OpticsKP()
 {
@@ -157,10 +160,6 @@ void OpticsKP::do_init()
 {
 
   SimulationEnvironment& si = get_environment();
-
-  _device = &( si.get_device() );
-
-
 
   //initial state----------------
   const ModelOptions& mod_opt = get_options();
@@ -499,13 +498,7 @@ void OpticsKP::calculate_matrix_bulk(void)
 
 
   EFAbulkHamiltonian* element_hamiltonian;
-
-  const ID subdomain = mat_elem->subdomain_id();
-
-  const Material* mat = _device->get_material(subdomain);
-
-  element_hamiltonian =
-    (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) ))->get_Hamiltonian_model();
+  element_hamiltonian = get_bulk_model<EFAbulkModel>(mat_elem)->get_Hamiltonian_model();
 
   element_hamiltonian->set_k_vector(k_vector);
 
@@ -718,10 +711,7 @@ void OpticsKP::calculate_matrix(void)
     // working on.  This allows for nicer syntax later.
     const Elem* elem = *el;
 
-    const ID subdomain = elem->subdomain_id();
-    const Material* mat = _device->get_material(subdomain);
-
-    element_hamiltonian = (  dynamic_cast<EFAbulkModel*> (  mat ->get_model(get_id()) )  )->get_Hamiltonian_model();
+    element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
 
     element_kp_hamiltonian = dynamic_cast<KPbulkHamiltonian*>  (element_hamiltonian);
 

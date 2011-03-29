@@ -4,10 +4,9 @@
 #define _ENVELOPFUNCTIONAPPROX_H_
 
 
-#include "Macrostrain.h"
-#include "SimulationInterface.h"
 #include "FEMEigenvalueProblem.h"
 #include "TemperatureInterface.h"
+#include "StrainInterface.h"
 
 
 //! A class that constructs EFA Hamiltonian and S-matrix 
@@ -49,7 +48,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
     double spectrum_shift;    //!< shift of spectrum ised in matrix assembly[eV]
 
-    bool  consider_strain;    //!< apply strain effect to the EFA Hamiltonian;
 
     bool  consider_potential; //!< apply strain effect to the EFA Hamiltonian;
 
@@ -69,9 +67,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
     JobKind job; //!< a job to do
-
-
-    double Temperature;//!<Temperature for density calculation
 
 
     bool local_occupation; //!<If a local occupation is considered 
@@ -205,12 +200,11 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     QuantumDensity
   };
 
-  //!pointer to the device object
-  static  Device* _device;
-
   //! interface for temperature acquisition
-  TemperatureInterface temp_interface;
+  TemperatureInterface _temp_interface;
  
+  //! Interface to strain simulation
+  StrainInterface _strain_interface;
 
   options opt;
 
@@ -225,13 +219,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   SimulationInterface* poisson_equation;
 
 
-  //!pointer to a temperature simulation object that is used to get temperature data
-  SimulationInterface* temperature_simulation;
-
-  //! ID of temperature in heat equation
-  ID temperature_ID;
-
-
   //! ID of electric potential in poisson_equation
   ID potential_ID;
 
@@ -240,9 +227,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   //! band edge ID in poisson_equation
   ID band_edge_ID;
-
-  //!pointer to the macrostrain object that is used to get strain data 
-  Macrostrain* strain;
 
   
   //! If \c true we have to calculate the density

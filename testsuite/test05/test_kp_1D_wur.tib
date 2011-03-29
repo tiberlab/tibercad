@@ -65,6 +65,33 @@ Device
 
 }
 
+Module elasticity
+{
+ plot = (Strain,Stress,Displacement)
+ #do_deformation = true
+ #shape_iterations = 1
+
+ Physics
+ {
+   body_force lattice_mismatch
+   {
+    reference_material = AlGaN
+    x = 0.3
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+    x-growth-direction = (0,0,0,1)
+   }
+ }
+
+ Contact substrate
+ { 
+   type = clamp
+   regions = 1
+ }
+
+}
+
+
 Module macrostrain
 {
 
@@ -114,7 +141,7 @@ Module  driftdiffusion
   Physics
   {
 
-    strain_simulation = str
+    strain_simulation = elasticity # str
 
     particle_density
     { 
@@ -156,7 +183,7 @@ Module efaschroedinger
 
   particle = el
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = elasticity
   convergent_density = true
 
   log_output = true
@@ -187,7 +214,7 @@ Module efaschroedinger
   name = quantum_hl
   particle = hl
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = elasticity
   convergent_density = true
 
   plot = (EigenFunctions, EigenEnergy, EnergyLevels)
@@ -255,7 +282,7 @@ Simulation
 {  
   temperature = 300
   verbose = 1
-  solve = (str, dd, quantum_el, quantum_hl, dispersion_el, dispersion_hl)  
+  solve = (elasticity, dd, quantum_el, quantum_hl, dispersion_el, dispersion_hl)  
 
   resultpath = output
   output_format = grace
