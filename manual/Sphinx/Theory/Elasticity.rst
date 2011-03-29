@@ -89,7 +89,7 @@ For the wurtzite structure we have C11, C12, C13 and C44.
     \right)
     \end{equation}
 
-An isotropic stiffness can be included with the keyword **Stiffness isotropic** . 
+An isotropic stiffness can be included with the keyword ``Stiffness isotropic`` . 
 In this case, the only independent parameters are the Young modulus 
 (Youngin GPa) and the Poisson's ratio (Poisson). 
 
@@ -111,7 +111,7 @@ In this case, the only independent parameters are the Young modulus
     \right)
     \end{equation}
 
-While the anisotropic model is included by default, the isotropic one must be explicitly
+While the anisotropic model is included by default, the ``isotropic`` one must be explicitly
 indicated
 
 Example::
@@ -125,7 +125,7 @@ Example::
 Boundary conditions:
 
 Surfaces forces :math:`f^0` are applied by imposing :math:`\sigma_{ij} n_{j} = f_i^0` along the surface with normal n. 
-This boundary condition can be used with the keyword **surface_force** . The force can be specified in GPa with force. 
+This boundary condition can be used with the keyword ``surface_force`` . The force can be specified in GPa with force. 
 An example is shown below ::
 
   Contact base
@@ -134,7 +134,7 @@ An example is shown below ::
      force = (0,0,0.5) 
     }
 
-On the other hand, one may want to fix some surface of the device. The keyword **clamp** freezes all nodes of a given surface. 
+On the other hand, one may want to fix some surface of the device. The keyword ``clamp`` freezes all nodes of a given surface. 
 
 Example::
 
@@ -145,7 +145,7 @@ Example::
 
 Body forces
 
-A constant value body force can be included by means of the keyword **Bodyforceconstant** .
+A constant value body force can be included by means of the keyword ``Bodyforceconstant`` .
 
 Example::
 
@@ -191,7 +191,7 @@ In presence of an electric field there might develop an additional stress source
     \sigma_{il}^{SC}=-e_{ijk}E_k
     \]
 
-The converse piezoelectric effect can be included with the keyword **BodyForce_piezo** and an electrostatic simulation must be indicated. 
+The converse piezoelectric effect can be included with the keyword ``BodyForce_piezo`` and an electrostatic simulation must be indicated. 
 
 The effective body force reads as :
 

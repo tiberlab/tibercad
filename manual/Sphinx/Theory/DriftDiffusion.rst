@@ -9,8 +9,8 @@ Theory
 ----------------
 
 
-The semi-classical transport simulation of electrons and holes is based on the drift-
-diffusion approximation (see [Selberherr]_ ).
+The semi-classical transport simulation of electrons and holes is based on the drift-diffusion
+ approximation (see [Selberherr]_ ).
 
 Beside the electric potential the electro-chemical potentials are used as variables such
 that the system of PDEs to be solved reads as follows
