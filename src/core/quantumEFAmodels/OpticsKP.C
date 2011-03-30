@@ -264,6 +264,12 @@ void OpticsKP::do_init()
 
   system->init();
 
+  mod_opt.get_option("initial_eigenstates", "");
+  mod_opt.get_option("final_eigenstates", "");
+  mod_opt.get_option("Emin", "");
+  mod_opt.get_option("Emax", "");
+  mod_opt.get_option("dE", "");
+  mod_opt.get_option("broadening", "");
 }
 
 
