@@ -99,9 +99,9 @@ Performs a linear sweep for a given variable.
 
 Options:
 
-  ``solve`` =  a list of simulations to be solved, eg. (strain, dd)
+  ``solve`` =  a list of simulations to be solved, eg. ``(strain, dd)``
 
-  ``variable`` =  the sweep variable, eg. $Vd
+  ``variable`` =  the sweep variable, eg. ``$Vd``
 
   ``start`` =  the first value of the sweep
 
@@ -133,13 +133,13 @@ As for any module, a name can be given to a sweep block. This is important when 
 Example::
 
   Module sweep
-    {
-     solve = (dd, thermal)
-     start = 0
-     stop = 1
-     steps = 10
-     plot_data = true
-    }
+  {
+   solve = (dd, thermal)
+   start = 0
+   stop = 1
+   steps = 10
+   plot_data = true
+  }
 
 .. index:: double:Solvers;selfconsistent
 	

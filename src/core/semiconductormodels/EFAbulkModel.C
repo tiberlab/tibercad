@@ -31,6 +31,8 @@ void EFAbulkModel::do_init()
     _bulkHamiltonian->init();
   }
 
+  get_option("kp_model","");
+  get_option("model","");
 
 }
 

@@ -764,11 +764,14 @@ void EnvelopFunctionApprox::do_solve()
      calculate_density_analytic();
    else
    {
-     ostringstream os;
-     os << "Solving for k = ( ";
-     k_vec.write_unformatted(os, false);
-     os << ")";
-     if (verbose() > 0) Messages::info(os.str());
+     if (get_mesh().mesh_dimension() < 3)
+     {
+       ostringstream os;
+       os << "Solving for k = ( ";
+       k_vec.write_unformatted(os, false);
+       os << ")";
+       if (verbose() > 0) Messages::info(os.str());
+     }
      solve_eigen_value_problem(solver_opt.number_of_eigenstates);
    }
 
@@ -2352,11 +2355,14 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     }
   }
 
-  ostringstream os;
-  os << "Solving for k0 = ( ";
-  kvector_0.write_unformatted(os, false);
-  os << ")";
-  if (verbose() > 0) m.info(os.str());
+  if (dim < 3)
+  {
+    ostringstream os;
+    os << "Solving for k0 = ( ";
+    kvector_0.write_unformatted(os, false);
+    os << ")";
+    if (verbose() > 0) m.info(os.str());
+  }
 
   set_k_vector(kvector_0);
   solve_eigen_value_problem(num_states + 1, spectrum_shift);

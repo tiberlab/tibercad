@@ -104,7 +104,7 @@ Module driftdiffusion
 
     recombination srh {}
 
-  
+ k_max = 1e-3 
     particle_density
     { 
       particle = electron
@@ -185,7 +185,6 @@ Module efaschroedinger
 
   Physics
   {
-    particle = el
     model = conduction_band    
   }
 
@@ -208,7 +207,6 @@ Module efaschroedinger
   
   Physics
   {
-    particle = hl
     model = kp   #  k.p  for  valence  band
     kp_model = 6x6
   }

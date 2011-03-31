@@ -88,6 +88,8 @@ void KPbulkHamiltonian::do_init()
   const ModelOptions& opt =  get_options ();
 
 
+  // dummy
+  get_option("model","");
 
   model_name = opt.get_option("kp_model","6x6");
 

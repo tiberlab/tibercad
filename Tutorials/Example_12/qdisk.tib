@@ -91,6 +91,7 @@ Module driftdiffusion
           ContactCurrent)
       
   save_state = true
+  #load_state = reference/dd_bias_3.8.tsv
 
   Physics
   {
@@ -103,9 +104,6 @@ Module driftdiffusion
       particle = electron
       # this is the default:
       # statistics = fermidirac
-
-      # where to get the quantum density from
-      quantum_density = quantum_el
     }
 
     particle_density
@@ -113,9 +111,6 @@ Module driftdiffusion
       particle = hole
       # this is the default:
       # statistics = fermidirac
-
-      # where to get the quantum density from
-      quantum_density = quantum_hl  
     }
 
     recombination (srh, direct) {}
@@ -157,7 +152,6 @@ Module efaschroedinger
   regions = quantum 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
-  Dirichlet_bc_everywhere = true
   particle = el
   number_of_eigenstates = 20
   poisson_simulation = dd
@@ -181,12 +175,10 @@ Module efaschroedinger
   poisson_simulation = dd
   strain_simulation = macrostrain
     
-  solver = arnoldi
-  log_output = true
+  solver = lanczos
   
   Physics
   {
-    particle = hl
     model = kp
     kp_model = 6x6
   }
@@ -197,6 +189,7 @@ Module opticskp
 {
   name = optics
   regions =  quantum
+
   plot = (optical_spectrum_k_0)
   output_format = grace
 
@@ -206,7 +199,7 @@ Module opticskp
   initial_eigenstates = (0, 19)
   final_eigenstates   = (0, 79)
 
-  polarization =  (0, 0, 1)
+  broadening = 0.02
 
   Emin = 3.0
   Emax  = 5.0
@@ -227,20 +220,15 @@ Module sweep
   plot_data = true
 }
 
-
-Module selfconsistent
-{
-  solve = (quantum_el, quantum_hl, dd)
-  absolute_tolerance = 1e-2
-}
-
   
 # Definition of model-independent parameters of the Simulation
 Simulation
 {
   temperature = 300
 
-  solve = (strain, sweep, selfconsistent, optics)
+  solve = (strain, sweep, quantum_el, quantum_hl, optics)
+  # we load saved solution
+  #solve = (strain, dd, quantum_el, quantum_hl, optics)
 
   resultpath = output 
 

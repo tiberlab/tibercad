@@ -34,6 +34,8 @@ SBCondBandBulkHamiltonian::do_init(void)
   kp_bands_map.insert(std::make_pair(0,0));
 
   calculate_for_init();
+
+  get_option("model", "");
 }
 
 

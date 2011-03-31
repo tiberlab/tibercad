@@ -55,24 +55,6 @@ SelfconsistentSolver::do_init(void)
 void
 SelfconsistentSolver::do_print_info(void)
 {
-  // this is a dirty trick to not have the variables in the command
-  // line output
-
-  for (int i = 0; i < _simulations.size(); i++)
-  {
-    // inherit the solution IDs
-    const IDSet& plotvars = _simulations[i]->get_plotvariable_ids();
-    for (IDSet::iterator it(plotvars.begin()); it != plotvars.end(); ++it)
-    {
-      ID id = *it;
-      const SolutionDescriptor& descr = _simulations[i]->get_solution_descriptor(id);
-
-      // adjust ID
-      id = TB_MAX_SIM * id + _simulations[i]->get_id();
-      declare_solution_ext(descr.name(), id, descr.type(), descr.location(),
-          descr.units(), descr.n_components());
-    }
-  }
 }
 
 
@@ -141,7 +123,24 @@ SelfconsistentSolver::solve_simulations(void)
 {
   int num_sim = _simulations.size();
   for (int i = 0; i < num_sim; i++)
+  {
     _simulations[i]->solve();
+
+    // inherit the solution IDs
+    // we do this here because the number of components may depend on the
+    // solutions
+    const IDSet& plotvars = _simulations[i]->get_plotvariable_ids();
+    for (IDSet::iterator it(plotvars.begin()); it != plotvars.end(); ++it)
+    {
+      ID id = *it;
+      const SolutionDescriptor& descr = _simulations[i]->get_solution_descriptor(id);
+
+      // adjust ID
+      id = TB_MAX_SIM * id + _simulations[i]->get_id();
+      declare_solution_ext(descr.name(), id, descr.type(), descr.location(),
+          descr.units(), descr.n_components());
+    }
+  }
 }
 
 

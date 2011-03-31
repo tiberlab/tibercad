@@ -78,6 +78,8 @@ SemiconductorModel::do_init(void)
   _recompute_band_parameters = get_option("recompute_band_parameters",
       _recompute_band_parameters);
 
+  // dummy read
+  get_option("k_max", "");
 }
 
 
