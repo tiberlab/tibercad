@@ -109,9 +109,11 @@ Options:
 
   ``steps`` =  the number of steps the interval (start, stop) gets subdivided in
 
-  ``values`` =  instead of start, stop and steps, provide the sweep values explicitly
+  ``values`` =  instead of ``start``, ``stop`` and ``steps``, provide the sweep values explicitly
 
   ``plot_data`` =  set to true if you want to plot after each step the simulation results (default is false)
+
+  ``file_mode`` = controls the behaviour for writing the data file containing global data. Can be one of ``append``, ``overwrite`` (default) or ``no-overwrite``
 
   ``min_step`` =  the minimum absolute step size
 

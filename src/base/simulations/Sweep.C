@@ -113,16 +113,17 @@ Sweep::parse_options(void)
   ModelOptions& opts = get_options();
 
   // dummy reads
-  opts.get_option("min_step", "");
-  opts.get_option("min_relative_step", "");
-  opts.get_option("max_step", "");
-  opts.get_option("max_relative_step", "");
-  opts.get_option("initial_step", "");
-  opts.get_option("initial_relative_step", "");
+  get_option("min_step", "");
+  get_option("min_relative_step", "");
+  get_option("max_step", "");
+  get_option("max_relative_step", "");
+  get_option("initial_step", "");
+  get_option("initial_relative_step", "");
+  get_option("file_mode", "");
 
-  double start = opts.get_option("start", 0.0);
-  double stop = opts.get_option("stop", 0.0);
-  unsigned int steps = opts.get_option("steps", 1);
+  double start = get_option("start", 0.0);
+  double stop = get_option("stop", 0.0);
+  unsigned int steps = get_option("steps", 1);
   steps = (steps < 1) ? 1 : steps;
 
   double step = (stop - start) / steps;
@@ -139,7 +140,7 @@ Sweep::parse_options(void)
     _values[i] = start + i * step;
 
   // we can also specify a vector with the values
-  opts.get_option("values", _values);
+  get_option("values", _values);
 
 
   // check if our variable exists
@@ -152,7 +153,8 @@ Sweep::parse_options(void)
 
 
   // whether to plot data or not
-  _plot_data = opts.get_option("plot_data", _plot_data);
+  _plot_data = get_option("plot_data", _plot_data);
+
 }
 
 
@@ -223,6 +225,9 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
 
   if (data.size() > 0)
   {
+
+    bool print_header = false;
+
     if (plotfile == NULL)
     {
       //
@@ -235,14 +240,46 @@ Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
       string plotfilename(outdir + "/" + get_name() + "_" +
           simulation.get_name() + _suffix + ".dat");
 
-      plotfile = new ofstream(plotfilename.c_str(), ios_base::trunc);
-      ofstream& file = *plotfile;
 
+      string mode = get_option("file_mode", "overwrite");
 
-      if (!file.good())
+      if (mode == "append")
+      {
+        plotfile = new ofstream(plotfilename.c_str(), ios_base::app);
+      }
+      else
+      {
+        print_header = true;
+
+        ifstream inp;
+        if (mode == "no-overwrite")
+        {
+          int ctr = 1;
+          inp.open(plotfilename.c_str(), ios::in);
+          while (inp.is_open())
+          {
+            inp.close();
+            ostringstream os;
+            os << ctr;
+            plotfilename = outdir + "/" + get_name() + "_" +
+                simulation.get_name() + _suffix + "_" + os.str() + ".dat";
+            inp.open(plotfilename.c_str(), ios::in);
+            ctr++;
+          }
+        }
+
+        if ((mode == "overwrite") || (!inp.is_open()))
+          plotfile = new ofstream(plotfilename.c_str(), ios_base::trunc);
+      }
+
+      if (!plotfile->good())
         throw SolveFailedException("Sweep: Could not open plotfile " +
             plotfilename);
+    }
 
+    if (print_header)
+    {
+      ofstream& file = *plotfile;
 
       //
       // print some header
