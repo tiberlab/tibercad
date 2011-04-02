@@ -151,7 +151,13 @@ void
 EnvelopFunctionApprox::do_setup_solution_variables(void)
 {
   // declare solution variables
-  declare_solution(ProbabilityDensity, NTUPLE, NODES, "");
+  unsigned int dim = get_mesh().mesh_dimension();
+  string units("1/cm");
+  if (dim == 2)
+    units = "1/cm^2";
+  else if (dim == 3)
+    units = "1/cm^3";
+  declare_solution(ProbabilityDensity, NTUPLE, NODES, units);
   add_alias("EigenFunctions", ProbabilityDensity);
   declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV");
   declare_solution(Occupation, NTUPLE, GLOBAL, "");
@@ -162,7 +168,7 @@ EnvelopFunctionApprox::do_setup_solution_variables(void)
 
   if (plot_solution("QuantumDensity") || get_options().has_submodel("QuantumDensity"))
     _calculate_density = true;
-  if (_calculate_density) declare_solution(QuantumDensity, REAL, NODES, "");
+  if (_calculate_density) declare_solution(QuantumDensity, REAL, NODES, "1/cm^3");
 }
 
 
@@ -201,6 +207,13 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
 
   if (values.count(ProbabilityDensity))
   {
+    unsigned int dim = get_mesh().mesh_dimension();
+    double scale = Constants::bohr_radius * 100;
+   if (dim > 1)
+     scale *= Constants::bohr_radius * 100;
+   if (dim > 2)
+     scale *= Constants::bohr_radius * 100;
+
     FEType fe_type = system->variable_type(0);
     AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
@@ -239,7 +252,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
           double tmp = abs(value);
 
           // the number of components should be set already to the right number
-          values[ProbabilityDensity][num_states * n + sn] += tmp * tmp;
+          values[ProbabilityDensity][num_states * n + sn] += tmp * tmp / scale;
         }
       }
     }
@@ -779,7 +792,13 @@ void EnvelopFunctionApprox::do_solve()
    // we have to redeclare the solution variables to adjust the number
    // of eigenstates
    const unsigned int num_states = solution.size();
-   declare_solution(ProbabilityDensity, NTUPLE, NODES, "", num_states);
+   unsigned int dim = get_mesh().mesh_dimension();
+   string units("1/cm");
+   if (dim == 2)
+     units = "1/cm^2";
+   else if (dim == 3)
+     units = "1/cm^3";
+   declare_solution(ProbabilityDensity, NTUPLE, NODES, units, num_states);
    declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
    declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
    declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
@@ -1849,6 +1868,7 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
   // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  //AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type)  );
   AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   QGauss qrule (dim, SECOND);

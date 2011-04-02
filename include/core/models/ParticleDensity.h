@@ -34,6 +34,8 @@ class Elem;
  * The function \f$f\f$ can be the exponential or the Fermi function of order
  * 1/2, according to carrier statistics.
  *
+ * The length units are cm.
+ *
  */
 class ParticleDensity : public PhysicalModelInterface
 {

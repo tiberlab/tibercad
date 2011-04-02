@@ -136,7 +136,7 @@ The available output variables, to be specified in the plot option, are the foll
 
 | ``EigenEnergy`` Eigen energy in eV
 
-| ``EigenFunctions`` :math:`|\psi({\bf r})|^2` function of the eigenstate
+| ``ProbabilityDensity`` :math:`|\psi({\bf r})|^2` function of the eigenstate
 
 Occupation probability to find the state occupied. It is calculated assuming Fermi
 distribution and mean electrochemical potential and temperature:
@@ -146,13 +146,13 @@ distribution and mean electrochemical potential and temperature:
     :label:
 
 
-    \begin{equation}
-    \bar \mu = \langle \psi|\mu({\bf r})|\psi \rangle \\
-    \bar T = \langle \psi|T({\bf r})|\psi \rangle 
-    \end{equation}
+    \begin{align}
+    \bar \mu &= \langle \psi|\mu({\bf r})|\psi \rangle \\
+    \bar T &= \langle \psi|T({\bf r})|\psi \rangle 
+    \end{align}
 
 
-| ``EnergyLevels`` graphical output used for showing the energy level over the band diagram.
+If ``ProbabilityDensity`` is specified as plot variable, then ``EigenEnergy`` will plot the levels of the states as constant values on the simulation mesh in addition ti the textual file listing all energies.
 
 
 
@@ -223,11 +223,11 @@ calculated  as follows:
     :label:
 
 
-    \begin{equation}
-    \rho_{1D}({\bf r}) = g\frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln \left(1 + 
+    \begin{align}
+    \rho_{1D}({\bf r}) &= g\frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln \left(1 + 
     \exp \left( \pm \frac{\mu - E}{kT} \right) \right) \\      
-    \rho_{2D}({\bf r}) = g|\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  F_{-1/2}\left( \pm \frac{\mu - E}{kT}         \right),       
-    \end{equation}
+    \rho_{2D}({\bf r}) &= g|\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  F_{-1/2}\left( \pm \frac{\mu - E}{kT}         \right),       
+    \end{align}
 
 
 where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; m is the averaged mass (the mass

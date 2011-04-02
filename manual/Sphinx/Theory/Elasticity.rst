@@ -91,7 +91,7 @@ For the wurtzite structure we have C11, C12, C13 and C44.
 
 An isotropic stiffness can be included with the keyword ``Stiffness isotropic`` . 
 In this case, the only independent parameters are the Young modulus 
-(Youngin GPa) and the Poisson's ratio (Poisson). 
+(Young in GPa) and the Poisson's ratio (Poisson). 
 
 ..  math::
     :nowrap:

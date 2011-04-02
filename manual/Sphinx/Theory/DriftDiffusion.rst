@@ -339,8 +339,8 @@ specified with a common keyword in arrays, e.g.
     \hline
      & \texttt{electrons holes }  \\
     \hline
-     &  &  &  &  \\
-    \texttt{mu_max} & (1400.0 , 250.0)  \\
+     &  \\
+    \texttt{mu\_max} & (1400.0 , 250.0)  \\
     \texttt{exponent } & (1.0    , 2.1)  \\
     \hline
     \end{tabular}
@@ -363,7 +363,7 @@ only on temperature by means of the following formula:
     \end{equation}
 
 In the material data file :math:`\mu_0` and :math:`\gamma`  
-have to be specified with the keywords mu_max and exponent. 
+have to be specified with the keywords ``mu_max`` and ``exponent``. 
 :math:`\mu_0` can be overridden from the ``physical_model`` section using the keyword
 mu or from the Region sections using the keywords ``mu_e`` and ``mu_h`` .
 

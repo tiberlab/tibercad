@@ -767,12 +767,12 @@ for each step of the sweep.
 
 The voltage and current found for each contact is displayed:
 
-  ``Sweep value Vb = 0.05``
+  ``Sweep value Vb = 0.05
 
 <<-------------------------------------------------------------------
 
-  ``DriftDiffusion (name: driftdiffusion)
-  .....
+  DriftDiffusion (name: driftdiffusion)
+  
   iterations: 5, residual = 1.17131e-10
 
   +---------------+-----------------+-----------------+
@@ -781,9 +781,9 @@ The voltage and current found for each contact is displayed:
   | cathode       | 0               | 6.31825e-05     |
   +---------------+-----------------+-----------------+
   | anode         | 0.05            | -6.3187e-05     |
-  +---------------+-----------------+-----------------+
+  +---------------+-----------------+-----------------+``
 
-The simulation ends correctly (hopefully...) with the Sweep value Vb = 1.2.
+The simulation ends correctly with the Sweep value Vb = 1.2.
 
  
 ..  index:: double:Si-Pn Diode;output
@@ -799,11 +799,8 @@ in  ``output_format`` and **plot** .
     :align: center
     :scale: 50%
 
-Thus, in ``driftdiffusion_materials.dat`` we have the information about 
-the material regions of the device (not very interesting in 1D, but useful in 2 and 3D).
-
-In ``driftdiffusion_nodal_Vb_0.000.dat`` and all the other files for each bias step, 
-we have the output for the nodal quantities which have been calculated, e.g. conduction and valence bands, (quasi)fermi levels, electron and hole density and mobility.
+In ``driftdiffusion_Vb_0_msh.dat`` and the other files for each bias step, 
+we have the output for the quantities which have been calculated, e.g. conduction and valence band edges, electrochemical potentials, electron and hole densities and so on.
 
 Here is, for example, the band profile obtained at the last step of calculation, 
 for V = 1.2V.
@@ -812,18 +809,13 @@ for V = 1.2V.
     :align: center
     :scale: 50%
 
-The IV characteristic of the diode is contained in the file ``sweep_driftdiffusion_Vb.dat`` , 
+The IV characteristic of the diode is contained in the file ``sweep_driftdiffusion.dat`` , 
 where the currents at both the contacts are reported.
 
 ..  figure:: ../data/IV_1D_fig.png
     :align: center
     :scale: 50%
 
-In the file ``driftdiffusion_elemental_Vb_0.200.dat`` etc., you can find the elemental 
-quantities which have been calculated, in this case the electron, hole and 
-total current density (Jn_x, Jp_x , J_x).
-
- 
 
 
 |  Attachment	        Size
@@ -846,7 +838,7 @@ This is the summary of the Sections of this Tutorial :
 *  :ref:`tut4step5` 
 *  :ref:`tut4step6` 
 
-In this tutorial we will show an example of **2D** simulation 
+In this tutorial we will show an example of a 2D simulation 
 of a **Si n-MOSFET** device.
 
 We will calculate :
