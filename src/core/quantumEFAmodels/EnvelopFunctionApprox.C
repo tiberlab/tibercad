@@ -414,7 +414,7 @@ void EnvelopFunctionApprox::parse_options()
 
   //-------------------------------------------------------------------------------------------//
   //strain model
-  std::string strain_model_name = mod_opt.get_option("strain_model_name","no_strain");
+  std::string strain_model_name = mod_opt.get_option("strain_model_name","");
   strain_model_name = mod_opt.get_option("strain_simulation", strain_model_name);
   _strain_interface.set_simulation(strain_model_name);
 
@@ -422,9 +422,9 @@ void EnvelopFunctionApprox::parse_options()
   //-------------------------------------------------------------------------------------------//
   //-------------------------------------------------------------------------------------------//
   //poisson
-  std::string  poisson_model_name = mod_opt.get_option("poisson_model_name","no_poisson");
+  std::string  poisson_model_name = mod_opt.get_option("poisson_model_name","");
   poisson_model_name = mod_opt.get_option("poisson_simulation", poisson_model_name);
-  if ( poisson_model_name != "no_poisson" )
+  if ( poisson_model_name != "" )
   {
     opt.consider_potential = true;
 
