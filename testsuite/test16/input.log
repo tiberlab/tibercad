@@ -1,16 +1,15 @@
 
-TiberCAD version 2.0.0 rev. 2480
+TiberCAD version 2.0.0 rev. 2565
 
-Log start: Wed Mar  9 01:55:34 2011
+Log start: Sun Apr  3 02:38:15 2011
 
 
 Input file: input.tib
 
 Initialize global simulation options
   Simulation temperature: 300 K
-  Database search path  : /home/gromano/TiberCADnew/materials
+  Database search path  : /scratch/maufder/TiberCAD_testsuite/trunk/materials
   Log file              : input.log
-
 
 Setup mesh
   Reading mesh file mesh.msh ... done.
@@ -20,30 +19,25 @@ Setup mesh
   number of elements  :    8417
   number of subdomains:       1
 
-
 Create materials ...
   Added material Si for region 'Bulk' (mesh regions 1)
-    x growth direction : 
-    y growth direction : 
-    z growth direction : 
-
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
 Creation of materials done.
 
-
 Setting up simulation of type 'boltzmann' ...
-  (using /home/gromano/TiberCADnew/lib/modules/boltzmann/boltzmann.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/lib/modules/boltzmann/boltzmann.so)
   Adding boundary 'Hot'
-  (using /home/gromano/TiberCADnew/lib/modules/boltzmann/boltzmann_bnd_heat_reservoir.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/lib/modules/boltzmann/boltzmann_bnd_heat_reservoir.so)
   Adding boundary 'Cold'
 
 Creating bulk models... 
-
 Setting up bulk models ...
-  (using /home/gromano/TiberCADnew/lib/modules/boltzmann/HeatTransport_gray.so)
-  (using /home/gromano/TiberCADnew/lib/modules/ThermalConductivity_constant.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/lib/modules/boltzmann/HeatTransport_gray.so)
+  (using /scratch/maufder/TiberCAD_testsuite/trunk/x86_64-linux/lib/modules/ThermalConductivity_constant.so)
 
 Setting up lower dimensional (boundary) models ...
-
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Simulation options for boltzmann (boltzmann)
@@ -74,15 +68,13 @@ Simulation options for boltzmann (boltzmann)
 
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-
 We solve: boltzmann 
 
 >>>>----------------------------------------------------------------------------
 boltzmann (name: boltzmann)
 
 
-Solve time: 13.36 sec
+Solve time: 9.34 sec
 <<<<------------------------------- (boltzmann) --------------------------------
-
 Simulation finished...
 Goodbye

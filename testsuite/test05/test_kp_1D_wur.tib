@@ -193,7 +193,7 @@ Module efaschroedinger
   #Solver
   #{   
     Dirichlet_bc_everywhere = true
-    number_of_eigenstates = 9
+    number_of_eigenstates = 10
   #  solver = lapack
   #  solver = krylovshur 
   #}
