@@ -410,30 +410,25 @@ void Macrostrain::do_init( )
 
   dim = mesh->mesh_dimension();
 
-
-
-  substrate_name = options.get_option("substrate","_no_substrate_");
-
-  Boundary* substrate_boundary= si.get_boundary ( substrate_name) ;
-
+  substrate_name = "";
   grown_on_substrate = false;
-
   substrate_crystal = NULL;
 
-  if (substrate_boundary != NULL)
+  SimulationEnvironment::BoundaryIterator bit(si.boundaries_begin());
+  SimulationEnvironment::BoundaryIterator bend(si.boundaries_end());
+  for ( ; bit != bend; ++bit)
   {
-    BoundaryProperties*  bp =  substrate_boundary->get_boundary_properties (get_id() );
+    Boundary* bd = *bit;
+    MacrostrainBoundaryProperties* bp =
+        static_cast<MacrostrainBoundaryProperties*>(bd->get_boundary_properties(get_id()));
 
-    if (bp !=NULL)
+    if (bp->get_type() == "substrate")
     {
+      MacrostrainSubstrate* sub = static_cast<MacrostrainSubstrate*>(bp);
+      substrate_name = bd->get_name();
       grown_on_substrate = true;
+      Material* mat = sub->get_material();
 
-      MacrostrainSubstrate* subst = dynamic_cast<MacrostrainSubstrate*>(bp);
-      if (subst == NULL)
-        throw InitFailedException("Macrostrain: Boundary model of \'" +
-            substrate_name + "\' is not substrate model.");
-
-      Material* mat = subst->get_material();
       if (mat == NULL)
         throw InitFailedException("Macrostrain: Substrate \'" + substrate_name +
             "\' has no material.");
@@ -441,8 +436,8 @@ void Macrostrain::do_init( )
       substrate_crystal =  &(mat->get_rotated_crystal());
     }
 
-
   }
+
 
 
   if (!grown_on_substrate)

@@ -196,7 +196,7 @@ Elasticity::do_solve(void)
     //  cout<<"| "<<error_u<<" |";
     //  cout<<endl;
     }
-    cout<<endl;
+    //cout<<endl;
 
     if (myopt.deformation)
        apply_shape_deformation();

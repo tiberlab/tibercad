@@ -99,7 +99,7 @@ Module macrostrain
 
   plot = (Strain, PiezoPolarization)
 
-  substrate = substrate
+  #substrate = substrate
 
   Boundary substrate
   {
