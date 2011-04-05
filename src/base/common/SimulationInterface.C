@@ -967,6 +967,10 @@ SimulationInterface::plot_meshdata(void)
 
     ID subdomain = elem->subdomain_id();
 
+    // if subdomain is not in data, we go to the next element
+    if (data.find(subdomain) == data.end())
+      continue;
+
     get_solution(elem, solutions);
 
     // put them into the right vectors
@@ -1021,7 +1025,7 @@ SimulationInterface::plot_meshdata(void)
   for (unsigned int i = 0; i < formats.size(); i++)
   {
     auto_ptr<DataOutput> writer(DataOutput::create(formats[i]));
-    if ((writer.get() != NULL) && (_solution_descriptors.size() > 0))
+    if ((writer.get() != NULL) && (data.size() > 0))
     {
       writer->set_output_directory(get_output_directory());
       writer->set_filename(get_output_filename());
