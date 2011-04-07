@@ -37,7 +37,7 @@ class TiberCad
 
 
     //! Constructor
-    TiberCad(int argc, char** argv);
+    TiberCad(void);
 
 
     //! Destructor
@@ -49,7 +49,7 @@ class TiberCad
     /*!
      * This routine calls init() of libmesh and other libraries, if needed.
      */
-    void init(void);
+    void init(const std::string& inputfile);
 
 
     //! Start simulations
@@ -131,9 +131,6 @@ class TiberCad
 
   private:
 
-    //! Disable default constructor
-    TiberCad(void);
-
     //! A cleanup routine
     /*!
      * This routine calls close() of libmesh and other libraries, if needed
@@ -155,13 +152,6 @@ class TiberCad
 
     //! The TiberCAD subversion release number
     static const int _SvnRevision;
-
-
-    //! We keep a pointer to the command line arguments
-    static char** _cmdline_argv;
-
-    //! We remember the number of command line arguments
-    static int _cmdline_argc;
 
 
     //! A counter to assure that there is only one instance of this class

@@ -28,6 +28,24 @@
 using namespace std;
 
 
+namespace
+{
+  bool interactive;
+
+  void usage(void)
+  {
+# ifdef CYGWIN
+    cout << endl << "Usage:" << endl
+      << "  from command line: tibercad [-b] inputfile" << endl
+      << "  or double click on inputfile" << endl << endl;
+    cout << "press Enter ...";
+    if (interactive) cin.get();
+# else
+    cout << endl << "Usage: tibercad [-b] inputfile" << endl << endl;
+# endif
+  }
+}
+
 // Will be extended with tools for command line argument parsing
 // and so on
 int main (int argc, char** argv)
@@ -36,33 +54,33 @@ int main (int argc, char** argv)
   cout << "TiberCAD version " << TiberCad::version_string() << endl;
   cout << endl;
 
+  interactive = true;
+  int optind = 1;
+  if (string(argv[optind]) == "-b")
+  {
+    interactive = false;
+    optind++;
+  }
+
+  if (optind >= argc)
+  {
+    usage();
+    return 1;
+  }
+
   // take input file from command line or ask for it
   string inputfile;
-  if (argc > 1)
-    inputfile = string(argv[1]);
-  else
-  {
+  inputfile = string(argv[optind]);
 
-#ifdef HAVE_LIBREADLINE
-    char *line = readline ("Enter input file: ");
-    inputfile = string(line);
-    free(line);
-    boost::algorithm::trim(inputfile);
-    cout << endl;
-#else
-# ifdef CYGWIN
-    cout << endl << "Usage:" << endl
-      << "  from command line: tibercad <inputfile>" << endl
-      << "  or double click on inputfile" << endl << endl;
-    cout << "press Enter ...";
-    cin.get();
-# else
-    cout << endl << "Usage: tibercad <inputfile>" << endl << endl;
-# endif
-    return 1;
-#endif
+//#ifdef HAVE_LIBREADLINE
+//    char *line = readline ("Enter input file: ");
+//    inputfile = string(line);
+//    free(line);
+//    boost::algorithm::trim(inputfile);
+//    cout << endl;
+//#else
+//#endif
 
-  }
 
   // do some preparation
   {
@@ -109,7 +127,7 @@ int main (int argc, char** argv)
           "a valid license." << endl;
 # ifdef CYGWIN
       cout << endl << "press Enter ...";
-      cin.get();
+      if (interactive) cin.get();
 # endif
       return 1;
     }
@@ -123,11 +141,11 @@ int main (int argc, char** argv)
   int error = 1;
 
   // Create the entry point object
-  TiberCad tibercad(argc, argv);
+  TiberCad tibercad;
 
   try {
 
-    tibercad.init();
+    tibercad.init(inputfile);
 
     tibercad.run();
 
@@ -146,7 +164,7 @@ int main (int argc, char** argv)
   }
 #ifdef CYGWIN
   cout << "press Enter ...";
-  cin.get();
+  if (interactive) cin.get();
 #endif
 
   Messages::close_log_file();

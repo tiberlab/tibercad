@@ -26,6 +26,7 @@ namespace
 {
   int __empty_argc = 1;
   char** __empty_argv = new char*[1];
+  char __executable[] = "tibercad";
 }
 
 
@@ -36,12 +37,6 @@ TiberCad::_filename_suffix;
 Control*
 TiberCad::_control = NULL;
 
-
-char**
-TiberCad::_cmdline_argv = 0;
-
-int
-TiberCad::_cmdline_argc = 0;
 
 unsigned int
 TiberCad::_object_counter = 0;
@@ -69,14 +64,11 @@ TiberCad::_SvnRevision = SVNREVISION;
 
 
 
-TiberCad::TiberCad(int argc, char** argv) :
+TiberCad::TiberCad(void) :
   _libmeshinit(NULL)
 {
   if (_object_counter > 0)
     throw InitFailedException("Only one TiberCAD instance may exist in a process!");
-
-  _cmdline_argc = argc;
-  _cmdline_argv = argv;
 
   _object_counter++;
 }
@@ -132,7 +124,7 @@ TiberCad::software_revision(void)
 
 
 void
-TiberCad::init(void)
+TiberCad::init(const std::string& inputfile)
 {
   // read TIBERCADROOT from environment
   char* root = getenv("TIBERCADROOT");
@@ -160,7 +152,7 @@ TiberCad::init(void)
 
 
   // to the libraries we hand empty cmdline!
-  __empty_argv[0] = _cmdline_argv[0];
+  __empty_argv[0] = __executable;
 
 
   // prepare libMesh
@@ -173,13 +165,13 @@ TiberCad::init(void)
   // now create a TiberCAD Control object
   _control = new Control();
  
-  std::string inputfile(_cmdline_argv[1]);
+  std::string infile(inputfile);
 #ifdef CYGWIN
     // we first convert the filename to something more UNIX like
-    Utils::convert_win32_path_to_posix(inputfile);
+    Utils::convert_win32_path_to_posix(infile);
 #endif
 
-  _control->set_inputfile(inputfile);
+  _control->set_inputfile(infile);
   _control->init();
 }
 

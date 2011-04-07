@@ -434,6 +434,7 @@ void Macrostrain::do_init( )
             "\' has no material.");
 
       substrate_crystal =  &(mat->get_rotated_crystal());
+      break;
     }
 
   }
