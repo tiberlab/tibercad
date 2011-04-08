@@ -12,18 +12,23 @@ make_windows_package () {
   mkdir -p ${files}/lib
 
   # copy all files
-  cp ${topdir}/bin/tibercad.exe ${files}
+  cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
   cp ${topdir}/${ARCH}/lib/*.dll ${files}
   cp -r ${topdir}/${ARCH}/lib/modules ${files}/lib
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
-  if test -e ${topdir}/manual/tiber_manual.pdf ; then
-    cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
+  if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
+    cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
+  fi
+  if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
+    cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  find ${files}/examples -name "test.conf" -exec rm -f {} \;
+  cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
 
   curdir=`pwd`
@@ -49,6 +54,8 @@ make_windows_package () {
   mkdir -p tools/gmsh-${GMSHVER}
   cd tools/gmsh-${GMSHVER}
   unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
+  mv gmsh-${GMSHVER}-Windows/* .
+  rmdir gmsh-${GMSHVER}-Windows
   cp ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf .
 
   cd $curdir
@@ -69,7 +76,6 @@ make_windows_package () {
 
 prepare_linux_package () {
 
-  ARCH=`uname -m`-linux
 
   mkdir -m 0755 ${files}
   mkdir -p ${files}/bin
@@ -98,7 +104,7 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep mkl | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep libmesh | awk '{print $3}'`"
   cp $libs ${files}/${ARCH}/lib
-  cp ${topdir}/bin/tibercad.bin ${files}/${ARCH}/bin/tibercad
+  cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/lib/lib*.so* ${files}/${ARCH}/lib
   cp -r ${topdir}/lib/modules ${files}/${ARCH}/lib
@@ -113,6 +119,8 @@ prepare_linux_package () {
   rm -rf ${files}/examples/Modules
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  find ${files}/examples -name "test.conf" -exec rm -f {} \;
+  cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
 
   if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
@@ -285,6 +293,7 @@ EOF
 topdir=@abs_top_builddir@
 version=`cat $topdir/VERSION`
 installerdir=$topdir/installer
+ARCH=`${topdir}/share/arch.sh`
 
 test $# -ge 1 || exit 1
 

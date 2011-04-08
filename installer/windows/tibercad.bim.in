@@ -1,73 +1,147 @@
-
-; 
 ; Please do not modify this file by hand
 ; It may crash the program if mistakes are found
-; Use BIM to modify it << Ha, see what we can do!!
-; 
+; Use BIM to modify it
 [Header]
 FileID = Bytessence Install Maker
-FileVersion = 2
-; 
+FileVersion = 4
 [GeneralInformation]
-AppName = TiberCAD
-Version = @TIBERVERSION@
-CompanyName = TiberLab
-Website = www.tibercad.org
-Email = @PACKAGE_BUGREPORT@
-OutPutFile = @WININSTALLERDIR@\tibercad-@TIBERVERSION@_setup.exe
-Compression = 1
-W98 = 1
-WME = 1
-WNT = 1
-W2K = 1
-WXP = 1
-WV = 1
-DotNet = 0
-RunIfDepNotFound = 
-; 
-[Look]
-HeaderTextColour = 0
-WizBitmap = @BINSTALLMAKERDIR@\Splash\Classic\Wizard.bmp
-HeadBitmap = @BINSTALLMAKERDIR@\Splash\Classic\Header.bmp
-IconFile = @TIBERSHAREDIR@\share\tibercad.ico
-[FilesAndSettings]
-ReadMe = @WININSTALLERDIR@\files\Readme.txt
-License = @TIBERSHAREDIR@\Copyright.txt
-RequireReadme = 1
-RequireLicense = 1
-; 
-[Folder]
-Folder = @WININSTALLERDIR@\files\
-; 
-[Localization]
-Entry0 = English¶Bytessence/Michel Van Passel¶@BINSTALLMAKERDIR@\Localization\English@ascii.ini
-;
-[InstTasks]
-fileassoc = ASSOCIATEEXTENSION¶tib¶TiberCAD input file¶<DefaultInstallPath>\tibercad.exe¶1
-mklicdir = CREATEFOLDER¶<DefaultInstallPath>\license
-assocgeo = ASSOCIATEEXTENSION¶geo¶GMSH geo file¶<DefaultInstallPath>/tools/gmsh-2.4.2/gmsh.exe¶0
-linkgmsh = NORMALLINK¶17¶gmsh¶<DefaultInstallPath>/tools/gmsh-2.4.2/gmsh.exe¶0¶0¶GMSH 2.4.2
-linkgmshmanual = NORMALLINK¶17¶GMSH manual¶<DefaultInstallPath>/tools/gmsh-2.4.2/gmsh.pdf¶0¶0¶GMSH 2.4.2 Manual
-; 
-[UninstTasks]
-; 
-[uConfig]
-RebootRequired = 0
-SkipExtString = 
-IconExtUninst = 0
-IconExtCustom = 0
-IconExtPath = 
-IconExtIndex = 0
-CreateUninstaller = 1
-; 
-[iConfig]
-RebootRequired = 0
-PathChangeable = 1
-DefaultPath = 
-AutoCreateStartMenu = 1
-CreateUninstallLink = 1
+ProgramName = TiberCAD
+ProgramVersion = @TIBERVERSION@
+ProgramWebsite = http://www.tibercad.org
+SupportEmail = support@tibercad.org
+CompanyName = TiberLAB
+CopyrightString = © TiberLAB
+OutputFile = @WININSTALLERDIR@\tibercad-@TIBERVERSION@_setup.exe
+IconFile = 
+CompressionLevel = 4
+InstallerWindowTitle = <ProgramName> <ProgramVersion> Setup
+InstallerBandText = <ProgramName> Setup
+ShowWebsiteLink = 1
+ShowCopyrightNotice = 1
+UninstallOlder = 0
+[SystemRequirements]
+WinNT4 = 1
+Win98 = 1
+WinMe = 1
+Win2000 = 1
+WinXP = 1
+WinVista = 1
+Win7 = 1
+DotNETVersion = 0
+DotNETVisitWebpage = 0
+DotNETWebpageAddress = http://
+[ProductInfo]
+NormalDefinedPath = 1
+ReadPathFromRegistry = 0
+DefinedPath = <ProgramFiles>\<ProgramName>\
+RegistryMainKey = 0
+RegistryKeyName = Software\
+RegistryValueName = Value name
+AppendString = 0
+AppendedString = \<ProgramName>\
+PathNotFoundQuit = 0
+PathNotFoundMessage = 
+DisallowPathChange = 0
+CreateGroup = 1
+CustomStartMenuGroup = <ProgramName>
+CreateUninstallShortcut = 1
+CustomStartMenuUninstall = Uninstall <ProgramName>
 CreateInternetLink = 1
-ForceGroupCreation = 1
-UninstOlderFirst = 1
-; 
-; EOF()
+CustomStartMenuWebLink = <ProgramWebsite>
+[VersionInfo]
+CompanyName = TiberLAB
+Copyright = © TiberLAB
+Email = support@tibercad.org
+FileDescription = TiberCAD installer
+ProductName = TiberCAD
+ProductVersion = @TIBERVERSION@
+Website = http://www.tibercad.org
+MajorHigh = 1
+MajorLow = 0
+MinorHigh = 0
+MinorLow = 0
+[LookAndFeel]
+WizardImage = @BINSTALLMAKERDIR@\Splash\Classic\Wizard.bmp
+HeaderImage = @BINSTALLMAKERDIR@\Splash\Classic\Header.bmp
+HeaderTextColor = -1
+BKUseBK = 0
+BKUseGradient = 1
+BKUsePicture = 0
+BKFirstColorR = 128
+BKFirstColorG = 128
+BKFirstColorB = 128
+BKSecondColorR = 255
+BKSecondColorG = 255
+BKSecondColorB = 255
+BKTextColorR = 230
+BKTextColorG = 230
+BKTextColorB = 230
+BKVertical = 1
+BKHorizontal = 0
+BKPicturePath = 
+BKText = 
+BKShowCopyright = 0
+ShowInformation = 1
+InformationFile = @WININSTALLERDIR@\files\Readme.txt
+ShowLicense = 1
+LicenseFile = @TIBERSHAREDIR@\Copyright.txt
+[Localization]
+0 = Bulgarian (áúëãàðñêè)
+1 = Czech (Èeština)
+2 = Dutch (Nederlands)
+3 = English
+4 = Finnish (Suomi)
+5 = French (Français)
+6 = German (Deutsch)
+7 = Hellenic (ÅëëçíéêÜ)
+8 = Hungarian (Magyar)
+9 = Hungarian (Magyar) - v2
+10 = Italian (Italiano)
+11 = Japanese (“ú–{Œê)
+12 = Portuguese (Português Brasil)
+13 = Romanian (Românã)
+14 = Russian (Ðóññêèé)
+15 = Spanish (Español)
+16 = Swedish (Svenska)
+17 = Turkish (Türkçe)
+18 = Turkish (Türkçe) - v2
+[InstallerSettings]
+InputDirectory = @WININSTALLERDIR@\files\
+ShowRestartComputerCheckbox = 0
+ShowLaunchProgramCheckbox = 0
+LPProgramPath = 
+LPParameters = 
+LPRunAsProgram = 
+LPRunAsFile = 
+LPRunHidden = 
+ShowViewDocumentationCheckbox = 0
+VDProgramPath = 
+VDParameters = 
+VDRunAsProgram = 
+VDRunAsFile = 
+VDRunHidden = 
+ShowOpenReadmeCheckbox = 0
+ORProgramPath = 
+ORParameters = 
+ORRunAsProgram = 
+ORRunAsFile = 
+ORRunHidden = 
+ShowVisitWebsiteCheckbox = 1
+OWWebsiteAddress = <ProgramWebsite>
+[InstallerTasks]
+assoc_tib = {ASSOCIATE}<DefaultInstallPath>\tibercad.exe"%1"TiberCAD input filetib<DefaultInstallPath>\tibercad.exe0TiberCAD input file1,1,1,1,1,1,1
+assoc_geo = {ASSOCIATE}<DefaultInstallPath>\tools\gmsh-2.5.0\gmsh.exe"%1"GMSH scriptgeo<DefaultInstallPath>\tools\gmsh-2.5.0\gmsh.exe0GMSH script1,1,1,1,1,1,1
+mklicdir = {CREATEFOLDER}<DefaultInstallPath>\license1,1,1,1,1,1,1
+mkgmshdir = {CREATEFOLDER}<DefaultStartMenuGroup>\gmsh1,1,1,1,1,1,1
+linkmanual = {CREATESHORTCUT}<DefaultStartMenuGroup>\TiberCAD manual<DefaultInstallPath>\doc\MultiUsers.pdf0<UserData>TiberCAD manual1,1,1,1,1,1,1
+linkex = {CREATESHORTCUT}<DefaultStartMenuGroup>\TiberCAD examples<DefaultInstallPath>\doc\Examples.pdf0<UserData>TiberCAD examples1,1,1,1,1,1,1
+linkgmsh = {CREATESHORTCUT}<DefaultStartMenuGroup>\gmsh\gmsh<DefaultInstallPath>\tools\gmsh-2.5.0\gmsh.exe<DefaultInstallPath>\tools\gmsh-2.5.0\gmsh.exe0<UserData>GMSH1,1,1,1,1,1,1
+linkgmshman = {CREATESHORTCUT}<DefaultStartMenuGroup>\gmsh\manual<DefaultInstallPath>\tools\gmsh-2.5.0\gmsh.pdf0<UserData>manual1,1,1,1,1,1,1
+[UninstallerSettings]
+CreateUninstaller = 1
+CreateAddRemoveEntry = 1
+UseClassicUninstallerIcon = 1
+UseCustomUninstallerIcon = 0
+CustomUninstallerIconPath = 
+CustomUninstallerIconIndex = 0
+UninstRestartPC = 0
