@@ -103,6 +103,8 @@ Module empirical_tb
   name = tb
   atomistic_structure = tb
   Harrison_scaling = false
+  potential_simulation = driftdiffusion
+  relativistic = true
 
   plot = (tbstates)
 
@@ -110,8 +112,6 @@ Module empirical_tb
   {
     num_valence_eigenvalues = 4
     num_conduction_eigenvalues = 4
-    potential_simulation = driftdiffusion
-    relativistic = true
   }
 
 }
