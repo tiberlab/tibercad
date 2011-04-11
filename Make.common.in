@@ -54,7 +54,7 @@ LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir)
 #ifeq ($(build_modules), yes)
 # LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
 #endif
-LDFLAGS += -ltensor -lnewmat
+LDFLAGS += -ltensor 
 
 #LDFLAGS += @GSL_LIBS@
 

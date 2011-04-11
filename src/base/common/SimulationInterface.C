@@ -24,7 +24,6 @@
 #include "CrackStrain.h"
 #include "Sweep.h"
 #include "RelaxationMethod.h"
-#include "ModifiedBroyden.h"
 #include "Utils.h"
 #include "DataOutput.h"
 #include "Messages.h"
@@ -130,8 +129,6 @@ SimulationInterface::create(const string& type,
     sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_relaxation")
     sim = RelaxationMethod::create(options);
-  else if (type_name == "selfconsistent_broyden")
-    sim = ModifiedBroyden::create(options);
   else if (type_name == "opticskp")
     sim = OpticsKP::create(options);
   else if (type_name == "quantumdispersion")
