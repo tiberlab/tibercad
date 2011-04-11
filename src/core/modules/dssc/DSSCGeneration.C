@@ -172,6 +172,8 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
       d += phi[i][n] * solution(dof_indices_d[i]);
     }
 
+    if (d < 0) { d = -d; }
+
     if (values.count(Distance))
       values[Distance][n] = d;
 
