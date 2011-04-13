@@ -520,10 +520,10 @@ class DSSCModel : public PhysicalModel
 
 
     //! The generation model
-    SimulationInterface* _generation_model;
+    std::vector<SimulationInterface*> _generation_model;
 
     //! The solution ID of the generation models variable
-    ID _gen_id;
+    std::vector<ID> _gen_id;
 
 
     //! coordinate of the contact under illumination
