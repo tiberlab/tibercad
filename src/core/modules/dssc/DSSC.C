@@ -4282,6 +4282,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   }
   else
   {
+    residual->close();
     residual->set(dof_cat, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
     residual->set(dof_iodine, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
     residual->close();
