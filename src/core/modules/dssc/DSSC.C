@@ -1120,8 +1120,7 @@ DSSC::solution_vector(void)
 {
   EquationSystems& es = get_equation_systems();
 
-  TiberNonlinearSystem& system =
-    es.get_system<TiberNonlinearSystem>(get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
   return system.get_solution_vector();
 }
@@ -1135,8 +1134,7 @@ DSSC::do_newton(void)
 
   EquationSystems& es = get_equation_systems();
 
-  TiberNonlinearSystem& system =
-    es.get_system<TiberNonlinearSystem>(get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
 
   system.set_options(get_solver_options());
@@ -1893,9 +1891,7 @@ DSSC::calculate_currents_rstf(void)
   for ( ; it != _boundary_currents.end(); ++it)
     (*it).second = 0.0;
 
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
   const NumericVector<Number>& solution = system->get_solution_vector();
 
@@ -2301,11 +2297,9 @@ DSSC::build_local_scaling(void)
 NumericVector<double>&
 DSSC::do_get_solution_vector(void)
 {
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  return system->get_solution_vector();
+  return system.get_solution_vector();
 }
 
 
@@ -4026,10 +4020,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 double kinetic_cathode = contact->get_kinetic();
                 
                 //double kT = sc->get_lattice_temperature();
-	        //double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
-	        //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
-                double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
-                double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
+	        double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
+	        double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
+                //double Normal_I = x0 / (phi0 * C0_I * scaling_I);
+                //double Normal_I3 = x0 / (phi0 * C0_I3 * scaling_I3);
 	        
                 //double Normal_I3 = x0 / (phi0 * C0_I3 * scaling_I3 );
 
@@ -4048,8 +4042,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 //KI3I3(s,s) += -0.5 * Normal_I3 / res;
                 KI3u(s,s) += -0.5 * Normal_I3 / res;
                 
-                //KI3u(s,s) += -kinetic_cathode * dI3_dphi * Normal_I3 ;
-                //KI3I3(s,s) += -kinetic_cathode * -dI3_dphi * Normal_I3 ;
+                //KI3u(s,s) += (1/3.0) * kinetic_cathode * dI_dphi * Normal_I3 ;
+                //KI3I(s,s) += (1/3.0) * kinetic_cathode * -dI_dphi * Normal_I3 ;
 
                 //KIu(s,s) += 1.5 * sign * j0 * ( (1.0 / I3_dark) * dI3_dphi - (1.0 / I_dark) * dI_dphi ) * Normal_I;
                 //KII(s,s) += 1.5 * sign * j0 * (-1.0 / I_dark) * -dI_dphi * Normal_I;
@@ -4092,17 +4086,17 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                //double I3_dark = sc->get_equilibrium_concentrations().I3;
                //double kT = sc->get_lattice_temperature();
 
-               //double density_I = sc->get_density_I();
-               //double density_I3 = sc->get_density_I3();
-               //double I3_dark = sc->get_equilibrium_concentrations().I3;
+               double density_I = sc->get_density_I();
+               double density_I3 = sc->get_density_I3();
+               double I_dark = sc->get_equilibrium_concentrations().I;
 
                //pot =  -2*Xu(s) + 1.5*XI(s) - 0.5*XI3(s);
                //pot = contact->get_potential();
                pot =  -Xu(s);
                FI(s) += -1.5 * pot * Normal_I / res ;
                FI3(s) += 0.5 * pot * Normal_I3 / res ;
-            //   FI3(s) += -kinetic_cathode * (density_I3 - I3_dark) * Normal_I3 ;
-            //   FI3(s) += 0.5 * kinetic_cathode * ( density_I3 / I3_dark  - density_I / I_dark ) * Normal_I3;
+               //FI3(s) += (1/3.0)* kinetic_cathode * (density_I - I_dark) * Normal_I3 ;
+               //FI3(s) += 0.5 * kinetic_cathode * ( density_I3 / I3_dark  - density_I / I_dark ) * Normal_I3;
 
                //FI3(s) += 0.5 * kinetic_cathode * ( exp(pot/kT)   -  exp(-pot/kT) ) * Normal_I3;
                //FI(s) += -1.5 * kinetic_cathode * ( exp(pot/kT)   -  exp(-pot/kT) ) * Normal_I;
@@ -4215,7 +4209,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               //double barrier = contact->get_barrier(); 
 
                Ke.condense(i + n_dofs, i + n_dofs, bias, Fe);
-               //Ke.condense(i, i, barrier, Fe);
+               //Ke.condense(i, i, bias, Fe);
 
             }
             else if (contact->is_gate())
@@ -4629,7 +4623,7 @@ DSSC::get_solution_secure(const Elem* elem,
 
     //double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
     //double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
-    double edens = sc->get_density_n();
+    double edens = sc->get_density_n_exp_DOS();
     double Idens = sc->get_density_I();
     double I3dens = sc->get_density_I3();
     double Cdens = sc->get_density_C();
