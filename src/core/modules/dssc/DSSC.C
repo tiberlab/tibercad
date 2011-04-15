@@ -4278,7 +4278,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       jacobian->set(dof_iodine, j, (*cons_iodine)(j));
 
     jacobian->close();
-    jacobian->print_matlab("J.m");
+    //jacobian->print_matlab("J.m");
   }
   else
   {
@@ -4286,7 +4286,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     residual->set(dof_cat, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
     residual->set(dof_iodine, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
     residual->close();
-    residual->print_matlab("F.m");
+    //residual->print_matlab("F.m");
   }
 
 

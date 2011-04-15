@@ -82,8 +82,8 @@ DSSCModel::do_init(void)
   {
     vector<string> gens;
     Utils::extract_vector(gen_str, gens);
-    _generation_model.reserve(gens.size());
-    _gen_id.reserve(gens.size());
+    _generation_model.resize(gens.size());
+    _gen_id.resize(gens.size());
     for (size_t i = 0; i < gens.size(); ++i)
     {
       _generation_model[i] = SimulationInterface::find_simulation(gens[i]);
