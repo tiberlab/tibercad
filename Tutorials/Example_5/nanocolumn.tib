@@ -1,267 +1,212 @@
-# diode example
+# Example 5: AlGaN nanocolumn with GaN quantum disk (3D simulation)
 
-# Description of  the  device physical regions
 
-#  n   n    i   p   p
-
-#  2 - 3  - 1 - 4 - 5
-$Device
+Device
 {
 
-  Options
-  {
-    meshfile = nanocolumn.msh
-    mesh_units = 1e-9
-    dimension = 3
-  }
+  meshfile = nanocolumn.msh
+  mesh_units = 1e-9
+  dimension = 3
+
+  structure = wz
+  x-growth-direction = (1,0,-1,0)
+  y-growth-direction = (-1,2,-1,0)
+  z-growth-direction = (0,0,0,1)
+
+ 
 
   Region well
   {
- #   mesh_regions = 1
+
     material = GaN
-  
-    structure = wz
-    x-growth-direction = (1,0,-1,0)
-    y-growth-direction = (-1,2,-1,0)
-    z-growth-direction = (0,0,0,1)	
-
-
-
-   }
-  
-
-   Region  layer1
-   {
-  #   mesh_regions = 2
-     material = AlGaN
-     x = 0.2
-     structure = wz
-     x-growth-direction = (1,0,-1,0)
-     y-growth-direction = (-1,2,-1,0)
-     z-growth-direction = (0,0,0,1)
-     
-
-     doping = 1e19 doping_type = donor doping_level = 0.025 g = 2
-    
    
-   }
+  }
+  
+
+  Region  layer1
+  {
+ 
+    material = AlGaN
+    x = 0.2
+   
+    Doping
+    {
+      Nd = 1e19
+      type = donor
+      Ed = 0.025
+      g=2
+    }
+
+      
+  }
 
   
 
-   Region barrier1
-   {
-  #   mesh_regions = 3
-     material = AlGaN
-     x = 0.2
-     structure = wz
-     x-growth-direction = (1,0,-1,0)
-     y-growth-direction = (-1,2,-1,0)
-     z-growth-direction = (0,0,0,1)
+  Region barrier1
+  {
+ 
+    material = AlGaN
+    x = 0.2
 
-
-     doping = 1e15 doping_type = donor doping_level = 0.025 g = 2
-
-   
-   }
+    Doping
+    {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+      g=2
+    }
+  
+  }
 
 
   
 
-   Region barrier2
-   {
- #    mesh_regions = 4
-     material = AlGaN
-     x = 0.2
-     structure = wz
-     x-growth-direction = (1,0,-1,0)
-     y-growth-direction = (-1,2,-1,0)
-     z-growth-direction = (0,0,0,1)
+  Region barrier2
+  {
 
+    material = AlGaN
+    x = 0.2
+
+    Doping
+    {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+      g=2
+    }
+ 
+  }
    
-     doping = 1e15 doping_type = donor doping_level = 0.025 g = 2
+  Region layer2
+  {
 
-   }
-   
-   Region layer2
-   {
-  #   mesh_regions = 5
-     material = AlGaN
-     x = 0.2
-     structure = wz
-
-     x-growth-direction = (1,0,-1,0)
-     y-growth-direction = (-1,2,-1,0)
-     z-growth-direction = (0,0,0,1)
+    material = AlGaN
+    x = 0.2
 
     
-     doping = 1e19 doping_type = acceptor doping_level = 0.17 g = 4 
+    Doping
+    {
+      Nd = 1e19
+      type = acceptor
+      Ed = 0.17
+      g=4
+    }
+    
 
-   }
-   
+  }
+  
    
 
 }
 
 
-# Definition of  Simulation Models  and associated Boundary Conditions 
-$Models 
-{ 
 
+Module  macrostrain
+{
+            
+  name = strain
+
+  substrate = substrate
+
+  plot = (Strain, PiezoPolarization)
+  lin_rel_tol = 1e-6  #
+         
+  
+  Contact substrate
+  {
+    
+    type = substrate
+
+    material = AlGaN
+    x = 0.2
+
+    structure = wz
+
+    x-growth-direction = (1,0,-1,0)
+    y-growth-direction = (-1,2,-1,0)
+    z-growth-direction = (0,0,0,1)
+        
+  }
+
+}
   
 
-  model macrostrain
+
+
+Module   driftdiffusion
+{ 
+       
+  name = dd
+
+  plot = (ElPotential, ElField, Ec, Ev, eQFermi, hQFermi, eMobility, hMobility, eDensity, hDensity, CurrentDensity, eCurrentDensity, hCurrentDensity, ContactCurrents, NetRecombination, Polarization, Ec0, Ev0)
+
+  Solver
   {
 
-    options
-    {          
-      simulation_name = strain
-      plot = (strain, stress, piezoPolarization)
-    }
-
-    
-    BC_Regions  
-    {
-      BC_Region substrate
-      {
-     #   BC_reg_numb = 2
-	type = substrate
-	material = AlGaN
-	x = 0.2
-	structure = wz
-
-	x-growth-direction = (1,0,-1,0)
-	y-growth-direction = (-1,2,-1,0)
-	z-growth-direction = (0,0,0,1)
-
-      }
-    }
-  }
-
-
-
-  model  driftdiffusion
-  { 
-
-    options
-    {          
-      simulation_name = dd
-
-      strain_simulation = strain
-      statistics = FD
-
-      plot = (ElPotential, ElField, Ec, Ev, eQFermi, hQFermi, eMobility, hMobility, eDensity, hDensity, CurrentDensity, eCurrentDensity, hCurrentDensity, ContactCurrents, NetRecombination, Polarization, Ec0, Ev0)
-    }
-
-    physical_model recombination
-    { 
-      model = srh
-     
-    }                
-
-    
-    physical_model recombination
-    { 
-     model = direct
-   
-   
-    }          
-           
-     
-
-    physical_model electron_mobility
-    { 
-      model = field_dependent
-      low_field_model = doping_dependent
-     
-    }                
-
-
-    physical_model hole_mobility
-    { 
-      model = field_dependent
-      low_field_model = doping_dependent
-     
-    }                
-
-
-   BC_Regions  
-    {
-
-      BC_Region substrate  #cathode
-      {
-      #  BC_reg_numb = 2
-
-
-        type = ohmic
-        rec_velocity_p = 1e9
-
-      }
-
-
-      BC_Region anode
-      {
-#	BC_reg_numb = 1
-
-	type = ohmic
-
-	voltage = @bias
-        rec_velocity_n = 1e9
-      }
- 
-    }   
-
-  }
-
-
-}  
-
-
-
-# Definition of  Model-dependent Solver parameters
-$Solver
-{
- 
-
- 
-
-  macrostrain
-  {
-    substrate = substrate
-    lin_rel_tol = 1e-6  #   1e-5
- #   xmonitor = true
-    
-  }
-
- 
-  driftdiffusion
-  {
     nonlin_max_it = 15
     nonlin_rel_tol = 1e-12
     nonlin_step_tol = 1e-6
     ls_max_step = 4
-  
+
+  }
+
+  Physics
+  {
+
+    strain_simulation = strain
+
+    polarization (piezo, pyro) {}
+
+    recombination srh {}
+
+                 
+    recombination direct {}
+    
+        
+    mobility # for  both  el  and  hl
+    {
+      type = field_dependent
+      low_field_model = doping_dependent
+    }  
+
   }
 
 
- sweep
- {
-   simulation = dd
-   variable = bias
-   start = 0.0
-   stop = 4.5 #5.0
-   steps = 200 #20
-   plot_data = true
- }
+
+  Contact  substrate  #cathode
+  {
+    type = ohmic
+    rec_velocity_p = 1e9
+  }
 
 
+  Contact anode
+  {
 
+    type = ohmic
+
+    voltage = $bias
+    rec_velocity_n = 1e9
+  }
   
+
+}
+
+
+Module  sweep
+{
+  solve = dd
+  variable = $bias
+  start = 0.0
+  stop = 4.5 #5.0
+  steps = 200 #20
+  plot_data = true
 }
 
 
 
-# Definition of  model-indipendent parameters of the Simulation
-$Simulation
+  
+Simulation
 {
   temperature = 300
   verbose = 2
