@@ -160,9 +160,9 @@ DSSCModel::read_database(void)
   _mobility.C = db.get("mobility_cation",8.5e-6);
 
   db.set_section("density");
-  _eq_conc.n = ("ne",2.3e4);
-  _eq_conc.I = ("nI",0.45);
-  _eq_conc.I3 = ("nI3",0.05);
+  _eq_conc.n = db.get("ne",2.3e4);
+  _eq_conc.I = db.get("nI",0.45);
+  _eq_conc.I3 = db.get("nI3",0.05);
 }
 
 
