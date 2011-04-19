@@ -41,6 +41,7 @@ ETB::ETB(const ModelOptions& options)
 
 ETB::~ETB(void)
 {
+  std::cout << "destructing";
   delete inst;
   inst = NULL;
   _el_atomic_charges.clear();
@@ -49,6 +50,7 @@ ETB::~ETB(void)
   _map_ID_Evb.clear();
   _map_ID_Ecb.clear();
   _ion_num_orbitals.clear();
+  std::cout << "destructed" << std::endl;
 }
 
 ETB::UptOptions::UptOptions(void)
@@ -414,27 +416,44 @@ void ETB::do_solve(void){
 
   }
 
+  //Set _solution_size in base class TightBinding 
+  _solution_size = _solution.size();
+
   // write state infos on screen.
   write_states();
 
   //Calculate electron and holes charge density on atoms (hydrogen not included)
   //std::cerr << "Calculating quantum charge " << std::endl;
 
+  std::cout << "I''m building charges" << std::endl;
   _el_atomic_charges.resize(_N_without_H, 0.0);
   _hl_atomic_charges.resize(_N_without_H, 0.0);
+  std::cout << "_el_atomic_charges.size()" << _el_atomic_charges.size()<<std::endl;
 
   compute_atomic_charges("el", _el_atomic_charges);
   compute_atomic_charges("hl", _hl_atomic_charges);
-  //std::cerr << "done " << std::endl;
+
+  std::cout << "quo";
+  //for (unsigned int i = 0; i < _solution_size; i++)
+  //{ 
+  //  std::cout<< "Building state densities" << std::endl;
+  //  _state_density[i].resize(_N_without_H);
+  //  compute_state_density(i, _state_density[i]); 
+  //
+  //}
+
+  //std::cout << "qui";
+  //declare_solution(MeshEigenstate, NTUPLE, CELL, "1/cm^3", _solution_size);
+  //std::cout << "qua" << std::endl;
 
   //Print for debug charges on atoms
   double* charges;
   charges = new double[_atomistic_structure->get_N_atoms()];
-  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _el_atomic_charges[i] * 1000;
+  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _el_atomic_charges[i];
   for (unsigned int i = _N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
 
   _atomistic_structure->print_structure("charges_el.xyz", charges);
-  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _hl_atomic_charges[i] * 1000;
+  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _hl_atomic_charges[i];
   for (unsigned int i = _N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
   _atomistic_structure->print_structure("charges_hl.xyz", charges);
 
@@ -532,7 +551,7 @@ void ETB::solve_for_particle(const std::string& particle)
 void ETB::do_plot(void){
 
   std::cout << "tightbinding do_plot()" << std::endl;
-  TightBinding::do_plot();
+  SimulationInterface::do_plot();
   std::cout << "tightbinding do_plot()" << std::endl;
 
 #ifdef DEBUG
@@ -807,10 +826,6 @@ ETB::calculate_fermi_averaged(unsigned int i)
 
   }
 
-  // debug cross check on vector size
-  //std::cerr<<"(TC-debug) N. orbitals = "<< k_at <<endl;
-  //std::cerr<<"(TC-debug) Matrix dim. = "<<inst->get_H_dim()<<endl;
-
   return sum;
 
 }
@@ -866,6 +881,41 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
   }
 
 }
+
+//void
+//ETB::compute_state_density(unsigned int eigenstate, std::vector<double>& densatm)
+//{
+//  double atom_sum;
+//  unsigned int i, k, j, k_at, N_atoms_wo_H;
+//  unsigned int n = _solution.size();
+//
+//  k = 0; k_at = 0;
+//
+//  N_atoms_wo_H = _atomistic_structure->get_N_without_H();
+//
+//  if(densatm.size() < N_atoms_wo_H)
+//    throw InitFailedException("(INT. ERROR) array mismatch in compute_state_density");
+//
+//  if (eigenstate >= n)
+//    throw InitFailedException("Eigenstate index is larger than number of available eigenstates");
+//
+//  for(j=0; j<N_atoms_wo_H; j++){densatm[j] = 0.0; }
+//  i = eigenstate;
+//      k = 0; k_at = 0;
+//      for (j = 0; j < N_atoms_wo_H; j++)
+//      {
+//	atom_sum = 0.0;
+//	for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
+//	{
+//	    atom_sum += std::norm(_solution[i].eigen_vector[k]);
+//	}
+//
+//	k_at = k;
+//
+//	densatm[j] += atom_sum;
+//      }
+//
+//}
 
 void ETB::get_band_edges(void)
 {
@@ -942,241 +992,49 @@ void ETB::get_band_edges(void)
   
 }
 
-ID
-ETB::convert_variable_name_to_id(const std:: string& variable_name) const
-{
-
-  ID id = INVALID_ID;
-
-
-  if (variable_name == "elDensity" )
-    id  = EL_CH;
-  if (variable_name == "hlDensity")
-    id = HL_CH;
-
-
-  return id;
-}
-
-
-//void
-//ETB::get_solution_secure(const Elem* elem,
-//    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
-//{
-//
-//  Point p = elem->centroid();
-//  std::vector<Point> points(1);
-//  points[0] = p;
-//
-//  get_solution_secure(elem,points,ids,values);
-//
-//}
-//
-//
-//void
-//ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
-//    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
-//{
-//  unsigned int np = p.size();
-//  values.resize(np);
-//
-//  if (ids.count(EL_CH))
-//    {
-//      for (unsigned int n = 0; n < p.size(); n++)
-//	{
-//	  values[n][EL_CH] = build_rho("el",p[n]);
-//	}
-//    }
-//
-//  if (ids.count(HL_CH))
-//    {
-//      for (unsigned int n = 0; n < p.size(); n++)
-//	{
-//	  values[n][HL_CH] = build_rho("hl",p[n]);
-//	}
-//    }
-//}
-
 
 void
 ETB::get_solution_secure(const Elem* elem,
-    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
+    std::map<ID, std::vector<double> >& values,
+    const std::vector<Point>& p)
 {
 
-  Point p = elem->centroid();
-  std::vector<Point> points(1);
-  points[0] = p;
-
-  get_solution_secure(elem,points,ids,values);
-
-}
-
-
-void
-ETB::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
-    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
-{
   unsigned int np = p.size();
-  values.resize(np);
+  
 
-
-  if (ids.count(EL_CH))
+  //CELL values
+  //
+  if (values.count(ElQuantumDensity))
     {
-      for (unsigned int n = 0; n < p.size(); n++)
-        {
-          if (_elemental_result_el.find(elem) != _elemental_result_el.end())
-            {
-              values[n][EL_CH] = _elemental_result_el[elem];
-            }
-          else
-            { 
+
 	      if (_dim == 3)
-                _elemental_result_el[elem] = build_rho3d("el", elem->centroid());
+                  values[ElQuantumDensity][0] = build_rho3d("el", elem->centroid());
               else if (_dim == 2)
-                _elemental_result_el[elem] = build_rho2d("el", elem->centroid());
+                  values[ElQuantumDensity][0] = build_rho2d("el", elem->centroid());
               else if (_dim == 1)
-                _elemental_result_el[elem] = build_average_rho1d("el", elem);
-              else std::cerr << "No rules to build 2D results" << std::endl;
+                  values[ElQuantumDensity][0] = build_average_rho1d("el", elem);
+              else std::cerr << "Unknown number of dimensions, values not assigned in" 
+                " ETB::get_solution_secure" << std::endl;
 
-              values[n][EL_CH] = _elemental_result_el[elem];
-            }
-        }
+              //values[ElQuantumDensity][n] = _elemental_result_el[elem];
+         //   }
+
     }
 
-  if (ids.count(HL_CH))
+  if (values.count(HlQuantumDensity))
     {
-      for (unsigned int n = 0; n < p.size(); n++)
-        {
-          if (_elemental_result_hl.find(elem) != _elemental_result_hl.end())
-            {
-              values[n][HL_CH] = _elemental_result_hl[elem];
-            }
-          else
-            { 
               if (_dim == 3)
-                _elemental_result_hl[elem] = build_rho3d("hl", elem->centroid());
+                values[HlQuantumDensity][0] = build_rho3d("hl", elem->centroid());
               else if (_dim == 2)
-                _elemental_result_hl[elem] = build_rho2d("hl", elem->centroid());
+                values[HlQuantumDensity][0] = build_rho2d("hl", elem->centroid());
               else if (_dim == 1)
-                _elemental_result_hl[elem] = build_average_rho1d("hl", elem);
-              else std::cerr << "No rules to build 2D results" << std::endl;
-
-              values[n][HL_CH] = _elemental_result_hl[elem];
-            }
-
-        }
+                values[HlQuantumDensity][0] = build_average_rho1d("hl", elem);
+              else std:cerr <<"Unknown number of dimensions, values not assigned in" 
+                " ETG::get_solutionsecure" << std::endl;
     }
-}
-
-
-void
-ETB::build_elemental_results(const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
-{
-
-std::cerr << "building elemental results " << std::endl;
-std::set<std::string>::iterator mit;
-for (mit=variables.begin() ; mit != variables.end(); mit++)
-  {
-    std::cout << "variable is " << *mit << std::endl;
-  }
-  // we only do something if we are on processor 0
-  // TODO parallelize
-  if (libMesh::processor_id() != 0)
-    return;
-
-
-  // if there is no mesh we can return immediately
-  if (_mesh == NULL)
-    return;
-
-
-
-  unsigned int n_vars = 0;
-  const unsigned int nn  = _mesh->n_active_elem();
-  int el_ch = -1;
-  int hl_ch = -1;
-
-  if (variables.count("ElQuantumDensity"))
-    {
-      legend.resize( n_vars + 1 );
-      legend[n_vars] = "ElQuantumDensity";
-      el_ch = n_vars;
-      n_vars++;
-    }
-
-  if (variables.count("HlQuantumDensity"))
-      {
-        legend.resize( n_vars + 1 );
-        legend[n_vars] = "HlQuantumDensity";
-        hl_ch = n_vars;
-        n_vars++;
-      }
-
-  results.resize(nn * n_vars,0.0);
-
-  MeshBase::const_element_iterator it =  _mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =     _mesh->active_local_elements_end();
-
-
-  unsigned int elem_number = 0;
-  for ( ; it != end; ++it)
-    {
-
-      const Elem* elem = *it;
-
-      unsigned int id = n_vars * elem_number;
-
-      std::vector<std::map<ID, double> > values;
-
-      std::set<ID> ids;
-      ids.insert(EL_CH);
-      ids.insert(HL_CH);
-
-      //get_solution_secure(elem, ids, values);
-      get_solution(elem, ids, values);
-
-      //double charge = values[0][CHARGE];
-
-
-      if (el_ch != -1)
-        {
-          //get_solution_secure(elem, ids, values);
-          results[id + el_ch] = values[0][EL_CH];
-        }
-
-      if (hl_ch != -1)
-             {
-               //get_solution_secure(elem, ids, values);
-               results[id + hl_ch] = values[0][HL_CH];
-             }
-
-      elem_number++;
-    } //over element
-
-  results.resize(elem_number * n_vars);
 
 }
 
-
-double
-ETB::build_rho(const std::string& particle, const Point& r)
-{
-  if (get_environment().get_device().get_mesh().mesh_dimension() == 1)
-          {
-    std::cerr << "Error: a 1d point charge projection is not available" << std::endl;
-            exit(1);
-          }
-  else if (get_environment().get_device().get_mesh().mesh_dimension() == 2)
-  {
-    std::cerr << "Error: a 2d point charge projection is not available" << std::endl;
-    exit(1);
-  }
-  else if (get_environment().get_device().get_mesh().mesh_dimension() == 3)
-    {
-    return build_rho3d(particle, r);
-    }
-}
 
 
 double
@@ -1193,14 +1051,11 @@ ETB::build_rho3d(const std::string& particle, const Point& r)
   if (particle == "el") charges = &(_el_atomic_charges);
   if (particle == "hl") charges = &(_hl_atomic_charges);
 
-
-  //std::cerr << " tau is " << tau << " " ;
-
   x = r(0); y = r(1); z = r(2);
 
   if ((*charges).size() == 0)
     {
-      std::cerr << "ERROR IN TIGHTBINDING: trying to build charge density "
+      std::cerr << "ERROR IN ETB: trying to build charge density "
       "but no mulliken charges are available" << std::endl;
       exit(1);
     }
@@ -1232,10 +1087,70 @@ ETB::build_rho3d(const std::string& particle, const Point& r)
   //scale rho to q/cm^3 (carrier density)
   double mesh_units = 100.0 * get_mesh_units();
   rho =  rho / ( mesh_units * mesh_units * mesh_units );
-
   return rho;
 
 }
+
+
+//void
+//ETB::build_statedens(std::vector<double>& values, const Point& r)
+//{
+//  double tau = 1.0 / (_upt_options.projection_length / _atomistic_structure->get_scale());
+//  const double deltar_max = tau * 10; //Maximum cutoff distance
+//  double deltar, uhatom;
+//  double rho = 0.0;
+//  double x1, y1, z1;
+//  double x ,y, z;
+//  std::vector<double>* state = NULL;
+//
+//  values.resize(_solution_size);
+//
+//  x = r(0); y = r(1); z = r(2);
+//
+//  for (unsigned int i = 0; i < _solution_size; i++)
+//  {
+//
+//     state = &(_state_density[i]);
+//    if ((*state).size() == 0)
+//    {
+//      std::cerr << "ERROR IN TIGHTBINDING: trying to build state density "
+//      "but no state densities are available" << std::endl;
+//      exit(1);
+//    }
+//
+//    values[i] = 0.0;
+//
+//  for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
+//    {
+//      //Convert atom position to mesh units
+//      x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
+//      y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
+//      z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3) / _atomistic_structure->get_scale();
+//
+//      //delta_r is already in mesh units in this way
+//      deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
+//
+//      //Also hubbard parameters (and tau) must be scaled in mesh units
+//      // (uhatom is in (atomic units)^(-1))
+//
+//      if (deltar > deltar_max) continue;
+//      else
+//        {
+//          values[i] = values[i] + ((*state)[iatm] * tau * tau * tau * exp(-1.0 * deltar * tau));
+//
+//        }
+//    }
+//
+//  values[i] = values[i] /  (8.0 * 3.141592653589793);
+//
+//  }
+//
+//  //scale rho to q/cm^3 (carrier density)
+//  //double mesh_units = 100.0 * get_mesh_units();
+//  //rho =  rho / ( mesh_units * mesh_units * mesh_units );
+//
+//}
+
 
 
 double
@@ -1253,13 +1168,11 @@ ETB::build_rho2d(const std::string& particle, const Point& r)
   if (particle == "hl") charges = &(_hl_atomic_charges);
 
 
-  //std::cerr << " tau is " << tau << " " ;
-
   x = r(0); y = r(1); z = 0.0;
 
   if ((*charges).size() == 0)
     {
-      std::cerr << "ERROR IN TIGHTBINDING: trying to build charge density "
+      std::cerr << "ERROR IN ETB: trying to build charge density "
       "but no mulliken charges are available" << std::endl;
       exit(1);
     }
@@ -1315,17 +1228,15 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
   if (x1 > x2) {x1 = x2; x2 = x_atm;}
   l = x2 - x1;
 
-
   std::vector<double>* charges = NULL;
 
   if (particle == "el") charges = &(_el_atomic_charges);
   if (particle == "hl") charges = &(_hl_atomic_charges);
 
-
   if ((*charges).size() == 0)
     {
-      std::cerr << "ERROR IN TIGHTBINDING: trying to build charge density "
-      "but no mulliken charges are available" << std::endl;
+      std::cerr << "ERROR IN ETB: trying to build charge density "
+      "but no mulliken charges are available" <<  (*charges).size() << std::endl;
       exit(1);
     }
 
@@ -1334,12 +1245,6 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
 
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
-
-      //std::cout << "rho before loop is " << rho << std::endl;
-      //Getting Hubbard parameter
-      //Up to now densities are mapped on orbital S
-      //uhatom = _u_hub[_atomistic_structure->get_structure_atoms()[iatm].get_specie()][S];
-
 
       //Convert atom position to mesh units
       x_atm = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
@@ -1369,8 +1274,6 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
       }
     }
 
-  //scale rho to q/cm^(-3) (carrier density)
-
   double normalize = 1.0;
   normalize = period[4]*period[8] - period[7]*period[5]
                       / _atomistic_structure->get_scale() / _atomistic_structure->get_scale();
@@ -1384,4 +1287,12 @@ ETB::build_average_rho1d(const std::string& particle, const Elem* elem)
 }
 
 
+void
+ETB::do_setup_solution_variables(void)
+{
+  declare_solution(ElQuantumDensity, REAL, CELL, "q/cm^3");
+  declare_solution(HlQuantumDensity, REAL, CELL, "q/cm^3");
+}
+
 #endif
+

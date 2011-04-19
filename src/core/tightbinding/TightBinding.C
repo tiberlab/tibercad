@@ -165,19 +165,18 @@ TightBinding::build_rho(const Point& r)
 }
 
 
-ID
-TightBinding::convert_variable_name_to_id(const std:: string& variable_name) const
-{
-
-  ID id = INVALID_ID;
-
-
-  if (variable_name == "charge_density" )
-    id  = CHARGE;
-
-
-  return id;
-}
+//ID
+//TightBinding::convert_variable_name_to_id(const std:: string& variable_name) const
+//{
+//
+//  ID id = INVALID_ID;
+//
+//
+//  if (variable_name == "charge_density" )
+//    id  = CHARGE;
+//
+//  return id;
+//}
 
 
 void
@@ -206,87 +205,84 @@ TightBinding::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
 
   if (ids.count(CHARGE))
     {
-      for (unsigned int n = 0; n < p.size(); n++)
+      for (unsigned int n = 0; n < np; n++)
         {
         values[n][CHARGE] = build_rho(p[n]);
         }
     }
 
-
 }
 
 
-
-
-void
-TightBinding::build_elemental_results(const std::set<std::string>& variables,
-    std::vector<double>& results, std::vector<std::string>& legend)
-{
-
-
-  // we only do something if we are on processor 0
-  // TODO parallelize
-  if (libMesh::processor_id() != 0)
-    return;
-
-
-  // if there is no mesh we can return immediately
-  if (_mesh == NULL)
-    return;
-
-
-
-  unsigned int n_vars = 0;
-  const unsigned int nn  = _mesh->n_active_elem();
-  int ch = -1;
-
-  if (variables.count("QuantumCharge"))
-    {
-      legend.resize( 1 );
-      legend[0] = "qDensity";
-      ch = n_vars;
-      n_vars++;
-    }
-
-
-  legend.resize(n_vars);
-
-  results.resize(nn * n_vars,0.0);
-
-  MeshBase::const_element_iterator it =  _mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =     _mesh->active_local_elements_end();
-
-
-  unsigned int elem_number = 0;
-  for ( ; it != end; ++it)
-    {
-
-      const Elem* elem = *it;
-
-      unsigned int id = n_vars * elem_number;
-
-      std::vector<std::map<ID, double> > values;
-
-      std::set<ID> ids;
-      ids.insert(CHARGE);
-
-      get_solution_secure(elem, ids, values);
-
-      double charge = values[0][CHARGE];
-
-
-      if (ch != -1)
-        {
-          results[id + ch] = charge;
-        }
-
-
-      elem_number++;
-    } //over element
-
-  results.resize(elem_number * n_vars);
-
-}
+//void
+//TightBinding::build_elemental_results(const std::set<std::string>& variables,
+//    std::vector<double>& results, std::vector<std::string>& legend)
+//{
+//
+//
+//  // we only do something if we are on processor 0
+//  // TODO parallelize
+//  if (libMesh::processor_id() != 0)
+//    return;
+//
+//
+//  // if there is no mesh we can return immediately
+//  if (_mesh == NULL)
+//    return;
+//
+//
+//
+//  unsigned int n_vars = 0;
+//  const unsigned int nn  = _mesh->n_active_elem();
+//  int ch = -1;
+//
+//  if (variables.count("QuantumCharge"))
+//    {
+//      legend.resize( 1 );
+//      legend[0] = "qDensity";
+//      ch = n_vars;
+//      n_vars++;
+//    }
+//
+//
+//  legend.resize(n_vars);
+//
+//  results.resize(nn * n_vars,0.0);
+//
+//  MeshBase::const_element_iterator it =  _mesh->active_local_elements_begin();
+//  const MeshBase::const_element_iterator end =     _mesh->active_local_elements_end();
+//
+//
+//  unsigned int elem_number = 0;
+//  for ( ; it != end; ++it)
+//    {
+//
+//      const Elem* elem = *it;
+//
+//      unsigned int id = n_vars * elem_number;
+//
+//      std::vector<std::map<ID, double> > values;
+//
+//      std::set<ID> ids;
+//      ids.insert(CHARGE);
+//
+//      get_solution_secure(elem, ids, values);
+//
+//      double charge = values[0][CHARGE];
+//
+//
+//      if (ch != -1)
+//        {
+//          results[id + ch] = charge;
+//        }
+//
+//
+//      elem_number++;
+//    } //over element
+//
+//  results.resize(elem_number * n_vars);
+//
+//}
 
 
 void

@@ -8,6 +8,8 @@ class ETB : public TightBinding
 
  public:
 
+
+
 //   enum Variables
 //   {
 //     UNKNOWN = 0,
@@ -77,6 +79,13 @@ class ETB : public TightBinding
 
   };
 
+  enum Solutions
+  {
+    //MeshEigenstate  //Eigenstate Magnitude projected on mesh
+    ElQuantumDensity,  //Electron charge density
+    HlQuantumDensity  //Hole charge density
+  };
+
   //! Constructor
   ETB(const ModelOptions& options);
 
@@ -111,19 +120,75 @@ class ETB : public TightBinding
   //! compute atomic charges
   void compute_atomic_charges(const std::string& particle, std::vector<double>& qmat);
 
-  virtual void get_solution_secure(const Elem* elem,
-      const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+//  //! compute state density for a single state
+//  void compute_state_density(unsigned int, std::vector<double>&);
 
+//  virtual void get_solution_secure(const Elem* elem,
+//      const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+
+//  virtual void
+//  get_solution_secure(const Elem* elem, const std::vector<Point>& p,
+//      const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+
+  //! Provide solution values
   virtual void
-  get_solution_secure(const Elem* elem, const std::vector<Point>& p,
-      const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+    get_solution_secure(const Elem* elem, std::map<ID, std::vector<double>>& values,
+        const std::vector<Point>& p);
 
   //! Order the solution in correct mode
-  virtual void build_elemental_results(const std::set<std::string>& variables,
-      std::vector<double>& results, std::vector<std::string>& legend);
+//  virtual void build_elemental_results(const std::set<std::string>& variables,
+//      std::vector<double>& results, std::vector<std::string>& legend);
+
+
+
+
+
+ protected:
+
+//  double build_rho(const std::string& particle, const Point& r);
+
+//  void build_statedens(std::vector<double>& values, const Point& r);
+
+  double build_rho3d(const std::string& particle, const Point& r);
+
+  double build_rho2d(const std::string& particle, const Point& r);
+
+  double build_average_rho1d(const std::string& particle, const Elem* elem);
+
+  virtual void do_init(void);
+
+  virtual void do_solve (void);
+
+  virtual void do_plot (void);
+
+  virtual void parse_options(void);
+
+  virtual void assemble(const ModelOptions& options);
+
+  //! Setup the available variables
+  virtual void do_setup_solution_variables(void);
+
+
+  //Mesh dimension (used many times by charge projection function)
+  int _dim;
+
+  //! computes the matrix element for the optical matrix
+  //! the P matrix comes out in   eV * Ang  (setting m=1,hbar=1)
+  virtual std::complex<double> calculate_matrix_element(const std::string& i_particle,
+							unsigned int i,
+							const std::string& j_particle,
+							unsigned int j);
+
+  /*! Note: for the moment calculate_matrix_element relays on the fact that the first
+     *  n_vb states are valence states, then there are all the electron states.
+     *  This should change if we want to put a self-consistent density calculation
+     *  that will dynamically append new states to the _solution vector.
+     */
 
 
  private:
+
+
 
   //! Get options suited for DFTB+ tight binding builder and solver
   void get_upt_options(void);
@@ -166,14 +231,17 @@ class ETB : public TightBinding
   //! vector to hold number of orbital per ion
   std::vector<int> _ion_num_orbitals;
 
-  /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
-  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+//  /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
+//  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
   
   //! Electron charge density on atoms
   std::vector<double> _el_atomic_charges;
   
   //!Hole charge density on atoms
   std::vector<double> _hl_atomic_charges;
+
+//  //! State density on atom, first index is the eigenvector label
+//  std::map<unsigned int, std::vector<double>> _state_density;
   
   //!Number of atoms (without including hydrogens)
   unsigned int _N_without_H;
@@ -190,42 +258,9 @@ class ETB : public TightBinding
     std::map<const Elem*, double> _elemental_result_el;
     std::map<const Elem*, double> _elemental_result_hl;
 
-
- protected:
-
-  double build_rho(const std::string& particle, const Point& r);
-
-  double build_rho3d(const std::string& particle, const Point& r);
-
-  double build_rho2d(const std::string& particle, const Point& r);
-
-  double build_average_rho1d(const std::string& particle, const Elem* elem);
-
-  virtual void do_init(void);
-
-  virtual void do_solve (void);
-
-  virtual void do_plot (void);
-
-  virtual void parse_options(void);
-
-  virtual void assemble(const ModelOptions& options);
-
-  //Mesh dimension (used many times by charge projection function)
-  int _dim;
-
-  //! computes the matrix element for the optical matrix
-  //! the P matrix comes out in   eV * Ang  (setting m=1,hbar=1)
-  virtual std::complex<double> calculate_matrix_element(const std::string& i_particle,
-							unsigned int i,
-							const std::string& j_particle,
-							unsigned int j);
-
-  /*! Note: for the moment calculate_matrix_element relays on the fact that the first
-     *  n_vb states are valence states, then there are all the electron states.
-     *  This should change if we want to put a self-consistent density calculation
-     *  that will dynamically append new states to the _solution vector.
-     */
+  //! Size of the solution (number of states)
+  unsigned int _solution_size;
+  
 
 };
 

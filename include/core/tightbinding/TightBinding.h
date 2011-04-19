@@ -23,12 +23,10 @@ class TightBinding : public EigenvalueProblem{
 
 public:
 
-  enum Variables
+  enum Unused
   {
     UNKNOWN = 0,
-    CHARGE,
-    EL_CH,
-    HL_CH
+    CHARGE
   };
 
   enum Shell
@@ -38,6 +36,7 @@ public:
     P = 2,
     D = 3
   };
+
 
   //! Constructor
   TightBinding(const ModelOptions& options);
@@ -57,11 +56,12 @@ public:
   virtual void
   get_solution_secure(const Elem* elem, const std::vector<Point>& p,
       const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+ 
+//  //! Order the solution in correct mode
+//  virtual void build_elemental_results(const std::set<std::string>& variables,
+//      std::vector<double>& results, std::vector<std::string>& legend);
 
-
-  //! Order the solution in correct mode
-  virtual void build_elemental_results(const std::set<std::string>& variables,
-      std::vector<double>& results, std::vector<std::string>& legend);
+  
 
 private:
 
@@ -79,8 +79,8 @@ protected:
    */
   virtual void obtain_hubbard_parameters(void);
 
-  /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
-  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
+//  /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
+//  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
 
   //! Pointer to atomistic structure for the simulation;
   AtomisticStructure* _atomistic_structure;
@@ -97,6 +97,10 @@ protected:
 
   //! Build charge density on given point
   double build_rho(const Point& r);
+
+  // Build states density 
+//  virtual void 
+  //build_statedens(std::vector<double>& values, const Point& r){};
 
   //! Charge variation (Mulliken Analisys) on each atom
   std::vector<double> _mulliken_netcharges;
@@ -118,6 +122,7 @@ protected:
 
   //!Vector for atom-projected hole chemical potential
   std::vector<double> _hl_chem_pot;
+
 
 };
 
