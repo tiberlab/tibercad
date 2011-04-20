@@ -1,13 +1,22 @@
-$Device
+#Example 8: 1D  Schroedinger-Poisson
+
+Device
 {
+
+  meshfile = quantum_poisson.msh
+  mesh_units = 1e-9
 
   Region well
   {
     material = GaAs
 
-    doping = 1e15
-    doping_type = donor
-    doping_level = 0.025
+    Doping
+    {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+     
+    }
 
   }
 
@@ -17,11 +26,14 @@ $Device
     material = AlGaAs
     x = 0.3
 
-    doping = 1e17
-    doping_type = donor
-    doping_level = 0.025
-    
-   
+    Doping
+    {
+      Nd = 1e17
+      type = donor
+      Ed = 0.025
+     
+    }
+ 
   }
   
   
@@ -32,197 +44,144 @@ $Device
     material = AlGaAs
     x = 0.3
 
-    doping = 1e17
-    doping_type = donor
-    doping_level = 0.025
-   
+    Doping
+    {
+      Nd = 1e17
+      type = donor
+      Ed = 0.025
+     
+    }
+ 
   }
-
 
   Cluster Quantum_1
   {
-    mesh_regions = (well ,barrier1_q, barrier2_q   )
-  }
-
-
-}
-
-$Models
-{
-
-  model macrostrain
-  {
-
-    options
-    {          
-      simulation_name = str
-
-      physical_regions = all
-    }
-
-  
-  
-    
-    BC_Regions  
-    {
-      BC_Region substrate
-      {
-	type = substrate
-	material = GaAs
-      }
-    }
-
-  } 
-
-
-  model  driftdiffusion
-  { 
-
-    options
-    {          
-      simulation_name = dd
-      physical_regions = all
-
-      coupling = poisson
-
-      electron_quantum_density = dens_el
-      statistics = FD
-      use_density_predictor = true
-
-    }
-
-    
-
-  }
-
-
- 
-
-
-  model efaschroedinger
-
-  {
-
-   
-    options
-    {
-     simulation_name = quantum_el
-     physical_regions = Quantum_1
-    }
-
-
-  }
-
-
- 
-  
-
-  model quantumdensity
-  {
-
-  
-    options 
-    {
-      simulation_name = dens_el
-      physical_regions =  Quantum_1
-    }
-
-
-  }
-
-  
-
-
-
-}
-
-$Solver
-{
-
- macrostrain
-  {
-    substrate = substrate
-
-  }
-
- 
-
-
-
-  quantum_el
-  {
-    Dirichlet_bc_everywhere = false
-    particle = el
-    number_of_eigenstates = 22
-    poisson_model_name = dd
-    strain_model_name = macrostrain
-    convergent_density = true
-
-  }
-
-
-
-  dens_el
-  {
-    k_space_dimension = 2
-    k-space_basis = true
-    k1 = (0, 0, 0.1)
-    k2 = (0, 0.1, 0)
-    
-
-    number_of_nodes = (4,4)
-    wedge = quarter
-
-    quantum_simulation = quantum_el
-
-    degeneracy = 2
-    refine_fraction = 0.20
-    relative_accuracy = 0.01
-    refine_k_space = true
-    output_density_in_k_space = true
-    uniform_refinement = false
-    mesh_order = FIRST
-
-    initial_eigenstates_number = 10 #20
-    analytic = true # false # true # 
-#   --------  if  false ->  k integration  performed,  if true,  analitical formula for 1D 
-  }
-
-
-  Selfconsistent
-  {
-    poisson_schroedinger
-    {
-      simulations = (dens_el, dd)
-      max_iterations = 10
-      abs_tolerance = 1e-4
-      rel_tolerance = 1e-6
-    }
+    regions = (well ,barrier1_q, barrier2_q   )
   }
 
 }
 
 
-$Physics
+
+
+
+Module  macrostrain
+{
+           
+  name = str
+
+  regions = all
+
+  substrate = substrate
+
+  plot = (Strain, PiezoPolarization)
+
+
+  Contact  substrate
+  {
+
+    type = substrate
+    material = GaAs
+
+  }
+  
+} 
+
+
+
+Module  driftdiffusion
+{ 
+ 
+  name = dd
+
+  regions = all
+  coupling = poisson
+
+
+  plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity,
+          CurrentDensity, ContactCurrent, eMobility, hMobility)
+
+  Physics
+  {
+    strain_simulation = str
+
+    # we us a predictor corrector scheme for the selfconsistent loop
+    use_density_predictor = true
+
+
+    recombination srh {}
+
+    particle_density
+    { 
+
+      particle = electron
+      statistics = fermidirac
+
+      # where to get the quantum density from
+      quantum_density =  quantum_el #   ex  dens_el
+      #   statistics = FD
+      barrier_regions = (buffer1,buffer2)
+      
+    }
+
+  
+    mobility doping_dependent {}
+
+  }
+
+}
+
+
+
+
+Module efaschroedinger
 {
 
-  quantum_el 
+  name = quantum_el
+  regions = Quantum_1
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  particle = el
+  number_of_eigenstates = 22
+  poisson_model_name = dd
+  strain_model_name = macrostrain
+  #solver = lapack
+
+
+  Physics
   {
     model = conduction_band    
   }
 
-
 }
 
-$Simulation
+
+
+Module selfconsistent
 {
-  #searchpath = ../../materials       
-  meshfile = quantum_poisson.msh
-  mesh_units = 1e-9
+
+  name =  poisson_schroedinger
+  solve = (quantum_el, dd)
+  # we do not use relaxation, but a predictor-corrector scheme
+  #relaxation_factor = 0.5
+  max_iterations = 10
+  absolute_tolerance = 1e-3  # 1e-4
+  relative_tolerance = 1e-8  #  1e-6
+  monitor = true
+  #xmonitor = true
+}
+
+
+Simulation
+{
+  
   dimension = 1
   temperature = 300
   solve = (str, dd, poisson_schroedinger)
-  resultpath = output
+  resultpath = output_2.0
   output_format = grace
-  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
+
+  #  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
+
 }

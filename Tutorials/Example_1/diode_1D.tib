@@ -56,8 +56,8 @@ Module driftdiffusion
 
     # use SRH and Auger recombination
     recombination (srh, auger) {}
+  
   }
-
 
   Contact anode
   {
@@ -70,6 +70,8 @@ Module driftdiffusion
     type = ohmic
     voltage = 0.0
   }
+
+  
 }
 
 

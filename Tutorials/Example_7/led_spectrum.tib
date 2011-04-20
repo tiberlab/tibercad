@@ -1,375 +1,205 @@
 
+# Example 7: Optical properties of AlGaN/GaN LED (1D)
 
-#   LED diode  3QW  GaN  
-#
+
 # Description of  the  device physical regions
-$Device
+Device
 {
 
+  meshfile = led_spectrum.msh #
+  mesh_units = 1e-9       #nm 
 
 
- Region n-algan  #n-AlGaN
-   {
-  #   mesh_regions = 1
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = AlGaN
-     x=0.20
-     doping = 5e18
-     doping_type = donor 
-     doping_level = 0.025
-   }
+  structure = wz
+  y-growth-direction = (1,0,-1,0)
+  z-growth-direction = (-1,2,-1,0)
+  x-growth-direction = (0,0,0,1)
 
- Region alinn  # AlInN
-   {
-  #   mesh_regions = 2
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = AlInN
-     x=0.78 
-     doping = 1e19
-     doping_type = donor 
-     doping_level = 0.025
-   }
 
+  Region n-algan  #n-AlGaN
+  {
  
 
+    material = AlGaN
+    x=0.20
+
+    Doping
+    {
+      Nd = 5e18
+      type = donor
+      Ed = 0.025
+     
+    }
 
 
- Region algan_barr1   # AlGaN_barrier1_no_quantum
-   {
- #    mesh_regions = 3
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = AlGaN
-     x = 0.2 
-     doping = 3e18 #
-     doping_type = donor 
-     doping_level = 0.025
-   }
+  }
 
-   Region AlGaN_barrier_quantum
-   {
-  #   mesh_regions = (4,6,8)
-     mesh_regions = (algan_barr_quantum1, algan_barr_quantum2, algan_barr_quantum3)
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = AlGaN
-     x = 0.2 
-     doping = 3e18 
-     doping_type = donor 
-     doping_level = 0.025
-   }
-
-
-
- Region GaN_QWell
-   {
- #    mesh_regions = (5,7,9)
-     mesh_regions = (GaN_QW1, GaN_QW2, GaN_QW3)
-
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = GaN
-     doping = 1e15  #  intrinsic  
-     doping_type = donor #
-    
-   }
-
-
-
+  Region alinn  # AlInN
+  {
  
+    material = AlInN
+    x=0.78 
 
-   Region i_AlGaN1_quantum
-   {
- #    mesh_regions = 10
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = AlGaN
-     x = 0.2 
-     doping = 1e15  #  intrinsic
-     doping_type = donor 
+    Doping
+    {
+       Nd = 1e19 
+       type = donor
+       Ed = 0.025
+     
+    }
+   
+  }
+   
+ 
+  Region algan_barr1   # AlGaN_barrier1_no_quantum
+  {
+
+    material = AlGaN
+    x = 0.2 
     
-   }
+    Doping
+    {
+      Nd =   3e18
+      type = donor
+      Ed = 0.025
+      
+    }
+
+    
+  }
 
 
+  Region AlGaN_barrier_quantum
+  {
+    
+    mesh_regions = (algan_barr_quantum1, algan_barr_quantum2, algan_barr_quantum3)
 
+    
+    material = AlGaN
+    x = 0.2 
 
-
-
-   Region i_AlGaN2_noquantum
-   {
-  #   mesh_regions = 11
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = AlGaN
-     x = 0.2 
-     doping = 1e15  #  intrinsic 
-     doping_type = donor 
+    Doping
+    {
+      Nd =   3e18
+      type = donor
+      Ed = 0.025
      
-   }
+    }
+
+    
+  }
 
 
 
+  Region GaN_QWell
+  {
+    
+    mesh_regions = (GaN_QW1, GaN_QW2, GaN_QW3)
+
+    material = GaN
+
+    Doping
+    {
+      Nd =   1e15  #  intrinsic 
+      type = donor
+      
+    }
+  
+  }
 
 
+  Region i_AlGaN1_quantum
+  {
+ 
+    material = AlGaN
+    x = 0.2 
+
+    Doping
+    {
+      Nd =   1e15  #  intrinsic 
+      type = donor
+       
+    }
+
+  }
 
 
- Region p_AlGaN
-   {
-  #   mesh_regions = 12
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = AlGaN
-     x = 0.250 
-     doping = 3e19
-     doping_type = acceptor 
-     doping_level = 0.170   g = 4    #p-doped Mg : Ea=170 meV    
+  Region i_AlGaN2_noquantum
+  {
+ 
+    material = AlGaN
+    x = 0.2 
+
+    Doping
+    {
+      Nd =   1e15  #  intrinsic 
+      type = donor
+      
+    }
+    
+  }
+
+
+  Region p_AlGaN
+  {
+    material = AlGaN
+    x = 0.250 
+
+    Doping
+    {
+      Nd =  3e19
+      type = acceptor
+      Ed = 0.170     #p-doped Mg : Ea=170 meV   
+      g = 4 
+
+    }
+
+
+    doping = 3e19
+    doping_type = acceptor 
+    doping_level = 0.170   g = 4    #p-doped Mg : Ea=170 meV    
      
-   }
+  }
+  
 
+  Cluster Quantum_1
+  {
+    regions = (algan_barr_quantum1,GaN_QW1)       
+  }
 
-   Cluster Quantum_1
-   {
-     mesh_regions = (algan_barr_quantum1,GaN_QW1)  #     (4, 5)
-   }
+  Cluster Quantum_2
+  {
+    regions = (algan_barr_quantum2, GaN_QW2 )   
+  }
 
-   Cluster Quantum_2
-   {
-     mesh_regions = (algan_barr_quantum2, GaN_QW2 ) #   (6,7)
-   }
-
-   Cluster Quantum_3
-   {
-     mesh_regions = (algan_barr_quantum3,GaN_QW3, i_AlGaN1_quantum)   #  (8,9,10)
-   }
+  Cluster Quantum_3
+  {
+    regions = (algan_barr_quantum3,GaN_QW3, i_AlGaN1_quantum)  
+  }
 
 
 }
 
 
-# Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
+
+
+
+Module  driftdiffusion
 { 
-
- model driftdiffusion
-  { 
-
-    options
-    {
-     simulation_name = driftdiffusion
-
-     physical_regions = all
-
-     statistics = FD
-     strain_simulation = strain
-    }
-
-    physical_model recombination
-    {
-      model = srh
-    }
-
-    physical_model recombination
-    {
-      model = direct
-    
-      C =  0.47e-10  #  GaN  
-
-    }
-
-
-    BC_Regions  
-    {
-      BC_Region n_contact
-      {
-        type = ohmic
-        rec_velocity_p = 1e7
-      
-        voltage = 0.0
-      }
-      
-      
-      BC_Region p_contact
-      {
-        type = ohmic
-        rec_velocity_n = 1e7
-
-  
-	voltage = @Vb[0.0]  
-      }
-
-      
  
-    }   
+  name = driftdiffusion
+
+  regions = all
 
 
+  plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity,
+          CurrentDensity, ContactCurrent, eMobility, hMobility)
 
+  #  statistics = FD default
 
-
- } 
-
- model macrostrain
-  {
-    options
-    {
-      simulation_name = strain
-      physical_regions = all
-    }
-
-    BC_Regions  
-    {
-      BC_Region n_contact   # substr
-      {
-      #  BC_reg_numb = 1
-	type = substrate
-        material = AlGaN
-        x=0.2
-	structure = wz
-        y-growth-direction = (1,0,-1,0)
-        z-growth-direction = (-1,2,-1,0)
-        x-growth-direction = (0,0,0,1)
-      }
-    }
-  }
-
-  model efaschroedinger
-
+  Solver
   {
 
-   
-    options
-    {
-      simulation_name = QW1_electrons
-      physical_regions = Quantum_1  # (4,5)
-    }
-
-  
-  }
-
- model efaschroedinger
-
-  {
-
-   
-    options
-    {
-     simulation_name = QW1_holes
-     physical_regions = Quantum_1  # (4,5)
-    }
-
-  
-  }
-
-
-
- model efaschroedinger
-
-  {
-
-   
-    options
-    {
-      simulation_name = QW2_electrons
-      physical_regions = Quantum_2  # (6,7)
-    }
-
-  
-  }
-
- model efaschroedinger
-
-  {
-
-   
-    options
-    {
-     simulation_name = QW2_holes
-     physical_regions = Quantum_1 # (6,7)
-    }
-
-  
-  }
-
- model efaschroedinger
-
-  {
-
-   
-    options
-    {
-      simulation_name = QW3_electrons
-      physical_regions = Quantum_3 # (8,9,10)
-    }
-
-  
-  }
-
- model efaschroedinger
-
-  {
-
-   
-    options
-    {
-     simulation_name = QW3_holes
-     physical_regions = Quantum_3 # (8,9,10)
-    }
-
-  
-  }
-
-
- model opticskp
-  {
-    options
-    {
-      simulation_name = optics
-      physical_regions = Quantum_3 # ( 8,9,10  )  
-    }
-  }
-
-model opticalspectrum
- {
-    options
-    {
-      simulation_name = spectrum
-     
-    }
-  }
-
-
-
-
- 
-}
-
-
-# Definition of  Model-dependent Solver parameters
-$Solver
-{
-
-
-
- driftdiffusion
-## full   DD calculation
-  {
     nonlinear_solver = tiber
     nonlin_rel_tol = 1e-14  
     nonlin_abs_tol =  1e-50  
@@ -381,227 +211,239 @@ $Solver
     pc_type = lu 
 
   }
+
  
-
-
-
-  sweep
-  {
-    simulation = driftdiffusion
-    variable = Vb
-    start = 0.0
-    stop =  4.0 #
-    steps = 100 #
-    plotvariable = current
-  }
-
-
-
-
-
-
- macrostrain
-  {
-    substrate = n_contact  #substr
-  }
-
-  efaschroedinger
-  {
-    x-periodicity = false
-    Dirichlet_bc_everywhere = true   
-
-    number_of_eigenstates = 20 
-
-    poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
-    strain_model_name = macrostrain
-    convergent_density = true
-    log_output= false
-
-
-
-  } 
-
-
-  QW1_electrons
-  {
-    particle = el
-   
-  }
-
-  QW2_electrons
-  {
-    particle = el
-   
-  }
-
-  QW3_electrons
-  {
-    particle = el
-   
-  }
-
-
-  QW1_holes
-  {
-    particle = hl
     
-  }
-
-
-  QW2_holes
+  Physics
   {
-    particle = hl
-    
-  }
 
+    strain_simulation = strain
 
-  QW3_holes
-  {
-    particle = hl
-    
-  }
+    polarization (piezo, pyro) {}
 
+    recombination srh {}
 
-
- optics
-  {
-    initial_state_model = QW3_electrons # quantum_el
-    final_state_model =   QW3_holes # quantum_hl
-
-
-    initial_eigenstates = (0, 19)
-    final_eigenstates   = (0, 19)
-
-  }
-
-
-
-
-# optical spectrum
-
-  spectrum
-  {
-    k_space_dimension = 2
-    k-space_basis = true
-    k1 = (0, 0, 0.1)
-    k2 = (0, 0.1, 0)
-
-    refine_fraction =  0.30 #    1.0 for  uniform refinement 
-    relative_accuracy =  0.01  #
-    refine_k_space = true
-
-    number_of_nodes = (2,2)  #  numb. of  elememts in k mesh, along x and y
-    wedge = quarter
- 
-    optical_matr_elem_model=optics
-
-    polarization =  (0, 0, 1)
-
-    Emin = 3.0
-    Emax  = 5.0
-    dE = 0.001
-
-
-
-  }
-
-
-
-
-}
-
-
-
-# Definition of  Model dependent physical parameters
-$Physics
-{
+    recombination direct 
+    {
   
+      C =  0.47e-10  #  GaN  
+
+    }
+
+
+  }
+
    
-
-# quantum_electrons 
-
-  QW1_electrons
+  Contact  n_contact
   {
-    particle = el
-    model = conduction_band   #eff mass  cb 
-  }
 
-  QW2_electrons
-  {
-    particle = el
-    model = conduction_band   #eff mass  cb 
-  }
+    type = ohmic
+    rec_velocity_p = 1e7
+      
+    voltage = 0.0
 
-  QW3_electrons
-  {
-    particle = el
-    model = conduction_band   #eff mass  cb 
   }
 
 
 
-#  quantum_holes
 
-  QW1_holes
+  Contact  p_contact
   {
+
+    type = ohmic
+    rec_velocity_n = 1e7
+      
+    voltage = $Vb[0.0] 
+
+  }
+
+
+} 
+
+
+Module macrostrain
+{
+   
+  name = strain
+  regions = all
+  substrate = n_contact 
+  plot = (Strain, PiezoPolarization)
+   
+  Contact  n_contact 
+  {
+    type = substrate
+    material = AlGaN 
+    x=0.2
+    structure = wz
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+    x-growth-direction = (0,0,0,1)
+        
+  }
+    
+}
+
+
+
+
+
+Module efaschroedinger
+{
+
+  name = QW1_electrons
+  regions = Quantum_1
+  plot = (ProbabilityDensity, EigenEnergy)
+
+  x-periodicity = false
+  Dirichlet_bc_everywhere = true
+  number_of_eigenstates = 20 
+
+  particle = el
+
+  poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
+  strain_model_name = macrostrain
+  #   convergent_density = true
+  #   log_output= false
+
+  Physics
+  {
+    model = conduction_band    
+  }
+
+}
+
+
+Module efaschroedinger
+{
+
+  name = QW1_holes 
+  regions = Quantum_1
+  plot = (ProbabilityDensity, EigenEnergy)
+
+  x-periodicity = false
+  Dirichlet_bc_everywhere = true
+  number_of_eigenstates = 20 
+
+  particle = hl
+
+  poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
+  strain_model_name = macrostrain
+  #   convergent_density = true
+  #   log_output= false
+
+  Physics
+  {
+
     particle = hl
     model = kp   #  k.p  for  valence  band
     kp_model = 6x6
 
   }
 
-  QW2_holes
-  {
-    particle = hl
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
-
-  }
-
-  QW3_holes
-  {
-    particle = hl
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
-
-  }
+}
 
 
- 
 
 
-  optics
-  {
 
-  }
+Module opticskp
+{
+
+  name = optics 
+
+  regions = Quantum_1
+
+  plot = optical_spectrum_k_0 
+
+
+  initial_state_model = QW1_electrons # quantum_el
+  final_state_model =   QW1_holes # quantum_hl
+
+
+  initial_eigenstates = (0, 19)
+  final_eigenstates   = (0, 19)
+
+  optical_matr_elem_model=optics
+
+  polarization =  (0, 0, 1)
+
+  Emin = 3.0
+  Emax  = 5.0
+  dE = 0.001
+
 
 
 }
 
 
-# Definition of  model-indipendent parameters of the Simulation
-
-
-$Simulation
+Module  opticalspectrum 
 {
 
+  name = spectrum 
+  plot = optical_spectrum
 
-  #searchpath =  ../../materials       
-  meshfile = led_spectrum.msh #  
+  regions = Quantum_1
+
+  k_space_dimension = 2
+  k-space_basis = true
+  k1 = (0, 0, 0.1)
+  k2 = (0, 0.1, 0)
+
+  refine_fraction =  0.30 #    1.0 for  uniform refinement 
+  relative_accuracy =  0.01  #
+  refine_k_space = true
+
+  number_of_nodes = (2,2)  #  numb. of  elememts in k mesh, along x and y
+  wedge = quarter
+ 
+  optical_matr_elem_model=optics
+
+  polarization =  (0, 0, 1)
+
+  Emin = 3.0
+  Emax  = 5.0
+  dE = 0.001
+
+ 
+}
+
+
+
+
+
+
+Module sweep
+{
+  name = sweep
+  solve = driftdiffusion
+
+  variable = $Vb
+  start = 0.0
+  stop =  4.0 #
+  steps = 100 #
+  plotvariable = current
+
+}
+
+ 
+
+
+Simulation
+{
+
   verbose = 3    
-  mesh_units = 1e-9       #nm 
+ 
   dimension = 1
   temperature = 300 
 
-  solve = (strain, sweep, QW3_electrons,QW3_holes, spectrum    )
+  solve = (strain, sweep, QW1_electrons,QW1_holes, optics, spectrum    )
 
 
-  resultpath =   output_V4_QW3
+  resultpath =   output_V4_QW1_2.0
  
-  plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensityDensity, eCurrentDensity, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, Occupation, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent,  optical_spectrum, k-space  )
+#  plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensityDensity, eCurrentDensity, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, Occupation, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent,  optical_spectrum, k-space  )
  
   output_format = grace
-
 
 }
 

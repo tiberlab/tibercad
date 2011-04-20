@@ -89,23 +89,21 @@ Module driftdiffusion
 
     recombination direct {}
 
- 
-    Contact cathode
-    {
-      type = ohmic
-      
-      voltage = 0.0
-    }
-      
-      
-    Contact anode 
-    {
-      type = ohmic
+  }
 
-      voltage = 0.0
-    }
+  Contact cathode
+  {
+    type = ohmic
+      
+    voltage = 0.0
+  }
+      
+      
+  Contact anode 
+  {
+    type = ohmic
 
-
+    voltage = 0.0
   }
 
 }
@@ -141,8 +139,8 @@ Module efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy)
 
- x-periodicity = false
-    Dirichlet_bc_everywhere = true
+  x-periodicity = false
+  Dirichlet_bc_everywhere = true
    
   particle = el
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
@@ -171,8 +169,8 @@ Module efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy)
 
- x-periodicity = false
-    Dirichlet_bc_everywhere = true
+  x-periodicity = false
+  Dirichlet_bc_everywhere = true
    
   particle = hl
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
