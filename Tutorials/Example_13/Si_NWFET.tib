@@ -1,147 +1,134 @@
 
 # Description of  the  device physical regions
-$Device
+Device
 {
+  meshfile = Si_NWFET.msh  
+  mesh_units = 1e-9
+
+  material = Si
    
    Region source_region
    {
-     material = Si
-     doping = 5e19 doping_type = donor
+     Doping {
+       type = donor
+       Nd = 5e19 
+     }
    }
 
    Region drain_region
    {
-     material = Si
-     doping = 5e19 doping_type = donor
+     Doping {
+       type = donor
+       Nd = 5e19 
+     }
    }
 
    Region oxide
    {
      material = SiO2
-  
    }
-   Region channel  #
+
+   Region channel 
    {
-     material = Si
    }
 
 }
 
 
 # Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
+Module driftdiffusion
 { 
-
-  model driftdiffusion
-  { 
               
-    options
+  # is default
+  # statistics = fermidirac
+
+  # we solve only for electrons
+  coupling = electrons
+
+  plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Physics
+  {
+    #recombination
+    #{
+    #  model = srh
+    #}
+
+    electron_mobility field_dependent
     {
-     simulation_name = driftdiffusion
-     statistics = FD
-
-     # we solve only for electrons
-     coupling = electrons
-    }
-
-    physical_model recombination
-    {
-      model = srh
-    }
-
-    physical_model electron_mobility
-    {
-
       model = field_dependent
 
-
-      low_field_model = doping_dependent   #Masetti  model for Si !!!
-
+      low_field_model = doping_dependent
     }
+  }
 
 
+  Contact gate
+  {
+    type = schottky
+    barrier_height = 3.0
 
+    voltage = $Vg[0.0]
+  }
 
-    BC_Regions  
-    {
-      BC_Region gate
-      {
-        type = schottky
-	barrier_height = 3.0
-
-        voltage = @Vg[0.0]
-      }
-
-      BC_Region source
-      {
-        type = ohmic
-
-        voltage = 0.0
-      }
+  Contact source
+  {
+    voltage = 0.0
+  }
  
-      BC_Region drain
-      {
-        type = ohmic
-
-        voltage = @Vd[0.0]
-      }
-   
-
-    }   
-
-  }  
-
-}
-
-
-# Definition of  Model-dependent Solver parameters
-$Solver
-{
-  driftdiffusion
+  Contact drain
   {
-    nonlinear_solver = tiber
-    ksp_type = bcgsl
-    nonlin_max_it = 10
-    nonlin_step_tol = 1e-3
-    ls_max_step = 2
-  }
-
-
-  Sweep
-  {
-    sweep_drain
-    {
-      simulation = driftdiffusion
-      variable = Vd
-      start = 0.0
-      stop = 3.5
-      steps = 70 #35 
-    }
-
-    sweep_gate
-    {
-      variable = Vg
-      start = -0.5  # -1.0
-      stop = 2.0
-      steps =  7 # 200 # 
-      simulation = sweep_drain # 
-    }
+    voltage = $Vd[0.0]
   }
 }
 
 
 
-# Definition of  model-indipendent parameters of the Simulation
-$Simulation
+Module sweep
 {
-  meshfile =  Si_NWFET.msh  
-  dimension = 3
-  mesh_units = 1e-9
+  name = sweep_drain
+  solve = driftdiffusion
+  variable = $Vd
+  start = 0.0
+  stop = 3.5
+  steps = 70 
+  plot_data = true
+}
+
+Module sweep
+{
+  name = sweep_gate
+  variable = $Vg
+  start = -0.5
+  stop = 2.0
+  steps =  10 
+  max_step = 0.2
+  solve = sweep_drain 
+}
+
+Module sweep
+{
+  name = transchar
+  variable = $Vg
+  start = 2.0
+  stop = -5.0
+  steps =  140 
+  solve = sweep_drain 
+  plot_data = true
+}
+
+
+
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
   temperature = 300
-  solve = sweep_drain  
+  solve = (sweep_gate, transchar)
   resultpath = output_IV  
   output_format = vtk
-  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent,  NetRecombination, EField, ElPotential, ContactCurrents)
 }
 
 
