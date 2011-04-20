@@ -273,7 +273,7 @@ ParticleDensity::quantum_density(void)
         continuum *= -1.0;
 
       // we do not accept it if it is lower than the bulk band edge
-      continuum = max(_E, continuum);
+      //continuum = max(_E, continuum);
 
       _argument = (_E_F - continuum) / _kT;
 

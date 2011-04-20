@@ -364,6 +364,9 @@ TightBinding::project_potential(const std::string model_name, const std::string 
     }
 
   //Process potential values to shift the smallest value to 0
+  _pot_min = 0;
+
+  /*
   _pot_min = _pot_shift[0];
   double tmp;
   for (unsigned int i = 1; i < _pot_shift.size(); i++)
@@ -384,10 +387,11 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   }
 
   double* pot = new double[_pot_shift.size()];
-      for (unsigned int i = 0; i < _pot_shift.size(); i++)
-        pot[i] = _pot_shift[i];
-      _atomistic_structure->print_structure("pot_on_atom.xyz", pot);
-
+  for (unsigned int i = 0; i < _pot_shift.size(); i++)
+    pot[i] = _pot_shift[i];
+  _atomistic_structure->print_structure("pot_on_atom.xyz", pot);
+  delete pot;
+  */
   std::cout << "project_potential done " << std::endl;
 }
 

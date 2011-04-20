@@ -11,6 +11,9 @@
 #include "TiberCad.h"
 #include "UptWrapper.h"
 #include "uptight.h"
+#include "Material.h"
+#include "Alloy.h"
+#include "Messages.h"
 #include "mesh.h"
 
 #include <fstream>
@@ -19,9 +22,7 @@
 #include <cstring>
 #include <map>
 #include <algorithm>
-#include "Material.h"
-#include "Alloy.h"
-#include "Messages.h"
+#include <limits>
 
 #define complex_dp  std::complex<double>
  
@@ -202,6 +203,24 @@ void ETB::reinit(void){
       throw InitFailedException("Strain model has not been solved");
   }
 
+  // Get the minimum CB and maximum VB edges
+  ModelOptions solopts = get_solver_options();
+  if (!solopts.find_option("guess_conduction") ||
+      !solopts.find_option("guess_valence"))
+  {
+    double cb_min, vb_max;
+    get_band_extrema(cb_min, vb_max);
+    ostringstream os;
+    os << "CB min = " << cb_min << "  VB max = " << vb_max << endl;
+    Messages::info(os.str());
+
+    if (!solopts.find_option("guess_conduction"))
+      _upt_solver_options.guess_cb = cb_min;
+
+    if (!solopts.find_option("guess_valence"))
+      _upt_solver_options.guess_vb = vb_max;
+  }
+
   std::string upt_filename;
   // Getting reference to atomistic structure for calculation
   if (_upg_filename.compare("none") != 0)
@@ -301,9 +320,11 @@ void ETB::do_solve(void){
     std::cerr<< "Conduct= "<<_map_ID_Ecb[*reg] << std::endl;   
   }
 
-  std::cerr << "Vb Max= " << _vb_shift << std::endl;  
+  //std::cerr << "Vb Max= " << _vb_shift << std::endl;
 
   reinit(); 
+
+
 
   if (_assemble) assemble(options);
 
@@ -365,7 +386,8 @@ void ETB::do_solve(void){
   {
     _solution[i].particle = "hl";
     _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
+    //_solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
+    _solution[i].eigen_energy = eigvals[i];
     _solution[i].eigen_vector.resize(hdim);
     _solution[i].temperature = _upt_options.temperature;
 
@@ -394,7 +416,8 @@ void ETB::do_solve(void){
   {
     _solution[i].particle = "el";
     _solution[i].statistics = "Fermi";
-    _solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
+    //_solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
+    _solution[i].eigen_energy = eigvals[i];
     _solution[i].eigen_vector.resize(hdim);
     _solution[i].temperature = _upt_options.temperature;
 
@@ -603,7 +626,7 @@ void ETB::parse_options(void)
 
   if (options.find_option("potential_simulation"))
   {
-    _upt_options.potential_sim = options.get_option("potential_simulation","no_sim");
+    _upt_options.potential_sim = options.get_option("potential_simulation","");
     _upt_options.potential_flag = true;
   }
 
@@ -648,6 +671,7 @@ void ETB::parse_options(void)
   
   _upt_options.grid_step = options.get_option("jmol_grid_step", 0.5);
 
+
   //---------------------------------------------------------------------------------------
   //computes educated guesses for valence and conduction bands edges
   std::set<ID> IDs = _atomistic_structure->get_IDset();
@@ -665,17 +689,18 @@ void ETB::parse_options(void)
   }
   
   // now vb_shift corresponds to maximum valence band edge
-  _vb_shift = vb_max;
+  //_vb_shift = vb_max;
+  _vb_shift = 0.0;
   
   if(cb_min<vb_max)
   {
     std::cerr<<"WARNING: bands overlap; cannot find good guess"<<std::endl;
   }
-  else
-  {
-    vb_max = 1.0*(cb_min - vb_max)/5.0;
-    cb_min = 4.0*vb_max;    
-  }
+  //else
+  //{
+  //  vb_max = 1.0*(cb_min - vb_max)/5.0;
+  //  cb_min = 4.0*vb_max;
+  //}
   //---------------------------------------------------------------------------------------
 
   _upt_options.band_shift_flag = options.get_option("add_band_shifts", true);
@@ -927,7 +952,7 @@ void ETB::get_band_edges(void)
   {
       const Material* mat = as->get_device()->get_material( (*reg) );
 
-      if (mat->is_alloy())
+      /*if (mat->is_alloy())
       {
 	const Alloy* alloy = static_cast<const Alloy*>(mat);
 
@@ -967,7 +992,7 @@ void ETB::get_band_edges(void)
 	
 	dbA.set_section(""); dbB.set_section("");
       }
-      else
+      else*/
       {
 	Database db = mat->get_database();
 	db.set_section("valenceband");
@@ -993,6 +1018,60 @@ void ETB::get_band_edges(void)
 }
 
 
+
+void
+ETB::get_band_extrema(double& cb_min, double& vb_max)
+{
+  if (_upt_options.potential_flag)
+  {
+    SimulationInterface* sim =
+        SimulationInterface::find_simulation(_upt_options.potential_sim);
+
+    string cbedge("Ec");
+    string vbedge("Ev");
+
+    // here we assume that the simulation exists (it was checked before)
+    ID cb_id = sim->get_solution_id(cbedge);
+    ID vb_id = sim->get_solution_id(vbedge);
+
+    if ((cb_id == INVALID_ID) || (vb_id == INVALID_ID))
+      throw RuntimeException("Simulation \'" + sim->get_name() +
+          "\' lacks band edge solution variables.");
+
+    vb_max = -numeric_limits<double>::max();
+    cb_min = numeric_limits<double>::max();
+
+    map<ID, vector<double> > bandedges;
+    bandedges[cb_id] = vector<double>(1);
+    bandedges[vb_id] = vector<double>(1);
+
+    MeshBase::const_element_iterator it = _mesh->active_local_elements_begin();
+    const MeshBase::const_element_iterator end = _mesh->active_local_elements_end();
+
+    for ( ; it != end; ++it)
+    {
+      const Elem* elem = *it;
+      vector<Point> p(elem->n_nodes());
+
+      for (size_t i = 0; i < elem->n_nodes(); ++i)
+        p[i] = elem->point(i);
+
+      sim->get_solution(elem, bandedges, p);
+
+      for (size_t i = 0; i < elem->n_nodes(); ++i)
+      {
+        double vb = bandedges[vb_id][i];
+        double cb = bandedges[cb_id][i];
+        vb_max = (vb > vb_max) ? vb : vb_max;
+        cb_min = (cb < cb_min) ? cb : cb_min;
+      }
+    }
+  }
+}
+
+
+
+
 void
 ETB::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
@@ -1013,11 +1092,9 @@ ETB::get_solution_secure(const Elem* elem,
                   values[ElQuantumDensity][0] = build_rho2d("el", elem->centroid());
               else if (_dim == 1)
                   values[ElQuantumDensity][0] = build_average_rho1d("el", elem);
-              else std::cerr << "Unknown number of dimensions, values not assigned in" 
-                " ETB::get_solution_secure" << std::endl;
-
-              //values[ElQuantumDensity][n] = _elemental_result_el[elem];
-         //   }
+              // probably unnecessary, otherwise should throw exception
+              //else std::cerr << "Unknown number of dimensions, values not assigned in" 
+              //  " ETB::get_solution_secure" << std::endl;
 
     }
 
@@ -1029,8 +1106,8 @@ ETB::get_solution_secure(const Elem* elem,
                 values[HlQuantumDensity][0] = build_rho2d("hl", elem->centroid());
               else if (_dim == 1)
                 values[HlQuantumDensity][0] = build_average_rho1d("hl", elem);
-              else std:cerr <<"Unknown number of dimensions, values not assigned in" 
-                " ETG::get_solutionsecure" << std::endl;
+              //else std:cerr <<"Unknown number of dimensions, values not assigned in" 
+              //  " ETG::get_solutionsecure" << std::endl;
     }
 
 }

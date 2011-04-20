@@ -1,3 +1,6 @@
+2011-04-19 Auf der Maur
+	( ) control/change get_solution() for CELL data (return data on each point)
+
 2011-02-20 Auf der Maur
 	( ) get rid of read_database(), put database access into get_option()
 		and get_parameter()

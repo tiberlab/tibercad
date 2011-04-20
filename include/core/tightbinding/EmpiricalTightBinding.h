@@ -10,13 +10,6 @@ class ETB : public TightBinding
 
 
 
-//   enum Variables
-//   {
-//     UNKNOWN = 0,
-//     EL_CH,
-//     HL_CH
-//   };
-
   //! A class for Dftb options
   class UptOptions
   {
@@ -79,12 +72,6 @@ class ETB : public TightBinding
 
   };
 
-  enum Solutions
-  {
-    //MeshEigenstate  //Eigenstate Magnitude projected on mesh
-    ElQuantumDensity,  //Electron charge density
-    HlQuantumDensity  //Hole charge density
-  };
 
   //! Constructor
   ETB(const ModelOptions& options);
@@ -123,21 +110,11 @@ class ETB : public TightBinding
 //  //! compute state density for a single state
 //  void compute_state_density(unsigned int, std::vector<double>&);
 
-//  virtual void get_solution_secure(const Elem* elem,
-//      const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
-
-//  virtual void
-//  get_solution_secure(const Elem* elem, const std::vector<Point>& p,
-//      const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
 
   //! Provide solution values
   virtual void
     get_solution_secure(const Elem* elem, std::map<ID, std::vector<double>>& values,
         const std::vector<Point>& p);
-
-  //! Order the solution in correct mode
-//  virtual void build_elemental_results(const std::set<std::string>& variables,
-//      std::vector<double>& results, std::vector<std::string>& legend);
 
 
 
@@ -188,6 +165,12 @@ class ETB : public TightBinding
 
  private:
 
+  enum Solutions
+  {
+    //MeshEigenstate  //Eigenstate Magnitude projected on mesh
+    ElQuantumDensity,  //Electron charge density
+    HlQuantumDensity  //Hole charge density
+  };
 
 
   //! Get options suited for DFTB+ tight binding builder and solver
@@ -210,6 +193,9 @@ class ETB : public TightBinding
   //! subroutine used to read band-edges from database
   void get_band_edges(void);
 
+  //! get the band extrema
+  void get_band_extrema(double& cb_min, double& vb_max);
+
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;
 
@@ -231,8 +217,6 @@ class ETB : public TightBinding
   //! vector to hold number of orbital per ion
   std::vector<int> _ion_num_orbitals;
 
-//  /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
-//  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
   
   //! Electron charge density on atoms
   std::vector<double> _el_atomic_charges;
@@ -253,6 +237,7 @@ class ETB : public TightBinding
   std::vector<double> _band_shift;
   
   double _vb_shift;
+
     
     //! Charge density on elements (for faster scc calculation)
     std::map<const Elem*, double> _elemental_result_el;

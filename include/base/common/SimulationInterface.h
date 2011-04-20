@@ -400,8 +400,6 @@ class SimulationInterface : public TiberModelObject
      * vector in the map has size zero. Generally the size of the vector depends on the
      * type of the solution.
      *
-     * Cell based solutions have to be returned only once, not for every
-     * requested point.
      *
      * If \c points is not specified, the values are returned on the ``natural''
      * locations of the solution variables.
@@ -1112,6 +1110,9 @@ class SimulationInterface : public TiberModelObject
      *
      * \note The points in \c p are given in \em local coordinates (i.e. on the
      * reference element)
+     *
+     * \note Cell based solutions have to be returned only once, not for every
+     * requested point.
      *
      * \pre \c elem is an active element of this simulation
      * \pre all ids refer to solutions located on an element

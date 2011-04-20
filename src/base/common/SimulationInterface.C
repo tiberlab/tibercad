@@ -1915,7 +1915,7 @@ SimulationInterface::get_solution(const Elem* elem,
 
   // first resize all data vectors to the right size
   map<ID, vector<double> >::iterator it(values.begin());
-  map<ID, vector<double> >::iterator end(values.end());
+  const map<ID, vector<double> >::iterator end(values.end());
   for ( ; it != end; ++it)
   {
     const SolutionDescriptor& sd = get_solution_descriptor(it->first);
@@ -1924,9 +1924,6 @@ SimulationInterface::get_solution(const Elem* elem,
     switch (sd.location())
     {
       case SolutionDescriptor::CELL:
-        values[it->first].resize(n_comp);
-        break;
-
       case SolutionDescriptor::NODES:
         values[it->first].resize(nn * n_comp);
         break;
@@ -2047,6 +2044,25 @@ SimulationInterface::get_solution(const Elem* elem,
   }
   else
     get_solution_secure(elem, values, points);
+
+
+  // cell based solutions are copied to all requested points
+  it = values.begin();
+  for ( ; it != end; ++it)
+  {
+    const SolutionDescriptor& sd = get_solution_descriptor(it->first);
+    unsigned int n_comp = sd.n_components();
+    if (sd.location() == SolutionDescriptor::CELL)
+    {
+      vector<double>& vec = values[it->first];
+      for (size_t i = 1; i < nn; ++i)
+      {
+        size_t shift = i * n_comp;
+        for (size_t c = 0; c < n_comp; ++c)
+          vec[shift + c] = vec[c];
+      }
+    }
+  }
 
   return flag;
 }
