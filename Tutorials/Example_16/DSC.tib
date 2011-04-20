@@ -1,0 +1,115 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = DSC.msh
+
+  Region TiO2 
+  {
+    material = TiO2mes
+    porosity = 0.5
+  }
+
+  Region electrolyte 
+  {
+    material = TiO2mes
+    TiO2 = false
+  }
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module dssc
+{ 
+              
+  name = dssc
+  plot = (Potential, Density, Current, ContactCurrents)
+
+
+  Solver linesearch
+  {
+    max_iterations = 300
+    step_tolerance = 1e-4
+    linear_solver
+    {
+      preconditioner = lu
+    }
+  }
+
+
+  Physics 
+  {
+    generation = dssc_generation
+  }
+
+
+
+  Contact anode
+  {
+    type = ohmic
+    bias = $V[0.0]
+  }
+
+  Contact cathode
+  {
+    type = Pt
+    load = $R[1e8]
+  }
+
+}  
+
+
+Module dssc_generation
+{
+  regions = TiO2
+  plot = (Distance, Generation)
+  light_direction = (1, 0, 0)
+  light_intensity = $x
+  dye = N719
+  #illumination_spectrum = Sun1p5am
+
+  Contact anode
+  {
+  }
+}
+
+
+Module sweep
+{
+  name = sweep_gen
+  solve = (dssc_generation, dssc)
+  variable = $x
+  values = (0, 1e-12, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 0.1, 1)
+  plot_data = true
+}
+
+Module sweep
+{
+  name = sweep_R
+  solve = dssc
+  variable = $R
+  values = ( 1000, 100, 10, 1 )
+  plot_data = true
+}
+
+Module sweep
+{
+  name = sweep_V
+  solve = dssc
+  variable = $V
+  values = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.62, 0.64, 0.66, 0.68, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8)
+  plot_data = true
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+Simulation
+{
+  searchpath = ../../materials
+  solve = (sweep_gen, sweep_R, sweep_V)
+  resultpath = output
+  output_format = grace
+}
+
+
+
