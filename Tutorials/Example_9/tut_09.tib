@@ -1,170 +1,165 @@
-# diode example
+# Example 9: 3D thermal - drift-diffusion self-consistent simulation with cylindrical symmetry
 
-# Description of  the  device physical regions
-$Device
+
+
+Device
 {
-  Options
+  
+  meshfile = tut_09.msh
+  dimension = 2
+  
+
+  Region n_side 
   {
-    meshfile = tut_09.msh
-    dimension = 2
+    material  = Si
+
+    Doping
+    {
+      Nd = 1e18
+      type = donor 
+     
+    }
+   
   }
 
-   Region n_side 
-   {
-     mat = Si
-     doping = 1e18 doping_type = donor
-     }
-
-   Region p_side 
-   {
-     mat = Si
-     doping = 1e19 doping_type = acceptor
-
-   }
-
-   Region air
-   {
-     mat = Air
-   }
-
-
-}
-
-
-# Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
-{
-  
-  model driftdiffusion
-  { 
-              
-    options
-    {
-     simulation_name = dd
-     physical_regions = (n_side,p_side)
-
-     statistics = FD
-     thermal_simulation = tt
-
-     plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity, eMobility, hMobility, NetRecombination, Pn, Pp, RecombHeat, ePeltier, hPeltier, eJoule, hJoule, ePowerFlux, hPowerFlux, ContactCurrents)
-    }
-
-     physical_model recombination
-     { 
-       model  =  srh
-     }
-
-     physical_model thermoelectric_power
-     {
-       model = diffusivity_model
-     }
-
-     physical_model electron_mobility
-     {
-       model = doping_dependent
-     }
-
-     physical_model hole_mobility
-     {
-       model = doping_dependent
-     }
-
-    BC_Regions  
-    {
-      BC_Region anode
-      {
-        type = ohmic
-        voltage = @Vb[0.0]
-      }
-
-      BC_Region cathode
-      {
-        type = ohmic
-        voltage = 0.0
-      }
- 
-    }   
-  }  
-  
-   model thermal
+  Region p_side 
   {
+    material = Si
 
-     options
-    { 
-      simulation_name = tt
-      physical_regions = all
-      plot = (thermal)
+    Doping
+    {
+      Nd = 1e19
+      type = acceptor 
     }
 
-      physical_model heat_source
-     {
-      model = drift_diffusion_dissipation
+  }
 
-      drift_diffusion_simulation = dd
-     }
-
-
-     BC_Regions
-     {
-        BC_Region reservoir
-   	{
-         type = heat_reservoir 
-         temperature = 300
-   	}
- 
-        BC_Region dissipator
-        {
-	 r_surf = 0.5
-         type = thermal_surface_resistance
-         temperature = 300
-       }
-    }
-
-   }
+  Region air
+  {
+    material = Air
+  }
+  
 }
 
 
-# Definition of  Model-dependent Solver parameters
-$Solver
-{
 
-  driftdiffusion
+  
+Module driftdiffusion
+{ 
+              
+   
+  name = dd
+  regions = (n_side,p_side)
+
+  #    statistics = FD
+  thermal_simulation = tt
+
+  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity, eMobility, hMobility, NetRecombination, Pn, Pp, RecombHeat, ePeltier, hPeltier, eJoule, hJoule, ePowerFlux, hPowerFlux, ContactCurrents)
+
+  Solver
   {
     nonlin_max_it = 25
     nonlin_step_tol = 1e-5
     ls_max_step = 2
   }
-
-  selfconsistent
+  
+  Physics
   {
-     flavour = relaxation
-     simulations = (dd,tt)
-     abs_tolerance = 1e-5
-     monitor = true
+
+    recombination srh {}
+
+    thermal_simulation = tt  
+
+
+    mobility
+    {
+      model = doping_dependent
+    }
+
+  }
+    
+
+# thermoelectric_power   diffusivity_model {}
+     
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]
   }
 
-
-
-  sweep
+  Contact cathode
   {
-    simulation = selfconsistent
-    variable = Vb
-    start = 0.0
-    stop = 1.2
-    steps = 12
+    type = ohmic
+    voltage = 0.0
+  }
+ 
+     
+}  
+  
+
+Module thermal
+{
+  
+  name = tt
+  regions = all
+  plot = (  LatticeTemp, ThermalFlux, HeatSource,ThermCond,MaxTemp)  #          all # (thermal)
+
+    
+  Physics
+  {
+
+    HeatSource joule
+
+    {
+      DD_simulation = dd
+    }
+
+     
   }
 
-
+ 
+  Contact  reservoir
+  {
+    type = heat_reservoir 
+    temperature = 300
+  }
+ 
+  Contact dissipator
+  {
+    r_surf = 0.5
+    type = surface_resistance
+    temperature = 300
+  }
 }
 
 
 
-# Definition of  model-indipendent parameters of the Simulation
-$Simulation
+Module selfconsistent
+{
+  solve =(dd,tt)
+
+  abs_tolerance = 1e-5
+  monitor = true
+}
+
+
+
+Module  sweep
+{
+  solve = selfconsistent
+  variable = $Vb
+  start = 0.0
+  stop = 1.2
+  steps = 12
+}
+
+
+
+Simulation
 {
   temperature = 300
   solve = sweep
-  resultpath = output_tut9
+  resultpath = output_tut9_2.0
   symmetry = cylindrical
   output_format = vtk
 }
