@@ -50,7 +50,7 @@ installation directory (INSTALLPATH/license), without changing its filename.
     \hline
     \hline
      &    \\
-    \texttt{tibercad-version-setup.exe } & Windows 32-bit     \\
+    \texttt{tibercad-version-setup.exe} & Windows 32-bit     \\
     \texttt{tibercad-version-installer.bin} & Linux 32-bit self-extracting installer  \\
     \hline
     \end{tabular}
@@ -792,7 +792,6 @@ Here is an example of the input file template::
 
 	
 ..   </marker>
-
 
 .. rubric:: Footnotes
 
