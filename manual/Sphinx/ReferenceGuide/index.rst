@@ -16,7 +16,7 @@ Welcome to TiberCAD's Reference Guide
    
    Glossary
    Bibliography
-   index
+   Index
    
 
 
