@@ -1,8 +1,7 @@
 
 ..   <marker>
 
-.. index:: double:Getting Started;[ModuleName]
-.. _[ModuleName]Getting:
+.. _DscGetting:
 
 
 Simulation Dye Solar Cells
