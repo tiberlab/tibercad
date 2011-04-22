@@ -93,7 +93,9 @@ Output data about strain are shown below.
 
 .. figure:: ../data/elasticity01.png
    :align: center
-   :scale: 50%
+   :scale: 80%
+   
+   The 3D output
 
    
    
@@ -101,8 +103,9 @@ Output data about strain are shown below.
 
 .. figure:: ../data/elasticity02.png
    :align: center
-   :scale: 50%
+   :scale: 80%
    
+   Strain effect on directions
    
 ..   </marker>
 

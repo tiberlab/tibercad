@@ -50,19 +50,19 @@ Module options
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-The following options infiuence the behaviour of the Module efaschroedinger:
+The following options influence the behaviour of the Module efaschroedinger:
 
-  ``particle = string`` defines for which particle (electron or hole) Schroedinger equation is
-        solved. Possible values are el and hl. A different Module efaschroedinger has to be
-        defined for each particle to be solved.
+  |  ``particle = string`` defines for which particle (electron or hole) Schroedinger equation is
+     solved. Possible values are el and hl. A different Module efaschroedinger has to be
+     defined for each particle to be solved.
 
-  ``poisson_model_name = string`` defines the name of the simulation (Module driftdiffu-
-        sion) that can provide electric potential
+  |  ``poisson_model_name = string`` defines the name of the simulation (Module driftdiffusion) 
+     that can provide electric potential
 
-  ``strain_model_name = string`` defines the name of the simulation (Module macrostrain)
-        that can provide elastic strain
+  |  ``strain_model_name = string`` defines the name of the simulation (Module macrostrain)
+     that can provide elastic strain
 
-  ``regions = string`` defines the regions associated to this EFA simulation
+  |  ``regions = string`` defines the regions associated to this EFA simulation
 
 Solver section
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -71,37 +71,40 @@ Solver section
 
 The Solver section of the Module efaschroedinger contains the following options:
 
-  ``number_of_eigenstates = integer`` defines the number of eigenvalues and eigenfunctions to be found.
+  |  ``number_of_eigenstates = integer`` defines the number of eigenvalues and eigenfunctions to be found.
 
-  ``Dirichlet_bc_everywhere = boolean`` : if true (default value), Dirichlet boundary
-conditions are imposed over all the boundaries of the simulation region
+  |  ``Dirichlet_bc_everywhere = boolean`` : if true (default value), Dirichlet boundary
+     conditions are imposed over all the boundaries of the simulation region
 
-  ``solver = string`` : defines the solver for the eigenvalue problem, possible values are:
-arnoldi, lapack, krylovshur. The default value is **krylovshur** . 
-In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur
-solver it is necessary to specify which and how many eigenvalues have to be computed. 
-The idea is that the iterative solver calculates several eigenvalues that are
-close to a specific number, refered to as the *spectral_shift*
+  |  ``solver = string`` : defines the solver for the eigenvalue problem, possible values are:
 
-  ``max_iteration_number = integer`` : maximum number of iteration, used as a stop condition
+            arnoldi, lapack, krylovshur. 
 
-  ``eigen_solver_tolerance = double`` :numerical eigensolver tolerance used as a convergence criteria
+     The default value is **krylovshur** . 
+     In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur
+     solver it is necessary to specify which and how many eigenvalues have to be computed. 
+     The idea is that the iterative solver calculates several eigenvalues that are
+     close to a specific number, referred to as the *spectral_shift*
 
-  ``spectral_shift = double`` :the closest eigenvalues to this value (eV) are found. If not
-defined, then it will be calculated internally from the band edges.
+  |  ``max_iteration_number = integer`` : maximum number of iteration, used as a stop condition
 
-  ``ksp_type = string`` : Krylov subspace method type; bcgsl, gmres, cg
+  |  ``eigen_solver_tolerance = double`` :numerical eigensolver tolerance used as a convergence criteria
 
-  ``pc_type = string`` : preconditioner type: cholesky, jacobi, ilu , composite.
+  |  ``spectral_shift = double`` :the closest eigenvalues to this value (eV) are found. If not
+     defined, then it will be calculated internally from the band edges.
+
+  |  ``ksp_type = string`` : Krylov subspace method type; bcgsl, gmres, cg
+
+  |  ``pc_type = string`` : preconditioner type: cholesky, jacobi, ilu , composite.
 
 Physics section
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-  ``model = string`` : possible values are : conduction band , for single conduction band
-model ( :math:`\Gamma` point) ;  kp for :math:`{\bf k \cdot p}` model
+  |  ``model = string`` : possible values are : conduction band , for single conduction band
+     model ( :math:`\Gamma` point) ;  kp for :math:`{\bf k \cdot p}` model
 
-  ``kp_model = string`` : possible values are : 6×6 , 8×8.
+  |  ``kp_model = string`` : possible values are : 6×6 , 8×8.
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -134,9 +137,9 @@ Module quantumdispersion
 ----------------------
 
 
-With the Module quantumdispersion it is possible to calculate the dependence of quan-
-tum eigenstates on **k** -vector. Such dependence gives the *quantum state dispersion* . The
-simulation name is **quantumdispersion** .
+With the Module quantumdispersion it is possible to calculate the dependence of quantum eigenstates on **k** -vector. 
+Such dependence gives the *quantum state dispersion* . 
+The simulation name is **quantumdispersion** .
 
 ::
 
@@ -181,8 +184,8 @@ Module quantumdensity
 ----------------------
 
 
-In Module quantumdensity you can define the calculation of particle (electron,hole) den-
-sity, based on the result of a previous calculation of the system eigenstates (e.g. with
+In Module quantumdensity you can define the calculation of particle (electron,hole) density, 
+based on the result of a previous calculation of the system eigenstates (e.g. with
 efaschroedinger module). 
 
 :: 
@@ -307,24 +310,24 @@ the associated (emission) spectrum with a k-space integration.
 
 The parameters are the following:
 
-|  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
- **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
-real space
+  |  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
+     **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
+     real space
 
-  If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the el-
-ements whose error is greater than the value (1-refine fraction)* (maximum error) are
+If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the elements
+whose error is greater than the value (1-refine fraction)* (maximum error) are
 going to be refined. In this case, Error is just the integrated quantity. The refinement
 will end when the *relative_accuracy* is obtained.
 
-|  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
+  |  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
 
-|  ``wedge`` = half | quarter, to reduce calculation time, by exploiting symmetry.
+  |  ``wedge`` = half | quarter, to reduce calculation time, by exploiting symmetry.
 
-|  ``optical_matr_elem_model`` = name of the *opticskp* model associated
+  |  ``optical_matr_elem_model`` = name of the *opticskp* model associated
 
-|  ``polarization`` = light polarization (vector)
+  |  ``polarization`` = light polarization (vector)
 
-|  ``Emin, Emax, dE`` : energy range and step of spectrum calculation.
+  |  ``Emin, Emax, dE`` : energy range and step of spectrum calculation.
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^

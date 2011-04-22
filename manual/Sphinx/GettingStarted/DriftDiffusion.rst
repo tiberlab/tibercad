@@ -45,14 +45,12 @@ In the following we'll see how to write a basic GMSH script ( bulk.geo_ );
 for any details please refer to GMSH manual GMSH (http://geuz.org/gmsh/).
 
  
-| 
-| 
 
 
-  |warn|: 
-          In a **1D** simulation it is assumed that the geometrical model is restricted to the **x axis** .
-          In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
-          Any other geometrical orientation could give unpredictable results
+  |warn|
+             In a **1D** simulation it is assumed that the geometrical model is restricted to the **x axis** .
+             In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
+             Any other geometrical orientation could give unpredictable results
 
  
 
@@ -110,13 +108,11 @@ Definition of two physical entities Physical Point::
 
   Physical Point("anode2)   = {1}
   Physical Point("cathode") = {2}
- 
-| 
-| 
 
-  |warn| 
-         In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
-         are used by TiberCAD to impose the required boundary conditions.
+
+|warn| 
+             In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
+             are used by TiberCAD to impose the required boundary conditions.
 
 Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
 through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
@@ -254,8 +250,7 @@ Point cathode is associated to the TiberCAD Contact cathode.
 Both contacts are defined as *ohmic* , cathode is assigned a fixed ``voltage = 0.0`` , while anode voltage is given 
 by the value of the variable *Vb* ::
 
-
-  ``voltage = @Vb``
+  voltage = @Vb
 
 
 Definition of Simulation parameters

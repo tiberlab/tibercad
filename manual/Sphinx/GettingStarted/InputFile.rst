@@ -33,9 +33,7 @@ After finishing installation, copy your license file *(tibercad.lic)* into the
  **license** subdirectory of the TIBERCAD
 installation directory (INSTALLPATH/license), without changing its filename.
 
-| 
-| 
-| 
+
 
 ..  math::
     :nowrap:
@@ -54,7 +52,7 @@ installation directory (INSTALLPATH/license), without changing its filename.
     \texttt{tibercad-version-installer.bin} & Linux 32-bit self-extracting installer  \\
     \hline
     \end{tabular}
-    \caption{Installer Pacakge}
+    \caption{Installer Package}
     \end{table}
 
 
@@ -158,7 +156,7 @@ Each block has a header made of one or two keywords.
 Each block may contain zero or any number of **parameter assignments** in the
 form:
 
-     *" tagname = tagvalue"* , where
+          *" tagname = tagvalue"* , where
 
 * *"tagname"* is a string
 
@@ -167,6 +165,7 @@ parenthesis and separated by commas. e.g. ( *cathode, anode* )
 
 Format is free for the parameter assignments, provided that they are separated by
 spaces. Everything which follows a "#" is considered as a comment and is disregarded.
+
 For example::
 
   electron_mobility field_dependent
@@ -217,12 +216,12 @@ In **Device** section, two kinds of block can be present: the **Region** block a
 be defined. The most important is the mesh file definition:
 
   *meshfile* : name of mesh file. N.B.: the extension is mandatory! ( *.grd* for ISE-TCAD,
-.msh for GMSH mesh file v.1 and v.2.0 )
+  .msh for GMSH mesh file v.1 and v.2.0 )
 
 The definition of the mesh file associated to this simulation is compulsory:
 
-|  ``meshfile = hemt_msh.grd``
-| 
+  ``meshfile = hemt_msh.grd``
+
 
 The **Region** blocks contain the description of the device in continuous media approach; 
 the **Cluster** blocks define each a group of regions (mesh regions) even with
@@ -258,9 +257,9 @@ specified by the keyword *mesh_regions* .
 
 Here are the description of the available keywords for a **Region** block.
 
-  material (mandatory): name of the material associated to the present region, e.g Si;
-it may be a ternary alloy, e.g AlGaAs, in this case keyword x described in the following
-has to be present.
+  ``material`` (mandatory): name of the material associated to the present region, e.g Si;
+  it may be a ternary alloy, e.g AlGaAs, in this case keyword x described in the following
+  has to be present.
 
   **x** : alloy concentration, expressed as the molar fraction of the first component of
   the alloy; e.g. to express an alloy :math:`Al_xGa_{1-x}As` with molar fraction x = 0.2, that is
@@ -274,12 +273,11 @@ has to be present.
   ``x-growth-direction, y-growth-direction, z-growth-direction`` : Bravais vectors with Miller
 indexes for wurtzite crystal (4 element vectors) or zincblende crystal (3 element vectors).
 
-  |warn| A common crystal structure and growth directions definition may be applied to
-         all the Regions of the Device, just by defining them everywhere in the Device block, but
-         outside any specific Region block.
+    |warn| 
+                A common crystal structure and growth directions definition may be applied to
+                all the Regions of the Device, just by defining them everywhere in the Device block, but
+                outside any specific Region block.
 
-| 
-| 
 
 Subblock doping, with the keywords:
 
@@ -287,8 +285,10 @@ Subblock doping, with the keywords:
   |  ``type`` : donor or acceptor
   |  ``level`` : energy level of the dopant [eV]
 
+As in this example :
+
 ::
-	
+
   Doping
     {
      density = 1e21
@@ -306,12 +306,14 @@ Each **Cluster** block must be preceded by the keyword **"Cluster"** , followed 
      regions = (well, barrier1,barrier2)
     }
 
-regions (mandatory): list of physical regions as specified in the meshing program, or
-TIBERCAD region names to be grouped in the cluster.
+and the **regions** definition :
+
+  ``regions`` (mandatory): list of physical regions as specified in the meshing program, or
+  TIBERCAD region names to be grouped in the cluster.
 
   **Regions** and **Clusters** represent the macroscopical description of the device or structure 
-to be be simulated in **TiberCAD** . In the rest of the input file, the physical regions
-associated to the **Modules** will be indicated by means of the **TiberCAD Region** and **Cluster** names.
+  to be be simulated in **TiberCAD** . In the rest of the input file, the physical regions
+  associated to the **Modules** will be indicated by means of the **TiberCAD Region** and **Cluster** names.
 
 Modules
 ------------
@@ -360,31 +362,31 @@ the keyword **"Module"** , followed by the (single-word) module name. This must 
 name of one of the TIBERCAD modules.
 Here are the Modules implemented until now:
 
-| ``driftdiffusion`` : Poisson-driftdiffusion transport of electrons and holes
+  | ``driftdiffusion`` : Poisson-driftdiffusion transport of electrons and holes
 
-| ``thermal`` : Heat balance simulation
+  | ``thermal`` : Heat balance simulation
 
-| ``excitontransport`` : Exciton transport model
+  | ``excitontransport`` : Exciton transport model
 
-| ``macrostrain`` : Calculation of Elastic deformations in heterostructures
+  | ``macrostrain`` : Calculation of Elastic deformations in heterostructures
 
-| ``efaschroedinger`` : Envelop Function Approximation (EFA) solution of single particle 
-Schroedinger equation for electrons and holes
+  | ``efaschroedinger`` : Envelop Function Approximation (EFA) solution of single particle 
+    Schroedinger equation for electrons and holes
 
-| ``quantumdensity`` : Calculation of quantum density of electrons and holes.
+  | ``quantumdensity`` : Calculation of quantum density of electrons and holes.
 
-| ``quantumdispersion`` : Dispersion of quantized states in k space
+  | ``quantumdispersion`` : Dispersion of quantized states in k space
 
-| ``opticskp`` : Optical properties (optical kp matrix elements)
+  | ``opticskp`` : Optical properties (optical kp matrix elements)
 
-| ``opticalspectrum`` : Emission spectrum (with k-space integration)
+  | ``opticalspectrum`` : Emission spectrum (with k-space integration)
 
-| ``Sweep`` : Parameterized execution of a module simulation (e.g. for the calculation
-of output current characteristics)
+  | ``Sweep`` : Parameterized execution of a module simulation (e.g. for the calculation
+    of output current characteristics)
 
-| ``Selfconsistent`` : coupled calculations of different simulation modules.
+  | ``Selfconsistent`` : coupled calculations of different simulation modules.
 
-| ``DSC`` : Simulation of a DSC solar cell1.
+  | ``DSC`` : Simulation of a DSC solar cell1.
 
 Each module-block usually contains a list of general options, such as plot and others
 specific to each module. Then, two main blocks define the Physics and the Solver
@@ -459,26 +461,26 @@ an output drain IV characteristic), in this Guide referred to as sweep calculati
 
 The following keywords are defined for this feature:
 
-|  ``variable`` : name of the variable to which the sweep is applied: 
+  |  ``variable`` : name of the variable to which the sweep is applied: 
 
 E.g.: variable = $Vg
 
 indicates that the values are applied to the variable Vg, which is a quantity defined in a **Contact** definition
 
-|  ``start, stop, steps`` : sweep starts from start value, is repeated steps times and stops
-in stop
+  |  ``start, stop, steps`` : sweep starts from start value, is repeated steps times and stops
+     in stop
 
-|  ``solve`` : name of the simulation (module) associated to the sweep calculation; it may
-be the name of another sweep defined in the same block.
+  |  ``solve`` : name of the simulation (module) associated to the sweep calculation; it may
+     be the name of another sweep defined in the same block.
 
-|  ``plotvariable`` (obsolete): specify the integrated quantity to be calculated during the
-sweep and that will be shown in the output file ``sweep_modelname_sweepvariable.dat`` ,
-eg. sweep driftdiffusion Vb.dat for a sweep of current calculation on the variable Vb
-(typically a contact voltage).
+  |  ``plotvariable`` (obsolete): specify the integrated quantity to be calculated during the
+     sweep and that will be shown in the output file ``sweep_modelname_sweepvariable.dat`` ,
+     eg. sweep driftdiffusion Vb.dat for a sweep of current calculation on the variable Vb
+     (typically a contact voltage).
 
-|  ``plot_data`` : default is false; if it is set to true, then output data will be written for
-each step of the sweep calculation, otherwise just the results for the final step will be
-present in the output.
+  |  ``plot_data`` : default is false; if it is set to true, then output data will be written for
+     each step of the sweep calculation, otherwise just the results for the final step will be
+     present in the output.
 
 Once a *sweep* calculation has been defined, it is treated as a special case of simulation
 and may be executed as an usual simulation: by adding it in the solve list, 
@@ -512,27 +514,27 @@ Simulation section
 In this block one can specify several general parameters and settings for the actual
 calculation to be run, such as the temperature, the process-flow of simulation, etc.
 
-|  ``searchpath`` : path for material files
+  |  ``searchpath`` : path for material files
 
-|  ``mesh units`` : units of measurements used in the meshing (relative to meters): e.g.,
-:math:`10^{-6}` for :math:`\mu m`
+  |  ``mesh units`` : units of measurements used in the meshing (relative to meters): e.g.,
+     :math:`10^{-6}` for :math:`\mu m`
 
-|  ``dimension`` : dimension of simulation (1,2,3)
+  |  ``dimension`` : dimension of simulation (1,2,3)
 
-|  ``temperature`` : temperature of the system [K]
+  |  ``temperature`` : temperature of the system [K]
 
-|  ``solve`` : list of simulations to be executed, in the order of execution; if the list contains
-"sweep", a sweep is performed as specified in sweep block in the Solver section.
+  |  ``solve`` : list of simulations to be executed, in the order of execution; if the list contains
+     "sweep", a sweep is performed as specified in sweep block in the Solver section.
 
-|  ``solve = (strain,driftdiffusion, quantum_electrons, quantum_holes)``
+  |  ``solve = (strain,driftdiffusion, quantum_electrons, quantum_holes)``
 
-|  ``resultpath`` : path for output directory
+  |  ``resultpath`` : path for output directory
 
-|  ``output format`` : format of the output data: *gmv* for **GMV** , ise for **Tecplot** , grace for
-xmgr (ascii data column type), *vtk* for **Paraview** .
+  |  ``output format`` : format of the output data: *gmv* for **GMV** , ise for **Tecplot** , grace for
+     xmgr (ascii data column type), *vtk* for **Paraview** .
 
-|  ``plot`` : list of output variables which are calculated and available in output files. It
-may be overriden by defining list specific to one or more modules.
+  |  ``plot`` : list of output variables which are calculated and available in output files. It
+     may be overriden by defining list specific to one or more modules.
 
 Output description
 -------------------------
@@ -552,7 +554,7 @@ The output values for these quantities are reported in the files simname msh.ext
 where *simname* is the simulation module used for the calculations and ext is the extension
 of the chosen file format, e.g. vtu for paraview output.
 
-|  ``strain_msh.vtu``
+  |  ``strain_msh.vtu``
 
 In the case a sweep calculation is performed and the plot data keyword is set to
 true, the output files are of the kind simname sweepvariable step value msh.ext, where
@@ -560,17 +562,17 @@ true, the output files are of the kind simname sweepvariable step value msh.ext,
 voltage) and step value is the value of this variable at that step; e.g the result at the
 step *Vbias = 1.1* will be found in the file:
 
-|  ``dd_Vbias_1.1_msh.vtu``
+  |  ``dd_Vbias_1.1_msh.vtu``
 
-|  ``mesh-independent`` quantities are the quantities which are not associated to the
-mesh, for example current at the contacts of a diode or quantized energy levels in a
-quantum well. These **mesh-independent** quantities are displayed in separated files,
-with the format simname.ext, e.g ``quantum_electrons.dat`` , where simname is the name of
-the model (simulation) associated to the results. If a sweep is performed, the output file
-gets the format sweep name simname.ext, where *sweep_name* is the name of the sweep
-performed, for example
+  |  ``mesh-independent`` quantities are the quantities which are not associated to the
+     mesh, for example current at the contacts of a diode or quantized energy levels in a
+     quantum well. These **mesh-independent** quantities are displayed in separated files,
+     with the format simname.ext, e.g ``quantum_electrons.dat`` , where simname is the name of
+     the model (simulation) associated to the results. If a sweep is performed, the output file
+     gets the format sweep name simname.ext, where *sweep_name* is the name of the sweep
+     performed, for example
 
-|    ``sweep_drain_driftdiffusion.dat``
+  |  ``sweep_drain_driftdiffusion.dat``
 
 Inside the file, output values for all the steps of calculation are shown.
 

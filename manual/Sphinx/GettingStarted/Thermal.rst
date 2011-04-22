@@ -57,7 +57,7 @@ In the simulation region we write which modules should be solved.
 
 ::
 
-    ``Simulation{solve = thermal}``
+    Simulation{solve = thermal}
 
 The temperature map is shown below
 

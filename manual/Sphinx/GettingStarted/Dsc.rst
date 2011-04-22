@@ -96,7 +96,7 @@ The part of the input file for the generation model::
        }
     }
     
-In the generation input flle must be specified:
+In the generation input file must be specified:
 
 *  ``regions`` : the regions where we want that there is generation (where the Dye is present);
 
@@ -168,13 +168,6 @@ For the generation::
      generation = dssc_generation
     }
     
-.. _Solver_Dsc:
-
-Solver
-----------
-
-Three sweeps are needed for the plot of the entire I-V under illumination. The first sweep
-is needed to make the transition from dark conditions to full open-circuit conditions under
 
 .. _dsc_parameters:
 
@@ -214,11 +207,17 @@ is needed to make the transition from dark conditions to full open-circuit condi
     \label{table:dsc_parameters}
     \end{table}
 
+.. _Solver_Dsc:
 
-illumination. The high value of the load R maintains the current to zero. Then a second
-sweep is used to pass from open circuit condition to short circuit condition lowering the
-external load from a high external load to a small one (R = 1). Finally, the voltage
-sweep compute the I-V characteristics under illumination. In case of dark simulation
+Solver
+----------
+
+Three sweeps are needed for the plot of the entire I-V under illumination. The first sweep
+is needed to make the transition from dark conditions to full open-circuit conditions under
+illumination. The high value of the load R maintains the current to zero. 
+Then a second sweep is used to pass from open circuit condition to short circuit condition lowering the
+external load from a high external load to a small one (R = 1). 
+Finally, the voltage sweep compute the I-V characteristics under illumination. In case of dark simulation
 (application of an external bias without illumination) the first and second sweep are not
 needed. The external load for the cathode can be set directly to R = 1.
 
@@ -322,7 +321,7 @@ The output that want to be plotted are enlisted in section Model within option. 
     \label{table:dsc_elemental}
     \end{table}
 
-..  _dsc_scalar:
+
 
 ..  math::
     :nowrap:
@@ -340,6 +339,8 @@ The output that want to be plotted are enlisted in section Model within option. 
     \end{minipage}
     \caption{Scalar quantities.} \label{table:dsc_scalar}
     \end{table}
+
+..  _dsc_scalar:
 
 
 .. |more| image:: ../data/more.png
