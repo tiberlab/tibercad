@@ -20,7 +20,7 @@ Sed mi turpis, tristique sit amet sagittis vitae, laoreet placerat justo. Maecen
 Description
 ----------------------
 
-..  Use Backquotes ``keyword`` for keywords and filenames
+..  Use Backquotes ``keyword`` for keywords and filenames to simulate literal
 
 [Lorem ``ipsum dolor`` sit amet, consectetur adipiscing elit.]
 
@@ -57,7 +57,7 @@ Note Block
  
 |warn| 
        [Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-       Pellentesque vulputate ultrices odio, quis dictum purus commodo eu.
+       Pellentesque vulputate ultrices odio, quis dictum purus commodo eu. 
        Fusce id massa sit amet nibh pellentesque aliquam.]
 
 
@@ -122,6 +122,11 @@ Example
 
 Keywords
 -------------------
+
+.. for a keyword listing in which you want to insert early the explanation, use this. Pay attention to alignment
+
+  |  ``start, stop, steps`` : sweep starts from start value, is repeated steps times and stops
+     in stop
 
 
 Tables
