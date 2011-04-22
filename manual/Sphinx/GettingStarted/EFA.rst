@@ -337,12 +337,10 @@ The output variables for optics calculations are:
 
 * ``optical_spectrum`` : k-space integrated optical emission spectrum.
 
-.. rubric:: Footnotes
-
-
 
 ..   </marker>
 
+.. rubric:: Footnotes
 
 
 .. |more| image:: ../data/more.*
