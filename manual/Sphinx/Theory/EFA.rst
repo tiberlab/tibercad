@@ -67,12 +67,11 @@ Module options
 
 
 
-The following options infiuence the behaviour of the Module efaschroedinger:
+The following options influence the behaviour of the Module efaschroedinger:
 
 |  ``particle = string`` defines for which particle (electron or hole) Schroedinger equation is solved. 
-| 
-|        Possible values are el and hl. A different Module efaschroedinger has to be
-         defined for each particle to be solved.
+      Possible values are el and hl. A different Module efaschroedinger has to be
+      defined for each particle to be solved.
 
 |  ``poisson_model_name = string`` defines the name of the simulation (Module driftdiffusion) that can provide electric potential
 
@@ -102,7 +101,7 @@ The Solver section of the Module efaschroedinger contains the following options:
 In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur
 solver it is necessary to specify which and how many eigenvalues have to be computed. 
 The idea is that the iterative solver calculates several eigenvalues that are
-close to a specific number, refered to as the *spectral_shift*
+close to a specific number, referred to as the *spectral_shift*
 
 |  ``max_iteration_number = integer`` : maximum number of iteration, used as a stop condition
 
@@ -160,9 +159,9 @@ Module quantumdispersion
 -----------------------
 
 
-With the Module quantumdispersion it is possible to calculate the dependence of quan-
-tum eigenstates on **k** -vector. Such dependence gives the *quantum state dispersion* . The
-simulation name is ``quantumdispersion`` .
+With the Module quantumdispersion it is possible to calculate the dependence of quantum eigenstates on **k** -vector. 
+Such dependence gives the *quantum state dispersion* . 
+The simulation name is ``quantumdispersion`` .
 
 ::
 
@@ -190,7 +189,7 @@ The main parameters are:
 
 | ``min eigenvalue number`` , ``max eigenvalue number`` : 
 | 
-|                the dispersion is calculated for the states number *i* , where 
+|     the dispersion is calculated for the states number *i* , where 
 
   max_eigenvalue_number :math:`\ge i \ge`  min_eigenvalue_number
 
@@ -209,8 +208,8 @@ Module quantumdensity
 -----------------------
 
 
-In Module quantumdensity you can define the calculation of particle (electron,hole) den-
-sity, based on the result of a previous calculation of the system eigenstates (e.g. with
+In Module quantumdensity you can define the calculation of particle (electron,hole) density, 
+based on the result of a previous calculation of the system eigenstates (e.g. with
 efaschroedinger module). Quantum density may be obtained with an analytical or a
 numerical calculation.
 
@@ -279,9 +278,9 @@ The available options are:
 | ``degeneracy`` : degeneracy of the quantum state
 
 | ``initial_eigenstates_number`` : initial number of eigenstates for the Schroedinger
-equation
+  equation
 
-| ``analytic``* = { true | false } 
+| ``analytic`` = { true | false } 
 | 
 |         If true then the density is calculated analytically,
           otherwise numerically.
@@ -381,14 +380,14 @@ the associated (emission) spectrum with a k-space integration.
 
 The parameters are the following:
 
-  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is 
-**true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
-real space
+|  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. 
+   k-space basis is **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
+   real space
 
-  If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the el-
-ements whose error is greater than the value **(1-refine fraction)** (maximum error) are
-going to be refined. In this case, "Error" is just the integrated quantity. The refinement
-will end when the *relative_accuracy* is obtained.
+If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the elements 
+whose error is greater than the value **(1-refine fraction)** (maximum error) are going to be refined. 
+In this case, "Error" is just the integrated quantity. 
+The refinement will end when the *relative_accuracy* is obtained.
 
 |  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
 
@@ -402,9 +401,6 @@ will end when the *relative_accuracy* is obtained.
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
 
 
 The output variables for optics calculations are:

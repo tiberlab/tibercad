@@ -10,7 +10,7 @@ Theory
 
 
 The semi-classical transport simulation of electrons and holes is based on the drift-diffusion
- approximation (see [Selberherr]_ ).
+approximation (see [Selberherr]_ ).
 
 Beside the electric potential the electro-chemical potentials are used as variables such
 that the system of PDEs to be solved reads as follows
@@ -99,10 +99,10 @@ The following options influence the behaviour of the Drift-Diffusion module:
 |       If set to true, the system will be solved after having
         reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
 
-     |warn|  
-                Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
-                Otherwise there will be undefined behaviour or failure. 
-                Future releases will relax this restriction.
+|warn|  
+            Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
+            Otherwise there will be undefined behaviour or failure. 
+            Future releases will relax this restriction.
 
 Solver section
 --------------------
@@ -170,6 +170,8 @@ of type ``srh`` .
     (p + n_i e^{-E^*/k_BT})\tau_n}
     \end{equation}
 
+|
+
 :math:`E^* = E_{trap} - (E_c + E_v)/2` is the trap level with respect to the midband energy. 
 
 :math:`n_i` is the intrinsic carrier density, :math:`\tau_n` and :math:`\tau_p` are the recombination times. 
@@ -199,13 +201,13 @@ the keywords of Table 2.4.
 
 
 The SRH recombination model can be applied also to surfaces and interfaces. In this
-case, you can provide the recombination velocities using the keywords rec_velocity_n
+case, you can provide the recombination velocities using the keywords ``rec_velocity_n``
 and ``rec_velocity_p`` instead of ``tau_n`` and ``tau_p`` .
 
-  **Direct (radiative) recombination**
+**Direct (radiative) recombination**
 
 The direct recombination model can be enabled in the input file by by defining a
- ``recombination`` submodel of type ``direct`` .
+``recombination`` submodel of type ``direct`` .
 
 Direct recombination is modeled as follows:
 
@@ -251,7 +253,6 @@ different for :math:`C_n` and :math:`C_p` and have to be specified as arrays wit
 e.g. A = (1e-31, 1e-32). The calculated values for :math:`C_n` and :math:`C_p` can be overridden from
 the input file by specifying values for the keywords :math:`C_n` and :math:`C_p` .
 
-| 
 
 **Optical generation**
 
@@ -260,14 +261,15 @@ in TIBERCAD. It is enabled by specifying a ``generation`` submodel of type optic
 model imposes a constant generation rate which has to be provided by the keyword G in
 units of :math:`(cm*s)^{-1}` . 
 
-  |warn| 
-         Note that the simulation usually should define a sweep on the value
-         of G from 0 to the desired generation.
+|warn| 
+          Note that the simulation usually should define a sweep on the value
+          of G from 0 to the desired generation.
 
 Thermoelectric power models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The thermoelectric power models are the same for electrons and holes. 
+
 The keyword is  ``thermoelectric_power`` , i.e ::
 
   thermoelectric_power [type]
@@ -329,7 +331,7 @@ specified with a common keyword in arrays, e.g.
     :nowrap:
     :label:
 
-    \begin{table}[!h]
+    \begin{table}[!ht]
     \center
     \begin{tabular}{l|c}
     \multicolumn{2}{c}{\textbf{Mobility Table}} \\
@@ -405,16 +407,22 @@ The model by Arora is identified by ``mobility_formula`` = 2. It reads:
 
     \begin{align}
     \mu = \mu_{min} + & \frac{\mu_d}{1+(N/N_0)^{A^*}} \\
-    \text{with} \nonumber \\
+    \end{align}
+    
+with
+
+.. math::
+   :nowrap:
+   :label:
+
+    \begin{align}
     \mu_{min} = A_{min}(T/T_0)^{\alpha_m}, & \quad \mu_d = A_d(T/T_0)^{\alpha_d} \nonumber \\
     N_0 = A_N(T/T_0)^{\alpha_N}, & \quad A^* = A_a(T/T_0)^{\alpha_a} \nonumber 
     \end{align}
 
-The parameters are given in table below.
+The parameters are given in table at the end of the Chapter.
 
-| 
-| 
-
+|
 
 **Field dependent mobility model**
 
@@ -493,15 +501,19 @@ with the types ``pyro`` and ``piezo`` ::
 As for all models, if they do not have individual options, they can be specified together
 by writing **polarization (pyro, piezo) {}** .
 
+|
+
 **Spontaneous (pyro-) polarization**
 
 The spontaneous polarization model imposes a constant electric polarization P along
 the symmetry-braking direction of the crystal. Crystals with wurtzite structure like Nitrides
- have strong piezoelectric fields along the c-direction. The value of the polarization
-usually is taken from the database, but it can be overridden from the input file by specifying
- the option Pz, meaning the value of the spontaneous polarization along c-direction
-([0001]). Alternatively, one can specify explicitly a polarization vector using the option
- **P = (Px, Py, Pz)** . This is useful to impose an arbitrary constant polarization field.
+have strong piezoelectric fields along the c-direction. 
+The value of the polarization usually is taken from the database, but it can be overridden from the input file by specifying
+the option Pz, meaning the value of the spontaneous polarization along c-direction ([0001]). 
+Alternatively, one can specify explicitly a polarization vector using the option
+**P = (Px, Py, Pz)** . This is useful to impose an arbitrary constant polarization field.
+
+|
 
 **Piezopolarization**
 
@@ -526,9 +538,9 @@ particle density
 Details for the calculation of the electron and hole densities can be given in the particle_density
 submodel. Its options are:
 
-|  ``particle = string`` The particle this model is describing. Can be ``electron`` or ``hole`` .
+|  ``particle = string``   The particle this model is describing. Can be ``electron`` or ``hole`` .
 
-|  ``statistics = string`` The statistics. Can be ``fermidirac`` (default) or ``boltzmann`` .
+|  ``statistics = string``   The statistics. Can be ``fermidirac`` (default) or ``boltzmann`` .
 
 |  ``quantum_density = string`` The name of a quantum density simulation. 
 | 
@@ -585,7 +597,7 @@ The trap energy in this case is given as :math:`E_{trap} = E_{midgap} + Et` .
 
 Other possible values are :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v + Et` .
 
-    ``eNeutral`` The trapped electron density is given by
+|   ``eNeutral`` The trapped electron density is given by
 
 ..  math::
     :nowrap:
@@ -595,7 +607,7 @@ Other possible values are :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v +
     n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
     \]
 
-    ``hNeutral`` The trapped hole density is given by
+|   ``hNeutral`` The trapped hole density is given by
 
 ..  math::
     :nowrap:
@@ -605,7 +617,7 @@ Other possible values are :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v +
     p_t = \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
     \]
 
-    ``donor`` The density of ionized traps is given by
+|   ``donor`` The density of ionized traps is given by
 
 ..  math::
     :nowrap:
@@ -615,7 +627,7 @@ Other possible values are :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v +
     N^+_t = N_t - \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
     \]
 
-    ``acceptor`` The density of ionized traps is given by
+|   ``acceptor`` The density of ionized traps is given by
 
 ..  math::
     :nowrap:
@@ -717,11 +729,13 @@ used as barrier for the unstrained case and will depend on strain during simulat
 the metal work function is specified, the barrier will be strain dependent as default.
 
   |warn| 
-         if the contact is touching different materials, one should specify the work
-         function instead of the barrier.
+            if the contact is touching different materials, one should specify the work
+            function instead of the barrier.
 
 Thermionic emission is by default switched on, but can be disabled by specifying
 ``thermionic_emission = false`` .
+
+|
 
 **Interface/surface model**
 
@@ -741,11 +755,11 @@ block. The following options { to be specified in the Physics section { control 
 behaviour of the selfconsistent simulation.
 
 |  ``use_density_predictor = bool`` 
-| 
-|       When set to true, a predictor-corrector scheme will
-        be adopted in the selfconsistent cycle. The Poisson/Drift-Diffusion solver does not
-        just take the particle densities as given by the Schroedinger calculation, but it will
-        assume a dependency of the density on the potentials of the form
+
+When set to true, a predictor-corrector scheme will
+be adopted in the selfconsistent cycle. The Poisson/Drift-Diffusion solver does not
+just take the particle densities as given by the Schroedinger calculation, but it will
+assume a dependency of the density on the potentials of the form
 
 .. math::
    :nowrap:
@@ -754,6 +768,8 @@ behaviour of the selfconsistent simulation.
     \begin{equation}
     \rho(\varphi, \phi_n, \phi_p) = \frac{\rho_{\mathrm{quantum}}(\varphi^0, \phi_n^0, \phi_p^0)}{\rho_{\mathrm{classical}}(\varphi^0, \phi_n^0, \phi_p^0)}\rho_{\mathrm{classical}}(\varphi, \phi_n, \phi_p)
     \end{equation}
+
+|
 
 where :math:`(\varphi^0, \phi_n^0, \phi_p^0)` are the potentials for which the quantum density was calculated. use_density_predictor = true is the preferred method for selfconsistent
 Schroedinger-Poisson/Drift-Diffusion calculations and is enabled by default.
@@ -802,7 +818,7 @@ Listing 3: Models section for drift-diffusion
     :nowrap:
     :label:
     
-     \begin{table}[!h]
+     \begin{table}[!ht]
      \center
      \begin{tabular}{l|c|l}
      \multicolumn{3}{c}{\textbf{Solution Table}} \\
@@ -842,19 +858,21 @@ Listing 3: Models section for drift-diffusion
      %
      %The net recombination rate for each recombination model and the total rate
      %\end{minipage}& cm$^{-3}$s$^{-1}$
-     The net recombination rate for each recombination/generation model and the total rate &
-     cm$^{-3}$s$^{-1}$ \\
+     The net recombination rate for each recombination/generation \\
+       &  model and the total rate    cm$^{-3}$s$^{-1}$ \\
      \texttt{ContactCurrent} & The electric current on each contact & A/cm$^{3-d}$
      \end{tabular}
      \caption{Solution/Plot variables}
      \label{table:dd_solutions}
      \end{table}
 
+|
+
 ..  math::
     :nowrap:
     :label:
     
-     \begin{table}[!h]
+     \begin{table}[!ht]
      \center
      \begin{tabular}{l||l}
      \multicolumn{2}{c}{\textbf{Semiconductor Table}} \\
@@ -872,11 +890,13 @@ Listing 3: Models section for drift-diffusion
      \label{table:simple_sc}
      \end{table}
 
+|
+
 ..  math::
     :nowrap:
     :label:
     
-     \begin{table}[!h]
+     \begin{table}[!ht]
      \center
      \begin{tabular}{l||l|l}
      \multicolumn{2}{c}{\textbf{SRH Table}} \\
@@ -894,12 +914,14 @@ Listing 3: Models section for drift-diffusion
      \caption{SRH material data file parameters}
      \label{table:srh_params_db}
      \end{table}
-    
+
+|
+
 ..  math::
     :nowrap:
     :label:
     
-     \begin{table}[!h]
+     \begin{table}[!ht]
      \center
      \begin{tabular}{l||l}
      \multicolumn{2}{c}{\textbf{SRH parameters Table}} \\
@@ -913,12 +935,13 @@ Listing 3: Models section for drift-diffusion
      \label{table:srh_params_input}
      \end{table}
     
+|
 
 .. math::
    :nowrap:
    :label:
 
-    \begin{table}[!h]
+    \begin{table}[!ht]
     \center
     \begin{tabular}{l||l|l}
     \multicolumn{2}{c}{\textbf{Mobility Model Table}} \\
@@ -938,12 +961,13 @@ Listing 3: Models section for drift-diffusion
     \label{table:mobility_masetti}
     \end{table}
     
-    
+|
+
 .. math::
    :nowrap:
    :label:
 
-    \begin{table}[!h]
+    \begin{table}[!ht]
     \center
     \begin{tabular}{l||l|l}
     \multicolumn{2}{c}{\textbf{Arora Model Table}} \\
@@ -963,12 +987,13 @@ Listing 3: Models section for drift-diffusion
     \label{table:mobility_arora}
     \end{table}
     
-    
+|
+
 .. math::
    :nowrap:
    :label:
 
-    \begin{table}[!h]
+    \begin{table}[!ht]
     \center
     \begin{tabular}{l||l|l}
     \multicolumn{3}{c}{\textbf{Mobility Dependence Table}} \\
@@ -986,7 +1011,8 @@ Listing 3: Models section for drift-diffusion
     \caption{Data file parameters for the mobility model by Arora.}
     \label{table:mobility_field_dep}
     \end{table}
-    
+
+
 .. rubric:: Footnotes
 
 .. [#] the Default value is given in brackets.

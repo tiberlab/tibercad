@@ -39,6 +39,8 @@ mobility developed from multi-trapping model:
     \mu_{e}(n_{e}) = \mu_{0} \left ( \frac{n_{e}}{N_{t}} \right )^{\frac{1 - a}{a}}
    \end{equation}
 
+|
+
 where :math:`a` is the trap exponent, :math:`N_t` the trap density and :math:`\mu_0` a constant. The energy trap
 density is assumed to form an exponential tail below the conduction band of the semiconductor:
 
@@ -50,6 +52,8 @@ density is assumed to form an exponential tail below the conduction band of the 
     g_{T}(E) = \frac{a N_t}{kT} e^{\frac{-a E}{kT}}.
    \end{equation}
 
+|
+
 The Poisson equation to handle the internal potential drop:
 
 .. math::
@@ -60,6 +64,7 @@ The Poisson equation to handle the internal potential drop:
     -\varepsilon\triangle \varphi =  q[n_{c} + N_{D}^{+} - n_{I^{-}} - n_{I_{3}^{-}} - (n_{e} - \bar{n}_{e})],
    \end{equation}
 
+|
 
 where N+ D is the amount of ionized dyes and it is equal to:
 
@@ -70,6 +75,8 @@ where N+ D is the amount of ionized dyes and it is equal to:
    \begin{equation}\label{dyeion}
     N_{D}^{+} = \frac{G}{k_{3}}
    \end{equation}
+
+|
 
 with **G** the generation term and :math:`k_{3}` the rate constant of dye regeneration. The dielectric
 constant, :math:`\varepsilon` , of the mesoporous material is a mix the two dielectric functions of the semiconductor and the electrolyte. 
@@ -84,6 +91,8 @@ function of the mixed medium becomes:
     \varepsilon = \varepsilon_{s}\frac{\varepsilon_{e} + 2\varepsilon_{s} + 2\epsilon_{p}\varepsilon_{e} - 2\varepsilon_{s}\epsilon_{p}}
     {\varepsilon_{e} + 2\varepsilon_{s} -\epsilon_{p}\varepsilon_{e} +\varepsilon_{s}\epsilon_{p}}
    \end{equation}
+
+|
 
 where :math:`\varepsilon_{s}` and :math:`\varepsilon_{e}` are the dielectric constants of the semiconductor and the electrolyte,
 respectively, and :math:`\epsilon_{p}` is the porosity of the medium. The recombination term depends
@@ -100,6 +109,8 @@ largely on the loss mechanisms at the electrolyte/oxide interface which follows 
    \label{reaction_loss}
    \end{eqnarray}
 
+|
+
 From the chemical path we can get a formula for the interface recombination (considering
 that the first chemical reaction is the slow process):
 
@@ -113,13 +124,15 @@ that the first chemical reaction is the slow process):
     ],
    \end{equation}
 
+|
+
 where the electron rate :math:`k_{e}` is the recombination rate constant.
 
 
 For the boundary conditions of the model we assume at the photoanode:
 
 *  :math:`\phi_{e} = V`: electrochemical potential of electrons set with the voltage applied;
-*  :math:`\nabla\phi_{I^{-}} = 0`: no iodide current at the photoande;
+*  :math:`\nabla\phi_{I^{-}} = 0`: no iodide current at the photoanode;
 *  :math:`\nabla\phi_{I_{3}^{-}} = 0`: no triiodide current at the photoande;
 *  :math:`\nabla\phi_{c} = 0`: no cationic current;
 *  :math:`\nabla\varphi = 0`: no charged layer at the photoanode;
@@ -319,7 +332,7 @@ The part of the input file for the generation module:
 
 In the generation module must be specified:
 
-* ``regions the regions where we want that there is generation (where the Dye is present);
+* ``regions`` : the regions where we want that there is generation (where the Dye is present);
 * ``plot if we want`` : to plot the generation;
 * ``light_direction`` : the vector which fixes the direction from where the light comes;
 * ``light_intensity`` : the light intensity;

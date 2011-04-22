@@ -69,6 +69,8 @@ By default the stiffness constant is anisotropic. For the zincoblend crystal str
     \end{array}
     \right)
     \end{equation}
+    
+|
 
 For the wurtzite structure we have C11, C12, C13 and C44.
 
@@ -88,6 +90,8 @@ For the wurtzite structure we have C11, C12, C13 and C44.
     \end{array}
     \right)
     \end{equation}
+
+|
 
 An isotropic stiffness can be included with the keyword ``Stiffness isotropic`` . 
 In this case, the only independent parameters are the Young modulus 
@@ -111,6 +115,8 @@ In this case, the only independent parameters are the Young modulus
     \right)
     \end{equation}
 
+|
+
 While the anisotropic model is included by default, the ``isotropic`` one must be explicitly
 indicated
 
@@ -122,7 +128,7 @@ Example::
      Poisson = 0.349
     }
 
-Boundary conditions:
+**Boundary conditions**
 
 Surfaces forces :math:`f^0` are applied by imposing :math:`\sigma_{ij} n_{j} = f_i^0` along the surface with normal n. 
 This boundary condition can be used with the keyword ``surface_force`` . The force can be specified in GPa with force. 
@@ -143,7 +149,7 @@ Example::
      type = clamp
     }
 
-Body forces
+**Body forces**
 
 A constant value body force can be included by means of the keyword ``Bodyforceconstant`` .
 
