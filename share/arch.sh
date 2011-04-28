@@ -10,7 +10,7 @@ case $os in
 
   *Linux*) arch=`uname -m`-linux ;;
 
-  *Cygwin*) arch=`uname -m`-win ;;
+  *Cygwin*) arch=`uname -m` ;;
 
   *) arch= ;;
 
