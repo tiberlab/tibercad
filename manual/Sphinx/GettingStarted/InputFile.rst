@@ -6,32 +6,29 @@
 Installation instructions
 ===================================
 
-In the following, VERSION denotes the version number of the TIBERCAD release you
-downloaded and INSTALLPATH denotes the directory where TIBERCAD gets installed.
-Version 2.3.0 of **GMSH** (http://www.geuz.org/gmsh) will be installed together with
-TIBERCAD. For the Linux version of GMSH you need OpenGL libraries installed on
-your system.
+In the following, ``installpath`` denotes the directory where tiberCAD 2.0.0 gets installed.
+Version 2.5.0 of ``GMSH`` (http://www.geuz.org/gmsh) will be installed together with
+tiberCAD.
 
 Prerequisites
 -------------------
 
-Get the installer package for your OS/architecture from http://www.tibercad.org or
+Get the installer package for your OS/architecture from http://www.tiberlab.com or
 by contacting support@tibercad.org. Table 1 lists the packages available for download.
-To run TIBERCAD you will also need a license file that you will have to copy into the
-installation directory of TIBERCAD.
+To run tiberCAD you will also need a license file that you will have to copy into the
+installation directory of tiberCAD.
 
-In the Windows version, some graphical features such as graphical convergence 
-monitors are only available if an X Window server is installed and running.
+.. In the Windows version, some graphical features such as graphical convergence 
+.. monitors are only available if an X Window server is installed and running.
 
 Windows installation procedure
 --------------------------------------
 
-To install TIBERCAD in Windows, run the setup program ``tibercad-version_setup.exe`` .
+To install tiberCAD in Windows, run the setup program ``tibercad-2.0.0_setup.exe`` .
 
 During the installation you can choose the installation directory. 
-After finishing installation, copy your license file *(tibercad.lic)* into the 
- **license** subdirectory of the TIBERCAD
-installation directory (INSTALLPATH/license), without changing its filename.
+After finishing installation, copy your license file ``tibercad.lic`` into the ``license`` subdirectory of the tiberCAD
+installation directory (``installpath/license``), without changing the filename.
 
 
 
@@ -48,8 +45,8 @@ installation directory (INSTALLPATH/license), without changing its filename.
     \hline
     \hline
      &    \\
-    \texttt{tibercad-version-setup.exe} & Windows 32-bit     \\
-    \texttt{tibercad-version-installer.bin} & Linux 32-bit self-extracting installer  \\
+    \texttt{tibercad-2.0.0-setup.exe} & Windows 32-bit     \\
+    \texttt{tibercad-2.0.0-installer.bin} & Linux 32-bit self-extracting installer  \\
     \hline
     \end{tabular}
     \caption{Installer Package}
@@ -60,74 +57,77 @@ installation directory (INSTALLPATH/license), without changing its filename.
 Linux installation procedure
 ------------------------------------
 
-To install TIBERCAD in Linux, download and run the self-extracting installer  ``tibercad-version_installer.bin`` 
+To install tiberCAD under Linux, download and run the self-extracting installer  ``tibercad-2.0.0_installer.bin`` 
 and follow the installation instructions.
 
-After installation, copy your license file *(tibercad.lic)* into the "license" subdirectory
-of the TIBERCAD installation directory (INSTALLPATH/license) without changing the filename. 
+After installation, copy your license file ``tibercad.lic`` into the ``license`` subdirectory
+of the tiberCAD installation path (``installpath/license``) without changing the filename. 
 You can also provide the license file during installation.
 
-The standard method to launch TIBERCAD is by means of a shell script that is
-installed alongside the TiberCAD executable. It takes care of setting all necessary 
+tiberCAD is launched by means of a shell script, which is
+installed together with the tiberCAD executable. It takes care of setting all necessary 
 environment variables. 
 
-If for some reason you have to run the executable directly, remember
-to set TIBERCADROOT to the TiberCAD installation directory (INSTALLPATH).
+If you have to call the executable directly, you have to
+set the environment variable ``TIBERCADROOT`` to the tiberCAD installation directory (``installpath``).
 
 Quick start guide
 ----------------------
 
-In the "examples" subdirectory you can find several examples ready to run. They are the
-same as the tutorials on http://www.tibercad.org/documentation/tutorial/list.
+In the ``examples`` subdirectory you can find several examples ready to run. More examples may be
+available on http://www.tiberlab.com or http://www.tibercad.org.
+
+tiberCAD has the following command line options:
+
+  | ``-v`` : print the version number and exit
+  | ``-b`` : run in batch mode, without asking for user input.
+
+The ``-b`` option is useful only for the windows version, which attends a keystroke by the user before
+exiting.
 
 Windows
 ^^^^^^^^^^^^^^^^^^^^^
 
-Open Windows Explorer and go to the TIBERCAD installation directory. If you have
-write permission in the installation directory, you can browse to an examples directory
-and start the simulation by double clicking the input file, e.g. bulk.tib in :ref:`tut0step1` . If
+Open Windows Explorer and go to the tiberCAD installation directory. If you have
+write permission in the installation directory, you can browse to an example directory
+and start the simulation by double clicking the input file, e.g. ``bulk.tib`` in :ref:`tut0step1` . If
 not, copy the whole directory to a location in your personal area and run the examples
 from there.
 
-If you cannot run TIBERCAD by double clicking an input file *(\*.tib)* , then the input
-files are probably not correctly associated with the TIBERCAD executable. In this case,
-try to establish the association by right-clicking the input file, choosing ``open with...`` 
+If you cannot run tiberCAD by double clicking a tiberCAD input file (the files with extension ``.tib``), then the input
+files may not be correctly associated with the tiberCAD executable. In this case,
+try to establish the association by right-clicking the input file, choosing 
 
-  ``>> Choose Program... >> Browse...`` , browsing to the TIBERCAD installation directory
-
-and choosing the TIBERCAD executable, tibercad.exe. A directory containing the
-simulation results will be created with the name provided in the input file.
+  ``open with... >> Choose Program... >> Browse...``,
+browsing to the tiberCAD installation directory and choosing the tiberCAD executable, ``tibercad.exe``.
 
 Linux
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After the correct installation of TIBERCAD you should be able to run TIBERCAD from the
-command line using the command tibercad. If not, you probably have to add the bin
-subdirectory of the TIBERCAD installation directory to your PATH environment variable or
-start the TIBERCAD executable using the absolute path (INSTALLPATH/bin/tibercad).
+After a correct installation of tiberCAD you should be able to run tiberCAD from the
+command line using the command ``tibercad``. If not, you probably have to add the ``bin``
+subdirectory of the tiberCAD installation path to your ``PATH`` environment variable or
+start the tiberCAD executable using the absolute path (``installpath/bin/tibercad``).
 
-Copy the directory of the example you want to run, e.g. bulk Si, to your home directory
-or any place you have write permissions for. Change to the newly created directory and
-run TIBERCAD by (assuming :ref:`tut0step1` )
+Copy the directory of the example you want to run to your home directory
+or any place you have write permissions for. Change to the example directory and
+run tiberCAD by (assuming :ref:`tut0step1` )
 
   ``$ tibercad bulk.tib``
 
-A directory containing the simulation results will be created with the name provided in
-the input file.
 
 Bug reports / Feedback
 -------------------------------------
 
 Please send bug reports, feedback or suggestions to support@tibercad.org. When
-submitting bug reports, please always include the full version number of TIBERCAD you
+submitting bug reports, please always include the full version number of tiberCAD you
 are running. The full version number appears in the first line of output when running
 the program:
 
-    $ tibercad
+::
 
-    TiberCAD version 1.0.0-961
-
-    Usage: ``tibercad`` <inputfile>
+  $ tibercad -v
+  TiberCAD version 2.0.0 (x86_64-linux)
 
 
 
@@ -137,23 +137,23 @@ Input for TiberCAD
 =================================================
 
 
-Input for TIBERCAD is composed by an input file e.g. "input.tib" and a mesh file generated 
-by a mesher software: as for now, mesh files from GMSH *(\*.msh, v.1 and v.2.0 )*
-and from ISE-TCAD *(\*.grd)* are supported.
-Be sure that the material files are in the correct directory .
-To run the program, type: **tibercad** *input_file_name*
+Input for tiberCAD is composed by an input file e.g. ``input.tib`` and a mesh file generated 
+by a mesher software: as for now, mesh files from ``GMSH`` (\*.msh)
+and from Synopsys TCAD (\*.grd) are supported.
+Be sure that the material files are in the correct directory.
+To run the program, type: ``tibercad`` *input_file_name*
 
 Description of Input file structure
 -------------------------------------------
 
-A valid input file for TIBERCAD is a text file with the structure described in the following.
+A valid input file for tiberCAD is a text file with the structure described in the following.
 In the whole input file, everything following a "#" is considered as a comment and is
-disregarded; blank lines can be present anywhere and are disregarded too.
-Input file is composed by several **blocks** :
+ignored; blank lines can be present anywhere and are ignored, too.
+An input file is composed by several **blocks** :
 
-A block is enclosed between **"{"** and **"}"** brackets and may include one or more blocks.
+A block is enclosed between curly braces ("{", "}") and may include one or more blocks.
 Each block has a header made of one or two keywords.
-Each block may contain zero or any number of **parameter assignments** in the
+Each block may contain zero or any number of **parameter assignments** of the
 form:
 
           *" tagname = tagvalue"* , where
@@ -164,20 +164,20 @@ form:
 parenthesis and separated by commas. e.g. ( *cathode, anode* )
 
 Format is free for the parameter assignments, provided that they are separated by
-spaces. Everything which follows a "#" is considered as a comment and is disregarded.
+spaces. Everything which follows a "#" is considered as a comment and is ignored.
 
 For example::
 
   electron_mobility field_dependent
-    {
-     region = buffer
-     # type = doping_dependent
-     low_field_model = constant
-    }
+  {
+    region = buffer
+    # type = doping_dependent
+    low_field_model = constant
+  }
 
 Here and in the whole input file a string item can include a combination of characters,
 special characters and numbers, except spaces; if a space is found, the string item is
-taken as terminated.
+assumed to be terminated.
 
 The input file is composed by the following main classes of blocks:
 
@@ -191,22 +191,24 @@ Device section
 ::
 
   Device hemt1
+  {
+    meshfile = hemt_msh.grd
+
+    Region buffer
     {
-     meshfile = hemt_msh.grd
-     Region buffer
-       {
-        .........
-        Doping
-          {
-           .........
-          }
-       }
-     Region barrier_1
-       {
-        ............
-       }
-    .................
+      ...
+      Doping
+      {
+        ...
+      }
     }
+
+    Region barrier
+    {
+      ...
+    }
+    ...
+  }
 
 **Device** section includes the geometrical description of the device to be simulated; an
 optional *device name* can be associated to the Device object, e.g. *Device hemt1* .
@@ -261,22 +263,20 @@ Here are the description of the available keywords for a **Region** block.
   it may be a ternary alloy, e.g AlGaAs, in this case keyword x described in the following
   has to be present.
 
-  **x** : alloy concentration, expressed as the molar fraction of the first component of
+  ``x`` : alloy concentration, expressed as the molar fraction of the first component of
   the alloy; e.g. to express an alloy :math:`Al_xGa_{1-x}As` with molar fraction x = 0.2, that is
-  :math:`Al_{0.2}Ga_{0.8}As` , we select **AlGaAs** for the keyword material, and 0.2 for the keyword x,
-  thus we write x = 0.2.
+  :math:`Al_{0.2}Ga_{0.8}As` , we select ``AlGaAs`` for the keyword material, and 0.2 for ``x``
 
-  ``mesh_regions`` : (a list of) region physical name(s) as specified in the meshing program.
+  ``mesh_regions`` : a list of region names as specified in the meshing program.
 
   ``structure`` : crystal structure (wz = wurtzite, zb = zincblend)
 
   ``x-growth-direction, y-growth-direction, z-growth-direction`` : Bravais vectors with Miller
 indexes for wurtzite crystal (4 element vectors) or zincblende crystal (3 element vectors).
 
-    |warn| 
-                A common crystal structure and growth directions definition may be applied to
-                all the Regions of the Device, just by defining them everywhere in the Device block, but
-                outside any specific Region block.
+    |idea|
+    A common material, crystal structure and growth directions can be defined for all
+    device regions by defining them outside of the Region blocks.
 
 
 Subblock doping, with the keywords:
@@ -309,7 +309,7 @@ Each **Cluster** block must be preceded by the keyword **"Cluster"** , followed 
 and the **regions** definition :
 
   ``regions`` (mandatory): list of physical regions as specified in the meshing program, or
-  TIBERCAD region names to be grouped in the cluster.
+  tiberCAD region names to be grouped in the cluster.
 
   **Regions** and **Clusters** represent the macroscopical description of the device or structure 
   to be be simulated in **TiberCAD** . In the rest of the input file, the physical regions
@@ -359,7 +359,7 @@ Modules
 
 One or more module-blocks may be present: each module-block must be preceded by
 the keyword **"Module"** , followed by the (single-word) module name. This must be the
-name of one of the TIBERCAD modules.
+name of one of the tiberCAD modules.
 Here are the Modules implemented until now:
 
   | ``driftdiffusion`` : Poisson-driftdiffusion transport of electrons and holes
