@@ -58,7 +58,11 @@ class TiberCad
 
 
     //! The full TiberCAD version string
-    static std::string version_string(bool include_svn_release = true);
+    static std::string version_string(bool include_svn_release = false);
+
+
+    //! The architecture as string
+    static std::string arch_string(void);
 
 
     //! The major version number

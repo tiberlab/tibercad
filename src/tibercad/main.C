@@ -24,6 +24,8 @@
 # include <windows.h>
 #endif
 
+#include <cstdio>
+
 
 using namespace std;
 
@@ -41,7 +43,7 @@ namespace
     cout << "press Enter ...";
     if (interactive) cin.get();
 # else
-    cout << endl << "Usage: tibercad [-b] inputfile" << endl << endl;
+    cout << endl << "Usage: tibercad [-v] [-b] inputfile" << endl << endl;
 # endif
   }
 }
@@ -50,23 +52,38 @@ namespace
 // and so on
 int main (int argc, char** argv)
 {
-  cout << endl;
-  cout << "TiberCAD version " << TiberCad::version_string() << endl;
-  cout << endl;
 
   interactive = true;
-  int optind = 1;
-  if (string(argv[optind]) == "-b")
-  {
-    interactive = false;
-    optind++;
-  }
+
+  opterr = 0;
+  int c;
+  while ((c = getopt(argc, argv, "bv")) != -1)
+    switch (c)
+    {
+      case 'v':
+        cout << "tiberCAD version " << TiberCad::version_string()
+          << " (" << TiberCad::arch_string() << ")" << endl;
+        return 0;
+        break;
+
+      case 'b':
+        interactive = false;
+        break;
+
+      case '?':
+        cout << "Unknown option: -" << (char) optopt << endl;
+      default:
+        usage();
+        return 1;
+    }
 
   if (optind >= argc)
   {
     usage();
     return 1;
   }
+
+
 
   // take input file from command line or ask for it
   string inputfile;

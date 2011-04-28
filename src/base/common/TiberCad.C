@@ -92,6 +92,16 @@ TiberCad::version_string(bool include_svn_release)
   return os.str();
 }
 
+
+
+std::string
+TiberCad::arch_string(void)
+{
+  return std::string(xstr(ARCH));
+}
+
+
+
 int
 TiberCad::major_version(void)
 {
