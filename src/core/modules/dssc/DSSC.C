@@ -4625,6 +4625,7 @@ DSSC::get_solution_secure(const Elem* elem,
     //double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
     //double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
     double edens = sc->get_density_n_exp_DOS();
+    double edens_c = sc->get_density_n();
     double Idens = sc->get_density_I();
     double I3dens = sc->get_density_I3();
     double Cdens = sc->get_density_C();
@@ -4633,7 +4634,7 @@ DSSC::get_solution_secure(const Elem* elem,
 
     sc->calculate_net_recombination_rate();
 
-    double sigma_e = Constants::e * edens * sc->get_mobility_n();
+    double sigma_e = Constants::e * edens_c * sc->get_mobility_n();
     double sigma_I = Constants::e * Idens * sc->get_mobility_I();
     double sigma_I3 = Constants::e * I3dens * sc->get_mobility_I3();
     double sigma_C = Constants::e * Cdens * sc->get_mobility_C();
