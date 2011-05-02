@@ -8,6 +8,12 @@ class ETB : public TightBinding
 
  public:
 
+     enum Solutions
+  {
+    MeshStates,  //Eigenstate Magnitude projected on mesh
+    ElQuantumDensity,  //Electron charge density
+    HlQuantumDensity  //Hole charge density
+  };
 
 
   //! A class for Dftb options
@@ -72,7 +78,6 @@ class ETB : public TightBinding
 
   };
 
-
   //! Constructor
   ETB(const ModelOptions& options);
 
@@ -107,9 +112,8 @@ class ETB : public TightBinding
   //! compute atomic charges
   void compute_atomic_charges(const std::string& particle, std::vector<double>& qmat);
 
-//  //! compute state density for a single state
-//  void compute_state_density(unsigned int, std::vector<double>&);
-
+  //! compute state density for a single state
+  void compute_eigenvector_mag(unsigned int, std::vector<double>&);
 
   //! Provide solution values
   virtual void
@@ -117,26 +121,21 @@ class ETB : public TightBinding
         const std::vector<Point>& p);
 
 
-
-
-
  protected:
-
-//  double build_rho(const std::string& particle, const Point& r);
 
 //  void build_statedens(std::vector<double>& values, const Point& r);
 
-  double build_rho3d(const std::string& particle, const Point& r);
+  double build_rho3d(const std::vector<double>& tb_density, const Point& r);
 
-  double build_rho2d(const std::string& particle, const Point& r);
+  double build_rho2d(const std::vector<double>& tb_density, const Point& r);
 
-  double build_average_rho1d(const std::string& particle, const Elem* elem);
+  double build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem);
 
   virtual void do_init(void);
 
   virtual void do_solve (void);
 
-  virtual void do_plot (void);
+//  virtual void do_plot (void);
 
   virtual void parse_options(void);
 
@@ -164,14 +163,6 @@ class ETB : public TightBinding
 
 
  private:
-
-  enum Solutions
-  {
-    //MeshEigenstate  //Eigenstate Magnitude projected on mesh
-    ElQuantumDensity,  //Electron charge density
-    HlQuantumDensity  //Hole charge density
-  };
-
 
   //! Get options suited for DFTB+ tight binding builder and solver
   void get_upt_options(void);
@@ -217,16 +208,15 @@ class ETB : public TightBinding
   //! vector to hold number of orbital per ion
   std::vector<int> _ion_num_orbitals;
 
-  
+  //! State density on atom, first index is the eigenvector label
+  std::map<unsigned int, std::vector<double>> _eigenvector_mag;
+ 
   //! Electron charge density on atoms
   std::vector<double> _el_atomic_charges;
   
   //!Hole charge density on atoms
   std::vector<double> _hl_atomic_charges;
 
-//  //! State density on atom, first index is the eigenvector label
-//  std::map<unsigned int, std::vector<double>> _state_density;
-  
   //!Number of atoms (without including hydrogens)
   unsigned int _N_without_H;
   
@@ -239,10 +229,6 @@ class ETB : public TightBinding
   double _vb_shift;
 
     
-    //! Charge density on elements (for faster scc calculation)
-    std::map<const Elem*, double> _elemental_result_el;
-    std::map<const Elem*, double> _elemental_result_hl;
-
   //! Size of the solution (number of states)
   unsigned int _solution_size;
   
