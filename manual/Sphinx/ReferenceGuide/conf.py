@@ -178,7 +178,7 @@ latex_font_size = '12pt'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'TiberCAD.tex', u'Reference Guide',
+  ('index', 'TiberCAD-ReferenceGuide.tex', u'Reference Guide',
    u'TiberLAB srl', 'manual'),
 ]
 
