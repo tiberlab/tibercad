@@ -47,10 +47,10 @@ for any details please refer to GMSH manual GMSH (http://geuz.org/gmsh/).
  
 
 
-  |warn|
-             In a **1D** simulation it is assumed that the geometrical model is restricted to the **x axis** .
-             In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
-             Any other geometrical orientation could give unpredictable results
+.. warning::
+             In a *1D* simulation it is assumed that the geometrical model is restricted to the *x axis* .
+             In a *2D* simulation it is assumed that the geometrical model is restricted to the *xy-plane (z=0)* 
+             Any other orientation will produce wrong results
 
  
 
@@ -110,9 +110,9 @@ Definition of two physical entities Physical Point::
   Physical Point("cathode") = {2}
 
 
-|warn| 
-             In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
-             are used by TiberCAD to impose the required boundary conditions.
+.. warning:: 
+             In general, in a nD simulation, *(n-1)D* physical regions (points in 1D, lines in 2D, surfaces in 3D) 
+             are used by TiberCAD to impose the boundary conditions.
 
 Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
 through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
@@ -131,7 +131,7 @@ Alternatively, a *non-interactive* mode is also available in GMSH, without graph
 
 For example, to mesh this 1D tutorial in non-interactive mode, just type:
 
-  |idea|    gmsh bulk.geo -1 -o bulk.msh
+    gmsh bulk.geo -1 -o bulk.msh
 
 where bulk.geo_ is the geometrical description of the device with GMSH syntax:
 

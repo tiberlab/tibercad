@@ -158,9 +158,9 @@ form:
 
           *" tagname = tagvalue"* , where
 
-* *"tagname"* is a string
+  * *"tagname"* is a string
 
-* *"tagvalue"* is a single numerical or string item or a list of items between "(" and ")"
+  * *"tagvalue"* is a single numerical or string item or a list of items between "(" and ")"
 parenthesis and separated by commas. e.g. ( *cathode, anode* )
 
 Format is free for the parameter assignments, provided that they are separated by
@@ -190,7 +190,7 @@ Device section
 
 ::
 
-  Device hemt1
+  Device hemt
   {
     meshfile = hemt_msh.grd
 
@@ -210,15 +210,15 @@ Device section
     ...
   }
 
-**Device** section includes the geometrical description of the device to be simulated; an
-optional *device name* can be associated to the Device object, e.g. *Device hemt1* .
+The ``Device`` section includes the geometrical description of the device to be simulated.
+An optional device name can be associated to the device object after the ``Device`` keyword.
 
-In **Device** section, two kinds of block can be present: the **Region** block and the
- **Cluster** block. Outside of these blocks, general options common to all the device can
+In the ``Device`` section, two kinds of block can be present: the ``Region`` block and the
+ ``Cluster`` block. Outside of these blocks, general options common to all the device can
 be defined. The most important is the mesh file definition:
 
-  *meshfile* : name of mesh file. N.B.: the extension is mandatory! ( *.grd* for ISE-TCAD,
-  .msh for GMSH mesh file v.1 and v.2.0 )
+  ``meshfile`` : name of the mesh file, including file name extension ( ``.grd`` for Synopsys devise,
+  ``.msh`` for ``GMSH`` mesh files)
 
 The definition of the mesh file associated to this simulation is compulsory:
 
@@ -242,41 +242,35 @@ specified by the keyword *mesh_regions* .
 ::
 
   Region QWell
+  {
+    mesh_regions = (well1,well2)
+
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+    x-growth-direction = (0,0,0,1)
+    material = GaN
+
+    Doping
     {
-     mesh_regions = (well1,well2)
-     structure = wz
-     y-growth-direction = (1,0,-1,0)
-     z-growth-direction = (-1,2,-1,0)
-     x-growth-direction = (0,0,0,1)
-     material = GaN
-     Doping
-       {
-        density = 1e17
-        type = donor
-        level = 0.025
-       }
+      density = 1e17
+      type = donor
+      level = 0.025
     }
+  }
 
-Here are the description of the available keywords for a **Region** block.
+Here are the description of the available keywords for a ``Region`` block:
 
-  ``material`` (mandatory): name of the material associated to the present region, e.g Si;
-  it may be a ternary alloy, e.g AlGaAs, in this case keyword x described in the following
-  has to be present.
+  | ``material`` : name of the material associated to the region, e.g ``Si`` or ``AlGaAs``
+  | ``x`` : alloy concentration, expressed as the molar fraction of the first component of the alloy.  To create e.g. an alloy :math:`\mathrm{Al}_{0.2}\mathrm{Ga}_{0.8}\mathrm{As}`, we specify ``AlGaAs`` for the keyword ``material``, and ``0.2`` for ``x``
+  | ``mesh_regions`` : a list of region names as specified in the meshing program.
+  | ``x-growth-direction, y-growth-direction, z-growth-direction`` : Bravais vectors with Miller
+indices for wurtzite crystal (4 element vectors) or zincblende crystal (3 element vectors).
 
-  ``x`` : alloy concentration, expressed as the molar fraction of the first component of
-  the alloy; e.g. to express an alloy :math:`Al_xGa_{1-x}As` with molar fraction x = 0.2, that is
-  :math:`Al_{0.2}Ga_{0.8}As` , we select ``AlGaAs`` for the keyword material, and 0.2 for ``x``
+..  | ``structure`` : crystal structure (wz = wurtzite, zb = zincblend)
 
-  ``mesh_regions`` : a list of region names as specified in the meshing program.
+.. tip:: A common material, crystal structure and growth directions can be defined for all
+         device regions by defining them outside of the Region blocks.
 
-  ``structure`` : crystal structure (wz = wurtzite, zb = zincblend)
-
-  ``x-growth-direction, y-growth-direction, z-growth-direction`` : Bravais vectors with Miller
-indexes for wurtzite crystal (4 element vectors) or zincblende crystal (3 element vectors).
-
-    |idea|
-    A common material, crystal structure and growth directions can be defined for all
-    device regions by defining them outside of the Region blocks.
 
 
 Subblock doping, with the keywords:
@@ -427,10 +421,8 @@ declared:
 
 In this example, several recombination models are defined (srh, auger, direct ) each one
 with default parameters.
-
-..   For a detailed description of the models, please refer to the reference guide.
-
-Three special Modules are: the Sweep Module, the Selfconsistent Module and the Solvers
+For a detailed description of the models, please refer to the reference guide.
+Two special Modules are: the Sweep Module and the Selfconsistent Module
 
 Module sweep
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -483,24 +475,6 @@ indicates that the values are applied to the variable Vg, which is a quantity de
   |  ``plot_data`` : default is false; if it is set to true, then output data will be written for
      each step of the sweep calculation, otherwise just the results for the final step will be
      present in the output.
-     
-  |  ``file_mode`` = controls the behaviour for writing the data file containing global data. Can be one of ``append``, ``overwrite`` (default) or ``no-overwrite``
-
-  |  ``min_step`` =  the minimum absolute step size
-
-  |  ``max_step`` = the maximum absolute step size
-
-  |  ``initial_step`` = the absolute initial step size
-
-  |  ``min_relative_step`` =  minimum relative step size, default is 1e-3
-
-  |  ``max_relative_step`` =  maximum relative step size, default is 1
-
-  |  ``initial_relative_step`` =  initial relative step size, default is 1
-
-     The relative step sizes refer to each single sweep step.  If max_relative_step is less than one, each sweep step will be subdivided in smaller steps. If a simulation fails, the step gets reduced by half until the simulation succeeds, or until the minimum relative or absolute step size is reached. In the latter case, the sweep is assumed to have failed.
-     As for any module, a name can be given to a sweep block. This is important when several sweeps are defined, and in particular when nested sweep (solve option of one sweep refers to another sweep) are used.
-
 
 Once a *sweep* calculation has been defined, it is treated as a special case of simulation
 and may be executed as an usual simulation: by adding it in the solve list, 
@@ -524,118 +498,12 @@ simulation modules (e.g. driftdiffusion and excitontransport).
     }
 
 In **solve** the list of simulations to be performed self-consistently is specified.
-
-
-Solves models in an iterative way to obtain a selfconsistent solution, optionally using a relaxation approach.
-options:
-
-* ``max_iteration`` =  the maximum number of iterations. Currently, when the maximum number of iterations is reached, the program only issues a warning and proceeds.
-
-* ``relative_tolerance`` =  the relative convergence tolerance for the observed variable in terms of the l2-norm
-
-* ``absolute_tolerance`` =  the absolute convergence tolerance for the observed variable in terms of the maximum-norm
-
-* ``relaxation_factor`` =  an optional relaxation factor (default is 1) to be applied to the observed variable
-
-* ``solve`` =  the simulations to be solved
-
-
 Now it is possible to execute the specified simulations in self consistent way, by using
 the **selfconsistent** keyword like a simulation name, in any **solve** assignment, e.g. 
 ``solve = selfconsistent`` in **Simulation** section, or even in a **sweep** section.
 
-
-Solvers
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-**Numerical Solvers**
-
-the "Solver" block inside a module description contains the options for the numerical solver.
-The solver type the "Solver" block is describing (linear, nonlinear, eigenvalue solver) depends on the module.
-For nonlinear and linear solvers, the following options exist:
-
-.. index:: double:Solvers;nonlinear
-
-
-**Nonlinear solvers :**
-
-
-type :
-
-  :ref:`petsc` =  uses the PETSc nonlinear solver (SNES) (default)
-
-  :ref:`linesearch` =  uses a linear linesearch implemented in TiberCAD
-
-Nonlinear solvers  are based on iterative methods, solving in each iteration a linear system. 
-The linear solver used for this can be controlled by providing a block with keyword "linear_solver" 
-containing the options for the linear solver (see linear solvers).
-
-.. _petsc:
-
-**petsc**
-
-* ``relative_tolerance``	=  convergence criterion based on relative residual l_2-norm
-
-* ``absolute_tolerance``	=  convergence criterion based on the l_2-norm of the residual
-
-* ``max_iterations``	=  maximum number of iterations
-
-* ``step_tolerance`` =  tolerance criterion based on the l_2-norm of the correction step
-
-* ``max_step`` =  maximum linesearch step (l_2-norm)
-
-* ``divergence_tolerance``	=  divergence criterion
-
-..  _linesearch:
-
-**linesearch**
-
-* ``absolute_tolerance`` =  convergence criterion based on the l_2-norm of the residual
-
-* ``step_tolerance`` =  tolerance criterion based on the l_infinity-norm of the correction step
-
-* ``max_iterations`` =  maximum number of iterations
-
-.. index:: double:Solvers;linear
-
-| 
-
-**Linear solvers :**
-
-
-type = petsc
-
-**Petsc**
-
-  ``method``, The Krylov subspace method to be used:
-  
-  ``bcgs`` =  BiCGSTAB
-  ``bcgsl`` =
-  ``gmres``	=  Generalized Minimal Residual
-  ``bicg`` =  BiConjugate Gradient
-  ``cg`` =  Conjugate Gradient
-  ``cgs`` =  Conjugate Gradient Squared
-  ``richardson`` =  Richardson
-  ``pconly`` = only apply preconditioner
-
-* ``relative_tolerance`` =  convergence criterion based on relative residual l_2-norm
-
-* ``absolute_tolerance`` =  convergence criterion based on the l_2-norm of the residual
-
-* ``max_iterations`` =  maximum number of iterations
-
-Preconditioner :
-
-  ``lu``	=  LU
-  ``ilu``	=  incomplete LU
-  ``jacobi`` =  Jacobi
-  ``cholesky`` =  Cholesky
-  ``none``	=  no preconditioning
-  ``composite``	=  use a combination of Jacobi and iLU
-
-
 Simulation section
-------------------------------
+--------------------------
 
 In this block one can specify several general parameters and settings for the actual
 calculation to be run, such as the temperature, the process-flow of simulation, etc.
@@ -924,12 +792,5 @@ Here is an example of the input file template::
 .. rubric:: Footnotes
 
 
-.. |more| image:: ../data/more.png
-    :scale: 50%
 
-.. |warn| image:: ../data/warn.png
-    :scale: 50%
-
-.. |idea| image:: ../data/idea.png
-    :scale: 50%
 
