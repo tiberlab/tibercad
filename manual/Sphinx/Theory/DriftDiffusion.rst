@@ -99,10 +99,10 @@ The following options influence the behaviour of the Drift-Diffusion module:
 |       If set to true, the system will be solved after having
         reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
 
-|warn|  
+.. warning::  
             Currently the reload of saved solutions *only works correctly when using the identical mesh* . 
             Otherwise there will be undefined behaviour or failure. 
-            Future releases will relax this restriction.
+
 
 Solver section
 --------------------
@@ -261,7 +261,7 @@ in TIBERCAD. It is enabled by specifying a ``generation`` submodel of type optic
 model imposes a constant generation rate which has to be provided by the keyword G in
 units of :math:`(cm*s)^{-1}` . 
 
-|warn| 
+.. warning:: 
           Note that the simulation usually should define a sweep on the value
           of G from 0 to the desired generation.
 
@@ -1022,14 +1022,5 @@ Listing 3: Models section for drift-diffusion
 ..   </marker>
 
     
-.. |more| image:: ../data/more.png
-    :scale: 50%
-
-.. |warn| image:: ../data/warn.png
-    :scale: 50%
-
-.. |idea| image:: ../data/idea.png
-    :scale: 50%
-
 
 
