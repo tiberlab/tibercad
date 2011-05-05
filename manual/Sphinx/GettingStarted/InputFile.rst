@@ -212,38 +212,37 @@ Device section
 
 The ``Device`` section includes the geometrical description of the device to be simulated.
 An optional device name can be associated to the device object after the ``Device`` keyword.
+In the ``Device`` section, two types of blocks can be present: ``Region`` and 
+``Cluster`` blocks. Outside of these blocks, general options common to all the device can
+be defined. The most important one is the specification of the mesh file, which is mandatory.
 
-In the ``Device`` section, two kinds of block can be present: the ``Region`` block and the
- ``Cluster`` block. Outside of these blocks, general options common to all the device can
-be defined. The most important is the mesh file definition:
+ ``meshfile`` : string
+     name of the mesh file, including file name extension
+     (``\*.grd`` for Synopsys devise, ``\*.msh`` for ``GMSH`` mesh files)
 
-  ``meshfile`` : name of the mesh file, including file name extension ( ``.grd`` for Synopsys devise,
-  ``.msh`` for ``GMSH`` mesh files)
-
-The definition of the mesh file associated to this simulation is compulsory:
-
-  ``meshfile = hemt_msh.grd``
+ ``mesh_units`` : double
+     units used in the meshfile in meters, default is ``1e-6`` corresponding to micrometers
 
 
-The **Region** blocks contain the description of the device in continuous media approach; 
-the **Cluster** blocks define each a group of regions (mesh regions) even with
+The ``Region`` blocks contain the description of the device in continuous media approach; 
+the ``Cluster`` blocks define each a group of regions (mesh regions) even with
 different physical properties, but to be treated together somewhere in the simulation
 (e.g. quantum calculation). In this way it is possible to refer to the set of these regions
-simply by the **Cluster** name.
+simply by the ``Cluster`` name.
 
-Each **Region** block must be preceded by the keyword **"Region"** , followed by the
-(single-word) name of the **TiberCAD Region** . The name of the **TiberCAD Region** 
+``Region`` blocks are started with the keyword ``Region`` , followed by the
+name of the TiberCAD region. The name of the TiberCAD region 
 can coincide with the name of a mesh region, as defined during the modeling of the
-device; in this case, if the keyword *mesh_regions* is absent, the **TiberCAD Region** will
-be associated to the mesh region identified by the name assigned to the **TiberCAD
-Region** . Otherwise, the **TiberCAD Region** will be associated to the mesh regions
-specified by the keyword *mesh_regions* .
+device. In this case, if the keyword ``mesh_regions`` is not used, the TiberCAD region will
+be associated to the mesh region identified by the given name.
+Otherwise, the TiberCAD region will be associated with the mesh regions
+specified using the keyword ``mesh_regions``.
 
 ::
 
   Region QWell
   {
-    mesh_regions = (well1,well2)
+    mesh_regions = (well1, well2)
 
     y-growth-direction = (1,0,-1,0)
     z-growth-direction = (-1,2,-1,0)
@@ -258,18 +257,28 @@ specified by the keyword *mesh_regions* .
     }
   }
 
-Here are the description of the available keywords for a ``Region`` block:
+The available keywords inside a ``Region`` block are the following:
 
-  | ``material`` : name of the material associated to the region, e.g ``Si`` or ``AlGaAs``
-  | ``x`` : alloy concentration, expressed as the molar fraction of the first component of the alloy.  To create e.g. an alloy :math:`\mathrm{Al}_{0.2}\mathrm{Ga}_{0.8}\mathrm{As}`, we specify ``AlGaAs`` for the keyword ``material``, and ``0.2`` for ``x``
-  | ``mesh_regions`` : a list of region names as specified in the meshing program.
-  | ``x-growth-direction, y-growth-direction, z-growth-direction`` : Bravais vectors with Miller
-indices for wurtzite crystal (4 element vectors) or zincblende crystal (3 element vectors).
+  ``material`` : string
+             name of the material associated to the region, e.g ``Si`` or ``AlGaAs``
 
-..  | ``structure`` : crystal structure (wz = wurtzite, zb = zincblend)
+  ``x`` : double, 0 < ``x`` < 1
+          alloy concentration, expressed as the molar fraction of the first component of the alloy.
+          To create e.g. an alloy :math:`\mathrm{Al}_{0.2}\mathrm{Ga}_{0.8}\mathrm{As}`,
+          we specify ``AlGaAs`` for the keyword ``material``, and ``0.2`` for ``x``
+
+  ``mesh_regions`` : string, list
+          a list of region names as specified in the meshing program.
+
+  ``[x,y,z]-growth-direction``  : 3-/4-tuple
+          Bravais vectors with Miller indices for wurtzite (4-tuple) or zincblende (3-tuple) crystal
+          along the x, y and z directions.
+
+.. ``structure`` : crystal structure (wz = wurtzite, zb = zincblend)
+
 
 .. tip:: A common material, crystal structure and growth directions can be defined for all
-         device regions by defining them outside of the Region blocks.
+         device regions by defining them outside of the ``Region`` blocks.
 
 
 
