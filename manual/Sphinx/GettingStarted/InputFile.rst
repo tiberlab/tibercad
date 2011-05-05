@@ -274,7 +274,8 @@ The available keywords inside a ``Region`` block are the following:
           Bravais vectors with Miller indices for wurtzite (4-tuple) or zincblende (3-tuple) crystal
           along the x, y and z directions.
 
-.. ``structure`` : crystal structure (wz = wurtzite, zb = zincblend)
+.. ``structure`` : string
+..          crystal structure (wz = wurtzite, zb = zincblend)
 
 
 .. tip:: A common material, crystal structure and growth directions can be defined for all
@@ -284,20 +285,26 @@ The available keywords inside a ``Region`` block are the following:
 
 Subblock doping, with the keywords:
 
-  |  ``density`` : doping concentration [cm-3]
-  |  ``type`` : donor or acceptor
-  |  ``level`` : energy level of the dopant [eV]
+  ``density`` : double 
+         The doping concentration in cm :sup:`-3`.
+
+  ``type`` : string
+         The dopant type. Can be ``donor`` or ``acceptor``.
+
+  ``level`` : double
+         The energy level of the dopant given as the distance from the conduction band edge (for donors)
+         or from the valence band edge (for acceptors) in eV.
 
 As in this example :
 
 ::
 
   Doping
-    {
-     density = 1e21
-     type = donor
-     level = 0.026
-    }
+  {
+    density = 1e21
+    type = donor
+    level = 0.026
+  }
 
 Each **Cluster** block must be preceded by the keyword **"Cluster"** , followed by the
 (single-word) name of the **Cluster** .
