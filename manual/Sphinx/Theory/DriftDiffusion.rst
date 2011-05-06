@@ -42,29 +42,26 @@ Module options
 
 The following options influence the behaviour of the Drift-Diffusion module:
 
-|  ``coupling = string`` defines which equations to solve. 
-| 
-|          The default is full, meaning that
-           the full system consisting of the Poisson, electron continuity and hole continuity
-           equations is solved. Other possible values are poisson (for equilibrium calculations),
-           electrons or holes. For the last two cases local equilibrium is assumed such that
-           :math:`\phi_n  =  \phi_p` .
+ ``coupling`` : string
+    defines which equations to solve. 
+    The default is ``full``, meaning that
+    the full system consisting of the Poisson, electron continuity and hole continuity
+    equations is solved. Other possible values are ``poisson`` (for equilibrium calculations),
+    ``electrons`` or ``holes``. For the last two cases local equilibrium is assumed such that
+    :math:`\phi_n  =  \phi_p` .
  
-|  ``enforce_local_charge_neutrality = bool`` 
-| 
-|        If set to true, local charge neutrality will
-         be enforced by setting the charge density to zero. This may be useful for solving
-         the Poisson equation involving only dielectrics.
+ ``enforce_local_charge_neutrality`` : bool 
+    If set to true, local charge neutrality will
+    be enforced by setting the charge density to zero. This may be useful for solving
+    the Poisson equation involving only dielectrics.
 
-|  ``guess_el_qfermi = double`` 
-|  
-|        If this option is set, then before resolving the system the
-         given number will be set as a guess for the electron electro-chemical potential.
+ ``guess_el_qfermi`` : double 
+     If this option is set, then before resolving the system the
+     given number will be set as a guess for the electron electro-chemical potential.
 
-|  ``guess_hl_qfermi = double`` 
-| 
-|        If this option is set, then before resolving the system the
-         given number will be set as a guess for the hole electro-chemical potential.
+ ``guess_hl_qfermi`` : double 
+     If this option is set, then before resolving the system the
+     given number will be set as a guess for the hole electro-chemical potential.
 
 |  ``default_boundary_condition = string`` 
 | 
