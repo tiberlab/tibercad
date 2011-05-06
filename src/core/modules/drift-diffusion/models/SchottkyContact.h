@@ -32,8 +32,8 @@ class TBDLLOCAL SchottkyContact : public ElectricalContact
 
   private:
 
-    //! The work function
-    double _workfunction;
+    //! The metal Fermi level (negative of work function)
+    double _metal_Ef;
 
     //! The reference band
     char _band;

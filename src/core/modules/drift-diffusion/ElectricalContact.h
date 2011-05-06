@@ -80,9 +80,9 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
 
 
     /*!
-     * \brief Set the metal workfunction
+     * \brief Set the contact fermilevel
      */
-    void set_workfunction(double wf);
+    void set_contact_fermilevel(double Ef);
 
 
 
@@ -104,8 +104,8 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     double _surfres;
 
 
-    //! The metal workfunction
-    double _workfunction;
+    //! The contact fermilevel
+    double _contact_fermilevel;
 
 
     //! The electron surface recombination velocity
@@ -167,9 +167,9 @@ ElectricalContact::get_inner_voltage(void) const
 
 inline
 void
-ElectricalContact::set_workfunction(double wf)
+ElectricalContact::set_contact_fermilevel(double Ef)
 {
-  _workfunction = wf;
+  _contact_fermilevel = Ef;
 }
 
 

@@ -32,9 +32,9 @@ SchottkyContact::do_init(void)
 
   std::string band = get_options().get_option("band", "c");
   if (band == "c")
-    _workfunction = get_dd_properties()->get_conduction_band_edge() - barrier;
+    _metal_Ef = get_dd_properties()->get_conduction_band_edge() - barrier;
   else if (band == "v")
-    _workfunction = get_dd_properties()->get_valence_band_edge() + barrier;
+    _metal_Ef = get_dd_properties()->get_valence_band_edge() + barrier;
   else
     throw ModelErrorException("SchottkyContact: undefined band specified");
 
@@ -46,7 +46,20 @@ SchottkyContact::do_init(void)
     // if the workfunction is set then we assume that this one should
     // be fixed and not the resulting barrier
     _fixed_barrier = false;
-    _workfunction = get_option("work_function", _workfunction);
+    _metal_Ef = -get_option("work_function", _metal_Ef);
+  }
+
+  if (has_option("metal_fermilevel"))
+  {
+    // sanity check
+    if (has_option("work_function"))
+      throw ModelErrorException("You may not specify both work_function "
+          "and metal_fermilevel for Schottky contact.");
+
+    // if the workfunction is set then we assume that this one should
+    // be fixed and not the resulting barrier
+    _fixed_barrier = false;
+    _metal_Ef = get_option("metal_fermilevel", _metal_Ef);
   }
 
   _fixed_barrier = get_option("fixed_barrier", _fixed_barrier);
@@ -55,9 +68,9 @@ SchottkyContact::do_init(void)
   {
     // this is a dirty trick, but assures the barrier in strained case
     if (_band == 'c')
-      _workfunction -= get_dd_properties()->get_conduction_band_edge();
+      _metal_Ef -= get_dd_properties()->get_conduction_band_edge();
     else
-      _workfunction -= get_dd_properties()->get_valence_band_edge();
+      _metal_Ef -= get_dd_properties()->get_valence_band_edge();
   }
 
   _thermionic_emission = get_option("thermionic_emission", true);
@@ -79,7 +92,7 @@ SchottkyContact::do_init(void)
 void
 SchottkyContact::do_compute(void)
 {
-  double val = _workfunction;
+  double val = _metal_Ef;
   if (_fixed_barrier)
   {
     if (_band == 'c')
@@ -87,7 +100,7 @@ SchottkyContact::do_compute(void)
     else
       val += get_dd_properties()->get_valence_band_edge();
   }
-  set_workfunction(val);
+  set_contact_fermilevel(val);
 
   if (_thermionic_emission)
   {

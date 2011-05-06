@@ -10,7 +10,7 @@ ElectricalContact::ElectricalContact(const ModelOptions& options)
   : DDInterfaceModel(options),
     _voltage(0.0),
     _surfres(0.0),
-    _workfunction(0.0),
+    _contact_fermilevel(0.0),
     _vrec_n(-1),
     _vrec_p(-1),
     _fixed_vrec_n(false),
@@ -55,7 +55,7 @@ void
 ElectricalContact::do_compute(void)
 {
   if (get_type(0) != NEUMANN)
-    coeff_g(0) = _workfunction + get_inner_voltage();
+    coeff_g(0) = _contact_fermilevel + get_inner_voltage();
 
   if (get_type(1) != NEUMANN)
     coeff_g(1) = get_inner_voltage();
@@ -68,7 +68,7 @@ ElectricalContact::do_compute(void)
     ParticleDensity& el = get_dd_properties()->get_electrons();
     DriftDiffusionProperties::BandProperties& cb = get_dd_properties()->get_conduction_band();
     el.set_classical_parameters(cb.effective_DOS,
-        get_dd_properties()->get_conduction_band_edge() - _workfunction, 0,
+        get_dd_properties()->get_conduction_band_edge() - _contact_fermilevel, 0,
         pd.electron_vt);
     double n0 = el.get_particle_density();
 
@@ -91,7 +91,7 @@ ElectricalContact::do_compute(void)
     ParticleDensity& hl = get_dd_properties()->get_holes();
     DriftDiffusionProperties::BandProperties& vb = get_dd_properties()->get_valence_band();
     hl.set_classical_parameters(vb.effective_DOS,
-        _workfunction - get_dd_properties()->get_valence_band_edge(), 0,
+        _contact_fermilevel - get_dd_properties()->get_valence_band_edge(), 0,
         pd.hole_vt);
     double p0 = hl.get_particle_density();
 
