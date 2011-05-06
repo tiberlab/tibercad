@@ -351,7 +351,7 @@ specified with a common keyword in arrays, e.g.
 
 
 Constant mobility model
--------------------------------
+"""""""""""""""""""""""""
 
 The constant mobility model (identifier ``constant`` ) assumes a mobility which depends
 only on temperature by means of the following formula:
@@ -370,7 +370,7 @@ have to be specified with the keywords ``mu_max`` and ``exponent``.
 mu or from the Region sections using the keywords ``mu_e`` and ``mu_h`` .
 
 Doping dependent mobility model
--------------------------------------
+""""""""""""""""""""""""""""""""
 
 The doping dependent mobility model (identifier ``doping_dependent`` ) implements two
 models for mobility depending on the total doping density and the temperature. The
@@ -422,9 +422,10 @@ with
 
 The parameters are given in table at the end of the Chapter.
 
-|
 
-**Field dependent mobility model**
+
+Field dependent mobility model
+"""""""""""""""""""""""""""""""
 
 The field dependent mobility model describes the degradation of mobility at high driving
 fields. It is identified by the identifier field_dependent. The electric field component
@@ -501,9 +502,10 @@ with the types ``pyro`` and ``piezo`` ::
 As for all models, if they do not have individual options, they can be specified together
 by writing **polarization (pyro, piezo) {}** .
 
-|
 
-**Spontaneous (pyro-) polarization**
+
+Spontaneous (pyro-)polarization
+"""""""""""""""""""""""""""""""
 
 The spontaneous polarization model imposes a constant electric polarization P along
 the symmetry-braking direction of the crystal. Crystals with wurtzite structure like Nitrides
@@ -513,9 +515,10 @@ the option Pz, meaning the value of the spontaneous polarization along c-directi
 Alternatively, one can specify explicitly a polarization vector using the option
 **P = (Px, Py, Pz)** . This is useful to impose an arbitrary constant polarization field.
 
-|
 
-**Piezopolarization**
+
+Piezopolarization
+""""""""""""""""""
 
 The piezoelectric polarization is strain induced and given by
 
@@ -576,6 +579,9 @@ accepts the following options:
        plotted for a visual control of the quality of the embracing region. 
        The default is ``false`` .
 
+
+.. _DD_trapmodels:
+
 Trap models
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -583,19 +589,23 @@ Currently single level traps are implemented in TiberCAD. Traps can be normally 
 or normally charged electron or hole traps, or a fixed charge. Common options for all
 models are
 
-|  ``type = string`` (If not provided as second keyword). 
+  ``type`` : string
+         The type of traps. One of ``eNeutral``, ``hNeutral``,
+         ``donor``, ``acceptor`` or ``fixed_charge``.
+         (Only necessary if not provided as second keyword). 
 
-|       The type of traps. One of eNeutral, hNeutral, donor, acceptor or fixed_charge.
+  ``Nt`` : double
+         The trap density in |cm3| (or |cm2| for surface traps).
 
-|  ``Nt = double`` The trap density in cm 3 (or cm 2 for surface traps).
+  ``Et`` : double
+         The trap level in eV with respect to the reference energy.
 
-|  ``Et = double`` The trap level with respect to a reference energy.
+  ``reference`` : string
+         The reference energy. The default is ``m`` for midgap.
+         Possible values are ``cb``, ``vb`` or ``m`` 
 
-|  ``reference = string`` The reference energy. The default is m. 
-
-The trap energy in this case is given as :math:`E_{trap} = E_{midgap} + Et` . 
-
-Other possible values are :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v + Et` .
+For ``reference = m`` for example, the trap energy is given as :math:`E_{trap} = E_{midgap} + Et` . 
+In the other cases it is :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v + Et` .
 
 |   ``eNeutral`` The trapped electron density is given by
 
@@ -692,7 +702,7 @@ equations of the form
 The options ``zero_field`` , ``zero_grad_fermi_e`` and ``zero_grad_fermi_h`` can be used,
 which when set to ``true`` will impose zero normal electric field and zero normal gradient
 of the electron and hole electro-chemical potential, respectively. The latter are special
-cases of surface recombination velocities ( :math:`v_{r}ec = 0` ).
+cases of surface recombination velocities ( :math:`v_{rec} = 0` ).
 
 Contacts are defined by blocks with keyword Contact, for example::
 
@@ -710,37 +720,42 @@ For interfaces and surfaces, the same syntax can be used (optionally one can use
 the keywords ``Interface`` or ``Boundary`` ), however they do usually not need to be defined
 explicitly.
 
-**Ohmic contact**
+Ohmic contact
+""""""""""""""
 
 The ohmic contact (identifier ohmic) has no further parameters.
 
-**Schottky contact**
+Schottky contact
+""""""""""""""""""
 
 A Schottky contact (identifier ``schottky`` ) has the additional parameter ``barrier`` , which
 signifies the energy difference between the semiconductor band edge and the fermi energy
 in the metal. As default, the barrier is taken with respect to the conduction band. By
 specifying ``band = v`` the barrier can be imposed with respect to the valence band (p-
 type contact). Alternatively, the metal work function can be defined using the keyword
-work_function. Note, however, that its value has to be aligned with the band energies
-given in the material files for the other materials. The ``fixed_barrier`` controls the
+``work_function`` or the keyword ``metal_fermilevel``. The latter is just the work function with
+inverted sign. Note, however, that its value has to be aligned with the band energies
+given in the material files for the other materials.
+
+The ``fixed_barrier`` controls the
 behaviour of the barrier height for strained materials. If it is set to true, the barrier will
 be independent of strain (default behaviour). If it is set to ``false`` , the given barrier is
 used as barrier for the unstrained case and will depend on strain during simulation. If
 the metal work function is specified, the barrier will be strain dependent as default.
-
-  |warn| 
-            if the contact is touching different materials, one should specify the work
-            function instead of the barrier.
-
 Thermionic emission is by default switched on, but can be disabled by specifying
 ``thermionic_emission = false`` .
 
-|
+.. warning::  If a Schottky contact is touching different materials, one should specify the work
+              function instead of the barrier.
 
-**Interface/surface model**
+
+
+
+Interface/surface model
+"""""""""""""""""""""""
 
 The free surface or interface model (identifier interface) can include surface charges
-due to traps and surface recombination. Their definition can be found in section (see above).
+due to traps and surface recombination. Their definition can be found in section :ref:`DD_trapmodels`.
 
 Each trap model will induce automatically a SRH recombination model as in the bulk
 case.
@@ -1023,4 +1038,6 @@ Listing 3: Models section for drift-diffusion
 
     
 
+.. |cm2| replace::  cm\ :sup:`2`
 
+.. |cm3| replace::  cm\ :sup:`3`

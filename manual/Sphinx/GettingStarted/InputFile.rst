@@ -79,8 +79,8 @@ available on http://www.tiberlab.com or http://www.tibercad.org.
 
 tiberCAD has the following command line options:
 
-  | ``-v`` : print the version number and exit
-  | ``-b`` : run in batch mode, without asking for user input.
+  -v     print the version number and exit
+  -b     run in batch mode, without asking for user input.
 
 The ``-b`` option is useful only for the windows version, which attends a keystroke by the user before
 exiting.
@@ -149,19 +149,17 @@ Description of Input file structure
 A valid input file for tiberCAD is a text file with the structure described in the following.
 In the whole input file, everything following a "#" is considered as a comment and is
 ignored; blank lines can be present anywhere and are ignored, too.
-An input file is composed by several **blocks** :
+An input file is composed by several blocks :
 
 A block is enclosed between curly braces ("{", "}") and may include one or more blocks.
 Each block has a header made of one or two keywords.
-Each block may contain zero or any number of **parameter assignments** of the
-form:
+Each block may contain zero or any number of parameter assignments of the
+form ``tagname = tagvalue``, where
 
-          *" tagname = tagvalue"* , where
+  * ``tagname`` is a string
 
-  * *"tagname"* is a string
-
-  * *"tagvalue"* is a single numerical or string item or a list of items between "(" and ")"
-parenthesis and separated by commas. e.g. ( *cathode, anode* )
+  * ``tagvalue`` is a single numerical or string item or a list of items in parentheses
+    and separated by commas. e.g. ``(cathode, anode)``
 
 Format is free for the parameter assignments, provided that they are separated by
 spaces. Everything which follows a "#" is considered as a comment and is ignored.
@@ -224,11 +222,10 @@ be defined. The most important one is the specification of the mesh file, which 
      units used in the meshfile in meters, default is ``1e-6`` corresponding to micrometers
 
 
-The ``Region`` blocks contain the description of the device in continuous media approach; 
-the ``Cluster`` blocks define each a group of regions (mesh regions) even with
-different physical properties, but to be treated together somewhere in the simulation
-(e.g. quantum calculation). In this way it is possible to refer to the set of these regions
-simply by the ``Cluster`` name.
+The ``Region`` blocks contain the description of the device in continuous media approach.
+The ``Cluster`` blocks define logical groups of regions, which may have different materials or
+different physical properties. In this way it is possible to easily refer to sets of regions
+by using the cluster name.
 
 ``Region`` blocks are started with the keyword ``Region`` , followed by the
 name of the TiberCAD region. The name of the TiberCAD region 
@@ -283,7 +280,7 @@ The available keywords inside a ``Region`` block are the following:
 
 
 
-Subblock doping, with the keywords:
+The optional subblock doping as in the example above contains the keywords:
 
   ``density`` : double 
          The doping concentration in cm :sup:`-3`.
@@ -295,35 +292,24 @@ Subblock doping, with the keywords:
          The energy level of the dopant given as the distance from the conduction band edge (for donors)
          or from the valence band edge (for acceptors) in eV.
 
-As in this example :
+
+The definition of cluster blocks must be preceded by the keyword ``Cluster`` , followed by the
+name of the Cluster. For example
 
 ::
 
-  Doping
+  Cluster Quantum
   {
-    density = 1e21
-    type = donor
-    level = 0.026
+    regions = (well, barrier1, barrier2)
   }
 
-Each **Cluster** block must be preceded by the keyword **"Cluster"** , followed by the
-(single-word) name of the **Cluster** .
+groups the regions ``well``, ``barrier1`` and ``barrier2`` in a logical unit with name ``Quantum``.
+The  ``regions`` option is mandatory and contains the list of mesh or tiberCAD regions to be grouped
+together.
 
-::
-
-  Cluster Quantum_1
-    {
-     regions = (well, barrier1,barrier2)
-    }
-
-and the **regions** definition :
-
-  ``regions`` (mandatory): list of physical regions as specified in the meshing program, or
-  tiberCAD region names to be grouped in the cluster.
-
-  **Regions** and **Clusters** represent the macroscopical description of the device or structure 
-  to be be simulated in **TiberCAD** . In the rest of the input file, the physical regions
-  associated to the **Modules** will be indicated by means of the **TiberCAD Region** and **Cluster** names.
+Regions and clusters represent the macroscopical description of the device or structure 
+to be be simulated in tiberCAD. In the rest of the input file, the regions
+associated to the Modules will be indicated by means of tiberCAD region names and cluster names.
 
 Modules
 ------------
@@ -331,44 +317,50 @@ Modules
 ::
 
   Module driftdiffusion
+  {
+    name = dd
+    #regions = all
+
+    plot = (Ec, Ev, Eg, eQFermi, hQFermi,
+            eDensity, hDensity, eMobility, hMobility,
+            Polarization, ElPotential, ElField,
+            eCurrentDensity, hCurrentDensity,
+            CurrentDensity, ContactCurrents,
+            eConductivity, hConductivity)
+
+    Solver
     {
-     name = dd
-     #regions = all
-     statistics = FermiDirac
-     strain_simulation = macrostrain
-     plot = (Ec, Ev, Eg, eQFermi, hQFermi, eDensity, hDensity, Polarization,
-     eCurrentDensity, hCurrentDensity,CurrentDensity, ContactCurrents,
-     ElPotential, ElField, eMobility, hMobility, eConductivity, hConductivity)
-      ..........
-     Solver
-       {
-        nonlinear_solver = tiber
-        nonlin_max_it = 15
-        nonlin_rel_tol = 1e-12
-        #nonlin_abs_tol = 1e-15
-        nonlin_step_tol = 1e-5
-       }
-     Physics
-       {
-        polarization (piezo, pyro) {}
-        mobility
-          {
-           type = field_dependent
-           low_field_model = doping_dependent
-          }
-       }
-  Contact cathode
+      max_iterations = 15
+      relative_tolerance = 1e-12
+      step_tolerance
+    }
+
+    Physics
+    {
+      strain_simulation = macrostrain
+
+      polarization (piezo, pyro) {}
+      
+      mobility
+      {
+        type = field_dependent
+        low_field_model = doping_dependent
+      }
+    }
+
+    Contact cathode
     {
      voltage = $Vd
     }
-  Contact anode
+
+    Contact anode
     {
      voltage = 0.0
     }
   }
 
 One or more module-blocks may be present: each module-block must be preceded by
-the keyword **"Module"** , followed by the (single-word) module name. This must be the
+the keyword ``Module``, followed by the (single-word) module name. This must be the
 name of one of the tiberCAD modules.
 Here are the Modules implemented until now:
 
