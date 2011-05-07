@@ -63,35 +63,29 @@ The following options influence the behaviour of the Drift-Diffusion module:
      If this option is set, then before resolving the system the
      given number will be set as a guess for the hole electro-chemical potential.
 
-|  ``default_boundary_condition = string`` 
-| 
-|        With this option the user can control the default 
-         boundary condition for the electric field on all external boundaries without explicit boundary model. 
-         Possible values are zero field (default), or zero displacement.
-         The two differ only in presence of electric polarization fields.
+ ``default_boundary_condition`` : string 
+        With this option the user can control the default 
+        boundary condition for the electric field on all external boundaries without explicit boundary model. 
+        Possible values are zero field (default), or zero displacement.
+        The two differ only in presence of electric polarization fields.
 
-|  ``quadrature_rule = string`` 
-| 
-|        This option allows to chose between trapezoidal and Gauss
-         type numeric integration rules. The default rule is gauss, but in some cases trapez
-         may prevent density peaks near badly resolved material interfaces.
+ ``quadrature_rule`` : string 
+       This option allows to chose between trapezoidal and Gauss
+       type numeric integration rules. The default rule is gauss, but in some cases trapez
+       may prevent density peaks near badly resolved material interfaces.
 
-|  ``save_state = boolean`` 
-|
-|        If set to *true* the current solution will be written to a compressed 
-         file after each solve. The file name follows the same rules as the result files,
-         having file extension ``.tsv`` .
+ ``save_state`` : bool
+        If set to ``true`` the current solution will be written to a compressed 
+        file after each solve. The file name follows the same rules as the result files,
+        having file extension ``.tsv`` .
 
-|  ``load_state = file`` 
-| 
-|       Reload a formerly saved solution. filename can be a filename (to
-        reside in the current working directory), a relative or an absolute path to a file.
-        The file needs to have been created with ``save_state = true`` .
+ ``load_state`` : string 
+       Reload a formerly saved solution. The provided string value has to be the relative or
+       absolute path to a ``.tsv`` file created using the option ``save_state``.
 
-|  ``solve_after_load = boolean`` 
-| 
-|       If set to true, the system will be solved after having
-        reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
+ ``solve_after_load`` : bool
+       If set to ``true``, the system will be solved after having
+       reloaded a saved state. Otherwise it will not be solved, which is the default behaviour.
 
 .. warning::  
             Currently the reload of saved solutions *only works correctly when using the identical mesh*. 
@@ -101,12 +95,12 @@ The following options influence the behaviour of the Drift-Diffusion module:
 Solver section
 --------------------
 
-The **Solver** section of the Drift-Diffusion module refers to a nonlinear solver .
+The ``Solver`` section of the Drift-Diffusion module refers to a nonlinear solver .
 
 Physics section
 --------------------
 
-The Physics block contains generic options for the bulk physical model and the definition
+The ``Physics`` block contains generic options for the bulk physical model and the definition
 of submodels. The generic options are:
 
 |  ``model = string`` 
@@ -177,7 +171,7 @@ doping density, e.g.
 
 where :math:`T_0` is the reference temperature (300 K). Table 2.3 shows the corresponding parameters 
 for the material data files. The parameters for holes and electrons have to be
-specified in an array, e.g. :math:`\tau_min = (1e-5, 3e-6)`
+specified in an array, e.g. :math:`\tau_{min} = (1e-5, 3e-6)`
 
     
 
@@ -542,31 +536,34 @@ models are
          The reference energy. The default is ``m`` for midgap.
          Possible values are ``cb``, ``vb`` or ``m`` 
 
-For ``reference = m`` for example, the trap energy is given as :math:`E_{trap} = E_{midgap} + Et` . 
-In the other cases it is :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v + Et` .
+For ``reference = m`` for example, the trap energy is given as :math:`E_{trap} = E_{midgap} + Et`. 
+In the other cases it is :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v + Et`.
+The following trap types are implemented:
 
-|   ``eNeutral`` The trapped electron density is given by
-
+ ``eNeutral``
+      The trapped electron density is given by
 .. math::
-    :label: dd_eq_eneutral
-    
-    n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+   :label: dd_eq_eneutral
 
-|   ``hNeutral`` The trapped hole density is given by
+     n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+
+
+ ``hNeutral``
+      The trapped hole density is given by
 
 .. math::
     :label: dd_eq_hneutral
     
     p_t = \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
 
-|   ``donor`` The density of ionized traps is given by
+  ``donor`` The density of ionized traps is given by
 
 .. math::
     :label: dd_eq_donor
 
     N^+_t = N_t - \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
 
-|   ``acceptor`` The density of ionized traps is given by
+  ``acceptor`` The density of ionized traps is given by
 
 .. math::
     :label: dd_eq_acceptor
@@ -610,7 +607,6 @@ recombination velocities for electrons and holes using the options ``rec_velocit
 equations of the form
 
 .. math::
-   :label: pippo
 
     -\nabla[\mu_n n (\nabla\phi_n + P_n \nabla T) ]  & =  v_n(n - n_0) \\
     -\nabla[\mu_p p (\nabla\phi_p + P_p \nabla T) ]  & =  -v_p(p - p0)
