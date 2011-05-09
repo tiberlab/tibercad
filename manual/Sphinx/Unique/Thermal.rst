@@ -20,26 +20,22 @@ Details about irreversible thermodynamics can be found in [Wachutka]_ .
 
 The heat flux, within the diffusive approach, is given by the Fourier's law, i.e.
 
-..  math::
+.. math::
     
     :label:
    
-    \begin{equation}
     J_i = - \kappa_{ij} \frac{\partial}{\partial x_j} T
-    \end{equation}
    
 where :math:`\kappa` is thermal conductivity second-rank tensor (which is assumed temperature in 
 dependent). The power balance is ensured by the continuity equation for the thermal
 
-..  math::
+.. math::
     
     :label:
     
-    \begin{equation}
     \frac{\partial}{\partial x_i} J_i = H
-    \end{equation}
     
-..  figure:: ../data/latticetemp.png
+.. figure:: ../data/latticetemp.png
     :align: center
     :scale: 50%
     

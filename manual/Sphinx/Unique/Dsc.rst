@@ -18,15 +18,12 @@ and electrons coupled with Poisson equation:
 
 .. math::
    
-   :label:
+   :label: dsc_eq_system
 
-   \begin{eqnarray}
-    \nabla \cdot (\mu_{e}n_{e}\nabla\phi_{e}) & = & (G - R) \\
-    \nabla \cdot (\mu_{I^{-}}n_{I^{-}}\nabla\phi_{I^{-}}) & = & -\frac{3}{2}(G - R) \\
-    \nabla \cdot (\mu_{I^{-}_{3}}n_{I^{-}_{3}}\nabla\phi_{I^{-}_{3}}) & = & \frac{1}{2}(G - R) \\
-    \nabla \cdot (\mu_{c}n_{c}\nabla\phi_{c}) & = & 0,
-   \label{eq1}
-   \end{eqnarray}
+    \nabla \cdot (\mu_{e}n_{e}\nabla\phi_{e}) & =  (G - R) \\
+    \nabla \cdot (\mu_{I^{-}}n_{I^{-}}\nabla\phi_{I^{-}}) & =  -\frac{3}{2}(G - R) \\
+    \nabla \cdot (\mu_{I^{-}_{3}}n_{I^{-}_{3}}\nabla\phi_{I^{-}_{3}}) & =  \frac{1}{2}(G - R) \\
+    \nabla \cdot (\mu_{c}n_{c}\nabla\phi_{c}) & =  0,
 
 where :math:`\mu_{\alpha}` refers to carrier mobilities, :math:`n_{\alpha}` to charge concentrations and :math:`\phi_{\alpha}` to 
 electrochemical potentials. **R** is the recombination term and **G** the generation term due to illumination. 
@@ -35,11 +32,9 @@ mobility developed from multi-trapping model:
 
 .. math::
    
-   :label:
+   :label: dsc_eq_difftraps
 
-   \begin{equation}\label{difftraps}
     \mu_{e}(n_{e}) = \mu_{0} \left ( \frac{n_{e}}{N_{t}} \right )^{\frac{1 - a}{a}}
-   \end{equation}
 
 |
 
@@ -48,11 +43,9 @@ density is assumed to form an exponential tail below the conduction band of the 
 
 .. math::
    
-   :label:
+   :label: dsc_eq_denstrap
    
-   \begin{equation}\label{denstrap}
     g_{T}(E) = \frac{a N_t}{kT} e^{\frac{-a E}{kT}}.
-   \end{equation}
 
 |
 
@@ -60,11 +53,9 @@ The Poisson equation to handle the internal potential drop:
 
 .. math::
    
-   :label:
+   :label: dsc_eq_poisson
    
-   \begin{equation}\label{poisson}
     -\varepsilon\triangle \varphi =  q[n_{c} + N_{D}^{+} - n_{I^{-}} - n_{I_{3}^{-}} - (n_{e} - \bar{n}_{e})],
-   \end{equation}
 
 |
 
@@ -72,11 +63,9 @@ where N+ D is the amount of ionized dyes and it is equal to:
 
 .. math::
    
-   :label:
+   :label: dsc_eq_dyeion
    
-   \begin{equation}\label{dyeion}
     N_{D}^{+} = \frac{G}{k_{3}}
-   \end{equation}
 
 |
 
@@ -87,12 +76,10 @@ function of the mixed medium becomes:
 
 .. math::
    
-   :label:
+   :label: dsc_eq_diel
    
-   \begin{equation}\label{diel}
     \varepsilon = \varepsilon_{s}\frac{\varepsilon_{e} + 2\varepsilon_{s} + 2\epsilon_{p}\varepsilon_{e} - 2\varepsilon_{s}\epsilon_{p}}
     {\varepsilon_{e} + 2\varepsilon_{s} -\epsilon_{p}\varepsilon_{e} +\varepsilon_{s}\epsilon_{p}}
-   \end{equation}
 
 |
 
@@ -102,14 +89,11 @@ largely on the loss mechanisms at the electrolyte/oxide interface which follows 
 
 .. math::
    
-   :label:
+   :label: dsc_eq_reaction_loss
    
-   \begin{eqnarray}
-   I^{-} & \rightleftharpoons & I + e \\
-   2I & \rightleftharpoons & I_{2} \\
-   I_{2} + I^{-} & \rightleftharpoons & I^{-}_{3}.
-   \label{reaction_loss}
-   \end{eqnarray}
+   I^{-} & \rightleftharpoons  I + e \\
+   2I & \rightleftharpoons  I_{2} \\
+   I_{2} + I^{-} & \rightleftharpoons  I^{-}_{3}.
 
 |
 
@@ -118,13 +102,11 @@ that the first chemical reaction is the slow process):
 
 .. math::
    
-   :label:
+   :label: dsc_eq_ricombinazione
    
-   \begin{equation}\label{ricombinazione}
     R = k_{e} \left [  \left ( \frac{n_{e}}{\bar{n}_{e}} \right )^{\beta}\bar{n}_{e}\sqrt{\frac{n_{I^{-}_{3}}}{n_{I^{-}}}}
     - \bar{n}_{e}\sqrt{\frac{\bar{n}_{I^{-}_{3}}}{\bar{n}^{3}_{I^{-}}}} n_{I^{-}}\right
     ],
-   \end{equation}
 
 |
 
@@ -163,21 +145,17 @@ R:math:`_{L}` is the external load. The bias applied is equal to:
 
 .. math::
    
-   :label:
+   :label: dsc_eq_pot1
    
-   \begin{equation}\label{pot1}
     V = \phi_{e} - E_{red}/q.
-   \end{equation}
 
 Ered is the redox potential. The redox potential can be evaluated using a Nernst approximation:
 
 .. math::
+    
+   :label: dsc_eq_redox11
    
-   :label:
-   
-   \begin{equation}\label{redox11}
     E_{red} = E^{0}_{Pt} - \frac{kT}{2} ln \left ( \frac{n_{I^{-}_{3}}/n_{St}}{ (n_{I^{-}}/n_{St})^{3} } \right ).
-   \end{equation}
 
 Module DSC
 ----------------------
@@ -261,7 +239,7 @@ set of parameters that can be defined for the entire device are enlisted in tabl
 
 .. _dsc_parameters:
 
-.. math::
+..  math::
    
    :label:
    
@@ -296,7 +274,6 @@ set of parameters that can be defined for the entire device are enlisted in tabl
    \end{tabular}
    \caption{Physical parameters that can be set for the model divided
    in subsets relative to different processes in the cell.}
-   \label{table:dsc_parameters}
    \end{table}
 
 
@@ -328,15 +305,13 @@ The generation term is related to the flux of photons which reaches the active :
 regions and the dye present in the cell. We assume a simple Beer-Lambert exponential
 decay for charge generation of the form:
 
-..  math::
+.. math::
     
-    :label:
+    :label: dsc_eq_generation
     
-    \begin{equation}\label{generation}
     G(\mathbf{r}) = \int^{\lambda_{2}}_{\lambda_{1}} \alpha(\lambda)
     \Phi (\lambda) e^{-\alpha(\lambda) \hat{n} \cdot \mathbf{r}}
     d\lambda
-    \end{equation}
 
 where :math:`\alpha` is the absorption coefficient (in :math:`\mu m^{-1}`
 ) of the chosen Dye, :math:`\Phi(\lambda)` the intensity of
@@ -498,7 +473,6 @@ The output that want to be plotted are enlisted in section Model within option. 
     \caption{Nodal quantities. The flags \texttt{Potential} and
     \texttt{Density} allow to plot all the electrochemical potentials
     and all the densities, including generation and recombination.}
-    \label{table:dsc_nodal}
     \end{table}
 
 

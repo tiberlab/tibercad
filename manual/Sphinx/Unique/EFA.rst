@@ -39,9 +39,7 @@ complex eigenvalue problem
     :label:
 
 	
-    \begin{equation}
 	 H\psi  = E S \psi,
-    \end{equation}
 
 where H and S are the Hamiltonian and S-matrix, respectively.
 The EFA calculations are performed by the **Module** ``efaschroedinger`` A typical example
@@ -148,10 +146,8 @@ distribution and mean electrochemical potential and temperature:
     :label:
 
 
-    \begin{align}
     \bar \mu &= \langle \psi|\mu({\bf r})|\psi \rangle \\
     \bar T &= \langle \psi|T({\bf r})|\psi \rangle 
-    \end{align}
 
 
 If ``ProbabilityDensity`` is specified as plot variable, then ``EigenEnergy`` will plot the levels of the states as constant values on the simulation mesh in addition ti the textual file listing all energies.
@@ -325,11 +321,9 @@ calculated  as follows:
     :label:
 
 
-    \begin{align}
     \rho_{1D}({\bf r}) &= g\frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln \left(1 + 
     \exp \left( \pm \frac{\mu - E}{kT} \right) \right) \\      
     \rho_{2D}({\bf r}) &= g|\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  F_{-1/2}\left( \pm \frac{\mu - E}{kT}         \right),       
-    \end{align}
 
 
 where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; m is the averaged mass (the mass
@@ -342,10 +336,8 @@ Numerical calculation is done by the following formula:
     
 	:label:
 
-    \begin{equation}
     \rho({\bf r}) = \sum_n \frac {1}{(2\pi)^d} \int_{BZ} |\psi_{\bf k_{\|}}|({\bf r})|^2 \frac{1}{1+\exp 
     \left(\pm \frac{E-\mu}{kT} \right)} d{\bf k_{\|}}
-    \end{equation}
 
 The integration is performed on a mesh in the k-space.
 
