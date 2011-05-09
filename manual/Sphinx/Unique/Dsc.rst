@@ -17,7 +17,6 @@ The model consists in a set of drift-diffusion equations for the propagation of 
 and electrons coupled with Poisson equation:
 
 .. math::
-   
    :label: dsc_eq_system
 
     \nabla \cdot (\mu_{e}n_{e}\nabla\phi_{e}) & =  (G - R) \\
@@ -31,43 +30,35 @@ In order to take into account the trap density we use a density dependent
 mobility developed from multi-trapping model:
 
 .. math::
-   
    :label: dsc_eq_difftraps
 
     \mu_{e}(n_{e}) = \mu_{0} \left ( \frac{n_{e}}{N_{t}} \right )^{\frac{1 - a}{a}}
 
-|
 
 where :math:`a` is the trap exponent, :math:`N_t` the trap density and :math:`\mu_0` a constant. The energy trap
 density is assumed to form an exponential tail below the conduction band of the semiconductor:
 
 .. math::
-   
    :label: dsc_eq_denstrap
    
     g_{T}(E) = \frac{a N_t}{kT} e^{\frac{-a E}{kT}}.
 
-|
 
 The Poisson equation to handle the internal potential drop:
 
 .. math::
-   
    :label: dsc_eq_poisson
    
     -\varepsilon\triangle \varphi =  q[n_{c} + N_{D}^{+} - n_{I^{-}} - n_{I_{3}^{-}} - (n_{e} - \bar{n}_{e})],
 
-|
 
 where N+ D is the amount of ionized dyes and it is equal to:
 
 .. math::
-   
    :label: dsc_eq_dyeion
    
     N_{D}^{+} = \frac{G}{k_{3}}
 
-|
 
 with **G** the generation term and :math:`k_{3}` the rate constant of dye regeneration. The dielectric
 constant, :math:`\varepsilon` , of the mesoporous material is a mix the two dielectric functions of the semiconductor and the electrolyte. 
@@ -75,40 +66,33 @@ We use the Maxwell-Garnet model where the dielectric
 function of the mixed medium becomes:
 
 .. math::
-   
    :label: dsc_eq_diel
    
     \varepsilon = \varepsilon_{s}\frac{\varepsilon_{e} + 2\varepsilon_{s} + 2\epsilon_{p}\varepsilon_{e} - 2\varepsilon_{s}\epsilon_{p}}
     {\varepsilon_{e} + 2\varepsilon_{s} -\epsilon_{p}\varepsilon_{e} +\varepsilon_{s}\epsilon_{p}}
 
-|
 
 where :math:`\varepsilon_{s}` and :math:`\varepsilon_{e}` are the dielectric constants of the semiconductor and the electrolyte,
 respectively, and :math:`\epsilon_{p}` is the porosity of the medium. The recombination term depends
 largely on the loss mechanisms at the electrolyte/oxide interface which follows the reaction chain:
 
 .. math::
-   
    :label: dsc_eq_reaction_loss
    
    I^{-} & \rightleftharpoons  I + e \\
    2I & \rightleftharpoons  I_{2} \\
    I_{2} + I^{-} & \rightleftharpoons  I^{-}_{3}.
 
-|
 
 From the chemical path we can get a formula for the interface recombination (considering
 that the first chemical reaction is the slow process):
 
 .. math::
-   
    :label: dsc_eq_ricombinazione
    
     R = k_{e} \left [  \left ( \frac{n_{e}}{\bar{n}_{e}} \right )^{\beta}\bar{n}_{e}\sqrt{\frac{n_{I^{-}_{3}}}{n_{I^{-}}}}
-    - \bar{n}_{e}\sqrt{\frac{\bar{n}_{I^{-}_{3}}}{\bar{n}^{3}_{I^{-}}}} n_{I^{-}}\right
-    ],
+    - \bar{n}_{e}\sqrt{\frac{\bar{n}_{I^{-}_{3}}}{\bar{n}^{3}_{I^{-}}}} n_{I^{-}}\right],
 
-|
 
 where the electron rate :math:`k_{e}` is the recombination rate constant.
 
@@ -140,11 +124,10 @@ integral boundary conditions for conservation of ionic species:
 
 where :math:`\Omega` is the volume of the cell, :math:`n_{\alpha}` the density
 of charged species and the index :math:`\alpha` stands for cation (c),
-iodide (I:math:`^{-}`), triiodide (I:math:`^{-}_{3}`) and electrons (e).
-R:math:`_{L}` is the external load. The bias applied is equal to:
+iodide (I\ :math:`^{-}`), triiodide (I\ :math:`^{-}_{3}`) and electrons (e).
+R\ :math:`_{L}` is the external load. The bias applied is equal to:
 
 .. math::
-   
    :label: dsc_eq_pot1
    
     V = \phi_{e} - E_{red}/q.
@@ -152,7 +135,6 @@ R:math:`_{L}` is the external load. The bias applied is equal to:
 Ered is the redox potential. The redox potential can be evaluated using a Nernst approximation:
 
 .. math::
-    
    :label: dsc_eq_redox11
    
     E_{red} = E^{0}_{Pt} - \frac{kT}{2} ln \left ( \frac{n_{I^{-}_{3}}/n_{St}}{ (n_{I^{-}}/n_{St})^{3} } \right ).
@@ -200,7 +182,7 @@ Contacts
 
 Information for the contacts is inserted in the ``Module`` section, in the subsections ``Contacts``. 
 The two contacts are the photoanode and the cathode. The photoanode must be
-the boundary of a region where :math:`\bf TiO_2` is present, on the contrary the cathode must be
+the boundary of a region where |TiO2| is present, on the contrary the cathode must be
 the boundary of a region where the *electrolyte* is present.
 
 ::
@@ -221,7 +203,7 @@ electrochemical potential of the electrons. The cathode must contain the initial
 resistance (``load = R``). 
 
 If a simulation of the cell under illumination is made the initial
-value of ``load`` must be set to a high value, in the range of :math:`10^{6}-10^{8}\Omega cm^{2}`
+value of ``load`` must be set to a high value, in the range of :math:`10^{6}-10^{8} \Omega cm^{2}`
 
 in order to have
 no current during the light intensity sweep. In case a simulation under dark conditions
@@ -239,12 +221,9 @@ set of parameters that can be defined for the entire device are enlisted in tabl
 
 .. _dsc_parameters:
 
-..  math::
-   
+.. math::
    :label:
    
-   \begin{table}[!h]
-   \center
    \begin{tabular}{l|p{8cm}|l}
    \multicolumn{3}{c}{\textbf{Parameters}} \\
    \hline
@@ -272,41 +251,17 @@ set of parameters that can be defined for the entire device are enlisted in tabl
    \texttt{k\_e} & Recombination constant rate & s$^{-1}$ \\
    \texttt{rec\_non\_linearity} & Non-linearity exponent in the electron density recombination &  \\
    \end{tabular}
-   \caption{Physical parameters that can be set for the model divided
-   in subsets relative to different processes in the cell.}
-   \end{table}
-
-
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
-| 
 
 
 
 Generation module
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The generation term is related to the flux of photons which reaches the active :math:`TiO_2`
+The generation term is related to the flux of photons which reaches the active |TiO2|
 regions and the dye present in the cell. We assume a simple Beer-Lambert exponential
 decay for charge generation of the form:
 
 .. math::
-    
     :label: dsc_eq_generation
     
     G(\mathbf{r}) = \int^{\lambda_{2}}_{\lambda_{1}} \alpha(\lambda)
@@ -378,7 +333,7 @@ Device section for a DSC simulation:
 
 The Device section must contain the name of the mesh file ``meshfile = <name_of_the_mesh>`` .
 For every region of the device it is specified the material file from the database (the
-``TiO2mes`` contains standard parameters for both :math:`TiO_2` and electrolyte, so it can be used
+``TiO2mes`` contains standard parameters for both |TiO2| and electrolyte, so it can be used
 for both regions). For every region must be specified if it contains ``TiO_2``, or electrolyte
 or both. This can be done setting two flags called ``TiO2`` and electrolyte. 
 
@@ -386,7 +341,7 @@ If set *true* the material is present in the region, if set *false* it is not pr
 
 By default they are assumed both true (porous region). In the second region of the example showed here
 there is electrolyte only and ``TiO2 = false`` is explicitly specified. In case both materials
-are present (porous region) a porosity must be specified (in the range between 0, :math:`TiO_2`
+are present (porous region) a porosity must be specified (in the range between 0, |TiO2|
 only, and 1, electrolyte only). 
 
 If one material is not present the porosity is automatically set to 0 or 1.
@@ -444,11 +399,8 @@ The output that want to be plotted are enlisted in section Model within option. 
 ..  _dsc_nodal:
 
 ..  math::
-    
     :label:
     
-    \begin{table}[!htb]
-    \center
     \begin{tabular}{l|p{8cm}|l}
     \multicolumn{3}{c}{\textbf{Nodal quantities}} \\
     \hline
@@ -470,20 +422,13 @@ The output that want to be plotted are enlisted in section Model within option. 
     \texttt{Generation} & The net electron generation rate & cm$^{-3}$s$^{-1}$ \\
     \texttt{NetRecombination} & The net recombination rate & cm$^{-3}$s$^{-1}$ \\
     \end{tabular}
-    \caption{Nodal quantities. The flags \texttt{Potential} and
-    \texttt{Density} allow to plot all the electrochemical potentials
-    and all the densities, including generation and recombination.}
-    \end{table}
 
 
 .. _dsc_elemental:
 
 ..  math::
-    
     :label: 
 
-    \begin{table}[!htb]
-    \center
     \begin{tabular}{l|p{5cm}|l}
     \multicolumn{3}{c}{\textbf{Elemental quantities}} \\
     \hline
@@ -496,19 +441,12 @@ The output that want to be plotted are enlisted in section Model within option. 
     \texttt{I3CurrentDensity} & Triiodide current density & Acm$^{-2}$ \\
     \texttt{CCurrentDensity} & Cation current density & Acm$^{-2}$ \\
     \end{tabular}
-    \caption{Elemental quantities. The flag \texttt{Current} allows to
-    plot all of them in the x, y and z components.}
-    \label{table:dsc_elemental}
-    \end{table}
 
 
 
 ..  math::
-    
     :label: 
 
-    \begin{table}[!htb]
-    \center
     \begin{minipage}{8cm}
     \center
     \begin{tabular}{l|l|l}
@@ -517,8 +455,6 @@ The output that want to be plotted are enlisted in section Model within option. 
     \texttt{ContactCurrents} & Contact currents & *\footnote{depends on dimension and symmetry}\\
     \end{tabular}
     \end{minipage}
-    \caption{Scalar quantities.} \label{table:dsc_scalar}
-    \end{table}
 
 ..  _dsc_scalar:
 
@@ -529,7 +465,6 @@ Boundary Conditions
 
 The boundary conditions are inserted in the **Model** section, the two contacts are the
 photoanode and the cathode. The photoanode must be the boundary of a region where
-:math:`\bf{TiO_2}` is present, on the contrary the cathode must be the boundary of a region where
 the **electrolyte** is present.
 
 ::
@@ -609,3 +544,5 @@ The intensity of illumination can be changed sweeping the value of x different t
 
 ..   rubric:: Footnotes
 
+
+.. |TiO2| replace:: :math:`{\rm TiO_2}`
