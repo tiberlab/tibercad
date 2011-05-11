@@ -113,7 +113,7 @@ AC_CACHE_CHECK([wether Boost::filesystem is available], tc_cv_boost_filesystem_l
  fi
  AC_LANG_PUSH([C++])
  for lib in $tc_boost_lib; do
-   LDFLAGS="$tc_boost_libdir -l$lib"
+   LDFLAGS="$tc_boost_libdir -l$lib -lboost_system"
    AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include <boost/filesystem/operations.hpp>]],
 			          [[boost::filesystem::path p("configure");
 				    boost::filesystem::exists(p); return 0;]]),
