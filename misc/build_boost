@@ -1,0 +1,60 @@
+#!/bin/bash
+
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
+
+VERSION=1_42_0
+ARCHIVE=boost_${VERSION}.tar.bz2
+
+echo "Compiling boost libraries"
+
+
+mkdir -p $BUILDDIR
+if [ ! -d $BUILDDIR ]; then
+  echo "Directory $BUILDDIR does not exist."
+  exit 1
+fi
+
+
+
+cd $BUILDDIR
+if [ ! -e ${ARCHIVE} ]; then
+  wget http://sourceforge.net/projects/boost/files/boost/`echo $VERSION | sed 's/_/\./g'`/${ARCHIVE}
+fi
+
+
+if [ ! -e ${ARCHIVE} ]; then
+  echo "Could not download ${ARCHIVE}."
+  exit 1
+fi
+
+cat <<PATCH >$BUILDDIR/boost.patch
+--- tools/build/v2/user-config.jam.orig	2010-01-29 10:14:42.000000000 +0100
++++ tools/build/v2/user-config.jam	2010-01-29 15:01:27.000000000 +0100
+@@ -43,7 +43,7 @@
+ # using gcc ;
+ 
+ # Configure specific gcc version, giving alternative name to use.
+-# using gcc : 3.2 : g++-3.2 ;
++using gcc : : $CXX : <linkflags>-Wl,-rpath,${BUILDDIR}/boost/lib ;
+ 
+ 
+ # -------------------
+PATCH
+
+if [ ! -d boost_${VERSION} ]; then
+  tar jxf ${ARCHIVE}
+  cd boost_${VERSION}
+  patch -p0 < ${BUILDDIR}/boost.patch
+  cd ..
+fi
+
+cd boost_${VERSION}
+
+
+./bootstrap.sh --prefix=${BUILDDIR}/boost --with-libraries="regex,filesystem,system"
+./bjam install

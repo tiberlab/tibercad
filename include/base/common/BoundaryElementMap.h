@@ -8,6 +8,7 @@
 #include <map>
 #include <set>
 #include <vector>
+#include <cstdlib> // for NULL
 
 class Elem;
 class Boundary;

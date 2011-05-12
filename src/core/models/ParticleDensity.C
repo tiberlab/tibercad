@@ -13,6 +13,9 @@
 using namespace std;
 
 
+const double
+ParticleDensity::MINDENSITY = 1e-64;
+
 
 ParticleDensity::ParticleDensity(const ModelOptions& options) :
   PhysicalModelInterface(options),

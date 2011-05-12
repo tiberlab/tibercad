@@ -177,7 +177,7 @@ TiberNonlinLS::do_solve(void)
 
     // check for divergence
     //if ((norm_res > norm_rhs) || isnan(norm_res))
-    if (isnan(norm_res))
+    if (std::isnan(norm_res))
     {
       //cout << endl;
       throw (SNESDivergedError(-4, i, norm_rhs));

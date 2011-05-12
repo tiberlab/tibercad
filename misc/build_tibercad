@@ -20,7 +20,8 @@ cd ../
   --with-petsc-arch=${ARCH}-complex \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
-  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${march}
+  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${march} \
+  --with-boost-prefix=${BUILDDIR}/boost --with-boost-libdir=${BUILDDIR}/boost/lib
 
 
 make
