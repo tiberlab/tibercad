@@ -110,23 +110,31 @@ Module driftdiffusion
 
  
 
-Module macrostrain
+Module elasticity 
 {
-   
+
   name = strain
   regions = all
-  substrate = cathode
+
   plot = (Strain, PiezoPolarization)
-   
-  Contact cathode
+
+
+  Physics 
   {
-    type = substrate
-    material = GaAs
-    structure = zb  
-        
+    body_force lattice_mismatch 
+    {
+      reference_material = GaAs
+      structure = zb    
+    }
+       
   }
-    
+
+  Contact cathode 
+  {type = clamp}
+
 }
+
+
 
 
 
@@ -144,7 +152,7 @@ Module efaschroedinger
    
   particle = el
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
-  strain_simulation = macrostrain
+  strain_simulation = strain 
  
 
   number_of_eigenstates = 6
@@ -174,7 +182,7 @@ Module efaschroedinger
    
   particle = hl
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
-  strain_simulation  = macrostrain
+  strain_simulation  = strain  
  
 
   number_of_eigenstates = 12
@@ -194,19 +202,12 @@ Module efaschroedinger
 Simulation
 {
 
-  #searchpath = ../../materials   
-#  meshfile = InGaAs_1D.msh 
-    
- 
-
   dimension = 1
   temperature = 300
   solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes )
 
   resultpath =  output  
 
-#  plot = (Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, ContactCurrents, NetRecombination, strain, polarization, EigenFunctions, EigenEnergy,EnergyLevels)
- 
   output_format = grace
 
 }
