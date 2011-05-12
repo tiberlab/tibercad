@@ -101,35 +101,36 @@ Device
 
 
 
-Module  macrostrain
+Module elasticity 
 {
-            
+
   name = strain
+  regions = all
 
-  substrate = substrate
+  plot = (Strain, StrainCell,Stress,Displacement )
+  lin_rel_tol = 1e-6 
 
-  plot = (Strain, PiezoPolarization)
-  lin_rel_tol = 1e-6  #
-         
-  
-  Contact substrate
+  Physics 
   {
-    
-    type = substrate
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaN
+      x = 0.2
+      structure = wz
+      x-growth-direction = (1,0,-1,0)
+      y-growth-direction = (-1,2,-1,0)
+      z-growth-direction = (0,0,0,1)
 
-    material = AlGaN
-    x = 0.2
 
-    structure = wz
-
-    x-growth-direction = (1,0,-1,0)
-    y-growth-direction = (-1,2,-1,0)
-    z-growth-direction = (0,0,0,1)
-        
+     
+    }
+       
   }
 
+  Contact substrate  
+  {type = clamp}
+
 }
-  
 
 
 
@@ -212,7 +213,7 @@ Simulation
   verbose = 2
 
   solve = (strain, sweep)
-  resultpath = output_nanocol_tecplot_tut_IV 
+  resultpath = output 
   output_format = vtk
 }
 
