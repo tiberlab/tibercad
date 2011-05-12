@@ -198,7 +198,7 @@ latex_logo = "../data/tibercad.png"
 
 # Additional stuff for the LaTeX preamble.
 latex_preamble = '\\usepackage{tiber}'
-latex_additional_files = ['../tiber.sty','../data/warning.png','../data/tip.png']
+latex_additional_files = ['../tiber.sty','../data/warning.png','../data/tip.png', '../data/note.png' ]
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
