@@ -65,34 +65,37 @@ Device
 }
 
 
-
-
-Module  macrostrain
+Module elasticity 
 {
-            
-  name = str
 
+  name = strain
   regions = all
 
   plot = (Strain, PiezoPolarization)
-      
-  substrate = substrate
-   
-  Contact substrate  #ALGANsubstrate
+
+
+  Physics 
   {
-    type = substrate
-    material = AlGaN
-    x = 0.3
-    structure = wz
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
-
-	
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaN
+      x = 0.3
+      structure = wz
+      y-growth-direction = (1,0,-1,0)
+      z-growth-direction = (-1,2,-1,0)
+      x-growth-direction = (0,0,0,1)
+    }
+       
   }
-    
 
-} 
+  Contact substrate  
+  {type = clamp}
+
+}
+
+
+
+
 
 
 Module  driftdiffusion
@@ -100,7 +103,7 @@ Module  driftdiffusion
         
   name = dd
       
-  strain_simulation = str
+  strain_simulation = strain 
 
   # we solve only Poisson equation
   coupling = poisson
@@ -139,7 +142,7 @@ Module  efaschroedinger
   particle = el
   number_of_eigenstates = 10
   poisson_simulation = dd
-  strain_simulation  = macrostrain
+  strain_simulation  = strain 
  
   solution_method = general
   solver = krylovshur 
@@ -147,10 +150,7 @@ Module  efaschroedinger
 
   Physics
   {
- model = conduction_band  
-
-  #  model = kp  
- #   kp_model = 8x8
+    model = conduction_band  
   }
   
 
@@ -170,7 +170,7 @@ Module  efaschroedinger
   particle = hl
   number_of_eigenstates = 15
   poisson_simulation  = dd
-  strain_simulation = macrostrain
+  strain_simulation = strain 
 
   solver = krylovshur
   solution_method = general
@@ -273,13 +273,11 @@ Module quantumdispersion
 
 Simulation
 {  
-  #searchpath =    ../../materials 
- 
- 
+   
   dimension = 1
   temperature = 300
-  solve = (str, dd, quantum_el, quantum_hl,  dispersion1D_el, dispersion1D_hl, dispersion2D_el, dispersion2D_hl )   
-  resultpath = output_new
+  solve = (strain, dd, quantum_el, quantum_hl,  dispersion1D_el, dispersion1D_hl, dispersion2D_el, dispersion2D_hl )   
+  resultpath = output
   output_format = grace
-#  plot = (strain, polarization, Ec, Ev, EField , EigenEnergy, EnergyLevels, EigenFunctions, k-space_dispersion)
+
 }
