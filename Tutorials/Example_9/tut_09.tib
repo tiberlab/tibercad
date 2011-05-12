@@ -6,7 +6,7 @@ Device
 {
   
   meshfile = tut_09.msh
-  dimension = 2
+  symmetry = cylindrical
   
 
   Region n_side 
@@ -15,7 +15,7 @@ Device
 
     Doping
     {
-      Nd = 1e18
+      density = 1e18
       type = donor 
      
     }
@@ -28,7 +28,7 @@ Device
 
     Doping
     {
-      Nd = 1e19
+      density = 1e19
       type = acceptor 
     }
 
@@ -49,37 +49,38 @@ Module driftdiffusion
               
    
   name = dd
-  regions = (n_side,p_side)
+  regions = (n_side, p_side)
 
-  #    statistics = FD
-  thermal_simulation = tt
 
-  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity, eMobility, hMobility, NetRecombination, Pn, Pp, RecombHeat, ePeltier, hPeltier, eJoule, hJoule, ePowerFlux, hPowerFlux, ContactCurrents)
+  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity,
+          eMobility, hMobility, NetRecombination, Pn, Pp,
+          RecombHeat, ePeltier, hPeltier, eJoule, hJoule,
+          ePowerFlux, hPowerFlux, ContactCurrents)
 
-  Solver
-  {
-    nonlin_max_it = 25
-    nonlin_step_tol = 1e-5
-    ls_max_step = 2
-  }
+#  Solver
+#  {
+#    nonlin_max_it = 25
+#    nonlin_step_tol = 1e-5
+#    ls_max_step = 2
+#  }
   
   Physics
   {
 
-    recombination srh {}
-
     thermal_simulation = tt  
 
+    recombination srh {}
 
     mobility
     {
       model = doping_dependent
     }
+ 
+# thermoelectric_power   diffusivity_model {}
 
   }
     
 
-# thermoelectric_power   diffusivity_model {}
      
   Contact anode
   {
@@ -101,15 +102,13 @@ Module thermal
 {
   
   name = tt
-  regions = all
-  plot = (  LatticeTemp, ThermalFlux, HeatSource,ThermCond,MaxTemp)  #          all # (thermal)
+  plot = (  LatticeTemp, ThermalFlux, HeatSource,ThermCond,MaxTemp)
 
     
   Physics
   {
 
     HeatSource joule
-
     {
       DD_simulation = dd
     }
@@ -136,7 +135,7 @@ Module thermal
 
 Module selfconsistent
 {
-  solve =(dd,tt)
+  solve = (dd,tt)
 
   abs_tolerance = 1e-5
   monitor = true
@@ -159,8 +158,7 @@ Simulation
 {
   temperature = 300
   solve = sweep
-  resultpath = output_tut9_2.0
-  symmetry = cylindrical
+  resultpath = output
   output_format = vtk
 }
 
