@@ -63,29 +63,31 @@ Device
 
 
 
-
-
-Module  macrostrain
+Module elasticity 
 {
-           
-  name = str
 
+  name = strain
   regions = all
 
-  substrate = substrate
+  plot = (Strain, StrainCell,Stress,Displacement )
+  lin_rel_tol = 1e-6 
 
-  plot = (Strain, PiezoPolarization)
-
-
-  Contact  substrate
+  Physics 
   {
-
-    type = substrate
-    material = GaAs
-
+    body_force lattice_mismatch 
+    {
+      reference_material = GaAs
+     
+    }
+       
   }
-  
-} 
+
+  Contact  substrate  
+  {type = clamp}
+
+}
+
+
 
 
 
@@ -103,7 +105,7 @@ Module  driftdiffusion
 
   Physics
   {
-    strain_simulation = str
+    strain_simulation = strain 
 
     # we us a predictor corrector scheme for the selfconsistent loop
     use_density_predictor = true
@@ -145,7 +147,7 @@ Module efaschroedinger
   particle = el
   number_of_eigenstates = 22
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = strain 
   #solver = lapack
 
 
@@ -178,10 +180,9 @@ Simulation
   
   dimension = 1
   temperature = 300
-  solve = (str, dd, poisson_schroedinger)
-  resultpath = output_2.0
+  solve = (strain, dd, poisson_schroedinger)
+  resultpath = output_2.0_elast
   output_format = grace
 
-  #  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , eDensity, hDensity, EigenFunctions, EigenEnergy, EnergyLevels,quantum_density)
 
 }
