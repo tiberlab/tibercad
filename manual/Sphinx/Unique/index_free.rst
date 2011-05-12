@@ -18,7 +18,7 @@ Welcome to TiberCAD's Theory Module
    Dsc_free
    
    Bibliography
-   Index
+
 
    
    

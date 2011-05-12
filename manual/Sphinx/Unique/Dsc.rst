@@ -51,7 +51,7 @@ The Poisson equation to handle the internal potential drop:
     -\varepsilon\triangle \varphi =  q[n_{c} + N_{D}^{+} - n_{I^{-}} - n_{I_{3}^{-}} - (n_{e} - \bar{n}_{e})],
 
 
-where N+ D is the amount of ionized dyes and it is equal to:
+where N+D is the amount of ionized dyes and it is equal to:
 
 .. math::
    :label: dsc_eq_dyeion
@@ -159,31 +159,31 @@ simulation and the list of plotted variables:
 ::
 
   Module dssc 
+  {
+    name = dssc
+    plot = (Potential, Density, Current, ContactCurrents)
+    Solver linesearch
     {
-     name = dssc
-     plot = (Potential, Density, Current, ContactCurrents)
-     Solver linesearch
-       {
-        max_iterations = 300
-        step_tolerance = 1e-4
-        linear_solver
-          {
-           preconditioner = lu
-          }
-       }
-     Physics
-       {
-        ...
-       }
-     Contact anode
-       {
-        ...
-       }
-     Contact cathode
-       {
-        ...
-       }
+      max_iterations = 300
+      step_tolerance = 1e-4
+      linear_solver
+     {
+       preconditioner = lu
+      }
     }
+    Physics
+   {
+     ...
+    }
+    Contact anode
+    {
+      ...
+    }
+    Contact cathode
+   {
+     ...
+    }
+  }
 
 This section contains information about the ``Contacts``, parameters for the ``Solver`` and
 the ``Physics`` sections.
@@ -199,15 +199,15 @@ the boundary of a region where the *electrolyte* is present.
 ::
 
   Contact anode
-    {
-     type = ohmic
-     bias = $V[0.0]
-    }
+  {
+    type = ohmic
+    bias = $V[0.0]
+  }
   Contact cathode
-    {
-     type = Pt
-     load = $R[1e8]
-    }
+  {
+    type = Pt
+    load = $R[1e8]
+  }
 
 The anode is an ohmic contact, it contains only the sweep of the bias applied for the
 electrochemical potential of the electrons. The cathode must contain the initial external
@@ -233,7 +233,7 @@ set of parameters that can be defined for the entire device are enlisted in tabl
 .. _dsc_parameters:
 
 .. math::
-   :label:
+   :label: Parameters Table
    
    \begin{tabular}{l|p{8cm}|l}
    \multicolumn{3}{c}{\textbf{Parameters}} \\
@@ -287,26 +287,37 @@ The part of the input file for the generation module:
 :: 
 
   Module dssc_generation
-    {
-     regions = TiO2
-     plot = (Distance, Generation)
-     light_direction = (1, 0, 0)
-     light_intensity = $x
-     dye = N719
+  {
+    regions = TiO2
+    plot = (Distance, Generation)
+    light_direction = (1, 0, 0)
+    light_intensity = $x
+    dye = N719
      
-     Contact anode
-       {
-       }
-    }
+    Contact anode
+    {
+     }
+  }
 
 In the generation module must be specified:
 
-* ``regions`` : the regions where we want that there is generation (where the Dye is present);
-* ``plot if we want`` : to plot the generation;
-* ``light_direction`` : the vector which fixes the direction from where the light comes;
-* ``light_intensity`` : the light intensity;
-* ``dye`` : the dye used in the cell;
-* ``illumination_spectrum`` : the source spectrum, by default a 1.5 AM solar spectrum;
+*  ``regions`` : 
+   the regions where we want that there is generation (where the Dye is present);
+
+*  ``plot if we want`` : 
+   to plot the generation;
+
+*  ``light_direction`` : 
+   the vector which fixes the direction from where the light comes;
+
+*  ``light_intensity`` : 
+   the light intensity;
+
+*  ``dye`` : 
+   the dye used in the cell;
+
+*  ``illumination_spectrum`` : 
+   the source spectrum, by default a 1.5 AM solar spectrum;
 
 The light intensity is defined in a sweep. It can be set to reach 1 that means one Sun,
 or a larger or smaller illumination intensity (0.1, 2.0, etc.).
@@ -315,7 +326,7 @@ to change the spectrum profile :math:`\Phi` with another illumination source (fo
 assumed that the cell is under light concentration). The file used by default for F is the
 standard 1.5 AM sun spectrum contained in the material database in the file **Sun1p5am** .
 
-The last part of the generation is the definition of the Contact. This Contact tells to
+The last part of the generation is the definition of the ``Contact``. This Contact tells to
 the code which is the boundary region of the grid from where the light penetrates into
 the device. The information given by the boundary and the light direction vector defines
 the coming of light and direction of rays.
@@ -329,14 +340,14 @@ Device section for a DSC simulation:
 
   # Description of the device physical regions Device
   { 
-   meshfile = <name_of_the_mesh>
-   Region TiO2
-     {
+    meshfile = <name_of_the_mesh>
+    Region TiO2
+    {
       material = TiO2mes
       porosity = 0.5
-     }
-   Region electrolyte
-     {
+    }
+    Region electrolyte
+    {
       material = TiO2mes
       TiO2 = false
      }
@@ -365,6 +376,7 @@ is needed to make the transition from dark condition to full open-circuit condit
 illumination. The high value of the load **R** maintains the current to zero. Then a second
 sweep is used to pass from open circuit condition to short circuit condition lowering the
 external load from a high external load to a small one (``R = 1``). 
+
 Finally, the voltage sweep compute the I-V characteristics under illumination. In case of dark simulation
 (application of an external bias without illumination) the first and second sweep are not
 needed. The external load for the cathode can be set directly to **R** = 1.
@@ -372,33 +384,33 @@ needed. The external load for the cathode can be set directly to **R** = 1.
 ::
 
   Module sweep 
-    {
-     name = sweep_gen
-     solve = (dssc_generation, dssc)
-     variable = $x
-     values = (0, 1e-9, 1e-8, 1e-7, 1e-6,
-     1e-5, 1e-4, 1e-3, 1e-2, 0.1, 1)
-     plot_data = true
-    }
+  {
+    name = sweep_gen
+    solve = (dssc_generation, dssc)
+    variable = $x
+    values = (0, 1e-9, 1e-8, 1e-7, 1e-6,
+    1e-5, 1e-4, 1e-3, 1e-2, 0.1, 1)
+    plot_data = true
+  }
   Module sweep 
-    {
-     name = sweep_R
-     solve = dssc
-     variable = $R
-     values = ( 1000, 100, 10, 1 )
-     plot_data = true
-    }
+  {
+    name = sweep_R
+    solve = dssc
+    variable = $R
+    values = ( 1000, 100, 10, 1 )
+    plot_data = true
+  }
   Module sweep 
-    {
-     name = sweep_V
-     solve = dssc
-     variable = $V
-     values = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.62, 0.64, 
-     0.66, 0.68, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8)
-     plot_data = true
-    }
-    
-The intensity of illumination can be changed sweeping the value of **x** different to 1 (1 = 1 Sun of power).
+  {
+    name = sweep_V
+    solve = dssc
+    variable = $V
+    values = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.62, 0.64, 
+    0.66, 0.68, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8)
+    plot_data = true
+  }
+
+The intensity of illumination can be changed sweeping the value of ``x`` different to 1 (1 = 1 Sun of power).
 
 
 Output
@@ -410,7 +422,7 @@ The output that want to be plotted are enlisted in section Model within option. 
 ..  _dsc_nodal:
 
 ..  math::
-    :label:
+    :label:  Nodal quantities Table
     
     \begin{tabular}{l|p{8cm}|l}
     \multicolumn{3}{c}{\textbf{Nodal quantities}} \\
@@ -438,7 +450,7 @@ The output that want to be plotted are enlisted in section Model within option. 
 .. _dsc_elemental:
 
 ..  math::
-    :label: 
+    :label: Elemental quantities Table
 
     \begin{tabular}{l|p{5cm}|l}
     \multicolumn{3}{c}{\textbf{Elemental quantities}} \\
@@ -456,7 +468,7 @@ The output that want to be plotted are enlisted in section Model within option. 
 
 
 ..  math::
-    :label: 
+    :label: Scalar quantities Table
 
     \begin{minipage}{8cm}
     \center
@@ -476,23 +488,23 @@ Boundary Conditions
 
 The boundary conditions are inserted in the **Model** section, the two contacts are the
 photoanode and the cathode. The photoanode must be the boundary of a region where
-the **electrolyte** is present.
+the ``electrolyte`` is present.
 
 ::
 
   BC_regions
+  {
+    BC_region <name_of_the_anode>
     {
-     BC_region <name_of_the_anode>
-       {
-        type = ohmic
-        bias = @V[0.0]
-       }
-     BC_region <name_of_the_cathode>
-       {
-        type = Pt
-        load = @R[1e8]
-       }
-    }
+      type = ohmic
+      bias = @V[0.0]
+     }
+    BC_region <name_of_the_cathode>
+    {
+      type = Pt
+      load = @R[1e8]
+     }
+  }
     
 The anode is an ohmic contact, it contains only the sweep of the bias applied for the
 electrochemical potential of the electrons. The cathode must contain the initial external
@@ -511,8 +523,10 @@ Solver
 Three sweeps are needed for the plot of the entire I-V under illumination. The first sweep
 is needed to make the transition from dark conditions to full open-circuit conditions under
 illumination. The high value of the load R maintains the current to zero. 
+
 Then a second sweep is used to pass from open circuit condition to short circuit condition lowering the
 external load from a high external load to a small one (R = 1). 
+
 Finally, the voltage sweep compute the I-V characteristics under illumination. In case of dark simulation
 (application of an external bias without illumination) the first and second sweep are not
 needed. The external load for the cathode can be set directly to R = 1.
@@ -520,34 +534,34 @@ needed. The external load for the cathode can be set directly to R = 1.
 ::
 
   Solver 
+  {
+    Sweep
     {
-     Sweep
-       {
-        sweep_gen
-          {
-           simulation = (dssc_generation, dssc)
-           variable = x
-           values = (0, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 0.1, 1)
-           plot_data = true
-          }
-        sweep_R
-          {
-           simulation = dssc
-           variable = R
-           values = ( 1000, 100, 1)
-           plot_data = true
-           }
-        sweep_V
-          {
-           simulation = dssc
-           variable = V
-           values = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0,8, 0.9, 1.0)
-           plot_data = true
-          }
-        }
-    }
+      sweep_gen
+      {
+        simulation = (dssc_generation, dssc)
+        variable = x
+        values = (0, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 0.1, 1)
+        plot_data = true
+       }
+      sweep_R
+      {
+        simulation = dssc
+        variable = R
+        values = ( 1000, 100, 1)
+        plot_data = true
+       }
+       sweep_V
+      {
+        simulation = dssc
+        variable = V
+        values = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0,8, 0.9, 1.0)
+        plot_data = true
+       }
+     }
+   }
     
-The intensity of illumination can be changed sweeping the value of x different to 1 (1 =
+The intensity of illumination can be changed sweeping the value of ``x`` different to 1 (1 =
 1 Sun of power).
 
 
