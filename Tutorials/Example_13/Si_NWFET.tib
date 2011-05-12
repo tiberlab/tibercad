@@ -1,5 +1,7 @@
 
-# Description of  the  device physical regions
+#Example 13: Si-nanowire FET
+
+
 Device
 {
   meshfile = Si_NWFET.msh  
@@ -122,7 +124,7 @@ Module sweep
 
 
 
-# Definition of  model-independent parameters of the Simulation
+
 Simulation
 {
   temperature = 300
