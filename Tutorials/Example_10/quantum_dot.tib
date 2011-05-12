@@ -88,34 +88,43 @@ Device
 }
 
 
-  
-Module macrostrain
+
+Module elasticity 
 {
 
-         
-  name = str
-    
-  substrate = substrate
-  
-  plot = (Strain, PiezoPolarization)
-    
-  Contact substrate
+  name = strain
+  regions = all
+
+  plot = (Strain, StrainCell,Stress,Displacement )
+  lin_rel_tol = 1e-6 
+
+  Physics 
   {
-    type = substrate
-    material = AlGaN
-    x = 0.3
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaN
 
-    structure = wz
+      x = 0.3
 
-    y-growth-direction = (-1,0,1,0)
-    x-growth-direction = (-1,2,-1,0)   
-    z-growth-direction = (0,0,0,1)
+      structure = wz
+
+      y-growth-direction = (-1,0,1,0)
+      x-growth-direction = (-1,2,-1,0)   
+      z-growth-direction = (0,0,0,1)
 
 
+     
+    }
+       
   }
+
+  Contact substrate  
+  {type = clamp}
+
 }
 
-  
+
+
 
 
 
@@ -130,7 +139,7 @@ Module  driftdiffusion
 
   Solver
   {
-    #nonlinear_solver = tiber
+   
     nonlin_max_it = 15
     nonlin_rel_tol = 1e-12
  
@@ -144,7 +153,7 @@ Module  driftdiffusion
 
   Physics
   {
-    strain_simulation = str
+    strain_simulation = strain 
     
     recombination srh {}
 
@@ -154,32 +163,21 @@ Module  driftdiffusion
       C = 1.1e-8
    
     }  
-   
+    
     mobility doping_dependent {}
+
+
+    trap fixed_charge
+    { 
+      regions = (surface_states1,surface_states2)
+      Nt = -1e10
+   
+    }  
+
      
   }           
 
 
-
-
-  Contact surface_states1
-  {
-     
-    type = interface
-    Ns = -1e10
- 	
-  }
-
-
-  Contact    surface_states2
-  {
-   
-    type = interface
-    Ns = -1e10	
-  }
- 
-   
- 
 }   
 
 
@@ -189,8 +187,7 @@ Module  driftdiffusion
 Module  efaschroedinger
 
 {
-
-   
+  
   name = quantum_el
   regions = Quantum_dot 
 
@@ -200,8 +197,8 @@ Module  efaschroedinger
   particle = el
   number_of_eigenstates = 5
   poisson_model_name = dd
-  strain_model_name = macrostrain
-#  convergent_density = true
+  strain_model_name = strain  
+
   log_output = true
   
   solver = krylovshur 
@@ -225,8 +222,7 @@ Module  efaschroedinger
 Module  efaschroedinger
 
 {
-
-   
+ 
   name = quantum_hl
   regions = Quantum_dot 
 
@@ -236,13 +232,11 @@ Module  efaschroedinger
   particle = hl
   number_of_eigenstates = 8
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = strain 
   convergent_density = true
   log_output = true
   
   solver = krylovshur 
-   
-
    
   monitor = true
   ksp_type = bcgsl
@@ -270,10 +264,10 @@ Simulation
   dimension = 3
   temperature = 300
 
-  solve = (str, dd, quantum_el, quantum_hl )
+  solve = (strain, dd, quantum_el, quantum_hl )
  
 
-  resultpath = output_2.0 #
+  resultpath = output_2.0#
   output_format = vtk
-#  plot = (strain, polarization, Ec, Ev, QFermi_e, QFermi_h, EField , ElPotential,  EigenFunctions, EigenEnergy, EnergyLevels)
+
 }
