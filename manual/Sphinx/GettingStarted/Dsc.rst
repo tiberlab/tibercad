@@ -3,45 +3,45 @@
 .. _DscGetting:
 
 
-Simulation Dye Solar Cells
+Simulation of Dye Solar Cells
 ==============================
 
-Model DSC
+Module  DSC
 ^^^^^^^^^
 
-The DSC model is tagged as ``dssc`` . In **options** subsection we indicate the simulation name::
+The DSC module is tagged as ``dssc`` . In **options** subsection we indicate the simulation name::
 
-  model dssc
+  Module dssc
     {
-     options
-       {
-        simulation_name = <name_of_the_model>
+    
+        name = <name_of_the_model>
         plot(Potential, Density, Current, ContactCurrents)
-       }
-     BC_regions
-       {
-        ...
-       }
-    }
+       
+
+       Contact anode
+        {
+     
+          ...
+      
+        }
     
 Boundary Conditions
 ^^^^^^^^^^^^^^^^^^^
 
-The boundary conditions are inserted in the **Model** section, the two contacts are the
+The boundary conditions are dfined by he  **Contact** blocks. In DSC  the two contacts are the
 photoanode and the cathode. The photoanode must be the boundary of a region where
 :math:`\bf{TiO_2}` is present, on the contrary the cathode must be the boundary of a region where
 the **electrolyte** is present.
 
 ::
 
-  BC_regions
-    {
-     BC_region <name_of_the_anode>
+ 
+     Contact <name_of_the_anode>
        {
         type = ohmic
         bias = @V[0.0]
        }
-     BC_region <name_of_the_cathode>
+     Contact  <name_of_the_cathode>
        {
         type = Pt
         load = @R[1e8]
@@ -75,12 +75,12 @@ decay for charge generation of the form:
 where :math:`\alpha` is the absorption coefficient (in :math:`\mu^{-1}` ) 
 of the chosen Dye, :math:`\Phi(\lambda)` the intensity of the light power at that 
 wavelength for the spectrum of the sun.
-The part of the input file for the generation model::
 
-  model dssc_generation
+The generation model is  defined in the  special  module dssc_generation::
+
+  Module dssc_generation
     {
-     options
-       {
+    
         regions = (<TiO2_region_name_1>, <TiO2_region_name_2>, ...)
         plot = (Distance, Generation)
         light_direction = <vector_indicating_the_direction_of_light>
@@ -88,15 +88,14 @@ The part of the input file for the generation model::
         light_intensity = @x
         dye = N719
        }
-     BC_Regions
-       {
-        BC_Region <name_of_the_boundary>
+     
+        Contact <name_of_the_boundary>
           {
           }
        }
     }
     
-In the generation input file must be specified:
+In the dssc_generation modul, the  following parameters may be specified:
 
 *  ``regions`` : the regions where we want that there is generation (where the Dye is present);
 
@@ -132,12 +131,12 @@ Device section for a DSC simulation::
     {
      Region <name of the porous region>
        {
-        mat = TiO2mes
+        material = TiO2mes
         porosity = 0.5
        }
      Region <name of the electrolyte region>
        {
-        mat = TiO2mes
+        material = TiO2mes
         TiO2 = false
        }
     }
@@ -161,12 +160,13 @@ Physics
 -----------
 
 The set of parameters that can be defined for the entire device are enlisted in table 3.1.
-For the generation::
+For the generation, in the Module dssc::
 
-  dssc
-    {
-     generation = dssc_generation
-    }
+  Physics 
+  {
+    generation = dssc_generation
+  }
+ 
     
 
 .. _dsc_parameters:
@@ -209,7 +209,7 @@ For the generation::
 
 .. _Solver_Dsc:
 
-Solver
+Sweeps
 ----------
 
 Three sweeps are needed for the plot of the entire I-V under illumination. The first sweep
@@ -223,33 +223,33 @@ needed. The external load for the cathode can be set directly to R = 1.
 
 ::
 
-  Solver 
-    {
-     Sweep
+  
+  Module sweep
        {
-        sweep_gen
-          {
-           simulation = (dssc_generation, dssc)
-           variable = x
-           values = (0, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 0.1, 1)
-           plot_data = true
-          }
-        sweep_R
-          {
-           simulation = dssc
-           variable = R
-           values = ( 1000, 100, 1)
-           plot_data = true
-           }
-        sweep_V
-          {
-           simulation = dssc
-           variable = V
-           values = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0,8, 0.9, 1.0)
-           plot_data = true
-          }
-        }
-    }
+        name = sweep_gen
+          
+        solve = (dssc_generation, dssc)
+        variable = $x
+        values = (0, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 0.1, 1)
+        plot_data = true
+       }
+  Module sweep        
+       {
+        name = sweep_R
+        solve = dssc
+        variable = $R
+        values = ( 1000, 100, 1)
+        plot_data = true
+       }
+  Module sweep        
+       {
+        name =   sweep_V       
+        solve = dssc
+        variable = V
+        values = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0,8, 0.9, 1.0)
+        plot_data = true          
+       }
+    
     
 The intensity of illumination can be changed sweeping the value of x different to 1 (1 =
 1 Sun of power).
@@ -257,7 +257,18 @@ The intensity of illumination can be changed sweeping the value of x different t
 Output
 ----------
 
-The output that want to be plotted are enlisted in section Model within option. See 
+The output to be plotted for  dssc Module are::
+
+ 
+
+  plot = (Potential, Density, Current, ContactCurrents)
+
+
+for Module dssc_generation::
+
+  plot = (Distance, Generation)  
+
+
 :ref:`Table nodal<dsc_nodal>` , :ref:`Table elemental<dsc_elemental>` and :ref:`Table scalar<dsc_scalar>` .
 
 ..  _dsc_nodal:

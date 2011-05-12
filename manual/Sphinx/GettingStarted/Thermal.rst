@@ -14,8 +14,9 @@ where :math:`\kappa` is thermal conductivity second-rank tensor (which is assume
 
 The power balance is ensured by the continuity equation for the thermal flux :math:`\frac{\partial J_i}{\partial x_i}=H` where H is the total heat source. 
 
-Thermal module computes the balance between the heat generated and the heat dissipated. 
-Here we get the temperature profile of a rectangular device with an hotspot in
+**Thermal**  module computes the balance between the heat generated and the heat dissipated.
+ 
+In the  following  example, we get the temperature profile of a rectangular device with an hotspot in
 the center.
 
 The device block specifies the material (Silicon) and the physical regions. In this
