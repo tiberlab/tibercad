@@ -250,7 +250,7 @@ Point cathode is associated to the TiberCAD Contact cathode.
 Both contacts are defined as *ohmic* , cathode is assigned a fixed ``voltage = 0.0`` , while anode voltage is given 
 by the value of the variable *Vb* ::
 
-  voltage = @Vb
+  voltage = $Vb
 
 
 Definition of Simulation parameters

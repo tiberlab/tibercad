@@ -190,7 +190,7 @@ Device section
 
   Device hemt
   {
-    meshfile = hemt_msh.grd
+    meshfile = hemt.msh
 
     Region buffer
     {
@@ -248,9 +248,9 @@ specified using the keyword ``mesh_regions``.
 
     Doping
     {
-      density = 1e17
+       Nd  = 1e17
       type = donor
-      level = 0.025
+      doping_level  = 0.025
     }
   }
 
@@ -282,13 +282,13 @@ The available keywords inside a ``Region`` block are the following:
 
 The optional subblock doping as in the example above contains the keywords:
 
-  ``density`` : double 
+  ``Nd`` : double 
          The doping concentration in cm :sup:`-3`.
 
   ``type`` : string
          The dopant type. Can be ``donor`` or ``acceptor``.
 
-  ``level`` : double
+  ``doping_level`` : double
          The energy level of the dopant given as the distance from the conduction band edge (for donors)
          or from the valence band edge (for acceptors) in eV.
 
@@ -337,7 +337,7 @@ Modules
 
     Physics
     {
-      strain_simulation = macrostrain
+      strain_simulation = strain
 
       polarization (piezo, pyro) {}
       
@@ -370,12 +370,11 @@ Here are the Modules implemented until now:
 
   | ``excitontransport`` : Exciton transport model
 
-  | ``macrostrain`` : Calculation of Elastic deformations in heterostructures
+  | ``elasticity`` : Calculation of Elastic deformations in heterostructures
 
-  | ``efaschroedinger`` : Envelop Function Approximation (EFA) solution of single particle 
-    Schroedinger equation for electrons and holes
+  | ``efaschroedinger`` : Envelop Function Approximation (EFA) solution of single particle Schroedinger equation for electrons and holes
 
-  | ``quantumdensity`` : Calculation of quantum density of electrons and holes.
+ 
 
   | ``quantumdispersion`` : Dispersion of quantized states in k space
 
@@ -383,12 +382,14 @@ Here are the Modules implemented until now:
 
   | ``opticalspectrum`` : Emission spectrum (with k-space integration)
 
-  | ``Sweep`` : Parameterized execution of a module simulation (e.g. for the calculation
+  | ``sweep`` : Parameterized execution of a module simulation (e.g. for the calculation
     of output current characteristics)
 
-  | ``Selfconsistent`` : coupled calculations of different simulation modules.
 
-  | ``DSC`` : Simulation of a DSC solar cell1.
+  | ``selfconsistent`` : coupled calculations of different simulation modules
+
+
+  | ``DSC`` : Simulation of a DSC solar cell
 
 Each module-block usually contains a list of general options, such as plot and others
 specific to each module. Then, two main blocks define the Physics and the Solver
@@ -465,12 +466,12 @@ The following keywords are defined for this feature:
 
   |  ``variable`` : name of the variable to which the sweep is applied: 
 
-E.g.: variable = $Vg
+E.g.::
+  variable = $Vg
 
 indicates that the values are applied to the variable Vg, which is a quantity defined in a **Contact** definition
 
-  |  ``start, stop, steps`` : sweep starts from start value, is repeated steps times and stops
-     in stop
+  |  ``start, stop, steps`` : sweep starts from start value, is repeated steps times and stops in stop
 
   |  ``solve`` : name of the simulation (module) associated to the sweep calculation; it may
      be the name of another sweep defined in the same block.
@@ -518,8 +519,7 @@ calculation to be run, such as the temperature, the process-flow of simulation, 
 
   |  ``searchpath`` : path for material files
 
-  |  ``mesh units`` : units of measurements used in the meshing (relative to meters): e.g.,
-     :math:`10^{-6}` for :math:`\mu m`
+
 
   |  ``dimension`` : dimension of simulation (1,2,3)
 
@@ -585,12 +585,14 @@ Here is an example of the input file template::
 
   Device hemt1
     {
-     meshfile = hemt_msh.grd
+     meshfile = hemt.msh
      mesh_units = 1e-6
+
      material = GaN
      y-growth-direction = (0,0,0,1)
      z-growth-direction = (1,0,-1,0)
      x-growth-direction = (-1,2,-1,0)
+
      Region barrier
        {
         material = AlGaN
@@ -603,30 +605,31 @@ Here is an example of the input file template::
         x = 0.14
         Doping 
 		  {
-           density = 1e21
+           Nd  = 1e21
            type = donor
-           level = 0.026
+           doping_level = 0.026
           }
        }
+
     Region buffer { }
     
-	Region buffer_doped
+      Region buffer_doped
       {
        mesh_regions = (buffer_dop_s, buffer_dop_d)
        Doping 
 	     {
-          density = 1e21
+          Nd  = 1e21
           type = donor
-          level = 0.026
+          doping_level = 0.026
          }
       }
     Region cap
       {
        Doping 
 	     {
-          density = 5e18
+          Nd  = 5e18
           type = donor
-          level = 0.026
+          doping_level = 0.026
          }
       }
     Region cap_doped
@@ -634,9 +637,9 @@ Here is an example of the input file template::
        mesh_regions = (cap_dop_s, cap_dop_d)
        Doping 
 	     {
-          density = 1e21
+          Nd  = 1e21
           type = donor
-          level = 0.026
+          doping_level = 0.026
          }
       }
     Region passivation
@@ -718,35 +721,38 @@ Here is an example of the input file template::
       }
     }
    
-  Module macrostrain
-    {
-     regions = -passivation # all the device except Region "passivation"
-     plot = all
-     LinearSolver # default
-       {
-        tolerance = 1e-7
-        max_iterations = 10000
-        #xmonitor = true
-        pc = composite
-       }
-     Physics
-       {
-        Boundary substrate
-          {
-           regions = bottom
-           material = GaN
-           y-growth-direction = (0,0,0,1)
-           z-growth-direction = (1,0,-1,0)
-           x-growth-direction = (-1,2,-1,0)
-          }
-		  
-        Boundary extended_material
-          {
-           regions = side
-          }
-       }
-    }
+ 
 	
+  Module elasticity 
+  {
+
+  name = strain
+  regions =  -passivation # all the device except Region "passivation"
+
+  plot = (Strain, StrainCell,Stress,Displacement )
+  lin_rel_tol = 1e-6 
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = GaN
+
+      structure = wz
+      y-growth-direction = (0,0,0,1)
+      z-growth-direction = (1,0,-1,0)
+      x-growth-direction = (-1,2,-1,0)
+          
+    }
+       
+  }
+
+  Contact substrate  
+  {type = clamp}
+
+  }
+
+
   Module sweep
     {
      name = sweep_g
@@ -784,7 +790,7 @@ Here is an example of the input file template::
     {
      temperature = 300
      verbose = 3
-     solve = (macrostrain, dd, sweep_g)
+     solve = (strain, dd, sweep_g)
      logfile = output_Nt5e16_Al0.215_SiN/hemt.log
      # these parameters can be defined in modules, too
      resultpath = output_Nt5e16_Al0.215_SiN
