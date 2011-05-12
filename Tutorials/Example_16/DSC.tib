@@ -1,4 +1,6 @@
 
+# Example 16: I-V characteristic of a Dye Solar Cell
+
 # Description of  the  device physical regions
 Device
 {
@@ -102,10 +104,10 @@ Module sweep
 }
 
 
-# Definition of  model-indipendent parameters of the Simulation
+
 Simulation
 {
-  searchpath = ../../materials
+  
   solve = (sweep_gen, sweep_R, sweep_V)
   resultpath = output
   output_format = grace

@@ -116,7 +116,7 @@ Module elasticity
   name = strain
   regions = all
 
-  plot = (Strain, PiezoPolarization)
+  plot = (Strain)
 
 
   Physics 

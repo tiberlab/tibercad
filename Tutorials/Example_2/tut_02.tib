@@ -132,7 +132,7 @@ Simulation
   solve = sweep
   resultpath = output_tut2
   output_format = grace
-#  plot = (Ec, Ev, QFermi_e, QFermi_h, eDensity, hDensity, eCurrent, hCurrent, CurrentDensity, eMob, hMob, ContactCurrents,NetRecombination,thermal)
+
 
 }
 

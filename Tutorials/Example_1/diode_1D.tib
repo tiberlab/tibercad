@@ -1,6 +1,6 @@
 #
-# This example calculates the IV of a silicon
-# pn junction in 1D
+# Example 1: Si pn diode 1D. 
+# This example calculates the IV of a silicon pn junction in 1D
 #
 
 
