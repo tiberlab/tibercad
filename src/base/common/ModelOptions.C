@@ -254,6 +254,9 @@ ModelOptions::check_unused(int mode) const
 {
   bool found = false;
 
+  // TODO for now this check is disabled
+  mode = 0;
+
   // the following is based on the assumption that
   // set iterators remain valid upon inserting/erasing
   // of elements

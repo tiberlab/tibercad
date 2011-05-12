@@ -4,6 +4,7 @@
 #include "SimulationOptions.h"
 #include "Material.h"
 #include "Database.h"
+#include "Messages.h"
 #include "HeatSourceModel.h"
 #include "ThermalConductivityModel.h"
 
@@ -81,10 +82,11 @@ ThermalModel::calculate(const Elem* elem, const Point& point)
 void 
 ThermalModel::do_print_info(void)
 {
-  cout<<"Thermal conductivity: "<<endl;
-  cout<<endl; 
-  cout<<"Kxx: "<<_kappa(0,0)<<" W/cm K"<<endl;
-  cout<<"Kyy: "<<_kappa(1,1)<<" W/cm K"<<endl;
-  cout<<"Kzz: "<<_kappa(2,2)<<" W/cm K"<<endl;
-  cout<<endl;
+  Messages::info("Thermal conductivity:");
+  ostringstream os;
+  os <<"  Kxx: "<<_kappa(0,0)<<" W/cm K\n";
+  os <<"  Kyy: "<<_kappa(1,1)<<" W/cm K\n";
+  os <<"  Kzz: "<<_kappa(2,2)<<" W/cm K";
+  Messages::info(os.str());
+  Messages::newline();
 }
