@@ -132,7 +132,7 @@ of submodels. The generic options are:
 
 For the simple semiconductor model one has to provide conduction and valence band
 edges and the effective density of states masses (or the effective density of states itself)
-in the ``Region`` sections. The corresponding keywords are given in table 5.2 .
+in the ``Region`` sections. The corresponding keywords are given in table 4.2 .
 In the following we describe the submodels. All submodels can be restricted to a
 subset of simulation regions.
 
@@ -178,14 +178,14 @@ doping density, e.g.
     \tau_n^0 & =  \tau_{min,n} + \frac{\tau_{max,n} - \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
     
     
-where :math:`T_0` is the reference temperature (300 K). Table 5.3 shows the corresponding parameters 
+where :math:`T_0` is the reference temperature (300 K). Table 4.3 shows the corresponding parameters 
 for the material data files. The parameters for holes and electrons have to be
 specified in an array, e.g. :math:`\tau_min = (1e-5, 3e-6)`
 
     
 
 The recombination times and trap level can be overridden from the input file by using
-the keywords of Table 5.4.
+the keywords of Table 4.4.
 
 
 
@@ -363,7 +363,7 @@ formula:
 
 
 where N is the total doping density and :math:`\mu_{const}` the mobility obtained from the constant
-mobility model. The parameters are specified in the material file as given in Table 5.5.
+mobility model. The parameters are specified in the material file as given in Table 4.5.
 
 
 
@@ -386,7 +386,7 @@ with
     N_0 = A_N(T/T_0)^{\alpha_N}, & \quad A^* = A_a(T/T_0)^{\alpha_a} \nonumber 
 
 
-The parameters are given in table 5.6 at the end of the Chapter.
+The parameters are given in table 4.6 at the end of the Chapter.
 
 
 
@@ -437,7 +437,7 @@ Formula 2 reads
     v_{sat} = \max(A_{vsat} - B_{vsat} (T/T_0), v_{min})
     
 
-The parameters for the field dependent mobility model are summarized in Table 5.7.
+The parameters for the field dependent mobility model are summarized in Table 4.7.
 
 
 

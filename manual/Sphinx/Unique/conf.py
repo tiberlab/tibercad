@@ -37,7 +37,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'index_free'
 
 # General information about the project.
 project = u'TiberCAD'
@@ -178,7 +178,7 @@ latex_font_size = '12pt'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'TiberCAD.tex', u'StandAlone Book',
+  ('index', 'TiberCAD-GettingStarted.tex', u'Getting Started Book',
    u'TiberLAB srl', 'manual'),
 ]
 
@@ -218,7 +218,7 @@ latex_additional_files = ['../tiber.sty','../data/warning.png','../data/tip.png'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'tibercad', u'TiberCAD Documentation',
+    ('index', 'tibercad-GettingStarted', u'TiberCAD Documentation',
      [u'TiberLAB srl'], 1)
 ]
 
@@ -226,7 +226,7 @@ man_pages = [
 # -- Options for Epub output ---------------------------------------------------
 
 # Bibliographic Dublin Core info.
-epub_title = u'TiberCAD'
+epub_title = u'TiberCAD-GettingStarted'
 epub_author = u'TiberLAB srl'
 epub_publisher = u'TiberLAB srl'
 epub_copyright = u'2011, TiberLAB srl'
