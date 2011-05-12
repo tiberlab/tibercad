@@ -1,3 +1,6 @@
+
+#Example 11: 1D  Schroedinger-Drift Diffusion
+
 Device
 {
 
@@ -66,23 +69,31 @@ Device
 
 
 
-
-
-Module macrostrain
+Module elasticity 
 {
 
-  name = str
-  substrate = cathode
+  name = strain
+  regions = all
 
-  plot = (Strain, PiezoPolarization)
+  plot = (Strain, StrainCell,Stress,Displacement )
+  lin_rel_tol = 1e-6 
 
-  Contact cathode
+  Physics 
   {
-    type = substrate
-    material = GaAs
+    body_force lattice_mismatch 
+    {
+      reference_material = GaAs
+   
+    }
+       
   }
 
-} 
+  Contact  cathode  
+  {type = clamp}
+
+}
+
+
 
 
 Module driftdiffusion
@@ -96,7 +107,7 @@ Module driftdiffusion
 
   Physics
   {
-    strain_simulation = str
+    strain_simulation = strain 
 
     # we us a predictor corrector scheme for the selfconsistent loop
     use_density_predictor = true
@@ -104,7 +115,6 @@ Module driftdiffusion
 
     recombination srh {}
 
- k_max = 1e-3 
     particle_density
     { 
       particle = electron
@@ -179,7 +189,7 @@ Module efaschroedinger
   particle = el
   number_of_eigenstates = 3
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = strain 
   #solver = lapack
 
 
@@ -202,7 +212,7 @@ Module efaschroedinger
   particle = hl
   number_of_eigenstates = 12
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = strain 
   #solver = lapack
   
   Physics
@@ -245,7 +255,7 @@ Simulation
 {
   verbose = 3
 
-  solve = (str, sweep, selfconsistent)
+  solve = (strain, sweep, selfconsistent)
 
   resultpath = output
   output_format = grace
