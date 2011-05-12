@@ -299,6 +299,10 @@ DriftDiffusionProperties::create_submodels(void)
     delete_submodel("electron_mobility");
     delete_submodel("recombination");
     delete_submodel("generation");
+    recomb_iterator it = _recombination_models.begin();
+    recomb_iterator end = _recombination_models.end();
+    for ( ; it != end; ++it)
+      delete it->second;
     _recombination_models.clear();
   }
 
