@@ -1,4 +1,7 @@
-# bjt example
+
+# Example 15: Si bipolar transistor
+# bjt example : A simple BJT with abrupt junctions and collector contacts on the bottom
+
 Device bjt
 {
   material = Si

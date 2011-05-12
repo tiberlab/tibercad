@@ -1,4 +1,8 @@
-# bjt example
+
+# Example 15: Si bipolar transistor
+# A BJT with lateral oxide between base and collector regions,
+#  abrupt junctions,all contacts on the top
+
 Device bjt2
 {
   material = Si
@@ -138,11 +142,6 @@ Module sweep
   solve = dd
   plot_data = true
 }
-
-
-
-
-
 
 
 Simulation
