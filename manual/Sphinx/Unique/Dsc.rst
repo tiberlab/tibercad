@@ -1,5 +1,4 @@
 
-.. _DscTheory:
 
 
 Simulation Dye Solar Cells
@@ -138,6 +137,18 @@ Ered is the redox potential. The redox potential can be evaluated using a Nernst
    :label: dsc_eq_redox11
    
     E_{red} = E^{0}_{Pt} - \frac{kT}{2} ln \left ( \frac{n_{I^{-}_{3}}/n_{St}}{ (n_{I^{-}}/n_{St})^{3} } \right ).
+
+
+
+
+..   <marker>
+
+..  THEORY PART
+
+.. _DscTheory:
+
+
+
 
 Module DSC
 ----------------------
@@ -540,6 +551,9 @@ The intensity of illumination can be changed sweeping the value of x different t
 1 Sun of power).
 
 
+..  EOF THEORY PART
+
+..   </marker>
 
 
 ..   rubric:: Footnotes

@@ -1,6 +1,4 @@
-..  THEORY PART
 
-.. _EFATheory:
 
 
 Quantum  EFA  calculations
@@ -22,6 +20,14 @@ The  optical properties  are  calculated by  the  following modules
 * ``Module opticskp``
 
 * ``Module opticalspectrum``
+
+
+..   <marker>
+
+..  THEORY PART
+
+.. _EFATheory:
+
 
 
 Module efaschroedinger
@@ -506,7 +512,7 @@ The output variables for optics calculations are:
 
 ..  EOF THEORY PART
 
-
+</marker>
 
 
 

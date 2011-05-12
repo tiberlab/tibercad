@@ -32,11 +32,7 @@ installation directory (``installpath/license``), without changing the filename.
 
 
 ..  math::
-    :nowrap:
-    :label:
 
-    \begin{table}[!h]
-    \center
     \begin{tabular}{l|c}
     \multicolumn{2}{c}{\textbf{Installer}} \\
     \hline
@@ -48,10 +44,7 @@ installation directory (``installpath/license``), without changing the filename.
     \texttt{tibercad-2.0.0-installer.bin} & Linux 32-bit self-extracting installer  \\
     \hline
     \end{tabular}
-    \caption{Installer Package}
-    \end{table}
-
-
+ 
 
 Linux installation procedure
 ------------------------------------

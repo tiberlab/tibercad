@@ -1,7 +1,4 @@
 
-..  THEORY PART
-
-.. _ThermalTheory:
 
 
 Thermal
@@ -40,6 +37,15 @@ dependent). The power balance is ensured by the continuity equation for the ther
     :scale: 50%
     
     Lattice temperature
+
+
+..   <marker>
+
+..  THEORY PART
+
+.. _ThermalTheory:
+
+
 
 Boundary conditions
 -------------------
@@ -99,7 +105,7 @@ Example::
 
 ..  EOF  THEORY PART
 
-..   <marker>
+..   </marker>
 
 ..  GETTING STARTED
 
@@ -216,7 +222,6 @@ Example::
 
 ..  EOF GETTING STARTED
 
-..   </marker>
 
 
 
