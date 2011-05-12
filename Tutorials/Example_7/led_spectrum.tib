@@ -195,7 +195,7 @@ Module  driftdiffusion
   plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity,
           CurrentDensity, ContactCurrent, eMobility, hMobility)
 
-  #  statistics = FD default
+
 
   Solver
   {
@@ -261,27 +261,39 @@ Module  driftdiffusion
 } 
 
 
-Module macrostrain
+
+Module elasticity 
 {
-   
+
   name = strain
   regions = all
-  substrate = n_contact 
-  plot = (Strain, PiezoPolarization)
-   
-  Contact  n_contact 
+
+  plot = (Strain, StrainCell,Stress,Displacement )
+  lin_rel_tol = 1e-6 
+
+  Physics 
   {
-    type = substrate
-    material = AlGaN 
-    x=0.2
-    structure = wz
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
-        
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaN
+      x = 0.2
+      structure = wz
+      y-growth-direction = (1,0,-1,0)
+      z-growth-direction = (-1,2,-1,0)
+      x-growth-direction = (0,0,0,1)
+
+
+     
+    }
+       
   }
-    
+
+  Contact  n_contact  #substrate  
+  {type = clamp}
+
 }
+
+
 
 
 
@@ -301,7 +313,7 @@ Module efaschroedinger
   particle = el
 
   poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
-  strain_model_name = macrostrain
+  strain_model_name = strain
   #   convergent_density = true
   #   log_output= false
 
@@ -327,7 +339,7 @@ Module efaschroedinger
   particle = hl
 
   poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
-  strain_model_name = macrostrain
+  strain_model_name = strain
   #   convergent_density = true
   #   log_output= false
 
@@ -436,12 +448,10 @@ Simulation
   dimension = 1
   temperature = 300 
 
-  solve = (strain, sweep, QW1_electrons,QW1_holes, optics, spectrum    )
+  solve = (strain, sweep, QW1_electrons,QW1_holes, optics, spectrum)
 
 
-  resultpath =   output_V4_QW1_2.0
- 
-#  plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensityDensity, eCurrentDensity, hCurrent, Current, NetRecombination, eMob, hMob, T, strain, polarization, xEffPot, xDensity, xMob, ExcitonRecombination, Occupation, EigenFunctions, EigenEnergy,EnergyLevels,   xCurrent,  optical_spectrum, k-space  )
+  resultpath =   output
  
   output_format = grace
 
