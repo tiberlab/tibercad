@@ -235,7 +235,7 @@ the associated (emission) spectrum with a k-space integration.
 The parameters are the following
 
 *  ``k_space_dimension`` :
-   Options are**1** for 2D simulations, **2** for 1D simulations. 
+   Options are **1** for 2D simulations, **2** for 1D simulations. 
 
 *  ``k-space basis`` : 
    if **true** then the k-space is defined by means of k-vectors; 
