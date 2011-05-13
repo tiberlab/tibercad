@@ -84,17 +84,17 @@ Output
 The available output variables, to be specified in the plot option, are the following:
 
   ``EigenEnergy``: 
-     Eigen energy in eV
+    Eigen energy in eV
 
   ``ProbabilityDensity``: 
-     math:`|\psi({\bf r})|^2` function of the eigenstate
+    :math:`|\psi({\bf r})|^2` function of the eigenstate
 
   ``QuantumDensity``:   
-      if  present, quantum  density is  calculated 
+    if  present, quantum  density is  calculated 
 
   ``Occupation``: 
-     probability to find the state occupied. It is calculated assuming Fermi
-     distribution and mean electrochemical potential and temperature:
+    probability to find the state occupied. It is calculated assuming Fermi
+    distribution and mean electrochemical potential and temperature:
 
 
 Module quantumdispersion
