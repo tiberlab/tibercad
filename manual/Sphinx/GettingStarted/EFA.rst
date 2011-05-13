@@ -235,26 +235,26 @@ the associated (emission) spectrum with a k-space integration.
 The parameters are the following
 
 *  ``k_space_dimension`` :
-   **1** for 2D simulations, **2** for 1D simulations. 
+   Options are**1** for 2D simulations, **2** for 1D simulations. 
 
-*  ``k-space basis``: 
+*  ``k-space basis`` : 
    if **true** then the k-space is defined by means of k-vectors; 
    if **false** , vectors are expressed in real space.
 
 *  ``number_of_nodes`` :
-    numb. of elements in k mesh, along each direction
+   numb. of elements in k mesh, along each direction
 
 *  ``wedge`` :
-    half | quarter, to reduce calculation time, by exploiting symmetry.
+   half | quarter, to reduce calculation time, by exploiting symmetry.
 
 *  ``optical_matr_elem_model`` :
-    name of the *opticskp* model associated
+   name of the *opticskp* model associated
 
 *  ``polarization`` :
-    light polarization (vector)
+   light polarization (vector)
 
 *  ``Emin, Emax, dE`` : 
-    energy range and step of spectrum calculation.
+   energy range and step of spectrum calculation.
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^
