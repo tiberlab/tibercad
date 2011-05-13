@@ -9,7 +9,7 @@ Thermal
 Introduction
 ------------
 
-The steady state heat flux, within the diffusive approach, is given by the Fourier's law, i. e. :math:`J_i = -\kappa_{ij} \frac{\partial T}{\partial x_j}` 
+The steady state heat flux, within the diffusive approach, is given by the Fourier's law, i.e. :math:`J_i = -\kappa_{ij} \frac{\partial T}{\partial x_j}` 
 where :math:`\kappa` is thermal conductivity second-rank tensor (which is assumed temperature independent). 
 
 The power balance is ensured by the continuity equation for the thermal flux :math:`\frac{\partial J_i}{\partial x_i}=H` where H is the total heat source. 
@@ -80,17 +80,17 @@ Dirichlet boundary conditions can be imposed with the keyword ``heat_reservoir``
 
 Example:: 
 
-  Contactheat_reservoir
+  Contact substrate
   {
-    region = substrate  
+    type = heat_reservoir
     temperature = 300
   }
   
-The surface resistance can be added with the keyword boundary ``surface_resistance``.  (r_surf is in cm2 W/ K). 
+The surface resistance can be added with the keyword boundary ``surface_resistance``. (r_surf is in  :math:`cm^{2} W/ K)`. 
 
 Example::
 
-  Contactsubstrate
+  Contact substrate
   {
     type = surface_resistance
     r_surf = 0. 05 
@@ -101,11 +101,11 @@ Heat sources
 ------------
 
 The constant value heat source can be included with ``heat_source`` constant. 
-The heat source must be in W/cm3. 
+The heat source must be in in  :math:`W/cm^{3}`.   
 
 Example::  
 
-  HeatSourceconstant
+  HeatSource constant
   {
     region = qdot 
     H = 1e10
@@ -116,7 +116,7 @@ The name of the drift-diffusion simulation is given by dd_simulation.
 
 Example::
   
-  HeatSourcejoule
+  HeatSource joule
     {
      dd_simulation = dd
     }

@@ -6,13 +6,13 @@ Drift Diffusion
 =================================================
 
 
-In this example we will see a very simple TiberCAD simulation:
+In this example we will see a very simple tiberCAD simulation:
 
   1D calculation of Poisson and drift-diffusion for a bulk Silicon sample.
 
 The following files should be in your working directory:
 
-  bulk.tib_  :                   **TiberCAD** input file 
+  bulk.tib_  :                   **tiberCAD** input file 
 
   bulk.msh_ :                   mesh file
 
@@ -101,8 +101,8 @@ of all the *geometrical lines* that need to be grouped inside the *physical line
 
 In this way, in general, physical regions are created which associate together geometrical regions, 
 and then the related mesh elements, which share some common physical properties. It's only these 
-physical regions which can be referred to outside GMSH. In TiberCAD, this is done by associating 
-one or more physical regions to a **RXSegion** through the keyword ``mesh_regions`` (see in the following).
+physical regions which can be referred to outside GMSH. In tiberCAD, this is done by associating 
+one or more physical regions to a **Region** through the keyword ``mesh_regions`` (see in the following).
 
 Definition of two physical entities Physical Point::
 
@@ -112,9 +112,9 @@ Definition of two physical entities Physical Point::
 
 .. warning:: 
                  In general, in a nD simulation, *(n-1)D* physical regions (points in 1D, lines in 2D, surfaces in 3D) 
-                 are used by TiberCAD to impose the boundary conditions.
+                 are used by tiberCAD to impose the boundary conditions.
 
-Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
+Each (n-1)D physical region defined in this way in GMSH will be associated in tiberCAD to a boundary condition region, 
 through the keyword ``Contact`` . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
 to two ``Contact`` regions (see in the following).
  
@@ -143,15 +143,15 @@ some command line options are:
 
   -o ``mesh_file.msh`` to specify the name of the mesh file to be generated
 
-In this way, a .msh has been generated and is ready to be read in TiberCAD.
+In this way, a .msh has been generated and is ready to be read in tiberCAD.
 
 ..  _tut0step3 :
 
-Step 3 - TiberCAD Input file
+Step 3 - tiberCAD Input file
 -----------------------------
 
 
-Now we have to write down the ``TiberCAD input file`` ( bulk.tib_ ). For a detailed reference see the user guide 
+Now we have to write down the ``tiberCAD input file`` ( bulk.tib_ ). For a detailed reference see the user guide 
 (Input file) and Getting started 
 
 Description of Device Regions
@@ -159,7 +159,7 @@ Description of Device Regions
 
 First, we have to list all the ``Regions`` present in our Device: 
 
-  a TiberCAD Region is usually a section 
+  a tiberCAD Region is usually a section 
   of the device featuring the same material and possibly the same doping.
 
 ::
@@ -193,7 +193,7 @@ to the present Region, in this way::
 In this case, the Physical Line bulk is associated to the  Region bulk.
 
 Alternatively, through the optional keyword ``mesh_regions`` , one or more GMSH physical regions can be 
-associated to a single TiberCAD Region .
+associated to a single tiberCAD Region .
 
  
 
@@ -214,7 +214,7 @@ Now we define the ``Simulation`` driftdiffusion_1: it belongs to the class **dri
     plot = (Ec, Ev, eQFermi, hQFermi, ContactCurrent)
     ....
        
-The TiberCAD simulation *driftdiffusion_1*  , belonging to the model driftdiffusion, will be applied 
+The tiberCAD simulation *driftdiffusion_1*  , belonging to the model driftdiffusion, will be applied 
 to the whole device structure (``regions = all``)
 
  
@@ -241,12 +241,12 @@ The anode and cathode contacts of our 1D Si sample are defined as **Boundary con
     
 Through the keyword Contact , one (n-1) -dimension GMSH physical region (Physical Point in 1D, 
 Physical Line in 2D, Physical Surface in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be 
-associated to the present TiberCAD Contact, in this way:
+associated to the present tiberCAD Contact, in this way:
 
   Contact  ``GMSH_physical_region_name`` 
 
-In this case, the *Physical Point* ``anode`` is associated to the TiberCAD Contact anode and the Physical 
-Point cathode is associated to the TiberCAD Contact cathode.
+In this case, the *Physical Point* ``anode`` is associated to the tiberCAD Contact anode and the Physical 
+Point cathode is associated to the tiberCAD Contact cathode.
 
 Both contacts are defined as *ohmic* , cathode is assigned a fixed ``voltage = 0.0`` , while anode voltage is given 
 by the value of the variable ``Vb`` ::
@@ -302,10 +302,10 @@ To increases the amount of information written to the screen we can vary the ver
  
 ..  _tut0step4 :
 
-Step 4 - Run TiberCAD
+Step 4 - Run tiberCAD
 -----------------------
 
-Now we can run TiberCAD
+Now we can run tiberCAD
 
 *   by double clicking on bulk.tib file (in Windows)
 

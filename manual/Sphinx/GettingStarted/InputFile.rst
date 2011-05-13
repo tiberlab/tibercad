@@ -294,10 +294,10 @@ The optional subblock doping as in the example above contains the keywords:
   ``type`` : string
          The dopant type. Can be ``donor`` or ``acceptor``.
 
-  ``density`` : double 
+  ``Nd`` : double 
          The doping concentration in cm\ :sup:`-3`.
 
-  ``level`` : double
+  ``doping_level`` : double
          The energy level of the dopant given as the distance from the conduction band edge (for donors)
          or from the valence band edge (for acceptors) in eV.
 
