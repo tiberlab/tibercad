@@ -14,7 +14,7 @@ Prerequisites
 -------------------
 
 Get the installer package for your OS/architecture from http://www.tiberlab.com or
-by contacting support@tibercad.org. Table 1 lists the packages available for download.
+by contacting support@tiberlab.com. Table :ref:`Installer packages<input_installerpacks>`  lists the packages available for download.
 To run tiberCAD you will also need a license file that you will have to copy into the
 installation directory of tiberCAD.
 
@@ -31,10 +31,10 @@ After finishing installation, copy your license file ``tibercad.lic`` into the `
 installation directory (``installpath/license``), without changing the filename.
 
 
+.. _input_installerpacks :
 
 ..  math::
     :nowrap:
-    :label:
 
     \begin{table}[!h]
     \center
@@ -49,7 +49,7 @@ installation directory (``installpath/license``), without changing the filename.
     \texttt{tibercad-2.0.0-installer.bin} & Linux 32-bit self-extracting installer  \\
     \hline
     \end{tabular}
-    \caption{Installer Package}
+    \caption*{Installer Packages}
     \end{table}
 
 
@@ -57,7 +57,8 @@ installation directory (``installpath/license``), without changing the filename.
 Linux installation procedure
 ------------------------------------
 
-To install tiberCAD under Linux, download and run the self-extracting installer  ``tibercad-2.0.0_installer.bin`` 
+To install tiberCAD under Linux, download and run the self-extracting installer
+``tibercad-2.0.0-ARCH_installer.bin``, where ARCH corresponds to your hardware architecture,
 and follow the installation instructions.
 
 After installation, copy your license file ``tibercad.lic`` into the ``license`` subdirectory
@@ -231,6 +232,10 @@ The ``Cluster`` blocks define logical groups of regions, which may have differen
 different physical properties. In this way it is possible to easily refer to sets of regions
 by using the cluster name.
 
+
+Region block
+"""""""""""""
+
 ``Region`` blocks are started with the keyword ``Region`` , followed by the
 name of the TiberCAD region. The name of the TiberCAD region 
 can coincide with the name of a mesh region, as defined during the modeling of the
@@ -286,16 +291,22 @@ The available keywords inside a ``Region`` block are the following:
 
 The optional subblock doping as in the example above contains the keywords:
 
-  ``Nd`` : double 
-         The doping concentration in cm :sup:`-3`.
-
   ``type`` : string
          The dopant type. Can be ``donor`` or ``acceptor``.
 
-  ``doping_level`` : double
+  ``density`` : double 
+         The doping concentration in cm\ :sup:`-3`.
+
+  ``level`` : double
          The energy level of the dopant given as the distance from the conduction band edge (for donors)
          or from the valence band edge (for acceptors) in eV.
 
+  ``g`` : integer
+         Level multiplicity. Defaults to 2 for donors and 4 for acceptors.
+
+
+Cluster block
+"""""""""""""
 
 The definition of cluster blocks must be preceded by the keyword ``Cluster`` , followed by the
 name of the Cluster. For example
@@ -369,38 +380,38 @@ name of one of the tiberCAD modules.
 Here are the Modules implemented until now:
 
  ``driftdiffusion`` : 
-    Poisson-driftdiffusion transport of electrons and holes
+       Poisson-driftdiffusion transport of electrons and holes
 
  ``thermal`` : 
-    Heat balance simulation
+       Heat balance simulation
 
  ``excitontransport`` : 
-    Exciton transport model
+       Exciton transport model
 
  ``elasticity`` : 
-    Calculation of Elastic deformations in heterostructures
+       Calculation of Elastic deformations in heterostructures
 
  ``efaschroedinger`` : 
-    Envelop Function Approximation (EFA) solution of single particle Schroedinger equation for electrons and holes 
+       Envelop Function Approximation (EFA) solution of single particle Schroedinger equation for electrons and holes 
 
  ``quantumdispersion`` : 
-    Dispersion of quantized states in k space
+       Dispersion of quantized states in k space
 
  ``opticskp`` : 
-    Optical properties (optical kp matrix elements)
+       Optical properties (optical kp matrix elements)
 
  ``opticalspectrum`` : 
-    Emission spectrum (with k-space integration)
+       Emission spectrum (with k-space integration)
 
  ``sweep`` : 
-    Parameterized execution of a module simulation (e.g. for the calculation
-    of output current characteristics)
+       Parameterized execution of a module simulation (e.g. for the calculation
+       of output current characteristics)
 
  ``selfconsistent`` : 
-    coupled calculations of different simulation modules
+       coupled calculations of different simulation modules
 
  ``DSC`` : 
-    Simulation of a DSC solar cell
+       Simulation of a DSC solar cell
 
 Each module-block usually contains a list of general options, such as plot and others
 specific to each module. Then, two main blocks define the ``Physics`` and the ``Solver``
@@ -440,10 +451,11 @@ declared:
 
   ``recombination (srh, direct, auger) { }``
 
-In this example, several recombination models are defined (srh, auger, direct ) each one
+In this example, several recombination models are defined (srh, auger, direct) each one
 with default parameters.
 For a detailed description of the models, please refer to the reference guide.
-Two special Modules are: the Sweep Module and the Selfconsistent Module
+
+Two special modules are  the ``sweep`` and the ``selfconsistent`` modules
 
 Module sweep
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -451,24 +463,17 @@ Module sweep
 ::
 
   Module sweep
-    {
-     name = sweep_drain
-     solve = driftdiffusion
-     variable = $Vd
-     start = 0.0
-     stop = 2.0
-     steps = 20
-     plot_data = true
-    }
-  Module sweep
-    {
-     name = sweep_gate
-     solve = sweep_drain
-     variable = $Vg
-     start = -0.1
-     stop = 1.0
-     steps = 11
-    }
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+    variable = $Vd
+    start = 0.0
+    stop = 2.0
+    steps = 20
+    plot_data = true
+  }
+
+
 
 Each sweep Module defines a set of calculations applied to a boundary region (e.g. a
 set of bias values to be assigned to a drain contact of a MOSFET for the calculation of
@@ -476,59 +481,58 @@ an output drain IV characteristic), in this Guide referred to as sweep calculati
 
 The following keywords are defined for this feature:
 
-  ``variable`` : 
+  ``variable`` 
      name of the variable to which the sweep is applied: 
 
-E.g.::
+Writing e.g. ``variable = $Vg`` that a sweep on the variable ``$Vg`` should pe performed.
 
-    variable = $Vg
+Further options controlling a sweep are:
 
-indicates that the values are applied to the variable Vg, which is a quantity defined in a **Contact** definition
+  ``name``
+     A user defined name. This is important if several sweeps are defined.
 
-  ``start, stop, steps`` : 
-     sweep starts from start value, is repeated steps times and stops in stop
+  ``solve``  
+     names of the simulations (modules) to be solved at each sweep step.
+     The names of other sweeps may be provided to realize nested sweeps.
 
-  ``solve`` : 
-     name of the simulation (module) associated to the sweep calculation; it may
-     be the name of another sweep defined in the same block.
+  ``start, stop, steps`` 
+     The sweep goes from ``start`` to ``stop`` in ``steps`` steps.
 
-  ``plotvariable`` (obsolete) : 
-     specify the integrated quantity to be calculated during the
-     sweep and that will be shown in the output file ``sweep_modelname_sweepvariable.dat`` ,
-     eg. sweep driftdiffusion Vb.dat for a sweep of current calculation on the variable Vb
-     (typically a contact voltage).
+  ``min_step``
+     The minimum allowed step size.
 
-  ``plot_data`` : 
-     default is false; 
-     if it is set to true, then output data will be written for
-     each step of the sweep calculation, otherwise just the results for the final step will be
-     present in the output.
+  ``max_step``
+     The maximum allowed step size.
 
-Once a *sweep* calculation has been defined, it is treated as a special case of simulation
-and may be executed as an usual simulation: by adding it in the solve list, 
-e.g. ``solve = sweep_drain`` .
+  ``plot_data``  
+     If set to true, output data will be written after
+     each step of the sweep, otherwise just for the final sweep value.
+     The default is ``false`` to limit output data.
+     The amount of written data can be controlled using the ``max_step`` option
+
+Once a *sweep* calculation has been defined, it is treated as an ordinary simulation
+and may therefore be used like any simulation by adding it to any ``solve`` option.
 
 Module selfconsistent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 In this Module it is possible to define a self-consistent calculation based on two different
-simulation modules (e.g. driftdiffusion and excitontransport).
+simulation modules (e.g. ``driftdiffusion`` and ``thermal``).
 
 ::
 
   Module selfconsistent
-    {
-     name = sc_all
-     solve = (tb, dens_el, dens_hl, dd)
-     max_iterations = 5
-     abs_tolerance = 1e-3
-     rel_tolerance = 1e-6
-    }
+  {
+    name = sc_all
+    solve = (tb, dens_el, dens_hl, dd)
+    max_iterations = 5
+    absolute_tolerance = 1e-3
+    relative_tolerance = 1e-6
+  }
 
 In ``solve`` the list of simulations to be performed self-consistently is specified.
-Now it is possible to execute the specified simulations in self consistent way, by using
-the ``selfconsistent`` keyword like a simulation name, in any **solve** assignment, e.g. 
-``solve = selfconsistent`` in ``Simulation`` section, or even in a ``sweep`` section.
+
+
 
 Simulation section
 --------------------------
@@ -538,9 +542,6 @@ calculation to be run, such as the temperature, the process-flow of simulation, 
 
   ``searchpath`` : 
      path for material files
-
-  ``dimension`` : 
-     dimension of simulation (1,2,3)
 
   ``temperature`` : 
      temperature of the system [K]
@@ -554,13 +555,10 @@ calculation to be run, such as the temperature, the process-flow of simulation, 
   ``resultpath`` : 
      path for output directory
 
-  ``output format`` : 
-     format of the output data: *gmv* for **GMV** , ise for **Tecplot** , grace for
-     xmgr (ascii data column type), *vtk* for **Paraview** .
+  ``output_format`` : 
+     format of the output data: ``grace`` for ascii data column type
+     ``vtk`` for VTK based output.
 
-  ``plot`` : 
-     list of output variables which are calculated and available in output files. It
-     may be overriden by defining list specific to one or more modules.
 
 Output description
 -------------------------
