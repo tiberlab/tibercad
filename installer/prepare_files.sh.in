@@ -94,20 +94,20 @@ prepare_linux_package () {
   #chmod a+x ${files}/bin/tibercad.sh
 
   # get some of the libraries
-  libs=`ldd ${topdir}/lib/libtibercad.so | grep boost | awk '{print $3}'`
-  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep lapack | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep blas | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep g2c | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep intel | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep mkl | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/lib/libtibercad.so | grep libmesh | awk '{print $3}'`"
+  libs=`ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep boost | awk '{print $3}'`
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep lapack | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep blas | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep g2c | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep intel | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep mkl | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libmesh | awk '{print $3}'`"
   cp $libs ${files}/${ARCH}/lib
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
-  cp ${topdir}/lib/lib*.so* ${files}/${ARCH}/lib
-  cp -r ${topdir}/lib/modules ${files}/${ARCH}/lib
+  cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
+  cp -r ${topdir}/${ARCH}/lib/modules ${files}/${ARCH}/lib
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
@@ -118,7 +118,7 @@ prepare_linux_package () {
   # for now:
   rm -rf ${files}/examples/Modules
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
-  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
@@ -310,7 +310,7 @@ case $1 in
     make_windows_package ;;
 
   linux ) {
-    name=tibercad-$version
+    name=tibercad-$version-${ARCH}
 
     case $2 in
 

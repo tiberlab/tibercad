@@ -103,7 +103,7 @@ manual:
 	@$(MAKE) --no-print-directory -C manual pdf
 
 
-wininstaller linuxinstaller deb tgz tbz: manual
+wininstaller linuxinstaller deb tgz tbz: 
 	@$(MAKE) --no-print-directory -C installer $(MAKECMDGOALS)
 
 
