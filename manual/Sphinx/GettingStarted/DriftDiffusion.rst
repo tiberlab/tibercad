@@ -320,7 +320,7 @@ Output
 The generated Output files are:
 
 *  ``driftdiffusion_materials.dat``  : 
-    material (mesh) regions, in this case just region 1
+    material (mesh) regions, in this case just region1
 
 *  ``driftdiffusion_nodal.dat``      : 
     nodal quantities (here conduction and valence band)
