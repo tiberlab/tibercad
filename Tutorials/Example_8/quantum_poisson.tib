@@ -181,7 +181,7 @@ Simulation
   dimension = 1
   temperature = 300
   solve = (strain, dd, poisson_schroedinger)
-  resultpath = output_2.0_elast
+  resultpath = output
   output_format = grace
 
 

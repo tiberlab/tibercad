@@ -64,7 +64,7 @@ Module dssc
 Module dssc_generation
 {
   regions = TiO2
-  plot = (Distance, Generation)
+#  plot = (Distance, Generation)
   light_direction = (1, 0, 0)
   light_intensity = $x
   dye = N719
