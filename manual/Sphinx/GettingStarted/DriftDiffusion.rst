@@ -12,9 +12,9 @@ In this example we will see a very simple TiberCAD simulation:
 
 The following files should be in your working directory:
 
-  ``bulk.tib_``  :                   **TiberCAD** input file 
+  bulk.tib_  :                   **TiberCAD** input file 
 
-  ``bulk.msh_``:                   mesh file
+  bulk.msh_ :                   mesh file
 
 The mesh file can be obtained from the following GMSH geo file : bulk.geo_ 
 
@@ -102,11 +102,11 @@ of all the *geometrical lines* that need to be grouped inside the *physical line
 In this way, in general, physical regions are created which associate together geometrical regions, 
 and then the related mesh elements, which share some common physical properties. It's only these 
 physical regions which can be referred to outside GMSH. In TiberCAD, this is done by associating 
-one or more physical regions to a **TiberCAD region** through the keyword ``mesh_regions`` (see in the following).
+one or more physical regions to a **RXSegion** through the keyword ``mesh_regions`` (see in the following).
 
 Definition of two physical entities Physical Point::
 
-  Physical Point("anode2)   = {1}
+  Physical Point("anode")   = {1}
   Physical Point("cathode") = {2}
 
 
@@ -115,7 +115,7 @@ Definition of two physical entities Physical Point::
                  are used by TiberCAD to impose the boundary conditions.
 
 Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
-through the keyword ``BC_reg_numb`` . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
+through the keyword ``Contact`` . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
 to two ``Contact`` regions (see in the following).
  
 
@@ -157,7 +157,7 @@ Now we have to write down the ``TiberCAD input file`` ( bulk.tib_ ). For a detai
 Description of Device Regions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First, we have to list all the ``TiberCAD Regions`` present in our Device: 
+First, we have to list all the ``Regions`` present in our Device: 
 
   a TiberCAD Region is usually a section 
   of the device featuring the same material and possibly the same doping.
@@ -180,17 +180,17 @@ First, we have to list all the ``TiberCAD Regions`` present in our Device:
      }
   }
     
-The TiberCAD Region bulk is made of Silicon and n-doped with a concentration 1 x :math:`10^{16} cm^{-3}` .
+The Region bulk is made of Silicon and n-doped with a concentration 1 x :math:`10^{16} cm^{-3}` .
 
 Through the keyword ``Region`` , one GMSH physical region (Physical Lines in 1D, Physical Surfaces in 2D, 
 Physical Volumes in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be associated 
-to the present TiberCAD Region, in this way::
+to the present Region, in this way::
 
 
   Region  GMSH_physical_region_name
 
 
-In this case, the Physical Line bulk is associated to the TiberCAD Region bulk.
+In this case, the Physical Line bulk is associated to the  Region bulk.
 
 Alternatively, through the optional keyword ``mesh_regions`` , one or more GMSH physical regions can be 
 associated to a single TiberCAD Region .
@@ -319,43 +319,28 @@ Output
 
 The generated Output files are:
 
-*  ``driftdiffusion_materials.dat``  : 
-    material (mesh) regions, in this case just region1
 
-*  ``driftdiffusion_nodal.dat``      : 
-    nodal quantities (here conduction and valence band)
+* ``driftdiffusion_msh.dat``      : mesh-dependent quantities (here conduction and valence band)
 
-*  ``sweep_driftdiffusion_Vb.dat``   : 
-    integrated current at the two contacts for each sweep step
+* ``driftdiffusion_Vb_step_msh.dat``: mesh-dependent quantities for each sweep step
  
+* ``sweep_driftdiffusion.dat``   : integrated current at the two contacts for each sweep step
 
 
-Attachment      Size
 
-*     bulk.tib_	       1.16 KB
-*     bulk.geo_	   181 bytes
-*     bulk.msh_	       4.49 KB
+..  _bulk.geo: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/bulk_0.geo
+..  _bulk.msh: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/bulk_0.msh
+..  _bulk.tib: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/bulk_2.tib
 
- 
+
 
 
  
-..  _bulk.tib: http://www.tibercad.org/files/bulk_2.tib
-..  _bulk.geo: http://www.tibercad.org/files/bulk_0.geo
-..  _bulk.msh: http://www.tibercad.org/files/bulk_0.msh
+
 
 .. rubric:: Footnotes
 
 
 ..   </marker>
 
-
-.. |more| image:: ../data/more.png
-    :scale: 50%
-
-.. |warn| image:: ../data/warn.png
-    :scale: 50%
-
-.. |idea| image:: ../data/idea.png
-    :scale: 50%
 

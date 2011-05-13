@@ -593,7 +593,7 @@ step ``Vbias = 1.1`` will be found in the file:
 
   ``dd_Vbias_1.1_msh.vtu``
 
-Mesh indipendent
+Mesh independent
 ^^^^^^^^^^^^^^^^
 
 ``mesh-independent`` quantities are the quantities which are not associated to the
