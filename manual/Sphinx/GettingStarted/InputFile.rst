@@ -183,7 +183,7 @@ assumed to be terminated.
 
 The input file is composed by the following main classes of blocks:
 
-    **Device, Module, Simulation**
+    ``Device``, ``Module``, ``Simulation``
 
 which will be described in the following.
 
