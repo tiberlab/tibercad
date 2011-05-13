@@ -276,7 +276,7 @@ The available keywords inside a ``Region`` block are the following:
 
 
 .. tip:: A common material, crystal structure and growth directions can be defined for all
-         device regions by defining them outside of the ``Region`` blocks.
+          device regions by defining them outside of the ``Region`` blocks.
 
 
 
@@ -350,12 +350,12 @@ Modules
 
     Contact cathode
     {
-     voltage = $Vd
+      voltage = $Vd
     }
 
     Contact anode
     {
-     voltage = 0.0
+      voltage = 0.0
     }
   }
 
@@ -364,39 +364,46 @@ the keyword ``Module``, followed by the (single-word) module name. This must be 
 name of one of the tiberCAD modules.
 Here are the Modules implemented until now:
 
-  | ``driftdiffusion`` : Poisson-driftdiffusion transport of electrons and holes
+ ``driftdiffusion`` : 
+    Poisson-driftdiffusion transport of electrons and holes
 
-  | ``thermal`` : Heat balance simulation
+ ``thermal`` : 
+    Heat balance simulation
 
-  | ``excitontransport`` : Exciton transport model
+ ``excitontransport`` : 
+    Exciton transport model
 
-  | ``elasticity`` : Calculation of Elastic deformations in heterostructures
+ ``elasticity`` : 
+    Calculation of Elastic deformations in heterostructures
 
-  | ``efaschroedinger`` : Envelop Function Approximation (EFA) solution of single particle Schroedinger equation for electrons and holes
+ ``efaschroedinger`` : 
+    Envelop Function Approximation (EFA) solution of single particle Schroedinger equation for electrons and holes 
 
- 
+ ``quantumdispersion`` : 
+    Dispersion of quantized states in k space
 
-  | ``quantumdispersion`` : Dispersion of quantized states in k space
+ ``opticskp`` : 
+    Optical properties (optical kp matrix elements)
 
-  | ``opticskp`` : Optical properties (optical kp matrix elements)
+ ``opticalspectrum`` : 
+    Emission spectrum (with k-space integration)
 
-  | ``opticalspectrum`` : Emission spectrum (with k-space integration)
-
-  | ``sweep`` : Parameterized execution of a module simulation (e.g. for the calculation
+ ``sweep`` : 
+    Parameterized execution of a module simulation (e.g. for the calculation
     of output current characteristics)
 
+ ``selfconsistent`` : 
+    coupled calculations of different simulation modules
 
-  | ``selfconsistent`` : coupled calculations of different simulation modules
-
-
-  | ``DSC`` : Simulation of a DSC solar cell
+ ``DSC`` : 
+    Simulation of a DSC solar cell
 
 Each module-block usually contains a list of general options, such as plot and others
-specific to each module. Then, two main blocks define the Physics and the Solver
+specific to each module. Then, two main blocks define the ``Physics`` and the ``Solver``
 models and parameters for this module.
 
   **Solver** contains the solver parameters; depending on the Module, it can contain a
-LinearSolver definition subblock.
+  LinearSolver definition subblock.
 
   **Physics** usually contains the definition of the physical models used in the simulation.
 
@@ -407,7 +414,8 @@ for driftdiffusion module.
 The declaration of these models obey to the following syntax:
 
     *model_keyword* type_specifier
-    <block>
+    
+        <block>
 
 where *model_keyword* is the name of the physical model to be declared (e.g. trap
 model) and **type_specifier** is the name of a particular one among the available descriptions 
@@ -464,24 +472,31 @@ an output drain IV characteristic), in this Guide referred to as sweep calculati
 
 The following keywords are defined for this feature:
 
-  |  ``variable`` : name of the variable to which the sweep is applied: 
+  ``variable`` : 
+     name of the variable to which the sweep is applied: 
 
 E.g.::
-  variable = $Vg
+
+    variable = $Vg
 
 indicates that the values are applied to the variable Vg, which is a quantity defined in a **Contact** definition
 
-  |  ``start, stop, steps`` : sweep starts from start value, is repeated steps times and stops in stop
+  ``start, stop, steps`` : 
+     sweep starts from start value, is repeated steps times and stops in stop
 
-  |  ``solve`` : name of the simulation (module) associated to the sweep calculation; it may
+  ``solve`` : 
+     name of the simulation (module) associated to the sweep calculation; it may
      be the name of another sweep defined in the same block.
 
-  |  ``plotvariable`` (obsolete): specify the integrated quantity to be calculated during the
+  ``plotvariable`` (obsolete) : 
+     specify the integrated quantity to be calculated during the
      sweep and that will be shown in the output file ``sweep_modelname_sweepvariable.dat`` ,
      eg. sweep driftdiffusion Vb.dat for a sweep of current calculation on the variable Vb
      (typically a contact voltage).
 
-  |  ``plot_data`` : default is false; if it is set to true, then output data will be written for
+  ``plot_data`` : 
+     default is false; 
+     if it is set to true, then output data will be written for
      each step of the sweep calculation, otherwise just the results for the final step will be
      present in the output.
 
@@ -506,10 +521,10 @@ simulation modules (e.g. driftdiffusion and excitontransport).
      rel_tolerance = 1e-6
     }
 
-In **solve** the list of simulations to be performed self-consistently is specified.
+In ``solve`` the list of simulations to be performed self-consistently is specified.
 Now it is possible to execute the specified simulations in self consistent way, by using
-the **selfconsistent** keyword like a simulation name, in any **solve** assignment, e.g. 
-``solve = selfconsistent`` in **Simulation** section, or even in a **sweep** section.
+the ``selfconsistent`` keyword like a simulation name, in any **solve** assignment, e.g. 
+``solve = selfconsistent`` in ``Simulation`` section, or even in a ``sweep`` section.
 
 Simulation section
 --------------------------
@@ -517,25 +532,30 @@ Simulation section
 In this block one can specify several general parameters and settings for the actual
 calculation to be run, such as the temperature, the process-flow of simulation, etc.
 
-  |  ``searchpath`` : path for material files
+  ``searchpath`` : 
+     path for material files
 
+  ``dimension`` : 
+     dimension of simulation (1,2,3)
 
+  ``temperature`` : 
+     temperature of the system [K]
 
-  |  ``dimension`` : dimension of simulation (1,2,3)
-
-  |  ``temperature`` : temperature of the system [K]
-
-  |  ``solve`` : list of simulations to be executed, in the order of execution; if the list contains
+  ``solve`` : 
+     list of simulations to be executed, in the order of execution; if the list contains
      "sweep", a sweep is performed as specified in sweep block in the Solver section.
 
-  |  ``solve = (strain,driftdiffusion, quantum_electrons, quantum_holes)``
+     ``solve = (strain,driftdiffusion, quantum_electrons, quantum_holes)``
 
-  |  ``resultpath`` : path for output directory
+  ``resultpath`` : 
+     path for output directory
 
-  |  ``output format`` : format of the output data: *gmv* for **GMV** , ise for **Tecplot** , grace for
+  ``output format`` : 
+     format of the output data: *gmv* for **GMV** , ise for **Tecplot** , grace for
      xmgr (ascii data column type), *vtk* for **Paraview** .
 
-  |  ``plot`` : list of output variables which are calculated and available in output files. It
+  ``plot`` : 
+     list of output variables which are calculated and available in output files. It
      may be overriden by defining list specific to one or more modules.
 
 Output description
@@ -548,33 +568,41 @@ variables are specified in a list plot, in each Module.
 TiberCAD output is divided in two classes: **mesh-based** and **mesh-independent**
 quantities.
 
-**Mesh-based** quantities are all the quantities associated with the nodes of the mesh,
+Mesh based
+^^^^^^^^^^^^
+
+``Mesh-based`` quantities are all the quantities associated with the nodes of the mesh,
 such as Fermi level, electron and hole density, conduction and valence band, etc., together
 with all the quantities associated with the elements of the mesh, such as current density.
 
 The output values for these quantities are reported in the files simname msh.ext,
-where *simname* is the simulation module used for the calculations and ext is the extension
+where ``simname`` is the simulation module used for the calculations and ext is the extension
 of the chosen file format, e.g. vtu for paraview output.
 
-  |  ``strain_msh.vtu``
+  ``strain_msh.vtu``
 
 In the case a sweep calculation is performed and the plot data keyword is set to
 true, the output files are of the kind simname sweepvariable step value msh.ext, where
  ``sweepvariable`` is the variable with respect to which the sweep is performed (e.g. gate
 voltage) and step value is the value of this variable at that step; e.g the result at the
-step *Vbias = 1.1* will be found in the file:
+step ``Vbias = 1.1`` will be found in the file:
 
-  |  ``dd_Vbias_1.1_msh.vtu``
+  ``dd_Vbias_1.1_msh.vtu``
 
-  |  ``mesh-independent`` quantities are the quantities which are not associated to the
-     mesh, for example current at the contacts of a diode or quantized energy levels in a
-     quantum well. These **mesh-independent** quantities are displayed in separated files,
-     with the format simname.ext, e.g ``quantum_electrons.dat`` , where simname is the name of
-     the model (simulation) associated to the results. If a sweep is performed, the output file
-     gets the format sweep name simname.ext, where *sweep_name* is the name of the sweep
-     performed, for example
+Mesh indipendent
+^^^^^^^^^^^^^^^^
 
-  |  ``sweep_drain_driftdiffusion.dat``
+``mesh-independent`` quantities are the quantities which are not associated to the
+mesh, for example current at the contacts of a diode or quantized energy levels in a
+quantum well. 
+
+These mesh-independent quantities are displayed in separated files,
+with the format simname.ext, e.g ``quantum_electrons.dat`` , where simname is the name of
+the model (simulation) associated to the results. If a sweep is performed, the output file
+gets the format sweep name simname.ext, where *sweep_name* is the name of the sweep
+performed, for example
+
+  ``sweep_drain_driftdiffusion.dat``
 
 Inside the file, output values for all the steps of calculation are shown.
 
@@ -594,166 +622,166 @@ Here is an example of the input file template::
      x-growth-direction = (-1,2,-1,0)
 
      Region barrier
-       {
-        material = AlGaN
-        x = 0.14
-       }
+     { 
+       material = AlGaN
+       x = 0.14
+     }
      Region barrier_doped
+     {
+       mesh_regions = (barrier_dop_s, barrier_dop_d)
+       material = AlGaN
+       x = 0.14
+       Doping 
        {
-        mesh_regions = (barrier_dop_s, barrier_dop_d)
-        material = AlGaN
-        x = 0.14
-        Doping 
-		  {
-           Nd  = 1e21
-           type = donor
-           doping_level = 0.026
-          }
-       }
+         Nd  = 1e21
+         type = donor
+         doping_level = 0.026
+        }
+      }
 
     Region buffer { }
     
-      Region buffer_doped
-      {
+     Region buffer_doped
+     {
        mesh_regions = (buffer_dop_s, buffer_dop_d)
        Doping 
-	     {
+	{
           Nd  = 1e21
           type = donor
           doping_level = 0.026
          }
       }
-    Region cap
-      {
+     Region cap
+     {
        Doping 
-	     {
-          Nd  = 5e18
-          type = donor
-          doping_level = 0.026
-         }
+       {
+         Nd  = 5e18
+         type = donor
+         doping_level = 0.026
+        }
       }
-    Region cap_doped
-      {
+     Region cap_doped
+     {
        mesh_regions = (cap_dop_s, cap_dop_d)
        Doping 
-	     {
-          Nd  = 1e21
-          type = donor
-          doping_level = 0.026
-         }
-      }
-    Region passivation
       {
+        Nd  = 1e21
+        type = donor
+        doping_level = 0.026
+       }
+     }
+     Region passivation
+     {
        mesh_regions = (passiv1, passiv2, passiv3, passiv4)
        material = SiN
-      }
-    Cluster semiconductor
-      {
+     }
+     Cluster semiconductor
+     {
        regions = -passivation
-      }
+     }
     }
-  Module driftdiffusion
+    Module driftdiffusion
     {
-     name = dd
-     regions = all
-     coupling = electrons
-     save_state = true
-     #load_state = output_Nt7e16_out/dd_Vd_50.tsv
-     statistics = FermiDirac
-     strain_simulation = macrostrain
-     plot = (Ec, Ev, Eg, eQFermi, hQFermi, eDensity, hDensity, Polarization,
-             eCurrentDensity, hCurrentDensity,CurrentDensity, ContactCurrents,
-             ElPotential, ElField, eMobility, hMobility, eConductivity, hConductivity,)
+      name = dd
+      regions = all
+      coupling = electrons
+      save_state = true
+      #load_state = output_Nt7e16_out/dd_Vd_50.tsv
+      statistics = FermiDirac
+      strain_simulation = macrostrain
+      plot = (Ec, Ev, Eg, eQFermi, hQFermi, eDensity, hDensity, Polarization,
+              eCurrentDensity, hCurrentDensity,CurrentDensity, ContactCurrents,
+              ElPotential, ElField, eMobility, hMobility, eConductivity, hConductivity,)
 
-	 NonlinearSolver linesearch
-       {
+      NonlinearSolver linesearch
+      {
         # type = ls
         relative_tolerance = 1e-15
         step_tolerance = 5e-3
         max_iterations = 15
         LinearSolver petsc
-          {
-           ksp_type = pconly
-           preconditioner = lu
-          }
-       }
-     Physics
-       {
+        {
+          ksp_type = pconly
+          preconditioner = lu
+        }
+      }
+      Physics
+      {
         recombination (srh, direct, auger) { }
         electron_mobility field_dependent
-          {
-           region = buffer
-           low_field_model = constant
-          }
+        {
+          region = buffer
+          low_field_model = constant
+         }
         electron_mobility doping_dependent
-          {
-           region = (barrier, barrier_doped, cap, cap_doped, buffer_doped)
-          }
+        {
+          region = (barrier, barrier_doped, cap, cap_doped, buffer_doped)
+        }
         trap fixed_charge
-          { 
-           region = GaN/SiN
-           Nt = 2.74e13
-          }
+        { 
+          region = GaN/SiN
+          Nt = 2.74e13
+        }
         trap acceptor
-          {
-           region = buffer
-           Nt = 7e16
-           Et = 0.5
-           reference = cb
-          }
+        {
+          region = buffer
+          Nt = 7e16
+          Et = 0.5
+          reference = cb
+         }
         polarization (piezo, pyro) { }
-       }
+      }
 	   
-    Contact drain
-      {
+     Contact drain
+     {
        voltage = @Vd
-      }
-    Contact source
-      {
+     }
+     Contact source
+     {
        voltage = 0.0
-      }
-    Contact gate
-      {
+     }
+     Contact gate
+     {
        regions = (gate1, gate2)
        type = schottky
        work_function = 1.5272
        voltage = @Vg
-      }
-    }
+     }
+   }
    
  
 	
-  Module elasticity 
-  {
+   Module elasticity 
+   {
 
-  name = strain
-  regions =  -passivation # all the device except Region "passivation"
+     name = strain
+     regions =  -passivation # all the device except Region "passivation"
 
-  plot = (Strain, StrainCell,Stress,Displacement )
-  lin_rel_tol = 1e-6 
+     plot = (Strain, StrainCell,Stress,Displacement )
+     lin_rel_tol = 1e-6 
 
-  Physics 
-  {
-    body_force lattice_mismatch 
-    {
-      reference_material = GaN
+     Physics 
+     {
+       body_force lattice_mismatch 
+       {
+         reference_material = GaN
 
-      structure = wz
-      y-growth-direction = (0,0,0,1)
-      z-growth-direction = (1,0,-1,0)
-      x-growth-direction = (-1,2,-1,0)
+         structure = wz
+         y-growth-direction = (0,0,0,1)
+         z-growth-direction = (1,0,-1,0)
+         x-growth-direction = (-1,2,-1,0)
           
-    }
+       }
        
-  }
+     }
 
-  Contact substrate  
-  {type = clamp}
+     Contact substrate  
+     {type = clamp}
 
-  }
+    }
 
 
-  Module sweep
+    Module sweep
     {
      name = sweep_g
      variable = Vg
@@ -766,7 +794,7 @@ Here is an example of the input file template::
      #plot_data = true
     }
 	
-  Module sweep
+    Module sweep
     {
      name = sweep_d
      variable = Vd
@@ -778,7 +806,7 @@ Here is an example of the input file template::
      plot_data = true
     }
 	
-  Module selfconsistent
+    Module selfconsistent
     {
      name = relaxation
      solve = (macrostrain, driftdiffusion)
@@ -786,16 +814,16 @@ Here is an example of the input file template::
      relative_tolerance = 1e-5
     }
 	
-  Simulation
+    Simulation
     {
-     temperature = 300
-     verbose = 3
-     solve = (strain, dd, sweep_g)
-     logfile = output_Nt5e16_Al0.215_SiN/hemt.log
-     # these parameters can be defined in modules, too
-     resultpath = output_Nt5e16_Al0.215_SiN
-     output_format = vtk
-    }
+      temperature = 300
+      verbose = 3
+      solve = (strain, dd, sweep_g)
+      logfile = output_Nt5e16_Al0.215_SiN/hemt.log
+      # these parameters can be defined in modules, too
+      resultpath = output_Nt5e16_Al0.215_SiN
+      output_format = vtk
+     }
 	
 	
 
