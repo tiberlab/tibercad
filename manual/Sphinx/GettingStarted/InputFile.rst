@@ -141,7 +141,11 @@ Input for tiberCAD is composed by an input file e.g. ``input.tib`` and a mesh fi
 by a mesher software: as for now, mesh files from ``GMSH`` (\*.msh)
 and from Synopsys TCAD (\*.grd) are supported.
 Be sure that the material files are in the correct directory.
-To run the program, type: ``tibercad`` *input_file_name*
+
+
+To run the program, type: 
+
+  ``tibercad`` *input_file_name*
 
 Description of Input file structure
 -------------------------------------------
