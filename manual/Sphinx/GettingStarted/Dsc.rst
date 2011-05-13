@@ -20,7 +20,7 @@ in fact in order to have a high light harvesting from the dye molecules is neces
 that can be obtained only with a porous material, moreover the porosity of the semiconductor allows the electrolyte 
 to be in contact with the dye molecules.
 
-..  figure:: ../data/DscGetting01.PNG
+..  figure:: ../data/DscGetting01.png
     :align: center
     :scale: 70%
  
@@ -66,7 +66,7 @@ In this tutorial we will see a simple 1D model, made of two physical regions:
 Two boundary condition points represent the photoanode (left) and the counter-electrode (right).
 
 
-..  figure:: ../data/DscGetting02.PNG
+..  figure:: ../data/DscGetting02.png
     :align: center
     :scale: 70%
  
@@ -219,7 +219,7 @@ under illumination, the second sweep switches the state of the cell from open ci
 In figure the three sweeps of the code are shown
 
 
-..  figure:: ../data/DscGetting03.PNG
+..  figure:: ../data/DscGetting03.png
     :align: center
     :scale: 70%
 
@@ -247,21 +247,21 @@ allows the plot of the current flowing through the contacts.
           In a DSC the current is fundamentally diffusion driven, the electric field and the consequent drift current is rather small.
 
 
-..  figure:: ../data/DscGetting04.PNG
+..  figure:: ../data/DscGetting04.png
     :align: center
     :scale: 70%
  
     Potential profiles for the ionic species and the electrostatic potential (short-circuit condition).
 
 
-..  figure:: ../data/DscGetting05.PNG
+..  figure:: ../data/DscGetting05.png
     :align: center
     :scale: 70%
  
     Current contributions within the cell (short-circuit condition).
 
 
-..  figure:: ../data/DscGetting06.PNG
+..  figure:: ../data/DscGetting06.png
     :align: center
     :scale: 70%
  
