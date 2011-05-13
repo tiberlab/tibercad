@@ -41,9 +41,6 @@ Device
 Module driftdiffusion
 { 
               
-  # is default
-  # statistics = fermidirac
-
   # we solve only for electrons
   coupling = electrons
 
@@ -60,8 +57,6 @@ Module driftdiffusion
 
     electron_mobility field_dependent
     {
-      model = field_dependent
-
       low_field_model = doping_dependent
     }
   }
@@ -117,7 +112,7 @@ Module sweep
   start = 2.0
   stop = -5.0
   steps =  140 
-  solve = sweep_drain 
+  solve = driftdiffusion 
   plot_data = true
 }
 

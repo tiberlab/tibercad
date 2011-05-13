@@ -11,6 +11,7 @@
 #include "InitFailedException.h"
 
 #include "libmesh.h"
+#include "petscerror.h"
 
 
 #ifndef stringify
@@ -170,6 +171,8 @@ TiberCad::init(const std::string& inputfile)
 
   // prepare EigenSolver
   EigenSolver::slepc_init(__empty_argc, __empty_argv);
+
+  PetscPopSignalHandler();
 
 
   // now create a TiberCAD Control object
