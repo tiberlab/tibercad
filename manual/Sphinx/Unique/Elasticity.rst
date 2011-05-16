@@ -162,11 +162,11 @@ Example::
 Body forces
 """""""""""""""""""""""""""""""
 
-A constant value body force can be included by means of the keyword ``Bodyforceconstant`` .
+A constant value body force can be included by means of the keyword ``body_force constant`` .
 
 Example::
 
-  BodyForceconstant 
+  body_force constant 
   {
     force = (0,1,0)
   }
@@ -187,7 +187,7 @@ The reference material and its growth axis can be included following the same sy
 
 Example::
 
-  BodyForcelattice_mismatch
+  body_force lattice_mismatch
   {
     reference_material = AlGaN
     structure = wz
@@ -219,7 +219,7 @@ The effective body force reads as :
 
 Example::
 
-  BodyForceconverse_piezo
+  body_force converse_piezo
   {
     poisson_simulation = dd
   }
@@ -301,7 +301,7 @@ The second part of the input file is devoted to the module declaration ::
   {
     Physics 
    {
-     BodyForcelattice_mismatch 
+     body_force lattice_mismatch 
      {
        x-growth-direction = (-1,0,1,0) 
        y-growth-direction = (-1,2,-1,0) 
