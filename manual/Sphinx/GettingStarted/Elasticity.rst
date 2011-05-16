@@ -6,17 +6,14 @@ Elasticity
 =================================================
 
 
-Abstract
---------
+Introduction
+-------------
 
-Elasticity is a Finite Elements solver for mechanical equilibrium problems. 
+Elasticity is a Finite Element solver for mechanical equilibrium problems. 
 It brings features typically developed for structural stability solvers into device modeling. 
 The coupled treatment of the electro-mechanical problem within a unique framework results very useful to explore for multidisciplinary ideas. 
 
-Mini theoretical intro
-----------------------
-
-Assuming a small displacement, Elasticity   computes the strain by solving the equation
+Assuming a small displacement, Elasticity  computes the strain by solving the equation
 
 .. math::
    :nowrap:

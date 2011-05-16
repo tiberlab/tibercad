@@ -221,10 +221,17 @@ be defined. The most important one is the specification of the mesh file, which 
 
  ``meshfile`` : string
      name of the mesh file, including file name extension
-     (``\*.grd`` for Synopsys devise, ``\*.msh`` for ``GMSH`` mesh files)
+     (``*.grd`` for Synopsys devise, ``*.msh`` for ``GMSH`` mesh files)
 
  ``mesh_units`` : double
      units used in the meshfile in meters, default is ``1e-6`` corresponding to micrometers
+
+
+.. warning::
+             For a *1D* simulation the geometrical model (mesh) has to be drawn on the *x axis*.
+             For a *2D* simulation the geometrical model (mesh) has to be drawn in the *xy-plane (z=0)*. 
+             Any other orientation will produce wrong results.
+
 
 
 The ``Region`` blocks contain the description of the device in continuous media approach.
