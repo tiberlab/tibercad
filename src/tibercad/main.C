@@ -116,7 +116,16 @@ int main (int argc, char** argv)
       string program(buffer);
       Utils::convert_win32_path_to_posix(program);
       string exepath(Utils::dirname(program));
+#ifdef HAVE_SETENV
       setenv("TIBERCADROOT", exepath.c_str(), 1);
+#else
+# ifdef HAVE_PUTENV
+      string tc_root("TIBERCADROOT=" + exepath);
+      putenv(tc_root.c_str());
+# else
+#  error "Neither setenv nor putenv available"
+# endif
+#endif
     }
 #endif
 

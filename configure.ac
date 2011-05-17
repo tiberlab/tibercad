@@ -242,6 +242,7 @@ AC_TYPE_SIZE_T
 #
 AC_FUNC_ERROR_AT_LINE
 AC_CHECK_FUNCS([pow sqrt isinf isnan])
+AC_CHECK_FUNCS([setenv putenv])
 
 #
 # check for other options

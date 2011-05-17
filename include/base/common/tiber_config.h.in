@@ -89,4 +89,9 @@
 /* define if the compiler supports std::unordered_set */
 #undef HAVE_UNORDERED_SET
 
+/* define if the setenv function is present */
+#undef HAVE_SETENV
+
+/* define if the putenv function is present */
+#undef HAVE_PUTENV
 
