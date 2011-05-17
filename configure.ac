@@ -40,6 +40,8 @@ AC_CANONICAL_HOST
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_FC
+AC_PROG_AR
+AC_PROG_RANLIB
 AC_FC_LIBRARY_LDFLAGS
 AC_SUBST([FCLIBS])
 AC_SUBST([LDFLAGS])
@@ -281,6 +283,7 @@ AC_CONFIG_FILES([Make.common
                  src/utils/DFTB/Makefile
                  src/utils/UPTIGHT/Makefile
                  src/utils/SLEPC/Makefile
+                 contrib/crypto++/make.defs
                  installer/Makefile
 		 installer/windows/tibercad.bim
                  installer/linux/deb/control
