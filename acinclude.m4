@@ -64,25 +64,28 @@ AC_CACHE_CHECK([wether Boost::regex is available], tc_cv_boost_regex_lib,
  CXXFLAGS_save=$CXXFLAGS
  CXXFLAGS=$BOOST_CPPFLAGS
  LDFLAGS_save=$LDFLAGS
+ LIBS_save=$LIBS
  if test "${tc_cv_boost_libdir+set}" == "set"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_libdir} -L${tc_cv_boost_libdir}"
  elif test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
  fi
- [tc_boost_lib="boost_regex-`$CC --version | awk '{ print $1; exit}'` boost_regex"]
+ [tc_boost_lib="boost_regex-`$CC --version | awk '{ print $1; exit}'` boost_regex-mt boost_regex"]
  if test "${tc_cv_boost_regex_lib:+set}" == "set"; then
    tc_boost_lib="boost_regex-$tc_cv_boost_regex_lib $tc_cv_boost_regex_lib $tc_boost_lib"
  fi
  AC_LANG_PUSH([C++])
  for lib in $tc_boost_lib; do
-   LDFLAGS="$tc_boost_libdir -l$lib"
+   LDFLAGS="$tc_boost_libdir"
+   LIBS="-l$lib"
    AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include <boost/regex.hpp>]],
 			          [[boost::regex r("s/*//"); return 0;]]),
-			          [tc_cv_boost_regex_lib="$LDFLAGS"; break])
+			          [tc_cv_boost_regex_lib="$LDFLAGS $LIBS"; break])
  done
  AC_LANG_POP()
  CXXFLAGS=$CXXFLAGS_save
- LDFLAGS=$LDFLAGS_save])
+ LDFLAGS=$LDFLAGS_save
+ LIBS=$LIBS_save])
  if test "${tc_cv_boost_regex_lib+set}" == "set"; then
    AC_SUBST([BOOST_REGEX_LIB], "$tc_cv_boost_regex_lib")
    AC_DEFINE([HAVE_BOOST_REGEX], [1], [define if Boost::regex is available])
@@ -102,26 +105,29 @@ AC_CACHE_CHECK([wether Boost::filesystem is available], tc_cv_boost_filesystem_l
  CXXFLAGS_save=$CXXFLAGS
  CXXFLAGS=$BOOST_CPPFLAGS
  LDFLAGS_save=$LDFLAGS
+ LIBS_save=$LIBS
  if test "${tc_cv_boost_libdir+set}" == "set"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_libdir} -L${tc_cv_boost_libdir}"
  elif test "x$tc_cv_boost_prefix" != "x"; then
    tc_boost_libdir="-Wl,-rpath,${tc_cv_boost_prefix}/lib -L${tc_cv_boost_prefix}/lib"
  fi
- [tc_boost_lib="boost_filesystem-`$CC --version | awk '{ print $1; exit}'` boost_filesystem"]
+ [tc_boost_lib="boost_filesystem-`$CC --version | awk '{ print $1; exit}'` boost_filesystem-mt boost_filesystem"]
  if test "${tc_cv_boost_filesystem_lib:+set}" == "set"; then
    tc_boost_lib="boost_filesystem-$tc_cv_boost_filesystem_lib $tc_cv_boost_filesystem_lib $tc_boost_lib"
  fi
  AC_LANG_PUSH([C++])
  for lib in $tc_boost_lib; do
-   LDFLAGS="$tc_boost_libdir -l$lib -lboost_system"
+   LDFLAGS="$tc_boost_libdir"
+   LIBS="-l$lib -l`echo $lib | sed 's/boost_filesystem/boost_system/'`"
    AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include <boost/filesystem/operations.hpp>]],
 			          [[boost::filesystem::path p("configure");
 				    boost::filesystem::exists(p); return 0;]]),
-			          [tc_cv_boost_filesystem_lib="$LDFLAGS"; break])
+			          [tc_cv_boost_filesystem_lib="$LDFLAGS $LIBS"; break])
  done
  AC_LANG_POP()
  CXXFLAGS=$CXXFLAGS_save
- LDFLAGS=$LDFLAGS_save])
+ LDFLAGS=$LDFLAGS_save
+ LIBS=$LIBS_save])
  if test "${tc_cv_boost_filesystem_lib+set}" == "set"; then
    AC_SUBST([BOOST_FILESYSTEM_LIB], "$tc_cv_boost_filesystem_lib")
    AC_DEFINE([HAVE_BOOST_FILESYSTEM], [1], [define if Boost::filesystem is available])
