@@ -1,6 +1,7 @@
 // $Id$
 
 #include "License.h"
+#include "tiber_config.h"
 
 #include <getopt.h>
 #include <iostream>
@@ -68,7 +69,14 @@ int main(int argc, char** argv)
 
   
   char* licfile = getenv("TIBERLICENSEFILE");
+#ifdef HAVE_SETENV
   setenv("TIBERLICENSEFILE", filename.c_str(), 1);
+#else
+  {
+    string tmp("TIBERLICENSEFILE=" + filename);
+    putenv(tmp.c_str());
+  }
+#endif
   if (!License::check_license())
   {
     cerr << "Ouch... something went wrong, could not successfully "

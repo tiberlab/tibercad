@@ -94,14 +94,12 @@ CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 
 CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) -std=c++0x
 LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags) -lz
-FCFLAGS  += -fPIC
-CFLAGS  += -fPIC
 
 ifneq ($(findstring cygwin,$(hostos)),cygwin)
   CXXFLAGS += -pthread
-endif
+  FCFLAGS  += -fPIC
+  CFLAGS  += -fPIC
 
-ifneq ($(findstring cygwin,$(hostos)),cygwin)
   ifeq ($(build_modules), yes)
     CXXFLAGS += -fvisibility=default -fvisibility-inlines-hidden
   endif
