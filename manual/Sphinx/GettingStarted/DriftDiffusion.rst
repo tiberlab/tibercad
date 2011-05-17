@@ -9,7 +9,7 @@ Introduction
 -------------
 
 The module Drift-Diffusion simulates electron and hole transport based on the drift-diffusion
-approximation (see [Selberherr]_ ).
+approximation.
 
 The system of equations that is solved is given by
 
@@ -28,8 +28,8 @@ Recombination and trap models can be specified both for bulk and interface devic
 
 
 
-Example
---------
+Example: Bulk silicon in 1D
+----------------------------
 
 This very simple example presents the basic setup of a Drift-Diffusion simulation
 by simulating the current in a piece of bulk silicon.
@@ -57,7 +57,7 @@ The mesh file can be obtained from the following ``GMSH`` script (bulk.geo_):
    Physical Point("cathode") = {2};
 
 
-The simulated device is a homogeneous piece of bulk silicon with a length of :math:`1\, \mu m`.
+The simulated device is a homogeneous piece of bulk silicon with a length of :math:`1\, \mu\rm m`.
 At the two ends we define the contacts (``anode`` and ``cathode``).
 
 The tiberCAD input file (bulk.tib_) is shown in the following listing:
@@ -145,7 +145,10 @@ The generated Output files are:
 
 
 
+Example: Mosfet
+---------------
 
+In this second example we show the simulation of a Si Mosfet device.
  
 
 
