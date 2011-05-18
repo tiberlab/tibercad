@@ -47,7 +47,8 @@ if [ $SYSTEM == "mingw" ]; then
 
   cd zlib-${VERSION}-win
   cp include/zconf.h include/zlib.h ${TOPDIR}/include/base/io/gzstream
-  cp zlib1.dll ${TOPDIR}/${ARCH}/lib
+  # this has to be improved:
+  cp zlib1.dll ${TOPDIR}/${march}/lib
 
 
 else

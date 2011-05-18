@@ -95,6 +95,7 @@ class TBDLLOCAL Control
 
   private:
 
+    /*
     //! A signal handler
     class SignalHandler
     {
@@ -118,6 +119,7 @@ class TBDLLOCAL Control
 
         static void sigint(int sig);
     };
+    */
 
 
     //! The inputfile

@@ -32,7 +32,25 @@ if [ ! -e ${ARCHIVE} ]; then
   exit 1
 fi
 
-cat <<PATCH >$BUILDDIR/boost.patch
+if [ $SYSTEM == "mingw" ]; then
+
+  cat <<PATCH >$BUILDDIR/boost.patch
+--- tools/build/v2/user-config.jam.orig	2010-01-29 10:14:42.000000000 +0100
++++ tools/build/v2/user-config.jam	2010-01-29 15:01:27.000000000 +0100
+@@ -43,7 +43,7 @@
+ # using gcc ;
+ 
+ # Configure specific gcc version, giving alternative name to use.
+-# using gcc : 3.2 : g++-3.2 ;
++using gcc : : $CXX : <src>${pre}windres <archiver>$AR ;
+ 
+ 
+ # -------------------
+PATCH
+
+else
+
+  cat <<PATCH >$BUILDDIR/boost.patch
 --- tools/build/v2/user-config.jam.orig	2010-01-29 10:14:42.000000000 +0100
 +++ tools/build/v2/user-config.jam	2010-01-29 15:01:27.000000000 +0100
 @@ -43,7 +43,7 @@
@@ -46,6 +64,9 @@ cat <<PATCH >$BUILDDIR/boost.patch
  # -------------------
 PATCH
 
+
+fi
+
 if [ ! -d boost_${VERSION} ]; then
   tar jxf ${ARCHIVE}
   cd boost_${VERSION}
@@ -55,6 +76,12 @@ fi
 
 cd boost_${VERSION}
 
+chmod a+x bootstrap.bat
 
-./bootstrap.sh --prefix=${BUILDDIR}/boost --with-libraries="regex,filesystem,system"
-./bjam install
+./bootstrap.bat --with-toolset=gcc --without-icu
+./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=C:\\cygwin\\home\\Matthias\\2.0\\extern\\boost install
+
+#--layout=system --prefix=${BUILDDIR}/boost install
+
+#./bootstrap.sh --prefix=${BUILDDIR}/boost --with-libraries="regex,filesystem,system"
+#./bjam install

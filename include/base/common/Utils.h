@@ -9,12 +9,15 @@
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
+//#include <ctime>
 
 template <typename T> class VectorValue;
 typedef VectorValue<double> RealVectorValue;
 
 template <typename T> class TensorValue;
 typedef TensorValue<double> RealTensor;
+
+class timeval;
 
 //! This class contains useful methods for different tasks
 class Utils
@@ -206,8 +209,7 @@ class Utils
 
       private:
 
-        clock_t _user;
-        clock_t _system;
+        timeval* _start;
     };
 
 

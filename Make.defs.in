@@ -67,8 +67,10 @@ libdir := $(topdir)/$(ARCH)/$(relative_libdir)
 
 # shared library extension
 shared_libext := .so
+dll_prefix := lib
 ifeq ($(findstring cygwin,$(hostos)),cygwin)
   shared_libext := .dll
+  dll_prefix := 
 endif
 
 ifdef PROFILE

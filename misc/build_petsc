@@ -41,14 +41,15 @@ cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 
 
 
-SHARED=--with-shared
+SHARED="--with-shared=1 --with-dynamic=1"
 if [ $shared_libs == 'n' ]
 then
   SHARED="--with-shared=0 --with-dynamic=0"
 fi
   
 
-COMPILERS="--with-cc=$CC --with-cxx=$CXX" # --with-fc=$FC"
+COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
+
 
 if [ $MPI == 'n' ]; then
   MPI="--with-mpi=0"
@@ -56,7 +57,8 @@ else
   MPI="--with-mpi-dir=${MPIDIR}"
 fi
 
-CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-fortran=0"
+#CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-fortran=0 --with-batch=1 --with-x=0 --with-host-vendor=w64 --with-host-os=mingw32 --download-f-blas-lapack=1"
+CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 --with-host-vendor=w64 --with-host-os=mingw32 --download-f-blas-lapack=1"
 
 
 export PETSC_DIR=${PWD}
@@ -65,6 +67,14 @@ export PETSC_DIR=${PWD}
 if [ ! -e ${ARCH}.ok ]; then
   export PETSC_ARCH=${ARCH}
   ./config/configure.py ${CONFIGOPTS} --with-debugging=0  --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+
+  ./conftest
+  ./reconfigure.py
+
+  cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+  sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+  sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+
   make
   #touch ${ARCH}-opt.ok
 fi
@@ -73,6 +83,15 @@ fi
 if [ ! -e ${ARCH}-complex.ok ]; then
   export PETSC_ARCH=${ARCH}-complex
   ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-debugging=0 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+
+  ./conftest
+  ./reconfigure.py
+
+  cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+  sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+  sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+
+
   make
   #touch ${ARCH}-complex-opt.ok
 fi
@@ -82,6 +101,14 @@ if [ $DEBUG == 'y' ]; then
   if [ ! -e ${ARCH}-dbg.ok ]; then
     export PETSC_ARCH=${ARCH}-dbg
     ./config/configure.py ${CONFIGOPTS} --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+
+  ./conftest
+  ./reconfigure.py
+
+  cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+  sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+  sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+
     make
     #touch ${ARCH}.ok
   fi
@@ -89,6 +116,14 @@ if [ $DEBUG == 'y' ]; then
   if [ ! -e ${ARCH}-complex-dbg.ok ]; then
     export PETSC_ARCH=${ARCH}-complex-dbg
     ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=C++ --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+
+  ./conftest
+  ./reconfigure.py
+
+  cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+  sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+  sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+
     make
     #touch ${ARCH}-complex.ok
   fi

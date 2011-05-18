@@ -8,9 +8,13 @@
 #include "EigenSolver.h"
 #include "Database.h"
 #include "DLLoader.h"
+#include "Utils.h"
 #include "InitFailedException.h"
 
 #include "libmesh.h"
+#ifdef CYGWIN
+#include "quadrature_trap.h"
+#endif
 #include "petscerror.h"
 
 
@@ -150,6 +154,7 @@ TiberCad::init(const std::string& inputfile)
     // setup DLLoader paths
 #ifdef CYGWIN
     DLLoader::set_library_path(_tiberroot + "/lib/modules");
+    QBase::build(QTRAP, 1, FIRST);
 #else
     DLLoader::set_library_path(_tiberroot + "/" + xstr(ARCH) + "/lib/modules");
 #ifdef DEBUG
@@ -181,7 +186,7 @@ TiberCad::init(const std::string& inputfile)
   std::string infile(inputfile);
 #ifdef CYGWIN
     // we first convert the filename to something more UNIX like
-    Utils::convert_win32_path_to_posix(infile);
+    //Utils::convert_win32_path_to_posix(infile);
 #endif
 
   _control->set_inputfile(infile);

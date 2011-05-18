@@ -2,6 +2,9 @@
 # load variables
 [ -e variables ] && . variables
 
+# top directory
+TOPDIR=${TOPDIR:-"`pwd`/.."}
+
 # build directory
 BUILDDIR=${BUILDDIR:-"`pwd`/../extern"}
 
@@ -35,7 +38,7 @@ MPIDIR=${MPIDIR:-"/usr/pack/mpich-1.2.7p1-ma"}
 system=`uname -s`
 case $system in
 	CYGWIN_NT-*)
-	SYSTEM=cygwin
+	SYSTEM=mingw
 	;;
 
 	Linux)
@@ -57,12 +60,15 @@ CXX=${CXX:-"g++"}
 F77=${F77:-"ifort-11.1"}
 F90=${F90:-$F77}
 FC=${FC:-$F77}
-export CC CXX F77 F90 FC
+AR=${AR:-"ar"}
+LD=${LD:-"ld"}
+RANLIB=${RANLIB:-"ranlib"}
+export CC CXX F77 F90 FC RANLIB LD AR
 
 # compiler flags
 CFLAGS="${CFLAGS} -fexceptions"
 FFLAGS="${FFLAGS} -fexceptions"
-if [ $march == "x86_64" ]; then
+if [ $march == "x86_64" ] &&  [ ${SYSTEM} != "mingw" ] ; then
   CXXFLAGS="-fPIC ${CXXFLAGS}"
   CFLAGS="-fPIC ${CFLAGS}"
   FFLAGS="-fPIC ${FFLAGS}"

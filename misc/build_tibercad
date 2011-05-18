@@ -15,6 +15,11 @@ echo "Compiling TiberCAD ..."
 
 cd ../
 
+if [ $SYSTEM == "mingw" ]; then
+  cp contrib/dlfcn-win32-r19/dlfcn.h include/base/io
+  cp contrib/dlfcn-win32-r19/dlfcn.c src/base/io
+fi
+
 ./configure \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
   --with-petsc-arch=${ARCH}-complex \

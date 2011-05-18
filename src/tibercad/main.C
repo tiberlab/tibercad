@@ -25,6 +25,7 @@
 #endif
 
 #include <cstdio>
+#include <getopt.h>
 
 
 using namespace std;
@@ -103,7 +104,7 @@ int main (int argc, char** argv)
   {
 #ifdef CYGWIN
     // we first convert the filename to something more UNIX like
-    Utils::convert_win32_path_to_posix(inputfile);
+    //Utils::convert_win32_path_to_posix(inputfile);
 
     // in windows argv[0] is the absolute path
     char* root = getenv("TIBERCADROOT");
@@ -114,7 +115,7 @@ int main (int argc, char** argv)
       if (!GetModuleFileName(NULL, buffer, bufsize))
         cerr << "Problems detecting installation path." << endl;
       string program(buffer);
-      Utils::convert_win32_path_to_posix(program);
+      //Utils::convert_win32_path_to_posix(program);
       string exepath(Utils::dirname(program));
 #ifdef HAVE_SETENV
       setenv("TIBERCADROOT", exepath.c_str(), 1);

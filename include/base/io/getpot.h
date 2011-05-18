@@ -27,7 +27,7 @@
 #ifndef __GETPOT_H__
 #define __GETPOT_H__
 
-#if defined(WIN32) || defined(SOLARIS_RAW) || defined(__SUNPRO_CC) || (__GNUC__ == 2) || defined(__HP_aCC) || defined (__CYGWIN__)
+#if defined(WIN32) || defined(SOLARIS_RAW) || defined(__SUNPRO_CC) || (__GNUC__ == 2) || defined(__HP_aCC) || defined (__CYGWIN__) || defined (__MINGW32__)
 #  define strtok_r(a, b, c) std::strtok(a, b)
 #endif // WINDOWS or SOLARIS or gcc 2.* or HP aCC or CYGWIN
 

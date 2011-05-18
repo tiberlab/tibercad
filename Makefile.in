@@ -29,14 +29,14 @@ endif
 export MODULE_LIBS
 
 
-all: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext) modules
+all: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) modules
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
-$(libdir)/lib$(TIBERLIBNAME)$(shared_libext): src
-	@echo "Linking lib$(TIBERLIBNAME)$(shared_libext) ..."
+$(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
+	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
-		-o $(libdir)/lib$(TIBERLIBNAME)$(shared_libext) \
+		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(LDFLAGS)
 
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
@@ -70,7 +70,7 @@ distclean: src doc
 
 
 ifeq ($(build_modules),yes)
-modules: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext)
+modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 else
 modules:

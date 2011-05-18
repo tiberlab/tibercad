@@ -36,7 +36,7 @@ using namespace std;
 
 
 
-
+/*
 Control*
 Control::SignalHandler::_ctrl = NULL;
 
@@ -107,7 +107,7 @@ Control::SignalHandler::sigint(int sig)
   // reactivate the handler
   activate_sigint();
 }
-
+*/
 
 
 Control::Control(void)

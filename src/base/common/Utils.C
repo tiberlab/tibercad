@@ -16,7 +16,8 @@
 #include <cctype>
 #include <iostream>
 #include <sstream>
-#include <sys/times.h>
+//#include <sys/times.h>
+#include <sys/time.h>
 
 
 using namespace std;
@@ -36,27 +37,25 @@ Utils::Timer::~Timer(void)
 void
 Utils::Timer::reset(void)
 {
-  struct tms now;
-  times(&now);
-  _user = now.tms_utime;
-  _system = now.tms_stime;
+  struct timezone tz;
+  gettimeofday(_start, &tz);
 }
 
 
 string
 Utils::Timer::elapsed_string(void)
 {
-  struct tms now;
-  times(&now);
+  struct timeval now;
+  struct timezone tz;
+  gettimeofday(&now, &tz);
 
-  double tps = sysconf(_SC_CLK_TCK);
-  double user_sec = (now.tms_utime - _user) / tps;
-  //double sys_sec = (now.tms_stime - _system) / tps;
+  long sec = now.tv_sec - _start->tv_sec;
+  long usec = now.tv_usec - _start->tv_usec;
 
-  string s(time_to_string(user_sec));
-  //s += " (system: " + time_to_string(sys_sec) + ")";
+  ostringstream os;
+  os << sec << "." << usec << " s";
 
-  return s;
+  return os.str();
 }
 
 
