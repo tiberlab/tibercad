@@ -22,14 +22,24 @@ fi
 
 ARCHIVE=libmesh${LIBMESHVERSION}.tar.gz
 PATCH=${PWD}/libmesh.patch-${LIBMESHVERSION}
+WINPATCH=${PWD}/libmesh-win.patch
 
 cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
   if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
-    svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$march
+    if [ ! -e libmesh-${LIBMESHVERSION}.tbz ]; then
+      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$march
+      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}-$march
+    else
+      tar jxf libmesh-${LIBMESHVERSION}.tbz
+    fi
 
     if [ -e ${PATCH} ]; then
       patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
+    fi
+
+    if [ $SYSTEM == "mingw" && -e $WINPATCH ]; then
+      patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
     fi
   fi
 else
@@ -48,6 +58,10 @@ if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
 
   if [ -e ${PATCH} ]; then
     patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
+  fi
+
+  if [ $SYSTEM == "mingw" && -e $WINPATCH ]; then
+    patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
   fi
 fi
 

@@ -1102,3 +1102,23 @@ Index: src/geom/elem.C
        		  AC_SUBST(PARMETIS_INCLUDE)
                        AC_SUBST(PARMETIS_LIB)
                        AC_DEFINE(HAVE_PARMETIS, 1,
+--- Make.common.in.orig	2011-05-18 18:08:21.828125000 +0200
++++ Make.common.in	2011-05-18 18:09:40.687500000 +0200
+@@ -257,7 +257,7 @@
+   libmesh_DLFLAGS += $(libmesh_RPATHFLAG)$(mesh_library_dir)
+ endif
+ 
+-libmesh_LIBS += $(mesh_library)
++libmesh_LIBS += -L$(mesh_library_dir) -lmesh
+ ###############################################################################
+ 
+ 
+@@ -303,6 +303,8 @@
+ # Optional packages
+ ifeq ($(enable-optional),yes)
+ 
++  libmesh_LIBS += -L$(EXTERNAL_LIBDIR)
++
+   # if Laspack is used we need the header path
+   # and the lib
+   libmesh_LIBS    += @LASPACK_LIB@
