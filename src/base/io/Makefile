@@ -2,7 +2,7 @@
 
 topdir := ../../..
 
-subdirs := Read_ISE_grid gzstream
+subdirs := Read_ISE_grid 
 
 include $(topdir)/Make.common
 
