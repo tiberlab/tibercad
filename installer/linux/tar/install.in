@@ -89,7 +89,12 @@ install_files ()
   src=$1
   dst=$2
 
-  empty=1
+  for d in `find $src -type d`
+  do
+    echo "- ${d/${srcpath}/${dst}}" >> ${dst}/files.lst
+    install -p -d $d ${d/${srcpath}/${dst}}
+  done
+
 
   for file in `find $src -type f`
   do
@@ -99,15 +104,7 @@ install_files ()
     install -p -D --mode=$mode $file $f
 
     md5sum $f >> ${dst}/files.lst
-    empty=0
   done
-
-  for d in `find $src -type d`
-  do
-    echo "- ${d/${srcpath}/${dst}}" >> ${dst}/files.lst
-  done
-
-  [ $empty -eq 1 ] && mkdir -p ${dst}
 
 }
 

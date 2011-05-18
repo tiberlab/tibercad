@@ -54,6 +54,10 @@ fi
 
 cd libmesh-${LIBMESHVERSION}-$march
 
+# we have modifications to the configuration
+aclocal -I m4
+autoconf
+
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 export PETSC_ARCH=${ARCH}

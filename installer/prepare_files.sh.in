@@ -104,6 +104,8 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep mkl | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libmesh | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep petsc | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
   cp $libs ${files}/${ARCH}/lib
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
