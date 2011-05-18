@@ -981,8 +981,8 @@ Index: src/geom/elem.C
        {
          Elem *child = this->child(c);
          if (child != remote_elem && child->has_neighbor(neighbor))
---- gmv.m4.orig	2011-05-18 10:34:01.000000000 +0200
-+++ gmv.m4	2011-05-18 10:34:31.000000000 +0200
+--- m4/gmv.m4.orig	2011-05-18 10:34:01.000000000 +0200
++++ m4/gmv.m4	2011-05-18 10:34:31.000000000 +0200
 @@ -12,7 +12,7 @@
  
    if (test $enablegmv = yes); then
@@ -992,8 +992,8 @@ Index: src/geom/elem.C
       AC_DEFINE(HAVE_GMV, 1, [Flag indicating whether the library will be compiled with GMV support])
       AC_MSG_RESULT(<<< Configuring library with GMV support >>>)
    else
---- gz.m4.orig	2011-05-18 10:35:07.000000000 +0200
-+++ gz.m4	2011-05-18 10:35:25.000000000 +0200
+--- m4/gz.m4.orig	2011-05-18 10:35:07.000000000 +0200
++++ m4/gz.m4	2011-05-18 10:35:25.000000000 +0200
 @@ -26,7 +26,7 @@
    dnl If both tests succeded, continue the configuration process.
    if (test "$have_zlib_h" = yes -a "$have_libz" = yes) ; then
@@ -1003,8 +1003,8 @@ Index: src/geom/elem.C
      AC_DEFINE(HAVE_GZSTREAM, 1, [Flag indicating whether or not gzstreams are available])
      AC_MSG_RESULT(<<< Configuring library with gzstreams support >>>)
  
---- laspack.m4.orig	2011-05-18 10:31:39.000000000 +0200
-+++ laspack.m4	2011-05-18 10:32:28.000000000 +0200
+--- m4/laspack.m4.orig	2011-05-18 10:31:39.000000000 +0200
++++ m4/laspack.m4	2011-05-18 10:32:28.000000000 +0200
 @@ -21,7 +21,7 @@
  if (test $enablelaspack = yes); then
  
@@ -1014,8 +1014,8 @@ Index: src/geom/elem.C
    AC_DEFINE(HAVE_LASPACK, 1, [Flag indicating whether or not LASPACK iterative solvers are available])
    laspack_version=`grep "define LASPACK_VERSION " $PWD/contrib/laspack/version.h | sed -e "s/[[^0-9.]]*//g"`
    AC_MSG_RESULT(<<< Configuring library with LASPACK version $laspack_version support >>>)
---- libhilbert.m4.orig	2011-05-18 10:35:50.000000000 +0200
-+++ libhilbert.m4	2011-05-18 10:36:05.000000000 +0200
+--- m4/libhilbert.m4.orig	2011-05-18 10:35:50.000000000 +0200
++++ m4/libhilbert.m4	2011-05-18 10:36:05.000000000 +0200
 @@ -12,7 +12,7 @@
  
    if (test $enablelibhilbert = yes); then
@@ -1025,8 +1025,8 @@ Index: src/geom/elem.C
       AC_DEFINE(HAVE_LIBHILBERT, 1, [Flag indicating whether the library will be compiled with libHilbert support])
       AC_MSG_RESULT(<<< Configuring library with libHilbert support >>>)
    else
---- metis.m4.orig	2011-05-18 10:36:24.000000000 +0200
-+++ metis.m4	2011-05-18 10:36:38.000000000 +0200
+--- m4/metis.m4.orig	2011-05-18 10:36:24.000000000 +0200
++++ m4/metis.m4	2011-05-18 10:36:38.000000000 +0200
 @@ -11,7 +11,7 @@
  	        [ 
  	          METIS_INCLUDE_PATH=$PWD/contrib/metis/Lib
@@ -1036,8 +1036,8 @@ Index: src/geom/elem.C
  		  AC_SUBST(METIS_INCLUDE)
                    AC_SUBST(METIS_LIB)
                    AC_DEFINE(HAVE_METIS, 1,
---- nemesis.m4.orig	2011-05-18 10:49:33.000000000 +0200
-+++ nemesis.m4	2011-05-18 10:49:44.000000000 +0200
+--- m4/nemesis.m4.orig	2011-05-18 10:49:33.000000000 +0200
++++ m4/nemesis.m4	2011-05-18 10:49:44.000000000 +0200
 @@ -12,7 +12,7 @@
  
    if (test $enablenetcdf = yes -a $enableexodus = yes -a $enablenemesis = yes); then
@@ -1047,8 +1047,8 @@ Index: src/geom/elem.C
       AC_DEFINE(HAVE_NEMESIS_API, 1, [Flag indicating whether the library will be compiled with Nemesis support])
       AC_MSG_RESULT(<<< Configuring library with Nemesis API support >>>)
    else
---- netcdf.m4.orig	2011-05-18 10:50:05.000000000 +0200
-+++ netcdf.m4	2011-05-18 10:50:17.000000000 +0200
+--- m4/netcdf.m4.orig	2011-05-18 10:50:05.000000000 +0200
++++ m4/netcdf.m4	2011-05-18 10:50:17.000000000 +0200
 @@ -12,7 +12,7 @@
  
    if (test $enablenetcdf = yes); then
@@ -1058,8 +1058,8 @@ Index: src/geom/elem.C
       AC_DEFINE(HAVE_NETCDF, 1, [Flag indicating whether the library will be compiled with Netcdf support])
       AC_MSG_RESULT(<<< Configuring library with Netcdf support >>>)
       have_netcdf=yes
---- sfc.m4.orig	2011-05-18 10:50:39.000000000 +0200
-+++ sfc.m4	2011-05-18 10:50:59.000000000 +0200
+--- m4/sfc.m4.orig	2011-05-18 10:50:39.000000000 +0200
++++ m4/sfc.m4	2011-05-18 10:50:59.000000000 +0200
 @@ -19,7 +19,7 @@
  
    if (test $enablesfc = yes); then
@@ -1069,8 +1069,8 @@ Index: src/geom/elem.C
       AC_DEFINE(HAVE_SFCURVES, 1, [Flag indicating whether or not Space filling curves are available])
       AC_MSG_RESULT(<<< Configuring library with SFC support >>>)
    fi
---- tetgen.m4.orig	2011-05-18 10:51:34.000000000 +0200
-+++ tetgen.m4	2011-05-18 10:51:45.000000000 +0200
+--- m4/tetgen.m4.orig	2011-05-18 10:51:34.000000000 +0200
++++ m4/tetgen.m4	2011-05-18 10:51:45.000000000 +0200
 @@ -11,7 +11,7 @@
  
    if (test $enabletetgen = yes) ; then
@@ -1080,8 +1080,8 @@ Index: src/geom/elem.C
       AC_DEFINE(HAVE_TETGEN, 1, [Flag indicating whether the library will be compiled with TetGen support])
       AC_MSG_RESULT(<<< Configuring library with TetGen support >>>)
    else
---- triangle.m4.orig	2011-05-18 10:51:58.000000000 +0200
-+++ triangle.m4	2011-05-18 10:52:12.000000000 +0200
+--- m4/triangle.m4.orig	2011-05-18 10:51:58.000000000 +0200
++++ m4/triangle.m4	2011-05-18 10:52:12.000000000 +0200
 @@ -12,7 +12,7 @@
  
    if (test $enabletriangle = yes); then
@@ -1091,8 +1091,8 @@ Index: src/geom/elem.C
       AC_DEFINE(HAVE_TRIANGLE, 1, [Flag indicating whether the library will be compiled with Triangle support])
       AC_MSG_RESULT(<<< Configuring library with Triangle support >>>)
    else
---- parmetis.m4.orig	2011-05-18 11:16:05.000000000 +0200
-+++ parmetis.m4	2011-05-18 11:16:20.000000000 +0200
+--- m4/parmetis.m4.orig	2011-05-18 11:16:05.000000000 +0200
++++ m4/parmetis.m4	2011-05-18 11:16:20.000000000 +0200
 @@ -21,7 +21,7 @@
        		  
        	          PARMETIS_INCLUDE_PATH=$PWD/contrib/parmetis/Lib
