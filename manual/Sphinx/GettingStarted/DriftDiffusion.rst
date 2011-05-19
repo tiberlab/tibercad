@@ -148,8 +148,152 @@ The generated Output files are:
 Example: Mosfet
 ---------------
 
-In this second example we show the simulation of a Si Mosfet device.
+In this second example we show a 2D simulation of a silicon Mosfet device.
+The ``GMSH`` model obtained from the script mosfet.geo_ is shown in Fig. :ref:`GMSH model of the Mosfet <fig_dd_mosfet>`.
  
+.. _fig_dd_mosfet:
+
+.. figure:: ../data/DDMosfetMesh.png
+    :align: center
+    :scale: 40%
+
+    ``GMSH`` model of the Mosfet showing the mesh and the region labels
+
+The model consists of a p-doped Si substrate (``substrate``), two highly n-doped access regions (``contact``),
+a thin gate oxide (``oxide``) and source, gate, drain and back-side contacts.
+
+We want to simulate a set of output characteristics and a transcharacteristic for this Mosfet, using two distinct input files
+outputchar.tib_ and transchar.tib_.
+In these two files we define only the ``Module sweep`` and ``Simulation`` blocks.
+The device and model definitions are put into a third file mosfet.tib_, which is included in the other two files using the syntax
+
+::
+
+   @include mosfet.tib
+
+The device definition found in mosfet.tib_ is shown in the following listing:
+
+::
+
+  Device mosfet
+  {
+    meshfile = mosfet.msh
+  
+    material = Si
+
+    Region substrate 
+    {
+      Doping
+      {
+        density = 1e18
+        type = acceptor
+      }
+    }
+   
+    Region contact
+    {
+      Doping
+      {
+        density = 5e19
+        type = donor
+      }
+    }
+
+    Region oxide
+    {
+      material = SiO2
+    }
+  }
+
+
+The material is defined globally in the ``Device`` section.
+For the oxide it has to be overridden in the correspondent ``Region`` block.
+
+The followng shows the module definition for the Drift-Diffusion simulation:
+
+::
+
+  Module driftdiffusion
+  { 
+    #coupling = electrons
+
+    plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+            hQFermi, hDensity, hCurrentDensity, hMobility,
+            NetRecombination, ElField, ElPotential, ContactCurrents)
+
+    Solver
+    {
+      type = linesearch
+
+      linear_solver
+      {
+        method = pconly
+        preconditioner = lu
+      }
+    }
+
+    Physics
+    {
+      particle_density
+      {
+        # use Fermi-Dirac statistics
+        statistics = fermidirac
+      }
+
+      recombination srh {}
+
+      mobility
+      {
+        type = field_dependent
+        low_field_model = doping_dependent
+      }
+    }
+
+    Contact gate
+    {
+      type = schottky
+      barrier_height = 3.0
+
+      voltage = $Vg
+
+      area_factor = 0.1
+    }
+
+    Contact source
+    {
+      voltage = 0.0
+      area_factor = 0.1
+    }
+ 
+    Contact backcontact
+    {
+      voltage = 0.0
+      area_factor = 0.1
+    }
+
+    Contact drain
+    {
+      voltage = $Vd
+      area_factor = 0.1
+    }
+  }
+
+
+The commented option ``coupling = electrons`` shows how a unipolar simulation can be set up.
+This example however we simulate in bipolar mode.
+The ``Solver`` defines options for the nonlinear solver (the shown options are the default ones).
+In this case, a linesearch approach is used to refine the nonlinear Newton steps.
+The linear solver for each Newton step (defined in the ``linear_solver`` block) uses a complete LU factorisation as preconditioner (``preconditioner = lu``).
+In this case, the linear solver method can be chosen to be the application of the preconditioner only (``method = pconly``), instead of using an iterative
+approach.
+
+
+
+..  _mosfet.geo: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/mosfet.geo
+..  _outputchar.tib: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/outputchar.tib
+..  _transchar.tib: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/transchar.tib
+..  _mosfet.tib: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/mosfet.tib
+
 
 
 .. rubric:: Footnotes

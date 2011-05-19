@@ -34,7 +34,7 @@ Solution/Plot variables
 -----------------------
 
 The solution variables available for plotting and for interaction with other models are
-given in :ref:`Table Plotting variables<dd_solutions>` .
+given in :ref:`Plotting variables<dd_solutions>` .
 
 
 Module options
