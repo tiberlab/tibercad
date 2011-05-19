@@ -20,7 +20,6 @@
 #include "PermittivityModel.h"
 
 #include "elem.h"
-#include "getpot.h"
 
 
 #include <cmath>
