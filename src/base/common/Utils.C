@@ -16,7 +16,7 @@
 #include <cctype>
 #include <iostream>
 #include <sstream>
-//#include <sys/times.h>
+// we can use only ANSI header for Win compatibility
 #include <sys/time.h>
 
 
@@ -38,7 +38,9 @@ void
 Utils::Timer::reset(void)
 {
   struct timezone tz;
-  gettimeofday(_start, &tz);
+  struct timeval now;
+  gettimeofday(&now, &tz);
+  _start = now.tv_sec + 1e-6 * now.tv_usec;
 }
 
 
@@ -49,11 +51,12 @@ Utils::Timer::elapsed_string(void)
   struct timezone tz;
   gettimeofday(&now, &tz);
 
-  long sec = now.tv_sec - _start->tv_sec;
-  long usec = now.tv_usec - _start->tv_usec;
+  double now_s = now.tv_sec + 1e-6 * now.tv_usec;
+  double diff = now_s - _start;
 
   ostringstream os;
-  os << sec << "." << usec << " s";
+  os.precision(2);
+  os << diff << " s";
 
   return os.str();
 }
