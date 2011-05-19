@@ -3,10 +3,14 @@
 #ifndef _EXCEPTIONTRACER_H_
 #define _EXCEPTIONTRACER_H_
 
-#ifdef DEBUG
+#include "tiber_config.h"
+
+#ifdef DEBUG 
+#ifndef CYGWIN
 #include <execinfo.h>
 #include <iostream>
 #include <cstdlib>
+#endif
 #endif
 
 //! A class for exception tracing
@@ -23,6 +27,7 @@ class ExceptionTracer
     ExceptionTracer(void)
     {
 #ifdef DEBUG
+#ifndef CYGWIN
       void* array[25];
       int nSize = backtrace(array, 25);
       char** symbols = backtrace_symbols(array, nSize);
@@ -33,6 +38,7 @@ class ExceptionTracer
       }
 
       free(symbols);
+#endif
 #endif
     }
 };
