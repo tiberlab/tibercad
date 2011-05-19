@@ -2,12 +2,15 @@
 
 dielectric = true
 
-structure = zb
+structure = zb 
 
 
 [lattice]
-a = 0.54304 # value of Si!
+a=0.49134
+c=0.54052
 
+#a = 0.54304 # value of Si!
+ 
 
 [valenceband]
 E_v = -3.66
@@ -60,11 +63,70 @@ C = 1.00 # j/cm3K
 vg  = 8.433e5 #cm/s
 
 
-
-
 [permittivity]
 # static dielectric constant
 permittivity = 3.9
+
+# piezoelectricity data  
+[piezoelectricity]
+e33 = 0.0
+e31 = 0.0
+e15 = 0.0
+
+[pyroelectricity]
+Pz = 0.0
+
+#Atomistic structure informations
+#This is ok for alpha-quartz
+[atomistic_structure]
+lattice_type = hexagonal
+# 
+
+#Basis 
+#Number of basis specie
+n_basis_specie = 2
+#Number of basis atoms for any specie
+n_1 = 3
+n_2 = 6 
+#Basis vectors T_"specie"_"#of atom"_"direction"
+# x1=0.4699
+# x2=0.4141
+# y2=0.2681
+# z2=0.7854
+# a=4.9134
+# c=5.4052
+
+T_1_1_x =  0.46990000 
+T_1_1_y =  0.00000000 
+T_1_1_z =  0.66666666
+T_1_2_x =  0.00000000  
+T_1_2_y =  0.46990000   
+T_1_2_z =  0.33333333
+T_1_3_x = -0.46990000 
+T_1_3_y = -0.46990000 
+T_1_3_z =  0.00000000
+T_2_1_x =  0.41410000  
+T_2_1_y =  0.26810000 
+T_2_1_z =  0.78540000
+T_2_2_x = -0.26810000 
+T_2_2_y =  0.14600000 
+T_2_2_z =  0.45206667
+T_2_3_x = -0.14600000
+T_2_3_y = -0.41410000 
+T_2_3_z =  0.11873333
+T_2_4_x =  0.26810000
+T_2_4_y =  0.41410000 
+T_2_4_z = -0.78540000
+T_2_5_x = -0.41410000 
+T_2_5_y = -0.14600000 
+T_2_5_z = -0.11873333
+T_2_6_x =  0.14600000 
+T_2_6_y = -0.26810000 
+T_2_6_z = -0.45206667
+
+#Name of species
+specie_1 = Si
+specie_2 = O
 
 [densityfunctional_tb]
 

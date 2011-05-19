@@ -50,7 +50,7 @@ uniax_def_pot_L = 16.14
 
 [permittivity]
 # static dielectric constant
-permittivity = 25
+permittivity = 20
 
 [densityfunctional_tb]
 

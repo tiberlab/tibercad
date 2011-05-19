@@ -208,7 +208,7 @@ inline void f77_upt_setkpoint (f77_int const* handler, f77_double const* k_vec)
 extern "C" void upt_lanczosdiag_ (f77_int const*, f77_int const&, f77_int 
     const&, f77_double const&, f77_double const&, f77_int const&, f77_int 
     const&, f77_int const&, f77_double const&, f77_double const&, f77_double 
-    const&);
+    const&, f77_int const&, f77_int const&);
 
 // Corresponding F77 arguments for f77_upt_lanczosdiag:
 // integer, intent(in) :: handler(DAC_handlerSize)
@@ -222,14 +222,16 @@ extern "C" void upt_lanczosdiag_ (f77_int const*, f77_int const&, f77_int
 // real(dp), intent(in) :: fast_tol
 // real(dp), intent(in) :: long_tol
 // real(dp), intent(in) :: ort_tol
+// integer, intent(in) :: twice_vb
+// integer, intent(in) :: twice_cb
 inline void f77_upt_lanczosdiag (f77_int const* handler, f77_int const& n_vb, 
     f77_int const& n_cb, f77_double const& guess_vb, f77_double const& 
     guess_cb, f77_int const& min_iter, f77_int const& long_iter, f77_int const& 
     max_iter, f77_double const& fast_tol, f77_double const& long_tol, 
-    f77_double const& ort_tol)
+    f77_double const& ort_tol, f77_int const& twice_vb, f77_int const& twice_cb)
 {
   upt_lanczosdiag_ (handler, n_vb, n_cb, guess_vb, guess_cb, min_iter, 
-      long_iter, max_iter, fast_tol, long_tol, ort_tol);
+      long_iter, max_iter, fast_tol, long_tol, ort_tol, twice_vb, twice_cb);
 }
 
 
@@ -318,6 +320,23 @@ inline void f77_upt_get_csr_hamiltonian (f77_int const* handler, f77_int& nrow,
     f77_char& fmt, f77_complex* A, f77_int* JA, f77_int* IA)
 {
   upt_get_csr_hamiltonian_ (handler, nrow, fmt, A, JA, IA);
+}
+
+
+extern "C" void upt_set_csr_hamiltonian_ (f77_int const*, f77_int&, f77_char&, 
+    f77_complex*, f77_int*, f77_int*);
+
+// Corresponding F77 arguments for f77_upt_set_csr_hamiltonian:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(out) :: nrow
+// character(1), intent(out) :: fmt
+// complex(dp), intent(out) :: A(*)
+// integer, intent(out) :: JA(*)
+// integer, intent(out) :: IA(*)
+inline void f77_upt_set_csr_hamiltonian (f77_int const* handler, f77_int& nrow, 
+    f77_char& fmt, f77_complex* A, f77_int* JA, f77_int* IA)
+{
+  upt_set_csr_hamiltonian_ (handler, nrow, fmt, A, JA, IA);
 }
 
 

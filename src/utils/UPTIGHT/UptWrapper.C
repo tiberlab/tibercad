@@ -144,10 +144,11 @@ void UptWrapper::compute_P_matrix(int poldir){
 //! Lanczos diagonalization
 void UptWrapper::lanczos_diag(int n_vb, int n_cb, double guess_vb, double guess_cb,
                                 int min_iter, int long_iter, int max_iter,
-				double fast_tol, double long_tol, double ort_tol) {
+				double fast_tol, double long_tol, double ort_tol,
+				int twice_vb, int twice_cb) {
 
   f77_upt_lanczosdiag(_handler, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
-		       max_iter, fast_tol, long_tol, ort_tol);
+		       max_iter, fast_tol, long_tol, ort_tol, twice_vb, twice_cb);
 
 
 }

@@ -86,7 +86,7 @@ protected:
 
   //! Localo origin
   Tensor1 _local_origin;
-
+  
   //! Name of lattice type
   std::string _lattice_type;
 

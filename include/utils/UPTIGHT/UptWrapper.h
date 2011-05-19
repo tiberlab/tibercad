@@ -109,7 +109,8 @@ public:
    */
   void lanczos_diag (int n_vb, int n_cb, double guess_vb, double guess_cb,
                      int min_iter, int long_iter, int max_iter, 
-                     double fast_tol, double long_tol, double ort_tol);
+                     double fast_tol, double long_tol, double ort_tol,
+		     int twice_cb, int twice_vb);
 
   void set_num_states(int n_vb, int n_cb);
 

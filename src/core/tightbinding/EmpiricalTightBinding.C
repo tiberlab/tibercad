@@ -107,7 +107,9 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    guess_cb(0.0),
    fast_tol(1e-1),
    long_tol(1e-10),
-   ort_tol(1e-4)
+   ort_tol(1e-4),
+   twice_cb(0),
+   twice_vb(0)
 {
 }
 
@@ -349,7 +351,8 @@ void ETB::do_solve(void){
 		 _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
 		 _upt_solver_options.min_iter, _upt_solver_options.long_iter,
 		 _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
-		 _upt_solver_options.long_tol, _upt_solver_options.ort_tol);
+		 _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
+		 _upt_solver_options.twice_vb, _upt_solver_options.twice_cb);
 
   }
 
@@ -664,6 +667,10 @@ void ETB::parse_options(void)
   _upt_solver_options.long_iter =  solopts.get_option("long_iter", 30);
   _upt_solver_options.max_iter =  solopts.get_option("max_iter", 100000);
 
+  bool flag = solopts.get_option("remove_folded_sols_conduction",false);
+  if (flag) _upt_solver_options.twice_cb = 1;
+  flag = solopts.get_option("remove_folded_sols_valence",false);
+  if (flag) _upt_solver_options.twice_vb = 1;
 
   //Feast options
   _upt_solver_options.e_min =  solopts.get_option("Emin", 0.0);
@@ -766,7 +773,7 @@ ETB::print_upt_options(void)
 
    std::cout << "n valence: " << _upt_solver_options.n_vb << std::endl;
    std::cout << "n conduction: " <<  _upt_solver_options.n_cb << std::endl;
-    std::cout << "min inter: " << _upt_solver_options.min_iter << std::endl;
+   std::cout << "min inter: " << _upt_solver_options.min_iter << std::endl;
    std::cout << "long iter: " <<  _upt_solver_options.long_iter << std::endl;
    std::cout << "max iter: " <<  _upt_solver_options.max_iter << std::endl;
    std::cout << "guess valence: " <<  _upt_solver_options.guess_vb << std::endl;
@@ -786,6 +793,18 @@ ETB::add_pot_shifts(void)
   project_potential(_upt_options.potential_sim, "point");
 
   inst->add_potential(_pot_shift);
+
+  std::string outdir = TiberCad::get_output_dir();
+  std::string file_name = outdir + "/pot_on_atoms.dat";
+  std::ofstream file;
+
+  file.open(file_name.c_str());
+  for(int i=0; i < _pot_shift.size(); i++)
+  {
+     file << _pot_shift[i];
+  }
+  file.close();
+
 }
 //-------------------------------------------------------------------------
 void
