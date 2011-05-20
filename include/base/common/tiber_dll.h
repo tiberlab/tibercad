@@ -6,7 +6,7 @@
 #include "tiber_config.h"
 
 #ifdef BUILD_TIBER_MODULES
-# ifdef CYGWIN
+# if defined(__CYGWIN__) || defined(__MINGW32__)
 //#  define TBDLEXPORT __declspec(dllexport)
 //#  define TBDLLOCAL __declspec(dllimport)
 #  define TBDLEXPORT 

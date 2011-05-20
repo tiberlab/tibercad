@@ -12,7 +12,7 @@
 #include "InitFailedException.h"
 
 #include "libmesh.h"
-#ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
 #include "quadrature_trap.h"
 #endif
 #include "petscerror.h"
@@ -152,7 +152,7 @@ TiberCad::init(const std::string& inputfile)
     Database::set_default_search_path(_tiberroot + "/materials");
 
     // setup DLLoader paths
-#ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
     DLLoader::set_library_path(_tiberroot + "/lib/modules");
     QBase::build(QTRAP, 1, FIRST);
 #else
@@ -184,7 +184,7 @@ TiberCad::init(const std::string& inputfile)
   _control = new Control();
  
   std::string infile(inputfile);
-#ifdef CYGWIN
+#if defined(__CYGWIN__)
     // we first convert the filename to something more UNIX like
     //Utils::convert_win32_path_to_posix(infile);
 #endif

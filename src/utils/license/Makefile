@@ -18,7 +18,11 @@ target := .$(ARCH)/liblicense.a $(topdir)/bin/create_license
 
 
 $(topdir)/bin/create_license: .$(ARCH)/create_license$(obj-suffix) .$(ARCH)/liblicense.a
-	@$(CXX) -o $@ $< .$(ARCH)/liblicense.a -lpthread
+ifeq ($(target_os),win32)
+	$(CXX) -o $@ $< .$(ARCH)/liblicense.a
+else
+	$(CXX) -o $@ $< .$(ARCH)/liblicense.a -lpthread
+endif
 
 
 $(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a:

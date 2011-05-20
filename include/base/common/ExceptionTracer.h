@@ -3,10 +3,9 @@
 #ifndef _EXCEPTIONTRACER_H_
 #define _EXCEPTIONTRACER_H_
 
-#include "tiber_config.h"
 
 #ifdef DEBUG 
-#ifndef CYGWIN
+#if !defined(__CYGWIN__) && !defined(__MINGW32__)
 #include <execinfo.h>
 #include <iostream>
 #include <cstdlib>
@@ -27,7 +26,7 @@ class ExceptionTracer
     ExceptionTracer(void)
     {
 #ifdef DEBUG
-#ifndef CYGWIN
+#if !defined(__CYGWIN__) && !defined(__MINGW32__)
       void* array[25];
       int nSize = backtrace(array, 25);
       char** symbols = backtrace_symbols(array, nSize);

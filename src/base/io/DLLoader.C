@@ -11,7 +11,7 @@
 #include <dlfcn.h>
 #include <sstream>
 
-#ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
 #define RTLD_NODELETE 0
 #define RTLD_NOLOAD 0
 #endif
@@ -65,7 +65,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
 
   // construct the library name
-#ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32)
   string libfile = name + ".dll";
 #else
   string libfile = name + ".so";
