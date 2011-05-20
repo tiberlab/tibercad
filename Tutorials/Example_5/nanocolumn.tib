@@ -6,9 +6,7 @@ Device
 
   meshfile = nanocolumn.msh
   mesh_units = 1e-9
-  dimension = 3
 
-  structure = wz
   x-growth-direction = (1,0,-1,0)
   y-growth-direction = (-1,2,-1,0)
   z-growth-direction = (0,0,0,1)
@@ -17,9 +15,7 @@ Device
 
   Region well
   {
-
     material = GaN
-   
   }
   
 
@@ -31,9 +27,9 @@ Device
    
     Doping
     {
-      Nd = 1e19
+      density = 1e19
       type = donor
-      Ed = 0.025
+      level = 0.025
       g=2
     }
 
@@ -50,9 +46,9 @@ Device
 
     Doping
     {
-      Nd = 1e15
+      density = 1e15
       type = donor
-      Ed = 0.025
+      level = 0.025
       g=2
     }
   
@@ -69,9 +65,9 @@ Device
 
     Doping
     {
-      Nd = 1e15
+      density = 1e15
       type = donor
-      Ed = 0.025
+      level = 0.025
       g=2
     }
  
@@ -86,9 +82,9 @@ Device
     
     Doping
     {
-      Nd = 1e19
+      density = 1e19
       type = acceptor
-      Ed = 0.17
+      level = 0.17
       g=4
     }
     
@@ -105,51 +101,38 @@ Module elasticity
 {
 
   name = strain
-  regions = all
 
-  plot = (Strain, StrainCell,Stress,Displacement )
-  lin_rel_tol = 1e-6 
+  plot = (Strain, Stress, Displacement)
 
   Physics 
   {
     body_force lattice_mismatch 
     {
       reference_material = AlGaN
+
       x = 0.2
-      structure = wz
       x-growth-direction = (1,0,-1,0)
       y-growth-direction = (-1,2,-1,0)
       z-growth-direction = (0,0,0,1)
-
-
-     
     }
-       
   }
 
-  Contact substrate  
-  {type = clamp}
+  Contact substrate  { type = clamp }
 
 }
 
 
 
-Module   driftdiffusion
+Module driftdiffusion
 { 
        
   name = dd
 
-  plot = (ElPotential, ElField, Ec, Ev, eQFermi, hQFermi, eMobility, hMobility, eDensity, hDensity, CurrentDensity, eCurrentDensity, hCurrentDensity, ContactCurrents, NetRecombination, Polarization, Ec0, Ev0)
+  plot = (ElPotential, ElField, Ec, Ev, eQFermi, hQFermi,
+          eMobility, hMobility, eDensity, hDensity,
+          CurrentDensity, eCurrentDensity, hCurrentDensity, ContactCurrents,
+          NetRecombination, Polarization, Ec0, Ev0)
 
-  Solver
-  {
-
-    nonlin_max_it = 15
-    nonlin_rel_tol = 1e-12
-    nonlin_step_tol = 1e-6
-    ls_max_step = 4
-
-  }
 
   Physics
   {
@@ -159,22 +142,16 @@ Module   driftdiffusion
     polarization (piezo, pyro) {}
 
     recombination srh {}
-
                  
     recombination direct {}
-    
-        
-    mobility # for  both  el  and  hl
-    {
-      type = field_dependent
-      low_field_model = doping_dependent
-    }  
 
+    mobility doping_dependent {}
+        
   }
 
 
 
-  Contact  substrate  #cathode
+  Contact substrate  # cathode
   {
     type = ohmic
     rec_velocity_p = 1e9
@@ -183,7 +160,6 @@ Module   driftdiffusion
 
   Contact anode
   {
-
     type = ohmic
 
     voltage = $bias
@@ -194,13 +170,13 @@ Module   driftdiffusion
 }
 
 
-Module  sweep
+Module sweep
 {
   solve = dd
   variable = $bias
   start = 0.0
-  stop = 4.5 #5.0
-  steps = 200 #20
+  stop = 4.5
+  steps = 200
   plot_data = true
 }
 
@@ -213,6 +189,7 @@ Simulation
   verbose = 2
 
   solve = (strain, sweep)
+
   resultpath = output 
   output_format = vtk
 }
