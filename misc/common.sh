@@ -37,22 +37,31 @@ MPIDIR=${MPIDIR:-"/usr/pack/mpich-1.2.7p1-ma"}
 # system
 system=`uname -s`
 case $system in
-	CYGWIN_NT-*)
-	SYSTEM=mingw
-	;;
+  CYGWIN_NT-* | MINGW*)
+    SYSTEM=mingw
+    ;;
 
-	Linux)
-	SYSTEM=linux-gnu
-	;;
+  Linux)
+    SYSTEM=linux-gnu
+    ;;
 
-	*)
-	echo "$system is not supported"; exit 1 ;;
+  *)
+    echo "$system is not supported"; exit 1 ;;
 esac
 
+# target system
+case $target in
+  *mingw* | *cygwin* )
+    target_os=win32 ;;
+
+  * )
+    target_os= ;;
+esac
 
 # architecture
 march=`uname -m`
 ARCH=${SYSTEM}-${march}
+
 
 # compilers
 CC=${CC:-"gcc"}
@@ -68,7 +77,7 @@ export CC CXX F77 F90 FC RANLIB LD AR
 # compiler flags
 CFLAGS="${CFLAGS} -fexceptions"
 FFLAGS="${FFLAGS} -fexceptions"
-if [ $march == "x86_64" ] &&  [ ${SYSTEM} != "mingw" ] ; then
+if [ $march == "x86_64" ] &&  [ ${target_os} != "win32" ] ; then
   CXXFLAGS="-fPIC ${CXXFLAGS}"
   CFLAGS="-fPIC ${CFLAGS}"
   FFLAGS="-fPIC ${FFLAGS}"

@@ -15,9 +15,13 @@ echo "Compiling TiberCAD ..."
 
 cd ../
 
-if [ $SYSTEM == "mingw" ]; then
+if [ $target_os == "win32" ]; then
   cp contrib/dlfcn-win32-r19/dlfcn.h include/base/io
   cp contrib/dlfcn-win32-r19/dlfcn.c src/base/io
+fi
+
+if [ "x$target" != "x" ]; then
+  TIBEROPTS="--host=$target $TIBEROPTS"
 fi
 
 ./configure \
@@ -26,7 +30,8 @@ fi
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${march} \
-  --with-boost-prefix=${BUILDDIR}/boost --with-boost-libdir=${BUILDDIR}/boost/lib
+  --with-boost-prefix=${BUILDDIR}/boost --with-boost-libdir=${BUILDDIR}/boost/lib 
+
 
 
 make
