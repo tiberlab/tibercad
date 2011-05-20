@@ -236,7 +236,6 @@ The followng shows the module definition for the Drift-Diffusion simulation:
     {
       particle_density
       {
-        # use Fermi-Dirac statistics
         statistics = fermidirac
       }
 
@@ -286,6 +285,76 @@ In this case, a linesearch approach is used to refine the nonlinear Newton steps
 The linear solver for each Newton step (defined in the ``linear_solver`` block) uses a complete LU factorisation as preconditioner (``preconditioner = lu``).
 In this case, the linear solver method can be chosen to be the application of the preconditioner only (``method = pconly``), instead of using an iterative
 approach.
+
+The ``Physics`` block contains the definition of a few physical models to be used.
+For the particle density we use Fermi-Dirac statistics, which is the default.
+We also use Shockley-Read-Hall recombination and a field-dependent mobility model in the simulation.
+
+The contacts are defined in the ``Contact`` blocks.
+For the gate we specify ``schottky`` as type (the default is ohmic contact), providing a suitable barrier height.
+The ``area_factor = 0.1`` indicates that we assume a transistor with 1 mm gate width.
+
+Next, we create a file transchar.tib_ containing the definitions for the simulation of the transcharacteristic, as given in the following listing:
+
+::
+
+  @include mosfet.tib
+
+  Module sweep
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+
+    variable = $Vd
+    start = 0.0
+    stop = 1.0 
+    steps = 5 
+  }
+
+  Module sweep
+  {
+    name = sweep_gate
+    solve = driftdiffusion
+
+    variable = $Vg
+    start = -0.5
+    stop = 1.5
+    steps = 100 
+
+    max_step = 0.1
+  
+    plot_data = true
+  }
+
+  Simulation
+  {
+    solve = (sweep_drain, sweep_gate)
+    resultpath = output_transchar 
+    output_format = vtk
+  }
+
+On the first row we include the device definition from mosfet.tib_.
+Then we define two sweeps ``sweep_drain`` and ``sweep_gate``.
+The first one will ramp the drain to 1.0 V in 5 steps, without plotting the results.
+The second one will then perform a sweep on the gate voltage from -0.5 V to 1.5 V,
+plotting the results after each step and produciong the transfer characteristic.
+The option ``max_step = 0.1`` limits the maximum voltage step to 0.1 V.
+This is useful, since the solver has first to reach the initial gate voltage of -0.5 V, starting from 0 V.
+Using this option it will do this in steps of 0.1 V.
+In the ``Simulation`` block we simply have to specify the two sweeps in the correct order.
+
+Running the simulation with ``tibercad transchar.tib`` will produce in particular a set of files ``*.vtu`` for each 
+step of the sweep ``sweep_gate``, and the file ``sweep_gate_driftdiffusion.dat`` containing the voltage-current
+characteristics for each contact, shown in Fig. :ref:`fig_dd_mosfet_transchar`.
+
+ 
+.. _fig_dd_mosfet_transchar:
+
+.. figure:: ../data/DDMosfetTranschar.png
+    :align: center
+    :scale: 80%
+
+    Mosfet transcharacteristic
 
 
 
