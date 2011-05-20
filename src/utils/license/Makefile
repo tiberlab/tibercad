@@ -13,8 +13,8 @@ target := .$(ARCH)/liblicense.a $(topdir)/bin/create_license
 .$(ARCH)/liblicense.a: $(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a $(objects)
 	@echo "Creating $@ ..."
 	@cp $(topdir)/contrib/crypto++/$(ARCH)/libcryptopp.a $@
-	@ar ru $@ $(objects)
-	@ranlib $@
+	@$(AR) ru $@ $(objects)
+	@$(RANLIB) $@
 
 
 $(topdir)/bin/create_license: .$(ARCH)/create_license$(obj-suffix) .$(ARCH)/liblicense.a
