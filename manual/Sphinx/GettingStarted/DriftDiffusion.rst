@@ -288,15 +288,15 @@ approach.
 
 The ``Physics`` block contains the definition of a few physical models to be used.
 For the particle density we use Fermi-Dirac statistics, which is the default.
-We also use Shockley-Read-Hall recombination and a field-dependent mobility model in the simulation.
+We use Shockley-Read-Hall recombination since we solve for both electrons and holes.
+For the mobility, we use a field-dependent model instead of the default constant mobility model.
+The low-field mobility is chosen to be calculated from a doping dependent model (which is the default).
 
 The contacts are defined in the ``Contact`` blocks.
 For the gate we specify ``schottky`` as type (the default is ohmic contact), providing a suitable barrier height.
 The ``area_factor = 0.1`` indicates that we assume a transistor with 1 mm gate width.
 
-Next, we create a file transchar.tib_ containing the definitions for the simulation of the transcharacteristic, as given in the following listing:
-
-::
+Next, we create a file transchar.tib_ containing the definitions for the simulation of the transcharacteristic, as given in the following listing::
 
   @include mosfet.tib
 
@@ -355,6 +355,66 @@ characteristics for each contact, shown in Fig. :ref:`fig_dd_mosfet_transchar`.
     :scale: 80%
 
     Mosfet transcharacteristic
+
+
+For the simulation of the output characteristics we create a file outputchar.tib_ with the following content::
+
+  @include mosfet.tib
+
+  Module sweep
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+
+    variable = $Vd
+    start = 0.0
+    stop = 2.0 
+    steps = 40
+  
+    plot_data = true
+  }
+
+  Module sweep
+  {
+    name = sweep_gate
+    solve = sweep_drain
+
+    variable = $Vg
+    start = 0.0
+    stop = 1.5
+    steps = 6
+  }
+
+  Simulation
+  {
+    solve = sweep_gate
+    resultpath = output_outputchar  
+  
+    output_format = vtk
+  }
+
+
+
+As before, we include the device definition using the ``@include`` statement.
+Then we define a sweep on the drain voltage with name ``sweep_drain`` and a second sweep ``sweep_gate``
+to sweep the gate voltage.
+In the latter, we specify ``sweep_drain`` in the ``solve`` option, creating thus a nested sweep:
+For each gate voltage, a sweep over the drain voltage will be performed.
+
+Running the simulation will produce a file for each couple of values (``$Vg``, ``$Vd``), and a file containing the output
+characteristic for each value of ``$Vg``.
+The resulting set of output characteristics is shown in Fig. :ref:`fig_dd_mosfet_outchar`.
+
+ 
+.. _fig_dd_mosfet_outchar:
+
+.. figure:: ../data/DDMosfetOutchar.png
+    :align: center
+    :scale: 80%
+
+    Mosfet output characteristics
+
+
 
 
 
