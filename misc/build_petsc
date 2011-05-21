@@ -63,31 +63,31 @@ CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPA
 export PETSC_DIR=${PWD}
 
 
-export PETSC_ARCH=${ARCH}
-if [ ! -e  reconfigure-${ARCH}.py ]; then
+export PETSC_ARCH=${HOST}
+if [ ! -e  reconfigure-${PETSC_ARCH}.py ]; then
   ./config/configure.py ${CONFIGOPTS} --with-debugging=0  --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
 
-  cp conftest conftest-${ARCH}
+  cp conftest conftest-${PETSC_ARCH}
   #./conftest
 else
-  ./reconfigure-${ARCH}.py
+#  ./reconfigure-${PETSC_ARCH}.py
 
   cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
   sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
   sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
 
-  make
+#  make
 fi
 
 
-export PETSC_ARCH=${ARCH}-complex
-if [ ! -e reconfigure-${ARCH}-complex.py ]; then
+export PETSC_ARCH=${HOST}-complex
+if [ ! -e reconfigure-${PETSC_ARCH}.py ]; then
   ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-debugging=0 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
 
-  cp conftest conftest-${ARCH}-complex
+  cp conftest conftest-${PETSC_ARCH}
   #./conftest
 else
-  ./reconfigure-${ARCH}-complex.py
+  ./reconfigure-${PETSC_ARCH}.py
 
   cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
   sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
@@ -99,8 +99,8 @@ fi
 
 if [ $DEBUG == 'y' ]; then
 
-  if [ ! -e ${ARCH}-dbg.ok ]; then
-    export PETSC_ARCH=${ARCH}-dbg
+  if [ ! -e ${HOST}-dbg.ok ]; then
+    export PETSC_ARCH=${HOST}-dbg
     ./config/configure.py ${CONFIGOPTS} --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
 
   ./conftest
@@ -114,7 +114,7 @@ if [ $DEBUG == 'y' ]; then
   fi
 
   if [ ! -e ${ARCH}-complex-dbg.ok ]; then
-    export PETSC_ARCH=${ARCH}-complex-dbg
+    export PETSC_ARCH=${HOST}-complex-dbg
     ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=C++ --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
 
   ./conftest

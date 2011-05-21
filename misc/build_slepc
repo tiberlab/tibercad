@@ -41,22 +41,22 @@ export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 export SLEPC_DIR=`pwd`
 
 
-export PETSC_ARCH=${ARCH}
+export PETSC_ARCH=${HOST}
 ./config/configure.py $CONFIGOPTS
 make
 
 
-export PETSC_ARCH=${ARCH}-complex
+export PETSC_ARCH=${HOST}-complex
 ./config/configure.py $CONFIGOPTS
 make
 
 
 if [ $DEBUG == 'y' ]; then
-  export PETSC_ARCH=${ARCH}-dbg
+  export PETSC_ARCH=${HOST}-dbg
   ./config/configure.py $CONFIGOPTS
   make
 
-  export PETSC_ARCH=${ARCH}-complex-dbg
+  export PETSC_ARCH=${HOST}-complex-dbg
   ./config/configure.py $CONFIGOPTS
   make
 fi

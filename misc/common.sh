@@ -60,19 +60,38 @@ esac
 
 # architecture
 march=`uname -m`
-ARCH=${SYSTEM}-${march}
+
+BUILD=`${TOPDIR}/share/arch.sh`
+
+HOST=$BUILD
+if [ "x$target" != "x" ]
+then
+  HOST=$target
+fi
+echo "*************************************************"
+echo "* Host system :  $HOST"
+echo "* Build system:  $BUILD"
+echo "*************************************************"
 
 
 # compilers
-CC=${CC:-"gcc"}
-CXX=${CXX:-"g++"}
-F77=${F77:-"ifort-11.1"}
+pre=
+if [ "x$target" != "x" ]; then
+  pre=${target}-
+fi
+if [ "x$gcc_version" != "x" ]; then
+  gcc_version=-${gcc_version}
+fi
+CC=${CC:-"${pre}gcc${gcc_version}"}
+CXX=${CXX:-"${pre}g++${gcc_version}"}
+F77=${F77:-"${pre}gfortran${gcc_version}"}
 F90=${F90:-$F77}
 FC=${FC:-$F77}
-AR=${AR:-"ar"}
-LD=${LD:-"ld"}
-RANLIB=${RANLIB:-"ranlib"}
-export CC CXX F77 F90 FC RANLIB LD AR
+AR=${AR:-"${pre}ar"}
+LD=${LD:-"${pre}ld"}
+RANLIB=${RANLIB:-"${pre}ranlib"}
+CPP=${CPP:-"${pre}cpp${gcc_version}"}
+export CC CXX F77 F90 FC RANLIB LD AR CPP
 
 # compiler flags
 CFLAGS="${CFLAGS} -fexceptions"

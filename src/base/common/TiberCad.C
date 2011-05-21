@@ -9,6 +9,7 @@
 #include "Database.h"
 #include "DLLoader.h"
 #include "Utils.h"
+#include "Messages.h"
 #include "InitFailedException.h"
 
 #include "libmesh.h"
@@ -146,6 +147,8 @@ TiberCad::init(const std::string& inputfile)
   if (root != NULL)
     _tiberroot = std::string(root);
 
+  Messages::debug("Using TIBERCADROOT=" + std::string(root));
+
   if (_tiberroot.size() != 0)
   {
     // setup default database search path
@@ -186,7 +189,7 @@ TiberCad::init(const std::string& inputfile)
   std::string infile(inputfile);
 #if defined(__CYGWIN__)
     // we first convert the filename to something more UNIX like
-    //Utils::convert_win32_path_to_posix(infile);
+    Utils::convert_win32_path_to_posix(infile);
 #endif
 
   _control->set_inputfile(infile);

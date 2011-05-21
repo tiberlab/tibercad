@@ -31,8 +31,8 @@ if [ ! -e ${ARCHIVE} ]; then
   echo "Could not download ${ARCHIVE}."
   exit 1
 fi
-SYSTEM=mingw
-if [ $SYSTEM == "mingw" ]; then
+
+if [ $target_os == "win32" ]; then
 
   cat <<PATCH >$BUILDDIR/boost.patch
 --- tools/build/v2/user-config.jam.orig	2010-01-29 10:14:42.000000000 +0100
@@ -96,7 +96,11 @@ chmod a+x bootstrap.bat
 #./bootstrap.bat --with-toolset=gcc --without-icu
 #./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=C:\\cygwin\\home\\Matthias\\2.0\\extern\\boost install
 ./bootstrap.sh --with-toolset=gcc --without-icu
-./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
+if [ $target_os == "win32" ]; then
+  ./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
+else
+  ./bjam toolset=gcc threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
+fi
 
 #--layout=system --prefix=${BUILDDIR}/boost install
 

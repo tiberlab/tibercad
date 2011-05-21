@@ -65,7 +65,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
 
   // construct the library name
-#if defined(__CYGWIN__) || defined(__MINGW32)
+#if defined(__CYGWIN__) || defined(__MINGW32__)
   string libfile = name + ".dll";
 #else
   string libfile = name + ".so";

@@ -38,7 +38,7 @@ if [ ${LIBMESHVERSION} == "svn" ]; then
       patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
     fi
 
-    if [ $SYSTEM == "mingw" ] && [ -e $WINPATCH ]; then
+    if [ $target_os == "win32" ] && [ -e $WINPATCH ]; then
       patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
     fi
   fi
@@ -60,7 +60,7 @@ if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
     patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
   fi
 
-  if [ $SYSTEM == "mingw" && -e $WINPATCH ]; then
+  if [ $target_os == "win32" && -e $WINPATCH ]; then
     patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
   fi
 fi
@@ -74,22 +74,16 @@ autoconf
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
-export PETSC_ARCH=${ARCH}
+export PETSC_ARCH=${HOST}
 
 SHARED=--enable-shared
 if [ $shared_libs == 'n' ]
 then
   SHARED=--disable-shared
 fi
-
-if [ "x$target" != "x" ]
-then
-  SHARED="$SHARED"
-# --host=$target"
-fi
   
 
-./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-nemesis --disable-exodus --disable-netcdf --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=i586-mingw32msvc
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-nemesis --disable-exodus --disable-netcdf --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=$HOST --build=$BUILD
 
 
 # delete the -pedantic flag because it makes problems with mpi
@@ -100,7 +94,7 @@ sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEB
 make |tee make_opt.log
 
 if [ $DEBUG == 'y' ]; then
-  export PETSC_ARCH=${ARCH}-dbg
+  export PETSC_ARCH=${HOST}-dbg
   make METHOD=dbg
 fi
 

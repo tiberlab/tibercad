@@ -51,7 +51,7 @@ Messages::set_log_file(const string& logfile)
   using namespace boost::filesystem;
 
   path logpath(logfile, native);
-#ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
   logpath = logpath.branch_path();
 #else
   logpath.remove_leaf();

@@ -9,7 +9,7 @@ fi
 
 VERSION=1.2.5
 
-if [ $SYSTEM == "mingw" ]; then
+if [ $target_os == "win32" ]; then
   ARCHIVE=zlib`echo $VERSION | sed 's/\.//g'`-dll.zip
 else
   ARCHIVE=zlib-${VERSION}.tar.gz
@@ -39,7 +39,7 @@ if [ ! -e ${ARCHIVE} ]; then
 fi
 
 
-if [ $SYSTEM == "mingw" ]; then
+if [ $target_os == "win32" ]; then
 
   rm -rf zlib-${VERSION}-win
   mkdir -p zlib-${VERSION}-win
@@ -63,5 +63,5 @@ else
   make
 
   cp zconf.h zlib.h ${TOPDIR}/include/base/io/gzstream
-  cp zlib.so* ${TOPDIR}/${ARCH}/lib
+  cp zlib.so* ${TOPDIR}/${HOST}/lib
 fi

@@ -20,7 +20,7 @@
 # endif
 #endif
 
-#ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
 # include <windows.h>
 #endif
 
@@ -37,7 +37,7 @@ namespace
 
   void usage(void)
   {
-# ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
     cout << endl << "Usage:" << endl
       << "  from command line: tibercad [-b] inputfile" << endl
       << "  or double click on inputfile" << endl << endl;
@@ -102,7 +102,7 @@ int main (int argc, char** argv)
 
   // do some preparation
   {
-#ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
     // we first convert the filename to something more UNIX like
     //Utils::convert_win32_path_to_posix(inputfile);
 
@@ -117,33 +117,31 @@ int main (int argc, char** argv)
       string program(buffer);
       //Utils::convert_win32_path_to_posix(program);
       string exepath(Utils::dirname(program));
-#ifdef HAVE_SETENV
+# ifdef HAVE_SETENV
       setenv("TIBERCADROOT", exepath.c_str(), 1);
-#else
-# ifdef HAVE_PUTENV
+# else
+#  ifdef HAVE_PUTENV
       string tc_root("TIBERCADROOT=" + exepath);
       putenv(tc_root.c_str());
-# else
-#  error "Neither setenv nor putenv available"
+#  else
+#   error "Neither setenv nor putenv available"
+#  endif
 # endif
-#endif
     }
 #endif
 
-  {
-    // we check here if the input file exists
-    ifstream infile;
-    infile.open(inputfile.c_str());
-    if (infile.fail() || !infile.good())
     {
+      // we check here if the input file exists
+      ifstream infile;
+      infile.open(inputfile.c_str());
+      if (infile.fail() || !infile.good())
+      {
+        infile.close();
+        cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
+        return 1;
+      }
       infile.close();
-      cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
-      return 1;
     }
-    infile.close();
-  }
-
-
 
 
 #ifdef LICENSE_CHECK
@@ -152,7 +150,7 @@ int main (int argc, char** argv)
     {
       cerr << "Sorry, cannot start TiberCAD as I could not find "
           "a valid license." << endl;
-# ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
       cout << endl << "press Enter ...";
       if (interactive) cin.get();
 # endif
@@ -189,7 +187,7 @@ int main (int argc, char** argv)
   {
     Messages::error("TiberCAD crashed for unknown reason.");
   }
-#ifdef CYGWIN
+#if defined(__CYGWIN__) || defined(__MINGW32__)
   cout << "press Enter ...";
   if (interactive) cin.get();
 #endif
