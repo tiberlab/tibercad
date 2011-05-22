@@ -70,7 +70,6 @@ DDHeatSource::calculate(const Elem* elem, const Point& point)
     heat_source += solution[var_map[EPELTH]][0];
     heat_source += solution[var_map[HPELTH]][0];
   }
-
   set_heat_source(heat_source);   
 
 }

@@ -47,13 +47,13 @@ ThermalModel::do_init(void)
   _kappa = _tcm->get_thermal_conductivity();
   //---------------------------------------
   ModelOptions::submodel_iterator
-    it_hs(get_options().submodels_begin("HeatSource"));
+    it_hs(get_options().submodels_begin("heat_source"));
   ModelOptions::submodel_iterator
-    end_hs(get_options().submodels_end("HeatSource"));
+    end_hs(get_options().submodels_end("heat_source"));
 
   //Heat Source
-  it = submodels_begin("HeatSource");
-  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("HeatSource"));
+  it = submodels_begin("heat_source");
+  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("heat_source"));
   for ( ; it != it_end ; ++it)
     _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
 }
