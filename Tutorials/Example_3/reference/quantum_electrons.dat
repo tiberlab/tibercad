@@ -1,0 +1,10 @@
+# EFA eigenstates (quantum_electrons)
+# Particle: electron
+#
+# Index EigenEnergy     Occupation  FermiLevel Temperature
+      0    0.541383    8.03853e-10           0         300
+      1    0.666727    6.30208e-12           0         300
+      2    0.804802    3.01947e-14           0         300
+      3    0.912174    4.74434e-16           0         300
+      4     1.08418    6.11814e-19           0         300
+      5     1.33742    3.40717e-23           0         300
