@@ -130,6 +130,22 @@ DSSCModel::do_init(void)
   _mobility.I3 = _mobility.I3 / kT;
   _mobility.C = _mobility.C / kT;
 
+  SubmodelIterator it = submodels_begin("trap");
+  SubmodelIterator end = submodels_end("trap");
+  for ( ; it != end; ++it)
+  {
+    Trap* t = static_cast<Trap*>(it->second);
+
+    if (t->get_particle() == 'e')
+      _etraps.insert(t);
+    else if (t->get_particle() == 'h')
+    {
+      Messages::error("No hole traps implemented for DSC module.");
+    //  _htraps.insert(t);
+    }
+  }
+
+
 }
 
 

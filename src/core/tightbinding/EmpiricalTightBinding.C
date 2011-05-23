@@ -716,8 +716,8 @@ void ETB::parse_options(void)
   //---------------------------------------------------------------------------------------
 
   _upt_options.band_shift_flag = options.get_option("add_band_shifts", true);
-  _upt_solver_options.guess_vb = solopts.get_option("guess_valence", vb_max);
-  _upt_solver_options.guess_cb = solopts.get_option("guess_conduction", cb_min);
+  //_upt_solver_options.guess_vb = solopts.get_option("guess_valence", vb_max);
+  //_upt_solver_options.guess_cb = solopts.get_option("guess_conduction", cb_min);
 
   // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
   //_upt_options.vb_shift = options.get_option("vb_shift", 0.0);
@@ -1090,6 +1090,30 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
         cb_min = (cb < cb_min) ? cb : cb_min;
       }
     }
+  }
+  else
+  {
+    //computes guess from database band edges
+    std::set<ID> IDs = _atomistic_structure->get_IDset();
+    std::set<ID>::iterator reg;
+
+    vb_max = -1000.0;
+    for (reg = IDs.begin(); reg != IDs.end(); reg++)
+    {
+      if(_map_ID_Evb[*reg] > vb_max) vb_max = _map_ID_Evb[*reg];
+    }
+
+    cb_min = 1000.0;
+    for (reg = IDs.begin(); reg != IDs.end(); reg++)
+    {
+      if(_map_ID_Ecb[*reg] < cb_min) cb_min = _map_ID_Ecb[*reg];
+    }
+
+  }
+
+  if(cb_min < vb_max)
+  {
+    Messages::warning("Bands overlap, cannot find good guess fo ETB");
   }
 }
 
