@@ -101,7 +101,7 @@ Module driftdiffusion
   plot = (Polarization, Ec, Ev, Eg, ElPotential, eQFermi, hQFermi,
           eMobility, hMobility, eDensity, hDensity,
           CurrentDensity, eCurrentDensity, hCurrentDensity,
-          ContactCurrent)
+          ContactCurrent, IQE)
       
   save_state = true
   #load_state = reference/dd_bias_3.8.tsv
@@ -129,10 +129,7 @@ Module driftdiffusion
     recombination (srh, direct) {}
 
     
-    mobility field_dependent
-    { 
-      low_field_model = doping_dependent
-    }
+    mobility doping_dependent {}
 
   }               
 
@@ -240,7 +237,7 @@ Simulation
   temperature = 300
 
   solve = (strain, sweep, quantum_el, quantum_hl, optics)
-  # we load saved solution
+  # when loading saved solution:
   #solve = (strain, dd, quantum_el, quantum_hl, optics)
 
   resultpath = output 

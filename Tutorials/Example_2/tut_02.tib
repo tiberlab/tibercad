@@ -11,11 +11,10 @@ Device
 
     Doping
     {
-      Nd = 1e18
+      density = 1e18
       type = acceptor
     }
 
-    #   doping = 1e18 doping_type = acceptor
   }
 
   Region n_side 
@@ -24,11 +23,10 @@ Device
 
     Doping
     {
-      Nd = 1e18
+      density = 1e18
       type = donor
     }
 
-    #   doping = 1e18 doping_type = donor
   }
 
 }
@@ -83,13 +81,12 @@ Module thermal
 
   plot = (LatticeTemp, ThermalFlux, HeatSource, ThermCond,  MaxTemp)
 
-  heat_source
+  Physics
   {
-
-    model =  drift_diffusion_dissipation
-
-    drift_diffusion_simulation = dd
-
+    heat_source drift_diffusion_dissipation
+    {
+      dd_simulation = dd
+    }
   }
 
 
@@ -112,7 +109,6 @@ Module thermal
 
 Module sweep
 {
-  #  simulation = (dd, tt)
   solve = (dd, tt)
   variable = $Vb
   start = 0.0
@@ -126,14 +122,10 @@ Module sweep
 
 Simulation
 {
-#  meshfile = tut_02.msh
-  dimension = 1
   temperature = 300
   solve = sweep
-  resultpath = output_tut2
+  resultpath = output
   output_format = grace
-
-
 }
 
 
