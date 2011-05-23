@@ -24,8 +24,9 @@ ifeq ($(findstring mingw,$(hostos)),mingw)
   target_os := win32
 endif
 
-
-ARCH := $(shell $(topdir)/share/arch.sh)
+# we create an ARCH string which will be the same when calling
+# arch.sh on the target system
+ARCH := $(shell $(topdir)/share/arch.sh $(hostcpu)-$(hostos))
 
 # the compilers
 CXX := @CXX@
