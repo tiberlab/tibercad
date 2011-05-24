@@ -120,15 +120,21 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     else
       ierr = EPSSetType(eps, EPSKRYLOVSCHUR);
 
-    ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
-   
+    
     ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
+  
+    if (opt.spectral_trans == "folding")
+    {
+      ierr = STSetType(st,STFOLD); CHKERRQ(ierr);
+      ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
+    }
+    else
+    {
+      ierr = STSetType(st,STSINV); CHKERRQ(ierr);
+      ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
+    }
+    
     ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
-    
-   
-     ierr = STSetType(st,STSINV); CHKERRQ(ierr);
-    
-    
     
   
     ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);

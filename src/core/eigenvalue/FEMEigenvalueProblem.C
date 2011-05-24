@@ -293,6 +293,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
   slep_opt.eps_max_it =  solver_opt.max_iteration_number;
 
+  slep_opt.spectral_trans = solver_opt.spectral_trans;
 
   slep_opt.read_matrix_from_file = false;
 
@@ -416,7 +417,7 @@ void FEMEigenvalueProblem::parse_options()
   solver_opt.solve_ev_problem_twice  = mod_opt.get_option("solve_ev_problem_twice",true);
 
 
-
+  solver_opt.spectral_trans = mod_opt.get_option("spectral_transformation","shift_and_invert");
 
   solver_opt.number_of_eigenstates   = mod_opt.get_option("number_of_eigenstates", 6);
 

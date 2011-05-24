@@ -801,7 +801,7 @@ ETB::add_pot_shifts(void)
   file.open(file_name.c_str());
   for(int i=0; i < _pot_shift.size(); i++)
   {
-     file << _pot_shift[i];
+     file << _pot_shift[i] << std::endl;
   }
   file.close();
 

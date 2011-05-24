@@ -94,7 +94,8 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
     std::string preconditioner;         //!< preconditioner name
 
     bool periodicity[3];                //!< periodic boundary conditions
-
+  
+    std::string spectral_trans;         //!< spectral transformation
 
     std::string st_ksp_type;            //!< Liner system solution method 
     

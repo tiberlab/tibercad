@@ -38,6 +38,8 @@ class EigenSolver
 
     std::string pc_type; //<! preconditioner name
 
+    std::string spectral_trans;
+
     bool monitor;   //<! activates monitor if true
 
     double spectrum_inversion_tolerance; //<! toterance for spectrum inversion
