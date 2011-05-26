@@ -90,6 +90,9 @@ DriftDiffusionProperties::read_database(void)
   db.set_section("");
   _is_dielectric = db.get("dielectric", _is_dielectric);
 
+  bool diel_as_sc = get_option("dielectric_as_semiconductor", false);
+  _is_dielectric &= !diel_as_sc;
+
 }
 
 
@@ -105,6 +108,10 @@ DriftDiffusionProperties::parse_options(void)
   _use_predictor = get_option("use_density_predictor", _use_predictor);
 
   _is_dielectric = get_option("dielectric", _is_dielectric);
+
+  bool diel_as_sc = get_option("dielectric_as_semiconductor", false);
+  _is_dielectric &= !diel_as_sc;
+
 
 
   // the temperature simulation
@@ -301,7 +308,7 @@ DriftDiffusionProperties::create_submodels(void)
     recomb_iterator it = _recombination_models.begin();
     recomb_iterator end = _recombination_models.end();
     for ( ; it != end; ++it)
-      delete it->second;
+      PhysicalModelInterface::destroy(it->second);
     _recombination_models.clear();
   }
 
@@ -395,12 +402,12 @@ DriftDiffusionProperties::do_init(void)
 
 
 
-  if (_is_dielectric)
+  //if (_is_dielectric)
+  //  _background_conductivity =
+  //      0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
+  //else
     _background_conductivity =
         0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
-  else
-    _background_conductivity =
-        0.5 * get_option("background_conductivity", 2e4 * Constants::e) / Constants::e;
 
 
   // calculate the equilibrium

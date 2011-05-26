@@ -275,9 +275,9 @@ TiberPetscNonlinearSolver::parse_options(const ModelOptions& options)
   if (it != options.submodels_end("linear_solver"))
   {
     const ModelOptions& linoptions = it->second;
-    _linear_rtol = linoptions.get_option("lin_rel_tol", 1e-6);
-    _linear_atol = linoptions.get_option("lin_abs_tol", 1e-50);
-    _linear_max_it = linoptions.get_option("lin_max_it", 500);
+    _linear_rtol = linoptions.get_option("relative_tolerance", 1e-6);
+    _linear_atol = linoptions.get_option("absolute_tolerance", 1e-50);
+    _linear_max_it = linoptions.get_option("max_iterations", 500);
 
     _ksp_type = TiberPetscUtils::extract_KSPType(linoptions);
     _pc_type = TiberPetscUtils::extract_PCType(linoptions);
