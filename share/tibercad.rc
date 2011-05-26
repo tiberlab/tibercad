@@ -33,12 +33,12 @@ FILEOS VOS__WINDOWS32
    VALUE "FileVersion", VER_STRING
    VALUE "ProductVersion", VER_STRING_SHORT
    VALUE "FileDescription", "TiberCAD simulator executable\0"
-   VALUE "CompanyName", "TiberLAB\0"
-   VALUE "LegalCopyright", "Copyright (C) TiberLAB, 2008\0"
-   VALUE "ProductName", "TiberCAD\0"
+   VALUE "CompanyName", "TiberLAB s.r.l\0"
+   VALUE "LegalCopyright", "Copyright (C) TiberLAB, 2011\0"
+   VALUE "ProductName", "tiberCAD\0"
    VALUE "InternalName", "tibercad\0"
    VALUE "OriginalFileName", "tibercad.exe\0"
-   VALUE "Website", "http://www.tibercad.org\0"
+   VALUE "Website", "http://www.tiberlab.com\0"
   }
  }
 
