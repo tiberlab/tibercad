@@ -309,7 +309,7 @@ void OpticsKP::do_solve()
 
 
   if (verbose > 0)
-    Messages::info("done");
+    Messages::info(" done");
 
 
 /*
