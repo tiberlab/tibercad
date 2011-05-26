@@ -54,9 +54,14 @@ Utils::Timer::elapsed_string(void)
   double now_s = now.tv_sec + 1e-6 * now.tv_usec;
   double diff = now_s - _start;
 
+  int m = ::floor(diff / 60);
+  int h = ::floor(m / 60);
+  m %= 60;
+  double s = diff - 60 * (m + 60 * h);
+
   ostringstream os;
   os.precision(2);
-  os << diff << " s";
+  os << h << "h " << m << "m " << s << "s";
 
   return os.str();
 }

@@ -806,6 +806,8 @@ Control::run_simulation(void)
     simulations[i] = sim;
   }
 
+  Utils::Timer tt;
+
   // now run them
   for (unsigned int i = 0; i < n; i++)
   {
@@ -833,6 +835,10 @@ Control::run_simulation(void)
     }
 
   }
+  os.str("");
+  os << "Total solve time: " << tt.elapsed_string();
+  Messages::newline();
+  Messages::info(os.str());
 }
 
 
