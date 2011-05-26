@@ -7,7 +7,6 @@ Device
   meshfile = quantum_well.msh
   mesh_units = 1e-9
 
-  structure = wz
   y-growth-direction = (1,0,-1,0)
   z-growth-direction = (-1,2,-1,0)
   x-growth-direction = (0,0,0,1)
@@ -19,9 +18,9 @@ Device
     
     Doping
     {
-      Nd = 1e18
+      density = 1e18
       type = acceptor
-      Ed = 0.025
+      level = 0.025
      
     }
   
@@ -35,9 +34,9 @@ Device
  
     Doping
     {
-      Nd = 5e16
+      density = 5e16
       type = acceptor
-      Ed = 0.025
+      level = 0.025
      
     }
    
@@ -54,9 +53,9 @@ Device
    
     Doping
     {
-      Nd = 5e16
+      density = 5e16
       type = acceptor
-      Ed = 0.025
+      level = 0.025
      
     }
   
@@ -71,7 +70,7 @@ Module elasticity
   name = strain
   regions = all
 
-  plot = (Strain, PiezoPolarization)
+  plot = (Strain, Stress)
 
 
   Physics 
@@ -80,7 +79,6 @@ Module elasticity
     {
       reference_material = AlGaN
       x = 0.3
-      structure = wz
       y-growth-direction = (1,0,-1,0)
       z-growth-direction = (-1,2,-1,0)
       x-growth-direction = (0,0,0,1)
@@ -112,19 +110,6 @@ Module  driftdiffusion
           hQFermi, hDensity, hCurrentDensity, hMobility,
           NetRecombination, ElField, ElPotential, ContactCurrents)
 
-  Solver
-  {
-
-    nonlin_max_it = 70
-    nonlin_rel_tol = 1e-10
-    nonlin_abs_tol = 1e-10
-    nonlin_step_tol = 1e-9
-    ls_max_step = 4
-    
-    ksp_type = bcgs
-
-
-  }
 
 }
 
@@ -138,7 +123,6 @@ Module  efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy)
 
-  Dirichlet_bc_everywhere = true
   particle = el
   number_of_eigenstates = 10
   poisson_simulation = dd
@@ -166,7 +150,6 @@ Module  efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy)
 
   
-  Dirichlet_bc_everywhere = true
   particle = hl
   number_of_eigenstates = 15
   poisson_simulation  = dd
@@ -195,10 +178,10 @@ Module  quantumdispersion
   quantum_simulation = quantum_el
   wedge = half
   k_space_dimension = 1
-  k1 = (0, 0.1, 0)
-  number_of_nodes = (10)
+  k1 = (0, 0.5, 0)
+  number_of_nodes = (20)
   min_eigenvalue_number = 0
-  max_eigenvalue_number = 1
+  max_eigenvalue_number = 9
     
 }
 
@@ -214,10 +197,10 @@ Module quantumdispersion
   quantum_simulation = quantum_hl
   wedge = half
   k_space_dimension = 1
-  k1 = (0, 0.1, 0)
-  number_of_nodes = (10)
+  k1 = (0, 0.5, 0)
+  number_of_nodes = (20)
   min_eigenvalue_number = 0
-  max_eigenvalue_number = 1
+  max_eigenvalue_number = 14
 
     
 }
@@ -236,11 +219,11 @@ Module quantumdispersion
   quantum_simulation = quantum_el
   wedge = quarter
   k_space_dimension = 2
-  k1 = (0,  0.1, 0)
-  k2 = (0,  0, 0.1)
+  k1 = (0,  0.5, 0)
+  k2 = (0,  0, 0.5)
   number_of_nodes = (8,8)
   min_eigenvalue_number = 0
-  max_eigenvalue_number = 1
+  max_eigenvalue_number = 9
     
     
 }
@@ -253,17 +236,16 @@ Module quantumdispersion
   regions = all
 
   plot = ( k-space_dispersion)
-
   output_format = vtk
 
   quantum_simulation = quantum_hl
   wedge = quarter
   k_space_dimension = 2
-  k1 = (0, 0.1, 0)
-  k2 = (0,  0, 0.1)
+  k1 = (0, 0.5, 0)
+  k2 = (0,  0, 0.5)
   number_of_nodes = (8,8)
   min_eigenvalue_number = 0
-  max_eigenvalue_number = 3
+  max_eigenvalue_number = 14
    
     
 }

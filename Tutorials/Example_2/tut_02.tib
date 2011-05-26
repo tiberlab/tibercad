@@ -83,9 +83,9 @@ Module thermal
 
   Physics
   {
-    heat_source drift_diffusion_dissipation
+    heat_source joule
     {
-      dd_simulation = dd
+      DD_simulation = dd
     }
   }
 
