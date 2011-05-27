@@ -46,6 +46,20 @@ if [ $target_os == "win32" ]; then
  
  
  # -------------------
+--- libs/regex/build/Jamfile.v2.orig	2011-05-20 13:15:23.000000000 +0200
++++ libs/regex/build/Jamfile.v2	2011-05-20 13:15:47.000000000 +0200
+@@ -274,9 +274,9 @@
+         #<link>static:<define>BOOST_REGEX_NO_LIB=1
+         #<link>static:<define>BOOST_REGEX_STATIC_LINK=1
+ 	     <link>shared:<define>BOOST_REGEX_DYN_LINK=1
+-	     <toolset>gcc-mw:<link>static
+-	     <toolset>gcc-mingw:<link>static
+-	     <toolset>gcc-cygwin:<link>static
++	     #<toolset>gcc-mw:<link>static
++	     #<toolset>gcc-mingw:<link>static
++	     #<toolset>gcc-cygwin:<link>static
+              <conditional>@force-shared-linking
+     ;
 PATCH
 
 else
@@ -74,7 +88,6 @@ else
 +	     #<toolset>gcc-mw:<link>static
 +	     #<toolset>gcc-mingw:<link>static
 +	     #<toolset>gcc-cygwin:<link>static
- 	     $(BOOST_REGEX_ICU_OPTS)
               <conditional>@force-shared-linking
      ;
 PATCH
@@ -97,7 +110,8 @@ chmod a+x bootstrap.bat
 #./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=C:\\cygwin\\home\\Matthias\\2.0\\extern\\boost install
 ./bootstrap.sh --with-toolset=gcc --without-icu
 if [ $target_os == "win32" ]; then
-  ./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
+#  ./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
+  ./bjam toolset=gcc threading=single link=shared runtime-link=shared target-os=windows --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
 else
   ./bjam toolset=gcc threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
 fi

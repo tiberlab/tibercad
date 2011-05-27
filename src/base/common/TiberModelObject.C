@@ -3,6 +3,7 @@
 #include "TiberModelObject.h"
 #include "Variable.h"
 #include "DLLoader.h"
+#include "Messages.h"
 #include "ModelErrorException.h"
 
 #include <vector_value.h>
@@ -31,7 +32,6 @@ TiberModelObject::TiberModelObject(const ModelOptions& options)
 TiberModelObject::~TiberModelObject(void)
 {
   Variable::unregister(this);
-  DLLoader::close_library(_libhandle);
 }
 
 
@@ -236,6 +236,13 @@ TiberModelObject::destroy(TiberModelObject* p)
 {
   if (p != NULL)
   {
+    Messages m;
+    ostringstream os;
+    os << "Destroying object: " << p;
+    os << ", " << Utils::extract_typename(typeid(*p));
+    os << " (" << p->get_name() << ")";
+    m.debug(os.str());
+    m.indent();
 
     libhandle_t libhandle = p->_libhandle;
     destroy_t destroy_fnc = p->_destroy;

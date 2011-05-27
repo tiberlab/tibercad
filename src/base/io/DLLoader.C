@@ -137,7 +137,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
 
 
 
-  void
+void
 DLLoader::close_library(void* handle)
 {
   if (handle != NULL)

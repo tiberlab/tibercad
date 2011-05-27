@@ -115,7 +115,9 @@ int main (int argc, char** argv)
       if (!GetModuleFileName(NULL, buffer, bufsize))
         cerr << "Problems detecting installation path." << endl;
       string program(buffer);
-      //Utils::convert_win32_path_to_posix(program);
+#if defined(__CYGWIN__)
+      Utils::convert_win32_path_to_posix(program);
+#endif
       string exepath(Utils::dirname(program));
 # ifdef HAVE_SETENV
       setenv("TIBERCADROOT", exepath.c_str(), 1);
@@ -144,7 +146,7 @@ int main (int argc, char** argv)
     }
 
 
-#ifdef LICENSE_CHECK
+#ifdef _LICENSE_CHECK
     // check the license
     if (!License::check_license())
     {

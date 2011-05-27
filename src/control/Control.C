@@ -134,10 +134,10 @@ Control::~Control(void)
     SimulationInterface::destroy(sim);
   }
 
+  Device::destroy(_device);
+
   // clear all variables
   Variable::clear_all();
-
-  Device::destroy(_device);
 
 }
 
