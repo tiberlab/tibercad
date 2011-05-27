@@ -57,12 +57,7 @@ Module driftdiffusion
           RecombHeat, ePeltier, hPeltier, eJoule, hJoule,
           ePowerFlux, hPowerFlux, ContactCurrents)
 
-#  Solver
-#  {
-#    nonlin_max_it = 25
-#    nonlin_step_tol = 1e-5
-#    ls_max_step = 2
-#  }
+
   
   Physics
   {
@@ -76,7 +71,7 @@ Module driftdiffusion
       model = doping_dependent
     }
  
-# thermoelectric_power   diffusivity_model {}
+    thermoelectric_power diffusivity_model {}
 
   }
     
@@ -108,7 +103,7 @@ Module thermal
   Physics
   {
 
-    HeatSource joule
+    heat_source joule
     {
       DD_simulation = dd
     }
