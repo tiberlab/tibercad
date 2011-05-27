@@ -1,4 +1,3 @@
-
 # Example 7: Optical properties of AlGaN/GaN LED (1D)
 
 
@@ -6,11 +5,10 @@
 Device
 {
 
-  meshfile = led_spectrum.msh #
+  meshfile = led_spectrum.msh 
   mesh_units = 1e-9       #nm 
 
 
-  structure = wz
   y-growth-direction = (1,0,-1,0)
   z-growth-direction = (-1,2,-1,0)
   x-growth-direction = (0,0,0,1)
@@ -25,9 +23,9 @@ Device
 
     Doping
     {
-      Nd = 5e18
+      density = 5e18
       type = donor
-      Ed = 0.025
+      level = 0.025
      
     }
 
@@ -42,9 +40,9 @@ Device
 
     Doping
     {
-       Nd = 1e19 
+       density = 1e19 
        type = donor
-       Ed = 0.025
+       level = 0.025
      
     }
    
@@ -59,9 +57,9 @@ Device
     
     Doping
     {
-      Nd =   3e18
+      density =   3e18
       type = donor
-      Ed = 0.025
+      level = 0.025
       
     }
 
@@ -80,9 +78,9 @@ Device
 
     Doping
     {
-      Nd =   3e18
+      density =   3e18
       type = donor
-      Ed = 0.025
+      level = 0.025
      
     }
 
@@ -100,7 +98,7 @@ Device
 
     Doping
     {
-      Nd =   1e15  #  intrinsic 
+      density =   1e15  #  intrinsic 
       type = donor
       
     }
@@ -116,7 +114,7 @@ Device
 
     Doping
     {
-      Nd =   1e15  #  intrinsic 
+      density =   1e15  #  intrinsic 
       type = donor
        
     }
@@ -132,7 +130,7 @@ Device
 
     Doping
     {
-      Nd =   1e15  #  intrinsic 
+      density =   1e15  #  intrinsic 
       type = donor
       
     }
@@ -147,18 +145,13 @@ Device
 
     Doping
     {
-      Nd =  3e19
+      density =  3e19
       type = acceptor
-      Ed = 0.170     #p-doped Mg : Ea=170 meV   
+      level = 0.170     #p-doped Mg : Ea=170 meV   
       g = 4 
 
     }
 
-
-    doping = 3e19
-    doping_type = acceptor 
-    doping_level = 0.170   g = 4    #p-doped Mg : Ea=170 meV    
-     
   }
   
 
@@ -193,27 +186,9 @@ Module  driftdiffusion
 
 
   plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity,
-          CurrentDensity, ContactCurrent, eMobility, hMobility)
+          eCurrentDensity, hCurrentDensity, ContactCurrent, eMobility, hMobility)
 
 
-
-  Solver
-  {
-
-    nonlinear_solver = tiber
-    nonlin_rel_tol = 1e-14  
-    nonlin_abs_tol =  1e-50  
-    nonlin_step_tol = 1e-3
-
-    lin_rel_tol = 1e-6
-    nonlin_max_it = 30
-    ls_max_step = 1.0 
-    pc_type = lu 
-
-  }
-
- 
-    
   Physics
   {
 
@@ -268,8 +243,7 @@ Module elasticity
   name = strain
   regions = all
 
-  plot = (Strain, StrainCell,Stress,Displacement )
-  lin_rel_tol = 1e-6 
+  plot = (Strain, Stress, Displacement)
 
   Physics 
   {
@@ -277,13 +251,9 @@ Module elasticity
     {
       reference_material = AlGaN
       x = 0.2
-      structure = wz
       y-growth-direction = (1,0,-1,0)
       z-growth-direction = (-1,2,-1,0)
       x-growth-direction = (0,0,0,1)
-
-
-     
     }
        
   }
@@ -297,25 +267,21 @@ Module elasticity
 
 
 
-
+# quantum simulations are done only on the third quantum well
 
 Module efaschroedinger
 {
 
-  name = QW1_electrons
-  regions = Quantum_1
+  name = QW3_electrons
+  regions = Quantum_3
   plot = (ProbabilityDensity, EigenEnergy)
 
-  x-periodicity = false
-  Dirichlet_bc_everywhere = true
   number_of_eigenstates = 20 
 
   particle = el
 
-  poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
-  strain_model_name = strain
-  #   convergent_density = true
-  #   log_output= false
+  poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
+  strain_simulation = strain
 
   Physics
   {
@@ -328,28 +294,21 @@ Module efaschroedinger
 Module efaschroedinger
 {
 
-  name = QW1_holes 
-  regions = Quantum_1
+  name = QW3_holes 
+  regions = Quantum_3
   plot = (ProbabilityDensity, EigenEnergy)
 
-  x-periodicity = false
-  Dirichlet_bc_everywhere = true
   number_of_eigenstates = 20 
 
   particle = hl
 
-  poisson_model_name = driftdiffusion  #  potential from driftdiffusion 
-  strain_model_name = strain
-  #   convergent_density = true
-  #   log_output= false
+  poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
+  strain_simulation = strain
 
   Physics
   {
-
-    particle = hl
     model = kp   #  k.p  for  valence  band
     kp_model = 6x6
-
   }
 
 }
@@ -363,13 +322,13 @@ Module opticskp
 
   name = optics 
 
-  regions = Quantum_1
+  regions = Quantum_3
 
   plot = optical_spectrum_k_0 
 
 
-  initial_state_model = QW1_electrons # quantum_el
-  final_state_model =   QW1_holes # quantum_hl
+  initial_state_model = QW1_electrons
+  final_state_model =   QW1_holes
 
 
   initial_eigenstates = (0, 19)
@@ -394,7 +353,7 @@ Module  opticalspectrum
   name = spectrum 
   plot = optical_spectrum
 
-  regions = Quantum_1
+  regions = Quantum_3
 
   k_space_dimension = 2
   k-space_basis = true
@@ -402,10 +361,10 @@ Module  opticalspectrum
   k2 = (0, 0.1, 0)
 
   refine_fraction =  0.30 #    1.0 for  uniform refinement 
-  relative_accuracy =  0.01  #
+  relative_accuracy =  0.05  #
   refine_k_space = true
 
-  number_of_nodes = (2,2)  #  numb. of  elememts in k mesh, along x and y
+  number_of_nodes = (4,4)  #  numb. of  elememts in k mesh, along x and y
   wedge = quarter
  
   optical_matr_elem_model=optics
@@ -431,10 +390,10 @@ Module sweep
 
   variable = $Vb
   start = 0.0
-  stop =  4.0 #
-  steps = 100 #
-  plotvariable = current
-
+  stop =  3.5 
+  steps = 14
+  max_step = 0.05
+  plot_data = true
 }
 
  
@@ -445,14 +404,12 @@ Simulation
 
   verbose = 3    
  
-  dimension = 1
   temperature = 300 
 
   solve = (strain, sweep, QW1_electrons,QW1_holes, optics, spectrum)
 
 
   resultpath =   output
- 
   output_format = grace
 
 }

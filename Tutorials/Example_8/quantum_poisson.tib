@@ -12,9 +12,9 @@ Device
 
     Doping
     {
-      Nd = 1e15
+      density = 1e15
       type = donor
-      Ed = 0.025
+      level = 0.025
      
     }
 
@@ -28,9 +28,9 @@ Device
 
     Doping
     {
-      Nd = 1e17
+      density = 1e17
       type = donor
-      Ed = 0.025
+      level = 0.025
      
     }
  
@@ -46,9 +46,9 @@ Device
 
     Doping
     {
-      Nd = 1e17
+      density = 1e17
       type = donor
-      Ed = 0.025
+      level = 0.025
      
     }
  
@@ -69,15 +69,13 @@ Module elasticity
   name = strain
   regions = all
 
-  plot = (Strain, StrainCell,Stress,Displacement )
-  lin_rel_tol = 1e-6 
+  plot = (Strain, Stress, Displacement )
 
   Physics 
   {
     body_force lattice_mismatch 
     {
       reference_material = GaAs
-     
     }
        
   }
@@ -120,8 +118,7 @@ Module  driftdiffusion
       statistics = fermidirac
 
       # where to get the quantum density from
-      quantum_density =  quantum_el #   ex  dens_el
-      #   statistics = FD
+      quantum_density =  quantum_el 
       barrier_regions = (buffer1,buffer2)
       
     }
@@ -146,9 +143,8 @@ Module efaschroedinger
 
   particle = el
   number_of_eigenstates = 22
-  poisson_model_name = dd
-  strain_model_name = strain 
-  #solver = lapack
+  poisson_simulation = dd
+  strain_simulation = strain 
 
 
   Physics
@@ -165,11 +161,9 @@ Module selfconsistent
 
   name =  poisson_schroedinger
   solve = (quantum_el, dd)
-  # we do not use relaxation, but a predictor-corrector scheme
-  #relaxation_factor = 0.5
   max_iterations = 10
-  absolute_tolerance = 1e-3  # 1e-4
-  relative_tolerance = 1e-8  #  1e-6
+  absolute_tolerance = 1e-3
+  relative_tolerance = 1e-8
   monitor = true
   #xmonitor = true
 }
