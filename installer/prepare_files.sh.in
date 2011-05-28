@@ -2,8 +2,74 @@
 
 GMSHVER=2.5.0
 
-
 make_windows_package () {
+
+  mkdir -m 0755 ${files}
+  mkdir -p ${files}/doc
+  mkdir -p ${files}/examples
+  mkdir -p ${files}/materials
+  mkdir -p ${files}/lib
+
+  # copy all files
+  cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
+  cp ${topdir}/${ARCH}/lib/*.dll ${files}
+  cp ${topdir}/extern/boost/lib/boost_regex.dll ${files}
+  cp ${topdir}/extern/boost/lib/boost_filesystem.dll ${files}
+  cp ${topdir}/extern/boost/lib/boost_system.dll ${files}
+  cp -r ${topdir}/${ARCH}/lib/modules ${files}/lib
+  cp ${topdir}/share/tibercad.ico ${files}
+  cp ${topdir}/share/Copyright.txt ${files}
+  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
+  if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
+    cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
+  fi
+  if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
+    cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
+  fi
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  find ${files}/examples -name "test.conf" -exec rm -f {} \;
+  cp ${topdir}/materials/*.txt ${files}/materials
+  cp ${topdir}/materials/*.dat ${files}/materials
+
+  unix2dos=`which unix2dos`
+  [ "x$unix2dos" == "x" ] && unix2dos=`which todos` ;
+  curdir=`pwd`
+  cd ${files}
+  find ./materials -type f -exec $unix2dos {} \;
+  find ./examples -type f -exec $unix2dos {} \;
+  $unix2dos Copyright.txt
+  $unix2dos Readme.txt
+
+  cd ${topdir}/contrib
+  if [ ! -d gmsh-${GMSHVER} ]
+  then
+    mkdir gmsh-${GMSHVER}
+    cd gmsh-${GMSHVER}
+    wget http://www.geuz.org/gmsh/bin/Windows/gmsh-${GMSHVER}-Windows.zip
+  fi
+  if [ ! -f gmsh.pdf ]
+  then
+    wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+  fi
+  cd ${curdir}
+  cd ${files}
+  mkdir -p tools/gmsh
+  cd tools/gmsh
+  unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
+  mv gmsh-${GMSHVER}-Windows/* .
+  rmdir gmsh-${GMSHVER}-Windows
+  cp ${topdir}/contrib/gmsh/gmsh.pdf .
+
+  cd $curdir
+
+  return
+}
+
+
+
+make_windows_package_cygwin () {
 
   mkdir -m 0755 ${files}
   mkdir -p ${files}/doc
@@ -139,8 +205,8 @@ prepare_linux_package () {
       wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
       mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}-Linux
     fi
-    cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux ${files}/tools
-    chmod a+x ${files}/tools/gmsh-${GMSHVER}-Linux/bin/gmsh
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux ${files}/tools/gmsh
+    chmod a+x ${files}/tools/gmsh/bin/gmsh
   fi
 
 
@@ -299,6 +365,7 @@ installerdir=$topdir/installer
 ARCH=`${topdir}/share/arch.sh`
 
 test $# -ge 1 || exit 1
+[ $# -ge 2 ] && ARCH=$2
 
 files=$1/files
 
@@ -313,40 +380,15 @@ case $1 in
     make_windows_package ;;
 
   linux ) {
-    name=tibercad-$version-${ARCH}
-
-    case $2 in
-
-      deb )
-        make_deb
-        ;;
-
-      tgz )
-        files=$name
-        echo "Creating linux/${name}.tar.gz ..."
-        ARCHIVE=$installerdir/linux/${name}.tar.gz
-        MODE=-zcf
-        prepare_linux_package
-        ;;
-
-      tbz )
-        files=$name
-        echo "Creating linux/${name}.tar.bz2 ..."
-        ARCHIVE=$installerdir/linux/${name}.tar.bz2
-        MODE=-jcf
-        prepare_linux_package
-        ;;
-
-      * )
-        files=$name
-        echo "Creating linux/${name}.tar.gz ..."
-        ARCHIVE=$installerdir/linux/${name}.tar.gz
-        MODE=-zcf
-        prepare_linux_package
-        cat linux/tar/extractor linux/${name}.tar.gz > linux/${name}_installer.bin
-        chmod 0755 linux/${name}_installer.bin
-    esac
-
+    name=tiberCAD-$version-${ARCH}
+    files=$name
+    rm -rf ${files}
+    echo "Creating linux/${name}.tar.gz ..."
+    ARCHIVE=$installerdir/linux/${name}.tar.gz
+    MODE=-zcf
+    prepare_linux_package
+    cat linux/tar/extractor linux/${name}.tar.gz > linux/${name}_installer.bin
+    chmod 0755 linux/${name}_installer.bin
   } ;;
 
   * ) ;;

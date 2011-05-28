@@ -146,7 +146,7 @@ int main (int argc, char** argv)
     }
 
 
-#ifdef _LICENSE_CHECK
+#ifdef LICENSE_CHECK
     // check the license
     if (!License::check_license())
     {

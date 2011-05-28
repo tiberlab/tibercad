@@ -1,12 +1,76 @@
---- GNUmakefile.orig	2011-05-17 12:56:26.000000000 +0200
-+++ GNUmakefile	2011-05-17 12:59:30.000000000 +0200
+--- rijndael.cpp.orig	2011-05-21 00:27:19.000000000 +0200
++++ rijndael.cpp	2011-05-21 00:27:50.000000000 +0200
+@@ -73,6 +73,10 @@
+ #include <alloca.h>
+ #endif
+ 
++#ifdef __MINGW32__
++#include <malloc.h>
++#endif
++
+ NAMESPACE_BEGIN(CryptoPP)
+ 
+ #ifdef CRYPTOPP_ALLOW_UNALIGNED_DATA_ACCESS
+--- config.h.orig	2011-05-21 15:15:08.000000000 +0200
++++ config.h	2011-05-21 15:18:18.000000000 +0200
+@@ -23,6 +23,8 @@
+ // This macro will be ignored if NO_OS_DEPENDENCE is defined.
+ #define USE_MS_CRYPTOAPI
+ 
++#define CRYPTOPP_DISABLE_X86ASM
++
+ // Define this to 1 to enforce the requirement in FIPS 186-2 Change Notice 1 that only 1024 bit moduli be used
+ #ifndef DSA_1024_BIT_MODULUS_ONLY
+ #	define DSA_1024_BIT_MODULUS_ONLY 1
+@@ -45,8 +47,11 @@
+ // #define LCRNG_ORIGINAL_NUMBERS
+ 
+ // choose which style of sockets to wrap (mostly useful for cygwin which has both)
+-#define PREFER_BERKELEY_STYLE_SOCKETS
+-// #define PREFER_WINDOWS_STYLE_SOCKETS
++#if defined(__MINGW32__) || defined(__CYGWIN__)
++# define PREFER_WINDOWS_STYLE_SOCKETS
++#else
++# define PREFER_BERKELEY_STYLE_SOCKETS
++#endif
+ 
+ // set the name of Rijndael cipher, was "Rijndael" before version 5.3
+ #define CRYPTOPP_RIJNDAEL_NAME "AES"
+@@ -86,14 +91,14 @@
+ // Unfortunately there is no way to tell whether or not socklen_t is defined.
+ // To work around this, TYPE_OF_SOCKLEN_T is a macro so that you can change it from the makefile.
+ #ifndef TYPE_OF_SOCKLEN_T
+-#	if defined(_WIN32) || defined(__CYGWIN__)
++#	if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+ #		define TYPE_OF_SOCKLEN_T int
+ #	else
+ #		define TYPE_OF_SOCKLEN_T ::socklen_t
+ #	endif
+ #endif
+ 
+-#if defined(__CYGWIN__) && defined(PREFER_WINDOWS_STYLE_SOCKETS)
++#if (defined(__CYGWIN__) || defined(__MINGW32__)) && defined(PREFER_WINDOWS_STYLE_SOCKETS)
+ #	define __USE_W32_SOCKETS
+ #endif
+ 
+@@ -347,7 +352,7 @@
+ 
+ #ifndef NO_OS_DEPENDENCE
+ 
+-#if defined(_WIN32) || defined(__CYGWIN__)
++#if defined(_WIN32) || defined(__CYGWIN__) || defined(__MINGW32__)
+ #define CRYPTOPP_WIN32_AVAILABLE
+ #endif
+ 
+--- GNUmakefile.orig	2009-03-15 02:48:02.000000000 +0100
++++ GNUmakefile	2011-05-21 23:20:00.000000000 +0200
 @@ -1,3 +1,5 @@
 +include ../make.defs
 +
  CXXFLAGS = -DNDEBUG -g -O2
  #CXXFLAGS = -g
  # -fPIC is supported. Please report any breakage of -fPIC as a bug.
-@@ -6,7 +8,7 @@
+@@ -6,13 +8,16 @@
  # CXXFLAGS += -ffunction-sections -fdata-sections
  # LDFLAGS += -Wl,--gc-sections
  ARFLAGS = -cr	# ar needs the dash on OpenBSD
@@ -15,3 +79,12 @@
  CP = cp
  MKDIR = mkdir
  EGREP = egrep
+ UNAME = $(shell uname)
+ ISX86 = $(shell uname -m | $(EGREP) -c "i.86|x86|i86|amd64")
+ ISMINGW = $(shell uname | $(EGREP) -c "MINGW32")
++#ifeq ($(findstring mingw,$(CXX)),mingw)
++#ISMINGW = 1
++#endif
+ 
+ # Default prefix for make install
+ ifeq ($(PREFIX),)
