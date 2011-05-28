@@ -92,11 +92,11 @@ CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 
-CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) -std=gnu++0x
+CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) 
 LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags) 
 
 ifneq ($(target_os),win32)
-  CXXFLAGS += -pthread
+  CXXFLAGS += -pthread -std=c++0x
   FCFLAGS  += -fPIC
   CFLAGS  += -fPIC
 
@@ -107,6 +107,7 @@ ifneq ($(target_os),win32)
   endif
 else
   #LDFLAGS += -lzlib1
+  CXXFLAGS += -std=gnu++0x
 endif
 
 vpath %.h $(include_dirs)
