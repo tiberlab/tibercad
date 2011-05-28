@@ -93,6 +93,7 @@ make_windows_package_cygwin () {
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  rm -rf ${files}/examples/Modules
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
