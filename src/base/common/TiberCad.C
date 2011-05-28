@@ -19,13 +19,9 @@
 #include "petscerror.h"
 
 
-#ifndef stringify
-#define stringify(a) #a
+#ifndef ARCH
+#error "Architecture has to be specified on the command line as string"
 #endif
-#ifndef xstr
-#define xstr(a) stringify(a)
-#endif
-
 
 // we hand an empty command line to underlying libraries
 namespace
@@ -103,7 +99,7 @@ TiberCad::version_string(bool include_svn_release)
 std::string
 TiberCad::arch_string(void)
 {
-  return std::string(xstr(ARCH));
+  return std::string(ARCH);
 }
 
 
@@ -159,9 +155,9 @@ TiberCad::init(const std::string& inputfile)
     DLLoader::set_library_path(_tiberroot + "/lib/modules");
     QBase::build(QTRAP, 1, FIRST);
 #else
-    DLLoader::set_library_path(_tiberroot + "/" + xstr(ARCH) + "/lib/modules");
+    DLLoader::set_library_path(_tiberroot + "/" + ARCH + "/lib/modules");
 #ifdef DEBUG
-    DLLoader::prepend_to_library_path(_tiberroot + "/" + xstr(ARCH) + "/lib/debug/modules");
+    DLLoader::prepend_to_library_path(_tiberroot + "/" + ARCH + "/lib/debug/modules");
 #endif
 #endif
     char* modelpath = getenv("TIBERMODULEPATH");

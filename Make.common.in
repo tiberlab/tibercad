@@ -86,28 +86,23 @@ endif
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
 # the machine architecture
-CPPFLAGS += -DARCH="$(ARCH)"
+CPPFLAGS += -DARCH=\"$(ARCH)\"
 
 CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 
-CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) 
+CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) -std=gnu++0x
 LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags) 
 
 ifneq ($(target_os),win32)
-  CXXFLAGS += -pthread -std=c++0x
+  CXXFLAGS += -pthread
   FCFLAGS  += -fPIC
   CFLAGS  += -fPIC
-
-  #LDFLAGS += -lz
 
   ifeq ($(build_modules), yes)
     CXXFLAGS += -fvisibility=default -fvisibility-inlines-hidden
   endif
-else
-  #LDFLAGS += -lzlib1
-  CXXFLAGS += -std=gnu++0x
 endif
 
 vpath %.h $(include_dirs)
