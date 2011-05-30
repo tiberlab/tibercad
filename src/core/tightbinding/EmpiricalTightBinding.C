@@ -472,7 +472,7 @@ void ETB::do_solve(void){
   compute_atomic_charges("el", _el_atomic_charges);
   compute_atomic_charges("hl", _hl_atomic_charges);
 
-  _eigenvector_mag.insert(make_pair(1, std::vector<double>(_N_without_H)));
+  //_eigenvector_mag.insert(make_pair(1, std::vector<double>(_N_without_H)));
   for (unsigned int i = 0; i < _solution_size; i++)
   { 
     _eigenvector_mag.insert(make_pair(i, std::vector<double>(_N_without_H)));
@@ -949,21 +949,19 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
     throw InitFailedException("Eigenstate index is larger than number of available eigenstates");
 
   for(j=0; j<N_atoms_wo_H; j++){densatm[j] = 0.0; }
-  i = eigenstate;
       k = 0; k_at = 0;
       for (j = 0; j < N_atoms_wo_H; j++)
       {
 	atom_sum = 0.0;
 	for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
 	{
-	    atom_sum += std::norm(_solution[i].eigen_vector[k]);
+	    atom_sum += std::norm(_solution[eigenstate].eigen_vector[k]);
 	}
 
 	k_at = k;
 
 	densatm[j] += atom_sum;
       }
-
 }
 
 void ETB::get_band_edges(void)
@@ -1303,7 +1301,6 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
       exit(1);
     }
 
-  //TODO: performing this operation anytime is slow. Make a function in AtomisticStructure
   double* period = _atomistic_structure->get_periodicity_vectors();
 
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
@@ -1323,28 +1320,28 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
 
         if (x_atm >= x2)
         {
-          rho = rho + (0.5 / l) * (tb_density[iatm]) * ( exp(tau * (x2 - x_atm)) - exp(tau * (x1 - x_atm)) );
+          rho = rho + (0.5) * (tb_density[iatm]) * l * ( + exp(tau * (x2 - x_atm)) - exp(tau * (x1 - x_atm)) );
         }
         else if (x_atm <= x1)
         {
-          rho = rho - (0.5 / l) * (tb_density[iatm]) * ( - exp(-tau * (x2 - x_atm)) - exp(-tau * (x1 - x_atm)) );
+          rho = rho - (0.5) * (tb_density[iatm]) * l * ( + exp(-tau * (x2 - x_atm)) - exp(-tau * (x1 - x_atm)) );
         }
         else
         //x_atm between x1 and x2
         {
-          rho = rho + (0.5 / l) * (tb_density[iatm]) * (2.0 - exp(-tau * (x2 - x_atm)) - exp(tau * (x1 - x_atm)) );
+          rho = rho + (0.5) * (tb_density[iatm]) * l * (2.0 - exp(-tau * (x2 - x_atm)) - exp(tau * (x1 - x_atm)) );
         }
       }
     }
 
   double normalize = 1.0;
-  normalize = period[4]*period[8] - period[7]*period[5]
-                      / _atomistic_structure->get_scale() / _atomistic_structure->get_scale();
-  rho = rho / normalize;
+  //normalize = (period[4]*period[8] - period[7]*period[5]);
 
-  double mesh_units = 100.0 * get_mesh_units();
-  rho =  rho / ( mesh_units * mesh_units * mesh_units );
+  //rho = rho / normalize;
 
+  //double mesh_units = 100.0 * get_mesh_units();
+  //rho =  rho / ( mesh_units * mesh_units * mesh_units );
+  //std::cout << "I builded average 1d" << std::endl;
   return rho;
 
 }
