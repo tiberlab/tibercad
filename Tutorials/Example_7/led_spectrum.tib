@@ -327,8 +327,8 @@ Module opticskp
   plot = optical_spectrum_k_0 
 
 
-  initial_state_model = QW1_electrons
-  final_state_model =   QW1_holes
+  initial_state_model = QW3_electrons
+  final_state_model =   QW3_holes
 
 
   initial_eigenstates = (0, 19)
@@ -406,7 +406,7 @@ Simulation
  
   temperature = 300 
 
-  solve = (strain, sweep, QW1_electrons,QW1_holes, optics, spectrum)
+  solve = (strain, sweep, QW3_electrons,QW3_holes, optics, spectrum)
 
 
   resultpath =   output
