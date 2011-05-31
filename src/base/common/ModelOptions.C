@@ -6,6 +6,7 @@
 
 #include <sstream>
 #include <iostream>
+#include <list>
 #include <algorithm>
 #include <cassert>
 
@@ -72,7 +73,7 @@ ModelOptions::OptionsMap::const_iterator
 ModelOptions::_find(const std::string& name) const
 {
   OptionsMap::const_iterator it(_options.find(name));
-  _used.push_back(it);
+  _used.insert(name);
 
   return it;
 /*
@@ -254,19 +255,16 @@ ModelOptions::check_unused(int mode) const
 {
   bool found = false;
 
-  // TODO for now this check is disabled
-  mode = 0;
+  // shortcut to disable all tests:
+  //mode = 0;
 
-  // the following is based on the assumption that
-  // set iterators remain valid upon inserting/erasing
-  // of elements
-  list<OptionsMap::const_iterator> unused;
+  list<std::string> unused;
 
   OptionsMap::const_iterator it(_options.begin());
   OptionsMap::const_iterator end(_options.end());
   for ( ; it != end; ++it)
-    if (find(_used.begin(), _used.end(), it) == _used.end())
-      unused.push_back(it);
+    if (_used.find(it->first) == _used.end())
+      unused.push_back(it->first);
 
   if (!unused.empty())
   {
@@ -277,12 +275,12 @@ ModelOptions::check_unused(int mode) const
       ostringstream os;
       os << "found unused options in block "
           << get_key() << " " << get_name() << ": ";
-      list<OptionsMap::const_iterator>::iterator uit(unused.begin());
-      os << (*uit)->first;
+      list<std::string>::iterator uit(unused.begin());
+      os << *uit;
       ++uit;
-      const list<OptionsMap::const_iterator>::iterator uend(unused.end());
+      const list<std::string>::iterator uend(unused.end());
       for ( ; uit != uend; ++uit)
-        os << ", " << (*uit)->first;
+        os << ", " << *uit;
 
       switch (mode)
       {
