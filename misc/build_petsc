@@ -64,65 +64,97 @@ export PETSC_DIR=${PWD}
 
 
 export PETSC_ARCH=${HOST}
-if [ ! -e  reconfigure-${PETSC_ARCH}.py ]; then
+if [ ! -e  conftest-${PETSC_ARCH} ]; then
   ./config/configure.py ${CONFIGOPTS} --with-debugging=0  --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
 
   cp conftest conftest-${PETSC_ARCH}
-  #./conftest
-else
-#  ./reconfigure-${PETSC_ARCH}.py
+  if [ "$target_os" != "win32" ]; then
+    ./conftest-${PETSC_ARCH}
+    cp reconfigure.py reconfigure-${PETSC_ARCH}.py
+  fi
+fi
 
-  cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
-  sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
-  sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+if [ -e  reconfigure-${PETSC_ARCH}.py ]; then
+  ./reconfigure-${PETSC_ARCH}.py
 
-#  make
+  if [ "$target_os" == "win32" ]; then
+    cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+    sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+    sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+  fi
+
+  make
 fi
 
 
 export PETSC_ARCH=${HOST}-complex
-if [ ! -e reconfigure-${PETSC_ARCH}.py ]; then
+if [ ! -e  conftest-${PETSC_ARCH} ]; then
   ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-debugging=0 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
 
   cp conftest conftest-${PETSC_ARCH}
-  #./conftest
-else
+  if [ "$target_os" != "win32" ]; then
+    ./conftest-${PETSC_ARCH}
+    cp reconfigure.py reconfigure-${PETSC_ARCH}.py
+  fi
+fi
+
+if [ -e  reconfigure-${PETSC_ARCH}.py ]; then
   ./reconfigure-${PETSC_ARCH}.py
 
-  cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
-  sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
-  sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
-
+  if [ "$target_os" == "win32" ]; then
+    cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+    sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+    sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+  fi
 
   make
 fi
 
 if [ $DEBUG == 'y' ]; then
 
-  if [ ! -e ${HOST}-dbg.ok ]; then
-    export PETSC_ARCH=${HOST}-dbg
+  export PETSC_ARCH=${HOST}-dbg
+  if [ ! -e  conftest-${PETSC_ARCH} ]; then
     ./config/configure.py ${CONFIGOPTS} --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
 
-  ./conftest
-  ./reconfigure.py
+    cp conftest conftest-${PETSC_ARCH}
+    if [ "$target_os" != "win32" ]; then
+      ./conftest-${PETSC_ARCH}
+      cp reconfigure.py reconfigure-${PETSC_ARCH}.py
+    fi
+  fi
 
-  cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
-  sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
-  sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+  if [ -e  reconfigure-${PETSC_ARCH}.py ]; then
+    ./reconfigure-${PETSC_ARCH}.py
+
+    if [ "$target_os" == "win32" ]; then
+      cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+      sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+      sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+    fi
 
     make
   fi
 
-  if [ ! -e ${ARCH}-complex-dbg.ok ]; then
-    export PETSC_ARCH=${HOST}-complex-dbg
+  export PETSC_ARCH=${HOST}-complex-dbg
+  if [ ! -e  conftest-${PETSC_ARCH} ]; then
     ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=C++ --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
 
-  ./conftest
-  ./reconfigure.py
+    cp conftest conftest-${PETSC_ARCH}
+    if [ "$target_os" != "win32" ]; then
+      ./conftest-${PETSC_ARCH}
+      cp reconfigure.py reconfigure-${PETSC_ARCH}.py
+    fi
+  fi
 
-  cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
-  sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
-  sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+  if [ -e  reconfigure-${PETSC_ARCH}.py ]; then
+    ./reconfigure-${PETSC_ARCH}.py
+
+    if [ "$target_os" == "win32" ]; then
+      cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+      sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+      sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+    fi
+
 
     make
   fi

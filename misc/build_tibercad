@@ -15,7 +15,7 @@ echo "Compiling TiberCAD ..."
 
 cd ../
 
-if [ $target_os == "win32" ]; then
+if [ "$target_os" == "win32" ]; then
   cp contrib/dlfcn-win32-r19/dlfcn.h include/base/io
   cp contrib/dlfcn-win32-r19/dlfcn.c src/base/io
 fi
