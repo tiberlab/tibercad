@@ -66,8 +66,7 @@ Module elasticity
   name = strain
   regions = all
 
-  plot = (Strain, StrainCell,Stress,Displacement )
-  lin_rel_tol = 1e-6 
+  plot = (Strain, Stress, Displacement )
 
   Physics 
   {
@@ -75,7 +74,6 @@ Module elasticity
     {
       reference_material = AlGaN
       x = 0.28
-      structure = wz
       x-growth-direction = (1,0,-1,0)
       y-growth-direction = (-1,2,-1,0)
       z-growth-direction = (0,0,0,1)
@@ -104,7 +102,9 @@ Module driftdiffusion
           ContactCurrent, IQE)
       
   save_state = true
-  #load_state = reference/dd_bias_3.8.tsv
+  # comment this out if you want to perform the 
+  # whole voltage sweep
+  load_state = reference/dd_bias_3.8.tsv
 
   Physics
   {
@@ -236,9 +236,11 @@ Simulation
 {
   temperature = 300
 
-  solve = (strain, sweep, quantum_el, quantum_hl, optics)
-  # when loading saved solution:
-  #solve = (strain, dd, quantum_el, quantum_hl, optics)
+  solve = (strain, 
+           # change this to 'sweep' if you want to perform the 
+           # whole voltage sweep:
+           dd, # sweep
+           quantum_el, quantum_hl, optics)
 
   resultpath = output 
 
