@@ -171,8 +171,6 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep mkl | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libmesh | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep petsc | awk '{print $3}'`"
-  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
   cp $libs ${files}/${ARCH}/lib
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
@@ -181,9 +179,14 @@ prepare_linux_package () {
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
-  if test -e ${topdir}/manual/tiber_manual.pdf ; then
-    cp ${topdir}/manual/tiber_manual.pdf ${files}/doc/manual.pdf
+
+  if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
+    cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
   fi
+  if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
+    cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
+  fi
+
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
   rm -rf ${files}/examples/Modules
