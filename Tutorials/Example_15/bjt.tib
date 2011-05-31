@@ -19,7 +19,7 @@ Device bjt
   {
     Doping {
       type = donor
-      Nd = 5e15
+      density = 5e15
     }
   }
 
@@ -63,11 +63,6 @@ Module driftdiffusion
 
   Physics
   {
-
-     # use Fermi-Dirac statistics
-     statistics =  FD
-
-           
      mobility doping_dependent {}
 
      recombination (srh, auger) {}

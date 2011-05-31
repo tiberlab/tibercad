@@ -274,7 +274,7 @@ ModelOptions::check_unused(int mode) const
     {
       ostringstream os;
       os << "found unused options in block "
-          << get_key() << " " << get_name() << ": ";
+          << get_key() << " (" << get_name() << "): ";
       list<std::string>::iterator uit(unused.begin());
       os << *uit;
       ++uit;

@@ -28,7 +28,7 @@ Module driftdiffusion
 
   Physics
   {
-
+piipo = 0
     particle_density
     { 
       statistics = boltzmann

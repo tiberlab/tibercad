@@ -357,7 +357,11 @@ Control::setup_module(Device* device, const ModelOptions& opts)
     ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
     const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
     for ( ; it != end; ++it)
+    {
       physopts += it->second;
+      physopts.set_key((it->second).get_key());
+      physopts.set_name((it->second).get_name());
+    }
   }
 
   //
