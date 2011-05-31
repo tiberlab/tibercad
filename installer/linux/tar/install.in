@@ -11,14 +11,14 @@ GMSHVER=2.5.0
 install_gmsh ()
 {
 
-  echo "Installing GMSH to ${instpath}/tools/gmsh-$GMSHVER-Linux"
+  echo "Installing GMSH to ${instpath}/tools/gmsh"
   install_files ${srcpath}/tools ${instpath}
 
   here=`pwd`
 
   cd ${instpath}/bin && ln -s TiberCAD.sh gmsh
   mkdir -p ${instpath}/man/man1
-  cd ${instpath}/man/man1 && ln -s ${instpath}/tools/gmsh-$GMSHVER-Linux/share/man/man1/gmsh.1 gmsh.1
+  cd ${instpath}/man/man1 && ln -s ${instpath}/tools/gmsh/share/man/man1/gmsh.1 gmsh.1
 
   echo "- ${instpath}/bin/gmsh" >> ${instpath}/files.lst
   echo "- ${instpath}/man/man1/gmsh.1" >> ${instpath}/files.lst
@@ -251,7 +251,7 @@ case \$prog in
 
   gmsh*)
     progname="gmsh"
-    executable="\${TIBERCADROOT}/tools/gmsh-\${GMSHVER}-Linux/bin/\$progname"
+    executable="\${TIBERCADROOT}/tools/gmsh/bin/\$progname"
     ;;
 
   *)

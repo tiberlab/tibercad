@@ -40,12 +40,14 @@ cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 
 
 
+# PETSc shared libraries cannot be moved around, therefore
+# we compile them always statically
 
-SHARED="--with-shared=1 --with-dynamic=1"
-if [ $shared_libs == 'n' ]
-then
+#SHARED="--with-shared=1 --with-dynamic=1"
+#if [ $shared_libs == 'n' ]
+#then
   SHARED="--with-shared=0 --with-dynamic=0"
-fi
+#fi
   
 
 COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
