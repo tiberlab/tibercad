@@ -360,7 +360,6 @@ Control::setup_module(Device* device, const ModelOptions& opts)
     {
       physopts += it->second;
       physopts.set_key((it->second).get_key());
-      physopts.set_name((it->second).get_name());
     }
   }
 

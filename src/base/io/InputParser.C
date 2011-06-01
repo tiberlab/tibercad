@@ -127,7 +127,6 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
       //  create a  ModelOptions object  to  contain the  next subblock
       ModelOptions submodel;
       submodel.set_key(model_name);
-      submodel.set_name(model_name);
 
       block_counter++;
 
