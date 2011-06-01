@@ -38,7 +38,7 @@ if [ ${LIBMESHVERSION} == "svn" ]; then
       patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
     fi
 
-    if [ $target_os == "win32" ] && [ -e $WINPATCH ]; then
+    if [ "$target_os" == "win32" ] && [ -e $WINPATCH ]; then
       patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
     fi
   fi
@@ -60,7 +60,7 @@ if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
     patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
   fi
 
-  if [ $target_os == "win32" && -e $WINPATCH ]; then
+  if [ "$target_os" == "win32" && -e $WINPATCH ]; then
     patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
   fi
 fi

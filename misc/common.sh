@@ -96,7 +96,7 @@ export CC CXX F77 F90 FC RANLIB LD AR CPP
 # compiler flags
 CFLAGS="${CFLAGS} -fexceptions"
 FFLAGS="${FFLAGS} -fexceptions"
-if [ $march == "x86_64" ] &&  [ ${target_os} != "win32" ] ; then
+if [ "$march" == "x86_64" ] &&  [ "${target_os}" != "win32" ] ; then
   CXXFLAGS="-fPIC ${CXXFLAGS}"
   CFLAGS="-fPIC ${CFLAGS}"
   FFLAGS="-fPIC ${FFLAGS}"
