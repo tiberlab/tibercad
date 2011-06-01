@@ -580,40 +580,36 @@ quantities.
 Mesh based
 ^^^^^^^^^^^^
 
-``Mesh-based`` quantities are all the quantities associated with the nodes of the mesh,
+*Mesh based* quantities are all the quantities associated with the nodes of the mesh,
 such as Fermi level, electron and hole density, conduction and valence band, etc., together
 with all the quantities associated with the elements of the mesh, such as current density.
 
 The output values for these quantities are reported in the files simname msh.ext,
-where ``simname`` is the simulation module used for the calculations and ext is the extension
-of the chosen file format, e.g. vtu for paraview output.
+where ``simname`` is the name of the simulation module used for the calculations and ``ext`` is the extension
+of the chosen file format, e.g. ``vtu`` for paraview output.
 
   ``strain_msh.vtu``
 
 In the case a sweep calculation is performed and the plot data keyword is set to
-true, the output files are of the kind simname sweepvariable step value msh.ext, where
- ``sweepvariable`` is the variable with respect to which the sweep is performed (e.g. gate
-voltage) and step value is the value of this variable at that step; e.g the result at the
-step ``Vbias = 1.1`` will be found in the file:
-
-  ``dd_Vbias_1.1_msh.vtu``
+true, the output files are of the kind ``simname_sweepvariable_stepvalue_msh.ext``, where
+``sweepvariable`` is the variable with respect to which the sweep is performed (e.g. gate
+voltage) and step value is the value of this variable at that step. The result at the
+step ``Vbias = 1.1`` will be found in the file ``dd_Vbias_1.1_msh.vtu``.
 
 Mesh independent
 ^^^^^^^^^^^^^^^^
 
-``mesh-independent`` quantities are the quantities which are not associated to the
-mesh, for example current at the contacts of a diode or quantized energy levels in a
+*Mesh independent* quantities are the quantities which are not associated to the
+mesh, for example the currents at the contacts of a diode or quantized energy levels in a
 quantum well. 
 
 These mesh-independent quantities are displayed in separated files,
-with the format simname.ext, e.g ``quantum_electrons.dat`` , where simname is the name of
-the model (simulation) associated to the results. If a sweep is performed, the output file
-gets the format sweep name simname.ext, where *sweep_name* is the name of the sweep
-performed, for example
-
-  ``sweep_drain_driftdiffusion.dat``
-
-Inside the file, output values for all the steps of calculation are shown.
+with the format ``simname.ext``, e.g ``quantum_electrons.dat``, where ``simname`` is the name of
+the model (simulation) associated to the results and ``ext`` is the filename extension (usually ``dat``).
+If a sweep is performed, the output file
+gets the format ``sweepname_simname.dat``, e.g. ``sweep_drain_driftdiffusion.dat``, where ``sweep_name``
+is the name of the sweep.
+The mesh independent results for every sweep step are stored in this file.
 
 Example of Input file
 ----------------------------------
