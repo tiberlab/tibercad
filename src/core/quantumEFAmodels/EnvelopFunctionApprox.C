@@ -464,7 +464,20 @@ void EnvelopFunctionApprox::parse_options()
   }
 
 
-
+  if (solver_opt.discretization_method == BIM)
+  {
+    _quadrature_type = QTRAP;
+  }
+  else
+  {
+  //string qrule = mod_opt.get_option("quadrature_rule", "gauss");
+  //if (qrule == "gauss")
+    _quadrature_type = QGAUSS;
+  //else if (qrule == "trapez")
+  //  _quadrature_type = QTRAP;
+  //else
+  //  throw InitFailedException("Unknown quadrature rule");
+  }
 
 
   //--------------------------------------------------------------------------------------------//
@@ -837,11 +850,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   // A 5th order Gauss quadrature rule for numerical integration.
-  QGauss qrule (dim, FIFTH);
+  //QGauss qrule (dim, FIFTH);
+  AutoPtr<QBase> qrule(QBase::build(_quadrature_type, dim, SECOND));
 
   // Tell the finite element object to use our quadrature rule.
 
-  fe -> attach_quadrature_rule (&qrule);
+  fe->attach_quadrature_rule (qrule.get());
 
  // Here we define some references to cell-specific data that
  // will be used to assemble the linear system.
@@ -862,6 +876,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   //------------------------------------------------------------
  std::vector<unsigned int> dof_indices_component;
+ std::vector<unsigned int> dof_indices_component0;
 
  std::vector<unsigned int> dof_indices;
 
@@ -878,7 +893,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   DenseSubMatrix<Number> s_real_sub(s_real);
 
 
-  vector<double> box_volume(Ham_real->n(), 0.0);
+  vector<double> box_volume(mesh->n_nodes(), 1.0);
 
   if (solver_opt.discretization_method == BIM)
   {
@@ -887,86 +902,17 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
     for ( ; el != end_el ; ++el)
     {//el
       const Elem* elem = *el;
-      dof_map.dof_indices (elem, dof_indices);
-      for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
-      {//band1
-	dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
-	const unsigned int n_psi_dofs = dof_indices_component.size();
-	for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-	{
-	  double box_part_volume;
+      int n_nodes = elem->n_nodes();
+      double vol = elem->volume() / n_nodes;
 
-	  Elem* box_part_elem;
+      dof_map.dof_indices (elem, dof_indices_component, psivar[0]);
+      const unsigned int n_psi_dofs = dof_indices_component.size();
+      for (unsigned int p1 = 0; p1 < n_psi_dofs; p1++)
+      {
+        double box_part_volume;
 
-	  if (dim == 1)
-	  {
-
-	    Edge2 box_part_1D;
-
-
-	    Node point1(elem->point(0),999);
-	    Node p_center(elem->centroid(),1000);
-
-	    if (p1 == 0)
-	    {
-	      box_part_1D.set_node(0) = &point1;
-	      box_part_1D.set_node(1) = &p_center;
-
-	    }
-	    else
-	    {
-	      box_part_1D.set_node(1) = &point1;
-	      box_part_1D.set_node(0) = &p_center;
-	    }
-
-	    box_part_elem = &box_part_1D;
-
-
-	    {//volume calculation
-
-	      FEType fe_type (FIRST , LAGRANGE);
-
-	      //AutoPtr<FEBase> fe (FEBase::build(dim,  fe_type));
-
-	      AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
-
-	      QGauss qrule (dim, FIRST);
-
-	      fe -> attach_quadrature_rule (&qrule);
-
-
-
-	      const std::vector<Real>& JxW = fe->get_JxW();
-
-	      fe->reinit(box_part_elem);
-
-
-	      box_part_volume = 0.0;
-	      for (unsigned int qp=0; qp<qrule.n_points(); ++qp)
-		box_part_volume += JxW[qp];
-
-	    }
-
-	  }
-
-
-
-
-
-
-	  // double v = box_part_1D.volume();
-
-	  //  box_part_volume = 0.5 * std::abs(p1(0) - p2(0)) ;
-
-
-
-	  box_volume[dof_indices_component[p1]] += box_part_volume;
-
-
-
-	}
+        box_volume[dof_indices_component[p1]] += vol;
       }
-
     }
 
   }
@@ -1011,11 +957,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       s_real.resize(n_dofs, n_dofs);
 
       // complex<double> operator_sign = Complex(0.0, -1.0);
-      if (solver_opt.discretization_method == FEM)
+      //if (solver_opt.discretization_method == FEM)
+      if (true)
       {//FEM
 	fe->reinit (elem);
 
-	for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+	for (unsigned int qp=0; qp < (*qrule).n_points(); qp++)
 	{//qp
 	  //--------------------------------------------------------------------------------
 	  /*
@@ -1044,6 +991,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
+	  dof_map.dof_indices(elem, dof_indices_component0, psivar[0]);
 
 	  for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
 	  {//band1
@@ -1098,8 +1046,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
-		  ham_real_sub(p1,p2) += value.real();
-		  ham_imag_sub(p1,p2) += value.imag();
+		  ham_real_sub(p1,p2) += value.real() / box_volume[dof_indices_component0[p1]];
+		  ham_imag_sub(p1,p2) += value.imag() / box_volume[dof_indices_component0[p1]];
 
 		}
 	      }
@@ -1115,7 +1063,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 		{
 		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
 		  {
-		    s_real_sub(p1,p2) += JxW[qp] * phi[p1][qp] * phi[p2][qp];
+		    s_real_sub(p1,p2) += JxW[qp] * phi[p1][qp] * phi[p2][qp] / box_volume[dof_indices_component0[p1]];
 		  }
 		}
 
@@ -1130,7 +1078,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 	}
 
       }
-      else if (solver_opt.discretization_method == BIM)
+      //else if (solver_opt.discretization_method == BIM)
+      else if (false)
       {//BIM
 
 	Point center = elem->centroid();

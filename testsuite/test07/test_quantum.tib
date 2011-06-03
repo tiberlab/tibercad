@@ -166,6 +166,7 @@ Module efaschroedinger
   regions = (1, 4, 5)
 
   Dirichlet_bc_everywhere = true
+  discretization_method = FEM
   particle = el
   number_of_eigenstates = 5
   poisson_model_name = dd

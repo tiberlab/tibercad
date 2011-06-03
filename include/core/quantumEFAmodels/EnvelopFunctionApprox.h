@@ -232,6 +232,10 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //! If \c true we have to calculate the density
   bool _calculate_density;
   
+
+  //! The quadrature rule
+  libMeshEnums::QuadratureType _quadrature_type;
+
  
 
   void set_k_vector(const RealVectorValue& k_vec);

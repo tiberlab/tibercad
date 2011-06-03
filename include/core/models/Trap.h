@@ -6,6 +6,7 @@
 
 #include "PhysicalModelInterface.h"
 
+class DensityOfStates;
 
 /*!
  * \brief Base class for traps in semiconductors
@@ -112,6 +113,9 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
 
     //! The thermal energy
     double _kT;
+
+    //! The density of states
+    DensityOfStates* _dos;
 
 
     //! Calculate the trap level

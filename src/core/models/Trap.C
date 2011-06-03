@@ -1,6 +1,7 @@
 // $Id$
 
 #include "Trap.h"
+#include "DensityOfStates.h"
 
 //TIBER _MODULE(Trap, trap)
 
@@ -12,7 +13,8 @@ Trap::Trap(const ModelOptions& options) :
   _type(NEUTRAL),
   _particle('e'),
   _level(0.0),
-  _energy_reference('m')
+  _energy_reference('m'),
+  _dos(NULL)
 {
   string type = get_option("type", "");
   if (type == "eNeutral")
@@ -52,6 +54,12 @@ Trap::do_init(void)
 
   get_parameter("Nt", _density);
   get_parameter("Et", _level);
+
+  if (get_options().has_submodel("density_of_states"))
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("density_of_states"));
+    _dos = DensityOfStates::create(it->second);
+  }
 }
 
 
@@ -94,13 +102,19 @@ Trap::get_ionized_density(void) const
     switch (_particle)
     {
       case 'h':
-        f = 1.0 / (1.0 + g * exp(-arg / _kT));
+        if (_dos == NULL)
+          f = 1.0 / (1.0 + g * exp(-arg / _kT));
+        else
+          f = _dos->get_occupied_density(-arg, _kT);
         break;
 
       case 'e':
       default:
         Nt = -Nt;
-        f = 1.0 / (1.0 + exp(arg / _kT) / g);
+        if (_dos == NULL)
+          f = 1.0 / (1.0 + exp(arg / _kT) / g);
+        else
+          f = _dos->get_occupied_density(arg, _kT);
         break;
     }
 
