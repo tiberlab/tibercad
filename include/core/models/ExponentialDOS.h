@@ -51,7 +51,10 @@ class TBDLEXPORT ExponentialDOS : public DensityOfStates
     double _alpha;
 
     //! Calculates the value under the integral
-    double get_value(double e, double E, double kT) const;
+    double _get_value(double e, double E, double kT) const;
+
+    //! Calculates the derivative w.r.t the fermi level
+    //double _get_value_derivative(double e, double E, double kT) const;
 
 };
 

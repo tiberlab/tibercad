@@ -44,6 +44,11 @@ Trap::Trap(const ModelOptions& options) :
 }
 
 
+Trap::~Trap(void)
+{
+  destroy(_dos);
+}
+
 
 void
 Trap::do_init(void)

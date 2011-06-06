@@ -33,7 +33,7 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
     };
 
     //! Destructor
-    virtual ~Trap(void) {};
+    virtual ~Trap(void);
 
 
     //! Creator function
