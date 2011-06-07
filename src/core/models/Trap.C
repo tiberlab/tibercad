@@ -46,7 +46,18 @@ Trap::Trap(const ModelOptions& options) :
 
 Trap::~Trap(void)
 {
-  destroy(_dos);
+}
+
+
+void
+Trap::create_submodels(void)
+{
+  if (get_options().has_submodel("density_of_states"))
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("density_of_states"));
+    _dos = DensityOfStates::create(it->second);
+    add_submodel("dos", _dos);
+  }
 }
 
 
@@ -60,11 +71,6 @@ Trap::do_init(void)
   get_parameter("Nt", _density);
   get_parameter("Et", _level);
 
-  if (get_options().has_submodel("density_of_states"))
-  {
-    ModelOptions::submodel_iterator it(get_options().submodels_begin("density_of_states"));
-    _dos = DensityOfStates::create(it->second);
-  }
 }
 
 
@@ -110,7 +116,8 @@ Trap::get_ionized_density(void) const
         if (_dos == NULL)
           f = 1.0 / (1.0 + g * exp(-arg / _kT));
         else
-          f = _dos->get_occupied_density(-arg, _kT);
+          // it needs the fermi level shifted by trap_level
+          f = _dos->get_occupied_density(arg, _kT);
         break;
 
       case 'e':
@@ -119,7 +126,8 @@ Trap::get_ionized_density(void) const
         if (_dos == NULL)
           f = 1.0 / (1.0 + exp(arg / _kT) / g);
         else
-          f = _dos->get_occupied_density(arg, _kT);
+          // it needs the fermi level shifted by trap_level
+          f = _dos->get_occupied_density(-arg, _kT);
         break;
     }
 
@@ -149,18 +157,40 @@ Trap::get_ionized_density_derivative(void) const
     switch (_particle)
     {
       case 'h':
-        expfac = g * exp(-arg / _kT);
+      {
+        if (_dos == NULL)
+        {
+          expfac = g * exp(-arg / _kT);
+          double denom = 1.0 + expfac;
+          deriv = -Nt / _kT * expfac / (denom * denom);
+        }
+        else
+          // it needs the fermi level shifted by trap_level
+          // The derivative is given w.r.t the argument
+          deriv = -Nt * _dos->get_occupied_density_derivative(arg, _kT);
+
         break;
+      }
 
       case 'e':
       default:
-        expfac = exp(arg / _kT) / g;
+      {
+        if (_dos == NULL)
+        {
+          expfac = exp(arg / _kT) / g;
+          double denom = 1.0 + expfac;
+          deriv = -Nt / _kT * expfac / (denom * denom);
+        }
+        else
+          // it needs the fermi level shifted by trap_level
+          // The derivative is given w.r.t the argument
+          deriv = -Nt * _dos->get_occupied_density_derivative(-arg, _kT);
+
         break;
+      }
     }
 
-    double denom = 1.0 + expfac;
 
-    deriv = -Nt / _kT * expfac / (denom * denom);
   }
 
   return deriv;

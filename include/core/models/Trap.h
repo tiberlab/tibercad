@@ -79,6 +79,9 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
     //! Initialize
     virtual void do_init(void);
 
+    //! Create DOS model (if present)
+    virtual void create_submodels(void);
+
 
     //! Set the trap type
     void set_type(Type type);

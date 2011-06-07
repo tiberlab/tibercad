@@ -2,6 +2,8 @@
 
 #include "ExponentialDOS.h"
 
+TIBER_MODULE(ExponentialDOS, density_of_states, exponential)
+
 using namespace std;
 
 ExponentialDOS::ExponentialDOS(const ModelOptions& options) :

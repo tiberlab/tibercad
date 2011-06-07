@@ -33,7 +33,7 @@ class TBDLEXPORT ExponentialDOS : public DensityOfStates
     virtual double get_occupied_density(double E, double kT) const;
 
 
-    //! Get the derivative with respect to the argument
+    //! Get the derivative with respect to the argument \c E
     virtual double get_occupied_density_derivative(double E, double kT) const;
 
 
