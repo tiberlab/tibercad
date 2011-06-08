@@ -179,6 +179,7 @@ DSSC::compute_scaling(Scaling::ScalingType type)
     sc->set_grad_fermi_C(RealGradient(0));
 
     sc->calculate_densities();
+    sc->calculate_traps();
 
     // element volume in cm
     double volume = elem->volume();
@@ -423,6 +424,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
       //sc->set_potentials(u, en, eI, eI3, eC);
 
       sc->calculate_densities();
+      sc->calculate_traps();
 
     // element volume in cm
     // double volume = elem->volume() * mesh_units;
@@ -2041,6 +2043,7 @@ DSSC::calculate_currents_rstf(void)
       sc->set_grad_fermi_C(dEfC);
 
       sc->calculate_densities();
+      sc->calculate_traps();
       sc->calculate_net_recombination_rate();
 
       // we put the minus here for convenience
@@ -3454,6 +3457,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
       // calculate all local properties
       sc->calculate_densities();
+      sc->calculate_traps();
       sc->calculate_net_recombination_rate();
 
       double n_e = sc->get_density_n();
@@ -3860,6 +3864,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               //sc->set_grad_fermi_I3(phi0 / x0 * RealGradient(grad_eI3, 0.0, 0.0));
               //sc->set_grad_fermi_C(phi0 / x0 * RealGradient(grad_eC, 0.0, 0.0));
               sc->calculate_densities();
+              sc->calculate_traps();
 
               // we put the phi0 here for convenience
               double sigma_I = sc->get_mobility_I() * sc->get_density_I() / C0_I;
@@ -3990,6 +3995,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           sc->set_grad_fermi_I3(phi0 / x0 * RealGradient(grad_eI3, 0.0, 0.0));
           sc->set_grad_fermi_C(phi0 / x0 * RealGradient(grad_eC, 0.0, 0.0));
           sc->calculate_densities();
+          sc->calculate_traps();
 
           // we put the phi0 here for convenience
           double sigma_I = sc->get_mobility_I() * sc->get_density_I() / C0_I;
@@ -4621,6 +4627,7 @@ DSSC::get_solution_secure(const Elem* elem,
     sc->set_grad_fermi_C(grad_eC_loc);
 
     sc->calculate_densities();
+    sc->calculate_traps();
 
     //double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
     //double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
