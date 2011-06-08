@@ -54,6 +54,7 @@ SemiconductorModel::create_submodels(void)
   opt.delete_option("strain_simulation");
   opt.delete_option("recompute_band_parameters");
   opt.delete_option("statistics");
+  opt.delete_option("use_density_predictor");
   opt.delete_all_submodels();
 
   if (_bulk_model == NULL)
