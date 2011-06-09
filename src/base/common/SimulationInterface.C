@@ -1293,7 +1293,7 @@ SimulationInterface::do_load_data(istream& is)
     is.getline(buf, bufsize);
   }
 
-  if (!is.good()) throw InitFailedException("Bad datafile");
+  if (!is.good()) throw InitFailedException("Bad datafile (missing variables block)");
 
   keyword = "</variables>";
   is.getline(buf, bufsize);
@@ -1314,7 +1314,7 @@ SimulationInterface::do_load_data(istream& is)
     Variable::set_variable_value(vit->first, vit->second);
   }
 
-  if (!is.good()) throw InitFailedException("Bad datafile");
+  if (!is.good()) throw InitFailedException("Bad datafile (missing data block?)");
   values.clear();
 
   bool has_read = false;
@@ -1332,7 +1332,7 @@ SimulationInterface::do_load_data(istream& is)
 
     for (size_t i = 0; i < solution.size(); ++i)
     {
-      if (!is.good()) throw InitFailedException("Bad datafile");
+      if (!is.good()) throw InitFailedException("Bad datafile (corrupted data?)");
 
       double val;
       is.read(buf, sizeof(double));
