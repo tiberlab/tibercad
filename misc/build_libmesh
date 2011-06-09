@@ -76,22 +76,51 @@ autoconf
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 export PETSC_ARCH=${HOST}
 
+# let's always compile the static version, and do the shared lib ourselves
+#SHARED=--enable-shared
+#if [ $shared_libs == 'n' ]
+#then
+#  SHARED=--disable-shared
+#fi
 SHARED=--enable-shared
-if [ $shared_libs == 'n' ]
+
+dll_name=libmesh
+dll_libext=.so
+
+if [ "${target_os}" == "win32" ]
 then
-  SHARED=--disable-shared
+  dll_libext=.dll
+else
+  LDFLAGS="${LDFLAGS} -ldl"
 fi
+
+[ "$debug" == 1 ] && dll_name=${dll_name}_dbg
+dll_name=${dll_name}${dll_libext}
   
 
-./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-nemesis --disable-exodus --disable-netcdf --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=$HOST --build=$BUILD
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=$HOST --build=$BUILD
 
 
 # delete the -pedantic flag because it makes problems with mpi
 cp Make.common Make.common.orig
-sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEBUG//g' -e 's/-ansi//g' Make.common.orig > Make.common
+sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEBUG//g' \
+    -e 's/-ansi//g' -e 's/^enable-shared*/enable-shared := no/' Make.common.orig > Make.common
 
 
 make |tee make_opt.log
+
+echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${dll_name} ..."
+staticlib=`make echo | grep libmesh.a`
+contriblibs=`echo $staticlib | sed -e 's/lib\//contrib\/lib\//' -e 's/libmesh\.a/\*\.a/'`
+contribdir=${contriblibs/%\*\.a}
+rm ${contribdir}/libnemesis.*
+rm ${contribdir}/libexodusii.*
+mkdir -p ${BUILDDIR}/${TCHOST}/lib
+${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${dll_name} \
+  ${libmesh_linker_flags} \
+  -Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive \
+  -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath-link,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
+  ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
 if [ $DEBUG == 'y' ]; then
   export PETSC_ARCH=${HOST}-dbg

@@ -1,6 +1,6 @@
 
 # load variables
-[ -e variables ] && . variables
+#[ -e variables ] && . variables
 
 # top directory
 TOPDIR=${TOPDIR:-"`pwd`/.."}
@@ -10,29 +10,33 @@ BUILDDIR=${BUILDDIR:-"`pwd`/../extern"}
 
 # PETSc version
 PETSCVERSION=${PETSCVERSION:-"3.0.0"}
-PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-"-p9"}
+PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-"-p10"}
 SLEPCPATCHLEVEL=${SLEPCPATCHLEVEL:-"-p7"}
 
 # libMesh version
 LIBMESHVERSION=${LIBMESHVERSION:-"svn"}
 
 # GMSH version
-GMSHVERSION=${GMSHVERSION:-"2.3.0"}
+GMSHVERSION=${GMSHVERSION:-"2.5.0"}
 
 # whether to compile debug mode or not (y/n)
 DEBUG=${DEBUG:-'n'}
 
+TIBEROPTS=${TIBEROPTS:-"--disable-uptight --enable-license-check --disable-hetero"}
+
+
 # build shared libs (yes/no)
-shared_libs=${shared_libs:-'y'}
+shared_libs=${shared_libs:-'n'}
 
 # use MKL (yes/no)
-MKL=${MKL:-'y'}
+MKL=${MKL:-'n'}
 MKLDIR=${MKLDIR:-"/usr/pack/intel_mkl-10.2-gp"}
 
 # MPI
-MPI=${MPI:-'y'}
+MPI=${MPI:-'n'}
 MPIDIR=${MPIDIR:-"/usr/pack/mpich-1.2.7p1-ma"}
 
+target=@host_cpu@-@host_os@
 
 # system
 system=`uname -s`
@@ -61,37 +65,39 @@ esac
 # architecture
 march=`uname -m`
 
-BUILD=`${TOPDIR}/share/arch.sh`
+HOST=@host@
+BUILD=@build@
 
-HOST=$BUILD
-if [ "x$target" != "x" ]
-then
-  HOST=$target
-fi
+TCBUILD=`${TOPDIR}/share/arch.sh`
+TCHOST=`${TOPDIR}/share/arch.sh ${target}`
 echo "*************************************************"
-echo "* Host system :  $HOST"
-echo "* Build system:  $BUILD"
+echo "* Host system :  $TCHOST"
+echo "* Build system:  $TCBUILD"
 echo "*************************************************"
 
 
-# compilers
-pre=
-if [ "x$target" != "x" ]; then
-  pre=${target}-
-fi
-if [ "x$gcc_version" != "x" ]; then
-  gcc_version=-${gcc_version}
-fi
-CC=${CC:-"${pre}gcc${gcc_version}"}
-CXX=${CXX:-"${pre}g++${gcc_version}"}
-F77=${F77:-"${pre}gfortran${gcc_version}"}
-F90=${F90:-$F77}
-FC=${FC:-$F77}
-AR=${AR:-"${pre}ar"}
-LD=${LD:-"${pre}ld"}
-RANLIB=${RANLIB:-"${pre}ranlib"}
-CPP=${CPP:-"${pre}cpp${gcc_version}"}
-export CC CXX F77 F90 FC RANLIB LD AR CPP
+#CC=${CC:-"${pre}gcc${gcc_version}"}
+#CXX=${CXX:-"${pre}g++${gcc_version}"}
+#F77=${F77:-"${pre}gfortran${gcc_version}"}
+#F90=${F90:-$F77}
+#FC=${FC:-$F77}
+#AR=${AR:-"${pre}ar"}
+#LD=${LD:-"${pre}ld"}
+#RANLIB=${RANLIB:-"${pre}ranlib"}
+#CPP=${CPP:-"${pre}cpp${gcc_version}"}
+CPP="@CPP@"
+CC="@CC@"
+CXX="@CXX@"
+FC="@FC@"
+F90="${F90:-$FC}"
+F77="${F77:-$FC}"
+RANLIB="@RANLIB@"
+
+
+#if [ "x$pre" != "x" ] || [ "x$gcc_version" != "x" ]
+#then
+#  export CC CXX F77 F90 FC RANLIB LD AR CPP
+#fi
 
 # compiler flags
 CFLAGS="${CFLAGS} -fexceptions"
@@ -113,6 +119,8 @@ if [ "x$FORTRANDIR" != "x" ]; then
   esac
   LDFLAGS="${LDFLAGS} -Wl,-rpath-link,${FLIBDIR}"
 fi
+
+FORTRAN_LIBS="@FCLIBS@"
 
 
 if [ $MPI == 'y' ]; then

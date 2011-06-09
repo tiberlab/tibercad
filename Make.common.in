@@ -7,7 +7,7 @@ include $(topdir)/Make.defs
 
 
 # libmesh can be found here
-#libmesh := @LIBMESH_PREFIX@
+#libmesh_dir := @LIBMESH_PREFIX@
 libmesh_config := @LIBMESH_CONFIG@
 
 # use or not PARDISO
@@ -50,6 +50,7 @@ include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
 TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
+
 LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir)
 #ifeq ($(build_modules), yes)
 # LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
@@ -57,6 +58,9 @@ LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir)
 LDFLAGS += -ltensor 
 
 #LDFLAGS += @GSL_LIBS@
+
+LDFLAGS += @LIBMESH_PETSC_LIBS@
+MODULE_LDFLAGS += @LIBMESH_PETSC_LIBS@
 
 LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 
@@ -93,7 +97,7 @@ CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 
 CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) -std=gnu++0x
-LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags) 
+#LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags) 
 
 ifneq ($(target_os),win32)
   CXXFLAGS += -pthread

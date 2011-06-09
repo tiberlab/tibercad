@@ -953,7 +953,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
 
   // In some cases guess can be Inf or NaN. Then we set it to midband energy
-  if (isinf(guess) || isnan(guess))
+  if (std::isinf(guess) || std::isnan(guess))
     guess = 0.5 * (Ec + Ev);
 
 

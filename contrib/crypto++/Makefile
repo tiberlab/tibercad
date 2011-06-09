@@ -8,9 +8,12 @@ package := cryptopp560.zip
 
 all: $(ARCH)/libcryptopp.a
 
-$(ARCH)/libcryptopp.a: stamp-h
+$(ARCH)/libcryptopp.a: $(ARCH)
 	@$(MAKE) CC=$(CC) CXX=$(CXX) -C $(ARCH) libcryptopp.a
 
+$(ARCH): $(package)
+	@mkdir $(ARCH) && unzip $(package) -d $(ARCH)/
+	@if test -e cryptopp.patch ; then patch -p0 -d $(ARCH) < cryptopp.patch; fi
 
 stamp-h: $(package)
 	@rm -rf $(ARCH) ; mkdir $(ARCH) && unzip $(package) -d $(ARCH)/ && touch stamp-h

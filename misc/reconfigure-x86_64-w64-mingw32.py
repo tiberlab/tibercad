@@ -1,0 +1,22 @@
+#!/usr/bin/python
+
+configure_options = [
+ '--with-memcmp-ok', '--with-endian=little',
+  '--sizeof_char=1',
+  '--sizeof_void_p=8',
+  '--sizeof_short=2',
+  '--sizeof_int=4',
+  '--sizeof_long=4',
+  '--sizeof_long_long=8',
+  '--sizeof_float=4',
+  '--sizeof_double=8',
+  '--sizeof_size_t=8',
+ '--bits_per_byte=8',
+  '--configModules=PETSc.Configure', '--optionsModule=PETSc.compilerOptions', '--with-matlab=0', '--with-shared=0', '--with-dynamic=0', '--with-mpi=0', '--with-cc=x86_64-w64-mingw32-gcc', '--with-cxx=x86_64-w64-mingw32-g++', '--with-fc=x86_64-w64-mingw32-gfortran', '--with-ranlib=x86_64-w64-mingw32-ranlib', '--with-cpp=x86_64-w64-mingw32-cpp', '--with-clanguage=C++', '--download-f-blas-lapack=1', '--with-batch=1', '--with-x=0', '--with-host-vendor=w64', '--with-host-os=mingw32', '--with-debugging=0', '--with-scalar-type=real', '--CFLAGS= -fexceptions', '--FFLAGS= -fexceptions', '--CXXFLAGS=', '--LDFLAGS='
+]
+if __name__ == '__main__':
+  import os
+  import sys
+  sys.path.insert(0, os.path.abspath(os.path.join('config')))
+  import configure
+  configure.petsc_configure(configure_options)

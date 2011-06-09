@@ -26,18 +26,14 @@ install_gmsh ()
 
 
   echo ""
-  echo "Create a link to gmsh in "
-  echo " 1. /usr/local/bin"
-  echo " 2. /usr/bin"
-  echo " 3. none"
-  echo -n "Your choice [1]: "
+  echo -n "Create a link to gmsh in /usr/local/bin? [Y/n] "
 
   read answer
+  [ -z $answer ] && answer='y'
 
-  bindir=/usr/local/bin
+  bindir=
   case $answer in
-    2) bindir=/usr/bin ;;
-    3) bindir= ;;
+    y|Y|yes|Yes|YES) bindir=/usr/local/bin ;;
     *) ;;
   esac
 
@@ -185,18 +181,17 @@ then
   if [ -x $instpath/bin/tibercad ]
   then
     echo "You seem to have TiberCAD already installed in this directory."
-    echo "A backup copy will be made of each file you modified."
+    echo "A backup copy will be made of each file that will be modified."
   else
-    echo "Installation directory is not empty. It is strongly recommended to"
-    echo "install TiberCAD into its own directory."
+    echo "Installation directory is not empty."
   fi
-  echo -n "Do you really want to proceed [y/N]? "
+  echo -n "Do you really want to proceed [Y/n]? "
   read answer
 
-  [ -z $answer ] && answer='n'
+  [ -z $answer ] && answer='y'
   case $answer in
-    n|no|N|No|NO) exit 0 ;;
-    *) ;;
+    y|yes|Y|Yes|YES) ;;
+    *) exit 0 ;;
   esac
 fi
 
@@ -340,20 +335,17 @@ EOF
 chmod a+x ${instpath}/bin/uninstall
 
 echo ""
-echo "Create a link to tibercad in "
-echo " 1. /usr/local/bin"
-echo " 2. /usr/bin"
-echo " 3. none"
-echo -n "Your choice [1]: "
+echo -n "Create a link to tibercad in /usr/local/bin? [Y/n] "
 
 read answer
+[ -z $answer ] && answer='y'
 
-bindir=/usr/local/bin
+bindir=
 case $answer in
-  2) bindir=/usr/bin ;;
-  3) bindir= ;;
+  y|Y|yes|Yes|YES) bindir=/usr/local/bin ;;
   *) ;;
 esac
+
 
 if [ ! -z $bindir ]
 then

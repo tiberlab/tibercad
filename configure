@@ -697,6 +697,7 @@ GREP
 EGREP
 LIBMESH_PREFIX
 LIBMESH_CONFIG
+LIBMESH_PETSC_LIBS
 COMPLEX_PETSC_DIR
 COMPLEX_PETSC_ARCH
 SLEPC_DIR
@@ -5132,6 +5133,127 @@ fi
 { echo "$as_me:$LINENO: " >&5
 echo "$as_me: " >&6;}
 
+ tc_libmesh_petsc_libdir=$(pwd)/extern/$(./share/arch.sh ${host_cpu}-${host_os})/lib
+ if test "${LIBMESH_PREFIX:+set}" == "set"; then
+   tc_libmesh_petsc_libdir=$(dirname ${LIBMESH_PREFIX})/$(./share/arch.sh ${host_cpu}-${host_os})/lib
+ fi
+   CXXFLAGS_save=$CXXFLAGS
+ LDFLAGS_save=$LDFLAGS
+ ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+ LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+ echo "$LDFLAGS"
+ cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  tc_cv_have_sharedlibs="yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+ echo "$tc_cv_have_sharedlibs"
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+ echo "$LDFLAGS"
+  LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  tc_cv_have_sharedlibs="yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+ fi
+ ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+ if test "${tc_cv_have_sharedlibs}" == "yes"; then
+   tc_libmesh_petsc_libs=${LDFLAGS}
+ else
+   tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
+ fi
+ LDFLAGS=$LDFLAGS_save
+ LIBMESH_PETSC_LIBS="$tc_libmesh_petsc_libs"
+
+
+
 
 # check for SLEPc
 { echo "$as_me:$LINENO: " >&5
@@ -5191,8 +5313,7 @@ SlepcInitialize(0,0,0,0);
  				  SlepcFinalize();
   ;
   return 0;
-};
- 			        tc_cv_have_slepc="yes"
+}
 _ACEOF
 rm -f conftest.$ac_objext conftest$ac_exeext
 if { (ac_try="$ac_link"
@@ -5212,7 +5333,7 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
 	 test ! -s conftest.err
        } && test -s conftest$ac_exeext &&
        $as_test_x conftest$ac_exeext; then
-  :
+  tc_cv_have_slepc="yes"
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
@@ -7241,6 +7362,80 @@ _ACEOF
 
 fi
 
+{ echo "$as_me:$LINENO: checking whether compiler supports constexpr keyword" >&5
+echo $ECHO_N "checking whether compiler supports constexpr keyword... $ECHO_C" >&6; }
+ ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+ CXXFLAGS_save=$CXXFLAGS
+ CXXFLAGS="-std=c++0x"
+ cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+  class ClassWithConst {
+    constexpr static double p = 3.1415;
+  };
+int
+main ()
+{
+ClassWithConst cl;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest.$ac_objext; then
+  tc_cv_have_constexpr=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+ CXXFLAGS=$CXXFLAGS_save
+ ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+ if test "${tc_cv_have_constexpr+set}" == "set"; then
+  { echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6; }
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_CONSTEXPR 1
+_ACEOF
+
+ else
+  { echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6; }
+ fi
+
 
 
 #
@@ -8300,6 +8495,7 @@ GREP!$GREP$ac_delim
 EGREP!$EGREP$ac_delim
 LIBMESH_PREFIX!$LIBMESH_PREFIX$ac_delim
 LIBMESH_CONFIG!$LIBMESH_CONFIG$ac_delim
+LIBMESH_PETSC_LIBS!$LIBMESH_PETSC_LIBS$ac_delim
 COMPLEX_PETSC_DIR!$COMPLEX_PETSC_DIR$ac_delim
 COMPLEX_PETSC_ARCH!$COMPLEX_PETSC_ARCH$ac_delim
 SLEPC_DIR!$SLEPC_DIR$ac_delim
@@ -8315,7 +8511,6 @@ ENABLE_PARDISO!$ENABLE_PARDISO$ac_delim
 ENABLE_DFTB!$ENABLE_DFTB$ac_delim
 ENABLE_UPTIGHT!$ENABLE_UPTIGHT$ac_delim
 ENABLE_HETERO!$ENABLE_HETERO$ac_delim
-LIBOBJS!$LIBOBJS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -8357,12 +8552,13 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+LIBOBJS!$LIBOBJS$ac_delim
 BUILD_TIBER_MODULES!$BUILD_TIBER_MODULES$ac_delim
 LICENSE_CHECK!$LICENSE_CHECK$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 3; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 4; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

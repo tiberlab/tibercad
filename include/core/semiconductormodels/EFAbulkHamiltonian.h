@@ -17,6 +17,7 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
 
   struct MatrixElement
   {
+    MatrixElement(void) {};
     Complex constant;
     Complex linear_left[3];
     Complex linear_right[3];

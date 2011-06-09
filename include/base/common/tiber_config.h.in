@@ -92,3 +92,5 @@
 /* define if the putenv function is present */
 #undef HAVE_PUTENV
 
+/* Define to 1 if compiler knows about constexpr */
+#undef HAVE_CONSTEXPR

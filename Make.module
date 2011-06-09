@@ -14,7 +14,9 @@ target :=
 
 
 CPPFLAGS += -DMODULE_NAME=$(MODULE_NAME)
-MODULE_LDFLAGS += -L$(libdir) -ltibercad
+ifeq ($(target_os), win32) 
+ MODULE_LDFLAGS += -L$(libdir) -ltibercad -lmesh
+endif
 CPPFLAGS += $(MODULE_INCLUDES)
 CXXFLAGS += $(MODULE_CXXFLAGS)
 
@@ -36,7 +38,7 @@ target += $(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1))
 $(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,.$$(ARCH)/%$$(obj-suffix),$(1))
 	@echo "Linking module $$(notdir $$@) ..."
 	@[ -d $$(dir $$@) ] || mkdir -p  $$(dir $$@)
-	@$$(CXX) -shared  $$(CPPFLAGS) $$(CXXFLAGS) $(2) $$(MODULE_LDFLAGS) \
+	@$$(CXX) -shared  $$(CXXFLAGS) $(2) $$(MODULE_LDFLAGS) \
 			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
 
 endef

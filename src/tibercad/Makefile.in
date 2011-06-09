@@ -26,14 +26,14 @@ all: tibercad
 tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad$(SUFF) \
-		-Wl,-export-dynamic -L$(libdir) \
+		-L$(libdir) \
 		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
 
 
 tibercad_static: $(objects)
 	@echo "Compiling statically linked tibercad executable ..."
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad_static$(SUFF) \
-		-Wl,-export-dynamic -L$(libdir) \
+		-L$(libdir) \
 		-Wl,-rpath,$(libdir) -Wl,-Bstatic -ltibercad -Wl,-Bdynamic \
 		$(ADDITIONAL_LIBS) \
 		$(MODULE_LIBS) $(LDFLAGS) $(PACKAGEFLAGS)

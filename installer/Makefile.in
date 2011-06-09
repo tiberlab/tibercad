@@ -29,7 +29,7 @@ wininstaller:
 	@./prepare_files.sh windows $(ARCH)
 	@cd windows ; zip -r files.zip files
 	wine "$(INNOSETUP)" /dMySrcPath="`winepath -w windows/files`" \
-	  /dMyAppVersion="`cat $(topdir)/VERSION`" "`winepath -w windows/tibercad.iss`"
+	  /dMyAppVersion="`cat $(topdir)/VERSION`" /dMyArch="$(ARCH)" "`winepath -w windows/tibercad.iss`"
 	@rm -rf windows/files
 
 

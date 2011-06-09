@@ -9,6 +9,47 @@ fi
 . common.sh
 
 
+# Does the actual build
+# needs at least 1 argument ('real' or 'complex')
+# second argument can be 0 or 1, 1 for creating debug version
+function make_slepc()
+{
+
+  datatype=$1
+  debug=0
+  if [ $# -ge 2 ]
+  then
+    debug=$2
+  fi
+
+  export SLEPC_DIR=${PWD}
+
+  export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
+
+  export PETSC_ARCH=${HOST}
+  [ "$datatype" == "complex" ] && export PETSC_ARCH=${HOST}-complex
+
+  echo "Building with PETSC_ARCH=${PETSC_ARCH} ..."
+
+  ./config/configure.py $CONFIGOPTS
+  make
+
+  dbg=
+  [ "$debug" == 1 ] && dbg=_dbg
+  libname=${slepc_dll_name}_${datatype}${dbg}
+
+  echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
+  mkdir -p ${BUILDDIR}/${TCHOST}/lib
+  ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} \
+    ${slepc_linker_flags} \
+    -Wl,--whole-archive ${SLEPC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive \
+    -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath-link,${BUILDDIR}/${TCHOST}/lib -lpetsc_${datatype}${dbg} \
+    ${LAPACK_LIBS} ${FORTRAN_LIBS}
+
+}
+
+
+
 echo "Compiling SLEPc version $PETSCVERSION in $BUILDDIR ..."
 
 mkdir -p $BUILDDIR
@@ -33,31 +74,26 @@ if [ ! -d slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} ]; then
   tar zxf ${ARCHIVE}
 fi
 
+
+slepc_dll_name=libslepc
+dll_libext=.so
+
+if [ "${target_os}" == "win32" ]
+then
+  slepc_dll_name=slepc
+  dll_libext=.dll
+fi
+
+
 cd slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}
 
 
-export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
-#export SLEPC_DIR=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}
-export SLEPC_DIR=`pwd`
+make_slepc real
+make_slepc complex
 
-
-export PETSC_ARCH=${HOST}
-./config/configure.py $CONFIGOPTS
-make
-
-
-export PETSC_ARCH=${HOST}-complex
-./config/configure.py $CONFIGOPTS
-make
-
-
-if [ $DEBUG == 'y' ]; then
-  export PETSC_ARCH=${HOST}-dbg
-  ./config/configure.py $CONFIGOPTS
-  make
-
-  export PETSC_ARCH=${HOST}-complex-dbg
-  ./config/configure.py $CONFIGOPTS
-  make
+if [ $DEBUG == 'y' ]
+then
+  make_slepc real 1
+  make_slepc complex 1
 fi
 

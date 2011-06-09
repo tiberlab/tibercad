@@ -15,6 +15,30 @@ AC_DEFUN([TC_BUILD_MODULES],
 ])dnl
 
 
+dnl check if the compiler has constexpr
+dnl
+AC_DEFUN([TC_HAVE_CONSTEXPR],
+[AC_MSG_CHECKING([whether compiler supports constexpr keyword])
+ AC_LANG_PUSH([C++])
+ CXXFLAGS_save=$CXXFLAGS
+ CXXFLAGS="-std=c++0x"
+ AC_TRY_COMPILE([
+  class ClassWithConst {
+    constexpr static double p = 3.1415;
+  };], [ClassWithConst cl;],[tc_cv_have_constexpr=yes])
+ CXXFLAGS=$CXXFLAGS_save
+ AC_LANG_POP()
+ if test "${tc_cv_have_constexpr+set}" == "set"; then
+  AC_MSG_RESULT([yes])
+  AC_DEFINE([HAVE_CONSTEXPR], [1],
+   [Define to 1 if compiler knows about constexpr])
+ else
+  AC_MSG_RESULT([no])
+ fi
+])dnl
+
+
+
 dnl check for boost
 dnl
 AC_DEFUN([TC_BOOST],
@@ -293,6 +317,41 @@ AC_DEFUN([TC_LIBMESH_CONFIG],
 
 
 
+dnl check for shared libraries in build directory
+dnl
+AC_DEFUN([TC_LIBMESH_PETSC_LIBS],
+[AC_REQUIRE([TC_LIBMESH_CONFIG])dnl
+ tc_libmesh_petsc_libdir=$(pwd)/extern/$(./share/arch.sh ${host_cpu}-${host_os})/lib
+ if test "${LIBMESH_PREFIX:+set}" == "set"; then
+   tc_libmesh_petsc_libdir=$(dirname ${LIBMESH_PREFIX})/$(./share/arch.sh ${host_cpu}-${host_os})/lib
+ fi
+ dnl
+ dnl link test
+ CXXFLAGS_save=$CXXFLAGS
+ LDFLAGS_save=$LDFLAGS
+ AC_LANG_PUSH([C++])
+ LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+ echo "$LDFLAGS"
+ AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+ 			        [tc_cv_have_sharedlibs="yes"])
+ echo "$tc_cv_have_sharedlibs"
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+ echo "$LDFLAGS"
+  LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
+ AC_LANG_POP()
+ if test "${tc_cv_have_sharedlibs}" == "yes"; then
+   tc_libmesh_petsc_libs=${LDFLAGS}
+ else
+   tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
+ fi
+ LDFLAGS=$LDFLAGS_save
+ AC_SUBST([LIBMESH_PETSC_LIBS], "$tc_libmesh_petsc_libs")
+])dnl
+
+
 
 dnl check for complex petsc
 dnl
@@ -327,7 +386,7 @@ AC_DEFUN([TC_SLEPC],
   	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch} -lpetscksp"
  AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include "slepceps.h"]],
  			        [[SlepcInitialize(0,0,0,0);
- 				  SlepcFinalize();]]);
+ 				  SlepcFinalize();]]),
  			        [tc_cv_have_slepc="yes"])
   AC_LANG_POP()
   CXXFLAGS=$CXXFLAGS_save
