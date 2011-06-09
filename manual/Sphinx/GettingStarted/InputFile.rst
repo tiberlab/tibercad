@@ -603,7 +603,7 @@ quantities.
 Mesh-based quantities
 ^^^^^^^^^^^^
 
-``Mesh-based`` quantities are all the quantities associated with the nodes of the mesh,
+The ``mesh-based`` quantities are all the quantities associated with the nodes of the mesh,
 such as Fermi level, electron and hole density, conduction and valence band, etc., together
 with all the quantities associated with the elements of the mesh, such as current density.
 
@@ -622,7 +622,7 @@ step ``Vb = 1.1`` will be found in the file:
 Mesh-independent quantities
 ^^^^^^^^^^^^^^^^
 
-``mesh-independent`` quantities are the quantities which are not associated to the
+The ``mesh-independent`` quantities are the quantities which are not associated to the
 mesh, for example current at the contacts of a diode or quantized energy levels in a
 quantum well. 
 
