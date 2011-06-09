@@ -1231,21 +1231,31 @@ SimulationInterface::load_state(const string& file)
 void
 SimulationInterface::do_save_data(ostream& os)
 {
+
+  // NOTE we always use windows line endings to
+  //      have better portability of the files
+#ifdef _WIN32
+  string eol("\n");
+#else
+  string eol("\r\n");
+#endif
+
+
   // first write all variables
-  os << "<variables>" << endl;
+  os << "<variables>" << eol;
   Variable::iterator vit(Variable::begin());
   const Variable::iterator vend(Variable::end());
   for ( ; vit != vend; ++vit)
   {
-    os << (*vit)->get_name() << " " << (*vit)->get_value_string() << endl;
+    os << (*vit)->get_name() << " " << (*vit)->get_value_string() << eol;
   }
-  os << "</variables>" << endl;
+  os << "</variables>" << eol;
 
 
   for (size_t i = 0; i < _systems.size(); ++i)
   {
     // then the data
-    os << "<data>" << endl;
+    os << "<data>" << eol;
 
     const NumericVector<Number>& solution =
         get_equation_system<TiberEqSystem>(i).get_solution_vector();
@@ -1256,7 +1266,7 @@ SimulationInterface::do_save_data(ostream& os)
       os.write(reinterpret_cast<char*>(&val), sizeof(double));
     }
 
-    os << "\n</data>" << endl << flush;
+    os << eol << "</data>" << eol << flush;
   }
 }
 
@@ -1274,8 +1284,11 @@ SimulationInterface::do_load_data(istream& is)
 
   string keyword("<variables>");
 
+  // NOTE we compare with an explicit number of characters
+  //      to not get confused if there is a \r
+
   is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
+  while (is.good() && (keyword.compare(0, keyword.size(), buf, keyword.size()) != 0))
   {
     is.getline(buf, bufsize);
   }
@@ -1284,7 +1297,7 @@ SimulationInterface::do_load_data(istream& is)
 
   keyword = "</variables>";
   is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
+  while (is.good() && (keyword.compare(0, keyword.size(), buf, keyword.size()) != 0))
   {
     istringstream ss(buf);
     string name;
@@ -1310,7 +1323,7 @@ SimulationInterface::do_load_data(istream& is)
   {
     keyword = "<data>";
     is.getline(buf, bufsize);
-    while (is.good() && (keyword.compare(buf) != 0))
+    while (is.good() && (keyword.compare(0, keyword.size(), buf, keyword.size()) != 0))
     {
       is.getline(buf, bufsize);
     }
@@ -1329,7 +1342,7 @@ SimulationInterface::do_load_data(istream& is)
     }
     keyword = "</data>";
     is.getline(buf, bufsize);
-    while (is.good() && (keyword.compare(buf) != 0))
+    while (is.good() && (keyword.compare(0, keyword.size(), buf, keyword.size()) != 0))
     {
       is.getline(buf, bufsize);
     }
