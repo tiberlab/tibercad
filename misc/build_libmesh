@@ -104,7 +104,7 @@ dll_name=${dll_name}${dll_libext}
 # delete the -pedantic flag because it makes problems with mpi
 cp Make.common Make.common.orig
 sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEBUG//g' \
-    -e 's/-ansi//g' -e 's/^enable-shared*/enable-shared := no/' Make.common.orig > Make.common
+    -e 's/-ansi//g' -e 's/^enable-shared.*/enable-shared := no/' Make.common.orig > Make.common
 
 
 make |tee make_opt.log

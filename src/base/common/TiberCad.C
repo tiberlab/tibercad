@@ -13,9 +13,6 @@
 #include "InitFailedException.h"
 
 #include "libmesh.h"
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-#include "quadrature_trap.h"
-#endif
 #include "petscerror.h"
 
 
@@ -153,7 +150,6 @@ TiberCad::init(const std::string& inputfile)
     // setup DLLoader paths
 #if defined(__CYGWIN__) || defined(__MINGW32__)
     DLLoader::set_library_path(_tiberroot + "/lib/modules");
-    QBase::build(QTRAP, 1, FIRST);
 #else
     DLLoader::set_library_path(_tiberroot + "/" + ARCH + "/lib/modules");
 #ifdef DEBUG
