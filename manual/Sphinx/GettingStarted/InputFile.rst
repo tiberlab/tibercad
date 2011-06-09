@@ -128,13 +128,13 @@ the program:
 ::
 
   $ tibercad -v
-  TiberCAD version 2.0.0 (x86_64-linux)
+  tiberCAD version 2.0.0 (x86_64-linux)
 
 
 
 .. _InputFileGetting:
 
-Input for TiberCAD
+Input for tiberCAD
 =================================================
 
 
@@ -244,23 +244,19 @@ Region block
 """""""""""""
 
 ``Region`` blocks are started with the keyword ``Region`` , followed by the
-name of the TiberCAD region. The name of the TiberCAD region 
+name of the tiberCAD region. The name of the tiberCAD region 
 can coincide with the name of a mesh region, as defined during the modeling of the
-device. In this case, if the keyword ``mesh_regions`` is not used, the TiberCAD region will
+device. In this case, if the keyword ``mesh_regions`` is not used, the tiberCAD region will
 be associated to the mesh region identified by the given name.
-Otherwise, the TiberCAD region will be associated with the mesh regions
+Otherwise, the tiberCAD region will be associated with the mesh regions
 specified using the keyword ``mesh_regions``.
+For example, in  the  following, the tiberCAD ``Region``  *QuantumWell* will comprise the  two  mesh regions *well1* and *well2*, defined during  the  geometrical modeling  of  the  device  
 
 ::
 
-  Region QWell
+  Region QuantumWell
   {
     mesh_regions = (well1, well2)
-
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-    x-growth-direction = (0,0,0,1)
-    material = GaN
 
     Doping
     {
@@ -270,6 +266,22 @@ specified using the keyword ``mesh_regions``.
     }
   }
 
+In  the following, instead, the  ``Region``  *well1* takes  its  name  from the mesh  region *well1*  it  refers to
+
+::
+
+  Region well1
+  {
+    
+    Doping
+    {
+       Nd  = 1e17
+      type = donor
+      doping_level  = 0.025
+    }
+  }
+
+ 
 The available keywords inside a ``Region`` block are the following:
 
   ``material`` : string
@@ -392,11 +404,8 @@ Here are the Modules implemented until now:
  ``thermal`` : 
        Heat balance simulation
 
- ``excitontransport`` : 
-       Exciton transport model
-
  ``elasticity`` : 
-       Calculation of Elastic deformations in heterostructures
+       Calculation of elastic deformations in heterostructures
 
  ``efaschroedinger`` : 
        Envelop Function Approximation (EFA) solution of single particle Schroedinger equation for electrons and holes 
@@ -405,10 +414,13 @@ Here are the Modules implemented until now:
        Dispersion of quantized states in k space
 
  ``opticskp`` : 
-       Optical properties (optical kp matrix elements)
+       Optical properties (spontaneous emission  spectrum in k=0)
 
  ``opticalspectrum`` : 
        Emission spectrum (with k-space integration)
+
+ ``DSC`` : 
+       Simulation of a DSC solar cell
 
  ``sweep`` : 
        Parameterized execution of a module simulation (e.g. for the calculation
@@ -417,31 +429,29 @@ Here are the Modules implemented until now:
  ``selfconsistent`` : 
        coupled calculations of different simulation modules
 
- ``DSC`` : 
-       Simulation of a DSC solar cell
 
-Each module-block usually contains a list of general options, such as plot and others
+Each module-block usually contains a list of general options, such as  ``plot``  and others
 specific to each module. Then, two main blocks define the ``Physics`` and the ``Solver``
 models and parameters for this module.
 
   **Solver** contains the solver parameters; depending on the Module, it can contain a
   LinearSolver definition subblock.
 
-  **Physics** usually contains the definition of the physical models used in the simulation.
+  **Physics** usually contains the definition of the *physical models* used in the simulation.
 
 
-For example, for driftdiffusion module, recombination, electron mobility, trap, polarization 
-and so on. A particular model is the Boundary model, which has an alias Contact
-for driftdiffusion module.
+Examples of *physical models* are, for the **driftdiffusion**  module, **recombination**, **electron mobility**, **trap**, **polarization** 
+and so on. A particular model is the **Boundary** model, which has an alias **Contact**
+for driftdiffusion module, as  we will  see in  the  following.
 The declaration of these models obey to the following syntax:
 
     *model_keyword* type_specifier
     
         <block>
 
-where *model_keyword* is the name of the physical model to be declared (e.g. trap
-model) and **type_specifier** is the name of a particular one among the available descriptions 
-for that model. For example, for a trap model of **type** *acceptor* ::
+where *model_keyword* is the name of the physical model to be declared (e.g. the *trap*
+model), **type_specifier** is the name of a particular one among the available descriptions 
+for that model and the  following block contains the options for the model. For example, for a *trap* model of **type** *acceptor* ::
 
   trap acceptor
     {
@@ -451,7 +461,7 @@ for that model. For example, for a trap model of **type** *acceptor* ::
      reference = cb
     }
 
-An alternative multiple declaration is possible if no parameters, beyond default, are
+An alternative multiple declaration is possible if no options, other than default, are
 declared:
 
     *model_keyword* (type specifier1, type specifier2,...)
@@ -482,28 +492,28 @@ Module sweep
 
 
 
-Each sweep Module defines a set of calculations applied to a boundary region (e.g. a
+Each ``sweep`` Module defines a set of calculations applied to a **boundary** region (e.g. a
 set of bias values to be assigned to a drain contact of a MOSFET for the calculation of
-an output drain IV characteristic), in this Guide referred to as sweep calculation.
+an output drain IV characteristic), in this Guide referred to as ``sweep`` calculation.
 
 The following keywords are defined for this feature:
 
   ``variable`` 
-     name of the variable to which the sweep is applied: 
+     name of the variable to which the ``sweep`` is applied: 
 
-Writing e.g. ``variable = $Vg`` that a sweep on the variable ``$Vg`` should pe performed.
+Writing e.g. ``variable = $Vg`` that a ``sweep`` on the variable ``$Vg`` will be performed.
 
-Further options controlling a sweep are:
+Further options controlling a ``sweep`` are:
 
   ``name``
-     A user defined name. This is important if several sweeps are defined.
+     A user defined name. This is important if several ``sweeps`` are defined.
 
   ``solve``  
-     names of the simulations (modules) to be solved at each sweep step.
-     The names of other sweeps may be provided to realize nested sweeps.
+     names of the simulations (modules) to be solved at each ``sweep`` step.
+     The names of other ``sweeps`` may be provided to realize nested ``sweeps``.
 
   ``start, stop, steps`` 
-     The sweep goes from ``start`` to ``stop`` in ``steps`` steps.
+     The ``sweep`` goes from ``start`` to ``stop`` in ``steps`` steps.
 
   ``min_step``
      The minimum allowed step size.
@@ -513,11 +523,11 @@ Further options controlling a sweep are:
 
   ``plot_data``  
      If set to true, output data will be written after
-     each step of the sweep, otherwise just for the final sweep value.
+     each step of the ``sweep``, otherwise this will be done only for the final sweep value.
      The default is ``false`` to limit output data.
      The amount of written data can be controlled using the ``max_step`` option
 
-Once a *sweep* calculation has been defined, it is treated as an ordinary simulation
+Once a ``sweep`` calculation has been defined, it is treated as an ordinary simulation
 and may therefore be used like any simulation by adding it to any ``solve`` option.
 
 Module selfconsistent
@@ -544,18 +554,31 @@ In ``solve`` the list of simulations to be performed self-consistently is specif
 Simulation section
 --------------------------
 
-In this block one can specify several general parameters and settings for the actual
-calculation to be run, such as the temperature, the process-flow of simulation, etc.
+::
+
+  Simulation
+  {
+      temperature = 300
+      verbose = 3
+      solve = (strain, dd, sweep_g)
+      logfile = output_Nt5e16_Al0.215_SiN/hemt.log
+     
+      resultpath = output_Nt5e16_Al0.215_SiN
+      output_format = vtk
+  }
+
+
+In this block one can specify several general parameters  such as the temperature and the settings for the actual
+calculation to be run,that is  the process-flow of the simulation.
 
   ``searchpath`` : 
-     path for material files
+     path for material files, default is  the system-defined material directory.
 
   ``temperature`` : 
      temperature of the system [K]
 
   ``solve`` : 
-     list of simulations to be executed, in the order of execution; if the list contains
-     "sweep", a sweep is performed as specified in sweep block in the Solver section.
+     list of simulations to be executed, in the order of execution
 
      ``solve = (strain,driftdiffusion, quantum_electrons, quantum_holes)``
 
@@ -571,45 +594,48 @@ Output description
 -------------------------
 
 At the end of the execution, the program will write the results of the simulation in the
-directory specified by resultpath , with the format specified by output format. The output
-variables are specified in a list plot, in each Module.
+directory specified by  ``resultpath``, with the format specified by ``output_format``. 
+The output variables for each Module are specified in the list *plot*.
 
-TiberCAD output is divided in two classes: **mesh-based** and **mesh-independent**
+tiberCAD output is divided in two classes: **mesh-based** and **mesh-independent**
 quantities.
 
-Mesh based
+Mesh-based quantities
 ^^^^^^^^^^^^
 
-*Mesh based* quantities are all the quantities associated with the nodes of the mesh,
+``Mesh-based`` quantities are all the quantities associated with the nodes of the mesh,
 such as Fermi level, electron and hole density, conduction and valence band, etc., together
 with all the quantities associated with the elements of the mesh, such as current density.
 
-The output values for these quantities are reported in the files simname msh.ext,
-where ``simname`` is the name of the simulation module used for the calculations and ``ext`` is the extension
-of the chosen file format, e.g. ``vtu`` for paraview output.
+The output values for these quantities are reported in the files *simname_msh.ext*,
+where *simname* is the  Module used for the calculations and *ext* is the extension
+of the chosen file format, e.g. **vtu** for paraview output.
 
   ``strain_msh.vtu``
 
-In the case a sweep calculation is performed and the plot data keyword is set to
-true, the output files are of the kind ``simname_sweepvariable_stepvalue_msh.ext``, where
-``sweepvariable`` is the variable with respect to which the sweep is performed (e.g. gate
-voltage) and step value is the value of this variable at that step. The result at the
-step ``Vbias = 1.1`` will be found in the file ``dd_Vbias_1.1_msh.vtu``.
+In the case a ``sweep`` calculation is performed and the **plot_data** keyword is set to
+*true*, the output files are of the kind *simname_sweepvariable_stepvalue_msh.ext*, where *sweepvariable* is the variable with respect to which the sweep is performed (e.g. gate voltage) and *stepvalue* is the value of this variable at that step; e.g the result at the
+step ``Vb = 1.1`` will be found in the file:
 
-Mesh independent
+  ``dd_Vb_1.1_msh.vtu``
+
+Mesh-independent quantities
 ^^^^^^^^^^^^^^^^
 
-*Mesh independent* quantities are the quantities which are not associated to the
-mesh, for example the currents at the contacts of a diode or quantized energy levels in a
+``mesh-independent`` quantities are the quantities which are not associated to the
+mesh, for example current at the contacts of a diode or quantized energy levels in a
 quantum well. 
 
 These mesh-independent quantities are displayed in separated files,
-with the format ``simname.ext``, e.g ``quantum_electrons.dat``, where ``simname`` is the name of
-the model (simulation) associated to the results and ``ext`` is the filename extension (usually ``dat``).
-If a sweep is performed, the output file
-gets the format ``sweepname_simname.dat``, e.g. ``sweep_drain_driftdiffusion.dat``, where ``sweep_name``
-is the name of the sweep.
+with the format ``simname.ext``, e.g ``quantum_electrons.dat`` , where ``simname`` is the name of
+the Module associated to the results and ``ext`` is the filename extension (usually ``dat``). If a sweep is performed, the output file
+gets the format ``sweepname_simname.ext``,  e.g. ``sweep_drain_driftdiffusion.dat``, where ``sweep_name`` is the name of the ``sweep``
+performed, for example
+
+  ``sweep_drain_driftdiffusion.dat``
 The mesh independent results for every sweep step are stored in this file.
+
+
 
 Example of Input file
 ----------------------------------
