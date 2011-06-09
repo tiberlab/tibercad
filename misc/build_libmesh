@@ -84,13 +84,10 @@ export PETSC_ARCH=${HOST}
 #fi
 SHARED=--enable-shared
 
-dll_name=libmesh
-dll_libext=.so
+dll_name=${dll_prefix}libmesh
 
-if [ "${target_os}" == "win32" ]
+if [ "${target_os}" != "win32" ]
 then
-  dll_libext=.dll
-else
   LDFLAGS="${LDFLAGS} -ldl"
 fi
 

@@ -75,14 +75,7 @@ if [ ! -d slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} ]; then
 fi
 
 
-slepc_dll_name=libslepc
-dll_libext=.so
-
-if [ "${target_os}" == "win32" ]
-then
-  slepc_dll_name=slepc
-  dll_libext=.dll
-fi
+slepc_dll_name=${dll_prefix}slepc
 
 
 cd slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}

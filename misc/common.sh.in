@@ -10,7 +10,7 @@ BUILDDIR=${BUILDDIR:-"`pwd`/../extern"}
 
 # PETSc version
 PETSCVERSION=${PETSCVERSION:-"3.0.0"}
-PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-"-p10"}
+PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-"-p12"}
 SLEPCPATCHLEVEL=${SLEPCPATCHLEVEL:-"-p7"}
 
 # libMesh version
@@ -49,6 +49,10 @@ case $system in
     SYSTEM=linux-gnu
     ;;
 
+  Darwin)
+    SYSTEM=darwin
+    ;;
+
   *)
     echo "$system is not supported"; exit 1 ;;
 esac
@@ -58,8 +62,11 @@ case $target in
   *mingw* | *cygwin* )
     target_os=win32 ;;
 
-  * )
-    target_os= ;;
+  *darwin*)
+    target_os=darwin ;;
+
+  *linux* )
+    target_os=linux ;;
 esac
 
 # architecture
@@ -139,4 +146,15 @@ if [ $MKL == 'y' ]; then
 fi
 
 export LDFLAGS
+
+dll_libext=.so
+dll_prefix=lib
+if [ "${target_os}" == "win32" ]
+then
+  dll_libext=.dll
+  dll_prefix=
+elif [ "${target_os}" == "darwin" ]
+then
+  dll_libext=.dylib
+fi
 

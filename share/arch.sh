@@ -5,8 +5,8 @@
 
 arch=unknown
 
-os=`uname -s`
-cpu=`uname -m`
+os=$(uname -s)
+cpu=$(uname -m)
 
 if [ $# -ge 1 ]; then
 
@@ -29,9 +29,11 @@ case $os in
 
   *Linux* | *linux*) arch=${cpu}-linux ;;
 
-  *CYGWIN* | *cygwin* ) arch=${cpu}-cygwin ;;
+  *Darwin* | *darwin*) arch=${cpu}-darwin ;;
 
   *MINGW* | *mingw* ) arch=${cpu}-mingw32 ;;
+
+  *CYGWIN* | *cygwin* ) arch=${cpu}-cygwin ;;
 
   *) arch= ;;
 

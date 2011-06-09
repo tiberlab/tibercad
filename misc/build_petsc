@@ -53,6 +53,8 @@ function make_petsc()
     libname=${petsc_dll_name}_${datatype}
     [ $debug -eq 1 ] && libname=${libname}_dbg
 
+    # for darwin: -force_load -reexport-lx  for each libx.a 
+
     echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
     mkdir -p ${BUILDDIR}/${TCHOST}/lib
     ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} \
@@ -121,14 +123,11 @@ fi
 LAPACKLIBS=${LAPACKLIBS:-"--download-f-blas-lapack=1"}
 
 petsc_host=
-petsc_dll_name=libpetsc
-dll_libext=.so
+petsc_dll_name=${dll_prefix}petsc
 
 if [ "${target_os}" == "win32" ]
 then
   petsc_host="--with-host-vendor=w64 --with-host-os=mingw32"
-  petsc_dll_name=petsc
-  dll_libext=.dll
 fi
 
 CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 ${petsc_host}"
