@@ -20,7 +20,7 @@
 # endif
 #endif
 
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
 # include <windows.h>
 #endif
 
@@ -37,7 +37,7 @@ namespace
 
   void usage(void)
   {
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
     cout << endl << "Usage:" << endl
       << "  from command line: tibercad [-b] inputfile" << endl
       << "  or double click on inputfile" << endl << endl;
@@ -102,7 +102,7 @@ int main (int argc, char** argv)
 
   // do some preparation
   {
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
     // we first convert the filename to something more UNIX like
     //Utils::convert_win32_path_to_posix(inputfile);
 
@@ -152,7 +152,7 @@ int main (int argc, char** argv)
     {
       cerr << "Sorry, cannot start TiberCAD as I could not find "
           "a valid license." << endl;
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
       cout << endl << "press Enter ...";
       if (interactive) cin.get();
 # endif
@@ -189,7 +189,7 @@ int main (int argc, char** argv)
   {
     Messages::error("TiberCAD crashed for unknown reason.");
   }
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
   cout << "press Enter ...";
   if (interactive) cin.get();
 #endif

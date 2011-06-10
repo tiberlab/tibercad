@@ -13,6 +13,9 @@
 
 #include <vector>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 namespace
 {
@@ -61,7 +64,7 @@ Messages::set_log_file(const string& logfile)
   using namespace boost::filesystem;
 
   path logpath(logfile, native);
-#if defined(__CYGWIN__) || defined(__MINGW32__)
+#if defined(_WIN32)
   logpath = logpath.branch_path();
 #else
   logpath.remove_leaf();
@@ -113,10 +116,21 @@ Messages::warning(const string& msg)
 {
   TeeStream ts(cout, _log);
   ts << Messages::endl;
+#ifdef _WIN32
+  HANDLE hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  GetConsoleScreenBufferInfo(hstdout, &csbi);
+  SetConsoleTextAttribute(hstdout, FOREGROUND_GREEN | FOREGROUND_BLUE);
+#else
   cout << yellowb;
+#endif
   _log << "*** ";
   ts << "Warning:";
+#ifdef _WIN32
+  SetConsoleTextAttribute(hstdout, csbi.wAttributes);
+#else
   cout << normal << " ";
+#endif
   ts << msg << endl << flush;
 }
 
@@ -127,10 +141,21 @@ Messages::error(const string& msg)
 {
   TeeStream ts(cerr, _log);
   ts << Messages::endl;
+#ifdef _WIN32
+  HANDLE hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  GetConsoleScreenBufferInfo(hstdout, &csbi);
+  SetConsoleTextAttribute(hstdout, FOREGROUND_RED);
+#else
   cerr << redb;
+#endif
   _log << "*** ";
   ts << "ERROR:";
-  cerr << normal << " ";
+#ifdef _WIN32
+  SetConsoleTextAttribute(hstdout, csbi.wAttributes);
+#else
+  cout << normal << " ";
+#endif
   ts << msg << endl << flush;
 }
 
