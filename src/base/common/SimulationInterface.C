@@ -1189,7 +1189,7 @@ SimulationInterface::save_state(const string& file)
       f = get_output_directory() + "/" +
         get_output_filename() + ".tsv";
 
-    ofstream of(f.c_str());
+    ofstream of(f.c_str(), ios_base::binary);
     if (!of.good()) throw InitFailedException("Cannot use " + f + " for writing.");
 
     Messages::newline();
@@ -1212,7 +1212,7 @@ SimulationInterface::load_state(const string& file)
   if (!f.empty())
   {
 
-    ifstream in(f.c_str());
+    ifstream in(f.c_str(), ios_base::binary);
     if (!in.good()) throw InitFailedException("Cannot use " + f + " for reading.");
 
     Messages::info("Reading state from " + f);
@@ -1234,11 +1234,7 @@ SimulationInterface::do_save_data(ostream& os)
 
   // NOTE we always use windows line endings to
   //      have better portability of the files
-#ifdef _WIN32
-  string eol("\n");
-#else
   string eol("\r\n");
-#endif
 
 
   // first write all variables

@@ -5,15 +5,15 @@ topdir := ../..
 
 # we have to compile each module
 
-subdirs := macrostrain semiconductormodels
+subdirs := semiconductormodels
 subdirs += solver-interfaces
 subdirs += quantumEFAmodels tightbinding
-subdirs += poisson
+#subdirs += poisson
 subdirs += eigenvalue
-subdirs += maxwell
+#subdirs += maxwell
 subdirs += embracing
 subdirs += models
-subdirs += phonondispersion
+#subdirs += phonondispersion
 
 include $(topdir)/Make.common
 

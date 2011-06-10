@@ -125,11 +125,11 @@ Messages::warning(const string& msg)
   cout << yellowb;
 #endif
   _log << "*** ";
-  ts << "Warning:";
+  ts << "Warning: ";
 #ifdef _WIN32
   SetConsoleTextAttribute(hstdout, csbi.wAttributes);
 #else
-  cout << normal << " ";
+  cout << normal;
 #endif
   ts << msg << endl << flush;
 }
@@ -150,11 +150,11 @@ Messages::error(const string& msg)
   cerr << redb;
 #endif
   _log << "*** ";
-  ts << "ERROR:";
+  ts << "ERROR: ";
 #ifdef _WIN32
   SetConsoleTextAttribute(hstdout, csbi.wAttributes);
 #else
-  cout << normal << " ";
+  cout << normal;
 #endif
   ts << msg << endl << flush;
 }
