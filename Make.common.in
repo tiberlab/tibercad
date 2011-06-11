@@ -51,7 +51,7 @@ TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
 
-LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir) -Wl,--as-needed
+LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir) # -Wl,--as-needed
 #ifeq ($(build_modules), yes)
 # LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
 #endif

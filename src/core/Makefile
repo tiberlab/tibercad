@@ -8,12 +8,13 @@ topdir := ../..
 subdirs := semiconductormodels
 subdirs += solver-interfaces
 subdirs += quantumEFAmodels tightbinding
-#subdirs += poisson
+subdirs += poisson
+subdirs += macrostrain
 subdirs += eigenvalue
-#subdirs += maxwell
+subdirs += maxwell
 subdirs += embracing
 subdirs += models
-#subdirs += phonondispersion
+subdirs += phonondispersion
 
 include $(topdir)/Make.common
 
