@@ -43,7 +43,7 @@ class ParticleDensity : public PhysicalModelInterface
   public:
 
     //! The minimum density
-    static const double MINDENSITY = 1e-64;
+    static const double MINDENSITY;
 
 
     //! Constructor

@@ -23,11 +23,11 @@ PETSC_ARCH := $(PETSC_ARCH)-dbg
 CXXFLAGS += -g -DDEBUG -O0
 endif
 
-target := $(libdir)/libeigen_solver$(shared_libext)
+target := $(libdir)/$(dll_prefix)eigen_solver$(shared_libext)
 
 
-$(libdir)/libeigen_solver$(shared_libext):  .$(ARCH)/EigenSolver$(obj-suffix)
-	@echo "Linking libeigen_solver$(shared_libext) ..."
+$(libdir)/$(dll_prefix)eigen_solver$(shared_libext):  .$(ARCH)/EigenSolver$(obj-suffix)
+	@echo "Linking $(dll_prefix)eigen_solver$(shared_libext) ..."
 	@mkdir -p $(libdir)
 	@$(CXX) -shared -o $@ $<  \
 		-Wl,--version-script,export.map \

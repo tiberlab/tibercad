@@ -7,7 +7,7 @@
 #include "tiber_dll.h"
 
 #include <map>
-#include <list>
+#include <set>
 #include <vector>
 #include <string>
 
@@ -301,7 +301,8 @@ class ModelOptions
     OptionsMap::const_iterator _find(const std::string& name) const;
 
 
-    mutable std::list<OptionsMap::const_iterator> _used;
+    //mutable std::list<OptionsMap::const_iterator> _used;
+    mutable std::set<std::string> _used;
 
 };
 

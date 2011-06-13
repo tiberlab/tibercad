@@ -325,6 +325,11 @@ sub run_test($) {
     return 1;
   }
 
+  if (not -e "$dir/$config") {
+    # this is not assumed to be an error
+    return 0;
+  }
+
   my $olddir = getcwd;
   chdir($dir);
   print("\nRunning test in $dir ...\n") if verbose();

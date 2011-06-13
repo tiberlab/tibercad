@@ -1,0 +1,62 @@
+# TiO2 (mesoporous) special material for DSCs module
+# many of the parameters are related to Germanium and do not belongs to TiO2
+
+
+structure = zb
+
+
+# lattice constant
+[lattice]
+a = 0.374
+
+
+#to be updated
+[valenceband]
+E_v = 1.76633
+
+
+#to be updated
+[conductionband]
+m_G = 0.038
+
+
+[bandgap]
+# T=0 K
+Eg_G = 3.2
+
+
+# I- --> I + e
+# recombination electrolyte (ke, alpha, k3)
+[recombination_TiO2-electrolyte]
+ke  = 1e4
+beta = 1.0
+k3 = 1e8
+
+
+# dark densities 
+# 1) electron in cm^-3
+# 2) ions in Mol/dm^3
+[density]
+ne = 2.3e4
+nI = 0.45
+nI3 = 0.05
+
+
+# permittivity
+[permittivity]
+permittivity_oxide = 85 
+permittivity_electrolyte = 117
+
+
+# mobilities of charge carriers
+# 1) electron mobility
+# 2) ionic diffusions coefficients 
+[mobility]
+mobility_oxide = 0.3
+mobility_iodide = 8.5e-6
+mobility_triiodide = 8.5e-6
+mobility_cation = 8.5e-6
+
+
+
+

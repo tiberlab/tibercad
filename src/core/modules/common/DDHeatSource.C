@@ -10,7 +10,7 @@
 // the third one is the specific model implementation.
 // The library name will then be bulk_default.so
 
-TIBER_MODULE(DDHeatSource, HeatSource, joule)
+TIBER_MODULE(DDHeatSource, heat_source, joule)
 using namespace std;
 
 
@@ -70,7 +70,6 @@ DDHeatSource::calculate(const Elem* elem, const Point& point)
     heat_source += solution[var_map[EPELTH]][0];
     heat_source += solution[var_map[HPELTH]][0];
   }
-
   set_heat_source(heat_source);   
 
 }

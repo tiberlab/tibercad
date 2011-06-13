@@ -20,55 +20,91 @@
 # endif
 #endif
 
-#ifdef CYGWIN
+#if defined(_WIN32)
 # include <windows.h>
 #endif
+
+#include <cstdio>
+#include <getopt.h>
 
 
 using namespace std;
 
 
+namespace
+{
+  bool interactive;
+
+  void usage(void)
+  {
+#if defined(_WIN32)
+    cout << endl << "Usage:" << endl
+      << "  from command line: tibercad [-b] inputfile" << endl
+      << "  or double click on inputfile" << endl << endl;
+    cout << "press Enter ...";
+    if (interactive) cin.get();
+# else
+    cout << endl << "Usage: tibercad [-v] [-b] inputfile" << endl << endl;
+# endif
+  }
+}
+
 // Will be extended with tools for command line argument parsing
 // and so on
 int main (int argc, char** argv)
 {
-  cout << endl;
-  cout << "TiberCAD version " << TiberCad::version_string() << endl;
-  cout << endl;
+
+  interactive = true;
+
+  opterr = 0;
+  int c;
+  while ((c = getopt(argc, argv, "bv")) != -1)
+    switch (c)
+    {
+      case 'v':
+        cout << "tiberCAD version " << TiberCad::version_string()
+          << " (" << TiberCad::arch_string() << ")" << endl;
+        return 0;
+        break;
+
+      case 'b':
+        interactive = false;
+        break;
+
+      case '?':
+        cout << "Unknown option: -" << (char) optopt << endl;
+      default:
+        usage();
+        return 1;
+    }
+
+  if (optind >= argc)
+  {
+    usage();
+    return 1;
+  }
+
+
 
   // take input file from command line or ask for it
   string inputfile;
-  if (argc > 1)
-    inputfile = string(argv[1]);
-  else
-  {
+  inputfile = string(argv[optind]);
 
-#ifdef HAVE_LIBREADLINE
-    char *line = readline ("Enter input file: ");
-    inputfile = string(line);
-    free(line);
-    boost::algorithm::trim(inputfile);
-    cout << endl;
-#else
-# ifdef CYGWIN
-    cout << endl << "Usage:" << endl
-      << "  from command line: tibercad <inputfile>" << endl
-      << "  or double click on inputfile" << endl << endl;
-    cout << "press Enter ...";
-    cin.get();
-# else
-    cout << endl << "Usage: tibercad <inputfile>" << endl << endl;
-# endif
-    return 1;
-#endif
+//#ifdef HAVE_LIBREADLINE
+//    char *line = readline ("Enter input file: ");
+//    inputfile = string(line);
+//    free(line);
+//    boost::algorithm::trim(inputfile);
+//    cout << endl;
+//#else
+//#endif
 
-  }
 
   // do some preparation
   {
-#ifdef CYGWIN
+#if defined(_WIN32)
     // we first convert the filename to something more UNIX like
-    Utils::convert_win32_path_to_posix(inputfile);
+    //Utils::convert_win32_path_to_posix(inputfile);
 
     // in windows argv[0] is the absolute path
     char* root = getenv("TIBERCADROOT");
@@ -79,26 +115,35 @@ int main (int argc, char** argv)
       if (!GetModuleFileName(NULL, buffer, bufsize))
         cerr << "Problems detecting installation path." << endl;
       string program(buffer);
+#if defined(__CYGWIN__)
       Utils::convert_win32_path_to_posix(program);
+#endif
       string exepath(Utils::dirname(program));
+# ifdef HAVE_SETENV
       setenv("TIBERCADROOT", exepath.c_str(), 1);
+# else
+#  ifdef HAVE_PUTENV
+      string tc_root("TIBERCADROOT=" + exepath);
+      putenv(tc_root.c_str());
+#  else
+#   error "Neither setenv nor putenv available"
+#  endif
+# endif
     }
 #endif
 
-  {
-    // we check here if the input file exists
-    ifstream infile;
-    infile.open(inputfile.c_str());
-    if (infile.fail() || !infile.good())
     {
+      // we check here if the input file exists
+      ifstream infile;
+      infile.open(inputfile.c_str());
+      if (infile.fail() || !infile.good())
+      {
+        infile.close();
+        cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
+        return 1;
+      }
       infile.close();
-      cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
-      return 1;
     }
-    infile.close();
-  }
-
-
 
 
 #ifdef LICENSE_CHECK
@@ -107,9 +152,9 @@ int main (int argc, char** argv)
     {
       cerr << "Sorry, cannot start TiberCAD as I could not find "
           "a valid license." << endl;
-# ifdef CYGWIN
+#if defined(_WIN32)
       cout << endl << "press Enter ...";
-      cin.get();
+      if (interactive) cin.get();
 # endif
       return 1;
     }
@@ -123,11 +168,11 @@ int main (int argc, char** argv)
   int error = 1;
 
   // Create the entry point object
-  TiberCad tibercad(argc, argv);
+  TiberCad tibercad;
 
   try {
 
-    tibercad.init();
+    tibercad.init(inputfile);
 
     tibercad.run();
 
@@ -144,9 +189,9 @@ int main (int argc, char** argv)
   {
     Messages::error("TiberCAD crashed for unknown reason.");
   }
-#ifdef CYGWIN
+#if defined(_WIN32)
   cout << "press Enter ...";
-  cin.get();
+  if (interactive) cin.get();
 #endif
 
   Messages::close_log_file();

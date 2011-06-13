@@ -6,9 +6,11 @@
 #include "tiber_config.h"
 
 #ifdef BUILD_TIBER_MODULES
-# ifdef CYGWIN
-#  define TBDLEXPORT __declspec(dllexport)
-#  define TBDLLOCAL __declspec(dllimport)
+# if defined(__CYGWIN__) || defined(__MINGW32__)
+//#  define TBDLEXPORT __declspec(dllexport)
+//#  define TBDLLOCAL __declspec(dllimport)
+#  define TBDLEXPORT 
+#  define TBDLLOCAL 
 # else
 #  ifdef GCC_HASVISIBILITY
 #    define TBDLEXPORT __attribute__ ((visibility("default")))

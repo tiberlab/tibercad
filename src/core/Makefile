@@ -5,10 +5,11 @@ topdir := ../..
 
 # we have to compile each module
 
-subdirs := macrostrain semiconductormodels
+subdirs := semiconductormodels
 subdirs += solver-interfaces
 subdirs += quantumEFAmodels tightbinding
 subdirs += poisson
+subdirs += macrostrain
 subdirs += eigenvalue
 subdirs += maxwell
 subdirs += embracing

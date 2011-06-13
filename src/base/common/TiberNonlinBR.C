@@ -134,7 +134,7 @@ TiberNonlinBR::do_solve(void)
 
 
     // check for divergence
-    if (isnan(norm_rhs))
+    if (std::isnan(norm_rhs))
     {
 #ifndef DEBUG
       cout << endl;

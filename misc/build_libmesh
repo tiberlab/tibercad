@@ -22,14 +22,24 @@ fi
 
 ARCHIVE=libmesh${LIBMESHVERSION}.tar.gz
 PATCH=${PWD}/libmesh.patch-${LIBMESHVERSION}
+WINPATCH=${PWD}/libmesh-win.patch
 
 cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
   if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
-    svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$march
+    if [ ! -e libmesh-${LIBMESHVERSION}.tbz ]; then
+      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$march
+      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}-$march
+    else
+      tar jxf libmesh-${LIBMESHVERSION}.tbz
+    fi
 
     if [ -e ${PATCH} ]; then
       patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
+    fi
+
+    if [ "$target_os" == "win32" ] && [ -e $WINPATCH ]; then
+      patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
     fi
   fi
 else
@@ -49,34 +59,68 @@ if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
   if [ -e ${PATCH} ]; then
     patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
   fi
+
+  if [ "$target_os" == "win32" && -e $WINPATCH ]; then
+    patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
+  fi
 fi
 
 
 cd libmesh-${LIBMESHVERSION}-$march
 
+# we have modifications to the configuration
+aclocal -I m4
+autoconf
+
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
-export PETSC_ARCH=${ARCH}
+export PETSC_ARCH=${HOST}
 
-SHARED=--enable-shared
+# let's always compile the static version, and do the shared lib ourselves
+#SHARED=--enable-shared
 #if [ $shared_libs == 'n' ]
 #then
 #  SHARED=--disable-shared
 #fi
+SHARED=--enable-shared
+
+dll_name=libmesh
+
+if [ "${target_os}" != "win32" ]
+then
+  LDFLAGS="${LDFLAGS} -ldl"
+fi
+
+[ "$debug" == 1 ] && dll_name=${dll_name}_dbg
+dll_name=${dll_name}${dll_libext}
   
 
-./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-nemesis --disable-exodus --disable-netcdf --disable-libHilbert
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=$HOST --build=$BUILD
 
 
 # delete the -pedantic flag because it makes problems with mpi
 cp Make.common Make.common.orig
-sed 's/-pedantic//g' Make.common.orig | sed 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' | sed 's/-D_GLIBCXX_DEBUG//g' > Make.common
+sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEBUG//g' \
+    -e 's/-ansi//g' -e 's/^enable-shared.*/enable-shared := no/' Make.common.orig > Make.common
 
 
 make |tee make_opt.log
 
+echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${dll_name} ..."
+staticlib=`make echo | grep libmesh.a`
+contriblibs=`echo $staticlib | sed -e 's/lib\//contrib\/lib\//' -e 's/libmesh\.a/\*\.a/'`
+contribdir=${contriblibs/%\*\.a}
+rm ${contribdir}/libnemesis.*
+rm ${contribdir}/libexodusii.*
+mkdir -p ${BUILDDIR}/${TCHOST}/lib
+${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${dll_name} \
+  ${libmesh_linker_flags} \
+  -Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive \
+  -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath-link,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
+  ${LAPACK_LIBS} ${FORTRAN_LIBS}
+
 if [ $DEBUG == 'y' ]; then
-  export PETSC_ARCH=${ARCH}-dbg
+  export PETSC_ARCH=${HOST}-dbg
   make METHOD=dbg
 fi
 

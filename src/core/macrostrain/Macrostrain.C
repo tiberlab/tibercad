@@ -434,6 +434,7 @@ void Macrostrain::do_init( )
             "\' has no material.");
 
       substrate_crystal =  &(mat->get_rotated_crystal());
+      break;
     }
 
   }
@@ -577,6 +578,8 @@ void Macrostrain::do_init( )
 
   }
   //------init is done---------------------------------------------------------------------//
+
+  parse_options();
 }
 
 
@@ -1562,11 +1565,11 @@ void Macrostrain::do_solve()
 
   my_system->set_options(get_solver_options());
 
-  if (verbose > 2) cout << "Assemble and solve the linear system ...\n" << flush ;
+  //if (verbose > 2) cout << "Assemble and solve the linear system ...\n" << flush ;
 
   my_system->solve();
 
-  if (verbose > 2) cout << "The linear system is solved... \n" << flush ;
+  //if (verbose > 2) cout << "The linear system is solved... \n" << flush ;
 
 
 

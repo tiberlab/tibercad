@@ -27,7 +27,7 @@
 #ifndef __GETPOT_H__
 #define __GETPOT_H__
 
-#if defined(WIN32) || defined(SOLARIS_RAW) || defined(__SUNPRO_CC) || (__GNUC__ == 2) || defined(__HP_aCC) || defined (__CYGWIN__)
+#if defined(WIN32) || defined(SOLARIS_RAW) || defined(__SUNPRO_CC) || (__GNUC__ == 2) || defined(__HP_aCC) || defined (__CYGWIN__) || defined (__MINGW32__)
 #  define strtok_r(a, b, c) std::strtok(a, b)
 #endif // WINDOWS or SOLARIS or gcc 2.* or HP aCC or CYGWIN
 
@@ -362,14 +362,14 @@ void GetPot::parse_command_line (int argc_, char ** argv_)
   __basic_initialization();
 
   // -- make an internal copy of the argument list:
-  std::vector<std::string> __argv;
-  __argv.reserve (argc_);
+  std::vector<std::string> _my_argv;
+  _my_argv.reserve (argc_);
   
   for(int i=0; i<argc_; i++) {
     std::string tmp(argv_[i]);
-    __argv.push_back(tmp);
+    _my_argv.push_back(tmp);
   }
-  __parse_argument_vector(__argv); 
+  __parse_argument_vector(_my_argv); 
 }
 
 
@@ -379,11 +379,11 @@ void GetPot::parse_input_file (const std::string& FileName)
 {
   __basic_initialization();
 
-  std::vector<std::string> __argv;
-  __argv.push_back(FileName); 
+  std::vector<std::string> _my_argv;
+  _my_argv.push_back(FileName); 
   std::vector<std::string> args = __read_in_file(FileName.c_str());
-  __argv.insert(__argv.begin()+1, args.begin(), args.end());
-  __parse_argument_vector(__argv); 
+  _my_argv.insert(_my_argv.begin()+1, args.begin(), args.end());
+  __parse_argument_vector(_my_argv); 
 }
 
 
@@ -393,11 +393,11 @@ void GetPot::parse_input_file (const char* FileName)
 {
   __basic_initialization();
 
-  std::vector<std::string> __argv;
-  __argv.push_back(FileName); 
+  std::vector<std::string> _my_argv;
+  _my_argv.push_back(FileName); 
   std::vector<std::string> args = __read_in_file(FileName);
-  __argv.insert(__argv.begin()+1, args.begin(), args.end());
-  __parse_argument_vector(__argv); 
+  _my_argv.insert(_my_argv.begin()+1, args.begin(), args.end());
+  __parse_argument_vector(_my_argv); 
 }
 
 

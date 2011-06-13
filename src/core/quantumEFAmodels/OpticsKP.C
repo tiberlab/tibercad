@@ -8,6 +8,7 @@
 #include "SimulationEnvironment.h"
 #include "Material.h"
 #include "DataOutput.h"
+#include "Messages.h"
 #include "SimulationOptions.h"
 
 #include <equation_systems.h>
@@ -286,7 +287,7 @@ void OpticsKP::do_solve()
   int verbose = SimulationOptions::verbose();
 
   if (verbose > 0)
-    cout << "calculation of  matrix elements for dipole optical transition..." << flush;
+    Messages::info("calculation of  matrix elements for dipole optical transition...", false);
 
   parse_options();
 
@@ -308,10 +309,10 @@ void OpticsKP::do_solve()
 
 
   if (verbose > 0)
-    cout << "done\n" << flush;
+    Messages::info(" done");
 
 
-
+/*
   if (verbose > 2)
   {
     for (int i = 0; i < n1; i++)
@@ -328,7 +329,7 @@ void OpticsKP::do_solve()
 
       }
   }
-
+*/
 }
 
 

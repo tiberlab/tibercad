@@ -56,9 +56,6 @@
 /* Define to 1 if you have the <history.h> header file. */
 #undef HAVE_HISTORY_H
 
-/* define if we are in cygwin */
-#undef CYGWIN
-
 /* Define to 1 if license check is enabled */
 #undef LICENSE_CHECK
 
@@ -89,4 +86,11 @@
 /* define if the compiler supports std::unordered_set */
 #undef HAVE_UNORDERED_SET
 
+/* define if the setenv function is present */
+#undef HAVE_SETENV
 
+/* define if the putenv function is present */
+#undef HAVE_PUTENV
+
+/* Define to 1 if compiler knows about constexpr */
+#undef HAVE_CONSTEXPR

@@ -16,12 +16,23 @@ hostos := @host_os@
 # The architecture
 hostcpu := @host_cpu@
 
-ARCH := $(shell $(topdir)/share/arch.sh)
+target_os := linux
+ifeq ($(findstring cygwin,$(hostos)),cygwin)
+  target_os := win32
+endif
+ifeq ($(findstring mingw,$(hostos)),mingw)
+  target_os := win32
+endif
+
+# we create an ARCH string which will be the same when calling
+# arch.sh on the target system
+ARCH := $(shell $(topdir)/share/arch.sh $(hostcpu)-$(hostos))
 
 # the compilers
 CXX := @CXX@
 CC := @CC@
 FC := @FC@
+RANLIB := @RANLIB@
 
 SVN := @SVN@
 
@@ -67,8 +78,10 @@ libdir := $(topdir)/$(ARCH)/$(relative_libdir)
 
 # shared library extension
 shared_libext := .so
-ifeq ($(findstring cygwin,$(hostos)),cygwin)
+dll_prefix := lib
+ifeq ($(target_os),win32)
   shared_libext := .dll
+  dll_prefix := 
 endif
 
 ifdef PROFILE

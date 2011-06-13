@@ -18,9 +18,6 @@
 #include "Variable.h"
 #include "FowlerNordheim.h"
 
-// TODO should be replaced by boost methods
-#include "gzstream.h"
-
 
 // libmesh includes
 #include "node.h"

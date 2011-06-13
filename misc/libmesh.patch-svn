@@ -133,17 +133,6 @@ Index: src/mesh/mesh_refinement.C
          }
  
        // Coarsen all the elements we just flagged.
---- Make.common.in.orig	2009-10-26 16:40:40.070747643 +0100
-+++ Make.common.in	2009-10-26 16:40:19.742747715 +0100
-@@ -177,6 +177,8 @@
- ###############################################################################
- 
- 
-+libmesh_CXXFLAGS += -DMPICH_IGNORE_CXX_SEEK
-+
- 
- ###############################################################################
- # Compiler flags, different for optimized, debug, and profiler modes.
 Index: include/parallel/parallel.h
 ===================================================================
 --- include/parallel/parallel.h	(revision 3581)
@@ -992,3 +981,144 @@ Index: src/geom/elem.C
        {
          Elem *child = this->child(c);
          if (child != remote_elem && child->has_neighbor(neighbor))
+--- m4/gmv.m4.orig	2011-05-18 10:34:01.000000000 +0200
++++ m4/gmv.m4	2011-05-18 10:34:31.000000000 +0200
+@@ -12,7 +12,7 @@
+ 
+   if (test $enablegmv = yes); then
+      GMV_INCLUDE="-I$PWD/contrib/gmv"
+-     GMV_LIBRARY="\$(EXTERNAL_LIBDIR)/libgmv\$(libext)"
++     GMV_LIBRARY="-lgmv"
+      AC_DEFINE(HAVE_GMV, 1, [Flag indicating whether the library will be compiled with GMV support])
+      AC_MSG_RESULT(<<< Configuring library with GMV support >>>)
+   else
+--- m4/gz.m4.orig	2011-05-18 10:35:07.000000000 +0200
++++ m4/gz.m4	2011-05-18 10:35:25.000000000 +0200
+@@ -26,7 +26,7 @@
+   dnl If both tests succeded, continue the configuration process.
+   if (test "$have_zlib_h" = yes -a "$have_libz" = yes) ; then
+     GZSTREAM_INCLUDE="-I$PWD/contrib/gzstream"
+-    GZSTREAM_LIB="\$(EXTERNAL_LIBDIR)/libgzstream\$(libext) -lz"
++    GZSTREAM_LIB="-lgzstream -lz"
+     AC_DEFINE(HAVE_GZSTREAM, 1, [Flag indicating whether or not gzstreams are available])
+     AC_MSG_RESULT(<<< Configuring library with gzstreams support >>>)
+ 
+--- m4/laspack.m4.orig	2011-05-18 10:31:39.000000000 +0200
++++ m4/laspack.m4	2011-05-18 10:32:28.000000000 +0200
+@@ -21,7 +21,7 @@
+ if (test $enablelaspack = yes); then
+ 
+   LASPACK_INCLUDE="-I$PWD/contrib/laspack"
+-  LASPACK_LIB="\$(EXTERNAL_LIBDIR)/liblaspack\$(libext)"
++  LASPACK_LIB="-llaspack"
+   AC_DEFINE(HAVE_LASPACK, 1, [Flag indicating whether or not LASPACK iterative solvers are available])
+   laspack_version=`grep "define LASPACK_VERSION " $PWD/contrib/laspack/version.h | sed -e "s/[[^0-9.]]*//g"`
+   AC_MSG_RESULT(<<< Configuring library with LASPACK version $laspack_version support >>>)
+--- m4/libhilbert.m4.orig	2011-05-18 10:35:50.000000000 +0200
++++ m4/libhilbert.m4	2011-05-18 10:36:05.000000000 +0200
+@@ -12,7 +12,7 @@
+ 
+   if (test $enablelibhilbert = yes); then
+      LIBHILBERT_INCLUDE="-I$PWD/contrib/libHilbert/include"
+-     LIBHILBERT_LIBRARY="\$(EXTERNAL_LIBDIR)/libHilbert\$(libext)"
++     LIBHILBERT_LIBRARY="-lHilbert"
+      AC_DEFINE(HAVE_LIBHILBERT, 1, [Flag indicating whether the library will be compiled with libHilbert support])
+      AC_MSG_RESULT(<<< Configuring library with libHilbert support >>>)
+   else
+--- m4/metis.m4.orig	2011-05-18 10:36:24.000000000 +0200
++++ m4/metis.m4	2011-05-18 10:36:38.000000000 +0200
+@@ -11,7 +11,7 @@
+ 	        [ 
+ 	          METIS_INCLUDE_PATH=$PWD/contrib/metis/Lib
+                   METIS_INCLUDE=-I$METIS_INCLUDE_PATH
+-                  METIS_LIB="\$(EXTERNAL_LIBDIR)/libmetis\$(libext)"
++                  METIS_LIB="-lmetis"
+ 		  AC_SUBST(METIS_INCLUDE)
+                   AC_SUBST(METIS_LIB)
+                   AC_DEFINE(HAVE_METIS, 1,
+--- m4/nemesis.m4.orig	2011-05-18 10:49:33.000000000 +0200
++++ m4/nemesis.m4	2011-05-18 10:49:44.000000000 +0200
+@@ -12,7 +12,7 @@
+ 
+   if (test $enablenetcdf = yes -a $enableexodus = yes -a $enablenemesis = yes); then
+      NEMESIS_INCLUDE="-I$PWD/contrib/nemesis/Lib"
+-     NEMESIS_LIBRARY="\$(EXTERNAL_LIBDIR)/libnemesis\$(libext)"
++     NEMESIS_LIBRARY="-lnemesis"
+      AC_DEFINE(HAVE_NEMESIS_API, 1, [Flag indicating whether the library will be compiled with Nemesis support])
+      AC_MSG_RESULT(<<< Configuring library with Nemesis API support >>>)
+   else
+--- m4/netcdf.m4.orig	2011-05-18 10:50:05.000000000 +0200
++++ m4/netcdf.m4	2011-05-18 10:50:17.000000000 +0200
+@@ -12,7 +12,7 @@
+ 
+   if (test $enablenetcdf = yes); then
+      NETCDF_INCLUDE="-I$PWD/contrib/netcdf/Lib"
+-     NETCDF_LIBRARY="\$(EXTERNAL_LIBDIR)/libnetcdf\$(libext)"
++     NETCDF_LIBRARY="-lnetcdf"
+      AC_DEFINE(HAVE_NETCDF, 1, [Flag indicating whether the library will be compiled with Netcdf support])
+      AC_MSG_RESULT(<<< Configuring library with Netcdf support >>>)
+      have_netcdf=yes
+--- m4/sfc.m4.orig	2011-05-18 10:50:39.000000000 +0200
++++ m4/sfc.m4	2011-05-18 10:50:59.000000000 +0200
+@@ -19,7 +19,7 @@
+ 
+   if (test $enablesfc = yes); then
+      SFC_INCLUDE="-I$PWD/contrib/sfcurves"
+-     SFC_LIB="\$(EXTERNAL_LIBDIR)/libsfcurves\$(libext)"
++     SFC_LIB="-lsfcurves"
+      AC_DEFINE(HAVE_SFCURVES, 1, [Flag indicating whether or not Space filling curves are available])
+      AC_MSG_RESULT(<<< Configuring library with SFC support >>>)
+   fi
+--- m4/tetgen.m4.orig	2011-05-18 10:51:34.000000000 +0200
++++ m4/tetgen.m4	2011-05-18 10:51:45.000000000 +0200
+@@ -11,7 +11,7 @@
+ 
+   if (test $enabletetgen = yes) ; then
+      TETGEN_INCLUDE="-I$PWD/contrib/tetgen"
+-     TETGEN_LIBRARY="\$(EXTERNAL_LIBDIR)/libtetgen\$(libext)"
++     TETGEN_LIBRARY="-ltetgen"
+      AC_DEFINE(HAVE_TETGEN, 1, [Flag indicating whether the library will be compiled with TetGen support])
+      AC_MSG_RESULT(<<< Configuring library with TetGen support >>>)
+   else
+--- m4/triangle.m4.orig	2011-05-18 10:51:58.000000000 +0200
++++ m4/triangle.m4	2011-05-18 10:52:12.000000000 +0200
+@@ -12,7 +12,7 @@
+ 
+   if (test $enabletriangle = yes); then
+      TRIANGLE_INCLUDE="-I$PWD/contrib/triangle"
+-     TRIANGLE_LIBRARY="\$(EXTERNAL_LIBDIR)/libtriangle\$(libext)"
++     TRIANGLE_LIBRARY="-ltriangle"
+      AC_DEFINE(HAVE_TRIANGLE, 1, [Flag indicating whether the library will be compiled with Triangle support])
+      AC_MSG_RESULT(<<< Configuring library with Triangle support >>>)
+   else
+--- m4/parmetis.m4.orig	2011-05-18 11:16:05.000000000 +0200
++++ m4/parmetis.m4	2011-05-18 11:16:20.000000000 +0200
+@@ -21,7 +21,7 @@
+       		  
+       	          PARMETIS_INCLUDE_PATH=$PWD/contrib/parmetis/Lib
+                       PARMETIS_INCLUDE=-I$PARMETIS_INCLUDE_PATH
+-                      PARMETIS_LIB="\$(EXTERNAL_LIBDIR)/libparmetis\$(libext)"
++                      PARMETIS_LIB="-lparmetis"
+       		  AC_SUBST(PARMETIS_INCLUDE)
+                       AC_SUBST(PARMETIS_LIB)
+                       AC_DEFINE(HAVE_PARMETIS, 1,
+--- Make.common.in.orig	2011-05-18 18:08:21.828125000 +0200
++++ Make.common.in	2011-05-18 18:09:40.687500000 +0200
+@@ -257,7 +257,7 @@
+   libmesh_DLFLAGS += $(libmesh_RPATHFLAG)$(mesh_library_dir)
+ endif
+ 
+-libmesh_LIBS += $(mesh_library)
++libmesh_LIBS += -L$(mesh_library_dir) -lmesh
+ ###############################################################################
+ 
+ 
+@@ -303,6 +303,8 @@
+ # Optional packages
+ ifeq ($(enable-optional),yes)
+ 
++  libmesh_LIBS += -L$(EXTERNAL_LIBDIR)
++
+   # if Laspack is used we need the header path
+   # and the lib
+   libmesh_LIBS    += @LASPACK_LIB@

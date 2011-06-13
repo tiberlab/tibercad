@@ -58,10 +58,7 @@ class TBDLLOCAL Sweep : public SimulationInterface
      */
     virtual void do_solve(void);
    
-    //! Plot results. Empty implementation!
-    /*!
-     * We do not plot anything here because we plot after each sweep step
-     */
+    //! Plot final results.
     virtual void do_plot(void);
 
 

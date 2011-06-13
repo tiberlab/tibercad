@@ -82,7 +82,7 @@ BoundaryRegions::prepare_for_use(void)
       {
         // the region pair does not yet exist in the map
         // we have to create a new ID
-        ID newid = next_id();
+        ID newid = MeshRegionInfo::next_id();
         add_id(newid);
         _side_ids.insert(newid);
         set_name(newid, get_name(id));

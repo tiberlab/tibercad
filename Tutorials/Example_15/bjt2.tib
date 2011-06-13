@@ -1,4 +1,8 @@
-# bjt example
+
+# Example 15: Si bipolar transistor
+# A BJT with lateral oxide between base and collector regions,
+#  abrupt junctions,all contacts on the top
+
 Device bjt2
 {
   material = Si
@@ -8,7 +12,7 @@ Device bjt2
   {
     Doping {
       type = donor
-      Nd = 1e19
+      density = 1e19
     }
   }
 
@@ -16,7 +20,7 @@ Device bjt2
   {
     Doping {
       type = donor
-      Nd = 5e15
+      density = 5e15
     }
   }
 
@@ -61,8 +65,7 @@ Module driftdiffusion
    plot = (Ec, Ev, ElPotential, ElField, eQFermi, hQFermi, eDensity, hDensity,
            eCurrentDensity, hCurrentDensity, CurrentDensity, ContactCurrents,
            NetRecombination, eMobility, hMobility,
-           IonizedDonors, IonizedAcceptors,
-           IonizedElectronTraps)
+           IonizedDonors, IonizedAcceptors, IonizedElectronTraps)
 
 
   Solver linesearch
@@ -73,10 +76,6 @@ Module driftdiffusion
   Physics
   {
 
-    # use Fermi-Dirac statistics
-    statistics =  FD
-
-           
     mobility doping_dependent {}
 
     recombination (srh, auger) {}
@@ -138,11 +137,6 @@ Module sweep
   solve = dd
   plot_data = true
 }
-
-
-
-
-
 
 
 Simulation

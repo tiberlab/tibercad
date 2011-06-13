@@ -36,7 +36,7 @@ using namespace std;
 
 
 
-
+/*
 Control*
 Control::SignalHandler::_ctrl = NULL;
 
@@ -107,7 +107,7 @@ Control::SignalHandler::sigint(int sig)
   // reactivate the handler
   activate_sigint();
 }
-
+*/
 
 
 Control::Control(void)
@@ -134,10 +134,10 @@ Control::~Control(void)
     SimulationInterface::destroy(sim);
   }
 
+  Device::destroy(_device);
+
   // clear all variables
   Variable::clear_all();
-
-  Device::destroy(_device);
 
 }
 
@@ -357,7 +357,10 @@ Control::setup_module(Device* device, const ModelOptions& opts)
     ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
     const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
     for ( ; it != end; ++it)
+    {
       physopts += it->second;
+      physopts.set_key((it->second).get_key());
+    }
   }
 
   //
@@ -806,6 +809,8 @@ Control::run_simulation(void)
     simulations[i] = sim;
   }
 
+  Utils::Timer tt;
+
   // now run them
   for (unsigned int i = 0; i < n; i++)
   {
@@ -833,6 +838,10 @@ Control::run_simulation(void)
     }
 
   }
+  os.str("");
+  os << "Total solve time: " << tt.elapsed_string();
+  Messages::newline();
+  Messages::info(os.str());
 }
 
 

@@ -447,8 +447,7 @@ Thermal::do_assemble(EquationSystems& es, const std::string& system_name)
    DenseMatrix<Number> Ke;
    DenseVector<Number> Fe;
 
-  
- MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
    for ( ; el != end_el ; ++el)
    {
@@ -470,7 +469,6 @@ Thermal::do_assemble(EquationSystems& es, const std::string& system_name)
      // loop over the quadrature points
      for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
      {
-
        mod.calculate(elem,q_point[qp]);
        
        const RealTensor& kappa = mod.get_total_thermal_conductivity();

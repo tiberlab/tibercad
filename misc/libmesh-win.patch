@@ -1,0 +1,96 @@
+Index: src/utils/perf_log.C
+===================================================================
+--- src/utils/perf_log.C	(revision 3581)
++++ src/utils/perf_log.C	(working copy)
+@@ -24,9 +24,9 @@
+ #include <iomanip>
+ #include <ctime>
+ #include <unistd.h>
+-#include <sys/utsname.h>
++//#include <sys/utsname.h>
+ #include <sys/types.h>
+-#include <pwd.h>
++//#include <pwd.h>
+ #include <vector>
+ 
+ // Local includes
+@@ -110,12 +110,14 @@
+ 	     'c');
+ #endif
+       
++/*      
+       // Get system information
+       struct utsname sysInfo;
+       uname(&sysInfo);
+       
+       // Get user information
+       struct passwd* p = getpwuid(getuid());
++*/
+       out << "\n";
+ 
+       // Construct string stream objects for each of the outputs
+@@ -154,13 +156,14 @@
+ #ifdef LIBMESH_HAVE_LOCALE						       
+       time_stream    << "| Time:           " << dateStr.str()          ; 
+ #endif								       
+-      
++/*      
+       os_stream      << "| OS:             " << sysInfo.sysname        ; 
+       host_stream    << "| HostName:       " << sysInfo.nodename       ; 
+       osrel_stream   << "| OS Release:     " << sysInfo.release        ; 
+       osver_stream   << "| OS Version:     " << sysInfo.version        ; 
+       machine_stream << "| Machine:        " << sysInfo.machine        ; 
+       user_stream    << "| Username:       " << p->pw_name             ;
++*/      
+       config_stream  << "| Configuration:  " << LIBMESH_CONFIGURE_INFO;
+       
+       // Find the longest string, use that to set the line length for formatting.
+Index: src/utils/utility.C
+===================================================================
+--- src/utils/utility.C	(revision 3581)
++++ src/utils/utility.C	(working copy)
+@@ -23,10 +23,11 @@
+ 
+ // System includes
+ #include <sys/time.h>
++#include <unistd.h>
++/*
+ #include <pwd.h>
+-#include <unistd.h>
+ #include <sys/utsname.h>
+-
++*/
+ #ifdef LIBMESH_HAVE_LOCALE
+ # include <locale>
+ #endif
+@@ -67,20 +68,22 @@
+ 	 'c');
+   
+   // Get system information
++/*
+   struct utsname sysInfo;
+   uname(&sysInfo);
+-  
++*/
++
+   // Get user information
+-  struct passwd* p = getpwuid(getuid());
++//  struct passwd* p = getpwuid(getuid());
+   out << '\n'
+       << " ---------------------------------------------------------------------\n"
+       << "| Time:           " << dateStr.str()    << '\n'
+-      << "| OS:             " << sysInfo.sysname  << '\n'
+-      << "| HostName:       " << sysInfo.nodename << '\n'
+-      << "| OS Release      " << sysInfo.release  << '\n'
+-      << "| OS Version:     " << sysInfo.version  << '\n'
+-      << "| Machine:        " << sysInfo.machine  << '\n'
+-      << "| Username:       " << p->pw_name       << '\n' 
++//      << "| OS:             " << sysInfo.sysname  << '\n'
++//      << "| HostName:       " << sysInfo.nodename << '\n'
++//      << "| OS Release      " << sysInfo.release  << '\n'
++//      << "| OS Version:     " << sysInfo.version  << '\n'
++//      << "| Machine:        " << sysInfo.machine  << '\n'
++//      << "| Username:       " << p->pw_name       << '\n' 
+       << " ---------------------------------------------------------------------\n";
+ 
+ #endif

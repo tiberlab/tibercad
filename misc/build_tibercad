@@ -15,12 +15,23 @@ echo "Compiling TiberCAD ..."
 
 cd ../
 
+if [ "$target_os" == "win32" ]; then
+  cp contrib/dlfcn-win32-r19/dlfcn.h include/base/io/dlfcn.h
+  cp contrib/dlfcn-win32-r19/dlfcn.c src/base/io/dlfcn.c
+fi
+
+
+
+
 ./configure \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
-  --with-petsc-arch=${ARCH}-complex \
+  --with-petsc-arch=${HOST}-complex \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
-  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${march}
+  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${march} \
+  --with-boost-prefix=${BUILDDIR}/boost-$HOST --with-boost-libdir=${BUILDDIR}/boost-${HOST}/lib \
+  --host=$HOST --build=$BUILD
 
 
-make
+
+make METHOD=opt

@@ -40,6 +40,7 @@ AC_CANONICAL_HOST
 AC_PROG_CXX
 AC_PROG_CC
 AC_PROG_FC
+AC_PROG_RANLIB
 AC_FC_LIBRARY_LDFLAGS
 AC_SUBST([FCLIBS])
 AC_SUBST([LDFLAGS])
@@ -138,6 +139,8 @@ fi
 
 AC_MSG_NOTICE([])
 
+TC_LIBMESH_PETSC_LIBS
+
 
 # check for SLEPc
 AC_MSG_NOTICE([])
@@ -234,6 +237,7 @@ AC_HEADER_STDBOOL
 AC_C_CONST
 AC_C_INLINE
 AC_TYPE_SIZE_T
+TC_HAVE_CONSTEXPR
 
 
 #
@@ -241,6 +245,7 @@ AC_TYPE_SIZE_T
 #
 AC_FUNC_ERROR_AT_LINE
 AC_CHECK_FUNCS([pow sqrt isinf isnan])
+AC_CHECK_FUNCS([setenv putenv])
 
 #
 # check for other options
@@ -281,6 +286,7 @@ AC_CONFIG_FILES([Make.common
                  src/utils/DFTB/Makefile
                  src/utils/UPTIGHT/Makefile
                  src/utils/SLEPC/Makefile
+                 contrib/crypto++/make.defs
                  installer/Makefile
 		 installer/windows/tibercad.bim
                  installer/linux/deb/control

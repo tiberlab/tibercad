@@ -26,17 +26,18 @@ ifeq ($(enable_hetero), yes)
  MODULE_LIBS += -lhetero -lmkl_p4 -lguide
 endif
 
+
 export MODULE_LIBS
 
 
-all: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext) modules
+all: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) modules
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
-$(libdir)/lib$(TIBERLIBNAME)$(shared_libext): src
-	@echo "Linking lib$(TIBERLIBNAME)$(shared_libext) ..."
+$(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
+	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
-		-o $(libdir)/lib$(TIBERLIBNAME)$(shared_libext) \
+		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(LDFLAGS)
 
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
@@ -45,15 +46,10 @@ $(libdir)/lib$(TIBERLIBNAME)$(shared_libext): src
 #	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
 		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
 
-static: $(libdir)/libtibercad.a
-	@$(MAKE) --no-print-directory -C src/tibercad tibercad_static
-
-.PHONY: $(libdir)/libtibercad.a
-$(libdir)/libtibercad.a:
-	@$(MAKE) --no-print-directory -C src all
-	@echo "Linking libtibercad.a ..."
-	@$(AR) rcs $@ $(TIBER_OBJECTS)
-
+$(libdir)/libdl.a:
+	@touch contrib/dlfcn-win32-r19/config.mak
+	@$(MAKE) --no-print-directory -C contrib/dlfcn-win32-r19
+	@cp contrib/dlfcn-win32-r19/libdl.a $(libdir)
 
 
 clean: src
@@ -70,7 +66,7 @@ distclean: src doc
 
 
 ifeq ($(build_modules),yes)
-modules: $(libdir)/lib$(TIBERLIBNAME)$(shared_libext)
+modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 else
 modules:
@@ -98,13 +94,20 @@ run_tests:
 	@cd testsuite && ./run_tests -t all -v -i
 
 
-.PHONY: manual
-manual:
-	@$(MAKE) --no-print-directory -C manual pdf
+
+gettingstarted:
+
+#	@$(MAKE) --no-print-directory -C manual/Sphinx/GettingStarted latexpdf
 
 
-wininstaller linuxinstaller deb tgz tbz: manual
+wininstaller linuxinstaller deb tgz tbz: gettingstarted SHAREDLIBS
 	@$(MAKE) --no-print-directory -C installer $(MAKECMDGOALS)
+
+
+SHAREDLIBS:
+ifeq ($(target_os),win32)
+	cp $$(find $$($(CC) -print-sysroot) -name *gcc_s*\.dll -o -name *gfortran*\.dll -o -name *stdc\+\+*\.dll) $(ARCH)/lib
+endif
 
 
 clean-dep:

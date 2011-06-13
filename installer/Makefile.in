@@ -1,22 +1,37 @@
 # $Id$
 #
 
+topdir := ..
+
+include $(topdir)/Make.defs
 
 
-BINSTALLMAKER = @BINSTALLMAKER@
+BINSTALLMAKER := @BINSTALLMAKER@
+INNOSETUP := $(shell winepath -w ~/.wine/drive_c/Program\ Files/Inno\ Setup\ 5/ISCC.exe)
 
 
 .PHONY: linux
 linuxinstaller:
 	@echo "Preparing self extractable installer package ..."
-	@./prepare_files.sh linux
+	@./prepare_files.sh linux $(ARCH)
 
 .PHONY: wininstaller
-wininstaller: 
+wininstaller_bim: 
 	@echo "Preparing Windows installer package ..."
 	@./prepare_files.sh windows
 	@exec "$(BINSTALLMAKER)" windows/tibercad.bim
+	@cd windows ; zip -r files.zip files
 	@rm -rf windows/files
+
+
+wininstaller: 
+	@echo "Preparing Windows installer package ..."
+	@./prepare_files.sh windows $(ARCH)
+	@cd windows ; zip -r files.zip files
+	wine "$(INNOSETUP)" /dMySrcPath="`winepath -w windows/files`" \
+	  /dMyAppVersion="`cat $(topdir)/VERSION`" /dMyArch="$(ARCH)" "`winepath -w windows/tibercad.iss`"
+	@rm -rf windows/files
+
 
 
 .PHONY: deb

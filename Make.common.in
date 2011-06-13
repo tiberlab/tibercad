@@ -7,7 +7,7 @@ include $(topdir)/Make.defs
 
 
 # libmesh can be found here
-#libmesh := @LIBMESH_PREFIX@
+#libmesh_dir := @LIBMESH_PREFIX@
 libmesh_config := @LIBMESH_CONFIG@
 
 # use or not PARDISO
@@ -50,13 +50,17 @@ include_dirs := $(shell find $(topdir)/include -type d -a ! -path "*.svn*")
 TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
-LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir)
+
+LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir) # -Wl,--as-needed
 #ifeq ($(build_modules), yes)
 # LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
 #endif
-LDFLAGS += -ltensor -lnewmat
+LDFLAGS += -ltensor 
 
 #LDFLAGS += @GSL_LIBS@
+
+LDFLAGS += @LIBMESH_PETSC_LIBS@
+MODULE_LDFLAGS += @LIBMESH_PETSC_LIBS@
 
 LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 
@@ -66,7 +70,7 @@ LDFLAGS += @LDFLAGS@
 LDFLAGS += @FCLIBS@
 
 ifeq ($(build_modules),yes)
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*")
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${ARCH}/*" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*")
 else
   TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
 endif
@@ -86,23 +90,23 @@ endif
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 
 # the machine architecture
-CPPFLAGS += -DARCH="$(ARCH)"
+CPPFLAGS += -DARCH=\"$(ARCH)\"
 
 CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 
-CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags)
-LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags)
-FCFLAGS  += -fPIC
-CFLAGS  += -fPIC
+CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) -std=gnu++0x
+#LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags) 
 
-ifneq ($(findstring cygwin,$(hostos)),cygwin)
+ifneq ($(target_os),win32)
   CXXFLAGS += -pthread
-endif
+  FCFLAGS  += -fPIC
+  CFLAGS  += -fPIC
 
-ifeq ($(build_modules), yes)
-  CXXFLAGS += -fvisibility=default -fvisibility-inlines-hidden
+  ifeq ($(build_modules), yes)
+    CXXFLAGS += -fvisibility=default -fvisibility-inlines-hidden
+  endif
 endif
 
 vpath %.h $(include_dirs)

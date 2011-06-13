@@ -8,24 +8,24 @@
 #include "EigenSolver.h"
 #include "Database.h"
 #include "DLLoader.h"
+#include "Utils.h"
+#include "Messages.h"
 #include "InitFailedException.h"
 
 #include "libmesh.h"
+#include "petscerror.h"
 
 
-#ifndef stringify
-#define stringify(a) #a
+#ifndef ARCH
+#error "Architecture has to be specified on the command line as string"
 #endif
-#ifndef xstr
-#define xstr(a) stringify(a)
-#endif
-
 
 // we hand an empty command line to underlying libraries
 namespace
 {
   int __empty_argc = 1;
   char** __empty_argv = new char*[1];
+  char __executable[] = "tibercad";
 }
 
 
@@ -36,12 +36,6 @@ TiberCad::_filename_suffix;
 Control*
 TiberCad::_control = NULL;
 
-
-char**
-TiberCad::_cmdline_argv = 0;
-
-int
-TiberCad::_cmdline_argc = 0;
 
 unsigned int
 TiberCad::_object_counter = 0;
@@ -69,14 +63,11 @@ TiberCad::_SvnRevision = SVNREVISION;
 
 
 
-TiberCad::TiberCad(int argc, char** argv) :
+TiberCad::TiberCad(void) :
   _libmeshinit(NULL)
 {
   if (_object_counter > 0)
     throw InitFailedException("Only one TiberCAD instance may exist in a process!");
-
-  _cmdline_argc = argc;
-  _cmdline_argv = argv;
 
   _object_counter++;
 }
@@ -99,6 +90,16 @@ TiberCad::version_string(bool include_svn_release)
 
   return os.str();
 }
+
+
+
+std::string
+TiberCad::arch_string(void)
+{
+  return std::string(ARCH);
+}
+
+
 
 int
 TiberCad::major_version(void)
@@ -132,12 +133,14 @@ TiberCad::software_revision(void)
 
 
 void
-TiberCad::init(void)
+TiberCad::init(const std::string& inputfile)
 {
   // read TIBERCADROOT from environment
   char* root = getenv("TIBERCADROOT");
   if (root != NULL)
     _tiberroot = std::string(root);
+
+  Messages::debug("Using TIBERCADROOT=" + std::string(root));
 
   if (_tiberroot.size() != 0)
   {
@@ -145,9 +148,13 @@ TiberCad::init(void)
     Database::set_default_search_path(_tiberroot + "/materials");
 
     // setup DLLoader paths
-    DLLoader::set_library_path(_tiberroot + "/" + xstr(ARCH) + "/lib/modules");
+#if defined(__CYGWIN__) || defined(__MINGW32__)
+    DLLoader::set_library_path(_tiberroot + "/lib/modules");
+#else
+    DLLoader::set_library_path(_tiberroot + "/" + ARCH + "/lib/modules");
 #ifdef DEBUG
-    DLLoader::prepend_to_library_path(_tiberroot + "/" + xstr(ARCH) + "/lib/debug/modules");
+    DLLoader::prepend_to_library_path(_tiberroot + "/" + ARCH + "/lib/debug/modules");
+#endif
 #endif
     char* modelpath = getenv("TIBERMODULEPATH");
     if (modelpath != NULL)
@@ -156,7 +163,7 @@ TiberCad::init(void)
 
 
   // to the libraries we hand empty cmdline!
-  __empty_argv[0] = _cmdline_argv[0];
+  __empty_argv[0] = __executable;
 
 
   // prepare libMesh
@@ -165,17 +172,19 @@ TiberCad::init(void)
   // prepare EigenSolver
   EigenSolver::slepc_init(__empty_argc, __empty_argv);
 
+  PetscPopSignalHandler();
+
 
   // now create a TiberCAD Control object
   _control = new Control();
  
-  std::string inputfile(_cmdline_argv[1]);
-#ifdef CYGWIN
+  std::string infile(inputfile);
+#if defined(__CYGWIN__)
     // we first convert the filename to something more UNIX like
-    Utils::convert_win32_path_to_posix(inputfile);
+    Utils::convert_win32_path_to_posix(infile);
 #endif
 
-  _control->set_inputfile(inputfile);
+  _control->set_inputfile(infile);
   _control->init();
 }
 

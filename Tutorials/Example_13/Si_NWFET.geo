@@ -87,6 +87,11 @@ Extrude {0, 0, 30} {
 Extrude {0, 0, 30} {
   Surface{280};
 }
+
+//Characteristic Length {20, 21, 22, 23, 24} = lc1 / 3;
+Characteristic Length {30, 31, 32, 33, 34} = lc1 / 3;
+
+
 Physical Surface("drain") = {323};
 Physical Surface("gate") = {49, 21, 33, 37};
 Physical Surface("source") = {237};

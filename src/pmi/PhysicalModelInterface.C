@@ -45,7 +45,6 @@
 
 #include "Messages.h"
 
-#include <typeinfo>
 #include <string>
 
 
@@ -60,12 +59,6 @@ PhysicalModelInterface::_model_ids;
 
 PhysicalModelInterface::~PhysicalModelInterface(void)
 {
-  string id = Utils::extract_typename(typeid(*this));
-  ostringstream os;
-  os << "Delete model (ID = " << get_id() <<
-    " name = " << get_name() << " type = " << get_type() << ")";
-  Messages::debug(os.str());
-
   SubmodelIterator it(submodels_begin());
   const SubmodelIterator end(submodels_end());
   for ( ; it != end; ++it)

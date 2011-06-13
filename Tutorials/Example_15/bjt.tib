@@ -1,4 +1,7 @@
-# bjt example
+
+# Example 15: Si bipolar transistor
+# bjt example : A simple BJT with abrupt junctions and collector contacts on the bottom
+
 Device bjt
 {
   material = Si
@@ -16,7 +19,7 @@ Device bjt
   {
     Doping {
       type = donor
-      Nd = 5e15
+      density = 5e15
     }
   }
 
@@ -60,11 +63,6 @@ Module driftdiffusion
 
   Physics
   {
-
-     # use Fermi-Dirac statistics
-     statistics =  FD
-
-           
      mobility doping_dependent {}
 
      recombination (srh, auger) {}

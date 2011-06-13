@@ -1,0 +1,265 @@
+
+# Example 6: Quantized states in a Gan/AlGaN quantum  well (1D)
+
+Device
+{
+  
+  meshfile = quantum_well.msh
+  mesh_units = 1e-9
+
+  y-growth-direction = (1,0,-1,0)
+  z-growth-direction = (-1,2,-1,0)
+  x-growth-direction = (0,0,0,1)
+
+
+  Region well
+  {
+    material = GaN
+    
+    Doping
+    {
+      density = 1e18
+      type = acceptor
+      level = 0.025
+     
+    }
+  
+  }
+
+  Region  buffer1
+  {
+    material = AlGaN
+    x = 0.3
+
+ 
+    Doping
+    {
+      density = 5e16
+      type = acceptor
+      level = 0.025
+     
+    }
+   
+     
+  }
+  
+  
+
+  Region  buffer2
+  {
+    material = AlGaN
+    x = 0.3
+
+   
+    Doping
+    {
+      density = 5e16
+      type = acceptor
+      level = 0.025
+     
+    }
+  
+  }
+
+}
+
+
+Module elasticity 
+{
+
+  name = strain
+  regions = all
+
+  plot = (Strain, Stress)
+
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaN
+      x = 0.3
+      y-growth-direction = (1,0,-1,0)
+      z-growth-direction = (-1,2,-1,0)
+      x-growth-direction = (0,0,0,1)
+    }
+       
+  }
+
+  Contact substrate  
+  {type = clamp}
+
+}
+
+
+
+
+
+
+Module  driftdiffusion
+{ 
+        
+  name = dd
+      
+  strain_simulation = strain 
+
+  # we solve only Poisson equation
+  coupling = poisson
+     
+  plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+          hQFermi, hDensity, hCurrentDensity, hMobility,
+          NetRecombination, ElField, ElPotential, ContactCurrents)
+
+
+}
+
+
+Module  efaschroedinger
+
+{
+  
+  name = quantum_el
+  regions = all
+
+  plot = (ProbabilityDensity, EigenEnergy)
+
+  particle = el
+  number_of_eigenstates = 10
+  poisson_simulation = dd
+  strain_simulation  = strain 
+ 
+  solution_method = general
+  solver = krylovshur 
+
+
+  Physics
+  {
+    model = conduction_band  
+  }
+  
+
+}
+
+
+Module  efaschroedinger
+
+{
+  name = quantum_hl
+  regions = all
+
+  plot = (ProbabilityDensity, EigenEnergy)
+
+  
+  particle = hl
+  number_of_eigenstates = 15
+  poisson_simulation  = dd
+  strain_simulation = strain 
+
+  solver = krylovshur
+  solution_method = general
+
+  Physics
+  { 
+    model = kp  
+    kp_model = 6x6 # 8x8
+  }
+
+}
+  
+
+Module  quantumdispersion
+{
+   
+  name = dispersion1D_el
+  regions = all
+
+  plot = ( k-space_dispersion)
+   
+  quantum_simulation = quantum_el
+  wedge = half
+  k_space_dimension = 1
+  k1 = (0, 0.5, 0)
+  number_of_nodes = (20)
+  min_eigenvalue_number = 0
+  max_eigenvalue_number = 9
+    
+}
+
+
+Module quantumdispersion
+{
+   
+  name = dispersion1D_hl
+  regions = all
+
+  plot = ( k-space_dispersion)
+
+  quantum_simulation = quantum_hl
+  wedge = half
+  k_space_dimension = 1
+  k1 = (0, 0.5, 0)
+  number_of_nodes = (20)
+  min_eigenvalue_number = 0
+  max_eigenvalue_number = 14
+
+    
+}
+
+
+
+Module quantumdispersion
+{
+   
+  name = dispersion2D_el
+  regions = all
+
+  plot = ( k-space_dispersion)
+  output_format = vtk
+
+  quantum_simulation = quantum_el
+  wedge = quarter
+  k_space_dimension = 2
+  k1 = (0,  0.5, 0)
+  k2 = (0,  0, 0.5)
+  number_of_nodes = (8,8)
+  min_eigenvalue_number = 0
+  max_eigenvalue_number = 9
+    
+    
+}
+
+
+Module quantumdispersion
+{
+   
+  name = dispersion2D_hl
+  regions = all
+
+  plot = ( k-space_dispersion)
+  output_format = vtk
+
+  quantum_simulation = quantum_hl
+  wedge = quarter
+  k_space_dimension = 2
+  k1 = (0, 0.5, 0)
+  k2 = (0,  0, 0.5)
+  number_of_nodes = (8,8)
+  min_eigenvalue_number = 0
+  max_eigenvalue_number = 14
+   
+    
+}
+
+
+ 
+
+Simulation
+{  
+   
+  dimension = 1
+  temperature = 300
+  solve = (strain, dd, quantum_el, quantum_hl,  dispersion1D_el, dispersion1D_hl, dispersion2D_el, dispersion2D_hl )   
+  resultpath = output
+  output_format = grace
+
+}

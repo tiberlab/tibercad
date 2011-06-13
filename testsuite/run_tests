@@ -26,7 +26,8 @@ USAGE: run_tests [OPTIONS]
     --config=<file> | -c <file> : use <file> as global configuration file
     --mail | -m                 : send error report to recipients specified
                                   in configuration
-    --test=<a,b,c,..> | -t <..> : perform tests a, b, c
+    --test=<a,b,c,..> | -t <..> : perform tests a, b, c. The names can contain
+                                  glob patterns, but then they must be quoted
     --skip                      : only check data, don't run the tests
     --purge | -p                : delete output of each test after run if
                                   test was succesful. If specified more than
@@ -98,7 +99,16 @@ GetOptions('verbose!' => \$verbose,
            'info' => \$info);
 
 
-@tests = split(/,/,join(',',@tests));
+my @temp = split(/,/,join(',',@tests));
+@tests = ();
+foreach (@temp) {
+  if ($_ eq "compile") {
+    push (@tests, $_);
+  }
+  else {
+    push (@tests, glob($_));
+  }
+}
 
 
 set_option('verbose', $verbose);
@@ -106,6 +116,7 @@ set_option('testonly', $skip);
 
 
 read_configuration($configfile);
+
 
 
 my $topdir = get_option("topdir");

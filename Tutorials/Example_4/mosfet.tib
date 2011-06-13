@@ -11,7 +11,7 @@ Device mosfet
   {
     Doping
     {
-      Nd = 1e18
+      density = 1e18
       type = acceptor
     }
   }
@@ -20,7 +20,7 @@ Device mosfet
   {
     Doping
     {
-      Nd = 5e19
+      density = 5e19
       type = donor
     }
   }
@@ -47,11 +47,12 @@ Module driftdiffusion
   Solver
   {
     type = linesearch
-    ksp_type = pconly
-    pc_type = lu
-    nonlin_max_it = 10
-    nonlin_step_tol = 1e-3
-    #ls_max_step = 20
+
+    linear_solver
+    {
+      method = pconly
+      preconditioner = lu
+    }
   }
 
 

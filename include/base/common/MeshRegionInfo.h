@@ -23,6 +23,9 @@ class TBDLLOCAL MeshRegionInfo
 
   public:
 
+    //! Constructor
+    MeshRegionInfo(void) {}
+
     //! Destructor
     virtual ~MeshRegionInfo(void);
 

@@ -25,7 +25,7 @@ OhmicContact::OhmicContact(const ModelOptions& options)
 void
 OhmicContact::do_compute(void)
 {
-  set_workfunction(get_dd_properties()->get_equilibrium_fermi_level());
+  set_contact_fermilevel(get_dd_properties()->get_equilibrium_fermi_level());
 
   ElectricalContact::do_compute();
 }

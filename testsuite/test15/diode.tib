@@ -63,7 +63,7 @@ Module thermal
   plot = LatticeTemp
   Physics
   {
-    HeatSource joule { DD_simulation = driftdiffusion }
+    heat_source joule { DD_simulation = driftdiffusion }
   }
 
   Contact anode

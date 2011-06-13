@@ -1,17 +1,16 @@
-a = 20; 
-d = 2; //3.5;  //4;
+s = 0.31736; // hexagon side length
+
+a = 63.5 * s;  // 7
+
+d = a / 9.2; // 1
+
 d1 = 1;
-
-// hw = well  thickness
-hw = 3.0; // 4.00 ; // 4.25; // 2.0; //3.0; // 4.5;
-
-hb = 10;
-h1 = 190;
-h2 = 190;
+hw = 3;
+hb = 4; // 5
+h1 = 80; // 100
+h2 = 80; // 100
 h3=50;
 N=4;
-
-lay_gan = 12 ; //16; // 22  12
 
 Function add_GaN_side_surfaces
 
@@ -53,6 +52,17 @@ Line Loop(7) = {1,2,3,4,5,6};
 Plane Surface(1) = {7};
 
 
+N = 30;
+For i In {0:N-2}
+  heightb[i] = 0.5 * (1 + Log10(i+2) / Log10(N));
+  stepsb[i] = 1;
+  heightt[i] = 0.5 * (1 - Log10(N-i-1) / Log10(N));
+  stepst[i] = 1;
+EndFor
+heightt[N-2] = heightt[N-2] - 0.05;
+
+
+
 //-----------------------------
 // GaN
 GaN_side_surface_number =  0;
@@ -65,7 +75,7 @@ volume = 1;
 
 
 
-t[] = Extrude   {0.0,0.0,h1} { Surface{1}; Layers {40}; Recombine; };  //AlGaN 
+t[] = Extrude   {0.0,0.0,h1} { Surface{1}; Layers { { 10, stepsb[] }, { 0.55, heightb[] } }; Recombine; };  //AlGaN 
 volume = t[1];
 AlGaN_volumes[0] = volume;
 Call add_AlGaN_side_surfaces;
@@ -76,7 +86,7 @@ volume++;
 
 
 
-t[] = Extrude {0.0,0.0,hb} {Surface{news - 1}; Layers {12}; Recombine; } ;//AlGaN 
+t[] = Extrude {0.0,0.0,hb} {Surface{news - 1}; Layers {12}; Recombine;} ;//AlGaN 
 volume = t[1];
 AlGaN_volumes[1] = volume;
 Call add_AlGaN_side_surfaces;
@@ -86,7 +96,7 @@ volume++;
 
 
 
-t[] = Extrude {0.0,0.0,hw} {Surface{news - 1};Layers{lay_gan}; Recombine; };//GaN  12 lay
+t[] = Extrude {0.0,0.0,hw} {Surface{news - 1};Layers{10}; Recombine;};//GaN
 volume = t[1];
 GaN_volumes[0] =  volume;
 Call add_GaN_side_surfaces;
@@ -97,7 +107,7 @@ volume++;
 
 
 
-t[] = Extrude {0.0,0.0,hb} {Surface{news - 1}; Layers {12}; Recombine; } ;//AlGaN 
+t[] = Extrude {0.0,0.0,hb} {Surface{news - 1}; Layers {12}; Recombine;} ;//AlGaN 
 volume = t[1];
 
 AlGaN_volumes[2] = volume;
@@ -106,7 +116,7 @@ volume++;
 
 
 
-t[] = Extrude {0.0,0.0,h1} {Surface{news - 1}; Layers {40}; Recombine; } ;//AlGaN 
+t[] = Extrude {0.0,0.0,h1} {Surface{news - 1}; Layers { { stepst[], 10 }, { heightt[], 1 }  }; Recombine;} ;//AlGaN 
 volume = t[1];
 AlGaN_volumes[3] = volume;
 Call add_AlGaN_side_surfaces;

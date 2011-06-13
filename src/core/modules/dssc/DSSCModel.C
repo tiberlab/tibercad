@@ -29,8 +29,6 @@ DSSCModel::DSSCModel(const ModelOptions& options)
     _beta(1.0),
     _k3(1e8),
     _generation(0.0),
-    _generation_model(NULL),
-    _gen_id(INVALID_ID),
 //obsolete++
     _alpha(0.2),
     _alpha2(0.0),
@@ -82,11 +80,19 @@ DSSCModel::do_init(void)
   }
   else
   {
-    _generation_model = SimulationInterface::find_simulation(gen_str);
-    if (_generation_model == NULL)
-      throw InitFailedException("Cannot find generation model: " + gen_str);
+    vector<string> gens;
+    Utils::extract_vector(gen_str, gens);
+    _generation_model.resize(gens.size());
+    _gen_id.resize(gens.size());
+    for (size_t i = 0; i < gens.size(); ++i)
+    {
+      _generation_model[i] = SimulationInterface::find_simulation(gens[i]);
+      if (_generation_model[i] == NULL)
+        throw InitFailedException("Cannot find generation model: " + gens[i]);
 
-    _gen_id = _generation_model->get_solution_id("Generation");
+      _gen_id[i] = _generation_model[i]->get_solution_id("Generation");
+
+    }
   }
 
 
@@ -129,7 +135,7 @@ DSSCModel::do_init(void)
   _mobility.I = _mobility.I / kT;
   _mobility.I3 = _mobility.I3 / kT;
   _mobility.C = _mobility.C / kT;
-
+   
   SubmodelIterator it = submodels_begin("trap");
   SubmodelIterator end = submodels_end("trap");
   for ( ; it != end; ++it)
@@ -144,7 +150,6 @@ DSSCModel::do_init(void)
     //  _htraps.insert(t);
     }
   }
-
 
 }
 
@@ -170,9 +175,9 @@ DSSCModel::read_database(void)
   _mobility.C = db.get("mobility_cation",8.5e-6);
 
   db.set_section("density");
-  _eq_conc.n = ("ne",2.3e4);
-  _eq_conc.I = ("nI",0.45);
-  _eq_conc.I3 = ("nI3",0.05);
+  _eq_conc.n = db.get("ne",2.3e4);
+  _eq_conc.I = db.get("nI",0.45);
+  _eq_conc.I3 = db.get("nI3",0.05);
 }
 
 
@@ -230,14 +235,17 @@ DSSCModel::calculate_densities(void)
 
     //double exponential2 = _alpha2 * exp( -_alpha2 * abs(_pd.coordinates(0) - _x0) );
     //_pd.generation_rate =  gen1 + _deltaG * exponential2;
-    if (_generation_model != NULL)
+    if (_generation_model.size() > 0)
     {
+      _generation = 0;
+
       vector<double> tmp(1);
-      if (_generation_model->get_solution(_elem, _gen_id, tmp,
-          vector<Point>(1, _pd.coordinates)))
-        _generation = tmp[0];
-      else
-        _generation = 0;
+      for (size_t i = 0; i < _generation_model.size(); ++i)
+      {
+        if (_generation_model[i]->get_solution(_elem, _gen_id[i], tmp,
+            vector<Point>(1, _pd.coordinates)))
+          _generation += tmp[0];
+      }
 
     }
 

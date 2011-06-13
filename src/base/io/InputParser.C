@@ -318,6 +318,7 @@ const string InputParser::get_until_closing_brace(ifstream& in_stream)
 
   while (true)
   {
+    skip_whitespaces(in_stream);
     temp = in_stream.get();
     if (temp == EOF)
       return str;

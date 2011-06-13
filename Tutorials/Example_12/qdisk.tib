@@ -1,4 +1,5 @@
-# nanocolumn LED example
+#  Example 12: Quantum and optical properties of  a GaN  nanocolumn quantum disk  LED
+
 Device nanocolumn
 {
  
@@ -58,27 +59,37 @@ Device nanocolumn
 }
 
 
-# Definition of  Simulation Models
 
-Module macrostrain
+Module elasticity 
 {
 
   name = strain
-  substrate = cathode
-  plot = (Strain, Stress)
+  regions = all
 
-  Boundary cathode
+  plot = (Strain, Stress, Displacement )
+
+  Physics 
   {
-    type = substrate
-    material = AlGaN
-    x = 0.28
-
-    x-growth-direction = (1,0,-1,0)
-    y-growth-direction = (-1,2,-1,0)
-    z-growth-direction = (0,0,0,1)
-
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaN
+      x = 0.28
+      x-growth-direction = (1,0,-1,0)
+      y-growth-direction = (-1,2,-1,0)
+      z-growth-direction = (0,0,0,1)
+    
+    }
+       
   }
+
+  Contact cathode   
+  {type = clamp}
+
 }
+
+
+
+
 
 
 Module driftdiffusion
@@ -88,10 +99,12 @@ Module driftdiffusion
   plot = (Polarization, Ec, Ev, Eg, ElPotential, eQFermi, hQFermi,
           eMobility, hMobility, eDensity, hDensity,
           CurrentDensity, eCurrentDensity, hCurrentDensity,
-          ContactCurrent)
+          ContactCurrent, IQE)
       
   save_state = true
-  #load_state = reference/dd_bias_3.8.tsv
+  # comment this out if you want to perform the 
+  # whole voltage sweep
+  load_state = reference/dd_bias_3.8.tsv
 
   Physics
   {
@@ -116,10 +129,7 @@ Module driftdiffusion
     recombination (srh, direct) {}
 
     
-    mobility field_dependent
-    { 
-      low_field_model = doping_dependent
-    }
+    mobility doping_dependent {}
 
   }               
 
@@ -155,7 +165,7 @@ Module efaschroedinger
   particle = el
   number_of_eigenstates = 20
   poisson_simulation = dd
-  strain_simulation = macrostrain
+  strain_simulation = strain
 
   Physics 
   {
@@ -173,7 +183,7 @@ Module efaschroedinger
   particle = hl
   number_of_eigenstates = 80
   poisson_simulation = dd
-  strain_simulation = macrostrain
+  strain_simulation =  strain
     
   solver = lanczos
   
@@ -221,14 +231,16 @@ Module sweep
 }
 
   
-# Definition of model-independent parameters of the Simulation
+
 Simulation
 {
   temperature = 300
 
-  solve = (strain, sweep, quantum_el, quantum_hl, optics)
-  # we load saved solution
-  #solve = (strain, dd, quantum_el, quantum_hl, optics)
+  solve = (strain, 
+           # change this to 'sweep' if you want to perform the 
+           # whole voltage sweep:
+           dd, # sweep
+           quantum_el, quantum_hl, optics)
 
   resultpath = output 
 

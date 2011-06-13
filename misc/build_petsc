@@ -7,6 +7,66 @@ fi
 
 . common.sh
 
+
+# Does the actual build
+# needs at least 1 argument ('real' or 'complex')
+# second argument can be 0 or 1, 1 for creating debug version
+function make_petsc()
+{
+
+  datatype=$1
+  debug=0
+  if [ $# -ge 2 ]
+  then
+    debug=$2
+  fi
+
+  export PETSC_DIR=${PWD}
+
+  export PETSC_ARCH=${HOST}
+  [ "$datatype" == "complex" ] && export PETSC_ARCH=${HOST}-complex
+
+  echo "Building with PETSC_ARCH=${PETSC_ARCH} ..."
+
+  if [ ! -e  conftest-${PETSC_ARCH} ]; then
+    ./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
+      --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+
+    cp conftest conftest-${PETSC_ARCH}
+    if [ "$target_os" != "win32" ]; then
+      ./conftest-${PETSC_ARCH}
+      cp reconfigure.py reconfigure-${PETSC_ARCH}.py
+    fi
+  fi
+
+  if [ -e  reconfigure-${PETSC_ARCH}.py ]; then
+    ./reconfigure-${PETSC_ARCH}.py
+
+    if [ "$target_os" == "win32" ]; then
+      cp ${PETSC_ARCH}/include/petscconf.h ${PETSC_ARCH}/include/petscconf.h.bkp
+      sed "/PETSC_HAVE_GETPAGESIZE/,+2 d" ${PETSC_ARCH}/include/petscconf.h.bkp |
+      sed "/PETSC_HAVE_SLEEP/,+2 d" > ${PETSC_ARCH}/include/petscconf.h 
+    fi
+
+    make
+
+    libname=${petsc_dll_name}_${datatype}
+    [ $debug -eq 1 ] && libname=${libname}_dbg
+
+    # for darwin: -force_load -reexport-lx  for each libx.a 
+
+    echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
+    mkdir -p ${BUILDDIR}/${TCHOST}/lib
+    ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} \
+      ${petsc_linker_flags} \
+      -Wl,--whole-archive ${PETSC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive \
+      ${LAPACK_LIBS} ${FORTRAN_LIBS}
+  fi
+
+}
+
+
+
 ARCHIVE="petsc-lite-${PETSCVERSION}${PETSCPATCHLEVEL}.tar.gz"
 PATCH=${PWD}/petsc.patch-${PETSCVERSION}
 
@@ -40,15 +100,19 @@ cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 
 
 
+# PETSc shared libraries cannot be moved around, therefore
+# we compile them always statically
 
-SHARED=--with-shared
-if [ $shared_libs == 'n' ]
-then
-  SHARED="--with-shared=0 --with-dynamic=0"
-fi
+#SHARED="--with-shared=1 --with-dynamic=1"
+#if [ $shared_libs == 'n' ]
+#then
+SHARED="--with-shared=0 --with-dynamic=0"
+#fi
   
 
-COMPILERS="--with-cc=$CC --with-cxx=$CXX" # --with-fc=$FC"
+#COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
+COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$(echo $CC | sed 's/gcc/cpp/')"
+echo $COMPILERS
 
 if [ $MPI == 'n' ]; then
   MPI="--with-mpi=0"
@@ -56,43 +120,27 @@ else
   MPI="--with-mpi-dir=${MPIDIR}"
 fi
 
-CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-fortran=0"
+LAPACKLIBS=${LAPACKLIBS:-"--download-f-blas-lapack=1"}
 
+petsc_host=
+petsc_dll_name=${dll_prefix}petsc
 
-export PETSC_DIR=${PWD}
-
-
-if [ ! -e ${ARCH}.ok ]; then
-  export PETSC_ARCH=${ARCH}
-  ./config/configure.py ${CONFIGOPTS} --with-debugging=0  --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
-  make
-  #touch ${ARCH}-opt.ok
+if [ "${target_os}" == "win32" ]
+then
+  petsc_host="--with-host-vendor=w64 --with-host-os=mingw32"
 fi
 
+CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 ${petsc_host}"
 
-if [ ! -e ${ARCH}-complex.ok ]; then
-  export PETSC_ARCH=${ARCH}-complex
-  ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex --with-debugging=0 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
-  make
-  #touch ${ARCH}-complex-opt.ok
-fi
 
-if [ $DEBUG == 'y' ]; then
+make_petsc real
+make_petsc complex
 
-  if [ ! -e ${ARCH}-dbg.ok ]; then
-    export PETSC_ARCH=${ARCH}-dbg
-    ./config/configure.py ${CONFIGOPTS} --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
-    make
-    #touch ${ARCH}.ok
-  fi
 
-  if [ ! -e ${ARCH}-complex-dbg.ok ]; then
-    export PETSC_ARCH=${ARCH}-complex-dbg
-    ./config/configure.py ${CONFIGOPTS} --with-scalar-type=complex  --with-clanguage=C++ --with-debugging=1 --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
-    make
-    #touch ${ARCH}-complex.ok
-  fi
-
+if [ $DEBUG == 'y' ]
+then
+  make_petsc real 1
+  make_petsc complex 1
 fi
 
 

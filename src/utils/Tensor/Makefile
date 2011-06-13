@@ -18,8 +18,8 @@ target := $(libdir)/libtensor.a
 
 
 $(libdir)/libtensor.a: $(objects)
-	@ar cru $@ $(objects)
-	@ranlib $@
+	@$(AR) cru $@ $(objects)
+	@$(RANLIB) $@
 
 $(libdir)/libtensor$(shared_libext): $(objects)
 	@$(CXX) -fPIC -shared -o $@ $(objects)

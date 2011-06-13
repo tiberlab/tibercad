@@ -16,7 +16,8 @@
 #include <cctype>
 #include <iostream>
 #include <sstream>
-#include <sys/times.h>
+// we can use only ANSI header for Win compatibility
+#include <sys/time.h>
 
 
 using namespace std;
@@ -36,27 +37,33 @@ Utils::Timer::~Timer(void)
 void
 Utils::Timer::reset(void)
 {
-  struct tms now;
-  times(&now);
-  _user = now.tms_utime;
-  _system = now.tms_stime;
+  struct timezone tz;
+  struct timeval now;
+  gettimeofday(&now, &tz);
+  _start = now.tv_sec + 1e-6 * now.tv_usec;
 }
 
 
 string
 Utils::Timer::elapsed_string(void)
 {
-  struct tms now;
-  times(&now);
+  struct timeval now;
+  struct timezone tz;
+  gettimeofday(&now, &tz);
 
-  double tps = sysconf(_SC_CLK_TCK);
-  double user_sec = (now.tms_utime - _user) / tps;
-  //double sys_sec = (now.tms_stime - _system) / tps;
+  double now_s = now.tv_sec + 1e-6 * now.tv_usec;
+  double diff = now_s - _start;
 
-  string s(time_to_string(user_sec));
-  //s += " (system: " + time_to_string(sys_sec) + ")";
+  int m = ::floor(diff / 60);
+  int h = ::floor(m / 60);
+  m %= 60;
+  double s = diff - 60 * (m + 60 * h);
 
-  return s;
+  ostringstream os;
+  os.precision(2);
+  os << h << "h " << m << "m " << s << "s";
+
+  return os.str();
 }
 
 

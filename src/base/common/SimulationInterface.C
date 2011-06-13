@@ -24,7 +24,6 @@
 #include "CrackStrain.h"
 #include "Sweep.h"
 #include "RelaxationMethod.h"
-#include "ModifiedBroyden.h"
 #include "Utils.h"
 #include "DataOutput.h"
 #include "Messages.h"
@@ -130,8 +129,6 @@ SimulationInterface::create(const string& type,
     sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_relaxation")
     sim = RelaxationMethod::create(options);
-  else if (type_name == "selfconsistent_broyden")
-    sim = ModifiedBroyden::create(options);
   else if (type_name == "opticskp")
     sim = OpticsKP::create(options);
   else if (type_name == "quantumdispersion")
@@ -967,6 +964,10 @@ SimulationInterface::plot_meshdata(void)
 
     ID subdomain = elem->subdomain_id();
 
+    // if subdomain is not in data, we go to the next element
+    if (data.find(subdomain) == data.end())
+      continue;
+
     get_solution(elem, solutions);
 
     // put them into the right vectors
@@ -1021,7 +1022,7 @@ SimulationInterface::plot_meshdata(void)
   for (unsigned int i = 0; i < formats.size(); i++)
   {
     auto_ptr<DataOutput> writer(DataOutput::create(formats[i]));
-    if ((writer.get() != NULL) && (_solution_descriptors.size() > 0))
+    if ((writer.get() != NULL) && (data.size() > 0))
     {
       writer->set_output_directory(get_output_directory());
       writer->set_filename(get_output_filename());
@@ -1188,7 +1189,7 @@ SimulationInterface::save_state(const string& file)
       f = get_output_directory() + "/" +
         get_output_filename() + ".tsv";
 
-    ofstream of(f.c_str());
+    ofstream of(f.c_str(), ios_base::binary);
     if (!of.good()) throw InitFailedException("Cannot use " + f + " for writing.");
 
     Messages::newline();
@@ -1211,7 +1212,7 @@ SimulationInterface::load_state(const string& file)
   if (!f.empty())
   {
 
-    ifstream in(f.c_str());
+    ifstream in(f.c_str(), ios_base::binary);
     if (!in.good()) throw InitFailedException("Cannot use " + f + " for reading.");
 
     Messages::info("Reading state from " + f);
@@ -1230,21 +1231,27 @@ SimulationInterface::load_state(const string& file)
 void
 SimulationInterface::do_save_data(ostream& os)
 {
+
+  // NOTE we always use windows line endings to
+  //      have better portability of the files
+  string eol("\r\n");
+
+
   // first write all variables
-  os << "<variables>" << endl;
+  os << "<variables>" << eol;
   Variable::iterator vit(Variable::begin());
   const Variable::iterator vend(Variable::end());
   for ( ; vit != vend; ++vit)
   {
-    os << (*vit)->get_name() << " " << (*vit)->get_value_string() << endl;
+    os << (*vit)->get_name() << " " << (*vit)->get_value_string() << eol;
   }
-  os << "</variables>" << endl;
+  os << "</variables>" << eol;
 
 
   for (size_t i = 0; i < _systems.size(); ++i)
   {
     // then the data
-    os << "<data>" << endl;
+    os << "<data>" << eol;
 
     const NumericVector<Number>& solution =
         get_equation_system<TiberEqSystem>(i).get_solution_vector();
@@ -1255,7 +1262,7 @@ SimulationInterface::do_save_data(ostream& os)
       os.write(reinterpret_cast<char*>(&val), sizeof(double));
     }
 
-    os << "\n</data>" << endl << flush;
+    os << eol << "</data>" << eol << flush;
   }
 }
 
@@ -1273,17 +1280,20 @@ SimulationInterface::do_load_data(istream& is)
 
   string keyword("<variables>");
 
+  // NOTE we compare with an explicit number of characters
+  //      to not get confused if there is a \r
+
   is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
+  while (is.good() && (keyword.compare(0, keyword.size(), buf, keyword.size()) != 0))
   {
     is.getline(buf, bufsize);
   }
 
-  if (!is.good()) throw InitFailedException("Bad datafile");
+  if (!is.good()) throw InitFailedException("Bad datafile (missing variables block)");
 
   keyword = "</variables>";
   is.getline(buf, bufsize);
-  while (is.good() && (keyword.compare(buf) != 0))
+  while (is.good() && (keyword.compare(0, keyword.size(), buf, keyword.size()) != 0))
   {
     istringstream ss(buf);
     string name;
@@ -1300,7 +1310,7 @@ SimulationInterface::do_load_data(istream& is)
     Variable::set_variable_value(vit->first, vit->second);
   }
 
-  if (!is.good()) throw InitFailedException("Bad datafile");
+  if (!is.good()) throw InitFailedException("Bad datafile (missing data block?)");
   values.clear();
 
   bool has_read = false;
@@ -1309,7 +1319,7 @@ SimulationInterface::do_load_data(istream& is)
   {
     keyword = "<data>";
     is.getline(buf, bufsize);
-    while (is.good() && (keyword.compare(buf) != 0))
+    while (is.good() && (keyword.compare(0, keyword.size(), buf, keyword.size()) != 0))
     {
       is.getline(buf, bufsize);
     }
@@ -1318,7 +1328,7 @@ SimulationInterface::do_load_data(istream& is)
 
     for (size_t i = 0; i < solution.size(); ++i)
     {
-      if (!is.good()) throw InitFailedException("Bad datafile");
+      if (!is.good()) throw InitFailedException("Bad datafile (corrupted data?)");
 
       double val;
       is.read(buf, sizeof(double));
@@ -1328,7 +1338,7 @@ SimulationInterface::do_load_data(istream& is)
     }
     keyword = "</data>";
     is.getline(buf, bufsize);
-    while (is.good() && (keyword.compare(buf) != 0))
+    while (is.good() && (keyword.compare(0, keyword.size(), buf, keyword.size()) != 0))
     {
       is.getline(buf, bufsize);
     }

@@ -8,8 +8,10 @@ ADDITIONAL_LIBS = @LIBREADLINE@ $(topdir)/src/utils/license/.$(ARCH)/liblicense.
 PACKAGEFLAGS = -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
 
 SUFF := 
-ifeq ($(findstring cygwin,$(hostos)),cygwin)
+ifeq ($(target_os),win32)
   SUFF := ".exe"
+  objects += tibercad_res.o
+  WINDRES := $(subst gcc,windres,$(CC))
 endif
 
 ifeq ($(METHOD),dbg)
@@ -17,9 +19,6 @@ ifeq ($(METHOD),dbg)
 endif
 
 
-ifeq ($(findstring cygwin,$(hostos)),cygwin)
-  objects += tibercad_res.o
-endif
 
 
 all: tibercad
@@ -27,14 +26,14 @@ all: tibercad
 tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad$(SUFF) \
-		-Wl,-export-dynamic -L$(libdir) \
+		-L$(libdir) \
 		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
 
 
 tibercad_static: $(objects)
 	@echo "Compiling statically linked tibercad executable ..."
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad_static$(SUFF) \
-		-Wl,-export-dynamic -L$(libdir) \
+		-L$(libdir) \
 		-Wl,-rpath,$(libdir) -Wl,-Bstatic -ltibercad -Wl,-Bdynamic \
 		$(ADDITIONAL_LIBS) \
 		$(MODULE_LIBS) $(LDFLAGS) $(PACKAGEFLAGS)
@@ -42,7 +41,7 @@ tibercad_static: $(objects)
 
 
 tibercad_res.o : $(topdir)/share/tibercad.rc $(topdir)/share/tibercad.ico $(topdir)/include/base/common/tiber_config.h
-	windres -I $(topdir)/share -I $(topdir)/include/base/common \
+	$(WINDRES) -I $(topdir)/share -I $(topdir)/include/base/common \
 	  -O coff -D SVNREVISION=$(SVNREVISION) $< -o $@
 
 

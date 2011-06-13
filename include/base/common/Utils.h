@@ -16,6 +16,8 @@ typedef VectorValue<double> RealVectorValue;
 template <typename T> class TensorValue;
 typedef TensorValue<double> RealTensor;
 
+
+
 //! This class contains useful methods for different tasks
 class Utils
 {
@@ -206,8 +208,8 @@ class Utils
 
       private:
 
-        clock_t _user;
-        clock_t _system;
+        // The start time, in seconds
+        double _start;
     };
 
 
