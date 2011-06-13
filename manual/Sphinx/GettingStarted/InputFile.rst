@@ -241,7 +241,7 @@ by using the cluster name.
 
 
 Region block
-"""""""""""""
+^^^^^^^^^^^^
 
 ``Region`` blocks are started with the keyword ``Region`` , followed by the
 name of the tiberCAD region. The name of the tiberCAD region 
@@ -325,7 +325,7 @@ The optional subblock doping as in the example above contains the keywords:
 
 
 Cluster block
-"""""""""""""
+^^^^^^^^^^^^^
 
 The definition of cluster blocks must be preceded by the keyword ``Cluster`` , followed by the
 name of the Cluster. For example
