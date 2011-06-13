@@ -331,12 +331,10 @@ AC_DEFUN([TC_LIBMESH_PETSC_LIBS],
  LDFLAGS_save=$LDFLAGS
  AC_LANG_PUSH([C++])
  LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
- echo "$LDFLAGS"
  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
  			        [tc_cv_have_sharedlibs="yes"])
  echo "$tc_cv_have_sharedlibs"
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
- echo "$LDFLAGS"
   LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
   AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
   			         [tc_cv_have_sharedlibs="yes"])

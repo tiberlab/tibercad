@@ -13,6 +13,15 @@
  #ifdef CRYPTOPP_ALLOW_UNALIGNED_DATA_ACCESS
 --- config.h.orig	2011-05-21 15:15:08.000000000 +0200
 +++ config.h	2011-05-21 15:18:18.000000000 +0200
+@@ -3,6 +3,8 @@
+ 
+ // ***************** Important Settings ********************
+ 
++#define NO_OS_DEPENDENCE
++
+ // define this if running on a big-endian CPU
+ #if !defined(IS_LITTLE_ENDIAN) && (defined(__BIG_ENDIAN__) || defined(__sparc) || defined(__sparc__) || defined(__hppa__) || defined(__mips__) || (defined(__MWERKS__) && !defined(__INTEL__)))
+ #      define IS_BIG_ENDIAN
 @@ -23,6 +23,8 @@
  // This macro will be ignored if NO_OS_DEPENDENCE is defined.
  #define USE_MS_CRYPTOAPI
