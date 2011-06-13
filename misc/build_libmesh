@@ -26,20 +26,44 @@ WINPATCH=${PWD}/libmesh-win.patch
 
 cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
-  if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
+  if [ ! -d libmesh-${LIBMESHVERSION}-$HOST ]; then
     if [ ! -e libmesh-${LIBMESHVERSION}.tbz ]; then
-      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$march
-      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}-$march
+      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$HOST
+      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}-$HOST
     else
       tar jxf libmesh-${LIBMESHVERSION}.tbz
     fi
 
     if [ -e ${PATCH} ]; then
-      patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
+      patch -p0 -d libmesh-${LIBMESHVERSION}-$HOST < ${PATCH}
     fi
 
     if [ "$target_os" == "win32" ] && [ -e $WINPATCH ]; then
-      patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
+      patch -p0 -d libmesh-${LIBMESHVERSION}-$HOST < $WINPATCH
+
+      cat > libmesh-${LIBMESHVERSION}-${HOST}/m4/check_file.m4 <<END
+# AC_CHECK_FILE(FILE, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
+# -------------------------------------------------------------
+#
+# Check for the existence of FILE.
+AC_DEFUN([AC_CHECK_FILE],
+[AC_DIAGNOSE([cross],
+	     [cannot check for file existence when cross compiling])dnl
+AS_VAR_PUSHDEF([ac_File], [ac_cv_file_$1])dnl
+AC_CACHE_CHECK([for $1], [ac_File],
+[test "$cross_compiling" = yes &&
+  AC_MSG_WARN([cannot check for file existence when cross compiling])
+if test -r "$1"; then
+  AS_VAR_SET([ac_File], [yes])
+else
+  AS_VAR_SET([ac_File], [no])
+fi])
+AS_IF([test AS_VAR_GET([ac_File]) = yes], [$2], [$3])[]dnl
+AS_VAR_POPDEF([ac_File])dnl
+])# AC_CHECK_FILE
+
+END
+
     fi
   fi
 else
@@ -48,29 +72,30 @@ else
   fi
 fi
 
-if [ ! -d libmesh-${LIBMESHVERSION}-$march ]; then
+if [ ! -d libmesh-${LIBMESHVERSION}-$HOST ]; then
   if [ ! -e ${ARCHIVE} ]; then
     echo "Could not download libmesh."
     exit 1
   fi
   tar zxf ${ARCHIVE}
-  mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$march
+  mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$HOST
 
   if [ -e ${PATCH} ]; then
-    patch -p0 -d libmesh-${LIBMESHVERSION}-$march < ${PATCH}
+    patch -p0 -d libmesh-${LIBMESHVERSION}-$HOST < ${PATCH}
   fi
 
   if [ "$target_os" == "win32" && -e $WINPATCH ]; then
-    patch -p0 -d libmesh-${LIBMESHVERSION}-$march < $WINPATCH
+    patch -p0 -d libmesh-${LIBMESHVERSION}-$HOST < $WINPATCH
   fi
 fi
 
 
-cd libmesh-${LIBMESHVERSION}-$march
+cd libmesh-${LIBMESHVERSION}-$HOST
 
 # we have modifications to the configuration
-aclocal -I m4
-autoconf
+#aclocal -I m4
+#autoconf
+cp ${BUILDDIR}/misc/configure.libmesh configure
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
