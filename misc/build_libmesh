@@ -84,7 +84,7 @@ export PETSC_ARCH=${HOST}
 #fi
 SHARED=--enable-shared
 
-dll_name=${dll_prefix}libmesh
+dll_name=libmesh
 
 if [ "${target_os}" != "win32" ]
 then
