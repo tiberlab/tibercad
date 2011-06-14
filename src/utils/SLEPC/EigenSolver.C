@@ -7,12 +7,16 @@
 #include "slepceps.h"
 #include "EigenSolver.h"
 
+#include "private/matimpl.h"
+
 namespace
 {
   Mat A; //Hamiltonian
   Mat B; //S-matrix
   EPS eps; //EigenSolver 
+  double shift; //could be stored in ST but lapack does not apply any shift
 }
+
 int EigenSolver::_size_of_matrix;
 //-------------------------------------------------------------//
 void EigenSolver::slepc_init(int argc1, char** argv1)
@@ -48,8 +52,8 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
         Load the matrices that define the eigensystem, Ax=kBx
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
- 
- 
+  //print_options(opt);
+  
 
   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
  
@@ -63,7 +67,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
-  ierr = MatGetSize(A, &_size_of_matrix, NULL);
+    ierr = MatGetSize(A, &_size_of_matrix, NULL);
    
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
 
@@ -104,7 +108,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   // ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
   
  
-
+  shift = opt.spectrum_shift;
  
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
@@ -113,7 +117,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   {
     ierr = EPSSetProblemType(eps,EPS_GNHEP);CHKERRQ(ierr);
     
-    // ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
+    //ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
 
     if (opt.solver_type == "arnoldi")
       ierr = EPSSetType(eps, EPSARNOLDI);
@@ -133,9 +137,9 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
       ierr = STSetType(st,STSINV); CHKERRQ(ierr);
       ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
     }
-    
+      
     ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
-    
+
   
     ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
 
@@ -181,6 +185,9 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
     ierr = EPSSetType(eps, EPSLAPACK);
     ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
+    //ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
+    //ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
+
   }
   else if (opt.solver_type == "arpack")
   {
@@ -239,20 +246,32 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
  
 
 
-
-
-
-
-  ierr = do_solve(opt);  CHKERRQ(ierr);
+  ierr = do_solve(opt);  
+  
+  CHKERRQ(ierr);
 
  
-
   return ierr;
 }
 
 //------------------------------------------------------------------------------//
 
-
+void EigenSolver::print_options(const EigenSolver::SLEPCoptions& opt)
+{
+  std::cout<<std::endl;
+  std::cout<< "   (ES) read matrix from file: " << opt.read_matrix_from_file << std::endl;
+  std::cout<< "   (ES) matrix output: " << opt.matrix_output << std::endl;
+  std::cout<< "   (ES) ev_number: " << opt.ev_number << std::endl;
+  std::cout<< "   (ES) solver type: " << opt.solver_type << std::endl;
+  std::cout<< "   (ES) tolerance: " << opt.eps_tolerance << std::endl;  
+  std::cout<< "   (ES) max iterations: " << opt.eps_max_it << std::endl;  
+  std::cout<< "   (ES) spectral trans: " << opt.spectral_trans << std::endl;
+  std::cout<< "   (ES) shift: " << opt.spectrum_shift << std::endl;  
+  std::cout<< "   (ES) linear system solver: " << opt.st_ksp_type << std::endl;
+  std::cout<< "   (ES) preconditioner: " << opt.pc_type << std::endl; 
+  std::cout<< "   (ES) tolerance: " << opt.spectrum_inversion_tolerance << std::endl;       
+  
+}    
 
 int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
 {
@@ -309,7 +328,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   } 
  
 
-  
+  shift = opt.spectrum_shift;
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
                 Create the eigensolver and set various options
@@ -353,6 +372,9 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
     ierr = EPSSetProblemType(eps,EPS_HEP);CHKERRQ(ierr);
     ierr = EPSSetType(eps, EPSLAPACK);
     ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
+    //ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
+    //ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
+
   }
   else if (opt.solver_type == "arpack")
   {
@@ -565,9 +587,8 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
    
   ierr = EPSSolve(eps);
  
-
-  ierr =  EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
-  
+  //ierr =  EPSGetConverged(eps,&nconv);  CHKERRQ(ierr);
+ 
  
   return ierr;
 
@@ -721,4 +742,100 @@ int  EigenSolver::preallocate_S_matrix(unsigned int matrix_size,  int*  non_zero
   ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
  
   return(ierr);
+}
+
+//------------------------------------------------------------------------------------//
+double  EigenSolver::get_shift(void)
+{
+  //PetscErrorCode ierr;
+  //ST st;
+  //PetscScalar shift;             //
+
+  //ierr = EPSGetST(eps, &st);     // ierr = EPSGetST(eps, st); 
+
+  //CHKERRQ(ierr);   
+
+  //ierr = STGetShift(st, &shift); // ierr = STGetShift(*st, &shift);
+ 
+  //CHKERRQ(ierr); 
+
+  //return(real(shift));
+  return(shift);
+
+}
+//------------------------------------------------------------------------------------//
+bool EigenSolver::check_matrices(double tol, bool verbose)
+{
+  PetscErrorCode ierr;
+  PetscTruth is;
+  bool ans;
+
+  ans = false;
+  if(A->hermitian_set)
+  {
+    if (verbose)
+      std::cout<<"   (ES) Hamiltonian is defined Hermitian"<<std::endl; 
+    ans = true;
+  }
+  else
+  {
+    ierr = MatIsHermitian(A, tol, &is);
+
+    if (is==PETSC_TRUE)
+    {
+      if (verbose)
+        std::cout<<"   (ES) Hamiltonian is Hermitian within "<<tol<<std::endl;
+    }
+    else
+    {
+      if (verbose)
+        std::cout<<"   (ES) Hamiltonian is NOT Hermitian!"<<std::endl;    
+    }
+    ans = (is==PETSC_TRUE);
+  }
+
+
+
+  if(B->hermitian_set)
+  {
+    if (verbose)
+      std::cout<<"   (ES) Overlap is defined Hermitian"<<std::endl; 
+    is = PETSC_TRUE;
+  }  
+  else
+  {
+    ierr = MatIsHermitian(B, tol, &is);
+    
+    if (is==PETSC_TRUE)
+    {
+      if (verbose)
+        std::cout<<"   (ES) Overlap is Hermitian within "<<tol<<std::endl;
+    }  
+    else
+    {
+      if (verbose)
+        std::cout<<"   (ES) Overlap is NOT Hermitian!"<<std::endl;   
+    }
+  }
+  
+  return (is==PETSC_TRUE) && ans;
+  
+}
+
+bool EigenSolver::check_matrices(void)
+{
+  PetscErrorCode ierr;
+  PetscTruth is;
+  bool ans;
+
+  ans = false;    
+
+  ierr = SlepcIsHermitian(A, &is);
+
+  ans = is==PETSC_TRUE;
+
+  ierr = SlepcIsHermitian(B, &is);
+
+  return (is==PETSC_TRUE) && ans;  
+
 }

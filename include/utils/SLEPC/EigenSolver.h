@@ -127,13 +127,20 @@ class EigenSolver
   */
   static int insert_S_row( int row, const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
 
-
+  static void print_options(const SLEPCoptions& opt);
 
   //!set initial vector
   /*!
     \param  initial_vector initial vector 
   */
   static void set_initial_vector( const std::vector<Complex>& initial_vector);
+
+  //! get actual shift used in calculation
+  static double get_shift(void);
+
+  //! Check whether matrices are Hermitian
+  static bool check_matrices(double tol, bool verbose);
+  static bool check_matrices(void);
 
 
  private:

@@ -97,16 +97,17 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   
     std::string spectral_trans;         //!< spectral transformation
 
+    double spectrum_shift;              //!< Spectrum shift 
+
     std::string st_ksp_type;            //!< Liner system solution method 
     
-
     std::string strategy;               //<! matlab (algorithm used in Matlab) or general (recommended by SLEPC)
 
     bool monitor;   //<! activates convergence monitor if true
 
-
     double spectrum_inversion_tolerance; //<! tolerance for spectrum inversion
 
+    bool dump_on_file;
     
   };
 
@@ -121,43 +122,18 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
   virtual void do_solve() {};
 
-
   virtual void parse_options();
 
+  virtual void do_copy_H_to_solver();
+  
+  virtual void do_copy_S_to_solver();
 
-
-  //!calculates matricies H and S for the generalized problem Hx = gSx 
-  virtual void calculate_Hamiltonian_and_S(void) {};
-
- 
+  //!options of any eigensolver problem
+  options solver_opt;
 
 
   //!dimension of the system
   short dim;
-
-  //!pointer to the real part of the Hamiltonian
-  SparseMatrix<Number>* Ham_real;
-
-  //!pointer to the imaginary part of the Hamiltonian
-  SparseMatrix<Number>* Ham_imag;
-
-  //!pointer to the real part of S matrix 
-  SparseMatrix<Number>* S_real;
-
-
-  //!pointer to the real part of S matrix 
-  SparseMatrix<Number>* S_imag;
-
-
-
-  //!creates complex matrix inside EigenSolver class (TODO)
-  /*!
-    \param matrix  H or S
-    \param m_real  real part of the matrix
-    \param m_imag  imaginary part of the matrix. If NULL, matrix is considdred to be pure real
-  */
-  void create_complex_matrix(const MatrixName matrix, const SparseMatrix<Number>* m_real, 
-  			     const SparseMatrix<Number>* m_imag = NULL ) {};
 
 
   //!number of independent dofs
@@ -168,13 +144,12 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   int number_of_all_dofs;
 
 
-
   //!vector: each element contains information about dof
   std::vector<FEMEigenvalueProblem::dof_new> new_dofs;
 
+  //! my copy of DofMap::_dof_constraints (I have to recalculate it because it is private)
+  DofConstraints 	my_dof_constraints;
 
-  //!creates new_dofs vector
-  void make_new_dofs(void);
 
 
   //!pointer to mesh of the equation systems
@@ -191,29 +166,34 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   //!diriclet DOFS
   std::set<unsigned int>  dirichlet_dofs;
 
+  //!list of periodic nodes
+  //dim node list's: each contains list of nodes that periodic b.c
+  //must be applied to
+  std::vector<std::vector <const Node*>>  nodes_periodic; 
+
+
+  //!creates new_dofs vector
+  void make_new_dofs(void);
+
   //!updates my_dof_constraints 
   void make_constraints(void);
 
-
-  //! my copy of DofMap::_dof_constraints (I have to recalculate it because it is private)
-  DofConstraints 	my_dof_constraints;
-
-  
+  //! checks if element lies on boundary
+  bool element_on_boundary(const Elem* element);
+    
   //!creates dirichlet dofs
   void create_dirichlet_dofs(void);
   
-
   //!Apply Dirichlet boundary conditions to all boundary points!
   void apply_diriclet_bc_at_all_boundaries();
   
+  //! Apply periodic boundary conditions
+  void apply_periodic_bc();
 
-  //!put spectrum shift energy to be almost equal to the 1st eigenvalue
-  virtual double get_new_spectrum_shift(void){};
+  //! create list of nodes that lies at the periodic boundary
+  void make_nodes_periodic();
 
-
- 
-
-
+                                                                 
   //!solves eigenvalue problem
   /*!
     \param ev_number number of eigenvalues requested
@@ -222,49 +202,12 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0 );
 
 
-   //!read SLEPc solutions
-  /*!
- 
-  1) Read all eigenvalues
-  2) Sort the eigenvalues and select those we want 
-  3) Read eigenvectors that correspond to the eigenvalues we want
-  4) do something else
- 
-    \param number_of_ev number of eigen functions to read
-  */
-  virtual void read_SLEPC_solution(unsigned int number_of_ev) {};
-
-  //!options of any eigensolver problem
-  options solver_opt;
-
-
-
-  //!passes H matrix to the eigensolver
-  void copy_H_matrix_to_solver();
-
-
-
-  //! Apply periodic boundary conditions
-  void apply_periodic_bc();
-
-  //! create list of nodes that lies at the periodic boundary
-  void make_nodes_periodic();
-
-
-  //!list of periodic nodes
-  std :: vector< std :: vector <const Node*> >  nodes_periodic; //dim node list's: each contains list of nodes that periodic b.c
-                                                                //must be applied to
-
-
   //!simulation domain boundary
   double min_coord[3];
   
   //!simulation domain boundary
   double max_coord[3];
 
-  //! checks if element lies on boundary
-  bool element_on_boundary(const Elem* element);
-  
 
 
 

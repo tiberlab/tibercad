@@ -189,7 +189,7 @@ void QuantumDispersion::calculate_eigen_energy()
 
     quantum_model->solve();
 
-    const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& solution = quantum_model->get_solution();
+    const std::vector<EnvelopFunctionApprox::eigen_problem_solution>& solution = quantum_model->get_solution();
 
 
     for (unsigned int j = 0 ; j < number_of_eigs_to_store ; j++)

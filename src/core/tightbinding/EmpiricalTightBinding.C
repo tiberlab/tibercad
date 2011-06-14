@@ -494,7 +494,7 @@ void ETB::do_solve(void){
 }
 
 //-------------------------------------------------------------------------
-void ETB::assemble(const ModelOptions& options)
+void ETB::do_assemble(const ModelOptions& options)
 {
 
 

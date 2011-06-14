@@ -80,7 +80,7 @@ void EigenvalueProblem::get_populations(const std::string& particle,
 
   values.resize(num_st);
  
-}
+} 
  
 double  EigenvalueProblem::get_population(int i) const
 {
@@ -183,3 +183,16 @@ void EigenvalueProblem::write_states(const std::string& filename) const
 
   file.close();
 }
+
+  
+void EigenvalueProblem::copy_H_to_solver( )
+{
+  do_copy_H_to_solver();
+}
+
+void EigenvalueProblem::copy_S_to_solver( )
+{
+  do_copy_S_to_solver();
+}
+
+ 

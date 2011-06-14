@@ -90,7 +90,7 @@ class MaxwellEquations : public FEMEigenvalueProblem
 
   virtual void 	parse_options (void);
 
-
+  virtual void do_assemble(const ModelOptions& options);
  
 
  private:
@@ -149,7 +149,7 @@ class MaxwellEquations : public FEMEigenvalueProblem
 
 
  
-  void copy_S_matrix_to_solver(void);
+  virtual void do_copy_S_to_solver(void);
 
 
   //! calculated \f$ {\bf E(r)}^2 \f$

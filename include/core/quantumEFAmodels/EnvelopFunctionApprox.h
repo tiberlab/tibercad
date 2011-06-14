@@ -34,73 +34,63 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
     std::map<short, short> kp_bands; //!< map between band numbers: from 8 band scheem to any band scheem
 
-
     std::string particle;   //!< particle name "el" or "hl"
 
     unsigned int degeneracy; //!< the degeneracy factor
 
     //double  length_scale;   //!< mesh length scale [Bohr radius]
 
-
     //bool periodicity[3];    //!< periodic boundary conditions
 
-   
-
     double spectrum_shift;    //!< shift of spectrum ised in matrix assembly[eV]
-
 
     bool  consider_potential; //!< apply strain effect to the EFA Hamiltonian;
 
     bool estimate_spectrum_shift; //!< calculate spectrum shift from band edges;
-  
-
 
     bool convergent_density;//!< if true, the number of eigenstates will be increased to reach the tolerance
-
  
     unsigned int initial_eigenstates_number; //!< initial number of eigenstates that is used in an iterative calculation of the density
-
 
     double relative_density_tolerance; //!< stops itarations if \f$ \rho_i / \rho_{i+1} < \varepsilon    \f$, where \f$ \rho \f$ is the                                              total density 
  
     double eigen_number_increase_factor; //!< to increase number of eigenstates for the next iteration 
 
-
     JobKind job; //!< a job to do
-
 
     bool local_occupation; //!<If a local occupation is considered 
 
-   
+    unsigned int first_state;
+
+    double k_val;
+    
+    bool assume_paraboloid;
+
 
   };
 
 
 
-  struct eigen_energy
-  {
-    double energy; //!< eigen energy [eV]
-    unsigned int global_number; //< eigen vector
-  };
+  //struct eigen_energy
+  //{
+  //  double energy; //!< eigen energy [eV]
+  //  unsigned int global_number; //< eigen vector
+  //};
 
 
 
   //! data structure that contains eigenvalue and eigenvector
-  struct eigen_propblem_solution
-  {
-    double eigen_energy; //!< eigen energy [eV]
-    std::vector< std::complex<double>  > eigen_vector; //< eigen vector
-    double Fermi_energy; //< electro-chemical potential [eV] \f$ \langle \psi |\mu({\bf r} | \psi \rangle  \f$
-    double Temperature; //!< averaged temperature for the state [K] 
-  };
+  //struct eigen_propblem_solution
+  //{
+  //  double eigen_energy; //!< eigen energy [eV]
+  //  std::vector< std::complex<double>  > eigen_vector; //< eigen vector
+  //  double Fermi_energy; //< electro-chemical potential [eV] \f$ \langle \psi |\mu({\bf r} | \psi \rangle  \f$
+  //  double Temperature; //!< averaged temperature for the state [K] 
+  //};
 
-
+  //! returns a reference to solutions
+  //const std::vector<eigen_propblem_solution>& get_solution() const;
  
-
-
- 
-
-
   //!constructor
   EnvelopFunctionApprox(const ModelOptions& options);
 
@@ -108,13 +98,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //!destructor
   ~EnvelopFunctionApprox();
 
-
-  //!computes Hamiltonian and S matrix
-  virtual void calculate_Hamiltonian_and_S(void); 
-
-
-  //! returns a reference to solutions
-  const std::vector<eigen_propblem_solution>& get_solution() const;
  
  
   //! returns conduction band minima for holes and valence band maximum for holes 
@@ -178,9 +161,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   void get_occupations(std::vector<double>& values) const;
 
 
-
-
-
   inline double get_particle_charge(void) const;
  
   //! element used for bulk calculations
@@ -208,10 +188,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   options opt;
 
-
-  //!pointer the equation systems object
-  //EquationSystems* es;
-
   
   std::string system_name;
 
@@ -236,6 +212,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //! The quadrature rule
   libMeshEnums::QuadratureType _quadrature_type;
 
+
+  //!bands names
+  std::vector<std::string> psi_name;
  
 
   void set_k_vector(const RealVectorValue& k_vec);
@@ -247,21 +226,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     F_{-1/2}\left(  \frac{\mu - E}{kT}         \right)       \f$
   */
   void calculate_density_analytic(void);
-
-
-  //!bands names
-  std::vector<std::string> psi_name;
-
-
- 
-
- 
-
-
-  //!passes S matrix to the eigensolver
-  void copy_S_matrix_to_solver();
-
- 
 
 
   //!read SLEPc solutions
@@ -277,58 +241,32 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   */
   void read_SLEPC_solution(unsigned int number_of_ev);
 
-
-
  
- 
-  
-
-
-
   //!creates constraints
   // void make_constraints(void);
 
  
-
- 
-
-
   //!number of nodes used in the model
   unsigned int number_of_nodes;
 
 
   //! compares eigenstate energy for electrons 
-  static bool compare_eigen_energy_electrons(eigen_propblem_solution state1, eigen_propblem_solution state2);
+  static bool compare_eigen_energy_electrons(const double& state1, const double& state2);
 
   //! compares eigenstate energy for holes 
-  static bool compare_eigen_energy_holes(eigen_propblem_solution state1, eigen_propblem_solution state2);
-
-  
-  //! compares eigenstate energy for electrons 
-  static bool compare_eigen_energy_electrons1(const eigen_energy& state1, const eigen_energy& state2);
-
-  //! compares eigenstate energy for holes 
-  static bool compare_eigen_energy_holes1(const eigen_energy& state1, const eigen_energy& state2);
+  static bool compare_eigen_energy_holes(const double& state1, const double& state2);
   
 
   //! solutions of the eigenvalue problem
-  std::vector<eigen_propblem_solution> solution;
+  //std::vector<eigen_propblem_solution> solution;
   
-
-
- 
-
-  //! Apply periodic boundary conditions
-  //void apply_periodic_bc();
-
-  //! create list of nodes that lies at the periodic boundary
-  //void make_nodes_periodic();
-
 
   //!list of periodic nodes
   std :: vector< std :: vector <const Node*> >  nodes_periodic; //dim node list's: each contains list of nodes that periodic b.c
                                                                 //must be applied to
   
+
+  void calculate_Hamiltonian_and_S(void);
 
 
   //! calculates the norm of the eigenstate \f$ \sqrt {| \langle \psi|\psi \rangle |} \f$
@@ -336,8 +274,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     \param state_number number of the eigenstate
   */
   double eigenstate_norm(unsigned int state_number);
-
- 
 
 
   //!Calculates Fermi Dirac probability
@@ -416,7 +352,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   virtual void plot_globaldata(void);
 
  
-
+  virtual void do_assemble(const ModelOptions& options);
 
 
 };

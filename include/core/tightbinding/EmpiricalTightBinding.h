@@ -140,7 +140,7 @@ class ETB : public TightBinding
 
   virtual void parse_options(void);
 
-  virtual void assemble(const ModelOptions& options);
+  virtual void do_assemble(const ModelOptions& options);
 
   //! Setup the available variables
   virtual void do_setup_solution_variables(void);

@@ -290,23 +290,23 @@ void MaxwellEquations::do_init()
    
   system->add_matrix("Ham_real"); //add matrix for a real part of the Hamiltonian
 
-  Ham_real = & (system->get_matrix("Ham_real"));
+  _H_real = & (system->get_matrix("Ham_real"));
 
 
   system->add_matrix("Ham_imag"); //add matrix for a real part of the Hamiltonian
 
-  Ham_imag = & (system->get_matrix("Ham_imag"));
+  _H_imag = & (system->get_matrix("Ham_imag"));
 
 
 
   system->add_matrix("S_real"); //add  matrix for real part of S matrix
 
-  S_real = &( system->get_matrix("S_real") );
+  _S_real = &( system->get_matrix("S_real") );
 
   
   system->add_matrix("S_imag"); //add matrix for imaginary part of S matrix
 
-  S_imag = &( system->get_matrix("S_imag") );
+  _S_imag = &( system->get_matrix("S_imag") );
 
   system->init();
 
@@ -580,14 +580,20 @@ void MaxwellEquations::read_SLEPC_solution(unsigned int number_of_ev)
 
 }
 
+void MaxwellEquations::do_assemble(const ModelOptions& opt)
+{
+  calculate_Hamiltonian_and_S();
+}
+
+
 //=======================================================================//
 void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 {
-  Ham_real->zero();
-  Ham_imag->zero();
+  _H_real->zero();
+  _H_imag->zero();
 
-  S_real->zero();
-  S_imag->zero(); 
+  _S_real->zero();
+  _S_imag->zero(); 
 
   vector<unsigned int> fieldvar(number_of_field_components);
  
@@ -741,21 +747,21 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 
     dof_indices_tmp = dof_indices;
     dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
-    Ham_real->add_matrix(ham_real,dof_indices_tmp);
+    _H_real->add_matrix(ham_real,dof_indices_tmp);
 
 
     dof_indices_tmp = dof_indices;
     dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
-    Ham_imag->add_matrix(ham_imag,dof_indices_tmp);
+    _H_imag->add_matrix(ham_imag,dof_indices_tmp);
 
 
     dof_indices_tmp = dof_indices;
     dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
-    S_real->add_matrix(s_real,dof_indices_tmp);
+    _S_real->add_matrix(s_real,dof_indices_tmp);
 
     dof_indices_tmp = dof_indices;
     dof_map.constrain_element_matrix(s_imag, dof_indices_tmp);
-    S_imag->add_matrix(s_imag,dof_indices_tmp);
+    _S_imag->add_matrix(s_imag,dof_indices_tmp);
 
     
 
@@ -765,8 +771,8 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
  
 
 
-  copy_H_matrix_to_solver( );
-  copy_S_matrix_to_solver( );
+  copy_H_to_solver( );
+  copy_S_to_solver( );
 
  
 
@@ -779,20 +785,20 @@ void MaxwellEquations::calculate_Hamiltonian_and_S(void)
 
 
 //---------------------------------------------------------------------// 
-void MaxwellEquations::copy_S_matrix_to_solver(void)
+void MaxwellEquations::do_copy_S_to_solver(void)
 {
-  int size_matrix = S_real->n();
+  int size_matrix = _S_real->n();
   
 
   EigenSolver::init_S_matrix(number_of_new_dofs);
 
   
-  PetscMatrix<Number>* S_real_matrix = static_cast<PetscMatrix<Number>* >(S_real);
+  PetscMatrix<Number>* S_real_matrix = static_cast<PetscMatrix<Number>* >(_S_real);
 
   S_real_matrix->close();
 
 
-  PetscMatrix<Number>* S_imag_matrix = static_cast<PetscMatrix<Number>* >(S_imag);
+  PetscMatrix<Number>* S_imag_matrix = static_cast<PetscMatrix<Number>* >(_S_imag);
 
   S_imag_matrix->close();
 

@@ -3,6 +3,7 @@
 #include "OpticsKP.h"
 #include "SimulationInterface.h"
 #include "KPbulkHamiltonian.h"
+#include "EigenvalueProblem.h"
 #include "EnvelopFunctionApprox.h"
 #include "EFAbulkModel.h"
 #include "SimulationEnvironment.h"
@@ -75,7 +76,7 @@ void OpticsKP::parse_options()
   const ModelOptions& mod_opt = get_options();
 
   _initial_eigen_state_numbers.clear();
-  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& in_solution 
+  const std::vector<EigenvalueProblem::eigen_problem_solution>& in_solution 
                                                = initial_state_model->get_solution();
   {
     std::vector<unsigned int> temp;
@@ -99,7 +100,7 @@ void OpticsKP::parse_options()
   }
 
   _final_eigen_state_numbers.clear();
-  const std::vector<EnvelopFunctionApprox::eigen_propblem_solution>& fin_solution =
+  const std::vector<EigenvalueProblem::eigen_problem_solution>& fin_solution =
     final_state_model->get_solution();
 
   {

@@ -71,6 +71,35 @@ Device qdot
   }
 }
 
+#Module elasticity 
+#{
+
+#  name = strain
+#  regions = all
+
+#  plot = (Strain, Stress, Displacement)
+#  lin_rel_tol = 1e-6 
+
+#  Physics 
+#  {
+#    body_force lattice_mismatch 
+#    {
+#      reference_material = AlGaN
+#
+#      x = 0.3
+#
+#      y-growth-direction = (-1,0,1,0)
+#      x-growth-direction = (-1,2,-1,0)   
+#      z-growth-direction = (0,0,0,1)
+#    }
+#       
+#  }
+
+#  Contact substrate  
+#  {type = clamp}
+
+#}
+
 
 
 Module macrostrain
@@ -78,7 +107,6 @@ Module macrostrain
 
   name = str
   plot = (Strain, PiezoPolarization)
-  substrate = substrate
 
   Solver
   {
@@ -154,19 +182,20 @@ Module efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy)
 
   particle = el
-  number_of_eigenstates = 5
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = str
 
-  solver = krylovshur 
-
-  ksp_type = bcgsl
-  pc_type =  jacobi
+  Solver
+  {
+    number_of_eigenstates = 5
+    solver = krylovshur 
+    ksp_type = bcgsl
+    pc_type =  jacobi
+  }
 
   Physics
   {
     model = conduction_band
-    particle = el
   }
 }
 
@@ -175,21 +204,22 @@ Module efaschroedinger
 {
   name = quantum_hl
   regions = (1,2)
-  plot = (ProbabilityDensity, EigenEnergy)
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
   particle = hl
-  number_of_eigenstates = 8
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = str
 
-  solver = krylovshur
-
-  ksp_type = bcgsl
-  pc_type =  jacobi
+  Solver
+  {
+    number_of_eigenstates = 8
+    solver = krylovshur
+    ksp_type = bcgsl
+    pc_type =  jacobi
+  }
 
   Physics
   {
-    particle = hl
     model = kp
     kp_model = 6x6
   }

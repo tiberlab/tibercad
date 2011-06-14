@@ -270,11 +270,11 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 {
 
  
- 
+  assemble();
 
   
 
-  calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
+  //calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
  
 
   if (ev_number > _hamiltonian_size)
@@ -297,7 +297,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
   slep_opt.read_matrix_from_file = false;
 
-  slep_opt.matrix_output = false;
+  slep_opt.matrix_output = solver_opt.dump_on_file;
 
   slep_opt.pc_type = solver_opt.preconditioner;
 
@@ -308,6 +308,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
   slep_opt.spectrum_inversion_tolerance = solver_opt.spectrum_inversion_tolerance;
 
+  EigenSolver::check_matrices(1e-10,true);
 
   vector<Complex> initial_vector;
 
@@ -315,17 +316,12 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
   if (solver_opt.solve_ev_problem_twice)
   {
 
-    st_shift_value = 0.0;
-
-
     slep_opt.ev_number = 1;
 
    
     slep_opt.eps_tolerance =  solver_opt.eigen_solver_tolerance;
    
-   
-  
-    
+       
     slep_opt.spectrum_shift = st_shift_value;
 
 
@@ -364,8 +360,6 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
   }
 
 
- 
-
   slep_opt.matrix_output = false;
   
   slep_opt.eps_tolerance = solver_opt.eigen_solver_tolerance;
@@ -373,9 +367,8 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
   slep_opt.ev_number = ev_number;
   
   slep_opt.spectrum_shift  = st_shift_value;
-  
  
-
+  std::cout << "  (EFA) Solving using guess (Hartree) " << st_shift_value << endl;
 
   {
     int result;
@@ -406,35 +399,42 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 //=====================================================//
 void FEMEigenvalueProblem::parse_options()
 {
-  const ModelOptions& mod_opt = get_options();
+  const ModelOptions& sol_opt = get_solver_options();
 
-  solver_opt.solver = mod_opt.get_option("solver","krylovshur");
+  solver_opt.solver = sol_opt.get_option("solver","krylovshur");
 
-  solver_opt.max_iteration_number = mod_opt.get_option("max_iteration_number",30000);
+  if ( !(solver_opt.solver == "krylovshur" ||
+         solver_opt.solver == "arnoldi" ||
+         solver_opt.solver == "arpack" ||
+         solver_opt.solver == "lapack" ) )
+    throw InitFailedException("Invalid solver " +solver_opt.solver);
+      
 
-  solver_opt.eigen_solver_tolerance  = mod_opt.get_option("eigen_solver_tolerance",1e-9);
+  solver_opt.max_iteration_number = sol_opt.get_option("max_iteration_number",30000);
 
-  solver_opt.solve_ev_problem_twice  = mod_opt.get_option("solve_ev_problem_twice",true);
+  solver_opt.eigen_solver_tolerance  = sol_opt.get_option("eigen_solver_tolerance",1e-9);
 
-
-  solver_opt.spectral_trans = mod_opt.get_option("spectral_transformation","shift_and_invert");
-
-  solver_opt.number_of_eigenstates   = mod_opt.get_option("number_of_eigenstates", 6);
-
-
-
-  solver_opt.Dirichlet_bc_everywhere = mod_opt.get_option("Dirichlet_bc_everywhere", true);
+  solver_opt.solve_ev_problem_twice  = sol_opt.get_option("solve_ev_problem_twice",false);
 
 
-  solver_opt.monitor = mod_opt.get_option("monitor", false);
+  solver_opt.spectral_trans = sol_opt.get_option("spectral_transformation","shift_and_invert");
+
+  solver_opt.number_of_eigenstates   = sol_opt.get_option("number_of_eigenstates", 6);
+
+  solver_opt.spectrum_shift = sol_opt.get_option("spectrum_shift",0.0);
+
+  solver_opt.Dirichlet_bc_everywhere = sol_opt.get_option("Dirichlet_bc_everywhere", true);
 
 
-  solver_opt.spectrum_inversion_tolerance = mod_opt.get_option("spectrum_inversion_tolerance", 1e-8);
+  solver_opt.monitor = sol_opt.get_option("monitor", false);
+
+
+  solver_opt.spectrum_inversion_tolerance = sol_opt.get_option("spectrum_inversion_tolerance", 1e-8);
 
   //cerr <<  solver_opt.Dirichlet_bc_everywhere << "\n";
 
   {
-    std::string  method_name = mod_opt.get_option("discretization_method","FEM");
+    std::string  method_name = get_option("discretization_method","FEM");
     if (method_name == "FEM")
       solver_opt.discretization_method = FEM;
     else if (method_name == "BIM")
@@ -445,103 +445,69 @@ void FEMEigenvalueProblem::parse_options()
    
   }
 
+  solver_opt.dump_on_file = get_option("dump_HS_on_files",false);
 
   {
 
-    unsigned int dim = get_environment().get_mesh().mesh_dimension();
+    unsigned int dim = get_mesh().mesh_dimension();
     
-    std::string default_method;
-
     if (dim == 1)
-      default_method = std::string("combined");
+    {
+      solver_opt.preconditioner = std::string("cholesky");
+      solver_opt.st_ksp_type = std::string("bcgsl");
+    }
     else
-      default_method = std::string("general");
-
-    std::string solution_method = mod_opt.get_option("solution_method", default_method );
-
-    if ( solution_method == "matlab")
     {
-      solver_opt.strategy = "matlab"; 
-      solver_opt.preconditioner = "cholesky";
-      solver_opt.st_ksp_type = "preonly";
-    }
-    else if (solution_method == "general")
-    {
-      solver_opt.strategy = "general";
-      solver_opt.preconditioner = "jacobi";
-      solver_opt.st_ksp_type = "bcgsl";
-    }
-    else if (solution_method == "combined")
-    {
-      solver_opt.strategy = "combined";
-      solver_opt.preconditioner = "cholesky";
-      solver_opt.st_ksp_type = "bcgsl";
+      solver_opt.preconditioner = std::string("jacobi");
+      solver_opt.st_ksp_type = std::string("bcgsl");
     }
 
   }
-
 
   { 
-    std::string prec =  mod_opt.get_option("pc_type","default");
-    if (prec != "default")
-    {
-      if (!(prec == "cholesky" || prec == "jacobi" || prec == "ilu" || prec == "composite"))
-      {
-	throw InitFailedException( "FEMEigenvalueProblem: Incorrect preconditioner name" + prec);  
-      }
-      else
-      {
-	solver_opt.preconditioner = prec;
+    std::string prec =  sol_opt.get_option("pc_type",solver_opt.preconditioner);
 
-      }
-    }
+    if (!(prec == "cholesky" || prec == "jacobi" || prec == "ilu" || prec == "composite"))
+      throw InitFailedException( "FEMEigenvalueProblem: Incorrect preconditioner name " + prec);  
+
+    solver_opt.preconditioner = prec;
 
   }
 
   {
-    std::string ksp =  mod_opt.get_option("ksp_type","default");
+    std::string ksp =  sol_opt.get_option("ksp_type",solver_opt.st_ksp_type);
+
+    if (!( ksp == "bcgsl" || ksp == "gmres" || ksp == "bcgs" 
+           || ksp == "cg" || ksp == "richardson" || ksp == "preonly"))
+      throw InitFailedException( "FEMEigenvalueProblem: Incorrect ksp " + ksp);  		
+     
+    solver_opt.st_ksp_type = ksp;
     
-    if (ksp != "default")
-    {
-      if (!( ksp == "bcgsl" || ksp == "gmres" || ksp == "bcgs" || ksp == "cg" || ksp == "richardson" || ksp == "preonly"))
-      {
-	throw InitFailedException( "FEMEigenvalueProblem: Incorrect ksp" + ksp);  		
-      }
-    
-      else
-      {
-	solver_opt.st_ksp_type = ksp;
-      }
-    }
   }
 
-
-
-  
- 
 
 
 }
 
-
+  
 //========================================================================================//
-void FEMEigenvalueProblem::copy_H_matrix_to_solver( )
+void FEMEigenvalueProblem::do_copy_H_to_solver( )
 {
 
  
-  int size_matrix = Ham_real->n();
+  int size_matrix = _H_real->n();
   
 
   // 2010-11-08 It seems this is just wasting memory
   //EigenSolver::init_H_matrix(number_of_new_dofs);
 
   
-  PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(Ham_real);
+  PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(_H_real);
 
   H_real_matrix->close();
 
 
-  PetscMatrix<Number>* H_imag_matrix = static_cast<PetscMatrix<Number>* >(Ham_imag);
+  PetscMatrix<Number>* H_imag_matrix = static_cast<PetscMatrix<Number>* >(_H_imag);
 
   H_imag_matrix->close();
 
@@ -739,6 +705,107 @@ void FEMEigenvalueProblem::copy_H_matrix_to_solver( )
   EigenSolver::finalize_H_assembly();
 
   
+}
+
+//============================================================//
+
+void FEMEigenvalueProblem::do_copy_S_to_solver()
+{
+
+  int size_matrix = _S_real->n();
+
+  PetscMatrix<double>* p_matrix = static_cast<PetscMatrix<double>* >(_S_real);
+
+  p_matrix->close();
+
+
+  //----------preallocate memory------------------------------------------------------
+  int non_zeros_number[number_of_new_dofs];
+
+  for (int row = 0 ; row < size_matrix; row++)
+  {
+    if (new_dofs[row].independent)
+    {
+      int ierr = 0;
+      const PetscScalar *petsc_row_vals;
+      const PetscInt *petsc_cols;
+      int n_cols = 0;
+
+      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols, &petsc_row_vals);
+      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+      vector<unsigned int> column_vector;
+      vector<Complex> row_values;
+
+      non_zeros_number[new_dofs[row].new_number] = 0;
+
+      for (int col = 0; col < n_cols; col++)
+      {
+	if ((new_dofs[petsc_cols[col]].independent) &&  (petsc_row_vals[col] != 0.0))
+	{
+
+	  non_zeros_number[new_dofs[row].new_number]++;
+
+
+	}
+      }
+
+      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+    }
+  }
+
+
+  EigenSolver::preallocate_S_matrix(number_of_new_dofs,  non_zeros_number);
+
+  //--------------assebmle data--------------------------------------------------------
+
+
+  for (int row = 0 ; row < size_matrix; row++)
+  {
+    if (new_dofs[row].independent)
+    {
+      int ierr = 0;
+      const  PetscScalar *petsc_row_vals;
+      const PetscInt *petsc_cols;
+      int n_cols = 0;
+
+      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+      vector<unsigned int> column_vector;
+      vector<Complex> row_values;
+
+      for (int col = 0; col < n_cols; col++)
+      {
+	if ((new_dofs[petsc_cols[col]].independent) &&  (petsc_row_vals[col] != 0.0))
+	{
+
+
+
+	  double value = petsc_row_vals[col];
+	  double zero = 0.0;
+
+	  column_vector.push_back(new_dofs[petsc_cols[col]].new_number);
+	  row_values.push_back(Complex(value, zero));
+
+
+
+
+	}
+      }
+
+      EigenSolver::insert_S_row( new_dofs[row].new_number, column_vector, row_values);
+
+      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
+      CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+    }
+  }
+
+  EigenSolver::finalize_S_assembly();
+
 }
 
 //=======================================================================================/
@@ -951,50 +1018,6 @@ void FEMEigenvalueProblem::make_nodes_periodic()
 void FEMEigenvalueProblem::do_init()
 {
 
-   //peiodicity can not be changed between runs because that will require cleaning of the DOF constraint table
-   const ModelOptions& mod_opt = get_options();
 
-   solver_opt.periodicity[0]          = mod_opt.get_option("x-periodicity", false);
-   solver_opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
-   solver_opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
-
-   EquationSystems* es = &(get_equation_systems());
-
-   MeshBase& mesh1 = es->get_mesh();
-   
-   MeshBase::const_element_iterator       el     = mesh1.active_elements_begin();
-   const MeshBase::const_element_iterator end_el = mesh1.active_elements_end();
-
-   bool temp = true;
-
-   for ( ; el != end_el ; ++el) 
-   {
-     const Elem* elem = *el;
-     short n1 = elem->n_nodes();
-     for (short i1 = 0; i1 < n1 ; i1++)
-     {
-
-
-       const Point& p = elem->point(i1);
-       for (unsigned i = 0; i < 3; i++)
-       {
-
-	 if (temp)
-	 {
-	   min_coord[i] = p(i);
-	   max_coord[i] = p(i);
-	   temp = false;
-	 }
-	 else
-	 {
-
-	   if (min_coord[i] < p(i)) min_coord[i] = p(i);
-	   if (max_coord[i] > p(i)) max_coord[i] = p(i);
-	 }
-       }
-	  
-     }
-
-   }
 
 }

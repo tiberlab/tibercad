@@ -209,8 +209,8 @@ void OpticsTB::do_solve()
 void OpticsTB::get_states()
 {
   //get states from TB model (but these states are not currently used)
-  _i_states = _initial_state_model->get_eigen_solution();
-  _f_states = _final_state_model->get_eigen_solution();
+  _i_states = _initial_state_model->get_solution();
+  _f_states = _final_state_model->get_solution();
 }
 
 //========================================================================================
