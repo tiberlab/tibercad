@@ -13,9 +13,7 @@ make_windows_package () {
   # copy all files
   cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
   cp ${topdir}/${ARCH}/lib/*.dll ${files}
-  cp ${topdir}/extern/boost/lib/boost_regex.dll ${files}
-  cp ${topdir}/extern/boost/lib/boost_filesystem.dll ${files}
-  cp ${topdir}/extern/boost/lib/boost_system.dll ${files}
+  cp ${topdir}/extern/${ARCH}/lib/*.dll ${files}
   cp -r ${topdir}/${ARCH}/lib/modules ${files}/lib
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
@@ -62,7 +60,7 @@ make_windows_package () {
   unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
   mv gmsh-${GMSHVER}-Windows/* .
   rmdir gmsh-${GMSHVER}-Windows
-  cp ${topdir}/contrib/gmsh/gmsh.pdf .
+  cp ${topdir}/contrib/gmsh.pdf .
 
   cd $curdir
 

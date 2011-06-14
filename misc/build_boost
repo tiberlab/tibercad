@@ -75,9 +75,9 @@ if [ "$target_os" == "win32" ]; then
   [ "x$(echo $HOST | grep x86_64)" != "x" ] && bits=64
 
 #  ./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
-  ./bjam toolset=gcc variant=release threading=single link=shared runtime-link=shared target-os=windows --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost-$HOST address-model=$bits install
+  ./bjam toolset=gcc variant=release threading=single link=shared runtime-link=shared target-os=windows --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCHOST address-model=$bits install
 else
-  ./bjam toolset=gcc variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost-$HOST install
+  ./bjam toolset=gcc variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCHOST install
 fi
 
 

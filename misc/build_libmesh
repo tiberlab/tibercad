@@ -28,10 +28,12 @@ cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
   if [ ! -d libmesh-${LIBMESHVERSION}-$HOST ]; then
     if [ ! -e libmesh-${LIBMESHVERSION}.tbz ]; then
-      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$HOST
-      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}-$HOST
+      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}
+      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}
+      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$HOST
     else
       tar jxf libmesh-${LIBMESHVERSION}.tbz
+      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$HOST
     fi
 
     if [ -e ${PATCH} ]; then
@@ -95,7 +97,7 @@ cd libmesh-${LIBMESHVERSION}-$HOST
 # we have modifications to the configuration
 #aclocal -I m4
 #autoconf
-cp ${BUILDDIR}/misc/configure.libmesh configure
+cp ${TOPDIR}/misc/configure.libmesh configure
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}

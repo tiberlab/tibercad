@@ -7709,8 +7709,9 @@ _ACEOF
 
 	  BUILD_TIBER_MODULES="yes"
 
-	 else
-	  BUILD_TIBER_MODULES="no"
+  cp ${topdir}/extern/${ARCH}/lib/*.dll ${files}
+	 6lse
+	 BUILD_TIBER_MODULES="no"
 
 	 fi
 else
