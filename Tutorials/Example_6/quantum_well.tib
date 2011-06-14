@@ -103,6 +103,8 @@ Module  driftdiffusion
       
   strain_simulation = strain 
 
+  polarization (piezo, pyro) { }
+
   # we solve only Poisson equation
   coupling = poisson
      
