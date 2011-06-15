@@ -26,93 +26,6 @@ Index: include/geom/elem.h
    if (this->active())
      return false;
    if (!this->has_children())
-Index: include/base/getpot.h
-===================================================================
---- include/base/getpot.h	(revision 3286)
-+++ include/base/getpot.h	(working copy)
-@@ -261,6 +261,7 @@
-   inline void               __skip_whitespace(std::istream& istr);
-   inline const std::string  __get_next_token(std::istream& istr);
-   inline const std::string  __get_string(std::istream& istr);
-+  inline const std::string  __get_until_closing_brace(std::istream& istr);
-   inline const std::string  __get_until_closing_bracket(std::istream& istr);
- 
-   inline std::vector<std::string> __read_in_stream(std::istream& istr);
-@@ -545,10 +546,17 @@
-     // found a non whitespace 
-     if( tmp == '#' ) {
-       // comment => skip until end of line
--      while( tmp != '\n' ) {
-+      while( (tmp != '\n') && (tmp != '\r') ) {
- 	if( ! istr ) { istr.unget(); return; }
- 	tmp = istr.get();
-       }
-+      int old = tmp;
-+      tmp = istr.get();
-+      if ((tmp != '\n') && (tmp != '\r'))
-+      {
-+        istr.unget();
-+        tmp = old;
-+      }
-       continue; 
-     }
-     else {
-@@ -571,7 +579,7 @@
-   while(1+1 == 2) {
-     last_letter = tmp; tmp = istr.get();
-     if( tmp == EOF 
--	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n') && last_letter != '\\') ) {
-+	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n' || tmp == '\r') && last_letter != '\\') ) {
-       return token;
-     }
-     else if( tmp == '\'' && last_letter != '\\' ) {
-@@ -579,6 +587,11 @@
-       token += __get_string(istr);
-       continue;
-     }
-+    else if( tmp == '(' && last_letter != '\\' ) {
-+      // it's a vector
-+      token += '(' +__get_until_closing_brace(istr);
-+      continue;
-+    }
-     else if( tmp == '{' && last_letter == '$') {
-       token += '{' + __get_until_closing_bracket(istr);
-       continue;
-@@ -620,6 +633,34 @@
- 
- 
- inline const std::string
-+GetPot::__get_until_closing_brace(std::istream& istr)
-+  // parse input until next matching )
-+{
-+  std::string str = ""; 
-+  int    tmp = 0;
-+  int    last_letter = 0;
-+  int    braces = 1;
-+  while(1 + 1 == 2) {
-+    last_letter = tmp; tmp = istr.get();
-+    if( tmp == EOF) return str;
-+    else if( tmp == '(' && last_letter != '\\') braces += 1;
-+    else if( tmp == ')' && last_letter != '\\') {
-+      braces -= 1;
-+      // un-backslashed brackets => it's the end of the string
-+      if( braces == 0) return str + ')';
-+      else if( tmp == '\\' && last_letter != '\\') 
-+	continue;  // do not append an unbackslashed backslash
-+    }
-+    str += tmp;
-+  }
-+
-+  return str;
-+}
-+
-+
-+
-+
-+inline const std::string
- GetPot::__get_until_closing_bracket(std::istream& istr)
-   // parse input until next matching }
- {
 Index: src/mesh/mesh_refinement.C
 ===================================================================
 --- src/mesh/mesh_refinement.C	(revision 3286)
@@ -1122,3 +1035,148 @@ Index: src/geom/elem.C
    # if Laspack is used we need the header path
    # and the lib
    libmesh_LIBS    += @LASPACK_LIB@
+--- include/base/getpot.h.orig	2011-06-14 14:52:42.000000000 +0200
++++ include/base/getpot.h	2011-06-15 15:30:57.000000000 +0200
+@@ -27,7 +27,7 @@
+ #ifndef __GETPOT_H__
+ #define __GETPOT_H__
+ 
+-#if defined(WIN32) || defined(SOLARIS_RAW) || defined(__SUNPRO_CC) || (__GNUC__ == 2) || defined(__HP_aCC) || defined (__CYGWIN__)
++#if defined(WIN32) || defined(SOLARIS_RAW) || defined(__SUNPRO_CC) || (__GNUC__ == 2) || defined(__HP_aCC) || defined (__CYGWIN__) || defined (__MINGW32__)
+ #  define strtok_r(a, b, c) std::strtok(a, b)
+ #endif // WINDOWS or SOLARIS or gcc 2.* or HP aCC or CYGWIN
+ 
+@@ -264,6 +264,7 @@
+   inline void               __skip_whitespace(std::istream& istr);
+   inline const std::string  __get_next_token(std::istream& istr);
+   inline const std::string  __get_string(std::istream& istr);
++  inline const std::string  __get_until_closing_brace(std::istream& istr);
+   inline const std::string  __get_until_closing_bracket(std::istream& istr);
+ 
+   inline std::vector<std::string> __read_in_stream(std::istream& istr);
+@@ -361,14 +362,14 @@
+   __basic_initialization();
+ 
+   // -- make an internal copy of the argument list:
+-  std::vector<std::string> __argv;
+-  __argv.reserve (argc_);
++  std::vector<std::string> my_argv;
++  my_argv.reserve (argc_);
+   
+   for(int i=0; i<argc_; i++) {
+     std::string tmp(argv_[i]);
+-    __argv.push_back(tmp);
++    my_argv.push_back(tmp);
+   }
+-  __parse_argument_vector(__argv); 
++  __parse_argument_vector(my_argv); 
+ }
+ 
+ 
+@@ -378,11 +379,11 @@
+ {
+   __basic_initialization();
+ 
+-  std::vector<std::string> __argv;
+-  __argv.push_back(FileName); 
++  std::vector<std::string> my_argv;
++  my_argv.push_back(FileName); 
+   std::vector<std::string> args = __read_in_file(FileName.c_str());
+-  __argv.insert(__argv.begin()+1, args.begin(), args.end());
+-  __parse_argument_vector(__argv); 
++  my_argv.insert(my_argv.begin()+1, args.begin(), args.end());
++  __parse_argument_vector(my_argv); 
+ }
+ 
+ 
+@@ -392,11 +393,11 @@
+ {
+   __basic_initialization();
+ 
+-  std::vector<std::string> __argv;
+-  __argv.push_back(FileName); 
++  std::vector<std::string> my_argv;
++  my_argv.push_back(FileName); 
+   std::vector<std::string> args = __read_in_file(FileName);
+-  __argv.insert(__argv.begin()+1, args.begin(), args.end());
+-  __parse_argument_vector(__argv); 
++  my_argv.insert(my_argv.begin()+1, args.begin(), args.end());
++  __parse_argument_vector(my_argv); 
+ }
+ 
+ 
+@@ -548,10 +549,17 @@
+     // found a non whitespace 
+     if( tmp == '#' ) {
+       // comment => skip until end of line
+-      while( tmp != '\n' ) {
++      while( (tmp != '\n') && (tmp != '\r') ) {
+ 	if( ! istr ) { istr.unget(); return; }
+ 	tmp = istr.get();
+       }
++      int old = tmp;
++      tmp = istr.get();
++      if ((tmp != '\n') && (tmp != '\r'))
++      {
++        istr.unget();
++        tmp = old;
++      }
+       continue; 
+     }
+     else {
+@@ -574,7 +582,7 @@
+   while(1+1 == 2) {
+     last_letter = tmp; tmp = istr.get();
+     if( tmp == EOF 
+-	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n') && last_letter != '\\') ) {
++	|| ((tmp == ' ' || tmp == '\t' || tmp == '\n' || tmp == '\r') && last_letter != '\\') ) {
+       return token;
+     }
+     else if( tmp == '\'' && last_letter != '\\' ) {
+@@ -582,6 +590,11 @@
+       token += __get_string(istr);
+       continue;
+     }
++    else if( tmp == '(' && last_letter != '\\' ) {
++      // it's a vector
++      token += '(' +__get_until_closing_brace(istr);
++      continue;
++    }
+     else if( tmp == '{' && last_letter == '$') {
+       token += '{' + __get_until_closing_bracket(istr);
+       continue;
+@@ -623,6 +636,34 @@
+ 
+ 
+ inline const std::string
++GetPot::__get_until_closing_brace(std::istream& istr)
++  // parse input until next matching )
++{
++  std::string str = ""; 
++  int    tmp = 0;
++  int    last_letter = 0;
++  int    braces = 1;
++  while(1 + 1 == 2) {
++    last_letter = tmp; tmp = istr.get();
++    if( tmp == EOF) return str;
++    else if( tmp == '(' && last_letter != '\\') braces += 1;
++    else if( tmp == ')' && last_letter != '\\') {
++      braces -= 1;
++      // un-backslashed brackets => it's the end of the string
++      if( braces == 0) return str + ')';
++      else if( tmp == '\\' && last_letter != '\\') 
++	continue;  // do not append an unbackslashed backslash
++    }
++    str += tmp;
++  }
++
++  return str;
++}
++
++
++
++
++inline const std::string
+ GetPot::__get_until_closing_bracket(std::istream& istr)
+   // parse input until next matching }
+ {

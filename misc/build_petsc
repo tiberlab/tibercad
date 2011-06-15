@@ -111,7 +111,10 @@ SHARED="--with-shared=0 --with-dynamic=0"
   
 
 #COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
-COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$(echo $CC | sed 's/gcc/cpp/')"
+COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
+  --with-cpp=$(echo $CC | sed 's/gcc/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc/ld/') \
+  --with-ar=$(echo $CC | sed 's/gcc/ar/')"
+
 echo $COMPILERS
 
 if [ $MPI == 'n' ]; then
