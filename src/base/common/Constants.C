@@ -47,11 +47,11 @@ const double&
 Constants::h = plancks_constant;
 
 const double
-Constants::hbar = h / (2 * M_PI);
+Constants::hbar = h / (2 * M_PI); // 1.0545716e-34
 
 const double
 Constants::bohr_radius = 4 * M_PI * epsilon * (hbar * hbar) /
-  (electron_mass * elementary_charge * elementary_charge);
+  (electron_mass * elementary_charge * elementary_charge); // 5.2917721e-11
 
 const double
 Constants::Hartree = (hbar * hbar) /

@@ -164,6 +164,44 @@ TiberModelObject::get_option(const std::string& name,
 
 
 
+void
+TiberModelObject::get_option(const std::string& name,
+    RealVectorValue& vec, bool override) const
+{
+  string val(_options.get_option(name, ""));
+  if (Variable::check_string(val))
+    throw ModelErrorException("Option \'" + name + "\' cannot "
+        " be used as variable (" + val +")");
+  // if one needs override from strange other sources
+  if (override) override_parameter_string(name, val);
+
+  if (val.empty()) return;
+
+  //Variable::check_and_register(val, variable, this, initfunc);
+  Utils::extract_vector(val, vec);
+}
+
+
+void
+TiberModelObject::get_option(const std::string& name,
+    RealTensor& vec, bool override) const
+{
+  string val(_options.get_option(name, ""));
+  if (Variable::check_string(val))
+    throw ModelErrorException("Option \'" + name + "\' cannot "
+        " be used as variable (" + val +")");
+  // if one needs override from strange other sources
+  if (override) override_parameter_string(name, val);
+
+  if (val.empty()) return;
+
+  //Variable::check_and_register(val, variable, this, initfunc);
+  Utils::extract_tensor(val, vec);
+
+}
+
+
+
 TiberModelObject*
 TiberModelObject::_create_from_library(const std::string& name,
     const ModelOptions& options)
