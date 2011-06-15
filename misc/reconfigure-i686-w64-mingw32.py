@@ -12,7 +12,7 @@ configure_options = [
   '--sizeof_double=8',
   '--sizeof_size_t=4',
  '--bits_per_byte=8',
-  '--configModules=PETSc.Configure', '--optionsModule=PETSc.compilerOptions', '--with-matlab=0', '--with-shared=0', '--with-dynamic=0', '--with-mpi=0', '--with-cc=i686-w64-mingw32-gcc', '--with-cxx=i686-w64-mingw32-g++', '--with-fc=i686-w64-mingw32-gfortran', '--with-ranlib=i686-w64-mingw32-ranlib', '--with-cpp=i686-w64-mingw32-cpp', '--with-clanguage=C++', '--with-batch=1', '--with-x=0', '--with-host-vendor=w64', '--with-host-os=mingw32', '--download-f-blas-lapack=1', '--with-debugging=0', '--CFLAGS= -fexceptions', '--FFLAGS= -fexceptions', '--CXXFLAGS=', '--LDFLAGS='
+  '--configModules=PETSc.Configure', '--optionsModule=PETSc.compilerOptions', '--with-matlab=0', '--with-shared=0', '--with-dynamic=0', '--with-mpi=0', '--with-cc=i686-w64-mingw32-gcc', '--with-cxx=i686-w64-mingw32-g++', '--with-fc=i686-w64-mingw32-gfortran', '--with-ranlib=i686-w64-mingw32-ranlib', '--with-cpp=i686-w64-mingw32-cpp', '--with-shared-ld=i686-w64-mingw32-ld', '--with-ar=i686-w64-mingw32-ar', '--with-clanguage=C++', '--download-f-blas-lapack=1', '--with-batch=1', '--with-x=0', '--with-host-vendor=w64', '--with-host-os=mingw32', '--with-debugging=0', '--with-scalar-type=real', '--CFLAGS= -fexceptions', '--FFLAGS= -fexceptions', '--CXXFLAGS=', '--LDFLAGS='
 ]
 if __name__ == '__main__':
   import os
