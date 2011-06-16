@@ -107,9 +107,14 @@ export PETSC_ARCH=${HOST}
 #SHARED=--enable-shared
 #if [ $shared_libs == 'n' ]
 #then
-  SHARED=--disable-shared
+#  SHARED=--disable-shared
 #fi
-#SHARED=--enable-shared
+SHARED=--enable-shared
+if [ "${target_os}" = "win32" ]
+then
+  # we do not need -fPIC
+  SHARED=--disable-shared
+fi
 
 dll_name=libmesh
 
@@ -118,22 +123,17 @@ then
   LDFLAGS="${LDFLAGS} -ldl"
 fi
 
-[ "$debug" == 1 ] && dll_name=${dll_name}_dbg
+[ "$debug" = 1 ] && dll_name=${dll_name}_dbg
 dll_name=${dll_name}${dll_libext}
   
 
 ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=$HOST --build=$BUILD
 
-PIC=
-if [ "$(echo $HOST |grep x86_64)" == "x86_64" ] && [ "${target_os}" != "win32" ]
-then
-  PIC=-fPIC
-fi
 
 # delete the -pedantic flag because it makes problems with mpi
 cp Make.common Make.common.orig
 sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEBUG//g' \
-    -e "s/-ansi/${PIC}/g"  Make.common.orig > Make.common
+  -e "s/-ansi//g"  -e 's/^enable-shared.*/enable-shared := no/'  Make.common.orig > Make.common
 
 
 make |tee make_opt.log

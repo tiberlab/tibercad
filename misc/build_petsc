@@ -11,7 +11,7 @@ fi
 # Does the actual build
 # needs at least 1 argument ('real' or 'complex')
 # second argument can be 0 or 1, 1 for creating debug version
-function make_petsc()
+make_petsc()
 {
 
   datatype=$1
