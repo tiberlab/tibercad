@@ -1,5 +1,4 @@
 To build TiberCAD from scratch:
 
-- copy the file variables from the appropriate subdirectory and
-  edit according to your system
+- run ./configure, maybe with --host=XXX option
 - run build_all
