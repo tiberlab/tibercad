@@ -1,7 +1,7 @@
 # $Id$
 
 topdir := @abs_top_builddir@
-include $(topdir)/Make.defs
+include $(topdir)/Make.common
 
 # reset all flags
 CFLAGS	   = 
@@ -15,7 +15,7 @@ PETSC_ARCH = @COMPLEX_PETSC_ARCH@
 
 SLEPC_DIR  = @SLEPC_DIR@
 
-CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC $(CC_INCLUDES) -I $(topdir)/include/utils/SLEPC
+CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC $(CC_INCLUDES) -I$(topdir)/include/utils/SLEPC $(TIBER_INCLUDES)
 
 
 ifeq ($(METHOD), dbg)
