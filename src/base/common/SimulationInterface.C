@@ -565,6 +565,7 @@ SimulationInterface::create_equation_system(const std::string& type)
   os << "_" << newid;
 
   get_solver_options().set_option("simulation", get_name());
+  get_solver_options().find_option("simulation");
 
   TiberEqSystem* sys = TiberEqSystem::create(get_equation_systems(),
       os.str(), type, get_solver_options());
