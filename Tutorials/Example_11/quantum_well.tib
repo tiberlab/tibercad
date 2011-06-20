@@ -190,7 +190,7 @@ Module efaschroedinger
   number_of_eigenstates = 3
   poisson_model_name = dd
   strain_model_name = strain 
-  #solver = lapack
+  quadrature_rule = trapez
 
 
   Physics
@@ -213,7 +213,7 @@ Module efaschroedinger
   number_of_eigenstates = 12
   poisson_model_name = dd
   strain_model_name = strain 
-  #solver = lapack
+  quadrature_rule = trapez
   
   Physics
   {
