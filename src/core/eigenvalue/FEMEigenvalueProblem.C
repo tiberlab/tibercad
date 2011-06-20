@@ -308,7 +308,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
   slep_opt.spectrum_inversion_tolerance = solver_opt.spectrum_inversion_tolerance;
 
-  EigenSolver::check_matrices(1e-10,true);
+  //EigenSolver::check_matrices(1e-10,true);
 
   vector<Complex> initial_vector;
 
@@ -453,8 +453,8 @@ void FEMEigenvalueProblem::parse_options()
     
     if (dim == 1)
     {
-      solver_opt.preconditioner = std::string("cholesky");
-      solver_opt.st_ksp_type = std::string("bcgsl");
+      solver_opt.preconditioner = std::string("redundant");
+      solver_opt.st_ksp_type = std::string("preonly");
     }
     else
     {
@@ -464,28 +464,9 @@ void FEMEigenvalueProblem::parse_options()
 
   }
 
-  { 
-    std::string prec =  sol_opt.get_option("pc_type",solver_opt.preconditioner);
+  solver_opt.preconditioner =  sol_opt.get_option("pc_type", solver_opt.preconditioner);
 
-    if (!(prec == "cholesky" || prec == "jacobi" || prec == "ilu" || prec == "composite"))
-      throw InitFailedException( "FEMEigenvalueProblem: Incorrect preconditioner name " + prec);  
-
-    solver_opt.preconditioner = prec;
-
-  }
-
-  {
-    std::string ksp =  sol_opt.get_option("ksp_type",solver_opt.st_ksp_type);
-
-    if (!( ksp == "bcgsl" || ksp == "gmres" || ksp == "bcgs" 
-           || ksp == "cg" || ksp == "richardson" || ksp == "preonly"))
-      throw InitFailedException( "FEMEigenvalueProblem: Incorrect ksp " + ksp);  		
-     
-    solver_opt.st_ksp_type = ksp;
-    
-  }
-
-
+  solver_opt.st_ksp_type =  sol_opt.get_option("ksp_type",solver_opt.st_ksp_type);
 
 }
 

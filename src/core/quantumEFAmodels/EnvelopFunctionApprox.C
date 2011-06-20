@@ -408,19 +408,20 @@ void EnvelopFunctionApprox::parse_options()
   }
 
 
-  if (solver_opt.discretization_method == BIM)
+  // check the quadrature rule
   {
-    _quadrature_type = QTRAP;
-  }
-  else
-  {
-  //string qrule = get_option("quadrature_rule", "gauss");
-  //if (qrule == "gauss")
-    _quadrature_type = QGAUSS;
-  //else if (qrule == "trapez")
-  //  _quadrature_type = QTRAP;
-  //else
-  //  throw InitFailedException("Unknown quadrature rule");
+    string qrule = get_option("quadrature_rule", "gauss");
+    if (qrule == "gauss")
+      _quadrature_type = QGAUSS;
+    else if (qrule == "trapez")
+    {
+      _quadrature_type = QTRAP;
+      // this is not BIM, but the flag will make it solve a non-
+      // generalized problem
+      solver_opt.discretization_method = BIM;
+    }
+    else
+      throw InitFailedException("Unknown quadrature rule");
   }
   //-------------------------------------------------------------------------------------------//
 
@@ -538,6 +539,7 @@ void EnvelopFunctionApprox::parse_options()
   heat_model_name = get_option("temperature_simulation", heat_model_name);
 
   _temp_interface.set_simulation(heat_model_name);
+
 
   //--------------------------------------------------------------------------------------------//
   //Spectrum Shift
@@ -895,7 +897,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
   //------------------------------------------------------------
  std::vector<unsigned int> dof_indices_component;
- std::vector<unsigned int> dof_indices_component0;
 
  std::vector<unsigned int> dof_indices;
 
@@ -911,31 +912,46 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   DenseSubMatrix<Number> ham_imag_sub(ham_imag);
   DenseSubMatrix<Number> s_real_sub(s_real);
 
-
-  vector<double> box_volume(mesh->n_nodes(), 1.0);
-
-  if (solver_opt.discretization_method == BIM)
+  double initval = 1.0;
+  if (_quadrature_type == QTRAP)
   {
+    // is this correct, or should we use n_local_dofs()?
+    _sqrt_S_inv.resize(dof_map.n_dofs());
+    _sqrt_S_inv.assign(_sqrt_S_inv.size(), 0.0);
+    //vector<double> test(_sqrt_S_inv);
+
+
+    double scale = Constants::bohr_radius * 1e9;
+    if (dim > 1)
+      scale *= Constants::bohr_radius * 1e9;
+    if (dim > 2)
+      scale *= Constants::bohr_radius * 1e9;
+    scale = 1.0 / scale;
+
     MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
     const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
     for ( ; el != end_el ; ++el)
-    {//el
+    {
       const Elem* elem = *el;
       int n_nodes = elem->n_nodes();
-      double vol = elem->volume() / n_nodes;
+      fe->reinit(elem);
 
-      dof_map.dof_indices (elem, dof_indices_component, psivar[0]);
-      const unsigned int n_psi_dofs = dof_indices_component.size();
-      for (unsigned int p1 = 0; p1 < n_psi_dofs; p1++)
+      for (unsigned int b = 0; b < opt.number_of_bands; b++)
       {
-        double box_part_volume;
+        dof_map.dof_indices(elem, dof_indices_component, psivar[b]);
+        const unsigned int n_dofs = dof_indices_component.size();
 
-        box_volume[dof_indices_component[p1]] += vol;
+        for (unsigned int qp=0; qp < (*qrule).n_points(); qp++)
+          for (unsigned int p = 0; p < n_dofs; p++)
+            _sqrt_S_inv[dof_indices_component[p]] += JxW[qp] * phi[p][qp] * phi[p][qp];
       }
     }
 
-  }
+    // build the square root and invert
+    for (size_t i = 0; i < _sqrt_S_inv.size(); i++)
+      _sqrt_S_inv[i] = 1.0 / sqrt(_sqrt_S_inv[i]);
 
+  }
 
 
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
@@ -944,12 +960,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   double electric_potential = 0;
 
   EFAbulkHamiltonian* element_hamiltonian;
-
-  unsigned int el_number = 0;
-
-
-
-
 
 
 
@@ -971,274 +981,148 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       dof_map.dof_indices (elem, dof_indices);
       const unsigned int n_dofs   = dof_indices.size();
 
+
       ham_real.resize(n_dofs, n_dofs);
       ham_imag.resize(n_dofs, n_dofs);
-      s_real.resize(n_dofs, n_dofs);
+      if (solver_opt.discretization_method == FEM)
+        s_real.resize(n_dofs, n_dofs);
 
-      // complex<double> operator_sign = Complex(0.0, -1.0);
-      //if (solver_opt.discretization_method == FEM)
-      if (true)
-      {//FEM
-	fe->reinit (elem);
+      fe->reinit (elem);
 
-	for (unsigned int qp=0; qp < (*qrule).n_points(); qp++)
-	{//qp
-	  //--------------------------------------------------------------------------------
-	  /*
+      for (unsigned int qp=0; qp < (*qrule).n_points(); qp++)
+      {//qp
+        //--------------------------------------------------------------------------------
+        /*
 	    We assume that strain and electric potential may be different for different quadrature points
 	    It is done for a sake of a multiscale generalization
-	  */
-	  Tensor2Sym strain_crystal_system(0);
-	  _strain_interface.get_crystal_strain(elem, q_point[qp], strain_crystal_system);
+         */
+        Tensor2Sym strain_crystal_system(0);
+        _strain_interface.get_crystal_strain(elem, q_point[qp], strain_crystal_system);
 
 
-	  if (opt.consider_potential)
-	  {
-	    electric_potential = get_electric_potential( elem, q_point[qp] );
-	  }
-
-
-
-
-	  element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
-
-	  //------------------------------------------------------------------------------------------
-
-
-	  std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
-	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
-
-
-
-	  dof_map.dof_indices(elem, dof_indices_component0, psivar[0]);
-
-	  for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
-	  {//band1
-	    dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
-	    const unsigned int n_psi_dofs = dof_indices_component.size();
-
-	    for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
-	    {//band2
-
-	      //Hamiltonian
-
-
-	      ham_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-	      ham_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-	      for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-	      {
-		for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-		{
-		  complex<double> value = (0.0, 0.0);
-		  //constant
-		  value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * model_Ham[band1][band2].constant ;
-
-
-		  //linear left
-
-		  for (short i = 0; i < dim; i++)
-		  {
-		    value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
-		      * Complex(0.0, -1.0);
-		  }
-		  //linear right
-
-		  for (short i = 0; i < dim; i++)
-		  {
-		    value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i]
-		      * Complex(0.0, -1.0);
-
-		  }
-
-		  //quadratic
-
-		  for (short i = 0; i < dim; i++)
-		    for (short j = 0; j < dim; j++)
-		    {
-		      value -= JxW[qp] * dphi[p1][qp](i) * dphi[p2][qp](j)*model_Ham[band1][band2].quad[i][j]
-			* Complex(0.0,-1.0) * Complex(0.0, -1.0);
-
-		    }
+        if (opt.consider_potential)
+        {
+          electric_potential = get_electric_potential( elem, q_point[qp] );
+        }
 
 
 
 
+        element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
+
+        //------------------------------------------------------------------------------------------
 
 
-		  ham_real_sub(p1,p2) += value.real() / box_volume[dof_indices_component0[p1]];
-		  ham_imag_sub(p1,p2) += value.imag() / box_volume[dof_indices_component0[p1]];
-
-		}
-	      }
-
-
-
-
-	      //S-matrix
-	      if (band1 == band2)
-	      {
-		s_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-		for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-		{
-		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-		  {
-		    s_real_sub(p1,p2) += JxW[qp] * phi[p1][qp] * phi[p2][qp] / box_volume[dof_indices_component0[p1]];
-		  }
-		}
-
-	      }
-	      //--------------------------------------------------------------------------//
-
-	    }
-	  }
+        std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
+        model_Ham = ( element_hamiltonian->get_Hamiltonian() );
 
 
 
-	}
 
+        for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
+        {//band1
+          dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
+          const unsigned int n_psi_dofs = dof_indices_component.size();
+
+          for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
+          {//band2
+
+            //Hamiltonian
+
+
+            ham_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+            ham_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+            for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+            {
+              for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+              {
+                complex<double> value = (0.0, 0.0);
+                //constant
+                value += JxW[qp] * phi[p1][qp] * phi[p2][qp] * model_Ham[band1][band2].constant ;
+
+
+                //linear left
+
+                for (short i = 0; i < dim; i++)
+                {
+                  value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
+                                                                                                        * Complex(0.0, -1.0);
+                }
+                //linear right
+
+                for (short i = 0; i < dim; i++)
+                {
+                  value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i]
+                                                                                                         * Complex(0.0, -1.0);
+
+                }
+
+                //quadratic
+
+                for (short i = 0; i < dim; i++)
+                  for (short j = 0; j < dim; j++)
+                  {
+                    value -= JxW[qp] * dphi[p1][qp](i) * dphi[p2][qp](j)*model_Ham[band1][band2].quad[i][j]
+                                                                                                         * Complex(0.0,-1.0) * Complex(0.0, -1.0);
+
+                  }
+
+
+
+
+
+
+                ham_real_sub(p1,p2) += value.real();
+                ham_imag_sub(p1,p2) += value.imag();
+
+              }
+            }
+
+
+
+
+            //S-matrix
+            if (solver_opt.discretization_method == FEM)
+              if (band1 == band2)
+              {
+                s_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+                for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+                {
+                  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+                  {
+                    s_real_sub(p1,p2) += JxW[qp] * phi[p1][qp] * phi[p2][qp];
+                  }
+                }
+
+              }
+            //--------------------------------------------------------------------------//
+          }
+        }
       }
-      //else if (solver_opt.discretization_method == BIM)
-      else if (false)
-      {//BIM
-
-	Point center = elem->centroid();
-
-	Tensor2Sym strain_crystal_system(0);
-	_strain_interface.get_crystal_strain(elem, center, strain_crystal_system);
-
-
-	if (opt.consider_potential)
-	{
-
-	  electric_potential = get_electric_potential( elem, center );
-	}
-
-
-	element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
-
-
-
-
-	std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
-	  model_Ham = ( element_hamiltonian->get_Hamiltonian() );
-
-
- 	double box_part_volume;
-	{
-	  Point p1 = elem->point(0);
-	  Point p2 = elem->point(1);
-
-	  box_part_volume = 0.5 * std::abs(p1(0) - p2(0)) ;
-	}
-
-	for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
-	{//band1
-	  dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
-	  const unsigned int n_psi_dofs = dof_indices_component.size();
-
-	  for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
-	  {//band2
-
-	    ham_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-	    ham_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
-
-	    //hamiltonian
-
-	    for (unsigned int p1=0; p1<n_psi_dofs; p1++)
-	    {//p1
-
-	      Elem* box_part_elem;
-	      vector< Point > qpoints;
-
-	      Point q1(0.0, 0.0, 0.0);
-	      qpoints.push_back(q1);
-	      qpoints.push_back( FEInterface::inverse_map ( dim, fe_type, elem, elem->point(p1)) );
-
-	      fe->reinit (elem, &qpoints);
-
-	      for (unsigned int p2=0; p2<n_psi_dofs; p2++)
-	      {	//p2
-		complex<double> value = (0.0, 0.0);
-		//constant (zero order)
-
-		if (p1 == p2)
-		{
-		  value +=  model_Ham[band1][band2].constant * box_part_volume;
-		  //if (band1 == band2) value += - opt.spectrum_shift/Hartree * box_part_volume;
-		}
-
-
-	       //linear left
-
-		for (short i = 0; i < dim; i++)
-		{
-		  double surface ;
-		  if (p1 == 0)
-		    surface = 1.0;
-		  else
-		    surface = -1.0;
-
-		  for (unsigned int qp=0; qp < dim; qp++)
-		    value +=   phi[p2][qp] * model_Ham[band1][band2].linear_left[i] * surface
-		      * Complex(0.0, -1.0);
-
-		}
-
-		//linear right
-
-		for (short i = 0; i < dim; i++)
-		  value +=  dphi[p2][dim](i) * model_Ham[band1][band2].linear_right[i]
-		    * Complex(0.0, -1.0)  * box_part_volume ;
-
-
-		//second order
-		vector<double> n1[3];
-
-		for (unsigned int qp=0; qp < dim; qp++)
-		{
-		  for (short i = 0; i < dim; i++)  //x,y,z
-		    for (short j = 0; j < dim; j++) //x,y,z
-		    {
-
-
-		      double surface ;
-
-		      if (p1 == 0)
-			surface = 1.0;
-		      else
-		     	surface = -1.0;
-
-
-		      value +=   dphi[p2][qp](j)  * surface *
-			model_Ham[band1][band2].quad[i][j] * Complex(0.0,-1.0) * Complex(0.0, -1.0);
-
-		    }
-		}
-
-
-
-
-
-		ham_real_sub(p1,p2) += value.real()/box_volume[dof_indices_component[p1]];
-		ham_imag_sub(p1,p2) += value.imag()/box_volume[dof_indices_component[p1]];
-
-
-	      }
-	    }
-
-
-
-
-	  }
-	}
-
-      }
-
-
 
 
       //if (solver_opt.discretization_method == FEM) 
       //  ham_real.add( - solver_opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
+
+
+      if (_quadrature_type == QTRAP)
+      {
+        // apply S^-1/2 H S^-1/2
+        for (unsigned int i = 0; i < n_dofs; i++)
+        {
+          for (unsigned int j = 0; j < n_dofs; j++)
+          {
+            double scale =
+                _sqrt_S_inv[dof_indices[i]] * _sqrt_S_inv[dof_indices[j]];
+            ham_real(i, j) *= scale;
+            ham_imag(i, j) *= scale;
+            // this is not needed, as we do not solve a generalized problem
+            // in this case
+            //s_real(i, j) *= scale;
+          }
+        }
+      }
+
 
       vector<unsigned int> dof_indices_tmp;
 
@@ -1262,17 +1146,15 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
-      el_number++;
-
     }
 
 
 //this is only to test
-/*
-  Ham_real->print_matlab("ham_r_matlab.m");
-  Ham_imag->print_matlab("ham_i_matlab.m");
-  S_real->print_matlab("s.m");
-*/
+  /*
+  _H_real->print_matlab("ham_r_matlab.m");
+  _H_imag->print_matlab("ham_i_matlab.m");
+  _S_real->print_matlab("s.m");
+  */
 
 
 
@@ -1537,6 +1419,8 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
   }
 
+  // apply transformation if needed
+  transform_eigenstates();
   
 
   //normalization
@@ -1668,12 +1552,37 @@ EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
 //=======================================================================//
 
 
+
+void EnvelopFunctionApprox::transform_eigenstates(void)
+{
+  // if we use QTRAP (diagonal overlap), we must transform the eigenstate
+  // with S^-1/2 as we transformed the system to have unit overlap
+  if (_quadrature_type != QTRAP) return;
+
+  size_t num_states = _solution.size();
+
+  for (size_t s = 0; s < num_states; s++)
+  {
+    vector<Complex>& eigvec =  _solution[s].eigen_vector;
+
+    size_t n_dofs = eigvec.size();
+    if (n_dofs != _sqrt_S_inv.size())
+      cerr << "eigvec : " << eigvec.size() << " " << "S : " << _sqrt_S_inv.size() << endl;
+
+    for (size_t i = 0; i < n_dofs; i++)
+      eigvec[i] *= _sqrt_S_inv[i];
+
+  }
+
+}
+
 //-----------------------------------------------------------------------------//
 double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
 {
   double  result;
 
   const vector< Complex > &  eigen_vector =  _solution[state_number].eigen_vector;
+
 
 
   DofMap& dof_map = system->get_dof_map();
@@ -1698,12 +1607,6 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
 
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-
-
-
-
-
 
   Complex temp(0.0, 0.0);
   Complex eigen_f_value1, eigen_f_value2;

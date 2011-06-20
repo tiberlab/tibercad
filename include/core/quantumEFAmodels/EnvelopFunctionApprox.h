@@ -212,6 +212,13 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //! The quadrature rule
   libMeshEnums::QuadratureType _quadrature_type;
 
+  //! The square root of the inverse of the overlap matrix
+  /*!
+   * This is only used for trapezoidal rule that produces a diagonal
+   * overlap matrix.
+   */
+  std::vector<double> _sqrt_S_inv;
+
 
   //!bands names
   std::vector<std::string> psi_name;
@@ -240,6 +247,10 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     \param number_of_ev number of eigen functions to read
   */
   void read_SLEPC_solution(unsigned int number_of_ev);
+
+
+  //! Transform the eigenstates with S^-1/2, if needed
+  void transform_eigenstates(void);
 
  
   //!creates constraints

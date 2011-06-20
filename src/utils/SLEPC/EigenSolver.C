@@ -4,8 +4,9 @@
 #include <cassert>
 #include <string>
 
-#include "slepceps.h"
 #include "EigenSolver.h"
+#include "RuntimeException.h"
+#include "slepceps.h"
 
 #include "private/matimpl.h"
 
@@ -17,12 +18,16 @@ namespace
   double shift; //could be stored in ST but lapack does not apply any shift
 }
 
+static int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt);
+
+
 int EigenSolver::_size_of_matrix;
 //-------------------------------------------------------------//
 void EigenSolver::slepc_init(int argc1, char** argv1)
 {
 
   SlepcInitialize(&argc1,&argv1,NULL,NULL);
+  PetscPopSignalHandler();
 
 }
 
@@ -140,45 +145,8 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
       
     ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
 
+    set_ksp_and_pc(st, opt);
   
-    ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
-
-    if (opt.st_ksp_type == "bcgsl")
-      ierr = KSPSetType( ksp, KSPBCGS);
-    else if (opt.st_ksp_type == "gmres" )
-       ierr = KSPSetType( ksp, KSPGMRES);
-    else if (opt.st_ksp_type == "bcgs" )
-       ierr = KSPSetType( ksp, KSPBCGS);
-    else if (opt.st_ksp_type == "cg" )
-      ierr = KSPSetType( ksp, KSPCG);
-    else if (opt.st_ksp_type == "richardson" )
-      ierr = KSPSetType( ksp, KSPCG);
-    else if (opt.st_ksp_type == "preonly")
-      ierr = KSPSetType( ksp, KSPPREONLY);
-
-    
-
-    ierr = KSPGetPC( ksp,&pc);
-
-    if (opt.pc_type == "cholesky")
-      ierr = PCSetType(pc,PCCHOLESKY);
-    else if (opt.pc_type == "jacobi" )
-      ierr =  PCSetType(pc,PCJACOBI);
-    else if (opt.pc_type == "ilu" )
-      ierr =  PCSetType(pc,PCILU);
-    else if (opt.pc_type == "composite" )
-      ierr =  PCSetType(pc,PCCOMPOSITE);
-  
-
-   
-   
-   
-    
-
-    //   ierr = KSPSetTolerances(ksp,1e-10, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
-    
-    ierr = KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
-
   }
   else if (opt.solver_type == "lapack")
   {
@@ -199,48 +167,10 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     {
       ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
       ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
-    
    
       ierr = STSetType(st,STSHIFT); CHKERRQ(ierr);
 
-      ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
-
-
-      ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
-
-
-      ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
-
-      if (opt.st_ksp_type == "bcgsl")
-	ierr = KSPSetType( ksp, KSPBCGS);
-      else if (opt.st_ksp_type == "gmres" )
-	ierr = KSPSetType( ksp, KSPGMRES);
-      else if (opt.st_ksp_type == "bcgs" )
-	 ierr = KSPSetType( ksp, KSPBCGS);
-       else if (opt.st_ksp_type == "cg" )
-	 ierr = KSPSetType( ksp, KSPCG);
-       else if (opt.st_ksp_type == "richardson" )
-	 ierr = KSPSetType( ksp, KSPCG);
-       else if (opt.st_ksp_type == "preonly")
-	 ierr = KSPSetType( ksp, KSPPREONLY);
-       
-    
-
-       ierr = KSPGetPC( ksp,&pc);
-       
-       if (opt.pc_type == "cholesky")
-	 ierr = PCSetType(pc,PCCHOLESKY);
-       else if (opt.pc_type == "jacobi" )
-	 ierr =  PCSetType(pc,PCJACOBI);
-       else if (opt.pc_type == "ilu" )
-	 ierr =  PCSetType(pc,PCILU);
-       else if (opt.pc_type == "composite" )
-	 ierr =  PCSetType(pc,PCCOMPOSITE);
-       
-     
-       //rtol, abstol, dtol, maxits
-       ierr = KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
-       
+      set_ksp_and_pc(st, opt);
     }
   }
  
@@ -286,6 +216,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   PetscMPIInt    rank,size;
   ST st;
   KSP ksp;
+  PC pc;
   
 
 
@@ -306,7 +237,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
-  ierr = MatGetSize(A, &_size_of_matrix, NULL);
+    ierr = MatGetSize(A, &_size_of_matrix, NULL);
   
 
   }
@@ -340,32 +271,36 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   ierr = EPSSetOperators(eps,A,PETSC_NULL);CHKERRQ(ierr);
  
   
- 
-
- 
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
 
-  if (opt.solver_type == "arnoldi")
+  if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur")
   {
     ierr = EPSSetProblemType(eps,EPS_HEP);CHKERRQ(ierr);
-    ierr = EPSSetType(eps, EPSARNOLDI); CHKERRQ(ierr);
-    ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
- 
+
+    if (opt.solver_type == "arnoldi")
+      ierr = EPSSetType(eps, EPSARNOLDI);
+    else
+      ierr = EPSSetType(eps, EPSKRYLOVSCHUR);
+
 
     ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
+
+    if (opt.spectral_trans == "folding")
+    {
+      ierr = STSetType(st,STFOLD); CHKERRQ(ierr);
+      ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
+    }
+    else
+    {
+      ierr = STSetType(st,STSINV); CHKERRQ(ierr);
+      ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
+    }
+
     ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
-    
-   
-    ierr = STSetType(st,STSINV); CHKERRQ(ierr);
-    ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
 
-    ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
+    ierr = set_ksp_and_pc(st, opt);
 
-
-    //rtol, abstol, dtol, maxits
-      ierr = KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
-   
   }
   else if (opt.solver_type == "lapack")
   {
@@ -390,13 +325,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
    
       ierr = STSetType(st,STSHIFT); CHKERRQ(ierr);
 
-      ierr = STGetKSP(st, &ksp);CHKERRQ(ierr);
-
-      //      ierr = KSPSetType( ksp, KSPBCGS);CHKERRQ(ierr);
-
-      //rtol, abstol, dtol, maxits
-      ierr = KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT); CHKERRQ(ierr);
-
+      ierr = set_ksp_and_pc(st, opt);
     }
 
   }
@@ -408,6 +337,55 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   return ierr; 
 
  
+}
+
+
+int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
+{
+  int ierr;
+
+  KSP ksp;
+  ierr = STGetKSP(st, &ksp);
+
+  PC pc;
+  ierr = KSPGetPC(ksp,&pc);
+
+  if (opt.st_ksp_type == "bcgsl")
+    ierr = KSPSetType( ksp, KSPBCGS);
+  else if (opt.st_ksp_type == "gmres" )
+    ierr = KSPSetType( ksp, KSPGMRES);
+  else if (opt.st_ksp_type == "bcgs" )
+    ierr = KSPSetType( ksp, KSPBCGS);
+  else if (opt.st_ksp_type == "cg" )
+    ierr = KSPSetType( ksp, KSPCG);
+  else if (opt.st_ksp_type == "richardson" )
+    ierr = KSPSetType( ksp, KSPCG);
+  else if (opt.st_ksp_type == "preonly")
+    ierr = KSPSetType( ksp, KSPPREONLY);
+  else
+    throw RuntimeException("KSP type \'" + opt.st_ksp_type +
+        "\' not supported in EigenSolver.");
+
+  if (opt.pc_type == "cholesky")
+    ierr = PCSetType(pc,PCCHOLESKY);
+  else if (opt.pc_type == "jacobi" )
+    ierr =  PCSetType(pc,PCJACOBI);
+  else if (opt.pc_type == "ilu" )
+    ierr =  PCSetType(pc,PCILU);
+  else if (opt.pc_type == "lu" )
+    ierr =  PCSetType(pc,PCLU);
+  else if (opt.pc_type == "redundant" )
+    ierr =  PCSetType(pc,PCREDUNDANT);
+  else if (opt.pc_type == "composite" )
+    ierr =  PCSetType(pc,PCCOMPOSITE);
+  else
+    throw RuntimeException("Preconditioner \'" + opt.pc_type +
+        "\' not supported in EigenSolver.");
+
+  ierr = KSPSetTolerances(ksp,opt.spectrum_inversion_tolerance, PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+
+  return ierr;
+
 }
 
 //--------------------------------------------------------------//
