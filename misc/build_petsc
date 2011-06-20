@@ -31,7 +31,7 @@ make_petsc()
   if [ ! -e  conftest-${PETSC_ARCH} ]; then
     ./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
       --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
-
+exit
     cp conftest conftest-${PETSC_ARCH}
     if [ "$target_os" != "win32" ]; then
       ./conftest-${PETSC_ARCH}
@@ -112,10 +112,9 @@ SHARED="--with-shared=0 --with-dynamic=0"
 
 #COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
 COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
-  --with-cpp=$(echo $CC | sed 's/gcc/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc/ld/') \
-  --with-ar=$(echo $CC | sed 's/gcc/ar/')"
+  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
+  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
 
-echo $COMPILERS
 
 if [ $MPI == 'n' ]; then
   MPI="--with-mpi=0"
@@ -128,10 +127,11 @@ LAPACKLIBS=${LAPACKLIBS:-"--download-f-blas-lapack=1"}
 petsc_host=
 petsc_dll_name=${dll_prefix}petsc
 
-if [ "${target_os}" == "win32" ]
+if [ "${target_os}" = "win32" ]
 then
   petsc_host="--with-host-vendor=w64 --with-host-os=mingw32"
 fi
+
 
 CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 ${petsc_host}"
 
