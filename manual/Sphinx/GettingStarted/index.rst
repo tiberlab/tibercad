@@ -1,7 +1,7 @@
 
 .. _contents:
 
-Welcome to TiberCAD's Getting Started
+Getting Started with tiberCAD
 ===========================================
 
 
@@ -16,7 +16,7 @@ Welcome to TiberCAD's Getting Started
    Dsc
    
    
-   Glossary
+..   Glossary
    Bibliography
    Index
    

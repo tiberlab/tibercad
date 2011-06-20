@@ -5,358 +5,429 @@
 Drift Diffusion
 =================================================
 
+Introduction
+-------------
 
-In this example we will see a very simple TiberCAD simulation:
+The module Drift-Diffusion simulates electron and hole transport based on the drift-diffusion
+approximation.
 
-  1D calculation of Poisson and drift-diffusion for a bulk Silicon sample.
+The system of equations that is solved is given by
+
+.. math::
+   :label: dd_eq_ddsystem
+   
+   -\nabla(\varepsilon\nabla\varphi - \mathbf{P}) & =  -e(n - p - N_d^+ + N_a^-) \\
+   -\nabla(\mu_n n ( \nabla\phi_n + P_n \nabla T)  ) & =  R \\
+   -\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & =  -R, 
+
+where :math:`P` is the electric polarization due to e.g. piezoelectric effects and :math:`R` is the net 
+recombination rate, i.e. recombination rate minus generation rate. :math:`P_n` and :math:`P_p` are the electron
+and hole thermoelectric powers, respectively. The models for the mobilities and the net
+recombination rates can be specified in the ``Physics`` section.
+Recombination and trap models can be specified both for bulk and interface device regions.
+
+
+
+Example: Bulk silicon in 1D
+----------------------------
+
+This very simple example presents the basic setup of a Drift-Diffusion simulation
+by simulating the current in a piece of bulk silicon.
 
 The following files should be in your working directory:
 
-|   ``bulk.tib_`` : **TiberCAD** input file 
-|
-|   ``bulk.msh_`` : mesh file
+  bulk.tib_  :            tiberCAD input file 
 
-The mesh file can be obtained from the following GMSH geo file : bulk.geo_ 
+  bulk.msh_ :             mesh file
 
-This is the summary of the Sections of this Tutorial :
+The mesh file can be obtained from the following ``GMSH`` script (bulk.geo_):
 
-*  :ref:`tut0step1` 
-*  :ref:`tut0step2` 
-*  :ref:`tut0step3` 
-*  :ref:`tut0step4` 
-*  :ref:`tut0step5` 
- 
+::
 
-..  _tut0step1 :
- 
-Step 1 - Modeling the device
-----------------------------
+   L = 1;
+   d = 0.01;
 
-As a first step, we have to model the device. To do so, you can use DEVISE 
-module of ISE-TCAD 9.5 software package or GMSH program.
+   Point(1) = {0, 0, 0, d};
+   Point(2) = {L, 0, 0, d};
 
-Here we'll see in details the procedure for GMSH.
+   Line(1) = {1, 2};
 
-There are two possible ways to use GMSH:
-
-Interactive, using the graphical interface
-Using a script file
-In the following we'll see how to write a basic GMSH script ( bulk.geo_ ); 
-for any details please refer to GMSH manual GMSH (http://geuz.org/gmsh/).
-
- 
-| 
-| 
+   Physical Line("bulk") = {1};
+   Physical Point("anode") = {1};
+   Physical Point("cathode") = {2};
 
 
-  |warn|: 
-          In a **1D** simulation it is assumed that the geometrical model is restricted to the **x axis** .
-          In a **2D** simulation it is assumed that the geometrical model is restricted to the **xy-plane (z=0)** 
-          Any other geometrical orientation could give unpredictable results
+The simulated device is a homogeneous piece of bulk silicon with a length of :math:`1\, \mu\rm m`.
+At the two ends we define the contacts (``anode`` and ``cathode``).
 
- 
-
-In a GMSH script, several variables can be defined and given a value in this way::
-
-  L = 1
-  d = 0.01
-  
-these are valid GMSH variables: L is just the length of the Si sample; d is the value 
-of a *characteristic mesh length* (see below).
-
-Definition of geometrical entities **Points** ::
-
-  Point(1) = {0, 0, 0, d}
-  Point(2) = {L, 0, 0, d}
-
-The first three expressions inside the braces on the right hand side give the three 
-X, Y and Z **coordinates** of the point; the last expression **(d)** sets the **characteristic 
-mesh length** at that point, that is the *"size"* of a mesh element, defined as the length 
-of the segment for a line segment, the radius of the circumscribed circle for a triangle 
-and the radius of the circumscribed sphere for a tetrahedron.
-
-Thus, the smaller is the value of d, the greater is the mesh density close to that point. 
-
-The size of the mesh elements will then be computed in GMSH by linearly interpolating 
-these characteristic lengths in the whole mesh.
- 
-
-Definition of a geometrical entity ``Line`` ::
-
-  Line(1) = {1, 2}
-
-The two expressions inside the braces on the right hand side give the identification 
-numbers of the start and end points of the line.
-
-
-..  figure:: ../data/bulk_geo_fig.png
-    :align: center
-    :scale: 50%
-
-
-Definition of the physical entity **Physical Line bulk** ::
-
-  Physical Line("bulk") = {1}
-
-The expression(s) inside the braces on the right hand side give the identification numbers 
-of all the **geometrical lines** that need to be grouped inside the *physical line* .
-
-In this way, in general, physical regions are created which associate together geometrical regions, 
-and then the related mesh elements, which share some common physical properties. It's only these 
-physical regions which can be referred to outside GMSH. In TiberCAD, this is done by associating 
-one or more physical regions to a **TiberCAD region** through the keyword *mesh_regions* (see in the following).
-
-Definition of two physical entities Physical Point::
-
-  Physical Point("anode2)   = {1}
-  Physical Point("cathode") = {2}
- 
-| 
-| 
-
-  |warn| 
-         In general, in a nD simulation, **(n-1)D** physical regions (points in 1D, lines in 2D, surfaces in 3D) 
-         are used by TiberCAD to impose the required boundary conditions.
-
-Each (n-1)D physical region defined in this way in GMSH will be associated in TiberCAD to a boundary condition region, 
-through the keyword **BC_reg_numb** . Thus, in this case, Physical points Anode and Cathode will be associated respectively 
-to two **Contact** regions (see in the following).
- 
-
-..  _tut0step2 :
-
-Step 2 - Meshing the device 
----------------------------
- 
-
-The *.geo* script file with the geometrical description can be run in GMSH, to display the modelled device 
-and to mesh it through the GMSH graphical interface.
-Alternatively, a *non-interactive* mode is also available in GMSH, without graphical user interface. 
-
-For example, to mesh this 1D tutorial in non-interactive mode, just type:
-
-  |idea|    gmsh bulk.geo -1 -o bulk.msh
-
-where bulk.geo_ is the geometrical description of the device with GMSH syntax:
-
-  -1 means *1D mesh generation*
-
-some command line options are:
-
-  -1 , -2, -3 to perform *1D, 2D or 3D* mesh generation,
-
-  -o **mesh_file.msh** to specify the name of the mesh file to be generated
-
-In this way, a .msh has been generated and is ready to be read in TiberCAD.
-
-..  _tut0step3 :
-
-Step 3 - TiberCAD Input file
------------------------------
-
-
-Now we have to write down the **TiberCAD input file** ( bulk.tib_ ). For a detailed reference see the user guide 
-(Input file) and Getting started 1
-
-Description of Device Regions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-First, we have to list all the **TiberCAD Regions** present in our Device: a TiberCAD Region is usually a section 
-of the device featuring the same material and possibly the same doping.
+The tiberCAD input file (bulk.tib_) is shown in the following listing:
 
 ::
 
   Device
+  {
+    meshfile = bulk.msh
+
+    Region bulk 
     {
-     meshfile = bulk.msh
+      material = Si
 
-     Region bulk 
-       {
-        material = Si
-
-        Doping
-          {
-           Nd = 1e16
-           type = donor
-          }
-       }
+      Doping
+      {
+        Nd = 1e16
+        type = donor
+      }
     }
-    
-The TiberCAD Region bulk is made of Silicon and n-doped with a concentration 1 x :math:`10^{16} cm^{-3}` .
-
-Through the keyword **Region** , one GMSH physical region (Physical Lines in 1D, Physical Surfaces in 2D, 
-Physical Volumes in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be associated 
-to the present TiberCAD Region, in this way::
-
-
-  Region  GMSH_physical_region_name
-
-
-In this case, the Physical Line bulk is associated to the TiberCAD Region bulk.
-
-Alternatively, through the optional keyword **mesh_regions** , one or more GMSH physical regions can be 
-associated to a single TiberCAD Region .
-
- 
-
-Definition of Simulation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Now we define the **Simulation** driftdiffusion_1: it belongs to the class **driftdiffusion** 
-
-::
+  }
 
   Module driftdiffusion
-    {               
-     name = driftdiffusion  # this is the default name
+  { 
+    plot = (Ec, Ev, eQFermi, hQFermi, ContactCurrent)
 
-     regions = all          # 'all' is the default
-
-     # what we want to plot
-     plot = (Ec, Ev, eQFermi, hQFermi, ContactCurrent)
-     ....
-       
-The TiberCAD simulation *driftdiffusion_1*  , belonging to the model driftdiffusion, will be applied 
-to the whole device structure (``regions = all``)
-
- 
-
-Definition of Boundary Conditions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The anode and cathode contacts of our 1D Si sample are defined as **Boundary conditions regions** 
-(``Contact anode, Contact cathode``) in the following way::
-
-
-  Module driftdiffusion
-    { 
-              
-     name = driftdiffusion  
-
-     regions = all
-
-     plot = (Ec, Ev, eQFermi, hQFermi, ContactCurrent)
-
-     Contact anode { voltage = $Vb }
-     Contact cathode { }
-
-    }
-    
-Through the keyword Contact , one (n-1) -dimension GMSH physical region (Physical Point in 1D, 
-Physical Line in 2D, Physical Surface in 3D) previously defined in the GMSH mesh ( :ref:`tut0step1` ), can be 
-associated to the present TiberCAD Contact, in this way:
-
-  Contact  ``GMSH_physical_region_name`` 
-
-In this case, the *Physical Point* **anode** is associated to the TiberCAD Contact anode and the Physical 
-Point cathode is associated to the TiberCAD Contact cathode.
-
-Both contacts are defined as *ohmic* , cathode is assigned a fixed ``voltage = 0.0`` , while anode voltage is given 
-by the value of the variable *Vb* ::
-
-
-  ``voltage = @Vb``
-
-
-Definition of Simulation parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Vb is specified in the sweep block, in the Solver section::
+    Contact anode { voltage = $Vb }
+    Contact cathode { }
+  }
 
   Module sweep
-    {
-     solve = driftdiffusion
-     variable = $Vb
-     start = 0.0
-     stop = 1
-     steps = 10
-     plot_data = true
-    }
-    
-In this way, the simulation ``driftdiffusion_1`` is performed for 10 ( steps = 10) values of the anode 
-voltage (variable = Vb), between 0 and 1.
-
-For each step we want to plot the solution variables specified in the driftdiffusion module 
-( ``plot_data = true`` ).
- 
-
-Definition of Execution parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-In the **Simulation** section , we decide *which* simulations to perform and in which *order*; set ``solve = sweep`` , 
-to execute the sweep which run driftdiffusion_1 simulation for the specified loop.
-
-::
+  {
+    solve = driftdiffusion
+    variable = $Vb
+    start = 0.0
+    stop = 1
+    steps = 10
+    plot_data = true
+  }
 
   Simulation
-    {
-     verbose = 2 
+  {
+    verbose = 2
 
-     solve = sweep
+    solve = sweep
 
-     resultpath = output
-     output_format = grace
-    }
-
-Output files with conduction and valence band profiles (plot = Ec,Ev..) and all the calculated values 
-of the current at the contacts (*ContactCurrents*) (the IV characteristic) are generated.
-
-To increases the amount of information written to the screen we can vary the verbose level (verbose = 2).
- 
-..  _tut0step4 :
-
-Step 4 - Run TiberCAD
------------------------
-
-Now we can run TiberCAD
-
-  |  by double clicking on bulk.tib file (in Windows)
-  |  
-  |  or by command line in linux: tibercad bulk.tib
+    resultpath = output
+    output_format = grace
+  }
 
 
-..  _tut0step5 :
+In the ``Device`` block we provide the name of the mesh file (``bulk.msh``), assuming default mesh units
+of micrometers (``mesh_units = 1e-6``).
+The model has a single region ``bulk`` with material silicon (``material = Si``), which is slightly n-doped.
 
-Output 
-----------
+Next we specify the simulation model. Here we only solve the Drift-Diffusion model (``Module = driftdiffusion``).
+We do not specify any physical models for recombination or mobility in this example, but we have to define the electrical contacts
+using the ``Contact`` keyword.
+At the anode we apply a variable voltage by providing a variable name (``$Vb``).
+We also specify which quantities to plot.
+
+In this simulation we want to calculate the IV characteristic of a piece of bulk Si.
+For this porpose we define a sweep on the anode voltage (``Module sweep``).
+In the sweep block we have to specify the sweep variable, which in our case is ``$Vb``.
+The ``plot_data = true`` option will make the sweep plot all results after each sweep step.
+
+Finally, in the ``Simulation`` block we define the output directory and format (in this case ``grace`` for 1D ASCII files),
+and we specify that we want to solve the sweep.
+
 
 The generated Output files are:
 
-* ``driftdiffusion_materials.dat``  : material (mesh) regions, in this case just region 1
 
-* ``driftdiffusion_nodal.dat``      : nodal quantities (here conduction and valence band)
+* ``driftdiffusion_msh.dat``      : mesh-dependent quantities (conduction and valence band edges and quasi Fermi levels)
 
-* ``sweep_driftdiffusion_Vb.dat``   : integrated current at the two contacts for each sweep step
+* ``driftdiffusion_Vb_<step>_msh.dat``: mesh-dependent quantities for each sweep step 
  
+* ``sweep_driftdiffusion.dat``   : integrated current at the two contacts for each sweep step
 
 
-    Attachment    Size
 
-* bulk.tib_	1.16 KB
-* bulk.geo_	181 bytes
-* bulk.msh_	4.49 KB
+..  _bulk.geo: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/bulk_0.geo
+..  _bulk.msh: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/bulk_0.msh
+..  _bulk.tib: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/bulk_2.tib
+
+
+
+Example: Mosfet
+---------------
+
+In this second example we show a 2D simulation of a silicon Mosfet device.
+The ``GMSH`` model obtained from the script mosfet.geo_ is shown in Fig. :ref:`GMSH model of the Mosfet <fig_dd_mosfet>`.
+ 
+.. _fig_dd_mosfet:
+
+.. figure:: ../data/DDMosfetMesh.png
+    :align: center
+    :scale: 40%
+
+    ``GMSH`` model of the Mosfet showing the mesh and the region labels
+
+The model consists of a p-doped Si substrate (``substrate``), two highly n-doped access regions (``contact``),
+a thin gate oxide (``oxide``) and source, gate, drain and back-side contacts.
+
+We want to simulate a set of output characteristics and a transcharacteristic for this Mosfet, using two distinct input files
+outputchar.tib_ and transchar.tib_.
+In these two files we define only the ``Module sweep`` and ``Simulation`` blocks.
+The device and model definitions are put into a third file mosfet.tib_, which is included in the other two files using the syntax
+
+::
+
+   @include mosfet.tib
+
+The device definition found in mosfet.tib_ is shown in the following listing:
+
+::
+
+  Device mosfet
+  {
+    meshfile = mosfet.msh
+  
+    material = Si
+
+    Region substrate 
+    {
+      Doping
+      {
+        density = 1e18
+        type = acceptor
+      }
+    }
+   
+    Region contact
+    {
+      Doping
+      {
+        density = 5e19
+        type = donor
+      }
+    }
+
+    Region oxide
+    {
+      material = SiO2
+    }
+  }
+
+
+The material is defined globally in the ``Device`` section.
+For the oxide it has to be overridden in the correspondent ``Region`` block.
+
+The followng shows the module definition for the Drift-Diffusion simulation:
+
+::
+
+  Module driftdiffusion
+  { 
+    #coupling = electrons
+
+    plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+            hQFermi, hDensity, hCurrentDensity, hMobility,
+            NetRecombination, ElField, ElPotential, ContactCurrents)
+
+    Solver
+    {
+      type = linesearch
+
+      linear_solver
+      {
+        method = pconly
+        preconditioner = lu
+      }
+    }
+
+    Physics
+    {
+      particle_density
+      {
+        statistics = fermidirac
+      }
+
+      recombination srh {}
+
+      mobility
+      {
+        type = field_dependent
+        low_field_model = doping_dependent
+      }
+    }
+
+    Contact gate
+    {
+      type = schottky
+      barrier_height = 3.0
+
+      voltage = $Vg
+
+      area_factor = 0.1
+    }
+
+    Contact source
+    {
+      voltage = 0.0
+      area_factor = 0.1
+    }
+ 
+    Contact backcontact
+    {
+      voltage = 0.0
+      area_factor = 0.1
+    }
+
+    Contact drain
+    {
+      voltage = $Vd
+      area_factor = 0.1
+    }
+  }
+
+
+The commented option ``coupling = electrons`` shows how a unipolar simulation can be set up.
+This example however we simulate in bipolar mode.
+The ``Solver`` defines options for the nonlinear solver (the shown options are the default ones).
+In this case, a linesearch approach is used to refine the nonlinear Newton steps.
+The linear solver for each Newton step (defined in the ``linear_solver`` block) uses a complete LU factorisation as preconditioner (``preconditioner = lu``).
+In this case, the linear solver method can be chosen to be the application of the preconditioner only (``method = pconly``), instead of using an iterative
+approach.
+
+The ``Physics`` block contains the definition of a few physical models to be used.
+For the particle density we use Fermi-Dirac statistics, which is the default.
+We use Shockley-Read-Hall recombination since we solve for both electrons and holes.
+For the mobility, we use a field-dependent model instead of the default constant mobility model.
+The low-field mobility is chosen to be calculated from a doping dependent model (which is the default).
+
+The contacts are defined in the ``Contact`` blocks.
+For the gate we specify ``schottky`` as type (the default is ohmic contact), providing a suitable barrier height.
+The ``area_factor = 0.1`` indicates that we assume a transistor with 1 mm gate width.
+
+Next, we create a file transchar.tib_ containing the definitions for the simulation of the transcharacteristic, as given in the following listing::
+
+  @include mosfet.tib
+
+  Module sweep
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+
+    variable = $Vd
+    start = 0.0
+    stop = 1.0 
+    steps = 5 
+  }
+
+  Module sweep
+  {
+    name = sweep_gate
+    solve = driftdiffusion
+
+    variable = $Vg
+    start = -0.5
+    stop = 1.5
+    steps = 100 
+
+    max_step = 0.1
+  
+    plot_data = true
+  }
+
+  Simulation
+  {
+    solve = (sweep_drain, sweep_gate)
+    resultpath = output_transchar 
+    output_format = vtk
+  }
+
+On the first row we include the device definition from mosfet.tib_.
+Then we define two sweeps ``sweep_drain`` and ``sweep_gate``.
+The first one will ramp the drain to 1.0 V in 5 steps, without plotting the results.
+The second one will then perform a sweep on the gate voltage from -0.5 V to 1.5 V,
+plotting the results after each step and produciong the transfer characteristic.
+The option ``max_step = 0.1`` limits the maximum voltage step to 0.1 V.
+This is useful, since the solver has first to reach the initial gate voltage of -0.5 V, starting from 0 V.
+Using this option it will do this in steps of 0.1 V.
+In the ``Simulation`` block we simply have to specify the two sweeps in the correct order.
+
+Running the simulation with ``tibercad transchar.tib`` will produce in particular a set of files ``*.vtu`` for each 
+step of the sweep ``sweep_gate``, and the file ``sweep_gate_driftdiffusion.dat`` containing the voltage-current
+characteristics for each contact, shown in Fig. :ref:`fig_dd_mosfet_transchar`.
 
  
+.. _fig_dd_mosfet_transchar:
 
+.. figure:: ../data/DDMosfetTranschar.png
+    :align: center
+    :scale: 80%
+
+    Mosfet transcharacteristic
+
+
+For the simulation of the output characteristics we create a file outputchar.tib_ with the following content::
+
+  @include mosfet.tib
+
+  Module sweep
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+
+    variable = $Vd
+    start = 0.0
+    stop = 2.0 
+    steps = 40
+  
+    plot_data = true
+  }
+
+  Module sweep
+  {
+    name = sweep_gate
+    solve = sweep_drain
+
+    variable = $Vg
+    start = 0.0
+    stop = 1.5
+    steps = 6
+  }
+
+  Simulation
+  {
+    solve = sweep_gate
+    resultpath = output_outputchar  
+  
+    output_format = vtk
+  }
+
+
+
+As before, we include the device definition using the ``@include`` statement.
+Then we define a sweep on the drain voltage with name ``sweep_drain`` and a second sweep ``sweep_gate``
+to sweep the gate voltage.
+In the latter, we specify ``sweep_drain`` in the ``solve`` option, creating thus a nested sweep:
+For each gate voltage, a sweep over the drain voltage will be performed.
+
+Running the simulation will produce a file for each couple of values (``$Vg``, ``$Vd``), and a file containing the output
+characteristic for each value of ``$Vg``.
+The resulting set of output characteristics is shown in Fig. :ref:`fig_dd_mosfet_outchar`.
 
  
-..  _bulk.tib: http://www.tibercad.org/files/bulk_2.tib
-..  _bulk.geo: http://www.tibercad.org/files/bulk_0.geo
-..  _bulk.msh: http://www.tibercad.org/files/bulk_0.msh
+.. _fig_dd_mosfet_outchar:
+
+.. figure:: ../data/DDMosfetOutchar.png
+    :align: center
+    :scale: 80%
+
+    Mosfet output characteristics
+
+
+
+
+
+..  _mosfet.geo: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/mosfet.geo
+..  _outputchar.tib: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/outputchar.tib
+..  _transchar.tib: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/transchar.tib
+..  _mosfet.tib: http://www.tiberlab.com/images/stories/products/device_sim/tibercad/manuals/resources/mosfet.tib
+
+
 
 .. rubric:: Footnotes
 
 
 ..   </marker>
 
-
-.. |more| image:: ../data/more.png
-    :scale: 50%
-
-.. |warn| image:: ../data/warn.png
-    :scale: 50%
-
-.. |idea| image:: ../data/idea.png
-    :scale: 50%
 

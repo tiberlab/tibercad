@@ -6,13 +6,12 @@
 Quantum  EFA  calculations
 =================================
 
-In  TiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates and  eigenfunctions  of  a  given system,   dispersion  of  quantum  states and   particle  quantum  density can  be  obtained   respectively by means  of the   following Modules:
+In  TiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates, eigenfunctions and  quantum  density of  a  given system and    dispersion  of  quantum  states  can  be  obtained   respectively by means  of the   following Modules:
 
 * Module efaschroedinger
 
 * Module quantumdispersion
 
-* Module quantumdensity
 
 The  optical properties  are  calculated by  the  following modules 
 
@@ -36,7 +35,7 @@ The EFA calculation  of eigenstates and  eigenfunctions are performed by the **M
      strain_model_name = strain # macrostrain
      name = quantum_el
      regions = quantum
-     plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+     plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
      Solver
        {
         number_of_eigenstates = 10 # 30 
@@ -46,6 +45,26 @@ The EFA calculation  of eigenstates and  eigenfunctions are performed by the **M
         model = conduction_band
        }
     }
+
+In  this  example, Schroedinger  equation is  solved for  electrons with a  single band model. 10 eigenstates  are  calculated and  the  electron quantum density obtained  in the following way. 
+
+For each eigenstate we
+calculate the effective mass assuming quadratic dispersion. Then the charge density is
+calculate as follows:
+
+.. math::
+   :nowrap:
+   :label:
+
+   \begin{gather}
+   \rho_{1D}({\bf r}) = g\frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln \left(1 + 
+   \exp \left( \pm \frac{\mu - E}{kT} \right) \right) \\      
+   \rho_{2D}({\bf r}) = g|\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  F_{-1/2}\left( \pm \frac{\mu - E}{kT}         \right),       
+   \end{gather}
+
+where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; m is the averaged mass (the mass
+is different for each quantized state and is position independent); g is the degeneracy of
+the states. The + sign is for electrons, the - sign is for holes.
 
 Module options
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -113,7 +132,9 @@ The available output variables, to be specified in the plot option, are the foll
 
 * EigenEnergy Eigen energy in eV
 
-* EigenFunctions :math:`|\psi({\bf r})|^2` function of the eigenstate
+* ProbabilityDensity :math:`|\psi({\bf r})|^2` function of the eigenstate
+
+* QuantumDensity   if  present, quantum  density is  calculated 
 
 * Occupation probability to find the state occupied. It is calculated assuming Fermi
 distribution and mean electrochemical potential and temperature:
@@ -131,107 +152,12 @@ distribution and mean electrochemical potential and temperature:
 diagram.
 
 
-<<<<<<< .mine
-By defining the Module **opticskp** , calculation of optical properties is enabled; in particular, 
-the optical kp matrix elements are calculated from the quantum models specified in the Module.
-
-The optical spectrum from spontaneous emission is calculated in the following way:
 
 
-
-where :math:`f_i` and :math:`f_j` are the Fermi distributions.
-
-::
-
-  Module opticskp
-    {
-     name = optics
-     regions = quantum
-     plot = (optical_spectrum_k_0 )
-     initial_state_model = quantum_el
-     final_state_model = quantum_hl
-     initial_eigenstates = (0, 9)
-     final_eigenstates = (0, 15)
-     polarization = (0, 0, 1)
-     Emin = 2.8
-     Emax = 3.6
-     dE = 0.001
-    }
-
-Here, *initial_state_model* and *final_state_model* are, respectively, the quantum simulations 
-( **efaschroedinger** module) associated respectively to the initial state of optical
-transition (e.g. electron), and to the final state of optical transition (e.g. hole). 
-*initial_eigenstates* and *final_eigenstates* refer to the range of eigenstates to be taken in
-account for optical calculations.
-
-By specifying a range of energy values in this way::
-
-  Emin = 3.0
-  Emax = 5.0
-  dE = 0.001
-
-the emission optical spectrum for **k=0** is calculated.
-
-Output
----------------------------
-
-The output variables for optics calculations are:
-
-* **optical_spectrum_k_0** : optical emission spectrum for *k=0*.
-
-Module opticalspectrum
-================================
-
-By defining the Module **opticalspectrum** , optical matrix elements are used to calculate
-the associated (emission) spectrum with a k-space integration.
-
-::
-
-  Module opticalspectrum
-    {
-     k_space_dimension = 2
-     k-space_basis = true
-     k1 = (0, 0, 0.1)
-     k2 = (0, 0.1, 0)
-     refine_fraction = 0.30
-     relative_accuracy = 0.01
-     refine_k_space = true
-     number_of_nodes = (2, 2)
-     wedge = quarter
-     plot = (optical_spectrum)
-     optical_matr_elem_model = opticskp
-     polarization = (0, 0, 1)
-     Emin = 3.0
-     Emax = 5.0
-     dE = 0.001
-    }
-
-The parameters are the following:
-
-  ``k_space_dimension`` = **1** for 2D simulations, **2** for 1D simulations. k-space basis is
- **true** if the k-space is defined by means of k-vectors; if **false** , vectors are expressed in
-real space
-
-  If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the el-
-ements whose error is greater than the value (1-refine fraction)* (maximum error) are
-going to be refined. In this case, "Error" is just the integrated quantity. The refinement
-will end when the *relative_accuracy* is obtained.
-
-  ``number_of_nodes`` = numb. of elements in k mesh, along each direction
-
-  ``wedge`` = half | quarter, to reduce calculation time, by exploiting symmetry.
-
-  ``optical_matr_elem_model`` = name of the *opticskp* model associated
-
-  ``polarization`` = light polarization (vector)
-
-  ``Emin, Emax, dE`` : energy range and step of spectrum calculation.
-
-Output
-=======
 Module quantumdispersion
->>>>>>> .r2404
----------------------
+-----------------------
+
+
 
 
 
@@ -280,87 +206,10 @@ The output variable name is **k-space_dispersion** . The output format for the d
 can be controlled independently of the general specification in the ``Simulation`` section
 by redefining the ``output_format`` keyword.
 
-Module quantumdensity
---------------------
-
-In Module quantumdensity you can define the calculation of particle (electron,hole) den-
-sity, based on the result of a previous calculation of the system eigenstates (e.g. with
-efaschroedinger module). Quantum density may be obtained with an analytical or a
-numerical calculation.
-
-Analytical calculation of density is done in the following way. For each eigenstate we
-calculate the effective mass assuming quadratic dispersion. Then the charge density is
-calculate as follows:
-
-..  math::
-    :nowrap:
-	:label:
-
-    \begin{gather}
-    \rho_{1D}({\bf r}) = g\frac{mkT}{2 \pi \hbar^2}  |\psi({\bf r})|^2 \ln \left(1 + 
-    \exp \left( \pm \frac{\mu - E}{kT} \right) \right) \\      
-    \rho_{2D}({\bf r}) = g|\psi({\bf r})|^2 \frac{1}{2} \sqrt{\left( \frac{mkT}{2\pi\hbar^2} \right)}  F_{-1/2}\left( \pm \frac{\mu - E}{kT}         \right),       
-    \end{gather}
-
-where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; m is the averaged mass (the mass
-is different for each quantized state and is position independent); g is the degeneracy of
-the states. The + sign is for electrons, the - sign is for holes.
-
-Numerical calculation is done by the following formula:
-
-..  math::
-    :nowrap:
-	:label:
-
-    \begin{equation}
-    \rho({\bf r}) = \sum_n \frac {1}{(2\pi)^d} \int_{BZ} |\psi_{\bf k_{\|}}|({\bf r})|^2 \frac{1}{1+\exp 
-    \left(\pm \frac{E-\mu}{kT} \right)} d{\bf k_{\|}}
-    \end{equation}
-
-The integration is performed on a mesh in the k-space.
-
-:: 
-
-  Module quantumdensity
-    {
-     name = dens_el
-     regions = quantum
-     plot = quantum_density
-     k-space_dimension = 0
-     k-space_basis = true
-     k1 = (0, 0, 0.1)
-     #number_of_nodes = (4)
-     #wedge = half
-     quantum_simulation = quantum_el
-     degeneracy = 2
-     refine_fraction = 0.20
-     relative_accuracy = 0.01
-     refine_k_space = true
-     output_density_in_k_space = true
-     uniform_refinement = false
-     mesh_order = FIRST
-     first_state = 3
-     initial_eigenstates_number = 10
-     analytic = true
-    }
-
-The available options are:
-
-* **quantum_simulation** : name of the efaschroedinger simulation.
-
-* degeneracy: degeneracy of the quantum state
-
-* **initial_eigenstates_number** : initial number of eigenstates for the Schroedinger
-equation
-
-* **analytic** = { true | false } If true then the density is calculated analytically,
-otherwise numerically.
-
-Output
-^^^^^^^^^^^^^^^^^^^^^^^
 
 
-The output parameter is **quantum_density**.
+
+
 
 
 

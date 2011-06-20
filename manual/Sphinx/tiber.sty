@@ -1,0 +1,91 @@
+%
+% tiber.sty
+%
+% Some modifications to the Sphinx style
+%
+
+\NeedsTeXFormat{LaTeX2e}[1995/12/01]
+\ProvidesPackage{tiber}[2011/05/03 LaTeX package (tiberCAD Sphinx modifications)]
+
+\RequirePackage{sphinx}
+
+\usepackage{caption}
+
+% Notices / Admonitions
+%
+\definecolor{Myorange}{cmyk}{0,0.07,0.25,0}
+\definecolor{Myblue}{cmyk}{0.1,0.0,0.05,0}
+
+\renewcommand{\py@heavybox}{
+  \setlength{\fboxrule}{0pt}
+  \setlength{\fboxsep}{7pt}
+  \setlength{\py@noticelength}{\linewidth}
+  \addtolength{\py@noticelength}{-3cm}
+  \addtolength{\py@noticelength}{-2\fboxsep}
+  \addtolength{\py@noticelength}{-2\fboxrule}
+  \setlength{\shadowsize}{3pt}
+  \Sbox
+  \minipage{\py@noticelength}
+  \begin{sl}
+}
+\renewcommand{\py@endheavybox}{
+  \end{sl}
+  \endminipage
+  \endSbox
+  \colorbox{Myorange}{\TheSbox}
+}
+
+\newcommand{\py@lightbox}{
+  \setlength{\fboxrule}{0pt}
+  \setlength{\fboxsep}{7pt}
+  \setlength{\py@noticelength}{\linewidth}
+  \addtolength{\py@noticelength}{-3cm}
+  \addtolength{\py@noticelength}{-2\fboxsep}
+  \addtolength{\py@noticelength}{-2\fboxrule}
+  \setlength{\shadowsize}{3pt}
+  %\Sbox
+  \minipage{\py@noticelength}
+  \begin{sl}
+}
+\newcommand{\py@endlightbox}{
+  \end{sl}
+  \endminipage
+  %\endSbox
+  %\fbox{\TheSbox}
+  %\colorbox{Myblue}{\TheSbox}
+}
+
+
+% Some are quite plain:
+\renewcommand{\py@noticestart@note}{\py@lightbox}
+\renewcommand{\py@noticeend@note}{\py@endlightbox}
+\renewcommand{\py@noticestart@hint}{\py@lightbox}
+\renewcommand{\py@noticeend@hint}{\py@endlightbox}
+\renewcommand{\py@noticestart@important}{\py@lightbox}
+\renewcommand{\py@noticeend@important}{\py@endlightbox}
+\renewcommand{\py@noticestart@tip}{\py@lightbox}
+\renewcommand{\py@noticeend@tip}{\py@endlightbox}
+
+% Others gets more visible distinction:
+%\newcommand{\py@noticestart@warning}{\py@heavybox}
+%\newcommand{\py@noticeend@warning}{\py@endheavybox}
+%\newcommand{\py@noticestart@caution}{\py@heavybox}
+%\newcommand{\py@noticeend@caution}{\py@endheavybox}
+%\newcommand{\py@noticestart@attention}{\py@heavybox}
+%\newcommand{\py@noticeend@attention}{\py@endheavybox}
+%\newcommand{\py@noticestart@danger}{\py@heavybox}
+%\newcommand{\py@noticeend@danger}{\py@endheavybox}
+%\newcommand{\py@noticestart@error}{\py@heavybox}
+%\newcommand{\py@noticeend@error}{\py@endheavybox}
+
+\renewenvironment{notice}[2]{
+  \def\py@noticetype{#1}
+  \vspace{0.5cm}
+  \begin{minipage}{1.2cm}
+    \includegraphics[width=\linewidth]{#1.png}
+  \end{minipage}
+  \csname py@noticestart@#1\endcsname
+  %\par\strong{#2}
+}{\csname py@noticeend@\py@noticetype\endcsname\vspace{0.5cm}}
+
+

@@ -178,13 +178,13 @@ latex_font_size = '12pt'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'TiberCAD.tex', u' Examples Book ',
+  ('index', 'TiberCAD-Examples.tex', u' Examples Book ',
    u'TiberLAB srl', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = "logo.png"
+latex_logo = "../data/logo.png"
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
@@ -197,7 +197,8 @@ latex_logo = "logo.png"
 #latex_show_urls = False
 
 # Additional stuff for the LaTeX preamble.
-#latex_preamble = ''
+latex_preamble = '\\usepackage{tiber}'
+latex_additional_files = ['../tiber.sty','../data/warning.png','../data/tip.png']
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
