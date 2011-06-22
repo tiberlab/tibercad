@@ -96,8 +96,7 @@ run_tests:
 
 
 gettingstarted:
-
-#	@$(MAKE) --no-print-directory -C manual/Sphinx/GettingStarted latexpdf
+	@$(MAKE) --no-print-directory -C manual/Sphinx/GettingStarted latexpdf
 
 
 wininstaller linuxinstaller deb tgz tbz: gettingstarted SHAREDLIBS

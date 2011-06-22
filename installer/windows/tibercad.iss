@@ -38,7 +38,10 @@ Source: "{#MySrcPath}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-;Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\Getting started"; Filename: "{app}\doc\GettingStarted.pdf"
+Name: "{group}\Gmsh"; Filename: "{app}\tools\gmsh\gmsh.exe"
+Name: "{group}\Gmsh Manual"; Filename: "{app}\tools\gmsh\gmsh.pdf"
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 

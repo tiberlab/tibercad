@@ -27,9 +27,32 @@
 #include <cstdio>
 #include <getopt.h>
 
-
+#undef LICENSE_CHECK
 using namespace std;
 
+#if defined(_WIN32)
+// Return filename from file open dialog
+static string open_file(const char *filter = "All Files (*.*)\0*.*\0", HWND owner = NULL)
+{
+  char fileName[MAX_PATH] = "";
+  OPENFILENAME ofn;
+  ZeroMemory(&ofn, sizeof(ofn));
+
+  ofn.lStructSize = sizeof(OPENFILENAME);
+  ofn.hwndOwner = owner;
+  ofn.lpstrFilter = filter;
+  ofn.lpstrFile = fileName;
+  ofn.nMaxFile = MAX_PATH;
+  ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY;
+  ofn.lpstrDefExt = "";
+
+  string fileNameStr;
+  if (GetOpenFileName(&ofn))
+    fileNameStr = fileName;
+
+  return fileNameStr;
+}
+#endif
 
 namespace
 {
@@ -78,17 +101,21 @@ int main (int argc, char** argv)
         return 1;
     }
 
-  if (optind >= argc)
-  {
-    usage();
-    return 1;
-  }
+#ifdef _WIN32
+  if (!interactive)
+#endif
+    if (optind >= argc)
+    {
+      usage();
+      return 1;
+    }
 
 
 
   // take input file from command line or ask for it
   string inputfile;
-  inputfile = string(argv[optind]);
+  if (optind < argc)
+    inputfile = string(argv[optind]);
 
 //#ifdef HAVE_LIBREADLINE
 //    char *line = readline ("Enter input file: ");
@@ -103,8 +130,14 @@ int main (int argc, char** argv)
   // do some preparation
   {
 #if defined(_WIN32)
+#if defined(__CYGWIN__)
     // we first convert the filename to something more UNIX like
-    //Utils::convert_win32_path_to_posix(inputfile);
+    Utils::convert_win32_path_to_posix(inputfile);
+#endif
+
+    if (inputfile.empty())
+      inputfile = open_file();
+
 
     // in windows argv[0] is the absolute path
     char* root = getenv("TIBERCADROOT");
@@ -140,10 +173,23 @@ int main (int argc, char** argv)
       {
         infile.close();
         cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
+        if (interactive) cin.get();
         return 1;
       }
       infile.close();
     }
+
+#if defined(_WIN32)
+    {
+      string dirname = Utils::dirname(inputfile);
+      if (SetCurrentDirectory(dirname.c_str()) == 0)
+      {
+        cerr << "TiberCAD: cannot set " << dirname << " as working directory." << endl;
+        if (interactive) cin.get();
+        return 1;
+      }
+    }
+#endif
 
 
 #ifdef LICENSE_CHECK

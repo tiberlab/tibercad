@@ -12,6 +12,7 @@ ifeq ($(target_os),win32)
   SUFF := ".exe"
   objects += tibercad_res.o
   WINDRES := $(subst gcc,windres,$(CC))
+  ADDITIONAL_LIBS += -lcomdlg32
 endif
 
 ifeq ($(METHOD),dbg)

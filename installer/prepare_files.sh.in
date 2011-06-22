@@ -18,11 +18,15 @@ make_windows_package () {
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
-  if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
-    cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
-  fi
-  if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
-    cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
+  #if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
+  #  cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
+  #fi
+  #if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
+  #  cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
+  #fi
+  if test -e ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf
+  then
+    cp ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf ${files}/doc/GettingStarted.pdf
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
@@ -183,11 +187,15 @@ prepare_linux_package () {
   cp ${topdir}/share/Copyright.txt ${files}/share
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
 
-  if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
-    cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
-  fi
-  if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
-    cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
+  #if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
+  #  cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
+  #fi
+  #if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
+  #  cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
+  #fi
+  if test -e ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf
+  then
+    cp ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf ${files}/doc/GettingStarted.pdf
   fi
 
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
