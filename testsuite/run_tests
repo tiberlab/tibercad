@@ -124,8 +124,10 @@ my $topdir = get_option("topdir");
 # get some repository info
 my @svninfo = (`svn info $topdir`);
 ($#svninfo <= 0) && die "Is $topdir under subversion control?";
+my $repo = (grep(/URL/, @svninfo))[0];
 my $revision = (grep(/Revision/, @svninfo))[0];
 my $last_changed_author = (grep(/Author/, @svninfo))[0];
+chomp($repo);
 chomp($revision);
 chomp($last_changed_author);
 
@@ -134,6 +136,7 @@ chomp($last_changed_author);
 my $datetime = localtime;
 print("\nStarting TiberCAD test suite at $datetime\n");
 print("\nRepository info:\n") if $info;
+print("     $repo\n") if $info;
 print("     $revision\n") if $info;
 print("     $last_changed_author\n") if $info;
 
@@ -182,6 +185,7 @@ if ($failure_detected and $sendmail) {
 
   my $msg = "Errors detected in TiberCAD test suite.\n\n";
   $msg = "${msg}Repository info:\n";
+  $msg = "${msg}     $repo\n";
   $msg = "${msg}     $revision\n";
   $msg = "${msg}     $last_changed_author\n\n";
   $msg = "${msg}Run: $datetime\n\n";
