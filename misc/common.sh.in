@@ -130,13 +130,13 @@ fi
 FORTRAN_LIBS="@FCLIBS@"
 
 
-if [ $MPI == 'y' ]; then
+if [ "$MPI" = y ]; then
   export MPIDIR
 fi
 
 # BLAS/LAPACK
-if [ $MKL == 'y' ]; then
-  if [ $march == "x86_64" ]; then
+if [ "$MKL" = y ]; then
+  if [ $march = x86_64 ]; then
     LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/em64t,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
     LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath-link,${MKLDIR}/lib/em64t"
   else
@@ -149,11 +149,11 @@ export LDFLAGS
 
 dll_libext=.so
 dll_prefix=lib
-if [ "${target_os}" == "win32" ]
+if [ "${target_os}" = win32 ]
 then
   dll_libext=.dll
   dll_prefix=
-elif [ "${target_os}" == "darwin" ]
+elif [ "${target_os}" = darwin ]
 then
   dll_libext=.dylib
 fi

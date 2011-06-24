@@ -67,6 +67,8 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   // construct the library name
 #if defined(__CYGWIN__) || defined(__MINGW32__)
   string libfile = name + ".dll";
+#elif defined(__APPLE__)
+  string libfile = name + ".dylib";
 #else
   string libfile = name + ".so";
 #endif

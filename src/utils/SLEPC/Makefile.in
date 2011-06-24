@@ -29,6 +29,7 @@ target := $(libdir)/$(dll_prefix)eigen_solver$(shared_libext)
 $(libdir)/$(dll_prefix)eigen_solver$(shared_libext):  .$(ARCH)/EigenSolver$(obj-suffix)
 	@echo "Linking $(dll_prefix)eigen_solver$(shared_libext) ..."
 	@mkdir -p $(libdir)
+ifneq ($(target_os),darwin)
 	@$(CXX) -shared -o $@ $<  \
 		-Wl,--version-script,export.map \
 		-Wl,-Bsymbolic -Wl,-Bstatic \
@@ -37,6 +38,10 @@ $(libdir)/$(dll_prefix)eigen_solver$(shared_libext):  .$(ARCH)/EigenSolver$(obj-
 		-L$(PETSC_LIB_DIR) -lpetscts \
 		  -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc \
 		-Wl,-Bdynamic $(PETSC_EXTERNAL_LIB_BASIC)
+else
+	@$(CXX) -shared -o $@ $< -Wl,-install_name,@rpath/lib/$(dll_prefix)eigen_solver$(shared_libext) \
+		-L$(topdir)/extern/$(ARCH)/lib -lslepc_complex -lpetsc_complex
+endif
 
 
 

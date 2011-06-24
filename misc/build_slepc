@@ -38,12 +38,30 @@ make_slepc()
   [ "$debug" == 1 ] && dbg=_dbg
   libname=${slepc_dll_name}_${datatype}${dbg}
 
+  ARCHIVES="-Wl,--whole-archive ${SLEPC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive"
+  if [ "$target_os" = darwin ]
+  then
+    #ARCHIVES="-L${PETSC_DIR}/${PETSC_ARCH}/lib -Wl,-all_load"
+    ARCHIVES=
+    for l in $(ls ${SLEPC_DIR}/${PETSC_ARCH}/lib/*.a)
+    do
+      #ARCHIVES="${ARCHIVES} -Wl,-reexport-l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
+      #ARCHIVES="${ARCHIVES} -l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
+      ARCHIVES="${ARCHIVES} -Wl,-force_load,$l"
+    done
+  fi
+
+  if [ "$target_os" = darwin ]
+  then
+    slepc_linker_flags="-Wl,-install_name,@rpath/lib/${libname}${dll_libext}"
+  fi
+
   echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
   mkdir -p ${BUILDDIR}/${TCHOST}/lib
   ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} \
     ${slepc_linker_flags} \
-    -Wl,--whole-archive ${SLEPC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive \
-    -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath-link,${BUILDDIR}/${TCHOST}/lib -lpetsc_${datatype}${dbg} \
+    ${ARCHIVES} \
+    -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath,${BUILDDIR}/${TCHOST}/lib -lpetsc_${datatype}${dbg} \
     ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
 }

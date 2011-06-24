@@ -26,9 +26,14 @@ make_petsc()
   export PETSC_ARCH=${HOST}
   [ "$datatype" == "complex" ] && export PETSC_ARCH=${HOST}-complex
 
+  if [ -e  ${TOPDIR}/misc/reconfigure-${PETSC_ARCH}.py ]
+  then
+    cp ${TOPDIR}/misc/reconfigure-${PETSC_ARCH}.py .
+  fi
+
   echo "Building with PETSC_ARCH=${PETSC_ARCH} ..."
 
-  if [ ! -e  conftest-${PETSC_ARCH} ]; then
+  if [ ! -e  reconfigure-${PETSC_ARCH}.py ] && [ ! -e  conftest-${PETSC_ARCH} ]; then
     ./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
       --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
     cp conftest conftest-${PETSC_ARCH}
@@ -52,16 +57,22 @@ make_petsc()
     libname=${petsc_dll_name}_${datatype}
     [ $debug -eq 1 ] && libname=${libname}_dbg
 
-    # for darwin: -force_load -reexport-lx  for each libx.a 
     ARCHIVES="-Wl,--whole-archive ${PETSC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive"
     if [ "$target_os" = darwin ]
     then
-      ARCHIVES="-L${PETSC_DIR}/${PETSC_ARCH}/lib -Wl,-all_load"
+      #ARCHIVES="-L${PETSC_DIR}/${PETSC_ARCH}/lib -Wl,-all_load"
+      ARCHIVES=
       for l in $(ls ${PETSC_DIR}/${PETSC_ARCH}/lib/*.a)
       do
         #ARCHIVES="${ARCHIVES} -Wl,-reexport-l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
-        ARCHIVES="${ARCHIVES} -l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
+        #ARCHIVES="${ARCHIVES} -l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
+        ARCHIVES="${ARCHIVES} -Wl,-force_load,$l"
       done
+    fi
+
+    if [ "$target_os" = darwin ]
+    then
+      petsc_linker_flags="-Wl,-install_name,@rpath/lib/${libname}${dll_libext}"
     fi
 
     echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
@@ -143,6 +154,7 @@ fi
 
 
 CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 ${petsc_host}"
+
 
 
 make_petsc real

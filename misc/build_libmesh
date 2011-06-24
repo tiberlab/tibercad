@@ -110,7 +110,12 @@ export PETSC_ARCH=${HOST}
 #  SHARED=--disable-shared
 #fi
 SHARED=--enable-shared
-if [ "${target_os}" = "win32" ]
+if [ "${target_os}" = win32 ]
+then
+  # we do not need -fPIC
+  SHARED=--disable-shared
+fi
+if [ "${target_os}" = darwin ]
 then
   # we do not need -fPIC
   SHARED=--disable-shared
@@ -145,10 +150,27 @@ contribdir=${contriblibs/%\*\.a}
 rm -f ${contribdir}/libnemesis.*
 rm -f ${contribdir}/libexodusii.*
 mkdir -p ${BUILDDIR}/${TCHOST}/lib
+
+ARCHIVES="-Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive" 
+if [ "$target_os" = darwin ]
+then
+  ARCHIVES="-Wl,-force_load,${staticlib}"
+  for l in $(ls ${contribdir}/*.a)
+  do
+    #ARCHIVES="${ARCHIVES} -Wl,-reexport-l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
+    ARCHIVES="${ARCHIVES} -Wl,-force_load,$l "
+  done
+fi 
+
+if [ "$target_os" = darwin ]
+then
+  libmesh_linker_flags="-Wl,-install_name,@rpath/lib/${dll_name}"
+fi
+
 ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${dll_name} \
   ${libmesh_linker_flags} \
-  -Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive \
-  -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath-link,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
+  ${ARCHIVES} \
+  -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
   ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
 if [ $DEBUG == 'y' ]; then

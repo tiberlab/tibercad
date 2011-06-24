@@ -23,6 +23,9 @@ endif
 ifeq ($(findstring mingw,$(hostos)),mingw)
   target_os := win32
 endif
+ifeq ($(findstring darwin,$(hostos)),darwin)
+  target_os := darwin
+endif
 
 # we create an ARCH string which will be the same when calling
 # arch.sh on the target system
@@ -79,7 +82,9 @@ libdir := $(topdir)/$(ARCH)/$(relative_libdir)
 # shared library extension
 shared_libext := .so
 dll_prefix := lib
-ifeq ($(target_os),win32)
+ifeq ($(target_os),darwin)
+  shared_libext := .dylib
+else ifeq ($(target_os),win32)
   shared_libext := .dll
   dll_prefix := 
 endif

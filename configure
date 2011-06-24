@@ -3634,7 +3634,7 @@ ac_fc_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_fc_v_output" >&5
 FCFLAGS=$ac_save_FFLAGS
 
-rm -f conftest*
+rm -f -r conftest*
 
 # On HP/UX there is a line like: "LPATH is: /foo:/bar:/baz" where
 # /foo, /bar, and /baz are search directories for the Fortran linker.
@@ -3725,7 +3725,7 @@ ac_fc_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_fc_v_output" >&5
 FCFLAGS=$ac_save_FFLAGS
 
-rm -f conftest*
+rm -f -r conftest*
 
 # On HP/UX there is a line like: "LPATH is: /foo:/bar:/baz" where
 # /foo, /bar, and /baz are search directories for the Fortran linker.
@@ -4744,7 +4744,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   ac_cv_header_stdc=no
 fi
-rm -f conftest*
+rm -f -r conftest*
 
 fi
 
@@ -4765,7 +4765,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   ac_cv_header_stdc=no
 fi
-rm -f conftest*
+rm -f -r conftest*
 
 fi
 
@@ -5411,7 +5411,7 @@ echo "$as_me: ****************************************" >&6;}
 
 { echo "$as_me:$LINENO: checking whether the compiler implements namespaces" >&5
 echo $ECHO_N "checking whether the compiler implements namespaces... $ECHO_C" >&6; }
-if test "${ac_cv_cxx_namespaces+set}" = set; then
+if test "${ax_cv_cxx_namespaces+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
@@ -5453,12 +5453,12 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
 	 test -z "$ac_cxx_werror_flag" ||
 	 test ! -s conftest.err
        } && test -s conftest.$ac_objext; then
-  ac_cv_cxx_namespaces=yes
+  ax_cv_cxx_namespaces=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	ac_cv_cxx_namespaces=no
+	ax_cv_cxx_namespaces=no
 fi
 
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -5470,9 +5470,9 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 fi
-{ echo "$as_me:$LINENO: result: $ac_cv_cxx_namespaces" >&5
-echo "${ECHO_T}$ac_cv_cxx_namespaces" >&6; }
-if test "$ac_cv_cxx_namespaces" = yes; then
+{ echo "$as_me:$LINENO: result: $ax_cv_cxx_namespaces" >&5
+echo "${ECHO_T}$ax_cv_cxx_namespaces" >&6; }
+if test "$ax_cv_cxx_namespaces" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_NAMESPACES
@@ -5915,16 +5915,20 @@ if test "${with_mkl+set}" = set; then
   withval=$with_mkl; tc_cv_mkl_dir="$with_mkl"
 fi
 
-  MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
-  HAVE_MKL="yes"
-  case $host in
-    x86_64-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/em64t" ;;
-    i?86-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/32" ;;
-    *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
-  esac
+  HAVE_MKL="${tc_cv_mkl_dir:-no}"
+  if test "$HAVE_MKL" != no
+  then
+    MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
+    HAVE_MKL="yes"
+    case $host in
+      x86_64-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/em64t" ;;
+      i?86-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/32" ;;
+      *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
+    esac
 
 
 
+  fi
 
 fi
 { echo "$as_me:$LINENO: result: $tc_cv_mkl_dir" >&5
@@ -6087,7 +6091,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   ac_cv_header_stdc=no
 fi
-rm -f conftest*
+rm -f -r conftest*
 
 fi
 
@@ -6108,7 +6112,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   ac_cv_header_stdc=no
 fi
-rm -f conftest*
+rm -f -r conftest*
 
 fi
 

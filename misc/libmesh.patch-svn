@@ -1180,3 +1180,15 @@ Index: src/geom/elem.C
  GetPot::__get_until_closing_bracket(std::istream& istr)
    // parse input until next matching }
  {
+Index: include/parallel/threads_allocators.h
+===================================================================
+--- include/parallel/threads_allocators.h	(revision 3581)
++++ include/parallel/threads_allocators.h	(working copy)
+@@ -23,6 +23,7 @@
+ 
+ // System includes
+ #include <memory> // for std::allocator
++#include <cstddef> // for std::allocator
+ 
+ // Local includes
+ #include "libmesh_config.h"

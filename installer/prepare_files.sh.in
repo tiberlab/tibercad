@@ -238,6 +238,101 @@ prepare_linux_package () {
 }
 
 
+
+prepare_darwin_package () {
+
+
+  mkdir -p -m 0755 ${files}
+  mkdir -p ${files}/bin
+  mkdir -p ${files}/${ARCH}/bin
+  mkdir -p ${files}/${ARCH}/lib/modules
+  mkdir -p ${files}/doc
+  mkdir -p ${files}/examples
+  mkdir -p ${files}/share
+  mkdir -p ${files}/license
+  mkdir -p ${files}/materials
+  mkdir -p ${files}/tools
+
+  cp ${topdir}/installer/linux/tar/install ${files}
+  chmod a+x ${files}/install
+  #cp ${topdir}/installer/linux/tar/tibercad.sh ${files}/bin
+  #chmod a+x ${files}/bin/tibercad.sh
+
+  # get some of the libraries
+  libs=`ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep boost | awk '{print $3}'`
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep lapack | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep blas | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep stdc | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep gcc_s | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep gfortran | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep quadmath | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep intel | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep mkl | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libmesh | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep petsc | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
+  cp $libs ${files}/${ARCH}/lib
+  cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
+  chmod a+x ${files}/${ARCH}/bin/tibercad
+  cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
+  cp -r ${topdir}/${ARCH}/lib/modules ${files}/${ARCH}/lib
+  cp ${topdir}/share/tibercad.ico ${files}/share
+  cp ${topdir}/share/Copyright.txt ${files}/share
+  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
+
+  #if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
+  #  cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
+  #fi
+  #if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
+  #  cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
+  #fi
+  if test -e ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf
+  then
+    cp ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf ${files}/doc/GettingStarted.pdf
+  fi
+
+  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+  # for now:
+  rm -rf ${files}/examples/Modules
+  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+  #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+  find ${files}/examples -name "test.conf" -exec rm -f {} \;
+  cp ${topdir}/materials/*.txt ${files}/materials
+  cp ${topdir}/materials/*.dat ${files}/materials
+
+  if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
+  then
+    wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux.tgz
+    tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux.tgz
+    rm -f gmsh-${GMSHVER}-Linux.tgz
+  fi
+  if [ -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
+  then
+    if [ ! -f ${topdir}/contrib/gmsh-${GMSHVER}-Linux/gmsh.pdf ]
+    then
+      wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+      mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}-Linux
+    fi
+    cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux ${files}/tools/gmsh
+    chmod a+x ${files}/tools/gmsh/bin/gmsh
+  fi
+
+
+  chmod -R a+r ${files}
+  find ${files} -type d -exec chmod a+x {} \;
+
+  CWDIR=`pwd`
+  cd ${files}
+  tar --group 0 --owner 0 $MODE $ARCHIVE * 
+  cd $CWDIR
+  rm -rf $files
+
+  return
+}
+
+
+
 make_deb () {
 
   bindir=debfiles/usr/bin

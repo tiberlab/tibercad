@@ -167,16 +167,20 @@ AC_DEFUN([TC_MKL],
  [AC_ARG_WITH([mkl], AS_HELP_STRING([--with-mkl=DIR],
  	[specify the MKL installation path]),
 	[tc_cv_mkl_dir="$with_mkl"])
-  MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
-  HAVE_MKL="yes"
-  case $host in
-    x86_64-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/em64t" ;;
-    i?86-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/32" ;;
-    *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
-  esac
-  AC_SUBST([MKL_LIBDIR])
-  AC_SUBST([MKL_INCLUDEDIR])
-  AC_SUBST([HAVE_MKL])
+  HAVE_MKL="${tc_cv_mkl_dir:-no}"
+  if test "$HAVE_MKL" != no
+  then
+    MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
+    HAVE_MKL="yes"
+    case $host in
+      x86_64-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/em64t" ;;
+      i?86-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/32" ;;
+      *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
+    esac
+    AC_SUBST([MKL_LIBDIR])
+    AC_SUBST([MKL_INCLUDEDIR])
+    AC_SUBST([HAVE_MKL])
+  fi
  ])dnl
 ])dnl
 
