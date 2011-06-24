@@ -6,12 +6,12 @@ MODULE_NAME := exciton
 
 include $(topdir)/Make.module
 
-MODULELIB :=  $(module_dir)/$(MODULE_NAME)/excitontransport$(shared_libext)
+DEPENDENCY_LIBS:=  $(module_dir)/$(MODULE_NAME)/excitontransport$(shared_libext)
 
 
 
 $(eval $(call MODULE, ExcitonTransport.C ExcitonProperties.C))
-$(eval $(call MODULE, ExcitonModel.C, $(MODULELIB)))
+$(eval $(call MODULE, ExcitonModel.C))
 
 
 include $(topdir)/Make.rules

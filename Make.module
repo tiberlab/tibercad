@@ -36,7 +36,7 @@ target += $(module_dir)/$(MODULE_NAME)/$$(call modulelib, $(1))
 $(module_dir)/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,.$$(ARCH)/%$$(obj-suffix),$(1))
 	@echo "Linking module $$(notdir $$@) ..."
 	@[ -d $$(dir $$@) ] || mkdir -p  $$(dir $$@)
-	@$$(CXX) -shared  $$(CXXFLAGS) $(2) $$(MODULE_LDFLAGS) -o $$@ $$^
+	@$$(CXX) -shared $$(CXXFLAGS) $$^ $(2) -Wl,--as-needed $$(MODULE_LDFLAGS) $$(DEPENDENCY_LIBS) -o $$@
 
 endef
 
