@@ -6,7 +6,7 @@ topdir := ../../../../..
 # we have to find the necessary include files of the module
 MODULE_INCLUDES = -I..
 
-MODULE_LDFLAGS = $(libdir)/modules/$(MODULE_NAME)/driftdiffusion$(shared_libext)
+MODULE_LDFLAGS = -L$(module_dir)/$(MODULE_NAME)/driftdiffusion$(shared_libext)
 
 include $(topdir)/Make.module
 

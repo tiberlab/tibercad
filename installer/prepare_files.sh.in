@@ -8,13 +8,13 @@ make_windows_package () {
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
   mkdir -p ${files}/materials
-  mkdir -p ${files}/lib
+  #mkdir -p ${files}/lib
 
   # copy all files
   cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
   cp ${topdir}/${ARCH}/lib/*.dll ${files}
   cp ${topdir}/extern/${ARCH}/lib/*.dll ${files}
-  cp -r ${topdir}/${ARCH}/lib/modules ${files}/lib
+  cp -r ${topdir}/${ARCH}/modules ${files}
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
@@ -84,7 +84,7 @@ make_windows_package_cygwin () {
   # copy all files
   cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
   cp ${topdir}/${ARCH}/lib/*.dll ${files}
-  cp -r ${topdir}/${ARCH}/lib/modules ${files}/lib
+  cp -r ${topdir}/${ARCH}/modules ${files}
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
@@ -151,7 +151,7 @@ prepare_linux_package () {
   mkdir -m 0755 ${files}
   mkdir -p ${files}/bin
   mkdir -p ${files}/${ARCH}/bin
-  mkdir -p ${files}/${ARCH}/lib/modules
+  mkdir -p ${files}/${ARCH}/lib
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
   mkdir -p ${files}/share
@@ -182,7 +182,7 @@ prepare_linux_package () {
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
-  cp -r ${topdir}/${ARCH}/lib/modules ${files}/${ARCH}/lib
+  cp -r ${topdir}/${ARCH}/modules ${files}/${ARCH}
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
@@ -245,7 +245,7 @@ prepare_darwin_package () {
   mkdir -p -m 0755 ${files}
   mkdir -p ${files}/bin
   mkdir -p ${files}/${ARCH}/bin
-  mkdir -p ${files}/${ARCH}/lib/modules
+  mkdir -p ${files}/${ARCH}/lib
   mkdir -p ${files}/doc
   mkdir -p ${files}/examples
   mkdir -p ${files}/share
@@ -276,7 +276,7 @@ prepare_darwin_package () {
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
-  cp -r ${topdir}/${ARCH}/lib/modules ${files}/${ARCH}/lib
+  cp -r ${topdir}/${ARCH}/modules ${files}/${ARCH}
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
@@ -497,8 +497,8 @@ case $1 in
     ARCHIVE=$installerdir/linux/${name}.tar.gz
     MODE=-zcf
     prepare_linux_package
-    cat linux/tar/extractor linux/${name}.tar.gz > linux/${name}_installer.bin
-    chmod 0755 linux/${name}_installer.bin
+    cat linux/tar/extractor linux/${name}.tar.gz > linux/${name}_installer.sh
+    chmod 0755 linux/${name}_installer.sh
   } ;;
 
   * ) ;;

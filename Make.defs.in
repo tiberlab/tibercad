@@ -66,6 +66,7 @@ endif
 
 # build modules or not
 build_modules := @BUILD_TIBER_MODULES@
+module_dir := $(topdir)/$(ARCH)/modules
 
 # The file extension for object files.
 # foo.C is compiled to foo.$(obj-suffix)
@@ -75,6 +76,7 @@ obj-suffix := .$(METHOD).o
 relative_libdir := lib
 ifeq ($(METHOD),dbg)
   relative_libdir := $(relative_libdir)/debug
+  module_dir := $(module_dir)/debug
 endif
 libdir := $(topdir)/$(ARCH)/$(relative_libdir)
 

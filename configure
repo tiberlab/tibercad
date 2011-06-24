@@ -3634,7 +3634,7 @@ ac_fc_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_fc_v_output" >&5
 FCFLAGS=$ac_save_FFLAGS
 
-rm -f -r conftest*
+rm -f conftest*
 
 # On HP/UX there is a line like: "LPATH is: /foo:/bar:/baz" where
 # /foo, /bar, and /baz are search directories for the Fortran linker.
@@ -3725,7 +3725,7 @@ ac_fc_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_fc_v_output" >&5
 FCFLAGS=$ac_save_FFLAGS
 
-rm -f -r conftest*
+rm -f conftest*
 
 # On HP/UX there is a line like: "LPATH is: /foo:/bar:/baz" where
 # /foo, /bar, and /baz are search directories for the Fortran linker.
@@ -4744,7 +4744,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   ac_cv_header_stdc=no
 fi
-rm -f -r conftest*
+rm -f conftest*
 
 fi
 
@@ -4765,7 +4765,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   ac_cv_header_stdc=no
 fi
-rm -f -r conftest*
+rm -f conftest*
 
 fi
 
@@ -6091,7 +6091,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   ac_cv_header_stdc=no
 fi
-rm -f -r conftest*
+rm -f conftest*
 
 fi
 
@@ -6112,7 +6112,7 @@ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
 else
   ac_cv_header_stdc=no
 fi
-rm -f -r conftest*
+rm -f conftest*
 
 fi
 

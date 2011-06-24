@@ -148,12 +148,15 @@ TiberCad::init(const std::string& inputfile)
     Database::set_default_search_path(_tiberroot + "/materials");
 
     // setup DLLoader paths
-#if defined(__CYGWIN__) || defined(__MINGW32__)
-    DLLoader::set_library_path(_tiberroot + "/lib/modules");
+#ifdef _WIN32
+    DLLoader::set_library_path(_tiberroot + "/modules");
+#elif defined(__APPLE__)
+    DLLoader::set_library_path(_tiberroot + "/modules");
+    DLLoader::set_library_path(_tiberroot + "/" + ARCH + "/modules");
 #else
-    DLLoader::set_library_path(_tiberroot + "/" + ARCH + "/lib/modules");
+    DLLoader::append_to_library_path(_tiberroot + "/" + ARCH + "/modules");
 #ifdef DEBUG
-    DLLoader::prepend_to_library_path(_tiberroot + "/" + ARCH + "/lib/debug/modules");
+    DLLoader::prepend_to_library_path(_tiberroot + "/" + ARCH + "/modules/debug");
 #endif
 #endif
     char* modelpath = getenv("TIBERMODULEPATH");

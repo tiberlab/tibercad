@@ -6,7 +6,7 @@ MODULE_NAME := exciton
 
 include $(topdir)/Make.module
 
-MODULELIB :=  $(libdir)/modules/$(MODULE_NAME)/excitontransport$(shared_libext)
+MODULELIB :=  $(module_dir)/$(MODULE_NAME)/excitontransport$(shared_libext)
 
 
 
