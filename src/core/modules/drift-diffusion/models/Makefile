@@ -8,9 +8,9 @@ MODULE_INCLUDES = -I..
 
 include $(topdir)/Make.module
 
-DEPENDENCY_LIBS := $(module_dir)/$(MODULE_NAME)/driftdiffusion$(shared_libext)
+MODULE_LIB := $(module_dir)/$(MODULE_NAME)/driftdiffusion$(shared_libext)
 
-$(foreach lib, $(srcfiles), $(eval $(call MODULE, $(lib))))
+$(foreach lib, $(srcfiles), $(eval $(call MODULE, $(lib), $(MODULE_LIB))))
 
 
 include $(topdir)/Make.rules
