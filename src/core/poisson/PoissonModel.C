@@ -198,7 +198,7 @@ PoissonModel::get_charge_density(const std::vector<Point> q_point, std::vector<d
   charge_density.clear();
 
   if (_chd_sim!=NULL)
-    if (_chd_sim->get_solution(_elem,q_point,charge_id, charge_density)){}
+    if (_chd_sim->get_solution(_elem, charge_id, charge_density, q_point)){}
 
 
   if (model_opt.add_doping)

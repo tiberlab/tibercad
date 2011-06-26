@@ -49,6 +49,28 @@ cat <<PATCH >$BUILDDIR/boost.patch
 	     \$(BOOST_REGEX_ICU_OPTS)
               <conditional>@force-shared-linking
      ;
+--- tools/build/v2/tools/darwin.jam.orig	2009-11-10 18:26:59.000000000 +0100
++++ tools/build/v2/tools/darwin.jam	2011-06-22 21:37:45.000000000 +0200
+@@ -450,7 +450,7 @@
+ flags darwin.compile OPTIONS <link>shared : -dynamic ;
+  
+ # Misc options.
+-flags darwin.compile OPTIONS : -no-cpp-precomp -gdwarf-2 ;
++flags darwin.compile OPTIONS : -gdwarf-2 ;
+   
+ # Add the framework names to use.
+ flags darwin.link FRAMEWORK <framework> ;
+--- tools/build/v2/tools/darwin.py.orig	2009-10-28 08:47:51.000000000 +0100
++++ tools/build/v2/tools/darwin.py	2011-06-22 17:32:05.000000000 +0200
+@@ -37,7 +37,7 @@
+ feature.feature ('framework', [], ['free'])
+      
+ toolset.flags ('darwin.compile', 'OPTIONS', '<link>shared', ['-dynamic'])
+-toolset.flags ('darwin.compile', 'OPTIONS', None, ['-Wno-long-double', '-no-cpp-precomp'])
++toolset.flags ('darwin.compile', 'OPTIONS', None, ['-Wno-long-double'])
+ toolset.flags ('darwin.compile.c++', 'OPTIONS', None, ['-fcoalesce-templates'])
+        
+ toolset.flags ('darwin.link', 'FRAMEWORK', '<framework>')
 PATCH
 
 
@@ -62,22 +84,39 @@ if [ ! -d boost_${VERSION} ]; then
 fi
 
 cd boost_${VERSION}
-
-if [ "$target_os" == "win32" ]; then
-  echo "using gcc : : $CXX : <src>$(echo $CC | sed 's/gcc/windres/') <archiver>$AR ;" > tools/build/v2/user-config.jam
-else
-  echo "using gcc : : $CXX : <linkflags>-Wl,-rpath,${BUILDDIR}/boost/lib ;" > tools/build/v2/user-config.jam
+toolset=gcc
+if [ "$target_os" = darwin ]
+then
+  toolset=darwin
 fi
 
-./bootstrap.sh --with-toolset=gcc --without-icu
-if [ "$target_os" == "win32" ]; then
+if [ "$target_os" = win32 ]; then
+  echo "using gcc : : $CXX : <src>$(echo $CC | sed 's/gcc/windres/') <archiver>$AR ;" > tools/build/v2/user-config.jam
+else
+  echo "using $toolset : : $CXX : <linkflags>-Wl,-rpath,${BUILDDIR}/boost/lib ;" > tools/build/v2/user-config.jam
+fi
+
+./bootstrap.sh --with-toolset=$toolset --without-icu
+if [ "$target_os" = win32 ]; then
   bits=32
   [ "x$(echo $HOST | grep x86_64)" != "x" ] && bits=64
 
-#  ./bjam toolset=gcc threading=multi link=shared runtime-link=shared target-os=windows threadapi=win32 --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost install
-  ./bjam toolset=gcc variant=release threading=single link=shared runtime-link=shared target-os=windows --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost-$HOST address-model=$bits install
+  ./bjam toolset=gcc variant=release threading=single link=shared runtime-link=shared target-os=windows --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCHOST address-model=$bits install
 else
-  ./bjam toolset=gcc variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/boost-$HOST install
+  ./bjam toolset=$toolset variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCHOST install
 fi
 
+if [ "$target_os" = darwin ]
+then
+  cd ${BUILDDIR}/$TCHOST/lib
+  for lib in libboost_*.dylib
+  do
+    install_name_tool -id "@rpath/lib/$lib" "$lib"
+    if [[ "$lib" =~ filesystem ]]
+    then
+      deplib="$(echo "$lib" | sed 's/file//')"
+      install_name_tool -change "$deplib" "@rpath/lib/$deplib" "$lib"
+    fi
+  done
+fi
 

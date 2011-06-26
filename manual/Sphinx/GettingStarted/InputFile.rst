@@ -24,7 +24,7 @@ installation directory of tiberCAD.
 Windows installation procedure
 --------------------------------------
 
-To install tiberCAD in Windows, run the setup program ``tibercad-2.0.0_setup.exe`` .
+To install tiberCAD in Windows, please run the setup program ``tibercad-2.0.0-i686-mingw32_setup.exe`` .
 
 During the installation you can choose the installation directory. 
 After finishing installation, copy your license file ``tibercad.lic`` into the ``license`` subdirectory of the tiberCAD
@@ -45,8 +45,9 @@ installation directory (``installpath/license``), without changing the filename.
     \hline
     \hline
      &    \\
-    \texttt{tibercad-2.0.0-setup.exe} & Windows 32-bit     \\
-    \texttt{tibercad-2.0.0-installer.bin} & Linux 32-bit self-extracting installer  \\
+    \texttt{tiberCAD-2.0.0-i686-mingw32\_setup.exe} & Windows 32-bit     \\
+    \texttt{tiberCAD-2.0.0-i686-linux\_installer.sh} & Linux 32-bit \\
+    \texttt{tiberCAD-2.0.0-x86\_64-linux\_installer.sh} & Linux 64-bit \\
     \hline
     \end{tabular}
     \caption*{Installer Packages}
@@ -58,7 +59,7 @@ Linux installation procedure
 ------------------------------------
 
 To install tiberCAD under Linux, download and run the self-extracting installer
-``tibercad-2.0.0-ARCH_installer.bin``, where ARCH corresponds to your hardware architecture,
+``tibercad-2.0.0-ARCH_installer.sh``, where ARCH corresponds to your hardware architecture,
 and follow the installation instructions.
 
 After installation, copy your license file ``tibercad.lic`` into the ``license`` subdirectory

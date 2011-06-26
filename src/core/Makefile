@@ -14,7 +14,7 @@ subdirs += eigenvalue
 subdirs += maxwell
 subdirs += embracing
 subdirs += models
-subdirs += phonondispersion
+#subdirs += phonondispersion
 
 include $(topdir)/Make.common
 

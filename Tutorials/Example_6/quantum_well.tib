@@ -101,14 +101,22 @@ Module  driftdiffusion
         
   name = dd
       
-  strain_simulation = strain 
-
+ 
   # we solve only Poisson equation
   coupling = poisson
      
   plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
           hQFermi, hDensity, hCurrentDensity, hMobility,
           NetRecombination, ElField, ElPotential, ContactCurrents)
+
+  Physics
+  {
+
+    strain_simulation = strain 
+
+    polarization (piezo, pyro) { }
+
+  }
 
 
 }

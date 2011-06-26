@@ -20,7 +20,7 @@
 #include "OpticsTB.h"
 #include "OptRecombinSpectrum.h"
 #include "MaxwellEquations.h"
-#include "PhononDispersion.h"
+//#include "PhononDispersion.h"
 #include "CrackStrain.h"
 #include "Sweep.h"
 #include "RelaxationMethod.h"
@@ -147,8 +147,8 @@ SimulationInterface::create(const string& type,
     sim = OptRecombinSpectrum::create(options);
   else if (type_name == "maxwell")
     sim = MaxwellEquations::create(options);
-  else if (type_name == "phonondispersion")
-    sim = PhononDispersion::create(options);
+//  else if (type_name == "phonondispersion")
+//    sim = PhononDispersion::create(options);
 
 
   if (sim == NULL)
@@ -795,7 +795,7 @@ SimulationInterface::create_node_model(const ModelOptions&) const
 }
 
 
-
+/*
 void
 SimulationInterface::get_integrated_quantities(std::vector<double>& values)
 {
@@ -806,7 +806,7 @@ SimulationInterface::get_integrated_quantities(std::vector<double>& values)
   values.resize(0);
   build_integrated_quantities(values);
 }
-
+*/
 
 
 void
@@ -1116,7 +1116,7 @@ SimulationInterface::plot_globaldata(void)
       file.close();
     }
   }
-  else // temporary only !
+  /*else // temporary only !
   {
     string outdir = get_output_directory();
 
@@ -1175,7 +1175,7 @@ SimulationInterface::plot_globaldata(void)
         file.close();
       }
     }
-  }
+  }*/
 }
 
 
@@ -1659,7 +1659,7 @@ SimulationInterface::get_nodal_results(std::vector<double>& results,
   }
 }
 
-
+/*
 void
 SimulationInterface::get_integrated_quantities_description(
     std::vector<std::string>& legend,
@@ -1669,12 +1669,12 @@ SimulationInterface::get_integrated_quantities_description(
   description.resize(0);
   build_integrated_quantities_description(legend, description);
 }
+*/
 
 
 
 
-
-
+/*
 bool
 SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
                                   vector<map<ID, double> >& values)
@@ -1754,9 +1754,9 @@ SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
 
   return flag;
 }
+*/
 
-
-
+/*
 bool
 SimulationInterface::get_solution(const Elem* elem, const Point& p,
                                   const set<ID>& ids, map<ID, double>& values)
@@ -1890,7 +1890,7 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
   return flag;
 }
-
+*/
 
 
 
@@ -2163,21 +2163,20 @@ SimulationInterface::get_solution_secure(std::map<ID, std::vector<double> >&)
 }
 
 
-
+/*
 void
 SimulationInterface::get_solution_secure(const Elem*,
         const std::set<ID>&, std::vector<std::map<ID, double> >&)
 {
 }
-
-
+*/
+/*
 void
 SimulationInterface::get_solution_secure(const Elem*,
         const std::vector<Point>&, const std::set<ID>&,
         std::vector<std::map<ID, double> >&)
 {
 }
-
 
 void
 SimulationInterface::build_integrated_quantities(std::vector<double>&)
@@ -2191,6 +2190,7 @@ SimulationInterface::build_integrated_quantities_description(
         std::vector<std::string>&)
 {
 }
+*/
 
 
 

@@ -23,6 +23,9 @@ endif
 ifeq ($(findstring mingw,$(hostos)),mingw)
   target_os := win32
 endif
+ifeq ($(findstring darwin,$(hostos)),darwin)
+  target_os := darwin
+endif
 
 # we create an ARCH string which will be the same when calling
 # arch.sh on the target system
@@ -63,6 +66,7 @@ endif
 
 # build modules or not
 build_modules := @BUILD_TIBER_MODULES@
+module_dir := $(topdir)/$(ARCH)/modules
 
 # The file extension for object files.
 # foo.C is compiled to foo.$(obj-suffix)
@@ -72,6 +76,7 @@ obj-suffix := .$(METHOD).o
 relative_libdir := lib
 ifeq ($(METHOD),dbg)
   relative_libdir := $(relative_libdir)/debug
+  module_dir := $(module_dir)/debug
 endif
 libdir := $(topdir)/$(ARCH)/$(relative_libdir)
 
@@ -79,7 +84,9 @@ libdir := $(topdir)/$(ARCH)/$(relative_libdir)
 # shared library extension
 shared_libext := .so
 dll_prefix := lib
-ifeq ($(target_os),win32)
+ifeq ($(target_os),darwin)
+  shared_libext := .dylib
+else ifeq ($(target_os),win32)
   shared_libext := .dll
   dll_prefix := 
 endif

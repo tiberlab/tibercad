@@ -419,6 +419,16 @@ class SimulationInterface : public TiberModelObject
         bool local_coords = false);
 
 
+    //! Get a single solution at a single point
+    /*!
+     * \see get_solution(const Elem*, std::map<ID, std::vector<double> >&,
+     *   const std::vector<Point>&, bool)
+     */
+    bool get_solution(const Elem* elem, ID id, double& value,
+        const Point& p,
+        bool local_coords = false);
+
+
     //! Get solutions associated to an atom
     /*!
      *
@@ -463,8 +473,8 @@ class SimulationInterface : public TiberModelObject
      *
      * \return false if no data can be found for \c elem
      */
-    bool get_solution(const Elem* elem, const std::set<ID>& ids,
-        std::vector<std::map<ID, double> >& values);
+    //bool get_solution(const Elem* elem, const std::set<ID>& ids,
+    //    std::vector<std::map<ID, double> >& values);
 
 
     //! Get solution values on one inner point of a specified element
@@ -478,8 +488,8 @@ class SimulationInterface : public TiberModelObject
      *
      * \return false if no data can be found for \c elem
      */
-    bool get_solution(const Elem* elem, const Point& p,
-        const std::set<ID>& ids, std::map<ID, double>& values);
+    //bool get_solution(const Elem* elem, const Point& p,
+    //    const std::set<ID>& ids, std::map<ID, double>& values);
 
 
     //! Get solution values on one inner point of a specified element
@@ -492,7 +502,7 @@ class SimulationInterface : public TiberModelObject
      *
      * \return false if no data can be found for \c elem
      */
-    bool get_solution(const Elem* elem, const Point& p, ID id, double& value);
+    //bool get_solution(const Elem* elem, const Point& p, ID id, double& value);
 
 
     //! Get solution values on inner points of a specified element
@@ -507,8 +517,8 @@ class SimulationInterface : public TiberModelObject
      *
      * \return false if no data can be found for \c elem
      */
-    bool get_solution(const Elem* elem, const std::vector<Point>& p,
-        ID id, std::vector<double>& values);
+    //bool get_solution(const Elem* elem, const std::vector<Point>& p,
+    //    ID id, std::vector<double>& values);
 
 
     //! Get solution values on inner points of a specified element
@@ -523,8 +533,8 @@ class SimulationInterface : public TiberModelObject
      *
      * \return false if no data can be found for \c elem
      */
-    bool get_solution(const Elem* elem, const std::vector<Point>& p,
-        const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+    //bool get_solution(const Elem* elem, const std::vector<Point>& p,
+    //    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
 
 
 
@@ -556,7 +566,7 @@ class SimulationInterface : public TiberModelObject
      *
      * \param values the vector where the values will be put
      */
-    void get_integrated_quantities(std::vector<double>& values);
+    //void get_integrated_quantities(std::vector<double>& values);
 
 
     //! Get the description for some integrated quantities
@@ -573,9 +583,9 @@ class SimulationInterface : public TiberModelObject
      * as it is not guaranteed the the mesh is prepared for the currently
      * accessed simulation.
      */
-    void get_integrated_quantities_description(
-        std::vector<std::string>& legend,
-        std::vector<std::string>& description);
+    //void get_integrated_quantities_description(
+    //    std::vector<std::string>& legend,
+    //    std::vector<std::string>& description);
 
 
     //! Get the type of this simulation
@@ -1157,8 +1167,8 @@ class SimulationInterface : public TiberModelObject
      * \li \c elem is an active element of this simulation
      * \li values is already resized to the number of nodes
      */
-    virtual void get_solution_secure(const Elem* elem,
-        const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
+    //virtual void get_solution_secure(const Elem* elem,
+    //    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
 
 
     //! Get solution values on inner points of a specified element
@@ -1176,9 +1186,9 @@ class SimulationInterface : public TiberModelObject
      * \li \c elem contains all points of \c p
      * \li values is already resized to the number of points
      */
-    virtual void get_solution_secure(const Elem* elem,
-        const std::vector<Point>& p, const std::set<ID>& ids,
-        std::vector<std::map<ID, double> >& values);
+    //virtual void get_solution_secure(const Elem* elem,
+    //    const std::vector<Point>& p, const std::set<ID>& ids,
+    //    std::vector<std::map<ID, double> >& values);
 
 
     //! Get the solution values on one point of an element
@@ -1193,9 +1203,9 @@ class SimulationInterface : public TiberModelObject
      * \li \c elem contains all points of \c p
      * \li values is already resized to the number of points
      */
-    virtual void get_solution_secure(const Elem* elem,
-        const Point& p, const std::set<ID>& ids,
-        std::map<ID, double>& values);
+    //virtual void get_solution_secure(const Elem* elem,
+    //    const Point& p, const std::set<ID>& ids,
+    //    std::map<ID, double>& values);
 
 
 
@@ -1235,7 +1245,7 @@ class SimulationInterface : public TiberModelObject
      * energy (e.g. for some spectrum). In this case, the legend should contain
      * the corresponding values of the independent variable.
      */
-    virtual void build_integrated_quantities(std::vector<double>& values);
+    //virtual void build_integrated_quantities(std::vector<double>& values);
 
     //! Create legend and description for integrated quantities
     /*!
@@ -1243,9 +1253,9 @@ class SimulationInterface : public TiberModelObject
      *
      * The return values of this method are used in printing data files
      */
-    virtual void build_integrated_quantities_description(
-        std::vector<std::string>& legend,
-        std::vector<std::string>& description);
+    //virtual void build_integrated_quantities_description(
+    //    std::vector<std::string>& legend,
+    //    std::vector<std::string>& description);
 
 
     //! Create a physical model that can be used by this type of simulation
@@ -1785,8 +1795,23 @@ SimulationInterface::set_scaling(const Scaling& scaling)
 }
 
 
+inline
+bool
+SimulationInterface::get_solution(const Elem* elem, ID id,
+    double& value, const Point& p,
+    bool local_coords)
+{
+  std::vector<Point> point(1, p);
+  std::vector<double> val(1, 0.0);
 
+  bool ok = get_solution(elem, id, val, point);
+  if (ok)
+    value = val[0];
 
+  return ok;
+}
+
+/*
 inline
 void
 SimulationInterface::get_solution_secure(const Elem* elem,
@@ -1799,7 +1824,7 @@ SimulationInterface::get_solution_secure(const Elem* elem,
 
   values = valvec[0];
 }
-
+*/
 
 inline
 NumericVector<double>&

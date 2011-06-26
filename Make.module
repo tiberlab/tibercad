@@ -1,5 +1,6 @@
 # $Id$
 
+
 # the definitions and rules needed to compile modules
 module := yes
 
@@ -10,19 +11,15 @@ ifeq ($(build_modules), yes)
 
 
 # reset the target
-target :=
+target := 
 
 
-CPPFLAGS += -DMODULE_NAME=$(MODULE_NAME)
-ifeq ($(target_os), win32) 
- MODULE_LDFLAGS += -L$(libdir) -ltibercad -lmesh
-endif
-CPPFLAGS += $(MODULE_INCLUDES)
+CPPFLAGS += -DMODULE_NAME=$(MODULE_NAME) $(MODULE_INCLUDES)
 CXXFLAGS += $(MODULE_CXXFLAGS)
 
 
-modulelib = $(shell echo `grep TIBER_MODULE $(1) | sed 's/MODULE_NAME/$(MODULE_NAME)/' \
-		| sed -e 's/[[:space:]]//g' -e 's/.*TIBER_MODULE([a-zA-Z]\+,\([-a-zA-Z_,]\+\))/\1/' -e 's/,/_/g'`$(shared_libext))
+modulelib = $(shell grep TIBER_MODULE $(1) | sed "s/MODULE_NAME/$(MODULE_NAME)/" \
+	| sed -e "s/[[:space:]]//g" -e 's/.*TIBER_MODULE([a-zA-Z]*,\([-a-zA-Z_,]*\))/\1/' -e "s/,/_/g")$(shared_libext)
 
 
 #
@@ -32,14 +29,22 @@ modulelib = $(shell echo `grep TIBER_MODULE $(1) | sed 's/MODULE_NAME/$(MODULE_N
 #
 define MODULE
 
-target += $(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1))
+
+target += $(module_dir)/$(MODULE_NAME)/$$(call modulelib, $(1))
 
 
-$(libdir)/modules/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,.$$(ARCH)/%$$(obj-suffix),$(1))
+$(module_dir)/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,.$$(ARCH)/%$$(obj-suffix),$(1))
 	@echo "Linking module $$(notdir $$@) ..."
 	@[ -d $$(dir $$@) ] || mkdir -p  $$(dir $$@)
-	@$$(CXX) -shared  $$(CXXFLAGS) $(2) $$(MODULE_LDFLAGS) \
-			-Wl,-soname,$$(notdir $$@) -o $$@ $$^
+ifeq ($(target_os), linux)
+	@$$(CXX) $$(CXXFLAGS) -shared -o $$@ $$^ \
+	  -Wl,-soname,$$(notdir $$@) -Wl,--as-needed \
+	  -Wl,-rpath,'$$$$ORIGIN' $(2) $$(MODULE_LDFLAGS)
+else
+	@$$(CXX) $$(CXXFLAGS) -shared -o $$@ $$^ \
+	  $(2) $$(MODULE_LDFLAGS)
+
+endif
 
 endef
 

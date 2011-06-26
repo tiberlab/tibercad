@@ -36,10 +36,10 @@
 #include  "WzOptDielectricConstant.h"
 #include  "MaxwellPhysicalModel.h"
 
-#include "PhononModel.h"
-#include "ZbFreeDynamicalMatrix.h"
-#include "ZbStrainDynamicalMatrix.h"
-#include "ZbRamanTensor.h"
+//#include "PhononModel.h"
+//#include "ZbFreeDynamicalMatrix.h"
+//#include "ZbStrainDynamicalMatrix.h"
+//#include "ZbRamanTensor.h"
 
 
 
@@ -120,14 +120,14 @@ PhysicalModelInterface::create(const string& name,
     mod = WzOptDielectricConstant::create(options);
   else if (name == "maxwell")
     mod = MaxwellPhysicalModel::create(options);
-  else if  (name == "phonon")
-    mod = PhononModel::create(options);
-  else if  (name == "free_dynamical_matrix_zb")
-    mod = ZbFreeDynamicalMatrix::create(options);
-  else if  (name == "strain_dependent_zb")
-    mod = ZbStrainDynamicalMatrix::create(options);
-  else if  (name == "raman_tensor_zb")
-    mod = ZbRamanTensor::create(options);
+  //else if  (name == "phonon")
+  //  mod = PhononModel::create(options);
+  //else if  (name == "free_dynamical_matrix_zb")
+  //  mod = ZbFreeDynamicalMatrix::create(options);
+  //else if  (name == "strain_dependent_zb")
+  //  mod = ZbStrainDynamicalMatrix::create(options);
+  //else if  (name == "raman_tensor_zb")
+  //  mod = ZbRamanTensor::create(options);
   //else if  (name == "piezoelectric_model_zb")
   //  mod = ZbPiezoelectricModel::create(options);
   //else if  (name == "piezoelectric_model_wz")

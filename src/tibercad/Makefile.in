@@ -5,13 +5,20 @@ topdir := ../..
 include $(topdir)/Make.common
 
 ADDITIONAL_LIBS = @LIBREADLINE@ $(topdir)/src/utils/license/.$(ARCH)/liblicense.a
-PACKAGEFLAGS = -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
+
+ifeq ($(target_os), linux)
+ PACKAGEFLAGS := -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
+endif
+ifeq ($(target_os), darwin)
+ PACKAGEFLAGS := -Wl,-rpath,@loader_path/.. -Wl,-rpath,@loader_path/../extern 
+endif
 
 SUFF := 
 ifeq ($(target_os),win32)
   SUFF := ".exe"
   objects += tibercad_res.o
   WINDRES := $(subst gcc,windres,$(CC))
+  ADDITIONAL_LIBS += -lcomdlg32
 endif
 
 ifeq ($(METHOD),dbg)

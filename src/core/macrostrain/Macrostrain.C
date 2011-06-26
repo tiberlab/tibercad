@@ -3944,7 +3944,7 @@ void  Macrostrain::write_atom_potential()
         }
 
 	vector<double> values;
-	poisson_equation->get_solution(atom_structure[i].element, point_vec, pot_ID, values);
+	poisson_equation->get_solution(atom_structure[i].element, pot_ID, values, point_vec);
 	potential_value = values[0];
       }
 

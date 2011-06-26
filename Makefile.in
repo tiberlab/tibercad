@@ -29,6 +29,10 @@ endif
 
 export MODULE_LIBS
 
+ifeq ($(target_os),darwin)
+  DLLNAME := -Wl,-install_name,@rpath/$(relative_libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
+endif
+
 
 all: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) modules
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
@@ -38,7 +42,7 @@ $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
-		$(MODULE_LIBS) $(LDFLAGS)
+		$(MODULE_LIBS) $(DLLNAME) $(LDFLAGS)
 
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
@@ -77,6 +81,7 @@ endif
 src:
 	@mkdir -p $(libdir)/tibermodels
 	@mkdir -p $(ARCH)/bin
+	@if test -d extern/$(ARCH); then rm -f $(ARCH)/extern && cd $(ARCH) && ln -s ../extern/$(ARCH) extern; fi
 	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
 ifneq ($(build_modules),yes)
 	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
@@ -96,8 +101,7 @@ run_tests:
 
 
 gettingstarted:
-
-#	@$(MAKE) --no-print-directory -C manual/Sphinx/GettingStarted latexpdf
+	@$(MAKE) --no-print-directory -C manual/Sphinx/GettingStarted latexpdf
 
 
 wininstaller linuxinstaller deb tgz tbz: gettingstarted SHAREDLIBS
@@ -106,7 +110,7 @@ wininstaller linuxinstaller deb tgz tbz: gettingstarted SHAREDLIBS
 
 SHAREDLIBS:
 ifeq ($(target_os),win32)
-	cp $$(find $$($(CC) -print-sysroot) -name *gcc_s*\.dll -o -name *gfortran*\.dll -o -name *stdc\+\+*\.dll) $(ARCH)/lib
+	cp $$(find $$($(CC) -print-sysroot) -name *gcc_s*\.dll -o -name *gfortran*\.dll -o -name *stdc\+\+*\.dll -o -name *quadmath*\.dll) $(ARCH)/lib
 endif
 
 

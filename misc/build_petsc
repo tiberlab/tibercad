@@ -11,7 +11,7 @@ fi
 # Does the actual build
 # needs at least 1 argument ('real' or 'complex')
 # second argument can be 0 or 1, 1 for creating debug version
-function make_petsc()
+make_petsc()
 {
 
   datatype=$1
@@ -26,12 +26,16 @@ function make_petsc()
   export PETSC_ARCH=${HOST}
   [ "$datatype" == "complex" ] && export PETSC_ARCH=${HOST}-complex
 
+  if [ -e  ${TOPDIR}/misc/reconfigure-${PETSC_ARCH}.py ]
+  then
+    cp ${TOPDIR}/misc/reconfigure-${PETSC_ARCH}.py .
+  fi
+
   echo "Building with PETSC_ARCH=${PETSC_ARCH} ..."
 
-  if [ ! -e  conftest-${PETSC_ARCH} ]; then
+  if [ ! -e  reconfigure-${PETSC_ARCH}.py ] && [ ! -e  conftest-${PETSC_ARCH} ]; then
     ./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
       --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
-
     cp conftest conftest-${PETSC_ARCH}
     if [ "$target_os" != "win32" ]; then
       ./conftest-${PETSC_ARCH}
@@ -53,13 +57,29 @@ function make_petsc()
     libname=${petsc_dll_name}_${datatype}
     [ $debug -eq 1 ] && libname=${libname}_dbg
 
-    # for darwin: -force_load -reexport-lx  for each libx.a 
+    ARCHIVES="-Wl,--whole-archive ${PETSC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive"
+    if [ "$target_os" = darwin ]
+    then
+      #ARCHIVES="-L${PETSC_DIR}/${PETSC_ARCH}/lib -Wl,-all_load"
+      ARCHIVES=
+      for l in $(ls ${PETSC_DIR}/${PETSC_ARCH}/lib/*.a)
+      do
+        #ARCHIVES="${ARCHIVES} -Wl,-reexport-l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
+        #ARCHIVES="${ARCHIVES} -l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
+        ARCHIVES="${ARCHIVES} -Wl,-force_load,$l"
+      done
+    fi
+
+    if [ "$target_os" = darwin ]
+    then
+      petsc_linker_flags="-Wl,-install_name,@rpath/lib/${libname}${dll_libext}"
+    fi
 
     echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
     mkdir -p ${BUILDDIR}/${TCHOST}/lib
     ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} \
       ${petsc_linker_flags} \
-      -Wl,--whole-archive ${PETSC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive \
+      ${ARCHIVES} \
       ${LAPACK_LIBS} ${FORTRAN_LIBS}
   fi
 
@@ -111,8 +131,10 @@ SHARED="--with-shared=0 --with-dynamic=0"
   
 
 #COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
-COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$(echo $CC | sed 's/gcc/cpp/')"
-echo $COMPILERS
+COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
+  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
+  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
+
 
 if [ $MPI == 'n' ]; then
   MPI="--with-mpi=0"
@@ -125,12 +147,14 @@ LAPACKLIBS=${LAPACKLIBS:-"--download-f-blas-lapack=1"}
 petsc_host=
 petsc_dll_name=${dll_prefix}petsc
 
-if [ "${target_os}" == "win32" ]
+if [ "${target_os}" = "win32" ]
 then
   petsc_host="--with-host-vendor=w64 --with-host-os=mingw32"
 fi
 
+
 CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 ${petsc_host}"
+
 
 
 make_petsc real

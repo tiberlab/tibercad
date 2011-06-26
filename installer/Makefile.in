@@ -7,7 +7,8 @@ include $(topdir)/Make.defs
 
 
 BINSTALLMAKER := @BINSTALLMAKER@
-INNOSETUP := $(shell winepath -w ~/.wine/drive_c/Program\ Files/Inno\ Setup\ 5/ISCC.exe)
+#INNOSETUP := $(shell winepath -w ~/.wine/drive_c/Program\ Files/Inno\ Setup\ 5/ISCC.exe)
+INNOSETUP := $(shell winepath -w /usr/pack/wine-1.2.3-ma/Programs/Inno\ Setup\ 5/ISCC.exe)
 
 
 .PHONY: linux

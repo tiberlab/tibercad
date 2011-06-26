@@ -51,16 +51,20 @@ TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
 
-LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir) -L$(libdir) # -Wl,--as-needed
-#ifeq ($(build_modules), yes)
-# LDFLAGS += -Wl,-rpath,$(libdir)/tibermodels -L$(libdir)/tibermodels
-#endif
+ifeq ($(target_os), linux)
+  LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir)
+endif
+ifeq ($(target_os), darwin)
+  LDFLAGS := -Wl,-rpath,@loader_path/.. -Wl,-rpath,@loader_path/../extern
+endif
+LDFLAGS += -L$(libdir) 
+
 LDFLAGS += -ltensor 
 
-#LDFLAGS += @GSL_LIBS@
-
 LDFLAGS += @LIBMESH_PETSC_LIBS@
-MODULE_LDFLAGS += @LIBMESH_PETSC_LIBS@
+ifneq ($(target_os), linux) 
+ MODULE_LDFLAGS += -L$(libdir) -ltibercad @LIBMESH_PETSC_LIBS@
+endif
 
 LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 

@@ -185,7 +185,6 @@ Module efaschroedinger
   poisson_simulation = dd
   strain_simulation =  strain
     
-  solver = lanczos
   
   Physics
   {

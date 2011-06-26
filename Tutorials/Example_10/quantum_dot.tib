@@ -18,7 +18,7 @@ Device
     {
       density = 1e15
       type = acceptor
-      doping_level = 0.025
+      level = 0.025
 
     }
    
@@ -36,7 +36,7 @@ Device
     {
       density = 1e15
       type = acceptor
-      doping_level = 0.025
+      level = 0.025
 
     }
    
@@ -53,7 +53,7 @@ Device
     {
       density = 1e15
       type = acceptor
-      doping_level = 0.025
+      level = 0.025
 
     }
  
@@ -71,7 +71,7 @@ Device
     {
       density = 1e15
       type = acceptor
-      doping_level = 0.025
+      level = 0.025
 
     }
       
@@ -94,7 +94,6 @@ Module elasticity
   regions = all
 
   plot = (Strain, Stress, Displacement)
-  lin_rel_tol = 1e-6 
 
   Physics 
   {
@@ -135,10 +134,11 @@ Module  driftdiffusion
   Physics
   {
     strain_simulation = strain 
+
+    polarization (piezo, pyro) {}
     
     recombination (srh, direct) {}
 
-    
     mobility doping_dependent {}
 
 
@@ -199,7 +199,6 @@ Module  efaschroedinger
   number_of_eigenstates = 8
   poisson_simulation = dd
   strain_simulation = strain 
-  convergent_density = true
   
   solver = krylovshur 
    

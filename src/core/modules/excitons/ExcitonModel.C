@@ -45,9 +45,10 @@ ExcitonModel::do_recombination(void)
   recombination_rate_derivative = density_derivative * inv_tau;
 
 
-  double G;
-  _dd_sim->get_solution(get_element(), get_coordinates(), _gen_model, G);
-  net_recomb_rate -= G;
+  std::vector<double> G(1);
+  _dd_sim->get_solution(get_element(), _gen_model, G,
+      std::vector<Point>(1, get_coordinates()));
+  net_recomb_rate -= G[0];
 }
 
 
@@ -79,20 +80,20 @@ ExcitonModel::prepare_element_data(void)
   if (!_dd_sim->is_solved())
     throw (SolveFailedException("ExcitonModel needs solved DriftDiffusion."));
 
-  double Eg;
+  std::vector<double> Eg(1);
   std::map<const Elem*, double>::iterator it(_bandgap_data.find(get_element()));
   if (it != _bandgap_data.end())
     set_energy(it->second);
   else
   {
-    bool ok = ((SimulationInterface*)_dd_sim)->get_solution(get_element(),
-        get_element()->centroid(), _Eg_id, Eg);
+    bool ok = _dd_sim->get_solution(get_element(),
+        _Eg_id, Eg, std::vector<Point>(1, get_element()->centroid()));
 
     if (!ok)
       throw SolveFailedException("Exciton model needs everywhere drift-diffusion.");
 
-    set_energy(Eg - _R);
-    _bandgap_data[get_element()] = Eg - _R;
+    set_energy(Eg[0] - _R);
+    _bandgap_data[get_element()] = Eg[0] - _R;
   }
 
   // lattice_vt was taken from TemperatureInterface

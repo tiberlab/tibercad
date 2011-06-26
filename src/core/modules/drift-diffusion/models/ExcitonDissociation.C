@@ -50,7 +50,7 @@ ExcitonDissociation::get_net_recombination_rates(double& recomb_e,
   if (_exciton_sim->is_solved())
   {
     double x = 0.0;
-    bool succ = _exciton_sim->get_solution(el, dd.get_coordinates(), _Rdiss_id, x);
+    bool succ = _exciton_sim->get_solution(el, _Rdiss_id, x, dd.get_coordinates());
     if (succ)
       recomb_e = -d_ * x;
   }

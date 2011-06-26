@@ -28,10 +28,12 @@ cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
   if [ ! -d libmesh-${LIBMESHVERSION}-$HOST ]; then
     if [ ! -e libmesh-${LIBMESHVERSION}.tbz ]; then
-      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}-$HOST
-      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}-$HOST
+      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}
+      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}
+      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$HOST
     else
       tar jxf libmesh-${LIBMESHVERSION}.tbz
+      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$HOST
     fi
 
     if [ -e ${PATCH} ]; then
@@ -95,7 +97,7 @@ cd libmesh-${LIBMESHVERSION}-$HOST
 # we have modifications to the configuration
 #aclocal -I m4
 #autoconf
-cp ${BUILDDIR}/misc/configure.libmesh configure
+cp ${TOPDIR}/misc/configure.libmesh configure
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
@@ -108,6 +110,16 @@ export PETSC_ARCH=${HOST}
 #  SHARED=--disable-shared
 #fi
 SHARED=--enable-shared
+if [ "${target_os}" = win32 ]
+then
+  # we do not need -fPIC
+  SHARED=--disable-shared
+fi
+if [ "${target_os}" = darwin ]
+then
+  # we do not need -fPIC
+  SHARED=--disable-shared
+fi
 
 dll_name=libmesh
 
@@ -116,7 +128,7 @@ then
   LDFLAGS="${LDFLAGS} -ldl"
 fi
 
-[ "$debug" == 1 ] && dll_name=${dll_name}_dbg
+[ "$debug" = 1 ] && dll_name=${dll_name}_dbg
 dll_name=${dll_name}${dll_libext}
   
 
@@ -126,7 +138,7 @@ dll_name=${dll_name}${dll_libext}
 # delete the -pedantic flag because it makes problems with mpi
 cp Make.common Make.common.orig
 sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEBUG//g' \
-    -e 's/-ansi//g' -e 's/^enable-shared.*/enable-shared := no/' Make.common.orig > Make.common
+  -e "s/-ansi//g"  -e 's/^enable-shared.*/enable-shared := no/'  Make.common.orig > Make.common
 
 
 make |tee make_opt.log
@@ -135,13 +147,30 @@ echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${dll_name} ..."
 staticlib=`make echo | grep libmesh.a`
 contriblibs=`echo $staticlib | sed -e 's/lib\//contrib\/lib\//' -e 's/libmesh\.a/\*\.a/'`
 contribdir=${contriblibs/%\*\.a}
-rm ${contribdir}/libnemesis.*
-rm ${contribdir}/libexodusii.*
+rm -f ${contribdir}/libnemesis.*
+rm -f ${contribdir}/libexodusii.*
 mkdir -p ${BUILDDIR}/${TCHOST}/lib
+
+ARCHIVES="-Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive" 
+if [ "$target_os" = darwin ]
+then
+  ARCHIVES="-Wl,-force_load,${staticlib}"
+  for l in $(ls ${contribdir}/*.a)
+  do
+    #ARCHIVES="${ARCHIVES} -Wl,-reexport-l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
+    ARCHIVES="${ARCHIVES} -Wl,-force_load,$l "
+  done
+fi 
+
+if [ "$target_os" = darwin ]
+then
+  libmesh_linker_flags="-Wl,-install_name,@rpath/lib/${dll_name}"
+fi
+
 ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${dll_name} \
   ${libmesh_linker_flags} \
-  -Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive \
-  -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath-link,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
+  ${ARCHIVES} \
+  -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
   ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
 if [ $DEBUG == 'y' ]; then

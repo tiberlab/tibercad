@@ -59,22 +59,22 @@ void  ZbPiezoelectricModel::calculate_piezopolarization(const Elem* elem, const 
 
   const RotatedCrystal& cr = mat->get_rotated_crystal ();
 
-  std::vector< std::map< ID, double > > solution;
+  std::map< ID, std::vector<double > > solution;
 
    std::vector<Point> p(1);
 
    p[0] = point;;
 
  
-  if  (_simul->get_solution(elem,p,ID_set,solution))
+  if  (_simul->get_solution(elem,solution,p))
   {
     Tensor2Sym eps(0);
-    eps(1,1) = solution[0].find(var_map[EXX])->second; 
-    eps(2,1) = solution[0].find(var_map[EXY])->second;
-    eps(3,1) = solution[0].find(var_map[EXZ])->second;
-    eps(2,1) = solution[0].find(var_map[EXY])->second; 
-    eps(2,2) = solution[0].find(var_map[EYY])->second;
-    eps(3,3) = solution[0].find(var_map[EZZ])->second;
+    eps(1,1) = solution.find(var_map[EXX])->second[0];
+    eps(2,1) = solution.find(var_map[EXY])->second[0];
+    eps(3,1) = solution.find(var_map[EXZ])->second[0];
+    eps(2,2) = solution.find(var_map[EYY])->second[0];
+    eps(3,2) = solution.find(var_map[EYZ])->second[0];
+    eps(3,3) = solution.find(var_map[EZZ])->second[0];
 
 
     _strain = sym(cr.RotMatrix.transpose() * ( eps * (cr.RotMatrix)));
