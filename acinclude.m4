@@ -348,7 +348,8 @@ AC_DEFUN([TC_LIBMESH_PETSC_LIBS],
  if test "${tc_cv_have_sharedlibs}" == "yes"; then
    tc_libmesh_petsc_libs=${LDFLAGS}
  else
-   tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
+   #tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
+   tc_libmesh_petsc_libs='$(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --ldflags)'
  fi
  LDFLAGS=$LDFLAGS_save
  AC_SUBST([LIBMESH_PETSC_LIBS], "$tc_libmesh_petsc_libs")

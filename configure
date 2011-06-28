@@ -5245,7 +5245,8 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
  if test "${tc_cv_have_sharedlibs}" == "yes"; then
    tc_libmesh_petsc_libs=${LDFLAGS}
  else
-   tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
+   #tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
+   tc_libmesh_petsc_libs='$(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --ldflags)'
  fi
  LDFLAGS=$LDFLAGS_save
  LIBMESH_PETSC_LIBS="$tc_libmesh_petsc_libs"
@@ -5409,7 +5410,7 @@ echo "$as_me: ****************************************" >&6;}
 
 { echo "$as_me:$LINENO: checking whether the compiler implements namespaces" >&5
 echo $ECHO_N "checking whether the compiler implements namespaces... $ECHO_C" >&6; }
-if test "${ax_cv_cxx_namespaces+set}" = set; then
+if test "${ac_cv_cxx_namespaces+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
@@ -5451,12 +5452,12 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
 	 test -z "$ac_cxx_werror_flag" ||
 	 test ! -s conftest.err
        } && test -s conftest.$ac_objext; then
-  ax_cv_cxx_namespaces=yes
+  ac_cv_cxx_namespaces=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	ax_cv_cxx_namespaces=no
+	ac_cv_cxx_namespaces=no
 fi
 
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -5468,9 +5469,9 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 fi
-{ echo "$as_me:$LINENO: result: $ax_cv_cxx_namespaces" >&5
-echo "${ECHO_T}$ax_cv_cxx_namespaces" >&6; }
-if test "$ax_cv_cxx_namespaces" = yes; then
+{ echo "$as_me:$LINENO: result: $ac_cv_cxx_namespaces" >&5
+echo "${ECHO_T}$ac_cv_cxx_namespaces" >&6; }
+if test "$ac_cv_cxx_namespaces" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_NAMESPACES
