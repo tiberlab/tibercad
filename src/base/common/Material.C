@@ -128,10 +128,6 @@ Material::create(const std::string& name, const ModelOptions& options)
   if (mat != NULL)
   {
     mat->set_database(db);
-
-    Messages::info("Created Material " + name +
-      " (using parameter file " + db.get_data_file() + ")");
-
     mat->preinit();
   }
 
