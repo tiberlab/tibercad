@@ -53,7 +53,9 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
     _is_task(false),
     _equilibrium_is_solved(false),
     _has_solution_vector(true),
-    _verbosity(1)
+    _verbosity(1),
+    _mesh(0),
+    _atomistic_structure(0)
 {
   ID new_id = _simulation_map.size() + 1;
   _id = new_id;
@@ -172,6 +174,7 @@ SimulationInterface::create(const string& type,
     string defaultname(type);
     sim->set_name(sim->get_options().get_option("name", defaultname));
     sim->get_options().delete_option("name");
+
 
 
     ostringstream os;
@@ -367,18 +370,68 @@ SimulationInterface::_get_node_model(const Elem* elem, int node) const
 
 
 
-MeshBase&
-SimulationInterface::get_mesh(void) const
-{
-  return get_environment().get_device().get_mesh();
-}
-
 
 double
 SimulationInterface::get_mesh_units(void) const
 {
   return get_environment().get_device().get_mesh_units();
 }
+
+
+
+void
+SimulationInterface::prepare(void)
+{
+  // prepare some of the environments internals (lists of elements etc.)
+  if (_environment != NULL) _environment->prepare();
+
+  // setup the solution variables
+  setup_solution_variables();
+}
+
+
+
+
+void
+SimulationInterface::setup_environment(Device& device, const set<ID>& region_numbers)
+{
+  if (!is_task())
+  {
+    if (_environment != NULL) delete _environment;
+    _environment = new SimulationEnvironment(device, region_numbers);
+
+    // get the mesh pointer
+    setup_mesh();
+    if (_mesh == NULL)
+      throw InitFailedException("No simulation mesh provided for \'" + get_name() + "\'");
+
+    // get atomistic structure
+    setup_atomistic_structure();
+  }
+}
+
+
+void
+SimulationInterface::setup_mesh(void)
+{
+  // For now just take the device mesh
+  _mesh = &get_environment().get_mesh();
+}
+
+
+void
+SimulationInterface::setup_atomistic_structure(void)
+{
+  string name(get_option("atomistic_structure", ""));
+  if (!name.empty())
+  {
+    _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
+    if (_atomistic_structure == NULL)
+      throw ModelErrorException("No atomistic structure \'" + name + "\' found "
+          "for simulation \'" + get_name());
+  }
+}
+
 
 
 void
@@ -394,9 +447,8 @@ SimulationInterface::init(void)
     if (_environment != NULL)
     {
       _environment->prepare_for_solve();
-      _scaling.set_calc_mesh_units((_environment->get_device()).get_mesh_units());
+      _scaling.set_calc_mesh_units(get_mesh_units());
     }
-
 
 
     _verbosity = get_option("verbose", _verbosity);
@@ -1378,7 +1430,7 @@ SimulationInterface::do_plot_old(void)
     formatstr += formats[i] + ",";
   formatstr += ")";
 
-  DataOutput data_output(dev.get_mesh(), formatstr);
+  DataOutput data_output(get_mesh(), formatstr);
   data_output.set_output_directory(outdir);
 
 
@@ -1623,7 +1675,7 @@ SimulationInterface::get_elemental_results(std::vector<double>& results,
   {
     build_elemental_results(_plotvariables, results, legend);
 
-    unsigned int n = get_environment().get_mesh().n_active_elem();
+    unsigned int n = get_mesh().n_active_elem();
 
 
 
@@ -1648,7 +1700,7 @@ SimulationInterface::get_nodal_results(std::vector<double>& results,
   {
     build_nodal_results(_plotvariables, results, legend);
 
-    unsigned int n = get_environment().get_mesh().n_nodes();
+    unsigned int n = get_mesh().n_nodes();
     if (results.size() != n * legend.size())
     {
       ostringstream s;

@@ -1,3 +1,12 @@
+Version 2.1.0
+-------------
+
+New features:
+
+	- improved automatic guess for eigenenergies in quantum
+	  simulations
+	
+
 Version 2.0.0
 -------------
 
@@ -5,7 +14,12 @@ New features:
 
 	- new input file syntax
 	- new physical models (polarization, particle_density)
-	- new modules
+	- new modules (elasticity)
+	- simplified input file syntax for EFA module (incorporates now
+	  quantum density)
+	- improved selfconsistency Quantum/Drift-Diffusion based on
+	  corrector/predictor
+	- windows version can open file dialog to open input file
 
 changes:
 xx_rel_tol -> relative_tolerance

@@ -201,28 +201,16 @@ Control::init(void)
   }
 
 
+
   // initialize the device
   _device->init();
 
 
-  // initialize the simulation environments
-  //EnvironmentMap::iterator envit(_simulation_environments.begin());
-  //const EnvironmentMap::iterator envend(_simulation_environments.end());
-  //for ( ; envit != envend; ++envit)
-  //  envit->second->init();
-  // TODO may be removed when all modules use new APIs, I think
-  SimulationInterface::SimulationIterator
-    simit(SimulationInterface::simulations_begin());
-  const SimulationInterface::SimulationIterator
-    simend(SimulationInterface::simulations_end());
-  //for ( ; simit != simend; ++simit)
-  //  if ((*simit)->has_environment()) (*simit)->get_environment().init();
-
 
 
   // initialize the simulations, but only if they are not initialized yet
-  // (the latter should not happen, however)
-  //simit = SimulationInterface::simulations_begin();
+  SimulationInterface::SimulationIterator simit(SimulationInterface::simulations_begin());
+  const SimulationInterface::SimulationIterator simend(SimulationInterface::simulations_end());
   for ( ; simit != simend; ++simit)
     if (!(*simit)->is_initialized())
       (*simit)->init();
@@ -337,274 +325,268 @@ Control::setup_module(Device* device, const ModelOptions& opts)
         "Unknown simulation type: " + modelname);
 
 
-  SimulationEnvironment* env = NULL;
-  // create the environment (only if it is not a task)
-  if (!sim->is_task())
-  {
-    env = new SimulationEnvironment(*device, phys_regions);
-    // hands the control over the environment over to SimulationInterface
-    sim->set_environment(env);
-  }
-
   sim->verbose() = SimulationOptions::verbose();
 
-
-  // the physical models
-  ModelOptions physopts;
-
-  // put them all together, if someone makes more than one Physics block ...
+  // the following stuff does not need to be done if the simulation is a task
+  if (!sim->is_task())
   {
-    ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
-    const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
-    for ( ; it != end; ++it)
+
+    SimulationEnvironment* env = NULL;
+    sim->setup_environment(*device, phys_regions);
+    env = &sim->get_environment();
+
+
+    // the physical models
+    ModelOptions physopts;
+
+    // put them all together, if someone makes more than one Physics block ...
     {
-      physopts += it->second;
-      physopts.set_key((it->second).get_key());
-    }
-  }
-
-  //
-  // and now... the boundary conditions
-  //
-
-  // we accept the following keywords for boundaries:
-  //   Contact, Boundary, Interface
-  vector<string> keys(4);
-  keys[0] = "Contact";
-  keys[1] = "Boundary";
-  keys[2] = "Interface";
-  keys[2] = "BoundaryCondition";
-
-  for (size_t i = 0; i < keys.size(); ++i)
-  {
-    ModelOptions::const_submodel_iterator it = opts.submodels_begin(keys[i]);
-    const ModelOptions::const_submodel_iterator end = opts.submodels_end(keys[i]);
-    for ( ; it != end; ++it)
-      create_boundary(sim, it->second);
-
-    // we remove them, so in the following we have only models
-    //physopts.delete_submodels(keys[i]);
-  }
-
-
-
-  //
-  // Next, we create all lower dimensional submodels
-  //
-  // NOTE: only definitions with correct space dimensions will be
-  //       added to the different PhysicalObject instances
-
-  {
-
-    ModelOptions::submodel_iterator it = physopts.submodels_begin();
-    const ModelOptions::submodel_iterator end = physopts.submodels_end();
-    while (it != end)
-    {
-      ModelOptions::submodel_iterator tmpit(it);
-      ++it;
-
-      const ModelOptions& bdopts = tmpit->second;
-
-      string physreg = bdopts.get_option("regions", "all");
-
-      // if "all", it cannot be a lower dimensional region
-      if (physreg == "all")
-        continue;
-
-      bool add = false;
-
-      // It might be some lower dim model
-
-      vector<string> ids_strings;
-      Utils::extract_vector(physreg, ids_strings);
-
-      for (unsigned int i = 0; i < ids_strings.size(); i++)
+      ModelOptions::const_submodel_iterator it = opts.submodels_begin("Physics");
+      const ModelOptions::const_submodel_iterator end = opts.submodels_end("Physics");
+      for ( ; it != end; ++it)
       {
-        vector<ID> region_ids;
-        device->get_boundary_region_ids(ids_strings[i], region_ids);
+        physopts += it->second;
+        physopts.set_key((it->second).get_key());
+      }
+    }
 
-        // if it is no boundary region, we continue to the next region name
-        if (region_ids.size() == 0)
-        {
-          // it could be the name of the Boundary object
-          Boundary* bnd = env->get_boundary(ids_strings[i]);
-          if (bnd != NULL)
-            bnd->get_region_ids(region_ids);
-        }
+    //
+    // and now... the boundary conditions
+    //
 
-        if (region_ids.size() == 0)
+    // we accept the following keywords for boundaries:
+    //   Contact, Boundary, Interface
+    vector<string> keys(4);
+    keys[0] = "Contact";
+    keys[1] = "Boundary";
+    keys[2] = "Interface";
+    keys[2] = "BoundaryCondition";
+
+    for (size_t i = 0; i < keys.size(); ++i)
+    {
+      ModelOptions::const_submodel_iterator it = opts.submodels_begin(keys[i]);
+      const ModelOptions::const_submodel_iterator end = opts.submodels_end(keys[i]);
+      for ( ; it != end; ++it)
+        create_boundary(sim, it->second);
+
+      // we remove them, so in the following we have only models
+      //physopts.delete_submodels(keys[i]);
+    }
+
+
+
+    //
+    // Next, we create all lower dimensional submodels
+    //
+    // NOTE: only definitions with correct space dimensions will be
+    //       added to the different PhysicalObject instances
+
+    {
+
+      ModelOptions::submodel_iterator it = physopts.submodels_begin();
+      const ModelOptions::submodel_iterator end = physopts.submodels_end();
+      while (it != end)
+      {
+        ModelOptions::submodel_iterator tmpit(it);
+        ++it;
+
+        const ModelOptions& bdopts = tmpit->second;
+
+        string physreg = bdopts.get_option("regions", "all");
+
+        // if "all", it cannot be a lower dimensional region
+        if (physreg == "all")
           continue;
 
-        // now it must be a lower dim model
-        add = true;
+        bool add = false;
 
-        // NOTE: the model will only be added if a corresponding boundary ID
-        // has been found
-        for (unsigned int reg = 0; reg < region_ids.size(); reg++)
+        // It might be some lower dim model
+
+        vector<string> ids_strings;
+        Utils::extract_vector(physreg, ids_strings);
+
+        for (unsigned int i = 0; i < ids_strings.size(); i++)
         {
-          ID id = region_ids[reg];
+          vector<ID> region_ids;
+          device->get_boundary_region_ids(ids_strings[i], region_ids);
 
-          MaterialBoundary* bd;
-          if ((bd = device->get_boundary_object(id)) != NULL)
+          // if it is no boundary region, we continue to the next region name
+          if (region_ids.size() == 0)
           {
-            PhysicalModel* pm = bd->get_model(sim->get_id());
-            if (pm == NULL)
-            {
-              // create the default model on the fly
-              Material* matA = bd->get_material_A();
-              Material* matB = bd->get_material_B();
-              pm = sim->new_boundary_model(ModelOptions(), matA, matB);
-              bd->add_model(pm, sim->get_id());
-            }
-
-            // now it's there
-            pm->get_options().add_submodel(tmpit->first, bdopts);
+            // it could be the name of the Boundary object
+            Boundary* bnd = env->get_boundary(ids_strings[i]);
+            if (bnd != NULL)
+              bnd->get_region_ids(region_ids);
           }
 
-          EdgeObject* eo;
-          if ((eo = device->get_edge_object(id)) != NULL)
+          if (region_ids.size() == 0)
+            continue;
+
+          // now it must be a lower dim model
+          add = true;
+
+          // NOTE: the model will only be added if a corresponding boundary ID
+          // has been found
+          for (unsigned int reg = 0; reg < region_ids.size(); reg++)
           {
-            PhysicalModel* pm = eo->get_model(sim->get_id());
-            if (pm == NULL)
+            ID id = region_ids[reg];
+
+            MaterialBoundary* bd;
+            if ((bd = device->get_boundary_object(id)) != NULL)
             {
-              // create the default model on the fly
-              pm = sim->new_edge_model(ModelOptions());
-              eo->add_model(pm, sim->get_id());
+              PhysicalModel* pm = bd->get_model(sim->get_id());
+              if (pm == NULL)
+              {
+                // create the default model on the fly
+                Material* matA = bd->get_material_A();
+                Material* matB = bd->get_material_B();
+                pm = sim->new_boundary_model(ModelOptions(), matA, matB);
+                bd->add_model(pm, sim->get_id());
+              }
+
+              // now it's there
+              pm->get_options().add_submodel(tmpit->first, bdopts);
             }
 
-            // now it's there
-            pm->get_options().add_submodel(tmpit->first, bdopts);
-          }
-
-          NodeObject* no;
-          if ((no = device->get_node_object(id)) != NULL)
-          {
-            PhysicalModel* pm = no->get_model(sim->get_id());
-            if (pm == NULL)
+            EdgeObject* eo;
+            if ((eo = device->get_edge_object(id)) != NULL)
             {
-              // create the default model on the fly
-              pm = sim->new_node_model(ModelOptions());
-              no->add_model(pm, sim->get_id());
+              PhysicalModel* pm = eo->get_model(sim->get_id());
+              if (pm == NULL)
+              {
+                // create the default model on the fly
+                pm = sim->new_edge_model(ModelOptions());
+                eo->add_model(pm, sim->get_id());
+              }
+
+              // now it's there
+              pm->get_options().add_submodel(tmpit->first, bdopts);
             }
 
-            // now it's there
-            pm->get_options().add_submodel(tmpit->first, bdopts);
+            NodeObject* no;
+            if ((no = device->get_node_object(id)) != NULL)
+            {
+              PhysicalModel* pm = no->get_model(sim->get_id());
+              if (pm == NULL)
+              {
+                // create the default model on the fly
+                pm = sim->new_node_model(ModelOptions());
+                no->add_model(pm, sim->get_id());
+              }
+
+              // now it's there
+              pm->get_options().add_submodel(tmpit->first, bdopts);
+            }
           }
         }
+
+        // remove it from the map
+        // NOTE: this means, we cannot specify the same model for bulk
+        //       boundaries in a single block
+        // TODO: maybe this can be relaxed?
+        if (add)
+          physopts.delete_submodel(tmpit);
       }
-
-      // remove it from the map
-      // NOTE: this means, we cannot specify the same model for bulk
-      //       boundaries in a single block
-      // TODO: maybe this can be relaxed?
-      if (add)
-        physopts.delete_submodel(tmpit);
     }
-  }
-  m.unindent();
+    m.unindent();
 
 
-  //
-  // now we have to create the bulk models
-  //
-  m.newline();
-  m.info("Creating bulk models... ");
-  m.indent();
+    //
+    // now we have to create the bulk models
+    //
+    m.newline();
+    m.info("Creating bulk models... ");
+    m.indent();
 
-  // we have to do this for each material!
-  IDSet::iterator reg_it(phys_regions.begin());
-  const IDSet::iterator reg_end(phys_regions.end());
-  for ( ; reg_it != reg_end; ++reg_it)
-  {
-    ID reg_id = *reg_it;
-    Material* mat = device->get_material(reg_id);
-
-    if (mat == NULL)
+    // we have to do this for each material!
+    IDSet::iterator reg_it(phys_regions.begin());
+    const IDSet::iterator reg_end(phys_regions.end());
+    for ( ; reg_it != reg_end; ++reg_it)
     {
-      ostringstream s;
-      s << "Physical region " << reg_id <<
-          " has no material associated!";
-      Messages::warning(s.str());
-      continue;
-      //throw InitFailedException(s.str());
-    }
+      ID reg_id = *reg_it;
+      Material* mat = device->get_material(reg_id);
 
-    // we only continue if the model has not already been added
-    // this is important as a material can be assigned to different
-    // regions
-    // TODO (Is this true ??)
-    if (mat->get_model(sim->get_id()) == NULL)
-    {
-
-      // the crystal structure
-      string crystal_structure(mat->get_structure());
-
-      // that's not elegant, but it works
-      ModelOptions opts(physopts);
-      opts.delete_all_submodels();
-
-      // we add the crystal structure for bulk materials as this could
-      // lead to different model implementations
-      opts["crystal_structure"] = crystal_structure;
-
-      //
-      // we parse the submodels for each region as they could be associated
-      // one-by-one
-      // NOTE: different submodels could have the same identifier
-      //
+      if (mat == NULL)
       {
-        ModelOptions::submodel_iterator it = physopts.submodels_begin();
-        const ModelOptions::submodel_iterator end = physopts.submodels_end();
-        for ( ; it != end; ++it)
-        {
-          bool add = true;
-
-          ModelOptions modopts(it->second);
-
-          // we have to check if it should be built for the current region
-          // TODO to not allow for errors
-
-          IDSet regs;
-          string physreg = modopts.get_option("regions", "all");
-          device->extract_physical_regions(physreg, regs);
-
-          if (regs.count(reg_id) == 0) add = false;
-
-
-          if (add)
-          {
-            // we add the crystal structure for bulk materials as this could
-            // lead to different model implementations
-            modopts.set_option("crystal_structure", crystal_structure);
-
-            // we set the name to the model type if not explicitly
-            // given by user
-            //if (!(mapit->second).find_option("name"))
-            //  (mapit->second)["name"] = mapit->first;
-            opts.add_submodel(it->first, modopts);
-          }
-        }
+        ostringstream s;
+        s << "Physical region " << reg_id <<
+            " has no material associated!";
+        Messages::warning(s.str());
+        continue;
+        //throw InitFailedException(s.str());
       }
 
+      // we only continue if the model has not already been added
+      // this is important as a material can be assigned to different
+      // regions
+      // TODO (Is this true ??)
+      if (mat->get_model(sim->get_id()) == NULL)
+      {
 
-      // here we actually create the model
-      PhysicalModel* model = sim->new_bulk_model(opts, mat);
+        // the crystal structure
+        string crystal_structure(mat->get_structure());
 
-      // NOTE: model could be NULL, but we don't care about. Who tells us that
-      // every simulation necessarily needs a model?
-      mat->add_model(model, sim->get_id());
+        // that's not elegant, but it works
+        ModelOptions opts(physopts);
+        opts.delete_all_submodels();
+
+        // we add the crystal structure for bulk materials as this could
+        // lead to different model implementations
+        opts["crystal_structure"] = crystal_structure;
+
+        //
+        // we parse the submodels for each region as they could be associated
+        // one-by-one
+        // NOTE: different submodels could have the same identifier
+        //
+        {
+          ModelOptions::submodel_iterator it = physopts.submodels_begin();
+          const ModelOptions::submodel_iterator end = physopts.submodels_end();
+          for ( ; it != end; ++it)
+          {
+            bool add = true;
+
+            ModelOptions modopts(it->second);
+
+            // we have to check if it should be built for the current region
+            // TODO to not allow for errors
+
+            IDSet regs;
+            string physreg = modopts.get_option("regions", "all");
+            device->extract_physical_regions(physreg, regs);
+
+            if (regs.count(reg_id) == 0) add = false;
+
+
+            if (add)
+            {
+              // we add the crystal structure for bulk materials as this could
+              // lead to different model implementations
+              modopts.set_option("crystal_structure", crystal_structure);
+
+              // we set the name to the model type if not explicitly
+              // given by user
+              //if (!(mapit->second).find_option("name"))
+              //  (mapit->second)["name"] = mapit->first;
+              opts.add_submodel(it->first, modopts);
+            }
+          }
+        }
+
+
+        // here we actually create the model
+        PhysicalModel* model = sim->new_bulk_model(opts, mat);
+
+        // NOTE: model could be NULL, but we don't care about. Who tells us that
+        // every simulation necessarily needs a model?
+        mat->add_model(model, sim->get_id());
+      }
     }
+    m.unindent();
+
   }
-  m.unindent();
 
-
-
-
-  // prepare some of the environments internals (lists of elements etc.)
-  if (env != NULL) env->prepare();
-
-  // setup the solution variables
-  sim->setup_solution_variables();
+  sim->prepare();
 }
 
 

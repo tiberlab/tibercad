@@ -68,12 +68,10 @@ make_petsc()
         #ARCHIVES="${ARCHIVES} -l$(basename $l | sed 's/lib\(.*\)\.a/\1/')"
         ARCHIVES="${ARCHIVES} -Wl,-force_load,$l"
       done
-    fi
 
-    if [ "$target_os" = darwin ]
-    then
       petsc_linker_flags="-Wl,-install_name,@rpath/lib/${libname}${dll_libext}"
     fi
+
 
     echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
     mkdir -p ${BUILDDIR}/${TCHOST}/lib

@@ -34,6 +34,7 @@
 
 class SimulationEnvironment;
 class Embracing;
+class Device;
 class EquationSystems;
 class TiberEqSystem;
 class PhysicalModel;
@@ -43,6 +44,8 @@ class MeshBase;
 class Point;
 class DofObject;
 class Atom;
+class AtomisticStructure;
+
 
 //! The base class for any simulation
 class SimulationInterface : public TiberModelObject
@@ -105,11 +108,11 @@ class SimulationInterface : public TiberModelObject
     virtual ~SimulationInterface(void);
 
 
-    //! Set the simulation environment for this simulation
+    //! Setup the environment for this simulation
     /*!
      * The SimulationEnvironment for each simulation is unique
      */
-    void set_environment(SimulationEnvironment* environment) TBDLLOCAL;
+    void setup_environment(Device& device, const std::set<ID>& region_numbers);
 
 
     //! Check if the simulation has a valid environment
@@ -117,11 +120,6 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get the simulation environment for this simulation
-    /*!
-     * \note This method does not check if the environment is valid.
-     * If you use it from the outside of an object, the check with
-     * has_environment() before.
-     */
     SimulationEnvironment& get_environment(void) const;
 
 
@@ -178,12 +176,20 @@ class SimulationInterface : public TiberModelObject
     static SimulationIterator simulations_end(void);
 
 
+    //! Prepare the simulation
+    /*!
+     * This does some preliminary initialization of data that might be needed
+     * during initialization of models or other modules.
+     */
+    void prepare(void);
+
+
     //! Initialize the system
     /*!
      * This method calls do_init() after some health checks
      * and print_info();
      */
-    void init(void) TBDLLOCAL;
+    void init(void);
 
 
     //! Setup the available solution variables
@@ -616,6 +622,13 @@ class SimulationInterface : public TiberModelObject
     double get_mesh_units(void) const;
 
 
+    //! Get the atomistic structure pointer
+    /*!
+     * Note that the given pointer may be NULL
+     */
+    AtomisticStructure* get_atomistic_structure(void) const;
+
+
 
 
     //! Build a finite element
@@ -796,6 +809,25 @@ class SimulationInterface : public TiberModelObject
      * simulation.
      */
     virtual void do_init(void) = 0;
+
+
+    //! Initialize the internal mesh pointer
+    /*!
+     * The default implementation just takes the mesh pointer from the device,
+     * but this method may be reimplemented to do more exotic things.
+     */
+    virtual void setup_mesh(void);
+
+
+    //! Initialize the internal atomistic structure pointer
+    /*!
+     * The default implementation just takes the structure pointer from the device,
+     * getting the structure name from the input file ("atomistic_structure").
+     * This method may be reimplemented to do more exotic things.
+     * It may be good habit to reimplement it as empty for modules that cannot
+     * do anything with atoms.
+     */
+    virtual void setup_atomistic_structure(void);
 
 
     //! Setup the available variables
@@ -1453,6 +1485,14 @@ class SimulationInterface : public TiberModelObject
     std::vector<TiberEqSystem*> _systems;
 
 
+    //! A pointer to the simulation mesh
+    MeshBase* _mesh;
+
+
+    //! A pointer to the principal atomistic structure
+    AtomisticStructure* _atomistic_structure;
+
+
     //! create a unique name for the equation system
     void create_equation_system_name(void) TBDLLOCAL;
 
@@ -1530,13 +1570,7 @@ SimulationInterface::get_equation_system(ID i)
 }
 
 
-inline
-void
-SimulationInterface::set_environment(SimulationEnvironment* environment)
-{
-  if (environment != 0)
-    _environment = environment;
-}
+
 
 
 inline
@@ -1551,11 +1585,33 @@ inline
 SimulationEnvironment&
 SimulationInterface::get_environment(void) const
 {
-  assert(has_environment());
+  if (_environment == NULL)
+    throw RuntimeException("Simulation \'" + get_name() +
+        "\' has no simulation environment associated");
 
   return *_environment;
 }
 
+
+inline
+MeshBase&
+SimulationInterface::get_mesh(void) const
+{
+  if (_environment == NULL)
+    throw RuntimeException("Simulation \'" + get_name() +
+        "\' has no mesh associated");
+
+  return *_mesh;
+}
+
+
+
+inline
+AtomisticStructure*
+SimulationInterface::get_atomistic_structure(void) const
+{
+  return _atomistic_structure;
+}
 
 
 inline
