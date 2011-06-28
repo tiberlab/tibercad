@@ -37,11 +37,11 @@ $(module_dir)/$(MODULE_NAME)/$$(call modulelib, $(1)) : $$(patsubst %.C,.$$(ARCH
 	@echo "Linking module $$(notdir $$@) ..."
 	@[ -d $$(dir $$@) ] || mkdir -p  $$(dir $$@)
 ifeq ($(target_os), linux)
-	$$(CXX) $$(CXXFLAGS) -shared -o $$@ $$^ \
+	@$$(CXX) $$(CXXFLAGS) -shared -o $$@ $$^ \
 	  -Wl,-soname,$$(notdir $$@) -Wl,--as-needed \
 	  -Wl,-rpath,'$$$$ORIGIN' $(2) $$(MODULE_LDFLAGS)
 else
-	$$(CXX) $$(CXXFLAGS) -shared -o $$@ $$^ \
+	@$$(CXX) $$(CXXFLAGS) -shared -o $$@ $$^ \
 	  $(2) $$(MODULE_LDFLAGS)
 
 endif
