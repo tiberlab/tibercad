@@ -129,7 +129,7 @@ Material::create(const std::string& name, const ModelOptions& options)
   {
     mat->set_database(db);
 
-    Messages::debug("Created Material " + name +
+    Messages::info("Created Material " + name +
       " (using parameter file " + db.get_data_file() + ")");
 
     mat->preinit();
