@@ -7,6 +7,7 @@
 #include "EmpiricalTightBinding.h"
 #include "PhysicalModel.h"
 #include "EtbModel.h"
+#include "AtomisticStructure.h"
 #include "SimulationOptions.h"
 #include "TiberCad.h"
 #include "UptWrapper.h"
@@ -152,9 +153,9 @@ ETB::do_init(void){
   }
 
 
-  TightBinding::do_init(); //gets mesh and _atomistic_structure
+  TightBinding::do_init(); //gets mesh and get_atomistic_structure()
 
-  if(_atomistic_structure==NULL)
+  if(get_atomistic_structure()==NULL)
     throw InitFailedException("ETB: atomistic structure not created");
 
   get_band_edges();  //reads band edges from database
@@ -243,15 +244,15 @@ void ETB::reinit(void){
   else
   {
 
-    upt_filename = _atomistic_structure->get_name() + ".upg";
+    upt_filename = get_atomistic_structure()->get_name() + ".upg";
 
     std::cerr << "printing structure " << upt_filename << std::endl;
 
-    _atomistic_structure->print_upg(upt_filename, _upt_options.etb_dataset);
+    get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset);
 
-    std::cout << "Number of atoms: " <<_atomistic_structure->get_N_atoms() << std::endl;
+    std::cout << "Number of atoms: " <<get_atomistic_structure()->get_N_atoms() << std::endl;
 
-    std::cout << "Numb. without H: " <<_atomistic_structure->get_N_without_H()
+    std::cout << "Numb. without H: " <<get_atomistic_structure()->get_N_without_H()
 	      << std::endl;
   }
 
@@ -292,14 +293,14 @@ void ETB::reinit(void){
 
   std::cout << "(TC) init uptight done" << std::endl;
 
-  _ion_num_orbitals.resize(_atomistic_structure->get_N_atoms(), 0);
+  _ion_num_orbitals.resize(get_atomistic_structure()->get_N_atoms(), 0);
 
 
   std::cout << "(TC) set orbitals per atom" << std::endl;
 
   inst->get_ion_numorbitals(_ion_num_orbitals);
 
-  _N_without_H = _atomistic_structure->get_N_without_H();
+  _N_without_H = get_atomistic_structure()->get_N_without_H();
 
   if (has_new_k())
   {
@@ -326,7 +327,7 @@ void ETB::do_solve(void){
 
   std::cout << "Tight-Binding calculations" << std::endl;
 
-  std::set<ID> IDs = _atomistic_structure->get_IDset();
+  std::set<ID> IDs = get_atomistic_structure()->get_IDset();
   std::set<ID>::iterator reg;
 
   for (reg = IDs.begin(); reg != IDs.end(); reg++)
@@ -482,14 +483,14 @@ void ETB::do_solve(void){
 
   //Print for debug charges on atoms
   double* charges;
-  charges = new double[_atomistic_structure->get_N_atoms()];
+  charges = new double[get_atomistic_structure()->get_N_atoms()];
   for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _el_atomic_charges[i];
-  for (unsigned int i = _N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
+  for (unsigned int i = _N_without_H + 1; i < get_atomistic_structure()->get_N_atoms(); i++) charges[i] = 0.0;
 
-  _atomistic_structure->print_structure("charges_el.xyz", charges);
+  get_atomistic_structure()->print_structure("charges_el.xyz", charges);
   for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _hl_atomic_charges[i];
-  for (unsigned int i = _N_without_H + 1; i < _atomistic_structure->get_N_atoms(); i++) charges[i] = 0.0;
-  _atomistic_structure->print_structure("charges_hl.xyz", charges);
+  for (unsigned int i = _N_without_H + 1; i < get_atomistic_structure()->get_N_atoms(); i++) charges[i] = 0.0;
+  get_atomistic_structure()->print_structure("charges_hl.xyz", charges);
 
 }
 
@@ -686,7 +687,7 @@ void ETB::parse_options(void)
 
   //---------------------------------------------------------------------------------------
   //computes educated guesses for valence and conduction bands edges
-  std::set<ID> IDs = _atomistic_structure->get_IDset();
+  std::set<ID> IDs = get_atomistic_structure()->get_IDset();
   std::set<ID>::iterator reg;
 
   double vb_max = -1000.0;
@@ -811,10 +812,10 @@ void
 ETB::add_band_shifts(void)
 {
   _band_shift.clear();
-  unsigned int N = _atomistic_structure->get_N_atoms();
+  unsigned int N = get_atomistic_structure()->get_N_atoms();
   _band_shift.resize(N, 0.0);
 
-  const std::vector< Atom >& atom = _atomistic_structure->get_structure_atoms();
+  const std::vector< Atom >& atom = get_atomistic_structure()->get_structure_atoms();
 
   for (unsigned int i = 0; i < N; i++)
   {
@@ -838,7 +839,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
 
   sum = 0.0; k = 0; k_at = 0;
 
-  N_atoms_wo_H = _atomistic_structure->get_N_without_H();
+  N_atoms_wo_H = get_atomistic_structure()->get_N_without_H();
 
   if(_solution[i].particle == "el" || _solution[i].particle == "electron")
   {
@@ -894,7 +895,7 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
 
   k = 0; k_at = 0;
 
-  N_atoms_wo_H = _atomistic_structure->get_N_without_H();
+  N_atoms_wo_H = get_atomistic_structure()->get_N_without_H();
 
   if(qmat.size() < N_atoms_wo_H)
     throw InitFailedException("(INT. ERROR) array mismatch in compute_atomic_charges");
@@ -940,7 +941,7 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
 
   k = 0; k_at = 0;
 
-  N_atoms_wo_H = _atomistic_structure->get_N_without_H();
+  N_atoms_wo_H = get_atomistic_structure()->get_N_without_H();
 
   if(densatm.size() < N_atoms_wo_H)
     throw InitFailedException("(INT. ERROR) array mismatch in compute_state_density");
@@ -967,7 +968,7 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
 void ETB::get_band_edges(void)
 {
   
-  AtomisticStructure* as = _atomistic_structure;
+  AtomisticStructure* as = get_atomistic_structure();
   std::set<ID> IDs = as->get_IDset();
 
   for(std::set<ID>::iterator reg = IDs.begin(); reg != IDs.end(); reg++)
@@ -1092,7 +1093,7 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
   else
   {
     //computes guess from database band edges
-    std::set<ID> IDs = _atomistic_structure->get_IDset();
+    std::set<ID> IDs = get_atomistic_structure()->get_IDset();
     std::set<ID>::iterator reg;
 
     vb_max = -1000.0;
@@ -1174,7 +1175,7 @@ ETB::get_solution_secure(const Elem* elem,
 double
 ETB::build_rho3d(const std::vector<double>& tb_density, const Point& r)
 {
-  double tau = 1.0 / (_upt_options.projection_length / _atomistic_structure->get_scale());
+  double tau = 1.0 / (_upt_options.projection_length / get_atomistic_structure()->get_scale());
   const double deltar_max = tau * 10; //Maximum cutoff distance
   double deltar, uhatom;
   double rho = 0.0;
@@ -1194,9 +1195,9 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Point& r)
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
       //Convert atom position to mesh units
-      x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
-      y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
-      z1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(3) / _atomistic_structure->get_scale();
+      x1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(1) / get_atomistic_structure()->get_scale();
+      y1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(2) / get_atomistic_structure()->get_scale();
+      z1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(3) / get_atomistic_structure()->get_scale();
 
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
@@ -1226,7 +1227,7 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Point& r)
 double
 ETB::build_rho2d(const std::vector<double>& tb_density, const Point& r)
 {
-  double tau = 1.0 / (_upt_options.projection_length / _atomistic_structure->get_scale());
+  double tau = 1.0 / (_upt_options.projection_length / get_atomistic_structure()->get_scale());
   const double deltar_max = tau * 10; //Maximum cutoff distance
   double deltar, uhatom;
   double rho = 0.0;
@@ -1246,8 +1247,8 @@ ETB::build_rho2d(const std::vector<double>& tb_density, const Point& r)
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
       //Convert atom position to mesh units
-      x1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
-      y1 = _atomistic_structure->get_structure_atoms()[iatm].get_position(2) / _atomistic_structure->get_scale();
+      x1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(1) / get_atomistic_structure()->get_scale();
+      y1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(2) / get_atomistic_structure()->get_scale();
       z1 = 0.0;
 
       //delta_r is already in mesh units in this way
@@ -1278,7 +1279,7 @@ double
 ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem)
 {
   //Projection length in mesh units
-  double proj_length = (_upt_options.projection_length / _atomistic_structure->get_scale());
+  double proj_length = (_upt_options.projection_length / get_atomistic_structure()->get_scale());
   double tau = 1.0 / proj_length;
   const double deltar_max = proj_length * 10; //Maximum cutoff distance
   double deltar, uhatom, l;
@@ -1301,13 +1302,13 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
       exit(1);
     }
 
-  double* period = _atomistic_structure->get_periodicity_vectors();
+  double* period = get_atomistic_structure()->get_periodicity_vectors();
 
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
 
       //Convert atom position to mesh units
-      x_atm = _atomistic_structure->get_structure_atoms()[iatm].get_position(1) / _atomistic_structure->get_scale();
+      x_atm = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(1) / get_atomistic_structure()->get_scale();
 
       //delta_r is already in mesh units in this way
       deltar = min( abs( (x_atm - x1) ), abs( (x_atm - x2) ) );

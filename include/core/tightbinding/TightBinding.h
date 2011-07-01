@@ -4,7 +4,6 @@
 //-----------------------------------------------------------------------------------------
 
 #include "EigenvalueProblem.h"
-#include "AtomisticStructure.h"
 #include "SimulationEnvironment.h"
 #include "Database.h"
 #include "Specie.h"
@@ -78,15 +77,6 @@ protected:
    */
   virtual void obtain_hubbard_parameters(void);
 
-//  /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
-//  virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
-
-  //! Pointer to atomistic structure for the simulation;
-  AtomisticStructure* _atomistic_structure;
-
-  //! Get the atomistic structure pointer from the name specified in input
-  //! and fill the private member _atomistic_structure
-  void get_atomistic_structure(void);
 
   //! Map of map containing hubbard parameters for any specie and any shell
   /*!
