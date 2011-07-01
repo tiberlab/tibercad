@@ -12,7 +12,6 @@
 
 //forward declaration
 class Device;
-class MeshBase;
 class DftbpWrapper;
 class UptWrapper;
 
@@ -104,9 +103,6 @@ protected:
 
   //! Charge variation (Mulliken Analisys) on each atom
   std::vector<double> _mulliken_netcharges;
-
-  //!Pointer to mesh
-  MeshBase* _mesh;
 
   //! Build a vector of potential projection over atom orbitals
   void project_potential(const std::string providing_model, const std::string mode);

@@ -186,7 +186,7 @@ ETB::do_init(void){
   length = out_path.copy(_upt_options.out_path, out_path.size() );
   //_upt_options.out_path[length] = '\0';
 
-  _dim = get_environment().get_device().get_mesh().mesh_dimension();
+  _dim = get_mesh().mesh_dimension();
 
   //inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs,
   //    _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
@@ -801,7 +801,7 @@ ETB::add_pot_shifts(void)
   file.open(file_name.c_str());
   for(int i=0; i < _pot_shift.size(); i++)
   {
-     file << _pot_shift[i] << std::endl;
+     file << _pot_shift[i] << endl;
   }
   file.close();
 
@@ -1067,8 +1067,8 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
     bandedges[cb_id] = vector<double>(1);
     bandedges[vb_id] = vector<double>(1);
 
-    MeshBase::const_element_iterator it = _mesh->active_local_elements_begin();
-    const MeshBase::const_element_iterator end = _mesh->active_local_elements_end();
+    MeshBase::const_element_iterator it = get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end = get_mesh().active_local_elements_end();
 
     for ( ; it != end; ++it)
     {

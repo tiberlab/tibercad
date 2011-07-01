@@ -22,8 +22,7 @@
 TightBinding::TightBinding(const ModelOptions& options)
  : EigenvalueProblem(options),
    _atomistic_structure(NULL),
-   _mulliken_netcharges(),
-   _mesh(NULL)
+   _mulliken_netcharges()
 {
   _pot_min = 0.0;
 }
@@ -42,9 +41,6 @@ TightBinding::~TightBinding()
 void
 TightBinding::do_init()
 {
-  //Get mesh reference
-  _mesh = & ( get_environment().get_device().get_mesh());
-
   // Getting reference to atomistic structure for calculation
   get_atomistic_structure();
 }
@@ -90,7 +86,9 @@ TightBinding::get_atomistic_structure(void){
   //Make a local copy of atomistic structure, in order to perform operations as
   //strain dependent atom displacement
   AtomisticStructure* atomistic_structure = NULL;
+  _atomistic_structure = SimulationInterface::get_atomistic_structure();
 
+  /*
   if (get_options().find_option("atomistic_structure") )
     {
       std::string name;
@@ -106,6 +104,7 @@ TightBinding::get_atomistic_structure(void){
       << get_name() << std::endl;
       exit(0);
     }
+  */
 }
 
 
@@ -310,7 +309,8 @@ TightBinding::project_potential(const std::string model_name, const std::string 
       _hl_chem_pot.clear();
       _hl_chem_pot.resize(_atomistic_structure->get_N_atoms(), 0.0);
 
-      unsigned int dim = get_environment().get_device().get_mesh().mesh_dimension();
+      // maybe we should take the mesh from the PotentialInterface?
+      unsigned int dim = get_mesh().mesh_dimension();
 
       for (unsigned int i = 0; i < _pot_shift.size(); i++)
 	{
