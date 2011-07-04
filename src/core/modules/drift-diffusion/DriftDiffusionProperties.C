@@ -386,7 +386,6 @@ DriftDiffusionProperties::do_init(void)
       _holes = pd;
   }
 
-  //setup_electrons_and_holes();
 
   it = submodels_begin("trap");
   end = submodels_end("trap");

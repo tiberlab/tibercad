@@ -2985,7 +2985,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const NumericVector<Number>& oldx = system.get_vector("old_sol");
   //SparseMatrix<double>& sysmat = system.get_matrix("sysmatrix");
   //if (residual != NULL)
-    //sysmat.zero();
+  //  sysmat.zero();
 
   //
   // some scaling stuff...

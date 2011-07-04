@@ -100,9 +100,9 @@ TiberNonlinTR::do_solve(void)
     matrix->vector_mult(*gradf, *rhs);
     double norm_grad_l2 = gradf->l2_norm();
     double norm_grad_infty = gradf->linfty_norm();
-    cerr << "|Z| = " << norm_rhs_now << "  " << " |g| = " << norm_grad_l2 << endl;
+    //cerr << "|Z| = " << norm_rhs_now << "  " << " |g| = " << norm_grad_l2 << endl;
 
-    cerr << "|f| = " << norm_rhs_now << "  |g| = " << norm_grad_l2 << endl;
+    //cerr << "|f| = " << norm_rhs_now << "  |g| = " << norm_grad_l2 << endl;
 
     // r'J(J'J)J'r
     //du = *gradf;
@@ -265,12 +265,12 @@ TiberNonlinTR::do_solve(void)
 
 
     //norm_du = du.linfty_norm();
-    {
+    /*{
       ostringstream os;
       os << "it " << i << ", |du| = " << norm_du
         << ", |r| = " << norm_rhs << " delta = " << delta_old;
       Messages::info(os.str());
-    }
+    }*/
 
 
     tol *= tol;
