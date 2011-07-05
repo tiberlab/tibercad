@@ -36,8 +36,8 @@ void GraceIO::write_nodal_data(const std::string& fname,
   const MeshBase& mesh = get_mesh();
 
   // This class is designed only for use with 1D meshes
-  if (mesh.mesh_dimension() > 1)
-    return;
+  //if (mesh.mesh_dimension() > 1)
+  //  return;
 
 
   // Create an output stream for script file
@@ -64,29 +64,50 @@ void GraceIO::write_nodal_data(const std::string& fname,
 
   map_type node_map;
 
+  double po_x = mesh.point(0)(0);
+  double po_y = mesh.point(0)(1);
+  double po_z = mesh.point(0)(2);
+  double dl = 0.0;
+  
+  //MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
+  //const MeshBase::const_element_iterator end = mesh.active_elements_end();
 
-  MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end = mesh.active_elements_end();
+  //for ( ; it != end; ++it)
+  //{
+  //  const Elem* elem = *it;
 
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    for(unsigned int i = 0; i < elem->n_nodes(); i++)
+    for(unsigned int i = 0; i < mesh.n_nodes(); i++)
     {
-      std::vector<Number> values;
+      std::vector<double> values;
 
       // Get the global id of the node
-      unsigned int global_id = elem->node(i);
+      unsigned int global_id = i; //elem->node(i);
 
       for(unsigned int c=0; c<n_vars; c++)
       {
         values.push_back(soln[global_id*n_vars + c]);
       }
 
-      node_map[mesh.point(global_id)(0)] = values;
+      // This is done to make the Grace plot independent 
+      // from the mesh dimension
+
+
+      double p_x = mesh.point(global_id)(0);
+      double p_y = mesh.point(global_id)(1);
+      double p_z = mesh.point(global_id)(2);
+
+      dl += sqrt( (p_x-po_x)*(p_x-po_x) + 
+                  (p_y-po_y)*(p_y-po_y) + 
+                  (p_z-po_z)*(p_z-po_z) );
+
+      node_map[dl] = values;
+
+      p_x = po_x;
+      p_y = po_y;
+      p_z = po_z;
+
     }
-  }
+  //}
 
   out << std::setprecision(10);
 

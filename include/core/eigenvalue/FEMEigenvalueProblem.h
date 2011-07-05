@@ -185,7 +185,7 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   void create_dirichlet_dofs(void);
   
   //!Apply Dirichlet boundary conditions to all boundary points!
-  void apply_diriclet_bc_at_all_boundaries();
+  void apply_dirichlet_at_all_boundaries();
   
   //! Apply periodic boundary conditions
   void apply_periodic_bc();
@@ -193,6 +193,8 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   //! create list of nodes that lies at the periodic boundary
   void make_nodes_periodic();
 
+  //! Apply bc to eigenvalue problem
+  void apply_bc();
                                                                  
   //!solves eigenvalue problem
   /*!

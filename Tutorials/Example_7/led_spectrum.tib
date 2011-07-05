@@ -188,6 +188,7 @@ Module  driftdiffusion
   plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity,
           eCurrentDensity, hCurrentDensity, ContactCurrent, eMobility, hMobility)
 
+  load_state = output/driftdiffusion_Vb_3.5.tsv
 
   Physics
   {
@@ -320,67 +321,65 @@ Module efaschroedinger
 Module opticskp
 {
 
-  name = optics 
+  name = spectrum 
 
   regions = Quantum_3
 
-  plot = optical_spectrum_k_0 
+  plot = optical_spectrum  #_k_0 
 
 
   initial_state_model = QW3_electrons
   final_state_model =   QW3_holes
 
 
-  initial_eigenstates = (0, 19)
-  final_eigenstates   = (0, 19)
-
-  optical_matr_elem_model=optics
-
-  polarization =  (0, 0, 1)
-
   Emin = 3.0
   Emax  = 5.0
   dE = 0.001
 
+  polarization = (0, 0, 1)
 
+  #k_vector = (0, 0, 0.01)
+
+  k_integration
+  {
+     k_max = 0.05     
+     number_of_elements = (5,5)
+     quadrature_type = gaussian 
+     quadrature_order = first
+
+     refine_k_space = true 
+     refine_fraction = 0.5
+     relative_accuracy = 0.001 
+  }
 
 }
 
 
-Module  opticalspectrum 
-{
+#Module  opticalspectrum 
+#{
 
-  name = spectrum 
-  plot = optical_spectrum
+#  name = spectrum 
+#  plot = optical_spectrum
 
-  regions = Quantum_3
+#  regions = Quantum_3
 
-  k_space_dimension = 2
-  k-space_basis = true
-  k1 = (0, 0, 0.1)
-  k2 = (0, 0.1, 0)
+#  optical_matr_elem_model = optics
 
-  refine_fraction =  0.30 #    1.0 for  uniform refinement 
-  relative_accuracy =  0.05  #
-  refine_k_space = true
-
-  number_of_nodes = (4,4)  #  numb. of  elememts in k mesh, along x and y
-  wedge = quarter
+#  polarization = (0, 0, 1)
+  	
+#  number_of_nodes = (4,4)  #  numb. of nodes in k mesh, along x and y
  
-  optical_matr_elem_model=optics
-
-  polarization =  (0, 0, 1)
-
-  Emin = 3.0
-  Emax  = 5.0
-  dE = 0.001
-
+#  k_max = 0.1 
  
-}
+#  refine_k_space = false 
+#  refine_fraction =  0.30 #    1.0 for  uniform refinement 
+#  relative_accuracy =  0.05  #
 
+#  Emin = 3.0
+#  Emax  = 5.0
+#  dE = 0.001
 
-
-
+#}
 
 
 Module sweep
@@ -406,8 +405,9 @@ Simulation
  
   temperature = 300 
 
-  solve = (strain, sweep, QW3_electrons,QW3_holes, optics, spectrum)
-
+  #solve = (strain, sweep, QW3_electrons,QW3_holes) 
+ 
+  solve = (strain, driftdiffusion, spectrum)
 
   resultpath =   output
   output_format = grace

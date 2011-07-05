@@ -191,6 +191,13 @@ Module efaschroedinger
     model = kp
     kp_model = 6x6
   }
+  
+  Solver
+  {
+    #solve_ev_problem_twice = true
+    #ksp_type = gmres
+    #pc_type = ilu	  
+  }
 }
 
 
@@ -205,8 +212,8 @@ Module opticskp
   initial_state_model = quantum_el 
   final_state_model =   quantum_hl
 
-  initial_eigenstates = (0, 19)
-  final_eigenstates   = (0, 79)
+  #initial_eigenstates = (0, 19)
+  #final_eigenstates   = (0, 79)
 
   broadening = 0.02
 

@@ -14,11 +14,11 @@
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
 #include "OpticsKP.h"
-#include "QuantumDispersion.h"
+//#include "QuantumDispersion.h"
 #include "Dftb.h"
 #include "EmpiricalTightBinding.h"
 #include "OpticsTB.h"
-#include "OptRecombinSpectrum.h"
+//#include "OptRecombinSpectrum.h"
 #include "MaxwellEquations.h"
 //#include "PhononDispersion.h"
 #include "CrackStrain.h"
@@ -133,8 +133,8 @@ SimulationInterface::create(const string& type,
     sim = RelaxationMethod::create(options);
   else if (type_name == "opticskp")
     sim = OpticsKP::create(options);
-  else if (type_name == "quantumdispersion")
-    sim = QuantumDispersion::create(options);
+  //else if (type_name == "quantumdispersion")
+  //  sim = QuantumDispersion::create(options);
 #ifdef ENABLE_DFTB
   else if (type_name == "densityfunctional_tb")
     sim = Dftb::create(options);
@@ -145,8 +145,8 @@ SimulationInterface::create(const string& type,
   else if (type_name == "opticstb")
     sim = OpticsTB::create(options);
 #endif
-  else if (type_name == "opticalspectrum")
-    sim = OptRecombinSpectrum::create(options);
+  //else if (type_name == "opticalspectrum")
+  //  sim = OptRecombinSpectrum::create(options);
   else if (type_name == "maxwell")
     sim = MaxwellEquations::create(options);
 //  else if (type_name == "phonondispersion")

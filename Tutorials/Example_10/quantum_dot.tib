@@ -95,6 +95,11 @@ Module elasticity
 
   plot = (Strain, Stress, Displacement)
 
+  Solver
+  {
+    relative_tolerance = 1e-6 
+  }
+
   Physics 
   {
     body_force lattice_mismatch 
@@ -130,7 +135,6 @@ Module  driftdiffusion
   coupling = poisson
 
 
-
   Physics
   {
     strain_simulation = strain 
@@ -138,19 +142,18 @@ Module  driftdiffusion
     polarization (piezo, pyro) {}
     
     recombination (srh, direct) {}
+ 
+    polarization (piezo, pyro) {}
 
     mobility doping_dependent {}
-
 
     trap fixed_charge
     { 
       regions = (surface_states1,surface_states2)
       Nt = -1e10
     }  
-
      
   }           
-
 
 }   
 
@@ -167,21 +170,21 @@ Module  efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
    
   particle = el
-  number_of_eigenstates = 5
   poisson_simulation = dd
   strain_simulation = strain  
-
-  solver = krylovshur 
-   
-  ksp_type = bcgsl
-  pc_type =  jacobi
 
   Physics
   {
     model = conduction_band    
   }
 
-
+  Solver
+  {
+     number_of_eigenstates = 5
+     solver = krylovshur 
+     ksp_type = bcgsl
+     pc_type =  jacobi
+  }
 }
 
 
@@ -196,19 +199,22 @@ Module  efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
   particle = hl
-  number_of_eigenstates = 8
   poisson_simulation = dd
   strain_simulation = strain 
   
-  solver = krylovshur 
-   
-  ksp_type = bcgsl
-  pc_type =  jacobi
 
   Physics
   {
     model = kp   #  k.p  for  valence  band
     kp_model = 6x6
+  }
+
+  Solver
+  {
+     number_of_eigenstates = 8
+     solver = krylovshur 
+     ksp_type = gmres 
+     pc_type =  ilu
   }
 
 

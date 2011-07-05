@@ -43,8 +43,8 @@ class ETB : public TightBinding
     char* gen_outfile;
     char* sparse_fmt;
     char* out_format;
-    std::vector<double> c_axis;
-    std::vector<double> k_point;
+    double c_axis[3];
+    double k_point[3];
     double hl_chem_pot;
     double el_chem_pot;
     double temperature;
@@ -97,7 +97,7 @@ class ETB : public TightBinding
   //! assemble the matrix again w/o init overheads
   void reassemble(void);
 
-  void set_kpoint(void);
+  //void set_kpoint(void);
 
   void set_num_states(int num_vb, int num_cb);
 
@@ -136,7 +136,7 @@ class ETB : public TightBinding
 
   virtual void do_solve (void);
 
-//  virtual void do_plot (void);
+  virtual void plot_globaldata (void);
 
   virtual void parse_options(void);
 
@@ -181,6 +181,8 @@ class ETB : public TightBinding
 
   //! Add band shifts
   void add_band_shifts(void);
+
+  void write_shifts(void);
 
   //! subroutine used to read band-edges from database
   void get_band_edges(void);

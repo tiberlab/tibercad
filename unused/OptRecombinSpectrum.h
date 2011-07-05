@@ -25,8 +25,11 @@
 #include "EnvelopFunctionApprox.h"
 #include "tensor.h"
 #include "KspaceIntegration.h"
+//#include "Optics.h"
 
 class OpticsKP;
+class EigenvalueProblem;
+class Optics;
 
 //! K-space integration of  optical spectrum.
 
@@ -77,11 +80,11 @@ class OptRecombinSpectrum : public KspaceIntegration
 
 
   //! pointers to   simulations which  solve Schroedinger equation 
-  EnvelopFunctionApprox*  _quantum_model_initial_state;
-  EnvelopFunctionApprox*  _quantum_model_final_state  ;
+  EigenvalueProblem*  _quantum_model_initial_state;
+  EigenvalueProblem*  _quantum_model_final_state  ;
 
   //! pointer  to   simulation  which  calculates  optical matrix  element
-  OpticsKP*  _optical_model;
+  Optics*  _optical_model;
 
 
   //!options 

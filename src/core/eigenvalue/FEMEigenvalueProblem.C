@@ -150,11 +150,11 @@ void  FEMEigenvalueProblem::create_dirichlet_dofs( )
 }
 
 //=======================================================================//
-void FEMEigenvalueProblem::apply_diriclet_bc_at_all_boundaries()
+void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 {
   MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
   const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
-
+ 
  
 
   dirichlet_dofs.clear();
@@ -270,13 +270,9 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 {
 
  
-  assemble();
+  assemble(); //calculate Hamiltonian and S matrix
 
   
-
-  //calculate_Hamiltonian_and_S(); //calculate Hamiltonian and S matrix
- 
-
   if (ev_number > _hamiltonian_size)
     throw SolveFailedException("FEMEigenvalueProblem: number of requested eigenvalues is bigger than the  Hamiltonian size");
   
@@ -368,7 +364,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
   
   slep_opt.spectrum_shift  = st_shift_value;
  
-  std::cout << "  (EFA) Solving using guess (Hartree) " << st_shift_value << endl;
+  //std::cout << "  (EFA) Solving using guess (Hartree) " << st_shift_value << endl;
 
   {
     int result;
@@ -790,6 +786,28 @@ void FEMEigenvalueProblem::do_copy_S_to_solver()
 }
 
 //=======================================================================================/
+void FEMEigenvalueProblem::apply_bc()
+{
+  if (solver_opt.Dirichlet_bc_everywhere)
+  {
+    apply_dirichlet_at_all_boundaries();
+    make_new_dofs();
+  }
+  else
+  {
+    create_dirichlet_dofs();
+    
+    make_constraints(); //creates a copy of them
+    
+    make_nodes_periodic();
+    
+    apply_periodic_bc();
+    
+    make_new_dofs();
+  }
+  
+}
+//=================================================================================
 void FEMEigenvalueProblem::apply_periodic_bc()
 {
 

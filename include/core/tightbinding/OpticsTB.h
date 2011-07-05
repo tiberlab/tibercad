@@ -27,67 +27,23 @@ class OpticsTB : public Optics
  
     static OpticsTB* create(const ModelOptions& options);
 
-    void calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
-                          std::map<const Elem*, double>& spectrum);
+
 
   protected:
 
     virtual void do_init(void);
 
-    virtual void do_solve(void);
+    virtual void do_assemble(const ModelOptions& options);
 
-    virtual void do_plot(void);
+    //! Assemble the P-matrix and compute its matrix elements.
+    virtual void do_compute_matrix_elements(void);
+
     
-    virtual void parse_options (void);
+    virtual void calculate_matrix_bulk(void){};
+
 
   private:
 
-    //! Mesh for spectrum [eV];  (should go in Optics.h)
-    Mesh* _energy_mesh;
-
-    //!  momentum matrix elements (should go in Optics.h)
-    /*!
-      Px_matrix[j][k]:  j - initial state; k - final state
-    */    
-    std::vector <std::vector <std::complex<double> > >  Px_matrix;
-    std::vector <std::vector <std::complex<double> > >  Py_matrix;
-    std::vector <std::vector <std::complex<double> > >  Pz_matrix;
-
-    //!numbers of eigensates that are considered as intial states for optical transition
-    std::vector<unsigned int> _initial_eigen_state_numbers;
-    
-    
-    //!numbers of eigensates that are considered as final states for optical transition
-    std::vector<unsigned int> _final_eigen_state_numbers;
-    
-
-    //!type of particle for the intial states 
-    std::string _initial_state_particle;
-
-
-    //!type of particle for the final states 
-    std::string _final_state_particle;
-    
-
-
-    //!pointer to the eigenvalue solver for initial states
-    EigenvalueProblem* _initial_state_model;
-    
-    
-    //!pointer to the eigenvalue solver for final states
-    EigenvalueProblem* _final_state_model;
-
-    //! initial states
-    std::vector<EigenvalueProblem::eigen_problem_solution> _i_states;    
-
-    //! final states
-    std::vector<EigenvalueProblem::eigen_problem_solution> _f_states;       
-
-    //! Assemble the P-matrix and compute its matrix elements.
-    void calculate_P_matrix_elements(void);
-
-    //! get states from the associated (tb) model and do some checks
-    void get_states(void);
 
     //! checks that states for optics are really there
     void check_states(void);

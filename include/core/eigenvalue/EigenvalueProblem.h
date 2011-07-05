@@ -4,6 +4,7 @@
 #define _EIGENVALUEPROBLEM_H_
 
 #include "SimulationInterface.h"
+#include "Kspace.h"
 
 #include "sparse_matrix.h"
 #include <complex>
@@ -22,12 +23,15 @@ class EigenvalueProblem : public SimulationInterface
     //! Destructor
     ~EigenvalueProblem(void) { };
 
+  
+    //! Eigenstate structure useful to the solver when sorting states
     struct eigen_state
     {
       double energy;
       unsigned int index;
     };
 
+    //! Container for eigenstates 
     struct eigen_problem_solution
     {
       //! particle type ("electron", "hole", "photon", "exciton", ...) 
@@ -44,23 +48,28 @@ class EigenvalueProblem : public SimulationInterface
       double temperature; 
     };
 
-    //! 
-    void set_k_vector(std::vector<double> k_point);
+    //! Set k-vector for calculation
+    void set_k_point(const Point& k_vec);
 
-    const std::vector<double>& get_k_vector(void) const;
-  
+    //! to check if k-vector has changed 
     bool has_new_k(void) const;
 
+    //! to set that k-vector is not new
     void k_is_old(void);
 
-
+    //! Used to retrieve eigenvalues from other modules
     void get_eigenvalues(const std::string& particle, std::vector<double>& values) const;
 
+    //! Used to retrieve populations from other modules
     void get_populations(const std::string& particle, std::vector<double>& values) const;
 
+    //! get population of a single state   
     double get_population(int i) const;
 
+    //! public member to invoke matrix assembly from other modules
     void assemble(const ModelOptions& options = ModelOptions());
+ 
+    void solve_for_kpoint(const Point& k_point);
     
     //! computes matrix elements between state i of particle_i and state j of particle_j
     virtual Complex calculate_matrix_element(const std::string& i_particle,
@@ -68,8 +77,15 @@ class EigenvalueProblem : public SimulationInterface
 							  const std::string& j_particle,
 							  unsigned int j){}; 
 
+    //! get number of states
+    unsigned int get_num_states(void) const;
+
     //! get number of states of a given particle type
     unsigned int get_num_states(const std::string& particle) const;
+
+    //! get states indeces of a given particle type
+    std::vector<unsigned int> get_state_indices(const std::string& particle) const;
+
 
     /*! Note: for the moment calculate_matrix_element relays on the fact that the first
      *  n_vb states are for valence, then there are all the electron states.
@@ -87,13 +103,12 @@ class EigenvalueProblem : public SimulationInterface
  
     //! returns a reference to _solution
     //! this is dangerous and should be substituted with calls to get_eigenvectors()
-    const std::vector<eigen_problem_solution>& get_solution() const
-      {return _solution;};
+    const std::vector<eigen_problem_solution>& get_solution(void) const {return _solution;};
 
-    //! compares eigenstate energy for electrons 
+    //! compares eigenstate energy for electrons needed for sorting
     static bool compare_eigen_energy_electrons(const eigen_state& state1, const eigen_state& state2);
 
-    //! compares eigenstate energy for holes 
+    //! compares eigenstate energy for holes needed for sorting
     static bool compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2);
    
   protected:
@@ -104,12 +119,17 @@ class EigenvalueProblem : public SimulationInterface
 
     double Bose(double Energy, double elec_chem, double Temperature) const;
 
+    virtual void init_kspace(void);
+
+    virtual void do_solve_for_kpoint(const Point& k_point){};
 
     virtual void do_copy_H_to_solver(void){};
 
     virtual void do_copy_S_to_solver(void){};  
 
-    virtual void do_assemble(const ModelOptions& options){};  
+    virtual void do_assemble(const ModelOptions& options){}; 
+
+    virtual void do_plot(void);
 
     //!read SLEPc solutions
     /*!
@@ -127,9 +147,13 @@ class EigenvalueProblem : public SimulationInterface
     //!put spectrum shift energy to be almost equal to the 1st eigenvalue
     virtual double get_new_spectrum_shift(void){};
 
+    ModelOptions parse_kspace_options(const ModelOptions&);
 
-    //!pointer to the real part of the Hamiltonian
-    //SparseMatrix<Complex>* _H;
+    //! method used to compute quantum dispersion
+    virtual void compute_dispersion(void);
+
+    //! method used to plot quantum dispersion
+    virtual void plot_dispersion(void);
 
     //!pointer to the imaginary part of the Hamiltonian
     SparseMatrix<double>* _H_real;
@@ -138,29 +162,37 @@ class EigenvalueProblem : public SimulationInterface
     SparseMatrix<double>* _H_imag;
 
     //!pointer to the real part of S matrix 
-    //SparseMatrix<Complex>* _S;
-
-    //!pointer to the real part of S matrix 
     SparseMatrix<double>* _S_real;
 
     //!pointer to the real part of S matrix 
     SparseMatrix<double>* _S_imag;
 
-  private:
+    //!k-vector in atomic units
+    double _k_vector[3];
 
-  std::vector<double> _k_vector;
+    Kspace* _kspace;
+
+    bool do_dispersion;
+
+    std::vector< std::vector<double> > _dispersion;
+
+    int disp_range[2];
+
+  private:
   
-  bool _new_k;
+     bool _new_k;
 
 };
-
 
 inline
 EigenvalueProblem::EigenvalueProblem(const ModelOptions& options)
  : SimulationInterface(options)
 {
-  _k_vector.reserve(3);
   _k_vector[0]=0.0;   _k_vector[1]=0.0;   _k_vector[2]=0.0; 
+  _kspace = NULL;
+  do_dispersion = false;
+  disp_range[0]=0; 
+  disp_range[1]=0;
 }
 
 inline
@@ -170,16 +202,16 @@ EigenvalueProblem::assemble(const ModelOptions& options)
   do_assemble(options);
 }
 
-inline
-const std::vector<double>& EigenvalueProblem::get_k_vector() const
-{
-  return _k_vector;
-}
+//inline
+//std::vector<eigen_problem_solution>& EigenvalueProblem::get_solution(void) const 
+//{
+//   return _solution;
+//}
 
 inline 
-void EigenvalueProblem::set_k_vector(std::vector<double> k_point)
+void EigenvalueProblem::set_k_point(const Point& k_vec)
 {
-  _k_vector = k_point;
+  for (short i = 0; i < 3; i++) _k_vector[i] = k_vec(i);
   _new_k = true;
 }
 

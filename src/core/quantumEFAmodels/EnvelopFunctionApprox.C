@@ -49,12 +49,29 @@ inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, cons
 inline double EnvelopFunctionApprox::get_band_edge( const Elem* elem) const
 {
   vector<double> values;
-  vector<Point> qp(1, elem->centroid());
+  vector<Point> p(elem->n_nodes());
+  
+  for (size_t i = 0; i < elem->n_nodes(); ++i)
+        p[i] = elem->point(i);
 
-  if (!poisson_equation->get_solution(elem, band_edge_ID, values, qp))
-    throw ModelErrorException("efaschroedinger needs solved Poisson equation");
+  poisson_equation->get_solution(elem, band_edge_ID, values, p);
 
-  return values[0];
+  double temp = values[0];
+  double bedge = temp;
+
+  for (size_t i = 1; i < elem->n_nodes(); ++i)
+  {
+     temp = values[i];
+     if(opt.particle == "el")
+        bedge = (temp < bedge) ? temp : bedge;
+     else
+        bedge = (temp > bedge) ? temp : bedge;
+   }
+
+  //if (!poisson_equation->get_solution(elem, band_edge_ID, values, qp))
+  //  throw ModelErrorException("efaschroedinger needs solved Poisson equation");
+
+  return bedge;
 }
 
 //---------------------------------------------------------------------------------//
@@ -154,11 +171,11 @@ EnvelopFunctionApprox::do_setup_solution_variables(void)
 {
   // declare solution variables
   unsigned int dim = get_mesh().mesh_dimension();
-  string units("1/nm");
+  string units("1/cm");
   if (dim == 2)
-    units = "1/nm^2";
+    units = "1/cm^2";
   else if (dim == 3)
-    units = "1/nm^3";
+    units = "1/cm^3";
   declare_solution(ProbabilityDensity, NTUPLE, NODES, units);
   add_alias("EigenFunctions", ProbabilityDensity);
   declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV");
@@ -210,11 +227,11 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
   if (values.count(ProbabilityDensity))
   {
     unsigned int dim = get_mesh().mesh_dimension();
-    double scale = Constants::bohr_radius * 1e9;
+    double scale = Constants::bohr_radius * 1e2;
    if (dim > 1)
-     scale *= Constants::bohr_radius * 1e9;
+     scale *= Constants::bohr_radius * 1e2;
    if (dim > 2)
-     scale *= Constants::bohr_radius * 1e9;
+     scale *= Constants::bohr_radius * 1e2;
 
     FEType fe_type = system->variable_type(0);
     AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
@@ -317,31 +334,17 @@ double EnvelopFunctionApprox::get_band_edge() const
 
   //vector <double> electric_potential(1, 0.0);
 
+  const Elem* elem = *el;
+  double temp = get_band_edge(elem);  
 
-  double band_edge;
-
-
+  double band_edge=temp;
 
 
   for (; el != end_el ; ++el )
   {
-    const Elem* elem = *el;
+    elem = *el;
 
-
-
-
-
-    double temp = get_band_edge( elem);
-
-
-
-    if ( elem == *(mesh->active_elements_begin()) )
-    {
-      band_edge = temp;
-    }
-
-
-
+    temp = get_band_edge( elem);
 
 
     if (opt.particle == "el")
@@ -553,6 +556,17 @@ void EnvelopFunctionApprox::parse_options()
     throw InitFailedException( "EnvelopeFunctionApprox: cannot estimate spectrum shift without electric potential");
 
   //--------------------------------------------------------------------------------------------//
+  // k-vector
+  if (has_option("k_vector"))
+  {
+
+    RealVectorValue k_vec(3,0.0);
+    get_parameter("k_vector", k_vec);
+    set_k_point(k_vec);
+
+    Messages::warning("k-vector given, will skip density calculation.");
+    _calculate_density = false;
+  }
 
   //---------------------------------------------------------------------------------//
   // Options for converged density  (NOT USED NOW)
@@ -601,9 +615,7 @@ void EnvelopFunctionApprox::parse_options()
     opt.assume_paraboloid = opts.get_option("assume_diagonal_mass_matrix", opt.assume_paraboloid);
   }
 
-  // check unused tags in solver_options
 
-  //sol_opt.check_unused();
   
 
 }
@@ -666,15 +678,10 @@ void EnvelopFunctionApprox::do_init( )
 
 
   //peiodicity can not be changed between runs because that will require cleaning of the DOF constraint table
-  const ModelOptions& mod_opt = get_options();
-
-  solver_opt.periodicity[0]          = mod_opt.get_option("x-periodicity", false);
-  solver_opt.periodicity[1]          = mod_opt.get_option("y-periodicity", false);
-  solver_opt.periodicity[2]          = mod_opt.get_option("z-periodicity", false);
+  solver_opt.periodicity[0]          = get_option("x-periodicity", false);
+  solver_opt.periodicity[1]          = get_option("y-periodicity", false);
+  solver_opt.periodicity[2]          = get_option("z-periodicity", false);
   
-  // EquationSystems* es = &(get_equation_systems());
-
-  // MeshBase& mesh1 = es->get_mesh();
    
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
@@ -746,12 +753,8 @@ void EnvelopFunctionApprox::do_init( )
  
   parse_options();
 
-}
+  EigenvalueProblem::init_kspace();
 
-
-void EnvelopFunctionApprox::set_k_vector(const RealVectorValue& k_vec)
-{
-  for (short i = 0; i < 3; i++) k_vector[i] = k_vec(i);
 }
 
 
@@ -760,69 +763,36 @@ void EnvelopFunctionApprox::set_k_vector(const RealVectorValue& k_vec)
 void EnvelopFunctionApprox::do_solve()
 {
 
- if (opt.estimate_spectrum_shift)
- {
-   solver_opt.spectrum_shift = get_band_edge();
-   if (opt.particle == "el") solver_opt.spectrum_shift -= 0.05;
-   if (opt.particle == "hl") solver_opt.spectrum_shift += 0.05;    
-
-   std::cout<<"  (EFA) Estimated guess (eV): " << solver_opt.spectrum_shift << std::endl;
- }
-
- // k-vector
- RealVectorValue k_vec(0.0);
- get_parameter("k_vector", k_vec);
- set_k_vector(k_vec);
- bool calc_density = _calculate_density;
-
- if (has_option("k_vector"))
- {
-   Messages::info("k-vector given, will skip density calculation.");
-   calc_density = false;
-   get_options().delete_option("k_vector");
- }
-
+ // check unused tags in solver_options
+ const ModelOptions& sol_opt = get_solver_options();
+ sol_opt.find_option("simulation"); // remove simulation name 
+ sol_opt.check_unused();
 
  if (opt.job == BULKEIGENSTATES )
  {
    solve_bulk();
  }
  else
- {
-
-   if (solver_opt.Dirichlet_bc_everywhere)
-     apply_diriclet_bc_at_all_boundaries();
-   else
-     create_dirichlet_dofs();
+ { 
 
 
-   make_constraints(); //creates a copy of them
+   if (_calculate_density && _k_vector[0] == 0.0 
+                          && _k_vector[1] == 0.0 
+                          && _k_vector[2] == 0.0 )
 
-
-   make_nodes_periodic();
-
-   apply_periodic_bc();
-
-   make_new_dofs();
-
-
-   if (calc_density)
+   {
+     estimate_spectrum_shift();
+     apply_bc();
      calculate_density_analytic();
+   }
    else
    {
-     if (get_mesh().mesh_dimension() < 3)
-     {
-       ostringstream os;
-       os << "Solving for k = ( ";
-       k_vec.write_unformatted(os, false);
-       os << ")";
-       if (verbose() > 0) Messages::info(os.str());
-     }
-     solve_eigen_value_problem(solver_opt.number_of_eigenstates, 
-                               solver_opt.spectrum_shift/Hartree);
+     Point k_vec;
+     for (short i = 0; i < 3; i++) k_vec(i)=_k_vector[i];
+     solve_for_kpoint(k_vec);
    }
 
-
+ 
    // we have to redeclare the solution variables to adjust the number
    // of eigenstates
    const unsigned int num_states = _solution.size();
@@ -838,10 +808,33 @@ void EnvelopFunctionApprox::do_solve()
    declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
  }
 
+
 }
 
+//===========================================================//
+void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
+{
+   
+  set_k_point(k_point);
 
+  estimate_spectrum_shift();
 
+  apply_bc(); 
+
+  if (verbose() > 0)
+  {
+    ostringstream os;
+    os << "(EFA) Solving for k = ( "<<
+      _k_vector[0]<<" "<<_k_vector[1]<<" "<<_k_vector[2]<< " )";
+    Messages::info(os.str());
+  }
+
+  //assemble();
+  
+  solve_eigen_value_problem(solver_opt.number_of_eigenstates, 
+                            solver_opt.spectrum_shift/Hartree);
+
+}
 
 //===========================================================//
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
@@ -973,7 +966,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       element_hamiltonian->set_temperature(_temp_interface.get_temperature( elem, elem->centroid()));
 
-      element_hamiltonian->set_k_vector(k_vector);
+      element_hamiltonian->set_k_vector(_k_vector);
 
       element_hamiltonian->calculate_Hamiltonian_k_par();
 
@@ -1175,9 +1168,18 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 //============================================================//
+void EnvelopFunctionApprox::estimate_spectrum_shift(void)
+{
+ if (opt.estimate_spectrum_shift)
+ {
+   solver_opt.spectrum_shift = get_band_edge();
+   if (opt.particle == "el") solver_opt.spectrum_shift -= 0.05;
+   if (opt.particle == "hl") solver_opt.spectrum_shift += 0.05;    
 
+   std::cout<<"  (EFA) Estimated guess (eV): " << solver_opt.spectrum_shift << std::endl;
+ }
 
-
+}
 //=============================================================//
 double EnvelopFunctionApprox::get_new_spectrum_shift(void)
 {
@@ -1289,7 +1291,7 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   bool finish = false;
 
 
-  cout<<"  Check solutions against shift (eV) "<<shift<< endl;
+  //cout<<"  Check solutions against shift (eV) "<<shift<< endl;
 
   for (unsigned int i = 0; (i < number_of_converged_solutions && (!finish) ); i++)
   {
@@ -1969,10 +1971,9 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   unsigned int num_states = solver_opt.number_of_eigenstates;
 
 
-
-  RealVectorValue kvector_0(0.0);
-  RealVectorValue kvector_1(0.0);
-  RealVectorValue kvector_2(0.0);
+  Point kvector_0;
+  Point kvector_1;
+  Point kvector_2;
   if (dim < 3)
     kvector_1(2) = opt.k_val;
   if (dim < 2)
@@ -2001,7 +2002,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   {
     solver_opt.solve_ev_problem_twice = false;
 
-    set_k_vector(kvector_0);
+    set_k_point(kvector_0);
 
     if (verbose() > 0)
       Messages::info("Solve to obtain spectrum shift ... ", false);
@@ -2026,7 +2027,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     os << ")";
     if (verbose() > 0) m.info(os.str());
 
-    set_k_vector(kvector_1);
+    set_k_point(kvector_1);
     solve_eigen_value_problem(num_states, spectrum_shift);
     get_eigenenergies(energy_k_1);
   }
@@ -2040,7 +2041,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     os << ")";
     if (verbose() > 0) m.info(os.str());
 
-    set_k_vector(kvector_2);
+    set_k_point(kvector_2);
     solve_eigen_value_problem(num_states, spectrum_shift);
     get_eigenenergies(energy_k_2);
 
@@ -2055,7 +2056,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
       os << ")";
       if (verbose() > 0) m.info(os.str());
 
-      set_k_vector(kvector_2);
+      set_k_point(kvector_2);
       solve_eigen_value_problem(num_states, spectrum_shift);
       get_eigenenergies(energy_k_3);
     }
@@ -2070,7 +2071,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     if (verbose() > 0) m.info(os.str());
   }
 
-  set_k_vector(kvector_0);
+  set_k_point(kvector_0);
   // we solve with +1 state to be used in dd to define the classical boundary
   solve_eigen_value_problem(num_states + 1, spectrum_shift);
   get_eigenenergies(energy_k_0);
@@ -2307,7 +2308,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   element_hamiltonian = get_bulk_model<EFAbulkModel>(mat_elem)->get_Hamiltonian_model();
 
-  element_hamiltonian->set_k_vector(k_vector);
+  element_hamiltonian->set_k_vector(_k_vector);
 
   element_hamiltonian->calculate_Hamiltonian_k_par();
 

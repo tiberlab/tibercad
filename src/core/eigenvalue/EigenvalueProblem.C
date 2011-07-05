@@ -1,7 +1,226 @@
 #include "EigenvalueProblem.h"
 #include "Constants.h"
+#include "Messages.h"
+#include "DataOutput.h"
 #include<fstream>
 
+void EigenvalueProblem::init_kspace(void)
+{
+   do_dispersion=false;
+
+   //! Is used to parse dispersion options
+   if(get_options().has_submodel("Dispersion"))
+   { 
+     ModelOptions::submodel_iterator it(get_options().submodels_begin("Dispersion"));
+
+     const ModelOptions& opts = it->second;
+ 
+     //disp_range[0] = opts.get_option("min_eigenvalue_number", 0);
+     //disp_range[1] = opts.get_option("max_eigenvalue_number", 100);
+
+     const ModelOptions kopts = parse_kspace_options(opts);
+     
+     _kspace = new Kspace(kopts);
+     
+     if(_kspace==NULL)
+       throw InitFailedException("Could not initialize k-space");
+     else
+       Messages::info("k-space initialized");
+
+     do_dispersion=true;
+   }
+}
+ 
+ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
+{
+  ModelOptions kopts;
+
+  kopts.set_option("mesh_units",get_mesh_units());
+  
+  unsigned int k_dim = 3 - get_mesh().mesh_dimension();
+
+  kopts.set_option("k_space_dimension",k_dim);
+
+  std::vector<unsigned int>  num_nodes;
+
+  if (opts.find_option("k-path"))
+  {
+
+    std::string kpath = opts.get_option("k-path","");
+    kopts.set_option("k-path",kpath);
+    num_nodes.push_back(10);
+    kopts.set_option("number_of_nodes",num_nodes);
+    ModelOptions newopts;
+    newopts.set_option("output_format","grace");
+    set_options( newopts );
+  }
+ 
+  if (opts.find_option("number_of_nodes"))
+  {
+     opts.get_option("number_of_nodes",num_nodes);
+     kopts.set_option("number_of_nodes", num_nodes);
+  }
+  else if (opts.find_option("number_of_elem"))
+  {
+     opts.get_option("number_of_elem",num_nodes);
+     for(int i=0; i< num_nodes.size(); i++)
+           if(num_nodes[i]>0) ++num_nodes[i];
+
+     kopts.set_option("number_of_nodes", num_nodes);
+  }
+
+  if (opts.find_option("wedge"))
+    kopts.set_option("wedge", opts.get_option("wedge",""));
+
+  
+  kopts.set_option("k_space_basis", opts.get_option("k_space_basis",true));
+
+
+  double k_max = opts.get_option("k_max",0.1);
+
+  kopts.set_option("k_max",k_max);
+
+
+  std::vector<double> k_vector(3,0.0);   
+  k_vector[0]=0.0;     k_vector[1]=0.0;     k_vector[2]=k_max; 
+
+  opts.get_option("k1", k_vector);
+  kopts.set_option("k1",k_vector);
+
+  k_vector[0]=0.0;     k_vector[1]=k_max;     k_vector[2]=0.0; 
+  opts.get_option("k2", k_vector);
+  kopts.set_option("k2",k_vector);
+
+  k_vector[0]=k_max;     k_vector[1]=0.0;     k_vector[2]=0.0; 
+  opts.get_option("k3", k_vector);
+  kopts.set_option("k3",k_vector);  
+    
+
+  kopts.set_option("mesh_order",opts.get_option("mesh_order","first") );
+
+  return kopts;
+}
+  
+
+void EigenvalueProblem::compute_dispersion(void)
+{
+  if (!do_dispersion) return;
+ 
+  std::cout<<"Compute Dispersion ..." << std::endl;  
+  const Mesh* kmesh = _kspace->get_k_mesh(); 	
+  unsigned int number_of_k_points = kmesh->n_nodes();
+
+  //if (disp_range[0] < 0) disp_range[0]=0;
+  unsigned int number_of_eigs;
+
+  std::cout<<"(EP)number of kp  " << number_of_k_points << std::endl;  
+
+  {
+    unsigned int i = 0;
+    const Point&  k_point = kmesh->point(i);  
+
+    solve_for_kpoint(k_point);
+    number_of_eigs = get_num_states();
+        
+    std::vector<double> temp(number_of_eigs);
+    _dispersion.resize(number_of_k_points, temp);  
+    
+    for (unsigned int j = 0 ; j <  _dispersion[0].size(); j++)
+      _dispersion[0][j] = _solution[j].eigen_energy;
+    
+  }
+
+  for (unsigned int i = 1; i < number_of_k_points; i++)
+  {
+
+    const Point&  k_point = kmesh->point(i);
+
+    solve_for_kpoint(k_point);
+    number_of_eigs = get_num_states();
+    
+    for (unsigned int j = 0 ; j < _dispersion[i].size() ; j++)
+      _dispersion[i][j] = _solution[j].eigen_energy;
+    
+
+  }
+	
+}
+
+void
+EigenvalueProblem::plot_dispersion(void)
+{
+
+  std::vector<std::string> formats;
+  get_output_format(formats);
+
+
+  const Mesh* kmesh = _kspace->get_k_mesh();
+  short kdim =  _kspace->mesh_dimension();
+
+    std::cout<<"(EP) kdim: "<< kdim  << std::endl;
+   
+
+  for(short k=0; k<formats.size();k++)
+  {
+
+    std::string format = formats[k];
+  
+    if ((format == "grace") && (kdim > 1)) format="vtk";
+ 
+    std::cout<<"(EP) format: "<< format  << std::endl;
+   
+    std::vector<double> results;
+    std::vector<std::string> names;    
+    
+    unsigned int number_of_eigs = _dispersion[0].size();
+    names.resize(number_of_eigs);
+
+    unsigned int number_of_k_points = kmesh->n_nodes();
+    results.resize( number_of_eigs * number_of_k_points );
+
+
+    for (unsigned int i = 0; i < number_of_eigs ; i++)
+    {
+      std::ostringstream i_str;
+      //The states are numbered starting from 0
+      i_str << "state_number_" << i;
+      names[i] = i_str.str();
+
+      for (unsigned int j = 0; j < number_of_k_points ; j++)
+        results[number_of_eigs * j + i] = _dispersion[j][i];
+    }
+
+
+    std::string filename(get_name() + "_dispersion"); 
+                         //+ TiberCad::get_filename_suffix());
+
+    DataOutput data_output(*kmesh, format);
+    data_output.set_output_directory(get_output_directory());
+    //data_output.set_filename(filename);
+    
+    data_output.write_nodal_data(filename, results, names);
+    
+  }
+
+}
+
+void EigenvalueProblem::do_plot(void)
+{
+  SimulationInterface::do_plot();
+
+  if (do_dispersion)
+  {  
+      compute_dispersion();	  
+      plot_dispersion();
+  }
+}
+ 
+void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
+{
+  do_solve_for_kpoint(kpoint);
+}
+ 
+ 
 void EigenvalueProblem::get_eigenvalues(const std::string& particle, 
 					std::vector<double>& values) const
 {
@@ -24,6 +243,12 @@ void EigenvalueProblem::get_eigenvalues(const std::string& particle,
 
 }
 
+unsigned int EigenvalueProblem::get_num_states(void) const
+{
+  return _solution.size();
+}
+
+
 unsigned int EigenvalueProblem::get_num_states(const std::string& particle) const
 {
   unsigned int num_i_states = 0;
@@ -34,6 +259,23 @@ unsigned int EigenvalueProblem::get_num_states(const std::string& particle) cons
   
   return num_i_states;
 }
+
+std::vector<unsigned int>
+EigenvalueProblem::get_state_indices(const std::string& particle) const
+{
+  unsigned int num = get_num_states(particle);	
+  std::vector<unsigned int> result(num, 0);
+
+  unsigned int num_st=0;
+  for(unsigned int i=0; i<_solution.size(); i++)
+  {
+    if(_solution[i].particle == particle) result[num_st]=i;
+    num_st++;  
+  }
+  
+  return result;
+}
+
 
 void EigenvalueProblem::get_populations(const std::string& particle, 
 					std::vector<double>& values) const

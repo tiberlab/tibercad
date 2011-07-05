@@ -65,7 +65,7 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
 }
 
 //! set output wavefunction parameters
-void UptWrapper::set_output(char *format, double step)
+void UptWrapper::set_output(int format, double step)
 {
   f77_upt_setoutput(_handler, format, step);
 }
@@ -142,12 +142,12 @@ void UptWrapper::compute_P_matrix(int poldir){
 
 
 //! Lanczos diagonalization
-void UptWrapper::lanczos_diag(int n_vb, int n_cb, double guess_vb, double guess_cb,
+void UptWrapper::lanczos_diag(int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                                 int min_iter, int long_iter, int max_iter,
 				double fast_tol, double long_tol, double ort_tol,
 				int twice_vb, int twice_cb) {
 
-  f77_upt_lanczosdiag(_handler, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
+  f77_upt_lanczosdiag(_handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
 		       max_iter, fast_tol, long_tol, ort_tol, twice_vb, twice_cb);
 
 
@@ -193,10 +193,10 @@ void UptWrapper::read_old_states(void) {
 
 
 //! get computed states 
-void UptWrapper::get_states(int num_ev, int hdim,
-			     double* eigenvals, std::complex<double>* eigenvec) {
+void UptWrapper::get_states(int num_ev, int hdim, double* eigenvals, 
+                            std::complex<double>* eigenvec, int* particles) {
 
-  f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenvec);
+  f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenvec, particles);
 
 
 }

@@ -191,9 +191,9 @@ Module efaschroedinger
   Solver
   {
     number_of_eigenstates = 10
-    estimate_spectrum_shift = false
+    #estimate_spectrum_shift = false
     #solve_ev_problem_twice = true	
-    spectrum_shift = 2.0	
+    #spectrum_shift = 2.0	
     	
     # solver = krylovshur
     # solver = lapack
@@ -207,6 +207,7 @@ Module efaschroedinger
     model = kp   #  k.p  for  valence  band
     kp_model = 8x8
   }
+
 }
 
 
@@ -218,16 +219,13 @@ Module efaschroedinger
   strain_model_name = elasticity
 
   plot = (EigenFunctions, EigenEnergy, EnergyLevels)
-  
-  
-    number_of_eigenstate = 30
 
   Solver
   {
     number_of_eigenstates = 30
-    estimate_spectrum_shift = false
+    #estimate_spectrum_shift = false
     #solve_ev_problem_twice = true	
-    spectrum_shift = 0.0	
+    #spectrum_shift = 0.0	
     	
     # solver = krylovshur
     # solver = lapack
@@ -238,43 +236,51 @@ Module efaschroedinger
     model = kp   #  k.p  for  valence  band
     kp_model = 8x8
   }
+
+  Dispersion
+  {
+    k-path = K-G-M
+    k_max = 0.1
+    number_of_nodes = 10	
+  }	
+
 }
   
 
-Module quantumdispersion
-{
-  name = dispersion_el
+#Module quantumdispersion
+#{
+#  name = dispersion_el
 
-  quantum_simulation = quantum_el
-  plot = (k-space_dispersion)
+#  quantum_simulation = quantum_el
+#  plot = (k-space_dispersion)
 
-  wedge = half
-  k_space_dimension = 1
-  k1 = (0, 0.1, 0)
-  number_of_nodes = (10)
+#  wedge = half
+#  k_space_dimension = 1
+#  k1 = (0, 0.1, 0)
+#  number_of_nodes = (10)
 
   #min_eigenvalue_number = 0
   #max_eigenvalue_number = 9
   
-}
+#}
 
 
-Module quantumdispersion
-{
-  name = dispersion_hl
-  plot = (k-space_dispersion)
+#Module quantumdispersion
+#{
+#  name = dispersion_hl
+#  plot = (k-space_dispersion)
 
-  quantum_simulation = quantum_hl
+#  quantum_simulation = quantum_hl
 
-  wedge = half
-  k_space_dimension = 1
-  k1 = (0, 0.1, 0)
-  number_of_nodes = (10)
+#  wedge = half
+#  k_space_dimension = 1
+#  k1 = (0, 0.1, 0)
+#  number_of_nodes = (10)
 
   #min_eigenvalue_number = 0
   #max_eigenvalue_number = 9
   
-}
+#}
     
 
 
@@ -285,6 +291,7 @@ Simulation
   verbose = 1
   #solve = (elasticity, dd, quantum_el, quantum_hl, dispersion_el, dispersion_hl)  
   solve = (elasticity, dd, quantum_el, quantum_hl)  
+  #solve = (elasticity, dd, quantum_hl)  
 
   resultpath = output
   output_format = grace

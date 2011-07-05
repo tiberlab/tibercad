@@ -59,8 +59,10 @@ public:
 		   double *c_axis, bool check_bondmap, 
                    double dg_scale, double dg_onsite, bool hybrid_passivation);
 
-  //! Set parameters for eigenstates output format
-  void set_output(char *out_format, double scale);
+  //! Set parameters for eigenstates output format 
+  //! out_format == 1 => JVXL
+  //! out_format == 2 => CUBE
+  void set_output(int out_format, double scale);
 
 
   //! Set verbosity level for the library screen output
@@ -107,7 +109,7 @@ public:
    * double long_tol   : tolerance on long loop         (~1e-10)
    * double ort_tol    : orthogonality tolerance        (~1e-5)
    */
-  void lanczos_diag (int n_vb, int n_cb, double guess_vb, double guess_cb,
+  void lanczos_diag (int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                      int min_iter, int long_iter, int max_iter, 
                      double fast_tol, double long_tol, double ort_tol,
 		     int twice_cb, int twice_vb);
@@ -122,7 +124,8 @@ public:
 
   void read_old_states(void);
 
-  void get_states(int num_ev, int hdim, double* eigenvals,std::complex<double>* states); 
+  void get_states(int num_ev, int hdim, double* eigenvals,
+                  std::complex<double>* states, int* particles); 
 
   void compute_P_matrix(int poldir);
 

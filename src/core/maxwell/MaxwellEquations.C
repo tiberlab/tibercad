@@ -352,7 +352,7 @@ void MaxwellEquations::do_solve()
   parse_options();
 
   if (solver_opt.Dirichlet_bc_everywhere)
-    apply_diriclet_bc_at_all_boundaries();
+    apply_dirichlet_at_all_boundaries();
   else
     create_dirichlet_dofs();
  

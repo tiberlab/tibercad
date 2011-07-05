@@ -163,8 +163,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   inline double get_particle_charge(void) const;
  
-  //! element used for bulk calculations
-  const Elem* _bulk_mat_element;
+
 
   //! returns element used for bulk calculation 
   inline const Elem*  return_bulk_element(void) const;
@@ -224,7 +223,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   std::vector<std::string> psi_name;
  
 
-  void set_k_vector(const RealVectorValue& k_vec);
+  //void set_k_vector(const RealVectorValue& k_vec);
 
   //!calculates analytical charge density for a 1D/2D structures
   /*!
@@ -306,12 +305,15 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //!calculated density
   std::map<const Elem*, double> _density;
  
- 
+   //! element used for bulk calculations
+  const Elem* _bulk_mat_element;
 
   //!k-vector in atomic units
-  double k_vector[3];
+  //double k_vector[3];
 
-
+  //!estimates shift according to band-edge
+  void estimate_spectrum_shift(void);
+  
 
   //!put spectrum shift energy to be almost equal to the 1st eigenvalue
   double get_new_spectrum_shift(void);
@@ -358,6 +360,10 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   virtual void 	parse_options (void);
 
+  //virtual void do_plot(void);
+
+
+  virtual void do_solve_for_kpoint(const Point& kpoint);
 
   //! We override this to write in our own format
   virtual void plot_globaldata(void);

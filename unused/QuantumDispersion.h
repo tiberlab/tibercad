@@ -10,7 +10,7 @@
 #include "Kspace.h"
 
 //! This class is to calculate dispersion of a quantized state
-class QuantumDispersion : public Kspace
+class QuantumDispersion 
 {
 
 

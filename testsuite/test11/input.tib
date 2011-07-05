@@ -108,8 +108,11 @@ Module empirical_tb
 
   plot = (tbstates)
 
+  sparse_format = full 
+
   Solver
   {
+    guess_valence = -0.5
     num_valence_eigenvalues = 4
     num_conduction_eigenvalues = 4
   }

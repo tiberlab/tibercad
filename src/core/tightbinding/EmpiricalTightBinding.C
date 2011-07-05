@@ -24,8 +24,6 @@
 #include <map>
 #include <algorithm>
 #include <limits>
-
-#define complex_dp  std::complex<double>
  
 //#include <complex>
 using namespace std;
@@ -74,22 +72,23 @@ ETB::UptOptions::UptOptions(void)
  dg_onsite(-200.0),
  grid_step(0.5)
 {
-  c_axis.reserve(3);
+  //c_axis.reserve(3);
   c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0;
-  k_point.reserve(3);
+  //k_point.reserve(3);
   k_point[0]=0.0; k_point[1]=0.0; k_point[2]=0.0;
-  database_path = new char[UPT_LC]; memset(database_path, ' ', UPT_LC);
-  work_path = new char[UPT_LC];     memset(work_path, ' ', UPT_LC);
-  out_path = new char[UPT_LC];      memset(out_path, ' ', UPT_LC);
-  upt_filename = new char[UPT_MC];  memset(upt_filename, ' ', UPT_MC);
-  gen_outfile = new char[UPT_MC];   memset(gen_outfile, ' ', UPT_MC);
-  sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, ' ', UPT_MC);
-  out_format = new char[UPT_SC];    memset(out_format, ' ', UPT_SC);
+  database_path = new char[UPT_LC]; memset(database_path, UPT_PADCHAR, UPT_LC);
+  work_path = new char[UPT_LC];     memset(work_path, UPT_PADCHAR, UPT_LC);
+  out_path = new char[UPT_LC];      memset(out_path, UPT_PADCHAR, UPT_LC);
+  upt_filename = new char[UPT_MC];  memset(upt_filename, UPT_PADCHAR, UPT_MC);
+  gen_outfile = new char[UPT_MC];   memset(gen_outfile, UPT_PADCHAR, UPT_MC);
+  sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, UPT_PADCHAR, UPT_MC);
+  out_format = new char[UPT_MC];    memset(out_format, UPT_PADCHAR, UPT_MC);
 }
 
 ETB::UptOptions::~UptOptions(void)
 {
   delete[] work_path;
+  delete[] out_path;
   delete[] upt_filename;
   delete[] gen_outfile;
   delete[] sparse_fmt;
@@ -103,7 +102,7 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    n_cb(0),
    min_iter(2),
    long_iter(30),
-   max_iter(100000),
+   max_iter(15000),
    guess_vb(0.0),
    guess_cb(0.0),
    fast_tol(1e-1),
@@ -139,14 +138,14 @@ ETB::create_physical_model(const ModelOptions &options,
 void
 ETB::do_init(void){
 
-  std::cerr << "(TC) Empirical TB Initialisation..." << std::endl;
+  std::cerr << "(ETB) Empirical TB Initialisation..." << std::endl;
 
   //sanity check of complex number passing (this should be checked elsewere perhaps)
-  complex_dp zz;
+  Complex zz;
   double re,im;
 
   inst -> complex_test(re,im,zz);
-  if (zz != complex_dp(re,im))
+  if (zz != Complex(re,im))
   {
     cerr<< zz <<  re << ", " << im << endl;
     throw InitFailedException("ETB: complex-passing test failed");
@@ -194,7 +193,7 @@ ETB::do_init(void){
 
   //std::cout << "addskdata done" << std::endl;
 
-  //std::cout << "(TC) init uptight begins" << std::endl;
+  //std::cout << "(ETB) init uptight begins" << std::endl;
 
   _init = 1;      // initialization must be called
   _assemble = 1;  // matrix assemble must be done
@@ -205,9 +204,11 @@ ETB::do_init(void){
 void ETB::reinit(void){
 
 
-  std::cout << "(TC) clean uptight data container" << std::endl;
+  std::cout << "(ETB) clean uptight data container" << std::endl;
 
   inst->cleanuptight();
+
+  _vb_shift = 0.0;
 
   // checks that the strain simulation, if specified has been done
   if(_upt_options.strain_sim != "no_sim")
@@ -258,18 +259,17 @@ void ETB::reinit(void){
 
   std::size_t length = 0;
   length = upt_filename.copy(_upt_options.upt_filename, upt_filename.size() );
-  //_upt_options.upt_filename[length] = '\0';
 
   // temporary hack to consider c-axis orientations
   // By default wurtzites c-axis is along z. If 1-d then it is along x:
   if (_dim == 1)
-    { _upt_options.c_axis[0]= 1.0;
-      _upt_options.c_axis[1]= 0.0;
-      _upt_options.c_axis[2]= 0.0;
-    }
+  { _upt_options.c_axis[0]= 1.0;
+    _upt_options.c_axis[1]= 0.0;
+    _upt_options.c_axis[2]= 0.0;
+  }
 
+  std::cout << "(ETB) fill parameter " << std::endl;
 
-  std::cout << "(TC) init uptight begins" << std::endl;
 
   //  Set parameters for Uptight instance
   inst->fill_param(_upt_options.verbose, _upt_options.database_path,
@@ -279,24 +279,30 @@ void ETB::reinit(void){
 		   _upt_options.max_TB_order, _upt_options.harrison_flag,
 		   _upt_options.relat_flag, _upt_options.potential_flag,
 		   _upt_options.opt_flag, _upt_options.poldir,
-		   &_upt_options.c_axis.front(), _upt_options.check_bondmap,
+		   _upt_options.c_axis, _upt_options.check_bondmap,
                    _upt_options.dg_scale, _upt_options.dg_onsite,
                    _upt_options.hybrid_passivation);
+  
+  // the next lines are ludicrous in order to solve a crazy problem 
+  // in passing char* to fortran  
+  int fmt;
+  if (_upt_options.out_format[0]=='j') fmt = 1;
+  if (_upt_options.out_format[0]=='c') fmt = 2;
+	  
+  inst->set_output(fmt, _upt_options.grid_step);
 
-  inst->set_output(_upt_options.out_format,_upt_options.grid_step);
-
-  std::cout << "(TC) fill parameter done" << std::endl;
+  //std::cout << "(ETB) fill parameter done" << std::endl;
+  //std::cout.flush();
 
   if(inst->inituptight() != 0){ 
     throw InitFailedException("internal handlers do not match"); }
 
 
-  std::cout << "(TC) init uptight done" << std::endl;
+  std::cout << "(ETB) init uptight done" << std::endl;
 
   _ion_num_orbitals.resize(get_atomistic_structure()->get_N_atoms(), 0);
 
-
-  std::cout << "(TC) set orbitals per atom" << std::endl;
+  std::cout << "(ETB) set orbitals per atom" << std::endl;
 
   inst->get_ion_numorbitals(_ion_num_orbitals);
 
@@ -304,37 +310,42 @@ void ETB::reinit(void){
 
   if (has_new_k())
   {
-    _upt_options.k_point = get_k_vector();
-    inst->set_kpoint(&_upt_options.k_point.front()); 
+    _upt_options.k_point[0] = _k_vector[0];
+    _upt_options.k_point[1] = _k_vector[1];
+    _upt_options.k_point[2] = _k_vector[2];
+  
+    inst->set_kpoint(_upt_options.k_point); 
     k_is_old();
   }
 
-  if(_upt_options.verbose>0) print_upt_options();
+  if(_upt_options.verbose>3) print_upt_options();
 
   _init = 0;
   _assemble = 1; //must reassemble matrix
 
 }
-//-------------------------------------------------------------------------
-void ETB::set_kpoint(void){ 
-  set_k_vector(_upt_options.k_point);
-}
 
 //-------------------------------------------------------------------------
 void ETB::do_solve(void){
 
+  // check unused tags in solver_options
+  const ModelOptions& sol_opt = get_solver_options();
+  sol_opt.find_option("simulation"); // remove simulation name
+  sol_opt.check_unused(); 
+  
+
   ModelOptions options;
 
-  std::cout << "Tight-Binding calculations" << std::endl;
+  std::cout << "(ETB) Tight-Binding calculations" << std::endl;
 
   std::set<ID> IDs = get_atomistic_structure()->get_IDset();
   std::set<ID>::iterator reg;
 
-  for (reg = IDs.begin(); reg != IDs.end(); reg++)
-  {
-    std::cerr<< "Valence= "<<_map_ID_Evb[*reg] << std::endl;
-    std::cerr<< "Conduct= "<<_map_ID_Ecb[*reg] << std::endl;   
-  }
+  //for (reg = IDs.begin(); reg != IDs.end(); reg++)
+  //{
+  //  std::cerr<< "Valence= "<<_map_ID_Evb[*reg] << std::endl;
+  //  std::cerr<< "Conduct= "<<_map_ID_Ecb[*reg] << std::endl;   
+  //}
 
   //std::cerr << "Vb Max= " << _vb_shift << std::endl;
 
@@ -346,14 +357,18 @@ void ETB::do_solve(void){
 
   if (_upt_solver_options.solver.compare("upt_lanczos") == 0) {
 
-    std::cout << "(TC) solving using lanczos" << std::endl;
+    std::cout << "(ETB) solving using lanczos" << std::endl;
 
-    inst->lanczos_diag(_upt_solver_options.n_vb, _upt_solver_options.n_cb,
-		 _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
-		 _upt_solver_options.min_iter, _upt_solver_options.long_iter,
-		 _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
-		 _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
-		 _upt_solver_options.twice_vb, _upt_solver_options.twice_cb);
+    std::cout << "(ETB) twice cb " <<   _upt_solver_options.twice_cb << std::endl;
+    std::cout << "(ETB) twice vb " <<   _upt_solver_options.twice_vb << std::endl;
+
+    inst->lanczos_diag(1, 1, _upt_solver_options.n_vb, _upt_solver_options.n_cb,
+                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
+                     _upt_solver_options.min_iter, _upt_solver_options.long_iter,
+                     _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
+                     _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
+                     _upt_solver_options.twice_vb, _upt_solver_options.twice_cb);
+
 
   }
 
@@ -365,13 +380,13 @@ void ETB::do_solve(void){
 
   if (_upt_solver_options.solver.compare("read_old") == 0) {
 
-    std::cout << "(TC) reading old states" << std::endl;
+    std::cout << "(ETB) reading old states" << std::endl;
 
     inst->set_num_states(_upt_solver_options.n_vb, _upt_solver_options.n_cb);
     inst->read_old_states();
 
     int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
-    complex_dp matel;
+    Complex matel;
 
     for(int i=1; i<= num_ev; i++)
     {
@@ -381,8 +396,8 @@ void ETB::do_solve(void){
   }
 
 #ifdef DEBUG
-  std::cout << "(TC) ETB->do_solve() done" << std::endl;
-  std::cout << "(TC) Copy solutions into _solutions" << std::endl;
+  std::cout << "(ETB) ETB->do_solve() done" << std::endl;
+  std::cout << "(ETB) Copy solutions into _solutions" << std::endl;
 #endif
   
   //std::cerr<<"Pot min= "<<_pot_min<<std::endl;
@@ -391,73 +406,69 @@ void ETB::do_solve(void){
   int num_vb = _upt_solver_options.n_vb;
   int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
   double *eigvals = new double[num_ev];
-  complex_dp *eigvects = new complex_dp[hdim*num_ev];
-  complex_dp *eigtmp = eigvects;  // walking pointer on eigenvectors array
+  Complex *eigvects = new Complex[hdim*num_ev];
+  int *particles = new int[num_ev];
+  Complex *eigtmp = eigvects;  // walking pointer on eigenvectors array
 
  
-  inst->get_states(num_ev,hdim,eigvals,eigvects);
+  inst->get_states(num_ev,hdim,eigvals,eigvects,particles);
 
   _solution.resize(num_ev);
 
-  for(int i=0; i< _upt_solver_options.n_vb; i++)
+  for(int i=0; i< num_ev; i++)
   {
-    _solution[i].particle = "hl";
+
+   if(particles[i]==1)
+   {
+      _solution[i].particle = "el";
+   }
+   else if(particles[i]==-1) 
+   {
+      _solution[i].particle = "hl";
+   }
+   else
+   {
+      throw SolveFailedException("ETB: unkown particle type");
+   }
+
     _solution[i].statistics = "Fermi";
-    //_solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
     _solution[i].eigen_energy = eigvals[i];
-    _solution[i].eigen_vector.resize(hdim);
     _solution[i].temperature = _upt_options.temperature;
+    _solution[i].eigen_vector.resize(hdim);
+
+    eigtmp = eigvects + i*hdim;
 
     for(int j=0; j<hdim;j++)
     {
       _solution[i].eigen_vector[j] = *(eigtmp+j);
     }
 
-    if( (_upt_options.potential_flag) && !(has_option("hl_qfermi_level")))
+     
+    if (_upt_options.potential_flag)
     {
-      _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
-    }
-    else
-    {
-      _solution[i].electro_chem_pot = _upt_options.hl_chem_pot;
-    }
-
-    eigtmp += hdim;
-
-  }
-
-
+       if(particles[i]==1 && !has_option("el_qfermi_level"))
+       {
+	  _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
+       }
+       else
+       {
+          _solution[i].electro_chem_pot = _upt_options.el_chem_pot; 	
+       } 
   
-
-  for(int i=num_vb; i< num_vb + _upt_solver_options.n_cb; i++)
-  {
-    _solution[i].particle = "el";
-    _solution[i].statistics = "Fermi";
-    //_solution[i].eigen_energy = eigvals[i] + _vb_shift - _pot_min;
-    _solution[i].eigen_energy = eigvals[i];
-    _solution[i].eigen_vector.resize(hdim);
-    _solution[i].temperature = _upt_options.temperature;
-
-    for(int j=0; j<hdim;j++)
-    {
-      _solution[i].eigen_vector[j] = *(eigtmp+j); 
-    }
-
-    if( (_upt_options.potential_flag) && !(has_option("el_qfermi_level")))
-    {
-      _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
-    }
-    else
-    {
-      _solution[i].electro_chem_pot =  _upt_options.el_chem_pot;
-    }
-
-    eigtmp += hdim;
-
+       if( particles[i]==-1 && !has_option("hl_qfermi_level"))
+       {
+          _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
+       }
+       else
+       {
+          _solution[i].electro_chem_pot = _upt_options.hl_chem_pot; 
+       }
+     }
   }
 
   delete eigvals;
   delete eigvects;
+  delete particles;
 
   //Set _solution_size in base class TightBinding 
   _solution_size = _solution.size();
@@ -521,6 +532,9 @@ void ETB::do_assemble(const ModelOptions& options)
       std::cerr<< "ETB: passing potential" <<std::endl;
       add_pot_shifts();
     }
+
+    write_shifts();
+
     inst->compute_H();
 
   }
@@ -529,7 +543,7 @@ void ETB::do_assemble(const ModelOptions& options)
 
 }
 //-------------------------------------------------------------------------
-complex_dp ETB::calculate_matrix_element(const std::string& i_particle,
+Complex ETB::calculate_matrix_element(const std::string& i_particle,
 						   unsigned int i,
 						   const std::string& j_particle,
 						   unsigned int j)
@@ -580,76 +594,83 @@ void ETB::solve_for_particle(const std::string& particle)
 }
 
 //-------------------------------------------------------------------------
-//void ETB::do_plot(void){
-//
-//  std::cout << "tightbinding do_plot()" << std::endl;
-//  SimulationInterface::do_plot();
-//  std::cout << "tightbinding do_plot()" << std::endl;
-//
-//#ifdef DEBUG
-//  std::cout << "(TC) Calling ETB->do_plot() " << std::endl;
-//#endif
+void
+ETB::plot_globaldata(void)
+{
 
+  string outdir = get_output_directory();
 
-  //std::string outdir = get_output_directory();
+  string filename(outdir + "/" + get_output_filename() + ".dat");
+  ofstream file;
+  file.open(filename.c_str());
 
-  //std::string file_name = outdir + "/states.dat";
-  //write eigenvalues and population infos
+  if (file.good())
+  {
+    // header
+    file << "# TB eigenstates (" << get_name() << ")\n";
 
-  //this->write_states(file_name);
+    file << "# Index" << setw(9)<< "Particle" << setw(12) << "EigenEnergy" 
+         << setw(15) << "Occupation"
+         << setw(12) << "FermiLevel" << setw(12) << "Temperature" << "\n";
 
-  // write states in upg and cub formats
-  //inst->write_states();
-
-//}
+    for (unsigned int i = 0; i < _solution.size(); i++)
+    {
+        file << setw(7) << i << setw(8) << _solution[i].particle 
+             << setw(11) << _solution[i].eigen_energy << " "
+             << setw(14) << get_population(i) << " "
+             << setw(11) << _solution[i].electro_chem_pot << " "
+             << setw(11) << _solution[i].temperature << "\n";
+    }
+  }
+}
 
 //-------------------------------------------------------------------------
 
 void ETB::parse_options(void)
 {
-  std::cout << "(TC) parse_options() begin...";
-  ModelOptions options = get_options();
-  ModelOptions solopts = get_solver_options();
+  std::cout << "(ETB) parse_options() begin...";
+
+  const ModelOptions& solopts = get_solver_options();
   
 
-  _upg_filename = options.get_option("upg_filename", "none");
+  _upg_filename = get_option("upg_filename", "none");
 
-  _upt_options.verbose = options.get_option("verbose", verbose());
+  _upt_options.verbose = get_option("verbose", SimulationOptions::verbose());
 
-  _upt_options.etb_dataset = options.get_option("dataset","");
-  _upt_options.max_TB_order = options.get_option("max_TB_order", 2);
-  std::string sparse_fmt = options.get_option("sparse_format", "upper");
+  _upt_options.etb_dataset = get_option("dataset","");
+  _upt_options.max_TB_order = get_option("max_TB_order", 2);
+  std::string sparse_fmt = get_option("sparse_format", "upper");
   sparse_fmt.copy(_upt_options.sparse_fmt, sparse_fmt.size() );
 
-  _upt_options.check_bondmap = options.get_option("check_bondmap", false);
-  _upt_options.harrison_flag = options.get_option("Harrison_scaling", true);
-  _upt_options.relat_flag = options.get_option("relativistic", true);
+  _upt_options.check_bondmap = get_option("check_bondmap", false);
+  _upt_options.harrison_flag = get_option("Harrison_scaling", true);
+  _upt_options.relat_flag = get_option("relativistic", true);
 
-  _upt_options.temperature = options.get_option("temperature",
-						      SimulationOptions::temperature );
+  _upt_options.temperature = get_option("temperature",
+			SimulationOptions::temperature );
 
-  //_upt_options.opt_flag = options.get_option("optical_transitions", false);
-  //_upt_options.poldir = options.get_option("polarization_direction", 1);
+  //_upt_options.opt_flag = get_option("optical_transitions", false);
+  //_upt_options.poldir = get_option("polarization_direction", 1);
   _upt_options.opt_flag = false; // these are set via OpticsTB
   _upt_options.poldir = 1;       //   "    "   "   "    "
 
-  if (options.find_option("potential_simulation"))
+  if (has_option("potential_simulation"))
   {
-    _upt_options.potential_sim = options.get_option("potential_simulation","");
+    _upt_options.potential_sim = get_option("potential_simulation","");
     _upt_options.potential_flag = true;
   }
 
-  _upt_options.hl_chem_pot = options.get_option("hl_qfermi_level", 0.0);
-  _upt_options.el_chem_pot = options.get_option("el_qfermi_level", 0.0);
+  _upt_options.hl_chem_pot = get_option("hl_qfermi_level", 0.0);
+  _upt_options.el_chem_pot = get_option("el_qfermi_level", 0.0);
 
-  _upt_options.strain_sim = options.get_option("strain_model_name", "no_sim");
+  _upt_options.strain_sim = get_option("strain_model_name", "no_sim");
 
   // Dangling bond scaling
-  _upt_options.dg_scale = options.get_option("dangling_bond_scaling",100);
-  _upt_options.dg_onsite = options.get_option("dangling_bond_onsite",-200.0);    
+  _upt_options.dg_scale = get_option("dangling_bond_scaling",100);
+  _upt_options.dg_onsite = get_option("dangling_bond_onsite",-200.0);    
 
   //Choose passivation model
-  std::string passivation_model = options.get_option("passivation_model","hydrogen");
+  std::string passivation_model = get_option("passivation_model","hydrogen");
   if ( passivation_model == "hybrid" )
       {_upt_options.hybrid_passivation = true;}
 
@@ -679,10 +700,10 @@ void ETB::parse_options(void)
   _upt_solver_options.m0 =  solopts.get_option("subspace", 100);
   //---------------------------------------------------------------------------------------
   // output wavevetors format
-  std::string out_fmt = options.get_option("jmol_output_format", "jvxl");
-  out_fmt.copy(_upt_options.out_format, out_fmt.size() );
+  std::string out_fmt = get_option("jmol_output_format", "jvxl");
+  out_fmt.copy(_upt_options.out_format, out_fmt.size(),0);
   
-  _upt_options.grid_step = options.get_option("jmol_grid_step", 0.5);
+  _upt_options.grid_step = get_option("jmol_grid_step", 0.5);
 
 
   //---------------------------------------------------------------------------------------
@@ -716,9 +737,9 @@ void ETB::parse_options(void)
   //}
   //---------------------------------------------------------------------------------------
 
-  _upt_options.band_shift_flag = options.get_option("add_band_shifts", true);
-  //_upt_solver_options.guess_vb = solopts.get_option("guess_valence", vb_max);
-  //_upt_solver_options.guess_cb = solopts.get_option("guess_conduction", cb_min);
+  _upt_options.band_shift_flag = get_option("add_band_shifts", true);
+  _upt_solver_options.guess_vb = solopts.get_option("guess_valence", vb_max);
+  _upt_solver_options.guess_cb = solopts.get_option("guess_conduction", cb_min);
 
   // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
   //_upt_options.vb_shift = options.get_option("vb_shift", 0.0);
@@ -728,20 +749,20 @@ void ETB::parse_options(void)
   _upt_solver_options.ort_tol =  solopts.get_option("orthogonality_tolerance", 1e-5);
 
   //Get projection_length for quantum charge projection (nm)
-  _upt_options.projection_length = options.get_option("projection_length", 5.0);
+  _upt_options.projection_length = get_option("projection_length", 5.0);
 
   std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
   std::cout << "done" << std::endl;
 
   // get kpoint
-  std::vector<double> k_vec(3, 0.0);
+  RealVectorValue k_vec;
   get_option("k_vector",k_vec);
-  set_k_vector(k_vec);
+  set_k_point(k_vec);
 
   // get kpoint as parameter
-  get_parameter("k_x", _upt_options.k_point[0], initializer(&ETB::set_kpoint) );
-  get_parameter("k_y", _upt_options.k_point[1], initializer(&ETB::set_kpoint) );
-  get_parameter("k_z", _upt_options.k_point[2], initializer(&ETB::set_kpoint) );
+  get_parameter("k_x", _upt_options.k_point[0], _k_vector[0] );
+  get_parameter("k_y", _upt_options.k_point[1], _k_vector[1] );
+  get_parameter("k_z", _upt_options.k_point[2], _k_vector[2] );
 
 
 }
@@ -752,7 +773,7 @@ void
 ETB::print_upt_options(void)
 {
 
-  std::cout << "(TC) UPTIGHT_OPTIONS: " << std::endl;
+  std::cout << "(ETB) UPTIGHT_OPTIONS: " << std::endl;
 
   int n_files = 0;
 
@@ -795,17 +816,6 @@ ETB::add_pot_shifts(void)
 
   inst->add_potential(_pot_shift);
 
-  std::string outdir = TiberCad::get_output_dir();
-  std::string file_name = outdir + "/pot_on_atoms.dat";
-  std::ofstream file;
-
-  file.open(file_name.c_str());
-  for(int i=0; i < _pot_shift.size(); i++)
-  {
-     file << _pot_shift[i] << endl;
-  }
-  file.close();
-
 }
 //-------------------------------------------------------------------------
 void
@@ -817,18 +827,67 @@ ETB::add_band_shifts(void)
 
   const std::vector< Atom >& atom = get_atomistic_structure()->get_structure_atoms();
 
+const Bondmap& b_map = _atomistic_structure->get_bond_map();
+
   for (unsigned int i = 0; i < N; i++)
   {
-    // the sign is inverted because in upt the potential is subtracted
-    _band_shift[i]= - _map_ID_Evb[atom[i].get_region_ID()] + _vb_shift;
-
-    //std::cerr << _band_shift[i] << std::endl;
+   
+    if (atom[i].get_specie() == H)
+    {
+      // the sign is inverted because in upt the potential is subtracted
+      _band_shift[i]= - _map_ID_Evb[atom[b_map[i][0]].get_region_ID()] + _vb_shift;
+    }
+    else
+    {
+      _band_shift[i]= - _map_ID_Evb[atom[i].get_region_ID()] + _vb_shift;
+    } 
   }
-
   inst->add_potential(_band_shift);
 }
 
 //-------------------------------------------------------------------------
+void
+ETB::write_shifts(void)
+{
+
+  std::string outdir = TiberCad::get_output_dir();
+  std::string file_name = outdir + "/pot_on_atoms.dat";
+  std::ofstream file;
+
+  file.open(file_name.c_str());
+
+  if(_upt_options.band_shift_flag && _upt_options.potential_flag)
+  {
+
+     for(int i=0; i < _band_shift.size(); i++)
+     {
+        file << _band_shift[i] + _pot_shift[i] << "  "
+             << _band_shift[i] << "  "
+             << _pot_shift[i] << std::endl;
+     }    
+  }
+ 
+  if(_upt_options.band_shift_flag && !_upt_options.potential_flag)
+  {
+     for(int i=0; i < _band_shift.size(); i++)
+     {
+         file << _band_shift[i] << std::endl;
+     }    
+   }
+
+     
+   if(_upt_options.potential_flag && !_upt_options.band_shift_flag)
+   {
+      for(int i=0; i < _pot_shift.size(); i++)
+      {
+          file << _pot_shift[i] << std::endl;
+      }    
+   }
+
+  file.close();
+
+}
+
 
 double
 ETB::calculate_fermi_averaged(unsigned int i)

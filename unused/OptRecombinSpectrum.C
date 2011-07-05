@@ -18,7 +18,7 @@ void OptRecombinSpectrum::do_plot()
      string filename(get_name() + "_spectrum" +
          TiberCad::get_filename_suffix());
 
-     string format = get_options().get_option("output_format", "grace");
+     string format = get_option("output_format", "grace");
 
      DataOutput data_output(*_energy_mesh, format);
      data_output.set_output_directory(get_output_directory());
@@ -26,6 +26,8 @@ void OptRecombinSpectrum::do_plot()
 
      string dimension;
      double area_dim_factor = 1;
+     short k_dim = _kspace->get_k_mesh()->mesh_dimension();
+
      if (k_dim == 1)
      {
        dimension = "/cm";
@@ -80,7 +82,7 @@ void OptRecombinSpectrum::do_plot()
      data_output.write_cell_data(filename, results, names);
 
 
-
+  
   }
 
 
@@ -116,52 +118,23 @@ OptRecombinSpectrum::~OptRecombinSpectrum()
 
 //================================================================//
 void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
-                                                std::map<const Elem*, double>& density,
+                                                std::map<const Elem*, double>& spectrum,
                                                 double& integrated_quantity)
 {
 
 
+  _quantum_model_initial_state->solve_for_kpoint(k_point); //calculate eigenstates
 
+  if( _quantum_model_initial_state !=  _quantum_model_final_state)
+  {
 
-  vector<double> k_vector(3, 0.0);
+    _quantum_model_final_state->solve_for_kpoint(k_point); //calculate eigenstates
 
+  }
 
-
-
-  k_vector[0] = k_point(0);
-  k_vector[1] = k_point(1);
-  k_vector[2] = k_point(2);
-
-
-  ModelOptions  quantum_model_opts;
-
-
-  quantum_model_opts.set_option("k_vector",  k_vector);
-
-  quantum_model_opts["job"] = "eigenstates";
-
-  _quantum_model_initial_state->set_options(quantum_model_opts);
-
-  _quantum_model_final_state->set_options(quantum_model_opts);
-
-
-  ModelOptions  optical_model_opts;
-
-  optical_model_opts.set_option("k_vector",  k_vector);
-
-  _optical_model->set_options(optical_model_opts);
-
-
-  _quantum_model_initial_state->solve(); //calculate eigenstates
-
-  _quantum_model_final_state->solve(); //calculate eigenstates
+  _optical_model->set_k_point(k_point);
 
   _optical_model->solve(); //calculate matrix elements of P operator
-
-
-
-
-  std::map<const Elem*, double>& spectrum = density;
 
 
   _optical_model->calculate_spectrum(*_energy_mesh, opt.Gamma, opt.polariz,  spectrum );
@@ -176,6 +149,8 @@ void OptRecombinSpectrum::calculate_for_k_point(const Point& k_point,
     integrated_quantity +=abs(it->second);
 
 
+  std::cout<<"(ORS) integrated quantity: "<< integrated_quantity<< std::endl;
+
 }
 
 
@@ -184,19 +159,17 @@ void OptRecombinSpectrum::do_init( )
 {
 
 
-  Kspace::do_init();//--kspace domain--------------
+  KspaceIntegration::do_init();//--kspace domain--------------
 
-
-  const ModelOptions& mod_spectrum = get_options();
 
   //---------------------- options OptSpectrum -----------------------
   //  take  the  name of  Optics  simulation used in  Opt Spectrum
 
 
   std::string optics_simul_name ;
-  if (mod_spectrum.find_option("optical_matr_elem_model"))
+  if (has_option("optical_matr_elem_model"))
   {
-    optics_simul_name = mod_spectrum.get_option("optical_matr_elem_model","");
+    optics_simul_name = get_option("optical_matr_elem_model","");
     _optical_model   = dynamic_cast<  OpticsKP* > ( find_simulation(optics_simul_name )   );
     if ( _optical_model== NULL)
       throw  InitFailedException("Optical Spectrum:optical_matr_elem_model  " +
@@ -212,24 +185,38 @@ void OptRecombinSpectrum::do_init( )
     _optical_model->init();
 
 
-
-
- //---------quantum models for initial and final states (from OpticsKP module)---------------------------------
-  _quantum_model_initial_state    = _optical_model->get_initial_state_model();
+  _quantum_model_initial_state  = _optical_model->get_initial_state_model();
 
   _quantum_model_final_state    = _optical_model->get_final_state_model();
 
 
+  parse_options();
 
-  if (mod_spectrum.find_option("Emin"))
-    opt.Emin = mod_spectrum.get_option("Emin", 0.0);
+
+}
+
+
+//============================================//
+void OptRecombinSpectrum::parse_options( )
+{
+
+  KspaceIntegration::parse_options();
+
+
+
+ //---------quantum models for initial and final states (from OpticsKP module)---------------------------------
+
+
+
+  if (has_option("Emin"))
+    opt.Emin = get_option("Emin", 0.0);
   else
      throw InitFailedException("Optical Spectrum: Emin must be defined\n");
 
 
 
-  if (mod_spectrum.find_option("Emax"))
-    opt.Emax = mod_spectrum.get_option("Emax", 0.0);
+  if (has_option("Emax"))
+    opt.Emax = get_option("Emax", 0.0);
   else
     throw InitFailedException("Optical Spectrum: Emin must be defined\n");
 
@@ -237,8 +224,8 @@ void OptRecombinSpectrum::do_init( )
 
   if (opt.Emax < opt.Emin)  throw InitFailedException("Optical Spectrum: Emax < Emin");
 
-  if (mod_spectrum.find_option("dE"))
-    opt.dE = mod_spectrum.get_option("dE", 0.0);
+  if (has_option("dE"))
+    opt.dE = get_option("dE", 0.0);
   else
     throw InitFailedException("Optical Spectrum: dE must be defined\n");
 
@@ -259,50 +246,26 @@ void OptRecombinSpectrum::do_init( )
 				     EDGE2);
 
 
-}
+  opt.Gamma = get_option("broadening", 0.007);
 
-
-//============================================//
-void OptRecombinSpectrum::parse_options( )
-{
-
-  KspaceIntegration::parse_options();
-
-  const ModelOptions& mod_spectrum = get_options();
-
-  opt.Gamma = mod_spectrum.get_option("broadening", 0.007);
-
-
-  vector<double> polariz;
-  mod_spectrum.get_option("polarization", polariz);
-  if (polariz.size() == 3)
+  
+  if (has_option("polarization"))
   {
-    opt.polariz(1) = polariz[0];
-    opt.polariz(2) = polariz[1];
-    opt.polariz(3) = polariz[2];
+    RealVectorValue polariz(3, 0.0);
 
-    if (norm (opt.polariz) != 0)
-      opt.polariz = opt.polariz/norm( opt.polariz );
+    get_option("polarization", polariz);
+
+    opt.polariz(1) = polariz(0);
+    opt.polariz(2) = polariz(1);
+    opt.polariz(3) = polariz(2);
+
+    if (norm(opt.polariz) != 0)
+      opt.polariz = opt.polariz/norm(opt.polariz);
     else
-      InitFailedException("Optical Spectrum: polarization vector must be non zero");
+      throw InitFailedException("Optical Spectrum: polarization vector must be non zero");
   }
   else
-    InitFailedException("Optical Spectrum: polarization vector must be defined\n");
-
-
- std::string  job_name = mod_spectrum.get_option("process","recombination");
-  if (job_name == "recombination")
-    job = RECOMBINATION;
-  else if (job_name == "absorption")
-    job = ABSORPTION;
-
-  else
-    throw InitFailedException( "OptSpectrum: Incorrect process: " + job_name );
-
-
-
-
-
+    throw InitFailedException("Optical Spectrum: polarization vector must be defined\n");
 
 
 }

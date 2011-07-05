@@ -7,7 +7,10 @@ topdir := ../..
 
 subdirs := semiconductormodels
 subdirs += solver-interfaces
-subdirs += quantumEFAmodels tightbinding
+subdirs += kintegrations
+subdirs += quantumEFAmodels
+subdirs += tightbinding
+subdirs += optics 
 subdirs += poisson
 subdirs += macrostrain
 subdirs += eigenvalue
