@@ -82,7 +82,7 @@ ETB::UptOptions::UptOptions(void)
   upt_filename = new char[UPT_MC];  memset(upt_filename, UPT_PADCHAR, UPT_MC);
   gen_outfile = new char[UPT_MC];   memset(gen_outfile, UPT_PADCHAR, UPT_MC);
   sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, UPT_PADCHAR, UPT_MC);
-  out_format = new char[UPT_MC];    memset(out_format, UPT_PADCHAR, UPT_MC);
+  //out_format = new char[UPT_MC];    memset(out_format, UPT_PADCHAR, UPT_MC);
 }
 
 ETB::UptOptions::~UptOptions(void)
@@ -92,7 +92,7 @@ ETB::UptOptions::~UptOptions(void)
   delete[] upt_filename;
   delete[] gen_outfile;
   delete[] sparse_fmt;
-  delete[] out_format;
+  //delete[] out_format;
   delete[] database_path;
 }
 
@@ -283,13 +283,8 @@ void ETB::reinit(void){
                    _upt_options.dg_scale, _upt_options.dg_onsite,
                    _upt_options.hybrid_passivation);
   
-  // the next lines are ludicrous in order to solve a crazy problem 
-  // in passing char* to fortran  
-  int fmt;
-  if (_upt_options.out_format[0]=='j') fmt = 1;
-  if (_upt_options.out_format[0]=='c') fmt = 2;
 	  
-  inst->set_output(fmt, _upt_options.grid_step);
+  inst->set_output((int) _upt_options.out_format, _upt_options.grid_step);
 
   //std::cout << "(ETB) fill parameter done" << std::endl;
   //std::cout.flush();
@@ -701,7 +696,12 @@ void ETB::parse_options(void)
   //---------------------------------------------------------------------------------------
   // output wavevetors format
   std::string out_fmt = get_option("jmol_output_format", "jvxl");
-  out_fmt.copy(_upt_options.out_format, out_fmt.size(),0);
+
+  // the next lines are ludicrous in order to solve a crazy problem 
+  // in passing char* to fortran  
+  if (out_fmt=="jvxl") _upt_options.out_format = JVXL;
+  else if (out_fmt=="cube") _upt_options.out_format = CUBE;
+  else throw InitFailedException("cannot recognize format "+out_fmt);
   
   _upt_options.grid_step = get_option("jmol_grid_step", 0.5);
 
@@ -827,7 +827,7 @@ ETB::add_band_shifts(void)
 
   const std::vector< Atom >& atom = get_atomistic_structure()->get_structure_atoms();
 
-const Bondmap& b_map = _atomistic_structure->get_bond_map();
+  const Bondmap& b_map = get_atomistic_structure()->get_bond_map();
 
   for (unsigned int i = 0; i < N; i++)
   {

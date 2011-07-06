@@ -75,12 +75,12 @@ class MaxwellEquations : public FEMEigenvalueProblem
 
 
   //!in this class it outputs eigen photon energies
-  virtual void 	build_integrated_quantities (std::vector< double > &values);
+  //virtual void 	build_integrated_quantities (std::vector< double > &values);
 
   //!in this class it builds description for eigen values
-  virtual void 	build_integrated_quantities_description (
-      std::vector< std::string > &legend,
-      std::vector< std::string > &description);
+  //virtual void 	build_integrated_quantities_description (
+  //    std::vector< std::string > &legend,
+  //    std::vector< std::string > &description);
  
 
 

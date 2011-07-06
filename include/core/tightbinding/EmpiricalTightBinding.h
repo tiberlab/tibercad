@@ -8,13 +8,14 @@ class ETB : public TightBinding
 
  public:
 
-     enum Solutions
+  enum Solutions
   {
     MeshStates,  //Eigenstate Magnitude projected on mesh
     ElQuantumDensity,  //Electron charge density
     HlQuantumDensity  //Hole charge density
   };
 
+  typedef enum {JVXL=1, CUBE=2} OutputFormat;
 
   //! A class for Dftb options
   class UptOptions
@@ -42,7 +43,7 @@ class ETB : public TightBinding
     char* upt_filename;
     char* gen_outfile;
     char* sparse_fmt;
-    char* out_format;
+    OutputFormat out_format;
     double c_axis[3];
     double k_point[3];
     double hl_chem_pot;

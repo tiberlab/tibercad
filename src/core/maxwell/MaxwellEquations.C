@@ -36,6 +36,7 @@ BoundaryProperties* MaxwellEquations::create_boundary_model(const ModelOptions& 
 }
 
 //=======================================================================================================//
+/*
 void 	MaxwellEquations::build_integrated_quantities (std::vector< double > &values)
 {
 
@@ -52,9 +53,6 @@ void 	MaxwellEquations::build_integrated_quantities (std::vector< double > &valu
 	* (1.0 / Constants::fine_structure_constant) ;
     }
   }
-
-
-
 }
 //=======================================================================================================//
 void 	MaxwellEquations::build_integrated_quantities_description (
@@ -76,17 +74,13 @@ void 	MaxwellEquations::build_integrated_quantities_description (
       temp << i ;
       legend[i] = temp.str();
     }
-
-
-
     description.resize(1);
     description[0] = "Photon energy [eV]";
 
   }
 
-
-
 }
+*/
 //=======================================================================================================//
 void MaxwellEquations::build_nodal_results(const std::set<std::string>& variables,
 						std::vector<double>& results, std::vector<std::string>& legend)
