@@ -1,0 +1,397 @@
+
+TiberCAD version 2.1.0
+
+Log start: Wed Jul  6 16:33:38 2011
+
+
+Input file: InGaN.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/mlopez/Desktop/materials
+  Log file              : InGaN.log
+
+Setup mesh
+  Reading mesh file well.msh ... done.
+  mesh units          : 1e-09 m
+  mesh dimension      :       1
+  number of nodes     :     260
+  number of elements  :     259
+  number of subdomains:       5
+
+Create materials ...
+  Added material InGaN for region 'QW' (using datafile /home/mlopez/Desktop/materials/InGaN.dat)
+    alloy with 0.1 InN, 0.9 GaN
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  Added material GaN for region 'barrier_left' (using datafile /home/mlopez/Desktop/materials/GaN.dat)
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  Added material GaN for region 'barrier_right' (using datafile /home/mlopez/Desktop/materials/GaN.dat)
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  Added material GaN for region 'device_left' (using datafile /home/mlopez/Desktop/materials/GaN.dat)
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+  Added material GaN for region 'device_right' (using datafile /home/mlopez/Desktop/materials/GaN.dat)
+    x growth direction : (0,0,0,1)
+    y growth direction : (1,0,-1,0)
+    z growth direction : (-1,2,-1,0)
+Creation of materials done.
+
+Setting up Cluster 'Quantum' containing regions 3, 5, 6
+Atomistic structure builder started 
+Building Atomistic Structure tb
+
+*** Warning: In database of InGaN: parameter specie_1 in section atomistic_structure has different values in the alloy components.
+Starting passivation...
+Calculating Bond Map
+Bond Map completed
+Passivation done
+Calculating Bond Map
+Bond Map completed
+Calculating Bond Map
+Bond Map completed
+
+Setting up simulation of type 'empirical_tb' ...
+
+Creating bulk models... 
+
+Setting up simulation of type 'macrostrain' ...
+  Adding boundary 'cathode'
+
+Creating bulk models... 
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+  Adding boundary 'cathode'
+  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+  Adding boundary 'anode'
+
+Creating bulk models... 
+  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+(using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/recombination_srh.so)
+(using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/recombination_direct.so)
+
+Setting up simulation of type 'efaschroedinger' ...
+
+Creating bulk models... 
+
+Setting up simulation of type 'efaschroedinger' ...
+
+Creating bulk models... 
+Setting up bulk models ...
+  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/mobility_doping_dependent.so)
+  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/permittivity_constant.so)
+
+*** Warning: found unused options in block semiconductor: background_conductivity
+
+*** Warning: found unused options in block bandstructure: background_conductivity
+  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+
+*** Warning: found unused options in block electron_mobility: low_field_model
+
+*** Warning: found unused options in block hole_mobility: low_field_model
+
+*** Warning: found unused options in block semiconductor: background_conductivity
+
+*** Warning: found unused options in block bandstructure: background_conductivity
+
+*** Warning: found unused options in block electron_mobility: low_field_model
+
+*** Warning: found unused options in block hole_mobility: low_field_model
+
+*** Warning: found unused options in block semiconductor: background_conductivity
+
+*** Warning: found unused options in block bandstructure: background_conductivity
+
+*** Warning: found unused options in block electron_mobility: low_field_model
+
+*** Warning: found unused options in block hole_mobility: low_field_model
+
+*** Warning: found unused options in block semiconductor: background_conductivity
+
+*** Warning: found unused options in block bandstructure: background_conductivity
+
+*** Warning: found unused options in block electron_mobility: low_field_model
+
+*** Warning: found unused options in block hole_mobility: low_field_model
+
+*** Warning: found unused options in block semiconductor: background_conductivity
+
+*** Warning: found unused options in block bandstructure: background_conductivity
+
+*** Warning: found unused options in block electron_mobility: low_field_model
+
+*** Warning: found unused options in block hole_mobility: low_field_model
+
+*** Warning: found unused options in block semiconductor: background_conductivity
+
+*** Warning: found unused options in block bandstructure: background_conductivity
+
+*** Warning: found unused options in block electron_mobility: low_field_model
+
+*** Warning: found unused options in block hole_mobility: low_field_model
+
+*** Warning: found unused options in block semiconductor: background_conductivity
+
+*** Warning: found unused options in block bandstructure: background_conductivity
+
+*** Warning: found unused options in block electron_mobility: low_field_model
+
+*** Warning: found unused options in block hole_mobility: low_field_model
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for tb (empirical_tb)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  MeshStates               1/cm           n-tuple   cell        y
+  ElQuantumDensity         q/cm           real      cell        n
+  HlQuantumDensity         q/cm           real      cell        n
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output_ingan_x1
+  Output file format    : grace
+  Output file basename  : tb
+
+
+  Region QW, InGaN (x = 0.1)
+  Region barrier_left, GaN
+  Region barrier_right, GaN
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for strain (macrostrain)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  Strain                                  tensor    cell        y
+  Stress                   GPa            tensor    cell        n
+  Displacement             m              vector    nodal       n
+  vonMises                 GPa            real      cell        n
+  PiezoPolarization        C/m^2          vector    cell        y
+  StrainCrystal                           tensor    cell        n
+  StressCrystal            GPa            tensor    cell        n
+  EnergyDensity            J/m^3          real      cell        n
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output_ingan_x1
+  Output file format    : grace
+  Output file basename  : strain
+
+
+  Region QW, InGaN (x = 0.1)
+  Region barrier_left, GaN
+  Region barrier_right, GaN
+  Region device_left, GaN
+  Region device_right, GaN
+
+*** Warning: found unused options in block Module (macrostrain): substrate
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (driftdiffusion)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  Ec                       eV             real      nodal       y
+  Ev                       eV             real      nodal       y
+  eQFermi                  eV             real      nodal       y
+  hQFermi                  eV             real      nodal       y
+  ElPotential              V              real      nodal       y
+  Ec0                      eV             real      nodal       n
+  Ev0                      eV             real      nodal       n
+  Eg                       eV             real      nodal       n
+  ConductionBands          eV             n-tuple   cell        n
+  ValenceBands             eV             n-tuple   cell        n
+  eDensity                 cm^-3          real      nodal       y
+  hDensity                 cm^-3          real      nodal       y
+  eMobility                cm^2/(V*s)     real      nodal       n
+  hMobility                cm^2/(V*s)     real      nodal       n
+  eConductivity            S/cm           real      nodal       n
+  hConductivity            S/cm           real      nodal       n
+  ElField                  V/cm           vector    cell        y
+  Polarization             C/m^2          vector    cell        y
+  CurrentDensity           A/cm^2         vector    cell        n
+  eCurrentDensity          A/cm^2         vector    cell        n
+  hCurrentDensity          A/cm^2         vector    cell        n
+  IonizedDonors            cm^-3          real      nodal       n
+  IonizedAcceptors         cm^-3          real      nodal       n
+  IonizedElectronTraps     cm^-3          real      nodal       n
+  IonizedHoleTraps         cm^-3          real      nodal       n
+  eThElPower               eV/K           real      nodal       n
+  hThElPower               eV/K           real      nodal       n
+  eJoule                   W/cm^3         real      nodal       n
+  hJoule                   W/cm^3         real      nodal       n
+  ePowerFlux               W/cm^2         vector    nodal       n
+  hPowerFlux               W/cm^2         vector    nodal       n
+  ePeltier                 W/cm^3         real      nodal       n
+  hPeltier                 W/cm^3         real      nodal       n
+  RecombHeat               W/cm^3         real      nodal       n
+  IQE                                     real      none        n
+  NetRecombination         1/(s*cm^3)     real      nodal       n
+  SRHRecombination         1/(s*cm^3)     real      nodal       n
+  DirectRecombination      1/(s*cm^3)     real      nodal       n
+  anode.current            A/cm^2         real      none        n
+  cathode.current          A/cm^2         real      none        n
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output_ingan_x1
+  Output file format    : grace
+  Output file basename  : driftdiffusion
+
+
+  solving for : poisson 
+  using local scaling
+
+  Region QW, InGaN (x = 0.1)
+    default semiconductor model (using k.p)
+    using strain simulation: strain
+  Region barrier_left, GaN
+    default semiconductor model (using k.p)
+    using strain simulation: strain
+  Region barrier_right, GaN
+    default semiconductor model (using k.p)
+    using strain simulation: strain
+  Region device_left, GaN
+    default semiconductor model (using k.p)
+    using strain simulation: strain
+  Region device_right, GaN
+    default semiconductor model (using k.p)
+    using strain simulation: strain
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for kp_electrons (efaschroedinger)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  ProbabilityDensity       1/cm           n-tuple   nodal       y
+  EigenEnergy              eV             n-tuple   none        y
+  Occupation                              n-tuple   none        n
+  EigenEnergyOnMesh        eV             n-tuple   nodal       y
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output_ingan_x1
+  Output file format    : grace
+  Output file basename  : kp_electrons
+
+
+  Region QW, InGaN (x = 0.1)
+  Region barrier_left, GaN
+  Region barrier_right, GaN
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for kp_holes (efaschroedinger)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  ProbabilityDensity       1/cm           n-tuple   nodal       y
+  EigenEnergy              eV             n-tuple   none        y
+  Occupation                              n-tuple   none        n
+  EigenEnergyOnMesh        eV             n-tuple   nodal       y
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output_ingan_x1
+  Output file format    : grace
+  Output file basename  : kp_holes
+
+
+  Region QW, InGaN (x = 0.1)
+  Region barrier_left, GaN
+  Region barrier_right, GaN
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+We solve: strain driftdiffusion kp_holes kp_electrons tb 
+
+>>>>----------------------------------------------------------------------------
+macrostrain (name: strain)
+
+  Starting the matrix assembly
+  Matrix assembly done
+  Starting the matrix assembly
+  Matrix assembly done
+
+Solve time: 0h 0m 0.026s
+<<<<--------------------------------- (strain) ---------------------------------
+
+>>>>----------------------------------------------------------------------------
+driftdiffusion (name: driftdiffusion)
+
+  Solving equilibrium
+  it 1, |du| = 3.8568, |r| = 4.05072e-14  alpha = 1
+
+  iterations: 2, |du| = 1.17282e-12, |r| = 3.90799e-14
+  Equilibrium done
+
+  Writing state to output_ingan_x1/driftdiffusion.tsv
+
+Solve time: 0h 0m 0.061s
+<<<<----------------------------- (driftdiffusion) -----------------------------
+
+>>>>----------------------------------------------------------------------------
+efaschroedinger (name: kp_holes)
+
+  (EFA) Solving for k = ( 0 0 0 )
+  eigenenergies (6):
+    -1.71822 -1.71822 -1.72843 -1.72843 -1.73378 -1.73378 
+
+
+Solve time: 0h 0m 0.12s
+<<<<-------------------------------- (kp_holes) --------------------------------
+
+>>>>----------------------------------------------------------------------------
+efaschroedinger (name: kp_electrons)
+
+  (EFA) Solving for k = ( 0 0 0 )
+  eigenenergies (4):
+    1.50604 1.62254 1.73314 1.73447 
+
+
+Solve time: 0h 0m 0.025s
+<<<<------------------------------ (kp_electrons) ------------------------------
+
+>>>>----------------------------------------------------------------------------
+empirical_tb (name: tb)
+
+  CB min = 1.46446  VB max = -1.71293
+
+Solve time: 0h 2m 10s
+<<<<----------------------------------- (tb) -----------------------------------
+(ETB) write wave functions on files
+
+Total solve time: 0h 2m 11s
+Simulation finished...
+Goodbye

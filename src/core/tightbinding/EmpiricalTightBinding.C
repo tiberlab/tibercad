@@ -467,7 +467,6 @@ void ETB::do_solve(void){
 
   //Set _solution_size in base class TightBinding 
   _solution_size = _solution.size();
-  declare_solution(MeshStates, NTUPLE, CELL, "1/cm^3", _solution.size());  
 
   // write state infos on screen.
   write_states();
@@ -617,6 +616,10 @@ ETB::plot_globaldata(void)
              << setw(11) << _solution[i].temperature << "\n";
     }
   }
+
+  Messages::info("(ETB) write wave functions on files");
+  inst->write_states();
+
 }
 
 //-------------------------------------------------------------------------
@@ -659,6 +662,7 @@ void ETB::parse_options(void)
   _upt_options.el_chem_pot = get_option("el_qfermi_level", 0.0);
 
   _upt_options.strain_sim = get_option("strain_model_name", "no_sim");
+  _upt_options.strain_sim = get_option("strain_simulation", _upt_options.strain_sim);
 
   // Dangling bond scaling
   _upt_options.dg_scale = get_option("dangling_bond_scaling",100);
@@ -682,7 +686,7 @@ void ETB::parse_options(void)
   }
   _upt_solver_options.min_iter =  solopts.get_option("min_iter", 2);
   _upt_solver_options.long_iter =  solopts.get_option("long_iter", 30);
-  _upt_solver_options.max_iter =  solopts.get_option("max_iter", 100000);
+  _upt_solver_options.max_iter =  solopts.get_option("max_iter", 15000);
 
   bool flag = solopts.get_option("remove_folded_sols_conduction",false);
   if (flag) _upt_solver_options.twice_cb = 1;
@@ -1410,9 +1414,20 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
 void
 ETB::do_setup_solution_variables(void)
 {
-  declare_solution(ElQuantumDensity, REAL, CELL, "q/cm^3");
-  declare_solution(HlQuantumDensity, REAL, CELL, "q/cm^3");
-  declare_solution(MeshStates, NTUPLE, CELL, "1/cm^3", 1);
+  unsigned int dim = get_mesh().mesh_dimension();
+  string units("/cm");
+  if (dim == 2)
+     units = "/cm^2";
+  else if (dim == 3)
+     units = "/cm^3";
+
+  declare_solution(ElQuantumDensity, REAL, CELL, "q"+units);
+  declare_solution(HlQuantumDensity, REAL, CELL, "q"+units);
+  declare_solution(MeshStates, NTUPLE, CELL, "1"+units, 1);
+
+  if (plot_solution("ProbabilityDensity"))
+	    add_plot_variable(MeshStates);
+
 }
 
 #endif

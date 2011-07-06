@@ -1,0 +1,283 @@
+Device
+{
+  meshfile = well.msh 
+  mesh_units = 1e-9    #nanometers
+  dimension = 1
+
+   structure = wz
+    x-growth-direction = (0,0,0,1)
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+ 
+
+	Region QW
+	{
+
+	material = InGaN
+        x=0.1
+
+	}
+
+	Region barrier_left
+	{
+	material = GaN
+
+	}
+
+	Region barrier_right
+	{
+	material = GaN
+	}
+
+	Region device_left
+	{
+
+	material = GaN
+
+	}
+
+	Region device_right
+	{
+	material = GaN
+
+	}
+
+	# group together the regions for the quantum simulation
+
+	Cluster Quantum
+	{
+	regions = (barrier_left, barrier_right, QW)
+	}
+
+
+
+	Atomistic tb
+	{
+	  reference_region = barrier_left
+	  regions = Quantum
+	  passivation = yes
+	  print = (xyb, xyz, gen, tgn)
+	}
+
+}#Device
+
+
+
+Module empirical_tb
+{
+  regions = Quantum
+  name = tb
+  atomistic_structure = tb
+  Harrison_scaling = true 
+
+  strain_simulation = strain
+  potential_simulation =  driftdiffusion
+
+  sparse_format = full   
+
+  projection_length = 1.0
+
+  plot = (ProbabilityDensity)
+  jmol_output_format = cube
+
+  Solver
+  {
+    num_valence_eigenvalues = 1 
+    num_conduction_eigenvalues = 0
+    long_tolerance = 1e-6
+    guess_valence = -1.6 
+  }
+
+}#empirical_tb
+
+
+Module  macrostrain
+{
+
+  name = strain
+  regions = all
+  substrate = cathode
+
+  plot = (Strain, PiezoPolarization)
+
+  number_shape_steps = 1  #  for  atom displacement  calculation
+  strain_atomistic_structure = tb  # tb1 = atomistic_structure
+
+  Boundary   cathode
+  {
+    type = substrate
+    material = GaN
+
+    structure = wz
+    x-growth-direction = (0,0,0,1)
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+  }
+
+  Solver
+  {
+    #  xmonitor = true
+  }
+    
+} #endmacrostrain
+
+
+
+
+Module driftdiffusion
+{ 
+
+  name = driftdiffusion
+  regions = all
+  coupling = poisson
+
+  #plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, Polarization)
+  plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity, ElPotential)
+
+  save_state = true
+  #load_state = dd.tsv
+ # solve_after_load = true
+
+  Physics
+  {
+
+     strain_simulation = strain
+
+     use_density_predictor = true
+     background_conductivity = 1e-6
+
+     #  polarization (piezo, pyro) {}
+     #  polarization (pyro) {}
+
+#    particle_density  #electron
+#    {
+#      statistics = fermidirac
+#      particle  = electron
+
+     # where to get the quantum densities from
+#      quantum_density = (tb)          #per calculo selfconsistent
+
+#    }#particle_density electron
+  
+#	embracing
+#      {
+#        embracing_length = 1e-9
+#        plot_embracing_regions = true
+#      }
+
+#   particle_density  #hole
+#    {
+      # use Fermi-Dirac statistics
+#      statistics = fermidirac
+
+#      particle  = hole
+     # quantum_density = dens_hl
+
+#      embracing
+#      {
+#        embracing_length = 1e-9
+#        plot_embracing_regions = true
+#      }
+#    }#particle_density hole
+
+	recombination   srh {
+	}
+
+    recombination  direct
+    { 
+     C = 1.1e-8
+    }
+           
+#    polarization (piezo, pyro) {}
+#    polarization (pyro) {}
+
+    mobility
+    { 
+      type = doping_dependent
+      #model = field_dependent
+      low_field_model = doping_dependent
+    }
+  } #endphysics 
+
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]  
+    rec_velocity_p = 1e7
+  }
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = 0.0
+   rec_velocity_n = 1e7
+  }
+
+} #driftdiffusion
+
+
+Module efaschroedinger    #electrons
+{
+  name = kp_electrons
+  particle = el
+
+  poisson_model_name = driftdiffusion
+  strain_model_name = strain
+
+  regions = Quantum
+
+  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+
+
+  Solver
+  {
+    number_of_eigenstates = 4
+  }
+
+  Physics
+  {
+      model =   conduction_band
+  }
+
+}#endefaschroedinger electrons
+
+Module efaschroedinger   #holes
+{
+  name = kp_holes
+  particle = hl
+  regions = Quantum 
+
+  poisson_model_name = driftdiffusion
+  strain_model_name = strain
+
+
+  plot = (EigenFunctions, EigenEnergy)
+
+
+  Solver
+  { 
+    number_of_eigenstates = 6 
+  }
+
+  Physics
+  {
+    model = kp
+    kp_model = 6x6
+  }
+
+}#efaschroedinger   holes
+
+
+Simulation
+{
+  temperature = 300
+  searchpath = /home/mlopez/Desktop/materials
+
+  solve = (strain,driftdiffusion,kp_holes,kp_electrons, tb)
+
+  resultpath =  output_ingan_x1
+  output_format = grace
+
+}
+
