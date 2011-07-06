@@ -1111,7 +1111,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
             ham_imag(i, j) *= scale;
             // this is not needed, as we do not solve a generalized problem
             // in this case
-            //s_real(i, j) *= scale;
+            if (solver_opt.discretization_method == FEM)
+              s_real(i, j) *= scale;
           }
         }
       }
@@ -1145,7 +1146,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 //this is only to test
   /*
   _H_real->print_matlab("ham_r_matlab.m");
-  _H_imag->print_matlab("ham_i_matlab.m");
+  //_H_imag->print_matlab("ham_i_matlab.m");
   _S_real->print_matlab("s.m");
   */
 

@@ -58,8 +58,6 @@ class SimulationInterface : public TiberModelObject
 
 
   public:
-    // QUIRK
-    double _relaxation;
 
 
     //! An iterator to iterate over all simulations

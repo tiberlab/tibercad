@@ -60,8 +60,6 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
   ID new_id = _simulation_map.size() + 1;
   _id = new_id;
 
-  _relaxation = 1.0;
-
   // register in the map of simulations
   _simulation_map[new_id] = this;
 

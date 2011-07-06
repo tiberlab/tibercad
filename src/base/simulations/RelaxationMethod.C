@@ -26,8 +26,6 @@ RelaxationMethod::do_solve(void)
 {
   parse_options();
 
-  double relax = get_option("special_relaxation", 1.0);
-
   //initialize();
 
   open_xmonitor();
@@ -53,8 +51,6 @@ RelaxationMethod::do_solve(void)
       //get_solution_vector().print_matlab(file.str());
     }
 
-    get_last_simulation()->_relaxation = relax;
-    relax = std::sqrt(relax);
     solve_simulations();
 
     get_solution_vector().close();

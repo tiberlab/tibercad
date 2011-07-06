@@ -562,8 +562,6 @@ DriftDiffusionProperties::calculate_densities(void)
   double Ec = get_conduction_band_edge();
   double Ev = get_valence_band_edge();
 
-  double relax = SimulationInterface::get_simulation(get_simulator_id())->_relaxation;
-
   _electrons->set_element_and_point(_elem, _coord);
 
   if (_electrons->is_quantum_density() && has_solution() && use_predictor())
