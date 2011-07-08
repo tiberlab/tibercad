@@ -37,10 +37,9 @@ A typical example is the following::
     name = quantum_el
     regions = quantum
     plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
-    Solver
-    {
-      number_of_eigenstates = 10 # 30 
-     }
+   
+    number_of_eigenstates = 10 # 30 
+    
     Physics
     {
       model = conduction_band
@@ -48,7 +47,7 @@ A typical example is the following::
    }
 
 In  this  example, Schroedinger  equation is  solved for  electrons with a  single band model.
-We  calculate  10 eigenstates  by  specifying in  Solver  section::
+We  calculate  10 eigenstates  by  specifying::
 
   number_of_eigenstates = 10  
 

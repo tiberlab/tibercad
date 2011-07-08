@@ -867,4 +867,223 @@ Here is an example of the input file template::
 
 
 
+GMSH   Quick Tutorial
+=================================================
+
+To  use  tiberCAD,   as a first step you  need  to model the device and  generate  a suitable mesh  grid. This  can  be  done  by  using DEVISE module of ISE-TCAD 9.5 software package or GMSH program.
+
+
+In the following we will see how to write a basic GMSH script in 1 and 2D; for any details please refer to GMSH manual  (http://geuz.org/gmsh/).
+
+
+Example 1D 
+-------------------------------------------
+
+
+Step 1: Modeling the device
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Here we  will  refer  to  the  example *Bulk Silicon  in  1D* (see  Chapter 5,  *bulk.geo*).
+
+In a GMSH script, several variables can be defined and given a value in this way::
+
+
+  L = 1;
+  d = 0.01;
+
+
+these are valid GMSH variables: ``L`` is just the length of the Si sample; ``d`` is the value of a *characteristic mesh length* (see below).
+
+
+
+**Definition of the geometrical entities Points**
+
+::
+
+  Point(1) = {0, 0, 0, d};
+  Point(2) = {L, 0, 0, d};
+
+
+In the definition of a geometrical point, the three first expressions inside the braces on the right hand side give the three X, Y and Z coordinates of the point; the last expression ``d`` sets the *characteristic mesh length* at that point, that is the *size* of a mesh element, 
+defined as the length of the segment for a line mesh element, the radius of the circumscribed circle for a triangle mesh element and the radius of the circumscribed sphere for a tetrahedron mesh element.
+
+
+Thus, the smaller is the value of ``d``, the greater is the mesh density close to that point. The size of the mesh elements will then be computed in GMSH by linearly interpolating these characteristic lengths in the whole mesh.
+
+.. warning::
+             In a 1D simulation it is  assumed that the geometrical model is  restricted to the ``x`` axis. 
+             Any other geometrical orientation  could  give impredictable results.
+
+
+
+**Definition of a geometrical entity Line**
+
+
+::  
+
+  Line(1) = {1, 2};
+
+The two expressions inside the braces on the right hand side  give the identification numbers of the start and end points of the line.
+
+
+
+**Definition of the physical entity Physical Line ``bulk`` and of two physical entities Physical Point** 
+
+
+
+
+
+Convenient *Physical Names*  are  to  be  assigned to  the  Physical entities. *Physical Names* consist of  strings  enclosed between  quotation marks.
+The  syntax is the  following:
+
+::
+  
+  Physical Line("bulk") = {1}
+  ............
+  Physical Point("Anode") = {1};
+  Physical Point("Cathode") = {2};
+
+
+
+
+
+The expression(s) inside the braces on the right hand side  give the identification numbers of all the geometrical lines that need to be grouped inside the *Physical Line*  or *Physical Point* .
+In this way, in general, *physical regions* are created which associate together geometrical regions, and then the related mesh elements, which share some common physical properties. It's only these physical regions which can be referred to outside GMSH. In tiberCAD, this is done by associating one or more physical regions to a tiberCAD region through the keywords *Region* and  *mesh_regions* (see Chapter 2).
+
+
+.. warning::
+             In general, in a n-Dimension (``nD``) simulation, ``(n-1)D`` physical regions
+             (points in 1D, lines in 2D, surfaces in 3D) are used by tiberCAD to impose the required 
+             boundary conditions. Each  ``(n-1)D``  physical region defined in this way in GMSH will be associated             in tiberCAD to a boundary condition (Contact) region. 
+             Thus, in this case, Physical points *1* and *2* will be associated respectively to two *Contacts* 
+             (see in the following).
+
+            
+
+
+ 
+
+
+Step 2: Meshing the device
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+The ``.geo`` script file with the geometrical description can be run in GMSH, to display the modelled device and to mesh it through the GMSH graphical interface.
+Alternatively, a ``non-interactive`` mode is also available in GMSH, without graphical user interface. For example, to mesh this 1D tutorial in non-interactive mode, just type::
+
+  gmsh bulk.geo  -1 -o bulk.msh 
+
+where ``bulk.geo``  is the geometrical description of the device with GMSH syntax;
+``-1`` means 1D mesh generation;
+
+some command line options are::
+
+  -1, -2, -3 
+
+to perform 1D, 2D or 3D mesh generation, respectively.
+
+::
+
+  -o  mesh_file.msh 
+
+to specify the name of the mesh file to be generated
+
+In this way, a ``.msh`` has been generated and is ready to be read in tiberCAD. 
+
+
+
+Example 2D
+-------------------------------------------
+
+
+
+In this  second  example  we  will  refer  to  the *Mosfet* example that you can find in Chapter 5 (*mosfet.geo*)
+
+
+
+Modeling the device
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Again, as a first step, we have to model the device. 
+
+Geometrical *Points* and *Lines* are  defined to design the device  structure; the  fourth parameter in *Point* assignement is  the   **characteristic length** associated to that point: this  is  an  essential feature to control the  mesh density and refine it where  necessary (usually n the channel region).   
+
+.. warning::
+             In a 2D simulation it is  assumed that the geometrical model is  restricted to  the  
+             ``xy-plane (z = 0)``. Any  other geometrical orientation  could  give impredictable results
+
+
+ 
+::
+  
+  Point(1) = {0, -h, 0, lsub};
+  Point(2) = {0, 0, 0, lc};
+  Point(3) = {xmax,-h,0.0,lsub};
+  Point(4) = {-xmax,-h,0.0,lsub};
+  Point(5) = {xmax,0,0.0,lh};
+  Point(6) = {-xmax,0,0.0,lh};
+  ..........................
+  Line(1) = {4,1};
+  Line(2) = {3,13};
+  Line(6) = {4,14};
+  Line(7) = {10,9};
+  Line(8) = {12,2};
+  Line(9) = {8,7};
+  Line(10) = {11,8};
+  Line(11) = {9,12};
+  Line(13) = {7,6};
+  ..........................
+
+
+**Definition of a surface**
+
+First a *line loop* is composed, listing all the  lines constituting the  boundary of the surface; then this  line  loop is  assigned to a  *Plane Surface* object (this  procedure can be alternatively performed throgh the  graphical interface).                          
+
+::
+
+
+  Line Loop(40) = {28,2,-34,33,8,29,-31,-30,-6,1};
+  Plane Surface(41) = {40};
+  ..........................
+
+
+**Definition of  the Physical Surfaces**
+
+Each of the  *Physical Surfaces* is composed by one or more geometrical *Plane Surface*. For example, *Physical surface contact* comprises the two separated contact regions, while *Physical surface oxide* corresponds to the  oxide  region.
+
+The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be  assigned to the related tiberCAD regions through the keyword *Region* and *mesh_regions*.                                                                                                                     
+::
+
+  Physical Surface("substrate") = {41}; // n-Si
+  Physical Surface("contact") = {44,47}; // n+-Si
+  Physical Surface("oxide") = {46}; // SiO2
+
+
+                                               
+**Definition of the Phisical Lines**
+
+In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Phisical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation): thus *Physical Line source* refers to the source contact, *Physical Line gate* to the gate contact, *Physical Line drain* to the drain contact.
+The names of these *Phisical Lines*  will be  asigned to tiberCAD *Contacts*.
+
+::
+
+  Physical Line("source") = {13}; // source
+  Physical Line("gate") = {39,38}; // gate
+  Physical Line("drain") = {19}; // drain
+
+
+
+Meshing the device
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``.geo`` script file with the geometrical description can be run in GMSH, to display the modelled device and to mesh it through the GMSH graphical interface.
+Alternatively, a textual mode is also available in GMSH, without graphical user interface. For example, to mesh this 2D tutorial in non-interactive mode, just type:
+
+::
+
+  gmsh mosfet.geo  -2 -o mosfet.msh 
+
 
