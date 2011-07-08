@@ -1044,7 +1044,9 @@ SimulationInterface::plot_meshdata(void)
       switch (descr.location())
       {
         case SolutionDescriptor::CELL:
-          vec.insert(vec.end(), sol.begin(), sol.end());
+          // Attention: we get the same data on every node, but we need to put only
+          // a single data set (for one node)
+          vec.insert(vec.end(), sol.data(), sol.data() + descr.n_components());
           break;
 
         case SolutionDescriptor::NODES:

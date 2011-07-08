@@ -264,15 +264,6 @@ TiberNonlinTR::do_solve(void)
     //}
 
 
-    //norm_du = du.linfty_norm();
-    /*{
-      ostringstream os;
-      os << "it " << i << ", |du| = " << norm_du
-        << ", |r| = " << norm_rhs << " delta = " << delta_old;
-      Messages::info(os.str());
-    }*/
-
-
     tol *= tol;
 
   }
