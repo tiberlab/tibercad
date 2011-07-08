@@ -106,9 +106,9 @@ Module empirical_tb
     #relativistic =  true
 
     num_valence_eigenvalues = 2 #4 #2  #1
-    guess_valence = 0.0
+    #guess_valence = 0.0
     num_conduction_eigenvalues = 2 # 0  # 1
-    guess_conduction = 2.5
+    #guess_conduction = 2.5
   }
 
 }

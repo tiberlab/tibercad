@@ -132,7 +132,7 @@ Module selfconsistent
 {
   solve = (dd,tt)
 
-  abs_tolerance = 1e-5
+  absolute_tolerance = 0.5
   monitor = true
 }
 
