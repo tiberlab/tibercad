@@ -308,12 +308,12 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 	                                          get_structure_atoms()[i].get_elem(), p);
 	      //std::cout << " shifting " << _pot_shift[i] << std::endl;
 	    }
-	  else
-	    {
-	      _pot_shift[i] = 0.0;
-	      _el_chem_pot[i] = 0.0;
-	      _hl_chem_pot[i] = 0.0;
-	    }
+	  //else
+	  //  {
+	  //    _pot_shift[i] = 0.0;
+	  //    _el_chem_pot[i] = 0.0;
+	  //    _hl_chem_pot[i] = 0.0;
+	  //  }
 	}
       //If atom has no element assigned, assigned the potential of the nearest neighbour
       //with non NULL element assigned

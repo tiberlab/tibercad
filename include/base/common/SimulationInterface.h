@@ -466,83 +466,6 @@ class SimulationInterface : public TiberModelObject
     bool get_solution(std::map<ID, std::vector<double> >& values);
 
 
-
-    //! Get solution values on the nodes of a specified element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param ids identifiers for the variables to be returned
-     * \param values a vector to store the values. The vector index
-     * corresponds to the node.
-     *
-     * \return false if no data can be found for \c elem
-     */
-    //bool get_solution(const Elem* elem, const std::set<ID>& ids,
-    //    std::vector<std::map<ID, double> >& values);
-
-
-    //! Get solution values on one inner point of a specified element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param p the point (assumed to lie in \c elem)
-     * \param ids identifiers for the variables to be returned
-     * \param values a vector to store the values. The vector index
-     * corresponds to the point.
-     *
-     * \return false if no data can be found for \c elem
-     */
-    //bool get_solution(const Elem* elem, const Point& p,
-    //    const std::set<ID>& ids, std::map<ID, double>& values);
-
-
-    //! Get solution values on one inner point of a specified element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param p the point (assumed to lie in \c elem)
-     * \param id identifier for the variable to be returned
-     * \param value the output value
-     *
-     * \return false if no data can be found for \c elem
-     */
-    //bool get_solution(const Elem* elem, const Point& p, ID id, double& value);
-
-
-    //! Get solution values on inner points of a specified element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param p a vector with the points. All Points are assumed to lie in
-     * \c elem
-     * \param id identifier for the variable to be returned
-     * \param values a vector to store the values. The vector index
-     * corresponds to the point.
-     *
-     * \return false if no data can be found for \c elem
-     */
-    //bool get_solution(const Elem* elem, const std::vector<Point>& p,
-    //    ID id, std::vector<double>& values);
-
-
-    //! Get solution values on inner points of a specified element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param p a vector with the points. All Points are assumed to lie in
-     * \c elem
-     * \param ids identifiers for the variables to be returned
-     * \param values a vector to store the values. The vector index
-     * corresponds to the point.
-     *
-     * \return false if no data can be found for \c elem
-     */
-    //bool get_solution(const Elem* elem, const std::vector<Point>& p,
-    //    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
-
-
-
-
     /*!
      * \copydoc build_nodal_results()
      *
@@ -559,37 +482,6 @@ class SimulationInterface : public TiberModelObject
      */
     void get_elemental_results(std::vector<double>& results,
         std::vector<std::string>& legend);
-
-
-    //! Build a vector with some integrated quantities
-    /*!
-     * Calls build_integrated_quantities()
-     *
-     * This method is used in sweeps for creating files like I-V
-     * characteristics and similar.
-     *
-     * \param values the vector where the values will be put
-     */
-    //void get_integrated_quantities(std::vector<double>& values);
-
-
-    //! Get the description for some integrated quantities
-    /*!
-     * calls build_integrated_quantities_description()
-     *
-     * \see get_integrated_quantities()
-     *
-     * \param legend the legend for the plot values, has usually the same
-     * size as \c values in get_integrated_quantities()
-     * \param description a description for each of the known quantities
-     *
-     * \note This method must not access the mesh or DOF maps or similar
-     * as it is not guaranteed the the mesh is prepared for the currently
-     * accessed simulation.
-     */
-    //void get_integrated_quantities_description(
-    //    std::vector<std::string>& legend,
-    //    std::vector<std::string>& description);
 
 
     //! Get the type of this simulation
@@ -1185,61 +1077,6 @@ class SimulationInterface : public TiberModelObject
     virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
 
-    //! Get solution values on the nodes of a specified element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param ids identifiers for the variables to be returned
-     * \param values a vector to store the values. The first index
-     * corresponds to the node.
-     *
-     * \pre
-     * \li \c elem is an active element of this simulation
-     * \li values is already resized to the number of nodes
-     */
-    //virtual void get_solution_secure(const Elem* elem,
-    //    const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
-
-
-    //! Get solution values on inner points of a specified element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param p a vector with the points. All Points are assumed to lie in
-     * \c elem
-     * \param ids identifiers for the variables to be returned
-     * \param values a vector to store the values. The first index
-     * corresponds to the point.
-     *
-     * \pre
-     * \li \c elem is an active element of this simulation
-     * \li \c elem contains all points of \c p
-     * \li values is already resized to the number of points
-     */
-    //virtual void get_solution_secure(const Elem* elem,
-    //    const std::vector<Point>& p, const std::set<ID>& ids,
-    //    std::vector<std::map<ID, double> >& values);
-
-
-    //! Get the solution values on one point of an element
-    /*!
-     * \deprecated
-     * \param elem a pointer to the element
-     * \param p the point (assumed to lie in \c elem)
-     * \param values a vector to store the values.
-     *
-     * \pre
-     * \li \c elem is an active element of this simulation
-     * \li \c elem contains all points of \c p
-     * \li values is already resized to the number of points
-     */
-    //virtual void get_solution_secure(const Elem* elem,
-    //    const Point& p, const std::set<ID>& ids,
-    //    std::map<ID, double>& values);
-
-
-
-
     //! Build nodal result vector for the given variables
     /*!
      * \param variables the identifier for the quantities that should be
@@ -1260,32 +1097,6 @@ class SimulationInterface : public TiberModelObject
      */
     virtual void build_elemental_results(const std::set<std::string>& variables,
         std::vector<double>& results, std::vector<std::string>& legend);
-
-
-    //! Build a vector with some integrated quantities
-    /*!
-     * \param variables the identifier for the quantities that should be
-     * putted into the vector
-     * \param values the vector that will contain the results
-     * \param legend the legend for the values in \c results
-     *
-     * This method is thought for quantities that do not depend on coordinates
-     * but are e.g. scalar integrated quantities like terminal currents.
-     * They can also be scalar values depending on some other quantity like
-     * energy (e.g. for some spectrum). In this case, the legend should contain
-     * the corresponding values of the independent variable.
-     */
-    //virtual void build_integrated_quantities(std::vector<double>& values);
-
-    //! Create legend and description for integrated quantities
-    /*!
-     * cf. build_integrated_quantities()
-     *
-     * The return values of this method are used in printing data files
-     */
-    //virtual void build_integrated_quantities_description(
-    //    std::vector<std::string>& legend,
-    //    std::vector<std::string>& description);
 
 
     //! Create a physical model that can be used by this type of simulation

@@ -12,6 +12,7 @@
 #include <string>
 
 class Elem;
+class Atom;
 class Point;
 class SimulationInterface;
 
@@ -41,10 +42,6 @@ public:
   bool set_simulation(const std::string& name);
 
 
-  //! Get the nodal electrostatic potentials
-  void get_potential(const Elem* elem, std::vector<double>& potentials);
-
-
   //! Get the electrostatic potential in specified points
   void get_potential(const Elem* elem, const std::vector<Point>& p,
       std::vector<double>& potentials, bool local_coord = false);
@@ -55,10 +52,8 @@ public:
       bool local_coord = false);
 
 
-  //THIS SECTION IS TEMPORARY FOR IWCE CALCULATION
-  //------------------------------------------------------------
-  //! Get the nodal electron chemical potentials
-  void get_el_chem_potential(const Elem* elem, std::vector<double>& potentials);
+  //! Get the electrostatic potential at the position of an atom
+  double get_potential(const Atom* atom);
 
 
   //! Get the electron chemical potential in specified points
@@ -70,8 +65,9 @@ public:
   double get_el_chem_potential(const Elem* elem, const Point& p,
       bool local_coord = false);
 
-  //! Get the nodal hole chemical potentials
-  void get_hl_chem_potential(const Elem* elem, std::vector<double>& potentials);
+
+  //! Get the electron chemical potential at the position of an atom
+  double get_el_chem_potential(const Atom* atom);
 
 
   //! Get the hole chemical potential in specified points
@@ -82,7 +78,10 @@ public:
   //! Get the hole chemical potential in one point
   double get_hl_chem_potential(const Elem* elem, const Point& p,
       bool local_coord = false);
-  //-------------------------------------------------------------
+
+
+  //! Get the hole chemical potential at the position of an atom
+  double get_hl_chem_potential(const Atom* atom);
 
 
   //! Tells if this interface has a simulation associated
@@ -108,6 +107,9 @@ private:
 
   //! The ID as returned from the simulation
   ID _id_chem_hl;
+
+  //! For efficiency, we will get all potentials together on an atomic position
+  //const Atom* _current_atom;
 
 };
 

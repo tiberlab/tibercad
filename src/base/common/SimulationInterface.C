@@ -4,6 +4,7 @@
 #include "SimulationEnvironment.h"
 #include "TiberEqSystem.h"
 #include "Material.h"
+#include "Atom.h"
 #include "MaterialBoundary.h"
 #include "EdgeObject.h"
 #include "NodeObject.h"
@@ -2147,12 +2148,31 @@ SimulationInterface::get_solution(const Elem* elem,
 
 
 bool
-SimulationInterface::get_solution(const Atom*, map<ID, vector<double> >&)
+SimulationInterface::get_solution(const Atom* atom, map<ID, vector<double> >& values)
 {
   if (!is_solved()) return false;
 
-  // TODO needs to be implemented
-  return false;
+  // Two possibilities:
+  //  1) we have an atomistic structure, therefore try to get results on atoms
+  //  2) we have only a mesh, therefore get the result on the atomic position
+
+  bool ret = false;
+
+  if (_atomistic_structure != NULL)
+  {
+    get_solution_secure(atom, values);
+    ret = true;
+  }
+  else
+  {
+    vector<Point> p(1);
+    p[0](0) = atom->get_position(0);
+    p[0](1) = atom->get_position(1);
+    p[0](2) = atom->get_position(2);
+    ret = get_solution(atom->get_elem(), values, p);
+  }
+
+  return ret;
 }
 
 

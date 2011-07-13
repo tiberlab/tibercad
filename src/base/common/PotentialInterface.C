@@ -3,15 +3,20 @@
 #include "PotentialInterface.h"
 #include "SimulationInterface.h"
 #include "SimulationOptions.h"
+#include "Atom.h"
 #include "InitFailedException.h"
 
 #include "elem.h"
+#include "mesh_base.h"
 
 
 
 PotentialInterface::PotentialInterface(void) :
   _simulation(NULL),
-  _id(INVALID_ID)
+  _id(INVALID_ID),
+  _id_chem_el(INVALID_ID),
+  _id_chem_hl(INVALID_ID)
+  //_current_atom(NULL)
 {
 }
 
@@ -34,8 +39,6 @@ PotentialInterface::set_simulation(const std::string& name)
           " has no variable 'ElPotential'");
 
 
-    //TODO: THIS PART IS ADDED FOR DIRTY IWCE CALCULATIONS!!!
-    //------------------------------------------------------------
     _id_chem_el = _simulation->get_solution_id("eQFermi");
 
     if (_id == INVALID_ID)
@@ -49,31 +52,12 @@ PotentialInterface::set_simulation(const std::string& name)
       throw InitFailedException("Simulation " + name +
           " has no variable 'hQFermi'");
 
-    //------------------------------------------------------------
-
-
     answer = true;
   }
 
   return answer;
 }
 
-
-void
-PotentialInterface::get_potential(const Elem* elem,
-    std::vector<double>& potentials)
-{
-  assert(elem != NULL);
-
-  if ((_simulation == NULL) ||
-      !_simulation->get_solution(elem, _id, potentials))
-  {
-    int nn = elem->n_nodes();
-    potentials.resize(nn);
-    for (int i = 0; i < nn; i++)
-      potentials[i] = 0.0;
-  }
-}
 
 
 void
@@ -107,20 +91,21 @@ PotentialInterface::get_potential(const Elem* elem, const Point& p,
 }
 
 
-void
-PotentialInterface::get_el_chem_potential(const Elem* elem,
-    std::vector<double>& potentials)
-{
-  assert(elem != NULL);
 
-  if ((_simulation == NULL) ||
-      !_simulation->get_solution(elem, _id_chem_el, potentials))
+double
+PotentialInterface::get_potential(const Atom* atom)
+{
+  Point p(0);
+  switch (get_simulation()->get_mesh().mesh_dimension())
   {
-    int nn = elem->n_nodes();
-    potentials.resize(nn);
-    for (int i = 0; i < nn; i++)
-      potentials[i] = 0.0;
+    case 3:
+      p(2) = atom->get_position(2);
+    case 2:
+      p(1) = atom->get_position(1);
+    default:
+      p(0) = atom->get_position(0);
   }
+  return get_potential(atom->get_elem(), p);
 }
 
 
@@ -155,20 +140,20 @@ PotentialInterface::get_el_chem_potential(const Elem* elem, const Point& p,
 }
 
 
-void
-PotentialInterface::get_hl_chem_potential(const Elem* elem,
-    std::vector<double>& potentials)
+double
+PotentialInterface::get_el_chem_potential(const Atom* atom)
 {
-  assert(elem != NULL);
-
-  if ((_simulation == NULL) ||
-      !_simulation->get_solution(elem, _id_chem_hl, potentials))
+  Point p(0);
+  switch (get_simulation()->get_mesh().mesh_dimension())
   {
-    int nn = elem->n_nodes();
-    potentials.resize(nn);
-    for (int i = 0; i < nn; i++)
-      potentials[i] = 0.0;
+    case 3:
+      p(2) = atom->get_position(2);
+    case 2:
+      p(1) = atom->get_position(1);
+    default:
+      p(0) = atom->get_position(0);
   }
+  return get_el_chem_potential(atom->get_elem(), p);
 }
 
 
@@ -201,3 +186,21 @@ PotentialInterface::get_hl_chem_potential(const Elem* elem, const Point& p,
 
   return temp[0];
 }
+
+
+double
+PotentialInterface::get_hl_chem_potential(const Atom* atom)
+{
+  Point p(0);
+  switch (get_simulation()->get_mesh().mesh_dimension())
+  {
+    case 3:
+      p(2) = atom->get_position(2);
+    case 2:
+      p(1) = atom->get_position(1);
+    default:
+      p(0) = atom->get_position(0);
+  }
+  return get_hl_chem_potential(atom->get_elem(), p);
+}
+
