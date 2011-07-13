@@ -1225,8 +1225,9 @@ ETB::get_solution_secure(const Elem* elem,
                 values[MeshStates][i] = build_rho3d(_eigenvector_mag[i], elem->centroid());
               else if (_dim == 2)
                 values[MeshStates][i] = build_rho2d(_eigenvector_mag[i], elem->centroid());
-              else if (_dim == 1)
+              else if (_dim == 1){
                 values[MeshStates][i] = build_average_rho1d(_eigenvector_mag[i], elem);
+              std::cout << "I put this stuff " <<values[MeshStates][i] << " in your stuff" << std::endl; }
               else std::cerr <<"Unknown number of dimensions, values not assigned in" 
                 " ETG::get_solutionsecure" << std::endl;
     }
@@ -1424,9 +1425,6 @@ ETB::do_setup_solution_variables(void)
   declare_solution(ElQuantumDensity, REAL, CELL, "q"+units);
   declare_solution(HlQuantumDensity, REAL, CELL, "q"+units);
   declare_solution(MeshStates, NTUPLE, CELL, "1"+units, 1);
-
-  if (plot_solution("ProbabilityDensity"))
-	    add_plot_variable(MeshStates);
 
 }
 
