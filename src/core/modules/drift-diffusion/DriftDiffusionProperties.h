@@ -9,6 +9,7 @@
 
 #include "TemperatureInterface.h"
 #include "StrainInterface.h"
+#include "BandProperties.h"
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
 #include "TiberCad.h"
@@ -180,12 +181,13 @@ class DriftDiffusionProperties : public PhysicalModel
      * This structure holds the basic properties of a band for given
      * conditions (temp etc.)
      */
+    /*
     struct BandProperties
     {
       //! The effective mass for the DOS
       /*!
        * It includes any degeneration, i.e. also spin
-       */
+       * /
       double effective_mass;
 
       //! The effective density of states
@@ -203,7 +205,7 @@ class DriftDiffusionProperties : public PhysicalModel
       //! Get thermal velocity in cm/s
       /*!
        * \param temp the temperature in eV
-       */
+       * /
       double get_thermal_velocity(double temp) const
       {
         const double fac = 3 * Constants::e / Constants::me;
@@ -211,6 +213,7 @@ class DriftDiffusionProperties : public PhysicalModel
         return (100.0 * std::sqrt(vth));
       }
     };
+    */
 
 
 
@@ -664,25 +667,25 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the lowest conduction band edge
     double get_conduction_band_edge(void) const
-      { return conduction_band.band_edge; };
+      { return _conduction_band.get_band_edge(); };
 
     //! Get all conduction bands
-    const std::vector<double>& get_conduction_bands(void)
-      { return conduction_band.band_edges; };
+    void get_conduction_bands(std::vector<double>& bands)
+      { return _conduction_band.get_bands(bands); };
 
 
     //! Get the highest valence band edge
     double get_valence_band_edge(void) const
-      { return valence_band.band_edge; };
+      { return _valence_band.get_band_edge(); };
 
     //! Get all valence bands
-    const std::vector<double>& get_valence_bands(void)
-      { return valence_band.band_edges; };
+    void get_valence_bands(std::vector<double>& bands)
+      { return _valence_band.get_bands(bands); };
 
 
     //! Get the band gap
     double get_band_gap(void) const
-      { return conduction_band.band_edge - valence_band.band_edge; };
+      { return _conduction_band.get_band_edge() - _valence_band.get_band_edge(); };
 
 
     void get_net_recombination_rates(std::vector<double>& rates);
@@ -770,22 +773,22 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the conduction band properties
     const BandProperties& get_conduction_band(void) const
-      { return conduction_band; };
+      { return _conduction_band; };
 
 
     //! Get the valence band properties
     const BandProperties& get_valence_band(void) const
-      { return valence_band; };
+      { return _valence_band; };
 
 
     //! Get the conduction band properties
     BandProperties& get_conduction_band(void)
-      { return conduction_band; };
+      { return _conduction_band; };
 
 
     //! Get the valence band properties
     BandProperties& get_valence_band(void)
-      { return valence_band; };
+      { return _valence_band; };
 
 
     //! Get the electrons
@@ -1021,13 +1024,13 @@ class DriftDiffusionProperties : public PhysicalModel
     /*!
      * Band properties are assumed to be elemental data, \em not nodal data
      */
-    BandProperties conduction_band;
+    BandProperties _conduction_band;
 
     //! The conduction band properties
     /*!
      * Band properties are assumed to be elemental data, \em not nodal data
      */
-    BandProperties valence_band;
+    BandProperties _valence_band;
 
 
     //! The electron traps
@@ -1343,14 +1346,16 @@ DriftDiffusionProperties::setup_band_edges(void)
   double kT = _lattice_vt;
   _pd->electron_vt = _pd->hole_vt = kT;
 
-  BandProperties& cb = conduction_band;
-  BandProperties& vb = valence_band;
+  BandProperties& cb = _conduction_band;
+  BandProperties& vb = _valence_band;
+  cb.set_temperature(kT);
+  vb.set_temperature(kT);
 
-  cb.effective_DOS =
-    get_DOS_factor() * std::pow(kT * cb.effective_mass, 1.5);
+  //cb.get_effective_DOS() =
+  //  get_DOS_factor() * std::pow(kT * cb.get_effective_mass(), 1.5);
 
-  vb.effective_DOS =
-    get_DOS_factor() * std::pow(kT * vb.effective_mass, 1.5);
+  //vb.get_effective_DOS() =
+  //  get_DOS_factor() * std::pow(kT * vb.get_effective_mass(), 1.5);
 }
 
 inline

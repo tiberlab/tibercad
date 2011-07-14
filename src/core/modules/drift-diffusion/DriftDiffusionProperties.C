@@ -556,8 +556,11 @@ DriftDiffusionProperties::calculate_densities(void)
   double kTe = _pd->electron_vt;
   double kTh = _pd->hole_vt;
 
-  const BandProperties& cb = conduction_band;
-  const BandProperties& vb = valence_band;
+  BandProperties& cb = _conduction_band;
+  BandProperties& vb = _valence_band;
+
+  cb.set_temperature(kTe);
+  vb.set_temperature(kTh);
 
   double Ec = get_conduction_band_edge();
   double Ev = get_valence_band_edge();
@@ -567,7 +570,7 @@ DriftDiffusionProperties::calculate_densities(void)
   if (_electrons->is_quantum_density() && has_solution() && use_predictor())
   {
     // set the OLD potentials
-    _electrons->set_classical_parameters(cb.effective_DOS,
+    _electrons->set_classical_parameters(cb.get_effective_DOS(),
         Ec - _pd->old_electric_potential, -_pd->old_fermi_e, kTe);
 
     double qdens = _electrons->get_particle_density();
@@ -577,7 +580,7 @@ DriftDiffusionProperties::calculate_densities(void)
     double old_dens = _electrons->get_particle_density();
 
     // now get the new classical density and derivative
-    _electrons->set_classical_parameters(cb.effective_DOS,
+    _electrons->set_classical_parameters(cb.get_effective_DOS(),
         Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
     _pd->electron_density = _electrons->get_particle_density();
     _pd->electron_density_derivative = _electrons->get_particle_density_derivative();
@@ -592,7 +595,7 @@ DriftDiffusionProperties::calculate_densities(void)
   }
   else
   {
-    _electrons->set_classical_parameters(cb.effective_DOS,
+    _electrons->set_classical_parameters(cb.get_effective_DOS(),
         Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
     _pd->electron_density = _electrons->get_particle_density();
     _pd->electron_density_derivative = _electrons->get_particle_density_derivative();
@@ -605,7 +608,7 @@ DriftDiffusionProperties::calculate_densities(void)
   if (_holes->is_quantum_density() && has_solution() && use_predictor())
   {
     // set the OLD potentials
-    _holes->set_classical_parameters(vb.effective_DOS,
+    _holes->set_classical_parameters(vb.get_effective_DOS(),
         -Ev + _pd->old_electric_potential, _pd->old_fermi_h, kTh);
 
     double qdens = _holes->get_particle_density();
@@ -615,7 +618,7 @@ DriftDiffusionProperties::calculate_densities(void)
     double old_dens = _holes->get_particle_density();
 
     // now get the new classical density and derivative
-    _holes->set_classical_parameters(vb.effective_DOS,
+    _holes->set_classical_parameters(vb.get_effective_DOS(),
         -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
     _pd->hole_density = _holes->get_particle_density();
     _pd->hole_density_derivative = -_holes->get_particle_density_derivative();
@@ -630,7 +633,7 @@ DriftDiffusionProperties::calculate_densities(void)
   }
   else
   {
-    _holes->set_classical_parameters(vb.effective_DOS,
+    _holes->set_classical_parameters(vb.get_effective_DOS(),
         -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
     _pd->hole_density = _holes->get_particle_density();
     _pd->hole_density_derivative = -_holes->get_particle_density_derivative();
@@ -807,9 +810,10 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
   {
     double kTe = _pd->electron_vt;
 
-    const BandProperties& cb = conduction_band;
+    BandProperties& cb = _conduction_band;
+    cb.set_temperature(kTe);
     double Ec = get_conduction_band_edge();
-    double Nc = cb.effective_DOS;
+    double Nc = cb.get_effective_DOS();
 
     if (_pd->electron_density > 0.0)
       _pd->fermi_e = -kTe * log(_pd->electron_density / Nc) - Ec +
@@ -825,9 +829,10 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
   {
     double kTh = _pd->hole_vt;
 
-    const BandProperties& vb = valence_band;
+    BandProperties& vb = _valence_band;
+    vb.set_temperature(kTh);
     double Ev = get_valence_band_edge();
-    double Nv = vb.effective_DOS;
+    double Nv = vb.get_effective_DOS();
 
     if (_pd->hole_density > 0.0)
       _pd->fermi_h = kTh * log(_pd->hole_density / Nv) - Ev +
@@ -899,19 +904,21 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // call this method to properly set conduction and valence band DOS
   // and energy
   setup_band_edges();
-
-  const BandProperties& cb = conduction_band;
-  const BandProperties& vb = valence_band;
-  double Ec = cb.band_edge;
-  double Ev = vb.band_edge;
-
   double kT = get_lattice_temperature();
+
+  BandProperties& cb = _conduction_band;
+  BandProperties& vb = _valence_band;
+  cb.set_temperature(kT);
+  vb.set_temperature(kT);
+  double Ec = cb.get_band_edge();
+  double Ev = vb.get_band_edge();
+
 
   // for a dielectric we don't need much...
   if (is_dielectric())
   {
     _equilibrium_fermi_level = 0.5 * (Ec + Ev);
-    double ni2 = cb.effective_DOS * vb.effective_DOS
+    double ni2 = cb.get_effective_DOS() * vb.get_effective_DOS()
         * exp(-get_band_gap() / kT);
     double ni = sqrt(ni2);
     _intrinsic_density = ni;
@@ -932,7 +939,7 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   double Na = get_material()->get_total_acceptor_density();
 
 
-  double ni2 = cb.effective_DOS * vb.effective_DOS
+  double ni2 = cb.get_effective_DOS() * vb.get_effective_DOS()
     * exp(-get_band_gap() / kT);
   double ni = sqrt(ni2);
   _intrinsic_density = ni;
@@ -941,11 +948,11 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   // Hmm... Is there a better guess?
   if (Nd > Na)
   {
-    guess = Ec - kT * log(cb.effective_DOS / (Nd + ni));
+    guess = Ec - kT * log(cb.get_effective_DOS() / (Nd + ni));
   }
   else
   {
-    guess = Ev + kT * log(vb.effective_DOS / (Na + ni));
+    guess = Ev + kT * log(vb.get_effective_DOS() / (Na + ni));
   }
 
 

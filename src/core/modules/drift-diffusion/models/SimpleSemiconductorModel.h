@@ -98,8 +98,8 @@ void
 SimpleSemiconductorModel::set_conduction_band_properties(double band_edge,
     double effective_mass, double mobility)
 {
-  get_conduction_band().band_edge = band_edge;
-  get_conduction_band().effective_mass = effective_mass;
+  get_conduction_band()._band_edge = band_edge;
+  get_conduction_band()._effective_mass = effective_mass;
   get_pd().electron_mobility = mobility;
 }
 
@@ -109,8 +109,8 @@ void
 SimpleSemiconductorModel::set_valence_band_properties(double band_edge,
     double effective_mass, double mobility)
 {
-  get_valence_band().band_edge = band_edge;
-  get_valence_band().effective_mass = effective_mass;
+  get_valence_band()._band_edge = band_edge;
+  get_valence_band()._effective_mass = effective_mass;
   get_pd().hole_mobility = mobility;
 }
 

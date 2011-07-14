@@ -105,8 +105,8 @@ SemiconductorModel::prepare_element_data(void)
 
       elem_data.Ec = get_conduction_band_edge();
       elem_data.Ev = get_valence_band_edge();
-      elem_data.mc = get_conduction_band().effective_mass;
-      elem_data.mv = get_valence_band().effective_mass;
+      elem_data.mc = get_conduction_band().get_effective_mass();
+      elem_data.mv = get_valence_band().get_effective_mass();
       elem_data.Ef0 = get_equilibrium_fermi_level();
       //elem_data.ni = get_intrinsic_density();
 
@@ -115,10 +115,10 @@ SemiconductorModel::prepare_element_data(void)
     {
       const ElementData& elem_data = it->second;
 
-      get_conduction_band().band_edge = elem_data.Ec;
-      get_conduction_band().effective_mass = elem_data.mc;
-      get_valence_band().band_edge = elem_data.Ev;
-      get_valence_band().effective_mass = elem_data.mv;
+      get_conduction_band()._band_edge = elem_data.Ec;
+      get_conduction_band()._effective_mass = elem_data.mc;
+      get_valence_band()._band_edge = elem_data.Ev;
+      get_valence_band()._effective_mass = elem_data.mv;
 
       // this sets the band edges and the effective DOS in the base class
       setup_band_edges();
@@ -147,56 +147,56 @@ SemiconductorModel::extract_band_properties(void)
   const std::vector<DDsemiconductor::band_extremum>& cbs =
     _bulk_model->get_conduction_band_energy_mass();
 
-  get_conduction_band().band_edges.resize(1);
+  std::vector<double> band_edges(1);
 
   // get minimum
   int id = 0;
-  get_conduction_band().band_edges[0] = cbs[0].energy;
+  band_edges[0] = cbs[0].energy;
 
   for (unsigned int i = 1; i < cbs.size(); i++)
   {
     if (cbs[i].energy < cbs[id].energy)
       id = i;
   }
-  get_conduction_band().band_edge = cbs[id].energy;
-  get_conduction_band().effective_mass = cbs[id].mass_DOS
+  get_conduction_band()._band_edge = cbs[id].energy;
+  get_conduction_band()._effective_mass = cbs[id].mass_DOS
     * std::pow(cbs[id].degeneracy, 2.0 / 3.0);
-  get_conduction_band().degeneracy = cbs[id].degeneracy;
+  get_conduction_band()._degeneracy = cbs[id].degeneracy;
 
   // treat valence band
   const std::vector<DDsemiconductor::band_extremum>& vbs =
     _bulk_model->get_valence_band_energy_mass();
 
-  get_valence_band().band_edges.resize(vbs.size());
+  band_edges.resize(vbs.size());
 
   // get maximum
   id = 0;
-  get_valence_band().band_edges[0] = vbs[0].energy;
+  band_edges[0] = vbs[0].energy;
 
   //double kT = SimulationOptions::T * Constants::k_B;
   double kT = get_lattice_temperature();
   double delta_max = 4.0 * kT;
   for (unsigned int i = 1; i < vbs.size(); i++)
   {
-    get_valence_band().band_edges[i] = vbs[i].energy;
+    band_edges[i] = vbs[i].energy;
     if (vbs[i].energy > vbs[id].energy)
       id = i;
   }
-  get_valence_band().band_edge = vbs[id].energy;
-  get_valence_band().degeneracy = vbs[id].degeneracy;
+  get_valence_band()._band_edge = vbs[id].energy;
+  get_valence_band()._degeneracy = vbs[id].degeneracy;
 
   double tmp = 0;
   // include other bands
   for (unsigned int i = 0; i < vbs.size(); i++)
   {
-    double delta = get_valence_band().band_edge - vbs[i].energy;
+    double delta = get_valence_band().get_band_edge() - vbs[i].energy;
     if (delta < delta_max)
       tmp += vbs[i].degeneracy * std::pow(vbs[i].mass_DOS, 1.5)
         * std::exp(-delta / kT);
 
     //cerr << i << ", Ev = " << vbs[i].energy << ", m = " << vbs[i].mass_DOS << ", d = " << vbs[i].degeneracy << endl;
   }
-  get_valence_band().effective_mass = std::pow(tmp, 2.0 / 3.0);
+  get_valence_band()._effective_mass = std::pow(tmp, 2.0 / 3.0);
   //cerr << "DOS mass = " << get_valence_band().effective_mass  << "\n***\n";
 
 
@@ -254,7 +254,7 @@ SemiconductorModel::do_print_info(void)
     ostringstream os;
 
     os << " - Eg = " <<
-      get_conduction_band().band_edge - get_valence_band().band_edge <<
+      get_conduction_band().get_band_edge() - get_valence_band().get_band_edge() <<
       ", Ef0 = " << get_equilibrium_fermi_level()
       << ", ni = " << std::sqrt(get_intrinsic_density_squared())
       << Messages::endl;
@@ -266,8 +266,8 @@ SemiconductorModel::do_print_info(void)
         << ", m = " << cbs[i].mass_DOS
         << ", d = " << cbs[i].degeneracy << Messages::endl;
     }
-    os << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
-      << "  m_dos = " << get_conduction_band().effective_mass / deg
+    os << "   Nc = " << get_conduction_band().get_effective_DOS() << " cm^-3"
+      << "  m_dos = " << get_conduction_band().get_effective_mass() / deg
       << "  v_th = " << get_conduction_band().get_thermal_velocity(SimulationOptions::T)
       << Messages::endl;
 
@@ -278,8 +278,8 @@ SemiconductorModel::do_print_info(void)
         << ", m = " << vbs[i].mass_DOS
         << ", d = " << vbs[i].degeneracy << Messages::endl;
     }
-    os << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
-      << "  m_dos = " << get_valence_band().effective_mass / deg
+    os << "   Nv = " << get_valence_band().get_effective_DOS() << " cm^-3"
+      << "  m_dos = " << get_valence_band().get_effective_mass() / deg
       << "  v_th = " << get_valence_band().get_thermal_velocity(SimulationOptions::T);
 
     Messages::info(os.str());
