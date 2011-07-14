@@ -467,6 +467,7 @@ void ETB::do_solve(void){
 
   //Set _solution_size in base class TightBinding 
   _solution_size = _solution.size();
+  declare_solution(MeshStates, NTUPLE, CELL, "1", _solution_size);  
 
   // write state infos on screen.
   write_states();
