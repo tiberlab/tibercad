@@ -139,7 +139,6 @@ int main (int argc, char** argv)
       inputfile = open_file();
 
 
-    // in windows argv[0] is the absolute path
     char* root = getenv("TIBERCADROOT");
     if (root == NULL)
     {
@@ -181,12 +180,27 @@ int main (int argc, char** argv)
 
 #if defined(_WIN32)
     {
+      //TCHAR cwd[MAX_PATH] = "";
+
+      //if(!GetCurrentDirectory(sizeof(cwd) - 1, cwd))
+      //{
+      //  cerr << "TiberCAD: cannot get working directory." << endl;
+      //  if (interactive) cin.get();
+      //  return 1;
+      //}
+
+      //string dirname(cwd);
+
       string dirname = Utils::dirname(inputfile);
-      if (SetCurrentDirectory(dirname.c_str()) == 0)
+      if (!dirname.empty())
       {
-        cerr << "TiberCAD: cannot set " << dirname << " as working directory." << endl;
-        if (interactive) cin.get();
-        return 1;
+        // try to set the working directory
+        if (SetCurrentDirectory(dirname.c_str()) == 0)
+        {
+          cerr << "TiberCAD: cannot set " << dirname << " as working directory." << endl;
+          if (interactive) cin.get();
+          return 1;
+        }
       }
     }
 #endif

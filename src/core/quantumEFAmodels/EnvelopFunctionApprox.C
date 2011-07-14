@@ -46,7 +46,7 @@ inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, cons
 */
 //---------------------------------------------------------------------------------//
 
-inline double EnvelopFunctionApprox::get_band_edge( const Elem* elem) const
+inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem) const
 {
   vector<double> values;
   vector<Point> p(elem->n_nodes());
@@ -56,20 +56,16 @@ inline double EnvelopFunctionApprox::get_band_edge( const Elem* elem) const
 
   poisson_equation->get_solution(elem, band_edge_ID, values, p);
 
-  double temp = values[0];
-  double bedge = temp;
+  double bedge = values[0];
 
   for (size_t i = 1; i < elem->n_nodes(); ++i)
   {
-     temp = values[i];
+     double temp = values[i];
      if(opt.particle == "el")
         bedge = (temp < bedge) ? temp : bedge;
      else
         bedge = (temp > bedge) ? temp : bedge;
    }
-
-  //if (!poisson_equation->get_solution(elem, band_edge_ID, values, qp))
-  //  throw ModelErrorException("efaschroedinger needs solved Poisson equation");
 
   return bedge;
 }
@@ -324,58 +320,34 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
 double EnvelopFunctionApprox::get_band_edge() const
 {
 
-
-
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
+  assert(el != end_el);
 
-
-
-  //vector <double> electric_potential(1, 0.0);
-
-  const Elem* elem = *el;
-  double temp = get_band_edge(elem);  
-
-  double band_edge=temp;
+  double band_edge = get_band_edge(*el);
+  ++el;
 
 
   for (; el != end_el ; ++el )
   {
-    elem = *el;
+    const Elem* elem = *el;
 
-    temp = get_band_edge( elem);
-
+    double temp = get_band_edge( elem);
 
     if (opt.particle == "el")
     {
-
       if (band_edge > temp)
 	band_edge = temp;
     }
     else
     {
-
-
       if (band_edge < temp)
 	band_edge = temp;
-
     }
-
-
-
-
-
   }
 
-
-
-
-
-  return(band_edge);
-
-
-
+  return (band_edge);
 
 }
 

@@ -2982,7 +2982,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   const Options& params = get_my_options();
 
 
-  const NumericVector<Number>& oldx = system.get_vector("old_sol");
+  NumericVector<Number>& oldx = system.get_vector("old_sol");
   //SparseMatrix<double>& sysmat = system.get_matrix("sysmatrix");
   //if (residual != NULL)
   //  sysmat.zero();
@@ -3994,13 +3994,16 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     /*
     if (coupling & ELECTRONS)
     {
+      if (__private_counter > 0)
+        oldx -= x;
       ostringstream os;
       os << "_" << __private_counter;
       write_nodal_vector("residual" + os.str(), *residual);
       cerr << "writing " << "residual" << os.str() << " (norm = " << residual->l2_norm() << ")\n";
       residual->print_matlab("F" + os.str() + ".m");
-      write_nodal_vector("x" + os.str(), x);
+      write_nodal_vector("x" + os.str(), oldx);
       __private_counter++;
+      oldx = x;
     }
     */
   }

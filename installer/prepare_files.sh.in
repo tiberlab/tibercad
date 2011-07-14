@@ -42,7 +42,8 @@ make_windows_package () {
   curdir=`pwd`
   cd ${files}
   find ./materials -type f -exec $unix2dos {} \;
-  find ./examples -type f -exec $unix2dos {} \;
+  # ATTENTION: do not process binary files with unix2dos!
+  find ./examples -not -name "*.tsv" -exec $unix2dos {} \;
   $unix2dos Copyright.txt
   $unix2dos Readme.txt
 

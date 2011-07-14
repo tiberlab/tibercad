@@ -268,6 +268,7 @@ SemiconductorModel::do_print_info(void)
     }
     os << "   Nc = " << get_conduction_band().effective_DOS << " cm^-3"
       << "  m_dos = " << get_conduction_band().effective_mass / deg
+      << "  v_th = " << get_conduction_band().get_thermal_velocity(SimulationOptions::T)
       << Messages::endl;
 
     os << " - valence bands:" << Messages::endl;
@@ -278,7 +279,8 @@ SemiconductorModel::do_print_info(void)
         << ", d = " << vbs[i].degeneracy << Messages::endl;
     }
     os << "   Nv = " << get_valence_band().effective_DOS << " cm^-3"
-      << "  m_dos = " << get_valence_band().effective_mass / deg;
+      << "  m_dos = " << get_valence_band().effective_mass / deg
+      << "  v_th = " << get_valence_band().get_thermal_velocity(SimulationOptions::T);
 
     Messages::info(os.str());
     Messages::newline();
