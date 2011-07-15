@@ -563,7 +563,11 @@ Device::set_material(Material* material, const vector<ID>& region_ids,
   ostringstream os;
   os << "Added material " << material->get_name()
      << " for region \'" << region_name
-     << "\' (using datafile " << material->get_database().get_data_file() << ")";
+     << "\' (mesh regions " << region_ids[0];
+  for (unsigned int i = 1; i < region_ids.size(); ++i)
+    os << ", " << region_ids[i];
+  os << ")" << endl
+     << "  (using datafile " << material->get_database().get_data_file() << ")";
   Messages::info(os.str());
   material->info();
 }
