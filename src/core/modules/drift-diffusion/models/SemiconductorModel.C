@@ -211,15 +211,15 @@ SemiconductorModel::calculate_equilibrium_properties(void)
   assert(_bulk_model != NULL);
 
   // it wants temperature in K
-  _bulk_model->set_temperature(get_lattice_temperature() / Constants::k_B);
-  _bulk_model->set_strain(get_strain());
+  //_bulk_model->set_temperature(get_lattice_temperature() / Constants::k_B);
+  //_bulk_model->set_strain(get_strain());
 
   // calculate conduction and valence band data
-  _bulk_model->calculate_conduction_band_extremum();
-  _bulk_model->calculate_valence_band_extremum();
+  //_bulk_model->calculate_conduction_band_extremum();
+  //_bulk_model->calculate_valence_band_extremum();
 
   // get the band properties from _bulk_model
-  extract_band_properties();
+  //extract_band_properties();
 
   // call the method of the parent class
   Parent::calculate_equilibrium_properties();

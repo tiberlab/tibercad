@@ -37,7 +37,7 @@ SimpleSemiconductorModel::do_init(void)
   get_conduction_band()._band_edge = get_option("Ec", 2.2288);
   //get_conduction_band().band_edges.resize(1);
   //get_conduction_band().band_edges[0] = get_conduction_band().band_edge;
-  //get_valence_band()._band_edge = get_option("Ev", 1.1047);
+  get_valence_band()._band_edge = get_option("Ev", 1.1047);
   //get_valence_band().band_edges.resize(1);
   //get_valence_band().band_edges[0] = get_valence_band().band_edge;
 

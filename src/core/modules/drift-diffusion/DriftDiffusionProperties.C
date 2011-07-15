@@ -141,6 +141,33 @@ DriftDiffusionProperties::create_submodels(void)
     get_options().add_submodel("permittivity", opts);
   }
 
+  if (!get_options().has_submodel("conduction_band"))
+  {
+    ModelOptions opts;
+    opts.set_option("particle", "el");
+    opts.set_option("type", "kp");
+    get_options().add_submodel("band_properties", opts);
+  }
+  else
+  {
+    ModelOptions opts(get_options().submodels_begin("conduction_band")->second);
+    opts.set_option("particle", "el");
+    get_options().add_submodel("band_properties", opts);
+  }
+
+  if (!get_options().has_submodel("valence_band"))
+  {
+    ModelOptions opts;
+    opts.set_option("particle", "hl");
+    opts.set_option("type", "kp");
+    get_options().add_submodel("band_properties", opts);
+  }
+  else
+  {
+    ModelOptions opts(get_options().submodels_begin("valence_band")->second);
+    opts.set_option("particle", "hl");
+    get_options().add_submodel("band_properties", opts);
+  }
 
   // particle densities
   {
@@ -319,6 +346,8 @@ DriftDiffusionProperties::create_submodels(void)
   get_options().delete_submodels("recombination");
   get_options().delete_submodels("generation");
   get_options().delete_submodels("thermoelectric_power");
+  get_options().delete_submodels("conduction_band");
+  get_options().delete_submodels("valence_band");
 }
 
 
@@ -374,8 +403,24 @@ DriftDiffusionProperties::do_init(void)
   parse_options();
 
   // they must be here
-  SubmodelIterator it = submodels_begin("particle_density");
-  SubmodelIterator end = submodels_end("particle_density");
+  SubmodelIterator it = submodels_begin("band_properties");
+  SubmodelIterator end = submodels_end("band_properties");
+  for ( ; it != end; ++it)
+  {
+    BandProperties* bp = static_cast<BandProperties*>(it->second);
+    bp->get_options().print_all();
+
+    if (string("el") == bp->get_options().get_option("particle", ""))
+      _conduction_band = bp;
+    else if (string("hl") == bp->get_options().get_option("particle", ""))
+      _valence_band = bp;
+    else
+      throw InitFailedException("Unknown particle for Drift-Diffusion model");
+  }
+
+  // they must be here
+  it = submodels_begin("particle_density");
+  end = submodels_end("particle_density");
   for ( ; it != end; ++it)
   {
     ParticleDensity* pd = static_cast<ParticleDensity*>(it->second);
@@ -556,8 +601,8 @@ DriftDiffusionProperties::calculate_densities(void)
   double kTe = _pd->electron_vt;
   double kTh = _pd->hole_vt;
 
-  BandProperties& cb = _conduction_band;
-  BandProperties& vb = _valence_band;
+  BandProperties& cb = get_conduction_band();
+  BandProperties& vb = get_valence_band();
 
   cb.set_temperature(kTe);
   vb.set_temperature(kTh);
@@ -810,7 +855,7 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
   {
     double kTe = _pd->electron_vt;
 
-    BandProperties& cb = _conduction_band;
+    BandProperties& cb = get_conduction_band();
     cb.set_temperature(kTe);
     double Ec = get_conduction_band_edge();
     double Nc = cb.get_effective_DOS();
@@ -829,7 +874,7 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
   {
     double kTh = _pd->hole_vt;
 
-    BandProperties& vb = _valence_band;
+    BandProperties& vb = get_valence_band();
     vb.set_temperature(kTh);
     double Ev = get_valence_band_edge();
     double Nv = vb.get_effective_DOS();
@@ -906,11 +951,12 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   setup_band_edges();
   double kT = get_lattice_temperature();
 
-  BandProperties& cb = _conduction_band;
-  BandProperties& vb = _valence_band;
-  cb.set_temperature(kT);
-  vb.set_temperature(kT);
+  BandProperties& cb = get_conduction_band();
+  cb.calculate(kT);
   double Ec = cb.get_band_edge();
+
+  BandProperties& vb = get_valence_band();
+  vb.calculate(kT);
   double Ev = vb.get_band_edge();
 
 

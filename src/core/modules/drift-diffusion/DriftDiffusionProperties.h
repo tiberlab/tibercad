@@ -667,25 +667,25 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the lowest conduction band edge
     double get_conduction_band_edge(void) const
-      { return _conduction_band.get_band_edge(); };
+      { return _conduction_band->get_band_edge(); };
 
     //! Get all conduction bands
     void get_conduction_bands(std::vector<double>& bands)
-      { return _conduction_band.get_bands(bands); };
+      { return _conduction_band->get_bands(bands); };
 
 
     //! Get the highest valence band edge
     double get_valence_band_edge(void) const
-      { return _valence_band.get_band_edge(); };
+      { return _valence_band->get_band_edge(); };
 
     //! Get all valence bands
     void get_valence_bands(std::vector<double>& bands)
-      { return _valence_band.get_bands(bands); };
+      { return _valence_band->get_bands(bands); };
 
 
     //! Get the band gap
     double get_band_gap(void) const
-      { return _conduction_band.get_band_edge() - _valence_band.get_band_edge(); };
+      { return _conduction_band->get_band_edge() - _valence_band->get_band_edge(); };
 
 
     void get_net_recombination_rates(std::vector<double>& rates);
@@ -773,22 +773,22 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the conduction band properties
     const BandProperties& get_conduction_band(void) const
-      { return _conduction_band; };
+      { return *_conduction_band; };
 
 
     //! Get the valence band properties
     const BandProperties& get_valence_band(void) const
-      { return _valence_band; };
+      { return *_valence_band; };
 
 
     //! Get the conduction band properties
     BandProperties& get_conduction_band(void)
-      { return _conduction_band; };
+      { return *_conduction_band; };
 
 
     //! Get the valence band properties
     BandProperties& get_valence_band(void)
-      { return _valence_band; };
+      { return *_valence_band; };
 
 
     //! Get the electrons
@@ -1024,13 +1024,13 @@ class DriftDiffusionProperties : public PhysicalModel
     /*!
      * Band properties are assumed to be elemental data, \em not nodal data
      */
-    BandProperties _conduction_band;
+    BandProperties* _conduction_band;
 
     //! The conduction band properties
     /*!
      * Band properties are assumed to be elemental data, \em not nodal data
      */
-    BandProperties _valence_band;
+    BandProperties* _valence_band;
 
 
     //! The electron traps
@@ -1346,8 +1346,8 @@ DriftDiffusionProperties::setup_band_edges(void)
   double kT = _lattice_vt;
   _pd->electron_vt = _pd->hole_vt = kT;
 
-  BandProperties& cb = _conduction_band;
-  BandProperties& vb = _valence_band;
+  BandProperties& cb = *_conduction_band;
+  BandProperties& vb = *_valence_band;
   cb.set_temperature(kT);
   vb.set_temperature(kT);
 

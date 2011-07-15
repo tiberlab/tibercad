@@ -3,14 +3,14 @@
 #ifndef _BANDPROPERTIES_H_
 #define _BANDPROPERTIES_H_
 
-#include "PhysicalModelInterface.h"
+#include "DriftDiffusionModelInterface.h"
 #include "Constants.h"
 
 class ModelOptions;
 
 
 //! Base class for band parameter models
-class BandProperties : public PhysicalModelInterface
+class BandProperties : public DriftDiffusionModelInterface
 {
 
   public:
@@ -20,6 +20,9 @@ class BandProperties : public PhysicalModelInterface
 
     //! Destructor
     virtual ~BandProperties(void) {}
+
+    //! Calculate for a given temperature
+    void calculate(double temperature);
 
     //! Set the temperature
     void set_temperature(double temperature) { _temperature = temperature; }
@@ -55,9 +58,26 @@ class BandProperties : public PhysicalModelInterface
     //! Get the temperature
     double get_temperature(void) const { return _temperature; }
 
-    //! initialize
+    //! Initialize
     virtual void do_init(void) {};
 
+    //! Calculate band properties
+    virtual void do_calculate(void) {};
+
+
+    //! Get band edge
+    double& band_edge(void) { return _band_edge; }
+
+
+    //! Get effective mass
+    double& effective_mass(void) { return _effective_mass; }
+
+
+    //! Get degeneracy
+    unsigned int& degeneracy(void) { return _degeneracy; }
+
+    //! Get the DOS factor
+    double get_dos_factor(void) const { return _dos_factor; }
 
 
   //private:
@@ -85,6 +105,13 @@ class BandProperties : public PhysicalModelInterface
 };
 
 
+inline
+void
+BandProperties::calculate(double temperature)
+{
+  set_temperature(temperature);
+  do_calculate();
+}
 
 inline
 double

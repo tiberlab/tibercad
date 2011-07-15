@@ -22,7 +22,6 @@ GMSHVERSION=${GMSHVERSION:-"2.5.0"}
 # whether to compile debug mode or not (y/n)
 DEBUG=${DEBUG:-'n'}
 
-TIBEROPTS=${TIBEROPTS:-"--disable-uptight --enable-license-check --disable-hetero"}
 
 
 # build shared libs (yes/no)
