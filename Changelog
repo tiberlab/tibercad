@@ -5,6 +5,10 @@ New features:
 
 	- improved automatic guess for eigenenergies in quantum
 	  simulations
+	- new submodels conduction_band and valence_band in driftdiffusion,
+	  allowing for better control of band parameters
+	- extended syntax for plot variables: can now switch off variables by
+	  writing plot = (foo, -bar), e.g. plot = (all, -Strain)
 	
 
 Version 2.0.0
@@ -20,6 +24,7 @@ New features:
 	- improved selfconsistency Quantum/Drift-Diffusion based on
 	  corrector/predictor
 	- windows version can open file dialog to open input file
+	- can now slectively exclude regions by saying e.g. regions = (all, -bulk)
 
 changes:
 xx_rel_tol -> relative_tolerance

@@ -496,7 +496,7 @@ SimulationInterface::init(void)
         if (mod != NULL)
         {
           ostringstream os;
-          os << "Region " << *it << ", " << mat->get_name();
+          os << "# Region " << *it << ", " << mat->get_name();
           if (mat->is_alloy())
             os << " (x = " <<
             static_cast<const Alloy*>(mat)->get_molar_fraction() << ")";
@@ -2280,6 +2280,11 @@ SimulationInterface::declare_solution_ext(const std::string& name, ID id,
   // check if it should be plotted
   if (_plotvariables.count(name) || plot_all)
     _plotvariable_ids.insert(id);
+
+  // a string of type "-pippo" prevents plotting of "pippo"
+  if (_plotvariables.count("-" + name))
+    _plotvariable_ids.erase(id);
+
 }
 
 

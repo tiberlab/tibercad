@@ -55,7 +55,7 @@ class BandProperties : public DriftDiffusionModelInterface
     //! Constructor
     BandProperties(const ModelOptions& options);
 
-    //! Get the temperature
+    //! Get the temperature in eV
     double get_temperature(void) const { return _temperature; }
 
     //! Initialize

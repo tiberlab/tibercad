@@ -93,8 +93,6 @@ Messages::set_log_file(const string& logfile)
   if (_log.fail() || !_log.good())
     throw InitFailedException("cannot open logfile for writing.");
 
-  _log << Messages::endl;
-  _log << "TiberCAD version " << TiberCad::version_string() << Messages::endl;
   time_t now;
   time(&now);
   _log << Messages::endl;
@@ -106,6 +104,11 @@ Messages::set_log_file(const string& logfile)
 void
 Messages::close_log_file(void)
 {
+  time_t now;
+  time(&now);
+  _log << Messages::endl;
+  _log << "Log end: " << ctime(&now) << Messages::endl;
+  _log << Messages::endl;
   _log.close();
 }
 

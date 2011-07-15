@@ -85,8 +85,9 @@ int main (int argc, char** argv)
     switch (c)
     {
       case 'v':
-        cout << "tiberCAD version " << TiberCad::version_string()
-          << " (" << TiberCad::arch_string() << ")" << endl;
+        cout << "tiberCAD release " << TiberCad::version_string()
+          << "(rev. " << TiberCad::software_revision() << ", "
+                  << TiberCad::arch_string() << ")" << endl;
         return 0;
         break;
 

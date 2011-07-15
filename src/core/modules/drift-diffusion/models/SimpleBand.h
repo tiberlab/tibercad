@@ -25,14 +25,32 @@ class SimpleBand : public BandProperties
     //! Destructor
     virtual ~SimpleBand(void);
 
+    //! We need some alloy parameters
+    virtual void read_database_alloy(void);
+
     //! Read database
     virtual void read_database(void);
 
     //! Initialize
     virtual void do_init(void);
 
+    //! Calculate band edges
+    virtual void do_calculate(void);
+
 
   private:
+
+    //! Reference energy (valence band edge)
+    double _reference_energy;
+
+    //! Band gap at 0 K
+    double _bandgap;
+
+    //! The bowing for Eg for alloys
+    double _bow_Eg;
+
+    //! Varshni parameters for the band gap
+    double _varshni[2];
 
     //! The effective DOS, if given
     double _eff_DOS;

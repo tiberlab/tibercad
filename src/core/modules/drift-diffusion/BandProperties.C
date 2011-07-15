@@ -14,6 +14,6 @@ BandProperties::BandProperties() : DriftDiffusionModelInterface(ModelOptions()) 
 BandProperties::BandProperties(const ModelOptions& options) :
     DriftDiffusionModelInterface(options)
 {
-
+  has_option("particle");
 }
 

@@ -408,7 +408,6 @@ DriftDiffusionProperties::do_init(void)
   for ( ; it != end; ++it)
   {
     BandProperties* bp = static_cast<BandProperties*>(it->second);
-    bp->get_options().print_all();
 
     if (string("el") == bp->get_options().get_option("particle", ""))
       _conduction_band = bp;
@@ -1213,17 +1212,50 @@ DriftDiffusionProperties::get_temperature_at_nodes()
 void
 DriftDiffusionProperties::do_print_info(void)
 {
+  Messages m;
+
   if (_strain_if.has_simulation())
-    Messages::info("using strain simulation: " +
+    m.info("using strain simulation: " +
       _strain_if.get_simulation()->get_name());
   else if (trace(_strain) == 0.0)
-    Messages::info("unstrained model");
+    m.info("unstrained model");
   else
-    Messages::info("using strain from input file");
+    m.info("using strain from input file");
 
   if (_lattice_temp.has_simulation())
-    Messages::info("using lattice temperature from: " +
+    m.info("using lattice temperature from: " +
       _lattice_temp.get_simulation()->get_name());
 
+
+  m.info("Band parameters:");
+  m.indent();
+
+  set_lattice_temperature(SimulationOptions::T);
+
+  calculate_equilibrium_properties();
+  setup_band_edges();
+
+  double deg = std::pow(2.0, 2.0 / 3.0);
+
+  ostringstream os;
+  os << "Ec = " << get_conduction_band().get_band_edge()
+      << ", Ev = " << get_valence_band().get_band_edge()
+      << "  (Eg = "
+      << get_conduction_band().get_band_edge() - get_valence_band().get_band_edge()
+      << ")" << Messages::endl
+      << "Ef0 = " << get_equilibrium_fermi_level()
+      << ", ni = " << std::sqrt(get_intrinsic_density_squared())
+      << Messages::endl;
+
+  os << "Nc = " << get_conduction_band().get_effective_DOS() << " cm^-3"
+      << "  m_dos_el = " << get_conduction_band().get_effective_mass() / deg
+      << "  v_th_el = " << get_conduction_band().get_thermal_velocity(SimulationOptions::T)
+      << Messages::endl;
+
+  os << "Nv = " << get_valence_band().get_effective_DOS() << " cm^-3"
+      << "  m_dos_hl = " << get_valence_band().get_effective_mass() / deg
+      << "  v_th_hl = " << get_valence_band().get_thermal_velocity(SimulationOptions::T);
+
+  Messages::info(os.str());
 }
 

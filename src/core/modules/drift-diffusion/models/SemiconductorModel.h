@@ -102,7 +102,7 @@ class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
 
 
     /*! \copydoc PhysicalModelInterface::do_print_info() */
-    virtual void do_print_info(void);
+    //virtual void do_print_info(void);
 
 
     //! Get the data map with the element wise cached data

@@ -1346,8 +1346,8 @@ DriftDiffusionProperties::setup_band_edges(void)
   double kT = _lattice_vt;
   _pd->electron_vt = _pd->hole_vt = kT;
 
-  BandProperties& cb = *_conduction_band;
-  BandProperties& vb = *_valence_band;
+  BandProperties& cb = get_conduction_band();
+  BandProperties& vb = get_valence_band();
   cb.set_temperature(kT);
   vb.set_temperature(kT);
 

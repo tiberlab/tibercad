@@ -59,12 +59,12 @@ SemiconductorModel::create_submodels(void)
 
   if (_bulk_model == NULL)
   {
-    _bulk_model = DDsemiconductor::create(get_material()->get_structure(), opt);
+    //_bulk_model = DDsemiconductor::create(get_material()->get_structure(), opt);
 
-    if (_bulk_model == NULL)
-      throw InitFailedException("Unknown structure for DDsemiconductor");
+    //if (_bulk_model == NULL)
+    //  throw InitFailedException("Unknown structure for DDsemiconductor");
 
-    add_submodel("bandstructure", _bulk_model);
+    //add_submodel("bandstructure", _bulk_model);
 
   }
 }
@@ -228,10 +228,10 @@ SemiconductorModel::calculate_equilibrium_properties(void)
 
 
 
+/*
 void
 SemiconductorModel::do_print_info(void)
 {
-
   Messages::info("default semiconductor model (using k.p)");
   Parent::do_print_info();
 
@@ -286,3 +286,4 @@ SemiconductorModel::do_print_info(void)
     Messages::newline();
   }
 }
+  */

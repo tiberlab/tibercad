@@ -230,6 +230,15 @@ Control::setup_globals(const ModelOptions& opts)
   //opts.delete_option("logfile");
   Messages::set_log_file(logfile);
 
+  {
+    ostringstream os;
+    os << "tiberCAD release " << TiberCad::version_string()
+          << " ("
+          << "rev. " << TiberCad::software_revision() << ", "
+          << TiberCad::arch_string() << ")";
+    Messages::info(os.str());
+  }
+  Messages::newline();
   Messages::info("Input file: " + _inputfile);
   Messages::newline();
 

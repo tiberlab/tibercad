@@ -9,9 +9,12 @@ TIBER_MODULE(SimpleBand, band_properties, simple)
 
 
 SimpleBand::SimpleBand(const ModelOptions& options) :
-  BandProperties(options)
+  BandProperties(options),
+  _reference_energy(0.0),
+  _bandgap(0.0)
 {
-
+  _varshni[0] = 0.0;
+  _varshni[1] = 0.0;
 }
 
 
@@ -40,49 +43,98 @@ SimpleBand::_set_mdos_from_Nc(double& Nc)
 }
 
 
+
+
+void
+SimpleBand::read_database_alloy(void)
+{
+  Database& db = get_database();
+
+  db.set_section("bandgap");
+  _bow_Eg = db.get("bow_Eg_G", 0.0);
+}
+
+
 void
 SimpleBand::read_database(void)
 {
+  // when reading from the database, we use the same data
+  // as for kp
   Database& db = get_database();
-  db.set_section("band_properties/simple");
+  db.set_section("valenceband");
+  _reference_energy = db.get("E_v", 0.0);
 
   if (get_option("particle", "el") == "el")
   {
-    band_edge() = db.get("Ec", 0.0, true);
-    degeneracy() = db.get("g_el", 2, true);
-    effective_mass() = db.get("DOS_mass_el", -1.0);
-    if (effective_mass() < 0)
+    db.set_section("bandgap");
+    _bandgap = db.get("Eg_G", 1e3);
+    _varshni[0] = db.get("varshni_alpha_G", 0.0);
+    _varshni[1] = db.get("varshni_beta_G", 0.0);
+
+    double Eg_L = db.get("Eg_L", 1e3);
+    double Eg_X = db.get("Eg_X", 1e3);
+
+    db.set_section("conductionband");
+    effective_mass() = db.get("m_G", 1.0);
+    degeneracy() = 2;
+
+    if (Eg_L < _bandgap)
     {
-      _eff_DOS = db.get("effective_DOS_el", 1e20, true);
-      _set_mdos_from_Nc(_eff_DOS);
+      _bandgap = Eg_L;
+
+      db.set_section("bandgap");
+      _varshni[0] = db.get("varshni_alpha_L", 0.0);
+      _varshni[1] = db.get("varshni_beta_L", 0.0);
+
+      db.set_section("conductionband");
+      double m_L_t = db.get("m_L_t", 1.0);
+      double m_L_l = db.get("m_L_l", 1.0);
+      // 64 = 8 * 8, with 8 = valley degeneracy
+      effective_mass() = std::pow(64 * m_L_t * m_L_t * m_L_l, 1.0/3.0 );
     }
-    else
-    _set_mdos(effective_mass());
+    if (Eg_X < _bandgap)
+    {
+      _bandgap = Eg_X;
+
+      db.set_section("bandgap");
+      _varshni[0] = db.get("varshni_alpha_X", 0.0);
+      _varshni[1] = db.get("varshni_beta_X", 0.0);
+
+      db.set_section("conductionband");
+      double m_X_t = db.get("m_X_t", 1.0);
+      double m_X_l = db.get("m_X_l", 1.0);
+      // 36 = 6 * 6, with 6 = valley degeneracy
+      effective_mass() = std::pow(36 * m_X_t * m_X_t * m_X_l, 1.0/3.0 );
+    }
+
 
   }
   else if (get_option("particle", "el") == "hl")
   {
-    band_edge() = db.get("Ev", 0.0, true);
-    degeneracy() = db.get("g_hl", 2, true);
-    effective_mass() = db.get("DOS_mass_hl", -1.0);
-    if (effective_mass() < 0)
-    {
-      _eff_DOS = db.get("effective_DOS_hl", 1e20, true);
-      _set_mdos_from_Nc(_eff_DOS);
-    }
-    else
-    _set_mdos(effective_mass());
-
+    db.set_section("valenceband");
+    degeneracy() = db.get("degeneracy", 4);
+    effective_mass() = db.get("m_dos", 1.0);
   }
 }
 
+/*
+void
+SimpleBand::do_init_alloy(const PhysicalModelInterface* comp_A,
+    const PhysicalModelInterface* comp_B, double xa)
+{
 
+  _modelA = dynamic_cast<const Semiconductor* >(comp_A);
+  _modelB = dynamic_cast<const Semiconductor* >(comp_B);
+
+  _xa = xa;
+}
+*/
 
 void
 SimpleBand::do_init(void)
 {
-  get_parameter("band_edge", band_edge());
-  get_parameter("reference_energy", band_edge());
+  get_parameter("band_edge", _reference_energy);
+  get_parameter("reference_energy", _reference_energy);
   degeneracy() = 2;
   get_parameter("degeneracy", degeneracy());
   // add spin degeneracy to DOS mass
@@ -98,5 +150,33 @@ SimpleBand::do_init(void)
     get_parameter("effective_DOS", _eff_DOS, true,
         initializer(&SimpleBand::_set_mdos_from_Nc));
     _set_mdos_from_Nc(_eff_DOS);
+  }
+
+  do_calculate();
+}
+
+
+
+
+void
+SimpleBand::do_calculate(void)
+{
+  band_edge() = _reference_energy;
+  if (_bandgap > 0)
+  {
+    double T = get_temperature() / Constants::k_B;
+    double gap = _bandgap;
+
+    //if (get_material()->is_alloy())
+    //{
+    //  const Alloy* alloy = static_cast<const Alloy*>(get_material());
+    //  const ZbSemiconductor::ZbDDparameters& parA_zero =  (dynamic_cast<const ZbSemiconductor*> (modelA))->get_initial_parameters();
+
+    //const ZbSemiconductor::ZbDDparameters& parB_zero =  (dynamic_cast<const ZbSemiconductor*> (modelB))->get_initial_parameters();
+    //}
+    //else
+      gap -= _varshni[0] * T * T / (T + _varshni[1]);
+
+    band_edge() += gap;
   }
 }
