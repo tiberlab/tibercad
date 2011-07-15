@@ -14,15 +14,9 @@
 // forward declarations
 //class Point;
 class Elem;
-class DDsemiconductor;
 
 
-//! A semiconductor model using k.p theory
-/*!
- * This model calculates band properties using the \c DDsemiconductor
- * interface, which is based on k.p theory.
- * 
- */
+//! The default DD semiconductor model container
 class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
 {
 
@@ -36,9 +30,6 @@ class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
 
     //! This method creates a SimpleSemiconductorModel object
     static SemiconductorModel* create(const ModelOptions& options);
-
-    /*! \copydoc DriftDiffusionProperties::calculate_equilibrium_properties() */
-    virtual void calculate_equilibrium_properties(void);
 
 
     //! Clean the internal cache of element data
@@ -74,24 +65,6 @@ class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
     /*! \copydoc DriftDiffusionProperties::do_init() */
     virtual void do_init();
 
-    //! Read the from database
-    virtual void create_submodels(void);
-
-
-    //! Get the physical semiconductor model
-    /*!
-     * Derived classes will need to access the physical model, e.g. to
-     * set the strain.
-     */
-    DDsemiconductor* get_physical_model(void)
-      { return _bulk_model; };
-
-    //! Extract the band properties from _bulk_model
-    /*!
-     * This method looks for the band extrema and puts the effective
-     * mass, band edges etc. into the BandProperties structure
-     */
-    void extract_band_properties(void);
 
     /*! \copydoc DriftDiffusionProperties::prepare_element_data() */
     virtual void prepare_element_data(void);
@@ -99,10 +72,6 @@ class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
 
     //! Set the object to unprepared state
     void set_to_unprepared(void);
-
-
-    /*! \copydoc PhysicalModelInterface::do_print_info() */
-    //virtual void do_print_info(void);
 
 
     //! Get the data map with the element wise cached data
@@ -122,13 +91,6 @@ class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
      * \c true means that all data is prepared and ready for use
      */
     bool _is_prepared;
-
-
-    //! The physical model for this semiconductor
-    /*!
-     * The physical model is based on an effective mass approximation
-     */
-    DDsemiconductor* _bulk_model;
 
 
     //! The map with the element wise data
