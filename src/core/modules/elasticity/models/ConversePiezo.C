@@ -79,8 +79,8 @@ ConversePiezo::do_init(void)
   _e31 = get_option("e31", _e31);
   _e15 = get_option("e15", _e15);
 
-  std::string _sim_name = "null";
-  get_parameter("poisson_simulation", _sim_name);
+  std::string _sim_name = "driftdiffusion";
+  get_parameter("DD_simulation", _sim_name);
   _simul = SimulationInterface::find_simulation(_sim_name);
 
 
