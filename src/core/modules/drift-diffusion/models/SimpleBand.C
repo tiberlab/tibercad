@@ -3,6 +3,7 @@
 #include "SimpleBand.h"
 #include "Database.h"
 #include "SimulationOptions.h"
+#include "Messages.h"
 
 
 TIBER_MODULE(SimpleBand, band_properties, simple)
@@ -133,7 +134,14 @@ SimpleBand::do_init_alloy(const PhysicalModelInterface* comp_A,
 void
 SimpleBand::do_init(void)
 {
-  get_parameter("band_edge", _reference_energy);
+  if (has_option("band_edge"))
+  {
+    _bandgap = 0.0;
+    get_parameter("band_edge", _reference_energy);
+    if (has_option("reference_energy"))
+      Messages::warning("You defined both \'band_edge\' and \'reference_energy\'"
+          " for semiconductor band parameters");
+  }
   get_parameter("reference_energy", _reference_energy);
   degeneracy() = 2;
   get_parameter("degeneracy", degeneracy());
