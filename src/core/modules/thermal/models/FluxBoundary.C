@@ -2,7 +2,7 @@
 
 #include "FluxBoundary.h"
 
-TIBER_MODULE(FluxBoundary,thermal_bnd, flux)
+TIBER_MODULE(FluxBoundary,thermal_bnd, thermal_flux)
 
 void
 FluxBoundary::do_init(void)
