@@ -141,12 +141,19 @@ SimpleBand::do_init(void)
     if (has_option("reference_energy"))
       Messages::warning("You defined both \'band_edge\' and \'reference_energy\'"
           " for semiconductor band parameters");
+
+    if (has_option("band_gap"))
+      Messages::warning("You defined both \'band_edge\' and \'band_gap\'"
+          " for semiconductor band parameters");
   }
   get_parameter("reference_energy", _reference_energy);
   degeneracy() = 2;
   get_parameter("degeneracy", degeneracy());
   // add spin degeneracy to DOS mass
   double deg = std::pow(2.0, 2.0 / 3.0);
+
+  if (get_option("particle", "el") == "el")
+    get_parameter("band_gap", _bandgap);
 
   get_parameter("DOS_mass", effective_mass(), true,
       initializer(&SimpleBand::_set_mdos));

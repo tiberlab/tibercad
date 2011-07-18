@@ -141,6 +141,56 @@ DriftDiffusionProperties::create_submodels(void)
     get_options().add_submodel("permittivity", opts);
   }
 
+  if (get_options().has_submodel("band_parameters"))
+  {
+    ModelOptions elopts(get_options().submodels_begin("band_parameters")->second);
+    ModelOptions hlopts(elopts);
+    if (elopts.find_option("Ec"))
+    {
+      elopts["band_edge"] = elopts["Ec"];
+      elopts.delete_option("Ec");
+      hlopts.delete_option("Ec");
+    }
+    if (elopts.find_option("Nc"))
+    {
+      elopts["effective_DOS"] = elopts["Nc"];
+      elopts.delete_option("Nc");
+      hlopts.delete_option("Nc");
+    }
+    if (elopts.find_option("m_dos_e"))
+    {
+      elopts["DOS_mass"] = elopts["m_dos_e"];
+      elopts.delete_option("m_dos_e");
+      hlopts.delete_option("m_dos_e");
+    }
+    if (elopts.find_option("band_gap"))
+      if (elopts.find_option("Ev"))
+        elopts["reference_energy"] = elopts["Ev"];
+
+    if (hlopts.find_option("Ev"))
+    {
+      hlopts["band_edge"] = hlopts["Ev"];
+      elopts.delete_option("Ev");
+      hlopts.delete_option("Ev");
+    }
+    if (hlopts.find_option("Nv"))
+    {
+      hlopts["effective_DOS"] = hlopts["Nv"];
+      elopts.delete_option("Nv");
+      hlopts.delete_option("Nv");
+    }
+    if (hlopts.find_option("m_dos_e"))
+    {
+      hlopts["DOS_mass"] = hlopts["m_dos_h"];
+      elopts.delete_option("m_dos_h");
+      hlopts.delete_option("m_dos_h");
+    }
+
+    get_options().add_submodel("conduction_band", elopts);
+    get_options().add_submodel("valence_band", hlopts);
+    get_options().delete_submodels("band_parameters");
+  }
+
   if (!get_options().has_submodel("conduction_band"))
   {
     ModelOptions opts;

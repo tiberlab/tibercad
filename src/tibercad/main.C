@@ -27,7 +27,6 @@
 #include <cstdio>
 #include <getopt.h>
 
-#undef LICENSE_CHECK
 using namespace std;
 
 #if defined(_WIN32)

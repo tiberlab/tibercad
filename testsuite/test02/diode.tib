@@ -47,6 +47,7 @@ Module driftdiffusion
 
   Physics
   {
+
     particle_density
     {
       statistics = boltzmann
