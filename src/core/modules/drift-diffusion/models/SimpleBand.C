@@ -139,14 +139,13 @@ SimpleBand::do_init(void)
   get_parameter("degeneracy", degeneracy());
   // add spin degeneracy to DOS mass
   double deg = std::pow(2.0, 2.0 / 3.0);
-  effective_mass() = 1;
+
   get_parameter("DOS_mass", effective_mass(), true,
       initializer(&SimpleBand::_set_mdos));
   _set_mdos(effective_mass());
 
   if (has_option("effective_DOS"))
   {
-    _eff_DOS = 1e20;
     get_parameter("effective_DOS", _eff_DOS, true,
         initializer(&SimpleBand::_set_mdos_from_Nc));
     _set_mdos_from_Nc(_eff_DOS);
@@ -164,7 +163,7 @@ SimpleBand::do_calculate(void)
   band_edge() = _reference_energy;
   if (_bandgap > 0)
   {
-    double T = get_temperature() / Constants::k_B;
+    double T = get_lattice_temperature() / Constants::k_B;
     double gap = _bandgap;
 
     //if (get_material()->is_alloy())

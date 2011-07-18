@@ -456,7 +456,6 @@ DriftDiffusionProperties::do_init(void)
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
   calculate_equilibrium_properties();
-  setup_band_edges();
 
 
   // Polarization
@@ -947,8 +946,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 
   // call this method to properly set conduction and valence band DOS
   // and energy
-  setup_band_edges();
   double kT = get_lattice_temperature();
+  set_carrier_temperatures(kT, kT);
 
   BandProperties& cb = get_conduction_band();
   cb.calculate(kT);
@@ -957,7 +956,6 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   BandProperties& vb = get_valence_band();
   vb.calculate(kT);
   double Ev = vb.get_band_edge();
-
 
   // for a dielectric we don't need much...
   if (is_dielectric())
@@ -1217,9 +1215,7 @@ DriftDiffusionProperties::do_print_info(void)
   if (_strain_if.has_simulation())
     m.info("using strain simulation: " +
       _strain_if.get_simulation()->get_name());
-  else if (trace(_strain) == 0.0)
-    m.info("unstrained model");
-  else
+  else if (trace(_strain) != 0.0)
     m.info("using strain from input file");
 
   if (_lattice_temp.has_simulation())
@@ -1227,35 +1223,46 @@ DriftDiffusionProperties::do_print_info(void)
       _lattice_temp.get_simulation()->get_name());
 
 
-  m.info("Band parameters:");
-  m.indent();
-
   set_lattice_temperature(SimulationOptions::T);
-
   calculate_equilibrium_properties();
-  setup_band_edges();
 
   double deg = std::pow(2.0, 2.0 / 3.0);
 
+  m.info("Conduction band:");
+  m.indent();
+  get_conduction_band().print_info();
+
   ostringstream os;
   os << "Ec = " << get_conduction_band().get_band_edge()
-      << ", Ev = " << get_valence_band().get_band_edge()
-      << "  (Eg = "
+      << ", Nc = " << get_conduction_band().get_effective_DOS() << " cm^-3\n"
+      << "m_dos = " << get_conduction_band().get_effective_mass() / deg
+      << ", v_th = " << get_conduction_band().get_thermal_velocity(SimulationOptions::T)
+      << " cm/s\n";
+  Messages::info(os.str());
+
+  m.unindent();
+
+  os.str("");
+
+  m.info("Valence band:");
+  m.indent();
+  get_valence_band().print_info();
+
+  os << "Ev = " << get_valence_band().get_band_edge()
+      << ", Nv = " << get_valence_band().get_effective_DOS() << " cm^-3\n"
+      << "m_dos = " << get_valence_band().get_effective_mass() / deg
+      << ", v_th = " << get_valence_band().get_thermal_velocity(SimulationOptions::T)
+      << " cm/s\n";
+  Messages::info(os.str());
+
+  m.unindent();
+  os.str("");
+
+  os << "Eg = "
       << get_conduction_band().get_band_edge() - get_valence_band().get_band_edge()
-      << ")" << Messages::endl
-      << "Ef0 = " << get_equilibrium_fermi_level()
+      << ", Ef0 = " << get_equilibrium_fermi_level()
       << ", ni = " << std::sqrt(get_intrinsic_density_squared())
       << Messages::endl;
-
-  os << "Nc = " << get_conduction_band().get_effective_DOS() << " cm^-3"
-      << "  m_dos_el = " << get_conduction_band().get_effective_mass() / deg
-      << "  v_th_el = " << get_conduction_band().get_thermal_velocity(SimulationOptions::T)
-      << Messages::endl;
-
-  os << "Nv = " << get_valence_band().get_effective_DOS() << " cm^-3"
-      << "  m_dos_hl = " << get_valence_band().get_effective_mass() / deg
-      << "  v_th_hl = " << get_valence_band().get_thermal_velocity(SimulationOptions::T);
-
   Messages::info(os.str());
 }
 

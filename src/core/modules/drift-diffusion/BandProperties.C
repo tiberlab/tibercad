@@ -1,6 +1,7 @@
 // $Id$
 
 #include "BandProperties.h"
+#include "DriftDiffusionProperties.h"
 #include "ModelOptions.h"
 
 const double
@@ -17,3 +18,8 @@ BandProperties::BandProperties(const ModelOptions& options) :
   has_option("particle");
 }
 
+double
+BandProperties::get_lattice_temperature(void) const
+{
+  return get_driftdiffusionproperties().get_lattice_temperature();
+}

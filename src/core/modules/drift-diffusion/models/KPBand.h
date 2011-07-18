@@ -32,6 +32,9 @@ class KPBand : public BandProperties
     //! Initialize
     //virtual void do_init(void);
 
+    //! \copydoc PhysicalModelInterface::do_print_info(void)
+    virtual void do_print_info(void);
+
     //! Calculate band properties
     virtual void do_calculate(void);
 

@@ -130,7 +130,7 @@ class Database
     void set_alloy_composition(std::vector<double>& fractions);
 
 
-    //! Checks if a given variable is present in the databas
+    //! Checks if a given variable is present in the database
     bool has_variable(const std::string& variable) const;
 
 

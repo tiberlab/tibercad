@@ -20,6 +20,11 @@ m_X_t = 0.19
 m_X_l = 0.916
 
 
+[valenceband]
+# (for now set it to the kp result)
+m_dos = 1.63813
+
+
 [bandgap] # [3]
 # T=0 K
 Eg_G = 3.385

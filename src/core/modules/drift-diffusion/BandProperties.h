@@ -49,6 +49,12 @@ class BandProperties : public DriftDiffusionModelInterface
     double get_thermal_velocity(double temp) const;
 
 
+    //! Set the band edge
+    void set_band_edge(double band_edge) { _band_edge = band_edge; }
+
+    //! Set the effective mass
+    void set_effective_mass(double effective_mass) { _effective_mass = effective_mass; }
+
 
   protected:
 
@@ -57,6 +63,9 @@ class BandProperties : public DriftDiffusionModelInterface
 
     //! Get the temperature in eV
     double get_temperature(void) const { return _temperature; }
+
+    //! Get the lattice temperature in eV
+    double get_lattice_temperature(void) const;
 
     //! Initialize
     virtual void do_init(void) {};
@@ -80,8 +89,7 @@ class BandProperties : public DriftDiffusionModelInterface
     double get_dos_factor(void) const { return _dos_factor; }
 
 
-  //private:
-  public:
+  private:
 
     //! The band edge
     double _band_edge;
@@ -129,5 +137,7 @@ BandProperties::get_thermal_velocity(double temp) const
   double vth = fac * temp / _effective_mass;
   return (100.0 * std::sqrt(vth));
 }
+
+
 
 #endif // _BANDPROPERTIES_H_

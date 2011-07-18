@@ -2,13 +2,10 @@
 
 
 #include "SemiconductorModel.h"
-#include "DDsemiconductor.h"
 
 #include "Material.h"
 #include "Messages.h"
 
-
-#include <sstream>
 
 
 TIBER_MODULE(SemiconductorModel, ddbulk, default)
@@ -81,13 +78,10 @@ SemiconductorModel::prepare_element_data(void)
     {
       const ElementData& elem_data = it->second;
 
-      get_conduction_band()._band_edge = elem_data.Ec;
-      get_conduction_band()._effective_mass = elem_data.mc;
-      get_valence_band()._band_edge = elem_data.Ev;
-      get_valence_band()._effective_mass = elem_data.mv;
-
-      // this sets the band edges and the effective DOS in the base class
-      setup_band_edges();
+      get_conduction_band().set_band_edge(elem_data.Ec);
+      get_conduction_band().set_effective_mass(elem_data.mc);
+      get_valence_band().set_band_edge(elem_data.Ev);
+      get_valence_band().set_effective_mass(elem_data.mv);
 
       set_equilibrium_properties(elem_data.Ef0);
     }

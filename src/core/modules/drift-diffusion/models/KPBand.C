@@ -4,6 +4,7 @@
 #include "DDsemiconductor.h"
 #include "DriftDiffusionProperties.h"
 #include "Material.h"
+#include "Messages.h"
 
 
 TIBER_MODULE(KPBand, band_properties, kp)
@@ -52,7 +53,7 @@ KPBand::do_calculate(void)
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
   // it wants temperature in K
-  _bulk_model->set_temperature(dd.get_lattice_temperature() / Constants::k_B);
+  _bulk_model->set_temperature(get_lattice_temperature() / Constants::k_B);
   _bulk_model->set_strain(dd.get_strain());
 
   // calculate conduction and valence band data
@@ -111,3 +112,9 @@ KPBand::do_calculate(void)
   }
 }
 
+
+void
+KPBand::do_print_info(void)
+{
+  Messages::info("(band parameters obtained from bulk k.p)");
+}

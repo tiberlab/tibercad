@@ -279,14 +279,6 @@ class DriftDiffusionProperties : public PhysicalModel
     bool is_dielectric(void) const;
 
 
-    //! Setup the band edge data
-    /*!
-     * This implementation calculates the effective density of states
-     * and sets the band edges.
-     */
-    void setup_band_edges(void);
-
-
     //! Set the polarization vector
     void set_polarization(const RealVectorValue& polarization);
 
@@ -1339,24 +1331,7 @@ DriftDiffusionProperties::get_strain(void)
 
 
 
-inline
-void
-DriftDiffusionProperties::setup_band_edges(void)
-{
-  double kT = _lattice_vt;
-  _pd->electron_vt = _pd->hole_vt = kT;
 
-  BandProperties& cb = get_conduction_band();
-  BandProperties& vb = get_valence_band();
-  cb.set_temperature(kT);
-  vb.set_temperature(kT);
-
-  //cb.get_effective_DOS() =
-  //  get_DOS_factor() * std::pow(kT * cb.get_effective_mass(), 1.5);
-
-  //vb.get_effective_DOS() =
-  //  get_DOS_factor() * std::pow(kT * vb.get_effective_mass(), 1.5);
-}
 
 inline
 void

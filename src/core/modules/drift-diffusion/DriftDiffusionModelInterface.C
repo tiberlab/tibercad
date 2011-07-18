@@ -11,7 +11,7 @@ DriftDiffusionModelInterface::T0 = Constants::k_B * 300.0;
 
 
 DriftDiffusionProperties&
-DriftDiffusionModelInterface::get_driftdiffusionproperties(void)
+DriftDiffusionModelInterface::get_driftdiffusionproperties(void) const
 {
   if (get_material() == NULL)
     throw RuntimeException("Drift-Diffusion model \'" + get_name()
