@@ -7,6 +7,7 @@
 #include "Constants.h"
 
 class ModelOptions;
+class DensityOfStates;
 
 
 //! Base class for band parameter models
@@ -48,6 +49,12 @@ class BandProperties : public DriftDiffusionModelInterface
      */
     double get_thermal_velocity(double temp) const;
 
+
+    //! Get the particle density and its derivative
+    /*!
+     * set_element_and_point() and calculate() have to be called before
+     */
+    std::pair<double, double> get_density_and_derivative(void) const;
 
     //! Set the band edge
     void set_band_edge(double band_edge) { _band_edge = band_edge; }
@@ -110,6 +117,10 @@ class BandProperties : public DriftDiffusionModelInterface
     double _temperature;
 
     const static double _dos_factor;
+
+    //! The DOS model
+    DensityOfStates* _dos_model;
+
 };
 
 

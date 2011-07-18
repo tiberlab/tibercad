@@ -23,3 +23,10 @@ BandProperties::get_lattice_temperature(void) const
 {
   return get_driftdiffusionproperties().get_lattice_temperature();
 }
+
+
+std::pair<double, double>
+BandProperties::get_density_and_derivative(void) const
+{
+  return std::pair<double, double>(0,0);
+}
