@@ -27,11 +27,11 @@ ThermalModel::create_submodels(void)
 {
   
   //Thermal Conductivity Default
-  if (!get_options().has_submodel("ThermalConductivity"))
+  if (!get_options().has_submodel("thermal_conductivity"))
   {
     ModelOptions opts;
     opts.set_option("type","constant");
-    get_options().add_submodel("ThermalConductivity",opts);
+    get_options().add_submodel("thermal_conductivity",opts);
   }
 
 }
@@ -42,7 +42,7 @@ ThermalModel::do_init(void)
 
    PhysicalModelInterface::SubmodelIterator  it;
   //Lattice Thermal Conductivity
-  it = submodels_begin("ThermalConductivity");  
+  it = submodels_begin("thermal_conductivity");  
   _tcm = dynamic_cast<ThermalConductivityModel*> ((*it).second);
   _kappa = _tcm->get_thermal_conductivity();
   //---------------------------------------
