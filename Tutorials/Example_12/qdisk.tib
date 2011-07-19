@@ -194,29 +194,6 @@ Module efaschroedinger
 }
 
 
-Module opticskp
-{
-  name = optics
-  regions =  quantum
-
-  plot = (optical_spectrum_k_0)
-  output_format = grace
-
-  initial_state_model = quantum_el 
-  final_state_model =   quantum_hl
-
-  initial_eigenstates = (0, 19)
-  final_eigenstates   = (0, 79)
-
-  broadening = 0.02
-
-  Emin = 3.0
-  Emax  = 5.0
-  dE = 0.001
-
-}  
-
-
 
 
 Module sweep
@@ -239,7 +216,7 @@ Simulation
            # change this to 'sweep' if you want to perform the 
            # whole voltage sweep:
            dd, # sweep
-           quantum_el, quantum_hl, optics)
+           quantum_el, quantum_hl)
 
   resultpath = output 
 
