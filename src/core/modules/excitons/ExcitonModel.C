@@ -125,7 +125,7 @@ ExcitonModel::do_init(void)
   get_parameter("mobility", _mu);
 
 
-  std::string dd = get_option("driftdiffusion_simulation", "driftdiffusion");
+  std::string dd = get_option("driftdiffusion_simulation", "");
 
   // find the drift-diffusion simulation to use
   _dd_sim = SimulationInterface::find_simulation(dd);
@@ -137,9 +137,7 @@ ExcitonModel::do_init(void)
     throw InitFailedException(msg);
   }
 
-  std::string varname("recombination.");
-  varname += get_option("generation_model", "");
-  _gen_model = _dd_sim->get_solution_id(varname);
+  _gen_model = _dd_sim->get_solution_id("ExcitonGeneration");
 
   _Eg_id = _dd_sim->get_solution_id("Eg");
 

@@ -240,9 +240,8 @@ ExcitonTransport::do_init(void)
   EquationSystems& equation_systems = get_equation_systems();
 
   // create the exciton continuity equation
-  TiberNonlinearSystem& system =
-    *TiberNonlinearSystem::create(equation_systems,
-        get_equation_system_name(), get_solver_options());
+  create_equation_system("nonlinear");
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
 
   system.add_variable("fermi_x", libMeshEnums::FIRST);
@@ -273,9 +272,7 @@ ExcitonTransport::set_initial_guess(double guess)
 {
   assert(_rebuild_eq_system == false);
 
-  TiberNonlinearSystem& system =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
   system.get_solution_vector().zero();
   system.get_solution_vector().add(guess);
@@ -286,9 +283,7 @@ ExcitonTransport::set_initial_guess(double guess)
 void
 ExcitonTransport::build_local_scaling(void)
 {
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
   
   
   const NumericVector<Number>& solution = *(system->solution);
@@ -417,9 +412,7 @@ ExcitonTransport::do_solve(void)
   EquationSystems& equation_systems = get_equation_systems();
 
 
-  TiberNonlinearSystem& system =
-    equation_systems.get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
   NumericVector<Number>& solution = system.get_solution_vector();
 
@@ -455,10 +448,8 @@ ExcitonTransport::build_nodal_results(const set<string>& variables,
     vector<double>& results, vector<string>& legend)
 {
   
-  TiberNonlinearSystem* system;
 
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
   // aliases for nicer code
   const Device& device = *(_device);
@@ -712,10 +703,7 @@ ExcitonTransport::build_elemental_results(const set<string>& variables,
   if (libMesh::processor_id() != 0)
     return;
   
-  TiberNonlinearSystem* system;
-
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
   // aliases for nicer code
   const Device& device = *(_device);
@@ -892,8 +880,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
   const MeshBase& mesh = get_mesh();
 
   EquationSystems& eq_sys = get_equation_systems();
-  TiberNonlinearSystem& system =
-    eq_sys.get_system<TiberNonlinearSystem>(get_equation_system_name());
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
   NumericVector<Number>& locscal = system.get_vector("local_scaling");
 
@@ -1193,9 +1180,7 @@ ExcitonTransport::get_solution_secure(const Elem* elem,
     points[i] = elem->local_node(elem->type(), i);
 
 
-  TiberNonlinearSystem* system;
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
   const NumericVector<Number>& ddsol = *(system->solution);
 
@@ -1328,9 +1313,7 @@ ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
 {
   unsigned int np = p.size();
 
-  TiberNonlinearSystem* system;
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
   const NumericVector<Number>& ddsol = *(system->solution);
 
