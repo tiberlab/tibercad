@@ -125,7 +125,7 @@ ExcitonModel::do_init(void)
   get_parameter("mobility", _mu);
 
 
-  std::string dd = get_option("DD_simulation", "driftdiffusion");
+  std::string dd = get_option("driftdiffusion_simulation", "driftdiffusion");
 
   // find the drift-diffusion simulation to use
   _dd_sim = SimulationInterface::find_simulation(dd);

@@ -2,7 +2,7 @@
 
 topdir := ../../../..
 
-MODULE_NAME := exciton
+MODULE_NAME := excitontransport
 
 include $(topdir)/Make.module
 

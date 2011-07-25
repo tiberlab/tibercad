@@ -37,7 +37,7 @@ using namespace std;
 // Module interface
 //
 
-TIBER_MODULE(ExcitonTransport,excitontransport)
+TIBER_MODULE(ExcitonTransport, MODULE_NAME)
 
 
 
