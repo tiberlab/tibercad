@@ -237,6 +237,40 @@ ExcitonTransport::do_init(void)
 
   _device = &get_environment().get_device();
 
+  ModelOptions::submodel_iterator linit(
+      get_solver_options().submodels_begin("linear_solver"));
+
+  if (linit == get_solver_options().submodels_end("linear_solver"))
+  {
+    get_solver_options().add_submodel("linear_solver", ModelOptions());
+    linit = get_solver_options().submodels_begin("linear_solver");
+  }
+
+  ModelOptions& linopts = linit->second;
+
+  // default is bcgsl
+  if (!linopts.find_option("method"))
+    linopts["method"] = "bcgsl";
+
+  // in 1D bcgs seems to work better than bcgsl
+  const unsigned int dim = get_mesh().mesh_dimension();
+  if ((dim == 1) && (linopts["method"] == "bcgsl"))
+    linopts["method"] = "bcgs";
+
+  if (!linopts.find_option("preconditioner"))
+    if (dim < 3)
+      linopts["preconditioner"] = "lu";
+    else
+      linopts["preconditioner"] = "ilu";
+
+  if (linopts.get_option("absolute_tolerance", -1.0) < 0)
+    linopts["absolute_tolerance"] = "1e-15";
+
+
+
+  ModelOptions& solveropts = get_solver_options();
+  if (solveropts.get_option("absolute_tolerance", -1.0) < 0)
+    solveropts["absolute_tolerance"] = "1e-15";
   EquationSystems& equation_systems = get_equation_systems();
 
   // create the exciton continuity equation
@@ -260,6 +294,8 @@ ExcitonTransport::do_init(void)
 
 
   _rebuild_eq_system = false;
+
+  set_initial_guess(get_option("x_fermi_guess", 0.0));
 
 }
 
@@ -376,7 +412,7 @@ ExcitonTransport::build_local_scaling(void)
       sc->calculate_net_recombination_rate();
 
 
-      double sigma_x = JxW[qp] * sc->get_mobility() * sc->get_density();
+      double sigma_x = JxW[qp] * (sc->get_mobility() * sc->get_density() + 0e-12);
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
@@ -390,6 +426,7 @@ ExcitonTransport::build_local_scaling(void)
     } // end loop over quadrature points
   } // end loop over elements
 
+  locscal.close();
 }
 
 
@@ -1021,7 +1058,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
 
 
       // NOTE: sigma_x = mu_x * x is the exciton conductivity
-      double sigma_x = (mux * x) / (mu0 * C0);
+      double sigma_x = (mux * x + 0e-12) / (mu0 * C0);
 
 
       //
@@ -1128,6 +1165,13 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
       jacobian->add_matrix(Ke, dof_indices);
 
   } // end loop over elements
+
+  if (residual != NULL)
+    residual->close();
+
+  if (jacobian != NULL)
+    jacobian->close();
+
 }
 
 
