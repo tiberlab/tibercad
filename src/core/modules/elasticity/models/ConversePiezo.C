@@ -80,7 +80,7 @@ ConversePiezo::do_init(void)
   _e15 = get_option("e15", _e15);
 
   std::string _sim_name = "driftdiffusion";
-  get_parameter("DD_simulation", _sim_name);
+  get_parameter("transport_simulation", _sim_name);
   _simul = SimulationInterface::find_simulation(_sim_name);
 
 
