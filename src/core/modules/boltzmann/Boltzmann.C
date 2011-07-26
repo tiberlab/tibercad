@@ -19,7 +19,6 @@
 
 //TODO
 //Eliminate the FE:interface when the point is at the centroid
-// This is needed in order to create the shared module library
 // The first string is the class name of the object to be created,
 // the second one is the name of the module as it should be referred
 // in the input file (the Makefile defines MODULE_NAME, which can be used here).
@@ -1196,7 +1195,6 @@ Boltzmann::compute_effective_thermal_conductivity()
  if (is_gray)
  {
   //-----------------GRAY---------------
-   
    TiberLinearSystem& gray_system =
      es.get_system<TiberLinearSystem>("gray");
    const NumericVector<Number>& gray_solution = gray_system.get_solution_vector();
@@ -1318,7 +1316,8 @@ Boltzmann::compute_effective_thermal_conductivity()
 	    double a,b,c; 
 	    mod_b->get_coefficients(a,b,c);
 	    Tcold = c;
-	   
+	   cout<<Tcold<<endl;
+
 //              //GRAY 
 // 	    double Px = (*thermal_flux[0])(dof_indices_gray[0]) * normal_gray[0](0);
 // 	    double Py = (*thermal_flux[1])(dof_indices_gray[0]) * normal_gray[0](1);
@@ -1680,20 +1679,20 @@ Boltzmann::do_solve(void)
     }
   } //if is_gray
 
- if  (SimulationOptions::verbose() > 1)
- {
+ //if  (SimulationOptions::verbose() > 1)
+ //{
    //double pe = compute_power_emitted();
    //double pd = compute_power_dissipated();
 
    //cout<<"Power Emitted:    "<<pe<<" W"<<endl;
-   //cout<<"Power Dissipated: "<<pd<<" W"<<endl; 
+  // cout<<"Power Dissipated: "<<endl;
 
    double kappa = compute_effective_thermal_conductivity();
    cout<<"Effettive thermal conductivity:    "<<kappa* 100.0<<" W/(m K)"<<endl;
    double  porosity = compute_porosity();
   //cout<<"Porosity:    "<<compute_porosity()<<endl;
 
- }
+ //}
   //J_err = energy_conservation_check();
 }
 
