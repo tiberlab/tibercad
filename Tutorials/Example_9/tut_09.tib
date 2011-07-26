@@ -105,7 +105,7 @@ Module thermal
 
     heat_source joule
     {
-      DD_simulation = dd
+      transport_simulation = dd
     }
 
      
