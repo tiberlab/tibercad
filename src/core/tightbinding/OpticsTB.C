@@ -73,7 +73,12 @@ void OpticsTB::do_compute_matrix_elements( )
 		                         _final_state_particle, fs);
 
           // convert matrix element from eV*Ang to atomic units
-          _P_matrix[i][i1][i2] *= Hartree/(bohr_radius*1e10);
+          // 1 eV = 1 H / 27.2114
+          // 1 Ang = 1/0.529177 a0 
+          // eV*Ang = 1 H*a0 /(27.2114 * 0.529177) 
+          // 1 bhor_rad = 5.2917721e-11 m * 10^10 Ang/m
+          _P_matrix[i][i1][i2] *= 1/(Hartree*bohr_radius*1e10);
+
 
        }
    }

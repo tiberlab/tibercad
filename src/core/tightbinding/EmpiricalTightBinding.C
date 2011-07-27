@@ -627,7 +627,7 @@ ETB::plot_globaldata(void)
 
 void ETB::parse_options(void)
 {
-  std::cout << "(ETB) parse_options() begin...";
+  //std::cout << "(ETB) parse_options() begin...";
 
   const ModelOptions& solopts = get_solver_options();
   
@@ -756,8 +756,8 @@ void ETB::parse_options(void)
   //Get projection_length for quantum charge projection (nm)
   _upt_options.projection_length = get_option("projection_length", 5.0);
 
-  std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
-  std::cout << "done" << std::endl;
+  //std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
+  //std::cout << "done" << std::endl;
 
   // get kpoint
   RealVectorValue k_vec;
@@ -1091,9 +1091,9 @@ void ETB::get_band_edges(void)
 	double Eg = min( db.get("Eg_G", 1e6), db.get("Eg_X", 1e6));
 	Eg = min( db.get("Eg_L", 1e6), Eg);
 
-	std::cerr << "Eg: " << Eg << std::endl;
-	std::cerr << "Vb: " << vb << std::endl; 
-	std::cerr << "Cb: " << vb+Eg << std::endl;
+	//std::cerr << "Eg: " << Eg << std::endl;
+	//std::cerr << "Vb: " << vb << std::endl; 
+	//std::cerr << "Cb: " << vb+Eg << std::endl;
 
 	_map_ID_Ecb[*reg] = vb + Eg; // Gap at 0 K.
 	

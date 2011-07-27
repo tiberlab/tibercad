@@ -233,7 +233,7 @@ void Optics::compute_matrix_elements()
         for (int p = 0; p < 3; p++)
         {
           cout << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   "
-               << j <<"      "  << _P_matrix[p][i][j] << "\n" << flush;
+               << j <<"      "  << std::norm(_P_matrix[p][i][j]) << "\n" << flush;
           
           
         }        
@@ -489,6 +489,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 
         double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)
                             + (0.5*Gamma)*(0.5*Gamma)) * Hartree;
+
 	// Note(alex): the division by Hartree seems wrong. Lorenzian is in 1/eV, so transformation
 	// should be "Lorenzian * Hartree"
 
