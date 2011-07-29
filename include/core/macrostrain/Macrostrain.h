@@ -460,7 +460,11 @@ class Macrostrain : public StrainSimulation
 
   void apply_atom_displacements(const std::string structure_name);
 
+  void internal_strain_correction(const std::string structure_name);
+
   bool calculate_atom_displacements;
+
+  bool internal_strain;
 
   std::string structure_to_be_strained;
 

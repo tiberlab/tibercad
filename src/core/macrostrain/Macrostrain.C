@@ -19,7 +19,7 @@
 #include "AtomisticStructure.h"
 
 #include "Messages.h"
-
+#include "Specie.h"
 
 
 using namespace std;
@@ -266,9 +266,12 @@ void Macrostrain::parse_options( )
 
  calculate_atom_displacements = opt.find_option("strain_atomistic_structure");
  structure_to_be_strained = opt.get_option("strain_atomistic_structure", "none");
+
  AtomisticStructure* as =
    get_environment().get_device().get_atomistic_structure(structure_to_be_strained);
  if (as == NULL) calculate_atom_displacements = false;
+
+ internal_strain = opt.get_option("internal_strain_correction",true);
 
  //atom_structure_filename = opt.get_option("atom_structure_filename", "");
  //atom_displacements_filename = opt.get_option("atom_displacements_filename","");
@@ -1751,6 +1754,10 @@ void Macrostrain::do_solve()
     }
 
     apply_atom_displacements(structure_to_be_strained);
+    
+    if (internal_strain) internal_strain_correction(structure_to_be_strained);
+
+
     }
   //------------------------------------------------------------------------------------
   //geometry relaxation
@@ -1880,6 +1887,7 @@ void Macrostrain::do_solve()
   if (calculate_atom_displacements)
     {std::cout << "call 3" << std::endl;
       apply_atom_displacements(structure_to_be_strained);
+      if (internal_strain) internal_strain_correction(structure_to_be_strained);
     }
 
   //--------------------------------------------------------------------------------------------------//
@@ -1891,6 +1899,10 @@ void Macrostrain::do_solve()
 
   }
   //--------------------------------------------------------------------------------------------------//
+
+  //For debugging
+  get_environment().get_device().get_atomistic_structure(structure_to_be_strained)->print_structure("strained.xyz");
+
 }
 
 
@@ -3157,28 +3169,28 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
       assert (::norm(eps - eps1) < 1e-6); //is it really symmetric
 
       for (unsigned int i = 0; i++; i<3)
-           {
-             for (unsigned int j = 0; j++; j<3)
-             {
-              std::cerr << "crystal_system_eps " << j + 1 << i + 1 << " " << eps(j + 1, i + 1);
-             }
-             }
-
+      {
+        for (unsigned int j = 0; j++; j<3)
+        {
+          std::cerr << "crystal_system_eps " << j + 1 << i + 1 << " " << eps(j + 1, i + 1);
+        }
+      }
+      
       return(eps); //return strain tensor in crystal system
     }
-  else
-    {
-    for (unsigned int i = 0; i++; i<3)
-               {
-                 for (unsigned int j = 0; j++; j<3)
-                 {
-                  std::cerr << "crystal_system_eps " << j + 1 << i + 1 << " " << eps(j + 1, i + 1);
-                 }
-                 }
-      //output in simulation system
-      return(eps);
-    }
-
+   else
+   {
+     for (unsigned int i = 0; i++; i<3)
+     {
+       for (unsigned int j = 0; j++; j<3)
+       {
+         std::cerr << "calc_system_eps " << j + 1 << i + 1 << " " << eps(j + 1, i + 1);
+       }
+     }
+     //output in simulation system
+     return(eps);
+   }
+   
 }
 
 //==============================================================================//
@@ -4283,10 +4295,10 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
           vector <double> new_pos_of_atom(3,0.0);
 
-          Point tmp_point;
-          tmp_point(0) = as->get_structure_atoms()[i].get_position()(1) / as->get_scale();
-          tmp_point(1) = as->get_structure_atoms()[i].get_position()(2) / as->get_scale();
-          tmp_point(2) = as->get_structure_atoms()[i].get_position()(3) / as->get_scale();
+          //Point tmp_point;  (Alex: apparently not used)
+          //tmp_point(0) = as->get_structure_atoms()[i].get_position()(1) / as->get_scale();
+          //tmp_point(1) = as->get_structure_atoms()[i].get_position()(2) / as->get_scale();
+          //tmp_point(2) = as->get_structure_atoms()[i].get_position()(3) / as->get_scale();
 
           //get atom relative point
           point_vec[0] =  _atom_relative_points[i];
@@ -4313,8 +4325,6 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
                 {
                   for (short coord = dim; coord < 3; coord++)
                     {
-
-
                       u_vector[coord] += u_node[as->get_structure_atoms()[i].get_elem()->get_node(nd)][coord] * phi[nd][0];
                     }
                 }
@@ -4391,9 +4401,96 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
           as->get_structure_atoms()[i].set_position(tmp + u_atm[bond_map[i][0]]);
           }
       }
-  //For debugging
-  as->print_structure("strained.xyz");
 
+}
+//-------------------------------------------------------------------------------------------/
+void 
+Macrostrain::internal_strain_correction(const std::string structure_name)
+{
+
+  std::cout << "APPLYING INTERNAL STRAIN CORRECTION " << std::endl;
+
+  AtomisticStructure* as = get_environment().get_device().get_atomistic_structure(structure_name);
+
+  std::vector<Atom>& structure = as->get_structure_atoms();
+
+  std::set<ID> IDs = as->get_IDset();
+
+  // create a map between region IDs and lattice constants (for later fast access)
+  // (a0 and c0 are the relaxed lattice constants of each material or alloy)
+  std::map<ID,double> a, c;
+  std::map<ID,const Tensor2Gen*> RotM;
+
+  for(std::set<ID>::iterator reg = IDs.begin(); reg != IDs.end(); reg++)
+  {
+    const Material* mat = as->get_device()->get_material( (*reg) );
+
+    if (mat->get_structure() == "wz")
+    {
+      Database db = mat->get_database();
+      db.set_section("lattice");
+      a[*reg] = db.get("a",0.0);
+      c[*reg] = db.get("c",0.0);
+
+      const RotatedCrystal& cry =  mat->get_rotated_crystal();
+      RotM[*reg] = &cry.RotMatrix;
+
+      //std::cout << "RotM: "<< cry.RotMatrix(1,3) << " " << cry.RotMatrix(2,3)  << " " << cry.RotMatrix(3,3)  <<std::endl;
+    }
+    else
+    {
+      a[*reg] = 0.0;
+      RotM[*reg] = NULL;
+    }
+
+  }
+
+  // Main Loop on structure
+
+  unsigned int Number_of_atoms = structure.size();
+
+  for (unsigned int i = 0; i < Number_of_atoms ; i++)
+  { 
+
+    ID id = structure[i].get_region_ID();
+
+    if (structure[i].get_specie() == N && RotM[id]!=NULL)
+    {
+      
+      // take strain in crystal system
+      Tensor2Sym eps = get_strain(structure[i].get_elem(),true);
+
+
+      double exx = eps(1,1);
+      double eyy = eps(2,2);
+      double ezz = eps(3,3);
+
+      double a0 = a[id];
+      double c0 = c[id];     
+      
+      // compute internal displacement:
+      // du = a0^2/(3*c0^2) * (exx+eyy-2ezz) * c0 
+
+      Tensor1 du_cry(0), du(0), ro(0), r(0); 
+
+      du_cry(3) = a0*a0/(3*c0) * (exx+eyy-2*ezz) * 10.0; //1 nm -> 10.0 Angstroms   
+       
+      du = *(RotM[id]) * du_cry;
+
+      ro = structure[i].get_position(); 
+
+      r = ro + du;
+
+      //std::cout<< "ro: "<< ro(1) <<" "<< ro(2) <<" "<< ro(3) << std::endl;
+      //std::cout<< "r: "<< r(1) <<" "<< r(2) <<" "<<r(3) << std::endl;
+     
+      structure[i].set_position(r);
+
+    }
+
+       
+  }
+    
 }
 
 
