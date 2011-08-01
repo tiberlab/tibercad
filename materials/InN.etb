@@ -48,8 +48,8 @@ N onsite
 'd15'  27.9171D0   3
 'd12'  31.5704D0   2
 
-In offset = 0.0D0
-N offset =  0.0D0
+In offset = -0.112D0
+N offset =  -0.112D0
 
 # strain coefficient for the d orbitals
 In b_d parameter = 0.0D0
