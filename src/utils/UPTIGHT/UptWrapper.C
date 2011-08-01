@@ -240,10 +240,16 @@ void UptWrapper::set_verbose(int verbose_lev)
 }
 
 
+void UptWrapper::set_strain(std::vector<double>& e_xx, std::vector<double>& e_yy, 
+                            std::vector<double>& e_zz)
+{
+  f77_upt_setstrain(_handler, e_xx.size(), &e_xx.front(), &e_yy.front(), &e_zz.front());
+}
+ 
+
 void UptWrapper::get_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, 
                            std::vector<int>& JA, std::vector<int>& IA)
 {
-
 
   f77_upt_get_csr_hamiltonian(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
 

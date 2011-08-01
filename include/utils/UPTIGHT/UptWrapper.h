@@ -86,6 +86,11 @@ public:
   //! Must be called after inituptight and before compute_H
   void add_potential(std::vector<double>& potential);
 
+
+  //! set atom-projected strain
+  void set_strain(std::vector<double>& e_xx, std::vector<double>& e_yy, std::vector<double>& e_zz);
+
+
   void clear_potential(void);
 	
   //! Set a k-point, k_vec(3)

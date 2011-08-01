@@ -97,23 +97,6 @@ class Macrostrain : public StrainSimulation
     };
 
 
-
-  struct atom
-  {
-    int mat_number;
-    int type;
-    Elem* element;
-    Point relative_point;
-
-  };
-
-
-
-
-
-
-
-
   struct  add_variable
   {
     std::string name ;
@@ -164,6 +147,9 @@ class Macrostrain : public StrainSimulation
 
  //Tensor2Sym get_stress_crystal(const Elem* el);
 
+  //!get strain at element centroid in crystal or calculation system
+  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false);
+
 
   //!get polarization (piezo)
   /*!
@@ -189,9 +175,6 @@ class Macrostrain : public StrainSimulation
   void output_add_strain_variables(std::string filename);
   //---------------------------------------------------------------------
 
-
-
-  //----------------------------------------------------------
 
   MeshBase* get_mesh(); //get pointer to the mesh
 
@@ -219,17 +202,8 @@ class Macrostrain : public StrainSimulation
 
 
 
-
-
-
-
-
-
-  //!will be removed in future
-  void write_atom_potential();
-
   //! Preliminary check to see if a point could belong to an element (much faster than exact calculation)
-  static bool may_belong_to_element(const Elem* element, Point& point);
+  //static bool may_belong_to_element(const Elem* element, Point& point);
 
  private:
 
@@ -269,8 +243,7 @@ class Macrostrain : public StrainSimulation
   //!pointer to the mesh
   MeshBase*  mesh;
 
-  //!calculate strain
-  Tensor2Sym get_strain(const Elem* el, bool crystal_system = false);
+
 
   //! calculate the result_strain map
   void calculate_result_elem_strain_map();
@@ -450,13 +423,6 @@ class Macrostrain : public StrainSimulation
 
   //------------atomic description------------------
 
-  std::vector<atom> atom_structure;
-
-  void read_atom_structure(const std::string filename);
-
-
-
-  void write_atom_displacements(const std::string filename);
 
   void apply_atom_displacements(const std::string structure_name);
 

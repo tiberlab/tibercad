@@ -3734,503 +3734,10 @@ unsigned int Macrostrain::get_number_of_the_fixed_node(Point point)
 
 }
 
-//-------------------------------------------------------------------------------------------/
-void Macrostrain::read_atom_structure(const std::string filename)
-{
-  string  string_from_file;
-
-  std::ifstream atoms_file;
-
-  atoms_file.open(filename.c_str());
-  //----------------------------------------------------------------
-
-
-  //----------------------------------------------------------------
-
-  if (!atoms_file.good())
-    {
-      cerr << "Error: file with atom coordinates  "<< filename << "   can not be opened";
-    }
-
-  //-----------------------------------------------------------
-  //determination of number of atoms
-  unsigned int N_atoms = 0;
-
-  while (getline(atoms_file, string_from_file ))
-    {
-
-      N_atoms++;
-    }
-
-
-  atoms_file.close();
-  //------------------------------------------------------------
-  atom  atom_from_file;
-
-  atom_from_file.mat_number = 0;
-  atom_from_file.type = 0;
-  atom_from_file.relative_point = Point(0.0, 0.0, 0.0);
-  atom_from_file.element = NULL;
-
-  atom_structure.resize(N_atoms,atom_from_file);
-
-  cout << "Number of atoms in " << filename << "  file  " <<  N_atoms;
-  //-------------------------------------------------------------------
-  //-------------------------------------------------------------------
-  //---reading of atoms and processing---------------------------------
-
-
-  //--------mesh related objects----------------------------------------
-  const MeshBase& mesh =  equation_systems->get_mesh();
-
-  LinearImplicitSystem& system = *my_system;
-
-  DofMap& dof_map = system.get_dof_map();
-
-  FEType fe_type = dof_map.variable_type(0);
-
-
-
-
-
-  //--------------------------------------------------------------------
-  std::ifstream atoms_file1(filename.c_str());
-
-  for (unsigned int i = 0; i < N_atoms; i++)
-    {//loop over atoms
-      getline(atoms_file1, string_from_file );
-
-
-
-      istringstream input_string(string_from_file);
-
-      unsigned int n ;
-      int t ;
-      int mat;
-      double x;
-      double y;
-      double z;
-      input_string >>mat >> t >> x >> y >> z ;
-
-      vector<double> coordinate(3);
-      coordinate[0] = x; coordinate[1] = y; coordinate[2] = z;
-
-
-
-      //   cerr << x << "    "<< y <<"   "<< z <<"\n";
-
-
-
-      atom_structure[i].mat_number = mat;
-      atom_structure[i].type  = t;
-
-      //-----------------------------------------------------------
-      //determination if the atom belongs to the similation domain
-      //-----------------------------------------------------------
-      Point point2;
-
-      for (unsigned int i1 = 0; i1 < dim; i1++)
-	{
-	  point2(i1) = coordinate[i1];
-
-	}
-
-      //-------------------------------------------------------------
-      //find element that contains the point
-
-      unsigned int refinement_level = 0;
-      MeshBase::const_element_iterator el3  = mesh.level_elements_begin(refinement_level);
-      MeshBase::const_element_iterator end_el3 = mesh.level_elements_end(refinement_level);
-
-      Elem*  elem1;
-
-      bool   found = false;
-
-      for ( ; ( (el3 != end_el3) ) ; ++el3)
-	{
-	  Elem* elem = *el3;
-
-	  if  (MeshUtils::may_belong_to_element(elem,  point2))
-	    {
-	      if (elem->contains_point(point2))
-		{
-		  elem1 = elem;
-		  found = true;
-		  break;
-		}
-
-	    }
-
-	}
-
-      if (!found)
-	{
-	  //atom is not found and will be ignored
-	  cerr << "WARNING: atom does not belong to the macroscopic domain\n";
-	  cerr << "The atom number  " << i << "  will be ignored\n";
-	  cerr << x <<"   "<< y <<"   " << z <<"   "<<  mat <<"   "<< t <<"\n";
-
-	}
-      else
-	{ //atom is found and will be processed
-	  //children of the  most coarse element
-	  while ( !( elem1->active() ) )
-	    {
-
-	      for (unsigned int i=0 ; i < elem1->n_children() ; i++)
-		{
-		  Elem* 	child = elem1->child(i);
-		  if  (MeshUtils::may_belong_to_element(elem1,  point2))
-		    {
-		      if (child->contains_point(point2))
-			{
-			  elem1 = child;
-			  break;
-			}
-		    }
-
-		}
-	    }
-
-
-	  atom_structure[i].relative_point = FEInterface::inverse_map(dim, fe_type, elem1, point2);
-
-	  atom_structure[i].element = elem1;
-	  //-------------------------------------------------------------------
-	}
-
-
-    }
-
-  atoms_file1.close();
-
-
-}
-
-//-------------------------------------------------------------------------------------------/
-void  Macrostrain::write_atom_potential()
-{
-
-
-
-  std::ofstream potential_file;
-
-  if (poisson_equation != NULL)
-  {
-
-    ID pot_ID = poisson_equation->get_solution_id("ElPotential");
-
-
-    potential_file.open( atom_potential_filename.c_str() );
-    if (!potential_file.good())
-    {
-      cerr << "Error: file with atom potentials can not be opened\n";
-      cerr <<  atom_potential_filename.c_str() << "\n";
-    }
-
-
-
-    unsigned int Number_of_atom = atom_structure.size();
-    vector<Point> point_vec(1);
-    double potential_value;
-
-    for (unsigned int i = 0; i < Number_of_atom ; i++)
-    {//atoms loop
-      if (atom_structure[i].element != NULL)
-      {
-
-        switch (dim)
-        {
-          case 1:
-            point_vec[0] =  FE<1,LAGRANGE>::map(atom_structure[i].element,
-                atom_structure[i].relative_point);
-            break;
-          case 2:
-            point_vec[0] =  FE<2,LAGRANGE>::map(atom_structure[i].element,
-                atom_structure[i].relative_point);
-            break;
-          case 3:
-            point_vec[0] =  FE<3,LAGRANGE>::map(atom_structure[i].element,
-                atom_structure[i].relative_point);
-            break;
-        }
-
-	vector<double> values;
-	poisson_equation->get_solution(atom_structure[i].element, pot_ID, values, point_vec);
-	potential_value = values[0];
-      }
-
-      potential_file << setw(20) <<   setprecision(12) << potential_value << "\n";
-
-
-    }
-
-  }
-
-
-
-}
-
 
 
 //-------------------------------------------------------------------------------------------/
-void  Macrostrain::write_atom_displacements(const std::string filename)
-{//-------------------------------------------------------------------
 
-
-
- //file opening
-  string  string_from_file;
-
-  std::ifstream atom_in_file;
-  std::ofstream displacement_file;
-
-
-
-
-
-  displacement_file.open(filename.c_str());
-
-  if (!displacement_file.good())
-  {
-    cerr << "Error: file with atom displacements can not be opened\n";
-    cerr << filename.c_str() << "\n";
-  }
-
-
-
-
-  //--------------------------------------------------------------------
- if (atom_output_type=="uptight")
-   {
-     //for uptight we have output displacements.
-     //therefore we need also the initial positions
-
-     atom_in_file.open(atom_structure_filename.c_str());
-
-     if ( ! atom_in_file.good () )
-       {
-	 cerr << "Error: file with atom positions can not be opened\n";
-	 cerr << atom_structure_filename.c_str() << "\n";
-       }
-
-   }
-  //-------------------------------------------------------------------
-  const MeshBase& mesh =  equation_systems->get_mesh();
-
-
-  LinearImplicitSystem& system = *my_system;
-
-  AutoPtr<NumericVector<Number> >& solution = system.solution;
-
-  DofMap& dof_map = system.get_dof_map();
-
-  std::vector<unsigned int> dof_indices_component1;
-
-  unsigned int uvar[3] ;
-  for (unsigned int i = 0; i<= 3 - 1; i++)
-    {
-      uvar[i] = system.variable_number(uname_vec[i]);
-    }
-
-
-
-  FEType fe_type = dof_map.variable_type(0);
-
-
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
-
-
-  const std::vector<std::vector<Real> >& phi = fe->get_phi();
-
-  const std::vector<Point>& q_point = fe->get_xyz();
-
-  vector<Point> point_vec(1);
-
-  //----------------------------------------------------------------------
-  double substrate_lat_const_initial[3];
-
-
-
-  substrate_crystal->get_lat_const(substrate_lat_const_initial);
-  //----------------------------------------------------------------------
-
-
-  unsigned int Number_of_atom = atom_structure.size();
-
-  for (unsigned int i = 0; i < Number_of_atom ; i++)
-    {//atoms loop
-      if (atom_structure[i].element != NULL)
-	{//atom belongs to the simulation domain
-
-	  vector <double> new_pos_of_atom(3,0.0);
-
-
-
-
-	  point_vec[0] =  atom_structure[i].relative_point ;
-
-
-
-
-	  fe->reinit(atom_structure[i].element, &point_vec);
-
-
-	  /*----------------------------------------------
-	    first we moove atom because the grid moves
-	    in 3D this is enough to get into account the external strain
-	    ---------------------------------------------*/
-	  for (short coord = 0; coord < dim; coord++)
-	    new_pos_of_atom[coord] = q_point[0](coord);
-
-	 /*----------------------------------------------
-	   in 2D and 1D there are displacements in the direction perpendcular to the simulation space
-	   if the reference lattice is fixed, this is enough
-	   ------------------------------------------------*/
-	  if (dim < 3)
-	    {//dim = 1,2
-	      vector <double> u_vector(3,0.0);
-	      for (unsigned int nd=0; nd < atom_structure[i].element->n_nodes(); nd++)
-		{
-		  for (short coord = dim; coord < 3; coord++)
-		    {
-
-
-		      u_vector[coord] += u_node[atom_structure[i].element->get_node(nd)][coord] * phi[nd][0];
-		    }
-		}
-
-
-	      for (short i1 = 1; i1 < 3; i1++)  new_pos_of_atom[i1] += u_vector[i];
-
-	      /*------------
-		If the reference lattice in a parallel space may change
-		then we need additional things
-	      ---------------*/
-	      if (!grown_on_substrate) /*otherwise the parallel space is fixed*/
-		{ //free standing
-		  //----------------------------------------------------------------------------------
-		  //creation of the transformation tensor
-		  Tensor2Sym substr_deform(1);
-
-		  for (short i1 = dim + 1; i1 <= 3; i1++)
-		    {
-		      substr_deform(i1,i1)  += ( (substrate_lat_const[i1 - 1] - substrate_lat_const_initial[i1 - 1])/
-			 substrate_lat_const_initial[i1 - 1] ) ;
-		      for (short j1 = dim + 1; j1 < i1; j1++)
-			{
-			  substr_deform(i1,j1) +=   substrate_shear(i1,j1);
-			}
-
-		    }
-		  //--------------------------------------------------------------------------------------
-		  //application of the transformation
-		  Tensor1 pos_vector_math;
-		  for (short i1 =1; i1 <= 3; i1++)		    pos_vector_math(i1) =  new_pos_of_atom[i1 - 1];
-
-		  pos_vector_math = substr_deform*pos_vector_math;
-
-		  for (short i1 =1; i1 <= 3; i1++)		   new_pos_of_atom[i1 - 1] =  pos_vector_math(i1);
-		  //---------------------------------------------------------------------------------------
-
-		}
-
-
-
-
-	    }
-
-	  //-------------------------------------------------------
-
-
-
-
-	  //-------------------------------------------------------------------
-	  //output of new coordinates
-
-	  if (atom_output_type=="povray")
-	    {
-	      displacement_file <<  setw(20) <<  atom_structure[i].mat_number << ",";
-	      displacement_file <<  setw(20) <<  atom_structure[i].type << ",";
-
-
-	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0]<< ","  ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1]<< ","  ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2]<< ","  ;
-
-	      if (output_strain_on_atoms)
-		{
-		  Tensor2Sym epsilon = get_strain(atom_structure[i].element);
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1) << "," ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2) << "," ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3) << "," ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1) << "," ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1) << "," ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2) << "," ;
-		}
-	    }
-
-
-	  if (atom_output_type=="uptight")
-	    {
-
-
-	      getline(atom_in_file, string_from_file );
-
-
-	      istringstream input_string(string_from_file);
-
-
-	      int t ;
-	      int mat;
-	      double x;
-	      double y;
-	      double z;
-
-
-
-	      input_string >>mat >> t >> x >> y >> z ;
-
-
-
-	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0] - x << ","  ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1] - y << ","  ;
-	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2] - z << ","  ;
-
-	      if (output_strain_on_atoms)
-		{
-		  Tensor2Sym epsilon = get_strain(atom_structure[i].element);
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1)  ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2)  ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3)  ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1)  ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1)  ;
-		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2)  ;
-		}
-
-
-
-
-	    }
-
-	  displacement_file <<  '\n';
-
-
-	}//
-
-
-    }//end of atoms loop
-
-
-
-
-
-
-}
-//-------------------------------------------------------------------------------------
-
-
-//-------------------------------------------------------------------------------------------/
 void
 Macrostrain::apply_atom_displacements(const std::string structure_name)
 {//-------------------------------------------------------------------
@@ -4493,7 +4000,6 @@ Macrostrain::internal_strain_correction(const std::string structure_name)
     
 }
 
-
 //-------------------------------------------------------------------------------------------/
 unsigned int Macrostrain::find_nearest_node(Point& point)
 {
@@ -4703,3 +4209,431 @@ Macrostrain::Macrostrain(const ModelOptions& options)
 
 //  return stress;
 //}
+
+// void  Macrostrain::write_atom_displacements(const std::string filename)
+// {//-------------------------------------------------------------------
+
+
+
+//  //file opening
+//   string  string_from_file;
+
+//   std::ifstream atom_in_file;
+//   std::ofstream displacement_file;
+
+
+
+
+
+//   displacement_file.open(filename.c_str());
+
+//   if (!displacement_file.good())
+//   {
+//     cerr << "Error: file with atom displacements can not be opened\n";
+//     cerr << filename.c_str() << "\n";
+//   }
+
+
+
+
+//   //--------------------------------------------------------------------
+//  if (atom_output_type=="uptight")
+//    {
+//      //for uptight we have output displacements.
+//      //therefore we need also the initial positions
+
+//      atom_in_file.open(atom_structure_filename.c_str());
+
+//      if ( ! atom_in_file.good () )
+//        {
+// 	 cerr << "Error: file with atom positions can not be opened\n";
+// 	 cerr << atom_structure_filename.c_str() << "\n";
+//        }
+
+//    }
+//   //-------------------------------------------------------------------
+//   const MeshBase& mesh =  equation_systems->get_mesh();
+
+
+//   LinearImplicitSystem& system = *my_system;
+
+//   AutoPtr<NumericVector<Number> >& solution = system.solution;
+
+//   DofMap& dof_map = system.get_dof_map();
+
+//   std::vector<unsigned int> dof_indices_component1;
+
+//   unsigned int uvar[3] ;
+//   for (unsigned int i = 0; i<= 3 - 1; i++)
+//     {
+//       uvar[i] = system.variable_number(uname_vec[i]);
+//     }
+
+
+
+//   FEType fe_type = dof_map.variable_type(0);
+
+
+//   AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+
+
+//   const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+//   const std::vector<Point>& q_point = fe->get_xyz();
+
+//   vector<Point> point_vec(1);
+
+//   //----------------------------------------------------------------------
+//   double substrate_lat_const_initial[3];
+
+
+
+//   substrate_crystal->get_lat_const(substrate_lat_const_initial);
+//   //----------------------------------------------------------------------
+
+
+//   unsigned int Number_of_atom = atom_structure.size();
+
+//   for (unsigned int i = 0; i < Number_of_atom ; i++)
+//     {//atoms loop
+//       if (atom_structure[i].element != NULL)
+// 	{//atom belongs to the simulation domain
+
+// 	  vector <double> new_pos_of_atom(3,0.0);
+
+
+
+
+// 	  point_vec[0] =  atom_structure[i].relative_point ;
+
+
+
+
+// 	  fe->reinit(atom_structure[i].element, &point_vec);
+
+
+// 	  /*----------------------------------------------
+// 	    first we moove atom because the grid moves
+// 	    in 3D this is enough to get into account the external strain
+// 	    ---------------------------------------------*/
+// 	  for (short coord = 0; coord < dim; coord++)
+// 	    new_pos_of_atom[coord] = q_point[0](coord);
+
+// 	 /*----------------------------------------------
+// 	   in 2D and 1D there are displacements in the direction perpendcular to the simulation space
+// 	   if the reference lattice is fixed, this is enough
+// 	   ------------------------------------------------*/
+// 	  if (dim < 3)
+// 	    {//dim = 1,2
+// 	      vector <double> u_vector(3,0.0);
+// 	      for (unsigned int nd=0; nd < atom_structure[i].element->n_nodes(); nd++)
+// 		{
+// 		  for (short coord = dim; coord < 3; coord++)
+// 		    {
+
+
+// 		      u_vector[coord] += u_node[atom_structure[i].element->get_node(nd)][coord] * phi[nd][0];
+// 		    }
+// 		}
+
+
+// 	      for (short i1 = 1; i1 < 3; i1++)  new_pos_of_atom[i1] += u_vector[i];
+
+// 	      /*------------
+// 		If the reference lattice in a parallel space may change
+// 		then we need additional things
+// 	      ---------------*/
+// 	      if (!grown_on_substrate) /*otherwise the parallel space is fixed*/
+// 		{ //free standing
+// 		  //----------------------------------------------------------------------------------
+// 		  //creation of the transformation tensor
+// 		  Tensor2Sym substr_deform(1);
+
+// 		  for (short i1 = dim + 1; i1 <= 3; i1++)
+// 		    {
+// 		      substr_deform(i1,i1)  += ( (substrate_lat_const[i1 - 1] - substrate_lat_const_initial[i1 - 1])/
+// 			 substrate_lat_const_initial[i1 - 1] ) ;
+// 		      for (short j1 = dim + 1; j1 < i1; j1++)
+// 			{
+// 			  substr_deform(i1,j1) +=   substrate_shear(i1,j1);
+// 			}
+
+// 		    }
+// 		  //--------------------------------------------------------------------------------------
+// 		  //application of the transformation
+// 		  Tensor1 pos_vector_math;
+// 		  for (short i1 =1; i1 <= 3; i1++)		    pos_vector_math(i1) =  new_pos_of_atom[i1 - 1];
+
+// 		  pos_vector_math = substr_deform*pos_vector_math;
+
+// 		  for (short i1 =1; i1 <= 3; i1++)		   new_pos_of_atom[i1 - 1] =  pos_vector_math(i1);
+// 		  //---------------------------------------------------------------------------------------
+
+// 		}
+
+
+
+
+// 	    }
+
+// 	  //-------------------------------------------------------
+
+
+
+
+// 	  //-------------------------------------------------------------------
+// 	  //output of new coordinates
+
+// 	  if (atom_output_type=="povray")
+// 	    {
+// 	      displacement_file <<  setw(20) <<  atom_structure[i].mat_number << ",";
+// 	      displacement_file <<  setw(20) <<  atom_structure[i].type << ",";
+
+
+// 	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0]<< ","  ;
+// 	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1]<< ","  ;
+// 	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2]<< ","  ;
+
+// 	      if (output_strain_on_atoms)
+// 		{
+// 		  Tensor2Sym epsilon = get_strain(atom_structure[i].element);
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1) << "," ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2) << "," ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3) << "," ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1) << "," ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1) << "," ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2) << "," ;
+// 		}
+// 	    }
+
+
+// 	  if (atom_output_type=="uptight")
+// 	    {
+
+
+// 	      getline(atom_in_file, string_from_file );
+
+
+// 	      istringstream input_string(string_from_file);
+
+
+// 	      int t ;
+// 	      int mat;
+// 	      double x;
+// 	      double y;
+// 	      double z;
+
+
+
+// 	      input_string >>mat >> t >> x >> y >> z ;
+
+
+
+// 	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[0] - x << ","  ;
+// 	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[1] - y << ","  ;
+// 	      displacement_file <<  setw(20) <<  setprecision(12) << new_pos_of_atom[2] - z << ","  ;
+
+// 	      if (output_strain_on_atoms)
+// 		{
+// 		  Tensor2Sym epsilon = get_strain(atom_structure[i].element);
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(1,1)  ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,2)  ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,3)  ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(2,1)  ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,1)  ;
+// 		  displacement_file <<  setw(20) <<  setprecision(12) << epsilon(3,2)  ;
+// 		}
+
+
+
+
+// 	    }
+
+// 	  displacement_file <<  '\n';
+
+
+// 	}//
+
+
+//     }//end of atoms loop
+
+
+
+
+
+
+// }
+// 
+// //-------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------/
+// void Macrostrain::read_atom_structure(const std::string filename)
+// {
+//   string  string_from_file;
+
+//   std::ifstream atoms_file;
+
+//   atoms_file.open(filename.c_str());
+//   //----------------------------------------------------------------
+
+
+//   //----------------------------------------------------------------
+
+//   if (!atoms_file.good())
+//     {
+//       cerr << "Error: file with atom coordinates  "<< filename << "   can not be opened";
+//     }
+
+//   //-----------------------------------------------------------
+//   //determination of number of atoms
+//   unsigned int N_atoms = 0;
+
+//   while (getline(atoms_file, string_from_file ))
+//     {
+
+//       N_atoms++;
+//     }
+
+
+//   atoms_file.close();
+//   //------------------------------------------------------------
+//   atom  atom_from_file;
+
+//   atom_from_file.mat_number = 0;
+//   atom_from_file.type = 0;
+//   atom_from_file.relative_point = Point(0.0, 0.0, 0.0);
+//   atom_from_file.element = NULL;
+
+//   atom_structure.resize(N_atoms,atom_from_file);
+
+//   cout << "Number of atoms in " << filename << "  file  " <<  N_atoms;
+//   //-------------------------------------------------------------------
+//   //-------------------------------------------------------------------
+//   //---reading of atoms and processing---------------------------------
+
+
+//   //--------mesh related objects----------------------------------------
+//   const MeshBase& mesh =  equation_systems->get_mesh();
+
+//   LinearImplicitSystem& system = *my_system;
+
+//   DofMap& dof_map = system.get_dof_map();
+
+//   FEType fe_type = dof_map.variable_type(0);
+
+
+
+
+
+//   //--------------------------------------------------------------------
+//   std::ifstream atoms_file1(filename.c_str());
+
+//   for (unsigned int i = 0; i < N_atoms; i++)
+//     {//loop over atoms
+//       getline(atoms_file1, string_from_file );
+
+
+
+//       istringstream input_string(string_from_file);
+
+//       unsigned int n ;
+//       int t ;
+//       int mat;
+//       double x;
+//       double y;
+//       double z;
+//       input_string >>mat >> t >> x >> y >> z ;
+
+//       vector<double> coordinate(3);
+//       coordinate[0] = x; coordinate[1] = y; coordinate[2] = z;
+
+
+
+//       //   cerr << x << "    "<< y <<"   "<< z <<"\n";
+
+
+
+//       atom_structure[i].mat_number = mat;
+//       atom_structure[i].type  = t;
+
+//       //-----------------------------------------------------------
+//       //determination if the atom belongs to the similation domain
+//       //-----------------------------------------------------------
+//       Point point2;
+
+//       for (unsigned int i1 = 0; i1 < dim; i1++)
+// 	{
+// 	  point2(i1) = coordinate[i1];
+
+// 	}
+
+//       //-------------------------------------------------------------
+//       //find element that contains the point
+
+//       unsigned int refinement_level = 0;
+//       MeshBase::const_element_iterator el3  = mesh.level_elements_begin(refinement_level);
+//       MeshBase::const_element_iterator end_el3 = mesh.level_elements_end(refinement_level);
+
+//       Elem*  elem1;
+
+//       bool   found = false;
+
+//       for ( ; ( (el3 != end_el3) ) ; ++el3)
+// 	{
+// 	  Elem* elem = *el3;
+
+// 	  if  (MeshUtils::may_belong_to_element(elem,  point2))
+// 	    {
+// 	      if (elem->contains_point(point2))
+// 		{
+// 		  elem1 = elem;
+// 		  found = true;
+// 		  break;
+// 		}
+
+// 	    }
+
+// 	}
+
+//       if (!found)
+// 	{
+// 	  //atom is not found and will be ignored
+// 	  cerr << "WARNING: atom does not belong to the macroscopic domain\n";
+// 	  cerr << "The atom number  " << i << "  will be ignored\n";
+// 	  cerr << x <<"   "<< y <<"   " << z <<"   "<<  mat <<"   "<< t <<"\n";
+
+// 	}
+//       else
+// 	{ //atom is found and will be processed
+// 	  //children of the  most coarse element
+// 	  while ( !( elem1->active() ) )
+// 	    {
+
+// 	      for (unsigned int i=0 ; i < elem1->n_children() ; i++)
+// 		{
+// 		  Elem* 	child = elem1->child(i);
+// 		  if  (MeshUtils::may_belong_to_element(elem1,  point2))
+// 		    {
+// 		      if (child->contains_point(point2))
+// 			{
+// 			  elem1 = child;
+// 			  break;
+// 			}
+// 		    }
+
+// 		}
+// 	    }
+
+
+// 	  atom_structure[i].relative_point = FEInterface::inverse_map(dim, fe_type, elem1, point2);
+
+// 	  atom_structure[i].element = elem1;
+// 	  //-------------------------------------------------------------------
+// 	}
+
+
+//     }
+
+//   atoms_file1.close();
+
+
+// }

@@ -16,6 +16,8 @@
 #include "Alloy.h"
 #include "Messages.h"
 #include "mesh.h"
+#include "Macrostrain.h"
+
 
 #include <fstream>
 #include <sstream>
@@ -214,7 +216,7 @@ void ETB::reinit(void){
   if(_upt_options.strain_sim != "no_sim")
   {
     SimulationInterface* strsim = find_simulation(_upt_options.strain_sim);
-    if( (strsim != 0) && (! strsim->is_solved()) )
+    if( (strsim != NULL) && (! strsim->is_solved()) )
       throw InitFailedException("Strain model has not been solved");
   }
 
@@ -260,13 +262,13 @@ void ETB::reinit(void){
   std::size_t length = 0;
   length = upt_filename.copy(_upt_options.upt_filename, upt_filename.size() );
 
-  // temporary hack to consider c-axis orientations
-  // By default wurtzites c-axis is along z. If 1-d then it is along x:
-  if (_dim == 1)
-  { _upt_options.c_axis[0]= 1.0;
-    _upt_options.c_axis[1]= 0.0;
-    _upt_options.c_axis[2]= 0.0;
-  }
+
+  // Use rotated crystal to obtain direction of c-axis (z-direction)
+  get_c_axis();
+
+  std::cout << "(ETB) c-axis: "<<_upt_options.c_axis[0]<<" "
+            <<_upt_options.c_axis[1]<<" "<<_upt_options.c_axis[2]<<std::endl;  
+  
 
   std::cout << "(ETB) fill parameter " << std::endl;
 
@@ -319,6 +321,37 @@ void ETB::reinit(void){
   _assemble = 1; //must reassemble matrix
 
 }
+//-------------------------------------------------------------------------
+void ETB::get_c_axis(void)
+{
+
+  std::set<ID> IDs = get_atomistic_structure()->get_IDset();
+  std::map<ID,Tensor1> cc;
+  std::set<ID>::iterator reg = IDs.begin();
+
+  for(; reg != IDs.end(); reg++)
+  {
+    const Material* mat = get_environment().get_device().get_material( (*reg) );
+    Tensor2Gen RotM = (mat->get_rotated_crystal()).RotMatrix;
+    Tensor1 zz(0); zz(3) = 1.0;
+    cc[*reg] = RotM * zz; 
+  }
+  
+
+  reg--;
+  for(; reg != IDs.begin(); reg--)
+  {
+    std::set<ID>::iterator regp1 = reg; regp1++;
+    if (cc[*regp1](1) != cc[*reg](1) || cc[*regp1](2) != cc[*reg](2) || cc[*regp1](3) != cc[*reg](3) )
+      throw InitFailedException("c-axis have different orientations in atomistic structure");
+  }  
+
+  _upt_options.c_axis[0]= cc[*IDs.begin()](1);
+  _upt_options.c_axis[1]= cc[*IDs.begin()](2);
+  _upt_options.c_axis[2]= cc[*IDs.begin()](3);
+
+
+}
 
 //-------------------------------------------------------------------------
 void ETB::do_solve(void){
@@ -354,8 +387,11 @@ void ETB::do_solve(void){
 
     std::cout << "(ETB) solving using lanczos" << std::endl;
 
-    std::cout << "(ETB) twice cb " <<   _upt_solver_options.twice_cb << std::endl;
-    std::cout << "(ETB) twice vb " <<   _upt_solver_options.twice_vb << std::endl;
+    if (_upt_solver_options.twice_cb)
+      std::cout << "(ETB) twice cb: true " << std::endl;
+
+    if (_upt_solver_options.twice_vb)    
+      std::cout << "(ETB) twice vb: true " << std::endl;
 
     inst->lanczos_diag(1, 1, _upt_solver_options.n_vb, _upt_solver_options.n_cb,
                      _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
@@ -467,7 +503,6 @@ void ETB::do_solve(void){
 
   //Set _solution_size in base class TightBinding 
   _solution_size = _solution.size();
-  declare_solution(MeshStates, NTUPLE, CELL, "1", _solution_size);  
 
   // write state infos on screen.
   write_states();
@@ -518,17 +553,24 @@ void ETB::do_assemble(const ModelOptions& options)
 
     if(_upt_options.band_shift_flag)
     {
-      std::cerr<< "ETB: including band shifts" <<std::endl;
+      std::cout<< "(ETB) including band shifts" <<std::endl;
       add_band_shifts();
     }
 
     if(_upt_options.potential_flag)
     {
-      std::cerr<< "ETB: passing potential" <<std::endl;
+      std::cout<< "(ETB) passing potential" <<std::endl;
       add_pot_shifts();
     }
 
     write_shifts();
+    
+    if(_upt_options.d_states_correction)
+    {
+      std::cout<< "(ETB) passing strain" <<std::endl;
+      project_atom_strain();
+    }
+
 
     inst->compute_H();
 
@@ -642,7 +684,7 @@ void ETB::parse_options(void)
   sparse_fmt.copy(_upt_options.sparse_fmt, sparse_fmt.size() );
 
   _upt_options.check_bondmap = get_option("check_bondmap", false);
-  _upt_options.harrison_flag = get_option("Harrison_scaling", true);
+
   _upt_options.relat_flag = get_option("relativistic", true);
 
   _upt_options.temperature = get_option("temperature",
@@ -664,6 +706,18 @@ void ETB::parse_options(void)
 
   _upt_options.strain_sim = get_option("strain_model_name", "no_sim");
   _upt_options.strain_sim = get_option("strain_simulation", _upt_options.strain_sim);
+
+  if (_upt_options.strain_sim == "no_sim")
+  {
+    _upt_options.harrison_flag = get_option("Harrison_scaling", false);
+    _upt_options.d_states_correction = get_option("d_splitting",false); 
+  }
+  else
+  {
+    _upt_options.harrison_flag = get_option("Harrison_scaling", true);
+    _upt_options.d_states_correction = get_option("d_splitting",true);     
+  }
+
 
   // Dangling bond scaling
   _upt_options.dg_scale = get_option("dangling_bond_scaling",100);
@@ -822,6 +876,7 @@ ETB::add_pot_shifts(void)
   inst->add_potential(_pot_shift);
 
 }
+
 //-------------------------------------------------------------------------
 void
 ETB::add_band_shifts(void)
@@ -893,6 +948,43 @@ ETB::write_shifts(void)
 
 }
 
+//-------------------------------------------------------------------------------------------/
+void
+ETB::project_atom_strain(void)
+{  
+  std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+
+  Macrostrain* strsim = dynamic_cast<Macrostrain*> (find_simulation(_upt_options.strain_sim));
+
+  
+  unsigned int Number_of_atoms =  get_atomistic_structure()->get_N_without_H();
+
+  std::vector<double> exx(Number_of_atoms, 0.0);
+  std::vector<double> eyy(Number_of_atoms, 0.0);  
+  std::vector<double> ezz(Number_of_atoms, 0.0);
+
+  unsigned int k = 0; 
+
+  for (unsigned int i = 0; i < structure.size() ; i++)
+  { 
+    
+    if (structure[i].get_specie() != H && structure[i].get_elem() != NULL)
+    {
+      Tensor2Sym epsilon = strsim->get_strain(structure[i].get_elem());
+      k++;
+
+      exx[k] = epsilon(1,1);
+      eyy[k] = epsilon(2,2);
+      ezz[k] = epsilon(3,3);
+    }
+  
+  }
+  
+  inst->set_strain(exx,eyy,ezz);
+  
+
+}
+ 
 
 double
 ETB::calculate_fermi_averaged(unsigned int i)
@@ -1226,9 +1318,8 @@ ETB::get_solution_secure(const Elem* elem,
                 values[MeshStates][i] = build_rho3d(_eigenvector_mag[i], elem->centroid());
               else if (_dim == 2)
                 values[MeshStates][i] = build_rho2d(_eigenvector_mag[i], elem->centroid());
-              else if (_dim == 1){
+              else if (_dim == 1)
                 values[MeshStates][i] = build_average_rho1d(_eigenvector_mag[i], elem);
-              std::cout << "I put this stuff " <<values[MeshStates][i] << " in your stuff" << std::endl; }
               else std::cerr <<"Unknown number of dimensions, values not assigned in" 
                 " ETG::get_solutionsecure" << std::endl;
     }
@@ -1426,6 +1517,9 @@ ETB::do_setup_solution_variables(void)
   declare_solution(ElQuantumDensity, REAL, CELL, "q"+units);
   declare_solution(HlQuantumDensity, REAL, CELL, "q"+units);
   declare_solution(MeshStates, NTUPLE, CELL, "1"+units, 1);
+
+  if (plot_solution("ProbabilityDensity"))
+	    add_plot_variable(MeshStates);
 
 }
 

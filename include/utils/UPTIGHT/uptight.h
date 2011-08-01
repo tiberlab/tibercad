@@ -254,6 +254,16 @@ inline void f77_upt_feastsolver (f77_int const* handler, f77_double const&
 }
 
 
+extern "C" void upt_alloc_states_ (f77_int const*);
+
+// Corresponding F77 arguments for f77_upt_alloc_states:
+// integer, intent(in) :: handler(DAC_handlerSize)
+inline void f77_upt_alloc_states (f77_int const* handler)
+{
+  upt_alloc_states_ (handler);
+}
+
+
 extern "C" void upt_write_states_ (f77_int const*);
 
 // Corresponding F77 arguments for f77_upt_write_states:

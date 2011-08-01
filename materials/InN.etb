@@ -34,6 +34,7 @@ N spin orbit
 
 number of orbitals per ion = 5 5
 
+#'s'     4.9070D0   1 #old value of Jancu paper
 In onsite
 's'     3.4070D0   1
 'p'    10.9070D0   3
@@ -41,8 +42,9 @@ In onsite
 'd15'  25.4028D0   3
 'd12'  26.3769D0   2
 
+#'s'    -8.7945D0   1 #old value of Jancu paper
 N onsite
-'s'    -10.2945D0   1
+'s'    -10.2945D0   1 
 'p'     2.1774D0   3
 's*'   26.9022D0   1
 'd15'  27.9171D0   3

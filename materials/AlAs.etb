@@ -14,7 +14,7 @@ internal strain parameter = 0.60D0
 
 # basis
 
-basis type = zinc-blende
+basis type = 'zinc-blende'
 
 number of ions = 2
 ions = 'Al' 'As'

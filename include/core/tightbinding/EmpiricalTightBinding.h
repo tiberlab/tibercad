@@ -54,6 +54,7 @@ class ETB : public TightBinding
     double dg_onsite;
     double grid_step;
     bool hybrid_passivation;
+    bool d_states_correction;
   };
 
   class UptSolverOptions
@@ -185,11 +186,17 @@ class ETB : public TightBinding
 
   void write_shifts(void);
 
+  //! project strain on atom (Macrostrain)
+  void project_atom_strain(void);
+
   //! subroutine used to read band-edges from database
   void get_band_edges(void);
 
   //! get the band extrema
   void get_band_extrema(double& cb_min, double& vb_max);
+
+  //! get c-axis orientation
+  void get_c_axis(void);
 
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;

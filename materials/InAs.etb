@@ -15,14 +15,12 @@ internal strain parameter = 0.68D0
 
 # basis
 
-basis type = zinc-blende
+basis type = 'zinc-blende'
 
 number of ions = 2
 ions = 'In' 'As'
-
 In valence = 4
 As valence = 4
-
 # states
 
 number of spin-orbit parameters per ion = 2 2
@@ -49,12 +47,12 @@ As onsite
 's*'   17.8411D0   1
 'd'    12.1954D0   5
 
-In offset = -0.00016D0
-As offset = -0.00016D0
+In offset = 0.00015912D0
+As offset = 0.00015912D0
 
 # strain coefficient for the d orbitals
-In b_d parameter = 0.655D0
-As b_d parameter = 0.655D0
+In b_d parameter = 0.488D0
+As b_d parameter = 0.488D0
 
 # TB couplings input
 
@@ -63,29 +61,48 @@ number of pairs = 1
 pair 1 = 'As' 'In' 21 1
 
 As In coupling 1
-'sss'     -1.4789D0    4.89D0 
-'sps'      2.3159D0    4.86D0
-'ss*s'    -1.2219D0    0.00D0
-'sds'     -2.5828D0    1.00D0
-'pss'      2.8006D0    4.86D0
-'pps'      4.1188D0    1.02D0
-'ps*s'     1.9012D0    0.73D0
-'pds'     -2.1222D0    1.12D0
-'s*ss'    -2.1320D0    0.00D0
-'s*ps'     2.6467D0    0.73D0 
-'s*s*s'   -3.8514D0    0.00D0
-'s*ds'    -0.8497D0    1.50D0 
-'dss'     -2.4499D0    1.00D0 
-'dps'     -2.0584D0    1.12D0 
-'ds*s'    -0.8371D0    1.50D0 
-'dds'     -1.2009D0    0.00D0
-'ppp'     -1.3687D0    4.80D0
-'pdp'      1.5462D0    1.13D0 
-'dpp'      1.7106D0    1.13D0
-'ddp'      2.1820D0    0.00D0
-'ddd'     -1.7788D0    0.00D0       
+'sss'     -1.4789D0    3.348D0 
+'sps'      2.3159D0    3.662D0 
+'ss*s'    -1.2219D0    0.000D0 
+'sds'     -2.5828D0    1.776D0 
+'pss'      2.8006D0    3.662D0 
+'pps'      4.1188D0    1.498D0 
+'ps*s'     1.9012D0    1.762D0 
+'pds'     -2.1222D0    1.740D0 
+'s*ss'    -2.1320D0    0.000D0 
+'s*ps'     2.6467D0    1.762D0 
+'s*s*s'   -3.8514D0    0.000D0 
+'s*ds'    -0.8497D0    2.000D0 
+'dss'     -2.4499D0    1.776D0 
+'dps'     -2.0584D0    1.740D0 
+'ds*s'    -0.8371D0    0.000D0 
+'dds'     -1.2009D0    2.000D0 
+'ppp'     -1.3687D0    4.259D0 
+'pdp'      1.5462D0    1.696D0 
+'dpp'      1.7106D0    1.696D0 
+'ddp'      2.1820D0    2.000D0 
+'ddd'     -1.7788D0    2.000D0       
 
 As In pair reference distance 1 = 2.6233209D0
 
-
-
+ 4.89D0 
+ 4.86D0
+ 0.00D0
+ 1.00D0
+ 4.86D0
+ 1.02D0
+ 0.73D0
+ 1.12D0
+ 0.00D0
+ 0.73D0 
+ 0.00D0
+ 1.50D0 
+ 1.00D0 
+ 1.12D0 
+ 1.50D0 
+ 0.00D0
+ 4.80D0
+ 1.13D0 
+ 1.13D0
+ 0.00D0
+ 0.00D0 
