@@ -98,8 +98,10 @@ Module empirical_tb
 
   atomistic_structure = tb1
   potential_simulation = dd
+  sparse_format = full	
 
-  plot = (tbstates)
+  plot = (tbstates, MeshStates)
+	
 
   Solver
   {

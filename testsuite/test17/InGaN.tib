@@ -104,7 +104,7 @@ Module  macrostrain
 
   number_shape_steps = 1  #  for  atom displacement  calculation
   strain_atomistic_structure = tb  # tb1 = atomistic_structure
-  internal_strain_correction = false
+  internal_strain_correction = true 
 
   Boundary   cathode
   {

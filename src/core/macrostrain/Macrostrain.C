@@ -267,16 +267,19 @@ void Macrostrain::parse_options( )
  calculate_atom_displacements = opt.find_option("strain_atomistic_structure");
  structure_to_be_strained = opt.get_option("strain_atomistic_structure", "none");
 
+
  AtomisticStructure* as =
    get_environment().get_device().get_atomistic_structure(structure_to_be_strained);
  if (as == NULL) calculate_atom_displacements = false;
 
+ if (calculate_atom_displacements && max_shape_steps == 0)
+ {
+   Messages::warning("Atomic strain requires number_shape_steps > 0");
+   Messages::warning("number_shape_steps will be set to 1");
+   max_shape_steps = 1;
+ }
+
  internal_strain = opt.get_option("internal_strain_correction",true);
-
- //atom_structure_filename = opt.get_option("atom_structure_filename", "");
- //atom_displacements_filename = opt.get_option("atom_displacements_filename","");
- //atom_potential_filename = opt.get_option("atom_potential_filename","");
-
 
 
  fix_all_fixed_points = opt.get_option("fix_all_fixed_points", false);
@@ -627,10 +630,8 @@ void Macrostrain::do_assemble(EquationSystems& es,
   int verbose = SimulationOptions::verbose();
 
 
-  if (verbose > 0)
-  {
+  if (verbose > 2)
     Messages::info("Starting the matrix assembly");
-  }
 
 
   int temp_i;
@@ -1395,7 +1396,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
    // system.rhs->print();
 
-   if (verbose > 0) Messages::info("Matrix assembly done");
+   if (verbose > 2) Messages::info("Matrix assembly done");
 
    if (verbose > 4)
    {
@@ -1492,8 +1493,6 @@ MeshBase* Macrostrain::get_mesh()
 void Macrostrain::do_solve()
 
 {
-  //if (!get_options().find_option("constant_strain"))
-  {
 
   int verbose = SimulationOptions::verbose();
 
@@ -1541,30 +1540,30 @@ void Macrostrain::do_solve()
   set_up_additional_dofs();
 
   if (_first_run)
-    {
-
-      my_system->solution->zero();
-
-      apply_periodic_bc();
-
-
-      if (verbose > 2) cout << "apply_antirotation_constraints ... " << flush;
-
+  {
+    
+    my_system->solution->zero();
+    
+    apply_periodic_bc();
+    
+    
+    if (verbose > 2) cout << "apply_antirotation_constraints ... " << flush;
+    
       if (!fix_all_fixed_points)
         if(apply_antirotation) apply_antirotation_constraints();
-
+      
       if (verbose > 2) cout << "done \n" << flush;
-
-    }
+      
+  }
 
 
 
 
   if (!_is_reallocated && _preallocate)
-    {
-      reallocate_matrix();
-      _is_reallocated = true;
-    }
+  {
+    reallocate_matrix();
+    _is_reallocated = true;
+  }
 
   my_system->set_options(get_solver_options());
 
@@ -1582,14 +1581,15 @@ void Macrostrain::do_solve()
 
 
   if (intermediate_output)
-    {
+  {
 
-      if (output_type=="GMV") GMVIO (mesh).write_equation_systems ("displacement_field.dat.000", *equation_systems);
-      if (output_type=="tecplot") TecplotIO_cell(mesh,false).write_equation_systems ("displacement_field.dat.000", *equation_systems);
-
-      output_strain("strain.dat.000");
-      output_add_strain_variables("add_var.000");
-    }
+    if (output_type=="GMV") GMVIO (mesh).write_equation_systems ("displacement_field.dat.000", *equation_systems);
+    if (output_type=="tecplot") TecplotIO_cell(mesh,false).
+      write_equation_systems ("displacement_field.dat.000", *equation_systems);
+    
+    output_strain("strain.dat.000");
+    output_add_strain_variables("add_var.000");
+  }
 
 
   //if (dim > 1) mesh.write("mesh0.ucd");
@@ -1602,133 +1602,122 @@ void Macrostrain::do_solve()
   MeshRefinement mesh_refinement(mesh);
 
   for (unsigned int r_step = 1; r_step <= max_r_steps; ++r_step)
+  {
+    if (verbose > 0)  cout << "\nRefining the mesh... (Step" << r_step << ")\n" << flush;
+    
+
+    ErrorVector error;
+    
+    KellyErrorEstimator error_estimator;
+    
+    
+    error_estimator.estimate_error (*my_system,error);
+    
+    
+    
+    mesh_refinement.flag_elements_by_error_fraction (error,
+                                                     refine_fraction,
+                                                     coarsen_fraction,
+                                                     max_ref_level);
+    
+    
+    
+    
+    // This call actually refines and coarsens the flagged
+    // elements.
+    if (uniform_refinement == 1)
+      mesh_refinement.uniformly_refine(1);
+    else
+      mesh_refinement.refine_and_coarsen_elements();
+    
+    
+    equation_systems->reinit();
+    
+    old_solution = *(my_system->solution);
+    
+    old_solution.close();
+    
+    initialize_eps0_list();
+    
+    initialize_el_number_map();
+    
+    set_up_additional_dofs();
+    
+    init_substrate();
+    
+    define_fixed_nodes();
+    
+    if (grown_on_substrate) si.get_boundary_nodes (substrate_name, substrate_points);
+    
+    refer_objects();
+    
+    make_nodes_periodic();
+    
+    apply_periodic_bc();
+    
+    if (apply_antirotation) apply_antirotation_constraints();
+    
+    //mesh.print_info();
+    
+    my_system->solution->zero();
+    
+    
+    
+    my_system->solve();
+    
+    
+    if (verbose > 1)
+      std::cout << "Norm of the difference  " << norm_of_difference( old_solution, *(my_system->solution) )
+                << "  after step number " << r_step << "\n" << flush;
+    
+    if (intermediate_output)
     {
-      if (verbose > 0)  cout << "\nRefining the mesh... (Step" << r_step << ")\n" << flush;
-
-
-
-
-
-      ErrorVector error;
-
-      KellyErrorEstimator error_estimator;
-
-
-      error_estimator.estimate_error (*my_system,error);
-
-
-
-      mesh_refinement.flag_elements_by_error_fraction (error,
-          refine_fraction,
-          coarsen_fraction,
-          max_ref_level);
-
-
-
-
-      // This call actually refines and coarsens the flagged
-      // elements.
-      if (uniform_refinement == 1)
-        mesh_refinement.uniformly_refine(1);
-      else
-        mesh_refinement.refine_and_coarsen_elements();
-
-
-      equation_systems->reinit();
-
-      old_solution = *(my_system->solution);
-
-      old_solution.close();
-
-      initialize_eps0_list();
-
-      initialize_el_number_map();
-
-      set_up_additional_dofs();
-
-      init_substrate();
-
-      define_fixed_nodes();
-
-      if (grown_on_substrate) si.get_boundary_nodes (substrate_name, substrate_points);
-
-      refer_objects();
-
-      make_nodes_periodic();
-
-      apply_periodic_bc();
-
-      if (apply_antirotation) apply_antirotation_constraints();
-
-      //mesh.print_info();
-
-      my_system->solution->zero();
-
-
-
-      my_system->solve();
-
-
-      if (verbose > 1)
-        std::cout << "Norm of the difference  " << norm_of_difference( old_solution, *(my_system->solution) )
-        << "  after step number " << r_step << "\n" << flush;
-
-      if (intermediate_output)
-        {
-
-          std::ostringstream os;
-          os << "displacement_field.dat.00" << r_step;
-
-
-          if (output_type=="GMV")  GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
-          if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems(os.str(), *equation_systems);
-
-          std::ostringstream os_mesh;
-          os_mesh << "mesh" << r_step << ".ucd";
-          if (dim > 1) mesh.write(os_mesh.str());
-
-          std::ostringstream os1;
-          os1 <<"strain.dat.00" << r_step;
-          output_strain(os1.str());
-
-          std::ostringstream os2;
-          os2 <<"add_var.00" << r_step;
-
-          output_add_strain_variables(os2.str());
-        }
-
-      if (verbose > 1)
-        {
-
-          //std::cout << "\n" ;
-          //std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
-          //mesh.print_info();
-          //std::cout << flush;
-        }
-
-      if (verbose > 0) Messages::info("Grid refinement finished");
-
+      
+      std::ostringstream os;
+      os << "displacement_field.dat.00" << r_step;
+      
+      
+      if (output_type=="GMV")  
+        GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+      if (output_type=="tecplot")   
+        TecplotIO_cell(mesh,false).write_equation_systems(os.str(), *equation_systems);
+      
+      std::ostringstream os_mesh;
+      os_mesh << "mesh" << r_step << ".ucd";
+      if (dim > 1) mesh.write(os_mesh.str());
+      
+      std::ostringstream os1;
+      os1 <<"strain.dat.00" << r_step;
+      output_strain(os1.str());
+      
+      std::ostringstream os2;
+      os2 <<"add_var.00" << r_step;
+      
+      output_add_strain_variables(os2.str());
     }
-
-
-
-
-  //cerr << atom_structure_filename << "\n";
-
-  if (calculate_atom_displacements)
+    
+    if (verbose > 1)
     {
-      //      read_atom_structure(atom_structure_filename);
-      //
-      //      std::ostringstream disp_file;
-      //      disp_file << atom_displacements_filename << ".out"  ;
-      //
-      //
-      //
-    std::cout << "call 1" << std::endl;
+      
+      //std::cout << "\n" ;
+      //std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
+      //mesh.print_info();
+      //std::cout << flush;
+    }
+    
+    if (verbose > 0) Messages::info("Grid refinement finished");
+    
+  }
+  
+  // Setup for atom displacemets: compute relative coords of unstrained atoms
+  //  with respect to the original mesh
+  if (calculate_atom_displacements)
+  {
+    
     //Initialise relative points
     AtomisticStructure* as = NULL;
     as = get_environment().get_device().get_atomistic_structure(structure_to_be_strained);
-
+    
     LinearImplicitSystem& system = *my_system;
 
     DofMap& dof_map = system.get_dof_map();
@@ -1749,106 +1738,88 @@ void Macrostrain::do_solve()
         tmp_point(2) = as->get_structure_atoms()[i].get_position()(3) / as->get_scale();
 
         //get atom relative point
-        _atom_relative_points[i] =  FEInterface::inverse_map(dim, fe_type, as->get_structure_atoms()[i].get_elem(), tmp_point);
+        _atom_relative_points[i] =  
+          FEInterface::inverse_map(dim, fe_type, as->get_structure_atoms()[i].get_elem(), tmp_point);
       }
     }
-
-    apply_atom_displacements(structure_to_be_strained);
-    
-    if (internal_strain) internal_strain_correction(structure_to_be_strained);
+  }
 
 
-    }
   //------------------------------------------------------------------------------------
-  //geometry relaxation
-
-
-
-
+  // geometry relaxation (mesh deformation)
 
   for (unsigned int geom_it = 1 ; geom_it <= max_shape_steps; geom_it++)
+  {
+    if (verbose > 1)  cout << "\n Geometry relaxation of the mesh... (Step" << geom_it << ")\n" << flush;
+    
+    
+    if (verbose > 2) Messages::info("Update nodes... ", false);
+    
+    update_u_node();
+    
+    if (verbose > 2) Messages::info("done");
+    
+    
+    //equation_systems->print_info();
+    //------move nodes------------------------------------------
+    
+    update_eps0_list();
+    
+    
+    refer_objects();
+    
+    move_nodes();
+    
+    update_substrate();
+    
+    
+    //---------------------------------------------------------
+    
+    //-------solve---------------------------------------------
+    my_system->solution->zero();
+    
+    //apply_periodic_bc();
+    
+    //equation_systems->print_info();
+    
+    
+    if (verbose > 2) cout << "Will solve...   " << flush;
+    
+    my_system->solve();
+    
+    if (verbose  > 2) cout << "solved \n" << flush;
+    
+    
+    if (intermediate_output)
     {
-      if (verbose > 1)  cout << "\n Geometry relaxation of the mesh... (Step" << geom_it << ")\n" << flush;
-
-
-      if (verbose > 2) Messages::info("Update nodes... ", false);
-
-      update_u_node();
-
-      if (verbose > 2) Messages::info("done");
-
-
-      //equation_systems->print_info();
-      //------move nodes------------------------------------------
-
-      update_eps0_list();
-
-
-      refer_objects();
-
-      move_nodes();
-
-      update_substrate();
-
-
-      //---------------------------------------------------------
-
-      //-------solve---------------------------------------------
-      my_system->solution->zero();
-
-      //apply_periodic_bc();
-
-      //equation_systems->print_info();
-
-
-      if (verbose > 2) cout << "Will solve...   " << flush;
-
-      my_system->solve();
-
-      if (verbose  > 2) cout << "solved \n" << flush;
-
-
-      if (intermediate_output)
-        {
-
-          //------write-----------------------------------------------
-          if (dim > 1) mesh.write("mesh0.ucd");
-
-          std::ostringstream os;
-          os << "displacement_field.dat.00" << geom_it + max_r_steps;
-          if (output_type=="GMV")  GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
-          if (output_type=="tecplot") TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
-
-          std::ostringstream os_mesh;
-          os_mesh << "mesh" << geom_it + max_r_steps<< ".ucd";
-          if (dim > 1) mesh.write(os_mesh.str());
-
-          std::ostringstream os1;
-          os1 <<"strain.dat.00" << geom_it;
-          output_strain(os1.str() );
-
-
-          std::ostringstream os2;
-          os2 <<"add_var.00" << geom_it + max_r_steps;
-
-          output_add_strain_variables(os2.str());
-
-          //Intermediate structure output not needed
-          //if (calculate_atom_displacements)
-          //  {std::cout << "call 2" << std::endl;
-          //    apply_atom_displacements(structure_to_be_strained);
-          //  }
-
-        }
-      //---------------------------------------------------
-
-
-
-
-    }//end of shape loop
-
-
-
+      
+      //------write-----------------------------------------------
+      if (dim > 1) mesh.write("mesh0.ucd");
+      
+      std::ostringstream os;
+      os << "displacement_field.dat.00" << geom_it + max_r_steps;
+      if (output_type=="GMV")  GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+      if (output_type=="tecplot") TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
+      
+      std::ostringstream os_mesh;
+      os_mesh << "mesh" << geom_it + max_r_steps<< ".ucd";
+      if (dim > 1) mesh.write(os_mesh.str());
+      
+      std::ostringstream os1;
+      os1 <<"strain.dat.00" << geom_it;
+      output_strain(os1.str() );
+      
+      
+      std::ostringstream os2;
+      os2 <<"add_var.00" << geom_it + max_r_steps;
+      
+      output_add_strain_variables(os2.str());
+            
+    }
+    //---------------------------------------------------
+    
+    
+  }//end of shape loop
 
 
   update_u_node();
@@ -1856,39 +1827,54 @@ void Macrostrain::do_solve()
   //------write-------------------------------------------------------------------------------------//
   //--  output of the final result
   if (intermediate_output)
-    {
-      if (dim > 1) mesh.write("mesh0.ucd");
-
-
-      std::ostringstream os;
-      os << "displacement_field.dat" ;
-
-      if (output_type=="GMV") GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
-      if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
-
-      std::ostringstream os_mesh;
-      os_mesh << "mesh"<< ".ucd";
-      if (dim > 1) mesh.write(os_mesh.str());
-
-      std::ostringstream os1;
-      os1 <<"strain.dat" ;
-      output_strain(os1.str() );
-
-
-      std::ostringstream os2;
-      os2 <<"add_var";
-
-      output_add_strain_variables(os2.str());
-
-
-    }
+  {
+    if (dim > 1) mesh.write("mesh0.ucd");
+    
+    
+    std::ostringstream os;
+    os << "displacement_field.dat" ;
+    
+    if (output_type=="GMV") GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+    if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
+    
+    std::ostringstream os_mesh;
+    os_mesh << "mesh"<< ".ucd";
+    if (dim > 1) mesh.write(os_mesh.str());
+    
+    std::ostringstream os1;
+    os1 <<"strain.dat" ;
+    output_strain(os1.str() );
+    
+    
+    std::ostringstream os2;
+    os2 <<"add_var";
+    
+    output_add_strain_variables(os2.str());
+    
+    
+  }
 
 
   if (calculate_atom_displacements)
-    {std::cout << "call 3" << std::endl;
-      apply_atom_displacements(structure_to_be_strained);
-      if (internal_strain) internal_strain_correction(structure_to_be_strained);
+  {
+    
+    if (verbose > 0) Messages::info("Applying strain to atoms");
+
+    apply_atom_displacements(structure_to_be_strained);
+    
+    if (internal_strain) 
+    {
+      if (verbose > 0) Messages::info("Applying internal strain");
+      internal_strain_correction(structure_to_be_strained);
     }
+
+    if (verbose > 0)
+      Messages::info("Saving strained structure in 'strained.xyz'");
+
+    get_environment().get_device().get_atomistic_structure(structure_to_be_strained)
+      ->print_structure("strained.xyz");
+
+  }
 
   //--------------------------------------------------------------------------------------------------//
   calculate_result_elem_strain_map();
@@ -1896,12 +1882,6 @@ void Macrostrain::do_solve()
 
   _first_run = false;
 
-
-  }
-  //--------------------------------------------------------------------------------------------------//
-
-  //For debugging
-  get_environment().get_device().get_atomistic_structure(structure_to_be_strained)->print_structure("strained.xyz");
 
 }
 
@@ -3748,8 +3728,6 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
   as = get_environment().get_device().get_atomistic_structure(structure_name);
 
 
-  std::cout << "APPLYING STRAIN TO ATOMS " << std::endl;
-
   const MeshBase& mesh =  equation_systems->get_mesh();
 
   LinearImplicitSystem& system = *my_system;
@@ -3914,8 +3892,6 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 void 
 Macrostrain::internal_strain_correction(const std::string structure_name)
 {
-
-  std::cout << "APPLYING INTERNAL STRAIN CORRECTION " << std::endl;
 
   AtomisticStructure* as = get_environment().get_device().get_atomistic_structure(structure_name);
 

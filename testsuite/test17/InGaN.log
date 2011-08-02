@@ -1,8 +1,8 @@
 
-Log start: Mon Aug  1 13:56:57 2011
+Log start: Tue Aug  2 15:12:46 2011
 
 
-tiberCAD release 2.1.0 (rev. 2886, x86_64-linux)
+tiberCAD release 2.1.0 (rev. 2903, x86_64-linux)
 
 Input file: InGaN.tib
 
@@ -362,13 +362,13 @@ macrostrain (name: strain)
   Starting the matrix assembly
   Matrix assembly done
 
-Solve time: 0h 0m 0.021s
+Solve time: 0h 0m 0.072s
 <<<<--------------------------------- (strain) ---------------------------------
 
-Total solve time: 0h 0m 0.035s
+Total solve time: 0h 0m 0.078s
 Simulation finished...
 Goodbye
 
-Log end: Mon Aug  1 13:56:58 2011
+Log end: Tue Aug  2 15:12:47 2011
 
 

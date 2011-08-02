@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <limits>
  
+
 //#include <complex>
 using namespace std;
 
@@ -249,7 +250,7 @@ void ETB::reinit(void){
 
     upt_filename = get_atomistic_structure()->get_name() + ".upg";
 
-    std::cerr << "printing structure " << upt_filename << std::endl;
+    Messages::info("printing structure "+upt_filename);
 
     get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset);
 
@@ -269,9 +270,7 @@ void ETB::reinit(void){
   std::cout << "(ETB) c-axis: "<<_upt_options.c_axis[0]<<" "
             <<_upt_options.c_axis[1]<<" "<<_upt_options.c_axis[2]<<std::endl;  
   
-
   std::cout << "(ETB) fill parameter " << std::endl;
-
 
   //  Set parameters for Uptight instance
   inst->fill_param(_upt_options.verbose, _upt_options.database_path,
@@ -320,6 +319,7 @@ void ETB::reinit(void){
   _init = 0;
   _assemble = 1; //must reassemble matrix
 
+
 }
 //-------------------------------------------------------------------------
 void ETB::get_c_axis(void)
@@ -338,13 +338,13 @@ void ETB::get_c_axis(void)
   }
   
 
-  reg--;
-  for(; reg != IDs.begin(); reg--)
-  {
-    std::set<ID>::iterator regp1 = reg; regp1++;
-    if (cc[*regp1](1) != cc[*reg](1) || cc[*regp1](2) != cc[*reg](2) || cc[*regp1](3) != cc[*reg](3) )
-      throw InitFailedException("c-axis have different orientations in atomistic structure");
-  }  
+  //reg--;
+  //for(; reg != IDs.begin(); reg--)
+  //{
+  //std::set<ID>::iterator regp1 = reg; regp1++;
+  //if (cc[*regp1](1) != cc[*reg](1) || cc[*regp1](2) != cc[*reg](2) || cc[*regp1](3) != cc[*reg](3) )
+  //  throw InitFailedException("c-axis have different orientations in atomistic structure");
+  //}  
 
   _upt_options.c_axis[0]= cc[*IDs.begin()](1);
   _upt_options.c_axis[1]= cc[*IDs.begin()](2);
@@ -1206,6 +1206,8 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
     SimulationInterface* sim =
         SimulationInterface::find_simulation(_upt_options.potential_sim);
 
+    Messages::info("(ETB) get band extrema from "+_upt_options.potential_sim);
+
     string cbedge("Ec");
     string vbedge("Ev");
 
@@ -1220,30 +1222,37 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
     vb_max = -numeric_limits<double>::max();
     cb_min = numeric_limits<double>::max();
 
-    map<ID, vector<double> > bandedges;
-    bandedges[cb_id] = vector<double>(1);
-    bandedges[vb_id] = vector<double>(1);
+    //map<ID, vector<double> > bandedges;
+    vector<double> cb_edges(8,0.0);
+    vector<double> vb_edges(8,0.0);
 
-    MeshBase::const_element_iterator it = get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end = get_mesh().active_local_elements_end();
+    MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
 
     for ( ; it != end; ++it)
-    {
+    { 
       const Elem* elem = *it;
       vector<Point> p(elem->n_nodes());
 
       for (size_t i = 0; i < elem->n_nodes(); ++i)
         p[i] = elem->point(i);
 
-      sim->get_solution(elem, bandedges, p);
+      sim->get_solution(elem, vb_id, vb_edges, p);
+      sim->get_solution(elem, cb_id, cb_edges, p);
 
+      //for (size_t i = 0; i < elem->n_nodes(); ++i)
+      //  std::cout<<vb_edges[i]<<" ";
+      //std::cout<<std::endl;
+      
       for (size_t i = 0; i < elem->n_nodes(); ++i)
       {
-        double vb = bandedges[vb_id][i];
-        double cb = bandedges[cb_id][i];
+        double vb = vb_edges[i];
+        double cb = cb_edges[i];
         vb_max = (vb > vb_max) ? vb : vb_max;
         cb_min = (cb < cb_min) ? cb : cb_min;
       }
+
+      //std::cout<<vb_max<<std::endl;
     }
   }
   else
