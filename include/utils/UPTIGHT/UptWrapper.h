@@ -127,7 +127,7 @@ public:
 
   void write_states(void);
 
-  void read_old_states(void);
+  void read_old_states(char* path, int& nev, int& nec);
 
   void get_states(int num_ev, int hdim, double* eigenvals,
                   std::complex<double>* states, int* particles); 

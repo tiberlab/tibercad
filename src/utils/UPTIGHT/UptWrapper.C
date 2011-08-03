@@ -187,8 +187,9 @@ void UptWrapper::write_states() {
 }
 
 //! read eigenstates from file
-void UptWrapper::read_old_states(void) {	
-  f77_upt_read_states(_handler);
+void UptWrapper::read_old_states(char* load_path, int& nev, int& nec) {	
+  f77_upt_setloadpath(_handler, load_path); 
+  f77_upt_read_states(_handler, nev, nec);
 }
 
 

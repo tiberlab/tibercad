@@ -40,6 +40,7 @@ class ETB : public TightBinding
     char* database_path;
     char* work_path;
     char* out_path;
+    char* load_path;
     char* upt_filename;
     char* gen_outfile;
     char* sparse_fmt;
@@ -66,6 +67,8 @@ class ETB : public TightBinding
     std::string solver;
     int n_vb;
     int n_cb;
+    int start_vb;
+    int start_cb;
     int min_iter;
     int long_iter;
     int max_iter;
@@ -79,6 +82,7 @@ class ETB : public TightBinding
     double e_max;
     int twice_vb;
     int twice_cb;
+    bool read_states;
   };
 
   //! Constructor

@@ -112,6 +112,18 @@ inline void f77_upt_fillbasicparameters (f77_int const* handler, f77_int const&
 }
 
 
+extern "C" void upt_setloadpath_ (f77_int const*, f77_char const*);
+
+// Corresponding F77 arguments for f77_upt_setloadpath:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// character(LST), intent(in) :: loadPath(1)
+inline void f77_upt_setloadpath (f77_int const* handler, f77_char const* 
+    loadPath)
+{
+  upt_setloadpath_ (handler, loadPath);
+}
+
+
 extern "C" void upt_setoutput_ (f77_int const*, f77_int const&, f77_double 
     const&);
 
@@ -288,13 +300,16 @@ inline void f77_upt_set_num_states (f77_int const* handler, f77_int const&
 }
 
 
-extern "C" void upt_read_states_ (f77_int const*);
+extern "C" void upt_read_states_ (f77_int const*, f77_int&, f77_int&);
 
 // Corresponding F77 arguments for f77_upt_read_states:
 // integer, intent(in) :: handler(DAC_handlerSize)
-inline void f77_upt_read_states (f77_int const* handler)
+// integer, intent(inout) :: nev
+// integer, intent(inout) :: nec
+inline void f77_upt_read_states (f77_int const* handler, f77_int& nev, f77_int& 
+    nec)
 {
-  upt_read_states_ (handler);
+  upt_read_states_ (handler, nev, nec);
 }
 
 

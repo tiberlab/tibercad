@@ -81,6 +81,7 @@ ETB::UptOptions::UptOptions(void)
   k_point[0]=0.0; k_point[1]=0.0; k_point[2]=0.0;
   database_path = new char[UPT_LC]; memset(database_path, UPT_PADCHAR, UPT_LC);
   work_path = new char[UPT_LC];     memset(work_path, UPT_PADCHAR, UPT_LC);
+  load_path = new char[UPT_LC];     memset(load_path, UPT_PADCHAR, UPT_LC);
   out_path = new char[UPT_LC];      memset(out_path, UPT_PADCHAR, UPT_LC);
   upt_filename = new char[UPT_MC];  memset(upt_filename, UPT_PADCHAR, UPT_MC);
   gen_outfile = new char[UPT_MC];   memset(gen_outfile, UPT_PADCHAR, UPT_MC);
@@ -91,6 +92,7 @@ ETB::UptOptions::UptOptions(void)
 ETB::UptOptions::~UptOptions(void)
 {
   delete[] work_path;
+  delete[] load_path;
   delete[] out_path;
   delete[] upt_filename;
   delete[] gen_outfile;
@@ -101,6 +103,8 @@ ETB::UptOptions::~UptOptions(void)
 
 ETB::UptSolverOptions::UptSolverOptions(void)
   :solver("upt_lanczos"),
+   start_vb(1),
+   start_cb(1),
    n_vb(0),
    n_cb(0),
    min_iter(2),
@@ -380,41 +384,19 @@ void ETB::do_solve(void){
   reinit(); 
 
 
-
   if (_assemble) assemble(options);
 
-  if (_upt_solver_options.solver.compare("upt_lanczos") == 0) {
-
-    std::cout << "(ETB) solving using lanczos" << std::endl;
-
-    if (_upt_solver_options.twice_cb)
-      std::cout << "(ETB) twice cb: true " << std::endl;
-
-    if (_upt_solver_options.twice_vb)    
-      std::cout << "(ETB) twice vb: true " << std::endl;
-
-    inst->lanczos_diag(1, 1, _upt_solver_options.n_vb, _upt_solver_options.n_cb,
-                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
-                     _upt_solver_options.min_iter, _upt_solver_options.long_iter,
-                     _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
-                     _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
-                     _upt_solver_options.twice_vb, _upt_solver_options.twice_cb);
-
-
-  }
-
-  if (_upt_solver_options.solver.compare("feast") == 0) 
-    {
-      Messages::info("Solving Tight Binding with FEAST eigensolver");
-      inst->feast(_upt_solver_options.e_min, _upt_solver_options.e_max, _upt_solver_options.m0);
-    } 
-
-  if (_upt_solver_options.solver.compare("read_old") == 0) {
-
-    std::cout << "(ETB) reading old states" << std::endl;
+  if (_upt_solver_options.read_states)
+  {
+    Messages::info("(ETB) reading old states");
 
     inst->set_num_states(_upt_solver_options.n_vb, _upt_solver_options.n_cb);
-    inst->read_old_states();
+
+    int n_vb, n_cb;
+    inst->read_old_states(_upt_options.load_path, n_vb, n_cb);
+    std::cout<<"(ETB) found: "<<n_vb<<" "<<n_cb<<std::endl;
+    _upt_solver_options.start_vb = n_vb + 1;
+    _upt_solver_options.start_cb = n_cb + 1;
 
     int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
     Complex matel;
@@ -426,10 +408,32 @@ void ETB::do_solve(void){
     }
   }
 
-#ifdef DEBUG
-  std::cout << "(ETB) ETB->do_solve() done" << std::endl;
-  std::cout << "(ETB) Copy solutions into _solutions" << std::endl;
-#endif
+  if (_upt_solver_options.solver.compare("upt_lanczos") == 0) 
+  {
+
+    std::cout << "(ETB) solving using lanczos" << std::endl;
+
+    if (_upt_solver_options.twice_cb)
+      std::cout << "(ETB) twice cb: true " << std::endl;
+
+    if (_upt_solver_options.twice_vb)    
+      std::cout << "(ETB) twice vb: true " << std::endl;
+
+    inst->lanczos_diag(_upt_solver_options.start_vb, _upt_solver_options.start_cb, 
+		     _upt_solver_options.n_vb, _upt_solver_options.n_cb,
+                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
+                     _upt_solver_options.min_iter, _upt_solver_options.long_iter,
+                     _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
+                     _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
+                     _upt_solver_options.twice_vb, _upt_solver_options.twice_cb);
+  }
+
+  if (_upt_solver_options.solver.compare("feast") == 0) 
+  {
+      Messages::info("Solving Tight Binding with FEAST eigensolver");
+      inst->feast(_upt_solver_options.e_min, _upt_solver_options.e_max, _upt_solver_options.m0);
+  } 
+
   
   //std::cerr<<"Pot min= "<<_pot_min<<std::endl;
 
@@ -441,10 +445,12 @@ void ETB::do_solve(void){
   int *particles = new int[num_ev];
   Complex *eigtmp = eigvects;  // walking pointer on eigenvectors array
 
- 
   inst->get_states(num_ev,hdim,eigvals,eigvects,particles);
 
   _solution.resize(num_ev);
+
+  //Set _solution_size in base class TightBinding 
+  _solution_size = _solution.size();
 
   for(int i=0; i< num_ev; i++)
   {
@@ -501,8 +507,6 @@ void ETB::do_solve(void){
   delete eigvects;
   delete particles;
 
-  //Set _solution_size in base class TightBinding 
-  _solution_size = _solution.size();
 
   // write state infos on screen.
   write_states();
@@ -521,14 +525,18 @@ void ETB::do_solve(void){
     compute_eigenvector_mag(i, _eigenvector_mag[i]); 
   }
 
+  string units("/cm");
+  if (_dim == 2) units = "/cm^2";
+  else if (_dim == 3) units = "/cm^3";
+  declare_solution(MeshStates, NTUPLE, CELL, "1"+units, _solution_size);
 
   //Print for debug charges on atoms
   double* charges;
   charges = new double[get_atomistic_structure()->get_N_atoms()];
   for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _el_atomic_charges[i];
   for (unsigned int i = _N_without_H + 1; i < get_atomistic_structure()->get_N_atoms(); i++) charges[i] = 0.0;
-
   get_atomistic_structure()->print_structure("charges_el.xyz", charges);
+
   for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _hl_atomic_charges[i];
   for (unsigned int i = _N_without_H + 1; i < get_atomistic_structure()->get_N_atoms(); i++) charges[i] = 0.0;
   get_atomistic_structure()->print_structure("charges_hl.xyz", charges);
@@ -719,16 +727,23 @@ void ETB::parse_options(void)
   }
 
 
+  //---------------------------------------------------------------------------------------
   // Dangling bond scaling
   _upt_options.dg_scale = get_option("dangling_bond_scaling",100);
   _upt_options.dg_onsite = get_option("dangling_bond_onsite",-200.0);    
 
+  //---------------------------------------------------------------------------------------
   //Choose passivation model
   std::string passivation_model = get_option("passivation_model","hydrogen");
   if ( passivation_model == "hybrid" )
       {_upt_options.hybrid_passivation = true;}
 
-  // Solver options: "upt_lanczos", "read_old"
+  //---------------------------------------------------------------------------------------
+  _upt_solver_options.read_states = solopts.get_option("load_states", false);
+  std::string load_path = solopts.get_option("load_path", ".");
+  load_path.copy(_upt_options.load_path, load_path.size() );
+ 
+  // Solver options: "upt_lanczos"  
   _upt_solver_options.solver = solopts.get_option("solver", "upt_lanczos");
 
   _upt_solver_options.n_vb =  solopts.get_option("num_valence_eigenvalues", 0);
@@ -752,6 +767,7 @@ void ETB::parse_options(void)
   _upt_solver_options.e_min =  solopts.get_option("Emin", 0.0);
   _upt_solver_options.e_max =  solopts.get_option("Emax", 3.0);
   _upt_solver_options.m0 =  solopts.get_option("subspace", 100);
+
   //---------------------------------------------------------------------------------------
   // output wavevetors format
   std::string out_fmt = get_option("jmol_output_format", "jvxl");
@@ -766,39 +782,14 @@ void ETB::parse_options(void)
 
 
   //---------------------------------------------------------------------------------------
-  //computes educated guesses for valence and conduction bands edges
-  std::set<ID> IDs = get_atomistic_structure()->get_IDset();
-  std::set<ID>::iterator reg;
-
-  double vb_max = -1000.0;
-  for (reg = IDs.begin(); reg != IDs.end(); reg++)
-  {
-    if(_map_ID_Evb[*reg] > vb_max) vb_max = _map_ID_Evb[*reg];
-  }
-  double cb_min = 1000.0;
-  for (reg = IDs.begin(); reg != IDs.end(); reg++)
-  {
-    if(_map_ID_Ecb[*reg] < cb_min) cb_min = _map_ID_Ecb[*reg];
-  }
   
-  // now vb_shift corresponds to maximum valence band edge
-  //_vb_shift = vb_max;
   _vb_shift = 0.0;
   
-  if(cb_min<vb_max)
-  {
-    std::cerr<<"WARNING: bands overlap; cannot find good guess"<<std::endl;
-  }
-  //else
-  //{
-  //  vb_max = 1.0*(cb_min - vb_max)/5.0;
-  //  cb_min = 4.0*vb_max;
-  //}
   //---------------------------------------------------------------------------------------
 
   _upt_options.band_shift_flag = get_option("add_band_shifts", true);
-  _upt_solver_options.guess_vb = solopts.get_option("guess_valence", vb_max);
-  _upt_solver_options.guess_cb = solopts.get_option("guess_conduction", cb_min);
+  _upt_solver_options.guess_vb = solopts.get_option("guess_valence", 0.0);
+  _upt_solver_options.guess_cb = solopts.get_option("guess_conduction", 0.0);
 
   // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
   //_upt_options.vb_shift = options.get_option("vb_shift", 0.0);
@@ -1290,8 +1281,6 @@ ETB::get_solution_secure(const Elem* elem,
     const std::vector<Point>& p)
 {
 
-  unsigned int np = p.size();
-
   //CELL values
   //
   if (values.count(ElQuantumDensity))
@@ -1302,9 +1291,6 @@ ETB::get_solution_secure(const Elem* elem,
                   values[ElQuantumDensity][0] = build_rho2d(_el_atomic_charges, elem->centroid());
               else if (_dim == 1)
                   values[ElQuantumDensity][0] = build_average_rho1d(_el_atomic_charges, elem);
-              // probably unnecessary, otherwise should throw exception
-              //else std::cerr << "Unknown number of dimensions, values not assigned in" 
-              //  " ETB::get_solution_secure" << std::endl;
     }
 
   if (values.count(HlQuantumDensity))
@@ -1315,8 +1301,6 @@ ETB::get_solution_secure(const Elem* elem,
                 values[HlQuantumDensity][0] = build_rho2d(_hl_atomic_charges, elem->centroid());
               else if (_dim == 1)
                 values[HlQuantumDensity][0] = build_average_rho1d(_hl_atomic_charges, elem);
-              else std::cerr <<"Unknown number of dimensions, values not assigned in" 
-                " ETG::get_solutionsecure" << std::endl;
     }
  
   if (values.count(MeshStates))
@@ -1329,8 +1313,6 @@ ETB::get_solution_secure(const Elem* elem,
                 values[MeshStates][i] = build_rho2d(_eigenvector_mag[i], elem->centroid());
               else if (_dim == 1)
                 values[MeshStates][i] = build_average_rho1d(_eigenvector_mag[i], elem);
-              else std::cerr <<"Unknown number of dimensions, values not assigned in" 
-                " ETG::get_solutionsecure" << std::endl;
     }
   }
 
