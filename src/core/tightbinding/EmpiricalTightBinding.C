@@ -529,6 +529,7 @@ void ETB::do_solve(void){
   if (_dim == 2) units = "/cm^2";
   else if (_dim == 3) units = "/cm^3";
   declare_solution(MeshStates, NTUPLE, CELL, "1"+units, _solution_size);
+  declare_solution(MeshStatesNodes, NTUPLE, NODES, "1"+units, _solution_size);
 
   //Print for debug charges on atoms
   double* charges;
@@ -1507,7 +1508,10 @@ ETB::do_setup_solution_variables(void)
 
   declare_solution(ElQuantumDensity, REAL, CELL, "q"+units);
   declare_solution(HlQuantumDensity, REAL, CELL, "q"+units);
+  declare_solution(ElQuantumDensityNodes, REAL, NODES, "q"+units);
+  declare_solution(HlQuantumDensityNodes, REAL, NODES, "q"+units);
   declare_solution(MeshStates, NTUPLE, CELL, "1"+units, 1);
+  declare_solution(MeshStates, NTUPLE, NODES, "1"+units, 1);
 
   if (plot_solution("ProbabilityDensity"))
 	    add_plot_variable(MeshStates);

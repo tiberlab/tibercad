@@ -11,8 +11,11 @@ class ETB : public TightBinding
   enum Solutions
   {
     MeshStates,  //Eigenstate Magnitude projected on mesh
-    ElQuantumDensity,  //Electron charge density
-    HlQuantumDensity  //Hole charge density
+    ElQuantumDensity,  //Electron charge density on mesh cells
+    HlQuantumDensity,  //Hole charge density on mesh cells
+    MeshStatesNodes,  //Eigenstate Magnitude projected on mesh nodes
+    ElQuantumDensityNodes,  //Electron charge density on mesh nodes
+    HlQuantumDensityNodes  //Hole charge density on mesh nodes
   };
 
   typedef enum {JVXL=1, CUBE=2} OutputFormat;
