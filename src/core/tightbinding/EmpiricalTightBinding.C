@@ -1286,36 +1286,113 @@ ETB::get_solution_secure(const Elem* elem,
   //
   if (values.count(ElQuantumDensity))
     {
-	      if (_dim == 3)
-                  values[ElQuantumDensity][0] = build_rho3d(_el_atomic_charges, elem->centroid());
-              else if (_dim == 2)
-                  values[ElQuantumDensity][0] = build_rho2d(_el_atomic_charges, elem->centroid());
-              else if (_dim == 1)
-                  values[ElQuantumDensity][0] = build_average_rho1d(_el_atomic_charges, elem);
+    if (_dim == 3)
+      values[ElQuantumDensity][0] = build_rho3d(_el_atomic_charges, elem->centroid());
+    else if (_dim == 2)
+      values[ElQuantumDensity][0] = build_rho2d(_el_atomic_charges, elem->centroid());
+    else if (_dim == 1)
+      values[ElQuantumDensity][0] = build_average_rho1d(_el_atomic_charges, elem);
     }
 
   if (values.count(HlQuantumDensity))
     {
-              if (_dim == 3)
-                values[HlQuantumDensity][0] = build_rho3d(_hl_atomic_charges, elem->centroid());
-              else if (_dim == 2)
-                values[HlQuantumDensity][0] = build_rho2d(_hl_atomic_charges, elem->centroid());
-              else if (_dim == 1)
-                values[HlQuantumDensity][0] = build_average_rho1d(_hl_atomic_charges, elem);
+    if (_dim == 3)
+      values[HlQuantumDensity][0] = build_rho3d(_hl_atomic_charges, elem->centroid());
+    else if (_dim == 2)
+      values[HlQuantumDensity][0] = build_rho2d(_hl_atomic_charges, elem->centroid());
+    else if (_dim == 1)
+      values[HlQuantumDensity][0] = build_average_rho1d(_hl_atomic_charges, elem);
     }
- 
+
   if (values.count(MeshStates))
-  {
-    for (unsigned int i = 0; i < _solution.size(); i++)
     {
-              if (_dim == 3)
-                values[MeshStates][i] = build_rho3d(_eigenvector_mag[i], elem->centroid());
-              else if (_dim == 2)
-                values[MeshStates][i] = build_rho2d(_eigenvector_mag[i], elem->centroid());
-              else if (_dim == 1)
-                values[MeshStates][i] = build_average_rho1d(_eigenvector_mag[i], elem);
+    for (unsigned int i = 0; i < _solution_size; i++)
+      {
+      if (_dim == 3)
+        values[MeshStates][i] = build_rho3d(_eigenvector_mag[i], elem->centroid());
+      else if (_dim == 2)
+        values[MeshStates][i] = build_rho2d(_eigenvector_mag[i], elem->centroid());
+      else if (_dim == 1)
+        values[MeshStates][i] = build_average_rho1d(_eigenvector_mag[i], elem);
+      }
     }
-  }
+
+  //NODES values
+  unsigned int np = p.size();
+
+  //Get point coordinate as physical_point
+  Point phys_p;
+
+  if (values.count(ElQuantumDensityNodes))
+    {
+    for (unsigned int n = 0; n < np; n++)
+      {
+      if (_dim == 3)
+        {
+        phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        values[ElQuantumDensityNodes][n] = build_rho3d(_el_atomic_charges, phys_p);
+        }
+      else if (_dim == 2)
+        {
+        phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        values[ElQuantumDensityNodes][n] = build_rho2d(_el_atomic_charges, phys_p);
+        }
+      else if (_dim == 1)
+        {
+        throw ModelErrorException("ElQuantumNodes is not supported in 1D "
+            "calculations. Use ElQuantumDensity (CELL variable)");
+        }
+      }
+    }
+
+  if (values.count(HlQuantumDensityNodes))
+    {
+    for (unsigned int n = 0; n < np; n++)
+      {
+      if (_dim == 3)
+        {
+        phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        values[HlQuantumDensityNodes][n] = build_rho3d(_hl_atomic_charges, phys_p);
+        }
+      else if (_dim == 2)
+        {
+        phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        values[HlQuantumDensityNodes][n] = build_rho2d(_hl_atomic_charges, phys_p);
+        }
+      else if (_dim == 1)
+        {
+        throw ModelErrorException("HlQuantumNodes is not supported in 1D "
+            "calculations. Use HlQuantumDensity (CELL variable)");
+        }
+
+      }
+    }
+
+  if (values.count(MeshStatesNodes))
+    {
+    for (unsigned int n = 0; n < np; n++)
+      {
+      for (unsigned int i = 0; i < _solution_size; i++)
+        {
+        if (_dim == 3)
+          {
+          phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+          values[MeshStatesNodes][_solution_size * n + i] = build_rho3d(_eigenvector_mag[i], phys_p);
+          }
+        else if (_dim == 2)
+          {
+          phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+          values[MeshStates][_solution_size * n + i] = build_rho2d(_eigenvector_mag[i], phys_p);
+          }
+        else if (_dim == 1)
+          {
+          throw ModelErrorException("MeshStatesNodes is not supported in 1D "
+              "calculations. Use MeshStates (CELL variable)");
+          }
+
+        }
+      }
+    }
 
 }
 
@@ -1515,6 +1592,9 @@ ETB::do_setup_solution_variables(void)
 
   if (plot_solution("ProbabilityDensity"))
 	    add_plot_variable(MeshStates);
+
+  if (plot_solution("ProbabilityDensityNodes"))
+            add_plot_variable(MeshStatesNodes);
 
 }
 
