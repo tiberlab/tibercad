@@ -26,13 +26,10 @@ void
 ThermalModel::prepare_submodels(void)
 {
   
-  //Thermal Conductivity Default
-  if (!get_options().has_submodel("thermal_conductivity"))
-  {
-    ModelOptions opts;
-    opts.set_option("type","constant");
-    get_options().add_submodel("thermal_conductivity",opts);
-  }
+  ModelOptions opts;
+  opts.set_option("type","constant");
+  PhysicalModelInterface* dummy;
+  create_submodel(dummy, "thermal_conductivity", opts);
 
 }
 
