@@ -23,7 +23,7 @@ ThermalModel::ThermalModel(const ModelOptions& options)
 }
 
 void
-ThermalModel::create_submodels(void)
+ThermalModel::prepare_submodels(void)
 {
   
   //Thermal Conductivity Default

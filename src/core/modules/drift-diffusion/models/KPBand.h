@@ -27,7 +27,7 @@ class KPBand : public BandProperties
     virtual ~KPBand(void);
 
     //! Create the kp bulk model
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
     //! Initialize
     //virtual void do_init(void);

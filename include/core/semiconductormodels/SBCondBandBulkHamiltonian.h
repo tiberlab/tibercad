@@ -35,7 +35,7 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 
  virtual void do_init(void);
 
- virtual void create_submodels(void);
+ virtual void prepare_submodels(void);
 
  
 

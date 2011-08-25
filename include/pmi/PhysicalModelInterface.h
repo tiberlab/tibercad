@@ -331,21 +331,59 @@ class PhysicalModelInterface : public TiberModelObject
         std::string& s) const;
 
 
+    //! Create a submodel
+    /*!
+     * If no submodel of type \c type is provided in the input file,
+     * \c NULL will be returned.
+     * An exception is thrown, if more than one specification is found
+     * in the input file.
+     */
+    template <class T>
+    void create_submodel(T*& model, const std::string& type);
+
+
+    //! Create a submodel
+    /*!
+     * If no submodel of type \c type is provided in the input file,
+     * the default options are used to create an instance of the model.
+     */
+    template <class T>
+    void create_submodel(T*& model, const std::string& type,
+        const ModelOptions& default_opts);
+
+
+    //! Create multiple instances of submodel \c type
+    template <class T>
+    void create_submodels(std::vector<T*>& models,
+        const std::string& type);
+
+
+    //! Create multiple instances of submodel \c type
+    /*!
+     * If no submodel of type \c type is provided in the input file,
+     * the default options are used to create an instance of the model.
+     */
+    template <class T>
+    void create_submodels(std::vector<T*>& models,
+        const std::string& type, const ModelOptions& default_opts);
+
+
     //! Create submodels
     /*!
-     * This method can be used to create special submodels, which for example
-     * are not provided as physical_model in the input file, or which do not
-     * follow the standard naming conventions.
+     * This method is to be used to create submodels, if they are needed for all bulk,
+     * interface, edges and nodes objects. Otherwise, submodels can be created inside
+     * one of the \c init_xxx methods.
      *
-     * All models created have to be added to the submodel map and their options
-     * have to be deleted from the ModelOptions object.
+     * Submodels can be created be using one of the \c create_submodel() or
+     * \c create_submodels() methods or by calling directly PhysicalModelInterface::create()
+     * and using \c add_submodel() subsequently.
      *
      * Subsequent operations on the submodels assume that they are ordered exactly
      * the same way in models associated to alloy or interface components.
      * This is assured as long as all submodels are created in create_submodels() in
      * a way independent of the type of "owner" (PhysicalObject)
      */
-    virtual void create_submodels(void) {};
+    virtual void prepare_submodels(void) {};
 
 
     //! Add an externally created submodel
@@ -449,11 +487,11 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Disable copy constructor
-    PhysicalModelInterface(const PhysicalModelInterface&) TBDLLOCAL;
+    PhysicalModelInterface(const PhysicalModelInterface&);
 
 
     //! Disable assignment operator
-    PhysicalModelInterface& operator=(const PhysicalModelInterface&) TBDLLOCAL;
+    PhysicalModelInterface& operator=(const PhysicalModelInterface&);
 
 
     //! The unique ID of this model
@@ -519,7 +557,7 @@ class PhysicalModelInterface : public TiberModelObject
 
     //! Create automatically all submodels
     /*!
-     * Calls create_submodels() which can be overridden by module developers.
+     * Calls prepare_submodels() which can be overridden by module developers.
      */
     void _create_submodels(void);
 
@@ -691,6 +729,53 @@ PhysicalModelInterface::create_submodel_alloy(const T* comp_A,
 
 
 
+template <typename T>
+void
+PhysicalModelInterface::create_submodel(T*& model, const std::string& type)
+{
+  PhysicalModelInterface* mod = NULL;
+  create_submodel<PhysicalModelInterface>(mod, type);
+  model = static_cast<T*>(mod);
+}
+
+
+template <typename T>
+void
+PhysicalModelInterface::create_submodel(T*& model, const std::string& type,
+    const ModelOptions& default_opts)
+{
+  PhysicalModelInterface* mod = NULL;
+  create_submodel<PhysicalModelInterface>(mod, type, default_opts);
+  model = static_cast<T*>(mod);
+}
+
+
+
+template <typename T>
+void
+PhysicalModelInterface::create_submodels(std::vector<T*>& models,
+    const std::string& type)
+{
+  std::vector<PhysicalModelInterface*> mod;
+  create_submodels<PhysicalModelInterface>(mod, type);
+  models.resize(mod.size());
+  for (size_t i = 0; i < mod.size(); i++)
+    models[i] = static_cast<T*>(mod[i]);
+}
+
+
+//! Create multiple instances of submodel \c type
+template <typename T>
+void
+PhysicalModelInterface::create_submodels(std::vector<T*>& models,
+    const std::string& type, const ModelOptions& default_opts)
+{
+  std::vector<PhysicalModelInterface*> mod;
+  create_submodels<PhysicalModelInterface>(mod, type, default_opts);
+  models.resize(mod.size());
+  for (size_t i = 0; i < mod.size(); i++)
+    models[i] = static_cast<T*>(mod[i]);
+}
 
 
 

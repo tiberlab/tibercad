@@ -60,6 +60,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _elem(NULL),
     _coupling(DriftDiffusionDefs::BOTH),
     _strain(0),
+    _conduction_band(NULL),
+    _valence_band(NULL),
     _equilibrium_fermi_level(0.0),
     _intrinsic_density(1e10),
     _equilibrium_n(0.0),
@@ -129,95 +131,135 @@ DriftDiffusionProperties::parse_options(void)
 
 
 void
-DriftDiffusionProperties::create_submodels(void)
+DriftDiffusionProperties::prepare_submodels(void)
 {
 
 
   // permittivity Default
-  if (!get_options().has_submodel("permittivity"))
   {
+    PermittivityModel* pm = NULL;
     ModelOptions opts;
     opts.set_option("type", "constant");
-    get_options().add_submodel("permittivity", opts);
+    create_submodel(pm, "permittivity", opts);
   }
 
-  if (get_options().has_submodel("band_parameters"))
+
+  if (get_options().has_submodel("band_properties"))
   {
-    ModelOptions elopts(get_options().submodels_begin("band_parameters")->second);
-    ModelOptions hlopts(elopts);
-    if (elopts.find_option("Ec"))
-    {
-      elopts["band_edge"] = elopts["Ec"];
-      elopts.delete_option("Ec");
-      hlopts.delete_option("Ec");
-    }
-    if (elopts.find_option("Nc"))
-    {
-      elopts["effective_DOS"] = elopts["Nc"];
-      elopts.delete_option("Nc");
-      hlopts.delete_option("Nc");
-    }
-    if (elopts.find_option("m_dos_e"))
-    {
-      elopts["DOS_mass"] = elopts["m_dos_e"];
-      elopts.delete_option("m_dos_e");
-      hlopts.delete_option("m_dos_e");
-    }
-    if (elopts.find_option("band_gap"))
-      if (elopts.find_option("Ev"))
-        elopts["reference_energy"] = elopts["Ev"];
+    ModelOptions::const_submodel_iterator it(get_options().submodels_begin("band_properties"));
 
-    if (hlopts.find_option("Ev"))
+    const ModelOptions& opts = it->second;
+    if (!opts.find_option("particle"))
     {
-      hlopts["band_edge"] = hlopts["Ev"];
-      elopts.delete_option("Ev");
-      hlopts.delete_option("Ev");
-    }
-    if (hlopts.find_option("Nv"))
-    {
-      hlopts["effective_DOS"] = hlopts["Nv"];
-      elopts.delete_option("Nv");
-      hlopts.delete_option("Nv");
-    }
-    if (hlopts.find_option("m_dos_e"))
-    {
-      hlopts["DOS_mass"] = hlopts["m_dos_h"];
-      elopts.delete_option("m_dos_h");
-      hlopts.delete_option("m_dos_h");
-    }
+      ModelOptions elopts(opts);
+      ModelOptions hlopts(elopts);
+      if (elopts.find_option("Ec"))
+      {
+        elopts["band_edge"] = elopts["Ec"];
+        elopts.delete_option("Ec");
+        hlopts.delete_option("Ec");
+      }
+      if (elopts.find_option("Nc"))
+      {
+        elopts["effective_DOS"] = elopts["Nc"];
+        elopts.delete_option("Nc");
+        hlopts.delete_option("Nc");
+      }
+      if (elopts.find_option("m_dos_e"))
+      {
+        elopts["DOS_mass"] = elopts["m_dos_e"];
+        elopts.delete_option("m_dos_e");
+        hlopts.delete_option("m_dos_e");
+      }
+      if (elopts.find_option("band_gap"))
+        if (elopts.find_option("Ev"))
+          elopts["reference_energy"] = elopts["Ev"];
 
-    get_options().add_submodel("conduction_band", elopts);
-    get_options().add_submodel("valence_band", hlopts);
-    get_options().delete_submodels("band_parameters");
+      if (hlopts.find_option("Ev"))
+      {
+        hlopts["band_edge"] = hlopts["Ev"];
+        elopts.delete_option("Ev");
+        hlopts.delete_option("Ev");
+      }
+      if (hlopts.find_option("Nv"))
+      {
+        hlopts["effective_DOS"] = hlopts["Nv"];
+        elopts.delete_option("Nv");
+        hlopts.delete_option("Nv");
+      }
+      if (hlopts.find_option("m_dos_e"))
+      {
+        hlopts["DOS_mass"] = hlopts["m_dos_h"];
+        elopts.delete_option("m_dos_h");
+        hlopts.delete_option("m_dos_h");
+      }
+
+      if (++it != get_options().submodels_end("band_properties"))
+        throw InitFailedException("Multiple definition of band properties for material "
+            + get_material()->get_name());
+
+      get_options().delete_submodels("band_properties");
+      get_options().add_submodel("band_properties", elopts);
+      get_options().add_submodel("band_properties", hlopts);
+    }
   }
 
-  if (!get_options().has_submodel("conduction_band"))
+  vector<BandProperties*> bp;
+  PhysicalModelInterface::create_submodels(bp, "band_properties");
+
+  if (bp.size() > 2)
+    throw InitFailedException("Multiple definition of band properties for material "
+        + get_material()->get_name());
+
+  for (size_t i = 0; i < bp.size(); i++)
   {
-    ModelOptions opts;
-    opts.set_option("particle", "el");
-    opts.set_option("type", "kp");
-    get_options().add_submodel("band_properties", opts);
+    if (string("el") == bp[i]->get_options().get_option("particle", ""))
+      _conduction_band = bp[i];
+    else if (string("hl") == bp[i]->get_options().get_option("particle", ""))
+      _valence_band = bp[i];
+    else
+      throw InitFailedException("Unknown particle for Drift-Diffusion model");
   }
-  else
+
+  if (get_options().has_submodel("conduction_band"))
   {
+    if (_conduction_band != NULL)
+    throw InitFailedException("Multiple definition of conduction band properties for material "
+        + get_material()->get_name());
+
     ModelOptions opts(get_options().submodels_begin("conduction_band")->second);
     opts.set_option("particle", "el");
-    get_options().add_submodel("band_properties", opts);
+    create_submodel(_conduction_band, "band_properties", opts);
   }
 
-  if (!get_options().has_submodel("valence_band"))
+  if (_conduction_band == NULL)
+  {
+    ModelOptions opts;
+    opts.set_option("particle", "el");
+    opts.set_option("type", "kp");
+    create_submodel(_conduction_band, "band_properties", opts);
+  }
+
+
+  if (get_options().has_submodel("valence_band"))
+  {
+    if (_valence_band != NULL)
+    throw InitFailedException("Multiple definition of valence band properties for material "
+        + get_material()->get_name());
+
+    ModelOptions opts(get_options().submodels_begin("valence_band")->second);
+    opts.set_option("particle", "hl");
+    create_submodel(_valence_band, "band_properties", opts);
+  }
+
+  if (_valence_band == NULL)
   {
     ModelOptions opts;
     opts.set_option("particle", "hl");
     opts.set_option("type", "kp");
-    get_options().add_submodel("band_properties", opts);
+    create_submodel(_valence_band, "band_properties", opts);
   }
-  else
-  {
-    ModelOptions opts(get_options().submodels_begin("valence_band")->second);
-    opts.set_option("particle", "hl");
-    get_options().add_submodel("band_properties", opts);
-  }
+
 
   // particle densities
   {
@@ -288,7 +330,14 @@ DriftDiffusionProperties::create_submodels(void)
       opts.set_option("particle", "hole");
       get_options().add_submodel("particle_density", opts);
     }
+
+    vector<PhysicalModelInterface*> pd;
+    create_submodels(pd, "particle_density");
   }
+
+
+  // polarization models
+  create_submodels(_pm, "polarization");
 
 
   if (!is_dielectric())
@@ -388,16 +437,6 @@ DriftDiffusionProperties::create_submodels(void)
       PhysicalModelInterface::destroy(it->second);
     _recombination_models.clear();
   }
-
-  // eliminate them from the submodel list
-  get_options().delete_submodels("mobility");
-  get_options().delete_submodels("electron_mobility");
-  get_options().delete_submodels("hole_mobility");
-  get_options().delete_submodels("recombination");
-  get_options().delete_submodels("generation");
-  get_options().delete_submodels("thermoelectric_power");
-  get_options().delete_submodels("conduction_band");
-  get_options().delete_submodels("valence_band");
 }
 
 
@@ -453,23 +492,8 @@ DriftDiffusionProperties::do_init(void)
   parse_options();
 
   // they must be here
-  SubmodelIterator it = submodels_begin("band_properties");
-  SubmodelIterator end = submodels_end("band_properties");
-  for ( ; it != end; ++it)
-  {
-    BandProperties* bp = static_cast<BandProperties*>(it->second);
-
-    if (string("el") == bp->get_options().get_option("particle", ""))
-      _conduction_band = bp;
-    else if (string("hl") == bp->get_options().get_option("particle", ""))
-      _valence_band = bp;
-    else
-      throw InitFailedException("Unknown particle for Drift-Diffusion model");
-  }
-
-  // they must be here
-  it = submodels_begin("particle_density");
-  end = submodels_end("particle_density");
+  SubmodelIterator it = submodels_begin("particle_density");
+  SubmodelIterator end = submodels_end("particle_density");
   for ( ; it != end; ++it)
   {
     ParticleDensity* pd = static_cast<ParticleDensity*>(it->second);
@@ -508,17 +532,9 @@ DriftDiffusionProperties::do_init(void)
   calculate_equilibrium_properties();
 
 
-  // Polarization
-  it = submodels_begin("polarization");
-  end = submodels_end("polarization");
-  for ( ; it != end ; ++it)
-    _pm.push_back(dynamic_cast<PolarizationModel*>(it->second));
-
-
-  // Permittivity
+  // permittivity
   it = submodels_begin("permittivity");
   PermittivityModel* pm =  dynamic_cast<PermittivityModel*>(it->second);
-  assert(pm != NULL);
   _permittivity = pm->get_permittivity();
 
 

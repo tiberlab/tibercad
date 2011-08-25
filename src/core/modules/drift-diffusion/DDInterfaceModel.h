@@ -133,7 +133,7 @@ class DDInterfaceModel : public PhysicalModel
 
 
     //! Create some of the submodels
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
 
     //! Set the BC type for variable \c i

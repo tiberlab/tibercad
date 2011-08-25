@@ -85,7 +85,7 @@ MyPoissonModel::do_calculate(void)
 }
 
 void
-MyPoissonModel::create_submodels(void)
+MyPoissonModel::prepare_submodels(void)
 {
   
   //Thermal Conductivity Default

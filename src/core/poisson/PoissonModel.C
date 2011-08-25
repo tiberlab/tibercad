@@ -80,7 +80,7 @@ void PoissonModel::do_init()
 
 
 
-void PoissonModel::create_submodels()
+void PoissonModel::prepare_submodels()
 {
 
   ModelOptions::const_submodel_iterator it;

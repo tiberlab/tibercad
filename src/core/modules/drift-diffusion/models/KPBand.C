@@ -26,7 +26,7 @@ KPBand::~KPBand(void)
 
 
 void
-KPBand::create_submodels(void)
+KPBand::prepare_submodels(void)
 {
   ModelOptions kpopts;
   if (get_options().has_submodel("kp"))

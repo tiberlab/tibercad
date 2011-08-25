@@ -35,7 +35,7 @@ DDsemiconductor::DDsemiconductor(const ModelOptions& options)
 }
 
 
-void DDsemiconductor::create_submodels(void)
+void DDsemiconductor::prepare_submodels(void)
 {
   assert(semiconductor == NULL);
   assert(bulk_ham == NULL);

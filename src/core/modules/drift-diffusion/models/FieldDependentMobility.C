@@ -58,7 +58,7 @@ FieldDependentMobility::read_database(void)
 
 
 void
-FieldDependentMobility::create_submodels(void)
+FieldDependentMobility::prepare_submodels(void)
 {
   assert(_low_field_mob == NULL);
 

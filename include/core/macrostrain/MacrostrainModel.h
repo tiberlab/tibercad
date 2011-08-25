@@ -66,7 +66,7 @@ class MacrostrainModel: public MacrostrainModelInterface
 
   virtual void do_init();
 
-  virtual void create_submodels();
+  virtual void prepare_submodels();
 
 
 };

@@ -63,7 +63,7 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
     //! Read database
   virtual void read_database(void){};
 
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
  
   void do_print_info(void);

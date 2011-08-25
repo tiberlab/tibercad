@@ -44,7 +44,7 @@ DDInterfaceModel::get_dd_properties(void) const
 
 
 void
-DDInterfaceModel::create_submodels(void)
+DDInterfaceModel::prepare_submodels(void)
 {
   // for each trap we add an SRH recombination model
   ModelOptions::submodel_iterator it(get_options().submodels_begin("trap"));
@@ -57,6 +57,9 @@ DDInterfaceModel::create_submodels(void)
     opts.set_option("name", "recombination");
     get_options().add_submodel("recombination", opts);
   }
+
+  vector<PhysicalModelInterface*> rec;
+  create_submodels(rec, "recombination");
 }
 
 

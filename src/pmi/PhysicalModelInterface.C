@@ -449,12 +449,14 @@ PhysicalModelInterface::set_material(Material* mat)
 void
 PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterface* pm)
 {
-  assert(pm != NULL);
-  pm->set_simulator_id(get_simulator_id());
-  pm->set_owner(get_owner());
-  pm->set_material(get_material());
-  pm->get_options().set_key(key);
-  _submodels.insert(SubmodelMap::value_type(key, pm));
+  if (pm != NULL)
+  {
+    pm->set_simulator_id(get_simulator_id());
+    pm->set_owner(get_owner());
+    pm->set_material(get_material());
+    pm->get_options().set_key(key);
+    _submodels.insert(SubmodelMap::value_type(key, pm));
+  }
 }
 
 
@@ -466,58 +468,190 @@ PhysicalModelInterface::delete_submodel(const std::string& key)
 }
 
 
+
+template <>
+void
+PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
+    const std::string& type)
+{
+  model = NULL;
+
+  string modname(type);
+
+  // loop over all submodels
+  ModelOptions::submodel_iterator it(get_options().submodels_begin(type));
+  const ModelOptions::submodel_iterator end(get_options().submodels_end(type));
+
+  for ( ; it != end; ++it)
+  {
+    if (model != NULL)
+      throw ModelErrorException("Only one instance of submodel type \'"
+          + type + "\' allowed");
+
+    string modtype = ((it->second).get_option("type", (it->second).get_name()));
+    (it->second).set_option("type", modtype);
+
+    if (modtype.size() > 0)
+      modname += string("_") + modtype;
+
+    // we try to create it from the same module
+    model = create(modname, it->second, get_module_name());
+
+    if (model == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      model = create(it->first, it->second, get_module_name());
+    }
+
+    add_submodel(type, model);
+
+    if (model == NULL)
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << it->first << "\' (type \'"
+        << modtype << "\')";
+      throw InitFailedException(os.str());
+    }
+  }
+}
+
+
+template <>
+void
+PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
+    const std::string& type, const ModelOptions& default_opts)
+{
+  create_submodel(model, type);
+
+  if (model == NULL)
+  {
+    string modname(type);
+
+    ModelOptions opts(default_opts);
+    string modtype = (opts.get_option("type", opts.get_name()));
+    opts.set_option("type", modtype);
+
+    if (modtype.size() > 0)
+      modname += string("_") + modtype;
+
+    // we try to create it from the same module
+    model = create(modname, opts, get_module_name());
+
+    if (model == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      model = create(type, opts, get_module_name());
+    }
+
+    add_submodel(type, model);
+
+    if (model == NULL)
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << type << "\' (type \'"
+        << modtype << "\')";
+      throw InitFailedException(os.str());
+    }
+  }
+}
+
+
+template <>
+void
+PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& models,
+    const std::string& type)
+{
+  string modname(type);
+
+  models.resize(0);
+
+  // loop over all submodels
+  ModelOptions::submodel_iterator it(get_options().submodels_begin(type));
+  const ModelOptions::submodel_iterator end(get_options().submodels_end(type));
+
+  for ( ; it != end; ++it)
+  {
+    string modtype = ((it->second).get_option("type", (it->second).get_name()));
+    (it->second).set_option("type", modtype);
+
+    if (modtype.size() > 0)
+      modname += string("_") + modtype;
+
+    // we try to create it from the same module
+    PhysicalModelInterface* mod = create(modname, it->second, get_module_name());
+
+    if (mod == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      mod = create(it->first, it->second, get_module_name());
+    }
+
+    add_submodel(type, mod);
+
+    if (mod != NULL)
+      models.push_back(mod);
+    else
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << it->first << "\' (type \'"
+        << modtype << "\')";
+      throw InitFailedException(os.str());
+    }
+  }
+}
+
+
+
+template <>
+void
+PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& models,
+    const std::string& type, const ModelOptions& default_opts)
+{
+  create_submodels(models, type);
+
+  if (models.empty())
+  {
+    PhysicalModelInterface* mod = NULL;
+
+    string modname(type);
+
+    ModelOptions opts(default_opts);
+    string modtype = (opts.get_option("type", opts.get_name()));
+    opts.set_option("type", modtype);
+
+    if (modtype.size() > 0)
+      modname += string("_") + modtype;
+
+    // we try to create it from the same module
+    mod = create(modname, opts, get_module_name());
+
+    if (mod == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      mod = create(type, opts, get_module_name());
+    }
+
+    add_submodel(type, mod);
+
+    if (mod != NULL)
+      models.push_back(mod);
+    else
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << type << "\' (type \'"
+        << modtype << "\')";
+      throw InitFailedException(os.str());
+    }
+  }
+}
+
+
+
 void
 PhysicalModelInterface::_create_submodels(void)
 {
   // first call the user defined method
-  create_submodels();
-
-  // loop over all submodels
-  ModelOptions::submodel_iterator it(get_options().submodels_begin());
-  const ModelOptions::submodel_iterator end(get_options().submodels_end());
-
-  while (it != end)
-  {
-    string name(it->first);
-
-    string type = ((it->second).get_option("type", (it->second).get_name()));
-    (it->second).set_option("type", type);
-
-    if (type.size() > 0)
-      name += string("_") + type;
-
-    // we try to create it from the same module
-    PhysicalModelInterface* pm = create(name, it->second, get_module_name());
-
-    if (pm == NULL)
-    {
-      // perhaps it uses 'type' or 'model' internally?
-      pm = create(it->first, it->second, get_module_name());
-    }
-
-    // a temporary iterator as we cannot delete the loop iterator
-    ModelOptions::submodel_iterator tmp_it(it);
-
-    // next entry
-    ++it;
-
-    if (pm == NULL)
-    {
-      ostringstream os;
-      os << "Unknown physical model \'" << tmp_it->first << "\' (type \'"
-        << type << "\')";
-      //throw InitFailedException(os.str());
-
-      Messages::warning(os.str());
-    }
-    else
-    {
-      add_submodel(tmp_it->first, pm);
-
-      // we delete the options from the ModelOptions object
-      get_options().delete_submodel(tmp_it);
-    }
-  }
+  prepare_submodels();
 }
 
 

@@ -67,7 +67,7 @@ KPbulkHamiltonian::KPbulkHamiltonian(const ModelOptions& options)
 }
 
 
-void KPbulkHamiltonian::create_submodels(void)
+void KPbulkHamiltonian::prepare_submodels(void)
 {
   assert(semiconductor == NULL);
 

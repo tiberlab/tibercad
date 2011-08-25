@@ -32,7 +32,7 @@ PhysicalModelInterface* MacrostrainModel::create_new (void) const
 
 
 void
-MacrostrainModel::create_submodels(void)
+MacrostrainModel::prepare_submodels(void)
 {
   assert(stiffness == NULL);
   assert(piezo == NULL);

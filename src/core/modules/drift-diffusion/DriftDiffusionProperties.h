@@ -814,7 +814,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Create some of the submodels
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
 
     //! This method gets called from reinit()

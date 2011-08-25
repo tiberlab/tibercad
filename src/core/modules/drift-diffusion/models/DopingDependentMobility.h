@@ -59,7 +59,7 @@ class TBDLLOCAL DopingDependentMobility : public MobilityModelInterface
     virtual void do_init(void);
 
     //! Create submodels
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
     //! \copydoc MobilityModelInterface::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
