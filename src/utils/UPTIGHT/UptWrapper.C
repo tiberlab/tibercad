@@ -4,11 +4,10 @@
 
 
 UptWrapper::UptWrapper(){
-  std::cout << "Constructing UPTIGHT instance... ";
+  std::cout << "\nCreating UPTIGHT instance... ";
     f77_upt_initsession(_handler);
     std::cout << "done." << std::endl;
 
-    std::cout << "Received handler: ";
     for  (int ii = 0; ii < UPT_HSIZE; ++ii) {
       std::cout << _handler[ii] << " ";
     }
@@ -18,10 +17,8 @@ UptWrapper::UptWrapper(){
 
 
 UptWrapper::~UptWrapper(){
-  std::cout << "Destructing UPTIGHT instance... ";
     f77_upt_destructuptight(_handler);
     f77_upt_destructsession(_handler);
-    std::cout << "done." << std::endl;
 }
 
 
@@ -253,6 +250,14 @@ void UptWrapper::get_H_csr(int nrow, char fmt, std::vector<std::complex<double> 
 {
 
   f77_upt_get_csr_hamiltonian(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
+
+}
+
+void UptWrapper::set_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, 
+                           std::vector<int>& JA, std::vector<int>& IA)
+{
+
+  f77_upt_set_csr_hamiltonian(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
 
 }
 

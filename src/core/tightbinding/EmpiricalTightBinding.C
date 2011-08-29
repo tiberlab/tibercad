@@ -44,7 +44,6 @@ ETB::ETB(const ModelOptions& options)
 
 ETB::~ETB(void)
 {
-  std::cout << "destructing";
   delete inst;
   inst = NULL;
   for (std::map<unsigned int, std::vector<double>>::iterator 
@@ -59,7 +58,6 @@ ETB::~ETB(void)
   _map_ID_Evb.clear();
   _map_ID_Ecb.clear();
   _ion_num_orbitals.clear();
-  std::cout << "destructed" << std::endl;
 }
 
 ETB::UptOptions::UptOptions(void)
@@ -297,12 +295,7 @@ void ETB::reinit(void){
   if(inst->inituptight() != 0){ 
     throw InitFailedException("internal handlers do not match"); }
 
-
-  std::cout << "(ETB) init uptight done" << std::endl;
-
   _ion_num_orbitals.resize(get_atomistic_structure()->get_N_atoms(), 0);
-
-  std::cout << "(ETB) set orbitals per atom" << std::endl;
 
   inst->get_ion_numorbitals(_ion_num_orbitals);
 
@@ -384,7 +377,9 @@ void ETB::do_solve(void){
   reinit(); 
 
 
-  if (_assemble) assemble(options);
+  if (_assemble && _upt_options.assemble_H) assemble(options);
+
+  if (!_upt_options.assemble_H) create_dummy_H(); 
 
   if (_upt_solver_options.read_states)
   {
@@ -394,24 +389,39 @@ void ETB::do_solve(void){
 
     int n_vb, n_cb;
     inst->read_old_states(_upt_options.load_path, n_vb, n_cb);
-    std::cout<<"(ETB) found: "<<n_vb<<" "<<n_cb<<std::endl;
+
+    Messages::info("...done\n");
+    
     _upt_solver_options.start_vb = n_vb + 1;
     _upt_solver_options.start_cb = n_cb + 1;
 
+    if (_upt_solver_options.n_vb < n_vb) _upt_solver_options.n_vb = n_vb;
+    if (_upt_solver_options.n_cb < n_cb) _upt_solver_options.n_cb = n_cb;
+
+    if ( (_upt_solver_options.n_vb > n_vb || _upt_solver_options.n_cb > n_cb) && 
+         !_upt_options.assemble_H)
+    {
+      Messages::warning("Cannot solve more states because assemble_hamiltonian=false");
+      _upt_solver_options.n_vb = n_vb;
+      _upt_solver_options.n_cb = n_cb;
+    }
+      
     int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
     Complex matel;
+
+    Messages::info("\n(ETB) consistency check:");
 
     for(int i=1; i<= num_ev; i++)
     {
 	matel = inst->get_matel(i,i);
-	std::cout << "eigval " << i << "= " << matel << std::endl;
+	std::cout << "  <"<<i<<"| H |"<<i<<"> = " << matel << std::endl;
     }
   }
 
   if (_upt_solver_options.solver.compare("upt_lanczos") == 0) 
   {
 
-    std::cout << "(ETB) solving using lanczos" << std::endl;
+    Messages::info("\n(ETB) solving using lanczos");
 
     if (_upt_solver_options.twice_cb)
       std::cout << "(ETB) twice cb: true " << std::endl;
@@ -434,12 +444,13 @@ void ETB::do_solve(void){
       inst->feast(_upt_solver_options.e_min, _upt_solver_options.e_max, _upt_solver_options.m0);
   } 
 
-  
-  //std::cerr<<"Pot min= "<<_pot_min<<std::endl;
+  Messages::info("(ETB) copy states from uptight"); 
 
   int hdim = inst->get_H_dim();
   int num_vb = _upt_solver_options.n_vb;
   int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
+
+
   double *eigvals = new double[num_ev];
   Complex *eigvects = new Complex[hdim*num_ev];
   int *particles = new int[num_ev];
@@ -455,19 +466,6 @@ void ETB::do_solve(void){
   for(int i=0; i< num_ev; i++)
   {
 
-   if(particles[i]==1)
-   {
-      _solution[i].particle = "el";
-   }
-   else if(particles[i]==-1) 
-   {
-      _solution[i].particle = "hl";
-   }
-   else
-   {
-      throw SolveFailedException("ETB: unkown particle type");
-   }
-
     _solution[i].statistics = "Fermi";
     _solution[i].eigen_energy = eigvals[i];
     _solution[i].temperature = _upt_options.temperature;
@@ -479,28 +477,36 @@ void ETB::do_solve(void){
     {
       _solution[i].eigen_vector[j] = *(eigtmp+j);
     }
-
      
-    if (_upt_options.potential_flag)
-    {
-       if(particles[i]==1 && !has_option("el_qfermi_level"))
+    if(particles[i]==1)
+    { 
+       _solution[i].particle = "el";
+       if (_upt_options.potential_flag)
        {
 	  _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
        }
        else
        {
           _solution[i].electro_chem_pot = _upt_options.el_chem_pot; 	
-       } 
-  
-       if( particles[i]==-1 && !has_option("hl_qfermi_level"))
+       }
+    }
+    else if(particles[i]==-1) 
+    {
+       _solution[i].particle = "hl";
+       if (_upt_options.potential_flag)
        {
-          _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
+	  _solution[i].electro_chem_pot = calculate_fermi_averaged(i);
        }
        else
        {
-          _solution[i].electro_chem_pot = _upt_options.hl_chem_pot; 
+          _solution[i].electro_chem_pot = _upt_options.hl_chem_pot; 	
        }
-     }
+    }
+    else
+    {
+       throw SolveFailedException("ETB: unkown particle type");
+    }
+
   }
 
   delete eigvals;
@@ -512,6 +518,9 @@ void ETB::do_solve(void){
   write_states();
 
   //Calculate electron and holes charge density on atoms (hydrogen not included)
+
+  Messages::info("(ETB) compute atom-projected charges"); 
+
   _el_atomic_charges.resize(_N_without_H, 0.0);
   _hl_atomic_charges.resize(_N_without_H, 0.0);
 
@@ -532,6 +541,8 @@ void ETB::do_solve(void){
   declare_solution(MeshStatesNodes, NTUPLE, NODES, "1"+units, _solution_size);
 
   //Print for debug charges on atoms
+  Messages::info("(ETB) print atom-projected charges on files"); 
+
   double* charges;
   charges = new double[get_atomistic_structure()->get_N_atoms()];
   for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _el_atomic_charges[i];
@@ -586,6 +597,29 @@ void ETB::do_assemble(const ModelOptions& options)
   }
 
   _assemble = 0;
+
+}
+//-------------------------------------------------------------------------
+void ETB::create_dummy_H(void)
+{
+   unsigned int nrow;	
+   char fmt;
+
+   // get the right value for nrow 
+   nrow = compute_H_dim();
+   fmt='F';
+   // create dummy null matrix with Fortran base 1 indexing
+   std::vector<Complex> A(nrow,0.0);
+   std::vector<int> JA(nrow,0);
+   for(int j=0; j<nrow; j++){ JA[j]=j+1; }
+   std::vector<int> IA(nrow+1,0);
+   for(int j=0; j<nrow+1; j++){ IA[j]=j+1; }
+
+   inst->set_H_csr(nrow,fmt,A,JA,IA);
+ 
+   // This is needed to create arrays like _el_chem_pot[]
+   // for later calculations of averaged Fermi levels
+   if (_upt_options.potential_flag)  add_pot_shifts(); 
 
 }
 //-------------------------------------------------------------------------
@@ -669,8 +703,11 @@ ETB::plot_globaldata(void)
     }
   }
 
-  Messages::info("(ETB) write wave functions on files");
-  inst->write_states();
+  if ( plot_solution("tbstates") || plot_solution("JmolStates") )
+  {
+    Messages::info("(ETB) write wave functions on files");
+    inst->write_states();
+  }
 
 }
 
@@ -709,9 +746,18 @@ void ETB::parse_options(void)
     _upt_options.potential_sim = get_option("potential_simulation","");
     _upt_options.potential_flag = true;
   }
+  else 
+  {
+   if (!has_option("el_qfermi_level")) 
+     Messages::warning("Neither potential_simulation nor el_qfermi_level have been specified");
 
-  _upt_options.hl_chem_pot = get_option("hl_qfermi_level", 0.0);
+   if (!has_option("hl_qfermi_level")) 
+     Messages::warning("Neither potential_simulation nor hl_qfermi_level have been specified");
+  }
+
   _upt_options.el_chem_pot = get_option("el_qfermi_level", 0.0);
+  _upt_options.hl_chem_pot = get_option("hl_qfermi_level", 0.0);
+
 
   _upt_options.strain_sim = get_option("strain_model_name", "no_sim");
   _upt_options.strain_sim = get_option("strain_simulation", _upt_options.strain_sim);
@@ -740,6 +786,9 @@ void ETB::parse_options(void)
       {_upt_options.hybrid_passivation = true;}
 
   //---------------------------------------------------------------------------------------
+ 
+  _upt_options.assemble_H = get_option("assemble_hamiltonian",true);
+
   _upt_solver_options.read_states = solopts.get_option("load_states", false);
   std::string load_path = solopts.get_option("load_path", ".");
   load_path.copy(_upt_options.load_path, load_path.size() );
@@ -976,7 +1025,24 @@ ETB::project_atom_strain(void)
   
 
 }
- 
+
+unsigned int
+ETB::compute_H_dim(void)
+{
+  unsigned int N_atoms_wo_H = get_atomistic_structure()->get_N_without_H();
+  unsigned int sum, k_at;
+
+  k_at = 0;
+  sum = 0;
+
+  for (unsigned int j = 0; j < N_atoms_wo_H; j++)
+  {
+    sum += _ion_num_orbitals[j];	  
+  }
+
+  return sum;
+}
+
 
 double
 ETB::calculate_fermi_averaged(unsigned int i)
@@ -1320,6 +1386,7 @@ ETB::get_solution_secure(const Elem* elem,
   //NODES values
   unsigned int np = p.size();
 
+
   //Get point coordinate as physical_point
   Point phys_p;
 
@@ -1372,6 +1439,7 @@ ETB::get_solution_secure(const Elem* elem,
     {
     for (unsigned int n = 0; n < np; n++)
       {
+
       for (unsigned int i = 0; i < _solution_size; i++)
         {
         if (_dim == 3)

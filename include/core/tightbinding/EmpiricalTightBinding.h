@@ -59,6 +59,7 @@ class ETB : public TightBinding
     double grid_step;
     bool hybrid_passivation;
     bool d_states_correction;
+    bool assemble_H;
   };
 
   class UptSolverOptions
@@ -204,6 +205,12 @@ class ETB : public TightBinding
 
   //! get c-axis orientation
   void get_c_axis(void);
+
+  //! create a dummy null H and pass it to uptight (mainly for debug)
+  void create_dummy_H(void);
+
+  //! compute the Hamiltonian dimension using uptight
+  unsigned int  compute_H_dim(void);
 
   //! Structure containing options for DFTB+ tight binding builder
   UptOptions _upt_options;

@@ -140,6 +140,10 @@ public:
 
   void get_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, std::vector<int>& JA,
                                                      std::vector<int>& IA );
+  
+  void set_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, std::vector<int>& JA,
+                                                     std::vector<int>& IA );
+
 
   void complex_test(double& re, double& im, std::complex<double>& zz);
 
