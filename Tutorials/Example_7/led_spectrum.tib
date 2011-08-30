@@ -188,7 +188,7 @@ Module  driftdiffusion
   plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity,
           eCurrentDensity, hCurrentDensity, ContactCurrent, eMobility, hMobility)
 
-  load_state = output/driftdiffusion_Vb_3.5.tsv
+  load_state = reference/driftdiffusion_Vb_3.5.tsv
 
   Physics
   {
