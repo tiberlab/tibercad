@@ -69,7 +69,7 @@ ETB::UptOptions::UptOptions(void)
  opt_flag(0),
  poldir(1),
  hybrid_passivation(false),
- dg_scale(0.10),
+ dg_scale(1.0),
  dg_onsite(-200.0),
  grid_step(0.5)
 {
@@ -776,8 +776,8 @@ void ETB::parse_options(void)
 
   //---------------------------------------------------------------------------------------
   // Dangling bond scaling
-  _upt_options.dg_scale = get_option("dangling_bond_scaling",100);
-  _upt_options.dg_onsite = get_option("dangling_bond_onsite",-200.0);    
+  _upt_options.dg_scale = get_option("dangling_bond_scaling",1.0);
+  _upt_options.dg_onsite = get_option("dangling_bond_onsite",-20.0);    
 
   //---------------------------------------------------------------------------------------
   //Choose passivation model
