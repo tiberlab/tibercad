@@ -563,9 +563,9 @@ void ETB::do_assemble(const ModelOptions& options)
   if( options.get_option("P_matrix",false) )
   {
     int poldir = options.get_option("poldir",0);
-    inst->set_verbose(0);
+    //inst->set_verbose(0);
     inst->compute_P_matrix(poldir);
-    inst->set_verbose(_upt_options.verbose);
+    //inst->set_verbose(_upt_options.verbose);
   }
   else
   {
@@ -776,8 +776,8 @@ void ETB::parse_options(void)
 
   //---------------------------------------------------------------------------------------
   // Dangling bond scaling
-  _upt_options.dg_scale = get_option("dangling_bond_scaling",1.0);
-  _upt_options.dg_onsite = get_option("dangling_bond_onsite",-20.0);    
+  _upt_options.dg_scale = get_option("dangling_bond_scaling",100.0);
+  _upt_options.dg_onsite = get_option("dangling_bond_onsite",-50.0);    
 
   //---------------------------------------------------------------------------------------
   //Choose passivation model
@@ -1656,7 +1656,7 @@ ETB::do_setup_solution_variables(void)
   declare_solution(ElQuantumDensityNodes, REAL, NODES, "q"+units);
   declare_solution(HlQuantumDensityNodes, REAL, NODES, "q"+units);
   declare_solution(MeshStates, NTUPLE, CELL, "1"+units, 1);
-  declare_solution(MeshStates, NTUPLE, NODES, "1"+units, 1);
+  declare_solution(MeshStatesNodes, NTUPLE, NODES, "1"+units, 1);
 
   if (plot_solution("ProbabilityDensity"))
 	    add_plot_variable(MeshStates);

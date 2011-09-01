@@ -99,7 +99,7 @@ void OpticsKP::do_init()
   system = &( es->get_system<LinearImplicitSystem>(system_name));
 
   //-------------------------------------------------------------------------------------------------
-  //add variables
+  //add variables for an 8x8 k.p problem
 
   psivar.resize(8);
 
@@ -209,13 +209,13 @@ void OpticsKP::calculate_matrix_bulk(void)
 
 
   //!number of bands in initial state
-  short    num_bands_initial = initial_state_model->get_number_of_bands();
+  //short    num_bands_initial = initial_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_in = initial_state_model->get_kp_bands();
 
   assert( kp_bands_map_in.size() > 0);
 
   //number of bands in final state
-  short    num_bands_final   = final_state_model->get_number_of_bands();
+  //short    num_bands_final   = final_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_fi = final_state_model->get_kp_bands();
 
   assert( kp_bands_map_fi.size() > 0);
@@ -490,7 +490,10 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
   DofMap& dof_map = system->get_dof_map();
 
-  unsigned int number_of_nodes  = dof_map.n_dofs()/dof_map.n_variables(); //only nodes that belong to active elements
+
+  // ?!! compute nuber of nodes of the active elements: is it safe this way ??
+  // n_variables should count the total number of bands ?  
+  unsigned int number_of_nodes  = dof_map.n_dofs()/dof_map.n_variables(); 
 
 
 
@@ -509,13 +512,13 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
 
   //!number of bands in initial state
-  short    num_bands_initial = initial_state_model->get_number_of_bands();
+  //short    num_bands_initial = initial_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_in = initial_state_model->get_kp_bands();
 
   assert( kp_bands_map_in.size() > 0);
 
   //number of bands in final state
-  short    num_bands_final   = final_state_model->get_number_of_bands();
+  //short    num_bands_final   = final_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_fi = final_state_model->get_kp_bands();
 
   assert( kp_bands_map_fi.size() > 0);
@@ -529,7 +532,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
     for (int row = 0 ; row < size_matrix; row++)
     {//rows of P matrix
 
-      // short band_number1 = row%8;
+      //! This compute the band index of a given row
       short band_number1 = row/number_of_nodes;
 
       band_it = kp_bands_map_in.find( band_number1 );

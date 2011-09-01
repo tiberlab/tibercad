@@ -255,29 +255,46 @@ void Optics::set_states()
   {
     std::vector<unsigned int> inum = _initial_state_model->get_state_indices(_initial_state_particle);
 
-    std::vector<unsigned int> temp(2, 0);
-    temp[1] = _initial_state_model->get_num_states(_initial_state_particle) - 1;
+    //for (unsigned i = 0; i < inum.size(); i++)
+    //{
+    //  std::cout << "initial indeces = "<<_initial_state_particle<< inum[i]<<std::endl;
+    //}
+
+    std::vector<unsigned int> temp;
 
     get_option("initial_eigenstates", temp);
 
-    if (temp.size() == 2) 
+
+    if (temp.size() > 0) 
     {
-      if (temp[0] <= temp[1])
-        if (temp[0] >= 0 && temp[1]-temp[0] <= _i_states.size())
+      if (temp.size() <= inum.size())
+      {
+        _initial_eigen_state_numbers.resize(temp.size());
+        unsigned int j = 0;
+        for (unsigned i = 0; i <= temp.size(); i++)
         {
-          _initial_eigen_state_numbers.resize(temp[1] - temp[0] + 1 );
-          unsigned int j = 0;
-          for (unsigned i = temp[0]; i <= temp[1]; i++)
-          {
-            _initial_eigen_state_numbers[j] = inum[i];
-            j++;
-          }
+          //std::cout << "initial state indeces = " << temp[i] << std::endl;
+         
+          if(temp[i]<0 || temp[i]>inum.size()) continue;
+          _initial_eigen_state_numbers[j] = inum[temp[i]];
+          j++;
         }
+      }
     }
     else
     {
-       _initial_eigen_state_numbers = inum;
+      //std::cout << "initial states defaults "<<std::endl;
+
+      _initial_eigen_state_numbers.resize(inum.size());
+
+      for (unsigned i = 0; i < inum.size(); i++)
+      {
+        //std::cout << "final state indeces = " << inum[i] << std::endl;
+        _initial_eigen_state_numbers[i] = inum[i];
+      }      
+      
     }
+
     if (_initial_eigen_state_numbers.size() == 0)
       throw InitFailedException("Optics: no states available in "
                                 + get_option("_initial_state_model", ""));
@@ -289,28 +306,45 @@ void Optics::set_states()
 
   {
     std::vector<unsigned int> fnum = _final_state_model->get_state_indices(_final_state_particle);
-    std::vector<unsigned int> temp(2,0);
-    temp[1] = _final_state_model->get_num_states(_final_state_particle) - 1;    
+
+    //std::cout << "final states = "<<fnum.size()<<std::endl;
+    //for (unsigned i = 0; i < fnum.size(); i++)
+    //{
+    //  std::cout << "final indeces = "<< fnum[i]<<std::endl;
+    // }
+
+    std::vector<unsigned int> temp;
 
     get_option("final_eigenstates", temp);
 
-    if (temp.size() == 2)
+    if (temp.size() > 0) 
     {
-      if (temp[0] <= temp[1])
-        if (temp[0] >= 0 && temp[1]-temp[0] <= _f_states.size())
+      if (temp.size() <= fnum.size())
+      {
+        _initial_eigen_state_numbers.resize(temp.size());
+        unsigned int j = 0;
+        for (unsigned i = 0; i <= temp.size(); i++)
         {
-          _final_eigen_state_numbers.resize(temp[1] - temp[0] + 1 );
-          unsigned int j = 0;
-          for (unsigned i = temp[0]; i <= temp[1]; i++)
-          {
-            _final_eigen_state_numbers[j] = fnum[i];
-            j++;
-          }
+          //std::cout << "final state indeces = " << temp[i] << std::endl;
+         
+          if(temp[i]<0 || temp[i]>fnum.size()) continue;
+          _final_eigen_state_numbers[j] = fnum[temp[i]];
+          j++;
         }
+      }
     }
     else
     {
-       _final_eigen_state_numbers = fnum;
+      //std::cout << "final states defaults "<<std::endl;
+
+      _final_eigen_state_numbers.resize(fnum.size());
+
+      for (unsigned i = 0; i < fnum.size(); i++)
+      {
+        //std::cout << "final state indeces = " << fnum[i] << std::endl;
+        _final_eigen_state_numbers[i] = fnum[i];
+      }      
+      
     }
 
     if (_final_eigen_state_numbers.size() == 0)
@@ -466,8 +500,6 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       f1 = is_occupations[_initial_eigen_state_numbers[i]];   // occupation for  electron
 
       f2 = fs_occupations[_final_eigen_state_numbers[j]]; // occupation for  holes
-
-
 
 
 

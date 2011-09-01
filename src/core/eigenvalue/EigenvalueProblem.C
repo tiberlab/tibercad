@@ -269,8 +269,8 @@ EigenvalueProblem::get_state_indices(const std::string& particle) const
   unsigned int num_st=0;
   for(unsigned int i=0; i<_solution.size(); i++)
   {
-    if(_solution[i].particle == particle) result[num_st]=i;
-    num_st++;  
+    if(_solution[i].particle == particle)
+      { result[num_st]=i; num_st++; }
   }
   
   return result;
