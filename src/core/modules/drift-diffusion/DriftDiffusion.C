@@ -1598,8 +1598,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     sc->calculate_net_recombination_rates();
 
-    double sigma_e = Constants::e * edens * sc->get_electron_mobility();
-    double sigma_h = Constants::e * hdens * sc->get_hole_mobility();
+    double sigma_e = Constants::e * sc->get_electron_conductivity();
+    double sigma_h = Constants::e * sc->get_hole_conductivity();
 
     RealGradient dfn = grad_en_loc + Pn * grad_T_loc;
     RealGradient dfp = grad_ep_loc + Pp * grad_T_loc;
@@ -1980,10 +1980,8 @@ DriftDiffusion::calculate_currents_rstf(void)
       double Pp =  sc->get_hole_thermoelectric_power() / phi0;
 
       // we put the minus here for convenience
-      double sigma_e = -Constants::e * sc->get_electron_density() *
-        sc->get_electron_mobility();
-      double sigma_h = -Constants::e * sc->get_hole_density() *
-        sc->get_hole_mobility();
+      double sigma_e = -Constants::e * sc->get_electron_conductivity();
+      double sigma_h = -Constants::e * sc->get_hole_conductivity();
 
       RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
       RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
@@ -3680,10 +3678,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           sc->calculate_mobilities();
 
           // we put the phi0 here for convenience
-          double sigma_e = phi0 * sc->get_electron_mobility() *
-              sc->get_electron_density();
-          double sigma_h = phi0 * sc->get_hole_mobility() *
-              sc->get_hole_density();
+          double sigma_e = phi0 * sc->get_electron_conductivity();
+          double sigma_h = phi0 * sc->get_hole_conductivity();
 
           sc->compute_thermoelectric_powers();
           double Pn =  sc->get_electron_thermoelectric_power() / phi0;
