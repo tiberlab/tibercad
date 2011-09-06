@@ -564,7 +564,12 @@ void ETB::do_assemble(const ModelOptions& options)
   {
     int poldir = options.get_option("poldir",0);
     //inst->set_verbose(0);
-    inst->compute_P_matrix(poldir);
+    //optical matrix must be computed in UPPER format (why?)
+    char* sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, UPT_PADCHAR, UPT_MC);
+    std::string string_fmt = "upper"; 
+    string_fmt.copy( sparse_fmt, string_fmt.size() );
+
+    inst->compute_P_matrix(poldir, sparse_fmt);
     //inst->set_verbose(_upt_options.verbose);
   }
   else
@@ -592,7 +597,7 @@ void ETB::do_assemble(const ModelOptions& options)
     }
 
 
-    inst->compute_H();
+    inst->compute_H(_upt_options.sparse_fmt);
 
   }
 
@@ -632,16 +637,16 @@ Complex ETB::calculate_matrix_element(const std::string& i_particle,
 
   // the following operation is done to offset the electron states.
   // in the ETB solver-lib the hole states are stored first, then the electron states
-  if (i_particle == "el" || i_particle == "electron")
-  {
-    i = i + _upt_solver_options.n_vb;
-  }
-  if (j_particle == "el" || j_particle == "electron")
-  {
-    j = j + _upt_solver_options.n_vb;
-  }
+  //if (i_particle == "el" || i_particle == "electron")
+  //{
+  //  i = i + _upt_solver_options.n_vb;
+  //}
+  //if (j_particle == "el" || j_particle == "electron")
+  //{
+  //  j = j + _upt_solver_options.n_vb;
+  //}
 
-  //std::cerr << "(" << i << "-" << j <<")"<<std::flush;
+  //std::cout << "(" << i << "-" << j <<")"<<std::flush;
 
   return inst->get_matel(i,j);
 }
@@ -964,7 +969,9 @@ ETB::write_shifts(void)
      {
         file << _band_shift[i] + _pot_shift[i] << "  "
              << _band_shift[i] << "  "
-             << _pot_shift[i] << std::endl;
+             << _pot_shift[i]  << "  "
+             << _el_chem_pot[i] << "  "
+             << _hl_chem_pot[i] << std::endl;
      }    
   }
  
@@ -1057,7 +1064,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
 
   if(_solution[i].particle == "el" || _solution[i].particle == "electron")
   {
-
+      cout<<"state el: "<<i<<endl;    
     for (j = 0; j < N_atoms_wo_H; j++)
     {
       atom_sum = 0.0;
@@ -1065,16 +1072,17 @@ ETB::calculate_fermi_averaged(unsigned int i)
       {
 	atom_sum += std::norm(_solution[i].eigen_vector[k]);
       }
-
+      //cout<<atom_sum<<"  ";
       k_at = k;
       sum +=  _el_chem_pot[j]*atom_sum;
     }
-
+  
   }
 
   if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
   {
 
+      cout<<"state hl: "<<i<<endl;    
     for (j = 0; j < N_atoms_wo_H; j++)
     {
       atom_sum = 0.0;
@@ -1082,7 +1090,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
       {
 	atom_sum += std::norm(_solution[i].eigen_vector[k]);
       }
-
+      //cout<<atom_sum<<"  ";
       k_at = k;
       sum +=  _hl_chem_pot[j]*atom_sum;
 
@@ -1485,12 +1493,15 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Point& r)
       exit(1);
     }
 
+  std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+  double scale = get_atomistic_structure()->get_scale();
+
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
       //Convert atom position to mesh units
-      x1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(1) / get_atomistic_structure()->get_scale();
-      y1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(2) / get_atomistic_structure()->get_scale();
-      z1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(3) / get_atomistic_structure()->get_scale();
+      x1 = structure[iatm].get_position(1) / scale;
+      y1 = structure[iatm].get_position(2) / scale;
+      z1 = structure[iatm].get_position(3) / scale;
 
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));

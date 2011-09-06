@@ -196,13 +196,15 @@ inline void f77_upt_erasepotential (f77_int const* handler)
 }
 
 
-extern "C" void upt_createhamiltonian_ (f77_int const*);
+extern "C" void upt_createhamiltonian_ (f77_int const*, f77_char const*);
 
 // Corresponding F77 arguments for f77_upt_createhamiltonian:
 // integer, intent(in) :: handler(DAC_handlerSize)
-inline void f77_upt_createhamiltonian (f77_int const* handler)
+// character(MST), intent(in) :: sparse_fmt(1)
+inline void f77_upt_createhamiltonian (f77_int const* handler, f77_char const* 
+    sparse_fmt)
 {
-  upt_createhamiltonian_ (handler);
+  upt_createhamiltonian_ (handler, sparse_fmt);
 }
 
 

@@ -4,6 +4,7 @@
 #include "EigenvalueProblem.h"
 #include "DataOutput.h"
 #include "SimulationOptions.h"
+#include "Messages.h"
 
 #include "mesh.h"
 #include "elem.h"
@@ -61,6 +62,7 @@ void OpticsTB::do_compute_matrix_elements( )
 
      assemble(options);
 
+
      for (unsigned int i1 = 0; i1 < n_i; i1++)
        for (unsigned int i2 = 0; i2 < n_f; i2++)
        {
@@ -78,7 +80,6 @@ void OpticsTB::do_compute_matrix_elements( )
           // eV*Ang = 1 H*a0 /(27.2114 * 0.529177) 
           // 1 bhor_rad = 5.2917721e-11 m * 10^10 Ang/m
           _P_matrix[i][i1][i2] *= 1/(Hartree*bohr_radius*1e10);
-
 
        }
    }

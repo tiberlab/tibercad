@@ -98,7 +98,10 @@ public:
 
   
   //!Computes Hamiltonian (must be called after inituptight)
-  void compute_H();
+  void compute_H(char* sprs_fmt);
+
+  //!Computes P-matrix for optics (must be called after inituptight)
+  void compute_P_matrix(int poldir, char* sprs_fmt);
 
 
   //!Function to perform Parravicini 2-step Lanczos
@@ -132,7 +135,6 @@ public:
   void get_states(int num_ev, int hdim, double* eigenvals,
                   std::complex<double>* states, int* particles); 
 
-  void compute_P_matrix(int poldir);
 
   std::complex<double> get_matel(int i, int j);
 

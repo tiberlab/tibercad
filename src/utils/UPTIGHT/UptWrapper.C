@@ -121,21 +121,18 @@ void UptWrapper::set_kpoint(double *k_vec)
 
 
 //! build ETB Hamiltonian with Uptight
-void UptWrapper::compute_H(){
-  f77_upt_createhamiltonian(_handler);
+void UptWrapper::compute_H(char* sprs_fmt){	
+  f77_upt_createhamiltonian(_handler, sprs_fmt);
 }
+
 
 //! build ETB Hamiltonian with Uptight
-void UptWrapper::compute_P_matrix(int poldir){
-
+void UptWrapper::compute_P_matrix(int poldir, char* sprs_fmt)
+{
   f77_upt_setpmatrix(_handler, 1, poldir);
-  
-  f77_upt_createhamiltonian(_handler);
-
+  f77_upt_createhamiltonian(_handler, sprs_fmt);
   f77_upt_setpmatrix(_handler, 0, poldir);
-
 }
-
 
 
 //! Lanczos diagonalization
