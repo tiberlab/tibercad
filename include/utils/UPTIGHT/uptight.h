@@ -337,6 +337,35 @@ inline void f77_upt_get_hamilnnz (f77_int const* handler, f77_int& nnz)
 }
 
 
+extern "C" void upt_get_hamil_rowsize_ (f77_int const*, f77_int const&, 
+    f77_int&);
+
+// Corresponding F77 arguments for f77_upt_get_hamil_rowsize:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: row
+// integer, intent(out) :: sz
+inline void f77_upt_get_hamil_rowsize (f77_int const* handler, f77_int const& 
+    row, f77_int& sz)
+{
+  upt_get_hamil_rowsize_ (handler, row, sz);
+}
+
+
+extern "C" void upt_get_hamil_row_ (f77_int const*, f77_int const&, f77_int*, 
+    f77_complex*);
+
+// Corresponding F77 arguments for f77_upt_get_hamil_row:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: row
+// integer, intent(inout) :: colind(*)
+// complex(dp), intent(inout) :: vals(*)
+inline void f77_upt_get_hamil_row (f77_int const* handler, f77_int const& row, 
+    f77_int* colind, f77_complex* vals)
+{
+  upt_get_hamil_row_ (handler, row, colind, vals);
+}
+
+
 extern "C" void upt_get_csr_hamiltonian_ (f77_int const*, f77_int&, f77_char&, 
     f77_complex*, f77_int*, f77_int*);
 

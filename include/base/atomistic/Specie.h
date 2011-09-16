@@ -11,45 +11,6 @@
 #include <fstream>
 
 
-enum Type
-      {
-         Hf, Al, Am, Sb, Ag, Ar, As, Ac, At, N, Ba, Bk, Be, Bi, Bh, B, Br, Cd, Ca, Cf, C,
-         Ce, Cs, Cl, Cr, Co, Kr, Cm, Ds, Dy, Db, Es, He, Er, Eu, Fm, Fe, F, Fr, Gd, Ga, Ge,
-         Hs, H, In, I, Ir, La, Lr, Pb, Li, Lu, Mg, Mn, Mt, Md, Hg, Mo, Nd, Ne, Np, Ni, Nb,
-         No, Ho, Au, Os, O, Pd, P, Pt, Pu, Po, K, Pr, Pm, Pa, Ra, Rn, Cu, Re, Rh, Rb, Ru,
-         Rf, Sm, Sc, Sg, Se, Si, Na, Sn, Sr, Ta, Tc, Te, Tb, Tl, Th, Tm, Ti, W, U, V, Xe,
-         Yb, Y, Zn, Zr, S
-      };
-
- static
-  std::map<Type,std::string> specie_to_string = boost::assign::map_list_of
-       (Hf, "Hf") (Al, "Al") (Am, "Am") (Sb, "Sb") (Ag, "Ag") (Ar, "Ar") (As, "As") (Ac, "Ac") (At, "At") (N, "N")
-       (Ba, "Ba") (Bk, "Bk") (Be, "Be") (Bi, "Bi") (Bh, "Bh") (B, "B") (Br, "Br") (Cd, "Cd") (Ca, "Ca") (Cf, "Cf")
-       (C, "C") (Ce, "Ce") (Cs, "Cs") (Cl, "Cl") (Cr, "Cr") (Co, "Co") (Kr, "Kr") (Cm, "Cm") (Ds, "Ds") (Dy, "Dy")
-       (Db, "Db") (Es, "Es") (He, "He") (Er, "Er") (Eu, "Eu") (Fm, "Fm") (Fe, "Fe") (F, "F") (Fr, "Fr") (Gd, "Gd")
-       (Ga, "Ga") (Ge, "Ge") (Hs, "Hs") (H, "H") (In, "In") (I, "I") (Ir, "Ir") (La, "La") (Lr, "Lr") (Pb, "Pb")
-       (Li, "Li") (Lu, "Lu") (Mg, "Mg") (Mn, "Mn") (Mt, "Mt") (Md, "Md") (Hg, "Hg") (Mo, "Mo") (Nd, "Nd") (Ne,
-       "Ne") (Np, "Np") (Ni, "Ni") (Nb, "Nb") (No, "No") (Ho, "Ho") (Au, "Au") (Os, "Os") (O, "O") (Pd, "Pd") (P,
-       "P") (Pt, "Pt") (Pu, "Pu") (Po, "Po") (K, "K") (Pr, "Pr") (Pm, "Pm") (Pa, "Pa") (Ra, "Ra") (Rn, "Rn") (Cu,
-       "Cu") (Re, "Re") (Rh, "Rh") (Rb, "Rb") (Ru, "Ru") (Rf, "Rf") (Sm, "Sm") (Sc, "Sc") (Sg, "Sg") (Se, "Se")
-       (Si, "Si") (Na, "Na") (Sn, "Sn") (Sr, "Sr") (Ta, "Ta") (Tc, "Tc") (Te, "Te") (Tb, "Tb") (Tl, "Tl") (Th, "Th")
-       (Tm, "Tm") (Ti, "Ti") (W, "W") (U, "U") (V, "V") (Xe, "Xe") (Yb, "Yb") (Y, "Y") (Zn, "Zn") (Zr, "Zr") (S,
-       "S");
-
-
-   static
-   std::map<std::string, Type> string_to_specie = boost::assign::map_list_of
-       ("Hf", Hf) ("Al", Al) ("Am", Am) ("Sb", Sb) ("Ag", Ag) ("Ar", Ar) ("As", As) ("Ac", Ac) ("At", At) ("N", N)
-       ("Ba", Ba) ("Bk", Bk) ("Be", Be) ("Bi", Bi) ("Bh", Bh) ("B", B) ("Br", Br) ("Cd", Cd) ("Ca", Ca) ("Cf", Cf)
-       ("C", C) ("Ce", Ce) ("Cs", Cs) ("Cl", Cl) ("Cr", Cr) ("Co", Co) ("Kr", Kr) ("Cm", Cm) ("Ds", Ds) ("Dy", Dy)
-       ("Db", Db) ("Es", Es) ("He", He) ("Er", Er) ("Eu", Eu) ("Fm", Fm) ("Fe", Fe) ("F", F) ("Fr", Fr) ("Gd",
-       Gd) ("Ga", Ga) ("Ge", Ge) ("Hs", Hs) ("H", H) ("In", In) ("I", I) ("Ir", Ir) ("La", La) ("Lr", Lr) ("Pb", Pb)
-       ("Li", Li) ("Lu", Lu) ("Mg", Mg) ("Mn", Mn) ("Mt", Mt) ("Md", Md) ("Hg", Hg) ("Mo", Mo) ("Nd", Nd) ("Ne", Ne)
-       ("Np", Np) ("Ni", Ni) ("Nb", Nb) ("No", No) ("Ho", Ho) ("Au", Au) ("Os", Os) ("O", O) ("Pd", Pd) ("P", P)
-       ("Pt", Pt) ("Pu", Pu) ("Po", Po) ("K", K) ("Pr", Pr) ("Pm", Pm) ("Pa", Pa) ("Ra", Ra) ("Rn", Rn) ("Cu", Cu)
-       ("Re", Re) ("Rh", Rh) ("Rb", Rb) ("Ru", Ru) ("Rf", Rf) ("Sm", Sm) ("Sc", Sc) ("Sg", Sg) ("Se", Se) ("Si", Si)
-       ("Na", Na) ("Sn", Sn) ("Sr", Sr) ("Ta", Ta) ("Tc", Tc) ("Te", Te) ("Tb", Tb) ("Tl", Tl) ("Th", Th) ("Tm", Tm)
-       ("Ti", Ti) ("W", W) ("U", U) ("V", V) ("Xe", Xe) ("Yb", Yb) ("Y", Y) ("Zn", Zn) ("Zr", Zr) ("S", S);
 
 //! A class for elemental specie enumeration
 /*
@@ -61,6 +22,35 @@ enum Type
 class Specie
 {
 public:
+
+  //enum Type
+  //    {
+  //       Hf, Al, Am, Sb, Ag, Ar, As, Ac, At, N, Ba, Bk, Be, Bi, Bh, B, Br, Cd, Ca, Cf, C,
+  //       Ce, Cs, Cl, Cr, Co, Kr, Cm, Ds, Dy, Db, Es, He, Er, Eu, Fm, Fe, F, Fr, Gd, Ga, Ge,
+  //       Hs, H, In, I, Ir, La, Lr, Pb, Li, Lu, Mg, Mn, Mt, Md, Hg, Mo, Nd, Ne, Np, Ni, Nb,
+  //       No, Ho, Au, Os, O, Pd, P, Pt, Pu, Po, K, Pr, Pm, Pa, Ra, Rn, Cu, Re, Rh, Rb, Ru,
+  //       Rf, Sm, Sc, Sg, Se, Si, Na, Sn, Sr, Ta, Tc, Te, Tb, Tl, Th, Tm, Ti, W, U, V, Xe,
+  //       Yb, Y, Zn, Zr, S
+  //    };
+
+  enum Type {NONE=0, 
+                H ,                                                He,
+                Li,Be,                              B ,C ,N ,O ,F ,Ne,
+                Na,Mg,                              Al,Si,P ,S ,Cl,Ar,
+	        K ,Ca,Sc,Ti,V ,Cr,Mn,Fe,Co,Ni,Cu,Zn,Ga,Ge,As,Se,Br,Kr,
+                Rb,Sr,Y ,Zr,Nb,Mo,Tc,Ru,Rh,Pd,Ag,Cd,In,Sn,Sb,Te,I ,Xe,
+                Cs,Ba,La,Ce,Pr,Nd,Pm,Sm,Eu,Gd,Tb,Dy,Ho,Er,Tm,Yb,
+                      Lu,Hf,Ta,W ,Re,Os,Ir,Pt,Au,Hg,Tl,Pb,Bi,Po,At,Rn,
+                Fr,Ra,Ac,Th,Pa,U ,Np,Pu,Am,Cm,Bk,Cf,Es,Fm,Md,No,
+                      Lr,Rf,Db,Sg,Bh,Hs,Mt,Ds};
+
+
+  static
+  std::map<Type, std::string> specie_to_string;
+
+
+   static
+   std::map<std::string, Type> string_to_specie;
 
     //! Default constructor
     Specie(void);
@@ -129,7 +119,7 @@ private:
 inline
 const std::string& Specie::get_string(void) const
 {
- return specie_to_string[_type];
+ return Specie::specie_to_string[_type];
 }
 
 inline
@@ -141,7 +131,103 @@ void Specie::set_type(const Type& type)
 inline
 void Specie::set_type(const std::string& type)
 {
- _type = string_to_specie[type];
+ _type = Specie::string_to_specie[type];
+}
+
+//!Override comparison operator, allows:
+//! s == 'H'
+inline
+bool operator== (const Specie& specie, const std::string& type_string)
+{
+  if (Specie::string_to_specie[type_string] == specie._type) return true;
+    else return false;
+}
+
+//!Override comparison operator, allows:
+  //! 'H' == s
+inline
+bool operator== (const std::string& type_string, const Specie& specie)
+{
+  if (Specie::string_to_specie[type_string] == specie._type) return true;
+    else return false;
+}
+
+//!Override comparison, allow comparison between Specie and Type avoiding
+//! explicit get_type() call
+inline
+bool operator== (const Specie& specie, const Specie::Type& type)
+    {
+  return ( specie._type == type);
+    }
+
+//!Override comparison, allow comparison between Specie and Type avoiding
+//! explicit get_type() call
+inline
+bool operator== (const Specie::Type& type, const Specie& specie)
+    {
+  return ( specie._type == type);
+    }
+
+//!Override comparison, allow comparison between Specie and Type avoiding
+//! explicit get_type() call
+inline
+bool operator!= (const Specie& specie, const Specie::Type& type)
+    {
+  return !(specie == type);
+    }
+
+//!Override comparison, allow comparison between Specie and Type avoiding
+//! explicit get_type() call
+inline
+bool operator!= (const Specie::Type& type, const Specie& specie)
+    {
+  return !( type == specie);
+    }
+
+////!Override comparison operator, allows:
+//    //! s.get_type() == 'H'
+//bool operator!= (Type& type, std::string& type_string)
+//{
+//  return !(type == string_to_specie[type_string]);
+//}
+//
+////!Override comparison operator, allows:
+//    //! 'H' == s.get_type()
+//bool operator!= (std::string& type_string, Type& type)
+//{
+//  return !(type == type_string);
+//}
+
+//!Override comparison operator, allows:
+  //! s == 'H'
+inline
+bool operator!= (const Specie& specie, const std::string& type_string)
+{
+  return !(specie == type_string);
+}
+
+//!Override comparison operator, allows:
+  //! 'H' == s
+inline
+bool operator!= (const std::string& type_string, const Specie& specie)
+{
+  return !(specie == type_string);
+}
+
+//!Override greater operator, allows:
+  //! 's1 > s2
+inline
+bool operator> (const Specie& specie1, const Specie& specie2)
+{
+  return (specie1._type > specie2._type);
+}
+
+//!Override greater operator, allows:
+  //! 's1 < s2
+inline
+bool operator< (const Specie& specie1, const Specie& specie2)
+{
+  return (specie1._type < specie2._type);
 }
 
 

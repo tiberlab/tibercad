@@ -474,11 +474,6 @@ void FEMEigenvalueProblem::do_copy_H_to_solver( )
  
   int size_matrix = _H_real->n();
   
-
-  // 2010-11-08 It seems this is just wasting memory
-  //EigenSolver::init_H_matrix(number_of_new_dofs);
-
-  
   PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(_H_real);
 
   H_real_matrix->close();

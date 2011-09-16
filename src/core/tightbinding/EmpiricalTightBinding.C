@@ -17,7 +17,7 @@
 #include "Messages.h"
 #include "mesh.h"
 #include "Macrostrain.h"
-
+#include "EigenSolver.h"
 
 #include <fstream>
 #include <sstream>
@@ -444,6 +444,13 @@ void ETB::do_solve(void){
       inst->feast(_upt_solver_options.e_min, _upt_solver_options.e_max, _upt_solver_options.m0);
   } 
 
+  if (_upt_solver_options.solver.compare("slepc") == 0) 
+  {
+      Messages::info("Solving Tight Binding with SLEPc eigensolver");
+      //copy_H_to_solver();
+
+  }
+    
   Messages::info("(ETB) copy states from uptight"); 
 
   int hdim = inst->get_H_dim();
@@ -564,8 +571,9 @@ void ETB::do_assemble(const ModelOptions& options)
   {
     int poldir = options.get_option("poldir",0);
     //inst->set_verbose(0);
-    //optical matrix must be computed in UPPER format (why?)
-    char* sparse_fmt = new char[UPT_MC];    memset(sparse_fmt, UPT_PADCHAR, UPT_MC);
+    //optical matrix computed in UPPER format (now also full works)
+    char* sparse_fmt = new char[UPT_MC];    
+    memset(sparse_fmt, UPT_PADCHAR, UPT_MC);
     std::string string_fmt = "upper"; 
     string_fmt.copy( sparse_fmt, string_fmt.size() );
 
@@ -595,7 +603,6 @@ void ETB::do_assemble(const ModelOptions& options)
       std::cout<< "(ETB) passing strain" <<std::endl;
       project_atom_strain();
     }
-
 
     inst->compute_H(_upt_options.sparse_fmt);
 
@@ -731,6 +738,7 @@ void ETB::parse_options(void)
 
   _upt_options.etb_dataset = get_option("dataset","");
   _upt_options.max_TB_order = get_option("max_TB_order", 2);
+
   std::string sparse_fmt = get_option("sparse_format", "upper");
   sparse_fmt.copy(_upt_options.sparse_fmt, sparse_fmt.size() );
 
@@ -938,7 +946,7 @@ ETB::add_band_shifts(void)
   for (unsigned int i = 0; i < N; i++)
   {
    
-    if (atom[i].get_specie() == H)
+    if (atom[i].get_specie() == Specie::H)
     {
       // the sign is inverted because in upt the potential is subtracted
       _band_shift[i]= - _map_ID_Evb[atom[b_map[i][0]].get_region_ID()] + _vb_shift;
@@ -997,6 +1005,7 @@ ETB::write_shifts(void)
 }
 
 //-------------------------------------------------------------------------------------------/
+// Relys on the fact that H are at the end !!
 void
 ETB::project_atom_strain(void)
 {  
@@ -1011,26 +1020,22 @@ ETB::project_atom_strain(void)
   std::vector<double> eyy(Number_of_atoms, 0.0);  
   std::vector<double> ezz(Number_of_atoms, 0.0);
 
-  unsigned int k = 0; 
-
-  for (unsigned int i = 0; i < structure.size() ; i++)
+  for (unsigned int i = 0; i < Number_of_atoms ; i++)
   { 
     
-    if (structure[i].get_specie() != H && structure[i].get_elem() != NULL)
+    if (structure[i].get_elem() != NULL)
     {
       Tensor2Sym epsilon = strsim->get_strain(structure[i].get_elem());
-      k++;
 
-      exx[k] = epsilon(1,1);
-      eyy[k] = epsilon(2,2);
-      ezz[k] = epsilon(3,3);
+      exx[i] = epsilon(1,1);
+      eyy[i] = epsilon(2,2);
+      ezz[i] = epsilon(3,3);
     }
   
   }
-  
+ 
   inst->set_strain(exx,eyy,ezz);
   
-
 }
 
 unsigned int
@@ -1675,6 +1680,62 @@ ETB::do_setup_solution_variables(void)
   if (plot_solution("ProbabilityDensityNodes"))
             add_plot_variable(MeshStatesNodes);
 
+}
+
+// -------------------------------------------------------------------------------------------------
+
+void ETB::do_copy_H_to_solver( )
+{
+
+  int size_matrix = inst->get_H_dim();
+  
+  int non_zeros_number[size_matrix];
+
+  for (int row = 0 ; row < size_matrix; row++)	
+  {
+      non_zeros_number[row] = inst->get_H_row_size(row);	  
+  }
+
+  EigenSolver::preallocate_H_matrix(size_matrix,  non_zeros_number);
+
+
+  //----------------------------------------------------------------------------------------------------//
+ 
+  //write data of columns in each row
+  
+  for (int row = 0 ; row < size_matrix; row++)
+  {
+      Complex *row_vals;
+      int *cols;
+      int n_cols = 0;
+	
+      vector<unsigned int> column_vector;
+      vector<Complex> row_values;
+
+      n_cols = inst->get_H_row_size(row);
+ 
+      cols = new PetscInt[n_cols];
+      row_vals = new Complex[n_cols];
+
+      inst->get_H_row(row, cols, row_vals);
+
+      column_vector.resize(n_cols);
+      column_vector.clear();
+
+      row_values.resize(n_cols);
+      row_values.clear();
+
+      for (int i = 0; i < n_cols; i++)
+      {
+	  column_vector[i] = cols[i];
+	  row_values[i] = row_vals[i];
+      }
+     
+      EigenSolver::insert_H_row( row, column_vector, row_values);
+  }
+
+  EigenSolver::finalize_H_assembly();
+  
 }
 
 #endif

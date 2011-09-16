@@ -3889,6 +3889,9 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
 }
 //-------------------------------------------------------------------------------------------/
+// This is to shift the cations sublattice in order to make the tethraheron with equal bonds
+// Only for nitrides works because of Specie::N
+ 
 void 
 Macrostrain::internal_strain_correction(const std::string structure_name)
 {
@@ -3937,7 +3940,7 @@ Macrostrain::internal_strain_correction(const std::string structure_name)
 
     ID id = structure[i].get_region_ID();
 
-    if (structure[i].get_specie() == N && RotM[id]!=NULL)
+    if (structure[i].get_specie() == Specie::N && RotM[id]!=NULL)
     {
       
       // take strain in crystal system

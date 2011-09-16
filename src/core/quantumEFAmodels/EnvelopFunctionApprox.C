@@ -1473,50 +1473,6 @@ EnvelopFunctionApprox::plot_globaldata(void)
 
 
 //=======================================================================//
-/*
-void EnvelopFunctionApprox::make_new_dofs( )
-{
-  new_dofs.clear();
-
-
-  DofMap& dof_map = system->get_dof_map();
-
-
-  number_of_all_dofs  =   dof_map.n_dofs();
-
-  new_dofs.resize(number_of_all_dofs);
-  const std::set<unsigned int> :: const_iterator  n_begin = dirichlet_dofs.begin();
-  const std::set<unsigned int> :: const_iterator  n_end   = dirichlet_dofs.end();
-  std::set<unsigned int> :: const_iterator n_it;
-
-  unsigned int number_it = 0;
-
-
-  for (unsigned int i = 0; i < number_of_all_dofs ; i++)
-    {
-      if ( !( dof_map.is_constrained_dof(i) ) && (find(n_begin, n_end, i) == n_end))
-	{
-	    new_dofs[i].independent = true;
-	    new_dofs[i].new_number = number_it;
-	    number_it++;
-
-	  }
-	else
-	  {
-
-	    new_dofs[i].independent = false;
-	  }
-    }
-
-
-  number_of_new_dofs = number_it;
-
-
-
-}
-*/
-
-//=======================================================================//
 
 
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)

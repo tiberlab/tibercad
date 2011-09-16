@@ -1,5 +1,6 @@
 #include "UptWrapper.h"
 
+
 //---------------------------------------------------------------------
 
 
@@ -99,8 +100,8 @@ void UptWrapper::cleanuptight()
 
 void UptWrapper::add_potential(std::vector<double>& potential)
 {
-  
-  f77_upt_addpotential(_handler,potential.size(),&potential.front());
+int size = potential.size();  
+  f77_upt_addpotential(_handler,size,&potential.front());
 }
 
 
@@ -174,6 +175,17 @@ int UptWrapper::get_H_nnz(void) {
   return hdim;
 }
 
+//! get a row size 
+int UptWrapper::get_H_row_size(int row) {
+   int size;
+   f77_upt_get_hamil_rowsize(_handler,row,size);
+   return size;
+}
+
+//! get a row 
+void UptWrapper::get_H_row(int row, int* colind, Complex* vals) {
+   f77_upt_get_hamil_row(_handler,row,colind,vals);
+}
 
 //! write eigenstates on file
 void UptWrapper::write_states() {	
@@ -189,7 +201,7 @@ void UptWrapper::read_old_states(char* load_path, int& nev, int& nec) {
 
 //! get computed states 
 void UptWrapper::get_states(int num_ev, int hdim, double* eigenvals, 
-                            std::complex<double>* eigenvec, int* particles) {
+                            Complex* eigenvec, int* particles) {
 
   f77_upt_get_states (_handler, num_ev, hdim, eigenvals, eigenvec, particles);
 
@@ -197,15 +209,15 @@ void UptWrapper::get_states(int num_ev, int hdim, double* eigenvals,
 }
 
 
-std::complex<double> UptWrapper::get_matel(int i, int j)
+Complex UptWrapper::get_matel(int i, int j)
 {
 
-  std::complex<double> matel;
+  Complex matel;
   //double matel_re, matel_im;
 
   f77_upt_get_matel(_handler,i,j,matel);
 
-  //matel = std::complex<double>(matel_re,matel_im);
+  //matel = Complex(matel_re,matel_im);
 
   //std::cerr<<matel<<std::endl;
 
@@ -238,11 +250,12 @@ void UptWrapper::set_verbose(int verbose_lev)
 void UptWrapper::set_strain(std::vector<double>& e_xx, std::vector<double>& e_yy, 
                             std::vector<double>& e_zz)
 {
-  f77_upt_setstrain(_handler, e_xx.size(), &e_xx.front(), &e_yy.front(), &e_zz.front());
+  int size = e_xx.size();	
+  f77_upt_setstrain(_handler, size, &e_xx.front(), &e_yy.front(), &e_zz.front());
 }
  
 
-void UptWrapper::get_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, 
+void UptWrapper::get_H_csr(int nrow, char fmt, std::vector<Complex >& A, 
                            std::vector<int>& JA, std::vector<int>& IA)
 {
 
@@ -250,7 +263,7 @@ void UptWrapper::get_H_csr(int nrow, char fmt, std::vector<std::complex<double> 
 
 }
 
-void UptWrapper::set_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, 
+void UptWrapper::set_H_csr(int nrow, char fmt, std::vector<Complex >& A, 
                            std::vector<int>& JA, std::vector<int>& IA)
 {
 
@@ -258,7 +271,7 @@ void UptWrapper::set_H_csr(int nrow, char fmt, std::vector<std::complex<double> 
 
 }
 
-void UptWrapper::complex_test(double& re, double& im, std::complex<double>& zz)
+void UptWrapper::complex_test(double& re, double& im, Complex& zz)
 {
   f77_complex_test(re,im,zz);
 }

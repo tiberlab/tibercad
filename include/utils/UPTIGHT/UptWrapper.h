@@ -8,6 +8,7 @@
 #include <vector>
 
 //-----------------------------------------------------------------------
+typedef std::complex<double> Complex; 
 
 class UptWrapper
 {
@@ -128,26 +129,30 @@ public:
 
   int get_H_nnz(void);
 
+  int get_H_row_size(int row);
+
+  void get_H_row(int row, int* colind, Complex* vals);
+
   void write_states(void);
 
   void read_old_states(char* path, int& nev, int& nec);
 
   void get_states(int num_ev, int hdim, double* eigenvals,
-                  std::complex<double>* states, int* particles); 
+                  Complex* states, int* particles); 
 
 
-  std::complex<double> get_matel(int i, int j);
+  Complex get_matel(int i, int j);
 
   void get_ion_numorbitals(std::vector<int>& ion_block_vector);
 
-  void get_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, std::vector<int>& JA,
+  void get_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
                                                      std::vector<int>& IA );
   
-  void set_H_csr(int nrow, char fmt, std::vector<std::complex<double> >& A, std::vector<int>& JA,
+  void set_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
                                                      std::vector<int>& IA );
 
 
-  void complex_test(double& re, double& im, std::complex<double>& zz);
+  void complex_test(double& re, double& im, Complex& zz);
 
   double real_test();
 

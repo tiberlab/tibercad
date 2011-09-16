@@ -155,6 +155,7 @@ class ETB : public TightBinding
   //! Setup the available variables
   virtual void do_setup_solution_variables(void);
 
+  virtual void do_copy_H_to_solver(void);
 
   //Mesh dimension (used many times by charge projection function)
   int _dim;

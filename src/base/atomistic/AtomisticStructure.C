@@ -979,7 +979,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         if (_atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
       }
       file << std::setw(10);
-      if (_structure_atoms[i].get_specie() ==  H)
+      if (_structure_atoms[i].get_specie() ==  Specie::H)
       {
         file << material_map[_device->get_material(_structure_atoms[get_bond_map()[i][0]].get_region_ID()) ];
       }
@@ -1277,7 +1277,7 @@ AtomisticStructure::get_N_without_H(void)
 
   for (unsigned int i = 0; i < _structure_atoms.size(); i++)
   {
-    if (_structure_atoms[i].get_specie() != H)
+    if (_structure_atoms[i].get_specie() != Specie::H)
     {
       N++;
     }
