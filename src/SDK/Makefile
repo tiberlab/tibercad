@@ -5,6 +5,10 @@ topdir := ../..
 include $(topdir)/Make.common
 
 
+srcfiles := build_module.C
+objects	:= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(srcfiles))
+
+
 
 SUFF := 
 ifeq ($(target_os),win32)

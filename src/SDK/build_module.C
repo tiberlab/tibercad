@@ -214,7 +214,7 @@ int main (int argc, char** argv)
     return 1;
   }
 
-  string name = "pippo";
+  string name = "test";
 
 #if defined(_WIN32)
   string binsuffix(".exe");
@@ -227,7 +227,6 @@ int main (int argc, char** argv)
 
   string cpp(sdkdir);
   cpp += "/compiler/" + string(ARCH) + "/bin/g++" + binsuffix;
-  cpp = "g++";
 
   string cppflags;
   cppflags += "-DARCH=" + string(ARCH) + " ";
@@ -242,15 +241,17 @@ int main (int argc, char** argv)
   cxxflags += "-fPIC ";
 #endif
 
-  string ldflags("-shared ");
+  string ldflags;
+  ldflags += "-shared ";
   ldflags += "-L" + tcroot + "/" + ARCH + "/lib ";
   ldflags += "-Wl,-rpath,\'$$ORIGIN\' -Wl,-rpath,\'$$ORIGIN/../lib\' ";
 
   cout << cpp << endl << cppflags << endl << ldflags << endl;
 
   string cmdline(cpp);
-  cpp += " " + cppflags + " " + cxxflags + " " + ldflags + " -o " + name + " " + name + ".C";
+  cmdline += " " + cppflags + " " + cxxflags + " " + ldflags + " -o " + name + " " + name + ".C";
   cout << "Compiling " << name << ".C ...";
+  //cout << cmdline << endl;
   system(cmdline.c_str());
  
   return error;
