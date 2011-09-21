@@ -237,10 +237,10 @@ The thermoelectric power models are the same for electrons and holes.
 The keyword is  ``thermoelectric_power`` , i.e ::
 
   thermoelectric_power [type]
-    {
-    }
+  {
+  }
     
-The model keyword can be ``constant`` (i.e. the thermoelectric powers are read from the
+The type can be ``constant`` (i.e. the thermoelectric powers are read from the
 database) or ``diffusivity_model`` where the thermoelectric powers are computed by
 
 .. math::
@@ -261,16 +261,16 @@ block or independently using two blocks. The corresponding keywords are mobility
 ::
 
   mobility [type]
-    {
-    }
+  {
+  }
     
   electron_mobility [type]
-    {
-    }
+  {
+  }
     
   hole_mobility [type]
-    {
-    }
+  {
+  }
     
 When using the first approach, both carriers will use the same model, and parameters 
 provided in the input file will also be used by both carriers. When mixing the
@@ -426,16 +426,16 @@ with the types ``pyro`` and ``piezo`` ::
   polarization piezo {}
 
 As for all models, if they do not have individual options, they can be specified together
-by writing **polarization (pyro, piezo) {}** .
+by writing ``polarization (pyro, piezo) {}``.
 
 
 
-Spontaneous (pyro-)polarization
+Spontaneous polarization
 """""""""""""""""""""""""""""""
 
-The spontaneous polarization model imposes a constant electric polarization P along
+The spontaneous polarization model (sometimes also called 'pyroelectric polarization') imposes a constant electric polarization P along
 the symmetry-braking direction of the crystal. Crystals with wurtzite structure like Nitrides
-have strong piezoelectric fields along the c-direction. 
+have strong polarization fields along the c-direction. 
 The value of the polarization usually is taken from the database, but it can be overridden from the input file by specifying
 the option Pz, meaning the value of the spontaneous polarization along c-direction ([0001]). 
 Alternatively, one can specify explicitly a polarization vector using the option
@@ -446,14 +446,14 @@ Alternatively, one can specify explicitly a polarization vector using the option
 Piezopolarization
 """"""""""""""""""
 
-The piezoelectric polarization is strain induced and given by
+The piezoelectric polarization is strain induced and given by the linear relationship
 
 .. math::
    :label: dd_eq_piezo
 
     P^{pz} = e_{ikl}\varepsilon_{kl}
 
-where :math:`\varepsilon_{kl}` is the strain tensor. The piezoelectric moduli :math:`e_{ikl}` are stored in the database.
+where :math:`\varepsilon_{kl}` is the strain tensor. The piezoelectric coefficients :math:`e_{ikl}` are stored in the database.
 The strain is obtained from the simulation specified in the ``Physics`` section, but it can
 be overridden by providing a name for the strain simulation inside the polarization block
 using the ``strain_simulation`` option.
@@ -464,22 +464,23 @@ particle density
 Details for the calculation of the electron and hole densities can be given in the particle_density
 submodel. Its options are:
 
-|  ``particle = string``   The particle this model is describing. Can be ``electron`` or ``hole`` .
+  ``particle``
+      The particle this model is describing. Can be ``electron`` or ``hole`` .
 
-|  ``statistics = string``   The statistics. Can be ``fermidirac`` (default) or ``boltzmann`` .
+  ``statistics``
+      The statistics. Can be ``fermidirac`` (default) or ``boltzmann`` .
 
-|  ``quantum_density = string`` The name of a quantum density simulation. 
-| 
-|       This will use the quantum mechanical particle density in the regions it was calculated.
+  ``quantum_density``
+      The name of a quantum density simulation. 
+      This will use the quantum mechanical particle density in the regions it was calculated.
 
 If a quantum density is used, then it is useful to define also an embracing region
 where the model gradually switches from a fully classical to a fully quantum density.
 The options for the embracing are specified in a block with keyword ``embracing`` . It
 accepts the following options:
 
-|  ``embracing_length = double`` 
-| 
-|      When the domain of the quantum simulation is smaller
+  ``embracing_length = double`` 
+       When the domain of the quantum simulation is smaller
        than the domain of the full simulation, the boundary conditions for the Schroedinger
        equation will disturb the transfer from classical to quantum density. By defining an
        embracing region of a certain extension (specified in meters), a gradual transition
@@ -487,16 +488,14 @@ accepts the following options:
        effective density :math:`\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}` . 
        The default is no embracing region at all (zero extension).
 
-|  ``cutoff = double`` 
-| 
-|      If an embracing region is used, a part of this region near the boundary
+  ``cutoff = double`` 
+       If an embracing region is used, a part of this region near the boundary
        of the quantum region can be cut off so that only the classical density is considered
        in that part. ``cutoff`` is specified as a percentage of the embracing length and should
        therefore be between 0.0 and 1.0.
 
-|  ``plot_embracing_region = bool`` 
-| 
-|      Whereas the automatic creation of the embracing region 
+  ``plot_embracing_region = bool`` 
+       Whereas the automatic creation of the embracing region 
        in 1D is a very simple task, it is a more difficult one in higher dimensions. 
        By setting this flag to true, the embracing region and the mixing coefficient x will be
        plotted for a visual control of the quality of the embracing region. 
@@ -512,18 +511,18 @@ Currently single level traps are implemented in TiberCAD. Traps can be normally 
 or normally charged electron or hole traps, or a fixed charge. Common options for all
 models are
 
-  ``type`` : string
+  ``type`` 
          The type of traps. One of ``eNeutral``, ``hNeutral``,
          ``donor``, ``acceptor`` or ``fixed_charge``.
          (Only necessary if not provided as second keyword). 
 
-  ``Nt`` : double
+  ``Nt`` 
          The trap density in |cm3| (or |cm2| for surface traps).
 
-  ``Et`` : double
+  ``Et`` 
          The trap level in eV with respect to the reference energy.
 
-  ``reference`` : string
+  ``reference`` 
          The reference energy. The default is ``m`` for midgap.
          Possible values are ``cb``, ``vb`` or ``m`` 
 
@@ -533,33 +532,36 @@ The following trap types are implemented:
 
  ``eNeutral``
       The trapped electron density is given by
-.. math::
-   :label: dd_eq_eneutral
 
-     n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+      .. math::
+       :label: dd_eq_eneutral
+
+        n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
 
 
  ``hNeutral``
       The trapped hole density is given by
 
-.. math::
-    :label: dd_eq_hneutral
+      .. math::
+       :label: dd_eq_hneutral
     
-    p_t = \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
+        p_t = \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
 
-  ``donor`` The density of ionized traps is given by
+  ``donor``
+      The density of ionized traps is given by
 
-.. math::
-    :label: dd_eq_donor
+      .. math::
+       :label: dd_eq_donor
 
-    N^+_t = N_t - \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+       N^+_t = N_t - \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
 
-  ``acceptor`` The density of ionized traps is given by
+  ``acceptor``
+       The density of ionized traps is given by
 
-.. math::
-    :label: dd_eq_acceptor
+       .. math::
+        :label: dd_eq_acceptor
    
-    N^-_t = N_t - \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
+        N^-_t = N_t - \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
 
 If traps are specified, the total charge density in the Poisson equation is modified to
 include the charged trap densities:
@@ -610,11 +612,11 @@ cases of surface recombination velocities ( :math:`v_{rec} = 0` ).
 Contacts are defined by blocks with keyword Contact, for example::
 
   Contact anode 
-    {
-     type = ohmic
-     [regions = (anode1, anode2)]
-     voltage = $Vd
-    }
+  {
+   type = ohmic
+   [regions = (anode1, anode2)]
+   voltage = $Vd
+  }
     
 An area factor can be specified for contacts using the keyword ``area_factor`` . The
 contact current will be multiplied by this factor.
@@ -675,25 +677,23 @@ the carriers, and a selfconsistent simulation should be defined in the Selfconsi
 block. The following options { to be specified in the Physics section { control the
 behaviour of the selfconsistent simulation.
 
-|  ``use_density_predictor = bool`` 
+ ``use_density_predictor`` 
+    When set to true, a predictor-corrector scheme will
+    be adopted in the selfconsistent cycle. The Poisson/Drift-Diffusion solver does not
+    just take the particle densities as given by the Schroedinger calculation, but it will
+    assume a dependency of the density on the potentials of the form
 
-When set to true, a predictor-corrector scheme will
-be adopted in the selfconsistent cycle. The Poisson/Drift-Diffusion solver does not
-just take the particle densities as given by the Schroedinger calculation, but it will
-assume a dependency of the density on the potentials of the form
+    .. math::
+     :nowrap:
+     :label:
 
-.. math::
-   :nowrap:
-   :label:
+     \begin{equation}
+     \rho(\varphi, \phi_n, \phi_p) = \frac{\rho_{\mathrm{quantum}}(\varphi^0, \phi_n^0, \phi_p^0)}{\rho_{\mathrm{classical}}(\varphi^0, \phi_n^0, \phi_p^0)}\rho_{\mathrm{classical}}(\varphi, \phi_n, \phi_p)
+     \end{equation}
 
-    \begin{equation}
-    \rho(\varphi, \phi_n, \phi_p) = \frac{\rho_{\mathrm{quantum}}(\varphi^0, \phi_n^0, \phi_p^0)}{\rho_{\mathrm{classical}}(\varphi^0, \phi_n^0, \phi_p^0)}\rho_{\mathrm{classical}}(\varphi, \phi_n, \phi_p)
-    \end{equation}
-
-|
-
-where :math:`(\varphi^0, \phi_n^0, \phi_p^0)` are the potentials for which the quantum density was calculated. use_density_predictor = true is the preferred method for selfconsistent
-Schroedinger-Poisson/Drift-Diffusion calculations and is enabled by default.
+    where :math:`(\varphi^0, \phi_n^0, \phi_p^0)` are the potentials for which the quantum density was calculated.
+    ``use_density_predictor = true`` is the preferred method for selfconsistent
+    Schroedinger-Poisson/Drift-Diffusion calculations and is enabled by default.
 
 Example
 --------------
