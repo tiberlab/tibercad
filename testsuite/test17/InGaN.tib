@@ -79,26 +79,44 @@ Module empirical_tb
   dangling_bond_scaling = 1.0
   dangling_bond_onsite = -5.0
 
-  plot = (ProbabilityDensity)
+  plot = (tbstates, ProbabilityDensity)
   jmol_output_format = cube
+
+  assemble_hamiltonian = false
 
   Solver
   {
-    num_valence_eigenvalues = 1 
-    num_conduction_eigenvalues = 0
+    load_states = true 
+    load_path = output3
+    num_valence_eigenvalues = 2 
+    num_conduction_eigenvalues = 2 
     long_tolerance = 1e-6
     guess_valence = -1.4 
   }
 
 }#empirical_tb
 
+Module opticstb
+{
+
+  name = spectrum 
+  plot = optical_spectrum_k_0 
+
+  initial_state_model = tb
+  final_state_model = tb
+
+
+  Emin = 3.0
+  Emax  = 5.0
+  dE = 0.001
+
+}
 
 Module  macrostrain
 {
 
   name = strain
   regions = all
-  substrate = cathode
 
   plot = (Strain, PiezoPolarization)
 
@@ -195,7 +213,7 @@ Module driftdiffusion
     { 
       type = doping_dependent
       #model = field_dependent
-      low_field_model = doping_dependent
+      #low_field_model = doping_dependent
     }
   } #endphysics 
 
@@ -271,13 +289,14 @@ Module efaschroedinger   #holes
 
 Simulation
 {
+  verbose = 4
   temperature = 300
   searchpath = /home/mlopez/Desktop/materials
 
-  #solve = (strain,driftdiffusion,tb)
-  solve = (strain)
+  solve = (strain,driftdiffusion,tb,spectrum)
+  #solve = (strain)
 
-  resultpath =  output
+  resultpath =  output3
   output_format = grace
 
 }

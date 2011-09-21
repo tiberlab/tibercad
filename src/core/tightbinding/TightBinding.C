@@ -369,3 +369,53 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 
 
 
+void
+TightBinding::build_map_elem_atoms(double projection_length)
+{
+  
+  //! Get total number of elements 
+  //! (the map is oversized, but faster since the elem ID is used as key)
+  _elem_to_atoms.resize(get_mesh().n_elem());
+
+  double tau = 1.0 / projection_length; // projection in Angstroms
+  const double deltar_max = 10 / tau;   // Maximum cutoff distance
+  double deltar, uhatom;
+  double rho = 0.0;
+  double x1, y1, z1;
+  double x ,y, z;
+  
+  unsigned int N_wo_H = get_atomistic_structure()->get_N_without_H();
+
+  //! Estimate number of atoms in a sphere
+  unsigned int Nat = round( sqrt(3)*3.1416/8 * pow(deltar_max/2.0, 3.0) );
+
+  std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+
+  MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+
+  for ( ; it != end; ++it)
+  { 
+    const Elem* elem = *it;
+    
+    _elem_to_atoms[elem->id()].reserve(Nat);
+
+
+    for (unsigned int iatm = 0; iatm  <  N_wo_H; iatm++)
+    {
+   
+      x1 = structure[iatm].get_position(1);
+      y1 = structure[iatm].get_position(2);
+      z1 = structure[iatm].get_position(3);
+
+      deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
+      
+      if (deltar > deltar_max) continue;
+      else
+      {
+        _elem_to_atoms.push_back(iatm);
+        
+      }
+    }
+  }
+}

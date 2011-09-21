@@ -163,9 +163,13 @@ Module efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
   particle = el
-  number_of_eigenstates = 20
   poisson_simulation = dd
   strain_simulation = strain
+
+  Solver
+  {
+     number_of_eigenstates = 20
+  }	
 
   Physics 
   {
@@ -181,7 +185,6 @@ Module efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
   particle = hl
-  number_of_eigenstates = 80
   poisson_simulation = dd
   strain_simulation =  strain
     
@@ -194,6 +197,7 @@ Module efaschroedinger
   
   Solver
   {
+    number_of_eigenstates = 80
     #solve_ev_problem_twice = true
     #ksp_type = gmres
     #pc_type = ilu	  
@@ -211,9 +215,6 @@ Module opticskp
 
   initial_state_model = quantum_el 
   final_state_model =   quantum_hl
-
-  #initial_eigenstates = (0, 19)
-  #final_eigenstates   = (0, 79)
 
   broadening = 0.02
 

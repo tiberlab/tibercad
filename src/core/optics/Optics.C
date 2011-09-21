@@ -64,15 +64,19 @@ void Optics::parse_options()
   else
     throw InitFailedException( "OpticsKP: Incorrect job: " + job_name);
 
+
+  if (!plot_solution("optical_spectrum") && !plot_solution("optical_spectrum_k_0"))
+      throw InitFailedException("(opticskp) requires a correct plot option");    
+
   if (plot_solution("optical_spectrum"))
     if (!get_options().has_submodel("k_integration")) 
-      throw InitFailedException("optical spectrum requires a k-integration");
+      throw InitFailedException("(opticskp) requires a k-integration");
 
   
   if (plot_solution("optical_spectrum") && plot_solution("optical_spectrum_k_0") )
-    throw InitFailedException("optical_spectrum incopatible with k_0 calculation");    
+    throw InitFailedException("(opticskp) optical_spectrum incompatible with k_0 calculation");    
 
-
+  
 
   // Spectrum options ------------------------------------------------------------------------------
   if (has_option("Emin"))
@@ -394,7 +398,7 @@ void Optics::calculate_for_k_point(const Point& k_point,
 
 void Optics::do_solve()
 {
-  if (get_options().has_submodel("k_integration")) 
+  if (plot_solution("optical_spectrum")) 
   {
      if (norm(_opt.polariz)==0)
      {	
@@ -426,7 +430,8 @@ void Optics::do_solve()
      _spectrum_z = _k_integration->get_solution();     
 
   }
-  else
+  
+  if (plot_solution("optical_spectrum_k_0"))
   {
     Point k_point(3,0.0);
     for(short i=0; i<3; i++) k_point(i) = _k_vector[i];

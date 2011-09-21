@@ -1,8 +1,8 @@
 
-Log start: Tue Aug  2 15:12:46 2011
+Log start: Mon Sep  5 16:18:53 2011
 
 
-tiberCAD release 2.1.0 (rev. 2903, x86_64-linux)
+tiberCAD release 2.1.0 (rev. 2915, x86_64-linux)
 
 Input file: InGaN.tib
 
@@ -66,6 +66,10 @@ Setting up simulation of type 'empirical_tb' ...
 
 Creating bulk models... 
 
+Setting up simulation of type 'opticstb' ...
+
+Creating bulk models... 
+
 Setting up simulation of type 'macrostrain' ...
   Adding boundary 'cathode'
 
@@ -95,34 +99,6 @@ Setting up bulk models ...
   (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/permittivity_constant.so)
   (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
 
-*** Warning: found unused options in block electron_mobility: low_field_model
-
-*** Warning: found unused options in block hole_mobility: low_field_model
-
-*** Warning: found unused options in block electron_mobility: low_field_model
-
-*** Warning: found unused options in block hole_mobility: low_field_model
-
-*** Warning: found unused options in block electron_mobility: low_field_model
-
-*** Warning: found unused options in block hole_mobility: low_field_model
-
-*** Warning: found unused options in block electron_mobility: low_field_model
-
-*** Warning: found unused options in block hole_mobility: low_field_model
-
-*** Warning: found unused options in block electron_mobility: low_field_model
-
-*** Warning: found unused options in block hole_mobility: low_field_model
-
-*** Warning: found unused options in block electron_mobility: low_field_model
-
-*** Warning: found unused options in block hole_mobility: low_field_model
-
-*** Warning: found unused options in block electron_mobility: low_field_model
-
-*** Warning: found unused options in block hole_mobility: low_field_model
-
 Setting up lower dimensional (boundary) models ...
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -135,10 +111,13 @@ Simulation options for tb (empirical_tb)
   MeshStates               1/cm           n-tuple   cell        y
   ElQuantumDensity         q/cm           real      cell        n
   HlQuantumDensity         q/cm           real      cell        n
+  MeshStatesNodes          1/cm           n-tuple   nodal       n
+  ElQuantumDensityNodes    q/cm           real      nodal       n
+  HlQuantumDensityNodes    q/cm           real      nodal       n
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output
+  Output directory      : output3
   Output file format    : grace
   Output file basename  : tb
 
@@ -146,6 +125,18 @@ Simulation options for tb (empirical_tb)
   # Region QW, InGaN (x = 0.1)
   # Region barrier_left, GaN
   # Region barrier_right, GaN
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for spectrum (opticstb)
+
+  Output directory      : output3
+  Output file format    : grace
+  Output file basename  : spectrum
+
+
 
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -168,7 +159,7 @@ Simulation options for strain (macrostrain)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output
+  Output directory      : output3
   Output file format    : grace
   Output file basename  : strain
 
@@ -178,8 +169,6 @@ Simulation options for strain (macrostrain)
   # Region barrier_right, GaN
   # Region device_left, GaN
   # Region device_right, GaN
-
-*** Warning: found unused options in block Module (macrostrain): substrate
 
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -234,7 +223,7 @@ Simulation options for driftdiffusion (driftdiffusion)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output
+  Output directory      : output3
   Output file format    : grace
   Output file basename  : driftdiffusion
 
@@ -315,7 +304,7 @@ Simulation options for kp_electrons (efaschroedinger)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output
+  Output directory      : output3
   Output file format    : grace
   Output file basename  : kp_electrons
 
@@ -341,7 +330,7 @@ Simulation options for kp_holes (efaschroedinger)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output
+  Output directory      : output3
   Output file format    : grace
   Output file basename  : kp_holes
 
@@ -352,23 +341,67 @@ Simulation options for kp_holes (efaschroedinger)
 
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-We solve: strain 
+We solve: strain driftdiffusion tb spectrum 
 
 >>>>----------------------------------------------------------------------------
 macrostrain (name: strain)
 
   Starting the matrix assembly
   Matrix assembly done
+  Update nodes... done
   Starting the matrix assembly
   Matrix assembly done
+  Applying strain to atoms
+  Applying internal strain
+  Saving strained structure in 'strained.xyz'
 
-Solve time: 0h 0m 0.072s
+Solve time: 0h 0m 0.068s
 <<<<--------------------------------- (strain) ---------------------------------
 
-Total solve time: 0h 0m 0.078s
+>>>>----------------------------------------------------------------------------
+driftdiffusion (name: driftdiffusion)
+
+  Solving equilibrium
+  it 1, |du| = 3.8568, |r| = 4.05072e-14  alpha = 1
+
+  iterations: 2, |du| = 1.17282e-12, |r| = 3.90799e-14
+  Equilibrium done
+
+  Writing state to output3/driftdiffusion.tsv
+
+Solve time: 0h 0m 0.072s
+<<<<----------------------------- (driftdiffusion) -----------------------------
+
+>>>>----------------------------------------------------------------------------
+empirical_tb (name: tb)
+
+  (ETB) get band extrema from driftdiffusion
+  CB min = 1.46446  VB max = -1.71293
+  printing structure tb.upg
+  (ETB) reading old states
+  ...done
+  (ETB) consistency check:
+  (ETB) solving using lanczos
+  (ETB) copy states from uptight
+  (ETB) compute atom-projected charges
+  (ETB) print atom-projected charges on files
+
+Solve time: 0h 0m 0.23s
+<<<<----------------------------------- (tb) -----------------------------------
+(ETB) write wave functions on files
+
+>>>>----------------------------------------------------------------------------
+opticstb (name: spectrum)
+
+  calculation of  matrix elements for dipole optical transition...
+
+Solve time: 0h 0m 0.65s
+<<<<-------------------------------- (spectrum) --------------------------------
+
+Total solve time: 0h 0m 3.6s
 Simulation finished...
 Goodbye
 
-Log end: Tue Aug  2 15:12:47 2011
+Log end: Mon Sep  5 16:18:57 2011
 
 

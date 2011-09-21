@@ -417,7 +417,7 @@ void FEMEigenvalueProblem::parse_options()
 
   solver_opt.number_of_eigenstates   = sol_opt.get_option("number_of_eigenstates", 6);
 
-  solver_opt.spectrum_shift = sol_opt.get_option("spectrum_shift",0.0);
+  solver_opt.spectrum_shift = sol_opt.get_option("guess",0.0);
 
   solver_opt.Dirichlet_bc_everywhere = sol_opt.get_option("Dirichlet_bc_everywhere", true);
 

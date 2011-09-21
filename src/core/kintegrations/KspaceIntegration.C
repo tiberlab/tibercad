@@ -89,10 +89,9 @@ cout<<"fe qrule attached\n";
 
     if (it_k_elem == kspace_integral.end())
     {
-cout<<"fe reinit\n";
+
       fe->reinit(kelem);
 
-cout<<"done\n";
       for (unsigned int qp=0; qp<q_point.size(); qp++)
       {//qp
 

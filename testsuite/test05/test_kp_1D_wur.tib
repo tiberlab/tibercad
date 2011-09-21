@@ -191,9 +191,7 @@ Module efaschroedinger
   Solver
   {
     number_of_eigenstates = 10
-    #estimate_spectrum_shift = false
     #solve_ev_problem_twice = true	
-    #spectrum_shift = 2.0	
     	
     # solver = krylovshur
     # solver = lapack
@@ -223,9 +221,7 @@ Module efaschroedinger
   Solver
   {
     number_of_eigenstates = 30
-    #estimate_spectrum_shift = false
     #solve_ev_problem_twice = true	
-    #spectrum_shift = 0.0	
     	
     # solver = krylovshur
     # solver = lapack

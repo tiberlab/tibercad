@@ -136,9 +136,9 @@ class ETB : public TightBinding
 
 //  void build_statedens(std::vector<double>& values, const Point& r);
 
-  double build_rho3d(const std::vector<double>& tb_density, const Point& r);
+  double build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const Point& r);
 
-  double build_rho2d(const std::vector<double>& tb_density, const Point& r);
+  double build_rho2d(const std::vector<double>& tb_density, const Elem* elem, const Point& r);
 
   double build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem);
 

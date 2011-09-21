@@ -522,10 +522,16 @@ void EnvelopFunctionApprox::parse_options()
   const ModelOptions& sol_opt = get_solver_options();
 
   opt.estimate_spectrum_shift =  opt.consider_potential;
-  opt.estimate_spectrum_shift = sol_opt.get_option("estimate_spectrum_shift",  opt.estimate_spectrum_shift);
+  //opt.estimate_spectrum_shift = sol_opt.get_option("estimate_guess",  opt.estimate_spectrum_shift);
+
+  if (has_option("guess")) opt.estimate_spectrum_shift = false;
 
   if ( !opt.consider_potential && opt.estimate_spectrum_shift) 
-    throw InitFailedException( "EnvelopeFunctionApprox: cannot estimate spectrum shift without electric potential");
+    throw InitFailedException( "EnvelopeFunctionApprox: cannot estimate guess without electric potential");
+
+  if (!has_option("guess") && !opt.estimate_spectrum_shift)
+    throw InitFailedException( "EnvelopeFunctionApprox: value for guess required");
+
 
   //--------------------------------------------------------------------------------------------//
   // k-vector

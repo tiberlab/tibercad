@@ -325,7 +325,7 @@ Module opticskp
 
   regions = Quantum_3
 
-  plot = optical_spectrum  #_k_0 
+  plot = optical_spectrum 
 
 
   initial_state_model = QW3_electrons
@@ -345,9 +345,9 @@ Module opticskp
      k_max = 0.05     
      number_of_elements = (5,5)
      quadrature_type = gaussian 
-     quadrature_order = first
+     quadrature_order = third 
 
-     refine_k_space = true 
+     refine_k_space = false 
      refine_fraction = 0.5
      relative_accuracy = 0.001 
   }
