@@ -4,7 +4,7 @@
 .. _DscGetting:
 
 
-Simulation Dye Solar Cells
+Simulation of Dye Solar Cells
 ========================================
 
 For a brief list of literature to understand Dye Solar cells (DSC) see [Kalyanasundaram]_ . 
