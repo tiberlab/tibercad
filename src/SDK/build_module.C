@@ -4,6 +4,8 @@
 
 #include "TiberCad.h"
 #include "Utils.h"
+#include "InputParser.h"
+#include "ModelOptions.h"
 
 #include "tiber_config.h"
 
@@ -62,12 +64,12 @@ namespace
   {
 #if defined(_WIN32)
     cout << endl << "Usage:" << endl
-      << "  from command line: build_module sourcefile" << endl
-      << "  or double click on inputfile" << endl << endl;
+      << "  from command line: build_module configfile" << endl
+      << "  or double click on configfile" << endl << endl;
     cout << "press Enter ...";
     if (interactive) cin.get();
 # else
-    cout << endl << "Usage: tibercad sourcefile" << endl << endl;
+    cout << endl << "Usage: tibercad configfile" << endl << endl;
 # endif
   }
 }
@@ -213,6 +215,12 @@ int main (int argc, char** argv)
     cerr << "TIBERCADROOT environment variable is not set.\n";
     return 1;
   }
+
+
+  ModelOptions config;
+  InputParser parser;
+  parser.parse_file(inputfile, config);
+  config.print_all();
 
   string name = "test";
 

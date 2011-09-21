@@ -10,18 +10,17 @@ ARCH=$(${topdir}/share/arch.sh)
 INSTALLPREFIX=${topdir}/SDK/compiler
 INSTALLEPREFIX=${INSTALLPREFIX}/$(${topdir}/share/arch.sh)
 WORKDIR=${topdir}/extern/gcc-4.6.0
-DEPLIBS=${WORKDIR}/dependencies
+#DEPLIBS=${WORKDIR}/dependencies
+DEPLIBS=${INSTALLPREFIX}
 
 
 . `dirname $0`/INSTALL.lib
 
-#PREFIX=$DEPLIBS
-#EPREFIX=$PREFIX
-PREFIX=$INSTALLPREFIX
-EPREFIX=$INSTALLEPREFIX
+PREFIX=$DEPLIBS
+EPREFIX=$PREFIX
 
 export LD_LIBRARY_PATH=${EPREFIX}/lib
-export LDFLAGS="-Wl,-rpath-link,${EPREFIX}/lib"
+export LDFLAGS="-Wl,-rpath-link,${EPREFIX}/lib -Wl,-rpath,\'$$ORIGIN/../../../../lib\' -Wl,-rpath,\'$$ORIGIN/../lib\'"
 echo $INSTALLEPREFIX
 
 simplebuild http://ftp.sunet.se/pub/gnu/gmp gmp-5.0.2.tar.bz2 --enable-cxx --enable-mpbsd 

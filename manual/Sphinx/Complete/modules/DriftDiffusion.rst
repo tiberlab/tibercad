@@ -33,7 +33,7 @@ following.
 Solution/Plot variables
 -----------------------
 
-The solution variables available for plotting and for interaction with other models are
+The solution variables available for plotting and for interaction with other modules are
 given in :ref:`Plotting variables<dd_solutions>` .
 
 
@@ -95,7 +95,8 @@ The following options influence the behaviour of the Drift-Diffusion module:
 Solver section
 --------------------
 
-The ``Solver`` section of the Drift-Diffusion module refers to a nonlinear solver .
+The ``Solver`` section of the Drift-Diffusion module refers to a nonlinear solver. See REF HERE for details on
+nonlinear solver options.
 
 Physics section
 --------------------
@@ -103,49 +104,39 @@ Physics section
 The ``Physics`` block contains generic options for the bulk physical model and the definition
 of submodels. The generic options are:
 
-|  ``model = string`` 
-| 
-|    Specify the semiconductor model to be used. Possible values are default
-     and simple. The former uses k.p to calculate the (strain corrected) band parameters.
-
-|  ``thermal_simulation = string`` 
-| 
-|    If you are doing coupled electrothermal simulations,
+ ``thermal_simulation`` 
+     If you are doing coupled electrothermal simulations,
      you have to specify the name of the thermal simulation providing the lattice temperature.
 
-|  ``strain_simulation = string`` 
-| 
-|    If you are doing simulations on strained systems, you
-     can specify the name of a strain simulation. The band parameters will then be
-     calculated taking local strain corrections into account.
+ ``strain_simulation`` 
+     If you are doing simulations on strained systems, you have to
+     specify the name of a strain simulation. The strain values obtained from
+     this model will be used to calculate strain dependent parameters like
+     band parameters and piezoelectric polarizations.
 
-|  ``relax_polarization = double`` 
-| 
-|    With this option one can specify a relaxation factor
+ ``relax_polarization`` 
+     With this option one can specify a global relaxation factor
      for the electric polarization field. This can be useful if the amount of total electric
      polarization has to be treated as fitting parameter.
 
-For the simple semiconductor model one has to provide conduction and valence band
-edges and the effective density of states masses (or the effective density of states itself)
-in the ``Region`` sections. The corresponding keywords are given in table 2.2 .
-In the following we describe the submodels. All submodels can be restricted to a
-subset of simulation regions.
+In the following we describe all submodels. As mentioned in the Introduction (REF HERE)
+submodels can be restricted to a subset of simulation regions.
 
 Recombination/generation models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This section describes the currently available generation/recombination models. Note
 that all recombination models can be applied also to surfaces/interfaces.
-Recombination models are controlled by means of recombination submodel blocks
+Recombination models are controlled by means of ``recombination`` submodel blocks
 inside the Physics section. Different recombination models having the same (or no)
-options can be enabled in a single statement writing::
+options can be enabled in a single statement by writing::
 
   recombination (model1, model2, ...) {}
 
 Shockley-Read-Hall (SRH) recombination
 """""""""""""""""""""""""""""""""""""""
 
-The SRH recombination model can be enabled by defining a recombination submodel
+The SRH recombination model can be enabled by defining a ``recombination`` submodel
 of type ``srh`` .
 
 SRH recombination is defined as follows:
