@@ -32,6 +32,11 @@ SBCondBandBulkHamiltonian::do_init(void)
   kp_bands.resize(1,0);
 
   kp_bands_map.insert(std::make_pair(0,0));
+  // NOTE: this duplicates the band, which makes OpticsKP use two 
+  // conduction bands, giving the same result as an 8x8 kp. The other
+  // parts of the code are not affected by this doubling, as they do not refer
+  // to kp_bands_map
+  kp_bands_map.insert(std::make_pair(1,0));
 
   calculate_for_init();
 
