@@ -365,10 +365,17 @@ For  1D and  2D  calculations,  it  is  possible  to  perform  an  integration  
 In  this  case,  one  has  to  define a  k-integration  block inside  Module opticskp, in this  way 
 ::
 
- k-integration
+  k-integration
   {
    
+     k_max = 0.05     
+     number_of_elements = (5,5)
+     quadrature_type = gaussian 
+     quadrature_order = third 
 
+     refine_k_space = false 
+     refine_fraction = 0.5
+     relative_accuracy = 0.001 
 
 
   }
@@ -376,15 +383,13 @@ In  this  case,  one  has  to  define a  k-integration  block inside  Module opt
 
 The parameters are the following
 
-*  ``k_space_dimension`` :
-   Options are **1** for 2D simulations, **2** for 1D simulations. 
+*  ``k_max`` max  value  of k  
 
-*  ``k-space basis`` : 
-   if **true** then the k-space is defined by means of k-vectors; 
-   if **false** , vectors are expressed in real space.
+*  ``quadrature_type`` : type of  integration, default is  gaussian 
+  
 
-*  ``number_of_elements`` :
-   numb. of elements in k mesh, along each direction
+*  ``quadrature_order`` : order of  integration, default is  third
+ 
 
 
   If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the el-
