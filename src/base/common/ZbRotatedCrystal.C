@@ -114,7 +114,7 @@ void ZbRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
 //====================================================//
 void ZbRotatedCrystal::read_database ( )
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("lattice");
 
   //a_lat = db.get("a", 0.543095, true);

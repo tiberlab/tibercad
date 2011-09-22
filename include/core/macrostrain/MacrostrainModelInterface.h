@@ -14,7 +14,8 @@ class MacrostrainModelInterface : public PhysicalModel
  public:
 
   
-  static MacrostrainModelInterface* create (const std::string& name,  const ModelOptions& options = ModelOptions());
+  static MacrostrainModelInterface* create (const std::string& name, const PhysicalObject* owner,
+      const ModelOptions& options = ModelOptions());
 
 
  protected:
@@ -37,12 +38,12 @@ MacrostrainModelInterface::MacrostrainModelInterface(const ModelOptions& options
 }
 
 
-inline MacrostrainModelInterface* MacrostrainModelInterface::create (const std::string& name,  const ModelOptions& options)
+inline MacrostrainModelInterface* MacrostrainModelInterface::create (const std::string& name,
+    const PhysicalObject* owner, const ModelOptions& options)
 {
 
-
-
-  return dynamic_cast<MacrostrainModelInterface*> (PhysicalModelInterface::create( name, options)  ) ;
+  return dynamic_cast<MacrostrainModelInterface*> (PhysicalModelInterface::create(name,
+      owner, options)  ) ;
 
 
 }

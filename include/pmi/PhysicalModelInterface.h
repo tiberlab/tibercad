@@ -88,12 +88,15 @@ class PhysicalModelInterface : public TiberModelObject
      * If it is not known, the NULL pointer is returned.
      *
      * \param name the model name
+     * \param owner the PhysicalObject this model is associated with (can be \c NULL)
      * \param options the options as given in the input file
      * \param module the module this model belongs to (in most cases
      *   found automatically)
      * \return a pointer to the newly created object
      */
-    static PhysicalModelInterface* create(const std::string& name,
+    template <typename T = PhysicalModelInterface>
+    static T* create(const std::string& name,
+        const PhysicalObject* owner,
         const ModelOptions& options = ModelOptions(),
         const std::string& module = xstr(MODULE_NAME));
 
@@ -105,6 +108,7 @@ class PhysicalModelInterface : public TiberModelObject
      */
     static PhysicalModelInterface* create(
         create_t create_fnc, destroy_t destroy_fnc,
+        const PhysicalObject* owner,
         const ModelOptions& options = ModelOptions(),
         const std::string& module = xstr(MODULE_NAME));
 
@@ -138,7 +142,7 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Get a reference to the database
-    Database& get_database(void);
+    const Database& get_database(void);
 
 
     //! Set the bulk material
@@ -149,7 +153,7 @@ class PhysicalModelInterface : public TiberModelObject
      * automatically when obtaining the model using one of the
      * methods provided in SimulationInterface.
      */
-    void set_material(Material* mat);
+    void set_material(const Material* mat);
 
 
     //! Get the bulk material
@@ -160,15 +164,15 @@ class PhysicalModelInterface : public TiberModelObject
      * but it will be set automatically when obtaining the model
      * using one of the methods provided in SimulationInterface.
      */
-    Material* get_material(void) const;
+    const Material* get_material(void) const;
 
 
     //! Set a reference to the physical object this model belongs to
-    void set_owner(PhysicalObject* owner);
+    void set_owner(const PhysicalObject* owner);
 
 
     //! Get a reference to the physical object this model belongs to
-    PhysicalObject* get_owner(void);
+    //PhysicalObject* get_owner(void);
 
 
     //! Get a reference to the physical object this model belongs to
@@ -338,7 +342,7 @@ class PhysicalModelInterface : public TiberModelObject
      * An exception is thrown, if more than one specification is found
      * in the input file.
      */
-    template <class T>
+    template <typename T>
     void create_submodel(T*& model, const std::string& type);
 
 
@@ -347,13 +351,13 @@ class PhysicalModelInterface : public TiberModelObject
      * If no submodel of type \c type is provided in the input file,
      * the default options are used to create an instance of the model.
      */
-    template <class T>
+    template <typename T>
     void create_submodel(T*& model, const std::string& type,
         const ModelOptions& default_opts);
 
 
     //! Create multiple instances of submodel \c type
-    template <class T>
+    template <typename T>
     void create_submodels(std::vector<T*>& models,
         const std::string& type);
 
@@ -363,7 +367,7 @@ class PhysicalModelInterface : public TiberModelObject
      * If no submodel of type \c type is provided in the input file,
      * the default options are used to create an instance of the model.
      */
-    template <class T>
+    template <typename T>
     void create_submodels(std::vector<T*>& models,
         const std::string& type, const ModelOptions& default_opts);
 
@@ -513,11 +517,11 @@ class PhysicalModelInterface : public TiberModelObject
     /*!
      * This pointer can be used by this or associated models.
      */
-    PhysicalObject* _owner;
+    const PhysicalObject* _owner;
 
 
     //! Lower dimensional objects can have a bulk material assigned
-    Material* _bulk_material;
+    const Material* _bulk_material;
 
 
     //! The name of the module this object is part of
@@ -668,7 +672,7 @@ PhysicalModelInterface::set_simulator_id(ID id)
 
 
 inline
-Material*
+const Material*
 PhysicalModelInterface::get_material(void) const
 {
   return _bulk_material;
@@ -676,13 +680,14 @@ PhysicalModelInterface::get_material(void) const
 
 
 
+/*
 inline
 PhysicalObject*
 PhysicalModelInterface::get_owner(void)
 {
   return _owner;
 }
-
+*/
 
 inline
 const PhysicalObject*
@@ -726,6 +731,21 @@ PhysicalModelInterface::create_submodel_alloy(const T* comp_A,
   newmod->init_alloy(comp_A, comp_B, xa);
   return newmod;
 }
+
+
+
+
+template <typename T>
+T*
+PhysicalModelInterface::create(const std::string& name, const PhysicalObject* owner,
+    const ModelOptions& options, const std::string& module)
+{
+  PhysicalModelInterface* mod =
+      create_submodel<PhysicalModelInterface>(name, owner, options, module);
+  return static_cast<T*>(mod);
+}
+
+
 
 
 

@@ -2,6 +2,7 @@
 
 #include "RotatedCrystal.h"
 #include "ModelErrorException.h"
+#include "Material.h"
 
 
 RotatedCrystal::RotatedCrystal(const ModelOptions& options)
@@ -13,15 +14,18 @@ RotatedCrystal::RotatedCrystal(const ModelOptions& options)
 
 
 RotatedCrystal*
-RotatedCrystal::create(const std::string& name, const ModelOptions& options)
+RotatedCrystal::create(const PhysicalObject* owner,
+    const ModelOptions& options)
 {
+  std::string structure = static_cast<const Material*>(owner)->get_structure();
+  // this can only be a bulk model
   RotatedCrystal* rc = dynamic_cast<RotatedCrystal*>(
-      PhysicalModelInterface::create("cryst_" + name, options));
+      PhysicalModelInterface::create("cryst_" + structure, owner, options));
 
   if (rc == NULL)
   {
     std::string msg("No such crystal structure known: ");
-    msg += name;
+    msg += structure;
     throw ModelErrorException(msg);
   }
 

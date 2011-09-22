@@ -67,9 +67,12 @@ PhysicalModelInterface::~PhysicalModelInterface(void)
 
 
 
+template <>
 PhysicalModelInterface*
 PhysicalModelInterface::create(const string& name,
-    const ModelOptions& options, const string& module)
+    const PhysicalObject* owner,
+    const ModelOptions& options,
+    const string& module)
 {
 
   // NOTE: for bulk models options contains the crystal structure
@@ -156,6 +159,7 @@ PhysicalModelInterface::create(const string& name,
     mod->_set_type(name);
 
     mod->_set_module_name(module);
+    mod->set_owner(owner);
 
     //! set the name
     // 2007-08-17
@@ -179,7 +183,9 @@ PhysicalModelInterface::create(const string& name,
 
 PhysicalModelInterface*
 PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
-    const ModelOptions& options, const string& module)
+    const PhysicalObject* owner,
+    const ModelOptions& options,
+    const string& module)
 {
   PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
       create_from_function(create_fnc, destroy_fnc, options));
@@ -192,6 +198,7 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
     mod->_set_type(options.get_option("type", ""));
 
     mod->_set_module_name(module);
+    mod->set_owner(owner);
 
     //! set the name
     // 2007-08-17
@@ -239,11 +246,11 @@ PhysicalModelInterface::_register_model(
 
 
 void
-PhysicalModelInterface::set_owner(PhysicalObject* owner)
+PhysicalModelInterface::set_owner(const PhysicalObject* owner)
 {
   _owner = owner;
   if (_owner->get_type() == PhysicalObject::BULK)
-    _bulk_material = static_cast<Material*>(_owner);
+    _bulk_material = static_cast<const Material*>(_owner);
 }
 
 
@@ -281,7 +288,7 @@ PhysicalModelInterface::get_default_name(void) const
 
 
 
-Database&
+const Database&
 PhysicalModelInterface::get_database(void)
 {
   return _owner->get_database();
@@ -400,10 +407,11 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
 
   // some models might treat alloys in a special way
   // disable alloy mixing
+  // This const cast is very ugly, better would be to not touch the database at all
   Database::AlloyMixing mixing = get_database().get_alloy_mixing();
-  get_database().set_alloy_mixing(Database::NONE);
+  const_cast<PhysicalObject*>(_owner)->get_database().set_alloy_mixing(Database::NONE);
   read_database_alloy();
-  get_database().set_alloy_mixing(mixing);
+  const_cast<PhysicalObject*>(_owner)->get_database().set_alloy_mixing(mixing);
 
 
   // setup the submodels
@@ -435,7 +443,7 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
 
 
 void
-PhysicalModelInterface::set_material(Material* mat)
+PhysicalModelInterface::set_material(const Material* mat)
 {
   _bulk_material = mat;
 
@@ -495,12 +503,12 @@ PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
       modname += string("_") + modtype;
 
     // we try to create it from the same module
-    model = create(modname, it->second, get_module_name());
+    model = create(modname, get_owner(), it->second, get_module_name());
 
     if (model == NULL)
     {
       // perhaps it uses 'type' or 'model' internally?
-      model = create(it->first, it->second, get_module_name());
+      model = create(it->first, get_owner(), it->second, get_module_name());
     }
 
     add_submodel(type, model);
@@ -535,12 +543,12 @@ PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
       modname += string("_") + modtype;
 
     // we try to create it from the same module
-    model = create(modname, opts, get_module_name());
+    model = create(modname, get_owner(), opts, get_module_name());
 
     if (model == NULL)
     {
       // perhaps it uses 'type' or 'model' internally?
-      model = create(type, opts, get_module_name());
+      model = create(type, get_owner(), opts, get_module_name());
     }
 
     add_submodel(type, model);
@@ -578,12 +586,13 @@ PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& m
       modname += string("_") + modtype;
 
     // we try to create it from the same module
-    PhysicalModelInterface* mod = create(modname, it->second, get_module_name());
+    PhysicalModelInterface* mod =
+        create(modname, get_owner(), it->second, get_module_name());
 
     if (mod == NULL)
     {
       // perhaps it uses 'type' or 'model' internally?
-      mod = create(it->first, it->second, get_module_name());
+      mod = create(it->first, get_owner(), it->second, get_module_name());
     }
 
     add_submodel(type, mod);
@@ -623,12 +632,12 @@ PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& m
       modname += string("_") + modtype;
 
     // we try to create it from the same module
-    mod = create(modname, opts, get_module_name());
+    mod = create(modname, get_owner(), opts, get_module_name());
 
     if (mod == NULL)
     {
       // perhaps it uses 'type' or 'model' internally?
-      mod = create(type, opts, get_module_name());
+      mod = create(type, get_owner(), opts, get_module_name());
     }
 
     add_submodel(type, mod);

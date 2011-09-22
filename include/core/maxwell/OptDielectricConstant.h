@@ -43,7 +43,7 @@ class  OptDielectricConstant: public PhysicalModelInterface
   void get_dielectric_imag(Tensor2Sym& dielectric_constant_imag) const; 
 
   //!creates new model
-  static OptDielectricConstant*  create(const std::string &name, const ModelOptions &options);
+  static OptDielectricConstant* create(const Material* mat, const ModelOptions &options);
 
 
  private:
@@ -114,9 +114,10 @@ OptDielectricConstant::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
 
 }
 
-inline OptDielectricConstant* OptDielectricConstant::create( const std::string& name,  const ModelOptions& options ) 
+inline OptDielectricConstant* OptDielectricConstant::create(const Material* mat, const ModelOptions& options )
 {
-  return dynamic_cast<OptDielectricConstant*>(PhysicalModelInterface::create("opt_dielectric_constant_" + name, options));
+  std::string structure = mat->get_structure();
+  return dynamic_cast<OptDielectricConstant*>(PhysicalModelInterface::create("opt_dielectric_constant_" + structure, mat, options));
 }
 
 #endif
