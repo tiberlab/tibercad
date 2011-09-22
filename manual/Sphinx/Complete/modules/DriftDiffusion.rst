@@ -1,6 +1,7 @@
 
 .. _DriftDiffusionTheory:
 
+
 Drift-diffusion simulation of electrons and holes
 =================================================
 
@@ -9,7 +10,8 @@ Theory
 
 
 The semi-classical transport simulation of electrons and holes is based on the drift-diffusion
-approximation (see [Selberherr]_ ).
+approximation (see [Selberherr]_).
+
 
 Beside the electric potential the electro-chemical potentials are used as variables such
 that the system of PDEs to be solved reads as follows
@@ -21,8 +23,9 @@ that the system of PDEs to be solved reads as follows
    -\nabla(\mu_n n ( \nabla\phi_n + P_n \nabla T)  ) & =  R \\
    -\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & =  -R 
  
-:math:`P` is the electric polarization due to e.g. piezoelectric effects and :math:`R` is the net 
-recombination rate, i.e. recombination rate minus generation rate. :math:`P_n` and :math:`P_p` are the electron
+:math:`P` is the electric polarization due to e.g. piezoelectric effects.
+:math:`N_d^+` and :math:`N_a^-` are the densities of ionized donors and acceptors, respectively.
+:math:`R` is the net recombination rate, i.e. recombination rate minus generation rate, and :math:`P_n` and :math:`P_p` are the electron
 and hole thermoelectric powers, respectively. The models for the mobilities and the net
 recombination rates can be specified in the ``Physics`` section as described in the
 following.
@@ -326,9 +329,9 @@ The doping dependent mobility model (identifier ``doping_dependent`` ) implement
 models for mobility depending on the total doping density and the temperature. The
 model that is used depends on the value of the ``mobility_formula`` parameter.
 
-**Model by Masetti et al. [4]**
+**Model by Masetti et al.**
 
-The model by Masetti et al. is identified by ``mobility_formula`` = 1. It uses the following
+The model by Masetti et al.  Masetti is identified by ``mobility_formula`` = 1. It uses the following
 formula:
 
 .. math::
@@ -342,9 +345,9 @@ mobility model. The parameters are specified in the material file as given in Ta
 
 
 
-**Model by Arora [5]**
+**Model by Arora**
 
-The model by Arora is identified by ``mobility_formula`` = 2. It reads:
+The model by Arora Arora _ is identified by ``mobility_formula`` = 2. It reads:
 
 .. math::
    :label: dd_eq_dopdep2
@@ -697,36 +700,35 @@ behaviour of the selfconsistent simulation.
 Example
 --------------
 
-The following example shows the Drift-Diffusion module definition for a pn junction.
+The following example shows a minimal Drift-Diffusion module definition for a pn junction.
 
 ----
 
 ::
 
   Module driftdiffusion
-    {
-     name = dd
-     #regions = (pside, nside)
-     Solver linesearch 
-       {
-       }
-     Physics
-       {
-        recombination srh {}
-        
-        mobility doping_dependent {}
-        
-        Contact anode 
-          { 
-           voltage = $Vd 
-          }
+  {
+    name = dd
+    #regions = (pside, nside)
+    plot = (Ec, Ev, eDensity, hDensity)
 
-          Contact cathode 
-            { 
-             voltage = 0 
-            }
-       }
+    Physics
+    {
+      recombination srh {}
+        
+      mobility doping_dependent {}
     }
+        
+    Contact anode 
+    { 
+      voltage = $Vd 
+    }
+
+    Contact cathode 
+    { 
+      voltage = 0 
+    }
+  }
 
 ----
 
@@ -933,16 +935,12 @@ Listing 3: Models section for drift-diffusion
     \end{table}
 
 
-.. rubric:: Footnotes
-
-.. [#] the Default value is given in brackets.
-.. [#] the linear tolerance gets automatically decreased after each nonlinear step.
-
-
-
-    
-.. [Selberherr] Siegfried Selberherr, Analysis and Simulation of Semiconductor Devices, SpringerVerlag Wien New York, 1st edition, 1984.
 
 .. |cm2| replace::  cm\ :sup:`2`
 
 .. |cm3| replace::  cm\ :sup:`3`
+
+
+.. rubric::  Footnotes
+
+

@@ -818,10 +818,9 @@ allows the plot of the current flowing through the contacts.
     I-V characteristic of the device.
 
 
+.. |TiO2| replace:: :math:`TiO_2`
 
-..  |TiO2| replace:: :math:`TiO_2`
-
-..  rubric::  Footnotes
+.. rubric::  Footnotes
 
 
 

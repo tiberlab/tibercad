@@ -11,15 +11,11 @@ Welcome to TiberCAD's manual
    Introduction
    Theory
    Control
-
-.. ReferenceGuide
-
-
-.. Glossary
-
-   
    Bibliography
    Index
+
+.. Glossary
+.. ReferenceGuide
    
 
 
