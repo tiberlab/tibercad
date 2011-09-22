@@ -11,6 +11,7 @@
 
 
 #include <iostream>
+#include <sstream>
 #include <fstream>
 
 #ifdef HAVE_LIBREADLINE
@@ -73,6 +74,11 @@ namespace
 # endif
   }
 }
+
+
+void process_module(const string& name, const ModelOptions& options);
+
+
 
 // Will be extended with tools for command line argument parsing
 // and so on
@@ -220,14 +226,38 @@ int main (int argc, char** argv)
   ModelOptions config;
   InputParser parser;
   parser.parse_file(inputfile, config);
-  config.print_all();
 
-  string name = "test";
+  ModelOptions::submodel_iterator it(config.submodels_begin("Module"));
+  ModelOptions::submodel_iterator end(config.submodels_end("Module"));
 
+  for ( ; it != end; ++it)
+  {
+    process_module(it->second.get_name(), it->second);
+  }
+  
+  
+
+  return error;
+}
+
+
+void process_module(const string& name, const ModelOptions& options)
+{
+  vector<string> sources;
+  options.get_option("sources", sources);
+
+  string creatable = options.get_option("creatable", "");
+
+  char* root = getenv("TIBERCADROOT");
+
+  string binsuffix;
 #if defined(_WIN32)
-  string binsuffix(".exe");
+  string libsuffix(".dll");
+  binsuffix = ".exe";
+#elif defined(_APPLE_)
+  string libsuffix(".dylib");
 #else
-  string binsuffix("");
+  string libsuffix(".so");
 #endif
 
   string tcroot(root);
@@ -242,6 +272,7 @@ int main (int argc, char** argv)
   cppflags += "-I" + sdkdir + "/petsc-3.0.0-p12/" + ARCH + "/include ";
   cppflags += "-I" + sdkdir + "/slepc-3.0.0-p7/include ";
   cppflags += "-I" + sdkdir + "/slepc-3.0.0-p7/" + ARCH + "/include ";
+  cppflags += "-I" + string(root) + "/include/base/common";
 
   string cxxflags;
   cxxflags += "-std=gnu++0x -pthread ";
@@ -254,14 +285,15 @@ int main (int argc, char** argv)
   ldflags += "-L" + tcroot + "/" + ARCH + "/lib ";
   ldflags += "-Wl,-rpath,\'$$ORIGIN\' -Wl,-rpath,\'$$ORIGIN/../lib\' ";
 
-  cout << cpp << endl << cppflags << endl << ldflags << endl;
+  string libfile = name + libsuffix;
 
-  string cmdline(cpp);
-  cmdline += " " + cppflags + " " + cxxflags + " " + ldflags + " -o " + name + " " + name + ".C";
-  cout << "Compiling " << name << ".C ...";
-  //cout << cmdline << endl;
-  system(cmdline.c_str());
+  ostringstream cmdline;
+  cmdline << cpp;
+  cmdline << " " << cppflags << " " << cxxflags << " " << ldflags
+      << " -o " << libfile;
+  for (size_t i = 0; i < sources.size(); ++i)
+    cmdline << " " << sources[i];
+  cout << "Compiling " << libfile << " ...";
+  system(cmdline.str().c_str());
  
-  return error;
 }
-
