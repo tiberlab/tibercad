@@ -1,4 +1,3 @@
-..   <marker>
 
 .. _DriftDiffusionTheory:
 
@@ -940,9 +939,9 @@ Listing 3: Models section for drift-diffusion
 .. [#] the linear tolerance gets automatically decreased after each nonlinear step.
 
 
-..   </marker>
 
     
+.. [Selberherr] Siegfried Selberherr, Analysis and Simulation of Semiconductor Devices, SpringerVerlag Wien New York, 1st edition, 1984.
 
 .. |cm2| replace::  cm\ :sup:`2`
 
