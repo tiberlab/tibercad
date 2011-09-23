@@ -250,22 +250,12 @@ To  calculate the  quantum dispersion we  need  to  define the  block *Dispersio
   Dispersion 
   {
 
-    k-path
-    number_of_nodes
-    k_max
+    k-path = G-M
+    number_of_nodes = 10
+    k_max = 0.1
 
 
-    simulation_name = dispersion1D_el
-    regions = all
-    quantum_simulation = quantum_el
-    min_eigenvalue_number = 0
-    max_eigenvalue_number = 5
-    wedge = half
-    k_space_dimension = 1
-    k1 = (0, 0.1, 0)
-    number_of_nodes = (10)
-   output_format = grace
-    plot = k-space_dispersion
+    
   }
 
 The dispersion of quantum states is calculated at k-points that are nodes of the mesh
@@ -274,23 +264,30 @@ in k-space.
 The main parameters are:
 
  ``k-path`` : 
-    path of the  direction in  k-space
+    path of the  direction in  k-space; it  must be  a  string of the  kind G-K-M
 
  ``number_of_nodes`` : 
    number_of_nodes along each  direction
 
  ``k-max`` : 
-   max value  of  k in  each  direction
+   max value  of  k in  each  direction (default 0.1)
 
 
 
-The dispersion can  be calculated in  1D  along  a  defined  path P1-P2-P3,  where for  example P1={G, K, M}.
+The dispersion can  be calculated in  1D  along  a  defined  path P1-P2-P3,  for  example G-K-M. Symmetry poinys available  are G,K,M,M'.
 In  this  case,  ``number_of_nodes`` is an  integer.
+
 The dispersion can  be calculated in  general in  a  k-space  dimension between 1 and (3-simdim),  where  simdim  is  the  simulation  dimension.
-Accordingly,  ``number_of_nodes``  is    an array  of  dimension equal  to  the k-space  dimension; for a 2D k-space, a  2D  mesh  is  defined.
+Accordingly,  ``number_of_nodes``  is    an array  of  dimension equal  to  the k-space  dimension.
+For a 2D k-space, a  2D  mesh  is  defined,  by  writing e.g. 
 
 
-The dispersion is calculated for each of  the quantum states previoosly  defined in  the  simulation
+::
+ 
+  number_of_nodes = (5,5)
+
+
+The dispersion is calculated for each of  the quantum states previously  defined in  the  simulation.
 
 
 
