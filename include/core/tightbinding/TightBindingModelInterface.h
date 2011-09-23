@@ -16,7 +16,7 @@ public:
   ~TightBindingModelInterface(){};
 
   //!Create a new object
-  static TightBindingModelInterface* create(const std::string& name,  const ModelOptions& options = ModelOptions());
+  //static TightBindingModelInterface* create(const std::string& name,  const ModelOptions& options = ModelOptions());
 
 
 protected:
@@ -36,11 +36,11 @@ TightBindingModelInterface::TightBindingModelInterface(const ModelOptions& optio
 }
 
 
-inline 
-TightBindingModelInterface* TightBindingModelInterface::create(const std::string& name,  const ModelOptions& options)
-{
-  return dynamic_cast<TightBindingModelInterface*> ( PhysicalModelInterface::create(name,options) );
-}
+//inline
+//TightBindingModelInterface* TightBindingModelInterface::create(const std::string& name,  const ModelOptions& options)
+//{
+//  return dynamic_cast<TightBindingModelInterface*> ( PhysicalModelInterface::create(name,options) );
+//}
 
 
 #endif

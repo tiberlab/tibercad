@@ -151,7 +151,7 @@ PhysicalModel* EnvelopFunctionApprox::create_bulk_model(const ModelOptions& opti
 {
 
 
-  EFAbulkModel* model = dynamic_cast<EFAbulkModel*> ( PhysicalModelInterface::create("EFAmodel", options) );
+  EFAbulkModel* model = PhysicalModelInterface::create<EFAbulkModel>("EFAmodel", mat, options);
 
   if (model == NULL)
     throw ModelErrorException("EnvelopFunctionApprox: cannot create EFAbulkModel");

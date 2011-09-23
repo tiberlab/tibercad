@@ -51,7 +51,7 @@ class TBDLEXPORT Semiconductor : public PhysicalModelInterface
 
   
   //! creates new object
-  static Semiconductor* create(const std::string& name,  const ModelOptions& options);
+  static Semiconductor* create(const Material* mat,  const ModelOptions& options);
  
   //! sets temperature
   void set_temperature(double T);
@@ -103,12 +103,7 @@ class TBDLEXPORT Semiconductor : public PhysicalModelInterface
 
 };
 
-inline 
-Semiconductor* Semiconductor::create(const std::string& name,  const ModelOptions& options)
-{
-  return dynamic_cast<Semiconductor*> (PhysicalModelInterface::create("semicond_" + name, options));
-}
- 
+
 
 
 inline 

@@ -67,9 +67,8 @@ PhysicalModelInterface::~PhysicalModelInterface(void)
 
 
 
-template <>
 PhysicalModelInterface*
-PhysicalModelInterface::create(const string& name,
+PhysicalModelInterface::_create(const string& name,
     const PhysicalObject* owner,
     const ModelOptions& options,
     const string& module)
@@ -182,7 +181,7 @@ PhysicalModelInterface::create(const string& name,
 
 
 PhysicalModelInterface*
-PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
+PhysicalModelInterface::_create(create_t create_fnc, destroy_t destroy_fnc,
     const PhysicalObject* owner,
     const ModelOptions& options,
     const string& module)

@@ -50,7 +50,7 @@ class PiezoelectricModel : public PhysicalModelInterface
 //------------------------------------------------------------------------------------//
 inline PiezoelectricModel* PiezoelectricModel::create( const std::string& name,  const ModelOptions& options )
 {
-  return dynamic_cast<PiezoelectricModel*>(PhysicalModelInterface::create("piezoelectric_model_" + name, options));
+  return PhysicalModelInterface::create<PiezoelectricModel>("piezoelectric_model_" + name, mat, options));
 }
 
 inline

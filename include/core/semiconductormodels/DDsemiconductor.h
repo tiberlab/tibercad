@@ -94,7 +94,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
  
   
   //! creates new object
-  static DDsemiconductor* create(const std::string& name,  const ModelOptions& options);
+  static DDsemiconductor* create(const Material* mat,  const ModelOptions& options);
 
 
  
@@ -153,13 +153,6 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
 
 
 
-
-inline DDsemiconductor* DDsemiconductor::create(const std::string& name,
-    const ModelOptions& options)
-{
-  return dynamic_cast<DDsemiconductor*>(
-      PhysicalModelInterface::create("DDsemicond_" + name, options));
-}
 
 
 inline 

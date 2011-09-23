@@ -8,6 +8,7 @@
 #include "TypeDefs.h"
 #include "ModelOptions.h"
 #include "InitFailedException.h"
+#include "ModelErrorException.h"
 
 #include <map>
 #include <string>
@@ -106,11 +107,12 @@ class PhysicalModelInterface : public TiberModelObject
      * Use this method only in special cases, e.g. if you don't have single
      * libraries for the different models.
      */
-    static PhysicalModelInterface* create(
-        create_t create_fnc, destroy_t destroy_fnc,
+    template <typename T = PhysicalModelInterface>
+    static T* create(create_t create_fnc, destroy_t destroy_fnc,
         const PhysicalObject* owner,
         const ModelOptions& options = ModelOptions(),
         const std::string& module = xstr(MODULE_NAME));
+
 
 
     //! Create a new model as a copy of this
@@ -566,6 +568,20 @@ class PhysicalModelInterface : public TiberModelObject
     void _create_submodels(void);
 
 
+    //! The internal implementation of the create method
+    static PhysicalModelInterface* _create(
+        const std::string& name,
+        const PhysicalObject* owner,
+        const ModelOptions& options,
+        const std::string& module);
+
+    //! The internal implementation of the create method
+    static PhysicalModelInterface* _create(
+        create_t create_fnc, destroy_t destroy_fnc,
+        const PhysicalObject* owner,
+        const ModelOptions& options,
+        const std::string& module);
+
 
 };
 
@@ -741,11 +757,31 @@ PhysicalModelInterface::create(const std::string& name, const PhysicalObject* ow
     const ModelOptions& options, const std::string& module)
 {
   PhysicalModelInterface* mod =
-      create_submodel<PhysicalModelInterface>(name, owner, options, module);
+      PhysicalModelInterface::_create(name, owner, options, module);
+
+  if (mod != dynamic_cast<T*>(mod))
+  {
+    throw ModelErrorException("Given model type \'" + name + "\' does not correspond to "
+        "type of created model.");
+  }
   return static_cast<T*>(mod);
 }
 
 
+template <typename T>
+T*
+PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
+        const PhysicalObject* owner,
+        const ModelOptions& options,
+        const std::string& module)
+{
+  PhysicalModelInterface* mod =
+      PhysicalModelInterface::_create(create_fnc, destroy_fnc,
+          owner, options, module);
+
+  // No check, this would be a programmer error
+  return static_cast<T*>(mod);
+}
 
 
 

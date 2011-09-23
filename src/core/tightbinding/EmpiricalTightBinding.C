@@ -131,7 +131,7 @@ ETB::create_physical_model(const ModelOptions &options,
 			     const Material* mat) const throw (ModelErrorException)
 {
 
-      ETBModel* model = dynamic_cast<ETBModel*> ( PhysicalModelInterface::create("etb",options) );
+      ETBModel* model = PhysicalModelInterface::create<ETBModel>("etb", mat, options);
 
       if (model == NULL)
         throw ModelErrorException("TightBinding: ETB physical model is not created" );

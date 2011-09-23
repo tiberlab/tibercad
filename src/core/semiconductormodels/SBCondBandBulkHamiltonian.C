@@ -18,7 +18,7 @@ SBCondBandBulkHamiltonian::prepare_submodels(void)
 
   ModelOptions opt =  get_options();
   opt.delete_all_submodels();
-  semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+  semiconductor = Semiconductor::create(get_material(), opt);
   add_submodel("semiconductor", semiconductor);
 }
 
