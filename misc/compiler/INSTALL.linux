@@ -20,8 +20,10 @@ PREFIX=$DEPLIBS
 EPREFIX=$PREFIX
 
 export LD_LIBRARY_PATH=${EPREFIX}/lib
-export LDFLAGS="-Wl,-rpath-link,${EPREFIX}/lib -Wl,-rpath,\'$$ORIGIN/../../../../lib\' -Wl,-rpath,\'$$ORIGIN/../lib\'"
+#export LDFLAGS="-Wl,-rpath-link,${EPREFIX}/lib -Wl,-rpath,'\$\$ORIGIN/../../../../../lib' -Wl,-rpath,'\$\$ORIGIN/../lib'"
+export LD_RUN_PATH='$ORIGIN:$ORIGIN/../lib:$ORIGIN/../../../../../lib'
 echo $INSTALLEPREFIX
+echo "$LD_RUN_PATH"
 
 simplebuild http://ftp.sunet.se/pub/gnu/gmp gmp-5.0.2.tar.bz2 --enable-cxx --enable-mpbsd 
 simplebuild http://www.mpfr.org/mpfr-current mpfr-3.0.1.tar.bz2 --with-gmp=${EPREFIX} 
@@ -41,7 +43,8 @@ then
   cd ..
   mkdir -p build
   cd build
-  ../${PROD}-${VERSION}/configure --prefix=${PREFIX} --enable-languages=c,c++,fortran --enable-__cxa_atexit --enable-threads --exec-prefix=${EPREFIX} --with-gmp-include=${DEPLIBS}/include --with-gmp-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib" --with-mpfr-include=${DEPLIBS}/include --with-mpfr-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib" --with-ppl-include=${DEPLIBS}/include --with-ppl-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib"  --with-cloog-include=${DEPLIBS}/include --with-cloog-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib"  
+  #../${PROD}-${VERSION}/configure --prefix=${PREFIX} --enable-languages=c,c++,fortran --enable-__cxa_atexit --enable-threads --exec-prefix=${EPREFIX} --with-gmp-include=${DEPLIBS}/include --with-gmp-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib" --with-mpfr-include=${DEPLIBS}/include --with-mpfr-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib" --with-ppl-include=${DEPLIBS}/include --with-ppl-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib"  --with-cloog-include=${DEPLIBS}/include --with-cloog-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib"  
+  ../${PROD}-${VERSION}/configure --prefix=${PREFIX} --enable-languages=c,c++,fortran --enable-__cxa_atexit --enable-threads --exec-prefix=${EPREFIX} --with-gmp-include=${DEPLIBS}/include --with-gmp-lib="${DEPLIBS}/lib" --with-mpfr-include=${DEPLIBS}/include --with-mpfr-lib="${DEPLIBS}/lib" --with-ppl-include=${DEPLIBS}/include --with-ppl-lib="${DEPLIBS}/lib"  --with-cloog-include=${DEPLIBS}/include --with-cloog-lib="${DEPLIBS}/lib"  
 
   make all
   make install

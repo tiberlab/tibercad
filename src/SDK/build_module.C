@@ -57,9 +57,16 @@ static string open_file(const char *filter = "All Files (*.*)\0*.*\0", HWND owne
 }
 #endif
 
+
+
+
 namespace
 {
+  //! Interactive or batch mode (only useful for Win)
   bool interactive;
+
+  //! Content of TIBERCADROOT
+  string tc_root;
 
   void usage(void)
   {
@@ -74,6 +81,32 @@ namespace
 # endif
   }
 }
+
+
+class Compiler
+{
+  public:
+
+    static void setup(const ModelOptions& options);
+
+    static bool compile(const std::string& source);
+
+    static bool link(const std::string& target, const std::string& sources);
+
+    //bool static_link(const std::string& target, const std::string& sources);
+
+  private:
+
+    Compiler(const ModelOptions& options);
+
+    std::string _preprocessor_flags;
+
+    std::string _compiler_flags;
+
+    std::string _linker_flags;
+
+    static std::map<std::string, Compiler*> _compilers;
+};
 
 
 void process_module(const string& name, const ModelOptions& options);
@@ -157,8 +190,8 @@ int main (int argc, char** argv)
       setenv("TIBERCADROOT", exepath.c_str(), 1);
 # else
 #  ifdef HAVE_PUTENV
-      string tc_root("TIBERCADROOT=" + exepath);
-      putenv(tc_root.c_str());
+      string newroot("TIBERCADROOT=" + exepath);
+      putenv(newroot.c_str());
 #  else
 #   error "Neither setenv nor putenv available"
 #  endif
@@ -215,19 +248,34 @@ int main (int argc, char** argv)
   //
   int error = 1;
 
-  char* root = getenv("TIBERCADROOT");
-  if (root == NULL)
   {
-    cerr << "TIBERCADROOT environment variable is not set.\n";
+    char* root = getenv("TIBERCADROOT");
+    if (root == NULL)
+    {
+      cerr << "TIBERCADROOT environment variable is not set.\n";
+      return 1;
+    }
+    tc_root = string(root);
+  }
+
+  InputParser parser;
+  ModelOptions global_config;
+  parser.parse_file(tc_root + "/share/modules.conf", global_config);
+
+  ModelOptions::submodel_iterator it(global_config.submodels_begin("Compiler"));
+  if (it == global_config.submodels_end("Compiler"))
+  {
+    cerr << "No compiler defined in configuration file.\n";
     return 1;
   }
 
+  Compiler::setup(it->second);
+
 
   ModelOptions config;
-  InputParser parser;
   parser.parse_file(inputfile, config);
 
-  ModelOptions::submodel_iterator it(config.submodels_begin("Module"));
+  it = config.submodels_begin("Module");
   ModelOptions::submodel_iterator end(config.submodels_end("Module"));
 
   for ( ; it != end; ++it)
@@ -238,6 +286,46 @@ int main (int argc, char** argv)
   
 
   return error;
+}
+
+
+void
+Compiler::setup(const ModelOptions& options)
+{
+  ModelOptions::const_submodel_iterator it(options.submodels_begin());
+  ModelOptions::const_submodel_iterator end(options.submodels_end());
+  for ( ; it != end; ++it)
+  {
+    //const string& name = it->first;
+    //const ModelOptions& opts = it->second;
+
+    ModelOptions opts;
+    if (options.find_option("path"))
+      opts.set_option("path", options.get_option("path", ""));
+
+    if (options.find_option("includes"))
+      opts.set_option("includes", options.get_option("includes", ""));
+
+    opts += it->second;
+    opts.print_all();
+  }
+
+}
+
+Compiler::Compiler(const ModelOptions& options)
+{
+  ostringstream pre;
+  pre << "-DARCH=" + string(ARCH);
+
+  string path = options.get_option("sdk_path", tc_root);
+
+  vector<string> includes;
+  options.get_option("includes", includes);
+  for (size_t i = 0; i < includes.size(); ++i)
+    pre << " -I" << path << "/" << includes[i];
+
+  _preprocessor_flags = pre.str();
+  cout << _preprocessor_flags << endl;
 }
 
 
