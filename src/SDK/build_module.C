@@ -89,9 +89,11 @@ class Compiler
 
     static void setup(const ModelOptions& options);
 
-    static bool compile(const std::string& source);
+    static int compile(const std::string& source);
 
-    static bool link(const std::string& target, const std::string& sources);
+    static int compile(const std::string& compiler, const std::string& source);
+
+    static int link(const std::string& target, const std::string& sources);
 
     //bool static_link(const std::string& target, const std::string& sources);
 
@@ -99,13 +101,24 @@ class Compiler
 
     Compiler(const ModelOptions& options);
 
+    ModelOptions _options;
+
     std::string _preprocessor_flags;
 
     std::string _compiler_flags;
 
     std::string _linker_flags;
 
+    std::string _executable(void);
+
+    int _compile(const std::string& source);
+
+    //! Compiler name to compiler object
     static std::map<std::string, Compiler*> _compilers;
+
+    //! File extension to compiler object
+    static std::map<std::string, Compiler*> _file_association;
+
 };
 
 
@@ -289,6 +302,12 @@ int main (int argc, char** argv)
 }
 
 
+
+
+map<string, Compiler*>
+Compiler::_compilers;
+
+
 void
 Compiler::setup(const ModelOptions& options)
 {
@@ -307,12 +326,32 @@ Compiler::setup(const ModelOptions& options)
       opts.set_option("includes", options.get_option("includes", ""));
 
     opts += it->second;
-    opts.print_all();
-  }
+    opts.set_key(it->second.get_key());
 
+    Compiler* comp = new Compiler(opts);
+    _compilers[opts.get_key()] = comp;
+
+  }
 }
 
-Compiler::Compiler(const ModelOptions& options)
+
+int
+Compiler::compile(const std::string& compiler, const std::string& source)
+{
+  map<string, Compiler*>::iterator it(_compilers.find(compiler));
+  if (it == _compilers.end())
+  {
+    cerr << "Compiler " << compiler << " not configured." << endl;
+    exit(1);
+  }
+
+  return it->second->_compile(source);
+}
+
+
+
+Compiler::Compiler(const ModelOptions& options) :
+  _options(options)
 {
   ostringstream pre;
   pre << "-DARCH=" + string(ARCH);
@@ -325,7 +364,28 @@ Compiler::Compiler(const ModelOptions& options)
     pre << " -I" << path << "/" << includes[i];
 
   _preprocessor_flags = pre.str();
-  cout << _preprocessor_flags << endl;
+}
+
+inline
+string
+Compiler::_executable(void)
+{
+  return tc_root + "/" + _options["executable"];
+}
+
+
+int
+Compiler::_compile(const std::string& source)
+{
+  cout << "Compiling " << source << " (" << _options.get_key() << ") ...\n";
+
+  ostringstream cmdline;
+  cmdline << _executable() << " " << _preprocessor_flags << " " <<
+    _compiler_flags << " " << source;
+
+  //cout << cmdline.str();
+
+  return system(cmdline.str().c_str());
 }
 
 
@@ -380,8 +440,12 @@ void process_module(const string& name, const ModelOptions& options)
   cmdline << " " << cppflags << " " << cxxflags << " " << ldflags
       << " -o " << libfile;
   for (size_t i = 0; i < sources.size(); ++i)
+  {
     cmdline << " " << sources[i];
-  cout << "Compiling " << libfile << " ...";
-  system(cmdline.str().c_str());
+    Compiler::compile("C++", sources[i]);
+  }
+
+  //cout << "Compiling " << libfile << " ...";
+  //system(cmdline.str().c_str());
  
 }
