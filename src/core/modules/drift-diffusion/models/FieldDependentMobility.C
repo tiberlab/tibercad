@@ -14,7 +14,7 @@ TIBER_MODULE(FieldDependentMobility, mobility, field_dependent)
 void
 FieldDependentMobility::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("mobility/field_dependent");
 
   std::vector<double> empty(2, 0);
@@ -67,7 +67,7 @@ FieldDependentMobility::prepare_submodels(void)
   opts.set_option("type", low_field_model);
   opts.set_option("particle", get_option("particle", "electron"));
 
-  _low_field_mob = MobilityModelInterface::create(low_field_model, opts);
+  _low_field_mob = MobilityModelInterface::create(low_field_model, get_material(), opts);
   if (_low_field_mob == NULL)
   {
     std::string msg("FieldDependentMobility: Could not ");

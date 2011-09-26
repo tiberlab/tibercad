@@ -23,6 +23,9 @@
 
 class PhysicalObject;
 class Material;
+class MaterialBoundary;
+class EdgeObject;
+class NodeObject;
 class Database;
 
 

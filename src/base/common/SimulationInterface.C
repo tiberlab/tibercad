@@ -248,9 +248,9 @@ SimulationInterface::new_boundary_model(const ModelOptions& options)
 
 PhysicalModel*
 SimulationInterface::new_boundary_model(const ModelOptions& options,
-    const Material* material_A, const Material* material_B)
+    const MaterialBoundary* boundary)
 {
-  PhysicalModel* pm = create_boundary_model(options, material_A, material_B);
+  PhysicalModel* pm = create_boundary_model(options, boundary);
 
   if (pm != NULL)
     _boundary_models.insert(pm);
@@ -260,9 +260,10 @@ SimulationInterface::new_boundary_model(const ModelOptions& options,
 
 
 PhysicalModel*
-SimulationInterface::new_edge_model(const ModelOptions& options)
+SimulationInterface::new_edge_model(const ModelOptions& options,
+    const EdgeObject* edge)
 {
-  PhysicalModel* pm = create_edge_model(options);
+  PhysicalModel* pm = create_edge_model(options, edge);
 
   //if (pm != NULL)
   //  _edge_models.insert(pm);
@@ -272,9 +273,10 @@ SimulationInterface::new_edge_model(const ModelOptions& options)
 
 
 PhysicalModel*
-SimulationInterface::new_node_model(const ModelOptions& options)
+SimulationInterface::new_node_model(const ModelOptions& options,
+    const NodeObject* node)
 {
-  PhysicalModel* pm = create_node_model(options);
+  PhysicalModel* pm = create_node_model(options, node);
 
   //if (pm != NULL)
   //  _node_models.insert(pm);
@@ -824,7 +826,7 @@ SimulationInterface::create_bulk_model(const ModelOptions& options,
 
 PhysicalModel*
 SimulationInterface::create_boundary_model(const ModelOptions&,
-    const Material*, const Material*) const
+    const MaterialBoundary*) const
 {
   return NULL;
 }
@@ -832,7 +834,8 @@ SimulationInterface::create_boundary_model(const ModelOptions&,
 
 
 PhysicalModel*
-SimulationInterface::create_edge_model(const ModelOptions&) const
+SimulationInterface::create_edge_model(const ModelOptions&,
+    const EdgeObject*) const
 {
   return NULL;
 }
@@ -840,7 +843,8 @@ SimulationInterface::create_edge_model(const ModelOptions&) const
 
 
 PhysicalModel*
-SimulationInterface::create_node_model(const ModelOptions&) const
+SimulationInterface::create_node_model(const ModelOptions&,
+const NodeObject*) const
 {
   return NULL;
 }

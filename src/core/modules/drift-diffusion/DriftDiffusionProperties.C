@@ -85,10 +85,20 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
 }
 
 
+
+DriftDiffusionProperties*
+DriftDiffusionProperties::create(const std::string& name, const Material* mat,
+    const ModelOptions& options)
+{
+  return PhysicalModelInterface::create<DriftDiffusionProperties>("ddbulk_" + name, mat, options);
+}
+
+
+
 void
 DriftDiffusionProperties::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("");
   _is_dielectric = db.get("dielectric", _is_dielectric);
 
@@ -415,7 +425,7 @@ DriftDiffusionProperties::prepare_submodels(void)
     if (it != end)
     {
       _thermoelectric_power =
-          ThermoelectricPower::create_model("default", it->second);
+          ThermoelectricPower::create_model("default", get_material(), it->second);
 
       if (_thermoelectric_power == NULL)
         throw InitFailedException("Could not create thermoelectric power model");
@@ -566,7 +576,7 @@ DriftDiffusionProperties::add_recombination_model(
     const string& model_name, const ModelOptions& options)
 {
   RecombinationModelInterface* model =
-    RecombinationModelInterface::create(model_name, options);
+    RecombinationModelInterface::create(model_name, get_material(), options);
 
   if (model == NULL)
     throw InitFailedException("No such recombination model: " + model_name);
@@ -589,7 +599,7 @@ DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
     model_name = "constant";
 
   MobilityModelInterface* mobility_model =
-    MobilityModelInterface::create(model_name, options);
+    MobilityModelInterface::create(model_name, get_material(), options);
 
   if (mobility_model == NULL)
     throw InitFailedException("No such mobility model: " + model_name);

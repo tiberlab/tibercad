@@ -14,7 +14,7 @@ TIBER_MODULE(FieldAssistedMobility, mobility, field_assisted)
 void
 FieldAssistedMobility::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("mobility/field_assisted");
 
   std::vector<double> mu0(2, _mu0);

@@ -15,7 +15,7 @@ TIBER_MODULE(AugerRecombination, recombination, auger)
 void
 AugerRecombination::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("recombination/auger");
 
   std::vector<double> data(2, 0);

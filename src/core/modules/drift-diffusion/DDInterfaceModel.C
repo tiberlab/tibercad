@@ -65,7 +65,7 @@ DDInterfaceModel::prepare_submodels(void)
 
 
 DDInterfaceModel*
-DDInterfaceModel::create(const ModelOptions& options)
+DDInterfaceModel::create(const MaterialBoundary* boundary, const ModelOptions& options)
 {
   DDInterfaceModel* model = NULL;
 
@@ -77,10 +77,10 @@ DDInterfaceModel::create(const ModelOptions& options)
 
   if (name == "interface")
     model = dynamic_cast<DDInterfaceModel*>(
-        PhysicalModelInterface::create(_create, _destroy, options));
+        PhysicalModelInterface::create(_create, _destroy, boundary, options));
   else
     model = dynamic_cast<DDInterfaceModel*>(
-        PhysicalModelInterface::create("ddbnd_" + name, options));
+        PhysicalModelInterface::create("ddbnd_" + name, boundary, options));
 
   if (model == NULL)
     throw ModelErrorException("Unknown drift-diffusion "

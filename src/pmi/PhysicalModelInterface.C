@@ -74,10 +74,6 @@ PhysicalModelInterface::_create(const string& name,
     const string& module)
 {
 
-  // NOTE: for bulk models options contains the crystal structure
-
-
-
   PhysicalModelInterface* mod = NULL;
 
   if (name == "stiffness_zb")
@@ -144,9 +140,9 @@ PhysicalModelInterface::_create(const string& name,
   {
     // first try in the module directory
     if ((module.size() == 0) || ((mod = create_from_library<PhysicalModelInterface>(
-        module + "/" + name, options)) == 0))
+        module + "/" + name, options, owner)) == 0))
     {
-      mod = create_from_library<PhysicalModelInterface>(name, options);
+      mod = create_from_library<PhysicalModelInterface>(name, options, owner);
     }
   }
 
@@ -187,7 +183,7 @@ PhysicalModelInterface::_create(create_t create_fnc, destroy_t destroy_fnc,
     const string& module)
 {
   PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
-      create_from_function(create_fnc, destroy_fnc, options));
+      create_from_function(create_fnc, destroy_fnc, options, owner));
 
   if (mod != NULL)
   {

@@ -231,6 +231,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return a pointer to the newly created object
      */
     static DriftDiffusionProperties* create(const std::string& name,
+        const Material* mat,
         const ModelOptions& options = ModelOptions());
 
 
@@ -1089,14 +1090,6 @@ class DriftDiffusionProperties : public PhysicalModel
 //
 
 
-inline
-DriftDiffusionProperties*
-DriftDiffusionProperties::create(const std::string& name,
-    const ModelOptions& options)
-{
-  return dynamic_cast<DriftDiffusionProperties*>(
-      PhysicalModelInterface::create("ddbulk_" + name, options));
-}
 
 
 

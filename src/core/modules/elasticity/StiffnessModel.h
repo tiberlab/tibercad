@@ -82,7 +82,7 @@ void
 StiffnessModel::rotate()
 {
 
-  Material* mat = get_material();
+  const Material* mat = get_material();
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 
   _stiffness = push_forward(_stiffness, cr.RotMatrix);

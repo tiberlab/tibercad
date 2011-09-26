@@ -226,16 +226,16 @@ Elasticity::create_bulk_model(const ModelOptions& options,
     const Material* mat) const
 {
  
-  return ElasticityModel::create(options);
+  return ElasticityModel::create(mat, options);
 }
 
 
 
 PhysicalModel*
 Elasticity::create_boundary_model(const ModelOptions& options,
-    const Material* material_A, const Material* material_B) const
+    const MaterialBoundary* boundary) const
 {
-  return ElasticityBoundaryModel::create(options);
+  return ElasticityBoundaryModel::create(boundary, options);
 }
 
 
@@ -335,7 +335,7 @@ Elasticity::get_solution_secure(const Elem* elem,
        if (values.count(StrainCrystal))
        {
 
-	 Material* mat = mod.get_material();
+	 const Material* mat = mod.get_material();
 	 const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 	 const Tensor2Gen& rotate = cr.RotMatrix;
 	 RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate);
@@ -371,7 +371,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      if (values.count(StressCrystal))
      {
        
-       Material* mat = mod.get_material();
+       const Material* mat = mod.get_material();
        const RotatedCrystal&   cr = mat->get_rotated_crystal ();
        const Tensor2Gen& rotate = cr.RotMatrix;
        RealTensor crystal_stress = rotate.transpose() * (total_stress * rotate);

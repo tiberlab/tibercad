@@ -12,6 +12,7 @@
 
 
 class DriftDiffusionProperties;
+class MaterialBoundary;
 class RecombinationModelInterface;
 class Trap;
 class FowlerNordheim;
@@ -46,7 +47,8 @@ class DDInterfaceModel : public PhysicalModel
 
 
     //! Create an interface model
-    static DDInterfaceModel* create(const ModelOptions& options);
+    static DDInterfaceModel* create(const MaterialBoundary* boundary,
+        const ModelOptions& options);
 
 
     //! Set the current face normal

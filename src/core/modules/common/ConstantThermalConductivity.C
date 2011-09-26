@@ -21,7 +21,7 @@ void
 ConstantThermalConductivity::read_database(void)
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("thermal_conductivity/constant");
 
   _kappa(0);

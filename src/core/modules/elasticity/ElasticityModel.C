@@ -7,6 +7,13 @@
 using namespace std;
 
 
+ElasticityModel*
+ElasticityModel::create(const Material* mat, const ModelOptions& options)
+{
+
+  return PhysicalModelInterface::create<ElasticityModel>(_create, _destroy, mat, options);
+
+}
 
 
 void

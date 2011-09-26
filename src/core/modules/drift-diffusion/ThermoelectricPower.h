@@ -75,7 +75,7 @@ class TBDLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
 
 
     static ThermoelectricPower* create_model(const std::string& model,
-        const ModelOptions& options = ModelOptions());
+        const Material* mat, const ModelOptions& options = ModelOptions());
 
     //! Set the electron and hole charge density
     //  void set_charge_densities(double n, double p);

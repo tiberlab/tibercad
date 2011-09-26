@@ -233,7 +233,7 @@ TiberModelObject::_create_from_library(const std::string& name,
 
 TiberModelObject*
 TiberModelObject::create_from_function(create_t create, destroy_t destroy,
-    const ModelOptions& options)
+    const ModelOptions& options, void* obj)
 {
   assert(create != NULL);
   assert(destroy != NULL);

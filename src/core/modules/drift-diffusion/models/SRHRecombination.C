@@ -15,7 +15,7 @@ TIBER_MODULE(SRHRecombination, recombination, srh)
 void
 SRHRecombination::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
 
   if (get_option("trap", false))
     db.set_section("recombination/trap");
@@ -69,7 +69,7 @@ SRHRecombination::read_database(void)
 void
 SRHRecombination::read_interface_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
 
   db.set_section("recombination/surface_rec");
 

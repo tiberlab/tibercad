@@ -107,7 +107,7 @@ DriftDiffusion::~DriftDiffusion(void)
 
 PhysicalModel*
 DriftDiffusion::create_bulk_model(const ModelOptions& options,
-    const Material*) const
+    const Material* mat) const
 {
   string modelname;
 
@@ -115,7 +115,7 @@ DriftDiffusion::create_bulk_model(const ModelOptions& options,
 
 
   DriftDiffusionProperties* model =
-    DriftDiffusionProperties::create(modelname, options);
+    DriftDiffusionProperties::create(modelname, mat, options);
 
   if (model == NULL)
     throw ModelErrorException(
@@ -128,12 +128,12 @@ DriftDiffusion::create_bulk_model(const ModelOptions& options,
 
 PhysicalModel*
 DriftDiffusion::create_boundary_model(const ModelOptions& options,
-    const Material* material_A, const Material* material_B) const
+    const MaterialBoundary* boundary) const
 {
 
   PhysicalModel* model = NULL;
 
-  model = DDInterfaceModel::create(options);
+  model = DDInterfaceModel::create(boundary, options);
 
   return model;
 }
@@ -1239,7 +1239,7 @@ DriftDiffusion::do_init(void)
     DDInterfaceModel* mod = static_cast<DDInterfaceModel*>(*it);
 
     const MaterialBoundary* bd =
-        static_cast<MaterialBoundary*>(mod->get_owner());
+        static_cast<const MaterialBoundary*>(mod->get_owner());
 
 
     // register the contact if it is a real contact (with current)

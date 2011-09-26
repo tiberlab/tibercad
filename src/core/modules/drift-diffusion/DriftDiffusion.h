@@ -302,7 +302,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
     //! Create the boundary model
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-        const Material* material_A, const Material* material_B) const;
+        const MaterialBoundary* boundary) const;
 
 
 

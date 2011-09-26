@@ -49,7 +49,7 @@ SimpleBand::_set_mdos_from_Nc(double& Nc)
 void
 SimpleBand::read_database_alloy(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
 
   db.set_section("bandgap");
   _bow_Eg = db.get("bow_Eg_G", 0.0);
@@ -61,7 +61,7 @@ SimpleBand::read_database(void)
 {
   // when reading from the database, we use the same data
   // as for kp
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("valenceband");
   _reference_energy = db.get("E_v", 0.0);
 

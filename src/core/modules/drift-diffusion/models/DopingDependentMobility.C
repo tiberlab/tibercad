@@ -16,7 +16,7 @@ TIBER_MODULE(DopingDependentMobility, mobility, doping_dependent)
 void
 DopingDependentMobility::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("mobility/doping_dependent");
 
   formula_ = db.get("mobility_formula", formula_, true);
@@ -108,7 +108,7 @@ DopingDependentMobility::prepare_submodels(void)
     opts.set_option("type", "constant");
     opts.set_option("particle", get_option("particle", "electron"));
 
-    const_mob_ = MobilityModelInterface::create("constant", opts);
+    const_mob_ = MobilityModelInterface::create("constant", get_material(), opts);
     if (const_mob_ == NULL)
     {
       std::string msg("DopingDependentMobility: Could not ");

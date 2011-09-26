@@ -447,9 +447,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
               if (pm == NULL)
               {
                 // create the default model on the fly
-                Material* matA = bd->get_material_A();
-                Material* matB = bd->get_material_B();
-                pm = sim->new_boundary_model(ModelOptions(), matA, matB);
+                pm = sim->new_boundary_model(ModelOptions(), bd);
                 bd->add_model(pm, sim->get_id());
               }
 
@@ -464,7 +462,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
               if (pm == NULL)
               {
                 // create the default model on the fly
-                pm = sim->new_edge_model(ModelOptions());
+                pm = sim->new_edge_model(ModelOptions(), eo);
                 eo->add_model(pm, sim->get_id());
               }
 
@@ -479,7 +477,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
               if (pm == NULL)
               {
                 // create the default model on the fly
-                pm = sim->new_node_model(ModelOptions());
+                pm = sim->new_node_model(ModelOptions(), no);
                 no->add_model(pm, sim->get_id());
               }
 
@@ -533,7 +531,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
       {
 
         // the crystal structure
-        string crystal_structure(mat->get_structure());
+        //string crystal_structure(mat->get_structure());
 
         // that's not elegant, but it works
         ModelOptions opts(physopts);
@@ -541,7 +539,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
 
         // we add the crystal structure for bulk materials as this could
         // lead to different model implementations
-        opts["crystal_structure"] = crystal_structure;
+        //opts["crystal_structure"] = crystal_structure;
 
         //
         // we parse the submodels for each region as they could be associated
@@ -571,7 +569,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
             {
               // we add the crystal structure for bulk materials as this could
               // lead to different model implementations
-              modopts.set_option("crystal_structure", crystal_structure);
+              //modopts.set_option("crystal_structure", crystal_structure);
 
               // we set the name to the model type if not explicitly
               // given by user
@@ -709,9 +707,7 @@ Control::create_boundary(SimulationInterface* sim, const ModelOptions& opts)
             "\' does not touch any region of simulation \'" +
             sim->get_name() + "\'");
 
-      Material* matA = bd->get_material_A();
-      Material* matB = bd->get_material_B();
-      pm = sim->new_boundary_model(opts, matA, matB);
+      pm = sim->new_boundary_model(opts, bd);
       bd->add_model(pm, sim->get_id());
       bnd->add_model(ids[i], pm);
       found = true;
@@ -730,7 +726,7 @@ Control::create_boundary(SimulationInterface* sim, const ModelOptions& opts)
         throw InitFailedException(os.str());
       }
 
-      pm = sim->new_edge_model(opts);
+      pm = sim->new_edge_model(opts, eo);
       eo->add_model(pm, sim->get_id());
       bnd->add_model(ids[i], pm);
       found = true;
@@ -749,7 +745,7 @@ Control::create_boundary(SimulationInterface* sim, const ModelOptions& opts)
         throw InitFailedException(os.str());
       }
 
-      pm = sim->new_node_model(opts);
+      pm = sim->new_node_model(opts, no);
       no->add_model(pm, sim->get_id());
       bnd->add_model(ids[i], pm);
       found = true;

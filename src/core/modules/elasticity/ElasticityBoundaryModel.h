@@ -26,7 +26,8 @@ class ElasticityBoundaryModel : public PhysicalModel
 		   const Point& point) = 0;
 
     //! Creator function
-    static ElasticityBoundaryModel* create(const ModelOptions& options);
+    static ElasticityBoundaryModel* create(const MaterialBoundary* boundary,
+        const ModelOptions& options);
 
   const bool is_extended(void);
 
