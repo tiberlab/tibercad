@@ -14,11 +14,12 @@ Getting Started with tiberCAD
    Thermal
    EFA
    Dsc
-   
-   
-..   Glossary
    Bibliography
    Index
+   
+..   Glossary
+   
+   
    
 
 
