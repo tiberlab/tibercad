@@ -114,10 +114,6 @@ OptDielectricConstant::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
 
 }
 
-inline OptDielectricConstant* OptDielectricConstant::create(const Material* mat, const ModelOptions& options )
-{
-  std::string structure = mat->get_structure();
-  return dynamic_cast<OptDielectricConstant*>(PhysicalModelInterface::create("opt_dielectric_constant_" + structure, mat, options));
-}
+
 
 #endif

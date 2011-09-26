@@ -21,9 +21,18 @@ void OptDielectricConstant::do_init_alloy (const PhysicalModelInterface *comp_A,
   
   alloy(_dielectric_constant_imag,modA->_dielectric_constant_imag, modB->_dielectric_constant_imag, xa);
 
-  Material* mat = get_material();
+  const Material* mat = get_material();
  
   const RotatedCrystal&   cr = mat->get_rotated_crystal();
  
   rotate_to_calculation_system(cr.RotMatrix);
+}
+
+
+
+
+OptDielectricConstant* OptDielectricConstant::create(const Material* mat, const ModelOptions& options )
+{
+  std::string structure = mat->get_structure();
+  return dynamic_cast<OptDielectricConstant*>(PhysicalModelInterface::create("opt_dielectric_constant_" + structure, mat, options));
 }

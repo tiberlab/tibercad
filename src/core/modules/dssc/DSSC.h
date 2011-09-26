@@ -103,8 +103,8 @@ class DSSC : public SimulationInterface
 
     /*! \copydoc SimulationInterface::create_physical_model() */
     virtual PhysicalModel*
-      create_physical_model(const ModelOptions& options,
-          const Material* mat) const throw (ModelErrorException);
+      create_bulk_model(const ModelOptions& options,
+          const Material* mat) const;
 
 
     /*! \copydoc SimulationInterface::create_boundary_model() */

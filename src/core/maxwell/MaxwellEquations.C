@@ -218,7 +218,7 @@ void MaxwellEquations::prepare_field_mod_squared(const unsigned int mode_number,
 PhysicalModel*  MaxwellEquations::create_physical_model(const ModelOptions& options,
     const Material* mat) const throw (ModelErrorException)
 {
-  MaxwellPhysicalModel* model = dynamic_cast<MaxwellPhysicalModel*> ( PhysicalModelInterface::create("maxwell", options) );
+  MaxwellPhysicalModel* model = PhysicalModelInterface::create<MaxwellPhysicalModel>("maxwell", mat, options);
  
   if (model == NULL)
     throw ModelErrorException("MaxwellEquations: cannot create MaxwellPhysicalMode");

@@ -28,7 +28,7 @@ ConstantPermittivity::do_init(void)
 void
 ConstantPermittivity::read_database(void)
 {
-   Database& db = get_database();
+   const Database& db = get_database();
    db.set_section("permittivity");
 
    _permittivity_diag(0) = _permittivity_diag(1) = _permittivity_diag(2) = 1;

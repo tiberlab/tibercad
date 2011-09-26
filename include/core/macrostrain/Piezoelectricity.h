@@ -51,15 +51,6 @@ class Piezoelectricity : public PhysicalModelInterface
 };
 
 
-inline Piezoelectricity* Piezoelectricity::create(const Material* mat, const ModelOptions& options)
-{
-  
-  std::string structure = mat->get_structure();
-  return dynamic_cast<Piezoelectricity*>(PhysicalModelInterface::create("piezo_" + structure,
-      mat, options));
-
-}
-
 
 inline double Piezoelectricity::calculate_product_by_vector_and_tensor(const Tensor1& f, const Tensor2Sym& e) const
 {

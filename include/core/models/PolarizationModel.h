@@ -112,7 +112,7 @@ void
 PolarizationModel::rotate(void)
 {
 
-  Material* mat = get_material();
+  const Material* mat = get_material();
   const RotatedCrystal&   cr = mat->get_rotated_crystal();
 
   _polarization = cr.RotMatrix * _polarization;

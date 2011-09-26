@@ -13,7 +13,7 @@
 void WzPiezoelectricModel::read_database ( )
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("piezoelectricity");
 
   e33 = db.get("e33", 0.0, true);
@@ -57,7 +57,7 @@ void  WzPiezoelectricModel::calculate_piezopolarization(const Elem* elem,const P
 {
 
 
-  Material* mat = get_material();
+  const Material* mat = get_material();
 
   const RotatedCrystal& cr = mat->get_rotated_crystal ();
 

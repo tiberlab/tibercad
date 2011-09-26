@@ -3,6 +3,7 @@
 
 #include "ExcitonProperties.h"
 #include "Constants.h"
+#include "Material.h"
 
 #include "elem.h"
 
@@ -21,11 +22,10 @@ ExcitonProperties::ExcitonProperties(const ModelOptions& options)
 
 
 ExcitonProperties*
-ExcitonProperties::create(const std::string& name,
+ExcitonProperties::create(const std::string& name, const Material* mat,
     const ModelOptions& options)
 {
-  return dynamic_cast<ExcitonProperties*>(
-      PhysicalModelInterface::create("exbulk_" + name, options));
+  return PhysicalModelInterface::create<ExcitonProperties>("exbulk_" + name, mat, options);
 }
 
 

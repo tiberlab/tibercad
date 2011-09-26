@@ -7,6 +7,13 @@
 #include "elem.h"
 
 
+PiezoelectricModel* PiezoelectricModel::create(const Material* mat,  const ModelOptions& options )
+{
+  std::string structure = mat->get_structure();
+  return PhysicalModelInterface::create<PiezoelectricModel>("piezoelectric_model_" + structure, mat, options);
+}
+
+
 
 //----------------------------------------------------------------------//
 void PiezoelectricModel:: do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa)

@@ -108,7 +108,7 @@ ExcitonTransport::create_bulk_model(const ModelOptions& options,
   const string& modelname = options.get_option("model", "simple");
 
   ExcitonProperties* model =
-    ExcitonProperties::create(modelname, options);
+    ExcitonProperties::create(modelname, mat, options);
 
   if (model == NULL)
     throw ModelErrorException(

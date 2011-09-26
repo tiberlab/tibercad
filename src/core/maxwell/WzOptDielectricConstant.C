@@ -9,7 +9,7 @@
 void  WzOptDielectricConstant::read_database(void)
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("permittivity");
 
   ModelOptions & options = get_options ();

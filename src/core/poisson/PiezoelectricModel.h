@@ -16,7 +16,7 @@ class PiezoelectricModel : public PhysicalModelInterface
   ~PiezoelectricModel(){};
 
   //! creates new object
-  static PiezoelectricModel* create(const std::string& name,  const ModelOptions& options);
+  static PiezoelectricModel* create(const Material* mat,  const ModelOptions& options);
  
   void get_piezopolarization(Tensor1& P);
 
@@ -47,11 +47,7 @@ class PiezoelectricModel : public PhysicalModelInterface
 
 };
 
-//------------------------------------------------------------------------------------//
-inline PiezoelectricModel* PiezoelectricModel::create( const std::string& name,  const ModelOptions& options )
-{
-  return PhysicalModelInterface::create<PiezoelectricModel>("piezoelectric_model_" + name, mat, options));
-}
+
 
 inline
 void 

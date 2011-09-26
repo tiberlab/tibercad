@@ -93,12 +93,12 @@ DDInterfaceModel::create(const ModelOptions& options)
 void
 DDInterfaceModel::do_init(void)
 {
-  MaterialBoundary* bnd = dynamic_cast<MaterialBoundary*>(get_owner());
+  const MaterialBoundary* bnd = dynamic_cast<const MaterialBoundary*>(get_owner());
   if (bnd == NULL)
     throw ModelErrorException("DriftDiffusion boundary models can "
         "be used only on region boundaries");
 
-  Material* mat = bnd->get_material_A();
+  const Material* mat = bnd->get_material_A();
   SimulationInterface* si = SimulationInterface::get_simulation(get_simulator_id());
   if (!si->includes_region(bnd->get_id_A()))
     mat = bnd->get_material_B();

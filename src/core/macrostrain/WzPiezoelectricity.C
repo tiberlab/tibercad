@@ -17,7 +17,7 @@ WzPiezoelectricity::WzPiezoelectricity(const ModelOptions& options) : Piezoelect
 void WzPiezoelectricity::read_database(void)
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("piezoelectricity");
 
   e33 = db.get("e33", 0.0);

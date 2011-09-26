@@ -125,7 +125,7 @@ PhysicalModel*   Poisson::create_physical_model (const ModelOptions &options,
     const Material* mat) const throw (ModelErrorException)
 {
 
-  PoissonModel* model = dynamic_cast<PoissonModel*> ( PhysicalModelInterface::create("poisson",options) );
+  PoissonModel* model = PhysicalModelInterface::create<PoissonModel>("poisson", mat, options);
 
   if (model == NULL)
     throw ModelErrorException("Poisson: Physical model is not created" );

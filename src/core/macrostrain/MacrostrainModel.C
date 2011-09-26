@@ -108,7 +108,7 @@ void MacrostrainModel::get_converse_piezo_stress(Tensor2Sym& sigma, const Elem* 
       field(2) = field_components[id_E][1];
       field(3) = field_components[id_E][2];
 
-      Material*   mat = get_material();
+      const Material*   mat = get_material();
 
       const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 
