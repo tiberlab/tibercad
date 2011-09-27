@@ -1,6 +1,7 @@
 // $Id: main.C 2874 2011-07-15 21:12:36Z maufder $
 
 #include "boost/algorithm/string/trim.hpp"
+#include "boost/regex.hpp"
 
 #include "TiberCad.h"
 #include "Utils.h"
@@ -80,6 +81,13 @@ namespace
     cout << endl << "Usage: tibercad configfile" << endl << endl;
 # endif
   }
+
+  void replace(std::string& s, const std::string& from, const std::string& to)
+  {
+    const boost::regex e(from);
+    string news = regex_replace(s, e, to, boost::match_default | boost::format_sed);
+    s = news;
+  }
 }
 
 
@@ -117,7 +125,7 @@ class Compiler
     static std::map<std::string, Compiler*> _compilers;
 
     //! File extension to compiler object
-    static std::map<std::string, Compiler*> _file_association;
+    static std::map<std::string, string> _file_association;
 
 };
 
@@ -296,10 +304,10 @@ int main (int argc, char** argv)
     process_module(it->second.get_name(), it->second);
   }
   
-  
-
   return error;
 }
+
+
 
 
 
@@ -307,10 +315,22 @@ int main (int argc, char** argv)
 map<string, Compiler*>
 Compiler::_compilers;
 
+map<string, string>
+Compiler::_file_association;
 
 void
 Compiler::setup(const ModelOptions& options)
 {
+
+  _file_association["C"] = "C++";
+  _file_association["cpp"] = "C++";
+  _file_association["cxx"] = "C++";
+  _file_association["c"] = "C";
+  _file_association["f"] = "Fortran";
+  _file_association["F"] = "Fortran";
+  _file_association["f90"] = "Fortran";
+
+
   ModelOptions::const_submodel_iterator it(options.submodels_begin());
   ModelOptions::const_submodel_iterator end(options.submodels_end());
   for ( ; it != end; ++it)
@@ -329,6 +349,7 @@ Compiler::setup(const ModelOptions& options)
     opts.set_key(it->second.get_key());
 
     Compiler* comp = new Compiler(opts);
+
     _compilers[opts.get_key()] = comp;
 
   }
@@ -349,28 +370,58 @@ Compiler::compile(const std::string& compiler, const std::string& source)
 }
 
 
+int
+Compiler::compile(const std::string& source)
+{
+  string suffix = Utils::file_extension(source);
+  map<string, string>::iterator it(_file_association.find(suffix));
+  if (it == _file_association.end())
+  {
+    cerr << "Unknwon file type: " << suffix << endl;
+    exit(1);
+  }
+
+  return compile(it->second, source);
+}
+
 
 Compiler::Compiler(const ModelOptions& options) :
   _options(options)
 {
+
   ostringstream pre;
   pre << "-DARCH=" + string(ARCH);
 
   string path = options.get_option("sdk_path", tc_root);
+  replace(path, "@ARCH", ARCH);
 
   vector<string> includes;
   options.get_option("includes", includes);
   for (size_t i = 0; i < includes.size(); ++i)
-    pre << " -I" << path << "/" << includes[i];
+  {
+    string inc = includes[i];
+    replace(inc, "@ARCH", ARCH);
+    pre << " -I" << path << "/" << inc;
+  }
 
   _preprocessor_flags = pre.str();
+
+  _compiler_flags = options.get_option("compiler_flags", "");
+#if defined(_WIN32)
+  replace(_compiler_flags, "-fPIC", "");
+#endif
+
+  _linker_flags = options.get_option("linker_flags", "");
 }
+
 
 inline
 string
 Compiler::_executable(void)
 {
-  return tc_root + "/" + _options["executable"];
+  string exe(_options["executable"]);
+  replace(exe, "@ARCH", ARCH);
+  return tc_root + "/" + exe;
 }
 
 
@@ -379,11 +430,11 @@ Compiler::_compile(const std::string& source)
 {
   cout << "Compiling " << source << " (" << _options.get_key() << ") ...\n";
 
+  string basename = Utils::basename(source);
+
   ostringstream cmdline;
   cmdline << _executable() << " " << _preprocessor_flags << " " <<
     _compiler_flags << " " << source;
-
-  //cout << cmdline.str();
 
   return system(cmdline.str().c_str());
 }

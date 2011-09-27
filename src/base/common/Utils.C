@@ -124,6 +124,14 @@ Utils::basename(const std::string& file)
   return boost::filesystem::basename(p);
 }
 
+std::string
+Utils::file_extension(const std::string& file)
+{
+  boost::filesystem::path p(file, boost::filesystem::native);
+
+  return boost::filesystem::extension(p);
+}
+
 
 std::string
 Utils::time_to_string(double seconds)

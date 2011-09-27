@@ -162,6 +162,10 @@ class Utils
     static std::string basename(const std::string& file);
 
 
+    //! Return the file extension
+    static std::string file_extension(const std::string& file);
+
+
     //! Convert a windows style path to a cygwin POSIX pathname like
     static void convert_win32_path_to_posix(std::string& path);
 

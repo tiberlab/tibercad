@@ -7,6 +7,10 @@ include $(topdir)/Make.common
 
 srcfiles := build_module.C
 objects	:= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(srcfiles))
+objects += $(topdir)/src/base/common/.$(ARCH)/Utils.$(METHOD).o
+objects += $(topdir)/src/base/common/.$(ARCH)/ModelOptions.$(METHOD).o
+objects += $(topdir)/src/base/io/.$(ARCH)/InputParser.$(METHOD).o
+objects += $(topdir)/src/base/io/.$(ARCH)/Messages.$(METHOD).o
 
 
 
@@ -26,7 +30,7 @@ all: build_module
 
 build_module: $(objects) 
 	@echo "Compiling build_module executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(LDFLAGS) -ltibercad
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) -Wl,--as-needed $(LDFLAGS)
 
 
 
