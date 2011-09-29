@@ -131,6 +131,21 @@ AtomisticStructure::init(const std::string& name,
 
     build_bond_map();
 
+    
+  if (_options.find_option("print"))
+  {
+    std::vector<std::string> extensions;
+    _options.get_option("print", extensions);
+    for (int i = 0; i < extensions.size(); i++)
+    {
+      std::string name(_name + "." + extensions[i]);
+      print_structure(name);
+    }
+  }
+  else
+    print_structure(_name + ".xyz");
+
+
  }
 
   // Build material representation
