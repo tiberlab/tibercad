@@ -97,11 +97,12 @@ class Compiler
 
     static void setup(const ModelOptions& options);
 
-    static int compile(const std::string& source);
+    static std::string compile(const std::string& source, const std::string& compiler = "");
 
-    static int compile(const std::string& compiler, const std::string& source);
+    static int link(const std::string& target, const std::vector<std::string>& sources,
+        const std::string& linker = "C++");
 
-    static int link(const std::string& target, const std::string& sources);
+    static void add_library(const ModelOptions& options, const std::string& compiler = "");
 
     //bool static_link(const std::string& target, const std::string& sources);
 
@@ -119,7 +120,7 @@ class Compiler
 
     std::string _executable(void);
 
-    int _compile(const std::string& source);
+    std::string _compile(const std::string& source);
 
     //! Compiler name to compiler object
     static std::map<std::string, Compiler*> _compilers;
@@ -292,6 +293,12 @@ int main (int argc, char** argv)
 
   Compiler::setup(it->second);
 
+  it = global_config.submodels_begin("Library");
+  for ( ; it != global_config.submodels_end("Library"); ++it)
+  {
+    Compiler::add_library(it->second);
+  }
+
 
   ModelOptions config;
   parser.parse_file(inputfile, config);
@@ -322,13 +329,13 @@ void
 Compiler::setup(const ModelOptions& options)
 {
 
-  _file_association["C"] = "C++";
-  _file_association["cpp"] = "C++";
-  _file_association["cxx"] = "C++";
-  _file_association["c"] = "C";
-  _file_association["f"] = "Fortran";
-  _file_association["F"] = "Fortran";
-  _file_association["f90"] = "Fortran";
+  _file_association[".C"] = "C++";
+  _file_association[".cpp"] = "C++";
+  _file_association[".cxx"] = "C++";
+  _file_association[".c"] = "C";
+  _file_association[".f"] = "Fortran";
+  _file_association[".F"] = "Fortran";
+  _file_association[".f90"] = "Fortran";
 
 
   ModelOptions::const_submodel_iterator it(options.submodels_begin());
@@ -356,33 +363,66 @@ Compiler::setup(const ModelOptions& options)
 }
 
 
-int
-Compiler::compile(const std::string& compiler, const std::string& source)
+
+std::string
+Compiler::compile(const std::string& source, const std::string& compiler)
 {
-  map<string, Compiler*>::iterator it(_compilers.find(compiler));
-  if (it == _compilers.end())
+  map<string, Compiler*>::iterator comp(_compilers.end());
+
+  if (compiler.empty())
+  {
+    string suffix = Utils::file_extension(source);
+    map<string, string>::iterator it(_file_association.find(suffix));
+    if (it == _file_association.end())
+    {
+      cerr << "Unknwon file type: " << suffix << endl;
+      exit(1);
+    }
+
+    comp = _compilers.find(it->second);
+  }
+  else
+    comp = _compilers.find(compiler);
+
+  if (comp == _compilers.end())
   {
     cerr << "Compiler " << compiler << " not configured." << endl;
     exit(1);
   }
 
-  return it->second->_compile(source);
+  return comp->second->_compile(source);
 }
 
 
-int
-Compiler::compile(const std::string& source)
+void
+Compiler::add_library(const ModelOptions& options, const std::string& compiler)
 {
-  string suffix = Utils::file_extension(source);
-  map<string, string>::iterator it(_file_association.find(suffix));
-  if (it == _file_association.end())
+  ostringstream pre;
+
+  string path = options.get_option("path", tc_root);
+  replace(path, "@ROOT", tc_root);
+  replace(path, "@ARCH", ARCH);
+  if (path[0] != '/')
+    path = tc_root + "/" + path;
+
+  vector<string> includes;
+  options.get_option("includes", includes);
+  for (size_t i = 0; i < includes.size(); ++i)
   {
-    cerr << "Unknwon file type: " << suffix << endl;
-    exit(1);
+    string inc = includes[i];
+    replace(inc, "@ARCH", ARCH);
+    pre << " -I" << path << "/" << inc;
   }
 
-  return compile(it->second, source);
+  if (compiler.empty())
+  {
+    map<string, Compiler*>::iterator it(_compilers.begin());
+    for ( ; it != _compilers.end(); ++it)
+      it->second->_preprocessor_flags += " " + pre.str();
+  }
+
 }
+
 
 
 Compiler::Compiler(const ModelOptions& options) :
@@ -393,6 +433,7 @@ Compiler::Compiler(const ModelOptions& options) :
   pre << "-DARCH=" + string(ARCH);
 
   string path = options.get_option("sdk_path", tc_root);
+  replace(path, "@ROOT", tc_root);
   replace(path, "@ARCH", ARCH);
 
   vector<string> includes;
@@ -425,7 +466,7 @@ Compiler::_executable(void)
 }
 
 
-int
+std::string
 Compiler::_compile(const std::string& source)
 {
   cout << "Compiling " << source << " (" << _options.get_key() << ") ...\n";
@@ -436,7 +477,12 @@ Compiler::_compile(const std::string& source)
   cmdline << _executable() << " " << _preprocessor_flags << " " <<
     _compiler_flags << " " << source;
 
-  return system(cmdline.str().c_str());
+  cout << cmdline.str() << endl;
+  string target;
+  if (system(cmdline.str().c_str()) == 0)
+    target = basename + ".o";
+
+  return target;
 }
 
 
@@ -493,7 +539,7 @@ void process_module(const string& name, const ModelOptions& options)
   for (size_t i = 0; i < sources.size(); ++i)
   {
     cmdline << " " << sources[i];
-    Compiler::compile("C++", sources[i]);
+    Compiler::compile(sources[i]);
   }
 
   //cout << "Compiling " << libfile << " ...";
