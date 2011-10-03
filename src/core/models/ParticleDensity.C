@@ -343,7 +343,10 @@ ParticleDensity::calculate_density(void)
     }
   }
 
-  _gamma = _density / (_N_eff * exp(_argument));
+  if (_density > 1e-9)
+    _gamma = _density / (_N_eff * exp(_argument));
+  else
+    _gamma = 1;
 }
 
 

@@ -30,7 +30,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
   //ThermalConductivityModel* get_thermal_conductivity_model(void) const;
 
 
-  const double get_total_heat_source(void) const;
+  double get_total_heat_source(void) const;
 
   const RealTensor& get_total_thermal_conductivity(void) const;
 
@@ -45,8 +45,6 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
     virtual PhysicalModelInterface* create_new(void) const;
 
 
-  void do_init_alloy(const PhysicalModelInterface *comp_A,
-		     const PhysicalModelInterface *comp_B, double xa){};
     //! Initialize
     virtual void do_init(void);
 
@@ -66,11 +64,11 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 
 
 
-  double  _heat_source;
+  ThermalConductivityModel* _tcm;
 
   RealTensor _kappa;
-  
-  ThermalConductivityModel* _tcm; 
+
+  double  _heat_source;
 
   //!Heat Source model map
   std::vector<HeatSourceModel* > _hsm;
@@ -93,10 +91,9 @@ void  ThermalModel::_destroy( TiberModelObject* p)
 
 
 inline
-const double 
+double
 ThermalModel::get_total_heat_source(void) const
 {
-
   return _heat_source;
 
 }

@@ -2,6 +2,7 @@
 
 #include "boost/algorithm/string/trim.hpp"
 #include "boost/regex.hpp"
+#include "boost/filesystem.hpp"
 
 #include "TiberCad.h"
 #include "Utils.h"
@@ -97,10 +98,11 @@ class Compiler
 
     static void setup(const ModelOptions& options);
 
-    static std::string compile(const std::string& source, const std::string& compiler = "");
+    static std::string compile(const std::string& source, const std::string& flags = "",
+        const std::string& compiler = "");
 
-    static int link(const std::string& target, const std::vector<std::string>& sources,
-        const std::string& linker = "C++");
+    static int link(const std::string& target, const std::vector<std::string>& objects,
+        const std::string& flags = "", const std::string& linker = "C++");
 
     static void add_library(const ModelOptions& options, const std::string& compiler = "");
 
@@ -120,7 +122,10 @@ class Compiler
 
     std::string _executable(void);
 
-    std::string _compile(const std::string& source);
+    std::string _compile(const std::string& source, const std::string& flags);
+
+    int _link(const std::string& target, const std::vector<std::string>& objects,
+        const std::string& flags);
 
     //! Compiler name to compiler object
     static std::map<std::string, Compiler*> _compilers;
@@ -352,6 +357,9 @@ Compiler::setup(const ModelOptions& options)
     if (options.find_option("includes"))
       opts.set_option("includes", options.get_option("includes", ""));
 
+    if (options.find_option("linker_flags"))
+      opts.set_option("linker_flags", options.get_option("linker_flags", ""));
+
     opts += it->second;
     opts.set_key(it->second.get_key());
 
@@ -365,7 +373,8 @@ Compiler::setup(const ModelOptions& options)
 
 
 std::string
-Compiler::compile(const std::string& source, const std::string& compiler)
+Compiler::compile(const std::string& source, const std::string& flags,
+    const std::string& compiler)
 {
   map<string, Compiler*>::iterator comp(_compilers.end());
 
@@ -390,8 +399,27 @@ Compiler::compile(const std::string& source, const std::string& compiler)
     exit(1);
   }
 
-  return comp->second->_compile(source);
+  return comp->second->_compile(source, flags);
 }
+
+
+
+int
+Compiler::link(const std::string& target, const std::vector<std::string>& objects,
+    const std::string& flags, const std::string& linker)
+{
+  map<string, Compiler*>::iterator comp(_compilers.find(linker));
+
+  if (comp == _compilers.end())
+  {
+    cerr << "Compiler " << linker << " not configured." << endl;
+    exit(1);
+  }
+
+  return comp->second->_link(target, objects, flags);
+}
+
+
 
 
 void
@@ -410,15 +438,46 @@ Compiler::add_library(const ModelOptions& options, const std::string& compiler)
   for (size_t i = 0; i < includes.size(); ++i)
   {
     string inc = includes[i];
+    replace(inc, "@ROOT", tc_root);
     replace(inc, "@ARCH", ARCH);
-    pre << " -I" << path << "/" << inc;
+    if (inc[0] != '/')
+      pre << " -I" << path << "/" << inc;
+    else
+      pre << " -I" << inc;
+  }
+
+  ostringstream linkerflags;
+
+  string libpath;
+  libpath = options.get_option("libpath", libpath);
+  if (!libpath.empty())
+  {
+    replace(libpath, "@ROOT", tc_root);
+    replace(libpath, "@ARCH", ARCH);
+    if (libpath[0] != '/')
+      linkerflags << "-L " << tc_root << "/" << libpath << " ";
+    else
+      linkerflags << "-L " << libpath << " ";
+  }
+
+  vector<string> ldflags;
+  options.get_option("linker_flags", ldflags);
+  for (size_t i = 0; i < ldflags.size(); ++i)
+  {
+    string flags = ldflags[i];
+    replace(flags, "@ROOT", tc_root);
+    replace(flags, "@ARCH", ARCH);
+    linkerflags << flags;
   }
 
   if (compiler.empty())
   {
     map<string, Compiler*>::iterator it(_compilers.begin());
     for ( ; it != _compilers.end(); ++it)
+    {
       it->second->_preprocessor_flags += " " + pre.str();
+      it->second->_linker_flags += " " + linkerflags.str();
+    }
   }
 
 }
@@ -445,6 +504,8 @@ Compiler::Compiler(const ModelOptions& options) :
     pre << " -I" << path << "/" << inc;
   }
 
+  pre << " -I " << boost::filesystem::current_path();
+
   _preprocessor_flags = pre.str();
 
   _compiler_flags = options.get_option("compiler_flags", "");
@@ -452,7 +513,10 @@ Compiler::Compiler(const ModelOptions& options) :
   replace(_compiler_flags, "-fPIC", "");
 #endif
 
-  _linker_flags = options.get_option("linker_flags", "");
+#if !defined(_WIN32)
+  _linker_flags = "-Wl,--as-needed ";
+#endif
+  _linker_flags += options.get_option("linker_flags", "");
 }
 
 
@@ -462,28 +526,52 @@ Compiler::_executable(void)
 {
   string exe(_options["executable"]);
   replace(exe, "@ARCH", ARCH);
-  return tc_root + "/" + exe;
+  if (exe[0] != '/')
+    exe = tc_root + "/" + exe;
+
+  return exe;
 }
 
 
 std::string
-Compiler::_compile(const std::string& source)
+Compiler::_compile(const std::string& source, const std::string& flags)
 {
   cout << "Compiling " << source << " (" << _options.get_key() << ") ...\n";
 
   string basename = Utils::basename(source);
+  string target = basename + ".o";
 
   ostringstream cmdline;
   cmdline << _executable() << " " << _preprocessor_flags << " " <<
-    _compiler_flags << " " << source;
+    _compiler_flags << " " << flags << " -o " << target << " " << source;
 
-  cout << cmdline.str() << endl;
-  string target;
-  if (system(cmdline.str().c_str()) == 0)
-    target = basename + ".o";
+  //cout << cmdline.str() << endl;
+  if (system(cmdline.str().c_str()) != 0)
+    target = "";
 
   return target;
 }
+
+
+
+int
+Compiler::_link(const std::string& target, const std::vector<std::string>& objects,
+    const std::string& flags)
+{
+  cout << "Linking " << target << " (" << _options.get_key() << ") ...\n";
+
+  ostringstream cmdline;
+  cmdline << _executable();
+  for (size_t i = 0; i << objects.size(); ++i)
+    cmdline << " " << objects[i];
+
+  cmdline << " " << flags << " " <<_linker_flags << " " << " -o " << target;
+
+  cout << cmdline.str() << endl;
+
+  return system(cmdline.str().c_str());
+}
+
 
 
 void process_module(const string& name, const ModelOptions& options)
@@ -492,6 +580,22 @@ void process_module(const string& name, const ModelOptions& options)
   options.get_option("sources", sources);
 
   string creatable = options.get_option("creatable", "");
+
+  string module = options.get_option("module", "");
+
+  string modulename = options.get_key();
+  string type = options.get_name();
+  if (modulename == "Module")
+  {
+    modulename = options.get_name();
+    module = modulename;
+    type = options.get_option("type", "");
+  }
+
+  if (!type.empty())
+    modulename += "_" + type;
+
+  cout << "Processing module " << modulename << " ...\n";
 
   char* root = getenv("TIBERCADROOT");
 
@@ -505,44 +609,62 @@ void process_module(const string& name, const ModelOptions& options)
   string libsuffix(".so");
 #endif
 
-  string tcroot(root);
-  string sdkdir(tcroot + "/SDK");
+  string compileflags = options.get_option("compiler_flags", "");
+  compileflags += "-DMODULE_NAME=" + module;
 
-  string cpp(sdkdir);
-  cpp += "/compiler/" + string(ARCH) + "/bin/g++" + binsuffix;
-
-  string cppflags;
-  cppflags += "-DARCH=" + string(ARCH) + " ";
-  cppflags += "-I" + sdkdir + "/petsc-3.0.0-p12/include ";
-  cppflags += "-I" + sdkdir + "/petsc-3.0.0-p12/" + ARCH + "/include ";
-  cppflags += "-I" + sdkdir + "/slepc-3.0.0-p7/include ";
-  cppflags += "-I" + sdkdir + "/slepc-3.0.0-p7/" + ARCH + "/include ";
-  cppflags += "-I" + string(root) + "/include/base/common";
-
-  string cxxflags;
-  cxxflags += "-std=gnu++0x -pthread ";
-#if !defined(_WIN32)
-  cxxflags += "-fPIC ";
-#endif
-
-  string ldflags;
-  ldflags += "-shared ";
-  ldflags += "-L" + tcroot + "/" + ARCH + "/lib ";
-  ldflags += "-Wl,-rpath,\'$$ORIGIN\' -Wl,-rpath,\'$$ORIGIN/../lib\' ";
-
-  string libfile = name + libsuffix;
-
-  ostringstream cmdline;
-  cmdline << cpp;
-  cmdline << " " << cppflags << " " << cxxflags << " " << ldflags
-      << " -o " << libfile;
+  vector<string> objects;
   for (size_t i = 0; i < sources.size(); ++i)
   {
-    cmdline << " " << sources[i];
-    Compiler::compile(sources[i]);
+    string obj = Compiler::compile(sources[i], compileflags);
+    if (obj.empty())
+    {
+      cerr << "Error in compilation: Could not compile "
+          << sources[i] << endl;
+      exit(1);
+    }
+
+    objects.push_back(obj);
   }
 
-  //cout << "Compiling " << libfile << " ...";
-  //system(cmdline.str().c_str());
- 
+  string linkflags = options.get_option("linker_flags", "");
+
+  string target = modulename + libsuffix;
+  Compiler::link(target, objects, linkflags);
+
+  string instpath = options.get_option("installpath", "");
+  replace(instpath, "@ARCH", ARCH);
+  replace(instpath, "@ROOT", tc_root);
+  replace(instpath, "@MODULE", modulename);
+  if (instpath[0] != '/')
+    instpath = tc_root + "/" + instpath;
+
+  using namespace boost::filesystem;
+  path from("./" + target);
+  path to(instpath + "/" + target);
+  copy_file(from, to, copy_option::overwrite_if_exists);
+  remove(from);
+
+
+  // recursively process submodules
+  ModelOptions::const_submodel_iterator it(options.submodels_begin());
+  ModelOptions::const_submodel_iterator end(options.submodels_end());
+  for ( ; it != end; ++it)
+  {
+    if (it->first == "Dependency") continue;
+
+    ModelOptions opts(it->second);
+    if (!opts.find_option("installpath"))
+      opts["installpath"] = instpath;
+
+    //string cpflags = opts.get_option("compiler_flags", "");
+    string ldflags = opts.get_option("linker_flags", "");
+    ldflags += "-Wl,--as-needed " + instpath + "/" + target;
+    opts["linker_flags"] = ldflags;
+
+    opts["module"] = module;
+
+    process_module(it->first, opts);
+  }
+
+
 }
