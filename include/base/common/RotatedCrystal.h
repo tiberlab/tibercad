@@ -34,7 +34,7 @@ class RotatedCrystal : public PhysicalModelInterface
   Tensor2Gen RotMatrix;
 
   //! calculates Bravais vectors, rotation matrix and lattice constants in calculation system 
-  virtual void calculate_lat_consts()=0;
+  virtual void calculate_lat_consts() {};
 
 
   //! Calculates rotation matrix
@@ -47,7 +47,7 @@ class RotatedCrystal : public PhysicalModelInterface
 
 
   //! Calculates rotation matrix basing on miller indexes 
-  virtual void calculate_rot_matrix_miller(std::vector<int> vec_x_mil, std::vector<int> vec_y_mil) = 0;
+  virtual void calculate_rot_matrix_miller(std::vector<int> vec_x_mil, std::vector<int> vec_y_mil) {};
 
 
 
@@ -111,20 +111,20 @@ class RotatedCrystal : public PhysicalModelInterface
 
 
   //!read lattice constant from the database
-  virtual void read_database ( ) =0;
+  virtual void read_database(void) {};
 
 
  
-  virtual void do_init(void) = 0;
+  virtual void do_init(void) ;
 
 
-  virtual void copy_from (const PhysicalModelInterface *rhs) = 0;
+  virtual void copy_from (const PhysicalModelInterface *rhs) {};
 
 
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) = 0;
+  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) {};
 
 
-  virtual PhysicalModelInterface* create_new(void) const = 0;
+  virtual PhysicalModelInterface* create_new(void) const {};
  
 
 

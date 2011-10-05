@@ -7,7 +7,12 @@
 RotatedCrystal::RotatedCrystal(const ModelOptions& options)
  : PhysicalModelInterface(options)
 {
-  
+  x_miller.resize(3, 0);
+  x_miller[0] = 1;
+  y_miller.resize(3, 0);
+  y_miller[1] = 1;
+  z_miller.resize(3, 0);
+  z_miller[2] = 1;
 }
 
 
@@ -15,8 +20,15 @@ RotatedCrystal::RotatedCrystal(const ModelOptions& options)
 RotatedCrystal*
 RotatedCrystal::create(const std::string& name, const ModelOptions& options)
 {
-  RotatedCrystal* rc = dynamic_cast<RotatedCrystal*>(
-      PhysicalModelInterface::create("cryst_" + name, options));
+  RotatedCrystal* rc = NULL;
+
+  if (name == "am")
+    rc = new RotatedCrystal(ModelOptions());
+  else
+  {
+    rc = dynamic_cast<RotatedCrystal*>(
+        PhysicalModelInterface::create("cryst_" + name, options));
+  }
 
   if (rc == NULL)
   {
@@ -150,5 +162,11 @@ Tensor2Sym RotatedCrystal::get_eps0(double lat_cont_substrate[3]) const
 
 }
 
+
+
+void RotatedCrystal::do_init(void)
+{
+  calculate_rot_matrix_miller(x_miller, y_miller);
+}
 
 //========================================================================//
