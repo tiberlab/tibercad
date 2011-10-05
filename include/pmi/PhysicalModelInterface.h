@@ -274,6 +274,14 @@ class PhysicalModelInterface : public TiberModelObject
     virtual void copy_from(const PhysicalModelInterface* rhs);
 
 
+    //! Create a new instance of the same model
+    /*!
+     * This is needed for creating alloy models. Ususally, the method does
+     * not have to be implemented.
+     */
+    virtual PhysicalModelInterface* create_new(void) const;
+
+
     //! Read the properties from the database
     /*!
      * Reads all needed physical properties from the database.

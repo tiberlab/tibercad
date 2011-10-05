@@ -225,7 +225,7 @@ class DDInterfaceModel : public PhysicalModel
 
 
     //! The creation method
-    static TiberModelObject* _create(const ModelOptions& options)
+    static TiberModelObject* _create(const ModelOptions& options, const void*)
     {
       return new DDInterfaceModel(options);
     }

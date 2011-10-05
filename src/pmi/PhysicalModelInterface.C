@@ -274,6 +274,26 @@ PhysicalModelInterface::copy(void) const
 }
 
 
+
+PhysicalModelInterface*
+PhysicalModelInterface::create_new(void) const
+{
+  create_t createfunc = get_creation_function();
+  if (createfunc == NULL)
+  {
+    ostringstream os;
+    //os << "Model " << get_name() << " cannot create a new instance of "
+    os << "Model cannot create a new instance of "
+        "the same type as the method \"create_new()\" is not "
+        "reimplemented.";
+    throw ModelErrorException(os.str());
+  }
+
+  return static_cast<PhysicalModelInterface*>(createfunc(get_options(), get_owner()));
+}
+
+
+
 string
 PhysicalModelInterface::get_default_name(void) const
 {
@@ -564,8 +584,6 @@ void
 PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& models,
     const std::string& type)
 {
-  string modname(type);
-
   models.resize(0);
 
   // loop over all submodels
@@ -574,11 +592,15 @@ PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& m
 
   for ( ; it != end; ++it)
   {
+    string modname(type);
+
     string modtype = ((it->second).get_option("type", (it->second).get_name()));
     (it->second).set_option("type", modtype);
 
     if (modtype.size() > 0)
       modname += string("_") + modtype;
+
+    cerr << type << "  " << modtype << "  " << modname << endl;
 
     // we try to create it from the same module
     PhysicalModelInterface* mod =

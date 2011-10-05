@@ -52,7 +52,7 @@ class TBDLLOCAL ElasticityModel : public PhysicalModel
   private:
 
 
-   static TiberModelObject*  _create(const ModelOptions& options);
+   static TiberModelObject* _create(const ModelOptions& options, const void*);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -113,7 +113,7 @@ ElasticityModel::ElasticityModel(const ModelOptions& options) :
 }
 
 inline
-TiberModelObject*  ElasticityModel::_create(const ModelOptions& options)
+TiberModelObject*  ElasticityModel::_create(const ModelOptions& options, const void*)
 {
 
   return new ElasticityModel(options);
