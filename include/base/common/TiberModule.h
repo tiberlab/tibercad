@@ -5,7 +5,7 @@
 
 #include "tiber_dll.h"
 
-#ifdef BUILD_TIBER_MODULES
+//#ifdef BUILD_TIBER_MODULES
 
 //
 // Provides macros needed to create a shared TiberCAD module
@@ -43,11 +43,11 @@
   } \
 
 
-#else
+//#else
 
-# define TIBER_MODULE(classname, model, ...)
+//# define TIBER_MODULE(classname, model, ...)
 
-#endif // BUILD_TIBER_MODULES
+//#endif // BUILD_TIBER_MODULES
 
 #ifndef MODULE_NAME
 #define MODULE_NAME

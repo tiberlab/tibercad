@@ -373,8 +373,8 @@ void
 TightBinding::build_map_elem_atoms(double projection_length)
 {
   
-  //! Get total number of elements 
-  //! (the map is oversized, but faster since the elem ID is used as key)
+  // Get total number of elements
+  // (the map is oversized, but faster since the elem ID is used as key)
   _elem_to_atoms.resize(get_mesh().n_elem());
 
   double scale = get_atomistic_structure()->get_scale();
@@ -396,7 +396,7 @@ TightBinding::build_map_elem_atoms(double projection_length)
   
   unsigned int N_wo_H = get_atomistic_structure()->get_N_without_H();
 
-  //! Estimate number of atoms in a sphere
+  // Estimate number of atoms in a sphere
   unsigned int Nat = round( sqrt(3.0)*3.1416/2.0 * pow(deltar_max/1.90, 3.0) );
 
   std::cout<<"(TB) proj length: "<<projection_length<<std::endl;

@@ -469,7 +469,7 @@ Thermal::do_assemble(EquationSystems& es, const std::string& system_name)
      // loop over the quadrature points
      for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
      {
-       mod.calculate(elem,q_point[qp]);
+       mod.calculate(elem, q_point[qp]);
        
        const RealTensor& kappa = mod.get_total_thermal_conductivity();
        double heat_source = mod.get_total_heat_source();

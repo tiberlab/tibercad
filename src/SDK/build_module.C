@@ -62,13 +62,19 @@ static string open_file(const char *filter = "All Files (*.*)\0*.*\0", HWND owne
 
 
 
-namespace
+namespace BuildModule
 {
   //! Interactive or batch mode (only useful for Win)
   bool interactive;
 
   //! Content of TIBERCADROOT
-  string tc_root;
+  std::string tc_root;
+
+  //! Module specific code
+  /*!
+   * These are mainly the creation and destruction methods
+   */
+  std::string module_code;
 
   void usage(void)
   {
@@ -145,7 +151,7 @@ void process_module(const string& name, const ModelOptions& options);
 int main (int argc, char** argv)
 {
 
-  interactive = true;
+  BuildModule::interactive = true;
 
   opterr = 0;
   int c;
@@ -153,22 +159,22 @@ int main (int argc, char** argv)
     switch (c)
     {
       case 'b':
-        interactive = false;
+        BuildModule::interactive = false;
         break;
 
       case '?':
         cout << "Unknown option: -" << (char) optopt << endl;
       default:
-        usage();
+        BuildModule::usage();
         return 1;
     }
 
 #ifdef _WIN32
-  if (!interactive)
+  if (!BuildModule::interactive)
 #endif
     if (optind >= argc)
     {
-      usage();
+      BuildModule::usage();
       return 1;
     }
 
@@ -234,7 +240,7 @@ int main (int argc, char** argv)
       {
         infile.close();
         cerr << "TiberCAD: Cannot open file " << inputfile <<  " for reading." << endl;
-        if (interactive) cin.get();
+        if (BuildModule::interactive) cin.get();
         return 1;
       }
       infile.close();
@@ -247,7 +253,7 @@ int main (int argc, char** argv)
       //if(!GetCurrentDirectory(sizeof(cwd) - 1, cwd))
       //{
       //  cerr << "TiberCAD: cannot get working directory." << endl;
-      //  if (interactive) cin.get();
+      //  if (BuildModule::interactive) cin.get();
       //  return 1;
       //}
 
@@ -260,7 +266,7 @@ int main (int argc, char** argv)
         if (SetCurrentDirectory(dirname.c_str()) == 0)
         {
           cerr << "TiberCAD: cannot set " << dirname << " as working directory." << endl;
-          if (interactive) cin.get();
+          if (BuildModule::interactive) cin.get();
           return 1;
         }
       }
@@ -282,12 +288,12 @@ int main (int argc, char** argv)
       cerr << "TIBERCADROOT environment variable is not set.\n";
       return 1;
     }
-    tc_root = string(root);
+    BuildModule::tc_root = string(root);
   }
 
   InputParser parser;
   ModelOptions global_config;
-  parser.parse_file(tc_root + "/share/modules.conf", global_config);
+  parser.parse_file(BuildModule::tc_root + "/share/modules.conf", global_config);
 
   ModelOptions::submodel_iterator it(global_config.submodels_begin("Compiler"));
   if (it == global_config.submodels_end("Compiler"))
@@ -303,6 +309,9 @@ int main (int argc, char** argv)
   {
     Compiler::add_library(it->second);
   }
+
+
+  BuildModule::module_code = global_config.get_option("module_code", "");
 
 
   ModelOptions config;
@@ -427,19 +436,19 @@ Compiler::add_library(const ModelOptions& options, const std::string& compiler)
 {
   ostringstream pre;
 
-  string path = options.get_option("path", tc_root);
-  replace(path, "@ROOT", tc_root);
-  replace(path, "@ARCH", ARCH);
+  string path = options.get_option("path", BuildModule::tc_root);
+  BuildModule::replace(path, "@ROOT", BuildModule::tc_root);
+  BuildModule::replace(path, "@ARCH", ARCH);
   if (path[0] != '/')
-    path = tc_root + "/" + path;
+    path = BuildModule::tc_root + "/" + path;
 
   vector<string> includes;
   options.get_option("includes", includes);
   for (size_t i = 0; i < includes.size(); ++i)
   {
     string inc = includes[i];
-    replace(inc, "@ROOT", tc_root);
-    replace(inc, "@ARCH", ARCH);
+    BuildModule::replace(inc, "@ROOT", BuildModule::tc_root);
+    BuildModule::replace(inc, "@ARCH", ARCH);
     if (inc[0] != '/')
       pre << " -I" << path << "/" << inc;
     else
@@ -452,10 +461,10 @@ Compiler::add_library(const ModelOptions& options, const std::string& compiler)
   libpath = options.get_option("libpath", libpath);
   if (!libpath.empty())
   {
-    replace(libpath, "@ROOT", tc_root);
-    replace(libpath, "@ARCH", ARCH);
+    BuildModule::replace(libpath, "@ROOT", BuildModule::tc_root);
+    BuildModule::replace(libpath, "@ARCH", ARCH);
     if (libpath[0] != '/')
-      linkerflags << "-L " << tc_root << "/" << libpath << " ";
+      linkerflags << "-L " << BuildModule::tc_root << "/" << libpath << " ";
     else
       linkerflags << "-L " << libpath << " ";
   }
@@ -465,8 +474,8 @@ Compiler::add_library(const ModelOptions& options, const std::string& compiler)
   for (size_t i = 0; i < ldflags.size(); ++i)
   {
     string flags = ldflags[i];
-    replace(flags, "@ROOT", tc_root);
-    replace(flags, "@ARCH", ARCH);
+    BuildModule::replace(flags, "@ROOT", BuildModule::tc_root);
+    BuildModule::replace(flags, "@ARCH", ARCH);
     linkerflags << flags;
   }
 
@@ -491,16 +500,16 @@ Compiler::Compiler(const ModelOptions& options) :
   ostringstream pre;
   pre << "-DARCH=" + string(ARCH);
 
-  string path = options.get_option("sdk_path", tc_root);
-  replace(path, "@ROOT", tc_root);
-  replace(path, "@ARCH", ARCH);
+  string path = options.get_option("sdk_path", BuildModule::tc_root);
+  BuildModule::replace(path, "@ROOT", BuildModule::tc_root);
+  BuildModule::replace(path, "@ARCH", ARCH);
 
   vector<string> includes;
   options.get_option("includes", includes);
   for (size_t i = 0; i < includes.size(); ++i)
   {
     string inc = includes[i];
-    replace(inc, "@ARCH", ARCH);
+    BuildModule::replace(inc, "@ARCH", ARCH);
     pre << " -I" << path << "/" << inc;
   }
 
@@ -510,7 +519,7 @@ Compiler::Compiler(const ModelOptions& options) :
 
   _compiler_flags = options.get_option("compiler_flags", "");
 #if defined(_WIN32)
-  replace(_compiler_flags, "-fPIC", "");
+  BuildModule::replace(_compiler_flags, "-fPIC", "");
 #endif
 
 #if !defined(_WIN32)
@@ -525,9 +534,9 @@ string
 Compiler::_executable(void)
 {
   string exe(_options["executable"]);
-  replace(exe, "@ARCH", ARCH);
+  BuildModule::replace(exe, "@ARCH", ARCH);
   if (exe[0] != '/')
-    exe = tc_root + "/" + exe;
+    exe = BuildModule::tc_root + "/" + exe;
 
   return exe;
 }
@@ -583,6 +592,9 @@ void process_module(const string& name, const ModelOptions& options)
 
   string module = options.get_option("module", "");
 
+  string module_code = options.get_option("module_code", BuildModule::module_code);
+  cerr << module_code << endl;
+
   string modulename = options.get_key();
   string type = options.get_name();
   if (modulename == "Module")
@@ -632,11 +644,11 @@ void process_module(const string& name, const ModelOptions& options)
   Compiler::link(target, objects, linkflags);
 
   string instpath = options.get_option("installpath", "");
-  replace(instpath, "@ARCH", ARCH);
-  replace(instpath, "@ROOT", tc_root);
-  replace(instpath, "@MODULE", modulename);
+  BuildModule::replace(instpath, "@ARCH", ARCH);
+  BuildModule::replace(instpath, "@ROOT", BuildModule::tc_root);
+  BuildModule::replace(instpath, "@MODULE", modulename);
   if (instpath[0] != '/')
-    instpath = tc_root + "/" + instpath;
+    instpath = BuildModule::tc_root + "/" + instpath;
 
   using namespace boost::filesystem;
   path from("./" + target);
