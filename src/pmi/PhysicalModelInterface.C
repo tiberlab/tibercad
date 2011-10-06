@@ -600,7 +600,6 @@ PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& m
     if (modtype.size() > 0)
       modname += string("_") + modtype;
 
-    cerr << type << "  " << modtype << "  " << modname << endl;
 
     // we try to create it from the same module
     PhysicalModelInterface* mod =
