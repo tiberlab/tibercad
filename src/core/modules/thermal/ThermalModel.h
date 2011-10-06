@@ -24,7 +24,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
     virtual ~ThermalModel(void) {};
 
     //! Creator function
-    static ThermalModel* create(const ModelOptions& options);
+    static ThermalModel* create(const Material* mat, const ModelOptions& options);
 
 
   //ThermalConductivityModel* get_thermal_conductivity_model(void) const;
@@ -41,8 +41,6 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 
     //! Constructor
     ThermalModel(const ModelOptions& options); 
-    //! Create a new instance of this type
-    virtual PhysicalModelInterface* create_new(void) const;
 
 
   void do_init_alloy(const PhysicalModelInterface *comp_A,
@@ -60,7 +58,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 
   private:
 
-  static TiberModelObject*  _create(const ModelOptions& options);
+  static TiberModelObject*  _create(const ModelOptions& options, const void*);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -78,7 +76,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 };
 
 inline
-TiberModelObject*  ThermalModel::_create(const ModelOptions& options)
+TiberModelObject*  ThermalModel::_create(const ModelOptions& options, const void*)
 {
   return new ThermalModel(options);
 }
@@ -109,20 +107,6 @@ ThermalModel::get_total_thermal_conductivity(void) const
 }
 
 
-
-inline
-ThermalModel*
-ThermalModel::create(const ModelOptions& options)
-{
-  return dynamic_cast<ThermalModel*>(PhysicalModelInterface::create(_create,_destroy,options));
-}
-
-inline
-PhysicalModelInterface*
-ThermalModel::create_new(void) const
-{
-  return new ThermalModel(get_options());
-}
 
 
 #endif // _DEFAULTMODEL_H_

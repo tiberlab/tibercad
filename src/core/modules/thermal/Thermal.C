@@ -288,7 +288,7 @@ Thermal::create_bulk_model(const ModelOptions& options,
     const Material* mat) const
 {
 
-  return  ThermalModel::create(options);
+  return  ThermalModel::create(mat, options);
 
 }
 
@@ -296,9 +296,9 @@ Thermal::create_bulk_model(const ModelOptions& options,
 
 PhysicalModel*
 Thermal::create_boundary_model(const ModelOptions& options,
-    const Material* material_A, const Material* material_B) const
+    const MaterialBoundary* boundary) const
 {
-  return ThermalBoundaryModel::create(options);
+  return ThermalBoundaryModel::create(boundary, options);
 }
 
 

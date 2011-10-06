@@ -22,6 +22,13 @@ ThermalModel::ThermalModel(const ModelOptions& options)
 
 }
 
+
+ThermalModel*
+ThermalModel::create(const Material* mat, const ModelOptions& options)
+{
+  return PhysicalModelInterface::create<ThermalModel>(_create,_destroy, mat, options);
+}
+
 void
 ThermalModel::prepare_submodels(void)
 {

@@ -74,9 +74,9 @@ LDFLAGS += @LDFLAGS@
 LDFLAGS += @FCLIBS@
 
 ifeq ($(build_modules),yes)
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${ARCH}/*" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*")
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${ARCH}/*" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*" -a ! -path "*/src/SDK/*")
 else
-  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*")
+  TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/SDK/*")
 endif
 
 
