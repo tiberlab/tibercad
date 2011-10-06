@@ -876,7 +876,7 @@ void ETB::parse_options(void)
   _upt_solver_options.ort_tol =  solopts.get_option("orthogonality_tolerance", 1e-5);
 
   //Get projection_length for quantum charge projection (Ang)
-  _upt_options.projection_length = get_option("projection_length", 1.0);
+  _upt_options.projection_length = get_option("projection_length", 2.0);
 
   //std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
   //std::cout << "done" << std::endl;
