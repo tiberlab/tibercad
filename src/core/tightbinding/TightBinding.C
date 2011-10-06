@@ -377,9 +377,19 @@ TightBinding::build_map_elem_atoms(double projection_length)
   //! (the map is oversized, but faster since the elem ID is used as key)
   _elem_to_atoms.resize(get_mesh().n_elem());
 
-  double tau = 1.0 / projection_length; // projection in Angstroms
-  const double deltar_max = 10 / tau;   // Maximum cutoff distance
-  double deltar, uhatom;
+  double scale = get_atomistic_structure()->get_scale();
+
+  // Maximum cutoff distance
+  //const double tau = 1.0 / projection_length; // projection in Angstroms
+  //const double deltar_max = (5.0*log(10.0) - log( 8.0*3.141593/(tau*tau*tau) )  ) / tau;   
+
+  
+  const double sigma = projection_length;
+  const double sigma2 = 2.0*sigma*sigma;
+  const double deltar2_max = sigma2*(5.0*log(10.0) - 1.5*log(2.0*3.141593*sigma)); 
+  const double deltar_max = sqrt(deltar2_max);
+
+  double deltar, deltar2, uhatom;
   double rho = 0.0;
   double x1, y1, z1;
   double x ,y, z;
@@ -387,19 +397,30 @@ TightBinding::build_map_elem_atoms(double projection_length)
   unsigned int N_wo_H = get_atomistic_structure()->get_N_without_H();
 
   //! Estimate number of atoms in a sphere
-  unsigned int Nat = round( sqrt(3)*3.1416/8 * pow(deltar_max/2.0, 3.0) );
+  unsigned int Nat = round( sqrt(3.0)*3.1416/2.0 * pow(deltar_max/1.90, 3.0) );
+
+  std::cout<<"(TB) proj length: "<<projection_length<<std::endl;
+  std::cout<<"(TB) Rmax: "<<deltar_max<<std::endl;
+  std::cout<<"(TB) Nat: "<<Nat<<std::endl;
 
   std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
 
-  MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+  MeshBase::const_element_iterator it = get_mesh().elements_begin();
+  const MeshBase::const_element_iterator end = get_mesh().elements_end();
 
   for ( ; it != end; ++it)
   { 
     const Elem* elem = *it;
-    
-    _elem_to_atoms[elem->id()].reserve(Nat);
+    int id = elem->id();
+    std::vector<unsigned int> temp;
+    unsigned int count = 0;
 
+    temp.reserve(Nat);
+ 
+    Point p = elem->centroid();
+    x=p(0)*scale;
+    y=p(1)*scale;
+    z=p(2)*scale;
 
     for (unsigned int iatm = 0; iatm  <  N_wo_H; iatm++)
     {
@@ -408,14 +429,23 @@ TightBinding::build_map_elem_atoms(double projection_length)
       y1 = structure[iatm].get_position(2);
       z1 = structure[iatm].get_position(3);
 
-      deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
-      
-      if (deltar > deltar_max) continue;
+      //deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
+      deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1);
+
+      if (deltar2 > deltar2_max) continue;
       else
       {
-        _elem_to_atoms.push_back(iatm);
-        
+        temp.push_back(iatm);
+	count++;
       }
     }
+
+    _elem_to_atoms[id].resize(count);
+
+    for (unsigned int iatm = 0; iatm  <  count; iatm++)
+    	_elem_to_atoms[id][iatm]=temp[iatm];
+
+    temp.clear();
+    
   }
 }

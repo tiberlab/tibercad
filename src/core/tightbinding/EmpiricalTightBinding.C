@@ -199,6 +199,20 @@ ETB::do_init(void){
   //std::cout << "addskdata done" << std::endl;
 
   //std::cout << "(ETB) init uptight begins" << std::endl;
+  Messages::info("creating map elem->atoms");
+  build_map_elem_atoms(_upt_options.projection_length);
+
+  
+  MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+
+  //for ( ; it != end; ++it)
+  //{ 
+  //  const Elem* elem = *it;
+  //  int id = elem->id();
+  //  if(get_neigh_atoms(id).size()>0)
+  //     cout<<"elem "<<id<<" n.n: "<<get_neigh_atoms(id).size()<<endl;
+  //}
 
   _init = 1;      // initialization must be called
   _assemble = 1;  // matrix assemble must be done
@@ -862,7 +876,7 @@ void ETB::parse_options(void)
   _upt_solver_options.ort_tol =  solopts.get_option("orthogonality_tolerance", 1e-5);
 
   //Get projection_length for quantum charge projection (Ang)
-  _upt_options.projection_length = get_option("projection_length", 2.0);
+  _upt_options.projection_length = get_option("projection_length", 1.0);
 
   //std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
   //std::cout << "done" << std::endl;
@@ -1177,19 +1191,24 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
     throw InitFailedException("Eigenstate index is larger than number of available eigenstates");
 
   for(j=0; j<N_atoms_wo_H; j++){densatm[j] = 0.0; }
-      k = 0; k_at = 0;
-      for (j = 0; j < N_atoms_wo_H; j++)
-      {
-	atom_sum = 0.0;
-	for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
-	{
-	    atom_sum += std::norm(_solution[eigenstate].eigen_vector[k]);
-	}
 
-	k_at = k;
+  k = 0; k_at = 0;
 
-	densatm[j] += atom_sum;
-      }
+  for (j = 0; j < N_atoms_wo_H; j++)
+  {
+    atom_sum = 0.0;
+    for (k = k_at; k < k_at + _ion_num_orbitals[j]; k++)
+    {
+      atom_sum += std::norm(_solution[eigenstate].eigen_vector[k]);
+    }
+    
+    k_at = k;
+    
+    densatm[j] = atom_sum;
+
+    //cout << j <<"   "<<densatm[j]<<endl;
+
+  }
 }
 
 void ETB::get_band_edges(void)
@@ -1439,30 +1458,36 @@ ETB::get_solution_secure(const Elem* elem,
 double
 ETB::build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const Point& r)
 {
-  //double scale = get_atomistic_structure()->get_scale();
-  double tau = 1.0 / _upt_options.projection_length; // projection in Angstroms
-  const double deltar_max = 10 / tau; //Maximum cutoff distance
-  double deltar, uhatom;
+  double scale = get_atomistic_structure()->get_scale();
+  //double tau = 1.0 / _upt_options.projection_length; // projection in Angstroms
+  const double sigma = _upt_options.projection_length;
+  const double sigma2 = 2.0*sigma*sigma;
+
+  double deltar, deltar2;
   double rho = 0.0;
   double x1, y1, z1;
   double x ,y, z;
   
-  x = r(0); y = r(1); z = r(2);
+  x = r(0)*scale; y = r(1)*scale; z = r(2)*scale;
 
   if (tb_density.size() != _N_without_H)
   {
     Messages::error("ERROR IN ETB: trying to build mesh density but tb density has wrong size");
     exit(1);
   }
-
+ 
   //! get structure
   std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
   //! get atoms that contribute to the density of an element
   std::vector<unsigned int> atoms = get_neigh_atoms(elem->id());
 
+  //cout<<x<<" "<<y<<" "<<z<<endl;
+
   for (unsigned int id = 0; id  < atoms.size(); id++)
   {
     unsigned int iatm = atoms[id];
+
+    //cout<<iatm<<":";
     
     // position is in Angstrom
     x1 = structure[iatm].get_position(1);
@@ -1470,12 +1495,20 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const 
     z1 = structure[iatm].get_position(3);
     
     //delta_r is in Angstrom
-    deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
-    
-    rho = rho + (tb_density[iatm] * tau * tau * tau * exp(-1.0 * deltar * tau));      
+    //deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
+    deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1);
+    //cout<<deltar<<";";
+
+    //rho = rho + (tb_density[iatm] * exp(-deltar * tau));      
+    rho = rho + (tb_density[iatm] * exp(- deltar2/sigma2 )); 
+
   }
   
-  rho = rho / (8.0 * 3.141592653589793);
+  //rho = rho *tau*tau*tau / (8.0 * 3.141592653589793);
+
+  double norm = 2.0 * 3.141592653589793 * sigma;
+  
+  rho = rho / sqrt(norm*norm*norm);
 
   //scale rho from q/Ang^3 to q/cm^3 (carrier density)
   rho =  rho * 1e24;
@@ -1486,16 +1519,18 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const 
 
 double
 ETB::build_rho2d(const std::vector<double>& tb_density, const Elem* elem, const Point& r)
-{
-  double tau = 1.0 / _upt_options.projection_length;
-  const double deltar_max = 10 / tau; //Maximum cutoff distance
-  double deltar, uhatom;
+{ 
+  double scale = get_atomistic_structure()->get_scale();
+  //double tau = 1.0 / _upt_options.projection_length;
+  double deltar, deltar2, uhatom;
+  const double sigma = _upt_options.projection_length;
+  const double sigma2 = 2.0*sigma*sigma;  
   double rho = 0.0;
   double x1, y1, z1;
   double x ,y, z;
 
 
-  x = r(0); y = r(1); z = 0.0;
+  x = r(0)*scale; y = r(1)*scale; z = 0.0;
 
   if (tb_density.size() != _N_without_H)
   {
@@ -1518,13 +1553,16 @@ ETB::build_rho2d(const std::vector<double>& tb_density, const Elem* elem, const 
     y1 = structure[iatm].get_position(2);
     z1 = 0.0;
     
-    deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) );
+    deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1);
     
-    rho = rho + (tb_density[iatm] * tau * tau * exp(-1.0 * deltar * tau));
-    
+    //rho = rho + (tb_density[iatm] * tau * tau * exp(-1.0 * deltar * tau));
+    rho = rho + (tb_density[iatm] * exp(- deltar2/sigma2 ));
+
   }
 
-  rho = rho / (2.0 * 3.141592653589793);
+  double norm = 2.0 * 3.141592653589793 * sigma; 
+  rho = rho / norm;
+  //rho = rho / (2.0 * 3.141592653589793);
 
   //scale rho from q/Ang^2 to q/cm^2 (carrier density)
   rho =  rho * 1e16;
@@ -1538,6 +1576,7 @@ double
 ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem)
 {
   //Projection length in mesh units
+  double scale = get_atomistic_structure()->get_scale();
   double tau = 1.0 / _upt_options.projection_length;
   const double deltar_max = 10 / tau; //Maximum cutoff distance
   double deltar, uhatom, l;
@@ -1546,7 +1585,7 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
 
   assert(elem->n_nodes() == 2);
 
-  x1 = elem->point(0)(0); x2 = elem->point(1)(0);
+  x1 = elem->point(0)(0)*scale; x2 = elem->point(1)(0)*scale;
 
   //just order nodes in ascending order, using "x_atm" temporary
   x_atm = x1;
@@ -1593,13 +1632,9 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
       }
     }
 
-  double normalize = 1.0;
-  //normalize = (period[4]*period[8] - period[7]*period[5]);
+  //scale rho from q/Ang to q/cm (carrier density)
+  rho =  rho * 1e8;
 
-  //rho = rho / normalize;
-
-  //double mesh_units = 100.0 * get_mesh_units();
-  //rho =  rho / ( mesh_units * mesh_units * mesh_units );
   //std::cout << "I builded average 1d" << std::endl;
   return rho;
 
@@ -1628,9 +1663,6 @@ ETB::do_setup_solution_variables(void)
 
   if (plot_solution("ProbabilityDensityNodes"))
             add_plot_variable(MeshStatesNodes);
-
-  Messages::info("creating map elem->atoms");
-  build_map_elem_atoms(_upt_options.projection_length);
 
 }
 
