@@ -434,6 +434,24 @@ SimulationInterface::setup_atomistic_structure(void)
 }
 
 
+void
+SimulationInterface::reinit(void)
+{
+  // reinitialize all models
+  set<PhysicalModel*>::iterator it(get_physical_models().begin());
+  set<PhysicalModel*>::iterator end(get_physical_models().end());
+  for ( ; it != end; ++it)
+    it->second->reinit();
+
+  it = get_interface_models().begin();
+  end = get_interface_models().end();
+  for ( ; it != end; ++it)
+    it->second->reinit();
+
+  do_reinit();
+}
+
+
 
 void
 SimulationInterface::init(void)
@@ -678,6 +696,12 @@ SimulationInterface::solve(void)
 {
 
 
+  if (_environment != NULL)
+    _environment->prepare_for_solve();
+
+  // call reinitialization
+  reinit();
+
   PerfLog perflog(get_name() + ": solve", false);
   perflog.start_event("solve");
 
@@ -699,9 +723,6 @@ SimulationInterface::solve(void)
     m.newline();
   }
   m.indent();
-
-  if (_environment != NULL)
-    _environment->prepare_for_solve();
 
 
 

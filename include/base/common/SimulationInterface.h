@@ -193,6 +193,13 @@ class SimulationInterface : public TiberModelObject
     void init(void);
 
 
+    //! Reinitialize the system before each solve
+    /*!
+     * This method is called before calling do_solve()
+     */
+    void reinit(void);
+
+
     //! Setup the available solution variables
     /*!
      * This has to be done before calling init() of all models
@@ -696,16 +703,6 @@ class SimulationInterface : public TiberModelObject
     ModelOptions& get_solver_options(void);
 
 
-    //! Do the initialization
-    /*!
-     * Has to be implemented by derived classes.
-     *
-     * This method should initialize everything that is needed to do a
-     * simulation.
-     */
-    virtual void do_init(void) = 0;
-
-
     //! Initialize the internal mesh pointer
     /*!
      * The default implementation just takes the mesh pointer from the device,
@@ -739,6 +736,23 @@ class SimulationInterface : public TiberModelObject
      * some reasonable starting values etc.
      */
     virtual void do_equilibrium(void) {};
+
+
+    //! Do the initialization
+    /*!
+     * Has to be implemented by derived classes.
+     *
+     * This method should initialize everything that is needed to do a
+     * simulation.
+     */
+    virtual void do_init(void) = 0;
+
+
+    //! Do some reinitialization before any solve
+    /*!
+     * May be reimplemented by derived classes if necessary.
+     */
+    virtual void do_reinit(void) {};
 
 
     //! Do the solve

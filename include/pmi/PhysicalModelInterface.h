@@ -208,6 +208,14 @@ class PhysicalModelInterface : public TiberModelObject
     void init(void);
 
 
+    //! Reinitialize the model
+    /*!
+     * This method will be called before any solve of the associated
+     * simulation module.
+     */
+    void reinit(void);
+
+
     //! Initialize this model as an alloy with two components
     /*!
      * It calls read_database_alloy(), do_init_alloy() and do_init()
@@ -251,7 +259,14 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Print some info
-    virtual void do_print_info(void){};
+    virtual void do_print_info(void) {};
+
+
+    //! Reinitialize before solving the module
+    /*!
+     * May be reimplemented if necesary
+     */
+    virtual void do_reinit(void) {};
 
 
     //! Initialize the model
