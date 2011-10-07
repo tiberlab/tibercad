@@ -43,6 +43,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
     ThermalModel(const ModelOptions& options); 
 
 
+
   void do_init_alloy(const PhysicalModelInterface *comp_A,
 		     const PhysicalModelInterface *comp_B, double xa){};
     //! Initialize

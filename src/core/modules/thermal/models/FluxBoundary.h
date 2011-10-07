@@ -47,9 +47,6 @@ class TBDLLOCAL FluxBoundary : public ThermalBoundaryModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
 
   private:
 
@@ -79,11 +76,5 @@ FluxBoundary::create(const ModelOptions& options)
 
 
 
-inline
-PhysicalModelInterface*
-FluxBoundary::create_new(void) const
-{
-  return new FluxBoundary(get_options());
-}
 
 #endif // _POISSONDIRICHLET_H_

@@ -256,7 +256,7 @@ PhysicalModelInterface::copy(void) const
   PhysicalModelInterface* new_copy = NULL;
 
   // this is safe
-  new_copy = static_cast<PhysicalModelInterface*>(this->create_new());
+  new_copy = this->create_new();
 
   if (new_copy != NULL)
   {

@@ -47,10 +47,6 @@ class TBDLLOCAL HeatReservoir : public ThermalBoundaryModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
-
-
   private:
 
     //! Constructor
@@ -78,12 +74,5 @@ HeatReservoir::create(const ModelOptions& options)
 }
 
 
-
-inline
-PhysicalModelInterface*
-HeatReservoir::create_new(void) const
-{
-  return new HeatReservoir(get_options());
-}
 
 #endif // _POISSONDIRICHLET_H_

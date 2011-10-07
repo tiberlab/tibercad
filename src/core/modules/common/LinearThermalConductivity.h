@@ -49,9 +49,6 @@ protected:
   //  virtual void read_interface_database(void);
   
   
-  //! Create a new object of the same type
-  virtual PhysicalModelInterface* create_new(void) const;
-  
   
 private:
    
@@ -67,12 +64,7 @@ private:
 };
 
 
-inline
-PhysicalModelInterface*
-LinearThermalConductivity::create_new(void) const
-{
-  return new   LinearThermalConductivity(get_options());
-}
+
 
 inline
 LinearThermalConductivity*

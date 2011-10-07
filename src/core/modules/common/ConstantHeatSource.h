@@ -46,8 +46,6 @@ class TBDLLOCAL ConstantHeatSource : public HeatSourceModel
     // virtual void read_interface_database(void);
 
 
-    //! Create a new object of the same type
-    virtual PhysicalModelInterface* create_new(void) const;
 
 
   private:
@@ -61,12 +59,7 @@ class TBDLLOCAL ConstantHeatSource : public HeatSourceModel
 };
 
 
-inline
-PhysicalModelInterface*
-ConstantHeatSource::create_new(void) const
-{
-  return new   ConstantHeatSource(get_options());
-}
+
 
 inline
 ConstantHeatSource*
