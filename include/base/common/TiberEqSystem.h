@@ -93,6 +93,10 @@ class TiberEqSystem
     virtual NumericVector<double>& get_solution_vector(void) = 0;
 
 
+    //! Set a weight for a given norm
+    void set_weight(const NumericVector<double>* weight, NormType norm);
+
+
 
   protected:
 
@@ -119,6 +123,14 @@ class TiberEqSystem
     virtual void parse_options(void) { };
 
 
+    //! Calculate a norm, considering the weight
+    double calculate_norm(NumericVector<double>* vec, NormType norm);
+
+    //! Get the weight associated with a given norm
+    const NumericVector<double>* get_weight(NormType norm) const;
+
+
+
   private:
 
     //! The options for this system
@@ -127,6 +139,14 @@ class TiberEqSystem
 
     //! The type of this system (linear, nonlinear)
     SystemType _type;
+
+
+    //! Weight for the l2 norm
+    const NumericVector<double>* _l2_weight;
+
+
+    //! Weight for the l_infty norm
+    const NumericVector<double>* _linfty_weight;
 
 };
 
@@ -175,6 +195,7 @@ TiberEqSystem::set_type(SystemType type)
 {
   _type = type;
 }
+
 
 
 #endif // _TIBEREQSYSTEM_H_

@@ -634,6 +634,56 @@ DriftDiffusion::do_solve(void)
 }
 
 
+void
+DriftDiffusion::create_weight(void)
+{
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+  AutoPtr<NumericVector<Real> > weight(get_solution_vector().clone());
+
+  NumericVector<Number>& solution = get_solution_vector();
+  NumericVector<Number>& oldsol = system.get_vector("old_sol");
+
+  const unsigned int var_el = system.variable_number("potential");
+  const unsigned int var_ef = system.variable_number("fermi_e");
+  const unsigned int var_hf = system.variable_number("fermi_h");
+
+  const double phi0 = get_scaling().get_potential_scaling();
+
+  MeshBase& mesh = get_mesh();
+  MeshBase::element_iterator it = mesh.active_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_elements_end();
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    DriftDiffusionProperties* sc = get_bulk_model<DriftDiffusionProperties>(elem);
+
+    assert(sc != NULL);
+    sc->reinit(elem);
+
+    for (unsigned int i = 0; i < elem->n_nodes(); i++)
+    {/*
+      sc->set_coordinates(elem->point[i]);
+
+      unsigned int dofu =
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+      sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
+
+      double grad_fac = phi0 / x0;
+      sc->set_electric_field(grad_fac * e_field);
+      sc->set_grad_fermi_e(grad_fac * grad_en);
+      sc->set_grad_fermi_h(grad_fac * grad_ep);
+
+      sc->calculate_densities();
+
+      long double n = sc->get_electron_density();
+      long double p = sc->get_hole_density();
+      unsigned int id =
+          elem->get_node(i)->dof_number(system.number(), var, 0);
+      solution.set(id, level);*/
+    }
+  }
+}
 
 
 void
@@ -3974,15 +4024,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    /*
-    if (coupling & ELECTRONS)
-    {
-      ostringstream os;
-      os << "_" << __private_counter << ".m";
-      cerr << "writing " << "J" << os.str() << "\n";
-      jacobian->print_matlab("J" + os.str());
-    }
-    */
+    //if (coupling & ELECTRONS)
+    //{
+    //  ostringstream os;
+    //  os << "_" << __private_counter << ".m";
+    //  cerr << "writing " << "J" << os.str() << "\n";
+    //  jacobian->print_matlab("J" + os.str());
+    //}
     //if (coupling & ELECTRONS) __private_counter++;
     //if (__private_counter == 2) exit(0);
   }

@@ -671,6 +671,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     void calculate_iqe(void);
 
 
+    //! Create a weight for the l2 norm
+    void create_weight(void);
+
+
     //! Assemble the residual vector or the jacobian matrix
     /*!
      * This method gets called from the underlying nonlinear solver

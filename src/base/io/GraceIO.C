@@ -102,9 +102,9 @@ void GraceIO::write_nodal_data(const std::string& fname,
 
       node_map[dl] = values;
 
-      p_x = po_x;
-      p_y = po_y;
-      p_z = po_z;
+      po_x = p_x;
+      po_y = p_y;
+      po_z = p_z;
 
     }
   //}

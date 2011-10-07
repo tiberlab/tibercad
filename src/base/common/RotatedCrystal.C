@@ -166,7 +166,18 @@ Tensor2Sym RotatedCrystal::get_eps0(double lat_cont_substrate[3]) const
 
 void RotatedCrystal::do_init(void)
 {
-  calculate_rot_matrix_miller(x_miller, y_miller);
+  Tensor1 vec_x;
+  Tensor1 vec_y;
+
+  vec_x(1) = x_miller[0];
+  vec_x(2) = x_miller[1];
+  vec_x(3) = x_miller[2];
+
+  vec_y(1) = y_miller[0];
+  vec_y(2) = y_miller[1];
+  vec_y(3) = y_miller[2];
+
+  calculate_rot_matrix(vec_x, vec_y);
 }
 
 //========================================================================//
