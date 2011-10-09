@@ -522,7 +522,7 @@ Compiler::Compiler(const ModelOptions& options) :
   BuildModule::replace(_compiler_flags, "-fPIC", "");
 #endif
 
-#if !defined(_WIN32)
+#if defined(_LINUX)
   _linker_flags = "-Wl,--as-needed ";
 #endif
   _linker_flags += options.get_option("linker_flags", "");
@@ -670,7 +670,10 @@ void process_module(const string& name, const ModelOptions& options)
 
     //string cpflags = opts.get_option("compiler_flags", "");
     string ldflags = opts.get_option("linker_flags", "");
-    ldflags += "-Wl,--as-needed " + instpath + "/" + target;
+#if defined(_LINUX)
+    ldflags += "-Wl,--as-needed ";
+#endif
+    ldflags += instpath + "/" + target;
     opts["linker_flags"] = ldflags;
 
     opts["module"] = module;

@@ -22,7 +22,11 @@ ifeq ($(target_os),win32)
   #ADDITIONAL_LIBS += -lcomdlg32
 endif
 
-
+ifeq ($(target_os),darwin)
+  ASNEEDED := 
+else
+  ASNEEDED := "-Wl,--as-needed"
+endif
 
 
 
@@ -30,7 +34,7 @@ all: build_module
 
 build_module: $(objects) 
 	@echo "Compiling build_module executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) -Wl,--as-needed $(LDFLAGS)
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
 
 
 
