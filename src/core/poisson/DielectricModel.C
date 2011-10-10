@@ -35,7 +35,7 @@ void  DielectricModel::do_init_alloy (const PhysicalModelInterface *comp_A,
 void   DielectricModel::read_database(void)
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("permittivity");
   _ep_x = db.get("permittivity", _ep_x);
 

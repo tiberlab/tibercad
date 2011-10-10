@@ -49,7 +49,7 @@ class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
     virtual void do_init(void);
 
     //! Create low field mobility model
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
 
 

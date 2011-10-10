@@ -24,7 +24,7 @@ void ZbPiezoelectricity::set_piezo_module(double e)
 void ZbPiezoelectricity::read_database ()
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("piezoelectricity");
 
   e14 = db.get("e14", 0.0);

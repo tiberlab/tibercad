@@ -12,6 +12,7 @@
 
 
 class DriftDiffusionProperties;
+class MaterialBoundary;
 class RecombinationModelInterface;
 class Trap;
 class FowlerNordheim;
@@ -46,7 +47,8 @@ class DDInterfaceModel : public PhysicalModel
 
 
     //! Create an interface model
-    static DDInterfaceModel* create(const ModelOptions& options);
+    static DDInterfaceModel* create(const MaterialBoundary* boundary,
+        const ModelOptions& options);
 
 
     //! Set the current face normal
@@ -133,7 +135,7 @@ class DDInterfaceModel : public PhysicalModel
 
 
     //! Create some of the submodels
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
 
     //! Set the BC type for variable \c i
@@ -223,7 +225,7 @@ class DDInterfaceModel : public PhysicalModel
 
 
     //! The creation method
-    static TiberModelObject* _create(const ModelOptions& options)
+    static TiberModelObject* _create(const ModelOptions& options, const void*)
     {
       return new DDInterfaceModel(options);
     }

@@ -44,7 +44,7 @@ DDInterfaceModel::get_dd_properties(void) const
 
 
 void
-DDInterfaceModel::create_submodels(void)
+DDInterfaceModel::prepare_submodels(void)
 {
   // for each trap we add an SRH recombination model
   ModelOptions::submodel_iterator it(get_options().submodels_begin("trap"));
@@ -57,12 +57,15 @@ DDInterfaceModel::create_submodels(void)
     opts.set_option("name", "recombination");
     get_options().add_submodel("recombination", opts);
   }
+
+  vector<PhysicalModelInterface*> rec;
+  create_submodels(rec, "recombination");
 }
 
 
 
 DDInterfaceModel*
-DDInterfaceModel::create(const ModelOptions& options)
+DDInterfaceModel::create(const MaterialBoundary* boundary, const ModelOptions& options)
 {
   DDInterfaceModel* model = NULL;
 
@@ -74,10 +77,10 @@ DDInterfaceModel::create(const ModelOptions& options)
 
   if (name == "interface")
     model = dynamic_cast<DDInterfaceModel*>(
-        PhysicalModelInterface::create(_create, _destroy, options));
+        PhysicalModelInterface::create(_create, _destroy, boundary, options));
   else
     model = dynamic_cast<DDInterfaceModel*>(
-        PhysicalModelInterface::create("ddbnd_" + name, options));
+        PhysicalModelInterface::create("ddbnd_" + name, boundary, options));
 
   if (model == NULL)
     throw ModelErrorException("Unknown drift-diffusion "
@@ -90,12 +93,12 @@ DDInterfaceModel::create(const ModelOptions& options)
 void
 DDInterfaceModel::do_init(void)
 {
-  MaterialBoundary* bnd = dynamic_cast<MaterialBoundary*>(get_owner());
+  const MaterialBoundary* bnd = dynamic_cast<const MaterialBoundary*>(get_owner());
   if (bnd == NULL)
     throw ModelErrorException("DriftDiffusion boundary models can "
         "be used only on region boundaries");
 
-  Material* mat = bnd->get_material_A();
+  const Material* mat = bnd->get_material_A();
   SimulationInterface* si = SimulationInterface::get_simulation(get_simulator_id());
   if (!si->includes_region(bnd->get_id_A()))
     mat = bnd->get_material_B();

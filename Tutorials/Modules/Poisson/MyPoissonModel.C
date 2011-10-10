@@ -47,19 +47,6 @@ MyPoissonModel::create(const ModelOptions& options)
 void
 MyPoissonModel::do_init(void)
 {
-  SubmodelIterator it = submodels_begin("charge_density");
-  if (it != submodels_end("charge_density"))
-    _charge_density = dynamic_cast<MyChargeDensityModel*>(it->second);
-  
-  it = submodels_begin("polarization");
-  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("polarization"));
-  for ( ; it != it_end ; ++it)
-    _pm.push_back(dynamic_cast<PolarizationModel*> ((*it).second));
-
-  it = submodels_begin("permittivity");
-  if (it != submodels_end("permittivity"))
-    _permittivity_model = dynamic_cast<PermittivityModel*>(it->second);
-
   _permittivity = _permittivity_model->get_permittivity();
 }
 
@@ -85,15 +72,20 @@ MyPoissonModel::do_calculate(void)
 }
 
 void
-MyPoissonModel::create_submodels(void)
+MyPoissonModel::prepare_submodels(void)
 {
   
-  //Thermal Conductivity Default
-  if (!get_options().has_submodel("permittivity"))
-  {
-    ModelOptions opts;
-    opts.set_option("type","constant");
-    get_options().add_submodel("permittivity",opts);
-  }
+  ModelOptions opts;
+  opts.set_option("type", "constant");
+  create_submodel(_permittivity_model, "permittivity", opts);
   
+  // alternative way to create internal submodels:
+  //
+  // PermittivityModel* mod = PhysicalModelInterface::create("permittivity", opts);
+  // add_submodel("permittivity", mod)
+
+  create_submodel(_charge_density, "charge_density");
+  create_submodels(_pm, "polarization");
+
+  // NOTE: all submodels are initialized automatically before calling do_init()
 }

@@ -162,7 +162,7 @@ class PoissonModel: public PhysicalModel
 
   virtual void do_init();
 
-  virtual void create_submodels(void);
+  virtual void prepare_submodels(void);
 
 };
 

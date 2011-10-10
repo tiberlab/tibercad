@@ -49,7 +49,7 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
      * \return a pointer to the newly created object
      */
     static RecombinationModelInterface* create(const std::string& name,
-        const ModelOptions& options = ModelOptions());
+        const PhysicalObject* owner, const ModelOptions& options = ModelOptions());
 
 
   protected:
@@ -81,10 +81,10 @@ RecombinationModelInterface::~RecombinationModelInterface(void)
 inline
 RecombinationModelInterface*
 RecombinationModelInterface::create(const std::string& name,
-    const ModelOptions& options)
+    const PhysicalObject* owner, const ModelOptions& options)
 {
   return dynamic_cast<RecombinationModelInterface*>(
-      PhysicalModelInterface::create("recombination_" + name, options));
+      PhysicalModelInterface::create("recombination_" + name, owner, options));
 }
 
 

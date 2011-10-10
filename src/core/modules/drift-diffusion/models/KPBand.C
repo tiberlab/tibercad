@@ -26,7 +26,7 @@ KPBand::~KPBand(void)
 
 
 void
-KPBand::create_submodels(void)
+KPBand::prepare_submodels(void)
 {
   ModelOptions kpopts;
   if (get_options().has_submodel("kp"))
@@ -34,7 +34,7 @@ KPBand::create_submodels(void)
     kpopts = get_options().submodels_begin("kp")->second;
   }
 
-  _bulk_model = DDsemiconductor::create(get_material()->get_structure(), kpopts);
+  _bulk_model = DDsemiconductor::create(get_material(), kpopts);
 
   if (_bulk_model == NULL)
     throw InitFailedException("Cannot create KdotP bulk model for material "

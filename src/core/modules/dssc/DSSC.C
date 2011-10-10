@@ -70,8 +70,8 @@ DSSC::~DSSC(void)
 
 
 PhysicalModel*
-DSSC::create_physical_model(const ModelOptions& options,
-    const Material* mat) const throw (ModelErrorException)
+DSSC::create_bulk_model(const ModelOptions& options,
+    const Material* mat) const
 {
   string modelname;
 

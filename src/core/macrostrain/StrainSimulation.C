@@ -15,7 +15,7 @@ StrainSimulation::create_physical_model(const ModelOptions& options,
   const std::string& modelname = options.get_option("model", "macrostrain");
 
   MacrostrainModelInterface* model =
-    MacrostrainModelInterface::create(modelname, options);
+    MacrostrainModelInterface::create(modelname, mat, options);
 
   if (model == NULL)
     throw ModelErrorException(

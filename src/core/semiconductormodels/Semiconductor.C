@@ -21,6 +21,14 @@ Semiconductor::Semiconductor(const ModelOptions& options)
   get_options().get_option("particle","");
 }
 
+
+Semiconductor* Semiconductor::create(const Material* mat,  const ModelOptions& options)
+{
+  std::string structure = mat->get_structure();
+  return PhysicalModelInterface::create<Semiconductor>("semicond_" + structure, mat, options);
+}
+
+
 //--------------------------------------------------------------------------------------------//
 void Semiconductor::do_init ()
 {

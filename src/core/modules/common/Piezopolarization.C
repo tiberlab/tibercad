@@ -31,7 +31,7 @@ void
 Piezopolarization::read_database(void)
 {
   // get piezoelectric_coefficients
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("piezoelectricity");
       
   if (get_material()->get_structure() == "wz")

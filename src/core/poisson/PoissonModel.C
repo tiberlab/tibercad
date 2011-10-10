@@ -80,7 +80,7 @@ void PoissonModel::do_init()
 
 
 
-void PoissonModel::create_submodels()
+void PoissonModel::prepare_submodels()
 {
 
   ModelOptions::const_submodel_iterator it;
@@ -95,9 +95,7 @@ void PoissonModel::create_submodels()
   if (it != end)
   {
 
-    _piezo_model = dynamic_cast<PiezoelectricModel*>(
-                     PhysicalModelInterface::create("piezoelectric_model_" +
-                    get_material()->get_structure(), it->second));
+    _piezo_model =  PiezoelectricModel::create(get_material(), it->second);
 
    if (_piezo_model == NULL)
       throw InitFailedException("Could not create piezoelectric model");
@@ -113,7 +111,7 @@ void PoissonModel::create_submodels()
    destroy(_epsilon_model);
 
    const ModelOptions& opt =  get_options ();
-   _epsilon_model = OptDielectricConstant::create(get_material()->get_structure(), opt);
+   _epsilon_model = OptDielectricConstant::create(get_material(), opt);
    _epsilon_model->set_owner(get_owner());
    _epsilon_model->init();
    _epsilon_model->get_dielectric_real(_epsilon);

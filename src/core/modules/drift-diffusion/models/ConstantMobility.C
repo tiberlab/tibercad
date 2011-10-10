@@ -13,7 +13,7 @@ TIBER_MODULE(ConstantMobility, mobility, constant)
 void
 ConstantMobility::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("mobility/constant");
 
   std::vector<double> data(2, 0);

@@ -37,11 +37,12 @@ class TBDLEXPORT ExcitonProperties : public PhysicalModel
      * If it is not known, the NULL pointer is returned.
      *
      * \param name the model name
+     * \param mat the bulk material
      * \param options the options as given in the input file
      * \return a pointer to the newly created object
      */
     static ExcitonProperties* create(const std::string& name,
-        const ModelOptions& options = ModelOptions());
+        const Material* mat, const ModelOptions& options = ModelOptions());
 
      //! Returns the exciton energy \f$ Eg - R \f$
      double get_exciton_energy(void);

@@ -39,7 +39,7 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
      * \return a pointer to the newly created object
      */
     static MobilityModelInterface* create(const std::string& name,
-        const ModelOptions& options = ModelOptions());
+        const Material* mat, const ModelOptions& options = ModelOptions());
 
 
     //! Set the carrier type
@@ -94,15 +94,6 @@ MobilityModelInterface::~MobilityModelInterface(void)
 {
 }
 
-
-inline
-MobilityModelInterface*
-MobilityModelInterface::create(const std::string& name,
-    const ModelOptions& options)
-{
-  return dynamic_cast<MobilityModelInterface*>(
-      PhysicalModelInterface::create("mobility_" + name, options));
-}
 
 
 inline

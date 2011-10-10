@@ -31,6 +31,33 @@ EFAbulkHamiltonian::EFAbulkHamiltonian(const ModelOptions& options)
  
 
 }
+
+EFAbulkHamiltonian* EFAbulkHamiltonian::create (const Material* mat,  const ModelOptions& options)
+{
+
+  if (! (options.find_option("model")) )
+  {
+    std::cerr << "EFAbulkHamiltonian* EFAbulkHamiltonian::create   model must be specified \n";
+    options.print_all();
+    exit(1);
+  }
+
+  const std::string&  model_name = options.get_option("model", "");
+
+  std::string model;
+  std::string structure = mat->get_structure();
+
+  if ( model_name == "kp")
+    //model = "quantum_kp_" + name;
+    model = "quantum_kp";
+  else if ( model_name == "sb_user_defined")
+    model = "quantum_user";
+  else if ( model_name == "conduction_band")
+    model ="quantum_cond_band_" + structure;
+
+  return PhysicalModelInterface::create<EFAbulkHamiltonian>(model, mat, options);
+
+}
  
 //------------------------------------------------------------//
 

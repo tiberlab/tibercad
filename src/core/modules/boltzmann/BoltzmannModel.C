@@ -25,7 +25,7 @@ BoltzmannModel::BoltzmannModel(const ModelOptions& options)
 }
 
 void
-BoltzmannModel::create_submodels(void)
+BoltzmannModel::prepare_submodels(void)
 {
 
   //Heat Transport Default

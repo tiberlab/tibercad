@@ -7,26 +7,24 @@
 using namespace std;
 
 
+ElasticityModel*
+ElasticityModel::create(const Material* mat, const ModelOptions& options)
+{
+
+  return PhysicalModelInterface::create<ElasticityModel>(_create, _destroy, mat, options);
+
+}
 
 
 void
 ElasticityModel::do_init(void)
 {
-
- 
-
-   PhysicalModelInterface::SubmodelIterator  it;
-   it = submodels_begin("stiffness");
-   StiffnessModel* _sm = dynamic_cast<StiffnessModel*> ((*it).second);
-   _stiffness =  _sm->get_stiffness();
+  PhysicalModelInterface::SubmodelIterator  it;
+  it = submodels_begin("stiffness");
+  StiffnessModel* _sm = dynamic_cast<StiffnessModel*> ((*it).second);
+  _stiffness =  _sm->get_stiffness();
 
 
-   //BodyForceModel
-   it = submodels_begin("body_force");
-   const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("body_force"));
-   for ( ; it != it_end ; ++it)
-     _bfm.push_back(dynamic_cast<BodyForceModel*> ((*it).second));
-  
 }
 
 
@@ -49,19 +47,14 @@ ElasticityModel::calculate(const Elem* elem, const Point& point)
 
 }
 
+
 void
-ElasticityModel::create_submodels(void)
+ElasticityModel::prepare_submodels(void)
 {
+  ModelOptions opts;
+  opts.set_option("type", "anisotropic");
+  PhysicalModelInterface* pm;
+  create_submodel(pm, "stiffness", opts);
 
-  //Heat Transport Default
-  if (!get_options().has_submodel("stiffness"))
-  {
-   
-    ModelOptions opts;
-    opts.set_option("type","anisotropic");
-    get_options().add_submodel("stiffness",opts);  
-
-  }
-
-
+  create_submodels(_bfm, "body_force");
 }

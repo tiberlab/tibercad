@@ -158,7 +158,7 @@ DSSCModel::do_init(void)
 void
 DSSCModel::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("recombination_TiO2-electrolyte");
   _ke = db.get("ke",_ke);
   _beta = db.get("beta",_beta);

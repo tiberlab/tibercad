@@ -28,7 +28,7 @@ DensityOfStates::create(const ModelOptions& options)
   else
   {
     dos_ptr = dynamic_cast<DensityOfStates*>(
-        PhysicalModelInterface::create("density_of_states_" + name, options));
+        PhysicalModelInterface::create("density_of_states_" + name, NULL, options));
     if (dos_ptr == NULL)
       throw ModelErrorException("Unknown density of states type: " + name);
   }

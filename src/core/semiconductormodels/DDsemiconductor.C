@@ -35,14 +35,21 @@ DDsemiconductor::DDsemiconductor(const ModelOptions& options)
 }
 
 
-void DDsemiconductor::create_submodels(void)
+DDsemiconductor* DDsemiconductor::create(const Material* mat,
+    const ModelOptions& options)
+{
+  std::string structure = mat->get_structure();
+  return PhysicalModelInterface::create<DDsemiconductor>("DDsemicond_" + structure, mat, options);
+}
+
+void DDsemiconductor::prepare_submodels(void)
 {
   assert(semiconductor == NULL);
   assert(bulk_ham == NULL);
 
   const ModelOptions& opt =  get_options();
 
-  semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+  semiconductor = Semiconductor::create(get_material(), opt);
   if (semiconductor == NULL)
   {
     string msg("Cannot create semiconductor model for ");
@@ -59,7 +66,7 @@ void DDsemiconductor::create_submodels(void)
   kp_options["kp_model"] = "6x6";
 
   bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
-      EFAbulkHamiltonian::create(get_material()->get_structure(), kp_options));
+      EFAbulkHamiltonian::create(get_material(), kp_options));
 
   if (bulk_ham == NULL)
     throw InitFailedException(string("Cannot create bulk hamiltonian for ")
@@ -90,7 +97,7 @@ void DDsemiconductor::do_init ()
 void DDsemiconductor::read_database(void)
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("kdotp");
 
   energy_cutoff  = db.get("energy_cutoff", energy_cutoff); //4eV default value

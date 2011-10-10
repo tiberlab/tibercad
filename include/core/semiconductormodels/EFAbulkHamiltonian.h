@@ -70,7 +70,7 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
     \param structure crystal structure, e.g. "zb", "wz"
     \param options options for the model
   */
-  static EFAbulkHamiltonian* create (const std::string& structure,  const ModelOptions& options = ModelOptions());
+  static EFAbulkHamiltonian* create (const Material* mat,  const ModelOptions& options = ModelOptions());
 
 
   //! sets temperature
@@ -128,30 +128,5 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
 };
 
 
-inline  EFAbulkHamiltonian* EFAbulkHamiltonian::create (const std::string& name,  const ModelOptions& options)
-{
-
-  if (! (options.find_option("model")) )
-  {
-    std::cerr << "EFAbulkHamiltonian* EFAbulkHamiltonian::create   model must be specified \n"; 
-    options.print_all();
-    exit(1);
-  }
-
-  const std::string&  model_name = options.get_option("model", ""); 
-  
-  std::string model;
-
-  if ( model_name == "kp")
-    //model = "quantum_kp_" + name;
-    model = "quantum_kp";
-  else if ( model_name == "sb_user_defined")
-    model = "quantum_user";
-  else if ( model_name == "conduction_band")
-    model ="quantum_cond_band_" + name; 
-
-  return dynamic_cast<EFAbulkHamiltonian*> ( PhysicalModelInterface::create(model, options) );
-
-}
 
 #endif

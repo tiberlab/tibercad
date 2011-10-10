@@ -71,7 +71,7 @@ class MyPoissonModel : public PhysicalModel
 
     virtual void do_init(void);
 
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
     //! do the actual calculation
     virtual void do_calculate(void);

@@ -1,19 +1,20 @@
 // $Id$
 
 #include "ElasticityBoundaryModel.h"
+#include "MaterialBoundary.h"
 
 using namespace std;
 
 
 ElasticityBoundaryModel*
-ElasticityBoundaryModel::create(const ModelOptions& options)
+ElasticityBoundaryModel::create(const MaterialBoundary* boundary, const ModelOptions& options)
 {
  
 
   std::string type = options.get_option("type", "clamp");
 
-  PhysicalModelInterface* pmod = PhysicalModelInterface::create("ebnd_" + type, options);
-  ElasticityBoundaryModel* mod = dynamic_cast<ElasticityBoundaryModel*>(pmod);
+  ElasticityBoundaryModel* mod = PhysicalModelInterface::create<ElasticityBoundaryModel>("ebnd_" + type,
+      boundary, options);
 
   if (mod == NULL)
   {

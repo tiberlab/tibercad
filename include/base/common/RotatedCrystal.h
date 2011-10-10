@@ -22,7 +22,7 @@ class RotatedCrystal : public PhysicalModelInterface
  public:
 
    //! Create a RotatedCrystal object
-   static RotatedCrystal* create(const std::string& name,
+   static RotatedCrystal* create(const PhysicalObject* owner,
        const ModelOptions& options);
    
   //!Rotation matrix  \f$ {\bf x}^{calc} = R {\bf x}^{cryst} \f$  \f$ 

@@ -50,7 +50,7 @@ Trap::~Trap(void)
 
 
 void
-Trap::create_submodels(void)
+Trap::prepare_submodels(void)
 {
   if (get_options().has_submodel("density_of_states"))
   {

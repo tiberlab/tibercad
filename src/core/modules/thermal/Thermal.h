@@ -60,7 +60,7 @@ class TBDLLOCAL Thermal : public SimulationInterface
 
     //! We need to create boundary condition model
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-        const Material* material_A, const Material* material_B) const;
+        const MaterialBoundary* boundary) const;
 
 
     //! We have to provide somehow our solution variables

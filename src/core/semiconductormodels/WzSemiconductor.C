@@ -66,7 +66,7 @@ void WzSemiconductor::do_init()
 void  WzSemiconductor::read_database_alloy(void)
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
 
   db.set_section("bandgap");
   bow.EgGamma = db.get("bow_Eg_G", 0.0);
@@ -78,7 +78,7 @@ void  WzSemiconductor::read_database_alloy(void)
 
 void WzSemiconductor::read_database( )
 {
-  Database& db = get_database();
+  const Database& db = get_database();
 
   db.set_section("bandgap");
   par.EgGamma = db.get("Eg_G", 3.51);

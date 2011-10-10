@@ -32,7 +32,7 @@ PhysicalModelInterface* MacrostrainModel::create_new (void) const
 
 
 void
-MacrostrainModel::create_submodels(void)
+MacrostrainModel::prepare_submodels(void)
 {
   assert(stiffness == NULL);
   assert(piezo == NULL);
@@ -42,7 +42,7 @@ MacrostrainModel::create_submodels(void)
   stiffness = Stiffness::create(opt);
   add_submodel("stiffness", stiffness);
 
-  piezo = Piezoelectricity::create(get_material()->get_structure(), opt);
+  piezo = Piezoelectricity::create(get_material(), opt);
   add_submodel("piezo", piezo);
 }
 
@@ -108,7 +108,7 @@ void MacrostrainModel::get_converse_piezo_stress(Tensor2Sym& sigma, const Elem* 
       field(2) = field_components[id_E][1];
       field(3) = field_components[id_E][2];
 
-      Material*   mat = get_material();
+      const Material*   mat = get_material();
 
       const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 

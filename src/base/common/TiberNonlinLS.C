@@ -49,6 +49,7 @@ TiberNonlinLS::do_solve(void)
   if (!u.closed()) u.close();
   NumericVector<Number>& du = *solution;
   AutoPtr<NumericVector<Number> > u_old_ptr = u.clone();
+  AutoPtr<NumericVector<Number> > tmp_vec = u.clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
   // the l_infty tolerance for the step size
@@ -90,7 +91,8 @@ TiberNonlinLS::do_solve(void)
     //cerr << "d = " << d << endl;
 
     // the l2 norm of the current residual
-    norm_rhs = rhs->l2_norm();
+    //norm_rhs = rhs->l2_norm();
+    norm_rhs = TiberEqSystem::calculate_norm(rhs, l2_NORM);
     norm_res = norm_rhs;
 
     if (norm_res < eps_res)
@@ -136,8 +138,11 @@ TiberNonlinLS::do_solve(void)
       _assemble(u, rhs, NULL);
 
       old_norm = norm_res;
-      norm_res = rhs->l2_norm();
-      norm_du = du.linfty_norm();
+      //norm_res = rhs->l2_norm();
+      norm_res = TiberEqSystem::calculate_norm(rhs, l2_NORM);
+      *tmp_vec = du;
+      norm_du = TiberEqSystem::calculate_norm(tmp_vec.get(), MAX_NORM);
+      //norm_du = du.linfty_norm();
 
       // TODO this seems not to be a brilliant idea
       //if (norm_du > get_divergence_tol() * norm_du_old)
@@ -193,7 +198,8 @@ TiberNonlinLS::do_solve(void)
       _assemble(u, rhs, NULL);
 
       double norm_res_old = norm_res;
-      norm_res = rhs->l2_norm();
+      //norm_res = rhs->l2_norm();
+      norm_res = TiberEqSystem::calculate_norm(rhs, l2_NORM);
       //cerr << "        ||r(x + " << alpha << "*dx)|| = " << norm_res_old <<
       //  ", ||r(x + " << 0.5 * alpha << "*dx)|| = "  << norm_res << endl;
       if (norm_res > norm_res_old)

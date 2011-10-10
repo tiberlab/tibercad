@@ -8,6 +8,7 @@
 #include "TypeDefs.h"
 #include "ModelOptions.h"
 #include "InitFailedException.h"
+#include "ModelErrorException.h"
 
 #include <map>
 #include <string>
@@ -22,6 +23,9 @@
 
 class PhysicalObject;
 class Material;
+class MaterialBoundary;
+class EdgeObject;
+class NodeObject;
 class Database;
 
 
@@ -88,12 +92,15 @@ class PhysicalModelInterface : public TiberModelObject
      * If it is not known, the NULL pointer is returned.
      *
      * \param name the model name
+     * \param owner the PhysicalObject this model is associated with (can be \c NULL)
      * \param options the options as given in the input file
      * \param module the module this model belongs to (in most cases
      *   found automatically)
      * \return a pointer to the newly created object
      */
-    static PhysicalModelInterface* create(const std::string& name,
+    template <typename T = PhysicalModelInterface>
+    static T* create(const std::string& name,
+        const PhysicalObject* owner,
         const ModelOptions& options = ModelOptions(),
         const std::string& module = xstr(MODULE_NAME));
 
@@ -103,10 +110,12 @@ class PhysicalModelInterface : public TiberModelObject
      * Use this method only in special cases, e.g. if you don't have single
      * libraries for the different models.
      */
-    static PhysicalModelInterface* create(
-        create_t create_fnc, destroy_t destroy_fnc,
+    template <typename T = PhysicalModelInterface>
+    static T* create(create_t create_fnc, destroy_t destroy_fnc,
+        const PhysicalObject* owner,
         const ModelOptions& options = ModelOptions(),
         const std::string& module = xstr(MODULE_NAME));
+
 
 
     //! Create a new model as a copy of this
@@ -138,7 +147,7 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Get a reference to the database
-    Database& get_database(void);
+    const Database& get_database(void);
 
 
     //! Set the bulk material
@@ -149,7 +158,7 @@ class PhysicalModelInterface : public TiberModelObject
      * automatically when obtaining the model using one of the
      * methods provided in SimulationInterface.
      */
-    void set_material(Material* mat);
+    void set_material(const Material* mat);
 
 
     //! Get the bulk material
@@ -160,15 +169,15 @@ class PhysicalModelInterface : public TiberModelObject
      * but it will be set automatically when obtaining the model
      * using one of the methods provided in SimulationInterface.
      */
-    Material* get_material(void) const;
+    const Material* get_material(void) const;
 
 
     //! Set a reference to the physical object this model belongs to
-    void set_owner(PhysicalObject* owner);
+    void set_owner(const PhysicalObject* owner);
 
 
     //! Get a reference to the physical object this model belongs to
-    PhysicalObject* get_owner(void);
+    //PhysicalObject* get_owner(void);
 
 
     //! Get a reference to the physical object this model belongs to
@@ -197,6 +206,14 @@ class PhysicalModelInterface : public TiberModelObject
      * correct parameter override and to assure complete initialization.
      */
     void init(void);
+
+
+    //! Reinitialize the model
+    /*!
+     * This method will be called before any solve of the associated
+     * simulation module.
+     */
+    void reinit(void);
 
 
     //! Initialize this model as an alloy with two components
@@ -242,7 +259,14 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Print some info
-    virtual void do_print_info(void){};
+    virtual void do_print_info(void) {};
+
+
+    //! Reinitialize before solving the module
+    /*!
+     * May be reimplemented if necesary
+     */
+    virtual void do_reinit(void) {};
 
 
     //! Initialize the model
@@ -263,6 +287,14 @@ class PhysicalModelInterface : public TiberModelObject
      * things.
      */
     virtual void copy_from(const PhysicalModelInterface* rhs);
+
+
+    //! Create a new instance of the same model
+    /*!
+     * This is needed for creating alloy models. Ususally, the method does
+     * not have to be implemented.
+     */
+    virtual PhysicalModelInterface* create_new(void) const;
 
 
     //! Read the properties from the database
@@ -331,21 +363,59 @@ class PhysicalModelInterface : public TiberModelObject
         std::string& s) const;
 
 
+    //! Create a submodel
+    /*!
+     * If no submodel of type \c type is provided in the input file,
+     * \c NULL will be returned.
+     * An exception is thrown, if more than one specification is found
+     * in the input file.
+     */
+    template <typename T>
+    void create_submodel(T*& model, const std::string& type);
+
+
+    //! Create a submodel
+    /*!
+     * If no submodel of type \c type is provided in the input file,
+     * the default options are used to create an instance of the model.
+     */
+    template <typename T>
+    void create_submodel(T*& model, const std::string& type,
+        const ModelOptions& default_opts);
+
+
+    //! Create multiple instances of submodel \c type
+    template <typename T>
+    void create_submodels(std::vector<T*>& models,
+        const std::string& type);
+
+
+    //! Create multiple instances of submodel \c type
+    /*!
+     * If no submodel of type \c type is provided in the input file,
+     * the default options are used to create an instance of the model.
+     */
+    template <typename T>
+    void create_submodels(std::vector<T*>& models,
+        const std::string& type, const ModelOptions& default_opts);
+
+
     //! Create submodels
     /*!
-     * This method can be used to create special submodels, which for example
-     * are not provided as physical_model in the input file, or which do not
-     * follow the standard naming conventions.
+     * This method is to be used to create submodels, if they are needed for all bulk,
+     * interface, edges and nodes objects. Otherwise, submodels can be created inside
+     * one of the \c init_xxx methods.
      *
-     * All models created have to be added to the submodel map and their options
-     * have to be deleted from the ModelOptions object.
+     * Submodels can be created be using one of the \c create_submodel() or
+     * \c create_submodels() methods or by calling directly PhysicalModelInterface::create()
+     * and using \c add_submodel() subsequently.
      *
      * Subsequent operations on the submodels assume that they are ordered exactly
      * the same way in models associated to alloy or interface components.
      * This is assured as long as all submodels are created in create_submodels() in
      * a way independent of the type of "owner" (PhysicalObject)
      */
-    virtual void create_submodels(void) {};
+    virtual void prepare_submodels(void) {};
 
 
     //! Add an externally created submodel
@@ -449,11 +519,11 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Disable copy constructor
-    PhysicalModelInterface(const PhysicalModelInterface&) TBDLLOCAL;
+    PhysicalModelInterface(const PhysicalModelInterface&);
 
 
     //! Disable assignment operator
-    PhysicalModelInterface& operator=(const PhysicalModelInterface&) TBDLLOCAL;
+    PhysicalModelInterface& operator=(const PhysicalModelInterface&);
 
 
     //! The unique ID of this model
@@ -475,11 +545,11 @@ class PhysicalModelInterface : public TiberModelObject
     /*!
      * This pointer can be used by this or associated models.
      */
-    PhysicalObject* _owner;
+    const PhysicalObject* _owner;
 
 
     //! Lower dimensional objects can have a bulk material assigned
-    Material* _bulk_material;
+    const Material* _bulk_material;
 
 
     //! The name of the module this object is part of
@@ -519,10 +589,24 @@ class PhysicalModelInterface : public TiberModelObject
 
     //! Create automatically all submodels
     /*!
-     * Calls create_submodels() which can be overridden by module developers.
+     * Calls prepare_submodels() which can be overridden by module developers.
      */
     void _create_submodels(void);
 
+
+    //! The internal implementation of the create method
+    static PhysicalModelInterface* _create(
+        const std::string& name,
+        const PhysicalObject* owner,
+        const ModelOptions& options,
+        const std::string& module);
+
+    //! The internal implementation of the create method
+    static PhysicalModelInterface* _create(
+        create_t create_fnc, destroy_t destroy_fnc,
+        const PhysicalObject* owner,
+        const ModelOptions& options,
+        const std::string& module);
 
 
 };
@@ -630,7 +714,7 @@ PhysicalModelInterface::set_simulator_id(ID id)
 
 
 inline
-Material*
+const Material*
 PhysicalModelInterface::get_material(void) const
 {
   return _bulk_material;
@@ -638,13 +722,14 @@ PhysicalModelInterface::get_material(void) const
 
 
 
+/*
 inline
 PhysicalObject*
 PhysicalModelInterface::get_owner(void)
 {
   return _owner;
 }
-
+*/
 
 inline
 const PhysicalObject*
@@ -691,6 +776,88 @@ PhysicalModelInterface::create_submodel_alloy(const T* comp_A,
 
 
 
+
+template <typename T>
+T*
+PhysicalModelInterface::create(const std::string& name, const PhysicalObject* owner,
+    const ModelOptions& options, const std::string& module)
+{
+  PhysicalModelInterface* mod =
+      PhysicalModelInterface::_create(name, owner, options, module);
+
+  if (mod != dynamic_cast<T*>(mod))
+  {
+    throw ModelErrorException("Given model type \'" + name + "\' does not correspond to "
+        "type of created model.");
+  }
+  return static_cast<T*>(mod);
+}
+
+
+template <typename T>
+T*
+PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
+        const PhysicalObject* owner,
+        const ModelOptions& options,
+        const std::string& module)
+{
+  PhysicalModelInterface* mod =
+      PhysicalModelInterface::_create(create_fnc, destroy_fnc,
+          owner, options, module);
+
+  // No check, this would be a programmer error
+  return static_cast<T*>(mod);
+}
+
+
+
+template <typename T>
+void
+PhysicalModelInterface::create_submodel(T*& model, const std::string& type)
+{
+  PhysicalModelInterface* mod = NULL;
+  create_submodel<PhysicalModelInterface>(mod, type);
+  model = static_cast<T*>(mod);
+}
+
+
+template <typename T>
+void
+PhysicalModelInterface::create_submodel(T*& model, const std::string& type,
+    const ModelOptions& default_opts)
+{
+  PhysicalModelInterface* mod = NULL;
+  create_submodel<PhysicalModelInterface>(mod, type, default_opts);
+  model = static_cast<T*>(mod);
+}
+
+
+
+template <typename T>
+void
+PhysicalModelInterface::create_submodels(std::vector<T*>& models,
+    const std::string& type)
+{
+  std::vector<PhysicalModelInterface*> mod;
+  create_submodels<PhysicalModelInterface>(mod, type);
+  models.resize(mod.size());
+  for (size_t i = 0; i < mod.size(); i++)
+    models[i] = static_cast<T*>(mod[i]);
+}
+
+
+//! Create multiple instances of submodel \c type
+template <typename T>
+void
+PhysicalModelInterface::create_submodels(std::vector<T*>& models,
+    const std::string& type, const ModelOptions& default_opts)
+{
+  std::vector<PhysicalModelInterface*> mod;
+  create_submodels<PhysicalModelInterface>(mod, type, default_opts);
+  models.resize(mod.size());
+  for (size_t i = 0; i < mod.size(); i++)
+    models[i] = static_cast<T*>(mod[i]);
+}
 
 
 

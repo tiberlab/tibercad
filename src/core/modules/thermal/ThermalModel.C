@@ -22,40 +22,29 @@ ThermalModel::ThermalModel(const ModelOptions& options)
 
 }
 
+
+ThermalModel*
+ThermalModel::create(const Material* mat, const ModelOptions& options)
+{
+  return PhysicalModelInterface::create<ThermalModel>(_create,_destroy, mat, options);
+}
+
 void
-ThermalModel::create_submodels(void)
+ThermalModel::prepare_submodels(void)
 {
   
-  //Thermal Conductivity Default
-  if (!get_options().has_submodel("thermal_conductivity"))
-  {
-    ModelOptions opts;
-    opts.set_option("type","constant");
-    get_options().add_submodel("thermal_conductivity",opts);
-  }
+  ModelOptions opts;
+  opts.set_option("type","constant");
+  create_submodel(_tcm, "thermal_conductivity", opts);
+
+  create_submodels(_hsm, "heat_source");
 
 }
 
 void
 ThermalModel::do_init(void)
 {
-
-   PhysicalModelInterface::SubmodelIterator  it;
-  //Lattice Thermal Conductivity
-  it = submodels_begin("thermal_conductivity");  
-  _tcm = dynamic_cast<ThermalConductivityModel*> ((*it).second);
   _kappa = _tcm->get_thermal_conductivity();
-  //---------------------------------------
-  ModelOptions::submodel_iterator
-    it_hs(get_options().submodels_begin("heat_source"));
-  ModelOptions::submodel_iterator
-    end_hs(get_options().submodels_end("heat_source"));
-
-  //Heat Source
-  it = submodels_begin("heat_source");
-  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("heat_source"));
-  for ( ; it != it_end ; ++it)
-    _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
 }
 
 

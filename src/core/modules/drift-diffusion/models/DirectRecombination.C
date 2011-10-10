@@ -15,7 +15,7 @@ TIBER_MODULE(DirectRecombination, recombination, direct)
 void
 DirectRecombination::read_database(void)
 {
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("recombination/direct");
 
   C_ = db.get("C", C_);

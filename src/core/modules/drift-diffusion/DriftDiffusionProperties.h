@@ -231,6 +231,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \return a pointer to the newly created object
      */
     static DriftDiffusionProperties* create(const std::string& name,
+        const Material* mat,
         const ModelOptions& options = ModelOptions());
 
 
@@ -814,7 +815,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Create some of the submodels
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
 
     //! This method gets called from reinit()
@@ -1089,14 +1090,6 @@ class DriftDiffusionProperties : public PhysicalModel
 //
 
 
-inline
-DriftDiffusionProperties*
-DriftDiffusionProperties::create(const std::string& name,
-    const ModelOptions& options)
-{
-  return dynamic_cast<DriftDiffusionProperties*>(
-      PhysicalModelInterface::create("ddbulk_" + name, options));
-}
 
 
 

@@ -34,7 +34,7 @@ Pyropolarization::read_database(void)
 {
 
   // Read the Pz componenents in the crystal system
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("pyroelectricity");
   _Pz = db.get("Pz", _Pz);
 

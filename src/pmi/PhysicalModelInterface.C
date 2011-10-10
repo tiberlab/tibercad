@@ -68,13 +68,11 @@ PhysicalModelInterface::~PhysicalModelInterface(void)
 
 
 PhysicalModelInterface*
-PhysicalModelInterface::create(const string& name,
-    const ModelOptions& options, const string& module)
+PhysicalModelInterface::_create(const string& name,
+    const PhysicalObject* owner,
+    const ModelOptions& options,
+    const string& module)
 {
-
-  // NOTE: for bulk models options contains the crystal structure
-
-
 
   PhysicalModelInterface* mod = NULL;
 
@@ -142,9 +140,9 @@ PhysicalModelInterface::create(const string& name,
   {
     // first try in the module directory
     if ((module.size() == 0) || ((mod = create_from_library<PhysicalModelInterface>(
-        module + "/" + name, options)) == 0))
+        module + "/" + name, options, owner)) == 0))
     {
-      mod = create_from_library<PhysicalModelInterface>(name, options);
+      mod = create_from_library<PhysicalModelInterface>(name, options, owner);
     }
   }
 
@@ -156,6 +154,7 @@ PhysicalModelInterface::create(const string& name,
     mod->_set_type(name);
 
     mod->_set_module_name(module);
+    mod->set_owner(owner);
 
     //! set the name
     // 2007-08-17
@@ -178,11 +177,13 @@ PhysicalModelInterface::create(const string& name,
 
 
 PhysicalModelInterface*
-PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
-    const ModelOptions& options, const string& module)
+PhysicalModelInterface::_create(create_t create_fnc, destroy_t destroy_fnc,
+    const PhysicalObject* owner,
+    const ModelOptions& options,
+    const string& module)
 {
   PhysicalModelInterface* mod = dynamic_cast<PhysicalModelInterface*>(
-      create_from_function(create_fnc, destroy_fnc, options));
+      create_from_function(create_fnc, destroy_fnc, options, owner));
 
   if (mod != NULL)
   {
@@ -192,6 +193,7 @@ PhysicalModelInterface::create(create_t create_fnc, destroy_t destroy_fnc,
     mod->_set_type(options.get_option("type", ""));
 
     mod->_set_module_name(module);
+    mod->set_owner(owner);
 
     //! set the name
     // 2007-08-17
@@ -239,11 +241,11 @@ PhysicalModelInterface::_register_model(
 
 
 void
-PhysicalModelInterface::set_owner(PhysicalObject* owner)
+PhysicalModelInterface::set_owner(const PhysicalObject* owner)
 {
   _owner = owner;
   if (_owner->get_type() == PhysicalObject::BULK)
-    _bulk_material = static_cast<Material*>(_owner);
+    _bulk_material = static_cast<const Material*>(_owner);
 }
 
 
@@ -254,7 +256,7 @@ PhysicalModelInterface::copy(void) const
   PhysicalModelInterface* new_copy = NULL;
 
   // this is safe
-  new_copy = static_cast<PhysicalModelInterface*>(this->create_new());
+  new_copy = this->create_new();
 
   if (new_copy != NULL)
   {
@@ -272,6 +274,26 @@ PhysicalModelInterface::copy(void) const
 }
 
 
+
+PhysicalModelInterface*
+PhysicalModelInterface::create_new(void) const
+{
+  create_t createfunc = get_creation_function();
+  if (createfunc == NULL)
+  {
+    ostringstream os;
+    //os << "Model " << get_name() << " cannot create a new instance of "
+    os << "Model cannot create a new instance of "
+        "the same type as the method \"create_new()\" is not "
+        "reimplemented.";
+    throw ModelErrorException(os.str());
+  }
+
+  return static_cast<PhysicalModelInterface*>(createfunc(get_options(), get_owner()));
+}
+
+
+
 string
 PhysicalModelInterface::get_default_name(void) const
 {
@@ -281,7 +303,7 @@ PhysicalModelInterface::get_default_name(void) const
 
 
 
-Database&
+const Database&
 PhysicalModelInterface::get_database(void)
 {
   return _owner->get_database();
@@ -357,6 +379,24 @@ PhysicalModelInterface::init(void)
 }
 
 
+
+
+void
+PhysicalModelInterface::reinit(void)
+{
+  // reinit submodels
+  SubmodelIterator smit(submodels_begin());
+  const SubmodelIterator smend(submodels_end());
+  for ( ; smit != smend; ++smit)
+    smit->second->reinit();
+
+  do_reinit();
+}
+
+
+
+
+
 void
 PhysicalModelInterface::init_interface(const Material* comp_A,
     const Material* comp_B)
@@ -400,10 +440,11 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
 
   // some models might treat alloys in a special way
   // disable alloy mixing
+  // This const cast is very ugly, better would be to not touch the database at all
   Database::AlloyMixing mixing = get_database().get_alloy_mixing();
-  get_database().set_alloy_mixing(Database::NONE);
+  const_cast<PhysicalObject*>(_owner)->get_database().set_alloy_mixing(Database::NONE);
   read_database_alloy();
-  get_database().set_alloy_mixing(mixing);
+  const_cast<PhysicalObject*>(_owner)->get_database().set_alloy_mixing(mixing);
 
 
   // setup the submodels
@@ -435,7 +476,7 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
 
 
 void
-PhysicalModelInterface::set_material(Material* mat)
+PhysicalModelInterface::set_material(const Material* mat)
 {
   _bulk_material = mat;
 
@@ -449,12 +490,14 @@ PhysicalModelInterface::set_material(Material* mat)
 void
 PhysicalModelInterface::add_submodel(const std::string& key, PhysicalModelInterface* pm)
 {
-  assert(pm != NULL);
-  pm->set_simulator_id(get_simulator_id());
-  pm->set_owner(get_owner());
-  pm->set_material(get_material());
-  pm->get_options().set_key(key);
-  _submodels.insert(SubmodelMap::value_type(key, pm));
+  if (pm != NULL)
+  {
+    pm->set_simulator_id(get_simulator_id());
+    pm->set_owner(get_owner());
+    pm->set_material(get_material());
+    pm->get_options().set_key(key);
+    _submodels.insert(SubmodelMap::value_type(key, pm));
+  }
 }
 
 
@@ -466,58 +509,192 @@ PhysicalModelInterface::delete_submodel(const std::string& key)
 }
 
 
+
+template <>
+void
+PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
+    const std::string& type)
+{
+  model = NULL;
+
+  string modname(type);
+
+  // loop over all submodels
+  ModelOptions::submodel_iterator it(get_options().submodels_begin(type));
+  const ModelOptions::submodel_iterator end(get_options().submodels_end(type));
+
+  for ( ; it != end; ++it)
+  {
+    if (model != NULL)
+      throw ModelErrorException("Only one instance of submodel type \'"
+          + type + "\' allowed");
+
+    string modtype = ((it->second).get_option("type", (it->second).get_name()));
+    (it->second).set_option("type", modtype);
+
+    if (modtype.size() > 0)
+      modname += string("_") + modtype;
+
+    // we try to create it from the same module
+    model = create(modname, get_owner(), it->second, get_module_name());
+
+    if (model == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      model = create(it->first, get_owner(), it->second, get_module_name());
+    }
+
+    add_submodel(type, model);
+
+    if (model == NULL)
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << it->first << "\' (type \'"
+        << modtype << "\')";
+      throw InitFailedException(os.str());
+    }
+  }
+}
+
+
+template <>
+void
+PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
+    const std::string& type, const ModelOptions& default_opts)
+{
+  create_submodel(model, type);
+
+  if (model == NULL)
+  {
+    string modname(type);
+
+    ModelOptions opts(default_opts);
+    string modtype = (opts.get_option("type", opts.get_name()));
+    opts.set_option("type", modtype);
+
+    if (modtype.size() > 0)
+      modname += string("_") + modtype;
+
+    // we try to create it from the same module
+    model = create(modname, get_owner(), opts, get_module_name());
+
+    if (model == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      model = create(type, get_owner(), opts, get_module_name());
+    }
+
+    add_submodel(type, model);
+
+    if (model == NULL)
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << type << "\' (type \'"
+        << modtype << "\')";
+      throw InitFailedException(os.str());
+    }
+  }
+}
+
+
+template <>
+void
+PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& models,
+    const std::string& type)
+{
+  models.resize(0);
+
+  // loop over all submodels
+  ModelOptions::submodel_iterator it(get_options().submodels_begin(type));
+  const ModelOptions::submodel_iterator end(get_options().submodels_end(type));
+
+  for ( ; it != end; ++it)
+  {
+    string modname(type);
+
+    string modtype = ((it->second).get_option("type", (it->second).get_name()));
+    (it->second).set_option("type", modtype);
+
+    if (modtype.size() > 0)
+      modname += string("_") + modtype;
+
+
+    // we try to create it from the same module
+    PhysicalModelInterface* mod =
+        create(modname, get_owner(), it->second, get_module_name());
+
+    if (mod == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      mod = create(it->first, get_owner(), it->second, get_module_name());
+    }
+
+    add_submodel(type, mod);
+
+    if (mod != NULL)
+      models.push_back(mod);
+    else
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << it->first << "\' (type \'"
+        << modtype << "\')";
+      throw InitFailedException(os.str());
+    }
+  }
+}
+
+
+
+template <>
+void
+PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& models,
+    const std::string& type, const ModelOptions& default_opts)
+{
+  create_submodels(models, type);
+
+  if (models.empty())
+  {
+    PhysicalModelInterface* mod = NULL;
+
+    string modname(type);
+
+    ModelOptions opts(default_opts);
+    string modtype = (opts.get_option("type", opts.get_name()));
+    opts.set_option("type", modtype);
+
+    if (modtype.size() > 0)
+      modname += string("_") + modtype;
+
+    // we try to create it from the same module
+    mod = create(modname, get_owner(), opts, get_module_name());
+
+    if (mod == NULL)
+    {
+      // perhaps it uses 'type' or 'model' internally?
+      mod = create(type, get_owner(), opts, get_module_name());
+    }
+
+    add_submodel(type, mod);
+
+    if (mod != NULL)
+      models.push_back(mod);
+    else
+    {
+      ostringstream os;
+      os << "Unknown physical model \'" << type << "\' (type \'"
+        << modtype << "\')";
+      throw InitFailedException(os.str());
+    }
+  }
+}
+
+
+
 void
 PhysicalModelInterface::_create_submodels(void)
 {
   // first call the user defined method
-  create_submodels();
-
-  // loop over all submodels
-  ModelOptions::submodel_iterator it(get_options().submodels_begin());
-  const ModelOptions::submodel_iterator end(get_options().submodels_end());
-
-  while (it != end)
-  {
-    string name(it->first);
-
-    string type = ((it->second).get_option("type", (it->second).get_name()));
-    (it->second).set_option("type", type);
-
-    if (type.size() > 0)
-      name += string("_") + type;
-
-    // we try to create it from the same module
-    PhysicalModelInterface* pm = create(name, it->second, get_module_name());
-
-    if (pm == NULL)
-    {
-      // perhaps it uses 'type' or 'model' internally?
-      pm = create(it->first, it->second, get_module_name());
-    }
-
-    // a temporary iterator as we cannot delete the loop iterator
-    ModelOptions::submodel_iterator tmp_it(it);
-
-    // next entry
-    ++it;
-
-    if (pm == NULL)
-    {
-      ostringstream os;
-      os << "Unknown physical model \'" << tmp_it->first << "\' (type \'"
-        << type << "\')";
-      //throw InitFailedException(os.str());
-
-      Messages::warning(os.str());
-    }
-    else
-    {
-      add_submodel(tmp_it->first, pm);
-
-      // we delete the options from the ModelOptions object
-      get_options().delete_submodel(tmp_it);
-    }
-  }
+  prepare_submodels();
 }
 
 

@@ -30,7 +30,7 @@ class TBDLLOCAL ElasticityModel : public PhysicalModel
 
 
     //! Creator function
-    static ElasticityModel* create(const ModelOptions& options);
+    static ElasticityModel* create(const Material* mat, const ModelOptions& options);
   
     const Tensor4DSym& get_stiffness(void);
   
@@ -47,12 +47,12 @@ class TBDLLOCAL ElasticityModel : public PhysicalModel
 
     virtual void do_init(void);
 
-    virtual void create_submodels(void);
+    virtual void prepare_submodels(void);
 
   private:
 
 
-   static TiberModelObject*  _create(const ModelOptions& options);
+   static TiberModelObject* _create(const ModelOptions& options, const void*);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -113,7 +113,7 @@ ElasticityModel::ElasticityModel(const ModelOptions& options) :
 }
 
 inline
-TiberModelObject*  ElasticityModel::_create(const ModelOptions& options)
+TiberModelObject*  ElasticityModel::_create(const ModelOptions& options, const void*)
 {
 
   return new ElasticityModel(options);
@@ -129,13 +129,6 @@ void  ElasticityModel::_destroy( TiberModelObject* p)
 }
 
 
-inline
-ElasticityModel*
-ElasticityModel::create(const ModelOptions& options)
-{
- 
-  return dynamic_cast<ElasticityModel*>(PhysicalModelInterface::create(_create,_destroy,options));
-  
-}
+
 
 #endif // _MYPOISSONMODEL_H_

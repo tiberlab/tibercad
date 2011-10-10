@@ -82,7 +82,7 @@ class TiberModelObject
 
 
     //! The creation method signature
-    typedef TiberModelObject* (*create_t)(const ModelOptions&);
+    typedef TiberModelObject* (*create_t)(const ModelOptions&, const void*);
 
 
     //! The destruction method signature
@@ -107,16 +107,16 @@ class TiberModelObject
      */
     template <typename T>
     static T* create_from_library(const std::string& name,
-        const ModelOptions& options = ModelOptions()) TBDLLOCAL;
+        const ModelOptions& options = ModelOptions(), const void* handle = NULL);
 
 
     //! Create an object from a given creator function
     static TiberModelObject* create_from_function(create_t create, destroy_t destroy,
-        const ModelOptions& options = ModelOptions()) TBDLLOCAL;
+        const ModelOptions& options = ModelOptions(), const void* handle = NULL);
 
 
-    //! Create a new model of the same type
-    virtual TiberModelObject* create_new(void) const;
+    //! Get the creation function
+    create_t get_creation_function(void) const;
 
 
     //! Tells if a parameter has been specified in the input file
@@ -274,7 +274,7 @@ class TiberModelObject
      * \return \c NULL if library cannot be opened
      */
     static TiberModelObject* _create_from_library(const std::string& name,
-        const ModelOptions& options = ModelOptions()) TBDLLOCAL;
+        const ModelOptions& options, const void* handle) TBDLLOCAL;
 
 
 
@@ -371,6 +371,13 @@ TiberModelObject::override_parameter_string(const std::string&,
 }
 
 
+inline
+TiberModelObject::create_t
+TiberModelObject::get_creation_function(void) const
+{
+  return _create;
+}
+
 
 template <class C, typename T>
 inline
@@ -394,10 +401,10 @@ template <typename T>
 inline
 T*
 TiberModelObject::create_from_library(const std::string& name,
-    const ModelOptions& options)
+    const ModelOptions& options, const void* handle)
 {
 #ifdef BUILD_TIBER_MODULES
-  return dynamic_cast<T*>(_create_from_library(name, options));
+  return dynamic_cast<T*>(_create_from_library(name, options, handle));
 #else
   return NULL;
 #endif

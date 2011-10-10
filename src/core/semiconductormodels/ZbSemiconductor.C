@@ -70,7 +70,7 @@ void ZbSemiconductor::do_init()
 void ZbSemiconductor::read_database( )
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
 
   // defaults for GaAs
   db.set_section("bandgap");
@@ -128,7 +128,7 @@ void ZbSemiconductor::read_database( )
 void ZbSemiconductor::read_database_alloy()
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
 
 
   db.set_section("bandgap");

@@ -166,7 +166,7 @@ void WzRotatedCrystal::set_xyz_mil_direction(std::string dir, int h, int k, int 
 void WzRotatedCrystal::read_database ( )
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("lattice");
   
   //a_lat = db.get("a", 0.31, true);

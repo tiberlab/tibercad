@@ -29,7 +29,7 @@ class Piezoelectricity : public PhysicalModelInterface
   inline double calculate_product_by_vector_and_tensor(const Tensor1& f, const Tensor2Sym& e) const;
 
   
-  static Piezoelectricity* create(const std::string& name,  const ModelOptions& options);
+  static Piezoelectricity* create(const Material* mat, const ModelOptions& options);
 
 
  protected:
@@ -50,13 +50,6 @@ class Piezoelectricity : public PhysicalModelInterface
 
 };
 
-
-inline Piezoelectricity* Piezoelectricity::create(const std::string& name,  const ModelOptions& options)
-{
-  
-  return dynamic_cast<Piezoelectricity*>(PhysicalModelInterface::create("piezo_" + name, options));
-
-}
 
 
 inline double Piezoelectricity::calculate_product_by_vector_and_tensor(const Tensor1& f, const Tensor2Sym& e) const

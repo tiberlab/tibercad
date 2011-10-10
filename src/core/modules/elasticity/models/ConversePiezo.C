@@ -37,7 +37,7 @@ ConversePiezo::calculate(const Elem* elem, const Point& point)
   // sigma_ij = - e_ijk E_k
   ElField *= -100.0 * 1e-9;
   //Rotate to crystal system
-  Material* mat = get_material();
+  const Material* mat = get_material();
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
   ElField = cr.RotMatrix.transpose() * ElField;
 
@@ -97,7 +97,7 @@ void
 ConversePiezo::read_database(void)
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("piezoelectricity");
 
   _e33 = db.get("e33", 0.0, true);

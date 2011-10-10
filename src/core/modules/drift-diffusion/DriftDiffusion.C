@@ -107,7 +107,7 @@ DriftDiffusion::~DriftDiffusion(void)
 
 PhysicalModel*
 DriftDiffusion::create_bulk_model(const ModelOptions& options,
-    const Material*) const
+    const Material* mat) const
 {
   string modelname;
 
@@ -115,7 +115,7 @@ DriftDiffusion::create_bulk_model(const ModelOptions& options,
 
 
   DriftDiffusionProperties* model =
-    DriftDiffusionProperties::create(modelname, options);
+    DriftDiffusionProperties::create(modelname, mat, options);
 
   if (model == NULL)
     throw ModelErrorException(
@@ -128,12 +128,12 @@ DriftDiffusion::create_bulk_model(const ModelOptions& options,
 
 PhysicalModel*
 DriftDiffusion::create_boundary_model(const ModelOptions& options,
-    const Material* material_A, const Material* material_B) const
+    const MaterialBoundary* boundary) const
 {
 
   PhysicalModel* model = NULL;
 
-  model = DDInterfaceModel::create(options);
+  model = DDInterfaceModel::create(boundary, options);
 
   return model;
 }
@@ -528,6 +528,7 @@ DriftDiffusion::do_solve(void)
   }
 
   //set_dirichlet_bc();
+  //calculate_weights();
 
   try
   {
@@ -635,15 +636,15 @@ DriftDiffusion::do_solve(void)
 
 
 void
-DriftDiffusion::create_weight(void)
+DriftDiffusion::calculate_weights(void)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
-  AutoPtr<NumericVector<Real> > weight(get_solution_vector().clone());
 
   NumericVector<Number>& solution = get_solution_vector();
   NumericVector<Number>& oldsol = system.get_vector("old_sol");
+  NumericVector<Number>& weight = system.get_vector("weight");
 
-  const unsigned int var_el = system.variable_number("potential");
+  const unsigned int var_u = system.variable_number("potential");
   const unsigned int var_ef = system.variable_number("fermi_e");
   const unsigned int var_hf = system.variable_number("fermi_h");
 
@@ -662,27 +663,37 @@ DriftDiffusion::create_weight(void)
     sc->reinit(elem);
 
     for (unsigned int i = 0; i < elem->n_nodes(); i++)
-    {/*
-      sc->set_coordinates(elem->point[i]);
+    {
+      sc->set_coordinates(elem->point(i));
 
       unsigned int dofu =
+        elem->get_node(i)->dof_number(system.number(), var_u, 0);
+      unsigned int dofen =
+        elem->get_node(i)->dof_number(system.number(), var_ef, 0);
+      unsigned int dofep =
+        elem->get_node(i)->dof_number(system.number(), var_hf, 0);
+
+      double u = solution(dofu);
+      double en = solution(dofen);
+      double ep = solution(dofep);
+      double oldu = oldsol(dofu);
+      double olden = oldsol(dofen);
+      double oldep = oldsol(dofep);
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
       sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldep);
 
-      double grad_fac = phi0 / x0;
-      sc->set_electric_field(grad_fac * e_field);
-      sc->set_grad_fermi_e(grad_fac * grad_en);
-      sc->set_grad_fermi_h(grad_fac * grad_ep);
-
       sc->calculate_densities();
 
-      long double n = sc->get_electron_density();
-      long double p = sc->get_hole_density();
-      unsigned int id =
-          elem->get_node(i)->dof_number(system.number(), var, 0);
-      solution.set(id, level);*/
+      double n = sc->get_electron_density() < 1e7 ? 0 : 1;
+      double p = sc->get_hole_density() < 1e7? 0 : 1;
+      weight.set(dofu, 1);
+      weight.set(dofen, n);
+      weight.set(dofep, p);
     }
   }
+  weight.close();
+  system.set_weight(&weight, TiberEqSystem::l2_NORM);
+  system.set_weight(&weight, TiberEqSystem::MAX_NORM);
 }
 
 
@@ -1251,6 +1262,7 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_variable("fermi_h", libMeshEnums::FIRST);
 
   system.add_vector("old_sol");
+  system.add_vector("weight");
   //system.add_matrix("sysmatrix");
 
   // finally initialize the newly created system
@@ -1289,7 +1301,7 @@ DriftDiffusion::do_init(void)
     DDInterfaceModel* mod = static_cast<DDInterfaceModel*>(*it);
 
     const MaterialBoundary* bd =
-        static_cast<MaterialBoundary*>(mod->get_owner());
+        static_cast<const MaterialBoundary*>(mod->get_owner());
 
 
     // register the contact if it is a real contact (with current)
@@ -4048,8 +4060,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       os << "_" << __private_counter;
       write_nodal_vector("residual" + os.str(), *residual);
       cerr << "writing " << "residual" << os.str() << " (norm = " << residual->l2_norm() << ")\n";
-      residual->print_matlab("F" + os.str() + ".m");
+      //residual->print_matlab("F" + os.str() + ".m");
       write_nodal_vector("x" + os.str(), oldx);
+      NumericVector<Number>& weight = system.get_vector("weight");
+      write_nodal_vector("weight" + os.str(), weight);
       __private_counter++;
       oldx = x;
     }

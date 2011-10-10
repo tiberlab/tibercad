@@ -20,7 +20,8 @@ class ThermalBoundaryModel : public PhysicalModel
     ~ThermalBoundaryModel(void) {};
 
     //! Creator function
-    static ThermalBoundaryModel* create(const ModelOptions& options);
+    static ThermalBoundaryModel* create(const MaterialBoundary* boundary,
+        const ModelOptions& options);
 
 
     //! Calculate for a point on the given side

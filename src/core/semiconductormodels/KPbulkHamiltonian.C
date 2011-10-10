@@ -67,13 +67,13 @@ KPbulkHamiltonian::KPbulkHamiltonian(const ModelOptions& options)
 }
 
 
-void KPbulkHamiltonian::create_submodels(void)
+void KPbulkHamiltonian::prepare_submodels(void)
 {
   assert(semiconductor == NULL);
 
   ModelOptions opt =  get_options();
   opt.delete_all_submodels();
-  semiconductor = Semiconductor::create(get_material()->get_structure(), opt);
+  semiconductor = Semiconductor::create(get_material(), opt);
   add_submodel("semiconductor", semiconductor);
 }
 

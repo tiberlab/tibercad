@@ -89,7 +89,7 @@ void
 PermittivityModel::rotate(void)
 {
 
-  Material* mat = get_material();
+  const Material* mat = get_material();
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 
  Tensor2Gen rotate = cr.RotMatrix;

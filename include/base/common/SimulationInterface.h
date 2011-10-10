@@ -40,6 +40,9 @@ class TiberEqSystem;
 class PhysicalModel;
 class BoundaryProperties;
 class Material;
+class MaterialBoundary;
+class EdgeObject;
+class NodeObject;
 class MeshBase;
 class Point;
 class DofObject;
@@ -66,7 +69,7 @@ class SimulationInterface : public TiberModelObject
       public:
         SimulationIterator(void) : _iter(_simulation_map.end()) {}
         SimulationIterator(const SimulationIterator& it) : _iter(it._iter) {}
-        SimulationIterator(const SimulationMap::iterator& it) TBDLLOCAL : _iter(it) {}
+        SimulationIterator(const SimulationMap::iterator& it) : _iter(it) {}
 
         SimulationIterator& operator++(void)
         {
@@ -156,7 +159,7 @@ class SimulationInterface : public TiberModelObject
      * if the \c typr does not exist.
      */
     static SimulationInterface* create(const std::string& type,
-        const ModelOptions& options = ModelOptions()) TBDLLOCAL;
+        const ModelOptions& options = ModelOptions());
 
 
     //! Destroy a SimulationInterface object
@@ -190,20 +193,27 @@ class SimulationInterface : public TiberModelObject
     void init(void);
 
 
+    //! Reinitialize the system before each solve
+    /*!
+     * This method is called before calling do_solve()
+     */
+    void reinit(void);
+
+
     //! Setup the available solution variables
     /*!
      * This has to be done before calling init() of all models
      * because others could want to know about solution variables
      * during initialisation.
      */
-    void setup_solution_variables(void) TBDLLOCAL;
+    void setup_solution_variables(void);
 
 
     //! Print some useful info
     /*!
      * Calls do_print_info()
      */
-    void print_info(void) TBDLLOCAL;
+    void print_info(void);
 
 
     //! Solve the system for equilibrium
@@ -559,15 +569,17 @@ class SimulationInterface : public TiberModelObject
 
     //! Create a boundary model to be used with this simulation
     PhysicalModel* new_boundary_model(const ModelOptions& options,
-        const Material* material_A, const Material* material_B) TBDLLOCAL;
+        const MaterialBoundary* boundary);
 
 
     //! Create an edge model
-    PhysicalModel* new_edge_model(const ModelOptions& options) TBDLLOCAL;
+    PhysicalModel* new_edge_model(const ModelOptions& options,
+        const EdgeObject* edge);
 
 
     //! Create a nodal model
-    PhysicalModel* new_node_model(const ModelOptions& options) TBDLLOCAL;
+    PhysicalModel* new_node_model(const ModelOptions& options,
+        const NodeObject* node);
 
 
     //! Get the physical model for a certain region ID
@@ -691,16 +703,6 @@ class SimulationInterface : public TiberModelObject
     ModelOptions& get_solver_options(void);
 
 
-    //! Do the initialization
-    /*!
-     * Has to be implemented by derived classes.
-     *
-     * This method should initialize everything that is needed to do a
-     * simulation.
-     */
-    virtual void do_init(void) = 0;
-
-
     //! Initialize the internal mesh pointer
     /*!
      * The default implementation just takes the mesh pointer from the device,
@@ -734,6 +736,23 @@ class SimulationInterface : public TiberModelObject
      * some reasonable starting values etc.
      */
     virtual void do_equilibrium(void) {};
+
+
+    //! Do the initialization
+    /*!
+     * Has to be implemented by derived classes.
+     *
+     * This method should initialize everything that is needed to do a
+     * simulation.
+     */
+    virtual void do_init(void) = 0;
+
+
+    //! Do some reinitialization before any solve
+    /*!
+     * May be reimplemented by derived classes if necessary.
+     */
+    virtual void do_reinit(void) {};
 
 
     //! Do the solve
@@ -1106,14 +1125,17 @@ class SimulationInterface : public TiberModelObject
      * a physical model. If a derived class reimplements this method (which
      * will normally be the case) it should notify about errors by throwing
      * a ModelErrorException.
+     *
+     * \param options the options
+     * \param mat the material this model is associated with
      */
+    virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
+        const Material* mat) const;
+
     virtual PhysicalModel*
       create_physical_model(const ModelOptions& options,
                             const Material* mat) const
       throw (ModelErrorException);
-
-    virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-        const Material* mat) const;
 
 
     //! Create a boundary model that can be used by this type of simulation
@@ -1123,13 +1145,16 @@ class SimulationInterface : public TiberModelObject
      * a boundary model. If a derived class reimplements this method (which
      * will normally be the case) it should notify about errors by throwing
      * a ModelErrorException.
+     *
+     * \param options the options
+     * \param boundary the boundary object this model is associated with
      */
+    virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
+        const MaterialBoundary* boundary) const;
+
     virtual BoundaryProperties*
       create_boundary_model(const ModelOptions& options) const
       throw (ModelErrorException);
-
-    virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-        const Material* material_A, const Material* material_B) const;
 
 
     //! Create an edge model that can be used by this type of simulation
@@ -1139,8 +1164,12 @@ class SimulationInterface : public TiberModelObject
      * an edge model. If a derived class reimplements this method (which
      * will normally be the case) it should notify about errors by throwing
      * a ModelErrorException.
+     *
+     * \param options the options
+     * \param edge the edge object this model is associated with
      */
-    virtual PhysicalModel* create_edge_model(const ModelOptions& options) const;
+    virtual PhysicalModel* create_edge_model(const ModelOptions& options,
+        const EdgeObject* edge) const;
 
 
     //! Create a nodal model that can be used by this type of simulation
@@ -1150,8 +1179,12 @@ class SimulationInterface : public TiberModelObject
      * an nodal model. If a derived class reimplements this method (which
      * will normally be the case) it should notify about errors by throwing
      * a ModelErrorException.
+     *
+     * \param options the options
+     * \param node the node object this model is associated with
      */
-    virtual PhysicalModel* create_node_model(const ModelOptions& options) const;
+    virtual PhysicalModel* create_node_model(const ModelOptions& options,
+        const NodeObject* node) const;
 
 
     //! Set or unset the \c equilibrium_done flag

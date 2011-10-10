@@ -204,7 +204,7 @@ TiberModelObject::get_option(const std::string& name,
 
 TiberModelObject*
 TiberModelObject::_create_from_library(const std::string& name,
-    const ModelOptions& options)
+    const ModelOptions& options, const void* handle)
 {
   TiberModelObject* obj = NULL;
 
@@ -215,7 +215,7 @@ TiberModelObject::_create_from_library(const std::string& name,
   create_t create = (create_t) iface.create_fnc;
 
   if (create != NULL)
-    obj = create(options);
+    obj = create(options, handle);
 
   if (obj != NULL)
   {
@@ -233,12 +233,12 @@ TiberModelObject::_create_from_library(const std::string& name,
 
 TiberModelObject*
 TiberModelObject::create_from_function(create_t create, destroy_t destroy,
-    const ModelOptions& options)
+    const ModelOptions& options, const void* handle)
 {
   assert(create != NULL);
   assert(destroy != NULL);
 
-  TiberModelObject* obj = create(options);
+  TiberModelObject* obj = create(options, handle);
 
   if (obj != NULL)
   {
@@ -250,22 +250,6 @@ TiberModelObject::create_from_function(create_t create, destroy_t destroy,
 }
 
 
-
-TiberModelObject*
-TiberModelObject::create_new(void) const
-{
-  if (_create == NULL)
-  {
-    ostringstream os;
-    //os << "Model " << get_name() << " cannot create a new instance of "
-    os << "Model cannot create a new instance of "
-        "the same type as the method \"create_new()\" is not "
-        "reimplemented.";
-    throw ModelErrorException(os.str());
-  }
-
-  return _create(get_options());
-}
 
 
 

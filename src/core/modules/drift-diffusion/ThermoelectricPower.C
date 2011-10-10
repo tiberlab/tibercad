@@ -10,7 +10,7 @@
 
 namespace
 {
-  TiberModelObject* thpow_create(const ModelOptions& options)
+  TiberModelObject* thpow_create(const ModelOptions& options, const void*)
   {
     return new ThermoelectricPower(options);
   }
@@ -43,10 +43,10 @@ ThermoelectricPower::ThermoelectricPower(const ModelOptions& options)
 
 ThermoelectricPower*
 ThermoelectricPower::create_model(const std::string&,
-    const ModelOptions& options)
+    const Material* mat, const ModelOptions& options)
 {
   return static_cast<ThermoelectricPower*>(
-      PhysicalModelInterface::create(thpow_create, thpow_destroy, options));
+      PhysicalModelInterface::create(thpow_create, thpow_destroy, mat, options));
 }
 
 
@@ -60,7 +60,7 @@ ThermoelectricPower::read_database(void)
 {
 
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("thermoelectric_power/constant");
 
   _eTEpower = db.get("eTEpower", 0.0);

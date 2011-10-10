@@ -37,7 +37,7 @@
     TBDLEXPORT void TBDESTROYFUNC(TiberModelObject* p) { \
       delete p; \
     } \
-    TBDLEXPORT classname* TBCREATEFUNC(const ModelOptions& options) { \
+    TBDLEXPORT classname* TBCREATEFUNC(const ModelOptions& options, const void*) { \
       return classname::create(options); \
     } \
   } \

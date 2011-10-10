@@ -35,7 +35,7 @@ void WzStiffness::set_moduli(double c11, double c12, double c13, double c33, dou
 void WzStiffness::read_database ( )
 {
 
-  Database& db = get_database();
+  const Database& db = get_database();
   db.set_section("elasticity");
 
   double c11 = db.get("C11", 0.0, true);
@@ -65,7 +65,7 @@ void WzStiffness::do_init(void)
 
   set_moduli(c11,  c12,  c13,  c33,  c44);
 
-  Material*   mat = get_material();
+  const Material*   mat = get_material();
 
   const RotatedCrystal&   cr = mat->get_rotated_crystal ();
 
