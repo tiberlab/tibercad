@@ -143,8 +143,6 @@ Module  driftdiffusion
     
     recombination (srh, direct) {}
  
-    polarization (piezo, pyro) {}
-
     mobility doping_dependent {}
 
     trap fixed_charge
