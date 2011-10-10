@@ -136,8 +136,16 @@ Module  efaschroedinger
   poisson_simulation = dd
   strain_simulation  = strain 
  
-  solution_method = general
-  solver = krylovshur 
+  Dispersion
+  {
+    k-path = K-G-M
+    k_max = 0.1
+    number_of_nodes = 10	
+  }	
+
+  Solver {
+    solver = krylovshur
+  }
 
 
   Physics
@@ -163,8 +171,16 @@ Module  efaschroedinger
   poisson_simulation  = dd
   strain_simulation = strain 
 
-  solver = krylovshur
-  solution_method = general
+  Dispersion
+  {
+    k-path = K-G-M
+    k_max = 0.1
+    number_of_nodes = 10	
+  }	
+
+  Solver {
+    solver = krylovshur
+  }
 
   Physics
   { 
@@ -175,98 +191,12 @@ Module  efaschroedinger
 }
   
 
-Module  quantumdispersion
-{
-   
-  name = dispersion1D_el
-  regions = all
-
-  plot = ( k-space_dispersion)
-   
-  quantum_simulation = quantum_el
-  wedge = half
-  k_space_dimension = 1
-  k1 = (0, 0.5, 0)
-  number_of_nodes = (20)
-  min_eigenvalue_number = 0
-  max_eigenvalue_number = 9
-    
-}
-
-
-Module quantumdispersion
-{
-   
-  name = dispersion1D_hl
-  regions = all
-
-  plot = ( k-space_dispersion)
-
-  quantum_simulation = quantum_hl
-  wedge = half
-  k_space_dimension = 1
-  k1 = (0, 0.5, 0)
-  number_of_nodes = (20)
-  min_eigenvalue_number = 0
-  max_eigenvalue_number = 14
-
-    
-}
-
-
-
-Module quantumdispersion
-{
-   
-  name = dispersion2D_el
-  regions = all
-
-  plot = ( k-space_dispersion)
-  output_format = vtk
-
-  quantum_simulation = quantum_el
-  wedge = quarter
-  k_space_dimension = 2
-  k1 = (0,  0.5, 0)
-  k2 = (0,  0, 0.5)
-  number_of_nodes = (8,8)
-  min_eigenvalue_number = 0
-  max_eigenvalue_number = 9
-    
-    
-}
-
-
-Module quantumdispersion
-{
-   
-  name = dispersion2D_hl
-  regions = all
-
-  plot = ( k-space_dispersion)
-  output_format = vtk
-
-  quantum_simulation = quantum_hl
-  wedge = quarter
-  k_space_dimension = 2
-  k1 = (0, 0.5, 0)
-  k2 = (0,  0, 0.5)
-  number_of_nodes = (8,8)
-  min_eigenvalue_number = 0
-  max_eigenvalue_number = 14
-   
-    
-}
-
-
- 
-
 Simulation
 {  
    
   dimension = 1
   temperature = 300
-  solve = (strain, dd, quantum_el, quantum_hl,  dispersion1D_el, dispersion1D_hl, dispersion2D_el, dispersion2D_hl )   
+  solve = (strain, dd, quantum_el, quantum_hl)   
   resultpath = output
   output_format = grace
 
