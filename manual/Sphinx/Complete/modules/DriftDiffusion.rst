@@ -415,6 +415,50 @@ Formula 2 reads
 The parameters for the field dependent mobility model are summarized in Table 2.7.
 
 
+Field assisted mobility model
+"""""""""""""""""""""""""""""""
+
+The field assisted mobility model describes the enhancement of the carrier mobility by an electric field in organic
+semiconductors. It is identified by the identifier field_enhanced. 
+
+The model is given by equation [devometterelareference]_:
+
+.. math::
+   :label: dd_eq_fieldassistedmodel
+
+    \mu = \mu_0 e^{\sqrt{|E|/E_0}}
+
+    
+where :math:`|E|` is the modulus of the driving field, :math:`\mu_{0}` is the zero-field mobility and :math:`E_0` is a critical field strength.
+
+The parameters for the field assisted mobility model are the following (summarized in Table :ref:`Field assisted mobility parameters<dd_field_assmob>`):
+
+  ``mu0``
+    The mobility at low electric field.
+
+  ``E0``
+    The critical electric field strength.
+
+
+..  _dd_field_assmob :
+
+.. math::
+   :nowrap:
+
+    \begin{table}[!ht]
+    \center
+    \begin{tabular}{l|r|r|l}
+    \hline
+    \textbf{parameter name} & \multicolumn{2}{r|}{\textbf{default value}} & \textbf{units} \\
+    \hline
+    \hline
+    \texttt{mu0} & \multicolumn{2}{r|}{0.0054} & cm$^2$/Vs \\
+    \texttt{E0} & \multicolumn{2}{r|}{$3\cdot 10^5$} & V/cm \\
+    \hline
+    \end{tabular}
+    \caption{Field assisted mobility parameters}
+    \end{table}
+
 
 Polarization models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -532,7 +576,7 @@ For ``reference = m`` for example, the trap energy is given as :math:`E_{trap} =
 In the other cases it is :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v + Et`.
 The following trap types are implemented:
 
- ``eNeutral``
+  ``eNeutral``
       The trapped electron density is given by
 
       .. math::
@@ -541,13 +585,14 @@ The following trap types are implemented:
         n_t = \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
 
 
- ``hNeutral``
+  ``hNeutral``
       The trapped hole density is given by
 
       .. math::
        :label: dd_eq_hneutral
-    
+
         p_t = \frac{N_t}{1 + \exp(-\frac{E_{trap} - E_{F,p}}{k_BT})}
+
 
   ``donor``
       The density of ionized traps is given by
@@ -556,6 +601,7 @@ The following trap types are implemented:
        :label: dd_eq_donor
 
        N^+_t = N_t - \frac{N_t}{1 + \exp(\frac{E_{trap} - E_{F,n}}{k_BT})}
+
 
   ``acceptor``
        The density of ionized traps is given by
