@@ -407,7 +407,7 @@ Simulation
 
   #solve = (strain, sweep, QW3_electrons,QW3_holes) 
  
-  solve = (strain, driftdiffusion, spectrum)
+  solve = (strain, driftdiffusion, QW3_electrons, QW3_holes, spectrum)
 
   resultpath =   output
   output_format = grace
