@@ -231,6 +231,9 @@ private:
   //! Build bond map
   void build_bond_map(void);
 
+  //! Manage structure printing
+  void print_driver(void);
+
 };
 
 //----------------------------------------------------
