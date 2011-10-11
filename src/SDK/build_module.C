@@ -70,11 +70,6 @@ namespace BuildModule
   //! Content of TIBERCADROOT
   std::string tc_root;
 
-  //! Module specific code
-  /*!
-   * These are mainly the creation and destruction methods
-   */
-  std::string module_code;
 
   void usage(void)
   {
@@ -309,9 +304,6 @@ int main (int argc, char** argv)
   {
     Compiler::add_library(it->second);
   }
-
-
-  BuildModule::module_code = global_config.get_option("module_code", "");
 
 
   ModelOptions config;
@@ -588,12 +580,9 @@ void process_module(const string& name, const ModelOptions& options)
   vector<string> sources;
   options.get_option("sources", sources);
 
-  string creatable = options.get_option("creatable", "");
+  string creatable = options.get_option("createable", "");
 
   string module = options.get_option("module", "");
-
-  string module_code = options.get_option("module_code", BuildModule::module_code);
-  cerr << module_code << endl;
 
   string modulename = options.get_key();
   string type = options.get_name();
@@ -621,8 +610,40 @@ void process_module(const string& name, const ModelOptions& options)
   string libsuffix(".so");
 #endif
 
+  // the module creation code is put into a header file that gets included by
+  // defining TIBERMODULE to #include "module.h"
+  {
+    string module_code = options.get_option("creator_code", "");
+    ofstream mh(module + ".h"); // mh = module_header
+    mh << "/*\n"
+      <<  " * This file was generated automatically by the tiberCAD\n"
+      <<  " * build_module tool.\n"
+      <<  " * Do not change its content in the case you compile\n"
+      <<  " * the module by hand.\n"
+      <<  " */\n\n"
+      <<  "#include \"TiberModule.h\"\n"
+      <<  "extern \"C\" {\n"
+      <<  "  TBDLEXPORT void TBDESTROYFUNC(TiberModelObject* p)\n"
+      <<  "  { delete p; }\n\n"
+      <<  "  TBDLEXPORT TiberModelObject* TBCREATEFUNC(const ModelOptions& options, const void* handle)\n"
+      <<  "  {\n"
+      <<  "    TiberModelObject* obj = NULL;\n";
+    if (!module_code.empty())
+      mh << module_code;
+    else
+    {
+      mh << "    obj = " << creatable << "::create(options); \n";
+    }
+    mh << "    return obj;\n";
+    mh << "  }\n"
+      <<  "}";
+  }
+
+
+
   string compileflags = options.get_option("compiler_flags", "");
   compileflags += "-DMODULE_NAME=" + module;
+  //compileflags += "-DTIBERMODULE=\"#include \\\"" + module + ".h\\\"\"";
 
   vector<string> objects;
   for (size_t i = 0; i < sources.size(); ++i)
