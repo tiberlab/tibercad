@@ -26,6 +26,11 @@ class Node;
 class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 {
 
+  private:
+    //! The element side map
+    typedef HashMap<ElementSide, ID, ElementSide::hash>::Type ElemSideMap;
+
+
   public:
 
     //! A set of nodes
@@ -38,6 +43,76 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
         EDGE,    /*!< an element edge */
         NODE,    /*!< a node */
         INVALID  /*!< invalid */
+    };
+
+
+    //! Iterator to iterate over a subset of boundaries
+    class side_iterator
+    {
+      public:
+        //! Constructor
+        side_iterator(ElemSideMap& map, const std::set<ID>& ids,
+            bool begin = false) :
+          _map(map),
+          _ids(ids),
+          _iter(_map.begin())
+        {
+          if (begin && _iter != _map.end())
+            while ((_iter != _map.end() && !_ids.empty()
+                && !_ids.count(_iter->second)))
+              ++_iter;
+          else
+            _iter = _map.end();
+        }
+
+        //! Copy constructor
+        side_iterator(const side_iterator& it) :
+          _map(it._map),
+          _ids(it._ids),
+          _iter(it._iter) { }
+
+        //! Prefix increment
+        side_iterator& operator++(void)
+        {
+          do {
+            ++_iter;
+          }
+          while ((_iter != _map.end()) && !_ids.empty()
+              && !_ids.count(_iter->second));
+          return *this;
+        }
+
+        //! Assignment
+        side_iterator& operator=(const side_iterator& rhs)
+        {
+          _map = rhs._map;
+          _ids = rhs._ids;
+          _iter = rhs._iter;
+          return *this;
+        }
+
+        //! Comparison
+        bool operator==(const side_iterator& rhs)
+                       {
+          return (_iter == rhs._iter);
+                       }
+
+        //! Comparison
+        bool operator!=(const side_iterator& rhs)
+                       {
+          return (_iter != rhs._iter);
+                       }
+
+        //! Dereference the iterator
+        const ElementSide& operator*(void)
+        {
+          return _iter->first;
+        }
+
+      private:
+        ElemSideMap& _map;
+        std::set<ID> _ids;
+        ElemSideMap::iterator _iter;
     };
 
 
@@ -120,10 +195,15 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     void get_bc_node_map(std::map<unsigned int, std::vector<ID> >& nodemap) const;
 
 
-  private:
+    //! Get the side iterator for a given set of boundary IDs
+    side_iterator sides_begin(const std::set<ID>& ids);
 
-    //! The element side map
-    typedef HashMap<ElementSide, ID, ElementSide::hash>::Type ElemSideMap;
+    //! Get the past-the-end iterator for a given set of boundary IDs
+    side_iterator sides_end(const std::set<ID>& ids);
+
+
+
+  private:
 
     //! The subdomain IDs on both sides of a boundary
     /*!
@@ -248,5 +328,21 @@ BoundaryRegions::~BoundaryRegions(void)
 {
   clear();
 }
+
+
+inline
+BoundaryRegions::side_iterator
+BoundaryRegions::sides_begin(const std::set<ID>& ids = std::set<ID>())
+{
+  return side_iterator(_sides, ids, true);
+}
+
+inline
+BoundaryRegions::side_iterator
+BoundaryRegions::sides_end(const std::set<ID>& ids = std::set<ID>())
+{
+  return side_iterator(_sides, ids);
+}
+
 
 #endif // _BOUNDARYREGIONS_H_

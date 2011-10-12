@@ -181,15 +181,7 @@ SimpleBand::do_calculate(void)
     double T = get_lattice_temperature() / Constants::k_B;
     double gap = _bandgap;
 
-    //if (get_material()->is_alloy())
-    //{
-    //  const Alloy* alloy = static_cast<const Alloy*>(get_material());
-    //  const ZbSemiconductor::ZbDDparameters& parA_zero =  (dynamic_cast<const ZbSemiconductor*> (modelA))->get_initial_parameters();
-
-    //const ZbSemiconductor::ZbDDparameters& parB_zero =  (dynamic_cast<const ZbSemiconductor*> (modelB))->get_initial_parameters();
-    //}
-    //else
-      gap -= _varshni[0] * T * T / (T + _varshni[1]);
+    gap -= _varshni[0] * T * T / (T + _varshni[1]);
 
     band_edge() += gap;
   }
