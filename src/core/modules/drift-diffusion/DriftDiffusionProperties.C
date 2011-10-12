@@ -350,6 +350,11 @@ DriftDiffusionProperties::prepare_submodels(void)
   create_submodels(_pm, "polarization");
 
 
+  // traps
+  vector<PhysicalModelInterface*> pd;
+  create_submodels(pd, "trap");
+
+
   if (!is_dielectric())
   {
 

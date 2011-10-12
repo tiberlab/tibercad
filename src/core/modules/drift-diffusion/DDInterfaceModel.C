@@ -58,8 +58,12 @@ DDInterfaceModel::prepare_submodels(void)
     get_options().add_submodel("recombination", opts);
   }
 
-  vector<PhysicalModelInterface*> rec;
-  create_submodels(rec, "recombination");
+  vector<PhysicalModelInterface*> pd;
+  create_submodels(pd, "recombination");
+
+  // traps
+  create_submodels(pd, "trap");
+
 }
 
 
