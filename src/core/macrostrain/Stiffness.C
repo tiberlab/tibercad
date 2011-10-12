@@ -20,9 +20,9 @@ Stiffness::Stiffness(const ModelOptions& options) : PhysicalModelInterface(optio
 
 
 
-Stiffness* Stiffness::create( const ModelOptions& options )
+Stiffness* Stiffness::create(const Material* mat, const ModelOptions& options)
 {
-  const std::string& str = options.get_option("crystal_structure", "");
+  std::string str = mat->get_structure();
   Stiffness* mod = NULL;
   if (str == "zb")
     mod = ZbStiffness::create(options);

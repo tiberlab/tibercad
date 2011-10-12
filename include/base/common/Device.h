@@ -213,8 +213,8 @@ class Device
     const std::string& get_region_name(ID id) const;
 
 
-    //! Get the name of a boundary region
-    /*!
+    // Get the name of a boundary region
+    /*
      * \param id the ID of the boundary region
      *
      * If a region has no name associated, it will be assigned the

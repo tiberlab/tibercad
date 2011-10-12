@@ -31,7 +31,7 @@ class Stiffness : public PhysicalModelInterface
   void set_C_tensor_crystal(const Tensor4DSym&     C);
 
   //! creates new object
-  static Stiffness* create(const ModelOptions& options);
+  static Stiffness* create(const Material* mat, const ModelOptions& options);
 
   void  calculate_strain_from_stress(const Tensor2Sym& stress, Tensor2Sym& strain ) const;
 

@@ -39,7 +39,7 @@ MacrostrainModel::prepare_submodels(void)
 
   ModelOptions opt(get_options());
   opt.delete_all_submodels();
-  stiffness = Stiffness::create(opt);
+  stiffness = Stiffness::create(get_material(), opt);
   add_submodel("stiffness", stiffness);
 
   piezo = Piezoelectricity::create(get_material(), opt);
