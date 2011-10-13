@@ -35,13 +35,6 @@
 using namespace std;
 
 
-//
-// Module interface
-//
-
-TIBER_MODULE(DSSC, dssc)
-
-
 
 
 DSSC*

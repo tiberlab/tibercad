@@ -10,7 +10,7 @@
 // the third one is the specific model implementation.
 // The library name will then be bulk_default.so
 
-TIBER_MODULE(DDHeatSource, heat_source, joule)
+//TIBER_MODULE(DDHeatSource, heat_source, joule)
 
 using namespace std;
 

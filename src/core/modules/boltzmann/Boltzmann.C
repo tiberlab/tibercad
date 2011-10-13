@@ -22,7 +22,7 @@
 // The first string is the class name of the object to be created,
 // the second one is the name of the module as it should be referred
 // in the input file (the Makefile defines MODULE_NAME, which can be used here).
-TIBER_MODULE(Boltzmann, MODULE_NAME)
+
 using namespace std;
 
 

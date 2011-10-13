@@ -11,8 +11,6 @@
 
 #include <limits>
 
-TIBER_MODULE(DSSCGeneration, dssc_generation)
-
 
 using namespace std;
 

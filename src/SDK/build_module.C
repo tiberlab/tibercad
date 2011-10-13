@@ -610,40 +610,18 @@ void process_module(const string& name, const ModelOptions& options)
   string libsuffix(".so");
 #endif
 
-  // the module creation code is put into a header file that gets included by
-  // defining TIBERMODULE to #include "module.h"
-  {
-    string module_code = options.get_option("creator_code", "");
-    ofstream mh(module + ".h"); // mh = module_header
-    mh << "/*\n"
-      <<  " * This file was generated automatically by the tiberCAD\n"
-      <<  " * build_module tool.\n"
-      <<  " * Do not change its content in the case you compile\n"
-      <<  " * the module by hand.\n"
-      <<  " */\n\n"
-      <<  "#include \"TiberModule.h\"\n"
-      <<  "extern \"C\" {\n"
-      <<  "  TBDLEXPORT void TBDESTROYFUNC(TiberModelObject* p)\n"
-      <<  "  { delete p; }\n\n"
-      <<  "  TBDLEXPORT TiberModelObject* TBCREATEFUNC(const ModelOptions& options, const void* handle)\n"
-      <<  "  {\n"
-      <<  "    TiberModelObject* obj = NULL;\n";
-    if (!module_code.empty())
-      mh << module_code;
-    else
-    {
-      mh << "    obj = " << creatable << "::create(options); \n";
-    }
-    mh << "    return obj;\n";
-    mh << "  }\n"
-      <<  "}";
-  }
-
-
 
   string compileflags = options.get_option("compiler_flags", "");
-  compileflags += "-DMODULE_NAME=" + module;
-  //compileflags += "-DTIBERMODULE=\"#include \\\"" + module + ".h\\\"\"";
+  compileflags += " -DMODULE_NAME=" + module;
+  compileflags += " -DCREATABLE=" + creatable;
+
+  string module_code = options.get_option("creator_code", "");
+  if (!module_code.empty())
+  {
+    ofstream of(module + "_creator.h");
+    of << module_code;
+    compileflags += " -DCREATORCODE=\"" + module + "_creator.h\"";
+  }
 
   vector<string> objects;
   for (size_t i = 0; i < sources.size(); ++i)

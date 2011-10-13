@@ -9,7 +9,6 @@
 // is the type of the model (here it is a polarization model),
 // the third one is the specific model implementation.
 // The library name will then be permittivity_constant.so
-TIBER_MODULE(ConstantPermittivity, permittivity, constant)
 
 using namespace std;
 
