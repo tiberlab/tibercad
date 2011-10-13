@@ -593,6 +593,20 @@ class PhysicalModelInterface : public TiberModelObject
      */
     void _create_submodels(void);
 
+    //! Create a submodel
+    void _create_submodel(PhysicalModelInterface*& model, const std::string& type);
+
+    //! Create a submodel
+    void _create_submodel(PhysicalModelInterface*& model, const std::string& type,
+        const ModelOptions& default_opts);
+
+    //! Create submodels
+    void _create_submodels(std::vector<PhysicalModelInterface*>& models,
+        const std::string& type);
+
+    //! Create submodels
+    void _create_submodels(std::vector<PhysicalModelInterface*>& models,
+        const std::string& type, const ModelOptions& default_opts);
 
     //! The internal implementation of the create method
     static PhysicalModelInterface* _create(
@@ -816,7 +830,7 @@ void
 PhysicalModelInterface::create_submodel(T*& model, const std::string& type)
 {
   PhysicalModelInterface* mod = NULL;
-  create_submodel<PhysicalModelInterface>(mod, type);
+  _create_submodel(mod, type);
   model = static_cast<T*>(mod);
 }
 
@@ -827,7 +841,7 @@ PhysicalModelInterface::create_submodel(T*& model, const std::string& type,
     const ModelOptions& default_opts)
 {
   PhysicalModelInterface* mod = NULL;
-  create_submodel<PhysicalModelInterface>(mod, type, default_opts);
+  _create_submodel(mod, type, default_opts);
   model = static_cast<T*>(mod);
 }
 
@@ -839,7 +853,7 @@ PhysicalModelInterface::create_submodels(std::vector<T*>& models,
     const std::string& type)
 {
   std::vector<PhysicalModelInterface*> mod;
-  create_submodels<PhysicalModelInterface>(mod, type);
+  _create_submodels(mod, type);
   models.resize(mod.size());
   for (size_t i = 0; i < mod.size(); i++)
     models[i] = static_cast<T*>(mod[i]);
@@ -853,7 +867,7 @@ PhysicalModelInterface::create_submodels(std::vector<T*>& models,
     const std::string& type, const ModelOptions& default_opts)
 {
   std::vector<PhysicalModelInterface*> mod;
-  create_submodels<PhysicalModelInterface>(mod, type, default_opts);
+  _create_submodels(mod, type, default_opts);
   models.resize(mod.size());
   for (size_t i = 0; i < mod.size(); i++)
     models[i] = static_cast<T*>(mod[i]);

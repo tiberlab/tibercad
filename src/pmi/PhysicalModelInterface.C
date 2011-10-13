@@ -510,9 +510,9 @@ PhysicalModelInterface::delete_submodel(const std::string& key)
 
 
 
-template <>
+//template <>
 void
-PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
+PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
     const std::string& type)
 {
   model = NULL;
@@ -557,9 +557,9 @@ PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
 }
 
 
-template <>
+//template <>
 void
-PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
+PhysicalModelInterface::_create_submodel(PhysicalModelInterface*& model,
     const std::string& type, const ModelOptions& default_opts)
 {
   create_submodel(model, type);
@@ -597,9 +597,9 @@ PhysicalModelInterface::create_submodel(PhysicalModelInterface*& model,
 }
 
 
-template <>
+//template <>
 void
-PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& models,
+PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& models,
     const std::string& type)
 {
   models.resize(0);
@@ -645,9 +645,9 @@ PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& m
 
 
 
-template <>
+//template <>
 void
-PhysicalModelInterface::create_submodels(std::vector<PhysicalModelInterface*>& models,
+PhysicalModelInterface::_create_submodels(std::vector<PhysicalModelInterface*>& models,
     const std::string& type, const ModelOptions& default_opts)
 {
   create_submodels(models, type);
