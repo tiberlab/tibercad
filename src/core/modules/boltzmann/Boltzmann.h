@@ -61,9 +61,6 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
     PhysicalModel* create_boundary_model(const ModelOptions& options,
         const MaterialBoundary* boundary) const;
 
-    //! We need to create boundary condition model
-   // virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-    //    const Material* material_A, const Material* material_B) const;
 
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,

@@ -19,7 +19,7 @@ RotatedCrystal::RotatedCrystal(const ModelOptions& options)
 
 
 RotatedCrystal*
-RotatedCrystal::create(const PhysicalObject* owner,
+RotatedCrystal::create(const Material* owner,
     const ModelOptions& options)
 {
   std::string structure = static_cast<const Material*>(owner)->get_structure();
@@ -40,6 +40,8 @@ RotatedCrystal::create(const PhysicalObject* owner,
     msg += structure;
     throw ModelErrorException(msg);
   }
+
+  rc->set_material(owner);
 
   return rc;
 }

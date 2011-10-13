@@ -24,35 +24,31 @@ BoltzmannModel::BoltzmannModel(const ModelOptions& options)
 
 }
 
-
-
 BoltzmannModel*
 BoltzmannModel::create(const Material* mat, const ModelOptions& options)
 {
-  return PhysicalModelInterface::create<BoltzmannModel>(_create,_destroy, mat, options);
+  return PhysicalModelInterface::create<BoltzmannModel>(_create, _destroy, mat, options);
 }
+
+
+
 
 void
 BoltzmannModel::prepare_submodels(void)
 {
+  ModelOptions opts;
 
   //Heat Transport Default
-  if (!get_options().has_submodel("heat_transport"))
-  {
-    ModelOptions opts;
-    opts.set_option("type","fourier");
-    get_options().add_submodel("heat_transport",opts);
-  }
+  opts.set_option("type", "fourier");
+  create_submodel(_htm, "heat_transport", opts);
+
   
   //Thermal Conductivity Default
-  if (!get_options().has_submodel("thermal_conductivity"))
-  {
-    ModelOptions opts;
-    opts.set_option("type","constant");
-    get_options().add_submodel("thermal_conductivity",opts);
+  opts.set_option("type","constant");
+  create_submodel(_tcm, "thermal_conductivity", opts);
 
-    //create_submodel(_tcm, "thermal_conductivity", opts);
-  }
+
+  create_submodels(_hsm, "heat_source");
 
 }
 
@@ -60,36 +56,12 @@ void
 BoltzmannModel::do_init(void)
 {
 
-
-  PhysicalModelInterface::SubmodelIterator  it;
-
-  it = submodels_begin("heat_transport");
-  _htm = dynamic_cast<HeatTransportModel*> ((*it).second);
-
-
-  //Lattice Thermal Conductivity
-  it = submodels_begin("thermal_conductivity");
-  _tcm = dynamic_cast<ThermalConductivityModel*> ((*it).second);
-
-  //---------------------------------------
-  ModelOptions::submodel_iterator
-    it_hs(get_options().submodels_begin("heat_source"));
-  ModelOptions::submodel_iterator
-    end_hs(get_options().submodels_end("heat_source"));
-
-  //Heat Source
-  it = submodels_begin("heat_source");
-  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("heat_source"));
-  for ( ; it != it_end ; ++it)
-    _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
-
   //If we do gray we have to get the sound velocity and the relaxation time
   _kappa = _tcm->get_thermal_conductivity();
   if (_htm->get_type() == HeatTransportModel::Gray)
   {
     //----------------------------------
-
-   const Database& db = get_database();
+    const Database& db = get_database();
     //Sound Velocity
     db.set_section("sound_velocity/constant");
     _vg = db.get("vg",0.0, false);

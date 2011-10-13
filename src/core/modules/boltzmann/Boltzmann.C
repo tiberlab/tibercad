@@ -1758,12 +1758,6 @@ Boltzmann::create_boundary_model(const ModelOptions& options,
 }
 
 
-//PhysicalModel*
-//Boltzmann::create_boundary_model(const ModelOptions& options,
-//   const Material* material_A, const Material* material_B) const
-//{
-//  return BoltzmannBoundaryModel::create(options);
-//}
 
 
 void

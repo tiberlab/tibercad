@@ -528,7 +528,8 @@ DriftDiffusion::do_solve(void)
   }
 
   //set_dirichlet_bc();
-  //calculate_weights();
+  if (get_option("use_weight", false))
+    calculate_weights();
 
   try
   {
@@ -649,6 +650,7 @@ DriftDiffusion::calculate_weights(void)
   const unsigned int var_hf = system.variable_number("fermi_h");
 
   const double phi0 = get_scaling().get_potential_scaling();
+  const double C0 = get_scaling().get_density_scaling();
 
   MeshBase& mesh = get_mesh();
   MeshBase::element_iterator it = mesh.active_elements_begin();
@@ -684,8 +686,8 @@ DriftDiffusion::calculate_weights(void)
 
       sc->calculate_densities();
 
-      double n = sc->get_electron_density() < 1e7 ? 0 : 1;
-      double p = sc->get_hole_density() < 1e7? 0 : 1;
+      double n = sc->get_electron_density() < 1 ? 0 : 1;
+      double p = sc->get_hole_density() < 1? 0 : 1;
       weight.set(dofu, 1);
       weight.set(dofen, n);
       weight.set(dofep, p);
@@ -3348,9 +3350,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       const RealTensor& permittivity = sc->get_relative_permittivity();
 
       long double Rn = sc->get_net_electron_recombination_rate();
-      //Rn = (fabs(Rn) < 1.0e-3) ? 0.0 : Rn;
+      //Rn = (fabs(Rn) < 1.0e3) ? 0.0 : Rn;
       long double Rp = sc->get_net_hole_recombination_rate();
-      //Rp = (fabs(Rp) < 1.0e-3) ? 0.0 : Rp;
+      //Rp = (fabs(Rp) < 1.0e3) ? 0.0 : Rp;
       if (_useparticle != 'b')
         Rn = Rp = 0.0;
 
@@ -3369,7 +3371,6 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       double sigma_h = sc->get_hole_conductivity() / (mu0 * C0_h);
       double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
       double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
-
 
       //
       // The residual looks like this:
@@ -4051,7 +4052,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     residual->close();
     //sysmat.close();
     //sysmat.print_matlab("sysmat.m");
-    /*
+    ///*
     if (coupling & ELECTRONS)
     {
       if (__private_counter > 0)
@@ -4067,7 +4068,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       __private_counter++;
       oldx = x;
     }
-    */
+    //*/
   }
 
 

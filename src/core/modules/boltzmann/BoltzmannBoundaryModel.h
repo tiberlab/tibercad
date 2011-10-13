@@ -20,8 +20,8 @@ class BoltzmannBoundaryModel : public PhysicalModel
     ~BoltzmannBoundaryModel(void) {};
 
     //! Creator function
-      static BoltzmannBoundaryModel* create(const MaterialBoundary* boundary,
-          const ModelOptions& options);
+    static BoltzmannBoundaryModel* create(const MaterialBoundary* boundary,
+        const ModelOptions& options);
 
 
     //! Calculate for a point on the given side

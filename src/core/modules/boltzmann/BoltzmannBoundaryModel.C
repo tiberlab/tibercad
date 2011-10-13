@@ -2,6 +2,7 @@
 
 #include "BoltzmannBoundaryModel.h"
 #include "MaterialBoundary.h"
+
 using namespace std;
 
 BoltzmannBoundaryModel*
@@ -11,8 +12,8 @@ BoltzmannBoundaryModel::create(const MaterialBoundary* boundary, const ModelOpti
 
   std::string type = options.get_option("type", "heat_reservoir");
   BoltzmannBoundaryModel* mod =
-      PhysicalModelInterface::create<BoltzmannBoundaryModel>("boltzmann_bnd_" + type,
-          boundary, options);
+      PhysicalModelInterface::create<BoltzmannBoundaryModel>(
+          "boltzmann_bnd_" + type, boundary, options);
 
   if (mod == NULL)
   {

@@ -69,8 +69,7 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
 
   private:
 
-
-  static TiberModelObject*  _create(const ModelOptions& options, const void*);
+  static TiberModelObject* _create(const ModelOptions& options, const void*);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -166,6 +165,7 @@ BoltzmannModel::get_heat_transport_model(void) const
   return _htm;
 
 }
+
 
 
 
