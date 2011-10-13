@@ -25,12 +25,12 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
     virtual ~BoltzmannModel(void) {};
 
     //! Creator function
-    static BoltzmannModel* create(const ModelOptions& options);
+    static BoltzmannModel* create(const Material* mat, const ModelOptions& options);
+
 
   HeatTransportModel* get_heat_transport_model(void) const;
 
   //ThermalConductivityModel* get_thermal_conductivity_model(void) const;
-
 
   const double get_total_heat_source(void) const;
 
@@ -42,7 +42,6 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
 
   const double get_relaxation_time(void) const;
 
-  
 
  //! Calculate for a point on the given side
   void calculate(const Elem* elem, const Point& point);
@@ -70,7 +69,8 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
 
   private:
 
-  static TiberModelObject*  _create(const ModelOptions& options);
+
+  static TiberModelObject*  _create(const ModelOptions& options, const void*);
 
   static void  _destroy( TiberModelObject* p);
 
@@ -101,11 +101,15 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
 
 };
 
+
+
 inline
-TiberModelObject*  BoltzmannModel::_create(const ModelOptions& options)
+TiberModelObject*  BoltzmannModel::_create(const ModelOptions& options, const void*)
 {
   return new BoltzmannModel(options);
 }
+
+
 
 inline
 void  BoltzmannModel::_destroy( TiberModelObject* p)
@@ -164,12 +168,6 @@ BoltzmannModel::get_heat_transport_model(void) const
 }
 
 
-inline
-BoltzmannModel*
-BoltzmannModel::create(const ModelOptions& options)
-{
-  return dynamic_cast<BoltzmannModel*>(PhysicalModelInterface::create(_create,_destroy,options));
-}
 
 inline
 PhysicalModelInterface*

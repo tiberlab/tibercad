@@ -3,7 +3,7 @@
 #include "GrayModel.h"
 
 
-TIBER_MODULE(GrayModel,HeatTransport, gray)
+TIBER_MODULE(GrayModel,heat_transport, gray)
 
 
 using namespace std;

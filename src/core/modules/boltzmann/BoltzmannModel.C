@@ -24,16 +24,24 @@ BoltzmannModel::BoltzmannModel(const ModelOptions& options)
 
 }
 
+
+
+BoltzmannModel*
+BoltzmannModel::create(const Material* mat, const ModelOptions& options)
+{
+  return PhysicalModelInterface::create<BoltzmannModel>(_create,_destroy, mat, options);
+}
+
 void
 BoltzmannModel::prepare_submodels(void)
 {
 
   //Heat Transport Default
-  if (!get_options().has_submodel("HeatTransport"))
+  if (!get_options().has_submodel("heat_transport"))
   {
     ModelOptions opts;
     opts.set_option("type","fourier");
-    get_options().add_submodel("HeatTransport",opts);
+    get_options().add_submodel("heat_transport",opts);
   }
   
   //Thermal Conductivity Default
@@ -42,6 +50,8 @@ BoltzmannModel::prepare_submodels(void)
     ModelOptions opts;
     opts.set_option("type","constant");
     get_options().add_submodel("thermal_conductivity",opts);
+
+    //create_submodel(_tcm, "thermal_conductivity", opts);
   }
 
 }
@@ -50,11 +60,10 @@ void
 BoltzmannModel::do_init(void)
 {
 
-  //PhysicalModelInterface::SubmodelIterator  it;
 
   PhysicalModelInterface::SubmodelIterator  it;
 
-  it = submodels_begin("HeatTransport");  
+  it = submodels_begin("heat_transport");
   _htm = dynamic_cast<HeatTransportModel*> ((*it).second);
 
 
@@ -64,14 +73,13 @@ BoltzmannModel::do_init(void)
 
   //---------------------------------------
   ModelOptions::submodel_iterator
-    it_hs(get_options().submodels_begin("HeatSource"));
+    it_hs(get_options().submodels_begin("heat_source"));
   ModelOptions::submodel_iterator
-    end_hs(get_options().submodels_end("HeatSource"));
+    end_hs(get_options().submodels_end("heat_source"));
 
   //Heat Source
-
-  it = submodels_begin("HeatSource");
-  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("HeatSource"));
+  it = submodels_begin("heat_source");
+  const PhysicalModelInterface::SubmodelIterator  it_end(submodels_end("heat_source"));
   for ( ; it != it_end ; ++it)
     _hsm.push_back(dynamic_cast<HeatSourceModel*> ((*it).second));
 
@@ -80,7 +88,8 @@ BoltzmannModel::do_init(void)
   if (_htm->get_type() == HeatTransportModel::Gray)
   {
     //----------------------------------
-    Database& db = get_database();
+
+   const Database& db = get_database();
     //Sound Velocity
     db.set_section("sound_velocity/constant");
     _vg = db.get("vg",0.0, false);
@@ -95,7 +104,7 @@ BoltzmannModel::do_init(void)
     double kappam = (_kappa(0,0) + _kappa(0,0)  + _kappa(0,0))/3.0;
 
     double mfp(0);
-    get_parameter("mfp", mfp);
+    get_parameter("mfp", mfp); //units: meters
 
     if (mfp != 0.0)
       _vg = kappam * 3.0/_cg/mfp;
@@ -129,14 +138,14 @@ BoltzmannModel::do_print_info(void)
   {
 
     cout<<endl;
-    cout<<"kx : "   <<_kappa(0,0) <<" W/cm/K"<<endl;
-    cout<<"kz : "   <<_kappa(2,2) <<" W/cm/K"<<endl;
+    cout<<"kx : "   <<_kappa(0,0) <<" W/m/K"<<endl;
+    cout<<"kz : "   <<_kappa(2,2) <<" W/m/K"<<endl;
     if (_htm->get_type() == HeatTransportModel::Gray)
     {
       cout<<"tg: "  <<_tg * 1e12   <<" ps"<<endl;
-      cout<<"Lg: "<<_tg * _vg * 1e7  <<" nm"<<endl;
-      cout<<"vg: " <<_vg          <<" cm/s"<<endl;
-      cout<<"C : "  <<_cg          <<" j/K/cm3"<<endl;
+      cout<<"Lg: "<<_tg * _vg<<" m"<<endl;
+      cout<<"vg: " <<_vg          <<" m/s"<<endl;
+      cout<<"C : "  <<_cg          <<" j/K/m3"<<endl;
       cout<<endl;
     }
   }

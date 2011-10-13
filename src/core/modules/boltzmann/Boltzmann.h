@@ -57,11 +57,13 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
    /*! \copydoc SimulationInterface::do_get_solution_vector() */
     virtual NumericVector<double>& do_get_solution_vector(void);
 
+    //! We need to create boundary condition model
+    PhysicalModel* create_boundary_model(const ModelOptions& options,
+        const MaterialBoundary* boundary) const;
 
     //! We need to create boundary condition model
-    virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-        const Material* material_A, const Material* material_B) const;
-
+   // virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
+    //    const Material* material_A, const Material* material_B) const;
 
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,
@@ -81,6 +83,9 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
 
   //! Check if the gray simulation should be solved
   bool is_gray;
+
+  //! The index for the solid angle discretization
+  ID solid_angle_iter;
 
   typedef  std::map<const ElementSide, std::vector<double> >  SideData;
 
@@ -131,7 +136,7 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
 
   void from_nodal_to_cell(void);
 
-  double get_boundary_value(ElementSide elside);
+  double get_boundary_value(ElementSide elside, Point normal, Point dir);
   ID gray_sys_number;
   std::vector< NumericVector<Number>* > sol_dir;
   std::vector< NumericVector<Number>* > thermal_flux;
@@ -205,7 +210,8 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
     std::string first_guess;
 
     std::vector<Point> cd;
-
+    std::string hot_contact;
+    std::string cold_contact;
     bool diffusive;
     double s_0;
     double t_0;

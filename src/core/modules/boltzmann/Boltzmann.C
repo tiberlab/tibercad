@@ -41,7 +41,6 @@ Boltzmann::Boltzmann(const ModelOptions& options) :
 }
 
 
-
 Boltzmann*
 Boltzmann::create(const ModelOptions& options)
 {
@@ -57,7 +56,7 @@ Boltzmann::do_init(void)
 {
   parse_options();
 
-  get_scaling().set_calc_mesh_units(100.0 * get_scaling().get_calc_mesh_units());
+  //get_scaling().set_calc_mesh_units(100.0 * get_scaling().get_calc_mesh_units());
 
   dim = get_mesh().mesh_dimension();
 
@@ -289,8 +288,8 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
   system->attach_assemble_function(assemble_fourier);
   system->init();
 
-  thermal_flux_nodal.resize(dim);
-  for (ID i = 0; i<dim; i++ )
+  thermal_flux_nodal.resize(3);
+  for (ID i = 0; i<3; i++ )
   {
     thermal_flux_nodal[i] = (system->solution)->clone().release();
     thermal_flux_nodal[i]->zero();
@@ -319,8 +318,8 @@ Boltzmann::do_init_gray(void)
    gray_sys_number = system->number();
    //Initialize thermal flux
    
-   thermal_flux.resize(dim);
-   for (ID i = 0; i<dim; i++ )
+   thermal_flux.resize(3);
+   for (ID i = 0; i<3; i++ )
    {
      thermal_flux[i] = (system->solution)->clone().release();
      thermal_flux[i]->zero();
@@ -367,7 +366,7 @@ Boltzmann::~Boltzmann()
   
   if (is_gray)
   {
-    for (ID i = 0; i<dim; i++ )
+    for (ID i = 0; i<3; i++ )
       delete thermal_flux[i]; //elemental (for the gray model)
     
     for (ID k = 0; k<AngInt.n_slices ; k++ )
@@ -376,7 +375,7 @@ Boltzmann::~Boltzmann()
     delete  equilibrium_energy;
   }
   
-  for (ID i = 0; i<dim; i++ )
+  for (ID i = 0; i<3; i++ )
     delete thermal_flux_nodal[i];
  
 
@@ -394,6 +393,8 @@ Boltzmann::parse_options(void)
  opts.fourier_guess = options.get_option("fourier_guess",true);
  opts.do_fourier = options.get_option("do_fourier" ,true);
  myopts.diffusive = options.get_option("diffusive_walls",true);
+ myopts.hot_contact = options.get_option("hot_contact","Hot");
+ myopts.cold_contact = options.get_option("cold_contact","Cold");
 
 //  myopts.max_error =  options.get_option("max_error",1e-3);
 //  myopts.max_iter =  options.get_option("max_iter",1);
@@ -435,11 +436,11 @@ Boltzmann::do_setup_solution_variables(void)
   declare_solution(LatticeTemp, REAL, NODES, "K");
   declare_solution(FourierTemp, REAL, NODES, "K");
   declare_solution(MaxTemp, REAL, GLOBAL, "K");
-  declare_solution(ThermalFlux, VECTOR, NODES, "W/cm^2");
-  declare_solution(ThermCond, VECTOR, NODES, "W/cm K");
-  declare_solution(HeatSource, REAL, NODES, "W/cm^3");
+  declare_solution(ThermalFlux, VECTOR, NODES, "W/m^2");
+  declare_solution(ThermCond, VECTOR, NODES, "W/m K");
+  declare_solution(HeatSource, REAL, NODES, "W/m^3");
   // declare_solution(EffectiveKappa, REAL, NODES, "W/cm^3");
-  declare_solution(SolDir,VECTOR,CELL, "W/cm^3");
+  declare_solution(SolDir,VECTOR,CELL, "W/m^3");
   declare_solution(Partition,REAL,CELL, "");
   declare_solution(DomainTest,REAL,CELL, "");
   declare_solution(GRAY,REAL,CELL, "");
@@ -486,7 +487,7 @@ Boltzmann::solve_fourier(void)
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
 
   //--------------------------------------------
-  for (ID d = 0; d< dim; d++)
+  for (ID d = 0; d< 3; d++)
   {
     thermal_flux_nodal[d]->close();
     thermal_flux_nodal[d]->zero();
@@ -517,14 +518,15 @@ Boltzmann::solve_fourier(void)
     for (ID alpha = 0; alpha<dof_indices_fourier.size() ;alpha ++)
       heat_flux -= solution_fourier(dof_indices_fourier[alpha]) * (kappa * dphi[alpha][0]);
     
-    
+
+
     for (int n = 0; n < elem->n_nodes(); n++)
-      for (ID d = 0; d< dim; d++)
+      for (ID d = 0; d< 3; d++)
 	thermal_flux_nodal[d]->add(dof_indices_fourier[n],heat_flux(d)/node_conn[elem->node(n)]);
     
   }
   
-  for (ID d = 0; d< dim; d++)
+  for (ID d = 0; d< 3; d++)
     thermal_flux_nodal[d]->close();
  
 
@@ -552,7 +554,6 @@ Boltzmann::from_nodal_to_cell()
   DofMap& dof_map_gray = system_gray.get_dof_map();
   std::vector<unsigned int> dof_indices_gray;
   const NumericVector<double>& solution_gray = *(system_gray.solution);
-
 
   set<const Elem*>::iterator el = Domain.begin();
   const set<const Elem*>::iterator end_el = Domain.end();
@@ -586,7 +587,7 @@ Boltzmann::from_nodal_to_cell()
 
     equilibrium_energy->set(dof_indices_gray[0],T);
 
-    for(ID d = 0; d<dim; d++)
+    for(ID d = 0; d<3; d++)
       thermal_flux[d]->set(dof_indices_gray[0],heat_flux(d));
 
   }
@@ -613,7 +614,7 @@ Boltzmann::from_cell_to_nodal()
   //--------------------------------------------
 
   system_fourier.solution->zero();
-  for (ID d = 0; d< dim; d++)
+  for (ID d = 0; d< 3; d++)
     thermal_flux_nodal[d]->zero();
   //-----------------------------------------------------
 
@@ -629,18 +630,17 @@ Boltzmann::from_cell_to_nodal()
     double T = (*equilibrium_energy)(dof_indices_gray[0]);
 
     RealGradient heat_flux(0);
-    for (ID d = 0; d< dim; d++)
+    for (ID d = 0; d<3; d++)
       heat_flux(d) = (*thermal_flux[d])(dof_indices_gray[0]);
 
     for (int n = 0; n < elem->n_nodes(); n++)
     {
       system_fourier.solution->add(dof_indices_fourier[n],T/node_conn[elem->node(n)]);
 
-      for (ID d = 0; d< dim; d++)
+      for (ID d = 0; d<3; d++)
 	thermal_flux_nodal[d]->add(dof_indices_fourier[n],heat_flux(d)/node_conn[elem->node(n)]);
 
     }
-
 
   }
 
@@ -658,7 +658,6 @@ Boltzmann::from_cell_to_nodal()
 
 //   const unsigned int nn  = mesh.n_active_elem();
 //   const unsigned int dim = mesh.mesh_dimension();
-
 //   legend.resize(variables.size());
 
 //   unsigned int n_vars = 0;
@@ -740,8 +739,7 @@ Boltzmann::solve_gray(void)
     sol_dir[k]->zero();
     sol_dir[k]->add(*equilibrium_energy);
   }
-
-  //-----Fill the boundary value (only for the outer boundary bieing in the gray domain------------------
+  //-----Fill the boundary value (only for the outer boundary being in the gray domain------------------
   SD.clear();
   {
 
@@ -782,27 +780,30 @@ Boltzmann::solve_gray(void)
   cout<<endl;
   cout<<"      GRAY..."<<endl;
 
-
+  solid_angle_iter = 0;
   while (E_err > myopts.max_error & iter < myopts.max_iter)
   {
 
-    for (ID k = 0; k<AngInt.n_slices; k++ )
+    for (ID k = 0; k < AngInt.n_slices; k++ )
     {
 
-      vec_spec = AngInt.spec[k];
-      d_omega = AngInt.d_omega[k];
-      IntDir = AngInt.directions[k];
-      dir = AngInt.dir[k];
+        solid_angle_iter = k;
+        // vec_spec = AngInt.spec[k];
+         d_omega = AngInt.d_omega[k];
+         IntDir = AngInt.directions[k];
+         dir = AngInt.dir[k];
 
        if  (SimulationOptions::verbose() > 2)
 	AngInt.print_info(k);
 
-      (system.solution)->zero();
+       //system.init();
+      //cout<<k<<endl;
       system.solve();
 
       sol_dir[k]->zero();
       sol_dir[k]->add(*(system.solution));
 
+      (system.solution)->zero();
     }
 
     //----UPDATE BOUNDARY DATA-----------------------
@@ -846,58 +847,71 @@ Boltzmann::solve_gray(void)
     E_err = abs(energy_norm - old_energy_norm)/max(energy_norm,old_energy_norm);
 
     //  cout<<"MAX TEMP:  "<<max_T<<" K"<<endl;
-   //  //----COMPUTE THERMAL FLUX--------------
-    {
-
-      for (ID i = 0; i<dim ; i++ )
-      {
-	thermal_flux[i]->close();
-	thermal_flux[i]->zero();
-      }
-
-      set<const Elem*>::iterator el = Domain.begin();
-      const set<const Elem*>::iterator end_el = Domain.end();
-      for ( ; el != end_el ; ++el)
-      {
-	const Elem* elem = *el;
-	ID dof = elem->dof_number(gray_sys_number,0,0);
-	BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-	mod.calculate(elem,elem->centroid());
-	double vg = mod.get_sound_velocity();
 
 
-	for (ID k = 0; k<AngInt.n_slices ; k++ )
-	{
-	  double value = (*sol_dir[k])(dof) * vg/(4.0 * M_PI);
+   //----COMPUTE THERMAL FLUX--------------
 
-	  for (ID i = 0; i<dim ; i++ )
-	  {
-	    double flux = value * AngInt.directions[k](i);
-	    thermal_flux[i]->add(dof,flux);
+    ofstream myfile;
 
-	  }
-	}
-      }
-    }
+    myfile.open ("energy.dat",ios_base::app);
+    myfile << energy_norm <<"\n";
+    myfile.close();
 
-    if  (SimulationOptions::verbose() > 1)
-    {
-      double kappa = compute_effective_thermal_conductivity();
-      cout<<"Effettive thermal conductivity:    "<<kappa* 100.0<<" W/(m K)"<<endl;
-    }
-    J_err = energy_conservation_check_traditional();
-    //J_err = energy_conservation_check();
+    //if  (SimulationOptions::verbose() > 1)
+    //{
+    //  double kappa = compute_effective_thermal_conductivity();
+    //  cout<<"Effettive thermal conductivity:    "<<kappa* 100.0<<" W/(m K)"<<endl;
+    //}
+    //J_err = energy_conservation_check_traditional();
+    ////J_err = energy_conservation_check();
     //--------------------------------------------------------------
+
+    cout<<endl;
 
     iter +=1;
     if  (SimulationOptions::verbose() > 1)
-      cout<<"          Iter: "<<iter<<" E_err: "<<E_err<<"  J_err: "<<J_err<<endl;
+      cout<<"          Iter: "<<iter<<" E_err: "<<E_err<<endl;
 
 
   }
+  //COMPUTE THERMAL FLUX
+          {
+
+            for (ID i = 0; i<3 ; i++ )
+            {
+              thermal_flux[i]->close();
+              thermal_flux[i]->zero();
+            }
+
+            set<const Elem*>::iterator el = Domain.begin();
+            const set<const Elem*>::iterator end_el = Domain.end();
+            for ( ; el != end_el ; ++el)
+            {
+              const Elem* elem = *el;
+              ID dof = elem->dof_number(gray_sys_number,0,0);
+              BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
+              mod.calculate(elem,elem->centroid());
+              double vg = mod.get_sound_velocity();
+              double cg = mod.get_heat_capacity();
+
+
+              for (ID k = 0; k<AngInt.n_slices ; k++ )
+              {
+                double value = (*sol_dir[k])(dof) * cg * vg / AngInt.total_angle;
+
+                for (ID i = 0; i<3 ; i++ )
+                {
+                  double flux = value * AngInt.directions[k](i);
+                  thermal_flux[i]->add(dof,flux);
+
+                }
+              }
+            }
+          }
+
+  cout<<endl;
   cout<<"      ...GRAY"<<endl;
   cout<<endl;
-
 
 }
 
@@ -1032,7 +1046,7 @@ Boltzmann::energy_conservation_check_traditional()
       {
 	fe_face->reinit(elem,ns);
 
-	for (ID d = 0; d<dim; d++)
+	for (ID d = 0; d<3; d++)
 	{
           double value = JxW_face[0] *(*thermal_flux[d])(dof_indices[0]) * normal[0](d);
 	  power_dissipated += value;
@@ -1192,8 +1206,10 @@ Boltzmann::compute_effective_thermal_conductivity()
 {
  EquationSystems& es = get_equation_systems();
 
+
  if (is_gray)
  {
+
   //-----------------GRAY---------------
    TiberLinearSystem& gray_system =
      es.get_system<TiberLinearSystem>("gray");
@@ -1202,7 +1218,7 @@ Boltzmann::compute_effective_thermal_conductivity()
    vector<unsigned int> dof_indices_gray;  
    const unsigned int tvar_gray = gray_system.variable_number("T");
    FEType fe_type_gray = dof_map_gray.variable_type(tvar_gray);
-   
+
    //--------------surface-----------------
    AutoPtr<FEBase> fe_face_gray(build_finite_element(dim, fe_type_gray, true));
    QGauss qrule_face_gray(dim-1,CONSTANT);
@@ -1221,7 +1237,6 @@ Boltzmann::compute_effective_thermal_conductivity()
   const unsigned int tvar = system.variable_number("T");
   FEType fe_type = dof_map.variable_type(tvar);
 
-
    //------------BULK----------
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
   QGauss qrule(dim,FIFTH);
@@ -1233,11 +1248,11 @@ Boltzmann::compute_effective_thermal_conductivity()
   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
   QGauss qrule_face(dim-1,FIFTH);
   fe_face->attach_quadrature_rule(&qrule_face);
-  
+
   const std::vector<Point>& q_point_face = fe_face->get_xyz();
   const std::vector<std::vector<RealGradient> >&  dphi = fe_face->get_dphi();
   const std::vector<std::vector<double> >&  phi = fe_face->get_phi();
-  
+
   const std::vector<Real>& JxW_face = fe_face->get_JxW();
   const std::vector<Point>& normal = fe_face->get_normals();
   
@@ -1245,8 +1260,7 @@ Boltzmann::compute_effective_thermal_conductivity()
   double area = 0.0;
   double DeltaT = 0.0;
 
-  double Phot_gray = 0.0;
-  double Pcold_gray = 0.0;
+
   double Phot = 0.0;
   double Pcold = 0.0;
   double Ahot = 0.0;
@@ -1254,22 +1268,11 @@ Boltzmann::compute_effective_thermal_conductivity()
   double Thot = 0.0;
   double Tcold = 0.0;
 
+
+
   Point Point_hot(0);
   Point Point_cold(0);
-	
-//    double power = 0.0;
-//           string name = mod_b->get_name();
-// 	  if (!BoundaryPower.count(name))
-// 	  {
-// 	    BoundaryPower[name] = 0.0;
-//             BoundaryArea[name]  = 0.0;
-// 	    BoundaryTemp[name]  = 0.0;
-// 	  }  
-// 	    BoundaryPower[name] += power;
-//   map<string,double> BoundaryPower;
-//   map<string,double> BoundaryArea;
-//   map<string,double> BoundaryTemp;
-//   map<string,Point> BoundaryPoint;
+
 
   set<const Elem*>::iterator it = Domain.begin();
   const set<const Elem*>::iterator end = Domain.end();
@@ -1280,9 +1283,6 @@ Boltzmann::compute_effective_thermal_conductivity()
     const Elem* elem = *it;
     dof_map.dof_indices(elem, dof_indices);
 
-    //  if (is_gray)
-     //  dof_map_gray.dof_indices(elem, dof_indices_gray);
-    
     fe->reinit(elem);
     
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
@@ -1295,7 +1295,7 @@ Boltzmann::compute_effective_thermal_conductivity()
       Real H = mod.get_total_heat_source();
       total_heat_source += H * JxW[qp];
     }
-    
+
     for (ID ns = 0; ns<elem->n_sides(); ns++)
     {
       const ElementSide elside(elem->top_parent(),ns);
@@ -1306,26 +1306,27 @@ Boltzmann::compute_effective_thermal_conductivity()
 	
 	fe_face->reinit(elem,ns);
 
-	//if (is_gray)
-	// fe_face_gray->reinit(elem,ns);
-
 	if (mod_b != NULL)
 	{
-	  if (mod_b->get_name() == "Cold")
+
+	  if (mod_b->get_name() == myopts.cold_contact)
 	  {
-	    double a,b,c; 
-	    mod_b->get_coefficients(a,b,c);
-	    Tcold = c;
-	   cout<<Tcold<<endl;
 
-//              //GRAY 
-// 	    double Px = (*thermal_flux[0])(dof_indices_gray[0]) * normal_gray[0](0);
-// 	    double Py = (*thermal_flux[1])(dof_indices_gray[0]) * normal_gray[0](1);
-// 	    double Pz = (*thermal_flux[2])(dof_indices_gray[0]) * normal_gray[0](2);
-// 	    Pcold_gray += JxW_face_gray[0] * (Px + Py + Pz);
-            //------------            
+	    //For heat_reservoir contact we take the nominal value (the imposed one)
+	    if (mod_b->get_type()=="boltzmann_bnd_heat_reservoir")
+	    {
+	      double a,b,c;
+	      mod_b->get_coefficients(a,b,c);
+	      Tcold = c;
+	    }
 
-            //fourier
+	    //For periodic boundary condtion we take the naturally developed temperature
+	    if (mod_b->get_type()=="boltzmann_bnd_periodic")
+	    {
+	      ID dof = elem->dof_number(gray_sys_number,0,0);
+	      Tcold = (*equilibrium_energy)(dof);
+	    }
+
 	    Point_cold = q_point_face[0];
 	    
 	    for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
@@ -1341,27 +1342,33 @@ Boltzmann::compute_effective_thermal_conductivity()
 	    }
 	  }
 
-	  if (mod_b->get_name() == "Hot")
+	  if (mod_b->get_name() == myopts.hot_contact)
 	  {
+	    //For heat_reservoir contact we take the nominal value (the imposed one)
+	    if (mod_b->get_type()=="boltzmann_bnd_heat_reservoir")
+	    {
+	      double a,b,c;
+	      mod_b->get_coefficients(a,b,c);
+	      Thot = c;
+	    }
 
-          //   //GRAY 
- 	//     double Px = (*thermal_flux[0])(dof_indices_gray[0]) * normal[0](0);
-// 	    double Py = (*thermal_flux[1])(dof_indices_gray[0]) * normal[0](1);
-// 	    double Pz = (*thermal_flux[2])(dof_indices_gray[0]) * normal[0](2);
-// 	    Phot_gray += JxW_face_gray[0] * (Px + Py + Pz);
-//             //------------            
+	    //For periodic boundary condtion we take the naturally developed temperature
+	    if (mod_b->get_type()=="boltzmann_bnd_periodic")
+	    {
+	      ID dof = elem->dof_number(gray_sys_number,0,0);
+	      Thot = (*equilibrium_energy)(dof);
+	    }
 
-	    double a,b,c; 
-	    mod_b->get_coefficients(a,b,c);
-	    Thot = c;
+
 	    Point_hot = q_point_face[0];
-	 
+
 	    for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
 	    {
 	      Ahot += JxW_face[qp];
               
 	      for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
 	      {
+
 		double Px = (*thermal_flux_nodal[0])(dof_indices[alpha]) * normal[qp](0);
 		double Py = (*thermal_flux_nodal[1])(dof_indices[alpha]) * normal[qp](1);
 		double Pz = (*thermal_flux_nodal[2])(dof_indices[alpha]) * normal[qp](2);
@@ -1375,20 +1382,36 @@ Boltzmann::compute_effective_thermal_conductivity()
     }
   }
 
-  cout<<"Pcold_gray: "<<Pcold_gray<<" W"<<endl;  //! Order the solution in correct mode
-  cout<<"Phot_gray: "<<Phot_gray<<" W"<<endl; 
+
+  //Guess of the direction of the heat transport
+  //It simply takes the max coordinate displacement among contacts
+  Point dist = Point_hot - Point_cold;
+
+  double max_dist = - 1.0;
+
+  for (ID d = 0; d<3; d++)
+   if (abs(dist(d))>max_dist)
+       max_dist = abs(dist(d));
+  //-------------------------------------------
+
+  //cout<<"Pcold_gray: "<<Pcold_gray<<" W"<<endl;  //! Order the solution in correct mode
+  //cout<<"Phot_gray: "<<Phot_gray<<" W"<<endl;
   cout<<"Pcold: "<<Pcold<<" W"<<endl;  //! Order the solution in correct mode
   cout<<"Phot: "<<Phot<<" W"<<endl;
   cout<<"Tcold: "<<Tcold<<" K"<<endl;  //! Order the solution in correct mode
   cout<<"Thot: "<<Thot<<" K"<<endl;
   cout<<"Power emitted: "<<total_heat_source*1e-6<<" W"<<endl;
-  double effective_kappa = Pcold/Ahot/(abs(Thot - Tcold)) * abs(Point_hot(2) - Point_cold(2))* get_scaling().get_calc_mesh_units();
 
-   
+  cout<<abs(Thot - Tcold)<<endl;
+ // cout<< max_dist * get_scaling().get_calc_mesh_units()<<endl;
+  //cout<<Ahot<<endl;
+
+  double effective_kappa = Pcold/Ahot/(abs(Thot - Tcold)) * max_dist * get_scaling().get_calc_mesh_units();
+
   ofstream myfile;
 
   myfile.open ("kappa.dat",ios_base::app);
-  myfile << effective_kappa * 100.0<<"\n";
+  myfile << effective_kappa <<"\n";
   myfile.close();
 
   return effective_kappa;
@@ -1596,8 +1619,9 @@ Boltzmann::do_solve(void)
   if (opts.fourier_guess)
   {
     Domain = GlobalDomain;
-    //cout<<"FOURIER over ALL"<<endl;
+    cout<<"FOURIER over ALL...";
     solve_fourier();
+    cout<<"...done."<<endl;
     is_fourier_solved = true;
     first_guess = false;
     EquationSystems& es = get_equation_systems();
@@ -1605,6 +1629,9 @@ Boltzmann::do_solve(void)
       es.get_system<TiberLinearSystem>("fourier");
     initial_energy = (system.solution)->clone().release();
   }
+
+
+
 
   if (is_gray)
   {
@@ -1644,6 +1671,7 @@ Boltzmann::do_solve(void)
 	}
 	
 	solve_gray();
+
 	is_gray_solved = true;
 	
 	if (do_multiscale)
@@ -1664,7 +1692,7 @@ Boltzmann::do_solve(void)
 	Domain = GlobalDomain;
 	from_cell_to_nodal();
 	
-	if (do_multiscale || iter> 0)
+	if (do_multiscale && iter> 0)
 	  std::cout<<"      Iter: "<<iter<<" Error: "<<err<<std::endl;
 	else
 	  err  = opts.ms_error - 1e-6; //Quit soon
@@ -1679,6 +1707,11 @@ Boltzmann::do_solve(void)
     }
   } //if is_gray
 
+if  (SimulationOptions::verbose() > 1)
+ {
+  double kappa = compute_effective_thermal_conductivity();
+  cout<<"Effettive thermal conductivity:    "<<kappa<<" W/(m K)"<<endl;
+}
  //if  (SimulationOptions::verbose() > 1)
  //{
    //double pe = compute_power_emitted();
@@ -1687,9 +1720,10 @@ Boltzmann::do_solve(void)
    //cout<<"Power Emitted:    "<<pe<<" W"<<endl;
   // cout<<"Power Dissipated: "<<endl;
 
-   double kappa = compute_effective_thermal_conductivity();
-   cout<<"Effettive thermal conductivity:    "<<kappa* 100.0<<" W/(m K)"<<endl;
-   double  porosity = compute_porosity();
+
+  // double  porosity = compute_porosity();
+
+
   //cout<<"Porosity:    "<<compute_porosity()<<endl;
 
  //}
@@ -1709,19 +1743,27 @@ Boltzmann::create_bulk_model(const ModelOptions& options,
     const Material* mat) const
 {
 
-  return  BoltzmannModel::create(options);
+  return  BoltzmannModel::create(mat,options);
 
 }
 
 
 
+//! We need to create boundary condition model
 PhysicalModel*
 Boltzmann::create_boundary_model(const ModelOptions& options,
-    const Material* material_A, const Material* material_B) const
+    const MaterialBoundary* boundary) const
 {
-  return BoltzmannBoundaryModel::create(options);
+  return BoltzmannBoundaryModel::create(boundary, options);
 }
 
+
+//PhysicalModel*
+//Boltzmann::create_boundary_model(const ModelOptions& options,
+//   const Material* material_A, const Material* material_B) const
+//{
+//  return BoltzmannBoundaryModel::create(options);
+//}
 
 
 void
@@ -1800,7 +1842,7 @@ Boltzmann::get_solution_secure(const Elem* elem,
 	
 	RealGradient heat_flux(0);
 	for (ID i = 0; i < n_dofs; i++)
-	  for (ID d = 0; d < dim; d++)
+	  for (ID d = 0; d < 3; d++)
 	    heat_flux(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
 	
 	
@@ -1872,8 +1914,6 @@ Boltzmann::clear_system(const std::string& system_name)
 		      get_equation_systems().get_system(system_name));
 
 
-
-
   const MeshBase& mesh = get_mesh();
 
   vector<unsigned int> dof_indices;
@@ -1925,7 +1965,8 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
 
    // the volume finite element
    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-   QGauss qrule(dim, FIFTH);
+   //QGauss qrule(dim, FIFTH);
+   QGauss qrule(dim, CONSTANT);
    fe->attach_quadrature_rule(&qrule);
 
    const vector<Real>& JxW = fe->get_JxW();
@@ -1936,7 +1977,8 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
 
    // the surface finite element
    AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-   QGauss qface(dim - 1, SIXTH);
+   //QGauss qface(dim - 1, SIXTH);
+   QGauss qface(dim - 1, CONSTANT);
    fe_face->attach_quadrature_rule(&qface);
 
    const vector<Real>& JxW_face = fe_face->get_JxW();
@@ -1956,16 +1998,26 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
    set<const Elem*>::iterator el = Domain.begin();
    const set<const Elem*>::iterator end_el = Domain.end();
 
+  // system.matrix->clear();
+  // system.rhs->clear();
+
    ID el_numb = 0;
    SimulationEnvironment& se = get_environment();
    for ( ; el != end_el ; ++el)
    {
-     el_numb ++;
 
+     el_numb ++;
      const Elem* elem = *el;
+     fe->reinit(elem);
+
+     //cout<<"EL NUMBER: "<<el_numb<<endl;
+
 
      dof_map.dof_indices (elem,dof_indices);
+     //const unsigned int n_dofs = dof_indices.size();
 
+
+     //Update list of neighbors
      ID neighbor = elem->n_neighbors();
 
      for (ID k = 0; k < neighbor; k ++)
@@ -1978,16 +2030,16 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
 	 dof_indices.push_back(dof_indices_n[0]);
        }
        else
-	 dof_indices.push_back(0);
+        dof_indices.push_back(0);
      }
 
      const unsigned int n_dofs = dof_indices.size();
+     Fe.zero();
 
-     fe->reinit(elem);
+     Ke.zero();
      Ke.resize(n_dofs,n_dofs);
      Fe.resize(n_dofs);
-     Fe.zero();
-     Ke.zero();
+
 
      const unsigned int num_sides = elem->n_sides();
 
@@ -1998,10 +2050,10 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
      double vg = mod.get_sound_velocity();
      double e_0 = (*equilibrium_energy)(dof_indices[0]);
      Real cg = mod.get_heat_capacity();
-     Real heat_source = mod.get_total_heat_source();
+     Real heat_source = mod.get_total_heat_source() * 1e-6;
 
-     //Assembly1
-     Ke(0,0) = 1.0/tg * JxW[0];
+     //Assembly
+     Ke(0,0) = JxW[0];
 
      ID nb = 0;
      for (ID ns = 0; ns < elem->n_sides(); ns++)
@@ -2010,49 +2062,49 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
        fe_face->reinit(elem,ns);
        const ElementSide elside(elem->top_parent(),ns);
        double in = dir * normal[0];
-       double value = vg * (IntDir * normal[0])  * JxW_face[0];
-
+       double value = vg * tg * (IntDir * normal[0])/d_omega * JxW_face[0];
 
        if (in<0.0)
        {
+
 	 if (se.is_outer_boundary(elside) || (is_on_GF_boundary(elside) && is_fourier_solved))
 	 {
-	   Fe(0) -= get_boundary_value(elside) * value;
+	   Fe(0) -= get_boundary_value(elside,normal[0],dir) * value;
 	   nb ++;
 	 }
 	 else
-	   Ke(0,ns + 1) += value;
+	    Ke(0,ns + 1) += value;
        }
        else
-	 Ke(0,0) += value;
-
+         Ke(0,0) += value;
 
      }
-     //if (nb>0)
-     // Fe(0) /=nb;
 
-     Fe(0) += (e_0/tg  +  heat_source * d_omega) * JxW[0];
+     //This term is a mess
+     //if (nb>0)
+      // Fe(0) /=nb;
+
+
+    Fe(0) += (e_0 +  heat_source * tg / cg) * JxW[0];
 
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+
     system.matrix->add_matrix (Ke, dof_indices);
     system.rhs->add_vector    (Fe, dof_indices);
 
    }
 
-
    system.matrix->close();
-   //system.matrix->print_matlab("K.m");
    system.rhs->close();
-   //system.rhs->print_matlab("F.m");
+   //system.matrix->print_matlab("K.m");
 
+   //system.rhs->print_matlab("F.m");
 
 }
 
 
-
-
 double
-Boltzmann::get_boundary_value(ElementSide elside)
+Boltzmann::get_boundary_value(ElementSide elside, Point normal, Point dir)
 {
 
   BoltzmannBoundaryModel* mod =
@@ -2065,12 +2117,54 @@ Boltzmann::get_boundary_value(ElementSide elside)
   if (mod != NULL)
   {
     mod->calculate(elside.elem(), elside.side(), elside.elem()->centroid());
-    double a, b, c;
 
-    //c is the temperature
-    mod->get_coefficients(a, b, c);
-    value = c;
+    if (mod->get_type() == "boltzmann_bnd_heat_reservoir")
+    {
+      double a, b, c;
+      //c is the temperature
+      mod->get_coefficients(a, b, c);
+      value = c;
+    }
 
+    if (mod->get_type() == "boltzmann_bnd_periodic")
+      {
+         //Get the periodicity vector
+         RealGradient periodicity = mod->get_periodicity();
+         double DeltaT = mod->get_deltaT();
+
+         //Get the point to search for
+         AutoPtr< Elem > elem_face =  elside.elem()->build_side(elside.side());
+         Point point_side = elem_face->point(0);
+
+         //The 1 - delta term has been included in order to be sure that the point is in the element
+         Point pt_to_search = (point_side + periodicity);
+
+
+         //Get the element of that point
+          SideData::iterator it(SD.begin());
+          SideData::const_iterator it_end(SD.end());
+
+         value = 0.0;
+         for ( ; it != it_end; ++it)
+            if ((it->first).elem() -> contains_point(pt_to_search))
+            {
+
+              ID local_dof = elside.elem()->dof_number(gray_sys_number,0,0);
+              ID per_dof = (it->first).elem()->dof_number(gray_sys_number,0,0);
+              double DeltaT = (*equilibrium_energy)(local_dof)-(*equilibrium_energy)(per_dof);
+
+                //value = SD[it->first][solid_angle_iter] + DeltaT;
+              value = SD[it->first][solid_angle_iter] + DeltaT;
+
+            }
+         //cout<<point_side<<endl;
+        //cout<<pt_to_search<<endl;
+         if (value == 0)
+           cout<<"ERROR: no ELEMENT FOUND!!!"<<endl;
+
+
+
+      }
   }
   else //Internal boundary or wall
   {
@@ -2094,16 +2188,24 @@ Boltzmann::get_boundary_value(ElementSide elside)
       }
       else
       {//SPECULAR
-        //IMPLEMENT SPECULAR BOUNDARY
-	ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
-	value = SD[elside][vec_spec];
-	//	std::cout<<value<<std::endl;
 
+        ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
+
+
+        //Check which direction is the specular for thi side
+        for (ID k = 0; k<AngInt.n_slices; k++)
+        {
+          Point check = (AngInt.dir[k] - dir)/(AngInt.dir[k] - dir).size() - normal;
+
+          if (check.size()<1e-5)
+            value = SD[elside][k];
       }
+
     }
 
+   }
   }
-  //cout<<value<<endl;
+
   return value;
 
 
@@ -2160,7 +2262,6 @@ Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_na
 
    for ( ; el != end_el ; ++el)
    {
-
      const Elem* elem = *el;
 
      dof_map.dof_indices(elem, dof_indices);
@@ -2217,14 +2318,13 @@ Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_na
 	 {             
 	   if (is_on_GF_boundary(elside) && !first_guess) //If this an Gray/Fourier Boundary
 	   {
-	   
  	      ID dof = (elem->neighbor(s))->dof_number(gray_sys_number,0,0);
  	      do_boundary = true;
 
  	      if (is_gray_solved)  //-----------Get the Gray flux-------------------------------
  	      {
 		RealGradient heat_flux(0);
-		for (ID i = 0; i < dim; i++)
+		for (ID i = 0; i < 3; i++)
 		  heat_flux(i) = (*thermal_flux[i])(dof);
 
 		//Put here something
@@ -2249,8 +2349,8 @@ Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_na
 	 if (do_boundary)
 	 {
 	   fe_face->reinit(elem, s);
-	   if ((b < 1e-10) && (b >= 0)) b = 1e-10;
-	   else if ((b > -1e-10) && (b<= 0)) b = -1e-10;
+	   if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+	   else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
 	   a /= b;
 	   c /= b;
 	   
@@ -2267,79 +2367,6 @@ Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_na
        
      }
      
-// 	if (se.is_outer_boundary(elside) ||
-// 	    is_on_GF_boundary(elside))
-// 	  {
-// 	    BoltzmannBoundaryModel* mod =
-// 	      get_interface_model<BoltzmannBoundaryModel>(elem, s);
-
-// 	    fe_face->reinit(elem, s);
-
-// 	    const ElementSide elside(elem->top_parent(),s);
-
-
-// 	    double a, b, c;
-
-// 	    if (mod != NULL)
-// 	    {
-
-// 	      mod->calculate(elem, s,elem->centroid() );
-// 	      mod->get_coefficients(a, b, c);
-// 	      do_boundary = true;
-
-// 	    }
-// 	    else
-// 	    {
-	      
-// 	      if (is_on_GF_boundary(elside) && !first_guess) //If this an Gray/Fourier Boundary
-// 	      {
-// 	      	ID dof = (elem->neighbor(s))->dof_number(gray_sys_number,0,0);
-// 		do_boundary = true;
-	
-// 	      if (is_gray_solved)
-// 	      {
-// 		  //-----------Get the Gray flux-------------------------------
-// 	      RealGradient heat_flux(0);
-// 	      for (ID i = 0; i < dim; i++)
-// 		heat_flux(i) = (*thermal_flux[i])(dof);
-
-// 		  //Put here something
-// 	        double normal_flux =  heat_flux * normal[0];
-
-// 	        a = 0;
-// 		b = 1;
-// 		c = -normal_flux;
-// 	      	}
-// 	      	else //Impose the computed temperature 
-// 	     	{
-// 	        double T = (*equilibrium_energy)(dof);
-	     
-// 	        a = 1;
-// 	      	b = 0;
-// 	        c = T;
-
-// 	      	}
-// 	      }
-// 	    } //if (mod != NULL)
-
-// 	    if (do_boundary)
-// 	    {
-	     
-// 	      if ((b < 1e-10) && (b >= 0)) b = 1e-20;
-// 	      else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
-// 	      //a /= b;
-// 	      //c /= b;
-              
-// 	      for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-// 		for (unsigned int i = 0; i < n_dofs; i++)
-// 		{
-// 		  for (unsigned int j = 0; j < n_dofs; j++)
-// 		    Ke(i, j) += a * JxW_face[qp] * (phi_face[i][qp] * phi_face[j][qp]);
-// 		  Fe(i) += c * JxW_face[qp] * phi_face[i][qp];
-// 		}
-// 	    } //if (do_boundary)
-      //  } //	if (is_on_any_boundary(elside))
-   //   } //Side
 
      dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
      system_fourier.matrix->add_matrix(Ke, dof_indices);
@@ -2435,15 +2462,18 @@ Boltzmann::AngularIntegrator::compute_directions()
 {
 
 
-    double min_theta, max_theta, min_phi, max_phi;
+  //double min_theta, max_theta, min_phi, max_phi;
+      //double d_phi,theta, phi, d_theta;
+    /*ID k = 0;
 
     switch (dim)
     {
 
     case 1 :
 
-      theta_slices = 1;
-      phi_slices = 2;
+     theta_slices = 1;
+      if (phi_slices == 0)
+           phi_slices = 4;
 
       min_theta = 0.0;
       max_theta = M_PI;
@@ -2451,33 +2481,114 @@ Boltzmann::AngularIntegrator::compute_directions()
       min_phi = M_PI * 0.5;
       max_phi = M_PI * 2.0 + M_PI * 0.5;
 
-      weight = 2.0 * M_PI;
 
+      weight = 1.0;
       n_slices = theta_slices * phi_slices;
       spec.resize(n_slices);
+      total_angle = 2 * M_PI;
 
-    
+      directions.resize(n_slices);
+      integrate_directions.resize(n_slices);
+      d_omega.resize(n_slices);
+      dir.resize(n_slices);
+      theta_vec.resize(n_slices);
+      phi_vec.resize(n_slices);
+
+      d_phi =  (max_phi - min_phi) / phi_slices;
+
+      k = 0;
+      for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
+      {
+
+       phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0;
+
+       d_omega[k] = d_phi;
+
+       dir[k](0) = sin(phi);
+       dir[k](1) = cos(phi);
+       dir[k](2) = 0.0;
+
+       directions[k](0) =  2.0 * sin(phi) * sin(0.5 * d_phi);
+       directions[k](1) =  2.0 * cos(phi) * sin(0.5 * d_phi);
+       directions[k](2) =  0.0;
+
+       theta_vec[k] = M_PI/2.0;
+       phi_vec[k] = phi;
+
+       k++;
+
+      }
+
       break;
 
     case 2 :
 
       //theta_slices = 1;
       //if (phi_slices == 0)
-      //	phi_slices = 4;
 
       min_theta = 0.0;
-      max_theta = M_PI;
+      max_theta = M_PI * 0.5;
 
       min_phi = M_PI * 0.5;
       max_phi = M_PI * 2.0 + M_PI * 0.5;
 
-
-      weight =  1.0;
+      weight =  2.0;
 
       n_slices = theta_slices * phi_slices;
       spec.resize(n_slices);
 
+      directions.resize(n_slices);
+      integrate_directions.resize(n_slices);
+      d_omega.resize(n_slices);
+      dir.resize(n_slices);
+      theta_vec.resize(n_slices);
+      phi_vec.resize(n_slices);
 
+      d_theta =  (max_theta - min_theta) / theta_slices;
+      d_phi =  (max_phi - min_phi) / phi_slices;
+
+      k = 0;
+      for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
+      {
+        // phi = min_phi + d_phi * 0.5 + d_phi * n_phi;
+
+        phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
+
+        for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
+        {
+          theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
+
+          d_omega[k] =  weight * 2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
+          //d_omega[k] = d_phi;
+
+          dir[k](0) = sin(theta) * sin(phi);
+          dir[k](1) = sin(theta) * cos(phi);
+          dir[k](2) = cos(theta);
+
+          directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+          directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+          directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
+
+          theta_vec[k] = theta;
+          phi_vec[k] = phi;
+
+          k++;
+        }
+      }
+
+
+      //Specular vectors
+    //  for (ID k1 = 0; k1<n_slices; k1++)
+      //    for (ID k2 = 0; k2<n_slices; k2++)
+        //    {
+          //    Point sum = directions[k1] + directions[k2];
+           //   cout<<sum<<endl;
+            //  if ((sum(0) < 1e-4) && (sum(1) < 1e-4) && (sum(2) < 1e-4) )
+            //     spec[k1]=k2;
+           // }
+
+
+      total_angle = 4.0 * M_PI;
       break;
 
     case 3 :
@@ -2504,64 +2615,103 @@ Boltzmann::AngularIntegrator::compute_directions()
 
       spec.resize(n_slices);
 
+      total_angle = 4.0 * M_PI;
 
+
+
+      directions.resize(n_slices);
+      integrate_directions.resize(n_slices);
+      d_omega.resize(n_slices);
+      dir.resize(n_slices);
+      theta_vec.resize(n_slices);
+      phi_vec.resize(n_slices);
+
+      d_theta =  (max_theta - min_theta) / theta_slices;
+      d_phi =  (max_phi - min_phi) / phi_slices;
+
+      k = 0;
+      for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
+      {
+        // phi = min_phi + d_phi * 0.5 + d_phi * n_phi;
+        phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
+
+        for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
+        {
+          theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
+
+          d_omega[k] =  2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
+          //d_omega[k] = d_phi;
+
+          dir[k](0) = sin(theta) * sin(phi);
+          dir[k](1) = sin(theta) * cos(phi);
+          dir[k](2) = cos(theta);
+
+          directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+          directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+          directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
+
+          theta_vec[k] = theta;
+          phi_vec[k] = phi;
+
+          k++;
+        }
+      }
 
       break;
-    }
+    }*/
 
+  double delta = 0.0;
+
+  double  min_theta = 0.0 + delta;
+  double  max_theta = M_PI+ delta;
+
+  double  min_phi = M_PI * 0.5 + delta;
+  double  max_phi = M_PI * 2.0 + M_PI * 0.5+ delta;
+
+    weight =  1.0;
+
+    n_slices = theta_slices * phi_slices;
+    //spec.resize(n_slices);
+
+     directions.resize(n_slices);
+     integrate_directions.resize(n_slices);
+     d_omega.resize(n_slices);
+     dir.resize(n_slices);
+     theta_vec.resize(n_slices);
+     phi_vec.resize(n_slices);
+
+     double d_theta =  (max_theta - min_theta) / theta_slices;
+     double d_phi =  (max_phi - min_phi) / phi_slices;
+
+     ID k = 0;
+     for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
+     {
+       double phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
+
+       for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
+       {
+         double theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
+
+         d_omega[k] =  weight * 2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
+
+         dir[k](0) = sin(theta) * sin(phi);
+         dir[k](1) = sin(theta) * cos(phi);
+         dir[k](2) = cos(theta);
+
+         directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+         directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+         directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
+
+         theta_vec[k] = theta;
+         phi_vec[k] = phi;
+
+         k++;
+       }
+     }
 
     total_angle = 4.0 * M_PI;
-    directions.resize(n_slices);
-    integrate_directions.resize(n_slices);
-    d_omega.resize(n_slices);
-    dir.resize(n_slices);
-    theta_vec.resize(n_slices);
-    phi_vec.resize(n_slices);
-
-    double d_theta =  (max_theta - min_theta) / theta_slices;
-    double d_phi =  (max_phi - min_phi) / phi_slices;
-    double theta, phi;
-
-
-    ID k = 0;
-    for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
-    {
-      // phi = min_phi + d_phi * 0.5 + d_phi * n_phi;
-      phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
-
-      for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
-      {
-	theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
-
-	d_omega[k] =  2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
-
-	dir[k](0) = sin(theta) * sin(phi);
-	dir[k](1) = sin(theta) * cos(phi);
-	dir[k](2) = cos(theta);
-
-	directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
-	directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
-	directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
-
-	theta_vec[k] = theta;
-	phi_vec[k] = phi;
-
-	k++;
-      }
-    }
-
-    //Spec vectors
-    for (ID k1 = 0;k1<n_slices; k1++)
-      for (ID k2 = 0;k2<n_slices; k2++)
-      {
-	Point sum = directions[k1] + directions[k2];
-        if (sum.size() < 1e-4)
-	  spec[k1]=k2;
-
-      }
-
-
 }
+
 
 
 void
@@ -2607,7 +2757,7 @@ Boltzmann::AngularIntegrator::print_info(void)
 
   }
   std::cout<<"Check:  "<<std::endl;
-  std::cout<<"Solid angle: "<<solid_angle/(4 * M_PI)<<std::endl;
+  std::cout<<"Solid angle: "<<solid_angle/total_angle<<std::endl;
 
 
   std::cout<<"Directions:  "<<std::endl;
@@ -2617,13 +2767,13 @@ Boltzmann::AngularIntegrator::print_info(void)
 
 
 
-  std::cout<<"  "<<std::endl;
-  std::cout<<"TotalAngle:  "<<total_angle<<std::endl;
-  std::cout<<"  "<<std::endl;
-  std::cout<<"Specular vector: "<<std::endl;
-  for (ID k =0; k<n_slices;k++)
-    std::cout<<"Dir "<<k<<" : "<<spec[k]<<std::endl;
-  std::cout<<"  "<<std::endl;
+  //std::cout<<"  "<<std::endl;
+  //std::cout<<"TotalAngle:  "<<total_angle<<std::endl;
+  //std::cout<<"  "<<std::endl;
+  //std::cout<<"Specular vector: "<<std::endl;
+  //for (ID k =0; k<n_slices;k++)
+  //  std::cout<<"Dir "<<k<<" : "<<spec[k]<<std::endl;
+  //std::cout<<"  "<<std::endl;
 }
 
 

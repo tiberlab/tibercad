@@ -4,7 +4,7 @@
 #define _BOLTZMANNBOUNDARYMODEL_H_
 
 #include "PhysicalModel.h"
-
+#include "vector_value.h"
 
 class Elem;
 class Point;
@@ -20,24 +20,38 @@ class BoltzmannBoundaryModel : public PhysicalModel
     ~BoltzmannBoundaryModel(void) {};
 
     //! Creator function
-    static BoltzmannBoundaryModel* create(const ModelOptions& options);
+      static BoltzmannBoundaryModel* create(const MaterialBoundary* boundary,
+          const ModelOptions& options);
 
 
     //! Calculate for a point on the given side
     virtual void calculate(const Elem* elem, unsigned int side,
         const Point& point) = 0;
 
-   void get_coefficients(double& a, double& b, double& c);
+    //! Calculate the periodic vector
+    RealGradient get_periodicity(void);
 
+    //! Calculate the periodic vector
+    double get_deltaT(void);
 
-  ///!Set the current element
+    //! Get coefficients
+    void get_coefficients(double& a, double& b, double& c);
+
+   ///!Set the current element
    void set_element(const Elem* elem);
+
   protected:
 
-    //! Constructor
-    BoltzmannBoundaryModel(const ModelOptions& options);
+  //! Constructor
+  BoltzmannBoundaryModel(const ModelOptions& options);
 
   void set_coefficients(double a, double b, double c);
+
+  //! Set periodicity
+  void set_periodicity(const RealGradient& periodicity);
+
+  //! Set deltaT
+  void set_deltaT(double deltaT);
 
 
   private:
@@ -45,6 +59,10 @@ class BoltzmannBoundaryModel : public PhysicalModel
   double _alpha;
   double _beta;
   double _gamma;
+  double _deltaT;
+
+  RealGradient _periodicity;
+
 
 };
 
@@ -67,6 +85,20 @@ BoltzmannBoundaryModel::get_coefficients(double& a, double& b, double& c)
 
 
 inline
+double
+BoltzmannBoundaryModel::get_deltaT(void)
+{
+ return _deltaT;
+}
+
+inline
+RealGradient
+BoltzmannBoundaryModel::get_periodicity(void)
+{
+ return _periodicity;
+}
+
+inline
 void
 BoltzmannBoundaryModel::set_coefficients(double a, double b, double c)
 {
@@ -74,6 +106,22 @@ BoltzmannBoundaryModel::set_coefficients(double a, double b, double c)
  _beta  = b;
  _gamma = c;
 }
+
+
+inline
+void
+BoltzmannBoundaryModel::set_periodicity(const RealGradient& periodicity)
+{
+_periodicity = periodicity;
+}
+
+inline
+void
+BoltzmannBoundaryModel::set_deltaT(double deltaT)
+{
+_deltaT = deltaT;
+}
+
 
 
 #endif // _THERMALBOUNDARYMODEL_H_

@@ -2,7 +2,7 @@
 
 #include "FourierModel.h"
 
-TIBER_MODULE(FourierModel, HeatTransport, fourier)
+TIBER_MODULE(FourierModel, heat_transport, fourier)
 
 
 using namespace std;
