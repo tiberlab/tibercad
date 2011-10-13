@@ -4052,7 +4052,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     residual->close();
     //sysmat.close();
     //sysmat.print_matlab("sysmat.m");
-    ///*
+    /*
     if (coupling & ELECTRONS)
     {
       if (__private_counter > 0)
@@ -4068,7 +4068,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       __private_counter++;
       oldx = x;
     }
-    //*/
+    */
   }
 
 
