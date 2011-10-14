@@ -88,6 +88,8 @@ Database::set_material(const string& material,
   string df(datafile);
   if (df.size() == 0)
     df = find_file(material + ".dat");
+  else
+    df = find_file(df);
 
   if ((_material != material) || (_datafile != df))
   {
@@ -240,6 +242,7 @@ Database::set_default_search_path(const string& path)
 const string
 Database::find_file(const string& file) const
 {
+  // TODO treat absolute filename
   string s(_path);
   s += "/" + file;
 
