@@ -339,20 +339,20 @@ const string InputParser::get_until_closing_quotes(ifstream& in_stream)
 {
 
   string str = "";
-  int    temp = 0;
+  int temp = 0;
+  int last = 0;
 
   while (true)
   {
-
+    last = temp;
     temp = in_stream.get();
     if (temp == EOF) return str;
-    else if(temp == '"')
-    {
+    else if ((temp == '"') && (last != '\\'))
       return str ;
-      //return (str + '"') ;
-    }
     else if (temp == '\n')
       line_counter++;
+    else if ((temp == '\\') && (last != '\\'))
+      continue;
     else
       str += temp;
 
