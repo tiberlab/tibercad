@@ -84,7 +84,7 @@ $(subdirs):
 	@$(CXX) $(CPPFLAGS) -S $<
 
 
-ifeq (,$(findstring clean,$(MAKECMDGOALS)))
+ifneq (,$(findstring clean,$(MAKECMDGOALS)))
 ifneq (x$(srcfiles),x)
 -include $(addprefix .$(ARCH)/,$(srcfiles:.C=.d))
 endif
