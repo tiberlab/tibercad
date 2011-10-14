@@ -83,7 +83,7 @@ void
 ThermalStress::calculate(const Elem* elem, const Point& point)
 {
   // get temperature
-  double deltaT = _temp.get_temperature(elem, point) - _ref_temp;
+  double deltaT = _temp.get_temperature(elem, point, true) - _ref_temp;
 
   const RotatedCrystal& cr = get_material()->get_rotated_crystal();
 

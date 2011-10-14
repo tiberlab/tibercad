@@ -45,11 +45,14 @@ class TemperatureInterface
 
     //! Get the temperatures in specified points
     void get_temperature(const Elem* elem, const std::vector<Point>& p,
-        std::vector<double>& temperatures);
+        std::vector<double>& temperatures, bool refcoord = false);
 
 
     //! Get the temperature in one point
-    double get_temperature(const Elem* elem, const Point& p);
+    /*!
+     * Set \c refcoord to true if p is given in reference coordinates
+     */
+    double get_temperature(const Elem* elem, const Point& p, bool refcoord = false);
 
 
     //! Tells if this interface has a simulation associated

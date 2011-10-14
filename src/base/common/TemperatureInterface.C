@@ -53,15 +53,15 @@ TemperatureInterface::get_temperature(const Elem* elem,
   std::vector<Point> nodes(nn);
 
   for (unsigned int i = 0; i < nn; ++i)
-    nodes[i] = elem->point(i);
+    nodes[i] = elem->local_node(elem->type(), i);
 
-  get_temperature(elem, nodes, temperatures);
+  get_temperature(elem, nodes, temperatures, true);
 }
 
 
 void
 TemperatureInterface::get_temperature(const Elem* elem,
-    const std::vector<Point>& p, std::vector<double>& temperatures)
+    const std::vector<Point>& p, std::vector<double>& temperatures, bool refcoord)
 {
   assert(elem != NULL);
 
@@ -79,7 +79,7 @@ TemperatureInterface::get_temperature(const Elem* elem,
     std::map<ID, std::vector<double> > temp;
     temp[_id] = std::vector<double>();
 
-    if (_simulation->get_solution(elem, temp, p))
+    if (_simulation->get_solution(elem, temp, p, refcoord))
       temperatures = temp[_id];
     else
       for (int i = 0; i < nn; i++)
@@ -89,12 +89,12 @@ TemperatureInterface::get_temperature(const Elem* elem,
 
 
 double
-TemperatureInterface::get_temperature(const Elem* elem, const Point& p)
+TemperatureInterface::get_temperature(const Elem* elem, const Point& p, bool refcoord)
 {
   std::vector<Point> ps(1, p);
   std::vector<double> temp(1);
 
-  get_temperature(elem, ps, temp);
+  get_temperature(elem, ps, temp, refcoord);
 
   return temp[0];
 }
