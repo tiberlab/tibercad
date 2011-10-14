@@ -144,7 +144,6 @@ Boltzmann::get_gray_options(void)
   }
 
 
-
 }
 
 
@@ -2133,7 +2132,6 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal, Point dir)
          //The 1 - delta term has been included in order to be sure that the point is in the element
          Point pt_to_search = (point_side + periodicity);
 
-
          //Get the element of that point
           SideData::iterator it(SD.begin());
           SideData::const_iterator it_end(SD.end());
@@ -2145,9 +2143,10 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal, Point dir)
 
               ID local_dof = elside.elem()->dof_number(gray_sys_number,0,0);
               ID per_dof = (it->first).elem()->dof_number(gray_sys_number,0,0);
-              double DeltaT = (*equilibrium_energy)(local_dof)-(*equilibrium_energy)(per_dof);
 
-                //value = SD[it->first][solid_angle_iter] + DeltaT;
+              //double DeltaT = (*equilibrium_energy)(local_dof)-(*equilibrium_energy)(per_dof);
+
+              //value = SD[it->first][solid_angle_iter] + DeltaT;
               value = SD[it->first][solid_angle_iter] + DeltaT;
 
             }
@@ -2155,8 +2154,6 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal, Point dir)
         //cout<<pt_to_search<<endl;
          if (value == 0)
            cout<<"ERROR: no ELEMENT FOUND!!!"<<endl;
-
-
 
       }
   }
