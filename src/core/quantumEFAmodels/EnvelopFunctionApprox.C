@@ -303,6 +303,9 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
     {
       double value = 0;
 
+      // the phi^2 factor comes from the fact that the more correct interpolation is the square
+      // of the basis function, because the probability densities are the square of the states
+      // NOTE: maybe one should check if this gives really a better result
       for (unsigned int i = 0; i < n_dofs; i++)
         value += phi[i][n] * phi[i][n] * qdens(dof_indices[i]);
 
@@ -2065,6 +2068,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   DofMap& dof_map = system->get_dof_map();
   std::vector<unsigned int> dof_indices;
 
+  // The qdens_sys system contains the nodal quantum density
   TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>();
   DofMap& dof_map_qdens = qdens_sys.get_dof_map();
   std::vector<unsigned int> dof_indices_qdens;
