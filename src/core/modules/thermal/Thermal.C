@@ -59,13 +59,13 @@ Thermal::do_init(void)
 
   ID  dim = get_mesh().mesh_dimension();
 
-  TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
-					     "fourier", get_solver_options());
+  create_equation_system("linear");
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
 
-  system->add_variable("T", FIRST);
-  system->attach_assemble_function(assemble);
-  system->init();
+  system.add_variable("T", FIRST);
+  system.attach_assemble_function(assemble);
+  system.init();
 
 
   //Create node connection
@@ -92,11 +92,9 @@ NumericVector<double>&
 Thermal::do_get_solution_vector(void)
 {
 
-  TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
-							"fourier", get_solver_options());
-
-  system->get_solution_vector().close();
-  return system->get_solution_vector();
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  system.get_solution_vector().close();
+  return system.get_solution_vector();
 
 }
 
@@ -131,9 +129,7 @@ Thermal::compute_power_dissipated()
 {
 
   //Gray System
-  EquationSystems& es = get_equation_systems();
-  TiberLinearSystem& system =
-    es.get_system<TiberLinearSystem>("fourier");
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   const NumericVector<double>& solution = *(system.solution);
 
@@ -203,8 +199,7 @@ Thermal::compute_power_emitted()
 
   //Gray System
   EquationSystems& es = get_equation_systems();
-  TiberLinearSystem& system =
-    es.get_system<TiberLinearSystem>("fourier");
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
   DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
@@ -267,12 +262,16 @@ Thermal::do_solve(void)
 
   EquationSystems& es = get_equation_systems();
 
-  TiberLinearSystem& system =
-    es.get_system<TiberLinearSystem>("fourier");
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   system.set_options(get_solver_options());
   system.solve();
 
+  const NumericVector<Number>& solution = system.get_solution_vector();
+  double Tmax = solution.linfty_norm();
+  ostringstream os;
+  os << "Maximum temperature : " << Tmax << " K";
+  Messages::info(os.str());
 }
 
 
@@ -308,10 +307,8 @@ Thermal::get_solution_secure(std::map<ID, std::vector<double> >& values)
 {
   if (values.count(MaxTemp))
   {
-    TiberLinearSystem* system =
-      &get_equation_systems().get_system<TiberLinearSystem>("fourier");
-    const NumericVector<Number>& solution = system->get_solution_vector();
-    double Tmax = solution.linfty_norm();
+    TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+    double Tmax =  system.get_solution_vector().linfty_norm();
     values[MaxTemp] = std::vector<double>(1, Tmax);
   }
 }
@@ -325,9 +322,7 @@ Thermal::get_solution_secure(const Elem* elem,
 {
    unsigned int np = p.size();
 
-   TiberLinearSystem* system;
-   system = &get_equation_systems().get_system<TiberLinearSystem>(
-       "fourier");
+   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
    const NumericVector<Number>& solution = system->get_solution_vector();
    const DofMap& dof_map = system->get_dof_map();
 
@@ -408,8 +403,7 @@ Thermal::get_solution_secure(const Elem* elem,
 void
 Thermal::do_assemble(EquationSystems& es, const std::string& system_name)
 {
-  TiberLinearSystem& system_fourier = static_cast<TiberLinearSystem&>(
-								      get_equation_systems().get_system("fourier"));
+  TiberLinearSystem& system_fourier = get_equation_system<TiberLinearSystem>();
 
    const MeshBase& mesh = get_mesh();
 
