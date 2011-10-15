@@ -3,6 +3,7 @@
 #include "boost/algorithm/string/trim.hpp"
 #include "boost/regex.hpp"
 #include "boost/filesystem.hpp"
+#include "boost/filesystem/operations.hpp"
 
 #include "TiberCad.h"
 #include "Utils.h"
@@ -70,6 +71,8 @@ namespace BuildModule
   //! Content of TIBERCADROOT
   std::string tc_root;
 
+  //! Verbose mode
+  bool verbose = true;
 
   void usage(void)
   {
@@ -283,7 +286,11 @@ int main (int argc, char** argv)
       cerr << "TIBERCADROOT environment variable is not set.\n";
       return 1;
     }
-    BuildModule::tc_root = string(root);
+    string rs(root);
+    boost::filesystem::path tcroot(rs);
+    tcroot = boost::filesystem::system_complete(tcroot);
+
+    BuildModule::tc_root = tcroot.string();
   }
 
   InputParser parser;
@@ -510,6 +517,7 @@ Compiler::Compiler(const ModelOptions& options) :
   _preprocessor_flags = pre.str();
 
   _compiler_flags = options.get_option("compiler_flags", "");
+
 #if defined(_WIN32)
   BuildModule::replace(_compiler_flags, "-fPIC", "");
 #endif
@@ -546,7 +554,7 @@ Compiler::_compile(const std::string& source, const std::string& flags)
   cmdline << _executable() << " " << _preprocessor_flags << " " <<
     _compiler_flags << " " << flags << " -o " << target << " " << source;
 
-  //cout << cmdline.str() << endl;
+  if (BuildModule::verbose) cout << cmdline.str() << endl;
   if (system(cmdline.str().c_str()) != 0)
     target = "";
 
@@ -563,12 +571,12 @@ Compiler::_link(const std::string& target, const std::vector<std::string>& objec
 
   ostringstream cmdline;
   cmdline << _executable();
-  for (size_t i = 0; i << objects.size(); ++i)
+  for (size_t i = 0; i < objects.size(); ++i)
     cmdline << " " << objects[i];
 
   cmdline << " " << flags << " " <<_linker_flags << " " << " -o " << target;
 
-  cout << cmdline.str() << endl;
+  if (BuildModule::verbose) cout << cmdline.str() << endl;
 
   return system(cmdline.str().c_str());
 }
@@ -581,6 +589,11 @@ void process_module(const string& name, const ModelOptions& options)
   options.get_option("sources", sources);
 
   string creatable = options.get_option("createable", "");
+
+  if (creatable.empty())
+  {
+    // guess it from the first source file
+  }
 
   string module = options.get_option("module", "");
 
@@ -620,7 +633,7 @@ void process_module(const string& name, const ModelOptions& options)
   {
     ofstream of(module + "_creator.h");
     of << module_code;
-    compileflags += " -DCREATORCODE=\"" + module + "_creator.h\"";
+    compileflags += " -DCREATORCODE=" + module + "_creator.h";
   }
 
   vector<string> objects;
@@ -633,7 +646,6 @@ void process_module(const string& name, const ModelOptions& options)
           << sources[i] << endl;
       exit(1);
     }
-
     objects.push_back(obj);
   }
 

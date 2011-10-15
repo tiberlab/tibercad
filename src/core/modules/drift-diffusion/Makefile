@@ -2,16 +2,10 @@
 
 topdir := ../../../..
 
-MODULE_NAME := driftdiffusion
-export MODULE_NAME
 
-include $(topdir)/Make.module
+all: module.conf
+	@export TIBERCADROOT=$(topdir) ;  $(topdir)/i686-linux/bin/build_module module.conf
 
-
-$(eval $(call MODULE, $(srcfiles)))
-
-
-target += models
 
 .PHONY: models
 models:
@@ -24,4 +18,3 @@ distclean:
 	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
 	
 
-include $(topdir)/Make.rules

@@ -10,10 +10,6 @@
 // Provides macros needed to create a shared TiberCAD module
 //
 
-#define TBCREATEFUNC __create
-#define TBDESTROYFUNC __destroy
-#define TBCREATEFUNCSYM "__create"
-#define TBDESTROYFUNCSYM "__destroy"
 
 
 #ifndef MODULE_NAME
@@ -21,16 +17,23 @@
 #endif
 
 /*!
- * \def TIBER_MODULE
- *
  * \brief Creates methods to create and destroy a simulation object
  *
- * In each implementation derived from TiberModelObject, put
- * this macro somewhere in the source file to be able to compile
+ * In each implementation derived from TiberModelObject, you have
+ * to include this header in the source file to be able to compile
  * it as TiberCad module.
+ * For each module it may be included only once!
  *
  */
 #ifdef CREATABLE
+
+#ifndef xstr
+#define xstr(a) stringify(a)
+#endif
+#ifndef stringify
+#define stringify(a) #a
+#endif
+
 extern "C" {
   TBDLEXPORT void
   TBDESTROYFUNC(TiberModelObject* p) {
@@ -41,7 +44,7 @@ extern "C" {
   TBCREATEFUNC(const ModelOptions& options, const void* handle) {
     TiberModelObject* obj = NULL;
 #ifdef CREATORCODE
-#include CREATORCODE
+#include xstr(CREATORCODE)
 #else
     obj = CREATABLE::create(options);
 #endif

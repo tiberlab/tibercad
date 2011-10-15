@@ -2,7 +2,7 @@
 
 #include "FluxBoundary.h"
 
-TIBER_MODULE(FluxBoundary,boltzmann_bnd, flux)
+//TIBER_MODULE(FluxBoundary,boltzmann_bnd, flux)
 
 void
 FluxBoundary::do_init(void)

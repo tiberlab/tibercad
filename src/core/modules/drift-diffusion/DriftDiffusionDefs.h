@@ -4,8 +4,6 @@
 #define _DRIFTDIFFUSIONDEFS_H_
 
 
-#include "TiberModule.h"
-
 
 //! A namespace for drift-diffusion specific definitions
 /*!
@@ -31,13 +29,6 @@ namespace DriftDiffusionDefs
     EQUILIBRIUM = 0x10
   };
 
-  //! The known basic Generation/Recombination processes
-  enum RecombinationModel
-  {
-    SRH         = 0x01, //< Shockley-Read-Hall
-    AUGER       = 0x02, //< Auger
-    DIRECT      = 0x04  //< direct (radiative)
-  };
 
   //! The variables used in Drift-Diffusion
   enum DDVariable

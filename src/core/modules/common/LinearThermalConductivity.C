@@ -5,8 +5,9 @@
 #include "LinearThermalConductivity.h"
 #include "RotatedCrystal.h"
 
+#include "TiberModule.h"
 
-TIBER_MODULE(LinearThermalConductivity, thermal_conductivity, linear)
+
 
 using namespace std;
 

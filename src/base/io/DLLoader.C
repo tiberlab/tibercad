@@ -3,7 +3,7 @@
 #include "tiber_config.h"
 #include "DLLoader.h"
 #include "Messages.h"
-#include "TiberModule.h"
+#include "tiber_dll.h"
 #include "RuntimeException.h"
 
 #include <boost/filesystem/operations.hpp>
