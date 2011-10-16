@@ -126,15 +126,10 @@ Module efaschroedinger
   regions = (barrier_left, barrier_right, QW)
   particle = el
 
-#  spectrum_shift = -0.2
+  poisson_model_name = driftdiffusion
+  number_of_eigenstates = 4 
 
   plot = (EigenFunctions, EigenEnergy)
-
-#  Solver
-#  {
-    number_of_eigenstates = 4 
-    poisson_model_name = driftdiffusion  #  potential from driftdiffusion
-#  }
 
   Physics
   {
@@ -149,18 +144,14 @@ Module efaschroedinger
   physical_regions = (barrier_left, barrier_right, QW)
   particle = hl
 
-#  spectrum_shift = -0.4
 
   log_output= false
 
   plot = (EigenFunctions, EigenEnergy)
 
-  poisson_model_name = driftdiffusion  #  potential from driftdiffusion
+  poisson_model_name = driftdiffusion  
  
-  #Solver
-  #{
-    number_of_eigenstates = 4 
-  #}
+  number_of_eigenstates = 4 
 
   Physics
   {
@@ -175,7 +166,6 @@ Module efaschroedinger
 Simulation
 {
   temperature = 1
-  #solve = (driftdiffusion, kp_electrons, kp_holes,  tb)
   solve = (driftdiffusion, tb)
   resultpath =  output
   output_format = grace
