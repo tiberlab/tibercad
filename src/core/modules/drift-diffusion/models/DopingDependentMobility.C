@@ -6,9 +6,8 @@
 #include "Material.h"
 #include "Database.h"
 
+#include "TiberModule.h"
 
-
-TIBER_MODULE(DopingDependentMobility, mobility, doping_dependent)
 
 
 

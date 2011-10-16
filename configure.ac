@@ -293,5 +293,6 @@ AC_CONFIG_FILES([Make.common
                  installer/linux/tar/install])
 AC_CONFIG_FILES([installer/prepare_files.sh], [chmod +x installer/prepare_files.sh])
 AC_CONFIG_FILES([bin/tibercad], [chmod +x bin/tibercad])
+AC_CONFIG_FILES([bin/tiberCAD.sh], [chmod +x bin/tiberCAD.sh])
 
 AC_OUTPUT

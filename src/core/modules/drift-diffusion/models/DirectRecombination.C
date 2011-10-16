@@ -4,11 +4,7 @@
 #include "DriftDiffusionProperties.h"
 #include "Database.h"
 
-
-
-
-TIBER_MODULE(DirectRecombination, recombination, direct)
-
+#include "TiberModule.h"
 
 
 

@@ -118,6 +118,8 @@ class Compiler
 
     ModelOptions _options;
 
+    std::string _outdir;
+
     std::string _preprocessor_flags;
 
     std::string _compiler_flags;
@@ -518,6 +520,8 @@ Compiler::Compiler(const ModelOptions& options) :
 
   _compiler_flags = options.get_option("compiler_flags", "");
 
+  _outdir = "." + string(ARCH);
+
 #if defined(_WIN32)
   BuildModule::replace(_compiler_flags, "-fPIC", "");
 #endif
@@ -547,13 +551,18 @@ Compiler::_compile(const std::string& source, const std::string& flags)
 {
   cout << "Compiling " << source << " (" << _options.get_key() << ") ...\n";
 
+  boost::filesystem::path outdir(_outdir);
+  if (!boost::filesystem::exists(outdir))
+    boost::filesystem::create_directory(outdir);
+
   string basename = Utils::basename(source);
-  string target = basename + ".o";
+  string target = _outdir + "/" + basename + ".o";
 
   ostringstream cmdline;
   cmdline << _executable() << " " << _preprocessor_flags << " " <<
-    _compiler_flags << " " << flags << " -o " << "." << ARCH << "/" <<
+    _compiler_flags << " " << flags << " -o " <<
     target << " " << source;
+
 
   if (BuildModule::verbose) cout << cmdline.str() << endl;
   if (system(cmdline.str().c_str()) != 0)

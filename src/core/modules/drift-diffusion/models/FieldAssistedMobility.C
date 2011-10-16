@@ -6,9 +6,8 @@
 #include "Database.h"
 #include "Material.h"
 
+#include "TiberModule.h"
 
-
-TIBER_MODULE(FieldAssistedMobility, mobility, field_assisted)
 
 
 void

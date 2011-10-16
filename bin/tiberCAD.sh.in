@@ -1,0 +1,52 @@
+#!/bin/sh
+
+# put your installation directory here (this is done automatically by the
+# installation script)
+TIBERCADROOT=@abs_top_builddir@
+ARCH=`${TIBERCADROOT}/share/arch.sh`
+
+
+
+# the program to call
+prog=`basename $0`
+progname=""
+
+case $prog in
+
+  tibercad*)
+    progname="tibercad"
+    ;;
+
+  gmsh*)
+    progname="gmsh"
+    executable="${TIBERCADROOT}/tools/gmsh/bin/$progname"
+    ;;
+
+  build_module*)
+    progname="build_module"
+    executable="${TIBERCADROOT}/${ARCH}/bin/$progname"
+    ;;
+
+  *)
+    echo "${prog}: Unknown TiberCAD tool"
+    echo "Known programs are: tibercad, gmsh, build_module"
+    ;;
+
+esac
+
+
+export TIBERCADROOT
+
+
+# stack size limit / VM may be too small 
+ulimit -v unlimited -s unlimited -c 0
+
+
+if [ -x $executable ]
+then
+  exec $executable $@
+else
+  echo "Cannot execute $progname. Perhaps broken installation?"
+fi
+
+

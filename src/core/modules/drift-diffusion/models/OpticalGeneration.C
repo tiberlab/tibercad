@@ -3,12 +3,10 @@
 #include "OpticalGeneration.h"
 #include "Material.h"
 
+#include "TiberModule.h"
+
 
 #include <string>
-
-
-
-TIBER_MODULE(OpticalGeneration, recombination, optical)
 
 
 

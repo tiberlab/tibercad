@@ -5,8 +5,7 @@
 #include "SimulationOptions.h"
 #include "Messages.h"
 
-
-TIBER_MODULE(SimpleBand, band_properties, simple)
+#include "TiberModule.h"
 
 
 SimpleBand::SimpleBand(const ModelOptions& options) :
