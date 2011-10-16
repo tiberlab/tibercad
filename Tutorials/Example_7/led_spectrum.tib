@@ -1,4 +1,5 @@
 # Example 7: Optical properties of AlGaN/GaN LED (1D)
+# p
 
 
 # Description of  the  device physical regions
@@ -337,8 +338,6 @@ Module opticskp
   dE = 0.001
 
   polarization = (0, 0, 1)
-
-  #k_vector = (0, 0, 0.01)
 
   k_integration
   {

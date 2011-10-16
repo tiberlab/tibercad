@@ -44,8 +44,8 @@ void OpticsTB::do_init()
 
 void OpticsTB::do_compute_matrix_elements( )
 {
-  unsigned int n_i =  _initial_eigen_state_numbers.size();
-  unsigned int n_f =  _final_eigen_state_numbers.size();
+  unsigned int n_i =  _initial_indices.size();
+  unsigned int n_f =  _final_indices.size();
 
   for (unsigned int i = 0; i < 3; i++)
   {
@@ -67,8 +67,8 @@ void OpticsTB::do_compute_matrix_elements( )
        for (unsigned int i2 = 0; i2 < n_f; i2++)
        {
 
-          unsigned int is = _initial_eigen_state_numbers[i1];
-          unsigned int fs = _final_eigen_state_numbers[i2];
+          unsigned int is = _initial_state_numbers[_initial_indices[i1]];
+          unsigned int fs = _final_state_numbers[_final_indices[i2]];
 
           _P_matrix[i][i1][i2] = _initial_state_model->
 	        calculate_matrix_element(_initial_state_particle, is,

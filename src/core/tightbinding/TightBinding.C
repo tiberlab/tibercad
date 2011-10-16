@@ -263,7 +263,6 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   //Use PotentialInterface to get the right simulation
   PotentialInterface model;
 
-  std::cout << "setting simulation " << std::endl;
   model.set_simulation(model_name);
 
   if( !model.get_simulation()->is_solved() )
@@ -363,7 +362,7 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   get_atomistic_structure()->print_structure("pot_on_atom.xyz", pot);
   delete pot;
   */
-  std::cout << "project_potential done " << std::endl;
+
 }
 
 

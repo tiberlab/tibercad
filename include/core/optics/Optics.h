@@ -37,6 +37,7 @@ class Optics : public SimulationInterface
     double dE;//<! spectrum mesh step [eV]
     double Gamma;//<! spectrum broadening [eV] 
     Tensor1 polariz; //<! light  polarization [eV] 
+    bool  get_occ;  //get occupations from Fermi (Eigenvalues) or set to 1
   };
 
 
@@ -84,6 +85,7 @@ class Optics : public SimulationInterface
     //! plot the  spectrum results for the single k-point case
     virtual void do_plot(void); 
 
+    virtual void plot_globaldata();
 
     virtual void parse_options(void);   
 
@@ -105,23 +107,28 @@ class Optics : public SimulationInterface
     virtual void calculate_matrix_bulk(void) = 0;
 
 
-    //!numbers of eigensates that are considered as intial states for optical transition
-    std::vector<unsigned int> _initial_eigen_state_numbers;
+    //! numbers of eigensates counting from 0 (e.g. el0, el1, el2, ...)
+    std::vector<ID>  _initial_indices;
     
+    //! numbers of eigensates counting from 0 (e.g. hl0, hl1, hl2, ...)
+    std::vector<ID>  _final_indices; 
     
-    //!numbers of eigensates that are considered as final states for optical transition
-    std::vector<unsigned int> _final_eigen_state_numbers;
-    
+   
+    //! maps the local state indices to EigenstateModel container    
+    std::map<ID, ID> _initial_state_numbers;
+  
+    //! maps the local state indices to EigenstateModel container    
+    std::map<ID, ID> _final_state_numbers;     
 
-    //!pointer to the eigenvalue solver for initial states
+
+    //! pointer to the eigenvalue solver for initial states
     EigenvalueProblem* _initial_state_model;
     
-    
-    //!pointer to the eigenvalue solver for final states
+    //! pointer to the eigenvalue solver for final states
     EigenvalueProblem* _final_state_model;
 
 
-    //!type of particle for the intial states 
+    //! type of particle for the intial states 
     std::string _initial_state_particle;
 
 

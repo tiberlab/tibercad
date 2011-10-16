@@ -66,15 +66,15 @@ void Optics::parse_options()
 
 
   if (!plot_solution("optical_spectrum") && !plot_solution("optical_spectrum_k_0"))
-      throw InitFailedException("(opticskp) requires a correct plot option");    
+      throw InitFailedException("(optics) requires a correct plot option");    
 
   if (plot_solution("optical_spectrum"))
     if (!get_options().has_submodel("k_integration")) 
-      throw InitFailedException("(opticskp) requires a k-integration");
+      throw InitFailedException("(optics) requires a k-integration");
 
   
   if (plot_solution("optical_spectrum") && plot_solution("optical_spectrum_k_0") )
-    throw InitFailedException("(opticskp) optical_spectrum incompatible with k_0 calculation");    
+    throw InitFailedException("(optics) optical_spectrum incompatible with k_0 calculation");    
 
   
 
@@ -97,6 +97,9 @@ void Optics::parse_options()
     throw InitFailedException("Optical Spectrum: dE must be defined\n");
 
   if (_opt.dE <= 0)  throw InitFailedException("Optical Spectrum: dE <= 0");
+
+
+  _opt.get_occ = !get_option("compute_strengths",false);
 
 
   unsigned int num_nodes = (int)((_opt.Emax - _opt.Emin)/_opt.dE) + 1;
@@ -225,24 +228,6 @@ void Optics::compute_matrix_elements()
   }
 
 
-  if (verbose > 3)
-  {
-    unsigned int n1 =  _initial_eigen_state_numbers.size();
-    unsigned int n2 =  _final_eigen_state_numbers.size();
-
-    for (int i = 0; i < n1; i++)
-      for (int j = 0; j < n2; j++)
-      {
-
-        for (int p = 0; p < 3; p++)
-        {
-          cout << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   "
-               << j <<"      "  << std::norm(_P_matrix[p][i][j]) << "\n" << flush;
-          
-          
-        }        
-      }
-  }
 
 }
 
@@ -254,108 +239,108 @@ void Optics::set_states()
 {
   _i_states = _initial_state_model->get_solution();
 
-  _initial_eigen_state_numbers.clear();
+  _initial_indices.clear();
 
+  //-------------------------------------------------------------------------------------
   {
-    std::vector<unsigned int> inum = _initial_state_model->get_state_indices(_initial_state_particle);
+    std::vector<ID> inum = _initial_state_model->get_state_indices(_initial_state_particle);
 
-    //for (unsigned i = 0; i < inum.size(); i++)
-    //{
-    //  std::cout << "initial indeces = "<<_initial_state_particle<< inum[i]<<std::endl;
-    //}
-
-    std::vector<unsigned int> temp;
-
-    get_option("initial_eigenstates", temp);
+    //for (ID i = 0; i < inum.size(); i++)
+    // {
+    //  std::cout << "initial state indeces = " << inum[i] << std::endl;
+    // }
 
 
-    if (temp.size() > 0) 
+    get_option("initial_eigenstates", _initial_indices);
+
+    //for (ID i = 0; i < _initial_indices.size(); i++)
+    // {
+    //  std::cout << "initial indeces = " << _initial_indices[i] << std::endl;
+    // }
+
+
+    if (_initial_indices.size() > 0) 
     {
-      if (temp.size() <= inum.size())
+      if (_initial_indices.size() <= inum.size())
       {
-        _initial_eigen_state_numbers.resize(temp.size());
-        unsigned int j = 0;
-        for (unsigned i = 0; i <= temp.size(); i++)
+        for (ID i = 0; i < _initial_indices.size(); i++)
         {
           //std::cout << "initial state indeces = " << temp[i] << std::endl;
          
-          if(temp[i]<0 || temp[i]>inum.size()) continue;
-          _initial_eigen_state_numbers[j] = inum[temp[i]];
-          j++;
+          if(_initial_indices[i]<0 || _initial_indices[i]>inum.size()) continue;
+          _initial_state_numbers[_initial_indices[i]] = inum[_initial_indices[i]];
+
         }
       }
     }
     else
     {
       //std::cout << "initial states defaults "<<std::endl;
-
-      _initial_eigen_state_numbers.resize(inum.size());
-
-      for (unsigned i = 0; i < inum.size(); i++)
+      _initial_indices.resize(inum.size());
+      for (ID i = 0; i < inum.size(); i++)
       {
         //std::cout << "final state indeces = " << inum[i] << std::endl;
-        _initial_eigen_state_numbers[i] = inum[i];
+        _initial_indices[i] = i;
+        _initial_state_numbers[i] = inum[i];
+        
       }      
       
     }
 
-    if (_initial_eigen_state_numbers.size() == 0)
+    if (_initial_state_numbers.size() == 0)
       throw InitFailedException("Optics: no states available in "
                                 + get_option("_initial_state_model", ""));
   }
 
+  //-------------------------------------------------------------------------------------
   _f_states = _final_state_model->get_solution();  
 
-  _final_eigen_state_numbers.clear();
+  _final_indices.clear();
 
   {
     std::vector<unsigned int> fnum = _final_state_model->get_state_indices(_final_state_particle);
 
-    //std::cout << "final states = "<<fnum.size()<<std::endl;
-    //for (unsigned i = 0; i < fnum.size(); i++)
-    //{
-    //  std::cout << "final indeces = "<< fnum[i]<<std::endl;
+    //for (ID i = 0; i < fnum.size(); i++)
+    // {
+    //  std::cout << "final state indeces = " << fnum[i] << std::endl;
     // }
 
-    std::vector<unsigned int> temp;
+    get_option("final_eigenstates", _final_indices);
 
-    get_option("final_eigenstates", temp);
-
-    if (temp.size() > 0) 
+    if (_final_indices.size() > 0) 
     {
-      if (temp.size() <= fnum.size())
+      if (_final_indices.size() <= fnum.size())
       {
-        _initial_eigen_state_numbers.resize(temp.size());
-        unsigned int j = 0;
-        for (unsigned i = 0; i <= temp.size(); i++)
+        for (ID i = 0; i < _final_indices.size(); i++)
         {
-          //std::cout << "final state indeces = " << temp[i] << std::endl;
+          //std::cout << "initial state indeces = " << temp[i] << std::endl;
          
-          if(temp[i]<0 || temp[i]>fnum.size()) continue;
-          _final_eigen_state_numbers[j] = fnum[temp[i]];
-          j++;
+          if(_final_indices[i]<0 || _final_indices[i]>fnum.size()) continue;
+          _final_state_numbers[_final_indices[i]] = fnum[_final_indices[i]];
+
         }
       }
     }
     else
     {
-      //std::cout << "final states defaults "<<std::endl;
-
-      _final_eigen_state_numbers.resize(fnum.size());
-
-      for (unsigned i = 0; i < fnum.size(); i++)
+      //std::cout << "initial states defaults "<<std::endl;
+      _final_indices.resize(fnum.size());
+      for (ID i = 0; i < fnum.size(); i++)
       {
-        //std::cout << "final state indeces = " << fnum[i] << std::endl;
-        _final_eigen_state_numbers[i] = fnum[i];
+        //std::cout << "final state indeces = " << inum[i] << std::endl;
+        _final_indices[i] = i;
+        _final_state_numbers[i] = fnum[i];
+        
       }      
       
     }
 
-    if (_final_eigen_state_numbers.size() == 0)
+
+    if (_final_state_numbers.size() == 0)
       throw InitFailedException("Optics: no states available in " 
                                + get_option("_final_state_model", "") );
   }
-
+  //-------------------------------------------------------------------------------------
 
 }  
 //==============================================//
@@ -398,38 +383,49 @@ void Optics::calculate_for_k_point(const Point& k_point,
 
 void Optics::do_solve()
 {
+  MeshBase::const_element_iterator       el     = _energy_mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = _energy_mesh->active_elements_end();
+  
+  for ( ; el!= end_el ; ++el)
+  {   
+    const Elem* elem = *el;
+    _spectrum_x[elem] = 0.0;
+    _spectrum_y[elem] = 0.0;
+    _spectrum_z[elem] = 0.0;
+  }
+
+  if (norm(_opt.polariz) != 0)
+  {
+    std::cout<<"(Optics) polarization: ( "<<_opt.polariz(1)<<" "
+             <<_opt.polariz(2)<<" "<<_opt.polariz(3)<<")"<<std::endl;
+  }
+
   if (plot_solution("optical_spectrum")) 
   {
-     if (norm(_opt.polariz)==0)
-     {	
 
-       _opt.polariz(1)=1.0;  _opt.polariz(2)=0.0; _opt.polariz(3)=0.0; 
-       std::cout<<"(Optics) polarization: ( "<<_opt.polariz(1)<<" "
-                <<_opt.polariz(2)<<" "<<_opt.polariz(3)<<")"<<std::endl;
-
-       do_k_space_integration();
-
-       _spectrum_x = _k_integration->get_solution();
-
-       _opt.polariz(1)=0.0;  _opt.polariz(2)=1.0; _opt.polariz(3)=0.0; 
-       std::cout<<"(Optics) polarization: ( "<<_opt.polariz(1)<<" "
-                <<_opt.polariz(2)<<" "<<_opt.polariz(3)<<")"<<std::endl;    
-
-       do_k_space_integration();
-
-       _spectrum_y = _k_integration->get_solution();
-
-       _opt.polariz(1)=0.0;  _opt.polariz(2)=0.0; _opt.polariz(3)=1.0; 
-     }
+    if (norm(_opt.polariz) == 0.0)
+    {
+      _opt.polariz(1)=1.0; _opt.polariz(2)=0.0; _opt.polariz(3)=0.0;  
+      do_k_space_integration();
+      _spectrum_x = _k_integration->get_solution();
       
-     std::cout<<"(Optics) polarization: ( "<<_opt.polariz(1)<<" "
-              <<_opt.polariz(2)<<" "<<_opt.polariz(3)<<")"<<std::endl;
+      _opt.polariz(1)=0.0; _opt.polariz(2)=1.0; _opt.polariz(3)=0.0;  
+      do_k_space_integration();
+      _spectrum_y = _k_integration->get_solution();
+      
+      _opt.polariz(1)=0.0; _opt.polariz(2)=0.0; _opt.polariz(3)=1.0; 
+      do_k_space_integration();
+      _spectrum_z = _k_integration->get_solution();
+    }
+    else
+    {
+      do_k_space_integration();
+      _spectrum_x = _k_integration->get_solution();
+    }
 
-     do_k_space_integration();
-
-     _spectrum_z = _k_integration->get_solution();     
 
   }
+  //---------------------------------------------------------------------------------
   
   if (plot_solution("optical_spectrum_k_0"))
   {
@@ -442,7 +438,7 @@ void Optics::do_solve()
        _final_state_model->solve_for_kpoint(k_point); //calculate eigenstates
 
     compute_matrix_elements();
-   
+       
     Tensor1 polariz; 
     polariz(1)=1.0;  polariz(2)=0.0; polariz(3)=0.0; 
     calculate_spectrum(*_energy_mesh, _opt.Gamma, polariz,  _spectrum_x );
@@ -476,19 +472,20 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
   double     trans_energy, f1, f2;
 
 
-  unsigned int n1 =  _initial_eigen_state_numbers.size();
-  unsigned int n2 =  _final_eigen_state_numbers.size();
+  unsigned int n1 =  _initial_state_numbers.size();
+  unsigned int n2 =  _final_state_numbers.size();
 
 
   _initial_state_model->get_eigenvalues(_initial_state_particle, is_eigen_values);
 
   _final_state_model->get_eigenvalues(_final_state_particle, fs_eigen_values);
 
-
-  _initial_state_model->get_populations(_initial_state_particle, is_occupations);
-
-  _final_state_model->get_populations(_final_state_particle, fs_occupations);
-
+  if (_opt.get_occ)
+  {
+    _initial_state_model->get_populations(_initial_state_particle, is_occupations);
+    
+    _final_state_model->get_populations(_final_state_particle, fs_occupations);
+  }
 
   // loop on  eigenstates
 
@@ -498,25 +495,36 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
-      trans_energy =  is_eigen_values[_initial_eigen_state_numbers[i]]
-	             - fs_eigen_values[ _final_eigen_state_numbers[j]];
+      trans_energy =  is_eigen_values[_initial_indices[i]]
+	             - fs_eigen_values[_final_indices[j]];
 
-
-      f1 = is_occupations[_initial_eigen_state_numbers[i]];   // occupation for  electron
-
-      f2 = fs_occupations[_final_eigen_state_numbers[j]]; // occupation for  holes
-
+      if (_opt.get_occ)
+      {
+        f1 = is_occupations[_initial_indices[i]];   // occupation for  electron
+        
+        f2 = fs_occupations[_final_indices[j]]; // occupation for  holes
+      }
+      else
+      {
+        f1 = 1.0; f2 = 1.0;
+      }
 
 
       Complex Me = _P_matrix[0][i][j] * polariz(1) +
 	           _P_matrix[1][i][j] * polariz(2) +
 	           _P_matrix[2][i][j] * polariz(3);
 
+      //cout << _initial_indices[i] << " -> " 
+      //     << _final_indices[j] << endl;
 
+      //cout << is_eigen_values[_initial_indices[i]] << " -> " 
+      //     << fs_eigen_values[_final_indices[j]] << endl;
+
+      //cout<<trans_energy<<"  "<<Me<<endl;
+ 
 
       MeshBase::const_element_iterator       el     = Energy.active_elements_begin();
       const MeshBase::const_element_iterator end_el = Energy.active_elements_end();
-
       for ( ; el!= end_el ; ++el)
       {
 
@@ -532,15 +540,17 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 
         double c = 1.0/Constants::fine_structure_constant;
 
-        double omega = trans_energy/Hartree;
+        double omega = trans_energy/Constants::Hartree;
 
         //This is the right formula, as f1 is electron occupation probability and f2 is hole occupation probability.
         //Note that it differs from usual literature where usually f1 and f2 states initial state and final state
 	//occupation probability, so it's related to electrons and it becomes f1*(1-f2)
 
-        spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
+        //spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
+        spectrum[elem] += 2 * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
 
-	//Note(alex): This factor 1/(2*PI*PI) was changed to 1/(2*PI). nr still missing
+	//Note(alex): The original factor 1/(2*PI*PI) was changed to 1/(2*PI) (see below) 
+	//            and finally multiplied by 4 PI for angular integration (17/10/2011). 
         //
 	//According to Chuang's book the recombination rate should contain a pre-factor
 	//(including 2 for spin sum and 2 for polarization and 4 Pi for angle integration)
@@ -561,7 +571,8 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 	//  So the formula above, multiplied by 4*Pi for angle integration, and a factor of 4 for spin/pol deg
 	//  agrees to Chuang's only if the factor is nr/(2*PI) rather than 1/(2*PI*PI).
 	//
-
+	//  note that  nr is  still missing !
+        
       }
 
 
@@ -583,36 +594,77 @@ void Optics::do_plot()
   double area_dim_factor = 1;
   short k_dim = 3 - get_mesh().mesh_dimension(); 
 
+  if (plot_solution("matrix_elements"))
+  {
+    plot_globaldata();
+  }
+
+  vector<double> results;
+
+  {
+    MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
+    const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
+    int n = 0;
+    for(;elem_it != elem_end; ++elem_it)
+      n++;
+    
+    results.resize(n*3);
+  }
+
+  
+  vector<string> names(3);
+    
+  string filename;
+  string format = get_option("output_format", "grace");
+
+  DataOutput data_output(*_energy_mesh, format);
+  data_output.set_output_directory(get_output_directory());
+
 
   if (plot_solution("optical_spectrum_k_0"))
   {
-    string filename(get_name() +
-        "_spectrum_k_0" + TiberCad::get_filename_suffix());
+    filename = get_name() + "_spectrum_k_0" + TiberCad::get_filename_suffix();
 
-    string format = get_options().get_option("output_format", "grace");
-
-    DataOutput data_output(*_energy_mesh, format);
-    data_output.set_output_directory(get_output_directory());
-
-    vector<string> names(3);
-    
     names[0] = "power_density_k0_Px[W/eV]";  //As it's a power density (W) per photon (eV)
     names[1] = "power_density_k0_Py[W/eV]";  //Depending on simulation dimension it will be
     names[2] = "power_density_k0_Pz[W/eV]";  // W/(eV) (3D), W/(eV*cm) (2D), W/(eV*cm^2) (1D)
-    
-    vector<double> results;
-    
+       
+  }
+  
+  
+  if (plot_solution("optical_spectrum"))
+  {
+
+    filename = get_name() + "_spectrum" + TiberCad::get_filename_suffix();
+     
+    if (k_dim == 1)
     {
-      MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
-      const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
-      int n = 0;
-      for(;elem_it != elem_end; ++elem_it)
-        n++;
-      
-      results.resize(n*3);
+      dimension = "/cm";
+      area_dim_factor  = (Constants::bohr_radius * 1e2);
+    }
+    else if (k_dim == 2)
+    {
+      dimension = "/cm^2";
+      area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
+    }
+    else if (k_dim == 3)
+    {
+      dimension = "/cm^3";
+      area_dim_factor  = (Constants::bohr_radius * 1e2) * 
+                         (Constants::bohr_radius * 1e2) * 
+                         (Constants::bohr_radius * 1e2);
     }
     
-    
+    names[0] = "power_density_Px[W/eV" + dimension + "]";
+    names[1] = "power_density_Py[W/eV" + dimension + "]"; 
+    names[2] = "power_density_Pz[W/eV" + dimension + "]"; 
+        
+  }
+
+
+  if (plot_solution("optical_spectrum") || plot_solution("optical_spectrum_k_0"))
+  {
+
     MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
     const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
     int point = 0;
@@ -644,71 +696,12 @@ void Optics::do_plot()
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
       results[3*point + 2] = value;
       
-      
-      
+           
       point++;
     }
-    
-    
-    
-    data_output.write_cell_data(filename, results, names);
-    
-  }
-  
-  
-  if (plot_solution("optical_spectrum"))
-  {
-    string filename(get_name() + "_spectrum" +
-                    TiberCad::get_filename_suffix());
-    
-    string format = get_option("output_format", "grace");
-    
-    DataOutput data_output(*_energy_mesh, format);
-    data_output.set_output_directory(get_output_directory());
-    
-    
-    if (k_dim == 1)
-    {
-      dimension = "/cm";
-      area_dim_factor  = (Constants::bohr_radius * 1e2);
-    }
-    else if (k_dim == 2)
-    {
-      dimension = "/cm^2";
-      area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
-    }
-    else if (k_dim == 3)
-    {
-      dimension = "/cm^3";
-      area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
-    }
-    
-    vector<string> names(1,"power_density[W/eV" + dimension + "]");
-    
-    vector<double> results;
-    
-    MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
-    const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
-    
-    for(;elem_it != elem_end; ++elem_it)
-    {
-      const Elem* el = *elem_it;
-      double value;
-      
-      value = _spectrum_z[el]; //[ 1/a.u._of_time/((bohr_radius)^kdim)]
-      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
-      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
-      value /= area_dim_factor ; //[J/(eV*second)/((cm)^kdim)]
        
-      results.push_back(value);
-      
-    }
-    
-  
-    
     data_output.write_cell_data(filename, results, names);
 
-    
   }
 
 }
@@ -728,8 +721,8 @@ void Optics::print_info()
   _initial_state_model->get_eigenvalues(_initial_state_particle, is_ene);
   _final_state_model->get_eigenvalues(_final_state_particle, fs_ene);
 
-  unsigned int n1 =  _initial_eigen_state_numbers.size();
-  unsigned int n2 =  _final_eigen_state_numbers.size();
+  unsigned int n1 =  _initial_state_numbers.size();
+  unsigned int n2 =  _final_state_numbers.size();
 
   // write down matrix elements for debugging
   if (verbose > 0)
@@ -742,8 +735,8 @@ void Optics::print_info()
       for (int j = 0; j < n2; j++)
       {
 
-	unsigned int is = _initial_eigen_state_numbers[i];
-	unsigned int fs = _final_eigen_state_numbers[j];
+	unsigned int is = _initial_state_numbers[_initial_indices[i]];
+	unsigned int fs = _final_state_numbers[_final_indices[j]];
 
 	std::cout << is << "-" << fs << ": " << std::flush;
 	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;
@@ -761,8 +754,8 @@ void Optics::print_info()
       for (int j = 0; j < n2; j++)
       {
 
-	unsigned int is = _initial_eigen_state_numbers[i];
-	unsigned int fs = _final_eigen_state_numbers[j];
+	unsigned int is = _initial_state_numbers[_initial_indices[i]];
+	unsigned int fs = _final_state_numbers[_final_indices[j]];
 
 	std::cout << is << "-" << fs << ": " << std::flush;
 	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;
@@ -780,8 +773,8 @@ void Optics::print_info()
       for (int j = 0; j < n2; j++)
       {
 
-	unsigned int is = _initial_eigen_state_numbers[i];
-	unsigned int fs = _final_eigen_state_numbers[j];
+	unsigned int is = _initial_state_numbers[_initial_indices[i]];
+	unsigned int fs = _final_state_numbers[_final_indices[j]];
 
 	std::cout << is << "-" << fs << ": " << std::flush;
 	std::cout << is_ene[is] << ":" << fs_ene[fs] << " " << std::flush;
@@ -799,12 +792,13 @@ void Optics::print_info()
 }
 
 //========================================================================================
+/*
 void Optics::check_states()
 {
 
   // Find maximum state index of initial states
   unsigned int i;
-  unsigned int n_i =_initial_eigen_state_numbers.size();
+  unsigned int n_i =_initial_state_numbers.size();
   std::cerr<<"num initial states: "<< n_i<< std::endl;
   unsigned int n_i_st =_initial_state_model->get_num_states(_initial_state_particle);
   std::cerr<<"num computed:  "<< n_i_st<< std::endl;
@@ -813,9 +807,9 @@ void Optics::check_states()
 
   for(i=n_i; i>0; --i)
   {
-    if(_initial_eigen_state_numbers[i-1] > n_i_st-1)
+    if(_initial_state_numbers[i-1] > n_i_st-1)
     {
-      _initial_eigen_state_numbers.pop_back();
+      _initial_indices.pop_back();
       resized = true;
 
     }
@@ -823,9 +817,9 @@ void Optics::check_states()
 
   if(resized)
   {
-    for(i=0; i<_initial_eigen_state_numbers.size(); i++)
+    for(i=0; i<_initial_state_numbers.size(); i++)
     {
-      std::cerr<<_initial_eigen_state_numbers[i]<<" ";
+      std::cerr<<_initial_state_numbers[i]<<" ";
     }
     std::cerr<<std::endl;
   }
@@ -858,6 +852,38 @@ void Optics::check_states()
   }
 
 
+
+}
+*/
+
+void
+Optics::plot_globaldata(void)
+{
+  string outdir = get_output_directory();
+
+  string filename(outdir + "/" + get_output_filename() + ".dat");
+  
+  Messages::info("(OPT) write matrix elements in "+filename);
+
+  ofstream file;
+  file.open(filename.c_str());
+
+  if (file.good())
+  {
+    unsigned int n1 =  _initial_state_numbers.size();
+    unsigned int n2 =  _final_state_numbers.size();
+    for (unsigned int p = 0; p < 3; p++)
+    {
+
+      for (unsigned int i = 0; i < n1; i++)
+        for (unsigned int j = 0; j < n2; j++)
+        {
+
+          file << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   "
+               << j <<"      "  << std::norm(_P_matrix[p][i][j]) << "\n" << flush;
+        }        
+    }
+  }
 
 }
 

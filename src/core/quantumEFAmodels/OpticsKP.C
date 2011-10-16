@@ -155,8 +155,8 @@ void OpticsKP::do_compute_matrix_elements(void)
 {
   assemble(); // this assembles Px Py Pz 
 
-  unsigned int n_i =  _initial_eigen_state_numbers.size();
-  unsigned int n_f =  _final_eigen_state_numbers.size();
+  unsigned int n_i =  _initial_state_numbers.size();
+  unsigned int n_f =  _final_state_numbers.size();
 
   for (unsigned i = 0; i < 3; i++)
   {
@@ -167,7 +167,10 @@ void OpticsKP::do_compute_matrix_elements(void)
   for (unsigned int i1 = 0; i1 < n_i; i1++)
     for (unsigned int i2 = 0; i2 < n_f; i2++)
     {
-      std::vector<Complex> mat_el =  calculate_matrix_element(i1, i2);
+      unsigned int is = _initial_state_numbers[_initial_indices[i1]];
+      unsigned int fs = _final_state_numbers[_final_indices[i2]];
+
+      std::vector<Complex> mat_el =  calculate_matrix_element(is, fs);
       for (unsigned i = 0; i < 3; i++)  _P_matrix[i][i1][i2] = mat_el[i];
     }
 
@@ -195,8 +198,8 @@ void OpticsKP::calculate_matrix_bulk(void)
     P = element_kp_hamiltonian->get_optical_operator() ;
 
 
-  unsigned int n_i =  _initial_eigen_state_numbers.size();
-  unsigned int n_f =  _final_eigen_state_numbers.size();
+  unsigned int n_i =  _initial_state_numbers.size();
+  unsigned int n_f =  _final_state_numbers.size();
 
 
   for (unsigned i = 0; i < 3; i++)

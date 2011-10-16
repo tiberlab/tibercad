@@ -238,7 +238,7 @@ void EigenvalueProblem::get_eigenvalues(const std::string& particle,
       values.push_back( _solution[i].eigen_energy ); 
     }
   }  
-
+ 
   values.resize(num_st);
 
 }
@@ -403,7 +403,7 @@ void EigenvalueProblem::write_states(void) const
 	     <<" "<<std::setw(10)<<_solution[i].electro_chem_pot
 	     <<" "<<std::setw(10)<<get_population(i)<<std::endl;
   }
-
+  std::cout<<std::endl;
 }
 
 void EigenvalueProblem::write_states(const std::string& filename) const

@@ -196,10 +196,8 @@ ETB::do_init(void){
   //inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs,
   //    _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
 
-  //std::cout << "addskdata done" << std::endl;
 
-  //std::cout << "(ETB) init uptight begins" << std::endl;
-  Messages::info("creating map elem->atoms");
+  Messages::info("(ETB) creating map elem->atoms");
   build_map_elem_atoms(_upt_options.projection_length);
 
   
@@ -1083,7 +1081,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
 
   if(_solution[i].particle == "el" || _solution[i].particle == "electron")
   {
-      cout<<"state el: "<<i<<endl;    
+    //cout<<"state el: "<<i<<endl;    
     for (j = 0; j < N_atoms_wo_H; j++)
     {
       atom_sum = 0.0;
@@ -1101,7 +1099,7 @@ ETB::calculate_fermi_averaged(unsigned int i)
   if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
   {
 
-      cout<<"state hl: "<<i<<endl;    
+    //cout<<"state hl: "<<i<<endl;    
     for (j = 0; j < N_atoms_wo_H; j++)
     {
       atom_sum = 0.0;
