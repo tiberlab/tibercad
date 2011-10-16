@@ -1,0 +1,20 @@
+ TESTSUITE CONTENT
+=====================================================
+test01     Bulk Si
+test02     Si pn diode
+test03     Si 1D Thermal (two reservoirs)
+test04     Led 2D InGaN 3QW
+test05     QW GaN/AlGaN  k.p
+test06     Qdot GaN/AlGaN  Strain + DD + k.p
+test07     QW GaAs/AlGaAs  Macrostrain, Elasticity + DD + k.p
+test08     Si pn 2D  DD + Thermal
+test09
+test10     Qdot GaN Atomistic
+test11     QW  GaAs/AlGaAs  Atomistic
+test12     Bulk Si + traps
+test13     QW  GaAs/AlGaAs  Elasticity + DD
+test14     Column GaN Elasticity Deformation
+test15     Si pn 1D  DD + Thermal
+test16     Simple Gray Model
+test17     Test QW GaN/InGaN  Macrostrain + DD + TB 
+test18     Test QW GaAs/InGaAs  Macrostrain + DD + TB 
