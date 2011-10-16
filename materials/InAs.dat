@@ -29,21 +29,14 @@ Eg_G = 0.417
 Eg_L = 1.133
 Eg_X = 1.433
 
-#varshni_alpha_G = 0.276e-3
-#varshni_beta_G = 93
-varshni_alpha_G = 0
-varshni_beta_G = 0
+varshni_alpha_G = 0.276e-3
+varshni_beta_G = 93
 
+varshni_alpha_X = 0.276e-3
+varshni_beta_X = 93
 
-#varshni_alpha_X = 0.276e-3
-#varshni_beta_X = 93
-varshni_alpha_X = 0
-varshni_beta_X = 0
-
-#varshni_alpha_L = 0.276e-3
-#varshni_beta_L = 93
-varshni_alpha_L = 0
-varshni_beta_L = 0
+varshni_alpha_L = 0.276e-3
+varshni_beta_L = 93
 
 
 

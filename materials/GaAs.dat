@@ -27,20 +27,14 @@ Eg_G = 1.519
 Eg_L = 1.815
 Eg_X = 1.981
 
-#varshni_alpha_G = 0.5405e-3
-#varshni_beta_G =  204 
-varshni_alpha_G = 0
-varshni_beta_G = 0
+varshni_alpha_G = 0.5405e-3
+varshni_beta_G =  204 
 
-#varshni_alpha_X = 0.460e-3
-#varshni_beta_X =  204 
-varshni_alpha_X = 0
-varshni_beta_X = 0
+varshni_alpha_X = 0.460e-3
+varshni_beta_X =  204 
 
-#varshni_alpha_L = 0.605e-3
-#varshni_beta_L =  204
-varshni_alpha_X = 0
-varshni_beta_X = 0
+varshni_alpha_L = 0.605e-3
+varshni_beta_L =  204
 
 
 [kdotp] # [1]
