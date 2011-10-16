@@ -72,7 +72,7 @@ namespace BuildModule
   std::string tc_root;
 
   //! Verbose mode
-  bool verbose = true;
+  bool verbose = false;
 
   void usage(void)
   {
@@ -552,7 +552,8 @@ Compiler::_compile(const std::string& source, const std::string& flags)
 
   ostringstream cmdline;
   cmdline << _executable() << " " << _preprocessor_flags << " " <<
-    _compiler_flags << " " << flags << " -o " << target << " " << source;
+    _compiler_flags << " " << flags << " -o " << "." << ARCH << "/" <<
+    target << " " << source;
 
   if (BuildModule::verbose) cout << cmdline.str() << endl;
   if (system(cmdline.str().c_str()) != 0)
@@ -593,6 +594,7 @@ void process_module(const string& name, const ModelOptions& options)
   if (creatable.empty())
   {
     // guess it from the first source file
+    creatable = Utils::basename(sources[0]);
   }
 
   string module = options.get_option("module", "");
