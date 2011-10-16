@@ -665,7 +665,7 @@ void process_module(const string& name, const ModelOptions& options)
   string target = modulename + libsuffix;
   Compiler::link(target, objects, linkflags);
 
-  string instpath = options.get_option("installpath", "");
+  string instpath = options.get_option("installpath", "@ARCH/modules/@MODULE");
   BuildModule::replace(instpath, "@ARCH", ARCH);
   BuildModule::replace(instpath, "@ROOT", BuildModule::tc_root);
   BuildModule::replace(instpath, "@MODULE", modulename);
@@ -674,7 +674,10 @@ void process_module(const string& name, const ModelOptions& options)
 
   using namespace boost::filesystem;
   path from("./" + target);
-  path to(instpath + "/" + target);
+  path to(instpath);
+  if (!exists(to))
+    create_directory(to);
+  to /= target;
   copy_file(from, to, copy_option::overwrite_if_exists);
   remove(from);
 
