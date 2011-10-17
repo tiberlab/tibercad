@@ -260,6 +260,28 @@ Database::find_file(const string& file) const
   }
 
   return s;
+
+  /*
+   * Needs boost >1.41
+  boost::filesystem::path p(file);
+  if (p.is_relative())
+    p = _path / p;
+
+  if ((_path.size() == 0) || !check_data_file(p.string()))
+  {
+    p = boost::filesystem::path(_default_path) / file;
+
+    if ((_default_path.size() == 0) || (!check_data_file(p.string())))
+    {
+      //string msg("Cannot find material data file ");
+      //msg += material + ".dat";
+      //throw DatabaseException(msg);
+      s = "";
+    }
+  }
+
+  return p.string();
+  */
 }
 
 
