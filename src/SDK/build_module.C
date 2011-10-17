@@ -279,7 +279,7 @@ int main (int argc, char** argv)
   //
   // here begins real task
   //
-  int error = 1;
+  int error = 0;
 
   {
     char* root = getenv("TIBERCADROOT");
@@ -549,7 +549,7 @@ Compiler::_executable(void)
 std::string
 Compiler::_compile(const std::string& source, const std::string& flags)
 {
-  cout << "Compiling " << source << " (" << _options.get_key() << ") ...\n";
+  cout << "  Compiling " << source << " (" << _options.get_key() << ") ";
 
   boost::filesystem::path outdir(_outdir);
   if (!boost::filesystem::exists(outdir))
@@ -562,24 +562,52 @@ Compiler::_compile(const std::string& source, const std::string& flags)
   string depfile = _outdir + "/" + basename + ".d";
   ostringstream cmdline;
   cmdline << _executable() << " " << _preprocessor_flags
-      << " -MG -MM -MF " << depfile << source;
+      << " -MG -MM -MF " << depfile << " " << source;
   system(cmdline.str().c_str());
 
+  vector<string> dependencies;
+
   ifstream dep(depfile);
-  while (dep.good())
+  while (dep.good() && !dep.eof())
   {
-    string line = dep.getlin
+    string buf;
+    getline(dep, buf);
+    vector<string> deplist;
+    Utils::tokenize(buf, deplist, " \\");
+    if (deplist.size() == 3)
+    {
+      dependencies.push_back(deplist[1]);
+      dependencies.push_back(deplist[2]);
+    }
+    else if (deplist.size() == 1)
+      dependencies.push_back(deplist[0]);
   }
-  vector<string> deplist;
-  Utils::tokenize(dep.str(), deplist, "/");
-  for (size_t i = 0; i < deplist.size(); ++i)
-    cout << deplist[i] << " ";
-  cout << "\n\n";
-  //string deplist(dep.str());
 
-      //-MF " << _outdir << "/" << basename << ".d"
+  bool need_compilation = false;
+  boost::filesystem::path target_p(target);
+  if (!boost::filesystem::exists(target_p))
+  {
+    need_compilation = true;
+  }
+  else
+  {
+    std::time_t target_ts = boost::filesystem::last_write_time(boost::filesystem::path(target));
+    for (size_t i = 0; i < dependencies.size(); ++i)
+    {
+      boost::filesystem::path p(dependencies[i]);
+      if (boost::filesystem::exists(p))
+      {
+        std::time_t dep_ts = boost::filesystem::last_write_time(p);
+        if (std::difftime(target_ts, dep_ts) < 0.0)
+        {
+          need_compilation = true;
+          break;
+        }
+      }
+    }
+  }
 
-
+  if (need_compilation)
   {
     ostringstream cmdline;
     cmdline << _executable() << " " << _preprocessor_flags << " " <<
@@ -587,9 +615,14 @@ Compiler::_compile(const std::string& source, const std::string& flags)
         target << " " << source;
 
 
+    cout << "...\n";
     if (BuildModule::verbose) cout << cmdline.str() << endl;
     if (system(cmdline.str().c_str()) != 0)
       target = "";
+  }
+  else
+  {
+    cout << "- nothing to be done\n";
   }
 
   return target;
@@ -601,7 +634,7 @@ int
 Compiler::_link(const std::string& target, const std::vector<std::string>& objects,
     const std::string& flags)
 {
-  cout << "Linking " << target << " (" << _options.get_key() << ") ...\n";
+  cout << "  Linking " << target << " (" << _options.get_key() << ") ...\n";
 
   ostringstream cmdline;
   cmdline << _executable();

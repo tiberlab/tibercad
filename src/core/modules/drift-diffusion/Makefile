@@ -4,7 +4,7 @@ topdir := ../../../..
 
 
 all: module.conf
-	@export TIBERCADROOT=$(topdir) ;  $(topdir)/i686-linux/bin/build_module module.conf
+	@$(topdir)/bin/build_module module.conf
 
 
 .PHONY: models
