@@ -104,7 +104,8 @@ Module empirical_tb
   Solver
   {
     num_valence_eigenvalues = 1 
-    num_conduction_eigenvalues = 1 
+    num_conduction_eigenvalues = 1
+    long_tolerance = 1e-4  
   }
 
 }
@@ -127,6 +128,7 @@ Module empirical_tb
     load_path = output    
     num_valence_eigenvalues = 2 
     num_conduction_eigenvalues = 2 
+    long_tolerance = 1e-4  
   }
 
 }
@@ -231,9 +233,9 @@ Module opticstb
   plot = (matrix_elements, optical_spectrum_k_0)
   output_format = grace
 
-  Emin = 4.0
-  Emax = 6.0
-  dE = 0.01
+  Emin = 4.25
+  Emax = 4.75
+  dE = 0.001
 
 }
 
