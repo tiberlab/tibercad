@@ -265,6 +265,7 @@ Elasticity::get_solution_secure(const Elem* elem,
    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
    const std::vector<std::vector<Real> >& phi = fe->get_phi();
    const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+   const std::vector<Point>& real_pts = fe->get_xyz();
   
    fe->reinit(elem, &p);
   
@@ -276,7 +277,7 @@ Elasticity::get_solution_secure(const Elem* elem,
   
    for (ID n = 0; n < np; n++)
    {
-     mod.calculate(elem, p[n]);
+     mod.calculate(elem, real_pts[n]);
      
      const Tensor4DSym& C = mod.get_stiffness();
      const RealGradient& force_source =  mod.get_force_source();
@@ -467,7 +468,7 @@ Elasticity::compute_elastic_energy(void)
     std::vector<double> energy_p(qrule.n_points(),0.0);
     std::map<ID, std::vector<double> > values;
     values[Energy] = energy_p;
-    get_solution_secure(elem,values,ref_points);
+    get_solution_secure(elem, values, ref_points);
     
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
       energy += JxW[qp] * values[Energy][qp];
@@ -618,7 +619,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
      
-       mod.calculate(elem, qrule.qp(qp));
+       mod.calculate(elem, q_point[qp]);
        const Tensor4DSym& C = mod.get_stiffness();
        const RealGradient& force =  mod.get_force_source();
        const RealTensor& strain =  mod.get_strain_source();
@@ -655,7 +656,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	  
 	  for (unsigned int qp = 0; qp < qface.n_points(); qp++)
 	  {
-	    boundary_mod->calculate(elem, s, qface.qp(qp));
+	    boundary_mod->calculate(elem, s, qface_point[qp]);
 	    
 	    RealTensor H(0);
 	    RealGradient R(0);
@@ -672,7 +673,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    H /= b;
 	    R /= b;
 
-	    mod.calculate(elem, qface.qp(qp));
+	    mod.calculate(elem, qface_point[qp]);
 	    const RealTensor& strain =  mod.get_strain_source();
 	    const RealTensor& stress =  mod.get_stress_source();	    
 	    const Tensor4DSym& C = mod.get_stiffness();
