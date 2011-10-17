@@ -642,7 +642,7 @@ void process_module(const string& name, const ModelOptions& options)
   string module_code = options.get_option("creator_code", "");
   if (!module_code.empty())
   {
-    ofstream of(module + "_creator.h");
+    ofstream of(string(module + "_creator.h").c_str());
     of << module_code;
     compileflags += " -DCREATORCODE=" + module + "_creator.h";
   }
