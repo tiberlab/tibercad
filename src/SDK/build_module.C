@@ -558,15 +558,39 @@ Compiler::_compile(const std::string& source, const std::string& flags)
   string basename = Utils::basename(source);
   string target = _outdir + "/" + basename + ".o";
 
+  // check dependencies
+  string depfile = _outdir + "/" + basename + ".d";
   ostringstream cmdline;
-  cmdline << _executable() << " " << _preprocessor_flags << " " <<
-    _compiler_flags << " " << flags << " -o " <<
-    target << " " << source;
+  cmdline << _executable() << " " << _preprocessor_flags
+      << " -MG -MM -MF " << depfile << source;
+  system(cmdline.str().c_str());
+
+  ifstream dep(depfile);
+  while (dep.good())
+  {
+    string line = dep.getlin
+  }
+  vector<string> deplist;
+  Utils::tokenize(dep.str(), deplist, "/");
+  for (size_t i = 0; i < deplist.size(); ++i)
+    cout << deplist[i] << " ";
+  cout << "\n\n";
+  //string deplist(dep.str());
+
+      //-MF " << _outdir << "/" << basename << ".d"
 
 
-  if (BuildModule::verbose) cout << cmdline.str() << endl;
-  if (system(cmdline.str().c_str()) != 0)
-    target = "";
+  {
+    ostringstream cmdline;
+    cmdline << _executable() << " " << _preprocessor_flags << " " <<
+        _compiler_flags << " " << flags << " -o " <<
+        target << " " << source;
+
+
+    if (BuildModule::verbose) cout << cmdline.str() << endl;
+    if (system(cmdline.str().c_str()) != 0)
+      target = "";
+  }
 
   return target;
 }
