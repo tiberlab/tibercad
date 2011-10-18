@@ -65,14 +65,14 @@ Library libmesh
 
 Library petsc
 { 
-  path = extern/petsc-3.0.0-p10
+  path = @LIBMESH_PREFIX@/../petsc-3.0.0-p10
   #includes = (include, include/mpiuni, @ARCH/include)
   includes = (include, include/mpiuni, linux-gnu-i686/include)
 }
 
 Library slepc
 {
-  path = SDK/slepc-3.0.0-p7
+  path = @LIBMESH_PREFIX@/../slepc-3.0.0-p7
   includes = (include, @ARCH/include)
 }
 

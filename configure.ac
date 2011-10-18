@@ -290,7 +290,8 @@ AC_CONFIG_FILES([Make.common
                  installer/Makefile
 		 installer/windows/tibercad.bim
                  installer/linux/deb/control
-                 installer/linux/tar/install])
+                 installer/linux/tar/install
+                 share/modules.conf])
 AC_CONFIG_FILES([installer/prepare_files.sh], [chmod +x installer/prepare_files.sh])
 AC_CONFIG_FILES([bin/tibercad], [chmod +x bin/tibercad])
 AC_CONFIG_FILES([bin/tiberCAD.sh], [chmod +x bin/tiberCAD.sh])

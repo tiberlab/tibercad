@@ -66,7 +66,7 @@ static string open_file(const char *filter = "All Files (*.*)\0*.*\0", HWND owne
 namespace BuildModule
 {
   //! Interactive or batch mode (only useful for Win)
-  bool interactive;
+  bool interactive = true;
 
   //! Content of TIBERCADROOT
   std::string tc_root;
@@ -151,8 +151,6 @@ void process_module(const string& name, const ModelOptions& options);
 int main (int argc, char** argv)
 {
 
-  BuildModule::interactive = true;
-
   opterr = 0;
   int c;
   while ((c = getopt(argc, argv, "bv")) != -1)
@@ -160,6 +158,10 @@ int main (int argc, char** argv)
     {
       case 'b':
         BuildModule::interactive = false;
+        break;
+
+      case 'v':
+        BuildModule::verbose = true;
         break;
 
       case '?':
@@ -539,8 +541,7 @@ Compiler::_executable(void)
 {
   string exe(_options["executable"]);
   BuildModule::replace(exe, "@ARCH", ARCH);
-  if (exe[0] != '/')
-    exe = BuildModule::tc_root + "/" + exe;
+  BuildModule::replace(exe, "@ROOT", BuildModule::tc_root);
 
   return exe;
 }
@@ -567,7 +568,7 @@ Compiler::_compile(const std::string& source, const std::string& flags)
 
   vector<string> dependencies;
 
-  ifstream dep(depfile);
+  ifstream dep(depfile.c_str());
   while (dep.good() && !dep.eof())
   {
     string buf;

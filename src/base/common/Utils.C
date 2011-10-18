@@ -109,7 +109,7 @@ Utils::tokenize(const std::string& input, std::vector<std::string>& tokens,
 string
 Utils::dirname(const std::string& file)
 {
-  boost::filesystem::path p(file, boost::filesystem::native);
+  boost::filesystem::path p(file); //, boost::filesystem::native);
 
   return p.branch_path().string();
 }
@@ -119,7 +119,7 @@ Utils::dirname(const std::string& file)
 std::string
 Utils::basename(const std::string& file)
 {
-  boost::filesystem::path p(file, boost::filesystem::native);
+  boost::filesystem::path p(file);//, boost::filesystem::native);
 
   return boost::filesystem::basename(p);
 }
@@ -127,7 +127,7 @@ Utils::basename(const std::string& file)
 std::string
 Utils::file_extension(const std::string& file)
 {
-  boost::filesystem::path p(file, boost::filesystem::native);
+  boost::filesystem::path p(file);//, boost::filesystem::native);
 
   return boost::filesystem::extension(p);
 }

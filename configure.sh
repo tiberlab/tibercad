@@ -1,7 +1,7 @@
 #!/bin/sh
  
-export CXX=g++-4.3.2
-export CC=gcc-4.3.2
+export CXX=g++-4.6.0
+export CC=gcc-4.6.0
 export FC=ifort-11.1
 export FCFLAGS="-fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
 

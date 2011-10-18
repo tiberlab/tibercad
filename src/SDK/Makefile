@@ -34,7 +34,7 @@ all: build_module
 
 build_module: $(objects) 
 	@echo "Compiling build_module executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
 
 
 

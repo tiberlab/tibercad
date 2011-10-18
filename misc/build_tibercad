@@ -26,10 +26,10 @@ cd ../
 
 ./configure \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
-  --with-petsc-arch=${HOST}-complex \
+  --with-petsc-arch=${TCHOST}-complex \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
-  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${HOST} \
+  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
   --with-boost-prefix=${BUILDDIR}/$TCHOST --with-boost-libdir=${BUILDDIR}/${TCHOST}/lib \
   --host=$HOST --build=$BUILD
 
