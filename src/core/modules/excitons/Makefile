@@ -2,16 +2,20 @@
 
 topdir := ../../../..
 
-MODULE_NAME := excitontransport
+include $(topdir)/Make.common
 
-include $(topdir)/Make.module
+target := modules
+
+modules: module.conf
+	@$(topdir)/bin/build_module module.conf
 
 
-MODULE_LIB =  $(module_dir)/$(MODULE_NAME)/excitontransport$(shared_libext)
+clean:
+	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
 
-$(eval $(call MODULE, ExcitonTransport.C ExcitonProperties.C))
-
-$(eval $(call MODULE, ExcitonModel.C, $(MODULE_LIB)))
+distclean:
+	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
+	
 
 
 include $(topdir)/Make.rules

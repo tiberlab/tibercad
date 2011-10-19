@@ -2,7 +2,8 @@
 
 #include "ExponentialDOS.h"
 
-//TIBER_MODULE(ExponentialDOS, density_of_states, exponential)
+#include "TiberModule.h"
+
 
 using namespace std;
 

@@ -6,8 +6,8 @@
 #include "ConstantThermalConductivity.h"
 #include "RotatedCrystal.h"
 
+#include "TiberModule.h"
 
-//TIBER_MODULE(ConstantThermalConductivity, thermal_conductivity, constant)
 
 using namespace std;
 

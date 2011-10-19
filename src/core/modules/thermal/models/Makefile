@@ -1,15 +1,7 @@
-# $Id: Makefile 2039 2010-07-22 16:00:20Z gromano $
+# $Id: Makefile 2839 2011-06-26 14:52:41Z maufder $
 
 topdir := ../../../../..
 
-
-# we have to find the necessary include files of the module
-MODULE_INCLUDES = -I..
-
-include $(topdir)/Make.module
-
-
-$(foreach lib, $(srcfiles), $(eval $(call MODULE, $(lib))))
 
 
 include $(topdir)/Make.rules

@@ -5,10 +5,8 @@
 #include "Material.h"
 #include "tensor.h"
 
-// The first string is the class name, the second one
-// is the type of the model (here it is a polarization model),
-// the third one is the specific model implementation.
-// The library name will then be permittivity_constant.so
+#include "TiberModule.h"
+
 
 using namespace std;
 

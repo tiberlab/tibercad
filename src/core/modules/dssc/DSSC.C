@@ -13,6 +13,8 @@
 #include "SolveFailedException.h"
 #include "Messages.h"
 
+#include "TiberModule.h"
+
 
 // libmesh includes
 #include "node.h"

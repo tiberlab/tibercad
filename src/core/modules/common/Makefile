@@ -2,10 +2,13 @@
 
 topdir := ../../../..
 
+include $(topdir)/Make.common
 
-include $(topdir)/Make.module
+target := modules
 
-$(foreach lib, $(srcfiles), $(eval $(call MODULE, $(lib))))
+modules: module.conf
+	@$(topdir)/bin/build_module module.conf
+
 
 
 include $(topdir)/Make.rules

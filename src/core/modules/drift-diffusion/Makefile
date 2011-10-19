@@ -2,14 +2,13 @@
 
 topdir := ../../../..
 
+include $(topdir)/Make.common
 
-all: module.conf
+target := modules
+
+modules: module.conf
 	@$(topdir)/bin/build_module module.conf
 
-
-.PHONY: models
-models:
-	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
 
 clean:
 	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
@@ -18,3 +17,5 @@ distclean:
 	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
 	
 
+
+include $(topdir)/Make.rules

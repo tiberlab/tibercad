@@ -3,7 +3,8 @@
 #include "Periodic.h"
 #include "SimulationOptions.h"
 
-TIBER_MODULE(Periodic,boltzmann_bnd,periodic)
+#include "TiberModule.h"
+
 
 void
 Periodic::do_init(void)

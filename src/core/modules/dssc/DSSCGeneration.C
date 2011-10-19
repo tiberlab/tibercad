@@ -6,6 +6,8 @@
 #include "Material.h"
 #include "Database.h"
 
+#include "TiberModule.h"
+
 #include "mesh_base.h"
 #include "dof_map.h"
 

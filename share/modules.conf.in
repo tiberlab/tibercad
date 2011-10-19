@@ -39,6 +39,7 @@ Library tibercad
     include/core/macrostrain,
     include/core/embracing,
     include/core/solver-interfaces,
+    include/core/solver-interfaces/petsc,
     include/core/quantumEFAmodels,
     include/core/optics,
     include/core/maxwell,
