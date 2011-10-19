@@ -41,7 +41,7 @@ tibercad: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
-
+.PHONY: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): 
 	@$(MAKE) --no-print-directory -C src all
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
