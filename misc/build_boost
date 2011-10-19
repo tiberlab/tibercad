@@ -79,3 +79,9 @@ then
   done
 fi
 
+# when cross compiling we ned also the build system boost libraries
+if [ "$TCHOST" != "$TCBUILD" ]
+then
+  rm tools/build/v2/user-config.jam
+  bjam toolset=$toolset variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCBUILD install
+fi

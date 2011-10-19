@@ -30,6 +30,8 @@ endif
 # we create an ARCH string which will be the same when calling
 # arch.sh on the target system
 ARCH := $(shell $(topdir)/share/arch.sh $(hostcpu)-$(hostos))
+# the architecture of the build system (for cross compiling)
+BUILD := $(shell $(topdir)/share/arch.sh)
 
 # the compilers
 CXX := @CXX@
@@ -63,6 +65,9 @@ endif
 ifeq ($(METHOD),dbg)
   mode := "debug"
 endif
+
+# if we are cross compiling
+cross_compiling := @cross_compiling@
 
 # build modules or not
 build_modules := @BUILD_TIBER_MODULES@

@@ -12,6 +12,15 @@ objects += $(topdir)/src/base/common/.$(ARCH)/ModelOptions.$(METHOD).o
 objects += $(topdir)/src/base/io/.$(ARCH)/InputParser.$(METHOD).o
 objects += $(topdir)/src/base/io/.$(ARCH)/Messages.$(METHOD).o
 
+cross_srcfiles := $(srcfiles)
+cross_srcfiles += $(topdir)/src/base/common/Utils.C
+cross_srcfiles += $(topdir)/src/base/common/ModelOptions.C
+cross_srcfiles += $(topdir)/src/base/io/InputParser.C
+cross_srcfiles += $(topdir)/src/base/io/Messages.C
+BUILD_CPPFLAGS := -DBUILD=\"$(BUILD)\" $(CPPFLAGS)
+BUILD_CXXFLAGS := $(CXXFLAGS)
+BUILD_LDFLAGS := -Wl,-rpath,../../extern/$(BUILD)/lib -L../../extern/$(BUILD)/lib -lboost_regex -lboost_filesystem -lboost_system
+BUILD_CXX := g++
 
 
 SUFF := 
@@ -19,7 +28,7 @@ ifeq ($(target_os),win32)
   SUFF := ".exe"
   #objects += tibercad_res.o
   WINDRES := $(subst gcc,windres,$(CC))
-  #ADDITIONAL_LIBS += -lcomdlg32
+  LDFLAGS += -lcomdlg32
 endif
 
 ifeq ($(target_os),darwin)
@@ -29,13 +38,20 @@ else
 endif
 
 
-
 all: build_module
+
+ifeq ($(cross_compiling), yes)
+all: build_module_cross
+endif
 
 build_module: $(objects) 
 	@echo "Compiling build_module executable ..."
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
 
+build_module_cross: $(cross_srcfiles)
+	@echo "compiling build_module for cross compilation ..."
+	$(BUILD_CXX) $(BUILD_CPPFLAGS) $(BUILD_CXXFLAGS) $(BUILD_LDFLAGS) \
+		-o $(topdir)/bin/build_module_cross $(BUILD_LDFLAGS) $(cross_srcfiles)
 
 
 
