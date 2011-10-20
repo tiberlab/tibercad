@@ -135,7 +135,7 @@ dll_name=${dll_name}${dll_libext}
 ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=$HOST --build=$BUILD
 
 #export libmesh_CXXFLAGS="-std=gnu++0x -g"
-export libmesh_CXXFLAGS="-g"
+export libmesh_CXXFLAGS="-g -fpermissive"
 
 # delete the -pedantic flag because it makes problems with mpi
 cp Make.common Make.common.orig
@@ -174,6 +174,8 @@ ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${dll_name} \
   ${ARCHIVES} \
   -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
   ${LAPACK_LIBS} ${FORTRAN_LIBS}
+
+
 
 if [ $DEBUG == 'y' ]; then
   export PETSC_ARCH=${TCHOST}-dbg

@@ -46,7 +46,7 @@ endif
 
 build_module: $(objects) 
 	@echo "Compiling build_module executable ..."
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
+	$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
 
 build_module_cross: $(cross_srcfiles)
 	@echo "compiling build_module for cross compilation ..."

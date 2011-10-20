@@ -30,6 +30,7 @@ cd ../
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
+  --with-libmesh-petsc-libdir=${BUILDDIR}/${TCHOST}/lib \
   --with-boost-prefix=${BUILDDIR}/$TCHOST --with-boost-libdir=${BUILDDIR}/${TCHOST}/lib \
   --host=$HOST --build=$BUILD
 
