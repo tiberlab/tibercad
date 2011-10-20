@@ -38,20 +38,20 @@ else
 endif
 
 
-all: build_module
+all: $(topdir)/$(ARCH)/bin/build_module$(SUFF)
 
 ifeq ($(cross_compiling), yes)
-all: build_module_cross
+all: $(topdir)/bin/build_module-$(BUILD)
 endif
 
-build_module: $(objects) 
+$(topdir)/$(ARCH)/bin/build_module$(SUFF): $(objects) 
 	@echo "Compiling build_module executable ..."
 	$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
 
-build_module_cross: $(cross_srcfiles)
+$(topdir)/bin/build_module-$(BUILD): $(cross_srcfiles)
 	@echo "compiling build_module for cross compilation ..."
-	$(BUILD_CXX) $(BUILD_CPPFLAGS) $(BUILD_CXXFLAGS) $(BUILD_LDFLAGS) \
-		-o $(topdir)/bin/build_module_cross $(BUILD_LDFLAGS) $(cross_srcfiles)
+	@$(BUILD_CXX) $(BUILD_CPPFLAGS) $(BUILD_CXXFLAGS) $(BUILD_LDFLAGS) \
+		-o $@ $(BUILD_LDFLAGS) $(cross_srcfiles)
 
 
 

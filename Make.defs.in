@@ -33,11 +33,24 @@ ARCH := $(shell $(topdir)/share/arch.sh $(hostcpu)-$(hostos))
 # the architecture of the build system (for cross compiling)
 BUILD := $(shell $(topdir)/share/arch.sh)
 
+# if we are cross compiling
+cross_compiling := no
+ifneq ($(ARCH), $(BUILD))
+  cross_compiling := yes
+endif
+
 # the compilers
 CXX := @CXX@
 CC := @CC@
 FC := @FC@
 RANLIB := @RANLIB@
+
+# the build_module tool: for cross compilation we need it compiled also
+# for the BUILD architecture
+BUILDMODULE := $(topdir)/bin/build_module
+ifeq ($(cross_compiling), yes)
+  BUILDMODULE := export TIBERCADROOT=$(topdir) && $(topdir)/bin/build_module-$(BUILD)
+endif
 
 SVN := @SVN@
 
@@ -65,9 +78,6 @@ endif
 ifeq ($(METHOD),dbg)
   mode := "debug"
 endif
-
-# if we are cross compiling
-cross_compiling := @cross_compiling@
 
 # build modules or not
 build_modules := @BUILD_TIBER_MODULES@

@@ -532,14 +532,17 @@ Compiler::Compiler(const ModelOptions& options) :
 
   _outdir = "." + string(ARCH);
 
-#if defined(_WIN32)
-  BuildModule::replace(_compiler_flags, "-fPIC", "");
-#endif
+  if ((ARCH == "i686-linux") || (ARCH == "x86_64-linux"))
+    _linker_flags = "-Wl,--as-needed ";
 
-#if defined(_LINUX)
-  _linker_flags = "-Wl,--as-needed ";
-#endif
   _linker_flags += options.get_option("linker_flags", "");
+
+  if ((ARCH == "i686-mingw32") || (ARCH == "x86_64-mingw32"))
+  {
+    BuildModule::replace(_compiler_flags, "-fPIC", "");
+    BuildModule::replace(_compiler_flags, "-pthread", "");
+    BuildModule::replace(_linker_flags, "-pthread", "");
+  }
 }
 
 
@@ -754,14 +757,14 @@ void process_module(const string& name, const ModelOptions& options)
     string linkflags = options.get_option("linker_flags", "");
 
     string binsuffix;
-#if defined(_WIN32)
-    string libsuffix(".dll");
-    binsuffix = ".exe";
-#elif defined(_APPLE_)
-    string libsuffix(".dylib");
-#else
     string libsuffix(".so");
-#endif
+    if ((ARCH == "i686-mingw32") || (ARCH == "x86_64-mingw32"))
+    {
+      libsuffix = ".dll";
+      binsuffix = ".exe";
+    }
+    else if ((ARCH == "i686-darwin") || (ARCH == "x86_64-darwin"))
+      libsuffix = ".dylib";
 
     modulelib = modulename + libsuffix;
 
@@ -789,9 +792,9 @@ void process_module(const string& name, const ModelOptions& options)
 
     //string cpflags = opts.get_option("compiler_flags", "");
     string ldflags = opts.get_option("linker_flags", "");
-#if defined(_LINUX)
-    ldflags += "-Wl,--as-needed ";
-#endif
+    if ((ARCH == "i686-linux") || (ARCH == "x86_64-linux"))
+      ldflags += "-Wl,--as-needed ";
+
     ldflags += modulelib;
     opts["linker_flags"] = ldflags;
 
