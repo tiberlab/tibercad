@@ -23,11 +23,11 @@ public:
 protected:
 
   //! The initialization
-  virtual void do_init(void){};
+  virtual void do_init(void);
 
 
   //! Parse the options from the input file
-  virtual void parse_options(void){};
+  virtual void parse_options(void);
 
 
   //! Setup the available variables
@@ -43,12 +43,12 @@ protected:
 
 
   //! We need to create a physical model
-  virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-      const Material* mat) const{};
+//  virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
+//      const Material* mat) const{};
 
   //! We need to create boundary condition model
-  virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-      const Material* material_A, const Material* material_B) const{};
+//  virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
+//      const Material* material_A, const Material* material_B) const{};
 
 
   //! We have to provide somehow our solution variables
@@ -93,14 +93,46 @@ private:
 
     std::string boundary_conditions;
     std::string substrate_plane;
+    double boundary_tol;
+
   };
 
   Options _options;
 
+  Options& get_my_options(void);
+
+  void
+  set_boundary(void);
+
+  std::vector<unsigned int> _free_atoms;
+  std::vector<unsigned int>& get_free_atoms(void);
+
+  std::vector<double> _dof;
+  std::vector<double>& get_dof(void);
+
 };
 
 
+inline
+Vff::Options&
+Vff::get_my_options(void)
+{
+  return _options;
+}
 
+inline
+std::vector<unsigned int>&
+Vff::get_free_atoms(void)
+{
+  return _free_atoms;
+}
+
+inline
+std::vector<double>&
+Vff::get_dof(void)
+{
+  return _dof;
+}
 
 
 #endif
