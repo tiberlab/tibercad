@@ -7,7 +7,7 @@ fi
 
 . common.sh
 
-VERSION=1_47_0
+VERSION=1_42_0
 ARCHIVE=boost_${VERSION}.tar.bz2
 
 echo "Compiling boost libraries"
@@ -83,5 +83,5 @@ fi
 if [ "$TCHOST" != "$TCBUILD" ]
 then
   rm tools/build/v2/user-config.jam
-  bjam toolset=$toolset variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCBUILD install
+  ./bjam toolset=$toolset variant=release threading=single link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCBUILD install
 fi

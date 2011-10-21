@@ -25,7 +25,7 @@ BUILD_CXX := g++
 
 SUFF := 
 ifeq ($(target_os),win32)
-  SUFF := ".exe"
+  SUFF := .exe
   #objects += tibercad_res.o
   WINDRES := $(subst gcc,windres,$(CC))
   LDFLAGS += -lcomdlg32
@@ -34,7 +34,7 @@ endif
 ifeq ($(target_os),darwin)
   ASNEEDED := 
 else
-  ASNEEDED := "-Wl,--as-needed"
+  ASNEEDED := -Wl,--as-needed
 endif
 
 
@@ -46,7 +46,7 @@ endif
 
 $(topdir)/$(ARCH)/bin/build_module$(SUFF): $(objects) 
 	@echo "Compiling build_module executable ..."
-	$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
 
 $(topdir)/bin/build_module-$(BUILD): $(cross_srcfiles)
 	@echo "compiling build_module for cross compilation ..."

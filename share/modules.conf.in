@@ -52,6 +52,12 @@ Library tibercad
 }
 
 
+Library boost
+{
+  inlcudes = @LIBMESH_PETSC_LIBDIR@/../include
+}
+
+
 Library libmesh
 {
   path = @LIBMESH_PREFIX@
@@ -60,7 +66,8 @@ Library libmesh
               include/solvers, include/utils, include/enums,
               include/fe, include/mesh, include/parallel,
               include/quadrature, include/systems)
-  #libpath = lib
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lmesh
 }
 
 
@@ -69,12 +76,16 @@ Library petsc
   path = @LIBMESH_PREFIX@/../petsc-3.0.0-p10
   #includes = (include, include/mpiuni, @ARCH/include)
   includes = (include, include/mpiuni, linux-gnu-i686/include)
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lpetsc_real
 }
 
 Library slepc
 {
   path = @LIBMESH_PREFIX@/../slepc-3.0.0-p7
   includes = (include, @ARCH/include)
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lslepc_real
 }
 
 		

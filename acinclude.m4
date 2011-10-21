@@ -335,13 +335,39 @@ AC_DEFUN([TC_LIBMESH_PETSC_LIBS],
  fi
  dnl
  dnl link test
+ dnl NOTE: this is a really dirty heuristic to make it link, but at the end we do not need
+ dnl the exact LDFLAGS, only if it links or not
  CXXFLAGS_save=$CXXFLAGS
  LDFLAGS_save=$LDFLAGS
  AC_LANG_PUSH([C++])
  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
- LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
+ LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
  			        [tc_cv_have_sharedlibs="yes"])
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS}"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+  LDFLAGS="${tc_LDFLAGS}"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
   tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
   LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
@@ -357,6 +383,7 @@ AC_DEFUN([TC_LIBMESH_PETSC_LIBS],
  fi
  LDFLAGS=$LDFLAGS_save
  AC_SUBST([LIBMESH_PETSC_LIBS], "$tc_libmesh_petsc_libs")
+ AC_SUBST([LIBMESH_PETSC_LIBDIR], "$tc_libmesh_petsc_libdir")
 ])dnl
 
 

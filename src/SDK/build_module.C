@@ -599,7 +599,7 @@ Compiler::_compile(const std::string& source, const std::string& flags)
 
   boost::filesystem::path outdir(_outdir);
   if (!boost::filesystem::exists(outdir))
-    boost::filesystem::create_directory(outdir);
+    boost::filesystem::create_directories(outdir);
 
   string basename = Utils::basename(source);
   string target = _outdir + "/" + basename + ".o";
@@ -773,7 +773,7 @@ void process_module(const string& name, const ModelOptions& options)
     // build full installation path
     path instpath_p(instpath);
     if (!exists(instpath_p))
-      create_directory(instpath_p);
+      create_directories(instpath_p);
     modulelib = instpath + "/" + modulelib;
 
     Compiler::link(modulelib, objects, linkflags);
