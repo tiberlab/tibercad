@@ -7,7 +7,7 @@ topdir=/home/maufder/Work/TiberCAD/trunk
 
 ARCH=$(${topdir}/share/arch.sh)
 # You can set these to any reasonable value
-INSTALLPREFIX=${topdir}/SDK/compiler
+INSTALLPREFIX=${topdir}/SDK/gcc-$VERSION
 INSTALLEPREFIX=${INSTALLPREFIX}/$(${topdir}/share/arch.sh)
 WORKDIR=${topdir}/extern/gcc-4.6.0
 #DEPLIBS=${WORKDIR}/dependencies
