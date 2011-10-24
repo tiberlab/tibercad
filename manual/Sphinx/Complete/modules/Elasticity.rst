@@ -45,7 +45,7 @@ Theory
 -------------
 
 Details about the theory of continuous elasticity applied to device mechanical deformation 
-can be found in [Povolotskiy]_ .
+can be found in [Povolotskyi]_ .
 
 TiberCAD computes the mechanical deformation of a body subjected to external forces by means of the equilibrium mechanical equation, i.e.
 
@@ -86,8 +86,10 @@ The non-linear strain is computed by applying the mechanical equilibrium equatio
 The number of the shape iteration is set by the keyword **shape_iteration** (default = 0, i.e. no deformation is performed) 
 whereas the maximum tolerated error can be indicated with shape_error ( default = :math:`1e^{-3}` ).
 
+
+
 Stiffness constant
--------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default the stiffness constant is anisotropic. For the zincoblend crystal structure the independent coefficients are 
 (with the Voigt notation) C11, C12, C44. 
@@ -167,39 +169,86 @@ Example::
      Poisson = 0.349
     }
 
-**Boundary conditions**
 
-Surfaces forces :math:`f^0` are applied by imposing :math:`\sigma_{ij} n_{j} = f_i^0` along the surface with normal n. 
-This boundary condition can be used with the keyword ``surface_force`` . The force can be specified in GPa with force. 
-An example is shown below ::
 
-  Contact base
-    {
-     type = surface_force
-     force = (0,0,0.5) 
-    }
 
-On the other hand, one may want to fix some surface of the device. The keyword ``clamp`` freezes all nodes of a given surface. 
+Module options
+---------------------
+
+The following options influence the behaviour of the Elasicity module:
+
+
+Solution/Plot variables
+-----------------------
+
+The solution variables available for plotting and for interaction with other modules are
+given in :ref:`Plotting variables<el_solutions>`.
+
+
+
+
+Solver section
+--------------------
+
+The ``Solver`` section of the Elasicity   module refers to  
+
+
+Physics section
+--------------------
+
+The ``Physics`` block contains generic options for the bulk physical model and the definition
+of submodels. The generic options are
+
+
+
+In the following we describe all submodels. As mentioned in the Introduction (REF HERE)
+submodels can be restricted to a subset of simulation regions.
+
+The user can specify the following physical  models:
+
+  * ``Body  force``
+
+  * ``Stiffness``
+
+
+
+Body  force
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The  Body   force  model   implements  an  external  force  applied  to  the  device.
+
+
+The  keyword  is ``body_force`` , i.e ::
+
+  body_force [type]
+  {
+  }
+
+The type can be ``constant``, ``converse_piezo``   or ``lattice_mismatch``
+
+
+Constant
+...............
+
+
+A constant value body force can be included by means of the keyword ``constant`` .
 
 Example::
 
-  Contact substrate 
+  body_force constant 
     {
-     type = clamp
+     F = 1
     }
 
-**Body forces**
 
-A constant value body force can be included by means of the keyword ``Bodyforceconstant`` .
+F  is  a  force in :math:`N/m^3`    
 
-Example::
 
-  BodyForceconstant 
-    {
-     force = (0,1,0)
-    }
 
-When two crystals with different crystal structure are put in contact the lattice mismatch between them may induce a strain  :math:`\epsilon^LM`  and, therefore, a stress :math:`\sigma =C\epsilon^{LM}` . 
+Lattice mismatch
+.................
+
+When two crystals with different crystal structure are put in contact the lattice mismatch between them may induce a strain  :math:`\epsilon^{LM}`  and, therefore, a stress :math:`\sigma =C\epsilon^{LM}` . 
 
 This stress contribution acts as a body force 
 
@@ -211,12 +260,15 @@ This stress contribution acts as a body force
     f_i = -\frac{\partial }{\partial x_j} C_{ijlk}\epsilon_{lk}^{LM}
     \]
 
+
+and  can  be included with the keyword ``lattice_mismatch`` .
+
 The strain source can be computed only once the reference lattice is identified. 
-The reference material and its growth axis can be included following the same syntax of the device section.
+The reference material and its growth axis must be included following the same syntax of the device section.
 
 Example::
 
-  BodyForcelattice_mismatch
+   body_force lattice_mismatch
     {
      reference_material = AlGaN
      structure = wz
@@ -225,6 +277,11 @@ Example::
      y-growth-direction = (0,1,-1,0)
      z-growth-direction = (0,0,0,1)
     }
+
+
+Converse  piezo
+.................
+
 
 In presence of an electric field there might develop an additional stress source due to the so-called converse piezoelectric effect, given by :
 
@@ -236,7 +293,7 @@ In presence of an electric field there might develop an additional stress source
     \sigma_{il}^{SC}=-e_{ijk}E_k
     \]
 
-The converse piezoelectric effect can be included with the keyword ``BodyForce_piezo`` and an electrostatic simulation must be indicated. 
+The converse piezoelectric effect can be included with the keyword ``converse_piezo`` and an electrostatic simulation must be indicated. 
 
 The effective body force reads as :
 
@@ -248,34 +305,177 @@ The effective body force reads as :
     f_i = -\frac{\partial}{\partial x_j} \sigma_{ij}^{CP}
     \]
 
+
 Example::
 
-  BodyForceconverse_piezo
+   body_force  converse_piezo  
     {
-     poisson_simulation = dd
+     DD_simulation = dd
     }
+
+
+where  ``DD_simulation``  indicates the relevant electrostatic simulation.
+
+
+
+Stiffness
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+The  keyword  is ``stiffness`` , i.e ::
+
+  stiffness [type]
+  {
+  }
+
+
+The type can be ``isotropic``   or ``anisotropic``.  The  latter is  the default.
+
+isotropic
+.................
+
+Example::
+
+   stiffness  isotropic 
+    {
+        young =
+        poisson = 
+    }
+
+
+
+anisotropic
+.................
+
+
+Example::
+
+   stiffness  anisotropic 
+    {
+        C11 =
+        C22 =
+        C44 = 
+         
+    }
+
+
+
+
+
+Boundary conditions
+-------------------
+
+Different boundary conditions can be implemented for Elasticity simulations, by  means  of  the  block  Contact.
+
+  * ``Surface force``
+
+  * ``Clamp``
+
+  * ``Plane``
+
+  * ``Custom``
+
+
+
+Surface force
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Surfaces forces :math:`f^0` are applied by imposing :math:`\sigma_{ij} n_{j} = f_i^0` along the surface with normal n. 
+This boundary condition can be used with the keyword ``surface_force`` . The force can be specified in GPa with force. 
+An example is shown below ::
+
+  Contact base
+    {
+     type = surface_force
+     force = (0,0,0.5) 
+    }
+
+where force is  the applied force in  GPa.
+
+
+Clamp
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+On the other hand, one may want to fix some surface of the device. The keyword ``clamp`` freezes all nodes of a given surface. 
+
+Example::
+
+  Contact substrate 
+    {
+     type = clamp
+    }
+
+
+
+
+Plane
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Example::
+
+  Contact substrate 
+    {
+     type = plane
+    }
+
+
+
+
+
+
+
+
+Custom
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Example::
+
+ 
+   Contact substrate 
+     {
+      type = Custom
+       H = 
+       R =
+
+      }
+
+
+
+..  _el_solutions :
+
+..  math::
+    :nowrap:
+    :label:
     
-Considering all the above mentioned force sources, the plotted total stress and strain are :
+     \begin{table}[!ht]
+     \center
+     \begin{tabular}{l|c|l}
+     \multicolumn{3}{c}{\textbf{Solution Table}} \\
+     \hline
+     \textbf{Keyword}  & \textbf{Description} & \textbf{Units}  \\
+     \hline
+     \hline
+     \texttt{Strain} & total strain  &  \\
+     \texttt{StrainCell} & total strain   &  \\
+     \texttt{StrainCrystal} & total strain  &  \\
+     \texttt{Stress} & stress & GPa \\
+     \texttt{StressCrystal} & stress & GPa \\
+     \texttt{Displacement} & displacement  & m  \\
+     \texttt{ForceSource} & force   & N/m3  \\
+     \texttt{StrainSource} &  force-generated strain   &   \\
+     \texttt{StressSource} & force-generated stress  & GPa \\
+     \texttt{Energy} & ???  & ??  \\
+     \end{tabular}
+     \caption{Solution/Plot variables}
+     \label{table:el_solutions}
+     \end{table}
 
-.. math::
-   :nowrap:
-   :label:
-
-    \[
-    \sigma_{ij} = C_{ijlk}\left( \frac{\partial u_l}{\partial x_k} + \epsilon_{lk}^{LM} \right) -e_{ijk}E_k 
-    \]
-
-.. math::
-   :nowrap:
-   :label:
-
-    \[
-    \epsilon_{kl}=\frac{1}{2}\left(\frac{\partial u_l}{x_k}-\frac{\partial u_k}{\partial u_l} \right ) + \epsilon_{lk}^{LM}
-    \]
-
-
-..   </marker>
-
+|
 
 
 
@@ -316,9 +516,14 @@ The second part of the input file is devoted to the module declaration ::
         reference_material = AlGaN
         x = 0.2 
        }
-     Contact Base {type = clamp}
+    
      }
+
+    Contact Base 
+        {type = clamp}
+
    }
+
 
 In  ``Physics`` we declare the physical models to be applied to our device. 
 In our case, with ``body_force lattice_mismatch`` we are adding a body force into the system, 
@@ -348,3 +553,7 @@ Output data about strain are shown below.
    Strain effect on directions
    
 ..   </marker>
+
+
+
+
