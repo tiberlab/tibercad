@@ -43,12 +43,15 @@ public:
   //!Set atom position (1X3 Tensor is used)
   void set_position(const Tensor1 pos);
 
-  //! Get absolute position coordinate i (x=1, y=2, z=3) 
+  //! Get absolute position coordinate i (x=0, y=1, z=2) 
   //! atomic coordinates are stored in Angstrom
   double get_position(int i) const;
 
   //! Get the whole position (1X3 Tensor)
-  Tensor1 get_position() const;
+  Tensor1 get_ttype_position() const;
+
+  //! Get the position as a Point object
+  Point get_position() const;
 
   //! Get the ID of the region the atom belongs to
   //! (Note: little errors may occur using basis or conventional cell
@@ -108,9 +111,15 @@ const Specie& Atom::get_specie(void) const
 inline
 double Atom::get_position(int i) const
 {
-  return _position(i - 1);
+  return _position(i);
 }
 
+
+inline 
+Point Atom::get_position() const
+{
+  return _position;
+}  
 
 inline
 void Atom::set_flag(const unsigned int fg)

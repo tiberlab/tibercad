@@ -1488,9 +1488,9 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const 
     //cout<<iatm<<":";
     
     // position is in Angstrom
-    x1 = structure[iatm].get_position(1);
-    y1 = structure[iatm].get_position(2);
-    z1 = structure[iatm].get_position(3);
+    x1 = structure[iatm].get_position(0);
+    y1 = structure[iatm].get_position(1);
+    z1 = structure[iatm].get_position(2);
     
     //delta_r is in Angstrom
     //deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
@@ -1547,8 +1547,8 @@ ETB::build_rho2d(const std::vector<double>& tb_density, const Elem* elem, const 
   {
     unsigned int iatm = atoms[id];    
 
-    x1 = structure[iatm].get_position(1);
-    y1 = structure[iatm].get_position(2);
+    x1 = structure[iatm].get_position(0);
+    y1 = structure[iatm].get_position(1);
     z1 = 0.0;
     
     deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1);
@@ -1604,7 +1604,7 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
 
-      x_atm = structure[iatm].get_position(1);
+      x_atm = structure[iatm].get_position(0);
 
       deltar = min( abs( (x_atm - x1) ), abs( (x_atm - x2) ) );
 

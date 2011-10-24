@@ -83,3 +83,10 @@ Vff::set_boundary(void)
     }
 
 }
+
+
+void
+Vff::check_structure(void)
+{
+
+}

@@ -105,9 +105,9 @@ TightBinding::build_rho(const Point& r)
       uhatom = _u_hub[sp][S];
 
       //Convert atom position to mesh units
-      x1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(1) / get_atomistic_structure()->get_scale();
-      y1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(2) / get_atomistic_structure()->get_scale();
-      z1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(3) / get_atomistic_structure()->get_scale();
+      x1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(0) / get_atomistic_structure()->get_scale();
+      y1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(1) / get_atomistic_structure()->get_scale();
+      z1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(2) / get_atomistic_structure()->get_scale();
 
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
@@ -286,11 +286,11 @@ TightBinding::project_potential(const std::string model_name, const std::string 
 	{
 	  if (get_atomistic_structure()->get_structure_atoms()[i].get_elem() != NULL)
 	    {
-	      p(0) = get_atomistic_structure()->get_structure_atoms()[i].get_position()(1)
+	      p(0) = get_atomistic_structure()->get_structure_atoms()[i].get_position(0)
                 / get_atomistic_structure()->get_scale();
-	      p(1) = get_atomistic_structure()->get_structure_atoms()[i].get_position()(2)
+	      p(1) = get_atomistic_structure()->get_structure_atoms()[i].get_position(1)
 		/ get_atomistic_structure()->get_scale();
-	      p(2) = get_atomistic_structure()->get_structure_atoms()[i].get_position()(3)
+	      p(2) = get_atomistic_structure()->get_structure_atoms()[i].get_position(2)
 		/ get_atomistic_structure()->get_scale();
 
 	      if (dim == 1) {p(1) = 0.0; p(2) = 0.0;}
@@ -424,9 +424,9 @@ TightBinding::build_map_elem_atoms(double projection_length)
     for (unsigned int iatm = 0; iatm  <  N_wo_H; iatm++)
     {
    
-      x1 = structure[iatm].get_position(1);
-      y1 = structure[iatm].get_position(2);
-      z1 = structure[iatm].get_position(3);
+      x1 = structure[iatm].get_position(0);
+      y1 = structure[iatm].get_position(1);
+      z1 = structure[iatm].get_position(2);
 
       //deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
       deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1);

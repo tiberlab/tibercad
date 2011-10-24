@@ -110,6 +110,9 @@ private:
   std::vector<double> _dof;
   std::vector<double>& get_dof(void);
 
+  void
+  check_structure(void);
+
 };
 
 

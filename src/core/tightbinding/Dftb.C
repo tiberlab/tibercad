@@ -388,9 +388,9 @@ Dftb::build_structure_options()
   //! Setting coordinates in DFTB format, coordinates are in atomic units
   for (int i = 0; i < _dftb_options.nAtom; i++){
 
-    _dftb_options.coords[ (i*3) ] = basis[i].get_position(1) / bohr_amstrong;
-    _dftb_options.coords[ (i*3) + 1 ] = basis[i].get_position(2) / bohr_amstrong;
-    _dftb_options.coords[ (i*3) + 2 ] = basis[i].get_position(3) / bohr_amstrong;
+    _dftb_options.coords[ (i*3) ] = basis[i].get_position(0) / bohr_amstrong;
+    _dftb_options.coords[ (i*3) + 1 ] = basis[i].get_position(1) / bohr_amstrong;
+    _dftb_options.coords[ (i*3) + 2 ] = basis[i].get_position(2) / bohr_amstrong;
 
   }
 

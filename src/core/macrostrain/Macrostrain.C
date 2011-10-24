@@ -1733,9 +1733,9 @@ void Macrostrain::do_solve()
       if (as->get_structure_atoms()[i].get_elem() != NULL)
       {
         Point tmp_point;
-        tmp_point(0) = as->get_structure_atoms()[i].get_position()(1) / as->get_scale();
-        tmp_point(1) = as->get_structure_atoms()[i].get_position()(2) / as->get_scale();
-        tmp_point(2) = as->get_structure_atoms()[i].get_position()(3) / as->get_scale();
+        tmp_point(0) = as->get_structure_atoms()[i].get_position(0) / as->get_scale();
+        tmp_point(1) = as->get_structure_atoms()[i].get_position(1) / as->get_scale();
+        tmp_point(2) = as->get_structure_atoms()[i].get_position(2) / as->get_scale();
 
         //get atom relative point
         _atom_relative_points[i] =  
@@ -3781,9 +3781,9 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
           vector <double> new_pos_of_atom(3,0.0);
 
           //Point tmp_point;  (Alex: apparently not used)
-          //tmp_point(0) = as->get_structure_atoms()[i].get_position()(1) / as->get_scale();
-          //tmp_point(1) = as->get_structure_atoms()[i].get_position()(2) / as->get_scale();
-          //tmp_point(2) = as->get_structure_atoms()[i].get_position()(3) / as->get_scale();
+          //tmp_point(0) = as->get_structure_atoms()[i].get_position()(0) / as->get_scale();
+          //tmp_point(1) = as->get_structure_atoms()[i].get_position()(1) / as->get_scale();
+          //tmp_point(2) = as->get_structure_atoms()[i].get_position()(2) / as->get_scale();
 
           //get atom relative point
           point_vec[0] =  _atom_relative_points[i];
@@ -3856,16 +3856,15 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
 
           Tensor1 tmp(0);
-          //std::cout << "setting position from " << as->get_structure_atoms()[i].get_position();
           tmp(1) = new_pos_of_atom[0] * as->get_scale();
 
           if (dim >= 2) tmp(2) = new_pos_of_atom[1] * as->get_scale();
-	  else tmp(2) = as->get_structure_atoms()[i].get_position()(2);
+	  else tmp(2) = as->get_structure_atoms()[i].get_position(1);
 
 	  if (dim == 3) tmp(3) = new_pos_of_atom[2] * as->get_scale();
-	  else tmp(3) = as->get_structure_atoms()[i].get_position()(3);
+	  else tmp(3) = as->get_structure_atoms()[i].get_position(2);
 
-          u_atm[i] = tmp - as->get_structure_atoms()[i].get_position();
+          u_atm[i] = tmp - as->get_structure_atoms()[i].get_ttype_position();
 
           as->get_structure_atoms()[i].set_position(tmp);
 
@@ -3880,7 +3879,7 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
         if (as->get_structure_atoms()[i].get_elem() == NULL)
           {
           Tensor1 tmp(0);
-          tmp = as->get_structure_atoms()[i].get_position();
+          tmp = as->get_structure_atoms()[i].get_ttype_position();
           //Use first neighbour displacement
           if (bond_map[i].size() == 0) Messages::error("One atom has no neighbours!");
           as->get_structure_atoms()[i].set_position(tmp + u_atm[bond_map[i][0]]);
@@ -3963,7 +3962,7 @@ Macrostrain::internal_strain_correction(const std::string structure_name)
        
       du = *(RotM[id]) * du_cry;
 
-      ro = structure[i].get_position(); 
+      ro = structure[i].get_ttype_position(); 
 
       r = ro + du;
 

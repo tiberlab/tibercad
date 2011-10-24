@@ -54,7 +54,7 @@ void Atom::set_position(const Tensor1 pos)
 }
 
 
-Tensor1 Atom::get_position(void) const
+Tensor1 Atom::get_ttype_position(void) const
 {
   Tensor1 pos;
   pos(1) = _position(0); pos(2) = _position(1); pos(3) = _position(2);

@@ -747,9 +747,9 @@ Elasticity::apply_shape_deformation()
     for (unsigned int na = 0; na < structure.size(); na++)
     {
       vector<Point> old_pos(1);     
-      old_pos[0](0) = structure[na].get_position()(1) / scale;
-      old_pos[0](1) = structure[na].get_position()(2) / scale;
-      old_pos[0](2) = structure[na].get_position()(3) / scale;
+      old_pos[0](0) = structure[na].get_position(0) / scale;
+      old_pos[0](1) = structure[na].get_position(1) / scale;
+      old_pos[0](2) = structure[na].get_position(2) / scale;
        
       const Elem* elem = structure[na].get_elem();
       for (unsigned int i = 0; i< 3 ; i++)

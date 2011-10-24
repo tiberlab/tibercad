@@ -65,9 +65,9 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
   do{
 
     output_file << std::setw(2) << (*basis_iterator).get_specie()
+    << std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).get_position(0))
     << std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).get_position(1))
-    << std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).get_position(2))
-    << std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).get_position(3)) << "\n";
+    << std::setw(20) << std::setprecision(10)<< std::fixed  << double((*basis_iterator).get_position(2)) << "\n";
 
     basis_iterator++;
 
@@ -334,11 +334,11 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
     {
       done = false;
 
-      p(0) = (*atom).get_position(1) / scale;
+      p(0) = (*atom).get_position(0) / scale;
 
-      if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).get_position(2) / scale;
+      if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).get_position(1) / scale;
 
-      if ( (_dim == 3) )  p(2) = (*atom).get_position(3) / scale;
+      if ( (_dim == 3) )  p(2) = (*atom).get_position(2) / scale;
       for (std::vector<Elem*>::iterator it = _structure_elements.begin();
           it != _structure_elements.end(); it++)
       {
@@ -423,7 +423,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                 atom != _crystal_basis.end(); atom++)
             {
 
-              tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
+              tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_ttype_position() );
 
               if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
               {
@@ -432,9 +432,9 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                 tmp_atom.belong_to_structure = true;
 
 
-                p(0) = tmp_atom.get_position()(1) / scale;
-                if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
-                if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
+                p(0) = tmp_atom.get_position(0) / scale;
+                if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position(1) / scale;
+                if ( (_dim == 3) )  p(2) = tmp_atom.get_position(2) / scale;
                 if (MeshUtils::may_belong_to_element(elem,p))
                 {
                   if ( (elem->contains_point(p) ) ) tmp_atom.set_elem(elem);
@@ -461,7 +461,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
             atom != _crystal_basis.end(); atom++)
         {
 
-          tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_position() );
+          tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_ttype_position() );
 
           if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
           {
@@ -515,16 +515,16 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                   atom != _crystal_basis.end(); atom++)
               {
                 tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                    _rotation*_prim_vec*(*atom).get_position());
+                    _rotation*_prim_vec*(*atom).get_ttype_position());
                 if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
                 {
                   std::string tmp =  assign[el_reg][(*atom).get_flag()];
                   tmp_atom.set_specie(tmp);
                   tmp_atom.belong_to_structure = true;
 
-                  p(0) = tmp_atom.get_position()(1) / scale;
-                  if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position()(2) / scale;
-                  if ( (_dim == 3) )  p(2) = tmp_atom.get_position()(3) / scale;
+                  p(0) = tmp_atom.get_position(0) / scale;
+                  if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position(1) / scale;
+                  if ( (_dim == 3) )  p(2) = tmp_atom.get_position(2) / scale;
                   if (MeshUtils::may_belong_to_element(elem,p))
                   {
                     if ( (elem->contains_point(p) ) ) tmp_atom.set_elem(elem);
@@ -556,7 +556,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
               atom != _crystal_basis.end(); atom++)
           {
             tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                _rotation*_prim_vec*(*atom).get_position());
+                _rotation*_prim_vec*(*atom).get_ttype_position());
             if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
             {
               std::string tmp =  assign[el_reg][(*atom).get_flag()];
@@ -837,7 +837,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
           do{
             basis_atom = (*basis_iterator);
             basis_atom.set_position ( _local_origin + lattice_point+
-                _rotation*_prim_vec*(*basis_iterator).get_position() );
+                _rotation*_prim_vec*(*basis_iterator).get_ttype_position() );
             _super_basis.push_back(basis_atom);
             basis_iterator++;
 
@@ -1427,10 +1427,10 @@ void AtomisticGenerator::passivate()
           Atom tmp(*bonded_atom);
           tmp.set_specie("H");
           tmp.belong_to_structure = true;
-          Tensor1 bonded_rel_position = bonded_atom->get_position() +
-              _bondmapobject->get_translation()[i][j] - _structure_basis[i].get_position();
+          Tensor1 bonded_rel_position = bonded_atom->get_ttype_position() +
+              _bondmapobject->get_translation()[i][j] - _structure_basis[i].get_ttype_position();
 
-          position = _structure_basis[i].get_position() +
+          position = _structure_basis[i].get_ttype_position() +
               ( ( bonded_rel_position) /
                   norm(bonded_rel_position ) *
                   hydrogen_distance);
@@ -1449,167 +1449,9 @@ void AtomisticGenerator::passivate()
 
 
 }
-//void AtomisticGenerator::passivate_cluster(std::vector<Atom> &basis){
-//
-//  Tensor1 u, u1, u2, r1, r2, r3, O;
-//  double R1, R2;
-//  const double sq3 = sqrt(3.0);
-//  const double d = 0.64;
-//  unsigned int i;
-//  std::vector<Atom> hydrogens;
-//  Atom tmp;
-//  double sin109, cos109;
-//  unsigned int ** bond_map;
-//
-//  sin109 = sin ( ( 180.0 / ( asin(1.0) * 2.0 ) ) * 109.471 );
-//  cos109 = cos ( ( 180.0 / ( asin(1.0) * 2.0 ) ) * 109.471 );
-//
-//
-//
-//  if (_bondmapobject == NULL) {
-//    bond_map_gen(basis);
-//  }
-//
-//  bond_map = _bondmapobject->get_bond_map();
-//
-//  for (i = 0; i < basis.size(); i++){
-//
-//    if ( bond_map[i][8] == 3 ){
-//
-//      O = basis[i].get_position();
-//      r1 = basis[ bond_map[i][0] ].get_position() - O;
-//      r2 = basis[ bond_map[i][1] ].get_position() - O;
-//      r3 = basis[ bond_map[i][2] ].get_position() - O;
-//
-//      u1 = r1 + r2 + r3;
-//      R1 = norm(u1);
-//      u1 = -d * (u1/R1);
-//
-//      tmp.set_specie("H");
-//      tmp.set_flag( basis[i].get_flag() );
-//
-//      // Up to now hydrogen is considered part of the same material of bonded atom
-//
-//      tmp.set_position ( O + u1 );
-//      hydrogens.push_back(tmp);
-//    }
-//
-//    else if  ( bond_map[i][8] == 2 ){
-//
-//      O = basis[i].get_position();
-//      r1 = basis[ bond_map[i][0] ].get_position() - O;
-//      r2 = basis[ bond_map[i][1] ].get_position() - O;
-//
-//      u1 = r1 + r2;
-//      u2 = vectorProduct(r1, r2);
-//      R1 = norm(u1); R2 = norm(u2);
-//
-//      u = - (u1 / R1) - sq3 * (u2 / R2);
-//      u = d * (u / 2.0);
-//
-//      tmp.set_specie("H");
-//      tmp.set_flag( basis[i].get_flag() );
-//
-//      // Up to now hydrogen is considered part of the same material of bonded atom
-//      tmp.set_region_ID(basis[i].get_region_ID());
-//      tmp.set_position ( O + u );
-//      hydrogens.push_back(tmp);
-//
-//      u = - (u1 / R1) + sq3 * (u2 / R2);
-//      u = d * (u / 2.0);
-//
-//      tmp.set_specie("H");
-//      tmp.set_flag( basis[i].get_flag() );
-//
-//      // Up to now hydrogen is considered part of the same material of bonded atom
-//      tmp.set_region_ID(basis[i].get_region_ID());
-//
-//      tmp.set_position ( O + u );
-//      hydrogens.push_back(tmp);
-//    }
-//
-//    else if (bond_map[i][8] == 1){
-//
-//      O = basis[i].get_position();
-//      r1 = basis[ bond_map[i][0] ].get_position() - O;
-//
-//      Tensor2Gen vect_rot(0);
-//      vect_rot(1,1) = cos109; vect_rot(1,2) = sin109; vect_rot(1,3) = 0.0;
-//      vect_rot(2,1) = sin109; vect_rot(2,2) = cos109; vect_rot(2,3) = 0.0;
-//      vect_rot(3,1) = 0.0; vect_rot(3,2) = 0.0; vect_rot(3,3) = 1.0;
-//
-//      u = vect_rot * r1;
-//      R1 = norm(r1);
-//      r2 = u * R1;
-//      u = d * (u / norm(u));
-//
-//      tmp.set_specie("H");
-//
-//      // TEMPORARY SOLUTION FOR WURTZITE
-//      //u = (-r1)/norm(r1); u(1) = u(1) + 0.1;
-//      //////////////////////////////
-//
-//
-//
-//      tmp.set_position ( O + u );
-//      tmp.set_flag ( basis[i].get_flag() );
-//
-//      // Up to now hydrogen is considered part of the same material of bonded atom
-//      tmp.set_region_ID(basis[i].get_region_ID());
-//
-//      hydrogens.push_back(tmp);
-//
-//      u1 = r1 + r2;
-//      u2 = vectorProduct(r1, r2);
-//      R1 = norm(u1); R2 = norm(u2);
-//
-//      u = - (u1 / R1) - sq3 * (u2 / R2);
-//      u = d * (u / 2.0);
-//
-//      tmp.set_specie("H");
-//
-//      // TEMPORARY SOLUTION FOR WURTZITE
-//           // u = (-r1)/norm(r1); u(2) = u(2) + 0.1;
-//            //////////////////////////////
-//
-//      tmp.set_position ( O + u );
-//      tmp.set_flag( basis[i].get_flag() );
-//
-//      // Up to now hydrogen is considered part of the same material of bonded atom
-//      tmp.set_region_ID(basis[i].get_region_ID());
-//
-//      hydrogens.push_back(tmp);
-//
-//      u = - (u1 / R1) + sq3 * (u2 / R2);
-//      u = d * (u / 2.0);
-//
-//      tmp.set_specie("H");
-//      tmp.set_flag( basis[i].get_flag() );
-//
-//      // Up to now hydrogen is considered part of the same material of bonded atom
-//      tmp.set_region_ID(basis[i].get_region_ID());
-//
-//      // TEMPORARY SOLUTION FOR WURTZITE
-//                // u = (-r1)/norm(r1); u(2) = u(2) - 0.1; u(1)=u(1) - 0.1;
-//                 //////////////////////////////
-//
-//      tmp.set_position ( O + u );
-//      hydrogens.push_back(tmp);
-//    }
-//
-//    else if (bond_map[i][8] != 4) {std::cout << "Warning! atom " << i
-//      << " is bonded to " << bond_map[i][8] << " atoms" << std::endl;}
-//
-//  }
-//  for (i = 0; i < hydrogens.size(); i++) {basis.push_back( hydrogens[i] );}
-//
-//
-//
-//};
 
 
 //Some data manipulation function useful only in this class
-
 
 Tensor2Gen
 AtomisticGenerator::reciprocal(Tensor2Gen real_basis)

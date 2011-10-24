@@ -191,9 +191,9 @@ BondMap::include_atoms(const std::vector<Atom>& basis)
   unsigned int x, y, z;
   for (unsigned int i = 0; i < basis.size(); i++)
     {
-      x = static_cast<unsigned int>(( (floor(basis[i].get_position()(1) - _origin(1)) / _x_spacing )));
-      y = static_cast<unsigned int>(( (floor(basis[i].get_position()(2) - _origin(2)) / _y_spacing )));
-      z = static_cast<unsigned int>(( (floor(basis[i].get_position()(3) - _origin(3)) / _z_spacing )));
+      x = static_cast<unsigned int>(( (floor(basis[i].get_position(0) - _origin(0)) / _x_spacing )));
+      y = static_cast<unsigned int>(( (floor(basis[i].get_position(1) - _origin(1)) / _y_spacing )));
+      z = static_cast<unsigned int>(( (floor(basis[i].get_position(2) - _origin(2)) / _z_spacing )));
 
       _grid_cell[x][y][z].push_back(i);
     }
@@ -215,8 +215,8 @@ BondMap::process_atoms(const std::vector<Atom>& basis, const unsigned int i,
     {
 
       cutofftmp = _cutoff[basis[i].get_specie()] + _cutoff[basis[j].get_specie()];
-      position1 = basis[i].get_position();
-      position2 = basis[j].get_position() + period;
+      position1 = basis[i].get_ttype_position();
+      position2 = basis[j].get_ttype_position() + period;
 
       if ( cutofftmp == 0.0 ) std::cout << "WARNING, CUTOFF DISTANCE BETWEEN "
 					<< basis[i].get_specie().get_string().c_str()
@@ -375,14 +375,14 @@ BondMap::define_edges(const std::vector<Atom>& basis, Tensor1& edge_min, Tensor1
 
   for (unsigned int i = 0; i < basis.size(); i++)
     {
-      if (basis[i].get_position()(1) < edge_min(1)) edge_min(1) = basis[i].get_position()(1);
-      if (basis[i].get_position()(1) > edge_max(1)) edge_max(1) = basis[i].get_position()(1);
+      if (basis[i].get_position(0) < edge_min(1)) edge_min(1) = basis[i].get_position(0);
+      if (basis[i].get_position(0) > edge_max(1)) edge_max(1) = basis[i].get_position(0);
 
-      if (basis[i].get_position()(2) < edge_min(2)) edge_min(2) = basis[i].get_position()(2);
-      if (basis[i].get_position()(2) > edge_max(2)) edge_max(2) = basis[i].get_position()(2);
+      if (basis[i].get_position(1) < edge_min(2)) edge_min(2) = basis[i].get_position(1);
+      if (basis[i].get_position(1) > edge_max(2)) edge_max(2) = basis[i].get_position(1);
 
-      if (basis[i].get_position()(3) < edge_min(3)) edge_min(3) = basis[i].get_position()(3);
-      if (basis[i].get_position()(3) > edge_max(3)) edge_max(3) = basis[i].get_position()(3);
+      if (basis[i].get_position(2) < edge_min(3)) edge_min(3) = basis[i].get_position(2);
+      if (basis[i].get_position(2) > edge_max(3)) edge_max(3) = basis[i].get_position(2);
     }
 
 

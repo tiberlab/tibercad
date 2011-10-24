@@ -332,9 +332,9 @@ AtomisticStructure::associate_elements()
         {
           set = false;
           p(0) = 0.0; p(1) = 0.0; p(2) = 0.0;
-          p(0) = get_structure_atoms()[i].get_position()(1) / get_scale();
-          if ( (dim == 2) || (dim == 3) )   p(1) = get_structure_atoms()[i].get_position()(2) / get_scale();
-          if ( (dim == 3) )  p(2) = get_structure_atoms()[i].get_position()(3) / get_scale();
+          p(0) = get_structure_atoms()[i].get_position(0) / get_scale();
+          if ( (dim == 2) || (dim == 3) )   p(1) = get_structure_atoms()[i].get_position(1) / get_scale();
+          if ( (dim == 3) )  p(2) = get_structure_atoms()[i].get_position(2) / get_scale();
 
           for (it = el_start; it != el_end; it++)
             {
@@ -744,9 +744,9 @@ AtomisticStructure::print_structure(const std::string& path)
       for (unsigned int i = 0; i < _structure_atoms.size(); i++)
         {
           file << std::setw(2) << _structure_atoms[i].get_specie()
+          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
           << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n";
+          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) << "\n";
 
         }
 
@@ -762,9 +762,9 @@ AtomisticStructure::print_structure(const std::string& path)
       for (unsigned int i = 0; i < _structure_atoms.size(); i++)
         {
           file << std::setw(2) << _structure_atoms[i].get_specie()
+          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
           << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3));
+          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2));
 
           if (_bondmap != NULL)
             {
@@ -810,9 +810,9 @@ AtomisticStructure::print_structure(const std::string& path)
               if ( _atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
             }
           file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) ;
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) ;
 
           if (_bondmap != NULL)
             {
@@ -884,9 +884,9 @@ AtomisticStructure::print_structure(const std::string& path)
               if (_atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
             }
           file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3)) << "\n";
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) << "\n";
         }
 
       //A line of zeros is put here (coordinates origin)
@@ -986,11 +986,11 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
           file << std::setw(5) << n_specie + 1
               << std::setw(20) << std::setprecision(10)
-          << std::fixed << double(_structure_atoms[i].get_position(1))
+          << std::fixed << double(_structure_atoms[i].get_position(0))
           << std::setw(20) << std::setprecision(10)
-          << std::fixed  << double(_structure_atoms[i].get_position(2))
+          << std::fixed  << double(_structure_atoms[i].get_position(1))
           << std::setw(20) << std::setprecision(10)
-          << std::fixed  << double(_structure_atoms[i].get_position(3));
+          << std::fixed  << double(_structure_atoms[i].get_position(2));
 
 
           if (_bondmap != NULL)
@@ -1137,9 +1137,9 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
       for (unsigned int i = 0; i < _structure_atoms.size(); i++)
         {
           file << std::setw(2) << _structure_atoms[i].get_specie()
+          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
           << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
           << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3))
           << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";
         }
 
@@ -1166,9 +1166,9 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
               if ( _atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
             }
           file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(3))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";
         }
 
