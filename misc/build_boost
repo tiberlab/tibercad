@@ -7,7 +7,7 @@ fi
 
 . common.sh
 
-VERSION=1_42_0
+VERSION=1_47_0
 ARCHIVE=boost_${VERSION}.tar.bz2
 
 echo "Compiling boost libraries"
@@ -52,7 +52,7 @@ fi
 if [ "$target_os" = win32 ]; then
   echo "using gcc : : $CXX : <cxxflags>-std=gnu++0x <src>$(echo $CC | sed 's/gcc/windres/') <archiver>$AR ;" > tools/build/v2/user-config.jam
 else
-  echo "using $toolset : : $CXX : <cxxflags>-std=gnu++0x <linkflags>-Wl,-rpath,${BUILDDIR}/boost/lib ;" > tools/build/v2/user-config.jam
+  echo "using $toolset : : $CXX : <cxxflags>-std=gnu++0x <linkflags>-Wl,-rpath,${BUILDDIR}/${TCHOST}/lib ;" > tools/build/v2/user-config.jam
 fi
 
 ./bootstrap.sh --with-toolset=$toolset --without-icu
