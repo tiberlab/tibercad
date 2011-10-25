@@ -4267,6 +4267,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   } // end loop over elements
 
 
+//  unsigned int dof_cat = n_cat->dof_number(system.number(), eC_var, 0);
+//  unsigned int dof_iodine = n_cat->dof_number(system.number(), eI_var, 0);
   unsigned int dof_cat = n_cat->dof_number(system.number(), eC_var, 0);
   unsigned int dof_iodine = n_cat->dof_number(system.number(), eI_var, 0);
 
