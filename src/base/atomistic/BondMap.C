@@ -191,9 +191,9 @@ BondMap::include_atoms(const std::vector<Atom>& basis)
   unsigned int x, y, z;
   for (unsigned int i = 0; i < basis.size(); i++)
     {
-      x = static_cast<unsigned int>(( (floor(basis[i].get_position(0) - _origin(0)) / _x_spacing )));
-      y = static_cast<unsigned int>(( (floor(basis[i].get_position(1) - _origin(1)) / _y_spacing )));
-      z = static_cast<unsigned int>(( (floor(basis[i].get_position(2) - _origin(2)) / _z_spacing )));
+      x = static_cast<unsigned int>(( (floor(basis[i].get_position(0) - _origin(1)) / _x_spacing )));
+      y = static_cast<unsigned int>(( (floor(basis[i].get_position(1) - _origin(2)) / _y_spacing )));
+      z = static_cast<unsigned int>(( (floor(basis[i].get_position(2) - _origin(3)) / _z_spacing )));
 
       _grid_cell[x][y][z].push_back(i);
     }
