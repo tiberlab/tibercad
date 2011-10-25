@@ -150,11 +150,13 @@ PhysicalModel* EnvelopFunctionApprox::create_bulk_model(const ModelOptions& opti
     const Material* mat) const
 {
 
+  ModelOptions opts(options);
+  opts.set_option("particle", get_option("particle", ""));
 
-  EFAbulkModel* model = PhysicalModelInterface::create<EFAbulkModel>("EFAmodel", mat, options);
+  EFAbulkModel* model = PhysicalModelInterface::create<EFAbulkModel>("EFAmodel", mat, opts);
 
   if (model == NULL)
-    throw ModelErrorException("EnvelopFunctionApprox: cannot create EFAbulkModel");
+    throw ModelErrorException("efaschroedinger: cannot create bulk model");
 
   return model;
 

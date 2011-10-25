@@ -43,6 +43,7 @@ EFAbulkHamiltonian* EFAbulkHamiltonian::create (const Material* mat,  const Mode
   }
 
   const std::string&  model_name = options.get_option("model", "");
+  const std::string&  particle = options.get_option("particle", "");
 
   std::string model;
   std::string structure = mat->get_structure();
@@ -51,9 +52,16 @@ EFAbulkHamiltonian* EFAbulkHamiltonian::create (const Material* mat,  const Mode
     //model = "quantum_kp_" + name;
     model = "quantum_kp";
   else if (model_name == "single_band")
-    model = "quantum_user";
+  {
+    if (particle == "el")
+      model ="quantum_cond_band_" + structure;
+    else if (particle == "hl")
+      model = "quantum_user";
+  }
   else if (model_name == "conduction_band")
     model ="quantum_cond_band_" + structure;
+  else if (model_name == "conduction_band")
+    model = "quantum_user";
 
   return PhysicalModelInterface::create<EFAbulkHamiltonian>(model, mat, options);
 
