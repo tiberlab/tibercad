@@ -449,7 +449,7 @@ void EnvelopFunctionApprox::parse_options()
     const ModelOptions& opts = it->second;
 
     string model = opts.get_option("model", "kp");
-    if (model == "conduction_band") opt.degeneracy = 2;
+    if ((model == "conduction_band") || (model == "single_band")) opt.degeneracy = 2;
   }
 
   //possible user override

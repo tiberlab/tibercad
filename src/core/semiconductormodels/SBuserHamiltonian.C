@@ -1,7 +1,10 @@
-using namespace std;
-#include "SBuserHamiltonian.h"
+// $Id$
 
-#include "getpot.h"
+#include "SBuserHamiltonian.h"
+#include "Database.h"
+#include "Constants.h"
+
+using namespace std;
 
 //======================================================================//
 SBuserHamiltonian::~SBuserHamiltonian()
@@ -30,10 +33,25 @@ void SBuserHamiltonian::do_init( )
 
   EFAbulkHamiltonian::do_init();
 
-  edge = get_option("Edge", 0.0);
+  // for now this is automatically a valence band
+  const Database& db = get_database();
+  db.set_section("valenceband");
+  edge = db.get("E_v", 0.0);
+
+  edge = get_option("Edge", edge);
+  edge /= Constants::Hartree;
+
+  // one degenerate band
+  kp_bands.resize(1,0);
+
+  kp_bands_map.insert(std::make_pair(2,0));
+  // NOTE: this duplicates the band, which makes OpticsKP use two
+  // identical bands with opposite spin
+  // BUT: maybe optics cannot do anything with this single band anyways?
+  kp_bands_map.insert(std::make_pair(3,0));
 
   const double mass = get_option("mass", 1.0);
- 
+
   if (mass == 0.0) throw InitFailedException("User-defined Hamiltonian: zero mass");
 
   imass = (1.0 / mass) * Tensor2Sym(1.0);

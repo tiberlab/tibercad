@@ -50,7 +50,7 @@ EFAbulkHamiltonian* EFAbulkHamiltonian::create (const Material* mat,  const Mode
   if ( model_name == "kp")
     //model = "quantum_kp_" + name;
     model = "quantum_kp";
-  else if ( model_name == "sb_user_defined")
+  else if ( model_name == "single_band")
     model = "quantum_user";
   else if ( model_name == "conduction_band")
     model ="quantum_cond_band_" + structure;
