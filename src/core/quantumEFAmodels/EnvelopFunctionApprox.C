@@ -156,7 +156,7 @@ PhysicalModel* EnvelopFunctionApprox::create_bulk_model(const ModelOptions& opti
   if (model == NULL)
     throw ModelErrorException("EnvelopFunctionApprox: cannot create EFAbulkModel");
 
-  return(model);
+  return model;
 
 }
 

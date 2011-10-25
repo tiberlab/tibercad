@@ -25,14 +25,13 @@ void EFAbulkModel::do_init()
     const ModelOptions& opt =  get_options ();
 
     _bulkHamiltonian = EFAbulkHamiltonian::create(get_material(), opt);
-
     _bulkHamiltonian->set_owner(get_owner());
-
     _bulkHamiltonian->init();
   }
 
   get_option("kp_model","");
   get_option("model","");
+  get_option("particle","");
 
 }
 
