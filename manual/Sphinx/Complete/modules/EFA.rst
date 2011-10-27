@@ -454,6 +454,32 @@ going to be refined. In this case, "Error" is just the integrated quantity. The 
 will end when the *relative_accuracy* is obtained.
 
 
+To  run  an  opticskp  sumulation,  one  need  to  define it in the  solve  statement,  in  this  way::
+
+
+
+
+
+   Simulation
+   { 
+      solve = (strain, dd,optics) 
+   }
+
+
+where  ``optics``  is  the  name  of  the  defined opticskp  sumulation.
+Note  that, in  this  way, the  quantum (efaschroedinger)  simulations needed  for opticskp are executed but their  results are  not  shown in  the  output.
+To plot quantum results you should  explicitly  define   efaschroedinger  simulations in the  solve  statement, in  this  way::
+
+
+
+
+   Simulation
+   { 
+      solve = (strain, dd, quantum_el,quantum_hl,optics) 
+   }
+
+
+
 
 
 Output
