@@ -48,6 +48,8 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
+    //! \copydoc RecombinationModelInterface::do_reinit()
+    virtual void do_reinit(void);
 
   private:
 

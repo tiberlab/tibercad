@@ -231,6 +231,15 @@ class SimulationInterface : public TiberModelObject
     void solve(void);
 
 
+    //! Obtain the solve sequence number
+    /*!
+     * Every call to solve increments the solve sequence number
+     * by one. This number can be used to decide if operations
+     * that depend on results of this model need to be carried out.
+     */
+    unsigned int get_solve_sequence_number(void) const;
+
+
     //! Write results to file
     /*!
      * This method calls do_plot() after some health checks
@@ -764,12 +773,8 @@ class SimulationInterface : public TiberModelObject
     virtual void do_solve(void) = 0;
 
 
-    //! Set the state of the simulation
-    /*!
-     * Can be used to set the state to \c solved after loading a result
-     * from file.
-     */
-    void is_solved(bool flag);
+    //! Increment the solve sequence number
+    void increment_solve_sequence_number(void);
 
 
     //! Declare this module to be a task or not
@@ -1238,8 +1243,8 @@ class SimulationInterface : public TiberModelObject
     bool _is_initialized;
 
 
-    //! A flag indicating that a simulation has been done
-    bool _is_solved;
+    //! The solve sequence number
+    unsigned int _solve_sequence_nr;
 
 
     //! \c true if this module is a task module
@@ -1507,7 +1512,7 @@ inline
 bool
 SimulationInterface::is_solved(void) const
 {
-  return _is_solved;
+  return (get_solve_sequence_number() > 0);
 }
 
 
@@ -1555,13 +1560,13 @@ SimulationInterface::plot_solution(ID id) const
 }
 
 
-inline
-void
-SimulationInterface::is_solved(bool flag)
-{
-  _is_solved = flag;
-}
 
+inline
+unsigned int
+SimulationInterface::get_solve_sequence_number(void) const
+{
+  return _solve_sequence_nr;
+}
 
 
 inline
@@ -1829,5 +1834,11 @@ SimulationInterface::simulations_end(void)
   return SimulationIterator();
 }
 
+inline
+void
+SimulationInterface::increment_solve_sequence_number(void)
+{
+  ++_solve_sequence_nr;
+}
 
 #endif // _SIMULATIONINTERFACE_H_

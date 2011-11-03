@@ -62,3 +62,8 @@ DirectRecombination::get_net_recombination_rate_derivatives(
   recomb_e[1] = recomb_h[1] = C_ * n; // dR/dp
 }
 
+
+void
+DirectRecombination::do_reinit(void)
+{
+}

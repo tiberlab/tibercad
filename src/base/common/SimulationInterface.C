@@ -50,7 +50,7 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
   : TiberModelObject(options),
     _environment(0),
     _is_initialized(false),
-    _is_solved(false),
+    _solve_sequence_nr(0),
     _is_task(false),
     _equilibrium_is_solved(false),
     _has_solution_vector(true),
@@ -665,7 +665,7 @@ SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
 
     do_equilibrium();
 
-    _is_solved = true;
+    increment_solve_sequence_number();
 
     perflog.stop_event("solve_equilibrium");
 
@@ -768,7 +768,7 @@ SimulationInterface::solve(void)
     throw SolveFailedException(s.str());
   }
 
-  _is_solved = true;
+  increment_solve_sequence_number();
 
   m.unindent();
 
@@ -1428,7 +1428,7 @@ SimulationInterface::do_load_data(istream& is)
   if (has_read)
   {
     equilibrium_done(true);
-    is_solved(true);
+    increment_solve_sequence_number();
   }
 }
 
