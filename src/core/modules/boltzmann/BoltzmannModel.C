@@ -31,8 +31,6 @@ BoltzmannModel::create(const Material* mat, const ModelOptions& options)
 }
 
 
-
-
 void
 BoltzmannModel::prepare_submodels(void)
 {

@@ -62,8 +62,28 @@ Boltzmann::do_init(void)
 
   do_init_fourier();
 
+
   //Get gray options
   get_gray_options();
+
+  if (is_gray)
+  {
+
+   AngInt.dim = dim;
+   AngInt.theta_slices = myopts.theta_slices;
+   AngInt.phi_slices = myopts.phi_slices;
+   AngInt.phi_zero = myopts.phi_zero;
+
+    if (myopts.custom)
+      AngInt.compute_custom_direction(myopts.cd);
+    else
+      AngInt.compute_directions();
+
+  }
+
+
+  // if (is_gray)
+   // do_init_boltzmann();
   
   if (is_gray)
     do_init_gray();
@@ -300,11 +320,36 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 }
 
 void
+Boltzmann::do_init_boltzmann(void)
+{
+  TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
+                                                           "boltzmann", get_solver_options());
+
+    system->add_variable("T",CONSTANT,MONOMIAL);
+
+    t_var.resize(AngInt.n_slices,0);
+
+    char buffer[10];
+    for (ID k = 0; k<AngInt.n_slices; k++)
+    {
+      int n=sprintf (buffer, "T_ %i",k);
+      system->add_variable(buffer,CONSTANT,MONOMIAL);
+
+      t_var[k] =  system->variable_number(buffer);
+    }
+
+     system->attach_assemble_function(assemble_boltzmann);
+
+     system->init();
+
+
+}
+
+
+void
 Boltzmann::do_init_gray(void)
 {
 
- if (is_gray)
- {
    
    TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 							 "gray", get_solver_options());
@@ -325,7 +370,8 @@ Boltzmann::do_init_gray(void)
      thermal_flux[i]->close();
    }
    
-   AngInt.dim = dim;
+
+  /* AngInt.dim = dim;
    AngInt.theta_slices = myopts.theta_slices;
    AngInt.phi_slices = myopts.phi_slices;
    AngInt.phi_zero = myopts.phi_zero;
@@ -334,26 +380,28 @@ Boltzmann::do_init_gray(void)
      AngInt.compute_custom_direction(myopts.cd);
    else
      AngInt.compute_directions();
-   
+   */
    //Get Gray Options
    //Initialize direction solution
 
-   sol_dir.resize(AngInt.n_slices);
-   for (ID k = 0; k<AngInt.n_slices ; k++ )
-   {
-     sol_dir[k] = (system->solution)->clone().release();
-     sol_dir[k]->zero();
-   }
+  // sol_dir.resize(AngInt.n_slices);
+  // for (ID k = 0; k<AngInt.n_slices ; k++ )
+  // {
+  //   sol_dir[k] = (system->solution)->clone().release();
+  //   sol_dir[k]->zero();
+  // }
    
    //Initialize Equilibrium Energy
    equilibrium_energy = (system->solution)->clone().release();
    equilibrium_energy->add(SimulationOptions::temperature); //Just put some dummy value
    equilibrium_energy->close();
    
+
+
+
    if  (SimulationOptions::verbose() > 2)
      AngInt.print_info();
 
- }
 
 }
 
@@ -368,8 +416,8 @@ Boltzmann::~Boltzmann()
     for (ID i = 0; i<3; i++ )
       delete thermal_flux[i]; //elemental (for the gray model)
     
-    for (ID k = 0; k<AngInt.n_slices ; k++ )
-      delete sol_dir[k];
+    //for (ID k = 0; k<AngInt.n_slices ; k++ )
+     // delete sol_dir[k];
     
     delete  equilibrium_energy;
   }
@@ -392,8 +440,10 @@ Boltzmann::parse_options(void)
  opts.fourier_guess = options.get_option("fourier_guess",true);
  opts.do_fourier = options.get_option("do_fourier" ,true);
  myopts.diffusive = options.get_option("diffusive_walls",true);
+ myopts.compute_kappa = options.get_option("compute_kappa",false);
  myopts.hot_contact = options.get_option("hot_contact","Hot");
  myopts.cold_contact = options.get_option("cold_contact","Cold");
+ myopts.dist = options.get_option("length",(1.0,0.0,0.0));
 
 //  myopts.max_error =  options.get_option("max_error",1e-3);
 //  myopts.max_iter =  options.get_option("max_iter",1);
@@ -611,10 +661,12 @@ Boltzmann::from_cell_to_nodal()
   // const NumericVector<double>& solution_gray = *(system_gray.solution);
 
   //--------------------------------------------
-
   system_fourier.solution->zero();
   for (ID d = 0; d< 3; d++)
+  {
     thermal_flux_nodal[d]->zero();
+    thermal_flux_nodal[d]->close();
+  }
   //-----------------------------------------------------
 
   set<const Elem*>::iterator el = Domain.begin();
@@ -646,85 +698,66 @@ Boltzmann::from_cell_to_nodal()
 }
 
 
-//   //! Order the solution in correct mode
-// void Boltzmann::build_elemental_results(const std::set<std::string>& variables,
-// 				     std::vector<double>& results,
-// 				     std::vector<std::string>& legend)
-// {
+void
+Boltzmann::solve_boltzmann(void)
+{
 
-//   EquationSystems& es = get_equation_systems();
-//   const MeshBase& mesh = get_mesh();
 
-//   const unsigned int nn  = mesh.n_active_elem();
-//   const unsigned int dim = mesh.mesh_dimension();
-//   legend.resize(variables.size());
+  EquationSystems& es = get_equation_systems();
 
-//   unsigned int n_vars = 0;
-//   int par = -1;
-//   if (variables.count("partial"))
-//   {
-//     par = n_vars;
-//     for (ID k = 0;k<  AngInt.n_slices;k++)
-//     {
+  TiberLinearSystem& system =
+    es.get_system<TiberLinearSystem>("boltzmann");
 
-//       std::string label;
-//       std::ostringstream i_str;
-//       i_str << "energy_density" << k;
-//       cout<<i_str.str()<<endl;
-//       legend.push_back(i_str.str());
-//       n_vars++;
-//     }
-//   }
+  system.set_options(get_solver_options());
 
-//   //if (variables.count("ThermalFlux"))
-//   // {
-    
 
-//   //}
-  
+  cout<<"HERE"<<endl;
 
-//   results.resize(nn * n_vars,0.0);
-//   legend.resize(n_vars);
+  system.solve();
 
-//   TiberLinearSystem& my_system =
-//     es.get_system<TiberLinearSystem>("gray");
+  //Get the equilibrium energy
+ const DofMap& dof_map = system.get_dof_map();
 
-//   const unsigned int  var = my_system.variable_number("T");
 
-//   DofMap& dof_map =  my_system.get_dof_map();
-//   std::vector<unsigned int> dof_indices;
+ const NumericVector<Number>& solution = system.get_solution_vector();
+ MeshBase::const_element_iterator       el     = get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
 
-//   FEType fe_type = dof_map.variable_type(var);
-//   MeshBase::const_element_iterator it =    mesh.active_local_elements_begin();
-//   const MeshBase::const_element_iterator end =     mesh.active_local_elements_end();
 
-//   unsigned int elem_number = 0;
-//   for ( ; it != end; ++it)
-//   {
-//     const Elem* elem = *it;
+  for  ( ; el != end_el ; ++el)
+  {
 
-//     dof_map.dof_indices (elem, dof_indices);
+    const Elem* elem = *el;
 
-//     unsigned int id = n_vars * elem_number;
+    std::vector<std::vector<ID> > dof_indices(AngInt.n_slices);
 
-//     if (par != -1)
-//       for (ID k = 0;k<  AngInt.n_slices;k++)
-// 	results[id+par+k] = (*sol_dir[k])(dof_indices[0]);
-      
+    double temperature = 0.0;
+    for (unsigned int i = 0; i< AngInt.n_slices ; i++)
+    {
+      dof_map.dof_indices(elem, dof_indices[i],t_var[i]);
 
-//     elem_number++;
-//   }
+     temperature += (solution)(dof_indices[i][0])/(4.0 * M_PI);
 
-//  results.resize(elem_number * n_vars);
+    }
 
-// }
+    ID dof = elem->dof_number(system.number(),0,0);
+    equilibrium_energy->set(dof,temperature);
+
+
+  }
+
+
+}
+
 
 void
 Boltzmann::solve_gray(void)
 {
 
 
- EquationSystems& es = get_equation_systems();
+  SimulationEnvironment& se = get_environment();
+
+  EquationSystems& es = get_equation_systems();
 
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("gray");
@@ -733,11 +766,12 @@ Boltzmann::solve_gray(void)
 
 
   //Fill the directional results
-  for (ID k = 0; k<AngInt.n_slices ; k++ )
-  {
-    sol_dir[k]->zero();
-    sol_dir[k]->add(*equilibrium_energy);
-  }
+  //for (ID k = 0; k<AngInt.n_slices ; k++ )
+ // {
+  //  sol_dir[k]->zero();
+  //  sol_dir[k]->add(*equilibrium_energy);
+ // }
+
   //-----Fill the boundary value (only for the outer boundary being in the gray domain------------------
   SD.clear();
   {
@@ -757,23 +791,37 @@ Boltzmann::solve_gray(void)
         {
 	  SD[elside].resize(AngInt.n_slices);
 	  for (ID k = 0; k<AngInt.n_slices; k++ )
-            SD[elside][k] = (*sol_dir[k])(dof);
+	    SD[elside][k] = (*equilibrium_energy)(dof);
 
 	}
       }
     }
   }
 
+  // Initialize a new equilibrium_energy_vector
+  NumericVector<Number>*  equilibrium_energy_new = (system.solution)->clone().release();
+  equilibrium_energy_new->close();
 
   // if  (SimulationOptions::verbose() > 2)
   //  AngInt.print_info();
+
+
+  //Get heat capacity and group velocity -TODO->get the vg for each element
+  set<const Elem*>::iterator el = Domain.begin();
+  BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(*el);
+  Real vg = mod.get_sound_velocity();
+  Real cg = mod.get_heat_capacity();
+  double factor = vg * cg / (4.0 * M_PI);
+         //-------------
 
   double old_energy_norm = 0.0;
   equilibrium_energy->close();
   double energy_norm = equilibrium_energy->l2_norm();
   double err = 0.0;
+  double K_err = 1.0;
   double E_err = 1.0;
   double J_err = 1.0;
+  double kappa = 150.0;
   ID iter = 0;
 
   cout<<endl;
@@ -783,6 +831,12 @@ Boltzmann::solve_gray(void)
   while (E_err > myopts.max_error & iter < myopts.max_iter)
   {
 
+    for (ID i = 0; i<3 ; i++ )
+    {
+       thermal_flux[i]->close();
+       thermal_flux[i]->zero();
+    }
+    equilibrium_energy_new->zero();
     for (ID k = 0; k < AngInt.n_slices; k++ )
     {
 
@@ -799,62 +853,199 @@ Boltzmann::solve_gray(void)
       //cout<<k<<endl;
       system.solve();
 
-      sol_dir[k]->zero();
-      sol_dir[k]->add(*(system.solution));
+      //Update equilibrium solution
+      {
+        NumericVector<Number>*  tmp_solution = system.solution->clone().release();
+        tmp_solution->scale(AngInt.d_omega[k]/(4.0 * M_PI));
+        equilibrium_energy_new->add((*tmp_solution));
+
+      }
+
+      //Update thermal_flux
+      {
+        for (ID i = 0; i<3 ; i++ )
+        {
+          NumericVector<Number>*  tmp_solution = system.solution->clone().release();
+          tmp_solution->scale(factor * AngInt.directions[k](i));
+          thermal_flux[i]->add(*tmp_solution);
+        }
+      }
+
+      {
+        NumericVector<Number>*  tmp_solution = system.solution->clone().release();
+        //----UPDATE BOUNDARY DATA-----------------------
+        SideData::iterator it(SD.begin());
+        SideData::const_iterator it_end(SD.end());
+        for ( ; it != it_end; ++it)
+        {
+          ID dof = ((it->first).elem())->dof_number(gray_sys_number,0,0);
+          SD[it->first][k] = (*tmp_solution)(dof);
+        }
+      }
 
       (system.solution)->zero();
+
+
+     }
+
+       //equilibrium_energy->close();
+       energy_norm = equilibrium_energy_new->l2_norm();
+       equilibrium_energy = equilibrium_energy_new->clone().release();
+
+       //-------
+       iter +=1;
+
+
+       if  (SimulationOptions::verbose() > 1)
+       {
+         if (myopts.compute_kappa == true)
+         {
+
+           double kappa_new = compute_effective_thermal_conductivity_elemental();
+           E_err = abs(kappa_new - kappa)/abs(kappa_new);
+           kappa = kappa_new;
+           cout<<"   Iter: "<<iter<<" K_err: "<<K_err<<" Kappa: "<<kappa_new<<" W/(m K)"<<endl;
+         }
+         else
+         {
+           E_err = abs(energy_norm - old_energy_norm)/energy_norm;
+           cout<<"   Iter: "<<iter<<" E_err: "<<E_err<<endl;
+           old_energy_norm = energy_norm;
+         }
+       }
+
+
+
+
     }
+    // sol_dir[k]->zero();
+     // sol_dir[k]->add(*(system.solution));
+
+
+  cout<<endl;
+  cout<<"      ...GRAY"<<endl;
+  cout<<endl;
+
+}
+
+    //Update the equilibrium energy
+
+    //Update thermal flux
+    //for (ID i = 0; i<3 ; i++ )
+     //
+       //  thermal_flux[i]->add(flux);
+      // }
+
 
     //----UPDATE BOUNDARY DATA-----------------------
-    SideData::iterator it(SD.begin());
-    SideData::const_iterator it_end(SD.end());
+  //  SideData::iterator it(SD.begin());
+  //  SideData::const_iterator it_end(SD.end());
 
-    for ( ; it != it_end; ++it)
-    {
-      for (ID k = 0; k<AngInt.n_slices ; k++ )
-      {
-	ID dof = ((it->first).elem())->dof_number(gray_sys_number,0,0);
-      	double value =  (*sol_dir[k])(dof);
-	SD[it->first][k] = value;
-      }
-    }
+  //  for ( ; it != it_end; ++it)
+  //  {
+  //    for (ID k = 0; k<AngInt.n_slices ; k++ )
+   //   {
 
-    //----UPDATE EQUILIBRIUM ENERGY FOR THE GRAY DOMAIN----------------------------
-    double max_T = 0.0;
-    set<const Elem*>::iterator el = Domain.begin();
-    const set<const Elem*>::iterator end_el = Domain.end();
-    for ( ; el != end_el ; ++el)
-    {
-      const Elem* elem = *el;
-      ID dof = elem->dof_number(gray_sys_number,0,0);
-      equilibrium_energy->set(dof,0.0);
-      for (ID k = 0; k<AngInt.n_slices ; k++ )
-      {
-	double value = (*sol_dir[k])(dof) * AngInt.d_omega[k]/AngInt.total_angle;
-	equilibrium_energy->add(dof,value);
-      }
-      if (max_T < (*equilibrium_energy)(dof))
-	max_T = (*equilibrium_energy)(dof);
+   //     ID dof = ((it->first).elem())->dof_number(gray_sys_number,0,0);
+   //     double value =  (*sol_dir[k])(dof);
+   //     SD[it->first][k] = value;
 
-    }
-    old_energy_norm = energy_norm;
-    equilibrium_energy->close();
-    energy_norm = equilibrium_energy->l2_norm();
-    //-----------------------------------------------------------------------
+    //  }
+  //  }
 
+//    //----UPDATE EQUILIBRIUM ENERGY FOR THE GRAY DOMAIN----------------------------
+//    double max_T = 0.0;
+//    set<const Elem*>::iterator el = Domain.begin();
+//    const set<const Elem*>::iterator end_el = Domain.end();
+//    for ( ; el != end_el ; ++el)
+//    {
+//      const Elem* elem = *el;
+//      ID dof = elem->dof_number(gray_sys_number,0,0);
+//      equilibrium_energy->set(dof,0.0);
+//      for (ID k = 0; k<AngInt.n_slices ; k++ )
+//      {
+//	double value = (*sol_dir[k])(dof) * AngInt.d_omega[k]/AngInt.total_angle;
+//	equilibrium_energy->add(dof,value);
+//      }
+//      if (max_T < (*equilibrium_energy)(dof))
+//	max_T = (*equilibrium_energy)(dof);
+//
+//    }
+//
+
+
+    //old_energy_norm = energy_norm;
+   // equilibrium_energy->close();
+   // energy_norm = equilibrium_energy->l2_norm();
+    //--------------------------------------------------------------------
     //---------------------------------------------
-    E_err = abs(energy_norm - old_energy_norm)/max(energy_norm,old_energy_norm);
+   // E_err = abs(energy_norm - old_energy_norm)/max(energy_norm,old_energy_norm);
 
     //  cout<<"MAX TEMP:  "<<max_T<<" K"<<endl;
 
 
-   //----COMPUTE THERMAL FLUX--------------
+//   //----COMPUTE THERMAL FLUX--------------
+//    {
+//
+//      for (ID i = 0; i<3 ; i++ )
+//      {
+//        thermal_flux[i]->close();
+//        thermal_flux[i]->zero();
+//      }
+//
+//      set<const Elem*>::iterator el = Domain.begin();
+//      const set<const Elem*>::iterator end_el = Domain.end();
+//      for ( ; el != end_el ; ++el)
+//      {
+//        const Elem* elem = *el;
+//        ID dof = elem->dof_number(gray_sys_number,0,0);
+//        BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
+//        mod.calculate(elem,elem->centroid());
+//        double vg = mod.get_sound_velocity();
+//        double cg = mod.get_heat_capacity();
+//
+//        for (ID k = 0; k<AngInt.n_slices ; k++ )
+//        {
+//          double value = (*sol_dir[k])(dof) * cg * vg / AngInt.total_angle;
+//
+//          for (ID i = 0; i<3 ; i++ )
+//          {
+//            double flux = value * AngInt.directions[k](i);
+//            //double flux = 300 * AngInt.directions[k](i);
+//            thermal_flux[i]->add(dof,flux);
+//
+//          }
+//        }
+//
+//        Point p = elem->point(1);
+//        if (p(0) == 5.0 && p(1) == 10.0)
+//        {
+//          //for (ID k = 0; k<AngInt.n_slices ; k++ )
+//            //cout<<(*equilibrium_energy)(dof)<<endl;
+//
+//             //cout<<(*sol_dir[k])(dof)<<" "<<AngInt.directions[k]<<endl;
+//        //     cout<<(*thermal_flux[0])(elem->dof_number(gray_sys_number,0,0))<<endl;
+//             //cout<<(*thermal_flux[1])(elem->dof_number(gray_sys_number,0,0))<<endl;
+//             //cout<<(*thermal_flux[2])(elem->dof_number(gray_sys_number,0,0))<<endl;
+//          //   cout<<" "<<endl;
+//         }
+//      }
+//    }
+//    //-------------------------------------
 
-    ofstream myfile;
 
-    myfile.open ("energy.dat",ios_base::app);
-    myfile << energy_norm <<"\n";
-    myfile.close();
+   // from_cell_to_nodal();
+  //  if  (SimulationOptions::verbose() > 1)
+  //   {
+  //    double kappa = compute_effective_thermal_conductivity();
+  //    cout<<"Effettive thermal conductivity:    "<<kappa<<" W/(m K)"<<endl;
+  //  }
+
+  //  ofstream myfile;
+
+   // myfile.open ("energy.dat",ios_base::app);
+   // myfile << energy_norm <<"\n";
+   // myfile.close();
 
     //if  (SimulationOptions::verbose() > 1)
     //{
@@ -865,54 +1056,11 @@ Boltzmann::solve_gray(void)
     ////J_err = energy_conservation_check();
     //--------------------------------------------------------------
 
-    cout<<endl;
+ //   cout<<endl;
 
-    iter +=1;
-    if  (SimulationOptions::verbose() > 1)
-      cout<<"          Iter: "<<iter<<" E_err: "<<E_err<<endl;
-
-
-  }
   //COMPUTE THERMAL FLUX
-          {
-
-            for (ID i = 0; i<3 ; i++ )
-            {
-              thermal_flux[i]->close();
-              thermal_flux[i]->zero();
-            }
-
-            set<const Elem*>::iterator el = Domain.begin();
-            const set<const Elem*>::iterator end_el = Domain.end();
-            for ( ; el != end_el ; ++el)
-            {
-              const Elem* elem = *el;
-              ID dof = elem->dof_number(gray_sys_number,0,0);
-              BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-              mod.calculate(elem,elem->centroid());
-              double vg = mod.get_sound_velocity();
-              double cg = mod.get_heat_capacity();
 
 
-              for (ID k = 0; k<AngInt.n_slices ; k++ )
-              {
-                double value = (*sol_dir[k])(dof) * cg * vg / AngInt.total_angle;
-
-                for (ID i = 0; i<3 ; i++ )
-                {
-                  double flux = value * AngInt.directions[k](i);
-                  thermal_flux[i]->add(dof,flux);
-
-                }
-              }
-            }
-          }
-
-  cout<<endl;
-  cout<<"      ...GRAY"<<endl;
-  cout<<endl;
-
-}
 
 double
 Boltzmann::energy_conservation_check()
@@ -1200,10 +1348,14 @@ Boltzmann::compute_porosity()
 }
 
 
+
+
+
 double
 Boltzmann::compute_effective_thermal_conductivity()
 {
  EquationSystems& es = get_equation_systems();
+
 
 
  if (is_gray)
@@ -1214,9 +1366,19 @@ Boltzmann::compute_effective_thermal_conductivity()
      es.get_system<TiberLinearSystem>("gray");
    const NumericVector<Number>& gray_solution = gray_system.get_solution_vector();
    const DofMap& dof_map_gray= gray_system.get_dof_map();
-   vector<unsigned int> dof_indices_gray;  
+   vector<unsigned int> dof_indices_gray;
    const unsigned int tvar_gray = gray_system.variable_number("T");
    FEType fe_type_gray = dof_map_gray.variable_type(tvar_gray);
+
+ //  TiberLinearSystem& gray_system =
+  //     es.get_system<TiberLinearSystem>("boltzmann");
+   //  const NumericVector<Number>& gray_solution = gray_system.get_solution_vector();
+   //  const DofMap& dof_map_gray= gray_system.get_dof_map();
+   //  vector<ID> dof_indices_gray;
+   //  ID tvar = gray_system.variable_number("T_0");
+    // FEType fe_type_gray = dof_map_gray.variable_type(tvar);
+
+
 
    //--------------surface-----------------
    AutoPtr<FEBase> fe_face_gray(build_finite_element(dim, fe_type_gray, true));
@@ -1271,7 +1433,8 @@ Boltzmann::compute_effective_thermal_conductivity()
 
   Point Point_hot(0);
   Point Point_cold(0);
-
+double Pspec(0);
+double Aspec(0);
 
   set<const Elem*>::iterator it = Domain.begin();
   const set<const Elem*>::iterator end = Domain.end();
@@ -1282,10 +1445,12 @@ Boltzmann::compute_effective_thermal_conductivity()
     const Elem* elem = *it;
     dof_map.dof_indices(elem, dof_indices);
 
+
     fe->reinit(elem);
     
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
     const RealTensor& kappa = mod.get_total_thermal_conductivity();
+
     
     //Power emitted
     for (ID qp = 0; qp <  qrule.n_points(); qp++)
@@ -1346,8 +1511,11 @@ Boltzmann::compute_effective_thermal_conductivity()
 	    //For heat_reservoir contact we take the nominal value (the imposed one)
 	    if (mod_b->get_type()=="boltzmann_bnd_heat_reservoir")
 	    {
+
 	      double a,b,c;
 	      mod_b->get_coefficients(a,b,c);
+
+
 	      Thot = c;
 	    }
 
@@ -1375,8 +1543,24 @@ Boltzmann::compute_effective_thermal_conductivity()
 	      } 
 	    }
 	  }
-   
+
 	}
+	  else
+         {
+	 for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
+	 {
+	   Aspec += JxW_face[qp];
+
+	   for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
+	   {
+
+	     double Px = (*thermal_flux_nodal[0])(dof_indices[alpha]) * normal[qp](0);
+	     double Py = (*thermal_flux_nodal[1])(dof_indices[alpha]) * normal[qp](1);
+	     double Pz = (*thermal_flux_nodal[2])(dof_indices[alpha]) * normal[qp](2);
+	     Pspec +=  JxW_face[qp] * phi[alpha][qp] * (Px + Py + Pz);
+	   }
+	 }
+         }
       }
     }
   }
@@ -1401,11 +1585,167 @@ Boltzmann::compute_effective_thermal_conductivity()
   cout<<"Thot: "<<Thot<<" K"<<endl;
   cout<<"Power emitted: "<<total_heat_source*1e-6<<" W"<<endl;
 
-  cout<<abs(Thot - Tcold)<<endl;
+  //cout<<abs(Thot - Tcold)<<endl;
  // cout<< max_dist * get_scaling().get_calc_mesh_units()<<endl;
   //cout<<Ahot<<endl;
 
   double effective_kappa = Pcold/Ahot/(abs(Thot - Tcold)) * max_dist * get_scaling().get_calc_mesh_units();
+
+  cout<<"P specular: "<<Pspec<<" W"<<endl;
+  ofstream myfile;
+
+  myfile.open ("kappa.dat",ios_base::app);
+  myfile << effective_kappa <<"\n";
+  myfile.close();
+
+  return effective_kappa;
+
+}
+
+
+
+
+double
+Boltzmann::compute_effective_thermal_conductivity_elemental()
+{
+
+
+  double effective_kappa = 0.0;
+
+  SimulationEnvironment& se = get_environment();
+
+ EquationSystems& es = get_equation_systems();
+
+  //-----------------GRAY---------------
+   TiberLinearSystem& system =
+     es.get_system<TiberLinearSystem>("gray");
+   const NumericVector<Number>& solution = system.get_solution_vector();
+   const DofMap& dof_map= system.get_dof_map();
+   vector<unsigned int> dof_indices;
+   const unsigned int tvar = system.variable_number("T");
+   FEType fe_type = dof_map.variable_type(tvar);
+
+   //--------------surface-----------------
+   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   QGauss qrule_face(dim-1,CONSTANT);
+   fe_face->attach_quadrature_rule(&qrule_face);
+   const std::vector<Real>& JxW_face = fe_face->get_JxW();
+   const std::vector<Point>& normal = fe_face->get_normals();
+   //---------------------------------------------------------------------------
+   //------------BULK----------
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  QGauss qrule(dim,FIFTH);
+  fe->attach_quadrature_rule(&qrule);
+  const std::vector<Real>& JxW = fe->get_JxW();
+  const std::vector<Point>& q_point = fe->get_xyz();
+
+
+  double Phot = 0.0;
+  double Pcold = 0.0;
+  double Ahot = 0.0;
+  double Acold = 0.0;
+  double Thot = 0.0;
+  double Tcold = 0.0;
+
+
+  double Pspec(0);
+
+  set<const Elem*>::iterator it = Domain.begin();
+  const set<const Elem*>::iterator end = Domain.end();
+
+  double total_heat_source = 0.0;
+
+  // MeshBase::const_element_iterator       it     = get_mesh().active_elements_begin();
+  // const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+   for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    dof_map.dof_indices(elem, dof_indices);
+
+    fe->reinit(elem);
+
+    ID dof = elem->dof_number(gray_sys_number,0,0);
+
+    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
+
+    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+
+    for (ID ns = 0; ns<elem->n_sides(); ns++)
+    {
+      const ElementSide elside(elem->top_parent(),ns);
+
+      if (se.is_outer_boundary(elside))
+      {
+
+        BoltzmannBoundaryModel* mod_b =
+            get_interface_model<BoltzmannBoundaryModel>(elem, ns);
+
+        fe_face->reinit(elem,ns);
+
+        //Get the normal flux
+        double Px = (*thermal_flux[0])(dof_indices[0]) * normal[0](0);
+        double Py = (*thermal_flux[1])(dof_indices[0]) * normal[0](1);
+        double Pz = (*thermal_flux[2])(dof_indices[0]) * normal[0](2);
+
+        if (mod_b != NULL)
+        {
+
+          double T = 0.0;
+          if (mod_b->get_type()=="boltzmann_bnd_heat_reservoir")
+          {
+            double a,b,c;
+            mod_b->get_coefficients(a,b,c);
+            T = c;
+          }
+
+          if (mod_b->get_type()=="boltzmann_bnd_diffusive")
+            Pspec +=  JxW_face[0] * (Px + Py + Pz);
+
+
+          if (mod_b->get_type()=="boltzmann_bnd_periodic")
+            T =  (*equilibrium_energy)(dof);
+
+
+          if (mod_b->get_name() == myopts.cold_contact)
+          {
+            Tcold += JxW_face[0] * T;
+            Pcold += JxW_face[0] * (Px + Py + Pz);
+            Acold += JxW_face[0];
+          }
+          else if (mod_b->get_name() == myopts.hot_contact)
+          {
+            Thot +=  JxW_face[0] * T;
+            Phot +=  JxW_face[0] * (Px + Py + Pz);
+            Ahot +=  JxW_face[0];
+          }
+
+        }
+        else
+          Pspec +=  JxW_face[0] * (Px + Py + Pz);
+      }
+   }
+ }
+
+ double max_dist = 0.0;
+  for (ID d = 0; d<3; d++)
+   if (abs(myopts.dist(d))>max_dist)
+       max_dist = abs(myopts.dist(d));
+
+
+  Thot  /= Ahot;
+  Tcold /= Acold;
+//  //-------------------------------------------
+  cout<<"Pcold: "<<Pcold<<" W"<<endl;  //! Order the solution in correct mode
+  cout<<"Phot: "<<Phot<<" W"<<endl;
+  cout<<"Tcold: "<<Tcold<<" K"<<endl;  //! Order the solution in correct mode
+  cout<<"Thot: "<<Thot<<" K"<<endl;cout<<"Power emitted: "<<total_heat_source*1e-6<<" W"<< " Conservation: "<<Pspec/Pcold<<endl;
+  //cout<<"P specular: "<<Pspec<<endl;
+  cout<<"DIST: "<<max_dist<<endl;
+
+  Pcold /=Ahot;
+  Pspec /=Ahot;
+
+  effective_kappa = Pcold/(abs(Thot - Tcold)) * max_dist * get_scaling().get_calc_mesh_units();
 
   ofstream myfile;
 
@@ -1416,6 +1756,7 @@ Boltzmann::compute_effective_thermal_conductivity()
   return effective_kappa;
 
 }
+
 double
 Boltzmann::compute_power_emitted()
 {
@@ -1630,7 +1971,11 @@ Boltzmann::do_solve(void)
   }
 
 
+  //solve_boltzmann();
+ //from_cell_to_nodal();
+  //std::cout<<"BOLTZMANN SOLVED"<<endl;
 
+  //is_gray = false;
 
   if (is_gray)
   {
@@ -1706,27 +2051,13 @@ Boltzmann::do_solve(void)
     }
   } //if is_gray
 
-if  (SimulationOptions::verbose() > 1)
- {
-  double kappa = compute_effective_thermal_conductivity();
-  cout<<"Effettive thermal conductivity:    "<<kappa<<" W/(m K)"<<endl;
-}
- //if  (SimulationOptions::verbose() > 1)
- //{
-   //double pe = compute_power_emitted();
-   //double pd = compute_power_dissipated();
-
-   //cout<<"Power Emitted:    "<<pe<<" W"<<endl;
-  // cout<<"Power Dissipated: "<<endl;
+//if  (SimulationOptions::verbose() > 1)
+// {
+//  double kappa = compute_effective_thermal_conductivity_elemental();
+//  cout<<"Effettive thermal conductivity:    "<<kappa<<" W/(m K)"<<endl;
+//}
 
 
-  // double  porosity = compute_porosity();
-
-
-  //cout<<"Porosity:    "<<compute_porosity()<<endl;
-
- //}
-  //J_err = energy_conservation_check();
 }
 
 
@@ -1755,8 +2086,6 @@ Boltzmann::create_boundary_model(const ModelOptions& options,
 {
   return BoltzmannBoundaryModel::create(boundary, options);
 }
-
-
 
 
 void
@@ -1875,27 +2204,6 @@ Boltzmann::get_solution_secure(const Elem* elem,
      }
    }
 
-   
-
-
-//      if (values.count(GRAY)||
-// 	 values.count(thermal)  )
-//      {
-//        dof_map_gray.dof_indices (elem, dof_indices_gray);
-
-//        double H = (*equilibrium_energy)(dof_indices_gray[0]);
-
-//        values[GRAY][0] = H;
-
-//      }
-   //if (values.count(FourierTemp))
-      // {
-      //  double T  = 0.0;
-      //  for (unsigned int i = 0; i < n_dofs; i++)
-      // 	 T += phi[i][n] * (*initial_energy)(dof_indices[i]);
-      //  values[FourierTemp][n] = T;
-      // }
-
 
 }
 
@@ -1941,6 +2249,206 @@ Boltzmann::do_assemble_global(EquationSystems& es, const std::string& system_nam
 {
 
 }
+
+void
+Boltzmann::do_assemble_boltzmann(EquationSystems& es, const std::string& system_name)
+{
+
+
+    TiberLinearSystem& system = static_cast<TiberLinearSystem&>(
+                         get_equation_systems().get_system("boltzmann"));
+
+     const MeshBase& mesh = get_mesh();
+     DofMap& dof_map =  system.get_dof_map();
+     FEType fe_type = dof_map.variable_type(t_var[0]);
+
+     // VOLUME
+     AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+     QGauss qrule(dim, CONSTANT);
+     fe->attach_quadrature_rule(&qrule);
+
+     const vector<Real>& JxW = fe->get_JxW();
+     const vector<Point>& q_point = fe->get_xyz();
+     const vector<vector<Real> >& phi = fe->get_phi();
+     const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+     // SURFACE
+     AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+     QGauss qface(dim - 1, CONSTANT);
+     fe_face->attach_quadrature_rule(&qface);
+
+     const vector<Real>& JxW_face = fe_face->get_JxW();
+     const vector<Point>& qface_point = fe_face->get_xyz();
+     const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+     const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
+     const vector<Point>& normal = fe_face->get_normals();
+
+
+  //Initialize-----------------------------------------------
+    DenseMatrix<Number> Ke;
+    DenseVector<Number> Fe;
+
+    std::vector< DenseSubVector<Number>* > F(AngInt.n_slices);
+    std::vector<std::vector< DenseSubMatrix<Number>* > > K(AngInt.n_slices);
+    for (ID i= 0;i<AngInt.n_slices; i++)
+    {
+      K[i].resize(AngInt.n_slices);
+      for (ID j= 0;j<AngInt.n_slices; j++)
+        K[i][j] = new  DenseSubMatrix<Number> (Ke);
+
+      F[i] = new DenseSubVector<Number> (Fe) ;
+    }
+    //----------------------------------------------------------
+    std::vector< std::vector<ID> > dof_indices_vec(AngInt.n_slices);
+
+
+    std::vector<ID> n_dofs_vec(AngInt.n_slices);
+    std::vector<ID> dof_indices_n;
+    SimulationEnvironment& se = get_environment();
+    //Start assembling
+    MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+    for ( ; el != end_el ; ++el)
+    {
+
+      const Elem* elem = *el;
+      fe->reinit(elem);
+
+      //Update global DOFs map
+    //  dof_map.dof_indices (elem, dof_indices);
+      for (ID k= 0;k<AngInt.n_slices; k++)
+        dof_map.dof_indices (elem, dof_indices_vec[k], t_var[k]);
+
+
+      //Include close elements
+
+      std::vector<ID> dof_indices;
+      ID neighbor = elem->n_neighbors();
+      for (ID n = 0; n < neighbor; n ++)
+      {
+        const Elem* elem_n = elem->neighbor(n);
+
+        for (ID k= 0;k<AngInt.n_slices; k++)
+        {
+           cout<<dof_indices_vec[k][0]<<endl;
+          dof_indices.push_back(dof_indices_vec[k][0]);
+          if (elem_n != NULL)
+          {
+            dof_indices.push_back(dof_indices_n[0]);
+            dof_indices_vec[k].push_back(dof_indices_n[0]);
+          }
+          else
+          {
+         //   dof_indices.push_back(0);
+          //  dof_indices_vec[k].push_back(0);
+          }
+        }
+
+      }
+
+      //Compute size
+
+      const ID n_dofs = dof_indices.size();
+      for (ID k= 0;k<AngInt.n_slices; k++)
+        n_dofs_vec[k] = dof_indices_vec[k].size();
+
+
+      cout<<n_dofs<<endl;
+      Ke.resize(n_dofs,n_dofs);
+      Fe.resize(n_dofs);
+
+     // cout<<n_dofs<<endl;
+
+      // Get the reposition of the submatrixes
+           for (ID k1= 0;k1<AngInt.n_slices; k1++)
+           {
+             (F[k1])->reposition(t_var[k1] * n_dofs_vec[k1],n_dofs_vec[k1]);
+             (F[k1])->zero();
+
+             for (ID k2 = 0;k2 <AngInt.n_slices; k2++)
+             {
+
+               (K[k1][k2])->reposition(t_var[k1] * n_dofs_vec[k1], t_var[k2] * n_dofs_vec[k1],  n_dofs_vec[k1] , n_dofs_vec[k2] );
+               (K[k1][k2])->zero();
+             }
+           }
+
+
+
+      //Get the model parameters
+      const unsigned int num_sides = elem->n_sides();
+      BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
+      mod.calculate(elem,elem->centroid());
+      Real tg = mod.get_relaxation_time();
+      Real vg = mod.get_sound_velocity();
+      Real cg = mod.get_heat_capacity();
+      Real heat_source = mod.get_total_heat_source() * 1e-6;
+
+
+      //Start Assembly
+      for (ID k1= 0;k1<AngInt.n_slices; k1++)
+      {
+         //Get the info of the direction
+         solid_angle_iter = k1;
+
+        // if  (SimulationOptions::verbose() > 2)
+         //  AngInt.print_info(k1);
+
+         //CORE
+         (*(K[k1][k1]))(0,0) = JxW[0];
+
+
+         for (ID ns = 0; ns < elem->n_sides(); ns++)
+         {
+         //  cout<<ns<<endl;
+         //  cout<<"A1"<<endl;
+           fe_face->reinit(elem,ns);
+          // cout<<"A2"<<endl;
+           const ElementSide elside(elem->top_parent(),ns);
+           //cout<<"A3"<<endl;
+           Real in = AngInt.dir[k1] * normal[0];
+           Real value = vg * tg * (AngInt.directions[k1] * normal[0])/AngInt.d_omega[k1] * JxW_face[0];
+
+
+           if (in<0.0)
+           {
+
+             if (se.is_outer_boundary(elside) || (is_on_GF_boundary(elside) && is_fourier_solved))
+               (*F[k1])(0) -= get_boundary_value(elside,normal[0]) * value;
+             else
+             {
+          //     cout<<"A1"<<endl;
+               (*(K[k1][k1]))(0,ns+1) +=value;
+          //     cout<<"A2"<<endl;
+             }
+           }
+           else
+             (*(K[k1][k1]))(0,0) += value;
+
+         }
+         (*F[k1])(0) += (heat_source * tg / cg) * JxW[0];
+
+
+
+         //Apply the condition on the equilibrium energy
+       //  for (ID k2= 0;k2<AngInt.n_slices; k2++)
+         //   (*(K[k1][k2]))(0,0) -=JxW[0] * AngInt.d_omega[k2] * 1.0/(4.0 * M_PI);
+
+      }
+
+
+
+      //dof_map.constrain_element_matrix_and_vector (Ke, Fe, dof_indices);
+
+      system.matrix->add_matrix (Ke, dof_indices);
+      system.rhs->add_vector    (Fe, dof_indices);
+
+cout<<"HERE"<<endl;
+    }
+
+
+}
+
 
 void
 Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
@@ -2009,10 +2517,8 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
      dof_map.dof_indices (elem,dof_indices);
      //const unsigned int n_dofs = dof_indices.size();
 
-
      //Update list of neighbors
      ID neighbor = elem->n_neighbors();
-
      for (ID k = 0; k < neighbor; k ++)
      {
        const Elem* elem_n = elem->neighbor(k);
@@ -2045,10 +2551,13 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
      Real cg = mod.get_heat_capacity();
      Real heat_source = mod.get_total_heat_source() * 1e-6;
 
+
+
+
      //Assembly
      Ke(0,0) = JxW[0];
 
-     ID nb = 0;
+     //ID nb = 0;
      for (ID ns = 0; ns < elem->n_sides(); ns++)
      {
 
@@ -2058,27 +2567,88 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
        double value = vg * tg * (IntDir * normal[0])/d_omega * JxW_face[0];
 
        if (in<0.0)
-       {
-
-	 if (se.is_outer_boundary(elside) || (is_on_GF_boundary(elside) && is_fourier_solved))
-	 {
-	   Fe(0) -= get_boundary_value(elside,normal[0],dir) * value;
-	   nb ++;
-	 }
-	 else
-	    Ke(0,ns + 1) += value;
-       }
+         Ke(0,ns + 1) += value;
        else
          Ke(0,0) += value;
-
      }
 
-     //This term is a mess
-     //if (nb>0)
-      // Fe(0) /=nb;
-
-
     Fe(0) += (e_0 +  heat_source * tg / cg) * JxW[0];
+
+    //Apply boundary conditions
+    for (ID ns = 0; ns < elem->n_sides(); ns++)
+    {
+
+      const ElementSide elside(elem->top_parent(),ns);
+      if (se.is_outer_boundary(elside) || (is_on_GF_boundary(elside) && is_fourier_solved))
+      {
+
+        fe_face->reinit(elem,ns);
+        double in = dir * normal[0];
+        if (in<0.0)
+        {
+           Fe(0) = 1e20 * get_boundary_value(elside,normal[0]);
+           Ke(0,0) = 1e20;
+
+        //for (ID d = 1; d<dof_indices.size(); d ++)
+         // Ke(0,d) = 0.0;
+         }
+
+      }
+
+    }
+
+
+    //Apply boundary conditions
+    //if (se.is_outer_boundary(elside) || (is_on_GF_boundary(elside) && is_fourier_solved))
+      //        Fe(0) -= get_boundary_value(elside,normal[0]) * value;
+        //    else
+
+
+
+
+
+    //OLD assembly
+//
+//
+//     //Assembly
+//     Ke(0,0) = JxW[0];
+//
+//     //ID nb = 0;
+//     for (ID ns = 0; ns < elem->n_sides(); ns++)
+//     {
+//
+//       fe_face->reinit(elem,ns);
+//       const ElementSide elside(elem->top_parent(),ns);
+//       double in = dir * normal[0];
+//       double value = vg * tg * (IntDir * normal[0])/d_omega * JxW_face[0];
+//
+//       if (in<0.0)
+//       {
+//
+//	 if (se.is_outer_boundary(elside) || (is_on_GF_boundary(elside) && is_fourier_solved))
+//	 {
+//	   Fe(0) -= get_boundary_value(elside,normal[0]) * value;
+//	   //nb ++;
+//	 }
+//	 else
+//	    Ke(0,ns + 1) += value;
+//       }
+//       else
+//         Ke(0,0) += value;
+//     }
+//
+//     //This term is a mess
+//     //if (nb>0)
+//      // Fe(0) /=nb;
+//
+//    Fe(0) += (e_0 +  heat_source * tg / cg) * JxW[0];
+
+
+
+
+
+
+
 
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
@@ -2097,12 +2667,13 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
 
 
 double
-Boltzmann::get_boundary_value(ElementSide elside, Point normal, Point dir)
+Boltzmann::get_boundary_value(ElementSide elside, Point normal)
 {
 
   BoltzmannBoundaryModel* mod =
     get_interface_model<BoltzmannBoundaryModel>(elside.elem(), elside.side());
 
+  ID local_dof = elside.elem()->dof_number(gray_sys_number,0,0);
 
   SimulationEnvironment& se = get_environment();
 
@@ -2120,7 +2691,7 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal, Point dir)
     }
 
     if (mod->get_type() == "boltzmann_bnd_periodic")
-      {
+    {
          //Get the periodicity vector
          RealGradient periodicity = mod->get_periodicity();
          double DeltaT = mod->get_deltaT();
@@ -2139,28 +2710,40 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal, Point dir)
          value = 0.0;
          for ( ; it != it_end; ++it)
             if ((it->first).elem() -> contains_point(pt_to_search))
-            {
-
-              ID local_dof = elside.elem()->dof_number(gray_sys_number,0,0);
-              ID per_dof = (it->first).elem()->dof_number(gray_sys_number,0,0);
-
-              //double DeltaT = (*equilibrium_energy)(local_dof)-(*equilibrium_energy)(per_dof);
-
-              //value = SD[it->first][solid_angle_iter] + DeltaT;
               value = SD[it->first][solid_angle_iter] + DeltaT;
 
-            }
-         //cout<<point_side<<endl;
-        //cout<<pt_to_search<<endl;
-         if (value == 0)
-           cout<<"ERROR: no ELEMENT FOUND!!!"<<endl;
-
+         if (value == 0.0){
+           cout<<"ERROR: no ELEMENT FOUND FOR THE PERIODIC BOUNDARY CONDITIONS!!!"<<endl;
+         }
       }
+
+     if (mod->get_type() == "boltzmann_bnd_diffusive")//Internal boundary or wall
+     {
+
+       // ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
+       //value = (*equilibrium_energy)(dof);
+
+       //value = 0.0;
+       double angle = 0.0;
+       for (ID k = 0; k<AngInt.n_slices; k++)
+       {
+         double in = AngInt.dir[k] * normal;
+         if (in>0.0)
+         {
+           angle += AngInt.d_omega[k];
+      //     cout<<SD[elside][k]<<endl;
+           value += SD[elside][k] * AngInt.d_omega[k];
+         }
+       }
+       value = value / angle;
+       //cout<<value<<endl;
+
+     }
   }
-  else //Internal boundary or wall
+  else
   {
     //Internal boundary
-    if (is_on_GF_boundary(elside))
+     if (is_on_GF_boundary(elside))
     {
 
       ID dof = (elside.elem()->neighbor(elside.side()))->dof_number(gray_sys_number,0,0);
@@ -2169,36 +2752,43 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal, Point dir)
     }
     else //Wall
     {
-
-      //Diffusive
-      if (myopts.diffusive)
-      {
-	ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
-	value = (*equilibrium_energy)(dof);
-
-      }
-      else
-      {//SPECULAR
-
         ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
 
-
-        //Check which direction is the specular for thi side
+        ID n_spec = 0;
         for (ID k = 0; k<AngInt.n_slices; k++)
         {
-          Point check = (AngInt.dir[k] - dir)/(AngInt.dir[k] - dir).size() - normal;
 
-          if (check.size()<1e-5)
-            value = SD[elside][k];
-      }
+          if (AngInt.phi_vec[solid_angle_iter] != AngInt.phi_vec[k])
+          {
+            Point sum(0);
+            sum(0) = AngInt.dir[solid_angle_iter](0)-AngInt.dir[k](0);
+            sum(1) = AngInt.dir[solid_angle_iter](1)-AngInt.dir[k](1);
+            const Point check = sum.cross(normal);
 
+            //cout<<"Normal: "<<normal<<" DIR1: "<<AngInt.dir[k]<<" DIR2: " <<AngInt.dir[solid_angle_iter]<<endl;
+            //cout<<check.size() <<endl;
+
+            if (check.size() <1e-3)
+              if (AngInt.theta_vec[solid_angle_iter] == AngInt.theta_vec[k])
+              {
+                n_spec ++;
+                //value =(*equilibrium_energy)(dof);
+                value = SD[elside][k];
+              }
+
+          }
+        }
+        if (n_spec > 1)
+            cout<<"TO MANY SPECULAR VECTORS!"<<endl;
+
+        if (n_spec == 0)
+        {
+          cout<<" normal: "<<normal;
+            cout<<"NO SPECULAR VECTORS!"<<endl;
+        }
     }
-
-   }
   }
-
   return value;
-
 
 }
 
@@ -2607,9 +3197,6 @@ Boltzmann::AngularIntegrator::compute_directions()
       spec.resize(n_slices);
 
       total_angle = 4.0 * M_PI;
-
-
-
       directions.resize(n_slices);
       integrate_directions.resize(n_slices);
       d_omega.resize(n_slices);
@@ -2653,19 +3240,21 @@ Boltzmann::AngularIntegrator::compute_directions()
 
   double delta = 0.0;
 
-  double  min_theta = 0.0 + delta;
-  double  max_theta = M_PI+ delta;
+  double  min_theta = 0.0;
+  double  max_theta = M_PI * 0.5;
 
-  double  min_phi = M_PI * 0.5 + delta;
-  double  max_phi = M_PI * 2.0 + M_PI * 0.5+ delta;
+  //double  min_phi = M_PI * 0.5 + delta;
+  //double  max_phi = M_PI * 2.0 + M_PI * 0.5+ delta;
 
-    weight =  1.0;
+   double  min_phi = 0.0 + delta;
+   double  max_phi = M_PI * 2.0 + delta;
+
+    weight =  2.0;
 
     n_slices = theta_slices * phi_slices;
     //spec.resize(n_slices);
 
      directions.resize(n_slices);
-     integrate_directions.resize(n_slices);
      d_omega.resize(n_slices);
      dir.resize(n_slices);
      theta_vec.resize(n_slices);
@@ -2677,7 +3266,7 @@ Boltzmann::AngularIntegrator::compute_directions()
      ID k = 0;
      for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
      {
-       double phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
+       double phi = min_phi + 0.5 * d_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
 
        for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
        {
@@ -2693,15 +3282,95 @@ Boltzmann::AngularIntegrator::compute_directions()
          directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
          directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
 
-         theta_vec[k] = theta;
-         phi_vec[k] = phi;
+         theta_vec[k] = theta * 180.0/M_PI;
+         phi_vec[k] = phi * 180.0/M_PI;
 
          k++;
        }
      }
 
     total_angle = 4.0 * M_PI;
+    //Specular vectors
+     //for (ID k1 = 0; k1<n_slices; k1++)
+      //    for (ID k2 = 0; k2<n_slices; k2++)
+       //   {
+        //    if
+        //    cout<<sum<<endl;
+        //    if ((sum(0) < 1e-4) && (sum(1) < 1e-4) && (sum(2) < 1e-4) )
+         //     spec[k1]=k2;
+         // }
 }
+
+
+void
+Boltzmann::AngularIntegrator::compute_directions_bis()
+{
+
+
+
+
+  double delta = 0.0;
+
+  double  min_theta = 0.0;
+  double  max_theta = M_PI * 0.5;
+
+  //double  min_phi = M_PI * 0.5 + delta;
+  //double  max_phi = M_PI * 2.0 + M_PI * 0.5+ delta;
+
+   double  min_phi = 0.0;
+   double  max_phi = M_PI * 2.0;
+
+
+
+
+
+    weight =  2.0;
+
+    n_slices = theta_slices * phi_slices;
+    //spec.resize(n_slices);
+
+     directions.resize(n_slices);
+     d_omega.resize(n_slices);
+     dir.resize(n_slices);
+     theta_vec.resize(n_slices);
+     phi_vec.resize(n_slices);
+
+     double d_theta =  (max_theta - min_theta) / theta_slices;
+     double d_phi =  (max_phi - min_phi) / phi_slices;
+
+
+     ID k = 0;
+     for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
+     {
+       double phi = min_phi + 0.5 * d_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
+
+       for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
+       {
+         double theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
+
+         d_omega[k] =  weight * 2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
+
+         dir[k](0) = sin(theta) * sin(phi);
+         dir[k](1) = sin(theta) * cos(phi);
+         dir[k](2) = cos(theta);
+
+         directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+         directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
+         directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
+
+         theta_vec[k] = theta * 180.0/M_PI;
+         phi_vec[k] = phi * 180.0/M_PI;
+
+         k++;
+       }
+     }
+
+    total_angle = 4.0 * M_PI;
+
+}
+
+
+
 
 
 
@@ -2721,7 +3390,7 @@ Boltzmann::AngularIntegrator::print_info(void)
   {
 
     std::cout<<"Direction: "<<k+1<<std::endl;
-    std::cout<<"  Theta: "<<theta_vec[k] / ( M_PI) * 180.0 <<"  phi: "<<phi_vec[k] / ( M_PI) * 180.0<<std::endl;
+    std::cout<<"  Theta: "<<theta_vec[k] <<"  phi: "<<phi_vec[k] <<std::endl;
 
     std::cout<<"d_omega:  "<<  d_omega[k]<<std::endl;
 
@@ -2775,7 +3444,7 @@ Boltzmann::AngularIntegrator::print_info(ID k)
 
 
     std::cout<<"Direction: "<<k<<std::endl;
-    std::cout<<"  Theta: "<<theta_vec[k] / ( M_PI) * 180.0 <<"  phi: "<<phi_vec[k] / ( M_PI) * 180.0<<std::endl;
+    std::cout<<"  Theta: "<<theta_vec[k] <<"  phi: "<<phi_vec[k]<<std::endl;
 
     std::cout<<"d_omega:  "<<  d_omega[k]/(4.0 * M_PI) <<std::endl;
 
@@ -2835,7 +3504,7 @@ Boltzmann::AngularIntegrator::print_info(ID k)
 // 	 BoltzmannBoundaryModel* b_mod =
 //     	   get_surface_model<BoltzmannBoundaryModel>(elem,ns);
 // 	 const ElementSide elside(elem->top_parent(),ns);
-// 	 double in = dir * normal[0];
+// 	 double in = dir * normasl[0];
 // 	 double value = vg * (IntDir * normal[0]) * JxW_face[0];
 
 // 	 if (in<0.0)

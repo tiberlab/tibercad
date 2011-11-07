@@ -81,6 +81,11 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
   //! Check if the gray simulation should be solved
   bool is_gray;
 
+   //! Variable for the boltzmann systems
+
+  std::vector<ID> t_var;
+
+
   //! The index for the solid angle discretization
   ID solid_angle_iter;
 
@@ -89,6 +94,7 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
   void get_gray_options(void);
 
   SideData SD;
+  SideData SD_old;
   std::vector<unsigned short int> node_conn;
 
   //! Compute porosity
@@ -100,6 +106,8 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
   double compute_power_dissipated();
 
   double compute_effective_thermal_conductivity();
+
+  double compute_effective_thermal_conductivity_elemental();
 
   double compute_power_emitted();
 
@@ -133,12 +141,13 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
 
   void from_nodal_to_cell(void);
 
-  double get_boundary_value(ElementSide elside, Point normal, Point dir);
+  double get_boundary_value(ElementSide elside, Point normal);
   ID gray_sys_number;
   std::vector< NumericVector<Number>* > sol_dir;
   std::vector< NumericVector<Number>* > thermal_flux;
   std::vector< NumericVector<Number>* > thermal_flux_nodal;
   NumericVector<Number>*  equilibrium_energy;
+
   NumericVector<Number>*  initial_energy;
 
     //!A Class that handle the angular integration
@@ -150,6 +159,8 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
    //~AngluarIntegrator(){};
 
    void compute_directions(void);
+
+   void compute_directions_bis(void);
 
    void compute_custom_direction(std::vector<Point> custom_dir);
 
@@ -170,8 +181,6 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
    std::vector<Point> directions;
 
    std::vector<Point> dir;
-
-   std::vector<Point> integrate_directions;
 
    std::vector<ID> spec;
 
@@ -201,11 +210,12 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
     std::string macro_sim;
     std::vector<int> custom_dir;
     double phi_zero;
-
+    RealGradient dist;
     //New
     double equilibrium_energy;
     std::string first_guess;
 
+    bool compute_kappa;
     std::vector<Point> cd;
     std::string hot_contact;
     std::string cold_contact;
@@ -235,9 +245,14 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
 
   void solve_gray(void);
 
+
+  void solve_boltzmann(void);
+
   void do_init_fourier(void);
 
   void do_init_gray(void);
+
+  void do_init_boltzmann(void);
 
   struct thermal_options
   {
@@ -308,6 +323,12 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
     //! The real assembly function
     void do_assemble_fourier(EquationSystems& es, const std::string& system_name);
 
+    //! The real assembly function
+    void do_assemble_boltzmann(EquationSystems& es, const std::string& system_name);
+
+    //! The assembly function
+    static void assemble_boltzmann(EquationSystems& es, const std::string& system_name);
+
      //! The assembly function
     static void assemble_gray(EquationSystems& es, const std::string& system_name);
 
@@ -374,6 +395,14 @@ void
 Boltzmann::assemble_gray(EquationSystems& es, const std::string& system_name)
 {
   _this->do_assemble_gray(es, system_name);
+}
+
+
+inline
+void
+Boltzmann::assemble_boltzmann(EquationSystems& es, const std::string& system_name)
+{
+  _this->do_assemble_boltzmann(es, system_name);
 }
 
 inline
