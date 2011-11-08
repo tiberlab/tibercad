@@ -4,6 +4,13 @@
 
 #include "SimulationInterface.h"
 
+//extern "C"
+//{
+//#include "cg_user.h"
+//#include "cg_descent.h"
+//}
+
+
 class TBDLLOCAL Vff : public SimulationInterface
 
 {
@@ -20,6 +27,16 @@ public:
   //! We need a public static creator function
   static Vff* create(const ModelOptions& options);
 
+  void keating_gradient(double* grad, double* x, int n);
+
+  double keating_pot_grad(double* grad, double* x, int n);
+
+  double keating_potential(double* x, int n);
+
+  int get_n_dof(void) const;
+
+  const std::vector<double>& get_dof(void) const;
+
 protected:
 
   //! The initialization
@@ -35,7 +52,7 @@ protected:
 
 
   //! Solve the MyPoisson equation
-  virtual void do_solve(void){};
+  virtual void do_solve(void);
 
 
   //! Print some useful information
@@ -106,12 +123,35 @@ private:
 
   std::vector<unsigned int> _free_atoms;
   std::vector<unsigned int>& get_free_atoms(void);
+  unsigned int _n_free_atoms;
+
 
   std::vector<double> _dof;
-  std::vector<double>& get_dof(void);
+  unsigned int _n_dof;
 
   void
   check_structure(void);
+
+  std::vector<std::vector<double>> _alpha;
+  std::vector<std::vector<std::vector<double> > > _beta;
+  std::vector<std::vector<double> > _d;
+  std::vector<std::vector<std::vector<double> > > _teta;
+
+  void
+  resize_parameters(void);
+
+  void
+  build_parameters(void);
+
+  double keating_potential(void);
+
+
+  std::vector<double> keating_gradient(void);
+
+
+  void optimize(void);
+
+  void displace_atoms(void);
 
 };
 
@@ -131,11 +171,16 @@ Vff::get_free_atoms(void)
 }
 
 inline
-std::vector<double>&
-Vff::get_dof(void)
+const std::vector<double>&
+Vff::get_dof(void) const
 {
   return _dof;
 }
 
-
+inline
+int
+Vff::get_n_dof(void) const
+{
+  return _n_dof;
+}
 #endif

@@ -43,6 +43,9 @@ public:
   //!Set atom position (1X3 Tensor is used)
   void set_position(const Tensor1 pos);
 
+  //! Set position number i
+  void set_position(int i, double x);
+
   //! Get absolute position coordinate i (x=0, y=1, z=2) 
   //! atomic coordinates are stored in Angstrom
   double get_position(int i) const;

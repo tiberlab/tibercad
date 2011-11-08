@@ -54,6 +54,12 @@ void Atom::set_position(const Tensor1 pos)
 }
 
 
+void
+Atom::set_position(int i, double x)
+{
+  _position(i) = x;
+}
+
 Tensor1 Atom::get_ttype_position(void) const
 {
   Tensor1 pos;

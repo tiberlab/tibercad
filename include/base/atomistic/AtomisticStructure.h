@@ -12,6 +12,7 @@
 #include "BondMap.h"
 #include "Messages.h"
 #include "InitFailedException.h"
+#include "Specie.h"
 
 //! Contains all needed data for an atomic structure
 /*!
@@ -157,6 +158,9 @@ public:
 
   //! Set the model options
     void set_options(const ModelOptions& options);
+
+  //! Get specie of atom i
+  const Specie& get_specie(unsigned int i) const;
 
 private:
 
@@ -352,6 +356,13 @@ const Bondmap&
 AtomisticStructure::get_bond_map() const
 {
   return _bondmap->get_bond_map();
+}
+
+inline
+const Specie&
+AtomisticStructure::get_specie(unsigned int i) const
+{
+  return _structure_atoms[i].get_specie();
 }
 
 //inline
