@@ -42,7 +42,7 @@ Vff::parse_options()
   const ModelOptions& opts = get_options();
   Options& myopts = get_my_options();
 
-  myopts.boundary_conditions = opts.get_option("boundary_conditions", "substrate");
+  myopts.boundary_conditions = opts.get_option("boundary_conditions", "free_standing");
   myopts.substrate_plane = opts.get_option("substrate_plane", "z");
   myopts.boundary_tol = opts.get_option("substrate_plane", 1.0);
 
@@ -58,6 +58,7 @@ Vff::do_init()
 
   Messages::debug("Setting boundary conditions");
   check_structure();
+  parse_options();
 
  }
 
@@ -110,6 +111,7 @@ Vff::set_boundary(void)
   //WARNING: passivation hydrogens are always left out!!!
 
   int n_without_h = get_atomistic_structure()->get_N_without_H();
+  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
 
   std::vector<unsigned int>& free_atoms = get_free_atoms();
   std::vector<Atom>& atoms = get_atomistic_structure()->get_structure_atoms();
@@ -119,11 +121,27 @@ Vff::set_boundary(void)
   //Assign free atoms indexes according to selected boundary conditions
   if (get_my_options().boundary_conditions == "free_standing")
     {
-
       for (unsigned int i = 0; i < n_without_h - 0; i++) free_atoms.push_back(i);
       _n_free_atoms = n_without_h - 0;
     }
 
+  if  (get_my_options().boundary_conditions == "all_around")
+    {
+      _n_free_atoms = 0;
+      for (unsigned int i = 0; i < n_without_h - 0; i++)
+        {
+          //If bonded to 4 non-hydrogen atoms, then it's a free atom
+          if ((bondmap[i].size() == 4) &&
+              (get_atomistic_structure()->get_specie(bondmap[i][0]) != Specie::H ) &&
+              (get_atomistic_structure()->get_specie(bondmap[i][1]) != Specie::H ) &&
+              (get_atomistic_structure()->get_specie(bondmap[i][2]) != Specie::H ) &&
+              (get_atomistic_structure()->get_specie(bondmap[i][3]) != Specie::H ))
+            {
+              free_atoms.push_back(i);
+              _n_free_atoms += 1;
+            }
+        }
+    }
 
 
   //Common operations
@@ -139,6 +157,7 @@ Vff::set_boundary(void)
 
   //Write some informations
   Messages::info("VFF boundary conditions set up");
+  std::cout << "Number of free atoms: " << _n_free_atoms << std::endl;
 
 }
 
