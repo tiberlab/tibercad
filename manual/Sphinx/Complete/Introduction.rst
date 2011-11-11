@@ -171,6 +171,21 @@ these are valid GMSH variables: ``L`` is just the length of the Si sample; ``d``
 
 
 
+**GMSH modeling strategy: bottom-up  design**
+
+In   gmsh  the idea  is  to   design  the  model  with a "bottom-up" strategy.
+So,   first, points are  defined, then lines  connecting  points,  surface  connecting  lines,  and  so  on,  without  superimposing  objects.
+This  means  that, once  defined  your  points,  you  may  connect them  with  lines but
+different Lines  must  not  have  parts  in  common (just  points);
+the  same  works for  surfaces:  they  may  have only  lines  in  common,   but  no  intersections between  surfaces  are allowed.
+
+.. warning::
+             If  a  geometrical  model  with  not  null  intersections  between entities (points, lines,  surfaces, volumes) is  created, unpredictable results may  occur (gmsh  crashes  during  meshing, a  mesh is  created  which is  not  valid, etc.). 
+
+
+
+
+
 **Definition of the geometrical entities Points**
 
 ::
@@ -187,7 +202,7 @@ Thus, the smaller is the value of ``d``, the greater is the mesh density close t
 
 .. warning::
              In a 1D simulation it is  assumed that the geometrical model is  restricted to the ``x`` axis. 
-             Any other geometrical orientation  could  give impredictable results.
+             Any other geometrical orientation  could  give unpredictable results.
 
 
 
@@ -245,6 +260,10 @@ Step 2: Meshing the device
 
 
 The ``.geo`` script file with the geometrical description can be run in GMSH, to display the modelled device and to mesh it through the GMSH graphical interface.
+To  generate  the  mesh,  select  ``Mesh`` in  the main menu  of  GMSH  and  click  on  ``1D``, ``2D`` or ``3D`` depending  on  the  dimension of  your  simulation.
+This  will  create  a  file  .msh  in  your  working  directory.
+
+
 Alternatively, a ``non-interactive`` mode is also available in GMSH, without graphical user interface. For example, to mesh this 1D tutorial in non-interactive mode, just type::
 
   gmsh bulk.geo  -1 -o bulk.msh 
