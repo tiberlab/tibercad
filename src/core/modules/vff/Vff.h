@@ -124,10 +124,15 @@ private:
   std::vector<unsigned int> _free_atoms;
   std::vector<unsigned int>& get_free_atoms(void);
   unsigned int _n_free_atoms;
+  unsigned int _n_atoms;
 
-
+// Degree of freedom
   std::vector<double> _dof;
   unsigned int _n_dof;
+
+  // All the coordinates of the atomistic structure, stored in a unique array
+  std::vector<double> _coords;
+  std::vector<double>& get_coords(void);
 
   void
   check_structure(void);
@@ -153,6 +158,9 @@ private:
 
   void displace_atoms(void);
 
+  //Set coordinates used
+  void set_coords(void);
+
 };
 
 
@@ -168,6 +176,13 @@ std::vector<unsigned int>&
 Vff::get_free_atoms(void)
 {
   return _free_atoms;
+}
+
+inline
+std::vector<double>&
+Vff::get_coords(void)
+{
+  return _coords;
 }
 
 inline

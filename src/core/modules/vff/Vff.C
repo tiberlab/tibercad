@@ -71,6 +71,7 @@ Vff::do_solve(void)
 
   resize_parameters();
   build_parameters();
+  set_coords();
 
 
   std::cout << "Trying one keating potential " << keating_potential() << std::endl;
@@ -85,6 +86,24 @@ Vff::do_solve(void)
 
   displace_atoms();
 
+}
+
+void
+Vff::set_coords(void)
+{
+  _n_atoms = get_atomistic_structure()->get_N_without_H();
+  unsigned int n_atoms = _n_atoms;
+  std::vector<double>& coords = get_coords();
+
+  coords.resize(n_atoms * 3, 0.0);
+  //Put all coords in a temporary 1D array
+  for (unsigned int i = 0; i < n_atoms; i ++)
+    {
+      int i_start = i * 3;
+      coords[i_start] = get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
+      coords[i_start + 1] = get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
+      coords[i_start + 2] = get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
+    }
 }
 
 
@@ -110,25 +129,25 @@ Vff::set_boundary(void)
 {
   //WARNING: passivation hydrogens are always left out!!!
 
-  int n_without_h = get_atomistic_structure()->get_N_without_H();
+  int n_atoms = get_atomistic_structure()->get_N_without_H();
   const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
 
   std::vector<unsigned int>& free_atoms = get_free_atoms();
   std::vector<Atom>& atoms = get_atomistic_structure()->get_structure_atoms();
 
-  free_atoms.reserve(n_without_h);
+  free_atoms.reserve(n_atoms);
 
   //Assign free atoms indexes according to selected boundary conditions
   if (get_my_options().boundary_conditions == "free_standing")
     {
-      for (unsigned int i = 0; i < n_without_h - 0; i++) free_atoms.push_back(i);
-      _n_free_atoms = n_without_h - 0;
+      for (unsigned int i = 0; i < n_atoms; i++) free_atoms.push_back(i);
+      _n_free_atoms = n_atoms;
     }
 
-  if  (get_my_options().boundary_conditions == "all_around")
+  if  (get_my_options().boundary_conditions == "all_around_1atom")
     {
       _n_free_atoms = 0;
-      for (unsigned int i = 0; i < n_without_h - 0; i++)
+      for (unsigned int i = 0; i < n_atoms; i++)
         {
           //If bonded to 4 non-hydrogen atoms, then it's a free atom
           if ((bondmap[i].size() == 4) &&
@@ -142,6 +161,42 @@ Vff::set_boundary(void)
             }
         }
     }
+
+
+
+  if  (get_my_options().boundary_conditions == "all_around")
+    {
+
+      _n_free_atoms = 0;
+      for (unsigned int i = 0; i < n_atoms; i++)
+        {
+          bool free = true;
+          for (unsigned int counter_j = 0; counter_j < bondmap[i].size(); counter_j++)
+            {
+              unsigned int j = bondmap[i][counter_j];
+              for (unsigned int counter_k = 0; counter_k < bondmap[j].size(); counter_k++)
+                {
+                  unsigned int k = bondmap[j][counter_k];
+                  if ((bondmap[k].size() != 4) ||
+                                (get_atomistic_structure()->get_specie(bondmap[k][0]) == Specie::H ) ||
+                                (get_atomistic_structure()->get_specie(bondmap[k][1]) == Specie::H ) ||
+                                (get_atomistic_structure()->get_specie(bondmap[k][2]) == Specie::H ) ||
+                                (get_atomistic_structure()->get_specie(bondmap[k][3]) == Specie::H ))
+                    {
+                      free = false;
+                    }
+                }
+            }
+
+          //If bonded to 4 non-hydrogen atoms, then it's a free atom
+          if (free)
+            {
+              free_atoms.push_back(i);
+              _n_free_atoms += 1;
+            }
+        }
+    }
+
 
 
   //Common operations
@@ -277,19 +332,10 @@ Vff::keating_potential(void)
 {
   double u = 0.0;
   //Atoms to be considered in keating potential (H passivation not included)
-  int n_atoms = get_atomistic_structure()->get_N_without_H();
+  int n_atoms = _n_atoms;
   const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  std::vector<double>& coords = get_coords();
 
-  std::vector<double> coords(n_atoms * 3, 0.0);
-
-  //Put all coords in a temporary 1D array
-  for (unsigned int i = 0; i < n_atoms; i ++)
-    {
-      int i_start = i * 3;
-      coords[i_start] = get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
-      coords[i_start + 1] = get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
-      coords[i_start + 2] = get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
-    }
 
   //Substitute degree of freedom (they can change during optimization) in local coords
   for (unsigned int i = 0; i < _n_free_atoms; i ++)
@@ -413,26 +459,15 @@ Vff::keating_gradient(void)
 {
 
   //Atoms to be considered in gradient (H passivation not included)
-  int n_atoms = get_atomistic_structure()->get_N_without_H();
+  int n_atoms = _n_atoms;
   const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  std::vector<double> coords = get_coords();
 
   //Note: grad_all is introduced as it's easier coding the gradient in a general way
   //considering all the coordinates. Then we only take the elements corresponding to degrees
   //of freedom
   std::vector<double> grad_all(n_atoms * 3, 0.0);
   std::vector<double> grad_dof(_n_free_atoms * 3, 0.0);
-
-  std::vector<double> coords(n_atoms * 3, 0.0);
-
-  //Put all coords in a temporary 1D array
-
-  for (unsigned int i = 0; i < n_atoms; i ++)
-    {
-      int i_start = i * 3;
-      coords[i_start] = get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
-      coords[i_start + 1] = get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
-      coords[i_start + 2] = get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
-    }
 
 
   //Substitute degree of freedom (they can change during optimization) in local coords
