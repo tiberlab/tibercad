@@ -26,7 +26,8 @@ class EquationSystems;
 class AtomisticStructure;
 class MeshRegionInfo;
 class BoundaryRegions;
-
+class Point;
+class QuantumContact;
 
 //! Higher-level definition of the  structure to  be  simulated.
 /*!
@@ -40,6 +41,8 @@ class Device
 
     //! A typedef for the map containing atomistic structures
     typedef std::map<std::string,  AtomisticStructure*> AtomStructMap;
+
+    typedef std::map<std::string, QuantumContact*> QuantumContactMap;
 
 
   public:
@@ -291,7 +294,14 @@ class Device
     atomistic_structure_iterator atomistic_structures_end(void);
 
 
+    QuantumContact* get_quantum_contact(const std::string& name);
 
+    //! Compute normal vector to a boundary region
+ //   Point get_normal(const std::set<ID>& rg_ids, const std::set<ID>& bd_ids, unsigned int& count) const;
+
+   // void extend_mesh(const std::set<ID>& rg_ids, const std::set<ID>& bd_ids, const Point& normal, double length, const std::string &name);
+
+    //double Deter (const Point& P1, const Point& P2, const Point& P3);
   private:
 
 
@@ -374,6 +384,8 @@ class Device
     //! Setup atomistic structures
     void setup_atomistic_structures(void);
 
+    //! Setup quantum contacts
+    void setup_quantum_contacts(void);
 
     //! Prepares the boundaries
     /*!
@@ -401,7 +413,7 @@ class Device
 
 
     //! The map that connects atomistic structure names to pointers
-    /*! (keep track of existing atomistic struxctures) */
+    /*! (keep track of existing atomistic structures) */
     AtomStructMap _atomistic_structure_map;
 
 
@@ -453,6 +465,9 @@ class Device
     //! A structure containing the original boundary region info
     BoundaryRegions* _bd_regions;
 
+    //! The map that connects quantum contacts to pointers
+     /*! (keep track of existing quantum contacts) */
+    QuantumContactMap _quantum_contact_map;
 
     //! A map that assigns boundary region IDs to boundary region names
     //std::map<ID, std::string> _boundary_region_names;
@@ -658,6 +673,16 @@ Device::get_atomistic_structure(const std::string& name)
 {
   if (_atomistic_structure_map.find(name) != _atomistic_structure_map.end())
     return _atomistic_structure_map[name];
+  else
+    return NULL;
+}
+
+inline
+QuantumContact*
+Device::get_quantum_contact(const std::string& name)
+{
+  if (_quantum_contact_map.find(name) != _quantum_contact_map.end())
+    return _quantum_contact_map[name];
   else
     return NULL;
 }

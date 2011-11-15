@@ -287,11 +287,19 @@ AtomisticStructure::init_mesh_structure()
 
   _structure_atoms.clear();
 
+  //---------------------------------------------------------------
+  // Extend mesh for contacts
+  //unsigned int num_sides;
+  //Point normal = Device::get_normal();
+
+
+  //---------------------------------------------------------------
+
   AtomisticGenerator* generate;
 
   if ( _device->get_mesh().mesh_dimension() == 1 ) generate = static_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
-  if ( _device->get_mesh().mesh_dimension() == 2 )  generate = static_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
-  if ( _device->get_mesh().mesh_dimension() == 3 )  generate = static_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
+  if ( _device->get_mesh().mesh_dimension() == 2 ) generate = static_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
+  if ( _device->get_mesh().mesh_dimension() == 3 ) generate = static_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
 
   generate->do_init();
   build_bond_map();

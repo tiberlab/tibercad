@@ -75,6 +75,7 @@ protected:
 
   //! Conventional cell vectors in absolute basis
   Tensor2Gen _conv_vect;
+
   //! Conventional cell vectors in primitive real basis
   Tensor2Gen _conv_prim;
 

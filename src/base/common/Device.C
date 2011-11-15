@@ -13,10 +13,12 @@
 #include "MeshRegionInfo.h"
 #include "SimulationOptions.h"
 #include "AtomisticStructure.h"
+#include "QuantumContact.h"
 
-#include "mesh.h"
+#include "gmsh_io.h"
 #include "equation_systems.h"
-
+#include "mesh.h"
+#include "elem.h"
 #include "Messages.h"
 
 #include <iostream>
@@ -55,7 +57,7 @@ Device::Device(void)
 }
 
 
-Device::~Device()
+Device::~Device(void)
 {
   // we put them first into a set because a material can be associated
   // to several IDs
@@ -116,6 +118,7 @@ Device::prepare(void)
   setup_mesh();
   setup_regions();
   setup_clusters();
+  setup_quantum_contacts();
   setup_atomistic_structures();
 }
 
@@ -366,7 +369,74 @@ Device::setup_atomistic_structures(void)
   Messages::debug("Control::create_atomistic_structures() end");
 }
 
+void
+Device::setup_quantum_contacts(void)
+{
 
+  Messages::debug("Control::create_quantum_contacts() begin");
+
+  ModelOptions::const_submodel_iterator it(_options.submodels_begin("Quantum_contact"));
+  const ModelOptions::const_submodel_iterator end(_options.submodels_end("Quantum_contact"));
+
+  for ( ; it != end; ++it)
+  {
+
+    const ModelOptions& data = it->second;
+
+    const string& name = data.get_name();
+
+    const string& region = data.get_option("regions","none");
+
+    double length = data.get_option("length", 0.5);
+
+    Messages::info(" ");
+    Messages::info("Creating quantum contact "+name);
+
+    std::vector<ID> rg_ids, bd_ids;
+
+    // We get mesh regions (not active regions).
+    // Only one region is allowed for the moment
+    get_mesh_region_ids(region, rg_ids);
+
+    if (rg_ids.size()==0)
+      throw InitFailedException("In Quantum_contact user must define a valid mesh region");
+
+    get_boundary_region_ids(name, bd_ids);
+
+    ID newid = _mesh_region_info->next_id();
+
+    QuantumContact* st = QuantumContact::create();
+
+    st->init(newid, name, this, _bd_regions, rg_ids, bd_ids, length);
+
+    // Defined quantum contact is put in the quantum_contact_map
+    _quantum_contact_map[name] = st;
+
+    _mesh_region_info->add_id(newid);
+
+    _mesh_region_info->set_name(newid, name);
+
+    std::vector<ID> vid(1,newid);
+
+    //std::cout<<"material new region: "<<rg_ids[0]<<std::endl;
+
+    set_material(get_material(rg_ids[0]), vid, name);
+
+  }
+
+  if (_options.has_submodel("Quantum_contact") )
+  {
+
+    const string& meshfile = _options["meshfile"];
+
+    std::cout<<"write meshfile new_"+meshfile<<std::endl;
+
+    GmshIO(*_mesh).write("new_" + meshfile);
+
+   }
+
+  Messages::debug("Control::create_quantum_contacts() end");
+}
 
 
 void
@@ -972,6 +1042,9 @@ Device::set_cluster(const string& name, const vector<ID>& ids)
 
   _cluster_map[name] = ids;
 }
+
+
+
 
 
 
