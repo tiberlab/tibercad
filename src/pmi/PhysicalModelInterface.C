@@ -244,8 +244,10 @@ void
 PhysicalModelInterface::set_owner(const PhysicalObject* owner)
 {
   _owner = owner;
-  if (_owner->get_type() == PhysicalObject::BULK)
+  if ((_owner != NULL) && (_owner->get_type() == PhysicalObject::BULK))
     _bulk_material = static_cast<const Material*>(_owner);
+  else
+    _bulk_material = NULL;
 }
 
 
