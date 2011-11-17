@@ -57,6 +57,7 @@ class TBDLLOCAL Negf : public SimulationInterface
     //! Solve the MyPoisson equation
     virtual void do_solve(void);
 
+    void do_assemble(const ModelOptions& opt);
 
     //! Print some useful information
     //virtual void do_print_info(void);
@@ -78,7 +79,11 @@ class TBDLLOCAL Negf : public SimulationInterface
         std::map<ID, std::vector<double> >& values,
         const std::vector<Point>& p);
 
+    void setup_effectivemass_hamil(void);
+
     static void reorder_assemble(EquationSystems& es, const std::string& system_name);
+
+    static void ham_assemble(EquationSystems& es, const std::string& system_name);
 
     static Negf* static_this;
 
@@ -86,15 +91,20 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void do_reorder_assemble(EquationSystems& es, const std::string& system_name);
 
+    void do_ham_assemble(EquationSystems& es, const std::string& system_name);
+
     bool do_compare(ID i, ID j);
 
     void test_project_on_boundary(void);
 
   private:
 
+    void activate_quantum_contacts(void);
+    void deactivate_quantum_contacts(void);
+
     Device* _device;
 
-    std::vector<std::string> _contacts;
+    std::vector<std::string> _contact_names;
 
     SimulationEnvironment* _env;
 
@@ -103,8 +113,18 @@ class TBDLLOCAL Negf : public SimulationInterface
     Negf(const ModelOptions& option);
 
     TiberLinearSystem* _sys;
+    TiberLinearSystem* _sys_H;
+    TiberLinearSystem* _sys_S;
 
     std::vector<ID> _permu;
+
+    std::vector<ID> _end_blocks;
+
+    unsigned int _n_blocks;
+
+    std::string _pot_module;
+
+
 };
 
 #endif

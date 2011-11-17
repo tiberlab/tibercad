@@ -22,16 +22,18 @@
 #include "cell_prism6.h"
 #include "cell_hex8.h"
 #include "gmsh_io.h"
+#include "dof_map.h"
+
 
 #include <fstream>
 #include <set>
 
 
 QuantumContact::QuantumContact(void)
-  : _device(NULL),
-    _mesh(NULL),
-    _bd_regions(NULL),
-    _id(0)
+: _device(NULL),
+  _mesh(NULL),
+  _bd_regions(NULL),
+  _id(0)
 {
 
 }
@@ -144,6 +146,44 @@ QuantumContact::get_normal(unsigned int& count)
   return normal1;
 
 }
+
+void
+QuantumContact::activate_elements(void)
+{
+  MeshBase::element_iterator it = _mesh->level_elements_begin(0);
+  const MeshBase::element_iterator end = _mesh->level_elements_end(0);
+
+  for ( ; it != end; ++it)
+  {
+    Elem* elem = *it;
+    ID elid = elem->subdomain_id();
+
+    if(elid==_id)
+    {
+       //std::cout<<"activating element "<<elem->id()<<std::endl;
+       elem->set_refinement_flag(Elem::DO_NOTHING);
+    }
+  }
+}
+
+void
+QuantumContact::inactivate_elements(void)
+{
+  MeshBase::element_iterator it = _mesh->level_elements_begin(0);
+  const MeshBase::element_iterator end = _mesh->level_elements_end(0);
+
+  for ( ; it != end; ++it)
+  {
+    Elem* elem = *it;
+    ID elid = elem->subdomain_id();
+
+    if(elid==_id)
+    {
+       elem->set_refinement_flag(Elem::INACTIVE);
+    }
+  }
+}
+
 
 void
 QuantumContact::extend_mesh(void)
@@ -326,7 +366,6 @@ QuantumContact::extend_mesh(void)
       }
     }
   }
-
   // 3D CASE -------------------------------------------------------------
   //
   // ---------------------------------------------------------------------
@@ -385,7 +424,7 @@ QuantumContact::extend_mesh(void)
         // determinat must be negative, otherwise swap points
         if (Deter(_mesh->point(nodevec[0]), _mesh->point(nodevec[1]), _mesh->point(nodevec[2]))<0)
           std::swap(nodevec[1], nodevec[2]);
-       }
+      }
 
       if (countnodes==4)
       {
@@ -492,6 +531,7 @@ QuantumContact::extend_mesh(void)
   // Prepare for use (1D, 2D, 3D)
   _mesh->prepare_for_use(true);
 
+
   // Adding neighbors to new elements (1D, 2D, 3D)
   {
     BoundaryRegions::side_iterator it =  _bd_regions->sides_begin(_bd_ids);
@@ -545,7 +585,7 @@ QuantumContact::extend_mesh(void)
 
      }
   }
-  */
+   */
   //neighbor mapping
   //std::cerr<<"Old elements : "<<std::endl;
   {
@@ -586,8 +626,8 @@ QuantumContact::Deter (const Point& P1, const Point& P2, const Point& P3)
 {
 
   double d =   P1(0)*P2(1)*P3(2) + P2(0)*P3(1)*P1(2)
-             + P3(0)*P1(1)*P2(2) - P1(2)*P2(1)*P3(0)
-             - P2(2)*P3(1)*P1(0) - P3(2)*P1(1)*P2(0);
+                 + P3(0)*P1(1)*P2(2) - P1(2)*P2(1)*P3(0)
+                 - P2(2)*P3(1)*P1(0) - P3(2)*P1(1)*P2(0);
   return d;
 }
 
@@ -614,7 +654,7 @@ QuantumContact:: set2vec(const std::set<ID>& set)
 
   for( ; it!=end; ++it)
   {
-     vec.push_back(*it);
+    vec.push_back(*it);
   }
 
   return vec;
@@ -658,13 +698,13 @@ QuantumContact::project_on_boundary(const Elem* elem,const Point& point )
 
   if(_mesh->mesh_dimension() == 3)
   {
-   Point e = p[2]-p[0];
-   Point f = a.cross(e);
-   double g = b*f;
-   double h = f*f;
-   Point i = f*g;
-   Point l = i/h;
-   out = b-l+p[0];
+    Point e = p[2]-p[0];
+    Point f = a.cross(e);
+    double g = b*f;
+    double h = f*f;
+    Point i = f*g;
+    Point l = i/h;
+    out = b-l+p[0];
   }
   //std::cerr<< "sidelem "<<sidelem->id()<<std::endl;
 

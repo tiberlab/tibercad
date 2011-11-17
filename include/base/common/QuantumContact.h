@@ -12,9 +12,10 @@
 #include "ModelOptions.h"
 #include "ElementSide.h"
 
+
 #include <string>
 
-
+class DofMap;
 class MeshRegionInfo;
 class BoundaryRegions;
 
@@ -65,6 +66,9 @@ class QuantumContact
 
     void plot(const std::string& name);
 
+
+    void activate_elements(void);
+    void inactivate_elements(void);
 
     static std::vector<ID> set2vec(const std::set<ID>& set);
     static std::set<ID> vec2set(const std::vector<ID>& vec);
