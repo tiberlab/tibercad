@@ -173,11 +173,11 @@ AC_DEFUN([TC_MKL],
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
-      x86_64-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/em64t" ;;
-      i?86-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/32" ;;
+      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/em64t -Wl,-rpath,$tc_cv_mkl_dir/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
+      i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
-    AC_SUBST([MKL_LIBDIR])
+    AC_SUBST([MKL_LIBS])
     AC_SUBST([MKL_INCLUDEDIR])
     AC_SUBST([HAVE_MKL])
   fi

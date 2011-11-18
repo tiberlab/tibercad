@@ -54,7 +54,7 @@ Library tibercad
 
 Library boost
 {
-  inlcudes = @LIBMESH_PETSC_LIBDIR@/../include
+  includes = @LIBMESH_PETSC_LIBDIR@/../include
 }
 
 
@@ -73,9 +73,8 @@ Library libmesh
 
 Library petsc
 { 
-  path = @LIBMESH_PREFIX@/../petsc-3.0.0-p10
-  #includes = (include, include/mpiuni, @ARCH/include)
-  includes = (include, include/mpiuni, linux-gnu-i686/include)
+  path = @LIBMESH_PREFIX@/../petsc-3.0.0-p12
+  includes = (include, include/mpiuni, @ARCH/include)
   libpath = @LIBMESH_PETSC_LIBDIR@
   linker_flags = -lpetsc_real
 }

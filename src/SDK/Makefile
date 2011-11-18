@@ -46,6 +46,7 @@ endif
 
 $(topdir)/$(ARCH)/bin/build_module$(SUFF): $(objects) 
 	@echo "Compiling build_module executable ..."
+	@mkdir -p $(topdir)/$(ARCH)/bin
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
 
 $(topdir)/bin/build_module-$(BUILD): $(cross_srcfiles)

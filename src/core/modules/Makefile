@@ -8,7 +8,7 @@ subdirs :=  excitons dssc common boltzmann thermal drift-diffusion elasticity
 
 include $(topdir)/Make.common
 
-modules: all
+#modules: all
 
 include $(topdir)/Make.rules
 
