@@ -113,7 +113,7 @@ void EigenvalueProblem::compute_dispersion(void)
   //if (disp_range[0] < 0) disp_range[0]=0;
   unsigned int number_of_eigs;
 
-  std::cout<<"(EP)number of kp  " << number_of_k_points << std::endl;  
+  std::cout<<"(EP) number of kpoints: " << number_of_k_points << std::endl;  
 
   {
     unsigned int i = 0;

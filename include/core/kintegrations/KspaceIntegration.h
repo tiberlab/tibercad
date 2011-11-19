@@ -20,9 +20,9 @@
 #include <map>
 
 
-typedef std::map <const Elem*, double> DofField;
-typedef std::map <const Elem*, std::vector<double> > DofFieldArray;  
-
+//typedef std::map <const Elem*, double> DofField;
+//! Definition of DofField that maps a dof index to a double.
+typedef std::vector<double> DofField;
 
 class KspaceIntegration : public TiberModelObject 
 {
@@ -65,7 +65,8 @@ class KspaceIntegration : public TiberModelObject
   void solve(void);
 
   DofField get_solution(void) const;
-  
+ 
+  void get_solution(DofField& density) const; 
 
  protected:
 
@@ -96,10 +97,14 @@ class KspaceIntegration : public TiberModelObject
   //!result after integration: maps the real space mesh to the integrated quantity
   DofField real_space_density;
  
+  //! temporary field arrays
+  DofField dens_at_k_elem;
+
+  DofField dens_at_k_point;
+
   //! kspace must be built in the derived classes
   Kspace* _kspace;
 
-  
   
  private:
 
@@ -127,7 +132,7 @@ class KspaceIntegration : public TiberModelObject
 
 
   //!map from Elem in the k-grid to an integrated quantity used for the refinement criterion
-  KMeshToIntegratedValue kspace_integral;
+  KMeshToIntegratedValue error_estimator;
 
   //!is used for k-space output
   std::string additional_name_suffix;
@@ -167,5 +172,11 @@ KspaceIntegration::get_solution(void) const
   return real_space_density;
 }
 
+inline
+void
+KspaceIntegration::get_solution(DofField& density) const
+{
+  density = real_space_density;
+}
 
 #endif

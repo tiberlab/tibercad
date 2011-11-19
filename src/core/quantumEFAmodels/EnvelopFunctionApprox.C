@@ -800,23 +800,30 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
    
   set_k_point(k_point);
 
-  estimate_spectrum_shift();
-
-  apply_bc(); 
-
-  if (verbose() > 0)
+  if (opt.job == BULKEIGENSTATES )
   {
-    ostringstream os;
-    os << "(EFA) Solving for k = ( "<<
-      _k_vector[0]<<" "<<_k_vector[1]<<" "<<_k_vector[2]<< " )";
-    Messages::info(os.str());
+    solve_bulk();
   }
+  else
+  { 
+    estimate_spectrum_shift();
+    
+    apply_bc(); 
+    
+    if (verbose() > 0)
+    {
+      ostringstream os;
+      os << "(EFA) Solving for k = ( "<<
+        _k_vector[0]<<" "<<_k_vector[1]<<" "<<_k_vector[2]<< " )";
+      Messages::info(os.str());
+    }
+    
+    //assemble();
+    
+    solve_eigen_value_problem(solver_opt.number_of_eigenstates, 
+                              solver_opt.spectrum_shift/Hartree);
 
-  //assemble();
-  
-  solve_eigen_value_problem(solver_opt.number_of_eigenstates, 
-                            solver_opt.spectrum_shift/Hartree);
-
+  }
 }
 
 //===========================================================//
@@ -1022,14 +1029,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
                 for (short i = 0; i < dim; i++)
                 {
                   value -= JxW[qp]* dphi[p1][qp](i) * phi[p2][qp] * model_Ham[band1][band2].linear_left[i]
-                                                                                                        * Complex(0.0, -1.0);
+                                                       * Complex(0.0, -1.0);
                 }
                 //linear right
 
                 for (short i = 0; i < dim; i++)
                 {
                   value += JxW[qp]* dphi[p2][qp](i) * phi[p1][qp] * model_Ham[band1][band2].linear_right[i]
-                                                                                                         * Complex(0.0, -1.0);
+                                                       * Complex(0.0, -1.0);
 
                 }
 
@@ -1039,7 +1046,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
                   for (short j = 0; j < dim; j++)
                   {
                     value -= JxW[qp] * dphi[p1][qp](i) * dphi[p2][qp](j)*model_Ham[band1][band2].quad[i][j]
-                                                                                                         * Complex(0.0,-1.0) * Complex(0.0, -1.0);
+                               * (-1.0); //Complex(0.0,-1.0) * Complex(0.0, -1.0);
 
                   }
 
@@ -1572,7 +1579,8 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
 		  for (unsigned int p2=0; p2<n_psi_dofs; p2++)
 		    {
 		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
-		      temp += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  phi[p2][qp] * conj(eigen_f_value2) );
+		      temp += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 * 
+                                      phi[p2][qp] * conj(eigen_f_value2) );
 		    }
 		}
 
@@ -1714,7 +1722,8 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
 		    {
 		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
-		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  phi[p2][qp] * conj(eigen_f_value2) ) * chem_pot_value_eV;
+		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  
+                                phi[p2][qp] * conj(eigen_f_value2) ) * chem_pot_value_eV;
 
 		    }
 		}
@@ -1858,7 +1867,8 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 
 		    {
 		      eigen_f_value2 = eigen_vector[dof_indices[p2]];
-		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  phi[p2][qp] * conj(eigen_f_value2) ) * Temperature;
+		      result += ( JxW[qp] * phi[p1][qp] * eigen_f_value1 *  
+                                  phi[p2][qp] * conj(eigen_f_value2) ) * Temperature;
 
 		    }
 		}
@@ -2207,8 +2217,12 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
     short result1 = model_Ham.size();
 
-    if (result1 != result) throw InitFailedException("EnvelopFunctionApprox: Hamiltonians of different materials have different number of bands");
-
+    if (result1 != result)
+    {
+      std::string mess = "EnvelopFunctionApprox: Hamiltonians of different";
+      mess += " materials have different number of bands";
+      throw InitFailedException(mess);
+    }
 
   }
 
@@ -2256,11 +2270,13 @@ void EnvelopFunctionApprox::solve_bulk(void)
   Tensor2Sym strain_crystal_system(0);
   _strain_interface.get_crystal_strain(mat_elem, qp, strain_crystal_system);
 
+  std::cout<<"(EP) strain exx "<<strain_crystal_system(1,1)<<std::endl;
+  std::cout<<"(EP) strain eyy "<<strain_crystal_system(2,2)<<std::endl;
+  std::cout<<"(EP) strain ezz "<<strain_crystal_system(3,3)<<std::endl;
+
   double electric_potential = 0;
   if (opt.consider_potential)
     electric_potential = get_electric_potential( mat_elem, qp );
-
-
 
 
   element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
@@ -2276,7 +2292,6 @@ void EnvelopFunctionApprox::solve_bulk(void)
     for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
     {
       ham_matrix[band1 + band2 * opt.number_of_bands] = model_Ham[band1][band2].constant;
-
 
     }
 

@@ -15,7 +15,8 @@ class KspaceIntegration;
  * The task of this class is to calculate the spectrum at a certain given
  * k-point and compute k-space integrations of the spectrum
  */
-typedef std::map<const Elem*, double> DofField;
+//typedef std::map<const Elem*, double> DofField;
+typedef std::vector<double> DofField;
 
 
 class Optics : public SimulationInterface
@@ -63,8 +64,10 @@ class Optics : public SimulationInterface
      \param polariz polarization vector of a linearly polarized light (must be a normalized one, \f$ |{\bf e}| = 1 \f$)
     
     */
-    void calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
-                                                std::map<const Elem*, double>& spectrum);
+    void calculate_spectrum(const Mesh& Energy, 
+		            double Gamma,
+			    const Tensor1& polariz, 
+                            DofField& spectrum);
 
     //! Set k-vector for calculation
     void set_k_point(const Point& k_vec);
@@ -95,8 +98,10 @@ class Optics : public SimulationInterface
 
 
     //! compute optical spectrum (currently only for one fixed polarization)
-    virtual void do_calculate_spectrum(const Mesh& Energy, double Gamma, const Tensor1& polariz, 
-                                    std::map<const Elem*, double>& spectrum); 
+    virtual void do_calculate_spectrum(const Mesh& Energy,
+		                       double Gamma,
+				       const Tensor1& polariz, 
+                                       DofField& spectrum); 
 
 
     //! compute matrix elements of P 
@@ -185,7 +190,7 @@ class Optics : public SimulationInterface
 
 inline
 void Optics::calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz, 
-                            std::map<const Elem*, double>& spectrum)
+                            DofField& spectrum)
 {
   do_calculate_spectrum(Energy, Gamma, polariz, spectrum);
 }

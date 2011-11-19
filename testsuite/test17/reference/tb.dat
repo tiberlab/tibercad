@@ -1,0 +1,6 @@
+# TB eigenstates (tb)
+# Index Particle EigenEnergy     Occupation  FermiLevel Temperature
+      0      hl   -1.70978              0           0         300
+      1      hl   -1.70978              0           0         300
+      2      el    1.61431              0           0         300
+      3      el    1.61431              0           0         300

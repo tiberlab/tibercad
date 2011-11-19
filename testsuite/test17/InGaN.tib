@@ -82,12 +82,12 @@ Module empirical_tb
   plot = (tbstates, ProbabilityDensity)
   jmol_output_format = cube
 
-  assemble_hamiltonian = false
+  #assemble_hamiltonian = false 
 
   Solver
   {
-    load_states = true 
-    load_path = output3
+    #load_states = true 
+    #load_path = output3
     num_valence_eigenvalues = 2 
     num_conduction_eigenvalues = 2 
     long_tolerance = 1e-6
@@ -167,47 +167,14 @@ Module driftdiffusion
      use_density_predictor = true
      background_conductivity = 1e-6
 
-     #  polarization (piezo, pyro) {}
-     #  polarization (pyro) {}
 
-#    particle_density  #electron
-#    {
-#      statistics = fermidirac
-#      particle  = electron
-
-     # where to get the quantum densities from
-#      quantum_density = (tb)          #per calculo selfconsistent
-
-#    }#particle_density electron
-  
-#	embracing
-#      {
-#        embracing_length = 1e-9
-#        plot_embracing_regions = true
-#      }
-
-#   particle_density  #hole
-#    {
-      # use Fermi-Dirac statistics
-#      statistics = fermidirac
-
-#      particle  = hole
-     # quantum_density = dens_hl
-
-#      embracing
-#      {
-#        embracing_length = 1e-9
-#        plot_embracing_regions = true
-#      }
-#    }#particle_density hole
-
-	recombination   srh {
+     recombination   srh {
 	}
 
-    recombination  direct
-    { 
-     C = 1.1e-8
-    }
+     recombination  direct
+     { 
+        C = 1.1e-8
+     }
 
     mobility
     { 
@@ -294,9 +261,8 @@ Simulation
   searchpath = /home/mlopez/Desktop/materials
 
   solve = (strain,driftdiffusion,tb,spectrum)
-  #solve = (strain)
 
-  resultpath =  output3
+  resultpath =  output
   output_format = grace
 
 }

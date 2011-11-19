@@ -211,3 +211,31 @@ Messages::newline(void)
   TeeStream ts(cout, _log);
   ts << endl << flush;
 }
+
+void
+Messages::frameline(const std::string start, const char ch, const std::string name)
+{
+  //ostringstream os;
+  //os << start;
+  //os.fill(ch);
+  //os.width(Messages::available_width() - start.length());
+  //os << "" << Messages::endl;
+
+  int w = Messages::available_width();
+  int wn = name.length();
+  int wc = wn > 0 ? 2 : 0;
+  string s;
+  s.reserve(w);
+  s += start;
+  w -= start.length() + 2*wc + name.length();
+  for (int i = 0; i < w / 2; i++)
+    s += ch;
+  if (wn > 0) s += " (";
+  s += name;
+  if (wn > 0) s += ") ";
+  for (int i = 0; i < (w / 2 + w % 2); i++)
+    s += ch;
+  Messages::info(s);
+
+}
+

@@ -53,7 +53,6 @@ void KspaceIntegration::calculate_density()
   AutoPtr<QBase> qrule(QBase::build(quadrature_type, k_dim, integration_order));
 
   fe->attach_quadrature_rule(qrule.get());
-cout<<"fe qrule attached\n";
 
   const std::vector<Real>& JxW = fe->get_JxW();
 
@@ -75,19 +74,22 @@ cout<<"fe qrule attached\n";
   //std::vector<unsigned int> dof_indices;
   // ------- INTEGRATION --------------------------------------------------------
 
+  dens_at_k_elem.clear();
+  dens_at_k_point.clear();
+  real_space_density.clear();      
+
   for ( ; it_k_space != it_k_end ; ++it_k_space) //loop over k space elements
   {
     const KElem* kelem = *it_k_space;
 
     KMeshToIntegratedValue::iterator it_k_elem;
 
-    DofField dens_at_k_elem;
    
     // Skipping elements already computed in a previous mesh refin steps
-    // kspace_integral == map<KMesh,double>;
-    it_k_elem = kspace_integral.find(kelem);
+    // error_estimator == map<KMesh,double>;
+    it_k_elem = error_estimator.find(kelem);
 
-    if (it_k_elem == kspace_integral.end())
+    if (it_k_elem == error_estimator.end())
     {
 
       fe->reinit(kelem);
@@ -102,45 +104,56 @@ cout<<"fe qrule attached\n";
         }
 	if (verbose > 3) 
 		std::cout << "(KIntegration) k_point:  "<<  q_point[qp] << std::endl;
+      
+	double error_value;
+        //dens_at_k_point.clear();
 
-        DofField  dens_at_k_point;
-        
-        double integrated_quantity;
-
-	calculate_for_k_point( q_point[qp], dens_at_k_point, integrated_quantity);
-
+	calculate_for_k_point( q_point[qp], dens_at_k_point, error_value);
 
         // build the map between k-points and the integrated error quantity
-	kspace_integral[kelem] += integrated_quantity * JxW[qp] * factor;
+	error_estimator[kelem] += error_value * JxW[qp] * factor;
 
-	// iterator over the real mesh 
-	// add quad point contrib for every real-space element         
-	DofField::iterator dens_it = dens_at_k_point.begin();
-	DofField::iterator dens_it_end = dens_at_k_point.end();
+        std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
+ 
+	// add quad point contrib for every real-space element-------------         
+        if (dens_at_k_elem.size() == 0)
+	{	
+            dens_at_k_elem.resize(dens_at_k_point.size());
 
-	for ( ; dens_it != dens_it_end ; ++dens_it) //loop over real space elements
-	{
-	  const Elem* el = dens_it->first;
-
-	  dens_at_k_elem[el] += (dens_it->second) * JxW[qp] * factor;
-	} 
-
+            for(unsigned int el=0; el < dens_at_k_point.size(); el++) 
+                 dens_at_k_elem[el] = dens_at_k_point[el] * JxW[qp] * factor;
+	}
+	else
+	{	
+	    for(unsigned int el=0; el < dens_at_k_point.size(); el++) 
+                 dens_at_k_elem[el] += dens_at_k_point[el] * JxW[qp] * factor;
+	}
+        //-------------------------------------------------------------------   
       }  //qp sum (dens_at_k_elem is computed)
  
       if (verbose > 3)
-	  std::cout << "Contribution at k-element  "<<kspace_integral[kelem]<<"\n";
+	  std::cout << "Contribution at k-element  "<<error_estimator[kelem]<<"\n";
 
       // either register on a map (density_at_k) or update immediatly real_space_dens
       if (opt.k_domain_refinement)
 	density_at_k.insert(pair<const KElem*, DofField >(kelem, dens_at_k_elem));
       else
       {
-        DofField::iterator field_it  = dens_at_k_elem.begin();
-        DofField::iterator field_end = dens_at_k_elem.end();
-      
-        for( ; field_it != field_end ; ++field_it )
-          real_space_density[field_it->first]  += field_it->second;
-       }
+	if (real_space_density.size() == 0 )
+	{	
+            real_space_density.reserve(dens_at_k_elem.size());
+
+            for(unsigned int el=0; el <dens_at_k_elem.size(); el++) 
+                 real_space_density.push_back(dens_at_k_elem[el]);
+	}
+	else
+	{	
+            for(unsigned int el=0; el <dens_at_k_elem.size(); el++) 
+      		 real_space_density[el] += dens_at_k_elem[el];
+  	}  
+      }
+      std::cout<<"dens_at_k_elem: "<<dens_at_k_elem.size()<<std::endl;
+      dens_at_k_elem.clear();
 
     } // if new k_elem
   
@@ -152,20 +165,23 @@ cout<<"fe qrule attached\n";
     MeshBase::const_element_iterator it_k_space = kmesh->active_elements_begin();
     const MeshBase::const_element_iterator it_k_end = kmesh->active_elements_end();
 
+    real_space_density.reserve(dens_at_k_elem.size());
+    for(unsigned int el=0; el <dens_at_k_elem.size(); el++) 
+        real_space_density.push_back(0.0);
+
     for ( ; it_k_space != it_k_end ; ++it_k_space)
     {
       const KElem* kel = *it_k_space;
 
       DofField& dens_at_k_elem = density_at_k[kel];
 
-      DofField::iterator field_it =   dens_at_k_elem.begin();
-      DofField::iterator field_end =  dens_at_k_elem.end();
-
-      for ( ; field_it != field_end ; ++field_it )
- 	real_space_density[field_it->first] += field_it->second;
+      for(unsigned int el=0; el <dens_at_k_elem.size(); el++) 
+             real_space_density[el] += dens_at_k_elem[el];
     }
 
   }
+      
+  std::cout<<"density: "<<real_space_density.size()<<std::endl;
 
 }
 
@@ -182,9 +198,9 @@ void KspaceIntegration::calculate_convergent_density()
 
   density_at_k.clear();
 
-  kspace_integral.clear();
+  error_estimator.clear();
 
-  real_space_density.clear();
+  //real_space_density.clear();
 
   calculate_density();
 
@@ -235,7 +251,7 @@ void KspaceIntegration::calculate_convergent_density()
 
 	old_density = real_space_density;
 
-	real_space_density.clear();
+	//real_space_density.clear();
 
 	calculate_density();
 
@@ -396,7 +412,7 @@ void KspaceIntegration::estimate_error_for_refinement(ErrorVector& error)
     const KElem* el = *elem_it1;
     const unsigned int el_id = el->id();
 
-    error[el_id] = abs(kspace_integral[el]); //test
+    error[el_id] = abs(error_estimator[el]); //test
   }
 
 }
@@ -408,12 +424,8 @@ double  KspaceIntegration::estimate_error(void)
   double result;
   double t1 = 0.0; double t2 = 0.0;
 
-  DofField::iterator it = real_space_density.begin();
-  const DofField::iterator it2 = real_space_density.end();
-
-  for (; it != it2; ++it)
+  for(unsigned int el=0; el < real_space_density.size(); el++) 
   {
-    const Elem* el = it->first;
 
     t1 += real_space_density[el] * real_space_density[el];
 
@@ -466,7 +478,7 @@ unsigned int KspaceIntegration::count_elements() const
     const KElem* el = *elem_it;
 
 
-    KMeshToIntegratedValue::const_iterator it1 = kspace_integral.find(el);
+    KMeshToIntegratedValue::const_iterator it1 = error_estimator.find(el);
 
 
     result[j] = it1->second / el->volume();

@@ -69,29 +69,28 @@ void GraceIO::write_nodal_data(const std::string& fname,
   double po_z = mesh.point(0)(2);
   double dl = 0.0;
   
-  //MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
-  //const MeshBase::const_element_iterator end = mesh.active_elements_end();
+  for(unsigned int i = 0; i < mesh.n_nodes(); i++)
+  {
+    std::vector<double> values;
 
-  //for ( ; it != end; ++it)
-  //{
-  //  const Elem* elem = *it;
+    // Get the global id of the node
+    unsigned int global_id = i; //elem->node(i);
 
-    for(unsigned int i = 0; i < mesh.n_nodes(); i++)
+    for(unsigned int c=0; c<n_vars; c++)
     {
-      std::vector<double> values;
+      values.push_back(soln[global_id*n_vars + c]);
+    }
 
-      // Get the global id of the node
-      unsigned int global_id = i; //elem->node(i);
+    // This is done to make the Grace plot independent 
+    // from the mesh dimension
 
-      for(unsigned int c=0; c<n_vars; c++)
-      {
-        values.push_back(soln[global_id*n_vars + c]);
-      }
-
-      // This is done to make the Grace plot independent 
-      // from the mesh dimension
-
-
+    if (mesh.mesh_dimension()==1)
+    {
+      double p_x = mesh.point(global_id)(0);
+      node_map[p_x] = values;     
+    }
+    else
+    {
       double p_x = mesh.point(global_id)(0);
       double p_y = mesh.point(global_id)(1);
       double p_z = mesh.point(global_id)(2);
@@ -105,9 +104,8 @@ void GraceIO::write_nodal_data(const std::string& fname,
       po_x = p_x;
       po_y = p_y;
       po_z = p_z;
-
     }
-  //}
+  }
 
   out << std::setprecision(10);
 

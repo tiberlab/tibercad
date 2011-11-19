@@ -456,6 +456,13 @@ SimulationInterface::reinit(void)
 void
 SimulationInterface::init(void)
 {
+  if (verbose() > 0)
+  {
+    Messages m;
+    m.newline();
+    m.frameline(">>>>",'>');
+  }
+
   if (!_is_initialized)
   {
     Messages::debug("Initialize " + get_name() + "... ");
@@ -479,17 +486,13 @@ SimulationInterface::init(void)
 
   Messages::debug("init of " + get_name() + " done");
 
+
   if (verbose() > 0)
   {
     Messages m;
-    m.newline();
     {
       ostringstream os;
-      os << ">>>>";
-      os.width(Messages::available_width() - 4);
-      os.fill('>');
-      os << "" << Messages::endl
-          << "Simulation options for " << get_name() << " (" <<
+      os << "Simulation options for " << get_name() << " (" <<
           get_type() << ")";
 
       m.info(os.str());
@@ -524,6 +527,7 @@ SimulationInterface::init(void)
           m.indent();
           mod->print_info();
           m.unindent();
+          m.newline();
         }
       }
     }
@@ -537,15 +541,8 @@ SimulationInterface::init(void)
 
     m.unindent();
     m.newline();
-    {
-      ostringstream os;
-      os << "<<<<";
-      os.width(Messages::available_width() - 4);
-      os.fill('<');
-      os << "" << Messages::endl;
-      m.info(os.str());
-    }
-    m.newline();
+    m.frameline("<<<<",'<');
+
   }
 }
 
@@ -711,17 +708,8 @@ SimulationInterface::solve(void)
 
   Messages m;
   m.newline();
-  {
-    string s(">>>>");
-    s.reserve(Messages::available_width());
-    for (int i = 0; i < Messages::available_width() - 4; i++)
-      s += "-";
-    m.info(s);
-    ostringstream os;
-    os << get_type() << " (name: " << get_name() << ")" << endl;
-    m.info(os.str());
-    m.newline();
-  }
+  m.frameline(">>>>",'-',get_name());
+
   m.indent();
 
 
@@ -777,18 +765,7 @@ SimulationInterface::solve(void)
   Messages::newline();
   Messages::info(os.str());
 
-  int w = Messages::available_width();
-  string s("<<<<");
-  s.reserve(w);
-  w -= 8 + get_name().size();
-  for (int i = 0; i < w / 2; i++)
-    s += "-";
-  s += " (";
-  s += get_name();
-  s += ") ";
-  for (int i = 0; i < (w / 2 + w % 2); i++)
-    s += "-";
-  m.info(s);
+  Messages::frameline("<<<<",'-');
 
   perflog.stop_event("solve");
 }

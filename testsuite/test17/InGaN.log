@@ -1,8 +1,8 @@
 
-Log start: Mon Sep  5 16:18:53 2011
+Log start: Sat Nov 19 10:32:08 2011
 
 
-tiberCAD release 2.1.0 (rev. 2915, x86_64-linux)
+tiberCAD release 2.1.0 (rev. 3039, x86_64-linux)
 
 Input file: InGaN.tib
 
@@ -76,15 +76,15 @@ Setting up simulation of type 'macrostrain' ...
 Creating bulk models... 
 
 Setting up simulation of type 'driftdiffusion' ...
-  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
   Adding boundary 'cathode'
-  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
   Adding boundary 'anode'
 
 Creating bulk models... 
-  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
-(using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/recombination_srh.so)
-(using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/recombination_direct.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+(using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/recombination_srh.so)
+(using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/recombination_direct.so)
 
 Setting up simulation of type 'efaschroedinger' ...
 
@@ -94,14 +94,35 @@ Setting up simulation of type 'efaschroedinger' ...
 
 Creating bulk models... 
 Setting up bulk models ...
-  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/mobility_doping_dependent.so)
-  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/band_properties_kp.so)
-  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/permittivity_constant.so)
-  (using /home/pecchia/projects/tibercad/_trunk/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/band_properties_kp.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/mobility_doping_dependent.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
+
+*** Warning: found unused options in block Physics: particle
 
 Setting up lower dimensional (boundary) models ...
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+(ETB) creating map elem->atoms
 Simulation options for tb (empirical_tb)
 
   Available solution variables:
@@ -117,29 +138,30 @@ Simulation options for tb (empirical_tb)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output3
+  Output directory      : output
   Output file format    : grace
   Output file basename  : tb
 
 
   # Region QW, InGaN (x = 0.1)
+
   # Region barrier_left, GaN
+
   # Region barrier_right, GaN
 
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Simulation options for spectrum (opticstb)
 
-  Output directory      : output3
+  Output directory      : output
   Output file format    : grace
   Output file basename  : spectrum
 
 
 
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Simulation options for strain (macrostrain)
@@ -159,19 +181,23 @@ Simulation options for strain (macrostrain)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output3
+  Output directory      : output
   Output file format    : grace
   Output file basename  : strain
 
 
   # Region QW, InGaN (x = 0.1)
+
   # Region barrier_left, GaN
+
   # Region barrier_right, GaN
+
   # Region device_left, GaN
+
   # Region device_right, GaN
 
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Simulation options for driftdiffusion (driftdiffusion)
@@ -223,7 +249,7 @@ Simulation options for driftdiffusion (driftdiffusion)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output3
+  Output directory      : output
   Output file format    : grace
   Output file basename  : driftdiffusion
 
@@ -235,13 +261,14 @@ Simulation options for driftdiffusion (driftdiffusion)
     using strain simulation: strain
     Conduction band:
       (band parameters obtained from bulk k.p)
-      Ec = 2.45067, Nc = 2.07815e+18 cm^-3
+      Ec = 2.57667, Nc = 2.07815e+18 cm^-3
       m_dos = 0.189992, v_th = 2.29098e+09 cm/s
     Valence band:
       (band parameters obtained from bulk k.p)
       Ev = -0.66033, Nv = 1.55349e+19 cm^-3
       m_dos = 0.726369, v_th = 1.17168e+09 cm/s
-    Eg = 3.111, Ef0 = 0.921172, ni = 4.20023e-08
+    Eg = 3.237, Ef0 = 0.984172, ni = 3.67215e-09
+
   # Region barrier_left, GaN
     using strain simulation: strain
     Conduction band:
@@ -253,6 +280,7 @@ Simulation options for driftdiffusion (driftdiffusion)
       Ev = -0.71033, Nv = 1.62451e+19 cm^-3
       m_dos = 0.748342, v_th = 1.15435e+09 cm/s
     Eg = 3.51, Ef0 = 1.06993, ni = 2.01197e-11
+
   # Region barrier_right, GaN
     using strain simulation: strain
     Conduction band:
@@ -264,6 +292,7 @@ Simulation options for driftdiffusion (driftdiffusion)
       Ev = -0.71033, Nv = 1.62451e+19 cm^-3
       m_dos = 0.748342, v_th = 1.15435e+09 cm/s
     Eg = 3.51, Ef0 = 1.06993, ni = 2.01197e-11
+
   # Region device_left, GaN
     using strain simulation: strain
     Conduction band:
@@ -275,6 +304,7 @@ Simulation options for driftdiffusion (driftdiffusion)
       Ev = -0.71033, Nv = 1.62451e+19 cm^-3
       m_dos = 0.748342, v_th = 1.15435e+09 cm/s
     Eg = 3.51, Ef0 = 1.06993, ni = 2.01197e-11
+
   # Region device_right, GaN
     using strain simulation: strain
     Conduction band:
@@ -287,8 +317,8 @@ Simulation options for driftdiffusion (driftdiffusion)
       m_dos = 0.748342, v_th = 1.15435e+09 cm/s
     Eg = 3.51, Ef0 = 1.06993, ni = 2.01197e-11
 
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Simulation options for kp_electrons (efaschroedinger)
@@ -304,17 +334,19 @@ Simulation options for kp_electrons (efaschroedinger)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output3
+  Output directory      : output
   Output file format    : grace
   Output file basename  : kp_electrons
 
 
   # Region QW, InGaN (x = 0.1)
+
   # Region barrier_left, GaN
+
   # Region barrier_right, GaN
 
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Simulation options for kp_holes (efaschroedinger)
@@ -330,22 +362,22 @@ Simulation options for kp_holes (efaschroedinger)
   RegionIDs                               real      cell        n
   ------------------------------------------------------------------
 
-  Output directory      : output3
+  Output directory      : output
   Output file format    : grace
   Output file basename  : kp_holes
 
 
   # Region QW, InGaN (x = 0.1)
+
   # Region barrier_left, GaN
+
   # Region barrier_right, GaN
 
-<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 We solve: strain driftdiffusion tb spectrum 
 
->>>>----------------------------------------------------------------------------
-macrostrain (name: strain)
-
+>>>>--------------------------------- (strain) ---------------------------------
   Starting the matrix assembly
   Matrix assembly done
   Update nodes... done
@@ -355,53 +387,47 @@ macrostrain (name: strain)
   Applying internal strain
   Saving strained structure in 'strained.xyz'
 
-Solve time: 0h 0m 0.068s
-<<<<--------------------------------- (strain) ---------------------------------
+Solve time: 0h 0m 0.027s
+<<<<----------------------------------------------------------------------------
 
->>>>----------------------------------------------------------------------------
-driftdiffusion (name: driftdiffusion)
-
+>>>>----------------------------- (driftdiffusion) -----------------------------
   Solving equilibrium
-  it 1, |du| = 3.8568, |r| = 4.05072e-14  alpha = 1
+  it 1, |du| = 1.41986, |r| = 4.33664e-14  alpha = 1
 
-  iterations: 2, |du| = 1.17282e-12, |r| = 3.90799e-14
+  iterations: 2, |du| = 2.99815e-12, |r| = 4.21861e-14
   Equilibrium done
 
-  Writing state to output3/driftdiffusion.tsv
+  Writing state to output/driftdiffusion.tsv
 
-Solve time: 0h 0m 0.072s
-<<<<----------------------------- (driftdiffusion) -----------------------------
+Solve time: 0h 0m 0.06s
+<<<<----------------------------------------------------------------------------
 
->>>>----------------------------------------------------------------------------
-empirical_tb (name: tb)
-
+>>>>----------------------------------- (tb) -----------------------------------
   (ETB) get band extrema from driftdiffusion
-  CB min = 1.46446  VB max = -1.71293
+  CB min = 1.59046  VB max = -1.71293
   printing structure tb.upg
-  (ETB) reading old states
-  ...done
-  (ETB) consistency check:
   (ETB) solving using lanczos
   (ETB) copy states from uptight
   (ETB) compute atom-projected charges
   (ETB) print atom-projected charges on files
 
-Solve time: 0h 0m 0.23s
-<<<<----------------------------------- (tb) -----------------------------------
+Solve time: 0h 0m 41s
+<<<<----------------------------------------------------------------------------
 (ETB) write wave functions on files
 
->>>>----------------------------------------------------------------------------
-opticstb (name: spectrum)
+>>>>-------------------------------- (spectrum) --------------------------------
+  calculation of matrix elements for dipole optical transition...
+  calculation of optical spectrum...
+  calculation of optical spectrum...
+  calculation of optical spectrum...
 
-  calculation of  matrix elements for dipole optical transition...
+Solve time: 0h 0m 0.38s
+<<<<----------------------------------------------------------------------------
 
-Solve time: 0h 0m 0.65s
-<<<<-------------------------------- (spectrum) --------------------------------
-
-Total solve time: 0h 0m 3.6s
+Total solve time: 0h 0m 44s
 Simulation finished...
 Goodbye
 
-Log end: Mon Sep  5 16:18:57 2011
+Log end: Sat Nov 19 10:32:52 2011
 
 

@@ -102,17 +102,6 @@ void Optics::parse_options()
   _opt.get_occ = !get_option("compute_strengths",false);
 
 
-  unsigned int num_nodes = (int)((_opt.Emax - _opt.Emin)/_opt.dE) + 1;
-
-  _energy_mesh = new Mesh(1);
-
-  MeshTools::Generation::build_cube (*_energy_mesh,
-				     num_nodes, 0, 0,
-				     _opt.Emin, _opt.Emax,
-				     0, 0,
-				     0, 0,
-				     EDGE2);
-
 
   _opt.Gamma = get_option("broadening", 0.007);
 
@@ -133,12 +122,6 @@ void Optics::parse_options()
     else
       throw InitFailedException("Optical Spectrum: polarization vector must be non zero");
   }
-  
-  // Kintegration options -----------------------------------------------------------------
-
-  if (get_options().has_submodel("k_integration")) 
-      init_k_space_integration();
-
 
 }
 
@@ -176,6 +159,28 @@ void Optics::do_init()
 
 
   parse_options();
+
+  _energy_mesh = new Mesh(1);
+
+  unsigned int num_elem = (int)((_opt.Emax - _opt.Emin)/_opt.dE);
+
+  MeshTools::Generation::build_cube (*_energy_mesh,
+				     num_elem, 0, 0,
+				     _opt.Emin, _opt.Emax,
+				     0, 0,
+				     0, 0,
+				     EDGE2);
+
+
+  _spectrum_x.resize(_energy_mesh->n_nodes(),0.0);
+  _spectrum_y.resize(_energy_mesh->n_nodes(),0.0);
+  _spectrum_z.resize(_energy_mesh->n_nodes(),0.0);
+
+
+ // Kintegration options ----------------------------------------------------------
+
+ if (get_options().has_submodel("k_integration")) 
+      init_k_space_integration();
 
 }
 
@@ -216,7 +221,7 @@ void Optics::compute_matrix_elements()
   int verbose = SimulationOptions::verbose();
 
   if (verbose > 0)
-    Messages::info("calculation of  matrix elements for dipole optical transition...", true);
+    Messages::info("calculation of matrix elements for dipole optical transition...", true);
 
   set_states();
 
@@ -366,14 +371,13 @@ void Optics::calculate_for_k_point(const Point& k_point,
 
   calculate_spectrum(*_energy_mesh, _opt.Gamma, _opt.polariz,  spectrum);
 
+  std::cout<<"(OPT) calc for k: "<<spectrum.size()<<std::endl;
+
   //for integrated quantity I take a sum of the map
   integrated_quantity = 0.0;
 
-  DofField::iterator it = spectrum.begin();
-  DofField::iterator itend = spectrum.end();
-
-  for (;it != itend; ++it)
-    integrated_quantity +=abs(it->second);
+  for (unsigned int k=0; k < _energy_mesh->n_nodes(); k++)
+    integrated_quantity += abs(spectrum[k]);
 
   //std::cout<<"(Optics) integrated quantity: "<< integrated_quantity<< std::endl;
 
@@ -383,16 +387,8 @@ void Optics::calculate_for_k_point(const Point& k_point,
 
 void Optics::do_solve()
 {
-  MeshBase::const_element_iterator       el     = _energy_mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = _energy_mesh->active_elements_end();
-  
-  for ( ; el!= end_el ; ++el)
-  {   
-    const Elem* elem = *el;
-    _spectrum_x[elem] = 0.0;
-    _spectrum_y[elem] = 0.0;
-    _spectrum_z[elem] = 0.0;
-  }
+ 
+
 
   if (norm(_opt.polariz) != 0)
   {
@@ -420,7 +416,8 @@ void Optics::do_solve()
     else
     {
       do_k_space_integration();
-      _spectrum_x = _k_integration->get_solution();
+      //_spectrum_x = _k_integration->get_solution();
+      _k_integration->get_solution(_spectrum_x);
     }
 
 
@@ -456,11 +453,13 @@ void Optics::do_solve()
 
 
 void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor1& polariz,
-    std::map<const Elem*, double>& spectrum )
+                                   DofField& spectrum )
 {
 
+  int verbose = SimulationOptions::verbose();
 
-  spectrum.clear();
+  if (verbose > 0)
+    Messages::info("calculation of optical spectrum...", true);
 
   std::vector<double> fs_eigen_values;
   std::vector<double> is_eigen_values;
@@ -488,6 +487,11 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
   }
 
   // loop on  eigenstates
+  //cout << "Energy nodes: " << Energy.n_nodes()<<endl; 
+  spectrum.clear();
+  spectrum.reserve(Energy.n_nodes());
+  for (unsigned int el=0; el < Energy.n_nodes(); el++)
+          spectrum.push_back(0.0);
 
   for (unsigned i = 0; i < n1; i++)  // "upper" states
   {
@@ -523,14 +527,10 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       //cout<<trans_energy<<"  "<<Me<<endl;
  
 
-      MeshBase::const_element_iterator       el     = Energy.active_elements_begin();
-      const MeshBase::const_element_iterator end_el = Energy.active_elements_end();
-      for ( ; el!= end_el ; ++el)
+      for (unsigned int el=0; el < Energy.n_nodes(); el++)
       {
 
-        const Elem* elem = *el;
-
-        double En = elem->centroid()(0);
+        double En =  Energy.point(el)(0); //elem->centroid()(0);
 
         double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)
                             + (0.5*Gamma)*(0.5*Gamma)) * Hartree;
@@ -547,7 +547,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 	//occupation probability, so it's related to electrons and it becomes f1*(1-f2)
 
         //spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
-        spectrum[elem] += 2 * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
+        spectrum[el] += 2 * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
 
 	//Note(alex): The original factor 1/(2*PI*PI) was changed to 1/(2*PI) (see below) 
 	//            and finally multiplied by 4 PI for angular integration (17/10/2011). 
@@ -581,6 +581,10 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 
   }
 
+  //cout<<"spectrum size: "<<spectrum.size()<<endl;
+  //cout<<"spectrum capacity: "<<spectrum.capacity()<<endl;
+  //for (unsigned int el=0; el < Energy.n_nodes(); el++)
+  //          cout<<spectrum[el]<<endl;
 
 }
 
@@ -599,18 +603,7 @@ void Optics::do_plot()
     plot_globaldata();
   }
 
-  vector<double> results;
-
-  {
-    MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
-    const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
-    int n = 0;
-    for(;elem_it != elem_end; ++elem_it)
-      n++;
-    
-    results.resize(n*3);
-  }
-
+  vector<double> results(_energy_mesh->n_nodes() * 3,0.0);
   
   vector<string> names(3);
     
@@ -620,6 +613,7 @@ void Optics::do_plot()
   DataOutput data_output(*_energy_mesh, format);
   data_output.set_output_directory(get_output_directory());
 
+  cout<<"output: "<<format<<endl; 
 
   if (plot_solution("optical_spectrum_k_0"))
   {
@@ -665,15 +659,16 @@ void Optics::do_plot()
   if (plot_solution("optical_spectrum") || plot_solution("optical_spectrum_k_0"))
   {
 
-    MeshBase::const_element_iterator       elem_it  = _energy_mesh->active_elements_begin();
-    const MeshBase::const_element_iterator elem_end = _energy_mesh->active_elements_end();
     int point = 0;
     
-    for(;elem_it != elem_end; ++elem_it)
+    //cout<<"Packing spectrum x, y, z "<<_energy_mesh->n_nodes()<<endl; 
+    //cout<<"size x, y, z "<<_spectrum_x.size()<<endl; 
+    //cout<<"size x, y, z "<<_spectrum_y.size()<<endl; 
+    //cout<<"size x, y, z "<<_spectrum_z.size()<<endl; 
+  
+    for(unsigned int el=0; el < _energy_mesh->n_nodes(); el++)
     {
-      const Elem* el = *elem_it;
       double value;
-      
       
       //--x - polarization
       value = _spectrum_x[el];
@@ -695,12 +690,12 @@ void Optics::do_plot()
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
       results[3*point + 2] = value;
-      
            
       point++;
     }
        
-    data_output.write_cell_data(filename, results, names);
+    cout<<"writing nodal data "<<endl; 
+    data_output.write_nodal_data(filename, results, names);
 
   }
 
