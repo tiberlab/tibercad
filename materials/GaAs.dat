@@ -136,7 +136,7 @@ N0	= (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 
 [thermal_conductivity/constant]
-ThermCond = 0.55
+ThermCond = 55
 
 
 #Thermoelectric power [mV/K]

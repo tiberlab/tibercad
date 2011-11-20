@@ -152,7 +152,7 @@ N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 [thermal_conductivity/constant]
 #Lattice thermal conductivity
-ThermCond_x = 0.45
+ThermCond = 45
 
 #Atomistic structure informations
 #

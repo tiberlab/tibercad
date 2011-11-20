@@ -1,4 +1,4 @@
-# ZnO
+#ZnO
 
 structure = wz
 dielectric = false
@@ -9,8 +9,15 @@ c = 0.5205
 
 
 [bandgap]
-#T = 0;
-Eg = 3.34
+Eg_G = 3.34
+
+[conductionband]
+m_G = 0.28
+
+[valenceband]
+E_v = 0.0
+m_dos = 0.59
+
 
 [deformation_potentials]
 a_x = 0.0
@@ -43,10 +50,9 @@ e15 = -0.45
 [pyroelectricity]
 P = -0.029
 
-
 # constant
 [mobility/constant]
-mu_max = (205, 10.0)
+mu_max = (5e-4, 5e-6.0)
 exponent = (1.0, 1.0)
 
 

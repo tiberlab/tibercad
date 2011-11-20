@@ -127,11 +127,9 @@ C =  (-2.2000e-32,	2.6300e-32)
 H =  (3.46667,		8.25688)
 N0 = (1.0000e+18,	1.0000e+18)
 
-
-
 # Lattice thermal conductivity
 [thermal_conductivity/constant]
-ThermCond = 1.66667 
+ThermCond = 166.667 
 
 
 #Thermoelectric power [V/k]
@@ -140,5 +138,32 @@ eTEpower = -0.001
 hTEpower =  0.001
 
 
+tomistic structure informations
+#
+[atomistic_structure]
+lattice_type = fcc
+
+#Basis
+
+#Number of basis specie
+n_basis_specie = 1
+#Number of basis atoms for any specie
+n_1 = 2
+#Basis vectors T_"specie"_"#of atom"_"direction"
+T_1_1_x = 0.0
+T_1_1_y = 0.0
+T_1_1_z = 0.0
+T_1_2_x = 0.25
+T_1_2_y = 0.25
+T_1_2_z = 0.25
+
+#Name of species
+specie_1 = Ge
+
+
+
+[densityfunctional_tb]
+
+dataset = pbc
 
 
