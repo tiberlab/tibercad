@@ -7,7 +7,7 @@ TIBER_MODULE(FluxBoundary,thermal_bnd, thermal_flux)
 void
 FluxBoundary::do_init(void)
 {
-  get_parameter("J", _heat_flux);
+  get_parameter("heat_flux", _heat_flux);
 }
 
 void

@@ -10,8 +10,8 @@ ThermalSurfaceResistance::do_init(void)
 {
 
   _resistance = SimulationOptions::temperature;
-  get_parameter("R", _resistance);
-  get_parameter("T", _temperature);
+  get_parameter("r_surf", _resistance);
+  get_parameter("temperature", _temperature);
 
 }
 
