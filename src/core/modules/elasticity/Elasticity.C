@@ -119,7 +119,8 @@ Elasticity::parse_options(void)
   const ModelOptions& opt = get_options();
 
   myopt.shape_error = opt.get_option("shape_error",1e-2);
-  myopt.shape_iterations = opt.get_option("shape_iterations",0);
+  myopt.shape_iterations = opt.get_option("shape_iterations",1);
+  cout<< myopt.shape_iterations<<endl;
   myopt.deformation = opt.get_option("do_deformation",false);
   myopt.magnification = opt.get_option("magnification",1);
   myopt.structure_to_be_strained = opt.get_option("strain_atomistic_structure", "all");
@@ -181,14 +182,14 @@ Elasticity::do_solve(void)
     error_u = norm/tot_norm * 100.0;
 
   
-    //The error is on the elastic energy
+    //The error is based on the elastic energy
     //double elastic_energy = abs(compute_elastic_energy());
     //error_energy = abs((new_energy - energy)/energy) * 100.0;
     //energy = new_energy;
 
     if ((SimulationOptions::verbose() > 2) && iter > 0) 
     {
-      cout<<"Iter: "<<iter<<"  Error:  "<<error_u<<endl;
+      cout<<"Iter: "<<iter<<"  Error:  "<<error_u<<" %"<<endl;
     //  cout<<"|    "<<iter<<"      ";
     //  cout<<"|    "<<new_energy<<"     ";
     //  cout<<"| "<<error_energy<<" ";
@@ -209,7 +210,7 @@ Elasticity::do_solve(void)
  
   double elastic_energy = abs(compute_elastic_energy());
   if ((SimulationOptions::verbose() > 2) && myopt.shape_iterations > 1)
-    cout<<"Elastic Energy: "<<elastic_energy<<endl;
+    cout<<"Elastic Energy: "<<elastic_energy<<" J"<<endl;
 
 }
 
@@ -667,8 +668,8 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
             bool is_extended = boundary_mod->is_extended();
 
 	    // we use a penalty approach here for its simplicity
-	    if ((b < 1e-10) && (b >= 0)) b = 1e-10;
-	    else if ((b > -1e-10) && (b<= 0)) b = -1e-10;
+	    if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+	    else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
 
 	    H /= b;
 	    R /= b;
@@ -683,7 +684,9 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	      RealGradient tmp(0);
 
               if (is_extended)
-		tmp = (stress + (C * strain)) * normal[qp];
+                tmp =(C * strain) * normal[qp];
+
+		//tmp = (stress + (C * strain)) * normal[qp];
 
               //Get the total stress (internal and external)
               //RealGradient tmp = (get_stress(elem,ref_face_points[qp]) * normal[qp]);

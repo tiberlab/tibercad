@@ -18,7 +18,7 @@ Extended::do_init(void)
   
   RealTensor H(0);
   RealGradient  R(0);
-  double A(0);
+  double A(1);
 
   set_is_extended(true);
   
