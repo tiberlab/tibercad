@@ -70,7 +70,7 @@ class TBDLLOCAL Periodic : public BoltzmannBoundaryModel
 inline
 Periodic::Periodic(const ModelOptions& options) :
   BoltzmannBoundaryModel(options),
-  _deltaT(0),
+  _deltaT(0.0),
   _periodicity(0)
 {
 }

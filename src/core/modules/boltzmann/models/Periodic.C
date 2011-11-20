@@ -25,7 +25,7 @@ Periodic::calculate(const Elem* elem, unsigned int side,
 
   set_periodicity(_periodicity);
 
-  set_coefficients(1.0, 0.0, SimulationOptions::temperature);
+  set_coefficients(1.0, 0.0, SimulationOptions::temperature + _deltaT*0.5);
 
 
 }

@@ -58,11 +58,9 @@ class TBDLLOCAL Diffusive : public BoltzmannBoundaryModel
     //! Constructor
     Diffusive(const ModelOptions& options);
 
-  double _deltaT;
+  double _p;
 
-  double _temperature;
 
-  RealGradient _periodicity;
 };
 
 

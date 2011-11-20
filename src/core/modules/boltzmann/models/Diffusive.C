@@ -10,8 +10,8 @@ Diffusive::do_init(void)
 {
   //get_parameter("deltaT", _deltaT);
 
-  //get_parameter("periodicity", _periodicity);
-
+  get_parameter("p", _p);
+ //
   //get_parameter("temperature", _temperature);
 
 }
@@ -25,8 +25,8 @@ Diffusive::calculate(const Elem* elem, unsigned int side,
 
   //set_periodicity(_periodicity);
 
-  //set_coefficients(1.0, 0.0, SimulationOptions::temperature);
 
+  set_coefficients(1.0, 0.0, _p);
 
 }
 

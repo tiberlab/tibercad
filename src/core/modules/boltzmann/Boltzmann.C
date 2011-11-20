@@ -85,7 +85,7 @@ Boltzmann::do_init(void)
   // if (is_gray)
    // do_init_boltzmann();
   
-  if (is_gray)
+  //if (is_gray)
     do_init_gray();
 
   //Create Global Domain
@@ -904,7 +904,7 @@ Boltzmann::solve_gray(void)
            double kappa_new = compute_effective_thermal_conductivity_elemental();
            E_err = abs(kappa_new - kappa)/abs(kappa_new);
            kappa = kappa_new;
-           cout<<"   Iter: "<<iter<<" K_err: "<<K_err<<" Kappa: "<<kappa_new<<" W/(m K)"<<endl;
+           cout<<"   Iter: "<<iter<<" K_err: "<<E_err<<" Kappa: "<<kappa_new<<" W/(m K)"<<endl;
          }
          else
          {
@@ -2051,11 +2051,11 @@ Boltzmann::do_solve(void)
     }
   } //if is_gray
 
-//if  (SimulationOptions::verbose() > 1)
-// {
-//  double kappa = compute_effective_thermal_conductivity_elemental();
-//  cout<<"Effettive thermal conductivity:    "<<kappa<<" W/(m K)"<<endl;
-//}
+if  (myopts.compute_kappa = true)
+ {
+  double kappa = compute_effective_thermal_conductivity_elemental();
+  cout<<"Effettive thermal conductivity:    "<<kappa<<" W/(m K)"<<endl;
+}
 
 
 }
@@ -2660,9 +2660,7 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
    system.matrix->close();
    system.rhs->close();
    //system.matrix->print_matlab("K.m");
-
    //system.rhs->print_matlab("F.m");
-
 }
 
 
@@ -2678,6 +2676,8 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
   SimulationEnvironment& se = get_environment();
 
   double value = 0.0;
+  double spec_part = 0.0;
+  double diff_part = 0.0;
   if (mod != NULL)
   {
     mod->calculate(elside.elem(), elside.side(), elside.elem()->centroid());
@@ -2695,7 +2695,7 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
          //Get the periodicity vector
          RealGradient periodicity = mod->get_periodicity();
          double DeltaT = mod->get_deltaT();
-
+         double value_eq = 0.0;
          //Get the point to search for
          AutoPtr< Elem > elem_face =  elside.elem()->build_side(elside.side());
          Point point_side = elem_face->point(0);
@@ -2704,13 +2704,22 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
          Point pt_to_search = (point_side + periodicity);
 
          //Get the element of that point
-          SideData::iterator it(SD.begin());
-          SideData::const_iterator it_end(SD.end());
+         SideData::iterator it(SD.begin());
+         SideData::const_iterator it_end(SD.end());
 
          value = 0.0;
          for ( ; it != it_end; ++it)
             if ((it->first).elem() -> contains_point(pt_to_search))
-              value = SD[it->first][solid_angle_iter] + DeltaT;
+              {
+                 value = SD[it->first][solid_angle_iter];
+
+                 ID periodic_dof = (it->first).elem()->dof_number(gray_sys_number,0,0);
+                 value_eq = (*equilibrium_energy)(periodic_dof);
+              }
+
+         DeltaT = (*equilibrium_energy)(local_dof) - value_eq;
+
+         value += DeltaT;
 
          if (value == 0.0){
            cout<<"ERROR: no ELEMENT FOUND FOR THE PERIODIC BOUNDARY CONDITIONS!!!"<<endl;
@@ -2720,23 +2729,64 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
      if (mod->get_type() == "boltzmann_bnd_diffusive")//Internal boundary or wall
      {
 
-       // ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
-       //value = (*equilibrium_energy)(dof);
+       double a,b,p;
+       mod->get_coefficients(a,b,p);
 
        //value = 0.0;
        double angle = 0.0;
+
        for (ID k = 0; k<AngInt.n_slices; k++)
        {
          double in = AngInt.dir[k] * normal;
          if (in>0.0)
          {
            angle += AngInt.d_omega[k];
-      //     cout<<SD[elside][k]<<endl;
-           value += SD[elside][k] * AngInt.d_omega[k];
+
+           diff_part += SD[elside][k] * AngInt.d_omega[k];
+           //value += SD[elside][k] * AngInt.d_omega[k];
          }
        }
-       value = value / angle;
-       //cout<<value<<endl;
+
+       //value = value /angle;
+       diff_part = diff_part /angle;
+
+
+     //  Specular part (TO BE REDO)
+       ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
+
+
+       ID n_spec = 0;
+       for (ID k = 0; k<AngInt.n_slices; k++)
+       {
+
+         if (AngInt.phi_vec[solid_angle_iter] != AngInt.phi_vec[k])
+         {
+           Point sum(0);
+             sum(0) = AngInt.dir[solid_angle_iter](0)-AngInt.dir[k](0);
+             sum(1) = AngInt.dir[solid_angle_iter](1)-AngInt.dir[k](1);
+             const Point check = sum.cross(normal);
+
+
+             if (check.size() <1e-6)
+               if (AngInt.theta_vec[solid_angle_iter] == AngInt.theta_vec[k])
+               {
+                 n_spec ++;
+
+                 spec_part = SD[elside][k];
+               }
+
+         }
+       }
+       if (n_spec > 1)
+         cout<<"TO MANY SPECULAR VECTORS!"<<endl;
+
+       if (n_spec == 0)
+       {
+           cout<<" normal: "<<normal;
+           cout<<"NO SPECULAR VECTORS!"<<endl;
+       }
+
+       value = p*spec_part + (1-p)*diff_part;
 
      }
   }
@@ -2778,8 +2828,8 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
 
           }
         }
-        if (n_spec > 1)
-            cout<<"TO MANY SPECULAR VECTORS!"<<endl;
+       // if (n_spec > 1)
+        //    cout<<"TO MANY SPECULAR VECTORS!"<<endl;
 
         if (n_spec == 0)
         {
@@ -2889,7 +2939,7 @@ Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_na
 	 
 	 bool do_boundary = false;
 	 double a, b, c;
-	 if (mod != NULL)
+	 if (mod != NULL &&  mod->get_type() != "boltzmann_bnd_diffusive" )
 	 {
 	   mod->calculate(elem,s,elem->centroid() );
 	   mod->get_coefficients(a, b, c);
@@ -3238,10 +3288,10 @@ Boltzmann::AngularIntegrator::compute_directions()
       break;
     }*/
 
-  double delta = 0.0;
+  double delta = phi_zero;
 
-  double  min_theta = 0.0;
-  double  max_theta = M_PI * 0.5;
+  double  min_theta = 0.0 + delta;
+  double  max_theta = M_PI * 0.5 + delta;
 
   //double  min_phi = M_PI * 0.5 + delta;
   //double  max_phi = M_PI * 2.0 + M_PI * 0.5+ delta;
