@@ -26,9 +26,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
     //! Creator function
     static ThermalModel* create(const Material* mat, const ModelOptions& options);
 
-
   //ThermalConductivityModel* get_thermal_conductivity_model(void) const;
-
 
   double get_total_heat_source(void) const;
 

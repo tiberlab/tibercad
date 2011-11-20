@@ -36,7 +36,6 @@ ThermalModel::prepare_submodels(void)
   ModelOptions opts;
   opts.set_option("type","constant");
   create_submodel(_tcm, "thermal_conductivity", opts);
-
   create_submodels(_hsm, "heat_source");
 
 }

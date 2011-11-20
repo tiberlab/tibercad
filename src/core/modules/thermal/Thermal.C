@@ -55,8 +55,6 @@ Thermal::do_init(void)
 {
   parse_options();
 
-  get_scaling().set_calc_mesh_units(100.0 * get_scaling().get_calc_mesh_units());
-
   ID  dim = get_mesh().mesh_dimension();
 
   create_equation_system("linear");
@@ -116,9 +114,9 @@ Thermal::do_setup_solution_variables(void)
   // we declare our solution variables
   declare_solution(LatticeTemp, REAL, NODES, "K");
   declare_solution(MaxTemp, REAL, GLOBAL, "K");
-  declare_solution(ThermalFlux, VECTOR, NODES, "W/cm^2");
-  declare_solution(ThermCond, VECTOR, NODES, "W/cm K");
-  declare_solution(HeatSource, REAL, NODES, "W/cm^3");
+  declare_solution(ThermalFlux, VECTOR, NODES, "W/m^2");
+  declare_solution(ThermCond, VECTOR, NODES, "W/m K");
+  declare_solution(HeatSource, REAL, NODES, "W/m^3");
 
 }
 
@@ -180,8 +178,10 @@ Thermal::compute_power_dissipated()
 	{ 
 	
 	  for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
+	  {
 	    power_dissipated -= JxW_face[qp] * solution(dof_indices[alpha]) * ((kappa * dphi[alpha][qp]) * normal[qp]);  
-	  
+
+	  }
 	}
        
       }
@@ -369,9 +369,10 @@ Thermal::get_solution_secure(const Elem* elem,
 
 	RealGradient heat_flux(0);
 	for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
-	  heat_flux -= solution(dof_indices[alpha]) * (kappa * dphi[alpha][0]);
+	  heat_flux -= solution(dof_indices[alpha]) * (kappa * dphi[alpha][n]);
 	
 	
+
 	for (ID d = 0; d < dim; d++)
 	  values[ThermalFlux][d + 3 * n] = heat_flux(d);
 	

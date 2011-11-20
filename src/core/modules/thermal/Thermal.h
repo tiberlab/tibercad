@@ -57,11 +57,9 @@ class TBDLLOCAL Thermal : public SimulationInterface
    /*! \copydoc SimulationInterface::do_get_solution_vector() */
     virtual NumericVector<double>& do_get_solution_vector(void);
 
-
     //! We need to create boundary condition model
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
         const MaterialBoundary* boundary) const;
-
 
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,
