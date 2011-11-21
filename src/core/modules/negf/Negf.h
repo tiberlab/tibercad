@@ -124,6 +124,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     std::string _pot_module;
 
+    unsigned int _device_n_dofs;
 
 };
 

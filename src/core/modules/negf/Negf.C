@@ -51,7 +51,7 @@ Negf* Negf::static_this;
 Negf::Negf(const ModelOptions& options) :
   SimulationInterface(options)
 {
-  // there's nothing to be done
+  _device_n_dofs = 0;
 }
 
 Negf::~Negf(void)
@@ -208,6 +208,9 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
   std::vector<unsigned int> dof_indices,new_dof_indices;
 
+  //ACTIVATE QC
+  activate_quantum_contacts();
+
   //ITERATION OVER ACTIVE DEVICE REGION
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
@@ -262,7 +265,6 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
   }
 
-  //ITERATION OVER INACTIVE CONTACT REGIONS ???
 
   _sys_H->matrix->print_matlab("H.m");
   _sys_S->matrix->print_matlab("S.m");
@@ -338,15 +340,7 @@ Negf::reorder(void)
 {
   MeshBase& mesh = get_mesh();
 
-  //for (ID k=0; k<_contact_names.size(); k++)
-  //{
-  //  QuantumContact* qc = _device->get_quantum_contact(_contact_names[k]);
-  //  qc->activate_elements();
-  //}
-
   ID id = create_equation_system("linear");
-
-  std::cerr<<"_sys id "<<id<<std::endl;
 
   _sys = &get_equation_system<TiberLinearSystem>(id);
 
@@ -367,12 +361,6 @@ Negf::reorder(void)
 
   _sys->init();
 
- /* for (ID k=0; k<_contact_names.size(); k++)
-  {
-    QuantumContact* qc = _device->get_quantum_contact(_contact_names[k]);
-    qc->inactivate_elements();
-  }
-*/
   _sys->solve();
 
   std::cerr<<"solved"<<std::endl;
@@ -389,6 +377,7 @@ Negf::reorder(void)
 
   std::cerr<<"sol size "<<sol_size<<std::endl;
 
+  // setup permutation vector
   perm.clear();
   perm.resize(sol_size, 0);
 
@@ -399,12 +388,14 @@ Negf::reorder(void)
 
   std::sort(perm.begin(), perm.end(), compare);
 
+  // Invert permutation to compute _permu
   _permu.clear();
   _permu.resize(sol_size, 0);
   for (unsigned int i = 0; i < sol_size; i++)
     _permu[perm[i]]= i;
 
-
+  // Print permutation data
+  activate_quantum_contacts();
   ID assign = 0;
   std::vector<unsigned int> temp(sol_size,sol_size);
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
@@ -421,7 +412,8 @@ Negf::reorder(void)
     {
       if (temp[dof_indices_u[i]] == sol_size)
       {
-        std::cerr<<"dof indices: "<<dof_indices_u[i]<<"  "<<_permu[dof_indices_u[i]]<<" "<<solution(perm[dof_indices_u[i]])<<"  "<<std::endl;
+        std::cerr<<"dof indices: "<<dof_indices_u[i]<<"  "<<solution(dof_indices_u[i])<<"  ";
+	std::cerr<<_permu[dof_indices_u[i]]<<" "<<solution(perm[dof_indices_u[i]])<<"  "<<std::endl;
         //_permu[assign] = dof_indices_u[i];
         temp[dof_indices_u[i]] = assign;
         assign++;
@@ -431,6 +423,7 @@ Negf::reorder(void)
 
   }
 
+  // Create slicing 
   double slice = 1.0/_n_blocks;
   unsigned int i_slice = 0;
   _end_blocks.resize(_n_blocks);
@@ -500,6 +493,7 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
   DenseVector<Number> Fe;
 
   std::vector<unsigned int> dof_indices;
+  _device_n_dofs = 0;
 
   // DEACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
   deactivate_quantum_contacts();
@@ -555,13 +549,20 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
         }
       }
     }
-
+    
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-
+    
     _sys->matrix->add_matrix(Ke, dof_indices);
     _sys->rhs->add_vector(Fe, dof_indices);
 
+    // Update number of dofs in device region
+    for (unsigned int n = 0; n <n_dofs; n++)
+       if (_device_n_dofs < dof_indices[n]) _device_n_dofs = dof_indices[n];
+
   }
+
+  std::cerr<<"n dofs in device: "<<_device_n_dofs<<std::endl;
+  std::cerr<<"dofs in qc: "<<std::endl;
 
   // Iterates over INACTIVE QuantumContact regions
   {
@@ -576,9 +577,9 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
       ID sub_id = elem->subdomain_id();
       if (_quantum_contacts.count(sub_id))
       {
+        
+        //std::cerr<<"element "<<elem->id()<<" domain "<<sub_id<<std::endl;
         /*
-        std::cerr<<"element "<<elem->id()<<" domain "<<sub_id<<std::endl;
-
         for (unsigned int n=0; n<elem->n_nodes(); n++)
         {
           const unsigned int nc = FEInterface::n_dofs_at_node(dim,fe_type,elem->type(),n);
@@ -598,15 +599,20 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
         dof_map.dof_indices(elem, dof_indices);
         const unsigned int n_dofs = dof_indices.size();
 
-        for(ID n=0;n<n_dofs;n++){std::cerr<<dof_indices[n]<<"  ";}
-
-        std::cerr<<std::endl;
 
         fe->reinit(elem);
 
         Ke.resize(n_dofs, n_dofs);
         Fe.resize(n_dofs);
         Ke.zero();
+
+	//bool firstlayer = false;
+        for(ID n=0;n<n_dofs;n++)
+	{
+	   //if (dof_indices[n] <= _device_n_dofs) firstlayer=true;    	
+           std::cerr<<dof_indices[n]<<"  ";
+	}
+        std::cerr<<std::endl;
 
         for(unsigned int n = 0; n< n_dofs; ++n)
         {
@@ -617,8 +623,11 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
           for (cc=0; cc<_contact_names.size(); cc++)
             if(qc_name==_contact_names[cc]) break;
 
-          //std::cerr<<"qc number "<<cc<<std::endl;
-          Fe(n) = 1.0 * cc;
+	  //if (firstlayer) 
+             Fe(n) = 1.0 * cc;
+	  //else
+          //   Fe(n) = 1.1 + 0.1 * cc;
+
         }
       }
 
@@ -642,8 +651,15 @@ Negf::compare(ID i, ID j)
 bool
 Negf::do_compare(ID i, ID j)
 {
-  const NumericVector<Number>& solution = _sys->get_solution_vector();
-  return (solution(i) < solution(j));
+  //if (i > _device_n_dofs || j > _device_n_dofs)
+  //{
+  //  return true;
+ // }
+  //else
+  {  
+    const NumericVector<Number>& solution = _sys->get_solution_vector();
+    return (solution(i) < solution(j));
+  }
 }
 
 void
