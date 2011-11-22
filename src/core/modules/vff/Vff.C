@@ -266,8 +266,10 @@ Vff::build_parameters(void)
   //Dummy hardcoded for debug purpose
   int n_atoms = get_atomistic_structure()->get_N_without_H();
   unsigned int n_max_neighbors = 4;
-  double alpha = 80.0; double d = 2.4479;
-  double beta = 20.0; double teta = -0.3333;
+  double alpha = 80.0; 
+  double d = 2.4479;
+  double beta = 20.0; 
+  double teta = -0.3333;
   const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
 
   for (unsigned int i = 0; i < n_atoms; i++)
@@ -284,7 +286,8 @@ Vff::build_parameters(void)
           //Alpha, d for InAs
           if ((get_atomistic_structure()->get_specie(i) == Specie::In) || (get_atomistic_structure()->get_specie(j) == Specie::In))
               {
-              _alpha[i][counter_j] = 83.5582;
+              //_alpha[i][counter_j] = 83.5582;
+              _alpha[i][counter_j] = 331.99;
               _d[i][counter_j] = 2.6233;
 
 
@@ -295,15 +298,18 @@ Vff::build_parameters(void)
                     {
                   _teta[i][counter_j][counter_k] = teta;
                   if (get_atomistic_structure()->get_specie(k) == Specie::Ga)
-                    _beta[i][counter_j][counter_k] =  sqrt(26.7576 * 14.4855)      ;
+                    //_beta[i][counter_j][counter_k] =  sqrt(26.7576 * 14.4855)      ;
+                    _beta[i][counter_j][counter_k] =  sqrt(57.554 * 92.571)      ;
                   else
-                    _beta[i][counter_j][counter_k] = 14.4855;
+                    //_beta[i][counter_j][counter_k] = 14.4855;
+                    _beta[i][counter_j][counter_k] = 57.554;
                     }
                 }
               }
           if ((get_atomistic_structure()->get_specie(i) == Specie::Ga) || (get_atomistic_structure()->get_specie(j) == Specie::Ga))
               {
-              _alpha[i][counter_j] = 119.2451;
+              //_alpha[i][counter_j] = 119.2451;
+              _alpha[i][counter_j] = 412.54;
               _d[i][counter_j] = 2.4479;
 
 
@@ -314,9 +320,11 @@ Vff::build_parameters(void)
                                      {
                   _teta[i][counter_j][counter_k] = teta;
                   if (get_atomistic_structure()->get_specie(k) == Specie::In)
-                    _beta[i][counter_j][counter_k] = sqrt(26.7576 * 14.4855)       ;
+                    //_beta[i][counter_j][counter_k] = sqrt(26.7576 * 14.4855)       ;
+                    _beta[i][counter_j][counter_k] =  sqrt(57.554 * 92.571)      ;
                   else
-                    _beta[i][counter_j][counter_k] = 26.7576;
+                    //_beta[i][counter_j][counter_k] = 26.7576;
+                    _beta[i][counter_j][counter_k] = 92.571;
                                      }
 
                 }
