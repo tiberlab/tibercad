@@ -43,8 +43,6 @@ class QuantumContact
     const std::set<ID>& get_bd_ids(void) const;
 
 
-
-
     //! Destructor
     /*!
      * We do not declare it virtual here, as we will not allow
@@ -65,7 +63,6 @@ class QuantumContact
               double length);
 
     void plot(const std::string& name);
-
 
     void activate_elements(void);
     void inactivate_elements(void);

@@ -7,6 +7,7 @@
 #include "ModelOptions.h"
 #include "QuantumContact.h"
 #include "TiberLinearSystem.h"
+#include "Boundary.h"
 
 #include <string>
 
@@ -104,7 +105,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     Device* _device;
 
-    std::vector<std::string> _contact_names;
+    std::map<const Boundary*, ID> _boundaries;
 
     SimulationEnvironment* _env;
 
@@ -125,6 +126,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     std::string _pot_module;
 
     unsigned int _device_n_dofs;
+
+    unsigned int _qc_n_dofs;
 
 };
 

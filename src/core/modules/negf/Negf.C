@@ -6,7 +6,6 @@
 #include "SimulationEnvironment.h"
 #include "DataOutput.h"
 #include "Messages.h"
-#include "Boundary.h"
 #include "InitFailedException.h"
 #include "PotentialInterface.h"
 
@@ -33,6 +32,7 @@
 #include "dof_map.h"
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
+
 // C++ includes
 #include <fstream>
 #include <set>
@@ -40,18 +40,16 @@
 #include <math.h>
 
 using namespace Constants;
-// This is needed in order to create the shared module library
-// The first string is the class name of the object to be created,
-// the second one is the name of the module as it should be referred
-// in the input file (the Makefile defines MODULE_NAME, which can be used here).
+
 TIBER_MODULE(Negf, MODULE_NAME)
 
 Negf* Negf::static_this;
 
 Negf::Negf(const ModelOptions& options) :
-  SimulationInterface(options)
+              SimulationInterface(options)
 {
   _device_n_dofs = 0;
+  _qc_n_dofs = 0;
 }
 
 Negf::~Negf(void)
@@ -75,17 +73,32 @@ Negf::do_init(void)
 
   _device = &(_env->get_device());
 
+  {
+    _boundaries.clear();
+    ID id = -1;
+    SimulationEnvironment::BoundaryIterator it = _env->boundaries_begin();
+    const SimulationEnvironment::BoundaryIterator end = _env->boundaries_end();
+    for( ;it!=end; ++it)
+    {
+      _boundaries[*it] = ++id;
+    }
+  }
   // Prepare QuantumContact Map
   // Note: Boundary _contact_names are the same as QC names !!
-  for (ID k=0; k<_contact_names.size(); k++)
   {
-    QuantumContact* qc = _device->get_quantum_contact(_contact_names[k]);
-    _quantum_contacts[qc->get_id()] = qc;
-    std::cerr<<"_quantum_contact "<<qc->get_id()<<std::endl;
-    // Quantum Contacts are activated here: so dof_map come out correctly
-    qc->activate_elements();
-  }
+    _quantum_contacts.clear();
+    std::map<const Boundary*, ID>::iterator it = _boundaries.begin();
+    const std::map<const Boundary*, ID>::iterator end = _boundaries.end();
+    for (; it != end; ++it)
+    {
+      QuantumContact* qc = _device->get_quantum_contact(it->first->get_name());
 
+      _quantum_contacts[qc->get_id()] = qc;
+      //std::cerr<<"_quantum_contact "<<qc->get_id()<<" "<<it->first->get_name()<<" "<<it->second<<std::endl;
+      // Quantum Contacts are activated here: so dof_map come out correctly
+      qc->activate_elements();
+    }
+  }
 }
 
 void
@@ -93,24 +106,19 @@ Negf::setup_effectivemass_hamil()
 {
   // Setup a simple effective mass Hamiltonian
   ID id = create_equation_system("linear");
-
   _sys_H = &get_equation_system<TiberLinearSystem>(id);
-
   _sys_H->add_variable("phi", FIRST, LAGRANGE);
 
   id = create_equation_system("linear");
-
   _sys_S = &get_equation_system<TiberLinearSystem>(id);
-
   _sys_S->add_variable("phi", FIRST, LAGRANGE);
 
   _sys_H->attach_assemble_function(ham_assemble);
 
   _sys_H->init();
-
   _sys_S->init();
 
-  reorder();
+  reorder(); // dof indices reorder
 
   _sys_H->assemble();
 }
@@ -124,24 +132,6 @@ Negf::do_solve(void)
 void
 Negf::parse_options(void)
 {
-
-  if (get_options().has_submodel("Boundary"))
-  {
-    _contact_names.clear();
-
-    ModelOptions::submodel_iterator it(get_options().submodels_begin("Boundary"));
-    ModelOptions::submodel_iterator end(get_options().submodels_end("Boundary"));
-    for( ;it!=end; ++it)
-    {
-      const ModelOptions& opts = it->second;
-      _contact_names.push_back(opts.get_name());
-    }
-
-  }
-  else
-  {
-    throw InitFailedException("ERROR: no quantum contact");
-  }
 
   _pot_module = get_option("potential_simulation","");
 
@@ -203,7 +193,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
 
-  DenseMatrix<Number> He;
+  DenseMatrix<Number> He; //
   DenseMatrix<Number> Se;
 
   std::vector<unsigned int> dof_indices,new_dof_indices;
@@ -224,7 +214,6 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
     //get effective mass tensor for elem
     //negfmod = <NegfModel>(get_bulk_model(elem));
     invMass(0,0) = 1.0; invMass(1,1) = 1.0;  invMass(2,2) = 1.0;
-
 
     const unsigned int n_dofs = dof_indices.size();
 
@@ -251,12 +240,12 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
           Se(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp];
           He(i,j) += JxW[qp]* newconst * dphi[i][qp] * (invMass*dphi[j][qp]);
           He(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
-         }
+        }
 
     new_dof_indices.resize(n_dofs);
 
     for (unsigned int i=0; i< n_dofs; i++)
-        new_dof_indices[i] = _permu[dof_indices[i]];
+      new_dof_indices[i] = _permu[dof_indices[i]];
 
 
     _sys_S->matrix->add_matrix(Se, new_dof_indices);
@@ -264,8 +253,6 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
     _sys_H->matrix->add_matrix(He, new_dof_indices);
 
   }
-
-
   _sys_H->matrix->print_matlab("H.m");
   _sys_S->matrix->print_matlab("S.m");
   std::cerr<<"print"<<std::endl;
@@ -295,7 +282,6 @@ Negf::get_solution_secure(const Elem *elem, std::map< ID, std::vector< double > 
     const unsigned int n_dofs = dof_indices_u.size();
     unsigned int np = p.size();
 
-    //std::cout<<"elem id "<<elem->id()<<std::endl;
 
     for (unsigned int n = 0; n < np; n++)
     {
@@ -303,18 +289,15 @@ Negf::get_solution_secure(const Elem *elem, std::map< ID, std::vector< double > 
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
-        //std::cout<<"dof ind "<<dof_indices_u[i]<<std::endl;
         u += phi[i][n] * solution(dof_indices_u[i]); ;
       }
 
       values[ReorderPotential][n] = u;
-
     }
   }
-
 }
 
-// DEACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
+// ACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
 void
 Negf::activate_quantum_contacts(void)
 {
@@ -323,7 +306,7 @@ Negf::activate_quantum_contacts(void)
   for (;it != end;++it)
     it->second->activate_elements();
 }
-
+// DEACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
 void
 Negf::deactivate_quantum_contacts(void)
 {
@@ -338,13 +321,16 @@ Negf::deactivate_quantum_contacts(void)
 void
 Negf::reorder(void)
 {
+  std::cerr<<"Reorder dofs"<<std::endl;
+
   MeshBase& mesh = get_mesh();
 
   ID id = create_equation_system("linear");
-
   _sys = &get_equation_system<TiberLinearSystem>(id);
 
   unsigned int n_vars = _sys_H->n_vars();
+
+  //std::cerr<<"n vars "<<n_vars<<std::endl;
 
   std::vector<ID> u_vars(n_vars,0);
 
@@ -355,6 +341,7 @@ Negf::reorder(void)
     std::string name = var_str.str();
     _sys->add_variable(name, FIRST, LAGRANGE);
     u_vars[n] = _sys->variable_number(name);
+    //std::cerr<<"var: "<<u_vars[n]<<std::endl;
   }
 
   _sys->attach_assemble_function(reorder_assemble);
@@ -363,7 +350,7 @@ Negf::reorder(void)
 
   _sys->solve();
 
-  std::cerr<<"solved"<<std::endl;
+  std::cerr<<"Laplace solved"<<std::endl;
 
   const NumericVector<Number>& solution = _sys->get_solution_vector();
 
@@ -375,31 +362,36 @@ Negf::reorder(void)
 
   std::vector<unsigned int> perm(sol_size,0);
 
-  std::cerr<<"sol size "<<sol_size<<std::endl;
+  //std::cerr<<"sol size "<<sol_size<<std::endl;
 
   // setup permutation vector
   perm.clear();
-  perm.resize(sol_size, 0);
-
-  for (unsigned int i = 0; i < sol_size; i++)
+  perm.resize(_device_n_dofs+1, 0);
+  for (unsigned int i = 0; i < _device_n_dofs+1; i++)
     perm[i]=i;
 
-  std::cerr<<"SORTING "<<std::endl;
+  std::cerr<<"Sorting"<<std::endl;
 
   std::sort(perm.begin(), perm.end(), compare);
 
   // Invert permutation to compute _permu
   _permu.clear();
-  _permu.resize(sol_size, 0);
-  for (unsigned int i = 0; i < sol_size; i++)
+  _permu.resize(_qc_n_dofs+1, 0);
+  for (unsigned int i = 0; i < _device_n_dofs+1; i++)
     _permu[perm[i]]= i;
+
+  // Reset dofs in QC as an identity
+  for (unsigned int i = _device_n_dofs+1; i < _qc_n_dofs+1; i++)
+    _permu[i]= i;
 
   // Print permutation data
   activate_quantum_contacts();
   ID assign = 0;
   std::vector<unsigned int> temp(sol_size,sol_size);
+
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
   for ( ; el != end_el; ++el)
   {
     const Elem* elem = *el;
@@ -412,15 +404,12 @@ Negf::reorder(void)
     {
       if (temp[dof_indices_u[i]] == sol_size)
       {
-        std::cerr<<"dof indices: "<<dof_indices_u[i]<<"  "<<solution(dof_indices_u[i])<<"  ";
-	std::cerr<<_permu[dof_indices_u[i]]<<" "<<solution(perm[dof_indices_u[i]])<<"  "<<std::endl;
-        //_permu[assign] = dof_indices_u[i];
+        //std::cerr<<"dof indices: "<<dof_indices_u[i]<<"  "<<solution(dof_indices_u[i])<<"  ";
+        //std::cerr<<_permu[dof_indices_u[i]]<<" "<<solution(_permu[dof_indices_u[i]])<<"  "<<std::endl;
         temp[dof_indices_u[i]] = assign;
         assign++;
-
       }
     }
-
   }
 
   // Create slicing 
@@ -429,25 +418,26 @@ Negf::reorder(void)
   _end_blocks.resize(_n_blocks);
   _end_blocks.assign(_n_blocks, -1);
 
-  for (unsigned int i = 0; i < _permu.size(); i++)
+  for (unsigned int i = 0; i < _device_n_dofs+1; i++)
   {
-      if (solution(perm[i]) <= slice+0.000001 )
-      {
-          _end_blocks[i_slice]++;
-      }
-      else
-      {
-        i_slice++;
-        slice = (i_slice+1) * 1.0/_n_blocks;
-        _end_blocks[i_slice] = _end_blocks[i_slice-1] + 1;
-      }
+    if (solution(perm[i]) <= slice+0.005 )
+    {
+      _end_blocks[i_slice]++;
+    }
+    else
+    {
+      i_slice++;
+      slice = (i_slice+1) * 1.0/_n_blocks;
+      _end_blocks[i_slice] = _end_blocks[i_slice-1] + 1;
+    }
   }
-
+  std::cerr<<"Slice created"<<std::endl;
+/*
   for (unsigned int i = 0; i < _end_blocks.size(); i++)
   {
-     std::cerr<<"end_blocks "<<_end_blocks[i]<<std::endl;
+    std::cerr<<_end_blocks[i]<<std::endl;
   }
-
+*/
 }
 
 
@@ -457,7 +447,7 @@ Negf::reorder_assemble(EquationSystems& es, const std::string& system_name)
   static_this->do_reorder_assemble(es, system_name);
 }
 
-
+//Approch to Laplace problem
 void
 Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 {
@@ -493,7 +483,7 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
   DenseVector<Number> Fe;
 
   std::vector<unsigned int> dof_indices;
-  _device_n_dofs = 0;
+  const double penalty = 1.e10;
 
   // DEACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
   deactivate_quantum_contacts();
@@ -530,39 +520,33 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 
       Boundary* bd = _env->get_boundary(elside);
 
-      for (ID cc=0; cc<_contact_names.size(); cc++)
+      if (bd != NULL)
       {
-        if (bd != NULL && bd->get_name()==_contact_names[cc])
+        ID cc = _boundaries[bd];
+
+        for(unsigned int n = 0; n< n_dofs; ++n)
         {
-          for(unsigned int n = 0; n< n_dofs; ++n)
+          if (elem->is_node_on_side(n,side))
           {
-            if (elem->is_node_on_side(n,side))
-            {
-              for (unsigned int nc = 0; nc < n_dofs; nc++)
-                 Ke(n,nc) = 0.0;
+            for (unsigned int nc = 0; nc < n_dofs; nc++)
+              Ke(n,nc) = 0.0;
 
-              Ke(n,n) = 1.0;
+            Ke(n,n) = penalty;
 
-              Fe(n) = 1.0*cc; //fix potential
-            }
+            Fe(n) = penalty*cc; //fix potential
           }
         }
       }
     }
-    
-    dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-    
+
     _sys->matrix->add_matrix(Ke, dof_indices);
     _sys->rhs->add_vector(Fe, dof_indices);
 
     // Update number of dofs in device region
     for (unsigned int n = 0; n <n_dofs; n++)
-       if (_device_n_dofs < dof_indices[n]) _device_n_dofs = dof_indices[n];
-
+      if (_device_n_dofs < dof_indices[n]) _device_n_dofs = dof_indices[n];
   }
-
-  std::cerr<<"n dofs in device: "<<_device_n_dofs<<std::endl;
-  std::cerr<<"dofs in qc: "<<std::endl;
+  //std::cerr<<"n dofs in device: "<<_device_n_dofs<<std::endl;
 
   // Iterates over INACTIVE QuantumContact regions
   {
@@ -577,71 +561,36 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
       ID sub_id = elem->subdomain_id();
       if (_quantum_contacts.count(sub_id))
       {
-        
-        //std::cerr<<"element "<<elem->id()<<" domain "<<sub_id<<std::endl;
-        /*
-        for (unsigned int n=0; n<elem->n_nodes(); n++)
-        {
-          const unsigned int nc = FEInterface::n_dofs_at_node(dim,fe_type,elem->type(),n);
-
-          std::cerr<<"number of dofs "<<nc<<std::endl;
-
-          const Node* node  = elem->get_node(n);
-          for (unsigned int i=0; i<nc; i++)
-               std::cerr<<node->dof_number(2,0,i)<<std::endl;
-
-          //std::cerr<<"n_system"<<node->n_systems()<<std::endl;
-          //std::cerr<<node->n_vars()<<std::endl;
-          //std::cerr<<node->n_comp()<<std::endl;
-        }
-        */
-
         dof_map.dof_indices(elem, dof_indices);
-        const unsigned int n_dofs = dof_indices.size();
-
+        const unsigned int n_dofs= dof_indices.size();
 
         fe->reinit(elem);
-
         Ke.resize(n_dofs, n_dofs);
         Fe.resize(n_dofs);
         Ke.zero();
-
-	//bool firstlayer = false;
-        for(ID n=0;n<n_dofs;n++)
-	{
-	   //if (dof_indices[n] <= _device_n_dofs) firstlayer=true;    	
-           std::cerr<<dof_indices[n]<<"  ";
-	}
-        std::cerr<<std::endl;
+        Fe.zero();
 
         for(unsigned int n = 0; n< n_dofs; ++n)
         {
-          Ke(n,n) = 1.0;
-          //
+          Ke(n,n) = penalty;
           ID cc;
+
           std::string qc_name = _device->get_region_name(sub_id);
-          for (cc=0; cc<_contact_names.size(); cc++)
-            if(qc_name==_contact_names[cc]) break;
+          cc = _boundaries[_env->get_boundary(qc_name)];
 
-	  //if (firstlayer) 
-             Fe(n) = 1.0 * cc;
-	  //else
-          //   Fe(n) = 1.1 + 0.1 * cc;
-
+          Fe(n) = penalty * cc;
+          // Update number of dofs in quantum contact. It start from number of dofs in device region
+          if (_qc_n_dofs < dof_indices[n]) _qc_n_dofs = dof_indices[n];
         }
       }
-
-      dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
-
       _sys->matrix->add_matrix(Ke, dof_indices);
       _sys->rhs->add_vector(Fe, dof_indices);
     }
+    //std::cerr<<"dofs in qc: "<<_qc_n_dofs - _device_n_dofs<<std::endl;
   }
-
-  std::cerr<<"assemble sys end"<<std::endl;
-
 }
 
+//Need to compare two solution to reorder dof indices
 bool
 Negf::compare(ID i, ID j)
 {
@@ -651,21 +600,14 @@ Negf::compare(ID i, ID j)
 bool
 Negf::do_compare(ID i, ID j)
 {
-  //if (i > _device_n_dofs || j > _device_n_dofs)
-  //{
-  //  return true;
- // }
-  //else
-  {  
-    const NumericVector<Number>& solution = _sys->get_solution_vector();
-    return (solution(i) < solution(j));
-  }
+  const NumericVector<Number>& solution = _sys->get_solution_vector();
+  return (solution(i) < solution(j));
 }
 
 void
 Negf::test_project_on_boundary(void)
 {
-  QuantumContact* qc = _device->get_quantum_contact(_contact_names[0]);
+  QuantumContact* qc = _device->get_quantum_contact(_boundaries.begin()->first->get_name());
 
   MeshBase& mesh = get_mesh();
 
@@ -673,7 +615,7 @@ Negf::test_project_on_boundary(void)
 
   AutoPtr<FEBase> fe( FEBase::build(dim, FEType() ));
 
-  QGauss qrule(dim, FIRST); // regola di ordine 0 perche in questo modo prendo la normale del centroide
+  QGauss qrule(dim, FIRST); // Order 0 rule because in this way we take centroid's normal
 
   fe->attach_quadrature_rule(&qrule);
 
@@ -693,21 +635,12 @@ Negf::test_project_on_boundary(void)
       fe->reinit(elem);
 
       for (unsigned int qp=0; qp<q_point.size(); qp++)
-      {//qp
-
-        //std::cerr<<"qpnt: "<<q_point[qp](0)<<" "<<q_point[qp](1)<<" "<<q_point[qp](2)<<std::endl;
-
+      {
         std::pair<const Elem*, Point> pair = qc->project_on_boundary(elem, q_point[qp]);
 
         Point pt = pair.second;
         const Elem* sidelem = pair.first;
-
-        //std::cerr<<"Pt: "<<pt(0)<<" "<<pt(1)<<" "<<pt(2)<<std::endl;
-
-        //std::cerr<<"side elem id: "<<sidelem->id()<<std::endl;
-
       }
-
     }
   }
 }

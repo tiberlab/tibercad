@@ -72,7 +72,7 @@ QuantumContact::init(ID id,
 
   _normal = get_normal(num_sides);
 
-  std::cout<<"normal: "<<_normal(0)<<" "<<_normal(1)<<" "<<_normal(2)<<std::endl;
+  std::cout<<"normal: "<<_normal(0)<<" "<<_normal(1)<<" "<<_normal(2)<<std::endl; // plot normal
 
   extend_mesh();
 
@@ -82,9 +82,6 @@ QuantumContact::init(ID id,
 void
 QuantumContact::plot(const std::string& name)
 {
-
-
-
 }
 
 QuantumContact::~QuantumContact(void)
@@ -99,7 +96,7 @@ QuantumContact::get_normal(unsigned int& count)
 
   AutoPtr<FEBase> fe(FEBase::build(dim, FEType()));
 
-  QGauss qrule(dim-1, CONSTANT); // regola di ordine 0 perche in questo modo prendo la normale del centroide
+  QGauss qrule(dim-1, CONSTANT); // Order 0 rule because in this way we take centroid's normal
 
   fe->attach_quadrature_rule(&qrule);
 
@@ -120,10 +117,10 @@ QuantumContact::get_normal(unsigned int& count)
 
     if(_rg_ids.count(elid))
     {
-      for (ID ns = 0; ns<elem->n_sides(); ns++)
+      for (ID ns = 0; ns<elem->n_sides(); ns++)  // loop over element side
       {
         ID side_id = _bd_regions->get_side_id(elem, ns);
-        if ( side_id != INVALID_ID && _bd_ids.count(side_id) ) //calcolo della normale
+        if ( side_id != INVALID_ID && _bd_ids.count(side_id) ) //normal computation
         {
           count++;
           fe->reinit(elem, ns);
@@ -134,7 +131,7 @@ QuantumContact::get_normal(unsigned int& count)
           }
           else
           {
-            if(!Utils::almost_equal::compare(normal1*normal[0],1.0)) //check di parallelismo
+            if(!Utils::almost_equal::compare(normal1*normal[0],1.0)) //parallelism check
             {
               Messages::error("Non parallel face normals");
             }
@@ -160,8 +157,7 @@ QuantumContact::activate_elements(void)
 
     if(elid==_id)
     {
-       //std::cout<<"activating element "<<elem->id()<<std::endl;
-       elem->set_refinement_flag(Elem::DO_NOTHING);
+      elem->set_refinement_flag(Elem::DO_NOTHING);
     }
   }
 }
@@ -179,7 +175,7 @@ QuantumContact::inactivate_elements(void)
 
     if(elid==_id)
     {
-       elem->set_refinement_flag(Elem::INACTIVE);
+     elem->set_refinement_flag(Elem::INACTIVE);
     }
   }
 }
@@ -196,10 +192,10 @@ QuantumContact::extend_mesh(void)
   BoundaryRegions::side_iterator it =  _bd_regions->sides_begin(_bd_ids);
   const BoundaryRegions::side_iterator end =  _bd_regions->sides_end(_bd_ids);
 
-  unsigned int numelem = _mesh->n_elem();
-  unsigned int numnode = _mesh->n_nodes();
-  std::cout<<"num node: "<<numnode<<std::endl;
-  std::cout<<"num elem: "<<numelem<<std::endl;
+  unsigned int numelem = _mesh->n_elem(); // number of element in the mesh
+  unsigned int numnode = _mesh->n_nodes();// number of node in the mesh
+  //std::cout<<"num node: "<<numnode<<std::endl;
+  //std::cout<<"num elem: "<<numelem<<std::endl;
   unsigned int cnt = 1;
 
   // 1D CASE -------------------------------------------------------
@@ -209,6 +205,7 @@ QuantumContact::extend_mesh(void)
   {
     for ( ; it != end; ++it)
     {
+      // Adding first node
       const ElementSide& elemside = *it;
 
       ID side = elemside.side();
@@ -300,9 +297,10 @@ QuantumContact::extend_mesh(void)
 
       ID id = 0; ID inc = 1;
 
+      //iterates on nodes of element
       for(ID nde = 0; nde < elem->n_nodes(); nde++)
       {
-
+        //check whether node is on the boundary
         if (elem->is_node_on_side(nde, side))
         {
           ID nodeid = elem->node(nde);
@@ -312,13 +310,13 @@ QuantumContact::extend_mesh(void)
           if(nodeit == nodemap.end())
           {
             _mesh->add_point(_mesh->point(nodeid)+(_normal*_length),numnode);
-            nodeit = nodemap.insert(std::make_pair(nodeid, numnode)).first;
+            nodeit = nodemap.insert(std::make_pair(nodeid, numnode)).first; //insert new node in nodemap
             numnode++;
           }
           ID num = nodeit->second;
           newelem->set_node(id) = _mesh->node_ptr(nodeid);
           newelem->set_node(id+inc) = _mesh->node_ptr(num);
-          id+=3; inc=-1;
+          id+=3; inc=-1; // for this increment we look the id node disposition in Libmesh class Quad4
         }
       }
     }
@@ -374,7 +372,6 @@ QuantumContact::extend_mesh(void)
   {
 
     ID countnodes = 0;
-    //std::cerr<<"3D mesh"<<std::endl;
 
     nodevec.reserve(4);
     // iterates on boundary elements
@@ -442,9 +439,6 @@ QuantumContact::extend_mesh(void)
           std::swap(nodevec[2], nodevec[3]);
       }
 
-      // write>>>>>>
-      //std::cerr<<"Old Elem: "<< elem->id() <<" : "<<newelem->id()<<std::endl;
-
       newelem->subdomain_id()=_id;
 
       elemmap[elem] = newelem;
@@ -491,8 +485,6 @@ QuantumContact::extend_mesh(void)
 
           newelem->subdomain_id()=_id;
 
-          //std::cerr<< "New Elem: "<< elem->id()<<" : "<<newelem->id()<<std::endl;
-
           ID id = 0;
 
           for(ID nde = 0; nde < elem->n_nodes(); nde++)
@@ -518,10 +510,6 @@ QuantumContact::extend_mesh(void)
               id++;
             }
           }
-        }
-        else
-        {
-          //std::cerr<<"Elem 0: attached to "<<elemside.elem()->id()<<std::endl;
         }
       }
     }
@@ -555,7 +543,6 @@ QuantumContact::extend_mesh(void)
         {
           (itmap->second)->set_neighbor(3, const_cast<Elem*>(itmap->first)); //elem);
         }
-
       }
     }
   }
@@ -587,7 +574,6 @@ QuantumContact::extend_mesh(void)
   }
    */
   //neighbor mapping
-  //std::cerr<<"Old elements : "<<std::endl;
   {
     BoundaryRegions::side_iterator it =  _bd_regions->sides_begin(_bd_ids);
     const BoundaryRegions::side_iterator end =  _bd_regions->sides_end(_bd_ids);
@@ -622,7 +608,7 @@ QuantumContact::extend_mesh(void)
 
 
 double
-QuantumContact::Deter (const Point& P1, const Point& P2, const Point& P3)
+QuantumContact::Deter (const Point& P1, const Point& P2, const Point& P3) //computation of a 3X3 matrix's determinant
 {
 
   double d =   P1(0)*P2(1)*P3(2) + P2(0)*P3(1)*P1(2)
@@ -632,7 +618,7 @@ QuantumContact::Deter (const Point& P1, const Point& P2, const Point& P3)
 }
 
 std::set<ID>
-QuantumContact:: vec2set(const std::vector<ID>& vec)
+QuantumContact:: vec2set(const std::vector<ID>& vec) // Transform a vector in a set
 {
   std::set<ID> set;
 
@@ -645,7 +631,7 @@ QuantumContact:: vec2set(const std::vector<ID>& vec)
 }
 
 std::vector<ID>
-QuantumContact:: set2vec(const std::set<ID>& set)
+QuantumContact:: set2vec(const std::set<ID>& set) // Transform a set in a vector
 {
   std::vector<ID> vec;
 
@@ -706,9 +692,7 @@ QuantumContact::project_on_boundary(const Elem* elem,const Point& point )
     Point l = i/h;
     out = b-l+p[0];
   }
-  //std::cerr<< "sidelem "<<sidelem->id()<<std::endl;
-
-  return std::make_pair(sidelem,out);
+ return std::make_pair(sidelem,out);
 }
 
 
