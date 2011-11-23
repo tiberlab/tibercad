@@ -8,6 +8,7 @@
 #include "QuantumContact.h"
 #include "TiberLinearSystem.h"
 #include "Boundary.h"
+#include "libnegf/NegfWrapper.h"
 
 #include <string>
 
@@ -128,6 +129,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     unsigned int _device_n_dofs;
 
     unsigned int _qc_n_dofs;
+
+    NegfWrapper* _libnegf;
 
 };
 

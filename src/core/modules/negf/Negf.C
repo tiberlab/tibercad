@@ -50,10 +50,12 @@ Negf::Negf(const ModelOptions& options) :
 {
   _device_n_dofs = 0;
   _qc_n_dofs = 0;
+  _libnegf = NegfWrapper::create();
 }
 
 Negf::~Negf(void)
 {
+  delete _libnegf;
 }
 
 Negf*
@@ -193,8 +195,8 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
 
-  DenseMatrix<Number> He; //
-  DenseMatrix<Number> Se;
+  DenseMatrix<Number> He; // Interaction matrix
+  DenseMatrix<Number> Se; // Self energy matrix
 
   std::vector<unsigned int> dof_indices,new_dof_indices;
 
@@ -579,7 +581,7 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
           cc = _boundaries[_env->get_boundary(qc_name)];
 
           Fe(n) = penalty * cc;
-          // Update number of dofs in quantum contact. It start from number of dofs in device region
+          // Update number of dofs in quantum contact. It begin from number of dofs in device region
           if (_qc_n_dofs < dof_indices[n]) _qc_n_dofs = dof_indices[n];
         }
       }

@@ -6,8 +6,19 @@ MODULE_NAME := negf
 
 include $(topdir)/Make.module
 
+MODULE_LDFLAGS += -L$(libdir) -lnegf
 
 $(eval $(call MODULE, Negf.C ))
+
+.PHONY: libnegf
+
+target += libnegf
+
+
+libnegf:       
+	$(MAKE) -C libnegf
+
+
 
 
 include $(topdir)/Make.rules
