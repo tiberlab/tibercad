@@ -1,53 +1,84 @@
-
-# diode example
-
 Device
 {
-   meshfile = mesh.msh
-   dimension = 3
-   material = Si
-   mesh_units = 1e-6
-   Region Bulk{}
+
+  meshfile = mesh.msh  
+  mesh_units = 1e-6
+
+  material = ZnO
+  symmetry = cylindrical
+
+  dimension = 2
+
+  Region Column{
+
+  material = ZnO
+
+  Doping{
+   Nd = 1e16
+   type = donor
+   Ed = 0.035
+  }
+
+  }
 
 }
 
-
-# Definition of  Simulation Models  and associated Boundary Conditions 
-
-
-Module boltzmann
+Module elasticity
 {
 
-  regions = Bulk
-  plot = (LatticeTemp,ThermalFlux)
+plot = (Strain,Stress,Displacements)
+
+Physics
+{
+ stiffness isotropic
+ {
+  young = 149
+  poisson = 0.349
+ }
+
+}
+
+Contact Upper {
+type = surface_force
+force = (0,-0.00625,0)
+}
+
+Contact Lower {type = clamp}
+
+}
+
+Module driftdiffusion
+{
+    enforce_local_charge_neutrality = false
+    coupling = poisson
+    reference_contact = Lower
+    default_boundary_condition = zero_displacement
+    plot = (ElPotential,ElField,eDensity,Ec,Ev,Polarization,IonizedDonors)
 
   Physics
-  { 
-    HeatTransport
-    {
-      type = gray
-    }
-  }
+  {
  
-   Contact Hot
-   {
-     type = heat_reservoir
-     temperature =  400
-   }
-  
-   Contact Cold
-   {
-     type = heat_reservoir
-     temperature = 300
-   }
-}  
-  
-Simulation
-{
-  solve = (boltzmann)
-  output_format = vtk
-  resultpath = output 
-  verbose = 3
+    polarization piezo
+    {
+     strain_simulation = elasticity
+    }
+
+  }
+
+  Contact Lower
+  { 
+    type = ohmic
+    regions = Lower
+    voltage = 0.0
+  }
 }
 
 
+Simulation
+{
+  solve = (elasticity,driftdiffusion)
+  resultpath = output
+  verbose = 3
+  searchpath = .
+  output_format = vtk
+}
