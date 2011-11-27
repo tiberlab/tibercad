@@ -112,6 +112,36 @@ Module opticstb
 
 }
 
+Module elasticity
+{
+
+name = mec
+
+plot = (Strain,Stress,Displacement)
+
+  Physics
+  {
+
+   body_force lattice_mismatch
+   {
+     
+    material = GaN
+
+    structure = wz
+    x-growth-direction = (0,0,0,1)
+    y-growth-direction = (1,0,-1,0)
+    z-growth-direction = (-1,2,-1,0)
+
+   }
+
+  }
+
+  Contact cathode{type = clamp}
+
+}
+
+
+
 Module  macrostrain
 {
 
@@ -260,7 +290,8 @@ Simulation
   temperature = 300
   searchpath = /home/mlopez/Desktop/materials
 
-  solve = (strain,driftdiffusion,tb,spectrum)
+  solve = mec
+  #solve = (strain,driftdiffusion,tb,spectrum)
 
   resultpath =  output
   output_format = grace
