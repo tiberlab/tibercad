@@ -1,163 +1,116 @@
-# Example 9: 3D thermal - drift-diffusion self-consistent simulation with cylindrical symmetry
-
-
-
 Device
 {
+
+  material = Si
   
   meshfile = tut_09.msh
+  dimension = 2
   symmetry = cylindrical
-  
 
-  Region n_side 
-  {
-    material  = Si
-
-    Doping
-    {
-      density = 1e18
-      type = donor 
-     
-    }
-   
+  Region n_side{
+   Doping
+   {
+     type = donor 
+     Nd = 1e18
+   }
   }
 
-  Region p_side 
-  {
-    material = Si
-
-    Doping
-    {
-      density = 1e19
-      type = acceptor 
-    }
-
+  Region p_side{
+   Doping
+   {
+     type = acceptor 
+     Nd = 1e18
+   }
   }
 
-  Region air
-  {
-    material = Air
-  }
-  
+   Region air { material = Air }
+
 }
 
 
-
-  
 Module driftdiffusion
-{ 
-              
-   
+{
+
   name = dd
-  regions = (n_side, p_side)
+                
+  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity, NetRecombination,Pn,Pp,thermal,ContactCurrents)
+
+  regions = (n_side,p_side)
 
 
-  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity,
-          eMobility, hMobility, NetRecombination, Pn, Pp,
-          RecombHeat, ePeltier, hPeltier, eJoule, hJoule,
-          ePowerFlux, hPowerFlux, ContactCurrents)
-
-
-  
   Physics
   {
-
-    thermal_simulation = tt  
-
-    recombination srh {}
-
-    mobility
-    {
-      model = doping_dependent
-    }
- 
-    thermoelectric_power diffusivity_model {}
-
-  }
     
+    thermal_simulation = tt
+    recombination srh{}
+    thermoelectric_power diffusivity_model{}
+    mobility doping_dependent{}
+  }  
 
-     
   Contact anode
   {
-    type = ohmic
-    voltage = $Vb[0.0]
+     type = ohmic
+     voltage = $Vb[0.0]
   }
 
   Contact cathode
   {
-    type = ohmic
-    voltage = 0.0
+     type = ohmic
+     voltage = 0.0
   }
- 
-     
-}  
-  
 
+} 
+  
 Module thermal
 {
-  
-  name = tt
-  plot = (  LatticeTemp, ThermalFlux, HeatSource,ThermCond,MaxTemp)
 
-    
-  Physics
-  {
+   name = tt
 
-    heat_source joule
-    {
-      transport_simulation = dd
-    }
+   plot = (LatticeTemp,ThermalFlux,HeatSource)
 
-     
+   Physics   
+   {
+      heat_source joule {transport_simulation = dd}
+   }
+
+   Contact reservoir
+   {
+     type = heat_reservoir
+     temperature = 300
+   }
+
+   Contact dissipator
+   {
+     r_surf = 0.5
+     type = surface_resistance
+     temperature = 300
   }
 
- 
-  Contact  reservoir
-  {
-    type = heat_reservoir 
-    temperature = 300
-  }
- 
-  Contact dissipator
-  {
-    r_surf = 0.5
-    type = surface_resistance
-    temperature = 300
-  }
 }
-
-
 
 Module selfconsistent
 {
-  solve = (dd,tt)
-
-  absolute_tolerance = 0.5
-  monitor = true
+   solve = (dd,tt)
+   absolute_tolerance = 1e-5
+   monitor = true
 }
 
-
-
-Module  sweep
+Module sweep
 {
-  solve = selfconsistent
+  solve = dd
   variable = $Vb
   start = 0.0
   stop = 1.2
   steps = 12
+  plot_data = true
 }
-
 
 
 Simulation
 {
-  temperature = 300
-  solve = sweep
+  verbose = 3
+  solve = (sweep,selfconsistent)
   resultpath = output
   output_format = vtk
 }
-
-
-
-
 

@@ -16,13 +16,15 @@ c_cont1 = 0.001 * scale * ms;
 c_cont2 = 0.02 * scale * ms;
 c_jun = 0.03 * scale * ms;
 c_sub = 0.2 * scale * ms;
+c_subm = 0.05 * scale * ms;
 c_sub2 = 0.05 * scale * ms ;
 c_sub_long = 2 *scale * ms ;
 c_air = 1 * scale * ms;
+c_air_sub = 0.2 * scale * ms;
 
 
 p1=newp;Point(p1) = {0, 0, 0, c_sub};
-p2=newp;Point(p2) = {wb, 0, 0, c_sub};
+p2=newp;Point(p2) = {wb, 0, 0, c_subm};
 p3=newp;Point(p3) = {wb, hb, 0, c_cont2};
 p4=newp;Point(p4) = {wb-ct, hb, 0, c_cont2};
 p5=newp;Point(p5) = {wt, hb, 0, c_jun};
@@ -30,7 +32,7 @@ p6=newp;Point(p6) = {0, hb, 0, c_jun};
 p7=newp;Point(p7) = {wt, hb+ht, 0, c_sub2};
 p8=newp;Point(p8) = {ct, hb+ht, 0, c_cont1};
 p9=newp;Point(p9) = {0, hb+ht, 0, c_cont1};
-p10=newp;Point(p10) = {wb+air_x,0, 0, c_air};
+p10=newp;Point(p10) = {wb+air_x,0, 0, c_air_sub};
 p11=newp;Point(p11) = {0, hb+ht+air_y, 0, c_air};
 p12=newp;Point(p12) = {wb+air_x,hb+ht+air_y,0,c_air};
 p13=newp;Point(p13) = {0, hb+ht*4/5, 0, c_sub2};
@@ -82,6 +84,4 @@ Physical Surface("air") = {s4}; // thermal
 lp1=newl;Physical Line("anode") = {l10}; // anode
 lp2=newl;Physical Line("cathode") = {l3}; // cathode
 Physical Line("reservoir") = {l15,l16,l17}; // thermal
-Physical Line("dissipator") = {l1}; // thermal
-
-
+Physical Line("dissipator") = {l1,l17}; // thermal
