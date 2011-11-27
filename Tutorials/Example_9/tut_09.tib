@@ -33,7 +33,11 @@ Module driftdiffusion
 
   name = dd
                 
-  plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity, NetRecombination,Pn,Pp,thermal,ContactCurrents)
+   plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity,
+          eMobility, hMobility, NetRecombination, Pn, Pp,
+          RecombHeat, ePeltier, hPeltier, eJoule, hJoule,
+          ePowerFlux, hPowerFlux, ContactCurrents)
+
 
   regions = (n_side,p_side)
 
@@ -66,7 +70,8 @@ Module thermal
 
    name = tt
 
-   plot = (LatticeTemp,ThermalFlux,HeatSource)
+   plot = (  LatticeTemp, ThermalFlux, HeatSource,ThermCond,MaxTemp)
+
 
    Physics   
    {
@@ -97,7 +102,7 @@ Module selfconsistent
 
 Module sweep
 {
-  solve = dd
+  solve = selfconsistent
   variable = $Vb
   start = 0.0
   stop = 1.2
@@ -109,7 +114,7 @@ Module sweep
 Simulation
 {
   verbose = 3
-  solve = (sweep,selfconsistent)
+  solve = (sweep)
   resultpath = output
   output_format = vtk
 }
