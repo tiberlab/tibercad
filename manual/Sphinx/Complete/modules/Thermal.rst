@@ -187,6 +187,8 @@ Different boundary conditions can be implemented for Dirichlet boundary conditio
 
 Dirichlet boundary conditions can be imposed with the keyword ``heat_reservoir``.
 
+This boundary condition imposes a fixed temperature  :math:`T = T_0`  , where  :math:`T_0`  is the prescribed temperature.
+
 ::
 
   Contact anode
@@ -195,7 +197,7 @@ Dirichlet boundary conditions can be imposed with the keyword ``heat_reservoir``
      temperature = 300
     }
     
-A surface boundary resistance can be added with the keyword ``surface_resistance`` .
+A surface boundary resistance can be added with the keyword ``surface_resistance``.
 
 ::
 
@@ -207,9 +209,14 @@ A surface boundary resistance can be added with the keyword ``surface_resistance
     }
     
 
-where  surface_resistance is  given by the  keyword  r_surf (r_surf is in  :math:`cm^{2} W/ K)`
+where  surface_resistance is  given by the  keyword  r_surf (r_surf is in  :math:`m^{2} W/ K)`.
+
+This boundary condition imposes a surface resistance R, so that the heat flux is constrained to
+
+ :math:`J_i n_i = \frac{(T-T_0)}{R}`
 
 
+where  :math:`T_0` is the reference temperature and  :math:`n`  the normal to the surface.
 
 Finallly,  thermal  flux  can  be  imposed  in  the  following  way
 
@@ -224,8 +231,10 @@ Finallly,  thermal  flux  can  be  imposed  in  the  following  way
     }
 
 
-where  heat_flux is  the  thermal flux in   W/cm^2
+where  heat_flux is  the  thermal flux in   W/m^2.
 
+This boundary condition imposes a fixed thermal flux, i.e.  :math:`J_i n_i =J_0`
+, where  :math:`n` is the normal to the surface and  :math:`J_0`  the prescribed thermal flux.
 
 
 
