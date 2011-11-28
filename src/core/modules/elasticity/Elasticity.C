@@ -185,10 +185,10 @@ Elasticity::do_solve(void)
     //The error is based on the elastic energy
     //double elastic_energy = abs(compute_elastic_energy());
     //error_energy = abs((new_energy - energy)/energy) * 100.0;
-    //energy = new_energy;
+    //energy = new_energÄy;
 
-    if ((SimulationOptions::verbose() > 2) && iter > 0) 
-    {
+   // if ((SimulationOptions::verbose() > 2) && iter > 0)
+    //{
       cout<<"Iter: "<<iter<<"  Error:  "<<error_u<<" %"<<endl;
     //  cout<<"|    "<<iter<<"      ";
     //  cout<<"|    "<<new_energy<<"     ";
@@ -196,7 +196,7 @@ Elasticity::do_solve(void)
     //  cout<<"| "<<norm<<"  ";
     //  cout<<"| "<<error_u<<" |";
     //  cout<<endl;
-    }
+    //}
     //cout<<endl;
 
     if (myopt.deformation)
@@ -274,99 +274,115 @@ Elasticity::get_solution_secure(const Elem* elem,
    
    RealTensor total_strain(0);
    RealTensor total_stress(0);
+   RealTensor stress(0);
+   RealTensor strain(0);
 
   
    for (ID n = 0; n < np; n++)
    {
-     mod.calculate(elem, real_pts[n]);
+     mod.calculate(elem, p[n]);
      
      const Tensor4DSym& C = mod.get_stiffness();
      const RealGradient& force_source =  mod.get_force_source();
      const RealTensor& strain_source  =  mod.get_strain_source();
      const RealTensor& stress_source  =  mod.get_stress_source();
     
+     RealGradient u(0);
+     for (unsigned int i = 0;i<3; i ++)
+       for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
+         u(i) +=(solution)(dof_indices[i][alpha]) * phi[alpha][n];
+
+     //------Strain-------------------------
+
+     for (unsigned int i = 0;i<3; i ++)
+       for (unsigned int j = 0;j<=i; j ++)
+       {
+
+         double der1 = 0;
+         for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
+           der1 += (solution)(dof_indices[i][alpha]) * dphi[alpha][n](j);
+
+         double der2 = 0;
+         for (unsigned int alpha = 0; alpha<dof_indices[j].size() ;alpha ++)
+           der2 += (solution)(dof_indices[j][alpha]) * dphi[alpha][n](i);
+
+         strain(i,j) = 0.5 * (der1 + der2);
+
+       }
+
+     stress = C*strain;
+     total_strain = strain + strain_source;
+     total_stress = C * total_strain + stress_source;
+
      //----Displacemet--------
      if (values.count(Displacement))
      {
-      
-       //----Displacemet-------- 
-       RealGradient u(0);
-       for (unsigned int i = 0;i<3; i ++)
-	 for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
-	   u(i) +=(solution)(dof_indices[i][alpha]) * phi[alpha][n];
-        
        values[Displacement][3*n]   = u(0);
        values[Displacement][3*n+1] = u(1);
        values[Displacement][3*n+2] = u(2);
      }
 
-     RealTensor strain(0);
-     if (values.count(Strain) || values.count(StrainCrystal) ||
-         values.count(Stress) || values.count(Energy) )
+     //Total Strain
+     if (values.count(Strain))
      {
-       //------Strain-------------------------
-   
-       for (unsigned int i = 0;i<3; i ++)
-	 for (unsigned int j = 0;j<=i; j ++)
-	 {
-	   
-	   double der1 = 0;
-	   for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
-	     der1 += (solution)(dof_indices[i][alpha]) * dphi[alpha][n](j);
-	   
-	   double der2 = 0;
-	   for (unsigned int alpha = 0; alpha<dof_indices[j].size() ;alpha ++)
-	     der2 += (solution)(dof_indices[j][alpha]) * dphi[alpha][n](i);
-	   
-	   strain(i,j) = 0.5 * (der1 + der2);
-	   
-	 }
-
-
-       total_strain = strain + strain_source;
-       if (values.count(Strain))
-       {
-	 values[Strain][6*n] =   total_strain(0,0);
-	 values[Strain][6*n+1] = total_strain(1,1);
-	 values[Strain][6*n+2] = total_strain(2,2); 
-	 values[Strain][6*n+3] = total_strain(1,0);
-	 values[Strain][6*n+4] = total_strain(2,1);
-	 values[Strain][6*n+5] = total_strain(2,0); 
-       }
-
-       if (values.count(StrainCrystal))
-       {
-
-	 const Material* mat = mod.get_material();
-	 const RotatedCrystal&   cr = mat->get_rotated_crystal ();
-	 const Tensor2Gen& rotate = cr.RotMatrix;
-	 RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate);
-
-	 values[StrainCrystal][6*n] =   crystal_strain(0,0);
-	 values[StrainCrystal][6*n+1] = crystal_strain(1,1);
-	 values[StrainCrystal][6*n+2] = crystal_strain(2,2);
-	 values[StrainCrystal][6*n+3] = crystal_strain(1,0);
-	 values[StrainCrystal][6*n+4] = crystal_strain(2,1);
-	 values[StrainCrystal][6*n+5] = crystal_strain(2,0);
-       }
-
+       values[Strain][6*n] =   total_strain(0,0);
+       values[Strain][6*n+1] = total_strain(1,1);
+       values[Strain][6*n+2] = total_strain(2,2);
+       values[Strain][6*n+3] = total_strain(1,0);
+       values[Strain][6*n+4] = total_strain(2,1);
+       values[Strain][6*n+5] = total_strain(2,0);
      }
      
-     //Stress
-     if (values.count(Stress) || values.count(Energy))
+     //Internal Strain
+     if (values.count(InternalStrain))
+     {
+       values[Strain][6*n] =   strain(0,0);
+       values[Strain][6*n+1] = strain(1,1);
+       values[Strain][6*n+2] = strain(2,2);
+       values[Strain][6*n+3] = strain(1,0);
+       values[Strain][6*n+4] = strain(2,1);
+       values[Strain][6*n+5] = strain(2,0);
+     }
+
+     //Total strain in the crystal system
+     if (values.count(StrainCrystal))
      {
        
-       total_stress = C * total_strain + stress_source;
+       const Material* mat = mod.get_material();
+       const RotatedCrystal&   cr = mat->get_rotated_crystal ();
+       const Tensor2Gen& rotate = cr.RotMatrix;
+       RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate);
 
-       if (values.count(Stress))
-	 {
-	   values[Stress][6*n] = total_stress(0,0);
-	   values[Stress][6*n+1] = total_stress(1,1);
-	   values[Stress][6*n+2] = total_stress(2,2); 
-	   values[Stress][6*n+3] = total_stress(1,0);
-	   values[Stress][6*n+4] = total_stress(2,1);
-	   values[Stress][6*n+5] = total_stress(2,0); 
-	 }
+       values[StrainCrystal][6*n] =   crystal_strain(0,0);
+       values[StrainCrystal][6*n+1] = crystal_strain(1,1);
+       values[StrainCrystal][6*n+2] = crystal_strain(2,2);
+       values[StrainCrystal][6*n+3] = crystal_strain(1,0);
+       values[StrainCrystal][6*n+4] = crystal_strain(2,1);
+       values[StrainCrystal][6*n+5] = crystal_strain(2,0);
+     }
+
+
+     if (values.count(Stress))
+     {
+       values[Stress][6*n] = total_stress(0,0);
+       values[Stress][6*n+1] = total_stress(1,1);
+       values[Stress][6*n+2] = total_stress(2,2);
+       values[Stress][6*n+3] = total_stress(1,0);
+       values[Stress][6*n+4] = total_stress(2,1);
+       values[Stress][6*n+5] = total_stress(2,0);
+     }
+
+     //Internal Stress
+     if (values.count(InternalStress))
+     {
+
+       values[InternalStress][6*n] = stress(0,0);
+       values[InternalStress][6*n+1] = stress(1,1);
+       values[InternalStress][6*n+2] = stress(2,2);
+       values[InternalStress][6*n+3] = stress(1,0);
+       values[InternalStress][6*n+4] = stress(2,1);
+       values[InternalStress][6*n+5] = stress(2,0);
+
      }
   
      //----------Stress crystal
@@ -486,9 +502,6 @@ Elasticity::get_stress(const Elem* elem, const Point& p)
   
   RealTensor stress(0);
 
-  //if (iter>1)
-  //{
-   
     std::vector<double> stress_p(6,0.0);
     std::map<ID, std::vector<double> > values;
     values[Stress] = stress_p;
@@ -506,11 +519,41 @@ Elasticity::get_stress(const Elem* elem, const Point& p)
     stress(2,0) = stress(0,2); 
     stress(2,1) = stress(1,2);
 
-   
-    //}
+  return stress;
+}
+
+
+RealTensor
+Elasticity::get_internal_stress(const Elem* elem, const Point& p)
+{
+
+  RealTensor stress(0);
+
+    std::vector<double> stress_p(6,0.0);
+    std::map<ID, std::vector<double> > values;
+    values[InternalStress] = stress_p;
+
+    std::vector<Point>  points(1);  points[0] = p;
+    get_solution_secure(elem,values,points);
+
+    stress(0,0) = values[InternalStress][0];
+    stress(1,1) = values[InternalStress][1];
+    stress(2,2) = values[InternalStress][2];
+    stress(0,1) = values[InternalStress][3];
+    stress(1,2) = values[InternalStress][4];
+    stress(0,2) = values[InternalStress][5];
+    stress(1,0) = stress(0,1);
+    stress(2,0) = stress(0,2);
+    stress(2,1) = stress(1,2);
 
   return stress;
 }
+
+
+
+
+
+
 
 
 
@@ -633,79 +676,150 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    for (ID beta=0; beta<n_dofs_vec[j]; beta++)
 	      (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
 	    
-
 	for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	{  
-          //Total stress -> internal plus external
+          //Add external stress
 	  RealGradient tmp = (stress + (C * strain)) * dphi[alpha][qp] + force *  phi[alpha][qp];
-	  //RealGradient tmp =  get_stress(elem,ref_points[qp]) * dphi[alpha][qp] + force *  phi[alpha][qp];
+
+	  //Add internal stress
+	  tmp += get_internal_stress(elem,q_point[qp]) * dphi[alpha][qp];
 	  for (ID i = 0;i <3; i++)
 	    (*(F[i]))(alpha) -= JxW[qp] * tmp(i);
+
 	}
       
     }//End QP
 
-    //Boundary Conditions
+    //Surface Integration
+//    for (unsigned int s = 0; s < elem->n_sides(); s++)
+//    {
+//      ElasticityBoundaryModel*  boundary_mod =
+//        get_interface_model<ElasticityBoundaryModel>(elem, s);
+//
+//          fe_face->reinit(elem, s);
+//
+//          if (boundary_mod == NULL)
+//          {
+//
+//            for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+//            {
+//              for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
+//              {
+//                RealGradient tmp = get_stress(elem,qface_point[qp]) * normal[qp];
+//                for (ID i = 0;i <3; i++)
+//                  (*(F[i]))(alpha) += JxW_face[qp] * phi_face[alpha][qp] * tmp(i) ;
+//              }
+//            }
+//          }
+//    }
+//
+
+    //Boundary conditions
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
-      ElasticityBoundaryModel*  boundary_mod =
-	get_interface_model<ElasticityBoundaryModel>(elem, s);
+      const ElementSide elside(elem->top_parent(),s);
 
-	if (boundary_mod != NULL)
-	{
-	  fe_face->reinit(elem, s);
-	  
-	  for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-	  {
-	    boundary_mod->calculate(elem, s, qface_point[qp]);
-	    
-	    RealTensor H(0);
-	    RealGradient R(0);
-	    double b(0);
+      if (si.is_outer_boundary(elside))
+      {
 
-            boundary_mod->set_normal(normal[qp]);
-	    boundary_mod->get_coefficients(H, b, R);
-            bool is_extended = boundary_mod->is_extended();
+          ElasticityBoundaryModel*  boundary_mod =
+              get_interface_model<ElasticityBoundaryModel>(elem, s);
 
-	    // we use a penalty approach here for its simplicity
-	    if ((b < 1e-10) && (b >= 0)) b = 1e-20;
-	    else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+          fe_face->reinit(elem, s);
 
-	    H /= b;
-	    R /= b;
+          RealTensor H(0);
+          RealGradient R(0);
 
-	    mod.calculate(elem, qface_point[qp]);
-	    const RealTensor& strain =  mod.get_strain_source();
-	    const RealTensor& stress =  mod.get_stress_source();	    
-	    const Tensor4DSym& C = mod.get_stiffness();
+          if (boundary_mod != NULL)
+          {
+            boundary_mod->calculate(elem, s,elem->centroid());
+            double b(0);
+            boundary_mod->set_normal(normal[0]);
+            boundary_mod->get_coefficients(H, b, R);
 
-	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
-	    {
-	      RealGradient tmp(0);
+          //  if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+           // else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+           // H /= b;
+            //R /= b;
+          }
+          else
+          {
 
-              if (is_extended)
-                tmp =(C * strain) * normal[qp];
+            //mod.calculate(elem, q_point[0]);
+            //const Tensor4DSym& C = mod.get_stiffness();
+            //const RealTensor& strain =  mod.get_strain_source();
+            //const RealTensor& stress =  mod.get_stress_source();
+           // R = (stress + (C * strain)) * normal[0];
+            //R = get_internal_stress(elem,elem->centroid())*normal[0];
+          }
 
-		//tmp = (stress + (C * strain)) * normal[qp];
 
-              //Get the total stress (internal and external)
-              //RealGradient tmp = (get_stress(elem,ref_face_points[qp]) * normal[qp]);
+          for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+            for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
+              for (unsigned int i =0; i<3; i++)
+              {
+                (*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
 
-	      for (unsigned int i =0; i<3; i++)
-	      { 
-              
-		(*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * (R(i) + tmp(i));
-		
-		for (unsigned int j =0; j<3; j++)
-		  for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)
-		    (*(K[i][j]))(alpha,beta) += JxW_face[qp] * H(i,j) * phi_face[alpha][qp] * phi_face[beta][qp];
-		
-	      }
-	    }
+                for (unsigned int j =0; j<3; j++)
+                  for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)
+                    (*(K[i][j]))(alpha,beta) += JxW_face[qp] * H(i,j) * phi_face[alpha][qp] * phi_face[beta][qp];
 
-	  }
-	}
+              }
+      }
     }
+	  
+//	  for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+//	  {
+//
+//	    RealTensor H(0);
+//	    RealGradient R(0);
+//
+//	    //Boundary conditions
+//	    if (boundary_mod != NULL)
+//	    {
+//	      boundary_mod->calculate(elem, s, qface_point[qp]);
+//
+//	      double b(0);
+//
+//	      boundary_mod->set_normal(normal[qp]);
+//	      boundary_mod->get_coefficients(H, b, R);
+//	      //bool is_extended = boundary_mod->is_extended();
+//
+//	       //we use a penalty approach here for its simplicity
+//	      if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+//	      else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+//	      H /= b;
+//	      R /= b;
+//
+//	      if (boundary_mod->get_type() == "ebnd_extended")
+//	      {
+//	        mod.calculate(elem, qface_point[qp]);
+//	        const RealTensor& strain =  mod.get_strain_source();
+//	        const RealTensor& stress =  mod.get_stress_source();
+//	        const Tensor4DSym& C = mod.get_stiffness();
+//	        R = ( C * strain) * normal[qp];
+//	      }
+//	    }
+//	    else
+//	    {
+//	       // R = (get_stress(elem,qface_point[qp]) * normal[qp]);
+//	    }
+//
+//	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
+//	    {
+//	      for (unsigned int i =0; i<3; i++)
+//	      {
+//		(*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
+//
+//		for (unsigned int j =0; j<3; j++)
+//		  for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)
+//		    (*(K[i][j]))(alpha,beta) += JxW_face[qp] * H(i,j) * phi_face[alpha][qp] * phi_face[beta][qp];
+//
+//	      }
+//	    }
+//
+//	  }
+
 
     //-------------------------
     system.matrix->add_matrix (Ke, dof_indices);
@@ -763,7 +877,7 @@ Elasticity::apply_shape_deformation()
 
       fe->reinit(elem, &p);
   
-      Tensor1 displ(0);
+      Point displ(0);
       for (unsigned int i = 0;i<3; i ++)
 	for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
 	  displ(i) +=(solution)(dof_indices[i][alpha]) * phi[alpha][0];
@@ -771,9 +885,9 @@ Elasticity::apply_shape_deformation()
       displ /= get_scaling().get_calc_mesh_units();
 
       Tensor1 new_pos(0);
-      new_pos(1) = displ(1) + old_pos[0](0);
-      new_pos(2) = displ(2) + old_pos[0](1);
-      new_pos(3) = displ(3) + old_pos[0](2);
+      new_pos(1) = displ(0) + old_pos[0](0);
+      new_pos(2) = displ(1) + old_pos[0](1);
+      new_pos(3) = displ(2) + old_pos[0](2);
        
       new_pos *=scale;
       

@@ -21,9 +21,9 @@ Clamp::do_init(void)
   double A(0);
   set_is_extended(false);
 
-  H(0,0) = 1;
-  H(1,1) = 1;
-  H(2,2) = 1;
+  H(0,0) = 1e20;
+  H(1,1) = 1e20;
+  H(2,2) = 1e20;
 
   set_coefficients(H,A,R);
 }

@@ -11,7 +11,7 @@
 #include "StiffnessModel.h"
 #include "BodyForceModel.h"
 #include "tiber_dll.h"
-
+#include "Messages.h"
 class StiffnessModel;
 class Elem;
 
@@ -46,6 +46,9 @@ class TBDLLOCAL ElasticityModel : public PhysicalModel
     ElasticityModel(const ModelOptions& options);
 
     virtual void do_init(void);
+
+    //! Print some useful information
+    virtual void do_print_info(void);
 
     virtual void prepare_submodels(void);
 

@@ -37,7 +37,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     //! The initialization
     virtual void do_init(void);
 
-
     //! Parse the options from the input file
     virtual void parse_options(void);
 
@@ -81,8 +80,12 @@ class TBDLLOCAL Elasticity : public SimulationInterface
   //! Compute the elastic energy
   Real compute_elastic_energy(void);
 
+  //!Get the total stress
   RealTensor get_stress(const Elem* elem, const Point& p);
   
+  //!Get the internal stress
+  RealTensor get_internal_stress(const Elem* elem, const Point& p);
+
   typedef std::map<const Elem*, RealGradient> force_vector;
 
 
@@ -116,7 +119,9 @@ class TBDLLOCAL Elasticity : public SimulationInterface
       Strain,        /*!< the strain */ 
       StrainCell,        /*!< the strain */
       StrainCrystal,  /*!< the strain in the crystal system*/
-      Stress,            /*!< the stress */
+      Stress,            /*!< the total stress */
+      InternalStress,   /*!< the internal stress */
+      InternalStrain,   /*!< the internal strain */
       StressCrystal,  /*!< the stress in the crystal system*/
       Displacement,     /*!< the displacement */
       ForceSource,      /*!< force source */
