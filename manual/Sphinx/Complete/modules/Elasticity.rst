@@ -6,56 +6,26 @@ Elasticity
 =================================================
 
 
-Introduction
--------------
-
-Elasticity is a Finite Element solver for mechanical equilibrium problems. 
-It brings features typically developed for structural stability solvers into device modeling. 
-The coupled treatment of the electro-mechanical problem within a unique framework results very useful to explore for multidisciplinary ideas. 
-
-Assuming a small displacement, Elasticity  computes the strain by solving the equation
-
-.. math::
-   :nowrap:
-   :label:
-   
-   \[
-   \frac{\partial}{\partial x_j}C_{ijlk}\frac{\partial u_l}{\partial x_k} = f_i
-   \]
-
-where ``C`` is the stiffness constant  and ``f`` is the total external body force. 
-The latter may include several contribution such as the converse piezoelectric effect, the thermal expansion and a lattice mismatch induced strain. 
-The latter, described in the example below, occurs when an interface is created between two materials with different lattice constants. 
-Let :math:`\epsilon^{LM}` be the lattice mismatch strain, then the effective body force reads as :  
-
-.. math::
-   :nowrap:
-   :label:
-
-    \[
-    f_i = -\frac{\partial }{\partial x_j} C_{ijlk}\epsilon_{lk}^{LM}
-    \]
-
-
-
-
 
 
 Theory
 -------------
 
+
+Elasticity is a Finite Element solver for mechanical equilibrium problems. 
+It brings features typically developed for structural stability solvers into device modeling. 
+The coupled treatment of the electro-mechanical problem within a unique framework results very useful to explore for multidisciplinary ideas. 
 Details about the theory of continuous elasticity applied to device mechanical deformation 
 can be found in [Povolotskyi]_ .
 
 TiberCAD computes the mechanical deformation of a body subjected to external forces by means of the equilibrium mechanical equation, i.e.
 
 .. math::
-   :nowrap:
-   :label:
+   :label: mec_eq
 
-    \[
+    
     \frac{\partial \sigma_{ij}}{\partial x_j} = f_i
-    \]
+    
 
 wheres :math:`\sigma` is the stress second-rank tensor and f is the external body force applied to the system. 
 As we will see below, any strain and stress source can be appropriately mapped into an equivalent body force. 
@@ -65,26 +35,24 @@ where **C** is the stiffness fourth-rank tensor.
 The strain is related to the displacement u by the expression
 
 .. math::
-   :nowrap:
-   :label:
+   :label: strain_eq 
 
-    \[
+    
     \epsilon_{kl}=\frac{1}{2}\left(\frac{\partial u_l}{x_k}-\frac{\partial u_k}{\partial u_l} \right )
-    \]
+    
 
 Relying on the symmetry of the strain and stiffness tensor the final equation reads as
 
 .. math::
-   :nowrap:
-   :label:
+   :label: strain_eq2
 
-    \[
+    
     \frac{\partial}{\partial x_j}C_{ijlk}\frac{\partial u_l}{\partial x_k} = f_i
-    \]
+    
 
 The non-linear strain is computed by applying the mechanical equilibrium equation on the deformed mesh.  
-The number of the shape iteration is set by the keyword **shape_iteration** (default = 0, i.e. no deformation is performed) 
-whereas the maximum tolerated error can be indicated with shape_error ( default = :math:`1e^{-3}` ).
+The number of the shape iterations is set by the keyword **shape_iteration** (default = 0, i.e. no deformation is performed) 
+whereas the maximum tolerated error can be indicated with **shape_error** ( default = :math:`1e^{-3}` ).
 
 
 
@@ -95,10 +63,9 @@ By default the stiffness constant is anisotropic. For the zincoblend crystal str
 (with the Voigt notation) C11, C12, C44. 
 
 ..  math::
-    :nowrap:
-    :label:
+    :label: stiffness
     
-    \begin{equation}
+   
     C = \left(
     \begin{array}{cccccc}
     C_{11} & C_{12} & C_{12} & 0 & 0 & 0\\
@@ -109,17 +76,16 @@ By default the stiffness constant is anisotropic. For the zincoblend crystal str
     0 &  0  &  0 & 0 & 0 & c_{44} 
     \end{array}
     \right)
-    \end{equation}
+   
     
 |
 
 For the wurtzite structure we have C11, C12, C13 and C44.
 
 ..  math::
-    :nowrap:
-    :label:
+    :label: stiffness2
     
-    \begin{equation}
+   
     C = \left(
     \begin{array}{cccccc}
     C_{11} & C_{12} & C_{13} & 0 & 0 & 0\\
@@ -130,7 +96,7 @@ For the wurtzite structure we have C11, C12, C13 and C44.
     0 &  0  &  0 & 0 & 0 & \frac{C_{11} - C_{22}}{2}   
     \end{array}
     \right)
-    \end{equation}
+   
 
 |
 
@@ -139,10 +105,9 @@ In this case, the only independent parameters are the Young modulus
 (Young in GPa) and the Poisson's ratio (Poisson). 
 
 ..  math::
-    :nowrap:
-    :label:
+    :label: anisotrop_stiff
     
-    \begin{equation}
+   
     C =
     \frac{E}{(1+\nu)(1-2\nu)} \left(
     \begin{array}{cccccc}
@@ -154,7 +119,7 @@ In this case, the only independent parameters are the Young modulus
     0 &  0  &  0 & 0 & 0 & \frac{1-2\nu}{2}   
     \end{array}
     \right)
-    \end{equation}
+   
 
 |
 
@@ -165,8 +130,8 @@ Example::
 
   Stiffness isotropic
     {
-     Young = 129
-     Poisson = 0.349
+     young = 129
+     poisson = 0.349
     }
 
 
@@ -176,6 +141,16 @@ Module options
 ---------------------
 
 The following options influence the behaviour of the Elasicity module:
+
+
+ ``shape_iteration`` : integer
+    defines the number of  shape iterations for non-linear strain computation. 
+    The default is ``1``, meaning that
+
+ ``shape_error`` : double
+   defines the maximum tolerated error in non-linear strain computation (default = :math:`1e^{-3}`) 
+
+
 
 
 Solution/Plot variables
@@ -190,16 +165,11 @@ given in :ref:`Plotting variables<el_solutions>`.
 Solver section
 --------------------
 
-The ``Solver`` section of the Elasicity   module refers to  
+The ``Solver`` section of the Elasicity   module refers to  ???
 
 
 Physics section
 --------------------
-
-The ``Physics`` block contains generic options for the bulk physical model and the definition
-of submodels. The generic options are
-
-
 
 In the following we describe all submodels. As mentioned in the Introduction (REF HERE)
 submodels can be restricted to a subset of simulation regions.
@@ -224,7 +194,7 @@ The  keyword  is ``body_force`` , i.e ::
   {
   }
 
-The type can be ``constant``, ``converse_piezo``   or ``lattice_mismatch``
+The type can be ``constant``, ``converse_piezo``   or ``lattice_mismatch`` or   thermal_stress ????
 
 
 Constant
@@ -335,12 +305,14 @@ The type can be ``isotropic``   or ``anisotropic``.  The  latter is  the default
 isotropic
 .................
 
+When the stiffness constant is  ``isotropic``, the  user  has  to  provide the  Young module (``young``) and Poisson ratio (``poisson``).
+
 Example::
 
    stiffness  isotropic 
     {
-        young =
-        poisson = 
+        young = 129
+        poisson = 0.349
     }
 
 
@@ -348,14 +320,15 @@ Example::
 anisotropic
 .................
 
+Even  when the  ``anisotropic`` constant is  chosen, it  is  possible to override it in the input file.
 
 Example::
 
    stiffness  anisotropic 
     {
-        C11 =
-        C22 =
-        C44 = 
+        C11 =55
+        C22 = 123
+        C44 = 103
          
     }
 
@@ -384,7 +357,7 @@ Surface force
 
 
 Surfaces forces :math:`f^0` are applied by imposing :math:`\sigma_{ij} n_{j} = f_i^0` along the surface with normal n. 
-This boundary condition can be used with the keyword ``surface_force`` . The force can be specified in GPa with force. 
+This boundary condition can be used with the keyword ``surface_force``.  
 An example is shown below ::
 
   Contact base
@@ -393,7 +366,7 @@ An example is shown below ::
      force = (0,0,0.5) 
     }
 
-where force is  the applied force in  GPa.
+where ``force`` is  the applied force in  GPa.
 
 
 Clamp
@@ -415,6 +388,7 @@ Example::
 
 Plane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This boundary condition constrains nodes to  move along the the plane of the  contact they belong to. 
 
 Example::
 
@@ -432,17 +406,19 @@ Example::
 
 Custom
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``Custom`` imposes a general  boundary  condition by means of the matrix and vector constrain H and R respectively, which are  related to the displacement by means of  :math:`Hu=R`.
 
 Example::
 
  
    Contact substrate 
      {
-      type = Custom
-       H = 
-       R =
 
-      }
+      type = Custom
+      H = ((1,0,0),(0,1,0),(0,0,1))
+      R = (1,0,1)
+
+     }
 
 
 
@@ -460,16 +436,14 @@ Example::
      \textbf{Keyword}  & \textbf{Description} & \textbf{Units}  \\
      \hline
      \hline
-     \texttt{Strain} & total strain  &  \\
-     \texttt{StrainCell} & total strain   &  \\
-     \texttt{StrainCrystal} & total strain  &  \\
-     \texttt{Stress} & stress & GPa \\
-     \texttt{StressCrystal} & stress & GPa \\
+     \texttt{Strain} & total strain  & - \\
+     \texttt{StrainCrystal} & total strain in the crystal system & - \\
+     \texttt{Stress} & total stress & GPa \\
+     \texttt{StressCrystal} & total stress in the crystal system & GPa \\
      \texttt{Displacement} & displacement  & m  \\
      \texttt{ForceSource} & force   & N/m3  \\
-     \texttt{StrainSource} &  force-generated strain   &   \\
-     \texttt{StressSource} & force-generated stress  & GPa \\
-     \texttt{Energy} & ???  & ??  \\
+     \texttt{StrainSource} & strain source  & -  \\
+     \texttt{StressSource} & stress source   & GPa \\
      \end{tabular}
      \caption{Solution/Plot variables}
      \label{table:el_solutions}
