@@ -131,7 +131,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     };
 
 
-  ID iter;
   //! The total displacement
  AutoPtr<NumericVector<Number> > sol;
 

@@ -120,7 +120,6 @@ Elasticity::parse_options(void)
 
   myopt.shape_error = opt.get_option("shape_error",1e-2);
   myopt.shape_iterations = opt.get_option("shape_iterations",1);
-  cout<< myopt.shape_iterations<<endl;
   myopt.deformation = opt.get_option("do_deformation",false);
   myopt.magnification = opt.get_option("magnification",1);
   myopt.structure_to_be_strained = opt.get_option("strain_atomistic_structure", "all");
@@ -157,7 +156,7 @@ Elasticity::do_solve(void)
   sol =  (system.solution)->clone();
   sol->zero();
 
-  iter = 0;
+  int iter = 0;
   double error_energy = 0.0;
   double error_u = 0.0;
   double tot_norm = 0.0;
@@ -187,25 +186,20 @@ Elasticity::do_solve(void)
     //error_energy = abs((new_energy - energy)/energy) * 100.0;
     //energy = new_energÄy;
 
-   // if ((SimulationOptions::verbose() > 2) && iter > 0)
-    //{
-      cout<<"Iter: "<<iter<<"  Error:  "<<error_u<<" %"<<endl;
-    //  cout<<"|    "<<iter<<"      ";
-    //  cout<<"|    "<<new_energy<<"     ";
-    //  cout<<"| "<<error_energy<<" ";
-    //  cout<<"| "<<norm<<"  ";
-    //  cout<<"| "<<error_u<<" |";
-    //  cout<<endl;
-    //}
-    //cout<<endl;
+    if ((verbose() > 1) && iter > 0)
+    {
+      ostringstream os;
+      os << "iteration " << iter << ":  Error =  " << error_u << " %";
+      Messages::info(os.str());
+    }
 
     if (myopt.deformation)
        apply_shape_deformation();
     
    
- iter +=1;
+    iter += 1;
 
-  } while (error_u > myopt.shape_error & iter < myopt.shape_iterations);
+  } while ((error_u > myopt.shape_error) && (iter < myopt.shape_iterations));
 
  
   double elastic_energy = abs(compute_elastic_energy());
