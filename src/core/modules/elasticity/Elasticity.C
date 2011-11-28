@@ -744,8 +744,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
               const RealTensor& stress =  mod.get_stress_source();
               const Tensor4DSym& C = mod.get_stiffness();
               R = ( C * strain) * normal[0];
-              cout<<R(1)<<endl;
-           }
+            }
 
           //  if ((b < 1e-10) && (b >= 0)) b = 1e-20;
            // else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
