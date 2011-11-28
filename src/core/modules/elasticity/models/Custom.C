@@ -21,8 +21,8 @@ Custom::do_init(void)
   RealGradient  R(0);
   double A(0);
  
-  get_parameter("constrain_matrix",H,false);
-  get_parameter("constrain_vector",R,false);
+  get_parameter("H",H,false);
+  get_parameter("R",R,false);
 
   
   set_coefficients(H*1e20,A,R*1e20);
