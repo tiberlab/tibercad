@@ -721,7 +721,6 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
       if (si.is_outer_boundary(elside))
       {
-
           ElasticityBoundaryModel*  boundary_mod =
               get_interface_model<ElasticityBoundaryModel>(elem, s);
 
@@ -732,36 +731,25 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
           if (boundary_mod != NULL)
           {
+            boundary_mod->set_normal(normal[0]);
             boundary_mod->calculate(elem, s,elem->centroid());
             double b(0);
-            boundary_mod->set_normal(normal[0]);
             boundary_mod->get_coefficients(H, b, R);
 
-           if (boundary_mod->get_type() == "ebnd_extended")
-           {
-              mod.calculate(elem, qface_point[0]);
-              const RealTensor& strain =  mod.get_strain_source();
-              const RealTensor& stress =  mod.get_stress_source();
-              const Tensor4DSym& C = mod.get_stiffness();
-              R = ( C * strain) * normal[0];
-            }
+            //if (boundary_mod->get_type() == "ebnd_extended")
+            //{
+            //  mod.calculate(elem, qface_point[0]);
+            //  const RealTensor& strain =  mod.get_strain_source();
+            //  const RealTensor& stress =  mod.get_stress_source();
+            //  const Tensor4DSym& C = mod.get_stiffness();
+            //  R = ( C * strain) * normal[0];
+            //}
 
-          //  if ((b < 1e-10) && (b >= 0)) b = 1e-20;
-           // else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
-           // H /= b;
-            //R /= b;
+            if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+            else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+            H /= b;
+            R /= b;
           }
-          else
-          {
-
-            //mod.calculate(elem, q_point[0]);
-            //const Tensor4DSym& C = mod.get_stiffness();
-            //const RealTensor& strain =  mod.get_strain_source();
-            //const RealTensor& stress =  mod.get_stress_source();
-           // R = (stress + (C * strain)) * normal[0];
-            //R = get_internal_stress(elem,elem->centroid())*normal[0];
-          }
-
 
           for (unsigned int qp = 0; qp < qface.n_points(); qp++)
             for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
@@ -776,59 +764,6 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
               }
       }
     }
-	  
-//	  for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-//	  {
-//
-//	    RealTensor H(0);
-//	    RealGradient R(0);
-//
-//	    //Boundary conditions
-//	    if (boundary_mod != NULL)
-//	    {
-//	      boundary_mod->calculate(elem, s, qface_point[qp]);
-//
-//	      double b(0);
-//
-//	      boundary_mod->set_normal(normal[qp]);
-//	      boundary_mod->get_coefficients(H, b, R);
-//	      //bool is_extended = boundary_mod->is_extended();
-//
-//	       //we use a penalty approach here for its simplicity
-//	      if ((b < 1e-10) && (b >= 0)) b = 1e-20;
-//	      else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
-//	      H /= b;
-//	      R /= b;
-//
-//	      if (boundary_mod->get_type() == "ebnd_extended")
-//	      {
-//	        mod.calculate(elem, qface_point[qp]);
-//	        const RealTensor& strain =  mod.get_strain_source();
-//	        const RealTensor& stress =  mod.get_stress_source();
-//	        const Tensor4DSym& C = mod.get_stiffness();
-//	        R = ( C * strain) * normal[qp];
-//	      }
-//	    }
-//	    else
-//	    {
-//	       // R = (get_stress(elem,qface_point[qp]) * normal[qp]);
-//	    }
-//
-//	    for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
-//	    {
-//	      for (unsigned int i =0; i<3; i++)
-//	      {
-//		(*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
-//
-//		for (unsigned int j =0; j<3; j++)
-//		  for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)
-//		    (*(K[i][j]))(alpha,beta) += JxW_face[qp] * H(i,j) * phi_face[alpha][qp] * phi_face[beta][qp];
-//
-//	      }
-//	    }
-//
-//	  }
-
 
     //-------------------------
     system.matrix->add_matrix (Ke, dof_indices);
