@@ -77,7 +77,14 @@ class Utils
     //! Extract a real tensor from a string
     /*!
      * The input string has to be of the form
-     * \li \verbatim ( a b c; d e f; g h i ) \endverbatim
+     * \li \verbatim a \endverbatim diagonal tensor, isotropic case
+     * \li \verbatim ( a b ) \endverbatim diagonal tensor, unisotropic case with one
+     *    different principal axis
+     * \li \verbatim ( a b c ) \endverbatim  diagonal tensor
+     * \li \verbatim ( a b c d e f ) \endverbatim symmetric tensor with ordering
+     *      \verbatim xx yy zz xy yz xz \endverbatim
+     * \li \verbatim ( a b c; d e f; g h i ) \endverbatim complete tensor
+     * The semicolon can be replaced by a newline.
      *
      * Any of the syntax of the  extract_vector() method can be used for
      * the row data.

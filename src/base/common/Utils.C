@@ -421,19 +421,52 @@ Utils::extract_tensor(const std::string& input, RealTensor& tensor)
   vector<string> rows;
   tokenize(in, rows, ";\n");
 
-  if (rows.size() != 3)
+  vector<double> row;
+
+  if (rows.size() == 1) // only diagonal is supplied
+  {
+    extract_vector<double>(rows[0], row);
+    switch (row.size())
+    {
+      case 1: // isotropic case
+        tensor(0,0) = tensor(1,1) = tensor(2,2) = row[0];
+        break;
+
+      case 2: // one different principal axis, assumed along z
+        tensor(0,0) = tensor(1,1) = row[0];
+        tensor(2,2) = row[1];
+        break;
+
+      case 6: // symmetric tensor in xx yy zz xy yz xz ordering
+        tensor(0,1) = tensor(1,0) = row[3];
+        tensor(1,2) = tensor(2,1) = row[4];
+        tensor(0,2) = tensor(2,0) = row[5];
+
+      case 3: // complete diagonal given
+        tensor(0,0) = row[0];
+        tensor(1,1) = row[1];
+        tensor(2,2) = row[2];
+        break;
+
+      default:
+        throw RuntimeException("\'" + input + "\' does not represent a 3-tensor.");
+    }
+  }
+  else if (rows.size() == 3)
+  {
+    for (size_t i = 0; i < 3; ++i)
+    {
+      extract_vector<double>(rows[i], row);
+      if (row.size() != 3)
+        throw RuntimeException("\'" + input + "\' does not represent a 3-tensor.");
+
+      for (size_t j = 0; j < 3; ++j)
+        tensor(i, j) = row[j];
+    }
+  }
+  else
     throw RuntimeException("\'" + input + "\' does not represent a 3-tensor.");
 
-  vector<double> row;
-  for (size_t i = 0; i < 3; ++i)
-  {
-    extract_vector<double>(rows[i], row);
-    if (row.size() != 3)
-      throw RuntimeException("\'" + input + "\' does not represent a 3-tensor.");
-
-    for (size_t j = 0; j < 3; ++j)
-      tensor(i, j) = row[j];
-  }
 }
 
 
