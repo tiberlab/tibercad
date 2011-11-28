@@ -737,6 +737,16 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
             boundary_mod->set_normal(normal[0]);
             boundary_mod->get_coefficients(H, b, R);
 
+           if (boundary_mod->get_type() == "ebnd_extended")
+           {
+              mod.calculate(elem, qface_point[0]);
+              const RealTensor& strain =  mod.get_strain_source();
+              const RealTensor& stress =  mod.get_stress_source();
+              const Tensor4DSym& C = mod.get_stiffness();
+              R = ( C * strain) * normal[0];
+              cout<<R(1)<<endl;
+           }
+
           //  if ((b < 1e-10) && (b >= 0)) b = 1e-20;
            // else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
            // H /= b;

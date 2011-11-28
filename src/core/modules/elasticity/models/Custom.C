@@ -25,7 +25,7 @@ Custom::do_init(void)
   get_parameter("constrain_vector",R,false);
 
   
-  set_coefficients(H,A,R);
+  set_coefficients(H*1e20,A,R*1e20);
 
 
 }
