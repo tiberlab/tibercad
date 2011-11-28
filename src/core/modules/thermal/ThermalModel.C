@@ -72,9 +72,9 @@ ThermalModel::do_print_info(void)
 {
   Messages::info("Thermal conductivity:");
   ostringstream os;
-  os <<"  Kxx: "<<_kappa(0,0)<<" W/cm K\n";
-  os <<"  Kyy: "<<_kappa(1,1)<<" W/cm K\n";
-  os <<"  Kzz: "<<_kappa(2,2)<<" W/cm K";
+  os <<"  Kxx: "<<_kappa(0,0)<<" W/(m K)\n";
+  os <<"  Kyy: "<<_kappa(1,1)<<" W/(m K)\n";
+  os <<"  Kzz: "<<_kappa(2,2)<<" W/(m K)";
   Messages::info(os.str());
   Messages::newline();
 }
