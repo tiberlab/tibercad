@@ -1,0 +1,102 @@
+
+Log start: Sun Nov 27 19:21:58 2011
+
+
+tiberCAD release 2.1.0 (rev. 3045, x86_64-darwin)
+
+Input file: input.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /Users/giusepperomano/Codes/TiberCAD/materials
+  Log file              : input.log
+
+Setup mesh
+  Reading mesh file mesh.msh ... done.
+  mesh units          : 1e-09 m
+  mesh dimension      :       3
+  number of nodes     :    3751
+  number of elements  :    3000
+  number of subdomains:       2
+
+Create materials ...
+  Added material GaN for region 'Well' (mesh regions 3)
+    (using datafile /Users/giusepperomano/Codes/TiberCAD/materials/GaN.dat)
+    x growth direction : (-1,0,1,0)
+    y growth direction : (-1,2,-1,0)
+    z growth direction : (0,0,0,1)
+  Added material AlGaN for region 'Bulk' (mesh regions 2)
+    (using datafile /Users/giusepperomano/Codes/TiberCAD/materials/AlGaN.dat)
+    alloy with 0.2 AlN, 0.8 GaN
+    x growth direction : (-1,0,1,0)
+    y growth direction : (-1,2,-1,0)
+    z growth direction : (0,0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'elasticity' ...
+  (using /Users/giusepperomano/Codes/TiberCAD/x86_64-darwin/modules/elasticity/elasticity.dylib)
+  Adding boundary 'Base'
+  (using /Users/giusepperomano/Codes/TiberCAD/x86_64-darwin/modules/elasticity/ebnd_clamp.dylib)
+
+Creating bulk models... 
+Setting up bulk models ...
+  (using /Users/giusepperomano/Codes/TiberCAD/x86_64-darwin/modules/elasticity/stiffness_anisotropic.dylib)
+  (using /Users/giusepperomano/Codes/TiberCAD/x86_64-darwin/modules/elasticity/body_force_lattice_mismatch.dylib)
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for elasticity (elasticity)
+
+  Available solution variables:
+  ------------------------------------------------------------------
+  Name                     Units          Type      Association Plot
+  ------------------------------------------------------------------
+  Strain                                  tensor    nodal       y
+  StrainCell                              tensor    cell        n
+  StrainCrystal                           tensor    nodal       n
+  Stress                   GPa            tensor    nodal       y
+  StressCrystal                           tensor    nodal       n
+  Displacement             m              vector    nodal       n
+  ForceSource              N/m3           tensor    nodal       n
+  StrainSource                            tensor    nodal       n
+  StressSource             GPa            tensor    nodal       n
+  Energy                   Joule          real      nodal       n
+  RegionIDs                               real      cell        n
+  ------------------------------------------------------------------
+
+  Output directory      : output
+  Output file format    : vtk
+  Output file basename  : elasticity
+
+
+  # Region Bulk, AlGaN (x = 0.2)
+    Stiffness Constant:
+      C11: 372.8 GPa
+      C12: 135.4 GPa
+      C13: 104 GPa
+      C44: 99.2 GPa
+
+  # Region Well, GaN
+    Stiffness Constant:
+      C11: 367 GPa
+      C12: 135 GPa
+      C13: 103 GPa
+      C44: 95 GPa
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: elasticity 
+
+>>>>------------------------------- (elasticity) -------------------------------
+
+Solve time: 0h 0m 26s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 26s
+Simulation finished...
+Goodbye
+
+Log end: Sun Nov 27 19:22:24 2011
+
+

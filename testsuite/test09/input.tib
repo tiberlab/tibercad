@@ -1,0 +1,46 @@
+Device{
+mension = 3 
+meshfile = mesh.msh
+mesh_units = 1e-9
+material = AlGaN
+x = 0.2 
+x-growth-direction = (-1,0,1,0) 
+y-growth-direction = (-1,2,-1,0) 
+z-growth-direction = (0,0,0,1) 
+Region Well {material = GaN}
+Region Bulk {}
+}
+
+Module elasticity {
+
+plot = (Strain,Stress,Displacements) 
+
+shape_iterations = 1
+do_deformation = false
+Physics {
+
+    body_force lattice_mismatch
+    {
+      x-growth-direction = (-1,0,1,0) 
+      y-growth-direction = (-1,2,-1,0) 
+      z-growth-direction = (0,0,0,1) 
+      reference_material = AlGaN
+      x = 0.2
+    }
+
+}
+
+
+   Contact Base {type = clamp}
+}
+
+Simulation{
+
+solve = elasticity
+
+resultpath = output
+
+}
+
+
+
