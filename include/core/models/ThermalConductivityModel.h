@@ -85,7 +85,7 @@ ThermalConductivityModel::rotate(void)
   {
     const RotatedCrystal&   cr = get_material()->get_rotated_crystal();
     Tensor2Gen RotMatrix = cr.RotMatrix; 
-    // _kappa = sym(RotMatrix * ( _kappa * (RotMatrix.transpose())));        
+    _kappa = sym(RotMatrix * ( _kappa * (RotMatrix.transpose())));
   }
 
 }
