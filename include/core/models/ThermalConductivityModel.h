@@ -4,6 +4,7 @@
 #define _THERMALCONDUCTIVITYMODEL_H_
 
 #include "PhysicalModel.h"
+#include "TensorOperators.h"
 
 #include "tensor_value.h"
 
@@ -85,7 +86,7 @@ ThermalConductivityModel::rotate(void)
   {
     const RotatedCrystal&   cr = get_material()->get_rotated_crystal();
     Tensor2Gen RotMatrix = cr.RotMatrix; 
-    //_kappa = RotMatrix * ( _kappa * (RotMatrix.transpose()));
+    _kappa = RotMatrix * ( _kappa * (RotMatrix.transpose()));
   }
 
 }
