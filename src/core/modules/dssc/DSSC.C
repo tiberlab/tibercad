@@ -198,7 +198,6 @@ DSSC::compute_scaling(Scaling::ScalingType type)
 
     double mu = sc->get_mobility_n();
     double C = sc->get_equilibrium_concentrations().n;
-    //double C1 = sc->get_generation_rate();
     //C = (C > C1) ? C : C1;
     mu0 = (mu0 > mu) ? mu0 : mu;
     C0 = (C0 > C) ? C0 : C;
@@ -278,11 +277,6 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   x0 = 1;
   mesh_units = 1;
   phi0 = 1;
-  //_cond_scaling.n = 1;
-  //_cond_scaling.I = 1;
-  //_cond_scaling.I3 = 1;
-  //_cond_scaling.C = 1;
-  //get_scaling().set_scaling_type(type);
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
@@ -343,21 +337,18 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
     const unsigned int eI_var = system->variable_number("fermi_I");
     const unsigned int eI3_var = system->variable_number("fermi_I3");
     const unsigned int eC_var = system->variable_number("fermi_C");
-    //const unsigned int aC_var = system->variable_number("aux_cat");
 
     vector<unsigned int> dof_indices_u;
     vector<unsigned int> dof_indices_en;
     vector<unsigned int> dof_indices_eI;
     vector<unsigned int> dof_indices_eI3;
     vector<unsigned int> dof_indices_eC;
-    //vector<unsigned int> dof_indices_aC;
     const unsigned int dim = mesh.mesh_dimension();
 
     FEType fe_type = system->variable_type(u_var);
     AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
     QGauss qrule(dim, libMeshEnums::CONSTANT);
     fe->attach_quadrature_rule(&qrule);
-      // sc->reinit(elem);
 
 
 
@@ -376,7 +367,6 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
       dof_map.dof_indices(elem, dof_indices_eI, eI_var);
       dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
       dof_map.dof_indices(elem, dof_indices_eC, eC_var);
-      //dof_map.dof_indices(elem, dof_indices_aC, aC_var);
 
       assert(_device->get_material(elem->subdomain_id()) != NULL);
       DSSCModel* sc =
@@ -421,21 +411,12 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
-      //sc->set_potentials(u, en, eI, eI3, eC);
 
       sc->calculate_densities();
       sc->calculate_traps();
 
-    // element volume in cm
-    // double volume = elem->volume() * mesh_units;
-    //_cation_amount += sc->get_equilibrium_concentrations().C * volume;
-    //_iodine_amount += sc->get_equilibrium_concentrations().I3 * volume;
-    //_iodine_amount += sc->get_equilibrium_concentrations().I * volume / 3.0;
-
     double mu = sc->get_mobility_n();
     double C = sc->get_density_n();
-    //double C1 = sc->get_generation_rate();
-    //C = (C > C1) ? C : C1;
     mu0 = (mu0 > mu) ? mu0 : mu;
     C0 = (C0 > C) ? C0 : C;
     _cond_scaling.n = (mu * C > _cond_scaling.n) ? mu * C : _cond_scaling.n;
@@ -508,19 +489,10 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
       break;
   }
 
-  //mu0 = 1;
-  //C0 = 1;
-  //eps0 = 1;
   x0 = 1;
   double mesh_units = 1;
   phi0 = 1;
-  //_cond_scaling.n = 1;
-  //_cond_scaling.I = 1;
-  //_cond_scaling.I3 = 1;
-  //_cond_scaling.C = 1;
-  //get_scaling().set_scaling_type(type);
   get_scaling().set_potential_scaling(phi0);
-  //get_scaling().set_density_scaling(C0);
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
   get_scaling().set_density_scaling(C0);
@@ -595,7 +567,8 @@ DSSC::get_OC_values(void)
           contact = dynamic_cast<DSSCContact*>(
               boundary->get_boundary_properties(get_id()));
 
-        if ((contact != NULL) && contact->is_cathode())
+            if ( (!contact->is_cathode()) && (!contact->is_gate()) )
+        if ((contact != NULL) && (!contact->is_cathode() && !contact->is_gate()))
         {
 
           dof_map.dof_indices(elem, dof_indices);
@@ -629,7 +602,8 @@ DSSC::get_OC_values(void)
           sc->calculate_densities();
 
           //double n_e = sc->get_density_n();
-          double n_I = sc->get_density_I();
+//          double n_I = sc->get_density_I();
+          double n_I = sc->get_density_e();
           double nIdark = sc->get_equilibrium_concentrations().I;
           double n_I3 = sc->get_density_I3();
           double nI3dark = sc->get_equilibrium_concentrations().I3;
@@ -655,7 +629,6 @@ DSSC::reset_solver(void)
 {
   if (!_rebuild_eq_system)
   {
-    //get_equation_systems().delete_system(get_equation_system_name());
     _rebuild_eq_system = true;
   }
 }
@@ -700,9 +673,6 @@ DSSC::do_solve(void)
     solve_equilibrium();
   }
 
-// Here the distance between light and   
-//  do optical();
-  
 
   if (do_local_scaling_)
     build_local_scaling();
@@ -783,74 +753,6 @@ DSSC::do_equilibrium(void)
   // first we have to compute the scaling
   compute_scaling(_scaling_type);
 
-/*
-  TiberNonlinearSystem& system =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-  ModelOptions& solveropts = get_solver_options();
-  int max_it = solveropts.get_option("nonlin_max_it", -1);
-  solveropts.set_option("nonlin_max_it", 150);
-
-
-  int coupling = get_options().coupling;
-  get_options().coupling = POISSON;
-
-  // backup the simulation voltages and set all to zero
-  ContactData sim_voltages(_boundary_currents);
-  ContactData::iterator it(sim_voltages.begin());
-  const ContactData::iterator end(sim_voltages.end());
-  for ( ; it != end; ++it)
-  {
-    const Boundary* bd = it->first;
-    // It's save to static_cast because we know there has to be an
-    // ElectricalContact object
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
-    sim_voltages[bd] = cnt->get_simulation_voltage();
-    cnt->set_simulation_voltage(0.0);
-  }
-
-  // make a rough guess
-  guess_equilibrium();
-
-
-  //if (do_local_scaling_)
-  //  build_local_scaling();
-
-
-  try
-  {
-    cout << "Solving equilibrium" << endl;
-
-    do_newton();
-
-    cout << "Equilibrium done" << endl;
-  }
-  catch (runtime_error& e)
-  {
-    cerr << "Equilibrium did not converge: " << e.what() << endl;
-    throw (e);
-  }
-
-  // set the contact voltages back to the desired values
-  it = sim_voltages.begin();
-  for ( ; it != end; ++it)
-  {
-    const Boundary* bd = it->first;
-    ElectricalContact* cnt =
-      static_cast<ElectricalContact*>(bd->get_boundary_properties(get_id()));
-    cnt->set_simulation_voltage(sim_voltages[bd]);
-  }
-
-  // reset the coupling
-  get_options().coupling = coupling;
-
-  if (max_it != -1)
-    solveropts.set_option("nonlin_max_it", max_it);
-  else
-    solveropts.delete_option("nonlin_max_it");
-*/
 }
 
 
@@ -858,80 +760,7 @@ DSSC::do_equilibrium(void)
 void
 DSSC::guess_equilibrium(void)
 {
-/*
-  // equation system needs to be active
-  rebuild_equation_system();
 
-  TiberNonlinearSystem& poisson =
-    get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-  const unsigned int u_var = poisson.variable_number("potential");
-  const DofMap& dof_map_u = poisson.get_dof_map();
-  vector<unsigned int> dof_indices_u;
-
-  NumericVector<Number>& solution_u = poisson.get_solution_vector();
-  solution_u.zero();
-
-  MeshBase::const_element_iterator el =
-                                  get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end_el =
-                                  get_mesh().active_elements_end();
-
-  const double phi0 = get_scaling().get_potential_scaling();
-
-  const unsigned int nn  = get_mesh().n_nodes();
-  vector<unsigned short int> node_conn(nn);
-  // Get the number of elements that share each node.  We will
-  // compute the average value at each node.
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-
-    MeshBase::const_element_iterator it =
-      get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end =
-      get_mesh().active_local_elements_end();
-
-    for ( ; it != end; ++it)
-      for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
-	node_conn_local[(*it)->node(n)]++;
-
-#ifdef HAVE_MPI
-    // Gather the distributed node_conn arrays in the case of
-    // multiple processors
-    //
-    // (Note that we use an unsigned short int here even though an
-    // unsigned char would be more that sufficient.  The MPI 1.1
-    // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)
-    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
-		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-
-#else
-    // Without MPI the node_conn_local and the node_conn arrays
-    // are necessarily identical
-    node_conn = node_conn_local;
-
-#endif
-  }
-
-  for ( ; el != end_el ; ++el)
-  {
-    const Elem* elem = *el;
-    const Elem* top_parent = (*el)->top_parent();
-    DSSCModel* sc =
-      dynamic_cast<DSSCModel*>(
-          _device->get_material(elem->subdomain_id())->get_model(get_id()));
-
-    dof_map_u.dof_indices(elem, dof_indices_u, u_var);
-    for (int i = 0; i < elem->n_nodes(); i++)
-    {
-      solution_u.add(dof_indices_u[i],
-          sc->get_equilibrium_fermi_level()
-          / (phi0 * static_cast<Real>(node_conn[elem->node(i)])));
-    }
-  }
-*/
 }
 
 
@@ -966,8 +795,6 @@ DSSC::parse_const_options(void)
     _scaling_type = Scaling::NONE;
   else
     _scaling_type = Scaling::UNITS;
-
-  //_light_from = opts.get_option("light_from", "anode");
 
 }
 
@@ -1046,9 +873,6 @@ DSSC::rebuild_equation_system(void)
   system.add_variable("fermi_I", libMeshEnums::FIRST);
   system.add_variable("fermi_I3", libMeshEnums::FIRST);
   system.add_variable("fermi_C", libMeshEnums::FIRST);
-  //system.add_variable("aux_cat", libMeshEnums::FIRST); // cation mass conservation
-  //system.add_variable("aux_iod", libMeshEnums::FIRST); // iodine mass conservation
-
 
   // finally initialize the newly created system
   system.init();
@@ -1076,16 +900,12 @@ DSSC::do_init(void)
 
   // prepare the _boundary_currents
   // we will rely on the fact that it contains an entry for every boundary
-  // later on !!!
   SimulationEnvironment::BoundaryIterator
     it(get_environment().boundaries_begin());
   const SimulationEnvironment::BoundaryIterator
     end(get_environment().boundaries_end());
   for ( ; it != end; ++it)
   {
-      //Boundary* bd1 = it->get_boundary(get_id());
-
-
       BoundaryProperties* bd = (*it)->get_boundary_properties(get_id());
       if (bd != NULL)
       {
@@ -1094,19 +914,6 @@ DSSC::do_init(void)
         {
           _boundary_currents[(*it)] = 0.0;
           _voltages[(*it)] = 0.0;
-
-          
-
-          //if (_light_from == "anode" )
-          //{
-            //_x0 = contact->get_coordinates();
-            //cout << "light " << _light_from << endl;
-            //_x0 = 0.0;
-          //}
-	  //else
-	  //{
-	  //  _x0 = 10.0;
-	  //}
         }
       }
     }
@@ -1190,694 +997,6 @@ DSSC::find_dirichlet_nodes(void)
 
 
 
-/*
-ID
-DSSC::convert_variable_name_to_id(const string& variable_name) const
-{
-  ID id = INVALID_ID;
-
-  // for an empty string we return immediately
-  if (variable_name == "") return id;
-
-  switch (variable_name[0])
-  {
-  case 'E':
-      if (variable_name == "ElPotential")
-        id = ELPOTENTIAL;
-      break;
-
-    case 'Q':
-      if (variable_name == "QFermi_e")
-        id = QFERMIE;
-      break;
-
-    default:
-      break;
-  }
-
-  return id;
-}
-
-
-
-
-void
-DSSC::get_solution_secure(const Elem* elem,
-    const set<ID>& ids, vector<map<ID, double> >& values)
-{
-  unsigned int np = elem->n_nodes();
-
-  vector<Point> points(np);
-  for (int i = 0; i < np; i++)
-    points[i] = elem->local_node(elem->type(), i);
-
-  TiberNonlinearSystem* system;
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
-
-  const Device& device = *(_device);
-
-  const NumericVector<Number>& solution = system->get_solution_vector();
-
-  const unsigned int dim = get_mesh().mesh_dimension();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  //FEInterface::inverse_map(dim, fe_type, elem, p, points);
-  //for (unsigned int n = 0; n < np; n++)
-  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
-
-
-  ID subdomain = elem->subdomain_id();
-
-  DSSCModel* sc =
-    dynamic_cast<DSSCModel*>(
-        device.get_material(subdomain)->get_model(get_id()));
-
-  assert(sc != NULL);
-
-
-
-  //sc->lock();
-  sc->reinit(elem);
-
-  fe->reinit(elem, &points);
-
-  // Get the thermoelectric power
-  sc->compute_thermoelectric_powers();
-  double Pn_el =  sc->get_electron_thermoelectric_power();
-  double Pp_el =  sc->get_hole_thermoelectric_power();
-
-  vector<double> T_nodes = sc->get_temperature_at_nodes();
-
-  dof_map.dof_indices(elem, dof_indices_u, u_var);
-  dof_map.dof_indices(elem, dof_indices_en, en_var);
-  dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-  const unsigned int n_dofs = dof_indices_u.size();
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  for (unsigned int n = 0; n < np; n++)
-  {
-    double en_x = 0.0, ep_x = 0.0;
-    double en_y = 0.0, ep_y = 0.0;
-    double en_z = 0.0, ep_z = 0.0;
-
-    double dT_x = 0.0;
-    double dT_y = 0.0;
-    double dT_z = 0.0;
-    double u  = phi0 * solution(dof_indices_u[n]);
-    double en = phi0 * solution(dof_indices_en[n]);
-    double ep = phi0 * solution(dof_indices_ep[n]);
-    double T = 0.0;
-    RealGradient e_field(0);
-    // do interpolation
-
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      en_x  += dphi[i][n](0) * solution(dof_indices_en[i]);
-      en_y  += dphi[i][n](1) * solution(dof_indices_en[i]);
-      en_z  += dphi[i][n](2) * solution(dof_indices_en[i]);
-
-      ep_x  += dphi[i][n](0) * solution(dof_indices_ep[i]);
-      ep_y  += dphi[i][n](1) * solution(dof_indices_ep[i]);
-      ep_z  += dphi[i][n](2) * solution(dof_indices_ep[i]);
-
-      dT_x  += dphi[i][n](0) * T_nodes[i];
-      dT_y  += dphi[i][n](1) * T_nodes[i];
-      dT_z  += dphi[i][n](2) * T_nodes[i];
-
-      T +=  phi[i][n] * T_nodes[i];
-
-      e_field += dphi[i][n] * solution(dof_indices_u[i]);
-
-    }
-
-    // scale the potential back
-    e_field *= -phi0;
-    en_x *= phi0;
-    en_y *= phi0;
-    en_z *= phi0;
-    ep_x *= phi0;
-    ep_y *= phi0;
-    ep_z *= phi0;
-
-
-    sc->set_coordinates(*(elem->get_node(n)));
-
-    sc->set_potentials(u, en, ep);
-
-    sc->set_electric_field(e_field);
-    sc->set_grad_fermi_e(RealGradient(en_x, en_y, en_z));
-    sc->set_grad_fermi_h(RealGradient(ep_x, ep_y, ep_z));
-
-    sc->calculate_densities();
-
-    sc->calculate_mobilities();
-
-    sc->compute_thermoelectric_powers();
-
-    double Pn =  sc->get_electron_thermoelectric_power();
-    double Pp =  sc->get_hole_thermoelectric_power();
-
-    double sigma_e = Constants::e * sc->get_electron_density() *
-      sc->get_electron_mobility();
-    double sigma_h = Constants::e * sc->get_hole_density() *
-      sc->get_hole_mobility();
-
-    double jnx = -sigma_e * (en_x + Pn_el * dT_x);
-    double jny = -sigma_e * (en_y + Pn_el * dT_y);
-    double jnz = -sigma_e * (en_z + Pn_el * dT_z);
-    double jpx = -sigma_h * (ep_x + Pp_el * dT_x);
-    double jpy = -sigma_h * (ep_y + Pp_el * dT_y);
-    double jpz = -sigma_h * (ep_z + Pp_el * dT_z);
-
-
-
-    if (ids.count(ELPOTENTIAL))
-      values[n][ELPOTENTIAL] = u;
-
-    if (ids.count(QFERMIE))
-      values[n][QFERMIE] = en;
-
-    if (ids.count(QFERMIH))
-      values[n][QFERMIH] = ep;
-
-    if (ids.count(VBANDEDGE))
-      values[n][VBANDEDGE] = sc->get_valence_band_edge() - u;
-
-    if (ids.count(CBANDEDGE))
-      values[n][CBANDEDGE] = sc->get_conduction_band_edge() - u;
-
-    if (ids.count(VBANDEDGEINTR))
-      values[n][VBANDEDGEINTR] = sc->get_valence_band_edge();
-
-    if (ids.count(CBANDEDGEINTR))
-      values[n][CBANDEDGEINTR] = sc->get_conduction_band_edge();
-
-    if (ids.count(EDENSITY))
-      values[n][EDENSITY] = sc->get_electron_density();
-
-    if (ids.count(HDENSITY))
-      values[n][HDENSITY] = sc->get_hole_density();
-
-    if (ids.count(BANDGAP))
-      values[n][BANDGAP] =
-        sc->get_conduction_band_edge() - sc->get_valence_band_edge();
-
-    if (ids.count(EMOBILITY))
-      values[n][EMOBILITY] = sc->get_electron_mobility();
-
-    if (ids.count(HMOBILITY))
-      values[n][HMOBILITY] = sc->get_hole_mobility();
-
-    if (ids.count(SIGMAE))
-      values[n][SIGMAE] = sigma_e;
-
-    if (ids.count(SIGMAH))
-      values[n][SIGMAH] = sigma_h;
-
-    if (ids.count(E))
-      values[n][E] = e_field.size();
-
-    if (ids.count(EX))
-      values[n][EX] = e_field(0);
-
-    if (ids.count(EY))
-      values[n][EY] = e_field(1);
-
-    if (ids.count(EZ))
-      values[n][EZ] = e_field(2);
-
-    if (ids.count(J))
-    {
-      double jx = jnx + jpx;
-      double jy = jny + jpy;
-      double jz = jnz + jpz;
-      values[n][J] = sqrt(jx * jx + jy * jy + jz * jz);
-    }
-
-    if (ids.count(JN))
-      values[n][JN] = sqrt(jnx * jnx + jny * jny + jnz * jnz);
-
-    if (ids.count(JP))
-      values[n][JP] = sqrt(jpx * jpx + jpy * jpy + jpz * jpz);
-
-    if (ids.count(JNX))
-      values[n][JNX] = jnx;
-
-    if (ids.count(JNY))
-      values[n][JNY] = jny;
-
-    if (ids.count(JNZ))
-      values[n][JNZ] = jnz;
-
-    if (ids.count(JPX))
-      values[n][JPX] = jpx;
-
-    if (ids.count(JPY))
-      values[n][JPY] = jpy;
-
-    if (ids.count(JPZ))
-      values[n][JPZ] = jpz;
-
-    if (ids.count(EJOULE))
-      values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
-
-    if (ids.count(HJOULE))
-      values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
-
-    if (ids.count(POWERNX))
-      values[n][POWERNX] = (Pn * T + en) * jnx;
-
-    if (ids.count(POWERNY))
-      values[n][POWERNY] = (Pn * T + en) * jny;
-
-    if (ids.count(POWERNZ))
-      values[n][POWERNZ] = (Pn * T + en) * jnz;
-
-    if (ids.count(POWERPX))
-      values[n][POWERPX] = (Pp * T + ep) * jpx;
-
-    if (ids.count(POWERPY))
-      values[n][POWERPY] = (Pp * T + ep) * jpy;
-
-    if (ids.count(POWERPZ))
-      values[n][POWERPZ] = (Pp * T + ep) * jpz;
-
-    if (ids.count(PN))
-      values[n][PN] = Pn;
-
-    if (ids.count(PP))
-      values[n][PP] = Pp;
-
-    if (ids.count(EPTSOURCE))
-    {
-      sc->compute_thermoelectric_power_gradient();
-      RealGradient PnGrad =  sc->get_electron_thermoelectric_power_gradient();
-      values[n][EPTSOURCE] =  -T * ( PnGrad(0) * jnx + PnGrad(1) * jny + PnGrad(2) * jnz );
-    }
-
-    if (ids.count(HPTSOURCE))
-    {
-      sc->compute_thermoelectric_power_gradient();
-      RealGradient PpGrad =  sc->get_hole_thermoelectric_power_gradient();
-      values[n][HPTSOURCE] =  -T * ( PpGrad(0) * jpx + PpGrad(1) * jpy + PpGrad(2) * jpz );
-    }
-
-    if (ids.count(HRECOMB))
-    {
-      vector<ID> rec_model_ids;
-      int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
-      double rec = 0.0;
-      for (int i = 0; i < n_rec; i++)
-	rec += sc->get_net_recombination_rate(rec_model_ids[i]);
-
-      values[n][HRECOMB] = Constants::e * rec * (ep-en + T * (Pp-Pn));
-    }
-
-
-    set<ID>::iterator first(ids.begin());
-    set<ID>::iterator it(ids.end());
-    --it;
-
-    hile (*it > MODELS )
-    {
-      if (*it > HEATMODELS)
-      {
-	double rec= sc->get_net_recombination_rate(*it - HEATMODELS);
-	values[n][*it] = Constants::e * rec * (ep-en + T * (Pp-Pn));
-      }
-      else
-	values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
-
-      if (it == first)
-        break;
-      --it;
-
-    }
-
-
-
-
-
-
-
-  }
-
-  //sc->unlock();
-}
-
-
-
-
-void
-DSSC::get_solution_secure(const Elem* elem, const vector<Point>& p,
-    const set<ID>& ids, vector<map<ID, double> >& values)
-{
-  unsigned int np = p.size();
-
-  TiberNonlinearSystem* system;
-  system = &get_equation_systems().get_system<TiberNonlinearSystem>(
-      get_equation_system_name());
-
-  const Device& device = *(_device);
-
-  const NumericVector<Number>& solution = system->get_solution_vector();
-
-  const unsigned int dim = get_mesh().mesh_dimension();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_e");
-  const unsigned int ep_var = system->variable_number("fermi_h");
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  vector<Point> points(np);
-  FEInterface::inverse_map(dim, fe_type, elem, p, points);
-  //for (unsigned int n = 0; n < np; n++)
-  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
-
-
-  ID subdomain = elem->subdomain_id();
-
-  DSSCModel* sc =
-    dynamic_cast<DSSCModel*>(
-        device.get_material(subdomain)->get_model(get_id()));
-  assert(sc != NULL);
-
-
-
-  //sc->lock();
-  sc->reinit(elem); //centroid
-
-  fe->reinit(elem, &points);
-
-
-  //Get the thermoelectric power
-  sc->compute_thermoelectric_powers();
-  double Pn_el =  sc->get_electron_thermoelectric_power();
-  double Pp_el =  sc->get_hole_thermoelectric_power();
-
-  vector<double> T_nodes = sc->get_temperature_at_nodes();
-
-  dof_map.dof_indices(elem, dof_indices_u, u_var);
-  dof_map.dof_indices(elem, dof_indices_en, en_var);
-  dof_map.dof_indices(elem, dof_indices_ep, ep_var);
-
-  const unsigned int n_dofs = dof_indices_u.size();
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  for (unsigned int n = 0; n < np; n++)
-  {
-    double en_x = 0.0, ep_x = 0.0;
-    double en_y = 0.0, ep_y = 0.0;
-    double en_z = 0.0, ep_z = 0.0;
-
-    double dT_x = 0.0;
-    double dT_y = 0.0;
-    double dT_z = 0.0;
-    double u = 0;
-    double en = 0.0;
-    double ep = 0.0;
-    double T = 0.0;
-    RealGradient e_field(0);
-    // do interpolation
-
-
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      u  += phi[i][n] * solution(dof_indices_u[i]);
-      en += phi[i][n] * solution(dof_indices_en[i]);
-      ep += phi[i][n] * solution(dof_indices_ep[i]);
-
-      en_x  += dphi[i][n](0) * solution(dof_indices_en[i]);
-      en_y  += dphi[i][n](1) * solution(dof_indices_en[i]);
-      en_z  += dphi[i][n](2) * solution(dof_indices_en[i]);
-
-      ep_x  += dphi[i][n](0) * solution(dof_indices_ep[i]);
-      ep_y  += dphi[i][n](1) * solution(dof_indices_ep[i]);
-      ep_z  += dphi[i][n](2) * solution(dof_indices_ep[i]);
-
-      dT_x  += dphi[i][n](0) * T_nodes[i];
-      dT_y  += dphi[i][n](1) * T_nodes[i];
-      dT_z  += dphi[i][n](2) * T_nodes[i];
-
-      T += phi[i][n] * T_nodes[i];
-
-      e_field += dphi[i][n] * solution(dof_indices_u[i]);
-
-
-    }
-
-    // scale the potential back
-    u  *= phi0;
-    en  *= phi0;
-    ep  *= phi0;
-    e_field *= -phi0;
-    en_x *= phi0;
-    en_y *= phi0;
-    en_z *= phi0;
-    ep_x *= phi0;
-    ep_y *= phi0;
-    ep_z *= phi0;
-
-
-
-    sc->set_coordinates(p[n]);
-
-    sc->set_potentials(u, en, ep);
-
-    sc->set_electric_field(e_field);
-    sc->set_grad_fermi_e(RealGradient(en_x, en_y, en_z));
-    sc->set_grad_fermi_h(RealGradient(ep_x, ep_y, ep_z));
-
-
-    sc->calculate_densities();
-
-    sc->calculate_mobilities();
-
-    sc->compute_thermoelectric_powers();
-
-    double Pn =  sc->get_electron_thermoelectric_power();
-    double Pp =  sc->get_hole_thermoelectric_power();
-
-    double sigma_e = Constants::e * sc->get_electron_density() *
-      sc->get_electron_mobility();
-    double sigma_h = Constants::e * sc->get_hole_density() *
-      sc->get_hole_mobility();
-
-
-    double jnx = -sigma_e * (en_x + Pn_el * dT_x);
-    double jny = -sigma_e * (en_y + Pn_el * dT_y);
-    double jnz = -sigma_e * (en_z + Pn_el * dT_z);
-    double jpx = -sigma_h * (ep_x + Pp_el * dT_x);
-    double jpy = -sigma_h * (ep_y + Pp_el * dT_y);
-    double jpz = -sigma_h * (ep_z + Pp_el * dT_z);
-
-    if (ids.count(ELPOTENTIAL))
-      values[n][ELPOTENTIAL] = u;
-
-    if (ids.count(QFERMIE))
-      values[n][QFERMIE] = en;
-
-    if (ids.count(QFERMIH))
-      values[n][QFERMIH] = ep;
-
-    if (ids.count(VBANDEDGE))
-      values[n][VBANDEDGE] = sc->get_valence_band_edge() - u;
-
-    if (ids.count(CBANDEDGE))
-      values[n][CBANDEDGE] = sc->get_conduction_band_edge() - u;
-
-    if (ids.count(VBANDEDGEINTR))
-      values[n][VBANDEDGEINTR] = sc->get_valence_band_edge();
-
-    if (ids.count(CBANDEDGEINTR))
-      values[n][CBANDEDGEINTR] = sc->get_conduction_band_edge();
-
-    if (ids.count(EDENSITY))
-      values[n][EDENSITY] = sc->get_electron_density();
-
-    if (ids.count(HDENSITY))
-      values[n][HDENSITY] = sc->get_hole_density();
-
-    if (ids.count(BANDGAP))
-      values[n][BANDGAP] =
-        sc->get_conduction_band_edge() - sc->get_valence_band_edge();
-
-    if (ids.count(EMOBILITY))
-      values[n][EMOBILITY] = sc->get_electron_mobility();
-
-    if (ids.count(HMOBILITY))
-      values[n][HMOBILITY] = sc->get_hole_mobility();
-
-    if (ids.count(SIGMAE))
-      values[n][SIGMAE] = sigma_e;
-
-    if (ids.count(SIGMAH))
-      values[n][SIGMAH] = sigma_h;
-
-    if (ids.count(E))
-      values[n][E] = e_field.size();
-
-    if (ids.count(EX))
-      values[n][EX] = e_field(0);
-
-    if (ids.count(EY))
-      values[n][EY] = e_field(1);
-
-    if (ids.count(EZ))
-      values[n][EZ] = e_field(2);
-    if (ids.count(J))
-    {
-      double jx = jnx + jpx;
-      double jy = jny + jpy;
-      double jz = jnz + jpz;
-      values[n][J] = sqrt(jx * jx + jy * jy + jz * jz);
-    }
-
-    if (ids.count(JN))
-      values[n][JN] = sqrt(jnx * jnx + jny * jny + jnz * jnz);
-
-    if (ids.count(JP))
-      values[n][JP] = sqrt(jpx * jpx + jpy * jpy + jpz * jpz);
-
-    if (ids.count(JNX))
-      values[n][JNX] = jnx;
-
-    if (ids.count(JNY))
-      values[n][JNY] = jny;
-
-    if (ids.count(JNZ))
-      values[n][JNZ] = jnz;
-
-    if (ids.count(JPX))
-      values[n][JPX] = jpx;
-
-    if (ids.count(JPY))
-      values[n][JPY] = jpy;
-
-    if (ids.count(JPZ))
-      values[n][JPZ] = jpz;
-
-    if (ids.count(EJOULE))
-      values[n][EJOULE] = ( jnx * jnx + jny * jny + jnz * jnz ) / sigma_e;
-
-    if (ids.count(HJOULE))
-      values[n][HJOULE] =  (jpx * jpx + jpy * jpy + jpz * jpz )/ sigma_h;
-
-    if (ids.count(POWERNX))
-      values[n][POWERNX] = (Pn * T + en) * jnx;
-
-    if (ids.count(POWERNY))
-      values[n][POWERNY] = (Pn * T + en) * jny;
-
-    if (ids.count(POWERNZ))
-      values[n][POWERNZ] = (Pn * T + en) * jnz;
-
-    if (ids.count(POWERPX))
-      values[n][POWERPX] = (Pp * T + ep) * jpx;
-
-    if (ids.count(POWERPY))
-      values[n][POWERPY] = (Pp * T + ep) * jpy;
-
-    if (ids.count(POWERPZ))
-      values[n][POWERPZ] = (Pp * T + ep) * jpz;
-
-    if (ids.count(EPTSOURCE))
-    {
-      sc->compute_thermoelectric_power_gradient();
-      RealGradient PnGrad =  sc->get_electron_thermoelectric_power_gradient();
-      values[n][EPTSOURCE] =  -T * ( PnGrad(0) * jnx + PnGrad(1) * jny + PnGrad(2) * jnz );
-    }
-
-    if (ids.count(HPTSOURCE))
-    {
-      sc->compute_thermoelectric_power_gradient();
-      RealGradient PpGrad =  sc->get_hole_thermoelectric_power_gradient();
-      values[n][HPTSOURCE] =  -T * ( PpGrad(0) * jpx + PpGrad(1) * jpy + PpGrad(2) * jpz );
-    }
-
-    if (ids.count(PN))
-      values[n][PN] = Pn;
-
-    if (ids.count(PP))
-      values[n][PP] = Pp;
-
-    if (ids.count(HRECOMB))
-    {
-      vector<ID> rec_model_ids;
-      int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
-      double rec = 0.0;
-      for (int i = 0; i < n_rec; i++)
-	rec += sc->get_net_recombination_rate(rec_model_ids[i]);
-
-      values[n][HRECOMB] = Constants::e * rec * (ep-en + T * (Pp-Pn));
-    }
-
-
-    set<ID>::iterator first(ids.begin());
-    set<ID>::iterator it(ids.end());
-    --it;
-
-
-    while (*it > MODELS )
-    {
-      if (*it > HEATMODELS)
-      {
-	double rec= sc->get_net_recombination_rate(*it - HEATMODELS);
-	values[n][*it] = Constants::e * rec * (ep-en + T * (Pp-Pn));
-      }
-      else
-	values[n][*it] = sc->get_net_recombination_rate(*it - MODELS);
-
-      if (it == first)
-        break;
-      --it;
-
-    }
-
-
-
-  }
-
-  //sc->unlock();
-}
-*/
-
-
-
 
 void
 DSSC::calculate_currents_rstf(void)
@@ -1923,7 +1042,7 @@ DSSC::calculate_currents_rstf(void)
   QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
-
+  
   // Jacobian * quadrature weight at each integration point.
   const vector<Real>& JxW = fe->get_JxW();
 
@@ -2075,7 +1194,6 @@ DSSC::calculate_currents_rstf(void)
   } // end loop over elements
 
 }
-
 
 
 
@@ -2306,726 +1424,12 @@ DSSC::do_get_solution_vector(void)
 }
 
 
-/*
-// implementation taken from libmesh equation_systems.C
-void
-DSSC::build_nodal_results(const set<string>& variables,
-    vector<double>& results, vector<string>& legend)
-{
-
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-  const NumericVector<Number>& solution = get_solution_vector();
-
-  // aliases for nicer code
-  const Device& device = *(_device);
-  const MeshBase& mesh = get_mesh();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  // TODO if some elements were coarsened, does this still work??
-  const unsigned int nn  = mesh.n_nodes();
-
-  legend.reserve(variables.size());
-
-  // for each possible variable we set the vector index
-  // -1 means, the variable should not be plotted
-  unsigned int n_vars = 0;
-  const set<string>::const_iterator varend(variables.end());
-
-  int Pot = -1;
-  if (variables.find("Potentials") != varend)
-  {
-    Pot = n_vars;
-    n_vars += 6;
-    legend.reserve(n_vars);
-    legend.push_back("electric_potential");
-    legend.push_back("el_chem_n");
-    legend.push_back("el_chem_I");
-    legend.push_back("el_chem_I3");
-    legend.push_back("el_chem_C");
-    legend.push_back("el_chem_rox");
-  }
-
-  int Dens = -1;
-  if (variables.find("Densities") != varend)
-  {
-    Dens = n_vars;
-    n_vars += 5;
-    legend.reserve(n_vars);
-    legend.push_back("density_n");
-    legend.push_back("density_I");
-    legend.push_back("density_I3");
-    legend.push_back("density_C");
-    legend.push_back("aux_cat");
-  }
-
-  int rho = -1;
-  if (variables.find("TotalChargeDensity") != varend)
-  {
-    rho = n_vars;
-    n_vars++;
-    legend.reserve(n_vars);
-    legend.push_back("total_charge_densitity");
-  }
-
-  int rec = -1;
-  if (variables.find("Recombination") != varend)
-  {
-    rec = n_vars;
-    n_vars++;
-    legend.reserve(n_vars);
-    legend.push_back("electron_recombination");
-  }
-
-  int gen = -1;
-  if (variables.find("Generation") != varend)
-  {
-    gen = n_vars;
-    n_vars++;
-    legend.reserve(n_vars);
-    legend.push_back("electron_generation");
-  }
-
-
-
-  legend.resize(n_vars);
-
-  results.resize(nn * n_vars);
-
-  vector<double> local(results.size());
-  vector<unsigned short int> node_conn(nn);
-
-  vector<double> nodal_val;
-
-  // the scaling parameters to scale back the result
-  const double phi0 = get_scaling().get_potential_scaling();
-  const double C0 = get_scaling().get_density_scaling();
-
-
-  fill(results.begin(), results.end(), 0.0);
-  fill(local.begin(), local.end(), 0.0);
-
-  // Get the number of elements that share each node.  We will
-  // compute the average value at each node.
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-
-    MeshBase::const_element_iterator it =
-      mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end();
-
-    for ( ; it != end; ++it)
-      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
-	node_conn_local[(*it)->node(n)]++;
-
-#ifdef HAVE_MPI
-    // Gather the distributed node_conn arrays in the case of
-    // multiple processors
-    //
-    // (Note that we use an unsigned short int here even though an
-    // unsigned char would be more that sufficient.  The MPI 1.1
-    // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)
-    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
-		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-
-#else
-    // Without MPI the node_conn_local and the node_conn arrays
-    // are necessarily identical
-    node_conn = node_conn_local;
-
-#endif
-  }
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_n");
-  const unsigned int eI_var = system->variable_number("fermi_I");
-  const unsigned int eI3_var = system->variable_number("fermi_I3");
-  const unsigned int eC_var = system->variable_number("fermi_C");
-  //const unsigned int aC_var = system->variable_number("aux_cat");
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_eI;
-  vector<unsigned int> dof_indices_eI3;
-  vector<unsigned int> dof_indices_eC;
-  //vector<unsigned int> dof_indices_aC;
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
-  fe->attach_quadrature_rule(&qrule);
-
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end();
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    ID subdomain = elem->subdomain_id();
-
-#ifdef ENABLE_INFINITE_ELEMENTS
-    // infinite elements should be skipped...
-    if (!elem->infinite())
-#endif
-    {
-      dof_map.dof_indices(elem, dof_indices_u, u_var);
-      dof_map.dof_indices(elem, dof_indices_en, en_var);
-      dof_map.dof_indices(elem, dof_indices_eI, eI_var);
-      dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
-      dof_map.dof_indices(elem, dof_indices_eC, eC_var);
-      //dof_map.dof_indices(elem, dof_indices_aC, aC_var);
-
-      DSSCModel* sc =
-      dynamic_cast<DSSCModel*>(
-          device.get_material(subdomain)->get_model(get_id()));
-      assert(sc != NULL);
-
-      sc->reinit(elem);
-
-      vector<Point> points(elem->n_nodes());
-      for (int i = 0; i < elem->n_nodes(); i++)
-        points[i] = elem->point(i);
-      fe->reinit(elem, &points);
-
-      assert(elem->n_nodes() == dof_indices_u.size());
-
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        double u  = phi0 * solution(dof_indices_u[n]);
-        double en = phi0 * solution(dof_indices_en[n]);
-        double eI = phi0 * solution(dof_indices_eI[n]);
-        double eI3 = phi0 * solution(dof_indices_eI3[n]);
-        double eC = phi0 * solution(dof_indices_eC[n]);
-        //double aC = C0 * solution(dof_indices_aC[n]);
-
-        RealGradient e_field(0);
-        RealGradient grad_en(0);
-        RealGradient grad_eI(0);
-        RealGradient grad_eI3(0);
-        RealGradient grad_eC(0);
-        for (unsigned int i = 0; i < dof_indices_u.size(); i++)
-        {
-          e_field += dphi[i][n] * solution(dof_indices_u[n]);
-          grad_en += dphi[i][n] * solution(dof_indices_en[n]);
-          grad_eI += dphi[i][n] * solution(dof_indices_eI[n]);
-          grad_eI3 += dphi[i][n] * solution(dof_indices_eI3[n]);
-          grad_eC += dphi[i][n] * solution(dof_indices_eC[n]);
-        }
-        e_field *= -phi0;
-        grad_en *= -phi0;
-        grad_eI *= -phi0;
-        grad_eI3 *= -phi0;
-        grad_eC *= -phi0;
-
-
-
-        // prepare for calculating local properties
-        sc->set_coordinates(elem->point(n));
-
-
-        sc->set_potentials(u, en, eI, eI3, eC);
-        sc->set_electric_field(e_field);
-        sc->set_grad_fermi_n(grad_en);
-        sc->set_grad_fermi_I(grad_eI);
-        sc->set_grad_fermi_I3(grad_eI3);
-        sc->set_grad_fermi_C(grad_eC);
-
-        sc->calculate_densities();
-        sc->calculate_net_recombination_rate();
-
-
-        assert (node_conn[elem->node(n)] != 0);
-        double conn = static_cast<double>(node_conn[elem->node(n)]);
-
-        unsigned int id = n_vars * elem->node(n);
-
-        if (Dens != -1)
-        {
-          local[id + Dens] += sc->get_density_n() / conn;
-          local[id + Dens + 1] += sc->get_density_I() / conn;
-          local[id + Dens + 2] += sc->get_density_I3() / conn;
-          local[id + Dens + 3] += sc->get_density_C() / conn;
-          local[id + Dens + 4] += sc->get_density_C() / conn;
-        }
-
-        if (rho != -1)
-        {
-          double nodal_val = sc->get_charge_density();
-          local[id + rho] += nodal_val / conn;
-        }
-
-        if (rec != -1)
-        {
-          double nodal_val = sc->get_recombination_rate();
-          local[id + rec] += nodal_val / conn;
-        }
-
-        if (gen != -1)
-        {
-          double nodal_val = sc->get_generation_rate();
-          local[id + gen] += nodal_val / conn;
-        }
-
-
-        if (Pot != -1)
-        {
-          local[id + Pot] += u / conn;
-          local[id + Pot + 1] += en / conn;
-          local[id + Pot + 2] += eI / conn;
-          local[id + Pot + 3] += eI3 / conn;
-          local[id + Pot + 4] += eC / conn;
-          local[id + Pot + 5] += 0.5 * (3*eI - eI3 - 2*u) / conn;
-        }
-
-      } // end loop over nodes
-    } // end if not infinite element
-  } // end loop over elements
-
-#ifdef HAVE_MPI
-  // Now each processor has computed contriburions to the
-  // soln vector.  Gather them all up.
-  MPI_Allreduce (&local[0], &results[0], results.size(),
-		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
-#else
-  results = local;
-#endif
-}
-
-
-
-
-
-
-void
-DSSC::build_elemental_results(const set<string>& variables,
-    vector<double>& results, vector<string>& legend)
-{
-
-  // we only do something if we are on processor 0
-  // TODO parallelize
-  if (libMesh::processor_id() != 0)
-    return;
-
-  TiberNonlinearSystem* system =
-    &get_equation_systems().get_system<TiberNonlinearSystem>(
-        get_equation_system_name());
-
-  const NumericVector<Number>& solution = system->get_solution_vector();
-
-  // aliases for nicer code
-  const Device& device = *(_device);
-  const MeshBase& mesh = get_mesh();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_active_elem();
-
-  legend.reserve(variables.size());
-
-  // for each possible variable we set the vector index
-  // -1 means, the variable should not be plotted
-  unsigned int n_vars = 0;
-  const set<string>::const_iterator varend(variables.end());
-
-
-  int EField = -1;
-  if (variables.find("EField") != varend)
-  {
-    legend.reserve(legend.size() + dim);
-    EField = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend.insert(legend.begin(), "E_z");
-        n_vars++;
-      case 2:
-        legend.insert(legend.begin(), "E_y");
-        n_vars++;
-        legend.insert(legend.end(), "modE");
-        n_vars++;
-      default:
-        legend.insert(legend.begin(), "E_x");
-        n_vars++;
-    }
-  }
-
-/*
-  int GradFermiE = -1;
-  if (variables.find("GradFermi") != varend)
-  {
-    legend.reserve(legend.size() + 4 * dim);
-    GradFermiE = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[GradFermiE + 2] = "grad_fermi_e_z";
-        n_vars++;
-      case 2:
-        legend[GradFermiE + 1] = "grad_fermi_e_y";
-        n_vars++;
-        legend[GradFermiE + dim] = "mod_grad_fermi_e";
-        n_vars++;
-      default:
-        legend[GradFermiE] = "grad_fermi_e_x";
-        n_vars++;
-    }
-  }
-*
-
-
-  int Jn = -1;
-  if (variables.find("ParticleFlux") != varend)
-  {
-    //legend.reserve(legend.size() + 4 * (dim + 1));
-    vector<string> tmp;
-    tmp.reserve(4 * (dim + 1));
-    Jn = n_vars;
-    switch (dim)
-    {
-      case 3:
-        tmp.push_back("Jn_x");
-        tmp.push_back("Jn_y");
-        tmp.push_back("Jn_z");
-        tmp.push_back("modJn");
-        tmp.push_back("JI_x");
-        tmp.push_back("JI_y");
-        tmp.push_back("JI_z");
-        tmp.push_back("modJI");
-        tmp.push_back("JI3_x");
-        tmp.push_back("JI3_y");
-        tmp.push_back("JI3_z");
-        tmp.push_back("modJI3");
-        tmp.push_back("JC_x");
-        tmp.push_back("JC_y");
-        tmp.push_back("JC_z");
-        tmp.push_back("modJC");
-        n_vars += 4 * 4;
-        break;
-      case 2:
-        tmp.push_back("Jn_x");
-        tmp.push_back("Jn_y");
-        //tmp.push_back("modJn");
-        tmp.push_back("JI_x");
-        tmp.push_back("JI_y");
-        //tmp.push_back("modJI");
-        tmp.push_back("JI3_x");
-        tmp.push_back("JI3_y");
-        //tmp.push_back("modJI3");
-        tmp.push_back("JC_x");
-        tmp.push_back("JC_y");
-        //tmp.push_back("modJC");
-        //n_vars += 3 * 4;
-        n_vars += 2 * 4;
-        break;
-      default:
-        tmp.push_back("Jn_x");
-        tmp.push_back("JI_x");
-        tmp.push_back("JI3_x");
-        tmp.push_back("JC_x");
-        n_vars += 4;
-    }
-    legend.insert(legend.end(), tmp.begin(), tmp.end());
-  }
-
-/*
-  int J = -1;
-  if (variables.find("Current") != varend)
-  {
-    legend.resize(legend.size() + dim);
-    J = n_vars;
-    switch (dim)
-    {
-      case 3:
-        legend[J + 2] = "J_z";
-        n_vars++;
-      case 2:
-        legend[J + 1] = "J_y";
-        n_vars++;
-        legend[J + dim] = "modJ";
-        n_vars++;
-      default:
-        legend[J] = "J_x";
-        n_vars++;
-    }
-  }
-*
-
-  legend.resize(n_vars);
-
-  results.resize(nn * n_vars);
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  const unsigned int u_var = system->variable_number("potential");
-  const unsigned int en_var = system->variable_number("fermi_n");
-  const unsigned int eI_var = system->variable_number("fermi_I");
-  const unsigned int eI3_var = system->variable_number("fermi_I3");
-  const unsigned int eC_var = system->variable_number("fermi_C");
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
-  fe->attach_quadrature_rule(&qrule);
-
-  vector<unsigned int> dof_indices_u;
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_eI;
-  vector<unsigned int> dof_indices_eI3;
-  vector<unsigned int> dof_indices_eC;
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-
-  // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  // physical coordinates of the quadrature points
-  const vector<Point>& q_point = fe->get_xyz();
-
-  MeshBase::const_element_iterator it =
-    mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_elements_end();
-
-  unsigned int elem_number = 0;
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    ID subdomain = elem->subdomain_id();
-
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
-    dof_map.dof_indices(elem, dof_indices_en, en_var);
-    dof_map.dof_indices(elem, dof_indices_eI, eI_var);
-    dof_map.dof_indices(elem, dof_indices_eI3, eI3_var);
-    dof_map.dof_indices(elem, dof_indices_eC, eC_var);
-
-    DSSCModel* sc =
-      dynamic_cast<DSSCModel*>(
-          device.get_material(subdomain)->get_model(get_id()));
-
-    assert(sc != NULL);
-
-    sc->reinit(elem);
-
-    fe->reinit(elem);
-
-
-    //Get the temperature given the element
-    //vector<double> T_nodes = sc->get_temperature_at_nodes();
-
-
-    unsigned int n_dofs = dof_indices_u.size();
-    // get the solution values at the centroid
-    double u  = 0.0;
-    double en = 0.0;
-    double eI = 0.0;
-    double eI3 = 0.0;
-    double eC = 0.0;
-    RealGradient e_field(0);
-    RealGradient grad_en(0);
-    RealGradient grad_eI(0);
-    RealGradient grad_eI3(0);
-    RealGradient grad_eC(0);
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      u  += phi[i][0] * solution(dof_indices_u[i]);
-      en += phi[i][0] * solution(dof_indices_en[i]);
-      eI += phi[i][0] * solution(dof_indices_eI[i]);
-      eI3 += phi[i][0] * solution(dof_indices_eI3[i]);
-      eC += phi[i][0] * solution(dof_indices_eC[i]);
-
-      e_field += dphi[i][0] * solution(dof_indices_u[i]);
-      grad_en += dphi[i][0] * solution(dof_indices_en[i]);
-      grad_eI += dphi[i][0] * solution(dof_indices_eI[i]);
-      grad_eI3 += dphi[i][0] * solution(dof_indices_eI3[i]);
-      grad_eC += dphi[i][0] * solution(dof_indices_eC[i]);
-    }
-    e_field *= -phi0;
-    grad_en *= phi0;
-    grad_eI *= phi0;
-    grad_eI3 *= phi0;
-    grad_eC *= phi0;
-
-    // prepare for calculating local properties
-    sc->set_coordinates(elem->centroid());
-
-    sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
-
-    sc->set_electric_field(e_field);
-    sc->set_grad_fermi_n(grad_en);
-    sc->set_grad_fermi_I(grad_eI);
-    sc->set_grad_fermi_I3(grad_eI3);
-    sc->set_grad_fermi_C(grad_eC);
-
-    sc->calculate_densities();
-    sc->calculate_net_recombination_rate();
-
-
-    double sigma_e = -Constants::e * sc->get_density_n() * sc->get_mobility_n();
-    double sigma_I = -Constants::e * sc->get_density_I() * sc->get_mobility_I();
-    double sigma_I3 = -Constants::e * sc->get_density_I3() * sc->get_mobility_I3();
-    double sigma_C = Constants::e * sc->get_density_C() * sc->get_mobility_C();
-
-    unsigned int id = n_vars * elem_number;
-
-
-    if (EField != -1)
-    {
-      switch (dim)
-      {
-        case 3:
-          results[id + EField + 2] = e_field(2);
-        case 2:
-          results[id + EField + 1] = e_field(1);
-          results[id + EField + dim] = e_field.size();
-        default:
-          results[id + EField] = e_field(0);
-      }
-    }
-
-/*
-    if (GradFermi != -1)
-    {
-      switch (dim)
-      {
-        case 3:
-          results[id + GradFermiE + 2] = en_z;
-        case 2:
-          results[id + GradFermiE + 1] = en_y;
-          results[id + GradFermiE + dim] =  sqrt(en_x * en_x + en_y * en_y + en_z * en_z);
-        default:
-          results[id + GradFermiE] = en_x;
-      }
-    }
-*
-
-
-    if (Jn != -1)
-    {
-      double jxn = sigma_e * grad_en(0);
-      double jyn = sigma_e * grad_en(1);
-      double jzn = sigma_e * grad_en(2);
-      double jxI = sigma_I * grad_eI(0);
-      double jyI = sigma_I * grad_eI(1);
-      double jzI = sigma_I * grad_eI(2);
-      double jxI3 = sigma_I3 * grad_eI3(0);
-      double jyI3 = sigma_I3 * grad_eI3(1);
-      double jzI3 = sigma_I3 * grad_eI3(2);
-      double jxC = -sigma_C * grad_eC(0);
-      double jyC = -sigma_C * grad_eC(1);
-      double jzC = -sigma_C * grad_eC(2);
-      //int shift = (dim > 1) ? dim + 1 : 1;
-      int shift = dim;
-      switch (dim)
-      {
-        case 3:
-          results[id + Jn + 2] = jzn;
-          results[id + Jn + shift + 2] = jzI;
-          results[id + Jn + 2 * shift + 2] = jzI3;
-          results[id + Jn + 3 * shift + 2] = jzC;
-        case 2:
-          results[id + Jn + 1] = jyn;
-          results[id + Jn + shift + 1] = jyI;
-          results[id + Jn + 2 * shift + 1] = jyI3;
-          results[id + Jn + 3 * shift + 1] = jyC;
-          //results[id + Jn + 3] = sqrt(jxn * jxn + jyn * jyn + jzn * jzn);
-          //results[id + Jn + shift + 3] = sqrt(jxI * jxI + jyI * jyI + jzI * jzI);
-          //results[id + Jn + 2 * shift + 3] = sqrt(jxI3 * jxI3 + jyI3 * jyI3 + jzI3 * jzI3);
-          //results[id + Jn + 3 * shift + 3] = sqrt(jxC * jxC + jyC * jyC + jzC * jzC);
-        default:
-          results[id + Jn] = jxn;
-          results[id + Jn + shift] = jxI;
-          results[id + Jn + 2 * shift] = jxI3;
-          results[id + Jn + 3 * shift] = jxC;
-      }
-    }
-
-    elem_number++;
-  }
-
-  results.resize(elem_number * n_vars);
-
-}
-
-*/
-/*
-void
-DSSC::build_integrated_quantities(
-    vector<double>& values)
-{
-
-  if (plot_solution("ContactCurrents") || plot_solution("current"))
-  {
-    //if (get_options().current_calculation == RSTF)
-      calculate_currents_rstf();
-    //else
-    //  calculate_currents_surfint();
-
-    values.resize(_boundary_currents.size());
-
-    ContactData::iterator it(_boundary_currents.begin());
-    const ContactData::iterator end(_boundary_currents.end());
-    for (unsigned int id = 0; it != end; ++it, id++)
-      values[id] = it->second * it->first->get_area_factor();
-
-  }
-}
-*/
 
 void
 DSSC::calculate_currents(void)
 {
   calculate_currents_rstf();
 }
-
-/*
-void
-DSSC::build_integrated_quantities_description(
-    std::vector<std::string>& legend,
-    std::vector<std::string>& description)
-{
-
-  if (plot_solution("ContactCurrents") || plot_solution("current"))
-  {
-    legend.resize(_boundary_currents.size());
-
-    ContactData::iterator it(_boundary_currents.begin());
-    const ContactData::iterator end(_boundary_currents.end());
-    for (unsigned int id = 0; it != end; ++it, id++)
-      legend[id] = it->first->get_name();
-
-    description.resize(1);
-    unsigned int dim = get_mesh().mesh_dimension();
-    ostringstream s;
-    s << "Contact currents. Units A";
-    switch (dim)
-    {
-      case 1:
-        s << "cm^-2";
-        break;
-      case 2:
-        s << "cm^-1";
-        break;
-    }
-    description[0] = s.str();
-  }
-}
-*/
 
 
 
@@ -3252,8 +1656,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     KIu(Ke), KIn(Ke), KII(Ke), KII3(Ke),  // KIC = 0
     KI3u(Ke),KI3n(Ke),KI3I(Ke),KI3I3(Ke), // KI3C = 0
     KCu(Ke), /* =0 */ /* =0 */ /* =0 */  KCC(Ke);
-    //Kau(Ke), /* =0 */ /* =0 */ /* =0 */  KaC(Ke), Kaa(Ke),
-    //Kbu(Ke), /* =0 */ KbI(Ke), KbI3(Ke), /* 0 */  /* 0 */ Kbb(Ke);
 
   DenseSubVector<Number>
     Fu(Fe),
@@ -3261,8 +1663,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     FI(Fe),
     FI3(Fe),
     FC(Fe);
-    //Fa(Fe),
-    //Fb(Fe);
 
   DenseSubVector<Number>
     Xu(X),
@@ -3365,22 +1765,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     KCu.reposition(4 * n_dofs, 0, n_dofs, n_dofs);
     KCC.reposition(4 * n_dofs, 4 * n_dofs, n_dofs, n_dofs);
     //
-    //Kau.reposition(5 * n_dofs, 0, n_dofs, n_dofs);
-    //KaC.reposition(5 * n_dofs, 4 * n_dofs, n_dofs, n_dofs);
-    //Kaa.reposition(5 * n_dofs, 5 * n_dofs, n_dofs, n_dofs);
-    //
-    //Kbu.reposition(6 * n_dofs, 0, n_dofs, n_dofs);
-    //KbI.reposition(6 * n_dofs, 2 * n_dofs, n_dofs, n_dofs);
-    //KbI3.reposition(6 * n_dofs, 3 * n_dofs, n_dofs, n_dofs);
-    //Kbb.reposition(6 * n_dofs, 6 * n_dofs, n_dofs, n_dofs);
-    //
     Fu.reposition(0, n_dofs);
     Fn.reposition(n_dofs, n_dofs);
     FI.reposition(2 * n_dofs, n_dofs);
     FI3.reposition(3 * n_dofs, n_dofs);
     FC.reposition(4 * n_dofs, n_dofs);
-    //Fa.reposition(5 * n_dofs, n_dofs);
-    //Fb.reposition(6 * n_dofs, n_dofs);
     //
     Xu.reposition(0, n_dofs);
     Xn.reposition(n_dofs, n_dofs);
@@ -3486,7 +1875,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
 
       // NOTE: sigma_e = mu_e * n is the electron conductivity
-      //double sigma_n = (mu_n * n_e ) / C0_e;
       double sigma_n = (mu_n * n_e ) / C0_e;
       double sigma_I = (mu_I * n_I ) / C0_I;
       double sigma_I3 = (mu_I3 * n_I3 ) / C0_I3;
@@ -3527,8 +1915,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               KI3I3(i,j) += sigma_I3 * laplace / local_scaling[i][2];
 
               KCC(i,j) += sigma_C * laplace / local_scaling[i][3];
-              //Kaa(i,i) += 1;
-              //Kbb(i,i) += 1;
             }
           }
         }
@@ -3541,8 +1927,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           KII(i,i) += 1;
           KI3I3(i,i) += 1;
           KCC(i,i) += 1;
-          //Kaa(i,i) += 1;
-          //Kbb(i,i) += 1;
         }
       }
 
@@ -3580,8 +1964,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
         // the factor phi_0 comes from the derivative with respect to the potential
-        //double n_eq = sc->get_equilibrium_concentrations().n;
-        //double dsigma_n = J * phi0 / C0_e * mu_n *  (1.4 * pow(n_e , 0.4)) * dn_dphi;
         double dsigma_n = J * phi0 / C0_e * mu_n * dn_dphi;
         double dsigma_I = J * phi0 / C0_I * mu_I * dI_dphi;
         double dsigma_I3 = J * phi0 / C0_I3 * mu_I3 * dI3_dphi;
@@ -3668,14 +2050,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               KuI(i,j) -= phi0 * dI_dphi * phi_i_x_phi_j / local_scaling[i][4] / C0_tot;
               KuI3(i,j) -= phi0 * dI3_dphi * phi_i_x_phi_j / local_scaling[i][4] / C0_tot;
               KuC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / local_scaling[i][4] / C0_tot;
-
-              //Kau(i,j) -= phi0 * dC_dphi * phi_i_x_phi_j / C0_C;
-              //KaC(i,j) += phi0 * dC_dphi * phi_i_x_phi_j / C0_C;
-
-              //Kbu(i,j) -= phi0 * (dI3_dphi + dI_dphi / 3.0) * phi_i_x_phi_j / C0_tot;
-              //KbI(i,j) += phi0 * dI_dphi / 3.0 * phi_i_x_phi_j / C0_tot;
-              //KbI3(i,j) += phi0 * dI3_dphi * phi_i_x_phi_j / C0_tot;
-
+              
               if (!poisson_only())
               {
                 if (is_TiO2)
@@ -3732,8 +2107,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
           tot_cat += J * phi[i][qp] * n_C / C0_C;
           tot_iodine += J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
-          //Fa(i) -= J * phi[i][qp] * n_C / C0_C;
-          //Fb(i) -= J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
 
         }
       }
@@ -3856,13 +2229,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
               sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
               sc->set_coordinates(q_point_face[qp]);
-              //sc->calculate_mobilities();
 
-              //sc->set_electric_field(phi0 / x0 * e_field);
-              //sc->set_grad_fermi_n(phi0 / x0 * RealGradient(grad_en, 0.0, 0.0));
-              //sc->set_grad_fermi_I(phi0 / x0 * RealGradient(grad_eI, 0.0, 0.0));
-              //sc->set_grad_fermi_I3(phi0 / x0 * RealGradient(grad_eI3, 0.0, 0.0));
-              //sc->set_grad_fermi_C(phi0 / x0 * RealGradient(grad_eC, 0.0, 0.0));
               sc->calculate_densities();
               sc->calculate_traps();
 
@@ -3881,6 +2248,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                 sc->get_density_derivative_C();
 
 
+            //define flux direction
+            
+
             // the jacobian x weight x scaling
             double J = JxW_face[qp];
 
@@ -3894,42 +2264,56 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                   for (unsigned int j = 0; j < n_dofs; j++)
                   {
 
-                    double res = contact->get_load() * x0;
-
-                    //double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
-                    //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
+                    //double res = contact->get_load() * x0;
+                    double j0 = contact->get_ex_curr();
+                
+                    double kT = sc->get_lattice_temperature();
+                    double kT2 = 2*kT;
+	            //double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
+	            //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
                     double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
                     double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
+                
+                    //double Eredox = -2*u + 1.5*eI - 0.5*eI3;
+                    double Eredox = -u;
 
                     double J_phi_i_phi_j = J * phi_face[i][qp] * phi_face[j][qp];
-
+	        
                     //KIu(i,j) += 1.5 * 2 * J_phi_i_phi_j * Normal_I / res;
                     //KII(i,j) += 1.5 * -1.5 * J_phi_i_phi_j * Normal_I / res;
                     //KII3(i,j) += 1.5 * 0.5 * J_phi_i_phi_j * Normal_I / res;
-                    KIu(i,j) += 1.5 * J_phi_i_phi_j * Normal_I / res;
+//                    KIu(i,j) += 1.5 * J_phi_i_phi_j * Normal_I / res;
+                    KIu(i,j) += 1.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * J_phi_i_phi_j * Normal_I / kT2;
 
                     //KI3u(i,j) += -0.5 * 2 * J_phi_i_phi_j * Normal_I3 / res;
                     //KI3I(i,j) += -0.5 * -1.5 * J_phi_i_phi_j * Normal_I3 / res;
                     //KI3I3(i,j) += -0.5 * 0.5 * J_phi_i_phi_j * Normal_I3 / res;
-                    KI3u(i,j) += -0.5 * J_phi_i_phi_j * Normal_I3 / res;
+//                    KI3u(i,j) += -0.5 * J_phi_i_phi_j * Normal_I3 / res;
+                    KI3u(i,j) += -0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * J_phi_i_phi_j * Normal_I3 / kT2;
 
                   }
                 }
                 if (residual != NULL)
                 {
-                  double res = contact->get_load() * x0;
-                  //double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
-                  //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
-                  double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
-                  double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
+                    //double res = contact->get_load() * x0;
+                    double j0 = contact->get_ex_curr();
+	            //double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
+	            //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
+                    double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
+                    double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
+                    double kT = sc->get_lattice_temperature();
+                    double kT2 = 2*kT;
+               
+                    //double Eredox = -2*u + 1.5*eI - 0.5*eI3;
+                    double Eredox = -u;
 
-                  pot = -u;
+                    FI(i) += -1.5 * j0 * ( exp(Eredox/kT2)   -  exp(-Eredox/kT2) ) * J * phi_face[i][qp] * Normal_I;
+                    FI3(i) += 0.5 * j0 * ( exp(Eredox/kT2)   -  exp(-Eredox/kT2) ) * J * phi_face[i][qp] * Normal_I3;
+
+                  //pot = -u;
                   //pot = -2*u + 1.5*eI - 0.5*eI3;
-                  FI(i) += -1.5 * pot * J * phi_face[i][qp] * Normal_I / res ;
-                  FI3(i) += 0.5 * pot * J * phi_face[i][qp] * Normal_I3 / res ;
-
-                  //Fa(s) += _cation_amount / C0_C;
-                  //Fb(s) += _iodine_amount / C0_tot;
+//                  FI(i) += -1.5 * pot * J * phi_face[i][qp] * Normal_I / res ;
+//                  FI3(i) += 0.5 * pot * J * phi_face[i][qp] * Normal_I3 / res ;
                 }
               }
 
@@ -3940,8 +2324,41 @@ DSSC::do_assembly(const NumericVector<Number>& x,
              if (n_cat == NULL)
              {
                n_cat = side->get_node(0);
-               //local_scaling_C = local_scaling[s][3];
-               //local_scaling_I = local_scaling[s][1];
+             }
+
+            for (unsigned int i = 0; i < n_dofs; i++)
+            {
+               if (jacobian != NULL)
+               {
+               for (unsigned int j = 0; j < n_dofs; j++)
+                {
+	           //double Normal_n = x0 / (phi0 * C0_e * local_scaling[s][0] );
+	           double Normal_n = x0 / (phi0 * C0_e );
+                   double kinetic_anode = contact->get_kinetic();
+                    
+                   double J_phi_i_phi_j = J * phi_face[i][qp] * phi_face[j][qp];
+
+                   double dn_dphi = sc->get_density_derivative_n();
+
+                   Knu(i,j) += -kinetic_anode * dn_dphi * Normal_n * J_phi_i_phi_j;
+                   Knn(i,j) += -kinetic_anode * -dn_dphi * Normal_n * J_phi_i_phi_j;
+                }
+               }
+               if (residual != NULL)
+               { 
+                 
+                 double density_n = sc->get_density_n();
+                 double n_dark = sc->get_equilibrium_concentrations().n;
+                 double bias = contact->get_potential();
+                 double kT = sc->get_lattice_temperature();
+                 double n_0 = n_dark * exp(bias/kT); 
+
+	         //double Normal_n = x0 / ( phi0 * C0_e * local_scaling[s][0] );
+	         double Normal_n = x0 / ( phi0 * C0_e );
+                 double kinetic_anode = contact->get_kinetic();
+
+                 Fn(i) += -kinetic_anode * (density_n - n_0) * Normal_n * J * phi_face[i][qp];
+               }
              }
 
             }
@@ -3950,10 +2367,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
         } // qp
 
-            //double value_u = J * (l2_eps * value[0] - Pn);
-            //  double value_u = J * (value[0] - Pn);
-            //  double value_n = J * value[1] / (mu0 * C0_e);
-            //  double value_p = J * value[2] / (mu0 * C0_h);
         } // true_boundary
         } // dimension
         else // i.e. dim == 1
@@ -4022,93 +2435,69 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             if (jacobian != NULL)
              {
 
-                double res = contact->get_load() * x0;
-                double kinetic_cathode = contact->get_kinetic();
+                //double res = contact->get_load() * x0;
+                //double kinetic_cathode = contact->get_kinetic();
                 
-                //double kT = sc->get_lattice_temperature();
+                double j0 = contact->get_ex_curr();
+                double kT = sc->get_lattice_temperature();
+                double kT2 = 2*kT;
 	        double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
 	        double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
-                //double Normal_I = x0 / (phi0 * C0_I * scaling_I);
-                //double Normal_I3 = x0 / (phi0 * C0_I3 * scaling_I3);
+                
+                //double Eredox = bias -2*Xu(s) + 1.5*XI(s) - 0.5*XI3(s);
+                double Eredox = -Xu(s);
 	        
-                //double Normal_I3 = x0 / (phi0 * C0_I3 * scaling_I3 );
-
-        	//double dI_dphi = sc->get_density_derivative_I();
-        	//double dI3_dphi = sc->get_density_derivative_I3();
-        	//double I_dark = sc->get_equilibrium_concentrations().I;
-        	//double I3_dark = sc->get_equilibrium_concentrations().I3;
 
                 //KIu(s,s) += 1.5 * 2 * Normal_I / res;
                 //KII(s,s) += 1.5 * -1.5 * Normal_I / res;
                 //KII3(s,s) += 1.5 * 0.5 * Normal_I / res;
-                KIu(s,s) += 1.5 * Normal_I / res;
+//               KIu(s,s) += 1.5 * Normal_I / res;
                  
                 //KI3u(s,s) += -0.5 * 2 * Normal_I3 / res;
                 //KI3I(s,s) += -0.5 * -1.5 * Normal_I3 / res;
                 //KI3I3(s,s) += -0.5 * Normal_I3 / res;
-                KI3u(s,s) += -0.5 * Normal_I3 / res;
+//               KI3u(s,s) += -0.5 * Normal_I3 / res;
                 
-                //KI3u(s,s) += (1/3.0) * kinetic_cathode * dI_dphi * Normal_I3 ;
-                //KI3I(s,s) += (1/3.0) * kinetic_cathode * -dI_dphi * Normal_I3 ;
-
-                //KIu(s,s) += 1.5 * sign * j0 * ( (1.0 / I3_dark) * dI3_dphi - (1.0 / I_dark) * dI_dphi ) * Normal_I;
-                //KII(s,s) += 1.5 * sign * j0 * (-1.0 / I_dark) * -dI_dphi * Normal_I;
-                //KII3(s,s) += 1.5 * sign * j0 * (1.0 / I3_dark) * -dI3_dphi * Normal_I;
-
-                //KI3u(s,s) += -0.5 * sign * j0 * ( (1.0 / I3_dark) * dI3_dphi - (1.0 / I_dark) * dI_dphi ) * Normal_I3;
-                //KI3I(s,s) += -0.5 * sign * j0 * (-1.0 / I_dark) * -dI_dphi * Normal_I3;
-                //KI3I3(s,s) += -0.5 * sign * j0 * (1.0 / I3_dark) * -dI3_dphi * Normal_I3;
-
                 //for (unsigned int n = 0; n < elem->n_nodes(); n++)
                 //{
-                //  KI3u(s,n) += -(1/3) * dsigma_I * XI(n) * dphi_face[n][0](0) * C0_I/C0_I3 ;
-                //  KI3I(s,n) += -(1/3) * -dsigma_I * XI(n) * dphi_face[n][0](0) * C0_I/C0_I3 ;
-                //  KI3I(s,n) += -(1/3) * sigma_I * dphi_face[n][0](0) * C0_I/C0_I3 ;
+                  //KIu(s,n) += -3 * dsigma_I3 * XI3(n) * dphi_face[n][0](0) * C0_I3/C0_I ;
+                  //KII3(s,n) += -3 * -dsigma_I3 * XI3(n) * dphi_face[n][0](0) * C0_I3/C0_I ;
+                  //KII3(s,n) += -3 * sigma_I3 * dphi_face[n][0](0) ;
                 //}
 
-                //for (unsigned int n = 0; n < elem->n_nodes(); n++)
-                //{
-                //  KIu(s,n) += -3 * dsigma_I3 * XI3(n) * dphi_face[n][0](0) * C0_I3/C0_I ;
-                //  KII3(s,n) += -3 * -dsigma_I3 * XI3(n) * dphi_face[n][0](0) * C0_I3/C0_I ;
-                //  KII3(s,n) += -3 * sigma_I3 * dphi_face[n][0](0) ;
-                //}
+//                KIu(s,s) += 1.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * Normal_I / kT2;
+                KIu(s,s) += -1.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I / kT2;
+                //KII(s,s) += -1.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (1.5) * Normal_I / kT2;
+                //KII3(s,s) += -1.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-0.5) * Normal_I / kT2;
 
+//                KI3u(s,s) += -0.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * Normal_I3 / kT2;
+                KI3u(s,s) += 0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I3 / kT2;
+                //KI3I(s,s) += 0.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (1.5) * Normal_I3 / kT2;
+                //KI3I3(s,s) += 0.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-0.5) * Normal_I3 / kT2;
+                
 
             }
             if (residual != NULL)
             {
-               double res = contact->get_load() * x0;
+               //double res = contact->get_load() * x0;
+
 	       double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
 	       double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
-	       //double Normal_I3 = 1.0 / ( C0_I3 * scaling_I3 );
-	       //double Normal_I = 1.0 / ( C0_I * scaling_I );
-
-               //double kinetic_cathode = contact->get_kinetic();
-               //double Normal_I = x0 / (phi0 * C0_I * Constants::e * scaling_I);
-               //double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * scaling_I3);
-
-               //double j0 = contact->get_ex_curr();
-               //double I_dark = sc->get_equilibrium_concentrations().I;
-               //double I3_dark = sc->get_equilibrium_concentrations().I3;
-               //double kT = sc->get_lattice_temperature();
-
-               double density_I = sc->get_density_I();
-               double density_I3 = sc->get_density_I3();
-               double I_dark = sc->get_equilibrium_concentrations().I;
-
+               double kT = sc->get_lattice_temperature();
+               double kT2 = 2*kT;
+               
+               double j0 = contact->get_ex_curr();
+               //double Eredox = bias -2*Xu(s) + 1.5*XI(s) - 0.5*XI3(s);
+               double Eredox = -Xu(s);
                //pot =  -2*Xu(s) + 1.5*XI(s) - 0.5*XI3(s);
-               //pot = contact->get_potential();
-               pot =  -Xu(s);
-               FI(s) += -1.5 * pot * Normal_I / res ;
-               FI3(s) += 0.5 * pot * Normal_I3 / res ;
-               //FI3(s) += (1/3.0)* kinetic_cathode * (density_I - I_dark) * Normal_I3 ;
-               //FI3(s) += 0.5 * kinetic_cathode * ( density_I3 / I3_dark  - density_I / I_dark ) * Normal_I3;
+               //pot =  -Xu(s);
 
-               //FI3(s) += 0.5 * kinetic_cathode * ( exp(pot/kT)   -  exp(-pot/kT) ) * Normal_I3;
-               //FI(s) += -1.5 * kinetic_cathode * ( exp(pot/kT)   -  exp(-pot/kT) ) * Normal_I;
+//               FI(s) += -1.5 * pot * Normal_I / res ;
+//               FI3(s) += 0.5 * pot * Normal_I3 / res ;
 
-               //Fa(s) += _cation_amount / C0_C;
-               //Fb(s) += _iodine_amount / C0_tot;
+               FI3(s) += 0.5 * j0 * ( exp(Eredox/kT2)   -  exp(-Eredox/kT2) ) * Normal_I3;
+               FI(s) += -1.5 * j0 * ( exp(Eredox/kT2)   -  exp(-Eredox/kT2) ) * Normal_I;
+
              }
            }
            else
@@ -4123,26 +2512,29 @@ DSSC::do_assembly(const NumericVector<Number>& x,
              {
                
 	       //double Normal_n = x0 / (phi0 * C0_e * Constants::e * local_scaling[s][0] );
-	       //double Normal_n = x0 / (phi0 * C0_e );
-               //double kinetic_anode = contact->get_kinetic();
+	       double Normal_n = x0 / (phi0 * C0_e * local_scaling[s][0] );
+               double kinetic_anode = contact->get_kinetic();
                  
-               //double dn_dphi = sc->get_density_derivative_n();
+               double dn_dphi = sc->get_density_derivative_n();
 
-               //Knu(s,s) += -kinetic_anode * dn_dphi * Normal_n;
-               //Knn(s,s) += -kinetic_anode * -dn_dphi * Normal_n;
+               Knu(s,s) += -kinetic_anode * dn_dphi * Normal_n;
+               Knn(s,s) += -kinetic_anode * -dn_dphi * Normal_n;
 
              }
              if (residual != NULL)
              { 
                  
-               //double density_n = sc->get_density_n();
-               //double n_dark = sc->get_equilibrium_concentrations().n;
+               double density_n = sc->get_density_n();
+               double n_dark = sc->get_equilibrium_concentrations().n;
+               double bias = contact->get_potential();
+               double kT = sc->get_lattice_temperature();
+               double n_0 = n_dark * exp(bias/kT); 
 
 	       //double Normal_n = x0 / ( phi0 * C0_e * Constants::e * local_scaling[s][0] );
-	       //double Normal_n = 1.0 / C0_e;
-               //double kinetic_anode = contact->get_kinetic();
+	       double Normal_n = x0 / ( phi0 * C0_e * local_scaling[s][0] );
+               double kinetic_anode = contact->get_kinetic();
 
-               //Fn(s) += -kinetic_anode * (density_n - n_dark) * Normal_n;
+               Fn(s) += -kinetic_anode * (density_n - n_0) * Normal_n; 
 
              }
 
@@ -4173,6 +2565,35 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       }
     }
 
+    // check if it is a dielectric
+    if (!sc->is_electrolyte())
+    {
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        for (unsigned int j = 0; j < n_dofs; j++)
+        {
+          KuI(i, j) = KuI3(i, j) = KuC(i, j) = 0.0;
+
+          KIu(i, j) = KIn(i, j) = KII(i, j) = KII3(i, j) = 0.0;
+          KI3u(i, j) = KI3n(i, j) = KI3I(i, j) = KI3I3(i, j) = 0.0;
+          KCu(i, j) = KCC(i, j) = 0.0;
+          
+          KnI(i, j) = KnI3(i, j) = 0.0;
+        }
+
+        if (!is_internal_boundary_node(elem->get_node(i)))
+        {
+          KII(i, i) = 1.0;
+          KI3I3(i, i) = 1.0;
+          KCC(i, i) = 1.0;
+        }
+
+        // we simply set the electrochemical potential to zero
+        FI(i) = 0.0;
+        FI3(i) = 0.0;
+        FC(i) = 0.0;
+      }
+    } 
 
     // constrain the jacobian and the rhs to account for constrained
     // DOFs
@@ -4187,7 +2608,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     BoundaryNodeList::const_iterator node_it;
     const BoundaryNodeList::const_iterator end =
       dirichlet_nodes.end();
-//    if (Ke.m() == n_dofs_tot)
     {
       // no constrained nodes, so everything is easy
 
@@ -4207,15 +2627,12 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           if (nodes_on_boundary_sides.find(elem->node(i)) !=
               nodes_on_boundary_sides.end())
           {
-          //if (!contact->is_cathode())
             if ( (!contact->is_cathode()) && (!contact->is_gate()) )
             {
 
-              double bias = contact->get_potential();
-              //double barrier = contact->get_barrier(); 
+              //double bias = contact->get_potential();
 
-               Ke.condense(i + n_dofs, i + n_dofs, bias, Fe);
-               //Ke.condense(i, i, bias, Fe);
+              //Ke.condense(i + n_dofs, i + n_dofs, bias, Fe);
 
             }
             else if (contact->is_gate())
@@ -4223,24 +2640,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                double bias = contact->get_potential();
 
                Ke.condense(i, i, bias, Fe);
-            }
-            else if (contact->is_cathode())
-            {
-               
-               //Ke.condense(i + 2*n_dofs, i + 2*n_dofs, -(1.0/3.0 * (-2*bias + XI3(i) + 2*Xu(i) )), Fe);
-               //Ke.condense(i + 2*n_dofs, i + 2*n_dofs, -bias , Fe);
-               //double bias = contact->get_potential();
-               
-               //for (unsigned int j = 0; j < n_dofs_tot; j++)
-               //  Ke(i + 2*n_dofs , j) = 0.0;
-
-               //Ke(i + 2*n_dofs, i+2*n_dofs) = 1.0;
-               //Ke(i + 2*n_dofs, i+3*n_dofs) = -1.0/3.0;
-               //Ke(i + 2*n_dofs, i) = -2.0/3.0;
-                
-               //Fe(i + 2*n_dofs) += 2.0/3.0 * bias;
-               //Fe(i + 2*n_dofs) = 0.0;
-              
             }
           }
         }
@@ -4350,11 +2749,6 @@ DSSC::do_setup_solution_variables(void)
   declare_solution(Eredox, REAL, NODES, "eV");
   
   declare_solution(ElField, VECTOR, CELL, "V/cm");
-  //declare_solution(Eg, REAL, NODES, "eV");
-  //declare_solution(Ec, REAL, NODES, "eV");
-  //declare_solution(Ev, REAL, NODES, "eV");
-  //declare_solution(Ec0, REAL, NODES, "eV");
-  //declare_solution(Ev0, REAL, NODES, "eV");
 
   declare_solution(eDensity, REAL, NODES, "cm^-3");
   declare_solution(IDensity, REAL, NODES, "cm^-3");
@@ -4370,8 +2764,6 @@ DSSC::do_setup_solution_variables(void)
   declare_solution(ICurrentDensity, VECTOR, CELL, "A/cm^2");
   declare_solution(I3CurrentDensity, VECTOR, CELL, "A/cm^2");
   declare_solution(CCurrentDensity, VECTOR, CELL, "A/cm^2");
-  //declare_solution(eFlux, VECTOR, CELL, "1/(s*cm^2)");
-  //declare_solution(hFlux, VECTOR, CELL, "1/(s*cm^2)");
 
   //declare_solution(IonizedElectronTraps, REAL, NODES, "cm^-3");
 
@@ -4557,7 +2949,6 @@ DSSC::get_solution_secure(const Elem* elem,
   RealGradient jI3(0);
   RealGradient jC(0);
   RealGradient el_field(0);
-  //RealVectorValue polariz(0);
 
   for (unsigned int n = 0; n < np; n++)
   {
@@ -4566,11 +2957,6 @@ DSSC::get_solution_secure(const Elem* elem,
     double eI = 0.0;
     double eI3 = 0.0;
     double eC = 0.0;
-    //double oldu  = 0.0;
-    //double olden = 0.0;
-    //double oldeI = 0.0;
-    //double oldeI3 = 0.0;
-    //double oldeC = 0.0;
     RealGradient e_field(0);
     RealGradient grad_en_loc(0);
     RealGradient grad_eI_loc(0);
@@ -4586,12 +2972,6 @@ DSSC::get_solution_secure(const Elem* elem,
       eI3 += phi[i][n] * solution(dof_indices_eI3[i]);
       eC += phi[i][n] * solution(dof_indices_eC[i]);
 
-      //oldu += phi[i][n] * oldsolution(dof_indices_u[i]);
-      //olden += phi[i][n] * oldsolution(dof_indices_en[i]);
-      //oldeI += phi[i][n] * oldsolution(dof_indices_eI[i]);
-      //oldeI3 += phi[i][n] * oldsolution(dof_indices_eI3[i]);
-      //oldeC += phi[i][n] * oldsolution(dof_indices_eC[i]);
-
       grad_en_loc += dphi[i][n] * solution(dof_indices_en[i]);
       grad_eI_loc += dphi[i][n] * solution(dof_indices_eI[i]);
       grad_eI3_loc += dphi[i][n] * solution(dof_indices_eI3[i]);
@@ -4601,7 +2981,6 @@ DSSC::get_solution_secure(const Elem* elem,
 
     }
 
-    //cout<<e_field<<endl;
     // scale the potential back
     u *= phi0;
     en *= phi0;
@@ -4618,7 +2997,6 @@ DSSC::get_solution_secure(const Elem* elem,
     sc->set_coordinates(real_pts[n]);
 
     sc->set_potentials(u, en, eI, eI3, eC);
-    //sc->set_old_potentials(phi0 * oldu, phi0 * olden, phi0 * oldeI, phi0 * oldeI, phi0 * oldeI3, phi0 * oldeC);
 
     sc->set_electric_field(e_field);
     sc->set_grad_fermi_n(grad_en_loc);
@@ -4629,15 +3007,11 @@ DSSC::get_solution_secure(const Elem* elem,
     sc->calculate_densities();
     sc->calculate_traps();
 
-    //double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
-    //double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
     double edens = sc->get_density_n_exp_DOS();
     double edens_c = sc->get_density_n();
     double Idens = sc->get_density_I();
     double I3dens = sc->get_density_I3();
     double Cdens = sc->get_density_C();
-
-    //sc->calculate_mobilities();
 
     sc->calculate_net_recombination_rate();
 

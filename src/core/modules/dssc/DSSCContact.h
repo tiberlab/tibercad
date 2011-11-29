@@ -138,7 +138,7 @@ DSSCContact::DSSCContact(const ModelOptions& options)
     _beta(1.0),
     _current(0.0),
     _barrier(0.0),
-    _kinetic_rate(1e3)
+    _kinetic_rate(1e4)
 {
 }
 
