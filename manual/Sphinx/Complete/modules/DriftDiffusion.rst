@@ -97,8 +97,8 @@ The following options influence the behaviour of the Drift-Diffusion module:
 Solver section
 --------------------
 
-The ``Solver`` section of the Drift-Diffusion module refers to a nonlinear solver. See REF HERE for details on
-nonlinear solver options.
+The ``Solver`` section of the Drift-Diffusion module refers to a nonlinear solver. 
+See  :ref:`Nonlinear_solver` for details on nonlinear solver options.
 
 Physics section
 --------------------

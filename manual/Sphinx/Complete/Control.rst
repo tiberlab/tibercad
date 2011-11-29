@@ -92,7 +92,10 @@ For nonlinear and linear solvers, the following options exist:
 
 .. index:: double:Solvers;nonlinear
 
-Nonlinear solvers:
+
+.. _Nonlinear_solver:
+
+Nonlinear solvers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 type :
@@ -132,6 +135,9 @@ containing the options for the linear solver (see linear solvers).
 * ``max_iterations`` =  maximum number of iterations
 
 .. index:: double:Solvers;linear
+
+
+.. _Linear_solver:
 
 Linear solvers
 ^^^^^^^^^^^^^^^^^^^^^^^^

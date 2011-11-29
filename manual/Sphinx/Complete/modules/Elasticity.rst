@@ -51,8 +51,8 @@ Relying on the symmetry of the strain and stiffness tensor the final equation re
     
 
 The non-linear strain is computed by applying the mechanical equilibrium equation on the deformed mesh.  
-The number of the shape iterations is set by the keyword **shape_iteration** (default = 0, i.e. no deformation is performed) 
-whereas the maximum tolerated error can be indicated with **shape_error** ( default = :math:`1e^{-3}` ).
+The number of the shape iterations is set by the keyword **shape_iterations** (default = 0, i.e. no deformation is performed) 
+whereas the maximum tolerated error can be indicated with **shape_error** ( default = :math:`1e-3` ).
 
 
 
@@ -60,7 +60,7 @@ Stiffness constant
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default the stiffness constant is anisotropic. For the zincoblend crystal structure the independent coefficients are 
-(with the Voigt notation) C11, C12, C44. 
+(with the Voigt notation) :math:`C_{11}, C_{12}, C_{44}`. 
 
 ..  math::
     :label: stiffness
@@ -80,7 +80,7 @@ By default the stiffness constant is anisotropic. For the zincoblend crystal str
     
 |
 
-For the wurtzite structure we have C11, C12, C13 and C44.
+For the wurtzite structure we have :math:`C_{11}, C_{12}, C_{13}, C_{44}`.
 
 ..  math::
     :label: stiffness2
@@ -100,9 +100,12 @@ For the wurtzite structure we have C11, C12, C13 and C44.
 
 |
 
-An isotropic stiffness can be included with the keyword ``Stiffness isotropic`` . 
-In this case, the only independent parameters are the Young modulus 
-(Young in GPa) and the Poisson's ratio (Poisson). 
+While the anisotropic model is included by default, the ``isotropic`` one must be explicitly
+indicated.
+
+An isotropic stiffness can be defined within the block ``Stiffness`` with the keyword ``isotropic``. 
+In this case, the only independent parameters are the Young modulus :math:`E`
+(``young`` in GPa) and the Poisson's ratio :math:`\nu` (``poisson``). 
 
 ..  math::
     :label: anisotrop_stiff
@@ -123,8 +126,6 @@ In this case, the only independent parameters are the Young modulus
 
 |
 
-While the anisotropic model is included by default, the ``isotropic`` one must be explicitly
-indicated
 
 Example::
 
@@ -140,7 +141,7 @@ Example::
 Module options
 ---------------------
 
-The following options influence the behaviour of the Elasicity module:
+The following options influence the behaviour of the Elasticity module:
 
 
  ``shape_iteration`` : integer
@@ -148,7 +149,7 @@ The following options influence the behaviour of the Elasicity module:
     The default is ``1``, meaning that
 
  ``shape_error`` : double
-   defines the maximum tolerated error in non-linear strain computation (default = :math:`1e^{-3}`) 
+   defines the maximum tolerated error in non-linear strain computation (default = :math:`1e-3`) 
 
 
 
@@ -165,14 +166,16 @@ given in :ref:`Plotting variables<el_solutions>`.
 Solver section
 --------------------
 
-The ``Solver`` section of the Elasicity   module refers to  ???
+The ``Solver`` section of the ``Elasticity``   module refers to a linear solver.
+See section :ref:`Linear_solver`  for details on linear solver options.
+
+ 
 
 
 Physics section
 --------------------
 
-In the following we describe all submodels. As mentioned in the Introduction (REF HERE)
-submodels can be restricted to a subset of simulation regions.
+In the following we describe all the submodels. As mentioned in the Introduction  in section :ref:`InputFileGetting`, submodels can be restricted to a subset of simulation regions.
 
 The user can specify the following physical  models:
 
@@ -234,7 +237,7 @@ This stress contribution acts as a body force
 and  can  be included with the keyword ``lattice_mismatch`` .
 
 The strain source can be computed only once the reference lattice is identified. 
-The reference material and its growth axis must be included following the same syntax of the device section.
+The reference material and its growth axis must be included following the same syntax of the device section (see :ref:`InputFileGetting`).
 
 Example::
 
@@ -339,7 +342,7 @@ Example::
 Boundary conditions
 -------------------
 
-Different boundary conditions can be implemented for Elasticity simulations, by  means  of  the  block  Contact.
+Different boundary conditions can be implemented for Elasticity simulations, by  means  of  the  block  ``Contact``.
 
   * ``Surface force``
 
@@ -356,9 +359,9 @@ Surface force
 
 
 
-Surfaces forces :math:`f^0` are applied by imposing :math:`\sigma_{ij} n_{j} = f_i^0` along the surface with normal n. 
+Surfaces forces :math:`f^0` are applied by imposing :math:`\sigma_{ij} n_{j} = f_i^0` along the surface with normal :math:`n`. 
 This boundary condition can be used with the keyword ``surface_force``.  
-An example is shown below ::
+An example is shown below. ::
 
   Contact base
     {
@@ -453,10 +456,10 @@ Example::
 
 
 
-Example
+Example 1: Strain  in  heterostructures
 -------
 
-In the following we will compute the strain induced by the lattice mismatch in a system comprising a layer of GaN between two contacts of :math:`Al_{x}Ga_{1-x}N` . 
+In the following example we will compute the strain induced by the lattice mismatch in a system comprising a layer of GaN between two contacts of :math:`Al_{x}Ga_{1-x}N` . 
 Once the mesh is created with *gmsh* (distributed along with TiberCAD ) we may start to build the input file. 
 First, we have to insert the region section ::
 
@@ -504,9 +507,6 @@ In our case, with ``body_force lattice_mismatch`` we are adding a body force int
 induced by the lattice mismatch with the reference lattice which in this case is :math:`Al_{0.2}Ga_{0.8}N` . 
 In order to avoid a free standing device we may want to freeze a surface. With the Boundary type ``Clamp`` we fix, in this case, the region Base.
 
-The third part is simply Simulation ``{solve = elasticity}`` where the default name ``elasticity`` is used. 
-By default, files for 3D system are written in *vtu* format which can be read from Paraview. 
-Output data about strain are shown below.
 
 .. _fig.elasticity01: 
 
@@ -525,6 +525,159 @@ Output data about strain are shown below.
    :scale: 100%
    
    Strain effect on directions
+
+
+The third part is simply Simulation ``{solve = elasticity}`` where the default name ``elasticity`` is used. 
+By default, files for 3D system are written in *vtu* format which can be read from Paraview. 
+Output data about strain are shown below.
+
+
+
+
+
+
+Example 2: Piezoelectric nanogenerator
+------------------------------------
+
+In this example we will compute the output potential of a piezoelectric nanogenerator based on a vertical compressed ZnO nanowire [1,2]. The cylindrical column has a radius of 150 nm and is 4 :math:`\mu m` high. As we rely on the cylindrical symmetry, only a slice of the structure is included in the simulation domain. 
+In the device section we specify the name of the region (*Column*) and the doping. ::
+
+  Device
+   {
+
+    meshfile = mesh.msh
+    mesh_units = 1e-6
+
+    material = ZnO
+    symmetry = cylindrical
+
+    dimension = 2
+
+        Region Column
+        {
+
+          material = ZnO
+
+          Doping
+              {
+                Nd = 1e16
+                type = donor
+                Ed = 0.035
+              }
+
+         }
+
+  }
+  
+
+In the Physics section we use define isotropic elastic constant by means of the Young module and Poisson ratio. ::
+
+  Module elasticity
+  {
+
+   plot = (Strain,Stress,Displacements)
+
+    Physics
+     {
+      stiffness isotropic
+        {
+          young = 149
+          poisson = 0.349
+        }
+
+     }
+
+
+On the upper surface we apply a normal force toward the base of the nanowire. The units are in GPa. ::
+
+  Contact Upper 
+  {
+   type = surface_force
+   force = (0,-0.00625,0)
+  }
+
+
+Finally, the boundary condition *clamp* fixes a given surface. ::
+
+  Contact Lower 
+  {
+   type = clamp
+  }
+
+
+As the simulation is at the equilibrium, we only need to solve the Poisson equation. This can be specified by :: 
+
+  coupling = poisson  
+
+The lower contact is ohmic. The output potential can be taken at the top of the nanowire, where the force is applied, with respect to the electrical potential at the base. 
+This can be done by setting a reference contact, i.e. :: 
+
+  reference_contact = Lower
+
+With ::
+
+  default_boundary_condition = zero_displacement
+
+we enforce zero total displacement along the simulation boundary. 
+Thus, here are   the options for  Module driftdiffusion ::
+
+
+  Module driftdiffusion
+  {
+
+   coupling = poisson
+   reference_contact = Lower
+   default_boundary_condition = zero_displacement
+   plot = (ElPotential,ElField,eDensity,Ec,Ev,Polarization,IonizedDonors)
+
+
+By ::
+
+  strain_simulation = elasticity
+
+we specify the strain simulation, which will provide the strain map. ::
+
+  Physics
+  {
+    strain_simulation = elasticity   
+  }
+
+    Contact Lower
+    {
+     type = ohmic
+     regions = Lower
+     voltage = 0.0
+    }
+  
+
+To get the output piezopotential we first compute elasticity and then driftdiffusion. ::
+
+  Simulation
+   {
+    solve = (elasticity,driftdiffusion)
+    resultpath = output
+    verbose = 3
+   
+    output_format = vtk
+   }  
+
+
+The Figure :ref:`Piezopotential` shows the electrical potential across a 200 :math:`nm` length region at the tip of the NW.
+The output potential is :math:`\phi_M=-42mV`. This value is a results of the competition between the piezoelectric field and the screening due to the free carriers. 
+
+
+
+
+
+.. _fig.piezopotential: 
+
+.. figure:: ../data/figure_piezopotential.png
+   :align: center
+   :scale: 100%
+   
+   Piezopotential
+
+
    
 ..   </marker>
 
