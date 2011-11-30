@@ -177,45 +177,6 @@ class DriftDiffusionProperties : public PhysicalModel
     };
 
 
-    /*!
-     * This structure holds the basic properties of a band for given
-     * conditions (temp etc.)
-     */
-    /*
-    struct BandProperties
-    {
-      //! The effective mass for the DOS
-      /*!
-       * It includes any degeneration, i.e. also spin
-       * /
-      double effective_mass;
-
-      //! The effective density of states
-      double effective_DOS;
-
-      //! The band edge energy
-      double band_edge;
-
-      //! The degeneracy
-      unsigned int degeneracy;
-
-      //! All the band energies
-      std::vector<double> band_edges;
-
-      //! Get thermal velocity in cm/s
-      /*!
-       * \param temp the temperature in eV
-       * /
-      double get_thermal_velocity(double temp) const
-      {
-        const double fac = 3 * Constants::e / Constants::me;
-        double vth = fac * temp / effective_mass;
-        return (100.0 * std::sqrt(vth));
-      }
-    };
-    */
-
-
 
     //! A default (empty) destructor.
     virtual ~DriftDiffusionProperties(void);
@@ -1251,9 +1212,17 @@ inline
 double
 DriftDiffusionProperties::get_charge_density(void) const
 {
-  return _pd->hole_density - _pd->electron_density +
-    _pd->ionized_donor_density - _pd->ionized_acceptor_density
-    + _pd->ionized_electron_traps + _pd->ionized_hole_traps;
+  long double dens = static_cast<long double>(_pd->hole_density) -
+      static_cast<long double>(_pd->electron_density) +
+      static_cast<long double>(_pd->ionized_donor_density) -
+      static_cast<long double>(_pd->ionized_acceptor_density) +
+      static_cast<long double>(_pd->ionized_electron_traps) +
+      static_cast<long double>(_pd->ionized_hole_traps);
+
+  return static_cast<double>(dens);
+  //return _pd->hole_density - _pd->electron_density +
+  //  _pd->ionized_donor_density - _pd->ionized_acceptor_density
+  //  + _pd->ionized_electron_traps + _pd->ionized_hole_traps;
 }
 
 
@@ -1262,12 +1231,23 @@ void
 DriftDiffusionProperties::get_charge_density_derivatives(
     double derivatives[2]) const
 {
-  derivatives[0] = get_electron_density_derivative()
-    - get_ionized_donor_density_derivative()
-    - _pd->ionized_electron_traps_derivative;
-  derivatives[1] = -get_hole_density_derivative()
-    + get_ionized_acceptor_density_derivative()
-    - _pd->ionized_hole_traps_derivative;
+  long double der0 = static_cast<long double>(get_electron_density_derivative())
+      - static_cast<long double>(get_ionized_donor_density_derivative())
+      - static_cast<long double>(_pd->ionized_electron_traps_derivative);
+
+  long double der1 = -static_cast<long double>(get_hole_density_derivative())
+      + static_cast<long double>(get_ionized_acceptor_density_derivative())
+      - static_cast<long double>(_pd->ionized_hole_traps_derivative);
+
+  derivatives[0] = static_cast<double>(der0);
+  derivatives[1] = static_cast<double>(der1);
+
+  //derivatives[0] = get_electron_density_derivative()
+  //  - get_ionized_donor_density_derivative()
+  //  - _pd->ionized_electron_traps_derivative;
+  //derivatives[1] = -get_hole_density_derivative()
+  //  + get_ionized_acceptor_density_derivative()
+  //  - _pd->ionized_hole_traps_derivative;
 }
 
 inline

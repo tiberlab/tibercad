@@ -110,7 +110,7 @@ class BandProperties : public DriftDiffusionModelInterface
     //! The effective density of states
     //double _effective_DOS;
 
-    //! The degeneracy
+    //! The total degeneracy, including spin
     unsigned int _degeneracy;
 
     //! The temperature in eV
