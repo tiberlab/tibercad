@@ -38,8 +38,6 @@ void Plane::calculate(const Elem* elem, unsigned int side,
   H(2,1) = x;
   H(2,2) = 0.0;
 
-  H *=1e15;
- 
   set_coefficients(H,A,R);
 
 }
