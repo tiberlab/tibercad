@@ -92,6 +92,12 @@ class Optics : public SimulationInterface
 
     virtual void parse_options(void);   
 
+    //! For now do not allow further reimplementation
+    void do_setup_solution_variables(void);
+
+    //! For now do not allow further reimplementation
+    void get_solution_secure(std::map<ID, std::vector<double> >& values);
+
 
     //! assemble the optical matrix problem
     virtual void do_assemble(const ModelOptions& opts) = 0;
@@ -172,6 +178,12 @@ class Optics : public SimulationInterface
 
   private:
 
+    enum Solutions
+    {
+      OpticalPower, //!< the emitted optical power
+      Recombination //!< the total recombination rate
+    };
+
     void set_states(void);
 
     void init_k_space_integration(void);
@@ -183,6 +195,12 @@ class Optics : public SimulationInterface
     void print_info(void);
 
     void check_states(void);
+
+    //! The total emitted/absorbed power
+    double _total_power;
+
+    //! The total recombination/generation rate
+    double _recombination;
 
 };
 
