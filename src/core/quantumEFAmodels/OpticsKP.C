@@ -16,7 +16,7 @@
 #include <dense_submatrix.h>
 #include <mesh_generation.h>
 
-#include <stdlib.h>
+#include <cstdlib>
 
 using namespace std;
 using namespace Constants;

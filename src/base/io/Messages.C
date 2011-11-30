@@ -213,7 +213,7 @@ Messages::newline(void)
 }
 
 void
-Messages::frameline(const std::string start, const char ch, const std::string name)
+Messages::frameline(const std::string& start, const char ch, const std::string& name)
 {
   //ostringstream os;
   //os << start;

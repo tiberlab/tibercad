@@ -113,7 +113,7 @@ void KspaceIntegration::calculate_density()
         // build the map between k-points and the integrated error quantity
 	error_estimator[kelem] += error_value * JxW[qp] * factor;
 
-        std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
+        //std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
  
 	// add quad point contrib for every real-space element-------------         
         if (dens_at_k_elem.size() == 0)
@@ -152,7 +152,7 @@ void KspaceIntegration::calculate_density()
       		 real_space_density[el] += dens_at_k_elem[el];
   	}  
       }
-      std::cout<<"dens_at_k_elem: "<<dens_at_k_elem.size()<<std::endl;
+      //std::cout<<"dens_at_k_elem: "<<dens_at_k_elem.size()<<std::endl;
       dens_at_k_elem.clear();
 
     } // if new k_elem
@@ -181,7 +181,7 @@ void KspaceIntegration::calculate_density()
 
   }
       
-  std::cout<<"density: "<<real_space_density.size()<<std::endl;
+  //std::cout<<"density: "<<real_space_density.size()<<std::endl;
 
 }
 

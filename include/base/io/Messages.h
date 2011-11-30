@@ -61,7 +61,8 @@ class Messages
     static void newline(void);
 
     //! Add a break line (e.g. "<<<<<<<<...")
-    static void frameline(const std::string start, const char c, const std::string name = "");
+    static void frameline(const std::string& start, const char c,
+        const std::string& name = "");
 
     //! Set the log file
     static void set_log_file(const std::string& logfile);

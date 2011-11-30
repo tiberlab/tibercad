@@ -1,3 +1,5 @@
+// $Id$
+
 #include "Optics.h"
 #include "EigenvalueProblem.h"
 #include "KspaceIntegration.h"
@@ -6,6 +8,7 @@
 #include "SimulationOptions.h"
 #include "Messages.h"
 #include "DataOutput.h"
+#include "Constants.h"
 
 using namespace std;
 using namespace Constants; 
@@ -30,17 +33,63 @@ Optics::Optics(const ModelOptions& options)
 
 //==============================================//
 
+
+
+
+void
+Optics::do_setup_solution_variables(void)
+{
+  int dim = get_mesh().mesh_dimension();
+  string unit("");
+  if (dim == 0)
+    unit = "/cm^3";
+  if (dim == 1)
+    unit = "/cm^2";
+  else if (dim == 2)
+    unit = "/cm";
+
+  declare_solution(OpticalPower, REAL, GLOBAL, "W" + unit);
+  declare_solution(Recombination, REAL, GLOBAL, "1/s" + unit);
+}
+
+
+void
+Optics::get_solution_secure(map<ID, vector<double> >& values)
+{
+
+  map<ID, vector<double> >::iterator mapit(values.begin());
+  const map<ID, vector<double> >::iterator mapend(values.end());
+  for ( ; mapit != mapend; ++mapit)
+  {
+    ID id = mapit->first;
+
+    switch (id)
+    {
+      case OpticalPower:
+        values[id] = vector<double>(1, _total_power);
+        break;
+
+      case Recombination:
+        values[id] = vector<double>(1, _recombination);
+        break;
+
+    }
+  }
+}
+
+
+
 void Optics::parse_options()
 {
    
-  std::string type = get_option("type","recombination"); //"absorption" 
+  std::string type = get_option("type", "emission");
 
-  if (type=="recombination")
+  if (type == "emission")
   { 
     _initial_state_particle = "el";
     _final_state_particle = "hl";
   }
-  else if(type=="absorption")
+  else if (type == "absorption")
   { 
     _initial_state_particle = "hl";
     _final_state_particle = "el";
@@ -371,7 +420,7 @@ void Optics::calculate_for_k_point(const Point& k_point,
 
   calculate_spectrum(*_energy_mesh, _opt.Gamma, _opt.polariz,  spectrum);
 
-  std::cout<<"(OPT) calc for k: "<<spectrum.size()<<std::endl;
+  //std::cout<<"(OPT) calc for k: "<<spectrum.size()<<std::endl;
 
   //for integrated quantity I take a sum of the map
   integrated_quantity = 0.0;
@@ -447,6 +496,66 @@ void Optics::do_solve()
     calculate_spectrum(*_energy_mesh, _opt.Gamma, polariz,  _spectrum_z );
 
   }
+
+  _total_power = 0;
+  _recombination = 0;
+
+  // integrate the spectrum to obtain total emitted power and total recombination/generation rate
+
+  /* I would maybe prefer to be able to loop over the elements:
+  MeshBase::iterator it(_energy_mesh.elements_begin());
+  MeshBase::iterator end(_energy_mesh.elements_end());
+  for ( ; it != end; ++it)
+  {
+    const Elem* el = *it;
+    double dE = el.size();
+    _total_power +=
+  }
+  */
+
+  // the last node
+  size_t N = _spectrum_x.size() - 1;
+
+  // use trapez formula
+  for (size_t i = 1; i < N; i++)
+  {
+    double dP = _opt.dE * (_spectrum_x[i] + _spectrum_y[i] + _spectrum_z[i]);
+    _total_power += dP;
+    _recombination += dP / _energy_mesh->point(i)(0);
+  }
+  double dP0 = 0.5 * _opt.dE * (_spectrum_x[0] + _spectrum_y[0] + _spectrum_z[0]);
+  double dPN = 0.5 * _opt.dE * (_spectrum_x[N] + _spectrum_y[N] + _spectrum_z[N]);
+  _total_power += dP0 + dPN;
+  _recombination += dP0 / _energy_mesh->point(0)(0) + dPN / _energy_mesh->point(N)(0);
+
+  double area_dim_factor = 1.0;
+  int dim = get_mesh().mesh_dimension();
+  switch (dim)
+  {
+    case 0:
+      area_dim_factor *= Constants::bohr_radius * 1e2;
+
+    case 1:
+      area_dim_factor *= Constants::bohr_radius * 1e2;
+
+    case 2:
+      area_dim_factor *= Constants::bohr_radius * 1e2;
+
+    default:
+      break;
+  }
+
+  // scale back to SI units
+  _total_power *= Constants::elementary_charge / (Constants::atomic_time * area_dim_factor);
+  _recombination /= (Constants::atomic_time * area_dim_factor);
+
+  std::string type = get_option("type", "emission");
+  ostringstream os;
+  os << "Total " << ((type == "emission") ? "emitted" : "absorbed") << " power: "
+      << _total_power << " " << get_solution_descriptor(OpticalPower).units() << "\n";
+  os << "Total " << ((type == "emission") ? "recombination" : "generation") << " rate: "
+      << _recombination << " " << get_solution_descriptor(Recombination).units();
+  Messages::info(os.str());
 }
 
 //=====================================================================================================
@@ -580,6 +689,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 
 
   }
+
 
   //cout<<"spectrum size: "<<spectrum.size()<<endl;
   //cout<<"spectrum capacity: "<<spectrum.capacity()<<endl;
