@@ -676,7 +676,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	  RealGradient tmp = (stress + (C * strain)) * dphi[alpha][qp] + force *  phi[alpha][qp];
 
 	  //Add internal stress
-	  tmp += get_internal_stress(elem,q_point[qp]) * dphi[alpha][qp];
+	  tmp += get_internal_stress(elem, qrule.qp(qp)) * dphi[alpha][qp];
 	  for (ID i = 0;i <3; i++)
 	    (*(F[i]))(alpha) -= JxW[qp] * tmp(i);
 
