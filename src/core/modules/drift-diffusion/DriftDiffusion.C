@@ -2568,6 +2568,9 @@ DriftDiffusion::build_local_scaling(void)
   else if (_useparticle == 'h')
     en_var = ep_var;
 
+  // we have to detect the dirichlet DOFs
+  set<unsigned int> dirichlet_dofs;
+
   vector<unsigned int> dof_indices;
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -2635,7 +2638,6 @@ DriftDiffusion::build_local_scaling(void)
   {
     const Elem* elem = *it;
 
-    ID subdomain = elem->subdomain_id();
 
     dof_map.dof_indices(elem, dof_indices);
     dof_map.dof_indices(elem, dof_indices_u, u_var);
@@ -2650,8 +2652,7 @@ DriftDiffusion::build_local_scaling(void)
     scalep.reposition(2 * n_dofs, n_dofs);
 
 
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
+    DriftDiffusionProperties* sc = get_bulk_model<DriftDiffusionProperties>(elem);
     assert(sc != NULL);
 
     sc->reinit(elem);
@@ -2773,19 +2774,21 @@ DriftDiffusion::build_local_scaling(void)
           if (elem->is_node_on_side(i, s))
           {
             if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
-              scaleu(i) *= _penalty_value;
+              dirichlet_dofs.insert(dof_indices_u[i]);
+              //scaleu(i) *= _penalty_value;
 
             if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
-              scalen(i) *= _penalty_value;
+              dirichlet_dofs.insert(dof_indices_en[i]);
+              //scalen(i) *= _penalty_value;
 
             if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
-              scalep(i) *= _penalty_value;
+              dirichlet_dofs.insert(dof_indices_ep[i]);
+              //scalep(i) *= _penalty_value;
           }
         }
 
       }
     }
-
 
 
 
@@ -2911,9 +2914,19 @@ DriftDiffusion::build_local_scaling(void)
     }
     */
 
+
     loc_scaling.add_vector(local_scaling, dof_indices);
-    loc_scaling.close();
   } // end loop over elements
+
+  set<unsigned int>::iterator dirit(dirichlet_dofs.begin());
+  const set<unsigned int>::iterator dirend(dirichlet_dofs.end());
+  for ( ; dirit != dirend; ++dirit)
+  {
+    double val = loc_scaling.el(*dirit) * _penalty_value;
+    loc_scaling.set(*dirit, val);
+  }
+
+  loc_scaling.close();
 
 
   /*
@@ -3072,7 +3085,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   //
   // some scaling stuff...
   //
-  // NOTE: the mesh and all paramters were not explicitly scaled, so
+  // NOTE: the mesh and all parameters were not explicitly scaled, so
   //       we have to treat scaling by explicit division/multiplication
   //
   // the scaling parameters
@@ -3091,7 +3104,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   // density scaling for holes
   double C0_h = C0;
 
-  //if (do_local_scaling_)
+  //if (_do_local_scaling)
   //  C0_e = C0_h = 1.0;
 
 
@@ -3926,9 +3939,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
             for (unsigned int i = 0; i < n_dofs; i++)
             {
-              double scale_u = 1.0 / scaleu(i);
-              double scale_n = 1.0 / scalen(i);
-              double scale_p = 1.0 / scalep(i);
+              double scale_u = 1.0 / scaleu(i) / C0;
+              double scale_n = 1.0 / scalen(i) / C0_e;
+              double scale_p = 1.0 / scalep(i) / C0_h;
 
               if ((sm != NULL) && elem->is_node_on_side(i, s))
               {
