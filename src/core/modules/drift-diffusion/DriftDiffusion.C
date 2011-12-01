@@ -2559,6 +2559,7 @@ DriftDiffusion::build_local_scaling(void)
   double R0_e = C0_e / scaling.get_time_scaling();
   double R0_h = C0_h / scaling.get_time_scaling();
 
+  C0_e = C0_h = 1;
 
   const unsigned int u_var = system.variable_number("potential");
   unsigned int en_var = system.variable_number("fermi_e");
@@ -3104,8 +3105,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   // density scaling for holes
   double C0_h = C0;
 
-  //if (_do_local_scaling)
-  //  C0_e = C0_h = 1.0;
+  if (_do_local_scaling)
+    C0_e = C0_h = 1.0;
 
 
   // scaling for recombination rates
@@ -3939,9 +3940,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
             for (unsigned int i = 0; i < n_dofs; i++)
             {
-              double scale_u = 1.0 / scaleu(i) / C0;
-              double scale_n = 1.0 / scalen(i) / C0_e;
-              double scale_p = 1.0 / scalep(i) / C0_h;
+              double scale_u = 1.0 / scaleu(i);
+              double scale_n = 1.0 / scalen(i);
+              double scale_p = 1.0 / scalep(i);
 
               if ((sm != NULL) && elem->is_node_on_side(i, s))
               {
