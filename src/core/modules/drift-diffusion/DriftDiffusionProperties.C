@@ -162,7 +162,9 @@ DriftDiffusionProperties::prepare_submodels(void)
     if (!opts.find_option("particle"))
     {
       ModelOptions elopts(opts);
+      elopts["particle"] = "el";
       ModelOptions hlopts(elopts);
+      hlopts["particle"] = "hl";
       if (elopts.find_option("Ec"))
       {
         elopts["band_edge"] = elopts["Ec"];
@@ -197,7 +199,7 @@ DriftDiffusionProperties::prepare_submodels(void)
         elopts.delete_option("Nv");
         hlopts.delete_option("Nv");
       }
-      if (hlopts.find_option("m_dos_e"))
+      if (hlopts.find_option("m_dos_h"))
       {
         hlopts["DOS_mass"] = hlopts["m_dos_h"];
         elopts.delete_option("m_dos_h");
@@ -465,10 +467,13 @@ DriftDiffusionProperties::create_recombination_models(void)
   for (; it != end; ++it)
   {
     ModelOptions opts(it->second);
-    opts.set_option("trap", true);
-    opts.set_option("type", "srh");
-    opts.set_option("name", "recombination");
-    get_options().add_submodel("recombination", opts);
+    if (opts.get_option("recombination_center", true))
+    {
+      opts.set_option("trap", true);
+      opts.set_option("type", "srh");
+      opts.set_option("name", "recombination");
+      get_options().add_submodel("recombination", opts);
+    }
   }
 
 
