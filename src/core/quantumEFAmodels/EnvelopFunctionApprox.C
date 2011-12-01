@@ -308,8 +308,10 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
       // the phi^2 factor comes from the fact that the more correct interpolation is the square
       // of the basis function, because the probability densities are the square of the states
       // NOTE: maybe one should check if this gives really a better result
+      // NOTE: 2011-12-01 the above turned out to be wrong
       for (unsigned int i = 0; i < n_dofs; i++)
-        value += phi[i][n] * phi[i][n] * qdens(dof_indices[i]);
+        //value += phi[i][n] * phi[i][n] * qdens(dof_indices[i]);
+        value += phi[i][n] * qdens(dof_indices[i]);
 
       values[QuantumDensity][n] = value;
     }
