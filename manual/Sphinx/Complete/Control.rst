@@ -5,77 +5,134 @@ Controlling the Simulation
 .. index:: double:Simulations;sweep
 
 ================
-Simulations
+Tools for Simulation
 ================
+
+
+Variables
+---------
+
+In  tiberCAD,  parameters defined in a module (voltage bias, temperature, material parameters) may be associated to a user-defined *variable*, in  such  a  way  that they their numerical value  can  be  controlled during the  simulation.
+The  assignement to  a  variable is done  in  this  way ::
+
+  parameter = $my_var[0.0]
+ 
+where  ``my_var`` is  a  user-defined variable and the value in  square brackets [0.0] is  the  default  value of  the  variable.
+
 
 Sweep
 ---------
 
 Performs a linear sweep for a given variable.
 
-Options:
 
-  ``solve`` =  a list of simulations to be solved, eg. ``(strain, dd)``
+Options and  parameters:
 
-  ``variable`` =  the sweep variable, eg. ``$Vd``
+ ``solve`` :  string
+    a list of simulations to be solved, eg. ``(strain, dd)``
 
-  ``start`` =  the first value of the sweep
+ ``variable`` : string
+    the sweep variable, eg. ``$Vd``
 
-  ``stop`` =  the last value of the sweep
+ ``start`` :  double
+    the first value of the sweep
 
-  ``steps`` =  the number of steps the interval (start, stop) gets subdivided in
+ ``stop`` : double
+    the last value of the sweep
 
-  ``values`` =  instead of ``start``, ``stop`` and ``steps``, provide the sweep values explicitly
+ ``steps`` : integer
+    the number of steps the interval (start, stop) gets subdivided in
 
-  ``plot_data`` =  set to true if you want to plot after each step the simulation results (default is false)
+ ``values`` :  double
+  instead of ``start``, ``stop`` and ``steps``, provide the sweep values explicitly
 
-  ``file_mode`` = controls the behaviour for writing the data file containing global data. Can be one of ``append``, ``overwrite`` (default) or ``no-overwrite``
+ ``plot_data`` : boolean
+    set to true if you want to plot after each step the simulation results (default is false)
 
-  ``min_step`` =  the minimum absolute step size
+ ``file_mode`` : string
+    controls the behaviour for writing the data file containing global data. Can be one of ``append``, ``overwrite`` (default) or ``no-overwrite``
 
-  ``max_step`` = the maximum absolute step size
+ ``min_step`` :  double
+   the minimum absolute step size
 
-  ``initial_step`` = the absolute initial step size
+ ``max_step`` : double
+   the maximum absolute step size
 
-  ``min_relative_step`` =  minimum relative step size, default is 1e-3
+ ``initial_step`` : double
+   the absolute initial step size
 
-  ``max_relative_step`` =  maximum relative step size, default is 1
+ ``min_relative_step`` : double
+     minimum relative step size, default is 1e-3
 
-  ``initial_relative_step`` =  initial relative step size, default is 1
+ ``max_relative_step`` : double
+    maximum relative step size, default is 1
 
-The relative step sizes refer to each single sweep step.  If max_relative_step is less than one, each sweep step will be subdivided in smaller steps. If a simulation fails, the step gets reduced by half until the simulation succeeds, or until the minimum relative or absolute step size is reached. In the latter case, the sweep is assumed to have failed.
-As for any module, a name can be given to a sweep block. This is important when several sweeps are defined, and in particular when nested sweep (solve option of one sweep refers to another sweep) are used.
+ ``initial_relative_step`` : double
+    initial relative step size, default is 1
+
+The relative step sizes refer to each single sweep step.  If  ``max_relative_step`` is less than one, each sweep step will be subdivided in smaller steps. If a simulation fails, the step gets reduced by half until the simulation succeeds, or until the minimum relative or absolute step size is reached. In the latter case, the sweep is assumed to have failed.
+As for any module, a name can be given to a *sweep* block. This is important when several sweeps are defined, and in particular when nested sweep (solve option of one sweep refers to another sweep) are used.
 
 Example::
 
   Module sweep
   {
    solve = (dd, thermal)
-   start = 0
-   stop = 1
-   steps = 10
+   variable = $Vbias
+   start = 0.0
+   stop = 1.2
+   steps = 12
    plot_data = true
   }
 
+In  this example, at  each  step of the  sweep the two simulations ``dd`` and  ``thermal`` are  performed, in  this  order, while  the  variable is ``Vbias`` and assumes values between 0 and 1.2.
+
+ 
+
 .. index:: double:Solvers;selfconsistent
 	
+
 Selfconsistent
 ----------------------
 
-Solves models in an iterative way to obtain a selfconsistent solution, optionally using a relaxation approach.
-options:
+This tool may  be  used to solve  models in an iterative way to obtain a selfconsistent solution, optionally using a relaxation approach.
 
-* ``max_iteration`` =  the maximum number of iterations. Currently, when the maximum number of iterations is reached, the program only issues a warning and proceeds.
+Options and parameters:
 
-* ``relative_tolerance`` =  the relative convergence tolerance for the observed variable in terms of the l2-norm
+ ``name`` :  string
+    optional name of  the ``selfconsistent``  block
 
-* ``absolute_tolerance`` =  the absolute convergence tolerance for the observed variable in terms of the maximum-norm
+ ``max_iterations`` : integer
+    the maximum number of iterations. When the maximum number of iterations is reached, the program only issues a warning and proceeds.
 
-* ``relaxation_factor`` =  an optional relaxation factor (default is 1) to be applied to the observed variable
+ ``relative_tolerance`` : double 
+    the relative convergence tolerance for the observed variable in terms of the l2-norm
 
-* ``solve`` =  the simulations to be solved
+ ``absolute_tolerance`` : double
+   the absolute convergence tolerance for the observed variable in terms of the maximum-norm
 
-Currently, the observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in 'solve'.
+ ``relaxation_factor`` : double
+   an optional relaxation factor (default is 1) to be applied to the observed variable
+
+ ``solve`` :  (list of)  string(s)
+   the simulations to be solved
+
+Currently, the observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in  ``solve``.
+
+
+Example::
+
+  Module  selfconsistent
+   {
+     name = sc_all 
+     solve = (quantum_el,quantum_hl, dd)
+     max_iterations = 25  # 5
+
+     absolute_tolerance = 1e-3
+     relative_tolerance = 1e-5
+   }
+
+In this  example, the ``selfconsistent`` solution named ``sc_all`` is  defined,  which solves quantum_el,quantum_hl and dd modules in this  order. 
 
 
 
@@ -86,9 +143,9 @@ Solvers
 Numerical Solvers
 -------------------------
 
-the "Solver" block inside a module description contains the options for the numerical solver.
-The solver type the "Solver" block is describing (linear, nonlinear, eigenvalue solver) depends on the module.
-For nonlinear and linear solvers, the following options exist:
+The **Solver**  block inside a module description contains the options for the numerical solver.
+The solver type the **Solver**  block is describing (linear, nonlinear, eigenvalue solver) depends on the module.
+The options and  parameters for the nonlinear and the linear solvers are presented in  the following :
 
 .. index:: double:Solvers;nonlinear
 
@@ -98,78 +155,126 @@ For nonlinear and linear solvers, the following options exist:
 Nonlinear solvers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-type :
+The Solvers implemented are of  two types :
 
   :ref:`petsc` =  uses the PETSc nonlinear solver (SNES) (default)
 
   :ref:`linesearch` =  uses a linear linesearch implemented in TiberCAD
 
 Nonlinear solvers  are based on iterative methods, solving in each iteration a linear system. 
-The linear solver used for this can be controlled by providing a block with keyword "linear_solver" 
+The linear solver used for this solution can be controlled by providing a block with the keyword ``linear_solver`` 
 containing the options for the linear solver (see linear solvers).
+
+
 
 .. _petsc:
 
-**petsc**
 
-* ``relative_tolerance``	=  convergence criterion based on relative residual l_2-norm
 
-* ``absolute_tolerance``	=  convergence criterion based on the l_2-norm of the residual
+Petsc solver
+...............
 
-* ``max_iterations``	=  maximum number of iterations
 
-* ``step_tolerance`` =  tolerance criterion based on the l_2-norm of the correction step
+ ``relative_tolerance``	: double
+    convergence criterion based on relative residual l_2-norm
 
-* ``max_step`` =  maximum linesearch step (l_2-norm)
+ ``absolute_tolerance``	: double
+    convergence criterion based on the l_2-norm of the residual
 
-* ``divergence_tolerance``	=  divergence criterion
+ ``max_iterations``:  integer
+    maximum number of iterations
+
+ ``step_tolerance`` : double
+    tolerance criterion based on the l_2-norm of the correction step
+
+ ``max_step`` :  double
+    maximum linesearch step (l_2-norm)
+
+ ``divergence_tolerance`` : double
+    divergence criterion
 
 ..  _linesearch:
 
-**linesearch**
 
-* ``absolute_tolerance`` =  convergence criterion based on the l_2-norm of the residual
+Linesearch solver
+................
 
-* ``step_tolerance`` =  tolerance criterion based on the l_infinity-norm of the correction step
 
-* ``max_iterations`` =  maximum number of iterations
+ ``absolute_tolerance`` : double
+    convergence criterion based on the l_2-norm of the residual
+
+ ``step_tolerance`` : double
+    tolerance criterion based on the l_infinity-norm of the correction step
+
+ ``max_iterations`` : integer
+    maximum number of iterations
 
 .. index:: double:Solvers;linear
 
 
 .. _Linear_solver:
 
+
 Linear solvers
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-type = petsc
 
-**Petsc**
+Petsc solver
+...............
 
-  ``method``, The Krylov subspace method to be used:
+
+
+ ``method`` : string 
+    The Krylov subspace method to be used
+
+Here  are  the  available methods:
   
-  ``bcgs`` =  BiCGSTAB
-  ``bcgsl`` =
-  ``gmres``	=  Generalized Minimal Residual
-  ``bicg`` =  BiConjugate Gradient
-  ``cg`` =  Conjugate Gradient
-  ``cgs`` =  Conjugate Gradient Squared
-  ``richardson`` =  Richardson
-  ``pconly`` = only apply preconditioner
+ ``bcgs`` :
+     BiCGSTAB
 
-* ``relative_tolerance`` =  convergence criterion based on relative residual l_2-norm
+ ``bcgsl`` :
 
-* ``absolute_tolerance`` =  convergence criterion based on the l_2-norm of the residual
+ ``gmres`` :
+    Generalized Minimal Residual
 
-* ``max_iterations`` =  maximum number of iterations
+ ``bicg`` :
+     BiConjugate Gradient
 
-Preconditioner :
+ ``cg`` :
+     Conjugate Gradient
 
-  ``lu``	=  LU
-  ``ilu``	=  incomplete LU
-  ``jacobi`` =  Jacobi
-  ``cholesky`` =  Cholesky
-  ``none``	=  no preconditioning
-  ``composite``	=  use a combination of Jacobi and iLU
+ ``cgs`` :
+     Conjugate Gradient Squared
+
+ ``richardson`` :
+      Richardson
+
+ ``pconly`` :
+     only apply preconditioner
+
+ ``relative_tolerance`` :
+     convergence criterion based on relative residual l_2-norm
+
+ ``absolute_tolerance`` :
+    convergence criterion based on the l_2-norm of the residual
+
+ ``max_iterations`` :
+    maximum number of iterations
+
+
+Available types of Preconditioner :
+
+ ``lu``	:
+    LU
+ ``ilu`` :
+    incomplete LU
+ ``jacobi`` :
+    Jacobi
+ ``cholesky`` :
+    Cholesky
+ ``none`` :
+     no preconditioning
+ ``composite``	:
+     use a combination of Jacobi and iLU
 
 
