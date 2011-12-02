@@ -413,14 +413,14 @@ Device::setup_quantum_contacts(void)
     _quantum_contact_map[name] = st;
 
     _mesh_region_info->add_id(newid);
-
     _mesh_region_info->set_name(newid, name);
 
-    std::vector<ID> vid(1,newid);
-
-    //std::cout<<"material new region: "<<rg_ids[0]<<std::endl;
-
+    std::vector<ID> vid(1, newid);
     set_material(get_material(rg_ids[0]), vid, name);
+
+    // We have to erase the region id from the list of active regions, otherwise
+    // we mess up the other modules
+    _active_region_ids.erase(newid);
 
   }
 
