@@ -33,10 +33,17 @@
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
 
+#include "petsc_vector.h"
+#include "petsc_matrix.h"
+#include "petsc_macro.h"
+#include "petscversion.h"
+
+
 // C++ includes
 #include <fstream>
 #include <set>
 #include <algorithm>
+#include <cassert>
 #include <math.h>
 
 using namespace Constants;
@@ -46,10 +53,9 @@ TIBER_MODULE(Negf, MODULE_NAME)
 Negf* Negf::static_this;
 
 Negf::Negf(const ModelOptions& options) :
-              SimulationInterface(options)
+                          SimulationInterface(options)
 {
   _device_n_dofs = 0;
-  _qc_n_dofs = 0;
   _libnegf = NegfWrapper::create();
 }
 
@@ -96,7 +102,7 @@ Negf::do_init(void)
       QuantumContact* qc = _device->get_quantum_contact(it->first->get_name());
 
       _quantum_contacts[qc->get_id()] = qc;
-      //std::cerr<<"_quantum_contact "<<qc->get_id()<<" "<<it->first->get_name()<<" "<<it->second<<std::endl;
+      std::cerr<<"_quantum_contact "<<qc->get_id()<<" "<<it->first->get_name()<<" "<<it->second<<std::endl;
       // Quantum Contacts are activated here: so dof_map come out correctly
       qc->activate_elements();
     }
@@ -110,10 +116,12 @@ Negf::setup_effectivemass_hamil()
   ID id = create_equation_system("linear");
   _sys_H = &get_equation_system<TiberLinearSystem>(id);
   _sys_H->add_variable("phi", FIRST, LAGRANGE);
+  _sys_H->add_matrix("Hi");
 
   id = create_equation_system("linear");
   _sys_S = &get_equation_system<TiberLinearSystem>(id);
   _sys_S->add_variable("phi", FIRST, LAGRANGE);
+  _sys_S->add_matrix("Si");
 
   _sys_H->attach_assemble_function(ham_assemble);
 
@@ -122,12 +130,21 @@ Negf::setup_effectivemass_hamil()
 
   reorder(); // dof indices reorder
 
+  slice();
+
   _sys_H->assemble();
+
+  print_ham("matlab");
+
+  print_Lib();
+
+  _libnegf->init();
 }
 
 void
 Negf::do_solve(void)
 {
+  activate_quantum_contacts();
   setup_effectivemass_hamil();
 }
 
@@ -135,7 +152,7 @@ void
 Negf::parse_options(void)
 {
 
-  _pot_module = get_option("potential_simulation","");
+  _pot_module = get_option("potential_simulation","none");
 
   _n_blocks = get_option("number_of_blocks", 10);
 
@@ -157,9 +174,21 @@ Negf::ham_assemble(EquationSystems& es, const std::string& system_name)
 void
 Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 {
-  PotentialInterface model;
+  SimulationInterface* model;
+  ID sol_id;
 
-  model.set_simulation(_pot_module);
+  if (_pot_module != "none")
+  {
+    model = SimulationInterface::find_simulation(_pot_module);
+    if (!model->is_solved() )
+        throw SolveFailedException("Simulation "+_pot_module+" must be solved first");
+
+    sol_id = model->get_solution_id("Ec");
+  }
+  else
+  {
+    model = NULL;
+  }
 
   const double newconst = 0.5 * Hartree * bohr_radius/get_mesh_units() * bohr_radius/get_mesh_units();
 
@@ -195,10 +224,14 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
 
-  DenseMatrix<Number> He; // Interaction matrix
-  DenseMatrix<Number> Se; // Self energy matrix
+  DenseMatrix<Number> Hr; // Interaction hamiltonian matrix real part
+  DenseMatrix<Number> Sr; // Overlap matrix real part
+  DenseMatrix<Number> Hi; // Interaction hamiltonian matrix immaginary part
+  DenseMatrix<Number> Si; // Overlap matrix immaginary part
 
   std::vector<unsigned int> dof_indices,new_dof_indices;
+
+  std::map<ID, QuantumContact*>::iterator qc_end = _quantum_contacts.end();
 
   //ACTIVATE QC
   activate_quantum_contacts();
@@ -225,23 +258,40 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
     V.resize(qrule.n_points());
     V.assign(qrule.n_points(), 0.0);
 
-    if( model.has_simulation() && !model.get_simulation()->is_solved() )
+    std::map<ID, QuantumContact*>::iterator qc_it;
+
+    if (model != NULL)
     {
-      model.get_potential(elem, q_point, V);
+      if ( (qc_it = _quantum_contacts.find(elem->subdomain_id())) != qc_end)
+      {
+        for (unsigned int qp=0; qp<q_point.size(); qp++)
+        {
+          std::pair<const Elem*, Point> pair = qc_it->second->project_on_boundary(elem, q_point[qp]);
+          model->get_solution(pair.first, sol_id, V[qp], pair.second);
+        }
+      }
+      else
+      {
+        model->get_solution(elem, sol_id, V, q_point);
+      }
     }
 
-    He.resize(n_dofs, n_dofs);
-    Se.resize(n_dofs, n_dofs);
-    He.zero();
-    Se.zero();
+    Hr.resize(n_dofs, n_dofs);
+    Sr.resize(n_dofs, n_dofs);
+    Hr.zero();
+    Sr.zero();
+    Hi.resize(n_dofs, n_dofs);
+    Si.resize(n_dofs, n_dofs);
+    Hi.zero();
+    Si.zero();
 
     for (unsigned int qp=0; qp<qrule.n_points(); qp++)
       for (unsigned int i=0; i<phi.size(); i++)
         for (unsigned int j=0; j<phi.size(); j++)
         {
-          Se(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp];
-          He(i,j) += JxW[qp]* newconst * dphi[i][qp] * (invMass*dphi[j][qp]);
-          He(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
+          Sr(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp];
+          Hr(i,j) += JxW[qp]* newconst * dphi[i][qp] * (invMass*dphi[j][qp]);
+          Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
         }
 
     new_dof_indices.resize(n_dofs);
@@ -250,20 +300,161 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
       new_dof_indices[i] = _permu[dof_indices[i]];
 
 
-    _sys_S->matrix->add_matrix(Se, new_dof_indices);
+    _sys_S->matrix->add_matrix(Sr, new_dof_indices);
 
-    _sys_H->matrix->add_matrix(He, new_dof_indices);
+    _sys_H->matrix->add_matrix(Hr, new_dof_indices);
+
+    _sys_S->get_matrix("Si").add_matrix(Si, new_dof_indices);
+
+    _sys_H->get_matrix("Hi").add_matrix(Hi, new_dof_indices);
 
   }
-  _sys_H->matrix->print_matlab("H.m");
-  _sys_S->matrix->print_matlab("S.m");
-  std::cerr<<"print"<<std::endl;
+
 }
 
+void
+Negf::print_ham(std::string form)
+{
+  std::string outpath = get_output_directory();
+
+  if (form=="matlab")
+  {
+    _sys_H->matrix->print_matlab(outpath+"/Hr.m");
+    _sys_S->matrix->print_matlab(outpath+"/Sr.m");
+    _sys_H->get_matrix("Hi").print_matlab(outpath+"/Hi.m");
+    _sys_S->get_matrix("Si").print_matlab(outpath+"/Si.m");
+    std::cerr<<"print Matlab matrices"<<std::endl;
+  }
+
+}
 
 void
-Negf::get_solution_secure(const Elem *elem, std::map< ID, std::vector< double > > &values,
-    const std::vector< Point > &p)
+Negf::print_Lib(void)
+{
+  double mu_n;
+  double mu_p;
+  double Ec = -2.0;
+  double Ev;
+  double DeltaEc;
+  double DeltaEv;
+  double Emin;
+  double Emax;
+  double Estep;
+  mu_n = mu_p = Ev = DeltaEc = DeltaEv = Emin = Emax = Estep = 0.0;
+
+  double kbT = 0.025;
+  double wght = 1.0;
+
+  std::vector <double> Np_n(2);
+  for (unsigned int i = 0; i < 2; i++)
+  {
+    Np_n[i] = 20.0;
+  }
+
+  std::vector <double> Np_p(2);
+  for (unsigned int i = 0; i < 2; i++)
+  {
+    Np_p[i] = 0.0;
+  }
+
+  double Np_real = 10.0;
+  unsigned int n_kt = 3.0;
+  unsigned int n_poles = 3.0;
+  unsigned int spin = 2;
+  double delta = 1e-5;
+  unsigned int nLDOS = 1;
+
+  std::vector <unsigned int> LDOS(2*nLDOS);
+  LDOS[0]=1; LDOS[1]=_device_n_dofs+1;
+
+
+  std::vector <double> Efermi(_quantum_contacts.size());
+  std::vector <double> mu(_quantum_contacts.size());
+
+  ID id = 0;
+  std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
+  const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
+  for (; it != end; ++it)
+  {
+    get_boundary_potentials(it->second, mu[id], Efermi[id]);
+    id++;
+  }
+
+  std::string out_file = "negf.in";
+  std::fstream ff(out_file.c_str(),std::fstream::out);
+
+  ff<<"'"+get_output_directory()+"/Hr.m'"<<std::endl;
+  ff<<"'"+get_output_directory()+"/Hi.m'"<<std::endl;
+  ff<<"'"+get_output_directory()+"/Sr.m'"<<std::endl;
+  ff<<"'"+get_output_directory()+"/Si.m'"<<std::endl;
+
+  ff<<_quantum_contacts.size()<<std::endl;
+
+  ff<<_end_blocks.size()<<std::endl;
+
+  ff<<"1"<<" ";
+  for (unsigned int i = 0; i < _end_blocks.size(); i++)
+    ff<<_end_blocks[i]+1<<" ";
+  ff<<std::endl;
+
+  for (unsigned int i = 0; i <_quantum_contacts.size(); i++)
+    ff<<_qc_n_dofs[i]+1<<" ";
+  ff<<std::endl;
+
+  ff<<_device_n_dofs+2<<" ";
+  for (unsigned int i = 0; i <(_quantum_contacts.size()-1); i++)
+    ff<<_qc_n_dofs[i]+2<<" ";
+  ff<<std::endl;
+
+  std::vector <int> cblock(_quantum_contacts.size());
+  get_blocks(cblock);
+  for(ID cc = 0; cc < (_quantum_contacts.size()); ++cc)
+    ff<<cblock[cc]+1<<" ";
+  ff<<std::endl;
+
+  ff<<mu_n<<" "<<mu_p<<std::endl;
+  ff<<Ec<<" "<<Ev<<std::endl;
+  ff<<DeltaEc<<" "<<DeltaEv<<std::endl;
+  ff<<Emin<<" "<<Emax<<" "<<Estep<<std::endl;
+  ff<<kbT<<std::endl;
+  ff<<wght<<std::endl;
+
+  for (unsigned int i = 0; i < 2; i++)
+    ff<<Np_n[i]<<" ";
+  ff<<std::endl;
+
+  for (unsigned int i = 0; i < 2; i++)
+    ff<<Np_p[i]<<" ";
+  ff<<std::endl;
+
+  ff<<Np_real<<std::endl;
+  ff<<n_kt<<std::endl;
+  ff<<n_poles<<std::endl;
+  ff<<spin<<std::endl;
+  ff<<delta<<std::endl;
+  ff<<nLDOS<<std::endl;
+
+  for (unsigned int i = 0; i < 2*nLDOS; i++)
+    ff<<LDOS[i]<<" ";
+  ff<<std::endl;
+
+  for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
+    ff<<mu[i]<<" ";
+  ff<<std::endl;
+
+  for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
+    ff<<Efermi[i]<<" ";
+  ff<<std::endl;
+
+  ff.close();
+
+  std::cerr<<"print LibNEGF matrices"<<std::endl;
+
+}
+
+void
+Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &values,
+    const std::vector<Point> &p)
 {
 
   if (values.count(ReorderPotential))
@@ -362,28 +553,25 @@ Negf::reorder(void)
 
   unsigned int sol_size = solution.size();
 
-  std::vector<unsigned int> perm(sol_size,0);
-
   //std::cerr<<"sol size "<<sol_size<<std::endl;
 
   // setup permutation vector
-  perm.clear();
-  perm.resize(_device_n_dofs+1, 0);
+  std::vector<unsigned int> perm(_device_n_dofs+1, 0);
   for (unsigned int i = 0; i < _device_n_dofs+1; i++)
     perm[i]=i;
 
   std::cerr<<"Sorting"<<std::endl;
-
+  //std::cerr<<"qc"<<_qc_n_dofs[_quantum_contacts.size()-1]<<std::endl;
   std::sort(perm.begin(), perm.end(), compare);
 
   // Invert permutation to compute _permu
   _permu.clear();
-  _permu.resize(_qc_n_dofs+1, 0);
+  _permu.resize(_qc_n_dofs[_quantum_contacts.size()-1]+1, 0);
   for (unsigned int i = 0; i < _device_n_dofs+1; i++)
     _permu[perm[i]]= i;
 
   // Reset dofs in QC as an identity
-  for (unsigned int i = _device_n_dofs+1; i < _qc_n_dofs+1; i++)
+  for (unsigned int i = _device_n_dofs+1; i < _qc_n_dofs[_quantum_contacts.size()-1]+1; i++)
     _permu[i]= i;
 
   // Print permutation data
@@ -413,12 +601,22 @@ Negf::reorder(void)
       }
     }
   }
+}
 
+void
+Negf::slice(void)
+{
   // Create slicing 
   double slice = 1.0/_n_blocks;
   unsigned int i_slice = 0;
   _end_blocks.resize(_n_blocks);
   _end_blocks.assign(_n_blocks, -1);
+
+  std::vector<unsigned int> perm(_qc_n_dofs[_quantum_contacts.size()-1]+1, 0);
+  for (unsigned int i = 0; i < _qc_n_dofs[_quantum_contacts.size()-1]+1; i++)
+    perm[_permu[i]]= i;
+
+  const NumericVector<Number>& solution = _sys->get_solution_vector();
 
   for (unsigned int i = 0; i < _device_n_dofs+1; i++)
   {
@@ -434,12 +632,15 @@ Negf::reorder(void)
     }
   }
   std::cerr<<"Slice created"<<std::endl;
-/*
+
+  std::string out_file = get_output_directory()+"/blocks.dat";
+  std::fstream ff(out_file.c_str(),std::fstream::out);
+  ff<<"1"<<std::endl;
   for (unsigned int i = 0; i < _end_blocks.size(); i++)
   {
-    std::cerr<<_end_blocks[i]<<std::endl;
+    ff<<_end_blocks[i]+1<<std::endl;
   }
-*/
+  ff.close();
 }
 
 
@@ -453,6 +654,9 @@ Negf::reorder_assemble(EquationSystems& es, const std::string& system_name)
 void
 Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 {
+  _device_n_dofs = 0;
+  _qc_n_dofs.resize(_quantum_contacts.size()-1);
+
   const MeshBase& mesh = get_mesh();
 
   const unsigned int dim = mesh.mesh_dimension();
@@ -582,16 +786,18 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 
           Fe(n) = penalty * cc;
           // Update number of dofs in quantum contact. It begin from number of dofs in device region
-          if (_qc_n_dofs < dof_indices[n]) _qc_n_dofs = dof_indices[n];
+          if (_qc_n_dofs[cc] <= dof_indices[n]) _qc_n_dofs[cc] = dof_indices[n];
         }
       }
       _sys->matrix->add_matrix(Ke, dof_indices);
       _sys->rhs->add_vector(Fe, dof_indices);
     }
-    //std::cerr<<"dofs in qc: "<<_qc_n_dofs - _device_n_dofs<<std::endl;
   }
-}
+  for (unsigned int i = 0; i <(_quantum_contacts.size()-1); i++)
+    if (_qc_n_dofs[i]>_qc_n_dofs[i+1])
+      std::swap(_qc_n_dofs[i],_qc_n_dofs[i+1]);
 
+}
 //Need to compare two solution to reorder dof indices
 bool
 Negf::compare(ID i, ID j)
@@ -607,9 +813,17 @@ Negf::do_compare(ID i, ID j)
 }
 
 void
-Negf::test_project_on_boundary(void)
+Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu)
 {
-  QuantumContact* qc = _device->get_quantum_contact(_boundaries.begin()->first->get_name());
+  PotentialInterface model;
+  av_V = 0.0;
+  av_mu = 0.0;
+
+  if (_pot_module == "none") return;
+  else model.set_simulation(_pot_module);
+
+  std::vector<double> V;
+  std::vector<double> E;
 
   MeshBase& mesh = get_mesh();
 
@@ -625,8 +839,24 @@ Negf::test_project_on_boundary(void)
 
   ID qc_id =qc->get_id();
 
+  double volume = 0.0;
   MeshBase::const_element_iterator it= mesh.active_elements_begin();
-  const MeshBase::const_element_iterator it_end  = mesh.active_elements_end();
+  MeshBase::const_element_iterator it_end  = mesh.active_elements_end();
+  for ( ; it != it_end ; ++it) //loop over k space elements
+  {
+    const Elem* elem = *it;
+    if (elem->subdomain_id() == qc_id)
+    {
+      fe->reinit(elem);
+      for (unsigned int qp=0; qp<q_point.size(); qp++)
+      {
+        volume +=  elem->volume();
+      }
+    }
+  }
+
+  it = mesh.active_elements_begin();
+  it_end  = mesh.active_elements_end();
 
   for ( ; it != it_end ; ++it) //loop over k space elements
   {
@@ -640,9 +870,58 @@ Negf::test_project_on_boundary(void)
       {
         std::pair<const Elem*, Point> pair = qc->project_on_boundary(elem, q_point[qp]);
 
-        Point pt = pair.second;
-        const Elem* sidelem = pair.first;
+        av_V += model.get_potential(pair.first, pair.second) * elem->volume()/volume ;
+        av_mu += model.get_el_chem_potential(pair.first, pair.second) * elem->volume()/volume;
       }
     }
   }
 }
+
+void
+Negf::get_blocks(std::vector<int>& cblok)
+{
+  PetscErrorCode ierr;
+  PetscTruth done;
+  PetscInt *rowpnt, *colind;
+  Mat M;
+  PetscInt nrows;
+  PetscMatrix<Number>* Pm = dynamic_cast< PetscMatrix<Number>* > (_sys_H->matrix);
+
+  if (Pm == NULL)
+    throw SolveFailedException("Sorry :( not a PETSc matrix.");
+
+  M = Pm->mat();
+
+  ierr = MatGetRowIJ(M, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &rowpnt, &colind, &done);
+
+  ID start = _device_n_dofs+1;
+
+  for(ID cc = 0; cc < (_quantum_contacts.size()); ++cc)
+  {
+    ID max = 0;
+    ID min = 400000000;
+    ID stop = _qc_n_dofs[cc];
+    std::cerr<<"start: "<<start<<" stop: "<<stop<<std::endl;
+    for(int i = start; i <= stop; ++i)
+    {
+      for(int j = rowpnt[i]; j < (rowpnt[i+1]-1); ++j)
+      {
+        if(colind[j]<=_device_n_dofs && colind[j] < min) min = colind[j];
+        if(colind[j]<=_device_n_dofs && colind[j] > max) max = colind[j];
+      }
+    }
+    std::cerr<<"min: "<<min<<" max: "<<max<<std::endl;
+    for(int n=0; n < _n_blocks; ++n)
+    {
+      if( max <= _end_blocks[n] )
+      {
+        cblok[cc] = n;
+        break;
+      }
+    }
+    start = _qc_n_dofs[cc]+1;
+  }
+ ierr = MatRestoreRowIJ(M, 0, PETSC_FALSE, PETSC_FALSE, &nrows, &rowpnt, &colind, &done);
+
+}
+

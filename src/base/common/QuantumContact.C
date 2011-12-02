@@ -67,7 +67,6 @@ QuantumContact::init(ID id,
 
   _length = length;
 
-
   unsigned int num_sides;
 
   _normal = get_normal(num_sides);

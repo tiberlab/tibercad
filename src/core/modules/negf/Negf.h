@@ -41,6 +41,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void reorder(void);
 
+    void slice(void);
 
   protected:
 
@@ -61,9 +62,9 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void do_assemble(const ModelOptions& opt);
 
-    //! Print some useful information
-    //virtual void do_print_info(void);
+    void print_ham(std::string form);
 
+    void print_Lib(void);
 
     //! We need to create a physical model
     //virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
@@ -97,7 +98,9 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     bool do_compare(ID i, ID j);
 
-    void test_project_on_boundary(void);
+    void get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu);
+
+    void get_blocks(std::vector<int>& cblok);
 
   private:
 
@@ -128,9 +131,11 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     unsigned int _device_n_dofs;
 
-    unsigned int _qc_n_dofs;
+    std::vector<unsigned int> _qc_n_dofs;
 
     NegfWrapper* _libnegf;
+
+
 
 };
 

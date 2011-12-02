@@ -30,7 +30,7 @@ public:
   static NegfWrapper* create(); 
 
   //!Initialize the Negf instance
-  int init_libnegf();
+  int init();
 
   //!Clean the Negf instance variable space
   void clean_libnegf();

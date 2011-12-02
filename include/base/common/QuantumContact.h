@@ -37,7 +37,7 @@ class QuantumContact
     double Deter (const Point& P1, const Point& P2, const Point& P3);
 
 
-    ID get_id(void);
+    ID get_id(void) const;
 
 
     const std::set<ID>& get_bd_ids(void) const;
@@ -98,7 +98,7 @@ class QuantumContact
 };
 
 inline
-ID QuantumContact::get_id(void)
+ID QuantumContact::get_id(void) const
 {
   return _id;
 }

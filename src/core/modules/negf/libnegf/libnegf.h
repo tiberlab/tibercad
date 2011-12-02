@@ -56,11 +56,33 @@ inline void f77_negf_getversion (f77_int* handler)
 }
 
 
-extern "C" void negf_destruct_session_ (f77_int*);
+extern "C" void negf_init_ (f77_int*);
+
+// Corresponding F77 arguments for f77_negf_init:
+// integer, intent(inout) :: handler(DAC_handlerSize)
+inline void f77_negf_init (f77_int* handler)
+{
+  negf_init_ (handler);
+}
+
+
+extern "C" void negf_fillparameters_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_negf_fillparameters:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: infile
+inline void f77_negf_fillparameters (f77_int const* handler, f77_int const& 
+    infile)
+{
+  negf_fillparameters_ (handler, infile);
+}
+
+
+extern "C" void negf_destruct_session_ (f77_int const*);
 
 // Corresponding F77 arguments for f77_negf_destruct_session:
-// integer, intent(inout) :: handler(DAC_handlerSize)
-inline void f77_negf_destruct_session (f77_int* handler)
+// integer, intent(in) :: handler(DAC_handlerSize)
+inline void f77_negf_destruct_session (f77_int const* handler)
 {
   negf_destruct_session_ (handler);
 }

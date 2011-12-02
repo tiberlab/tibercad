@@ -9,7 +9,8 @@ NegfWrapper* NegfWrapper::create()
 
 
 
-NegfWrapper::NegfWrapper(){
+NegfWrapper::NegfWrapper()
+{
 
     std::cout << "\nCreating libNEGF instance... ";
     f77_negf_init_session(_handler);
@@ -24,13 +25,18 @@ NegfWrapper::NegfWrapper(){
 }
 
 
-NegfWrapper::~NegfWrapper(){
+NegfWrapper::~NegfWrapper()
+{
     f77_negf_destruct_libnegf(_handler);
     f77_negf_destruct_session(_handler);
 }
 
-
-
+int
+NegfWrapper::init()
+{
+  f77_negf_init(_handler);
+  return 0;
+}
 
 
 
