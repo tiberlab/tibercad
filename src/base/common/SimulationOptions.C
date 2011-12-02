@@ -41,6 +41,6 @@ SimulationOptions::initialize(const ModelOptions& opts)
 
   incomplete_ionization = opts.get_option("incomplete_ionization", true);
 
-  _verbose = opts.get_option("verbose", 1);
+  _verbose = opts.get_option("verbose", 2);
 }
 

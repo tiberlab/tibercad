@@ -124,6 +124,83 @@ of submodels. The generic options are:
 In the following we describe all submodels. As mentioned in the Introduction (REF HERE)
 submodels can be restricted to a subset of simulation regions.
 
+
+Band parameter models
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. The model and parameters to calculate band parameters like band edge, effective density of states and particle densities
+
+The model and parameters to calculate band parameters like band edges, band gaps etc. 
+can be controlled by special submodel blocks in different ways:
+
+1. a single ``band_properties`` block containing parameters for conduction and for valence band
+
+2. ``conduction_band`` and ``valence_band`` blocks to control both bands independently
+
+In the current version, there are two different implementations of band parameter models:
+
+ ``simple`` a simple model requesting the input of the band edge energies and effective DOS masses or effective DOS
+
+ ``kp`` a model based on bulk :math:`k\cdot p` including strain corrections
+
+
+particle density
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Details for the calculation of the electron and hole densities can be given in the particle_density
+submodel. Its options are:
+
+  ``particle``
+      The particle this model is describing. Can be ``electron`` or ``hole`` .
+
+  ``statistics``
+      The statistics. Can be ``fermidirac`` (default) or ``boltzmann`` .
+
+  ``quantum_density``
+      The name of a quantum density simulation. 
+      This will use the quantum mechanical particle density in the regions it was calculated. More than one 
+      simulations can be specified as a vector. In this case the sum of all quantum densities is taken.
+
+If  ``quantum_density`` is specified, the following additional options control the mixing between
+classical and quantum density:
+
+  ``barrier_regions``
+     Regions which can be regarded as pure barriers. In these regions a classical density will be added using the barrier
+     materials bulk band edge.
+
+  ``add_continuum_in_well``
+     If this option is set to true, the energy level of the first state after the ones considered for the quantum
+     density is used as an effective bulk band edge and a classical carrier density will be added accordingly.
+
+If a quantum density is used, then it is useful to define also an embracing region
+where the model gradually switches from a fully classical to a fully quantum density.
+The options for the embracing are specified in a block with keyword ``embracing`` . It
+accepts the following options:
+
+  ``embracing_length = double`` 
+       When the domain of the quantum simulation is smaller
+       than the domain of the full simulation, the boundary conditions for the Schroedinger
+       equation will disturb the transfer from classical to quantum density. By defining an
+       embracing region of a certain extension (specified in meters), a gradual transition
+       from classical to quantum density will be done instead of an abrupt one, using as
+       effective density :math:`\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}` . 
+       The default is no embracing region at all (zero extension).
+
+  ``cutoff = double`` 
+       If an embracing region is used, a part of this region near the boundary
+       of the quantum region can be cut off so that only the classical density is considered
+       in that part. ``cutoff`` is specified as a percentage of the embracing length and should
+       therefore be between 0.0 and 1.0.
+
+  ``plot_embracing_region = bool`` 
+       Whereas the automatic creation of the embracing region 
+       in 1D is a very simple task, it is a more difficult one in higher dimensions. 
+       By setting this flag to true, the embracing region and the mixing coefficient x will be
+       plotted for a visual control of the quality of the embracing region. 
+       The default is ``false`` .
+
+
+
 Recombination/generation models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -503,50 +580,6 @@ where :math:`\varepsilon_{kl}` is the strain tensor. The piezoelectric coefficie
 The strain is obtained from the simulation specified in the ``Physics`` section, but it can
 be overridden by providing a name for the strain simulation inside the polarization block
 using the ``strain_simulation`` option.
-
-particle density
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Details for the calculation of the electron and hole densities can be given in the particle_density
-submodel. Its options are:
-
-  ``particle``
-      The particle this model is describing. Can be ``electron`` or ``hole`` .
-
-  ``statistics``
-      The statistics. Can be ``fermidirac`` (default) or ``boltzmann`` .
-
-  ``quantum_density``
-      The name of a quantum density simulation. 
-      This will use the quantum mechanical particle density in the regions it was calculated.
-
-If a quantum density is used, then it is useful to define also an embracing region
-where the model gradually switches from a fully classical to a fully quantum density.
-The options for the embracing are specified in a block with keyword ``embracing`` . It
-accepts the following options:
-
-  ``embracing_length = double`` 
-       When the domain of the quantum simulation is smaller
-       than the domain of the full simulation, the boundary conditions for the Schroedinger
-       equation will disturb the transfer from classical to quantum density. By defining an
-       embracing region of a certain extension (specified in meters), a gradual transition
-       from classical to quantum density will be done instead of an abrupt one, using as
-       effective density :math:`\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}` . 
-       The default is no embracing region at all (zero extension).
-
-  ``cutoff = double`` 
-       If an embracing region is used, a part of this region near the boundary
-       of the quantum region can be cut off so that only the classical density is considered
-       in that part. ``cutoff`` is specified as a percentage of the embracing length and should
-       therefore be between 0.0 and 1.0.
-
-  ``plot_embracing_region = bool`` 
-       Whereas the automatic creation of the embracing region 
-       in 1D is a very simple task, it is a more difficult one in higher dimensions. 
-       By setting this flag to true, the embracing region and the mixing coefficient x will be
-       plotted for a visual control of the quality of the embracing region. 
-       The default is ``false`` .
-
 
 .. _DD_trapmodels:
 

@@ -225,7 +225,8 @@ ParticleDensity::quantum_density(void)
   _density = 0.0;
 
   double qdens = 0.0;
-  double continuum = -1000;
+  // put it to something small and then check for a slightly bigger number
+  double continuum = -1000.0;
 
   for (size_t i = 0; i < _quantum_density.size(); i++)
   {
@@ -265,7 +266,7 @@ ParticleDensity::quantum_density(void)
           break;
       }
     }
-    else if (continuum > -1000)
+    else if (continuum > -999.0)
     {
       // in the well (or everywhere, if no barrier has been specified)
       // add a continuum from the next available energy level
