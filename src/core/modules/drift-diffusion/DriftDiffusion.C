@@ -745,7 +745,11 @@ DriftDiffusion::do_equilibrium(void)
 
   ModelOptions& solveropts = get_solver_options();
   int max_it = solveropts.get_option("max_iterations", 15);
-  solveropts.set_option("max_iterations", 150);
+  if (max_it < 100)
+  {
+    Messages::info("Setting max_iterations for nonlinear solver to 150");
+    solveropts.set_option("max_iterations", 150);
+  }
 
   int coupling = get_my_options().coupling;
   get_my_options().coupling = POISSON;
