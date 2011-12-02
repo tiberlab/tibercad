@@ -190,6 +190,7 @@ Module  driftdiffusion
           eCurrentDensity, hCurrentDensity, ContactCurrent, eMobility, hMobility)
 
   load_state = reference/driftdiffusion_Vb_3.5.tsv
+  solve_after_load = true
 
   Physics
   {
@@ -326,7 +327,7 @@ Module opticskp
 
   regions = Quantum_3
 
-  plot = optical_spectrum 
+  plot = (optical_spectrum, OpticalPower, Recombination)
 
 
   initial_state_model = QW3_electrons
@@ -337,7 +338,8 @@ Module opticskp
   Emax  = 5.0
   dE = 0.001
 
-  polarization = (0, 0, 1)
+  # we want all polarizations, not one specific
+  #polarization = (0, 0, 1)
 
   k_integration
   {
@@ -354,42 +356,16 @@ Module opticskp
 }
 
 
-#Module  opticalspectrum 
-#{
-
-#  name = spectrum 
-#  plot = optical_spectrum
-
-#  regions = Quantum_3
-
-#  optical_matr_elem_model = optics
-
-#  polarization = (0, 0, 1)
-  	
-#  number_of_nodes = (4,4)  #  numb. of nodes in k mesh, along x and y
- 
-#  k_max = 0.1 
- 
-#  refine_k_space = false 
-#  refine_fraction =  0.30 #    1.0 for  uniform refinement 
-#  relative_accuracy =  0.05  #
-
-#  Emin = 3.0
-#  Emax  = 5.0
-#  dE = 0.001
-
-#}
-
 
 Module sweep
 {
   name = sweep
-  solve = driftdiffusion
+  solve = (driftdiffusion, QW3_electrons, QW3_holes, spectrum)
 
   variable = $Vb
   start = 0.0
-  stop =  3.5 
-  steps = 14
+  stop =  4.0 # 3.5 
+  steps = 40
   max_step = 0.05
   plot_data = true
 }
@@ -404,7 +380,7 @@ Simulation
  
   temperature = 300 
 
-  #solve = (strain, sweep, QW3_electrons,QW3_holes) 
+  #solve = (strain, sweep) 
  
   solve = (strain, driftdiffusion, QW3_electrons, QW3_holes, spectrum)
 
