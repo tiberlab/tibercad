@@ -23,8 +23,6 @@ Device
 Module elasticity
 {
  plot = (Strain,Stress,Displacement)
- do_deformation = true
- shape_iterations = 10
 
  Contact (Lower,Upper){type = clamp}
 
