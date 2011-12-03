@@ -1,5 +1,5 @@
 
-Log start: Sun Nov 27 19:42:28 2011
+Log start: Sat Dec  3 12:37:53 2011
 
 
 tiberCAD release 2.1.0 (rev. 3045, x86_64-darwin)
@@ -57,7 +57,7 @@ Simulation options for elasticity (elasticity)
   StrainCrystal                           tensor    nodal       n
   Stress                   GPa            tensor    nodal       y
   StressCrystal                           tensor    nodal       n
-  Displacement             m              vector    nodal       n
+  Displacement             m              vector    nodal       y
   ForceSource              N/m3           tensor    nodal       n
   StrainSource                            tensor    nodal       n
   StressSource             GPa            tensor    nodal       n
@@ -89,3 +89,15 @@ Simulation options for elasticity (elasticity)
 We solve: elasticity 
 
 >>>>------------------------------- (elasticity) -------------------------------
+  iteration 1:  Error =  0.61332 %
+
+Solve time: 0h 0m 56s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 56s
+Simulation finished...
+Goodbye
+
+Log end: Sat Dec  3 12:38:50 2011
+
+

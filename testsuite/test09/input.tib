@@ -9,7 +9,7 @@ Region Bulk {}
 
 Module elasticity {
 
-plot = (Strain,Stress,Displacements) 
+plot = (Strain,Stress,Displacement) 
 
 Physics {
 
