@@ -13,7 +13,7 @@ Theory
 
 
 Elasticity is a Finite Element solver for mechanical equilibrium problems. 
-It brings features typically developed for structural stability solvers into device modeling. 
+It brings features typically developed for force balance problems into device modeling. 
 The coupled treatment of the electro-mechanical problem within a unique framework results very useful to explore for multidisciplinary ideas. 
 Details about the theory of continuous elasticity applied to device mechanical deformation 
 can be found in [Povolotskyi]_ .
@@ -50,9 +50,7 @@ Relying on the symmetry of the strain and stiffness tensor the final equation re
     \frac{\partial}{\partial x_j}C_{ijlk}\frac{\partial u_l}{\partial x_k} = f_i
     
 
-The non-linear strain is computed by applying the mechanical equilibrium equation on the deformed mesh.  
-The number of the shape iterations is set by the keyword **shape_iterations** (default = 0, i.e. no deformation is performed) 
-whereas the maximum tolerated error can be indicated with **shape_error** ( default = :math:`1e-3` ).
+the computed displacements are used to deform the mesh.
 
 
 
@@ -144,14 +142,14 @@ Module options
 The following options influence the behaviour of the Elasticity module:
 
 
+COMMENT: questa parte forze e' meglio ometterla in quanto il non linear strain e' da testare. Per la release anche zero step secondo me (e Matthias) vano bene.
+
  ``shape_iteration`` : integer
     defines the number of  shape iterations for non-linear strain computation. 
     The default is ``1``, meaning that
 
  ``shape_error`` : double
    defines the maximum tolerated error in non-linear strain computation (default = :math:`1e-3`) 
-
-
 
 
 Solution/Plot variables
@@ -171,7 +169,6 @@ See section :ref:`Linear_solver`  for details on linear solver options.
 
  
 
-
 Physics section
 --------------------
 
@@ -182,8 +179,6 @@ The user can specify the following physical  models:
   * ``Body  force``
 
   * ``Stiffness``
-
-
 
 Body  force
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -197,7 +192,7 @@ The  keyword  is ``body_force`` , i.e ::
   {
   }
 
-The type can be ``constant``, ``converse_piezo``   or ``lattice_mismatch`` or   thermal_stress ????
+The type can be ``constant``, ``converse_piezo``   or ``lattice_mismatch``.
 
 
 Constant
@@ -217,13 +212,12 @@ Example::
 F  is  a  force in :math:`N/m^3`    
 
 
-
 Lattice mismatch
 .................
 
 When two crystals with different crystal structure are put in contact the lattice mismatch between them may induce a strain  :math:`\epsilon^{LM}`  and, therefore, a stress :math:`\sigma =C\epsilon^{LM}` . 
 
-This stress contribution acts as a body force 
+This contribution can be mapped in the body force
 
 .. math::
    :nowrap:
@@ -348,10 +342,7 @@ Different boundary conditions can be implemented for Elasticity simulations, by 
 
   * ``Clamp``
 
-  * ``Plane``
-
   * ``Custom``
-
 
 
 Surface force
@@ -389,6 +380,8 @@ Example::
 
 
 
+
+COMMENT: eliminerei plane.
 Plane
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This boundary condition constrains nodes to  move along the the plane of the  contact they belong to. 
@@ -399,11 +392,6 @@ Example::
     {
      type = plane
     }
-
-
-
-
-
 
 
 
@@ -476,8 +464,10 @@ First, we have to insert the region section ::
     Region Well  {material = GaN}
   }
 
-All the options included in this section, such ad the material, axis growth and alloy concentration, apply for the whole structure.  
+All the options included in this section, such as the material, axis growth and alloy concentration, apply for the whole structure.  
 If we want to specify a region with different properties, we may use the keyword ``Region`` and refer to a region name, as specified in the mesh file. 
+
+COMMENT: Region o region o regions? Check this.
 
 The second part of the input file is devoted to the module declaration ::
 
@@ -569,6 +559,7 @@ In the device section we specify the name of the region (*Column*) and the dopin
 
   }
   
+COMMENT: la simmetria cilindrica credo abbia senso solo per costanti isotropiche. Dovremmo specificarlo? Puoi chiedere a Matthias che ne pensa?
 
 In the Physics section we use define isotropic elastic constant by means of the Young module and Poisson ratio. ::
 
@@ -663,7 +654,7 @@ To get the output piezopotential we first compute elasticity and then driftdiffu
 
 
 The Figure :ref:`Piezopotential` shows the electrical potential across a 200 :math:`nm` length region at the tip of the NW.
-The output potential is :math:`\phi_M=-42mV`. This value is a results of the competition between the piezoelectric field and the screening due to the free carriers. 
+The output potential is :math:`\phi_M=-42mV`. This value is a result of the competition between the piezoelectric field and the screening due to the free carriers. 
 
 
 

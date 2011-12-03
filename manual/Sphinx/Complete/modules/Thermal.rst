@@ -22,9 +22,11 @@ The heat flux, within the diffusive approach, is given by the Fourier's law, i.e
     :label:
    
     \begin{equation}
-    J_i = - \kappa_{ij} \frac{\partial}{\partial x_j} T
+    \mathbf{J} = - \kappa \nabla T
     \end{equation}
    
+COMMENT: mi sono uniformato alla notazione di Matthias
+
 where :math:`\kappa` is thermal conductivity  (which is assumed temperature independent). The power balance is ensured by the continuity equation for the thermal flux. i. e.
 
 ..  math::
@@ -32,7 +34,7 @@ where :math:`\kappa` is thermal conductivity  (which is assumed temperature inde
     :label:
     
     \begin{equation}
-    \frac{\partial}{\partial x_i} J_i = H
+    \nabla \cdot \mathbf{J} = H
     \end{equation}
 
 where :math:`H` is the total heat source, which can be a combination of several models (see :ref:`heat_source_models`).
@@ -234,7 +236,7 @@ Finallly,  thermal  flux  can  be  imposed  in  the  following  way
 
 where  ``heat_flux``  is  the  thermal flux in  :math:`W/m^2`.
 
-This boundary condition imposes a fixed thermal flux, i.e.  :math:`J_i n_i =J_0`
+This boundary condition imposes a fixed thermal flux, i.e.  :math:`\mathbf{J}\cdot\mathbf{n} =J_0`
 , where  :math:`n` is the normal to the surface and  :math:`J_0`  the prescribed thermal flux.
 
 
@@ -327,7 +329,6 @@ The temperature map is shown below in  Fig. :ref:`Lattice temperature`
      \texttt{ThermalFlux} & Thermal  flux & W/m$^2$ \\
      \texttt{HeatSource} & total heat source  &  W/m$^3$   \\
      \texttt{ThermCond} & thermal conductivity  &  W/mK   \\
-     \texttt{MaxTemp} & max  temperature ?  &  K  \\
      \end{tabular}
      \caption{Solution/Plot variables}
      \label{table:th_solutions}
@@ -336,5 +337,5 @@ The temperature map is shown below in  Fig. :ref:`Lattice temperature`
 |
 
 
-
-
+COMMENT: tolto max temp
+COMMENT: forse si dovrebbe inserire un esempio preso dal vecchio sito...
