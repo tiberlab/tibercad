@@ -119,8 +119,9 @@ Elasticity::parse_options(void)
   const ModelOptions& opt = get_options();
 
   myopt.shape_error = opt.get_option("shape_error",1e-2);
-  myopt.shape_iterations = opt.get_option("shape_iterations",1);
-  myopt.deformation = opt.get_option("do_deformation",false);
+  myopt.non_linear_strain = opt.get_option("non_linear_strain",false);
+  //myopt.shape_iterations = opt.get_option("shape_iterations",0);
+  //myopt.deformation = opt.get_option("do_deformation",false);
   myopt.magnification = opt.get_option("magnification",1);
   myopt.structure_to_be_strained = opt.get_option("strain_atomistic_structure", "all");
 
@@ -156,7 +157,7 @@ Elasticity::do_solve(void)
   sol =  (system.solution)->clone();
   sol->zero();
 
-  int iter = 0;
+  shape_iteration = 0;
   double error_energy = 0.0;
   double error_u = 0.0;
   double tot_norm = 0.0;
@@ -168,9 +169,15 @@ Elasticity::do_solve(void)
   //  cout<<"-----------------------------------------------------------------------------------------------"<<endl;
   // }
 
+
+  double max_error = 2.0;
+  if (myopt.non_linear_strain == true)
+     max_error = myopt.shape_error;
+
+
   do {
 
-    // system.solution->zero();
+    //system.solution->zero();
     //apply_shape_deformation();
  
     system.solve();
@@ -178,33 +185,33 @@ Elasticity::do_solve(void)
     
     double tot_norm = sol->l2_norm();
     double norm = (system.solution)->l2_norm();
-    error_u = norm/tot_norm * 100.0;
+    error_u = norm/tot_norm;
 
-  
     //The error is based on the elastic energy
     //double elastic_energy = abs(compute_elastic_energy());
     //error_energy = abs((new_energy - energy)/energy) * 100.0;
     //energy = new_energÄy;
 
-    if ((verbose() > 1) && iter > 0)
+    if ((verbose() > 1) && shape_iteration > 0)
     {
       ostringstream os;
-      os << "iteration " << iter << ":  Error =  " << error_u << " %";
+      os << "iteration " << shape_iteration << ":  Error =  " << error_u;
       Messages::info(os.str());
     }
 
-    if (myopt.deformation)
+    //if (myopt.non_linear_strain)
        apply_shape_deformation();
-    
+
    
-    iter += 1;
+    shape_iteration += 1;
 
-  } while ((error_u > myopt.shape_error) && (iter < myopt.shape_iterations));
+  } while (error_u > max_error);
 
- 
-  double elastic_energy = abs(compute_elastic_energy());
-  if ((SimulationOptions::verbose() > 2) && myopt.shape_iterations > 1)
-    cout<<"Elastic Energy: "<<elastic_energy<<" J"<<endl;
+  //} while ((error_u > myopt.shape_error) && (iter < myopt.shape_iterations));
+
+  //double elastic_energy = abs(compute_elastic_energy());
+  //if ((SimulationOptions::verbose() > 2) && myopt.shape_iterations > 1)
+  //  cout<<"Elastic Energy: "<<elastic_energy<<" J"<<endl;
 
 }
 
@@ -545,13 +552,6 @@ Elasticity::get_internal_stress(const Elem* elem, const Point& p)
 
 
 
-
-
-
-
-
-
-
 void
 Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 {
@@ -653,16 +653,23 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
     //Bulk
     ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);    
   
+    const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
      
-       mod.calculate(elem, q_point[qp]);
+       mod.calculate(elem, qrule.qp(qp));
        const Tensor4DSym& C = mod.get_stiffness();
        const RealGradient& force =  mod.get_force_source();
-       const RealTensor& strain =  mod.get_strain_source();
-       const RealTensor& stress =  mod.get_stress_source();
+       const RealTensor& strain_source =  mod.get_strain_source();
+       const RealTensor& stress_source =  mod.get_stress_source();
+       //const RealTensor& internal_stress = get_internal_stress(elem, qrule.qp(qp));
 
+       RealTensor total_stress;
+      // if (shape_iteration == 0)
+         total_stress = (stress_source + (C * strain_source));
+       //else
+         total_stress += internal_stress;
 
       for (ID i = 0;i <3; i++)
 	for (ID j = 0;j <3; j++)
@@ -670,13 +677,11 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	    for (ID beta=0; beta<n_dofs_vec[j]; beta++)
 	      (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
 	    
+
 	for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	{  
-          //Add external stress
-	  RealGradient tmp = (stress + (C * strain)) * dphi[alpha][qp] + force *  phi[alpha][qp];
 
-	  //Add internal stress
-	  tmp += get_internal_stress(elem, qrule.qp(qp)) * dphi[alpha][qp];
+	  RealGradient tmp = total_stress * dphi[alpha][qp] + force *  phi[alpha][qp];
 	  for (ID i = 0;i <3; i++)
 	    (*(F[i]))(alpha) -= JxW[qp] * tmp(i);
 
@@ -684,29 +689,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
       
     }//End QP
 
-    //Surface Integration
-//    for (unsigned int s = 0; s < elem->n_sides(); s++)
-//    {
-//      ElasticityBoundaryModel*  boundary_mod =
-//        get_interface_model<ElasticityBoundaryModel>(elem, s);
-//
-//          fe_face->reinit(elem, s);
-//
-//          if (boundary_mod == NULL)
-//          {
-//
-//            for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-//            {
-//              for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
-//              {
-//                RealGradient tmp = get_stress(elem,qface_point[qp]) * normal[qp];
-//                for (ID i = 0;i <3; i++)
-//                  (*(F[i]))(alpha) += JxW_face[qp] * phi_face[alpha][qp] * tmp(i) ;
-//              }
-//            }
-//          }
-//    }
-//
+
 
     //Boundary conditions
     for (unsigned int s = 0; s < elem->n_sides(); s++)
@@ -922,3 +905,29 @@ Elasticity::get_subtensor(const Tensor4DSym& C_calc,unsigned int i,unsigned  int
   return a;
 
 }
+
+
+
+//Surface Integration
+//    for (unsigned int s = 0; s < elem->n_sides(); s++)
+//    {
+//      ElasticityBoundaryModel*  boundary_mod =
+//        get_interface_model<ElasticityBoundaryModel>(elem, s);
+//
+//          fe_face->reinit(elem, s);
+//
+//          if (boundary_mod == NULL)
+//          {
+//
+//            for (unsigned int qp = 0; qp < qface.n_points(); qp++)
+//            {
+//              for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
+//              {
+//                RealGradient tmp = get_stress(elem,qface_point[qp]) * normal[qp];
+//                for (ID i = 0;i <3; i++)
+//                  (*(F[i]))(alpha) += JxW_face[qp] * phi_face[alpha][qp] * tmp(i) ;
+//              }
+//            }
+//          }
+//    }
+//

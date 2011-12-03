@@ -3,7 +3,7 @@
 #include "LatticeMismatch.h"
 #include "Material.h"
 #include "RotatedCrystal.h"
-
+#include "tensor_value.h"
 // The first string is the class name, the second one
 // is the type of the model (here it is a bulk model),
 // the third one is the specific model implementation.
@@ -71,9 +71,13 @@ LatticeMismatch::do_init(void)
        
   Tensor2Sym _eps0 = crystal_el->get_eps0(ref_lat_const);
 
-
   //double loc_lat_const[3];
   //crystal_el->get_lat_const(loc_lat_const);
+
+  //Rotation
+  Tensor2Gen RotMatrix = crystal_el->RotMatrix;
+  _eps0 = sym(RotMatrix * ( _eps0 * (RotMatrix.transpose())));
+
 
   RealTensor eps0(0);
   for (ID i = 0; i<3; i ++)
@@ -88,7 +92,7 @@ LatticeMismatch::do_init(void)
 
   eps0 *= relax;
 
-  
+
   set_strain_source(eps0);
 
   //RealTensor dummy_tens(0);

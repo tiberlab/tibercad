@@ -11,7 +11,6 @@
 TIBER_MODULE(Extended, ebnd, extended)
 
 
-
 void
 Extended::do_init(void)
 {
@@ -25,7 +24,6 @@ Extended::do_init(void)
   set_coefficients(H,A,R);
 
 }
-
 
 
 

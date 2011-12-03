@@ -71,6 +71,9 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
   private:
 
+  //!shape iteration index
+  ID shape_iteration;
+
   //!node connection
   std::vector<unsigned short int> node_conn;
 
@@ -105,6 +108,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
   {
     ID magnification;   //!< Magnification  
     ID edge;
+    bool non_linear_strain;
     bool deformation;
     double shape_error; //!< Max tollerance for shape deformation
     unsigned int shape_iterations; //! Max number of shape itarations
