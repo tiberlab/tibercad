@@ -653,7 +653,10 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
     //Bulk
     ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);    
   
-    const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
+    // commentato perche' centroide ha coordinate globali e produce errore
+    //const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
+
+
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
