@@ -74,7 +74,7 @@ The tiberCAD input file (bulk.tib_) is shown in the following listing:
 
       Doping
       {
-        Nd = 1e16
+        density = 1e16
         type = donor
       }
     }

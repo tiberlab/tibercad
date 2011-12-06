@@ -25,7 +25,6 @@ The heat flux, within the diffusive approach, is given by the Fourier's law, i.e
     \mathbf{J} = - \kappa \nabla T
     \end{equation}
    
-COMMENT: mi sono uniformato alla notazione di Matthias
 
 where :math:`\kappa` is thermal conductivity  (which is assumed temperature independent). The power balance is ensured by the continuity equation for the thermal flux. i. e.
 
@@ -337,5 +336,4 @@ The temperature map is shown below in  Fig. :ref:`Lattice temperature`
 |
 
 
-COMMENT: tolto max temp
-COMMENT: forse si dovrebbe inserire un esempio preso dal vecchio sito...
+

@@ -261,9 +261,9 @@ For example, in  the  following, the tiberCAD ``Region``  *QuantumWell* will com
 
     Doping
     {
-       Nd  = 1e17
+       density  = 1e17
       type = donor
-      doping_level  = 0.025
+      level  = 0.025
     }
   }
 
@@ -276,9 +276,9 @@ In  the following, instead, the  ``Region``  *well1* takes  its  name  from the 
     
     Doping
     {
-       Nd  = 1e17
+       density  = 1e17
       type = donor
-      doping_level  = 0.025
+      level  = 0.025
     }
   }
 
@@ -314,10 +314,10 @@ The optional subblock doping as in the example above contains the keywords:
   ``type`` : string
          The dopant type. Can be ``donor`` or ``acceptor``.
 
-  ``Nd`` : double 
+  ``density`` : double 
          The doping concentration in cm\ :sup:`-3`.
 
-  ``doping_level`` : double
+  ``level`` : double
          The energy level of the dopant given as the distance from the conduction band edge (for donors)
          or from the valence band edge (for acceptors) in eV.
 
@@ -665,9 +665,9 @@ Here is an example of the input file template::
        x = 0.14
        Doping 
        {
-         Nd  = 1e21
+         density  = 1e21
          type = donor
-         doping_level = 0.026
+         level = 0.026
         }
       }
 
@@ -678,18 +678,18 @@ Here is an example of the input file template::
        mesh_regions = (buffer_dop_s, buffer_dop_d)
        Doping 
 	{
-          Nd  = 1e21
+          density  = 1e21
           type = donor
-          doping_level = 0.026
+          level = 0.026
          }
       }
      Region cap
      {
        Doping 
        {
-         Nd  = 5e18
+         density  = 5e18
          type = donor
-         doping_level = 0.026
+         level = 0.026
         }
       }
      Region cap_doped
@@ -697,9 +697,9 @@ Here is an example of the input file template::
        mesh_regions = (cap_dop_s, cap_dop_d)
        Doping 
       {
-        Nd  = 1e21
+        density  = 1e21
         type = donor
-        doping_level = 0.026
+        level = 0.026
        }
      }
      Region passivation

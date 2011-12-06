@@ -381,18 +381,6 @@ Example::
 
 
 
-COMMENT: eliminerei plane.
-Plane
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This boundary condition constrains nodes to  move along the the plane of the  contact they belong to. 
-
-Example::
-
-  Contact substrate 
-    {
-     type = plane
-    }
-
 
 
 Custom
@@ -461,13 +449,29 @@ First, we have to insert the region section ::
     x-growth-direction = (-1,0,1,0) 
     y-growth-direction = (-1,2,-1,0) 
     z-growth-direction = (0,0,0,1)
-    Region Well  {material = GaN}
+    Region Well
+      {material = GaN}
+
+    Region Barr1
+      {
+      }
+
+    Region Barr2
+      {
+      }
+
+
   }
 
-All the options included in this section, such as the material, axis growth and alloy concentration, apply for the whole structure.  
-If we want to specify a region with different properties, we may use the keyword ``Region`` and refer to a region name, as specified in the mesh file. 
+All the options included in this section, such as the material, axis growth and alloy concentration, apply for all  the  Regions defined in the whole structure.  
+If we want to specify  different properties for  a  Region, we may define them in  the relevant Region block. E.g. ::
+ 
+  Region Well
+      {material = GaN}
 
-COMMENT: Region o region o regions? Check this.
+ 
+
+
 
 The second part of the input file is devoted to the module declaration ::
 
