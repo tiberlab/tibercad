@@ -653,8 +653,8 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
     //Bulk
     ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);    
   
-    // commentato perche' centroide ha coordinate globali e produce errore
-    //const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
+// commentato perche' centroide ha coordinate globali e produce errore
+//    const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
 
 
     // loop over the quadrature points
@@ -672,7 +672,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
       // if (shape_iteration == 0)
          total_stress = (stress_source + (C * strain_source));
        //else
-         total_stress += internal_stress;
+//         total_stress += internal_stress;
 
       for (ID i = 0;i <3; i++)
 	for (ID j = 0;j <3; j++)
