@@ -308,6 +308,9 @@ units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` .
           Usually the simulation should define a sweep on the value
           of G from 0 to the desired generation.
 
+
+.. _ThermoelectricPower:
+
 Thermoelectric power models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

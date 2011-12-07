@@ -242,7 +242,43 @@ This boundary condition imposes a fixed thermal flux, i.e.  :math:`\mathbf{J}\cd
 
 
 
-Example
+..  _th_solutions :
+
+..  math::
+    :nowrap:
+    :label:
+    
+     \begin{table}[!ht]
+     \center
+     \begin{tabular}{l|c|l}
+     \multicolumn{3}{c}{\textbf{Solution Table}} \\
+     \hline
+     \textbf{Keyword}  & \textbf{Description} & \textbf{Units}  \\
+     \hline
+     \hline
+     \texttt{LatticeTemp} & Lattice  temperature & K \\
+     \texttt{ThermalFlux} & Thermal  flux & W/m$^2$ \\
+     \texttt{HeatSource} & total heat source  &  W/m$^3$   \\
+     \texttt{ThermCond} & thermal conductivity  &  W/mK   \\
+     \end{tabular}
+     \caption{Solution/Plot variables}
+     \label{table:th_solutions}
+     \end{table}
+
+|
+
+
+
+
+
+
+
+
+
+
+
+
+Example 1
 ------------
 
 
@@ -299,7 +335,11 @@ In the simulation region we write which modules should be solved.
     }
 
 
-The temperature map is shown below in  Fig. :ref:`Lattice temperature`
+The temperature map is shown below in  Fig. :ref:`Lattice temperature<temp1>`
+
+
+
+..  _temp1 :
 
 ..  figure:: ../data/latticetemp.png
     :align: center
@@ -309,31 +349,252 @@ The temperature map is shown below in  Fig. :ref:`Lattice temperature`
 
 
 
+Example 2
+------------
 
-..  _th_solutions :
 
-..  math::
-    :nowrap:
-    :label:
+In the  following  example, we will see how to perform a **thermal-driftdiffusion** `self-consistent` simulation.
+We include the Seebeck and Peltier effects.
+The heat conduction through the environment is modelled by adding an air region all around the diode.
+
+We assume that far from the junction the system is in thermal equilibrium with a thermal bath at 300 K.
+The heat dissipation through the substrate is taken into acount by introducing a  :math:`0.5 cm^2 K/W` thermal surface resistance.
+
+The model of  the  device (including air region)  is shown in  Fig. :ref:`Device Model<model>`,  together with the  mesh.
+
+Furthermore, we rely on the cylindrical symmetry with respect to the axis growth and consider only a 2D slice of the system. In this way we simulate a 3D device by performing a 2D simulation (with much less computational time). ::
+
+  Device
+  {
+
+   material = Si
+  
+   meshfile = tut_09.msh
+   dimension = 2
+   symmetry = cylindrical
+
+   Region n_side{
+    Doping
+     {
+      type = donor 
+      Nd = 1e18
+     }
+   }
+
+   Region p_side{
+    Doping
+     {
+      type = acceptor 
+      Nd = 1e18
+     }
+   }
+
+   Region air { material = Air }
+
+  }
+
+We select a 2D dimension for our simulation (dimension = 2), but then we specify the cylindrical symmetry with ::
+
+  symmetry = cylindrical
+
+
+Region n-side corresponds to the n-doped region situated at the bottom of the device, while the region p-side refers to the top p-doped region. Air is modelled with Region Air.
+
+
+
+Here is  the Module  driftdiffusion ::
+
+  Module driftdiffusion
+   {
+
+     name = dd
+                
+     plot = (Ec, Ev, eQFermi, hQFermi, eDensity, hDensity,
+          eMobility, hMobility, NetRecombination, Pn, Pp,
+          RecombHeat, ePeltier, hPeltier, eJoule, hJoule,
+          ePowerFlux, hPowerFlux, ContactCurrents)
+
+
+      regions = (n_side,p_side)
+
+
+       Physics
+        {
     
-     \begin{table}[!ht]
-     \center
-     \begin{tabular}{l|c|l}
-     \multicolumn{3}{c}{\textbf{Solution Table}} \\
-     \hline
-     \textbf{Keyword}  & \textbf{Description} & \textbf{Units}  \\
-     \hline
-     \hline
-     \texttt{LatticeTemp} & Lattice  temperature & K \\
-     \texttt{ThermalFlux} & Thermal  flux & W/m$^2$ \\
-     \texttt{HeatSource} & total heat source  &  W/m$^3$   \\
-     \texttt{ThermCond} & thermal conductivity  &  W/mK   \\
-     \end{tabular}
-     \caption{Solution/Plot variables}
-     \label{table:th_solutions}
-     \end{table}
+         thermal_simulation = tt
+         recombination srh{}
+         thermoelectric_power diffusivity_model{}
+         mobility doping_dependent{}
+        }  
 
-|
+        Contact anode
+        {
+        type = ohmic
+        voltage = $Vb[0.0]
+        }
+
+        Contact cathode
+        {
+        type = ohmic
+        voltage = 0.0
+        }
+
+   } 
+
+
+The drift-diffusion simulation is performed only over the device domain (excluding the Air region). Therefore, in Module  driftdiffusion we have to indicate ::
+
+  regions = (n_side,p_side) 
+
+
+In order to make the drift-diffusion simulation use the results of the chosen thermal simulation model, we write ::
+
+  thermal_simulation = tt 
+
+
+The thermoelectric power model used is the  *diffusivity model* (see  :ref:`ThermoelectricPower`) and we can include it by the notation ::
+  
+  thermoelectric_power diffusivity_model{}
+
+
+As for the thermal model ::
+
+  Module thermal
+  {
+
+        name = tt
+
+         plot = (  LatticeTemp, ThermalFlux, HeatSource,ThermCond,MaxTemp)
+
+
+        Physics   
+        {
+         heat_source joule 
+         {
+           transport_simulation = dd
+         }
+        }
+
+        Contact reservoir
+        {
+        type = heat_reservoir
+        temperature = 300
+        }
+
+        Contact dissipator
+        {
+        r_surf = 0.5
+        type = surface_resistance
+        temperature = 300
+        }
+
+  }  
+
+
+
+
+Heat generated by the Joule effect is included by  defining an  *heat source*  model  of  type `joule`.In  this  way,  the heat generated by electrons and holes is included.
+
+With ::
+
+  transport_simulation = dd
+
+we specify the transport simulation which  provides the particles for the  Joule model (in  this  case it is  the  drift-diffusion simulation,  but in general it could be any  appropriate implemented transport model)
+  
+
+The dirichlet boundary condition is set by defining a  `Contact` with the type `heat_reservoir` and the temperature specified as 300 K.
+
+The thermal surface resistance is included with a  `Contact` with the type `surface_resistance`. Its value is given by `r_surf`.
+
+The selfconsistent module  solves the thermal and the drift diffusion simulations (named tt and dd respectively) in a self consistent way. ::
+ 
+  Module selfconsistent
+  {
+   solve = (dd,tt)
+   absolute_tolerance = 1e-5
+   monitor = true
+  } 
+
+
+The sweep section runs the selfconsistent simulation for each anode bias step. ::
+
+  Module sweep
+  {
+   solve = selfconsistent
+   variable = $Vb
+   start = 0.0
+   stop  = 1.2
+   steps = 12
+   plot_data = true
+  }
+
+
+
+
+
+Since we have to solve a sweep simulation, we write ::
+
+  solve = sweep
+
+in the Simulation block ::
+
+  Simulation
+  {
+   verbose = 3
+   solve = sweep
+   resultpath = output
+   output_format = vtk
+  }
+
+
+
+
+
+Output of  simulation is  shown in  Fig. :ref:`Temperature map<temp>` and :ref:`Thermal flux<heat>`
+All results displayed are calculated at 1.2 V bias value.
+
+
+The substrate removes most of the heat generated.
+
+
+
+
+..  _model :
+
+..  figure:: ../data/tut_09_mesh.png
+    :align: center
+    :scale: 70%
+
+    Device model and mesh
+
+
+
+..  _temp :
+
+..  figure:: ../data/tut_09_temperature.png 
+    :align: center
+    :scale: 70%
+
+    Temperature Map
+
+
+
+..  _heat :
+
+..  figure:: ../data/tut_09_heat.png 
+    :align: center
+    :scale: 70%
+
+    Heat sources
+
+
+..  _tep :
+
+..  figure:: ../data/tut_09_TEP.png
+    :align: center
+    :scale: 70%
+
+    Thermoelectric power
 
 
 
