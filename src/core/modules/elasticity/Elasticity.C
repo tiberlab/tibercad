@@ -199,7 +199,8 @@ Elasticity::do_solve(void)
       Messages::info(os.str());
     }
 
-    //if (myopt.non_linear_strain)
+    // apply_shape_deformation() leads to negative jacobian for certain structures??
+    if (myopt.non_linear_strain)
        apply_shape_deformation();
 
    
