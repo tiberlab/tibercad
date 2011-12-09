@@ -174,7 +174,7 @@ Device
 
     Physics
     {
-      strain_simulation = elasticity
+      strain_simulation = strain
       relax_polarization = $polariz[0.0]
 
 
@@ -221,6 +221,8 @@ Module elasticity
    plot = (Strain, Stress, Displacement)
    regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
 
+
+   name = strain
    Physics
    {
      body_force lattice_mismatch
@@ -245,36 +247,36 @@ Module elasticity
 
 }
 
-Module macrostrain
-{
-      name = strain
-      plot = (Strain, PiezoPolarization)
-      regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
+#Module macrostrain
+#{
+#      name = strain
+#      plot = (Strain, PiezoPolarization)
+#      regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
 
-  substrate = substr
+#  substrate = substr
 
-  Solver
-  {
-    relative_tolerance = 1e-6 # 1e-8 ok senza  oxide
+#  Solver
+#  {
+#    relative_tolerance = 1e-6 # 1e-8 ok senza  oxide
     #ksp_type = cg #gmres
-    max_iterations = 15000
-    preconditioner = composite
-  }
+#    max_iterations = 15000
+#    preconditioner = composite
+#  }
 
 
 
-  Contact substr
-  {
-    regions = 19
-    type = substrate
-    material = GaN
-    structure = wz
-    z-growth-direction = (1,0,-1,0)
-    x-growth-direction = (-1,2,-1,0)
-    y-growth-direction = (0,0,0,-1)
-  }
+#  Contact substr
+#  {
+#    regions = 19
+#    type = substrate
+#    material = GaN
+#    structure = wz
+#    z-growth-direction = (1,0,-1,0)
+#    x-growth-direction = (-1,2,-1,0)
+#    y-growth-direction = (0,0,0,-1)
+#  }
  
-}
+#}
 
 
 Module sweep
@@ -311,9 +313,8 @@ Simulation
 {
 
   temperature = 300
-  #solve = (strain, sweep_1)
+  solve = (strain, sweep_1)
 
-  solve = (elasticity,sweep_1)
 
   #symmetry = cylindrical
   resultpath =  output
