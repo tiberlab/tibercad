@@ -52,27 +52,27 @@ Device
 
 
 
-Module macrostrain
-{
+#Module macrostrain
+#{
 
-  name = str
-  plot = (Strain, Stress)
-  substrate = substrate
+#  name = str
+#  plot = (Strain, Stress)
+#  substrate = substrate
 
     
-  Boundary substrate 
-  {
-    regions = 1
-    type = substrate
-    material = GaAs
-  }
-}
+#  Boundary substrate 
+#  {
+#    regions = 1
+#    type = substrate
+#    material = GaAs
+#  }
+#}
 
 
 Module elasticity
 {
 
-  name = str_el
+  name = str
   plot = (Strain, Stress)
 
   Physics
