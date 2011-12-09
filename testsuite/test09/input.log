@@ -1,5 +1,5 @@
 
-Log start: Fri Dec  9 16:38:40 2011
+Log start: Fri Dec  9 16:47:34 2011
 
 
 tiberCAD release 2.1.0 (rev. 3045, x86_64-darwin)
@@ -90,13 +90,13 @@ We solve: elasticity
 
 >>>>------------------------------- (elasticity) -------------------------------
 
-Solve time: 0h 0m 5s
+Solve time: 0h 0m 5.1s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 0m 5.2s
+Total solve time: 0h 0m 5.5s
 Simulation finished...
 Goodbye
 
-Log end: Fri Dec  9 16:38:45 2011
+Log end: Fri Dec  9 16:47:40 2011
 
 
