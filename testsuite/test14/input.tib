@@ -22,14 +22,17 @@ Device
 
 Module elasticity
 {
- plot = (Strain,Stress,Displacement)
+  plot = (Strain,Stress,Displacement)
 
- Contact (Lower,Upper){type = clamp}
+  non_linear_strain = true
 
- Contact Force {type = surface_force
-                force = (0.0,0.1,0.0)}
+  shape_error = 0.1
 
- 
+  Contact (Lower,Upper){type = clamp}
+
+  Contact Force {type = surface_force
+                 force = (0.0,0.1,0.0)}
+
 }
 
 Simulation{
