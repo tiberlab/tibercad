@@ -174,7 +174,7 @@ Device
 
     Physics
     {
-      strain_simulation = strain
+      strain_simulation = elasticity
       relax_polarization = $polariz[0.0]
 
 
@@ -216,7 +216,34 @@ Device
 } 
 
 
+Module elasticity
+{
+   plot = (Strain, Stress, Displacement)
+   regions = (1,2,3,4,5,6,7,8,10,11,12,13,14,15,16,17)
 
+   Physics
+   {
+     body_force lattice_mismatch
+    {
+
+       reference_material = GaN
+       structure = wz
+       z-growth-direction = (1,0,-1,0)
+       x-growth-direction = (-1,2,-1,0)   
+       y-growth-direction = (0,0,0,-1)
+    }
+
+   }  
+
+
+   Contact substr
+   {
+    type = clamp
+    regions = 19
+   }
+
+
+}
 
 Module macrostrain
 {
@@ -284,7 +311,9 @@ Simulation
 {
 
   temperature = 300
-  solve = (strain, sweep_1)
+  #solve = (strain, sweep_1)
+
+  solve = (elasticity,sweep_1)
 
   #symmetry = cylindrical
   resultpath =  output
