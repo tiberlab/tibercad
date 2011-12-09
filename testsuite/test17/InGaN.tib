@@ -115,9 +115,13 @@ Module opticstb
 Module elasticity
 {
 
-name = mec
+name = strain
 
 plot = (Strain,Stress,Displacement)
+
+non_linear_strain = true
+
+shape_iteration = 1
 
   Physics
   {
@@ -142,35 +146,37 @@ plot = (Strain,Stress,Displacement)
 
 
 
-Module  macrostrain
-{
+#Module  macrostrain
+#{
 
-  name = strain
-  regions = all
+#  name = strain
+#  regions = all
 
-  plot = (Strain, PiezoPolarization)
+#  plot = (Strain, PiezoPolarization)
 
-  number_shape_steps = 1  #  for  atom displacement  calculation
-  strain_atomistic_structure = tb  # tb1 = atomistic_structure
-  internal_strain_correction = true 
+#  number_shape_steps = 1  #  for  atom displacement  calculation
+#  strain_atomistic_structure = tb  # tb1 = atomistic_structure
+#  internal_strain_correction = true 
 
-  Boundary   cathode
-  {
-    type = substrate
-    material = GaN
+#  Boundary   cathode
+#  {
+#    type = substrate
+#    material = GaN
 
-    structure = wz
-    x-growth-direction = (0,0,0,1)
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-  }
+#    structure = wz
+#    x-growth-direction = (0,0,0,1)
+#    y-growth-direction = (1,0,-1,0)
+#    z-growth-direction = (-1,2,-1,0)
+#  }
 
-  Solver
-  {
+#  Solver
+#  {
     #  xmonitor = true
-  }
+#  }
     
-} #endmacrostrain
+#} #endmacrostrain
+
+
 
 
 
@@ -288,9 +294,9 @@ Simulation
 {
   verbose = 4
   temperature = 300
-  searchpath = /home/mlopez/Desktop/materials
+  #searchpath = /home/mlopez/Desktop/materials
 
-  solve = mec
+  solve = strain
   #solve = (strain,driftdiffusion,tb,spectrum)
 
   resultpath =  output

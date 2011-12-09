@@ -1,5 +1,5 @@
 
-Log start: Sun Nov 27 15:38:20 2011
+Log start: Fri Dec  9 18:06:30 2011
 
 
 tiberCAD release 2.1.0 (rev. 3045, x86_64-darwin)
@@ -66,6 +66,6 @@ Setting up simulation of type 'empirical_tb' ...
 
 *** ERROR: Unknown simulation type: empirical_tb
 
-Log end: Sun Nov 27 15:38:20 2011
+Log end: Fri Dec  9 18:06:30 2011
 
 

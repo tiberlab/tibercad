@@ -3,18 +3,17 @@
 test01     Bulk Si             
 test02     Si pn diode          DD
 test03     Si 1D                Thermal (2 reservoirs) 
-test04     Led 2D InGaN 3QW     Macrostrain + DD + Sweep (I-V) 
+test04     Led 2D InGaN 3QW     Elasticity + DD + Sweep (I-V) 
 test05     QW GaN/AlGaN         Elasticity + DD + k.p(8x8 + dispersion)
-test06     Qdot GaN/AlGaN       Macrostrain + DD + k.p(2x2 + 6x6)
-test07     QW GaAs/AlGaAs       Macrostrain + Elasticity + DD + k.p
+test06     Qdot GaN/AlGaN       Elasticity + DD + k.p(2x2 + 6x6)
+test07     QW GaAs/AlGaAs       Elasticity + DD + k.p
 test08     Si pn 2D             DD + Thermal
 test09     GaN/AlGaN            Elasticity
 test10     Qdot GaN Atomistic   TB (+ reload) + opticsTB
 test11     QW  GaAs/AlGaAs      TB
 test12     Bulk Si              DD + traps
 test13     QW  GaAs/AlGaAs      Elasticity + DD
-test14     Column GaN           Elasticity Deformation
+test14     Column GaN           Elasticity
 test15     Si pn 1D             DD + Thermal
 test16     ZnO column           Elasticity + DD    
 test17     QW GaN/InGaN         Macrostrain + DD + TB + opticsTB 
-test18     QW GaAs/InGaAs       Macrostrain + DD + TB 
