@@ -177,9 +177,9 @@ Elasticity::do_solve(void)
 
   do {
 
-    //system.solution->zero();
-    //apply_shape_deformation();
- 
+    system.solution->zero();
+    apply_shape_deformation();
+
     system.solve();
     sol->add(1.0,*(system.solution));
     
@@ -200,8 +200,8 @@ Elasticity::do_solve(void)
     }
 
     // apply_shape_deformation() leads to negative jacobian for certain structures??
-    if (myopt.non_linear_strain)
-       apply_shape_deformation();
+
+
 
    
     shape_iteration += 1;
@@ -560,6 +560,8 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
+  const NumericVector<Number>& solution = *sol;
+
   const MeshBase& mesh = get_mesh();
   //const unsigned int dim = mesh.mesh_dimension();
   ID dim = mesh.mesh_dimension();
@@ -597,6 +599,11 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
   const vector<Point>& normal = fe_face->get_normals();
+
+
+  //std::vector<std::vector<unsigned int> > dof_indices(3);
+  //for (unsigned int i = 0; i< 3 ; i++)
+  //  dof_map.dof_indices(elem, dof_indices[i],uvar[i]);
 
 
   //Initialize-----------------------------------------------
@@ -678,10 +685,17 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
       for (ID i = 0;i <3; i++)
 	for (ID j = 0;j <3; j++)
 	  for (ID alpha=0; alpha<n_dofs_vec[i]; alpha++)
+	  {
+	    //Add internal stress
+	    total_stress(i,j) += 0.5 * ((solution)(dof_indices_vec[i][alpha]) * dphi[alpha][qp](j) + (solution)(dof_indices_vec[j][alpha]) * dphi[alpha][qp](i));
+
 	    for (ID beta=0; beta<n_dofs_vec[j]; beta++)
 	      (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
-	    
 
+	    
+	    }
+
+        //Right Hand side
 	for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	{  
 
