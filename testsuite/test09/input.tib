@@ -11,8 +11,8 @@ Module elasticity {
 
 plot = (Strain,Stress,Displacement) 
 
-non_linear_strain = true
-shape_error = 0.1
+#non_linear_strain = true
+#shape_error = 0.1
 
 Physics {
 
