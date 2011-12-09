@@ -71,63 +71,62 @@ Device qdot
   }
 }
 
-#Module elasticity 
-#{
-
-#  name = strain
-#  regions = all
-
-#  plot = (Strain, Stress, Displacement)
-#  lin_rel_tol = 1e-6 
-
-#  Physics 
-#  {
-#    body_force lattice_mismatch 
-#    {
-#      reference_material = AlGaN
-#
-#      x = 0.3
-#
-#      y-growth-direction = (-1,0,1,0)
-#      x-growth-direction = (-1,2,-1,0)   
-#      z-growth-direction = (0,0,0,1)
-#    }
-#       
-#  }
-
-#  Contact substrate  
-#  {type = clamp}
-
-#}
-
-
-
-Module macrostrain
+Module elasticity 
 {
 
   name = str
-  plot = (Strain, PiezoPolarization)
+  plot = (Strain, Stress, Displacement)
 
-  Solver
+  Physics 
   {
-    relative_tolerance = 1e-6
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaN
+
+      x = 0.3
+
+      y-growth-direction = (-1,0,1,0)
+      x-growth-direction = (-1,2,-1,0)   
+      z-growth-direction = (0,0,0,1)
+    }
+       
   }
 
-
-  Boundary substrate
+  Contact substrate  
   {
-    regions = 1
-    type = substrate
-    material = AlGaN
-    x = 0.3
-    structure = wz
+  regions =  1
+  type = clamp}
 
-    y-growth-direction = (-1,0,1,0)
-    x-growth-direction = (-1,2,-1,0)   
-    z-growth-direction = (0,0,0,1)
-  }
+}
 
-} 
+
+
+#Module macrostrain
+#{
+
+#  name = str
+#  plot = (Strain, PiezoPolarization)
+
+#  Solver
+#  {
+#    relative_tolerance = 1e-6
+#  }
+
+
+#  Boundary substrate
+#  {
+#    regions = 1
+#    type = substrate
+#    material = AlGaN
+#    x = 0.3
+#    structure = wz
+
+#    y-growth-direction = (-1,0,1,0)
+#    x-growth-direction = (-1,2,-1,0)   
+#    z-growth-direction = (0,0,0,1)
+#  }
+
+#} 
 
 
 Module driftdiffusion
