@@ -1,5 +1,5 @@
 
-Log start: Sat Dec  3 12:37:53 2011
+Log start: Fri Dec  9 16:34:38 2011
 
 
 tiberCAD release 2.1.0 (rev. 3045, x86_64-darwin)
@@ -89,15 +89,26 @@ Simulation options for elasticity (elasticity)
 We solve: elasticity 
 
 >>>>------------------------------- (elasticity) -------------------------------
-  iteration 1:  Error =  0.61332 %
+  iteration 1:  Error =  0.501042
+  iteration 2:  Error =  0.336071
+  iteration 3:  Error =  0.254584
+  iteration 4:  Error =  0.206475
+  iteration 5:  Error =  0.175039
+  iteration 6:  Error =  0.153118
+  iteration 7:  Error =  0.137131
+  iteration 8:  Error =  0.125087
+  iteration 9:  Error =  0.115794
+  iteration 10:  Error =  0.108492
+  iteration 11:  Error =  0.102676
+  iteration 12:  Error =  0.0979953
 
-Solve time: 0h 0m 56s
+Solve time: 0h 1m 10s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 0m 56s
+Total solve time: 0h 1m 11s
 Simulation finished...
 Goodbye
 
-Log end: Sat Dec  3 12:38:50 2011
+Log end: Fri Dec  9 16:35:49 2011
 
 
