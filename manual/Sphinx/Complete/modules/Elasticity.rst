@@ -246,6 +246,13 @@ Example::
     }
 
 
+
+
+.. note::
+          
+        When a lattice mismatch force is included in the calculation, the displacement will be computed with respect the reference lattice.
+
+
 Converse  piezo
 .................
 
