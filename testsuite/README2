@@ -16,4 +16,4 @@ test13     QW  GaAs/AlGaAs      Elasticity + DD
 test14     Column GaN           Elasticity
 test15     Si pn 1D             DD + Thermal
 test16     ZnO column           Elasticity + DD    
-test17     QW GaN/InGaN         Macrostrain + DD + TB + opticsTB 
+test17     QW GaN/InGaN         Elasticity + Macrostrain + DD + TB + opticsTB 
