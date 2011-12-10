@@ -39,11 +39,7 @@ ConstantThermalConductivity::do_init(void)
 
   rotate();
 
- //  if (get_material()->get_structure() == "wz")
-//   {
-//     const RotatedCrystal&   cr = get_material()->get_rotated_crystal();
-//     rotate_to_calculation_system(cr.RotMatrix);
-//   }
+
 
 }
 

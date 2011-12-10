@@ -24,7 +24,6 @@ void
 DDHeatSource::do_init(void)
 {
 
-  
   string dd_simul_name = get_options().get_option("transport_simulation", "driftdiffusion");
   _simul = SimulationInterface::find_simulation(dd_simul_name);
 
@@ -45,7 +44,6 @@ DDHeatSource::do_init(void)
   for(; it!=end; ++it)
     ID_set.insert(it->second);
   
-
 }
 
 void
