@@ -5,9 +5,8 @@ Device
   mesh_units = 1e-6
 
   material = ZnO
-  symmetry = cylindrical
 
-  dimension = 2
+  dimension = 3
 
   Region Column{
 
@@ -26,21 +25,20 @@ Device
 Module elasticity
 {
 
-plot = (Strain,Stress,Displacements)
+plot = (Strain,Stress,Displacement)
 
 Physics
 {
- stiffness isotropic
- {
-  young = 149
-  poisson = 0.349
- }
-
+  stiffness isotropic
+  {
+   young = 149
+   poisson = 0.349
+  }
 }
 
 Contact Upper {
 type = surface_force
-force = (0,-0.00625,0)
+force = (0.0,0.0,-0.00625)
 }
 
 Contact Lower {type = clamp}
@@ -77,6 +75,7 @@ Module driftdiffusion
 Simulation
 {
   solve = (elasticity,driftdiffusion)
+  #solve = (driftdiffusion)
   resultpath = output
   verbose = 3
   searchpath = .
