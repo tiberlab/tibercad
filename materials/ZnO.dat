@@ -34,7 +34,7 @@ D_6 = 0.0
 permittivity = (7.77, 8.91)
 
 # stiffness data Ambacher theory1 
-[stiffness]
+[elasticity]
 C11 = 207.0
 C12 = 117.7
 C13 = 106.1

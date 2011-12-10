@@ -143,7 +143,7 @@ ThermCond = 150.0 #w/m K
 vg = 8.433e3 #m/s
 
 [heat_capacity/constant]
-C = 1E6 # j/m3K
+C = 1.66E6 # j/m3K
 
 
 #Thermoelectric power [V/k]
