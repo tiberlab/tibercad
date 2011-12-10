@@ -115,13 +115,6 @@ Transport  simulation from  wich  joule  heating  is  calculated  is  given by
 the  keyword ``transport_simulation`` .
 
 
-
-..  figure:: ../data/heatsource.png
-    :align: center
-    :scale: 50%
-    
-    Heat Source
-
 Example::
 
 
@@ -129,19 +122,6 @@ Example::
    { 
       transport_simulation = dd
    }
-
-
- 
-    
-..  figure:: ../data/thermoelectric.png
-    :align: center
-    :scale: 50%
-    
-    Thermoelectric power 
-
-..   </marker>
-
-
 
 
 

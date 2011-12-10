@@ -41,7 +41,7 @@ The strain is related to the displacement u by the expression
     \epsilon_{kl}=\frac{1}{2}\left(\frac{\partial u_l}{x_k}-\frac{\partial u_k}{\partial u_l} \right )
     
 
-Relying on the symmetry of the strain and stiffness tensor the final equation reads as
+Because of the symmetry of the strain and stiffness tensor the final equation reads as
 
 .. math::
    :label: strain_eq2
@@ -50,7 +50,7 @@ Relying on the symmetry of the strain and stiffness tensor the final equation re
     \frac{\partial}{\partial x_j}C_{ijlk}\frac{\partial u_l}{\partial x_k} = f_i
     
 
-the computed displacements are used to deform the mesh.
+the computed displacements are used to deform the mesh. 
 
 
 
@@ -141,16 +141,16 @@ Module options
 
 The following options influence the behaviour of the Elasticity module:
 
+ ``non_linear_strain`` : bool
+   if :math:`true` the strain is computed iteratively until the convergence on the structure deformation is reached  (default = :math:`false`) 
 
-COMMENT: questa parte forze e' meglio ometterla in quanto il non linear strain e' da testare. Per la release anche zero step secondo me (e Matthias) vano bene.
-
- ``shape_iteration`` : integer
+ ``shape_iterations`` : integer
     defines the number of  shape iterations for non-linear strain computation. 
-    The default is ``1``, meaning that
+    The default is ``0``, meaning that the force balance problem is solved only once. 
 
  ``shape_error`` : double
    defines the maximum tolerated error in non-linear strain computation (default = :math:`1e-3`) 
-
+  
 
 Solution/Plot variables
 -----------------------
@@ -533,7 +533,7 @@ Output data about strain are shown below.
 Example 2: Piezoelectric nanogenerator
 ------------------------------------
 
-In this example we will compute the output potential of a piezoelectric nanogenerator based on a vertical compressed ZnO nanowire [1,2]. The cylindrical column has a radius of 150 nm and is 4 :math:`\mu m` high. As we rely on the cylindrical symmetry, only a slice of the structure is included in the simulation domain. 
+In this example we will compute the output potential of a piezoelectric nanogenerator based on a vertical compressed ZnO nanowire [1,2]. The cylindrical columni, oriented along the :math:`z`-axis, has a radius of 150 nm and is 4 :math:`\mu m` high. 
 In the device section we specify the name of the region (*Column*) and the doping. ::
 
   Device
@@ -543,9 +543,8 @@ In the device section we specify the name of the region (*Column*) and the dopin
     mesh_units = 1e-6
 
     material = ZnO
-    symmetry = cylindrical
 
-    dimension = 2
+    dimension = 3
 
         Region Column
         {
@@ -563,7 +562,6 @@ In the device section we specify the name of the region (*Column*) and the dopin
 
   }
   
-COMMENT: la simmetria cilindrica credo abbia senso solo per costanti isotropiche. Dovremmo specificarlo? Puoi chiedere a Matthias che ne pensa?
 
 In the Physics section we use define isotropic elastic constant by means of the Young module and Poisson ratio. ::
 
@@ -588,11 +586,11 @@ On the upper surface we apply a normal force toward the base of the nanowire. Th
   Contact Upper 
   {
    type = surface_force
-   force = (0,-0.00625,0)
+   force = (0,0,-0.00625)
   }
 
 
-Finally, the boundary condition *clamp* fixes a given surface. ::
+Finally, the boundary condition *clamp* frozes the column base. ::
 
   Contact Lower 
   {
