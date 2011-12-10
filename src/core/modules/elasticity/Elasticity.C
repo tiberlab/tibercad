@@ -120,7 +120,7 @@ Elasticity::parse_options(void)
 
   myopt.shape_error = opt.get_option("shape_error",1e-2);
   myopt.non_linear_strain = opt.get_option("non_linear_strain",false);
-  //myopt.shape_iterations = opt.get_option("shape_iterations",0);
+  myopt.shape_iterations = opt.get_option("shape_iterations",20);
   //myopt.deformation = opt.get_option("do_deformation",false);
   myopt.magnification = opt.get_option("magnification",1);
   myopt.structure_to_be_strained = opt.get_option("strain_atomistic_structure", "all");
@@ -200,15 +200,11 @@ Elasticity::do_solve(void)
     }
 
     // apply_shape_deformation() leads to negative jacobian for certain structures??
-
-
-
-   
     shape_iteration += 1;
 
-  } while (error_u > max_error);
+ // } while (error_u > max_error);
 
-  //} while ((error_u > myopt.shape_error) && (iter < myopt.shape_iterations));
+  } while ((error_u > max_error) && ( shape_iteration <= myopt.shape_iterations));
 
   //double elastic_energy = abs(compute_elastic_energy());
   //if ((SimulationOptions::verbose() > 2) && myopt.shape_iterations > 1)
@@ -687,7 +683,8 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	  for (ID alpha=0; alpha<n_dofs_vec[i]; alpha++)
 	  {
 	    //Add internal stress
-	    total_stress(i,j) += 0.5 * ((solution)(dof_indices_vec[i][alpha]) * dphi[alpha][qp](j) + (solution)(dof_indices_vec[j][alpha]) * dphi[alpha][qp](i));
+	      if (shape_iteration > 0)
+	        total_stress(i,j) += 0.5 * ((solution)(dof_indices_vec[i][alpha]) * dphi[alpha][qp](j) + (solution)(dof_indices_vec[j][alpha]) * dphi[alpha][qp](i));
 
 	    for (ID beta=0; beta<n_dofs_vec[j]; beta++)
 	      (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
