@@ -104,7 +104,7 @@ BoltzmannModel::do_init_alloy(const PhysicalModelInterface *comp_A,
 void
 BoltzmannModel::do_print_info(void)
 {
-  if  (SimulationOptions::verbose() > 2)
+  if  (SimulationOptions::verbose() > 1)
   {
 
     cout<<endl;

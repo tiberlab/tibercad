@@ -847,7 +847,7 @@ Boltzmann::solve_gray(void)
          dir = AngInt.dir[k];
 
        if  (SimulationOptions::verbose() > 2)
-	AngInt.print_info(k);
+	 AngInt.print_info(k);
 
        //system.init();
       //cout<<k<<endl;
@@ -2743,7 +2743,7 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
            angle += AngInt.d_omega[k];
 
            diff_part += SD[elside][k] * AngInt.d_omega[k];
-           //value += SD[elside][k] * AngInt.d_omega[k];
+
          }
        }
 
@@ -2751,32 +2751,47 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
        diff_part = diff_part /angle;
 
 
-     //  Specular part (TO BE REDO)
        ID dof = elside.elem()->dof_number(gray_sys_number,0,0);
-
 
        ID n_spec = 0;
        for (ID k = 0; k<AngInt.n_slices; k++)
-       {
+          {
 
-         if (AngInt.phi_vec[solid_angle_iter] != AngInt.phi_vec[k])
-         {
-           Point sum(0);
-             sum(0) = AngInt.dir[solid_angle_iter](0)-AngInt.dir[k](0);
-             sum(1) = AngInt.dir[solid_angle_iter](1)-AngInt.dir[k](1);
-             const Point check = sum.cross(normal);
+            if (solid_angle_iter != k)
+            {
+            //  Point test = AngInt.dir[k] - AngInt.dir[solid_angle_iter];
+            //  Point check = test/test.size() - normal;
+
+              ID dimension = get_mesh().mesh_dimension();
+
+              Point check(0);
+              if (dimension == 3)
+              {
+                check = AngInt.dir[solid_angle_iter] - (AngInt.dir[k] - 2.0*abs(AngInt.dir[k]*normal)*normal);
+                if (check.size() <1e-5)
+                {
+                  n_spec ++;
+                  spec_part = SD[elside][k];
+                }
+
+              }
+              if (dimension == 2)
+              {
+                Point test = AngInt.dir[k] - AngInt.dir[solid_angle_iter];
+                check = test/test.size() - normal;
+                check(2) = 0.0;
+                if (check.size() <1e-5 && AngInt.theta_vec[k] == AngInt.theta_vec[solid_angle_iter])
+                {
+                  n_spec ++;
+                  spec_part = SD[elside][k];
+                }
+
+              }
+
+             }
+          }
 
 
-             if (check.size() <1e-6)
-               if (AngInt.theta_vec[solid_angle_iter] == AngInt.theta_vec[k])
-               {
-                 n_spec ++;
-
-                 spec_part = SD[elside][k];
-               }
-
-         }
-       }
        if (n_spec > 1)
          cout<<"TO MANY SPECULAR VECTORS!"<<endl;
 
@@ -2808,28 +2823,65 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
         for (ID k = 0; k<AngInt.n_slices; k++)
         {
 
-          if (AngInt.phi_vec[solid_angle_iter] != AngInt.phi_vec[k])
-          {
-            Point sum(0);
-            sum(0) = AngInt.dir[solid_angle_iter](0)-AngInt.dir[k](0);
-            sum(1) = AngInt.dir[solid_angle_iter](1)-AngInt.dir[k](1);
-            const Point check = sum.cross(normal);
+
+            if (solid_angle_iter != k)
+            {
+
+              ID dimension = get_mesh().mesh_dimension();
+
+              Point check(0);
+              if (dimension == 3)
+              {
+                check = AngInt.dir[solid_angle_iter] - (AngInt.dir[k] - 2.0*abs(AngInt.dir[k]*normal)*normal);
+                if (check.size() <1e-5)
+                {
+                  n_spec ++;
+                  value = SD[elside][k];
+                }
+
+              }
+
+              if (dimension == 2)
+              {
+                Point test = AngInt.dir[k] - AngInt.dir[solid_angle_iter];
+                check = test/test.size() - normal;
+                check(2) = 0.0;
+                if (check.size() <1e-5 && AngInt.theta_vec[k] == AngInt.theta_vec[solid_angle_iter])
+                {
+                  n_spec ++;
+                  value = SD[elside][k];
+                }
+
+              }
+
+            }
+
+
+          }
+
+         // if (AngInt.phi_vec[solid_angle_iter] != AngInt.phi_vec[k])
+          //{
+           // Point sum(0);
+           // sum(0) = AngInt.dir[solid_angle_iter](0)-AngInt.dir[k](0);
+           // sum(1) = AngInt.dir[solid_angle_iter](1)-AngInt.dir[k](1);
+           // const Point check = sum.cross(normal);
 
             //cout<<"Normal: "<<normal<<" DIR1: "<<AngInt.dir[k]<<" DIR2: " <<AngInt.dir[solid_angle_iter]<<endl;
             //cout<<check.size() <<endl;
 
-            if (check.size() <1e-3)
-              if (AngInt.theta_vec[solid_angle_iter] == AngInt.theta_vec[k])
-              {
-                n_spec ++;
+           // if (check.size() <1e-3)
+           //   if (AngInt.theta_vec[solid_angle_iter] == AngInt.theta_vec[k])
+           //   {
+            //    n_spec ++;
                 //value =(*equilibrium_energy)(dof);
-                value = SD[elside][k];
-              }
+             //   value = SD[elside][k];
+             // }
 
-          }
-        }
-       // if (n_spec > 1)
-        //    cout<<"TO MANY SPECULAR VECTORS!"<<endl;
+          //}
+
+
+        if (n_spec > 1)
+            cout<<"TO MANY SPECULAR VECTORS!"<<endl;
 
         if (n_spec == 0)
         {
@@ -3093,216 +3145,51 @@ Boltzmann::AngularIntegrator::compute_directions()
 {
 
 
-  //double min_theta, max_theta, min_phi, max_phi;
-      //double d_phi,theta, phi, d_theta;
-    /*ID k = 0;
-
-    switch (dim)
-    {
-
-    case 1 :
-
-     theta_slices = 1;
-      if (phi_slices == 0)
-           phi_slices = 4;
-
-      min_theta = 0.0;
-      max_theta = M_PI;
-
-      min_phi = M_PI * 0.5;
-      max_phi = M_PI * 2.0 + M_PI * 0.5;
-
-
-      weight = 1.0;
-      n_slices = theta_slices * phi_slices;
-      spec.resize(n_slices);
-      total_angle = 2 * M_PI;
-
-      directions.resize(n_slices);
-      integrate_directions.resize(n_slices);
-      d_omega.resize(n_slices);
-      dir.resize(n_slices);
-      theta_vec.resize(n_slices);
-      phi_vec.resize(n_slices);
-
-      d_phi =  (max_phi - min_phi) / phi_slices;
-
-      k = 0;
-      for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
-      {
-
-       phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0;
-
-       d_omega[k] = d_phi;
-
-       dir[k](0) = sin(phi);
-       dir[k](1) = cos(phi);
-       dir[k](2) = 0.0;
-
-       directions[k](0) =  2.0 * sin(phi) * sin(0.5 * d_phi);
-       directions[k](1) =  2.0 * cos(phi) * sin(0.5 * d_phi);
-       directions[k](2) =  0.0;
-
-       theta_vec[k] = M_PI/2.0;
-       phi_vec[k] = phi;
-
-       k++;
-
-      }
-
-      break;
-
-    case 2 :
-
-      //theta_slices = 1;
-      //if (phi_slices == 0)
-
-      min_theta = 0.0;
-      max_theta = M_PI * 0.5;
-
-      min_phi = M_PI * 0.5;
-      max_phi = M_PI * 2.0 + M_PI * 0.5;
-
-      weight =  2.0;
-
-      n_slices = theta_slices * phi_slices;
-      spec.resize(n_slices);
-
-      directions.resize(n_slices);
-      integrate_directions.resize(n_slices);
-      d_omega.resize(n_slices);
-      dir.resize(n_slices);
-      theta_vec.resize(n_slices);
-      phi_vec.resize(n_slices);
-
-      d_theta =  (max_theta - min_theta) / theta_slices;
-      d_phi =  (max_phi - min_phi) / phi_slices;
-
-      k = 0;
-      for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
-      {
-        // phi = min_phi + d_phi * 0.5 + d_phi * n_phi;
-
-        phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
-
-        for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
-        {
-          theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
-
-          d_omega[k] =  weight * 2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
-          //d_omega[k] = d_phi;
-
-          dir[k](0) = sin(theta) * sin(phi);
-          dir[k](1) = sin(theta) * cos(phi);
-          dir[k](2) = cos(theta);
-
-          directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
-          directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
-          directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
-
-          theta_vec[k] = theta;
-          phi_vec[k] = phi;
-
-          k++;
-        }
-      }
-
-
-      //Specular vectors
-    //  for (ID k1 = 0; k1<n_slices; k1++)
-      //    for (ID k2 = 0; k2<n_slices; k2++)
-        //    {
-          //    Point sum = directions[k1] + directions[k2];
-           //   cout<<sum<<endl;
-            //  if ((sum(0) < 1e-4) && (sum(1) < 1e-4) && (sum(2) < 1e-4) )
-            //     spec[k1]=k2;
-           // }
-
-
-      total_angle = 4.0 * M_PI;
-      break;
-
-    case 3 :
-
-      std::cout<<"3D"<<std::endl;
-
-      if (theta_slices == 0)
-	theta_slices = 2;
-
-      if (phi_slices == 0)
-	phi_slices = 4;
-
-
-      min_theta = 0.0;
-      max_theta = M_PI;
-
-      min_phi = 0.0;
-      max_phi = M_PI * 2.0;
-
-      weight = 1.0;
-
-
-      n_slices = theta_slices * phi_slices;
-
-      spec.resize(n_slices);
-
-      total_angle = 4.0 * M_PI;
-      directions.resize(n_slices);
-      integrate_directions.resize(n_slices);
-      d_omega.resize(n_slices);
-      dir.resize(n_slices);
-      theta_vec.resize(n_slices);
-      phi_vec.resize(n_slices);
-
-      d_theta =  (max_theta - min_theta) / theta_slices;
-      d_phi =  (max_phi - min_phi) / phi_slices;
-
-      k = 0;
-      for (ID n_phi = 0; n_phi < phi_slices; n_phi++)
-      {
-        // phi = min_phi + d_phi * 0.5 + d_phi * n_phi;
-        phi = min_phi + d_phi * n_phi + phi_zero * M_PI/180.0 ;
-
-        for (ID n_theta = 0; n_theta < theta_slices; n_theta++)
-        {
-          theta = min_theta + d_theta * 0.5 + d_theta * n_theta;
-
-          d_omega[k] =  2.0 * sin(theta) * sin (0.5 * d_theta) * d_phi;
-          //d_omega[k] = d_phi;
-
-          dir[k](0) = sin(theta) * sin(phi);
-          dir[k](1) = sin(theta) * cos(phi);
-          dir[k](2) = cos(theta);
-
-          directions[k](0) =  weight * sin(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
-          directions[k](1) =  weight * cos(phi) * sin(0.5 * d_phi) * (d_theta - cos(2.0 * theta) * sin(d_theta) );
-          directions[k](2) =  weight * 0.5 * d_phi * sin(2.0 * theta) * sin(d_theta);
-
-          theta_vec[k] = theta;
-          phi_vec[k] = phi;
-
-          k++;
-        }
-      }
-
-      break;
-    }*/
 
   double delta = phi_zero;
 
-  double  min_theta = 0.0 + delta;
-  double  max_theta = M_PI * 0.5 + delta;
 
-  //double  min_phi = M_PI * 0.5 + delta;
-  //double  max_phi = M_PI * 2.0 + M_PI * 0.5+ delta;
+  double  min_phi = 0.0 + delta;
+  double  max_phi = M_PI * 2.0 + delta;
 
-   double  min_phi = 0.0 + delta;
-   double  max_phi = M_PI * 2.0 + delta;
 
-    weight =  2.0;
+  double  min_theta = 0.0;
+  double  max_theta = 0.0;
 
-    n_slices = theta_slices * phi_slices;
-    //spec.resize(n_slices);
+
+
+  switch (dim)
+     {
+
+       case 1 :
+
+         //TO BE TESTED in 1D
+         min_theta = 0.0 + delta;
+         max_theta = M_PI * 0.5 + delta;
+         weight =  2.0;
+
+       break;
+
+       case 2 :
+         cout<<"2D"<<endl;
+          min_theta = 0.0 + delta;
+          max_theta = M_PI * 0.5 + delta;
+          weight =  2.0;
+
+       break;
+
+       case 3 :
+
+         cout<<"3D"<<endl;
+         min_theta = 0.0 + delta;
+         max_theta = M_PI + delta;
+         weight =  1.0;
+
+       break;
+
+     }
+
+     n_slices = theta_slices * phi_slices;
 
      directions.resize(n_slices);
      d_omega.resize(n_slices);
