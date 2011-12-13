@@ -150,7 +150,9 @@ To  use  tiberCAD,   as a first step you  need  to model the device and  generat
 In the following we will see how to write a basic GMSH script in 1 and 2D; for any details please refer to GMSH manual  (http://geuz.org/gmsh/).
 
 
-Example 1D 
+.. _GMSH_Ex1:
+
+GMSH Example 1D 
 -------------------------------------------
 
 
@@ -158,7 +160,8 @@ Step 1: Modeling the device
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Here we  will  refer  to  the  example *Bulk Silicon  in  1D* (see  :ref:`Drift Diffusion<DriftDiffusionGetting>`,  *bulk.geo*).
+Here we  will  refer  to  the  Example 0 *Bulk Silicon  in  1D* in the  Example directory. 
+See :ref:`Input_Ex1` for the  description of the corresponding input file.
 
 In a GMSH script, several variables can be defined and given a value in this way::
 
@@ -174,9 +177,9 @@ these are valid GMSH variables: ``L`` is just the length of the Si sample; ``d``
 **GMSH modeling strategy: bottom-up  design**
 
 In   gmsh  the idea  is  to   design  the  model  with a "bottom-up" strategy.
-So,   first, points are  defined, then lines  connecting  points,  surface  connecting  lines,  and  so  on,  without  superimposing  objects.
+So,   first, points are  defined, then lines  connecting  points,  surface  connecting  lines,  and  so  on. No  superimposing  objects are  allowed.
 This  means  that, once  defined  your  points,  you  may  connect them  with  lines but
-different Lines  must  not  have  parts  in  common (just  points);
+different lines  must  not  have  parts  in  common (just  points);
 the  same  works for  surfaces:  they  may  have only  lines  in  common,   but  no  intersections between  surfaces  are allowed.
 
 .. warning::
@@ -241,12 +244,14 @@ The expression(s) inside the braces on the right hand side  give the identificat
 In this way, in general, *physical regions* are created which associate together geometrical regions, and then the related mesh elements, which share some common physical properties. It's only these physical regions which can be referred to outside GMSH. In tiberCAD, this is done by associating one or more physical regions to a tiberCAD region through the keywords *Region* and  *mesh_regions* (see :ref:`Input File<InputFileGetting>`).
 
 
+
+
 .. warning::
              In general, in a n-Dimension (``nD``) simulation, ``(n-1)D`` physical regions
              (points in 1D, lines in 2D, surfaces in 3D) are used by tiberCAD to impose the required 
-             boundary conditions. Each  ``(n-1)D``  physical region defined in this way in GMSH will be associated             in tiberCAD to a boundary condition (Contact) region. 
-             Thus, in this case, Physical points *1* and *2* will be associated respectively to two *Contacts* 
-             (see in the following).
+             boundary conditions. Each  ``(n-1)D``  physical region defined in this way in GMSH will be associated                          in tiberCAD to a boundary condition (Contact) region. 
+             Thus, in this case, Physical points *Anode* and *Cathode* will be associated respectively to two *Contacts* 
+             (see :ref:`Input_Ex1`).
 
             
 
@@ -264,7 +269,7 @@ To  generate  the  mesh,  select  ``Mesh`` in  the main menu  of  GMSH  and  cli
 This  will  create  a  file  .msh  in  your  working  directory.
 
 
-Alternatively, a ``non-interactive`` mode is also available in GMSH, without graphical user interface. For example, to mesh this 1D tutorial in non-interactive mode, just type::
+Alternatively, a ``non-interactive`` mode is also available in GMSH, without graphical user interface. For example, to mesh this 1D tutorial in non-interactive mode, just type in the command line ::
 
   gmsh bulk.geo  -1 -o bulk.msh 
 
@@ -287,13 +292,15 @@ In this way, a ``.msh`` has been generated and is ready to be read in tiberCAD.
 
 
 
-Example 2D
+
+.. _GMSH_Ex2:
+
+GMSH Example 2D
 -------------------------------------------
 
 
-
-In this  second  example  we  will  refer  to  the *Mosfet* example that you can 
-find in :ref:`Drift Diffusion<DriftDiffusionGetting>`  (*mosfet.geo*).
+In this  second  example  we  will  refer  to  the  Example 4 that you can 
+find in the Example directory  (*mosfet.geo*). See :ref:`Input_Ex2` for  a  description of  the  Input file.
 
 
 
@@ -334,7 +341,7 @@ Geometrical *Points* and *Lines* are  defined to design the device  structure; t
 
 **Definition of a surface**
 
-First a *line loop* is composed, listing all the  lines constituting the  boundary of the surface; then this  line  loop is  assigned to a  *Plane Surface* object (this  procedure can be alternatively performed throgh the  graphical interface).                          
+First a *line loop* is composed, listing all the  lines constituting the  boundary of the surface; then this  line  loop is  assigned to a  *Plane Surface* object (this  procedure can be alternatively performed through the  graphical interface).                          
 
 ::
 
@@ -346,9 +353,12 @@ First a *line loop* is composed, listing all the  lines constituting the  bounda
 
 **Definition of  the Physical Surfaces**
 
-Each of the  *Physical Surfaces* is composed by one or more geometrical *Plane Surface*. For example, *Physical surface contact* comprises the two separated contact regions, while *Physical surface oxide* corresponds to the  oxide  region.
+Each of the  *Physical Surfaces* is composed by one or more geometrical *Plane Surface*. For example, *Physical surface* **contact** comprises in one   single physical region the two separated contact geometrical regions, while *Physical surface* **oxide** corresponds to the  oxide  region.
 
-The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be  assigned to the related tiberCAD regions through the keyword *Region* and *mesh_regions*.                                                                                                                     
+The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be  assigned to the related tiberCAD regions through the keyword *Region* and *mesh_regions*.   
+ (See :ref:`Input_Ex2`)
+
+                                                                                                                  
 ::
 
   Physical Surface("substrate") = {41}; // n-Si
@@ -359,7 +369,7 @@ The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be 
                                                
 **Definition of the Phisical Lines**
 
-In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Phisical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation): thus *Physical Line source* refers to the source contact, *Physical Line gate* to the gate contact, *Physical Line drain* to the drain contact.
+In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Phisical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation): thus *Physical Line* **source** refers to the source contact, *Physical Line* **gate**  to the gate contact, *Physical Line*  **drain**  to the drain contact.
 The names of these *Phisical Lines*  will be  asigned to tiberCAD *Contacts*.
 
 ::
@@ -889,9 +899,228 @@ performed, for example
 The mesh independent results for every sweep step are stored in this file.
 
 
-
-Example of Input file
+Input files Examples
 ----------------------------------
+
+
+.. _Input_Ex1:
+
+1D Bulk Silicon
+^^^^^^^^^^^^
+
+
+
+This is the Example 0 in  the  Example directory.
+This simple example calculates the IV characteristic of a piece of slightly doped bulk silicon
+The mesh  file ``bulk.msh`` has  been  generated by GMSH,  based on the  script bulk.geo,  described in 
+:ref:`GMSH_Ex1`. ::
+
+  # Description of the device physical regions
+  Device
+  {
+   meshfile = bulk.msh
+
+   Region bulk 
+    {
+     material = Si
+
+     Doping
+     {
+      Nd = 1e16
+      type = donor
+     }
+    }
+
+  }
+
+Here  the  geometrical and physical structure of the device  to  be  simulated  is  described.
+Note that the name of  the  only  ``Region`` of  this  ``Device`` is **bulk**,  that  is  the  name of the Physical Line in  
+:ref:`GMSH_Ex1`. ::
+
+
+  # Definition of Simulation Models 
+
+  Module driftdiffusion
+  { 
+              
+   # name = driftdiffusion  # this is the default name
+
+   #regions = all # 'all' is the default
+
+   # what we want to plot
+   plot = (Ec, Ev, eQFermi, hQFermi, ContactCurrent)
+
+
+   Contact anode { voltage = $Vb }
+   Contact cathode { }
+
+  }
+
+
+Here the block for  **Module**  ``driftdiffusion`` is  defined.
+
+Note  that the names of  the  two ``Contact`` boundary  regions, **anode** and **cathode**, are the  names of the two *Physical Point* objects created in :ref:`GMSH_Ex1`. ::
+
+
+
+  # we want to sweep over the anode voltage
+  Module sweep
+  {
+   solve = driftdiffusion
+   variable = $Vb
+   start = 0.0
+   stop = 1
+   steps = 10
+   # for each step we want to plot the solution variables
+   # specified in the driftdiffusion module
+   plot_data = true
+  }
+
+In  this  example, we  calculate Poisson and  transport equations for a  set  of  bias  values,  as  described  by  **Sweep** block. ::
+
+  Simulation
+  {
+   # this increases the amount of information
+   # written to the screen
+   verbose = 2
+
+   solve = sweep
+
+   resultpath = output
+   output_format = grace
+  }
+
+
+Finally, the **Simulation**  block defines  the  simulations  to  be  executed and  their  order.In this  case this  amounts to just the  **sweep**  block calculation.
+
+
+
+.. _Input_Ex2:
+
+2D Mosfet 
+^^^^^^^^^^^^
+
+This is the Example 4 in  the  Example directory.
+This  example calculates the IV characteristics of a silicon Mosfet. 
+The mesh  file ``mosfet.msh`` has  been  generated by GMSH,  based on the  script *mosfet.geo*,  described in 
+:ref:`GMSH_Ex2`. ::
+
+  Device mosfet
+  {
+
+   meshfile = mosfet.msh
+
+   material = Si
+
+   Region substrate
+   {
+     Doping
+     {
+      density = 1e18
+      type = acceptor
+     }
+   }
+
+   Region contact
+   {
+     Doping
+     {
+      density = 5e19
+      type = donor
+     }
+   }
+
+   Region oxide
+   {
+    material = SiO2
+   }
+
+  }
+
+
+Note that the  ``Regions`` **substrate**, **contact**, **oxide** correspond to the *Physical surfaces* defined in the geo script of GMASH (see  :ref:`GMSH_Ex2`). ::
+
+  Module driftdiffusion
+  {
+
+  # we can solve only for electrons
+  #coupling = electrons
+
+  plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+          hQFermi, hDensity, hCurrentDensity, hMobility,
+          NetRecombination, ElField, ElPotential, ContactCurrents)
+
+  Solver
+  {
+    type = linesearch
+
+    linear_solver
+    {
+      method = pconly
+      preconditioner = lu
+    }
+  }
+
+
+   Physics
+   {
+
+    particle_density
+    {
+      # use Fermi-Dirac statistics
+      statistics = fermidirac
+    }
+
+
+    recombination srh {}
+
+    mobility
+    {
+      type = field_dependent
+      low_field_model = doping_dependent
+    }
+   }
+
+   Contact gate
+   {
+    type = schottky
+    barrier_height = 3.0
+
+    voltage = $Vg
+
+    # assume a gate width of 1 mm = 0.1 cm
+    area_factor = 0.1
+   }
+
+   Contact source
+   {
+    voltage = 0.0
+    area_factor = 0.1
+   }
+
+   Contact backcontact
+   {
+    voltage = 0.0
+    area_factor = 0.1
+   }
+
+   Contact drain
+   {
+    voltage = $Vd
+    area_factor = 0.1
+   }
+  }
+             
+
+Note  that the names of  the   ``Contact`` boundary  regions,  are the  names of the  *Physical Line* objects created in :ref:`GMSH_Ex2`. ::
+
+
+
+
+
+Example of Input file: 2D HEMT
+^^^^^^^^^^^^
+
 
 Here is an example of the input file template::
 

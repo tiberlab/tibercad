@@ -12,8 +12,8 @@ Tools for Simulation
 Variables
 ---------
 
-In  tiberCAD,  parameters defined in a module (voltage bias, temperature, material parameters) may be associated to a user-defined *variable*, in  such  a  way  that they their numerical value  can  be  controlled during the  simulation.
-The  assignement to  a  variable is done  in  this  way ::
+In  tiberCAD,  the parameters defined in a module (e.g. voltage bias, temperature, material parameters) may be associated to a user-defined *variable*, in  such  a  way  that they their numerical value  can  be  controlled during the  simulation.
+The  assignement to  a  *variable* is done  in  this  way ::
 
   parameter = $my_var[0.0]
  
@@ -71,7 +71,7 @@ Options and  parameters:
     initial relative step size, default is 1
 
 The relative step sizes refer to each single sweep step.  If  ``max_relative_step`` is less than one, each sweep step will be subdivided in smaller steps. If a simulation fails, the step gets reduced by half until the simulation succeeds, or until the minimum relative or absolute step size is reached. In the latter case, the sweep is assumed to have failed.
-As for any module, a name can be given to a *sweep* block. This is important when several sweeps are defined, and in particular when nested sweep (solve option of one sweep refers to another sweep) are used.
+As for any module, a name can be given to a *sweep* block. This is important when several sweeps are defined, and in particular when nested sweeps (a solve option of one sweep refers to another sweep) are used.
 
 Example::
 
@@ -95,7 +95,7 @@ In  this example, at  each  step of the  sweep the two simulations ``dd`` and  `
 Selfconsistent
 ----------------------
 
-This tool may  be  used to solve  models in an iterative way to obtain a selfconsistent solution, optionally using a relaxation approach.
+This tool may  be  used to solve  models in an iterative way to obtain a *selfconsistent* solution, optionally using a relaxation approach.
 
 Options and parameters:
 
@@ -103,7 +103,7 @@ Options and parameters:
     optional name of  the ``selfconsistent``  block
 
  ``max_iterations`` : integer
-    the maximum number of iterations. When the maximum number of iterations is reached, the program only issues a warning and proceeds.
+    the maximum number of iterations. When the maximum number of iterations is reached, the program issues a warning, exits from the  self-consistent loop and proceeds to  the  next operation.
 
  ``relative_tolerance`` : double 
     the relative convergence tolerance for the observed variable in terms of the l2-norm
@@ -117,7 +117,7 @@ Options and parameters:
  ``solve`` :  (list of)  string(s)
    the simulations to be solved
 
-Currently, the observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in  ``solve``.
+The observed variable on which convergence control and relaxation is done is the system variable of the last simulation specified in  ``solve``.
 
 
 Example::
@@ -132,7 +132,7 @@ Example::
      relative_tolerance = 1e-5
    }
 
-In this  example, the ``selfconsistent`` solution named ``sc_all`` is  defined,  which solves quantum_el,quantum_hl and dd modules in this  order. 
+In this  example, the ``selfconsistent`` solution named ``sc_all`` is  defined,  which solves the  simulation defined in the relevant  modules as quantum_el,quantum_hl and dd,  in this  order. 
 
 
 
