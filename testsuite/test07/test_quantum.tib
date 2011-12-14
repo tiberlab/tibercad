@@ -169,7 +169,7 @@ Module efaschroedinger
   particle = el
   
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = str
 
 
   quadrature_rule = trapez
@@ -196,7 +196,7 @@ Module efaschroedinger
 
   particle = hl
   poisson_model_name = dd
-  strain_model_name = macrostrain
+  strain_model_name = str
   
   Solver
   {
