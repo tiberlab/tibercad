@@ -170,9 +170,9 @@ Elasticity::do_solve(void)
   // }
 
 
-  double max_error = 2.0;
+  int max_iterations = 0;
   if (myopt.non_linear_strain == true)
-     max_error = myopt.shape_error;
+     max_iterations = myopt.shape_iterations;
 
 
   do {
@@ -204,7 +204,7 @@ Elasticity::do_solve(void)
 
  // } while (error_u > max_error);
 
-  } while ((error_u > max_error) && ( shape_iteration <= myopt.shape_iterations));
+  } while ((error_u > myopt.shape_error) && (shape_iteration < max_iterations));
 
   //double elastic_energy = abs(compute_elastic_energy());
   //if ((SimulationOptions::verbose() > 2) && myopt.shape_iterations > 1)

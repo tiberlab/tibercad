@@ -74,9 +74,9 @@ LatticeMismatch::do_init(void)
   //double loc_lat_const[3];
   //crystal_el->get_lat_const(loc_lat_const);
 
-  //Rotation
-  Tensor2Gen RotMatrix = crystal_el->RotMatrix;
-  _eps0 = sym(RotMatrix * ( _eps0 * (RotMatrix.transpose())));
+  //Rotation NO: eps0 is already in calculation system
+  //Tensor2Gen RotMatrix = crystal_el->RotMatrix;
+  //_eps0 = sym(RotMatrix * ( _eps0 * (RotMatrix.transpose())));
 
 
   RealTensor eps0(0);
