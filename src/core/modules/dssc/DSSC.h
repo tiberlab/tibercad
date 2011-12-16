@@ -62,7 +62,7 @@ class DSSC : public SimulationInterface
       IDensity,         /*!< iodide density */
       I3Density,         /*!< triiodide density */
       CDensity,         /*!< cation density */
-      //eMobility,        /*!< electron mobility */
+      eMobility,        /*!< electron mobility */
       //eConductivity,    /*!< electron conductivity */
       ElField,          /*!< electric field vector */
       CurrentDensity,   /*!< total electric current density */

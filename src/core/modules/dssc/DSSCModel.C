@@ -25,7 +25,7 @@ DSSCModel::DSSCModel(const ModelOptions& options)
     _iodide("iodide"),
     _triiodide("triiodide"),
     _cation("cation"),
-    _ke(1e4),
+    _ke(1e3),
     _beta(1.0),
     _k3(1e8),
     _generation(0.0),
@@ -38,7 +38,8 @@ DSSCModel::DSSCModel(const ModelOptions& options)
     _perm_ox(85.0),
     _perm_elec(117.0),
     _elem(NULL),
-    _trap_DOS(1e17),
+    _CB_DOS(3.35e20),
+    _trap_DOS(3.35e20),
     _exp_trap(1.0)
 {
 }
@@ -109,6 +110,8 @@ DSSCModel::do_init(void)
   
   get_parameter("trap_exp", _exp_trap);
   get_parameter("trap_DOS", _trap_DOS);
+  if (_exp_trap == 1.0)
+    _trap_DOS = _CB_DOS;
 
   get_parameter("mu_e", _mobility.n);
   get_parameter("D_I", _mobility.I);
@@ -300,31 +303,9 @@ DSSCModel::calculate_net_recombination_rate(void)
 */
 
 
-/*
-  double sqrt_I3_I = sqrt(_pd.density_I3 / _pd.density_I);
-  double n_I_p3 = _eq_conc.I *_eq_conc.I * _eq_conc.I;
-  double sqrt_I3_I_eq = sqrt(_eq_conc.I3 / n_I_p3);
-  // rate
-  double r = pow(_pd.density_n,_beta) * sqrt_I3_I;
-  double g = pow(_eq_conc.n,_beta) * _pd.density_I * sqrt_I3_I_eq;
-  _pd.recombination_rate = _ke * (r - g);
-
-  // derivative
-  _pd.recombination_rate_derivatives = vector<double>(4, 0.0);
-  _pd.recombination_rate_derivatives[0] = _ke * sqrt_I3_I * _beta * pow(_pd.density_n,_beta-1);
-  _pd.recombination_rate_derivatives[1] = -_ke * (0.5 * r / _pd.density_I +
-     pow(_eq_conc.n,_beta) * sqrt_I3_I_eq);
-  _pd.recombination_rate_derivatives[2] = _ke * 0.5 * r / _pd.density_I3;
-*/
-
-
+// Old version Ferber
+/* 
   double n0 = _eq_conc.n;
-
-//  if (n0 <= _generation/_k3)
-//  {
-//     n0 = _generation/_k3;
-//  }
-
   if (n0 <= 1e-3)
   {
     n0 = 100;
@@ -350,8 +331,8 @@ DSSCModel::calculate_net_recombination_rate(void)
   _pd.recombination_rate_derivatives[1] = -_ke * (0.5 * r / _pd.density_I +
      dens_dark_beta * sqrt_I3_I_eq);
   _pd.recombination_rate_derivatives[2] = _ke * 0.5 * r / _pd.density_I3;
-
-/*
+*/
+/* Only electrons
  double r = pow(_pd.density_n/n0, _beta) * n0;
  double g = _eq_conc.n; 
  _pd.recombination_rate = _ke * (r - g);
@@ -361,6 +342,40 @@ DSSCModel::calculate_net_recombination_rate(void)
  _pd.recombination_rate_derivatives[1] = 0.0;
  _pd.recombination_rate_derivatives[2] = 0.0;
 */
+
+// R = ke * ( (ne/ne_dark)^beta * ne_dark * n_I3/n_I - ne_dark * sqrt ( (n_I3 * n_I * n_I3_dark) / (n_I_dark)^3 )
+
+
+  double n0 = _eq_conc.n;
+  if (n0 <= 1e-3)
+  {
+    n0 = 100;
+  }
+  
+  double dens_norm = _pd.density_n/n0;
+
+  double dens_beta = pow(_pd.density_n, _beta) * pow(n0, 1.0 - _beta);
+  double dens_dark_beta = n0;
+  double dens_beta_der = _beta * pow(_pd.density_n, _beta - 1) * pow(n0,1-_beta);
+
+  double n_I_p3 = _eq_conc.I *_eq_conc.I * _eq_conc.I;
+  double gamma1 = _pd.density_I3 / _pd.density_I;
+  double gamma2 = sqrt( ( _pd.density_I3 * _pd.density_I * _eq_conc.I3) / n_I_p3 );
+  
+  double k_tib = _ke * pow(_trap_DOS / n0, 1 - _beta) * pow(_trap_DOS / _CB_DOS, _beta); 
+  
+  // rate
+  double r = dens_beta * gamma1;
+  double g = dens_dark_beta * gamma2;
+  _pd.recombination_rate = k_tib * (r - g);
+  // derivative
+  _pd.recombination_rate_derivatives = vector<double>(4, 0.0);
+  _pd.recombination_rate_derivatives[0] = k_tib * dens_beta_der * gamma1;
+  _pd.recombination_rate_derivatives[1] = -k_tib * (dens_beta * gamma1 / _pd.density_I +
+     dens_dark_beta * 0.5 * (1 / gamma2) * ( ( _pd.density_I3 * _eq_conc.I3 ) / ( n_I_p3 ) ) );   
+  _pd.recombination_rate_derivatives[2] = k_tib * ( r / _pd.density_I3 -
+      0.5 * (1 / gamma2) * dens_dark_beta * ( ( _pd.density_I * _eq_conc.I3 ) / n_I_p3 ) );
+    
 }
 
 

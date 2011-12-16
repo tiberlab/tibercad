@@ -5,6 +5,13 @@
 
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
+#include "vector_value.h"
+#include "SimulationInterface.h"
+#include "point.h"
+
+// forward declarations
+class Elem;
+
 
 
 //! Implementation of optical generation
@@ -47,7 +54,13 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
   private:
 
     //! Generation rate parameter
-    double G_;
+    double _generation;
+
+    //! The generation model
+    std::vector<SimulationInterface*> _generation_model;
+
+    //! The solution ID of the generation models variable
+    std::vector<ID> _gen_id;
 
 };
 
@@ -60,7 +73,7 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
 inline
 OpticalGeneration::OpticalGeneration(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    G_(0.0)
+    _generation(0.0)
 {
 }
 

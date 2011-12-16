@@ -2691,7 +2691,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     residual->set(dof_cat, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
     residual->set(dof_iodine, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
     residual->close();
-    //residual->print_matlab("F.m");
+   //residual->print_matlab("F.m");
   }
 
 
@@ -2737,6 +2737,11 @@ DSSC::do_setup_solution_variables(void)
      add_plot_variable("CCurrentDensity");
   }  
 
+  if (plot_solution("Mobility"))
+  {
+     add_plot_variable("eMobility");
+  }
+
 
   // the contact currents/voltages
    
@@ -2769,6 +2774,8 @@ DSSC::do_setup_solution_variables(void)
 
   declare_solution(Generation, REAL, NODES, "1/(s*cm^3)");
   declare_solution(NetRecombination, REAL, NODES, "1/(s*cm^3)");
+  
+  declare_solution(eMobility, REAL, NODES, "cm^2/(V*s)");
 
     //bool plot_rec = plot_solution(NetRecombination);
 /*
@@ -2993,6 +3000,7 @@ DSSC::get_solution_secure(const Elem* elem,
     grad_eI3_loc *= phi0;
     grad_eC_loc *= phi0;
 
+    //double kT = sc->get_lattice_temperature();
 
     sc->set_coordinates(real_pts[n]);
 
@@ -3019,6 +3027,7 @@ DSSC::get_solution_secure(const Elem* elem,
     double sigma_I = Constants::e * Idens * sc->get_mobility_I();
     double sigma_I3 = Constants::e * I3dens * sc->get_mobility_I3();
     double sigma_C = Constants::e * Cdens * sc->get_mobility_C();
+
 
     RealGradient dfn = grad_en_loc;
     RealGradient dfI = grad_eI_loc;
@@ -3127,6 +3136,8 @@ DSSC::get_solution_secure(const Elem* elem,
     if (values.count(Generation))
       values[Generation][n] = sc->get_generation_rate();
 
+    if (values.count(eMobility))
+      values[eMobility][n] = sc->get_dens_elec_mobility();
   }
 
 

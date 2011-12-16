@@ -274,6 +274,10 @@ class DSSCModel : public PhysicalModel
       get_net_recombination_rate_derivatives(void) const;
 
 
+    //! Compute the electron density mobility for electrons
+    double get_dens_elec_mobility(void) const;
+
+
     //! Get electron trapped density
     double get_ionized_electron_traps(void) const; 
 
@@ -513,6 +517,10 @@ class DSSCModel : public PhysicalModel
 
     //! trap exponent
     double _exp_trap;
+
+
+    //! CB density
+    double _CB_DOS;
 
 
     //! The generation rate
@@ -758,7 +766,7 @@ inline
 double
 DSSCModel::get_charge_density(void) const
 {
- return _pd.density_C - get_density_n_exp_DOS() + _trap_DOS * pow(_eq_conc.n/_trap_DOS,_exp_trap) +
+ return _pd.density_C - get_density_n_exp_DOS() + _trap_DOS * pow(_eq_conc.n/_CB_DOS,_exp_trap) +
     _pd.ionized_dye - _pd.density_I - _pd.density_I3 + _pd.ionized_electron_traps;
       
 // return _pd.density_C - _pd.density_n + _eq_conc.n +
@@ -866,7 +874,7 @@ inline
 double
 DSSCModel::get_density_n_exp_DOS(void) const
 {
-  return _trap_DOS * pow(_pd.density_n/_trap_DOS, _exp_trap);
+  return _trap_DOS * pow(_pd.density_n/_CB_DOS, _exp_trap);
 }
 
 
@@ -882,7 +890,17 @@ inline
 double
 DSSCModel::get_density_derivative_n_exp_DOS(void) const
 {
-  return pow(_trap_DOS, 1 - _exp_trap) * _exp_trap * pow(get_density_n(), _exp_trap) / _pd.kT;
+  return _exp_trap * pow(get_density_n(), _exp_trap) * pow( 1/_CB_DOS, _exp_trap) * _trap_DOS / _pd.kT;  
+    
+//  pow(_trap_DOS, 1 - _exp_trap) * _exp_trap * pow(get_density_n(), _exp_trap) / _pd.kT;
+}
+
+
+inline
+double
+DSSCModel::get_dens_elec_mobility(void) const
+{
+  return  ( _mobility.n / _exp_trap ) * pow(_CB_DOS / _trap_DOS, _exp_trap) * pow(get_density_n() / _trap_DOS, 1 - _exp_trap); 
 }
 
 
