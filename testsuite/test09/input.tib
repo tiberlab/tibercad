@@ -1,20 +1,22 @@
-Device{
-meshfile = mesh.msh
-mesh_units = 1e-9
-material = AlGaN
-x = 0.2 
-Region Well {material = GaN}
-Region Bulk {}
+Device
+{
+  meshfile = mesh.msh
+  mesh_units = 1e-9
+  material = AlGaN
+  x = 0.2 
+  Region Well {material = GaN}
+  Region Bulk {}
 }
 
-Module elasticity {
+Module elasticity 
+{
 
-plot = (Strain,Stress,Displacement) 
+  plot = (Strain,Stress,Displacement) 
 
-#non_linear_strain = true
-#shape_error = 0.1
+  #non_linear_strain = true
+  #shape_error = 0.1
 
-Physics {
+  Physics {
 
     body_force lattice_mismatch
     {
@@ -25,12 +27,17 @@ Physics {
       x = 0.2
     }
 
+  }
+
+  Contact Base {type = clamp}
 }
 
-   Contact Base {type = clamp}
-}
+Simulation
 
-Simulation{solve = elasticity}
+{
+  solve = elasticity
+  resultpath = output
+}
 
 
 
