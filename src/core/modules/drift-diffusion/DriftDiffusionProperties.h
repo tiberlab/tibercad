@@ -625,7 +625,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get all conduction bands
     void get_conduction_bands(std::vector<double>& bands)
-      { return _conduction_band->get_bands(bands); };
+      { _conduction_band->get_bands(bands); };
 
 
     //! Get the highest valence band edge
@@ -634,7 +634,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get all valence bands
     void get_valence_bands(std::vector<double>& bands)
-      { return _valence_band->get_bands(bands); };
+      { _valence_band->get_bands(bands); };
 
 
     //! Get the band gap
