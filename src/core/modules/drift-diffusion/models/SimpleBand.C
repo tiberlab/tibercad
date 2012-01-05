@@ -185,4 +185,7 @@ SimpleBand::do_calculate(void)
 
     band_edge() += gap;
   }
+
+  band_edges().resize(1);
+  band_edges()[0] = band_edge();
 }

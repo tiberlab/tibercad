@@ -32,7 +32,7 @@ class BandProperties : public DriftDiffusionModelInterface
     double get_band_edge(void) const { return _band_edge; }
 
     //! Get all band energies
-    void get_bands(std::vector<double>& bands) const {};
+    void get_bands(std::vector<double>& bands) const { bands = _band_edges; }
 
     //! Get the effective mass
     double get_effective_mass(void) const { return _effective_mass; }
@@ -85,6 +85,10 @@ class BandProperties : public DriftDiffusionModelInterface
     double& band_edge(void) { return _band_edge; }
 
 
+    //! Get all band edges
+    std::vector<double>& band_edges(void) { return _band_edges; }
+
+
     //! Get effective mass
     double& effective_mass(void) { return _effective_mass; }
 
@@ -100,6 +104,9 @@ class BandProperties : public DriftDiffusionModelInterface
 
     //! The band edge
     double _band_edge;
+
+    //! All different bands
+    std::vector<double> _band_edges;
 
     //! The effective mass for the DOS
     /*!

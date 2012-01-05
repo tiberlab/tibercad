@@ -68,8 +68,13 @@ KPBand::do_calculate(void)
     // get minimum
     int id = 0;
 
+    band_edges().resize(cbs.size());
+    band_edges()[0] = cbs[0].energy;
+
     for (unsigned int i = 1; i < cbs.size(); i++)
     {
+      band_edges()[i] = cbs[i].energy;
+
       if (cbs[i].energy < cbs[id].energy)
         id = i;
     }
@@ -89,11 +94,16 @@ KPBand::do_calculate(void)
     // get maximum
     int id = 0;
 
+    band_edges().resize(vbs.size());
+    band_edges()[0] = vbs[0].energy;
+
     //double kT = SimulationOptions::T * Constants::k_B;
     double kT = dd.get_lattice_temperature();
     double delta_max = 4.0 * kT;
     for (unsigned int i = 1; i < vbs.size(); i++)
     {
+      band_edges()[i] = vbs[i].energy;
+
       if (vbs[i].energy > vbs[id].energy)
         id = i;
     }
