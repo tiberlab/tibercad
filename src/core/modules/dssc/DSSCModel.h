@@ -405,6 +405,10 @@ class DSSCModel : public PhysicalModel
      */
     virtual void prepare_element_data(void) {};
 
+    
+    // Initialize submodels
+    void prepare_submodels(void); 
+
 
     //! \copydoc PhysicalModel::create_new()
     virtual PhysicalModelInterface* create_new(void) const;
@@ -473,7 +477,7 @@ class DSSCModel : public PhysicalModel
     //std::vector<double> _nodal_lattice_vt;
  
     //! The electron traps
-    std::set<Trap*> _etraps;
+    std::vector<Trap*> _etraps;
 
     //! The electrons
     ParticleDensity _electrons;

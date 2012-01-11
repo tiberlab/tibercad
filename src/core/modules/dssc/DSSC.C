@@ -2723,6 +2723,7 @@ DSSC::do_setup_solution_variables(void)
      add_plot_variable("IDensity");
      add_plot_variable("I3Density");
      add_plot_variable("CDensity");
+     add_plot_variable("Traps");
      add_plot_variable("NetRecombination");
      add_plot_variable("Generation");
   }
@@ -2759,6 +2760,7 @@ DSSC::do_setup_solution_variables(void)
   declare_solution(IDensity, REAL, NODES, "cm^-3");
   declare_solution(I3Density, REAL, NODES, "cm^-3");
   declare_solution(CDensity, REAL, NODES, "cm^-3");
+  declare_solution(Traps, REAL, NODES, "cm^-3");
 
   //declare_solution(eMobility, REAL, NODES, "cm^2/(V*s)");
 
@@ -3091,6 +3093,8 @@ DSSC::get_solution_secure(const Elem* elem,
     if (values.count(CDensity))
       values[CDensity][n] = Cdens;
     
+    if (values.count(Traps))
+      values[Traps][n] = - sc->get_ionized_electron_traps();
     
     //if (values.count(eMobility))
     //  values[eMobility][n] = sc->get_electron_mobility();

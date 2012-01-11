@@ -138,16 +138,24 @@ DSSCModel::do_init(void)
   _mobility.I = _mobility.I / kT;
   _mobility.I3 = _mobility.I3 / kT;
   _mobility.C = _mobility.C / kT;
-   
+
+}
+
+
+
+
+void
+DSSCModel::prepare_submodels(void)
+{
+  create_submodels(_etraps, "trap");
+
   SubmodelIterator it = submodels_begin("trap");
   SubmodelIterator end = submodels_end("trap");
   for ( ; it != end; ++it)
   {
     Trap* t = static_cast<Trap*>(it->second);
 
-    if (t->get_particle() == 'e')
-      _etraps.insert(t);
-    else if (t->get_particle() == 'h')
+    if (t->get_particle() == 'h')
     {
       Messages::error("No hole traps implemented for DSC module.");
     //  _htraps.insert(t);
@@ -155,7 +163,6 @@ DSSCModel::do_init(void)
   }
 
 }
-
 
 
 void
@@ -394,13 +401,13 @@ DSSCModel::calculate_traps(void)
   {
     double nt = 0, dnt = 0;
     double kT = Constants::k_B * SimulationOptions::T;
-    set<Trap*>::iterator it(_etraps.begin());
-    const set<Trap*>::iterator end(_etraps.end());
-    for ( ; it != end; ++it)
+//    set<Trap*>::iterator it(_etraps.begin());
+//    const set<Trap*>::iterator end(_etraps.end());
+    for ( int i = 0; i < _etraps.size(); ++i)
     {
-      (*it)->set_energies(Ec, Ev, -_pd.fermi_n, kT);
-      nt += (*it)->get_ionized_density();
-      dnt += (*it)->get_ionized_density_derivative();
+      _etraps[i]->set_energies(Ec, Ev, -_pd.fermi_n, kT);
+      nt += _etraps[i]->get_ionized_density();
+      dnt += _etraps[i]->get_ionized_density_derivative();
     }
 
     _pd.ionized_electron_traps = nt;
