@@ -8,6 +8,7 @@ structure = wz
 a = 0.3112
 c = 0.4982
 
+thermal_coefficient = (4.15e-6, 5.27e-6)
 
 [valenceband]
 #E_v = -3.44;

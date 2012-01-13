@@ -136,13 +136,14 @@ Elasticity::do_setup_solution_variables(void)
   declare_solution(Strain, TENSOR, NODES, "");
   declare_solution(StrainCell, TENSOR, CELL, "");
   declare_solution(StrainCrystal, TENSOR, NODES, "");
-  declare_solution(Energy, REAL, NODES, "Joule");
+  //declare_solution(Energy, REAL, NODES, "Joule");
   declare_solution(Stress, TENSOR, NODES, "GPa");
   declare_solution(StressCrystal, TENSOR, NODES, "");
   declare_solution(Displacement, VECTOR, NODES, "m");
   declare_solution(StrainSource, TENSOR, NODES, "");
   declare_solution(StressSource, TENSOR, NODES, "GPa");
   declare_solution(ForceSource, TENSOR, NODES, "N/m3 ");
+  declare_solution(EnergyDensity, REAL, NODES, "J/m^3");
 
 }
 
@@ -427,12 +428,21 @@ Elasticity::get_solution_secure(const Elem* elem,
        values[StrainSource][6*n+5] = strain_source(2,0); 
      }
 
-     if (values.count(Energy))
+     if (values.count(EnergyDensity))
      {
-       for (ID i = 0; i<dim; i++)
-	 for (ID j = 0; j<dim; j++)
-	   values[Energy][n] += 0.5 * (total_stress(i,j)) * (total_strain(i,j));
+       double energy = 0;
+       for (ID i = 0; i < 3; i++)
+         for (ID j = 0; j < 3; j++)
+           energy += total_stress(i,j) * total_strain(i,j);
+       values[EnergyDensity][n] = 0.5e9 * energy;
      }
+
+     //if (values.count(Energy))
+     //{
+     //  for (ID i = 0; i<dim; i++)
+     //    for (ID j = 0; j<dim; j++)
+     //      values[Energy][n] += 0.5 * (total_stress(i,j)) * (total_strain(i,j));
+     //}
 
    }
 

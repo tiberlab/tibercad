@@ -6,6 +6,8 @@ structure = wz
 a = 0.3189
 c = 0.5185
 
+thermal_coefficient = (3.17e-6, 5.59e-6)
+
 
 [valenceband]
 #E_v = -2.64
@@ -125,7 +127,7 @@ aA     = (0.31, 0.31)
 [mobility/field_dependent]
 Vsat_Formula = 2
 beta0    = (1.7, 	1.7)
-A_vsat   = (1.9e+07, 	1.5000e+07)
+A_vsat   = (1.5e+07, 	1.5000e+07)
 B_vsat   = (0,		0)
 vsat_min = (1.000e+07, 	1.000e+07)
 betaexp  = (0,		0)
