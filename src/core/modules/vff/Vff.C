@@ -1,9 +1,11 @@
 #include "Vff.h"
+#include "VffModel.h"
 #include "Messages.h"
 #include "AtomisticStructure.h"
 #include "Specie.h"
 #include <math.h>
 #include "OptGpl.h"
+#include "Atom.h"
 
 TIBER_MODULE(Vff, MODULE_NAME)
 
@@ -34,6 +36,14 @@ Vff*
 Vff::create(const ModelOptions& options)
 {
   return new Vff(options);
+}
+
+PhysicalModel*
+Vff::create_bulk_model(const ModelOptions& options,
+    const Material* mat) const
+{
+
+  return VffModel::create(mat, options);
 }
 
 void
@@ -263,77 +273,141 @@ Vff::resize_parameters(void)
 void
 Vff::build_parameters(void)
 {
-  //Dummy hardcoded for debug purpose
   int n_atoms = get_atomistic_structure()->get_N_without_H();
-  unsigned int n_max_neighbors = 4;
-  double alpha = 80.0; 
-  double d = 2.4479;
-  double beta = 20.0; 
-  double teta = -0.3333;
   const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  VffModel* pm_a = NULL;
+  VffModel* pm_b = NULL;
+
 
   for (unsigned int i = 0; i < n_atoms; i++)
-    {
+  {
+      const Atom& atm_i = get_atomistic_structure()->get_structure_atom(i);
       unsigned int n_bonds = bondmap[i].size();
       for (unsigned int counter_j = 0; counter_j < n_bonds; counter_j++)
         {
-
           unsigned int j = bondmap[i][counter_j];
           //You don't want informations for passivation bonds
           if (get_atomistic_structure()->get_specie(j) != Specie::H)
             {
+              const Atom& atm_j = get_atomistic_structure()->get_structure_atom(j);
 
-          //Alpha, d for InAs
-          if ((get_atomistic_structure()->get_specie(i) == Specie::In) || (get_atomistic_structure()->get_specie(j) == Specie::In))
-              {
-              //_alpha[i][counter_j] = 83.5582;
-              _alpha[i][counter_j] = 331.99;
-              _d[i][counter_j] = 2.6233;
-
+              //Here I check who's the anion. This check is not really elegant, maybe the
+              //PhysicalModel should do that. For checking here, I just cycle on the materials
+              //supported by TiberCAD
+              if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
+                  || (atm_i.get_specie() == Specie::Al))
+                {
+                  pm_a = dynamic_cast<VffModel*>(get_physical_model(atm_i.get_region_ID()));
+                }
+              else
+                {
+                  pm_a = dynamic_cast<VffModel*>(get_physical_model(atm_j.get_region_ID()));
+                }
+              _alpha[i][counter_j] = pm_a->get_alpha();
+              _d[i][counter_j] = pm_a->get_d();
 
               for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
                 {
-                  unsigned int k = bondmap[i][counter_k];
-                  if (get_atomistic_structure()->get_specie(k) != Specie::H)
-                    {
-                  _teta[i][counter_j][counter_k] = teta;
-                  if (get_atomistic_structure()->get_specie(k) == Specie::Ga)
-                    //_beta[i][counter_j][counter_k] =  sqrt(26.7576 * 14.4855)      ;
-                    _beta[i][counter_j][counter_k] =  sqrt(57.554 * 92.571)      ;
-                  else
-                    //_beta[i][counter_j][counter_k] = 14.4855;
-                    _beta[i][counter_j][counter_k] = 57.554;
-                    }
-                }
-              }
-          if ((get_atomistic_structure()->get_specie(i) == Specie::Ga) || (get_atomistic_structure()->get_specie(j) == Specie::Ga))
-              {
-              //_alpha[i][counter_j] = 119.2451;
-              _alpha[i][counter_j] = 412.54;
-              _d[i][counter_j] = 2.4479;
-
-
-              for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
-                {
-                  unsigned int k = bondmap[i][counter_k];
-                  if (get_atomistic_structure()->get_specie(k) != Specie::H)
-                                     {
-                  _teta[i][counter_j][counter_k] = teta;
-                  if (get_atomistic_structure()->get_specie(k) == Specie::In)
-                    //_beta[i][counter_j][counter_k] = sqrt(26.7576 * 14.4855)       ;
-                    _beta[i][counter_j][counter_k] =  sqrt(57.554 * 92.571)      ;
-                  else
-                    //_beta[i][counter_j][counter_k] = 26.7576;
-                    _beta[i][counter_j][counter_k] = 92.571;
-                                     }
+                 unsigned int k = bondmap[i][counter_k];
+                 const Atom& atm_k = get_atomistic_structure()->get_structure_atom(k);
+                 if (get_atomistic_structure()->get_specie(k) != Specie::H)
+                  {
+                     if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
+                         || (atm_i.get_specie() == Specie::Al))
+                       {
+                         pm_a = dynamic_cast<VffModel*>(get_physical_model(atm_i.get_region_ID()));
+                         pm_b = dynamic_cast<VffModel*>(get_physical_model(atm_i.get_region_ID()));
+                       }
+                     else
+                       {
+                         pm_a = dynamic_cast<VffModel*>(get_physical_model(atm_j.get_region_ID()));
+                         pm_b = dynamic_cast<VffModel*>(get_physical_model(atm_k.get_region_ID()));
+                       }
+                       _teta[i][counter_j][counter_k] = pm_a->get_teta();
+                       _beta[i][counter_j][counter_k] = sqrt(pm_a->get_beta() * pm_b->get_beta());
+                  }
 
                 }
-              }
-        }
-        }
-    }
 
+            }
+        }
+  }
 }
+
+//void
+//Vff::build_parameters(void)
+//{
+//  //Dummy hardcoded for debug purpose
+//  int n_atoms = get_atomistic_structure()->get_N_without_H();
+//  unsigned int n_max_neighbors = 4;
+//  double alpha = 80.0;
+//  double d = 2.4479;
+//  double beta = 20.0;
+//  double teta = -0.3333;
+//  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+//
+//  for (unsigned int i = 0; i < n_atoms; i++)
+//    {
+//      unsigned int n_bonds = bondmap[i].size();
+//      for (unsigned int counter_j = 0; counter_j < n_bonds; counter_j++)
+//        {
+//
+//          unsigned int j = bondmap[i][counter_j];
+//          //You don't want informations for passivation bonds
+//          if (get_atomistic_structure()->get_specie(j) != Specie::H)
+//            {
+//
+//          //Alpha, d for InAs
+//          if ((get_atomistic_structure()->get_specie(i) == Specie::In) || (get_atomistic_structure()->get_specie(j) == Specie::In))
+//              {
+//              //_alpha[i][counter_j] = 83.5582;
+//              _alpha[i][counter_j] = 33.199;
+//              _d[i][counter_j] = 2.6233;
+//
+//
+//              for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
+//                {
+//                  unsigned int k = bondmap[i][counter_k];
+//                  if (get_atomistic_structure()->get_specie(k) != Specie::H)
+//                    {
+//                  _teta[i][counter_j][counter_k] = teta;
+//                  if (get_atomistic_structure()->get_specie(k) == Specie::Ga)
+//                    //_beta[i][counter_j][counter_k] =  sqrt(26.7576 * 14.4855)      ;
+//                    _beta[i][counter_j][counter_k] =  sqrt(5.7554 * 9.2571)      ;
+//                  else
+//                    //_beta[i][counter_j][counter_k] = 14.4855;
+//                    _beta[i][counter_j][counter_k] = 5.7554;
+//                    }
+//                }
+//              }
+//          if ((get_atomistic_structure()->get_specie(i) == Specie::Ga) || (get_atomistic_structure()->get_specie(j) == Specie::Ga))
+//              {
+//              //_alpha[i][counter_j] = 119.2451;
+//              _alpha[i][counter_j] = 41.254;
+//              _d[i][counter_j] = 2.4479;
+//
+//
+//              for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
+//                {
+//                  unsigned int k = bondmap[i][counter_k];
+//                  if (get_atomistic_structure()->get_specie(k) != Specie::H)
+//                                     {
+//                  _teta[i][counter_j][counter_k] = teta;
+//                  if (get_atomistic_structure()->get_specie(k) == Specie::In)
+//                    //_beta[i][counter_j][counter_k] = sqrt(26.7576 * 14.4855)       ;
+//                    _beta[i][counter_j][counter_k] =  sqrt(5.7554 * 9.2571)      ;
+//                  else
+//                    //_beta[i][counter_j][counter_k] = 26.7576;
+//                    _beta[i][counter_j][counter_k] = 9.2571;
+//                                     }
+//
+//                }
+//              }
+//        }
+//        }
+//    }
+//
+//}
 
 double
 Vff::keating_potential(void)

@@ -31,6 +31,11 @@ public:
 
   double keating_pot_grad(double* grad, double* x, int n);
 
+  //! Calculate Keating potential
+  /*!
+   * Keating potential is calculated. Resulting potential is in 10^-20 J (N/m * A^2).
+   * Potential in eV can be obtained multiplying by 10/1.602
+   */
   double keating_potential(double* x, int n);
 
   int get_n_dof(void) const;
@@ -60,8 +65,8 @@ protected:
 
 
   //! We need to create a physical model
-//  virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-//      const Material* mat) const{};
+  virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
+      const Material* mat) const;
 
   //! We need to create boundary condition model
 //  virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
