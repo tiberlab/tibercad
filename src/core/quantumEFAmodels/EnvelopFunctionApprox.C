@@ -2252,6 +2252,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
       found = true;
       mat_elem = elem;
       _bulk_mat_element = mat_elem;
+      break;
     }
 
   }

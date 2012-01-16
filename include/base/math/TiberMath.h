@@ -37,6 +37,8 @@ namespace TiberMath
   //! The fermi integral of order -1/2
   inline double fermidirac_mhalf(double x);
 
+  //! Calculate SVD of a matrix
+  //void svd(DenseMatrix<double>& matrix, DenseVector<double>& sigma)
 }
 
 

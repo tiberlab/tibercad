@@ -250,11 +250,11 @@ Example::
 
 .. note::
           
-        When a lattice mismatch force is included in the calculation, the displacement will be computed with respect the reference lattice.
+        When a lattice mismatch force is included in the calculation, the displacement will be computed with respect to the reference lattice.
 
 
-Converse  piezo
-.................
+Converse  piezoelectric effect
+..............................
 
 
 In presence of an electric field there might develop an additional stress source due to the so-called converse piezoelectric effect, given by :
@@ -284,12 +284,44 @@ Example::
 
    body_force  converse_piezo  
     {
-     DD_simulation = dd
+     poisson_simulation = dd
     }
 
 
-where  ``DD_simulation``  indicates the relevant electrostatic simulation.
+where  ``poisson_simulation``  indicates the simulation providing the electric field strength.
 
+
+Thermal stress
+...............
+
+Mechanical stress can be induced by thermal expansion in two ways:
+
+ 1. different materials with different expansion coefficients touching each other
+ 2. a temperature gradient induces different expansion in different spatial points
+
+Thermal stress is included as a strain source of the form
+
+.. math::
+   :label:thermal_stress
+
+    \epsilon_{ij} = \alpha_{ij}(T - T_0)
+
+where :math:`\alpha_{ij}` is the thermal expansion coefficient tensor, and :math:`T_0` is a reference temperature.
+:math:`T` is the local lattice temperature, which is or the simulation temperature or the temperature obtained from a different simulation module.
+
+
+Thermal stress can be considered in the simulation using the ``body_force`` model ``thermal_stress``::
+
+  body_force thermal_stress
+  {
+    thermal_coefficient = 
+    thermal_simulation = 
+    reference_temperature =
+  }
+
+``thermal_coefficient`` can be used to override the material database value for the thermal expansion coefficient (which may be anisotropic, but diagonal).
+``thermal_simulation`` (optional) is the name of a thermal simulation providing the lattice temperature.
+``reference_temperature`` is the reference temperature :math:`T_0`. Its default value is equal to the simulation temperature.
 
 
 Stiffness
@@ -430,6 +462,7 @@ Example::
      \texttt{ForceSource} & force   & N/m3  \\
      \texttt{StrainSource} & strain source  & -  \\
      \texttt{StressSource} & stress source   & GPa \\
+     \texttt{EnergyDensity} & elastic energy density   & J/m$^3$ \\
      \end{tabular}
      \caption{Solution/Plot variables}
      \label{table:el_solutions}
