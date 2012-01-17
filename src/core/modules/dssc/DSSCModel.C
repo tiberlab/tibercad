@@ -429,8 +429,7 @@ DSSCModel::calculate_equilibrium_traps(void)
   double Ec = 0.93;
   double Ev = (0.93 - 3.2);
 
-  _pd.ionized_electron_traps = 0.0;
-  _pd.ionized_electron_traps_derivative = 0.0;
+  _pd.ionized_equilibrium_electron_traps = 0.0;
   if (_etraps.size() > 0)
   {
     double nt = 0, dnt = 0;
