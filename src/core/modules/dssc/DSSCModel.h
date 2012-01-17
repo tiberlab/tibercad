@@ -209,8 +209,12 @@ class DSSCModel : public PhysicalModel
     void calculate_net_recombination_rate(void);
 
 
-      //! Calculate trap density
+    //! Calculate trap density
     void calculate_traps(void);
+
+   
+    //! Calculate dark background for traps (only real traps) 
+    void calculate_equilibrium_traps(void);
 
 
     //! Get the electron density
@@ -378,6 +382,7 @@ class DSSCModel : public PhysicalModel
 
       double ionized_electron_traps;
       double ionized_electron_traps_derivative;
+      double ionized_equilibrium_electron_traps;
 
     };
 
@@ -771,7 +776,7 @@ double
 DSSCModel::get_charge_density(void) const
 {
  return _pd.density_C - get_density_n_exp_DOS() + _trap_DOS * pow(_eq_conc.n/_CB_DOS,_exp_trap) +
-    _pd.ionized_dye - _pd.density_I - _pd.density_I3 + _pd.ionized_electron_traps;
+    _pd.ionized_dye - _pd.density_I - _pd.density_I3 + (_pd.ionized_electron_traps - _pd.ionized_equilibrium_electron_traps);
       
 // return _pd.density_C - _pd.density_n + _eq_conc.n +
 //    _pd.ionized_dye - _pd.density_I - _pd.density_I3 + _pd.ionized_electron_traps;

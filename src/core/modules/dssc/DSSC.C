@@ -180,6 +180,8 @@ DSSC::compute_scaling(Scaling::ScalingType type)
 
     sc->calculate_densities();
     sc->calculate_traps();
+    sc->calculate_equilibrium_traps();
+    sc->calculate_net_recombination_rate();
 
     // element volume in cm
     double volume = elem->volume();
@@ -414,6 +416,8 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 
       sc->calculate_densities();
       sc->calculate_traps();
+      sc->calculate_equilibrium_traps();
+      sc->calculate_net_recombination_rate();
 
     double mu = sc->get_mobility_n();
     double C = sc->get_density_n();
@@ -1163,6 +1167,7 @@ DSSC::calculate_currents_rstf(void)
 
       sc->calculate_densities();
       sc->calculate_traps();
+      sc->calculate_equilibrium_traps();
       sc->calculate_net_recombination_rate();
 
       // we put the minus here for convenience
@@ -1847,6 +1852,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       // calculate all local properties
       sc->calculate_densities();
       sc->calculate_traps();
+      sc->calculate_equilibrium_traps();
       sc->calculate_net_recombination_rate();
 
       double n_e = sc->get_density_n();
@@ -2232,6 +2238,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
               sc->calculate_densities();
               sc->calculate_traps();
+              sc->calculate_equilibrium_traps();
 
               // we put the phi0 here for convenience
               double sigma_I = sc->get_mobility_I() * sc->get_density_I() / C0_I;
@@ -2409,6 +2416,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           sc->set_grad_fermi_C(phi0 / x0 * RealGradient(grad_eC, 0.0, 0.0));
           sc->calculate_densities();
           sc->calculate_traps();
+          sc->calculate_equilibrium_traps();
 
           // we put the phi0 here for convenience
           double sigma_I = sc->get_mobility_I() * sc->get_density_I() / C0_I;
@@ -2465,12 +2473,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
                   //KII3(s,n) += -3 * sigma_I3 * dphi_face[n][0](0) ;
                 //}
 
-//                KIu(s,s) += 1.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * Normal_I / kT2;
                 KIu(s,s) += -1.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I / kT2;
                 //KII(s,s) += -1.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (1.5) * Normal_I / kT2;
                 //KII3(s,s) += -1.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-0.5) * Normal_I / kT2;
 
-//                KI3u(s,s) += -0.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * Normal_I3 / kT2;
                 KI3u(s,s) += 0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I3 / kT2;
                 //KI3I(s,s) += 0.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (1.5) * Normal_I3 / kT2;
                 //KI3I3(s,s) += 0.5 * sign * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-0.5) * Normal_I3 / kT2;
@@ -2479,7 +2485,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             }
             if (residual != NULL)
             {
-               //double res = contact->get_load() * x0;
+//               double res = contact->get_load() * x0;
 
 	       double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
 	       double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
@@ -2630,16 +2636,16 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             if ( (!contact->is_cathode()) && (!contact->is_gate()) )
             {
 
-              //double bias = contact->get_potential();
+              double bias = contact->get_potential();
 
-              //Ke.condense(i + n_dofs, i + n_dofs, bias, Fe);
+//              Ke.condense(i + n_dofs, i + n_dofs, bias, Fe);
 
             }
             else if (contact->is_gate())
             {
                double bias = contact->get_potential();
 
-               Ke.condense(i, i, bias, Fe);
+              Ke.condense(i, i, bias, Fe);
             }
           }
         }
@@ -3016,6 +3022,8 @@ DSSC::get_solution_secure(const Elem* elem,
 
     sc->calculate_densities();
     sc->calculate_traps();
+    sc->calculate_equilibrium_traps();
+    sc->calculate_net_recombination_rate();
 
     double edens = sc->get_density_n_exp_DOS();
     double edens_c = sc->get_density_n();

@@ -354,35 +354,39 @@ DSSCModel::calculate_net_recombination_rate(void)
 
 
   double n0 = _eq_conc.n;
+  _pd.recombination_rate_derivatives = vector<double>(4, 0.0);
   if (n0 <= 1e-3)
   {
-    n0 = 100;
+    _pd.recombination_rate = 0.0;
+    _pd.recombination_rate_derivatives[0] = 0.0;
+    _pd.recombination_rate_derivatives[1] = 0.0;
+    _pd.recombination_rate_derivatives[2] = 0.0;
+  }
+  else {
+    double dens_norm = _pd.density_n/n0;
+
+    double dens_beta = pow(_pd.density_n, _beta) * pow(n0, 1.0 - _beta);
+    double dens_dark_beta = n0;
+    double dens_beta_der = _beta * pow(_pd.density_n, _beta - 1) * pow(n0,1-_beta);
+
+    double n_I_p3 = _eq_conc.I *_eq_conc.I * _eq_conc.I;
+    double gamma1 = _pd.density_I3 / _pd.density_I;
+    double gamma2 = sqrt( ( _pd.density_I3 * _pd.density_I * _eq_conc.I3) / n_I_p3 );
+  
+    double k_tib = _ke * pow(_trap_DOS / n0, 1 - _beta) * pow(_trap_DOS / _CB_DOS, _beta); 
+  
+    // rate
+    double r = dens_beta * gamma1;
+    double g = dens_dark_beta * gamma2;
+    _pd.recombination_rate = k_tib * (r - g);
+    // derivative
+    _pd.recombination_rate_derivatives[0] = k_tib * dens_beta_der * gamma1;
+    _pd.recombination_rate_derivatives[1] = -k_tib * (dens_beta * gamma1 / _pd.density_I +
+       dens_dark_beta * 0.5 * (1 / gamma2) * ( ( _pd.density_I3 * _eq_conc.I3 ) / ( n_I_p3 ) ) );   
+    _pd.recombination_rate_derivatives[2] = k_tib * ( r / _pd.density_I3 -
+        0.5 * (1 / gamma2) * dens_dark_beta * ( ( _pd.density_I * _eq_conc.I3 ) / n_I_p3 ) );
   }
   
-  double dens_norm = _pd.density_n/n0;
-
-  double dens_beta = pow(_pd.density_n, _beta) * pow(n0, 1.0 - _beta);
-  double dens_dark_beta = n0;
-  double dens_beta_der = _beta * pow(_pd.density_n, _beta - 1) * pow(n0,1-_beta);
-
-  double n_I_p3 = _eq_conc.I *_eq_conc.I * _eq_conc.I;
-  double gamma1 = _pd.density_I3 / _pd.density_I;
-  double gamma2 = sqrt( ( _pd.density_I3 * _pd.density_I * _eq_conc.I3) / n_I_p3 );
-  
-  double k_tib = _ke * pow(_trap_DOS / n0, 1 - _beta) * pow(_trap_DOS / _CB_DOS, _beta); 
-  
-  // rate
-  double r = dens_beta * gamma1;
-  double g = dens_dark_beta * gamma2;
-  _pd.recombination_rate = k_tib * (r - g);
-  // derivative
-  _pd.recombination_rate_derivatives = vector<double>(4, 0.0);
-  _pd.recombination_rate_derivatives[0] = k_tib * dens_beta_der * gamma1;
-  _pd.recombination_rate_derivatives[1] = -k_tib * (dens_beta * gamma1 / _pd.density_I +
-     dens_dark_beta * 0.5 * (1 / gamma2) * ( ( _pd.density_I3 * _eq_conc.I3 ) / ( n_I_p3 ) ) );   
-  _pd.recombination_rate_derivatives[2] = k_tib * ( r / _pd.density_I3 -
-      0.5 * (1 / gamma2) * dens_dark_beta * ( ( _pd.density_I * _eq_conc.I3 ) / n_I_p3 ) );
-    
 }
 
 
@@ -410,8 +414,37 @@ DSSCModel::calculate_traps(void)
       dnt += _etraps[i]->get_ionized_density_derivative();
     }
 
+
     _pd.ionized_electron_traps = nt;
     _pd.ionized_electron_traps_derivative = dnt;
   }
 }
 
+
+void
+DSSCModel::calculate_equilibrium_traps(void)
+{
+  //double Ec = get_conduction_band_edge() - _pd->electric_potential;
+  //double Ev = get_valence_band_edge() - _pd->electric_potential;
+  double Ec = 0.93;
+  double Ev = (0.93 - 3.2);
+
+  _pd.ionized_electron_traps = 0.0;
+  _pd.ionized_electron_traps_derivative = 0.0;
+  if (_etraps.size() > 0)
+  {
+    double nt = 0, dnt = 0;
+    double kT = Constants::k_B * SimulationOptions::T;
+//    set<Trap*>::iterator it(_etraps.begin());
+//    const set<Trap*>::iterator end(_etraps.end());
+    for ( int i = 0; i < _etraps.size(); ++i)
+    {
+      _etraps[i]->set_energies(Ec, Ev, 0.0, kT);
+      nt += _etraps[i]->get_ionized_density();
+      dnt += _etraps[i]->get_ionized_density_derivative();
+    }
+
+
+    _pd.ionized_equilibrium_electron_traps = nt;
+  }
+}
