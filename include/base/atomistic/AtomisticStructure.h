@@ -87,6 +87,9 @@ public:
   //! Return a writable reference to structure atoms
   std::vector<Atom>& get_structure_atoms(void);
 
+  //! Return a cons reference to an atom
+  const Atom& get_structure_atom(unsigned int i) const;
+
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)
   const double& get_scale(void);
 
@@ -250,7 +253,7 @@ ModelOptions& AtomisticStructure::get_options(void)
 {
     assert( !(_options.is_empty()) );
 
-    if (!_options.is_empty()) return _options;
+    return _options;
 
  }
 
@@ -289,6 +292,12 @@ std::vector<Atom>& AtomisticStructure::get_structure_atoms(void)
   return _structure_atoms;
 }
 
+
+inline
+const Atom& AtomisticStructure::get_structure_atom(unsigned int i) const
+{
+  return _structure_atoms[i];
+}
 
 inline
 void AtomisticStructure::set_structure_atoms(const std::vector<Atom>& atoms)
