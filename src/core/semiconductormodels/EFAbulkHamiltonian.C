@@ -120,11 +120,12 @@ void EFAbulkHamiltonian::rotate_linear(std::complex<double> *vector)
 
   for (short i = 0 ; i < 3; i++) vec1[i] = vector[i];
 
-  for (short i = 0 ; i < 3; i++)  vector[i] = complex<double>(0.0,0.0);
-
   for (short i = 0 ; i < 3; i++)
+  {
+    vector[i] = 0.0;
     for (short j = 0 ; j < 3; j++)
       vector[i] += vec1[j] * rot_matrix[i][j];
+  }
 	
 }
 

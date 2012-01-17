@@ -128,7 +128,7 @@ void ZbRotatedCrystal::read_database ( )
 void ZbRotatedCrystal::do_init(void)
 {
 
-   ModelOptions & options = get_options ();
+   ModelOptions & options = get_options();
    a_lat = options.get_option("a", a_lat);
    assert(a_lat > 0);
 
@@ -145,6 +145,8 @@ void ZbRotatedCrystal::do_init(void)
    calculate_lat_consts();
 
    calculate_rot_matrix_miller(x_miller, y_miller);
+
+   calculate_euler_angles();
 
 }
 

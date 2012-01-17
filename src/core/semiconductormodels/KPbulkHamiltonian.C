@@ -470,7 +470,17 @@ void KPbulkHamiltonian::calculate_optical_operator(void)
 
 
 
+void
+KPbulkHamiltonian::get_hamiltonian_without_k(
+    std::vector<std::vector<KPbulkHamiltonian::MatrixElement> >& ham) const
+{
+  ham.resize(band_max - band_min + 1);
+  for (short i = 0; i <= band_max - band_min; i++)  ham[i].resize(band_max - band_min + 1);
 
+  for (short i = 0; i <= band_max - band_min; i++)
+    for (short j = 0; j <= band_max - band_min; j++)
+      ham[i][j] = Ham[i + band_min][j + band_min];
+}
 
 
 
@@ -485,31 +495,35 @@ void KPbulkHamiltonian:: calculate_Hamiltonian_k_par (void)
   //--------------------------------------------------//
 
 
-  for (short i = band_min; i <= band_max; i++)
-    for (short j = band_min; j <= band_max; j++)
-    {
+   for (short i = band_min; i <= band_max; i++)
+   {
+     for (short j = band_min; j <= band_max; j++)
+     {
 
-      //------we have to change constant term
-      for (short i1 = 0; i1 < 3; i1++)
-      {
-	result[i][j].constant += Ham[i][j].linear_left[i1]  * k_vector[i1];
-	result[i][j].constant += Ham[i][j].linear_right[i1] * k_vector[i1];
-	for (short j1 = 0; j1 < 3; j1++)
-	{
-	  result[i][j].constant += Ham[i][j].quad[i1][j1] * k_vector[i1] * k_vector[j1];
-	}
-      }
+       //------we have to change constant term
+       for (short i1 = 0; i1 < 3; i1++)
+       {
+         result[i][j].constant += Ham[i][j].linear_left[i1]  * k_vector[i1];
+         result[i][j].constant += Ham[i][j].linear_right[i1] * k_vector[i1];
+         for (short j1 = 0; j1 < 3; j1++)
+         {
+           result[i][j].constant += Ham[i][j].quad[i1][j1] * k_vector[i1] * k_vector[j1];
+         }
+       }
 
-      //------we have to change linear term
+       //------we have to change linear term
 
-      for (short i1 = 0; i1 < 3; i1++)
-	for (short j1 = 0; j1 < 3; j1++)
-	{
-	  result[i][j].linear_left[i1]  += Ham[i][j].quad[i1][j1] * k_vector[j1];
-	  result[i][j].linear_right[j1] += Ham[i][j].quad[i1][j1] * k_vector[i1];
-	}
+       for (short i1 = 0; i1 < 3; i1++)
+       {
+         for (short j1 = 0; j1 < 3; j1++)
+         {
+           result[i][j].linear_left[i1]  += Ham[i][j].quad[i1][j1] * k_vector[j1];
+           result[i][j].linear_right[j1] += Ham[i][j].quad[i1][j1] * k_vector[i1];
+         }
+       }
 
-    }
+     }
+   }
 
 
   //-------------------------------------------------//

@@ -4,7 +4,6 @@
 #include "ZbSemiconductor.h"
 #include "Semiconductor.h"
 #include "Constants.h"
-#include "SolverException.h"
 
 using namespace std;
 using namespace Constants;
@@ -164,108 +163,6 @@ using namespace Constants;
  }
 
 
-
-
-
- //=================================================================================//
-
-
- void ZbDDsemiconductor::do_calculate_valence_band_extremum(void)
- {
-
-
-
-   vector<DDsemiconductor::band_extremum>   result;
-
-   DDsemiconductor::band_extremum extremum;
-
-   vector<Tensor1> k_vector;
-   //-----------------------------------------------
-
-   Tensor1 k;
-   // Gamma
-   k(1) = 0 ; k(2) = 0; k(3) = 0;
-   k_vector.push_back(k);
-
-   // [100]
-   k(1) = k_max ; k(2) = 0; k(3) = 0;
-   k_vector.push_back(k);
-
-   // [010]
-   k(1) = 0 ; k(2) = k_max; k(3) = 0;
-   k_vector.push_back(k);
-
-   // [001]
-   k(1) = 0 ; k(2) = 0; k(3) = k_max;
-   k_vector.push_back(k);
-
-   // [110]
-   k(1) = k_max; k(2) = k_max; k(3) = 0;
-   k_vector.push_back(k);
-
-   // [101]
-   k(1) = k_max; k(2) = 0; k(3) = k_max;
-   k_vector.push_back(k);
-
-   // [011]
-   k(1) = 0.0; k(2) = k_max; k(3) = k_max;
-   k_vector.push_back(k);
-   //--------------------------------------------------
-   vector< vector<double> >  eigenvalue = calculate_vb_bulk_states(k_vector);
-
-
-   Tensor2Sym imass;
-
-   double Eh_kmax = Hartree * k_max * k_max;
-
-   for (short ind = 0; ind < 3; ind++)
-   {
-     if (eigenvalue[0][ind*2] + energy_cutoff > eigenvalue[0][5])
-     {
-       extremum.degeneracy = 2;
-       extremum.energy = eigenvalue[0][ind*2] ;
-
-       imass(1,1) = (2.0 *(eigenvalue[0][ind*2] - eigenvalue[1][ind*2] )) / Eh_kmax;
-
-       imass(2,2) = (2.0 *(eigenvalue[0][ind*2] - eigenvalue[2][ind*2] )) / Eh_kmax;
-
-       imass(3,3) = (2.0 *(eigenvalue[0][ind*2] - eigenvalue[3][ind*2] )) / Eh_kmax;
-
-
-       imass(2,1) = (eigenvalue[0][ind*2] - eigenvalue[4][ind*2]) / Eh_kmax
-           - 0.5 * (imass(1,1) + imass(2,2));
-
-       imass(3,1) = (eigenvalue[0][ind*2] - eigenvalue[5][ind*2]) / Eh_kmax
-           - 0.5 * (imass(1,1) + imass(3,3));
-
-       imass(3,2) = (eigenvalue[0][ind*2] - eigenvalue[6][ind*2]) / Eh_kmax
-           - 0.5 * (imass(2,2) + imass(3,3));
-
-
-       double imass_DOS = 0.0;
-       double temp1, temp2;
-
-       imass.invariants(&temp1, &temp2,&imass_DOS);
-
-       assert(imass_DOS > 0.0);
-       if (imass_DOS <= 0.0)
-         throw SolverException("Negative valence band DOS mass");
-
-       extremum.mass_DOS = std::pow(1.0/imass_DOS,1.0/3.0);
-
-
-       result.push_back(extremum);
-     }
-   }
-
-
-   valence_band = result;
-
-
-
- }
-
- //---------------------------------------------------------//
 
 
 

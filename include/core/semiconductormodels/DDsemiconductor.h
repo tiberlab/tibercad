@@ -12,12 +12,15 @@
 #include "KPbulkHamiltonian.h"
 
 #include "tensor.h"
+#include "dense_vector.h"
 
 #include <vector>
 
 class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
 {
- public:
+  public:
+
+
 
   //! data structure for band extremum
   struct band_extremum
@@ -75,6 +78,9 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
   //! calculate information about valence bands
   void  calculate_valence_band_extremum(const Elem* element, const Point& point);
 
+  //! Calculate valence band states
+  void calculate_vb_bulk_states(const Tensor1& k_vector,
+      std::vector<double>& eigenvalues, std::vector<DenseVector<Complex> >& eigenvectors);
 
 
   //! calculates dispersion along a line in k-space
@@ -100,12 +106,23 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
  
  
 
- private:
+  private:
 
   //! a pointer to an object that can calculate the valence band properties 
   KPbulkHamiltonian*  bulk_ham;
-
   
+
+  //! Compute the inverse mass tensor for a given set of degenerate states
+  /*!
+   * This currently works only for hamiltonians without terms linear in k,
+   * and only in standard directions in case of warping.
+   */
+  void calculate_inverse_mass(
+      const std::vector<std::vector<KPbulkHamiltonian::MatrixElement> >& ham,
+      const std::vector<DenseVector<Complex> >::const_iterator first,
+      const std::vector<DenseVector<Complex> >::const_iterator last,
+      std::map<ID, RealTensor>& imasses);
+
    
 
  
@@ -146,8 +163,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
   virtual void  do_calculate_conduction_band_extremum(void) = 0;
 
   //! calculate information about valence bands
-  virtual void  do_calculate_valence_band_extremum(void) = 0;
-
+  virtual void  do_calculate_valence_band_extremum(void);
 
 };
 

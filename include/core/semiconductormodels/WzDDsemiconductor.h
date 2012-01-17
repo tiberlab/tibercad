@@ -55,12 +55,6 @@ class  WzDDsemiconductor : public DDsemiconductor
   */
   virtual void  do_calculate_conduction_band_extremum(void);
 
-  //!calculates information about valence bands
-  /*!
-    Uses 6 band Luttinger kp theory 
-  */
-  virtual void  do_calculate_valence_band_extremum(void);
-
 };
 
 inline

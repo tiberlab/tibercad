@@ -25,7 +25,7 @@ class RotatedCrystal : public PhysicalModelInterface
    static RotatedCrystal* create(const Material* owner,
        const ModelOptions& options);
    
-  //!Rotation matrix  \f$ {\bf x}^{calc} = R {\bf x}^{cryst} \f$  \f$ 
+  //! Rotation matrix  \f$ {\bf x}^{calc} = R {\bf x}^{cryst} \f$  \f$
   /*! 
     In matrix notation:  
     vector transformation:    \f$ {\bf v}^{calc} = R {\bf v}^{cryst} \f$
@@ -80,10 +80,16 @@ class RotatedCrystal : public PhysicalModelInterface
   /*!
     \param name of the additional variable
   */
-
   Tensor2Sym get_var_eps0(std::string  var_name) const;
 
 
+  //! Get the Euler angles
+  /*!
+   * The Euler angles here are the ones that rotate the crystal from
+   * standard orientation to its real orientation (obtained thus from the
+   * transpose of the rotation matrix)
+   */
+  void get_euler_angles(double& alpha, double& beta, double& gamma) const;
  
 
 
@@ -126,12 +132,20 @@ class RotatedCrystal : public PhysicalModelInterface
 
   virtual PhysicalModelInterface* create_new(void) const {};
  
+  void calculate_euler_angles(void);
 
 
  private:
 
 
- 
+  //! Euler angle \f$\alpha\f$
+  double _alpha;
+
+  //! Euler angle \f$\beta\f$
+  double _beta;
+
+  //! Euler angle \f$\gamma\f$
+  double _gamma;
 
 
 
@@ -141,6 +155,13 @@ class RotatedCrystal : public PhysicalModelInterface
 // inline members
 //
 
-
+inline
+void
+RotatedCrystal::get_euler_angles(double& alpha, double& beta, double& gamma) const
+{
+  alpha = _alpha;
+  beta = _beta;
+  gamma = _gamma;
+}
 
 #endif

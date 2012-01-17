@@ -61,6 +61,10 @@ void WzRotatedCrystal::calculate_lat_consts()
    Rx = Tensor1(0); Rx(1) = a_lat;
    Ry = Tensor1(0); Ry(1) = -0.5*a_lat; Ry(2) = std::sqrt(3.0)/2.0*a_lat;
    Rz = Tensor1(0); Rz(3) = c_lat;
+// TODO maybe these would be more standard directions?
+//   Rx = Tensor1(0); Rx(1) = 0.5*a_lat; Rx(2) = -std::sqrt(3.0)/2.0*a_lat;
+//   Ry = Tensor1(0); Ry(1) = 0.5*a_lat; Ry(2) = std::sqrt(3.0)/2.0*a_lat;
+//   Rz = Tensor1(0); Rz(3) = c_lat;
 
 
    const double volume =Rx *vectorProduct(Ry, Rz);
@@ -239,6 +243,7 @@ void WzRotatedCrystal::do_init(void)
 
   calculate_rot_matrix_miller(x_miller, y_miller);
 
+  calculate_euler_angles();
 
 }
 

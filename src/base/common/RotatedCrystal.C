@@ -169,6 +169,18 @@ Tensor2Sym RotatedCrystal::get_eps0(double lat_cont_substrate[3]) const
 }
 
 
+void RotatedCrystal::calculate_euler_angles(void)
+{
+  // calculate Euler angles
+
+  // Note: they are calculated from the transpose of RotMatrix
+  _beta = acos(RotMatrix(3,3));
+
+  _gamma = atan2(RotMatrix(2,3), -RotMatrix(1,3));
+  _alpha = atan2(-RotMatrix(3,2), RotMatrix(3,1));
+}
+
+
 
 void RotatedCrystal::do_init(void)
 {
@@ -184,6 +196,10 @@ void RotatedCrystal::do_init(void)
   vec_y(3) = y_miller[2];
 
   calculate_rot_matrix(vec_x, vec_y);
+
+  calculate_euler_angles();
+
+
 }
 
 //========================================================================//

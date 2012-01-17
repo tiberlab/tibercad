@@ -47,7 +47,10 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   void set_parameters(const KPparams&  par1 );
 
 
-  const std::vector< std::vector <std::vector<MatrixElement> > > & get_optical_operator(void) const;
+  const std::vector< std::vector <std::vector<MatrixElement> > >& get_optical_operator(void) const;
+
+  //! Get Hamiltonian as coefficients for k-expansion
+  void get_hamiltonian_without_k(std::vector<std::vector<MatrixElement> >& ham) const;
 
 
   static KPbulkHamiltonian* create(const ModelOptions& options);
@@ -145,5 +148,8 @@ void  KPbulkHamiltonian::set_temperature(double Temperature)
   semiconductor->apply_temperature();
   calculate_Hamiltonian_gen();
 }
+
+
+
 
 #endif

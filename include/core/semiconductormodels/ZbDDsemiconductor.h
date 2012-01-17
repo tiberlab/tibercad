@@ -34,12 +34,8 @@ class ZbDDsemiconductor  : public DDsemiconductor
   virtual PhysicalModelInterface* create_new(void) const;
    
   
- 
   virtual void  do_calculate_conduction_band_extremum(void);
    
-  
-  virtual void  do_calculate_valence_band_extremum(void);
- 
   
 };
  

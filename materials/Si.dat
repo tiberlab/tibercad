@@ -11,6 +11,9 @@ a = 0.54304
 [valenceband]
 E_v = 1.10467
 
+# (for now set it to the kp result)
+m_dos = 1.63813
+
 
 [conductionband] # [3]
 m_G = 0.156
@@ -19,10 +22,7 @@ m_L_l = 1.42
 m_X_t = 0.19
 m_X_l = 0.916
 
-
-[valenceband]
-# (for now set it to the kp result)
-m_dos = 1.63813
+m_dos = 1.189
 
 
 [bandgap] # [3]
