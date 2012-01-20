@@ -2221,7 +2221,7 @@ DriftDiffusion::calculate_field_emission(void)
 
         for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
-          sm->set_face_normal(face_normals[qp]);
+          sm->set_face_normal(s, face_normals[qp]);
 
           // get the solution value at the quadrature point
           RealGradient e_field(0.0);
@@ -3795,7 +3795,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           // contribution to the jacobian
           if ((sm != NULL) && (jacobian != NULL))
           {
-            sm->set_face_normal(face_normals[qp]);
+            sm->set_face_normal(s, face_normals[qp]);
             sm->compute();
 
             // for Dirichlet DOFs we do not add anything
@@ -3913,7 +3913,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
             if (sm != NULL)
             {
-              sm->set_face_normal(face_normals[qp]);
+              sm->set_face_normal(s, face_normals[qp]);
               sm->compute();
 
               const vector<double>& coeff_a = sm->get_a();

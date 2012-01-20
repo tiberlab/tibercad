@@ -3,13 +3,15 @@
 #include "DirectRecombination.h"
 #include "DriftDiffusionProperties.h"
 #include "Database.h"
+#include "SimulationInterface.h"
+#include "SimulationEnvironment.h"
 
 
 
 
 TIBER_MODULE(DirectRecombination, recombination, direct)
 
-
+using namespace std;
 
 
 void
@@ -28,6 +30,20 @@ void
 DirectRecombination::do_init(void)
 {
   get_parameter("C", C_);
+
+  string quantumsim = get_option("optics_simulation", "");
+  if (!quantumsim.empty())
+  {
+    _quantum_optics = SimulationInterface::find_simulation(quantumsim);
+    if (_quantum_optics == NULL)
+      throw InitFailedException("Cannot find optics simulation \'" + quantumsim + "\'");
+
+    _rec_id = _quantum_optics->get_solution_id("recombination");
+    if (_rec_id == INVALID_ID)
+      throw InitFailedException("Simulation \'" + quantumsim + "\'" +
+          " does not have the needed solution \'recombination\'");
+  }
+
 }
 
 
@@ -66,4 +82,30 @@ DirectRecombination::get_net_recombination_rate_derivatives(
 void
 DirectRecombination::do_reinit(void)
 {
+  if (_quantum_optics != NULL)
+  {
+    map<ID, vector<double> > data;
+    data[_rec_id];
+
+    if (_quantum_optics->get_solution(data))
+    {
+      double rec = data[_rec_id][0];
+
+      // now we have to integrate the term (np - ni^2)
+      // for that, we have to loop over all elements
+      // TODO this has to be checked for parallel execution
+      const SimulationEnvironment& env =
+          SimulationInterface::get_simulation(get_simulator_id())->get_environment();
+      SimulationEnvironment::ConstElemIterator it(env.elements_begin());
+      SimulationEnvironment::ConstElemIterator end(env.elements_end());
+      for ( ; it != end; ++it)
+      {
+        const Elem* elem = *it;
+        if (_quantum_optics->includes_region(elem->subdomain_id()))
+        {
+
+        }
+      }
+    }
+  }
 }

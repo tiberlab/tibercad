@@ -170,7 +170,7 @@ class Variable
     //! A list with all models that define a variable variable
     /*!
      * A variable variable is defined in the input file using the notation
-     * \c @name(defaultvalue)
+     * \c $name[defaultvalue]
      *
      */
     static VariableMap _variables;

@@ -6,6 +6,7 @@
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
 
+class SimulationInterface;
 
 //! Implementation of direct recombination
 /*!
@@ -56,6 +57,12 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
     //! Recombination rate parameter
     double C_;
 
+    //! The quantum optics simulation, if available
+    SimulationInterface* _quantum_optics;
+
+    //! The solution ID for the optical recombination
+    ID _rec_id;
+
 };
 
 
@@ -67,7 +74,8 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
 inline
 DirectRecombination::DirectRecombination(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    C_(0.0)
+    C_(0.0),
+    _quantum_optics(NULL)
 {
 }
 

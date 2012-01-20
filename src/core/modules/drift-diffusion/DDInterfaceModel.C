@@ -9,6 +9,8 @@
 #include "DriftDiffusionProperties.h"
 #include "SimulationInterface.h"
 #include "ModelErrorException.h"
+#include "Variable.h"
+#include "elem.h"
 
 using namespace std;
 
@@ -17,7 +19,10 @@ DDInterfaceModel::DDInterfaceModel(const ModelOptions& options) :
   PhysicalModel(options),
   _internal_bd(false),
   _has_current(false),
-  _emission(NULL)
+  _emission(NULL),
+  _eflux(0.0),
+  _eflux_sim(NULL),
+  _eflux_controlled(false)
 {
   _coeff_a.resize(3, 0);
   _coeff_b.resize(3, NEUMANN);
@@ -150,6 +155,41 @@ DDInterfaceModel::do_init(void)
   }
 
   get_option("area_factor", "");
+
+  // the default behaviour is to be voltage controlled, but the contact can also
+  // be flux controlled
+  string eflux = get_option("electron_current", "");
+  if (!eflux.empty())
+  {
+    if (Variable::check_string(eflux))
+      get_parameter("electron_current", _eflux);
+    else
+    {
+      istringstream iss(eflux);
+      if ((iss >> _eflux).fail())
+      {
+        _eflux_sim = SimulationInterface::find_simulation(eflux);
+        if (_eflux_sim == NULL)
+        {
+          string msg("DriftDiffusion Interface: ");
+          msg += "no electron current simulation '" + eflux + "' found.";
+          throw InitFailedException(msg);
+        }
+
+        _eflux_id = _eflux_sim->get_solution_id("eCurrentDensity");
+        if (_eflux_id == INVALID_ID)
+          throw InitFailedException("Module '" +
+              eflux + "' does not contain solution variable 'eCurrentDensity'");
+      }
+    }
+
+    _eflux_controlled = true;
+    set_type(0, NEUMANN);
+    set_type(1, NEUMANN);
+    set_type(2, NEUMANN);
+  }
+
+
 }
 
 
@@ -206,6 +246,28 @@ DDInterfaceModel::compute()
     _jacobian[2][0] -= dRp_dEfn + dRp_dEfp;
     _jacobian[2][1] += dRp_dEfn;
     _jacobian[2][2] += dRp_dEfp;
+  }
+
+  if (_eflux_controlled)
+  {
+
+    if (this->is_internal_boundary())
+      _eflux *= 0.5;
+
+    if (_eflux_sim != NULL)
+    {
+      DriftDiffusionProperties& dd = *get_dd_properties();
+      vector<double> data;
+      // we take the flux from the neighbor element
+      _eflux_sim->get_solution(dd.get_element()->neighbor(_side), _eflux_id,
+          data, dd.get_coordinates());
+
+      _eflux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
+    }
+
+
+    _coeff_g[1] -= _eflux / Constants::e;
+
   }
 
 }

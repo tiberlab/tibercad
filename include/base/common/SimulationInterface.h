@@ -448,8 +448,16 @@ class SimulationInterface : public TiberModelObject
      *   const std::vector<Point>&, bool)
      */
     bool get_solution(const Elem* elem, ID id, double& value,
-        const Point& p,
-        bool local_coords = false);
+        const Point& p, bool local_coords = false);
+
+
+    //! Get a single solution at a single point
+    /*!
+     * \see get_solution(const Elem*, std::map<ID, std::vector<double> >&,
+     *   const std::vector<Point>&, bool)
+     */
+    bool get_solution(const Elem* elem, ID id, std::vector<double>& value,
+        const Point& p, bool local_coords = false);
 
 
     //! Get solutions associated to an atom
@@ -1712,6 +1720,16 @@ SimulationInterface::get_solution(const Elem* elem, ID id,
     value = val[0];
 
   return ok;
+}
+
+inline
+bool
+SimulationInterface::get_solution(const Elem* elem, ID id,
+    std::vector<double>& value, const Point& p,
+    bool local_coords)
+{
+  std::vector<Point> point(1, p);
+  return get_solution(elem, id, value, point);
 }
 
 /*

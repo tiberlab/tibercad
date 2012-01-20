@@ -1047,10 +1047,8 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
   if (is_dielectric())
   {
     _equilibrium_fermi_level = 0.5 * (Ec + Ev);
-    double ni2 = cb.get_effective_DOS() * vb.get_effective_DOS()
-        * exp(-get_band_gap() / kT);
-    double ni = sqrt(ni2);
-    _intrinsic_density = ni;
+    _intrinsic_density = sqrt(cb.get_effective_DOS() * vb.get_effective_DOS())
+        * exp(-0.5 * get_band_gap() / kT);
     return;
   }
 

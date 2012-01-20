@@ -16,6 +16,7 @@ class MaterialBoundary;
 class RecombinationModelInterface;
 class Trap;
 class FowlerNordheim;
+class SimulationInterface;
 
 /*!
  * \brief The base class for the Drift-Diffusion boundary models
@@ -51,8 +52,8 @@ class DDInterfaceModel : public PhysicalModel
         const ModelOptions& options);
 
 
-    //! Set the current face normal
-    void set_face_normal(const Point& n);
+    //! Set the current side number and face normal
+    void set_face_normal(int side, const Point& n);
 
 
     //! Compute the coefficients and their derivatives
@@ -169,6 +170,8 @@ class DDInterfaceModel : public PhysicalModel
     //! Get the DriftDiffusionProperties object
     DriftDiffusionProperties* get_dd_properties(void) const;
 
+    //! Get the current side number
+    int get_side_number(void) const;
 
     //! Get the current face normal
     const Point& get_face_normal(void) const;
@@ -199,6 +202,9 @@ class DDInterfaceModel : public PhysicalModel
     bool _has_current;
 
 
+    //! The current side number
+    int _side;
+
     //! The current face normal
     Point _normal;
 
@@ -214,6 +220,19 @@ class DDInterfaceModel : public PhysicalModel
 
     //! If we use Fowler-Nordheim emission
     FowlerNordheim* _emission;
+
+
+    //! The electron flux in \f$cm^{-2}\f$
+    double _eflux;
+
+    //! The simulation providing electron flux
+    SimulationInterface* _eflux_sim;
+
+    //! The solution ID for the electron current density
+    ID _eflux_id;
+
+    //! True if flux controlled for electrons
+    bool _eflux_controlled;
 
 
     //! Calculate the trap contributions
@@ -292,9 +311,18 @@ DDInterfaceModel::get_jacobian_row(unsigned int i) const
 
 inline
 void
-DDInterfaceModel::set_face_normal(const Point& n)
+DDInterfaceModel::set_face_normal(int side, const Point& n)
 {
+  _side = side;
   _normal = n;
+}
+
+
+inline
+int
+DDInterfaceModel::get_side_number(void) const
+{
+  return _side;
 }
 
 
