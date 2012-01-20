@@ -5,11 +5,14 @@
 
 
 #include "ModelOptions.h"
+#include "IDSet.h"
 
 #include <string>
 
 class EquationSystems;
 template <typename T> class NumericVector;
+template <typename T> class DenseVector;
+template <typename T> class DenseMatrix;
 
 
 //! A base class for linear and nonlinear equation systems in TiberCAD
@@ -97,6 +100,15 @@ class TiberEqSystem
     void set_weight(const NumericVector<double>* weight, NormType norm);
 
 
+    //! Set the set of excluded DoFs
+    void set_excluded_dofs(const IDHashSet& exlcuded_dofs);
+
+    //! Exclude DoFs from a matrix
+    void exclude_dofs(DenseMatrix<double>& mat, const std::vector<unsigned int>& dof_indices);
+
+    //! Exclude DoFs from a matrix
+    void exclude_dofs(DenseVector<double>& vec, const std::vector<unsigned int>& dof_indices);
+
 
   protected:
 
@@ -148,6 +160,10 @@ class TiberEqSystem
     //! Weight for the l_infty norm
     const NumericVector<double>* _linfty_weight;
 
+
+    //! A set of DoFs which should be excluded from the calculation
+    IDHashSet _excluded_dofs;
+
 };
 
 
@@ -196,6 +212,13 @@ TiberEqSystem::set_type(SystemType type)
   _type = type;
 }
 
+
+inline
+void
+TiberEqSystem::set_excluded_dofs(const IDHashSet& exlcuded_dofs)
+{
+  _excluded_dofs = exlcuded_dofs;
+}
 
 
 #endif // _TIBEREQSYSTEM_H_

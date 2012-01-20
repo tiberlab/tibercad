@@ -8,7 +8,6 @@
 #include "tiber_config.h"
 #include "TiberModelObject.h"
 #include "TypeDefs.h"
-#include "HashMap.h"
 #include "IDSet.h"
 #include "SolutionDescriptor.h"
 #include "InitFailedException.h"
@@ -214,6 +213,10 @@ class SimulationInterface : public TiberModelObject
      * Calls do_print_info()
      */
     void print_info(void);
+
+
+    //! Restrict the solve to a set of subdomains
+    void restrict_solve_to_subdomains(const std::set<ID>& ids);
 
 
     //! Solve the system for equilibrium
@@ -783,6 +786,14 @@ class SimulationInterface : public TiberModelObject
 
     //! Increment the solve sequence number
     void increment_solve_sequence_number(void);
+
+
+    //! Find excluded DoFs
+    /*!
+     * Can be overridden if the default implementation is not
+     * appropriate.
+     */
+    virtual void find_excluded_dofs(const std::set<ID>& ids);
 
 
     //! Declare this module to be a task or not

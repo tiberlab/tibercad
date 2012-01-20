@@ -251,8 +251,9 @@ DDInterfaceModel::compute()
   if (_eflux_controlled)
   {
 
+    double flux = _eflux;
     if (this->is_internal_boundary())
-      _eflux *= 0.5;
+      flux *= 0.5;
 
     if (_eflux_sim != NULL)
     {
@@ -262,11 +263,11 @@ DDInterfaceModel::compute()
       _eflux_sim->get_solution(dd.get_element()->neighbor(_side), _eflux_id,
           data, dd.get_coordinates());
 
-      _eflux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
+      flux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
     }
 
 
-    _coeff_g[1] -= _eflux / Constants::e;
+    _coeff_g[1] -= flux / Constants::e;
 
   }
 

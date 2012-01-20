@@ -85,24 +85,29 @@ double
 TiberEqSystem::calculate_norm(NumericVector<double>* vec, NormType norm)
 {
   double result = 0;
-
+double old;
   switch (norm)
   {
     case l2_NORM:
+      old = vec->l2_norm();
       if (_l2_weight != NULL)
         vec->pointwise_mult(*vec, *_l2_weight);
       result = vec->l2_norm();
+      //std::cerr << "l2 ";
       break;
 
     case MAX_NORM:
+      old = vec->linfty_norm();
       if (_linfty_weight != NULL)
         vec->pointwise_mult(*vec, *_linfty_weight);
       result = vec->linfty_norm();
+      //std::cerr << "linfty ";
       break;
 
     default:
       break;
   }
+      //std::cerr << old << "  " << result << std::endl;
 
   return result;
 }

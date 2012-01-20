@@ -206,6 +206,19 @@ SimulationInterface::do_print_info(void)
 }
 
 
+void
+SimulationInterface::restrict_solve_to_subdomains(const std::set<ID>& ids)
+{
+  find_excluded_dofs(ids);
+}
+
+
+void
+SimulationInterface::find_excluded_dofs(const std::set<ID>& ids)
+{
+
+}
+
 
 bool
 SimulationInterface::includes_region(ID region_id) const
