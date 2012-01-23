@@ -6,6 +6,10 @@
 #include "InitFailedException.h"
 
 #include <numeric_vector.h>
+#include <dense_vector.h>
+#include <dense_matrix.h>
+
+#include <cassert>
 
 
 TiberEqSystem::TiberEqSystem(void)
@@ -60,6 +64,49 @@ TiberEqSystem::create(EquationSystems& es,
   return sys;
 }
   
+
+
+
+void
+TiberEqSystem::exclude_dofs(DenseMatrix<double>& mat,
+    const std::vector<unsigned int>& dof_indices)
+{
+  // if there are no excluded Dofs we have nothing to do
+  if (!_excluded_dofs.empty())
+  {
+    assert(dof_indices.size() == mat.m());
+    for (unsigned int i = 0; i < dof_indices.size(); ++i)
+    {
+      if (_excluded_dofs.count(dof_indices[i]))
+      {
+        for (unsigned int j = 0; j < mat.n(); ++j)
+          mat(i,j) = 0;
+        mat(i,i) = 1;
+      }
+    }
+  }
+}
+
+
+
+void
+TiberEqSystem::exclude_dofs(DenseVector<double>& vec,
+    const std::vector<unsigned int>& dof_indices)
+{
+  // if there are no excluded Dofs we have nothing to do
+  if (!_excluded_dofs.empty())
+  {
+    assert(dof_indices.size() == vec.size());
+    for (unsigned int i = 0; i < dof_indices.size(); ++i)
+    {
+      if (_excluded_dofs.count(dof_indices[i]))
+        vec(i) = 0;
+    }
+  }
+}
+
+
+
 
 
 void

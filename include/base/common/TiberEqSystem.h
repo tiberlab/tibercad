@@ -101,6 +101,9 @@ class TiberEqSystem
 
 
     //! Set the set of excluded DoFs
+    /*!
+     * An empty set resets any previous restrictions
+     */
     void set_excluded_dofs(const IDHashSet& exlcuded_dofs);
 
     //! Exclude DoFs from a matrix

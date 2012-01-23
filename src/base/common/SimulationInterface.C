@@ -216,6 +216,7 @@ SimulationInterface::restrict_solve_to_subdomains(const std::set<ID>& ids)
 void
 SimulationInterface::find_excluded_dofs(const std::set<ID>& ids)
 {
+  vector<IDHashSet> dofsets;
 
 }
 
