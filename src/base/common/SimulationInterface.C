@@ -20,7 +20,6 @@
 #include "EmpiricalTightBinding.h"
 #include "OpticsTB.h"
 #include "MaxwellEquations.h"
-#include "CrackStrain.h"
 #include "Sweep.h"
 #include "RelaxationMethod.h"
 #include "Utils.h"
@@ -117,8 +116,6 @@ SimulationInterface::create(const string& type,
 
   if (type_name == "macrostrain")
     sim = Macrostrain::create(options);
-  else if (type_name == "crackstrain")
-    sim = CrackStrain::create(options);
   else if (type_name == "efaschroedinger")
     sim = EnvelopFunctionApprox::create(options);
   else if (type_name == "sweep")
@@ -233,8 +230,8 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
   // a set of DoFs for each system
   vector<IDHashSet> dofsets;
 
-  System* system =
-      get_equation_system<TiberEqSystem>().get_libmesh_system();
+  TiberEqSystem& tiber_sys = get_equation_system<TiberEqSystem>();
+  System* system = tiber_sys.get_libmesh_system();
 
   // In the remote case that system is NULL we return immediately
   if (system == NULL)
@@ -242,20 +239,22 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
 
 
   const DofMap& dof_map = system->get_dof_map();
-  vector<vector<unsigned int> > dof_indices;
+  vector<unsigned int> dof_indices;
 
-  // numeric ids corresponding to the given variable
-  vector<ID> var(variables.size(), INVALID_ID);
+  // contains the 'active' DoFs, false means inactive
+  vector<unsigned int> used_dofs(dof_map.n_dofs(), false);
+
+  // for each variable, tell if it is used in the
+  // excluded domains
+  vector<bool> var(dof_map.n_variables(), true);
 
   for (int i = 0; i < var.size(); ++i)
-    var[i] = system->variable_number(variables[i]);
+    var[system->variable_number(variables[i])] = false;
 
-  if (var.empty())
+  if (variables.empty())
   {
     // take all variables
   }
-
-  dof_indices.resize(var.size());
 
 
   const MeshBase& mesh = get_mesh();
@@ -272,10 +271,28 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
 
     ID subdomain = elem->subdomain_id();
 
-    for (int i = 0; i < var.size(); ++i)
-      dof_map.dof_indices(elem, dof_indices[i], var[i]);
+    // if the subdomain ID is not found in the given set
+    // it means all its DoFs need to be included
+    int restricted = ids.count(subdomain);
 
+    for (int i = 0; i < var.size(); ++i)
+    {
+      if (!restricted || var[i])
+      {
+        dof_map.dof_indices(elem, dof_indices, i);
+
+        for (int j = 0; j < dof_indices.size(); ++j)
+          used_dofs[dof_indices[j]] = true;
+      }
+    }
   }
+
+  // now we have all used DoFs in used_dofs marked with true
+  for (size_t i = 0; i < dof_indices.size(); ++i)
+    if (!used_dofs[i])
+      dofsets[0].insert(i);
+
+  tiber_sys.set_excluded_dofs(dofsets[0]);
 }
 
 

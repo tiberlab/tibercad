@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # returns the machine architecture as a string
 # the given string has to be of type cpu-os
