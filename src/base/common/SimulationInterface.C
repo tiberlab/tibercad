@@ -3,6 +3,7 @@
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 #include "TiberEqSystem.h"
+#include "TiberLinearSystem.h"
 #include "Material.h"
 #include "Atom.h"
 #include "MaterialBoundary.h"
@@ -207,17 +208,74 @@ SimulationInterface::do_print_info(void)
 
 
 void
-SimulationInterface::restrict_solve_to_subdomains(const std::set<ID>& ids)
+SimulationInterface::restrict_solve_to_subdomains(const set<ID>& ids,
+    const vector<string>& variables)
 {
-  find_excluded_dofs(ids);
+  // if we have no environment then we have probably no mesh
+  // and we can go out immediately
+  if (!has_environment()) return;
+
+  // we have to activate our elements
+  get_environment().prepare_for_solve();
+  find_excluded_dofs(ids, variables);
 }
 
 
 void
-SimulationInterface::find_excluded_dofs(const std::set<ID>& ids)
+SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
+    const vector<string>& variables)
 {
+  // if we have no environment then we have probably no mesh
+  // and we can go out immediately
+  if (!has_environment())
+    return;
+
+  // a set of DoFs for each system
   vector<IDHashSet> dofsets;
 
+  System* system =
+      get_equation_system<TiberEqSystem>().get_libmesh_system();
+
+  // In the remote case that system is NULL we return immediately
+  if (system == NULL)
+    return;
+
+
+  const DofMap& dof_map = system->get_dof_map();
+  vector<vector<unsigned int> > dof_indices;
+
+  // numeric ids corresponding to the given variable
+  vector<ID> var(variables.size(), INVALID_ID);
+
+  for (int i = 0; i < var.size(); ++i)
+    var[i] = system->variable_number(variables[i]);
+
+  if (var.empty())
+  {
+    // take all variables
+  }
+
+  dof_indices.resize(var.size());
+
+
+  const MeshBase& mesh = get_mesh();
+
+  MeshBase::const_element_iterator el =
+                                  mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  mesh.active_local_elements_end();
+
+  // loop over all active elements
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+
+    ID subdomain = elem->subdomain_id();
+
+    for (int i = 0; i < var.size(); ++i)
+      dof_map.dof_indices(elem, dof_indices[i], var[i]);
+
+  }
 }
 
 

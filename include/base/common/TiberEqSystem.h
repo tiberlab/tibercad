@@ -10,6 +10,7 @@
 #include <string>
 
 class EquationSystems;
+class System;
 template <typename T> class NumericVector;
 template <typename T> class DenseVector;
 template <typename T> class DenseMatrix;
@@ -90,6 +91,14 @@ class TiberEqSystem
 
     //! Get the type of this system
     SystemType get_type(void) const;
+
+
+    //! Get a pointer to the underlying libmesh System
+    /*!
+     * In future the return value may be \c NULL if there is no
+     * libmesh system type associated
+     */
+    System* get_libmesh_system(void);
 
 
     //! Get the solution vector

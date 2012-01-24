@@ -63,7 +63,24 @@ TiberEqSystem::create(EquationSystems& es,
 
   return sys;
 }
-  
+
+
+
+System*
+TiberEqSystem::get_libmesh_system(void)
+{
+  System* sys = NULL;
+  switch (get_type())
+  {
+    case LINEAR:
+      sys = static_cast<TiberLinearSystem*>(this);
+      break;
+
+    case NONLINEAR:
+      sys = static_cast<TiberNonlinearSystem*>(this);
+      break;
+  }
+}
 
 
 

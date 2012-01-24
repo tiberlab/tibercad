@@ -216,7 +216,14 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Restrict the solve to a set of subdomains
-    void restrict_solve_to_subdomains(const std::set<ID>& ids);
+    /*!
+     * \param ids the set of subdomain IDs
+     * \param variables the names of the variables to restrict
+     *
+     * If \p variables is empty, then all variables are restricted.
+     */
+    void restrict_solve_to_subdomains(const std::set<ID>& ids,
+        const std::vector<std::string>& variables);
 
 
     //! Solve the system for equilibrium
@@ -792,8 +799,14 @@ class SimulationInterface : public TiberModelObject
     /*!
      * Can be overridden if the default implementation is not
      * appropriate.
+     *
+     * \param ids the set of subdomain IDs
+     * \param variables the names of the variables to restrict
+     *
+     * If \p variables is empty, then all variables are restricted.
      */
-    virtual void find_excluded_dofs(const std::set<ID>& ids);
+    virtual void find_excluded_dofs(const std::set<ID>& ids,
+        const std::vector<std::string>& variables);
 
 
     //! Declare this module to be a task or not
