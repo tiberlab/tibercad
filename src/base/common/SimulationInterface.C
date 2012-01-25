@@ -245,7 +245,8 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
   vector<unsigned int> used_dofs(dof_map.n_dofs(), false);
 
   // for each variable, tell if it is used in the
-  // excluded domains
+  // excluded domains:
+  // true means include, false means exclude
   vector<bool> var(dof_map.n_variables(), true);
 
   for (int i = 0; i < var.size(); ++i)
@@ -253,7 +254,8 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
 
   if (variables.empty())
   {
-    // take all variables
+    // exclude all variables
+    var = vector<bool>(var.size(), false);
   }
 
 

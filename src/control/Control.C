@@ -369,7 +369,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
     keys[0] = "Contact";
     keys[1] = "Boundary";
     keys[2] = "Interface";
-    keys[2] = "BoundaryCondition";
+    keys[3] = "BoundaryCondition";
 
     for (size_t i = 0; i < keys.size(); ++i)
     {
