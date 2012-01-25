@@ -100,6 +100,9 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
   //! Compute porosity
   double compute_porosity();
 
+  //! Compute porosity
+  double compute_view_factor(std::string S1, std::string S2);
+
   //! Compute surface to volume ratio
   double surface_to_volume_ratio();
 
@@ -271,6 +274,13 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
 
   //typedef  set<const Elem*>::const_iterator ConstIteratorFourier;
 
+  //! Maximum temperature
+  Real _Tmax;
+
+  //! Minimum temperature
+  Real _Tmin;
+
+
   std::set<const Elem*> FourierDomain;
 
   std::map<const Elem*, const Elem*> domain_boundary;
@@ -298,6 +308,8 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
     enum Solutions
     {
       LatticeTemp,       /*!< the Lattice Temperature */
+      NormalizedLatticeTemp,       /*!< the Normalized Lattice Temperature */
+      NormalizedThermalFlux,       /*!< the Normalized ThermalFlux */
       FourierTemp,       /*!< the Lattice Temperature */
       ThermalFlux,              /*!< the thermal flux */
       HeatSource,                /*!< the HeatSource */
@@ -307,7 +319,7 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
       EffectiveKappa,
       thermal,
       DomainTest,
-     GRAY,
+      GRAY,
       MaxTemp
     };
 

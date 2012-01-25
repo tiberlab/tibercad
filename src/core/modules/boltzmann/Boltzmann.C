@@ -6,6 +6,7 @@
 #include "TiberLinearSystem.h"
 #include "Messages.h"
 #include "ModelOptions.h"
+#include "SimulationOptions.h"
 #include "equation_systems.h"
 #include "dof_map.h"
 #include "quadrature_gauss.h"
@@ -483,9 +484,11 @@ Boltzmann::do_setup_solution_variables(void)
 {
   // we declare our solution variables
   declare_solution(LatticeTemp, REAL, NODES, "K");
+  declare_solution(NormalizedLatticeTemp, REAL, NODES, "");
   declare_solution(FourierTemp, REAL, NODES, "K");
   declare_solution(MaxTemp, REAL, GLOBAL, "K");
   declare_solution(ThermalFlux, VECTOR, NODES, "W/m^2");
+  declare_solution(NormalizedThermalFlux, VECTOR, NODES, "");
   declare_solution(ThermCond, VECTOR, NODES, "W/m K");
   declare_solution(HeatSource, REAL, NODES, "W/m^3");
   // declare_solution(EffectiveKappa, REAL, NODES, "W/cm^3");
@@ -1356,19 +1359,16 @@ Boltzmann::compute_effective_thermal_conductivity()
 {
  EquationSystems& es = get_equation_systems();
 
-
-
- if (is_gray)
- {
-
+// if (is_gray)
+// {
   //-----------------GRAY---------------
-   TiberLinearSystem& gray_system =
-     es.get_system<TiberLinearSystem>("gray");
-   const NumericVector<Number>& gray_solution = gray_system.get_solution_vector();
-   const DofMap& dof_map_gray= gray_system.get_dof_map();
-   vector<unsigned int> dof_indices_gray;
-   const unsigned int tvar_gray = gray_system.variable_number("T");
-   FEType fe_type_gray = dof_map_gray.variable_type(tvar_gray);
+  // TiberLinearSystem& gray_system =
+  //   es.get_system<TiberLinearSystem>("gray");
+ //  const NumericVector<Number>& gray_solution = gray_system.get_solution_vector();
+ //  const DofMap& dof_map_gray= gray_system.get_dof_map();
+ //  vector<unsigned int> dof_indices_gray;
+ //  const unsigned int tvar_gray = gray_system.variable_number("T");
+  // FEType fe_type_gray = dof_map_gray.variable_type(tvar_gray);
 
  //  TiberLinearSystem& gray_system =
   //     es.get_system<TiberLinearSystem>("boltzmann");
@@ -1378,16 +1378,14 @@ Boltzmann::compute_effective_thermal_conductivity()
    //  ID tvar = gray_system.variable_number("T_0");
     // FEType fe_type_gray = dof_map_gray.variable_type(tvar);
 
-
-
    //--------------surface-----------------
-   AutoPtr<FEBase> fe_face_gray(build_finite_element(dim, fe_type_gray, true));
-   QGauss qrule_face_gray(dim-1,CONSTANT);
-   fe_face_gray->attach_quadrature_rule(&qrule_face_gray);
-   const std::vector<Real>& JxW_face_gray = fe_face_gray->get_JxW();
-   const std::vector<Point>& normal_gray = fe_face_gray->get_normals();
+//   AutoPtr<FEBase> fe_face_gray(build_finite_element(dim, fe_type_gray, true));
+ //  QGauss qrule_face_gray(dim-1,CONSTANT);
+ //  fe_face_gray->attach_quadrature_rule(&qrule_face_gray);
+ //  const std::vector<Real>& JxW_face_gray = fe_face_gray->get_JxW();
+ //  const std::vector<Point>& normal_gray = fe_face_gray->get_normals();
    //-----------------------------------------------------------------------------
-  }
+ // }
    //Fourier System
    TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("fourier");
@@ -1433,8 +1431,8 @@ Boltzmann::compute_effective_thermal_conductivity()
 
   Point Point_hot(0);
   Point Point_cold(0);
-double Pspec(0);
-double Aspec(0);
+  double Pspec(0);
+  double Aspec(0);
 
   set<const Elem*>::iterator it = Domain.begin();
   const set<const Elem*>::iterator end = Domain.end();
@@ -1475,22 +1473,6 @@ double Aspec(0);
 
 	  if (mod_b->get_name() == myopts.cold_contact)
 	  {
-
-	    //For heat_reservoir contact we take the nominal value (the imposed one)
-	    if (mod_b->get_type()=="boltzmann_bnd_heat_reservoir")
-	    {
-	      double a,b,c;
-	      mod_b->get_coefficients(a,b,c);
-	      Tcold = c;
-	    }
-
-	    //For periodic boundary condtion we take the naturally developed temperature
-	    if (mod_b->get_type()=="boltzmann_bnd_periodic")
-	    {
-	      ID dof = elem->dof_number(gray_sys_number,0,0);
-	      Tcold = (*equilibrium_energy)(dof);
-	    }
-
 	    Point_cold = q_point_face[0];
 	    
 	    for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
@@ -1498,50 +1480,34 @@ double Aspec(0);
 	      Acold += JxW_face[qp];
 	      for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
 	      {
+	        double T = (solution)(dof_indices[alpha]) ;
 		double Px = (*thermal_flux_nodal[0])(dof_indices[alpha]) * normal[qp](0);
 		double Py = (*thermal_flux_nodal[1])(dof_indices[alpha]) * normal[qp](1);
 		double Pz = (*thermal_flux_nodal[2])(dof_indices[alpha]) * normal[qp](2);
                 Pcold +=  JxW_face[qp] * phi[alpha][qp] * (Px + Py + Pz);
+                Tcold +=  JxW_face[qp] * phi[alpha][qp] * T;
 	      } 
 	    }
 	  }
 
 	  if (mod_b->get_name() == myopts.hot_contact)
 	  {
-	    //For heat_reservoir contact we take the nominal value (the imposed one)
-	    if (mod_b->get_type()=="boltzmann_bnd_heat_reservoir")
-	    {
-
-	      double a,b,c;
-	      mod_b->get_coefficients(a,b,c);
-
-
-	      Thot = c;
-	    }
-
-	    //For periodic boundary condtion we take the naturally developed temperature
-	    if (mod_b->get_type()=="boltzmann_bnd_periodic")
-	    {
-	      ID dof = elem->dof_number(gray_sys_number,0,0);
-	      Thot = (*equilibrium_energy)(dof);
-	    }
-
 
 	    Point_hot = q_point_face[0];
-
 	    for (ID qp = 0; qp <  qrule_face.n_points(); qp++)
 	    {
-	      Ahot += JxW_face[qp];
-              
+	      Acold += JxW_face[qp];
 	      for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
 	      {
-
-		double Px = (*thermal_flux_nodal[0])(dof_indices[alpha]) * normal[qp](0);
-		double Py = (*thermal_flux_nodal[1])(dof_indices[alpha]) * normal[qp](1);
-		double Pz = (*thermal_flux_nodal[2])(dof_indices[alpha]) * normal[qp](2);
+	        double T = (solution)(dof_indices[alpha]) ;
+	        double Px = (*thermal_flux_nodal[0])(dof_indices[alpha]) * normal[qp](0);
+	        double Py = (*thermal_flux_nodal[1])(dof_indices[alpha]) * normal[qp](1);
+	        double Pz = (*thermal_flux_nodal[2])(dof_indices[alpha]) * normal[qp](2);
 	        Phot +=  JxW_face[qp] * phi[alpha][qp] * (Px + Py + Pz);
+	        Thot +=  JxW_face[qp] * phi[alpha][qp] * T;
 	      } 
 	    }
+
 	  }
 
 	}
@@ -1577,19 +1543,13 @@ double Aspec(0);
        max_dist = abs(dist(d));
   //-------------------------------------------
 
-  //cout<<"Pcold_gray: "<<Pcold_gray<<" W"<<endl;  //! Order the solution in correct mode
-  //cout<<"Phot_gray: "<<Phot_gray<<" W"<<endl;
   cout<<"Pcold: "<<Pcold<<" W"<<endl;  //! Order the solution in correct mode
   cout<<"Phot: "<<Phot<<" W"<<endl;
   cout<<"Tcold: "<<Tcold<<" K"<<endl;  //! Order the solution in correct mode
   cout<<"Thot: "<<Thot<<" K"<<endl;
   cout<<"Power emitted: "<<total_heat_source*1e-6<<" W"<<endl;
 
-  //cout<<abs(Thot - Tcold)<<endl;
- // cout<< max_dist * get_scaling().get_calc_mesh_units()<<endl;
-  //cout<<Ahot<<endl;
-
-  double effective_kappa = Pcold/Ahot/(abs(Thot - Tcold)) * max_dist * get_scaling().get_calc_mesh_units();
+  double effective_kappa = 0.5 * (Pcold+Phot)/(abs(Thot - Tcold)) * max_dist * get_scaling().get_calc_mesh_units();
 
   cout<<"P specular: "<<Pspec<<" W"<<endl;
   ofstream myfile;
@@ -1943,14 +1903,56 @@ Boltzmann::compute_power_emitted()
 // }
 
 
+double
+Boltzmann::compute_view_factor(std::string S1, std::string S2)
+{
+  SimulationEnvironment& se = get_environment();
+
+  //Boundary* hb = se.get_boundary(myopts.hot_contact);
+
+  //SimulationEnvironment::BoundaryElementMap side = se.boundary_elements_begin(hb)
+
+  //Boundary* cb = se.get_boundary(myopts.cold_contact);
+
+  //! Get the iterator for the first boundary side
+  SimulationEnvironment::BoundarySideIterator side = se.boundary_sides_begin();
+  SimulationEnvironment::BoundarySideIterator end = se.boundary_sides_end();
+
+ // for ( ; side != end ; ++side)
+ // {
+
+ //   const ElementSide elside(elem->top_parent(),ns);
+ //   if (is_on_any_boundary(elside))
+  //  {
+  //    BoltzmannBoundaryModel* mod_b =
+  //        get_interface_model<BoltzmannBoundaryModel>(elem, ns);
+
+  //    fe_face->reinit(elem,ns);
+
+  //    if (mod_b != NULL)
+  //    {
+
+   //     if (mod_b->get_name() == myopts.cold_contact)
+
+   //   }
 
 
+
+  return 1.0;
+
+}
 
 
 void
 Boltzmann::do_solve(void)
 {
   _this = this;
+
+
+  //! Compute the view factor
+  cout<<compute_view_factor(myopts.hot_contact,myopts.cold_contact)<<endl;
+
+
 
   is_fourier_solved = false;
   is_gray_solved = false;
@@ -2055,7 +2057,15 @@ if  (myopts.compute_kappa = true)
  {
   double kappa = compute_effective_thermal_conductivity_elemental();
   cout<<"Effettive thermal conductivity:    "<<kappa<<" W/(m K)"<<endl;
-}
+
+  TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
+                                             "fourier", get_solver_options());
+
+     _Tmax =  system->get_solution_vector().linfty_norm();
+     _Tmin =  system->get_solution_vector().min();
+
+
+ }
 
 
 }
@@ -2146,6 +2156,10 @@ Boltzmann::get_solution_secure(const Elem* elem,
    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
    const RealTensor& kappa = mod.get_total_thermal_conductivity();
 
+   Real vg = mod.get_sound_velocity();
+   Real cg = mod.get_heat_capacity();
+
+
    for (unsigned int n = 0; n < np; n++)
     {
       mod.calculate(elem,real_pts[n]);
@@ -2159,6 +2173,18 @@ Boltzmann::get_solution_secure(const Elem* elem,
 	values[LatticeTemp][n] = T;
       }
    
+
+      if (values.count(NormalizedLatticeTemp))
+          {
+             double T  = 0.0;
+             for (unsigned int i = 0; i < n_dofs; i++)
+               T += phi[i][n] * solution(dof_indices[i]);
+
+             //double value = (T-_Tmin)/(_Tmax-_Tmin);
+             values[NormalizedLatticeTemp][n] = T - SimulationOptions::temperature;
+
+      }
+
       if (values.count(ThermalFlux))  
       {
 	
@@ -2167,11 +2193,23 @@ Boltzmann::get_solution_secure(const Elem* elem,
 	  for (ID d = 0; d < 3; d++)
 	    heat_flux(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
 	
-	
 	for (ID d = 0; d < dim; d++)
 	  values[ThermalFlux][d + 3 * n] = heat_flux(d);
 	
       }
+
+      if (values.count(NormalizedThermalFlux))
+          {
+
+            RealGradient heat_flux(0);
+            for (ID i = 0; i < n_dofs; i++)
+              for (ID d = 0; d < 3; d++)
+                heat_flux(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
+
+            for (ID d = 0; d < dim; d++)
+              values[NormalizedThermalFlux][d + 3 * n] = heat_flux(d)/(cg * vg);
+
+          }
 
       
       if (values.count(ThermCond))
@@ -2717,6 +2755,8 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
                  value_eq = (*equilibrium_energy)(periodic_dof);
               }
 
+
+         //No Delta T is superimposed
          DeltaT = (*equilibrium_energy)(local_dof) - value_eq;
 
          value += DeltaT;
