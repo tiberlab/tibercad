@@ -11,9 +11,9 @@
 
 .. [Kalyanasundaram] Kalyanasundaram Kuppuswamy, "Dye-Sensitized Solar Cells", *Editor Crc Pr Inc.* , 2010.
 
-.. [Gagliardi] Alessio Gagliardi, Matthias Auf der Maur, Desiree Gentilini and Aldo Di Carlo, "Modeling of Dye sensitized solar cells using a finite element method", *J. Computational Electronics* , vol. 8, pp. 12, 2009.
+.. [Gagliardi] Alessio Gagliardi, Matthias Auf der Maur, Desiree Gentilini and Aldo Di Carlo, "Simulation of Dye Solar Cells: through and beyond one dimension", *J. Computational Electronics* , vol. 10 (Number 4), pp. 424-436, 2011.
  
-
+.. [Frank] Arthur J. Frank, Nikos Kopidakis and Jao van de Lagemaat, J. Coordination Chemistry Reviews, vol. 248, pp. 1165-1179 (2004).
 
 .. [Povolotskyi] Povolotskyi et al. JAP (2006).
 
