@@ -67,8 +67,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     void print_Lib(void);
 
     //! We need to create a physical model
-    //virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
-    //    const Material* mat) const;
+    virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
+                                                  const Material* mat) const;
 
     //! We need to create boundary condition model
     //virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
@@ -83,6 +83,8 @@ class TBDLLOCAL Negf : public SimulationInterface
         const std::vector<Point>& p);
 
     void setup_effectivemass_hamil(void);
+
+    void compute_current(void);
 
     static void reorder_assemble(EquationSystems& es, const std::string& system_name);
 
@@ -101,6 +103,27 @@ class TBDLLOCAL Negf : public SimulationInterface
     void get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu);
 
     void get_blocks(std::vector<int>& cblok);
+
+    struct options
+    {
+        unsigned int n_blocks;
+
+        std::string pot_module;
+
+        double Emin;
+
+        double Emax;
+
+        double Estep;
+
+        std::vector <int> Np_n;
+
+        double Np_real;
+
+
+    };
+
+
 
   private:
 
@@ -125,17 +148,17 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     std::vector<ID> _end_blocks;
 
-    unsigned int _n_blocks;
-
-    std::string _pot_module;
-
     unsigned int _device_n_dofs;
+
+    std::vector<unsigned int> _dev;
 
     std::vector<unsigned int> _qc_n_dofs;
 
+    std::vector<unsigned int> _qc;
+
     NegfWrapper* _libnegf;
 
-
+    options opt;
 
 };
 

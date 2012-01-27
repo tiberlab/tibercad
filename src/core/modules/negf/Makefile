@@ -3,21 +3,25 @@
 topdir := ../../../..
 
 MODULE_NAME := negf
+export MODULE_NAME
 
 include $(topdir)/Make.module
 
-.PHONY: libnegf
+$(eval $(call MODULE, $(srcfiles)))
+
 target += libnegf
+target += models
 
 MODULE_LDFLAGS += -L$(libdir) -lnegf
 
-$(eval $(call MODULE, Negf.C ))
+.PHONY: models
+models:
+	$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
 
 
-libnegf:       
+.PHONY: libnegf
+libnegf:
 	$(MAKE) -C libnegf
-
-
 
 
 include $(topdir)/Make.rules

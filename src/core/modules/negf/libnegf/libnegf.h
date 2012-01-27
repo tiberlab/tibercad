@@ -110,5 +110,15 @@ inline void f77_negf_set_verbosity (f77_int const* handler, f77_int const&
 }
 
 
+extern "C" void negf_current_ (f77_int const*);
+
+// Corresponding F77 arguments for f77_negf_current:
+// integer, intent(in) :: handler(DAC_handlerSize)
+inline void f77_negf_current (f77_int const* handler)
+{
+  negf_current_ (handler);
+}
+
+
 #endif
 

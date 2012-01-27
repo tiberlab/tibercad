@@ -47,4 +47,10 @@ void NegfWrapper::set_verbose(int verbose_lev)
 
 }
 
+int
+NegfWrapper::current()
+{
+  f77_negf_current(_handler);
+  return 0;
+}
 

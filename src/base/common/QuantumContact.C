@@ -381,6 +381,8 @@ QuantumContact::extend_mesh(void)
       ID side = elemside.side();
 
       const Elem* elem = elemside.elem();
+      const Point centr = elem->centroid();
+
 
       if (!_rg_ids.count(elem->subdomain_id())) continue;
 
@@ -417,8 +419,8 @@ QuantumContact::extend_mesh(void)
         newelem = _mesh->add_elem(new Prism6);
 
         // reorder nodes to have a closed loop counter clockwise
-        // determinat must be negative, otherwise swap points
-        if (Deter(_mesh->point(nodevec[0]), _mesh->point(nodevec[1]), _mesh->point(nodevec[2]))<0)
+        // determinat must be positive, otherwise swap points
+        if (Deter(_mesh->point(nodevec[0])-centr, _mesh->point(nodevec[1])-centr, _mesh->point(nodevec[2])-centr)<0)
           std::swap(nodevec[1], nodevec[2]);
       }
 
@@ -427,14 +429,14 @@ QuantumContact::extend_mesh(void)
         newelem = _mesh->add_elem(new Hex8);
 
         // reorder nodes to have a closed loop counter clockwise
-        // determinat must be negative, otherwise swap points
-        if (Deter(_mesh->point(nodevec[0]), _mesh->point(nodevec[1]), _mesh->point(nodevec[2]))<0)
+        // determinat must be positive, otherwise swap points
+        if (Deter(_mesh->point(nodevec[0])-centr, _mesh->point(nodevec[1])-centr, _mesh->point(nodevec[2])-centr)<0)
           std::swap(nodevec[1], nodevec[2]);
 
-        if (Deter(_mesh->point(nodevec[0]), _mesh->point(nodevec[1]), _mesh->point(nodevec[3]))<0)
+        if (Deter(_mesh->point(nodevec[0])-centr, _mesh->point(nodevec[1])-centr, _mesh->point(nodevec[3])-centr)<0)
           std::swap(nodevec[1], nodevec[3]);
 
-        if (Deter(_mesh->point(nodevec[0]), _mesh->point(nodevec[2]), _mesh->point(nodevec[3]))<0)
+        if (Deter(_mesh->point(nodevec[0])-centr, _mesh->point(nodevec[2])-centr, _mesh->point(nodevec[3])-centr)<0)
           std::swap(nodevec[2], nodevec[3]);
       }
 
@@ -602,7 +604,6 @@ QuantumContact::extend_mesh(void)
       }
     }
   }
-
 }
 
 
@@ -693,10 +694,3 @@ QuantumContact::project_on_boundary(const Elem* elem,const Point& point )
   }
  return std::make_pair(sidelem,out);
 }
-
-
-
-
-
-
-

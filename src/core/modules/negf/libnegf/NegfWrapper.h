@@ -32,6 +32,9 @@ public:
   //!Initialize the Negf instance
   int init();
 
+  //!Initialize the Negf instance
+  int current();
+
   //!Clean the Negf instance variable space
   void clean_libnegf();
 
