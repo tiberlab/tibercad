@@ -50,6 +50,10 @@ Specie::string_to_specie = boost::assign::map_list_of
        ("Ti", Ti) ("W", W) ("U", U) ("V", V) ("Xe", Xe) ("Yb", Yb) ("Y", Y) ("Zn", Zn) ("Zr", Zr) ("S", S);
 
 
+std::map<Specie::Type, double>
+Specie::specie_to_mass = boost::assign::map_list_of
+       (Si,28.01) (Ge,72.61);
+
 
 //!Override assignement operator (string input, allows:
 //!Specie s = 'H')

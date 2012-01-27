@@ -48,6 +48,8 @@ public:
   static
   std::map<Type, std::string> specie_to_string;
 
+  static
+    std::map<Type, double> specie_to_mass;
 
    static
    std::map<std::string, Type> string_to_specie;
@@ -66,6 +68,9 @@ public:
 
     //! Get reference to specie type
     //const Type& get_type(void) const;
+
+    //!Get mass
+    const double get_mass(void) const;
 
     //!Get specie string
     const std::string& get_string(void) const;
@@ -120,6 +125,13 @@ inline
 const std::string& Specie::get_string(void) const
 {
  return Specie::specie_to_string[_type];
+}
+
+
+inline
+const double Specie::get_mass(void) const
+{
+ return Specie::specie_to_mass[_type];
 }
 
 inline
