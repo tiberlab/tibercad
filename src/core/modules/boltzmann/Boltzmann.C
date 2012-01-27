@@ -1908,33 +1908,81 @@ Boltzmann::compute_view_factor(std::string S1, std::string S2)
 {
   SimulationEnvironment& se = get_environment();
 
-  //Boundary* hb = se.get_boundary(myopts.hot_contact);
 
-  //SimulationEnvironment::BoundaryElementMap side = se.boundary_elements_begin(hb)
+  TiberLinearSystem& system = static_cast<TiberLinearSystem&>(
+                        get_equation_systems().get_system("gray"));
 
-  //Boundary* cb = se.get_boundary(myopts.cold_contact);
+    const MeshBase& mesh = get_mesh();
+    DofMap& dof_map =  system.get_dof_map();
+    const unsigned int tvar = system.variable_number("T");
+    FEType fe_type = dof_map.variable_type(tvar);
+
+    // the surface finite element
+    AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+    QGauss qface(dim - 1, CONSTANT);
+    fe_face->attach_quadrature_rule(&qface);
+
+    const vector<Real>& JxW_face = fe_face->get_JxW();
+    const vector<Point>& qface_point = fe_face->get_xyz();
+    const vector<Point>& normal = fe_face->get_normals();
+
+
+  Real view_factor = 0.0;
+  ID n_max = 100;
 
   //! Get the iterator for the first boundary side
-  SimulationEnvironment::BoundarySideIterator side = se.boundary_sides_begin();
+  SimulationEnvironment::BoundarySideIterator side_begin = se.boundary_sides_begin();
+  SimulationEnvironment::BoundarySideIterator side_1 = se.boundary_sides_begin();
+  SimulationEnvironment::BoundarySideIterator side_2 = se.boundary_sides_begin();
   SimulationEnvironment::BoundarySideIterator end = se.boundary_sides_end();
 
- // for ( ; side != end ; ++side)
- // {
+  for ( ; side_1 != end ; ++side_1)
+  {
+    ElementSide elside = (*side_1).first;
 
- //   const ElementSide elside(elem->top_parent(),ns);
- //   if (is_on_any_boundary(elside))
-  //  {
-  //    BoltzmannBoundaryModel* mod_b =
-  //        get_interface_model<BoltzmannBoundaryModel>(elem, ns);
+    BoltzmannBoundaryModel* mod_b =
+          get_interface_model<BoltzmannBoundaryModel>(elside.elem(), elside.side());
 
-  //    fe_face->reinit(elem,ns);
+      if (mod_b->get_name() == myopts.hot_contact)
+       {
 
-  //    if (mod_b != NULL)
-  //    {
+        fe_face->reinit(elside.elem(), elside.side());
+        Point face_centroid_1 = qface_point[0];
 
-   //     if (mod_b->get_name() == myopts.cold_contact)
+        for ( ; side_2 != end ; ++side_2)
+        {
 
-   //   }
+          ElementSide elside = (*side_2).first;
+          BoltzmannBoundaryModel* mod_b =
+                   get_interface_model<BoltzmannBoundaryModel>(elside.elem(), elside.side());
+
+         if (mod_b->get_name() == myopts.cold_contact)
+         {
+           fe_face->reinit(elside.elem(), elside.side());
+                   Point face_centroid_2 = qface_point[0];
+
+           for (ID n; n< n_max; n++)
+           {
+
+             Point p = face_centroid_1 + (face_centroid_2 - face_centroid_1)/n_max * (n+1);
+
+             set<const Elem*>::iterator el = Domain.begin();
+             const set<const Elem*>::iterator end_el = Domain.end();
+
+             for ( ; el != end_el ; ++el)
+             {
+               const Elem* elem = *el;
+               if (elem->contains_point(p))
+               {
+               }
+             }
+           }
+
+         }
+       }
+       }
+
+      }
 
 
 
@@ -1950,7 +1998,7 @@ Boltzmann::do_solve(void)
 
 
   //! Compute the view factor
-  cout<<compute_view_factor(myopts.hot_contact,myopts.cold_contact)<<endl;
+  //cout<<compute_view_factor(myopts.hot_contact,myopts.cold_contact)<<endl;
 
 
 
@@ -2180,8 +2228,9 @@ Boltzmann::get_solution_secure(const Elem* elem,
              for (unsigned int i = 0; i < n_dofs; i++)
                T += phi[i][n] * solution(dof_indices[i]);
 
-             //double value = (T-_Tmin)/(_Tmax-_Tmin);
-             values[NormalizedLatticeTemp][n] = T - SimulationOptions::temperature;
+             double value = (T-(_Tmax+_Tmin)/2.0)/(_Tmax-_Tmin);
+             //double value = T - SimulationOptions::temperature;
+             values[NormalizedLatticeTemp][n] = value;
 
       }
 
@@ -2207,7 +2256,7 @@ Boltzmann::get_solution_secure(const Elem* elem,
                 heat_flux(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
 
             for (ID d = 0; d < dim; d++)
-              values[NormalizedThermalFlux][d + 3 * n] = heat_flux(d)/(cg * vg);
+              values[NormalizedThermalFlux][d + 3 * n] = heat_flux(d)/(cg * vg)/(_Tmax-_Tmin);
 
           }
 
