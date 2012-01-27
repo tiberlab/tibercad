@@ -38,11 +38,7 @@ where :math:`\kappa` is thermal conductivity  (which is assumed temperature inde
 
 where :math:`H` is the total heat source, which can be a combination of several models (see :ref:`heat_source_models`).
     
-..  figure:: ../data/latticetemp.png
-    :align: center
-    :scale: 50%
-    
-    Lattice temperature
+
 
 
 
@@ -530,7 +526,9 @@ in the Simulation block ::
 
 
 
-Output of  simulation is  shown in  Fig. :ref:`Temperature map<temp>` and :ref:`Thermal flux<heat>`
+Output of  simulation is  shown in  Fig. :ref:`Temperature map<temp>`, :ref:`Thermal flux<heat>` and 
+:ref:`Thermoelectric power<tep>`.
+
 All results displayed are calculated at 1.2 V bias value.
 
 

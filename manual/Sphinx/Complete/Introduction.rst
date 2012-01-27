@@ -863,6 +863,25 @@ The output variables for each Module are specified in the list *plot*.
 tiberCAD output is divided in two classes: **mesh-based** and **mesh-independent**
 quantities.
 
+The  available  formats are 
+
+  * ``vtk`` for 2D and 3D  output data
+
+  * ``grace`` for 1D output  data
+
+Output results from 2D or 3D simulations may  be  visualized with  the open source visualization and post-processing  tool **paraview**: http://www.paraview.org
+
+Output results from 1D simulations are  ascii  data  files which  can  be visualized e.g.  with the  open source plotting tools: 
+
+**xmgrace** : http://plasma-gate.weizmann.ac.il/Grace
+(for Linux)
+
+**AptPlot** :
+http://www.aptplot.com/aptplot/
+(in java,  for  Win and  Linux)
+
+
+
 Mesh-based quantities
 ^^^^^^^^^^^^
 
