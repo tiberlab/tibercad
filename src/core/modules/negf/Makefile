@@ -7,10 +7,10 @@ export MODULE_NAME
 
 include $(topdir)/Make.module
 
-$(eval $(call MODULE, $(srcfiles)))
-
 target += libnegf
 target += models
+
+$(eval $(call MODULE, $(srcfiles)))
 
 MODULE_LDFLAGS += -L$(libdir) -lnegf
 
