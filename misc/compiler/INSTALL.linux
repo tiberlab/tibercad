@@ -3,7 +3,7 @@ PACKAGER=ma
 VERSION=4.6.0
 PROD=gcc
 
-topdir=/home/maufder/Work/TiberCAD/trunk
+topdir=/scratch/maufder/TiberCAD/test/trunk
 
 ARCH=$(${topdir}/share/arch.sh)
 # You can set these to any reasonable value
@@ -26,9 +26,9 @@ echo $INSTALLEPREFIX
 echo "$LD_RUN_PATH"
 
 simplebuild http://ftp.sunet.se/pub/gnu/gmp gmp-5.0.2.tar.bz2 --enable-cxx --enable-mpbsd 
-simplebuild http://www.mpfr.org/mpfr-current mpfr-3.0.1.tar.bz2 --with-gmp=${EPREFIX} 
+simplebuild http://www.mpfr.org/mpfr-3.0.1 mpfr-3.0.1.tar.bz2 --with-gmp=${EPREFIX} 
 simplebuild http://www.multiprecision.org/mpc/download mpc-0.9.tar.gz --with-gmp-include=${EPREFIX}/include --with-gmp-lib=${EPREFIX}/lib --with-mpfr-include=${PREFIX}/include --with-mpfr-lib=${EPREFIX}/lib 
-simplebuild http://www.cs.unipr.it/ppl/Download/ftp/releases/0.11.2/ ppl-0.11.2.tar.bz2 --with-libgmpxx-prefix=${EPREFIX} --with-cxxflags="-I ${PREFIX}/include" 
+simplebuild http://bugseng.com/products/ppl/download/ftp/releases/0.11.2/ ppl-0.11.2.tar.bz2 --with-libgmpxx-prefix=${EPREFIX} --with-cxxflags="-I ${PREFIX}/include" 
 export CXXFLAGS="-I ${PREFIX}/include"
 export CFLAGS="-I ${PREFIX}/include"
 export CPPLAGS="-I ${PREFIX}/include"
