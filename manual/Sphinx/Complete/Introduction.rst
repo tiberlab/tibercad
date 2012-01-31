@@ -197,7 +197,7 @@ the  same  works for  surfaces:  they  may  have only  lines  in  common,   but 
   Point(2) = {L, 0, 0, d};
 
 
-In the definition of a geometrical point, the three first expressions inside the braces on the right hand side give the three X, Y and Z coordinates of the point; the last expression ``d`` sets the *characteristic mesh length* at that point, that is the *size* of a mesh element, 
+In the definition of a geometrical point, the  first three expressions inside the braces on the right hand side give the three X, Y and Z coordinates of the point; the last expression ``d`` sets the *characteristic mesh length* at that point, that is the *size* of a mesh element, 
 defined as the length of the segment for a line mesh element, the radius of the circumscribed circle for a triangle mesh element and the radius of the circumscribed sphere for a tetrahedron mesh element.
 
 
@@ -214,7 +214,7 @@ Thus, the smaller is the value of ``d``, the greater is the mesh density close t
 
 ::  
 
-  Line(1) = {1, 2};
+  Line(1) = {1,2};
 
 The two expressions inside the braces on the right hand side  give the identification numbers of the start and end points of the line.
 
@@ -310,7 +310,7 @@ Modeling the device
 
 Again, as a first step, we have to model the device. 
 
-Geometrical *Points* and *Lines* are  defined to design the device  structure; the  fourth parameter in *Point* assignement is  the   **characteristic length** associated to that point: this  is  an  essential feature to control the  mesh density and refine it where  necessary (usually n the channel region).   
+Geometrical *Points* and *Lines* are  defined to design the device  structure; the  fourth parameter in *Point* assignement is  the   **characteristic length** associated to that point: this  is  an  essential feature to control the  mesh density and refine it where  necessary (usually in the channel region).   
 
 .. warning::
              In a 2D simulation it is  assumed that the geometrical model is  restricted to  the  
@@ -353,13 +353,8 @@ First a *line loop* is composed, listing all the  lines constituting the  bounda
 
 **Definition of  the Physical Surfaces**
 
-Each of the  *Physical Surfaces* is composed by one or more geometrical *Plane Surface*. For example, *Physical surface* **contact** comprises in one   single physical region the two separated contact geometrical regions, while *Physical surface* **oxide** corresponds to the  oxide  region.
-
-The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be  assigned to the related tiberCAD regions through the keyword *Region* and *mesh_regions*.   
- (See :ref:`Input_Ex2`)
-
-                                                                                                                  
-::
+Each of the  *Physical Surfaces* is composed by one or more geometrical *Plane Surface*. For example, *Physical surface* **contact** comprises in one   single physical region the two separated contact geometrical regions, while *Physical surface* **oxide** corresponds to the  oxide  region. 
+The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be  assigned to the related tiberCAD regions through the keyword *Region* and *mesh_regions*. (See :ref:`Input_Ex2`) ::
 
   Physical Surface("substrate") = {41}; // n-Si
   Physical Surface("contact") = {44,47}; // n+-Si
@@ -369,8 +364,8 @@ The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be 
                                                
 **Definition of the Phisical Lines**
 
-In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Phisical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation): thus *Physical Line* **source** refers to the source contact, *Physical Line* **gate**  to the gate contact, *Physical Line*  **drain**  to the drain contact.
-The names of these *Phisical Lines*  will be  asigned to tiberCAD *Contacts*.
+In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Phisical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation). Thus *Physical Line* **source** refers to the source contact, *Physical Line* **gate**  to the gate contact, *Physical Line*  **drain**  to the drain contact.
+The names of these *Phisical Lines*  will be  assigned to tiberCAD *Contacts*.
 
 ::
 

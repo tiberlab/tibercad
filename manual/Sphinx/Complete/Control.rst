@@ -18,7 +18,8 @@ The  assignement to  a  *variable* is done  in  this  way ::
   parameter = $my_var[0.0]
  
 where  ``my_var`` is  a  user-defined variable and the value in  square brackets [0.0] is  the  default  value of  the  variable.
-
+A  typical application  of a user-defined *variable* is  in  the  *Sweep* calculation.
+ 
 
 Sweep
 ---------
@@ -132,7 +133,7 @@ Example::
      relative_tolerance = 1e-5
    }
 
-In this  example, the ``selfconsistent`` solution named ``sc_all`` is  defined,  which solves the  simulation defined in the relevant  modules as quantum_el,quantum_hl and dd,  in this  order. 
+In this  example, the ``selfconsistent`` solution named ``sc_all`` is  defined,  which solves the  simulations defined in the relevant  modules as *quantum_el,quantum_hl* and *dd*,  in this  order. 
 
 
 
@@ -144,8 +145,8 @@ Numerical Solvers
 -------------------------
 
 The **Solver**  block inside a module description contains the options for the numerical solver.
-The solver type the **Solver**  block is describing (linear, nonlinear, eigenvalue solver) depends on the module.
-The options and  parameters for the nonlinear and the linear solvers are presented in  the following :
+The solver type the **Solver**  block is describing (*linear, nonlinear, eigenvalue solver*) depends on the module.
+The options and  parameters for the *nonlinear* and the *linear* solvers are presented in  the following.
 
 .. index:: double:Solvers;nonlinear
 
@@ -163,7 +164,7 @@ The Solvers implemented are of  two types :
 
 Nonlinear solvers  are based on iterative methods, solving in each iteration a linear system. 
 The linear solver used for this solution can be controlled by providing a block with the keyword ``linear_solver`` 
-containing the options for the linear solver (see linear solvers).
+containing the options for the linear solver (see :ref:`Linear_solver`).
 
 
 
@@ -225,14 +226,13 @@ Petsc solver
 
 
  ``method`` : string 
-    The Krylov subspace method to be used
-
-Here  are  the  available methods:
+    The Krylov subspace method to be used. Here  are  the  available options:
   
  ``bcgs`` :
-     BiCGSTAB
+     BiCGstab
 
  ``bcgsl`` :
+      BiCGstab(L)
 
  ``gmres`` :
     Generalized Minimal Residual

@@ -45,7 +45,7 @@ complex eigenvalue problem
 
 where H and S are the Hamiltonian and S-matrix, respectively.
 The EFA calculations are performed by the **Module** ``efaschroedinger``.
-A typical exampleis the following  ::
+A typical example is the following  ::
 
   Module efaschroedinger
     {
@@ -188,15 +188,17 @@ In case *single_band* model is  applied to electrons, the  relevant  mass  is re
 Quantum density calculation
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-TO  BE   CHECKED
 
-Calculation of particle (electron,hole) quantum density, 
-based on the result of a previous calculation of the system eigenstates may be obtained with an analytical or a
-numerical calculation.
 
-Analytical calculation of density is done in the following way. For each eigenstate we
-calculate the effective mass assuming quadratic dispersion. Then the charge density is
-calculated  as follows:
+The particle (electron,hole) **quantum density** is  calculated  by default if  the  keyword ``QuantumDensity`` is  present in the plot list::
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)  
+
+
+ 
+The calculation  may be obtained with an analytical or a numerical calculation.
+
+By default, an analytical calculation of density is performed in the following way. For each eigenstate we calculate the effective mass assuming quadratic dispersion. Then the charge density is calculated  as follows:
 
 ..  math::
     :nowrap:
@@ -210,17 +212,17 @@ calculated  as follows:
     \end{align}
 
 
-where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; m is the averaged mass (the mass
-is different for each quantized state and is position independent); g is the degeneracy of
-the states. The + sign is for electrons, the - sign is for holes.
+where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; :math:`m` is the averaged mass (the mass
+is different for each quantized state and is position independent); :math:`g` is the degeneracy of
+the states. The :math:`+` sign is for electrons, the :math:`-` sign is for holes.
 
 
 
-Numerical calculation is done by the following formula:
+Alternatively, numerical calculation may be performed according  the following formula:
 
 ..  math::
     :nowrap:
-	:label:
+    :label:
 
     \begin{equation}
     \rho({\bf r}) = \sum_n \frac {1}{(2\pi)^d} \int_{BZ} |\psi_{\bf k_{\|}}|({\bf r})|^2 \frac{1}{1+\exp 
@@ -229,23 +231,26 @@ Numerical calculation is done by the following formula:
 
 
 The integration is performed on a mesh in the k-space.
-A  block quantumdensity has  to  be  defined inside Module efaschroedinger.
+To perform a numerical calculation,  a  block ``quantumdensity`` has  to  be  defined inside the **Module** ``efaschroedinger``.
 
 :: 
 
   quantumdensity
     {
-     
+     analytic = false
+     k_max = 0.05     
+     number_of_elements = (5,5)
     }
 
 The available options are:
 
 
 
-| ``analytic`` = { true | false } 
-| 
-|         If true then the density is calculated analytically,
-          otherwise numerically.
+  ``analytic`` : bool  
+      If true then the density is calculated analytically, otherwise numerically.
+  ``number_of_elements`` :
+      number of elements in the mesh along each  direction
+
 
 
 
@@ -263,13 +268,9 @@ To  calculate the  quantum dispersion we  need  to  define the  block *Dispersio
 
   Dispersion 
   {
-
     k-path = G-K-M
     number_of_nodes = 10
-    k_max = 0.1
-
-
-    
+    k_max = 0.1  
   }
 
 The dispersion of quantum states is calculated at k-points that are nodes of a mesh
