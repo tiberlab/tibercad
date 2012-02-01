@@ -189,7 +189,6 @@ DDInterfaceModel::do_init(void)
     set_type(2, NEUMANN);
   }
 
-
 }
 
 
@@ -281,6 +280,8 @@ DDInterfaceModel::_calculate_traps(double& q, double& dq_dEfn, double& dq_dEfp)
 {
   DriftDiffusionProperties* ddprop = get_dd_properties();
   assert(ddprop != NULL);
+
+  q = dq_dEfn = dq_dEfp = 0.0;
 
   double Ec = ddprop->get_conduction_band_edge() - ddprop->get_electric_potential();
   double Ev = ddprop->get_valence_band_edge() - ddprop->get_electric_potential();
