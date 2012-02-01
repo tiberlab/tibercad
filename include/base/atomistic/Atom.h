@@ -37,6 +37,9 @@ public:
   //! Set atom specie name
   void set_specie(const std::string& sp);
 
+   //! Set atom specie name
+  void set_specie(const Specie& sp);
+
   //! Get atom specie name
   const Specie& get_specie() const;
 
@@ -90,6 +93,8 @@ private:
   //! A general purpose integer flag (for example used in passivation)
   unsigned int _flag;
 
+  Tensor1 _ttype_position;
+
 };
 
 
@@ -103,6 +108,11 @@ void Atom::set_specie(const std::string& sp)
   _specie=sp;
 }
 
+inline 
+void Atom::set_specie(const Specie& sp)
+{
+ _specie = sp;
+}
 
 inline
 const Specie& Atom::get_specie(void) const

@@ -277,7 +277,7 @@ void
 AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
   std::set<ID> IDs = _as->get_IDset();
-  std::map<ID, std::map<unsigned int, std::string> > assign;
+  std::map<ID, std::map<unsigned int, Specie> > assign;
   bool done;
   ID el_reg;
 
@@ -307,7 +307,8 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
       s = out.str();
 
       record = "specie_" + s;
-      assign[*reg][i] = db.get(record.c_str(),"none");
+      std::string db_record = db.get(record.c_str(),"none");
+      assign[*reg][i] = Specie(db_record);
 
     }
 
@@ -350,7 +351,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
           if ( ( elem->contains_point(p) ) ) {
             if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
             {
-              std::string tmp =  assign[el_reg][(*atom).get_flag()];
+              Specie tmp =  assign[el_reg][(*atom).get_flag()];
               (*atom).set_specie(tmp);
               (*atom).set_flag(0);
               (*atom).belong_to_structure = true;
@@ -375,7 +376,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
       {
         if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
         {
-          std::string tmp =  assign[el_reg][(*atom).get_flag()];
+          Specie tmp =  assign[el_reg][(*atom).get_flag()];
           (*atom).set_specie(tmp);
           (*atom).set_flag(0);
           (*atom).belong_to_structure = false;
@@ -427,7 +428,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
               if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
               {
-                std::string tmp =  assign[el_reg][(*atom).get_flag()];
+                Specie tmp =  assign[el_reg][(*atom).get_flag()];
                 tmp_atom.set_specie(tmp);
                 tmp_atom.belong_to_structure = true;
 
@@ -465,7 +466,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
           if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
           {
-            std::string tmp =  assign[el_reg][(*atom).get_flag()];
+            Specie tmp =  assign[el_reg][(*atom).get_flag()];
             tmp_atom.set_specie(tmp);
             tmp_atom.belong_to_structure = false;
             _structure_basis.push_back(tmp_atom);
@@ -518,7 +519,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                     _rotation*_prim_vec*(*atom).get_ttype_position());
                 if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
                 {
-                  std::string tmp =  assign[el_reg][(*atom).get_flag()];
+                  Specie tmp =  assign[el_reg][(*atom).get_flag()];
                   tmp_atom.set_specie(tmp);
                   tmp_atom.belong_to_structure = true;
 
@@ -559,7 +560,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                 _rotation*_prim_vec*(*atom).get_ttype_position());
             if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
             {
-              std::string tmp =  assign[el_reg][(*atom).get_flag()];
+              Specie tmp =  assign[el_reg][(*atom).get_flag()];
               tmp_atom.set_specie(tmp);
               tmp_atom.belong_to_structure = false;
               _structure_basis.push_back(tmp_atom);
