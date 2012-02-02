@@ -322,32 +322,41 @@ ParticleDensity::calculate_density(void)
         classical_density<TiberCad::BOLTZMANN>();
         break;
     }
-  }
-  else if (_embracing != NULL)
-  {
-    // we need to do a mixing
-    double x = _embracing->get_mixing_coefficient(_elem, _p);
-    if (x < 1.0)
-    {
-      double dens = x * _density;
-      switch (_statistics)
-      {
-        case TiberCad::FERMIDIRAC:
-          classical_density<TiberCad::FERMIDIRAC>();
-          break;
-        default: // Boltzmann
-          classical_density<TiberCad::BOLTZMANN>();
-          break;
-      }
-      dens += (1.0 - x) * _density;
-      _density = dens;
-    }
-  }
 
-  if (_density > 1e-9)
-    _gamma = _density / (_N_eff * exp(_argument));
-  else
     _gamma = 1;
+  }
+  else
+  {
+    double dens = _density;
+
+    switch (_statistics)
+    {
+      case TiberCad::FERMIDIRAC:
+        classical_density<TiberCad::FERMIDIRAC>();
+        break;
+      default: // Boltzmann
+        classical_density<TiberCad::BOLTZMANN>();
+        break;
+    }
+
+    double dens_cl = _density;
+    _density = dens;
+
+    if (_embracing != NULL)
+    {
+      // we need to do a mixing
+      double x = _embracing->get_mixing_coefficient(_elem, _p);
+      if (x < 1.0)
+      {
+        _density = x * _density + (1.0 - x) * dens_cl;
+      }
+    }
+    if (dens_cl > 1e-15)
+      _gamma = _density / dens_cl;
+    else
+      _gamma = 1;
+
+  }
 }
 
 
