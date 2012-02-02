@@ -351,6 +351,20 @@ First a *line loop* is composed, listing all the  lines constituting the  bounda
   ..........................
 
 
+The obtained geometrical  surface is shown n Fig. :ref:`Surface<geomsurf>`
+
+
+..  _geomsurf :
+
+..  figure:: ../data/geo_surf.png
+    :align: center
+    :scale: 300%
+
+    Surface
+
+
+
+
 **Definition of  the Physical Surfaces**
 
 Each of the  *Physical Surfaces* is composed by one or more geometrical *Plane Surface*. For example, *Physical surface* **contact** comprises in one   single physical region the two separated contact geometrical regions, while *Physical surface* **oxide** corresponds to the  oxide  region. 
@@ -359,6 +373,11 @@ The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be 
   Physical Surface("substrate") = {41}; // n-Si
   Physical Surface("contact") = {44,47}; // n+-Si
   Physical Surface("oxide") = {46}; // SiO2
+
+
+
+
+
 
 
                                                
@@ -374,6 +393,19 @@ The names of these *Phisical Lines*  will be  assigned to tiberCAD *Contacts*.
   Physical Line("drain") = {19}; // drain
 
 
+The final geometrical model  is shown in Fig. :ref:`Geometrical model<geomodel>`
+
+
+..  _geomodel :
+
+..  figure:: ../data/geomosfet.png
+    :align: center
+    :scale: 100%
+
+    Geometrical model 
+
+
+
 
 Meshing the device
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -386,7 +418,16 @@ Alternatively, a textual mode is also available in GMSH, without graphical user 
   gmsh mosfet.geo  -2 -o mosfet.msh 
 
 
+The final meshed model  is shown in Fig. :ref:`2D meshing<mesh>`
 
+
+..  _mesh :
+
+..  figure:: ../data/meshmosfet.png
+    :align: center
+    :scale: 100%
+
+    Meshed model 
 
 
 
