@@ -10,6 +10,8 @@ New features:
 	  to control them usaing a single block)
 	- extended syntax for plot variables: can now switch off variables by
 	  writing plot = (foo, -bar), e.g. plot = (all, -Strain)
+	- bug fix for recombination models
+	- can now use single band approximation for holes
 	
 
 Version 2.0.0
@@ -25,7 +27,7 @@ New features:
 	- improved selfconsistency Quantum/Drift-Diffusion based on
 	  corrector/predictor
 	- windows version can open file dialog to open input file
-	- can now slectively exclude regions by saying e.g. regions = (all, -bulk)
+	- can now selectively exclude regions by saying e.g. regions = (all, -bulk)
 
 changes:
 xx_rel_tol -> relative_tolerance
