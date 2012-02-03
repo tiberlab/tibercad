@@ -139,9 +139,45 @@ can be controlled by special submodel blocks in different ways:
 
 In the current version, there are two different implementations of band parameter models:
 
- ``simple`` a simple model requesting the input of the band edge energies and effective DOS masses or effective DOS
+ ``simple``
+   a simple model assuming a parabolic dispersion,
+   requesting the input of the band edge energies and effective DOS masses or effective DOS
 
- ``kp`` a model based on bulk :math:`k\cdot p` including strain corrections
+ ``kp``
+   a model based on bulk :math:`k\cdot p` including strain corrections
+
+
+Whereas the :math:`k\cdot p` based model takes all model parameters from the materials database, parameters can be provided in 
+the input file for the simple model in the following ways.
+If the ``band_properties`` block is used, then one can provide the following options:
+
+  ``Ec`` *or* ``band_gap``
+    The conduction band edge, or the band gap
+
+  ``Ev``
+    the valence band edge
+
+  ``Nc`` *or* ``m_dos_e``
+    the electron effective density of states, or the DOS mass
+
+  ``Nv`` *or* ``m_dos_h``
+    the hole effective density of states, or the DOS mass
+
+For the ``conduction_band`` and ``valence_band`` blocks the following options need to be used:
+
+  ``band_edge``
+    the band edge energy
+
+  ``band_gap`` *and* ``reference_energy``
+    a reference energy and a band gap such that ``band_edge`` = ``reference_energy`` + ``band_gap``
+
+  ``DOS_mass`` *or* ``effective_DOS``
+    the DOS mass or the effective DOS
+  
+
+.. note:: Remember that you can provide the ``regions`` option to limit a models validity
+          to a subset of the simulaton domain. This way it is possible to mix the ``simple`` and
+          ``kp`` models in the same simulation.
 
 
 particle density
