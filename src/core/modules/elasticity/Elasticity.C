@@ -71,20 +71,15 @@ Elasticity::do_init(void)
 
   Device*  _device = &get_environment().get_device();
   
-  // ID  dim = get_mesh().mesh_dimension();
+  system.add_variable("ux", FIRST);
+  system.add_variable("uy", FIRST);
+  system.add_variable("uz", FIRST);
+
   uvar.resize(3);
-  //switch (dim)
-  // {
-  //case 3:
-    system.add_variable("uz", FIRST);
-    uvar[2] =  system.variable_number("uz");
-    // case 2:
-    system.add_variable("uy", FIRST);
-    uvar[1] =  system.variable_number("uy");
-    //default:
-    system.add_variable("ux", FIRST);
-    uvar[0] =  system.variable_number("ux");
-    // }
+  uvar[0] =  system.variable_number("ux");
+  uvar[1] =  system.variable_number("uy");
+  uvar[2] =  system.variable_number("uz");
+
 
   system.attach_assemble_function(assemble);
   system.init();
@@ -682,25 +677,31 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
        const RealTensor& stress_source =  mod.get_stress_source();
        //const RealTensor& internal_stress = get_internal_stress(elem, qrule.qp(qp));
 
-       RealTensor total_stress;
-      // if (shape_iteration == 0)
-         total_stress = (stress_source + (C * strain_source));
+       //RealTensor total_stress;
+       // if (shape_iteration == 0)
+       //total_stress = (stress_source + (C * strain_source));
        //else
-//         total_stress += internal_stress;
+       //         total_stress += internal_stress;
 
-      for (ID i = 0;i <3; i++)
-	for (ID j = 0;j <3; j++)
-	  for (ID alpha=0; alpha<n_dofs_vec[i]; alpha++)
-	  {
-	    //Add internal stress
-	      if (shape_iteration > 0)
-	        total_stress(i,j) += 0.5 * ((solution)(dof_indices_vec[i][alpha]) * dphi[alpha][qp](j) + (solution)(dof_indices_vec[j][alpha]) * dphi[alpha][qp](i));
+       RealTensor strain(strain_source);
 
-	    for (ID beta=0; beta<n_dofs_vec[j]; beta++)
-	      (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
+       for (ID i = 0;i <3; i++)
+         for (ID j = 0;j <3; j++)
+           for (ID alpha=0; alpha<n_dofs_vec[i]; alpha++)
+           {
+             //Add internal stress
+             if (shape_iteration > 0)
+               strain(i,j) += 0.5 * ((solution)(dof_indices_vec[i][alpha]) * dphi[alpha][qp](j) + (solution)(dof_indices_vec[j][alpha]) * dphi[alpha][qp](i));
 
-	    
-	    }
+             for (ID beta=0; beta<n_dofs_vec[j]; beta++)
+               (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
+
+
+           }
+
+       RealTensor total_stress(stress_source);
+       total_stress += C * strain;
+
 
         //Right Hand side
 	for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)

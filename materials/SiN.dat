@@ -9,6 +9,8 @@ dielectric = true
 a = 0.3189
 c = 0.5185
 
+thermal_coefficient = 3.3e-6
+
 
 [valenceband]
 # One publication claims that GaN/SiN is type II
@@ -74,6 +76,9 @@ C12 = 270.0
 C13 = 200.0
 C33 = 810.0
 C44 = 190.0
+
+poisson = 0.27
+young = 300
 
 # piezoelectricity data  
 [piezoelectricity]
