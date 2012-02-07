@@ -280,6 +280,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   std::map<ID, std::map<unsigned int, Specie> > assign;
   bool done;
   ID el_reg;
+  unsigned int progress_counter, progress_step;
 
   Messages::debug("Running cut_and_change_specie");
 
@@ -323,16 +324,28 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   //Cycle upon all atoms and change specie according to assign map
   Point p(0.0, 0.0, 0.0);
 
+  progress_step = _super_basis.size()/100;
+  progress_counter = 0;
+
+  std::cout << "Atomistic Generator progress 0% " << std::endl;
+
   //Different strategies if preserving conventional cell or preserving basis are needed
   if (preserve.compare("none") == 0)
   {
 
     //bool not_already_included is needed because a point can be contained by more than one element
     //if it falls exactly on the boundary
-
+    
     for ( std::vector<Atom>::iterator atom = _super_basis.begin();
         atom != _super_basis.end(); atom++)
     {
+
+      if (((progress_counter % progress_step) == 0) && ((progress_counter / progress_step) % 10 == 0)) 
+        {
+          std::cout << progress_counter / progress_step << "%  " << std::endl; 
+        }    
+      progress_counter+=1;
+
       done = false;
 
       p(0) = (*atom).get_position(0) / scale;
