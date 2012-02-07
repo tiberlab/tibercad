@@ -138,11 +138,14 @@ PhysicalModelInterface::_create(const string& name,
 
   if (mod == NULL)
   {
-    // first try in the module directory
-    if ((module.size() == 0) || ((mod = create_from_library<PhysicalModelInterface>(
-        module + "/" + name, options, owner)) == 0))
+    // first try without module directory
+    if ((mod = create_from_library<PhysicalModelInterface>(name, options, owner)) == 0)
     {
-      mod = create_from_library<PhysicalModelInterface>(name, options, owner);
+      if (module.size() >  0)
+      {
+        mod = create_from_library<PhysicalModelInterface>(
+            module + "/" + name, options, owner);
+      }
     }
   }
 

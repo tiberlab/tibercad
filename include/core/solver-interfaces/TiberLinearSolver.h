@@ -58,7 +58,7 @@ class TiberLinearSolver : public TiberModelObject, public LinearSolver<Number>
           NumericVector<Number> &rhs)
       {
         parse_options();
-        return this->do_solve(matrix, matrix, solution, rhs);
+        return this->do_solve(matrix, preconditioner, solution, rhs);
       }
 
 

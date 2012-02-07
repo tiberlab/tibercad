@@ -1266,7 +1266,7 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_vector("old_sol");
   system.add_vector("weight");
   system.add_vector("scaling");
-  //system.add_matrix("sysmatrix");
+  //system.add_matrix("Preconditioner");
 
   // finally initialize the newly created system
   system.init();
@@ -3083,8 +3083,9 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
   NumericVector<Number>& oldx = system.get_vector("old_sol");
   NumericVector<Number>& loc_scaling = system.get_vector("scaling");
-  //SparseMatrix<double>& sysmat = system.get_matrix("sysmatrix");
+  //SparseMatrix<double>& sysmat = system.get_matrix("Preconditioner");
   //if (residual != NULL)
+  //if (jacobian != NULL)
   //  sysmat.zero();
 
   //
@@ -4070,6 +4071,23 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     else
     {
       jacobian->add_matrix(Ke, dof_indices);
+      /*
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        unsigned int i2 = i + n_dofs;
+        unsigned int i3 = i2 + n_dofs;
+        for (unsigned int j = 0; j < n_dofs; j++)
+        {
+          if (j != i)
+          {
+            Ke(i, j) = Ke(i, j + n_dofs) = Ke(i, j + 2*n_dofs) = 0.0;
+            Ke(i2, j) = Ke(i2, j + n_dofs) = Ke(i2, j + 2*n_dofs) = 0.0;
+            Ke(i3, j) = Ke(i3, j + n_dofs) = Ke(i3, j + 2*n_dofs) = 0.0;
+          }
+        }
+      }
+      sysmat.add_matrix(Ke, dof_indices);
+      */
       //cerr << Ke << endl;
       //TiberMath::svd(Ke, Fe);
       //elem->centroid().write_unformatted(cerr, false);
@@ -4083,6 +4101,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
+    //sysmat.close();
     /*
     if (coupling & ELECTRONS)
     {
@@ -4092,11 +4111,11 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       ms << "writing " << "J" << os.str() << "\n";
       Messages::info(ms.str());
       jacobian->print_matlab("J" + os.str());
-      loc_scaling.print_matlab("scaling" + os.str() + ".m");
+      sysmat.print_matlab("precond" + os.str());
     }
-    */
     //if (coupling & ELECTRONS) __private_counter++;
     //if (__private_counter == 2) exit(0);
+    */
   }
   else
   {

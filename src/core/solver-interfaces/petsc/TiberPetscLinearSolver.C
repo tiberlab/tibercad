@@ -129,9 +129,12 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   solution->close();
   rhs->close();
 
+  std::string ksp_type(_ksp_type);
+  if ((_pc_type == PCLU) && (matrix == precond))
+    ksp_type = KSPPREONLY;
 
   // Set user-specified solver and preconditioner types
-  ierr = KSPSetType(_ksp, _ksp_type.c_str());
+  ierr = KSPSetType(_ksp, ksp_type.c_str());
   TiberPetscUtils::checkerr(ierr);
 
   PC pc;
@@ -355,8 +358,6 @@ TiberPetscLinearSolver::do_parse_options(void)
 
   _pc_type = TiberPetscUtils::extract_PCType(get_options());
 
-  if (_pc_type == PCLU)
-    _ksp_type = KSPPREONLY;
 
   _monitor = get_option("monitor", false);
   _xmonitor = get_option("xmonitor", false);

@@ -140,14 +140,12 @@ SimulationInterface::create(const string& type,
   else if (type_name == "maxwell")
     sim = MaxwellEquations::create(options);
 
-
   if (sim == NULL)
   {
-    // try first in a module directory
-    if ((type.size() > 0 ) && ((sim = create_from_library<SimulationInterface>(
-           type + "/" + type_name, options)) == 0))
+    // try first without a module directory
+    if ((sim = create_from_library<SimulationInterface>(type_name, options)) == 0)
     {
-      sim = create_from_library<SimulationInterface>(type_name, options);
+      sim = create_from_library<SimulationInterface>(type + "/" + type_name, options);
     }
   }
 

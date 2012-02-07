@@ -82,7 +82,11 @@ TiberNonlinLS::do_solve(void)
     get_linear_solver()->set_linear_rtol(tol);
 
     // solve the linear system
-    get_linear_solver()->solve(*matrix, *solution, *rhs);
+    if (this->have_matrix("Preconditioner"))
+      get_linear_solver()->solve(*matrix, this->get_matrix("Preconditioner"),
+          *solution, *rhs);
+    else
+      get_linear_solver()->solve(*matrix, *solution, *rhs);
 
     //cout << "." << flush;
 
