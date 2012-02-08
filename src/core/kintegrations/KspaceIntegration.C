@@ -165,15 +165,14 @@ void KspaceIntegration::calculate_density()
     MeshBase::const_element_iterator it_k_space = kmesh->active_elements_begin();
     const MeshBase::const_element_iterator it_k_end = kmesh->active_elements_end();
 
-    real_space_density.reserve(dens_at_k_elem.size());
-    for(unsigned int el=0; el <dens_at_k_elem.size(); el++) 
-        real_space_density.push_back(0.0);
-
     for ( ; it_k_space != it_k_end ; ++it_k_space)
     {
       const KElem* kel = *it_k_space;
 
       DofField& dens_at_k_elem = density_at_k[kel];
+
+      if (real_space_density.empty())
+        real_space_density.resize(dens_at_k_elem.size(), 0.0);
 
       for(unsigned int el=0; el <dens_at_k_elem.size(); el++) 
              real_space_density[el] += dens_at_k_elem[el];
