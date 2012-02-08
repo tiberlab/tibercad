@@ -1,3 +1,11 @@
+Version 2.2.0
+-------------
+
+	- logfile is now written in 'resultpath' directory
+	- bug fix for recombination models
+	- can now 
+
+
 Version 2.1.0
 -------------
 
@@ -10,8 +18,10 @@ New features:
 	  to control them usaing a single block)
 	- extended syntax for plot variables: can now switch off variables by
 	  writing plot = (foo, -bar), e.g. plot = (all, -Strain)
-	- bug fix for recombination models
 	- can now use single band approximation for holes
+	- can now define interfaces by specifying material or region pairs (or
+	  a combination of both) : mat1/mat2, region1/mat2. External boundary
+	  is specified by a dash '-': Si/-
 	
 
 Version 2.0.0

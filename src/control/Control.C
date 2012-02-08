@@ -224,10 +224,15 @@ Control::setup_globals(const ModelOptions& opts)
 {
   using namespace boost::filesystem;
 
+  _outputdir = opts.get_option("resultpath", _outputdir);
+
   // setup the logfile
-  string logfile(Utils::basename(_inputfile) + ".log");
-  logfile = opts.get_option("logfile", logfile);
-  //opts.delete_option("logfile");
+  string logfile = opts.get_option("logfile", "");
+  if (logfile.empty())
+    logfile = _outputdir + "/" + Utils::basename(_inputfile) + ".log";
+
+  Messages::info("Writing log to " + logfile);
+
   Messages::set_log_file(logfile);
 
   {
@@ -247,10 +252,6 @@ Control::setup_globals(const ModelOptions& opts)
 
   DLLoader::prepend_to_library_path(opts.get_option("modellibpath", "."));
   //opts.delete_option("modellibpath");
-
-
-  _outputdir = opts.get_option("resultpath", _outputdir);
-  //opts.delete_option("resultpath");
 
   _output_format = opts.get_option("output_format", "vtk");
 

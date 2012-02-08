@@ -964,6 +964,7 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
           const Elem* neighbour = elem->neighbor(s);
           ID neighbour_id = INVALID_ID;
 
+          // subdomain IDs have to be different
           if ((neighbour == NULL) ||
               ((neighbour_id = neighbour->subdomain_id()) != id))
           {
@@ -975,12 +976,16 @@ Device::get_boundary_region_ids(const string& name, vector<ID>& ids) const
             }
             else
             {
-              if (neighbour_id == INVALID_ID)
-              {
 
-              }
-              else if ((comp[other] == get_material(neighbour_id)->get_name()) ||
-                       (comp[other] == get_region_name(neighbour_id)))
+              // check if it has to be added
+              bool add = false;
+              if (neighbour_id == INVALID_ID)
+                add = !comp[other].compare("-");
+              else
+                add = ((comp[other] == get_material(neighbour_id)->get_name()) ||
+                    (comp[other] == get_region_name(neighbour_id)));
+
+              if (add)
               {
                 // first check if the side has already a boundary ID
                 ID newid = _bd_regions->get_side_id(elem, s);
