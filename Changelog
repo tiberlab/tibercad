@@ -3,7 +3,9 @@ Version 2.2.0
 
 	- logfile is now written in 'resultpath' directory
 	- bug fix for recombination models
-	- can now 
+	- new option in sweep 'ignore_failure = true' will ignore
+	  solver failures and simply exit the sweep
+	- print some info on errors and warnings at the end
 
 
 Version 2.1.0

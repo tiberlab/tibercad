@@ -47,8 +47,8 @@ class TBDLLOCAL Sweep : public SimulationInterface
     virtual void do_init(void);
 
 
-    /*! \copydoc SimulationInterface::do_equilibrium() */
-    virtual void do_equilibrium(void);
+    // / *! \copydoc SimulationInterface::do_equilibrium() */
+    //virtual void do_equilibrium(void);
 
     
     /*! \copydoc SimulationInterface::do_solve()
@@ -110,12 +110,6 @@ class TBDLLOCAL Sweep : public SimulationInterface
     //! The current simulation goal
     double _goal;
 
-    //! The minimum step size
-    //double _min_step;
-
-    //! The maximum step size
-    //double _max_step;
-
 
     //! Write results to file after every step if true
     bool _plot_data;
@@ -130,6 +124,10 @@ class TBDLLOCAL Sweep : public SimulationInterface
 
     //! The remembered sweep value
     double _remembered_sweep_value;
+
+
+    //! Ignore solver failures
+    bool _ignore_failures;
 
 
     //! Remember the current solution
@@ -158,9 +156,8 @@ inline
 Sweep::Sweep(const ModelOptions& options)
   : SimulationInterface(options),
     _variable(""),
-    //_min_step(1e-3),
-    //_max_step(10),
-    _plot_data(false)
+    _plot_data(false),
+    _ignore_failures(false)
 {
   has_solution_vector(false);
   is_task(true);

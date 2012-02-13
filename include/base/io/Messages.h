@@ -78,6 +78,12 @@ class Messages
     //! The available text width
     static int available_width(void);
 
+
+    //! Print statistics on errors and warnings
+    static void print_statistics(void);
+
+
+
   private:
 
 
@@ -92,6 +98,12 @@ class Messages
 
     //! The indentation width
     static const int _indent_width;
+
+    //! The number of errors
+    static int _error_count;
+
+    //! The number of warnings
+    static int _warning_count;
 
     //! The local indentation
     int _indent_loc;

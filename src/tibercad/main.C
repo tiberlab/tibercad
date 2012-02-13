@@ -237,7 +237,6 @@ int main (int argc, char** argv)
     tibercad.run();
 
     Messages::info("Simulation finished...");
-    Messages::info("Goodbye");
 
     error = 0;
   }
@@ -254,7 +253,10 @@ int main (int argc, char** argv)
   if (interactive) cin.get();
 #endif
 
+  Messages::print_statistics();
   Messages::close_log_file();
+
+  Messages::info("Goodbye");
 
   return error;
 }

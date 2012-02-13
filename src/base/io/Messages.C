@@ -53,9 +53,30 @@ Messages::_indent = 0;
 const int
 Messages::_indent_width = 2;
 
+int
+Messages::_error_count = 0;
+
+int
+Messages::_warning_count = 0;
+
 
 ofstream
 Messages::_log;
+
+
+
+void
+Messages::print_statistics(void)
+{
+  ostringstream os;
+  os << _warning_count << " warnings during run\n"
+      << _error_count << " errors detected";
+  newline();
+  info(os.str());
+  newline();
+}
+
+
 
 
 void

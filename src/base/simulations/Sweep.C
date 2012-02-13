@@ -120,6 +120,7 @@ Sweep::parse_options(void)
   get_option("initial_step", "");
   get_option("initial_relative_step", "");
   get_option("file_mode", "");
+  get_option("ignore_failure", "");
 
   double start = get_option("start", 0.0);
   double stop = get_option("stop", 0.0);
@@ -160,7 +161,7 @@ Sweep::parse_options(void)
 
 
 
-
+/*
 void
 Sweep::do_equilibrium(void)
 {
@@ -175,7 +176,7 @@ Sweep::do_equilibrium(void)
     _simulations[i]->solve_equilibrium();
   }
 }
-
+*/
 
 
 
@@ -520,7 +521,13 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
       failed = true;
       Messages::error(e.what());
       if (i == 0)
-        throw SolveFailedException("Already first sweep step could not be solved.");
+        if (get_option("ignore_failure", false))
+        {
+          Messages::warning("I will exit sweep and continue anyway (ignore_failure = true)");
+          break;
+        }
+        else
+          throw SolveFailedException("Already first sweep step could not be solved.");
     }
 
     TiberCad::drop_first_filename_suffix();
@@ -529,7 +536,15 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     {
       ostringstream os;
       os << "Sweep failed at " << _variable << " = " << _goal;
-      throw SolveFailedException(os.str());
+      if (get_option("ignore_failure", false))
+      {
+        // in this case, exit the sweep
+        os << " but I will continue anyway (ignore_failure = true)";
+        Messages::warning(os.str());
+        break;
+      }
+      else
+        throw SolveFailedException(os.str());
     }
   }
 }
