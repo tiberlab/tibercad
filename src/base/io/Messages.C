@@ -164,6 +164,8 @@ Messages::warning(const string& msg)
     cout << "press any key to continue ...";
     cin.get();
   }
+
+  _warning_count++;
 }
 
 
@@ -196,6 +198,7 @@ Messages::error(const string& msg)
     cin.get();
   }
 
+  _error_count++;
 }
 
 
