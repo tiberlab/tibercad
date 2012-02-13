@@ -76,11 +76,15 @@ namespace
 int main (int argc, char** argv)
 {
 
+#ifdef _WIN32
   interactive = true;
+#else
+  interactive = false;
+#endif
 
   opterr = 0;
   int c;
-  while ((c = getopt(argc, argv, "bv")) != -1)
+  while ((c = getopt(argc, argv, "biv")) != -1)
     switch (c)
     {
       case 'v':
@@ -92,6 +96,10 @@ int main (int argc, char** argv)
 
       case 'b':
         interactive = false;
+        break;
+
+      case 'i':
+        interactive = true;
         break;
 
       case '?':
@@ -227,6 +235,9 @@ int main (int argc, char** argv)
   //
   int error = 1;
 
+
+  Messages::interactive() = interactive;
+
   // Create the entry point object
   TiberCad tibercad;
 
@@ -236,7 +247,7 @@ int main (int argc, char** argv)
 
     tibercad.run();
 
-    Messages::info("Simulation finished...");
+    Messages::info("Simulation finished.");
 
     error = 0;
   }

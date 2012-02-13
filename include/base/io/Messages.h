@@ -83,6 +83,9 @@ class Messages
     static void print_statistics(void);
 
 
+    //! Tell if we are interactive
+    static bool& interactive(void);
+
 
   private:
 
@@ -104,6 +107,14 @@ class Messages
 
     //! The number of warnings
     static int _warning_count;
+
+    //! Interactive or not
+    /*!
+     * If interactive, warnings and errors need to be
+     * acknowledged by the user.
+     */
+    static bool _interactive;
+
 
     //! The local indentation
     int _indent_loc;
@@ -155,5 +166,12 @@ Messages::available_width(void)
   return _max_width - _indent * _indent_width;
 }
 
+
+inline
+bool&
+Messages::interactive(void)
+{
+  return _interactive;
+}
 
 #endif // _MESSAGES_H_

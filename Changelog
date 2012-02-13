@@ -6,6 +6,8 @@ Version 2.2.0
 	- new option in sweep 'ignore_failure = true' will ignore
 	  solver failures and simply exit the sweep
 	- print some info on errors and warnings at the end
+	- new flag -i for interactive mode, which will stop at errors
+	  and warnings
 
 
 Version 2.1.0

@@ -59,6 +59,8 @@ Messages::_error_count = 0;
 int
 Messages::_warning_count = 0;
 
+bool
+Messages::_interactive = false;
 
 ofstream
 Messages::_log;
@@ -156,6 +158,12 @@ Messages::warning(const string& msg)
   cout << normal;
 #endif
   ts << msg << endl << flush;
+
+  if (interactive())
+  {
+    cout << "press any key to continue ...";
+    cin.get();
+  }
 }
 
 
@@ -181,6 +189,13 @@ Messages::error(const string& msg)
   cout << normal;
 #endif
   ts << msg << endl << flush;
+
+  if (interactive())
+  {
+    cout << "press any key to continue ...";
+    cin.get();
+  }
+
 }
 
 
