@@ -68,18 +68,6 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
   }
 
 
-  //    (check_validity(token_1)  ==
-//   if  (check_validity(token_1)  ==   false)
-//   {
-
-//     std::ostringstream stm;
-
-//     stm << " ERROR in  line " <<  line_counter +1 <<   endl;
-
-//     throw InitFailedException(stm.str());
-//   }
-
-
   while ((token_1 != "}") && (!in_stream.eof()))
   {
 
@@ -137,6 +125,16 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
       options.add_submodel(model_name,submodel);
 
     }
+    /*
+    else if  (token_2 == "}" )
+    {
+      options.set_option(token_1, true);
+      token_1 = token_2;
+      in_stream.putback('}');
+      //for (int i = 0; i < token_2.size(); i++)
+      //  in_stream.unget();
+    }
+    */
     else
     {
       // 2  keyword-block
@@ -147,9 +145,19 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
 
       if  (token_3 != "{")
       {
+        /*
+        options.set_option(token_1, true);
+        token_1 = token_2;
+        in_stream.putback(' ');
+        for (int i = 0; i < token_3.size(); i++)
+          in_stream.unget();
+
+        continue;
+        */
         ostringstream stm;
         stm << "in " << _file << " on line " <<  line_counter <<   endl;
         throw InitFailedException(stm.str());
+
       }
 
       //  else   we  read  2 names header !
