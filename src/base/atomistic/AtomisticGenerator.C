@@ -281,6 +281,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   bool done;
   ID el_reg;
   unsigned int progress_counter, progress_step;
+  Tensor2Gen rotated_primvec;
 
   Messages::debug("Running cut_and_change_specie");
 
@@ -328,6 +329,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   progress_counter = 0;
 
   std::cout << "Atomistic Generator progress 0% " << std::endl;
+  rotated_primvec = _rotation * _prim_vec;
 
   //Different strategies if preserving conventional cell or preserving basis are needed
   if (preserve.compare("none") == 0)
@@ -437,7 +439,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                 atom != _crystal_basis.end(); atom++)
             {
 
-              tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_ttype_position() );
+              tmp_atom.set_position( (*lattice)+ rotated_primvec*(*atom).get_ttype_position() );
 
               if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
               {
@@ -475,7 +477,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
             atom != _crystal_basis.end(); atom++)
         {
 
-          tmp_atom.set_position( (*lattice)+ _rotation*_prim_vec*(*atom).get_ttype_position() );
+          tmp_atom.set_position( (*lattice)+ rotated_primvec*(*atom).get_ttype_position() );
 
           if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
           {
@@ -529,7 +531,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
                   atom != _crystal_basis.end(); atom++)
               {
                 tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                    _rotation*_prim_vec*(*atom).get_ttype_position());
+                    rotated_primvec*(*atom).get_ttype_position());
                 if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
                 {
                   Specie tmp =  assign[el_reg][(*atom).get_flag()];
@@ -570,7 +572,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
               atom != _crystal_basis.end(); atom++)
           {
             tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                _rotation*_prim_vec*(*atom).get_ttype_position());
+                rotated_primvec*(*atom).get_ttype_position());
             if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
             {
               Specie tmp =  assign[el_reg][(*atom).get_flag()];
