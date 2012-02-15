@@ -19,6 +19,10 @@ using namespace std;
 
 
 
+map<string, string>
+InputParser::_defined;
+
+
 
 InputParser::InputParser(void)
 {
@@ -49,6 +53,20 @@ InputParser::~InputParser(void)
 }
 
 
+void
+InputParser::add_defined(const string& flag, const string& value)
+{
+  if (_defined.find(flag) != _defined.end())
+    Messages::warning("Redefining input file macro '" + flag + "'");
+
+  _defined[flag] = value;
+}
+
+bool
+InputParser::defined(const string& flag)
+{
+  return (_defined.find(flag) != _defined.end());
+}
 
 void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options)
 {
@@ -89,6 +107,28 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
       //Messages::info("Including file " + token_2);
       InputParser().parse_file(token_2, tmp);
       options += tmp;
+    }
+    else if (token_1 == "@define")
+    {
+      // the next token is a new status variable
+      add_defined(token_2);
+    }
+    else if (token_1 == "@ifdef")
+    {
+      // if it is defined we go on, otherwise we skip
+      if (!defined(token_2))
+        skip_until_else_or_endif(in_stream);
+    }
+    else if (token_1 == "@else")
+    {
+      // we can skip until @endif
+      skip_until_else_or_endif(in_stream);
+    }
+    else if (token_1 == "@endif")
+    {
+      in_stream.putback(' ');
+      for (int i = 0; i < token_2.size(); i++)
+        in_stream.unget();
     }
     else if (token_2 == "=" )
     {
@@ -272,6 +312,18 @@ const string InputParser::get_token(ifstream& in_stream)
 }
 
 
+string
+InputParser::skip_until_else_or_endif(std::ifstream& in_stream)
+{
+  skip_whitespaces(in_stream);
+  string tok = get_token(in_stream);
+  while ((tok != "@else") && (tok != "@endif"))
+  {
+    skip_whitespaces(in_stream);
+    tok = get_token(in_stream);
+  }
+  return tok;
+}
 
 // find next non-whitespace and  skip  comments
 //  "space"  include  \n, \r, and  tab

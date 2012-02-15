@@ -47,6 +47,12 @@ class InputParser
   void parse_file(const std::string file, ModelOptions& data);
 
 
+  //! Define a macro
+  static void add_defined(const std::string& flag, const std::string& value = "1");
+
+  //! Check if a macro is defined
+  static bool defined(const std::string& flag);
+
 
  private:
 
@@ -60,6 +66,9 @@ class InputParser
   //! The current input file
   std::string _file;
 
+  //! Map of all defined flags
+  static std::map<std::string, std::string> _defined;
+
 
   void  read_block_no_boost(std::ifstream& in_stream, ModelOptions& options);
 
@@ -70,6 +79,8 @@ class InputParser
   const std::string get_until_closing_brace(std::ifstream& in_stream);
 
   const std::string get_until_closing_quotes(std::ifstream& in_stream);
+
+  std::string skip_until_else_or_endif(std::ifstream& in_stream);
 
   bool check_validity(std::string& token);
 
