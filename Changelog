@@ -8,6 +8,7 @@ Version 2.2.0
 	- print some info on errors and warnings at the end
 	- new flag -i for interactive mode, which will stop at errors
 	  and warnings
+	- input file macros @define, @ifdef, @ifndef, @else, @endif
 
 
 Version 2.1.0
