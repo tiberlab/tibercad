@@ -119,6 +119,12 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
       if (!defined(token_2))
         skip_until_else_or_endif(in_stream);
     }
+    else if (token_1 == "@ifndef")
+    {
+      // if it is not defined we go on, otherwise we skip
+      if (defined(token_2))
+        skip_until_else_or_endif(in_stream);
+    }
     else if (token_1 == "@else")
     {
       // we can skip until @endif
