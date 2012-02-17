@@ -43,10 +43,10 @@ class EigenSolver
     bool monitor;   //<! activates monitor if true
 
     double spectrum_inversion_tolerance; //<! toterance for spectrum inversion
-    
+
   };
 
- 
+
 
 
   //!solves general eigenvalue problem (Hx = gSx) matrix
@@ -58,17 +58,17 @@ class EigenSolver
 
   //!has to be called at the beginning of tibecad
   static void slepc_init(int argc1, char** argv1);
-  
+
   //!has to be called at the end of tibecad
   static void slepc_done(void);
 
   //!returns number of converged eigenvalues
   static int number_of_converged_eigenvalues();
 
-  //!returns  eigenvalue number i (starting from 0) 
+  //!returns  eigenvalue number i (starting from 0)
   static double get_eigenvalue( int i);
 
-  //!returns  eigenvector number i (starting from 0) 
+  //!returns  eigenvector number i (starting from 0)
   static void get_eigen_vector( int i, std::vector<Complex>& eigen_vector);
 
   //!has to be called before solving the eigenvalue problem
@@ -90,20 +90,20 @@ class EigenSolver
   static int init_S_matrix(unsigned int size);
 
 
-  //!allocates memory for H matrix (non-parallel version!!!) 
+  //!allocates memory for H matrix (non-parallel version!!!)
   /*!
-    \param matrix_size size of the matrix 
+    \param matrix_size size of the matrix
     \param non_zeros numbers of non-zero columns in each raw
   */
   static int preallocate_H_matrix(unsigned int matrix_size,  int*  non_zeros);
 
-  //!allocates memory for S matrix (non-parallel version!!!) 
+  //!allocates memory for S matrix (non-parallel version!!!)
   /*!
-    \param matrix_size size of the matrix 
+    \param matrix_size size of the matrix
     \param non_zeros numbers of non-zero columns in each raw
   */
   static int preallocate_S_matrix(unsigned int matrix_size,  int*  non_zeros);
-  
+
 
   //closes H matrix
   static int finalize_H_assembly(void);
@@ -131,7 +131,7 @@ class EigenSolver
 
   //!set initial vector
   /*!
-    \param  initial_vector initial vector 
+    \param  initial_vector initial vector
   */
   static void set_initial_vector( const std::vector<Complex>& initial_vector);
 
@@ -142,12 +142,25 @@ class EigenSolver
   static bool check_matrices(double tol, bool verbose);
   static bool check_matrices(void);
 
+//MINE
+  static int eig_value_problem_general2(const SLEPCoptions& opt) ;
 
+  static int addARow(int row, const int columnsNum, int* columns, Complex* values);
+
+  static int addBRow(int row, const int columnsNum, int* columns, Complex* values);
+
+  static int addARow(int row, const int columnsNum, int* columns, Complex value);
+
+  static int addBRow(int row, const int columnsNum, int* columns, Complex value);
+
+  static Complex get_eigenvalue_c( int i);
+
+//ENDOFMINE
  private:
 
   static int do_solve(const SLEPCoptions& opt);
 
-  
+
   static  int _size_of_matrix;
 
 
@@ -156,3 +169,4 @@ class EigenSolver
 
 
 #endif
+
