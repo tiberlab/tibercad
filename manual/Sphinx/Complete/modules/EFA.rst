@@ -217,38 +217,38 @@ is different for each quantized state and is position independent); :math:`g` is
 the states. The :math:`+` sign is for electrons, the :math:`-` sign is for holes.
 
 
+..
+  Alternatively, numerical calculation may be performed according  the following formula:
 
-Alternatively, numerical calculation may be performed according  the following formula:
+  ..  math::
+      :nowrap:
+      :label:
 
-..  math::
-    :nowrap:
-    :label:
-
-    \begin{equation}
-    \rho({\bf r}) = \sum_n \frac {1}{(2\pi)^d} \int_{BZ} |\psi_{\bf k_{\|}}|({\bf r})|^2 \frac{1}{1+\exp 
-    \left(\pm \frac{E-\mu}{kT} \right)} d{\bf k_{\|}}
-    \end{equation}
+       \begin{equation}
+        \rho({\bf r}) = \sum_n \frac {1}{(2\pi)^d} \int_{BZ} |\psi_{\bf k_{\|}}|({\bf r})|^2 \frac{1}{1+\exp 
+       \left(\pm \frac{E-\mu}{kT} \right)} d{\bf k_{\|}}
+       \end{equation}
 
 
-The integration is performed on a mesh in the k-space.
-To perform a numerical calculation,  a  block ``quantumdensity`` has  to  be  defined inside the **Module** ``efaschroedinger``.
+  The integration is performed on a mesh in the k-space.
+  To perform a numerical calculation,  a  block ``quantumdensity`` has  to  be  defined inside the **Module** ``efascroedinger``.
 
-:: 
+  :: 
 
-  quantumdensity
+    quantumdensity
     {
      analytic = false
      k_max = 0.05     
      number_of_elements = (5,5)
     }
 
-The available options are:
+  The available options are:
 
 
 
-  ``analytic`` : bool  
-      If true then the density is calculated analytically, otherwise numerically.
-  ``number_of_elements`` :
+    ``analytic`` : bool  
+         If true then the density is calculated analytically, otherwise numerically.
+    ``number_of_elements`` :
       number of elements in the mesh along each  direction
 
 
@@ -375,7 +375,7 @@ The optical spectrum from spontaneous emission is calculated in the following wa
 
 
 
-where :math:`f_i` and :math:`f_j` are the Fermi distributions.
+where :math:`f_i` and :math:`f_j` are the Fermi distributions, :math:`M_{i,j}` is the optical matrix element between the states  :math:`i` and :math:`j`.
 
 ::
 
@@ -414,6 +414,9 @@ The main parameters are:
  ``dE``:
     energy step
 
+ ``polarization`` :  vector
+      light polarization 
+
  ``plot`` :
     to  select  spectrum in a k-point k0 or  integrated in k-space 
 
@@ -436,7 +439,9 @@ A range of energy values must  be  defined in this way::
 
 where ``Emin,Emax amd dE`` are  respectively   the  minimum,  maximum and  interval energy. 
 
-Polarization  indicates the  light polarization (vector)..............
+.. Polarization  indicates the  light polarization 
+
+.. (vector)..............
 
 By specifying *optical_spectrum_k_0* in  the  ``plot``  statement, the emission  recombination  optical spectrum for  k=0 is  calculated. 
 

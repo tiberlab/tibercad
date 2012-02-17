@@ -358,7 +358,7 @@ The obtained geometrical  surface is shown n Fig. :ref:`Surface<geomsurf>`
 
 ..  figure:: ../data/geo_surf.png
     :align: center
-    :scale: 300%
+    :scale: 140%
 
     Surface
 
@@ -400,7 +400,7 @@ The final geometrical model  is shown in Fig. :ref:`Geometrical model<geomodel>`
 
 ..  figure:: ../data/geomosfet.png
     :align: center
-    :scale: 100%
+    :scale: 140%
 
     Geometrical model 
 
@@ -425,7 +425,7 @@ The final meshed model  is shown in Fig. :ref:`2D meshing<mesh>`
 
 ..  figure:: ../data/meshmosfet.png
     :align: center
-    :scale: 100%
+    :scale: 140%
 
     Meshed model 
 
@@ -709,14 +709,8 @@ Here are the Modules implemented until now:
  ``efaschroedinger`` : 
        Envelop Function Approximation (EFA) solution of single particle Schroedinger equation for electrons and holes 
 
- ``quantumdispersion`` : 
-       Dispersion of quantized states in k space
-
  ``opticskp`` : 
-       Optical properties (spontaneous emission  spectrum in k=0)
-
- ``opticalspectrum`` : 
-       Emission spectrum (with k-space integration)
+       Optical properties (spontaneous emission  spectrum)
 
  ``DSC`` : 
        Simulation of a DSC solar cell
