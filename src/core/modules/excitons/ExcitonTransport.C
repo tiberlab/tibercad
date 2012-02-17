@@ -118,11 +118,6 @@ ExcitonTransport::create_bulk_model(const ModelOptions& options,
 }
 
 
-
-
-
-
-
 void
 ExcitonTransport::compute_scaling(void)
 {
@@ -266,7 +261,10 @@ ExcitonTransport::do_init(void)
   if (linopts.get_option("absolute_tolerance", -1.0) < 0)
     linopts["absolute_tolerance"] = "1e-15";
 
-
+  if (polaritons) {
+    // TODO :
+    linopts["method"] = "bcgs"; // test
+  }
 
   ModelOptions& solveropts = get_solver_options();
   if (solveropts.get_option("absolute_tolerance", -1.0) < 0)
@@ -457,6 +455,7 @@ ExcitonTransport::do_solve(void)
   // the first calculation)
   system.set_options(get_solver_options());
 
+  calc_excpol_integral(solution);
 
   try
   {
@@ -473,426 +472,8 @@ ExcitonTransport::do_solve(void)
   _n_nonlinear_iterations = system.n_nonlinear_iterations();
   _final_residual = system.final_residual_norm();
 
+  calc_excpol_integral(solution);
 }
-
-
-
-
-
-// implementation taken from libmesh equation_systems.C
-void
-ExcitonTransport::build_nodal_results(const set<string>& variables,
-    vector<double>& results, vector<string>& legend)
-{
-  
-
-  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
-
-  // aliases for nicer code
-  const Device& device = *(_device);
-  const MeshBase& mesh = get_mesh();
-  const NumericVector<Number>& solution = system->get_solution_vector();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  // TODO if some elements were coarsened, does this still work??
-  const unsigned int nn  = mesh.n_nodes();
-  
-  legend.resize(variables.size());
-
-  // for each possible variable we set the vector index
-  // -1 means, the variable should not be plotted
-  unsigned int n_vars = 0;
-  const set<string>::const_iterator varend(variables.end());
-
-
-  int Ef = -1;
-  if (variables.find("xEffPot") != varend)
-  {
-    Ef = n_vars;
-    legend[n_vars] = "exciton_effective_potential";
-    n_vars++;
-  }
-
-
-  int xdens = -1;
-  if (variables.find("xDensity") != varend)
-  {
-    xdens = n_vars;
-    legend[n_vars] = "exciton_density";
-    n_vars++;
-  }
-
-
-  int rec = -1;
-  int num_rec = 0;
-  map<ID, string> rec_model_ids;
-  if (variables.find("ExcitonRecombination") != varend)
-  {
-    num_rec = 5;
-    rec = n_vars;
-    
-    legend.resize(variables.size() + num_rec);
-
-    legend[n_vars] = "exciton_generation";
-    n_vars++;
-
-    legend[n_vars] = "exciton_radiative_recombination";
-    n_vars++;
-
-    legend[n_vars] = "exciton_nonradiative_recombination";
-    n_vars++;
-
-    legend[n_vars] = "exciton_dissociation";
-    n_vars++;
-
-    legend[n_vars] = "net_exciton_recombination";
-    n_vars++;
-  }
-
-
-  int mu = -1;
-  if (variables.find("xMob") != varend)
-  {
-    mu = n_vars;
-    legend[n_vars] = "exciton_mobility";
-    n_vars++;
-  }
-
-  legend.resize(n_vars);
-    
-  results.resize(nn * n_vars);
-
-  vector<double> local(results.size());
-  vector<unsigned short int> node_conn(nn);
-
-  vector<double> nodal_val;
-
-  // the scaling parameters to scale back the result
-  const double phi0 = get_scaling().get_potential_scaling();
-
-
-  fill(results.begin(), results.end(), 0.0);
-  fill(local.begin(), local.end(), 0.0);
-
-  // Get the number of elements that share each node.  We will
-  // compute the average value at each node.
-  {
-    vector<unsigned short int> node_conn_local(node_conn.size());
-    
-    MeshBase::const_element_iterator it =
-      mesh.active_local_elements_begin();
-    const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end(); 
-
-    for ( ; it != end; ++it)
-      for (unsigned int n=0; n<(*it)->n_nodes(); n++)
-	node_conn_local[(*it)->node(n)]++;
-
-#ifdef HAVE_MPI
-    // Gather the distributed node_conn arrays in the case of
-    // multiple processors
-    //
-    // (Note that we use an unsigned short int here even though an
-    // unsigned char would be more that sufficient.  The MPI 1.1
-    // standard does not require that MPI_SUM, MPI_PROD etc... be
-    // implemented for char data types. 12/23/2003 - BSK)  
-    MPI_Allreduce (&node_conn_local[0], &node_conn[0], node_conn.size(),
-		   MPI_UNSIGNED_SHORT, MPI_SUM, libMesh::COMM_WORLD);
-    
-#else
-    // Without MPI the node_conn_local and the node_conn arrays
-    // are necessarily identical
-    node_conn = node_conn_local;
-    
-#endif
-  }
-
-  const unsigned int u_var = system->variable_number("fermi_x");
-  
-  vector<unsigned int> dof_indices_u;
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
-  fe->attach_quadrature_rule(&qrule);
-
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end(); 
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    ID subdomain = elem->subdomain_id();
-
-#ifdef ENABLE_INFINITE_ELEMENTS
-    // infinite elements should be skipped...
-    if (!elem->infinite())
-#endif
-    {
-      dof_map.dof_indices(elem, dof_indices_u, u_var);
-
-      ExcitonProperties* excitonmodel =
-        dynamic_cast<ExcitonProperties*>(
-            device.get_material(subdomain)->get_model(get_id()));
-
-      assert(excitonmodel!= NULL);
-
-      excitonmodel->reinit(elem);
-
-      fe->reinit(elem);
-
-      assert(elem->n_nodes() == dof_indices_u.size());
-
-
-      for (unsigned int n = 0; n < elem->n_nodes(); n++)
-      {
-        double ex  = phi0 * solution(dof_indices_u[n]);
-
-        double kT = excitonmodel->get_lattice_temperature();
-        
-        excitonmodel->set_carrier_temperature(kT);
-        excitonmodel->set_coordinates(elem->point(n));
-        excitonmodel->set_effective_potential(ex);
-        excitonmodel->calculate_density();
-        excitonmodel->calculate_net_recombination_rate();
-
-
-        assert (node_conn[elem->node(n)] != 0);
-        double conn = static_cast<double>(node_conn[elem->node(n)]);
-
-        unsigned int id = n_vars * elem->node(n);
-
-        if (xdens != -1)
-        {
-          double nodal_val = excitonmodel->get_density();
-          local[id + xdens] += nodal_val / conn;
-        }
-
-        if (rec != -1)
-        {
-          // recombination models
-          int first = id + rec;
-          double tot = excitonmodel->get_net_recombination_rate();
-          local[first + 4] += tot / conn;
-          
-          double nodal_val = excitonmodel->get_radiative_recombination_rate();
-          local[first + 1] += nodal_val / conn;
-          double totrec = nodal_val;
-          
-          nodal_val = excitonmodel->get_nonradiative_recombination_rate();
-          local[first + 2] += nodal_val / conn;
-          totrec += nodal_val;
-          
-          nodal_val = excitonmodel->get_dissociation_rate();
-          local[first + 3] += nodal_val / conn;
-          totrec += nodal_val;
-
-          // note the sign: we want to plot it as positive quantity
-          nodal_val = (totrec - tot) / conn;
-          local[first] += nodal_val; // generation
-        }
-
-
-        if (mu != -1)
-        {
-          double nodal_val = excitonmodel->get_mobility();
-          local[id + mu] += nodal_val / conn;
-        }
-
-        if (Ef != -1)
-          local[id + Ef] += ex / conn;
-
-
-      } // end loop over nodes
-    } // end if not infinite element
-  } // end loop over elements
-
-#ifdef HAVE_MPI
-  // Now each processor has computed contriburions to the
-  // soln vector.  Gather them all up.
-  MPI_Allreduce (&local[0], &results[0], results.size(),
-		 MPI_REAL, MPI_SUM, libMesh::COMM_WORLD);
-#else
-  results = local;
-#endif
-
-}
-
-
-
-
-
-
-void
-ExcitonTransport::build_elemental_results(const set<string>& variables,
-    vector<double>& results, vector<string>& legend)
-{
-
-  // we only do something if we are on processor 0
-  // TODO parallelize
-  if (libMesh::processor_id() != 0)
-    return;
-  
-  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
-
-  // aliases for nicer code
-  const Device& device = *(_device);
-  const MeshBase& mesh = get_mesh();
-  const NumericVector<Number>& solution = system->get_solution_vector();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int dim = mesh.mesh_dimension();
-  const unsigned int nn  = mesh.n_elem();
-  
-  legend.resize(variables.size());
-
-  // for each possible variable we set the vector index
-  // -1 means, the variable should not be plotted
-  unsigned int n_vars = 0;
-  const set<string>::const_iterator varend(variables.end());
-
-
-  int J = -1;
-  if (variables.find("xCurrent") != varend)
-  {
-    J = n_vars;
-    legend.resize(variables.size() + dim);
-    switch (dim)
-    {
-      case 3:
-        legend[J + 2] = "Jx_z";
-        n_vars++;
-      case 2:
-        legend[J + 1] = "Jx_y";
-        n_vars++;
-        legend[J + dim] = "|J|";
-        n_vars++;
-      default:
-        legend[J] = "Jx_x";
-        n_vars++;
-    }
-  }
-
-
-  legend.resize(n_vars);
-
-  results.resize(nn * n_vars);
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  const unsigned int u_var = system->variable_number("fermi_x");
-  
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::CONSTANT);
-  fe->attach_quadrature_rule(&qrule);
-
-  vector<unsigned int> dof_indices_u;
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-
-  // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  // physical coordinates of the quadrature points
-  const vector<Point>& q_point = fe->get_xyz();
-
-  MeshBase::const_element_iterator it =
-    mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end =
-    mesh.active_elements_end(); 
-
-  unsigned int elem_number = 0;
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-
-    ID subdomain = elem->subdomain_id();
-
-    dof_map.dof_indices(elem, dof_indices_u, u_var);
-
-    ExcitonProperties* excitonmodel =
-      dynamic_cast<ExcitonProperties*>(
-          device.get_material(subdomain)->get_model(get_id()));
-
-    assert(excitonmodel!= NULL);
-
-    excitonmodel->reinit(elem);
-
-    fe->reinit(elem);
-    
-    unsigned int n_dofs = dof_indices_u.size();
-    // get the solution values at the centroid
-    Real ex_x = 0.0;
-    Real ex_y = 0.0;
-    Real ex_z = 0.0;
-    Real ex = 0.0;
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      ex_x  += dphi[i][0](0) * solution(dof_indices_u[i]);
-      ex_y  += dphi[i][0](1) * solution(dof_indices_u[i]);
-      ex_z  += dphi[i][0](2) * solution(dof_indices_u[i]);
-      
-      ex += phi[i][0] * solution(dof_indices_u[i]);
-    }
-    ex_x *= phi0;
-    ex_y *= phi0;
-    ex_z *= phi0;
-
-    // prepare for calculating local properties
-    excitonmodel->set_coordinates(elem->centroid());
-
-    double kT = excitonmodel->get_lattice_temperature();
-
-    excitonmodel->set_carrier_temperature(kT);
-    excitonmodel->set_coordinates(elem->centroid());
-    excitonmodel->set_effective_potential(phi0 * ex);
-    excitonmodel->calculate_density();
-
-
-    // we put the minus sign here
-    double sigma = -excitonmodel->get_density() * excitonmodel->get_mobility();
-
-    unsigned int id = n_vars * elem_number;
-
-
-    if (J != -1)
-    {
-      double jx = sigma * ex_x;
-      double jy = sigma * ex_y;
-      double jz = sigma * ex_z;
-      switch (dim)
-      {
-        case 3:
-          results[id + J + 2] = jz;
-        case 2:
-          results[id + J + 1] = jy;
-          results[id + J + dim] = sqrt(jx * jx + jy * jy + jz * jz);
-        default:
-          results[id + J] = jx;
-      }
-    }
-
-
-    elem_number++;
-  }
-
-  results.resize(elem_number * n_vars);
-}
-
-
-
-
 
 double
 ExcitonTransport::do_maximum_norm_of_difference(ID id)
@@ -901,11 +482,6 @@ ExcitonTransport::do_maximum_norm_of_difference(ID id)
 
   return norm * get_scaling().get_potential_scaling();
 }
-
-
-
-
-
 
 void
 ExcitonTransport::do_assembly(const NumericVector<Number>& x,
@@ -1176,311 +752,300 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
 
 
 
+void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::vector<double> >& solutions, const std::vector<Point>& points) {
+    unsigned int np = points.size();
+
+    TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
+
+    const NumericVector<Number>& ddsol = *(system->solution);
+
+    const unsigned int dim = get_mesh().mesh_dimension();
+
+    const DofMap& dof_map = system->get_dof_map();
+
+    const unsigned int u_var = system->variable_number("fermi_x");
+
+    FEType fe_type = system->variable_type(u_var);
+    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+
+    vector<unsigned int> dof_indices_u;
+
+    // element shape functions
+    const vector<vector<Real> >& phi = fe->get_phi();
+
+    // element shape function gradients
+    const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+    fe->reinit(elem, &points);
+
+    const vector<Point>& q_points = fe->get_xyz();
+
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+
+    const unsigned int n_dofs = dof_indices_u.size();
 
 
-ID
-ExcitonTransport::convert_variable_name_to_id(const string& variable_name) const
-{
-  ID id = INVALID_ID;
+    ID subdomain = elem->subdomain_id();
 
+    ExcitonProperties* excitonmodel =
+      dynamic_cast<ExcitonProperties*>(
+          _device->get_material(subdomain)->get_model(get_id()));
 
-  if (variable_name == "chemPot")
-    id = CHEMPOT;
-  else if (variable_name == "xCond")
-    id = XSIGMA;
-  else if (variable_name == "xMob")
-    id = XMOBILITY;
-  else if (variable_name == "xDensity")
-    id = XDENSITY;
-  else if (variable_name == "J")
-    id = J;
-  else if (variable_name == "J_x")
-    id = JX;
-  else if (variable_name == "J_y")
-    id = JY;
-  else if (variable_name == "J_z")
-    id = JZ;
-  else if (variable_name == "Rad_power")
-    id = RADPOWER;
-  else if (variable_name == "dissociation")
-    id = RDISS;
+    assert(excitonmodel != NULL);
 
+    excitonmodel->reinit(elem);
 
+    // the scaling parameters to scale back the result
+    double phi0 = get_scaling().get_potential_scaling();
 
-  return id;
+    for (unsigned int n = 0; n < np; n++) {
+
+      // do interpolation
+      double ex = 0;
+      Point grad_x = 0.0;
+
+      for (unsigned int i = 0; i < n_dofs; i++) {
+        ex  += phi[i][n] * ddsol(dof_indices_u[i]);
+        grad_x  += dphi[i][n] * ddsol(dof_indices_u[i]);
+      }
+
+      // scale the potential back
+      ex  *= phi0;
+      grad_x *= phi0;
+
+      // prepare for calculating local properties
+      excitonmodel->set_coordinates(q_points[n]);
+
+      double T_lat = excitonmodel->get_lattice_temperature();
+      // all are at lattice temperature
+      excitonmodel->set_carrier_temperature(T_lat);
+
+      excitonmodel->set_effective_potential(ex);
+
+      excitonmodel->calculate_density();
+
+      if (solutions.count(RDISS))
+        solutions[RDISS][n] = excitonmodel->get_dissociation_rate();
+
+      double sigma = excitonmodel->get_real_density() * excitonmodel->get_mobility();
+
+      if (solutions.count(CHEMPOT)) {
+        solutions[CHEMPOT][n] = ex;
+      }
+
+      if (solutions.count(XSIGMA)) {
+        solutions[XSIGMA][n] = sigma;
+      }
+
+      if (solutions.count(XMOBILITY)) {
+        solutions[XMOBILITY][n] = excitonmodel->get_mobility();
+      }
+
+      if (solutions.count(XDENSITY)) {
+        solutions[XDENSITY][n] = excitonmodel->get_real_density();
+      }
+
+      if (solutions.count(RDISS)) {
+        solutions[RDISS][n] = excitonmodel->get_dissociation_rate();
+      }
+
+      if (solutions.count(RRAD)) {
+        solutions[RRAD][n] = excitonmodel->get_radiative_recombination_rate();
+      }
+
+      if (solutions.count(RNONRAD)) {
+        solutions[RNONRAD][n] = excitonmodel->get_nonradiative_recombination_rate();
+      }
+
+      if (solutions.count(EXCEXCPOLARITON)) {
+        solutions[EXCEXCPOLARITON][n] = excitonmodel->get_exc_exc_scattering();
+      }
+
+      if (solutions.count(EXCPHONONPOLARITON)) {
+        solutions[EXCPHONONPOLARITON][n] = excitonmodel->get_exc_photon_scattering();
+      }
+
+      if (solutions.count(NETRECOMB)) {
+        excitonmodel->calculate_net_recombination_rate();
+        solutions[NETRECOMB][n] = excitonmodel->get_real_net_recombination_rate();
+      }
+
+      if (solutions.count(XGEN)) {
+        solutions[XGEN][n] = excitonmodel->get_generation_rate();
+      }
+
+      if (solutions.count(J)) {
+        solutions[J][3*n] = -sigma * grad_x(0);
+        solutions[J][3*n + 1] = -sigma * grad_x(1);
+        solutions[J][3*n + 2] = -sigma * grad_x(2);
+      }
+
+       if (solutions.count(RADPOWER)) {
+         solutions[RADPOWER][n] =
+           excitonmodel->get_exciton_energy() * excitonmodel->get_real_density() /
+           excitonmodel->get_radiative_recombination_rate();
+       }
+
+    }
 }
 
-      
+// ------------- -------------- ------------
+void ExcitonTransport::calc_excpol_integral(const NumericVector<Number>& x) {
+  if (!polaritons) {
+    excpolprops.a = 0;
+    excpolprops.b = 0;
+    excpolprops.density_renormalization = 1;
+    return;
+  } else {
+    double X_2 = 0.0;
+    SimulationInterface* maxwell = SimulationInterface::find_simulation("maxwell");
+    if (maxwell != NULL && maxwell->is_solved()) {
+      ID id = maxwell->get_solution_id("XHopfield");
+      ID id2 = maxwell->get_solution_id("EigenValueImag");
 
+      std::map<ID, std::vector<double> > map;
+      map.insert(std::make_pair(id, std::vector<double>(1)));
+      map.insert(std::make_pair(id2, std::vector<double>(1)));
+      maxwell->get_solution(map);
+      X_2 = map[id][0];
+      excpolprops.pol_tau = 1.0 / std::abs(map[id2][0]);
+    }
 
-void
-ExcitonTransport::get_solution_secure(const Elem* elem,
-    const set<ID>& ids, vector<map<ID, double> >& values)
-{
-  unsigned int np = elem->n_nodes();
+    std::cout << "X Hopfield " << X_2 << "\n";
+    std::cout << "Polariton life time " << excpolprops.pol_tau << "\n";
+    flush(std::cout);
 
-  vector<Point> points(np);
-  for (int i = 0; i < np; i++)
-    points[i] = elem->local_node(elem->type(), i);
+    excpolprops.a = ExcPolProps::a0 * X_2;
+    excpolprops.b = ExcPolProps::b0 * X_2;
+  }
 
+  DenseVector<Number> X;
 
-  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
+  const MeshBase& mesh = get_mesh();
 
-  const NumericVector<Number>& ddsol = *(system->solution);
+  const unsigned int dim = mesh.mesh_dimension();
+  const double phi0 = get_scaling().get_potential_scaling();
 
-  const unsigned int dim = get_mesh().mesh_dimension();
+  const Device& device = *_device;
+  const Options& params = get_options();
 
-  const DofMap& dof_map = system->get_dof_map();
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+  const DofMap& dof_map = system.get_dof_map();
 
-  const unsigned int u_var = system->variable_number("fermi_x");
+  // numeric ids corresponding to the variables
+  const unsigned int ex_var = system.variable_number("fermi_x");
 
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  FEType fe_type = system.variable_type(ex_var);
 
-  vector<unsigned int> dof_indices_u;
+  // the finite element
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  QGauss qrule(dim, params.integration_order);
+  fe->attach_quadrature_rule(&qrule);
 
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW = fe->get_JxW();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+  //
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
 
-  // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  // the DOF indices
+  vector<unsigned int> dof_indices;
 
+  double xx_max = -1;
 
-  fe->reinit(elem, &points);
+  double density_integral = 0.0;
+  double density_square_integral = 0.0;
 
-  dof_map.dof_indices(elem, dof_indices_u, u_var);
+  MeshBase::const_element_iterator el = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
 
-  const unsigned int n_dofs = dof_indices_u.size();
+  // loop over all active elements
+  for ( ; el != end_el ; ++el) {
+    const Elem* elem = *el;
+    ID subdomain = elem->subdomain_id();
 
-  ID subdomain = elem->subdomain_id();
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices);
+    unsigned int n_dofs = dof_indices.size();
 
-  ExcitonProperties* excitonmodel =
-    dynamic_cast<ExcitonProperties*>(
-        _device->get_material(subdomain)->get_model(get_id()));
+    X.resize(n_dofs);
 
-  assert(excitonmodel != NULL); 
+    fe->reinit(elem);
 
-  excitonmodel->reinit(elem);
+    // extract local ddsol, accounting for constraints
+    dof_map.extract_local_vector(x, dof_indices, X);
 
+    ExcitonProperties* em = dynamic_cast<ExcitonProperties*>(device.get_material(subdomain)->get_model(get_id()));
 
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
+    assert(em != NULL);
 
-  for (unsigned int n = 0; n < np; n++)
-  {
-    // the chemical potential
-    double ex = phi0 * ddsol(dof_indices_u[n]);
+    em->reinit(elem);
 
-    // do interpolation
-    double grad_x = 0.0;
-    double grad_y = 0.0;
-    double grad_z = 0.0;
-    double dT_x = 0.0;
-    double dT_y = 0.0;
-    double dT_z = 0.0;
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      grad_x  += dphi[i][n](0) * ddsol(dof_indices_u[i]);
-      grad_y  += dphi[i][n](1) * ddsol(dof_indices_u[i]);
-      grad_z  += dphi[i][n](2) * ddsol(dof_indices_u[i]);
-      
-      //dT_x  += dphi[i][n](0) * T_nodes[i];
-      //dT_y  += dphi[i][n](1) * T_nodes[i];
-      //dT_z  += dphi[i][n](2) * T_nodes[i];
+    // loop over the quadrature points
+    for (unsigned int qp = 0; qp < qrule.n_points(); qp++) {
+      // get the exciton electro-chemical potential at the quadrature point
+      double ex = 0.0;
+      for (unsigned int i = 0; i < n_dofs; i++) {
+        ex += phi[i][qp] * X(i);
+      }
+
+      em->set_coordinates(q_point[qp]);
+      em->set_effective_potential(phi0 * ex);
+      em->calculate_density();
+
+      double x = em->get_density();
+      xx_max = std::max(x, xx_max);
+
+      density_integral += x * JxW[qp];
+      density_square_integral += x * x * JxW[qp];
     }
-
-    // scale the potential back
-    grad_x *= phi0;
-    grad_y *= phi0;
-    grad_z *= phi0;
-
-
-    // prepare for calculating local properties
-    excitonmodel->set_coordinates(points[n]);
-
-    double T_lat = excitonmodel->get_lattice_temperature();
-    // all are at lattice temperature
-    excitonmodel->set_carrier_temperature(T_lat);
-
-    excitonmodel->set_effective_potential(ex);
-
-    excitonmodel->calculate_density();
-
-    double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
-
-
-    if (ids.count(CHEMPOT))
-      values[n][CHEMPOT] = ex;
-
-    if (ids.count(XSIGMA))
-      values[n][XSIGMA] = sigma;
-
-    if (ids.count(XMOBILITY))
-      values[n][XMOBILITY] = excitonmodel->get_mobility();
-
-    if (ids.count(XDENSITY))
-      values[n][XDENSITY] = excitonmodel->get_density();
-
-    if (ids.count(RDISS))
-      values[n][RDISS] = excitonmodel->get_dissociation_rate();
-
-    if (ids.count(J))
-    {
-      double tmp = grad_x * grad_x + grad_y * grad_y + grad_z * grad_z;
-      values[n][J] = -sigma * sqrt(tmp);
-    }
-
-    if (ids.count(JX))
-      values[n][JX] = -sigma * grad_x;
-
-    if (ids.count(JY))
-      values[n][JY] = -sigma * grad_y;
-
-    if (ids.count(JZ))
-      values[n][JZ] = -sigma * grad_z;
-
-     if (ids.count(RADPOWER))
-       values[n][RADPOWER] = 
-         excitonmodel->get_exciton_energy() * excitonmodel->get_density() / 
-         excitonmodel->get_radiative_recombination_rate();
-
   }
 
+  for (int k = 0; k < mesh.mesh_dimension(); k++) {
+    density_integral = density_integral * get_scaling().get_length_scaling();
+    density_square_integral = density_square_integral * get_scaling().get_length_scaling();
+  }
+
+  //  R^2 - aa*R - bb = 0;
+  double aa = 1.0 + excpolprops.a * excpolprops.pol_tau * density_integral;
+  double bb = excpolprops.b * excpolprops.pol_tau * density_square_integral;
+
+  excpolprops.density_renormalization = (aa + std::sqrt(aa*aa + 4*bb)) / 2;
+
+  std::cout << "My info: " << density_integral << " " << density_square_integral << " " << excpolprops.density_renormalization << " " << xx_max << "\n";
+  flush(std::cout);
 }
-
-      
-
 
 void
-ExcitonTransport::get_solution_secure(const Elem* elem, const vector<Point>& p,
-    const set<ID>& ids, vector<map<ID, double> >& values)
-{
-  unsigned int np = p.size();
+ExcitonTransport::do_setup_solution_variables(void) {
+  polaritons = get_option("polaritons", false);
 
-  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
+  declare_solution_ext("generation", XGEN, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xpot", CHEMPOT, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xdens", XDENSITY, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xmob", XMOBILITY, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xsigm", XSIGMA, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xcurrent", J, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("dissociation", RDISS, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("rad_recombination", RRAD, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("nonrad_recombination", RNONRAD, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("net_recombination", NETRECOMB, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("rad_power", RADPOWER, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
 
-  const NumericVector<Number>& ddsol = *(system->solution);
-
-  const unsigned int dim = get_mesh().mesh_dimension();
-
-  const DofMap& dof_map = system->get_dof_map();
-
-  const unsigned int u_var = system->variable_number("fermi_x");
-
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-
-  vector<unsigned int> dof_indices_u;
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-
-  // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
-  vector<Point> points(np);
-  FEInterface::inverse_map(dim, fe_type, elem, p, points);
-  //for (unsigned int n = 0; n < np; n++)
-  //  points[n] = FEInterface::inverse_map(dim, fe_type, elem, p[n], 1e-6);
-
-  fe->reinit(elem, &points);
-
-  dof_map.dof_indices(elem, dof_indices_u, u_var);
-
-  const unsigned int n_dofs = dof_indices_u.size();
-
-
-  ID subdomain = elem->subdomain_id();
-
-  ExcitonProperties* excitonmodel =
-    dynamic_cast<ExcitonProperties*>(
-        _device->get_material(subdomain)->get_model(get_id()));
-
-  assert(excitonmodel != NULL); 
-
-  excitonmodel->reinit(elem);
-
-
-  // the scaling parameters to scale back the result
-  double phi0 = get_scaling().get_potential_scaling();
-
-  for (unsigned int n = 0; n < np; n++)
-  {
-    
-    // do interpolation
-    double ex = 0;
-    double grad_x = 0.0;
-    double grad_y = 0.0;
-    double grad_z = 0.0;
-    double dT_x = 0.0;
-    double dT_y = 0.0;
-    double dT_z = 0.0;
-    for (unsigned int i = 0; i < n_dofs; i++)
-    {
-      ex  += phi[i][n] * ddsol(dof_indices_u[i]);
-
-      grad_x  += dphi[i][n](0) * ddsol(dof_indices_u[i]);
-      grad_y  += dphi[i][n](1) * ddsol(dof_indices_u[i]);
-      grad_z  += dphi[i][n](2) * ddsol(dof_indices_u[i]);
-      
-      //dT_x  += dphi[i][n](0) * T_nodes[i];
-      //dT_y  += dphi[i][n](1) * T_nodes[i];
-      //dT_z  += dphi[i][n](2) * T_nodes[i];
-    }
-
-    // scale the potential back
-    ex  *= phi0;
-    grad_x *= phi0;
-    grad_y *= phi0;
-    grad_z *= phi0;
-
-
-    // prepare for calculating local properties
-    excitonmodel->set_coordinates(points[n]);
-
-    double T_lat = excitonmodel->get_lattice_temperature();
-    // all are at lattice temperature
-    excitonmodel->set_carrier_temperature(T_lat);
-
-    excitonmodel->set_effective_potential(ex);
-
-    excitonmodel->calculate_density();
-
-    double sigma = excitonmodel->get_density() * excitonmodel->get_mobility();
-
-
-    if (ids.count(CHEMPOT))
-      values[n][CHEMPOT] = ex;
-
-    if (ids.count(XSIGMA))
-      values[n][XSIGMA] = sigma;
-
-    if (ids.count(XMOBILITY))
-      values[n][XMOBILITY] = excitonmodel->get_mobility();
-
-    if (ids.count(XDENSITY))
-      values[n][XDENSITY] = excitonmodel->get_density();
-
-    if (ids.count(RDISS))
-      values[n][RDISS] = excitonmodel->get_dissociation_rate();
-
-    if (ids.count(J))
-    {
-      double tmp = grad_x * grad_x + grad_y * grad_y + grad_z * grad_z;
-      values[n][J] = -sigma * sqrt(tmp);
-    }
-
-    if (ids.count(JX))
-      values[n][JX] = -sigma * grad_x;
-
-    if (ids.count(JY))
-      values[n][JY] = -sigma * grad_y;
-
-    if (ids.count(JZ))
-      values[n][JZ] = -sigma * grad_z;
+  if (polaritons) {
+    declare_solution_ext("n_polaritons", NPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "x");
+    declare_solution_ext("exc_exc_recombination", EXCEXCPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+    declare_solution_ext("exc_phonon_recombination", EXCPHONONPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
   }
-
 }
 
-
-
+void ExcitonTransport::get_solution_secure(std::map<ID, std::vector<double> >& solutions) {
+  if (solutions.count(NPOLARITON)) {
+    std::vector<double>& solution = solutions[NPOLARITON];
+    solution.resize(0);
+    solution.push_back(excpolprops.density_renormalization - 1);
+  }
+}

@@ -1,5 +1,5 @@
 // $Id$
- 
+
 #include <iostream>
 #include <cassert>
 #include <string>
@@ -14,7 +14,7 @@ namespace
 {
   Mat A; //Hamiltonian
   Mat B; //S-matrix
-  EPS eps; //EigenSolver 
+  EPS eps; //EigenSolver
   double shift; //could be stored in ST but lapack does not apply any shift
 }
 
@@ -26,6 +26,16 @@ int EigenSolver::_size_of_matrix;
 void EigenSolver::slepc_init(int argc1, char** argv1)
 {
 
+  //Seems to work ^^
+/*  TODO
+  int __empty_argc = 3;
+  char** __empty_argv = new char*[3];
+  __empty_argv[0] = "tibercad";
+  __empty_argv[1] = "-mat_mumps_icntl_14";
+  __empty_argv[2] = "100";
+
+  SlepcInitialize(&__empty_argc,&__empty_argv,NULL,NULL);
+  */
   SlepcInitialize(&argc1,&argv1,NULL,NULL);
   PetscPopSignalHandler();
 
@@ -39,7 +49,7 @@ void  EigenSolver::slepc_done()
 //--------------------------------------------------------------//
 int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt )
 {
-  
+
   EPSType     type;
   PetscReal   error, tol, re, im;
   PetscScalar kr, ki;
@@ -51,42 +61,42 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   ST st;
   KSP ksp;
   PC pc;
-  
 
 
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Load the matrices that define the eigensystem, Ax=kBx
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   //print_options(opt);
-  
+
 
   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
- 
+
 
   if (opt.read_matrix_from_file)
   {
-  
-  
+
+
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
 
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
     ierr = MatGetSize(A, &_size_of_matrix, NULL);
-   
+
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
 
     ierr = MatLoad(viewer,MATAIJ,&B);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
-  
+
 
   }
-  
- 
+
+
 
   if (opt.matrix_output)
   {//test of the matrix
-   
+
 
     ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out); CHKERRQ(ierr);
     ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
@@ -102,26 +112,26 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   }
 
 
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 Create the eigensolver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
- 
-  /* 
+
+  /*
      Set operators. In this case, it is a generalized eigenvalue problem
   */
   ierr = EPSSetOperators(eps,A,B);CHKERRQ(ierr);
   // ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
-  
- 
+
+
   shift = opt.spectrum_shift;
- 
+
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
 
   if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur" )
   {
     ierr = EPSSetProblemType(eps,EPS_GNHEP);CHKERRQ(ierr);
-    
+
     //ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
 
     if (opt.solver_type == "arnoldi")
@@ -129,9 +139,9 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     else
       ierr = EPSSetType(eps, EPSKRYLOVSCHUR);
 
-    
+
     ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-  
+
     if (opt.spectral_trans == "folding")
     {
       ierr = STSetType(st,STFOLD); CHKERRQ(ierr);
@@ -142,11 +152,11 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
       ierr = STSetType(st,STSINV); CHKERRQ(ierr);
       ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
     }
-      
-    ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
+
+    ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
 
     set_ksp_and_pc(st, opt);
-  
+
   }
   else if (opt.solver_type == "lapack")
   {
@@ -154,7 +164,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     ierr = EPSSetType(eps, EPSLAPACK);
     ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
     //ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-    //ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
+    //ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
 
   }
   else if (opt.solver_type == "arpack")
@@ -166,21 +176,21 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
     if (std::abs(opt.spectrum_shift) >1e-8)
     {
       ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-      ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
-   
+      ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
+
       ierr = STSetType(st,STSHIFT); CHKERRQ(ierr);
 
       set_ksp_and_pc(st, opt);
     }
   }
- 
 
 
-  ierr = do_solve(opt);  
-  
+
+  ierr = do_solve(opt);
+
   CHKERRQ(ierr);
 
- 
+
   return ierr;
 }
 
@@ -193,19 +203,19 @@ void EigenSolver::print_options(const EigenSolver::SLEPCoptions& opt)
   std::cout<< "   (ES) matrix output: " << opt.matrix_output << std::endl;
   std::cout<< "   (ES) ev_number: " << opt.ev_number << std::endl;
   std::cout<< "   (ES) solver type: " << opt.solver_type << std::endl;
-  std::cout<< "   (ES) tolerance: " << opt.eps_tolerance << std::endl;  
-  std::cout<< "   (ES) max iterations: " << opt.eps_max_it << std::endl;  
+  std::cout<< "   (ES) tolerance: " << opt.eps_tolerance << std::endl;
+  std::cout<< "   (ES) max iterations: " << opt.eps_max_it << std::endl;
   std::cout<< "   (ES) spectral trans: " << opt.spectral_trans << std::endl;
-  std::cout<< "   (ES) shift: " << opt.spectrum_shift << std::endl;  
+  std::cout<< "   (ES) shift: " << opt.spectrum_shift << std::endl;
   std::cout<< "   (ES) linear system solver: " << opt.st_ksp_type << std::endl;
-  std::cout<< "   (ES) preconditioner: " << opt.pc_type << std::endl; 
-  std::cout<< "   (ES) tolerance: " << opt.spectrum_inversion_tolerance << std::endl;       
-  
-}    
+  std::cout<< "   (ES) preconditioner: " << opt.pc_type << std::endl;
+  std::cout<< "   (ES) tolerance: " << opt.spectrum_inversion_tolerance << std::endl;
+
+}
 
 int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
 {
-  
+
   EPSType     type;
   PetscReal   error, tol, re, im;
   PetscScalar kr, ki;
@@ -217,36 +227,36 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   ST st;
   KSP ksp;
   PC pc;
-  
 
 
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         Load the matrices that define the eigensystem, Ax=kBx
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
- 
- 
+
+
 
   ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
- 
+
 
    if (opt.read_matrix_from_file)
-   { 
-  
-    
+   {
+
+
     ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
     ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
     ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
 
     ierr = MatGetSize(A, &_size_of_matrix, NULL);
-  
+
 
   }
-  
- 
+
+
 
   if (opt.matrix_output)
   {//test of the matrix
-   
+
 
     ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out); CHKERRQ(ierr);
     ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
@@ -254,23 +264,23 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
     ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
 
 
-   
 
-  } 
- 
+
+  }
+
 
   shift = opt.spectrum_shift;
 
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 Create the eigensolver and set various options
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
-  /* 
+  /*
      Set operators. In this case, it is a generalized eigenvalue problem
   */
   ierr = EPSSetOperators(eps,A,PETSC_NULL);CHKERRQ(ierr);
- 
-  
+
+
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
 
@@ -297,7 +307,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
       ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
     }
 
-    ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
+    ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
 
     ierr = set_ksp_and_pc(st, opt);
 
@@ -308,7 +318,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
     ierr = EPSSetType(eps, EPSLAPACK);
     ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
     //ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-    //ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
+    //ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
 
   }
   else if (opt.solver_type == "arpack")
@@ -320,23 +330,23 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
     if (std::abs(opt.spectrum_shift) >1e-8)
     {
       ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-      ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr); 
-    
-   
+      ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
+
+
       ierr = STSetType(st,STSHIFT); CHKERRQ(ierr);
 
       ierr = set_ksp_and_pc(st, opt);
     }
 
   }
- 
+
   ierr = do_solve(opt);
 
- 
 
-  return ierr; 
 
- 
+  return ierr;
+
+
 }
 
 
@@ -391,10 +401,10 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
 //--------------------------------------------------------------//
 int EigenSolver::number_of_converged_eigenvalues()
 {
-  int ierr, nconv; 
+  int ierr, nconv;
   ierr =  EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
 
- 
+
 
   return(nconv);
 }
@@ -403,13 +413,13 @@ double EigenSolver::get_eigenvalue( int i)
 {
   int ierr;
   PetscScalar ev, ev_i;
- 
+
   ierr = EPSGetValue(eps, i, &ev,  &ev_i);
 
   double eigen_value = PetscRealPart(ev);
 
   return(eigen_value);
- 
+
 }
 //----------------------------------------------------------------//
 
@@ -420,15 +430,15 @@ void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_ou
   PetscScalar kr, ki;
   Vec eigen_vector;
 
- 
+
 
   MatGetVecs(A,PETSC_NULL,&eigen_vector);
 
   EPSGetEigenpair(eps,i,&kr,&ki,eigen_vector,PETSC_NULL);
 
- 
+
   VecGetSize(eigen_vector, &vec_size);
-  
+
   eigen_vector_out.resize(vec_size);
 
   {
@@ -443,7 +453,7 @@ void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_ou
 
     for (int j= 0; j < vec_size; j++)
     {
-      eigen_vector_out[j] = Complex(  PetscRealPart(y[j]), PetscImaginaryPart(y[j]) );  
+      eigen_vector_out[j] = Complex(  PetscRealPart(y[j]), PetscImaginaryPart(y[j]) );
     }
 
   }
@@ -460,10 +470,10 @@ void EigenSolver::set_initial_vector( const std::vector<Complex>& in_vector)
 
   Vec v0;
 
-  
+
 
   MatGetVecs(A,PETSC_NULL,&v0);
-  
+
   PetscScalar y[_size_of_matrix];
   PetscInt ix[_size_of_matrix];
 
@@ -477,11 +487,11 @@ void EigenSolver::set_initial_vector( const std::vector<Complex>& in_vector)
 
   VecSetValues(v0,_size_of_matrix,ix,y,INSERT_VALUES);
 
- 
+
 
   EPSSetInitialVector(eps, v0);
-  
- 
+
+
   ierr = VecDestroy(v0);
 }
 
@@ -490,7 +500,7 @@ void EigenSolver::set_initial_vector( const std::vector<Complex>& in_vector)
 
 int EigenSolver::prepare_slepc()
 {
-  /* 
+  /*
      Create eigensolver context
   */
   int ierr;
@@ -520,9 +530,9 @@ int EigenSolver::clear_slepc()
   }
 
   ierr = EPSDestroy(eps);CHKERRQ(ierr);
- 
 
-  
+
+
 
   return(ierr);
 }
@@ -534,7 +544,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   int ierr;
 
   int ncv, nconv;
-  
+
 
 
 
@@ -542,11 +552,11 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
     ncv =  4*opt.ev_number;
   else
     ncv = 32;
-   
 
- 
+
+
   if (ncv > _size_of_matrix) ncv = _size_of_matrix;
- 
+
 #if ((SLEPC_VERSION_MAJOR == 2) && (SLEPC_VERSION_MINOR == 3) && \
     (SLEPC_VERSION_SUBMINOR <= 2))
   if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULL);
@@ -554,7 +564,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   if (opt.monitor) EPSMonitorSet(eps, EPSMonitorDefault, PETSC_NULL, PETSC_NULL);
 #endif
 
-  
+
 
 #if (SLEPC_VERSION_MAJOR >= 3)
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv, PETSC_DECIDE); CHKERRQ(ierr);
@@ -562,12 +572,12 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
   ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
 #endif
 
-   
+
   ierr = EPSSolve(eps);
- 
+
   //ierr =  EPSGetConverged(eps,&nconv);  CHKERRQ(ierr);
- 
- 
+
+
   return ierr;
 
 }
@@ -580,27 +590,27 @@ int EigenSolver::init_H_matrix(unsigned int n)
   int ierr;
 
   ierr = MatCreate(PETSC_COMM_WORLD,&A);
- 
+
   CHKERRQ(ierr);
-  
-   
+
+
   ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);
-   
+
   CHKERRQ(ierr);
-  
-   
+
+
   ierr = MatSetFromOptions(A);
-     
+
 
   CHKERRQ(ierr);
-   
-  
- 
 
- 
+
+
+
+
   return(ierr);
 
-  
+
 }
 
 
@@ -612,18 +622,18 @@ int EigenSolver::init_S_matrix(unsigned int n)
 
   ierr = MatCreate(PETSC_COMM_WORLD,&B);
   CHKERRQ(ierr);
-  
-  
+
+
   ierr = MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,n,n);
   CHKERRQ(ierr);
-  
-   
+
+
   ierr = MatSetFromOptions(B);
   CHKERRQ(ierr);
-   
+
 
   return(ierr);
-  
+
 }
 //-----------------------------------------------------------------//
 int EigenSolver::finalize_H_assembly(void)
@@ -632,7 +642,7 @@ int EigenSolver::finalize_H_assembly(void)
 
   ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
   CHKERRQ(ierr);
- 
+
   ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
   CHKERRQ(ierr);
 
@@ -646,10 +656,10 @@ int EigenSolver::finalize_S_assembly(void)
 
   ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);
   CHKERRQ(ierr);
-  
+
   ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);
   CHKERRQ(ierr);
-  
+
 
   return(ierr);
 }
@@ -661,7 +671,7 @@ int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums,
   int number_of_columns =  colums.size();
   PetscInt col[number_of_columns];
   PetscScalar value[number_of_columns];
-  
+
   for (unsigned int i = 0; i < number_of_columns; i++)
   {
     col[i] = colums[i];
@@ -676,7 +686,7 @@ int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums,
   CHKERRQ(ierr);
   return(ierr);
 
-  
+
 }
 
 //-------------------------------------------------------------------//
@@ -687,7 +697,7 @@ int EigenSolver::insert_S_row( int row, const std::vector<unsigned int>& colums,
   int number_of_columns =  colums.size();
   PetscInt col[number_of_columns];
   PetscScalar value[number_of_columns];
-  
+
   for (unsigned int i = 0; i < number_of_columns; i++)
   {
     col[i] = colums[i];
@@ -705,20 +715,20 @@ int  EigenSolver::preallocate_H_matrix(unsigned int matrix_size,  int*  non_zero
 {
 
   int ierr;
-  
+
   ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &A);
 
-  _size_of_matrix = matrix_size;       
-  
+  _size_of_matrix = matrix_size;
+
   return(ierr);
 }
 //------------------------------------------------------------------------------------//
 int  EigenSolver::preallocate_S_matrix(unsigned int matrix_size,  int*  non_zeros)
 {
   int ierr;
-  
+
   ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
- 
+
   return(ierr);
 }
 
@@ -729,13 +739,13 @@ double  EigenSolver::get_shift(void)
   //ST st;
   //PetscScalar shift;             //
 
-  //ierr = EPSGetST(eps, &st);     // ierr = EPSGetST(eps, st); 
+  //ierr = EPSGetST(eps, &st);     // ierr = EPSGetST(eps, st);
 
-  //CHKERRQ(ierr);   
+  //CHKERRQ(ierr);
 
   //ierr = STGetShift(st, &shift); // ierr = STGetShift(*st, &shift);
- 
-  //CHKERRQ(ierr); 
+
+  //CHKERRQ(ierr);
 
   //return(real(shift));
   return(shift);
@@ -752,7 +762,7 @@ bool EigenSolver::check_matrices(double tol, bool verbose)
   if(A->hermitian_set)
   {
     if (verbose)
-      std::cout<<"   (ES) Hamiltonian is defined Hermitian"<<std::endl; 
+      std::cout<<"   (ES) Hamiltonian is defined Hermitian"<<std::endl;
     ans = true;
   }
   else
@@ -767,7 +777,7 @@ bool EigenSolver::check_matrices(double tol, bool verbose)
     else
     {
       if (verbose)
-        std::cout<<"   (ES) Hamiltonian is NOT Hermitian!"<<std::endl;    
+        std::cout<<"   (ES) Hamiltonian is NOT Hermitian!"<<std::endl;
     }
     ans = (is==PETSC_TRUE);
   }
@@ -777,27 +787,27 @@ bool EigenSolver::check_matrices(double tol, bool verbose)
   if(B->hermitian_set)
   {
     if (verbose)
-      std::cout<<"   (ES) Overlap is defined Hermitian"<<std::endl; 
+      std::cout<<"   (ES) Overlap is defined Hermitian"<<std::endl;
     is = PETSC_TRUE;
-  }  
+  }
   else
   {
     ierr = MatIsHermitian(B, tol, &is);
-    
+
     if (is==PETSC_TRUE)
     {
       if (verbose)
         std::cout<<"   (ES) Overlap is Hermitian within "<<tol<<std::endl;
-    }  
+    }
     else
     {
       if (verbose)
-        std::cout<<"   (ES) Overlap is NOT Hermitian!"<<std::endl;   
+        std::cout<<"   (ES) Overlap is NOT Hermitian!"<<std::endl;
     }
   }
-  
+
   return (is==PETSC_TRUE) && ans;
-  
+
 }
 
 bool EigenSolver::check_matrices(void)
@@ -806,7 +816,7 @@ bool EigenSolver::check_matrices(void)
   PetscTruth is;
   bool ans;
 
-  ans = false;    
+  ans = false;
 
   ierr = SlepcIsHermitian(A, &is);
 
@@ -814,6 +824,90 @@ bool EigenSolver::check_matrices(void)
 
   ierr = SlepcIsHermitian(B, &is);
 
-  return (is==PETSC_TRUE) && ans;  
+  return (is==PETSC_TRUE) && ans;
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+int EigenSolver::eig_value_problem_general2(const EigenSolver::SLEPCoptions& opt) {
+  if (opt.matrix_output) {
+    PetscViewer viewer_out;
+
+    PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out);
+    PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
+    MatView(A, viewer_out);
+    PetscViewerDestroy(viewer_out);
+
+
+    PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matB.m",&viewer_out);
+    PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
+    MatView(B, viewer_out);
+    PetscViewerDestroy(viewer_out);
+  }
+
+  ST st;
+
+  EPSGetST(eps,&st);
+  STSetShift(st, opt.spectrum_shift);
+  STSetType(st,STSINV);
+
+  //MatMumpsSetIcntl(A, 14, 40);
+
+  KSP ksp;
+
+  STGetKSP(st, &ksp);
+  KSPSetType( ksp, KSPPREONLY);
+
+  PC pc;
+
+  KSPGetPC( ksp,&pc);
+  PCSetType(pc, PCLU);
+  PCFactorSetMatSolverPackage(pc, "mumps");
+
+  EPSSetOperators(eps,A,B);
+  EPSSetDimensions(eps, opt.ev_number, PETSC_DECIDE, PETSC_DECIDE);
+  EPSSolve(eps);
+
+  return 0;
+}
+
+
+int EigenSolver::addARow(int row, const int columnsNum, int* columns, Complex* values) {
+  return MatSetValues(A, 1, &row, columnsNum, columns, values, ADD_VALUES);
+}
+
+int EigenSolver::addBRow(int row, const int columnsNum, int* columns, Complex* values) {
+  return MatSetValues(B, 1, &row, columnsNum, columns, values, ADD_VALUES);
+}
+
+int EigenSolver::addARow(int row, const int columnsNum, int* columns, Complex values) {
+  return MatSetValues(A, 1, &row, columnsNum, columns, &values, ADD_VALUES);
+}
+
+int EigenSolver::addBRow(int row, const int columnsNum, int* columns, Complex values) {
+  return MatSetValues(B, 1, &row, columnsNum, columns, &values, ADD_VALUES);
+}
+
+Complex EigenSolver::get_eigenvalue_c( int i) {
+  PetscScalar ev, ev_i;
+  EPSGetValue(eps, i, &ev,  &ev_i);
+
+  return ev;
+ }

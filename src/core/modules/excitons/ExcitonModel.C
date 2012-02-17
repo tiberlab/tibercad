@@ -13,6 +13,7 @@
 #include "Utils.h"
 
 #include "elem.h"
+#include "ExcitonTransport.h"
 
 
 TIBER_MODULE(ExcitonModel, exbulk, simple)
@@ -38,38 +39,61 @@ ExcitonModel::do_mobility(void)
 }
 
 void
-ExcitonModel::do_recombination(void)
+ExcitonModel::do_recombination()
 {
   double inv_tau = 1.0 / _t_nr + 1.0 / _t_r + 1.0 / _t_diss;
   net_recomb_rate = density * inv_tau;
   recombination_rate_derivative = density_derivative * inv_tau;
 
+  net_recomb_rate += (get_exc_exc_scattering() + get_exc_photon_scattering()) * excpolprops->density_renormalization;
 
+  recombination_rate_derivative += excpolprops->b * 2 * density * density_derivative;
+  recombination_rate_derivative += excpolprops->a * density_derivative * excpolprops->density_renormalization;
+
+  net_recomb_rate -= get_generation_rate() * excpolprops->density_renormalization;
+}
+
+double ExcitonModel::get_exc_photon_scattering() {
+  return excpolprops->a * density; // real value
+}
+
+double ExcitonModel::get_exc_exc_scattering() {
+  return excpolprops->b * density * density / excpolprops->density_renormalization;
+}
+
+double ExcitonModel::get_generation_rate() {
   std::vector<double> G(1);
   _dd_sim->get_solution(get_element(), _gen_model, G,
       std::vector<Point>(1, get_coordinates()));
-  net_recomb_rate -= G[0];
+  return G[0];
 }
-
 
 double
 ExcitonModel::get_nonradiative_recombination_rate(void)
 {
-  return density / _t_nr;
+  return get_real_density() / _t_nr;
 }
 
 
 double
 ExcitonModel::get_radiative_recombination_rate(void)
 {
-  return density / _t_r;
+  return get_real_density() / _t_r ;
 }
 
 
 double
 ExcitonModel::get_dissociation_rate(void)
 {
-  return density / _t_diss;
+  return get_real_density() / _t_diss;
+}
+
+double ExcitonModel::get_real_density() const {
+  return density / excpolprops->density_renormalization;
+}
+
+double ExcitonModel::get_real_net_recombination_rate() const {
+  return net_recomb_rate / excpolprops->density_renormalization;
 }
 
 
@@ -148,5 +172,9 @@ ExcitonModel::do_init(void)
     throw InitFailedException(msg);
   }
 
+  ExcitonTransport* excitontransport = dynamic_cast<ExcitonTransport*>(SimulationInterface::get_simulation(get_simulator_id()));
+  if (excitontransport != NULL) {
+    excpolprops = excitontransport->get_excpol_props();
+  }
 }
 

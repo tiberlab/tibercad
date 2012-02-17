@@ -7,7 +7,7 @@
 #include "ExcitonProperties.h"
 #include "TiberCad.h"
 #include "TypeDefs.h"
-
+#include "ExcPolProps.h"
 
 #include <string>
 #include <map>
@@ -28,7 +28,6 @@ class ExcitonModel : public ExcitonProperties
 
     //! This method creates an ExcitonModel object
     static ExcitonModel* create(const ModelOptions& options);
-
 
   protected:
 
@@ -58,7 +57,21 @@ class ExcitonModel : public ExcitonProperties
     //! Get the dissociation rate
     virtual double get_dissociation_rate(void);
 
+    virtual double get_generation_rate();
+
+    //! Get the dissociation rate
+    virtual double get_exc_photon_scattering();
+
+    //! Get the dissociation rate
+    virtual double get_exc_exc_scattering();
+
+    virtual double get_real_density() const;
+
+    virtual double get_real_net_recombination_rate() const;
+
   private:
+    ExcPolProps* excpolprops;
+
 
     //! Exciton radiative recombination time
     double _t_r;
@@ -118,8 +131,6 @@ ExcitonModel::create(const ModelOptions& options)
 {
   return new ExcitonModel(options);
 }
-
-
 
 
 #endif /* _EXCITONMODEL_H_*/

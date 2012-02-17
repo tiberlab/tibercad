@@ -9,6 +9,7 @@
 #include "PetscRuntimeError.h"
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
+#include "ExcPolProps.h"
 
 // Libmesh includes
 #include "libmesh_common.h"
@@ -60,11 +61,15 @@ class ExcitonTransport : public SimulationInterface
       XMOBILITY,        /*!< mobility */
       XSIGMA,           /*!< conductivity */
       J,                /*!< total flux, modulus */
-      JX,               /*!< flux, x-component */
-      JY,               /*!< flux, y-component */
-      JZ,               /*!< flux, z-component */
-      RADPOWER,         /*!<Radiative power density  */
-      RDISS             /*!< dissociation rate */
+      RDISS,             /*!< dissociation rate */
+      RRAD,             /*!< dissociation rate */
+      RNONRAD,             /*!< dissociation rate */
+      EXCEXCPOLARITON,             /*!< dissociation rate */
+      EXCPHONONPOLARITON,
+      NETRECOMB,             /*!< dissociation rate */
+      NPOLARITON,        /* Polaritons number */
+      XGEN,              /* Exciton generation */
+      RADPOWER           /*!<Radiative power density  */
     };
  
     
@@ -204,7 +209,7 @@ class ExcitonTransport : public SimulationInterface
     double get_final_residual(void) const;
 
 
-
+    ExcPolProps* get_excpol_props();
 
   protected:
     
@@ -226,50 +231,26 @@ class ExcitonTransport : public SimulationInterface
     /*! \copydoc SimulationInterface::parse_options() */
     virtual void parse_options(void);
 
-
-    /*! \copydoc SimulationInterface::build_nodal_results() */
-    virtual void build_nodal_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
-
-
-    /*! \copydoc SimulationInterface::build_elemental_results() */
-    virtual void build_elemental_results(const std::set<std::string>& variables,
-        std::vector<double>& results, std::vector<std::string>& legend);
-
-
     /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
     virtual double do_maximum_norm_of_difference(ID id);
 
 
-    /*! \copydoc SimulationInterface::convert_variable_name_to_id() */
-    virtual ID convert_variable_name_to_id(const std::string& variable_name) const;
-
-
-    /*!
-     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
-     * const std::vector<ID>&, std::vector<std::vector<double> >&)
-     */
     virtual void get_solution_secure(const Elem* elem,
-        const std::set<ID>& ids,
-        std::vector<std::map<ID, double> >& values);
+        std::map<ID, std::vector<double> >& values,
+        const std::vector<Point>& p);
 
+    virtual void do_setup_solution_variables(void);
 
-    /*!
-     * \copydoc SimulationInterface::get_solution_secure(const Elem*,
-     * const std::vector<Point>&, const std::vector<ID>&,
-     * std::vector<std::vector<double> >&)
-     */
-    virtual void get_solution_secure(const Elem* elem,
-        const std::vector<Point>& p,
-        const std::set<ID>& ids,
-        std::vector<std::map<ID, double> >& solution);
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
-
-
-
+    //! We override this to not produce too many files ...
+    virtual void plot_globaldata(void) {};
     
+    virtual void calc_excpol_integral(const NumericVector<Number>& x);
   private:
+    bool polaritons;
 
+    ExcPolProps excpolprops;
 
     //! A static reference to \c this
     /*!
@@ -434,7 +415,9 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
   _this->do_assembly(x, residual, jacobian);
 }
 
-
+inline ExcPolProps* ExcitonTransport::get_excpol_props() {
+  return &excpolprops;
+}
 
 
 

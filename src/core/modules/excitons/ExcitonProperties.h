@@ -169,6 +169,26 @@ class TBDLEXPORT ExcitonProperties : public PhysicalModel
     double get_mobility(void) const
       { return mobility; };
 
+    virtual double get_generation_rate() {
+      return 0;
+    }
+
+    virtual double get_exc_photon_scattering() {
+      return 0;
+    }
+
+    virtual double get_exc_exc_scattering() {
+      return 0;
+    }
+
+    virtual double get_real_density() const {
+      return 0;
+    };
+
+    virtual double get_real_net_recombination_rate() const {
+      return 0;
+    };
+
   protected:
 
     //! The empty constructor.
