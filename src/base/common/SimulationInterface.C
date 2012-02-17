@@ -19,7 +19,6 @@
 #include "Dftb.h"
 #include "EmpiricalTightBinding.h"
 #include "OpticsTB.h"
-#include "MaxwellEquations.h"
 #include "Sweep.h"
 #include "RelaxationMethod.h"
 #include "Utils.h"
@@ -137,8 +136,6 @@ SimulationInterface::create(const string& type,
   else if (type_name == "opticstb")
     sim = OpticsTB::create(options);
 #endif
-  else if (type_name == "maxwell")
-    sim = MaxwellEquations::create(options);
 
   if (sim == NULL)
   {
