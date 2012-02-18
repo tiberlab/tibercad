@@ -48,10 +48,16 @@ class InputParser
 
 
   //! Define a macro
-  static void add_defined(const std::string& flag, const std::string& value = "1");
+  static void add_defined(const std::string& name, const std::string& value = "");
 
   //! Check if a macro is defined
-  static bool defined(const std::string& flag);
+  static bool defined(const std::string& name);
+
+  //! Get the value of a defined macro
+  std::string get_defined(const std::string& name);
+
+  //! In-place expansion of macro
+  void expand_macro(std::string& in);
 
 
  private:
@@ -66,21 +72,23 @@ class InputParser
   //! The current input file
   std::string _file;
 
-  //! Map of all defined flags
+  //! Map of all defined macros
   static std::map<std::string, std::string> _defined;
 
 
-  void  read_block_no_boost(std::ifstream& in_stream, ModelOptions& options);
+  void  read_block_no_boost(std::istream& in_stream, ModelOptions& options);
 
-  const std::string get_token(std::ifstream& in_stream);
+  std::string get_token(std::istream& in_stream, bool expand = true);
 
-  void skip_whitespaces(std::ifstream& in_stream);
+  void skip_whitespaces(std::istream& in_stream);
 
-  const std::string get_until_closing_brace(std::ifstream& in_stream);
+  std::string get_until_closing_brace(std::istream& in_stream);
 
-  const std::string get_until_closing_quotes(std::ifstream& in_stream);
+  std::string get_until_closing_quotes(std::istream& in_stream);
 
-  std::string skip_until_else_or_endif(std::ifstream& in_stream);
+  std::string get_until_eol(std::istream& in_stream);
+
+  std::string skip_until_else_or_endif(std::istream& in_stream);
 
   bool check_validity(std::string& token);
 

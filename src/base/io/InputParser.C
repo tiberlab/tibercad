@@ -54,29 +54,45 @@ InputParser::~InputParser(void)
 
 
 void
-InputParser::add_defined(const string& flag, const string& value)
+InputParser::add_defined(const string& name, const string& value)
 {
-  if (_defined.find(flag) != _defined.end())
-    Messages::warning("Redefining input file macro '" + flag + "'");
-
-  _defined[flag] = value;
+  if (_defined.find(name) != _defined.end())
+    Messages::warning("Redefining input file macro '" + name + "'");
+  _defined[name] = value;
 }
 
 bool
-InputParser::defined(const string& flag)
+InputParser::defined(const string& name)
 {
-  return (_defined.find(flag) != _defined.end());
+  return (_defined.find(name) != _defined.end());
 }
 
-void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options)
+string
+InputParser::get_defined(const string& name)
+{
+  string val("");
+  if (_defined.find(name) != _defined.end())
+    val = _defined[name];
+
+  return val;
+}
+
+
+void
+InputParser::expand_macro(string& in)
+{
+  map<string, string>::iterator it(_defined.find(in));
+  if (it != _defined.end())
+    in = it->second;
+}
+
+void InputParser::read_block_no_boost(istream& in_stream, ModelOptions& options)
 {
 
   string token_1 =  "";
   string token_2 =  "";
   string token_3 =  "";
   string model_name;
-
-  skip_whitespaces(in_stream);
 
   token_1 = get_token(in_stream);
 
@@ -97,50 +113,59 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
       throw InitFailedException(stm.str());
     }
 
-    skip_whitespaces(in_stream);
+
+    if (token_1.at(0) == '@')
+    {
+      istringstream is(get_until_eol(in_stream));
+
+      if (token_1 == "@include")
+      {
+        ModelOptions tmp;
+        InputParser().parse_file(get_token(is), tmp);
+        options += tmp;
+      }
+      else if (token_1 == "@define")
+      {
+        // the next token is a new status variable
+        string tok1(get_token(is, false));
+        // TODO generalize to accept any string as value
+        add_defined(tok1, get_token(is));
+      }
+      else if (token_1 == "@ifdef")
+      {
+        // if it is defined we go on, otherwise we skip
+        if (!defined(get_token(is, false)))
+          skip_until_else_or_endif(in_stream);
+      }
+      else if (token_1 == "@ifndef")
+      {
+        // if it is not defined we go on, otherwise we skip
+        if (defined(get_token(is, false)))
+          skip_until_else_or_endif(in_stream);
+      }
+      else if (token_1 == "@else")
+      {
+        // we can skip until @endif
+        skip_until_else_or_endif(in_stream);
+      }
+      else if (token_1 == "@endif")
+      {
+        //token_2 = get_token(in_stream);
+        //in_stream.putback(' ');
+        //for (int i = 0; i < token_2.size(); i++)
+        //  in_stream.unget();
+      }
+
+      token_1 = get_token(in_stream);
+
+      if (token_1 == "}") block_counter--;
+      continue;
+    }
 
     token_2 = get_token(in_stream);
 
-    if (token_1 == "@include")
+    if (token_2 == "=" )
     {
-      ModelOptions tmp;
-      //Messages::info("Including file " + token_2);
-      InputParser().parse_file(token_2, tmp);
-      options += tmp;
-    }
-    else if (token_1 == "@define")
-    {
-      // the next token is a new status variable
-      add_defined(token_2);
-    }
-    else if (token_1 == "@ifdef")
-    {
-      // if it is defined we go on, otherwise we skip
-      if (!defined(token_2))
-        skip_until_else_or_endif(in_stream);
-    }
-    else if (token_1 == "@ifndef")
-    {
-      // if it is not defined we go on, otherwise we skip
-      if (defined(token_2))
-        skip_until_else_or_endif(in_stream);
-    }
-    else if (token_1 == "@else")
-    {
-      // we can skip until @endif
-      skip_until_else_or_endif(in_stream);
-    }
-    else if (token_1 == "@endif")
-    {
-      in_stream.putback(' ');
-      for (int i = 0; i < token_2.size(); i++)
-        in_stream.unget();
-    }
-    else if (token_2 == "=" )
-    {
-
-      skip_whitespaces(in_stream);
-
       token_3 =  get_token(in_stream);
 
       if  (( token_3 == "{" ) || ( token_3 == "=" ) || ( token_3 == "}") )
@@ -184,8 +209,6 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
     else
     {
       // 2  keyword-block
-
-      skip_whitespaces(in_stream);
 
       token_3 =  get_token(in_stream);
 
@@ -234,8 +257,6 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
 
     //  else  error  ???
 
-    skip_whitespaces(in_stream);
-
     token_1 = get_token(in_stream);
 
     if (token_1 == "}") block_counter--;
@@ -267,73 +288,93 @@ void InputParser::read_block_no_boost(ifstream& in_stream, ModelOptions& options
 
 
 
-const string InputParser::get_token(ifstream& in_stream)
+string InputParser::get_token(istream& in_stream, bool expand)
 {
+  skip_whitespaces(in_stream);
 
   string token;
-  token = "";
 
   int temp = 0;
-
-  temp = in_stream.get();
-
-  if (temp == '{' || temp == '}' ||  temp  == '=')
+  switch (temp = in_stream.get())
   {
-    token += temp;
-    return token;
-  }
-  else if (temp == '(')
-  {
-    token += '(' + get_until_closing_brace(in_stream);
-    return token;
-  }
-  else if (temp == '"')
-  {
-    //token += '"' + get_until_closing_quotes(in_stream);
-    token += get_until_closing_quotes(in_stream);
-    return token;
-  }
-  else if (temp == EOF)
-  {
-    return token;
-  }
-  else token +=  temp;
-
-
-  while (true)
-  {
-    temp = in_stream.get();
-
-    if ((temp == EOF) ||
-        (temp == '{' || temp == '}' || temp  == '=' ||
-            temp  == ' ' || temp  == '\n') ||
-        (temp == '\r') || (temp == '#' ) || (temp == '\t'))
-    {
-      in_stream.unget();
+    case '{':
+    case '}':
+    case '=':
+      token += temp;
       return token;
-    }
+      break;
 
-    token +=  temp;
+    case '(':
+      token += '(' + get_until_closing_brace(in_stream);
+      return token;
+      break;
+
+    case '"':
+      token += get_until_closing_quotes(in_stream);
+      break;
+
+    case EOF:
+      return token;
+      break;
+
+    default:
+      in_stream.unget();
+      //token += temp;
+      break;
+  }
+
+
+  string tok;
+  while (in_stream.good())
+  {
+    switch (temp = in_stream.get())
+    {
+      case '"':
+        expand_macro(tok);
+        token += tok + get_until_closing_quotes(in_stream);
+        tok.clear();
+        break;
+
+      case '{':
+      case '}':
+      case '(':
+      case '=':
+      case ' ':
+      case '\n':
+      case '\r':
+      case '\t':
+      case '#':
+      case EOF:
+        in_stream.unget();
+        if (expand)
+          expand_macro(tok);
+        token += tok;
+        return token;
+        break;
+
+      default:
+        tok += temp;
+        break;
+    }
   }
 }
 
 
 string
-InputParser::skip_until_else_or_endif(std::ifstream& in_stream)
+InputParser::skip_until_else_or_endif(std::istream& in_stream)
 {
-  skip_whitespaces(in_stream);
-  string tok = get_token(in_stream);
-  while ((tok != "@else") && (tok != "@endif"))
+  string tok;
+  do
   {
-    skip_whitespaces(in_stream);
     tok = get_token(in_stream);
-  }
+  } while ((tok != "@else") && (tok != "@endif"));
+
   return tok;
 }
 
 // find next non-whitespace and  skip  comments
 //  "space"  include  \n, \r, and  tab
-void InputParser::skip_whitespaces(ifstream& in_stream)
+void InputParser::skip_whitespaces(istream& in_stream)
 {
 
   int tmp = in_stream.get();
@@ -376,7 +417,7 @@ void InputParser::skip_whitespaces(ifstream& in_stream)
 
 
 
-const string InputParser::get_until_closing_brace(ifstream& in_stream)
+string InputParser::get_until_closing_brace(istream& in_stream)
 {
 
   string str = "";
@@ -401,7 +442,7 @@ const string InputParser::get_until_closing_brace(ifstream& in_stream)
 
 
 
-const string InputParser::get_until_closing_quotes(ifstream& in_stream)
+string InputParser::get_until_closing_quotes(istream& in_stream)
 {
 
   string str = "";
@@ -425,6 +466,32 @@ const string InputParser::get_until_closing_quotes(ifstream& in_stream)
   }
 
 }
+
+
+
+string InputParser::get_until_eol(istream& in_stream)
+{
+  string str;
+  int temp = 0;
+
+  while (in_stream)
+  {
+    temp = in_stream.get();
+
+    if ((temp == '\n') || (temp == '#'))
+    {
+      in_stream.unget();
+      break;
+    }
+    else if (temp == '\\')
+      skip_whitespaces(in_stream);
+    else
+      str += temp;
+  }
+
+  return str;
+}
+
 
 
 
