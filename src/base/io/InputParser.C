@@ -42,7 +42,7 @@ InputParser::parse_file(const string file, ModelOptions& data)
   line_counter = 1;
   block_counter = 0;
 
-  read_block_no_boost(in_stream, data);
+  read_block(in_stream, data);
 
 }
 
@@ -86,7 +86,7 @@ InputParser::expand_macro(string& in)
     in = it->second;
 }
 
-void InputParser::read_block_no_boost(istream& in_stream, ModelOptions& options)
+void InputParser::read_block(istream& in_stream, ModelOptions& options)
 {
 
   string token_1 =  "";
@@ -116,31 +116,34 @@ void InputParser::read_block_no_boost(istream& in_stream, ModelOptions& options)
 
     if (token_1.at(0) == '@')
     {
-      istringstream is(get_until_eol(in_stream));
 
       if (token_1 == "@include")
       {
         ModelOptions tmp;
-        InputParser().parse_file(get_token(is), tmp);
+        InputParser().parse_file(get_token(in_stream), tmp);
         options += tmp;
       }
       else if (token_1 == "@define")
       {
         // the next token is a new status variable
-        string tok1(get_token(is, false));
-        // TODO generalize to accept any string as value
-        add_defined(tok1, get_token(is));
+        string tok1(get_token(in_stream, false));
+
+        istringstream is(get_until_eol(in_stream));
+        string value(get_token(is));
+        while (is.good())
+          value += " " + get_token(is);
+        add_defined(tok1, value);
       }
       else if (token_1 == "@ifdef")
       {
         // if it is defined we go on, otherwise we skip
-        if (!defined(get_token(is, false)))
+        if (!defined(get_token(in_stream, false)))
           skip_until_else_or_endif(in_stream);
       }
       else if (token_1 == "@ifndef")
       {
         // if it is not defined we go on, otherwise we skip
-        if (defined(get_token(is, false)))
+        if (defined(get_token(in_stream, false)))
           skip_until_else_or_endif(in_stream);
       }
       else if (token_1 == "@else")
@@ -150,10 +153,6 @@ void InputParser::read_block_no_boost(istream& in_stream, ModelOptions& options)
       }
       else if (token_1 == "@endif")
       {
-        //token_2 = get_token(in_stream);
-        //in_stream.putback(' ');
-        //for (int i = 0; i < token_2.size(); i++)
-        //  in_stream.unget();
       }
 
       token_1 = get_token(in_stream);
@@ -190,7 +189,7 @@ void InputParser::read_block_no_boost(istream& in_stream, ModelOptions& options)
       block_counter++;
 
       // recursively  call  to  read  the  subblock and  put the  data in  'submodel' ModelOptions
-      read_block_no_boost(in_stream, submodel);
+      read_block(in_stream, submodel);
 
       // add  the  subblock ModelOptions to  the current-level  options, as  a  submodel
       options.add_submodel(model_name,submodel);
@@ -240,7 +239,7 @@ void InputParser::read_block_no_boost(istream& in_stream, ModelOptions& options)
       block_counter++;
 
       // recursively  call  to  read  the  subblock and  put the  data in  'submodel' ModelOptions
-      read_block_no_boost(in_stream, submodel);
+      read_block(in_stream, submodel);
 
       // we allow several modifiers as vector
       vector<string> tok2;

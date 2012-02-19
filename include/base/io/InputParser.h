@@ -76,7 +76,7 @@ class InputParser
   static std::map<std::string, std::string> _defined;
 
 
-  void  read_block_no_boost(std::istream& in_stream, ModelOptions& options);
+  void  read_block(std::istream& in_stream, ModelOptions& options);
 
   std::string get_token(std::istream& in_stream, bool expand = true);
 
