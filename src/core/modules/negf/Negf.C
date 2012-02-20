@@ -59,6 +59,8 @@ Negf::Negf(const ModelOptions& options) :
 {
   _device_n_dofs = 0;
   _libnegf = NegfWrapper::create();
+
+  this->has_solution_vector(false);
 }
 
 Negf::~Negf(void)
