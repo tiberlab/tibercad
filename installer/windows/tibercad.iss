@@ -39,7 +39,7 @@ Source: "{#MySrcPath}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs 
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
-Name: "{group}\Getting started"; Filename: "{app}\doc\GettingStarted.pdf"
+Name: "{group}\Getting started"; Filename: "{app}\doc\UserManual.pdf"
 Name: "{group}\Gmsh"; Filename: "{app}\tools\gmsh\gmsh.exe"
 Name: "{group}\Gmsh Manual"; Filename: "{app}\tools\gmsh\gmsh.pdf"
 Name: "{group}\{cm:ProgramOnTheWeb,{#MyAppName}}"; Filename: "{#MyAppURL}"

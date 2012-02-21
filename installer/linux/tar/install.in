@@ -223,6 +223,9 @@ install_files ${srcpath}/share $instpath
 cat > ${instpath}/bin/TiberCAD.sh <<EOF
 #!/bin/sh
 
+IFS=
+PATH=/usr/bin:/bin
+
 VER=$TIBERVER
 GMSHVER=${GMSHVER}
 ARCH=${ARCH}
@@ -260,8 +263,13 @@ esac
 export TIBERCADROOT
 
 
-# stack size limit / VM may be too small 
-ulimit -v unlimited -s unlimited -c 0
+# stack size limit / VM may be too small
+if [ ! echo "$ARCH" | grep "darwin" ]
+then  
+  ulimit -v unlimited
+  ulimit -s unlimited
+  ulimit -c 0
+fi
 
 
 if [ -x \$executable ]
@@ -298,14 +306,14 @@ case \$answer in
     do
       md5=\`echo \$line | awk '{print \$1}'\`
       file=\`echo \$line | awk '{print \$2}'\`
-      if [[ -f \$file ]]
+      if [ -f \$file ]
       then
         md5new=\`md5sum \$file | awk '{print \$1}'\`
-        if [[ \$md5 == \$md5new || \$md5 == "-" ]]
+        if [ \$md5 == \$md5new || \$md5 == "-" ]
         then
           rm -f \$file
         fi
-      elif [[ -L \$file ]]
+      elif [ -L \$file ]
       then
         rm -f \$file
       else
@@ -318,7 +326,7 @@ case \$answer in
     cd ..
     rmdir -p \${instpath}/bin >& /dev/null
 
-    if [[ -d \${instpath} ]]
+    if [ -d \${instpath} ]
     then
       echo ""
       echo "I could not delete all directories due to presence of modified or added files."

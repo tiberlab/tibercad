@@ -24,9 +24,9 @@ make_windows_package () {
   #if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
   #  cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
   #fi
-  if test -e ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf
+  if test -e ${topdir}/manual/Sphinx/Complete/_build/latex/tiberCAD-manual.pdf
   then
-    cp ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf ${files}/doc/GettingStarted.pdf
+    cp ${topdir}/manual/Sphinx/Complete/_build/latex/tiberCAD-manual.pdf ${files}/doc/UserManual.pdf
   fi
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
@@ -194,9 +194,9 @@ prepare_linux_package () {
   #if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
   #  cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
   #fi
-  if test -e ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf
+  if test -e ${topdir}/manual/Sphinx/Complete/_build/latex/tiberCAD-manual.pdf
   then
-    cp ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf ${files}/doc/GettingStarted.pdf
+    cp ${topdir}/manual/Sphinx/Complete/_build/latex/tiberCAD-manual.pdf ${files}/doc/UserManual.pdf
   fi
 
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
@@ -288,9 +288,9 @@ prepare_darwin_package () {
   #if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
   #  cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
   #fi
-  if test -e ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf
+  if test -e ${topdir}/manual/Sphinx/Complete/_build/latex/tiberCAD-manual.pdf
   then
-    cp ${topdir}/manual/Sphinx/GettingStarted/_build/latex/TiberCAD-GettingStarted.pdf ${files}/doc/GettingStarted.pdf
+    cp ${topdir}/manual/Sphinx/Complete/_build/latex/tiberCAD-manual.pdf ${files}/doc/UserManual.pdf
   fi
 
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
