@@ -6,6 +6,7 @@
 #include "Material.h"
 #include "Constants.h"
 #include "Database.h"
+#include "Messages.h"
 #include "SolverException.h"
 #include "RuntimeException.h"
 
@@ -713,7 +714,11 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
       imass.invariants(&temp1, &temp2, &imass_DOS);
 
       if (imass_DOS <= 0.0)
-        throw SolverException("Negative valence band DOS mass");
+      {
+      //  throw SolverException("Negative valence band DOS mass");
+        Messages::warning("Negative valence band DOS mass, setting to 1.0");
+        imass_DOS = 1.0;
+      }
 
       extremum.mass_DOS = std::pow(1.0/imass_DOS,1.0/3.0);
 
