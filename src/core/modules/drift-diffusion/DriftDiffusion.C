@@ -1709,6 +1709,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     if (values.count(hDensity))
       values[hDensity][n] = hdens;
 
+    if (values.count(IntrinsicDensity))
+      values[IntrinsicDensity][n] = sc->get_intrinsic_density();
+
     if (values.count(eMobility))
       values[eMobility][n] = sc->get_electron_mobility();
 

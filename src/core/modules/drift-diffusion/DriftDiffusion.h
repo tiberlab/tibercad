@@ -108,6 +108,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       ValenceBands,     /*!< the valence band energies */
       eDensity,         /*!< electron density */
       hDensity,         /*!< hole density */
+      IntrinsicDensity, /*!< the intrinsic density */
       eMobility,        /*!< electron mobility */
       hMobility,        /*!< hole mobility */
       eConductivity,    /*!< electron conductivity */
