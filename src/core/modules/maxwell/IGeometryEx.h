@@ -27,7 +27,11 @@ class IGeometryEx {
     PML pml;
   protected:
     Scaling& scaling;
+#ifdef HAVE_CONSTEXPR
+    constexpr static double SCALE_LENGTH = 10;
+#else
     static const double SCALE_LENGTH = 10;
+#endif
     SimulationInterface* simulationInterface;
     std::set<ItemId> boundaryIds;
 

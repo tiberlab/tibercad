@@ -73,10 +73,11 @@ void MaxwellEquations::do_init() {
 
   polaritons = get_options().get_option("polaritons", false);
 
-  Wexc0.real() = get_options().get_option("Wexc", 0.0) / Constants::hbar * Constants::e;
   Wlt = get_options().get_option("Wlt", 0.0) / Constants::hbar * Constants::e;
 
-  Wexc0.imag() = 1.0 / get_options().get_option("excitonLifeTime", 1.0);
+  double Wexc0_r = get_options().get_option("Wexc", 0.0) / Constants::hbar * Constants::e;
+  double Wexc0_i = 1.0 / get_options().get_option("excitonLifeTime", 1.0);
+  Wexc0 = Complex(Wexc0_r, Wexc0_i);
 
   MeshBase& mesh = get_mesh();
 
