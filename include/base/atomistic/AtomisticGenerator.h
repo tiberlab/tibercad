@@ -219,6 +219,13 @@ protected:
   //Same work with 3 vectors composing a tensor2Gen
   static void scale_to_int(Tensor2Gen& a);
 
+
+private:
+
+  //Build random alloy structure
+  void build_random_alloy(void);
+
+
 };
 
 

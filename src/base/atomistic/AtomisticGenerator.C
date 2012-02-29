@@ -17,6 +17,7 @@
 #include <sstream>
 #include <map>
 #include <set>
+#include <time.h>
 
 
 
@@ -195,11 +196,13 @@ AtomisticGenerator::do_init()
   std::string preserve;
   preserve = _as->get_options().get_option("preserve", "none");
   cut_and_change_specie(preserve);
-
+std::cout << "going to build random alloy ";
+  if (_as->is_random_alloy()) build_random_alloy();
+std::cout << "done" ;
   std::string passivation;
   passivation = _as->get_options().get_option("passivation", "no");
 
-  if (passivation.compare("yes") == 0){passivate();}
+  if (passivation.compare("yes") == 0 || passivation.compare("true")){passivate();}
 
   //BondMap pointer is used for passivation, delete it and refresh bond map
   delete _bondmapobject;
@@ -289,6 +292,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   assign.clear();
   _structure_basis.reserve(_super_basis.size());
 
+
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++)
   {
 
@@ -368,7 +372,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
             {
               Specie tmp =  assign[el_reg][(*atom).get_flag()];
               (*atom).set_specie(tmp);
-              (*atom).set_flag(0);
+              //(*atom).set_flag(0);
               (*atom).belong_to_structure = true;
               (*atom).set_elem(elem);
               _structure_basis.push_back(*atom);
@@ -393,7 +397,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
         {
           Specie tmp =  assign[el_reg][(*atom).get_flag()];
           (*atom).set_specie(tmp);
-          (*atom).set_flag(0);
+          //(*atom).set_flag(0);
           (*atom).belong_to_structure = false;
           _structure_basis.push_back(*atom);
         }
@@ -596,6 +600,84 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
 };
 
+
+void
+AtomisticGenerator::build_random_alloy()
+{
+  std::set<ID> IDs = _as->get_IDset();
+  std::map<ID, std::map<unsigned int, Specie> > assign;
+  std::map<ID, double> a_to_b_prob;
+  bool done;
+  ID el_reg;
+  unsigned int progress_counter, progress_step;
+  Tensor2Gen rotated_primvec;
+
+  if (_as->is_random_alloy() == false)
+    Messages::error("build_random_alloy is called but AtomisticStructure is not"
+        "a random alloy");
+
+  Messages::debug("Running build_random_alloy()");
+
+  for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++)
+  {
+    const Material* mat = _as->get_device()->get_material( (*reg) );
+
+    //By default in VCA the specie assigned is the one of parent A,
+    //then we only need to change it if the atoms belong to parent B
+    if (mat->is_alloy())
+    {
+        const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
+        mat = alloy->get_component_B();
+
+    Database db = mat->get_database();
+
+    db.set_section("atomistic_structure");
+
+    //Build up conversion map from file
+    for (int i = 1; i <= db.get("n_basis_specie", 0); i++)
+    {
+      std::string record;
+      std::string s;
+      std::stringstream out;
+
+      out << i;
+      s = out.str();
+
+      record = "specie_" + s;
+      std::string db_record = db.get(record.c_str(),"none");
+      assign[*reg][i] = Specie(db_record);
+      //Note: probability to switch specie is 1-x
+      a_to_b_prob[*reg] = 1 - mat->get_options().get_option("x", 1.0);
+
+    }
+    //No more reading from section atomistic_structure in database are needed
+    db.set_section("");
+    }
+  }
+    //Cycle on atoms and change specie according to their belonging to alloy regions
+    //and random distribution weighted on molar fraction
+    //A random starting seed is needed to actually have different sequences
+    srand(time(NULL));
+    for (unsigned int i = 0; i < _structure_basis.size(); i++)
+      {
+        Atom& atm = _structure_basis[i];
+        //Note: region_ID e aterial sono definiti solo per gli atomi appartenenti alla struttura
+        if (atm.belong_to_structure)
+          {
+        const Material* mat = _as->get_material(_structure_basis[i]);
+        if (mat->is_alloy())
+        {
+            //Calcolate the probability to change specie
+            int random_n = rand() % 100;
+            if (random_n < a_to_b_prob[atm.get_region_ID()] * 100.0 )
+              {
+                atm.set_specie(assign[atm.get_region_ID()][atm.get_flag()]);
+              }
+        }
+          }
+
+      }
+}
 
 //Note:: make_supercell is called only with preserve_basis and preserve_conv
 //This is the complete function after some modifications in Atom structure (added
@@ -1071,6 +1153,7 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
         n_s = record + n_s;
 
         //Putting specie (defined by an integer) temporary in flag data
+        //It's used in cut_and_change_specie() and build_random_alloy()
         tmp.set_flag(i);
 
         record = n_s + "_x";
@@ -1182,7 +1265,7 @@ void AtomisticGenerator::parse_parameters(const Material* mat)
         s2 = record + s2;
 
         //Putting specie (defined by an integer) temporary in flag data
-        // ???????????? CHECK IT , WHY i IS SET AS FLAG???????????
+        //It's used in cut_and_change_specie() and build_random_alloy()
         tmp.set_flag(i);
 
         record = s2 + "_x";

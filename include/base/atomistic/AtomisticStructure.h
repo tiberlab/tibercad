@@ -14,6 +14,8 @@
 #include "InitFailedException.h"
 #include "Specie.h"
 
+class Material;
+
 //! Contains all needed data for an atomic structure
 /*!
  *For any Atomistic region an atomistic structure is
@@ -79,7 +81,7 @@ public:
   void set_device(const Device* const device);
 
   //! Get Device reference
-  const Device*  get_device(void);
+  const Device*  get_device(void) const;
 
   //! Return a const reference to structure atoms
   const std::vector<Atom>& get_structure_atoms(void) const;
@@ -165,9 +167,16 @@ public:
   //! Get specie of atom i
   const Specie& get_specie(unsigned int i) const;
 
+  //! Get atom Material
+  const Material* get_material(const Atom& atom, bool parent = false) const;
+
+  //! Tells if random alloy approximation is used
+   bool is_random_alloy(void);
+
+
 private:
 
-    //! Initialize the structure using mesh infos
+     //! Initialize the structure using mesh infos
     void init_mesh_structure(void);
 
     //Build mesh regions infos
@@ -226,6 +235,11 @@ private:
   //! Tell if the object has been already initialized
   bool _is_initialized;
 
+  //! True if the alloy must be treated as a Random Alloy
+  //! (Species are used to distinguish the parent material the atom
+  //! belongs to). By default VCA is used
+  bool _random_alloy;
+
   //! Contains reference to device we're working with
   const Device* _device;
 
@@ -256,6 +270,12 @@ ModelOptions& AtomisticStructure::get_options(void)
     return _options;
 
  }
+
+inline
+bool AtomisticStructure::is_random_alloy(void)
+{
+  return _random_alloy;
+}
 
 
 inline
@@ -320,7 +340,7 @@ double* AtomisticStructure::get_periodicity_vectors(void){
 
 
 inline
-const Device* AtomisticStructure::get_device(void)
+const Device* AtomisticStructure::get_device(void) const
 {
 
   assert ( (_device != NULL) );

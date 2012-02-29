@@ -24,6 +24,7 @@
 #include "Utils.h"
 #include "DataOutput.h"
 #include "Messages.h"
+#include "AtomisticStructure.h"
 
 
 // LibMesh includes
@@ -388,7 +389,20 @@ PhysicalModel*
 SimulationInterface::_get_bulk_model(const Elem* elem) const
 {
   PhysicalModel* mod = NULL;
-  Material* mat = get_environment().get_device().get_material(elem);
+  const Material* mat = get_environment().get_device().get_material(elem);
+  if (mat != NULL)
+    mod = mat->get_model(get_id());
+
+  return mod;
+}
+
+
+
+PhysicalModel*
+SimulationInterface::_get_bulk_model(const Atom& atom) const
+{
+  PhysicalModel* mod = NULL;
+  const Material* mat = get_atomistic_structure()->get_material(atom);
   if (mat != NULL)
     mod = mat->get_model(get_id());
 

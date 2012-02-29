@@ -16,6 +16,7 @@
 #include "RuntimeException.h"
 #include "Scaling.h"
 #include "FiniteElement.h"
+#include "Atom.h"
 
 // LibMesh includes
 #include "numeric_vector.h"
@@ -45,7 +46,6 @@ class NodeObject;
 class MeshBase;
 class Point;
 class DofObject;
-class Atom;
 class AtomisticStructure;
 
 
@@ -627,6 +627,14 @@ class SimulationInterface : public TiberModelObject
      */
     template <typename T>
     T* get_bulk_model(const Elem* elem) const;
+
+    //! Get the physical model for a given atom
+    /*!
+     * \return \c NULL if no model is present for \c atom
+     */
+    template <typename T>
+    T* get_bulk_model(const Atom& atom) const;
+
 
 
     //! Get the physical model associated to an element side
@@ -1398,6 +1406,8 @@ class SimulationInterface : public TiberModelObject
     //! \see get_bulk_model()
     PhysicalModel* _get_bulk_model(const Elem* elem) const;
 
+    //! \see get_bulk_model()
+    PhysicalModel* _get_bulk_model(const Atom& atom) const;
 
     //! \see get_interface_model()
     PhysicalModel* _get_interface_model(const Elem* elem, int side) const;
@@ -1830,6 +1840,15 @@ T*
 SimulationInterface::get_bulk_model(const Elem* elem) const
 {
   return dynamic_cast<T*>(_get_bulk_model(elem));
+}
+
+
+template <typename T>
+inline
+T*
+SimulationInterface::get_bulk_model(const Atom& atom) const
+{
+  return dynamic_cast<T*>(_get_bulk_model(atom));
 }
 
 

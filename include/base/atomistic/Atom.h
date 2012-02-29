@@ -60,8 +60,7 @@ public:
   Point get_position() const;
 
   //! Get the ID of the region the atom belongs to
-  //! (Note: little errors may occur using basis or conventional cell
-  //! preservation in Atomistic Generator)
+  //! (Note: it will get the region from associated element)
   int get_region_ID() const;
 
   //! Set a general purpose integer flag, used internally. 0 is default safe value

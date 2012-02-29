@@ -9,6 +9,7 @@
 #include "Messages.h"
 #include "MeshUtils.h"
 #include "TiberCad.h"
+#include "Material.h"
 
 //C++ includes
 //--------------------
@@ -24,7 +25,8 @@
 
 AtomisticStructure::AtomisticStructure()
 :_bondmap(NULL),
- _device(NULL)
+ _device(NULL),
+ _random_alloy(false)
 {
   N_atoms = 0;
   for (unsigned int i = 0; i < 9; i++)
@@ -38,7 +40,9 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
 :_name(name),
  _bondmap(NULL),
  _atomistic_structure_options(),
- _scale(1.0)
+ _scale(1.0),
+ _device(NULL),
+ _random_alloy(false)
 {
   // Default initializations
   N_atoms = 0;
@@ -80,6 +84,7 @@ AtomisticStructure::init(const std::string& name,
     const Device* const device, const ModelOptions& options)
 {
   std::ostringstream os;
+  std::string random_alloy;
 
   _name = name;
   _device = device;
@@ -108,6 +113,9 @@ AtomisticStructure::init(const std::string& name,
   // the atomistic generator for complex structures is invoked
   //
   // Read from file
+
+  random_alloy = _options.get_option("random_alloy", "false");
+  if (random_alloy == "true") _random_alloy = true;
 
   if (_options.find_option("load_structure")||_options.find_option("load"))
     {
@@ -917,9 +925,15 @@ AtomisticStructure::print_structure(const std::string& path)
 
     }
 
+  else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
+    {
+      print_upg(file_name, "VOID");
+    }
+
   else
     {
-      std::cerr << "File extension does not correspond to any internal format. File not print. \n";
+      std::cerr << "File extension " << extension <<
+          " of file does not correspond to any internal format. File not print. \n";
     }
 
   file.close();
@@ -1059,10 +1073,6 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           Database db = mat->get_database();
           db.set_section("atomistic_structure");
 
-          file << std::setw(3)  << (*mat_it).second
-              << std::setw(12) << mat->get_name()
-              << std::setw(6)  <<  mat->get_structure();
-
           std::string alloy_type;
 
           //TODO: IT NEEDS TO BE EXTENDED WORKING WITH OTHER ALLOYS (QUATERNARY...)
@@ -1071,46 +1081,64 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           else if (db.get("n_basis_specie", 0) == 2 ) {alloy_type = "binary";}
           else Messages::error("Could not define alloy_type variable in AtomisticStructure.C");
 
-          file << std::setw(12) << alloy_type;
-
-          if (mat->is_alloy()) file << std::setw(4) << 2;
-          else file << std::setw(4) << 1;
-
-          if (mat->is_alloy()) file << std::setw(5) << "VCA";
-          else file << std::setw(5) << "CRY" ;
-
-
-          //Parental material names
-          if (mat->is_alloy()) file << std::setw(8) << (static_cast<const Alloy*>(mat))->get_name_A()
-          << std::setw(8) << (static_cast<const Alloy*>(mat))->get_name_B();
-          else file << std::setw(8) << mat->get_name();
-
-          //Molar fractions
-          //HELP MOLAR FRACTION STILL NOT DEFINED AT THIS POINT (Initialized in Material::do_init)
-          if (mat->is_alloy()) file << std::setw(10) <<  std::setprecision(3)
-          << mat->get_options().get_option("x",1.0)
-          << std::setw(10) << std::setprecision(3)
-          <<  ( 1.0 - mat->get_options().get_option("x",1.0) );
-
-          else  file << std::setw(10) <<  std::setprecision(3) << 1.0 ;
-
           //Mancano da inserire i file con i dati per Uptight
           std::string path = "./ ";
           std::string structure = "unknown";
 
+          if (! mat->is_alloy())
+            {
+              file << std::setw(3)  << (*mat_it).second
+                   << std::setw(12) << mat->get_name()
+                   << std::setw(6)  << mat->get_structure()
+                   << std::setw(12) << alloy_type
+                   << std::setw(4)  << 1
+                   << std::setw(5)  << "CRY"
+                   << std::setw(8)  << mat->get_name()
+                   << std::setw(10) << std::setprecision(3) << 1.0
+                   << std::setw(10) << mat->get_name() << etb_dataset + ".etb"
+                   << " 0.0  0.0"   << std::endl;
+            };
+          if (mat->is_alloy() && !(is_random_alloy()))
+            {
+              file << std::setw(3)  << (*mat_it).second
+                   << std::setw(12) << mat->get_name()
+                   << std::setw(6)  << mat->get_structure()
+                   << std::setw(12) << alloy_type
+                   << std::setw(4)  << 2
+                   << std::setw(5)  << "VCA"
+                   << std::setw(8)  << (static_cast<const Alloy*>(mat))->get_name_A()
+                   << std::setw(8)  << (static_cast<const Alloy*>(mat))->get_name_B()
+                   << std::setw(10) <<  std::setprecision(3)  << mat->get_options().get_option("x",1.0)
+                                    << std::setw(10) << std::setprecision(3)
+                                    <<  ( 1.0 - mat->get_options().get_option("x",1.0) )
+                   << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_A()
+                                    << etb_dataset + ".etb"
+                   << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_B()
+                                    << etb_dataset + ".etb"
+                                    << " 0.0  0.0"
+                                    << " 0.0  0.0" << std::endl;
+            };
+          if (mat->is_alloy() && (is_random_alloy()))
+                      {
+              file << std::setw(3)  << (*mat_it).second
+                                 << std::setw(12) << mat->get_name()
+                                 << std::setw(6)  << mat->get_structure()
+                                 << std::setw(12) << alloy_type
+                                 << std::setw(4)  << 2
+                                 << std::setw(5)  << "RND"
+                                 << std::setw(8)  << (static_cast<const Alloy*>(mat))->get_name_A()
+                                 << std::setw(8)  << (static_cast<const Alloy*>(mat))->get_name_B()
+                                 << std::setw(10) <<  std::setprecision(3)  << mat->get_options().get_option("x",1.0)
+                                                  << std::setw(10) << std::setprecision(3)
+                                                  <<  ( 1.0 - mat->get_options().get_option("x",1.0) )
+                                 << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_A()
+                                                  << etb_dataset + ".etb"
+                                 << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_B()
+                                                  << etb_dataset + ".etb"
+                                                  << " 0.0  0.0"
+                                                  << " 0.0  0.0" << std::endl;
+                      };
 
-          if (mat->is_alloy()) file << std::setw(10)
-          << (static_cast<const Alloy*>(mat))->get_name_A()
-          << etb_dataset + ".etb"
-          << std::setw(10)
-          << (static_cast<const Alloy*>(mat))->get_name_B()
-          << etb_dataset + ".etb"
-          << "  0.0  0.0";
-
-          else file << std::setw(10) << mat->get_name() << etb_dataset + ".etb" ;
-
-          // these two numbers can be used for band-gap fine tuning (dE_s, dV_sps)
-          file << " 0.0  0.0" << std::endl;
         }
 
       file.close();
@@ -1288,5 +1316,42 @@ AtomisticStructure::get_N_without_H(void)
     }
 
   return N;
+
+}
+
+
+//! Get atom Material
+const Material*
+AtomisticStructure::get_material(const Atom& atom, bool parent) const
+{
+ const Material* mat = get_device()->get_material(atom.get_region_ID());
+
+ if (!(mat->is_alloy()))
+    {
+
+     return mat;
+    }
+
+ if (!(parent))
+    {
+
+ return mat;
+    }
+
+ if (parent)
+   {
+
+     const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
+     //TODO: At first we only consider InGaX, AlGaX alloys with this hardcoded trick.
+     //To be generalized.
+     if ((atom.get_specie() == Specie::Ga))
+       {
+         return alloy->get_component_B();
+       }
+     else return alloy->get_component_A();
+   }
+
+
+ return NULL;
 
 }
