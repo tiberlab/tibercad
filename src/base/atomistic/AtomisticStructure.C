@@ -805,7 +805,7 @@ AtomisticStructure::print_structure(const std::string& path)
   else if ( (extension.compare(".tgn") == 0) || (extension.compare(".TGN") == 0) )
     {
 
-      file.open(path.c_str());
+      file.open(file_name.c_str());
 
       file << _structure_atoms.size();
 
