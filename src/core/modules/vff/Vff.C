@@ -278,6 +278,7 @@ Vff::build_parameters(void)
   VffModel* pm_a = NULL;
   VffModel* pm_b = NULL;
 
+  bool parent(get_atomistic_structure()->is_random_alloy());
 
   for (unsigned int i = 0; i < n_atoms; i++)
   {
@@ -297,11 +298,11 @@ Vff::build_parameters(void)
               if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
                   || (atm_i.get_specie() == Specie::Al))
                 {
-                  pm_a = dynamic_cast<VffModel*>(get_physical_model(atm_i.get_region_ID()));
+                  pm_a = get_bulk_model<VffModel>(atm_i, parent);
                 }
               else
                 {
-                  pm_a = dynamic_cast<VffModel*>(get_physical_model(atm_j.get_region_ID()));
+                  pm_a = get_bulk_model<VffModel>(atm_j, parent);
                 }
               _alpha[i][counter_j] = pm_a->get_alpha();
               _d[i][counter_j] = pm_a->get_d();
@@ -315,13 +316,13 @@ Vff::build_parameters(void)
                      if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
                          || (atm_i.get_specie() == Specie::Al))
                        {
-                         pm_a = dynamic_cast<VffModel*>(get_physical_model(atm_i.get_region_ID()));
-                         pm_b = dynamic_cast<VffModel*>(get_physical_model(atm_i.get_region_ID()));
+                         pm_a = get_bulk_model<VffModel>(atm_i, parent);
+                         pm_b = get_bulk_model<VffModel>(atm_i, parent);
                        }
                      else
                        {
-                         pm_a = dynamic_cast<VffModel*>(get_physical_model(atm_j.get_region_ID()));
-                         pm_b = dynamic_cast<VffModel*>(get_physical_model(atm_k.get_region_ID()));
+                         pm_a = get_bulk_model<VffModel>(atm_j, parent);
+                         pm_b = get_bulk_model<VffModel>(atm_k, parent);
                        }
                        _teta[i][counter_j][counter_k] = pm_a->get_teta();
                        _beta[i][counter_j][counter_k] = sqrt(pm_a->get_beta() * pm_b->get_beta());

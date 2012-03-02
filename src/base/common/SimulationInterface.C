@@ -399,10 +399,10 @@ SimulationInterface::_get_bulk_model(const Elem* elem) const
 
 
 PhysicalModel*
-SimulationInterface::_get_bulk_model(const Atom& atom) const
+SimulationInterface::_get_bulk_model(const Atom& atom, bool parent) const
 {
   PhysicalModel* mod = NULL;
-  const Material* mat = get_atomistic_structure()->get_material(atom);
+  const Material* mat = get_atomistic_structure()->get_material(atom, parent);
   if (mat != NULL)
     mod = mat->get_model(get_id());
 
