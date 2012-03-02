@@ -57,10 +57,14 @@ DDInterfaceModel::prepare_submodels(void)
   for (; it != end; ++it)
   {
     ModelOptions opts(it->second);
-    opts.set_option("trap", true);
-    opts.set_option("type", "srh");
-    opts.set_option("name", "recombination");
-    get_options().add_submodel("recombination", opts);
+    if (opts.get_option("recombination_center", true))
+    {
+      it->second.delete_option("recombination_center");
+      opts.set_option("trap", true);
+      opts.set_option("type", "srh");
+      opts.set_option("name", "recombination");
+      get_options().add_submodel("recombination", opts);
+    }
   }
 
   vector<PhysicalModelInterface*> pd;

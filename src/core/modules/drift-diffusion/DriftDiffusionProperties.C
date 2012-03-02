@@ -469,6 +469,7 @@ DriftDiffusionProperties::create_recombination_models(void)
     ModelOptions opts(it->second);
     if (opts.get_option("recombination_center", true))
     {
+      it->second.delete_option("recombination_center");
       opts.set_option("trap", true);
       opts.set_option("type", "srh");
       opts.set_option("name", "recombination");
