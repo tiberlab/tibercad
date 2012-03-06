@@ -180,7 +180,7 @@ For the ``conduction_band`` and ``valence_band`` blocks the following options ne
           ``kp`` models in the same simulation.
 
 
-particle density
+Particle density
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Details for the calculation of the electron and hole densities can be given in the particle_density
@@ -248,8 +248,11 @@ options can be enabled in a single statement by writing::
 
   recombination (model1, model2, ...) {}
 
+
+
 Shockley-Read-Hall (SRH) recombination
-"""""""""""""""""""""""""""""""""""""""
+............................................
+
 
 The SRH recombination model can be enabled by defining a ``recombination`` submodel
 of type ``srh`` .
@@ -291,7 +294,8 @@ case, you can provide the recombination velocities using the keywords ``rec_velo
 and ``rec_velocity_p`` instead of ``tau_n`` and ``tau_p`` .
 
 Direct (radiative) recombination
-""""""""""""""""""""""""""""""""
+.................................
+
 
 The direct recombination model can be enabled in the input file by by defining a
 ``recombination`` submodel of type ``direct`` .
@@ -307,7 +311,8 @@ The material data file and the input file use the same keyword C for the paramet
 database value can be overridden from the input file as described for SRH recombination.
 
 Auger recombination
-""""""""""""""""""""
+.................................
+
 
 
 The Auger recombination model can be enabled in the input file by defining a recombination
@@ -329,11 +334,12 @@ with temperature dependent parameters
 The parameters A;B;C;H and :math:`N_0` are taken exclusively from the database. They are
 different for :math:`C_n` and :math:`C_p` and have to be specified as arrays with keywords ``A``, ``B``, ``C``, ``H``, ``N0``,
 e.g. ``A = (1e-31, 1e-32)``. The calculated values for :math:`C_n` and :math:`C_p` can be overridden from
-the input file by specifying values for the keywords ``C_n`` and ``C_p`` .
+the input file by specifying values for the keywords ``Cn`` and ``Cp`` .
 
 
 Optical generation
-"""""""""""""""""""
+.................................
+
 
 A very simple model for photoelectric generation of electron-hole pairs is implemented
 in tiberCAD. It is enabled by specifying a ``generation`` submodel of type optical The
