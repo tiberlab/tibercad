@@ -35,23 +35,26 @@ N spin orbit
 number of orbitals per ion = 5 5
 
 #'s'     4.9070D0   1 #old value of Jancu paper
+#'s'     3.4070D0   1   #old value  tibercad
 In onsite
-'s'     3.4070D0   1
+'s'     2.3300D0   1
 'p'    10.9070D0   3
 's*'   34.7081D0   1
 'd15'  25.4028D0   3
 'd12'  26.3769D0   2
 
-#'s'    -8.7945D0   1 #old value of Jancu paper
+#'s'    -8.7945D0   1 # value of Jancu paper
+#'s'   -10.2945D0   1  #old value  tibercad
 N onsite
-'s'    -10.2945D0   1 
+'s'    -8.7945D0   1 
 'p'     2.1774D0   3
 's*'   26.9022D0   1
 'd15'  27.9171D0   3
 'd12'  31.5704D0   2
 
-In offset = -0.112D0
-N offset =  -0.112D0
+# new offset
+In offset =  -0.1146D0 
+N offset =  -0.1146D0
 
 # strain coefficient for the d orbitals
 In b_d parameter = 0.0D0
@@ -67,12 +70,16 @@ number of pairs = 1
 
 pair 1 = 'N' 'In' 21 1
 
+ 
+# sps  3.4189D0  #old value  tibercad
+# pss' 3.4442D0   #old value  tibercad
+
 N In coupling 1
 'sss'     -1.9364D0    2.57D0 
-'sps'      3.4189D0    4.93D0
+'sps'      2.5050D0    4.93D0
 'ss*s'    -2.8450D0    1.46D0
 'sds'     -3.7643D0    1.12D0
-'pss'      3.4442D0    4.93D0
+'pss'      2.5050D0    4.93D0
 'pps'      4.6297D0    3.80D0
 'ps*s'     2.1143D0    1.00D0
 'pds'     -1.7717D0    1.33D0
