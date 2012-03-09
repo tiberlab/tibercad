@@ -7,14 +7,15 @@ Quantum  EFA  calculations
 =================================
 
 
-In  tiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates, eigenfunctions and  quantum  density of  a  given system and    dispersion  of  quantum  states  can  be  obtained    by means  of the module:
+In  tiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates, eigenfunctions and  quantum  density of  a  given system and    dispersion  of  quantum  states  can  be  obtained  by means  of the module:
 
-* Module efaschroedinger
+* **Module**  ``efaschroedinger``
 
 
 The  optical properties  are  calculated by  the  module 
 
-* Module opticskp
+* **Module**  ``opticskp``
+
 
 
 

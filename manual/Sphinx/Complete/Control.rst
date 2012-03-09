@@ -9,6 +9,9 @@ Tools for Simulation
 ================
 
 
+.. _Variable:
+
+
 Variables
 ---------
 
@@ -16,10 +19,26 @@ In  tiberCAD,  the parameters defined in a module (e.g. voltage bias, temperatur
 The  assignement to  a  *variable* is done  in  this  way ::
 
   parameter = $my_var[0.0]
+
+where  ``my_var`` is  a  user-defined *variable* and the value in  square brackets [0.0] is  the  default  value of  the  *variable*.
+
+For example ::
+
+  Contact anode  
+   {
+    
+    type = ohmic
+    voltage = $Vbias[0.0]
+   
+   }
+
  
-where  ``my_var`` is  a  user-defined variable and the value in  square brackets [0.0] is  the  default  value of  the  variable.
+here the value of the  voltage in  the  defined ``Contact`` is  given  by the value of the *variable* ``Vbias``
+
+ 
 A  typical application  of a user-defined *variable* is  in  the  *Sweep* calculation.
  
+
 
 Sweep
 ---------
@@ -92,6 +111,9 @@ In  this example, at  each  step of the  sweep the two simulations ``dd`` and  `
 
 .. index:: double:Solvers;selfconsistent
 	
+
+.. _Selfcons:
+
 
 Selfconsistent
 ----------------------
