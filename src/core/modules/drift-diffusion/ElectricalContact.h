@@ -93,6 +93,13 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     void set_recombination_velocities(double vn, double vp);
 
 
+    //! Get the recombination velocities
+    /*!
+     * A value of -1 will not change the current value.
+     */
+    void get_recombination_velocities(double& vn, double& vp);
+
+
 
   private:
 
@@ -189,6 +196,14 @@ ElectricalContact::set_recombination_velocities(double vn, double vp)
   }
 }
 
+
+inline
+void
+ElectricalContact::get_recombination_velocities(double& vn, double& vp)
+{
+  vn = _vrec_n;
+  vp = _vrec_p;
+}
 
 
 

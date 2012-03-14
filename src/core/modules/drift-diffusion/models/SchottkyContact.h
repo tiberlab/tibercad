@@ -45,6 +45,10 @@ class TBDLLOCAL SchottkyContact : public ElectricalContact
     //! Do we include thermionic emission?
     bool _thermionic_emission;
 
+
+    //! Do we include tunneling?
+    bool _tunneling;
+
 };
 
 
