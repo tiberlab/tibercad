@@ -1,0 +1,25 @@
+'outputd10nml50/Hr.m'
+'outputd10nml50/Hi.m'
+'outputd10nml50/Sr.m'
+'outputd10nml50/Si.m'
+2                 ! n_cont
+0                 ! n_blocks (0 libnegf do it)
+26118 27270       ! cont_end 
+24966 26118       ! surf_end
+0 0               ! mu_n mu_p
+-2 0              ! Ec Ev
+0 0               ! DEc DEv
+-0.25 0 0.01      ! Emin Emax Estep
+0.025             ! kT
+1                 ! weight of k-point
+20 20             ! Np_n(1:2)
+0 0               ! Np_p(1:2)
+10                ! Real axis points
+3                 ! n_kT
+3                 ! n_poles
+2                 ! degeneracy factor (spin)
+1e-05             ! delta
+0                 ! n_ldos
+                  ! --
+0 0               ! Efermi
+0.115355 0.184647 ! mu 

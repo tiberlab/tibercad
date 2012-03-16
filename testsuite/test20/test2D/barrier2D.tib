@@ -1,0 +1,160 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = test2D.msh  
+  mesh_units = 1e-9
+
+  material = GaAs
+  
+  #x-growth-direction = (1, 1, 0)
+  #y-growth-direction = (1, -1, 0)
+  #z-growth-direction = (0, 0, 1)
+
+   Region source_region
+   {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region barrier1
+   {
+    material = AlAs      
+   }
+
+   Region barrier2
+   {
+     material = AlAs           
+   }
+
+  Region drain_region
+   {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region well
+   {
+   }
+
+   Cluster barrier
+   {
+    regions=(barrier1, well, barrier2)
+   }
+
+   
+   Quantum_contact int_source
+   {
+    regions = barrier1  
+    length = 0.13
+   }
+
+   Quantum_contact int_drain
+   {
+    regions = barrier2 
+    length = 0.13
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{ 
+  regions = (source_region,drain_region,barrier1,barrier2,well)
+  # is default
+  # statistics = fermidirac
+
+  # we solve only for electrons
+  coupling = electrons
+
+  #save_state = true
+  #load_state = outputd10nml50/driftdiffusion_Vd_0.3_Vg_0.4.tsv
+  plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Physics
+  {
+    #recombination
+    #{
+    #  model = srh
+    #}
+
+   }
+
+  Contact source
+  {
+    voltage = 0.0
+  }
+ 
+  Contact drain
+  {
+    voltage = $Vd[0.0]
+  }
+}
+
+
+
+Module sweep
+{
+  name = sweep_drain 
+  solve = (driftdiffusion, negf)
+  variable = $Vd
+  start = 0
+  stop = 1
+  steps = 25
+  plot_data = true
+}
+
+Module negf
+{
+  plot = (ReorderPotential)
+  regions = (barrier1,well,barrier2)
+  potential_simulation = driftdiffusion
+  Boundary int_source{}
+  Boundary int_drain{}
+  
+  Solver
+  {
+    Emin = -0.6
+    Emax = 0.6 
+    Estep = 0.01
+  }
+
+  Physics
+  {
+    # hamiltonian single_band { } 
+     hamiltonian single_band {valley = G}
+  }
+  
+}
+
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  solve = (sweep_drain)
+  resultpath = output
+  scratchpath = /work/fpalomba/
+  output_format = vtk
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
