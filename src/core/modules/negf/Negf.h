@@ -1,4 +1,4 @@
-// $Id: Negf.h 2964 2011-10-10 20:34:57Z maufder $
+// $Id: Negf.h 2964 2011-10-10 20:34:57Z fpalomba $
 
 #ifndef _NEGF_H_
 #define _NEGF_H_
@@ -27,7 +27,11 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     enum Solutions
     {
-       ReorderPotential  //Laplace equation solution from reordering routines
+       ReorderPotential,  // Laplace equation solution from reordering routines
+       eDensity,  // Electron QuantumDensity from Negf
+       hDensity,  // Hole QuantumDensity from Negf
+       CurrentDensity    //
+
     };
     //! Destructor
     /*!
@@ -41,8 +45,6 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void reorder(void);
 
-    void slice(void);
-
   protected:
 
     //! The initialization
@@ -51,10 +53,6 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     //! Parse the options from the input file
     virtual void parse_options(void);
-
-
-    //! Setup the available variables
-    //virtual void do_setup_solution_variables(void);
 
 
     //! Solve the MyPoisson equation
@@ -76,6 +74,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     virtual void do_setup_solution_variables(void);
 
+    //! Used to plot global data such as current
+    virtual void plot_globaldata (void);
 
     //! We have to provide somehow our solution variables
     virtual void get_solution_secure(const Elem* elem,
@@ -102,12 +102,10 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu);
 
-    void get_blocks(std::vector<int>& cblok);
+    void calculate_density(const std::string& particle);
 
     struct options
     {
-        unsigned int n_blocks;
-
         std::string pot_module;
 
         double Emin;
@@ -130,6 +128,9 @@ class TBDLLOCAL Negf : public SimulationInterface
     void activate_quantum_contacts(void);
     void deactivate_quantum_contacts(void);
 
+    double get_band_edge(const std::string& band) const;
+    double get_band_edge(SimulationInterface* model, const std::string& band, const Elem* elem) const;
+
     Device* _device;
 
     std::map<const Boundary*, ID> _boundaries;
@@ -143,8 +144,10 @@ class TBDLLOCAL Negf : public SimulationInterface
     TiberLinearSystem* _sys;
     TiberLinearSystem* _sys_H;
     TiberLinearSystem* _sys_S;
+    TiberLinearSystem* _qdens_sys;
 
-    std::vector<ID> _permu;
+    std::vector<ID> _perm;      //permutation vector
+    std::vector<ID> _inv_perm;     //inverse permutation
 
     std::vector<ID> _end_blocks;
 

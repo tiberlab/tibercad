@@ -4,6 +4,7 @@
 #define _SIMULATIONOPTIONS_H_
 
 #include "tiber_dll.h"
+#include <string>
 
 class ModelOptions;
 
@@ -18,7 +19,7 @@ class SimulationOptions
     static double temperature;
     static double& temp;
     static double& T;
-
+    static std::string scratch_path;
 
     //! Wheter or not to consider incomplete ionization
     static bool incomplete_ionization;

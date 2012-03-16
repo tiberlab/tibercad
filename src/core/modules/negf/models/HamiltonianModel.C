@@ -19,51 +19,88 @@ HamiltonianModel::HamiltonianModel(const ModelOptions& options)
 void
 HamiltonianModel::do_init(void)
 {
+
+  std::string model = get_option("model","conduction");
+
+  if (model=="conduction")
+  {
+    _band_type = "Ec";
+  }
+
+  if (model=="valence")
+  {
+    _band_type = "Ev";
+  }
+
+
   read_database();
 
   set_invmass_tensor();
 
-  std::cerr<<"invmass"<<std::endl<<_inv_mass<<std::endl;
+  //std::cerr<<"invmass"<<std::endl<<_inv_mass<<std::endl;
 }
 
 void HamiltonianModel::read_database(void)
 {
   const Database& db = get_database();
-  db.set_section("conductionband");
 
   double m_l = 0.0;
   double m_t = 0.0;
 
-  std::string valley = get_option("valley","G");
-
-  if (valley=="G")
+  if (_band_type == "Ec")
   {
-    m_l = db.get("m_G", 1.0);
-    m_t = db.get("m_G", 1.0);
+    db.set_section("conductionband");
+
+    std::string valley = get_option("valley","G");
+
+    if (valley=="G")
+    {
+      m_l = db.get("m_G", 1.0);
+      m_t = db.get("m_G", 1.0);
+    }
+
+    if (valley=="X1" || valley=="X2" || valley=="X3")
+    {
+      m_l = db.get("m_X_l", 1.0);
+      m_t = db.get("m_X_t", 1.0);
+    }
+
+    if (valley=="L1" || valley=="L2" || valley=="L3")
+    {
+      m_l = db.get("m_L_l", 1.0);
+      m_t = db.get("m_L_t", 1.0);
+    }
+
   }
 
-  if (valley=="X1" || valley=="X2" || valley=="X3")
+  if (_band_type == "Ev")
   {
-    m_l = db.get("m_X_l", 1.0);
-    m_t = db.get("m_X_t", 1.0);
-  }
+    db.set_section("valenceband");
 
-  if (valley=="L1" || valley=="L2" || valley=="L3")
-  {
-    m_l = db.get("m_L_l", 1.0);
-    m_t = db.get("m_L_t", 1.0);
+    std::string band = get_option("band","HH");
+
+    if (band=="HH")
+    {
+      m_l = -1 * db.get("m_HH", 1.0);
+      m_t = -1 * db.get("m_HH", 1.0);
+    }
+
+    if (band=="LH")
+    {
+      m_l = -1 * db.get("m_LH", 1.0);
+      m_t = -1 * db.get("m_LH", 1.0);
+    }
   }
 
   _inv_mass_crys(0,0) = 1.0/m_l;
   _inv_mass_crys(1,1) = 1.0/m_t;
   _inv_mass_crys(2,2) = 1.0/m_t;
-
-
 }
 
 void HamiltonianModel::set_invmass_tensor(void)
 {
-  std::string valley = get_option("valley","G");
+  std::string band = get_option("band","G");
+  std::string valley = get_option("valley",band);
 
   // vector u defines rotation with respect to e1 = (1,0,0)
   // e.g. u = (0 1 0)
@@ -99,6 +136,11 @@ void HamiltonianModel::set_invmass_tensor(void)
     u(0) = 1.0;  u(1) = -2.0;  u(2) = 1.0;
     _degeneracy = 2.0;
   }
+
+  if (valley=="HH"){ u(0) = 1.0; _degeneracy = 1.0; }
+
+  if (valley=="LH"){ u(0) = 1.0; _degeneracy = 1.0; }
+
 
   _degeneracy = get_option("degeneracy", _degeneracy);
 

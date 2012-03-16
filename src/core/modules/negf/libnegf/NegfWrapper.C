@@ -1,5 +1,5 @@
 #include "NegfWrapper.h"
-
+#include <cstring>
 
 //---------------------------------------------------------------------
 NegfWrapper* NegfWrapper::create()
@@ -54,3 +54,27 @@ NegfWrapper::current()
   return 0;
 }
 
+//Compute charge density
+int
+NegfWrapper::density(std::vector<double>& density)
+{
+   int size = density.size();
+   f77_negf_density(_handler, size, &density.front());
+}
+
+//Set SC iteration
+void
+NegfWrapper::set_iteration(int iter)
+{
+  f77_negf_set_iteration(_handler, iter);
+}
+
+void
+NegfWrapper::set_scratch_path(std::string path)
+{
+  char *cpath = new char[NEGF_LC];
+  memset(cpath,NEGF_PADCHAR,NEGF_LC);
+  path.copy(cpath,path.size());
+
+  f77_negf_set_scratch(_handler, cpath);
+}

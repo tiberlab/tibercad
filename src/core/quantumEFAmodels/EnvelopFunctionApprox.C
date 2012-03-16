@@ -48,7 +48,7 @@ inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, cons
 
 inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem) const
 {
-  vector<double> values;
+  vector<double> values(elem->n_nodes());
   vector<Point> p(elem->n_nodes());
   
   for (size_t i = 0; i < elem->n_nodes(); ++i)

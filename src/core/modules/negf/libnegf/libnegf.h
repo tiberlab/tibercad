@@ -120,5 +120,42 @@ inline void f77_negf_current (f77_int const* handler)
 }
 
 
+extern "C" void negf_density_ (f77_int const*, f77_int const&, f77_double 
+    const*);
+
+// Corresponding F77 arguments for f77_negf_density:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: ndofs
+// real(dp), intent(in) :: density(ndofs)
+inline void f77_negf_density (f77_int const* handler, f77_int const& ndofs, 
+    f77_double const* density)
+{
+  negf_density_ (handler, ndofs, density);
+}
+
+
+extern "C" void negf_set_iteration_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_negf_set_iteration:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: iter
+inline void f77_negf_set_iteration (f77_int const* handler, f77_int const& iter)
+{
+  negf_set_iteration_ (handler, iter);
+}
+
+
+extern "C" void negf_set_scratch_ (f77_int const*, f77_char const*);
+
+// Corresponding F77 arguments for f77_negf_set_scratch:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// character(LST), intent(in) :: scratch_path(1)
+inline void f77_negf_set_scratch (f77_int const* handler, f77_char const* 
+    scratch_path)
+{
+  negf_set_scratch_ (handler, scratch_path);
+}
+
+
 #endif
 

@@ -17,6 +17,8 @@ class HamiltonianModel : public PhysicalModelInterface
 
     double get_degeneracy(void) const;
 
+    const std::string& get_band_type(void) const;
+
   protected:
 
     HamiltonianModel(const ModelOptions& options);
@@ -34,6 +36,8 @@ class HamiltonianModel : public PhysicalModelInterface
     TensorValue<double> _inv_mass;
 
     double _degeneracy;
+
+    std::string _band_type;
 
 };
 
@@ -58,4 +62,10 @@ HamiltonianModel::get_degeneracy(void) const
   return _degeneracy;
 }
 
+inline
+const std::string&
+HamiltonianModel::get_band_type(void) const
+{
+  return _band_type;
+}
 

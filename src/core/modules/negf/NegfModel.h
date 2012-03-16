@@ -25,6 +25,10 @@ class TBDLLOCAL NegfModel : public PhysicalModel
 
     unsigned int get_n_bands(void) const;
 
+    const std::string& get_band(ID id) const;
+
+    double get_degeneracy(ID id) const;
+
   protected:
 
     virtual void prepare_submodels(void);
@@ -67,5 +71,16 @@ unsigned int NegfModel::get_n_bands(void) const
    return _ham_models.size();
 }
 
+inline
+const std::string& NegfModel::get_band(ID id) const
+{
+   return _ham_models[id]->get_band_type();
+}
+
+inline
+double NegfModel::get_degeneracy(ID id) const
+{
+   return _ham_models[id]->get_degeneracy();
+}
 
 #endif /* NEGFMODEL_H_ */

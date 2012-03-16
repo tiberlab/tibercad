@@ -24,6 +24,10 @@ m_X_l = 0.916
 
 m_dos = 1.189
 
+[valenceband]
+m_HH = 0.49
+m_LH = 0.16
+
 
 [bandgap] # [3]
 # T=0 K

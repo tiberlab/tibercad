@@ -32,8 +32,17 @@ public:
   //!Initialize the Negf instance
   int init();
 
-  //!Initialize the Negf instance
+  //!Compute current
   int current();
+
+  //!Compute charge density
+  int density(std::vector<double>& density);
+
+  //!Set SC iteration
+  void set_iteration(int iter);
+
+  //!Set scratch folder path
+  void set_scratch_path(std::string path);
 
   //!Clean the Negf instance variable space
   void clean_libnegf();
