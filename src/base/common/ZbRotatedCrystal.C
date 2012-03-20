@@ -2,7 +2,11 @@
 
 #include "ZbRotatedCrystal.h"
 #include "Database.h"
+#include "Material.h"
+#include "Messages.h"
 #include "InitFailedException.h"
+
+#include <cmath>
 
 ZbRotatedCrystal::ZbRotatedCrystal(const ModelOptions& options) :
   RotatedCrystal(options)
@@ -13,15 +17,6 @@ ZbRotatedCrystal::ZbRotatedCrystal(const ModelOptions& options) :
   set_xyz_mil_direction("z", 0, 0, 1);
 }
 
-//===============================================================//
-
-/*
-ZbRotatedCrystal::ZbRotatedCrystal(const double a) : RotatedCrystal()
-{
-  set_lat_const(a);
-}
-*/
-//===============================================================//
 
 
 void ZbRotatedCrystal::set_lat_const(const double a) 
@@ -69,11 +64,55 @@ void ZbRotatedCrystal::set_xyz_mil_direction(std::string dir, int h, int k, int 
 void ZbRotatedCrystal::calculate_lat_consts()
 {
 
+  // If 4 Miller indices are given, then we use a hexagonal
+  // cell ([111] growth direction)
   
+  if (x_miller.size() == 3)
+  {
+    lat_const_calc[0] = a_lat/sqrt(double( x_miller[0]*x_miller[0] + x_miller[1]*x_miller[1] + x_miller[2]*x_miller[2]));
+    lat_const_calc[1] = a_lat/sqrt(double( y_miller[0]*y_miller[0] + y_miller[1]*y_miller[1] + y_miller[2]*y_miller[2]));
+    lat_const_calc[2] = a_lat/sqrt(double( z_miller[0]*z_miller[0] + z_miller[1]*z_miller[1] + z_miller[2]*z_miller[2]));
+  }
+  else // there is no other choice by now
+  {
+    // calculate hexagonal basis vectors
+    double a = a_lat * M_SQRT1_2;
+    double c = 1.632993161855452 * a_lat; // sqrt(8/3)
 
- lat_const_calc[0] = a_lat/sqrt(double( x_miller[0]*x_miller[0] + x_miller[1]*x_miller[1] + x_miller[2]*x_miller[2]));
- lat_const_calc[1] = a_lat/sqrt(double( y_miller[0]*y_miller[0] + y_miller[1]*y_miller[1] + y_miller[2]*y_miller[2]));
- lat_const_calc[2] = a_lat/sqrt(double( z_miller[0]*z_miller[0] + z_miller[1]*z_miller[1] + z_miller[2]*z_miller[2]));
+    //Bravais vectors
+    Tensor1  Rx(0);
+    Rx(1) = a;
+    Tensor1  Ry(0);
+    Ry(1) = -0.5 * a;
+    Ry(2) = 0.866025403784439 * a; // sqrt(3)/2
+    Tensor1  Rz(0);
+    Rz(3) = c;
+
+    // Reciprocal  basis
+    Tensor1 rec_basis1;
+    Tensor1 rec_basis2;
+    Tensor1 rec_basis3;
+
+    const double volume = Rx * vectorProduct(Ry, Rz);
+
+    rec_basis1 = vectorProduct(Ry, Rz) / volume;
+    rec_basis2 = vectorProduct(Rz, Rx) / volume;
+    rec_basis3 = vectorProduct(Rx, Ry) / volume;
+
+
+   lat_const_calc[0] = 1.0 / norm((x_miller[0] - x_miller[2]) * rec_basis1  +
+       (x_miller[1] - x_miller[2]) * rec_basis2 +
+       x_miller[3]* rec_basis3);
+
+   lat_const_calc[1] = 1.0 / norm((y_miller[0] - y_miller[2]) * rec_basis1 +
+       (y_miller[1] - y_miller[2]) * rec_basis2 +
+       y_miller[3] * rec_basis3);
+
+
+   lat_const_calc[2] = 1.0 / norm((z_miller[0] - z_miller[2]) * rec_basis1 +
+       (z_miller[1] - z_miller[2]) * rec_basis2 +
+       z_miller[3] * rec_basis3);
+  }
 
 
  //std::cerr << "lat_const_calc  " << lat_const_calc[0] << "   " << lat_const_calc[1] << "    " <<  lat_const_calc[2] << "\n";
@@ -86,28 +125,45 @@ void ZbRotatedCrystal::calculate_lat_consts()
 void ZbRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, std::vector<int> vec_y_mil)
 {
 
- assert(vec_x_mil.size()==vec_y_mil.size());
- assert(vec_x_mil.size()==3);
+  Tensor1 vec_x;
+  Tensor1 vec_y;
 
+  if (vec_x_mil.size() == 3)
+  {
+    //convert from miller indexes to vectors
+    vec_x(1) = a_lat* vec_x_mil[0];
+    vec_x(2) = a_lat* vec_x_mil[1];
+    vec_x(3) = a_lat* vec_x_mil[2];
 
- Tensor1 vec_x;
- Tensor1 vec_y;
+    vec_y(1) = a_lat* vec_y_mil[0];
+    vec_y(2) = a_lat* vec_y_mil[1];
+    vec_y(3) = a_lat* vec_y_mil[2];
+  }
+  else
+  {
+    double a = a_lat * M_SQRT1_2;
+    double c = 1.632993161855452 * a_lat; // sqrt(8/3)
 
- //convert from miller indexes to vectors
+    // Miller basis
+    // assign principal directions
+    Tensor1 mil1(0);
+    mil1(1) = a;
+    Tensor1 mil2(0);
+    mil2(1) = -0.5 * a;
+    mil2(2) = 0.866025403784439 * a; // sqrt(3)/2
+    Tensor1 mil3(0);
+    mil3(3) = c;
 
- vec_x(1) = a_lat* vec_x_mil[0];
- vec_x(2) = a_lat* vec_x_mil[1];
- vec_x(3) = a_lat* vec_x_mil[2];
-      
- vec_y(1) = a_lat* vec_y_mil[0];
- vec_y(2) = a_lat* vec_y_mil[1];
- vec_y(3) = a_lat* vec_y_mil[2];
+    //convert from miller indexes to vectors
+    vec_x = (x_miller[0] - x_miller[2]) * mil1 +
+        (x_miller[1] - x_miller[2]) * mil2 +
+        x_miller[3] * mil3;
+    vec_y = (y_miller[0] - y_miller[2]) * mil1 +
+        (y_miller[1] - y_miller[2]) * mil2 +
+        y_miller[3] * mil3;
+  }
 
-
- calculate_rot_matrix(vec_x, vec_y);
-
-
-
+  calculate_rot_matrix(vec_x, vec_y);
 }
 
 
@@ -128,25 +184,32 @@ void ZbRotatedCrystal::read_database ( )
 void ZbRotatedCrystal::do_init(void)
 {
 
-   ModelOptions & options = get_options();
-   a_lat = options.get_option("a", a_lat);
-   assert(a_lat > 0);
+  ModelOptions & options = get_options();
+  a_lat = options.get_option("a", a_lat);
+  assert(a_lat > 0);
 
-   options.get_option("x-growth-direction", x_miller);
-   options.get_option("y-growth-direction", y_miller);
-   options.get_option("z-growth-direction", z_miller); 
+  options.get_option("x-growth-direction", x_miller);
+  options.get_option("y-growth-direction", y_miller);
+  options.get_option("z-growth-direction", z_miller);
 
-  if (x_miller.size() != 3 ||
-      y_miller.size() != 3 ||
-      z_miller.size() != 3)
-    throw InitFailedException("Zincblende growth directions are wrong."
-        " (Need exactly 3 miller indices)");
+  const std::string& mat = get_material()->get_name();
+  int miller_size = x_miller.size();
+  if (y_miller.size() != miller_size ||
+      z_miller.size() != miller_size)
+    throw InitFailedException(mat + ": zincblende growth directions are wrong."
+        " (Different number of Miller indices for different directions)");
 
-   calculate_lat_consts();
+  if (miller_size == 4)
+    Messages::info("Using hexagonal lattice for material " + mat);
+  else if (miller_size != 3)
+    throw InitFailedException(mat + ": zincblende growth directions are wrong."
+        " Can only take 3 or 4 Miller indices.");
 
-   calculate_rot_matrix_miller(x_miller, y_miller);
+  calculate_lat_consts();
 
-   calculate_euler_angles();
+  calculate_rot_matrix_miller(x_miller, y_miller);
+
+  calculate_euler_angles();
 
 }
 

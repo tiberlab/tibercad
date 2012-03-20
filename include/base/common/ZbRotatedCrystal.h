@@ -8,8 +8,6 @@ class TBDLLOCAL ZbRotatedCrystal : public RotatedCrystal
 
  public:
 
-  //ZbRotatedCrystal(const double a);
-
   void set_lat_const(const double a);
 
   virtual void calculate_lat_consts();
