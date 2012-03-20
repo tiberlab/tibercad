@@ -77,7 +77,7 @@ void ZbRotatedCrystal::calculate_lat_consts()
   {
     // calculate hexagonal basis vectors
     double a = a_lat * M_SQRT1_2;
-    double c = 1.632993161855452 * a_lat; // sqrt(8/3)
+    double c = 1.632993161855452 * a; // sqrt(8/3)
 
     //Bravais vectors
     Tensor1  Rx(0);
@@ -142,7 +142,7 @@ void ZbRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
   else
   {
     double a = a_lat * M_SQRT1_2;
-    double c = 1.632993161855452 * a_lat; // sqrt(8/3)
+    double c = 1.632993161855452 * a; // sqrt(8/3)
 
     // Miller basis
     // assign principal directions
