@@ -17,7 +17,8 @@
 #include <sstream>
 #include <map>
 #include <set>
-#include <time.h>
+#include <ctime>
+#include <random>
 
 
 
@@ -657,26 +658,28 @@ AtomisticGenerator::build_random_alloy()
     //Cycle on atoms and change specie according to their belonging to alloy regions
     //and random distribution weighted on molar fraction
     //A random starting seed is needed to actually have different sequences
-    srand(time(NULL));
+    //srand(time(NULL));
+    std::mt19937 random(time(NULL));
+
     for (unsigned int i = 0; i < _structure_basis.size(); i++)
+    {
+      Atom& atm = _structure_basis[i];
+      //Note: region_ID e material sono definiti solo per gli atomi appartenenti alla struttura
+      if (atm.belong_to_structure)
       {
-        Atom& atm = _structure_basis[i];
-        //Note: region_ID e aterial sono definiti solo per gli atomi appartenenti alla struttura
-        if (atm.belong_to_structure)
-          {
         const Material* mat = _as->get_material(_structure_basis[i]);
         if (mat->is_alloy())
         {
-            //Calcolate the probability to change specie
-            int random_n = rand() % 100;
-            if (random_n < a_to_b_prob[atm.get_region_ID()] * 100.0 )
-              {
-                atm.set_specie(assign[atm.get_region_ID()][atm.get_flag()]);
-              }
-        }
+          //Calcolate the probability to change specie
+          //int random_n = rand() % 100;
+          if (random() < a_to_b_prob[atm.get_region_ID()] * random.max() )
+          {
+            atm.set_specie(assign[atm.get_region_ID()][atm.get_flag()]);
           }
-
+        }
       }
+
+    }
 }
 
 //Note:: make_supercell is called only with preserve_basis and preserve_conv
