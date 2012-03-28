@@ -203,7 +203,9 @@ std::cout << "done" ;
   std::string passivation;
   passivation = _as->get_options().get_option("passivation", "no");
 
-  if (passivation.compare("yes") == 0 || passivation.compare("true")){passivate();}
+//  if (passivation.compare("yes") == 0 || passivation.compare("true")){passivate();}
+  if ( (passivation.compare("yes") == 0) || (passivation.compare("true") == 0) ){passivate();}
+
 
   //BondMap pointer is used for passivation, delete it and refresh bond map
   delete _bondmapobject;
