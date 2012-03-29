@@ -1,0 +1,37 @@
+--- tools/build/v2/tools/darwin.jam.orig	2009-11-10 18:26:59.000000000 +0100
++++ tools/build/v2/tools/darwin.jam	2011-06-22 21:37:45.000000000 +0200
+@@ -450,7 +450,7 @@
+ flags darwin.compile OPTIONS <link>shared : -dynamic ;
+ 
+ # Misc options.
+-flags darwin.compile OPTIONS : -no-cpp-precomp -gdwarf-2 ;
++flags darwin.compile OPTIONS : -gdwarf-2 ;
+
+ # Add the framework names to use.
+ flags darwin.link FRAMEWORK <framework> ;
+--- tools/build/v2/tools/darwin.py.orig	2009-10-28 08:47:51.000000000 +0100
++++ tools/build/v2/tools/darwin.py	2011-06-22 17:32:05.000000000 +0200
+@@ -37,7 +37,7 @@
+ feature.feature ('framework', [], ['free'])
+      
+ toolset.flags ('darwin.compile', 'OPTIONS', '<link>shared', ['-dynamic'])
+-toolset.flags ('darwin.compile', 'OPTIONS', None, ['-Wno-long-double', '-no-cpp-precomp'])
++toolset.flags ('darwin.compile', 'OPTIONS', None, ['-Wno-long-double'])
+ toolset.flags ('darwin.compile.c++', 'OPTIONS', None, ['-fcoalesce-templates'])
+        
+ toolset.flags ('darwin.link', 'FRAMEWORK', '<framework>')
+--- libs/regex/build/Jamfile.v2.orig	2011-07-11 16:10:44.000000000 +0200
++++ libs/regex/build/Jamfile.v2	2011-07-11 16:13:03.000000000 +0200
+@@ -274,9 +274,9 @@
+         #<link>static:<define>BOOST_REGEX_NO_LIB=1
+         #<link>static:<define>BOOST_REGEX_STATIC_LINK=1
+ 	     <link>shared:<define>BOOST_REGEX_DYN_LINK=1
+-	     <toolset>gcc-mw:<link>static
+-	     <toolset>gcc-mingw:<link>static
+-	     <toolset>gcc-cygwin:<link>static
++	     #<toolset>gcc-mw:<link>static
++	     #<toolset>gcc-mingw:<link>static
++	     #<toolset>gcc-cygwin:<link>static
+ 	     $(BOOST_REGEX_ICU_OPTS)
+              <conditional>@force-shared-linking
+     ;
