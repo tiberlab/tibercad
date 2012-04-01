@@ -81,6 +81,11 @@ echo "* Host system :  $TCHOST"
 echo "* Build system:  $TCBUILD"
 echo "*************************************************"
 
+if [ -d ${TOPDIR}/SDK/compiler/$TCHOST ]
+then
+  export PATH=${TOPDIR}/SDK/compiler/${TCHOST}/bin:${PATH}
+  export LD_LIBRARY_PATH=${TOPDIR}/SDK/compiler/${TCHOST}/lib
+fi
 
 #CC=${CC:-"${pre}gcc${gcc_version}"}
 #CXX=${CXX:-"${pre}g++${gcc_version}"}
