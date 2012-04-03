@@ -199,7 +199,7 @@ Database::set_search_path(const string& path)
 {
   if (path.size() > 0)
   {
-    boost::filesystem::path p(path, boost::filesystem::native);
+    boost::filesystem::path p(path);//, boost::filesystem::native);
     if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
     {
       string msg("\'");
@@ -226,7 +226,7 @@ Database::set_default_search_path(const string& path)
 {
   if (path.size() > 0)
   {
-    boost::filesystem::path p(path, boost::filesystem::native);
+    boost::filesystem::path p(path);//, boost::filesystem::native);
     if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
     {
       string msg("\'");

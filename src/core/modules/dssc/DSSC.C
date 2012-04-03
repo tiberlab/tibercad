@@ -13,6 +13,8 @@
 #include "SolveFailedException.h"
 #include "Messages.h"
 
+#include "TiberModule.h"
+
 
 // libmesh includes
 #include "node.h"
@@ -33,13 +35,6 @@
 // C++ includes
 
 using namespace std;
-
-
-//
-// Module interface
-//
-
-TIBER_MODULE(DSSC, dssc)
 
 
 

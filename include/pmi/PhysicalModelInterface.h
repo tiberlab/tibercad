@@ -18,8 +18,10 @@
 #include "tensor.h"
 #include "xtensor.h"
 
-#include "TiberModule.h"
 
+#ifndef MODULE_NAME
+#define MODULE_NAME
+#endif
 
 class PhysicalObject;
 class Material;

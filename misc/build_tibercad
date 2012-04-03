@@ -10,7 +10,11 @@ fi
 
 . common.sh
 
-TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
+TIBEROPTS=${TIBEROPTS:-"--disable-uptight --enable-license-check --disable-hetero"}
+
+if [ "$MKL" = y ]; then
+TIBEROPTS="${TIBEROPTS} --with-mkl=${MKLDIR}"
+fi
 
 echo "Compiling TiberCAD ..."
 
@@ -21,15 +25,16 @@ cd ../
 #  cp contrib/dlfcn-win32-r19/dlfcn.c src/base/io/dlfcn.c
 #fi
 
-
-
+export LD_RUN_PATH=`pwd`/SDK/compiler/$TCHOST/lib
+export LD_LIBRARY_PATH=`pwd`/SDK/compiler/$TCHOST/lib
 
 ./configure \
   --with-petsc-prefix=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL} \
-  --with-petsc-arch=${HOST}-complex \
+  --with-petsc-arch=${TCHOST}-complex \
   --with-slepc-prefix=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} \
   $TIBEROPTS \
-  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${HOST} \
+  --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
+  --with-libmesh-petsc-libdir=${BUILDDIR}/${TCHOST}/lib \
   --with-boost-prefix=${BUILDDIR}/$TCHOST --with-boost-libdir=${BUILDDIR}/${TCHOST}/lib \
   --host=$HOST --build=$BUILD
 

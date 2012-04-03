@@ -4,11 +4,9 @@
 #include "Database.h"
 #include "Material.h"
 
-// The first string is the class name, the second one
-// is the type of the model (here it is a polarization model),
-// the third one is the specific model implementation.
-// The library name will then be polarization_piezo.so
-TIBER_MODULE(Pyropolarization, polarization, pyro)
+#include "TiberModule.h"
+
+
 
 using namespace std;
 

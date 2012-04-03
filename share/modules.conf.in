@@ -5,9 +5,9 @@ Compiler
 
   C++
   {
-    #executable = SDK/compiler/@ARCH/bin/g++
-    executable = /usr/bin/g++
+    executable = @CXX@
     compiler_flags = "-O3 -std=gnu++0x -pthread -fPIC -c"
+    # -fvisibility=hidden
   }
 
   C
@@ -39,42 +39,53 @@ Library tibercad
     include/core/macrostrain,
     include/core/embracing,
     include/core/solver-interfaces,
+    include/core/solver-interfaces/petsc,
     include/core/quantumEFAmodels,
     include/core/optics,
     include/core/maxwell,
     include/core/kintegrations,
     include/core/eigenvalue,
-    include/utils/Tensor
+    include/utils/Tensor,
+    include/utils/SLEPC
   )
   libpath = @ARCH/lib
   linker_flags = -ltibercad
 }
 
 
+Library boost
+{
+  includes = @LIBMESH_PETSC_LIBDIR@/../include
+}
+
+
 Library libmesh
 {
-  #path = extern/libmesh-svn-@ARCH
-  path = extern/libmesh-svn-i686
+  path = @LIBMESH_PREFIX@
   includes = (include/base, include/error_estimation,
               include/geom, include/numerics, include/partitioning,
               include/solvers, include/utils, include/enums,
               include/fe, include/mesh, include/parallel,
               include/quadrature, include/systems)
-  #libpath = lib
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lmesh
 }
 
 
 Library petsc
 { 
-  path = extern/petsc-3.0.0-p10
-  #includes = (include, include/mpiuni, @ARCH/include)
-  includes = (include, include/mpiuni, linux-gnu-i686/include)
+  path = @LIBMESH_PREFIX@/../petsc-3.0.0-p12
+  includes = (include, include/mpiuni, @ARCH/include)
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lpetsc_real
 }
 
 Library slepc
 {
-  path = SDK/slepc-3.0.0-p7
+  path = @LIBMESH_PREFIX@/../slepc-3.0.0-p7
   includes = (include, @ARCH/include)
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lslepc_real
 }
 
 		

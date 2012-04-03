@@ -17,13 +17,9 @@
 #include "SimulationOptions.h"
 #include "fe_interface.h"
 
-//TODO
-//Eliminate the FE:interface when the point is at the centroid
-// This is needed in order to create the shared module library
-// The first string is the class name of the object to be created,
-// the second one is the name of the module as it should be referred
-// in the input file (the Makefile defines MODULE_NAME, which can be used here).
-TIBER_MODULE(Thermal, MODULE_NAME)
+#include "TiberModule.h"
+
+
 using namespace std;
 
 

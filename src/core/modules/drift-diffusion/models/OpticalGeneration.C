@@ -6,15 +6,14 @@
 #include "SimulationInterface.h"
 #include "DriftDiffusionProperties.h"
 
+#include "TiberModule.h"
+
 #include <string>
 #include "elem.h"
 
 
-TIBER_MODULE(OpticalGeneration, recombination, optical)
 
 using namespace std;
-
-
 
 void
 OpticalGeneration::do_init(void)

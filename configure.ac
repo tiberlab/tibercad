@@ -45,6 +45,8 @@ AC_FC_LIBRARY_LDFLAGS
 AC_SUBST([FCLIBS])
 AC_SUBST([LDFLAGS])
 
+AC_SUBST([cross_compiling])
+
 # libtool
 #AC_LIBTOOL_DLOPEN
 #AC_DISABLE_STATIC
@@ -100,22 +102,22 @@ AC_SUBST([GMSH])
 
 
 # on cygwin we check for Bytessence InstallMaker
-[BINSTALLMAKER="no"]
-case $host_os in
-  *cygwin* ) 
-	AC_PATH_PROGS([BINSTALLMAKER], [BInstallMaker.exe BInstallMakerA.exe], ["no"],
-	["/cygdrive/c/Programme/Bytessence\ InstallMaker":"/cygdrive/c/Programmi/Bytessence\ InstallMaker":"/cygdrive/c/Programs/Bytessence\ InstallMaker":"/cygdrive/c/Program\ Files/Bytessence\ InstallMaker"])
-	[WININSTALLERDIR=`cygpath --windows "${ac_pwd}/installer/windows"`]
-	AC_SUBST([WININSTALLERDIR])
-	[TIBERSHAREDIR=`cygpath --windows "${ac_pwd}/share"`]
-	AC_SUBST([TIBERSHAREDIR])
-	[BINSTALLMAKERDIR="`expr "$BINSTALLMAKER" : '\(.*\)/'`"]
-	[BINSTALLMAKERDIR=`cygpath --windows "$BINSTALLMAKERDIR"`]
-	AC_SUBST([BINSTALLMAKERDIR])
-        AC_DEFINE([CYGWIN], [1], [define if we are in cygwin]) ;;
-  * )  ;;
-esac
-AC_SUBST([BINSTALLMAKER])
+#[BINSTALLMAKER="no"]
+#case $host_os in
+#  *cygwin* ) 
+#	AC_PATH_PROGS([BINSTALLMAKER], [BInstallMaker.exe BInstallMakerA.exe], ["no"],
+#	["/cygdrive/c/Programme/Bytessence\ InstallMaker":"/cygdrive/c/Programmi/Bytessence\ InstallMaker":"/cygdrive/c/Programs/Bytessence\ InstallMaker":"/cygdrive/c/Program\ Files/Bytessence\ InstallMaker"])
+#	[WININSTALLERDIR=`cygpath --windows "${ac_pwd}/installer/windows"`]
+#	AC_SUBST([WININSTALLERDIR])
+#	[TIBERSHAREDIR=`cygpath --windows "${ac_pwd}/share"`]
+#	AC_SUBST([TIBERSHAREDIR])
+#	[BINSTALLMAKERDIR="`expr "$BINSTALLMAKER" : '\(.*\)/'`"]
+#	[BINSTALLMAKERDIR=`cygpath --windows "$BINSTALLMAKERDIR"`]
+#	AC_SUBST([BINSTALLMAKERDIR])
+#        AC_DEFINE([CYGWIN], [1], [define if we are in cygwin]) ;;
+#  * )  ;;
+#esac
+#AC_SUBST([BINSTALLMAKER])
 
 TC_SUBVERSION
 
@@ -290,8 +292,10 @@ AC_CONFIG_FILES([Make.common
                  installer/Makefile
 		 installer/windows/tibercad.bim
                  installer/linux/deb/control
-                 installer/linux/tar/install])
+                 installer/linux/tar/install
+                 share/modules.conf])
 AC_CONFIG_FILES([installer/prepare_files.sh], [chmod +x installer/prepare_files.sh])
 AC_CONFIG_FILES([bin/tibercad], [chmod +x bin/tibercad])
+AC_CONFIG_FILES([bin/tiberCAD.sh], [chmod +x bin/tiberCAD.sh])
 
 AC_OUTPUT

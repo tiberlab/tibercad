@@ -3,6 +3,7 @@
 #include "boost/algorithm/string/trim.hpp"
 #include "boost/regex.hpp"
 #include "boost/filesystem.hpp"
+#include "boost/filesystem/operations.hpp"
 
 #include "TiberCad.h"
 #include "Utils.h"
@@ -65,11 +66,13 @@ static string open_file(const char *filter = "All Files (*.*)\0*.*\0", HWND owne
 namespace BuildModule
 {
   //! Interactive or batch mode (only useful for Win)
-  bool interactive;
+  bool interactive = true;
 
   //! Content of TIBERCADROOT
   std::string tc_root;
 
+  //! Verbose mode
+  bool verbose = false;
 
   void usage(void)
   {
@@ -115,6 +118,8 @@ class Compiler
 
     ModelOptions _options;
 
+    std::string _outdir;
+
     std::string _preprocessor_flags;
 
     std::string _compiler_flags;
@@ -122,6 +127,14 @@ class Compiler
     std::string _linker_flags;
 
     std::string _executable(void);
+
+    //! Check dependency timestamps
+    /*!
+     * If any of the dependencies has a newer (write) timestamp
+     * the method returns \c true, \c false otherwise.
+     */
+    static bool _needs_build(const std::string& target,
+        const std::vector<std::string>& dependencies);
 
     std::string _compile(const std::string& source, const std::string& flags);
 
@@ -146,8 +159,6 @@ void process_module(const string& name, const ModelOptions& options);
 int main (int argc, char** argv)
 {
 
-  BuildModule::interactive = true;
-
   opterr = 0;
   int c;
   while ((c = getopt(argc, argv, "bv")) != -1)
@@ -155,6 +166,10 @@ int main (int argc, char** argv)
     {
       case 'b':
         BuildModule::interactive = false;
+        break;
+
+      case 'v':
+        BuildModule::verbose = true;
         break;
 
       case '?':
@@ -274,7 +289,7 @@ int main (int argc, char** argv)
   //
   // here begins real task
   //
-  int error = 1;
+  int error = 0;
 
   {
     char* root = getenv("TIBERCADROOT");
@@ -283,7 +298,11 @@ int main (int argc, char** argv)
       cerr << "TIBERCADROOT environment variable is not set.\n";
       return 1;
     }
-    BuildModule::tc_root = string(root);
+    string rs(root);
+    boost::filesystem::path tcroot(rs);
+    tcroot = boost::filesystem::system_complete(tcroot);
+
+    BuildModule::tc_root = tcroot.string();
   }
 
   InputParser parser;
@@ -510,14 +529,20 @@ Compiler::Compiler(const ModelOptions& options) :
   _preprocessor_flags = pre.str();
 
   _compiler_flags = options.get_option("compiler_flags", "");
-#if defined(_WIN32)
-  BuildModule::replace(_compiler_flags, "-fPIC", "");
-#endif
 
-#if defined(_LINUX)
-  _linker_flags = "-Wl,--as-needed ";
-#endif
+  _outdir = "." + string(ARCH);
+
+  if ((ARCH == "i686-linux") || (ARCH == "x86_64-linux"))
+    _linker_flags = "-Wl,--as-needed ";
+
   _linker_flags += options.get_option("linker_flags", "");
+
+  if ((ARCH == "i686-mingw32") || (ARCH == "x86_64-mingw32"))
+  {
+    BuildModule::replace(_compiler_flags, "-fPIC", "");
+    BuildModule::replace(_compiler_flags, "-pthread", "");
+    BuildModule::replace(_linker_flags, "-pthread", "");
+  }
 }
 
 
@@ -527,28 +552,100 @@ Compiler::_executable(void)
 {
   string exe(_options["executable"]);
   BuildModule::replace(exe, "@ARCH", ARCH);
-  if (exe[0] != '/')
-    exe = BuildModule::tc_root + "/" + exe;
+  BuildModule::replace(exe, "@ROOT", BuildModule::tc_root);
 
   return exe;
 }
+
+bool
+Compiler::_needs_build(const std::string& target,
+    const std::vector<std::string>& dependencies)
+{
+  bool need_compilation = false;
+
+  boost::filesystem::path target_p(target);
+  if (!boost::filesystem::exists(target_p))
+  {
+    need_compilation = true;
+  }
+  else
+  {
+    std::time_t target_ts = boost::filesystem::last_write_time(boost::filesystem::path(target));
+    for (size_t i = 0; i < dependencies.size(); ++i)
+    {
+      boost::filesystem::path p(dependencies[i]);
+      if (boost::filesystem::exists(p))
+      {
+        std::time_t dep_ts = boost::filesystem::last_write_time(p);
+        if (std::difftime(target_ts, dep_ts) < 0.0)
+        {
+          need_compilation = true;
+          break;
+        }
+      }
+    }
+  }
+
+  return need_compilation;
+}
+
+
 
 
 std::string
 Compiler::_compile(const std::string& source, const std::string& flags)
 {
-  cout << "Compiling " << source << " (" << _options.get_key() << ") ...\n";
+  cout << "  Compiling " << source << " (" << _options.get_key() << ") ";
+
+  boost::filesystem::path outdir(_outdir);
+  if (!boost::filesystem::exists(outdir))
+    boost::filesystem::create_directories(outdir);
 
   string basename = Utils::basename(source);
-  string target = basename + ".o";
+  string target = _outdir + "/" + basename + ".o";
 
+  // check dependencies
+  string depfile = _outdir + "/" + basename + ".d";
   ostringstream cmdline;
-  cmdline << _executable() << " " << _preprocessor_flags << " " <<
-    _compiler_flags << " " << flags << " -o " << target << " " << source;
+  cmdline << _executable() << " " << _preprocessor_flags
+      << " -MG -MM -MF " << depfile << " " << source;
+  system(cmdline.str().c_str());
 
-  //cout << cmdline.str() << endl;
-  if (system(cmdline.str().c_str()) != 0)
-    target = "";
+  vector<string> dependencies;
+
+  ifstream dep(depfile.c_str());
+  while (dep.good() && !dep.eof())
+  {
+    string buf;
+    getline(dep, buf);
+    vector<string> deplist;
+    Utils::tokenize(buf, deplist, " \\");
+    if (deplist.size() == 3)
+    {
+      dependencies.push_back(deplist[1]);
+      dependencies.push_back(deplist[2]);
+    }
+    else if (deplist.size() == 1)
+      dependencies.push_back(deplist[0]);
+  }
+
+
+
+  if (_needs_build(target, dependencies))
+  {
+    ostringstream cmdline;
+    cmdline << _executable() << " " << _preprocessor_flags << " " <<
+        _compiler_flags << " " << flags << " -o " <<
+        target << " " << source;
+
+
+    cout << "...\n";
+    if (BuildModule::verbose) cout << cmdline.str() << endl;
+    if (system(cmdline.str().c_str()) != 0)
+      target = "";
+  }
+  else
+    cout << "- nothing to be done\n";
 
   return target;
 }
@@ -559,28 +656,34 @@ int
 Compiler::_link(const std::string& target, const std::vector<std::string>& objects,
     const std::string& flags)
 {
-  cout << "Linking " << target << " (" << _options.get_key() << ") ...\n";
+  cout << "  Linking " << target << " (" << _options.get_key() << ")";
 
-  ostringstream cmdline;
-  cmdline << _executable();
-  for (size_t i = 0; i << objects.size(); ++i)
-    cmdline << " " << objects[i];
+  int returnval = 0;
+  if (_needs_build(target, objects))
+  {
+    cout << " ...\n";
+    ostringstream cmdline;
+    cmdline << _executable();
+    for (size_t i = 0; i < objects.size(); ++i)
+      cmdline << " " << objects[i];
 
-  cmdline << " " << flags << " " <<_linker_flags << " " << " -o " << target;
+    cmdline << " " << flags << " " <<_linker_flags << " " << " -o " << target;
 
-  cout << cmdline.str() << endl;
+    if (BuildModule::verbose) cout << cmdline.str() << endl;
 
-  return system(cmdline.str().c_str());
+    returnval = system(cmdline.str().c_str());
+  }
+  else
+    cout << "- nothing to be done\n";
+
+  return returnval;
 }
 
 
 
 void process_module(const string& name, const ModelOptions& options)
 {
-  vector<string> sources;
-  options.get_option("sources", sources);
 
-  string creatable = options.get_option("createable", "");
 
   string module = options.get_option("module", "");
 
@@ -598,85 +701,84 @@ void process_module(const string& name, const ModelOptions& options)
 
   cout << "Processing module " << modulename << " ...\n";
 
-  char* root = getenv("TIBERCADROOT");
+  // the module library, if present
+  string modulelib;
 
-  string binsuffix;
-#if defined(_WIN32)
-  string libsuffix(".dll");
-  binsuffix = ".exe";
-#elif defined(_APPLE_)
-  string libsuffix(".dylib");
-#else
-  string libsuffix(".so");
-#endif
-
-  // the module creation code is put into a header file that gets included by
-  // defining TIBERMODULE to #include "module.h"
-  {
-    string module_code = options.get_option("creator_code", "");
-    ofstream mh(module + ".h"); // mh = module_header
-    mh << "/*\n"
-      <<  " * This file was generated automatically by the tiberCAD\n"
-      <<  " * build_module tool.\n"
-      <<  " * Do not change its content in the case you compile\n"
-      <<  " * the module by hand.\n"
-      <<  " */\n\n"
-      <<  "#include \"TiberModule.h\"\n"
-      <<  "extern \"C\" {\n"
-      <<  "  TBDLEXPORT void TBDESTROYFUNC(TiberModelObject* p)\n"
-      <<  "  { delete p; }\n\n"
-      <<  "  TBDLEXPORT TiberModelObject* TBCREATEFUNC(const ModelOptions& options, const void* handle)\n"
-      <<  "  {\n"
-      <<  "    TiberModelObject* obj = NULL;\n";
-    if (!module_code.empty())
-      mh << module_code;
-    else
-    {
-      mh << "    obj = " << creatable << "::create(options); \n";
-    }
-    mh << "    return obj;\n";
-    mh << "  }\n"
-      <<  "}";
-  }
-
-
-
-  string compileflags = options.get_option("compiler_flags", "");
-  compileflags += "-DMODULE_NAME=" + module;
-  //compileflags += "-DTIBERMODULE=\"#include \\\"" + module + ".h\\\"\"";
-
-  vector<string> objects;
-  for (size_t i = 0; i < sources.size(); ++i)
-  {
-    string obj = Compiler::compile(sources[i], compileflags);
-    if (obj.empty())
-    {
-      cerr << "Error in compilation: Could not compile "
-          << sources[i] << endl;
-      exit(1);
-    }
-
-    objects.push_back(obj);
-  }
-
-  string linkflags = options.get_option("linker_flags", "");
-
-  string target = modulename + libsuffix;
-  Compiler::link(target, objects, linkflags);
-
-  string instpath = options.get_option("installpath", "");
+  string instpath = options.get_option("installpath", "@ARCH/modules/@MODULE");
   BuildModule::replace(instpath, "@ARCH", ARCH);
   BuildModule::replace(instpath, "@ROOT", BuildModule::tc_root);
   BuildModule::replace(instpath, "@MODULE", modulename);
   if (instpath[0] != '/')
     instpath = BuildModule::tc_root + "/" + instpath;
 
-  using namespace boost::filesystem;
-  path from("./" + target);
-  path to(instpath + "/" + target);
-  copy_file(from, to, copy_option::overwrite_if_exists);
-  remove(from);
+  vector<string> sources;
+  options.get_option("sources", sources);
 
+  if (sources.size() > 0)
+  {
+
+    string creatable = options.get_option("createable", "");
+
+    if (creatable.empty())
+    {
+      // guess it from the first source file
+      creatable = Utils::basename(sources[0]);
+    }
+
+    char* root = getenv("TIBERCADROOT");
+
+    // TODO process dependencies
+
+
+    string compileflags = options.get_option("compiler_flags", "");
+    compileflags += " -DMODULE_NAME=" + module;
+    compileflags += " -DCREATABLE=" + creatable;
+
+    string module_code = options.get_option("creator_code", "");
+    if (!module_code.empty())
+    {
+      ofstream of(string(module + "_creator.h").c_str());
+      of << module_code;
+      compileflags += " -DCREATORCODE=" + module + "_creator.h";
+    }
+
+    vector<string> objects;
+    for (size_t i = 0; i < sources.size(); ++i)
+    {
+      string obj = Compiler::compile(sources[i], compileflags);
+      if (obj.empty())
+      {
+        cerr << "Error in compilation: Could not compile "
+            << sources[i] << endl;
+        exit(1);
+      }
+      objects.push_back(obj);
+    }
+
+    string linkflags = options.get_option("linker_flags", "");
+
+    string binsuffix;
+    string libsuffix(".so");
+    if ((ARCH == "i686-mingw32") || (ARCH == "x86_64-mingw32"))
+    {
+      libsuffix = ".dll";
+      binsuffix = ".exe";
+    }
+    else if ((ARCH == "i686-darwin") || (ARCH == "x86_64-darwin"))
+      libsuffix = ".dylib";
+
+    modulelib = modulename + libsuffix;
+
+    using namespace boost::filesystem;
+
+    // build full installation path
+    path instpath_p(instpath);
+    if (!exists(instpath_p))
+      create_directories(instpath_p);
+    modulelib = instpath + "/" + modulelib;
+
+    Compiler::link(modulelib, objects, linkflags);
+  }
 
   // recursively process submodules
   ModelOptions::const_submodel_iterator it(options.submodels_begin());
@@ -691,10 +793,10 @@ void process_module(const string& name, const ModelOptions& options)
 
     //string cpflags = opts.get_option("compiler_flags", "");
     string ldflags = opts.get_option("linker_flags", "");
-#if defined(_LINUX)
-    ldflags += "-Wl,--as-needed ";
-#endif
-    ldflags += instpath + "/" + target;
+    if ((ARCH == "i686-linux") || (ARCH == "x86_64-linux"))
+      ldflags += "-Wl,--as-needed ";
+
+    ldflags += modulelib;
     opts["linker_flags"] = ldflags;
 
     opts["module"] = module;

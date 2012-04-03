@@ -14,12 +14,11 @@
 #include "TiberLinearSystem.h"
 #include "VectorFEBase1D.h"
 
+#include "TiberModule.h"
+
 using namespace std;
 using namespace Constants;
 
-#include "sys/time.h"
-
-TIBER_MODULE(MaxwellBoundaryEquations, maxwell, boundary)
 
 MaxwellBoundaryEquations::MaxwellBoundaryEquations(const ModelOptions& options)
  : SimulationInterface(options)

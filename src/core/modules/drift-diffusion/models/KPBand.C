@@ -6,8 +6,9 @@
 #include "Material.h"
 #include "Messages.h"
 
+#include "TiberModule.h"
 
-TIBER_MODULE(KPBand, band_properties, kp)
+
 
 
 KPBand::KPBand(const ModelOptions& options) :

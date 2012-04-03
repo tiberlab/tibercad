@@ -6,12 +6,8 @@
 #include "Database.h"
 #include "TensorOperators.h"
 
-// The first string is the class name, the second one
-// is the type of the model (here it is a bulk model),
-// the third one is the specific model implementation.
-// The library name will then be bulk_default.so
+#include "TiberModule.h"
 
-TIBER_MODULE(ConversePiezo,body_force, converse_piezo)
 
 using namespace std;
 

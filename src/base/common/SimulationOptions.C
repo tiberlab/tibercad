@@ -53,7 +53,7 @@ SimulationOptions::initialize(const ModelOptions& opts)
   scratch_path = opts.get_option("scratchpath",".");
 
   // create scratch directory
-  path outpath(scratch_path, native);
+  path outpath(scratch_path);//, native);
 
   if (!exists(outpath))
   {

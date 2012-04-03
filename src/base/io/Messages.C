@@ -86,7 +86,7 @@ Messages::set_log_file(const string& logfile)
 {
   using namespace boost::filesystem;
 
-  path logpath(logfile, native);
+  path logpath(logfile);//, native);
 #if defined(_WIN32)
   logpath = logpath.branch_path();
 #else

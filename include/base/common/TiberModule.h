@@ -5,52 +5,55 @@
 
 #include "tiber_dll.h"
 
-//#ifdef BUILD_TIBER_MODULES
 
 //
 // Provides macros needed to create a shared TiberCAD module
 //
 
-#define TBCREATEFUNC __create
-#define TBDESTROYFUNC __destroy
-#define TBCREATEFUNCSYM "__create"
-#define TBDESTROYFUNCSYM "__destroy"
 
-/*!
- * \def TIBER_MODULE(classname, model [, type])
- *
- * \brief Creates methods to create and destroy a simulation object
- *
- * In each implementation derived from TiberModelObject, put
- * this macro somewhere in the source file to be able to compile
- * it as TiberCad module.
- *
- * \param classname the name of the class that should be 'createable'
- * \param model the model family (e.g. recombination, mobility etc.)
- * \param type the specific model name, if applicable (e.g. srh, auger)
- *
- * \c model and \c type will be used to create the library name as
- * model
- */
-#define TIBER_MODULE(classname, model, type...) \
-  extern "C" { \
-    TBDLEXPORT void TBDESTROYFUNC(TiberModelObject* p) { \
-      delete p; \
-    } \
-    TBDLEXPORT classname* TBCREATEFUNC(const ModelOptions& options, const void*) { \
-      return classname::create(options); \
-    } \
-  } \
-
-
-//#else
-
-//# define TIBER_MODULE(classname, model, ...)
-
-//#endif // BUILD_TIBER_MODULES
 
 #ifndef MODULE_NAME
 #define MODULE_NAME
 #endif
+
+/*!
+ * \brief Creates methods to create and destroy a simulation object
+ *
+ * In each implementation derived from TiberModelObject, you have
+ * to include this header in the source file to be able to compile
+ * it as TiberCad module.
+ * For each module it may be included only once!
+ *
+ */
+#ifdef CREATABLE
+
+#ifndef xstr
+#define xstr(a) stringify(a)
+#endif
+#ifndef stringify
+#define stringify(a) #a
+#endif
+
+extern "C" {
+  TBDLEXPORT void
+  TBDESTROYFUNC(TiberModelObject* p) {
+    delete p;
+  }
+
+  TBDLEXPORT TiberModelObject*
+  TBCREATEFUNC(const ModelOptions& options, const void* handle) {
+    TiberModelObject* obj = NULL;
+#ifdef CREATORCODE
+#include xstr(CREATORCODE)
+#else
+    obj = CREATABLE::create(options);
+#endif
+    return obj;
+  }
+}
+#endif
+
+
+
 
 #endif // _TIBERMODULE_H_

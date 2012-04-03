@@ -6,10 +6,7 @@
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 
-
-
-
-TIBER_MODULE(DirectRecombination, recombination, direct)
+#include "TiberModule.h"
 
 using namespace std;
 

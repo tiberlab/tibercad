@@ -12,30 +12,47 @@ objects += $(topdir)/src/base/common/.$(ARCH)/ModelOptions.$(METHOD).o
 objects += $(topdir)/src/base/io/.$(ARCH)/InputParser.$(METHOD).o
 objects += $(topdir)/src/base/io/.$(ARCH)/Messages.$(METHOD).o
 
+cross_srcfiles := $(srcfiles)
+cross_srcfiles += $(topdir)/src/base/common/Utils.C
+cross_srcfiles += $(topdir)/src/base/common/ModelOptions.C
+cross_srcfiles += $(topdir)/src/base/io/InputParser.C
+cross_srcfiles += $(topdir)/src/base/io/Messages.C
+BUILD_CPPFLAGS := -DBUILD=\"$(BUILD)\" $(CPPFLAGS)
+BUILD_CXXFLAGS := $(CXXFLAGS)
+BUILD_LDFLAGS := -Wl,-rpath,../../extern/$(BUILD)/lib -L../../extern/$(BUILD)/lib -lboost_regex -lboost_filesystem -lboost_system
+BUILD_CXX := g++
 
 
 SUFF := 
 ifeq ($(target_os),win32)
-  SUFF := ".exe"
+  SUFF := .exe
   #objects += tibercad_res.o
   WINDRES := $(subst gcc,windres,$(CC))
-  #ADDITIONAL_LIBS += -lcomdlg32
+  LDFLAGS += -lcomdlg32
 endif
 
 ifeq ($(target_os),darwin)
   ASNEEDED := 
 else
-  ASNEEDED := "-Wl,--as-needed"
+  ASNEEDED := -Wl,--as-needed
 endif
 
 
+all: $(topdir)/$(ARCH)/bin/build_module$(SUFF)
 
-all: build_module
+ifeq ($(cross_compiling), yes)
+all: $(topdir)/bin/build_module-$(BUILD)
+endif
 
-build_module: $(objects) 
+$(topdir)/$(ARCH)/bin/build_module$(SUFF): $(objects) 
 	@echo "Compiling build_module executable ..."
+	@mkdir -p $(topdir)/$(ARCH)/bin
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(ASNEEDED) $(LDFLAGS)
 
+$(topdir)/bin/build_module-$(BUILD): $(cross_srcfiles)
+	@echo "compiling build_module for cross compilation ..."
+	@$(BUILD_CXX) $(BUILD_CPPFLAGS) $(BUILD_CXXFLAGS) $(BUILD_LDFLAGS) \
+		-o $@ $(BUILD_LDFLAGS) $(cross_srcfiles)
 
 
 

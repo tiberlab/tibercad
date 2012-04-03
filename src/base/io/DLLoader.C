@@ -3,7 +3,7 @@
 #include "tiber_config.h"
 #include "DLLoader.h"
 #include "Messages.h"
-#include "TiberModule.h"
+#include "tiber_dll.h"
 #include "RuntimeException.h"
 
 #include <boost/filesystem/operations.hpp>
@@ -82,7 +82,7 @@ DLLoader::open_library(const string& name, DLLoader::LibraryInterface& iface)
   const list<string>::iterator end(_libpath.end());
   for ( ; it != end; ++it)
   {
-    path p(*it + "/" + libfile, native);
+    path p(*it + "/" + libfile);//, native);
     Messages::debug("Looking for library " + p.string() + "... ");
     if (exists(p))
     {

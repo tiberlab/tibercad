@@ -6,12 +6,8 @@
 #include "Material.h"
 #include "TensorOperators.h"
 
+#include "TiberModule.h"
 
-// The first string is the class name, the second one
-// is the type of the model (here it is a polarization model),
-// the third one is the specific model implementation.
-// The library name will then be polarization_piezo.so
-TIBER_MODULE(Piezopolarization, polarization, piezo)
 
 using namespace std;
 

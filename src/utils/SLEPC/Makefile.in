@@ -37,7 +37,9 @@ ifneq ($(target_os),darwin)
 		$(SLEPC_EXTERNAL_LIB) \
 		-L$(PETSC_LIB_DIR) -lpetscts \
 		  -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc \
-		-Wl,-Bdynamic $(PETSC_EXTERNAL_LIB_BASIC)
+		-Wl,-Bdynamic -Wl,--as-needed $(LDFLAGS)
+	
+#$(PETSC_EXTERNAL_LIB_BASIC)
 else
 	@$(CXX) -shared -o $@ $< -Wl,-install_name,@rpath/lib/$(dll_prefix)eigen_solver$(shared_libext) \
 		-L$(topdir)/extern/$(ARCH)/lib -lslepc_complex -lpetsc_complex

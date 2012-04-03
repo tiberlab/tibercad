@@ -23,8 +23,8 @@ make_petsc()
 
   export PETSC_DIR=${PWD}
 
-  export PETSC_ARCH=${HOST}
-  [ "$datatype" == "complex" ] && export PETSC_ARCH=${HOST}-complex
+  export PETSC_ARCH=${TCHOST}
+  [ "$datatype" == "complex" ] && export PETSC_ARCH=${TCHOST}-complex
 
   if [ -e  ${TOPDIR}/misc/reconfigure-${PETSC_ARCH}.py ]
   then
@@ -129,9 +129,15 @@ SHARED="--with-shared=0 --with-dynamic=0"
   
 
 #COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
-COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
-  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
-  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
+if [ "${target_os}" = "win32" ]
+then
+  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
+    --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') \
+    --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
+    --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
+else
+  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
+fi
 
 
 if [ $MPI == 'n' ]; then

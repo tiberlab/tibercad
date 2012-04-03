@@ -7,8 +7,7 @@
 #include "Database.h"
 
 
-
-TIBER_MODULE(SRHRecombination, recombination, srh)
+#include "TiberModule.h"
 
 
 

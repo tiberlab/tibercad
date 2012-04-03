@@ -2,7 +2,8 @@
 
 #include "HeatReservoir.h"
 
-TIBER_MODULE(HeatReservoir,thermal_bnd,heat_reservoir)
+#include "TiberModule.h"
+
 
 void
 HeatReservoir::do_init(void)

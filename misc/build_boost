@@ -7,7 +7,7 @@ fi
 
 . common.sh
 
-VERSION=1_42_0
+VERSION=1_47_0
 ARCHIVE=boost_${VERSION}.tar.bz2
 
 echo "Compiling boost libraries"
@@ -50,9 +50,9 @@ then
 fi
 
 if [ "$target_os" = win32 ]; then
-  echo "using gcc : : $CXX : <src>$(echo $CC | sed 's/gcc/windres/') <archiver>$AR ;" > tools/build/v2/user-config.jam
+  echo "using gcc : : $CXX : <cxxflags>-std=gnu++0x <src>$(echo $CC | sed 's/gcc/windres/') <archiver>$AR ;" > tools/build/v2/user-config.jam
 else
-  echo "using $toolset : : $CXX : <linkflags>-Wl,-rpath,${BUILDDIR}/boost/lib ;" > tools/build/v2/user-config.jam
+  echo "using $toolset : : $CXX : <cxxflags>-std=gnu++0x <linkflags>-Wl,-rpath,${BUILDDIR}/${TCHOST}/lib ;" > tools/build/v2/user-config.jam
 fi
 
 ./bootstrap.sh --with-toolset=$toolset --without-icu
@@ -79,3 +79,9 @@ then
   done
 fi
 
+# when cross compiling we ned also the build system boost libraries
+if [ "$TCHOST" != "$TCBUILD" ]
+then
+  rm tools/build/v2/user-config.jam
+  ./bjam toolset=$toolset variant=release threading=single link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${BUILDDIR}/$TCBUILD install
+fi
