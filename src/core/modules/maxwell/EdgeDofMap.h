@@ -43,7 +43,7 @@ class EdgeDofMap {//TODO rename
 
     // Indeces for edge functions. function index -> Function info
     // Stored for all variables
-    std::vector<std::map<ItemId, FunctionInfo>> functionsIndeces;
+    std::vector<std::map<unsigned int, FunctionInfo>> functionsIndeces;
 
     // For each variable store:
     //     For each element store all indeces
