@@ -42,13 +42,6 @@ DriftDiffusionProperties::PointData::PointData(void)
 
 
 
-// we calculate in cm, therefore the factor 1e6
-// the electron charge enters because we take k*T in electron volts
-const double
-DriftDiffusionProperties::_DOS_factor = pow(2.0 * M_PI *
-    Constants::me / (Constants::h * Constants::h) *
-    Constants::e, 1.5) / 1e6;
-
 
 
 
@@ -467,7 +460,7 @@ DriftDiffusionProperties::create_recombination_models(void)
   for (; it != end; ++it)
   {
     ModelOptions opts(it->second);
-    if (opts.get_option("recombination_center", true))
+    if (opts.get_option("recombination_center", false))
     {
       it->second.delete_option("recombination_center");
       opts.set_option("trap", true);

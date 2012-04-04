@@ -83,6 +83,11 @@ public:
 
     Specie& operator= (const std::string& type);
 
+    bool operator==(const Specie& specie) const;
+
+    bool operator!=(const Specie& specie) const;
+
+
     //friend bool operator== (Type& type, std::string& type_string);
     //friend bool operator== (std::string& type_string, Type& type);
     friend bool operator== (const Specie& specie, const std::string& type_string);
@@ -145,6 +150,22 @@ void Specie::set_type(const std::string& type)
 {
  _type = Specie::string_to_specie[type];
 }
+
+
+inline
+bool
+Specie::operator==(const Specie& specie) const
+{
+  return (specie._type == _type);
+}
+
+inline
+bool
+Specie::operator!=(const Specie& specie) const
+{
+  return !operator==(specie);
+}
+
 
 //!Override comparison operator, allows:
 //! s == 'H'

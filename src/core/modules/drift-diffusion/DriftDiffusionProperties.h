@@ -800,17 +800,6 @@ class DriftDiffusionProperties : public PhysicalModel
     Tensor2Sym& get_strain(void);
 
 
-
-    //! Get the constant factor to calculate the effective density of states
-    /*!
-     * \return the factor pow(2 * PI / h^2)^1.5
-     *
-     * The spin degeneracy has to be included in the effective mass.
-     */
-    static double get_DOS_factor(void)
-      { return _DOS_factor; }
-
-
     //! Get the temperature interface
     TemperatureInterface& get_temperature_interface(void);
 
@@ -1018,13 +1007,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! The nodal lattice temperature
     std::vector<double> _nodal_lattice_vt;
-
-
-    //! The constant factor to calculate the effective density of states
-    /*!
-     * The spin degeneracy has to be included in the effective mass
-     */
-    static const double _DOS_factor;
 
 
     //! True if this is a dielectric

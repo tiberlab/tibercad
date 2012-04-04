@@ -197,9 +197,9 @@ AtomisticGenerator::do_init()
   std::string preserve;
   preserve = _as->get_options().get_option("preserve", "none");
   cut_and_change_specie(preserve);
-std::cout << "going to build random alloy ";
+
   if (_as->is_random_alloy()) build_random_alloy();
-std::cout << "done" ;
+
   std::string passivation;
   passivation = _as->get_options().get_option("passivation", "no");
 
@@ -346,7 +346,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
     //if it falls exactly on the boundary
     
     for ( std::vector<Atom>::iterator atom = _super_basis.begin();
-        atom != _super_basis.end(); atom++)
+        atom != _super_basis.end(); ++atom)
     {
 
       if (((progress_counter % progress_step) == 0) && ((progress_counter / progress_step) % 10 == 0)) 
@@ -607,6 +607,12 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 void
 AtomisticGenerator::build_random_alloy()
 {
+  Messages::newline();
+  Messages::info("Building random alloy ...");
+
+  Messages m;
+  m.indent();
+
   std::set<ID> IDs = _as->get_IDset();
   std::map<ID, std::map<unsigned int, Specie> > assign;
   std::map<ID, double> a_to_b_prob;
@@ -616,12 +622,13 @@ AtomisticGenerator::build_random_alloy()
   Tensor2Gen rotated_primvec;
 
   if (_as->is_random_alloy() == false)
-    Messages::error("build_random_alloy is called but AtomisticStructure is not"
+    Messages::error("build_random_alloy is called but AtomisticStructure is not "
         "a random alloy");
 
   Messages::debug("Running build_random_alloy()");
 
-  for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++)
+
+  for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
   {
     const Material* mat = _as->get_device()->get_material( (*reg) );
 
@@ -629,59 +636,148 @@ AtomisticGenerator::build_random_alloy()
     //then we only need to change it if the atoms belong to parent B
     if (mat->is_alloy())
     {
-        const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
-        mat = alloy->get_component_B();
+      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
+      mat = alloy->get_component_B();
 
-    Database db = mat->get_database();
+      Database db = mat->get_database();
 
-    db.set_section("atomistic_structure");
+      db.set_section("atomistic_structure");
 
-    //Build up conversion map from file
-    for (int i = 1; i <= db.get("n_basis_specie", 0); i++)
-    {
-      std::string record;
-      std::string s;
-      std::stringstream out;
-
-      out << i;
-      s = out.str();
-
-      record = "specie_" + s;
-      std::string db_record = db.get(record.c_str(),"none");
-      assign[*reg][i] = Specie(db_record);
-      //Note: probability to switch specie is 1-x
-      a_to_b_prob[*reg] = 1 - mat->get_options().get_option("x", 1.0);
-
-    }
-    //No more reading from section atomistic_structure in database are needed
-    db.set_section("");
-    }
-  }
-    //Cycle on atoms and change specie according to their belonging to alloy regions
-    //and random distribution weighted on molar fraction
-    //A random starting seed is needed to actually have different sequences
-    //srand(time(NULL));
-    std::mt19937 random(time(NULL));
-
-    for (unsigned int i = 0; i < _structure_basis.size(); i++)
-    {
-      Atom& atm = _structure_basis[i];
-      //Note: region_ID e material sono definiti solo per gli atomi appartenenti alla struttura
-      if (atm.belong_to_structure)
+      //Build up conversion map from file
+      for (int i = 1; i <= db.get("n_basis_specie", 0); i++)
       {
-        const Material* mat = _as->get_material(_structure_basis[i]);
-        if (mat->is_alloy())
-        {
-          //Calcolate the probability to change specie
-          //int random_n = rand() % 100;
-          if (random() < a_to_b_prob[atm.get_region_ID()] * random.max() )
-          {
-            atm.set_specie(assign[atm.get_region_ID()][atm.get_flag()]);
-          }
-        }
+        std::string record;
+        std::string s;
+        std::stringstream out;
+
+        out << i;
+        s = out.str();
+
+        record = "specie_" + s;
+        std::string db_record = db.get(record.c_str(),"none");
+        assign[*reg][i] = Specie(db_record);
+        //Note: probability to switch specie is 1-x
+        a_to_b_prob[*reg] = 1 - mat->get_options().get_option("x", 1.0);
+
       }
 
+      //No more reading from section atomistic_structure in database are needed
+      db.set_section("");
     }
+  }
+
+
+  //
+  // First we count for each region the number of atoms that have to be substituted
+  //
+
+  // these vectors have space for all regions, so we can access them in a fast way
+  std::vector<int> num_to_substitute(
+      *(std::max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1, 0);
+  std::vector<int> num_substituted(num_to_substitute.size(), 0);
+
+  for (unsigned int i = 0; i < _structure_basis.size(); i++)
+  {
+    const Atom& atm = _structure_basis[i];
+
+    // if it is flagged as first atom in the basis it may be substituted
+    if (atm.belong_to_structure && (atm.get_flag() == 1))
+    {
+      ID regid = atm.get_region_ID();
+      const Material* mat = _as->get_material(atm);
+      if (mat->is_alloy())
+        num_to_substitute[regid] += 1;
+    }
+  }
+
+  // this set is used to check if we have to do something
+  std::set<ID> not_finished;
+
+  for (int i = 0; i < num_to_substitute.size(); ++i)
+  {
+    if (num_to_substitute[i] > 0)
+    {
+      double x = a_to_b_prob[i];
+      // NOTE: we use floor() here to not have any fluctuation due to numerical
+      // roundoff errors
+      num_to_substitute[i] = std::floor(x * num_to_substitute[i]);
+      std::ostringstream os;
+      os << "Region " << i << ": x = " << (1-x) << " -> " << num_to_substitute[i] <<
+          " atoms to be substituted" << std::endl;
+      Messages::info(os.str());
+
+      not_finished.insert(i);
+    }
+  }
+
+  //A random starting seed is needed to actually have different sequences
+  std::mt19937 generator(time(NULL));
+
+  //
+  // Now we extract random numbers between 0 and _structure_basis.size() - 1
+  // to randomly pick an atom. If it is flagged as 1, and is in aregion where
+  // atoms need to be substituted, and is not already substituted it will be changed.
+  // This is repeated until in all regions we have substituted the required number
+  // of atoms.
+  //
+
+  std::uniform_int<size_t> random(0, _structure_basis.size() - 1);
+  size_t ctr = 0;
+  for (; !not_finished.empty(); ++ctr)
+  {
+    size_t id = random(generator);
+    Atom& atm = _structure_basis[id];
+    if (atm.belong_to_structure && (atm.get_flag() == 1))
+    {
+      ID regid = atm.get_region_ID();
+      if (num_substituted[regid] < num_to_substitute[regid])
+      {
+        // NOTE: random numbers may repeat, so we have to check if this atom
+        // has already been substituted!!
+        Specie sp(assign[regid][atm.get_flag()]);
+        if (atm.get_specie() != sp)
+        {
+          atm.set_specie(sp);
+          ++num_substituted[regid];
+        }
+      }
+      else
+        not_finished.erase(regid);
+    }
+  }
+
+  size_t subst = 0;
+  for (int i = 0; i < num_substituted.size(); ++i)
+    subst += num_substituted[i];
+
+  std::ostringstream os;
+  os << "Needed " << ctr << " random number extractions to substitute " << subst << " atoms";
+  Messages::info(os.str());
+  Messages::newline();
+
+/*
+  //Cycle on atoms and change specie according to their belonging to alloy regions
+  //and random distribution weighted on molar fraction
+  for (unsigned int i = 0; i < _structure_basis.size(); i++)
+  {
+    Atom& atm = _structure_basis[i];
+    //Note: region_ID e material sono definiti solo per gli atomi appartenenti alla struttura
+    if (atm.belong_to_structure)
+    {
+      const Material* mat = _as->get_material(_structure_basis[i]);
+      if (mat->is_alloy())
+      {
+        //Calcolate the probability to change specie
+        //int random_n = rand() % 100;
+        if (random() < a_to_b_prob[atm.get_region_ID()] * random.max() )
+        {
+          atm.set_specie(assign[atm.get_region_ID()][atm.get_flag()]);
+        }
+      }
+    }
+
+  }
+*/
 }
 
 //Note:: make_supercell is called only with preserve_basis and preserve_conv
@@ -939,10 +1035,10 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
 
           do{
             basis_atom = (*basis_iterator);
-            basis_atom.set_position ( _local_origin + lattice_point+
+            basis_atom.set_position ( _local_origin + lattice_point +
                 _rotation*_prim_vec*(*basis_iterator).get_ttype_position() );
             _super_basis.push_back(basis_atom);
-            basis_iterator++;
+            ++basis_iterator;
 
           }while(basis_iterator != _crystal_basis.end());
 

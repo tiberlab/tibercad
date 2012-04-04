@@ -655,7 +655,7 @@ include the charged trap densities:
 
    \rho = e\left(p - n + N^+_D - N^-_A - \sum n_t + \sum p_t + \sum N^+_t - \sum N^-_t \right)
 
-Additionally, each trap induces a SRH recombination term of the form
+Additionally, each trap can induces a SRH recombination term of the form
 
 .. math::
    :label: dd_eq_trapsrh
@@ -668,6 +668,9 @@ where :math:`\sigma^{n,p}` are the capture cross sections, :math:`v_{th}^{n,p}` 
    :label: dd_eq_n1p1
 
    n_1 = n_{i,\mathrm{eff}}\exp(E_{trap}/k_BT),\quad p_1 = n_{i,\mathrm{eff}}\exp(-E_{trap}/k_BT)
+
+The recombination model associated with a trap has to be enabled explicitly by using the option
+``recombination_center = true`` in the trap definition.
    
 
 
