@@ -18,7 +18,7 @@
 #include <map>
 #include <set>
 #include <ctime>
-#include <random>
+#include <tr1/random>
 
 
 
@@ -711,7 +711,7 @@ AtomisticGenerator::build_random_alloy()
   }
 
   //A random starting seed is needed to actually have different sequences
-  std::mt19937 generator(time(NULL));
+  std::tr1::mt19937 generator(time(NULL));
 
   //
   // Now we extract random numbers between 0 and _structure_basis.size() - 1
@@ -721,7 +721,7 @@ AtomisticGenerator::build_random_alloy()
   // of atoms.
   //
 
-  std::uniform_int<size_t> random(0, _structure_basis.size() - 1);
+  std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
   size_t ctr = 0;
   for (; !not_finished.empty(); ++ctr)
   {
