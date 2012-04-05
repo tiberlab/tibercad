@@ -175,6 +175,9 @@ public:
 
 
 private:
+  
+    //!Override lattice vectors from structure generation
+    void parse_lattice_vectors(void); 
 
      //! Initialize the structure using mesh infos
     void init_mesh_structure(void);

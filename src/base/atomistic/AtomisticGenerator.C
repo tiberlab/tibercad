@@ -233,9 +233,6 @@ AtomisticGenerator::do_init()
   std::cout << "At the end structure basis is sized " << _structure_basis.size() << std::endl;
   //-------------------------------------------------------------
 
-  bond_map_gen(_structure_basis);
-
-  //----------------------------------------------------------------------------------------------
 
 
 
@@ -246,11 +243,7 @@ AtomisticGenerator::do_init()
   Atom tmp_atom;
   //TODO:not safe, better swap arrays, so then we can delete AtomisticGenerator instance
   _as->set_structure_atoms(_structure_basis);
-  //for (int i = 0; i < 3 ; i++){
-  //  for (int j = 0; j < 3 ; j++){
-  //    _as->_periodicity_vectors[i][j] = _period(i+1,j+1);
-  //  }
-  // }
+  
   _as->set_periodicity_vectors(_period);
 
   _as->set_N_atoms( _structure_basis.size() );
@@ -265,15 +258,7 @@ AtomisticGenerator::do_init()
 
   _as->clear_atom_types();
 
-  //for (std::set<std::string>::iterator types = atom_types.begin(); types != atom_types.end(); types++)
-  //{
-  //  _as->_atom_types.push_back(*types);
-  //}
   _as->set_atom_types(atom_types);
-
-  //Passing bondmap object (deallocation will be managed by AtomisticStructure, setting local pointer NULL)
-  _as->set_bondmap(_bondmapobject);
-  _bondmapobject = NULL;
 
 };
 

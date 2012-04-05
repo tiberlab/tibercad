@@ -26,7 +26,8 @@
 AtomisticStructure::AtomisticStructure()
 :_bondmap(NULL),
  _device(NULL),
- _random_alloy(false)
+ _random_alloy(false),
+  _atom_types()
 {
   N_atoms = 0;
   for (unsigned int i = 0; i < 9; i++)
@@ -42,7 +43,8 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
  _atomistic_structure_options(),
  _scale(1.0),
  _device(NULL),
- _random_alloy(false)
+ _random_alloy(false),
+_atom_types()
 {
   // Default initializations
   N_atoms = 0;
@@ -164,11 +166,40 @@ AtomisticStructure::init(const std::string& name,
       Messages::info(os.str(), true);
       os.str(std::string());
       //---------------------------------------------------------------
-
     }
 
 }
 
+void
+AtomisticStructure::parse_lattice_vectors(void)
+//Overrides supercell options
+{
+  if (_options.find_option("lattice_vectors"))
+  {
+    std::vector<double> lattice_vectors;
+    _options.get_option("lattice_vectors", lattice_vectors);
+ 
+    if (lattice_vectors.size() == 3)
+    {  
+       _atomistic_structure_options.is_periodical = true;
+       _periodicity_vectors[0] = lattice_vectors[0];
+       _periodicity_vectors[4] = lattice_vectors[1];
+       _periodicity_vectors[8] = lattice_vectors[2];
+    }
+ 
+    else if (lattice_vectors.size() == 9)
+    {
+       for (int i = 0; i < 9; i++)
+       {
+         _atomistic_structure_options.is_periodical = true;
+         _periodicity_vectors[i] = lattice_vectors[i]; 
+       }
+    }
+ 
+    else Messages::error("lattice_vectors must have 3 or 9 components");
+  }
+
+} 
 
 void
 AtomisticStructure::init(const std::string& filename)
@@ -310,6 +341,7 @@ AtomisticStructure::init_mesh_structure()
   if ( _device->get_mesh().mesh_dimension() == 3 ) generate = static_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
 
   generate->do_init();
+  parse_lattice_vectors();
   build_bond_map();
 
   //if (_atomistic_structure_options.is_associated == false) associate_elements();
@@ -865,7 +897,9 @@ AtomisticStructure::print_structure(const std::string& path)
       for (unsigned int i = 0; i < 3; i++)
         {
           for (unsigned int j = 0; j < 3; j++)
-            {
+            { 
+              std::cout << "I'm writing";
+              std::cout << _periodicity_vectors[count];
               file << std::setw(20) << std::setprecision(10) << std::fixed <<
                   _periodicity_vectors[count];
               count++;
