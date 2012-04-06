@@ -172,7 +172,9 @@ ETB::do_init(void){
 
 
   // Get database path from Database class
-  std::string database_path = Database::get_default_search_path();
+//  std::string database_path = Database::get_default_search_path();
+  std::string database_path = get_option("database_path",Database::get_search_path());
+
   std::string work_path = ".";
   std::string gen_outfile = "out.gen";
   std::string out_path = get_output_directory();
@@ -720,9 +722,9 @@ ETB::plot_globaldata(void)
     for (unsigned int i = 0; i < _solution.size(); i++)
     {
         file << setw(7) << i << setw(8) << _solution[i].particle 
-             << setw(11) << _solution[i].eigen_energy << " "
+             << setw(14) << _solution[i].eigen_energy << " "
              << setw(14) << get_population(i) << " "
-             << setw(11) << _solution[i].electro_chem_pot << " "
+             << setw(14) << _solution[i].electro_chem_pot << " "
              << setw(11) << _solution[i].temperature << "\n";
     }
   }
