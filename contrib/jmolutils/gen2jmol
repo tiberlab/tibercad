@@ -1,0 +1,20 @@
+#!/bin/csh -f
+
+if ($#argv < 4) then
+ echo "gen2xyz str.gen na nb nc"
+ exit
+endif
+
+gen2xyz $1 >! ${1}.xyz
+
+set a = `awk '{if($1==0 && $2==0 && $3==0){getline; print $1;}}' $1`
+set b = `awk '{if($1==0 && $2==0 && $3==0){getline; getline; print $2}}' $1`
+set c = `awk '{if($1==0 && $2==0 && $3==0){getline; getline; getline; print $3}}' $1`
+
+echo "load '"${1}.xyz"' {"$2 $3 $4"}  spacegroup 'x,y,z' unitcell {" $a $b $c "90 90 90}" | tee scr.jmol
+
+echo "To view in jmol use:"
+echo "jmol -s scr.jmol"
+ 
+
+
