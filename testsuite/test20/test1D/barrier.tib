@@ -21,15 +21,40 @@ Device
 
    Region barrier1
    {
-    material = AlAs      
+     #material = AlAs           
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
+    
    }
 
    Region barrier2
    {
-     material = AlAs           
+    #material = AlAs           
+    Doping {
+       type = donor
+       Nd = 2e18 
+     }
    }
 
-  Region drain_region
+   Region drain_region
+   {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region dd_drain_region
+   {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+   
+   Region dd_source_region
    {
      Doping {
        type = donor
@@ -39,24 +64,29 @@ Device
 
    Region well
    {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
    }
 
-   Cluster barrier
+   Cluster double_barrier
    {
-    regions=(barrier1, well, barrier2)
+    regions=(source_region,barrier1, well, barrier2,drain_region)
    }
 
    
    Quantum_contact int_source
    {
-    regions = barrier1  
-    length = 0.13
+    regions = source_region  
+    length = 0.05
    }
+
 
    Quantum_contact int_drain
    {
-    regions = barrier2 
-    length = 0.13
+    regions = drain_region
+    length = 0.05
    }
 
 }
@@ -64,8 +94,8 @@ Device
 
 # Definition of  Simulation Models  and associated Boundary Conditions 
 Module driftdiffusion
-{ 
-  regions = (source_region,drain_region,barrier1,barrier2,well)
+{
+  regions=(dd_source_region, source_region,barrier1, well, barrier2,drain_region, dd_drain_region)
   # is default
   # statistics = fermidirac
 
@@ -84,8 +114,11 @@ Module driftdiffusion
     #{
     #  model = srh
     #}
-
-   }
+  particle_density
+  {
+   statistics =  fermidirac
+  } 
+ }
 
   Contact source
   {
@@ -103,24 +136,32 @@ Module driftdiffusion
 Module sweep
 {
   name = sweep_drain 
-  solve = driftdiffusion
+  solve = (driftdiffusion,negf)
   variable = $Vd
   start = 0
-  stop = 1
-  steps = 25
+  stop = 0.10
+  steps = 1 
   plot_data = true
 }
 
 Module negf
 {
-  plot = ReorderPotential
-  regions = (barrier1,well,barrier2)
+  plot = (Current) 
+  regions = double_barrier
+
   potential_simulation = driftdiffusion
   Boundary int_source{}
   Boundary int_drain{}
-  
+
+ 
   Solver
   {
+    #verbosity = 99 
+    Np_contour = (20,20)
+    Np_real = 50
+    Npoles = 3 
+    delta = 2e-3
+    deltaEc = 0.25
     Emin = -0.6
     Emax = 0.6 
     Estep = 0.01
@@ -132,16 +173,59 @@ Module negf
      hamiltonian single_band {valley = G}
   }
   
+  k_integration_density
+  {
+   k_max = 0.750
+   number_of_elements = (4,4)
+  }
+
+  k_integration_current
+  {
+   k_max = 0.10
+   number_of_elements = (2,2)
+  }
+
+
 }
+
+Module efaschroedinger
+{
+  name = quantum_el
+
+  regions = double_barrier 
+  
+  particle = el
+  poisson_model_name = driftdiffusion
+
+  plot = (EigenFunctions, EigenEnergy, EnergyLevels,ProbabilityDensity,QuantumDensity)
+
+  Solver
+  {
+    number_of_eigenstates = 4 
+  }	
+
+
+  Physics
+  {
+    model = conduction_band
+
+    #model = kp   #  k.p  for  valence  band
+    #kp_model = 8x8
+  }
+
+}
+
 
 
 # Definition of  model-independent parameters of the Simulation
 Simulation
 {
   temperature = 300
-  solve = (driftdiffusion, negf)
+  #solve = (driftdiffusion,negf) 
+  solve = (sweep_drain)
   resultpath = output
-  output_format = vtk
+  scratchpath = /work/fpalomba/GS
+  output_format = grace 
 }
 
 

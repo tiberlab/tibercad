@@ -33,7 +33,7 @@ public:
   int init();
 
   //!Compute current
-  int current();
+  double current();
 
   //!Compute charge density
   int density(std::vector<double>& density);
@@ -44,6 +44,9 @@ public:
   //!Set scratch folder path
   void set_scratch_path(std::string path);
 
+  //!Set scratch folder path
+  void set_output_path(std::string path);
+
   //!Clean the Negf instance variable space
   void clean_libnegf();
 
@@ -52,6 +55,9 @@ public:
 
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);
+
+  //! Set what to do with outer parts 0=none; 1=upper block; 2=full
+  void device_contact_dm(int outer);
 
   //! Get library version
   void get_version(void);

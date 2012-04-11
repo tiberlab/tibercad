@@ -20,9 +20,10 @@
 #include <map>
 
 
-//typedef std::map <const Elem*, double> DofField;
 //! Definition of DofField that maps a dof index to a double.
 typedef std::vector<double> DofField;
+// TO DO Change in NumericVector:
+//typedef NumericVector<double> DofField;
 
 class KspaceIntegration : public TiberModelObject 
 {
@@ -67,6 +68,7 @@ class KspaceIntegration : public TiberModelObject
   DofField get_solution(void) const;
  
   void get_solution(DofField& density) const; 
+
 
  protected:
 

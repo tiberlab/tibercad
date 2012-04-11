@@ -76,6 +76,8 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
   //! sets temperature
   virtual void set_temperature(double Temperature) {};
 
+  double get_degeneracy(void);
+
 
  protected:
 
@@ -121,8 +123,9 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
   //!map between band numbers  
   std::map <short, short> kp_bands_map;
   
-   void set_rotation_matrix(void);
+  void set_rotation_matrix(void);
  
+  unsigned int _degeneracy;
 
  private:
 };

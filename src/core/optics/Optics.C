@@ -2,7 +2,7 @@
 
 #include "Optics.h"
 #include "EigenvalueProblem.h"
-#include "KspaceIntegration.h"
+//#include "KspaceIntegration.h"
 #include "KspaceIntegrationTemplate.h"
 #include "SimulationInterface.h"
 #include "SimulationOptions.h"

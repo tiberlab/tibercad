@@ -5,18 +5,16 @@
 
 #include "SimulationInterface.h"
 #include "EigenvalueProblem.h"
+#include "KspaceIntegration.h"
 
 class Mesh;
 class Elem;
 class Tensor1;
-class KspaceIntegration;
 //! A base class of optics calculation
 /*!
  * The task of this class is to calculate the spectrum at a certain given
  * k-point and compute k-space integrations of the spectrum
  */
-//typedef std::map<const Elem*, double> DofField;
-typedef std::vector<double> DofField;
 
 
 class Optics : public SimulationInterface

@@ -385,7 +385,8 @@ Device::setup_quantum_contacts(void)
 
     const string& name = data.get_name();
 
-    const string& region = data.get_option("regions","none");
+    string regions("");
+    regions = data.get_option("regions",regions);
 
     double length = data.get_option("length", 0.5);
 
@@ -393,17 +394,25 @@ Device::setup_quantum_contacts(void)
     Messages::info("Creating quantum contact "+name);
 
     std::vector<ID> rg_ids, bd_ids;
+    std::set<ID> ids;
 
     // We get mesh regions (not active regions).
-    // Only one region is allowed for the moment
-    get_mesh_region_ids(region, rg_ids);
+
+    extract_physical_regions(regions, ids);
+
+    rg_ids = QuantumContact::set2vec(ids);
+
+    //for (int n=0; n<rg_ids.size();n++)
+    //std::cout << "rg_ids: "<< rg_ids[n]<<std::endl;
 
     if (rg_ids.size()==0)
       throw InitFailedException("In Quantum_contact user must define a valid mesh region");
 
     get_boundary_region_ids(name, bd_ids);
+    //for (int n=0; n<bd_ids.size();n++)
+    //std::cout << "bd_ids: "<< bd_ids[n]<<std::endl;
 
-    ID newid = _mesh_region_info->next_id();
+    ID  newid = _mesh_region_info->next_id();
 
     QuantumContact* st = QuantumContact::create();
 
@@ -416,6 +425,8 @@ Device::setup_quantum_contacts(void)
     _mesh_region_info->set_name(newid, name);
 
     std::vector<ID> vid(1, newid);
+
+    // Only one material/region can be created !!
     set_material(get_material(rg_ids[0]), vid, name);
 
     // We have to erase the region id from the list of active regions, otherwise

@@ -10,6 +10,8 @@
 #include "Messages.h"
 #include "InitFailedException.h"
 #include "PotentialInterface.h"
+#include "KspaceIntegration.h"
+#include "KspaceIntegrationTemplate.h"
 
 // Basic include files needed for the mesh functionality.
 #include "fe.h"
@@ -17,6 +19,7 @@
 // Define generic quadrature rules.
 #include "quadrature.h"
 #include "quadrature_gauss.h"
+#include "quadrature_trap.h"
 #include "mesh.h"
 
 // Define useful datatypes for finite element
@@ -59,6 +62,8 @@ Negf::Negf(const ModelOptions& options) :
                               SimulationInterface(options)
 {
   _device_n_dofs = 0;
+  _k_int_density = NULL;
+  _k_int_current = NULL;
   _libnegf = NegfWrapper::create();
 
   this->has_solution_vector(false);
@@ -122,21 +127,16 @@ Negf::do_init(void)
       qc->activate_elements();
     }
   }
+  // get the number of subbands.
+   const MeshBase& mesh = get_mesh();
+   MeshBase::const_element_iterator el = mesh.active_elements_begin();
+   const Elem* elem = *el;
 
-}
-
-void
-Negf::setup_effectivemass_hamil()
-{
+  NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
   // Setup a simple effective mass Hamiltonian
+  std::cout<<"(negf) create eq sys for H"<<std::endl;
   ID id = create_equation_system("linear");
   _sys_H = &get_equation_system<TiberLinearSystem>(id);
-
-  // get the number of subbands.
-  const MeshBase& mesh = get_mesh();
-  MeshBase::const_element_iterator el = mesh.active_elements_begin();
-  const Elem* elem = *el;
-  NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
 
   // attach a variable for each subband
   for (unsigned int band=0; band < negfmod->get_n_bands(); band++)
@@ -148,6 +148,8 @@ Negf::setup_effectivemass_hamil()
 
   _sys_H->add_matrix("Hi");
 
+  // Setup Overlap matrix
+  std::cout<<"(negf) create eq sys for S"<<std::endl;
   id = create_equation_system("linear");
   _sys_S = &get_equation_system<TiberLinearSystem>(id);
 
@@ -161,12 +163,91 @@ Negf::setup_effectivemass_hamil()
 
   _sys_S->add_matrix("Si");
 
+
+  // attach system for reorder dofs
+  std::cout<<"(negf) get eq sys for reorder"<<std::endl;
+  id = create_equation_system("linear");
+  _sys = &get_equation_system<TiberLinearSystem>(id);
+
+  // We add a second system just to contain the density
+  if (plot_solution(eDensity))
+  {
+    std::cout<<"(negf) create eq sys for eDensity"<<std::endl;
+    id = create_equation_system("linear");
+    _qdens_sys = &get_equation_system<TiberLinearSystem>(id);
+    _qdens_sys->add_variable("edens", libMeshEnums::FIRST);
+    //_qdens_sys->add_variable("hdens", libMeshEnums::FIRST);
+
+  }
+
   _sys_H->attach_assemble_function(ham_assemble);
 
   _sys_H->init();
   _sys_S->init();
 
+  init_k_space_integration();
+
+  activate_quantum_contacts();
+
   reorder(); // dof indices reorder
+
+}
+
+void
+Negf::do_reinit(void)
+{
+  //std::cout<<"(negf) clean up libnegf"<<std::endl;
+   _libnegf->clean_libnegf();
+
+   //std::cout<<"(negf) clear systems"<<std::endl;
+
+}
+
+void
+Negf::init_k_space_integration(void)
+{
+  if (get_options().has_submodel("k_integration_density"))
+  {
+    //-----------------DENSITY ---------------------------------------------
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_density"));
+    ModelOptions& kopts = it->second;
+
+    kopts.set_option("mesh_units",get_mesh_units());
+    kopts.set_option("k_space_dimension",3 - get_mesh().mesh_dimension());
+    kopts.set_option("verbose", SimulationOptions::verbose() );
+
+
+    _k_int_density = KspaceIntegrationTemplate<Negf>::create(this,kopts);
+
+    if (_k_int_density == NULL)
+      throw InitFailedException("Could not create k-integration");
+
+    _k_int_density->init();
+  }
+  //------------------CURRENT --------------------------------------------------
+  if (get_options().has_submodel("k_integration_current"))
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_current"));
+    ModelOptions& kopts = it->second;
+
+    kopts.set_option("mesh_units",get_mesh_units());
+    kopts.set_option("k_space_dimension",3 - get_mesh().mesh_dimension());
+    kopts.set_option("verbose", SimulationOptions::verbose() );
+
+    _k_int_current = KspaceIntegrationTemplate<Negf>::create(this,kopts);
+
+    if (_k_int_current == NULL)
+      throw InitFailedException("Could not create k-integration");
+
+    _k_int_current->init();
+
+  }
+}
+
+void
+Negf::setup_effectivemass_hamil()
+{
+  do_reinit();
 
   _sys_H->assemble();
 
@@ -176,39 +257,63 @@ Negf::setup_effectivemass_hamil()
 
   _libnegf->init();
 
-  // We add a second system just to contain the density
-  id = create_equation_system("linear");
-  _qdens_sys = &get_equation_system<TiberLinearSystem>(id);
-  _qdens_sys->add_variable("edens", libMeshEnums::FIRST);
-  _qdens_sys->add_variable("hdens", libMeshEnums::FIRST);
-  _qdens_sys->init();
+  _libnegf->set_verbose(opt.verbosity);
+
+  _libnegf->set_iteration(1);
+
+  //Messages::info("setting scratch path to "+SimulationOptions::scratch_path);
+  _libnegf->set_scratch_path(SimulationOptions::scratch_path);
+
+  _libnegf->set_output_path(get_output_directory());
+
+  // set not to compute Device-Contact blocks
+  _libnegf->device_contact_dm(0);
 
 }
 
 void
 Negf::compute_current(void)
 {
-  _libnegf->set_verbose(90);
-  _libnegf->current();
+  _libnegf->set_verbose(opt.verbosity);
+
+  //std::cout << _libnegf->current() << std::endl;
+
+  current.clear();
+  current.resize(2,0.0);
+  current[0] = _libnegf->current();
+  current[1] = -current[0];
 }
 
 void
 Negf::do_solve(void)
 {
   activate_quantum_contacts();
-  setup_effectivemass_hamil();
+
+  //reorder(); // dof indices reorder
 
   if ( plot_solution("eDensity") )
   {
-    _libnegf->set_verbose(90);
+    Messages::info("Computing Density");
 
-    _libnegf->set_iteration(1);
+    _qdens_sys->init();
 
-    Messages::info("setting scratch path to "+SimulationOptions::scratch_path);
+    if (get_options().has_submodel("k_integration_density"))
+    {
+      _which_integration = 1;
 
-    _libnegf->set_scratch_path(SimulationOptions::scratch_path);
+      _k_int_density->solve();
 
-    calculate_density("el");
+      density = _k_int_density->get_solution();
+
+    }
+    else
+    {
+      _k_vec.zero();
+
+      setup_effectivemass_hamil();
+
+      calculate_density("el");
+    }
 
     Messages::info("Density done");
 
@@ -219,33 +324,160 @@ Negf::do_solve(void)
   {
     Messages::info("Computing Current");
 
-    compute_current();
+    if (get_options().has_submodel("k_integration_current"))
+    {
+      _which_integration = 3;
+
+      _k_int_current->solve();
+
+      current = _k_int_current->get_solution();
+
+    }
+    else
+    {
+       _k_vec.zero();
+
+       setup_effectivemass_hamil();
+
+       compute_current();
+    }
+
+    double u = get_mesh_units();
+    unsigned int dim = get_mesh().mesh_dimension();
+    double area_factor;
+
+    switch (dim)
+    {
+      case 1:
+        area_factor = 1e14;  // k^2 is in 1/nm^2 => 1e14 1/cm^2
+        break;
+      case 2:
+        area_factor = 1e7;
+        break;
+      case 3:
+        area_factor = 1.0;
+    }
+
+    ID id = 0;
+    std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
+    const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
+    for (; it != end; ++it)
+    {
+      _contact_current[it->second] = current[id] * area_factor;
+      id++;
+    }
+
+    Messages::info("Current done");
   }
+
 
 }
 
 void
+Negf::calculate_for_k_point(const Point& k_point,
+                                   DofField& field,
+                                   double& error)
+{
+   for(short i=0;i<3;i++) _k_vec(i) = k_point(i);
+
+   std::cout << "k-point: "<<_k_vec(0)<<" "<<_k_vec(1)<<" "<<_k_vec(2)<<std::endl;
+
+   setup_effectivemass_hamil();
+
+   if (_which_integration == 1)
+   {
+       calculate_density("el");
+       NumericVector<Number>& qdens = *_qdens_sys->solution;
+
+       field.clear();
+       field.reserve(_device_n_dofs);
+
+       for (unsigned int el=0; el < _device_n_dofs; el++)
+         field.push_back(qdens(el));
+
+       error = 0.0;
+
+       return;
+   }
+
+   if (_which_integration == 2)
+   {
+       return;
+   }
+
+
+   if (_which_integration == 3)
+   {
+       field.clear();
+       double curr = _libnegf->current();
+       std::cout<<"current: "<< curr<<std::endl;
+       field.push_back(curr);
+       field.push_back(-curr);
+       error = 0.0;
+       return;
+   }
+
+}
+
+
+void
 Negf::calculate_density(const std::string& particle)
 {
+  double u = get_mesh_units();
+  unsigned int dim = get_mesh().mesh_dimension();
 
+  deactivate_quantum_contacts();
+
+  // compute total number of n_vars n_dofs
   unsigned int n_vars = _sys_H->n_vars();
+  unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
 
   int particle_id;
 
   if (particle == "el") particle_id = _qdens_sys->variable_number("edens");
   if (particle == "hl") particle_id = _qdens_sys->variable_number("hdens");
 
-  std::vector<double> density(_device_n_dofs * n_vars);
+  std::vector<double> density(_device_n_dofs * n_vars, 0.0);
 
+  //-------------------------------------------------------
+  // HERE WE COMPUTE DENSITY!
+  //-------------------------------------------------------
   _libnegf->density(density);
 
-  NumericVector<Number>& qdens = *_qdens_sys->solution;
-  qdens.zero();
+  // ---- debug ---------------------------------------------
+  std::string out_file = "density.dat";
+  std::fstream ff(out_file.c_str(),std::fstream::out);
+  for (unsigned int i = 0; i < density.size(); i++)
+        ff<< density[i] <<std::endl;
+  ff.close();
+  // ---------------------------------------------------------
+
+
+  double equ;
+  switch (dim)
+  {
+    case 1:
+      equ = 1.0e14/(u*1.0e2); //  k^2 is in 1/nm^2 => 1e14 1/cm^2  / mesh_units -> cm
+      break;
+    case 2:
+      equ = 1.0e7/(u*u*1.0e4); //
+      break;
+    case 3:
+      equ = 1.0/(u*u*u*1.0e6);
+  }
+
   DofMap& dof_map_qdens = _qdens_sys->get_dof_map();
   std::vector<unsigned int> dof_indices_qdens;
+  // setup output vector qdens
+  NumericVector<Number>& qdens = *_qdens_sys->solution;
+  qdens.zero();
 
+  // compute connectivity of each node
   // we need the connectivity of the nodes to not double count
-  std::vector<int> connectivity(qdens.size(), 0.0);
+  //std::vector<int> connectivity(_device_n_dofs * n_vars, 0);
+  //std::cout<<"qdens.size: "<<qdens.size()<<std::endl;
+
+  std::vector<int> connectivity(qdens.size(), 0);
   {
     MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
     const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
@@ -253,23 +485,26 @@ Negf::calculate_density(const std::string& particle)
     {
       const Elem* elem = *el;
       dof_map_qdens.dof_indices(elem, dof_indices_qdens, particle_id);
+
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
         connectivity[dof_indices_qdens[n]]++;
     }
   }
 
 
-  // The qdens_sys system contains the nodal quantum density
+  // The _sys_H system contains the nodal dofmap (all variables)
   DofMap& dof_map = _sys_H->get_dof_map();
   std::vector<unsigned int> dof_indices;
 
   MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
   const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+
   for ( ; el != end_el; ++el)
   {
     const Elem* elem = *el;
 
     NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
+
     dof_map_qdens.dof_indices(elem, dof_indices_qdens, particle_id);
 
     for (int band = 0; band < n_vars; band++)
@@ -278,12 +513,21 @@ Negf::calculate_density(const std::string& particle)
 
       double deg = negfmod->get_degeneracy(band);
 
+
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
-        double dens = _perm[density[n]];
-        double val =  deg * dens / connectivity[dof_indices_qdens[n]];
-        qdens.add(dof_indices_qdens[n], val);
+
+        double dens = density[_inv_perm[dof_indices[n]]];
+
+        //std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
+
+        double val = equ * deg * dens / connectivity[dof_indices_qdens[n]];
+
+        qdens.add( dof_indices_qdens[n], val);
       }
+
+      //for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      //std::cout<<connectivity[ dof_indices_qdens[n]]<<std::endl;
 
     }
   }
@@ -313,24 +557,74 @@ Negf::parse_options(void)
 
   opt.Np_real = sol_opt.get_option("Np_real",10);
 
+  opt.DEc = sol_opt.get_option("deltaEc", 0.25);
+
+  opt.DEv = sol_opt.get_option("deltaEv", 0.25);
+
+  opt.n_poles = sol_opt.get_option("Npoles", 3);
+
+  opt.n_kT = sol_opt.get_option("n_kT", 10);
+
+  opt.verbosity = sol_opt.get_option("verbosity",0);
   //sol_opt.check_unused();
+
+  opt.delta = sol_opt.get_option("delta",1e-5);
 }
 
 void
 Negf::do_setup_solution_variables(void)
 {
-  unsigned int dim = get_mesh().mesh_dimension();
-  std::string units("/cm");
-  if (dim == 2)
-    units = "/cm^2";
-  else if (dim == 3)
-    units = "/cm^3";
 
 
   declare_solution(ReorderPotential, REAL, NODES, "1");
-  declare_solution(eDensity, REAL, CELL, "q"+units);
-  declare_solution(hDensity, REAL, CELL, "q"+units);
-  declare_solution(CurrentDensity, REAL, CELL, "A/cm^2");
+  declare_solution(eDensity, REAL, NODES, "1/cm^3");
+  declare_solution(hDensity, REAL, NODES, "1/cm^3");
+  declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
+
+
+  if (plot_solution("Current"))
+  {
+
+    std::cout<<"Setup contact currents"<<std::endl;
+
+    std::set<std::string> cnt_set;
+
+    SimulationEnvironment::BoundaryIterator it = get_environment().boundaries_begin();
+    const SimulationEnvironment::BoundaryIterator end = get_environment().boundaries_end();
+
+    for ( ; it != end; ++it)
+    {
+      const Boundary* bd = (*it);
+      if (bd != NULL)
+      {
+        std::cout<<bd->get_name()<<std::endl;
+
+        std::string name(bd->get_name() + ".current");
+
+        add_plot_variable(name);
+
+        cnt_set.insert(name);
+      }
+
+      // now we declare them
+      unsigned int dim = get_mesh().mesh_dimension();
+      std::string units("A");
+      if (dim == 1)
+        units = "A/cm^2";
+      else if (dim == 2)
+        units = "A/cm";
+
+      unsigned int id = static_cast<ID>(ContactCurrents);
+      for (std::set<std::string>::iterator i(cnt_set.begin()); i != cnt_set.end(); ++i)
+      {
+        ++id;
+        declare_solution_ext(*i, id, SolutionDescriptor::REAL,
+            SolutionDescriptor::GLOBAL, units);
+      }
+
+    }
+
+  }
 
 }
 
@@ -339,9 +633,21 @@ Negf::plot_globaldata (void)
 {
   if ( plot_solution("Current") )
   {
+    std::string out_file = get_output_directory()+"/current.dat";
 
+    std::fstream ff(out_file.c_str(), std::fstream::out);
+
+    std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
+    const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
+    for (; it != end; ++it)
+    {
+      ff<< _contact_current[it->second] << "  ";
+    }
+    ff << std::endl;
+    ff.close();
   }
 }
+
 
 void
 Negf::ham_assemble(EquationSystems& es, const std::string& system_name)
@@ -384,14 +690,9 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
   AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
 
   QGauss qrule(dim, THIRD);
+  //QTrap qrule(dim);
 
   fe->attach_quadrature_rule(&qrule);
-
-  AutoPtr<FEBase> fe_face(FEBase::build(dim, fe_type));
-
-  QGauss qface(dim-1, THIRD);
-
-  fe_face->attach_quadrature_rule(&qface);
 
   const std::vector<Real>& JxW = fe->get_JxW();
 
@@ -412,6 +713,12 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
   //ACTIVATE QC
   activate_quantum_contacts();
+
+  // Zero H and S
+  _sys_H->matrix->zero();
+  _sys_H->get_matrix("Hi").zero();
+  _sys_S->matrix->zero();
+  _sys_S->get_matrix("Si").zero();
 
   //ITERATION OVER ACTIVE DEVICE REGION
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
@@ -475,6 +782,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
             Sr(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp];
             Hr(i,j) += JxW[qp]* newconst * dphi[i][qp] * (invMass*dphi[j][qp]);
             Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
+            Hr(i,j) += JxW[qp] * newconst * (_k_vec * (invMass * _k_vec)) * phi[i][qp] * phi[j][qp];
           }
 
       new_dof_indices.resize(n_dofs);
@@ -498,7 +806,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 void
 Negf::print_ham(std::string form)
 {
-  std::string outpath = get_output_directory();
+  std::string outpath = SimulationOptions::scratch_path;
 
   if (form=="matlab")
   {
@@ -518,13 +826,14 @@ Negf::print_Lib(void)
   double mu_p;
   double Ec = get_band_edge("Ec");
   double Ev = get_band_edge("Ev");
-  double DeltaEc = 1.0;
-  double DeltaEv = 1.0;
+  double DeltaEc = -opt.DEc;
+  double DeltaEv =  opt.DEv;
   unsigned int n_vars = _sys_H->n_vars();
 
-  mu_n = mu_p = 0.0;
+  mu_n = mu_p = 0.0;     // set to 0.0 for libnegf:
+                         // we set  Ef  as   Ef - mu (see below)
 
-  double kbT = 0.025;
+  double kbT = SimulationOptions::temperature * Constants::kb;
   double wght = 1.0;
 
   std::vector <double> Np_p(2);
@@ -533,10 +842,7 @@ Negf::print_Lib(void)
     Np_p[i] = 0.0;
   }
 
-  unsigned int n_kt = 5;
-  unsigned int n_poles = 3;
   unsigned int spin = 2;
-  double delta = 1e-5;
   unsigned int nLDOS = 0;
 
   std::vector <unsigned int> LDOS(2*nLDOS);
@@ -560,18 +866,20 @@ Negf::print_Lib(void)
     id++;
   }
 
+  std::string outpath = SimulationOptions::scratch_path;
   std::string out_file = "negf.in";
   std::fstream ff(out_file.c_str(),std::fstream::out);
 
-  ff<<"'"+get_output_directory()+"/Hr.m'"<<std::endl;
-  ff<<"'"+get_output_directory()+"/Hi.m'"<<std::endl;
-  ff<<"'"+get_output_directory()+"/Sr.m'"<<std::endl;
-  ff<<"'"+get_output_directory()+"/Si.m'"<<std::endl;
+  ff<<"'"+outpath+"/Hr.m'"<<std::endl;
+  ff<<"'"+outpath+"/Hi.m'"<<std::endl;
+  ff<<"'"+outpath+"/Sr.m'"<<std::endl;
+  ff<<"'"+outpath+"/Si.m'"<<std::endl;
 
   ff<<_quantum_contacts.size()<<std::endl;
 
+  // Nblocks (if 0 are partitioned by the library)
   ff<<0<<std::endl;
-
+  //ff<<floor(_device_n_dofs*n_vars/2)<<" "<<_device_n_dofs*n_vars<<std::endl;
 
   // contact end dofs:
   for (unsigned int i = 0; i <_quantum_contacts.size(); i++)
@@ -584,8 +892,8 @@ Negf::print_Lib(void)
   ff<<std::endl;
 
   ff<<mu_n<<" "<<mu_p<<std::endl;
-  ff<<Ec<<" "<<Ev<<std::endl;
-  ff<<DeltaEc<<" "<<DeltaEv<<std::endl;
+  ff<<Ec+DeltaEc<<" "<<Ev+DeltaEv<<std::endl;
+  ff<<0.0<<" "<<0.0<<std::endl;                // DEc DEv = 0 (are set above)
   ff<<opt.Emin<<" "<<opt.Emax<<" "<<opt.Estep<<std::endl;
   ff<<kbT<<std::endl;
   ff<<wght<<std::endl;
@@ -599,10 +907,10 @@ Negf::print_Lib(void)
   ff<<std::endl;
 
   ff<<opt.Np_real<<std::endl;
-  ff<<n_kt<<std::endl;
-  ff<<n_poles<<std::endl;
+  ff<<opt.n_kT<<std::endl;
+  ff<<opt.n_poles<<std::endl;
   ff<<spin<<std::endl;
-  ff<<delta<<std::endl;
+  ff<<opt.delta<<std::endl;
   ff<<nLDOS<<std::endl;
 
   for (unsigned int i = 0; i < 2*nLDOS; i++)
@@ -615,7 +923,7 @@ Negf::print_Lib(void)
     ff<<0.0<<" ";
   ff<<std::endl;
 
-  // takes -mu (electrochemical potential) as LibNEGF will turn back the sign
+  // takes -mu (ELECTROCHEMICAL potential) as LibNEGF will turn back the sign
   // Ef[k]-mu[k] = 0 - mu[k]   for LibNEGF
   for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
     ff<<-mu[i]<<" ";
@@ -679,21 +987,75 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     dof_map.dof_indices(elem, dof_indices, 0);
     unsigned int n_dofs = phi.size();
 
-    for (unsigned int n = 0; n < np; n++)
+    // the phi^2 factor comes from the fact that the more correct interpolation is the square
+    // of the basis function, because the probability densities are the square of the states
+    // NOTE: maybe one should check if this gives really a better result
+    // NOTE: 2011-12-01 the above turned out to be wrong
+    //  phi[i] rho[i][j] phi[j] ~~  phi[i] rho[i][i] phi[i]
+    // rho[i][i] is the correct density at node i: phi is used linear interpolation.
+    if (_k_int_density!=NULL)
     {
-      double value = 0;
 
-      // the phi^2 factor comes from the fact that the more correct interpolation is the square
-      // of the basis function, because the probability densities are the square of the states
-      // NOTE: maybe one should check if this gives really a better result
-      // NOTE: 2011-12-01 the above turned out to be wrong
-      for (unsigned int i = 0; i < n_dofs; i++)
-        //value += phi[i][n] * phi[i][n] * qdens(dof_indices[i]);
-        value += phi[i][n] * qdens(dof_indices[i]);
+      for (unsigned int n = 0; n < np; n++)
+      {
+        double value = 0;
 
-      values[eDensity][n] = value;
+        for (unsigned int i = 0; i < n_dofs; i++)
+        {
+          value += phi[i][n] * density[dof_indices[i]];
+        }
+
+        values[eDensity][n] = value;
+      }
+    }
+    else
+    {
+      for (unsigned int n = 0; n < np; n++)
+      {
+        double value = 0;
+
+        for (unsigned int i = 0; i < n_dofs; i++)
+          value += phi[i][n]  * qdens(dof_indices[i]);
+
+        values[eDensity][n] = value;
+      }
+    }
+
+
+  }
+}
+
+void
+Negf::get_solution_secure(std::map<ID, std::vector<double> >& values)
+{
+
+  std::cout<<"get_solution_secure: current"<< std::endl;
+  std::vector<std::string> tokens;
+
+  std::map<ID, std::vector<double> >::iterator mapit(values.begin());
+  const std::map<ID, std::vector<double> >::iterator mapend(values.end());
+
+  for ( ; mapit != mapend; ++mapit)
+  {
+
+    ID id = mapit->first;
+
+    const SolutionDescriptor& descr = get_solution_descriptor(id);
+    Utils::tokenize(descr.name(), tokens);
+
+    std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
+    const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
+    for (; it != end; ++it)
+    {
+      if (tokens[0]==it->second->get_name())
+      {
+        std::cout<<"current: "<<it->first<<"  "<< _contact_current[it->second]<<std::endl;
+        values[id] = std::vector<double>(1,  _contact_current[it->second]);
+        break;
+      }
     }
   }
+
 }
 
 // ACTIVATE TEMPORARILY ALL ELEMENTS IN QUANTUM CONTACTS
@@ -723,9 +1085,6 @@ Negf::reorder(void)
   //std::cout<<"Reorder dofs"<<std::endl;
 
   MeshBase& mesh = get_mesh();
-
-  ID id = create_equation_system("linear");
-  _sys = &get_equation_system<TiberLinearSystem>(id);
 
   unsigned int n_vars = _sys_H->n_vars();
   unsigned int n_var_reord = 1;
@@ -867,12 +1226,6 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
   QGauss qrule(dim, THIRD);
 
   fe->attach_quadrature_rule(&qrule);
-
-  AutoPtr<FEBase> fe_face(FEBase::build(dim, fe_type));
-
-  QGauss qface(dim-1, THIRD);
-
-  fe_face->attach_quadrature_rule(&qface);
 
   const std::vector<Real>& JxW = fe->get_JxW();
 
@@ -1161,3 +1514,89 @@ inline double Negf::get_band_edge(SimulationInterface* model, const std::string&
 }
 
 
+
+
+
+void
+Negf::apply_dirichlet_bc(void)
+{
+  const MeshBase* mesh = &get_mesh();
+
+  unsigned int dim = mesh->mesh_dimension();
+
+  MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
+
+  //activate_contacts(); // dirichelet must go on contacts as well.
+
+  dirichlet_dofs.clear();
+
+  DofMap& dof_map = _sys_H->get_dof_map();
+
+  unsigned int n_var = dof_map.n_variables();
+
+  std::vector<unsigned int> dof_indices;
+
+
+  // iterates over all elements and mark the external sides
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    unsigned int n_sides;
+
+    if ( dim > 1 )
+      n_sides = elem->n_sides();
+    else
+      n_sides = elem->n_nodes();
+
+
+    for (short side = 0; side < n_sides; side++)
+    {
+
+      Elem* el1 = elem->neighbor(side);
+      bool side_is_external = false;
+
+      // mesh refinements are not handled
+      if (el1 == NULL)
+      {
+         side_is_external = true;
+      }
+      else  if ( !(el1->active()) )
+      {
+         side_is_external = true;
+      }
+
+      if (side_is_external)
+      {
+
+        if (dim > 1)
+        {//2D/3D
+          for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
+          {
+            if (elem->is_node_on_side(nd, side))
+            {
+              const Point& node = elem->point(nd);
+              for (short band = 0 ; band <  n_var; band++)
+              {
+                dof_map.dof_indices(elem, dof_indices, band);
+                dirichlet_dofs.insert(dof_indices[nd]);
+              }
+            }
+          }
+
+        }
+        else
+        {//1D
+          for (short band = 0 ; band < n_var; band++)
+          {
+            dof_map.dof_indices (elem, dof_indices, band);
+            dirichlet_dofs.insert(dof_indices[side]);
+          }
+        }
+
+      }
+
+    }// close side loop
+
+  }// close element loop
+}

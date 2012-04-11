@@ -39,6 +39,7 @@ class QuantumContact
 
     ID get_id(void) const;
 
+    std::string get_name(void) const;
 
     const std::set<ID>& get_bd_ids(void) const;
 
@@ -54,7 +55,7 @@ class QuantumContact
     static QuantumContact* create(void);
 
 
-    void init(ID id,
+    void init(const ID id,
               const std::string& name,
               Device* device,
               BoundaryRegions* bd_regions,
@@ -107,6 +108,12 @@ inline
 const std::set<ID>& QuantumContact::get_bd_ids(void) const
 {
   return _bd_ids;
+}
+
+inline
+std::string QuantumContact::get_name(void) const
+{
+  return _name;
 }
 
 #endif /* QUANTUMCONTACT_H_ */

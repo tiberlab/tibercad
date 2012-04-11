@@ -34,6 +34,7 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
       edge = (par.Ev  + par.EgGamma) / Hartree;
 
       kp_bands.resize(1,0);
+
     }
 
   if ( (min_name == "X") || (min_name == "x") )
@@ -71,6 +72,8 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 
 	  kp_bands.resize(1,0);
 	}
+
+        _degeneracy = 2;
     }
 
   calculate_Hamiltonian_gen();

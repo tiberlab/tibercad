@@ -19,14 +19,49 @@ Device
      }
    }
 
+   Region oxide1
+   {
+    material = AlAs
+   }
+  
+   Region oxide2
+   {
+    material = AlAs
+   }  
+  
+   Region dd_drain_region
+   {
+    Doping {
+      type = donor
+      Nd = 2e18
+     }
+   }  
+ 
+   Region dd_source_region
+   {
+    Doping {
+      type = donor
+      Nd = 2e18
+     }
+   } 
+
+
    Region barrier1
    {
-    material = AlAs      
+    #material = AlAs      
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
    }
 
    Region barrier2
    {
-     material = AlAs           
+     #material = AlAs           
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
    }
 
   Region drain_region
@@ -39,6 +74,10 @@ Device
 
    Region well
    {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
    }
 
    Cluster barrier
@@ -49,14 +88,14 @@ Device
    
    Quantum_contact int_source
    {
-    regions = barrier1  
-    length = 0.13
+    regions = (source_region,oxide1,oxide2) 
+    length = 0.25
    }
 
    Quantum_contact int_drain
    {
-    regions = barrier2 
-    length = 0.13
+    regions = (drain_region,oxide1,oxide2)
+    length = 0.25
    }
 
 }
@@ -65,7 +104,7 @@ Device
 # Definition of  Simulation Models  and associated Boundary Conditions 
 Module driftdiffusion
 { 
-  regions = (source_region,drain_region,barrier1,barrier2,well)
+  regions = (dd_drain_region,dd_source_region,oxide1,oxide2,source_region,drain_region,barrier1,barrier2,well)
   # is default
   # statistics = fermidirac
 
@@ -85,7 +124,7 @@ Module driftdiffusion
     #  model = srh
     #}
 
-   }
+  }
 
   Contact source
   {
@@ -113,8 +152,8 @@ Module sweep
 
 Module negf
 {
-  plot = (ReorderPotential)
-  regions = (barrier1,well,barrier2)
+  plot = (eDensity)
+  regions = (source_region,barrier1,well,barrier2,drain_region,oxide1,oxide2)
   potential_simulation = driftdiffusion
   Boundary int_source{}
   Boundary int_drain{}
@@ -131,7 +170,40 @@ Module negf
     # hamiltonian single_band { } 
      hamiltonian single_band {valley = G}
   }
+
+  #k_integration
+  #{
+  #  k_max = 1.0  # in 1/nm ! 
+  #  number_of_elements = 5
+  #}
+
+}
+
+Module efaschroedinger
+{
+  name = quantum_el
+
+  regions = (source_region,barrier1,well,barrier2,drain_region,oxide1,oxide2)
   
+  particle = el
+  poisson_model_name = driftdiffusion
+
+  plot = (EigenFunctions, EigenEnergy, EnergyLevels,ProbabilityDensity,QuantumDensity)
+
+  Solver
+  {
+    number_of_eigenstates = 6 
+  }	
+
+
+  Physics
+  {
+    model = conduction_band
+
+    #model = kp   #  k.p  for  valence  band
+    #kp_model = 8x8
+  }
+
 }
 
 
@@ -139,7 +211,8 @@ Module negf
 Simulation
 {
   temperature = 300
-  solve = (sweep_drain)
+  solve = (driftdiffusion,negf)
+
   resultpath = output
   scratchpath = /work/fpalomba/
   output_format = vtk

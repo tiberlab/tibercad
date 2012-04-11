@@ -315,6 +315,7 @@ void KspaceIntegration::do_solve( )
 {
 
   calculate_convergent_density();
+
 }
 
 //--------------------------------------------------------------------------------------//

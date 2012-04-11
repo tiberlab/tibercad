@@ -110,13 +110,14 @@ inline void f77_negf_set_verbosity (f77_int const* handler, f77_int const&
 }
 
 
-extern "C" void negf_current_ (f77_int const*);
+extern "C" void negf_current_ (f77_int const*, f77_double&);
 
 // Corresponding F77 arguments for f77_negf_current:
 // integer, intent(in) :: handler(DAC_handlerSize)
-inline void f77_negf_current (f77_int const* handler)
+// real(dp), intent(inout) :: current
+inline void f77_negf_current (f77_int const* handler, f77_double& current)
 {
-  negf_current_ (handler);
+  negf_current_ (handler, current);
 }
 
 
@@ -145,6 +146,18 @@ inline void f77_negf_set_iteration (f77_int const* handler, f77_int const& iter)
 }
 
 
+extern "C" void negf_set_output_ (f77_int const*, f77_char const*);
+
+// Corresponding F77 arguments for f77_negf_set_output:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// character(LST), intent(in) :: out_path(1)
+inline void f77_negf_set_output (f77_int const* handler, f77_char const* 
+    out_path)
+{
+  negf_set_output_ (handler, out_path);
+}
+
+
 extern "C" void negf_set_scratch_ (f77_int const*, f77_char const*);
 
 // Corresponding F77 arguments for f77_negf_set_scratch:
@@ -154,6 +167,17 @@ inline void f77_negf_set_scratch (f77_int const* handler, f77_char const*
     scratch_path)
 {
   negf_set_scratch_ (handler, scratch_path);
+}
+
+
+extern "C" void negf_set_outer_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_negf_set_outer:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: outer
+inline void f77_negf_set_outer (f77_int const* handler, f77_int const& outer)
+{
+  negf_set_outer_ (handler, outer);
 }
 
 

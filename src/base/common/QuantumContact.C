@@ -1,5 +1,4 @@
-/*
- * QuantumContact.C
+/* QuantumContact.C
  *
  *  Created on: Nov 3, 2011
  *      Author: fpalomba
@@ -47,7 +46,7 @@ QuantumContact::create(void)
 }
 
 void
-QuantumContact::init(ID id,
+QuantumContact::init(const ID id,
     const std::string& name,
     Device* device,
     BoundaryRegions* bd_regions,
@@ -500,6 +499,8 @@ QuantumContact::extend_mesh(void)
 
 
   // Adding neighbors to new elements (1D, 2D, 3D)
+  // Elements on quantum regions have 2 neighobours (on in original mesh and a new one
+  // on quantum contact. This is not a problem since negf is solved with outside elements inactive
   {
     BoundaryRegions::side_iterator it =  _bd_regions->sides_begin(_bd_ids);
     const BoundaryRegions::side_iterator end =  _bd_regions->sides_end(_bd_ids);

@@ -308,10 +308,9 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
       // the phi^2 factor comes from the fact that the more correct interpolation is the square
       // of the basis function, because the probability densities are the square of the states
       // NOTE: maybe one should check if this gives really a better result
-      // NOTE: 2011-12-01 the above turned out to be wrong
+      // NOTE: 2011-12-01 the above turned out to be wrong: phi is used only as linear interp. !
       for (unsigned int i = 0; i < n_dofs; i++)
-        //value += phi[i][n] * phi[i][n] * qdens(dof_indices[i]);
-        value += phi[i][n] * qdens(dof_indices[i]);
+         value += phi[i][n] * qdens(dof_indices[i]);
 
       values[QuantumDensity][n] = value;
     }
@@ -446,14 +445,15 @@ void EnvelopFunctionApprox::parse_options()
   //Set degeneracy factor depending on model 
 
   // adjust the degeneracy (in a quirky way, I must admit...)
-  opt.degeneracy = 1;
+  //opt.degeneracy = 1; This has been already initialized in do_init()
+
   if (get_options().has_submodel("Physics"))
   {
     ModelOptions::const_submodel_iterator it(get_options().submodels_begin("Physics"));
     const ModelOptions& opts = it->second;
 
     string model = opts.get_option("model", "kp");
-    if ((model == "conduction_band") || (model == "single_band")) opt.degeneracy = 2;
+    if ((model == "conduction_band") || (model == "single_band"))  opt.degeneracy *= 2;
   }
 
   //possible user override
@@ -732,10 +732,11 @@ void EnvelopFunctionApprox::do_init( )
     
     opt.kp_bands = element_hamiltonian->get_kp_bands_map();
     
+    opt.degeneracy = element_hamiltonian->get_degeneracy();
   }
   //------------------------------------------------------------------------------------------------------//
-  
  
+
   parse_options();
 
   EigenvalueProblem::init_kspace();

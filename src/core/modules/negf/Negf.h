@@ -9,9 +9,9 @@
 #include "TiberLinearSystem.h"
 #include "Boundary.h"
 #include "libnegf/NegfWrapper.h"
+#include "KspaceIntegration.h"
 
 #include <string>
-
 
 /*!
  *
@@ -30,8 +30,8 @@ class TBDLLOCAL Negf : public SimulationInterface
        ReorderPotential,  // Laplace equation solution from reordering routines
        eDensity,  // Electron QuantumDensity from Negf
        hDensity,  // Hole QuantumDensity from Negf
-       CurrentDensity    //
-
+       CurrentDensity,    //
+       ContactCurrents    // Contact Currents
     };
     //! Destructor
     /*!
@@ -45,11 +45,16 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void reorder(void);
 
+    //! call-back method that KspaceIntegration invokes
+    void calculate_for_k_point(const Point& kpoint, DofField& spectrum, double& estimator);
+
   protected:
 
     //! The initialization
     virtual void do_init(void);
 
+    //! Re-initialization for sweep, etc...
+    virtual void do_reinit(void);
 
     //! Parse the options from the input file
     virtual void parse_options(void);
@@ -68,9 +73,6 @@ class TBDLLOCAL Negf : public SimulationInterface
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
                                                   const Material* mat) const;
 
-    //! We need to create boundary condition model
-    //virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
-    //    const MaterialBoundary* boundary) const;
 
     virtual void do_setup_solution_variables(void);
 
@@ -81,6 +83,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& values,
         const std::vector<Point>& p);
+
+    virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
     void setup_effectivemass_hamil(void);
 
@@ -104,6 +108,10 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void calculate_density(const std::string& particle);
 
+    void init_k_space_integration(void);
+
+
+
     struct options
     {
         std::string pot_module;
@@ -116,8 +124,19 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         std::vector <int> Np_n;
 
+        int n_poles;
+
+        int n_kT;
+
         double Np_real;
 
+        double DEc;
+
+        double DEv;
+
+        int verbosity;
+
+        double delta;
 
     };
 
@@ -130,6 +149,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     double get_band_edge(const std::string& band) const;
     double get_band_edge(SimulationInterface* model, const std::string& band, const Elem* elem) const;
+
+    void apply_dirichlet_bc(void);
 
     Device* _device;
 
@@ -163,6 +184,23 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     options opt;
 
+    //!diriclet DOFS
+    std::set<unsigned int>  dirichlet_dofs;
+
+    KspaceIntegration* _k_int_density;
+
+    KspaceIntegration* _k_int_current;
+
+    // internal status for k_space_integration
+    int _which_integration;
+
+    VectorValue<double> _k_vec;
+
+    DofField density;
+
+    DofField current;
+
+    std::map<const QuantumContact*, double> _contact_current;
 };
 
 #endif

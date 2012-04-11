@@ -17,6 +17,7 @@ void EFAbulkHamiltonian::do_init()
   k_vector[1] =  k[1];
   k_vector[2] =  k[2];
 
+  _degeneracy = 1;
 
   set_rotation_matrix();
  
@@ -161,7 +162,11 @@ void EFAbulkHamiltonian::rotate_quad(std::complex<double> matrix[][3])
 }
 //--------------------------------------------------------//
 
-
+double
+EFAbulkHamiltonian::get_degeneracy(void)
+{
+  return _degeneracy;
+}
 
 
 

@@ -47,14 +47,16 @@ void NegfWrapper::set_verbose(int verbose_lev)
 
 }
 
-int
+double
 NegfWrapper::current()
 {
-  f77_negf_current(_handler);
-  return 0;
+  double current;
+
+  f77_negf_current(_handler, current);
+
+  return current;
 }
 
-//Compute charge density
 int
 NegfWrapper::density(std::vector<double>& density)
 {
@@ -62,7 +64,7 @@ NegfWrapper::density(std::vector<double>& density)
    f77_negf_density(_handler, size, &density.front());
 }
 
-//Set SC iteration
+
 void
 NegfWrapper::set_iteration(int iter)
 {
@@ -78,3 +80,29 @@ NegfWrapper::set_scratch_path(std::string path)
 
   f77_negf_set_scratch(_handler, cpath);
 }
+
+void
+NegfWrapper::set_output_path(std::string path)
+{
+  char *cpath = new char[NEGF_LC];
+  memset(cpath,NEGF_PADCHAR,NEGF_LC);
+  path.copy(cpath,path.size());
+
+  f77_negf_set_output(_handler, cpath);
+}
+
+
+
+void
+NegfWrapper::clean_libnegf(void)
+{
+   f77_negf_destruct_libnegf(_handler);
+}
+
+void
+NegfWrapper::device_contact_dm(int outer)
+{
+   f77_negf_set_outer(_handler, outer);
+}
+
+
