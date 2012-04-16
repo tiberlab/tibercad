@@ -25,10 +25,11 @@ CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${sepparch}/
 #  --with-mkl=/usr/pack/intel_mkl-10.2-gp \
 #  --enable-pardiso \
 #  --with-boost-prefix=/usr/pack/boost-1.33.1-ma \
+#  --with-petsc-arch=linux-gnu-${ARCH}-complex \
 
 ./configure \
   --with-petsc-prefix=/usr/pack/tibercad_dev-2.1-ma/petsc-3.0.0-p12 \
-  --with-petsc-arch=linux-gnu-${ARCH}-complex \
+  --with-petsc-arch=${ARCH}-linux-complex \
   --with-slepc-prefix=/usr/pack/tibercad_dev-2.1-ma/slepc-3.0.0-p7 \
   --with-tao-prefix=/usr/pack/tibercad_dev-2.1-ma/tao-1.10-p1 \
   --with-mkl=/usr/pack/intel_mkl-10.2-gp \

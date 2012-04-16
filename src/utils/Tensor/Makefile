@@ -18,6 +18,7 @@ target := $(libdir)/libtensor.a
 
 
 $(libdir)/libtensor.a: $(objects)
+	@mkdir -p $(libdir)
 	@$(AR) cru $@ $(objects)
 	@$(RANLIB) $@
 
