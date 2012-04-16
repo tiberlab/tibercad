@@ -763,6 +763,18 @@ DriftDiffusionProperties::calculate_densities(void)
     _pd->gamma_p = _holes->get_gamma();
   }
 
+  if (!(_coupling && DriftDiffusionDefs::ELECTRONS))
+  {
+    _pd->electron_density = 0.0;
+    _pd->electron_density_derivative = 0.0;
+  }
+
+  if (!(_coupling && DriftDiffusionDefs::HOLES))
+  {
+    _pd->hole_density = 0.0;
+    _pd->hole_density_derivative = 0.0;
+  }
+
 }
 
 
@@ -1208,6 +1220,10 @@ DriftDiffusionProperties::calculate_equilibrium_properties(void)
 void
 DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 {
+  // remember the coupling
+  int coupling_bkp = _coupling;
+  _coupling = DriftDiffusionDefs::BOTH;
+
   _equilibrium_fermi_level = Ef;
   set_potentials(Ef);
   calculate_densities();
@@ -1215,6 +1231,9 @@ DriftDiffusionProperties::set_equilibrium_properties(double Ef)
   _intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
   _equilibrium_n = _pd->electron_density;
   _equilibrium_p = _pd->hole_density;
+
+  // restore original coupling
+  _coupling = coupling_bkp;
 }
 
 
