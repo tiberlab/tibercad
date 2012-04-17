@@ -51,6 +51,7 @@ Module driftdiffusion
       Nt = 1e16
       Et = 0.2
       reference = midgap
+      recombination_center = true
     }
 
     trap donor
@@ -58,6 +59,7 @@ Module driftdiffusion
       Nt = 2e16
       Et = 0.4
       reference = cb
+      recombination_center = true
     }
   }
 
