@@ -56,11 +56,20 @@ public:
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);
 
+  //! used to set an integer value to label tunneling files
+  void set_kpoint(int kpoint);
+
+  //! used to set the reference contact 0= min mu; 1= max mu
+  void set_reference(int minmax);
+
   //! Set what to do with outer parts 0=none; 1=upper block; 2=full
   void device_contact_dm(int outer);
 
   //! Get library version
   void get_version(void);
+
+  //! used to set if print LDOS
+  void set_writeLDOS(int flag);
 
 private:
   int _handler[NEGF_HSIZE];

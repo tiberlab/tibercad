@@ -2113,7 +2113,9 @@ SimulationInterface::get_solution(const Elem* elem,
     {
       // no active parent, so look for children
       // TODO This part is not tested at all !!!
-      vector<const Elem*> tree;
+      // Alex: indeed it does crash with selfcons negf/dd
+      // commented out temporarily
+      /*vector<const Elem*> tree;
       elem->family_tree(tree, false);
 
       set<const Elem*> elem_list;
@@ -2196,7 +2198,7 @@ SimulationInterface::get_solution(const Elem* elem,
             }
           }
         }
-      }
+      }*/
     }
   }
   else

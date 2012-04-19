@@ -233,6 +233,8 @@ ParticleDensity::quantum_density(void)
     vector<Point> p(1, _p);
     vector<double> values(1, 0.0);
 
+    //std::cout<<"elem: "<< _elem->id()<<" "<<  _elem->subdomain_id() <<std::endl;
+
     if (_quantum_density[i]->is_solved())
       flag |= _quantum_density[i]->get_solution(_elem, _density_ids[i], values, p);
 

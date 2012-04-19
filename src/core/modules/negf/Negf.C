@@ -170,9 +170,9 @@ Negf::do_init(void)
   _sys = &get_equation_system<TiberLinearSystem>(id);
 
   // We add a second system just to contain the density
-  if (plot_solution(eDensity))
+  if (plot_solution(elDensity))
   {
-    std::cout<<"(negf) create eq sys for eDensity"<<std::endl;
+    std::cout<<"(negf) create eq sys for elDensity"<<std::endl;
     id = create_equation_system("linear");
     _qdens_sys = &get_equation_system<TiberLinearSystem>(id);
     _qdens_sys->add_variable("edens", libMeshEnums::FIRST);
@@ -259,6 +259,8 @@ Negf::setup_effectivemass_hamil()
 
   _libnegf->set_verbose(opt.verbosity);
 
+  _libnegf->set_writeLDOS(opt.writeLDOS);
+
   _libnegf->set_iteration(1);
 
   //Messages::info("setting scratch path to "+SimulationOptions::scratch_path);
@@ -268,6 +270,9 @@ Negf::setup_effectivemass_hamil()
 
   // set not to compute Device-Contact blocks
   _libnegf->device_contact_dm(0);
+
+  // set reference contact at maximum electrochem pot.
+  _libnegf->set_reference(1);
 
 }
 
@@ -291,11 +296,12 @@ Negf::do_solve(void)
 
   //reorder(); // dof indices reorder
 
-  if ( plot_solution("eDensity") )
+  if ( plot_solution("elDensity") )
   {
     Messages::info("Computing Density");
 
     _qdens_sys->init();
+
 
     if (get_options().has_submodel("k_integration_density"))
     {
@@ -370,7 +376,7 @@ Negf::do_solve(void)
     Messages::info("Current done");
   }
 
-
+  deactivate_quantum_contacts();
 }
 
 void
@@ -379,8 +385,6 @@ Negf::calculate_for_k_point(const Point& k_point,
                                    double& error)
 {
    for(short i=0;i<3;i++) _k_vec(i) = k_point(i);
-
-   std::cout << "k-point: "<<_k_vec(0)<<" "<<_k_vec(1)<<" "<<_k_vec(2)<<std::endl;
 
    setup_effectivemass_hamil();
 
@@ -545,9 +549,9 @@ Negf::parse_options(void)
 
   ModelOptions& sol_opt = get_solver_options();
 
-  opt.Emin = sol_opt.get_option("Emin",0.0);
+  opt.n_kT = sol_opt.get_option("n_kT", 10);
 
-  opt.Emax = sol_opt.get_option("Emax",0.5);
+
 
   opt.Estep = sol_opt.get_option("Estep",0.1);
 
@@ -563,10 +567,11 @@ Negf::parse_options(void)
 
   opt.n_poles = sol_opt.get_option("Npoles", 3);
 
-  opt.n_kT = sol_opt.get_option("n_kT", 10);
+
 
   opt.verbosity = sol_opt.get_option("verbosity",0);
   //sol_opt.check_unused();
+  opt.writeLDOS = sol_opt.get_option("writeLDOS",1);
 
   opt.delta = sol_opt.get_option("delta",1e-5);
 }
@@ -577,7 +582,7 @@ Negf::do_setup_solution_variables(void)
 
 
   declare_solution(ReorderPotential, REAL, NODES, "1");
-  declare_solution(eDensity, REAL, NODES, "1/cm^3");
+  declare_solution(elDensity, REAL, NODES, "1/cm^3");
   declare_solution(hDensity, REAL, NODES, "1/cm^3");
   declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
 
@@ -639,8 +644,10 @@ Negf::plot_globaldata (void)
 
     std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
     const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
+    std::cout<<"contact"<<"       current:"<<std::endl;
     for (; it != end; ++it)
     {
+      std::cout<<it->second->get_name()<<"  "<<_contact_current[it->second]<<std::endl;
       ff<< _contact_current[it->second] << "  ";
     }
     ff << std::endl;
@@ -822,6 +829,7 @@ Negf::print_ham(std::string form)
 void
 Negf::print_Lib(void)
 {
+  ModelOptions& sol_opt = get_solver_options();
   double mu_n;
   double mu_p;
   double Ec = get_band_edge("Ec");
@@ -835,6 +843,7 @@ Negf::print_Lib(void)
 
   double kbT = SimulationOptions::temperature * Constants::kb;
   double wght = 1.0;
+
 
   std::vector <double> Np_p(2);
   for (unsigned int i = 0; i < 2; i++)
@@ -857,6 +866,8 @@ Negf::print_Lib(void)
   std::vector <double> phi(_quantum_contacts.size());
   std::vector <double> mu(_quantum_contacts.size());
 
+  double mumin=10000;
+  double mumax=-10000;
   ID id = 0;
   std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
   const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
@@ -864,7 +875,12 @@ Negf::print_Lib(void)
   {
     get_boundary_potentials(it->second, phi[id], mu[id]);
     id++;
+    if(mu[id]>mumax){mumax = mu[id];}
+    if(mu[id]<mumin){mumin = mu[id];}
   }
+
+  opt.Emin = sol_opt.get_option("Emin",-mumax-opt.n_kT*kbT);
+  opt.Emax = sol_opt.get_option("Emax",-mumin+opt.n_kT*kbT);
 
   std::string outpath = SimulationOptions::scratch_path;
   std::string out_file = "negf.in";
@@ -970,7 +986,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     }
   }
 
-  if (values.count(eDensity))
+  if (values.count(elDensity))
   {
     const unsigned int dim = get_mesh().mesh_dimension();
     _sys_H = &get_equation_system<TiberLinearSystem>(0);
@@ -1005,7 +1021,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
           value += phi[i][n] * density[dof_indices[i]];
         }
 
-        values[eDensity][n] = value;
+        values[elDensity][n] = value;
       }
     }
     else
@@ -1017,7 +1033,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
         for (unsigned int i = 0; i < n_dofs; i++)
           value += phi[i][n]  * qdens(dof_indices[i]);
 
-        values[eDensity][n] = value;
+        values[elDensity][n] = value;
       }
     }
 

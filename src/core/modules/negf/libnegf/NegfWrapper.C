@@ -72,6 +72,12 @@ NegfWrapper::set_iteration(int iter)
 }
 
 void
+NegfWrapper::set_kpoint(int kpoint)
+{
+  f77_negf_set_kpoint(_handler, kpoint);
+}
+
+void
 NegfWrapper::set_scratch_path(std::string path)
 {
   char *cpath = new char[NEGF_LC];
@@ -91,6 +97,11 @@ NegfWrapper::set_output_path(std::string path)
   f77_negf_set_output(_handler, cpath);
 }
 
+void
+NegfWrapper::set_reference(int minmax)
+{
+  f77_negf_set_reference(_handler,minmax);
+}
 
 
 void
@@ -105,4 +116,8 @@ NegfWrapper::device_contact_dm(int outer)
    f77_negf_set_outer(_handler, outer);
 }
 
-
+void
+NegfWrapper::set_writeLDOS(int flag)
+{
+  f77_negf_set_writeldos(_handler,flag);
+}

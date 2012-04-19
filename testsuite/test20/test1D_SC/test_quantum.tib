@@ -1,0 +1,263 @@
+Device
+{
+
+  meshfile = quantum_well.msh
+  mesh_units = 1e-9
+  dimension = 1
+
+
+  Region well
+  {
+    mesh_regions = 1
+    material = GaAs
+
+    Doping {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+    }
+
+  }
+
+  Region  buffer
+  {
+    mesh_regions = (2, 3)
+    material = AlGaAs
+    x = 0.3
+
+    Doping {
+      Nd = 1e17
+      type = donor
+      Ed = 0.025
+    }
+  }
+  
+
+  Region  buffer
+  {
+    mesh_regions = (4, 5)
+    material = AlGaAs
+    x = 0.3
+
+    Doping {
+      Nd = 1e17
+      type = donor
+      Ed = 0.025
+    }
+  }
+
+  Quantum_contact int_source 
+  {
+   regions = ( 4 )
+   length = 0.05
+  }
+
+  Quantum_contact int_drain
+  {
+   regions = ( 5 )
+   length = 0.05
+  }
+
+}
+
+
+Module elasticity
+{
+
+  name = str
+  plot = (Strain, Stress)
+
+  Physics
+  {
+    body_force lattice_mismatch
+    {
+      reference_material = GaAs
+    }
+
+  }
+    
+  Boundary clamp
+  {
+    regions = 1
+  }
+    
+}
+
+
+
+
+Module driftdiffusion
+{ 
+
+  name = dd
+  regions = (1,2,3,4,5)
+
+  plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, CurrentDensity, NetRecombination)
+
+  coupling = poisson
+  integration_order = 2
+       
+  Solver
+  {
+    max_iterations = 70
+    relative_tolerance = 1e-10
+    absolute_tolerance = 1e-10
+    step_tolerance = 1e-9
+    max_step = 4
+    ksp_type = bcgs
+  }
+
+
+    
+  Physics
+  {
+    strain_simulation = str
+
+    #use_density_predictor = true
+
+    recombination srh { }
+
+    
+    particle_density
+    {
+      particle = electron
+      statistics = fermidirac
+
+      quantum_density = negf   #quantum_el
+      #add_continuum_in_well = false
+      #barrier_regions = buffer
+    }
+  
+     
+    mobility doping_dependent { }
+
+  }
+
+  Boundary cathode
+  {
+    regions = 1
+    #zero_grad_fermi_e = true
+    type = ohmic
+  }
+
+
+  Boundary anode
+  {
+    regions = 2
+    #zero_grad_fermi_e = true
+    type = ohmic
+    voltage = $Vb[0.0]  
+  }
+ 
+  #Interface int_source
+  #{
+  #  electron_current = negf
+  #}
+
+  #Interface int_drain
+  #{
+  #  electron_current = negf
+  #}
+  	
+}
+
+
+ 
+
+
+Module efaschroedinger
+{
+  name = quantum_el
+  regions = (1, 4, 5)
+
+  particle = el
+  
+  poisson_model_name = dd
+  strain_model_name = str
+
+
+  quadrature_rule = trapez
+
+  Solver
+  {
+    number_of_eigenstates = 5 
+    #solver = lapack
+  }
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  Physics
+  {
+    model = conduction_band    
+  }
+}
+
+
+Module negf
+{
+  regions = (1,4,5)
+  plot= (elDensity)
+  
+  potential_simulation = driftdiffusion
+  Boundary int_source{}
+  Boundary int_drain{}
+
+ 
+  Solver
+  {
+    #verbosity = 99 
+    writeLDOS = 0
+    Np_contour = (20,20)
+    Np_real = 0
+    Npoles = 3 
+    delta = 1e-5 #2e-3
+    deltaEc = 0.25
+    Emin = -0.30
+    Emax = 0.4
+    Estep = 0.01
+  }
+
+  Physics
+  {
+    hamiltonian single_band {valley = G}
+  }
+  
+  k_integration_density
+  {
+    k_max = 0.750
+    number_of_elements = (4,4)
+  }
+
+}
+
+
+
+Module sweep
+{
+  variable = $Vb
+  start = 0.0
+  stop =  0.3  #3.5 # 1.0
+  steps = 10  # 70 # 20
+}
+
+
+Module selfconsistent
+{
+  solve = (negf, dd)
+  #relaxation_factor = 0.1
+  max_iterations = 100
+  absolute_tolerance = 5e-4
+  relative_tolerance = 1e-9
+  monitor = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = (str, dd, selfconsistent)
+  #solve = (str, dd, quantum_el)
+  resultpath = output
+  output_format = grace
+}

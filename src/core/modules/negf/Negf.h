@@ -28,7 +28,7 @@ class TBDLLOCAL Negf : public SimulationInterface
     enum Solutions
     {
        ReorderPotential,  // Laplace equation solution from reordering routines
-       eDensity,  // Electron QuantumDensity from Negf
+       elDensity,  // Electron QuantumDensity from Negf
        hDensity,  // Hole QuantumDensity from Negf
        CurrentDensity,    //
        ContactCurrents    // Contact Currents
@@ -138,6 +138,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         double delta;
 
+        int writeLDOS;
     };
 
 

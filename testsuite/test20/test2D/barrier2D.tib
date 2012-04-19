@@ -152,7 +152,7 @@ Module sweep
 
 Module negf
 {
-  plot = (eDensity)
+  plot = (elDensity)
   regions = (source_region,barrier1,well,barrier2,drain_region,oxide1,oxide2)
   potential_simulation = driftdiffusion
   Boundary int_source{}
@@ -171,11 +171,11 @@ Module negf
      hamiltonian single_band {valley = G}
   }
 
-  #k_integration
-  #{
-  #  k_max = 1.0  # in 1/nm ! 
-  #  number_of_elements = 5
-  #}
+  k_integration_density
+  {
+    k_max = 1.0  # in 1/nm ! 
+    number_of_elements = 5
+  }
 
 }
 
@@ -211,7 +211,7 @@ Module efaschroedinger
 Simulation
 {
   temperature = 300
-  solve = (driftdiffusion,negf)
+  solve = (driftdiffusion,negf,quantum_el)
 
   resultpath = output
   scratchpath = /work/fpalomba/

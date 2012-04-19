@@ -181,5 +181,39 @@ inline void f77_negf_set_outer (f77_int const* handler, f77_int const& outer)
 }
 
 
+extern "C" void negf_set_kpoint_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_negf_set_kpoint:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: kpoint
+inline void f77_negf_set_kpoint (f77_int const* handler, f77_int const& kpoint)
+{
+  negf_set_kpoint_ (handler, kpoint);
+}
+
+
+extern "C" void negf_set_reference_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_negf_set_reference:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: minmax
+inline void f77_negf_set_reference (f77_int const* handler, f77_int const& 
+    minmax)
+{
+  negf_set_reference_ (handler, minmax);
+}
+
+
+extern "C" void negf_set_writeldos_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_negf_set_writeldos:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: flag
+inline void f77_negf_set_writeldos (f77_int const* handler, f77_int const& flag)
+{
+  negf_set_writeldos_ (handler, flag);
+}
+
+
 #endif
 

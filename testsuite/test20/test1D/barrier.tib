@@ -5,8 +5,8 @@ Device
   meshfile = test.msh  
   mesh_units = 1e-9
 
-  material = GaAs
-  
+  material = InGaAs
+  x = 0.53
   #x-growth-direction = (1, 1, 0)
   #y-growth-direction = (1, -1, 0)
   #z-growth-direction = (0, 0, 1)
@@ -21,21 +21,23 @@ Device
 
    Region barrier1
    {
-     #material = AlAs           
-     Doping {
-       type = donor
-       Nd = 2e18 
-     }
+     material = GaInP
+     x = 0.3           
+   #  Doping {
+   #    type = donor
+   #    Nd = 2e18 
+   #  }
     
    }
 
    Region barrier2
    {
-    #material = AlAs           
-    Doping {
-       type = donor
-       Nd = 2e18 
-     }
+    material = GaInP
+    x = 0.3           
+   # Doping {
+   #    type = donor
+   #    Nd = 2e18 
+   #  }
    }
 
    Region drain_region
@@ -64,10 +66,10 @@ Device
 
    Region well
    {
-     Doping {
-       type = donor
-       Nd = 2e18 
-     }
+  #   Doping {
+  #   type = donor
+  #   Nd = 2e18 
+  #   }
    }
 
    Cluster double_barrier
@@ -75,17 +77,15 @@ Device
     regions=(source_region,barrier1, well, barrier2,drain_region)
    }
 
-   
-   Quantum_contact int_source
-   {
-    regions = source_region  
-    length = 0.05
-   }
-
-
    Quantum_contact int_drain
    {
     regions = drain_region
+    length = 0.05
+   }
+
+   Quantum_contact int_source
+   {
+    regions = source_region  
     length = 0.05
    }
 
@@ -114,11 +114,14 @@ Module driftdiffusion
     #{
     #  model = srh
     #}
-  particle_density
-  {
-   statistics =  fermidirac
-  } 
- }
+   particle_density
+   { 
+   
+    statistics =  fermidirac
+   
+    }
+
+  }
 
   Contact source
   {
@@ -138,15 +141,15 @@ Module sweep
   name = sweep_drain 
   solve = (driftdiffusion,negf)
   variable = $Vd
-  start = 0
-  stop = 0.10
-  steps = 1 
+  start = 0.0
+  stop = 1.0
+  steps = 50 
   plot_data = true
 }
 
 Module negf
 {
-  plot = (Current) 
+  plot = (Current)
   regions = double_barrier
 
   potential_simulation = driftdiffusion
@@ -157,13 +160,14 @@ Module negf
   Solver
   {
     #verbosity = 99 
-    Np_contour = (20,20)
-    Np_real = 50
-    Npoles = 3 
+    writeLDOS = 1
+    Np_contour = (0,0)
+    Np_real = 1000
+    Npoles = 0 
     delta = 2e-3
     deltaEc = 0.25
-    Emin = -0.6
-    Emax = 0.6 
+    Emin = -0.30
+    Emax = 0.4
     Estep = 0.01
   }
 
@@ -173,49 +177,57 @@ Module negf
      hamiltonian single_band {valley = G}
   }
   
-  k_integration_density
-  {
-   k_max = 0.750
-   number_of_elements = (4,4)
-  }
+  #k_integration_density
+  #{
+  # k_max = 0.750
+  # number_of_elements = (4,4)
+  #}
 
-  k_integration_current
-  {
-   k_max = 0.10
-   number_of_elements = (2,2)
-  }
+ k_integration_current
+ {
+  k_max = 0.5
+  number_of_elements = (5,5)
+ }
 
 
 }
 
-Module efaschroedinger
-{
-  name = quantum_el
+#Module efaschroedinger
+#{
+#  name = quantum_el
 
-  regions = double_barrier 
+#  regions = double_barrier 
   
-  particle = el
-  poisson_model_name = driftdiffusion
+#  particle = el
+#  poisson_model_name = driftdiffusion
 
-  plot = (EigenFunctions, EigenEnergy, EnergyLevels,ProbabilityDensity,QuantumDensity)
+#  plot = (EigenFunctions, EigenEnergy, EnergyLevels,ProbabilityDensity,QuantumDensity)
 
-  Solver
-  {
-    number_of_eigenstates = 4 
-  }	
+#  Solver
+#  {
+#    number_of_eigenstates = 4 
+#  }	
 
 
-  Physics
-  {
-    model = conduction_band
+#  Physics
+#  {
+#    model = conduction_band
 
     #model = kp   #  k.p  for  valence  band
     #kp_model = 8x8
-  }
+#  }
 
-}
+#}
 
 
+#Module selfconsistent
+#{
+# solve = (driftdiffusion,negf) 
+# max_iteration = 100
+# absolute_tollerance = 5e-4
+# relative_tollerance = 1e-9
+# monitor = true
+#} 
 
 # Definition of  model-independent parameters of the Simulation
 Simulation
