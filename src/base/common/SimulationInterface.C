@@ -2115,6 +2115,8 @@ SimulationInterface::get_solution(const Elem* elem,
       // TODO This part is not tested at all !!!
       // Alex: indeed it does crash with selfcons negf/dd
       // commented out temporarily
+      // need flag = false in this case!
+      flag = false;
       /*vector<const Elem*> tree;
       elem->family_tree(tree, false);
 
