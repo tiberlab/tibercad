@@ -763,13 +763,13 @@ DriftDiffusionProperties::calculate_densities(void)
     _pd->gamma_p = _holes->get_gamma();
   }
 
-  if (!(_coupling && DriftDiffusionDefs::ELECTRONS))
+  if (!(_coupling & DriftDiffusionDefs::ELECTRONS))
   {
     _pd->electron_density = 0.0;
     _pd->electron_density_derivative = 0.0;
   }
 
-  if (!(_coupling && DriftDiffusionDefs::HOLES))
+  if (!(_coupling & DriftDiffusionDefs::HOLES))
   {
     _pd->hole_density = 0.0;
     _pd->hole_density_derivative = 0.0;
