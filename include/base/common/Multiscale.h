@@ -28,6 +28,12 @@ class Multiscale
     //! Constructor
     explicit Multiscale(const ModelOptions& options);
 
+    //! Reinit the multiscale coupling
+    /*!
+     * Can be called before solving the coupled models
+     */
+    void reinit(void);
+
 
   private:
 

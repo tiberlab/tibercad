@@ -74,3 +74,14 @@ Multiscale::init(void)
   Messages::info(os.str());
 
 }
+
+
+void
+Multiscale::reinit(void)
+{
+  if (!_macromodel->is_solved())
+    Messages::warning("Simulation '" + _macromodel->get_name() +
+        "' has not been solved before multiscale coupling.");
+
+  _macromodel->restrict_solve_to_subdomains(_restricted_macro_domain, _restricted_variables);
+}

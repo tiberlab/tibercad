@@ -167,6 +167,10 @@ class TBDLLOCAL SelfconsistentSolver : public SimulationInterface
     //! The simulations which we solve self-consistently
     std::vector<SimulationInterface*> _simulations;
 
+    //! The index of the simulation for convergence check
+    unsigned int _convergence_check_id;
+
+
     //! The maximum number of iterations
     unsigned int _max_it;
 
@@ -202,7 +206,8 @@ SelfconsistentSolver::SelfconsistentSolver(const ModelOptions& options)
     _max_it(20),
     _rel_tol(1e-3),
     _abs_tol(1e-3),
-    _xmonitor(NULL)
+    _xmonitor(NULL),
+    _multiscale(NULL)
 {
   is_task(true);
 }

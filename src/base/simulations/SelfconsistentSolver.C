@@ -27,12 +27,17 @@ SelfconsistentSolver::do_init(void)
         "SelfconsistentSolver: No simulation names provided.");
   
   _simulations.resize(num_of_sims);
+  // as default, convergence check is done on the last simulation of the list
+  _convergence_check_id = num_of_sims - 1;
   for (int i = 0; i < num_of_sims; i++)
   {
     _simulations[i] = find_simulation(sims[i]);
     if (_simulations[i] == NULL)
       throw InitFailedException("SelfconsistentSolver: Simulation " +
           sims[i] + " not found.");
+
+    if (sims[i] == get_option("convergence_check", ""))
+      _convergence_check_id = i;
 
     // If it is not already initialized, we initialize now
     if (!_simulations[i]->is_initialized())
@@ -132,6 +137,9 @@ SelfconsistentSolver::initialize(void)
 void
 SelfconsistentSolver::solve_simulations(void)
 {
+  if (_multiscale != NULL)
+    _multiscale->reinit();
+
   int num_sim = _simulations.size();
   for (int i = 0; i < num_sim; i++)
   {
