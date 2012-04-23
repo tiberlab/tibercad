@@ -697,6 +697,9 @@ class SimulationInterface : public TiberModelObject
     const IDSet& get_plotvariable_ids(void) const;
 
 
+    //! Get the region IDs
+    void get_region_ids(std::set<ID>& region_ids) const;
+
 
   protected:
  

@@ -1,11 +1,16 @@
 // $Id$
 
 #include "SelfconsistentSolver.h"
+#include "Multiscale.h"
 #include "XMonitor.h"
 
 using namespace std;
 
 
+SelfconsistentSolver::~SelfconsistentSolver(void)
+{
+  delete _multiscale;
+}
 
 void
 SelfconsistentSolver::do_init(void)
@@ -47,6 +52,12 @@ SelfconsistentSolver::do_init(void)
   //set_environment(&_simulations[0]->get_environment());
 
   parse_options();
+
+  if (get_options().has_submodel("Multiscale"))
+  {
+    ModelOptions::const_submodel_iterator it(get_options().submodels_begin("Multiscale"));
+    _multiscale = new Multiscale(it->second);
+  }
 }
 
 

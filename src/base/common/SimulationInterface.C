@@ -552,6 +552,13 @@ SimulationInterface::init(void)
     Messages m;
     m.newline();
     m.frameline(">>>>",'>');
+
+    ostringstream os;
+    os << "Simulation options for " << get_name() << " (" <<
+        get_type() << ")";
+
+    m.info(os.str());
+    m.indent();
   }
 
   if (!_is_initialized)
@@ -580,18 +587,9 @@ SimulationInterface::init(void)
 
   if (verbose() > 0)
   {
-    Messages m;
-    {
-      ostringstream os;
-      os << "Simulation options for " << get_name() << " (" <<
-          get_type() << ")";
-
-      m.info(os.str());
-    }
-    m.indent();
-
     print_info();
 
+    Messages m;
     m.newline();
 
     set<string> names;
@@ -690,6 +688,17 @@ SimulationInterface::find_simulation(const string& name)
   }
 
   return sim;
+}
+
+
+
+
+void
+SimulationInterface::get_region_ids(std::set<ID>& region_ids) const
+{
+  region_ids.clear();
+  if (has_environment())
+    region_ids = get_environment().get_region_ids();
 }
 
 

@@ -6,6 +6,7 @@
 #include "SimulationInterface.h"
 
 
+class Multiscale;
 class XMonitor;
 
 //! Interface for self-consistent calculations
@@ -184,6 +185,10 @@ class TBDLLOCAL SelfconsistentSolver : public SimulationInterface
     //! The X monitor
     XMonitor* _xmonitor;
 
+
+    //! Multiscale definitions
+    Multiscale* _multiscale;
+
 };
 
 
@@ -202,10 +207,6 @@ SelfconsistentSolver::SelfconsistentSolver(const ModelOptions& options)
   is_task(true);
 }
 
-inline
-SelfconsistentSolver::~SelfconsistentSolver(void)
-{
-}
 
 
 inline
