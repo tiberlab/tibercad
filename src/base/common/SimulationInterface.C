@@ -713,7 +713,9 @@ SimulationInterface::clear_systems(void)
 
 
 ID
-SimulationInterface::create_equation_system(const std::string& type)
+SimulationInterface::create_equation_system(const std::string& type,
+    const std::string& block,
+    const ModelOptions& options)
 {
   ID newid = _systems.size();
 
@@ -723,11 +725,14 @@ SimulationInterface::create_equation_system(const std::string& type)
   //if (newid > 0)
   os << "_" << newid;
 
-  get_solver_options().set_option("simulation", get_name());
-  get_solver_options().find_option("simulation");
+  ModelOptions opts(options);
+  opts += get_solver_options(block);
+
+  opts.set_option("simulation", get_name());
+  opts.find_option("simulation");
 
   TiberEqSystem* sys = TiberEqSystem::create(get_equation_systems(),
-      os.str(), type, get_solver_options());
+      os.str(), type, opts);
 
   _systems.push_back(sys);
 
@@ -2438,12 +2443,12 @@ SimulationInterface::convert_variable_name_to_id(
 
 
 ModelOptions&
-SimulationInterface::get_solver_options(void)
+SimulationInterface::get_solver_options(const std::string& block)
 {
-  if (!get_options().has_submodel("Solver"))
-    get_options().add_submodel("Solver", ModelOptions());
+  if (!get_options().has_submodel(block))
+    get_options().add_submodel(block, ModelOptions());
 
-  ModelOptions::submodel_iterator it(get_options().submodels_begin("Solver"));
+  ModelOptions::submodel_iterator it(get_options().submodels_begin(block));
 
   return it->second;
 }

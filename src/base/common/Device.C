@@ -430,7 +430,8 @@ Device::setup_quantum_contacts(void)
     set_material(get_material(rg_ids[0]), vid, name);
 
     // We have to erase the region id from the list of active regions, otherwise
-    // we mess up the other modules
+    // we mess up the other modules (quantum contact regions should be invisible
+    // when asking for real device regions)
     _active_region_ids.erase(newid);
 
   }

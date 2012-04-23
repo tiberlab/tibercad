@@ -721,8 +721,14 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \param type the type as string (linear, nonlinear, eigen)
      * The systems are stored in sequence of creation.
+     * \param block the input file block to read from (default is \c Solver)
+     * \param options default options
+     *
+     * If no input file block should be read, use the empty string for \c block.
      */
-    ID create_equation_system(const std::string& type);
+    ID create_equation_system(const std::string& type,
+        const std::string& block = "Solver",
+        const ModelOptions& options = ModelOptions());
 
 
     //! Get the equation system with number \c i
@@ -735,7 +741,10 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get the solver options
-    ModelOptions& get_solver_options(void);
+    /*!
+     * \param block the input file block to read solver options from (default \c Solver)
+     */
+    ModelOptions& get_solver_options(const std::string& block = "Solver");
 
 
     //! Initialize the internal mesh pointer

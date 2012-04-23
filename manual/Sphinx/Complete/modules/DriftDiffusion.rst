@@ -608,6 +608,10 @@ models are
          The reference energy. The default is ``m`` for midgap.
          Possible values are ``cb``, ``vb`` or ``m`` 
 
+  ``recombination_center``
+         Flag to switch on and off the recombination through a trap
+
+
 For ``reference = m`` for example, the trap energy is given as :math:`E_{trap} = E_{midgap} + Et`. 
 In the other cases it is :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v + Et`.
 The following trap types are implemented:
