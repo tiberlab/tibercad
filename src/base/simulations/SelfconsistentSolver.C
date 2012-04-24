@@ -137,12 +137,12 @@ SelfconsistentSolver::initialize(void)
 void
 SelfconsistentSolver::solve_simulations(void)
 {
-  if (_multiscale != NULL)
-    _multiscale->reinit();
-
   int num_sim = _simulations.size();
   for (int i = 0; i < num_sim; i++)
   {
+    if (_multiscale != NULL)
+      _multiscale->reinit(_simulations[i]);
+
     _simulations[i]->solve();
 
     // inherit the solution IDs
