@@ -57,7 +57,7 @@ DDInterfaceModel::prepare_submodels(void)
   for (; it != end; ++it)
   {
     ModelOptions opts(it->second);
-    if (opts.get_option("recombination_center", true))
+    if (opts.get_option("recombination_center", false))
     {
       it->second.delete_option("recombination_center");
       opts.set_option("trap", true);
