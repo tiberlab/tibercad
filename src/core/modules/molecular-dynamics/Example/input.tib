@@ -1,0 +1,69 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = mesh.msh
+  
+  Region Bulk1{material = Si}
+  Region Bulk2{material = Si}
+  Region Bulk3{material = Si}
+  Region Bulk4{material = Si}
+
+  mesh_units = 1e-10
+
+  Atomistic interface1
+  {
+     regions = (all)
+     reference_region = Bulk3
+     print = (xyz)
+  }
+
+}
+
+
+Module molecular-dynamics
+{
+
+  name = md
+  plot = (LatticeTemp)
+
+  potential_file = pot.lammps
+  thermo_step = 10
+  dump_step = 100
+  
+  rescale_step = 10
+  time_step = 0.0001 #ps
+  nvt_step = 2000
+
+  #NVT equilibration
+  Nevery = 10
+  Nrepeat = 10
+  Nfreq = 100
+ 
+  x_bc = p
+  y_bc = p
+  z_bc = p
+}
+
+
+Simulation
+{
+  temperature = 300
+  solve = md
+  resultpath = output
+  output_format = vtk
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
