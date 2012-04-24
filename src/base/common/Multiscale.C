@@ -77,8 +77,10 @@ Multiscale::init(void)
 
 
 void
-Multiscale::reinit(void)
+Multiscale::reinit(SimulationInterface* sim)
 {
+  if (sim != _macromodel) return;
+
   if (!_macromodel->is_solved())
     Messages::warning("Simulation '" + _macromodel->get_name() +
         "' has not been solved before multiscale coupling.");

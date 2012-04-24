@@ -224,7 +224,7 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
     return;
 
   // a set of DoFs for each system
-  vector<IDHashSet> dofsets;
+  vector<IDHashSet> dofsets(1);
 
   TiberEqSystem& tiber_sys = get_equation_system<TiberEqSystem>();
   System* system = tiber_sys.get_libmesh_system();
@@ -238,14 +238,15 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
   vector<unsigned int> dof_indices;
 
   // contains the 'active' DoFs, false means inactive
-  vector<unsigned int> used_dofs(dof_map.n_dofs(), false);
+  vector<bool> used_dofs(dof_map.n_dofs(), false);
 
   // for each variable, tell if it is used in the
   // excluded domains:
   // true means include, false means exclude
   vector<bool> var(dof_map.n_variables(), true);
 
-  for (int i = 0; i < var.size(); ++i)
+
+  for (int i = 0; i < variables.size(); ++i)
     var[system->variable_number(variables[i])] = false;
 
   if (variables.empty())
@@ -286,7 +287,7 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
   }
 
   // now we have all used DoFs in used_dofs marked with true
-  for (size_t i = 0; i < dof_indices.size(); ++i)
+  for (size_t i = 0; i < used_dofs.size(); ++i)
     if (!used_dofs[i])
       dofsets[0].insert(i);
 

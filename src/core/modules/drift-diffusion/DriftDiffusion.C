@@ -885,6 +885,10 @@ DriftDiffusion::calculate_iqe(void)
   }
 
   ID rec_id = get_solution_id("DirectRecombination");
+  ID netrec_id = get_solution_id("NetRecombination");
+  ID srh_id = get_solution_id("SRHRecombination");
+  ID aug_id = get_solution_id("AugerRecombination");
+  double Rtot = 0.0, Rsrh = 0.0, Raug = 0.0;
 
   if (rec_id == INVALID_ID)
   {
@@ -935,7 +939,13 @@ DriftDiffusion::calculate_iqe(void)
 
     map<ID, vector<double> > datamap;
     datamap[rec_id] = vector<double>(qrule->n_points());
+    datamap[netrec_id] = vector<double>(qrule->n_points());
+    datamap[srh_id] = vector<double>(qrule->n_points());
+    datamap[aug_id] = vector<double>(qrule->n_points());
     vector<double>& data = datamap[rec_id];
+    vector<double>& nrdata = datamap[netrec_id];
+    vector<double>& srhdata = datamap[srh_id];
+    vector<double>& augdata = datamap[aug_id];
 
     DriftDiffusion::get_solution_secure(elem, datamap, qrule->get_points());
 
@@ -945,10 +955,20 @@ DriftDiffusion::calculate_iqe(void)
     for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
     {
       iqe_el += JxW[qp] * data[qp];
+      Rtot += JxW[qp] * nrdata[qp];
+      Rsrh += JxW[qp] * srhdata[qp];
+      Raug += JxW[qp] * augdata[qp];
     }
 
     _iqe += iqe_el;
   }
+
+  ostringstream rec;
+  rec << "Rrad = " << _iqe * Constants::e << 
+    " Rsrh = " << Rsrh * Constants::e <<
+    " Raug = " << Raug * Constants::e << 
+    " Rtot = " << Rtot * Constants::e << "\n";
+  Messages::info(rec.str());
 
   double current = 0;
 
@@ -1329,6 +1349,39 @@ DriftDiffusion::do_init(void)
   }
 
 }
+
+
+
+
+void
+DriftDiffusion::do_reinit(void)
+{
+  const set<PhysicalModel*>& pm = get_physical_models();
+  set<PhysicalModel*>::const_iterator it(pm.begin());
+  set<PhysicalModel*>::const_iterator end(pm.end());
+
+  for ( ; it != end; ++it)
+  {
+    DriftDiffusionProperties* sc =
+        static_cast<DriftDiffusionProperties*>(*it);
+
+    switch (_useparticle)
+    {
+      case 'e':
+        sc->set_coupling_type(DriftDiffusionDefs::ELECTRONS);
+        break;
+
+      case 'h':
+        sc->set_coupling_type(DriftDiffusionDefs::HOLES);
+        break;
+
+      default:
+        sc->set_coupling_type(DriftDiffusionDefs::BOTH);
+        break;
+    }
+  }
+}
+
 
 
 void
@@ -4067,12 +4120,15 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         //cerr << " " << Fe(0) <<  "  " << Fe(Fe.size()-1) << endl;
       }
 
+      system.exclude_dofs(Fe, dof_indices);
 
       residual->add_vector(Fe, dof_indices);
       //sysmat.add_matrix(Ke, dof_indices);
     }
     else
     {
+      system.exclude_dofs(Ke, dof_indices);
+
       jacobian->add_matrix(Ke, dof_indices);
       /*
       for (unsigned int i = 0; i < n_dofs; i++)
@@ -4128,8 +4184,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     /*
     if (coupling & ELECTRONS)
     {
-      if (__private_counter > 0)
-        oldx -= x;
+      //if (__private_counter > 0)
+      //  oldx -= x;
       ostringstream os;
       os << "_" << __private_counter;
       write_nodal_vector("residual" + os.str(), *residual);
@@ -4137,11 +4193,11 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       ms << "writing " << "residual" << os.str() << " (norm = " << residual->l2_norm() << ")\n";
       Messages::info(ms.str());
       //residual->print_matlab("F" + os.str() + ".m");
-      write_nodal_vector("x" + os.str(), oldx);
-      NumericVector<Number>& weight = system.get_vector("scaling");
-      write_nodal_vector("scaling" + os.str(), weight);
+      //write_nodal_vector("x" + os.str(), oldx);
+      //NumericVector<Number>& weight = system.get_vector("scaling");
+      //write_nodal_vector("scaling" + os.str(), weight);
       __private_counter++;
-      oldx = x;
+      //oldx = x;
     }
     */
   }

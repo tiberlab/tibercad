@@ -373,6 +373,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     virtual void do_init(void);
 
 
+    //! Reinit the simulation
+    virtual void do_reinit(void);
+
+
     //! Setup the available variables
     virtual void do_setup_solution_variables(void);
 

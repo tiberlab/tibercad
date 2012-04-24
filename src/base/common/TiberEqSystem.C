@@ -80,6 +80,8 @@ TiberEqSystem::get_libmesh_system(void)
       sys = static_cast<TiberNonlinearSystem*>(this);
       break;
   }
+
+  return sys;
 }
 
 

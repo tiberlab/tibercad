@@ -1463,11 +1463,7 @@ SimulationInterface::get_equation_system(ID i)
   if (i >= _systems.size())
     throw RuntimeException("Trying to access inexistent system.");
 
-#ifdef DEBUG
   return dynamic_cast<T&>(*_systems[i]);
-#else
-  return static_cast<T&>(*_systems[i]);
-#endif
 }
 
 

@@ -30,9 +30,11 @@ class Multiscale
 
     //! Reinit the multiscale coupling
     /*!
-     * Can be called before solving the coupled models
+     * Can be called before solving \c sim.
+     * If \c sim is one of the multiscale coupled models,
+     * actions will be taken according to multiscale method.
      */
-    void reinit(void);
+    void reinit(SimulationInterface* sim);
 
 
   private:
