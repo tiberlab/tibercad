@@ -30,9 +30,9 @@ class TBDLLOCAL Negf : public SimulationInterface
        ReorderPotential,  // Laplace equation solution from reordering routines
        elDensity,  // Electron QuantumDensity from Negf
        hDensity,  // Hole QuantumDensity from Negf
-       ContactCurrent,
        eCurrentDensity,    //
-       hCurrentDensity    // Contact Currents
+       hCurrentDensity,    // Contact Currents
+       ContactCurrent = 100
     };
 
     enum kIntegrationType

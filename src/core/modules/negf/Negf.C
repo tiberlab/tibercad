@@ -598,7 +598,7 @@ Negf::do_setup_solution_variables(void)
 {
 
 
-  declare_solution(ReorderPotential, REAL, NODES, "1");
+  declare_solution(ReorderPotential, REAL, NODES, "");
   declare_solution(elDensity, REAL, NODES, "1/cm^3");
   declare_solution(hDensity, REAL, NODES, "1/cm^3");
   declare_solution(eCurrentDensity, REAL, NODES, "A/cm^2");
