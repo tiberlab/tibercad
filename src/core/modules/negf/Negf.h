@@ -30,8 +30,15 @@ class TBDLLOCAL Negf : public SimulationInterface
        ReorderPotential,  // Laplace equation solution from reordering routines
        elDensity,  // Electron QuantumDensity from Negf
        hDensity,  // Hole QuantumDensity from Negf
-       CurrentDensity,    //
-       ContactCurrents    // Contact Currents
+       ContactCurrent,
+       eCurrentDensity,    //
+       hCurrentDensity    // Contact Currents
+    };
+
+    enum kIntegrationType
+    {
+       kintegrationdensity
+
     };
     //! Destructor
     /*!
@@ -109,8 +116,6 @@ class TBDLLOCAL Negf : public SimulationInterface
     void calculate_density(const std::string& particle);
 
     void init_k_space_integration(void);
-
-
 
     struct options
     {
@@ -201,7 +206,11 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     DofField current;
 
+    std::map<const QuantumContact*, double> _contact_potential;
+
     std::map<const QuantumContact*, double> _contact_current;
+
+    double mumin, mumax;
 };
 
 #endif

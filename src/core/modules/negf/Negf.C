@@ -135,7 +135,7 @@ Negf::do_init(void)
   NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
   // Setup a simple effective mass Hamiltonian
   std::cout<<"(negf) create eq sys for H"<<std::endl;
-  ID id = create_equation_system("linear");
+  ID id = create_equation_system("linear","");
   _sys_H = &get_equation_system<TiberLinearSystem>(id);
 
   // attach a variable for each subband
@@ -150,7 +150,7 @@ Negf::do_init(void)
 
   // Setup Overlap matrix
   std::cout<<"(negf) create eq sys for S"<<std::endl;
-  id = create_equation_system("linear");
+  id = create_equation_system("linear","");
   _sys_S = &get_equation_system<TiberLinearSystem>(id);
 
   // attach a variable for each subband
@@ -166,14 +166,14 @@ Negf::do_init(void)
 
   // attach system for reorder dofs
   std::cout<<"(negf) get eq sys for reorder"<<std::endl;
-  id = create_equation_system("linear");
+  id = create_equation_system("linear","");
   _sys = &get_equation_system<TiberLinearSystem>(id);
 
   // We add a second system just to contain the density
   if (plot_solution(elDensity))
   {
     std::cout<<"(negf) create eq sys for elDensity"<<std::endl;
-    id = create_equation_system("linear");
+    id = create_equation_system("linear","");
     _qdens_sys = &get_equation_system<TiberLinearSystem>(id);
     _qdens_sys->add_variable("edens", libMeshEnums::FIRST);
     //_qdens_sys->add_variable("hdens", libMeshEnums::FIRST);
@@ -285,8 +285,11 @@ Negf::compute_current(void)
 
   current.clear();
   current.resize(2,0.0);
+
+  //TODO: elCurrent. hlCurrent
+
   current[0] = _libnegf->current();
-  current[1] = -current[0];
+  current[1] = current[0];
 }
 
 void
@@ -365,15 +368,23 @@ Negf::do_solve(void)
     }
 
     ID id = 0;
+    double sign;
     std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
     const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
     for (; it != end; ++it)
     {
-      _contact_current[it->second] = current[id] * area_factor;
+      if(_contact_potential[it->second] == mumax)
+        sign = 1.0;
+      else
+        sign =-1.0;
+
+      _contact_current[it->second] = sign * current[id] * area_factor;
       id++;
     }
 
     Messages::info("Current done");
+    plot_globaldata();
+
   }
 
   deactivate_quantum_contacts();
@@ -413,10 +424,14 @@ Negf::calculate_for_k_point(const Point& k_point,
    if (_which_integration == 3)
    {
        field.clear();
-       double curr = _libnegf->current();
-       std::cout<<"current: "<< curr<<std::endl;
-       field.push_back(curr);
-       field.push_back(-curr);
+       compute_current();
+       //double curr = _libnegf->current();
+       //std::cout<<"current: "<< curr<<std::endl;
+       //_contact_potential[]
+       //field.push_back(curr);
+       //field.push_back(-curr);
+       field = current;
+
        error = 0.0;
        return;
    }
@@ -551,7 +566,9 @@ Negf::parse_options(void)
 
   opt.n_kT = sol_opt.get_option("n_kT", 10);
 
+  opt.Emin = sol_opt.get_option("Emin",0.0);
 
+  opt.Emax = sol_opt.get_option("Emax",0.0);
 
   opt.Estep = sol_opt.get_option("Estep",0.1);
 
@@ -584,8 +601,8 @@ Negf::do_setup_solution_variables(void)
   declare_solution(ReorderPotential, REAL, NODES, "1");
   declare_solution(elDensity, REAL, NODES, "1/cm^3");
   declare_solution(hDensity, REAL, NODES, "1/cm^3");
-  declare_solution(CurrentDensity, REAL, NODES, "A/cm^2");
-
+  declare_solution(eCurrentDensity, REAL, NODES, "A/cm^2");
+  declare_solution(hCurrentDensity, REAL, NODES, "A/cm^2");
 
   if (plot_solution("Current"))
   {
@@ -619,7 +636,7 @@ Negf::do_setup_solution_variables(void)
       else if (dim == 2)
         units = "A/cm";
 
-      unsigned int id = static_cast<ID>(ContactCurrents);
+      unsigned int id = static_cast<ID>(ContactCurrent);
       for (std::set<std::string>::iterator i(cnt_set.begin()); i != cnt_set.end(); ++i)
       {
         ++id;
@@ -863,20 +880,24 @@ Negf::print_Lib(void)
 
   // phi: potential at boundaries (quantum contacts)
   // mu : electrochemical potential at boundaries (qc)
-  std::vector <double> phi(_quantum_contacts.size());
-  std::vector <double> mu(_quantum_contacts.size());
+  std::vector <double> phi(_quantum_contacts.size(), 0.0);
+  std::vector <double> mu(_quantum_contacts.size(), 0.0);
 
-  double mumin=10000;
-  double mumax=-10000;
+
+  mumin=10000;
+  mumax=-10000;
   ID id = 0;
   std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
   const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
   for (; it != end; ++it)
   {
     get_boundary_potentials(it->second, phi[id], mu[id]);
-    id++;
+
     if(mu[id]>mumax){mumax = mu[id];}
     if(mu[id]<mumin){mumin = mu[id];}
+    _contact_potential[it->second] = mu[id];
+
+    id++;
   }
 
   opt.Emin = sol_opt.get_option("Emin",-mumax-opt.n_kT*kbT);
@@ -955,10 +976,10 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 {
 
   unsigned int np = p.size();
+  const unsigned int dim = get_mesh().mesh_dimension();
 
   if (values.count(ReorderPotential))
   {
-    const unsigned int dim = get_mesh().mesh_dimension();
     const NumericVector<Number>& solution = _sys->get_solution_vector();
     const DofMap& dof_map = _sys->get_dof_map();
     ID u_var = _sys->variable_number("u0");
@@ -988,7 +1009,6 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 
   if (values.count(elDensity))
   {
-    const unsigned int dim = get_mesh().mesh_dimension();
     _sys_H = &get_equation_system<TiberLinearSystem>(0);
     NumericVector<Number>& qdens = *_qdens_sys->solution;
 
@@ -1036,9 +1056,42 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
         values[elDensity][n] = value;
       }
     }
+  }
 
+  if (values.count(eCurrentDensity))
+  {
+    //given an element/point decide which contact it belongs to
+    //values[eCurrentDensity] = std::vector<double>(np*3, 0.0);
+
+    for (unsigned int side=0; side<elem->n_sides(); side++)
+    {
+      const ElementSide elside(elem, side);
+      Boundary* b = _env->get_boundary(elside);
+
+      if (b != NULL)
+      {
+        unsigned int i;
+        ID id = _boundaries[b];
+        std::map<ID, QuantumContact*>::iterator it(_quantum_contacts.find(id));
+        if(it !=  _quantum_contacts.end())
+        {
+          Point point_current = _contact_current[it->second] * it->second->get_normal(i);
+
+          // assign the same current to all points
+          for (unsigned int n = 0; n < np; n++)
+          {
+            values[eCurrentDensity][n*3]   =  point_current(0);
+            values[eCurrentDensity][n*3+1] =  point_current(1);
+            values[eCurrentDensity][n*3+2] =  point_current(2);
+          }
+        }
+        break;
+      }
+
+    }
 
   }
+
 }
 
 void
