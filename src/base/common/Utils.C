@@ -375,6 +375,70 @@ Utils::extract_vector(const string& input, vector<T>& vec)
 }
 
 
+template <>
+void
+Utils::extract_vector(const string& input, vector<double>& vec)
+{
+  // We first read it as strings. This is to allow for ranges:
+  // (0, 0.1, 0.2:0.1:1, 2-5, 5.5)
+  vector<string> vs;
+  extract_vector(input, vs);
+
+  if (vs.size() > 0)
+  {
+    vec.resize(0);
+    vec.reserve(vs.size());
+
+    vector<string> tok;
+    for (size_t i = 0; i < vs.size(); i++)
+    {
+      // check for range a-b
+      tokenize(vs[i], tok, "-");
+      if ((tok.size() == 2) &&
+          (tok[0].find_first_of("eE") == string::npos))
+      {
+        double a = convert<double>(tok[0]);
+        double b = convert<double>(tok[1]);
+        double step = (b > a) ? 1.0 : -1.0;
+        for (double x = a; x < b; x += step)
+          vec.push_back(x);
+        vec.push_back(b);
+      }
+      else
+      {
+        // check for matlab style range a:b or a:s:b
+        tokenize(vs[i], tok, ":");
+        if (tok.size() == 1)
+        {
+          vec.push_back(convert<double>(vs[i]));
+        }
+        else if (tok.size() == 2)
+        {
+          double a = convert<double>(tok[0]);
+          double b = convert<double>(tok[1]);
+          double step = (b > a) ? 1 : -1;
+          for (double x = a; x < b; x += step)
+            vec.push_back(x);
+          vec.push_back(b);
+        }
+        else if (tok.size() == 3)
+        {
+          double a = convert<double>(tok[0]);
+          double step = convert<double>(tok[1]);
+          double b = convert<double>(tok[2]);
+          if (step * (b - a) < 0)
+            throw RuntimeException("'" + vs[i] + "' is invalid double range");
+          for (double x = a; x < b; x += step)
+            vec.push_back(x);
+          vec.push_back(b);
+        }
+        else
+          throw RuntimeException("'" + vs[i] + "' is invalid double range");
+      }
+    }
+  }
+}
+
 
 
 void
@@ -489,6 +553,7 @@ Utils::extract_vector(const string& input, vector<int>& vec)
     vector<string> tok;
     for (size_t i = 0; i < vs.size(); i++)
     {
+      // check for range a-b
       tokenize(vs[i], tok, "-");
       if ((tok.size() == 2) &&
           (tok[0].find_first_of("eE") == string::npos))
@@ -500,15 +565,42 @@ Utils::extract_vector(const string& input, vector<int>& vec)
           vec.push_back(x);
       }
       else
-        vec.push_back(convert<int>(vs[i]));
+      {
+        // check for matlab style range a:b or a:s:b
+        tokenize(vs[i], tok, ":");
+        if (tok.size() == 1)
+        {
+          vec.push_back(convert<int>(vs[i]));
+        }
+        else if (tok.size() == 2)
+        {
+          int a = convert<int>(tok[0]);
+          int b = convert<int>(tok[1]);
+          int step = (b > a) ? 1 : -1;
+          for (int x = a; x <= b; x += step)
+            vec.push_back(x);
+        }
+        else if (tok.size() == 3)
+        {
+          int a = convert<int>(tok[0]);
+          int step = convert<int>(tok[1]);
+          int b = convert<int>(tok[2]);
+          if (step * (b - a) < 0)
+            throw RuntimeException("'" + vs[i] + "' is invalid integer range");
+          for (int x = a; x <= b; x += step)
+            vec.push_back(x);
+        }
+        else
+          throw RuntimeException("'" + vs[i] + "' is invalid integer range");
+      }
     }
   }
 }
 
 
-template
-void
-Utils::extract_vector<double>(const string& input, vector<double>& vec);
+//template
+//void
+//Utils::extract_vector<double>(const string& input, vector<double>& vec);
 
 template
 void
