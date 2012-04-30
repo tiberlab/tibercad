@@ -101,27 +101,21 @@ Negf::do_init(void)
 
   _device = &(_env->get_device());
 
-  {
-    _boundaries.clear();
-    ID id = -1;
-    SimulationEnvironment::BoundaryIterator it = _env->boundaries_begin();
-    const SimulationEnvironment::BoundaryIterator end = _env->boundaries_end();
-    for( ;it!=end; ++it)
-    {
-      _boundaries[*it] = ++id;
-    }
-  }
+
+
+
   // Prepare QuantumContact Map
   // Note: Boundary _contact_names are the same as QC names !!
   {
     _quantum_contacts.clear();
-    std::map<const Boundary*, ID>::iterator it = _boundaries.begin();
-    const std::map<const Boundary*, ID>::iterator end = _boundaries.end();
+    SimulationEnvironment::BoundaryIterator it = _env->boundaries_begin();
+    const SimulationEnvironment::BoundaryIterator end = _env->boundaries_end();
     for (; it != end; ++it)
     {
-      QuantumContact* qc = _device->get_quantum_contact(it->first->get_name());
+      QuantumContact* qc = _device->get_quantum_contact((*it)->get_name());
 
       _quantum_contacts[qc->get_id()] = qc;
+      _boundaries[*it] = qc;
       //std::cerr<<"_quantum_contact "<<qc->get_id()<<" "<<it->first->get_name()<<" "<<it->second<<std::endl;
       // Quantum Contacts are activated here: so dof_map come out correctly
       qc->activate_elements();
@@ -1070,12 +1064,11 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 
       if (b != NULL)
       {
-        unsigned int i;
-        ID id = _boundaries[b];
-        std::map<ID, QuantumContact*>::iterator it(_quantum_contacts.find(id));
-        if(it !=  _quantum_contacts.end())
+        std::map<const Boundary*, QuantumContact*>::iterator it(_boundaries.find(b));
+        if (it !=  _boundaries.end())
         {
-          Point point_current = _contact_current[it->second] * it->second->get_normal(i);
+          unsigned int dummy;
+          Point point_current = _contact_current[it->second] * it->second->get_normal(dummy);
 
           // assign the same current to all points
           for (unsigned int n = 0; n < np; n++)
@@ -1280,6 +1273,16 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
   _device_n_dofs = 0;
   _qc_n_dofs.resize(_quantum_contacts.size(), 0);
 
+  std::map<const Boundary*, int> boundary_ids;
+  int id = 0;
+  std::map<const Boundary*, QuantumContact*>::iterator it = _boundaries.begin();
+  const std::map<const Boundary*, QuantumContact*>::iterator end = _boundaries.end();
+  for( ; it != end; ++it, ++id)
+  {
+    boundary_ids[it->first] = id;
+  }
+
+
   const MeshBase& mesh = get_mesh();
 
   const unsigned int dim = mesh.mesh_dimension();
@@ -1349,7 +1352,7 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 
         if (bd != NULL)
         {
-          ID cc = _boundaries[bd];
+          ID cc = boundary_ids[bd];
 
           for(unsigned int n = 0; n< n_dofs; ++n)
           {
@@ -1404,7 +1407,7 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 
           std::string qc_name = _device->get_region_name(sub_id);
 
-          unsigned int cc = _boundaries[_env->get_boundary(qc_name)];  // cc = 0 or 1
+          unsigned int cc = boundary_ids[_env->get_boundary(qc_name)];  // cc = 0 or 1
 
           for(unsigned int n = 0; n< n_dofs; ++n)
           {

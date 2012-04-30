@@ -160,7 +160,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     Device* _device;
 
-    std::map<const Boundary*, ID> _boundaries;
+    std::map<const Boundary*, QuantumContact*> _boundaries;
 
     SimulationEnvironment* _env;
 
