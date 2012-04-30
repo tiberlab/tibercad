@@ -226,6 +226,17 @@ class SimulationInterface : public TiberModelObject
         const std::vector<std::string>& variables);
 
 
+    //! Exclude the solve from a set of subdomains
+    /*!
+     * \param ids the set of subdomain IDs to be excluded
+     * \param variables the names of the variables to exclude
+     *
+     * If \p variables is empty, then all variables are restricted.
+     */
+    void exclude_solve_from_subdomains(const std::set<ID>& ids,
+        const std::vector<std::string>& variables);
+
+
     //! Solve the system for equilibrium
     /*!
      * Calls do_equilibrium()
@@ -820,8 +831,8 @@ class SimulationInterface : public TiberModelObject
      * Can be overridden if the default implementation is not
      * appropriate.
      *
-     * \param ids the set of subdomain IDs
-     * \param variables the names of the variables to restrict
+     * \param ids the set of subdomain IDs to exclude variables in
+     * \param variables the names of the variables to exclude in regions \c ids
      *
      * If \p variables is empty, then all variables are restricted.
      */

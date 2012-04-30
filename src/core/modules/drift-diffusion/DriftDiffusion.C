@@ -4104,6 +4104,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     //       Dirichlet type BCs needs special care
     dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
+    system.exclude_dofs(Ke, dof_indices, elem);
+
 
     perf_log.start_event("add");
     if (residual != NULL)
@@ -4120,14 +4122,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         //cerr << " " << Fe(0) <<  "  " << Fe(Fe.size()-1) << endl;
       }
 
-      system.exclude_dofs(Fe, dof_indices);
+      system.exclude_dofs(Fe, dof_indices, elem);
 
       residual->add_vector(Fe, dof_indices);
       //sysmat.add_matrix(Ke, dof_indices);
     }
     else
     {
-      system.exclude_dofs(Ke, dof_indices);
 
       jacobian->add_matrix(Ke, dof_indices);
       /*

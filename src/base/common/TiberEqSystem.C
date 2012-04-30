@@ -88,8 +88,9 @@ TiberEqSystem::get_libmesh_system(void)
 
 void
 TiberEqSystem::exclude_dofs(DenseMatrix<double>& mat,
-    const std::vector<unsigned int>& dof_indices)
+    const std::vector<unsigned int>& dof_indices, const Elem* elem)
 {
+
   // if there are no excluded Dofs we have nothing to do
   if (!_excluded_dofs.empty())
   {
@@ -100,7 +101,14 @@ TiberEqSystem::exclude_dofs(DenseMatrix<double>& mat,
       {
         for (unsigned int j = 0; j < mat.n(); ++j)
           mat(i,j) = 0;
+
         mat(i,i) = 1;
+      }
+      else if ((elem != NULL) && _excluded_region_ids.count(elem->subdomain_id()) &&
+          _interface_dofs.count(dof_indices[i]))
+      {
+        // this DOF is on an interface, so it must not be messed up
+        mat(i,i) = 0;
       }
     }
   }
@@ -110,7 +118,7 @@ TiberEqSystem::exclude_dofs(DenseMatrix<double>& mat,
 
 void
 TiberEqSystem::exclude_dofs(DenseVector<double>& vec,
-    const std::vector<unsigned int>& dof_indices)
+    const std::vector<unsigned int>& dof_indices, const Elem* elem)
 {
   // if there are no excluded Dofs we have nothing to do
   if (!_excluded_dofs.empty())
@@ -120,6 +128,12 @@ TiberEqSystem::exclude_dofs(DenseVector<double>& vec,
     {
       if (_excluded_dofs.count(dof_indices[i]))
         vec(i) = 0;
+      else if ((elem != NULL) && _excluded_region_ids.count(elem->subdomain_id()) &&
+          _interface_dofs.count(dof_indices[i]))
+      {
+        // this DOF is on an interface, so it must not be messed up
+        vec(i) = 0;
+      }
     }
   }
 }
@@ -151,7 +165,7 @@ double
 TiberEqSystem::calculate_norm(NumericVector<double>* vec, NormType norm)
 {
   double result = 0;
-double old;
+  double old;
   switch (norm)
   {
     case l2_NORM:

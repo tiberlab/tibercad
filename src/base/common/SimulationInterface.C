@@ -204,14 +204,32 @@ void
 SimulationInterface::restrict_solve_to_subdomains(const set<ID>& ids,
     const vector<string>& variables)
 {
+  // find_excluded_dofs wants the set of ids where variables have to
+  // be excluded
+  set<ID> all_ids, excluded_ids;
+  get_region_ids(all_ids);
+  set_difference(all_ids.begin(), all_ids.end(), ids.begin(), ids.end(),
+      std::inserter(excluded_ids, excluded_ids.end()));
+
+  exclude_solve_from_subdomains(excluded_ids, variables);
+}
+
+
+
+void
+SimulationInterface::exclude_solve_from_subdomains(const set<ID>& ids,
+    const vector<string>& variables)
+{
   // if we have no environment then we have probably no mesh
   // and we can go out immediately
   if (!has_environment()) return;
 
   // we have to activate our elements
   get_environment().prepare_for_solve();
+
   find_excluded_dofs(ids, variables);
 }
+
 
 
 void
@@ -225,6 +243,7 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
 
   // a set of DoFs for each system
   vector<IDHashSet> dofsets(1);
+  vector<IDHashSet> bd_dofs(1);
 
   TiberEqSystem& tiber_sys = get_equation_system<TiberEqSystem>();
   System* system = tiber_sys.get_libmesh_system();
@@ -239,6 +258,8 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
 
   // contains the 'active' DoFs, false means inactive
   vector<bool> used_dofs(dof_map.n_dofs(), false);
+  // contains the 'inactive' DoFs, true means inactive
+  vector<bool> unused_dofs(dof_map.n_dofs(), false);
 
   // for each variable, tell if it is used in the
   // excluded domains:
@@ -276,12 +297,16 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
 
     for (int i = 0; i < var.size(); ++i)
     {
+      dof_map.dof_indices(elem, dof_indices, i);
       if (!restricted || var[i])
       {
-        dof_map.dof_indices(elem, dof_indices, i);
-
         for (int j = 0; j < dof_indices.size(); ++j)
           used_dofs[dof_indices[j]] = true;
+      }
+      else
+      {
+        for (int j = 0; j < dof_indices.size(); ++j)
+          unused_dofs[dof_indices[j]] = true;
       }
     }
   }
@@ -290,8 +315,15 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
   for (size_t i = 0; i < used_dofs.size(); ++i)
     if (!used_dofs[i])
       dofsets[0].insert(i);
+    else
+    {
+      // it may be on the boundary, in that case we have to treat it
+      // in a special way
+      if (unused_dofs[i])
+        bd_dofs[0].insert(i);
+    }
 
-  tiber_sys.set_excluded_dofs(dofsets[0]);
+  tiber_sys.set_excluded_dofs(dofsets[0], bd_dofs[0], ids);
 }
 
 

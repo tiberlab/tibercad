@@ -11,6 +11,7 @@
 
 class EquationSystems;
 class System;
+class Elem;
 template <typename T> class NumericVector;
 template <typename T> class DenseVector;
 template <typename T> class DenseMatrix;
@@ -111,15 +112,20 @@ class TiberEqSystem
 
     //! Set the set of excluded DoFs
     /*!
-     * An empty set resets any previous restrictions
+     * \param region_ids the region IDs with excluded dofs
+     * An empty \c excluded_dofs set resets any previous restrictions
      */
-    void set_excluded_dofs(const IDHashSet& exlcuded_dofs);
+    void set_excluded_dofs(const IDHashSet& excluded_dofs,
+        const IDHashSet& interface_dofs = IDHashSet(),
+        const std::set<ID>& region_ids = std::set<ID>());
 
     //! Exclude DoFs from a matrix
-    void exclude_dofs(DenseMatrix<double>& mat, const std::vector<unsigned int>& dof_indices);
+    void exclude_dofs(DenseMatrix<double>& mat,
+        const std::vector<unsigned int>& dof_indices, const Elem* elem = NULL);
 
     //! Exclude DoFs from a matrix
-    void exclude_dofs(DenseVector<double>& vec, const std::vector<unsigned int>& dof_indices);
+    void exclude_dofs(DenseVector<double>& vec,
+        const std::vector<unsigned int>& dof_indices, const Elem* elem = NULL);
 
 
   protected:
@@ -176,6 +182,14 @@ class TiberEqSystem
     //! A set of DoFs which should be excluded from the calculation
     IDHashSet _excluded_dofs;
 
+
+    //! A set of DoFs which are on the interface between excluded and included regions
+    IDHashSet _interface_dofs;
+
+
+    //! A set of DoFs which should be exc
+    std::set<ID> _excluded_region_ids;
+
 };
 
 
@@ -227,9 +241,13 @@ TiberEqSystem::set_type(SystemType type)
 
 inline
 void
-TiberEqSystem::set_excluded_dofs(const IDHashSet& exlcuded_dofs)
+TiberEqSystem::set_excluded_dofs(const IDHashSet& exlcuded_dofs,
+    const IDHashSet& interface_dofs,
+    const std::set<ID>& region_ids)
 {
   _excluded_dofs = exlcuded_dofs;
+  _interface_dofs = interface_dofs;
+  _excluded_region_ids = region_ids;
 }
 
 
