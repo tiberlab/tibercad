@@ -172,6 +172,7 @@ DDInterfaceModel::do_init(void)
       istringstream iss(eflux);
       if ((iss >> _eflux).fail())
       {
+        _eflux = 0;
         _eflux_sim = SimulationInterface::find_simulation(eflux);
         if (_eflux_sim == NULL)
         {
@@ -263,10 +264,11 @@ DDInterfaceModel::compute()
       DriftDiffusionProperties& dd = *get_dd_properties();
       vector<double> data;
       // we take the flux from the neighbor element
-      _eflux_sim->get_solution(dd.get_element()->neighbor(_side), _eflux_id,
-          data, dd.get_coordinates());
-
-      flux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
+      if (_eflux_sim->get_solution(dd.get_element()->neighbor(_side), _eflux_id,
+          data, dd.get_coordinates()))
+      {
+        flux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
+      }
     }
 
 
