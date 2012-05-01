@@ -285,7 +285,7 @@ Control::setup_globals(const ModelOptions& opts)
 
 
   // create output directory
-  path outpath(_outputdir, native);
+  path outpath(_outputdir);
   if (!exists(outpath))
   {
     // we catch any error here without doing anything yet
