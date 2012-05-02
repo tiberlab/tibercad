@@ -484,6 +484,10 @@ class DSSC : public SimulationInterface
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
+    //! Assmebly of the Impedance Spectroscopy Jacobian matrix
+    void do_assembly_frequency(const NumericVector<Number>& x,
+        NumericVector<Number>* residual,
+        SparseMatrix<Number>* jacobian);
 
     //! Find the open circuit potential and densities
     void get_OC_values(void);
