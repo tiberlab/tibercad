@@ -1003,6 +1003,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 
   if (values.count(elDensity))
   {
+    //std::cout<<"(Negf) Getting electron density"<<std::endl;
     _sys_H = &get_equation_system<TiberLinearSystem>(0);
     NumericVector<Number>& qdens = *_qdens_sys->solution;
 
@@ -1054,6 +1055,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 
   if (values.count(eCurrentDensity))
   {
+    //std::cout<<"(Negf) Getting e current density"<<std::endl;
     //given an element/point decide which contact it belongs to
     //values[eCurrentDensity] = std::vector<double>(np*3, 0.0);
 
