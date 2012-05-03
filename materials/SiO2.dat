@@ -62,6 +62,10 @@ C = 1.00e6 # j/m3K
 [sound_velocity/constant]
 vg  = 8.433e5 #cm/s
 
+# mobility
+[mobility/constant]
+mu_max   = (1417.0,   470.5)
+exponent = (   2.5,   2.2)
 
 [permittivity]
 # static dielectric constant
