@@ -8,6 +8,7 @@
 #include "Database.h"
 #include <assert.h>
 #include "MaxwellBoundaryProperties.h"
+#include "OpticPropsModel.h"
 
 #include "equation_systems.h"
 #include "dense_submatrix.h"
@@ -23,7 +24,6 @@ using namespace Constants;
 #include "sys/time.h"
 #include "ExcitonLayer.h"
 #include "PMLFilter.h"
-#include "OpticParameters.h"
 
 TIBER_MODULE(MaxwellEquations, MODULE_NAME)
 
@@ -44,13 +44,7 @@ BoundaryProperties* MaxwellEquations::create_boundary_model(const ModelOptions& 
 PhysicalModel*  MaxwellEquations::create_physical_model(const ModelOptions& options,
     const Material* mat) const throw (ModelErrorException)
 {
-  MaxwellPhysicalModel* model = dynamic_cast<MaxwellPhysicalModel*> ( PhysicalModelInterface::create("maxwell", mat, options) );
-
-  if (model == NULL)
-    throw ModelErrorException("MaxwellEquations: cannot create MaxwellPhysicalModel");
-
-  return(model);
-
+  return OpticPropsModel::create(options);
 }
 
 //=======================================================================================================//
@@ -231,14 +225,12 @@ MaxwellEquations::do_setup_solution_variables(void)
         SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "AnyLoL");
   }
 
-  declare_solution_ext("XHopfield" , XHopfield,
-      SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "abs");
-  declare_solution_ext("epsilon" , Epsilon,
-      SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
-  declare_solution_ext("mu" , Mu,
-      SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
-  declare_solution_ext("SVector" , SVector,
-      SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
+  declare_solution(XHopfield, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "abs");
+  declare_solution(Epsilon, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+  declare_solution(Epsilon_imag, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+  declare_solution(Mu, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+  declare_solution(SVector, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
+
 }
 
 
@@ -247,7 +239,6 @@ void
 MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
     const std::string& system_name)
 {
-
   const MeshBase& mesh = es.get_mesh();
 
   const unsigned int dimension = mesh.mesh_dimension();
@@ -304,7 +295,7 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
     const std::vector<VectorFunction >& edge_phi = fe->getFunctions();
     const std::vector<Point>& xyz = fe->get_xyz();
 
-    OpticParameters params(this_mme, elem);
+    OpticPropsModel* opticModel = this_mme->getOpticModel(elem);
 
     //This part is the slowest in assembling.
     for (unsigned int i=0; i<edge_phi.size(); i++) {
@@ -316,9 +307,9 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
             Complex bValue = 0;
 
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
-              Complex sInvertDet = pml.getSVectorDet(xyz[qp], params.sPML);
-              aValue += 1/params.mu * JxW[qp] * (pml.curls(edge_phi[i], xyz[qp], qp, params.sPML) * pml.curls(edge_phi[j], xyz[qp], qp, params.sPML)) / sInvertDet;
-              bValue += JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*params.epsilon / sInvertDet;
+              Complex sInvertDet = pml.getSVectorDet(xyz[qp], opticModel->get_spml());
+              aValue += 1/opticModel->get_permeability_constant() * JxW[qp] * (pml.curls(edge_phi[i], xyz[qp], qp, opticModel->get_spml()) * pml.curls(edge_phi[j], xyz[qp], qp, opticModel->get_spml())) / sInvertDet;
+              bValue += JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*opticModel->get_dielectric_constant() / sInvertDet;
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j]);
@@ -336,7 +327,7 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
 
             Complex aValue = 0;
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
-              aValue += JxW[qp] * (edge_phi[i].phi[qp] * scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], params.sPML)(0)));
+              aValue += opticModel->get_dielectric_constant() * JxW[qp] * (edge_phi[i].phi[qp] * scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())));
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j + edge_phi.size()]);
@@ -408,21 +399,24 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
 
     PML pml = system.getGeometryEx()->pml;
 
-    OpticParameters params(this, elem);
-
+    OpticPropsModel* opticModel = getOpticModel(elem);
 
     for (unsigned int qp = 0; qp < points.size(); qp++) {
       if (solutions.count(Mu)) {
-        solutions[Mu][qp] = params.mu;
+        solutions[Mu][qp] = opticModel->get_permeability_constant();
       }
 
       if (solutions.count(Epsilon)) {
-        solutions[Epsilon][qp] = params.epsilon;
+        solutions[Epsilon][qp] = opticModel->get_dielectric_constant().real();
+      }
+
+      if (solutions.count(Epsilon_imag)) {
+        solutions[Epsilon_imag][qp] = opticModel->get_dielectric_constant().imag();
       }
 
       if (solutions.count(SVector)) {
         Complex one(1, 0);
-        VectorValue<Complex> sVector = pml.getSVector(xyz[qp], pml.getSPML(elem, this));
+        VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
 
         solutions[SVector][qp*3] = (one / sVector(0)).imag();
         solutions[SVector][qp*3 + 1] = (one / sVector(1)).imag();
@@ -503,4 +497,15 @@ void MaxwellEquations::plot_globaldata() {
   if (!polaritons) {
     SimulationInterface::plot_globaldata();
   }
+}
+
+OpticPropsModel* MaxwellEquations::getOpticModel(const Elem* elem) {
+  ID subdomain = elem->subdomain_id();
+  const Material* material = get_environment().get_device().get_material(subdomain);
+
+
+  return dynamic_cast<OpticPropsModel*>(
+          material->get_model(get_id()));
+
+  //return OpticPropsModel::create(material->get_options());
 }

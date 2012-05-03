@@ -24,8 +24,8 @@
 #include <time.h>
 #include <map>
 #include "SolverException.h"
-#include "MaxwellPhysicalModel.h"
 #include "SimulationInterface.h"
+#include "OpticPropsModel.h"
 
 using namespace libMesh;
 using namespace std;
@@ -36,7 +36,13 @@ class MaxwellBoundaryEquations : public SimulationInterface
   public:
     enum Solutions
     {
-      Efield
+      Efield,
+      Efield_real,
+      Efield_imag,
+      Epsilon,
+      Epsilon_imag,
+      Mu,
+      SVector
     };
 
     //!constructor
@@ -54,6 +60,7 @@ class MaxwellBoundaryEquations : public SimulationInterface
 
     static MaxwellBoundaryEquations* create(const ModelOptions& options);
 
+    OpticPropsModel* getOpticModel(const Elem*);
   protected:
     //! Get solutions at specified points in an element
     virtual void get_solution_secure(const Elem* elem,
@@ -85,10 +92,13 @@ class MaxwellBoundaryEquations : public SimulationInterface
 
     unsigned int approxOrder;
     unsigned int extraQOrder;
+    std::string inplane;// used in 2d only actually
+    unsigned int defaultSourceDirection;
 
     std::vector<unsigned int> pmlRegions;
 
     double W;
+    std::vector<Complex> edgeSolution;
 };
 
 inline MaxwellBoundaryEquations*

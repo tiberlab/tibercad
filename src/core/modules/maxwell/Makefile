@@ -6,15 +6,10 @@ MODULE_NAME := maxwell
 
 include $(topdir)/Make.module
 
-$(eval $(call MODULE, MaxwellEquations.C CubicEigenSystem.C EdgeDofMap.C EigenSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C))
-
-#MODULE_LIB =  $(module_dir)/$(MODULE_NAME)/maxwell$(shared_libext)
-
+$(eval $(call MODULE, MaxwellEquations.C CubicEigenSystem.C EdgeDofMap.C EigenSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C))
 MODULE_NAME := maxwell_boundary
 
-$(eval $(call MODULE, MaxwellBoundaryEquations.C, $(MODULE_LIB)))
-#$(eval $(call MODULE, MaxwellBoundaryEquations.C))
-
+$(eval $(call MODULE, MaxwellBoundaryEquations.C EdgeDofMap.C VectorLinearSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C))
 include $(topdir)/Make.rules
 
 

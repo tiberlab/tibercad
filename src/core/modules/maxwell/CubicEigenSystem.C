@@ -33,7 +33,7 @@ unsigned int CubicEigenSystem::initSystemSize () {
 }
 
 void CubicEigenSystem::assemble () {
-  Parent::assemble ();
+  EigenSystem::assemble ();
 
   for (int i = 0; i < original_system_size; i++) {
     int i1 = i + original_system_size;

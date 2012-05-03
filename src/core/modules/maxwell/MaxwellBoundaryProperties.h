@@ -14,7 +14,7 @@ class MaxwellBoundaryProperties : public BoundaryProperties
       return new MaxwellBoundaryProperties(options);
     }
 
-    enum Type {ElectricWall,  MagneticWall, AirWall};
+    enum Type {ElectricWall,  MagneticWall, Source};
 
   public:
     Type type;
@@ -24,8 +24,8 @@ class MaxwellBoundaryProperties : public BoundaryProperties
       return type == ElectricWall;
     }
 
-    bool isMixed() const {
-      return type == AirWall;
+    bool isSource() const {
+      return type == Source;
     }
 
   protected:
@@ -36,8 +36,7 @@ class MaxwellBoundaryProperties : public BoundaryProperties
       } else if (sType == "MagneticWall") {
         type = MagneticWall;
       } else {
-        type = AirWall;
-        alpha = std::complex<double>(options.get_option("em_alpha_r", 1.0), options.get_option("em_alpha_c", 1.0));
+        type = Source;
       }
     }
 };

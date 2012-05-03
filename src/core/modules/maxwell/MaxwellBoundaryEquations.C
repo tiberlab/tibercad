@@ -6,6 +6,7 @@
 #include "TiberMath.h"
 #include "Database.h"
 #include "MaxwellBoundaryProperties.h"
+#include "OpticPropsModel.h"
 
 #include "equation_systems.h"
 #include "dense_submatrix.h"
@@ -13,6 +14,7 @@
 #include "Utils.h"
 #include "TiberLinearSystem.h"
 #include "VectorFEBase1D.h"
+#include "VectorLinearSystem.h"
 
 using namespace std;
 using namespace Constants;
@@ -37,63 +39,340 @@ BoundaryProperties* MaxwellBoundaryEquations::create_boundary_model(const ModelO
 PhysicalModel*  MaxwellBoundaryEquations::create_physical_model(const ModelOptions& options,
     const Material* mat) const throw (ModelErrorException)
 {
-  MaxwellPhysicalModel* model = dynamic_cast<MaxwellPhysicalModel*> ( PhysicalModelInterface::create("maxwell", mat, options) );
-
-  if (model == NULL)
-    throw ModelErrorException("MaxwellBoundaryEquations: cannot create MaxwellPhysicalModel");
-
-  return(model);
-
+  return OpticPropsModel::create(options);
 }
 
 //=======================================================================================================//
 
 void MaxwellBoundaryEquations::do_init() {
+  approxOrder = get_options().get_option("approxOrder", 0);
+  extraQOrder = get_options().get_option("extraQOrder", 1);
+  inplane = get_options().get_option("inplane", "yes");
+
   W = get_options().get_option("W", 0.0) / Constants::hbar * Constants::e;
 
-  create_equation_system("linear");
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  EquationSystems& equation_systems = get_equation_systems();
 
-  system.add_variable("Ex", FIRST);
-  system.add_variable("Ey", FIRST);
-  system.add_variable("Ez", FIRST);
+  equation_systems.add_system<VectorLinearSystem> ("MaxwellBoundary");
+
+  VectorLinearSystem& system = equation_systems.get_system<VectorLinearSystem> ("MaxwellBoundary");
+  system.simulationInterface = this;
+
+  MeshBase& mesh = get_mesh();
+
+  defaultSourceDirection = 0;
+  if (mesh.mesh_dimension() == 3) {
+    system.addVariable(approxOrder, true, extraQOrder, false);
+    system.addVariable(approxOrder, false);
+  } else if (mesh.mesh_dimension() == 2) {
+    system.addVariable(approxOrder, true, extraQOrder, inplane == "yes");
+
+    if (inplane == "yes") {
+      system.addVariable(approxOrder, false);
+    } else {
+      defaultSourceDirection =2; // z
+    }
+  } else {
+    system.addVariable(approxOrder, true, extraQOrder, false);
+    defaultSourceDirection = 1;
+  }
 
   system.attach_assemble_function(assemble_maxwell_equations);
+
   system.init();
 }
 
 
 //=======================================================================================================//
 void MaxwellBoundaryEquations::do_solve() {
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  EquationSystems& equation_systems = get_equation_systems();
 
-  //system.solve();
-  VectorFEBase1D test(1.0);
-  std::cout << "TEST FOUR" << test.FOUR << "\n";
+  VectorLinearSystem& system = equation_systems.get_system<VectorLinearSystem> ("MaxwellBoundary");
+
+  system.solve();
+  system.get_solution(edgeSolution);
 }
 
 void
 MaxwellBoundaryEquations::do_setup_solution_variables(void)
 {
-  declare_solution(Efield, REAL, NODES, "abs");
+  declare_solution(Efield, VECTOR, NODES, "abs");
+  declare_solution(Efield_real, VECTOR, NODES, "abs");
+  declare_solution(Efield_imag, VECTOR, NODES, "abs");
+  declare_solution(Epsilon,
+      SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+  declare_solution(Epsilon_imag,
+      SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+  declare_solution(Mu,
+      SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+  declare_solution(SVector,
+      SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
 }
 
+// TODO: remove code duplication
 void
 MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
     const std::string& system_name)
 {
 
+  const MeshBase& mesh = es.get_mesh();
 
-/*  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  const unsigned int dimension = mesh.mesh_dimension();
 
-  const MeshBase& mesh = get_mesh();*/
+  VectorLinearSystem& system = es.get_system<VectorLinearSystem>("MaxwellBoundary");
 
+  MaxwellBoundaryEquations* simulation = dynamic_cast<MaxwellBoundaryEquations*>(system.simulationInterface);
+
+  double W_in_eV = simulation->W;
+  double K /* this should be scaled */ = W_in_eV * Constants::eV / Constants::e /              // W [c-1]
+      (c / system.simulationInterface->get_environment().get_device().get_mesh_units()) * // scaling
+      system.getGeometryEx()->getScaling().get_length_scaling(); // additional scaling TODO: do we need this for boundary problem?
+
+  EdgeDofMap* dof_map = system.getEdgeDofMap(false);
+
+  const VariableType fe_type = system.getVariableType(0);
+
+  IVectorFEBase* fe = dynamic_cast<IVectorFEBase*>(system.getVariableType(0).getFEbase());
+  IVectorFEBase* fe_face = dynamic_cast<IVectorFEBase*>(system.getVariableType(0).getFEbase());
+
+  //TODO to be revised
+  AutoPtr<QBase> qrule(new QGauss(dimension, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
+
+  AutoPtr<QBase> qrule_face(new QGauss(dimension - 1, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
+
+  IScalarFEBase* fe_sc = NULL;
+  if (system.getVariablesCount() > 1) {
+    fe_sc = dynamic_cast<IScalarFEBase*>(system.getVariableType(1).getFEbase());
+  }
+
+  MeshBase::const_element_iterator el = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+
+  PML pml = system.getGeometryEx()->pml;
+
+  //addBValue(Complex(1, 0), (systemSize - 1) / 2);
+
+
+  for (; el != end_el; ++el) {
+    //std::cout << "Elem\n";
+    const Elem* elem = *el;
+
+    std::vector<unsigned int> all_dof_indices;
+    system.dof_indices (elem, all_dof_indices);
+
+    fe->attach_quadrature_rule (qrule.get());
+    fe_face->attach_quadrature_rule (qrule_face.get());
+
+    if (fe_sc != NULL) {
+      fe_sc->attach_quadrature_rule      (qrule.get());
+    }
+
+    fe->reinit (elem, dof_map->getPOrder(elem, 0));
+    if (fe_sc != NULL) {
+      fe_sc->reinit(elem, dof_map->getPOrder(elem, 1));
+    }
+    const std::vector<Real>& JxW = fe->get_JxW();
+    const std::vector<VectorFunction >& edge_phi = fe->getFunctions();
+    const std::vector<Point>& xyz = fe->get_xyz();
+    const std::vector<Point>& xyz_face = fe_face->get_xyz();
+
+    OpticPropsModel* opticModel = simulation->getOpticModel(elem);
+
+    //This part is the slowest in assembling.
+    for (unsigned int i=0; i<edge_phi.size(); i++) {
+      if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID) {
+        for (unsigned int j=0; j<edge_phi.size(); j++) {
+          if (all_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
+
+            Complex aValue = 0;
+            //Complex bValue = 0;
+
+            for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
+              Complex sInvertDet = pml.getSVectorDet(xyz[qp], opticModel->get_spml());
+              //std::cout << "spml: " << params.sPML << "\n";
+              aValue += 1/opticModel->get_permeability_constant() * JxW[qp] * (pml.curls(edge_phi[i], xyz[qp], qp, opticModel->get_spml()) * pml.curls(edge_phi[j], xyz[qp], qp, opticModel->get_spml())) / sInvertDet;
+/*
+              Complex zzz(params.epsilon, params.epsilon);
+              if (params.epsilon != 4) {
+                zzz = Complex(params.epsilon, 0);
+              }
+*/
+/*
+              if ((all_dof_indices[i] <= 3 || all_dof_indices[i] >= 235) && i == j) {
+                std::cout << "TEST " << all_dof_indices[i] << " " <<  sInvertDet * K * K << " " << JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*params.epsilon << "\n";
+              }
+*/
+              aValue -= JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*opticModel->get_dielectric_constant() / sInvertDet * K * K;
+              //bValue += JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*params.epsilon / sInvertDet;
+            }
+
+            system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j]);
+            //system.addBValue(bValue, all_dof_indices[i], all_dof_indices[j]);
+          }
+        }
+      }
+
+      //TODO add svector here???
+      if (fe_sc != NULL) {
+        const std::vector<ScalarFunction >& scalar_phi = fe_sc->getFunctions();
+
+        for (unsigned int j = 0; j < scalar_phi.size(); j++) {
+          if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID && all_dof_indices[j + edge_phi.size()] != ElementUtils::INVALID_FUNCTION_ID) {
+
+            Complex aValue = 0;
+            for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
+              aValue += JxW[qp] * (edge_phi[i].phi[qp] * scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())(0)));
+            }
+
+            system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j + edge_phi.size()]);
+            system.addAValue(aValue, all_dof_indices[j + edge_phi.size()], all_dof_indices[i]);
+          }
+        }
+      }
+
+      //Apply BC
+      for (unsigned int side = 0; side < elem->n_sides(); side++) {
+        const AutoPtr<Elem> sideElem = elem->build_side(i);
+        Boundary* bd = simulation->get_environment().get_boundary(ElementSide(elem,i));
+
+        if (bd != NULL && (bd->get_boundary_properties( simulation->get_id() ) != NULL )) {
+          //std::cout << "YES " << dynamic_cast<MaxwellBoundaryProperties*>(bd->get_boundary_properties(simulationInterface->get_id()))->isSource() << "\n";
+          if (dynamic_cast<MaxwellBoundaryProperties*>(bd->get_boundary_properties(simulation->get_id()))->isSource()) {
+            // Add smth...
+            fe_face->reinit(elem, dof_map->getPOrder(elem, 0), side);
+            const std::vector<Real>& JxW_face = fe_face->get_JxW();
+            const std::vector<VectorFunction >& edge_phi_face = fe_face->getFunctions();
+
+            //std::cout << "PETER2\n";
+            for (unsigned int i=0; i<edge_phi_face.size(); i++) {
+              if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID) {
+                //std::cout << "PETER1\n";
+                    Complex value = 0;
+                    for (unsigned int qp=0; qp<qrule_face->n_points(); qp++) {
+                      Complex sInvertDet = pml.getSVectorDet(xyz_face[qp], opticModel->get_spml()), one(1, 0);
+                      Complex sDet = one / sInvertDet;
+
+                      Point sourceVector;
+                      sourceVector(simulation->defaultSourceDirection) = 1;//TODO DIRECTION
+                      value += sDet * JxW_face[qp] * (edge_phi_face[i].phi[qp] * sourceVector);
+                    }
+                    system.addBValue(value, all_dof_indices[i]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  delete fe;
+  delete fe_face;
+  if (fe_sc != NULL) {
+    delete fe_sc;
+  }
 }
 
+//TODo code duplication
 void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& solutions,
     const std::vector<Point>& points)
 {
+  //Utils::Timer tt;
+  EquationSystems& equation_systems = get_equation_systems();
+  VectorLinearSystem& system = equation_systems.get_system<VectorLinearSystem> ("MaxwellBoundary");
 
+  std::vector<unsigned int> edge_dof_indices;
+  IVectorFEBase* fe = dynamic_cast<IVectorFEBase*>(system.getVariableType(0).getFEbase());
+  system.getEdgeDofMap(false)->dof_indices (elem, edge_dof_indices, 0);
+  fe->reinit(elem, system.getEdgeDofMap(false)->getPOrder(elem, 0), &points);
+  const std::vector<VectorFunction>& edge_phi = fe->getFunctions();
+
+ // std::cout << "1:" << tt.elapsed_string() << "\n";
+  if (solutions.count(Efield)) {
+    std::vector<double>& solution = solutions[Efield];
+    std::vector<double>& solution_real = solutions[Efield_real];
+    std::vector<double>& solution_imag = solutions[Efield_imag];
+
+    //std::vector<Complex> edgeSolution;
+    //system.get_solution(edgeSolution);
+    //std::cout << "2:" << tt.elapsed_string() << "\n";
+/*
+    if (edge_dof_indices[0] == 0) {
+      //std::cout << "EDGE SOLUTION: \n";
+      for (int iii = 0; iii < edgeSolution.size(); iii++) {
+        std::cout << iii << " " << edgeSolution[iii];
+      }
+    }
+*/
+
+    solution.resize(points.size()*3);
+    solution_real.resize(points.size()*3);
+    solution_imag.resize(points.size()*3);
+
+    for (unsigned int qp = 0; qp < points.size(); qp++) {
+      Point realValue;
+      Point imagValue;
+      for (unsigned int j = 0; j < edge_dof_indices.size(); j++) {
+        if (edge_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
+          realValue +=edgeSolution[edge_dof_indices[j]].real() * edge_phi[j].phi[qp];
+          imagValue +=edgeSolution[edge_dof_indices[j]].imag() * edge_phi[j].phi[qp];
+        }
+      }
+
+      solution[qp*3] = std::sqrt(realValue(0) * realValue(0) + imagValue(0) * imagValue(0));
+      solution[qp*3 + 1] = std::sqrt(realValue(1) * realValue(1) + imagValue(1) * imagValue(1));
+      solution[qp*3 + 2] = std::sqrt(realValue(2) * realValue(2) + imagValue(2) * imagValue(2));
+//      solution[qp*3] = (realValue(0) * realValue(0) + imagValue(0) * imagValue(0));
+//      solution[qp*3 + 1] = (realValue(1) * realValue(1) + imagValue(1) * imagValue(1));
+//      solution[qp*3 + 2] = (realValue(2) * realValue(2) + imagValue(2) * imagValue(2));
+
+      solution_real[qp*3] = realValue(0);
+      solution_real[qp*3 + 1] = realValue(1);
+      solution_real[qp*3 + 2] = realValue(2);
+
+      solution_imag[qp*3] = imagValue(0);
+      solution_imag[qp*3 + 1] = imagValue(1);
+      solution_imag[qp*3 + 2] = imagValue(2);
+    }
+  }
+  //std::cout << "3:" << tt.elapsed_string() << "\n";
+  if (solutions.count(Mu) || solutions.count(Epsilon) || solutions.count(SVector)) {
+    const std::vector<Point>& xyz = fe->get_xyz();
+
+    PML pml = system.getGeometryEx()->pml;
+
+    OpticPropsModel* opticModel = getOpticModel(elem);
+
+    for (unsigned int qp = 0; qp < points.size(); qp++) {
+      if (solutions.count(Mu)) {
+        solutions[Mu][qp] = opticModel->get_permeability_constant();
+      }
+
+      if (solutions.count(Epsilon)) {
+        solutions[Epsilon][qp] = opticModel->get_dielectric_constant().real();
+      }
+
+      if (solutions.count(Epsilon_imag)) {
+        solutions[Epsilon_imag][qp] = opticModel->get_dielectric_constant().imag();
+      }
+
+      if (solutions.count(SVector)) {
+        Complex one(1, 0);
+        VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
+
+        solutions[SVector][qp*3] = (one / sVector(0)).imag();
+        solutions[SVector][qp*3 + 1] = (one / sVector(1)).imag();
+        solutions[SVector][qp*3 + 2] = (one / sVector(2)).imag();
+      }
+    }
+  }
+
+  delete fe;
 }
 
+OpticPropsModel* MaxwellBoundaryEquations::getOpticModel(const Elem* elem) {
+  ID subdomain = elem->subdomain_id();
+  const Material* material = get_environment().get_device().get_material(subdomain);
+
+  return dynamic_cast<OpticPropsModel*>(
+          material->get_model(get_id()));
+}

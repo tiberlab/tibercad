@@ -12,6 +12,7 @@
 #include <set>
 #include "SimulationInterface.h"
 #include "MaxwellEquations.h"
+#include "EigenSolver.h"
 
 class PMLFilter {
   private:
@@ -66,7 +67,7 @@ class PMLFilter {
       }
 
       for (int i = system.get_n_converged() - 1; i >= 0; i--) {
-        bool acceptValue = false;
+        bool acceptValue = true;
 
         Complex eigen = system.get_eigen_lambda(i);
 
@@ -87,8 +88,8 @@ class PMLFilter {
 
     bool isOnPmlBorder(const Node& node, PML& pml) {
       for (int i = 0; i < 3; i++) {
-        if (std::abs((node(i) - pml.allMinPoint(0))/(pml.minPoint(0) - pml.allMinPoint(0))) < 0.5 ||
-            std::abs((node(i) - pml.allMaxPoint(0))/(pml.maxPoint(0) - pml.allMaxPoint(0))) < 0.5) {
+        if (std::abs((node(i) - pml.allMinPoint(i))/(pml.minPoint(i) - pml.allMinPoint(i))) < 0.5 ||
+            std::abs((node(i) - pml.allMaxPoint(i))/(pml.maxPoint(i) - pml.allMaxPoint(i))) < 0.5) {
           return true;
         }
       }

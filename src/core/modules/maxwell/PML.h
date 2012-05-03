@@ -13,6 +13,7 @@
 #include "SimulationInterface.h"
 #include "vector_value.h"
 #include "VectorFunction.h"
+#include "OpticPropsModel.h"
 
 class PML {
   public:
@@ -25,7 +26,8 @@ class PML {
     Point allMaxPoint;
 
     PML() {
-
+      minPoint = Point(INT_MAX, INT_MAX);
+      maxPoint = Point(INT_MIN, INT_MIN);
     }
 
     void init(SimulationInterface* interface) {
@@ -38,7 +40,6 @@ class PML {
       for (; el != end_el; ++el) {
         const Elem* elem = *el;
         if (getSPML(elem, interface) <= 0) {// if it is not pml
-
           for (unsigned int i = 0; i < elem->n_nodes(); i++) {
             const Node node = *(elem->get_node(i));
 
@@ -51,19 +52,18 @@ class PML {
       }
 
       midPoint = (minPoint + maxPoint) / 2;
+      std::cout << "PML max " << maxPoint(0) << "\n";
+      std::cout << "PML min " << minPoint(0) << "\n";
     }
 
     double getSPML(const Elem* elem, SimulationInterface* interface) {
-      double sPML = -1.0;
       ID subdomain = elem->subdomain_id();
       const Material* material = interface->get_environment().get_device().get_material(subdomain);
-      if (material != NULL) {
-        Database dbA = material->get_database();
-        dbA.set_section("pml");
 
-        sPML = dbA.get("sPML", -1.0);
-      }
-      return sPML;
+      OpticPropsModel* opticModel =  dynamic_cast<OpticPropsModel*>(
+              material->get_model(interface->get_id()));
+
+      return opticModel->get_spml();
     }
 
     bool isPMLRegion(const Elem* elem, SimulationInterface* interface) {
@@ -74,6 +74,7 @@ class PML {
       VectorValue<Complex> result(1, 1, 1);
 
       if (c > 0) {
+        //std::cout << "ii " << point(0) << " " << minPoint(0) << " " << allMinPoint(0)<< "\n";
         for (int i = 0; i < 3; i++) {
           Complex t, one(1, 0);
           if (point(i) > maxPoint(i)) {

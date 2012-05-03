@@ -12,8 +12,8 @@
 #include "IGeometryEx.h"
 #include "MaxwellEquations.h"
 #include "Constants.h"
-#include "OpticParameters.h"
 #include "PML.h"
+#include "OpticPropsModel.h"
 
 class ExcitonLayer
 {
@@ -80,9 +80,9 @@ class ExcitonLayer
 
         PML pml = system.getGeometryEx()->pml;
 
-        if (!pml.isPMLRegion(elem, mme)) {
+        OpticPropsModel* opticModel = mme->getOpticModel(elem);
 
-          OpticParameters params(mme, elem);
+        if (!pml.isPMLRegion(elem, mme)) {
 
           std::vector<unsigned int> all_dof_indices;
           system.dof_indices (elem, all_dof_indices);
@@ -109,10 +109,10 @@ class ExcitonLayer
                  if (Xden != 0) {
                    if (FexcFi.find(all_dof_indices[i]) == FexcFi.end()) {
                      FexcFi[all_dof_indices[i]] = value;
-                     FexcFiEpsilon[all_dof_indices[i]] = value * params.epsilon;
+                     FexcFiEpsilon[all_dof_indices[i]] = value * opticModel->get_dielectric_constant().real();//TODO complex?
                    } else {
                      FexcFi[all_dof_indices[i]] += value;
-                     FexcFiEpsilon[all_dof_indices[i]] += value * params.epsilon;
+                     FexcFiEpsilon[all_dof_indices[i]] += value * opticModel->get_dielectric_constant().real();//TODO complex?
                    }
                  }
               }

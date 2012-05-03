@@ -73,6 +73,12 @@ EdgeDofMap::EdgeDofMap(IGeometryEx* geometry, std::vector<VariableType>& vars) :
           functionIndex = reverseFunctionsIndeces[varNum][info];
         }
 
+/*
+        bool sourceFunction = geometry->sourceFunction(elem, info);
+        if (sourceFunction && info.order == 0) {
+          sourceIds.insert(functionIndex);
+        }
+*/
         elemIndecesVector.push_back(functionIndex);
       }
 

@@ -32,7 +32,7 @@
 #include <map>
 #include "ElementUtils.h"
 #include "SolverException.h"
-#include "MaxwellPhysicalModel.h"
+#include "OpticPropsModel.h"
 
 
 using namespace libMesh;
@@ -48,6 +48,7 @@ class MaxwellEquations : public SimulationInterface
       EigenValueImag,
       XHopfield,
       Epsilon,
+      Epsilon_imag,
       Mu,
       SVector,
       Efield // MUST BE LAST
@@ -69,6 +70,8 @@ class MaxwellEquations : public SimulationInterface
     static MaxwellEquations* create(const ModelOptions& options);
 
     virtual void plot_globaldata();
+
+    OpticPropsModel* getOpticModel(const Elem*);
   protected:
     //virtual void build_nodal_results(const std::set<std::string>& variables, std::vector<
         //double>& results, std::vector<std::string>& legend);

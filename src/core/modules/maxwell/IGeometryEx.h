@@ -59,6 +59,7 @@ class IGeometryEx {
             minPoint(1) = std::min(minPoint(1), node(1));
             maxPoint(0) = std::max(maxPoint(0), node(0));
             maxPoint(1) = std::max(maxPoint(1), node(1));
+
           }
         }
 
@@ -98,6 +99,22 @@ class IGeometryEx {
               }
             }
           }
+
+/*
+          {
+            const AutoPtr<Elem> sideElem = elem->build_side(i);
+            Boundary* bd = simulationInterface->get_environment().get_boundary(ElementSide(elem,i));
+
+            if (bd == NULL || (bd->get_boundary_properties( simulationInterface->get_id() ) == NULL )) {
+              //std::cout << "NO \n";
+            } else {
+              //std::cout << "YES " << dynamic_cast<MaxwellBoundaryProperties*>(bd->get_boundary_properties(simulationInterface->get_id()))->isSource() << "\n";
+              if (dynamic_cast<MaxwellBoundaryProperties*>(bd->get_boundary_properties(simulationInterface->get_id()))->isSource()) {
+                sourceIds.insert(ItemId::get(sideElem.get()));
+              }
+            }
+          }
+*/
         }
       }
 
@@ -145,12 +162,19 @@ class IGeometryEx {
       }
 */
 
+      //if (properties != NULL) {
+        //std::cout << "PA TYPE " << properties->isSource();
+      //}
       return properties == NULL || properties->isDirichle();
     }
 
     virtual bool excludeFunction(const Elem* elem, FunctionInfo& info) {
       return boundaryIds.count(info.globalItemId) != 0;
     }
+
+/*    virtual bool sourceFunction(const Elem* elem, FunctionInfo& info) {
+      return sourceIds.count(info.globalItemId) != 0;
+    }*/
 
     virtual bool isSideBoundary(const Elem* elem, unsigned int side) {
       return elem->neighbor(side) == NULL;
