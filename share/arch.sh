@@ -29,7 +29,7 @@ case $os in
 
   *Linux* | *linux*) arch=${cpu}-linux ;;
 
-  *Darwin* | *darwin*) arch=${cpu}-darwin ;;
+  *Darwin* | *darwin*) arch=x86_64-darwin ;;
 
   *MINGW* | *mingw* ) arch=${cpu}-mingw32 ;;
 
