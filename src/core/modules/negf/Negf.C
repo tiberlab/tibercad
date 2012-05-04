@@ -1093,7 +1093,6 @@ void
 Negf::get_solution_secure(std::map<ID, std::vector<double> >& values)
 {
 
-  std::cout<<"get_solution_secure: current"<< std::endl;
   std::vector<std::string> tokens;
 
   std::map<ID, std::vector<double> >::iterator mapit(values.begin());
@@ -1113,7 +1112,6 @@ Negf::get_solution_secure(std::map<ID, std::vector<double> >& values)
     {
       if (tokens[0]==it->second->get_name())
       {
-        std::cout<<"current: "<<it->first<<"  "<< _contact_current[it->second]<<std::endl;
         values[id] = std::vector<double>(1,  _contact_current[it->second]);
         break;
       }
