@@ -152,7 +152,9 @@ largely on the loss mechanisms at the electrolyte/oxide interface [Frank]_. From
 
 |
 
-where the electron rate :math:`k_{e}` is the recombination rate constant. The recombination rate constant depends if traps are present or not within Multi-trapping model.
+where the electron rate :math:`k_{e}` is the recombination rate constant. The recombination rate constant depends 
+on  whether
+ traps are present or not within Multi-trapping model.
 It looks like:
 
 .. math::
@@ -167,7 +169,10 @@ It looks like:
 
 where the first equation is related to no traps condition ( with :math:`N_c` the effective conduction band density of the semiconductor and 
 :math:`\beta` the non linear recombination constant for electrons). The trap assisted recombination takes into account also the effective density of states
-of the traps ( :math:`N_t`). **NOTE** the parameter set in the input file is :math:`k_0`. By default :math:`N_t` = :math:`N_c`.
+of the traps ( :math:`N_t`). 
+
+
+**NOTE** the parameter set in the input file is :math:`k_0`. By default :math:`N_t` = :math:`N_c`.
 
 
 
@@ -213,8 +218,7 @@ iodide ( :math:`I^{-}`), triiodide ( :math:`I^{-}_{3}`) and electrons (e).
 Module DSC
 ----------------------
 
-The DSC module is tagged as ``dssc``. In this part of the input file are set the name of the
-simulation and the list of plotted variables:
+The simulation of DSCs is  performed by  the  **Module** *dssc*.  :
 
 ::
 
@@ -245,7 +249,8 @@ simulation and the list of plotted variables:
        }
     }
 
-This section contains information about the ``Contacts``, parameters for the ``Solver`` and
+Beyond the name of the
+simulation and the list of plotted variables, this section contains information about the ``Contacts``, parameters for the ``Solver`` and
 the ``Physics`` sections.
 
 Contacts
@@ -270,11 +275,11 @@ part of the boundary of a region where the *electrolyte* is present.
      Ex_curr = 0.1
     }
 
-The anode is modeled with an electron collection rate, the collection rate depends on the bias applied.
-The module contains the sweep over the bias applied (considering the cathode the reference contact) and the kinetic rate for electron collection.
+The anode is modeled as an  ``ohmic``  contact with an electron collection rate where the collection rate depends on the bias applied. The kinetic rate for electron collection is  given  by ``kinetic_rate``.
+Usually a  sweep over the bias is performed  (considering the cathode as the reference contact). The  associated  variable  is  indicated as ``$V`` above.
 
-The cathode (*type* Pt (platinum)) is modeled as a Butler-Volmer equation, the only needed parameter is
-the exchange current expressed in A/ :math:`cm^2` (``Ex_curr = 0.1``). 
+The cathode is a  contact of  the  special *type* Pt (platinum): it is modeled as a Butler-Volmer equation, the only needed parameter is
+the exchange current expressed in :math:`A/cm^2` (``Ex_curr = 0.1``). 
 
 
 
@@ -407,16 +412,16 @@ Device section for a DSC simulation:
   }
 
 The Device section must contain the name of the mesh file ``meshfile = <name_of_the_mesh>`` .
-For every region of the device it is specified the material file from the database (the ``TiO2mes`` 
-contains standard parameters for both |TiO2|  and *electrolyte*, so it can be used
-for both regions). For every region must be specified if it contains ``TiO_2``, or electrolyte
-or both. This can be done setting two flags called ``TiO2`` and electrolyte. 
-
-If set *true* the material is present in the region, if set *false* is not present. 
-By default they are assumed both *true* (porous region). In the second region of the example showed here
-there is electrolyte only and ``TiO2 = false`` is explicitly specified. In case both materials
-are present (porous region) a porosity must be set (in the range between 0, |TiO2|
-only, and 1, *electrolyte* only). If one material is not present the porosity is automatically
+As usual, to each  region of the device we associate a  material file from the database. 
+In this  case, for both regions we  define  the  same  material ``TiO2mes``, which is  a special material which  
+contains standard parameters for both |TiO2|  and *electrolyte*.  Then, for every region we must  specify  if it contains ``TiO2``, or electrolyte
+or both. This can be done setting two flags called ``TiO2`` and ``electrolyte``. 
+When one of these two keywords is set to *true*, the corresponding material is present in the region, otherwise it is not present. 
+By default they are assumed both *true* (which  defines a porous region). In the second region of the example shown  here
+we want only  electrolyte  and thus ``TiO2 = false`` is explicitly specified. 
+In case both materials
+are present (porous region) like in **Region** *TiO2* above, a value for porosity must be defined, through the  keyword *porosity* (in the range between 0, |TiO2|
+only, and 1, *electrolyte* only). If one of the two  is not present the porosity is automatically
 set to 0 or 1.
 
 Sweep
