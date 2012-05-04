@@ -34,7 +34,7 @@
 
 #include  "ZbOptDielectricConstant.h"
 #include  "WzOptDielectricConstant.h"
-#include  "MaxwellPhysicalModel.h"
+//#include  "MaxwellPhysicalModel.h"
 
 //#include "PhononModel.h"
 //#include "ZbFreeDynamicalMatrix.h"
@@ -116,8 +116,8 @@ PhysicalModelInterface::_create(const string& name,
     mod = ZbOptDielectricConstant::create(options);
   else if (name == "opt_dielectric_constant_wz")
     mod = WzOptDielectricConstant::create(options);
-  else if (name == "maxwell")
-    mod = MaxwellPhysicalModel::create(options);
+  //else if (name == "maxwell")
+  //  mod = MaxwellPhysicalModel::create(options);
   //else if  (name == "phonon")
   //  mod = PhononModel::create(options);
   //else if  (name == "free_dynamical_matrix_zb")
