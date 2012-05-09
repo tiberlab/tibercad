@@ -264,7 +264,7 @@ The simulation of DSCs is  performed by  the  **Module** *dssc*.  :
   Module dssc 
     {
      name = dssc
-     plot = (Potential, Density, Current, Mobility, ContactCurrents)
+     plot = (ElPotential, eDensity, CurrentDensity , eMobility, ContactCurrents)
      Solver linesearch
        {
         max_iterations = 300
@@ -437,9 +437,7 @@ standard 1.5 AM sun spectrum contained in the material database in the file **Su
 
 
 The ``dye`` keyword  defines the absorption spectrum of  the  used dye.
-Different spectrum files can be used, by  adding them in 
- the material folder: the first line of the file contains the *energy gap* between the HOMO and the LUMO of the dye in eV,  the second part of the 
-file is the absorption intensity in :math:`\mu m^{-1}` in the interval 380-800 nanometers.
+Different spectrum files can be used, by  adding them in the material folder: the first line of the file contains the *energy gap* between the HOMO and the LUMO of the dye in eV,  the second part of the file is the absorption intensity in :math:`\mu m^{-1}` in the interval 380-800 nanometers.
 
 The last part of the  **Module** *dssc_generation*  is the definition of the *Contact* boundary. This contact  defines  the physical  region taken as the illuminated external surface.
 
@@ -477,15 +475,12 @@ Two sweeps are needed for the calculation  of the entire I-V characteristic unde
     
 
 The first sweep, (``sweep_gen``),
-is needed to perform  the transition from dark condition to full open-circuit condition under
+is needed to perform  the transition from dark condition to full short-circuit condition under
 illumination. Then a second sweep, the voltage sweep (``sweep_v``), computes the I-V characteristic under illumination. 
 In case of dark simulation
 (application of an external bias without illumination) the first sweep is not
 needed.
-
-
-The intensity of illumination can be changed by  defining  a   final value for  **x** different from  1
- (1 = 1 Sun of power).
+The intensity of illumination can be changed by  defining  a   final value for  **x** different from  1 (1 = 1 Sun of power).
 
 
 .. _dsc_nodal:
@@ -562,7 +557,7 @@ The intensity of illumination can be changed by  defining  a   final value for  
    \center
    \begin{tabular}{l|l|l}
    \multicolumn{3}{c}{\textbf{Scalar quantities}} \\
-   \hline:
+   \hline
    \texttt{ContactCurrents} & Contact currents & *\footnote{depends on dimension.}\\
    \end{tabular}
    \end{minipage}
@@ -579,7 +574,8 @@ The intensity of illumination can be changed by  defining  a   final value for  
 Output
 ------------------
 
-The output that want to be plotted are enlisted in section Module dssc. See tables :ref:`Nodal quantities<dsc_nodal>`,
+The output variables  to be plotted should be  enlisted in the ``plot`` statement in **Module** *dssc*. 
+The available variables are reported in tables :ref:`Nodal quantities<dsc_nodal>`,
 :ref:`Elemental quantities<dsc_elemental>` and :ref:`Scalar quantities<dsc_scalar>`.
 
 
@@ -660,8 +656,9 @@ Definition of dsc.tib::
   }
 
 ..  note:: 
-          for both region (TiO2 and electrolyte) the same material for the database is used (TiO2mes), the parameter porosity 
-          defines which porosity has the material. The flag TiO2 = false defines instead that in the electrolyte region only 
+
+          For both region (TiO2 and electrolyte) the same material for the database is used (*TiO2mes*), the parameter porosity 
+          defines which porosity has the material. The flag *TiO2 = false* defines instead that in the electrolyte region only 
           the electrolyte is present and there is no semiconductor. By default the dssc module assumes that a certain region 
           contains both the semiconductor and the electrolyte (porous material).
 
@@ -676,7 +673,7 @@ Definition of  Simulation Modules  and  Boundary Conditions
   { 
               
    name = dssc
-   plot = (Potential, Density, Current, ContactCurrents)
+   plot =  (Potential, Density, Current, Mobility, ContactCurrents) 
 
    Solver linesearch
    {
@@ -710,19 +707,19 @@ Definition of  Simulation Modules  and  Boundary Conditions
 
   }
 
-The module ``dssc`` contains the name of the simulation (and the list of output plotted), 
-the subsections for the solver, the physics and the contacts. 
+The module ``dssc`` contains the name of the simulation (*dssc*) and the list of output plotted (see :ref:`Output_ex`), 
+the subsections for the *solver*, the *physics* and the *contacts*. 
 
-The physics subsection must contain at least one flag for the generation module (if the device is illuminated). 
-The non linear exponent in the electron density recombination is assumed to 1 (linear case), 
-but can be a changed to a different value for non-linear recombination. 
+The *physics* subsection  contains a keyword to set the *dssc_generation*  **module**, since the device is illuminated. 
+The non linear exponent in the electron density recombination :math:`\beta`  is assumed to be 1 (linear case), 
+but can be changed to a different value for non-linear recombination. 
 
-The contact modules must be two: ``photoanode`` and ``counter-electrode``. 
-The two contacts are type = ``ohmic`` (photoanode) and ``Pt`` (counter-electrode, cathode). 
-The external bias is applied at the photoanode (bias), while the counter-electrode is modeled as a Butler-Volmer equation. 
+We define two *Contacts*: ``anode`` ( for the photoanode)  and ``cathode`` (for the 
+counter-electrode). 
+The two contacts are respectively of type ``ohmic`` (``anode``) and ``Pt`` (``cathode``). 
+The external bias is applied at the anode (*bias*), while the counter-electrode (``cathode``) is modeled as a Butler-Volmer equation. 
 
-The contact modules can include the flag ``region = (region_1, region_2)`` in case that contact (cathode or anode) 
-is the composition of different mesh regions.
+
 
 ::
 
@@ -738,15 +735,15 @@ is the composition of different mesh regions.
    }
   }
 
-The Module ``dssc_generation`` defines the photogeneration within the device. 
-The generation model must define which is the region(s) where photogeneration occurs (regions), 
+The **Module** *dssc_generation* defines the photogeneration within the device. 
+The generation model must define which is the region(s) where photogeneration occurs (``regions``), 
 the intensity of light (``light_intensity``), the direction of the light rays (``light_direction``), 
 the kind of Dye used in the cell (``dye``) and the boundary region illuminated (in our example ``anode``). 
 
-Another flag ``illumination_spectrum = <source_spectrum>`` can be set if we want to change the solar spectrum 
-for generation (for example in case the light source we want to simulate is not the conventional sun spectrum). 
+Another keyword,  ``illumination_spectrum = <source_spectrum>`` can be set if we want to change the solar spectrum 
+for generation, in case the light source we want to simulate is not the conventional sun spectrum. 
 
-By default the flag is set to ``illumination_spectrum = Sun1p5am`` conventional sun spectrum 1.5 AM.
+By default the flag is set to ``illumination_spectrum = Sun1p5am``, the conventional sun spectrum 1.5 AM.
 
 ::
 
@@ -771,17 +768,9 @@ By default the flag is set to ``illumination_spectrum = Sun1p5am`` conventional 
    plot_data = true
   }
 
-Two sweeps needed to solve the cell: the first sweep is needed to push the device to short circuit condition 
-under illumination, the second sweep for the bias.  
+These are the two sweeps needed to solve the cell: the first sweep is needed to push the device to short circuit condition 
+under illumination, the second sweep calculates the IV  characteristic  under illumination.  
 
-In figure the two sweeps of the code are shown:
-
-
-..  figure:: ../data/DscGetting03.png
-    :align: center
-    :scale: 70%
-
-    Various type of sweeps.
 
 ::
     
@@ -792,22 +781,57 @@ In figure the two sweeps of the code are shown:
    solve = (sweep_gen, sweep_V)
    resultpath = output
    output_format = grace
+
   }
 
+
+
+The two sweeps are to  be  executed in  the  shown order in the *solve* statement in  *Simulation* section.
+First, the sweep on  the variable *x* (``sweep_gen``)  increases the generation until 1 Sun, then the sweep  on  bias (``sweep_V``), produces the IV characteristic under illumination.
+
+
+
+..  figure:: ../data/DscGetting03.png
+    :align: center
+    :scale: 70%
+
+    Sweeps for  generation and applied bias.
+
+
+.. note:: 
+
+        In a DSC the current is fundamentally diffusion driven, the electric field and the consequent drift current is rather small.
+
+
+.. _Output_ex:
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The output of the calculation is set in the module dssc. 
-We can chose to plot the internal potential profiles (flag ``Potential``) which includes electrostatic potential, 
-all the densities (flag ``Density``) which includes electron, iodide, triiodide, cation densities and recombination 
-and generation profiles, all the currents (flag ``Current``) which include the x, y and z components of the currents 
-(electronic, iodide, triiodide and cation, total current) and the electric field. Finally the flag (``ContactCurrents``) 
+The output of the calculation is set in the **Module** *dssc*. 
+It  is  possible to collect a  set of  Output  variables, as  defined in tables :ref:`Nodal quantities<dsc_nodal>`, :ref:`Elemental quantities<dsc_elemental>` and :ref:`Scalar quantities<dsc_scalar>`, with some  special keywords.
+::
+
+  plot =  (Potential, Density, Current, Mobility, ContactCurrents) 
+ 
+
+Thus, with ``Potential`` we  plot the internal potential profiles  which includes electrostatic potential, 
+with ``Density``, all the densities  which includes electron, iodide, triiodide, cation densities and recombination 
+and generation profiles, with ``Current``  all the currents  which include the x, y and z components of the currents 
+(electronic, iodide, triiodide and cation, total current) and the electric field, with ``Mobility`` all the mobilities. Finally ``ContactCurrents``
 allows the plot of the current flowing through the contacts.
 
-..  note:: 
-          In a DSC the current is fundamentally diffusion driven, the electric field and the consequent drift current is rather small.
 
+
+
+
+The mesh-based output  for  this 1D simulation can be  found  in  the  files 
+``dssc_sweepvariable_stepvalue_msh.dat``, e.g. dssc_V_0.8_msh.dat.
+
+In  Fig. :ref:`Potential profiles<fig.potential>` the  results for  ionic and  electrostatic potential in the cell are  shown, in  short-circuit condition.
+
+
+.. _fig.potential:
 
 ..  figure:: ../data/DscGetting04.png
     :align: center
@@ -816,12 +840,24 @@ allows the plot of the current flowing through the contacts.
     Potential profiles for the ionic species and the electrostatic potential (short-circuit condition).
 
 
+In  Fig. :ref:`Current components<fig.current_contrib>`, the  values  of  the  iodide, triiodide and electron current 
+components along the cell are  shown. 
+
+.. _fig.current_contrib:
+
 ..  figure:: ../data/DscGetting05.png
     :align: center
     :scale: 70%
  
     Current contributions within the cell (short-circuit condition).
 
+
+
+The mesh-independent output is printed in  the  files *sweep_V_dssc.dat* and *sweep_gen_dssc.dat*.
+From  the  first one, the  IV  characteristic of the  cell is  shown in  Fig. :ref:`IV char<fig.IV>`. 
+
+
+.. _fig.IV:
 
 ..  figure:: ../data/DscGetting06.png
     :align: center
