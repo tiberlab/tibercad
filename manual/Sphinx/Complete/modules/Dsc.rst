@@ -145,16 +145,15 @@ largely on the loss mechanisms at the electrolyte/oxide interface [Frank]_. From
    :label:
    
    \begin{equation}\label{ricombinazione}
-    R = k_{e} \left [  \left ( \frac{n_{e}}{\bar{n}_{e}} \right )^{\beta}\bar{n}_{e}\frac{n_{I^{-}_{3}}}{n_{I^{-}}}
+    R = k_{0} \left [  \left ( \frac{n_{e}}{\bar{n}_{e}} \right )^{\beta}\bar{n}_{e}\frac{n_{I^{-}_{3}}}{n_{I^{-}}}
     - \bar{n}_{e}\sqrt{\frac{n_{I^{-}_{3}}n_{I^{-}}\bar{n}_{I^{-}_{3}}}{\bar{n}^{3}_{I^{-}}}} \right
     ],
    \end{equation}
 
 |
 
-where the electron rate :math:`k_{e}` is the recombination rate constant. The recombination rate constant depends 
-on  whether
- traps are present or not within Multi-trapping model.
+where the electron rate :math:`k_{0}` is the recombination rate constant. The recombination rate constant depends 
+on  whether traps are present or not within Multi-trapping model.
 It looks like:
 
 .. math::
@@ -167,9 +166,9 @@ It looks like:
    \label{ke}
    \end{eqnarray}
 
-where the first equation is related to no traps condition ( with :math:`N_c` the effective conduction band density of the semiconductor and 
+where the first equation is related to no traps condition (with :math:`N_c` the effective conduction band density of the semiconductor and 
 :math:`\beta` the non linear recombination constant for electrons). The trap assisted recombination takes into account also the effective density of states
-of the traps ( :math:`N_t`). 
+of the traps (:math:`N_t`). 
 
 
 
@@ -237,10 +236,10 @@ The *Device* section for a DSC simulation is defined as  following:
   }
 
 
-The Device section must contain the name of the mesh file ``meshfile = <name_of_the_mesh>`` .
+The Device section must contain the name of the mesh file ``meshfile = <name_of_the_mesh>``.
 As usual, to each  region of the device we associate a  material file from the database. 
 In this  case, for both regions we  define  the  same  material ``TiO2mes``, which is  a special material which  
-contains standard parameters for both |TiO2|  and *electrolyte*.  Then, for every region we must  specify  if it contains ``TiO2``, or electrolyte
+contains standard parameters for both |TiO2|  and *electrolyte*.  Then, for every region we must  specify  if it contains |TiO2|  or electrolyte
 or both. This can be done setting two flags called ``TiO2`` and ``electrolyte``. 
 When one of these two keywords is set to *true*, the corresponding material is present in the region, otherwise it is not present. 
 By default they are assumed both *true* (which  defines a porous region). In the second region of the example shown  here
@@ -315,13 +314,10 @@ part of the boundary of a region where the *electrolyte* is present.
      Ex_curr = 0.1
     }
 
-The anode is modeled as a contact of  type ``ohmic``, with an electron collection rate given  by ``kinetic_rate``. The  default value of ``kinetic_rate`` is :math:`10^6`
-
-
+The anode is modeled as a contact of  type ``ohmic``, with an electron collection rate given  by ``kinetic_rate``. The  default value of ``kinetic_rate`` is :math:`10^6`.
 Usually a  sweep over the bias is performed  (considering the cathode as the reference contact). The  associated  variable  is  indicated as ``$V`` above.
-
 The cathode is a  contact of  the  special *type* Pt (platinum): it is modeled as a Butler-Volmer equation, the only needed parameter is
-the *exchange current*  :math:`j_0`,  expressed in :math:`A/cm^2` (``Ex_curr = 0.1``). (see  above)
+the *exchange current*  :math:`j_0`,  expressed in :math:`A/cm^2` (``Ex_curr = 0.1`` in  the  example above).
 
 
 
@@ -329,15 +325,10 @@ Physics
 ^^^^^^^^^^^^^^^^
 
 In  this  section one  can  define the  physical  parameters enlisted in table :ref:`Physical parameters<dsc_parameters>`.
-In this  case  they  are  valid  for  the  whole device. Alternatively, one  can  set one  or  more  of  these parameters in  one  of  the  *Regions*  of  the  *Device*, to  limit its  validity to that *Region* 
-
+In this  case  they  are  valid  for  the  whole device. Alternatively, one  can  set one  or  more  of  these parameters in  one  of  the  *Regions*  of  the  *Device*, to  limit its  validity to that *Region*. 
 For example, the trap effective density of states is given by :math:`N_t`, which  by  default is :math:`N_t` = :math:`N_c`, while
 recombination constant rate is  given by :math:`k_e`.
-   
-
-
-
-If we are simulating a device under illumination the ``Physics`` section must contain at least the setting of the generation module ::
+If we are simulating a device under illumination the ``Physics`` section must contain at least the setting of the generation module, given by ::
 
   generation = dssc_generation
 
@@ -421,14 +412,14 @@ The parameters for the generation can be defined in the auxiliary **Module** *ds
        }
     }
 
-In the generation module, the  following  keywords must be specified:
+In the *dssc_generation* module, the  following  keywords must be specified:
 
-* ``regions`` : the regions where we want that generation to take place (where the Dye is present);
+* ``regions`` : the regions where we want the generation to take place (where the Dye is present);
 * ``plot`` : if we want to plot the generation within the cell during generation sweep;
 * ``light_direction`` : the vector which fixes the direction from where the light comes;
 * ``light_intensity`` : the light intensity, in units of *Sun* ;
 * ``dye`` : the dye used in the cell (file name);
-* ``illumination_spectrum`` : the source spectrum , (file name) by default a 1.5 AM solar spectrum;
+* ``illumination_spectrum`` : the source spectrum (file name), by default a 1.5 AM solar spectrum;
 
 The light intensity is usually defined as a variable used  in a sweep (see below). It can be set to increasing  values  until it reaches  1, that means one Sun,
 or a larger or smaller illumination intensity (0.1, 2.0, etc.).
@@ -741,7 +732,7 @@ the intensity of light (``light_intensity``), the direction of the light rays (`
 the kind of Dye used in the cell (``dye``) and the boundary region illuminated (in our example ``anode``). 
 
 Another keyword,  ``illumination_spectrum = <source_spectrum>`` can be set if we want to change the solar spectrum 
-for generation, in case the light source we want to simulate is not the conventional sun spectrum. 
+for the generation, in case the light source we want to simulate is not the conventional sun spectrum. 
 
 By default the flag is set to ``illumination_spectrum = Sun1p5am``, the conventional sun spectrum 1.5 AM.
 
@@ -815,8 +806,8 @@ It  is  possible to collect a  set of  Output  variables, as  defined in tables 
   plot =  (Potential, Density, Current, Mobility, ContactCurrents) 
  
 
-Thus, with ``Potential`` we  plot the internal potential profiles  which includes electrostatic potential, 
-with ``Density``, all the densities  which includes electron, iodide, triiodide, cation densities and recombination 
+Thus, with ``Potential`` we  plot the internal potential profiles  which include electrostatic potential, 
+with ``Density``, all the densities  which include electron, iodide, triiodide, cation densities and recombination 
 and generation profiles, with ``Current``  all the currents  which include the x, y and z components of the currents 
 (electronic, iodide, triiodide and cation, total current) and the electric field, with ``Mobility`` all the mobilities. Finally ``ContactCurrents``
 allows the plot of the current flowing through the contacts.
