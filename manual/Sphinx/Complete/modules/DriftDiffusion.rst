@@ -215,7 +215,7 @@ accepts the following options:
 
   ``embracing_length = double`` 
        When the domain of the quantum simulation is smaller
-       than the domain of the full simulation, the boundary conditions for the Schroedinger
+       than the domain of the full simulation, the boundary conditions for the :math:`Schr\ddot{o}dinger` 
        equation will disturb the transfer from classical to quantum density. By defining an
        embracing region of a certain extension (specified in meters), a gradual transition
        from classical to quantum density will be done instead of an abrupt one, using as
@@ -429,7 +429,10 @@ specified with a common keyword in arrays, e.g.
 
 
 Constant mobility model
-"""""""""""""""""""""""""
+............................................
+
+
+
 
 The constant mobility model (identifier ``constant`` ) assumes a mobility which depends
 only on temperature by means of the following formula:
@@ -444,8 +447,10 @@ have to be specified with the keywords ``mu_max`` and ``exponent``.
 :math:`\mu_0` can be overridden from the ``physical_model`` section using the keyword
 ``mu`` or from the Region sections using the keywords ``mu_e`` and ``mu_h`` .
 
+
 Doping dependent mobility model
-""""""""""""""""""""""""""""""""
+............................................
+
 
 The doping dependent mobility model (identifier ``doping_dependent`` ) implements two
 models for mobility depending on the total doping density and the temperature. The
@@ -488,7 +493,9 @@ The parameters are given in table at the end of the Chapter.
 
 
 Field dependent mobility model
-"""""""""""""""""""""""""""""""
+............................................
+
+
 
 The field dependent mobility model describes the degradation of mobility at high driving
 fields. It is identified by the identifier field_dependent. The electric field component
@@ -538,7 +545,9 @@ The parameters for the field dependent mobility model are summarized in Table 2.
 
 
 Field assisted mobility model
-"""""""""""""""""""""""""""""""
+............................................
+
+
 
 The field assisted mobility model describes the enhancement of the carrier mobility by an electric field in organic
 semiconductors. It is identified by the identifier field_enhanced. 
@@ -599,7 +608,9 @@ by writing ``polarization (pyro, piezo) {}``.
 
 
 Spontaneous polarization
-"""""""""""""""""""""""""""""""
+............................................
+
+
 
 The spontaneous polarization model (sometimes also called 'pyroelectric polarization') imposes a constant electric polarization P along
 the symmetry-braking direction of the crystal. Crystals with wurtzite structure like Nitrides
@@ -612,7 +623,9 @@ Alternatively, one can specify explicitly a polarization vector using the option
 
 
 Piezopolarization
-""""""""""""""""""
+............................................
+
+
 
 The piezoelectric polarization is strain induced and given by the linear relationship
 
@@ -747,19 +760,22 @@ Contacts are defined by blocks with keyword Contact, for example::
 An area factor can be specified for contacts using the keyword ``area_factor`` . The
 contact current will be multiplied by this factor.
 
-For interfaces and surfaces, the same syntax can be used (optionally one can use
-the keywords ``Interface`` or ``Boundary`` ), however they do usually not need to be defined
-explicitly.
+For interfaces and surfaces, the same syntax can be used (optionally one can  use the keywords ``Interface`` or ``Boundary``), however they do usually not need to be defined explicitly.
 
 Ohmic contact
-""""""""""""""
+............................................
 
-The ohmic contact (identifier ohmic) has no further parameters.
+
+
+The ohmic contact (identifier ``ohmic``) has no further parameters.
+
 
 Schottky contact
-""""""""""""""""""
+............................................
 
-A Schottky contact (identifier ``schottky`` ) has the additional parameter ``barrier`` , which
+
+
+A Schottky contact (identifier ``schottky``) has the additional parameter ``barrier`` , which
 signifies the energy difference between the semiconductor band edge and the fermi energy
 in the metal. As default, the barrier is taken with respect to the conduction band. By
 specifying ``band = v`` the barrier can be imposed with respect to the valence band (p-
@@ -786,7 +802,10 @@ Thermionic emission is by default switched on, but can be disabled by specifying
 
 
 Interface/surface model
-"""""""""""""""""""""""
+............................................
+
+
+
 
 The free surface or interface model (identifier interface) can include surface charges
 due to traps and surface recombination. Their definition can be found in section :ref:`DD_trapmodels`.
@@ -794,19 +813,18 @@ due to traps and surface recombination. Their definition can be found in section
 Each trap model will induce automatically a SRH recombination model as in the bulk
 case.
 
-Schroedinger/Poisson/Drift-Diffusion calculations
+:math:`Schr\ddot{o}dinger`/Poisson/Drift-Diffusion calculations
 -----------------------------------------------------
 
-TIBERCAD is able to do selfconsistent Schroedinger-Poisson or Schroedinger-Drift-Diffusion
-calculations. For this purpose, quantum_density has to be specified for at least one of
-the carriers, and a selfconsistent simulation should be defined in the Selfconsistent
-block. The following options { to be specified in the Physics section { control the
-behaviour of the selfconsistent simulation.
+tiberCAD is able to do selfconsistent :math:`Schr\ddot{o}dinger`-Poisson or :math:`Schr\ddot{o}dinger`-Drift-Diffusion
+calculations.  For this purpose, quantum_density has to be specified for at least one of
+the carriers,  and a selfconsistent simulation should be defined in the Selfconsistent
+block (see :ref:`Selfcons`).  The following options to be specified in the Physics section  control the behaviour of the selfconsistent simulation.
 
  ``use_density_predictor`` 
     When set to true, a predictor-corrector scheme will
     be adopted in the selfconsistent cycle. The Poisson/Drift-Diffusion solver does not
-    just take the particle densities as given by the Schroedinger calculation, but it will
+    just take the particle densities as given by the :math:`Schr\ddot{o}dinger` calculation, but it will
     assume a dependency of the density on the potentials of the form
 
     .. math::
@@ -819,7 +837,7 @@ behaviour of the selfconsistent simulation.
 
     where :math:`(\varphi^0, \phi_n^0, \phi_p^0)` are the potentials for which the quantum density was calculated.
     ``use_density_predictor = true`` is the preferred method for selfconsistent
-    Schroedinger-Poisson/Drift-Diffusion calculations and is enabled by default.
+    :math:`Schr\ddot{o}dinger`-Poisson/Drift-Diffusion calculations and is enabled by default.
 
 Example
 --------------
