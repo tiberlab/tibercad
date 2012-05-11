@@ -115,14 +115,14 @@ The following options influence the behaviour of the Module efaschroedinger:
 
  ``particle`` : string  
     defines for which particle (electron or hole) :math:`Schr\ddot{o}dinger` equation is solved. 
-    Possible values are el and hl. A different Module efaschroedinger has to be
+    Possible values are ``el`` and ``hl``. A different **Module** ``efaschroedinger`` has to be
     defined for each particle to be solved.
 
  ``poisson_model_name`` : string
-    defines the name of the simulation (e.g.  driftdiffusion) that can provide electric potential
+    defines the name of the simulation (e.g.  ``driftdiffusion``) that can provide electric potential
 
  ``strain_model_name`` : string 
-    defines the name of the simulation (e.g. elasticity) that can provide elastic strain
+    defines the name of the simulation (e.g. ``elasticity``) that can provide elastic strain
 
  ``regions`` : string 
     defines the regions associated to this EFA simulation
@@ -153,10 +153,10 @@ close to a specific number, referred to as the *guess*.
     maximum number of iteration, used as a stop condition
 
  ``eigen_solver_tolerance`` : double 
-    numerical eigensolver tolerance used as a convergence criteria
+    numerical eigensolver tolerance used as a convergence criterium
 
  ``guess`` : double 
-     the algorithm try  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If not defined, then by  default it is  calculated internally from the band edges.
+     the algorithm try  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If not defined, then by  default it is  calculated internally based on  the band edges.
 
  ``ksp_type`` : string 
     Krylov subspace method type: *bcgsl*, *gmres*, *cg*
@@ -170,13 +170,14 @@ Physics section
 
 
  ``model`` : string 
-    possible values are *single_band* , for single  band model ( :math:`\Gamma` point) ;  *kp* for :math:`{\bf k \cdot p}` model
+    possible values are *single_band*, for single  band model (:math:`\Gamma` point) ;  *kp* for :math:`{\bf k \cdot p}` model
 
  ``kp_model`` : string 
     possible values are *6x6*, *8x8*. 
 
 
-In case *single_band* model is  applied to electrons, the  relevant  mass  is read from  the  material file. In case  of  holes, in  *Physics*  section the  following options have  to be  defined:
+In case *single_band* model is  applied to electrons, the  relevant  mass  is read from  the  material file. 
+When it is applied to  holes, in  *Physics*  section the  following options have  to be  defined:
 
  ``mass`` : double(units of :math:`m_0`)
     effective  mass to  be  used  in *single_band* calculations for  holes 
@@ -197,9 +198,8 @@ The particle (electron,hole) **quantum density** is  calculated  by default if  
 
 
  
-The calculation  may be obtained with an analytical or a numerical calculation.
-
-By default, an analytical calculation of density is performed in the following way. For each eigenstate we calculate the effective mass assuming quadratic dispersion. Then the charge density is calculated  as follows:
+The quantum density   is  calculated  analytically   in the following way. 
+For each eigenstate we calculate the effective mass assuming quadratic dispersion. Then the charge density is calculated  as follows:
 
 ..  math::
     :nowrap:
@@ -290,10 +290,10 @@ The main parameters are:
 
 
 
-The dispersion can  be calculated in  general in  a  k-space  dimension between 1 and (3-*simdim*),  where  *simdim*  is  the  simulation  dimension.
+The dispersion can  be calculated in  general in  a  k-space  dimension between 1 and (3-*simdim*),  where  *simdim*  is  the  simulation  dimension. That is a 1D k-space can be defined for 1D and 2D simulations and a 2D k-space for 1D simulations.
 Accordingly,  *number_of_nodes*  is    an array  of  dimension equal  to  the k-space  dimension.
 
-For example, for a 2D k-space, a  2D  mesh  is  defined,  by  writing e.g. ::
+For example, in a  simulation of a quantum well (1D), to create a 2D k-space one defines   a  2D  mesh  by  writing e.g. ::
  
   number_of_nodes = (5,5)
 
@@ -376,7 +376,7 @@ The optical spectrum from spontaneous emission is calculated in the following wa
 
 
 
-where :math:`f_i` and :math:`f_j` are the Fermi distributions, :math:`M_{i,j}` is the optical matrix element between the states  :math:`i` and :math:`j`.
+where :math:`f_i` and :math:`f_j` are the Fermi distributions and :math:`M_{i,j}` is the optical matrix element between the states  :math:`i` and :math:`j`.
 
 ::
 
@@ -419,7 +419,7 @@ The main parameters are:
       light polarization 
 
  ``plot`` :
-    to  select  spectrum in a k-point k0 or  integrated in k-space 
+    to  select  spectrum in *k=0* (:math:`\Gamma` point)  or  spectrum integrated in k-space 
 
 
 Here, ``initial_state_model`` and ``final_state_model`` are, respectively, the quantum simulations 
@@ -432,7 +432,7 @@ By  default, all  the eigenstates calculated in  the electron  and  hole quantum
 
 Optionally, one  can  define  the  range  of  states to  be  used  for  optical  transitions, by  means  of  the  keywords ``initial_eigenstates`` and ``final_eigenstates``. 
 
-A range of energy values must  be  defined in this way::
+A range of energy values  must  be  defined for the optical  spectrum, in this way::
 
   Emin = 3.0
   Emax = 5.0
@@ -444,7 +444,7 @@ where ``Emin,Emax amd dE`` are  respectively   the  minimum,  maximum and  inter
 
 .. (vector)..............
 
-By specifying *optical_spectrum_k_0* in  the  ``plot``  statement, the emission  recombination  optical spectrum for  k=0 is  calculated. 
+By specifying *optical_spectrum_k_0* in  the  ``plot``  statement, the emission  recombination  optical spectrum for   *k=0* (:math:`\Gamma` point) is  calculated. 
 
 
 Integrated spectrum
@@ -489,10 +489,10 @@ The parameters for the *k-space* integration are the following
     default is *false*, if  *true*, then *adaptive* k-mesh refinement is enabled
  
  ``refine_fraction`` : 
-    refinement  parameter
+    refinement  parameter for *adaptive* k-mesh refinement
     
  ``relative_accuracy``:
-    refinement  tolerance
+    refinement  tolerance for *adaptive* k-mesh refinement
 
 If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the elements whose error is greater than the value (1-refine_fraction)* (maximum error) are
 going to be refined. In this case, "Error" is just the integrated quantity. The refinement
@@ -511,9 +511,9 @@ To  run  an  opticskp  sumulation,  one  needs  to  define it in the  solve  sta
    }
 
 
-where  *optics*  is  the  name  of  the  defined ``opticskp``  sumulation.
-Note  that, in  this  way, the  quantum (efaschroedinger)  simulations needed  for ``opticskp`` are executed but their  results are  not  shown in  the  output.
-To plot quantum results you should  explicitly  define   efaschroedinger  simulations in the  solve  statement, in  this  way::
+where  *optics*  is  the  name  of  the  defined ``opticskp``  simulation.
+Note  that, in  this  way, the  quantum (``efaschroedinger``)  simulations needed  for ``opticskp`` are executed but their  results are  not  shown in  the  output.
+To plot quantum results you should  explicitly  define   ``efaschroedinger``  simulations in the  ``solve``  statement, in  this  way::
 
 
 
@@ -558,7 +558,7 @@ Example
 
 
 In this 1D example we will see how to calculate quantum properties of a GaAs/InGaAs **quantum  well**.
-:math:`Schr\ddot{o}dinger` equation is solved, with a single-band effective mass model for conduction band and with a 6-band **k.p** model for valence band. Eigenvalues and eigenfunctions are calculated to get energy levels and wavefunctions in the quantum well.
+:math:`Schr\ddot{o}dinger` equation is solved with a single-band effective mass model for conduction band and with a 6-band **k.p** model for valence band. Eigenvalues and eigenfunctions are calculated to get energy levels and wavefunctions in the quantum well.
 Here is  the  device  definition ::
 
   Device
@@ -640,7 +640,7 @@ First, a strain calculation for the GaAs/InGaAs/GaAs heterostructure, with GaAs 
 
   }
 
-See   Module  Elasticity  for  a  detailed  explanation. 
+See   :ref:`ElasticityTheory`      for  a  detailed  explanation. 
 
 Simulation is performed at equilibrium, so that   we   solve *driftdiffusion* with the option  ::
 
