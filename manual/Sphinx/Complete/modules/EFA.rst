@@ -642,7 +642,8 @@ First, a strain calculation for the GaAs/InGaAs/GaAs heterostructure, with GaAs 
 
 See   :ref:`ElasticityTheory`      for  a  detailed  explanation. 
 
-Simulation is performed at equilibrium, so that   we   solve *driftdiffusion* with the option  ::
+Simulation is performed at equilibrium, so that   we   solve *driftdiffusion* 
+(see :ref:`DriftDiffusionTheory`) with the option  ::
 
   coupling = poisson
 
@@ -842,6 +843,10 @@ States from the heavy hole and the light hole bands are visible.
     :scale: 70%
 
     VB wavefunctions   
+
+
+
+
 
 
 

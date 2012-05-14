@@ -952,6 +952,109 @@ performed, for example
 The mesh independent results for every sweep step are stored in this file.
 
 
+Material database
+----------------------------------
+
+
+
+
+
+..  _material_list :
+
+..  math::
+    :nowrap:
+    :label:
+
+     \begin{table}[!ht]
+     %\center
+     \begin{minipage}[t]{8cm}
+     \begin{tabular}{l|c|l}
+     \multicolumn{3}{c}{\textbf{Material list}} \\
+     \hline
+     \textbf{Name}  & \textbf{Crystal structure} & \textbf{Type}  \\
+     \hline
+     \hline
+     \texttt{Air} & - & - \\
+     \texttt{AlAs} & zb & binary \\
+     \texttt{AlAsP} & zb & ternary \\ 
+     \texttt{AlAsSb} & zb & ternary  \\
+     \texttt{AlGaAs} & zb & ternary  \\
+     \texttt{AlGaN} & wz & ternary  \\
+     \texttt{AlGaP} & zb & ternary  \\
+     \texttt{AlGaSb} & zb & ternary  \\
+     \texttt{AlInAs} & zb & ternary  \\
+     \texttt{AlInN} & wz & ternary  \\
+     \texttt{AlInP} & zb & ternary  \\
+     \texttt{AlInSb} & zb & ternary  \\
+     \texttt{AlN} & wz & binary \\
+     \texttt{AlP} & zb & binary \\
+     \texttt{AlPSb} & zb & ternary  \\
+     \texttt{AlSb} & zb & binary \\
+     \texttt{GaAs} & zb & binary \\
+     \texttt{GaAsP} & zb & ternary  \\
+     \texttt{GaAsSb} & zb & ternary  \\
+     \texttt{GaInP} & zb & ternary  \\
+     \texttt{GaInSb} & zb & ternary  
+     \end{tabular}
+     \end{minipage}
+     \hspace{0.5cm}
+     \begin{minipage}[t]{8cm}
+     \begin{tabular}{l|c|l}
+     \multicolumn{3}{c}{\textbf{Material list}} \\
+     \hline
+     \textbf{Name}  & \textbf{Crystal structure} & \textbf{Type}  \\
+     \hline
+     \hline
+     \texttt{GaN} & wz & binary \\
+     \texttt{GaP} & zb & binary \\
+     \texttt{GaPSb} & zb & ternary \\ 
+     \texttt{GaSb} & zb & binary \\
+     \texttt{Ge} & zb & simple \\
+     \texttt{InAs} & zb & binary \\
+     \texttt{InAsP} & zb & ternary  \\
+     \texttt{InAsSb} & zb & ternary  \\
+     \texttt{InGaAs} & zb & ternary  \\
+     \texttt{InGaN} & zb & ternary  \\
+     \texttt{InN} & wz & binary \\
+     \texttt{InP} & zb & binary \\
+     \texttt{InPSb} & zb & ternary  \\
+     \texttt{InSb} & zb & binary \\
+     \texttt{Pentacene} & - & molecular \\
+     \texttt{Si} & zb & simple \\
+     \texttt{SiN} & zb & binary  \\
+     \texttt{SiO2} & zb & binary \\
+     \texttt{TiO2mes} & - & mesoporous \\    
+     \texttt{ZnO} & zb & binary \\
+     \texttt{ZrO2} & zb & binary 
+     \end{tabular}
+     \end{minipage}
+     \caption{List of Materials}
+     \label{table:material_list}
+     \end{table}
+
+
+    
+    
+
+
+|
+
+
+
+The  parameters  of  the  most  important semiconductor materials are  collected  in  the  *material database*.
+See :ref:`List of materials<material_list>` for  a  complete list of  the  materials defined in  tiberCAD.
+For  the  simple and binary  compounds the lattice, strain  and  band properties are included in  each material file. The ternary alloy material  file is instead 
+
+User-defined  materials can  be  freely  added, provided  that  the  syntax for  the parameters entry is  followed.
+
+
+
+
+
+
+
+
+
 Input files Examples
 ----------------------------------
 
