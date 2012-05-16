@@ -1042,10 +1042,19 @@ Material database
 
 
 The  parameters  of  the  most  important semiconductor materials are  collected  in  the  *material database*.
-See :ref:`List of materials<material_list>` for  a  complete list of  the  materials defined in  tiberCAD.
-For  the  simple and binary  compounds the lattice, strain  and  band properties are included in  each material file. The ternary alloy material  file is instead 
+See :ref:`List of materials<material_list>` for  a  complete list of  the  materials defined in  tiberCAD. 
+*zb* stands  for  *zincblende* crystal  structure, *wz* for  *wurtzite*. 
+Materials  can be  simple elements, like Si and  Ge, binary  compounds, such  as GaAs or  GaN,  and ternary alloys, like  AlGaAs.
+For  the  simple and binary  compounds the lattice, strain  and  band properties are included in  each material file. The ternary alloy material  file instead contains  the name of  the  two parent  materials,  from  which the  parameters  of  the  alloy  material are  calculated,  depending  on  the  components concentration, according to a  quadratic  law, e.g. for the energy gap *Eg* 
 
-User-defined  materials can  be  freely  added, provided  that  the  syntax for  the parameters entry is  followed.
+.. math::
+   :label: Vegard_law
+
+    E_g(A_xB_{1-x}) & = xE_g(A)+ (1-x)E_g(B)- x(1-x)C  
+
+
+where  the  *bowing* parameter *C* accounts  for  the  deviation from a linear interpolation (virtual-crystal approximation) between the two binary compounds *A* and *B*. Values of *C* for one or  more  parameters are reported in the  alloy  material  file. 
+User-defined  materials can  be  freely  added, provided  that  the  correct syntax for  the parameters entry is  followed.
 
 
 
