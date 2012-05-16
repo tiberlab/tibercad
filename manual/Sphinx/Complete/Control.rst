@@ -2,7 +2,8 @@
 Controlling the Simulation
 ###########################
 
-.. index:: double:Simulations;sweep
+..
+  .. index:: double:Simulations;sweep
 
 ================
 Tools for Simulation
@@ -108,8 +109,8 @@ Example::
 In  this example, at  each  step of the  sweep the two simulations ``dd`` and  ``thermal`` are  performed, in  this  order, while  the  variable is ``Vbias`` and assumes values between 0 and 1.2.
 
  
-
-.. index:: double:Solvers;selfconsistent
+..
+  .. index:: double:Solvers;selfconsistent
 	
 
 .. _Selfcons:
@@ -158,6 +159,20 @@ Example::
 In this  example, the ``selfconsistent`` solution named ``sc_all`` is  defined,  which solves the  simulations defined in the relevant  modules as *quantum_el,quantum_hl* and *dd*,  in this  order. 
 
 
+Then, in **Simulation**, we  execute ``sc_all``, e.g. ::
+
+  Simulation
+  {
+   verbose = 3
+
+   solve = (strain, sweep, scall)
+
+   resultpath = output
+   output_format = grace
+
+}
+
+
 
 =========================
 Solvers
@@ -170,7 +185,8 @@ The **Solver**  block inside a module description contains the options for the n
 The solver type the **Solver**  block is describing (*linear, nonlinear, eigenvalue solver*) depends on the module.
 The options and  parameters for the *nonlinear* and the *linear* solvers are presented in  the following.
 
-.. index:: double:Solvers;nonlinear
+..
+  .. index:: double:Solvers;nonlinear
 
 
 .. _Nonlinear_solver:
@@ -232,7 +248,8 @@ Linesearch solver
  ``max_iterations`` : integer
     maximum number of iterations
 
-.. index:: double:Solvers;linear
+..
+  .. index:: double:Solvers;linear
 
 
 .. _Linear_solver:

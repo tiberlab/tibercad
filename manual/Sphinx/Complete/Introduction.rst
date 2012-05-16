@@ -1053,7 +1053,7 @@ For  the  simple and binary  compounds the lattice, strain  and  band properties
     E_g(A_xB_{1-x}) & = xE_g(A)+ (1-x)E_g(B)- x(1-x)C  
 
 
-where  the  *bowing* parameter *C* accounts  for  the  deviation from a linear interpolation (virtual-crystal approximation) between the two binary compounds *A* and *B*. Values of *C* for one or  more  parameters are reported in the  alloy  material  file. 
+where  the  *bowing* parameter *C* accounts  for  the  deviation from a linear interpolation (virtual-crystal approximation) between the two binary compounds *A* and *B* and *x* is the concentration of the binary *A*. Values of *C* for one or  more  parameters are reported in the  alloy  material  file. 
 User-defined  materials can  be  freely  added, provided  that  the  correct syntax for  the parameters entry is  followed.
 
 

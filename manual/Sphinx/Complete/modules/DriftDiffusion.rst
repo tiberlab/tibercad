@@ -30,7 +30,8 @@ and hole thermoelectric powers, respectively. The models for the mobilities and 
 recombination rates can be specified in the ``Physics`` section as described in the
 following.
 
-..  index:: double:DriftDiffusion;Solution
+..
+  ..  index:: double:DriftDiffusion;Solution
 
 Solution/Plot variables
 -----------------------
@@ -596,7 +597,7 @@ Polarization models
 
 For simulations involving materials with nonzero electric polarization (such as nitrides)
 it is important to include the effect of polarization. This is done by specifying the models
-for spontaneous (pyro-) and piezoelectric polarization using the keywords polarization
+for spontaneous (pyro-) and piezoelectric polarization using the keyword ``polarization``
 with the types ``pyro`` and ``piezo`` ::
 
   polarization pyro {}
@@ -816,10 +817,9 @@ case.
 :math:`Schr\ddot{o}dinger`/Poisson/Drift-Diffusion calculations
 -----------------------------------------------------
 
-tiberCAD is able to do selfconsistent :math:`Schr\ddot{o}dinger`-Poisson or :math:`Schr\ddot{o}dinger`-Drift-Diffusion
-calculations.  For this purpose, quantum_density has to be specified for at least one of
-the carriers,  and a selfconsistent simulation should be defined in the Selfconsistent
-block (see :ref:`Selfcons`).  The following options to be specified in the Physics section  control the behaviour of the selfconsistent simulation.
+tiberCAD is able to perform selfconsistent :math:`Schr\ddot{o}dinger`-Poisson or :math:`Schr\ddot{o}dinger`-Drift-Diffusion calculations.  For this purpose, ``quantum_density`` has to be specified for at least one of
+the carriers,  and a selfconsistent simulation should be defined in the *Selfconsistent*
+block (see :ref:`Selfcons`).  The following option, to be specified in the Physics section,  controls the behaviour of the ``selfconsistent`` simulation.
 
  ``use_density_predictor`` 
     When set to true, a predictor-corrector scheme will
@@ -838,6 +838,57 @@ block (see :ref:`Selfcons`).  The following options to be specified in the Physi
     where :math:`(\varphi^0, \phi_n^0, \phi_p^0)` are the potentials for which the quantum density was calculated.
     ``use_density_predictor = true`` is the preferred method for selfconsistent
     :math:`Schr\ddot{o}dinger`-Poisson/Drift-Diffusion calculations and is enabled by default.
+
+
+For example, in **Module** *driftdiffusion* 
+::
+
+  Physics
+  {    
+    # we us a predictor corrector scheme for the selfconsistent loop
+    use_density_predictor = true
+
+    recombination srh {}
+
+    particle_density
+    {
+      particle = electron
+      statistics = fermidirac
+
+      # where to get the quantum density from
+      quantum_density = quantum_el
+      barrier_regions = buffer_quantum
+
+      # we use an embracing region to get a continuous transition from
+      # classical to quantum density
+      #embracing
+      #{
+      #  embracing_length = 8e-9
+      #  plot_embracing_regions = true
+      #}
+    }
+
+
+Then, in **Module** *selfconsistent* ::
+
+  Module selfconsistent
+  {
+   solve = (quantum_el, quantum_hl, driftdiffusion)
+   # we do not use relaxation, but a predictor-corrector scheme
+   #relaxation_factor = 0.5
+   max_iterations = 10
+   absolute_tolerance = 1e-3
+   relative_tolerance = 1e-8
+   monitor = true
+   #xmonitor = true
+  }
+
+
+
+``quantum_el`` and  ``quantum_hl`` are  the  *efaschroedinger* simulations which  calculate the quantum densities for  electron and  holes. The  ``solve`` statement here specifies the order of execution in  the  self-consistent  cycle, which is  repeated until the  requested tolerance is  reached.
+
+
+
 
 Example
 --------------

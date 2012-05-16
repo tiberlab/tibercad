@@ -7,15 +7,18 @@ Welcome to TiberCAD's manual
 .. toctree::
    :maxdepth: 3
 
+   :noindex:
 
    Introduction
    Theory
    Control
    Bibliography
-   Index
+   
 
 .. Glossary
 .. ReferenceGuide
    
+
+
 
 
