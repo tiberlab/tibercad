@@ -44,7 +44,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
     double spectrum_shift;    //!< shift of spectrum ised in matrix assembly[eV]
 
-    bool  consider_potential; //!< apply strain effect to the EFA Hamiltonian;
+    bool  consider_potential; //!< apply potential to the EFA Hamiltonian;
+
+    bool  consider_potential_bulk; //!< apply potential to the bulk EFA Hamiltonian;
 
     bool estimate_spectrum_shift; //!< calculate spectrum shift from band edges;
 

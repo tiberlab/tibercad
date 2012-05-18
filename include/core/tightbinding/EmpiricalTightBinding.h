@@ -2,6 +2,7 @@
 #define _EMPIRICALTIGHTBINIDNG_H_
 
 #include "TightBinding.h"
+#include "StrainInterface.h"
 
 class ETB : public TightBinding
 {
@@ -258,6 +259,7 @@ class ETB : public TightBinding
   //! Size of the solution (number of states)
   unsigned int _solution_size;
   
+  StrainInterface _strain_int;
 
 };
 

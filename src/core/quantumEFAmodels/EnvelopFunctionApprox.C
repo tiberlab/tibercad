@@ -478,11 +478,16 @@ void EnvelopFunctionApprox::parse_options()
   //-------------------------------------------------------------------------------------------//
   //-------------------------------------------------------------------------------------------//
   //Poisson model
+  opt.consider_potential = false;
+  opt.consider_potential_bulk = false;
+
   std::string  poisson_model_name = get_option("poisson_model_name","");
   poisson_model_name = get_option("poisson_simulation", poisson_model_name);
   if ( poisson_model_name != "" )
   {
     opt.consider_potential = true;
+
+    opt.consider_potential_bulk = get_option("potential_in_bulk",true);
 
     poisson_equation  = find_simulation ( poisson_model_name );
 
@@ -529,6 +534,7 @@ void EnvelopFunctionApprox::parse_options()
   const ModelOptions& sol_opt = get_solver_options();
 
   opt.estimate_spectrum_shift =  opt.consider_potential;
+
   //opt.estimate_spectrum_shift = sol_opt.get_option("estimate_guess",  opt.estimate_spectrum_shift);
 
   if (sol_opt.find_option("guess")) opt.estimate_spectrum_shift = false;
@@ -1258,17 +1264,17 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
   if (opt.particle == "hl") sort( ev.begin(), ev.end(), EigenvalueProblem::compare_eigen_energy_holes);
 
-  if (verbose() > 0)
+  if (verbose() > 1)
   {
     Messages m;
     ostringstream os;
-    os << "eigenenergies (" << number_of_ev
+    os << "converged eigenenergies (" << number_of_converged_solutions
         << "):";
     m.info(os.str());
     m.indent();
 
     os.str("");
-    for (unsigned int i = 0; i < number_of_ev; ++i)
+    for (unsigned int i = 0; i < number_of_converged_solutions; ++i)
     {
       os << ev[i].energy << " ";
       if (i%8 == 7)
@@ -2279,8 +2285,8 @@ void EnvelopFunctionApprox::solve_bulk(void)
   std::cout<<"(EP) strain ezz "<<strain_crystal_system(3,3)<<std::endl;
 
   double electric_potential = 0;
-  if (opt.consider_potential)
-    electric_potential = get_electric_potential( mat_elem, qp );
+  if (opt.consider_potential_bulk)
+      electric_potential = get_electric_potential( mat_elem, qp );
 
 
   element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
@@ -2289,6 +2295,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
   std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
 	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
 
+  std::cout<<"number of bands: " << opt.number_of_bands<<std::endl;
 
   std::complex<double> ham_matrix[opt.number_of_bands * opt.number_of_bands ];
 

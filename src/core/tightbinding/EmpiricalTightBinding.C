@@ -16,8 +16,8 @@
 #include "Alloy.h"
 #include "Messages.h"
 #include "mesh.h"
-#include "Macrostrain.h"
 #include "EigenSolver.h"
+#include "RotatedCrystal.h"
 
 #include <fstream>
 #include <sstream>
@@ -172,9 +172,8 @@ ETB::do_init(void){
 
 
   // Get database path from Database class
-//  std::string database_path = Database::get_default_search_path();
+  //  std::string database_path = Database::get_default_search_path();
   std::string database_path = get_option("database_path",Database::get_search_path());
-
   std::string work_path = ".";
   std::string gen_outfile = "out.gen";
   std::string out_path = get_output_directory();
@@ -232,8 +231,11 @@ void ETB::reinit(void){
   // checks that the strain simulation, if specified has been done
   if(_upt_options.strain_sim != "no_sim")
   {
-    SimulationInterface* strsim = find_simulation(_upt_options.strain_sim);
-    if( (strsim != NULL) && (! strsim->is_solved()) )
+    _strain_int.set_simulation(_upt_options.strain_sim);
+
+    SimulationInterface* strsim = _strain_int.get_simulation();
+
+    if( ! strsim->is_solved() ) 
       throw InitFailedException("Strain model has not been solved");
   }
 
@@ -1024,22 +1026,21 @@ void
 ETB::project_atom_strain(void)
 {  
   std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
-
-  Macrostrain* strsim = dynamic_cast<Macrostrain*> (find_simulation(_upt_options.strain_sim));
-
-  
   unsigned int Number_of_atoms =  get_atomistic_structure()->get_N_without_H();
-
   std::vector<double> exx(Number_of_atoms, 0.0);
   std::vector<double> eyy(Number_of_atoms, 0.0);  
   std::vector<double> ezz(Number_of_atoms, 0.0);
+
+  Tensor2Sym epsilon;
 
   for (unsigned int i = 0; i < Number_of_atoms ; i++)
   { 
     
     if (structure[i].get_elem() != NULL)
     {
-      Tensor2Sym epsilon = strsim->get_strain(structure[i].get_elem());
+      const Elem* el = structure[i].get_elem();
+
+      _strain_int.get_strain(el, el->centroid(), epsilon);
 
       exx[i] = epsilon(1,1);
       eyy[i] = epsilon(2,2);
