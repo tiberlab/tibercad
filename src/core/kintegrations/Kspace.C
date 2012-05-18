@@ -651,41 +651,18 @@ void Kspace::define_k_path(void)
     {
 
       //std::cout<< "#"<<tokens[i-1]<<"-"<<tokens[i]<<"#" << endl;
+      if(tokens[i-1]=="G")        k1 = G;
+      else if(tokens[i-1]=="K")   k1 = K;
+      else if(tokens[i-1]=="M")   k1 = M;
+      else if(tokens[i-1]=="M'")  k1 = M1;
+      else                        k1 = G;
 
-      if(tokens[i-1]=="G")
-      {
-        k1 = G;
-      }
-      else if(tokens[i-1]=="K")
-      {
-        k1 = K;
-      }
-      else if(tokens[i-1]=="M")
-      {
-        k1 = M;
-      }
-      else if(tokens[i-1]=="M'")
-      {
-        k1 = M1;
-      }
+      if(tokens[i]=="G")          k2 = G;
+      else if(tokens[i]=="K")     k2 = K;
+      else if(tokens[i]=="M")     k2 = M;
+      else if(tokens[i]=="M'")    k2 = M1;
+      else                        k2 = G;
 
-      if(tokens[i]=="G")
-      {
-        k2 = G;
-      }
-      else if(tokens[i]=="K")
-      {
-        k2 = K;
-      }
-      else if(tokens[i]=="M")
-      {
-        k2 = M;
-      }
-      else if(tokens[i]=="M'")
-      {
-        k2 = M1;
-      }
-      
       unsigned int npoints=num_nodes[0];
 
       for (unsigned int j=0; j < npoints; j++)
@@ -708,6 +685,65 @@ void Kspace::define_k_path(void)
   }
   else if (k_space_dim == 3)
   {
+    double G[3], X1[3], X2[3], X3[3], K[3];
+    double *k1, *k2;
+    
+    double k_max = mod_opt.get_option("k_max",0.1);
+
+    // Problems with k-points in k.p and full band!
+    // Needs to define a common unit system !! 
+    G[0]=0.0;    G[1]=0.0;    G[2]=0.0;  //( 0  0  0 ) 
+    K[0]=0.0;    K[1]=k_max;  K[2]=k_max;  //( 0  1  1 )  
+    X1[0]=k_max; X1[1]=0.0;   X1[2]=0.0;
+    X2[0]=0.0;   X2[1]=k_max; X2[2]=0.0;
+    X3[0]=0.0;   X3[1]=0.0;   X3[2]=k_max;
+
+
+    std::vector<std::string> tokens;
+    std::string kpath = mod_opt.get_option("k-path","");
+
+    Messages::info("(KSP) defining a k-path: " + kpath);
+
+    tokenize(kpath, tokens, "-");
+
+    unsigned int id = 0;
+
+    for(short i=1; i<tokens.size(); i++)
+    {
+
+      std::cout<< "#"<<tokens[i-1]<<"-"<<tokens[i]<<"#" << endl;
+
+       if(tokens[i-1]=="G")        k1 = G;   
+       else if(tokens[i-1]=="K")   k1 = K;    
+       else if(tokens[i-1]=="X1")  k1 = X1;    
+       else if(tokens[i-1]=="X3")  k1 = X3;   
+       else                        k1 = G;  
+                                              
+       if(tokens[i]=="G")          k2 = G;    
+       else if(tokens[i]=="K")     k2 = K;    
+       else if(tokens[i]=="X1")    k2 = X1; 
+       else if(tokens[i]=="X3")    k2 = X3;   
+       else                        k2 = G;    
+
+      unsigned int npoints=num_nodes[0];
+
+      for (unsigned int j=0; j < npoints; j++)
+      {
+        double b1 = k1[0]*(npoints-j)/npoints + k2[0]*j/npoints;
+        double b2 = k1[1]*(npoints-j)/npoints + k2[1]*j/npoints;
+        double b3 = k1[2]*(npoints-j)/npoints + k2[2]*j/npoints;
+
+        //std::cout << b1 << " " << b2 << " " << b3 << endl;
+
+        Point pt(b1,b2,b3);
+
+        kmesh->add_point(pt,id,0);
+
+        id++;
+      }
+
+    }
+ 
   }
 
   //kmesh->print_info();

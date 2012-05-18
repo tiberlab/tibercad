@@ -101,9 +101,6 @@ Negf::do_init(void)
 
   _device = &(_env->get_device());
 
-
-
-
   // Prepare QuantumContact Map
   // Note: Boundary _contact_names are the same as QC names !!
   {
@@ -114,11 +111,23 @@ Negf::do_init(void)
     {
       QuantumContact* qc = _device->get_quantum_contact((*it)->get_name());
 
-      _quantum_contacts[qc->get_id()] = qc;
-      _boundaries[*it] = qc;
-      //std::cerr<<"_quantum_contact "<<qc->get_id()<<" "<<it->first->get_name()<<" "<<it->second<<std::endl;
-      // Quantum Contacts are activated here: so dof_map come out correctly
-      qc->activate_elements();
+      if (qc != NULL)
+      {
+        _quantum_contacts[qc->get_id()] = qc;
+        _qc_boundaries[*it] = qc;
+        std::cerr<<"_quantum_contact "<<qc->get_id()<<" "<<(*it)->get_name()<<std::endl;
+        // Quantum Contacts are activated here: so dof_map come out correctly
+        qc->activate_elements();
+      }
+      else
+      {
+        if ((*it)->get_options().get_option("dirichlet",false))
+        {
+          _dirichlet_boundaries.insert(*it);
+          std::cout<<"dirichlet bc on "<<(*it)->get_name()<<std::endl;
+        }
+      }
+
     }
   }
   // get the number of subbands.
@@ -250,6 +259,8 @@ Negf::setup_effectivemass_hamil()
   print_Lib();
 
   _libnegf->init();
+
+  if (opt.verbosity > 60) _libnegf->partition_info();
 
   _libnegf->set_verbose(opt.verbosity);
 
@@ -566,25 +577,34 @@ Negf::parse_options(void)
 
   opt.Estep = sol_opt.get_option("Estep",0.1);
 
-  opt.Np_n.resize(2, 20);
+  opt.Np_n.resize(2, 0);
 
   sol_opt.get_option("Np_contour", opt.Np_n);
 
-  opt.Np_real = sol_opt.get_option("Np_real",10);
+  opt.delta = sol_opt.get_option("delta",2e-3);
+
+  double deltaE =  sol_opt.get_option("deltaE",opt.delta/2.0);
+
+  int Np = 2 * opt.n_kT/deltaE;
+
+  opt.Np_real = sol_opt.get_option("Np_real",Np);
 
   opt.DEc = sol_opt.get_option("deltaEc", 0.25);
 
   opt.DEv = sol_opt.get_option("deltaEv", 0.25);
 
-  opt.n_poles = sol_opt.get_option("Npoles", 3);
-
-
+  opt.n_poles = sol_opt.get_option("Npoles", 0);
 
   opt.verbosity = sol_opt.get_option("verbosity",0);
   //sol_opt.check_unused();
-  opt.writeLDOS = sol_opt.get_option("writeLDOS",1);
+  opt.writeLDOS = sol_opt.get_option("writeLDOS",false);
 
-  opt.delta = sol_opt.get_option("delta",1e-5);
+  opt.set_dirichlet_bc = get_option("dirichlet", false);
+
+  if (!has_option("Np_real"))
+  {
+    std::cout<<"Np_real: "<<opt.Np_real<<std::endl;
+  }
 }
 
 void
@@ -706,11 +726,14 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
   FEType fe_type = dof_map.variable_type(0);
 
   AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe_face(FEBase::build(dim,fe_type));
 
   QGauss qrule(dim, THIRD);
+  QGauss qrule_face(dim-1,FIRST);
   //QTrap qrule(dim);
 
   fe->attach_quadrature_rule(&qrule);
+  fe_face->attach_quadrature_rule(&qrule_face);
 
   const std::vector<Real>& JxW = fe->get_JxW();
 
@@ -719,6 +742,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  const std::vector<Point>& face_normals = fe_face->get_normals();
 
   DenseMatrix<Number> Hr; // Interaction hamiltonian matrix real part
   DenseMatrix<Number> Sr; // Overlap matrix real part
@@ -746,6 +770,8 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
   {
     const Elem* elem = *el;
 
+
+    //-------------------------------------------------------
     //get effective mass tensor for elem
     NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
 
@@ -803,7 +829,55 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
             Hr(i,j) += JxW[qp] * newconst * (_k_vec * (invMass * _k_vec)) * phi[i][qp] * phi[j][qp];
           }
 
+      // DIRICHLET BC (Make sense only in 2D and 3D)---------------------------------
+      if (dim>1)
+      {
+        unsigned int n_sides = elem->n_sides();
+
+
+        for (short side = 0; side < n_sides; side++)
+        {
+
+          const ElementSide elside(elem->top_parent(), side);
+          bool set_dirichlet = false;
+
+          if ( _quantum_contacts.count(elem->subdomain_id()) )  //in quantum contact
+          {
+            fe_face->reinit(elem, side);
+            if (elem->neighbor(side)==NULL && face_normals[0](1) > 0)
+            {
+              set_dirichlet = true;
+            }
+          }
+          else if(_env->is_outer_boundary(elside))  //in device region
+          {
+            Boundary* bd = _env->get_boundary(elside);
+            // bd==NULL => not defined in input (!quantum_contact)
+            if ((bd == NULL && opt.set_dirichlet_bc) || _dirichlet_boundaries.count(bd) )
+              set_dirichlet = true;
+           }
+
+          if (set_dirichlet)
+          {
+            //std::cout<<elem->id()<<"  ";
+            //if (elem->neighbor(side) !=NULL) std::cout<<(elem->neighbor(side))->id()<<std::endl;
+            //else std::cout<<std::endl;
+            for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
+            {
+              if (elem->is_node_on_side(nd, side))
+              {
+                Hr(nd,nd) = newconst/0.01;
+              }
+            }
+          }
+
+        }
+
+      }
+      // -----------------------------------------------------------------------------------
+
       new_dof_indices.resize(n_dofs);
+
 
       for (unsigned int i=0; i< n_dofs; i++)
         new_dof_indices[i] = _inv_perm[dof_indices[i]];
@@ -817,8 +891,9 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
       _sys_H->get_matrix("Hi").add_matrix(Hi, new_dof_indices);
 
-    }
-  }
+    }//BAND LOOP
+  }//ELEM LOOP
+
 }
 
 void
@@ -1066,8 +1141,8 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 
       if (b != NULL)
       {
-        std::map<const Boundary*, QuantumContact*>::iterator it(_boundaries.find(b));
-        if (it !=  _boundaries.end())
+        std::map<const Boundary*, QuantumContact*>::iterator it(_qc_boundaries.find(b));
+        if (it !=  _qc_boundaries.end())
         {
           unsigned int dummy;
           Point point_current = _contact_current[it->second] * it->second->get_normal(dummy);
@@ -1275,8 +1350,8 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 
   std::map<const Boundary*, int> boundary_ids;
   int id = 0;
-  std::map<const Boundary*, QuantumContact*>::iterator it = _boundaries.begin();
-  const std::map<const Boundary*, QuantumContact*>::iterator end = _boundaries.end();
+  std::map<const Boundary*, QuantumContact*>::iterator it = _qc_boundaries.begin();
+  const std::map<const Boundary*, QuantumContact*>::iterator end = _qc_boundaries.end();
   for( ; it != end; ++it, ++id)
   {
     boundary_ids[it->first] = id;
@@ -1350,7 +1425,7 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 
         Boundary* bd = _env->get_boundary(elside);
 
-        if (bd != NULL)
+        if (bd != NULL && _qc_boundaries.count(bd))
         {
           ID cc = boundary_ids[bd];
 

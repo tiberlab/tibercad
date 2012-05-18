@@ -215,5 +215,15 @@ inline void f77_negf_set_writeldos (f77_int const* handler, f77_int const& flag)
 }
 
 
+extern "C" void negf_write_partition_ (f77_int const*);
+
+// Corresponding F77 arguments for f77_negf_write_partition:
+// integer, intent(in) :: handler(DAC_handlerSize)
+inline void f77_negf_write_partition (f77_int const* handler)
+{
+  negf_write_partition_ (handler);
+}
+
+
 #endif
 

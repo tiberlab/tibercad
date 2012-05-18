@@ -143,7 +143,9 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         double delta;
 
-        int writeLDOS;
+        bool writeLDOS;
+
+        bool set_dirichlet_bc;
     };
 
 
@@ -160,10 +162,13 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     Device* _device;
 
-    std::map<const Boundary*, QuantumContact*> _boundaries;
-
     SimulationEnvironment* _env;
 
+    std::set<const Boundary*> _dirichlet_boundaries;
+
+    std::map<const Boundary*, QuantumContact*> _qc_boundaries;
+
+    //! Map quantumContact ID to pointers
     std::map<ID, QuantumContact*> _quantum_contacts;
 
     Negf(const ModelOptions& option);

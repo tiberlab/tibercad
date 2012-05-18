@@ -117,7 +117,13 @@ NegfWrapper::device_contact_dm(int outer)
 }
 
 void
-NegfWrapper::set_writeLDOS(int flag)
+NegfWrapper::set_writeLDOS(bool flag)
 {
-  f77_negf_set_writeldos(_handler,flag);
+  if (flag) f77_negf_set_writeldos(_handler,1);
+  else f77_negf_set_writeldos(_handler,0);
+}
+void
+NegfWrapper::partition_info(void)
+{
+   f77_negf_write_partition(_handler);
 }

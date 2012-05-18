@@ -239,8 +239,6 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 	  {
 	    if (elem->is_node_on_side(nd, i))
 	    {
-	      
-	      const Point& node = elem->point(nd);
 	      for (short band = 0 ; band <  number_of_variables; band++)
 	      {
 		dof_map.dof_indices (elem, dof_indices,band); 

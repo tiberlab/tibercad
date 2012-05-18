@@ -38,7 +38,7 @@ KspaceIntegration::~KspaceIntegration()
 void KspaceIntegration::calculate_density()
 {
 
-  int verbose = get_option("verbose",0);
+  int verbose = get_option("verbose",SimulationOptions::verbose());
 
   Mesh* kmesh = const_cast <Mesh*>( _kspace->get_k_mesh() );
   //const Mesh* kmesh =  _kspace->get_k_mesh();
@@ -189,11 +189,14 @@ void KspaceIntegration::calculate_density()
 void KspaceIntegration::calculate_convergent_density()
 {
 
-  int verbose = SimulationOptions::verbose();
+  int verbose = get_option("verbose",SimulationOptions::verbose());
+
+   cout<<"verbose: "<<verbose<<endl;
 
   Mesh* kmesh = const_cast <Mesh*> (_kspace->get_k_mesh() );
 
-  cout <<"(KIntegration) Calculate k-integral "<<endl;
+  if (verbose>1)
+ 	 cout <<"(KIntegration) Calculate k-integral "<<endl;
 
   density_at_k.clear();
 

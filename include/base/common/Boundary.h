@@ -111,6 +111,7 @@ class Boundary
     //! Check if it contains a region ID
     bool has_region_id(ID id) const;
 
+    const ModelOptions& get_options(void) const;
 
   private:
 
@@ -240,6 +241,13 @@ bool
 Boundary::has_region_id(ID id) const
 {
   return static_cast<bool>(_region_ids.count(id));
+}
+
+inline
+const ModelOptions&
+Boundary::get_options(void) const
+{
+  return _options;
 }
 
 #endif // _BOUNDARY_H_

@@ -39,14 +39,19 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   
   unsigned int k_dim = 3 - get_mesh().mesh_dimension();
 
+  if (opts.find_option("k_space_dimension"))
+  {
+      k_dim = opts.get_option("k_space_dimension",k_dim);
+  }
+
   kopts.set_option("k_space_dimension",k_dim);
 
   std::vector<unsigned int>  num_nodes;
 
-  if (opts.find_option("k-path"))
-  {
-
+  if (opts.find_option("k_path") || opts.find_option("k-path"))
+  {	  
     std::string kpath = opts.get_option("k-path","");
+    kpath = opts.get_option("k_path",kpath);    
     kopts.set_option("k-path",kpath);
     num_nodes.push_back(10);
     kopts.set_option("number_of_nodes",num_nodes);

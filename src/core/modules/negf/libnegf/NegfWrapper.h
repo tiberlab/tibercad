@@ -69,7 +69,10 @@ public:
   void get_version(void);
 
   //! used to set if print LDOS
-  void set_writeLDOS(int flag);
+  void set_writeLDOS(bool flag);
+
+  //! write partition info 
+  void partition_info(void);
 
 private:
   int _handler[NEGF_HSIZE];
