@@ -204,6 +204,17 @@ inline void f77_negf_set_reference (f77_int const* handler, f77_int const&
 }
 
 
+extern "C" void negf_set_writetunn_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_negf_set_writetunn:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: flag
+inline void f77_negf_set_writetunn (f77_int const* handler, f77_int const& flag)
+{
+  negf_set_writetunn_ (handler, flag);
+}
+
+
 extern "C" void negf_set_writeldos_ (f77_int const*, f77_int const&);
 
 // Corresponding F77 arguments for f77_negf_set_writeldos:

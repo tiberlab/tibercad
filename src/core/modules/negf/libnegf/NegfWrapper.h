@@ -69,7 +69,10 @@ public:
   void get_version(void);
 
   //! used to set if print LDOS
-  void set_writeLDOS(bool flag);
+  void set_write_tunn(bool flag);
+
+  //! used to set if print LDOS
+  void set_write_ldos(bool flag);
 
   //! write partition info 
   void partition_info(void);

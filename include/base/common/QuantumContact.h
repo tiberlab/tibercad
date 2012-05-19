@@ -68,13 +68,18 @@ class QuantumContact
     void activate_elements(void);
     void inactivate_elements(void);
 
+    //! this function must be called explicitly before use of qc
+    //! since apparently the correct neighbor map gets broken
+    void set_neighbor_map(void);
+
     static std::vector<ID> set2vec(const std::set<ID>& set);
     static std::set<ID> vec2set(const std::vector<ID>& vec);
-
 
   private:
 
     QuantumContact(void) TBDLLOCAL;
+
+    void write_neighbors(void) const;
 
     Device* _device;
 
@@ -82,7 +87,11 @@ class QuantumContact
 
     BoundaryRegions* _bd_regions;
 
-    std::map<const Elem*,const ElementSide*> _elemmap; // maps elements to side elements
+    //! maps elements of the original mesh to neighboring elements in the quantum contact
+    std::map<const Elem*, Elem*> _elemmap;
+
+    //! maps elements of the quantum contact to side elements
+    std::map<const Elem*,const ElementSide*> _elemsidemap;
 
     Point _normal;
 

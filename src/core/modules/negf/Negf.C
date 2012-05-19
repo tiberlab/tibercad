@@ -77,7 +77,9 @@ Negf::~Negf(void)
 Negf*
 Negf::create(const ModelOptions& options)
 {
-  return static_this = new Negf(options);
+  static_this = new Negf(options);
+  std::cout<<"this & "<<static_this<<std::endl;
+  return static_this;
 }
 
 PhysicalModel*
@@ -94,6 +96,7 @@ Negf::create_bulk_model(const ModelOptions& options,
 void
 Negf::do_init(void)
 {
+  static_this = this;
 
   parse_options();
 
@@ -115,9 +118,13 @@ Negf::do_init(void)
       {
         _quantum_contacts[qc->get_id()] = qc;
         _qc_boundaries[*it] = qc;
+        _bd_map[qc] = *it;
+
         std::cerr<<"_quantum_contact "<<qc->get_id()<<" "<<(*it)->get_name()<<std::endl;
         // Quantum Contacts are activated here: so dof_map come out correctly
         qc->activate_elements();
+        qc->set_neighbor_map();
+
       }
       else
       {
@@ -130,6 +137,10 @@ Negf::do_init(void)
 
     }
   }
+
+
+  std::cout<<"this & "<<static_this<<std::endl;
+
   // get the number of subbands.
    const MeshBase& mesh = get_mesh();
    MeshBase::const_element_iterator el = mesh.active_elements_begin();
@@ -182,23 +193,28 @@ Negf::do_init(void)
     //_qdens_sys->add_variable("hdens", libMeshEnums::FIRST);
 
   }
-
+  std::cout<<"(negf) init H and S"<<std::endl;
   _sys_H->attach_assemble_function(ham_assemble);
 
   _sys_H->init();
   _sys_S->init();
 
+  std::cout<<"(negf) init k-integration"<<std::endl;
   init_k_space_integration();
 
+  std::cout<<"(negf) activate quantum contacts"<<std::endl;
   activate_quantum_contacts();
 
+  std::cout<<"(negf) reorder dofs"<<std::endl;
   reorder(); // dof indices reorder
 
+  std::cout<<"(negf) init done"<<std::endl;
 }
 
 void
 Negf::do_reinit(void)
 {
+  static_this = this;
   //std::cout<<"(negf) clean up libnegf"<<std::endl;
    _libnegf->clean_libnegf();
 
@@ -264,7 +280,9 @@ Negf::setup_effectivemass_hamil()
 
   _libnegf->set_verbose(opt.verbosity);
 
-  _libnegf->set_writeLDOS(opt.writeLDOS);
+  _libnegf->set_write_ldos(opt.writeLDOS);
+
+  _libnegf->set_write_tunn(true);
 
   _libnegf->set_iteration(1);
 
@@ -300,6 +318,8 @@ Negf::compute_current(void)
 void
 Negf::do_solve(void)
 {
+  static_this = this;
+
   activate_quantum_contacts();
 
   //reorder(); // dof indices reorder
@@ -841,20 +861,46 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
           const ElementSide elside(elem->top_parent(), side);
           bool set_dirichlet = false;
 
-          if ( _quantum_contacts.count(elem->subdomain_id()) )  //in quantum contact
+          std::map<ID, QuantumContact*>::iterator it;
+
+          if ( (it = _quantum_contacts.find(elem->subdomain_id())) != _quantum_contacts.end() )  //in quantum contact
           {
-            fe_face->reinit(elem, side);
-            if (elem->neighbor(side)==NULL && face_normals[0](1) > 0)
+            if (elem->neighbor(side)==NULL)
             {
-              set_dirichlet = true;
+              set_dirichlet = opt.set_dirichlet_bc; //set to default value
+              fe_face->reinit(elem, side);
+              const Boundary* bd = get_boundary(it->second);
+              std::string bc = bd->get_options().get_option("dirichlet","");
+              if (bc!="")
+              {
+                int sign = (bc[0]=='-' ? -1: 1);
+                int dir;
+                if (bc[1]=='x') dir = 0;
+                if (bc[1]=='y') dir = 1;
+                if (bc[1]=='z') dir = 2;
+                if  (sign*face_normals[0](dir) > 0) set_dirichlet = true;
+              }
             }
+            //std::cout<<"in qc "<<it->second->get_name()<<" "<<set_dirichlet<<std::endl;
           }
+
+          /*if(_quantum_contacts.count(elem->subdomain_id())) //in quantum contact
+          {
+            if(elem->neighbor(side)==NULL)
+            {
+               //int sbd= (int) elem->subdomain_id();
+               //std::cout<<"elem "<<sbd<<" : "<<elem->id()<<"  side:  "<<side<<std::endl;
+               set_dirichlet = opt.set_dirichlet_bc; //set to default
+            }
+          }*/
           else if(_env->is_outer_boundary(elside))  //in device region
           {
             Boundary* bd = _env->get_boundary(elside);
             // bd==NULL => not defined in input (!quantum_contact)
             if ((bd == NULL && opt.set_dirichlet_bc) || _dirichlet_boundaries.count(bd) )
+            {
               set_dirichlet = true;
+            }
            }
 
           if (set_dirichlet)
@@ -1746,4 +1792,12 @@ Negf::apply_dirichlet_bc(void)
     }// close side loop
 
   }// close element loop
+}
+
+
+const Boundary*
+Negf::get_boundary(const QuantumContact* qc)
+{
+  std::map<const QuantumContact*, const Boundary*>::iterator it = _bd_map.find(qc);
+  return it->second;
 }

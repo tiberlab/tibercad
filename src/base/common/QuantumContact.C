@@ -144,7 +144,6 @@ void
 QuantumContact::extend_mesh(void)
 {
   std::map<ID, ID> nodemap;
-  std::map<const Elem*, Elem*> elemmap;
   std::map<ID, ID>::iterator nodeit;
   std::vector<ID> nodevec;
 
@@ -172,9 +171,9 @@ QuantumContact::extend_mesh(void)
 
       newelem->subdomain_id() = _id;
 
-      elemmap[elem] = newelem;
+      _elemmap[elem] = newelem;
 
-      _elemmap[newelem] = &elemside;
+      _elemsidemap[newelem] = &elemside;
 
       ID id = 0; ID inc = 1;
 
@@ -209,13 +208,13 @@ QuantumContact::extend_mesh(void)
       {
         const ElementSide& elemside = *++it;
 
-        const Elem* elem = elemmap[elemside.elem()];
+        const Elem* elem = _elemmap[elemside.elem()];
 
         Elem* newelem = _mesh->add_elem(new Edge2);
 
         newelem->subdomain_id() = _id;
 
-        _elemmap[newelem] = &elemside;
+        _elemsidemap[newelem] = &elemside;
 
         ID id = 0; ID inc = 1;
 
@@ -260,9 +259,9 @@ QuantumContact::extend_mesh(void)
 
       newelem->subdomain_id()=_id;
 
-      elemmap[elem] = newelem;
+      _elemmap[elem] = newelem;
 
-      _elemmap[newelem] = &elemside;
+      _elemsidemap[newelem] = &elemside;
 
       ID id = 0; ID inc = 1;
 
@@ -299,9 +298,9 @@ QuantumContact::extend_mesh(void)
       {
         const ElementSide& elemside = *it;
 
-        std::map<const Elem*, Elem*>::iterator itmap(elemmap.find(elemside.elem()));
+        std::map<const Elem*, Elem*>::iterator itmap(_elemmap.find(elemside.elem()));
 
-        if ( itmap!=elemmap.end() )
+        if ( itmap!=_elemmap.end() )
 
         {
 
@@ -309,7 +308,7 @@ QuantumContact::extend_mesh(void)
 
           Elem* newelem = _mesh->add_elem(new Quad4);
 
-          _elemmap[newelem] = &elemside;
+          _elemsidemap[newelem] = &elemside;
 
           newelem->subdomain_id()=_id;
 
@@ -419,9 +418,9 @@ QuantumContact::extend_mesh(void)
 
       newelem->subdomain_id()=_id;
 
-      elemmap[elem] = newelem;
+      _elemmap[elem] = newelem;
 
-      _elemmap[newelem] = &elemside;
+      _elemsidemap[newelem] = &elemside;
 
       for (ID id = 0; id < countnodes; id++)
       {
@@ -441,9 +440,9 @@ QuantumContact::extend_mesh(void)
 
         const ElementSide& elemside = *it;
 
-        std::map<const Elem*, Elem*>::iterator itmap(elemmap.find(elemside.elem()));
+        std::map<const Elem*, Elem*>::iterator itmap(_elemmap.find(elemside.elem()));
 
-        if ( itmap!=elemmap.end() )
+        if ( itmap!=_elemmap.end() )
         {
           const Elem* elem = itmap->second;
 
@@ -459,7 +458,7 @@ QuantumContact::extend_mesh(void)
             newelem = _mesh->add_elem(new Hex8);
           }
 
-          _elemmap[newelem] = &elemside;
+          _elemsidemap[newelem] = &elemside;
 
           newelem->subdomain_id()=_id;
 
@@ -497,38 +496,45 @@ QuantumContact::extend_mesh(void)
   // Prepare for use (1D, 2D, 3D)
   _mesh->prepare_for_use(true);
 
+}
 
+void
+QuantumContact::set_neighbor_map(void)
+{
   // Adding neighbors to new elements (1D, 2D, 3D)
-  // Elements on quantum regions have 2 neighobours (on in original mesh and a new one
+  // Elements on quantum regions have 2 neighobours (one in the original mesh and a new one
   // on quantum contact. This is not a problem since negf is solved with outside elements inactive
+  // _elemmap maps elements in the original mesh to quantum_contact
+
+  BoundaryRegions::side_iterator it =  _bd_regions->sides_begin(_bd_ids);
+  const BoundaryRegions::side_iterator end =  _bd_regions->sides_end(_bd_ids);
+
+  for ( ; it != end; ++it)
   {
-    BoundaryRegions::side_iterator it =  _bd_regions->sides_begin(_bd_ids);
-    const BoundaryRegions::side_iterator end =  _bd_regions->sides_end(_bd_ids);
+    const ElementSide& elemside = *it;
 
-    for ( ; it != end; ++it)
+    ID side = elemside.side();
+
+    std::map<const Elem*, Elem*>::iterator itmap(_elemmap.find(elemside.elem()));
+
+    if ( itmap!=_elemmap.end() )
     {
-      const ElementSide& elemside = *it;
-
-      ID side = elemside.side();
-
-      std::map<const Elem*, Elem*>::iterator itmap(elemmap.find(elemside.elem()));
-
-      if ( itmap!=elemmap.end() )
+      if( _mesh->mesh_dimension() == 1 || _mesh->mesh_dimension() == 3)
       {
-        if( _mesh->mesh_dimension() == 1 || _mesh->mesh_dimension() == 3)
-        {
-          (itmap->second)->set_neighbor(0, const_cast<Elem*>(itmap->first)); //elem);
-        }
-        else if(_mesh->mesh_dimension() == 2 )
-        {
-          (itmap->second)->set_neighbor(3, const_cast<Elem*>(itmap->first)); //elem);
-        }
+        (itmap->second)->set_neighbor(0, const_cast<Elem*>(itmap->first));
+      }
+      else if(_mesh->mesh_dimension() == 2 )
+      {
+        (itmap->second)->set_neighbor(3, const_cast<Elem*>(itmap->first));
       }
     }
   }
 
-  //neighbor mapping
-  {
+  //write_neighbors();
+
+  //neighbor mapping of the original mesh
+  /*{
+    std::cout<<"Neighbours of original mesh"<<std::endl;
     BoundaryRegions::side_iterator it =  _bd_regions->sides_begin(_bd_ids);
     const BoundaryRegions::side_iterator end =  _bd_regions->sides_end(_bd_ids);
 
@@ -540,23 +546,58 @@ QuantumContact::extend_mesh(void)
 
       if (_rg_ids.count(elem->subdomain_id()))
       {
-        //std::cerr<<elem->id()<<" : " ;
-        for (ID nn=0; nn<elem->n_neighbors() ;nn++)
+        std::cout<<elem->id()<<" : " ;
+        for (ID nn=0; nn<elem->n_sides() ;nn++)
         {
           if (elem->neighbor(nn)==NULL)
           {
-            //std::cerr<< "0" << " ";
+            std::cout<< "0" << ", ";
           }
           else
           {
-            //std::cerr<< elem->neighbor(nn)->id() << " ";
+            std::cout<< elem->neighbor(nn)->id() << ", ";
           }
 
         }
-        //std::cerr<<std::endl;
+        std::cout<<std::endl;
       }
     }
+  }*/
+
+}
+
+void
+QuantumContact::write_neighbors(void) const
+{
+  MeshBase::element_iterator it = _mesh->level_elements_begin(0);
+  const MeshBase::element_iterator end = _mesh->level_elements_end(0);
+
+  for ( ; it != end; ++it)
+  {
+    Elem* elem = *it;
+    ID elid = elem->subdomain_id();
+
+    if(elid==_id)
+    {
+      std::cout<<elem->id()<<" : " ;
+      for (ID nn=0; nn<elem->n_sides() ;nn++)
+      {
+        if (elem->neighbor(nn)==NULL)
+        {
+          std::cout<< "0" << ", ";
+        }
+        else
+        {
+          std::cout<< elem->neighbor(nn)->id() << ", ";
+        }
+
+      }
+      std::cout<<std::endl;
+
+
+    }
   }
+
 }
 
 
@@ -569,7 +610,7 @@ QuantumContact::project_on_boundary(const Elem* elem,const Point& point )
 
   p.reserve(4);
 
-  const ElementSide* elemside = _elemmap[elem];
+  const ElementSide* elemside = _elemsidemap[elem];
 
   const Elem* sidelem = elemside->elem();
 

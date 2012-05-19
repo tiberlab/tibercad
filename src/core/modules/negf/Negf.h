@@ -158,6 +158,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     double get_band_edge(const std::string& band) const;
     double get_band_edge(SimulationInterface* model, const std::string& band, const Elem* elem) const;
 
+    const Boundary* get_boundary(const QuantumContact* qc);
+
     void apply_dirichlet_bc(void);
 
     Device* _device;
@@ -167,6 +169,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     std::set<const Boundary*> _dirichlet_boundaries;
 
     std::map<const Boundary*, QuantumContact*> _qc_boundaries;
+
+    std::map<const QuantumContact*, const Boundary*> _bd_map;
 
     //! Map quantumContact ID to pointers
     std::map<ID, QuantumContact*> _quantum_contacts;
