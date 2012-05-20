@@ -71,6 +71,7 @@ Negf::Negf(const ModelOptions& options) :
 
 Negf::~Negf(void)
 {
+  static_this = NULL;	
   delete _libnegf;
 }
 
@@ -392,6 +393,13 @@ Negf::do_solve(void)
         area_factor = 1.0;
     }
 
+    //get degeneracy of first band
+    const MeshBase& mesh = get_mesh();
+    MeshBase::const_element_iterator el = mesh.active_elements_begin();
+    const Elem* elem = *el;
+    NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
+    double deg = negfmod->get_degeneracy(0);
+
     ID id = 0;
     double sign;
     std::map<ID, QuantumContact*>::iterator it = _quantum_contacts.begin();
@@ -403,7 +411,7 @@ Negf::do_solve(void)
       else
         sign =-1.0;
 
-      _contact_current[it->second] = sign * current[id] * area_factor;
+      _contact_current[it->second] = sign * deg * current[id] * area_factor;
       id++;
     }
 
@@ -603,9 +611,9 @@ Negf::parse_options(void)
 
   opt.delta = sol_opt.get_option("delta",2e-3);
 
-  double deltaE =  sol_opt.get_option("deltaE",opt.delta/2.0);
+  opt.deltaE =  sol_opt.get_option("deltaE",opt.delta/2.0);
 
-  int Np = 2 * opt.n_kT/deltaE;
+  int Np = 2 * opt.n_kT/opt.deltaE;
 
   opt.Np_real = sol_opt.get_option("Np_real",Np);
 
@@ -621,10 +629,6 @@ Negf::parse_options(void)
 
   opt.set_dirichlet_bc = get_option("dirichlet", false);
 
-  if (!has_option("Np_real"))
-  {
-    std::cout<<"Np_real: "<<opt.Np_real<<std::endl;
-  }
 }
 
 void
@@ -749,7 +753,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
   AutoPtr<FEBase> fe_face(FEBase::build(dim,fe_type));
 
   QGauss qrule(dim, THIRD);
-  QGauss qrule_face(dim-1,FIRST);
+  QGauss qrule_face(dim-1,CONSTANT);
   //QTrap qrule(dim);
 
   fe->attach_quadrature_rule(&qrule);
@@ -1058,7 +1062,23 @@ Negf::print_Lib(void)
     ff<<Np_p[i]<<" ";
   ff<<std::endl;
 
-  ff<<opt.Np_real<<std::endl;
+  int Np;
+  if (sol_opt.find_option("Np_real"))
+  {
+     Np = opt.Np_real;
+  }
+  else
+  {  
+     Np = (abs(mu[0]-mu[1])+ 2 * opt.n_kT)/opt.deltaE;
+     if (Np>1000) 
+     {	   
+        std::ostringstream os;
+	os << "Np_real has been set to "<<Np;
+	Messages::warning(os.str());
+     }
+  }
+
+  ff<< Np <<std::endl;
   ff<<opt.n_kT<<std::endl;
   ff<<opt.n_poles<<std::endl;
   ff<<spin<<std::endl;
@@ -1180,32 +1200,40 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     //given an element/point decide which contact it belongs to
     //values[eCurrentDensity] = std::vector<double>(np*3, 0.0);
 
+    // loop over the sides and check on which boundary it is
     for (unsigned int side=0; side<elem->n_sides(); side++)
     {
       const ElementSide elside(elem, side);
       Boundary* b = _env->get_boundary(elside);
+      QuantumContact* qc = _qc_boundaries[b];
 
-      if (b != NULL)
+      if (b != NULL && qc != NULL)
       {
-        std::map<const Boundary*, QuantumContact*>::iterator it(_qc_boundaries.find(b));
-        if (it !=  _qc_boundaries.end())
+	Point point_current;      
+        if (dim>1)
+        { 
+          AutoPtr<Elem> elside = elem->build_side(side); 		
+          point_current = _contact_current[qc] * qc->get_normal() * elside->volume() / qc->get_area();
+        }
+	else
+	{
+          point_current = _contact_current[qc] * qc->get_normal(); 
+	}
+	      
+        // assign the same current to all points
+        for (unsigned int n = 0; n < np; n++)
         {
-          unsigned int dummy;
-          Point point_current = _contact_current[it->second] * it->second->get_normal(dummy);
-
-          // assign the same current to all points
-          for (unsigned int n = 0; n < np; n++)
-          {
-            values[eCurrentDensity][n*3]   =  point_current(0);
-            values[eCurrentDensity][n*3+1] =  point_current(1);
-            values[eCurrentDensity][n*3+2] =  point_current(2);
-          }
+	   //std::cout<<"point: "<<p[n](0)<< " "<<p[n](1)<<" "<<p[n](2)<<std::endl;
+           values[eCurrentDensity][n*3]   =  point_current(0);
+           values[eCurrentDensity][n*3+1] =  point_current(1);
+           values[eCurrentDensity][n*3+2] =  point_current(2);
+	   //std::cout<<"current: "<<point_current(0)<< " "<<point_current(1)<<" "<<point_current(2)<<std::endl;
         }
         break;
       }
 
     }
-
+    //std::cout << "done" <<std::endl;
   }
 
 }
@@ -1587,7 +1615,7 @@ Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu)
 
   AutoPtr<FEBase> fe( FEBase::build(dim, FEType() ));
 
-  QGauss qrule(dim, FIRST); // Order 0 rule because in this way we take centroid's normal
+  QGauss qrule(dim, FIRST); // Why order 1 ?  
 
   fe->attach_quadrature_rule(&qrule);
 

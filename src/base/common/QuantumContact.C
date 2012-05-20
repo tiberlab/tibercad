@@ -66,9 +66,7 @@ QuantumContact::init(const ID id,
 
   _length = length;
 
-  unsigned int num_sides;
-
-  _normal = get_normal(num_sides);
+  _normal = get_normal(_area);
 
   //std::cout<<"normal: "<<_normal(0)<<" "<<_normal(1)<<" "<<_normal(2)<<std::endl; // plot normal
 
@@ -86,7 +84,7 @@ QuantumContact::~QuantumContact(void)
 
 
 Point
-QuantumContact::get_normal(unsigned int& count)
+QuantumContact::get_normal(double& area)
 {
   unsigned int dim = _mesh->mesh_dimension();
 
@@ -98,8 +96,10 @@ QuantumContact::get_normal(unsigned int& count)
 
   const std::vector<Point>& normal = fe->get_normals(); // normal definition like vector of points
 
+  const std::vector<Real>& JxW = fe->get_JxW(); 
+
   Point normal1;
-  count=0;
+  area = 0.0;
 
   MeshBase::const_element_iterator it = _mesh->level_elements_begin(0);
   const MeshBase::const_element_iterator end = _mesh->level_elements_end(0);
@@ -118,8 +118,8 @@ QuantumContact::get_normal(unsigned int& count)
         ID side_id = _bd_regions->get_side_id(elem, ns);
         if ( side_id != INVALID_ID && _bd_ids.count(side_id) ) //normal computation
         {
-          count++;
           fe->reinit(elem, ns);
+	  area += JxW[0];
           if (!found_first)
           {
             found_first=true;
@@ -136,6 +136,7 @@ QuantumContact::get_normal(unsigned int& count)
       }
     }
   }
+
   return normal1;
 
 }

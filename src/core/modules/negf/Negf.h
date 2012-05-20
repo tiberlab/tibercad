@@ -143,6 +143,8 @@ class TBDLLOCAL Negf : public SimulationInterface
 
         double delta;
 
+	double deltaE;
+
         bool writeLDOS;
 
         bool set_dirichlet_bc;

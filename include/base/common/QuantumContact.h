@@ -24,8 +24,11 @@ class QuantumContact
 {
   public:
 
-    // Compute normal vector to a boundary region
-    Point get_normal( unsigned int& count);
+    // get normal 
+    const Point& get_normal(void) const;
+    
+    // get area
+    double get_area(void) const;
 
     // Extend mesh in normal vector direction
     void extend_mesh(void);
@@ -79,6 +82,9 @@ class QuantumContact
 
     QuantumContact(void) TBDLLOCAL;
 
+    //! Compute normal vector to a boundary region
+    Point get_normal( double& area);
+
     void write_neighbors(void) const;
 
     Device* _device;
@@ -94,6 +100,8 @@ class QuantumContact
     std::map<const Elem*,const ElementSide*> _elemsidemap;
 
     Point _normal;
+
+    double _area;
 
     ID _id;
 
@@ -124,5 +132,18 @@ std::string QuantumContact::get_name(void) const
 {
   return _name;
 }
+
+inline
+const Point& QuantumContact::get_normal(void) const
+{
+   return _normal;
+}
+
+inline
+double QuantumContact::get_area(void) const
+{
+   return _area;
+}
+
 
 #endif /* QUANTUMCONTACT_H_ */
