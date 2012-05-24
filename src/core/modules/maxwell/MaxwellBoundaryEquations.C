@@ -96,6 +96,7 @@ void MaxwellBoundaryEquations::do_solve() {
 void
 MaxwellBoundaryEquations::do_setup_solution_variables(void)
 {
+  declare_solution(Intensity, SolutionDescriptor::REAL, NODES, "abs");
   declare_solution(Efield, VECTOR, NODES, "abs");
   declare_solution(Efield_real, VECTOR, NODES, "abs");
   declare_solution(Efield_imag, VECTOR, NODES, "abs");
@@ -123,10 +124,12 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
 
   MaxwellBoundaryEquations* simulation = dynamic_cast<MaxwellBoundaryEquations*>(system.simulationInterface);
 
-  double W_in_eV = simulation->W;
-  double K /* this should be scaled */ = W_in_eV * Constants::eV / Constants::e /              // W [c-1]
-      (c / system.simulationInterface->get_environment().get_device().get_mesh_units()) * // scaling
-      system.getGeometryEx()->getScaling().get_length_scaling(); // additional scaling TODO: do we need this for boundary problem?
+  double W = simulation->W;
+  double total_length_scaling = system.simulationInterface->get_environment().get_device().get_mesh_units() * system.getGeometryEx()->getScaling().get_length_scaling();
+  double K = W / Constants::c * total_length_scaling;
+
+  std::cout << "KKKKKKKKKK = " << K << std::endl;
+  std::cout << "TLS = " << total_length_scaling << std::endl;
 
   EdgeDofMap* dof_map = system.getEdgeDofMap(false);
 
@@ -243,7 +246,6 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
             const std::vector<Real>& JxW_face = fe_face->get_JxW();
             const std::vector<VectorFunction >& edge_phi_face = fe_face->getFunctions();
 
-            //std::cout << "PETER2\n";
             for (unsigned int i=0; i<edge_phi_face.size(); i++) {
               if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID) {
                 //std::cout << "PETER1\n";
@@ -253,7 +255,7 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
                       Complex sDet = one / sInvertDet;
 
                       Point sourceVector;
-                      sourceVector(simulation->defaultSourceDirection) = 1;//TODO DIRECTION
+                      sourceVector(simulation->defaultSourceDirection) = 1 * K / 2 * system.getGeometryEx()->getScaling().get_length_scaling();//TODO DIRECTION
                       value += sDet * JxW_face[qp] * (edge_phi_face[i].phi[qp] * sourceVector);
                     }
                     system.addBValue(value, all_dof_indices[i]);
@@ -291,6 +293,7 @@ void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
     std::vector<double>& solution = solutions[Efield];
     std::vector<double>& solution_real = solutions[Efield_real];
     std::vector<double>& solution_imag = solutions[Efield_imag];
+    std::vector<double>& solution_intensity = solutions[Intensity];
 
     //std::vector<Complex> edgeSolution;
     //system.get_solution(edgeSolution);
@@ -332,6 +335,8 @@ void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
       solution_imag[qp*3] = imagValue(0);
       solution_imag[qp*3 + 1] = imagValue(1);
       solution_imag[qp*3 + 2] = imagValue(2);
+
+      solution_intensity[qp] = realValue * realValue + imagValue * imagValue;
     }
   }
   //std::cout << "3:" << tt.elapsed_string() << "\n";

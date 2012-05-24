@@ -42,7 +42,8 @@ class MaxwellBoundaryEquations : public SimulationInterface
       Epsilon,
       Epsilon_imag,
       Mu,
-      SVector
+      SVector,
+      Intensity
     };
 
     //!constructor
