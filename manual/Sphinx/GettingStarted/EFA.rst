@@ -6,25 +6,39 @@
 Quantum  EFA  calculations
 =================================
 
-In  tiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates, eigenfunctions and  quantum  density of  a  given system and    dispersion  of  quantum  states  can  be  obtained   respectively by means  of the   following Modules:
 
-* Module efaschroedinger
+In  tiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates, eigenfunctions and  quantum  density of  a  given system and    dispersion  of  quantum  states  can  be  obtained  by means  of the module:
 
-* Module quantumdispersion
+* **Module**  ``efaschroedinger``
 
 
-The  optical properties  are  calculated by  the  following modules 
+The  optical properties  are  calculated by  the  module 
 
-* Module opticskp
+* **Module**  ``opticskp``
 
-* Module opticalspectrum
 
 
 Module efaschroedinger
 -----------------------
+ 
 
+The  ``efaschroedinger``  simulation tool of tiberCAD  is developed
+in order to solve a single-particle    :math:`Schr\ddot{o}dinger`  equation for electrons and holes in a semiconductor crystal. 
+This problem is an eigenvalue problem that is treated as a generalized
+complex eigenvalue problem
 
-The EFA calculation  of eigenstates and  eigenfunctions are performed by the **Module** efaschroedinger.  
+..  math::
+    :nowrap:
+    :label:
+
+	
+    \begin{equation}
+	 H\psi  = E S \psi,
+    \end{equation}
+
+where H and S are the Hamiltonian and S-matrix, respectively.
+The EFA calculations are performed by the **Module** ``efaschroedinger``.
+
 
 A typical example is the following::
 
@@ -36,14 +50,15 @@ A typical example is the following::
     strain_model_name = strain # 
     name = quantum_el
     regions = quantum
-    plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+    plot = (EigenFunctions, EigenEnergy, EnergyLevels, QuantumDensity)
+    
     Solver
     {
       number_of_eigenstates = 10 # 30 
      }
     Physics
     {
-      model = conduction_band
+      model = single_band 
      }
    }
 
@@ -67,10 +82,30 @@ For  holes, one  can  choose  a  6 bands ``kp``  model in  this  way::
 
   Physics
   {
-    particle = hl
+   
     model = kp   #  k.p  for  valence  band
     kp_model = 6x6
    }
+
+
+Calculation of quantum dispersion
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Within  the **Module**  ``efaschroedinger``  it is possible to calculate the dependence of quantum eigenstates on ``k``-vector. Such dependence gives the *quantum state dispersion*. 
+To  calculate the  quantum dispersion we  need  to  define the  block *Dispersion*
+
+
+::
+
+  Dispersion 
+  {
+    k-path = G-K-M
+    number_of_nodes = 10
+    k_max = 0.1  
+  }
+
+
+The dispersion is calculated for each of  the quantum states previously  defined in  the  simulation.
 
 
 
@@ -88,66 +123,20 @@ The available output variables, to be specified in the plot option, are the foll
 
   ``ProbabilityDensity``: 
     square module :math:`|\psi({\bf r})|^2` of the eigenstate wavefunction 
+
+  ``k-space_dispersion`` :
+    output of  the quantum dispersion
+
   ``QuantumDensity``:   
     if  present, quantum  density is  calculated 
 
   ``Occupation``: 
     probability to find the state occupied. It is calculated assuming Fermi
-    distribution and mean electrochemical potential and temperature:
-
-
-Module quantumdispersion
------------------------
+    distribution and mean electrochemical potential and temperature.
 
 
 
 
-
-With the Module quantumdispersion it is possible to calculate the dependence of quantum eigenstates 
-on ``k``-vector. Such dependence gives the *quantum state dispersion* . The
-simulation name is ``quantumdispersion`` .
-
-::
-
-  Module quantumdispersion
-  {
-    simulation_name = dispersion1D_el
-    regions = all
-    quantum_simulation = quantum_el
-    min_eigenvalue_number = 0
-    max_eigenvalue_number = 5
-    wedge = half
-    k_space_dimension = 1
-    k1 = (0, 0.1, 0)
-    number_of_nodes = (10)
-   output_format = grace
-    plot = k-space_dispersion
-  }
-
-The dispersion of quantum states is calculated at k-points that are nodes of the mesh
-in k-space.
-
-The main parameters are:
-
-*  ``quantum simulation`` : 
-    name of the efaschroedinger simulation.
-
-*  ``min eigenvalue number`` , ``max eigenvalue number`` : 
-    the dispersion is calculated for the states number *i* , where 
-    
-             ``max_eigenvalue_number`` :math:`\ge i \ge`  ``min_eigenvalue_number``
-
-The rest of the parameters (wedge, k space dimension, etc...) define the k-space.
-
-
-
-Output
-^^^^^^^^^^^^^^^^^^^^^^^
-
-
-The output variable name is ``k-space_dispersion`` . The output format for the dispersion
-can be controlled independently of the general specification in the ``Simulation`` section
-by redefining the ``output_format`` keyword.
 
 
 
@@ -155,12 +144,29 @@ Module opticskp
 ----------------------
 
 
-By defining the Module ``opticskp`` , calculation of optical properties is enabled; in particular, 
-the optical ``kp`` matrix elements are calculated from the quantum models specified in the Module.
+By defining the **Module** ``opticskp`` , calculation of optical properties is enabled; in particular, the optical ``kp`` matrix elements are calculated from the quantum models specified in the **Module**.
+
+
+
+
 
 The optical spectrum from spontaneous emission is calculated in the following way:
 
-where :math:`f_i` and :math:`f_j` are the Fermi distributions.
+..  math::
+    :nowrap:
+    :label:
+
+
+    \begin{equation}
+         P(\hbar \omega) = \sum_{i,j} \frac{1}{2\pi^2}  \frac{\omega^2_{ij} e^2 }{m^2 c^3}  
+         |{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
+         \frac{\Gamma/2} {(\hbar \omega_{ij} - \hbar \omega)^2 + (\Gamma/2)^2} d\Omega,
+    \end{equation}
+
+
+where :math:`f_i` and :math:`f_j` are the Fermi distributions and :math:`M_{i,j}` is the optical matrix element between the states  :math:`i` and :math:`j`.
+
+
 
 ::
 
@@ -185,6 +191,7 @@ transition (e.g. electron), and to the final state of optical transition (e.g. h
 
 ``initial_eigenstates`` and ``final_eigenstates`` refer to the range of eigenstates to be taken in
 account for optical calculations.
+By  default, all  the eigenstates calculated in  the electron  and  hole quantum simulations are taken in  account  for the  optical calculations.
 
 By specifying a range of energy values in this way::
 
@@ -194,73 +201,69 @@ By specifying a range of energy values in this way::
 
 the emission optical spectrum for **k=0** is calculated.
 
-Output
+
+
+
+
+
+
+
+
+Integrated spectrum
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-The output variables for optics calculations are:
+For  1D and  2D  calculations,  it  is  possible  to  perform  an  integration  of  the  optical  spectrum  in  *k-space*, by specifying *optical_spectrum* in  the  ``plot``  statement ::
 
-*  ``optical_spectrum_k_0`` : optical emission spectrum for *k=0*.
-
-
-
-Module opticalspectrum
----------------------------
+  plot = (optical_spectrum)
 
 
+In  this  case,  one  has  to  define a  **k-integration**  block inside  **Module** ``opticskp``, in this  way ::
 
-By defining the Module ``opticalspectrum`` , optical matrix elements are used to calculate
-the associated (emission) spectrum with a k-space integration.
-
-::
-
-  Module opticalspectrum
+  k-integration
   {
-    k_space_dimension = 2
-    k-space_basis = true
-    k1 = (0, 0, 0.1)
-    k2 = (0, 0.1, 0)
-     
-    number_of_nodes = (2, 2)
-    wedge = quarter
-    plot = (optical_spectrum)
-    optical_matr_elem_model = opticskp
-    polarization = (0, 0, 1)
-    Emin = 3.0
-    Emax = 5.0
-    dE = 0.001
+   
+     k_max = 0.05     
+     number_of_elements = (5,5)
+     quadrature_type = gaussian 
+     quadrature_order = third 
+
+     refine_k_space = false 
+     refine_fraction = 0.5
+     relative_accuracy = 0.001 
+
   }
 
-The parameters are the following
 
-*  ``k_space_dimension`` :
-   Options are **1** for 2D simulations, **2** for 1D simulations. 
+To  run  an  opticskp  sumulation,  one  needs  to  define it in the  solve  statement,  in  this  way::
 
-*  ``k-space basis`` : 
-   if **true** then the k-space is defined by means of k-vectors; 
-   if **false** , vectors are expressed in real space.
 
-*  ``number_of_nodes`` :
-   numb. of elements in k mesh, along each direction
 
-*  ``wedge`` :
-   half | quarter, to reduce calculation time, by exploiting symmetry.
 
-*  ``optical_matr_elem_model`` :
-   name of the *opticskp* model associated
 
-*  ``polarization`` :
-   light polarization (vector)
+   Simulation
+   { 
+      solve = (strain, dd,optics) 
+   }
 
-*  ``Emin, Emax, dE`` : 
-   energy range and step of spectrum calculation.
+
+where  *optics*  is  the  name  of  the  defined ``opticskp``  simulation.
+
+
 
 Output
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+
 The output variables for optics calculations are:
 
-*  ``optical_spectrum`` : k-space integrated optical emission spectrum. 
+ ``optical_spectrum_k_0`` : 
+    optical emission spectrum for *k=0*.
+
+ ``optical_spectrum`` : 
+    optical emission spectrum integrated in  k-space.
+
+
 
 
 .. rubric:: Footnotes
