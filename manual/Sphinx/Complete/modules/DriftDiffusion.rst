@@ -890,43 +890,6 @@ Then, in **Module** *selfconsistent* ::
 
 
 
-Example
---------------
-
-The following example shows a minimal Drift-Diffusion module definition for a pn junction.
-
-----
-
-::
-
-  Module driftdiffusion
-  {
-    name = dd
-    #regions = (pside, nside)
-    plot = (Ec, Ev, eDensity, hDensity)
-
-    Physics
-    {
-      recombination srh {}
-        
-      mobility doping_dependent {}
-    }
-        
-    Contact anode 
-    { 
-      voltage = $Vd 
-    }
-
-    Contact cathode 
-    { 
-      voltage = 0 
-    }
-  }
-
-----
-
-Listing 3: Models section for drift-diffusion
-
 ..  _dd_solutions :
 
 ..  math::
@@ -1126,6 +1089,319 @@ Listing 3: Models section for drift-diffusion
     \caption{Data file parameters for the mobility model by Arora.}
     \label{table:mobility_field_dep}
     \end{table}
+
+
+
+Example 1: pn diode
+--------------
+
+The following example shows a minimal Drift-Diffusion module definition for a pn junction.
+
+----
+
+::
+
+  Module driftdiffusion
+  {
+    name = dd
+    #regions = (pside, nside)
+    plot = (Ec, Ev, eDensity, hDensity)
+
+    Physics
+    {
+      recombination srh {}
+        
+      mobility doping_dependent {}
+    }
+        
+    Contact anode 
+    { 
+      voltage = $Vd 
+    }
+
+    Contact cathode 
+    { 
+      voltage = 0 
+    }
+  }
+
+----
+
+
+.. _DD_Ex2:
+
+Example 2: Mosfet
+---------------
+
+In this second example we show a 2D simulation of a silicon Mosfet device.
+The  ``GMSH`` model (see :ref:`GMSH_Ex2`) is shown in Fig. :ref:`GMSH model of the Mosfet <fig_dd_mosfet>`.
+ 
+.. _fig_dd_mosfet:
+
+.. figure:: ../data/DDMosfetMesh.png
+    :align: center
+    :scale: 40%
+
+    ``GMSH`` model of the Mosfet showing the mesh and the region labels
+
+The model consists of a p-doped Si substrate (``substrate``), two highly n-doped access regions (``contact``),
+a thin gate oxide (``oxide``) and source, gate, drain and back-side contacts.
+
+We want to simulate a set of output characteristics and a transcharacteristic for this Mosfet, using two distinct input files: ``outputchar.tib`` and ``transchar.tib``.
+In these two files we define only the ``Module sweep`` and ``Simulation`` blocks.
+The device and model definitions are put into a third file ``mosfet.tib``, which is included in the other two files using the syntax
+
+::
+
+   @include mosfet.tib
+
+The device definition found in ``mosfet.tib`` is shown in the following listing:
+
+::
+
+  Device mosfet
+  {
+    meshfile = mosfet.msh
+  
+    material = Si
+
+    Region substrate 
+    {
+      Doping
+      {
+        density = 1e18
+        type = acceptor
+      }
+    }
+   
+    Region contact
+    {
+      Doping
+      {
+        density = 5e19
+        type = donor
+      }
+    }
+
+    Region oxide
+    {
+      material = SiO2
+    }
+  }
+
+
+The material is defined globally in the ``Device`` section.
+For the oxide it has to be overridden in the correspondent ``Region`` block.
+
+The followng shows the module definition for the Drift-Diffusion simulation:
+
+::
+
+  Module driftdiffusion
+  { 
+    #coupling = electrons
+
+    plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+            hQFermi, hDensity, hCurrentDensity, hMobility,
+            NetRecombination, ElField, ElPotential, ContactCurrents)
+
+    Solver
+    {
+      type = linesearch
+
+      linear_solver
+      {
+        method = pconly
+        preconditioner = lu
+      }
+    }
+
+    Physics
+    {
+      particle_density
+      {
+        statistics = fermidirac
+      }
+
+      recombination srh {}
+
+      mobility
+      {
+        type = field_dependent
+        low_field_model = doping_dependent
+      }
+    }
+
+    Contact gate
+    {
+      type = schottky
+      barrier_height = 3.0
+
+      voltage = $Vg
+
+      area_factor = 0.1
+    }
+
+    Contact source
+    {
+      voltage = 0.0
+      area_factor = 0.1
+    }
+ 
+    Contact backcontact
+    {
+      voltage = 0.0
+      area_factor = 0.1
+    }
+
+    Contact drain
+    {
+      voltage = $Vd
+      area_factor = 0.1
+    }
+  }
+
+
+The commented option ``coupling = electrons`` shows how a unipolar simulation can be set up.
+This example however will be  simulated in bipolar mode.
+The ``Solver`` defines options for the nonlinear solver (the shown options are the default ones).
+In this case, a linesearch approach is used to refine the nonlinear Newton steps.
+The linear solver for each Newton step (defined in the ``linear_solver`` block) uses a complete LU factorisation as preconditioner (``preconditioner = lu``).
+In this case, the linear solver method can be chosen to be the application of the preconditioner only (``method = pconly``), instead of using an iterative
+approach.
+
+The ``Physics`` block contains the definition of a few physical models to be used.
+For the particle density we use Fermi-Dirac statistics, which is the default.
+We use Shockley-Read-Hall recombination since we solve for both electrons and holes.
+For the mobility, we use a field-dependent model instead of the default constant mobility model.
+The low-field mobility is chosen to be calculated from a doping dependent model (which is the default).
+
+The contacts are defined in the ``Contact`` blocks.
+For the gate we specify ``schottky`` as type (the default is ohmic contact), providing a suitable barrier height.
+The ``area_factor = 0.1`` indicates that we assume a transistor with 1 mm gate width.
+
+Next, we create a file ``transchar.tib`` containing the definitions for the simulation of the transcharacteristic, as given in the following listing::
+
+  @include mosfet.tib
+
+  Module sweep
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+
+    variable = $Vd
+    start = 0.0
+    stop = 1.0 
+    steps = 5 
+  }
+
+  Module sweep
+  {
+    name = sweep_gate
+    solve = driftdiffusion
+
+    variable = $Vg
+    start = -0.5
+    stop = 1.5
+    steps = 100 
+
+    max_step = 0.1
+  
+    plot_data = true
+  }
+
+  Simulation
+  {
+    solve = (sweep_drain, sweep_gate)
+    resultpath = output_transchar 
+    output_format = vtk
+  }
+
+On the first row we include the device definition from ``mosfet.tib``.
+Then we define two sweeps ``sweep_drain`` and ``sweep_gate``.
+The first one will ramp the drain to 1.0 V in 5 steps, without plotting the results.
+The second one will then perform a sweep on the gate voltage from -0.5 V to 1.5 V,
+plotting the results after each step and produciong the transfer characteristic.
+The option ``max_step = 0.1`` limits the maximum voltage step to 0.1 V.
+This is useful, since the solver has first to reach the initial gate voltage of -0.5 V, starting from 0 V.
+Using this option it will do this in steps of 0.1 V.
+In the ``Simulation`` block we simply have to specify the two sweeps in the correct order.
+
+Running the simulation with ::
+
+  tibercad transchar.tib
+ 
+will produce in particular a set of files ``*.vtu`` for each 
+step of the sweep ``sweep_gate``, and the file ``sweep_gate_driftdiffusion.dat`` containing the voltage-current
+characteristics for each contact, shown in Fig. :ref:`fig_dd_mosfet_transchar`.
+
+ 
+.. _fig_dd_mosfet_transchar:
+
+.. figure:: ../data/DDMosfetTranschar.png
+    :align: center
+    :scale: 80%
+
+    Mosfet transcharacteristic
+
+
+For the simulation of the output characteristics we create a file ``outputchar.tib`` with the following content::
+
+  @include mosfet.tib
+
+  Module sweep
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+
+    variable = $Vd
+    start = 0.0
+    stop = 2.0 
+    steps = 40
+  
+    plot_data = true
+  }
+
+  Module sweep
+  {
+    name = sweep_gate
+    solve = sweep_drain
+
+    variable = $Vg
+    start = 0.0
+    stop = 1.5
+    steps = 6
+  }
+
+  Simulation
+  {
+    solve = sweep_gate
+    resultpath = output_outputchar  
+  
+    output_format = vtk
+  }
+
+
+
+As before, we include the device definition using the ``@include`` statement.
+Then we define a sweep on the drain voltage with name ``sweep_drain`` and a second sweep ``sweep_gate``
+to sweep the gate voltage.
+In the latter, we specify ``sweep_drain`` in the ``solve`` option, creating thus a nested sweep.
+For each gate voltage, a sweep over the drain voltage will be performed.
+
+Running the simulation will produce a file for each couple of values (``$Vg``, ``$Vd``), and a file containing the output
+characteristic for each value of ``$Vg``.
+The resulting set of output characteristics is shown in Fig. :ref:`fig_dd_mosfet_outchar`.
+
+ 
+.. _fig_dd_mosfet_outchar:
+
+.. figure:: ../data/DDMosfetOutchar.png
+    :align: center
+    :scale: 80%
+
+    Mosfet output characteristics
+
 
 
 
