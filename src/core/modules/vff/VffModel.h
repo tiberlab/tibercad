@@ -6,66 +6,72 @@
 #include "tiber_dll.h"
 #include "Messages.h"
 #include "Database.h"
+#include "Keating.h"
 
+class Keating;
 
 
 //! This is the base class for the Poisson physical model
 class TBDLLOCAL VffModel : public PhysicalModel
 {
 
-  public:
+public:
 
-    //! Destructor
-    virtual ~VffModel(void);
-
-
-    //! Creator function
-    static VffModel* create(const Material* mat, const ModelOptions& options);
-
-    const double& get_alpha(void) const;
-
-    const double& get_beta(void) const;
-
-    const double& get_teta(void) const;
-
-    const double& get_d(void) const;
+  //! Destructor
+  virtual ~VffModel(void);
 
 
-  protected:
+  //! Creator function
+  static VffModel* create(const Material* mat, const ModelOptions& options);
 
-    //! Constructor
-    VffModel(const ModelOptions& options);
+  const double get_alpha(void) const;
 
-    //! Read database
-    void read_database(void);
+  const double get_beta(void) const;
 
-    //! Initialize
-    virtual void do_init(void);
+  const double get_teta(void) const;
 
-    //virtual void prepare_submodels(void);
-
-  private:
+  const double get_d(void) const;
 
 
-   static TiberModelObject* _create(const ModelOptions& options, const void*);
+protected:
 
-   static void  _destroy( TiberModelObject* p);
+  //! Constructor
+  VffModel(const ModelOptions& options);
 
-   double _c11;
-   double _c12;
-   double _c44;
-   double _alpha;
-   double _beta;
-   double _a;
-   double _teta;
-   double _d;
+  //! Read database
+  void read_database(void);
+
+  //! Initialize
+  virtual void do_init(void);
+
+  //virtual void prepare_submodels(void);
+
+private:
+
+
+  static TiberModelObject* _create(const ModelOptions& options, const void*);
+
+  static void  _destroy( TiberModelObject* p);
+
+  void prepare_submodels(void);
+
+  double _c11;
+  double _c12;
+  double _c44;
+  double _alpha;
+  double _beta;
+  double _a;
+  double _teta;
+  double _d;
+
+  Keating* _keating;
 
 };
 
 
 inline
 VffModel::VffModel(const ModelOptions& options) :
-  PhysicalModel(options)
+PhysicalModel(options)
 {
 }
 
@@ -91,25 +97,27 @@ void  VffModel::_destroy( TiberModelObject* p)
 }
 
 inline
-const double& VffModel::get_alpha(void) const
+const double VffModel::get_alpha(void) const
 {
-  return _alpha;
+  //return _alpha;
+  return _keating->get_alpha_0();
 }
 
 inline
-const double& VffModel::get_beta(void) const
+const double VffModel::get_beta(void) const
 {
-  return _beta;
+  //return _beta;
+  return _keating->get_beta_0();
 }
 
 inline
-const double& VffModel::get_teta(void) const
+const double VffModel::get_teta(void) const
 {
   return _teta;
 }
 
 inline
-const double& VffModel::get_d(void) const
+const double VffModel::get_d(void) const
 {
   return _d;
 }

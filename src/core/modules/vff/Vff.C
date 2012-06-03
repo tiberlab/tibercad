@@ -304,8 +304,10 @@ Vff::build_parameters(void)
                 {
                   pm_a = get_bulk_model<VffModel>(atm_j, parent);
                 }
-              _alpha[i][counter_j] = pm_a->get_alpha();
+              _alpha[i][counter_j] = pm_a->get_alpha();;
               _d[i][counter_j] = pm_a->get_d();
+              //std::cout << "alpha " << _alpha[i][counter_j];
+
 
               for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
                 {
