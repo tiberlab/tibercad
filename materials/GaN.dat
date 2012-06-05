@@ -5,6 +5,7 @@ structure = wz
 [lattice]
 a = 0.3189
 c = 0.5185
+u = 0.377
 
 thermal_coefficient = (3.17e-6, 5.59e-6)
 
