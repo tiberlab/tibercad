@@ -35,8 +35,6 @@ private:
 
   void assign_beta_parents(void);
 
-  //! Check if parameters have been assigned, throw exception otherwise
-  void check_parameters(void);
 
 };
 

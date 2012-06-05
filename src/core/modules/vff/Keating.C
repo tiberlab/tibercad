@@ -11,8 +11,8 @@ Keating::do_init(void)
     {
       double d = _a * (sqrt(3.0) / 4.0) * 10.0;
       _d_0 = d; _d_1 = d;
-      double teta = -0.3333;
-      _teta_0 = teta; _teta_1 = teta;
+      double teta = -1.0 / 3.0;
+      _costeta_0 = teta; _costeta_1 = teta;
     }
   if (get_material()->get_structure() == "wz")
     {
@@ -24,8 +24,8 @@ Keating::do_init(void)
       double sq_3 = sqrt(3.0);
       _d_0 = (sqrt(3.0 * _c * _c * v * v + 4.0 * _a * _a) / (2.0 * sq_3)) * 10.0;
 
-      _teta_1 = asin((-1.0 * sq_3 * _c * v) / sqrt(3.0 * _c * _c * v * v + 4.0 * _a * _a));
-      _teta_0 = (3.0 * _c * _c * _a * _a - 2.0 * _a * _a) / (3.0 * _c * _c * _a * _a + 4.0 * _a * _a);
+      _costeta_1 = (-1.0 * sq_3 * _c * v) / sqrt(3.0 * _c * _c * v * v + 4.0 * _a * _a);
+      _costeta_0 = (3.0 * _c * _c * v * v - 2.0 * _a * _a) / (3.0 * _c * _c * v * v + 4.0 * _a * _a);
     }
 
 }

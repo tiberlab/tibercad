@@ -328,8 +328,8 @@ Vff::build_parameters(void)
                       pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
                       pm_b = get_bulk_model<VffModel>(atm_i, atm_k, parent);
                       _teta[i][counter_j][counter_k] =
-                          (pm_a->get_teta(atm_i, atm_j, atm_k) +
-                              pm_b->get_teta(atm_i, atm_j, atm_k)) / 2.0;
+                          (pm_a->get_costeta(atm_i, atm_j, atm_k) +
+                              pm_b->get_costeta(atm_i, atm_j, atm_k)) / 2.0;
                       _beta[i][counter_j][counter_k] = sqrt(
                           pm_a->get_beta(atm_i, atm_j, atm_k) *
                           pm_b->get_beta(atm_i, atm_j, atm_k));

@@ -38,8 +38,6 @@ VffModel::do_init( )
   //NOTE: in database the lattice constant is in nm and the stiffness constants
   //are in GPa, therefore alpha and beta are in N/m without unit conversion
   //The reference distance must be in A, as atomic distances are evaluated in Amstrong
-
-  std::cout << "I have submodel " << _keating->get_name() << " and I am " << get_material()->get_name();
 }
 
 
@@ -80,14 +78,14 @@ VffModel::get_d(const Atom& atm1, const Atom& atm2) const
 
 
 const double
-VffModel::get_teta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const
+VffModel::get_costeta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const
 {
   if (get_material()->get_structure() == "zb")
-    return _keating->get_teta_0();
+    return _keating->get_costeta_0();
   else if (along_c(atm1, atm2) || along_c(atm1, atm3) || along_c(atm2, atm3))
-    return _keating->get_teta_1();
+    return _keating->get_costeta_1();
   else
-    return _keating->get_teta_0();
+    return _keating->get_costeta_0();
 }
 
 

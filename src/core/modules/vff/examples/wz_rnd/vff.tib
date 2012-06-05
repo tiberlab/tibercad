@@ -1,0 +1,97 @@
+Device qdot
+{
+  meshfile = box_in_cube.msh 
+  mesh_units = 2e-9
+  dimension = 3
+
+  y-growth-direction = (-1,0,1,0)
+  x-growth-direction = (-1,2,-1,0)   
+  z-growth-direction = (0,0,0,1)
+
+
+  Region ball
+  {
+    material = InGaN
+    x = 0.5 
+  }
+
+  Region  qbox
+  {
+    material = GaN
+  }
+
+
+  Region  intrinsic
+  {
+    material =  GaN  
+    
+  }
+
+  Region  nside
+  {
+    material =  GaN
+    
+  }
+
+
+  Region  pside
+  {
+    material =  GaN
+    
+  }
+
+
+  Cluster atomistic
+  {
+    regions=(ball, qbox)
+  }
+
+
+  Atomistic tb1
+  {
+    regions = atomistic 
+    reference_region = qbox  # barrier1 
+    #passivation = yes
+    random_alloy = true
+  }
+
+}
+
+Module vff
+{
+ atomistic_structure = tb1
+ boundary_conditions = free_standing
+
+ Physics
+ { 
+  keating user
+  {
+   regions = InGaN
+   component InN
+   {
+    alpha = 67.38
+    beta = 10.01
+   }
+   component GaN
+   {
+    alpha = 88.35
+    beta = 20.92
+   }
+  }
+  keating user
+  {
+   regions = GaN
+   alpha = 88.35
+   beta = 20.92
+  }
+ }
+
+}
+
+
+Simulation
+{
+  temperature = 300
+  solve = (vff)
+  resultpath = output 
+}
