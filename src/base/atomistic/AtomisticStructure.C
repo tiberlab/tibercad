@@ -1389,3 +1389,22 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
  return NULL;
 
 }
+
+//! Get atom Material
+const Material*
+AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
+    bool parent) const
+{
+ const Material* mat1 = get_device()->get_material(atom1.get_region_ID());
+ const Material* mat2 = get_device()->get_material(atom2.get_region_ID());
+
+ if (atom1.get_specie() == Specie::In || atom1.get_specie() == Specie::Al
+     || atom1.get_specie() == Specie::Ga)
+   return get_material(atom1, parent);
+ else if (atom2.get_specie() == Specie::In || atom2.get_specie() == Specie::Al
+     || atom2.get_specie() == Specie::Ga)
+   return get_material(atom2, parent);
+ else
+   return get_material(atom1, parent);
+
+}

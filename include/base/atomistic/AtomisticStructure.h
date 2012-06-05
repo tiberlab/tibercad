@@ -170,6 +170,17 @@ public:
   //! Get atom Material
   const Material* get_material(const Atom& atom, bool parent = false) const;
 
+  //! Get bond Material
+  /*
+   * If a couple of atoms belonging to a binary compound is specified,
+   * the material can be assigned without ambiguity to the Anion.
+   * The check is now hardcoded for a restricted class of materials (Nitrides
+   * and Arsenides). With additional information in Material class, this can be made
+   * more generic.
+   */
+  const Material* get_material(const Atom& atom1, const Atom& atom2,
+      bool parent = false) const;
+
   //! Tells if random alloy approximation is used
    bool is_random_alloy(void);
 

@@ -7,6 +7,7 @@
 #include "Messages.h"
 #include "Database.h"
 #include "Keating.h"
+#include "Atom.h"
 
 class Keating;
 
@@ -31,6 +32,14 @@ public:
   const double get_teta(void) const;
 
   const double get_d(void) const;
+
+  const double get_alpha(const Atom& atm1, const Atom& atm2) const;
+
+  const double get_beta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const;
+
+  const double get_teta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const;
+
+  const double get_d(const Atom& atm1, const Atom& atm2) const;
 
 
 protected:
@@ -65,6 +74,8 @@ private:
   double _d;
 
   Keating* _keating;
+
+  bool along_c(const Atom& atm1, const Atom& atm2) const;
 
 };
 
@@ -113,13 +124,13 @@ const double VffModel::get_beta(void) const
 inline
 const double VffModel::get_teta(void) const
 {
-  return _teta;
+  return _keating->get_teta_0();
 }
 
 inline
 const double VffModel::get_d(void) const
 {
-  return _d;
+  return _keating->get_d_0();
 }
 
 #endif // _VFFMODEL_H_

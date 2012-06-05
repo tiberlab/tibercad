@@ -22,7 +22,7 @@ Vff::Options::Options(void)
 }
 
 Vff::Vff(const ModelOptions& options) :
-      SimulationInterface(options)
+          SimulationInterface(options)
 {
   // there's nothing to be done
 }
@@ -70,7 +70,7 @@ Vff::do_init()
   check_structure();
   parse_options();
 
- }
+}
 
 void
 Vff::do_solve(void)
@@ -188,10 +188,10 @@ Vff::set_boundary(void)
                 {
                   unsigned int k = bondmap[j][counter_k];
                   if ((bondmap[k].size() != 4) ||
-                                (get_atomistic_structure()->get_specie(bondmap[k][0]) == Specie::H ) ||
-                                (get_atomistic_structure()->get_specie(bondmap[k][1]) == Specie::H ) ||
-                                (get_atomistic_structure()->get_specie(bondmap[k][2]) == Specie::H ) ||
-                                (get_atomistic_structure()->get_specie(bondmap[k][3]) == Specie::H ))
+                      (get_atomistic_structure()->get_specie(bondmap[k][0]) == Specie::H ) ||
+                      (get_atomistic_structure()->get_specie(bondmap[k][1]) == Specie::H ) ||
+                      (get_atomistic_structure()->get_specie(bondmap[k][2]) == Specie::H ) ||
+                      (get_atomistic_structure()->get_specie(bondmap[k][3]) == Specie::H ))
                     {
                       free = false;
                     }
@@ -281,7 +281,7 @@ Vff::build_parameters(void)
   bool parent(get_atomistic_structure()->is_random_alloy());
 
   for (unsigned int i = 0; i < n_atoms; i++)
-  {
+    {
       const Atom& atm_i = get_atomistic_structure()->get_structure_atom(i);
       unsigned int n_bonds = bondmap[i].size();
       for (unsigned int counter_j = 0; counter_j < n_bonds; counter_j++)
@@ -292,49 +292,54 @@ Vff::build_parameters(void)
             {
               const Atom& atm_j = get_atomistic_structure()->get_structure_atom(j);
 
-              //Here I check who's the anion. This check is not really elegant, maybe the
-              //PhysicalModel should do that. For checking here, I just cycle on the materials
-              //supported by TiberCAD
-              if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
-                  || (atm_i.get_specie() == Specie::Al))
-                {
-                  pm_a = get_bulk_model<VffModel>(atm_i, parent);
-                }
-              else
-                {
-                  pm_a = get_bulk_model<VffModel>(atm_j, parent);
-                }
-              _alpha[i][counter_j] = pm_a->get_alpha();;
-              _d[i][counter_j] = pm_a->get_d();
-              //std::cout << "alpha " << _alpha[i][counter_j];
-
+              //              //Here I check who's the anion. This check is not really elegant, maybe the
+              //              //PhysicalModel should do that. For checking here, I just cycle on the materials
+              //              //supported by TiberCAD
+              //              if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
+              //                  || (atm_i.get_specie() == Specie::Al))
+              //                {
+              //                  pm_a = get_bulk_model<VffModel>(atm_i, parent);
+              //                }
+              //              else
+              //                {
+              //                  pm_a = get_bulk_model<VffModel>(atm_j, parent);
+              //                }
+              pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
+              _alpha[i][counter_j] = pm_a->get_alpha(atm_i, atm_j);
+              _d[i][counter_j] = pm_a->get_d(atm_i, atm_j);
 
               for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
                 {
-                 unsigned int k = bondmap[i][counter_k];
-                 const Atom& atm_k = get_atomistic_structure()->get_structure_atom(k);
-                 if (get_atomistic_structure()->get_specie(k) != Specie::H)
-                  {
-                     if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
-                         || (atm_i.get_specie() == Specie::Al))
-                       {
-                         pm_a = get_bulk_model<VffModel>(atm_i, parent);
-                         pm_b = get_bulk_model<VffModel>(atm_i, parent);
-                       }
-                     else
-                       {
-                         pm_a = get_bulk_model<VffModel>(atm_j, parent);
-                         pm_b = get_bulk_model<VffModel>(atm_k, parent);
-                       }
-                       _teta[i][counter_j][counter_k] = pm_a->get_teta();
-                       _beta[i][counter_j][counter_k] = sqrt(pm_a->get_beta() * pm_b->get_beta());
-                  }
+                  unsigned int k = bondmap[i][counter_k];
+                  const Atom& atm_k = get_atomistic_structure()->get_structure_atom(k);
+                  if (get_atomistic_structure()->get_specie(k) != Specie::H)
+                    {
+                      //                     if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
+                      //                         || (atm_i.get_specie() == Specie::Al))
+                      //                       {
+                      //                         pm_a = get_bulk_model<VffModel>(atm_i, parent);
+                      //                         pm_b = get_bulk_model<VffModel>(atm_i, parent);
+                      //                       }
+                      //                     else
+                      //                       {
+                      //                         pm_a = get_bulk_model<VffModel>(atm_j, parent);
+                      //                         pm_b = get_bulk_model<VffModel>(atm_k, parent);
+                      //                       }
+                      pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
+                      pm_b = get_bulk_model<VffModel>(atm_i, atm_k, parent);
+                      _teta[i][counter_j][counter_k] =
+                          (pm_a->get_teta(atm_i, atm_j, atm_k) +
+                              pm_b->get_teta(atm_i, atm_j, atm_k)) / 2.0;
+                      _beta[i][counter_j][counter_k] = sqrt(
+                          pm_a->get_beta(atm_i, atm_j, atm_k) *
+                          pm_b->get_beta(atm_i, atm_j, atm_k));
+                    }
 
                 }
 
             }
         }
-  }
+    }
 }
 
 //void
@@ -466,23 +471,23 @@ Vff::keating_potential(void)
                   if (counter_k != counter_j)
                     {
 
-                  unsigned int k = bondmap[i][counter_k];
-                  //Hydrogen bonds must not be included (they don't have reference distance and angles)
-                  if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
-                    {
-                      unsigned int k_start = k * 3;
-                      double x_ik = coords[i_start] - coords[k_start];
-                      double y_ik = coords[i_start + 1] - coords[k_start + 1];
-                      double z_ik = coords[i_start + 2] - coords[k_start + 2];
+                      unsigned int k = bondmap[i][counter_k];
+                      //Hydrogen bonds must not be included (they don't have reference distance and angles)
+                      if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
+                        {
+                          unsigned int k_start = k * 3;
+                          double x_ik = coords[i_start] - coords[k_start];
+                          double y_ik = coords[i_start + 1] - coords[k_start + 1];
+                          double z_ik = coords[i_start + 2] - coords[k_start + 2];
 
-                      prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (8.0 * _d[i][counter_j] * _d[i][counter_k]);
+                          prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (8.0 * _d[i][counter_j] * _d[i][counter_k]);
 
-                      double bond_bending = prefactor *
-                          pow((x_ij * x_ik + y_ij * y_ik + z_ij * z_ik - _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]),2);
+                          double bond_bending = prefactor *
+                              pow((x_ij * x_ik + y_ij * y_ik + z_ij * z_ik - _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]),2);
 
-                      u += bond_bending;
+                          u += bond_bending;
 
-                    }
+                        }
                     }
                 }
 
@@ -600,32 +605,32 @@ Vff::keating_gradient(void)
               for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
                 {
                   if (counter_k != counter_j)
-                                      {
-                  unsigned int k = bondmap[i][counter_k];
-                  //Hydrogen bonds must not be included (they don't have reference distance and angles)
-                  if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
                     {
-                      unsigned int k_start = k * 3;
-                      double x_ik = coords[i_start] - coords[k_start];
-                      double y_ik = coords[i_start + 1] - coords[k_start + 1];
-                      double z_ik = coords[i_start + 2] - coords[k_start + 2];
+                      unsigned int k = bondmap[i][counter_k];
+                      //Hydrogen bonds must not be included (they don't have reference distance and angles)
+                      if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
+                        {
+                          unsigned int k_start = k * 3;
+                          double x_ik = coords[i_start] - coords[k_start];
+                          double y_ik = coords[i_start + 1] - coords[k_start + 1];
+                          double z_ik = coords[i_start + 2] - coords[k_start + 2];
 
-                      prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (8.0 * _d[i][counter_j] * _d[i][counter_k]);
+                          prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (8.0 * _d[i][counter_j] * _d[i][counter_k]);
 
-                      common = (x_ij * x_ik + y_ij * y_ik + z_ij * z_ik -
-                          _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]) * 2.0 * prefactor;
+                          common = (x_ij * x_ik + y_ij * y_ik + z_ij * z_ik -
+                              _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]) * 2.0 * prefactor;
 
-                      grad_all[i_start] += common * (x_ik + x_ij); grad_all[i_start + 1] += common * (y_ik + y_ij);
-                      grad_all[i_start + 2] += common * (z_ik + z_ij);
+                          grad_all[i_start] += common * (x_ik + x_ij); grad_all[i_start + 1] += common * (y_ik + y_ij);
+                          grad_all[i_start + 2] += common * (z_ik + z_ij);
 
-                      grad_all[j_start] -= common * (x_ik); grad_all[j_start + 1] -= common * (y_ik);
-                      grad_all[j_start + 2] -= common * (z_ik);
+                          grad_all[j_start] -= common * (x_ik); grad_all[j_start + 1] -= common * (y_ik);
+                          grad_all[j_start + 2] -= common * (z_ik);
 
-                      grad_all[k_start] -= common * (x_ij); grad_all[k_start + 1] -= common * (y_ij);
-                      grad_all[k_start + 2] -= common * (z_ij);
+                          grad_all[k_start] -= common * (x_ij); grad_all[k_start + 1] -= common * (y_ij);
+                          grad_all[k_start + 2] -= common * (z_ij);
 
+                        }
                     }
-                                      }
                 }
 
             }
@@ -652,9 +657,9 @@ Vff::keating_gradient(void)
 void
 Vff::optimize(void)
 {
-OptGpl solver(*this);
+  OptGpl solver(*this);
 
-solver.solve();
+  solver.solve();
 
 }
 

@@ -646,7 +646,16 @@ class SimulationInterface : public TiberModelObject
     template <typename T>
     T* get_bulk_model(const Atom& atom, bool parent = false) const;
 
-
+    //! Get the physical model for a given couple of atoms
+    /*!
+     * This method has been added to deal with binary compounds,
+     * where a bon (for example In-As) can be assigned without ambiguity
+     * to a material even when the two atoms are falling in different
+     * regions with namely different materials.
+     * \return \c NULL if no model is present for \c atom
+     */
+    template <typename T>
+    T* get_bulk_model(const Atom& atom1, const Atom& atom2, bool parent = false) const;
 
     //! Get the physical model associated to an element side
     /*!
@@ -1432,6 +1441,9 @@ class SimulationInterface : public TiberModelObject
     //! \see get_bulk_model()
     PhysicalModel* _get_bulk_model(const Atom& atom, bool parent) const;
 
+    //! \see get_bulk_model()
+    PhysicalModel* _get_bulk_model(const Atom& atom1, const Atom& atom2, bool parent) const;
+
     //! \see get_interface_model()
     PhysicalModel* _get_interface_model(const Elem* elem, int side) const;
 
@@ -1868,6 +1880,15 @@ T*
 SimulationInterface::get_bulk_model(const Atom& atom, bool parent) const
 {
   return dynamic_cast<T*>(_get_bulk_model(atom, parent));
+}
+
+
+template <typename T>
+inline
+T*
+SimulationInterface::get_bulk_model(const Atom& atom1, const Atom& atom2, bool parent) const
+{
+  return dynamic_cast<T*>(_get_bulk_model(atom1, atom2, parent));
 }
 
 

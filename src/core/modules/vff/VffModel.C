@@ -26,33 +26,83 @@ VffModel::prepare_submodels(void)
 
 }
 
-void VffModel::read_database( )
+void
+VffModel::read_database( )
 {
-
-  const Database& db = get_database();
-  db.set_section("elasticity");
-
-  if (get_material()->get_structure() == "wz")
-    {
-      throw RuntimeException("VffModel: wz structure is not supported yet");
-      //     _c13 = db.get("C13", 0.0, true);
-      //     _c33 = db.get("C33", 0.0, true);
-    }
-
-  db.set_section("lattice");
-  _a = db.get("a", 0.0, true);
 
 }
 
-void VffModel::do_init( )
+void
+VffModel::do_init( )
 {
   //NOTE: in database the lattice constant is in nm and the stiffness constants
   //are in GPa, therefore alpha and beta are in N/m without unit conversion
   //The reference distance must be in A, as atomic distances are evaluated in Amstrong
-  _alpha = (_c11 + 3.0 * _c12) * (_a  / 4.0);
-  _beta = (_c11 - _c12) *  (_a  / 4.0);
-  _d = _a * (sqrt(3.0) / 4.0) * 10.0;
-  _teta = -0.3333;
+
+  std::cout << "I have submodel " << _keating->get_name() << " and I am " << get_material()->get_name();
 }
 
+
+const double
+VffModel::get_alpha(const Atom& atm1, const Atom& atm2) const
+{
+  if (get_material()->get_structure() == "zb")
+    return _keating->get_alpha_0();
+  else if (along_c(atm1, atm2))
+    return _keating->get_alpha_1();
+  else
+    return _keating->get_alpha_0();
+}
+
+
+const double
+VffModel::get_beta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const
+{
+  if (get_material()->get_structure() == "zb")
+    return _keating->get_beta_0();
+  else if (along_c(atm1, atm2)  || along_c(atm1, atm3) || along_c(atm2, atm3))
+    return _keating->get_beta_1();
+  else
+    return _keating->get_beta_0();
+}
+
+
+const double
+VffModel::get_d(const Atom& atm1, const Atom& atm2) const
+{
+  if (get_material()->get_structure() == "zb")
+    return _keating->get_d_0();
+  else if (along_c(atm1, atm2))
+    return _keating->get_d_1();
+  else
+    return _keating->get_d_0();
+}
+
+
+const double
+VffModel::get_teta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const
+{
+  if (get_material()->get_structure() == "zb")
+    return _keating->get_teta_0();
+  else if (along_c(atm1, atm2) || along_c(atm1, atm3) || along_c(atm2, atm3))
+    return _keating->get_teta_1();
+  else
+    return _keating->get_teta_0();
+}
+
+
+bool
+VffModel::along_c(const Atom& atm1, const Atom& atm2) const
+{
+  //Note: tolerance must ne high because it's supposed to work even when the
+  //material is strained
+  double tol = 0.1;
+  double x_d = atm1.get_position(0) - atm2.get_position(0);
+  double y_d = atm1.get_position(1) - atm2.get_position(1);
+
+  if ((fabs(x_d) < tol) && (fabs(y_d) < tol))
+    return true;
+  else
+    return false;
+}
 

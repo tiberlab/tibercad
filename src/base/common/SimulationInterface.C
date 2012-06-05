@@ -443,6 +443,17 @@ SimulationInterface::_get_bulk_model(const Atom& atom, bool parent) const
 }
 
 
+PhysicalModel*
+SimulationInterface::_get_bulk_model(const Atom& atom1, const Atom& atom2, bool parent) const
+{
+  PhysicalModel* mod = NULL;
+  const Material* mat = get_atomistic_structure()->get_material(atom1, atom2, parent);
+  if (mat != NULL)
+    mod = mat->get_model(get_id());
+
+  return mod;
+}
+
 
 PhysicalModel*
 SimulationInterface::_get_interface_model(const Elem* elem, int side) const

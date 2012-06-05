@@ -12,7 +12,6 @@ Keating(options)
 void
 UserKeating::do_init(void)
 {
-  std::cout << "I belong to the alloy " << get_material()->get_name() << "and alloy "<< get_material()->is_alloy() << std::endl;
   Keating::do_init();
   assign_alpha();
   assign_beta();
