@@ -30,6 +30,14 @@ private:
 
   void assign_beta(void);
 
+  //! Parse parent material parameters. To be used if the models belongs to an alloy
+  void assign_alpha_parents(void);
+
+  void assign_beta_parents(void);
+
+  //! Check if parameters have been assigned, throw exception otherwise
+  void check_parameters(void);
+
 };
 
 inline
