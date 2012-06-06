@@ -1,5 +1,6 @@
 // $Id$
 
+#include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/convenience.hpp>
 
@@ -86,7 +87,11 @@ Messages::set_log_file(const string& logfile)
 {
   using namespace boost::filesystem;
 
+#if BOOST_VERSION >= 104700
+  path logpath(logfile);
+#else
   path logpath(logfile, native);
+#endif
 #if defined(_WIN32)
   logpath = logpath.branch_path();
 #else

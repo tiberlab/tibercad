@@ -9,6 +9,7 @@
 #include "dense_vector.h"
 #include "vector_value.h"
 
+#include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
 
 #include <fstream>
@@ -199,7 +200,11 @@ Database::set_search_path(const string& path)
 {
   if (path.size() > 0)
   {
+#if BOOST_VERSION >= 104700
+    boost::filesystem::path p(path);
+#else
     boost::filesystem::path p(path, boost::filesystem::native);
+#endif
     if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
     {
       string msg("\'");
@@ -226,7 +231,11 @@ Database::set_default_search_path(const string& path)
 {
   if (path.size() > 0)
   {
+#if BOOST_VERSION >= 104700
+    boost::filesystem::path p(path);
+#else
     boost::filesystem::path p(path, boost::filesystem::native);
+#endif
     if (!boost::filesystem::exists(p) || !boost::filesystem::is_directory(p))
     {
       string msg("\'");

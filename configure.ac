@@ -100,28 +100,41 @@ AC_SUBST([GMSH])
 
 
 # on cygwin we check for Bytessence InstallMaker
-[BINSTALLMAKER="no"]
-case $host_os in
-  *cygwin* ) 
-	AC_PATH_PROGS([BINSTALLMAKER], [BInstallMaker.exe BInstallMakerA.exe], ["no"],
-	["/cygdrive/c/Programme/Bytessence\ InstallMaker":"/cygdrive/c/Programmi/Bytessence\ InstallMaker":"/cygdrive/c/Programs/Bytessence\ InstallMaker":"/cygdrive/c/Program\ Files/Bytessence\ InstallMaker"])
-	[WININSTALLERDIR=`cygpath --windows "${ac_pwd}/installer/windows"`]
-	AC_SUBST([WININSTALLERDIR])
-	[TIBERSHAREDIR=`cygpath --windows "${ac_pwd}/share"`]
-	AC_SUBST([TIBERSHAREDIR])
-	[BINSTALLMAKERDIR="`expr "$BINSTALLMAKER" : '\(.*\)/'`"]
-	[BINSTALLMAKERDIR=`cygpath --windows "$BINSTALLMAKERDIR"`]
-	AC_SUBST([BINSTALLMAKERDIR])
-        AC_DEFINE([CYGWIN], [1], [define if we are in cygwin]) ;;
-  * )  ;;
-esac
-AC_SUBST([BINSTALLMAKER])
+#[BINSTALLMAKER="no"]
+#case $host_os in
+#  *cygwin* ) 
+#	AC_PATH_PROGS([BINSTALLMAKER], [BInstallMaker.exe BInstallMakerA.exe], ["no"],
+#	["/cygdrive/c/Programme/Bytessence\ InstallMaker":"/cygdrive/c/Programmi/Bytessence\ InstallMaker":"/cygdrive/c/Programs/Bytessence\ InstallMaker":"/cygdrive/c/Program\ Files/Bytessence\ InstallMaker"])
+#	[WININSTALLERDIR=`cygpath --windows "${ac_pwd}/installer/windows"`]
+#	AC_SUBST([WININSTALLERDIR])
+#	[TIBERSHAREDIR=`cygpath --windows "${ac_pwd}/share"`]
+#	AC_SUBST([TIBERSHAREDIR])
+#	[BINSTALLMAKERDIR="`expr "$BINSTALLMAKER" : '\(.*\)/'`"]
+#	[BINSTALLMAKERDIR=`cygpath --windows "$BINSTALLMAKERDIR"`]
+#	AC_SUBST([BINSTALLMAKERDIR])
+#        AC_DEFINE([CYGWIN], [1], [define if we are in cygwin]) ;;
+#  * )  ;;
+#esac
+#AC_SUBST([BINSTALLMAKER])
 
 TC_SUBVERSION
 
 #
 # Checks for libraries.
 #
+
+# PARDISO
+TC_PARDISO
+
+# DFTB+
+TC_DFTB
+
+# UPTIGHT
+TC_UPTIGHT
+
+# HETERO
+TC_HETERO
+
 
 # without libmesh nothing works
 AC_MSG_NOTICE([])
@@ -202,18 +215,6 @@ AC_MSG_NOTICE([])
 # add RPATH to LDFLAGS
 #[GSL_LIBS=`echo "$GSL_LIBS" | sed -r 's/-L([^[:space:]]+)/-Wl,-rpath,\1 -L\1/'`]
 
-
-# PARDISO
-TC_PARDISO
-
-# DFTB+
-TC_DFTB
-
-# UPTIGHT
-TC_UPTIGHT
-
-# HETERO
-TC_HETERO
   
 #
 # Checks for header files.

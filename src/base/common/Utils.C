@@ -1,6 +1,7 @@
 // $Id$
 
 // for parsing of vectors
+#include "boost/version.hpp"
 #include "boost/regex.hpp"
 #include "boost/tokenizer.hpp"
 #include "boost/algorithm/string/trim.hpp"
@@ -109,7 +110,11 @@ Utils::tokenize(const std::string& input, std::vector<std::string>& tokens,
 string
 Utils::dirname(const std::string& file)
 {
+#if BOOST_VERSION >= 104700
+  boost::filesystem::path p(file);
+#else
   boost::filesystem::path p(file, boost::filesystem::native);
+#endif
 
   return p.branch_path().string();
 }
@@ -119,7 +124,11 @@ Utils::dirname(const std::string& file)
 std::string
 Utils::basename(const std::string& file)
 {
+#if BOOST_VERSION >= 104700
+  boost::filesystem::path p(file);
+#else
   boost::filesystem::path p(file, boost::filesystem::native);
+#endif
 
   return boost::filesystem::basename(p);
 }
@@ -127,7 +136,12 @@ Utils::basename(const std::string& file)
 std::string
 Utils::file_extension(const std::string& file)
 {
+#if BOOST_VERSION >= 104700
+  boost::filesystem::path p(file);
+#else
   boost::filesystem::path p(file, boost::filesystem::native);
+#endif
+
 
   return boost::filesystem::extension(p);
 }
