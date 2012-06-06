@@ -157,6 +157,11 @@ ModelOptions::add_submodel(const string& name,
 ModelOptions&
 ModelOptions::operator+=(const ModelOptions& rhs)
 {
+  if (!rhs._key.empty())
+    _key = rhs._key;
+  if (!rhs._name.empty())
+    _name = rhs._name;
+
   OptionsMap::const_iterator it(rhs._options.begin());
   const OptionsMap::const_iterator end(rhs._options.end());
 
