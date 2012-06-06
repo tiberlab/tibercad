@@ -311,6 +311,10 @@ class DSSC : public SimulationInterface
     bool _poisson_only;
 
 
+    //! Whether we do EIS or not
+    bool _do_EIS;
+
+
     //! Tells if we are doing only Poisson
     bool poisson_only(void) const;
 
@@ -484,10 +488,14 @@ class DSSC : public SimulationInterface
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
+
+    //! The assembly function for EIS
+    static void assemble_EIS(EquationSystems& es, const std::string& system_name);
+
+
     //! Assmebly of the Impedance Spectroscopy Jacobian matrix
-    void do_assembly_frequency(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+    void do_assembly_frequency(EquationSystems& es, const std::string& system_name);
+
 
     //! Find the open circuit potential and densities
     void get_OC_values(void);

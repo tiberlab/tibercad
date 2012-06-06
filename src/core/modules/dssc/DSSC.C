@@ -801,6 +801,7 @@ DSSC::parse_const_options(void)
   else
     _scaling_type = Scaling::UNITS;
 
+  _do_EIS = get_option("EIS", false);
 }
 
 
@@ -882,13 +883,13 @@ DSSC::rebuild_equation_system(void)
   // finally initialize the newly created system
   system.init();
 
-/*  if (EIS .eq. true)
+  if (_do_EIS)
   {
     // the coupled DD system
     create_equation_system("linear");
     TiberLinearSystem& system_frequency = get_equation_system<TiberLinearSystem>(1);
 
-    system_frequency.attach_assembly_routine(assemble_system);
+    system_frequency.attach_assemble_function(assemble_EIS);
 
     system_frequency.add_variable("potential_R", libMeshEnums::FIRST);
     system_frequency.add_variable("fermi_n_R", libMeshEnums::FIRST);
@@ -902,8 +903,8 @@ DSSC::rebuild_equation_system(void)
     system_frequency.add_variable("fermi_C_I", libMeshEnums::FIRST);
 
     system_frequency.init();
-    }
-*/
+  }
+
   _rebuild_eq_system = false;
 
 }
@@ -3295,11 +3296,16 @@ DSSC::get_solution_secure(map<ID, vector<double> >& values)
 
 
 
+void
+DSSC::assemble_EIS(EquationSystems& es, const std::string& system_name)
+{
+  _this->do_assembly_frequency(es, system_name);
+}
+
+
 
 void
-DSSC::do_assembly_frequency(const NumericVector<Number>& x,
-    NumericVector<Number>* residual,
-    SparseMatrix<Number>* jacobian)
+DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 {
 
   PerfLog perf_log("Matrix assembly", false);
@@ -3307,18 +3313,15 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
 
   // references for nicer code
   const MeshBase& mesh = get_mesh();
-  TiberNonlinearSystem& system_frequency = get_equation_system<TiberNonlinearSystem>(1);
+  TiberLinearSystem& system_frequency = get_equation_system<TiberLinearSystem>(1);
 
   /// COMMENT: here we define a dumb value for freq (frequency for the EIS)
   double freq = 0.0;
 
   // references for nicer code
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
-  //get_solution (riprendere la parte della soluzione)
+  const NumericVector<Number>& solution = system.get_solution_vector();
   
-  // finally initialize the newly created system
-  system_frequency.init();
-
   const unsigned int dim = mesh.mesh_dimension();
 
   const Device& device = *_device;
@@ -3533,20 +3536,16 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
   vector<unsigned int> dof_indices_eC_I;
 
   // zero out residual and jacobian !! IMPORTANT !!
-  if (residual != NULL)
-    residual->zero();
-  if (jacobian != NULL)
-    jacobian->zero();
 
 
   const Node* n_cat = NULL;
   double tot_cat = 0;
-  AutoPtr<NumericVector<Number> > cons_cat = x.clone();
+  AutoPtr<NumericVector<Number> > cons_cat = solution.clone();
   cons_cat->zero();
 
   const Node* n_iodine = NULL;
   double tot_iodine = 0;
-  AutoPtr<NumericVector<Number> > cons_iodine = x.clone();
+  AutoPtr<NumericVector<Number> > cons_iodine = solution.clone();
   cons_iodine->zero();
 
   set<unsigned int> inner_boundary_nodes;
@@ -3587,7 +3586,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
     X.resize(n_dofs_tot);
 
     // extract local solution, accounting for constraints
-    dof_map.extract_local_vector(x, dof_indices, X);
+    dof_map.extract_local_vector(solution, dof_indices, X);
 
     // Reposition the submatrices according to this scheme:
     //
@@ -3871,7 +3870,6 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
       //
       // for jacobian compute the other contributions
       //
-      if (jacobian != NULL)
       {
         double dn_dphi = sc->get_density_derivative_n();
         double dI_dphi = sc->get_density_derivative_I();
@@ -4074,7 +4072,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
 
       }
 
-
+/* IS THIS NEEDED?
       // if we are doing residual, calculate rhs contribution (i.e. Fe)
       if (residual != NULL)
       {
@@ -4107,6 +4105,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
 
         }
       }
+*/
 
     } // end loop over quadrature points
 
@@ -4256,7 +4255,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
               for (unsigned int i = 0; i < n_dofs; i++)
               {
 
-                if (jacobian != NULL)
+                //if (jacobian != NULL)
                 {
                   for (unsigned int j = 0; j < n_dofs; j++)
                   {
@@ -4292,10 +4291,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
 
                   }
                 }
-                if (residual != NULL)
-                {
-                    
-                }
+
               }
 
             }
@@ -4309,7 +4305,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
 
             for (unsigned int i = 0; i < n_dofs; i++)
             {
-               if (jacobian != NULL)
+               //if (jacobian != NULL)
                {
                for (unsigned int j = 0; j < n_dofs; j++)
                 {
@@ -4327,6 +4323,8 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
                    KnnI(i,j) += -kinetic_anode * -dn_dphi * Normal_n * J_phi_i_phi_j;
                 }
                }
+
+/* IS THIS NEEDED
                if (residual != NULL)
                { 
                  
@@ -4340,6 +4338,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
 
                    FnR(s) += -kinetic_anode * n_dark * Normal_n / kT; 
                }
+*/
              }
 
             }
@@ -4418,7 +4417,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
 //               n_cat = side->get_node(0);            
 //             }
 
-            if (jacobian != NULL)
+            //if (jacobian != NULL)
              {
 
                 //double res = contact->get_load() * x0;
@@ -4456,11 +4455,6 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
                 
 
             }
-            if (residual != NULL)
-            {
-
-
-             }
            }
            else
 	   {
@@ -4470,7 +4464,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
                n_cat = side->get_node(0);            
              }
 
-             if (jacobian != NULL)
+             //if (jacobian != NULL)
              {
                
 	       //double Normal_n = x0 / (phi0 * C0_e * Constants::e * local_scaling[s][0] );
@@ -4503,6 +4497,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
                KnnI(s,s) += -kinetic_anode * -dn_dphi * Normal_n;
 
              }
+/* IS THIS NEEDED?
              if (residual != NULL)
              { 
                  
@@ -4518,6 +4513,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
                FnR(s) += -kinetic_anode * n_dark * Normal_n / kT; 
 
              }
+*/
 
            }
 	}
@@ -4634,6 +4630,7 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
 
 
     perf_log.start_event("add");
+/*
     if (residual != NULL)
     {
       for (unsigned int i = 0; i < n_dofs_tot; i++)
@@ -4644,7 +4641,8 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
       residual->add_vector(Fe, dof_indices);
     }
     else
-      jacobian->add_matrix(Ke, dof_indices);
+*/
+    system_frequency.matrix->add_matrix(Ke, dof_indices);
 
     perf_log.stop_event("add");
 
@@ -4659,36 +4657,36 @@ DSSC::do_assembly_frequency(const NumericVector<Number>& x,
   unsigned int dof_cat_I = n_cat->dof_number(system.number(), eC_var_I, 0);
   unsigned int dof_iodine_I = n_cat->dof_number(system.number(), eI_var_I, 0);
 
-  if (jacobian != NULL)
+  //if (jacobian != NULL)
   {
 
-    jacobian->close();
+    system_frequency.matrix->close();
 
     assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_cat->size(); j++)
-      jacobian->set(dof_cat_R, j, (*cons_cat)(j));
+      system_frequency.matrix->set(dof_cat_R, j, (*cons_cat)(j));
 
     assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_iodine->size(); j++)
-      jacobian->set(dof_iodine_R, j, (*cons_iodine)(j));
+      system_frequency.matrix->set(dof_iodine_R, j, (*cons_iodine)(j));
 
     assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_cat->size(); j++)
-      jacobian->set(dof_cat_I, j, (*cons_cat)(j));
+      system_frequency.matrix->set(dof_cat_I, j, (*cons_cat)(j));
     
     assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_cat->size(); j++)
-      jacobian->set(dof_cat_I, j, (*cons_cat)(j));
+      system_frequency.matrix->set(dof_cat_I, j, (*cons_cat)(j));
     
-    jacobian->close();
+    system_frequency.matrix->close();
     //jacobian->print_matlab("J.m");
   }
-  else
+  //else
   {
-    residual->close();
-    residual->set(dof_cat_R, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
-    residual->set(dof_iodine_R, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
-    residual->close();
+    system_frequency.rhs->close();
+    system_frequency.rhs->set(dof_cat_R, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
+    system_frequency.rhs->set(dof_iodine_R, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
+    system_frequency.rhs->close();
     //residual->print_matlab("F.m");
   }
 
