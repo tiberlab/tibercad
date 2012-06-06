@@ -70,6 +70,7 @@ TiberNonlinLS::do_solve(void)
   double tol = get_linear_solver()->get_linear_rtol();
   double tol_orig = tol;
 
+  //AutoPtr<SparseMatrix<double> > transpose = SparseMatrix<double>::build();
 
   unsigned int i = 1;
   for ( ; i <= get_nonlinear_max_it(); i++)
@@ -88,16 +89,19 @@ TiberNonlinLS::do_solve(void)
     else
       get_linear_solver()->solve(*matrix, *solution, *rhs);
 
-    //cout << "." << flush;
-
-    //matrix->vector_mult(*rhs, *solution);
-    //double d = rhs->dot(*rhs);
-    //cerr << "d = " << d << endl;
 
     // the l2 norm of the current residual
     //norm_rhs = rhs->l2_norm();
     norm_rhs = TiberEqSystem::calculate_norm(rhs, l2_NORM);
     norm_res = norm_rhs;
+
+
+    //matrix->vector_mult(*rhs, *solution);
+    //matrix->get_transpose(*transpose);
+    //transpose->vector_mult(*tmp_vec, *rhs);
+    //double costheta = norm_rhs * norm_rhs / (solution->l2_norm() * tmp_vec->l2_norm());
+    //cerr << "cos(theta) = " << costheta << endl;
+
 
     if (norm_res < eps_res)
     {
@@ -147,6 +151,10 @@ TiberNonlinLS::do_solve(void)
       *tmp_vec = du;
       norm_du = TiberEqSystem::calculate_norm(tmp_vec.get(), MAX_NORM);
       //norm_du = du.linfty_norm();
+      //norm_du = du.l2_norm();
+      //double norm_u = u.l2_norm();
+      //eps = get_nonlinear_stol() * norm_u + 1e-12;
+
 
       // TODO this seems not to be a brilliant idea
       //if (norm_du > get_divergence_tol() * norm_du_old)
@@ -192,7 +200,6 @@ TiberNonlinLS::do_solve(void)
       throw (SNESDivergedError(-4, i, norm_rhs));
     }
 
-    ///*
     {
       // check for one more smaller step
       u = u_old;
@@ -219,7 +226,7 @@ TiberNonlinLS::do_solve(void)
       du.scale(alpha);
       norm_du *= alpha;
     }
-    //*/
+
 
     //if (norm_du > _max_step_size)
     //{

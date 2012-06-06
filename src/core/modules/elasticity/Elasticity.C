@@ -580,7 +580,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   QGauss qrule(dim, FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
-  const vector<Point>& ref_points = qrule.get_points();
+  //const vector<Point>& ref_points = qrule.get_points();
 
   const vector<Real>& JxW = fe->get_JxW();
   const vector<Point>& q_point = fe->get_xyz();
@@ -741,7 +741,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
             //if (boundary_mod->get_type() == "ebnd_extended")
             //{
-            //  mod.calculate(elem, qface_point[0]);
+            //  mod.calculate(elem, qface.qp(0));
             //  const RealTensor& strain =  mod.get_strain_source();
             //  const RealTensor& stress =  mod.get_stress_source();
             //  const Tensor4DSym& C = mod.get_stiffness();
@@ -817,7 +817,7 @@ Elasticity::apply_shape_deformation()
        
       const Elem* elem = structure[na].get_elem();
       for (unsigned int i = 0; i< 3 ; i++)
-	dof_map.dof_indices(elem, dof_indices[i],uvar[i]);
+	dof_map.dof_indices(elem, dof_indices[i], uvar[i]);
 
       vector<Point> p(old_pos);     
       FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, old_pos, p);

@@ -35,6 +35,8 @@ RelaxationMethod::do_solve(void)
   x_old->init(get_solution_vector());
   //x_old->close();
 
+  double relax = _relax;
+
   bool converged = true;
   unsigned int it = 0;
 
@@ -84,8 +86,10 @@ RelaxationMethod::do_solve(void)
         (rel_err > get_relative_tolerance()))
       converged = false;
 
-    get_solution_vector().scale(_relax);
+    get_solution_vector().scale(relax);
     get_solution_vector() += *x_old;
+
+    relax = sqrt(relax);
 
     if (converged)
       break;

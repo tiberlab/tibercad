@@ -7,8 +7,6 @@
 #include "InitFailedException.h"
 
 #include "SolveFailedException.h"
-#include "PetscDivergedError.h"
-#include "SNESDivergedError.h"
 
 
 #include "linear_solver.h"
@@ -96,16 +94,15 @@ TiberNonlinTR::do_solve(void)
     //
     // calculate cauchy point
     //
-    matrix->get_transpose(*matrix);
+    matrix->get_transpose(*matrix); // J'
     matrix->vector_mult(*gradf, *rhs);
-    double norm_grad_l2 = gradf->l2_norm();
-    double norm_grad_infty = gradf->linfty_norm();
+    double norm_pk_l2 = gradf->l2_norm();
+    double norm_pk_infty = gradf->linfty_norm();
     //cerr << "|Z| = " << norm_rhs_now << "  " << " |g| = " << norm_grad_l2 << endl;
 
     //cerr << "|f| = " << norm_rhs_now << "  |g| = " << norm_grad_l2 << endl;
 
     // r'J(J'J)J'r
-    //du = *gradf;
     matrix->get_transpose(*matrix); // J
     matrix->vector_mult(du, *gradf); // JJ'r
     matrix->get_transpose(*matrix);  // J'
@@ -114,28 +111,27 @@ TiberNonlinTR::do_solve(void)
     //double fac = tmp / (norm_grad_l2 * norm_grad_l2);
     //cerr << "g'(J'J)g = " << tmp << " fac = "<< fac << endl;
     tmp *= delta; // delta * r'JJ'JJ'r
-    tmp = norm_grad_l2 * norm_grad_l2 * norm_grad_infty / tmp;
+    tmp = norm_pk_l2 * norm_pk_l2 * norm_pk_infty / tmp;
     double tau = std::min(1.0, tmp);
-    gradf->scale(-tau * delta / norm_grad_infty);  // Cauchy point
-
-    //double norm_cauchy = norm_grad_l2 / tmp;
+    gradf->scale(-tau * delta / norm_pk_infty);  // Cauchy point
 
     matrix->get_transpose(*matrix);  // J
 
+    // length of the Cauchy step
     norm_du = gradf->linfty_norm();
     //norm_du = gradf->l2_norm();
 
     //cerr << "tau = " << tau << " |du| = " << norm_du << " delta = " << delta << endl;
 
-    //if (Utils::almost_equal::compare(norm_du, delta, 1e-16))
     if (tau == 1.0)
+      // we can just take the Cauchy step
       du = *gradf;
     else
     {
       //
       // calculate unconstrained minimizer (Newton step)
       //
-      get_linear_solver()->solve(*matrix, *solution, *rhs);
+      get_linear_solver()->solve(*matrix, du, *rhs);
       du.scale(-1.0);
 
       double t = 1.0;
@@ -204,8 +200,7 @@ TiberNonlinTR::do_solve(void)
     }
     else if (i == get_nonlinear_max_it())
     {
-      //cout << endl << flush;
-      throw (PetscDivergedError(-3, i, norm_rhs));
+      throw (SolveFailedException("Trust-region method failed."));
     }
 
 

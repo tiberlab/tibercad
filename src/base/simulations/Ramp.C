@@ -106,10 +106,12 @@ Ramp::ramp(void)
       if (!_simulations[i]->is_solved())
       {
          ostringstream os;
-         os << "INFO: I will first solve a currently unsolved system ("
-            << _simulations[i]->get_name() << "):";
-         Messages::info(os.str());
-         _simulations[i]->solve();
+         //os << "INFO: I will first solve a currently unsolved system ("
+         //   << _simulations[i]->get_name() << "):";
+         //Messages::info(os.str());
+         //_simulations[i]->solve();
+         os << _simulations[i]->get_name() << " has never been solved before ramping.";
+         Messages::warning(os.str());
       }
       _old_sol_ids[i] = _simulations[i]->remember_current_solution();
     }

@@ -1831,24 +1831,34 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       bool get_recomb = values.count(NetRecombination);
       double tot_rec = 0;
 
-      // loop over all recombination ids
+      bool need_recomb = get_recomb;
       set<ID>::const_iterator rec_it(_recombination_ids.begin());
       for ( ; rec_it != _recombination_ids.end(); ++rec_it)
       {
-        bool requested = values.count(*rec_it);
-        double rec = 0;
-        if (get_recomb || requested)
-          rec = sc->get_net_recombination_rate(*rec_it - NetRecombination);
-
-        if (requested)
-          values[*rec_it][n] = rec;
-
-        if (get_recomb)
-          tot_rec += rec;
+        need_recomb |= values.count(*rec_it);
       }
 
-      if (get_recomb)
-        values[NetRecombination][n] = tot_rec;
+      if (need_recomb)
+      {
+        // loop over all recombination ids
+        rec_it = _recombination_ids.begin();
+        for ( ; rec_it != _recombination_ids.end(); ++rec_it)
+        {
+          bool requested = values.count(*rec_it);
+          double rec = 0;
+          if (get_recomb || requested)
+            rec = sc->get_net_recombination_rate(*rec_it - NetRecombination);
+
+          if (requested)
+            values[*rec_it][n] = rec;
+
+          if (get_recomb)
+            tot_rec += rec;
+        }
+
+        if (get_recomb)
+          values[NetRecombination][n] = tot_rec;
+      }
     }
 
 
@@ -3463,6 +3473,12 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       double sigma_h = sc->get_hole_conductivity() / (mu0 * C0_h);
       double sigma_e_x_Pe_x_J = J * sigma_e * eTEpower;
       double sigma_h_x_Ph_x_J = J * sigma_h * hTEpower;
+
+      // TEST
+      //double dn_dphi = sc->get_electron_density_derivative();
+      //double art_diff = 0.5 * x0 * elem->hmax() * mue * dn_dphi * grad_en.size() / (mu0 * C0_e);
+      //cerr << "art. diffusivity = " << art_diff << " (" << sigma_e << ")" << endl;
+      //sigma_e += art_diff;
 
       //
       // The residual looks like this:
