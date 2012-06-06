@@ -10,6 +10,11 @@ New features:
 	  to control them usaing a single block)
 	- extended syntax for plot variables: can now switch off variables by
 	  writing plot = (foo, -bar), e.g. plot = (all, -Strain)
+	- can now use single band approximation for holes
+	- can now define interfaces by specifying material or region pairs (or
+	  a combination of both) : mat1/mat2, region1/mat2. External boundary
+	  is specified by a dash '-': Si/-
+
 	
 
 Version 2.0.0

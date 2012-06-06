@@ -17,6 +17,7 @@ make_windows_package () {
   cp -r ${topdir}/${ARCH}/modules ${files}
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
+  cp ${topdir}/Changelog ${files}/Changelog.txt
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
   #if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
   #  cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
@@ -46,6 +47,7 @@ make_windows_package () {
   find ./examples -not -name "*.tsv" -exec $unix2dos {} \;
   $unix2dos Copyright.txt
   $unix2dos Readme.txt
+  $unix2dos Changelog.txt
 
   cd ${topdir}/contrib
   if [ ! -d gmsh-${GMSHVER} ]
@@ -186,6 +188,7 @@ prepare_linux_package () {
   cp -r ${topdir}/${ARCH}/modules ${files}/${ARCH}
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
+  cp ${topdir}/Changelog ${files}/share
   sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/doc/Readme.txt
 
   #if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then

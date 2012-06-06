@@ -264,7 +264,7 @@ export TIBERCADROOT
 
 
 # stack size limit / VM may be too small
-if [ ! echo "$ARCH" | grep "darwin" ]
+if [ ! \`echo "\$ARCH" | grep "darwin"\` ]
 then  
   ulimit -v unlimited
   ulimit -s unlimited
