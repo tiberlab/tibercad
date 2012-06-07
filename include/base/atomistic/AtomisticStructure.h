@@ -152,6 +152,11 @@ public:
   //! Get bond map
   const Bondmap& get_bond_map(void) const;
 
+  //! Get neighbor periodic image translation
+  //! (same indexing as bondmap)
+  const std::vector<std::vector<Tensor1>>&
+  get_neighbor_translation(void) const;
+
   //! AtomisticStructureOptions object pointer
   AtomisticStructureOptions _atomistic_structure_options;
 
@@ -399,6 +404,13 @@ const Bondmap&
 AtomisticStructure::get_bond_map() const
 {
   return _bondmap->get_bond_map();
+}
+
+inline
+const std::vector<std::vector<Tensor1>>&
+AtomisticStructure::get_neighbor_translation(void) const
+{
+  return _bondmap->get_translation();
 }
 
 inline

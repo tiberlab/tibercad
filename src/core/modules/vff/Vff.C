@@ -22,7 +22,7 @@ Vff::Options::Options(void)
 }
 
 Vff::Vff(const ModelOptions& options) :
-          SimulationInterface(options)
+              SimulationInterface(options)
 {
   // there's nothing to be done
 }
@@ -424,6 +424,8 @@ Vff::keating_potential(void)
   //Atoms to be considered in keating potential (H passivation not included)
   int n_atoms = _n_atoms;
   const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  const std::vector<std::vector<Tensor1> > translation =
+      get_atomistic_structure()->get_neighbor_translation();
   std::vector<double>& coords = get_coords();
 
 
@@ -449,6 +451,12 @@ Vff::keating_potential(void)
         {
 
           unsigned int j = bondmap[i][counter_j];
+          double t_j_x = translation[i][counter_j](1);
+          double t_j_y = translation[i][counter_j](2);
+          double t_j_z = translation[i][counter_j](3);
+          // t_j_x = 0.0;
+          // t_j_y = 0.0;
+          // t_j_z = 0.0;
           //Hydrogen bonds must not be included (they don't have reference distance and angles)
           if (get_atomistic_structure()->get_structure_atoms()[j].get_specie() != Specie::H)
             {
@@ -457,9 +465,9 @@ Vff::keating_potential(void)
               unsigned int i_start = i * 3; unsigned int j_start = j * 3;
 
               double prefactor = (_alpha[i][counter_j] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_j]);
-              double x_ij = coords[i_start] - coords[j_start];
-              double y_ij = coords[i_start + 1] - coords[j_start + 1];
-              double z_ij = coords[i_start + 2] - coords[j_start + 2];
+              double x_ij = coords[i_start] - coords[j_start] - t_j_x;
+              double y_ij = coords[i_start + 1] - coords[j_start + 1] - t_j_y;
+              double z_ij = coords[i_start + 2] - coords[j_start + 2] - t_j_z;
 
               double bond_stretching = prefactor *
                   pow((x_ij * x_ij + y_ij * y_ij + z_ij * z_ij - _d[i][counter_j] * _d[i][counter_j]),2);
@@ -472,13 +480,19 @@ Vff::keating_potential(void)
                     {
 
                       unsigned int k = bondmap[i][counter_k];
+                      double t_k_x = translation[i][counter_k](1);
+                      double t_k_y = translation[i][counter_k](2);
+                      double t_k_z = translation[i][counter_k](3);
+                      // t_k_x = 0.0;
+                      // t_k_y = 0.0;
+                      // t_k_z = 0.0;
                       //Hydrogen bonds must not be included (they don't have reference distance and angles)
                       if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
                         {
                           unsigned int k_start = k * 3;
-                          double x_ik = coords[i_start] - coords[k_start];
-                          double y_ik = coords[i_start + 1] - coords[k_start + 1];
-                          double z_ik = coords[i_start + 2] - coords[k_start + 2];
+                          double x_ik = coords[i_start] - coords[k_start] - t_k_x;
+                          double y_ik = coords[i_start + 1] - coords[k_start + 1] - t_k_y;
+                          double z_ik = coords[i_start + 2] - coords[k_start + 2] - t_k_z;
 
                           prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (8.0 * _d[i][counter_j] * _d[i][counter_k]);
 
@@ -552,6 +566,8 @@ Vff::keating_gradient(void)
   int n_atoms = _n_atoms;
   const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
   std::vector<double> coords = get_coords();
+  const std::vector<std::vector<Tensor1> > translation =
+      get_atomistic_structure()->get_neighbor_translation();
 
   //Note: grad_all is introduced as it's easier coding the gradient in a general way
   //considering all the coordinates. Then we only take the elements corresponding to degrees
@@ -581,6 +597,12 @@ Vff::keating_gradient(void)
         {
 
           unsigned int j = bondmap[i][counter_j];
+          double t_j_x = translation[i][counter_j](1);
+          double t_j_y = translation[i][counter_j](2);
+          double t_j_z = translation[i][counter_j](3);
+//           t_j_x = 0.0;
+//           t_j_y = 0.0;
+//           t_j_z = 0.0;
           //Hydrogen bonds must not be included (they don't have reference distance and angles)
           if (get_atomistic_structure()->get_structure_atoms()[j].get_specie() != Specie::H)
             {
@@ -588,10 +610,9 @@ Vff::keating_gradient(void)
               unsigned int i_start = i * 3; unsigned int j_start = j * 3;
 
               double prefactor = (_alpha[i][counter_j] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_j]);
-
-              double x_ij = coords[i_start] - coords[j_start];
-              double y_ij = coords[i_start + 1] - coords[j_start + 1];
-              double z_ij = coords[i_start + 2] - coords[j_start + 2];
+              double x_ij = coords[i_start] - coords[j_start] - t_j_x;
+              double y_ij = coords[i_start + 1] - coords[j_start + 1] - t_j_y;
+              double z_ij = coords[i_start + 2] - coords[j_start + 2] - t_j_z;
 
               double common = (x_ij * x_ij + y_ij * y_ij + z_ij * z_ij - _d[i][counter_j] * _d[i][counter_j]) * prefactor * 4.0;
 
@@ -607,13 +628,19 @@ Vff::keating_gradient(void)
                   if (counter_k != counter_j)
                     {
                       unsigned int k = bondmap[i][counter_k];
+                      double t_k_x = translation[i][counter_k](1);
+                      double t_k_y = translation[i][counter_k](2);
+                      double t_k_z = translation[i][counter_k](3);
+//                       t_k_x = 0.0;
+//                       t_k_y = 0.0;
+//                       t_k_z = 0.0;
                       //Hydrogen bonds must not be included (they don't have reference distance and angles)
                       if (get_atomistic_structure()->get_structure_atoms()[k].get_specie() != Specie::H)
                         {
                           unsigned int k_start = k * 3;
-                          double x_ik = coords[i_start] - coords[k_start];
-                          double y_ik = coords[i_start + 1] - coords[k_start + 1];
-                          double z_ik = coords[i_start + 2] - coords[k_start + 2];
+                          double x_ik = coords[i_start] - coords[k_start] - t_k_x;
+                          double y_ik = coords[i_start + 1] - coords[k_start + 1] - t_k_y;
+                          double z_ik = coords[i_start + 2] - coords[k_start + 2] - t_k_z;
 
                           prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (8.0 * _d[i][counter_j] * _d[i][counter_k]);
 

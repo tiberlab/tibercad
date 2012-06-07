@@ -35,7 +35,7 @@ AutomaticKeating::do_init(void)
         {
           if (get_material()->is_alloy())
             Messages::warning(warning1);
-          calculate_zb_alpha();
+          calculate_zb_beta();
         }
     }
 
@@ -52,7 +52,7 @@ AutomaticKeating::do_init(void)
         {
           if (get_material()->is_alloy())
             Messages::warning(warning1);
-          calculate_wz_alpha();
+          calculate_wz_beta();
         }
     }
 
