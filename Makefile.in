@@ -103,8 +103,12 @@ run_tests:
 gettingstarted:
 	@$(MAKE) --no-print-directory -C manual/Sphinx/GettingStarted latexpdf
 
+completemanual:
+	@$(MAKE) --no-print-directory -C manual/Sphinx/Complete latexpdf
 
-wininstaller linuxinstaller deb tgz tbz: gettingstarted SHAREDLIBS
+
+
+wininstaller linuxinstaller deb tgz tbz: completemanual SHAREDLIBS
 	@$(MAKE) --no-print-directory -C installer $(MAKECMDGOALS)
 
 

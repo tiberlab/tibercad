@@ -14,6 +14,12 @@ New features:
 	- can now define interfaces by specifying material or region pairs (or
 	  a combination of both) : mat1/mat2, region1/mat2. External boundary
 	  is specified by a dash '-': Si/-
+	- improved generation model for DSC based on Lambert-Beer
+	  approximation
+	- improved boundary conditions for DSC including Butler-Volmer for
+	  ionic species and kinetic rate for electrons
+	- Multi trapping model to include in an effetive way the exponential band
+	  of traps below TiO2 conduction band edge
 
 	
 
