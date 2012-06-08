@@ -1,0 +1,77 @@
+Device
+{
+  meshfile = testline.msh
+
+   Region air
+   {
+     material = Air
+     optical_epsilon = 1
+   }
+
+   Region d1
+   {
+     material = Air
+     optical_epsilon = 3.5490
+     optical_epsilon_imag = 0.02162
+   }
+
+   Region d2
+   {
+     material = Air
+     optical_epsilon = 2.2891
+     optical_epsilon_imag = 0.06052
+   }
+
+   Region d3
+   {
+     material = Air
+     optical_epsilon = 3.3531
+     optical_epsilon_imag = 1.4182
+   }
+
+   Region d4
+   {
+     material = Air
+     optical_epsilon = -1.7228
+     optical_epsilon_imag = 5.1986
+   }
+
+   Region d5
+   {
+     material = Air
+     optical_epsilon = -36.377
+     optical_epsilon_imag = 9.3767
+   }
+
+   Region pml
+   {
+     material = Air
+     sPML = 6.0
+   }
+
+  mesh_units = 1e-9
+}
+
+Module maxwell_boundary
+{
+  plot = (all)
+
+  extraQOrder = 0
+  approxOrder = 2
+  inplane = yes
+
+  W = 2.3546   # in eV
+
+  Contact source
+  {
+  	type = Source
+  }
+}
+
+Simulation
+{  
+  temperature = 300
+  solve = (maxwell_boundary)   
+  resultpath = output_500
+  output_format = vtk
+}

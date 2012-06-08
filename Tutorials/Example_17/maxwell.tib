@@ -29,7 +29,7 @@ Module maxwell_boundary
   approxOrder = 0
   inplane = no
   
-  W = 4e-7
+  W = 4e-7     # in eV
 
   Contact source
   {
