@@ -1,0 +1,56 @@
+Device
+{
+  meshfile = pmlline.msh
+
+   Region device1
+   {
+     material = Air
+   }
+
+   Region pml
+   {
+     material = Air
+     sPML = 6
+   }
+
+   Region device2
+   {
+     material = Air
+   }
+
+  mesh_units = 1
+}
+
+Module maxwell_boundary
+{
+  plot = (all)
+
+  extraQOrder = 0
+  approxOrder = 0
+  inplane = no
+  
+  W = 4e-7
+
+  Contact source
+  {
+  	type = Source
+  }
+
+  Contact left
+  {
+  	type = ElectricWall
+  }
+  
+  Contact right
+  {
+  	type = ElectricWall
+  }
+}
+
+Simulation
+{  
+  temperature = 300
+  solve = (maxwell_boundary)   
+  resultpath = output
+  output_format = vtk
+}
