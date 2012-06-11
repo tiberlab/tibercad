@@ -128,7 +128,7 @@ Simulation
 
   #temperature = 300 # this is the default
 
-  solve = sweep_base
+  solve = (dd, sweep_base)
 
   resultpath = output
   output_format = vtk
