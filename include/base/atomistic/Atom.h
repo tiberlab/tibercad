@@ -49,6 +49,9 @@ public:
   //! Set position number i
   void set_position(int i, double x);
 
+  //! Set position
+  void set_position(const Point& p);
+
   //! Get absolute position coordinate i (x=0, y=1, z=2) 
   //! atomic coordinates are stored in Angstrom
   double get_position(int i) const;
@@ -126,6 +129,11 @@ double Atom::get_position(int i) const
   return _position(i);
 }
 
+inline
+void Atom::set_position(const Point& p)
+{
+  _position = p;
+}
 
 inline 
 Point Atom::get_position() const

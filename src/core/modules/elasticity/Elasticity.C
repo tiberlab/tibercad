@@ -186,7 +186,7 @@ Elasticity::do_solve(void)
     //The error is based on the elastic energy
     //double elastic_energy = abs(compute_elastic_energy());
     //error_energy = abs((new_energy - energy)/energy) * 100.0;
-    //energy = new_energÄy;
+    //energy = new_energï¿½y;
 
     if ((verbose() > 1) && shape_iteration > 0)
     {
@@ -804,41 +804,54 @@ Elasticity::apply_shape_deformation()
 
   for (unsigned int ns = 0; ns < atom_structures.size(); ns++)
   {
-  
-    std::vector< Atom >& structure =  atom_structures[ns]->get_structure_atoms();
+    std::vector<Atom>& structure = atom_structures[ns]->get_structure_atoms();
+    std::vector<std::vector<unsigned int> > bond_map = atom_structures[ns]->get_bond_map();
     double scale = atom_structures[ns]->get_scale();
    
     for (unsigned int na = 0; na < structure.size(); na++)
     {
-      vector<Point> old_pos(1);     
-      old_pos[0](0) = structure[na].get_position(0) / scale;
-      old_pos[0](1) = structure[na].get_position(1) / scale;
-      old_pos[0](2) = structure[na].get_position(2) / scale;
+      Point old_pos(structure[na].get_position() / scale);
        
+      // will be the point in the reference coordinates, but is used also to
+      // pass the real space coordinates to inverse_map
+      vector<Point> p_ref(1, old_pos);
+
       const Elem* elem = structure[na].get_elem();
+      if (elem == NULL)
+      {
+        // here we may arrive when the atom is a passivation atom
+        // we simply take the displacement at the neighbour atom
+        if (bond_map[na].size() == 0)
+          throw RuntimeException("Found atom with no neighbours!");
+
+        unsigned int neighbor = bond_map[na][0];
+
+        elem = structure[neighbor].get_elem();
+
+        if (elem == NULL)
+          throw RuntimeException("Found atom with no neighbour inside the mesh!");
+
+        p_ref[0] = structure[neighbor].get_position() / scale;
+      }
+
+      p_ref[0] = FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, p_ref[0]);
+
+      fe->reinit(elem, &p_ref);
+
       for (unsigned int i = 0; i< 3 ; i++)
 	dof_map.dof_indices(elem, dof_indices[i], uvar[i]);
-
-      vector<Point> p(old_pos);     
-      FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, old_pos, p);
-
-      fe->reinit(elem, &p);
   
       Point displ(0);
       for (unsigned int i = 0;i<3; i ++)
-	for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
-	  displ(i) +=(solution)(dof_indices[i][alpha]) * phi[alpha][0];
+	for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
+	  displ(i) += (solution)(dof_indices[i][alpha]) * phi[alpha][0];
         
       displ /= get_scaling().get_calc_mesh_units();
 
-      Tensor1 new_pos(0);
-      new_pos(1) = displ(0) + old_pos[0](0);
-      new_pos(2) = displ(1) + old_pos[0](1);
-      new_pos(3) = displ(2) + old_pos[0](2);
-       
-      new_pos *=scale;
+      old_pos += displ;
+      old_pos *= scale;
       
-      structure[na].set_position(new_pos);
+      structure[na].set_position(old_pos);
       
     }
     atom_structures[ns]->print_structure("strained.xyz");
