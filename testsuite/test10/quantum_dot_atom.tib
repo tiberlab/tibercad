@@ -139,7 +139,8 @@ Module macrostrain
 {
   name = str
 
-  plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity, ElPotential)
+  plot = (Strain, PiezoPolarization)
+ 
 
   number_shape_steps = 1  #  for  atom displacement  calculation
   strain_atomistic_structure = tb1  # tb1 = atomistic_structure
@@ -166,9 +167,9 @@ Module  driftdiffusion
 { 
 
   name = dd
-
-  plot = (Strain, PiezoPolarization)
  
+  plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity, ElPotential)
+
   Solver
   {
     #nonlinear_solver = tiber
