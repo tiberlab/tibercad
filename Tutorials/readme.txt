@@ -26,7 +26,7 @@ Example 12: Quantum and optical properties of  a GaN  quantum disk in a nanocolu
 
 Example 13: Si-nanowire FET 
 
-Example 15: Si bipolar transistor
+Example 14: Si bipolar transistor
 
-Example 16: I-V characteristic of a Dye Solar Cell
+Example 15: I-V characteristic of a Dye Solar Cell
 
