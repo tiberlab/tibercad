@@ -701,6 +701,15 @@ DSSC::do_solve(void)
   // calculate the currents to print them on screen
   calculate_currents();
 
+  if (_do_EIS)
+  {
+    TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(1);
+    _frequency = 1e5; // TODO scaling
+
+    system.solve();
+
+  }
+
   ContactData::iterator it(_boundary_currents.begin());
   const ContactData::iterator end(_boundary_currents.end());
 
@@ -867,9 +876,6 @@ DSSC::rebuild_equation_system(void)
   // the coupled DD system
   create_equation_system("nonlinear");
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
-  //TiberNonlinearSystem& system =
-  //  *TiberNonlinearSystem::create(equation_systems,
-  //    get_equation_system_name(), get_solver_options());
 
   system.attach_assembly_routine(assemble_system);
 
@@ -886,7 +892,7 @@ DSSC::rebuild_equation_system(void)
   if (_do_EIS)
   {
     // the coupled DD system
-    create_equation_system("linear");
+    create_equation_system("linear", "FrequencySolver");
     TiberLinearSystem& system_frequency = get_equation_system<TiberLinearSystem>(1);
 
     system_frequency.attach_assemble_function(assemble_EIS);
@@ -2725,6 +2731,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   } // end loop over elements
 
 
+  assert(n_cat != NULL);
   unsigned int dof_cat = n_cat->dof_number(system.number(), eC_var, 0);
   unsigned int dof_iodine = n_cat->dof_number(system.number(), eI_var, 0);
 
@@ -2733,11 +2740,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
     jacobian->close();
 
-    assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_cat->size(); j++)
       jacobian->set(dof_cat, j, (*cons_cat)(j));
 
-    assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_iodine->size(); j++)
       jacobian->set(dof_iodine, j, (*cons_iodine)(j));
 
@@ -3315,12 +3320,17 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   const MeshBase& mesh = get_mesh();
   TiberLinearSystem& system_frequency = get_equation_system<TiberLinearSystem>(1);
 
-  /// COMMENT: here we define a dumb value for freq (frequency for the EIS)
-  double freq = 0.0;
+  double freq = _frequency;
+  {
+    ostringstream os;
+    os << "Solving impedance for f = " << freq;
+    Messages::info(os.str());
+  }
 
   // references for nicer code
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
   const NumericVector<Number>& solution = system.get_solution_vector();
+  unsigned int n_real_dofs = solution.size();
   
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -3344,6 +3354,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   const double x0 = scaling.get_length_scaling();
   const double phi0 = scaling.get_potential_scaling();
   const double C0 = scaling.get_density_scaling();
+  const double t0 = scaling.get_time_scaling();
   const double mu0 = scaling.get_mobility_scaling();
   // scaling for electrons
   double C0_e = _cond_scaling.n;
@@ -3365,6 +3376,8 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   // scaling all charges
   double scaling_tot = 1.0;
 
+  // scale the frequency by t0
+  freq *= t0;
 
 
   if (do_local_scaling_)
@@ -3388,16 +3401,16 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   const DofMap& dof_map = system_frequency.get_dof_map();
 
   // numeric ids corresponding to the variables
-  const unsigned int u_var_R = system.variable_number("potential_R");
-  const unsigned int en_var_R = system.variable_number("fermi_n_R");
-  const unsigned int eI_var_R = system.variable_number("fermi_I_R");
-  const unsigned int eI3_var_R = system.variable_number("fermi_I3_R");
-  const unsigned int eC_var_R = system.variable_number("fermi_C_R");
-  const unsigned int u_var_I = system.variable_number("potential_I");
-  const unsigned int en_var_I = system.variable_number("fermi_n_I");
-  const unsigned int eI_var_I = system.variable_number("fermi_I_I");
-  const unsigned int eI3_var_I = system.variable_number("fermi_I3_I");
-  const unsigned int eC_var_I = system.variable_number("fermi_C_I");
+  const unsigned int u_var_R = system_frequency.variable_number("potential_R");
+  const unsigned int en_var_R = system_frequency.variable_number("fermi_n_R");
+  const unsigned int eI_var_R = system_frequency.variable_number("fermi_I_R");
+  const unsigned int eI3_var_R = system_frequency.variable_number("fermi_I3_R");
+  const unsigned int eC_var_R = system_frequency.variable_number("fermi_C_R");
+  const unsigned int u_var_I = system_frequency.variable_number("potential_I");
+  const unsigned int en_var_I = system_frequency.variable_number("fermi_n_I");
+  const unsigned int eI_var_I = system_frequency.variable_number("fermi_I_I");
+  const unsigned int eI3_var_I = system_frequency.variable_number("fermi_I3_I");
+  const unsigned int eC_var_I = system_frequency.variable_number("fermi_C_I");
 
   FEType fe_type = system_frequency.variable_type(u_var_R);
 
@@ -3503,6 +3516,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     FI3I(Fe),
     FCI(Fe);
 
+  /*
   DenseSubVector<Number>
     XuR(X),
     XnR(X),
@@ -3514,6 +3528,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     XII(X),
     XI3I(X),
     XCI(X);
+    */
   
   DenseSubVector<Number>
     Su(X),
@@ -3632,7 +3647,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     //
     KCuR.reposition(4 * n_dofs, 0, n_dofs, n_dofs);
     KCCR.reposition(4 * n_dofs, 4 * n_dofs, n_dofs, n_dofs);
-    KCuFR.reposition(4 * n_dofs, 5, n_dofs, n_dofs);
+    KCuFR.reposition(4 * n_dofs, 5 * n_dofs, n_dofs, n_dofs);
     KCCFR.reposition(4 * n_dofs, 9 * n_dofs, n_dofs, n_dofs);
     
     //
@@ -3680,6 +3695,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     FI3I.reposition(8 * n_dofs, n_dofs);
     FCI.reposition(9 * n_dofs, n_dofs);
     //
+    /*
     // Solution Vector
     XuR.reposition(0, n_dofs);
     XnR.reposition(n_dofs, n_dofs);
@@ -3691,6 +3707,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     XII.reposition(7 * n_dofs, n_dofs);
     XI3I.reposition(8 * n_dofs, n_dofs);
     XCI.reposition(9 * n_dofs, n_dofs);
+    */
     //
     // Solution Steady state Vector
     Su.reposition(0, n_dofs);
@@ -4648,46 +4665,46 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
   } // end loop over elements
 
-  //COMMENT: dovrei mettere la conservazione due volte
+  // COMMENT: dovrei mettere la conservazione due volte
+  // solution: add number of real DOFs to the relevant DOF, but this works
+  // only if variables are ordered in a certain way
 
 //  unsigned int dof_cat = n_cat->dof_number(system.number(), eC_var, 0);
 //  unsigned int dof_iodine = n_cat->dof_number(system.number(), eI_var, 0);
-  unsigned int dof_cat_R = n_cat->dof_number(system.number(), eC_var_R, 0);
-  unsigned int dof_iodine_R = n_cat->dof_number(system.number(), eI_var_R, 0);
-  unsigned int dof_cat_I = n_cat->dof_number(system.number(), eC_var_I, 0);
-  unsigned int dof_iodine_I = n_cat->dof_number(system.number(), eI_var_I, 0);
+  assert(n_cat != NULL);
+  unsigned int dof_cat_R = n_cat->dof_number(system_frequency.number(), eC_var_R, 0);
+  unsigned int dof_iodine_R = n_cat->dof_number(system_frequency.number(), eI_var_R, 0);
+  unsigned int dof_cat_I = n_cat->dof_number(system_frequency.number(), eC_var_I, 0);
+  unsigned int dof_iodine_I = n_cat->dof_number(system_frequency.number(), eI_var_I, 0);
 
-  //if (jacobian != NULL)
+  if (1)
   {
 
     system_frequency.matrix->close();
 
-    assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_cat->size(); j++)
+    {
       system_frequency.matrix->set(dof_cat_R, j, (*cons_cat)(j));
+      system_frequency.matrix->set(dof_cat_I, j + n_real_dofs, (*cons_cat)(j));
+    }
 
-    assert(n_cat != NULL);
     for (unsigned int j = 0; j < cons_iodine->size(); j++)
+    {
       system_frequency.matrix->set(dof_iodine_R, j, (*cons_iodine)(j));
+      system_frequency.matrix->set(dof_iodine_I, j + n_real_dofs, (*cons_iodine)(j));
+    }
 
-    assert(n_cat != NULL);
-    for (unsigned int j = 0; j < cons_cat->size(); j++)
-      system_frequency.matrix->set(dof_cat_I, j, (*cons_cat)(j));
-    
-    assert(n_cat != NULL);
-    for (unsigned int j = 0; j < cons_cat->size(); j++)
-      system_frequency.matrix->set(dof_cat_I, j, (*cons_cat)(j));
+  }
     
     system_frequency.matrix->close();
-    //jacobian->print_matlab("J.m");
-  }
-  //else
+    system_frequency.matrix->print_matlab("J.m");
+
   {
     system_frequency.rhs->close();
-    system_frequency.rhs->set(dof_cat_R, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
-    system_frequency.rhs->set(dof_iodine_R, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
-    system_frequency.rhs->close();
-    //residual->print_matlab("F.m");
+    //system_frequency.rhs->set(dof_cat_R, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
+    //system_frequency.rhs->set(dof_iodine_R, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
+    //system_frequency.rhs->close();
+    system_frequency.rhs->print_matlab("F.m");
   }
 
 
