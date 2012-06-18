@@ -20,26 +20,15 @@ void EigenSystem::reinit () {
 
 void EigenSystem::solve () {
 
-  std::cout << "Solve called \n";
-  flush(std::cout);
-
   int systemSize = initSystemSize();
 
-  std::cout << "Created edge dof map\n";
-  flush(std::cout);
-  std::cout << "Total system size: " << systemSize << "\n";
-  flush(std::cout);
+  Messages::debug("Total system size: " + systemSize);
 
   EigenSolver::prepare_slepc();
-  std::cout << "Prepared SLEPC \n";
-  flush(std::cout);
 
   Utils::Timer tt;
 
   this->assemble ();
-
-  std::cout << "Assemble finished " << tt.elapsed_string() << "\n";
-  flush(std::cout);
 
   //get nonzeros and fill marix in EigenSolver
   int nonZerosA[systemSize];
@@ -48,16 +37,9 @@ void EigenSystem::solve () {
   countNonZeros(matA, nonZerosA, systemSize);
   countNonZeros(matB, nonZerosB, systemSize);
 
-  std::cout << "Got nonzeros\n";
-  flush(std::cout);
-
   EigenSolver::preallocate_H_matrix(systemSize, nonZerosA);
-  std::cout << "Preallocated memory 1 \n";
-  flush(std::cout);
 
   EigenSolver::preallocate_S_matrix(systemSize, nonZerosB);
-  std::cout << "Preallocated memory 2 \n";
-  flush(std::cout);
 
   tt.reset();
 
@@ -71,9 +53,8 @@ void EigenSystem::solve () {
     }
     //matA.clear();
   }
-  std::cout << "Copied A"  << tt.elapsed_string() << " " << copyNumber << "\n";
+  Messages::debug("Copied A"  + tt.elapsed_string());
   tt.reset();
-  flush(std::cout);
   copyNumber = 0;
 
   {
@@ -85,8 +66,7 @@ void EigenSystem::solve () {
     }
     //matB.clear();
   }
-  std::cout << "Copied B"  << tt.elapsed_string() << " " << copyNumber << "\n";
-  flush(std::cout);
+  Messages::debug("Copied B"  + tt.elapsed_string());
   //
 
   EigenSolver::finalize_H_assembly();
@@ -103,8 +83,6 @@ void EigenSystem::solve () {
   
   this->_n_converged_eigenpairs = EigenSolver::number_of_converged_eigenvalues();
 
-  std::cout << "Solved \n";
-  flush(std::cout);
 }
 
 Complex EigenSystem::get_eigen_lambda (unsigned int i) {

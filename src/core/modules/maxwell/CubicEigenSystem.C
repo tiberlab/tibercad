@@ -74,7 +74,6 @@ void  CubicEigenSystem::get_eigen_vector(const unsigned int i, std::vector<Compl
  */
 
 void CubicEigenSystem::addAValue(Complex value, int i, int j) {
-  //flush(std::cout);
   // A value goes to A0 and A1
   matA[std::make_pair(i, j)] += -lambda1 * value;
   matB[std::make_pair(i, j)] += -value;

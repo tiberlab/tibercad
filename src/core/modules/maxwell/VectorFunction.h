@@ -5,6 +5,7 @@
 #include <vector>
 #include "point.h"
 #include "vector_value.h"
+#include "Messages.h"
 
 class VectorFunction {
   public:
@@ -91,8 +92,7 @@ class VectorFunction {
 
     static VectorFunction gradient(const ScalarFunction& scalarFunction) {
       if (!scalarFunction.secondOrderDerivatives) {
-        std::cout << "Can not get gradient because second order derivatives is undefined.\n";
-        flush(std::cout);
+        Messages::error("Can not get gradient because second order derivatives is undefined.");
         return VectorFunction();
       }
       VectorFunction result(Point(0, 0), scalarFunction.phi.size());

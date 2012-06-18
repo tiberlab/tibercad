@@ -32,9 +32,6 @@ class ExcitonLayer
       Wexc = (Wexc / Constants::c) * length_scaling;
       Q = (Q / Constants::c) * length_scaling;
 
-      std::cout << "OUTPUT " << Q << "\n";
-      std::cout << "OUTPUT " << (mme->Wc - mme->Wexc0) / Constants::c * length_scaling << "\n";
-      std::cout << "OUTPUT " << Q / ((mme->Wc - mme->Wexc0) / Constants::c * length_scaling) << "\n";
     }
 
     virtual ~ExcitonLayer() {
@@ -100,7 +97,6 @@ class ExcitonLayer
             _exciton_sim->get_solution(elem, densityId, Xden, point);
 
             Fexc += JxW[qp] * Xden;
-            //std::cout << "Fexc " << JxW[qp] << " " << Xden << "\n";
 
             for (unsigned int i=0; i<edge_phi.size(); i++) {
               if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID) {
@@ -123,10 +119,6 @@ class ExcitonLayer
 
       delete fe;
 
-      for (int i = 0; i < FexcFi.size(); i++) {
-        //std::cout << "Fexci " << FexcFi[i] << "\n";
-      }
-
       std::map<unsigned int, Point>::iterator it1;
       std::map<unsigned int, Point>::iterator it2;
 
@@ -136,7 +128,6 @@ class ExcitonLayer
           Point p2 = (*it2).second;
 
           cubicSystem.addCValue(Q * (p1 * p2) / Fexc, (*it1).first, (*it2).first);
-          //std::cout << "o_O" << Q << " " << p1.size() << " " << p2.size() << " " << Fexc << "\n";
         }
       }
     }
@@ -206,8 +197,6 @@ class ExcitonLayer
 
       delete fe;
 
-      std::cout << "DBG " << fi0I << " " << E2I << " " << XdensI << "\n";
-      std::cout << "DBG2 " << (fi0I / std::sqrt(E2I * XdensI)) << "\n";
       return std::sqrt(mme->Wlt * mme->Wexc0 * (fi0I * fi0I / E2I / XdensI / 2));
 
     }

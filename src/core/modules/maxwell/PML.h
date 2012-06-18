@@ -52,8 +52,6 @@ class PML {
       }
 
       midPoint = (minPoint + maxPoint) / 2;
-      std::cout << "PML max " << maxPoint(0) << "\n";
-      std::cout << "PML min " << minPoint(0) << "\n";
     }
 
     double getSPML(const Elem* elem, SimulationInterface* interface) {

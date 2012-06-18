@@ -21,6 +21,7 @@
 #include "Database.h"
 #include "Material.h"
 #include "PML.h"
+#include "Messages.h"
 
 class IGeometryEx {
   public:
@@ -65,15 +66,11 @@ class IGeometryEx {
 
         //To avoid looking for this stupid error...
         if (mesh.mesh_dimension() == 1 && (maxPoint(1) - minPoint(1)) > 1e-5) {
-          std::cout << "********************************************************************** \n";
-          std::cout << "WARNING! Y_COORDINATE DIFFERS! PROBABLE YOU ARE TRYING CALULATE 1D WITH Y-MESH!\n";
+          Messages::warning("Y_COORDINATE DIFFERS! PROBABLE YOU ARE TRYING CALULATE 1D WITH Y-MESH!");
         }
 
         double structureDiameter = (maxPoint - minPoint).size();
-        std::cout << "Structure diameter: " << structureDiameter << "\n";
         scaling.set_length_scaling(structureDiameter / SCALE_LENGTH);
-        std::cout << "Using scale: " << scaling.get_length_scaling() << "\n";
-        flush(std::cout);
       }
 
 
@@ -86,8 +83,6 @@ class IGeometryEx {
         for (unsigned int i = 0; i < elem->n_sides(); i++) {
           if (excludeSideFunction(elem, i)) {
             const AutoPtr<Elem> sideElem = elem->build_side(i);
-
-            //std::cout << "Excluded " << i << " " << sideElem->centroid() << "\n";
 
             boundaryIds.insert(ItemId::get(sideElem.get()));
             for (int j = 0; j < sideElem->n_nodes(); j++) {

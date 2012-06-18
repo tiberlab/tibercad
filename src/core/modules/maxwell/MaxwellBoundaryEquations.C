@@ -128,9 +128,6 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
   double total_length_scaling = system.simulationInterface->get_environment().get_device().get_mesh_units() * system.getGeometryEx()->getScaling().get_length_scaling();
   double K = W / Constants::c * total_length_scaling;
 
-  std::cout << "KKKKKKKKKK = " << K << std::endl;
-  std::cout << "TLS = " << total_length_scaling << std::endl;
-
   EdgeDofMap* dof_map = system.getEdgeDofMap(false);
 
   const VariableType fe_type = system.getVariableType(0);

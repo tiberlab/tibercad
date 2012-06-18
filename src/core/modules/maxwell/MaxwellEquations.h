@@ -88,7 +88,6 @@ class MaxwellEquations : public SimulationInterface
     virtual void do_solve(void);
 
     virtual void parse_options(void) {
-      std::cout << "EEEPO"; flush(std::cout);
     }
 
   private:

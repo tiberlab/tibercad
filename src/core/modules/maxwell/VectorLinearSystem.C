@@ -17,12 +17,7 @@ void VectorLinearSystem::reinit () {
 }
 
 void VectorLinearSystem::solve () {
-  std::cout << "Solve called\n";
-  flush(std::cout);
   systemSize = initSystemSize();
-
-  std::cout << "Inited system size\n";
-  flush(std::cout);
 
   // Resize the solution conformal to the current mesh
   solution->init (2*systemSize, 2*systemSize, false, PARALLEL);
@@ -38,8 +33,6 @@ void VectorLinearSystem::solve () {
 
   rhs->init (2*systemSize, 2*systemSize, false, PARALLEL);
 
-  std::cout << "Inited all\n";
-  flush(std::cout);
 
   /***************************************************************************/
   this->assemble ();
@@ -74,9 +67,6 @@ void VectorLinearSystem::solve () {
       //std::cout << "Matrix output B" << pair.first << " " << pair.second << " " << "\n";
     }
   }
-
-  std::cout << "Copied\n";
-  flush(std::cout);
 
 /*
   std::pair<unsigned int, Real> result = linear_solver->solve (*matrix, this->request_matrix("Preconditioner"), *solution, *rhs, 1e-30, 1000);
@@ -127,9 +117,6 @@ void VectorLinearSystem::solve () {
 
   //std::cout << "RETURN INFO 2" << result2.first << " " << result2.second << "\n";
 
-
-  std::cout << "Solved\n";
-  flush(std::cout);
 }
 
 void VectorLinearSystem::init_data() {

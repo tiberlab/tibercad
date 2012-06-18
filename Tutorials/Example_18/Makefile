@@ -2,7 +2,7 @@
 
 topdir := ../..
 
-inputfile = maxwell_400.tib
+inputfile = maxwell_500.tib
 
 
 .PHONY: run clean distclean
