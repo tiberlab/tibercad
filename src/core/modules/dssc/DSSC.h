@@ -317,6 +317,9 @@ class DSSC : public SimulationInterface
     //! The current frequency (it's here because it's a hack...)
     double _frequency;
 
+    //! Do the actual EIS calculation
+    void do_EIS(void);
+
 
     //! Tells if we are doing only Poisson
     bool poisson_only(void) const;

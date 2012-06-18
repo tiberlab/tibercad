@@ -701,14 +701,8 @@ DSSC::do_solve(void)
   // calculate the currents to print them on screen
   calculate_currents();
 
-  if (_do_EIS)
-  {
-    TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(1);
-    _frequency = 1e5; // TODO scaling
+  do_EIS();
 
-    system.solve();
-
-  }
 
   ContactData::iterator it(_boundary_currents.begin());
   const ContactData::iterator end(_boundary_currents.end());
@@ -748,6 +742,36 @@ DSSC::do_solve(void)
 }
 
 
+void
+DSSC::do_EIS(void)
+{
+  if (!_do_EIS) return;
+
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(1);
+  double start = 100;
+  double stop = 1e3;
+  int steps = 10;
+
+  ostringstream os;
+  os << "Doing EIS, start = " << start << " stop = " << stop;
+  Messages::info(os.str());
+
+  double _frequency = start;
+  for (int i = 1; _frequency < stop; ++i)
+  {
+    _frequency = 2 * M_PI * start * i;
+
+    system.assemble();
+    system.solve();
+    Messages::info(".", false);
+  }
+
+  _frequency = 2 * M_PI * stop;
+  system.assemble();
+  system.solve();
+  Messages::info(". done");
+
+}
 
 
 void
@@ -879,7 +903,6 @@ DSSC::rebuild_equation_system(void)
 
   system.attach_assembly_routine(assemble_system);
 
-
   system.add_variable("potential", libMeshEnums::FIRST);
   system.add_variable("fermi_n", libMeshEnums::FIRST);
   system.add_variable("fermi_I", libMeshEnums::FIRST);
@@ -891,11 +914,28 @@ DSSC::rebuild_equation_system(void)
 
   if (_do_EIS)
   {
+    ModelOptions linopts;
+    // default is bcgsl
+    linopts["method"] = "bcgsl";
+
+    if ((dim == 1) && (linopts["method"] == "bcgsl"))
+      linopts["method"] = "bcgs";
+
+    if (dim < 3)
+      linopts["preconditioner"] = "lu";
+    else
+      linopts["preconditioner"] = "ilu";
+
+    linopts["absolute_tolerance"] = "1e-15";
+
     // the coupled DD system
-    create_equation_system("linear", "FrequencySolver");
+    create_equation_system("linear", "FrequencySolver", linopts);
     TiberLinearSystem& system_frequency = get_equation_system<TiberLinearSystem>(1);
 
     system_frequency.attach_assemble_function(assemble_EIS);
+
+    // we will call assemble() by hand, since we need to solve for several rhs
+    system_frequency.assemble_before_solve = false;
 
     system_frequency.add_variable("potential_R", libMeshEnums::FIRST);
     system_frequency.add_variable("fermi_n_R", libMeshEnums::FIRST);
@@ -3321,11 +3361,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   TiberLinearSystem& system_frequency = get_equation_system<TiberLinearSystem>(1);
 
   double freq = _frequency;
-  {
-    ostringstream os;
-    os << "Solving impedance for f = " << freq;
-    Messages::info(os.str());
-  }
+
 
   // references for nicer code
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
@@ -4341,21 +4377,19 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
                 }
                }
 
-/* IS THIS NEEDED
-               if (residual != NULL)
+             //
+             // Here comes the source term:
                { 
-                 
-                   double density_n = sc->get_density_n();
-                   double n_dark = sc->get_equilibrium_concentrations().n;
-                   double bias = contact->get_potential();
-                   double kT = sc->get_lattice_temperature();
-	           //double Normal_n = x0 / ( phi0 * C0_e * Constants::e * local_scaling[s][0] );
-	           double Normal_n = x0 / ( phi0 * C0_e * local_scaling[s][0] );
-                   double kinetic_anode = contact->get_kinetic();
 
-                   FnR(s) += -kinetic_anode * n_dark * Normal_n / kT; 
+                 //double density_n = sc->get_density_n();
+                 //double n_dark = sc->get_equilibrium_concentrations().n;
+                 //double bias = contact->get_potential();
+                 //double kT = sc->get_lattice_temperature();
+                 //double Normal_n = x0 / ( phi0 * C0_e * local_scaling[s][0] );
+                 //double kinetic_anode = contact->get_kinetic();
+
+                 FnR(s) = 1;
                }
-*/
              }
 
             }
@@ -4429,49 +4463,28 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
           if (contact->is_cathode())
           {
-//             if (n_cat == NULL)
-//             {
-//               n_cat = side->get_node(0);            
-//             }
+            //double res = contact->get_load() * x0;
 
-            //if (jacobian != NULL)
-             {
+            double j0 = contact->get_ex_curr();
+            double kT = sc->get_lattice_temperature();
+            double kT2 = 2*kT;
+            double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
+            double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
 
-                //double res = contact->get_load() * x0;
-                
-                double j0 = contact->get_ex_curr();
-                double kT = sc->get_lattice_temperature();
-                double kT2 = 2*kT;
-	        double Normal_I = x0 / (phi0 * C0_I * Constants::e * local_scaling[s][1] );
-	        double Normal_I3 = x0 / (phi0 * C0_I3 * Constants::e * local_scaling[s][2] );
-                
-                double Eredox = -Su(s);
-               
-                double bias = contact->get_potential();
-                
-                double Eredox1 = bias + 2.5*SI(s) - 1.5*SI3(s) - 2*Su(s);
-                double Eredox2 = -bias +4*Su(s) - 3.5*SI(s) + 0.5*SI3(s);
+            double Eredox = -Su(s);
 
-//                KI3u(s,s) += 0.5 * j0 * ( -2*exp( (Eredox1)/kT2 ) -4*exp( (Eredox2)/kT2 ) ) * Normal_I3/kT2;
-//                KI3I(s,s) += 0.5 * j0 * ( 2.5*exp( (Eredox1)/kT2 ) + 3.5*exp( (Eredox2)/kT2 ) )  * Normal_I3 / kT2;
-//                KI3I3(s,s) += 0.5 * j0 * ( -1.5*exp( (Eredox1)/kT2 ) -0.5*exp( -(Eredox2)/kT2 ) ) * Normal_I3 /kT2;
-                
-//                KIu(s,s) += -1.5 * j0 * ( -2*exp( (Eredox1)/kT2 ) -4*exp( (Eredox2)/kT2 ) ) * Normal_I3/kT2;
-//                KII(s,s) += -1.5 * j0 * ( 2.5*exp( (Eredox1)/kT2 ) + 3.5*exp( (Eredox2)/kT2 ) )  * Normal_I3 / kT2;
-//                KII3(s,s) += -1.5 * j0 * ( -1.5*exp( (Eredox1)/kT2 ) -0.5*exp( -(Eredox2)/kT2 ) ) * Normal_I3 /kT2;
-	        
+            double bias = contact->get_potential();
 
-//               KIu(s,s) += 1.5 * Normal_I / res;
-//               KI3u(s,s) += -0.5 * Normal_I3 / res;
-                
-                KIuR(s,s) += -1.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I / kT2;
-                KIuI(s,s) += -1.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I / kT2;
+            double Eredox1 = bias + 2.5*SI(s) - 1.5*SI3(s) - 2*Su(s);
+            double Eredox2 = -bias +4*Su(s) - 3.5*SI(s) + 0.5*SI3(s);
 
-                KI3uR(s,s) += 0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I3 / kT2;
-                KI3uI(s,s) += 0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I3 / kT2;
-                
 
-            }
+            KIuR(s,s) += -1.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I / kT2;
+            KIuI(s,s) += -1.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I / kT2;
+
+            KI3uR(s,s) += 0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I3 / kT2;
+            KI3uI(s,s) += 0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * (-1) * Normal_I3 / kT2;
+
            }
            else
 	   {
@@ -4514,23 +4527,22 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
                KnnI(s,s) += -kinetic_anode * -dn_dphi * Normal_n;
 
              }
-/* IS THIS NEEDED?
-             if (residual != NULL)
+
+             //
+             // Here comes the source term:
              { 
                  
-               double density_n = sc->get_density_n();
-               double n_dark = sc->get_equilibrium_concentrations().n;
-               double bias = contact->get_potential();
-               double kT = sc->get_lattice_temperature();
-               double n_0 = n_dark * exp(bias/kT); 
-	       //double Normal_n = x0 / ( phi0 * C0_e * Constants::e * local_scaling[s][0] );
-	       double Normal_n = x0 / ( phi0 * C0_e * local_scaling[s][0] );
-               double kinetic_anode = contact->get_kinetic();
+               //double density_n = sc->get_density_n();
+               //double n_dark = sc->get_equilibrium_concentrations().n;
+               //double bias = contact->get_potential();
+               //double kT = sc->get_lattice_temperature();
+               //double n_0 = n_dark * exp(bias/kT);
+	       //double Normal_n = x0 / ( phi0 * C0_e * local_scaling[s][0] );
+               //double kinetic_anode = contact->get_kinetic();
 
-               FnR(s) += -kinetic_anode * n_dark * Normal_n / kT; 
+               FnR(s) = 1;
 
              }
-*/
 
            }
 	}
@@ -4647,18 +4659,8 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
 
     perf_log.start_event("add");
-/*
-    if (residual != NULL)
-    {
-      for (unsigned int i = 0; i < n_dofs_tot; i++)
-        for (unsigned int j = 0; j < n_dofs_tot; j++)
-          Fe(i) += Ke(i,j) * x(dof_indices[j]);
 
-
-      residual->add_vector(Fe, dof_indices);
-    }
-    else
-*/
+    system_frequency.rhs->add_vector(Fe, dof_indices);
     system_frequency.matrix->add_matrix(Ke, dof_indices);
 
     perf_log.stop_event("add");
@@ -4697,14 +4699,14 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   }
     
     system_frequency.matrix->close();
-    system_frequency.matrix->print_matlab("J.m");
+    //system_frequency.matrix->print_matlab("J.m");
 
   {
     system_frequency.rhs->close();
     //system_frequency.rhs->set(dof_cat_R, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
     //system_frequency.rhs->set(dof_iodine_R, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
     //system_frequency.rhs->close();
-    system_frequency.rhs->print_matlab("F.m");
+    //system_frequency.rhs->print_matlab("F.m");
   }
 
 
