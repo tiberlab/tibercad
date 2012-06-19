@@ -5,6 +5,8 @@
 #include "Database.h"
 #include "Messages.h"
 #include "RuntimeException.h"
+#include "RotatedCrystal.h"
+
 
 
 
@@ -97,9 +99,32 @@ VffModel::along_c(const Atom& atm1, const Atom& atm2) const
   double tol = 0.1;
   double x_d = atm1.get_position(0) - atm2.get_position(0);
   double y_d = atm1.get_position(1) - atm2.get_position(1);
+  double z_d = atm1.get_position(2) - atm2.get_position(2);
 
-  if ((fabs(x_d) < tol) && (fabs(y_d) < tol))
+  //How do I get a pointer to atomistic structure???
+  //SimulationInterface* owner = static_cast<SimulatonInterface*>(get_owner());
+//  std::vector<double> c_axis = owner->get_atomistic_structure()->get_c_axis();
+
+  //TODO: doing this operation on the fly is not efficient at all, as the
+  //c-axis has the same direction in the whole material. You could move it in
+  //Material (or in RotatedCrystal). The loss is not dramatic as this operation is done only once during the
+  //parameters matrix assembly, and the operation itself is quite fast
+  Tensor2Gen RotM;
+  RotM = get_material()->get_rotated_crystal().RotMatrix;
+  Tensor1 zz(0); zz(3) = 1.0;
+  Tensor1 cc = RotM * zz;
+  Tensor1 bond_direction(0);
+  bond_direction(1) = x_d; bond_direction(2) = y_d; bond_direction(3) = z_d;
+  double scalar_product = pow((cc * bond_direction), 2);
+  double norm_product = (cc * cc) * (bond_direction * bond_direction);
+  double diff = scalar_product - norm_product;
+
+
+
+  if (fabs(diff) < tol)
+    {
     return true;
+    }
   else
     return false;
 }
