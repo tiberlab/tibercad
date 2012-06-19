@@ -48,8 +48,6 @@ public:
   static
   std::map<Type, std::string> specie_to_string;
 
-  static
-    std::map<Type, double> specie_to_mass;
 
    static
    std::map<Type, double> specie_to_mass;
