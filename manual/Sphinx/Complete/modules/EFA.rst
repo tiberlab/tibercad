@@ -7,14 +7,15 @@ Quantum  EFA  calculations
 =================================
 
 
-In  tiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates, eigenfunctions and  quantum  density of  a  given system and    dispersion  of  quantum  states  can  be  obtained   respectively by means  of the module:
+In  tiberCAD,  it  is  possible  to  perform quantum  calculations in  the  framework  of  Envelope Function Approximation (EFA):  eigenstates, eigenfunctions and  quantum  density of  a  given system and    dispersion  of  quantum  states  can  be  obtained  by means  of the module:
 
-* Module efaschroedinger
+* **Module**  ``efaschroedinger``
 
 
 The  optical properties  are  calculated by  the  module 
 
-* Module opticskp
+* **Module**  ``opticskp``
+
 
 
 
@@ -29,8 +30,8 @@ Module efaschroedinger
 
 
 
-The efaschroedinger  simulation tool of TIBERCAD is developed
-in order to solve a single-particle Schroedinger equation for electrons and holes in a semiconductor crystal. 
+The  ``efaschroedinger``  simulation tool of tiberCAD  is developed
+in order to solve a single-particle    :math:`Schr\ddot{o}dinger`  equation for electrons and holes in a semiconductor crystal. 
 This problem is an eigenvalue problem that is treated as a generalized
 complex eigenvalue problem
 
@@ -44,8 +45,8 @@ complex eigenvalue problem
     \end{equation}
 
 where H and S are the Hamiltonian and S-matrix, respectively.
-The EFA calculations are performed by the **Module** ``efaschroedinger`` A typical example
- is the following::
+The EFA calculations are performed by the **Module** ``efaschroedinger``.
+A typical example is the following  ::
 
   Module efaschroedinger
     {
@@ -63,12 +64,21 @@ The EFA calculations are performed by the **Module** ``efaschroedinger`` A typic
 
      Physics
        {
-        model = conduction_band
+        model = single_band
        }
     }
 
 
-In  this  example, Schroedinger  equation is  solved for  electrons with a  single band model.
+In  this  example, :math:`Schr\ddot{o}dinger`  equation is  solved for  electrons ::
+
+  particle = el 
+
+
+with a  single band model ::
+
+ model = single_band
+
+
 We  calculate  10 eigenstates  by  specifying::
 
   number_of_eigenstates = 10  
@@ -76,24 +86,23 @@ We  calculate  10 eigenstates  by  specifying::
 
 
 
-The  electron quantum density is  calculated too if  the  keyword QuantumDensity is  present in the plot list::
+The  electron quantum density is  calculated by default if  the  keyword ``QuantumDensity`` is  present in the plot list::
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)  
 
 
-A similar  definition is  needed  for  the  calculation of hole  quantum  states, by  defining:: 
+A similar  definition may be  used  in a **Module** ``efaschroedinger`` for  the  calculation of hole  quantum  states, by  defining :: 
 
   particle = hl
 
 
-For  holes, one  can  choose  a  6 bands ``kp``  model in  this  way::
+For  holes, one  can  choose, for example,  a  6 bands :math:`{\bf k \cdot p}`  model in  this  way::
 
   Physics
   {
-    particle = hl
     model = kp   #  k.p  for  valence  band
     kp_model = 6x6
-   }
+  }
 
 
 
@@ -105,15 +114,15 @@ Module options
 The following options influence the behaviour of the Module efaschroedinger:
 
  ``particle`` : string  
-    defines for which particle (electron or hole) Schroedinger equation is solved. 
-    Possible values are el and hl. A different Module efaschroedinger has to be
+    defines for which particle (electron or hole) :math:`Schr\ddot{o}dinger` equation is solved. 
+    Possible values are ``el`` and ``hl``. A different **Module** ``efaschroedinger`` has to be
     defined for each particle to be solved.
 
  ``poisson_model_name`` : string
-    defines the name of the simulation (Module driftdiffusion) that can provide electric potential
+    defines the name of the simulation (e.g.  ``driftdiffusion``) that can provide electric potential
 
  ``strain_model_name`` : string 
-    defines the name of the simulation (Module macrostrain) that can provide elastic strain
+    defines the name of the simulation (e.g. ``elasticity``) that can provide elastic strain
 
  ``regions`` : string 
     defines the regions associated to this EFA simulation
@@ -129,12 +138,12 @@ The Solver section of the Module efaschroedinger contains the following options:
     defines the number of eigenvalues and eigenfunctions to be found.
 
  ``Dirichlet_bc_everywhere`` : boolean 
-    if true (default value), Dirichlet boundary conditions are imposed over all the boundaries of the simulation region
+    if *true* (default value), Dirichlet boundary conditions are imposed over all the boundaries of the simulation region
 
  ``solver`` : string 
-    defines the solver for the eigenvalue problem, possible values are:arnoldi, lapack, krylovshur. The default value is **krylovshur** . 
+    defines the solver for the eigenvalue problem, possible values are: *arnoldi*, *lapack*, *krylovshur*. The default value is **krylovshur** . 
 
-In the case of the lapack solver all the eigenvalues are computed. In the case of arnoldi or krylovshur
+In the case of the *lapack* solver all the eigenvalues are computed. In the case of *arnoldi* or *krylovshur*
 solver it is necessary to specify which and how many eigenvalues have to be computed. 
 The idea is that the iterative solver calculates several eigenvalues that are
 close to a specific number, referred to as the *guess*.
@@ -144,16 +153,16 @@ close to a specific number, referred to as the *guess*.
     maximum number of iteration, used as a stop condition
 
  ``eigen_solver_tolerance`` : double 
-    numerical eigensolver tolerance used as a convergence criteria
+    numerical eigensolver tolerance used as a convergence criterium
 
  ``guess`` : double 
-     the algorithm try  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If not defined, then by  default it is  calculated internally from the band edges.
+     the algorithm try  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If not defined, then by  default it is  calculated internally based on  the band edges.
 
  ``ksp_type`` : string 
-    Krylov subspace method type *bcgsl*, *gmres*, *cg*
+    Krylov subspace method type: *bcgsl*, *gmres*, *cg*
 
  ``pc_type`` : string 
-    preconditioner type: cholesky, jacobi, ilu , composite.
+    preconditioner type: *cholesky*, *jacobi*, *ilu* , *composite*.
 
 
 Physics section
@@ -161,28 +170,36 @@ Physics section
 
 
  ``model`` : string 
-    possible values are *conduction band* , for single conduction band model ( :math:`\Gamma` point) ;  *kp* for :math:`{\bf k \cdot p}` model
+    possible values are *single_band*, for single  band model (:math:`\Gamma` point) ;  *kp* for :math:`{\bf k \cdot p}` model
 
  ``kp_model`` : string 
     possible values are *6x6*, *8x8*. 
 
 
+In case *single_band* model is  applied to electrons, the  relevant  mass  is read from  the  material file. 
+When it is applied to  holes, in  *Physics*  section the  following options have  to be  defined:
 
+ ``mass`` : double(units of :math:`m_0`)
+    effective  mass to  be  used  in *single_band* calculations for  holes 
+
+ ``band_edge`` : double
+    optional override  of  band edge  energy  defined in the material file (:math:`E_v`)
 
 
 
 Quantum density calculation
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-TO  BE   CHECKED
 
-Calculation of particle (electron,hole) quantum density, 
-based on the result of a previous calculation of the system eigenstates may be obtained with an analytical or a
-numerical calculation.
 
-Analytical calculation of density is done in the following way. For each eigenstate we
-calculate the effective mass assuming quadratic dispersion. Then the charge density is
-calculated  as follows:
+The particle (electron,hole) **quantum density** is  calculated  by default if  the  keyword ``QuantumDensity`` is  present in the plot list::
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)  
+
+
+ 
+The quantum density   is  calculated  analytically   in the following way. 
+For each eigenstate we calculate the effective mass assuming quadratic dispersion. Then the charge density is calculated  as follows:
 
 ..  math::
     :nowrap:
@@ -196,42 +213,45 @@ calculated  as follows:
     \end{align}
 
 
-where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; m is the averaged mass (the mass
-is different for each quantized state and is position independent); g is the degeneracy of
-the states. The + sign is for electrons, the - sign is for holes.
+where :math:`\rho_{1D}` and :math:`\rho_{2D}` are the 1D and 2D charge densities; :math:`m` is the averaged mass (the mass
+is different for each quantized state and is position independent); :math:`g` is the degeneracy of
+the states. The :math:`+` sign is for electrons, the :math:`-` sign is for holes.
 
 
+..
+  Alternatively, numerical calculation may be performed according  the following formula:
 
-Numerical calculation is done by the following formula:
+  ..  math::
+      :nowrap:
+      :label:
 
-..  math::
-    :nowrap:
-	:label:
-
-    \begin{equation}
-    \rho({\bf r}) = \sum_n \frac {1}{(2\pi)^d} \int_{BZ} |\psi_{\bf k_{\|}}|({\bf r})|^2 \frac{1}{1+\exp 
-    \left(\pm \frac{E-\mu}{kT} \right)} d{\bf k_{\|}}
-    \end{equation}
+       \begin{equation}
+        \rho({\bf r}) = \sum_n \frac {1}{(2\pi)^d} \int_{BZ} |\psi_{\bf k_{\|}}|({\bf r})|^2 \frac{1}{1+\exp 
+       \left(\pm \frac{E-\mu}{kT} \right)} d{\bf k_{\|}}
+       \end{equation}
 
 
-The integration is performed on a mesh in the k-space.
-A  block quantumdensity has  to  be  defined inside Module efaschroedinger.
+  The integration is performed on a mesh in the k-space.
+  To perform a numerical calculation,  a  block ``quantumdensity`` has  to  be  defined inside the **Module** ``efascroedinger``.
 
-:: 
+  :: 
 
-  quantumdensity
+    quantumdensity
     {
-     
+     analytic = false
+     k_max = 0.05     
+     number_of_elements = (5,5)
     }
 
-The available options are:
+  The available options are:
 
 
 
-| ``analytic`` = { true | false } 
-| 
-|         If true then the density is calculated analytically,
-          otherwise numerically.
+    ``analytic`` : bool  
+         If true then the density is calculated analytically, otherwise numerically.
+    ``number_of_elements`` :
+      number of elements in the mesh along each  direction
+
 
 
 
@@ -240,7 +260,7 @@ Calculation of quantum dispersion
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Within  the Module efaschroedinger  it is possible to calculate the dependence of quantum eigenstates 
+Within  the **Module**  ``efaschroedinger``  it is possible to calculate the dependence of quantum eigenstates 
 on ``k``-vector. Such dependence gives the *quantum state dispersion*. 
 To  calculate the  quantum dispersion we  need  to  define the  block *Dispersion*
 
@@ -249,13 +269,9 @@ To  calculate the  quantum dispersion we  need  to  define the  block *Dispersio
 
   Dispersion 
   {
-
     k-path = G-K-M
     number_of_nodes = 10
-    k_max = 0.1
-
-
-    
+    k_max = 0.1  
   }
 
 The dispersion of quantum states is calculated at k-points that are nodes of a mesh
@@ -267,17 +283,17 @@ The main parameters are:
     path of the  direction in  k-space; it  must be  a  string of the  kind G-K-M
 
  ``number_of_nodes`` : 
-   number_of_nodes along each  direction
+   number of nodes in the mesh along each  direction
 
  ``k-max`` : 
-   max value  of  k in  each  direction (default 0.1)
+   max value  of  k in  each  direction (default = 0.1)
 
 
 
-The dispersion can  be calculated in  general in  a  k-space  dimension between 1 and (3-simdim),  where  *simdim*  is  the  simulation  dimension.
-Accordingly,  ``number_of_nodes``  is    an array  of  dimension equal  to  the k-space  dimension.
+The dispersion can  be calculated in  general in  a  k-space  dimension between 1 and (3-*simdim*),  where  *simdim*  is  the  simulation  dimension. That is a 1D k-space can be defined for 1D and 2D simulations and a 2D k-space for 1D simulations.
+Accordingly,  *number_of_nodes*  is    an array  of  dimension equal  to  the k-space  dimension.
 
-For a 2D k-space, a  2D  mesh  is  defined,  by  writing e.g. ::
+For example, in a  simulation of a quantum well (1D), to create a 2D k-space one defines   a  2D  mesh  by  writing e.g. ::
  
   number_of_nodes = (5,5)
 
@@ -309,10 +325,10 @@ Output
 The available output variables for  *Module efaschroedinger* , to be specified in the plot option, are the following:
 
  ``EigenEnergy`` :
-   Eigen energy in eV
+   List of Eigenenergies in eV
 
  ``ProbabilityDensity``: 
-    :math:`|\psi({\bf r})|^2` function of the eigenstate
+    square modules :math:`|\psi({\bf r})|^2` of the eigenstate wavefunctions 
 
  ``QuantumDensity``:  
     if  present, quantum  density is  calculated 
@@ -342,12 +358,25 @@ If ``ProbabilityDensity`` is specified as plot variable, then ``EigenEnergy`` wi
 Module opticskp
 ----------------------
 
-By defining the Module ``opticskp`` , calculation of optical properties is enabled; in particular, 
-the optical ``kp`` matrix elements are calculated from the quantum models specified in the Module.
+By defining the **Module** ``opticskp`` , calculation of optical properties is enabled; in particular, 
+the optical ``kp`` matrix elements are calculated from the quantum models specified in the **Module**.
 
-The optical spectrum from spontaneous emission is calculated in the following way:
+The optical spectrum from spontaneous emission is calculated in the following way
 
-where :math:`f_i` and :math:`f_j` are the Fermi distributions.
+..  math::
+    :nowrap:
+    :label:
+
+
+    \begin{equation}
+         P(\hbar \omega) = \sum_{i,j} \frac{1}{2\pi^2}  \frac{\omega^2_{ij} e^2 }{m^2 c^3}  
+         |{\bf M_{i,j} e}|^2 f_i(E_i)(1 - f_j(E_j)) 
+         \frac{\Gamma/2} {(\hbar \omega_{ij} - \hbar \omega)^2 + (\Gamma/2)^2} d\Omega,
+    \end{equation}
+
+
+
+where :math:`f_i` and :math:`f_j` are the Fermi distributions and :math:`M_{i,j}` is the optical matrix element between the states  :math:`i` and :math:`j`.
 
 ::
 
@@ -372,7 +401,7 @@ where :math:`f_i` and :math:`f_j` are the Fermi distributions.
 The main parameters are:
 
  ``initial_state_model``:
-     quantum simulations associated to the initial state of optical transition
+     quantum simulations associated to the initial state of the optical transition
 
  ``final_state_model`` :
     quantum simulations associated to the final  state of optical transition
@@ -386,12 +415,15 @@ The main parameters are:
  ``dE``:
     energy step
 
+ ``polarization`` :  vector
+      light polarization 
+
  ``plot`` :
-    to  select  spectrum in a k-point k0 or  integrated in k-space 
+    to  select  spectrum in *k=0* (:math:`\Gamma` point)  or  spectrum integrated in k-space 
 
 
 Here, ``initial_state_model`` and ``final_state_model`` are, respectively, the quantum simulations 
-( ``efaschroedinger`` module) associated respectively to the initial state of optical
+( ``efaschroedinger`` module) associated respectively to the initial state of the optical
 transition (e.g. electron), and to the final state of optical transition (e.g. hole). 
 
 
@@ -400,24 +432,31 @@ By  default, all  the eigenstates calculated in  the electron  and  hole quantum
 
 Optionally, one  can  define  the  range  of  states to  be  used  for  optical  transitions, by  means  of  the  keywords ``initial_eigenstates`` and ``final_eigenstates``. 
 
-A range of energy values must  be  defined in this way::
+A range of energy values  must  be  defined for the optical  spectrum, in this way::
 
   Emin = 3.0
   Emax = 5.0
   dE = 0.001
 
-where Emin,Emax amd dE are  respectively   the  minimum,  maximum and  interval energy. 
+where ``Emin,Emax amd dE`` are  respectively   the  minimum,  maximum and  interval energy. 
 
-Polarization  indicates the  light polarization (vector)..............
+.. Polarization  indicates the  light polarization 
+
+.. (vector)..............
+
+By specifying *optical_spectrum_k_0* in  the  ``plot``  statement, the emission  recombination  optical spectrum for   *k=0* (:math:`\Gamma` point) is  calculated. 
 
 
 Integrated spectrum
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-By specifying ``optical_spectrum_k_0`` in  the  ``plot``  statement, the emission  recombination  optical spectrum for  k=0 is  calculated. 
-For  1D and  2D  calculations,  it  is  possible  to  perform  an  integration  of  the  optical  spectrum  in  k-space, by specifying ``optical_spectrum`` in  the  ``plot``  statement.
-In  this  case,  one  has  to  define a  k-integration  block inside  *Module opticskp*, in this  way 
-::
+
+For  1D and  2D  calculations,  it  is  possible  to  perform  an  integration  of  the  optical  spectrum  in  *k-space*, by specifying *optical_spectrum* in  the  ``plot``  statement ::
+
+  plot = (optical_spectrum)
+
+
+In  this  case,  one  has  to  define a  **k-integration**  block inside  **Module** ``opticskp``, in this  way ::
 
   k-integration
   {
@@ -431,37 +470,36 @@ In  this  case,  one  has  to  define a  k-integration  block inside  *Module op
      refine_fraction = 0.5
      relative_accuracy = 0.001 
 
-
   }
 
 
-The parameters are the following
+The parameters for the *k-space* integration are the following
 
  ``k_max`` :
     max  value  of k  
 
  ``quadrature_type`` : 
-    type of  integration, default is  gaussian 
+    type of  integration, default is  *gaussian* 
   
 
  ``quadrature_order`` : 
-    order of  integration, default is  third
+    order of  integration, default is  *third*
 
  ``refine_k_space`` :
-    if  true, then adaptive k-mesh refinement is enabled
+    default is *false*, if  *true*, then *adaptive* k-mesh refinement is enabled
  
  ``refine_fraction`` : 
-    refinement  parameter
+    refinement  parameter for *adaptive* k-mesh refinement
     
  ``relative_accuracy``:
-    refinement  tolerance
+    refinement  tolerance for *adaptive* k-mesh refinement
 
 If ``refine_k_space`` = **true** , that is adaptive k-mesh refinement is enabled, all the elements whose error is greater than the value (1-refine_fraction)* (maximum error) are
 going to be refined. In this case, "Error" is just the integrated quantity. The refinement
-will end when the *relative_accuracy* is obtained.
+will end when the tolerance defined by ``relative_accuracy`` is satisfied.
 
 
-To  run  an  opticskp  sumulation,  one  need  to  define it in the  solve  statement,  in  this  way::
+To  run  an  opticskp  sumulation,  one  needs  to  define it in the  solve  statement,  in  this  way::
 
 
 
@@ -473,9 +511,9 @@ To  run  an  opticskp  sumulation,  one  need  to  define it in the  solve  stat
    }
 
 
-where  ``optics``  is  the  name  of  the  defined opticskp  sumulation.
-Note  that, in  this  way, the  quantum (efaschroedinger)  simulations needed  for opticskp are executed but their  results are  not  shown in  the  output.
-To plot quantum results you should  explicitly  define   efaschroedinger  simulations in the  solve  statement, in  this  way::
+where  *optics*  is  the  name  of  the  defined ``opticskp``  simulation.
+Note  that, in  this  way, the  quantum (``efaschroedinger``)  simulations needed  for ``opticskp`` are executed but their  results are  not  shown in  the  output.
+To plot quantum results you should  explicitly  define   ``efaschroedinger``  simulations in the  ``solve``  statement, in  this  way::
 
 
 
@@ -520,7 +558,7 @@ Example
 
 
 In this 1D example we will see how to calculate quantum properties of a GaAs/InGaAs **quantum  well**.
-Schroedinger equation is solved, with a single-band effective mass model for conduction band and with a 6 band-kp model for valence band. Eigenvalues and eigenfunctions are calculated to get energy levels and wavefunctions in the quantum well.
+:math:`Schr\ddot{o}dinger` equation is solved with a single-band effective mass model for conduction band and with a 6-band **k.p** model for valence band. Eigenvalues and eigenfunctions are calculated to get energy levels and wavefunctions in the quantum well.
 Here is  the  device  definition ::
 
   Device
@@ -568,7 +606,7 @@ Here is  the  device  definition ::
 
 
 
-The InGaAs  well  region (**QWell**) and  the  two  barrier  regions are  collected  in  the  *Cluster*  Quantum_1.  Quantum calculation  will  be  restricted  to  this  *Cluster* ::
+The InGaAs  well  region (**QWell**) and  the  two  barrier  regions are  collected  in  the  *Cluster*  **Quantum_1**.  Quantum calculation  will  be  restricted  to  this  *Cluster* ::
 
   Cluster Quantum_1
     {
@@ -576,7 +614,7 @@ The InGaAs  well  region (**QWell**) and  the  two  barrier  regions are  collec
     } 
 
 
-Simulation is performed at equilibrium, and first a strain calculation for the GaAs/InGaAs/GaAs heterostructure, with GaAs as a reference substrate, is performed. ::
+First, a strain calculation for the GaAs/InGaAs/GaAs heterostructure, with GaAs as a reference substrate, is performed. ::
 
   Module elasticity 
    {
@@ -602,7 +640,14 @@ Simulation is performed at equilibrium, and first a strain calculation for the G
 
   }
 
-See   Module  Elasticity  for  a  detailed  explanation ::
+See   :ref:`ElasticityTheory`      for  a  detailed  explanation. 
+
+Simulation is performed at equilibrium, so that   we   solve *driftdiffusion* 
+(see :ref:`DriftDiffusionTheory`) with the option  ::
+
+  coupling = poisson
+
+which  means that only Poisson  equation will  be  solved. ::
 
   Module driftdiffusion
   { 
@@ -624,8 +669,9 @@ See   Module  Elasticity  for  a  detailed  explanation ::
 
 
 
-Finally, the model efaschroedinger, for quantum effective mass calculations, is defined.
-We are going to study quantized states of electrons and holes in the quantum well. Since the structure is 1D, the eigenstate is characterized by the energy level number n and the k vector that is perpendicular to the growth direction. In this example, we define two simulations that solve Schroedinger equation for a single k-vector (k = 0) , for electrons and holes. ::
+Finally, we define the model *efaschroedinger*, for quantum effective mass calculations.
+We are going to study quantized states of electrons and holes in the quantum well. 
+Since the structure is 1D, each eigenstate is characterized by the energy level number *n* and the *k vector* that is perpendicular to the growth direction. In this example, we define two simulations that solve :math:`Schr\ddot{o}dinger` equation for a single *k-vector* (*k = 0*), one for electrons and one for holes. For electrons ::
 
   Module efaschroedinger
 
@@ -646,23 +692,23 @@ We are going to study quantized states of electrons and holes in the quantum wel
 
    Physics
    {
-    model = conduction_band    
+    model = single_band    
    }
 
   
   }
 
 
-Note  that we must  define poisson and  strain  simulation from  which potential and  strain data have  to  be taken ::
+Note  that we must  define *poisson* and  *strain*  simulation from  which potential and  strain data have  to  be taken ::
 
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
   strain_simulation = strain 
 
-Electron eigenstates  will  be  obtained from a  single  band model, so ::
+Electron eigenstates  will  be  obtained from a  single  band model, so we define ::
 
   Physics
    {
-    model = conduction_band    
+    model = single_band    
    }  
 
 
@@ -693,7 +739,7 @@ In  a  similar  way,  for  holes ::
   
   }
 
-where, in  this  case,  we  use a  6x6 kp model to  calculate  hole  eigenstates ::
+where, in  this  case,  we  use a  6x6 :math:`{\bf k \cdot p}`  model to  calculate  hole  eigenstates ::
 
   Physics
    {
@@ -701,29 +747,104 @@ where, in  this  case,  we  use a  6x6 kp model to  calculate  hole  eigenstates
     kp_model = 6x6
    }
 
-In  the  block  *Simulation*,  we  state  the *solve*  order. ::
+Finally, in  the  block  *Simulation*,  we  state  the *solve*  order. ::
 
   solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes ) 
 
 
-.. warning::  We need to  compute strain and driftdiffusion modules first, to  get  the  correct  parameters  for kp quantum calculation
+.. warning::  We need to  compute strain and driftdiffusion modules first, to  get  the  correct  parameters  for  :math:`{\bf k \cdot p}`  quantum calculations
 
-Thus :: 
+Thus, the  block  *Simulation* reads  :: 
 
   Simulation
   {
-
    dimension = 1
    temperature = 300
    solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes )
-
    resultpath =  output  
-
    output_format = grace
-
   }
 
  
+
+Output of  simulation is  shown in the following.
+
+First we look at the output of driftdiffusion calculation.
+In Fig. :ref:`Conduction and valence bands<bands>` we have the conduction and valence band profiles in equilibrium condition (contained in the output file *driftdiffusion_msh.dat*); the Fermi level is in correspondance of the zero of energy.
+
+
+..  _bands :
+
+..  figure:: ../data/bands_fig.png
+    :align: center
+    :scale: 70%
+
+    Conduction and valence bands
+
+
+
+
+..  _cblevels :
+
+..  figure:: ../data/CB_levels_qw8nm_fig.png
+    :align: center
+    :scale: 70%
+
+    Conduction band levels
+
+
+..  _vblevels :
+
+..  figure:: ../data/VB_levels_qw8nm_fig.png
+    :align: center
+    :scale: 70%
+
+    Valence band levels
+
+
+Then in Fig. :ref:`Conduction band levels<cblevels>` we  show
+the conduction band profile and the the quantized levels for electrons (from the file *quantum_electrons_msh.dat*) in the InGaAs quantum well; for this 8 nm-wide quantum well only the first two energy levels are confined. 
+
+
+The first 12 quantized levels for the holes (from the file *quantum_holes_msh.dat*) in the InGaAs quantum well are shown in Fig. :ref:`Valence band levels<vblevels>` (there are 6 couples of degenerated energy levels). 
+
+
+
+
+
+
+Fig. :ref:`CB wavefunctions<cbwave>` show the wavefunctions (square module) for the energy states in the conduction band: only the first two states are confined in the conduction band and are shown here.
+
+ 
+Finally, in Fig. :ref:`VB wavefunctions<vbwave>`
+there are the wavefunctions for the first 10 confined energy states in the valence band. The first of each couple of degenerated states is shown.
+States from the heavy hole and the light hole bands are visible. 
+
+
+
+
+
+
+
+..  _cbwave :
+
+..  figure:: ../data/efa_ex1_wave_el.png
+    :align: center
+    :scale: 70%
+
+    CB wavefunctions   
+
+
+
+..  _vbwave :
+
+..  figure:: ../data/wave_hl_ex1.png
+    :align: center
+    :scale: 70%
+
+    VB wavefunctions   
+
+
 
 
 

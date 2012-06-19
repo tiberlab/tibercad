@@ -30,7 +30,8 @@ and hole thermoelectric powers, respectively. The models for the mobilities and 
 recombination rates can be specified in the ``Physics`` section as described in the
 following.
 
-..  index:: double:DriftDiffusion;Solution
+..
+  ..  index:: double:DriftDiffusion;Solution
 
 Solution/Plot variables
 -----------------------
@@ -139,12 +140,48 @@ can be controlled by special submodel blocks in different ways:
 
 In the current version, there are two different implementations of band parameter models:
 
- ``simple`` a simple model requesting the input of the band edge energies and effective DOS masses or effective DOS
+ ``simple``
+   a simple model assuming a parabolic dispersion,
+   requesting the input of the band edge energies and effective DOS masses or effective DOS
 
- ``kp`` a model based on bulk :math:`k\cdot p` including strain corrections
+ ``kp``
+   a model based on bulk :math:`k\cdot p` including strain corrections
 
 
-particle density
+Whereas the :math:`k\cdot p` based model takes all model parameters from the materials database, parameters can be provided in 
+the input file for the simple model in the following ways.
+If the ``band_properties`` block is used, then one can provide the following options:
+
+  ``Ec`` *or* ``band_gap``
+    The conduction band edge, or the band gap
+
+  ``Ev``
+    the valence band edge
+
+  ``Nc`` *or* ``m_dos_e``
+    the electron effective density of states, or the DOS mass
+
+  ``Nv`` *or* ``m_dos_h``
+    the hole effective density of states, or the DOS mass
+
+For the ``conduction_band`` and ``valence_band`` blocks the following options need to be used:
+
+  ``band_edge``
+    the band edge energy
+
+  ``band_gap`` *and* ``reference_energy``
+    a reference energy and a band gap such that ``band_edge`` = ``reference_energy`` + ``band_gap``
+
+  ``DOS_mass`` *or* ``effective_DOS``
+    the DOS mass or the effective DOS
+  
+
+.. note:: Remember that you can provide the ``regions`` option to limit a models validity
+          to a subset of the simulaton domain. This way it is possible to mix the ``simple`` and
+          ``kp`` models in the same simulation.
+
+
+Particle density
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Details for the calculation of the electron and hole densities can be given in the particle_density
@@ -179,7 +216,7 @@ accepts the following options:
 
   ``embracing_length = double`` 
        When the domain of the quantum simulation is smaller
-       than the domain of the full simulation, the boundary conditions for the Schroedinger
+       than the domain of the full simulation, the boundary conditions for the :math:`Schr\ddot{o}dinger` 
        equation will disturb the transfer from classical to quantum density. By defining an
        embracing region of a certain extension (specified in meters), a gradual transition
        from classical to quantum density will be done instead of an abrupt one, using as
@@ -212,8 +249,11 @@ options can be enabled in a single statement by writing::
 
   recombination (model1, model2, ...) {}
 
+
+
 Shockley-Read-Hall (SRH) recombination
-"""""""""""""""""""""""""""""""""""""""
+............................................
+
 
 The SRH recombination model can be enabled by defining a ``recombination`` submodel
 of type ``srh`` .
@@ -255,7 +295,8 @@ case, you can provide the recombination velocities using the keywords ``rec_velo
 and ``rec_velocity_p`` instead of ``tau_n`` and ``tau_p`` .
 
 Direct (radiative) recombination
-""""""""""""""""""""""""""""""""
+.................................
+
 
 The direct recombination model can be enabled in the input file by by defining a
 ``recombination`` submodel of type ``direct`` .
@@ -271,7 +312,8 @@ The material data file and the input file use the same keyword C for the paramet
 database value can be overridden from the input file as described for SRH recombination.
 
 Auger recombination
-""""""""""""""""""""
+.................................
+
 
 
 The Auger recombination model can be enabled in the input file by defining a recombination
@@ -293,11 +335,12 @@ with temperature dependent parameters
 The parameters A;B;C;H and :math:`N_0` are taken exclusively from the database. They are
 different for :math:`C_n` and :math:`C_p` and have to be specified as arrays with keywords ``A``, ``B``, ``C``, ``H``, ``N0``,
 e.g. ``A = (1e-31, 1e-32)``. The calculated values for :math:`C_n` and :math:`C_p` can be overridden from
-the input file by specifying values for the keywords ``C_n`` and ``C_p`` .
+the input file by specifying values for the keywords ``Cn`` and ``Cp`` .
 
 
 Optical generation
-"""""""""""""""""""
+.................................
+
 
 A very simple model for photoelectric generation of electron-hole pairs is implemented
 in tiberCAD. It is enabled by specifying a ``generation`` submodel of type optical The
@@ -387,7 +430,10 @@ specified with a common keyword in arrays, e.g.
 
 
 Constant mobility model
-"""""""""""""""""""""""""
+............................................
+
+
+
 
 The constant mobility model (identifier ``constant`` ) assumes a mobility which depends
 only on temperature by means of the following formula:
@@ -402,8 +448,10 @@ have to be specified with the keywords ``mu_max`` and ``exponent``.
 :math:`\mu_0` can be overridden from the ``physical_model`` section using the keyword
 ``mu`` or from the Region sections using the keywords ``mu_e`` and ``mu_h`` .
 
+
 Doping dependent mobility model
-""""""""""""""""""""""""""""""""
+............................................
+
 
 The doping dependent mobility model (identifier ``doping_dependent`` ) implements two
 models for mobility depending on the total doping density and the temperature. The
@@ -446,7 +494,9 @@ The parameters are given in table at the end of the Chapter.
 
 
 Field dependent mobility model
-"""""""""""""""""""""""""""""""
+............................................
+
+
 
 The field dependent mobility model describes the degradation of mobility at high driving
 fields. It is identified by the identifier field_dependent. The electric field component
@@ -496,7 +546,9 @@ The parameters for the field dependent mobility model are summarized in Table 2.
 
 
 Field assisted mobility model
-"""""""""""""""""""""""""""""""
+............................................
+
+
 
 The field assisted mobility model describes the enhancement of the carrier mobility by an electric field in organic
 semiconductors. It is identified by the identifier field_enhanced. 
@@ -545,7 +597,7 @@ Polarization models
 
 For simulations involving materials with nonzero electric polarization (such as nitrides)
 it is important to include the effect of polarization. This is done by specifying the models
-for spontaneous (pyro-) and piezoelectric polarization using the keywords polarization
+for spontaneous (pyro-) and piezoelectric polarization using the keyword ``polarization``
 with the types ``pyro`` and ``piezo`` ::
 
   polarization pyro {}
@@ -557,7 +609,9 @@ by writing ``polarization (pyro, piezo) {}``.
 
 
 Spontaneous polarization
-"""""""""""""""""""""""""""""""
+............................................
+
+
 
 The spontaneous polarization model (sometimes also called 'pyroelectric polarization') imposes a constant electric polarization P along
 the symmetry-braking direction of the crystal. Crystals with wurtzite structure like Nitrides
@@ -570,7 +624,9 @@ Alternatively, one can specify explicitly a polarization vector using the option
 
 
 Piezopolarization
-""""""""""""""""""
+............................................
+
+
 
 The piezoelectric polarization is strain induced and given by the linear relationship
 
@@ -712,19 +768,22 @@ Contacts are defined by blocks with keyword Contact, for example::
 An area factor can be specified for contacts using the keyword ``area_factor`` . The
 contact current will be multiplied by this factor.
 
-For interfaces and surfaces, the same syntax can be used (optionally one can use
-the keywords ``Interface`` or ``Boundary`` ), however they do usually not need to be defined
-explicitly.
+For interfaces and surfaces, the same syntax can be used (optionally one can  use the keywords ``Interface`` or ``Boundary``), however they do usually not need to be defined explicitly.
 
 Ohmic contact
-""""""""""""""
+............................................
 
-The ohmic contact (identifier ohmic) has no further parameters.
+
+
+The ohmic contact (identifier ``ohmic``) has no further parameters.
+
 
 Schottky contact
-""""""""""""""""""
+............................................
 
-A Schottky contact (identifier ``schottky`` ) has the additional parameter ``barrier`` , which
+
+
+A Schottky contact (identifier ``schottky``) has the additional parameter ``barrier`` , which
 signifies the energy difference between the semiconductor band edge and the fermi energy
 in the metal. As default, the barrier is taken with respect to the conduction band. By
 specifying ``band = v`` the barrier can be imposed with respect to the valence band (p-
@@ -751,7 +810,10 @@ Thermionic emission is by default switched on, but can be disabled by specifying
 
 
 Interface/surface model
-"""""""""""""""""""""""
+............................................
+
+
+
 
 The free surface or interface model (identifier interface) can include surface charges
 due to traps and surface recombination. Their definition can be found in section :ref:`DD_trapmodels`.
@@ -759,19 +821,17 @@ due to traps and surface recombination. Their definition can be found in section
 Each trap model will induce automatically a SRH recombination model as in the bulk
 case.
 
-Schroedinger/Poisson/Drift-Diffusion calculations
+:math:`Schr\ddot{o}dinger`/Poisson/Drift-Diffusion calculations
 -----------------------------------------------------
 
-TIBERCAD is able to do selfconsistent Schroedinger-Poisson or Schroedinger-Drift-Diffusion
-calculations. For this purpose, quantum_density has to be specified for at least one of
-the carriers, and a selfconsistent simulation should be defined in the Selfconsistent
-block. The following options { to be specified in the Physics section { control the
-behaviour of the selfconsistent simulation.
+tiberCAD is able to perform selfconsistent :math:`Schr\ddot{o}dinger`-Poisson or :math:`Schr\ddot{o}dinger`-Drift-Diffusion calculations.  For this purpose, ``quantum_density`` has to be specified for at least one of
+the carriers,  and a selfconsistent simulation should be defined in the *Selfconsistent*
+block (see :ref:`Selfcons`).  The following option, to be specified in the Physics section,  controls the behaviour of the ``selfconsistent`` simulation.
 
  ``use_density_predictor`` 
     When set to true, a predictor-corrector scheme will
     be adopted in the selfconsistent cycle. The Poisson/Drift-Diffusion solver does not
-    just take the particle densities as given by the Schroedinger calculation, but it will
+    just take the particle densities as given by the :math:`Schr\ddot{o}dinger` calculation, but it will
     assume a dependency of the density on the potentials of the form
 
     .. math::
@@ -784,44 +844,58 @@ behaviour of the selfconsistent simulation.
 
     where :math:`(\varphi^0, \phi_n^0, \phi_p^0)` are the potentials for which the quantum density was calculated.
     ``use_density_predictor = true`` is the preferred method for selfconsistent
-    Schroedinger-Poisson/Drift-Diffusion calculations and is enabled by default.
+    :math:`Schr\ddot{o}dinger`-Poisson/Drift-Diffusion calculations and is enabled by default.
 
-Example
---------------
 
-The following example shows a minimal Drift-Diffusion module definition for a pn junction.
-
-----
-
+For example, in **Module** *driftdiffusion* 
 ::
 
-  Module driftdiffusion
-  {
-    name = dd
-    #regions = (pside, nside)
-    plot = (Ec, Ev, eDensity, hDensity)
+  Physics
+  {    
+    # we us a predictor corrector scheme for the selfconsistent loop
+    use_density_predictor = true
 
-    Physics
+    recombination srh {}
+
+    particle_density
     {
-      recombination srh {}
-        
-      mobility doping_dependent {}
-    }
-        
-    Contact anode 
-    { 
-      voltage = $Vd 
+      particle = electron
+      statistics = fermidirac
+
+      # where to get the quantum density from
+      quantum_density = quantum_el
+      barrier_regions = buffer_quantum
+
+      # we use an embracing region to get a continuous transition from
+      # classical to quantum density
+      #embracing
+      #{
+      #  embracing_length = 8e-9
+      #  plot_embracing_regions = true
+      #}
     }
 
-    Contact cathode 
-    { 
-      voltage = 0 
-    }
+
+Then, in **Module** *selfconsistent* ::
+
+  Module selfconsistent
+  {
+   solve = (quantum_el, quantum_hl, driftdiffusion)
+   # we do not use relaxation, but a predictor-corrector scheme
+   #relaxation_factor = 0.5
+   max_iterations = 10
+   absolute_tolerance = 1e-3
+   relative_tolerance = 1e-8
+   monitor = true
+   #xmonitor = true
   }
 
-----
 
-Listing 3: Models section for drift-diffusion
+
+``quantum_el`` and  ``quantum_hl`` are  the  *efaschroedinger* simulations which  calculate the quantum densities for  electron and  holes. The  ``solve`` statement here specifies the order of execution in  the  self-consistent  cycle, which is  repeated until the  requested tolerance is  reached.
+
+
+
 
 ..  _dd_solutions :
 
@@ -1022,6 +1096,319 @@ Listing 3: Models section for drift-diffusion
     \caption{Data file parameters for the mobility model by Arora.}
     \label{table:mobility_field_dep}
     \end{table}
+
+
+
+Example 1: pn diode
+--------------
+
+The following example shows a minimal Drift-Diffusion module definition for a pn junction.
+
+----
+
+::
+
+  Module driftdiffusion
+  {
+    name = dd
+    #regions = (pside, nside)
+    plot = (Ec, Ev, eDensity, hDensity)
+
+    Physics
+    {
+      recombination srh {}
+        
+      mobility doping_dependent {}
+    }
+        
+    Contact anode 
+    { 
+      voltage = $Vd 
+    }
+
+    Contact cathode 
+    { 
+      voltage = 0 
+    }
+  }
+
+----
+
+
+.. _DD_Ex2:
+
+Example 2: Mosfet
+---------------
+
+In this second example we show a 2D simulation of a silicon Mosfet device.
+The  ``GMSH`` model (see :ref:`GMSH_Ex2`) is shown in Fig. :ref:`GMSH model of the Mosfet <fig_dd_mosfet>`.
+ 
+.. _fig_dd_mosfet:
+
+.. figure:: ../data/DDMosfetMesh.png
+    :align: center
+    :scale: 40%
+
+    ``GMSH`` model of the Mosfet showing the mesh and the region labels
+
+The model consists of a p-doped Si substrate (``substrate``), two highly n-doped access regions (``contact``),
+a thin gate oxide (``oxide``) and source, gate, drain and back-side contacts.
+
+We want to simulate a set of output characteristics and a transcharacteristic for this Mosfet, using two distinct input files: ``outputchar.tib`` and ``transchar.tib``.
+In these two files we define only the ``Module sweep`` and ``Simulation`` blocks.
+The device and model definitions are put into a third file ``mosfet.tib``, which is included in the other two files using the syntax
+
+::
+
+   @include mosfet.tib
+
+The device definition found in ``mosfet.tib`` is shown in the following listing:
+
+::
+
+  Device mosfet
+  {
+    meshfile = mosfet.msh
+  
+    material = Si
+
+    Region substrate 
+    {
+      Doping
+      {
+        density = 1e18
+        type = acceptor
+      }
+    }
+   
+    Region contact
+    {
+      Doping
+      {
+        density = 5e19
+        type = donor
+      }
+    }
+
+    Region oxide
+    {
+      material = SiO2
+    }
+  }
+
+
+The material is defined globally in the ``Device`` section.
+For the oxide it has to be overridden in the correspondent ``Region`` block.
+
+The followng shows the module definition for the Drift-Diffusion simulation:
+
+::
+
+  Module driftdiffusion
+  { 
+    #coupling = electrons
+
+    plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+            hQFermi, hDensity, hCurrentDensity, hMobility,
+            NetRecombination, ElField, ElPotential, ContactCurrents)
+
+    Solver
+    {
+      type = linesearch
+
+      linear_solver
+      {
+        method = pconly
+        preconditioner = lu
+      }
+    }
+
+    Physics
+    {
+      particle_density
+      {
+        statistics = fermidirac
+      }
+
+      recombination srh {}
+
+      mobility
+      {
+        type = field_dependent
+        low_field_model = doping_dependent
+      }
+    }
+
+    Contact gate
+    {
+      type = schottky
+      barrier_height = 3.0
+
+      voltage = $Vg
+
+      area_factor = 0.1
+    }
+
+    Contact source
+    {
+      voltage = 0.0
+      area_factor = 0.1
+    }
+ 
+    Contact backcontact
+    {
+      voltage = 0.0
+      area_factor = 0.1
+    }
+
+    Contact drain
+    {
+      voltage = $Vd
+      area_factor = 0.1
+    }
+  }
+
+
+The commented option ``coupling = electrons`` shows how a unipolar simulation can be set up.
+This example however will be  simulated in bipolar mode.
+The ``Solver`` defines options for the nonlinear solver (the shown options are the default ones).
+In this case, a linesearch approach is used to refine the nonlinear Newton steps.
+The linear solver for each Newton step (defined in the ``linear_solver`` block) uses a complete LU factorisation as preconditioner (``preconditioner = lu``).
+In this case, the linear solver method can be chosen to be the application of the preconditioner only (``method = pconly``), instead of using an iterative
+approach.
+
+The ``Physics`` block contains the definition of a few physical models to be used.
+For the particle density we use Fermi-Dirac statistics, which is the default.
+We use Shockley-Read-Hall recombination since we solve for both electrons and holes.
+For the mobility, we use a field-dependent model instead of the default constant mobility model.
+The low-field mobility is chosen to be calculated from a doping dependent model (which is the default).
+
+The contacts are defined in the ``Contact`` blocks.
+For the gate we specify ``schottky`` as type (the default is ohmic contact), providing a suitable barrier height.
+The ``area_factor = 0.1`` indicates that we assume a transistor with 1 mm gate width.
+
+Next, we create a file ``transchar.tib`` containing the definitions for the simulation of the transcharacteristic, as given in the following listing::
+
+  @include mosfet.tib
+
+  Module sweep
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+
+    variable = $Vd
+    start = 0.0
+    stop = 1.0 
+    steps = 5 
+  }
+
+  Module sweep
+  {
+    name = sweep_gate
+    solve = driftdiffusion
+
+    variable = $Vg
+    start = -0.5
+    stop = 1.5
+    steps = 100 
+
+    max_step = 0.1
+  
+    plot_data = true
+  }
+
+  Simulation
+  {
+    solve = (sweep_drain, sweep_gate)
+    resultpath = output_transchar 
+    output_format = vtk
+  }
+
+On the first row we include the device definition from ``mosfet.tib``.
+Then we define two sweeps ``sweep_drain`` and ``sweep_gate``.
+The first one will ramp the drain to 1.0 V in 5 steps, without plotting the results.
+The second one will then perform a sweep on the gate voltage from -0.5 V to 1.5 V,
+plotting the results after each step and produciong the transfer characteristic.
+The option ``max_step = 0.1`` limits the maximum voltage step to 0.1 V.
+This is useful, since the solver has first to reach the initial gate voltage of -0.5 V, starting from 0 V.
+Using this option it will do this in steps of 0.1 V.
+In the ``Simulation`` block we simply have to specify the two sweeps in the correct order.
+
+Running the simulation with ::
+
+  tibercad transchar.tib
+ 
+will produce in particular a set of files ``*.vtu`` for each 
+step of the sweep ``sweep_gate``, and the file ``sweep_gate_driftdiffusion.dat`` containing the voltage-current
+characteristics for each contact, shown in Fig. :ref:`fig_dd_mosfet_transchar`.
+
+ 
+.. _fig_dd_mosfet_transchar:
+
+.. figure:: ../data/DDMosfetTranschar.png
+    :align: center
+    :scale: 80%
+
+    Mosfet transcharacteristic
+
+
+For the simulation of the output characteristics we create a file ``outputchar.tib`` with the following content::
+
+  @include mosfet.tib
+
+  Module sweep
+  {
+    name = sweep_drain
+    solve = driftdiffusion
+
+    variable = $Vd
+    start = 0.0
+    stop = 2.0 
+    steps = 40
+  
+    plot_data = true
+  }
+
+  Module sweep
+  {
+    name = sweep_gate
+    solve = sweep_drain
+
+    variable = $Vg
+    start = 0.0
+    stop = 1.5
+    steps = 6
+  }
+
+  Simulation
+  {
+    solve = sweep_gate
+    resultpath = output_outputchar  
+  
+    output_format = vtk
+  }
+
+
+
+As before, we include the device definition using the ``@include`` statement.
+Then we define a sweep on the drain voltage with name ``sweep_drain`` and a second sweep ``sweep_gate``
+to sweep the gate voltage.
+In the latter, we specify ``sweep_drain`` in the ``solve`` option, creating thus a nested sweep.
+For each gate voltage, a sweep over the drain voltage will be performed.
+
+Running the simulation will produce a file for each couple of values (``$Vg``, ``$Vd``), and a file containing the output
+characteristic for each value of ``$Vg``.
+The resulting set of output characteristics is shown in Fig. :ref:`fig_dd_mosfet_outchar`.
+
+ 
+.. _fig_dd_mosfet_outchar:
+
+.. figure:: ../data/DDMosfetOutchar.png
+    :align: center
+    :scale: 80%
+
+    Mosfet output characteristics
+
 
 
 

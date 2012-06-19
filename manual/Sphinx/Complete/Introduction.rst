@@ -197,7 +197,7 @@ the  same  works for  surfaces:  they  may  have only  lines  in  common,   but 
   Point(2) = {L, 0, 0, d};
 
 
-In the definition of a geometrical point, the three first expressions inside the braces on the right hand side give the three X, Y and Z coordinates of the point; the last expression ``d`` sets the *characteristic mesh length* at that point, that is the *size* of a mesh element, 
+In the definition of a geometrical point, the  first three expressions inside the braces on the right hand side give the three X, Y and Z coordinates of the point; the last expression ``d`` sets the *characteristic mesh length* at that point, that is the *size* of a mesh element, 
 defined as the length of the segment for a line mesh element, the radius of the circumscribed circle for a triangle mesh element and the radius of the circumscribed sphere for a tetrahedron mesh element.
 
 
@@ -214,7 +214,7 @@ Thus, the smaller is the value of ``d``, the greater is the mesh density close t
 
 ::  
 
-  Line(1) = {1, 2};
+  Line(1) = {1,2};
 
 The two expressions inside the braces on the right hand side  give the identification numbers of the start and end points of the line.
 
@@ -310,7 +310,7 @@ Modeling the device
 
 Again, as a first step, we have to model the device. 
 
-Geometrical *Points* and *Lines* are  defined to design the device  structure; the  fourth parameter in *Point* assignement is  the   **characteristic length** associated to that point: this  is  an  essential feature to control the  mesh density and refine it where  necessary (usually n the channel region).   
+Geometrical *Points* and *Lines* are  defined to design the device  structure; the  fourth parameter in *Point* assignement is  the   **characteristic length** associated to that point: this  is  an  essential feature to control the  mesh density and refine it where  necessary (usually in the channel region).   
 
 .. warning::
              In a 2D simulation it is  assumed that the geometrical model is  restricted to  the  
@@ -351,32 +351,59 @@ First a *line loop* is composed, listing all the  lines constituting the  bounda
   ..........................
 
 
+The obtained geometrical  surface is shown n Fig. :ref:`Surface<geomsurf>`
+
+
+..  _geomsurf :
+
+..  figure:: ../data/geo_surf.png
+    :align: center
+    :scale: 140%
+
+    Surface
+
+
+
+
 **Definition of  the Physical Surfaces**
 
-Each of the  *Physical Surfaces* is composed by one or more geometrical *Plane Surface*. For example, *Physical surface* **contact** comprises in one   single physical region the two separated contact geometrical regions, while *Physical surface* **oxide** corresponds to the  oxide  region.
-
-The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be  assigned to the related tiberCAD regions through the keyword *Region* and *mesh_regions*.   
- (See :ref:`Input_Ex2`)
-
-                                                                                                                  
-::
+Each of the  *Physical Surfaces* is composed by one or more geometrical *Plane Surface*. For example, *Physical surface* **contact** comprises in one   single physical region the two separated contact geometrical regions, while *Physical surface* **oxide** corresponds to the  oxide  region. 
+The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be  assigned to the related tiberCAD regions through the keyword *Region* and *mesh_regions*. (See :ref:`Input_Ex2`) ::
 
   Physical Surface("substrate") = {41}; // n-Si
   Physical Surface("contact") = {44,47}; // n+-Si
   Physical Surface("oxide") = {46}; // SiO2
 
 
+
+
+
+
+
                                                
 **Definition of the Phisical Lines**
 
-In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Phisical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation): thus *Physical Line* **source** refers to the source contact, *Physical Line* **gate**  to the gate contact, *Physical Line*  **drain**  to the drain contact.
-The names of these *Phisical Lines*  will be  asigned to tiberCAD *Contacts*.
+In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Phisical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation). Thus *Physical Line* **source** refers to the source contact, *Physical Line* **gate**  to the gate contact, *Physical Line*  **drain**  to the drain contact.
+The names of these *Phisical Lines*  will be  assigned to tiberCAD *Contacts*.
 
 ::
 
   Physical Line("source") = {13}; // source
   Physical Line("gate") = {39,38}; // gate
   Physical Line("drain") = {19}; // drain
+
+
+The final geometrical model  is shown in Fig. :ref:`Geometrical model<geomodel>`
+
+
+..  _geomodel :
+
+..  figure:: ../data/geomosfet.png
+    :align: center
+    :scale: 140%
+
+    Geometrical model 
+
 
 
 
@@ -391,7 +418,16 @@ Alternatively, a textual mode is also available in GMSH, without graphical user 
   gmsh mosfet.geo  -2 -o mosfet.msh 
 
 
+The final meshed model  is shown in Fig. :ref:`2D meshing<mesh>`
 
+
+..  _mesh :
+
+..  figure:: ../data/meshmosfet.png
+    :align: center
+    :scale: 140%
+
+    Meshed model 
 
 
 
@@ -523,9 +559,9 @@ For example, in  the  following, the tiberCAD ``Region``  *QuantumWell* will com
 
     Doping
     {
-       Nd  = 1e17
+      density  = 1e17
       type = donor
-      doping_level  = 0.025
+      level  = 0.025
     }
   }
 
@@ -538,9 +574,9 @@ In  the following, instead, the  ``Region``  *well1* takes  its  name  from the 
     
     Doping
     {
-       Nd  = 1e17
+      density  = 1e17
       type = donor
-      doping_level  = 0.025
+      level  = 0.025
     }
   }
 
@@ -571,15 +607,15 @@ The available keywords inside a ``Region`` block are the following:
 
 
 
-The optional subblock doping as in the example above contains the keywords:
+The optional subblock ``Doping`` as in the example above contains the keywords:
 
   ``type`` : string
          The dopant type. Can be ``donor`` or ``acceptor``.
 
-  ``Nd`` : double 
+  ``density`` : double 
          The doping concentration in cm\ :sup:`-3`.
 
-  ``doping_level`` : double
+  ``level`` : double
          The energy level of the dopant given as the distance from the conduction band edge (for donors)
          or from the valence band edge (for acceptors) in eV.
 
@@ -673,14 +709,8 @@ Here are the Modules implemented until now:
  ``efaschroedinger`` : 
        Envelop Function Approximation (EFA) solution of single particle Schroedinger equation for electrons and holes 
 
- ``quantumdispersion`` : 
-       Dispersion of quantized states in k space
-
  ``opticskp`` : 
-       Optical properties (spontaneous emission  spectrum in k=0)
-
- ``opticalspectrum`` : 
-       Emission spectrum (with k-space integration)
+       Optical properties (spontaneous emission  spectrum)
 
  ``DSC`` : 
        Simulation of a DSC solar cell
@@ -764,7 +794,8 @@ The following keywords are defined for this feature:
   ``variable`` 
      name of the variable to which the ``sweep`` is applied: 
 
-Writing e.g. ``variable = $Vg`` that a ``sweep`` on the variable ``$Vg`` will be performed.
+Writing e.g. ``variable = $Vg`` means that a ``sweep`` on the variable ``$Vg`` will be performed.
+(see  :ref:`Variable`).
 
 Further options controlling a ``sweep`` are:
 
@@ -791,7 +822,7 @@ Further options controlling a ``sweep`` are:
      The amount of written data can be controlled using the ``max_step`` option
 
 Once a ``sweep`` calculation has been defined, it is treated as an ordinary simulation
-and may therefore be used like any simulation by adding it to any ``solve`` option.
+and may therefore be used just like any other simulation by adding it to a ``solve`` statement (see below).
 
 Module selfconsistent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -811,6 +842,8 @@ simulation modules (e.g. ``driftdiffusion`` and ``thermal``).
   }
 
 In ``solve`` the list of simulations to be performed self-consistently is specified.
+
+See  also :ref:`Selfcons`.   
 
 
 
@@ -863,6 +896,25 @@ The output variables for each Module are specified in the list *plot*.
 tiberCAD output is divided in two classes: **mesh-based** and **mesh-independent**
 quantities.
 
+The  available  formats are 
+
+  * ``vtk`` for 2D and 3D  output data
+
+  * ``grace`` for 1D output  data
+
+Output results from 2D or 3D simulations may  be  visualized with  the open source visualization and post-processing  tool **paraview**: http://www.paraview.org
+
+Output results from 1D simulations are  ascii  data  files which  can  be visualized e.g.  with the  open source plotting tools: 
+
+**xmgrace** : http://plasma-gate.weizmann.ac.il/Grace
+(for Linux)
+
+**AptPlot** :
+http://www.aptplot.com/aptplot/
+(in java,  for  Win and  Linux)
+
+
+
 Mesh-based quantities
 ^^^^^^^^^^^^
 
@@ -892,11 +944,124 @@ quantum well.
 These mesh-independent quantities are displayed in separated files,
 with the format ``simname.ext``, e.g ``quantum_electrons.dat`` , where ``simname`` is the name of
 the Module associated to the results and ``ext`` is the filename extension (usually ``dat``). If a sweep is performed, the output file
-gets the format ``sweepname_simname.ext``,  e.g. ``sweep_drain_driftdiffusion.dat``, where ``sweep_name`` is the name of the ``sweep``
+gets the format ``sweep_name_simname.ext``,   
+where ``sweep_name`` is the name of the ``sweep``
 performed, for example
 
   ``sweep_drain_driftdiffusion.dat``
 The mesh independent results for every sweep step are stored in this file.
+
+
+Material database
+----------------------------------
+
+
+
+
+
+..  _material_list :
+
+..  math::
+    :nowrap:
+    :label:
+
+     \begin{table}[!ht]
+     %\center
+     \begin{minipage}[t]{8cm}
+     \begin{tabular}{l|c|l}
+     \multicolumn{3}{c}{\textbf{Material list}} \\
+     \hline
+     \textbf{Name}  & \textbf{Crystal structure} & \textbf{Type}  \\
+     \hline
+     \hline
+     \texttt{Air} & - & - \\
+     \texttt{AlAs} & zb & binary \\
+     \texttt{AlAsP} & zb & ternary \\ 
+     \texttt{AlAsSb} & zb & ternary  \\
+     \texttt{AlGaAs} & zb & ternary  \\
+     \texttt{AlGaN} & wz & ternary  \\
+     \texttt{AlGaP} & zb & ternary  \\
+     \texttt{AlGaSb} & zb & ternary  \\
+     \texttt{AlInAs} & zb & ternary  \\
+     \texttt{AlInN} & wz & ternary  \\
+     \texttt{AlInP} & zb & ternary  \\
+     \texttt{AlInSb} & zb & ternary  \\
+     \texttt{AlN} & wz & binary \\
+     \texttt{AlP} & zb & binary \\
+     \texttt{AlPSb} & zb & ternary  \\
+     \texttt{AlSb} & zb & binary \\
+     \texttt{GaAs} & zb & binary \\
+     \texttt{GaAsP} & zb & ternary  \\
+     \texttt{GaAsSb} & zb & ternary  \\
+     \texttt{GaInP} & zb & ternary  \\
+     \texttt{GaInSb} & zb & ternary  
+     \end{tabular}
+     \end{minipage}
+     \hspace{0.5cm}
+     \begin{minipage}[t]{8cm}
+     \begin{tabular}{l|c|l}
+     \multicolumn{3}{c}{\textbf{Material list}} \\
+     \hline
+     \textbf{Name}  & \textbf{Crystal structure} & \textbf{Type}  \\
+     \hline
+     \hline
+     \texttt{GaN} & wz & binary \\
+     \texttt{GaP} & zb & binary \\
+     \texttt{GaPSb} & zb & ternary \\ 
+     \texttt{GaSb} & zb & binary \\
+     \texttt{Ge} & zb & simple \\
+     \texttt{InAs} & zb & binary \\
+     \texttt{InAsP} & zb & ternary  \\
+     \texttt{InAsSb} & zb & ternary  \\
+     \texttt{InGaAs} & zb & ternary  \\
+     \texttt{InGaN} & zb & ternary  \\
+     \texttt{InN} & wz & binary \\
+     \texttt{InP} & zb & binary \\
+     \texttt{InPSb} & zb & ternary  \\
+     \texttt{InSb} & zb & binary \\
+     \texttt{Pentacene} & - & molecular \\
+     \texttt{Si} & zb & simple \\
+     \texttt{SiN} & zb & binary  \\
+     \texttt{SiO2} & zb & binary \\
+     \texttt{TiO2mes} & - & mesoporous \\    
+     \texttt{ZnO} & zb & binary \\
+     \texttt{ZrO2} & zb & binary 
+     \end{tabular}
+     \end{minipage}
+     \caption{List of Materials}
+     \label{table:material_list}
+     \end{table}
+
+
+    
+    
+
+
+|
+
+
+
+The  parameters  of  the  most  important semiconductor materials are  collected  in  the  *material database*.
+See :ref:`List of materials<material_list>` for  a  complete list of  the  materials defined in  tiberCAD. 
+*zb* stands  for  *zincblende* crystal  structure, *wz* for  *wurtzite*. 
+Materials  can be  simple elements, like Si and  Ge, binary  compounds, such  as GaAs or  GaN,  and ternary alloys, like  AlGaAs.
+For  the  simple and binary  compounds the lattice, strain  and  band properties are included in  each material file. The ternary alloy material  file instead contains  the name of  the  two parent  materials,  from  which the  parameters  of  the  alloy  material are  calculated,  depending  on  the  components concentration, according to a  quadratic  law, e.g. for the energy gap *Eg* 
+
+.. math::
+   :label: Vegard_law
+
+    E_g(A_xB_{1-x}) & = xE_g(A)+ (1-x)E_g(B)- x(1-x)C  
+
+
+where  the  *bowing* parameter *C* accounts  for  the  deviation from a linear interpolation (virtual-crystal approximation) between the two binary compounds *A* and *B* and *x* is the concentration of the binary *A*. Values of *C* for one or  more  parameters are reported in the  alloy  material  file. 
+User-defined  materials can  be  freely  added, provided  that  the  correct syntax for  the parameters entry is  followed.
+
+
+
+
+
+
+
 
 
 Input files Examples
@@ -926,7 +1091,7 @@ The mesh  file ``bulk.msh`` has  been  generated by GMSH,  based on the  script 
 
      Doping
      {
-      Nd = 1e16
+      density = 1e16
       type = donor
      }
     }
@@ -991,7 +1156,8 @@ In  this  example, we  calculate Poisson and  transport equations for a  set  of
   }
 
 
-Finally, the **Simulation**  block defines  the  simulations  to  be  executed and  their  order.In this  case this  amounts to just the  **sweep**  block calculation.
+Finally, the **Simulation**  block defines  the  simulations  to  be  executed and  their  order.
+In this  case this  amounts to just the  **sweep**  block calculation.
 
 
 
@@ -1000,7 +1166,7 @@ Finally, the **Simulation**  block defines  the  simulations  to  be  executed a
 2D Mosfet 
 ^^^^^^^^^^^^
 
-This is the Example 4 in  the  Example directory.
+This is the Example 4 in  the  Example directory (see  also :ref:`DD_Ex2`)
 This  example calculates the IV characteristics of a silicon Mosfet. 
 The mesh  file ``mosfet.msh`` has  been  generated by GMSH,  based on the  script *mosfet.geo*,  described in 
 :ref:`GMSH_Ex2`. ::
@@ -1043,7 +1209,7 @@ Note that the  ``Regions`` **substrate**, **contact**, **oxide** correspond to t
   Module driftdiffusion
   {
 
-  # we can solve only for electrons
+  # we  solve  for electrons only
   #coupling = electrons
 
   plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,

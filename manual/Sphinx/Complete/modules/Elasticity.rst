@@ -192,7 +192,7 @@ The  keyword  is ``body_force`` , i.e ::
   {
   }
 
-The type can be ``constant``, ``converse_piezo``   or ``lattice_mismatch``.
+The type can be ``constant``, ``converse_piezo``, ``lattice_mismatch``, ``thermal_stress``  .
 
 
 Constant
@@ -223,9 +223,9 @@ This contribution can be mapped in the body force
    :nowrap:
    :label:
 
-    \[
-    f_i = -\frac{\partial }{\partial x_j} C_{ijlk}\epsilon_{lk}^{LM}
-    \]
+    \begin{equation}
+       f_i = -\frac{\partial }{\partial x_j} C_{ijlk}\epsilon_{lk}^{LM}
+    \end{equation}
 
 
 and  can  be included with the keyword ``lattice_mismatch`` .
@@ -257,15 +257,15 @@ Converse  piezoelectric effect
 ..............................
 
 
-In presence of an electric field there might develop an additional stress source due to the so-called converse piezoelectric effect, given by :
+In presence of an electric field,  an additional stress source may be present due to the so-called converse piezoelectric effect, given by :
 
 .. math::
    :nowrap:
    :label:
 
-    \[
-    \sigma_{il}^{SC}=-e_{ijk}E_k
-    \]
+    \begin{equation}
+      \sigma_{il}^{SC}=-e_{ijk}E_k
+    \end{equation}
 
 The converse piezoelectric effect can be included with the keyword ``converse_piezo`` and an electrostatic simulation must be indicated. 
 
@@ -275,9 +275,9 @@ The effective body force reads as :
    :nowrap:
    :label:
 
-    \[
-    f_i = -\frac{\partial}{\partial x_j} \sigma_{ij}^{CP}
-    \]
+     \begin{equation}
+       f_i = -\frac{\partial}{\partial x_j} \sigma_{ij}^{CP}
+     \end{equation}
 
 
 Example::
@@ -302,21 +302,25 @@ Mechanical stress can be induced by thermal expansion in two ways:
 Thermal stress is included as a strain source of the form
 
 .. math::
-   :label:thermal_stress
+   :nowrap:
+   :label:
 
-    \epsilon_{ij} = \alpha_{ij}(T - T_0)
+
+   \begin{equation}
+        \epsilon_{ij} = \alpha_{ij}(T - T_0)
+   \end{equation}
 
 where :math:`\alpha_{ij}` is the thermal expansion coefficient tensor, and :math:`T_0` is a reference temperature.
 :math:`T` is the local lattice temperature, which is or the simulation temperature or the temperature obtained from a different simulation module.
 
 
-Thermal stress can be considered in the simulation using the ``body_force`` model ``thermal_stress``::
+Thermal stress can be defined  in the simulation using the ``body_force`` model ``thermal_stress``::
 
   body_force thermal_stress
   {
-    thermal_coefficient = 
-    thermal_simulation = 
-    reference_temperature =
+    thermal_coefficient = (3.17e-6, 5.59e-6)
+    thermal_simulation = th
+    reference_temperature = 300
   }
 
 ``thermal_coefficient`` can be used to override the material database value for the thermal expansion coefficient (which may be anisotropic, but diagonal).
@@ -356,7 +360,7 @@ Example::
 anisotropic
 .................
 
-Even  when the  ``anisotropic`` constant is  chosen, it  is  possible to override it in the input file.
+The  ``anisotropic`` constant is  set by default, with the values taken from the  material  file; however, it  is  possible to override them in the input file.
 
 Example::
 
@@ -375,7 +379,7 @@ Example::
 Boundary conditions
 -------------------
 
-Different boundary conditions can be implemented for Elasticity simulations, by  means  of  the  block  ``Contact``.
+The following  boundary conditions can be implemented for ``Elasticity`` simulations, by  means  of  the  block  ``Contact``.
 
   * ``Surface force``
 
@@ -424,7 +428,7 @@ Example::
 
 Custom
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-``Custom`` imposes a general  boundary  condition by means of the matrix and vector constrain H and R respectively, which are  related to the displacement by means of  :math:`Hu=R`.
+``Custom`` imposes a general  boundary  condition by means of the matrix and vector constraint H and R respectively, which are  related to the displacement by means of  :math:`Hu=R`.
 
 Example::
 
@@ -475,9 +479,9 @@ Example::
 Example 1: Strain  in  heterostructures
 -------
 
-In the following example we will compute the strain induced by the lattice mismatch in a system comprising a layer of GaN between two contacts of :math:`Al_{x}Ga_{1-x}N` . 
-Once the mesh is created with *gmsh* (distributed along with TiberCAD ) we may start to build the input file. 
-First, we have to insert the region section ::
+In the following example we will compute the strain induced by the lattice mismatch in a system comprising a layer of GaN between two contacts of :math:`Al_{x}Ga_{1-x}N`. 
+
+We  begin the input file by defining  the device regions ::
 
   Device
   {
@@ -513,7 +517,7 @@ If we want to specify  different properties for  a  Region, we may define them i
 
 
 
-The second part of the input file is devoted to the module declaration ::
+The second part of the input file is devoted to the  declaration of **Module** ``elasticity`` ::
 
   Module elasticity 
   {
@@ -538,8 +542,16 @@ The second part of the input file is devoted to the module declaration ::
 
 In  ``Physics`` we declare the physical models to be applied to our device. 
 In our case, with ``body_force lattice_mismatch`` we are adding a body force into the system, 
-induced by the lattice mismatch with the reference lattice which in this case is :math:`Al_{0.2}Ga_{0.8}N` . 
-In order to avoid a free standing device we may want to freeze a surface. With the Boundary type ``Clamp`` we fix, in this case, the region Base.
+induced by the lattice mismatch of the materials defined in *Device* section with the reference lattice which in this case is :math:`Al_{0.2}Ga_{0.8}N`, as defined by :: 
+
+  reference_material = AlGaN
+  x = 0.2 
+
+ 
+
+
+
+In order to avoid a free standing device we may want to freeze a surface. With the Boundary type ``Clamp`` we fix, in this case, the region *Base*.
 
 
 .. _fig.elasticity01: 
@@ -548,7 +560,7 @@ In order to avoid a free standing device we may want to freeze a surface. With t
    :align: center
    :scale: 100%
    
-   The 3D output
+   3D map of the strain component :math:`\varepsilon_{xx}` 
 
    
    
@@ -558,12 +570,26 @@ In order to avoid a free standing device we may want to freeze a surface. With t
    :align: center
    :scale: 100%
    
-   Strain effect on directions
+   Strain components along growth direction
 
 
-The third part is simply Simulation ``{solve = elasticity}`` where the default name ``elasticity`` is used. 
-By default, files for 3D system are written in *vtu* format which can be read from Paraview. 
-Output data about strain are shown below.
+
+Finally, the **Simulation** block  reads ::
+
+  {
+
+   solve = elasticity
+
+  }
+
+ where the default name ``elasticity``  is used. 
+By default, files for a 3D system are written in *vtu* format which can be read from *Paraview*. 
+Strain output data  are shown below.
+
+In  Fig. :ref:`Strain map<fig.elasticity01>`  the 3D picture of  the  :math:`\varepsilon_{xx}` strain component  shows that the GaN region is  subjected to  a  compression (negative value of :math:`\varepsilon_{xx}`) 
+
+Fig. :ref:`Strain components<fig.elasticity02>` shows the  strain components along a  cut in  the growth direction.
+
 
 
 
@@ -573,7 +599,8 @@ Output data about strain are shown below.
 Example 2: Piezoelectric nanogenerator
 ------------------------------------
 
-In this example we will compute the output potential of a piezoelectric nanogenerator based on a vertical compressed ZnO nanowire [1,2]. The cylindrical columni, oriented along the :math:`z`-axis, has a radius of 150 nm and is 4 :math:`\mu m` high. 
+In this example we will compute the output potential of a piezoelectric nanogenerator based on a vertical compressed ZnO nanowire. The cylindrical column, oriented along the :math:`z`-axis, has a radius of 150 nm and is 4 :math:`\mu m` high.
+ 
 In the device section we specify the name of the region (*Column*) and the doping. ::
 
   Device
@@ -603,7 +630,7 @@ In the device section we specify the name of the region (*Column*) and the dopin
   }
   
 
-In the Physics section we use define isotropic elastic constant by means of the Young module and Poisson ratio. ::
+In the Physics section of **Module** ``elasticity`` we  define an isotropic elastic constant by means of the Young module and Poisson ratio. ::
 
   Module elasticity
   {
@@ -638,7 +665,7 @@ Finally, the boundary condition *clamp* frozes the column base. ::
   }
 
 
-As the simulation is at the equilibrium, we only need to solve the Poisson equation. This can be specified by :: 
+Since we want to  perform a  simulation  at the equilibrium,  in **Module** ``driftdiffusion``   we only need to solve the Poisson equation. This can be specified by :: 
 
   coupling = poisson  
 
@@ -651,9 +678,7 @@ With ::
 
   default_boundary_condition = zero_displacement
 
-we enforce zero total displacement along the simulation boundary. 
-Thus, here are   the options for  Module driftdiffusion ::
-
+we enforce zero total electric displacement field (:math:`D`) along the simulation boundary.  ::
 
   Module driftdiffusion
   {
@@ -683,19 +708,18 @@ we specify the strain simulation, which will provide the strain map. ::
     }
   
 
-To get the output piezopotential we first compute elasticity and then driftdiffusion. ::
+To obtain the desired piezopotential in output, we first compute *elasticity* and then *driftdiffusion*. ::
 
   Simulation
    {
     solve = (elasticity,driftdiffusion)
     resultpath = output
-    verbose = 3
    
     output_format = vtk
    }  
 
 
-The Figure :ref:`Piezopotential` shows the electrical potential across a 200 :math:`nm` length region at the tip of the NW.
+The Figure :ref:`Piezopotential<fig.piezopotential>` shows the electrical potential across a 200 :math:`nm` length region at the tip of the NW.
 The output potential is :math:`\phi_M=-42mV`. This value is a result of the competition between the piezoelectric field and the screening due to the free carriers. 
 
 

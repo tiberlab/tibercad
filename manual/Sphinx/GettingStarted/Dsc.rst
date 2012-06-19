@@ -131,33 +131,37 @@ Definition of dsc.tib::
    {
     type = ohmic
     bias = $V[0.0]
+    kinetic_rate = 1e3
    }
 
    Contact cathode
    {
     type = Pt
-    load = $R[1e8]
+    Ex_curr = 0.1
+    
    }
 
   }
 
-The module ``dssc`` contains the name of the simulation (and the list of output plotted), 
-the subsections for the solver, the physics and the contacts. 
 
-The physics subsection must contain at least one flag for the generation module. 
-The non linear exponent in the electron density recombination is assumed to 1 (linear case), 
-but can be a changed to a different value for non-linear recombination. 
 
-The contact modules must be two: ``photoanode`` and ``counter-electrode``. 
-The two contacts are type = ``ohmic`` (photoanode) and ``Pt`` (counter-electrode). 
+The module ``dssc`` contains the name of the simulation (*dssc*) and the list of output plotted (see :ref:`Output_ex`), 
+the subsections for the *solver*, the *physics* and the *contacts*. 
 
-The external bias is applied at the photoanode (bias), while the counter-electrode is closed over an external resistance (load). 
-In case it is wanted to simulate a cell under illumination the load must be set to a high value (open-circuit condition) 
-and then switched to a load = 1 value (short-circuit condition). 
+The *physics* subsection  contains a keyword to set the *dssc_generation*  **module**, since the device is illuminated. 
+The non linear exponent in the electron density recombination :math:`\beta`  is assumed to be 1 (linear case), 
+but can be changed to a different value for non-linear recombination. 
 
-For a simulation in dark condition, load can be set to ``load = 1`` immediately. 
-The contact modules can include the flag ``region = (region_1, region_2)`` in case that contact (cathode or anode) 
-is the composition of different mesh regions.
+We define two *Contacts*: ``anode`` ( for the photoanode)  and ``cathode`` (for the 
+counter-electrode). 
+The two contacts are respectively of type ``ohmic`` (``anode``) and ``Pt`` (``cathode``). 
+The external bias is applied at the anode (*bias*), while the counter-electrode (``cathode``) is modeled as a Butler-Volmer equation. 
+
+
+
+
+
+
 
 ::
 
@@ -173,15 +177,17 @@ is the composition of different mesh regions.
    }
   }
 
-The Module dssc_generation defines the photogeneration within the device. 
-The generation model must define which is the region(s) where photogeneration occurs (regions), 
-the intensity of light (*light_intensity*), the direction of the light rays (*light_direction*), 
-the kind of Dye used in the cell (dye) and the boundary region where light has the maximum intensity (in our example ``anode``). 
 
-Another flag ``illumination_spectrum = <material>`` can be set if we want to change the solar spectrum 
-for generation (for example in case the light source we want to simulate is not the conventional sun spectrum). 
 
-By default the flag is set to ``illumination_spectrum = Sun1p5am`` conventional sun spectrum 1.5 AM.
+The **Module** *dssc_generation* defines the photogeneration within the device. 
+The generation model must define which is the region(s) where photogeneration occurs (``regions``), 
+the intensity of light (``light_intensity``), the direction of the light rays (``light_direction``), 
+the kind of Dye used in the cell (``dye``) and the boundary region illuminated (in our example ``anode``). 
+
+Another keyword,  ``illumination_spectrum = <source_spectrum>`` can be set if we want to change the solar spectrum 
+for the generation, in case the light source we want to simulate is not the conventional sun spectrum. 
+
+By default the flag is set to ``illumination_spectrum = Sun1p5am``, the conventional sun spectrum 1.5 AM.
 
 ::
 
@@ -194,29 +200,25 @@ By default the flag is set to ``illumination_spectrum = Sun1p5am`` conventional 
    plot_data = true
   }
 
-  Module sweep
-  {
-   name = sweep_R
-   solve = dssc
-   variable = $R
-   values = ( 1000, 100, 10, 1 )
-   plot_data = true
-  }
-
-  Module sweep
+ Module sweep
   {
    name = sweep_V
    solve = dssc
    variable = $V
-   values = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.62, 0.64, 0.66, 0.68, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8)
+   values = (0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.62, 0.64, 0.65, 0.66, 
+   0.67, 0.68, 0.69, 0.7, 0.71, 0.73, 0.75, 0.77, 0.79, 0.8)
    plot_data = true
   }
 
-The three sweeps needed to solve the cell: the first sweep is needed to push the device to open circuit condition 
-under illumination, the second sweep switches the state of the cell from open circuit condition 
-(high external load) to short circuit condition (load = 1), then the final sweep for the bias. 
 
-In figure the three sweeps of the code are shown
+These are the two sweeps needed to solve the cell: the first sweep is needed to push the device to short circuit condition 
+under illumination, the second sweep calculates the IV  characteristic  under illumination.  
+
+
+
+ 
+
+
 
 
 ..  figure:: ../data/DscGetting03.png
@@ -225,16 +227,22 @@ In figure the three sweeps of the code are shown
 
     Various type of sweep
 
+
 ::
     
   # Definition of  model-indipendent parameters of the Simulation
   Simulation
   {
    searchpath = ../../materials
-   solve = (sweep_gen, sweep_R, sweep_V)
+   solve = (sweep_gen, sweep_V)
    resultpath = output
    output_format = grace
+
   }
+
+
+
+
 
 The output of the calculation is set in the module dssc section. 
 We can chose to plot the internal potential profiles (flag ``Potential``) which includes electrostatic potential, 
