@@ -52,6 +52,10 @@ public:
     std::map<Type, double> specie_to_mass;
 
    static
+   std::map<Type, double> specie_to_mass;
+
+
+   static
    std::map<std::string, Type> string_to_specie;
 
     //! Default constructor
@@ -117,14 +121,11 @@ private:
 };
 
 
-
-
 //inline
 //const Type& Specie::get_type(void) const
 //{
 // return _type;
 //}
-
 
 inline
 const std::string& Specie::get_string(void) const

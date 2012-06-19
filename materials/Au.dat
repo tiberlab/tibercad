@@ -1,0 +1,36 @@
+# Au
+#
+# (values from wikipedia)
+
+structure = am
+
+[lattice]
+a = 0.40788
+
+thermal_coefficient = 14.2e-6
+
+
+[permittivity]
+# static dielectric constant
+#permittivity = 7.5
+
+# Optical dielectric constant @ 3.5 eV
+#optical_epsilon_x = 7.3
+#optical_epsilon_z = 7.3 
+
+
+
+
+# stiffness data 
+[elasticity]
+poisson = 0.44
+young = 79
+
+
+
+#Lattice thermal conductivity 
+[thermal_conductivity/constant]
+ThermCond = 318
+
+
+

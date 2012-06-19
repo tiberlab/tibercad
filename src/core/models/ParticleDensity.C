@@ -85,6 +85,8 @@ ParticleDensity::do_init(void)
     _statistics = TiberCad::BOLTZMANN;
   else if (stat == "fermidirac")
     _statistics = TiberCad::FERMIDIRAC;
+  else
+    throw InitFailedException("Unknown statistics: " + stat);
 
 
   vector<string> qd;
