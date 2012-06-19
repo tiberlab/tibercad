@@ -1,6 +1,6 @@
 # SiO2
 
-dielectric = true
+#dielectric = true
 
 structure = zb 
 
@@ -49,6 +49,10 @@ uniax_def_pot_X = 9.16
 abs_def_pot_L = -2.07
 uniax_def_pot_L = 16.14
 
+# mobility
+[mobility/constant]
+mu_max   = (1417.0,   470.5)
+exponent = (   2.5,   2.2)
 
 # Lattice thermal conductivity
 [thermal_conductivity/constant]

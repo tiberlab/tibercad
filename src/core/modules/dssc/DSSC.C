@@ -2770,6 +2770,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   } // end loop over elements
 
+//  if (jacobian != NULL)
+//    jacobian->close();
+//  else
+//    residual->close();
 
   assert(n_cat != NULL);
   unsigned int dof_cat = n_cat->dof_number(system.number(), eC_var, 0);
@@ -2801,6 +2805,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
   perf_log.stop_event("assembly");
 
+//    cerr << "fatto" << endl;
 }
 
 
@@ -4715,6 +4720,321 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 }
 
 
+
+
+
+void
+DSSC::calculate_currents_rstf_EIS(void)
+{
+
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return;
+  
+  
+
+  // reset currents
+  ContactData::iterator it =
+    _boundary_currents.begin();
+  for ( ; it != _boundary_currents.end(); ++it)
+    (*it).second = 0.0;
+
+  TiberLinearSystem* system_frequency = &get_equation_system<TiberLinearSystem>(1);
+
+  const NumericVector<Number>& solution_frequency = system_frequency->get_solution_vector();
+  
+  // references for nicer code
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>(0);
+  const NumericVector<Number>& solution = system->get_solution_vector();
+  //unsigned int n_real_dofs = solution->size();
+
+  // aliases for nicer code
+  const MeshBase& mesh = system_frequency->get_mesh();
+  const Device& device = *(_device);
+  const SimulationEnvironment& env = get_environment();
+
+  const DofMap& dof_map = system_frequency->get_dof_map();
+  const DofMap& dof_map_steady = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const double phi0 = get_scaling().get_potential_scaling();
+
+
+  // numeric ids corresponding to the variables
+  const unsigned int u_var_R = system_frequency->variable_number("potential_R");
+  const unsigned int en_var_R = system_frequency->variable_number("fermi_n_R");
+  const unsigned int eI_var_R = system_frequency->variable_number("fermi_I_R");
+  const unsigned int eI3_var_R = system_frequency->variable_number("fermi_I3_R");
+  const unsigned int eC_var_R = system_frequency->variable_number("fermi_C_R");
+  const unsigned int u_var_I = system_frequency->variable_number("potential_I");
+  const unsigned int en_var_I = system_frequency->variable_number("fermi_n_I");
+  const unsigned int eI_var_I = system_frequency->variable_number("fermi_I_I");
+  const unsigned int eI3_var_I = system_frequency->variable_number("fermi_I3_I");
+  const unsigned int eC_var_I = system_frequency->variable_number("fermi_C_I");
+
+  const unsigned int u_var = system->variable_number("potential");
+  const unsigned int en_var = system->variable_number("fermi_n");
+  const unsigned int eI_var = system->variable_number("fermi_I");
+  const unsigned int eI3_var = system->variable_number("fermi_I3");
+  const unsigned int eC_var = system->variable_number("fermi_C");
+  
+  FEType fe_type = system_frequency->variable_type(u_var_R);
+
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  QGauss qrule(dim, libMeshEnums::FIFTH);
+  fe->attach_quadrature_rule(&qrule);
+
+  
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW = fe->get_JxW();
+
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  
+  
+
+
+  vector<unsigned int> dof_indices_u_R;
+  vector<unsigned int> dof_indices_en_R;
+  vector<unsigned int> dof_indices_eI_R;
+  vector<unsigned int> dof_indices_eI3_R;
+  vector<unsigned int> dof_indices_eC_R;
+  vector<unsigned int> dof_indices_u_I;
+  vector<unsigned int> dof_indices_en_I;
+  vector<unsigned int> dof_indices_eI_I;
+  vector<unsigned int> dof_indices_eI3_I;
+  vector<unsigned int> dof_indices_eC_I;
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_eI;
+  vector<unsigned int> dof_indices_eI3;
+  vector<unsigned int> dof_indices_eC;
+
+  // will contain the node ids if an element has boundary nodes
+  vector<Boundary*> node_ids;
+
+  MeshBase::const_element_iterator el =
+                                  mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  mesh.active_elements_end();
+
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    bool has_node = false;
+    node_ids.resize(elem->n_nodes());
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+    {
+      Boundary* bd = env.get_boundary(elem->get_node(n));
+      node_ids[n] = bd;
+      if (bd != NULL)
+        has_node = true;
+    }
+
+    // if the element has no node on a boundary,
+    // we can go to the next element
+    if (!has_node)
+      continue;
+
+    ID subdomain = elem->subdomain_id();
+
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices_u_R, u_var_R);
+    dof_map.dof_indices(elem, dof_indices_en_R, en_var_R);
+    dof_map.dof_indices(elem, dof_indices_eI_R, eI_var_R);
+    dof_map.dof_indices(elem, dof_indices_eI3_R, eI3_var_R);
+    dof_map.dof_indices(elem, dof_indices_eC_R, eC_var_R);
+    dof_map.dof_indices(elem, dof_indices_u_I, u_var_I);
+    dof_map.dof_indices(elem, dof_indices_en_I, en_var_I);
+    dof_map.dof_indices(elem, dof_indices_eI_I, eI_var_I);
+    dof_map.dof_indices(elem, dof_indices_eI3_I, eI3_var_I);
+    dof_map.dof_indices(elem, dof_indices_eC_I, eC_var_I);
+
+    dof_map_steady.dof_indices(elem, dof_indices_u, u_var);
+    dof_map_steady.dof_indices(elem, dof_indices_en, en_var);
+    dof_map_steady.dof_indices(elem, dof_indices_eI, eI_var);
+    dof_map_steady.dof_indices(elem, dof_indices_eI3, eI3_var);
+    dof_map_steady.dof_indices(elem, dof_indices_eC, eC_var);
+    
+    DSSCModel* sc =
+      dynamic_cast<DSSCModel*>(
+          device.get_material(subdomain)->get_model(get_id()));
+
+    assert(sc != NULL);
+
+    const double l2 = get_scaling().get_lambda_squared() * Constants::e0 * 1e-2;
+    const double t0 = get_scaling().get_time_scaling();
+    double epsilon = sc->get_relative_permittivity();
+    double l2_eps = l2 * epsilon;
+    double freq = _frequency * t0;
+
+    fe->reinit(elem);
+
+    sc->reinit(elem);
+
+    //Get the temperature given the element
+    //vector<double> T_nodes =  sc->get_temperature_at_nodes();
+
+
+    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+    {
+
+      unsigned int n_dofs = dof_indices_u.size();
+      // get the solution values at the centroid
+      Real u_R  = 0.0;
+      Real en_R = 0.0;
+      Real eI_R = 0.0;
+      Real eI3_R = 0.0;
+      Real eC_R = 0.0;
+      Real u_I  = 0.0;
+      Real en_I = 0.0;
+      Real eI_I = 0.0;
+      Real eI3_I = 0.0;
+      Real eC_I = 0.0;
+      RealGradient dEfn_R(0);
+      RealGradient dEfI_R(0);
+      RealGradient dEfI3_R(0);
+      RealGradient dEfC_R(0);
+      RealGradient e_field_R(0);
+      RealGradient dT_R(0);
+      RealGradient dEfn_I(0);
+      RealGradient dEfI_I(0);
+      RealGradient dEfI3_I(0);
+      RealGradient dEfC_I(0);
+      RealGradient e_field_I(0);
+      RealGradient dT_I(0);
+
+
+      Real u  = 0.0;
+      Real en = 0.0;
+      Real eI = 0.0;
+      Real eI3 = 0.0;
+      Real eC = 0.0;
+      RealGradient dEfn(0);
+      RealGradient dEfI(0);
+      RealGradient dEfI3(0);
+      RealGradient dEfC(0);
+      RealGradient e_field(0);
+      RealGradient dT(0);
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        u_R  += phi[i][qp] * solution_frequency(dof_indices_u_R[i]);
+        en_R += phi[i][qp] * solution_frequency(dof_indices_en_R[i]);
+        eI_R += phi[i][qp] * solution_frequency(dof_indices_eI_R[i]);
+        eI3_R += phi[i][qp] * solution_frequency(dof_indices_eI3_R[i]);
+        eC_R += phi[i][qp] * solution_frequency(dof_indices_eC_R[i]);
+        
+        u_I  += phi[i][qp] * solution_frequency(dof_indices_u_I[i]);
+        en_I += phi[i][qp] * solution_frequency(dof_indices_en_I[i]);
+        eI_I += phi[i][qp] * solution_frequency(dof_indices_eI_I[i]);
+        eI3_I += phi[i][qp] * solution_frequency(dof_indices_eI3_I[i]);
+        eC_I += phi[i][qp] * solution_frequency(dof_indices_eC_I[i]);
+
+        dEfn_R += dphi[i][qp] * solution_frequency(dof_indices_en_R[i]);
+        dEfI_R += dphi[i][qp] * solution_frequency(dof_indices_eI_R[i]);
+        dEfI3_R += dphi[i][qp] * solution_frequency(dof_indices_eI3_R[i]);
+        dEfC_R += dphi[i][qp] * solution_frequency(dof_indices_eC_R[i]);
+        
+        dEfn_I += dphi[i][qp] * solution_frequency(dof_indices_en_I[i]);
+        dEfI_I += dphi[i][qp] * solution_frequency(dof_indices_eI_I[i]);
+        dEfI3_I += dphi[i][qp] * solution_frequency(dof_indices_eI3_I[i]);
+        dEfC_I += dphi[i][qp] * solution_frequency(dof_indices_eC_I[i]);
+        
+        e_field_R += dphi[i][qp] * solution_frequency(dof_indices_u_R[i]);
+        e_field_I += dphi[i][qp] * solution_frequency(dof_indices_u_I[i]);
+
+        //==================================================================
+
+        u  += phi[i][qp] * solution(dof_indices_u[i]);
+        en += phi[i][qp] * solution(dof_indices_en[i]);
+        eI += phi[i][qp] * solution(dof_indices_eI[i]);
+        eI3 += phi[i][qp] * solution(dof_indices_eI3[i]);
+        eC += phi[i][qp] * solution(dof_indices_eC[i]);
+        //dT += dphi[i][qp] * T_nodes[i];
+
+        dEfn += dphi[i][qp] * solution(dof_indices_en[i]);
+        dEfI += dphi[i][qp] * solution(dof_indices_eI[i]);
+        dEfI3 += dphi[i][qp] * solution(dof_indices_eI3[i]);
+        dEfC += dphi[i][qp] * solution(dof_indices_eC[i]);
+        
+        e_field += dphi[i][qp] * solution(dof_indices_u[i]);
+      }
+
+      // prepare for calculating local properties
+      sc->set_coordinates(elem->centroid());
+
+
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
+      
+      sc->set_electric_field(e_field);
+      sc->set_grad_fermi_n(dEfn);
+      sc->set_grad_fermi_I(dEfI);
+      sc->set_grad_fermi_I3(dEfI3);
+      sc->set_grad_fermi_C(dEfC);
+
+      sc->calculate_densities();
+      sc->calculate_traps();
+      sc->calculate_equilibrium_traps();
+      sc->calculate_net_recombination_rate();
+
+      // we put the minus here for convenience
+      RealGradient j_I_R = -Constants::e * sc->get_mobility_I() * sc->get_density_I() * dEfI_R;
+      RealGradient j_I3_R = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() * dEfI3_R;
+      RealGradient j_n_R = -Constants::e * sc->get_mobility_n() * sc->get_density_n() * dEfn_R;
+      
+      RealGradient j_I_2_R = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * eI_R * dEfI;
+      RealGradient j_I3_2_R = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * eI3_R * dEfI3;
+      RealGradient j_n_2_R = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * en_R * dEfn;
+
+      RealGradient j_I_I = -Constants::e * sc->get_mobility_I() * sc->get_density_I() * dEfI_I;
+      RealGradient j_I3_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() * dEfI3_I;
+      RealGradient j_n_I = -Constants::e * sc->get_mobility_n() * sc->get_density_n() * dEfn_I;
+      
+      RealGradient j_I_2_I = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * eI_I * dEfI;
+      RealGradient j_I3_2_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * eI3_I * dEfI3;
+      RealGradient j_n_2_I = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * en_I * dEfn;
+      
+      RealGradient j_Cap_R = freq * l2_eps * e_field_I;
+      RealGradient j_Cap_I = -freq * l2_eps * e_field_R;
+      
+      
+      //RealGradient j(JxW[qp] * phi0 *
+      //    (sigma_n * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT)));
+      
+      RealGradient j_R(JxW[qp] * phi0 *
+          (j_I_R + j_I3_R + j_n_R + j_I_2_R + j_I3_2_R + j_n_2_R + j_Cap_R));
+      
+      RealGradient j_I(JxW[qp] * phi0 *
+          (j_I_I + j_I3_I + j_n_I + j_I_2_I + j_I3_2_I + j_n_2_I + j_Cap_I));
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+
+        Boundary* boundary = node_ids[n];
+        if (boundary != NULL)
+        {
+          DSSCContact* contact = dynamic_cast<DSSCContact*>(
+                boundary->get_boundary_properties(get_id()));
+          //if (contact->is_real_contact())
+            _boundary_currents_R[boundary] += j_R * dphi[n][qp];
+            _boundary_currents_I[boundary] += j_I * dphi[n][qp];
+        }
+
+      }
+    } // end loop over quadrature points
+  } // end loop over elements
+
+}
 
 
 

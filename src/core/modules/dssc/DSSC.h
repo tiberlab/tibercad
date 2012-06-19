@@ -141,6 +141,14 @@ class DSSC : public SimulationInterface
       get_boundary_currents(void) const;
 
 
+    //! Get the boundary real currents (EIS) indexed by boundary descriptor
+    const std::map<const Boundary*, double>&
+      get_boundary_currents_R(void) const;
+
+
+    //! Get the boundary imaginary currents (EIS) indexed by boundary descriptor 
+    const std::map<const Boundary*, double>&
+      get_boundary_currents_I(void) const;
 
   protected:
 
@@ -338,6 +346,20 @@ class DSSC : public SimulationInterface
      * Currents are calculated after each solve step.
      */
     ContactData _boundary_currents;
+    
+    
+    //! The real boundary currents (EIS)
+    /*!
+     * Currents are calculated after each solve step.
+     */
+    ContactData _boundary_currents_R;
+    
+    
+    //! The imaginary boundary currents (EIS)
+    /*!
+     * Currents are calculated after each solve step.
+     */
+    ContactData _boundary_currents_I;
 
 
     //! The voltages of the former solve step
@@ -472,6 +494,9 @@ class DSSC : public SimulationInterface
      */
     void calculate_currents_rstf(void);
 
+    // similar routine to compute complex current for Impedance spectroscopy
+
+    void calculate_currents_rstf_EIS(void);
 
     //! Assemble the residual vector or the jacobian matrix
     /*!
@@ -545,6 +570,21 @@ DSSC::get_boundary_currents() const
   return _boundary_currents;
 }
 
+
+inline
+const std::map<const Boundary*, double>&
+DSSC::get_boundary_currents_R() const
+{
+  return _boundary_currents_R;
+}
+
+
+inline
+const std::map<const Boundary*, double>&
+DSSC::get_boundary_currents_I() const
+{
+  return _boundary_currents_I;
+}
 
 inline
 MeshBase&

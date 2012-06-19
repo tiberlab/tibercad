@@ -8,7 +8,7 @@ The model consists in a set of drift-diffusion equations for the
 description of the propagation of different ions and for the
 electrons coupled with Poisson equation:
 \begin{eqnarray}
-    \nabla \cdot (\mu_{e}n_{e}\nabla\phi_{e}) & = & (G - R) \\
+    \nabla \cdot (\mu_{e}(n_e)n_{e}\nabla\phi_{e}) & = & (G - R) \\
     \nabla \cdot (\mu_{I^{-}}n_{I^{-}}\nabla\phi_{I^{-}}) & = & -\frac{3}{2}(G - R) \\
     \nabla \cdot (\mu_{I^{-}_{3}}n_{I^{-}_{3}}\nabla\phi_{I^{-}_{3}}) & = & \frac{1}{2}(G - R) \\
     \nabla \cdot (\mu_{c}n_{c}\nabla\phi_{c}) & = & 0,
@@ -17,7 +17,11 @@ electrons coupled with Poisson equation:
 where $\mu_{\alpha}$ refers to carrier mobilities, $n_{\alpha}$ to
 concentrations and $\phi_{\alpha}$ to electrochemical potentials.
 $R$ is the recombination term and $G$ the generation term due to
-illumination. The Poisson equation to handle the internal
+illumination. All mobilities, except electron mobility, are considered constant. For electron mobility
+a multitrapping model has been implemented [REF], the TiberCAD user can chose if 
+compute the electrical behavior of the cell including or not including traps (with an exponential distribution).
+
+The Poisson equation to handle the internal
 potential drop:
 \begin{equation}\label{poisson}
     -\varepsilon\triangle \varphi =  q[n_{c} + N_{D}^{+} - n_{I^{-}} - n_{I_{3}^{-}} - (n_{e} -
@@ -52,13 +56,15 @@ electrolyte/oxide interface which follows the reaction chain:
 recombination (considering that the first chemical reaction is the
 slow process):
 \begin{equation}\label{ricombinazione}
-    R = k_{e} \left [  \left ( \frac{n_{e}}{\bar{n}_{e}} \right )^{\beta}\bar{n}_{e}\sqrt{\frac{n_{I^{-}_{3}}}{n_{I^{-}}}}
+    R = k_{e} \left [  \left ( \frac{n_{e}}{\bar{n}_{e}} \right )^{\beta}\bar{n}_{e}\frac{n_{I^{-}_{3}}}{n_{I^{-}}}
     - \bar{n}_{e}\sqrt{\frac{\bar{n}_{I^{-}_{3}}}{\bar{n}^{3}_{I^{-}}}} n_{I^{-}}\right
-    ],
+    ], ...
 \end{equation}
 where the electron rate $k_{e}$ is the recombination rate
-constant.
-
+constant and equal to:
+\begin{equation}\label{ricombinazione2}
+   k_e = k_0 \left ( \right) ....
+\end{equation}
 For the boundary conditions of the model we assume at the
 photoanode:
 \begin{itemize}
@@ -66,7 +72,6 @@ photoanode:
     \item $\nabla\phi_{I^{-}} = 0$: no iodide current at the photoande;
     \item $\nabla\phi_{I_{3}^{-}} = 0$: no triiodide current at the photoande;
     \item $\nabla\phi_{c} = 0$: no cationic current;
-    \item $\nabla\varphi = 0$: no charged layer at the photoanode;
 \end{itemize}
 at the cathode:
 \begin{itemize}
@@ -86,6 +91,8 @@ integral boundary conditions for conservation of ionic species:
 where $\Omega$ is the volume of the cell, $n_{\alpha}$ the density
 of charged species and the index $\alpha$ stands for cation (c),
 iodide (I$^{-}$), triiodide (I$^{-}_{3}$) and electrons (e).
+
+
 R$_{L}$ is the external load. The bias applied is equal to:
 \begin{equation}\label{pot1}
     V = \phi_{e} - E_{red}.
