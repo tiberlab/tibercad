@@ -1,0 +1,261 @@
+#  Example 12: Quantum and optical properties of  a GaN  nanocolumn quantum disk  LED
+
+Device nanocolumn
+{
+ 
+  meshfile = qdisk.msh 
+  mesh_units = 1e-9
+
+  material = AlGaN
+  x = 0.28 
+  x-growth-direction = (1,0,-1,0)
+  y-growth-direction = (-1,2,-1,0)
+  z-growth-direction = (0,0,0,1)
+
+
+  Region well
+  {
+    material = GaN
+  }
+  
+
+  Region n-side
+  {
+    Doping
+    {
+      density = 1e19
+      type = donor
+      level = 0.025
+      g = 2
+    }
+  }
+
+  Region barrier1
+  {
+  }
+
+  Region barrier2
+  {
+  }
+   
+  Region p-side
+  {
+   Doping
+   {
+     density = 1e19
+     type = acceptor
+     level = 0.17
+     g = 4
+   }
+  }
+
+
+  Cluster quantum
+  {
+    regions=(well, barrier1, barrier2)
+  }
+   
+
+}
+
+
+
+Module elasticity 
+{
+
+  name = strain
+  regions = all
+
+  plot = (Strain, Stress, Displacement )
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = AlGaN
+      x = 0.28
+      x-growth-direction = (1,0,-1,0)
+      y-growth-direction = (-1,2,-1,0)
+      z-growth-direction = (0,0,0,1)
+    
+    }
+       
+  }
+
+  Contact cathode   
+  {type = clamp}
+
+}
+
+
+
+
+
+
+Module driftdiffusion
+{ 
+
+  name = dd
+  plot = (Polarization, Ec, Ev, Eg, ElPotential, eQFermi, hQFermi,
+          eMobility, hMobility, eDensity, hDensity,
+          CurrentDensity, eCurrentDensity, hCurrentDensity,
+          ContactCurrent, IQE)
+      
+  save_state = true
+  # comment this out if you want to perform the 
+  # whole voltage sweep
+  load_state = reference/dd_bias_3.8.tsv
+
+  Physics
+  {
+    strain_simulation = strain
+
+    polarization (piezo, pyro) {}
+
+    particle_density
+    {
+      particle = electron
+      # this is the default:
+      # statistics = fermidirac
+    }
+
+    particle_density
+    {
+      particle = hole
+      # this is the default:
+      # statistics = fermidirac
+    }
+
+    recombination (srh, direct) {}
+
+    
+    mobility doping_dependent {}
+
+  }               
+
+
+  Contact cathode
+  {
+    type = ohmic
+    rec_velocity_p = 1e9
+
+    voltage = 0.0
+  }
+
+
+  Contact anode
+  {
+    type = ohmic
+    rec_velocity_n = 1e9
+	
+    voltage = $bias
+  }
+
+
+}
+
+
+Module efaschroedinger
+{
+
+  name = quantum_el
+  regions = quantum 
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  particle = el
+  poisson_simulation = dd
+  strain_simulation = strain
+
+  Solver
+  {
+     number_of_eigenstates = 20
+  }	
+
+  Physics 
+  {
+    model = conduction_band    
+  }
+}
+
+
+Module efaschroedinger
+{
+  name = quantum_hl
+  regions =  quantum
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  particle = hl
+  poisson_simulation = dd
+  strain_simulation =  strain
+    
+  
+  Physics
+  {
+    model = kp
+    kp_model = 6x6
+  }
+  
+  Solver
+  {
+    number_of_eigenstates = 80
+    #solve_ev_problem_twice = true
+    #ksp_type = gmres
+    #pc_type = ilu	  
+  }
+}
+
+
+#Module opticskp
+#{
+#  name = optics
+#  regions =  quantum
+#
+#  plot = (optical_spectrum_k_0)
+#  output_format = grace
+#
+#  initial_state_model = quantum_el 
+#  final_state_model =   quantum_hl
+#
+#  broadening = 0.02
+#
+#  Emin = 3.0
+#  Emax  = 5.0
+#  dE = 0.001
+#
+#}  
+
+
+
+
+Module sweep
+{
+  solve = dd
+  variable = $bias
+  start = 0.0
+  stop = 3.8
+  steps = 76
+  plot_data = true
+}
+
+  
+
+Simulation
+{
+  temperature = 300
+
+  solve = (strain, 
+           # change this to 'sweep' if you want to perform the 
+           # whole voltage sweep:
+           dd, # sweep
+           quantum_el, quantum_hl #, optics
+          )
+
+  resultpath = output 
+
+  output_format = vtk
+}
+
+
+
+
+
