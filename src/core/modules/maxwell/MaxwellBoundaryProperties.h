@@ -18,7 +18,8 @@ class MaxwellBoundaryProperties : public BoundaryProperties
 
   public:
     Type type;
-    std::complex<double> alpha;
+    int direction;
+    double power;
 
     bool isDirichle() const {
       return type == ElectricWall;
@@ -37,6 +38,9 @@ class MaxwellBoundaryProperties : public BoundaryProperties
         type = MagneticWall;
       } else {
         type = Source;
+
+        direction = options.get_option("direction", -1);
+        power = options.get_option("power", 1);
       }
     }
 };

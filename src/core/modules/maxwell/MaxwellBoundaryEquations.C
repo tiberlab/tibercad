@@ -70,11 +70,11 @@ void MaxwellBoundaryEquations::do_init() {
     if (inplane == "yes") {
       system.addVariable(approxOrder, false);
     } else {
-      defaultSourceDirection =2; // z
+      defaultSourceDirection = 2; // z
     }
   } else {
     system.addVariable(approxOrder, true, extraQOrder, false);
-    defaultSourceDirection = 1;
+    defaultSourceDirection = 1; // y
   }
 
   system.attach_assemble_function(assemble_maxwell_equations);
@@ -191,28 +191,16 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
               Complex sInvertDet = pml.getSVectorDet(xyz[qp], opticModel->get_spml());
               //std::cout << "spml: " << params.sPML << "\n";
               aValue += 1/opticModel->get_permeability_constant() * JxW[qp] * (pml.curls(edge_phi[i], xyz[qp], qp, opticModel->get_spml()) * pml.curls(edge_phi[j], xyz[qp], qp, opticModel->get_spml())) / sInvertDet;
-/*
-              Complex zzz(params.epsilon, params.epsilon);
-              if (params.epsilon != 4) {
-                zzz = Complex(params.epsilon, 0);
-              }
-*/
-/*
-              if ((all_dof_indices[i] <= 3 || all_dof_indices[i] >= 235) && i == j) {
-                std::cout << "TEST " << all_dof_indices[i] << " " <<  sInvertDet * K * K << " " << JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*params.epsilon << "\n";
-              }
-*/
-              aValue -= JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*opticModel->get_dielectric_constant() / sInvertDet * K * K;
-              //bValue += JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*params.epsilon / sInvertDet;
+
+              aValue -= simulation->multiply(edge_phi[i].phi[qp], edge_phi[j].phi[qp], opticModel->get_optical_epsilon(), opticModel->get_optical_epsilon_imag()) * JxW[qp] / sInvertDet * K * K;
+              //aValue -= JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*opticModel->get_dielectric_constant() / sInvertDet * K * K;
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j]);
-            //system.addBValue(bValue, all_dof_indices[i], all_dof_indices[j]);
           }
         }
       }
 
-      //TODO add svector here???
       if (fe_sc != NULL) {
         const std::vector<ScalarFunction >& scalar_phi = fe_sc->getFunctions();
 
@@ -221,7 +209,7 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
 
             Complex aValue = 0;
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
-              aValue += JxW[qp] * (edge_phi[i].phi[qp] * scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())(0)));
+              aValue += simulation->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())(0)),  opticModel->get_optical_epsilon(), opticModel->get_optical_epsilon_imag()) * JxW[qp];
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j + edge_phi.size()]);
@@ -236,23 +224,24 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
         Boundary* bd = simulation->get_environment().get_boundary(ElementSide(elem,i));
 
         if (bd != NULL && (bd->get_boundary_properties( simulation->get_id() ) != NULL )) {
-          //std::cout << "YES " << dynamic_cast<MaxwellBoundaryProperties*>(bd->get_boundary_properties(simulationInterface->get_id()))->isSource() << "\n";
-          if (dynamic_cast<MaxwellBoundaryProperties*>(bd->get_boundary_properties(simulation->get_id()))->isSource()) {
+          MaxwellBoundaryProperties* boundaryProps = dynamic_cast<MaxwellBoundaryProperties*>(bd->get_boundary_properties(simulation->get_id()));
+          if (boundaryProps->isSource()) {
             // Add smth...
             fe_face->reinit(elem, dof_map->getPOrder(elem, 0), side);
             const std::vector<Real>& JxW_face = fe_face->get_JxW();
             const std::vector<VectorFunction >& edge_phi_face = fe_face->getFunctions();
 
+            int direction = (boundaryProps->direction < 0 || boundaryProps->direction > 2) ? simulation->defaultSourceDirection : boundaryProps->direction;
+
             for (unsigned int i=0; i<edge_phi_face.size(); i++) {
               if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID) {
-                //std::cout << "PETER1\n";
                     Complex value = 0;
                     for (unsigned int qp=0; qp<qrule_face->n_points(); qp++) {
                       Complex sInvertDet = pml.getSVectorDet(xyz_face[qp], opticModel->get_spml()), one(1, 0);
                       Complex sDet = one / sInvertDet;
 
                       Point sourceVector;
-                      sourceVector(simulation->defaultSourceDirection) = 1 * K / 2 * system.getGeometryEx()->getScaling().get_length_scaling();//TODO DIRECTION
+                      sourceVector(direction) = boundaryProps->power * K / 2 * system.getGeometryEx()->getScaling().get_length_scaling();//TODO DIRECTION
                       value += sDet * JxW_face[qp] * (edge_phi_face[i].phi[qp] * sourceVector);
                     }
                     system.addBValue(value, all_dof_indices[i]);
@@ -377,4 +366,29 @@ OpticPropsModel* MaxwellBoundaryEquations::getOpticModel(const Elem* elem) {
 
   return dynamic_cast<OpticPropsModel*>(
           material->get_model(get_id()));
+}
+
+Complex MaxwellBoundaryEquations::multiply(const Point& v1, const Point& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag) {
+  Complex result = 0;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      Complex t(t_real(i+1, j+1), t_imag(i+1, j+1));
+
+      result += t * v1(i) * v2(j);
+    }
+  }
+
+  return result;
+}
+
+Complex MaxwellBoundaryEquations::multiply(const Point& v1, const VectorValue<Complex>& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag) {
+  Complex result = 0;
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      Complex t(t_real(i+1, j+1), t_imag(i+1, j+1));
+      result += t * v1(i) * v2(j);
+    }
+  }
+
+  return result;
 }

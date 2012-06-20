@@ -100,6 +100,9 @@ class MaxwellBoundaryEquations : public SimulationInterface
 
     double W;
     std::vector<Complex> edgeSolution;
+
+    Complex multiply(const Point& v1, const Point& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag);
+    Complex multiply(const Point& v1, const VectorValue<Complex>& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag);
 };
 
 inline MaxwellBoundaryEquations*

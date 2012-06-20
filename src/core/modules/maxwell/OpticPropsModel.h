@@ -8,6 +8,8 @@
 #include "PhysicalModelInterface.h"
 #include "PhysicalModel.h"
 #include "Database.h"
+#include "RotatedCrystal.h"
+#include "Material.h"
 
 #ifndef OPTIC_PROPS_MODEL1_H_
 #define OPTIC_PROPS_MODEL1_H_
@@ -21,7 +23,7 @@ class OpticPropsModel: public PhysicalModel
     OpticPropsModel(const ModelOptions& options) : PhysicalModel(options) {
       epsilon = Tensor2Sym(1);
       epsilon_imag = Tensor2Sym(0);
-      mu =  Tensor2Sym(1);
+      mu =  1;
       sPML = -1;
     }
 
@@ -35,14 +37,25 @@ class OpticPropsModel: public PhysicalModel
        return new OpticPropsModel(get_options());
      }
 
-     //TODO
      virtual Complex get_dielectric_constant() const {
        return Complex(epsilon(1, 1), epsilon_imag(1, 1));
      }
 
-     //TODO
+     virtual const Tensor2Sym get_optical_epsilon() const {
+       return epsilon;
+     }
+
+     virtual const Tensor2Sym get_optical_epsilon_imag() const {
+       return epsilon_imag;
+     }
+/*
+     virtual const Tensor2Sym& get_optical_epsilon_imag() const {
+       return epsilon_imag;
+     }
+*/
+
      virtual double get_permeability_constant() const {
-       return mu(1, 1);
+       return mu;
      }
 
      virtual double get_spml() const {
@@ -58,34 +71,79 @@ class OpticPropsModel: public PhysicalModel
 
        double eps_imag = db.get("optical_epsilon_imag", 0.0);
 
-       double dmu = db.get("optical_mu", 1.0);
+       mu = db.get("optical_mu", 1.0);
 
        sPML = db.get("sPML", -1);
 
-       do_set_simple(eps, eps_imag, dmu);
+       do_set(eps, eps_imag);
+
+       if (db.has_variable("optical_epsilon00")) {
+         epsilon(1, 1) = db.get("optical_epsilon00", 1);
+         epsilon(2, 2) = db.get("optical_epsilon11", 1);
+         epsilon(3, 3) = db.get("optical_epsilon22", 1);
+
+         epsilon_imag(1, 1) = db.get("optical_epsilon_imag00", 0);
+         epsilon_imag(2, 2) = db.get("optical_epsilon_imag11", 0);
+         epsilon_imag(3, 3) = db.get("optical_epsilon_imag22", 0);
+       }
      }
 
      virtual void do_init(void) {
-       double eps = get_dielectric_constant().real();
-       double eps_imag = get_dielectric_constant().imag();
-       double dmu = get_permeability_constant();
-
-       get_parameter("optical_epsilon", eps);
-       get_parameter("optical_epsilon_imag", eps_imag);
-       get_parameter("optical_mu", dmu);
+       get_parameter("optical_mu", mu);
        get_parameter("sPML", sPML);
 
-       do_set_simple(eps, eps_imag, dmu);
+       if (has_parameter("optical_epsilon")) {
+         double eps = get_dielectric_constant().real();
+         double eps_imag = get_dielectric_constant().imag();
+
+         get_parameter("optical_epsilon", eps);
+         get_parameter("optical_epsilon_imag", eps_imag);
+
+         do_set(eps, eps_imag);
+       }
+
+       if (has_parameter("optical_epsilon00", false)) {
+         get_parameter("optical_epsilon00", epsilon(1, 1));
+         get_parameter("optical_epsilon11", epsilon(2, 2));
+         get_parameter("optical_epsilon22", epsilon(3, 3));
+         get_parameter("optical_epsilon_imag00", epsilon_imag(1, 1));
+         get_parameter("optical_epsilon_imag11", epsilon_imag(2, 2));
+         get_parameter("optical_epsilon_imag22", epsilon_imag(3, 3));
+       }
+
+       const Material* mat = get_material();
+
+       const RotatedCrystal&   cr = mat->get_rotated_crystal();
+
+       rotate_to_calculation_system(cr.RotMatrix);
      }
 
+     void do_init_alloy (const PhysicalModelInterface *comp_A,
+                                                const PhysicalModelInterface *comp_B, double xa) {
+       const OpticPropsModel* modA = dynamic_cast<const OpticPropsModel*>(comp_A);
+
+       const OpticPropsModel* modB = dynamic_cast<const OpticPropsModel*>(comp_B);
+
+
+
+       alloy(epsilon,modA->epsilon, modB->epsilon, xa);
+
+       alloy(epsilon_imag,modA->epsilon_imag, modB->epsilon_imag, xa);
+
+/*       const Material* mat = get_material();
+
+       const RotatedCrystal&   cr = mat->get_rotated_crystal();
+
+       rotate_to_calculation_system(cr.RotMatrix);*/
+     }
 
    private:
      Tensor2Sym epsilon;
      Tensor2Sym epsilon_imag;
-     Tensor2Sym mu;
+     double mu;
      double sPML;
 
-     void do_set_simple(double eps, double eps_imag, double dmu) {
+     void do_set(double eps, double eps_imag) {
        epsilon(1, 1) = eps;
        epsilon(2, 2) = eps;
        epsilon(3, 3) = eps;
@@ -93,10 +151,11 @@ class OpticPropsModel: public PhysicalModel
        epsilon_imag(1, 1) = eps_imag;
        epsilon_imag(2, 2) = eps_imag;
        epsilon_imag(3, 3) = eps_imag;
+     }
 
-       mu(1, 1) = dmu;
-       mu(2, 2) = dmu;
-       mu(3, 3) = dmu;
+     void rotate_to_calculation_system(const Tensor2Gen& RotMatrix) {
+       epsilon  = sym(RotMatrix * (epsilon * (RotMatrix.transpose())));
+       epsilon_imag  = sym(RotMatrix * (epsilon_imag * (RotMatrix.transpose())));
      }
 };
 
@@ -104,16 +163,5 @@ inline OpticPropsModel* OpticPropsModel::create(const ModelOptions& options)
 {
   return new OpticPropsModel(options);
 }
-/*inline
-void
-OptDielectricConstant::rotate_to_calculation_system(const Tensor2Gen& RotMatrix)
-{
-
-  // generates dielectric  matrix in calculation system
-  _dielectric_constant_real  = sym(RotMatrix * (_dielectric_constant_real * (RotMatrix.transpose())));
-  _dielectric_constant_imag  = sym(RotMatrix * (_dielectric_constant_imag * (RotMatrix.transpose())));
-
-
-}*/
 
 #endif

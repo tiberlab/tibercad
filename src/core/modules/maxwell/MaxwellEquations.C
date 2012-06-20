@@ -25,6 +25,12 @@ using namespace Constants;
 #include "ExcitonLayer.h"
 #include "PMLFilter.h"
 
+
+//TODO
+//TODO add tensor here
+//TODO remove code duplication
+//TODO
+
 TIBER_MODULE(MaxwellEquations, MODULE_NAME)
 
 MaxwellEquations::MaxwellEquations(const ModelOptions& options)
