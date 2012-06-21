@@ -6,6 +6,7 @@
 #include <math.h>
 #include "OptGpl.h"
 #include "Atom.h"
+#include "RuntimeException.h"
 
 TIBER_MODULE(Vff, MODULE_NAME)
 
@@ -114,21 +115,45 @@ Vff::set_coords(void)
       coords[i_start + 1] = get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
       coords[i_start + 2] = get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
     }
+
 }
 
 
 void
 Vff::displace_atoms(void)
 {
-  std::vector<Atom>& writable_atoms = get_atomistic_structure()->get_structure_atoms();
+  std::vector<Atom>& atoms = get_atomistic_structure()->get_structure_atoms();
   std::vector<unsigned int>& free_atoms = get_free_atoms();
 
+  //Displace hydrogens according to bonded atom
+  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  double x_t, y_t, z_t;
+  unsigned int n_atoms = get_atomistic_structure()->get_N_without_H();
+  unsigned int n_all_atoms = get_atomistic_structure()->get_N_atoms();
+
+  for (unsigned int i = n_atoms + 1; i < n_all_atoms; i++)
+      {
+      unsigned int n_bonds = bondmap[i].size();
+      if (n_bonds != 1)
+        throw RuntimeException("Structure is badly defined. Passivation atom has multiple bonds");
+      unsigned int j = bondmap[i][0];
+      //Calculate translation
+      x_t = _dof[j * 3 + 0] - atoms[j].get_position(0);
+      y_t = _dof[j * 3 + 1] - atoms[j].get_position(1);
+      z_t = _dof[j * 3 + 2] - atoms[j].get_position(2);
+      //Translate hydrogen accordingly
+      atoms[i].set_position(0, atoms[i].get_position(0) + x_t);
+      atoms[i].set_position(1, atoms[i].get_position(1) + x_t);
+      atoms[i].set_position(2, atoms[i].get_position(2) + x_t);
+      }
+
+  //Displace other atoms
   for (unsigned int i = 0; i < _n_free_atoms; i++)
     {
       unsigned int j = free_atoms[i];
-      writable_atoms[j].set_position(0, _dof[i * 3 + 0]);
-      writable_atoms[j].set_position(1, _dof[i * 3 + 1]);
-      writable_atoms[j].set_position(2, _dof[i * 3 + 2]);
+      atoms[j].set_position(0, _dof[i * 3 + 0]);
+      atoms[j].set_position(1, _dof[i * 3 + 1]);
+      atoms[j].set_position(2, _dof[i * 3 + 2]);
     }
 
   get_atomistic_structure()->print_structure("strained.xyz");
