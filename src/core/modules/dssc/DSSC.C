@@ -30,6 +30,7 @@
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
 
+#include <fstream>
 
 // C++ includes
 
@@ -747,28 +748,59 @@ DSSC::do_EIS(void)
 {
   if (!_do_EIS) return;
 
+  ModelOptions& opts = get_options().submodels_begin("EIS")->second;
+
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(1);
-  double start = 100;
-  double stop = 1e3;
-  int steps = 10;
+  double start = opts.get_option("min_frequency", 1e3);
+  double stop = opts.get_option("max_frequency", 1e6);
+  int steps = opts.get_option("steps_per_decade", 10);
 
   ostringstream os;
   os << "Doing EIS, start = " << start << " stop = " << stop;
   Messages::info(os.str());
 
+  ContactData curr_R(_boundary_currents);
+  ContactData curr_I(_boundary_currents);
+
+  ContactData::iterator it = curr_R.begin();
+  const Boundary* bnd = NULL;
+  for ( ; it != curr_R.end(); ++it)
+  {
+    DSSCContact* contact = dynamic_cast<DSSCContact*>(
+        (*it).first->get_boundary_properties(get_id()));
+    if (!(contact->is_cathode() || contact->is_gate()))
+      bnd = (*it).first;
+  }
+
+  string file(get_output_directory() + "/" + get_output_filename() + "_eis.dat");
+  ofstream fout(file.c_str());
+  fout << "# EIS simulation for " << get_name() << "\n";
+  fout << "#\n# f Re(Z) Im(Z) Re(Y) Im(Y)\n";
+
+  // produce a logarithmic scale: 1, 2 ... 10, 20, ... 100, 200 ...
   double _frequency = start;
-  for (int i = 1; _frequency < stop; ++i)
+  for (int i = 1; _frequency < stop * 2 * M_PI; i = i + pow(10, floor(log10(i))))
   {
     _frequency = 2 * M_PI * start * i;
 
     system.assemble();
     system.solve();
+    calculate_currents_rstf_EIS(curr_R, curr_I);
+    complex<double> adm = complex<double>(curr_R[bnd], curr_I[bnd]);
+    complex<double> imp = 1.0 / adm;
+    fout << start * i << " " << imp.real() << " " << imp.imag() << " "
+        << adm.real() << " " << adm.imag() << endl;
     Messages::info(".", false);
+
   }
 
-  _frequency = 2 * M_PI * stop;
-  system.assemble();
-  system.solve();
+  //_frequency = 2 * M_PI * stop;
+  //system.assemble();
+  //system.solve();
+  //calculate_currents_rstf_EIS(curr_R, curr_I);
+  //complex<double> imp = 1.0 / complex<double>(curr_R[bnd], curr_I[bnd]);
+  //fout << stop << " " << imp.real() << " " << imp.imag() << endl;
+
   Messages::info(". done");
 
 }
@@ -834,7 +866,7 @@ DSSC::parse_const_options(void)
   else
     _scaling_type = Scaling::UNITS;
 
-  _do_EIS = get_option("EIS", false);
+  _do_EIS = opts.has_submodel("EIS");
 }
 
 
@@ -4724,19 +4756,20 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
 
 void
-DSSC::calculate_currents_rstf_EIS(void)
+DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
+    std::map<const Boundary*, double>& curr_I)
 {
 
   // we only do something if we are on processor 0
   if (libMesh::processor_id() != 0)
     return;
   
-  
-
   // reset currents
-  ContactData::iterator it =
-    _boundary_currents.begin();
-  for ( ; it != _boundary_currents.end(); ++it)
+  ContactData::iterator it = curr_R.begin();
+  for ( ; it != curr_R.end(); ++it)
+    (*it).second = 0.0;
+  it = curr_I.begin();
+  for ( ; it != curr_I.end(); ++it)
     (*it).second = 0.0;
 
   TiberLinearSystem* system_frequency = &get_equation_system<TiberLinearSystem>(1);
@@ -5026,8 +5059,8 @@ DSSC::calculate_currents_rstf_EIS(void)
           DSSCContact* contact = dynamic_cast<DSSCContact*>(
                 boundary->get_boundary_properties(get_id()));
           //if (contact->is_real_contact())
-            _boundary_currents_R[boundary] += j_R * dphi[n][qp];
-            _boundary_currents_I[boundary] += j_I * dphi[n][qp];
+          curr_R[boundary] += j_R * dphi[n][qp];
+          curr_I[boundary] += j_I * dphi[n][qp];
         }
 
       }

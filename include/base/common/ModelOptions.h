@@ -206,7 +206,7 @@ class ModelOptions
      * \param name the name of the model to look for
      * \return \c true if found, \c false otherwise
      */
-    bool has_submodel(const std::string& name);
+    bool has_submodel(const std::string& name) const;
 
 
     //! Get the iterator for a certain submodel
@@ -493,7 +493,7 @@ ModelOptions::submodels_end(const std::string& name)
 
 inline
 bool
-ModelOptions::has_submodel(const std::string& name)
+ModelOptions::has_submodel(const std::string& name) const
 {
   bool ans = true;
   if (_submodels.find(name) == _submodels.end())
