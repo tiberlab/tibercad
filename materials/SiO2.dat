@@ -1,6 +1,6 @@
 # SiO2
 
-#dielectric = true
+dielectric = true
 
 structure = zb 
 
