@@ -139,6 +139,10 @@ private:
   std::vector<double> _coords;
   std::vector<double>& get_coords(void);
 
+  //Initial coordinates. To keep track of hydrogen displacement
+  std::vector<double> _initial_coords;
+
+
   void
   check_structure(void);
 

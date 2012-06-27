@@ -85,10 +85,10 @@ Vff::do_solve(void)
   set_coords();
 
 
-  std::cout << "Trying one keating potential " << keating_potential() << std::endl;
-  std::cout << "Trying one keating gradient " << std::endl;
-  std::vector<double> test(keating_gradient());
-  std::cout << "done" << std::endl;
+//  std::cout << "Trying one keating potential " << keating_potential() << std::endl;
+//  std::cout << "Trying one keating gradient " << std::endl;
+//  std::vector<double> test(keating_gradient());
+//  std::cout << "done" << std::endl;
 
 
   //std::cout << "calling optimizer " << std::endl;
@@ -103,17 +103,33 @@ void
 Vff::set_coords(void)
 {
   _n_atoms = get_atomistic_structure()->get_N_without_H();
+  unsigned int n_all_atoms = get_atomistic_structure()->get_N_atoms();
   unsigned int n_atoms = _n_atoms;
   std::vector<double>& coords = get_coords();
 
   coords.resize(n_atoms * 3, 0.0);
+  _initial_coords.resize(n_all_atoms * 3, 0.0);
   //Put all coords in a temporary 1D array
   for (unsigned int i = 0; i < n_atoms; i ++)
     {
-      int i_start = i * 3;
-      coords[i_start] = get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
-      coords[i_start + 1] = get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
-      coords[i_start + 2] = get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
+      unsigned int i_start = i * 3;
+      coords[i_start] =
+          get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
+      coords[i_start + 1] =
+          get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
+      coords[i_start + 2] =
+          get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
+    }
+
+  for (unsigned int i = 0; i < n_all_atoms; i ++)
+    {
+      unsigned int i_start = i * 3;
+      _initial_coords[i_start] =
+          get_atomistic_structure()->get_structure_atoms()[i].get_position(0);
+      _initial_coords[i_start + 1] =
+          get_atomistic_structure()->get_structure_atoms()[i].get_position(1);
+      _initial_coords[i_start + 2] =
+          get_atomistic_structure()->get_structure_atoms()[i].get_position(2);
     }
 
 }
@@ -131,22 +147,6 @@ Vff::displace_atoms(void)
   unsigned int n_atoms = get_atomistic_structure()->get_N_without_H();
   unsigned int n_all_atoms = get_atomistic_structure()->get_N_atoms();
 
-  for (unsigned int i = n_atoms + 1; i < n_all_atoms; i++)
-      {
-      unsigned int n_bonds = bondmap[i].size();
-      if (n_bonds != 1)
-        throw RuntimeException("Structure is badly defined. Passivation atom has multiple bonds");
-      unsigned int j = bondmap[i][0];
-      //Calculate translation
-      x_t = _dof[j * 3 + 0] - atoms[j].get_position(0);
-      y_t = _dof[j * 3 + 1] - atoms[j].get_position(1);
-      z_t = _dof[j * 3 + 2] - atoms[j].get_position(2);
-      //Translate hydrogen accordingly
-      atoms[i].set_position(0, atoms[i].get_position(0) + x_t);
-      atoms[i].set_position(1, atoms[i].get_position(1) + x_t);
-      atoms[i].set_position(2, atoms[i].get_position(2) + x_t);
-      }
-
   //Displace other atoms
   for (unsigned int i = 0; i < _n_free_atoms; i++)
     {
@@ -155,6 +155,26 @@ Vff::displace_atoms(void)
       atoms[j].set_position(1, _dof[i * 3 + 1]);
       atoms[j].set_position(2, _dof[i * 3 + 2]);
     }
+
+  for (unsigned int i = n_atoms + 1; i < n_all_atoms; i++)
+      {
+      unsigned int n_bonds = bondmap[i].size();
+      if (n_bonds != 1)
+        throw RuntimeException("Structure is badly defined. Passivation atom has multiple bonds");
+      unsigned int j = bondmap[i][0];
+      //Calculate translation
+      x_t = _initial_coords[j * 3 + 0] - atoms[j].get_position(0);
+      y_t = _initial_coords[j * 3 + 1] - atoms[j].get_position(1);
+      z_t = _initial_coords[j * 3 + 2] - atoms[j].get_position(2);
+      //Translate hydrogen accordingly
+      atoms[i].set_position(0, _initial_coords[i * 3 + 0] + x_t);
+      atoms[i].set_position(1, _initial_coords[i * 3 + 1] + y_t);
+      atoms[i].set_position(2, _initial_coords[i * 3 + 2] + z_t);
+      }
+
+  _initial_coords.resize(0);
+  get_coords().resize(0);
+  _dof.resize(0);
 
   get_atomistic_structure()->print_structure("strained.xyz");
 }
