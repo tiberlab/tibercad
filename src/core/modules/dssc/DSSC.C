@@ -768,8 +768,8 @@ DSSC::do_EIS(void)
   {
     DSSCContact* contact = dynamic_cast<DSSCContact*>(
         (*it).first->get_boundary_properties(get_id()));
-    if (!(contact->is_cathode() || contact->is_gate()))
-//    if (contact->is_cathode() )
+//    if (!(contact->is_cathode() || contact->is_gate()))
+    if (contact->is_cathode() )
       bnd = (*it).first;
   }
 
@@ -2825,14 +2825,17 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
     jacobian->close();
 //    jacobian->print_matlab("J.m");
+
   }
   else
   {
     residual->close();
+
     residual->set(dof_cat, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
     residual->set(dof_iodine, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
     residual->close();
 //    residual->print_matlab("F.m");
+
   }
 
 
@@ -3469,6 +3472,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   double R0_e = C0_e * tmp;
   double R0_I = C0_I * tmp ;
   double R0_I3 = C0_I3 * tmp;
+  double R0_C = C0_C * tmp;
 
 
   const DofMap& dof_map = system_frequency.get_dof_map();
@@ -3589,7 +3593,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     FI3I(Fe),
     FCI(Fe);
 
-  /*
+ /* 
   DenseSubVector<Number>
     XuR(X),
     XnR(X),
@@ -3601,7 +3605,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     XII(X),
     XI3I(X),
     XCI(X);
-    */
+   */
   
   DenseSubVector<Number>
     Su(X),
@@ -3685,7 +3689,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     //        | KI3uR KI3nR KI3IR KI3I3R  0    KI3uFR  0      0     KI3I3FR   0     |        | 0   |
     //   Ke = | KCuR   0     0     0     KCCR  KCuFR   0      0      0       KCCFR  |;  Fe = | 0   |
     //        |  0     0     0     0      0    KuuI   KunI   KuII   KuI3I    KuCI   |        | 0   |
-    //        | KnuFI KnnFI  0     0      0    KnuI   KnnI   KnII   KnI3I     0     |        | FnI |
+    //        | KnuFI KnnFI  0     0      0    KnuI   KnnI   KnII   KnI3I     0     |        | 0   |
     //        | KIuFI  0    KIIFI  0      0    KIuI   KInI   KIII   KII3I     0     |        | 0   |
     //        | KI3uFI 0     0    KI3I3FI 0    KI3uI  KI3nI  KI3II  KI3I3I    0     |        | 0   |
     //        | KCuFI   0    0     0     KCCFI KCuI    0      0      0       KCCI   |        | 0   |
@@ -3768,7 +3772,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     FI3I.reposition(8 * n_dofs, n_dofs);
     FCI.reposition(9 * n_dofs, n_dofs);
     //
-    /*
+   /* 
     // Solution Vector
     XuR.reposition(0, n_dofs);
     XnR.reposition(n_dofs, n_dofs);
@@ -3780,7 +3784,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     XII.reposition(7 * n_dofs, n_dofs);
     XI3I.reposition(8 * n_dofs, n_dofs);
     XCI.reposition(9 * n_dofs, n_dofs);
-    */
+   */ 
     //
     // Solution Steady state Vector
     Su.reposition(0, n_dofs);
@@ -3887,7 +3891,6 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
 
       // NOTE: sigma_e = mu_e * n is the electron conductivity
-      //double sigma_n = (mu_n * n_e ) / C0_e;
       double sigma_n = (mu_n * n_e ) / C0_e;
       double sigma_I = (mu_I * n_I ) / C0_I;
       double sigma_I3 = (mu_I3 * n_I3 ) / C0_I3;
@@ -3990,8 +3993,6 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
         // d(sigma_n)/du * element-jacobian
         // sigma_n = mu_n * n means the conductivity of electrons
         // the factor phi_0 comes from the derivative with respect to the potential
-        //double n_eq = sc->get_equilibrium_concentrations().n;
-        //double dsigma_n = J * phi0 / C0_e * mu_n *  (1.4 * pow(n_e , 0.4)) * dn_dphi;
         double dsigma_n = J * phi0 / C0_e * mu_n * dn_dphi;
         double dsigma_I = J * phi0 / C0_I * mu_I * dI_dphi;
         double dsigma_I3 = J * phi0 / C0_I3 * mu_I3 * dI3_dphi;
@@ -4378,7 +4379,6 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 //                    KI3u(i,j) += -0.5 * J_phi_i_phi_j * Normal_I3 / res;
                     KI3uR(i,j) += -0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * J_phi_i_phi_j * Normal_I3 / kT2;
                     KI3uI(i,j) += -0.5 * j0 * ( exp(Eredox/kT2) + exp(-Eredox/kT2) ) * J_phi_i_phi_j * Normal_I3 / kT2;
-
                   }
                 }
 
@@ -4424,7 +4424,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
                  double kT = sc->get_lattice_temperature();
                  double Normal_n = x0 / ( phi0 * C0_e * local_scaling[s][0] );
                  double kinetic_anode = contact->get_kinetic();
-                 double n_0 = n_dark * exp(bias/kT); 
+                 double n_0 = n_dark * exp(bias/kT);
 
                  FnR(i) = (kinetic_anode/kT) * n_0 * Normal_n * J * phi_face[i][qp];
                }
@@ -4709,8 +4709,6 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   // solution: add number of real DOFs to the relevant DOF, but this works
   // only if variables are ordered in a certain way
 
-//  unsigned int dof_cat = n_cat->dof_number(system.number(), eC_var, 0);
-//  unsigned int dof_iodine = n_cat->dof_number(system.number(), eI_var, 0);
   assert(n_cat != NULL);
   unsigned int dof_cat_R = n_cat->dof_number(system_frequency.number(), eC_var_R, 0);
   unsigned int dof_iodine_R = n_cat->dof_number(system_frequency.number(), eI_var_R, 0);
@@ -4737,7 +4735,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   }
     
     system_frequency.matrix->close();
-    //system_frequency.matrix->print_matlab("J.m");
+    //system_frequency.matrix->print_matlab("JEIS.m");
 
   {
     system_frequency.rhs->close();
@@ -4973,18 +4971,18 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
         eI3_I += phi[i][qp] * solution_frequency(dof_indices_eI3_I[i]);
         eC_I += phi[i][qp] * solution_frequency(dof_indices_eC_I[i]);
 
+        e_field_R += dphi[i][qp] * solution_frequency(dof_indices_u_R[i]);
         dEfn_R += dphi[i][qp] * solution_frequency(dof_indices_en_R[i]);
         dEfI_R += dphi[i][qp] * solution_frequency(dof_indices_eI_R[i]);
         dEfI3_R += dphi[i][qp] * solution_frequency(dof_indices_eI3_R[i]);
         dEfC_R += dphi[i][qp] * solution_frequency(dof_indices_eC_R[i]);
         
+        e_field_I += dphi[i][qp] * solution_frequency(dof_indices_u_I[i]);
         dEfn_I += dphi[i][qp] * solution_frequency(dof_indices_en_I[i]);
         dEfI_I += dphi[i][qp] * solution_frequency(dof_indices_eI_I[i]);
         dEfI3_I += dphi[i][qp] * solution_frequency(dof_indices_eI3_I[i]);
         dEfC_I += dphi[i][qp] * solution_frequency(dof_indices_eC_I[i]);
         
-        e_field_R += dphi[i][qp] * solution_frequency(dof_indices_u_R[i]);
-        e_field_I += dphi[i][qp] * solution_frequency(dof_indices_u_I[i]);
 
         //==================================================================
 
@@ -4995,12 +4993,12 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
         eC += phi[i][qp] * solution(dof_indices_eC[i]);
         //dT += dphi[i][qp] * T_nodes[i];
 
+        e_field += dphi[i][qp] * solution(dof_indices_u[i]);
         dEfn += dphi[i][qp] * solution(dof_indices_en[i]);
         dEfI += dphi[i][qp] * solution(dof_indices_eI[i]);
         dEfI3 += dphi[i][qp] * solution(dof_indices_eI3[i]);
         dEfC += dphi[i][qp] * solution(dof_indices_eC[i]);
         
-        e_field += dphi[i][qp] * solution(dof_indices_u[i]);
       }
 
       // prepare for calculating local properties
@@ -5020,20 +5018,20 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
       RealGradient j_n_R = -Constants::e * sc->get_mobility_n() * sc->get_density_n() * dEfn_R;
       RealGradient j_C_R = Constants::e * sc->get_mobility_C() * sc->get_density_C() * dEfC_R;
       
-      RealGradient j_I_2_R = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * eI_R * phi0 * dEfI;
-      RealGradient j_I3_2_R = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * eI3_R * phi0 * dEfI3;
-      RealGradient j_n_2_R = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * en_R * phi0 * dEfn;
-      RealGradient j_C_2_R = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * eC_R * phi0 * dEfC;
+      RealGradient j_I_2_R = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * (u_R - eI_R) * phi0 * dEfI;
+      RealGradient j_I3_2_R = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * (u_R - eI3_R) * phi0 * dEfI3;
+      RealGradient j_n_2_R = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * (u_R - en_R) * phi0 * dEfn;
+      RealGradient j_C_2_R = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * (u_R - eC_R) * phi0 * dEfC;
 
       RealGradient j_I_I = -Constants::e * sc->get_mobility_I() * sc->get_density_I() * dEfI_I;
       RealGradient j_I3_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() * dEfI3_I;
       RealGradient j_n_I = -Constants::e * sc->get_mobility_n() * sc->get_density_n() * dEfn_I;
       RealGradient j_C_I = Constants::e * sc->get_mobility_C() * sc->get_density_C() * dEfC_I;
       
-      RealGradient j_I_2_I = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * eI_I * phi0 * dEfI;
-      RealGradient j_I3_2_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * eI3_I * phi0 * dEfI3;
-      RealGradient j_n_2_I = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * en_I * phi0 * dEfn;
-      RealGradient j_C_2_I = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * eC_I * phi0 * dEfC;
+      RealGradient j_I_2_I = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * (u_I - eI_I) * phi0 * dEfI;
+      RealGradient j_I3_2_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * (u_I - eI3_I) * phi0 * dEfI3;
+      RealGradient j_n_2_I = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * (u_I - en_I) * phi0 * dEfn;
+      RealGradient j_C_2_I = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * (u_I - eC_I) * phi0 * dEfC;
       
       RealGradient j_Cap_R = freq * eps * e_field_I;
       RealGradient j_Cap_I = -freq * eps * e_field_R;
