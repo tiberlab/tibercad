@@ -301,6 +301,24 @@ class SimulationEnvironment
       boundary_elements_end(const Boundary* bd = NULL) const;
 
 
+    //! Get the iterator for the first boundary element
+    /*!
+     * \param name a certain boundary name if you want only elements
+     * touching this boundary
+     */
+    const BoundaryElementMap::iterator
+      boundary_elements_begin(const std::string& name) const;
+
+
+    //! Get the end iterator for the boundary elements
+    /*!
+     * \param name a certain boundary name if you want only elements
+     * touching this boundary
+     */
+    const BoundaryElementMap::iterator
+      boundary_elements_end(const std::string& name) const;
+
+
     //! Get the iterator for the first element
     const ConstElemIterator elements_begin(void) const;
 
@@ -683,6 +701,23 @@ const BoundaryElementMap::iterator
 SimulationEnvironment::boundary_elements_end(const Boundary* bd) const
 {
   return _bd_elem_map.elements_end(bd);
+}
+
+
+inline
+const BoundaryElementMap::iterator
+SimulationEnvironment::boundary_elements_begin(const std::string& name) const
+{
+  return boundary_elements_begin(get_boundary(name));
+}
+
+
+
+inline
+const BoundaryElementMap::iterator
+SimulationEnvironment::boundary_elements_end(const std::string& name) const
+{
+  return boundary_elements_end(get_boundary(name));
 }
 
 

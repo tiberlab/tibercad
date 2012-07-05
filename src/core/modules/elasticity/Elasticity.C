@@ -8,6 +8,7 @@
 #include "equation_systems.h"
 #include "dof_map.h"
 #include "quadrature_gauss.h"
+#include "quadrature_trap.h"
 #include "sparse_matrix.h"
 #include "dense_matrix.h"
 #include "dense_vector.h"
@@ -578,6 +579,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   //AutoPtr<QBase> qrule(QBase::build(QTRAP, dim, FIFTH));
 
   QGauss qrule(dim, FIFTH);
+  //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   //const vector<Point>& ref_points = qrule.get_points();
@@ -591,6 +593,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   // the surface finite element
   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
   QGauss qface(dim - 1, SIXTH);
+  //QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(&qface);
 
   const vector<Point>& ref_face_points = qface.get_points();
