@@ -734,10 +734,6 @@ DSSC::do_solve(void)
     os << "";
     os << (cnt->get_potential()/it->first->get_area_factor()) * it->second;
     os.width(2 * width - os.tellp());
-    os << "";
-    os << it->second;
-    Messages::info(os.str());
-
   }
 
 }
@@ -3400,6 +3396,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   // references for nicer code
   const MeshBase& mesh = get_mesh();
   TiberLinearSystem& system_frequency = get_equation_system<TiberLinearSystem>(1);
+  const NumericVector<Number>& solution_frequency = system_frequency.get_solution_vector();
 
   double freq = _frequency;
 
@@ -3476,6 +3473,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
 
   const DofMap& dof_map = system_frequency.get_dof_map();
+  const DofMap& dof_map_steady = system.get_dof_map();
 
   // numeric ids corresponding to the variables
   const unsigned int u_var_R = system_frequency.variable_number("potential_R");
@@ -3489,6 +3487,12 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   const unsigned int eI3_var_I = system_frequency.variable_number("fermi_I3_I");
   const unsigned int eC_var_I = system_frequency.variable_number("fermi_C_I");
 
+  const unsigned int u_var = system.variable_number("potential");
+  const unsigned int en_var = system.variable_number("fermi_n");
+  const unsigned int eI_var = system.variable_number("fermi_I");
+  const unsigned int eI3_var = system.variable_number("fermi_I3");
+  const unsigned int eC_var = system.variable_number("fermi_C");
+  
   FEType fe_type = system_frequency.variable_type(u_var_R);
 
   libMeshEnums::Order integration_order = libMeshEnums::FIFTH;
@@ -3548,8 +3552,8 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   DenseMatrix<Number> Ke;
   // the system rhs (will hold also element rhs contribution)
   DenseVector<Number> Fe;
-  // the local solution
-  DenseVector<Number> X;
+//  // the local solution
+//  DenseVector<Number> X;
   // the steady-state solution
   DenseVector<Number> S;
     
@@ -3608,11 +3612,11 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
    */
   
   DenseSubVector<Number>
-    Su(X),
-    Sn(X),
-    SI(X),
-    SI3(X),
-    SC(X);
+    Su(S),
+    Sn(S),
+    SI(S),
+    SI3(S),
+    SC(S);
 
 
   vector<unsigned int> dof_indices;
@@ -3627,18 +3631,28 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   vector<unsigned int> dof_indices_eI3_I;
   vector<unsigned int> dof_indices_eC_I;
 
+  vector<unsigned int> dof_indices_steady;
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_eI;
+  vector<unsigned int> dof_indices_eI3;
+  vector<unsigned int> dof_indices_eC;
   // zero out residual and jacobian !! IMPORTANT !!
 
 
   const Node* n_cat = NULL;
   double tot_cat = 0;
-  AutoPtr<NumericVector<Number> > cons_cat = solution.clone();
-  cons_cat->zero();
+  AutoPtr<NumericVector<Number> > cons_cat_R = solution_frequency.clone();
+  cons_cat_R->zero();
+  AutoPtr<NumericVector<Number> > cons_cat_I = solution_frequency.clone();
+  cons_cat_I->zero();
 
   const Node* n_iodine = NULL;
   double tot_iodine = 0;
-  AutoPtr<NumericVector<Number> > cons_iodine = solution.clone();
-  cons_iodine->zero();
+  AutoPtr<NumericVector<Number> > cons_iodine_R = solution_frequency.clone();
+  cons_iodine_R->zero();
+  AutoPtr<NumericVector<Number> > cons_iodine_I = solution_frequency.clone();
+  cons_iodine_I->zero();
 
   set<unsigned int> inner_boundary_nodes;
 
@@ -3667,18 +3681,29 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     dof_map.dof_indices(elem, dof_indices_eI_I, eI_var_I);
     dof_map.dof_indices(elem, dof_indices_eI3_I, eI3_var_I);
     dof_map.dof_indices(elem, dof_indices_eC_I, eC_var_I);
+    
+    // get DOF indices
+    dof_map_steady.dof_indices(elem, dof_indices_steady);
+    dof_map_steady.dof_indices(elem, dof_indices_u, u_var);
+    dof_map_steady.dof_indices(elem, dof_indices_en, en_var);
+    dof_map_steady.dof_indices(elem, dof_indices_eI, eI_var);
+    dof_map_steady.dof_indices(elem, dof_indices_eI3, eI3_var);
+    dof_map_steady.dof_indices(elem, dof_indices_eC, eC_var);
 
     unsigned int n_dofs     = dof_indices_u_R.size();
     unsigned int n_dofs_tot = dof_indices.size();
+    unsigned int n_dofs_steady     = dof_indices_u.size();
+    unsigned int n_dofs_tot_steady = dof_indices_steady.size();
 
     fe->reinit(elem);
 
     Ke.resize(n_dofs_tot, n_dofs_tot);
     Fe.resize(n_dofs_tot);
-    X.resize(n_dofs_tot);
+//    X.resize(n_dofs_tot);
+    S.resize(n_dofs_tot_steady);
 
     // extract local solution, accounting for constraints
-    dof_map.extract_local_vector(solution, dof_indices, X);
+    dof_map_steady.extract_local_vector(solution, dof_indices_steady, S);
 
     // Reposition the submatrices according to this scheme:
     //
@@ -3787,11 +3812,11 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
    */ 
     //
     // Solution Steady state Vector
-    Su.reposition(0, n_dofs);
-    Sn.reposition(n_dofs, n_dofs);
-    SI.reposition(2 * n_dofs, n_dofs);
-    SI3.reposition(3 * n_dofs, n_dofs);
-    SC.reposition(4 * n_dofs, n_dofs);
+    Su.reposition(0, n_dofs_steady);
+    Sn.reposition(n_dofs_steady, n_dofs_steady);
+    SI.reposition(2 * n_dofs_steady, n_dofs_steady);
+    SI3.reposition(3 * n_dofs_steady, n_dofs_steady);
+    SC.reposition(4 * n_dofs_steady, n_dofs_steady);
 
 
 
@@ -3834,7 +3859,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
       RealGradient grad_eI(0);
       RealGradient grad_eI3(0);
       RealGradient grad_eC(0);
-      for (unsigned int i = 0; i < n_dofs; i++)
+      for (unsigned int i = 0; i < n_dofs_steady; i++)
       {
         u  += phi[i][qp] * Su(i);
         en += phi[i][qp] * Sn(i);
@@ -4016,12 +4041,19 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
           double volume = elem->volume();
 
-          cons_cat->add(dof_indices_eC_R[i], -phi0 * J * dC_dphi * phi[i][qp] / C0_C / scaling_C );
-          cons_cat->add(dof_indices_u_R[i], phi0 * J * dC_dphi * phi[i][qp]  / C0_C / scaling_C );
+          cons_cat_R->add(dof_indices_eC_R[i], -phi0 * J * dC_dphi * phi[i][qp] / C0_C / scaling_C );
+          cons_cat_R->add(dof_indices_u_R[i], phi0 * J * dC_dphi * phi[i][qp]  / C0_C / scaling_C );
+          
+          cons_cat_I->add(dof_indices_eC_I[i], -phi0 * J * dC_dphi * phi[i][qp] / C0_C / scaling_C );
+          cons_cat_I->add(dof_indices_u_I[i], phi0 * J * dC_dphi * phi[i][qp]  / C0_C / scaling_C );
 
-          cons_iodine->add(dof_indices_eI_R[i], -phi0 * J * dI_dphi * phi[i][qp] / (3.0*C0_tot*scaling_tot) );
-          cons_iodine->add(dof_indices_eI3_R[i], -phi0 * J * dI3_dphi * phi[i][qp] / (C0_tot * scaling_tot) );
-          cons_iodine->add(dof_indices_u_R[i], phi0 * J * phi[i][qp] * ( ( (1/3.0) * dI_dphi + dI3_dphi ) / (C0_tot * scaling_tot) ) );
+          cons_iodine_R->add(dof_indices_eI_R[i], -phi0 * J * dI_dphi * phi[i][qp] / (3.0*C0_tot*scaling_tot) );
+          cons_iodine_R->add(dof_indices_eI3_R[i], -phi0 * J * dI3_dphi * phi[i][qp] / (C0_tot * scaling_tot) );
+          cons_iodine_R->add(dof_indices_u_R[i], phi0 * J * phi[i][qp] * ( ( (1/3.0) * dI_dphi + dI3_dphi ) / (C0_tot * scaling_tot) ) );
+          
+          cons_iodine_I->add(dof_indices_eI_I[i], -phi0 * J * dI_dphi * phi[i][qp] / (3.0*C0_tot*scaling_tot) );
+          cons_iodine_I->add(dof_indices_eI3_I[i], -phi0 * J * dI3_dphi * phi[i][qp] / (C0_tot * scaling_tot) );
+          cons_iodine_I->add(dof_indices_u_I[i], phi0 * J * phi[i][qp] * ( ( (1/3.0) * dI_dphi + dI3_dphi ) / (C0_tot * scaling_tot) ) );
 
           for (unsigned int j = 0; j < n_dofs; j++)
           {
@@ -4299,7 +4331,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
               RealGradient grad_eI(0);
               RealGradient grad_eI3(0);
               RealGradient grad_eC(0);
-              for (unsigned int i = 0; i < n_dofs; i++)
+              for (unsigned int i = 0; i < n_dofs_steady; i++)
               {
                 u  += phi_face[i][qp] * Su(i);
                 en += phi_face[i][qp] * Sn(i);
@@ -4720,22 +4752,24 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
     system_frequency.matrix->close();
 
-    for (unsigned int j = 0; j < cons_cat->size(); j++)
+    for (unsigned int j = 0; j < cons_cat_R->size(); j++)
     {
-      system_frequency.matrix->set(dof_cat_R, j, (*cons_cat)(j));
-      system_frequency.matrix->set(dof_cat_I, j + n_real_dofs, (*cons_cat)(j));
+      system_frequency.matrix->set(dof_cat_R, j, (*cons_cat_R)(j));
+//      system_frequency.matrix->set(dof_cat_I, j + n_real_dofs, (*cons_cat_I)(j));
+      system_frequency.matrix->set(dof_cat_I, j, (*cons_cat_I)(j));
     }
 
-    for (unsigned int j = 0; j < cons_iodine->size(); j++)
+    for (unsigned int j = 0; j < cons_iodine_R->size(); j++)
     {
-      system_frequency.matrix->set(dof_iodine_R, j, (*cons_iodine)(j));
-      system_frequency.matrix->set(dof_iodine_I, j + n_real_dofs, (*cons_iodine)(j));
+      system_frequency.matrix->set(dof_iodine_R, j, (*cons_iodine_R)(j));
+//      system_frequency.matrix->set(dof_iodine_I, j + n_real_dofs, (*cons_iodine)(j));
+      system_frequency.matrix->set(dof_iodine_I, j, (*cons_iodine_I)(j));
     }
 
   }
     
     system_frequency.matrix->close();
-    //system_frequency.matrix->print_matlab("JEIS.m");
+//    system_frequency.matrix->print_matlab("JEIS.m");
 
   {
     system_frequency.rhs->close();

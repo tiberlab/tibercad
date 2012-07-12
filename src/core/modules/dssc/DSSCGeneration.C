@@ -181,8 +181,8 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
     {
       double generation = 0.0;
       if (_alpha >= 0)
-//       generation = 1e4 * 1.5e17 * _intensity * _alpha * exp(-d * 1e4 *_alpha);
-       generation = 1e4 * 1.0e17 * _intensity * _alpha * exp(-d * 1e4 *_alpha);
+       generation = 1e4 * 1.5e17 * _intensity * _alpha * exp(-d * 1e4 *_alpha);
+//       generation = 1e4 * 1.0e17 * _intensity * _alpha * exp(-d * 1e4 *_alpha);
 //       generation = 1e4 * 1.5e17 * _intensity * _alpha * exp(-d * _alpha);
       else
       {
