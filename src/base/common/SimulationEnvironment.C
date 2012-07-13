@@ -196,14 +196,43 @@ SimulationEnvironment::create_bc_maps(void)
 }
 
 
+
+
+
+const SimulationEnvironment::BoundarySideIterator
+SimulationEnvironment::boundary_sides_begin(const std::string& name) const
+{
+  if (name.empty())
+    return BoundarySideIterator(_element_side_map, _element_side_map.begin());
+
+  return BoundarySideIterator(_element_side_map, _element_side_map.begin(),
+      get_boundary(name)->get_region_ids());
+}
+
+
+
+
+const SimulationEnvironment::BoundarySideIterator
+SimulationEnvironment::boundary_sides_end(const std::string& name) const
+{
+  if (name.empty())
+    return BoundarySideIterator(_element_side_map, _element_side_map.end());
+
+  return BoundarySideIterator(_element_side_map, _element_side_map.end(),
+      get_boundary(name)->get_region_ids());
+}
+
+
+
+
 void
 SimulationEnvironment::update_boundary_node_map(void)
 {
   // If nothing strange happens, we should never loose boundary nodes but
   // just add new ones. So we don't reset the map
 
-  BoundarySideIterator it(_element_side_map.begin());
-  const BoundarySideIterator end(_element_side_map.end());
+  BoundarySideIterator it(boundary_sides_begin());
+  const BoundarySideIterator end(boundary_sides_end());
 
   if ((_device->get_mesh()).mesh_dimension() == 1)
   {
@@ -212,6 +241,8 @@ SimulationEnvironment::update_boundary_node_map(void)
     for ( ; it != end; ++it)
     {
       const ElementSide& elem_side = it->first;
+      const Elem* elem = elem_side.elem();
+      cerr << elem->centroid() << endl;
       //_node_map[(elem_side.first)->get_node(elem_side.second)] = it->second;
       _node_map.add_node(it->second,
           (elem_side.elem())->get_node(elem_side.side()));

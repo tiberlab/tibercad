@@ -1938,7 +1938,7 @@ Boltzmann::compute_view_factor(std::string S1, std::string S2)
 
   for ( ; side_1 != end ; ++side_1)
   {
-    ElementSide elside = (*side_1).first;
+    ElementSide elside = *side_1;
 
     BoltzmannBoundaryModel* mod_b =
           get_interface_model<BoltzmannBoundaryModel>(elside.elem(), elside.side());
@@ -1952,7 +1952,7 @@ Boltzmann::compute_view_factor(std::string S1, std::string S2)
         for ( ; side_2 != end ; ++side_2)
         {
 
-          ElementSide elside = (*side_2).first;
+          ElementSide elside = *side_2;
           BoltzmannBoundaryModel* mod_b =
                    get_interface_model<BoltzmannBoundaryModel>(elside.elem(), elside.side());
 

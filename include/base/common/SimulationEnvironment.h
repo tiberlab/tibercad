@@ -42,7 +42,69 @@ class SimulationEnvironment
   public:
 
     //! An iterator for the element sides lying on a boundary
-    typedef ElemSideMap::const_iterator BoundarySideIterator;
+    //typedef ElemSideMap::const_iterator BoundarySideIterator;
+    class BoundarySideIterator
+    {
+      public:
+        BoundarySideIterator(void) {}
+        BoundarySideIterator(const BoundarySideIterator& it) :
+          _iter(it._iter),
+          _bdids(it._bdids),
+          _mapend(it._mapend) {}
+        BoundarySideIterator(const ElemSideMap& emap,
+            const ElemSideMap::const_iterator& it,
+            const std::set<ID>& ids = std::set<ID>()) :
+              _iter(it),
+              _bdids(ids),
+              _mapend(emap.end()) {}
+
+        BoundarySideIterator& operator++(void)
+        {
+          if (_iter != _mapend)
+          {
+            ++_iter;
+            while ((_iter != _mapend) && !_bdids.empty() &&
+                !_bdids.count(_iter->second))
+            {
+              ++_iter;
+            }
+          }
+          return *this;
+        }
+
+        BoundarySideIterator& operator=(const BoundarySideIterator& rhs)
+        {
+          _iter = rhs._iter;
+          _bdids = rhs._bdids;
+          _mapend = rhs._mapend;
+          return *this;
+        }
+
+        bool operator==(const BoundarySideIterator& rhs)
+        {
+          return ((_iter == rhs._iter) && (_bdids == rhs._bdids));
+        }
+
+        bool operator!=(const BoundarySideIterator& rhs)
+        {
+          return !(*this == rhs);
+        }
+
+        const ElementSide& operator*(void)
+        {
+          return _iter->first;
+        }
+
+        const ElemSideMap::const_iterator& operator->(void)
+        {
+          return _iter;
+        }
+
+      private:
+        ElemSideMap::const_iterator _iter;
+        std::set<ID> _bdids;
+        ElemSideMap::const_iterator _mapend;
+    };
 
     //! An iterator for the nodes lying on a boundary
     typedef std::map<const Node*, ID>::const_iterator BoundaryNodeIterator;
@@ -259,12 +321,12 @@ class SimulationEnvironment
     bool is_inner_boundary(const ElementSide& side) const;
 
 
-    //! Get the iterator for the first boundary side
-    const BoundarySideIterator boundary_sides_begin(void) const;
+    //! Get the iterator for the first named boundary side
+    const BoundarySideIterator boundary_sides_begin(const std::string& name = "") const;
 
 
-    //! Get the end iterator for the boundary sides
-    const BoundarySideIterator boundary_sides_end(void) const;
+    //! Get the end iterator for the named boundary sides
+    const BoundarySideIterator boundary_sides_end(const std::string& name = "") const;
 
 
     //! Get the iterator for the first boundary side
@@ -654,20 +716,6 @@ SimulationEnvironment::contains_element(const Elem* elem) const
 }
 
 
-inline
-const SimulationEnvironment::BoundarySideIterator
-SimulationEnvironment::boundary_sides_begin(void) const
-{
-  return _element_side_map.begin();
-}
-
-
-inline
-const SimulationEnvironment::BoundarySideIterator
-SimulationEnvironment::boundary_sides_end(void) const
-{
-  return _element_side_map.end();
-}
 
 /*
 inline

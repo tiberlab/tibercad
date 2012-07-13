@@ -54,8 +54,27 @@ SchottkyTunneling::do_init(void)
 
   // first, build a bounding box for the contact to be faster afterwards
   BoundaryElementMap::iterator bdfirst(env.boundary_elements_begin(_contact_name));
-  BoundaryElementMap::iterator bdend(env.boundary_elements_end(_contact_name));
+  const BoundaryElementMap::iterator bdend(env.boundary_elements_end(_contact_name));
 
+  // min and max
+  Point pmin(0);
+  Point pmax(0);
+
+  BoundaryElementMap::iterator bdit(bdfirst);
+  for ( ; bdit != bdend; ++bdit)
+  {
+    const Elem* elem = *bdit;
+
+  }
+
+  SimulationEnvironment::ConstElemIterator it(env.elements_begin());
+  SimulationEnvironment::ConstElemIterator end(env.elements_end());
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+  }
+
+    // calculate min distance from contact
 }
 
 
