@@ -8,9 +8,10 @@
 #include "Messages.h"
 
 #include "mesh_base.h"
-#include "quadrature.h"
+#include "fe.h"
+#include "quadrature_gauss.h"
 
-
+#include <limits>
 
 
 TIBER_MODULE(SchottkyTunneling, recombination, schottky_tunneling)
@@ -42,9 +43,12 @@ SchottkyTunneling::read_database(void)
 void
 SchottkyTunneling::do_init(void)
 {
-  get_option("maximum_tunnel_length", _max_tunnel_length);
-  get_option("contact_name", _contact_name);
+  _max_tunnel_length = get_option("maximum_tunnel_length", _max_tunnel_length);
+  _contact_name = get_option("contact", _contact_name);
 
+  if (_contact_name.empty())
+    throw ModelErrorException("Need a contact name for Schottky "
+        "contact tunneling model.");
 
   // calculate distance from contact and put it into
   // _elem_map if it is below the maximum tunnel length
@@ -52,29 +56,84 @@ SchottkyTunneling::do_init(void)
   SimulationInterface* sim = SimulationInterface::get_simulation(get_simulator_id());
   const SimulationEnvironment& env = sim->get_environment();
 
+  // the tunneling length in mesh units
+  double tun_len = _max_tunnel_length * 1e-9 / sim->get_mesh_units();
+
+  unsigned int dim = sim->get_mesh().mesh_dimension();
+
+  AutoPtr<FEBase> fe(FEBase::build(dim, FEType()));
+  QGauss qrule(dim - 1, CONSTANT);
+  fe->attach_quadrature_rule(&qrule);
+  const std::vector<Point>& normal = fe->get_normals();
+
   // first, build a bounding box for the contact to be faster afterwards
-  BoundaryElementMap::iterator bdfirst(env.boundary_elements_begin(_contact_name));
-  const BoundaryElementMap::iterator bdend(env.boundary_elements_end(_contact_name));
+  SimulationEnvironment::BoundarySideIterator bdfirst(
+      env.boundary_sides_begin(_contact_name));
+  SimulationEnvironment::BoundarySideIterator bdend(
+      env.boundary_sides_end(_contact_name));
 
   // min and max
-  Point pmin(0);
-  Point pmax(0);
+  Point pmin(numeric_limits<double>::max());
+  Point pmax(-numeric_limits<double>::max());
 
-  BoundaryElementMap::iterator bdit(bdfirst);
+  SimulationEnvironment::BoundarySideIterator bdit(bdfirst);
   for ( ; bdit != bdend; ++bdit)
   {
-    const Elem* elem = *bdit;
+    const Elem* elem = (*bdit).elem();
+    unsigned int side = (*bdit).side();
 
+    for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+      if (elem->is_node_on_side(i, side))
+      {
+        const Point& p = elem->point(i);
+        pmin(0) = (p(0) - tun_len < pmin(0)) ? p(0) - tun_len : pmin(0);
+        pmin(1) = (p(1) - tun_len < pmin(1)) ? p(1) - tun_len : pmin(1);
+        pmin(2) = (p(2) - tun_len < pmin(2)) ? p(2) - tun_len : pmin(2);
+        pmax(0) = (p(0) + tun_len > pmax(0)) ? p(0) + tun_len : pmax(0);
+        pmax(1) = (p(1) + tun_len > pmax(1)) ? p(1) + tun_len : pmax(1);
+        pmax(2) = (p(2) + tun_len > pmax(2)) ? p(2) + tun_len : pmax(2);
+      }
   }
+
+  //cerr << "Bounding box: " << pmin << pmax << endl;
 
   SimulationEnvironment::ConstElemIterator it(env.elements_begin());
   SimulationEnvironment::ConstElemIterator end(env.elements_end());
   for ( ; it != end; ++it)
   {
     const Elem* elem = *it;
-  }
+    const Point& centr = elem->centroid();
+
+    double mindist = numeric_limits<double>::max();
+    Point p_mindist(mindist);
+
+    // check if it is inside the tunneling bounding box
+    if ((centr(0) < pmin(0)) && (centr(1) < pmin(1)) && (centr(1) < pmin(1)) &&
+        (centr(0) > pmax(0)) && (centr(0) > pmax(0)) && (centr(0) > pmax(0)))
+      continue;
 
     // calculate min distance from contact
+    for (bdit = bdfirst; bdit != bdend; ++bdit)
+    {
+      const Elem* elem = (*bdit).elem();
+      unsigned int side = (*bdit).side();
+
+      fe->reinit(elem, side);
+      // TODO for now we use the distance between centroids, since we do not
+      //      need the exact distance for the most primitive model
+      AutoPtr<Elem> side_el(elem->build_side(side));
+      const Point& side_centr = side_el->centroid();
+
+      Point dist(centr - side_centr);
+      if ((dist * normal[0]) < 0)
+        if (dist.size() < mindist)
+          p_mindist = dist;
+    }
+
+    _elem_map.insert(make_pair(elem, p_mindist));
+
+  }
+
 }
 
 

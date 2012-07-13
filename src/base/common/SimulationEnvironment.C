@@ -242,7 +242,6 @@ SimulationEnvironment::update_boundary_node_map(void)
     {
       const ElementSide& elem_side = it->first;
       const Elem* elem = elem_side.elem();
-      cerr << elem->centroid() << endl;
       //_node_map[(elem_side.first)->get_node(elem_side.second)] = it->second;
       _node_map.add_node(it->second,
           (elem_side.elem())->get_node(elem_side.side()));
