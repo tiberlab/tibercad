@@ -776,9 +776,11 @@ DSSC::do_EIS(void)
 
   // produce a logarithmic scale: 1, 2 ... 10, 20, ... 100, 200 ...
   _frequency = start;
-  for (int i = 1; _frequency < stop * 2 * M_PI; i = i + pow(10, floor(log10(i))))
+  for (long int i = 1; _frequency < stop * 2 * M_PI; i = i + pow(10, floor(log10(i))))
   {
     _frequency = 2 * M_PI * start * i;
+//    cout << "freq = " << _frequency << "\n";
+//    cout << "i = " << i << "\n";
 
     system.assemble();
     system.solve();
