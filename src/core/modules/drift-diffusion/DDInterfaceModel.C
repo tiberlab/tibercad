@@ -69,6 +69,7 @@ DDInterfaceModel::prepare_submodels(void)
 
   vector<PhysicalModelInterface*> pd;
   create_submodels(pd, "recombination");
+  create_submodels(pd, "generation");
 
   // traps
   create_submodels(pd, "trap");
@@ -149,6 +150,15 @@ DDInterfaceModel::do_init(void)
   {
     set_type(1, NEUMANN);
     set_type(2, NEUMANN);
+  }
+
+  it = submodels_begin("generation");
+  end = submodels_end("generation");
+  for ( ; it != end; ++it)
+  {
+    RecombinationModelInterface* rec =
+        static_cast<RecombinationModelInterface*>(it->second);
+    _recombination_models.insert(rec);
   }
 
 
