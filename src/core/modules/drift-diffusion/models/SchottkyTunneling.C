@@ -86,6 +86,7 @@ SchottkyTunneling::do_init(void)
       if (elem->is_node_on_side(i, side))
       {
         const Point& p = elem->point(i);
+        //cerr << p << endl;
         pmin(0) = (p(0) - tun_len < pmin(0)) ? p(0) - tun_len : pmin(0);
         pmin(1) = (p(1) - tun_len < pmin(1)) ? p(1) - tun_len : pmin(1);
         pmin(2) = (p(2) - tun_len < pmin(2)) ? p(2) - tun_len : pmin(2);
@@ -108,8 +109,8 @@ SchottkyTunneling::do_init(void)
     Point p_mindist(mindist);
 
     // check if it is inside the tunneling bounding box
-    if ((centr(0) < pmin(0)) && (centr(1) < pmin(1)) && (centr(1) < pmin(1)) &&
-        (centr(0) > pmax(0)) && (centr(0) > pmax(0)) && (centr(0) > pmax(0)))
+    if ((centr(0) < pmin(0)) || (centr(1) < pmin(1)) || (centr(1) < pmin(1)) ||
+        (centr(0) > pmax(0)) || (centr(0) > pmax(0)) || (centr(0) > pmax(0)))
       continue;
 
     // calculate min distance from contact
@@ -130,7 +131,9 @@ SchottkyTunneling::do_init(void)
           p_mindist = dist;
     }
 
-    _elem_map.insert(make_pair(elem, p_mindist));
+    // NOTE: we insert the top parent, assuming that this list
+    // is created before refinement
+    _elem_map.insert(make_pair(elem->top_parent(), p_mindist));
 
   }
 
@@ -143,6 +146,12 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
     double& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
+  recomb_e = recomb_h = 0.0;
+
+  // if the current element is not in our list, we can return immediately
+  if (!_elem_map.count(dd.get_element()->top_parent())) return;
+
 
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
@@ -160,6 +169,12 @@ SchottkyTunneling::get_net_recombination_rate_derivatives(
     std::vector<double>& recomb_e, std::vector<double>& recomb_h)
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
+  recomb_e[0] = recomb_h[0] =  0;
+  recomb_e[1] = recomb_h[1] =  0;
+
+  // if the current element is not in our list, we can return immediately
+  if (!_elem_map.count(dd.get_element()->top_parent())) return;
 
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
