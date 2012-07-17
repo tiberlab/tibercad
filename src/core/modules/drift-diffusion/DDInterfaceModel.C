@@ -51,6 +51,8 @@ DDInterfaceModel::get_dd_properties(void) const
 void
 DDInterfaceModel::prepare_submodels(void)
 {
+  list<ModelOptions> newopts;
+
   // for each trap we add an SRH recombination model
   ModelOptions::submodel_iterator it(get_options().submodels_begin("trap"));
   ModelOptions::submodel_iterator end(get_options().submodels_end("trap"));
@@ -63,13 +65,31 @@ DDInterfaceModel::prepare_submodels(void)
       opts.set_option("trap", true);
       opts.set_option("type", "srh");
       opts.set_option("name", "recombination");
-      get_options().add_submodel("recombination", opts);
+      opts.set_key("recombination");
+      newopts.insert(newopts.end(), opts);
+      //get_options().add_submodel("recombination", opts);
     }
   }
 
+  it = get_options().submodels_begin("generation");
+  end = get_options().submodels_end("generation");
+  for ( ; it != end; ++it)
+  {
+    ModelOptions opts(it->second);
+    opts.set_option("name", "recombination");
+    opts.set_key("recombination");
+    newopts.insert(newopts.end(), opts);
+    //get_options().add_submodel("recombination", it->second);
+  }
+
+  list<ModelOptions>::iterator lit(newopts.begin());
+  list<ModelOptions>::iterator lend(newopts.end());
+  for ( ; lit != lend; ++lit)
+    get_options().add_submodel((*lit).get_key(), *lit);
+
+
   vector<PhysicalModelInterface*> pd;
   create_submodels(pd, "recombination");
-  create_submodels(pd, "generation");
 
   // traps
   create_submodels(pd, "trap");
@@ -152,14 +172,6 @@ DDInterfaceModel::do_init(void)
     set_type(2, NEUMANN);
   }
 
-  it = submodels_begin("generation");
-  end = submodels_end("generation");
-  for ( ; it != end; ++it)
-  {
-    RecombinationModelInterface* rec =
-        static_cast<RecombinationModelInterface*>(it->second);
-    _recombination_models.insert(rec);
-  }
 
 
   if (get_option("field_emission", "") == "fowler_nordheim")
