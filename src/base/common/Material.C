@@ -297,3 +297,16 @@ Material::fill_species(void)
   }
 }
 
+
+bool
+Material::has_specie(Specie sp) const
+{
+    if (_species.find(sp) == _species.end())
+    {
+      return false;
+    }
+    else
+    {
+      return true;
+    }
+}

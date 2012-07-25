@@ -1372,19 +1372,16 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
 
  if (!(mat->is_alloy()))
     {
-
      return mat;
     }
 
  if (!(parent))
     {
-
- return mat;
+     return mat;
     }
 
  if (parent)
    {
-
      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
      //TODO: At first we only consider InGaX, AlGaX alloys with this hardcoded trick.
      //To be generalized.
@@ -1398,7 +1395,7 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
          (!alloy->get_component_B()->has_specie(atom.get_specie())))
        return alloy->get_component_A();
      else if (alloy->get_component_B()->has_specie(atom.get_specie()) &&
-         (!alloy->get_component_A()->has_specie(atom.get_specie())))
+         (!alloy->get_component_A()->has_specie(atom.get_specie())))       
        return alloy->get_component_B();
      else
        throw RuntimeException("Ambiguity for alloy component assignation"
@@ -1426,6 +1423,8 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
      || atom2.get_specie() == Specie::Ga)
    return get_material(atom2, parent);
  else
-   return get_material(atom1, parent);
+   throw RuntimeException("WARNING: material for couple of atoms is decided "
+       "depending on the anion specie. I cannot find a valid anion "
+       "(only In, Al, Ga supported)");
 
 }

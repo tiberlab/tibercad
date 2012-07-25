@@ -291,14 +291,4 @@ Material::acceptors_end(void) const
 }
 
 
-inline
-bool
-Material::has_specie(Specie sp) const 
-{
-  if (_species.find(sp) == _species.end())
-    return true;
-  else return false; 
-}
-
-
 #endif // _MATERIAL_H_
