@@ -205,6 +205,8 @@ Material::preinit(void)
 
   do_preinit();
 
+  fill_species();
+
   get_database().close();
 }
 
@@ -275,4 +277,23 @@ Material::clear_doping(void)
 
 
 
+void
+Material::fill_species(void)
+{
+  //Read and store species belonging to the material.
+  //Useful for assigning components to atoms in random alloys
+  get_database().set_section("atomistic_structure");
+  unsigned int n_species = get_database().get("n_basis_specie", 0);
+  for (unsigned int i = 0; i < n_species; i++)
+  {
+    std::string s;
+    std::stringstream out;
+    out << i;
+    s = out.str();
+    std::string sp;
+    sp = get_database().get("specie_" + s, "None");
+    Specie tmp(sp);
+    _species.insert(tmp);
+  }
+}
 

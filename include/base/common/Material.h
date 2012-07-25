@@ -5,6 +5,7 @@
 
 #include "PhysicalObject.h"
 #include "TypeDefs.h"
+#include "Specie.h"
 
 // LibMesh includes
 #include "point.h"
@@ -117,7 +118,8 @@ class Material : public PhysicalObject
     //! Print some information
     void info(void) const;
 
-
+    //! Tells if a specie belongs to the material
+    bool has_specie(Specie) const;
 
   protected:
 
@@ -156,6 +158,8 @@ class Material : public PhysicalObject
     //! Set the RotatedCrystal
     void set_crystal(RotatedCrystal* crystal);
 
+    //! Fill list of species, to be used during initialization
+    void fill_species(void);
 
 
   private:
@@ -186,6 +190,8 @@ class Material : public PhysicalObject
     //! Clear all doping
     void clear_doping(void) TBDLLOCAL;
 
+    //! List of all species 
+    std::set<Specie> _species;
 
 };
 
@@ -285,7 +291,14 @@ Material::acceptors_end(void) const
 }
 
 
-
+inline
+bool
+Material::has_specie(Specie sp) const 
+{
+  if (_species.find(sp) == _species.end())
+    return true;
+  else return false; 
+}
 
 
 #endif // _MATERIAL_H_
