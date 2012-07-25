@@ -10,6 +10,7 @@
 #include "MeshUtils.h"
 #include "TiberCad.h"
 #include "Material.h"
+#include "RuntimeException.h"
 
 //C++ includes
 //--------------------
@@ -139,7 +140,16 @@ AtomisticStructure::init(const std::string& name,
 
       if (_atomistic_structure_options.is_associated == false) associate_elements();
 
+      //TODO: I'm calculating the bond map again anyway because otherwise the translation vectors are not
+      //correctly reproduced for periodic structures. If we really want to import the bond map,
+      //this needs to be changed
+      if (_bondmap != NULL)
+      {
+        delete _bondmap;
+        _bondmap = NULL;
+      }
       if (_bondmap == NULL) build_bond_map();
+
 
       print_driver();
 
@@ -1378,11 +1388,22 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
      //TODO: At first we only consider InGaX, AlGaX alloys with this hardcoded trick.
      //To be generalized.
-     if ((atom.get_specie() == Specie::Ga))
-       {
-         return alloy->get_component_B();
-       }
-     else return alloy->get_component_A();
+     //if ((atom.get_specie() == Specie::Ga))
+     //  {
+     //    return alloy->get_component_B();
+     //  }
+     //else return alloy->get_component_A();
+     //
+     if (alloy->get_component_A()->has_specie(atom.get_specie()) &&
+         (!alloy->get_component_B()->has_specie(atom.get_specie())))
+       return alloy->get_component_A();
+     else if (alloy->get_component_B()->has_specie(atom.get_specie()) &&
+         (!alloy->get_component_A()->has_specie(atom.get_specie())))
+       return alloy->get_component_B();
+     else
+       throw RuntimeException("Ambiguity for alloy component assignation"
+           "in AtomisticStructure::get_material(Atom&, bool)");
+
    }
 
 
