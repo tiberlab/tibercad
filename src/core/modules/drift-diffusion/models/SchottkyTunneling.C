@@ -24,7 +24,8 @@ using namespace std;
 SchottkyTunneling::SchottkyTunneling(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _max_tunnel_length(10),
-    _contact_voltage(0.0)
+    _contact_voltage(0.0),
+    _band('c')
 {
 }
 
@@ -84,12 +85,17 @@ SchottkyTunneling::do_init(void)
     const Elem* elem = (*bdit).elem();
     unsigned int side = (*bdit).side();
 
-    if ((bdit == bdfirst) && !has_option("voltage"))
+    if (bdit == bdfirst)
     {
       const PhysicalModelInterface* mod =
           sim->get_interface_model<PhysicalModelInterface>(elem, side);
-      get_options().set_option("voltage",
-          mod->get_options().get_option("voltage", string()));
+
+      if (!has_option("voltage"))
+        get_options().set_option("voltage",
+            mod->get_options().get_option("voltage", string()));
+
+      string band = mod->get_option("band", string("c"));
+      _band = band[0];
     }
 
     for (unsigned int i = 0; i < elem->n_nodes(); ++i)
