@@ -66,6 +66,10 @@ class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
     std::string _contact_name;
 
 
+    //! The contact voltage
+    double _contact_voltage;
+
+
     //! A map containing all elements inside the tunnel length
     HashMap<const Elem*, Point>::Type _elem_map;
 

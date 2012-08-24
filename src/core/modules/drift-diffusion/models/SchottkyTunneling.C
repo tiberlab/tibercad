@@ -23,7 +23,8 @@ using namespace std;
 
 SchottkyTunneling::SchottkyTunneling(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    _max_tunnel_length(10)
+    _max_tunnel_length(10),
+    _contact_voltage(0.0)
 {
 }
 
@@ -76,11 +77,20 @@ SchottkyTunneling::do_init(void)
   Point pmin(numeric_limits<double>::max());
   Point pmax(-numeric_limits<double>::max());
 
+  // here we also extract the voltage option from the contact
   SimulationEnvironment::BoundarySideIterator bdit(bdfirst);
   for ( ; bdit != bdend; ++bdit)
   {
     const Elem* elem = (*bdit).elem();
     unsigned int side = (*bdit).side();
+
+    if ((bdit == bdfirst) && !has_option("voltage"))
+    {
+      const PhysicalModelInterface* mod =
+          sim->get_interface_model<PhysicalModelInterface>(elem, side);
+      get_options().set_option("voltage",
+          mod->get_options().get_option("voltage", string()));
+    }
 
     for (unsigned int i = 0; i < elem->n_nodes(); ++i)
       if (elem->is_node_on_side(i, side))
@@ -136,6 +146,9 @@ SchottkyTunneling::do_init(void)
     _elem_map.insert(make_pair(elem->top_parent(), p_mindist));
 
   }
+
+  // now, extract the contact voltage we copied from the contact model
+  get_parameter("voltage", _contact_voltage);
 
 }
 
