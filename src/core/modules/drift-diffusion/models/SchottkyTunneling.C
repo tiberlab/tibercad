@@ -25,7 +25,8 @@ SchottkyTunneling::SchottkyTunneling(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _max_tunnel_length(10),
     _contact_voltage(0.0),
-    _band('c')
+    _band('c'),
+    _barrier(0.6)
 {
 }
 
@@ -47,6 +48,7 @@ SchottkyTunneling::do_init(void)
 {
   _max_tunnel_length = get_option("maximum_tunnel_length", _max_tunnel_length);
   _contact_name = get_option("contact", _contact_name);
+  _barrier = get_option("barrier", _barrier);
 
   if (_contact_name.empty())
     throw ModelErrorException("Need a contact name for Schottky "
@@ -171,6 +173,30 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
   // if the current element is not in our list, we can return immediately
   if (!_elem_map.count(dd.get_element()->top_parent())) return;
 
+  double gamma = 0.0;
+  double pot_diff = 0.0;
+  if (_band == 'c')
+  {
+    double Ec = dd.get_conduction_band_edge() - dd.get_electric_potential();
+    pot_diff = _contact_voltage + _barrier - Ec;
+  }
+  else
+  {
+    double Ev = dd.get_valence_band_edge() - dd.get_electric_potential();
+    pot_diff =  _barrier + Ev - _contact_voltage;
+  }
+
+  // add something small because we will divide by E
+  double E = 100 * dd.get_electric_field().size() + 1e-3;
+
+  double m = 1;
+  if (pot_diff > 0.0)
+  {
+    double tmp = sqrt(2 * Constants::e * m * Constants::electron_mass *
+        pot_diff * pot_diff * pot_diff) / E;
+    gamma = exp(-4 / 3 / Constants::hbar * tmp);
+  }
+  cerr << "G = " << gamma << "\n";
 
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();

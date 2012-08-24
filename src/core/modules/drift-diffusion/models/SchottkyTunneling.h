@@ -74,6 +74,10 @@ class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
     char _band;
 
 
+    //! The Schottky barrier
+    double _barrier;
+
+
     //! A map containing all elements inside the tunnel length
     HashMap<const Elem*, Point>::Type _elem_map;
 
