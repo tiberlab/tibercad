@@ -2320,10 +2320,7 @@ SimulationInterface::get_solution(const Atom* atom, map<ID, vector<double> >& va
   }
   else
   {
-    vector<Point> p(1);
-    p[0](0) = atom->get_position(0);
-    p[0](1) = atom->get_position(1);
-    p[0](2) = atom->get_position(2);
+    vector<Point> p(1, atom->get_position());
     ret = get_solution(atom->get_elem(), values, p);
   }
 

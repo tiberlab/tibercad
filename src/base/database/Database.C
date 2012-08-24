@@ -76,6 +76,7 @@ Database::operator=(const Database& rhs)
     _mixing_type = rhs._mixing_type;
     _comp_db = rhs._comp_db;
     _comp_fractions = rhs._comp_fractions;
+    //set_material(_material, _datafile); // Does not work
   }
 
   return *this;
