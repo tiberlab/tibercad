@@ -23,10 +23,11 @@ using namespace std;
 
 SchottkyTunneling::SchottkyTunneling(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    _max_tunnel_length(10),
+    _max_tunnel_length(20),
     _contact_voltage(0.0),
     _band('c'),
-    _barrier(0.6)
+    _barrier(0.6),
+    _mass(1.0)
 {
 }
 
@@ -48,7 +49,7 @@ SchottkyTunneling::do_init(void)
 {
   _max_tunnel_length = get_option("maximum_tunnel_length", _max_tunnel_length);
   _contact_name = get_option("contact", _contact_name);
-  _barrier = get_option("barrier", _barrier);
+  get_parameter("effective_mass", _mass);
 
   if (_contact_name.empty())
     throw ModelErrorException("Need a contact name for Schottky "
@@ -96,7 +97,17 @@ SchottkyTunneling::do_init(void)
         get_options().set_option("voltage",
             mod->get_options().get_option("voltage", string()));
 
-      string band = mod->get_option("band", string("c"));
+      if (!has_option("barrier"))
+      {
+        if (mod->get_options().find_option("barrier_height"))
+          get_options().set_option("barrier",
+              mod->get_options().get_option("barrier_height", string()));
+        if (mod->get_options().find_option("barrier"))
+          get_options().set_option("barrier",
+              mod->get_options().get_option("barrier", _barrier));
+      }
+
+      string band = mod->get_options().get_option("band", "c");
       _band = band[0];
     }
 
@@ -158,6 +169,12 @@ SchottkyTunneling::do_init(void)
   // now, extract the contact voltage we copied from the contact model
   get_parameter("voltage", _contact_voltage);
 
+  // the same for the barrier height
+  if (!has_option("barrier"))
+    throw ModelErrorException("Need barrier height for Schottky "
+        "contact tunneling model (contact: " + _contact_name + ")");
+  _barrier = get_option("barrier", _barrier);
+
 }
 
 
@@ -178,25 +195,24 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
   if (_band == 'c')
   {
     double Ec = dd.get_conduction_band_edge() - dd.get_electric_potential();
-    pot_diff = _contact_voltage + _barrier - Ec;
+    pot_diff = -_contact_voltage + _barrier - Ec;
   }
   else
   {
     double Ev = dd.get_valence_band_edge() - dd.get_electric_potential();
-    pot_diff =  _barrier + Ev - _contact_voltage;
+    pot_diff =  _barrier + Ev + _contact_voltage;
   }
 
   // add something small because we will divide by E
   double E = 100 * dd.get_electric_field().size() + 1e-3;
 
-  double m = 1;
   if (pot_diff > 0.0)
   {
-    double tmp = sqrt(2 * Constants::e * m * Constants::electron_mass *
+    double tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass *
         pot_diff * pot_diff * pot_diff) / E;
     gamma = exp(-4 / 3 / Constants::hbar * tmp);
   }
-  cerr << "G = " << gamma << "\n";
+
 
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
@@ -204,7 +220,7 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
   double gn = 1; //dd.get_electron_gamma();
   double gp = 1; //dd.get_hole_gamma();
 
-  recomb_e = recomb_h = (n * p - ni * ni * gn * gp);
+  recomb_e = recomb_h = gamma; (n * p - ni * ni * gn * gp);
 }
 
 
@@ -224,8 +240,8 @@ SchottkyTunneling::get_net_recombination_rate_derivatives(
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
 
-  recomb_e[0] = recomb_h[0] =  p; // dR/dn
-  recomb_e[1] = recomb_h[1] =  n; // dR/dp
+  recomb_e[0] = recomb_h[0] =  0; //p; // dR/dn
+  recomb_e[1] = recomb_h[1] =  0; //n; // dR/dp
 }
 
 

@@ -56,7 +56,14 @@ class SimulationEnvironment
             const std::set<ID>& ids = std::set<ID>()) :
               _iter(it),
               _bdids(ids),
-              _mapend(emap.end()) {}
+              _mapend(emap.end())
+        {
+          while ((_iter != _mapend) && !_bdids.empty() &&
+              !_bdids.count(_iter->second))
+          {
+            ++_iter;
+          }
+        }
 
         BoundarySideIterator& operator++(void)
         {
