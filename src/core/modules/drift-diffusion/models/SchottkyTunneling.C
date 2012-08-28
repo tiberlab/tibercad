@@ -187,32 +187,59 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
 
   recomb_e = recomb_h = 0.0;
 
-  // if the current element is not in our list, we can return immediately
-  if (!_elem_map.count(dd.get_element()->top_parent())) return;
+  HashMap<const Elem*, Point>::Type::iterator it(
+      _elem_map.find(dd.get_element()->top_parent()));
 
-  double gamma = 0.0;
+  // if the current element is not in our list, we can return immediately
+  if (it == _elem_map.end()) return;
+
+  double Gtun = 0.0;
   double pot_diff = 0.0;
+  double band_edge;
+  double kT;
   if (_band == 'c')
   {
-    double Ec = dd.get_conduction_band_edge() - dd.get_electric_potential();
-    pot_diff = -_contact_voltage + _barrier - Ec;
+    kT = dd.get_point_data().electron_vt;
+    band_edge = dd.get_conduction_band_edge() - dd.get_electric_potential();
+    pot_diff = -_contact_voltage + _barrier - band_edge;
   }
   else
   {
-    double Ev = dd.get_valence_band_edge() - dd.get_electric_potential();
-    pot_diff =  _barrier + Ev + _contact_voltage;
+    kT = dd.get_point_data().hole_vt;
+    band_edge = dd.get_valence_band_edge() - dd.get_electric_potential();
+    pot_diff =  _barrier + band_edge + _contact_voltage;
   }
 
   // add something small because we will divide by E
-  double E = 100 * dd.get_electric_field().size() + 1e-3;
+  double E = dd.get_electric_field() * it->second / it->second.size();
+  E = 100 * E + 1e-3;
 
-  if (pot_diff > 0.0)
+  if ((pot_diff > 0.0) && (E < 0))
   {
+    // E is negative !!
     double tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass *
         pot_diff * pot_diff * pot_diff) / E;
-    gamma = exp(-4 / 3 / Constants::hbar * tmp);
-  }
+    double gamma = exp(4 / 3 / Constants::hbar * tmp);
 
+    double hcube = Constants::h * Constants::h * Constants::h;
+    double A = 4 * M_PI * Constants::electron_mass * _mass *
+        Constants::e * Constants::e * kT / hcube;
+
+    double exp1, exp2;
+    if (_band == 'c')
+    {
+      exp1 = exp(-(band_edge + dd.get_electron_electro_chemical_potential()) / kT);
+      exp2 = exp(-(band_edge + _contact_voltage) / kT);
+    }
+    else
+    {
+      exp1 = exp((band_edge - dd.get_hole_electro_chemical_potential()) / kT);
+      exp2 = exp((band_edge - _contact_voltage) / kT);
+    }
+
+    Gtun = -A * gamma * log((1 + exp1) / (1 + exp2)) * E / 1e6;
+
+  }
 
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
@@ -220,7 +247,10 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
   double gn = 1; //dd.get_electron_gamma();
   double gp = 1; //dd.get_hole_gamma();
 
-  recomb_e = recomb_h = gamma; (n * p - ni * ni * gn * gp);
+  if (_band == 'c')
+    recomb_e = Gtun;
+  else
+    recomb_h = Gtun;
 }
 
 
