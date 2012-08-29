@@ -18,7 +18,7 @@ Vff::_this = NULL;
 Vff::Options::Options(void)
 : boundary_conditions("free_standing"),
   substrate_plane("z"),
-  boundary_tol(1.0)
+  substrate_tol(1.0)
 {
 }
 
@@ -54,9 +54,8 @@ Vff::parse_options()
   Options& myopts = get_my_options();
 
   myopts.boundary_conditions = opts.get_option("boundary_conditions", "free_standing");
-  myopts.substrate_plane = opts.get_option("substrate_plane", "z");
-  myopts.boundary_tol = opts.get_option("substrate_plane", 1.0);
-
+   myopts.substrate_plane = opts.get_option("substrate_plane", "z");
+   myopts.substrate_tol = opts.get_option("substrate_tol", 1.0);
 }
 
 void
@@ -76,27 +75,21 @@ Vff::do_init()
 void
 Vff::do_solve(void)
 {
-  //Set_boundary temporary here otherwise the dof are fixed before Macrostrain runs
-  set_boundary();
+  Messages::debug("Initializing VFF Module");
+   //Set_boundary temporary here otherwise the dof are fixed before Macrostrain runs
+   set_boundary();
 
+   //Build preliminar information
+   resize_parameters();
+   build_parameters();
+   set_coords();
 
-  resize_parameters();
-  build_parameters();
-  set_coords();
+   Messages::debug("Starting VFF Conjugate Gradient");
+   //Calling optimization
+   optimize();
 
-
-//  std::cout << "Trying one keating potential " << keating_potential() << std::endl;
-//  std::cout << "Trying one keating gradient " << std::endl;
-//  std::vector<double> test(keating_gradient());
-//  std::cout << "done" << std::endl;
-
-
-  //std::cout << "calling optimizer " << std::endl;
-  optimize();
-  //std::cout << "done" << std::endl;
-
-  displace_atoms();
-
+   //Apply displacement to AtomisticStructure instance
+   displace_atoms();
 }
 
 void
@@ -251,8 +244,38 @@ Vff::set_boundary(void)
             }
         }
     }
+  if (get_my_options().boundary_conditions == "substrate")
+   {
+     double tol = get_my_options().substrate_tol;
+     unsigned int plane = 0;
+     if (get_my_options().substrate_plane == "z")
+         plane = 2;
+     if (get_my_options().substrate_plane == "y")
+             plane = 1;
+     if (get_my_options().substrate_plane == "x")
+             plane = 0;
+     double min_coord =
+         get_atomistic_structure()->get_structure_atoms()[0].get_position(plane);
+     for (unsigned int i = 0; i < n_atoms; i++)
+     {
+       double coord =
+           get_atomistic_structure()->get_structure_atoms()[i].get_position(plane);
+       if (coord < min_coord)
+           min_coord = coord;
+     }
+     for (unsigned int i = 0; i < n_atoms; i++)
+          {
+            double coord =
+                get_atomistic_structure()->get_structure_atoms()[i].get_position(plane);
+            if (coord > min_coord + tol)
+            {
+              free_atoms.push_back(i);
 
+            }
+          }
+   }
 
+  _n_free_atoms = free_atoms.size();
 
   //Common operations
   _n_dof = _n_free_atoms * 3;

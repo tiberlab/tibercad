@@ -115,7 +115,7 @@ private:
 
     std::string boundary_conditions;
     std::string substrate_plane;
-    double boundary_tol;
+    double substrate_tol;
 
   };
 
