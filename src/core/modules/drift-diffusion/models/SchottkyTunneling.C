@@ -10,6 +10,7 @@
 #include "mesh_base.h"
 #include "fe.h"
 #include "quadrature_gauss.h"
+#include "elem.h"
 
 #include <limits>
 
@@ -115,7 +116,6 @@ SchottkyTunneling::do_init(void)
       if (elem->is_node_on_side(i, side))
       {
         const Point& p = elem->point(i);
-        //cerr << p << endl;
         pmin(0) = (p(0) - tun_len < pmin(0)) ? p(0) - tun_len : pmin(0);
         pmin(1) = (p(1) - tun_len < pmin(1)) ? p(1) - tun_len : pmin(1);
         pmin(2) = (p(2) - tun_len < pmin(2)) ? p(2) - tun_len : pmin(2);
@@ -251,6 +251,7 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
     recomb_e = Gtun;
   else
     recomb_h = Gtun;
+
 }
 
 

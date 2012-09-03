@@ -2011,6 +2011,8 @@ DriftDiffusion::calculate_currents_rstf(void)
 
   // Jacobian * quadrature weight at each integration point.
   const vector<Real>& JxW = fe->get_JxW();
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
 
   // physical coordinates of the quadrature points
   //const vector<Point>& q_point = fe->get_xyz();
@@ -2071,7 +2073,6 @@ DriftDiffusion::calculate_currents_rstf(void)
     {
 
       unsigned int n_dofs = dof_indices_u.size();
-      // get the solution values at the centroid
       Real u  = 0.0;
       Real en = 0.0;
       Real ep = 0.0;
@@ -2090,11 +2091,12 @@ DriftDiffusion::calculate_currents_rstf(void)
 
         dT += dphi[i][qp] * T_nodes[i];
 
-        e_field += dphi[i][qp] * solution(dof_indices_u[i]);
+        e_field -= dphi[i][qp] * solution(dof_indices_u[i]);
       }
 
       // prepare for calculating local properties
-      sc->set_coordinates(elem->centroid());
+      //sc->set_coordinates(elem->centroid());  ????? 2012-08-31
+      sc->set_coordinates(q_point[qp]);
 
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
@@ -2104,6 +2106,7 @@ DriftDiffusion::calculate_currents_rstf(void)
 
       sc->calculate_densities();
       sc->calculate_mobilities();
+      sc->calculate_net_recombination_rates();
 
       //Get the thermoelectric power
       sc->compute_thermoelectric_powers();
@@ -2114,11 +2117,16 @@ DriftDiffusion::calculate_currents_rstf(void)
       double sigma_e = -Constants::e * sc->get_electron_conductivity();
       double sigma_h = -Constants::e * sc->get_hole_conductivity();
 
+      double Rn = sc->get_net_electron_recombination_rate();
+      double Rp = sc->get_net_hole_recombination_rate();
+      double net_rate = JxW[qp] * Constants::e * (Rn - Rp);
+
       RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
       RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-        _boundary_currents[boundary] += (je + jh) * dphi[n][qp] * weight[n];
+        _boundary_currents[boundary] += ((je + jh) * dphi[n][qp] -
+            net_rate * phi[n][qp]) * weight[n];
 
     } // end loop over quadrature points
   } // end loop over elements
