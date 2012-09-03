@@ -71,11 +71,55 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
   private:
 
+    //! We need this to store the accumulated elemental strain
+    class SymTensor
+    {
+      public:
+      SymTensor(void) :
+        _val({0, 0, 0, 0, 0, 0})
+      { }
+      SymTensor(const RealTensor& t)
+      {
+        _val[0] = t(0,0);
+        _val[1] = t(1,1);
+        _val[2] = t(2,2);
+        _val[3] = t(0,1);
+        _val[4] = t(1,2);
+        _val[5] = t(0,2);
+      }
+
+      void get_tensor(RealTensor& t)
+      {
+        t(0,0) = _val[0];
+        t(1,1) = _val[1];
+        t(2,2) = _val[2];
+        t(0,1) = t(1,0) = _val[3];
+        t(1,2) = t(2,1) = _val[4];
+        t(0,2) = t(2,0) = _val[5];
+      }
+
+      SymTensor& operator+=(RealTensor& t)
+      {
+        _val[0] += t(0,0);
+        _val[1] += t(1,1);
+        _val[2] += t(2,2);
+        _val[3] += t(0,1);
+        _val[4] += t(1,2);
+        _val[5] += t(0,2);
+      }
+
+      private:
+      double _val[6];
+    };
+
   //!shape iteration index
   ID shape_iteration;
 
   //!node connection
   std::vector<unsigned short int> node_conn;
+
+  //! The accumulated elemental strain, used for shape deformation
+  HashMap<const Elem*, SymTensor>::Type _accumulated_strain;
 
   //! A pointer to device
   Device* _device;
@@ -160,6 +204,8 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     //! Apply the deformation
     void apply_shape_deformation();
 
+    //! Update the aqccumulated strain
+    void accumulate_strain(void);
 
     //! Restore the shape
     void restore_shape();

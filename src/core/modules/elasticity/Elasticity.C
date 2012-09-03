@@ -85,6 +85,7 @@ Elasticity::do_init(void)
   system.attach_assemble_function(assemble);
   system.init();
 
+  int n_elem = 0;
   
   //Create node connection
   const unsigned int nn  = get_mesh().n_nodes();
@@ -96,13 +97,17 @@ Elasticity::do_init(void)
     MeshBase::const_element_iterator       el     = get_mesh().active_elements_begin();
     const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
     
-    for ( ; el != end_el; ++el)
+    for ( ; el != end_el; ++el, ++n_elem)
       for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
 	node_conn_local[(*el)->node(n)]++;
 
     node_conn = node_conn_local;
   }
   
+  // prepare the vector for the accumulated strain
+  // TODO this would not work very well with mesh refinement and needs to be improved,
+  // e.g. by using a helper System
+  _accumulated_strain.clear();
 
 
 }
@@ -174,8 +179,9 @@ Elasticity::do_solve(void)
 
   do {
 
-    system.solution->zero();
+    accumulate_strain();
     apply_shape_deformation();
+    system.solution->zero();
 
     system.solve();
     sol->add(1.0,*(system.solution));
@@ -237,6 +243,55 @@ Elasticity::create_boundary_model(const ModelOptions& options,
 
 
 void
+Elasticity::accumulate_strain(void)
+{
+
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
+  const NumericVector<Number>& solution = system.get_solution_vector();
+
+  const MeshBase& mesh = get_mesh();
+  const unsigned int dim = mesh.mesh_dimension();
+
+  DofMap& dof_map =  system.get_dof_map();
+  vector<vector<unsigned int> > dof_indices_vec(3);
+  vector<unsigned int> dof_indices;
+
+  FEType fe_type = dof_map.variable_type(uvar[0]);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  QGauss qrule(dim, CONSTANT);
+  fe->attach_quadrature_rule(&qrule);
+
+  const vector<Point>& ref_points = qrule.get_points();
+  const vector<Real>& JxW = fe->get_JxW();
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+    fe->reinit(elem);
+
+    dof_map.dof_indices(elem, dof_indices_vec[0], uvar[0]);
+    dof_map.dof_indices(elem, dof_indices_vec[1], uvar[1]);
+    dof_map.dof_indices(elem, dof_indices_vec[2], uvar[2]);
+    const unsigned int n_dofs = dof_indices_vec[0].size();
+
+    RealTensor strain(0);
+    for (int i = 0; i < 3; i++)
+      for (int j = 0; j < 3; j++)
+        for (int l = 0; l < n_dofs; l++)
+          strain(i,j) += 0.5 * ((solution)(dof_indices_vec[i][l]) * dphi[l][0](j) +
+              (solution)(dof_indices_vec[j][l]) * dphi[l][0](i));
+
+    _accumulated_strain[elem] += strain;
+  }
+}
+
+
+void
 Elasticity::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
     const std::vector<Point>& p)
@@ -247,8 +302,8 @@ Elasticity::get_solution_secure(const Elem* elem,
  
    TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
 
-   //const NumericVector<Number>& solution = system->get_solution_vector();
-   const NumericVector<Number>& solution = *sol;
+   const NumericVector<Number>& solution = system->get_solution_vector();
+   const NumericVector<Number>& accum_sol = *sol;
    const unsigned int dim = get_mesh().mesh_dimension();
 
    const DofMap& dof_map = system->get_dof_map();
@@ -267,10 +322,12 @@ Elasticity::get_solution_secure(const Elem* elem,
   
    ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);
    
-   RealTensor total_strain(0);
-   RealTensor total_stress(0);
-   RealTensor stress(0);
-   RealTensor strain(0);
+   RealTensor total_strain;
+   RealTensor total_stress;
+   RealTensor stress;
+   RealTensor strain;
+   RealTensor summed_strain;
+   _accumulated_strain[elem].get_tensor(summed_strain);
 
   
    for (ID n = 0; n < np; n++)
@@ -285,7 +342,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      RealGradient u(0);
      for (unsigned int i = 0;i<3; i ++)
        for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
-         u(i) +=(solution)(dof_indices[i][alpha]) * phi[alpha][n];
+         u(i) +=(accum_sol)(dof_indices[i][alpha]) * phi[alpha][n];
 
      //------Strain-------------------------
 
@@ -305,6 +362,7 @@ Elasticity::get_solution_secure(const Elem* elem,
 
        }
 
+     strain += summed_strain;
      stress = C*strain;
      total_strain = strain + strain_source;
      total_stress = C * total_strain + stress_source;
@@ -628,6 +686,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   std::vector< std::vector<unsigned int> > dof_indices_vec(3);
   std::vector<unsigned int> dof_indices;
 
+
   //Start assembling
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
@@ -668,6 +727,8 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 // commentato perche' centroide ha coordinate globali e produce errore
 //    const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
 
+    RealTensor strain;
+    _accumulated_strain[elem].get_tensor(strain);
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -676,30 +737,20 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
        mod.calculate(elem, qrule.qp(qp));
        const Tensor4DSym& C = mod.get_stiffness();
        const RealGradient& force =  mod.get_force_source();
-       const RealTensor& strain_source =  mod.get_strain_source();
+       strain +=  mod.get_strain_source();
+       //const RealTensor& strain_source =  mod.get_strain_source();
        const RealTensor& stress_source =  mod.get_stress_source();
-       //const RealTensor& internal_stress = get_internal_stress(elem, qrule.qp(qp));
-
-       //RealTensor total_stress;
-       // if (shape_iteration == 0)
-       //total_stress = (stress_source + (C * strain_source));
-       //else
-       //         total_stress += internal_stress;
-
-       RealTensor strain(strain_source);
 
        for (ID i = 0;i <3; i++)
          for (ID j = 0;j <3; j++)
            for (ID alpha=0; alpha<n_dofs_vec[i]; alpha++)
            {
-             //Add internal stress
-             if (shape_iteration > 0)
-               strain(i,j) += 0.5 * ((solution)(dof_indices_vec[i][alpha]) * dphi[alpha][qp](j) + (solution)(dof_indices_vec[j][alpha]) * dphi[alpha][qp](i));
+             //Add internal stress SEEMS TO BE WRONG
+             //if (shape_iteration > 0)
+             //  strain(i,j) += 0.5 * ((solution)(dof_indices_vec[i][alpha]) * dphi[alpha][qp](j) + (solution)(dof_indices_vec[j][alpha]) * dphi[alpha][qp](i));
 
              for (ID beta=0; beta<n_dofs_vec[j]; beta++)
                (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
-
-
            }
 
        RealTensor total_stress(stress_source);
@@ -794,7 +845,10 @@ Elasticity::apply_shape_deformation()
    
   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   
-  const NumericVector<Number>& solution = *sol;
+  // TODO CHECK THIS! It seems that this was terribly wrong and worked only
+  // for one deformation step
+  //const NumericVector<Number>& solution = *sol;
+  const NumericVector<Number>& solution = system->get_solution_vector();
   const unsigned int dim = get_mesh().mesh_dimension();
   const DofMap& dof_map = system->get_dof_map();
   
