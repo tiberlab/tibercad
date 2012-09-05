@@ -210,17 +210,11 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
     pot_diff =  _barrier + band_edge + _contact_voltage;
   }
 
-  // add something small because we will divide by E
   double E = dd.get_electric_field() * it->second / it->second.size();
-  E = 100 * E + 1e-3;
+  E = 100 * E;
 
-  if ((pot_diff > 0.0) && (E < 0))
+  if (pot_diff > 0.0)
   {
-    // E is negative !!
-    double tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass *
-        pot_diff * pot_diff * pot_diff) / E;
-    double gamma = exp(4 / 3 / Constants::hbar * tmp);
-
     double hcube = Constants::h * Constants::h * Constants::h;
     double A = 4 * M_PI * Constants::electron_mass * _mass *
         Constants::e * Constants::e * kT / hcube;
@@ -233,19 +227,21 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
     }
     else
     {
-      exp1 = exp((band_edge - dd.get_hole_electro_chemical_potential()) / kT);
-      exp2 = exp((band_edge - _contact_voltage) / kT);
+      exp1 = exp((band_edge + dd.get_hole_electro_chemical_potential()) / kT);
+      exp2 = exp((band_edge + _contact_voltage) / kT);
+
+      E *= -1;
     }
 
+    if (E >= 0) E = -1e-6;
+
+    // E is negative !!
+    double tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass *
+        pot_diff * pot_diff * pot_diff) / E;
+    double gamma = exp(4 / 3 / Constants::hbar * tmp);
     Gtun = -A * gamma * log((1 + exp1) / (1 + exp2)) * E / 1e6;
 
   }
-
-  double n  = dd.get_electron_density();
-  double p  = dd.get_hole_density();
-  double ni = dd.get_intrinsic_density();
-  double gn = 1; //dd.get_electron_gamma();
-  double gp = 1; //dd.get_hole_gamma();
 
   if (_band == 'c')
     recomb_e = Gtun;
