@@ -75,9 +75,13 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     class SymTensor
     {
       public:
-      SymTensor(void) :
-        _val({0, 0, 0, 0, 0, 0})
-      { }
+      SymTensor(void)
+//       : _val({0, 0, 0, 0, 0, 0})
+//      { }
+      {
+        _val[0] = _val[1] = _val[2] = _val[3] = _val[4] = _val[5] = 0.0;
+      }
+
       SymTensor(const RealTensor& t)
       {
         _val[0] = t(0,0);
