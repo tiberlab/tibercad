@@ -11,6 +11,48 @@
 TIBER_MODULE(SRHRecombination, recombination, srh)
 
 
+SRHRecombination::TrapAssisted::TrapAssisted(void) :
+  m_trap(0.25)
+{
+}
+
+double
+SRHRecombination::TrapAssisted::get_gamma(double F, double T, double Et)
+{
+  double Et_kT = Et / T;
+  double Kn_ref = 2.0/3.0 * Et_kT;
+  double Kn = 4.0/3.0 * sqrt(2 * m_trap * Constants::electron_mass *
+      Constants::e * Et * Et * Et) /
+      (3 * Constants::hbar * F);
+
+  double gamma = 0;
+
+  if (Kn > Kn_ref)
+  {
+    double fg = sqrt(24 * Constants::electron_mass * m_trap * Constants::e * T * T * T) / Constants::hbar;
+    gamma = 2 * sqrt(3*M_PI) * F / fg * exp(F*F/(fg*fg));
+  }
+  else
+  {
+    const double a1 = 0.3480242;
+    const double a2 = -0.0958798;
+    const double a3 = 0.7478556;
+    const double p1 = 0.47047;
+
+    double ttn = 1.0 / (1 + p1 * (0.5 * Et_kT - Kn*0.75) / sqrt(Kn * 0.375));
+    gamma = Et_kT * sqrt(2 * M_PI / (3 * Kn)) *
+        (a1 * ttn + a2 * ttn * ttn + a3 * ttn * ttn * ttn) * exp(Et_kT - Kn);
+  }
+
+  return gamma;
+}
+
+
+SRHRecombination::~SRHRecombination(void)
+{
+  delete _tat;
+}
+
 
 void
 SRHRecombination::read_database(void)
@@ -105,6 +147,15 @@ SRHRecombination::do_init(void)
   tmp =  get_option("reference", tmp);
   _energy_reference = tmp[0];
 
+  ModelOptions::submodel_iterator it(get_options().submodels_begin("trap_assisted_tunneling"));
+  if (get_option("trap_assisted_tunneling", false) ||
+      it != get_options().submodels_end("trap_assisted_tunneling"))
+  {
+    _tat = new TrapAssisted();
+
+    if (it != get_options().submodels_end("trap_assisted_tunneling"))
+      _tat->m_trap = it->second.get_option("tunneling_mass", _tat->m_trap);
+  }
 }
 
 
@@ -178,6 +229,15 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   {
     tau_n *= std::pow(T / T0, _Talpha_e) * std::exp(_Tcoeff_e * (T / T0 - 1));
     tau_p *= std::pow(T / T0, _Talpha_h) * std::exp(_Tcoeff_h * (T / T0 - 1));
+  }
+
+  if (_tat != NULL)
+  {
+    double gamma = _tat->get_gamma(dd.get_electric_field().size() * 100, T, _E_t);
+    gamma = 1.0 / (gamma + 1);
+    std::cerr << gamma << std::endl;
+    tau_n *= gamma;
+    tau_p *= gamma;
   }
 
   double denom = tau_p * (n + gn * n0 * f) + tau_n * (p + gp * p0 / f);

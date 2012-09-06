@@ -32,7 +32,7 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
   public:
 
     //! Destructor
-    virtual ~SRHRecombination(void) {};
+    virtual ~SRHRecombination(void);
 
     //! Create a ConstantMobility object
     static SRHRecombination* create(const ModelOptions& options);
@@ -73,6 +73,21 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 
   private:
 
+    struct TrapAssisted
+    {
+      TrapAssisted(void);
+
+      //! TAT tunneling mass
+      double m_trap;
+
+      //! calculate Gamma
+      /*!
+       * F is electric field in V/m, T temperature in K,
+       * Et trap level from conduction band
+       */
+      double get_gamma(double F, double T, double Et);
+    };
+
     //! True if this is a trap generated model
     bool _trap;
 
@@ -109,6 +124,8 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! Temperature coefficient for exponential temp. dependence, holes
     double _Tcoeff_h;
 
+    //! The TAT coefficients, if present
+    TrapAssisted* _tat;
 
     //! Get the trap level
     double get_trap_level(void);
@@ -134,7 +151,8 @@ SRHRecombination::SRHRecombination(const ModelOptions& options) :
   _Talpha_e(0.0),
   _Talpha_h(0.0),
   _Tcoeff_e(0.0),
-  _Tcoeff_h(0.0)
+  _Tcoeff_h(0.0),
+  _tat(NULL)
 {
 }
 
