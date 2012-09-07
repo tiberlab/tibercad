@@ -121,6 +121,7 @@ Elasticity::parse_options(void)
 
   myopt.shape_error = opt.get_option("shape_error",1e-2);
   myopt.non_linear_strain = opt.get_option("non_linear_strain",false);
+  myopt.non_linear_strain = opt.get_option("nonlinear_strain", myopt.non_linear_strain);
   myopt.shape_iterations = opt.get_option("shape_iterations",20);
   //myopt.deformation = opt.get_option("do_deformation",false);
   myopt.magnification = opt.get_option("magnification",1);
@@ -349,7 +350,6 @@ Elasticity::get_solution_secure(const Elem* elem,
      for (unsigned int i = 0;i<3; i ++)
        for (unsigned int j = 0;j<=i; j ++)
        {
-
          double der1 = 0;
          for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
            der1 += (solution)(dof_indices[i][alpha]) * dphi[alpha][n](j);
@@ -359,8 +359,11 @@ Elasticity::get_solution_secure(const Elem* elem,
            der2 += (solution)(dof_indices[j][alpha]) * dphi[alpha][n](i);
 
          strain(i,j) = 0.5 * (der1 + der2);
-
        }
+     strain(0,1) = strain(1,0);
+     strain(0,2) = strain(2,0);
+     strain(1,2) = strain(2,1);
+
 
      strain += summed_strain;
      stress = C*strain;
@@ -727,8 +730,8 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 // commentato perche' centroide ha coordinate globali e produce errore
 //    const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
 
-    RealTensor strain;
-    _accumulated_strain[elem].get_tensor(strain);
+    RealTensor accum_strain;
+    _accumulated_strain[elem].get_tensor(accum_strain);
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
@@ -737,9 +740,11 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
        mod.calculate(elem, qrule.qp(qp));
        const Tensor4DSym& C = mod.get_stiffness();
        const RealGradient& force =  mod.get_force_source();
-       strain +=  mod.get_strain_source();
        //const RealTensor& strain_source =  mod.get_strain_source();
        const RealTensor& stress_source =  mod.get_stress_source();
+
+       RealTensor strain(mod.get_strain_source());
+       strain += accum_strain;
 
        for (ID i = 0;i <3; i++)
          for (ID j = 0;j <3; j++)
