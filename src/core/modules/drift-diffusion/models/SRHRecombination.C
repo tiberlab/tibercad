@@ -233,6 +233,7 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
 
   if (_tat != NULL)
   {
+    // TODO what is the correct value for the two dE ??
     //double dE_n = dd.get_conduction_band_edge() - dd.get_electric_potential() +
     //    dd.get_electron_electro_chemical_potential();
     //double dE_p = dd.get_electric_potential() - dd.get_valence_band_edge() -
