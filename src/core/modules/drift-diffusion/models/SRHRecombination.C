@@ -214,8 +214,8 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   double T = dd.get_lattice_temperature();
   // TODO should take carrier temperatures
 
-  double Et = get_trap_level() - dd.get_equilibrium_fermi_level();
-  double f = std::exp(Et / T);
+  double Et = get_trap_level();
+  double f = std::exp((Et - dd.get_equilibrium_fermi_level()) / T);
 
   double tau_n = _tau_n;
   double tau_p = _tau_p;
@@ -233,11 +233,18 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
 
   if (_tat != NULL)
   {
-    double gamma = _tat->get_gamma(dd.get_electric_field().size() * 100, T, _E_t);
-    gamma = 1.0 / (gamma + 1);
-    std::cerr << gamma << std::endl;
-    tau_n *= gamma;
-    tau_p *= gamma;
+    //double dE_n = dd.get_conduction_band_edge() - dd.get_electric_potential() +
+    //    dd.get_electron_electro_chemical_potential();
+    //double dE_p = dd.get_electric_potential() - dd.get_valence_band_edge() -
+    //    dd.get_hole_electro_chemical_potential();
+    double dE_n = dd.get_conduction_band_edge() - Et;
+    double dE_p = Et - dd.get_valence_band_edge();
+    double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_n);
+    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
+    gamman = 1.0 / (gamman + 1);
+    gammap = 1.0 / (gammap + 1);
+    tau_n *= gamman;
+    tau_p *= gammap;
   }
 
   double denom = tau_p * (n + gn * n0 * f) + tau_n * (p + gp * p0 / f);
@@ -261,8 +268,8 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   double gp = dd.get_point_data().gamma_p;
   double T = dd.get_lattice_temperature();
 
-  double Et = get_trap_level() - dd.get_equilibrium_fermi_level();
-  double f = std::exp(Et / T);
+  double Et = get_trap_level();
+  double f = std::exp((Et - dd.get_equilibrium_fermi_level()) / T);
 
   double tau_n = _tau_n;
   double tau_p = _tau_p;
@@ -276,6 +283,22 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   {
     tau_n *= std::pow(T / T0, _Talpha_e) * std::exp(_Tcoeff_e * (T / T0 - 1));
     tau_p *= std::pow(T / T0, _Talpha_h) * std::exp(_Tcoeff_h * (T / T0 - 1));
+  }
+
+  if (_tat != NULL)
+  {
+    //double dE_n = dd.get_conduction_band_edge() - dd.get_electric_potential() +
+    //    dd.get_electron_electro_chemical_potential();
+    //double dE_p = dd.get_electric_potential() - dd.get_valence_band_edge() -
+    //    dd.get_hole_electro_chemical_potential();
+    double dE_n = dd.get_conduction_band_edge() - Et;
+    double dE_p = Et - dd.get_valence_band_edge();
+    double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_n);
+    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
+    gamman = 1.0 / (gamman + 1);
+    gammap = 1.0 / (gammap + 1);
+    tau_n *= gamman;
+    tau_p *= gammap;
   }
 
   long double denom = tau_p * (n + gn * n0 * f) + tau_n * (p + gp * p0 / f);
