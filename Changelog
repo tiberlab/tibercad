@@ -11,6 +11,9 @@ Version 2.2.0
 	- new flag -i for interactive mode, which will stop at errors
 	  and warnings
 	- input file macros @define, @ifdef, @ifndef, @else, @endif
+	- in driftdiffusion can now apply optical generation at interface
+	- bug fixes in elasticity module, shape deformation is now working
+	  correctly
 
 
 Version 2.1.0
