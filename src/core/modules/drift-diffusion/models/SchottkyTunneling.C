@@ -264,8 +264,8 @@ SchottkyTunneling::get_net_recombination_rate_derivatives(
   // if the current element is not in our list, we can return immediately
   if (!_elem_map.count(dd.get_element()->top_parent())) return;
 
-  double n  = dd.get_electron_density();
-  double p  = dd.get_hole_density();
+  double dn  = dd.get_electron_density_derivative();
+  double dp  = dd.get_hole_density_derivative();
 
   recomb_e[0] = recomb_h[0] =  0; //p; // dR/dn
   recomb_e[1] = recomb_h[1] =  0; //n; // dR/dp
