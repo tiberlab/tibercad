@@ -54,6 +54,9 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
 
   private:
 
+    typedef std::map<std::pair<SimulationInterface*, SimulationInterface*>,
+        std::pair<unsigned int, double> > QRecMap;
+
     //! Recombination rate parameter
     double C_;
 
@@ -62,6 +65,13 @@ class TBDLLOCAL DirectRecombination : public RecombinationModelInterface
 
     //! The solution ID for the optical recombination
     ID _rec_id;
+
+    //! A static map to put quantum recombination in
+    /*!
+     * This map is used so as to not calculate the same quantity
+     * several times.
+     */
+    static QRecMap _qrec_vals;
 
 };
 

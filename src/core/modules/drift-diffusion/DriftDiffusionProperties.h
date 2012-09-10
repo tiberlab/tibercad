@@ -402,6 +402,14 @@ class DriftDiffusionProperties : public PhysicalModel
       { return _pd->electron_density_derivative; };
 
 
+    //! Get the electron gamma \f$\gamma_n\f$
+    /*!
+     * \f$\gamma_n = n/n_{cl}\f$
+     */
+    double get_electron_gamma(void) const
+    { return _pd->gamma_n; };
+
+
     //! Get the hole density
     /*!
      * Get the hole density as calculated by \c calculate_all(...)
@@ -419,6 +427,14 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     double get_hole_density_derivative(void) const
       { return _pd->hole_density_derivative; };
+
+
+    //! Get the hole gamma \f$\gamma_p\f$
+    /*!
+     * \f$\gamma_p = p/p_{cl}\f$
+     */
+    double get_hole_gamma(void) const
+    { return _pd->gamma_p; };
 
 
     //! Get the ionized donor density

@@ -261,14 +261,85 @@ SchottkyTunneling::get_net_recombination_rate_derivatives(
   recomb_e[0] = recomb_h[0] =  0;
   recomb_e[1] = recomb_h[1] =  0;
 
+  HashMap<const Elem*, Point>::Type::iterator it(
+      _elem_map.find(dd.get_element()->top_parent()));
+
   // if the current element is not in our list, we can return immediately
-  if (!_elem_map.count(dd.get_element()->top_parent())) return;
+  if (it == _elem_map.end()) return;
 
-  double dn  = dd.get_electron_density_derivative();
-  double dp  = dd.get_hole_density_derivative();
+  double dGtun_dn = 0.0;
+  double dGtun_dp = 0.0;
+  double pot_diff = 0.0;
+  double band_edge;
+  double kT;
+  if (_band == 'c')
+  {
+    kT = dd.get_point_data().electron_vt;
+    band_edge = dd.get_conduction_band_edge() - dd.get_electric_potential();
+    pot_diff = -_contact_voltage + _barrier - band_edge;
+  }
+  else
+  {
+    kT = dd.get_point_data().hole_vt;
+    band_edge = dd.get_valence_band_edge() - dd.get_electric_potential();
+    pot_diff =  _barrier + band_edge + _contact_voltage;
+  }
 
-  recomb_e[0] = recomb_h[0] =  0; //p; // dR/dn
-  recomb_e[1] = recomb_h[1] =  0; //n; // dR/dp
+  double E = dd.get_electric_field() * it->second / it->second.size();
+  E = 100 * E;
+
+  if (pot_diff > 0.0)
+  {
+    double hcube = Constants::h * Constants::h * Constants::h;
+    double A = 4 * M_PI * Constants::electron_mass * _mass *
+        Constants::e * Constants::e * kT / hcube;
+
+    double exp1, exp2;
+    if (_band == 'c')
+    {
+      exp1 = exp(-(band_edge + dd.get_electron_electro_chemical_potential()) / kT);
+      exp2 = exp(-(band_edge + _contact_voltage) / kT);
+    }
+    else
+    {
+      exp1 = exp((band_edge + dd.get_hole_electro_chemical_potential()) / kT);
+      exp2 = exp((band_edge + _contact_voltage) / kT);
+
+      E *= -1;
+    }
+
+    if (E >= 0) E = -1e-6;
+
+    // E is negative !!
+    double tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass *
+        pot_diff * pot_diff * pot_diff) / E;
+    double gamma = exp(4 / 3 / Constants::hbar * tmp);
+
+    // TODO for holes
+    tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass * pot_diff) / E;
+    double dgamma_dphi = -2 / Constants::hbar * tmp * gamma;
+    dgamma_dphi *= -A * log((1 + exp1) / (1 + exp2)) * E / 1e6;
+
+    dGtun_dn = dgamma_dphi / dd.get_electron_density_derivative();
+    dGtun_dp = dgamma_dphi / dd.get_hole_density_derivative();
+
+    tmp = exp1 / (1 + exp1);
+    double dB_dphi = tmp - exp2 / (1 + exp2);
+    dGtun_dn -= A * gamma / kT * (tmp + dB_dphi) * E / (1e6 * dd.get_electron_density_derivative());
+    dGtun_dp -= A * gamma / kT * dB_dphi * E / (1e6 * dd.get_hole_density_derivative());
+
+  }
+
+  if (_band == 'c')
+  {
+    recomb_e[0] = dGtun_dn;
+    recomb_e[1] = dGtun_dp;
+  }
+  else
+  {
+    recomb_h[0] = dGtun_dp;
+    recomb_h[1] = dGtun_dn;
+  }
 }
 
 
