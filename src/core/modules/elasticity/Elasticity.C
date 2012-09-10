@@ -331,7 +331,7 @@ Elasticity::get_solution_secure(const Elem* elem,
    _accumulated_strain[elem].get_tensor(summed_strain);
 
   
-   for (ID n = 0; n < np; n++)
+   for (int n = 0; n < np; n++)
    {
      mod.calculate(elem, p[n]);
      
@@ -343,26 +343,30 @@ Elasticity::get_solution_secure(const Elem* elem,
      RealGradient u(0);
      for (unsigned int i = 0;i<3; i ++)
        for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
-         u(i) +=(accum_sol)(dof_indices[i][alpha]) * phi[alpha][n];
+         u(i) += (accum_sol)(dof_indices[i][alpha]) * phi[alpha][n];
 
      //------Strain-------------------------
 
-     for (unsigned int i = 0;i<3; i ++)
-       for (unsigned int j = 0;j<=i; j ++)
+     for (unsigned int i = 0; i < 3; i++)
+     {
+       double der1 = 0;
+       double der2 = 0;
+       double der3 = 0;
+       for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
        {
-         double der1 = 0;
-         for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
-           der1 += (solution)(dof_indices[i][alpha]) * dphi[alpha][n](j);
-
-         double der2 = 0;
-         for (unsigned int alpha = 0; alpha<dof_indices[j].size() ;alpha ++)
-           der2 += (solution)(dof_indices[j][alpha]) * dphi[alpha][n](i);
-
-         strain(i,j) = 0.5 * (der1 + der2);
+         double ui = (solution)(dof_indices[i][alpha]);
+         der1 += ui * dphi[alpha][n](0);
+         der2 += ui * dphi[alpha][n](1);
+         der3 += ui * dphi[alpha][n](2);
        }
-     strain(0,1) = strain(1,0);
-     strain(0,2) = strain(2,0);
-     strain(1,2) = strain(2,1);
+
+       strain(i,0) = der1;
+       strain(i,1) = der2;
+       strain(i,2) = der3;
+     }
+     strain(0,1) = strain(1,0) = 0.5 * (strain(0,1) + strain(1,0));
+     strain(0,2) = strain(2,0) = 0.5 * (strain(0,2) + strain(2,0));
+     strain(1,2) = strain(2,1) = 0.5 * (strain(1,2) + strain(2,1));
 
 
      strain += summed_strain;
