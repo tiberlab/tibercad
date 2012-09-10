@@ -1,0 +1,67 @@
+// $Id$
+
+#include "Band2Band.h"
+#include "DriftDiffusionProperties.h"
+#include "Database.h"
+#include "SimulationInterface.h"
+#include "SimulationEnvironment.h"
+
+
+
+
+TIBER_MODULE(Band2Band, recombination, band2band)
+
+using namespace std;
+
+
+void
+Band2Band::read_database(void)
+{
+  const Database& db = get_database();
+  db.set_section("recombination/direct");
+
+  C_ = db.get("C", C_);
+
+}
+
+
+
+void
+Band2Band::do_init(void)
+{
+  get_parameter("C", C_);
+}
+
+
+
+void
+Band2Band::get_net_recombination_rates(double& recomb_e,
+    double& recomb_h)
+{
+  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
+  double n  = dd.get_electron_density();
+  double p  = dd.get_hole_density();
+  double ni = dd.get_intrinsic_density();
+  double gn = dd.get_point_data().gamma_n;
+  double gp = dd.get_point_data().gamma_p;
+
+  recomb_e = recomb_h = C_ * (n * p - ni * ni * gn * gp);
+}
+
+
+
+void
+Band2Band::get_net_recombination_rate_derivatives(
+    std::vector<double>& recomb_e, std::vector<double>& recomb_h)
+{
+  const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
+
+  double n  = dd.get_electron_density();
+  double p  = dd.get_hole_density();
+
+  recomb_e[0] = recomb_h[0] = C_ * p; // dR/dn
+  recomb_e[1] = recomb_h[1] = C_ * n; // dR/dp
+}
+
+

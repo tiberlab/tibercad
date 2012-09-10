@@ -22,7 +22,7 @@ OpticalGeneration::do_init(void)
   // G is a sweepable value, so check it!
   //get_parameter("G", G_);
 
-  string gen_str(get_option("generation", ""));
+  string gen_str(get_option("generation", "0"));
   istringstream is(gen_str);
   double val;
   if ((is >> val) || (gen_str[0] == '$'))
