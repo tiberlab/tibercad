@@ -49,11 +49,15 @@ class TBDLLOCAL Band2Band : public RecombinationModelInterface
 
   private:
 
-    //! Recombination rate parameter
-    double C_;
+    //! B parameter
+    double _B_param;
 
-    //! The solution ID for the optical recombination
-    ID _rec_id;
+    //! Critical field
+    double _E0;
+
+    //! Exponent for field dependency
+    double _sigma;
+
 
 };
 
@@ -66,7 +70,9 @@ class TBDLLOCAL Band2Band : public RecombinationModelInterface
 inline
 Band2Band::Band2Band(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    C_(0.0)
+    _B_param(0.0),
+    _E0(1e7),
+    _sigma(2.5)
 {
 }
 
