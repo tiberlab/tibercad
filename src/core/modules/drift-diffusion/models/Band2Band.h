@@ -49,13 +49,16 @@ class TBDLLOCAL Band2Band : public RecombinationModelInterface
 
   private:
 
-    //! B parameter
+    //! B parameter in cm^-1/2 * V^-5/2 * s^-1
     double _B_param;
 
-    //! Critical field
+    //! Critical field in V/cm
     double _E0;
 
     //! Exponent for field dependency
+    /*!
+     * = 2 for direct transition, = 5/2 for indirect
+     */
     double _sigma;
 
 
