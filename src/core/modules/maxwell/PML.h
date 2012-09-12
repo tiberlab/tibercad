@@ -13,7 +13,7 @@
 #include "SimulationInterface.h"
 #include "vector_value.h"
 #include "VectorFunction.h"
-#include "OpticPropsModel.h"
+#include "OpticPropsInterface.h"
 
 class PML {
   public:
@@ -58,7 +58,7 @@ class PML {
       ID subdomain = elem->subdomain_id();
       const Material* material = interface->get_environment().get_device().get_material(subdomain);
 
-      OpticPropsModel* opticModel =  dynamic_cast<OpticPropsModel*>(
+      OpticPropsInterface* opticModel =  dynamic_cast<OpticPropsInterface*>(
               material->get_model(interface->get_id()));
 
       return opticModel->get_spml();

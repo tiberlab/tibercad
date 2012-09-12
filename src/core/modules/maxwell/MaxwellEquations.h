@@ -32,7 +32,7 @@
 #include <map>
 #include "ElementUtils.h"
 #include "SolverException.h"
-#include "OpticPropsModel.h"
+#include "OpticPropsInterface.h"
 
 
 using namespace libMesh;
@@ -45,7 +45,11 @@ class MaxwellEquations : public SimulationInterface
     enum Solutions
     {
       EigenValue,
+      EigenValue_eV,
       EigenValueImag,
+      WPolariton,
+      WPolariton_eV,
+      WPolaritonImag,
       XHopfield,
       Epsilon,
       Epsilon_imag,
@@ -71,7 +75,7 @@ class MaxwellEquations : public SimulationInterface
 
     virtual void plot_globaldata();
 
-    OpticPropsModel* getOpticModel(const Elem*);
+    OpticPropsInterface* getOpticModel(const Elem*);
   protected:
     //virtual void build_nodal_results(const std::set<std::string>& variables, std::vector<
         //double>& results, std::vector<std::string>& legend);
@@ -101,6 +105,10 @@ class MaxwellEquations : public SimulationInterface
     //!solver options
     //options opt;
 
+    Complex WPolaritonLow; // low polariton energy & lifetime
+
+    std::map<ID, double> hopfieldCoeeficients; // Map: region ID -> hopfield coeff
+
     static void assemble_maxwell_equations(EquationSystems& es, const std::string& system_name);
 
     //! Setup the available variables
@@ -123,23 +131,21 @@ class MaxwellEquations : public SimulationInterface
     bool storeSolutions;
     std::map<unsigned int, std::vector<Complex> > storedSolutions;
     
-    std::map<Point, double> hopfieldCoefficients;
     std::vector<unsigned int> pmlRegions;
     bool polaritons;
+    bool useCubic;
 
     std::map<unsigned int, unsigned int> eigenIndices;
     unsigned int accepted_eigen_count;
     bool relativeIndexing;
 
     void filterEigenValues(double factor);
+    virtual void calculateHopfieldCoefficients();
 
   public:
-    Complex Wc;
+    Complex Wc0;
     Complex Wexc0;
     double Wlt;
-    Complex VRabiApprox;
-
-    virtual double getXHopfield(int i);
 };
 
 inline MaxwellEquations*

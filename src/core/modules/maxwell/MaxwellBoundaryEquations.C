@@ -15,6 +15,7 @@
 #include "TiberLinearSystem.h"
 #include "VectorFEBase1D.h"
 #include "VectorLinearSystem.h"
+#include "OpticPropsInterface.h"
 
 using namespace std;
 using namespace Constants;
@@ -39,7 +40,20 @@ BoundaryProperties* MaxwellBoundaryEquations::create_boundary_model(const ModelO
 PhysicalModel*  MaxwellBoundaryEquations::create_physical_model(const ModelOptions& options,
     const Material* mat) const throw (ModelErrorException)
 {
-  return OpticPropsModel::create(options);
+  const std::string& modelname = options.get_option((mat->get_name() + "_opticmodel"), "");
+
+  if (modelname == "") {
+    return OpticPropsModel::create(options);
+  } else {
+    OpticPropsInterface* model =
+        OpticPropsInterface::create(modelname, mat, options);
+
+    if (model == NULL)
+      throw ModelErrorException(
+          "Maxwell: No such physical model: " + modelname);
+
+    return model;
+  }
 }
 
 //=======================================================================================================//
@@ -176,7 +190,7 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
     const std::vector<Point>& xyz = fe->get_xyz();
     const std::vector<Point>& xyz_face = fe_face->get_xyz();
 
-    OpticPropsModel* opticModel = simulation->getOpticModel(elem);
+    OpticPropsInterface* opticModel = simulation->getOpticModel(elem);
 
     //This part is the slowest in assembling.
     for (unsigned int i=0; i<edge_phi.size(); i++) {
@@ -331,7 +345,7 @@ void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
 
     PML pml = system.getGeometryEx()->pml;
 
-    OpticPropsModel* opticModel = getOpticModel(elem);
+    OpticPropsInterface* opticModel = getOpticModel(elem);
 
     for (unsigned int qp = 0; qp < points.size(); qp++) {
       if (solutions.count(Mu)) {
@@ -360,12 +374,15 @@ void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
   delete fe;
 }
 
-OpticPropsModel* MaxwellBoundaryEquations::getOpticModel(const Elem* elem) {
+OpticPropsInterface* MaxwellBoundaryEquations::getOpticModel(const Elem* elem) {
   ID subdomain = elem->subdomain_id();
   const Material* material = get_environment().get_device().get_material(subdomain);
 
-  return dynamic_cast<OpticPropsModel*>(
+  OpticPropsInterface* result = dynamic_cast<OpticPropsInterface*>(
           material->get_model(get_id()));
+
+  double lambda =  2 * M_PI / (W * Constants::e / Constants::hbar) * Constants::c;
+  result->set_param(lambda);
 }
 
 Complex MaxwellBoundaryEquations::multiply(const Point& v1, const Point& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag) {

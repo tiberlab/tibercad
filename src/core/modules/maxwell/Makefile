@@ -2,14 +2,15 @@
 
 topdir := ../../../..
 
-MODULE_NAME := maxwell
-
 include $(topdir)/Make.module
 
-$(eval $(call MODULE, MaxwellEquations.C CubicEigenSystem.C EdgeDofMap.C EigenSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C))
+MODULE_NAME := maxwell
+$(eval $(call MODULE, MaxwellEquations.C CubicEigenSystem.C EdgeDofMap.C EigenSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C OpticPropsModel.C))
+
 MODULE_NAME := maxwell_boundary
+$(eval $(call MODULE, MaxwellBoundaryEquations.C EdgeDofMap.C VectorLinearSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C OpticPropsModel.C))
 
-$(eval $(call MODULE, MaxwellBoundaryEquations.C EdgeDofMap.C VectorLinearSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C))
+
+$(eval $(call MODULE, OpticPropsWDependant.C))
+
 include $(topdir)/Make.rules
-
-

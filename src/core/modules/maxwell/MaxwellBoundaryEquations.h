@@ -25,7 +25,7 @@
 #include <map>
 #include "SolverException.h"
 #include "SimulationInterface.h"
-#include "OpticPropsModel.h"
+#include "OpticPropsInterface.h"
 
 using namespace libMesh;
 using namespace std;
@@ -61,7 +61,7 @@ class MaxwellBoundaryEquations : public SimulationInterface
 
     static MaxwellBoundaryEquations* create(const ModelOptions& options);
 
-    OpticPropsModel* getOpticModel(const Elem*);
+    OpticPropsInterface* getOpticModel(const Elem*);
   protected:
     //! Get solutions at specified points in an element
     virtual void get_solution_secure(const Elem* elem,

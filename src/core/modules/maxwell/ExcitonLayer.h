@@ -13,7 +13,7 @@
 #include "MaxwellEquations.h"
 #include "Constants.h"
 #include "PML.h"
-#include "OpticPropsModel.h"
+#include "OpticPropsInterface.h"
 
 class ExcitonLayer
 {
@@ -49,7 +49,7 @@ class ExcitonLayer
       if (_exciton_sim == NULL) {
         std::string msg("ExcitonLayer: Simulation not found");
         throw InitFailedException(msg);
-      } else if (!_exciton_sim->is_solved() || mme->Wc.real() == -1) {
+      } else if (!_exciton_sim->is_solved() || mme->Wc0.real() == -1) {
         return;
       }
 
@@ -77,7 +77,7 @@ class ExcitonLayer
 
         PML pml = system.getGeometryEx()->pml;
 
-        OpticPropsModel* opticModel = mme->getOpticModel(elem);
+        OpticPropsInterface* opticModel = mme->getOpticModel(elem);
 
         if (!pml.isPMLRegion(elem, mme)) {
 
@@ -140,7 +140,7 @@ class ExcitonLayer
       if (_exciton_sim == NULL) {
         std::string msg("ExcitonLayer: Simulation not found");
         throw InitFailedException(msg);
-      } else if (!_exciton_sim->is_solved() || mme->Wc.real() == -1) {
+      } else if (!_exciton_sim->is_solved() || mme->Wc0.real() == -1) {
         return -100;
       }
 
@@ -197,6 +197,7 @@ class ExcitonLayer
 
       delete fe;
 
+      std::cout << "PPAPP " << std::sqrt(mme->Wlt * mme->Wexc0 * (fi0I * fi0I / E2I / XdensI / 2)) << "\n";
       return std::sqrt(mme->Wlt * mme->Wexc0 * (fi0I * fi0I / E2I / XdensI / 2));
 
     }
