@@ -14,6 +14,8 @@ Version 2.2.0
 	- in driftdiffusion can now apply optical generation at interface
 	- bug fixes in elasticity module, shape deformation is now working
 	  correctly
+	- implemented local version of BBT and TAT (Hurkx model)
+	- implemented local version of Schottky barrier tunneling
 
 
 Version 2.1.0
