@@ -1078,6 +1078,7 @@ DriftDiffusion::do_set_to_remembered_solution(ID id)
   // call the default implementation
   SimulationInterface::do_set_to_remembered_solution(id);
 
+  get_environment().prepare_for_solve();
   build_local_scaling();
 
 }
