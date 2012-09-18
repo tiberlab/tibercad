@@ -317,7 +317,7 @@ SchottkyTunneling::get_net_recombination_rate_derivatives(
 
     // TODO for holes
     tmp = sqrt(2 * Constants::e * _mass * Constants::electron_mass * pot_diff) / E;
-    double dgamma_dphi = -2 / Constants::hbar * tmp * gamma;
+    double dgamma_dphi = 2 / Constants::hbar * tmp * gamma;
     dgamma_dphi *= -A * log((1 + exp1) / (1 + exp2)) * E / 1e6;
 
     dGtun_dn = dgamma_dphi / dd.get_electron_density_derivative();
@@ -325,7 +325,7 @@ SchottkyTunneling::get_net_recombination_rate_derivatives(
 
     tmp = exp1 / (1 + exp1);
     double dB_dphi = tmp - exp2 / (1 + exp2);
-    dGtun_dn -= A * gamma / kT * (tmp + dB_dphi) * E / (1e6 * dd.get_electron_density_derivative());
+    dGtun_dn += A * gamma / kT * (tmp + dB_dphi) * E / (1e6 * dd.get_electron_density_derivative());
     dGtun_dp -= A * gamma / kT * dB_dphi * E / (1e6 * dd.get_hole_density_derivative());
 
   }
