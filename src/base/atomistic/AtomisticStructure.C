@@ -46,7 +46,7 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
  _scale(1.0),
  _device(NULL),
  _random_alloy(false),
-_atom_types()
+ _atom_types()
 {
   // Default initializations
   N_atoms = 0;

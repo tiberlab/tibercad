@@ -752,11 +752,10 @@ AtomisticGenerator::build_random_alloy()
         {
           double prob = 1.0;
           double rnd = 0.0;
-          if (clustering)
+          // the first X% will be distributed randomly
+          if (clustering && (num_substituted[regid] > 0.05 * num_to_substitute[regid]))
           {
-            // the first 10% will be distributed randomly
-            if (num_substituted[regid] <= 0.1 * num_to_substitute[regid])
-            prob = substitution_probability(id, atm);
+            prob = substitution_probability(id, sp);
             rnd = static_cast<double>(generator()) / generator.max();
           }
           if (rnd <= prob)
@@ -779,35 +778,11 @@ AtomisticGenerator::build_random_alloy()
   os << "Needed " << ctr << " random number extractions to substitute " << subst << " atoms";
   Messages::info(os.str());
   Messages::newline();
-
-/*
-  //Cycle on atoms and change specie according to their belonging to alloy regions
-  //and random distribution weighted on molar fraction
-  for (unsigned int i = 0; i < _structure_basis.size(); i++)
-  {
-    Atom& atm = _structure_basis[i];
-    //Note: region_ID e material sono definiti solo per gli atomi appartenenti alla struttura
-    if (atm.belong_to_structure)
-    {
-      const Material* mat = _as->get_material(_structure_basis[i]);
-      if (mat->is_alloy())
-      {
-        //Calcolate the probability to change specie
-        //int random_n = rand() % 100;
-        if (random() < a_to_b_prob[atm.get_region_ID()] * random.max() )
-        {
-          atm.set_specie(assign[atm.get_region_ID()][atm.get_flag()]);
-        }
-      }
-    }
-
-  }
-*/
 }
 
 
 double
-AtomisticGenerator::substitution_probability(size_t id, const Atom& atm)
+AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 {
   const Bondmap& bm = _bondmapobject->get_bond_map();
 
@@ -826,7 +801,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Atom& atm)
       {
         n_neigh++;
         visited.insert(nn[j]);
-        if (_structure_basis[nn[j]].get_specie() == atm.get_specie())
+        if (_structure_basis[nn[j]].get_specie() == sp)
           same_species++;
 
         const std::vector<unsigned int>& nn2 = bm[neigh[j]];
@@ -839,7 +814,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Atom& atm)
             {
               n_neigh++;
               visited.insert(nn[jj]);
-              if (_structure_basis[nn[jj]].get_specie() == atm.get_specie())
+              if (_structure_basis[nn[jj]].get_specie() == sp)
                 same_species++;
             }
           }
@@ -852,7 +827,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Atom& atm)
   // others are already the same species
   n_neigh++;
   double ratio = static_cast<double>(same_species) / n_neigh;
-  ratio = 1 - (1 - ratio)*(1 - ratio);
+  ratio = 1 - (1 - ratio)*(1 - ratio)*(1 - ratio);
   return ratio;
 }
 
