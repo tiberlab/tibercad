@@ -187,7 +187,10 @@ public:
       bool parent = false) const;
 
   //! Tells if random alloy approximation is used
-   bool is_random_alloy(void);
+  bool is_random_alloy(void);
+
+  //! Tells if clustering should be applied
+  bool build_clusters(void);
 
 
 private:
@@ -259,6 +262,9 @@ private:
   //! belongs to). By default VCA is used
   bool _random_alloy;
 
+  //! True if clustering should be applied
+  bool _clustering;
+
   //! Contains reference to device we're working with
   const Device* _device;
 
@@ -294,6 +300,13 @@ inline
 bool AtomisticStructure::is_random_alloy(void)
 {
   return _random_alloy;
+}
+
+
+inline
+bool AtomisticStructure::build_clusters(void)
+{
+  return _clustering;
 }
 
 

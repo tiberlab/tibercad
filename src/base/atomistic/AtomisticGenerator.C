@@ -595,11 +595,14 @@ AtomisticGenerator::build_random_alloy()
   Messages::newline();
   Messages::info("Building random alloy ...");
 
+  if (_bondmapobject == NULL) bond_map_gen(_structure_basis);
+
   Messages m;
   m.indent();
 
   std::set<ID> IDs = _as->get_IDset();
-  std::map<ID, std::map<unsigned int, Specie> > assign;
+  std::map<ID, std::map<unsigned int, Specie> > assignA;
+  std::map<ID, std::map<unsigned int, Specie> > assignB;
   std::map<ID, double> a_to_b_prob;
   bool done;
   ID el_reg;
@@ -610,26 +613,31 @@ AtomisticGenerator::build_random_alloy()
     Messages::error("build_random_alloy is called but AtomisticStructure is not "
         "a random alloy");
 
+  bool clustering = _as->build_clusters();
+
   Messages::debug("Running build_random_alloy()");
 
+  // By default in VCA the specie assigned is the one of parent A
+  // so we first swap all atoms and then change back to species A
 
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
   {
     const Material* mat = _as->get_device()->get_material( (*reg) );
 
-    //By default in VCA the specie assigned is the one of parent A,
-    //then we only need to change it if the atoms belong to parent B
     if (mat->is_alloy())
     {
       const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
-      mat = alloy->get_component_B();
+      const Material* matA = alloy->get_component_A();
+      const Material* matB = alloy->get_component_B();
 
-      Database db = mat->get_database();
+      Database dbA = matA->get_database();
+      Database dbB = matB->get_database();
 
-      db.set_section("atomistic_structure");
+      dbA.set_section("atomistic_structure");
+      dbB.set_section("atomistic_structure");
 
-      //Build up conversion map from file
-      for (int i = 1; i <= db.get("n_basis_specie", 0); i++)
+      // Build up conversion map from file
+      for (int i = 1; i <= dbA.get("n_basis_specie", 0); i++)
       {
         std::string record;
         std::string s;
@@ -639,15 +647,26 @@ AtomisticGenerator::build_random_alloy()
         s = out.str();
 
         record = "specie_" + s;
-        std::string db_record = db.get(record.c_str(),"none");
-        assign[*reg][i] = Specie(db_record);
-        //Note: probability to switch specie is 1-x
-        a_to_b_prob[*reg] = 1 - mat->get_options().get_option("x", 1.0);
-
+        std::string db_record = dbA.get(record.c_str(),"none");
+        assignA[*reg][i] = Specie(db_record);
+        // Note: probability to switch specie is 1-x
+        a_to_b_prob[*reg] = mat->get_options().get_option("x", 1.0);
       }
 
-      //No more reading from section atomistic_structure in database are needed
-      db.set_section("");
+      for (int i = 1; i <= dbB.get("n_basis_specie", 0); i++)
+      {
+        std::string record;
+        std::string s;
+        std::stringstream out;
+
+        out << i;
+        s = out.str();
+
+        record = "specie_" + s;
+        std::string db_record = dbB.get(record.c_str(),"none");
+        assignB[*reg][i] = Specie(db_record);
+      }
+
     }
   }
 
@@ -663,7 +682,7 @@ AtomisticGenerator::build_random_alloy()
 
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
   {
-    const Atom& atm = _structure_basis[i];
+    Atom& atm = _structure_basis[i];
 
     // if it is flagged as first atom in the basis it may be substituted
     if (atm.belong_to_structure && (atm.get_flag() == 1))
@@ -671,7 +690,11 @@ AtomisticGenerator::build_random_alloy()
       ID regid = atm.get_region_ID();
       const Material* mat = _as->get_material(atm);
       if (mat->is_alloy())
+      {
         num_to_substitute[regid] += 1;
+        // swap species
+        atm.set_specie(assignB[regid][atm.get_flag()]);
+      }
     }
   }
 
@@ -685,10 +708,11 @@ AtomisticGenerator::build_random_alloy()
       double x = a_to_b_prob[i];
       // NOTE: we use floor() here to not have any fluctuation due to numerical
       // roundoff errors
+      int n_tot = num_to_substitute[i];
       num_to_substitute[i] = std::floor(x * num_to_substitute[i]);
       std::ostringstream os;
-      os << "Region " << i << ": x = " << (1-x) << " -> " << num_to_substitute[i] <<
-          " atoms to be substituted" << std::endl;
+      os << "Region " << i << ": x = " << x << " -> " << num_to_substitute[i] <<
+          " atoms out of " << n_tot << " to be substituted" << std::endl;
       Messages::info(os.str());
 
       not_finished.insert(i);
@@ -700,13 +724,17 @@ AtomisticGenerator::build_random_alloy()
 
   //
   // Now we extract random numbers between 0 and _structure_basis.size() - 1
-  // to randomly pick an atom. If it is flagged as 1, and is in aregion where
+  // to randomly pick an atom. If it is flagged as 1, and is in a region where
   // atoms need to be substituted, and is not already substituted it will be changed.
   // This is repeated until in all regions we have substituted the required number
   // of atoms.
   //
 
   std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
+
+  // this we need for the substitution probability
+  std::tr1::uniform_real<double> random2;
+
   size_t ctr = 0;
   for (; !not_finished.empty(); ++ctr)
   {
@@ -719,11 +747,23 @@ AtomisticGenerator::build_random_alloy()
       {
         // NOTE: random numbers may repeat, so we have to check if this atom
         // has already been substituted!!
-        Specie sp(assign[regid][atm.get_flag()]);
+        Specie sp(assignA[regid][atm.get_flag()]);
         if (atm.get_specie() != sp)
         {
-          atm.set_specie(sp);
-          ++num_substituted[regid];
+          double prob = 1.0;
+          double rnd = 0.0;
+          if (clustering)
+          {
+            // the first 10% will be distributed randomly
+            if (num_substituted[regid] <= 0.1 * num_to_substitute[regid])
+            prob = substitution_probability(id, atm);
+            rnd = static_cast<double>(generator()) / generator.max();
+          }
+          if (rnd <= prob)
+          {
+            atm.set_specie(sp);
+            ++num_substituted[regid];
+          }
         }
       }
       else
@@ -764,6 +804,58 @@ AtomisticGenerator::build_random_alloy()
   }
 */
 }
+
+
+double
+AtomisticGenerator::substitution_probability(size_t id, const Atom& atm)
+{
+  const Bondmap& bm = _bondmapobject->get_bond_map();
+
+  int same_species = 1;
+  int n_neigh = 1;
+
+  std::set<size_t> visited;
+  visited.insert(id);
+  const std::vector<unsigned int>& neigh = bm[id];
+  for (unsigned int i = 0; i < neigh.size(); ++i)
+  {
+    const std::vector<unsigned int>& nn = bm[neigh[i]];
+    for (unsigned int j = 0; j < nn.size(); ++j)
+    {
+      if (!visited.count(nn[j]))
+      {
+        n_neigh++;
+        visited.insert(nn[j]);
+        if (_structure_basis[nn[j]].get_specie() == atm.get_specie())
+          same_species++;
+
+        const std::vector<unsigned int>& nn2 = bm[neigh[j]];
+        for (unsigned int ii = 0; ii < nn2.size(); ++ii)
+        {
+          const std::vector<unsigned int>& nn3 = bm[neigh[ii]];
+          for (unsigned int jj = 0; jj < nn2.size(); ++jj)
+          {
+            if (!visited.count(nn[jj]))
+            {
+              n_neigh++;
+              visited.insert(nn[jj]);
+              if (_structure_basis[nn[jj]].get_specie() == atm.get_specie())
+                same_species++;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // add 1 to the number of neighbors to not have probability 1 if all
+  // others are already the same species
+  n_neigh++;
+  double ratio = static_cast<double>(same_species) / n_neigh;
+  ratio = 1 - (1 - ratio)*(1 - ratio);
+  return ratio;
+}
+
 
 //Note:: make_supercell is called only with preserve_basis and preserve_conv
 //This is the complete function after some modifications in Atom structure (added

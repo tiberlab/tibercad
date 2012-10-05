@@ -225,6 +225,8 @@ private:
   //Build random alloy structure
   void build_random_alloy(void);
 
+  double substitution_probability(size_t id, const Atom& atm);
+
 
 };
 

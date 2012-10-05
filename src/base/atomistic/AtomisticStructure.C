@@ -28,6 +28,7 @@ AtomisticStructure::AtomisticStructure()
 :_bondmap(NULL),
  _device(NULL),
  _random_alloy(false),
+ _clustering(false),
   _atom_types()
 {
   N_atoms = 0;
@@ -119,6 +120,9 @@ AtomisticStructure::init(const std::string& name,
 
   random_alloy = _options.get_option("random_alloy", "false");
   if (random_alloy == "true") _random_alloy = true;
+
+  _clustering = _options.get_option("clustering", false);
+
 
   if (_options.find_option("load_structure")||_options.find_option("load"))
     {
