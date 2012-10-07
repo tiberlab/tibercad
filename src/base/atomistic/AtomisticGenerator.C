@@ -614,6 +614,9 @@ AtomisticGenerator::build_random_alloy()
         "a random alloy");
 
   bool clustering = _as->build_clusters();
+  double rand_percentage;
+  if (clustering)
+    rand_percentage = _as->get_options().get_option("cluster_seeds", 0.02);
 
   Messages::debug("Running build_random_alloy()");
 
@@ -753,7 +756,7 @@ AtomisticGenerator::build_random_alloy()
           double prob = 1.0;
           double rnd = 0.0;
           // the first X% will be distributed randomly
-          if (clustering && (num_substituted[regid] > 0.05 * num_to_substitute[regid]))
+          if (clustering && (num_substituted[regid] > rand_percentage * num_to_substitute[regid]))
           {
             prob = substitution_probability(id, sp);
             rnd = static_cast<double>(generator()) / generator.max();
@@ -802,7 +805,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
         n_neigh++;
         visited.insert(nn[j]);
         if (_structure_basis[nn[j]].get_specie() == sp)
-          same_species++;
+          same_species += 1;
 
         const std::vector<unsigned int>& nn2 = bm[neigh[j]];
         for (unsigned int ii = 0; ii < nn2.size(); ++ii)
@@ -823,11 +826,10 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
     }
   }
 
-  // add 1 to the number of neighbors to not have probability 1 if all
-  // others are already the same species
-  n_neigh++;
+  n_neigh = 13;
   double ratio = static_cast<double>(same_species) / n_neigh;
-  ratio = 1 - (1 - ratio)*(1 - ratio)*(1 - ratio);
+  ratio = (ratio < 1) ? ratio : 1;
+  //ratio = 1 - (1 - ratio)*(1 - ratio)*(1 - ratio);
   return ratio;
 }
 
