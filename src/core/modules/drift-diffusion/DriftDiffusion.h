@@ -619,6 +619,14 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     void calculate_field_emission(void);
 
 
+    //! Calculate the rstf test functions
+    void prepare_rstf(void);
+
+    //! The assembly of the laplace equation for the RSTF
+    static void assemble_laplace(EquationSystems& es,
+        const std::string& system_name);
+
+
     //! Calculate the terminal currents
     /*!
      * Calls \c calculate_currents_surfint() or

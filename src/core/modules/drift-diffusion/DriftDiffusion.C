@@ -14,6 +14,7 @@
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
 #include "TiberNonlinearSystem.h"
+#include "TiberLinearSystem.h"
 #include "SolveFailedException.h"
 #include "Variable.h"
 #include "FowlerNordheim.h"
@@ -1271,9 +1272,6 @@ DriftDiffusion::rebuild_equation_system(void)
 
 
   // the coupled DD system
-  //TiberNonlinearSystem& system =
-  //  *TiberNonlinearSystem::create(equation_systems,
-  //    get_equation_system_name(), get_solver_options());
   create_equation_system("nonlinear");
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
 
@@ -1289,6 +1287,15 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_vector("scaling");
   //system.add_matrix("Preconditioner");
 
+  // for each contact, we add a vector for the Ramo-Shockley test function
+  ContactData::iterator it = _boundary_currents.begin();
+  for (int i = 0 ; it != _boundary_currents.end(); ++it, ++i)
+  {
+    ostringstream os;
+    os << "rstf" << i;
+    system.add_vector(os.str());
+  }
+
   // finally initialize the newly created system
   system.init();
 
@@ -1298,6 +1305,27 @@ DriftDiffusion::rebuild_equation_system(void)
 }
 
 
+void
+DriftDiffusion::prepare_rstf(void)
+{
+  create_equation_system("linear");
+  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(1);
+
+  system.attach_assemble_function(assemble_laplace);
+
+  system.add_variable("u", libMeshEnums::FIRST);
+  system.init();
+
+
+  system.clear();
+}
+
+void
+DriftDiffusion::assemble_laplace(EquationSystems& es,
+    const std::string& system_name)
+{
+
+}
 
 
 void
@@ -1307,8 +1335,6 @@ DriftDiffusion::do_init(void)
   _device = &get_environment().get_device();
 
   parse_const_options();
-
-  rebuild_equation_system();
 
   find_dielectric_boundary_nodes();
 
@@ -1348,6 +1374,8 @@ DriftDiffusion::do_init(void)
         get_environment().contains_region(idB))
       mod->internal_bondary(true);
   }
+
+  rebuild_equation_system();
 
 }
 
