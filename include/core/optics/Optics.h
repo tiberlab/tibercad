@@ -31,10 +31,13 @@ class Optics : public SimulationInterface
 
   struct options 
   {
+    options(void) : polariz(0) {}
+
     double Emin;//<! left boundary of spectrum [eV] 
     double Emax;//<! right boundary of spectrum [eV] 
     double dE;//<! spectrum mesh step [eV]
     double Gamma;//<! spectrum broadening [eV] 
+    double nr; //<! the effective refractive index
     Tensor1 polariz; //<! light  polarization [eV] 
     bool  get_occ;  //get occupations from Fermi (Eigenvalues) or set to 1
   };

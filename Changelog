@@ -1,6 +1,8 @@
 Version 2.2.0
 -------------
 
+New features and bug fixes:
+
 	- logfile is now written in 'resultpath' directory
 	- bug fix for recombination models
 	- new option in sweep 'ignore_failure = true' will ignore
@@ -16,6 +18,8 @@ Version 2.2.0
 	  correctly
 	- implemented local version of BBT and TAT (Hurkx model)
 	- implemented local version of Schottky barrier tunneling
+	- a bug fix in optics module, and can now specify the effective
+	  refractive index in the input file
 
 
 Version 2.1.0

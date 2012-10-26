@@ -153,6 +153,7 @@ void Optics::parse_options()
 
 
   _opt.Gamma = get_option("broadening", 0.007);
+  _opt.nr = get_option("refractive_index", 1.0);
 
   
   if (has_option("polarization") || has_option("polarisation"))
@@ -452,15 +453,18 @@ void Optics::do_solve()
     {
       _opt.polariz(1)=1.0; _opt.polariz(2)=0.0; _opt.polariz(3)=0.0;  
       do_k_space_integration();
-      _spectrum_x = _k_integration->get_solution();
+      //_spectrum_x = _k_integration->get_solution();
+      _k_integration->get_solution(_spectrum_x);
       
       _opt.polariz(1)=0.0; _opt.polariz(2)=1.0; _opt.polariz(3)=0.0;  
       do_k_space_integration();
-      _spectrum_y = _k_integration->get_solution();
+      //_spectrum_y = _k_integration->get_solution();
+      _k_integration->get_solution(_spectrum_y);
       
       _opt.polariz(1)=0.0; _opt.polariz(2)=0.0; _opt.polariz(3)=1.0; 
       do_k_space_integration();
-      _spectrum_z = _k_integration->get_solution();
+      //_spectrum_z = _k_integration->get_solution();
+      _k_integration->get_solution(_spectrum_z);
     }
     else
     {
@@ -642,7 +646,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
         double En =  Energy.point(el)(0); //elem->centroid()(0);
 
         double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)
-                            + (0.5*Gamma)*(0.5*Gamma)) * Hartree;
+                            + (0.5*Gamma)*(0.5*Gamma)) / M_PI * Hartree;
 
 	// Note(alex): the division by Hartree seems wrong. Lorenzian is in 1/eV, so transformation
 	// should be "Lorenzian * Hartree"
@@ -656,7 +660,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 	//occupation probability, so it's related to electrons and it becomes f1*(1-f2)
 
         //spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
-        spectrum[el] += 2 * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
+        spectrum[el] += 2 * _opt.nr * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
 
 	//Note(alex): The original factor 1/(2*PI*PI) was changed to 1/(2*PI) (see below) 
 	//            and finally multiplied by 4 PI for angular integration (17/10/2011). 
@@ -681,6 +685,11 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 	//  agrees to Chuang's only if the factor is nr/(2*PI) rather than 1/(2*PI*PI).
 	//
 	//  note that  nr is  still missing !
+        //
+        //  2012-03-23, (Matthias): added nr taken from input file
+        //
+        //  2012-10-26, (Matthias): the second PI in the original factor (see Note Alex) was coming
+        //                          from the Lorenzian. It is now included in the formula of the latter.
         
       }
 
