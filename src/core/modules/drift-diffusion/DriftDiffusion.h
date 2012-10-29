@@ -13,6 +13,7 @@
 #include "libmesh_common.h"
 #include "enum_order.h"
 #include "enum_quadrature_type.h"
+#include "linear_implicit_system.h"
 
 
 // C++ includes
@@ -444,6 +445,28 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     typedef std::set<unsigned int> DofList;
 
 
+    //! Internal class for the RSTF test functions
+    class RSTFSys : public LinearImplicitSystem
+    {
+      public:
+        RSTFSys(EquationSystems& es,
+            const std::string& name,
+            const unsigned int number)
+        : LinearImplicitSystem(es, name, number)
+        {}
+
+        static RSTFSys* create(DriftDiffusion* dd);
+
+        void assemble(void);
+
+        void solve(void);
+
+      private:
+        DriftDiffusion* _dd;
+    };
+
+    friend class RSTFSys;
+
     //! The penalty value for Dirichlet BCs
 #ifdef HAVE_CONSTEXPR
     constexpr static double _penalty_value = 1e56;
@@ -538,6 +561,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     double _hl_qfermi_guess;
 
 
+    //! The RSTFSys object
+    RSTFSys* _rstf;
+
+
     //! disable the copy constructor
     DriftDiffusion(const DriftDiffusion& rhs);
 
@@ -607,10 +634,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     void cleanup_solver(void);
 
 
-    //! Solve using an iterative Gummel scheme
-    //void solve_gummel(void);
-
-
     //! Do a Newton type iteration
     void do_newton(void);
 
@@ -621,10 +644,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
     //! Calculate the rstf test functions
     void prepare_rstf(void);
-
-    //! The assembly of the laplace equation for the RSTF
-    static void assemble_laplace(EquationSystems& es,
-        const std::string& system_name);
 
 
     //! Calculate the terminal currents

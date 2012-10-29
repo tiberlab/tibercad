@@ -1287,14 +1287,7 @@ DriftDiffusion::rebuild_equation_system(void)
   system.add_vector("scaling");
   //system.add_matrix("Preconditioner");
 
-  // for each contact, we add a vector for the Ramo-Shockley test function
-  ContactData::iterator it = _boundary_currents.begin();
-  for (int i = 0 ; it != _boundary_currents.end(); ++it, ++i)
-  {
-    ostringstream os;
-    os << "rstf" << i;
-    system.add_vector(os.str());
-  }
+
 
   // finally initialize the newly created system
   system.init();
@@ -1305,27 +1298,74 @@ DriftDiffusion::rebuild_equation_system(void)
 }
 
 
+DriftDiffusion::RSTFSys*
+DriftDiffusion::RSTFSys::create(DriftDiffusion* dd)
+{
+
+  EquationSystems& es = dd->get_equation_systems();
+  RSTFSys* sys = NULL;
+  sys = &(es.add_system<RSTFSys>("__DD_rstf"));
+  if (sys == NULL)
+    throw InitFailedException("Fatal error in DriftDiffusion. "
+        "Cannot create RSTF system");
+
+  sys->_dd = dd;
+
+  sys->add_variable("u", libMeshEnums::FIRST);
+  // for each contact, we add a vector for the Ramo-Shockley test function
+  ContactData::iterator it = dd->_boundary_currents.begin();
+  for (int i = 0 ; it != dd->_boundary_currents.end(); ++it, ++i)
+  {
+    ostringstream os;
+    os << "rstf" << i;
+    sys->add_vector(os.str());
+  }
+
+  return sys;
+}
+
+
+void
+DriftDiffusion::RSTFSys::solve(void)
+{
+  // we need to solve for every contact
+  ContactData::iterator it = _dd->_boundary_currents.begin();
+  for (int i = 0 ; it != _dd->_boundary_currents.end(); ++it, ++i)
+  {
+    ostringstream os;
+    os << "rstf" << i;
+
+
+  }
+}
+
+
+void
+DriftDiffusion::RSTFSys::assemble(void)
+{
+
+}
+
 void
 DriftDiffusion::prepare_rstf(void)
 {
+  _rstf = RSTFSys::create(this);
+  _rstf->init();
+  _rstf->solve();
+
+  /*
   create_equation_system("linear");
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(1);
 
   system.attach_assemble_function(assemble_laplace);
 
   system.add_variable("u", libMeshEnums::FIRST);
-  system.init();
+  */
 
-
-  system.clear();
+  _rstf->matrix->clear();
 }
 
-void
-DriftDiffusion::assemble_laplace(EquationSystems& es,
-    const std::string& system_name)
-{
 
-}
 
 
 void
@@ -1995,6 +2035,9 @@ DriftDiffusion::calculate_currents_rstf(void)
   // we only do something if we are on processor 0
   if (libMesh::processor_id() != 0)
     return;
+
+  if (_rstf == NULL)
+    prepare_rstf();
 
   // reset currents
   {
