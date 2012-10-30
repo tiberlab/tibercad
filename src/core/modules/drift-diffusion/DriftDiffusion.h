@@ -698,6 +698,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     //! Calculates internal quantum efficiency
     void calculate_iqe(void);
 
+    //! Calculates total surface recombination
+    void calculate_surface_recombination(void);
+
 
     //! Create a weight for the l2 norm
     void calculate_weights(void);

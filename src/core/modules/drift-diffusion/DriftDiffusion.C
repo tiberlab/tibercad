@@ -560,6 +560,7 @@ DriftDiffusion::do_solve(void)
   // calculate the currents to print them on screen
   calculate_currents();
   calculate_iqe();
+  calculate_surface_recombination();
 
 
   ContactData::iterator it(_boundary_currents.begin());
@@ -923,6 +924,33 @@ DriftDiffusion::calculate_iqe(void)
 
   const vector<Real>& JxW = fe->get_JxW();
 
+  // the finite element for boundary integration
+  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+
+  AutoPtr<QBase> qface(QBase::build(
+        params.quadrature_type, dim - 1, integration_order));
+  fe_face->attach_quadrature_rule(qface.get());
+
+  // references to boundary-specific data that will be used to
+  // assemble the system.
+  // Data will be given for each quadrature point.
+  //
+  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+  //
+  const vector<vector<RealGradient> >&  dphi_face = fe_face->get_dphi();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point_face = fe_face->get_xyz();
+  //
+  const vector<Point>& face_normals = fe_face->get_normals();
+  //
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW_face = fe_face->get_JxW();
+
+
   MeshBase::const_element_iterator el =
       get_mesh().active_elements_begin();
   const MeshBase::const_element_iterator end_el =
@@ -959,6 +987,28 @@ DriftDiffusion::calculate_iqe(void)
       Rtot += JxW[qp] * nrdata[qp];
       Rsrh += JxW[qp] * srhdata[qp];
       Raug += JxW[qp] * augdata[qp];
+    }
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+
+      Material* mat = get_material(elem);
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+
+      //bool true_boundary = environment.is_outer_boundary(ElementSide(elem, s));
+
+      //if ((sm != NULL) || true_boundary)
+      //{
+      //  fe_face->reinit(elem, s);
+
+      //  int phi_size = phi_face.size();
+
+        // now integrate to include von Neumann and mixed type BCs
+        // and polarization
+      //  for (unsigned int qp = 0; qp < qface->n_points(); qp++)
+      //  {
+      //  }
+      //}
     }
 
     _iqe += iqe_el;
@@ -2664,6 +2714,189 @@ DriftDiffusion::calculate_currents_surfint(void)
 }
 
 
+
+void
+DriftDiffusion::calculate_surface_recombination(void)
+{
+
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return;
+
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
+
+  const NumericVector<Number>& solution = get_solution_vector();
+
+  // aliases for nicer code
+  const MeshBase& mesh = system->get_mesh();
+  const Device& device = *(_device);
+  const SimulationEnvironment& env = get_environment();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const double phi0 = get_scaling().get_potential_scaling();
+
+
+  // numeric ids corresponding to the variables
+  const unsigned int u_var = system->variable_number("potential");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
+
+  FEType fe_type = system->variable_type(u_var);
+
+  // the finite element for boundary integration
+  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type));
+  libMeshEnums::Order integration_order;
+  if (dim == 1)
+    integration_order = libMeshEnums::CONSTANT;
+  else
+    integration_order = get_my_options().integration_order;
+
+  AutoPtr<QBase> qface(QBase::build(
+        get_my_options().quadrature_type, dim - 1, integration_order));
+  fe_face->attach_quadrature_rule(qface.get());
+
+
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW = fe_face->get_JxW();
+
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe_face->get_xyz();
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe_face->get_phi();
+
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe_face->get_dphi();
+
+  // the face normals
+  const vector<Point>& face_normals = fe_face->get_normals();
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  // the total recombination current
+  double current = 0.0;
+
+  //BoundaryElementMap::iterator el(env.boundary_elements_begin());
+  //BoundaryElementMap::iterator end_el(env.boundary_elements_end());
+  MeshBase::const_element_iterator el =
+                                  mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  mesh.active_elements_end();
+
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    ID subdomain = elem->subdomain_id();
+
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+    dof_map.dof_indices(elem, dof_indices_en, en_var);
+    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    DriftDiffusionProperties* sc =
+      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
+
+    assert(sc != NULL);
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+
+      // theck check about the current is a bit primitive, but ok for now
+      if ((sm != NULL)  && !sm->has_current())
+      {
+        sc->reinit(elem);
+
+        //Get the temperature given the element
+        vector<double> T_nodes = sc->get_temperature_at_nodes();
+
+        fe_face->reinit(elem, s);
+
+        int phi_size = phi.size();
+
+
+        for (unsigned int qp = 0; qp < qface->n_points(); qp++)
+        {
+          // get the solution value at the quadrature point
+          Real u  = 0.0;
+          Real en = 0.0;
+          Real ep = 0.0;
+          Real dEfn = 0.0;
+          Real dEfp = 0.0;
+          RealGradient e_field(0);
+          Real dT = 0.0;
+          for (unsigned int i = 0; i < phi_size; i++)
+          {
+            u  += phi[i][qp] * solution(dof_indices_u[i]);
+            en += phi[i][qp] * solution(dof_indices_en[i]);
+            ep += phi[i][qp] * solution(dof_indices_ep[i]);
+
+            double tmp = dphi[i][qp] * face_normals[qp];
+            dEfn += tmp * solution(dof_indices_en[i]);
+            dEfp += tmp * solution(dof_indices_ep[i]);
+
+            e_field += dphi[i][qp] * solution(dof_indices_u[i]);
+
+            dT += tmp * T_nodes[i];
+          }
+
+          // prepare for calculating local properties
+          sc->set_coordinates(q_point[qp]);
+
+
+          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+
+          sc->set_electric_field(-phi0 * e_field);
+          sc->set_grad_fermi_e(phi0 * dEfn);
+          sc->set_grad_fermi_h(phi0 * dEfp);
+
+          sc->calculate_densities();
+          sc->calculate_mobilities();
+
+          sm->set_face_normal(s, face_normals[qp]);
+          sm->compute();
+
+          const vector<double>& coeff_a = sm->get_a();
+          const vector<double>& coeff_g = sm->get_g();
+
+          //double tmp = (coeff_g[0] - coeff_a[0] * u * phi0);
+          //if (sm->get_type(0) != DDInterfaceModel::DIRICHLET)
+          //  value_u += J * tmp / (x0 * C0);
+          //else
+          //  value_u = coeff_g[0] / phi0;
+
+          double value_n = 0;
+          if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)
+            value_n = (coeff_g[1] - coeff_a[1] * en);
+
+
+          double value_p = 0;
+          if (sm->get_type(2) != DDInterfaceModel::DIRICHLET)
+            value_p = (coeff_g[2] - coeff_a[2] * ep);
+
+
+          current += JxW[qp] * 0.5 * (value_n + value_p);
+
+        } // end loop over quadrature points
+      }
+    } // end loop over elem sides
+  } // end loop over elements
+
+  ostringstream rec;
+  rec << "Surface recombination current = " << current * Constants::e << "\n";
+  Messages::info(rec.str());
+}
 
 
 
