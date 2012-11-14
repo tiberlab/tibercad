@@ -66,6 +66,11 @@ Module maxwell_boundary
   {
   	type = Source
   }
+
+   #Physics
+   #{
+   #  Air_opticmodel = w_dependant
+   #}  
 }
 
 Simulation
