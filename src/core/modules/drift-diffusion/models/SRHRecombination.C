@@ -238,8 +238,8 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
     //    dd.get_electron_electro_chemical_potential();
     //double dE_p = dd.get_electric_potential() - dd.get_valence_band_edge() -
     //    dd.get_hole_electro_chemical_potential();
-    double dE_n = dd.get_conduction_band_edge() - Et;
-    double dE_p = Et - dd.get_valence_band_edge();
+    double dE_n = _E_t; //dd.get_conduction_band_edge() - Et;
+    double dE_p = _E_t; //Et - dd.get_valence_band_edge();
     double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_n);
     double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
     gamman = 1.0 / (gamman + 1);
@@ -292,8 +292,8 @@ SRHRecombination::get_net_recombination_rate_derivatives(
     //    dd.get_electron_electro_chemical_potential();
     //double dE_p = dd.get_electric_potential() - dd.get_valence_band_edge() -
     //    dd.get_hole_electro_chemical_potential();
-    double dE_n = dd.get_conduction_band_edge() - Et;
-    double dE_p = Et - dd.get_valence_band_edge();
+    double dE_n = _E_t; //dd.get_conduction_band_edge() - Et;
+    double dE_p = _E_t; //Et - dd.get_valence_band_edge();
     double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_n);
     double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
     gamman = 1.0 / (gamman + 1);

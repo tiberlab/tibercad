@@ -982,14 +982,6 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
 
 
 
-// TODO
-void
-DriftDiffusionProperties::get_net_recombination_rates(
-    vector<double>& rates)
-{
-  ignore_unused_variable(rates);
-}
-
 
 
 int

@@ -86,7 +86,7 @@ SchottkyContact::do_init(void)
     set_recombination_velocities(fac * vth_n, fac * vth_p);
   }
 
-  _tunneling = get_option("tunneling", true);
+  //_tunneling = get_option("tunneling", true);
 
 }
 
@@ -114,11 +114,6 @@ SchottkyContact::do_compute(void)
 
     const double fac = 0.23032943; // std::sqrt(1.0 / (6.0 * M_PI));
     set_recombination_velocities(fac * vth_n, fac * vth_p);
-  }
-
-  if (_tunneling)
-  {
-
   }
 
   ElectricalContact::do_compute();

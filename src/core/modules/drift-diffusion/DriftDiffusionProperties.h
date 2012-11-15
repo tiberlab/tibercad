@@ -50,7 +50,32 @@ class ParticleDensity;
 class DriftDiffusionProperties : public PhysicalModel
 {
 
+  private:
+
+    //! An iterator for the recombination models
+    typedef std::multimap<ID, RecombinationModelInterface*>::iterator
+      recomb_iterator;
+
+    //! A const iterator for the recombination models
+    typedef std::multimap<ID, RecombinationModelInterface*>::const_iterator
+      const_recomb_iterator;
+
   public:
+
+    class RecombinationModelIterator : public recomb_iterator
+    {
+      public:
+        RecombinationModelIterator(const recomb_iterator& it) :
+          recomb_iterator(it) {}
+
+        RecombinationModelIterator(const RecombinationModelIterator& it) :
+          recomb_iterator(it) {}
+
+        ID id(void) { return((*this)->first); }
+
+        RecombinationModelInterface* operator*(void) { return((*this)->second); }
+
+    };
 
     //! A nested class that holds all point data
     class PointData
@@ -658,7 +683,12 @@ class DriftDiffusionProperties : public PhysicalModel
       { return _conduction_band->get_band_edge() - _valence_band->get_band_edge(); };
 
 
-    void get_net_recombination_rates(std::vector<double>& rates);
+    //! Get the iterator to the first recombination model
+    RecombinationModelIterator recombination_models_begin(void);
+
+
+    //! Get the past-the-end iterator for the recombination models
+    RecombinationModelIterator recombination_models_end(void);
 
 
     //! Get the IDs of the registered recombination models
@@ -918,14 +948,6 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     double _background_conductivity;
 
-
-    //! An iterator for the recombination models
-    typedef std::multimap<ID, RecombinationModelInterface*>::iterator
-      recomb_iterator;
-
-    //! A const iterator for the recombination models
-    typedef std::multimap<ID, RecombinationModelInterface*>::const_iterator
-      const_recomb_iterator;
 
 
     //! The copy constructor is disabled
@@ -1410,6 +1432,21 @@ DriftDiffusionProperties::get_holes(void)
   return *_holes;
 }
 
+
+inline
+DriftDiffusionProperties::RecombinationModelIterator
+DriftDiffusionProperties::recombination_models_begin(void)
+{
+  return(RecombinationModelIterator(_recombination_models.begin()));
+}
+
+
+inline
+DriftDiffusionProperties::RecombinationModelIterator
+DriftDiffusionProperties::recombination_models_end(void)
+{
+  return(RecombinationModelIterator(_recombination_models.end()));
+}
 
 
 

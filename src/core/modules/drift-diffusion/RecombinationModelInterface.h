@@ -9,6 +9,9 @@
 
 #include <vector>
 
+class Boundary;
+
+
 //! Base class for recombination models
 /*!
  * This is the base class for recombination models. A new recombination model
@@ -52,12 +55,27 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
         const PhysicalObject* owner, const ModelOptions& options = ModelOptions());
 
 
+    //! Get the associated tunneling contact pointer, or NULL
+    const Boundary* get_tunneling_contact(void);
+
+
   protected:
 
     //! \copydoc DriftDiffusionProperties::DriftDiffusionProperties()
     RecombinationModelInterface(const ModelOptions& options);
 
+    //! Set the associated contact for tunneling
+    /*!
+     * This method should be called if the recombination model
+     * is modelling carrier tunneling to or from a contact.
+     */
+    void set_tunneling_contact(const Boundary* bd);
+
+
   private:
+
+    //! The associated tunneling contact, or NULL
+    const Boundary* _tunneling_boundary;
 
 };
 
@@ -68,7 +86,8 @@ class TBDLEXPORT RecombinationModelInterface : public DriftDiffusionModelInterfa
 
 inline
 RecombinationModelInterface::RecombinationModelInterface(const ModelOptions& options)
- : DriftDiffusionModelInterface(options)
+ : DriftDiffusionModelInterface(options),
+   _tunneling_boundary(NULL)
 {
 }
 
@@ -76,6 +95,21 @@ inline
 RecombinationModelInterface::~RecombinationModelInterface(void)
 {
 }
+
+inline
+const Boundary*
+RecombinationModelInterface::get_tunneling_contact(void)
+{
+  return _tunneling_boundary;
+}
+
+inline
+void
+RecombinationModelInterface::set_tunneling_contact(const Boundary* bd)
+{
+  _tunneling_boundary = bd;
+}
+
 
 
 inline

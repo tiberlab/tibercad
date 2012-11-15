@@ -47,7 +47,7 @@ class TBDLLOCAL SchottkyContact : public ElectricalContact
 
 
     //! Do we include tunneling?
-    bool _tunneling;
+    //bool _tunneling;
 
 };
 

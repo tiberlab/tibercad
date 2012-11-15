@@ -175,6 +175,9 @@ SchottkyTunneling::do_init(void)
         "contact tunneling model (contact: " + _contact_name + ")");
   _barrier = get_option("barrier", _barrier);
 
+  // let the model know that it is a contact tunneling model
+  set_tunneling_contact(env.get_boundary(_contact_name));
+
 }
 
 

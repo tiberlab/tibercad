@@ -91,7 +91,8 @@ DriftDiffusion::DriftDiffusion(const ModelOptions& options)
   : SimulationInterface(options),
     _rebuild_eq_system(true),
     _useparticle('b'),
-    _reference_potential(0.0)
+    _reference_potential(0.0),
+    _rstf(NULL)
 {
 }
 
@@ -1173,11 +1174,15 @@ DriftDiffusion::parse_const_options(void)
   const ModelOptions& opts = get_options();
   Options& myopts = get_my_options();
 
-  string method =  opts.get_option("current_integration_method", "");
-  if (method == "surfint")
-    myopts.current_calculation = SURFINT;
-  else
+  string method =  opts.get_option("current_integration_method", "rstf");
+  if (method == "rstf")
     myopts.current_calculation = RSTF;
+  else if (method == "compact_rstf")
+    myopts.current_calculation = RSTF_COMPACT;
+  //else if (method == "surface_integral")
+  //  myopts.current_calculation = SURFINT;
+  else throw InitFailedException("Unknown current integration method: "
+      + method + " in DriftDiffusion.");
 
   string scaling = opts.get_option("scaling", "");
   if (scaling == "demari")
@@ -1369,7 +1374,10 @@ DriftDiffusion::RSTFSys::create(DriftDiffusion* dd)
     ostringstream os;
     os << "rstf" << i;
     sys->add_vector(os.str());
+    sys->_boundaries[it->first] = i;
   }
+
+  sys->assemble_before_solve = false;
 
   return sys;
 }
@@ -1378,22 +1386,228 @@ DriftDiffusion::RSTFSys::create(DriftDiffusion* dd)
 void
 DriftDiffusion::RSTFSys::solve(void)
 {
+  assemble();
+
   // we need to solve for every contact
-  ContactData::iterator it = _dd->_boundary_currents.begin();
-  for (int i = 0 ; it != _dd->_boundary_currents.end(); ++it, ++i)
+  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  for ( ; bdit != _boundaries.end(); ++bdit)
   {
+    int i = bdit->second;
+
     ostringstream os;
     os << "rstf" << i;
 
+    *rhs = get_vector(os.str());
+
+    LinearImplicitSystem::solve();
+
+    get_vector(os.str()) = *solution;
+
+  }
+
+  //plot();
+}
+
+
+NumericVector<double>*
+DriftDiffusion::RSTFSys::get_testfunction(int i)
+{
+  ostringstream os;
+  os << "rstf" << i;
+  return &get_vector(os.str());
+}
+
+NumericVector<double>*
+DriftDiffusion::RSTFSys::get_testfunction(const Boundary* bd)
+{
+  NumericVector<double>* vec = NULL;
+
+  map<const Boundary*, int>::iterator bdit(_boundaries.find(bd));
+  if (bdit != _boundaries.end())
+  {
+    ostringstream os;
+    os << "rstf" << bdit->second;
+    vec = &get_vector(os.str());
+  }
+
+  return vec;
+}
+
+
+void
+DriftDiffusion::RSTFSys::user_assembly(void)
+{
+  const unsigned int var = variable_number("u");
+
+  vector<NumericVector<double>*> rhsides(_boundaries.size());
+  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  for ( ; bdit != _boundaries.end(); ++bdit)
+  {
+    int i = bdit->second;
+    ostringstream os;
+    os << "rstf" << i;
+    rhsides[i] = &get_vector(os.str());
+  }
+
+  DofMap& dof_map = get_dof_map();
+
+  FEType fe_type = variable_type(var);
+
+  const MeshBase& mesh = get_mesh();
+  unsigned int dim = mesh.mesh_dimension();
+
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  QGauss qrule(dim, SECOND);
+  fe->attach_quadrature_rule(&qrule);
+
+  const std::vector<Real>& JxW = fe->get_JxW();
+  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+
+  std::vector<unsigned int> dof_indices;
+
+  DenseMatrix<Number> Ke;
+  vector<DenseVector<Number>> Fe(_boundaries.size());
+
+  const double penalty = 1e6;
+
+  MeshBase::const_element_iterator el(mesh.active_elements_begin());
+  const MeshBase::const_element_iterator end_el(mesh.active_elements_end());
+
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+
+    dof_map.dof_indices (elem, dof_indices);
+    const unsigned int n_dofs   = dof_indices.size();
+
+    fe->reinit(elem);
+
+    Ke.resize(n_dofs, n_dofs);
+    for (int i = 0; i < _boundaries.size(); ++i)
+      Fe[i].resize(n_dofs);
+
+    for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
+      for (unsigned int i = 0; i < n_dofs; i++)
+        for (unsigned int j = 0; j < n_dofs; j++)
+          Ke(i, j) += JxW[qp] * dphi[i][qp] * dphi[j][qp];
+
+
+    // loop over the sides for boundary conditions
+    // NOTE we use penalty-method here
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+      Boundary* bd = _dd->get_environment().get_boundary(ElementSide(elem, s));
+
+      if (bd != NULL)
+      {
+        map<const Boundary*, int>::iterator bdit(_boundaries.find(bd));
+        if (bdit != _boundaries.end())
+        {
+          // the internal number of the boundary
+          int bdid = bdit->second;
+
+          for (unsigned int i = 0; i < elem->n_nodes(); i++)
+          {
+            if (elem->is_node_on_side(i, s))
+            {
+              Ke(i, i) += penalty;
+              Fe[bdid](i) += penalty;
+            }
+          }
+        }
+      }
+    }
+
+    // apply dof constraints
+    // TODO needs to be split and uncommented for mesh refinement
+    //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
+
+    matrix->add_matrix(Ke, dof_indices);
+    map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+    for ( ; bdit != _boundaries.end(); ++bdit)
+    {
+      rhsides[bdit->second]->add_vector(Fe[bdit->second], dof_indices);
+    }
 
   }
 }
 
 
-void
-DriftDiffusion::RSTFSys::assemble(void)
-{
 
+void
+DriftDiffusion::RSTFSys::plot(void)
+{
+  // we return immediately if nothing is to be printed
+  //if (!_do_plot) return;
+
+  const MeshBase& mesh = get_mesh();
+
+  DataOutput data_output(mesh, TiberCad::get_output_format());
+  data_output.set_output_directory(TiberCad::get_output_dir());
+
+
+  vector<double> sol;
+  vector<string> solname;
+
+  build_nodal_results(sol, solname);
+  data_output.write_nodal_data("__DD_rstf", sol, solname);
+
+}
+
+
+void
+DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
+    vector<string>& legend)
+{
+  legend.resize(_boundaries.size());
+
+  vector<NumericVector<double>*> rhsides(_boundaries.size());
+  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  for ( ; bdit != _boundaries.end(); ++bdit)
+  {
+    int i = bdit->second;
+    ostringstream os;
+    os << "rstf" << i;
+    legend[i] = os.str();
+    rhsides[i] = &get_vector(os.str());
+  }
+
+  //const unsigned int s = number();
+  //const unsigned int var = variable_number("u");
+  const MeshBase& mesh = get_mesh();
+
+  MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
+  const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
+
+  unsigned int number_of_points = 0;
+  for ( ; nd != nd_end; ++nd)  number_of_points++;
+
+  results.resize(number_of_points * _boundaries.size(), 0.0);
+
+  MeshBase::const_element_iterator it(mesh.active_local_elements_begin());
+  const MeshBase::const_element_iterator
+    end(mesh.active_local_elements_end());
+
+  vector<unsigned int> dof_indices;
+  DofMap& dof_map = get_dof_map();
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    dof_map.dof_indices(elem, dof_indices);
+
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+    {
+      unsigned int id = elem->node(n) * _boundaries.size();
+      map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+      for ( ; bdit != _boundaries.end(); ++bdit)
+      {
+        int i = bdit->second;
+        results[id + i]  =  (*rhsides[i])(dof_indices[n]);
+      }
+    }
+  }
 }
 
 void
@@ -2075,11 +2289,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
 
 
-
-
-
 void
-DriftDiffusion::calculate_currents_rstf(void)
+DriftDiffusion::calculate_currents_rstf_global(void)
 {
 
   // we only do something if we are on processor 0
@@ -2088,6 +2299,217 @@ DriftDiffusion::calculate_currents_rstf(void)
 
   if (_rstf == NULL)
     prepare_rstf();
+
+  // now we have certainly the RSTFs prepared
+
+  // put all RSTFs into a map
+  map<const Boundary*, NumericVector<double>*> rstf;
+
+  {
+    ContactData::iterator it = _boundary_currents.begin();
+    for ( ; it != _boundary_currents.end(); ++it)
+    {
+      // zero out current
+      (*it).second = 0.0;
+
+      rstf[it->first] = _rstf->get_testfunction(it->first);
+    }
+  }
+
+
+  TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>(0);
+
+  const NumericVector<Number>& solution = system->get_solution_vector();
+
+  // aliases for nicer code
+  const MeshBase& mesh = system->get_mesh();
+  //const Device& device = *(_device);
+  SimulationEnvironment& env = get_environment();
+
+  const DofMap& dof_map = system->get_dof_map();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+
+  const double phi0 = get_scaling().get_potential_scaling();
+
+
+  // numeric ids corresponding to the variables
+  const unsigned int u_var = system->variable_number("potential");
+  unsigned int en_var = system->variable_number("fermi_e");
+  unsigned int ep_var = system->variable_number("fermi_h");
+  if (_useparticle == 'e')
+    ep_var = en_var;
+  else if (_useparticle == 'h')
+    en_var = ep_var;
+
+  FEType fe_type = system->variable_type(u_var);
+
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  AutoPtr<QBase> qrule(QBase::build(
+        get_my_options().quadrature_type, dim, get_my_options().integration_order));
+  fe->attach_quadrature_rule(qrule.get());
+
+
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW = fe->get_JxW();
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point = fe->get_xyz();
+
+  // physical coordinates of the quadrature points
+  //const vector<Point>& q_point = fe->get_xyz();
+
+  // element shape functions
+  const vector<vector<Real> >& phi = fe->get_phi();
+
+  // element shape function gradients
+  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+
+
+  vector<unsigned int> dof_indices_u;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  MeshBase::const_element_iterator el(mesh.active_local_elements_begin());
+  const MeshBase::const_element_iterator end_el(mesh.active_local_elements_end());
+
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+    //const Elem* top_parent = elem->top_parent();
+
+    // get DOF indices
+    dof_map.dof_indices(elem, dof_indices_u, u_var);
+    dof_map.dof_indices(elem, dof_indices_en, en_var);
+    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    DriftDiffusionProperties* sc =
+        get_bulk_model<DriftDiffusionProperties>(elem);
+
+    assert(sc != NULL);
+
+
+    // in a dielectric we have no current
+    if (sc->is_dielectric())
+      continue;
+
+
+    fe->reinit(elem);
+
+    sc->reinit(elem);
+
+    //Get the temperature given the element
+    vector<double> T_nodes =  sc->get_temperature_at_nodes();
+
+
+    for (unsigned int qp = 0; qp < qrule->n_points(); qp++)
+    {
+
+      unsigned int n_dofs = dof_indices_u.size();
+      Real u  = 0.0;
+      Real en = 0.0;
+      Real ep = 0.0;
+      RealGradient dEfn(0);
+      RealGradient dEfp(0);
+      RealGradient e_field(0);
+      RealGradient dT(0);
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        u  += phi[i][qp] * solution(dof_indices_u[i]);
+        en += phi[i][qp] * solution(dof_indices_en[i]);
+        ep += phi[i][qp] * solution(dof_indices_ep[i]);
+
+        dEfn += dphi[i][qp] * solution(dof_indices_en[i]);
+        dEfp += dphi[i][qp] * solution(dof_indices_ep[i]);
+
+        dT += dphi[i][qp] * T_nodes[i];
+
+        e_field -= dphi[i][qp] * solution(dof_indices_u[i]);
+      }
+
+      // prepare for calculating local properties
+      //sc->set_coordinates(elem->centroid());  ????? 2012-08-31
+      sc->set_coordinates(q_point[qp]);
+
+
+      sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+      sc->set_electric_field(phi0 * e_field);
+      sc->set_grad_fermi_e(phi0 * dEfn);
+      sc->set_grad_fermi_h(phi0 * dEfp);
+
+      sc->calculate_densities();
+      sc->calculate_mobilities();
+      sc->calculate_net_recombination_rates();
+
+      //Get the thermoelectric power
+      sc->compute_thermoelectric_powers();
+      double Pn =  sc->get_electron_thermoelectric_power() / phi0;
+      double Pp =  sc->get_hole_thermoelectric_power() / phi0;
+
+      // we put the minus here for convenience
+      double sigma_e = -Constants::e * sc->get_electron_conductivity();
+      double sigma_h = -Constants::e * sc->get_hole_conductivity();
+
+      double Rn = sc->get_net_electron_recombination_rate();
+      double Rp = sc->get_net_hole_recombination_rate();
+      double net_rate = JxW[qp] * Constants::e * (Rn - Rp);
+
+      // loop over all recombination models and add the ones that model
+      // tunneling for the current contact
+      // this is needed, because the current calculated afterwards does not
+      // include direct tunneling.
+      DriftDiffusionProperties::RecombinationModelIterator recit(
+          sc->recombination_models_begin());
+      DriftDiffusionProperties::RecombinationModelIterator recend(
+          sc->recombination_models_end());
+      for ( ; recit != recend; ++recit)
+      {
+        const Boundary* bd = (*recit)->get_tunneling_contact();
+        if (bd != NULL)
+        {
+          double elrate, hlrate;
+          (*recit)->get_net_recombination_rates(elrate, hlrate);
+          _boundary_currents[bd] -= JxW[qp] * Constants::e * (elrate - hlrate);
+        }
+      }
+
+      RealGradient je(JxW[qp] * phi0 * (sigma_e * (dEfn + Pn * dT)));
+      RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        // do this for each contact
+        map<const Boundary*, NumericVector<double>*>::iterator rstf_it(rstf.begin());
+        for ( ; rstf_it != rstf.end(); ++rstf_it)
+        {
+          const Boundary* bd = rstf_it->first;
+          const NumericVector<double>& sol = *rstf_it->second;
+
+          _boundary_currents[bd] += ((je + jh) * dphi[n][qp] +
+              net_rate * phi[n][qp]) * sol(dof_indices_u[n]);
+
+        }
+      }
+
+    } // end loop over quadrature points
+  } // end loop over elements
+
+}
+
+
+
+void
+DriftDiffusion::calculate_currents_rstf_compact(void)
+{
+
+  // we only do something if we are on processor 0
+  if (libMesh::processor_id() != 0)
+    return;
+
+  if (_rstf == NULL)
+    prepare_rstf();
+
+  // now we have certainly the RSTFs prepared
 
   // reset currents
   {
@@ -3379,8 +3801,8 @@ void
 DriftDiffusion::calculate_currents(void)
 {
   if (get_my_options().current_calculation == RSTF)
-    calculate_currents_rstf();
-  else
+    calculate_currents_rstf_global();
+  else if (get_my_options().current_calculation == RSTF_COMPACT)
     calculate_currents_surfint();
 }
 

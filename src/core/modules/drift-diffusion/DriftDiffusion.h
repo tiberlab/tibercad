@@ -155,9 +155,16 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     {
       /*!
        * Use Ramo-Shockley test functions
-       * (cf. calculate_current_rstf() )
+       * (cf. calculate_current_rstf_global() )
        */
       RSTF,
+
+      /*!
+       * Use Ramo-Shockley test functions
+       * with compact (local) support
+       * (cf. calculate_current_rstf_compact() )
+       */
+      RSTF_COMPACT,
 
       /*!
        * Do a naive surface integration
@@ -452,17 +459,27 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
         RSTFSys(EquationSystems& es,
             const std::string& name,
             const unsigned int number)
-        : LinearImplicitSystem(es, name, number)
+        : LinearImplicitSystem(es, name, number), _dd(NULL)
         {}
 
         static RSTFSys* create(DriftDiffusion* dd);
 
-        void assemble(void);
+        void user_assembly(void);
 
         void solve(void);
 
+        NumericVector<double>* get_testfunction(int i);
+
+        NumericVector<double>* get_testfunction(const Boundary* bd);
+
       private:
         DriftDiffusion* _dd;
+
+        std::map<const Boundary*, int> _boundaries;
+
+        void plot(void);
+        void build_nodal_results(std::vector<double>& results,
+            std::vector<std::string>& legend);
     };
 
     friend class RSTFSys;
@@ -692,7 +709,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      * node \it i):
      * \f[h_l = \sum_{i \in \Gamma_l}\psi_i\f]
      */
-    void calculate_currents_rstf(void);
+    void calculate_currents_rstf_global(void);
+
+    //! Compact (local) version of RSTF
+    void calculate_currents_rstf_compact(void);
 
 
     //! Calculates internal quantum efficiency
