@@ -2506,11 +2506,6 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
   if (libMesh::processor_id() != 0)
     return;
 
-  if (_rstf == NULL)
-    prepare_rstf();
-
-  // now we have certainly the RSTFs prepared
-
   // reset currents
   {
     ContactData::iterator it =
