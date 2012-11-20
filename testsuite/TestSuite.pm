@@ -37,7 +37,7 @@ use Cwd;
 use Text::ParseWords;
 use Term::ANSIColor;
 use File::Basename;
-use Net::SMTP;
+use Net::SMTP::SSL;
 
 
 ##
@@ -64,6 +64,9 @@ our %options;
     'verbose' => 0,
     'testonly' => 0,
     'smtp_server' => "localhost",
+    'smtp_port' => 25,
+    'smtp_user' => '',
+    'smtp_passwd' => '',
     'mail_sender' => "$ENV{USER}",
     'package' => "unknown",
     'logfile' => "run.log"
@@ -273,6 +276,21 @@ sub read_configuration($) {
        
        /\s*smtp_server\s*=(.+)/ && do {
          $options{'smtp_server'} = trim($1);
+         last SWITCH;
+       };
+      
+       /\s*smtp_port\s*=(.+)/ && do {
+         $options{'smtp_port'} = trim($1);
+         last SWITCH;
+       };
+      
+       /\s*smtp_user\s*=(.+)/ && do {
+         $options{'smtp_user'} = trim($1);
+         last SWITCH;
+       };
+      
+       /\s*smtp_passwd\s*=(.+)/ && do {
+         $options{'smtp_passwd'} = trim($1);
          last SWITCH;
        };
 
@@ -739,6 +757,9 @@ sub send_email($)
 {
   my $rcpt = get_option("mail_rcpt");
   my $from = get_option("mail_sender");
+  my $port = get_option("smtp_port");
+  my $user = get_option("smtp_user");
+  my $passwd = get_option("smtp_passwd");
   my $subject = "";
   my $msg = "";
 
@@ -748,9 +769,13 @@ sub send_email($)
   if (length($rcpt) > 0) {
     print("Sending report to $rcpt\n") if verbose();
 
-    my $smtp = Net::SMTP->new(get_option("smtp_server"),
-                              Debug => 0);
+    my $smtp = Net::SMTP::SSL->new(get_option("smtp_server"),
+                              Port => $port,
+                              Debug => 1);
 
+    if (length($passwd) > 0) { 
+      $smtp->auth($user, $passwd) or die "Could not authenticate $!";
+    }
     $smtp->mail($from);
     $smtp->to($rcpt);
 
