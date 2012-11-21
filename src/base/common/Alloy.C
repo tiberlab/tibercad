@@ -36,6 +36,18 @@ Alloy::do_preinit(void)
 
   _molar_fraction = get_options().get_option("x", 0.0);
 
+  std::vector<double> fracs(2);
+  fracs[0] = _molar_fraction;
+  fracs[1] = 1.0 - _molar_fraction;
+  get_database().set_alloy_composition(fracs);
+
+  // the components may be alloys
+  Database::AlloyMixing mixing = get_database().get_alloy_mixing();
+  get_database().set_alloy_mixing(Database::NONE);
+  double xa = get_database().get("x_A", -1.0);
+  double xb = get_database().get("x_B", -1.0);
+  get_database().set_alloy_mixing(mixing);
+
 #ifdef DEBUG
   std::ostringstream os;
   os << get_name() << " is an alloy with components " <<
@@ -45,18 +57,18 @@ Alloy::do_preinit(void)
 #endif
 
 
+  ModelOptions opts(get_options());
+  if (xa >= 0)
+    opts.set_option("x", xa);
 
-  _mat_A = Material::create(names[0], get_options());
-  _mat_B = Material::create(names[1], get_options());
+  _mat_A = Material::create(names[0], opts);
+
+  opts.delete_option("x");
+  if (xb >= 0)
+    opts.set_option("x", xb);
+  _mat_B = Material::create(names[1], opts);
 
 
-  // TODO for now alloy has two components
-  assert(get_database().get_number_of_components() == 2);
-
-  std::vector<double> fracs(2);
-  fracs[0] = _molar_fraction;
-  fracs[1] = 1.0 - _molar_fraction;
-  get_database().set_alloy_composition(fracs);
 
   _mat_A->set_database(get_database().get_component_database(0));
   _mat_B->set_database(get_database().get_component_database(1));
