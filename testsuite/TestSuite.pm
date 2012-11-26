@@ -769,12 +769,17 @@ sub send_email($)
   if (length($rcpt) > 0) {
     print("Sending report to $rcpt\n") if verbose();
 
-    my $smtp = Net::SMTP::SSL->new(get_option("smtp_server"),
-                              Port => $port,
-                              Debug => 1);
-
+    my $smtp;
     if (length($passwd) > 0) { 
+      $smtp = Net::SMTP::SSL->new(get_option("smtp_server"),
+                              Port => $port,
+                              Debug => 0);
+
       $smtp->auth($user, $passwd) or die "Could not authenticate $!";
+    }
+    else {
+      $smtp = Net::SMTP->new(get_option("smtp_server"),
+                             Debug => 0);
     }
     $smtp->mail($from);
     $smtp->to($rcpt);
