@@ -2,7 +2,7 @@
 # Description of  the  device physical regions
 Device
 {
-  meshfile = bulk.msh
+  meshfile = bulki.msh
   material = Si
 
 
@@ -26,8 +26,9 @@ Module driftdiffusion
   name = driftdiffusion
   plot = (Ec, Ev, eQFermi, hQFermi, NetRecombination, ContactCurrents)
 
-  Physics
+  Physics 
   {
+   band_properties simple {}
 
     particle_density
     { 
