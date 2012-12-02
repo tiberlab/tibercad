@@ -8,6 +8,9 @@ TOPDIR=${TOPDIR:-"`pwd`/.."}
 # build directory
 BUILDDIR=${BUILDDIR:-"`pwd`/../extern"}
 
+# SDK directory
+SDKDIR=${SDKDIR:-"`pwd`/../SDK"}
+
 # PETSc version
 PETSCVERSION=${PETSCVERSION:-"3.0.0"}
 PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-"-p12"}

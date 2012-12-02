@@ -3,25 +3,26 @@ PACKAGER=ma
 VERSION=4.6.0
 PROD=gcc
 
-topdir=/scratch/maufder/TiberCAD/test/trunk
+topdir=/home/maufder/Work/TiberCAD/2.0-win
 
 ARCH=$(${topdir}/share/arch.sh)
 # You can set these to any reasonable value
-INSTALLPREFIX=${topdir}/SDK/gcc-$VERSION
-INSTALLEPREFIX=${INSTALLPREFIX}/$(${topdir}/share/arch.sh)
+#INSTALLPREFIX=${topdir}/SDK/gcc-$VERSION
+#INSTALLEPREFIX=${INSTALLPREFIX}/$(${topdir}/share/arch.sh)
+INSTALLPREFIX=${topdir}/SDK
+INSTALLEPREFIX=${topdir}/SDK/$ARCH
 WORKDIR=${topdir}/extern/gcc-4.6.0
 #DEPLIBS=${WORKDIR}/dependencies
-DEPLIBS=${INSTALLPREFIX}
 
 
 . `dirname $0`/INSTALL.lib
 
-PREFIX=$DEPLIBS
-EPREFIX=$PREFIX
+PREFIX=$INSTALLPREFIX
+EPREFIX=$INSTALLEPREFIX
 
 export LD_LIBRARY_PATH=${EPREFIX}/lib
 #export LDFLAGS="-Wl,-rpath-link,${EPREFIX}/lib -Wl,-rpath,'\$\$ORIGIN/../../../../../lib' -Wl,-rpath,'\$\$ORIGIN/../lib'"
-export LD_RUN_PATH='$ORIGIN:$ORIGIN/../lib:$ORIGIN/../../../../../lib'
+export LD_RUN_PATH='$ORIGIN:$ORIGIN/../lib:$ORIGIN/../../../../lib'
 echo $INSTALLEPREFIX
 echo "$LD_RUN_PATH"
 
@@ -35,8 +36,6 @@ export CPPLAGS="-I ${PREFIX}/include"
 simplebuild ftp://gcc.gnu.org/pub/gcc/infrastructure cloog-ppl-0.15.11.tar.gz --with-ppl=${EPREFIX}/lib --with-gmp-library=${EPREFIX}/lib --with-gmp-include=${EPREFIX}/include 
 
 
-PREFIX=$INSTALLPREFIX
-EPREFIX=$INSTALLEPREFIX
 if prepare ftp://mirror.switch.ch/mirror/gnu/${PROD}/${PROD}-${VERSION} ${PROD}-${VERSION}.tar.bz2
 then
 
@@ -44,10 +43,11 @@ then
   mkdir -p build
   cd build
   #../${PROD}-${VERSION}/configure --prefix=${PREFIX} --enable-languages=c,c++,fortran --enable-__cxa_atexit --enable-threads --exec-prefix=${EPREFIX} --with-gmp-include=${DEPLIBS}/include --with-gmp-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib" --with-mpfr-include=${DEPLIBS}/include --with-mpfr-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib" --with-ppl-include=${DEPLIBS}/include --with-ppl-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib"  --with-cloog-include=${DEPLIBS}/include --with-cloog-lib="${DEPLIBS}/lib -Wl,-rpath-link,${DEPLIBS}/lib"  
-  ../${PROD}-${VERSION}/configure --prefix=${PREFIX} --enable-languages=c,c++,fortran --enable-__cxa_atexit --enable-threads --exec-prefix=${EPREFIX} --with-gmp-include=${DEPLIBS}/include --with-gmp-lib="${DEPLIBS}/lib" --with-mpfr-include=${DEPLIBS}/include --with-mpfr-lib="${DEPLIBS}/lib" --with-ppl-include=${DEPLIBS}/include --with-ppl-lib="${DEPLIBS}/lib"  --with-cloog-include=${DEPLIBS}/include --with-cloog-lib="${DEPLIBS}/lib"  
+  ../${PROD}-${VERSION}/configure --prefix=${PREFIX} --enable-languages=c,c++,fortran --enable-__cxa_atexit --enable-threads --exec-prefix=${EPREFIX} --with-gmp-include=${EPREFIX}/include --with-gmp-lib="${EPREFIX}/lib" --with-mpfr-include=${PREFIX}/include --with-mpfr-lib="${EPREFIX}/lib" --with-ppl-include=${PREFIX}/include --with-ppl-lib="${EPREFIX}/lib"  --with-cloog-include=${PREFIX}/include --with-cloog-lib="${EPREFIX}/lib"
 
   make all
   make install
+
 fi
 
 echo "You might want to link ${HOME}/bin to ${EPREFIX}/bin and add ${HOME}/bin to your PATH"
