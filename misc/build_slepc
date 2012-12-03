@@ -56,12 +56,12 @@ make_slepc()
     slepc_linker_flags="-Wl,-install_name,@rpath/lib/${libname}${dll_libext}"
   fi
 
-  echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
-  mkdir -p ${BUILDDIR}/${TCHOST}/lib
-  ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} \
+  echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
+  mkdir -p ${SDKDIR}/${TCHOST}/lib
+  ${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} \
     ${slepc_linker_flags} \
     ${ARCHIVES} \
-    -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath,${BUILDDIR}/${TCHOST}/lib -lpetsc_${datatype}${dbg} \
+    -L${SDKDIR}/${TCHOST}/lib -Wl,-rpath,\$ORIGIN -lpetsc_${datatype}${dbg} \
     ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
 }

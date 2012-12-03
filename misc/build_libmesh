@@ -145,13 +145,13 @@ sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEB
 
 make |tee make_opt.log
 
-echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${dll_name} ..."
+echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${dll_name} ..."
 staticlib=`make echo | grep libmesh.a`
 contriblibs=`echo $staticlib | sed -e 's/lib\//contrib\/lib\//' -e 's/libmesh\.a/\*\.a/'`
 contribdir=${contriblibs/%\*\.a}
 rm -f ${contribdir}/libnemesis.*
 rm -f ${contribdir}/libexodusii.*
-mkdir -p ${BUILDDIR}/${TCHOST}/lib
+mkdir -p ${SDKDIR}/${TCHOST}/lib
 
 ARCHIVES="-Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive" 
 if [ "$target_os" = darwin ]
@@ -169,10 +169,10 @@ then
   libmesh_linker_flags="-Wl,-install_name,@rpath/lib/${dll_name}"
 fi
 
-${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${dll_name} \
+${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${dll_name} \
   ${libmesh_linker_flags} \
   ${ARCHIVES} \
-  -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
+  -L${SDKDIR}/${TCHOST}/lib -Wl,-rpath,\$ORIGIN -lpetsc_real${dbg} \
   ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
 

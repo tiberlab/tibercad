@@ -52,7 +52,7 @@ TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
 ifeq ($(target_os), linux)
-  LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir)
+  LDFLAGS := -Wl,-rpath,'$$ORIGIN:$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir)
 endif
 ifeq ($(target_os), darwin)
   LDFLAGS := -Wl,-rpath,@loader_path/.. -Wl,-rpath,@loader_path/../extern

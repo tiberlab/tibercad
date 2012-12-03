@@ -1,6 +1,6 @@
 
 # load variables
-#[ -e variables ] && . variables
+[ -e variables ] && . variables
 
 # top directory
 TOPDIR=${TOPDIR:-"`pwd`/.."}
@@ -84,10 +84,10 @@ echo "* Host system :  $TCHOST"
 echo "* Build system:  $TCBUILD"
 echo "*************************************************"
 
-if [ -d ${TOPDIR}/SDK/compiler/$TCHOST ]
+if [ -d ${TOPDIR}/SDK/${TCHOST}/lib/gcc ]
 then
-  export PATH=${TOPDIR}/SDK/compiler/${TCHOST}/bin:${PATH}
-  export LD_LIBRARY_PATH=${TOPDIR}/SDK/compiler/${TCHOST}/lib
+  export PATH=${TOPDIR}/SDK/${TCHOST}/bin:${PATH}
+  export LD_LIBRARY_PATH=${TOPDIR}/SDK/${TCHOST}/lib
 fi
 
 #CC=${CC:-"${pre}gcc${gcc_version}"}
