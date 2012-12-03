@@ -52,7 +52,7 @@ fi
 if [ "$target_os" = win32 ]; then
   echo "using gcc : : $CXX : <cxxflags>-std=gnu++0x <src>$(echo $CC | sed 's/gcc/windres/') <archiver>$AR ;" > tools/build/v2/user-config.jam
 else
-  echo "using $toolset : : $CXX : <cxxflags>-std=gnu++0x <linkflags>-Wl,-rpath,${BUILDDIR}/${TCHOST}/lib ;" > tools/build/v2/user-config.jam
+  echo "using $toolset : : $CXX -v : <cxxflags>-std=gnu++0x <linkflags>-Wl,-rpath,\'\$ORIGIN\' ;" > tools/build/v2/user-config.jam
 fi
 
 ./bootstrap.sh --with-toolset=$toolset --without-icu
@@ -62,7 +62,6 @@ if [ "$target_os" = win32 ]; then
 
   ./bjam toolset=gcc variant=release threading=single link=shared runtime-link=shared target-os=windows --with-regex --with-filesystem --with-system --layout=tagged --prefix=${SDKDIR} --exec-prefix=${SDKDIR}/$TCHOST address-model=$bits install
 else
-  export LD_RUN_PATH='$ORIGIN'
   ./bjam toolset=$toolset variant=release threading=multi link=shared runtime-link=shared --with-regex --with-filesystem --with-system --layout=tagged --prefix=${SDKDIR} --exec-prefix=${SDKDIR}/$TCHOST install
 fi
 
@@ -80,7 +79,7 @@ then
   done
 fi
 
-# when cross compiling we ned also the build system boost libraries
+# when cross compiling we need also the build system boost libraries
 if [ "$TCHOST" != "$TCBUILD" ]
 then
   rm tools/build/v2/user-config.jam
