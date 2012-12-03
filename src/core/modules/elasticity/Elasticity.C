@@ -734,6 +734,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 // commentato perche' centroide ha coordinate globali e produce errore
 //    const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
 
+    // get the accumulated strain from shape deformation
     RealTensor accum_strain;
     _accumulated_strain[elem].get_tensor(accum_strain);
 
