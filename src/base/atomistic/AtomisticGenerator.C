@@ -1,3 +1,5 @@
+// $Id$
+
 #include "AtomisticGenerator.h"
 #include "AtomisticStructure.h"
 #include "AtomisticGenerator1D.h"
@@ -7,6 +9,7 @@
 #include "Messages.h"
 #include "MeshUtils.h"
 #include "Specie.h"
+#include "Utils.h"
 
 #include <stdio.h>
 #include <cmath>
@@ -320,7 +323,9 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   progress_step = _super_basis.size()/100;
   progress_counter = 0;
 
-  std::cout << "Atomistic Generator progress 0% " << std::endl;
+  Utils::Timer tt;
+
+  std::cout << "Atomistic Generator progress   0% ..." << std::flush;
   rotated_primvec = _rotation * _prim_vec;
 
   //Different strategies if preserving conventional cell or preserving basis are needed
@@ -334,11 +339,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
         atom != _super_basis.end(); ++atom)
     {
 
-      if (((progress_counter % progress_step) == 0) && ((progress_counter / progress_step) % 10 == 0)) 
-        {
-          std::cout << progress_counter / progress_step << "%  " << std::endl; 
-        }    
-      progress_counter+=1;
 
       done = false;
 
@@ -395,8 +395,13 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
         }
       }
 
+      progress_counter += 1;
+      if (((progress_counter % progress_step) == 0) && ((progress_counter / progress_step) % 2 == 0))
+          std::cout << "\b\b\b\b\b\b\b\b" << std::setw(3) <<
+            progress_counter / progress_step << "% ..." << std::flush;
     }
   }
+  std::cout << " done" << std::endl;
 
 
   if (preserve.compare("lattice") == 0)
@@ -583,6 +588,10 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
     }
   }
+  std::ostringstream os;
+  os << "Atomistic structure build time: " << tt.elapsed_string();
+  Messages::newline();
+  Messages::info(os.str());
 
   Messages::debug("Finished cut_and_change_specie");
 
