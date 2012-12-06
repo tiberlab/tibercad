@@ -4,6 +4,8 @@
 #include "Database.h"
 #include "Constants.h"
 
+#include "Constants.h"
+
 using namespace std;
 
 //======================================================================//
@@ -40,6 +42,7 @@ void SBuserHamiltonian::do_init( )
     const Database& db = get_database();
     db.set_section("valenceband");
     edge = db.get("E_v", 0.0);
+  edge /= Constants::Hartree;
 
     // mass
     const string& band = get_option("band", "hh");

@@ -8,8 +8,8 @@ MODULE_INCLUDES = -I..
 
 include $(topdir)/Make.module
 
-
-$(foreach lib, $(srcfiles), $(eval $(call MODULE, $(lib))))
+MODULE_LIB := $(module_dir)/$(MODULE_NAME)/vff$(shared_libext)
+$(foreach lib, $(srcfiles), $(eval $(call MODULE, $(lib), $(MODULE_LIB))))
 
 
 include $(topdir)/Make.rules

@@ -6,10 +6,6 @@
 
 // Local Includes
 #include "VectorSystem.h"
-#include "EigenSolver.h"
-#include "EdgeDofMap.h"
-#include "IGeometryEx.h"
-#include "VariableType.h"
 #include <vector>
 
 using namespace libMesh;

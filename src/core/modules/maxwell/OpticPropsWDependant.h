@@ -6,6 +6,9 @@
  *      Author: paveryan
 */
 
+#ifndef OPTIC_PROPS_W_DEP_H_
+#define OPTIC_PROPS_W_DEP_H_
+
 #include "TypeDefs.h"
 #include "PhysicalModelInterface.h"
 #include "PhysicalModel.h"
@@ -15,8 +18,6 @@
 #include "OpticPropsInterface.h"
 #include "Database.h"
 
-#ifndef OPTIC_PROPS_W_DEP_H_
-#define OPTIC_PROPS_W_DEP_H_
 
 
 class OpticPropsWDependant: public OpticPropsInterface
@@ -51,7 +52,7 @@ class OpticPropsWDependant: public OpticPropsInterface
        return -1;
      }
 
-     virtual Complex get_dielectric_constant(double param) const;
+     //virtual Complex get_dielectric_constant(double param) const;
 
   protected:
      Tensor2Sym unit;

@@ -11,6 +11,8 @@ MODULE_NAME := maxwell_boundary
 $(eval $(call MODULE, MaxwellBoundaryEquations.C EdgeDofMap.C VectorLinearSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C OpticPropsModel.C))
 
 
-$(eval $(call MODULE, OpticPropsWDependant.C))
+MODULE_LIB := $(module_dir)/$(MODULE_NAME)/maxwell_boundary$(shared_libext)
+
+$(eval $(call MODULE, OpticPropsWDependant.C, $(MODULE_LIB)))
 
 include $(topdir)/Make.rules

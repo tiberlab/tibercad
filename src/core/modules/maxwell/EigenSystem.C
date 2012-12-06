@@ -1,4 +1,8 @@
 #include "EigenSystem.h"
+#include "EigenSolver.h"
+#include "EdgeDofMap.h"
+#include "IGeometryEx.h"
+#include "VariableType.h"
 
 // ------------------------------------------------------------
 // EigenSystem implementation
