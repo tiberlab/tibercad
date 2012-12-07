@@ -23,8 +23,8 @@ that the system of PDEs to be solved reads as follows
    -\nabla(\mu_n n ( \nabla\phi_n + P_n \nabla T)  ) & =  R \\
    -\nabla(\mu_p p (\nabla\phi_p + P_p \nabla T) ) & =  -R 
  
-:math:`P` is the electric polarization due to e.g. piezoelectric effects.
-:math:`N_d^+` and :math:`N_a^-` are the densities of ionized donors and acceptors, respectively.
+where :math:`P` is the electric polarization due to e.g. piezoelectric effects;
+:math:`N_d^+` and :math:`N_a^-` are the densities of ionized donors and acceptors, respectively;
 :math:`R` is the net recombination rate, i.e. recombination rate minus generation rate, and :math:`P_n` and :math:`P_p` are the electron
 and hole thermoelectric powers, respectively. The models for the mobilities and the net
 recombination rates can be specified in the ``Physics`` section as described in the
@@ -73,8 +73,8 @@ The following options influence the behaviour of the Drift-Diffusion module:
         The two differ only in presence of electric polarization fields.
 
  ``quadrature_rule`` : string 
-       This option allows to chose between trapezoidal and Gauss
-       type numeric integration rules. The default rule is gauss, but in some cases trapez
+       This option allows to choose between ``trapez`` (trapezoidal) and ``gauss``
+       type numeric integration rules. The default rule is ``gauss``, but in some cases ``trapez``
        may prevent density peaks near badly resolved material interfaces.
 
  ``save_state`` : bool
@@ -105,7 +105,7 @@ Physics section
 --------------------
 
 The ``Physics`` block contains generic options for the bulk physical model and the definition
-of submodels. The generic options are:
+of the submodels. The generic options are:
 
  ``thermal_simulation`` 
      If you are doing coupled electrothermal simulations,
@@ -118,7 +118,7 @@ of submodels. The generic options are:
      band parameters and piezoelectric polarizations.
 
  ``relax_polarization`` 
-     With this option one can specify a global relaxation factor
+     With this option one can specify a global relaxation factor (between 0 and 1)
      for the electric polarization field. This can be useful if the amount of total electric
      polarization has to be treated as fitting parameter.
 
@@ -129,9 +129,9 @@ submodels can be restricted to a subset of simulation regions.
 Band parameter models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. The model and parameters to calculate band parameters like band edge, effective density of states and particle densities
+.. The model and the parameters used to calculate band parameters like band edge, effective density of states and particle densities
 
-The model and parameters to calculate band parameters like band edges, band gaps etc. 
+The model and the parameters used to calculate band parameters like band edges, band gaps etc. 
 can be controlled by special submodel blocks in different ways:
 
 1. a single ``band_properties`` block containing parameters for conduction and for valence band
@@ -145,11 +145,14 @@ In the current version, there are two different implementations of band paramete
    requesting the input of the band edge energies and effective DOS masses or effective DOS
 
  ``kp``
-   a model based on bulk :math:`k\cdot p` including strain corrections
+   the default  model, based on bulk :math:`k\cdot p` including strain corrections
 
 
-Whereas the :math:`k\cdot p` based model takes all model parameters from the materials database, parameters can be provided in 
-the input file for the simple model in the following ways.
+Whereas the :math:`k\cdot p` based model takes all model parameters from the materials database, 
+in  the  case of the ``simple``  model
+parameters can be provided in 
+the input file  in the following ways.
+Parameters  which  are  not  explicitly defined are  assigned  the  database values. 
 If the ``band_properties`` block is used, then one can provide the following options:
 
   ``Ec`` *or* ``band_gap``
@@ -176,8 +179,10 @@ For the ``conduction_band`` and ``valence_band`` blocks the following options ne
     the DOS mass or the effective DOS
   
 
-.. note:: Remember that you can provide the ``regions`` option to limit a models validity
-          to a subset of the simulaton domain. This way it is possible to mix the ``simple`` and
+Parameters  are  summarized in Table :ref:`Simple semiconductor model<simple_sc>` 
+
+.. note:: Remember that you can provide the ``regions`` option to limit the   validity of a  model
+          to a subset of the simulaton domain. In this way it is possible to mix the ``simple`` and
           ``kp`` models in the same simulation.
 
 
@@ -195,8 +200,7 @@ submodel. Its options are:
 
   ``quantum_density``
       The name of a quantum density simulation. 
-      This will use the quantum mechanical particle density in the regions it was calculated. More than one 
-      simulations can be specified as a vector. In this case the sum of all quantum densities is taken.
+      If  defined,  the quantum mechanical particle density will  be  used in the regions where it was calculated.         More simulations can be specified as a vector. In this case the sum of all quantum densities is taken.
 
 If  ``quantum_density`` is specified, the following additional options control the mixing between
 classical and quantum density:
@@ -206,7 +210,7 @@ classical and quantum density:
      materials bulk band edge.
 
   ``add_continuum_in_well``
-     If this option is set to true, the energy level of the first state after the ones considered for the quantum
+     (*default*) If this option is set to true, the energy level of the first state after the ones considered for the quantum
      density is used as an effective bulk band edge and a classical carrier density will be added accordingly.
 
 If a quantum density is used, then it is useful to define also an embracing region
@@ -279,14 +283,18 @@ doping density, e.g.
     \tau_n & =  \tau_n^0 \left(\frac{T}{T_0}\right)^{\alpha_n} e^{\beta(T/T0 - 1)} \\
     \tau_n^0 & =  \tau_{min,n} + \frac{\tau_{max,n} - \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
 
-where :math:`T_0` is the reference temperature (300 K). Table 2.3 shows the corresponding parameters 
+where :math:`T_0` is the reference temperature (300 K) and :math:`N` the  total doping concentration. 
+
+Table :ref:`SRH parameters<srh_params_db>` 
+shows the corresponding parameters 
 for the material data files. The parameters for holes and electrons have to be
-specified in an array, e.g. :math:`\tau_{min} = (1e-5, 3e-6)`
+specified in an array where the  first  element  refers  to  electron and  the  second  to  hole, e.g. :math:`\tau_{min} = (1e-5, 3e-6)`
 
     
 
 The recombination times and trap level can be overridden from the input file by using
-the keywords of Table 2.4.
+the keywords of 
+Table :ref:`SRH input file parameters<srh_params_input>`.
 
 
 
@@ -345,7 +353,14 @@ Optical generation
 A very simple model for photoelectric generation of electron-hole pairs is implemented
 in tiberCAD. It is enabled by specifying a ``generation`` submodel of type optical The
 model imposes a constant generation rate which has to be provided by the keyword G in
-units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` . 
+units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` :: 
+
+  generation optical
+  {
+    G = ...
+  }
+
+
 
 .. note:: 
           Usually the simulation should define a sweep on the value
@@ -357,7 +372,7 @@ units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` .
 Thermoelectric power models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The thermoelectric power models are the same for electrons and holes. 
+The thermoelectric power model is the same for electrons and holes. 
 
 The keyword is  ``thermoelectric_power`` , i.e ::
 
@@ -365,7 +380,7 @@ The keyword is  ``thermoelectric_power`` , i.e ::
   {
   }
     
-The type can be ``constant`` (i.e. the thermoelectric powers are read from the
+The type can be ``constant`` (i.e. the thermoelectric powers :math:`P_n` and :math:`P_p` are read from the
 database) or ``diffusivity_model`` where the thermoelectric powers are computed by
 
 .. math::
@@ -374,20 +389,23 @@ database) or ``diffusivity_model`` where the thermoelectric powers are computed 
     P_n & = - \frac{k_b}{q}\left( \frac{5}{2} + \frac{e \phi_n + E_c - e \varphi}{k_b T} \right) \\
     P_p & = \frac{k_b}{q}\left( \frac{5}{2} - \frac{e \phi_p + E_v - e \varphi}{k_b T} \right)
 
-The default is :math:`P_n = P_p = 0`
+The default type  for the thermoelectric power model  is ``diffusivity_model``.
+
+
+
 
 Mobility models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The models to be used for electrons and holes can be defined in a single submodel
-block or independently using two blocks. The corresponding keywords are mobility or
- ``electron_mobility`` and ``hole_mobility`` , i.e.
-
-::
+The models to be used for electrons and holes mobility can be defined in a single submodel
+block ::
 
   mobility [type]
   {
   }
+
+
+or independently using two blocks ::
     
   electron_mobility [type]
   {
@@ -402,9 +420,9 @@ provided in the input file will also be used by both carriers. When mixing the
 different definitions, the blocks ``electron_mobility`` and ``hole_mobility`` will override
 the common ``mobility`` block.
 
-The default model is the constant mobility model. The parameters for the different
-mobility models are needed for both electrons and holes. In the material files they are
-specified with a common keyword in arrays, e.g.
+The *default* model is the constant mobility model. The parameters for the different
+mobility models are to be  specified  for both electrons and holes. In the material files they are
+specified with a common keyword in arrays of two elements,  respectively for electrons and holes, e.g.
 
 ..  math::
     :nowrap:
@@ -435,7 +453,7 @@ Constant mobility model
 
 
 
-The constant mobility model (identifier ``constant`` ) assumes a mobility which depends
+The constant mobility model (identifier ``constant`` ) is the default model. It assumes a mobility which depends
 only on temperature by means of the following formula:
 
 .. math::
@@ -445,8 +463,8 @@ only on temperature by means of the following formula:
 
 In the material data file :math:`\mu_0` and :math:`\gamma`  
 have to be specified with the keywords ``mu_max`` and ``exponent``. 
-:math:`\mu_0` can be overridden from the ``physical_model`` section using the keyword
-``mu`` or from the Region sections using the keywords ``mu_e`` and ``mu_h`` .
+:math:`\mu_0` can be overridden in  the ``mobility`` block using the keyword
+``mu`` or in  a  **Region** block  using the keywords ``mu_e`` and ``mu_h`` .
 
 
 Doping dependent mobility model
@@ -455,11 +473,13 @@ Doping dependent mobility model
 
 The doping dependent mobility model (identifier ``doping_dependent`` ) implements two
 models for mobility depending on the total doping density and the temperature. The
-model that is used depends on the value of the ``mobility_formula`` parameter.
+model that is used depends on the value of the ``mobility_formula`` parameter. 
+Note  that for  many  materials only  one  of  the  two models is  defined  in the  corresponding  material  file and can be thus used.
 
 **Model by Masetti et al.**
 
-The model by Masetti et al.  Masetti is identified by ``mobility_formula`` = 1. It uses the following
+The Masetti model (by Masetti et al.)  is identified by ``mobility_formula`` = 1. 
+It uses the following
 formula:
 
 .. math::
@@ -469,13 +489,16 @@ formula:
 
 
 where N is the total doping density and :math:`\mu_{const}` the mobility obtained from the constant
-mobility model. The parameters are specified in the material file as given in Table 2.5.
+mobility model. The parameters are specified in the material file as given in 
+Table :ref:`Masetti mobility model<mobility_masetti>` 
+
+
 
 
 
 **Model by Arora**
 
-The model by Arora Arora _ is identified by ``mobility_formula`` = 2. It reads:
+The Arora model (REF)  is identified by ``mobility_formula`` = 2. It reads:
 
 .. math::
    :label: dd_eq_dopdep2
@@ -489,7 +512,11 @@ with
     \mu_{min} = A_{min}(T/T_0)^{\alpha_m}, & \quad \mu_d = A_d(T/T_0)^{\alpha_d} \nonumber \\
     N_0 = A_N(T/T_0)^{\alpha_N}, & \quad A^* = A_a(T/T_0)^{\alpha_a} \nonumber 
 
-The parameters are given in table at the end of the Chapter.
+The parameters are given in 
+Table :ref:`Arora mobility model<mobility_arora>` 
+
+
+
 
 
 
@@ -501,7 +528,7 @@ Field dependent mobility model
 The field dependent mobility model describes the degradation of mobility at high driving
 fields. It is identified by the identifier field_dependent. The electric field component
 in direction of the current 
-ow or the gradient of the electro-chemical potential can be
+flow or the gradient of the electro-chemical potential can be
 chosen as driving force:
 
   ``driving_force = efield | grad_fermi | field_parameter``
@@ -509,7 +536,7 @@ chosen as driving force:
 The default driving force is the gradient of the corresponding electro-chemical potential :math:`\nabla\phi` .
 ``field_parameter`` uses a field parameter given by :math:`\sqrt{E\cdot\nabla\phi}`  as driving force.
 
-The model is based on the Caughey-Thomas model, refined by Canali [6]:
+The model is based on the Caughey-Thomas model, refined by REF Canali [6]:
 
 .. math::
    :label: dd_eq_fielddepmodel
@@ -522,10 +549,13 @@ with
 
     \beta = \beta_0(T/T_0)^b 
 
-:math:`|E|` is the modulus of the driving field, :math:`\mu_{lowfield}` is the low-field mobility. For the latter
-one can specify the model to be used using the parameter ``lowfield_model`` . As default
+:math:`|E|` is the modulus of the driving field, :math:`\mu_{lowfield}` is the low-field mobility. 
+
+For the latter
+one can specify the model to be used using the parameter ``low_field_model``. As default
 the doping dependent model is used.
-There are two models for vsat, identified with ``Vsat_Formula = 1`` and 2. 
+
+There are two models available,  depending  on  the  material used, for ``vsat``, identified with ``Vsat_Formula = 1`` and  ``Vsat_Formula = 2``. 
 
 Formula 1 reads
 
@@ -542,7 +572,8 @@ Formula 2 reads
 
     v_{sat} = \max(A_{vsat} - B_{vsat} (T/T_0), v_{min})
 
-The parameters for the field dependent mobility model are summarized in Table 2.7.
+The parameters for the field dependent mobility model are summarized in 
+Table :ref:`Field Dependent Mobility<mobility_field_dep>` 
 
 
 Field assisted mobility model
@@ -553,7 +584,7 @@ Field assisted mobility model
 The field assisted mobility model describes the enhancement of the carrier mobility by an electric field in organic
 semiconductors. It is identified by the identifier field_enhanced. 
 
-The model is given by equation [devometterelareference]_:
+The model is given by equation [REF]_:
 
 .. math::
    :label: dd_eq_fieldassistedmodel
@@ -563,7 +594,8 @@ The model is given by equation [devometterelareference]_:
     
 where :math:`|E|` is the modulus of the driving field, :math:`\mu_{0}` is the zero-field mobility and :math:`E_0` is a critical field strength.
 
-The parameters for the field assisted mobility model are the following (summarized in Table :ref:`Field assisted mobility parameters<dd_field_assmob>`):
+The parameters for the field assisted mobility model are the following (summarized in 
+Table :ref:`Field assisted mobility parameters<dd_field_assmob>`):
 
   ``mu0``
     The mobility at low electric field.
@@ -597,7 +629,7 @@ Polarization models
 
 For simulations involving materials with nonzero electric polarization (such as nitrides)
 it is important to include the effect of polarization. This is done by specifying the models
-for spontaneous (pyro-) and piezoelectric polarization using the keyword ``polarization``
+for spontaneous (pyroelectric) and piezoelectric polarization using the keyword ``polarization``
 with the types ``pyro`` and ``piezo`` ::
 
   polarization pyro {}
@@ -636,8 +668,8 @@ The piezoelectric polarization is strain induced and given by the linear relatio
     P^{pz} = e_{ikl}\varepsilon_{kl}
 
 where :math:`\varepsilon_{kl}` is the strain tensor. The piezoelectric coefficients :math:`e_{ikl}` are stored in the database.
-The strain is obtained from the simulation specified in the ``Physics`` section, but it can
-be overridden by providing a name for the strain simulation inside the polarization block
+The strain is obtained in general from the simulation specified in the ``Physics`` section.
+This can be overridden by providing a name for the strain simulation inside the polarization block
 using the ``strain_simulation`` option.
 
 .. _DD_trapmodels:
@@ -645,24 +677,31 @@ using the ``strain_simulation`` option.
 Trap models
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Currently single level traps are implemented in TiberCAD. Traps can be normally neutral
-or normally charged electron or hole traps, or a fixed charge. Common options for all
+Single level traps are implemented in TiberCAD. Traps can be normally neutral
+or normally charged electron or hole traps, or a fixed charge, e.g. ::
+
+  trap donor
+  {
+  }
+
+
+Common options for all trap
 models are
 
   ``type`` 
          The type of traps. One of ``eNeutral``, ``hNeutral``,
          ``donor``, ``acceptor`` or ``fixed_charge``.
-         (Only necessary if not provided as second keyword). 
+          
 
   ``Nt`` 
-         The trap density in |cm3| (or |cm2| for surface traps).
+         The trap density in :math:`cm^{-3}` (or :math:`cm^{-2}`  for surface traps).
 
   ``Et`` 
          The trap level in eV with respect to the reference energy.
 
   ``reference`` 
          The reference energy. The default is ``m`` for midgap.
-         Possible values are ``cb``, ``vb`` or ``m`` 
+         Possible values are ``cb`` for conduction band, ``vb`` for valence band or ``m`` for midgap 
 
 For ``reference = m`` for example, the trap energy is given as :math:`E_{trap} = E_{midgap} + Et`. 
 In the other cases it is :math:`E_{trap} = E_c - Et` or :math:`E_{trap} = E_v + Et`.
@@ -734,7 +773,18 @@ Boundary conditions are implemented for ohmic contacts, Schottky contacts, free 
 and interfaces. Contacts are boundary models that allow a nonzero normal electrical
 current. The applied voltage is specified with the option ``voltage`` . 
 
-A variable can be assigned to this, using the $-syntax. On ohmic or schottky contacts one can define surface
+A variable can be assigned to this, using the $-syntax. 
+Contacts are defined by blocks with keyword Contact, for example ::
+
+  Contact anode 
+  {
+   type = ohmic
+   [regions = (anode1, anode2)]
+   voltage = $Vd
+  }
+    
+
+On ohmic or schottky contacts one can define surface
 recombination velocities for electrons and holes using the options ``rec_velocity_e`` and 
 ``rec_velocity_h`` . This will impose Robin type boundary conditions for the continuity
 equations of the form
@@ -749,14 +799,7 @@ which when set to ``true`` will impose zero normal electric field and zero norma
 of the electron and hole electro-chemical potential, respectively. The latter are special
 cases of surface recombination velocities ( :math:`v_{rec} = 0` ).
 
-Contacts are defined by blocks with keyword Contact, for example::
 
-  Contact anode 
-  {
-   type = ohmic
-   [regions = (anode1, anode2)]
-   voltage = $Vd
-  }
     
 An area factor can be specified for contacts using the keyword ``area_factor`` . The
 contact current will be multiplied by this factor.
@@ -782,7 +825,16 @@ in the metal. As default, the barrier is taken with respect to the conduction ba
 specifying ``band = v`` the barrier can be imposed with respect to the valence band (p-
 type contact). Alternatively, the metal work function can be defined using the keyword
 ``work_function`` or the keyword ``metal_fermilevel``. The latter is just the work function with
-inverted sign.
+inverted sign ::
+
+  Contact gate 
+  {
+   type = schottky
+   barrier = 3.1
+   voltage = $Vd
+  }
+
+
 
 .. note:: The  value given in  ``work_function`` or ``metal_fermilevel`` has to be
           aligned with the band energies given in the material files,
@@ -889,6 +941,41 @@ Then, in **Module** *selfconsistent* ::
 
 
 
+Example 1: pn diode
+--------------
+
+The following example shows a minimal Drift-Diffusion module definition for a pn junction.
+
+
+::
+
+  Module driftdiffusion
+  {
+    name = dd
+    #regions = (pside, nside)
+    plot = (Ec, Ev, eDensity, hDensity)
+
+    Physics
+    {
+      recombination srh {}
+        
+      mobility doping_dependent {}
+    }
+        
+    Contact anode 
+    { 
+      voltage = $Vd 
+    }
+
+    Contact cathode 
+    { 
+      voltage = 0 
+    }
+  }
+
+
+----
+
 
 ..  _dd_solutions :
 
@@ -946,6 +1033,10 @@ Then, in **Module** *selfconsistent* ::
 
 |
 
+
+
+..  _simple_sc :
+
 ..  math::
     :nowrap:
     :label:
@@ -953,7 +1044,7 @@ Then, in **Module** *selfconsistent* ::
      \begin{table}[!ht]
      \center
      \begin{tabular}{l||l}
-     \multicolumn{2}{c}{\textbf{Semiconductor Table}} \\
+     \multicolumn{2}{c}{\textbf{Band parameters}} \\
      \hline
      \textit{keyword} & \textit{description} \\
      \hline \hline
@@ -970,6 +1061,9 @@ Then, in **Module** *selfconsistent* ::
 
 |
 
+
+..  _srh_params_db :
+
 ..  math::
     :nowrap:
     :label:
@@ -977,7 +1071,7 @@ Then, in **Module** *selfconsistent* ::
      \begin{table}[!ht]
      \center
      \begin{tabular}{l||l|l}
-     \multicolumn{2}{c}{\textbf{SRH Table}} \\
+     \multicolumn{2}{c}{\textbf{SRH parameters}} \\
      \hline
      \textit{parameter} & \textit{keyword} \\
      \hline\hline
@@ -995,6 +1089,8 @@ Then, in **Module** *selfconsistent* ::
 
 |
 
+..  _srh_params_input :
+
 ..  math::
     :nowrap:
     :label:
@@ -1002,7 +1098,7 @@ Then, in **Module** *selfconsistent* ::
      \begin{table}[!ht]
      \center
      \begin{tabular}{l||l}
-     \multicolumn{2}{c}{\textbf{SRH parameters Table}} \\
+     \multicolumn{2}{c}{\textbf{SRH input file parameters}} \\
      \hline
      \hline
      $tau_n$ & \texttt{tau\_n} \\
@@ -1015,6 +1111,9 @@ Then, in **Module** *selfconsistent* ::
     
 |
 
+
+..  _mobility_masetti :
+
 .. math::
    :nowrap:
    :label:
@@ -1022,7 +1121,7 @@ Then, in **Module** *selfconsistent* ::
     \begin{table}[!ht]
     \center
     \begin{tabular}{l||l|l}
-    \multicolumn{2}{c}{\textbf{Mobility Model Table}} \\
+    \multicolumn{2}{c}{\textbf{Masetti Mobility Model}} \\
     \hline
     \textit{parameter} & \textit{keyword}  \\
     \hline\hline
@@ -1035,11 +1134,14 @@ Then, in **Module** *selfconsistent* ::
     $\alpha$ & \verb+alpha+ \\
     $\beta$ & \verb+beta+ \\
     \end{tabular}
-    \caption{Data file parameters for the mobility model by Masetti et al.}
+    \caption{Material file parameters for the Masetti mobility model}
     \label{table:mobility_masetti}
     \end{table}
     
 |
+
+
+..  _mobility_arora :
 
 .. math::
    :nowrap:
@@ -1048,7 +1150,7 @@ Then, in **Module** *selfconsistent* ::
     \begin{table}[!ht]
     \center
     \begin{tabular}{l||l|l}
-    \multicolumn{2}{c}{\textbf{Arora Model Table}} \\
+    \multicolumn{2}{c}{\textbf{Arora Mobility Model}} \\
     \hline
     \textit{parameter} & \textit{keyword} \\
     \hline\hline
@@ -1061,11 +1163,14 @@ Then, in **Module** *selfconsistent* ::
     $\alpha_N$ &  \verb+aN+ \\
     $\alpha_a$ &  \verb+aA+ \\
     \end{tabular}
-    \caption{Data file parameters for the mobility model by Arora.}
+    \caption{Material file parameters for the Arora mobility model.}
     \label{table:mobility_arora}
     \end{table}
     
 |
+
+
+..  _mobility_field_dep :
 
 .. math::
    :nowrap:
@@ -1074,7 +1179,7 @@ Then, in **Module** *selfconsistent* ::
     \begin{table}[!ht]
     \center
     \begin{tabular}{l||l|l}
-    \multicolumn{3}{c}{\textbf{Mobility Dependence Table}} \\
+    \multicolumn{3}{c}{\textbf{Field Dependent Mobility model}} \\
     \hline
     \textit{parameter} & \textit{keyword} \\
     \hline\hline
@@ -1086,46 +1191,17 @@ Then, in **Module** *selfconsistent* ::
     $B_{vsat}$ &  \verb+B_vsat+ \\
     $v_{min}$ &  \verb+vsat_min+ \\
     \end{tabular}
-    \caption{Data file parameters for the mobility model by Arora.}
+    \caption{Data file parameters for the field dependent mobility model}
     \label{table:mobility_field_dep}
     \end{table}
 
 
 
-Example 1: pn diode
---------------
 
-The following example shows a minimal Drift-Diffusion module definition for a pn junction.
 
-----
 
-::
 
-  Module driftdiffusion
-  {
-    name = dd
-    #regions = (pside, nside)
-    plot = (Ec, Ev, eDensity, hDensity)
 
-    Physics
-    {
-      recombination srh {}
-        
-      mobility doping_dependent {}
-    }
-        
-    Contact anode 
-    { 
-      voltage = $Vd 
-    }
-
-    Contact cathode 
-    { 
-      voltage = 0 
-    }
-  }
-
-----
 
 
 .. _DD_Ex2:
