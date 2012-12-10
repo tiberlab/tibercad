@@ -516,7 +516,9 @@ Database::get(const string& variable, double default_value,
   {
     size_t n = get_number_of_components();
     for (size_t i = 0; i < n; i++)
+    {
       result += _comp_fractions[i] * _comp_db[i].get(variable, default_value, required);
+    }
 
     if (n == 2)
     {

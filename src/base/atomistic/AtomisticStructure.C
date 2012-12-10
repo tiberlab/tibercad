@@ -912,8 +912,6 @@ AtomisticStructure::print_structure(const std::string& path)
         {
           for (unsigned int j = 0; j < 3; j++)
             { 
-              std::cout << "I'm writing";
-              std::cout << _periodicity_vectors[count];
               file << std::setw(20) << std::setprecision(10) << std::fixed <<
                   _periodicity_vectors[count];
               count++;

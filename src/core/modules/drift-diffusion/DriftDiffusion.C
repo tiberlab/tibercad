@@ -1734,17 +1734,37 @@ DriftDiffusion::do_setup_solution_variables(void)
   // the correct number of components will be inserted afterwards
   declare_solution(ConductionBands, NTUPLE, CELL, "eV", 1);
   declare_solution(ValenceBands, NTUPLE, CELL, "eV", 1);
+  if (plot_solution("BandEdges"))
+  {
+    add_plot_variable(ConductionBands);
+    add_plot_variable(ValenceBands);
+  }
 
   declare_solution(Polarization, VECTOR, CELL, "C/m^2");
 
   declare_solution(eDensity, REAL, NODES, "cm^-3");
   declare_solution(hDensity, REAL, NODES, "cm^-3");
+  if (plot_solution("Density"))
+  {
+    add_plot_variable(eDensity);
+    add_plot_variable(hDensity);
+  }
 
   declare_solution(eMobility, REAL, NODES, "cm^2/(V*s)");
   declare_solution(hMobility, REAL, NODES, "cm^2/(V*s)");
+  if (plot_solution("Mobility"))
+  {
+    add_plot_variable(eMobility);
+    add_plot_variable(hMobility);
+  }
 
   declare_solution(eConductivity, REAL, NODES, "S/cm");
   declare_solution(hConductivity, REAL, NODES, "S/cm");
+  if (plot_solution("Conductivity"))
+  {
+    add_plot_variable(eConductivity);
+    add_plot_variable(hConductivity);
+  }
 
   declare_solution(CurrentDensity, VECTOR, CELL, "A/cm^2");
   declare_solution(eCurrentDensity, VECTOR, CELL, "A/cm^2");

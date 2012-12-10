@@ -142,7 +142,6 @@ Material::create(const std::string& name, const ModelOptions& options)
 void
 Material::preinit(void)
 {
-
   // set the crystal structure at this point
   _structure = get_database().get("structure", "zb");
 
@@ -188,6 +187,7 @@ Material::preinit(void)
           get_options()["y-growth-direction"] = "( 1,0,-1,0)";
           get_options()["z-growth-direction"] = "(-1,2,-1,0)";
           get_options()["x-growth-direction"] = "( 0,0, 0,1)";
+          break;
       }
     }
 
