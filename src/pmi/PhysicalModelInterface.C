@@ -283,8 +283,8 @@ PhysicalModelInterface::copy(void) const
 PhysicalModelInterface*
 PhysicalModelInterface::create_new(void) const
 {
-  create_t createfunc = get_creation_function();
-  if (createfunc == NULL)
+  PhysicalModelInterface* pmi = create_from_object(this, get_owner());
+  if (pmi == NULL)
   {
     ostringstream os;
     //os << "Model " << get_name() << " cannot create a new instance of "
@@ -294,7 +294,7 @@ PhysicalModelInterface::create_new(void) const
     throw ModelErrorException(os.str());
   }
 
-  return static_cast<PhysicalModelInterface*>(createfunc(get_options(), get_owner()));
+  return pmi;
 }
 
 

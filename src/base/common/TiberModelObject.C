@@ -231,6 +231,29 @@ TiberModelObject::_create_from_library(const std::string& name,
 }
 
 
+
+TiberModelObject*
+TiberModelObject::_create_from_object(const TiberModelObject* other, const void* handle)
+{
+  TiberModelObject* obj = NULL;
+
+  if (other != NULL)
+  {
+    if (other->_create != NULL)
+    obj = other->_create(other->_options, handle);
+    if (obj != NULL)
+    {
+      obj->_create = other->_create;
+      obj->_destroy = other->_destroy;
+      obj->_libhandle = other->_libhandle;
+    }
+  }
+
+  return obj;
+}
+
+
+
 TiberModelObject*
 TiberModelObject::create_from_function(create_t create, destroy_t destroy,
     const ModelOptions& options, const void* handle)

@@ -48,19 +48,18 @@ Alloy::do_preinit(void)
   double xb = get_database().get("x_B", -1.0);
   get_database().set_alloy_mixing(mixing);
 
-#ifdef DEBUG
-  std::ostringstream os;
-  os << get_name() << " is an alloy with components " <<
-    names[0] << " and " << names[1] << " and molar fraction of " << names[0]
-    << " is " << _molar_fraction << ".";
-  Messages::debug(os.str());
-#endif
+  {
+    std::ostringstream os;
+    os << get_name() << " is an alloy with components " <<
+      names[0] << " and " << names[1] << " and molar fraction of " << names[0]
+      << " is " << _molar_fraction << ".";
+    Messages::info(os.str());
+  }
 
 
   ModelOptions opts(get_options());
   if (xa >= 0)
     opts.set_option("x", xa);
-
   _mat_A = Material::create(names[0], opts);
 
   opts.delete_option("x");
@@ -68,7 +67,19 @@ Alloy::do_preinit(void)
     opts.set_option("x", xb);
   _mat_B = Material::create(names[1], opts);
 
-
+  // if components are alloys, we have to set correctly their alloy fractions
+  if (xa >= 0)
+  {
+    fracs[0] = xa;
+    fracs[1] = 1.0 - xa;
+    get_database().get_component_database(0).set_alloy_composition(fracs);
+  }
+  if (xb >= 0)
+  {
+    fracs[0] = xb;
+    fracs[1] = 1.0 - xb;
+    get_database().get_component_database(1).set_alloy_composition(fracs);
+  }
 
   _mat_A->set_database(get_database().get_component_database(0));
   _mat_B->set_database(get_database().get_component_database(1));
@@ -107,6 +118,7 @@ Alloy::do_init(void)
 
   for ( ; it != end; ++it)
   {
+    (it->second)->get_options().print_all();
     PhysicalModel* modA = static_cast<PhysicalModel*>((it->second)->copy());
     _mat_A->add_model(modA, it->first);
 
