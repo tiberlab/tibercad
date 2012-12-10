@@ -100,7 +100,9 @@ class TiberModelObject
     /*!
      * \param name the name of the library <c>lib</c><it>name</it><c>.so</c>
      * \param options the options to pass to the object (which could be used to
-     * create different objects depending on the options)
+     *   create different objects depending on the options)
+     * \param handle a pointer to hold any object needed in the class implementation
+     *   of the creation method.
      *
      * \return \c NULL if it could not find the library
      *
@@ -115,8 +117,12 @@ class TiberModelObject
         const ModelOptions& options = ModelOptions(), const void* handle = NULL);
 
 
-    //! Get the creation function
-    create_t get_creation_function(void) const;
+    //! Create as a clone from a given object
+    /*! \param handle a pointer to hold any object needed in the class implementation
+     *   of the creation method.
+     */
+    template <typename T>
+    static T* create_from_object(const T* other, const void* handle = NULL);
 
 
     //! Tells if a parameter has been specified in the input file
@@ -277,6 +283,13 @@ class TiberModelObject
         const ModelOptions& options, const void* handle) TBDLLOCAL;
 
 
+    //! Try to create as a clone from an existing object
+    /*! \param handle a pointer to hold any object needed in the class implementation
+     *   of the creation method.
+     */
+    static TiberModelObject* _create_from_object(const TiberModelObject* other,
+        const void* handle);
+
 
     //! The options for this model as read from the input file
     ModelOptions _options;
@@ -371,12 +384,7 @@ TiberModelObject::override_parameter_string(const std::string&,
 }
 
 
-inline
-TiberModelObject::create_t
-TiberModelObject::get_creation_function(void) const
-{
-  return _create;
-}
+
 
 
 template <class C, typename T>
@@ -405,6 +413,18 @@ TiberModelObject::create_from_library(const std::string& name,
 {
 #ifdef BUILD_TIBER_MODULES
   return dynamic_cast<T*>(_create_from_library(name, options, handle));
+#else
+  return NULL;
+#endif
+}
+
+template <typename T>
+inline
+T*
+TiberModelObject::create_from_object(const T* other, const void* handle)
+{
+#ifdef BUILD_TIBER_MODULES
+  return dynamic_cast<T*>(_create_from_object(other, handle));
 #else
   return NULL;
 #endif

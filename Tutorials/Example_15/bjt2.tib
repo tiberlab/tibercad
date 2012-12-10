@@ -136,6 +136,9 @@ Module sweep
 
   solve = dd
   plot_data = true
+  
+  # ignore failure current output characteristic, going to the next one
+  ignore_failure = true
 }
 
 

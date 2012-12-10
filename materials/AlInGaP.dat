@@ -1,0 +1,32 @@
+# AlINGaP-zb
+
+alloy = 2
+structure = zb
+
+comp_A = AlGaP
+comp_B = GaInP
+x_A = 0.5
+x_B = 0.5
+
+
+
+
+[bandgap] # [1]
+bow_Eg_G = 0
+bow_Eg_L = 0
+bow_Eg_X = 0
+
+
+
+
+#Atomistic structure informations
+#
+[atomistic_structure]
+n_basis_specie=2
+
+specie_1=AlGaIn
+specie_2=P
+
+[densityfunctional_tb]
+
+

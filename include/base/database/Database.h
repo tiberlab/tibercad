@@ -126,6 +126,13 @@ class Database
     const Database& get_component_database(size_t i) const;
 
 
+    //! Get the database of the i-th component
+    /*!
+     * \param i the component index, beginning from 1
+     */
+    Database& get_component_database(size_t i);
+
+
     //! For an alloy, set the composition (fraction for each component)
     void set_alloy_composition(std::vector<double>& fractions);
 
@@ -360,6 +367,13 @@ Database::get_component_database(size_t i) const
   return _comp_db.at(i);
 }
 
+
+inline
+Database&
+Database::get_component_database(size_t i)
+{
+  return _comp_db.at(i);
+}
 
 
 
