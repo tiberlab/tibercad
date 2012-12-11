@@ -19,6 +19,8 @@ SRHRecombination::TrapAssisted::TrapAssisted(void) :
 double
 SRHRecombination::TrapAssisted::get_gamma(double F, double T, double Et)
 {
+  if (Et == 0.0) return 0.0;
+
   double Et_kT = Et / T;
   double Kn_ref = 2.0/3.0 * Et_kT;
   double Kn = 4.0/3.0 * sqrt(2 * m_trap * Constants::electron_mass *
@@ -233,18 +235,33 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
 
   if (_tat != NULL)
   {
-    // TODO what is the correct value for the two dE ??
-    //double dE_n = dd.get_conduction_band_edge() - dd.get_electric_potential() +
-    //    dd.get_electron_electro_chemical_potential();
-    //double dE_p = dd.get_electric_potential() - dd.get_valence_band_edge() -
-    //    dd.get_hole_electro_chemical_potential();
-    double dE_n = dd.get_conduction_band_edge() - Et;
-    double dE_p = Et - dd.get_valence_band_edge();
+    // definition of integration limit
+    double Ec = dd.get_conduction_band_edge();
+    double Efn = dd.get_electron_electro_chemical_potential();
+    double dE_n = 0;
+    if (Efn <= Ec)
+    {
+      if (Efn >= Et)
+        dE_n = Ec - Efn;
+      else
+        dE_n = Ec - Et;
+    }
     double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_n);
-    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
     gamman = 1.0 / (gamman + 1);
-    gammap = 1.0 / (gammap + 1);
     tau_n *= gamman;
+
+    double Ev = dd.get_valence_band_edge();
+    double Efp = dd.get_hole_electro_chemical_potential();
+    double dE_p = 0;
+    if (Efp >= Ev)
+    {
+      if (Efp <= Et)
+        dE_p = Efp - Ev;
+      else
+        dE_p = Et - Ev;
+    }
+    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
+    gammap = 1.0 / (gammap + 1);
     tau_p *= gammap;
   }
 
@@ -288,17 +305,33 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 
   if (_tat != NULL)
   {
-    //double dE_n = dd.get_conduction_band_edge() - dd.get_electric_potential() +
-    //    dd.get_electron_electro_chemical_potential();
-    //double dE_p = dd.get_electric_potential() - dd.get_valence_band_edge() -
-    //    dd.get_hole_electro_chemical_potential();
-    double dE_n = dd.get_conduction_band_edge() - Et;
-    double dE_p = Et - dd.get_valence_band_edge();
+    // definition of integration limit
+    double Ec = dd.get_conduction_band_edge();
+    double Efn = dd.get_electron_electro_chemical_potential();
+    double dE_n = 0;
+    if (Efn <= Ec)
+    {
+      if (Efn >= Et)
+        dE_n = Ec - Efn;
+      else
+        dE_n = Ec - Et;
+    }
     double gamman = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_n);
-    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
     gamman = 1.0 / (gamman + 1);
-    gammap = 1.0 / (gammap + 1);
     tau_n *= gamman;
+
+    double Ev = dd.get_valence_band_edge();
+    double Efp = dd.get_hole_electro_chemical_potential();
+    double dE_p = 0;
+    if (Efp >= Ev)
+    {
+      if (Efp <= Et)
+        dE_p = Efp - Ev;
+      else
+        dE_p = Et - Ev;
+    }
+    double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
+    gammap = 1.0 / (gammap + 1);
     tau_p *= gammap;
   }
 
