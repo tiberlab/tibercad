@@ -733,6 +733,30 @@ The recombination model associated with a trap has to be enabled explicitly by u
 ``recombination_center = true`` in the trap definition.
    
 
+Tunneling models
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Several simplified tunneling models are implemented in tiberCAD. They are derived from quantum mechanical
+models under simplifying assumptions and cast into local recombination-generation models.
+
+
+Schottky contact tunneling
+.............................
+
+
+
+Trap-assisted tunneling
+........................
+
+(see [Hurkx]_).
+
+Band-to-band tunneling
+........................
+
+(see [Hurkx]_).
+
+
+
 
 Boundary conditions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^

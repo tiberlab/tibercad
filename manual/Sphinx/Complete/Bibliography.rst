@@ -7,6 +7,7 @@
 
 .. [Arora] N D Arora, J R  Hauser and D J Roulston, "Electron and Hole Mobilities in Silicon as a Function of Concentration and Temperature", *IEEE Trans. on Electron Devices*, 29, 292-295, 1982.
 
+.. [Hurkx] G. A. M. Hurkx, D. B. M. Klaassen, and M. P. G. Knuvers, "A New Recombination Model for Device Simulation Including Tunneling", *IEEE Trans. on Electron Devices*, 39, 331-338, 1992
 
 
 .. [Kalyanasundaram] Kalyanasundaram Kuppuswamy, "Dye-Sensitized Solar Cells", *Editor Crc Pr Inc.* , 2010.
