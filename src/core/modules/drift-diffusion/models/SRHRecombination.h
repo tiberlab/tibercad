@@ -25,6 +25,10 @@
  * \tau_n^0 = \tau_{min,n} + \frac{\tau_{max,n} -
  *         \tau_{min,n}}{1 + (N/N_{ref})^\gamma}
  * \f]
+ *
+ * Trap-assisted tunneling is implemented following Hurkx et al., "A New
+ *   Recombination Model for Device Simulation Including Tunneling",
+ *   IEEE Trans. on Electron Devices, 39, 331-338, 1992
  */
 class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 {
