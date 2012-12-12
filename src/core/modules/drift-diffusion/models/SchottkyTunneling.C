@@ -82,6 +82,8 @@ SchottkyTunneling::do_init(void)
   Point pmin(numeric_limits<double>::max());
   Point pmax(-numeric_limits<double>::max());
 
+  // TODO need to check if regions touch the contact!
+
   // here we also extract the voltage option from the contact
   SimulationEnvironment::BoundarySideIterator bdit(bdfirst);
   for ( ; bdit != bdend; ++bdit)
@@ -135,7 +137,7 @@ SchottkyTunneling::do_init(void)
     const Point& centr = elem->centroid();
 
     double mindist = numeric_limits<double>::max();
-    Point p_mindist(mindist);
+    Point p_mindist(mindist, mindist, mindist);
 
     // check if it is inside the tunneling bounding box
     if ((centr(0) < pmin(0)) || (centr(1) < pmin(1)) || (centr(1) < pmin(1)) ||
@@ -154,10 +156,16 @@ SchottkyTunneling::do_init(void)
       AutoPtr<Elem> side_el(elem->build_side(side));
       const Point& side_centr = side_el->centroid();
 
-      Point dist(centr - side_centr);
-      if ((dist * normal[0]) < 0)
-        if (dist.size() < mindist)
-          p_mindist = dist;
+      Point dist_vec(centr - side_centr);
+      if ((dist_vec * normal[0]) < 0)
+      {
+        double dist = dist_vec.size();
+        if (dist < mindist)
+        {
+          p_mindist = dist_vec;
+          mindist = dist;
+        }
+      }
     }
 
     // NOTE: we insert the top parent, assuming that this list
