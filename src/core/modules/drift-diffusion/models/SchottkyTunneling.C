@@ -84,7 +84,7 @@ SchottkyTunneling::do_init(void)
   Point pmin(max_double, max_double, max_double);
   Point pmax(-max_double, -max_double, -max_double);
 
-  // TODO need to check if regions touch the contact!
+  //Utils::Timer tt;
 
   // here we also extract the voltage option from the contact
   SimulationEnvironment::BoundarySideIterator bdit(bdfirst);
@@ -129,6 +129,9 @@ SchottkyTunneling::do_init(void)
       }
   }
 
+  //cerr << "Bounding box took " << tt.elapsed_string() << endl;
+  //tt.reset();
+
   //cerr << "Bounding box: " << pmin << pmax << endl;
 
   SimulationEnvironment::ConstElemIterator it(env.elements_begin());
@@ -138,13 +141,13 @@ SchottkyTunneling::do_init(void)
     const Elem* elem = *it;
     const Point& centr = elem->centroid();
 
+    // check if it is inside the tunneling bounding box
+    if ((centr(0) < pmin(0)) || (centr(1) < pmin(1)) || (centr(2) < pmin(2)) ||
+        (centr(0) > pmax(0)) || (centr(1) > pmax(1)) || (centr(2) > pmax(2)))
+      continue;
+
     double mindist = numeric_limits<double>::max();
     Point p_mindist(mindist, mindist, mindist);
-
-    // check if it is inside the tunneling bounding box
-    if ((centr(0) < pmin(0)) || (centr(1) < pmin(1)) || (centr(1) < pmin(1)) ||
-        (centr(0) > pmax(0)) || (centr(0) > pmax(0)) || (centr(0) > pmax(0)))
-      continue;
 
     // calculate min distance from contact
     for (bdit = bdfirst; bdit != bdend; ++bdit)
@@ -154,16 +157,18 @@ SchottkyTunneling::do_init(void)
 
       // TODO for now we use the distance between centroids, since we do not
       //      need the exact distance for the most primitive model
-      // TODO calculate normal by hand, the following is way too slow
-      Point norm(MeshUtils::get_outer_normal(elem, side));
-      AutoPtr<Elem> side_el(elem->build_side(side));
-      const Point& side_centr = side_el->centroid();
-      //vector<Point> side_centr(1, side_el->centroid());
-      //fe->reinit(side_el.get(), &side_centr);
-      fe->reinit(elem, side);
+      Point normal(MeshUtils::get_outer_normal(elem, side));
+
+      // side center as mean value of coordinates
+      Point side_centr;
+      for (int i = 0; i < elem->n_nodes(); ++i)
+        if (elem->is_node_on_side(side, i))
+          side_centr += elem->point(i);
+
+      side_centr /= elem->n_nodes();
 
       Point dist_vec(centr - side_centr);
-      if ((dist_vec * normal[0]) < 0)
+      if ((dist_vec * normal) < 0)
       {
         double dist = dist_vec.size();
         if (dist < mindist)
@@ -179,6 +184,8 @@ SchottkyTunneling::do_init(void)
     _elem_map.insert(make_pair(elem->top_parent(), p_mindist));
 
   }
+
+  //cerr << "Search took " << tt.elapsed_string() << endl;
 
   // now, extract the contact voltage we copied from the contact model
   get_parameter("voltage", _contact_voltage);

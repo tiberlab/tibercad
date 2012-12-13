@@ -32,9 +32,8 @@
 #include  "EtbModel.h"
 
 
-#include  "ZbOptDielectricConstant.h"
-#include  "WzOptDielectricConstant.h"
-//#include  "MaxwellPhysicalModel.h"
+//#include  "ZbOptDielectricConstant.h"
+//#include  "WzOptDielectricConstant.h"
 
 //#include "PhononModel.h"
 //#include "ZbFreeDynamicalMatrix.h"
@@ -112,10 +111,10 @@ PhysicalModelInterface::_create(const string& name,
     mod = DftbModel::create(options);
   else if (name == "etb")
     mod = ETBModel::create(options);
-  else if (name == "opt_dielectric_constant_zb")
-    mod = ZbOptDielectricConstant::create(options);
-  else if (name == "opt_dielectric_constant_wz")
-    mod = WzOptDielectricConstant::create(options);
+  //else if (name == "opt_dielectric_constant_zb")
+  //  mod = ZbOptDielectricConstant::create(options);
+  //else if (name == "opt_dielectric_constant_wz")
+  //  mod = WzOptDielectricConstant::create(options);
   //else if (name == "maxwell")
   //  mod = MaxwellPhysicalModel::create(options);
   //else if  (name == "phonon")

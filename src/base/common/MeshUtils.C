@@ -78,7 +78,8 @@ MeshUtils::get_outer_normal(const Elem* elem, int side)
 
   Point normal;
 
-  const Elem* side_el = dynamic_cast<Elem*>((elem->side(side)).get());
+  AutoPtr<DofObject> sobj = elem->side(side);
+  const Elem* side_el = dynamic_cast<Elem*>(sobj.get());
   const Point& centroid = elem->centroid();
 
   switch (elem->dim())
@@ -94,13 +95,18 @@ MeshUtils::get_outer_normal(const Elem* elem, int side)
     case 2:
     {
       // side should always be an Edge2
-      std::cerr << side_el << std::endl;
-      std::cerr << side_el->n_nodes() << std::endl;
+      // normal direction is: p0 + t*(p1 - p0) - centroid, where
+      // t gives the intersection between the side and the perpendicular
+      // through the centroid
       Point p10((*side_el->get_node(1) - *side_el->get_node(0)).unit());
       Point p03(*side_el->get_node(0) - centroid);
       double t = p03 * p10;
       normal = p03 - t * p10;
-      std::cerr << "# " << *side_el->get_node(0) << *side_el->get_node(1) << normal.unit() << " " << t << std::endl;
+      break;
+    }
+
+    case 3:
+    {
       break;
     }
 
