@@ -15,7 +15,7 @@ class MeshBase;
 
 
 //! A few utilities for operations on a mesh
-class TBDLLOCAL MeshUtils
+class MeshUtils
 {
 
   public:
@@ -27,7 +27,8 @@ class TBDLLOCAL MeshUtils
      */
     static void get_subdomain_ids(MeshBase& mesh, std::set<ID>& subdomain_ids);
 
-    //!Preliminary check to see if a point can belong to an element
+
+    //! Preliminary check to see if a point can belong to an element
     /*!
      * If true, the point can belong to the element (but not for sure).
      * If false, the point does not belong to element.
@@ -35,6 +36,12 @@ class TBDLLOCAL MeshUtils
      * around the element, it only performs a simple matrix-vector product
      */
     static bool may_belong_to_element(const Elem* element, Point& point);
+
+
+    //! Get the outer normal on an element side
+    static Point get_outer_normal(const Elem* elem, int side);
+
+
 
   private:
 

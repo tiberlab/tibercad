@@ -6,6 +6,7 @@
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 #include "Messages.h"
+#include "MeshUtils.h"
 
 #include "mesh_base.h"
 #include "fe.h"
@@ -67,7 +68,7 @@ SchottkyTunneling::do_init(void)
 
   unsigned int dim = sim->get_mesh().mesh_dimension();
 
-  AutoPtr<FEBase> fe(FEBase::build(dim, FEType()));
+  AutoPtr<FEBase> fe(FEBase::build(dim, FEType(CONSTANT, MONOMIAL)));
   QGauss qrule(dim - 1, CONSTANT);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Point>& normal = fe->get_normals();
@@ -79,8 +80,9 @@ SchottkyTunneling::do_init(void)
       env.boundary_sides_end(_contact_name));
 
   // min and max
-  Point pmin(numeric_limits<double>::max());
-  Point pmax(-numeric_limits<double>::max());
+  double max_double = numeric_limits<double>::max();
+  Point pmin(max_double, max_double, max_double);
+  Point pmax(-max_double, -max_double, -max_double);
 
   // TODO need to check if regions touch the contact!
 
@@ -150,11 +152,15 @@ SchottkyTunneling::do_init(void)
       const Elem* elem = (*bdit).elem();
       unsigned int side = (*bdit).side();
 
-      fe->reinit(elem, side);
       // TODO for now we use the distance between centroids, since we do not
       //      need the exact distance for the most primitive model
+      // TODO calculate normal by hand, the following is way too slow
+      Point norm(MeshUtils::get_outer_normal(elem, side));
       AutoPtr<Elem> side_el(elem->build_side(side));
       const Point& side_centr = side_el->centroid();
+      //vector<Point> side_centr(1, side_el->centroid());
+      //fe->reinit(side_el.get(), &side_centr);
+      fe->reinit(elem, side);
 
       Point dist_vec(centr - side_centr);
       if ((dist_vec * normal[0]) < 0)

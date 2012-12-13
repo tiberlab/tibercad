@@ -3865,6 +3865,7 @@ DriftDiffusion::assemble_system(const NumericVector<Number>& x,
       break;
     default:
       _this->do_assembly<FULLYCOUPLED>(x, residual, jacobian);
+      break;
   }
 
 }
@@ -4205,8 +4206,10 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       //Rn = (fabs(Rn) < 1.0e3) ? 0.0 : Rn;
       long double Rp = sc->get_net_hole_recombination_rate();
       //Rp = (fabs(Rp) < 1.0e3) ? 0.0 : Rp;
-      if (_useparticle != 'b')
-        Rn = Rp = 0.0;
+
+      // this is no good, R_n == R_p does not hold in general
+      //if (_useparticle != 'b')
+      //  Rn = Rp = 0.0;
 
 
       //double ni = sc->get_intrinsic_density();

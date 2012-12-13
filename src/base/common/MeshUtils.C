@@ -6,6 +6,8 @@
 #include "mesh.h"
 #include "elem.h"
 
+#include <cassert>
+
 
 
 
@@ -66,3 +68,43 @@ bool MeshUtils::may_belong_to_element(const Elem* element, Point& point)
   return result;
 }
 
+
+
+
+Point
+MeshUtils::get_outer_normal(const Elem* elem, int side)
+{
+  assert(elem != NULL);
+
+  Point normal;
+
+  const Elem* side_el = dynamic_cast<Elem*>((elem->side(side)).get());
+  const Point& centroid = elem->centroid();
+
+  switch (elem->dim())
+  {
+    case 0:
+      break;
+
+    case 1:
+      // side is a node
+      normal = *side_el->get_node(0) - centroid;
+      break;
+
+    case 2:
+    {
+      // side should always be an Edge2
+      std::cerr << side_el << std::endl;
+      std::cerr << side_el->n_nodes() << std::endl;
+      Point p10((*side_el->get_node(1) - *side_el->get_node(0)).unit());
+      Point p03(*side_el->get_node(0) - centroid);
+      double t = p03 * p10;
+      normal = p03 - t * p10;
+      std::cerr << "# " << *side_el->get_node(0) << *side_el->get_node(1) << normal.unit() << " " << t << std::endl;
+      break;
+    }
+
+  }
+
+  return normal.unit();
+}
