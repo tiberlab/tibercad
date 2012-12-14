@@ -161,11 +161,15 @@ SchottkyTunneling::do_init(void)
 
       // side center as mean value of coordinates
       Point side_centr;
+      int n_nodes = 0;
       for (int i = 0; i < elem->n_nodes(); ++i)
-        if (elem->is_node_on_side(side, i))
+        if (elem->is_node_on_side(i, side))
+        {
           side_centr += elem->point(i);
+          ++n_nodes;
+        }
 
-      side_centr /= elem->n_nodes();
+      side_centr /= n_nodes;
 
       Point dist_vec(centr - side_centr);
       if ((dist_vec * normal) < 0)
