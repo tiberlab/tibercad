@@ -21,6 +21,8 @@ New features and bug fixes:
 	- a bug fix in optics module, and can now specify the effective
 	  refractive index in the input file
 	- Quaternary alloys of type (A_yBD)_{x}(C_zBD)_{1-x} are now supported
+	- write_boundary_mesh=true in device section will write the region
+	  boundaries as VTK file (for dim > 1)
 
 
 Version 2.1.0
