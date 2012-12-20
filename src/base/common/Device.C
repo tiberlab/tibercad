@@ -124,7 +124,9 @@ Device::prepare(void)
   setup_quantum_contacts();
   setup_atomistic_structures();
 
-  if (_options.get_option("write_boundary_mesh", false))
+  // for now, this works only for D > 1
+  if (_options.get_option("write_boundary_mesh", false) &&
+      (get_mesh().mesh_dimension() > 1))
   {
     auto_ptr<DataOutput> writer(DataOutput::create("vtk"));
     if (writer.get() != NULL)
