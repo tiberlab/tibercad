@@ -8,6 +8,8 @@
 #include "point.h"
 #include "tiber_dll.h"
 
+#include "auto_ptr.h"
+
 #include <set>
 
 class Elem;
@@ -41,6 +43,8 @@ class MeshUtils
     //! Get the outer normal on an element side
     static Point get_outer_normal(const Elem* elem, int side);
 
+    //! Create the boundary mesh for a given volume mesh
+    static AutoPtr<MeshBase> create_boundary_mesh(const MeshBase& mesh);
 
 
   private:

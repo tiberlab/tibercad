@@ -173,11 +173,14 @@ Control::init(void)
   it = input.submodels_begin("Device");
   if (it == input.submodels_end("Device"))
     throw InitFailedException("\'Device\' block missing in input file.");
-  const ModelOptions& device_opts = it->second;
+  ModelOptions device_opts;
+  device_opts.set_option("output_path", _outputdir);
+  device_opts += it->second;
 
   // create and prepare the device
   _device = Device::create(device_opts);
   _device->prepare();
+
 
   // create and prepare modules
   it = input.submodels_begin("Module");

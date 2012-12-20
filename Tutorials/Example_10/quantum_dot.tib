@@ -3,6 +3,7 @@
 Device
 {
   meshfile = quantum_dot.msh 
+  write_boundary_mesh = true
   mesh_units = 1e-9
 
   y-growth-direction = (-1,0,1,0)

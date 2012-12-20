@@ -118,7 +118,6 @@ Alloy::do_init(void)
 
   for ( ; it != end; ++it)
   {
-    (it->second)->get_options().print_all();
     PhysicalModel* modA = static_cast<PhysicalModel*>((it->second)->copy());
     _mat_A->add_model(modA, it->first);
 

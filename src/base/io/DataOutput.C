@@ -209,9 +209,9 @@ DataOutput::get_zone_data(ID zone)
 }
 
 void
-DataOutput::write(void)
+DataOutput::write(bool force)
 {
-  if (has_data())
+  if (has_data() || force)
     do_write();
 }
 

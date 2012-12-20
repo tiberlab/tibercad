@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "MeshUtils.h"
 #include "MeshReader.h"
+#include "DataOutput.h"
 #include "ReadGMSH.h"
 #include "ReadISEGrid.h"
 #include "BoundaryRegions.h"
@@ -22,6 +23,8 @@
 #include "Messages.h"
 
 #include <iostream>
+#include <memory>
+
 
 using namespace std;
 
@@ -120,6 +123,21 @@ Device::prepare(void)
   setup_clusters();
   setup_quantum_contacts();
   setup_atomistic_structures();
+
+  if (_options.get_option("write_boundary_mesh", false))
+  {
+    auto_ptr<DataOutput> writer(DataOutput::create("vtk"));
+    if (writer.get() != NULL)
+    {
+      writer->set_output_directory(_options.get_option("output_path", "./"));
+      writer->set_filename(Utils::basename(_options["meshfile"]) + "_bnd");
+
+      AutoPtr<MeshBase> bdmesh = MeshUtils::create_boundary_mesh(get_mesh());
+
+      writer->set_mesh(*bdmesh);
+      writer->write(true);
+    }
+  }
 }
 
 

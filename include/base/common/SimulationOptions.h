@@ -19,9 +19,8 @@ class SimulationOptions
     static double temperature;
     static double& temp;
     static double& T;
-    static std::string scratch_path;
 
-    //! Wheter or not to consider incomplete ionization
+    //! Whether or not to consider incomplete ionization
     static bool incomplete_ionization;
 
 
@@ -32,6 +31,8 @@ class SimulationOptions
     //! Initialize the simulation options
     static void initialize(const ModelOptions& opts) TBDLLOCAL;
 
+    //! A path for temporary data
+    static std::string scratch_path;
 
   private:
 

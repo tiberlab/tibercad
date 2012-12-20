@@ -2,11 +2,14 @@
 
 
 #include "MeshUtils.h"
+#include "HashMap.h"
+#include "HashSet.h"
 
 #include "mesh.h"
 #include "elem.h"
 
 #include <cassert>
+#include <list>
 
 
 
@@ -97,7 +100,7 @@ MeshUtils::get_outer_normal(const Elem* elem, int side)
       // side should always be an Edge2
       // normal direction is: p0 + t*(p1 - p0) - centroid, where
       // t gives the intersection between the side and the perpendicular
-      // through the centroid
+      // through the element centroid
       Point p10((*side_el->get_node(1) - *side_el->get_node(0)).unit());
       Point p03(*side_el->get_node(0) - centroid);
       double t = p03 * p10;
@@ -113,4 +116,71 @@ MeshUtils::get_outer_normal(const Elem* elem, int side)
   }
 
   return normal.unit();
+}
+
+
+
+AutoPtr<MeshBase>
+MeshUtils::create_boundary_mesh(const MeshBase& mesh)
+{
+
+  MeshBase *bdmesh = new SerialMesh(mesh.mesh_dimension() - 1);
+
+  using namespace std;
+
+  // extract region boundary
+  unsigned int node_ctr = 0;
+  HashMap<unsigned int, unsigned int>::Type node_id_map;
+  set<pair<const Elem*, const Elem*>> sides_added;
+
+
+  MeshBase::const_element_iterator it = mesh.level_elements_begin(0);
+  const MeshBase::const_element_iterator end = mesh.level_elements_end(0);
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    ID subdomain = elem->subdomain_id();
+
+    for (int i = 0; i < elem->n_sides(); ++i)
+    {
+      const Elem* nb = elem->neighbor(i);
+      pair<const Elem*, const Elem*> el_pair(elem, nb);
+      if (nb > elem) { el_pair.first = nb; el_pair.second = elem; }
+
+      if ((nb == NULL) || ((nb->subdomain_id() != subdomain) && !sides_added.count(el_pair)))
+      {
+        sides_added.insert(el_pair);
+
+        DofObject* sobj = elem->side(i).release();
+        Elem* side_el = dynamic_cast<Elem*>(sobj);
+
+        HashMap<unsigned int, unsigned int>::Type::iterator mit;
+
+        for (unsigned int n = 0; n < side_el->n_nodes(); ++n)
+        {
+          mit = node_id_map.find(side_el->node(n));
+
+          unsigned int id = side_el->get_node(n)->id();
+          if (mit == node_id_map.end())
+          {
+            node_id_map[side_el->node(n)] = node_ctr;
+            const Node* p = side_el->get_node(n);
+            bdmesh->add_point(*p, p->id(), 0);
+          }
+
+          side_el->set_node(n) = bdmesh->node_ptr(id);
+        }
+
+        side_el->processor_id() = 0;
+        bdmesh->add_elem(side_el);
+
+      }
+    }
+  }
+
+
+
+  //bdmesh->prepare_for_use();
+
+  return AutoPtr<MeshBase>(bdmesh);
 }

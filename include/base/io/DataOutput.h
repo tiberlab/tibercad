@@ -98,7 +98,8 @@ class DataOutput
 
 
     //! Write out everything
-    void write(void);
+    void write(bool force = false);
+
 
 
   protected:

@@ -4,6 +4,7 @@ Device mosfet
 {
 
   meshfile = mosfet.msh
+  write_boundary_mesh = true
   
   material = Si
 
