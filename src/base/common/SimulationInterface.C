@@ -110,7 +110,7 @@ SimulationInterface::create(const string& type,
   SimulationInterface* sim = NULL;
 
   string type_name(type);
-  string flavour = options.get_option("type", "");
+  string flavour = options.get_option("module_subtype", "");
   if (flavour.size() != 0)
     type_name += "_" + flavour;
 
