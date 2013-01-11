@@ -599,6 +599,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
     _final_state_model->get_populations(_final_state_particle, fs_occupations);
   }
 
+
   // loop on  eigenstates
   //cout << "Energy nodes: " << Energy.n_nodes()<<endl; 
   spectrum.clear();
@@ -638,7 +639,49 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       //     << fs_eigen_values[_final_indices[j]] << endl;
 
       //cout<<trans_energy<<"  "<<Me<<endl;
- 
+
+      double c = 1.0/Constants::fine_structure_constant;
+      double omega = trans_energy/Constants::Hartree;
+
+      //This is the right formula, as f1 is electron occupation probability and f2 is hole occupation probability.
+      //Note that it differs from usual literature where usually f1 and f2 states initial state and final state
+      //occupation probability, so it's related to electrons and it becomes f1*(1-f2)
+
+      //spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
+      double strength = 2 * _opt.nr * (omega * omega) / (c*c*c) * abs (Me) * abs (Me);
+
+      double power = strength * f1 * f2;
+
+      //Note(alex): The original factor 1/(2*PI*PI) was changed to 1/(2*PI) (see below)
+      //            and finally multiplied by 4 PI for angular integration (17/10/2011).
+      //
+      //According to Chuang's book the recombination rate should contain a pre-factor
+      //(including 2 for spin sum and 2 for polarization and 4 Pi for angle integration)
+      //
+      //    nr^2 w^2           pi e^2      2       8 nr w e^2 c
+      // ---------------- --------------- --- = ----------------------
+      // pi^2 hbar c^2     nr c m^2 e0 w   V    4 pi e0 hbar (m^2 c^4)
+      //
+      // Extracting the prefactor m/hbar from the P-matrix, and multipling by a factor (hbar w) to get power emitted
+      // we get the following prefactor (in which V has been removed to get total power emitted):
+      //
+      //     8 nr (hbar w)^2 e^2/(4 pi e0)
+      //  = ------------------------------
+      //             (hbar c)^3  hbar
+      //
+      //  Expressed in atomic units, hbar=1, e=1, 4 pi e0=1, c=1/fine_struct.
+      //
+      //  So the formula above, multiplied by 4*Pi for angle integration, and a factor of 4 for spin/pol deg
+      //  agrees to Chuang's only if the factor is nr/(2*PI) rather than 1/(2*PI*PI).
+      //
+      //  note that  nr is  still missing !
+      //
+      //  2012-03-23, (Matthias): added nr taken from input file
+      //
+      //  2012-10-26, (Matthias): the second PI in the original factor (see Note Alex) was coming
+      //                          from the Lorenzian. It is now included in the formula of the latter.
+
+
 
       for (unsigned int el=0; el < Energy.n_nodes(); el++)
       {
@@ -651,52 +694,10 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 	// Note(alex): the division by Hartree seems wrong. Lorenzian is in 1/eV, so transformation
 	// should be "Lorenzian * Hartree"
 
-        double c = 1.0/Constants::fine_structure_constant;
+        spectrum[el] += power * Lorenzian;
 
-        double omega = trans_energy/Constants::Hartree;
-
-        //This is the right formula, as f1 is electron occupation probability and f2 is hole occupation probability.
-        //Note that it differs from usual literature where usually f1 and f2 states initial state and final state
-	//occupation probability, so it's related to electrons and it becomes f1*(1-f2)
-
-        //spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
-        spectrum[el] += 2 * _opt.nr * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
-
-	//Note(alex): The original factor 1/(2*PI*PI) was changed to 1/(2*PI) (see below) 
-	//            and finally multiplied by 4 PI for angular integration (17/10/2011). 
-        //
-	//According to Chuang's book the recombination rate should contain a pre-factor
-	//(including 2 for spin sum and 2 for polarization and 4 Pi for angle integration)
-	//
-	//    nr^2 w^2           pi e^2      2       8 nr w e^2 c
-	// ---------------- --------------- --- = ----------------------
-	// pi^2 hbar c^2     nr c m^2 e0 w   V    4 pi e0 hbar (m^2 c^4)
-	//
-	// Extracting the prefactor m/hbar from the P-matrix, and multipling by a factor (hbar w) to get power emitted
-	// we get the following prefactor (in which V has been removed to get total power emitted):
-	//
-	//     8 nr (hbar w)^2 e^2/(4 pi e0)
-	//  = ------------------------------
-	//             (hbar c)^3  hbar
-	//
-	//  Expressed in atomic units, hbar=1, e=1, 4 pi e0=1, c=1/fine_struct.
-	//
-	//  So the formula above, multiplied by 4*Pi for angle integration, and a factor of 4 for spin/pol deg
-	//  agrees to Chuang's only if the factor is nr/(2*PI) rather than 1/(2*PI*PI).
-	//
-	//  note that  nr is  still missing !
-        //
-        //  2012-03-23, (Matthias): added nr taken from input file
-        //
-        //  2012-10-26, (Matthias): the second PI in the original factor (see Note Alex) was coming
-        //                          from the Lorenzian. It is now included in the formula of the latter.
-        
-      }
-
-
+     }
     }
-
-
   }
 
 
@@ -984,18 +985,21 @@ Optics::plot_globaldata(void)
 
   if (file.good())
   {
+    file << "# initial_state final_state Px Py Pz\n";
     unsigned int n1 =  _initial_state_numbers.size();
     unsigned int n2 =  _final_state_numbers.size();
-    for (unsigned int p = 0; p < 3; p++)
+
+    for (unsigned int i = 0; i < n1; i++)
     {
-
-      for (unsigned int i = 0; i < n1; i++)
-        for (unsigned int j = 0; j < n2; j++)
+      for (unsigned int j = 0; j < n2; j++)
+      {
+        file << i << "  " << j;
+        for (unsigned int p = 0; p < 3; p++)
         {
-
-          file << "polarization = " <<  p << "  " << "state i = " << i  <<"   " << "state j =   "
-               << j <<"      "  << std::norm(_P_matrix[p][i][j]) << "\n" << flush;
+          file << "  " << std::norm(_P_matrix[p][i][j]);
         }        
+        file << "\n";
+      }
     }
   }
 

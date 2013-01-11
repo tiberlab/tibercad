@@ -4,6 +4,7 @@
 #include "MeshUtils.h"
 #include "HashMap.h"
 #include "HashSet.h"
+#include "RuntimeException.h"
 
 #include "mesh.h"
 #include "elem.h"
@@ -110,6 +111,8 @@ MeshUtils::get_outer_normal(const Elem* elem, int side)
 
     case 3:
     {
+      // TODO
+      throw RuntimeException("MeshUtils::get_outer_normal() is not implemented yet for 3D");
       break;
     }
 
