@@ -157,8 +157,14 @@ Elasticity::do_solve(void)
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
+  // NOTE: this probably breaks shape deformation with lattice mismatch
+  //       across different simulations. Accumulated strain should persist,
+  //       and also sol should accumulate the deformation across several
+  //       solves.
   sol =  (system.solution)->clone();
   sol->zero();
+  _accumulated_strain.clear();
+  (system.solution)->zero();
 
   shape_iteration = 0;
   double error_energy = 0.0;
