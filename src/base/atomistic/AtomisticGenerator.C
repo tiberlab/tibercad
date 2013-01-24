@@ -731,8 +731,17 @@ AtomisticGenerator::build_random_alloy()
     }
   }
 
-  //A random starting seed is needed to actually have different sequences
-  std::tr1::mt19937 generator(time(NULL));
+  // A random starting seed is needed to actually have different sequences
+  // we try to use something that is different also if launching simulations
+  // at the same time
+  int seed = time(NULL) * std::tr1::random_device()();
+  {
+    std::ostringstream os;
+    os << "Initializing  MT19937 random generator with seed " << seed;
+        //std::ios::hex << seed;
+    Messages::info(os.str());
+  }
+  std::tr1::mt19937 generator(seed);
 
   //
   // Now we extract random numbers between 0 and _structure_basis.size() - 1
