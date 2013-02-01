@@ -88,7 +88,6 @@ void MaxwellEquations::do_init() {
   if (polaritons && useCubic) {
     equation_systems.add_system<CubicEigenSystem> ("Maxwell");
   } else {
-
     equation_systems.add_system<EigenSystem> ("Maxwell");
   }
 
@@ -100,7 +99,7 @@ void MaxwellEquations::do_init() {
   system.solver_max_it = solver_max_it;
   system.solver_tolerance = solver_tolerance;
 
-  std::cout << "Spectrum shift: " << system.spectrumShift << "\n";
+  //std::cout << "Spectrum shift: " << system.spectrumShift << "\n";
 
   system.setRequestedEigenPairs(eigenCount);
 
@@ -124,8 +123,6 @@ void MaxwellEquations::do_init() {
 
 //=======================================================================================================//
 void MaxwellEquations::do_solve() {
-  std::cout << "MM->do_solve\n"; flush(std::cout);
-
   MeshBase& mesh = get_mesh();
 
   EquationSystems& equation_systems = get_equation_systems();
@@ -178,26 +175,29 @@ void MaxwellEquations::do_solve() {
   filterEigenValues(0.0);
 
   int ttime = time(NULL) - stime;
-  cout << "Solving time in seconds: " << ttime << "\n";
-  flush(cout);
+  //cout << "Solving time in seconds: " << ttime << "\n";
+  //flush(cout);
+
+  std::ostringstream os;
 
   for (int i = 0; i < accepted_eigen_count; i++) {
     Complex eigen1 = system.get_eigen_lambda(eigenIndices[i]);
 
     Complex eigen2 = eigen1 * c / system.simulationInterface->get_environment().get_device().get_mesh_units();
 
-    std::cout << i << " " << eigen1 << " W= || " <<  eigen2 << " || or in eV: " << (eigen2  * Constants::hbar / Constants::eV) << "\n";
-    flush(std::cout);
+    os << i << " " << eigen1 << " W= || " <<  eigen2 << " || or in eV: " << (eigen2  * Constants::hbar / Constants::eV) << "\n";
   }
 
-  std::cout << "Eigen total " << system.get_n_converged() << " eigen accepted " << accepted_eigen_count << "\n";
-  cout << "======================================================================\n";
-  flush(cout);
+  os << "Eigen total: " << system.get_n_converged() << ", eigen accepted: " << accepted_eigen_count << ".\n";
+//  cout << "======================================================================\n";
+  Messages::info(os.str());
 
   if (Wc0.real() == -1) {
     Wc0 =  system.get_eigen_lambda(eigenIndices[0])  * c / system.simulationInterface->get_environment().get_device().get_mesh_units();
-    std::cout << "Setting Wc0 to " << Wc0 << "\n";
-    flush(std::cout);
+    if (polaritons) {
+      std::cout << "Setting Wc0 to " << Wc0 << "\n";
+      flush(std::cout);
+    }
   }
 }
 
@@ -214,8 +214,8 @@ void MaxwellEquations::filterEigenValues(double factor) {
 
   filter.filter(system, eigenIndices, storedSolutions);
 
-  std::cout << "Filtered in " << tt.elapsed_string() << "\n";
-  flush(std::cout);
+  //std::cout << "Filtered in " << tt.elapsed_string() << "\n";
+  //flush(std::cout);
 
   accepted_eigen_count = eigenIndices.size();
   relativeIndexing = true;
@@ -363,7 +363,7 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
 
 
   if (this_mme->polaritons && this_mme->Wc0.real() > 0 && this_mme->useCubic) {
-    std::cout << "Add data Called\n"; flush(std::cout);
+    //std::cout << "Add data Called\n"; flush(std::cout);
     layer.addData(system);
   }
 }
@@ -597,7 +597,7 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
     OpticPropsInterface* opticModel = getOpticModel(elem);
 
     //TODO
-    bool inWell = get_environment().get_device().get_material(elem->subdomain_id())->get_name() == "AlGaN";
+    bool inWell = get_environment().get_device().get_material(elem->subdomain_id())->get_name() == "GaN";
     if (!pml.isPMLRegion(elem, this)) {
 
       std::vector<unsigned int> all_dof_indices;
@@ -620,15 +620,17 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
         get_solution(elem, Efield + 0, Esolution, point);
         Point E(Esolution[0], Esolution[1], Esolution[2]);
 
-        E2 += JxW[qp] * (E * E); // TODO ????
+        E2 += JxW[qp] * (E * E);
 
         if (inWell) {
           Fexc2[subdomain] += JxW[qp] * Xden;
-          FexcE[subdomain] += JxW[qp] * std::sqrt(Xden) * E;// * opticModel->get_dielectric_constant().real();//TODO
+          FexcE[subdomain] += JxW[qp] * std::sqrt(Xden) * E;
         }
       }
     }
   }
+
+  delete fe;
 
   std::map<ID, double> Vi2;
   double sum_Vi = 0;
@@ -636,15 +638,14 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
   //std::cout << "WC=" << Wc0 << " Wexc0=" << Wexc0 << " Wlt=" << Wlt << "\n";
   for (std::map<ID, double>::iterator it = Fexc2.begin(); it != Fexc2.end(); it++) {
     ID id = it->first;
-    double q = Wlt / 2;
+    double q = Wlt * 3 / 3;// TODO ab div lwell
 
-    Vi2[id] = (Fexc2[id] == 0) ? 0.0 : (q * std::abs(Wc0) * ((FexcE[id] * FexcE[id]) / Fexc2[id] / E2) / 2);
+    Vi2[id] = (Fexc2[id] == 0) ? 0.0 : (q * std::abs(Wc0) * ((FexcE[id] * FexcE[id]) / Fexc2[id] / E2));
     sum_Vi += Vi2[id];
   }
 
   Complex two(2, 0);
 
-  std::cout << "Rabi in eV=" << std::sqrt(sum_Vi)*Constants::hbar/Constants::e <<"\n";
 
   WPolaritonLow = (Wc0 + Wexc0) / two - std::sqrt((Wc0 - Wexc0) / two * (Wc0 - Wexc0) / two + sum_Vi);
   std::cout << "Wpolariton low: " << WPolaritonLow << "\n";

@@ -26,7 +26,10 @@ void EigenSystem::solve () {
 
   int systemSize = initSystemSize();
 
-  Messages::debug("Total system size: " + systemSize);
+  std::ostringstream os;
+  os << "Total system size: " << systemSize;
+  Messages::debug(os.str());
+
 
   EigenSolver::prepare_slepc();
 
