@@ -1,0 +1,30 @@
+Device
+{
+  meshfile = testline.msh
+
+   Region air
+   {
+     material = Air
+     optical_epsilon = 1
+   }
+
+  mesh_units = 1
+}
+
+Module maxwell
+{
+  plot = (all)
+
+  approxOrder = 2
+
+  eigenCount = 10
+  eigensOut = 10
+}
+
+Simulation
+{  
+  temperature = 300
+  solve = (maxwell)   
+  resultpath = output
+  output_format = vtk
+}
