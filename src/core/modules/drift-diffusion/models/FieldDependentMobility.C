@@ -67,15 +67,8 @@ FieldDependentMobility::prepare_submodels(void)
   opts.set_option("type", low_field_model);
   opts.set_option("particle", get_option("particle", "electron"));
 
-  _low_field_mob = MobilityModelInterface::create(low_field_model, get_material(), opts);
-  if (_low_field_mob == NULL)
-  {
-    std::string msg("FieldDependentMobility: Could not ");
-    msg += "create low-field mobility model '" + low_field_model + "'.";
-    throw InitFailedException(msg);
-  }
-
-  add_submodel("lowfield_mob", _low_field_mob);
+  create_submodel(_low_field_mob, "mobility", opts);
+  _low_field_mob->set_carrier_type(get_carrier_type());
 }
 
 
