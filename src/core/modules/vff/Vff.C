@@ -562,7 +562,7 @@ Vff::keating_potential(void)
                           double y_ik = coords[i_start + 1] - coords[k_start + 1] - t_k_y;
                           double z_ik = coords[i_start + 2] - coords[k_start + 2] - t_k_z;
 
-                          prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (8.0 * _d[i][counter_j] * _d[i][counter_k]);
+                          prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_k]);
 
                           double bond_bending = prefactor *
                               pow((x_ij * x_ik + y_ij * y_ik + z_ij * z_ik - _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]),2);
@@ -710,7 +710,7 @@ Vff::keating_gradient(void)
                           double y_ik = coords[i_start + 1] - coords[k_start + 1] - t_k_y;
                           double z_ik = coords[i_start + 2] - coords[k_start + 2] - t_k_z;
 
-                          prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (8.0 * _d[i][counter_j] * _d[i][counter_k]);
+                          prefactor = (_beta[i][counter_j][counter_k] * 3.0) / (16.0 * _d[i][counter_j] * _d[i][counter_k]);
 
                           common = (x_ij * x_ik + y_ij * y_ik + z_ij * z_ik -
                               _d[i][counter_j] * _d[i][counter_k] * _teta[i][counter_j][counter_k]) * 2.0 * prefactor;
