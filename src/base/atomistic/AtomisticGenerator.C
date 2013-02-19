@@ -734,7 +734,9 @@ AtomisticGenerator::build_random_alloy()
   // A random starting seed is needed to actually have different sequences
   // we try to use something that is different also if launching simulations
   // at the same time
-  int seed = time(NULL) * std::tr1::random_device()();
+  //int seed = time(NULL) * std::tr1::random_device()();
+  int seed = _as->get_options().get_option("random_generator_seed",
+      static_cast<int>(time(NULL) * std::tr1::random_device()()));
   {
     std::ostringstream os;
     os << "Initializing  MT19937 random generator with seed " << seed;
