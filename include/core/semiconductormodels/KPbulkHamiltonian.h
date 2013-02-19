@@ -63,6 +63,7 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   //! sets temperature
   virtual void set_temperature(double Temperature);
  
+  virtual void do_print_info(void);
 
  private:
   //!simmetrize valence-valence term 

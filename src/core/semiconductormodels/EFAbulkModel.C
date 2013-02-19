@@ -17,6 +17,12 @@ EFAbulkModel::~EFAbulkModel()
 
 //===================================//
 
+void EFAbulkModel::do_print_info()
+{
+  _bulkHamiltonian->print_info();
+}
+
+
 void EFAbulkModel::do_init()
 {
 

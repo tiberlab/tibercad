@@ -30,6 +30,8 @@ class EFAbulkModel: public PhysicalModel
 
   virtual void do_init();
   
+  virtual void do_print_info();
+
 
 
  private:

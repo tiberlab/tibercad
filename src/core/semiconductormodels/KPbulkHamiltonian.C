@@ -2,6 +2,7 @@
 
 #include "KPbulkHamiltonian.h"
 #include "Material.h"
+#include "Messages.h"
 #include "Constants.h"
 
 using namespace Constants;
@@ -10,6 +11,14 @@ using namespace Constants;
 
 using namespace std;
 //==================================================================
+
+
+void KPbulkHamiltonian::do_print_info(void)
+{
+  ostringstream os;
+  os << "L1 = " << par.L1 << " M1 = " << par.M1 << " N1 = " << par.N1;
+  Messages::info(os.str());
+}
 
 void KPbulkHamiltonian::nullify_parameters(void)
 {
@@ -140,6 +149,8 @@ void KPbulkHamiltonian::do_init()
 
   //prepare k.p parameter
   par = semiconductor->calculate_kp_params(model_name);
+
+
 
   //calculate general Hamiltonian
   calculate_Hamiltonian_gen();
