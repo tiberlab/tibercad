@@ -777,8 +777,10 @@ DSSC::do_EIS(void)
   // produce a logarithmic scale: 1, 2 ... 10, 20, ... 100, 200 ...
   _frequency = start;
   for (long int i = 1; _frequency < stop * 2 * M_PI; i = i + pow(10, floor(log10(i))))
+//  for (long int i = 1; _frequency < stop * 2 * M_PI; i = i + 100)
   {
     _frequency = 2 * M_PI * start * i;
+//    _frequency = 2 * M_PI * i;
 //    cout << "freq = " << _frequency << "\n";
 //    cout << "i = " << i << "\n";
 
@@ -1796,7 +1798,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   AutoPtr<NumericVector<Number> > cons_cat = x.clone();
   cons_cat->zero();
 
-  const Node* n_iodine = NULL;
   double tot_iodine = 0;
   AutoPtr<NumericVector<Number> > cons_iodine = x.clone();
   cons_iodine->zero();
@@ -2292,8 +2293,8 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         if (dim > 1)
         {
 
-         if (true_boundary)
-	 {
+//         if (true_boundary)
+//	 {
           int phi_size = phi_face.size();
 
           // now integrate to include von Neumann and mixed type BCs
@@ -2474,7 +2475,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
         } // qp
 
-        } // true_boundary
+//        } // true_boundary
         } // dimension
         else // i.e. dim == 1
         {
@@ -3649,7 +3650,6 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   AutoPtr<NumericVector<Number> > cons_cat_I = solution_frequency.clone();
   cons_cat_I->zero();
 
-  const Node* n_iodine = NULL;
   double tot_iodine = 0;
   AutoPtr<NumericVector<Number> > cons_iodine_R = solution_frequency.clone();
   cons_iodine_R->zero();
@@ -4197,41 +4197,6 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
       }
 
-/* IS THIS NEEDED?
-      // if we are doing residual, calculate rhs contribution (i.e. Fe)
-      if (residual != NULL)
-      {
-        // charge density
-        double J_x_rho = J * sc->get_charge_density() / C0_tot;
-        //double J_x_rho = 0.0;
-
-        // net recombination rate
-        double J_x_R = 0.0;
-        if ((is_TiO2 && is_electrolyte) && !poisson_only())
-          J_x_R = J * R;
-
-
-        for (unsigned int i = 0; i < n_dofs; i++)
-        {
-          double net_recomb = J_x_R * phi[i][qp];
-
-//          Fu(i) -= J_x_rho * phi[i][qp] / local_scaling[i][4];
-
-//          Fn(i) -= net_recomb / R0_e / local_scaling[i][0];
-
-          // TODO factors
-//          FI(i) += 1.5 * net_recomb / R0_I / local_scaling[i][1];
-//          FI3(i) -= 0.5 * net_recomb / R0_I3 / local_scaling[i][2];
-
-          double volume = elem->volume();
-
-          tot_cat += J * phi[i][qp] * n_C / C0_C;
-          tot_iodine += J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
-
-        }
-      }
-*/
-
     } // end loop over quadrature points
 
 
@@ -4369,7 +4334,6 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
                 sc->get_density_derivative_C();
 
 
-            //define flux direction
             
 
             // the jacobian x weight x scaling
@@ -4764,7 +4728,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     for (unsigned int j = 0; j < cons_iodine_R->size(); j++)
     {
       system_frequency.matrix->set(dof_iodine_R, j, (*cons_iodine_R)(j));
-//      system_frequency.matrix->set(dof_iodine_I, j + n_real_dofs, (*cons_iodine)(j));
+//      system_frequency.matrix->set(dof_iodine_I, j + n_real_dofs, (*cons_iodine_I)(j));
       system_frequency.matrix->set(dof_iodine_I, j, (*cons_iodine_I)(j));
     }
 
@@ -4775,10 +4739,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
   {
     system_frequency.rhs->close();
-    //system_frequency.rhs->set(dof_cat_R, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
-    //system_frequency.rhs->set(dof_iodine_R, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
-    //system_frequency.rhs->close();
-    //system_frequency.rhs->print_matlab("F.m");
+    system_frequency.rhs->print_matlab("F.m");
   }
 
 
@@ -4940,7 +4901,6 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
 
     assert(sc != NULL);
 
-//    const double t0 = get_scaling().get_time_scaling();
     double epsilon = sc->get_relative_permittivity();
     double eps = Constants::e0 * 1e-2 * epsilon;
     double freq = _frequency;
@@ -5037,9 +4997,7 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
         
       }
 
-      // prepare for calculating local properties
-      sc->set_coordinates(elem->centroid());
-
+      sc->set_coordinates(q_point[qp]);   
 
       sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
       
@@ -5068,9 +5026,9 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
       RealGradient j_I3_2_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * (u_I - eI3_I) * phi0 * dEfI3;
       RealGradient j_n_2_I = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * (u_I - en_I) * phi0 * dEfn;
       RealGradient j_C_2_I = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * (u_I - eC_I) * phi0 * dEfC;
-      
-      RealGradient j_Cap_R = freq * eps * e_field_I;
-      RealGradient j_Cap_I = -freq * eps * e_field_R;
+       
+      RealGradient j_Cap_R = -freq * eps * e_field_I;
+      RealGradient j_Cap_I = freq * eps * e_field_R;
 //    cout << "freq " << freq << "\n";
 //    cout << "eI_I " << eI_I << "\n";
 //    cout << "eI3_I " << eI3_I << "\n";
@@ -5088,7 +5046,13 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
       
       RealGradient j_I(JxW[qp] *
           (j_I_I + j_I3_I + j_n_I + j_C_I + j_I_2_I + j_I3_2_I + j_n_2_I + j_C_2_I + j_Cap_I));
-
+/*     
+      RealGradient j_R(JxW[qp] *
+          (j_Cap_R));
+      
+      RealGradient j_I(JxW[qp] *
+          (j_Cap_I));
+*/
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
 

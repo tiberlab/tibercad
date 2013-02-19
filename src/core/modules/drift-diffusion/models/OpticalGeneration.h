@@ -41,6 +41,9 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     void get_net_recombination_rate_derivatives(
         std::vector<double>& recomb_e, std::vector<double>& recomb_h);
 
+    //! File to read the external generation
+//    double read_file(char *filename, double p);
+     double read_file(void);
 
   protected:
 
@@ -56,11 +59,18 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! Generation rate parameter
     double _generation;
 
+    //! Flag to decide to upload an external generation file
+    bool _read_file;
+
+    //! Number of suns
+    double _sun;
+
     //! The generation model
     std::vector<SimulationInterface*> _generation_model;
 
     //! The solution ID of the generation models variable
     std::vector<ID> _gen_id;
+
 
 };
 
@@ -73,7 +83,9 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
 inline
 OpticalGeneration::OpticalGeneration(const ModelOptions& options)
   : RecombinationModelInterface(options),
-    _generation(0.0)
+    _generation(0.0),
+    _sun(0.0),
+    _read_file(false)
 {
 }
 

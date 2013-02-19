@@ -188,6 +188,11 @@ DSSCModel::read_database(void)
   _eq_conc.n = db.get("ne",2.3e4);
   _eq_conc.I = db.get("nI",0.45);
   _eq_conc.I3 = db.get("nI3",0.05);
+  
+  db.set_section("morphology");
+  _porosity = db.get("porosity",0.5),
+  _is_electrolyte = db.get("electrolyte",true);
+  _is_TiO2 = db.get("TiO2",true);
 }
 
 

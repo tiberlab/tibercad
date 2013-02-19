@@ -1,6 +1,6 @@
-# TiO2 (mesoporous) special material for DSCs module
-# many of the parameters are related to Germanium and do not belongs to TiO2
-
+# Electrolyte: special material for DSCs module
+# Some parameters refer to the TiO2 in case of a mesoporous material
+# however this material final should be used preferably for pure electrolyte regions 
 
 structure = zb
 
@@ -47,11 +47,12 @@ nI3 = 0.05
 permittivity_oxide = 85 
 permittivity_electrolyte = 117
 
-#porosity
+# porosity
+# here it is set that the region with this material does not contain TiO2
 [morphology]
-porosity = 0.5
+porosity = 1.0
 electrolyte = true
-TiO2 = true
+TiO2 = false
 
 # mobilities of charge carriers
 # 1) electron mobility

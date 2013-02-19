@@ -11,8 +11,8 @@ Device
 
   Region electrolyte 
   {
-    material = TiO2mes
-    TiO2 = false
+    material = Electrolyte
+#    TiO2 = false
   }
 }
 
@@ -47,7 +47,7 @@ Module dssc
   {
     type = ohmic
     bias = $V[0.0]
-    kinetic_rate = 1e3
+    kinetic_rate = 1e8
   }
 
   Contact cathode
