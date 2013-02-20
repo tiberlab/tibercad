@@ -37,7 +37,7 @@ use Cwd;
 use Text::ParseWords;
 use Term::ANSIColor;
 use File::Basename;
-use Net::SMTP::SSL;
+#use Net::SMTP::SSL;
 
 
 ##

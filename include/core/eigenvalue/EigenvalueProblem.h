@@ -87,7 +87,7 @@ class EigenvalueProblem : public SimulationInterface
     std::vector<unsigned int> get_state_indices(const std::string& particle) const;
 
 
-    /*! Note: for the moment calculate_matrix_element relays on the fact that the first
+    /* Note: for the moment calculate_matrix_element relays on the fact that the first
      *  n_vb states are for valence, then there are all the electron states.
     */
 

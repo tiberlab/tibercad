@@ -8,7 +8,6 @@
 #include "PhysicalModel.h"
 
 #include "TemperatureInterface.h"
-#include "StrainInterface.h"
 #include "BandProperties.h"
 #include "SimulationOptions.h"
 #include "DriftDiffusionDefs.h"
@@ -35,18 +34,10 @@ class Trap;
 class SimulationInterface;
 class DriftDiffusion;
 class RecombinationModelInterface;
-class MobilityModelInterface;
-class ThermoelectricPower;
-class PolarizationModel;
 class ParticleDensity;
 
 
 //! The base class for all drift-diffusion related semiconductor models
-/*!
- * \note { it is not yet possible to have twice the same recombination model.
- * Trying to add to identical models will result in a memory leak. This will
- * be corrected in future. }
- */
 class DriftDiffusionProperties : public PhysicalModel
 {
 
@@ -172,8 +163,16 @@ class DriftDiffusionProperties : public PhysicalModel
         //! The electron mobility
         double electron_mobility;
 
+        //! The electron mobility derivative w.r.t gradient of Fermi level
+        RealGradient electron_mobility_derivatives;
+
+
         //! The hole mobility
         double hole_mobility;
+
+        //! The hole mobility derivative w.r.t gradient of Fermi level
+        RealGradient hole_mobility_derivatives;
+
 
         //! The electron conductivity
         double electron_conductivity;
@@ -245,7 +244,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * \c reinit() calls \c prepare_element_data() which needs to be
      * implemented in derived classes
      */
-    void reinit(const Elem* elem);
+    //void reinit(const Elem* elem);
 
 
     //! Set the coupling type
@@ -267,7 +266,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Set the polarization vector
-    void set_polarization(const RealVectorValue& polarization);
+    //void set_polarization(const RealVectorValue& polarization);
 
 
     //! Set the coordinates
@@ -351,6 +350,9 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Set the lattice temperature (in K)
     void set_lattice_temperature(double T);
 
+    //! Set the lattice temperature (in eV)
+    void set_lattice_vt(double vt);
+
     //! Get the lattice temperature (in units of eV)
     double get_lattice_temperature(void) const;
 
@@ -389,22 +391,6 @@ class DriftDiffusionProperties : public PhysicalModel
      */
     void calculate_net_recombination_rates(void);
 
-
-    //! Calculate the mobilities
-    void calculate_mobilities(void);
-
-
-    //! Calculates the equilibrium properties.
-    /*!
-     *
-     * This method has to be called before calculating anything
-     * Call this method from a derived one.
-     *
-     * \pre { \c reinit() has to be called before }
-     * \post { all equilibrium properties are accessible without
-     *  explicitly calling \c calculate_all() }
-     */
-    virtual void calculate_equilibrium_properties(void);
 
 
     //! Get the electron density
@@ -578,8 +564,8 @@ class DriftDiffusionProperties : public PhysicalModel
      * The total electric polarization \b P is the sum of the
      * pyroelectric and piezoelectric polarization
      */
-    const RealVectorValue& get_total_polarization(void) const
-      { return _polarization; };
+    //const RealVectorValue& get_total_polarization(void) const
+    //  { return _polarization; };
 
 
     //! Get the relative permittivity tensor
@@ -610,10 +596,6 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_electron_mobility(void) const
       { return _pd->electron_mobility; };
 
-    //! Get the electron mobility model
-    MobilityModelInterface* get_electron_mobility_model(void)
-      { return _electron_mobility; };
-
 
     //! Get the hole mobility
     /*!
@@ -622,17 +604,15 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_hole_mobility(void) const
       { return _pd->hole_mobility; };
 
-    //! Get the hole mobility model
-    MobilityModelInterface* get_hole_mobility_model(void)
-      { return _hole_mobility; };
-
 
     //! Get the electron mobility derivatives
-    void get_electron_mobility_derivatives(RealGradient& dmu) const;
+    void get_electron_mobility_derivatives(RealGradient& dmu) const
+      { dmu = _pd->electron_mobility_derivatives; }
 
 
     //! Get the hole mobility derivatives
-    void get_hole_mobility_derivatives(RealGradient& dmu) const;
+    void get_hole_mobility_derivatives(RealGradient& dmu) const
+      { dmu = _pd->hole_mobility_derivatives; }
 
 
     //! Get the square of the intrinsic density
@@ -719,25 +699,23 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Returns the thermoelectric power for electrons
-    double get_electron_thermoelectric_power() const;
+    //double get_electron_thermoelectric_power() const;
 
     //! Returns the thermoelectric power for holes
-    double get_hole_thermoelectric_power() const;
+    //double get_hole_thermoelectric_power() const;
 
     //! Computes the electron and hole thermoelectric powers
-    void compute_thermoelectric_powers(void);
+    //void compute_thermoelectric_powers(void);
 
     //! Computes the electron and hole thermoelectric power derivatives
-    void compute_thermoelectric_power_gradient(void);
+    //void compute_thermoelectric_power_gradient(void);
 
     //!provides holes thermoelectric power [V/K]
-    RealGradient get_electron_thermoelectric_power_gradient(void) const;
+    //RealGradient get_electron_thermoelectric_power_gradient(void) const;
 
     //!provides holes thermoelectric power [V/K]
-    RealGradient get_hole_thermoelectric_power_gradient(void) const;
+    //RealGradient get_hole_thermoelectric_power_gradient(void) const;
 
-    //! Get the all nodal temperatures for a given element
-    std::vector<double>& get_temperature_at_nodes(void);
 
     //! Get the electric potential
     double get_electric_potential(void) const;
@@ -808,10 +786,6 @@ class DriftDiffusionProperties : public PhysicalModel
     DriftDiffusionProperties(const ModelOptions& options);
 
 
-    /*! \copydoc PhysicalModel::read_database() */
-    virtual void read_database(void);
-
-
     //! Initialize this model
     /*!
      * This reads the database and calls init for all submodels
@@ -825,17 +799,18 @@ class DriftDiffusionProperties : public PhysicalModel
     virtual void prepare_submodels(void);
 
 
+    //! Set the element we are currently working on
+    void set_element(const Elem* elem);
+
+
     //! This method gets called from reinit()
     /*!
      * It can be used to setup data that is constant in an element, e.g.
      * strain related stuff, band edges.
-     * This method can be used overiden by derived classes.
+     * This method can be overriden by derived classes.
      */
     virtual void prepare_element_data(void) {};
 
-
-    //! \copydoc PhysicalModel::do_print_info(void)
-    virtual void do_print_info(void);
 
 
     //! Get the point data structure
@@ -850,7 +825,7 @@ class DriftDiffusionProperties : public PhysicalModel
     TemperatureInterface& get_temperature_interface(void);
 
     //! Get the strain interface
-    StrainInterface& get_strain_interface(void);
+    //StrainInterface& get_strain_interface(void);
 
 
     //! Tells if we should assume inhomogeneous band parameters
@@ -865,6 +840,9 @@ class DriftDiffusionProperties : public PhysicalModel
     bool use_predictor(void) const;
 
 
+    //! Set the relative permittivity tensor
+    void set_relative_permittivity(const RealTensor& eps)
+      { _permittivity = eps; };
 
     //! Set the equilibrium Fermi level
     void set_equilibrium_fermi_level(double Ef)
@@ -878,6 +856,30 @@ class DriftDiffusionProperties : public PhysicalModel
     void set_equilibrium_properties(double Ef);
 
 
+    //! Get the conduction band properties as pointer
+    void set_conduction_band(BandProperties* cb);
+
+
+    //! Get the valence band properties as pointer
+    void set_valence_band(BandProperties* vb);
+
+
+    //! Set the intrinsic density
+    void set_intrinsic_density(double ni)
+      { _intrinsic_density = ni; };
+
+
+    //! Set the equilibrium electron density
+    void set_equilibrium_n(double n)
+      { _equilibrium_n = n; };
+
+
+    //! Set the equilibrium hole density
+    void set_equilibrium_p(double p)
+      { _equilibrium_p = p; };
+
+
+
   private:
 
     //! The interface to the lattice temperature simulation
@@ -885,7 +887,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! The interface to a strain simulation
-    StrainInterface _strain_if;
+    //StrainInterface _strain_if;
 
 
     //! \c true if we should assume inhomogeneous band parameters
@@ -914,17 +916,17 @@ class DriftDiffusionProperties : public PhysicalModel
     PointData* _pd;
 
 
-    //! Electron thermoelectric power gradient
-    RealGradient _eTEpowerGrad;
+    // ! Electron thermoelectric power gradient
+    //RealGradient _eTEpowerGrad;
 
-    //! Hole thermoelectric power gradient
-    RealGradient _hTEpowerGrad;
+    // ! Hole thermoelectric power gradient
+    //RealGradient _hTEpowerGrad;
 
     //! Electron thermoelectric power
-    double _eTEpower;
+    //double _eTEpower;
 
     //! Hole thermoelectric power
-    double _hTEpower;
+    //double _hTEpower;
 
     //! The electric field
     RealGradient _electric_field;
@@ -936,18 +938,10 @@ class DriftDiffusionProperties : public PhysicalModel
     RealGradient _grad_fermi_h;
 
     //! The total electric polarization
-    RealVectorValue _polarization;
+    //RealVectorValue _polarization;
 
     //! The relative permittivity tensor
     RealTensor _permittivity;
-
-    //! A background conductivity
-    /*!
-     * Mainly used for stability reasons in pathologic cases
-     * Units are S/cm
-     */
-    double _background_conductivity;
-
 
 
     //! The copy constructor is disabled
@@ -956,10 +950,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! The assignment operator is disabled
     DriftDiffusionProperties& operator=(const DriftDiffusionProperties& rhs);
-
-
-    //! Parse the model options
-    void parse_options(void);
 
 
     //! Add a recombination model
@@ -971,16 +961,6 @@ class DriftDiffusionProperties : public PhysicalModel
      * \param options the options for the model
      */
      void add_recombination_model(const std::string& model_name,
-        const ModelOptions& options = ModelOptions());
-
-
-
-    //! Create a mobility model
-    /*!
-     * Creates a mobility model from the given model name
-     * and options.
-     */
-    MobilityModelInterface* create_mobility_model(
         const ModelOptions& options = ModelOptions());
 
 
@@ -1024,27 +1004,17 @@ class DriftDiffusionProperties : public PhysicalModel
     //! The recombination models
     std::multimap<ID, RecombinationModelInterface*> _recombination_models;
 
-    //! The electron mobility
-    MobilityModelInterface* _electron_mobility;
-
-    //! The hole mobility
-    MobilityModelInterface* _hole_mobility;
-
 
     //! The thermoelectric power
-    ThermoelectricPower* _thermoelectric_power;
+    //ThermoelectricPower* _thermoelectric_power;
 
 
     //! The polarization models
-    std::vector<PolarizationModel*> _pm;
+    //std::vector<PolarizationModel*> _pm;
 
 
     //! The lattice temperature in eV (\f$= k_B T_{lat} / e\f$)
     double _lattice_vt;
-
-
-    //! The nodal lattice temperature
-    std::vector<double> _nodal_lattice_vt;
 
 
     //! True if this is a dielectric
@@ -1060,7 +1030,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! The relaxation factor for the polarization
-    double _relax_polariz;
+    //double _relax_polariz;
 
 
 };
@@ -1204,6 +1174,13 @@ DriftDiffusionProperties::set_lattice_temperature(double T)
 }
 
 
+inline
+void
+DriftDiffusionProperties::set_lattice_vt(double vt)
+{
+  _lattice_vt = vt;
+}
+
 
 inline
 double
@@ -1212,6 +1189,12 @@ DriftDiffusionProperties::get_lattice_temperature(void) const
   return _lattice_vt;
 }
 
+inline
+void
+DriftDiffusionProperties::set_element(const Elem* elem)
+{
+  _elem = elem;
+}
 
 inline
 const Elem*
@@ -1326,12 +1309,12 @@ DriftDiffusionProperties::get_strain(void)
 
 
 
-inline
-void
-DriftDiffusionProperties::set_polarization(const RealVectorValue& polarization)
-{
-  _polarization = _relax_polariz * polarization;
-}
+//inline
+//void
+//DriftDiffusionProperties::set_polarization(const RealVectorValue& polarization)
+//{
+//  _polarization = _relax_polariz * polarization;
+//}
 
 
 inline
@@ -1341,7 +1324,7 @@ DriftDiffusionProperties::get_number_of_recombination_models(void) const
   return _recombination_models.size();
 }
 
-
+/*
 inline
 double
 DriftDiffusionProperties::get_electron_thermoelectric_power(void) const
@@ -1374,7 +1357,7 @@ DriftDiffusionProperties::get_hole_thermoelectric_power_gradient(void) const
   return  _hTEpowerGrad;
 
 }
-
+*/
 
 
 inline
@@ -1392,12 +1375,12 @@ DriftDiffusionProperties::get_temperature_interface(void)
   return _lattice_temp;
 }
 
-inline
-StrainInterface&
-DriftDiffusionProperties::get_strain_interface(void)
-{
-  return _strain_if;
-}
+//inline
+//StrainInterface&
+//DriftDiffusionProperties::get_strain_interface(void)
+//{
+//  return _strain_if;
+//}
 
 
 inline

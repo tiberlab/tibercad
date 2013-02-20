@@ -8,9 +8,10 @@
 #include "MaterialBoundary.h"
 #include "Boundary.h"
 #include "ElectricalContact.h"
+#include "DriftDiffusionProperties.h"
+#include "DDBulkModel.h"
 #include "DDInterfaceModel.h"
 #include "Constants.h"
-#include "DriftDiffusionProperties.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
 #include "TiberNonlinearSystem.h"
@@ -116,8 +117,8 @@ DriftDiffusion::create_bulk_model(const ModelOptions& options,
   modelname = options.get_option("model", "default");
 
 
-  DriftDiffusionProperties* model =
-    DriftDiffusionProperties::create(modelname, mat, options);
+  DDBulkModel* model =
+    DDBulkModel::create(modelname, mat, options);
 
   if (model == NULL)
     throw ModelErrorException(
@@ -187,8 +188,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     const Elem* top_parent = (*el)->top_parent();
 
     assert(_device->get_material(elem->subdomain_id()) != NULL);
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
+    DDBulkModel* sc =
+      dynamic_cast<DDBulkModel*>(
           get_physical_model(elem->subdomain_id()));
 
     sc->set_coordinates(elem->centroid());
@@ -390,8 +391,8 @@ DriftDiffusion::find_dielectric_boundary_nodes(void)
   {
     const Elem* el = *it;
 
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
+    DDBulkModel* sc =
+      dynamic_cast<DDBulkModel*>(
           get_physical_model(el->subdomain_id()));
 
     // we are only interested in boundaries between semiconductor/dielectric
@@ -402,8 +403,8 @@ DriftDiffusion::find_dielectric_boundary_nodes(void)
         if (get_environment().is_inner_boundary(ElementSide(el, s)))
         {
           // get the model of the neighbor element
-          DriftDiffusionProperties* scn =
-            dynamic_cast<DriftDiffusionProperties*>(
+          DDBulkModel* scn =
+            dynamic_cast<DDBulkModel*>(
                 get_physical_model(el->neighbor(s)->subdomain_id()));
 
 
@@ -660,7 +661,7 @@ DriftDiffusion::calculate_weights(void)
   for ( ; it != end; ++it)
   {
     const Elem* elem = *it;
-    DriftDiffusionProperties* sc = get_bulk_model<DriftDiffusionProperties>(elem);
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
     assert(sc != NULL);
     sc->reinit(elem);
@@ -723,8 +724,8 @@ DriftDiffusion::do_equilibrium(void)
     set<PhysicalModel*>::const_iterator end(pm.end());
     for ( ; it != end; ++it)
     {
-      DriftDiffusionProperties* sc =
-          static_cast<DriftDiffusionProperties*>(*it);
+      DDBulkModel* sc =
+          static_cast<DDBulkModel*>(*it);
 
       // the conduction bands
       vector<double> cb;
@@ -1109,8 +1110,8 @@ DriftDiffusion::guess_equilibrium(void)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(
+    DDBulkModel* sc =
+      dynamic_cast<DDBulkModel*>(
           get_physical_model(elem->subdomain_id()));
 
     dof_map_u.dof_indices(elem, dof_indices_u, u_var);
@@ -1695,8 +1696,8 @@ DriftDiffusion::do_reinit(void)
 
   for ( ; it != end; ++it)
   {
-    DriftDiffusionProperties* sc =
-        static_cast<DriftDiffusionProperties*>(*it);
+    DDBulkModel* sc =
+        static_cast<DDBulkModel*>(*it);
 
     switch (_useparticle)
     {
@@ -1808,8 +1809,8 @@ DriftDiffusion::do_setup_solution_variables(void)
 
     for ( ; it != end; ++it)
     {
-      DriftDiffusionProperties* sc =
-          static_cast<DriftDiffusionProperties*>(*it);
+      DDBulkModel* sc =
+          static_cast<DDBulkModel*>(*it);
 
       // the conduction bands
       //const vector<double>& cb = sc->get_conduction_bands();
@@ -1963,8 +1964,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   ID subdomain = elem->subdomain_id();
 
-  DriftDiffusionProperties* sc =
-    dynamic_cast<DriftDiffusionProperties*>(
+  DDBulkModel* sc =
+    dynamic_cast<DDBulkModel*>(
         get_physical_model(subdomain));
 
   assert(sc != NULL);
@@ -2403,8 +2404,8 @@ DriftDiffusion::calculate_currents_rstf_global(void)
     dof_map.dof_indices(elem, dof_indices_en, en_var);
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
-    DriftDiffusionProperties* sc =
-        get_bulk_model<DriftDiffusionProperties>(elem);
+    DDBulkModel* sc =
+        get_bulk_model<DDBulkModel>(elem);
 
     assert(sc != NULL);
 
@@ -2603,8 +2604,8 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
     dof_map.dof_indices(elem, dof_indices_en, en_var);
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
-    DriftDiffusionProperties* sc =
-        get_bulk_model<DriftDiffusionProperties>(elem);
+    DDBulkModel* sc =
+        get_bulk_model<DDBulkModel>(elem);
 
     assert(sc != NULL);
 
@@ -2817,7 +2818,7 @@ DriftDiffusion::calculate_field_emission(void)
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices_u, u_var);
 
-    DriftDiffusionProperties* sc = get_bulk_model<DriftDiffusionProperties>(elem);
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
     assert(sc != NULL);
 
@@ -2851,10 +2852,11 @@ DriftDiffusion::calculate_field_emission(void)
         double current = 0.0;
 
         FowlerNordheim* em = sm->get_field_emission_model();
+        sm->reinit(elem, s);
 
         for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
-          sm->set_face_normal(s, face_normals[qp]);
+          sm->set_face_normal(face_normals[qp]);
 
           // get the solution value at the quadrature point
           RealGradient e_field(0.0);
@@ -2989,8 +2991,8 @@ DriftDiffusion::calculate_currents_surfint(void)
     dof_map.dof_indices(elem, dof_indices_en, en_var);
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
+    DDBulkModel* sc =
+      dynamic_cast<DDBulkModel*>(get_physical_model(subdomain));
 
     assert(sc != NULL);
 
@@ -3241,27 +3243,23 @@ DriftDiffusion::calculate_surface_recombination(void)
     dof_map.dof_indices(elem, dof_indices_en, en_var);
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
-    DriftDiffusionProperties* sc =
-      dynamic_cast<DriftDiffusionProperties*>(get_physical_model(subdomain));
+    //DDBulkModel* sc =
+    //  dynamic_cast<DDBulkModel*>(get_physical_model(subdomain));
 
-    assert(sc != NULL);
+    //assert(sc != NULL);
 
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
       DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
 
-      // theck check about the current is a bit primitive, but ok for now
+      // the check about the current is a bit primitive, but ok for now
       if ((sm != NULL)  && !sm->has_current())
       {
-        sc->reinit(elem);
-
-        //Get the temperature given the element
-        vector<double> T_nodes = sc->get_temperature_at_nodes();
+        sm->reinit(elem, s);
 
         fe_face->reinit(elem, s);
 
         int phi_size = phi.size();
-
 
         for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
@@ -3272,7 +3270,6 @@ DriftDiffusion::calculate_surface_recombination(void)
           Real dEfn = 0.0;
           Real dEfp = 0.0;
           RealGradient e_field(0);
-          Real dT = 0.0;
           for (unsigned int i = 0; i < phi_size; i++)
           {
             u  += phi[i][qp] * solution(dof_indices_u[i]);
@@ -3284,24 +3281,15 @@ DriftDiffusion::calculate_surface_recombination(void)
             dEfp += tmp * solution(dof_indices_ep[i]);
 
             e_field += dphi[i][qp] * solution(dof_indices_u[i]);
-
-            dT += tmp * T_nodes[i];
           }
 
           // prepare for calculating local properties
-          sc->set_coordinates(q_point[qp]);
-
-
-          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-
-          sc->set_electric_field(-phi0 * e_field);
-          sc->set_grad_fermi_e(phi0 * dEfn);
-          sc->set_grad_fermi_h(phi0 * dEfp);
-
-          sc->calculate_densities();
-          sc->calculate_mobilities();
-
-          sm->set_face_normal(s, face_normals[qp]);
+          sm->set_coordinates(q_point[qp]);
+          sm->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+          sm->set_electric_field(-phi0 * e_field);
+          sm->set_grad_fermi_e(phi0 * dEfn);
+          sm->set_grad_fermi_h(phi0 * dEfp);
+          sm->set_face_normal(face_normals[qp]);
           sm->compute();
 
           const vector<double>& coeff_a = sm->get_a();
@@ -3473,7 +3461,7 @@ DriftDiffusion::build_local_scaling(void)
     scalep.reposition(2 * n_dofs, n_dofs);
 
 
-    DriftDiffusionProperties* sc = get_bulk_model<DriftDiffusionProperties>(elem);
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
     assert(sc != NULL);
 
     sc->reinit(elem);
@@ -4128,7 +4116,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
     scalep.reposition(2 * n_dofs, n_dofs);
 
 
-    DriftDiffusionProperties* sc = get_bulk_model<DriftDiffusionProperties>(elem);
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
     assert(sc != NULL);
     sc->reinit(elem);
@@ -4561,9 +4549,11 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
       bool true_boundary = environment.is_outer_boundary(ElementSide(elem, s));
 
-      if ((sm != NULL) || true_boundary)
+      if (sm != NULL)
       {
         fe_face->reinit(elem, s);
+
+        sm->reinit(elem, s);
 
         int phi_size = phi_face.size();
 
@@ -4590,40 +4580,44 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             grad_ep += dphi_face[i][qp] * Xp(i);
           }
 
-          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-          sc->set_coordinates(q_point_face[qp]);
-          sc->set_electric_field(phi0 / x0 * e_field);
-          sc->set_grad_fermi_e(phi0 / x0 * grad_en);
-          sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
-          sc->calculate_densities();
-          sc->calculate_mobilities();
+          //sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+          //sc->set_coordinates(q_point_face[qp]);
+          //sc->set_electric_field(phi0 / x0 * e_field);
+          //sc->set_grad_fermi_e(phi0 / x0 * grad_en);
+          //sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
+          //sc->calculate_densities();
+          //sc->calculate_mobilities();
 
           // we put the phi0 here for convenience
-          double sigma_e = phi0 * sc->get_electron_conductivity();
-          double sigma_h = phi0 * sc->get_hole_conductivity();
+          //double sigma_e = phi0 * sc->get_electron_conductivity();
+          //double sigma_h = phi0 * sc->get_hole_conductivity();
 
-          sc->compute_thermoelectric_powers();
-          double Pn =  sc->get_electron_thermoelectric_power() / phi0;
-          double Pp =  sc->get_hole_thermoelectric_power() / phi0;
+          //sc->compute_thermoelectric_powers();
+          //double Pn =  sc->get_electron_thermoelectric_power() / phi0;
+          //double Pp =  sc->get_hole_thermoelectric_power() / phi0;
 
-          double jn = 0.0;
-          double jp = 0.0;
-          if (coupling & ECURRENT)
-            jn = (sigma_e * grad_en + Pn * grad_T) * face_normals[qp] / x0;
-          if (coupling & HCURRENT)
-            jp = -(sigma_h * grad_ep + Pp * grad_T) * face_normals[qp] / x0;
+          //double jn = 0.0;
+          //double jp = 0.0;
+          //if (coupling & ECURRENT)
+          //  jn = (sigma_e * grad_en + Pn * grad_T) * face_normals[qp] / x0;
+          //if (coupling & HCURRENT)
+          //  jp = -(sigma_h * grad_ep + Pp * grad_T) * face_normals[qp] / x0;
 
+          sm->set_face_normal(face_normals[qp]);
+          sm->set_coordinates(q_point_face[qp]);
+          sm->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+          sm->set_electric_field(phi0 / x0 * e_field);
+          sm->set_grad_fermi_e(phi0 / x0 * grad_en);
+          sm->set_grad_fermi_h(phi0 / x0 * grad_ep);
+          sm->compute();
 
           // the jacobian x weight x scaling
           double J = JxW_face[qp];
 
 
           // contribution to the jacobian
-          if ((sm != NULL) && (jacobian != NULL))
+          if (jacobian != NULL)
           {
-            sm->set_face_normal(s, face_normals[qp]);
-            sm->compute();
-
             // for Dirichlet DOFs we do not add anything
             double scale_u = J * phi0 / x0 / C0;;
             if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
@@ -4719,53 +4713,27 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             double value_n = 0.0;
             double value_p = 0.0;
 
-            if (true_boundary && (sm == NULL))
-            {
-              // If we are on an outer boundary, we have to include
-              // the polarization
-              //
-              // NOTE:
-              // we only include the polarization when no dirichlet
-              // boundary is defined
+            const vector<double>& coeff_a = sm->get_a();
+            const vector<double>& coeff_g = sm->get_g();
 
-	      RealVectorValue P(0.0);
-	      if (params.default_boundary_condition == ZEROFIELD)
-	      {
-		P = sc->get_total_polarization();
-	      }
-              double Pn = (P * face_normals[qp]) / P0;
-              value_u = -J * Pn;
-            }
+            double tmp = (coeff_g[0] - coeff_a[0] * u * phi0);
+            if (sm->get_type(0) != DDInterfaceModel::DIRICHLET)
+              value_u += J * tmp / (x0 * C0);
+            else
+              value_u = coeff_g[0] / phi0;
 
-            if (sm != NULL)
-            {
-              sm->set_face_normal(s, face_normals[qp]);
-              sm->compute();
-
-              const vector<double>& coeff_a = sm->get_a();
-              const vector<double>& coeff_g = sm->get_g();
-
-              double tmp = (coeff_g[0] - coeff_a[0] * u * phi0);
-              if (sm->get_type(0) != DDInterfaceModel::DIRICHLET)
-                value_u += J * tmp / (x0 * C0);
-              else
-                value_u = coeff_g[0] / phi0;
-
-              value_n = (coeff_g[1] - coeff_a[1] * en * phi0);
-              if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)
-                value_n *= J / (x0 * R0_e);
-              else
-                value_n = coeff_g[1] / phi0;
+            value_n = (coeff_g[1] - coeff_a[1] * en * phi0);
+            if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)
+              value_n *= J / (x0 * R0_e);
+            else
+              value_n = coeff_g[1] / phi0;
 
 
-              value_p = (coeff_g[2] - coeff_a[2] * ep * phi0);
-              if (sm->get_type(2) != DDInterfaceModel::DIRICHLET)
-                value_p *= J / (x0 * R0_h);
-              else
-                value_p = coeff_g[2] / phi0;
-
-
-            }
+            value_p = (coeff_g[2] - coeff_a[2] * ep * phi0);
+            if (sm->get_type(2) != DDInterfaceModel::DIRICHLET)
+              value_p *= J / (x0 * R0_h);
+            else
+              value_p = coeff_g[2] / phi0;
 
 
             for (unsigned int i = 0; i < n_dofs; i++)
@@ -4774,7 +4742,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               double scale_n = 1.0 / scalen(i);
               double scale_p = 1.0 / scalep(i);
 
-              if ((sm != NULL) && elem->is_node_on_side(i, s))
+              if (elem->is_node_on_side(i, s))
               {
                 if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
                 {
@@ -4803,6 +4771,40 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
 
               if (coupling & HCURRENT)
                 Fp(i) += value_p * phi_face[i][qp] * scale_p;
+            }
+          }
+        }
+      }
+      else if ((true_boundary) && (residual != NULL))
+      {
+        // If we are on an outer boundary, we have to include
+        // the polarization
+        //
+        // NOTE:
+        // we only include the polarization when no explicit
+        // boundary is defined
+
+        if (params.default_boundary_condition == ZEROFIELD)
+        {
+          fe_face->reinit(elem, s);
+
+          for (unsigned int qp = 0; qp < qface->n_points(); qp++)
+          {
+
+            // the jacobian x weight x scaling
+            double J = JxW_face[qp];
+
+            RealVectorValue P(0.0);
+            P = sc->get_total_polarization();
+            double Pn = (P * face_normals[qp]) / P0;
+            double value_u = -J * Pn;
+
+            if (coupling & POISSON)
+            {
+              for (unsigned int i = 0; i < n_dofs; i++)
+              {
+                Fu(i) -= value_u * phi_face[i][qp] / scaleu(i);
+              }
             }
           }
         }

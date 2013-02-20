@@ -4,7 +4,7 @@
 #include "ParticleDensity.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
-#include "ThermoelectricPower.h"
+//#include "ThermoelectricPower.h"
 #include "SimulationInterface.h"
 #include "Material.h"
 #include "Database.h"
@@ -16,8 +16,7 @@
 #include "Embracing.h"
 #include "Messages.h"
 #include "TypeDefs.h"
-#include "PolarizationModel.h"
-#include "PermittivityModel.h"
+//#include "PolarizationModel.h"
 
 #include "elem.h"
 
@@ -59,20 +58,17 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     _intrinsic_density(1e10),
     _equilibrium_n(0.0),
     _equilibrium_p(0.0),
-    _electron_mobility(NULL),
-    _hole_mobility(NULL),
-    _eTEpowerGrad(0.0),
-    _hTEpowerGrad(0.0),
-    _eTEpower(0),
-    _hTEpower(0),
-    _polarization(0),
+    //_eTEpowerGrad(0.0),
+    //_hTEpowerGrad(0.0),
+    //_eTEpower(0),
+    //_hTEpower(0),
+    //_polarization(0),
     _permittivity(0),
-    _background_conductivity(0.0),
-    _thermoelectric_power(NULL),
-    _is_dielectric(false),
+    //_thermoelectric_power(NULL),
     _electrons(NULL),
     _holes(NULL),
-    _relax_polariz(1.0)
+    _is_dielectric(false)
+    //_relax_polariz(1)
 {
   _pd = new PointData();
 }
@@ -88,47 +84,7 @@ DriftDiffusionProperties::create(const std::string& name, const Material* mat,
 
 
 
-void
-DriftDiffusionProperties::read_database(void)
-{
-  const Database& db = get_database();
-  db.set_section("");
-  _is_dielectric = db.get("dielectric", _is_dielectric);
 
-  bool diel_as_sc = get_option("dielectric_as_semiconductor", false);
-  _is_dielectric &= !diel_as_sc;
-
-}
-
-
-
-
-
-void
-DriftDiffusionProperties::parse_options(void)
-{
-
-  get_parameter("relax_polarization", _relax_polariz);
-
-  _use_predictor = get_option("use_density_predictor", _use_predictor);
-
-  _is_dielectric = get_option("dielectric", _is_dielectric);
-
-  bool diel_as_sc = get_option("dielectric_as_semiconductor", false);
-  _is_dielectric &= !diel_as_sc;
-
-
-
-  // the temperature simulation
-  string temp_simul = get_option("thermal_simulation", "");
-  _is_inhomogeneous |= _lattice_temp.set_simulation(temp_simul);
-
-
-  // the strain simulation
-  string strain_simul = get_option("strain_simulation", "");
-  _is_inhomogeneous |= _strain_if.set_simulation(strain_simul);
-
-}
 
 
 
@@ -136,15 +92,6 @@ DriftDiffusionProperties::parse_options(void)
 void
 DriftDiffusionProperties::prepare_submodels(void)
 {
-
-
-  // permittivity Default
-  {
-    PermittivityModel* pm = NULL;
-    ModelOptions opts;
-    opts.set_option("type", "constant");
-    create_submodel(pm, "permittivity", opts);
-  }
 
 
   if (get_options().has_submodel("band_properties"))
@@ -237,13 +184,7 @@ DriftDiffusionProperties::prepare_submodels(void)
     create_submodel(_conduction_band, "band_properties", opts);
   }
 
-  if (_conduction_band == NULL)
-  {
-    ModelOptions opts;
-    opts.set_option("particle", "el");
-    opts.set_option("type", "kp");
-    create_submodel(_conduction_band, "band_properties", opts);
-  }
+
 
 
   if (get_options().has_submodel("valence_band"))
@@ -257,13 +198,7 @@ DriftDiffusionProperties::prepare_submodels(void)
     create_submodel(_valence_band, "band_properties", opts);
   }
 
-  if (_valence_band == NULL)
-  {
-    ModelOptions opts;
-    opts.set_option("particle", "hl");
-    opts.set_option("type", "kp");
-    create_submodel(_valence_band, "band_properties", opts);
-  }
+
 
 
   // particle densities
@@ -342,7 +277,7 @@ DriftDiffusionProperties::prepare_submodels(void)
 
 
   // polarization models
-  create_submodels(_pm, "polarization");
+  //create_submodels(_pm, "polarization");
 
 
   // traps
@@ -353,63 +288,6 @@ DriftDiffusionProperties::prepare_submodels(void)
   if (!is_dielectric())
   {
 
-    //
-    // mobilities
-    //
-    ModelOptions::submodel_iterator
-      mobit(get_options().submodels_begin("mobility"));
-
-    ModelOptions::submodel_iterator
-      it(get_options().submodels_begin("electron_mobility"));
-    ModelOptions::submodel_iterator
-      end(get_options().submodels_end("electron_mobility"));
-
-    // create electron mobility model
-    if (it != end)
-    {
-      (it->second).set_option("particle", "electron");
-      _electron_mobility = create_mobility_model(it->second);
-    }
-    else if (mobit != get_options().submodels_end("mobility"))
-    {
-      (mobit->second).set_option("particle", "electron");
-      (mobit->second).set_option("name", string("electron_mobility"));
-      _electron_mobility = create_mobility_model(mobit->second);
-    }
-    else
-    {
-      ModelOptions opts;
-      opts.set_option("particle", "electron");
-      opts.set_option("name", string("electron_mobility"));
-      _electron_mobility = create_mobility_model(opts);
-    }
-
-
-
-    // create hole mobility model
-    it = get_options().submodels_begin("hole_mobility");
-    end = get_options().submodels_end("hole_mobility");
-
-    if (it != end)
-    {
-      (it->second).set_option("particle", "hole");
-      _hole_mobility = create_mobility_model(it->second);
-    }
-    else if (mobit != get_options().submodels_end("mobility"))
-    {
-      (mobit->second).set_option("particle", "hole");
-      (mobit->second).set_option("name", string("hole_mobility"));
-      _hole_mobility = create_mobility_model(mobit->second);
-    }
-    else
-    {
-      ModelOptions opts;
-      opts.set_option("particle", "hole");
-      opts.set_option("name", string("hole_mobility"));
-      _hole_mobility = create_mobility_model(opts);
-    }
-
-
 
     //
     // Recombinations
@@ -419,9 +297,11 @@ DriftDiffusionProperties::prepare_submodels(void)
     //
     // Thermoelectric power
     //
-
-    it = get_options().submodels_begin("thermoelectric_power");
-    end = get_options().submodels_end("thermoelectric_power");
+    /*
+    ModelOptions::submodel_iterator
+      it(get_options().submodels_begin("thermoelectric_power"));
+    ModelOptions::submodel_iterator
+      end(get_options().submodels_end("thermoelectric_power"));
     if (it != end)
     {
       _thermoelectric_power =
@@ -432,13 +312,11 @@ DriftDiffusionProperties::prepare_submodels(void)
 
       add_submodel("thermoelectricpower", _thermoelectric_power);
     }
+    */
   }
   else
   {
     // a dielectric does not need all this models
-    delete_submodel("thermoelectricpower");
-    delete_submodel("hole_mobility");
-    delete_submodel("electron_mobility");
     delete_submodel("recombination");
     delete_submodel("generation");
     recomb_iterator it = _recombination_models.begin();
@@ -453,48 +331,56 @@ DriftDiffusionProperties::prepare_submodels(void)
 void
 DriftDiffusionProperties::create_recombination_models(void)
 {
-
-  // for each trap we add an SRH recombination model
-  ModelOptions::submodel_iterator it(get_options().submodels_begin("trap"));
-  ModelOptions::submodel_iterator end(get_options().submodels_end("trap"));
-  for (; it != end; ++it)
-  {
-    ModelOptions opts(it->second);
-    if (opts.get_option("recombination_center", false))
-    {
-      it->second.delete_option("recombination_center");
-      opts.set_option("trap", true);
-      opts.set_option("type", "srh");
-      opts.set_option("name", "recombination");
-      get_options().add_submodel("recombination", opts);
-    }
-  }
-
-
   // we create them only if they do not exist yet
   vector<ID> ids;
   get_net_recombination_rate_IDs(ids);
   if (!is_dielectric() && !ids.size())
   {
+    //
     // we can have several models!
+    //
 
-    // create recombination models
-    it = get_options().submodels_begin("recombination");
-    end = get_options().submodels_end("recombination");
-    for ( ; it != end; ++it)
+    list<ModelOptions> newopts;
+
+    // for each trap we add an SRH recombination model
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("trap"));
+    ModelOptions::submodel_iterator end(get_options().submodels_end("trap"));
+    for (; it != end; ++it)
     {
-      std::string name = (it->second).get_option("type", (it->second).get_name());
-      add_recombination_model(name, it->second);
+      ModelOptions opts(it->second);
+      if (opts.get_option("recombination_center", false))
+      {
+        it->second.delete_option("recombination_center");
+        opts.set_option("trap", true);
+        opts.set_option("type", "srh");
+        opts.set_option("name", "recombination");
+        opts.set_key("recombination");
+        newopts.insert(newopts.end(), opts);
+      }
     }
 
-    // this is only a logical division
     it = get_options().submodels_begin("generation");
     end = get_options().submodels_end("generation");
     for ( ; it != end; ++it)
     {
-      std::string name = (it->second).get_option("type", (it->second).get_name());
-      add_recombination_model(name, it->second);
+      ModelOptions opts(it->second);
+      opts.set_option("name", "recombination");
+      opts.set_key("recombination");
+      newopts.insert(newopts.end(), opts);
     }
+
+    list<ModelOptions>::iterator lit(newopts.begin());
+    list<ModelOptions>::iterator lend(newopts.end());
+    for ( ; lit != lend; ++lit)
+      get_options().add_submodel((*lit).get_key(), *lit);
+
+
+    vector<RecombinationModelInterface*> pd;
+    create_submodels(pd, "recombination");
+
+    for (int i = 0; i < pd.size(); ++i)
+      _recombination_models.insert(make_pair(pd[i]->get_id(), pd[i]));
+
   }
 }
 
@@ -502,8 +388,6 @@ DriftDiffusionProperties::create_recombination_models(void)
 void
 DriftDiffusionProperties::do_init(void)
 {
-
-  parse_options();
 
   // they must be here
   SubmodelIterator it = submodels_begin("particle_density");
@@ -533,28 +417,26 @@ DriftDiffusionProperties::do_init(void)
 
 
 
-  //if (_is_dielectric)
-  //  _background_conductivity =
-  //      0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
-  //else
-    _background_conductivity =
-        0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
-
-
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
-  calculate_equilibrium_properties();
-
-
-  // permittivity
-  it = submodels_begin("permittivity");
-  PermittivityModel* pm =  dynamic_cast<PermittivityModel*>(it->second);
-  _permittivity = pm->get_permittivity();
 
 
 }
 
 
+
+void
+DriftDiffusionProperties::set_conduction_band(BandProperties* cb)
+{
+  _conduction_band = cb;
+}
+
+
+void
+DriftDiffusionProperties::set_valence_band(BandProperties* vb)
+{
+  _valence_band = vb;
+}
 
 
 DriftDiffusionProperties::~DriftDiffusionProperties(void)
@@ -594,27 +476,6 @@ DriftDiffusionProperties::add_recombination_model(
 
 
 
-MobilityModelInterface*
-DriftDiffusionProperties::create_mobility_model(const ModelOptions& options)
-{
-  string model_name = options.get_name();
-  model_name = options.get_option("type", model_name);
-  if (model_name.empty())
-    model_name = "constant";
-
-  MobilityModelInterface* mobility_model =
-    MobilityModelInterface::create(model_name, get_material(), options);
-
-  if (mobility_model == NULL)
-    throw InitFailedException("No such mobility model: " + model_name);
-
-  add_submodel(options.get_option("name",""), mobility_model);
-
-  return mobility_model;
-}
-
-
-
 
 
 void
@@ -633,7 +494,7 @@ DriftDiffusionProperties::clear_recombination(void)
 
 
 
-
+/*
 void
 DriftDiffusionProperties::reinit(const Elem* elem)
 {
@@ -668,7 +529,7 @@ DriftDiffusionProperties::reinit(const Elem* elem)
   _pd->electron_vt = _pd->hole_vt = _lattice_vt;
 
 }
-
+*/
 
 
 
@@ -897,43 +758,6 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
 
 
 
-void
-DriftDiffusionProperties::calculate_mobilities(void)
-{
-  if (is_dielectric())
-  {
-    _pd->electron_mobility = 0.0;
-    _pd->hole_mobility = 0.0;
-  }
-  else
-  {
-    _pd->electron_mobility = _electron_mobility->get_mobility();
-    _pd->hole_mobility = _hole_mobility->get_mobility();
-  }
-
-  _pd->electron_conductivity =
-    _pd->electron_mobility * _pd->electron_density + _background_conductivity;
-  _pd->hole_conductivity =
-    _pd->hole_mobility * _pd->hole_density + _background_conductivity;
-}
-
-
-
-void
-DriftDiffusionProperties::get_electron_mobility_derivatives(RealGradient& dmu) const
-{
-  if (!is_dielectric())
-    _electron_mobility->get_derivative_grad_fermi(dmu);
-}
-
-
-
-void
-DriftDiffusionProperties::get_hole_mobility_derivatives(RealGradient& dmu) const
-{
-  if (!is_dielectric())
-    _hole_mobility->get_derivative_grad_fermi(dmu);
-}
 
 
 
@@ -1024,187 +848,6 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
 
 
 
-void
-DriftDiffusionProperties::calculate_equilibrium_properties(void)
-{
-
-  // call this method to properly set conduction and valence band DOS
-  // and energy
-  double kT = get_lattice_temperature();
-  set_carrier_temperatures(kT, kT);
-
-  BandProperties& cb = get_conduction_band();
-  cb.calculate(kT);
-  double Ec = cb.get_band_edge();
-
-  BandProperties& vb = get_valence_band();
-  vb.calculate(kT);
-  double Ev = vb.get_band_edge();
-
-
-  // for a dielectric we don't need much...
-  if (is_dielectric())
-  {
-    _equilibrium_fermi_level = 0.5 * (Ec + Ev);
-    _intrinsic_density = sqrt(cb.get_effective_DOS() * vb.get_effective_DOS())
-        * exp(-0.5 * get_band_gap() / kT);
-    return;
-  }
-
-  // remember the coupling
-  int coupling_bkp = _coupling;
-  _coupling = DriftDiffusionDefs::BOTH;
-
-  bool quantum_el = _electrons->has_quantum_density();
-  bool quantum_hl = _holes->has_quantum_density();
-  _electrons->use_quantum_density(false);
-  _holes->use_quantum_density(false);
-
-
-  double Nd = get_material()->get_total_donor_density();
-  double Na = get_material()->get_total_acceptor_density();
-
-
-  double ni2 = cb.get_effective_DOS() * vb.get_effective_DOS()
-    * exp(-get_band_gap() / kT);
-  double ni = sqrt(ni2);
-  _intrinsic_density = ni;
-
-  double guess;
-  // Hmm... Is there a better guess?
-  if (Nd > Na)
-  {
-    guess = Ec - kT * log(cb.get_effective_DOS() / (Nd + ni));
-  }
-  else
-  {
-    guess = Ev + kT * log(vb.get_effective_DOS() / (Na + ni));
-  }
-
-
-  // In some cases guess can be Inf or NaN. Then we set it to midband energy
-  //if (std::isinf(guess) || std::isnan(guess))
-    guess = 0.5 * (Ec + Ev);
-
-  /*
-   * We use standard Newton. This should work always, as the density
-   * is a strictly monotone function of the electric potential with
-   * lim_{+-infty} = +-infty .
-   */
-
-  double x = guess;
-  // 1e-4 V error seems to be good enough...
-  double eps = 1e-4, dens_max = 1e6;
-  double error, residual_dens, y;
-
-  //set_carrier_temperatures(kT, kT);
-
-  /* for testing
-  ofstream of("charge.dat");
-  double I = Ec + 0.2 - (Ev -0.2);
-  double h = I / 10000;
-  of << "# " << Ec << " " << Ev << "\n";
-  for (unsigned int i = 0; i < 10000; i++)
-  {
-    double x = Ev - 0.2 + i * h;
-    set_potentials(x);
-    calculate_densities();
-    calculate_traps();
-    calculate_ionized_dopants();
-    double f = get_charge_density();
-    double df_fermi[2];
-    get_charge_density_derivatives(df_fermi);
-    double df = -(df_fermi[0] + df_fermi[1]);
-    of << (x-Ec) << " " << f << " " << df <<  "\n";
-  }
-  of.close();
-  */
-
-  // is set to true when calculation is successful
-  bool success = false;
-
-  // the minimum x (below the zero, f > 0)
-  double xmin = Ev - 0.5;
-
-  // the maximum x (above the zero, f < 0)
-  double xmax = Ec + 0.5;
-
-  //cerr << "***\n";
-  for (unsigned int i = 0; i < 200; ++i)
-  {
-    set_potentials(x);
-    calculate_densities();
-    calculate_traps();
-    calculate_ionized_dopants();
-
-    double f = get_charge_density();
-    double df_fermi[2];
-    get_charge_density_derivatives(df_fermi);
-    double df = -(df_fermi[0] + df_fermi[1]);
-
-    if (f > 0) xmin = x;
-    else if (f < 0) xmax = x;
-
-    residual_dens = fabs(f);
-
-    double dx = 0.0;
-    if (residual_dens > ParticleDensity::MINDENSITY)
-    {
-      // At low temperatures everything is very sensitive on dx, so we don't
-      // allow it to be bigger than k*T. At high temperatures this should not
-      // have any impact
-      dx = - f / df;
-
-      y = x + dx;
-      // we limit Ef to (xmin, xmax)
-      if (y > xmax)
-        dx = 0.5 * (xmax - x);
-      else if (y < xmin)
-        dx = 0.5 * (xmin - x);
-
-    }
-
-    y = x + dx;
-
-    error = fabs(dx);
-    //cerr << "x = " << y << " error = " << dx << " res. dens. = "
-    //  << residual_dens << endl;
-
-    x = y;
-
-    if ((error < eps) && (residual_dens < dens_max))
-    {
-      success = true;
-      break;
-    }
-  }
-
-  if (!success)
-  {
-    ostringstream os;
-    os << "Could not find equilibrium properties for material "
-        << get_material()->get_name() << " around point "
-        << get_coordinates();
-    throw SolveFailedException(os.str());
-  }
-
-  _intrinsic_density = sqrt(_pd->electron_density) * sqrt(_pd->hole_density);
-  _equilibrium_n = _pd->electron_density;
-  _equilibrium_p = _pd->hole_density;
-
-  // for a dielectric we don't need much...
-  if (is_dielectric())
-    _equilibrium_fermi_level = 0.0;
-  else
-    _equilibrium_fermi_level =  y;
-
-  // restore original coupling
-  _coupling = coupling_bkp;
-
-  _electrons->use_quantum_density(quantum_el);
-  _holes->use_quantum_density(quantum_hl);
-}
-
 
 
 
@@ -1234,7 +877,7 @@ DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 
 
 
-
+/*
 void
 DriftDiffusionProperties::compute_thermoelectric_powers(void)
 {
@@ -1287,71 +930,8 @@ DriftDiffusionProperties::compute_thermoelectric_power_gradient(void)
      _hTEpowerGrad = 0;
    }
 }
-
-std::vector<double>&
-DriftDiffusionProperties::get_temperature_at_nodes()
-{
-  return _nodal_lattice_vt;
-}
+*/
 
 
 
-void
-DriftDiffusionProperties::do_print_info(void)
-{
-  Messages m;
-
-  if (_strain_if.has_simulation())
-    m.info("using strain simulation: " +
-      _strain_if.get_simulation()->get_name());
-  else if (trace(_strain) != 0.0)
-    m.info("using strain from input file");
-
-  if (_lattice_temp.has_simulation())
-    m.info("using lattice temperature from: " +
-      _lattice_temp.get_simulation()->get_name());
-
-
-  set_lattice_temperature(SimulationOptions::T);
-  calculate_equilibrium_properties();
-
-  double deg = std::pow(2.0, 2.0 / 3.0);
-
-  m.info("Conduction band:");
-  m.indent();
-  get_conduction_band().print_info();
-
-  ostringstream os;
-  os << "Ec = " << get_conduction_band().get_band_edge()
-      << ", Nc = " << get_conduction_band().get_effective_DOS() << " cm^-3\n"
-      << "m_dos = " << get_conduction_band().get_effective_mass() / deg
-      << ", v_th = " << get_conduction_band().get_thermal_velocity(SimulationOptions::T)
-      << " cm/s\n";
-  Messages::info(os.str());
-
-  m.unindent();
-
-  os.str("");
-
-  m.info("Valence band:");
-  m.indent();
-  get_valence_band().print_info();
-
-  os << "Ev = " << get_valence_band().get_band_edge()
-      << ", Nv = " << get_valence_band().get_effective_DOS() << " cm^-3\n"
-      << "m_dos = " << get_valence_band().get_effective_mass() / deg
-      << ", v_th = " << get_valence_band().get_thermal_velocity(SimulationOptions::T)
-      << " cm/s\n";
-  Messages::info(os.str());
-
-  m.unindent();
-  os.str("");
-
-  os << "Eg = "
-      << get_conduction_band().get_band_edge() - get_valence_band().get_band_edge()
-      << ", Ef0 = " << get_equilibrium_fermi_level()
-      << ", ni = " << std::sqrt(get_intrinsic_density_squared())
-      << Messages::endl;
-  Messages::info(os.str());
-}
 

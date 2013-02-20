@@ -66,15 +66,14 @@ ElectricalContact::do_compute(void)
     coeff_g(1) = get_inner_voltage();
   else
   {
-    const DriftDiffusionProperties::PointData& pd =
-        get_dd_properties()->get_point_data();
+    const PointData& pd = get_point_data();
 
     // we have to take the correct equilibrium density!
-    ParticleDensity& el = get_dd_properties()->get_electrons();
-    BandProperties& cb = get_dd_properties()->get_conduction_band();
+    ParticleDensity& el = get_electrons();
+    BandProperties& cb = get_conduction_band();
     cb.set_temperature(pd.electron_vt);
     el.set_classical_parameters(cb.get_effective_DOS(),
-        get_dd_properties()->get_conduction_band_edge() - _contact_fermilevel, 0,
+        get_conduction_band_edge() - _contact_fermilevel, 0,
         pd.electron_vt);
     double n0 = el.get_particle_density();
 
@@ -90,15 +89,14 @@ ElectricalContact::do_compute(void)
     coeff_g(2) = get_inner_voltage();
   else
   {
-    const DriftDiffusionProperties::PointData& pd =
-        get_dd_properties()->get_point_data();
+    const PointData& pd = get_point_data();
 
     // we have to take the correct equilibrium density!
-    ParticleDensity& hl = get_dd_properties()->get_holes();
-    BandProperties& vb = get_dd_properties()->get_valence_band();
+    ParticleDensity& hl = get_holes();
+    BandProperties& vb = get_valence_band();
     vb.set_temperature(pd.hole_vt);
     hl.set_classical_parameters(vb.get_effective_DOS(),
-        _contact_fermilevel - get_dd_properties()->get_valence_band_edge(), 0,
+        _contact_fermilevel - get_valence_band_edge(), 0,
         pd.hole_vt);
     double p0 = hl.get_particle_density();
 

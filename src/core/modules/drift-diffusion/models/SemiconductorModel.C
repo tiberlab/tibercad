@@ -18,7 +18,7 @@ SemiconductorModel::~SemiconductorModel(void)
 }
 
 SemiconductorModel::SemiconductorModel(const ModelOptions& options)
-  : DriftDiffusionProperties(options),
+  : DDBulkModel(options),
     _is_prepared(false),
     _recompute_band_parameters(false)
 {

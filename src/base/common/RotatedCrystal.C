@@ -27,7 +27,10 @@ RotatedCrystal::create(const Material* owner,
   RotatedCrystal* rc = NULL;
 
   if (structure == "am")
+  {
     rc = new RotatedCrystal(ModelOptions());
+    rc->set_owner(owner);
+  }
   else
   {
     rc = PhysicalModelInterface::create<RotatedCrystal>(

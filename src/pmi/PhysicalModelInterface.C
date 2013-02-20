@@ -2,6 +2,7 @@
 
 #include "tiber_config.h"
 #include "PhysicalModelInterface.h"
+#include "MaterialBoundary.h"
 #include "Material.h"
 #include "Variable.h"
 #include "Database.h"
@@ -355,6 +356,19 @@ PhysicalModelInterface::override_parameter_string(const std::string& name,
 void
 PhysicalModelInterface::init(void)
 {
+  //
+  // we may arrive here, although the model is associated to an alloy
+  // in that case, we defer to the init_interface() routine
+  //
+  if (get_owner()->get_type() == PhysicalObject::BOUNDARY)
+  {
+    const MaterialBoundary* mb = static_cast<const MaterialBoundary*>(get_owner());
+    init_interface(mb->get_material_A(), mb->get_material_B());
+
+    // NOTE we immediately return here
+    return;
+  }
+
   read_database();
 
   _create_submodels();
@@ -439,6 +453,11 @@ PhysicalModelInterface::init_alloy(const PhysicalModelInterface* comp_A,
 {
   assert(typeid(*comp_A) == typeid(*comp_B));
 
+  //
+  // NOTE:
+  //   The current approach relies on the strong assumption that all models
+  //   in all alloy components are ordered exactly the same way. This had
+  //   better be changed in the future!
 
   read_database();
 

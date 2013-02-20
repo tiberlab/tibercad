@@ -9,11 +9,12 @@
 TIBER_MODULE(SchottkyContact, ddbnd, schottky)
 
 
-inline
 SchottkyContact::SchottkyContact(const ModelOptions& options)
   : ElectricalContact(options),
     _band('c'),
-    _fixed_barrier(true)
+    _fixed_barrier(true),
+    _thermionic_emission(true),
+    _metal_Ef(0)
 {
   set_type(0, DIRICHLET);
   set_type(1, DIRICHLET);
@@ -32,9 +33,9 @@ SchottkyContact::do_init(void)
 
   std::string band = get_options().get_option("band", "c");
   if (band == "c")
-    _metal_Ef = get_dd_properties()->get_conduction_band_edge() - barrier;
+    _metal_Ef = get_conduction_band_edge() - barrier;
   else if (band == "v")
-    _metal_Ef = get_dd_properties()->get_valence_band_edge() + barrier;
+    _metal_Ef = get_valence_band_edge() + barrier;
   else
     throw ModelErrorException("SchottkyContact: undefined band specified");
 
@@ -68,17 +69,17 @@ SchottkyContact::do_init(void)
   {
     // this is a dirty trick, but assures the barrier in strained case
     if (_band == 'c')
-      _metal_Ef -= get_dd_properties()->get_conduction_band_edge();
+      _metal_Ef -= get_conduction_band_edge();
     else
-      _metal_Ef -= get_dd_properties()->get_valence_band_edge();
+      _metal_Ef -= get_valence_band_edge();
   }
 
   _thermionic_emission = get_option("thermionic_emission", true);
   if (_thermionic_emission)
   {
     double temp = Constants::k_B * SimulationOptions::T;
-    double vth_n = get_dd_properties()->get_conduction_band().get_thermal_velocity(temp);
-    double vth_p = get_dd_properties()->get_valence_band().get_thermal_velocity(temp);
+    double vth_n = get_bulk_dd_properties()->get_conduction_band().get_thermal_velocity(temp);
+    double vth_p = get_bulk_dd_properties()->get_valence_band().get_thermal_velocity(temp);
 
     // the effective emission velocity is fac * v_thermal
 
@@ -98,16 +99,16 @@ SchottkyContact::do_compute(void)
   if (_fixed_barrier)
   {
     if (_band == 'c')
-      val += get_dd_properties()->get_conduction_band_edge();
+      val += get_conduction_band_edge();
     else
-      val += get_dd_properties()->get_valence_band_edge();
+      val += get_valence_band_edge();
   }
   set_contact_fermilevel(val);
 
   if (_thermionic_emission)
   {
-    const DriftDiffusionProperties* dd = get_dd_properties();
-    const DriftDiffusionProperties::PointData& pd = dd->get_point_data();
+    const DriftDiffusionProperties* dd = get_bulk_dd_properties();
+    const PointData& pd = get_point_data();
 
     double vth_n = dd->get_conduction_band().get_thermal_velocity(pd.electron_vt);
     double vth_p = dd->get_valence_band().get_thermal_velocity(pd.hole_vt);

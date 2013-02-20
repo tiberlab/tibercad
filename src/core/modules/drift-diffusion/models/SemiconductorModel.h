@@ -4,7 +4,7 @@
 #define _SEMICONDUCTORMODEL_H_
 
 #include "SimulationOptions.h"
-#include "DriftDiffusionProperties.h"
+#include "DDBulkModel.h"
 #include "StrainInterface.h"
 
 #include <vector>
@@ -17,7 +17,7 @@ class Elem;
 
 
 //! The default DD semiconductor model container
-class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
+class TBDLLOCAL SemiconductorModel : public DDBulkModel
 {
 
   public:
@@ -80,7 +80,7 @@ class TBDLLOCAL SemiconductorModel : public DriftDiffusionProperties
 
   private:
 
-    typedef DriftDiffusionProperties Parent;
+    typedef DDBulkModel Parent;
     
     SemiconductorModel(const SemiconductorModel& model);
     SemiconductorModel& operator=(const SemiconductorModel& model);

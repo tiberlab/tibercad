@@ -3,7 +3,7 @@
 #ifndef _DDINTERFACEMODEL_H_
 #define _DDINTERFACEMODEL_H_
 
-#include "PhysicalModel.h"
+#include "DriftDiffusionProperties.h"
 
 #include "point.h"
 
@@ -11,7 +11,7 @@
 #include <set>
 
 
-class DriftDiffusionProperties;
+class DDBulkModel;
 class MaterialBoundary;
 class RecombinationModelInterface;
 class Trap;
@@ -30,7 +30,7 @@ class SimulationInterface;
  * to allow for Dirichlet boundary conditions. For \f$\beta = 1\f$, the boundary
  * condition is of Robin type, for \f$\beta = 0\f$, it is of Dirichlet type.
  */
-class DDInterfaceModel : public PhysicalModel
+class DDInterfaceModel : public DriftDiffusionProperties
 {
 
   public:
@@ -52,8 +52,12 @@ class DDInterfaceModel : public PhysicalModel
         const ModelOptions& options);
 
 
+    //! reinitialize for the current element side
+    void reinit(const Elem* elem, int side);
+
+
     //! Set the current side number and face normal
-    void set_face_normal(int side, const Point& n);
+    void set_face_normal(const Point& n);
 
 
     //! Compute the coefficients and their derivatives
@@ -136,7 +140,7 @@ class DDInterfaceModel : public PhysicalModel
 
 
     //! Create some of the submodels
-    virtual void prepare_submodels(void);
+    //virtual void prepare_submodels(void);
 
 
     //! Set the BC type for variable \c i
@@ -167,8 +171,8 @@ class DDInterfaceModel : public PhysicalModel
     //! Tell the model that it has non-zero current
     void has_current(bool hascurrent);
 
-    //! Get the DriftDiffusionProperties object
-    DriftDiffusionProperties* get_dd_properties(void) const;
+    //! Get the bulk DriftDiffusionProperties object
+    DriftDiffusionProperties* get_bulk_dd_properties(void) const;
 
     //! Get the current side number
     int get_side_number(void) const;
@@ -216,7 +220,7 @@ class DDInterfaceModel : public PhysicalModel
     std::set<Trap*> _htraps;
 
     //! Recombination models
-    std::set<RecombinationModelInterface*> _recombination_models;
+    //std::set<RecombinationModelInterface*> _recombination_models;
 
     //! If we use Fowler-Nordheim emission
     FowlerNordheim* _emission;
@@ -234,13 +238,11 @@ class DDInterfaceModel : public PhysicalModel
     //! True if flux controlled for electrons
     bool _eflux_controlled;
 
+    //! The DD properties for material A
+    DDBulkModel* _ddprop_A;
 
-    //! Calculate the trap contributions
-    void _calculate_traps(double& q, double& dq_dEfn, double& dq_dEfp);
-
-
-    //! calculate the recombinations
-    void _calculate_recombination(double rec[6]);
+    //! The DD properties for material B
+    DDBulkModel* _ddprop_B;
 
 
     //! The creation method
@@ -311,9 +313,8 @@ DDInterfaceModel::get_jacobian_row(unsigned int i) const
 
 inline
 void
-DDInterfaceModel::set_face_normal(int side, const Point& n)
+DDInterfaceModel::set_face_normal(const Point& n)
 {
-  _side = side;
   _normal = n;
 }
 
