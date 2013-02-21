@@ -216,7 +216,7 @@ iodide ( :math:`I^{-}`), triiodide ( :math:`I^{-}_{3}`) and electrons (e).
 Device
 ----------------------
 
-The *Device* section for a DSC simulation is defined as  following:
+The **Device** section for a DSC simulation is defined as  following:
 
 ::
 
@@ -230,24 +230,19 @@ The *Device* section for a DSC simulation is defined as  following:
      }
    Region electrolyte
      {
-      material = TiO2mes
-      TiO2 = false
+      material = Electrolyte
+      
      }
   }
 
 
-The Device section must contain the name of the mesh file ``meshfile = <name_of_the_mesh>``.
+The **Device** section must contain the name of the mesh file ``meshfile = <name_of_the_mesh>``.
 As usual, to each  region of the device we associate a  material file from the database. 
-In this  case, for both regions we  define  the  same  material ``TiO2mes``, which is  a special material which  
-contains standard parameters for both |TiO2|  and *electrolyte*.  Then, for every region we must  specify  if it contains |TiO2|  or electrolyte
-or both. This can be done setting two flags called ``TiO2`` and ``electrolyte``. 
-When one of these two keywords is set to *true*, the corresponding material is present in the region, otherwise it is not present. 
-By default they are assumed both *true* (which  defines a porous region). In the second region of the example shown  here
-we want only  electrolyte  and thus ``TiO2 = false`` is explicitly specified. 
-In case both materials
-are present (porous region) like in **Region** *TiO2* above, a value for **porosity** must be defined, through the  keyword *porosity* (in the range between 0, |TiO2|
-only, and 1, *electrolyte* only). If one of the two  is not present the porosity is automatically
-set to 0 or 1.
+To  the   **Region** |TiO2| we  associate the   special  material ``TiO2mes``, which defines a  *mesoporous*  material with  standard parameters for both |TiO2|  and *electrolyte*. A  value  of  *porosity* needs to  be  assigned to  this  material. This  value,  defined by  the  parameter  ``porosity``, must be   in the range between 0, corresponding to  a  pure  |TiO2| material and 1, which  means  pure *electrolyte* medium.  If  ``porosity`` is  not  present,  its  default  value  of  ``0.5``  is  assigned.
+
+The second **Region**  of the above example  contains  only *electrolyte*,  so  we  simply  associate  to  it  the  material ``Electrolyte``.
+
+
 
 
 
