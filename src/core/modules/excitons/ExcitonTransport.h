@@ -10,7 +10,7 @@
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
 #include "ExcPolProps.h"
-
+#include "TiberNonlinearScalarSolver.h"
 // Libmesh includes
 #include "libmesh_common.h"
 #include "enum_order.h"
@@ -69,7 +69,9 @@ class ExcitonTransport : public SimulationInterface
       NETRECOMB,             /*!< dissociation rate */
       NPOLARITON,        /* Polaritons number */
       XGEN,              /* Exciton generation */
-      RADPOWER           /*!<Radiative power density  */
+      RADPOWER,        /*!<Radiative power density  */
+      POLRADPOWER,     /* polariton radiation power */
+      MOTTDENSITY           /* max.density/maximum allowed density*/
     };
  
     
@@ -248,6 +250,8 @@ class ExcitonTransport : public SimulationInterface
     
     virtual void calc_excpol_integral(const NumericVector<Number>& x);
   private:
+    TiberNonlinearScalarSolver scalarSolver;
+
     bool polaritons;
 
     ExcPolProps excpolprops;
@@ -333,11 +337,18 @@ class ExcitonTransport : public SimulationInterface
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
+    static void assemble_DRSystem(const double& x,
+        double* rhs,
+        double* jacobian);
+
     //! Do the actual assembly
     void do_assembly(const NumericVector<Number>& x,
         NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
 
+    void do_assembly_DRSystem(const double& x,
+        double* rhs,
+        double* jacobian);
 };
 
 
@@ -413,6 +424,15 @@ ExcitonTransport::assemble(const NumericVector<Number>& x,
     SparseMatrix<Number>* jacobian)
 {
   _this->do_assembly(x, residual, jacobian);
+}
+
+inline
+void
+ExcitonTransport::assemble_DRSystem(const double& x,
+    double* rhs,
+    double* jacobian)
+{
+  _this->do_assembly_DRSystem(x, rhs, jacobian);
 }
 
 inline ExcPolProps* ExcitonTransport::get_excpol_props() {

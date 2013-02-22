@@ -40,7 +40,7 @@ BoundaryProperties* MaxwellBoundaryEquations::create_boundary_model(const ModelO
 PhysicalModel*  MaxwellBoundaryEquations::create_physical_model(const ModelOptions& options,
     const Material* mat) const throw (ModelErrorException)
 {
-  const std::string& modelname = options.get_option((mat->get_name() + "_opticmodel"), "");
+  const std::string& modelname = get_option((mat->get_name() + "_opticmodel"), "");
 
   if (modelname == "") {
     return OpticPropsModel::create(options);
@@ -97,8 +97,16 @@ void MaxwellBoundaryEquations::do_init() {
 }
 
 
+void MaxwellBoundaryEquations::do_reinit() {
+  W = get_options().get_option("W", 0.0) / Constants::hbar * Constants::e;
+}
+
 //=======================================================================================================//
 void MaxwellBoundaryEquations::do_solve() {
+  std::ostringstream os;
+  os << "Lambda is " << 2 * M_PI * Constants::c / W;
+  Messages::info(os.str());
+
   EquationSystems& equation_systems = get_equation_systems();
 
   VectorLinearSystem& system = equation_systems.get_system<VectorLinearSystem> ("MaxwellBoundary");
@@ -197,7 +205,6 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
       if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID) {
         for (unsigned int j=0; j<edge_phi.size(); j++) {
           if (all_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
-
             Complex aValue = 0;
             //Complex bValue = 0;
 
@@ -381,8 +388,7 @@ OpticPropsInterface* MaxwellBoundaryEquations::getOpticModel(const Elem* elem) {
   OpticPropsInterface* result = dynamic_cast<OpticPropsInterface*>(
           material->get_model(get_id()));
 
-  double lambda =  2 * M_PI / (W * Constants::e / Constants::hbar) * Constants::c;
-  result->set_param(lambda);
+  return result;
 }
 
 Complex MaxwellBoundaryEquations::multiply(const Point& v1, const Point& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag) {

@@ -84,7 +84,7 @@ void EigenSystem::solve () {
   options.ev_number = std::min(requested_eigenpairs, (unsigned int)(systemSize - 1));
   options.spectrum_shift = spectrumShift.real() * getGeomScaling();
   options.eps_tolerance = solver_tolerance;
-  options.matrix_output = true;
+  options.matrix_output = false;
 
   EigenSolver::eig_value_problem_general2(options);
   

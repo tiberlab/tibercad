@@ -22,9 +22,6 @@ class TBDLEXPORT OpticPropsInterface: public PhysicalModel
   public:
      virtual ~OpticPropsInterface(void);
 
-     virtual void set_param(double param) {
-     }
-
      virtual Complex get_dielectric_constant() const {
        return Complex(1, 0);
      }

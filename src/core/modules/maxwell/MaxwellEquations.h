@@ -133,7 +133,10 @@ class MaxwellEquations : public SimulationInterface
     
     std::vector<unsigned int> pmlRegions;
     bool polaritons;
+    double lwell;
+    std::string wellMaterial;
     bool useCubic;
+    bool errorEstamite;
 
     std::map<unsigned int, unsigned int> eigenIndices;
     unsigned int accepted_eigen_count;

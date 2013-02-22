@@ -45,20 +45,26 @@ ExcitonModel::do_recombination()
   net_recomb_rate = density * inv_tau;
   recombination_rate_derivative = density_derivative * inv_tau;
 
-  net_recomb_rate += (get_exc_exc_scattering() + get_exc_photon_scattering()) * excpolprops->density_renormalization;
+  //net_recomb_rate += (excpolprops->get_exc_exc_scattering(density, get_element(), get_coordinates()) + excpolprops->get_phonon_scattering(density, get_element(), get_coordinates()));
+  net_recomb_rate += (excpolprops->Gpol_exc(density, get_element(), get_coordinates()) +
+                      excpolprops->Gpol_phon(density, get_element(), get_coordinates())) * excpolprops->density_renormalization;
 
-  recombination_rate_derivative += excpolprops->b * 2 * density * density_derivative;
-  recombination_rate_derivative += excpolprops->a * density_derivative * excpolprops->density_renormalization;
+  //recombination_rate_derivative += excpolprops->get_scattering_derivative(density, get_element(), get_coordinates()) * density_derivative;
+  recombination_rate_derivative += excpolprops->div_Gpol(density, get_element(), get_coordinates()) * excpolprops->density_renormalization;
 
-  net_recomb_rate -= get_generation_rate() * excpolprops->density_renormalization;
+  net_recomb_rate -= get_generation_rate() * excpolprops->density_renormalization + 1 * excpolprops->density_renormalization;
+
+  //if (_dd_sim->get_environment().get_device().get_material(get_element())->get_name() == "InGaN") {
+  //net_recomb_rate -= 1e8 * excpolprops->density_renormalization;
+  //}
 }
 
 double ExcitonModel::get_exc_photon_scattering() {
-  return excpolprops->a * density; // real value
+  return excpolprops->Gpol_phon(density, get_element(), get_coordinates());
 }
 
 double ExcitonModel::get_exc_exc_scattering() {
-  return excpolprops->b * density * density / excpolprops->density_renormalization;
+  return excpolprops->Gpol_exc(density, get_element(), get_coordinates());
 }
 
 double ExcitonModel::get_generation_rate() {

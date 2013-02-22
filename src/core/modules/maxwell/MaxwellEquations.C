@@ -72,6 +72,9 @@ void MaxwellEquations::do_init() {
   storeSolutions = get_options().get_option("storeSolutions", eigenCount < 100);
 
   polaritons = get_options().get_option("polaritons", false);
+  wellMaterial = get_options().get_option("wellMaterial", "GaN");
+  lwell = get_options().get_option("lwell", 3.0) * 1e-9;
+  errorEstamite = get_options().get_option("errorEstimate", false);
   useCubic = false;
 
   Wlt = get_options().get_option("Wlt", 0.0) / Constants::hbar * Constants::e;
@@ -180,8 +183,10 @@ void MaxwellEquations::do_solve() {
 
   std::ostringstream os;
 
+  std::vector<Complex> eigens;
   for (int i = 0; i < accepted_eigen_count; i++) {
     Complex eigen1 = system.get_eigen_lambda(eigenIndices[i]);
+    eigens.push_back(eigen1);
 
     Complex eigen2 = eigen1 * c / system.simulationInterface->get_environment().get_device().get_mesh_units();
 
@@ -198,6 +203,27 @@ void MaxwellEquations::do_solve() {
       std::cout << "Setting Wc0 to " << Wc0 << "\n";
       flush(std::cout);
     }
+  }
+
+  if (errorEstamite) {
+    errorEstamite = false;
+    approxOrder++;
+
+    EigenSystem& system = equation_systems.get_system<EigenSystem> ("Maxwell");
+    for (int i = 0; i < system.variables.size(); i++) {
+      system.variables[i].order++;
+    }
+
+    do_solve();
+
+    std::ostringstream os1;
+    os1 << "Real error can be either bigger or smaller than presented values\n";
+    for (int i = 0; i < accepted_eigen_count && i < eigens.size(); i++) {
+      Complex eigen1 = system.get_eigen_lambda(eigenIndices[i]);
+      double error = std::abs(eigen1 - eigens[i])/std::abs(eigen1);
+      os1 << i << " error: " << error << "\n";
+    }
+    Messages::info(os1.str());
   }
 }
 
@@ -594,10 +620,10 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
       FexcE[subdomain] = Point(0);
     }
 
-    OpticPropsInterface* opticModel = getOpticModel(elem);
+    //OpticPropsInterface* opticModel = getOpticModel(elem);
 
     //TODO
-    bool inWell = get_environment().get_device().get_material(elem->subdomain_id())->get_name() == "GaN";
+    bool inWell = get_environment().get_device().get_material(elem->subdomain_id())->get_name() == wellMaterial;
     if (!pml.isPMLRegion(elem, this)) {
 
       std::vector<unsigned int> all_dof_indices;
@@ -618,9 +644,13 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
         std::vector<double> Esolution;
         //std::map<ID, std::vector<double> >& solutions
         get_solution(elem, Efield + 0, Esolution, point);
+
+	double epsilon;
+
+	get_solution(elem, Epsilon, epsilon, point);
         Point E(Esolution[0], Esolution[1], Esolution[2]);
 
-        E2 += JxW[qp] * (E * E);
+        E2 += JxW[qp] * (epsilon * E * E);
 
         if (inWell) {
           Fexc2[subdomain] += JxW[qp] * Xden;
@@ -638,7 +668,10 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
   //std::cout << "WC=" << Wc0 << " Wexc0=" << Wexc0 << " Wlt=" << Wlt << "\n";
   for (std::map<ID, double>::iterator it = Fexc2.begin(); it != Fexc2.end(); it++) {
     ID id = it->first;
-    double q = Wlt * 3 / 3;// TODO ab div lwell
+    double a_b_GaN = 3e-9;
+    double a_b_GaN_2D = 3e-9 / 2;
+
+    double q = Wlt * a_b_GaN * a_b_GaN * a_b_GaN / (lwell * a_b_GaN_2D * a_b_GaN_2D);
 
     Vi2[id] = (Fexc2[id] == 0) ? 0.0 : (q * std::abs(Wc0) * ((FexcE[id] * FexcE[id]) / Fexc2[id] / E2));
     sum_Vi += Vi2[id];

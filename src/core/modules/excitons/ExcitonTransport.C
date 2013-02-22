@@ -27,7 +27,7 @@
 #include "numeric_vector.h"
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
-
+#include "TiberNonlinearScalarSolver.h"
 // C++ includes
 
 using namespace std;
@@ -295,6 +295,10 @@ ExcitonTransport::do_init(void)
 
   set_initial_guess(get_option("x_fermi_guess", 0.0));
 
+  if (polaritons) {
+    scalarSolver.init(1.0);
+    scalarSolver.attach_assembly_routine(assemble_DRSystem);
+  }
 }
 
 
@@ -358,7 +362,6 @@ ExcitonTransport::build_local_scaling(void)
   const vector<vector<Real> >& phi = fe->get_phi();
   //
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-
 
   locscal.zero();
 
@@ -432,7 +435,6 @@ ExcitonTransport::build_local_scaling(void)
 void
 ExcitonTransport::do_solve(void)
 {
-
   assert(_rebuild_eq_system == false);
 
   // set a static pointer to ourselves
@@ -443,9 +445,7 @@ ExcitonTransport::do_solve(void)
 
   build_local_scaling();
 
-
   EquationSystems& equation_systems = get_equation_systems();
-
 
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
@@ -455,7 +455,9 @@ ExcitonTransport::do_solve(void)
   // the first calculation)
   system.set_options(get_solver_options());
 
+  //Utils::Timer tt;
   calc_excpol_integral(solution);
+  //std::cout << "Excpol int time: "  << tt.elapsed_string() << "\n";
 
   try
   {
@@ -463,8 +465,8 @@ ExcitonTransport::do_solve(void)
   }
   catch (SolverException& e)
   {
-    string msg("ExcitonTransport: solve failed (");
-      string(e.what()) + ")";
+    string msg("ExcitonTransport: solve failed (" +
+      string(e.what()) + ")");
     throw SolveFailedException(msg);
   }
 
@@ -655,6 +657,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
       //
       // First we will build the system matrix Ke_ij
       //
+
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         for (unsigned int j = 0; j < n_dofs; j++)
@@ -662,8 +665,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
           double laplace =
             J * (dphi[i][qp] * dphi[j][qp]);
 
-            Ke(i,j) += sigma_x * laplace ;
-
+            Ke(i,j) += sigma_x * laplace;
         }
       }
 
@@ -824,8 +826,9 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
 
       excitonmodel->calculate_density();
 
-      if (solutions.count(RDISS))
+      if (solutions.count(RDISS)) {
         solutions[RDISS][n] = excitonmodel->get_dissociation_rate();
+      }
 
       double sigma = excitonmodel->get_real_density() * excitonmodel->get_mobility();
 
@@ -843,6 +846,7 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
 
       if (solutions.count(XDENSITY)) {
         solutions[XDENSITY][n] = excitonmodel->get_real_density();
+	excpolprops.max_density = std::max(excpolprops.max_density, excitonmodel->get_real_density());
       }
 
       if (solutions.count(RDISS)) {
@@ -891,33 +895,98 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
 
 // ------------- -------------- ------------
 void ExcitonTransport::calc_excpol_integral(const NumericVector<Number>& x) {
-  if (!polaritons) {
-    excpolprops.a = 0;
-    excpolprops.b = 0;
-    excpolprops.density_renormalization = 1;
-    return;
-  } else {
-    double X_2 = 0.0;
-    SimulationInterface* maxwell = SimulationInterface::find_simulation("maxwell");
-    if (maxwell != NULL && maxwell->is_solved()) {
-      ID id = maxwell->get_solution_id("XHopfield");
-      ID id2 = maxwell->get_solution_id("EigenValueImag");
+  if (polaritons) {
+    excpolprops.set(SimulationOptions::temperature);
+    //excpolprops.calculate(x, SimulationOptions::temperature);
 
-      std::map<ID, std::vector<double> > map;
-      map.insert(std::make_pair(id, std::vector<double>(1)));
-      map.insert(std::make_pair(id2, std::vector<double>(1)));
-      maxwell->get_solution(map);
-      X_2 = map[id][0];
-      excpolprops.pol_tau = 1.0 / std::abs(map[id2][0]);
+    do_assembly_DRSystem(1.0, NULL, NULL);
+    if (excpolprops.int_g < 0) {
+	    excpolprops.density_renormalization = 1;
+	    excpolprops.ren_alpha = 1.0 / (1.0 - excpolprops.pol_tau * excpolprops.int_g);
+	    std::cout << "G negative\n";
+    } else {
+    	bool success = scalarSolver.solve();
+        if (!success) {
+          throw ModelErrorException("Can not find solution for density renormalization."); 
+	}
+	excpolprops.ren_alpha = 1;
+        excpolprops.density_renormalization = 1/scalarSolver.getSolution();
+        do_assembly_DRSystem(scalarSolver.getSolution(), NULL, NULL); //to calculate 'int_f' last time
+        std::cout << "G positive, ISOL " << scalarSolver.getSolution(); flush(std::cout);
     }
+    //excpolprops.density_renormalization = 1.0 + excpolprops.int_f * excpolprops.pol_tau;
+    std::cout << "excpolprops.int_f int_g= " << excpolprops.int_f << " " << excpolprops.int_g << "\n";
+    std::cout << "excpolprops.density_renormalization ren_alpha= " << excpolprops.density_renormalization << " " << excpolprops.ren_alpha << "\n";
 
-    std::cout << "X Hopfield " << X_2 << "\n";
-    std::cout << "Polariton life time " << excpolprops.pol_tau << "\n";
-    flush(std::cout);
-
-    excpolprops.a = ExcPolProps::a0 * X_2;
-    excpolprops.b = ExcPolProps::b0 * X_2;
   }
+}
+
+void
+ExcitonTransport::do_setup_solution_variables(void) {
+  polaritons = get_option("polaritons", false);
+
+  declare_solution_ext("generation", XGEN, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xpot", CHEMPOT, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xdens", XDENSITY, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xmob", XMOBILITY, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xsigm", XSIGMA, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("Xcurrent", J, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("dissociation", RDISS, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("rad_recombination", RRAD, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("nonrad_recombination", RNONRAD, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("net_recombination", NETRECOMB, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("rad_power", RADPOWER, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+
+  if (polaritons) {
+    declare_solution_ext("n_polaritons", NPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "x");
+    declare_solution_ext("exc_exc_recombination", EXCEXCPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+    declare_solution_ext("exc_phonon_recombination", EXCPHONONPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+    declare_solution_ext("pol_rad_power", POLRADPOWER, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "W");
+    declare_solution_ext("mott_density", MOTTDENSITY, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "x");
+  }
+}
+
+void ExcitonTransport::get_solution_secure(std::map<ID, std::vector<double> >& solutions) {
+  if (solutions.count(MOTTDENSITY)) {
+    solutions[MOTTDENSITY][0] = excpolprops.max_density * excpolprops.lwell / (3e11); // all in cm here
+  }
+
+  if (solutions.count(NPOLARITON)) {
+    std::vector<double>& solution = solutions[NPOLARITON];
+    solution.resize(0);
+    if (excpolprops.ren_alpha > 0.999) {
+      solution.push_back(excpolprops.density_renormalization * excpolprops.int_f *excpolprops.pol_tau);
+    } else {
+      solution.push_back(excpolprops.ren_alpha * excpolprops.int_f *excpolprops.pol_tau);
+    }
+  }
+
+  if (solutions.count(POLRADPOWER)) {
+    std::vector<double>& solution = solutions[POLRADPOWER];
+    solution.resize(0);
+
+    if (excpolprops.ren_alpha > 0.999) {
+      solution.push_back(excpolprops.density_renormalization * excpolprops.int_f * excpolprops.pol_energy);
+    } else {
+      solution.push_back(excpolprops.ren_alpha * excpolprops.int_f *excpolprops.pol_energy);
+    }
+  }
+}
+
+void
+ExcitonTransport::do_assembly_DRSystem(const double& solution,
+    double* rhs,
+    double* jacobian)
+{
+  // We are solving 1 - I = int(g(I*exciton_density)*pol_tau)
+  // 1x1 system -)
+  double int_g = 0;
+  double int_div_g = 0;
+  double int_f = 0;
+
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+
+  NumericVector<Number>& x_solution = system.get_solution_vector();
 
   DenseVector<Number> X;
 
@@ -926,10 +995,9 @@ void ExcitonTransport::calc_excpol_integral(const NumericVector<Number>& x) {
   const unsigned int dim = mesh.mesh_dimension();
   const double phi0 = get_scaling().get_potential_scaling();
 
-  const Device& device = *_device;
+  const Device& device = get_environment().get_device();
   const Options& params = get_options();
 
-  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
   const DofMap& dof_map = system.get_dof_map();
 
   // numeric ids corresponding to the variables
@@ -954,11 +1022,6 @@ void ExcitonTransport::calc_excpol_integral(const NumericVector<Number>& x) {
   // the DOF indices
   vector<unsigned int> dof_indices;
 
-  double xx_max = -1;
-
-  double density_integral = 0.0;
-  double density_square_integral = 0.0;
-
   MeshBase::const_element_iterator el = mesh.active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
 
@@ -976,13 +1039,16 @@ void ExcitonTransport::calc_excpol_integral(const NumericVector<Number>& x) {
     fe->reinit(elem);
 
     // extract local ddsol, accounting for constraints
-    dof_map.extract_local_vector(x, dof_indices, X);
+    dof_map.extract_local_vector(x_solution, dof_indices, X);
 
     ExcitonProperties* em = dynamic_cast<ExcitonProperties*>(device.get_material(subdomain)->get_model(get_id()));
 
     assert(em != NULL);
 
     em->reinit(elem);
+
+    //We know that Xhop is the same in element
+    double Xhop = excpolprops.getXHopfield(elem, q_point[0], true);
 
     // loop over the quadrature points
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++) {
@@ -997,55 +1063,33 @@ void ExcitonTransport::calc_excpol_integral(const NumericVector<Number>& x) {
       em->calculate_density();
 
       double x = em->get_density();
-      xx_max = std::max(x, xx_max);
 
-      density_integral += x * JxW[qp];
-      density_square_integral += x * x * JxW[qp];
+      double xx = x * solution * excpolprops.density_renormalization; // Used in f() and g(), where argument wil be divide by DR. Thats why we multiply here (!!!).
+
+      int_g += JxW[qp] * excpolprops.g(xx, elem, q_point[qp]);
+      int_div_g += JxW[qp] * excpolprops.div_g(xx, elem, q_point[qp]) * x;
+      int_f += JxW[qp] * excpolprops.f(xx, elem, q_point[qp]);
     }
   }
 
   for (int k = 0; k < mesh.mesh_dimension(); k++) {
-    density_integral = density_integral * get_scaling().get_length_scaling();
-    density_square_integral = density_square_integral * get_scaling().get_length_scaling();
+    int_f = int_f * get_scaling().get_length_scaling();
+    int_div_g = int_div_g * get_scaling().get_length_scaling();
+    int_g = int_g * get_scaling().get_length_scaling();
+  }
+  // We are solving 1 - I - int(g(I*exciton_density)*pol_tau) = 0;
+
+  if (rhs != NULL) {
+    *rhs = 1 - solution - excpolprops.pol_tau * int_g;
   }
 
-  //  R^2 - aa*R - bb = 0;
-  double aa = 1.0 + excpolprops.a * excpolprops.pol_tau * density_integral;
-  double bb = excpolprops.b * excpolprops.pol_tau * density_square_integral;
+  if (jacobian != NULL) {
+    *jacobian = -1 - excpolprops.pol_tau * int_div_g;
+  }
 
-  excpolprops.density_renormalization = (aa + std::sqrt(aa*aa + 4*bb)) / 2;
-
-  std::cout << "My info: " << density_integral << " " << density_square_integral << " " << excpolprops.density_renormalization << " " << xx_max << "\n";
-  flush(std::cout);
-}
-
-void
-ExcitonTransport::do_setup_solution_variables(void) {
-  polaritons = get_option("polaritons", false);
-
-  declare_solution_ext("generation", XGEN, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("Xpot", CHEMPOT, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("Xdens", XDENSITY, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("Xmob", XMOBILITY, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("Xsigm", XSIGMA, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("Xcurrent", J, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("dissociation", RDISS, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("rad_recombination", RRAD, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("nonrad_recombination", RNONRAD, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("net_recombination", NETRECOMB, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-  declare_solution_ext("rad_power", RADPOWER, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-
-  if (polaritons) {
-    declare_solution_ext("n_polaritons", NPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "x");
-    declare_solution_ext("exc_exc_recombination", EXCEXCPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
-    declare_solution_ext("exc_phonon_recombination", EXCPHONONPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  if (rhs == NULL & jacobian == NULL) {
+    excpolprops.int_f = int_f;
+    excpolprops.int_g = int_g;
   }
 }
 
-void ExcitonTransport::get_solution_secure(std::map<ID, std::vector<double> >& solutions) {
-  if (solutions.count(NPOLARITON)) {
-    std::vector<double>& solution = solutions[NPOLARITON];
-    solution.resize(0);
-    solution.push_back(excpolprops.density_renormalization - 1);
-  }
-}

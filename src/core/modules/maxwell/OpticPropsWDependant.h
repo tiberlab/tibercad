@@ -30,18 +30,16 @@ class OpticPropsWDependant: public OpticPropsInterface
 
      PhysicalModelInterface* create_new() const;
 
-     virtual void set_param(double param);
-
      virtual Complex get_dielectric_constant() const {
        return Complex(epsilon[currentIndex], epsilon_imag[currentIndex]);
      }
 
      virtual const Tensor2Sym get_optical_epsilon() const {
-       return unit*get_dielectric_constant().real();
+       return Tensor2Sym(get_dielectric_constant().real());
      }
 
      virtual const Tensor2Sym get_optical_epsilon_imag() const {
-       return unit*get_dielectric_constant().imag();
+       return Tensor2Sym(get_dielectric_constant().imag());
      }
 
      virtual double get_permeability_constant() const {
@@ -52,11 +50,10 @@ class OpticPropsWDependant: public OpticPropsInterface
        return -1;
      }
 
+     virtual void do_reinit(void);
      //virtual Complex get_dielectric_constant(double param) const;
 
   protected:
-     Tensor2Sym unit;
-
      std::vector<double> params;
      std::vector<double> epsilon;
      std::vector<double> epsilon_imag;
@@ -76,7 +73,7 @@ inline OpticPropsWDependant* OpticPropsWDependant::create(const ModelOptions& op
 }
 
 inline
-OpticPropsWDependant::OpticPropsWDependant(const ModelOptions& options) : OpticPropsInterface(options), unit(1) {
+OpticPropsWDependant::OpticPropsWDependant(const ModelOptions& options) : OpticPropsInterface(options) {
 }
 
 inline

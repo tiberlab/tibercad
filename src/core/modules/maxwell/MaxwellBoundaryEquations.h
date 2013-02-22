@@ -62,6 +62,10 @@ class MaxwellBoundaryEquations : public SimulationInterface
     static MaxwellBoundaryEquations* create(const ModelOptions& options);
 
     OpticPropsInterface* getOpticModel(const Elem*);
+
+    virtual double getW() {
+      return W;
+    }
   protected:
     //! Get solutions at specified points in an element
     virtual void get_solution_secure(const Elem* elem,
@@ -69,6 +73,8 @@ class MaxwellBoundaryEquations : public SimulationInterface
         const std::vector<Point>& p);
 
     virtual void do_init(void);
+
+    virtual void do_reinit(void);
 
     virtual void do_solve(void);
 
