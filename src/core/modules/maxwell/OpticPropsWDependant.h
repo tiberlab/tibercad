@@ -19,7 +19,6 @@
 #include "Database.h"
 
 
-
 class OpticPropsWDependant: public OpticPropsInterface
 
 {

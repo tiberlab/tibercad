@@ -16,8 +16,6 @@
 #include "ExcitonTransport.h"
 
 
-TIBER_MODULE(ExcitonModel, exbulk, simple)
-
 
 
 ExcitonModel::ExcitonModel(const ModelOptions& options)

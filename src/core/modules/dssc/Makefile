@@ -2,15 +2,12 @@
 
 topdir := ../../../..
 
-MODULE_NAME := dssc
+include $(topdir)/Make.common
 
-include $(topdir)/Make.module
+target := modules
 
-
-$(eval $(call MODULE, DSSC.C DSSCContact.C DSSCModel.C))
-
-MODULE_NAME := dssc_generation
-$(eval $(call MODULE, DSSCGeneration.C))
+modules: module.conf
+	@$(BUILDMODULE) module.conf
 
 
 include $(topdir)/Make.rules

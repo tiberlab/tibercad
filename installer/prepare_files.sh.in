@@ -13,7 +13,7 @@ make_windows_package () {
   # copy all files
   cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
   cp ${topdir}/${ARCH}/lib/*.dll ${files}
-  cp ${topdir}/extern/${ARCH}/lib/*.dll ${files}
+  cp ${topdir}/SDK/${ARCH}/lib/*.dll ${files}
   cp -r ${topdir}/${ARCH}/modules ${files}
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}
@@ -44,7 +44,7 @@ make_windows_package () {
   cd ${files}
   find ./materials -type f -exec $unix2dos {} \;
   # ATTENTION: do not process binary files with unix2dos!
-  find ./examples -not -name "*.tsv" -exec $unix2dos {} \;
+  find ./examples -type f -not -name "*.tsv" -exec $unix2dos {} \;
   $unix2dos Copyright.txt
   $unix2dos Readme.txt
   $unix2dos Changelog.txt

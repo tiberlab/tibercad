@@ -2,17 +2,12 @@
 
 topdir := ../../../..
 
-include $(topdir)/Make.module
+include $(topdir)/Make.common
 
-MODULE_NAME := maxwell
-$(eval $(call MODULE, MaxwellEquations.C CubicEigenSystem.C EdgeDofMap.C EigenSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C OpticPropsModel.C))
+target := modules
 
-MODULE_NAME := maxwell_boundary
-$(eval $(call MODULE, MaxwellBoundaryEquations.C EdgeDofMap.C VectorLinearSystem.C VectorSystem.C ScalarFEBase2D.C ScalarFEBase3D.C VectorFEBase2D.C VectorFEBase3D.C OpticPropsModel.C))
+modules: module.conf
+	@$(BUILDMODULE) module.conf
 
-
-MODULE_LIB := $(module_dir)/$(MODULE_NAME)/maxwell_boundary$(shared_libext)
-
-$(eval $(call MODULE, OpticPropsWDependant.C, $(MODULE_LIB)))
 
 include $(topdir)/Make.rules

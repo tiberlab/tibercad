@@ -122,7 +122,7 @@ C = 1.1e-14
 # SRH recombination
 [recombination/SRH]
 Etrap  = 0.0
-taumin = (0.0,		0.0)
+taumin = (0e-9,		0e-9)
 taumax = (1.0e-5,	3.0e-6)
 Nref   = (1.0e+16,	1.0e+16)
 gamma  = (1,		1)

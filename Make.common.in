@@ -52,7 +52,7 @@ TIBER_INCLUDES := $(foreach dir,$(include_dirs),-I$(dir))
 
 
 ifeq ($(target_os), linux)
-  LDFLAGS := -Wl,-rpath,'$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir)
+  LDFLAGS := -Wl,-rpath,'$$ORIGIN:$$ORIGIN/../lib' -Wl,-rpath-link,$(libdir)
 endif
 ifeq ($(target_os), darwin)
   LDFLAGS := -Wl,-rpath,@loader_path/.. -Wl,-rpath,@loader_path/../extern
@@ -85,10 +85,12 @@ INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --includ
 NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ @TAO_INCLUDES@ $(INCLUDE) 
 
 ifeq ($(have_mkl),yes)
- LDFLAGS += -L@MKL_LIBDIR@ -Wl,-rpath,@MKL_LIBDIR@
- NON_TIBER_INCLUDES += -I@MKL_INCLUDEDIR@
+ BLASLAPACK_LDFLAGS = @MKL_LIBS@
+ BLASLAPACK_INCLUDE += -I@MKL_INCLUDEDIR@
 endif
 
+LDFLAGS += $(BLASLAPACK_LDFLAGS)
+NON_TIBER_INCLUDES += $(BLASLAPACK_INCLUDE)
 
 
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))

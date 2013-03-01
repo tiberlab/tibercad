@@ -4,9 +4,8 @@
 #include "DriftDiffusionProperties.h"
 #include "ModelErrorException.h"
 
+#include "TiberModule.h"
 
-
-TIBER_MODULE(SchottkyContact, ddbnd, schottky)
 
 
 SchottkyContact::SchottkyContact(const ModelOptions& options)

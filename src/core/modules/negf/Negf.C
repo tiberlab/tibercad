@@ -13,6 +13,9 @@
 #include "KspaceIntegration.h"
 #include "KspaceIntegrationTemplate.h"
 
+// To be able to compile as module
+#include "TiberModule.h"
+
 // Basic include files needed for the mesh functionality.
 #include "fe.h"
 #include "fe_interface.h"
@@ -38,11 +41,6 @@
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
 
-#include "petsc_vector.h"
-#include "petsc_matrix.h"
-#include "petsc_macro.h"
-#include "petscversion.h"
-
 
 // C++ includes
 #include <fstream>
@@ -50,11 +48,10 @@
 #include <set>
 #include <algorithm>
 #include <cassert>
-#include <math.h>
+#include <cmath>
 
 using namespace Constants;
 
-TIBER_MODULE(Negf, MODULE_NAME)
 
 Negf* Negf::static_this;
 

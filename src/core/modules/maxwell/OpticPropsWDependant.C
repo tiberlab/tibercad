@@ -7,7 +7,8 @@
 #include "Constants.h"
 #include "MaxwellBoundaryEquations.h"
 
-TIBER_MODULE(OpticPropsWDependant, opticmodel, w_dependant)
+#include "TiberModule.h"
+
 
 
 void OpticPropsWDependant::read_database() {

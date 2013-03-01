@@ -3,10 +3,13 @@
 #[ -e variables ] && . variables
 
 # top directory
-TOPDIR=${TOPDIR:-"`pwd`/.."}
+TOPDIR=${TOPDIR:-"$(dirname `pwd`)"}
 
 # build directory
-BUILDDIR=${BUILDDIR:-"`pwd`/../extern"}
+BUILDDIR=${BUILDDIR:-"$(dirname `pwd`)/extern"}
+
+# SDK directory
+SDKDIR=${SDKDIR:-"$(dirname `pwd`)/SDK"}
 
 # PETSc version
 PETSCVERSION=${PETSCVERSION:-"3.0.0"}
@@ -33,7 +36,7 @@ MKLDIR=${MKLDIR:-"/usr/pack/intel_mkl-10.2-gp"}
 
 # MPI
 MPI=${MPI:-'n'}
-MPIDIR=${MPIDIR:-"/usr/pack/mpich-1.2.7p1-ma"}
+#MPIDIR=${MPIDIR:-"/usr/pack/mpich-1.2.7p1-ma"}
 
 target=@host_cpu@-@host_os@
 
@@ -81,6 +84,11 @@ echo "* Host system :  $TCHOST"
 echo "* Build system:  $TCBUILD"
 echo "*************************************************"
 
+if [ -d ${TOPDIR}/SDK/${TCHOST}/lib/gcc ]
+then
+  export PATH=${TOPDIR}/SDK/${TCHOST}/bin:${PATH}
+  export LD_LIBRARY_PATH=${TOPDIR}/SDK/${TCHOST}/lib
+fi
 
 #CC=${CC:-"${pre}gcc${gcc_version}"}
 #CXX=${CXX:-"${pre}g++${gcc_version}"}
@@ -102,20 +110,22 @@ RANLIB="@RANLIB@"
 
 #if [ "x$pre" != "x" ] || [ "x$gcc_version" != "x" ]
 #then
-#  export CC CXX F77 F90 FC RANLIB LD AR CPP
+  export CC CXX F77 F90 FC RANLIB LD AR CPP
 #fi
 
 # compiler flags
 CFLAGS="${CFLAGS} -fexceptions"
-FFLAGS="${FFLAGS} -fexceptions"
+FCFLAGS="${FCFLAGS} -fexceptions"
 if [ "$march" == "x86_64" ] &&  [ "${target_os}" != "win32" ] ; then
   CXXFLAGS="-fPIC ${CXXFLAGS}"
   CFLAGS="-fPIC ${CFLAGS}"
-  FFLAGS="-fPIC ${FFLAGS}"
+  FCFLAGS="-fPIC ${FCFLAGS}"
 fi
-FCFLAGS=${FFFLAGS}
+FFLAGS=${FCFLAGS}
 export CXXFLAGS CFLAGS FFLAGS FCFLAGS
 
+
+FORTRAN_LIBS="@FCLIBS@"
 
 if [ "x$FORTRANDIR" != "x" ]; then
   case $march in
@@ -123,14 +133,16 @@ if [ "x$FORTRANDIR" != "x" ]; then
     i?86)   FLIBDIR=${FORTRANDIR}/lib/ia32 ;;
     *)      echo "FORTRANDIR cannot be used on architecture $march"; exit 1 ;;
   esac
-  LDFLAGS="${LDFLAGS} -Wl,-rpath-link,${FLIBDIR}"
+  LDFLAGS="${LDFLAGS} -Wl,-rpath,${FLIBDIR}"
+  FORTRAN_LIBS="${FORTRAN_LIBS} -Wl,-rpath,${FLIBDIR}"
 fi
-
-FORTRAN_LIBS="@FCLIBS@"
 
 
 if [ "$MPI" = y ]; then
   export MPIDIR
+  #if [ -x ${MPIDIR}/bin/mpicxx ]; then
+  #  LDFLAGS="${LDFLAGS} `${MPIDIR}/bin/mpicxx -showme:link`"
+  #fi
 fi
 
 # BLAS/LAPACK
@@ -138,13 +150,15 @@ if [ "$MKL" = y ]; then
   if [ $march = x86_64 ]; then
     LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/em64t,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
     LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath-link,${MKLDIR}/lib/em64t"
+    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath,${MKLDIR}/lib/em64t"
   else
     LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/32,-lmkl_intel,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
     LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/32 -Wl,-rpath,${MKLDIR}/lib/32"
+    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/32 -Wl,-rpath,${MKLDIR}/lib/32"
   fi
 fi
 
-export LDFLAGS
+export LDFLAGS LAPACK_LIBS
 
 dll_libext=.so
 dll_prefix=lib

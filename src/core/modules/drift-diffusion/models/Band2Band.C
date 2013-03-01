@@ -6,10 +6,8 @@
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 
+#include "TiberModule.h"
 
-
-
-TIBER_MODULE(Band2Band, recombination, band2band)
 
 using namespace std;
 

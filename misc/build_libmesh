@@ -8,8 +8,6 @@ fi
 . common.sh
 
 
-#export CXX=mpicxx
-
 REVISION=3581
 
 echo "Compiling libMesh version $LIBMESHVERSION in $BUILDDIR ..."
@@ -26,24 +24,24 @@ WINPATCH=${PWD}/libmesh-win.patch
 
 cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
-  if [ ! -d libmesh-${LIBMESHVERSION}-$HOST ]; then
+  if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
     if [ ! -e libmesh-${LIBMESHVERSION}.tbz ]; then
       svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}
       tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}
-      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$HOST
+      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$TCHOST
     else
       tar jxf libmesh-${LIBMESHVERSION}.tbz
-      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$HOST
+      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$TCHOST
     fi
 
     if [ -e ${PATCH} ]; then
-      patch -p0 -d libmesh-${LIBMESHVERSION}-$HOST < ${PATCH}
+      patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < ${PATCH}
     fi
 
     if [ "$target_os" == "win32" ] && [ -e $WINPATCH ]; then
-      patch -p0 -d libmesh-${LIBMESHVERSION}-$HOST < $WINPATCH
+      patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < $WINPATCH
 
-      cat > libmesh-${LIBMESHVERSION}-${HOST}/m4/check_file.m4 <<END
+      cat > libmesh-${LIBMESHVERSION}-${TCHOST}/m4/check_file.m4 <<END
 # AC_CHECK_FILE(FILE, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
 # -------------------------------------------------------------
 #
@@ -74,25 +72,25 @@ else
   fi
 fi
 
-if [ ! -d libmesh-${LIBMESHVERSION}-$HOST ]; then
+if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
   if [ ! -e ${ARCHIVE} ]; then
     echo "Could not download libmesh."
     exit 1
   fi
   tar zxf ${ARCHIVE}
-  mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$HOST
+  mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$TCHOST
 
   if [ -e ${PATCH} ]; then
-    patch -p0 -d libmesh-${LIBMESHVERSION}-$HOST < ${PATCH}
+    patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < ${PATCH}
   fi
 
   if [ "$target_os" == "win32" && -e $WINPATCH ]; then
-    patch -p0 -d libmesh-${LIBMESHVERSION}-$HOST < $WINPATCH
+    patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < $WINPATCH
   fi
 fi
 
 
-cd libmesh-${LIBMESHVERSION}-$HOST
+cd libmesh-${LIBMESHVERSION}-$TCHOST
 
 # we have modifications to the configuration
 #aclocal -I m4
@@ -101,7 +99,10 @@ cp ${TOPDIR}/misc/configure.libmesh configure
 
 
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
-export PETSC_ARCH=${HOST}
+export PETSC_ARCH=${TCHOST}
+
+#export CXX=${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx
+#LDFLAGS="${LDFLAGS} -L${PETSC_DIR}/${TCHOST}/lib"
 
 # let's always compile the static version, and do the shared lib ourselves
 #SHARED=--enable-shared
@@ -133,7 +134,11 @@ dll_name=${dll_name}${dll_libext}
   
 
 ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=$HOST --build=$BUILD
+#--with-cc=${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicc
+#--with-cxx=${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx 
 
+#export libmesh_CXXFLAGS="-std=gnu++0x -g"
+export libmesh_CXXFLAGS="-g -fpermissive"
 
 # delete the -pedantic flag because it makes problems with mpi
 cp Make.common Make.common.orig
@@ -143,13 +148,13 @@ sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEB
 
 make |tee make_opt.log
 
-echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${dll_name} ..."
+echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${dll_name} ..."
 staticlib=`make echo | grep libmesh.a`
 contriblibs=`echo $staticlib | sed -e 's/lib\//contrib\/lib\//' -e 's/libmesh\.a/\*\.a/'`
 contribdir=${contriblibs/%\*\.a}
 rm -f ${contribdir}/libnemesis.*
 rm -f ${contribdir}/libexodusii.*
-mkdir -p ${BUILDDIR}/${TCHOST}/lib
+mkdir -p ${SDKDIR}/${TCHOST}/lib
 
 ARCHIVES="-Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive" 
 if [ "$target_os" = darwin ]
@@ -167,14 +172,19 @@ then
   libmesh_linker_flags="-Wl,-install_name,@rpath/lib/${dll_name}"
 fi
 
-${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${dll_name} \
+${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${dll_name} \
   ${libmesh_linker_flags} \
   ${ARCHIVES} \
-  -L${BUILDDIR}/${TCHOST}/lib -Wl,-rpath,${BUILDDIR}/${TCHOST}/lib -lpetsc_real${dbg} \
+  -L${SDKDIR}/${TCHOST}/lib -Wl,-rpath,\$ORIGIN -lpetsc_real${dbg} \
   ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
+mkdir -p ${TOPDIR}/${TCHOST}/lib
+cp ${SDKDIR}/${TCHOST}/lib/${dll_name} ${TOPDIR}/${TCHOST}/lib/${dll_name}
+
+
+
 if [ $DEBUG == 'y' ]; then
-  export PETSC_ARCH=${HOST}-dbg
+  export PETSC_ARCH=${TCHOST}-dbg
   make METHOD=dbg
 fi
 

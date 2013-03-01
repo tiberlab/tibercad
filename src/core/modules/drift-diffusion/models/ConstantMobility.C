@@ -5,9 +5,9 @@
 
 #include "Database.h"
 
+#include "TiberModule.h"
 
 
-TIBER_MODULE(ConstantMobility, mobility, constant)
 
 
 void

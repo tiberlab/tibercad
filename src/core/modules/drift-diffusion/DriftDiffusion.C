@@ -42,12 +42,12 @@
 // C++ includes
 #include <fstream>
 
+#include "TiberModule.h"
 
 //
 // Module interface
 //
 
-TIBER_MODULE(DriftDiffusion, MODULE_NAME)
 
 namespace
 {

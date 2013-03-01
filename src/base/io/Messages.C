@@ -63,6 +63,10 @@ Messages::_warning_count = 0;
 bool
 Messages::_interactive = false;
 
+bool
+Messages::_stop_on_warning = false;
+
+
 ofstream
 Messages::_log;
 
@@ -164,7 +168,7 @@ Messages::warning(const string& msg)
 #endif
   ts << msg << endl << flush;
 
-  if (interactive())
+  if (stop_on_warning())
   {
     cout << "press any key to continue ...";
     cin.get();

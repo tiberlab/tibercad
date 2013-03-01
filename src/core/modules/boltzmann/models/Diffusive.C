@@ -3,7 +3,8 @@
 #include "Diffusive.h"
 #include "SimulationOptions.h"
 
-TIBER_MODULE(Diffusive,boltzmann_bnd,diffusive)
+#include "TiberModule.h"
+
 
 void
 Diffusive::do_init(void)

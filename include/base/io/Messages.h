@@ -87,6 +87,10 @@ class Messages
     static bool& interactive(void);
 
 
+    //! Tell if we are should stop at warnings
+    static bool& stop_on_warning(void);
+
+
   private:
 
 
@@ -110,10 +114,16 @@ class Messages
 
     //! Interactive or not
     /*!
-     * If interactive, warnings and errors need to be
+     * If interactive errors need to be
      * acknowledged by the user.
      */
     static bool _interactive;
+
+    //! Stop also at warnings
+    /*!
+     * If set, warnings have to be acknowledged by the user
+     */
+    static bool _stop_on_warning;
 
 
     //! The local indentation
@@ -173,5 +183,13 @@ Messages::interactive(void)
 {
   return _interactive;
 }
+
+inline
+bool&
+Messages::stop_on_warning(void)
+{
+  return _stop_on_warning;
+}
+
 
 #endif // _MESSAGES_H_

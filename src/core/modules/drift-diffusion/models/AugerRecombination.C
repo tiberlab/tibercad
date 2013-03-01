@@ -2,14 +2,9 @@
 
 #include "AugerRecombination.h"
 #include "DriftDiffusionProperties.h"
-
 #include "Database.h"
 
-
-
-
-TIBER_MODULE(AugerRecombination, recombination, auger)
-
+#include "TiberModule.h"
 
 
 void

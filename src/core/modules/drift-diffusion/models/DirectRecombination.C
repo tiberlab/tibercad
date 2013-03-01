@@ -10,10 +10,8 @@
 #include "mesh_base.h"
 #include "quadrature.h"
 
+#include "TiberModule.h"
 
-
-
-TIBER_MODULE(DirectRecombination, recombination, direct)
 
 using namespace std;
 

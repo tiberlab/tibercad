@@ -15,7 +15,8 @@
 #include "Constants.h"
 #include "SimulationInterface.h"
 
-TIBER_MODULE(MaxwellAbsorption, MODULE_NAME)
+#include "TiberModule.h"
+
 
 MaxwellAbsorption::MaxwellAbsorption(const ModelOptions& options)
  : SimulationInterface(options)

@@ -1,7 +1,8 @@
 #include "UserKeating.h"
 #include "PhysicalObject.h"
 
-TIBER_MODULE(UserKeating, keating, user)
+#include "TiberModule.h"
+
 
 UserKeating::UserKeating(const ModelOptions& options):
 Keating(options)

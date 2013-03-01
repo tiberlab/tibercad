@@ -1,14 +1,17 @@
+// $Id$
+
 #include "Vff.h"
 #include "VffModel.h"
 #include "Messages.h"
 #include "AtomisticStructure.h"
 #include "Specie.h"
-#include <math.h>
 #include "OptGpl.h"
 #include "Atom.h"
 #include "RuntimeException.h"
 
-TIBER_MODULE(Vff, MODULE_NAME)
+#include "TiberModule.h"
+
+#include <cmath>
 
 
 Vff*

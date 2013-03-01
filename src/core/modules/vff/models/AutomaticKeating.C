@@ -3,7 +3,8 @@
 #include "Messages.h"
 #include "RuntimeException.h"
 
-TIBER_MODULE(AutomaticKeating, keating, automatic)
+#include "TiberModule.h"
+
 
 AutomaticKeating::AutomaticKeating(const ModelOptions& options):
 Keating(options),

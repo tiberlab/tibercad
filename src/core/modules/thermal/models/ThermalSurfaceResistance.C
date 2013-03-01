@@ -4,7 +4,8 @@
 #include "ThermalSurfaceResistance.h"
 #include "SimulationOptions.h"
 
-TIBER_MODULE(ThermalSurfaceResistance,thermal_bnd,surface_resistance)
+#include "TiberModule.h"
+
 void
 ThermalSurfaceResistance::do_init(void)
 {

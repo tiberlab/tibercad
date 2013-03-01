@@ -173,11 +173,11 @@ AC_DEFUN([TC_MKL],
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
-      x86_64-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/em64t" ;;
-      i?86-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/32" ;;
+      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/em64t -Wl,-rpath,$tc_cv_mkl_dir/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
+      i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
-    AC_SUBST([MKL_LIBDIR])
+    AC_SUBST([MKL_LIBS])
     AC_SUBST([MKL_INCLUDEDIR])
     AC_SUBST([HAVE_MKL])
   fi
@@ -326,40 +326,76 @@ dnl check for shared libraries in build directory
 dnl
 AC_DEFUN([TC_LIBMESH_PETSC_LIBS],
 [AC_REQUIRE([TC_LIBMESH_CONFIG])dnl
+dnl AC_ARG_WITH([libmesh-petsc-libdir], AS_HELP_STRING([--with-libmesh-petsc-libdir=DIR],
+dnl	[specify the libmesh and PETSc shared library directory]),
+dnl	[tc_libmesh_petsc_libdir=$with_libmesh_petsc_libdir])
+dnl if test "${tc_libmesh_petsc_libdir:-no}" == no
+dnl then
+dnl   tc_libmesh_petsc_libdir=$(pwd)/SDK/$(./share/arch.sh ${host_cpu}-${host_os})/lib
+ tc_libmesh_petsc_libdir=$(pwd)/SDK/$(./share/arch.sh ${host_cpu}-${host_os})/lib
  AC_ARG_WITH([libmesh-petsc-libdir], AS_HELP_STRING([--with-libmesh-petsc-libdir=DIR],
-	[specify the libmesh and PETSc shared library directory]),
+	[specify the path to the shared libmesh and petsc/slepc libraries]),
 	[tc_libmesh_petsc_libdir=$with_libmesh_petsc_libdir])
- if test "${tc_libmesh_petsc_libdir:-no}" == no
- then
-   tc_libmesh_petsc_libdir=$(pwd)/extern/$(./share/arch.sh ${host_cpu}-${host_os})/lib
- fi
+dnl if test "${LIBMESH_PREFIX:+set}" == "set"; then
+dnl   tc_libmesh_petsc_libdir=$(dirname ${LIBMESH_PREFIX})/$(./share/arch.sh ${host_cpu}-${host_os})/lib
+dnl fi
 dnl if test "${LIBMESH_PREFIX:+set}" == "set"; then
 dnl   tc_libmesh_petsc_libdir=$(dirname ${LIBMESH_PREFIX})/$(./share/arch.sh ${host_cpu}-${host_os})/lib
 dnl fi
  dnl
  dnl link test
+ dnl NOTE: this is a really dirty heuristic to make it link, but at the end we do not need
+ dnl the exact LDFLAGS, only if it links or not
  CXXFLAGS_save=$CXXFLAGS
  LDFLAGS_save=$LDFLAGS
  AC_LANG_PUSH([C++])
- LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -L${MKL_LIBDIR} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
+dnl LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -L${MKL_LIBDIR} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
+ tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+ LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
  			        [tc_cv_have_sharedlibs="yes"])
- echo "$tc_cv_have_sharedlibs"
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
-  LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS}"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+  LDFLAGS="${tc_LDFLAGS}"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
+  AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
+  			         [tc_cv_have_sharedlibs="yes"])
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
   AC_LINK_IFELSE(AC_LANG_PROGRAM([], []),
   			         [tc_cv_have_sharedlibs="yes"])
  fi
  AC_LANG_POP()
  if test "${tc_cv_have_sharedlibs}" == "yes"; then
-   tc_libmesh_petsc_libs=${LDFLAGS}
+   tc_libmesh_petsc_libs=${tc_LDFLAGS}
  else
    #tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
    tc_libmesh_petsc_libs='$(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --ldflags)'
  fi
  LDFLAGS=$LDFLAGS_save
  AC_SUBST([LIBMESH_PETSC_LIBS], "$tc_libmesh_petsc_libs")
+ AC_SUBST([LIBMESH_PETSC_LIBDIR], "$tc_libmesh_petsc_libdir")
 ])dnl
+
 
 
 

@@ -1,4 +1,3 @@
-#include "libmesh_config.h"
 
 // C++ includes
 
@@ -11,10 +10,6 @@
 #include "mesh_base.h"
 #include "dense_matrix.h"
 
-#include "kelly_error_estimator.h"
-#include "error_vector.h"
-#include "numeric_vector.h"
-#include "petsc_vector.h"
 #include "EdgeDofMap.h"
 #include "ElementUtils.h"
 #include "MaxwellBoundaryProperties.h"

@@ -677,6 +677,7 @@ FCFLAGS
 ac_ct_FC
 RANLIB
 FCLIBS
+cross_compiling
 LIBREADLINE
 PERL
 DOXYGEN
@@ -688,7 +689,7 @@ LATEX_PATH
 GENERATE_LATEX
 GMSH
 SVN
-MKL_LIBDIR
+MKL_LIBS
 MKL_INCLUDEDIR
 HAVE_MKL
 ENABLE_PARDISO
@@ -701,6 +702,7 @@ EGREP
 LIBMESH_PREFIX
 LIBMESH_CONFIG
 LIBMESH_PETSC_LIBS
+LIBMESH_PETSC_LIBDIR
 COMPLEX_PETSC_DIR
 COMPLEX_PETSC_ARCH
 SLEPC_DIR
@@ -1320,8 +1322,8 @@ Optional Packages:
   --with-libmesh-config=PROG
                           specify the libmesh-config tool
   --with-libmesh-petsc-libdir=DIR
-                          specify the libmesh and PETSc shared library
-                          directory
+                          specify the path to the shared libmesh and
+                          petsc/slepc libraries
   --with-petsc-prefix=DIR specify the (complex) PETSc installation prefix
   --with-petsc-arch=ARCH  specify the (complex) PETSc ARCH to be used
   --with-slepc-prefix=DIR specify the SLEPc installation prefix
@@ -3907,6 +3909,8 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 
+
+
 # libtool
 #AC_LIBTOOL_DLOPEN
 #AC_DISABLE_STATIC
@@ -4244,8 +4248,8 @@ fi
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
-      x86_64-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/em64t" ;;
-      i?86-*-*) MKL_LIBDIR="$tc_cv_mkl_dir/lib/32" ;;
+      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/em64t -Wl,-rpath,$tc_cv_mkl_dir/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
+      i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
 
@@ -5201,17 +5205,14 @@ fi
 { echo "$as_me:$LINENO: " >&5
 echo "$as_me: " >&6;}
 
+ tc_libmesh_petsc_libdir=$(pwd)/SDK/$(./share/arch.sh ${host_cpu}-${host_os})/lib
 
 # Check whether --with-libmesh-petsc-libdir was given.
 if test "${with_libmesh_petsc_libdir+set}" = set; then
   withval=$with_libmesh_petsc_libdir; tc_libmesh_petsc_libdir=$with_libmesh_petsc_libdir
 fi
 
- if test "${tc_libmesh_petsc_libdir:-no}" == no
- then
-   tc_libmesh_petsc_libdir=$(pwd)/extern/$(./share/arch.sh ${host_cpu}-${host_os})/lib
- fi
-   CXXFLAGS_save=$CXXFLAGS
+     CXXFLAGS_save=$CXXFLAGS
  LDFLAGS_save=$LDFLAGS
  ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -5219,7 +5220,8 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
- LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -L${MKL_LIBDIR} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
+ tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+ LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
  cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -5263,9 +5265,197 @@ fi
 
 rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
       conftest$ac_exeext conftest.$ac_ext
- echo "$tc_cv_have_sharedlibs"
  if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
-  LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS}"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  tc_cv_have_sharedlibs="yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+  LDFLAGS="${tc_LDFLAGS}"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  tc_cv_have_sharedlibs="yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  tc_cv_have_sharedlibs="yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags`"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_link") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } && {
+	 test -z "$ac_cxx_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext &&
+       $as_test_x conftest$ac_exeext; then
+  tc_cv_have_sharedlibs="yes"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
+      conftest$ac_exeext conftest.$ac_ext
+ fi
+ if test "${tc_cv_have_sharedlibs:+set}" != "set"; then
+  tc_LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} -lmesh -lpetsc_real -ldl"
+  LDFLAGS="${tc_LDFLAGS} `${LIBMESH_CONFIG} --ldflags` ${FCLIBS}"
   cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -5317,13 +5507,15 @@ ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ex
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
  if test "${tc_cv_have_sharedlibs}" == "yes"; then
-   tc_libmesh_petsc_libs=${LDFLAGS}
+   tc_libmesh_petsc_libs=${tc_LDFLAGS}
  else
    #tc_libmesh_petsc_libs=$(${LIBMESH_CONFIG} --ldflags)
    tc_libmesh_petsc_libs='$(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --ldflags)'
  fi
  LDFLAGS=$LDFLAGS_save
  LIBMESH_PETSC_LIBS="$tc_libmesh_petsc_libs"
+
+ LIBMESH_PETSC_LIBDIR="$tc_libmesh_petsc_libdir"
 
 
 
@@ -7736,11 +7928,13 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/DFTB/Makefile src/utils/UPTIGHT/Makefile src/utils/SLEPC/Makefile contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install"
+ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/DFTB/Makefile src/utils/UPTIGHT/Makefile src/utils/SLEPC/Makefile contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/modules.conf"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
 
 ac_config_files="$ac_config_files bin/tibercad"
+
+ac_config_files="$ac_config_files bin/tiberCAD.sh"
 
 
 cat >confcache <<\_ACEOF
@@ -8312,8 +8506,10 @@ do
     "installer/windows/tibercad.bim") CONFIG_FILES="$CONFIG_FILES installer/windows/tibercad.bim" ;;
     "installer/linux/deb/control") CONFIG_FILES="$CONFIG_FILES installer/linux/deb/control" ;;
     "installer/linux/tar/install") CONFIG_FILES="$CONFIG_FILES installer/linux/tar/install" ;;
+    "share/modules.conf") CONFIG_FILES="$CONFIG_FILES share/modules.conf" ;;
     "installer/prepare_files.sh") CONFIG_FILES="$CONFIG_FILES installer/prepare_files.sh" ;;
     "bin/tibercad") CONFIG_FILES="$CONFIG_FILES bin/tibercad" ;;
+    "bin/tiberCAD.sh") CONFIG_FILES="$CONFIG_FILES bin/tiberCAD.sh" ;;
 
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}
@@ -8436,6 +8632,7 @@ FCFLAGS!$FCFLAGS$ac_delim
 ac_ct_FC!$ac_ct_FC$ac_delim
 RANLIB!$RANLIB$ac_delim
 FCLIBS!$FCLIBS$ac_delim
+cross_compiling!$cross_compiling$ac_delim
 LIBREADLINE!$LIBREADLINE$ac_delim
 PERL!$PERL$ac_delim
 DOXYGEN!$DOXYGEN$ac_delim
@@ -8447,7 +8644,7 @@ LATEX_PATH!$LATEX_PATH$ac_delim
 GENERATE_LATEX!$GENERATE_LATEX$ac_delim
 GMSH!$GMSH$ac_delim
 SVN!$SVN$ac_delim
-MKL_LIBDIR!$MKL_LIBDIR$ac_delim
+MKL_LIBS!$MKL_LIBS$ac_delim
 MKL_INCLUDEDIR!$MKL_INCLUDEDIR$ac_delim
 HAVE_MKL!$HAVE_MKL$ac_delim
 ENABLE_PARDISO!$ENABLE_PARDISO$ac_delim
@@ -8460,6 +8657,7 @@ EGREP!$EGREP$ac_delim
 LIBMESH_PREFIX!$LIBMESH_PREFIX$ac_delim
 LIBMESH_CONFIG!$LIBMESH_CONFIG$ac_delim
 LIBMESH_PETSC_LIBS!$LIBMESH_PETSC_LIBS$ac_delim
+LIBMESH_PETSC_LIBDIR!$LIBMESH_PETSC_LIBDIR$ac_delim
 COMPLEX_PETSC_DIR!$COMPLEX_PETSC_DIR$ac_delim
 COMPLEX_PETSC_ARCH!$COMPLEX_PETSC_ARCH$ac_delim
 SLEPC_DIR!$SLEPC_DIR$ac_delim
@@ -8470,8 +8668,6 @@ BOOST_REGEX_LIB!$BOOST_REGEX_LIB$ac_delim
 BOOST_FILESYSTEM_LIB!$BOOST_FILESYSTEM_LIB$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 BUILD_TIBER_MODULES!$BUILD_TIBER_MODULES$ac_delim
-LICENSE_CHECK!$LICENSE_CHECK$ac_delim
-LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -8506,6 +8702,51 @@ N; s/^.*\n//; s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g; b n
 ' >>$CONFIG_STATUS <conf$$subs.sed
 rm -f conf$$subs.sed
 cat >>$CONFIG_STATUS <<_ACEOF
+CEOF$ac_eof
+_ACEOF
+
+
+ac_delim='%!_!# '
+for ac_last_try in false false false false false :; do
+  cat >conf$$subs.sed <<_ACEOF
+LICENSE_CHECK!$LICENSE_CHECK$ac_delim
+LTLIBOBJS!$LTLIBOBJS$ac_delim
+_ACEOF
+
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 2; then
+    break
+  elif $ac_last_try; then
+    { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
+echo "$as_me: error: could not make $CONFIG_STATUS" >&2;}
+   { (exit 1); exit 1; }; }
+  else
+    ac_delim="$ac_delim!$ac_delim _$ac_delim!! "
+  fi
+done
+
+ac_eof=`sed -n '/^CEOF[0-9]*$/s/CEOF/0/p' conf$$subs.sed`
+if test -n "$ac_eof"; then
+  ac_eof=`echo "$ac_eof" | sort -nru | sed 1q`
+  ac_eof=`expr $ac_eof + 1`
+fi
+
+cat >>$CONFIG_STATUS <<_ACEOF
+cat >"\$tmp/subs-2.sed" <<\CEOF$ac_eof
+/@[a-zA-Z_][a-zA-Z_0-9]*@/!b end
+_ACEOF
+sed '
+s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g
+s/^/s,@/; s/!/@,|#_!!_#|/
+:n
+t n
+s/'"$ac_delim"'$/,g/; t
+s/$/\\/; p
+N; s/^.*\n//; s/[,\\&]/\\&/g; s/@/@|#_!!_#|/g; b n
+' >>$CONFIG_STATUS <conf$$subs.sed
+rm -f conf$$subs.sed
+cat >>$CONFIG_STATUS <<_ACEOF
+:end
+s/|#_!!_#|//g
 CEOF$ac_eof
 _ACEOF
 
@@ -8748,7 +8989,7 @@ s&@builddir@&$ac_builddir&;t t
 s&@abs_builddir@&$ac_abs_builddir&;t t
 s&@abs_top_builddir@&$ac_abs_top_builddir&;t t
 $ac_datarootdir_hack
-" $ac_file_inputs | sed -f "$tmp/subs-1.sed" | sed 's/|#_!!_#|//g' >$tmp/out
+" $ac_file_inputs | sed -f "$tmp/subs-1.sed" | sed -f "$tmp/subs-2.sed" >$tmp/out
 
 test -z "$ac_datarootdir_hack$ac_datarootdir_seen" &&
   { ac_out=`sed -n '/\${datarootdir}/p' "$tmp/out"`; test -n "$ac_out"; } &&
@@ -8871,6 +9112,7 @@ echo "$as_me: $ac_file is unchanged" >&6;}
     "stamp-h":F) echo timestamp > stamp-h ;;
     "installer/prepare_files.sh":F) chmod +x installer/prepare_files.sh ;;
     "bin/tibercad":F) chmod +x bin/tibercad ;;
+    "bin/tiberCAD.sh":F) chmod +x bin/tiberCAD.sh ;;
 
   esac
 done # for ac_tag

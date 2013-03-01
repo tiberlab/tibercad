@@ -4,7 +4,8 @@
 #include "ThermalBoundaryResistance.h"
 #include "SimulationOptions.h"
 
-TIBER_MODULE(ThermalBoundaryResistance,boltzmann_bnd,surface_resistance)
+#include "TiberModule.h"
+
 void
 ThermalBoundaryResistance::do_init(void)
 {

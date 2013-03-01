@@ -56,17 +56,27 @@ static string open_file(const char *filter = "All Files (*.*)\0*.*\0", HWND owne
 namespace
 {
   bool interactive;
+  bool stop_on_warning = false;
 
   void usage(void)
   {
 #if defined(_WIN32)
     cout << endl << "Usage:" << endl
-      << "  from command line: tibercad [-b] inputfile" << endl
+      << "  from command line: tibercad [options] inputfile" << endl
       << "  or double click on inputfile" << endl << endl;
+# else
+    cout << endl << "Usage: tibercad [options] inputfile" << endl << endl;
+# endif
+
+    cout << "Options:" << endl
+         << "  -b      batch mode" << endl
+         << "  -i      interactive mode" << endl
+         << "  -s      stop at warnings (disabled in batch mode)" << endl
+         << "  -v      version info" << endl;
+
+#if defined(_WIN32)
     cout << "press Enter ...";
     if (interactive) cin.get();
-# else
-    cout << endl << "Usage: tibercad [-v] [-b] inputfile" << endl << endl;
 # endif
   }
 }
@@ -84,7 +94,7 @@ int main (int argc, char** argv)
 
   opterr = 0;
   int c;
-  while ((c = getopt(argc, argv, "biv")) != -1)
+  while ((c = getopt(argc, argv, "bivs")) != -1)
     switch (c)
     {
       case 'v':
@@ -96,10 +106,15 @@ int main (int argc, char** argv)
 
       case 'b':
         interactive = false;
+        stop_on_warning = false;
         break;
 
       case 'i':
         interactive = true;
+        break;
+
+      case 's':
+        stop_on_warning = true;
         break;
 
       case '?':
@@ -237,6 +252,7 @@ int main (int argc, char** argv)
 
 
   Messages::interactive() = interactive;
+  Messages::stop_on_warning() = stop_on_warning;
 
   // Create the entry point object
   TiberCad tibercad;

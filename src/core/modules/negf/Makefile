@@ -1,27 +1,20 @@
-# $Id: Makefile 2309 2011-02-07 21:39:43Z maufder $
+# $Id: Makefile 2399 2011-02-23 15:43:57Z maufder $
 
 topdir := ../../../..
 
-MODULE_NAME := negf
-export MODULE_NAME
+include $(topdir)/Make.common
 
-include $(topdir)/Make.module
+target := modules
 
-target += libnegf
-target += models
-
-$(eval $(call MODULE, $(srcfiles)))
-
-MODULE_LDFLAGS += -L$(libdir) -lnegf
-
-.PHONY: models
-models:
-	$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
-
+modules: libnegf module.conf
+	@$(BUILDMODULE) module.conf
 
 .PHONY: libnegf
 libnegf:
-	$(MAKE) -C libnegf
+	-@$(MAKE) --no-print-directory -C libnegf $(MAKECMDGOALS)
+	@mkdir -p $(topdir)/$(ARCH)/modules/negf
+	-@cp libnegf/libnegf.so $(topdir)/$(ARCH)/modules/negf
+
 
 
 include $(topdir)/Make.rules

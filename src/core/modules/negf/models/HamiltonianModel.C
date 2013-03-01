@@ -1,11 +1,13 @@
 // $Id$
+
 #include "HamiltonianModel.h"
 #include "Database.h"
 #include "Material.h"
 #include "RotatedCrystal.h"
 
+#include "TiberModule.h"
 
-TIBER_MODULE(HamiltonianModel, hamiltonian, single_band)
+
 
 HamiltonianModel::HamiltonianModel(const ModelOptions& options)
    : PhysicalModelInterface(options),

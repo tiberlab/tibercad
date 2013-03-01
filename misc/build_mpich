@@ -1,0 +1,52 @@
+#!/bin/bash
+
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
+
+VERSION=1.5
+#3.0.1
+ARCHIVE=mpich2-${VERSION}.tar.gz
+
+echo "Compiling openmpi libraries"
+
+
+mkdir -p $BUILDDIR
+if [ ! -d $BUILDDIR ]; then
+  echo "Directory $BUILDDIR does not exist."
+  exit 1
+fi
+
+
+
+cd $BUILDDIR
+if [ ! -e ${ARCHIVE} ]; then
+  wget http://www.mpich.org/static/tarballs/${VERSION}/${ARCHIVE}
+fi
+
+
+if [ ! -e ${ARCHIVE} ]; then
+  echo "Could not download ${ARCHIVE}."
+  exit 1
+fi
+
+if [ ! -d mpich2-${VERSION} ]; then
+  tar zxf ${ARCHIVE}
+fi
+
+
+
+F90=
+export F90
+
+cd mpich2-${VERSION}
+
+./configure --prefix=${SDKDIR} --enable-shared=yes \
+            --host=$HOST --build=$BUILD \
+            --with-cross=${TOPDIR}/misc/win_cross_values --with-thread-package=none --with-pmi=none --with-pm=none --with-shared-memory=no --enable-threads=single --disable-romio
+
+make install
+

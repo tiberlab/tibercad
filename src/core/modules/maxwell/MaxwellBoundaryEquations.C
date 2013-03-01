@@ -17,12 +17,11 @@
 #include "VectorLinearSystem.h"
 #include "OpticPropsInterface.h"
 
+#include "TiberModule.h"
+
 using namespace std;
 using namespace Constants;
 
-#include "sys/time.h"
-
-TIBER_MODULE(MaxwellBoundaryEquations, maxwell, boundary)
 
 MaxwellBoundaryEquations::MaxwellBoundaryEquations(const ModelOptions& options)
  : SimulationInterface(options)
@@ -387,6 +386,8 @@ OpticPropsInterface* MaxwellBoundaryEquations::getOpticModel(const Elem* elem) {
 
   OpticPropsInterface* result = dynamic_cast<OpticPropsInterface*>(
           material->get_model(get_id()));
+
+  return result;
 
   return result;
 }

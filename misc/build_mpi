@@ -1,0 +1,49 @@
+#!/bin/bash
+
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
+
+VERSION=1.6.3
+ARCHIVE=openmpi-${VERSION}.tar.bz2
+
+echo "Compiling openmpi libraries"
+
+
+mkdir -p $BUILDDIR
+if [ ! -d $BUILDDIR ]; then
+  echo "Directory $BUILDDIR does not exist."
+  exit 1
+fi
+
+
+
+cd $BUILDDIR
+if [ ! -e ${ARCHIVE} ]; then
+  wget http://www.open-mpi.org/software/ompi/v1.6/downloads/${ARCHIVE}
+fi
+
+
+if [ ! -e ${ARCHIVE} ]; then
+  echo "Could not download ${ARCHIVE}."
+  exit 1
+fi
+
+if [ ! -d openmpi-${VERSION} ]; then
+  tar jxf ${ARCHIVE}
+fi
+
+
+
+
+cd openmpi-${VERSION}
+
+./configure --prefix=${SDKDIR} --exec-prefix=${SDKDIR}/${TCHOST} --enable-shared=yes \
+            --enable-static=no --host=$HOST --build=$BUILD
+
+make
+#make install
+

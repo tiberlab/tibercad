@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ ! -e common.sh ]; then
+  echo "Need configuration file (common.sh)."
+  exit 1
+fi
+
+. common.sh
+
+for f in $(ldd ${TOPDIR}/${TCHOST}/lib/lib*.so | awk '{print $3}' | grep "${SDKDIR}")
+do
+  echo "Copy $f to ${TOPDIR}/${TCHOST}/lib ..."
+  cp -L $f ${TOPDIR}/${TCHOST}/lib
+done

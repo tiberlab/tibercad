@@ -3,13 +3,10 @@
 #include "ConstantHeatSource.h"
 #include "Material.h"
 
+#include "TiberModule.h"
 
-// The first string is the class name, the second one
-// is the type of the model (here it is a bulk model),
-// the third one is the specific model implementation.
-// The library name will then be bulk_default.so
 
-TIBER_MODULE(ConstantHeatSource,heat_source, constant)
+
 
 using namespace std;
 

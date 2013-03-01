@@ -2,26 +2,12 @@
 
 topdir := ../../../..
 
-MODULE_NAME := elasticity
-export MODULE_NAME
+include $(topdir)/Make.common
 
-include $(topdir)/Make.module
+target := modules
 
-$(eval $(call MODULE, $(srcfiles)))
+modules: module.conf
+	@$(BUILDMODULE) module.conf
 
-
-target += models
-
-
-.PHONY: models
-models:
-	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
-
-clean:
-	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
-
-distclean:
-	@$(MAKE) --no-print-directory -C models $(MAKECMDGOALS)
-	
 
 include $(topdir)/Make.rules

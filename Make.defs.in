@@ -30,12 +30,27 @@ endif
 # we create an ARCH string which will be the same when calling
 # arch.sh on the target system
 ARCH := $(shell $(topdir)/share/arch.sh $(hostcpu)-$(hostos))
+# the architecture of the build system (for cross compiling)
+BUILD := $(shell $(topdir)/share/arch.sh)
+
+# if we are cross compiling
+cross_compiling := no
+ifneq ($(ARCH), $(BUILD))
+  cross_compiling := yes
+endif
 
 # the compilers
 CXX := @CXX@
 CC := @CC@
 FC := @FC@
 RANLIB := @RANLIB@
+
+# the build_module tool: for cross compilation we need it compiled also
+# for the BUILD architecture
+BUILDMODULE := $(topdir)/bin/build_module
+ifeq ($(cross_compiling), yes)
+  BUILDMODULE := export TIBERCADROOT=$(topdir) && $(topdir)/bin/build_module-$(BUILD)
+endif
 
 SVN := @SVN@
 

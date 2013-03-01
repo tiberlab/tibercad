@@ -6,9 +6,8 @@
 #include "Material.h"
 #include "Messages.h"
 
+#include "TiberModule.h"
 
-
-TIBER_MODULE(SemiconductorModel, ddbulk, default)
 
 
 

@@ -7,8 +7,8 @@
 #include "Database.h"
 
 
+#include "TiberModule.h"
 
-TIBER_MODULE(SRHRecombination, recombination, srh)
 
 
 SRHRecombination::TrapAssisted::TrapAssisted(void) :

@@ -7,10 +7,10 @@ ARCH = $(shell uname -m)
 CXXFLAGS = -fPIC -I . 
 
 
-target := $(libdir)/libnegf$(shared_libext)
+target := libnegf$(shared_libext)
 
 
-$(libdir)/libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
+libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 	@echo "Linking libnegf$(shared_libext) ..."
 	$(CXX) -shared -o $@ $< \
 		-Wl,--version-script,export.map \

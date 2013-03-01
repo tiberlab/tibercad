@@ -3,9 +3,7 @@
 #include "OhmicContact.h"
 #include "DriftDiffusionProperties.h"
 
-
-TIBER_MODULE(OhmicContact, ddbnd, ohmic)
-
+#include "TiberModule.h"
 
 
 OhmicContact::OhmicContact(const ModelOptions& options)

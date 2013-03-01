@@ -1192,3 +1192,43 @@ Index: include/parallel/threads_allocators.h
  
  // Local includes
  #include "libmesh_config.h"
+Index: include/parallel/parallel.h
+===================================================================
+--- include/parallel/parallel.h	2012-12-14 14:41:34.898323662 +0100
++++ include/parallel/parallel.h	2012-12-14 14:41:52.614274228 +0100
+@@ -458,7 +458,7 @@
+   inline void send (const unsigned int dest_processor_id,
+ 		    std::vector<T> &buf,
+ 		    const DataType &type,
+-		    const int tag=0);
++		    const int tag);
+ 
+   //-------------------------------------------------------------------
+   /**
+@@ -469,7 +469,7 @@
+ 		    std::vector<T> &buf,
+ 		    const DataType &type,
+ 		    request &req,
+-		    const int tag=0);
++		    const int tag);
+ 
+   //-------------------------------------------------------------------
+   /**
+@@ -683,7 +683,7 @@
+ 		       std::vector<T> &buf,
+ 		       const DataType &type,
+ 		       request &req,
+-		       const int tag=any_tag);
++		       const int tag);
+ 
+   //-------------------------------------------------------------------
+   /**
+@@ -722,7 +722,7 @@
+   inline void receive (const int src_processor_id,
+ 		       std::vector<T> &buf,
+ 		       request &req,
+-		       const int tag=any_tag)
++		       const int tag)
+   {
+     receive (src_processor_id,
+ 	     buf,

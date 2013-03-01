@@ -23,8 +23,8 @@ make_petsc()
 
   export PETSC_DIR=${PWD}
 
-  export PETSC_ARCH=${HOST}
-  [ "$datatype" == "complex" ] && export PETSC_ARCH=${HOST}-complex
+  export PETSC_ARCH=${TCHOST}
+  [ "$datatype" == "complex" ] && export PETSC_ARCH=${TCHOST}-complex
 
   if [ -e  ${TOPDIR}/misc/reconfigure-${PETSC_ARCH}.py ]
   then
@@ -73,12 +73,16 @@ make_petsc()
     fi
 
 
-    echo "Create shared library ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
-    mkdir -p ${BUILDDIR}/${TCHOST}/lib
-    ${CXX} -shared -o ${BUILDDIR}/${TCHOST}/lib/${libname}${dll_libext} \
+    echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
+    mkdir -p ${SDKDIR}/${TCHOST}/lib
+    ${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} \
       ${petsc_linker_flags} \
       ${ARCHIVES} \
-      ${LAPACK_LIBS} ${FORTRAN_LIBS}
+      -Wl,-rpath,\$ORIGIN \
+      ${LDFLAGS} ${LAPACK_LIBS} ${FORTRAN_LIBS}
+
+    mkdir -p ${TOPDIR}/${TCHOST}/lib
+    cp ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ${TOPDIR}/${TCHOST}/lib/${libname}${dll_libext}
   fi
 
 }
@@ -121,17 +125,23 @@ cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 # PETSc shared libraries cannot be moved around, therefore
 # we compile them always statically
 
-#SHARED="--with-shared=1 --with-dynamic=1"
-#if [ $shared_libs == 'n' ]
-#then
 SHARED="--with-shared=0 --with-dynamic=0"
-#fi
   
 
-#COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
-COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
-  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
-  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
+#COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
+#  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
+#  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
+COMPILERS=
+
+if [ "${target_os}" = "win32" ]
+then
+  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
+    --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') \
+    --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
+    --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
+else
+  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
+fi
 
 
 if [ $MPI == 'n' ]; then
@@ -139,6 +149,7 @@ if [ $MPI == 'n' ]; then
 else
   MPI="--with-mpi-dir=${MPIDIR}"
 fi
+#MPI="--download-mpich=1 --with-mpi-shared=0"
 
 LAPACKLIBS=${LAPACKLIBS:-"--download-f-blas-lapack=1"}
 
@@ -152,6 +163,8 @@ fi
 
 
 CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 ${petsc_host}"
+#CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 \
+#  ${petsc_host} --download-mumps=yes  --download-parmetis=1 --download-scalapack=1 --download-blacs=1"
 
 
 

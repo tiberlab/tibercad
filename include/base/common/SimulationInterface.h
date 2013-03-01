@@ -26,7 +26,6 @@
 #include <set>
 #include <string>
 
-#include "TiberModule.h"
 
 #ifndef TB_MAX_SIM
 #define TB_MAX_SIM 100

@@ -7,8 +7,7 @@
 
 #include "Material.h"
 
-
-TIBER_MODULE(ExcitonDissociation, recombination, exciton_dissociation)
+#include "TiberModule.h"
 
 
 

@@ -6,7 +6,6 @@
 #include "Material.h"
 #include "TiberMath.h"
 #include "Database.h"
-#include <assert.h>
 #include "MaxwellBoundaryProperties.h"
 #include "OpticPropsModel.h"
 
@@ -19,9 +18,6 @@
 #include "IScalarFEBase.h"
 #include "limits.h"
 #include "Utils.h"
-using namespace std;
-using namespace Constants;
-#include "sys/time.h"
 #include "ExcitonLayer.h"
 #include "PMLFilter.h"
 
@@ -31,7 +27,14 @@ using namespace Constants;
 //TODO remove code duplication
 //TODO
 
-TIBER_MODULE(MaxwellEquations, MODULE_NAME)
+#include "TiberModule.h"
+
+#include <ctime>
+#include <cassert>
+
+using namespace std;
+using namespace Constants;
+
 
 MaxwellEquations::MaxwellEquations(const ModelOptions& options)
  : SimulationInterface(options)

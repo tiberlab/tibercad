@@ -34,21 +34,37 @@ ifeq ($(target_os),darwin)
 endif
 
 
-all: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) modules
+all: tibercad modules
+
+
+tibercad: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
-$(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
+.PHONY: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
+$(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): 
+	@$(MAKE) --no-print-directory -C src all
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(DLLNAME) $(LDFLAGS)
-
+		
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
 		$(MODULE_LIBS) -lmkl_lapack $(LDFLAGS)
 #	@cd lib && ln -f -s libtibercad.so.0.0 libtibercad.so.0 \
 		&& ln -f -s libtibercad.so.0 libtibercad.so && cd ..
+
+
+ifeq ($(build_modules),yes)
+modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
+	@mkdir -p SDK/etc
+	@cp share/modules.conf SDK/etc
+	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
+else
+modules:
+endif
+
 
 $(libdir)/libdl.a:
 	@touch contrib/dlfcn-win32-r19/config.mak
@@ -68,13 +84,6 @@ distclean: src doc
 	@$(MAKE) --no-print-directory -C src/core/modules distclean
 	@rm -rf $(ARCH)
 
-
-ifeq ($(build_modules),yes)
-modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
-	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
-else
-modules:
-endif
 
 
 .PHONY: src
