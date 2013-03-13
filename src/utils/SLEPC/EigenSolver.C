@@ -27,7 +27,8 @@ void EigenSolver::slepc_init(int argc1, char** argv1)
 {
 
   //Seems to work ^^
-/*  TODO
+  //  TODO Looks poor, but in current version of petsc there is no methods for it. (In later releases there is ...)
+  // It fix problem when during factorization MUMPS does not have have enouph memory.
   int __empty_argc = 3;
   char** __empty_argv = new char*[3];
   __empty_argv[0] = "tibercad";
@@ -35,8 +36,8 @@ void EigenSolver::slepc_init(int argc1, char** argv1)
   __empty_argv[2] = "100";
 
   SlepcInitialize(&__empty_argc,&__empty_argv,NULL,NULL);
-  */
-  SlepcInitialize(&argc1,&argv1,NULL,NULL);
+
+/*  SlepcInitialize(&argc1,&argv1,NULL,NULL);*/
   PetscPopSignalHandler();
 
 }
