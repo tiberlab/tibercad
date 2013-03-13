@@ -123,7 +123,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   // ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
 
 
-  shift = opt.spectrum_shift;
+  shift = opt.spectrum_shift.real();
 
   ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
 
@@ -269,7 +269,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   }
 
 
-  shift = opt.spectrum_shift;
+  shift = opt.spectrum_shift.real();
 
   /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
                 Create the eigensolver and set various options
