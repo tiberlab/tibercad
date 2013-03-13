@@ -26,12 +26,13 @@
 #include "SolverException.h"
 #include "SimulationInterface.h"
 #include "OpticPropsInterface.h"
+#include "MaxwellEquationsCommon.h"
 
 using namespace libMesh;
 using namespace std;
 
 //! Class to solve Maxwell equations
-class MaxwellBoundaryEquations : public SimulationInterface
+class MaxwellBoundaryEquations : public MaxwellEquationsCommon
 {
   public:
     enum Solutions
@@ -106,9 +107,6 @@ class MaxwellBoundaryEquations : public SimulationInterface
 
     double W;
     std::vector<Complex> edgeSolution;
-
-    Complex multiply(const Point& v1, const Point& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag);
-    Complex multiply(const Point& v1, const VectorValue<Complex>& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag);
 };
 
 inline MaxwellBoundaryEquations*

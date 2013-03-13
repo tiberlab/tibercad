@@ -1,3 +1,6 @@
+#ifndef OPTIC_PROPS_INTERFACE_H_
+#define OPTIC_PROPS_INTERFACE_H_
+
 /*
  * ExcitonLayer.h
  *
@@ -11,10 +14,7 @@
 #include "RotatedCrystal.h"
 #include "Material.h"
 #include "InitFailedException.h"
-
-#ifndef OPTIC_PROPS_INTERFACE_H_
-#define OPTIC_PROPS_INTERFACE_H_
-
+#include <tensor_value.h>
 
 class TBDLEXPORT OpticPropsInterface: public PhysicalModel
 
@@ -26,12 +26,8 @@ class TBDLEXPORT OpticPropsInterface: public PhysicalModel
        return Complex(1, 0);
      }
 
-     virtual const Tensor2Sym get_optical_epsilon() const {
-       return Tensor2Sym(1);
-     }
-
-     virtual const Tensor2Sym get_optical_epsilon_imag() const {
-       return Tensor2Sym(1);
+     virtual const TensorValue<Complex> get_optical_epsilon() const {
+       return TensorValue<Complex>(1);
      }
 
      virtual double get_permeability_constant() const {

@@ -30,7 +30,7 @@ class EigenSolver
     
     std::string st_ksp_type; //!< Liner system solution method 
     
-    double spectrum_shift;
+    Complex spectrum_shift;
 
     bool read_matrix_from_file;
 
@@ -155,6 +155,7 @@ class EigenSolver
 
   static Complex get_eigenvalue_c( int i);
 
+  static int f(int argc,char **argv);
 //ENDOFMINE
  private:
 

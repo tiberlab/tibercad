@@ -12,28 +12,13 @@
 #include <vector>
 #include <set>
 
-
-/**
- * Following things are expected:
- *
- * 1. Referenced simulation is launched and solved asking solution for all integration points.
- *    Returned value is zero for each point.
- * 2. Integration points are stored.
- * 3. Now MaxwellAbsorption can be launched for solving. It launches MaxwellBoundaryEquations->solve
- *    n-times. For each integration point solution is stored.
- * 4. Referenced simulation is launched again. Now return value is real one.
- *
- */
-
-
-
-//! Class to solve Maxwell equations
 class MaxwellAbsorption : public SimulationInterface
 {
   public:
     enum Solutions
     {
-      Absorption
+      Absorption_Energy,
+      Absorption_Photon
     };
 
     //!constructor
@@ -57,13 +42,16 @@ class MaxwellAbsorption : public SimulationInterface
 
   protected:
     SimulationInterface* maxwell;
-    SimulationInterface* referencedPointsSimulation;
-    std::map<Point, std::vector<Point> > integration_points; // Map which contains all integration points. elem->centroid -> element points
-    std::map<Point, double> solution;
+    std::map<Point, std::vector<double>> solution_photon;
+    std::map<Point, std::vector<double>> solution_energy;
+
+    std::vector<double> input_lambda;
+    std::vector<double> input_intencity;
 
     double lambdaStart;
     double lambdaEnd;
     double lambdaStep;
+    bool plotAll;
 
     //! Get solutions at specified points in an element
     virtual void get_solution_secure(const Elem* elem,

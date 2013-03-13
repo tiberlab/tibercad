@@ -25,13 +25,13 @@ class PMLFilter {
       maxwell = maxwellEquations;
     }
 
-    void filter(EigenSystem& system, std::map<unsigned int, unsigned int>& eigenIndices, std::map<unsigned int, std::vector<Complex> >& storedSolutions) {
+    void filter(EigenSystem& system, std::map<unsigned int, unsigned int>& eigenIndices, std::map<unsigned int, std::vector<Complex> >& storedSolutions, std::vector<bool>& pmlXYZ) {
       eigenIndices.clear();
 
       std::map<ID, std::vector<double> > solutions;
 
       for (int i = 0; i < system.get_n_converged(); i++) {
-        solutions[MaxwellEquations::Efield + i].resize(0);
+        solutions[MaxwellEquations::Efield + 3*i].resize(0);
       }
 
       MeshBase& mesh = maxwell->get_mesh();
@@ -53,11 +53,11 @@ class PMLFilter {
         bool isPML = pml.isPMLRegion(elem, maxwell); // respect to +, * etc. slow operation
         for (int i = 0; i < system.get_n_converged(); i++) {
           for (int qp = 0; qp < elem->n_nodes(); qp++) {
-            std::vector<double>& solution = solutions[MaxwellEquations::Efield + i];
+            std::vector<double>& solution = solutions[MaxwellEquations::Efield + 3*i];
             double E = std::sqrt(solution[3*qp] * solution[3*qp] +
                                  solution[3*qp + 1] * solution[3*qp + 1] +
                                  solution[3*qp + 2] * solution[3*qp + 2]);
-            if (isPML && isOnPmlBorder(*(elem->get_node(qp)), pml)) {
+            if (isPML && isOnPmlBorder(*(elem->get_node(qp)), pml, pmlXYZ)) {
               maxBorderPMLValue[i] = std::max(maxBorderPMLValue[i], E);
             } else {
               maxValue[i] = std::max(maxValue[i], E);
@@ -74,7 +74,7 @@ class PMLFilter {
         acceptValue = eigen.real() > 0;
 
         if (acceptValue) {
-          acceptValue = maxBorderPMLValue[i] < maxValue[i] * 0.1;
+          acceptValue = maxBorderPMLValue[i] < maxValue[i] * factor;
         }
 
         if (acceptValue) {
@@ -86,8 +86,12 @@ class PMLFilter {
       }
     }
 
-    bool isOnPmlBorder(const Node& node, PML& pml) {
+    bool isOnPmlBorder(const Node& node, PML& pml, std::vector<bool>& pmlXYZ) {
       for (int i = 0; i < 3; i++) {
+        if (!pmlXYZ[i]) {
+          return false;
+        }
+
         if (std::abs((node(i) - pml.allMinPoint(i))/(pml.minPoint(i) - pml.allMinPoint(i))) < 0.5 ||
             std::abs((node(i) - pml.allMaxPoint(i))/(pml.maxPoint(i) - pml.allMaxPoint(i))) < 0.5) {
           return true;

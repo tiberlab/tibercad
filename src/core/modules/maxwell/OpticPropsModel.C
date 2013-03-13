@@ -18,15 +18,25 @@ void OpticPropsModel::read_database() {
 
   do_set(eps, eps_imag);
 
-  if (db.has_variable("optical_epsilon00")) {
-    epsilon(1, 1) = db.get("optical_epsilon00", 1);
-    epsilon(2, 2) = db.get("optical_epsilon11", 1);
-    epsilon(3, 3) = db.get("optical_epsilon22", 1);
 
-    epsilon_imag(1, 1) = db.get("optical_epsilon_imag00", 0);
-    epsilon_imag(2, 2) = db.get("optical_epsilon_imag11", 0);
-    epsilon_imag(3, 3) = db.get("optical_epsilon_imag22", 0);
+  if (db.has_variable("optical_epsilonxx")) {
+    epsilon(0, 0) = Complex(db.get("optical_epsilon_xx", 1), db.get("optical_epsilon_xx_imag", 0));
+    epsilon(1, 1) = Complex(db.get("optical_epsilon_yy", 1), db.get("optical_epsilon_yy_imag", 0));
+    epsilon(2, 2) = Complex(db.get("optical_epsilon_zz", 1), db.get("optical_epsilon_zz_imag", 0));;
+
+    epsilon(0, 1) = Complex(db.get("optical_epsilon_xy", 1), db.get("optical_epsilon_xy_imag", 0));
+    epsilon(1, 2) = Complex(db.get("optical_epsilon_yz", 1), db.get("optical_epsilon_yz_imag", 0));
+    epsilon(2, 0) = Complex(db.get("optical_epsilon_zx", 1), db.get("optical_epsilon_zx_imag", 0));;
   }
+}
+
+void OpticPropsModel::get_parameter_c(const std::string& name, Complex& var) {
+  double a = var.real(), b = var.imag();
+
+  get_parameter(name, a);
+  get_parameter(name + "_imag", b);
+
+  var = Complex(a, b);
 }
 
 void OpticPropsModel::do_init(void) {
@@ -43,33 +53,35 @@ void OpticPropsModel::do_init(void) {
     do_set(eps, eps_imag);
   }
 
-  if (has_parameter("optical_epsilon00", false)) {
-    get_parameter("optical_epsilon00", epsilon(1, 1));
-    get_parameter("optical_epsilon11", epsilon(2, 2));
-    get_parameter("optical_epsilon22", epsilon(3, 3));
-    get_parameter("optical_epsilon_imag00", epsilon_imag(1, 1));
-    get_parameter("optical_epsilon_imag11", epsilon_imag(2, 2));
-    get_parameter("optical_epsilon_imag22", epsilon_imag(3, 3));
+  if (has_parameter("optical_epsilonxx", false)) {
+    get_parameter_c("optical_epsilon_xx", epsilon(0, 0));
+    get_parameter_c("optical_epsilon_yy", epsilon(1, 1));
+    get_parameter_c("optical_epsilon_zz", epsilon(2, 2));
+
+    get_parameter_c("optical_epsilon_xy", epsilon(0, 1));
+    get_parameter_c("optical_epsilon_yz", epsilon(1, 2));
+    get_parameter_c("optical_epsilon_zx", epsilon(2, 0));
   }
+
+  epsilon(1, 0) = epsilon(0, 1);
+  epsilon(2, 1) = epsilon(1, 2);
+  epsilon(0, 2) = epsilon(2, 0);
 
   const Material* mat = get_material();
 
   const RotatedCrystal&   cr = mat->get_rotated_crystal();
 
-  rotate_to_calculation_system(cr.RotMatrix);
+  //rotate_to_calculation_system(cr.RotMatrix); TODO
 }
 
 void OpticPropsModel::do_init_alloy (const PhysicalModelInterface *comp_A,
                                            const PhysicalModelInterface *comp_B, double xa) {
+/*
   const OpticPropsModel* modA = dynamic_cast<const OpticPropsModel*>(comp_A);
 
   const OpticPropsModel* modB = dynamic_cast<const OpticPropsModel*>(comp_B);
 
-
-
-  alloy(epsilon,modA->epsilon, modB->epsilon, xa);
-
-  alloy(epsilon_imag,modA->epsilon_imag, modB->epsilon_imag, xa);
-
+  epsilon =  (1 - xa) * modB->epsilon + xa * modA->epsilon;
+  mu = alloy(modA->mu, modB->mu, xa);*/
 }
 

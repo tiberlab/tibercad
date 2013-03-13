@@ -68,6 +68,9 @@ class PML {
       return getSPML(elem, interface) > 0;
     }
 
+
+    // Solution is smth like exp(ik(x+icxx/2)) ~ exp(-kcxx/2)
+
     VectorValue<Complex> getSVector(const Point &point, double c) const {
       VectorValue<Complex> result(1, 1, 1);
 

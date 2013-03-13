@@ -82,7 +82,7 @@ void EigenSystem::solve () {
   EigenSolver::SLEPCoptions options;
 
   options.ev_number = std::min(requested_eigenpairs, (unsigned int)(systemSize - 1));
-  options.spectrum_shift = spectrumShift.real() * getGeomScaling();
+  options.spectrum_shift = spectrumShift * getGeomScaling();
   options.eps_tolerance = solver_tolerance;
   options.matrix_output = false;
 

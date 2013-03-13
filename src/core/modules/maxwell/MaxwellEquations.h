@@ -33,13 +33,13 @@
 #include "ElementUtils.h"
 #include "SolverException.h"
 #include "OpticPropsInterface.h"
-
+#include "MaxwellEquationsCommon.h"
 
 using namespace libMesh;
 using namespace std;
 
 //! Class to solve Maxwell equations
-class MaxwellEquations : public SimulationInterface
+class MaxwellEquations : public MaxwellEquationsCommon
 {
   public:
     enum Solutions
@@ -55,7 +55,10 @@ class MaxwellEquations : public SimulationInterface
       Epsilon_imag,
       Mu,
       SVector,
-      Efield // MUST BE LAST
+      Efield,
+      Efield_real,
+      Efield_imag
+      // NB: To add solution variable - add it to the start of this list
     };
 
     //!constructor
@@ -94,6 +97,7 @@ class MaxwellEquations : public SimulationInterface
     virtual void parse_options(void) {
     }
 
+    virtual void declare_E_solution(const char* name, int localIndex, int solutionIndex);
   private:
 
     //!pointer to the device object
@@ -119,12 +123,12 @@ class MaxwellEquations : public SimulationInterface
     unsigned int approxOrder;
     unsigned int extraQOrder;
 
-    double spectrumShift;
+    Complex spectrumShift;
     double solver_tolerance;
     int solver_max_it;
 
-    unsigned int maxIterations;
-    double relativeError;
+    double pmlFactor;
+    std::vector<bool> pmlXYZ;
     unsigned int eigensOut;
     std::string inplane;// used in 2d only actually
 
@@ -142,7 +146,7 @@ class MaxwellEquations : public SimulationInterface
     unsigned int accepted_eigen_count;
     bool relativeIndexing;
 
-    void filterEigenValues(double factor);
+    void filterEigenValues();
     virtual void calculateHopfieldCoefficients();
 
   public:

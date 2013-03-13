@@ -22,9 +22,8 @@
 using namespace std;
 using namespace Constants;
 
-
 MaxwellBoundaryEquations::MaxwellBoundaryEquations(const ModelOptions& options)
- : SimulationInterface(options)
+ : MaxwellEquationsCommon(options)
 {
   has_solution_vector(false);
 }
@@ -122,9 +121,9 @@ MaxwellBoundaryEquations::do_setup_solution_variables(void)
   declare_solution(Efield_real, VECTOR, NODES, "abs");
   declare_solution(Efield_imag, VECTOR, NODES, "abs");
   declare_solution(Epsilon,
-      SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+      SolutionDescriptor::TENSOR, SolutionDescriptor::NODES, "abs");
   declare_solution(Epsilon_imag,
-      SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+      SolutionDescriptor::TENSOR, SolutionDescriptor::NODES, "abs");
   declare_solution(Mu,
       SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
   declare_solution(SVector,
@@ -205,14 +204,12 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
         for (unsigned int j=0; j<edge_phi.size(); j++) {
           if (all_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
             Complex aValue = 0;
-            //Complex bValue = 0;
 
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
               Complex sInvertDet = pml.getSVectorDet(xyz[qp], opticModel->get_spml());
-              //std::cout << "spml: " << params.sPML << "\n";
               aValue += 1/opticModel->get_permeability_constant() * JxW[qp] * (pml.curls(edge_phi[i], xyz[qp], qp, opticModel->get_spml()) * pml.curls(edge_phi[j], xyz[qp], qp, opticModel->get_spml())) / sInvertDet;
 
-              aValue -= simulation->multiply(edge_phi[i].phi[qp], edge_phi[j].phi[qp], opticModel->get_optical_epsilon(), opticModel->get_optical_epsilon_imag()) * JxW[qp] / sInvertDet * K * K;
+              aValue -= simulation->multiply(edge_phi[i].phi[qp], edge_phi[j].phi[qp], opticModel->get_optical_epsilon()) * JxW[qp] / sInvertDet * K * K;
               //aValue -= JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*opticModel->get_dielectric_constant() / sInvertDet * K * K;
             }
 
@@ -229,7 +226,7 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
 
             Complex aValue = 0;
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
-              aValue += simulation->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())(0)),  opticModel->get_optical_epsilon(), opticModel->get_optical_epsilon_imag()) * JxW[qp];
+              aValue += simulation->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())(0)),  opticModel->get_optical_epsilon()) * JxW[qp];
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j + edge_phi.size()]);
@@ -359,11 +356,11 @@ void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
       }
 
       if (solutions.count(Epsilon)) {
-        solutions[Epsilon][qp] = opticModel->get_dielectric_constant().real();
+        addTensorSolutionR(solutions[Epsilon], opticModel->get_optical_epsilon(), 6*qp);
       }
 
       if (solutions.count(Epsilon_imag)) {
-        solutions[Epsilon_imag][qp] = opticModel->get_dielectric_constant().imag();
+        addTensorSolutionI(solutions[Epsilon_imag], opticModel->get_optical_epsilon(), 6*qp);
       }
 
       if (solutions.count(SVector)) {
@@ -386,33 +383,6 @@ OpticPropsInterface* MaxwellBoundaryEquations::getOpticModel(const Elem* elem) {
 
   OpticPropsInterface* result = dynamic_cast<OpticPropsInterface*>(
           material->get_model(get_id()));
-
-  return result;
-
-  return result;
-}
-
-Complex MaxwellBoundaryEquations::multiply(const Point& v1, const Point& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag) {
-  Complex result = 0;
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      Complex t(t_real(i+1, j+1), t_imag(i+1, j+1));
-
-      result += t * v1(i) * v2(j);
-    }
-  }
-
-  return result;
-}
-
-Complex MaxwellBoundaryEquations::multiply(const Point& v1, const VectorValue<Complex>& v2, const Tensor2Sym& t_real, const Tensor2Sym& t_imag) {
-  Complex result = 0;
-  for (int i = 0; i < 3; i++) {
-    for (int j = 0; j < 3; j++) {
-      Complex t(t_real(i+1, j+1), t_imag(i+1, j+1));
-      result += t * v1(i) * v2(j);
-    }
-  }
 
   return result;
 }

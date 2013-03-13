@@ -23,7 +23,6 @@
 
 
 //TODO
-//TODO add tensor here
 //TODO remove code duplication
 //TODO
 
@@ -37,7 +36,7 @@ using namespace Constants;
 
 
 MaxwellEquations::MaxwellEquations(const ModelOptions& options)
- : SimulationInterface(options)
+ : MaxwellEquationsCommon(options)
 {
   has_solution_vector(false);
   Wc0 = Complex(-1, 0);
@@ -64,17 +63,21 @@ void MaxwellEquations::do_init() {
   approxOrder = get_options().get_option("approxOrder", 0);
   extraQOrder = get_options().get_option("extraQOrder", 1);
 
-  maxIterations = get_options().get_option("maxIterations", 1);
-  relativeError = get_options().get_option("relativeError", 0.2);
+  pmlFactor = get_options().get_option("pmlFactor", 0.1);
+  pmlXYZ.resize(3);
+  pmlXYZ[0] = get_options().get_option("pmlX", true);
+  pmlXYZ[1] = get_options().get_option("pmlY", true);
+  pmlXYZ[2] = get_options().get_option("pmlZ", true);
   inplane = get_options().get_option("inplane", "yes");
 
-  spectrumShift = get_options().get_option("spectrumShift", 0.0);
+  std::vector<double> sShift(2, 0.0);
+  get_options().get_option("spectrumShift", sShift);
+  spectrumShift = Complex(sShift[0] / Constants::hbar * Constants::e, sShift[1] / Constants::hbar * Constants::e);
 
   solver_max_it = get_options().get_option("solver_maxits", 100);
   solver_tolerance = get_options().get_option("solver_rtol", 0.001);
   storeSolutions = get_options().get_option("storeSolutions", eigenCount < 100);
 
-  polaritons = get_options().get_option("polaritons", false);
   wellMaterial = get_options().get_option("wellMaterial", "GaN");
   lwell = get_options().get_option("lwell", 3.0) * 1e-9;
   errorEstamite = get_options().get_option("errorEstimate", false);
@@ -100,7 +103,7 @@ void MaxwellEquations::do_init() {
   EigenSystem& system = equation_systems.get_system<EigenSystem> ("Maxwell");
   system.simulationInterface = this;
 
-  system.setSpectrumShift(Complex(spectrumShift * system.simulationInterface->get_environment().get_device().get_mesh_units() / c, 0));
+  system.setSpectrumShift(spectrumShift * system.simulationInterface->get_environment().get_device().get_mesh_units() / c);
 
   system.solver_max_it = solver_max_it;
   system.solver_tolerance = solver_tolerance;
@@ -178,7 +181,7 @@ void MaxwellEquations::do_solve() {
   }
   increment_solve_sequence_number();
 
-  filterEigenValues(0.0);
+  filterEigenValues();
 
   int ttime = time(NULL) - stime;
   //cout << "Solving time in seconds: " << ttime << "\n";
@@ -230,18 +233,18 @@ void MaxwellEquations::do_solve() {
   }
 }
 
-void MaxwellEquations::filterEigenValues(double factor) {
+void MaxwellEquations::filterEigenValues() {
   EquationSystems& equation_systems = get_equation_systems();
 
   EigenSystem& system = equation_systems.get_system<EigenSystem> ("Maxwell");
 
-  PMLFilter filter(factor, this);
+  PMLFilter filter(pmlFactor, this);
 
   relativeIndexing = false;
 
   Utils::Timer tt;
 
-  filter.filter(system, eigenIndices, storedSolutions);
+  filter.filter(system, eigenIndices, storedSolutions, pmlXYZ);
 
   //std::cout << "Filtered in " << tt.elapsed_string() << "\n";
   //flush(std::cout);
@@ -254,34 +257,39 @@ void
 MaxwellEquations::do_setup_solution_variables(void)
 {
   eigensOut = get_options().get_option("eigensOut", 1);
+  polaritons = get_options().get_option("polaritons", false);
 
   declare_solution(EigenValue, REAL, GLOBAL, "c-1");
   declare_solution(EigenValue_eV, REAL, GLOBAL, "eV");
   declare_solution(EigenValueImag, REAL, GLOBAL, "c-1");
 
-  //if (polaritons) {
+  if (polaritons) {
     declare_solution(WPolariton, REAL, GLOBAL, "c-1");
     declare_solution(WPolariton_eV, REAL, GLOBAL, "eV");
     declare_solution(WPolaritonImag, REAL, GLOBAL, "c-1");
-  //}
+  }
 
   for (int i = 0; i < eigensOut; i++) {
-    char buffer [50];
-    sprintf(buffer, "Efield_%d", i);
-
-    declare_solution_ext(buffer , Efield + i,
-        SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "AnyLoL");
+    declare_E_solution("Efield", i, Efield + 3*i);
+    declare_E_solution("Efield_real", i, Efield_real + 3*i);
+    declare_E_solution("Efield_imag", i, Efield_imag + 3*i);
   }
 
   declare_solution(XHopfield, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
-  declare_solution(Epsilon, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
-  declare_solution(Epsilon_imag, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
+  declare_solution(Epsilon, SolutionDescriptor::TENSOR, SolutionDescriptor::NODES, "abs");
+  declare_solution(Epsilon_imag, SolutionDescriptor::TENSOR, SolutionDescriptor::NODES, "abs");
   declare_solution(Mu, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
   declare_solution(SVector, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
 
 }
 
-
+void
+MaxwellEquations::declare_E_solution(const char* name, int localIndex, int solutionIndex) {
+  char buffer [50];
+  sprintf(buffer, "%s_%d", name, localIndex);
+  declare_solution_ext(buffer , solutionIndex,
+      SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
+}
 
 void
 MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
@@ -357,7 +365,7 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
               Complex sInvertDet = pml.getSVectorDet(xyz[qp], opticModel->get_spml());
               aValue += 1/opticModel->get_permeability_constant() * JxW[qp] * (pml.curls(edge_phi[i], xyz[qp], qp, opticModel->get_spml()) * pml.curls(edge_phi[j], xyz[qp], qp, opticModel->get_spml())) / sInvertDet;
-              bValue += JxW[qp]*(edge_phi[i].phi[qp] * edge_phi[j].phi[qp])*opticModel->get_dielectric_constant() / sInvertDet;
+              bValue += this_mme->multiply(edge_phi[i].phi[qp], edge_phi[j].phi[qp], opticModel->get_optical_epsilon()) * JxW[qp] / sInvertDet;
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j]);
@@ -375,7 +383,7 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
 
             Complex aValue = 0;
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
-              aValue += opticModel->get_dielectric_constant() * JxW[qp] * (edge_phi[i].phi[qp] * scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())));
+              aValue += this_mme->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())(0)),  opticModel->get_optical_epsilon()) * JxW[qp];
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j + edge_phi.size()]);
@@ -413,8 +421,10 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
   int iMax = relativeIndexing ? accepted_eigen_count : system.get_n_converged();
 
   for (int i = 0; i < iMax; i++) {
-    if (solutions.count(Efield + i)) {
-      std::vector<double>& solution = solutions[Efield + i];
+    if (solutions.count(Efield + 3*i) || solutions.count(Efield_real + 3*i) || solutions.count(Efield_imag + 3*i)) {
+      std::vector<double>& solutionE = solutions[Efield + 3*i];
+      std::vector<double>& solutionE_imag = solutions[Efield_real + 3*i];
+      std::vector<double>& solutionE_real = solutions[Efield_imag + 3*i];
 
       int ii = relativeIndexing ? eigenIndices[i] : i;
 
@@ -423,21 +433,35 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
         system.get_eigen_vector(ii, edgeSolution);
       }
 
-      solution.resize(points.size()*3);
+      solutionE.resize(points.size()*3);
+      solutionE_imag.resize(points.size()*3);
+      solutionE_real.resize(points.size()*3);
+
       for (unsigned int qp = 0; qp < points.size(); qp++) {
         Point value;
+        Point value_c;
         for (unsigned int j = 0; j < edge_dof_indices.size(); j++) {
           if (edge_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
             if (!storeSolutions) {
               value = value + edgeSolution[edge_dof_indices[j]].real() * edge_phi[j].phi[qp];
+              value_c = value_c + edgeSolution[edge_dof_indices[j]].imag() * edge_phi[j].phi[qp];
             } else {
               value = value + storedSolutions[ii][edge_dof_indices[j]].real() * edge_phi[j].phi[qp];
+              value_c = value_c + storedSolutions[ii][edge_dof_indices[j]].imag() * edge_phi[j].phi[qp];
             }
           }
         }
-        solution[qp*3] = value(0);
-        solution[qp*3 + 1] = value(1);
-        solution[qp*3 + 2] = value(2);
+        solutionE[qp*3] = std::sqrt(value_c(0)*value_c(0) + value(0)*value(0));
+        solutionE[qp*3 + 1] = std::sqrt(value_c(1)*value_c(1) + value(1)*value(1));
+        solutionE[qp*3 + 2] = std::sqrt(value_c(2)*value_c(2) + value(2)*value(2));
+
+        solutionE_imag[qp*3] = value_c(0);
+        solutionE_imag[qp*3 + 1] = value_c(1);
+        solutionE_imag[qp*3 + 2] = value_c(2);
+
+        solutionE_real[qp*3] = value(0);
+        solutionE_real[qp*3 + 1] = value(1);
+        solutionE_real[qp*3 + 2] = value(2);
       }
     }
   }
@@ -455,11 +479,11 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
       }
 
       if (solutions.count(Epsilon)) {
-        solutions[Epsilon][qp] = opticModel->get_dielectric_constant().real();
+        addTensorSolutionR(solutions[Epsilon], opticModel->get_optical_epsilon(), 6*qp);
       }
 
       if (solutions.count(Epsilon_imag)) {
-        solutions[Epsilon_imag][qp] = opticModel->get_dielectric_constant().imag();
+        addTensorSolutionI(solutions[Epsilon_imag], opticModel->get_optical_epsilon(), 6*qp);
       }
 
       if (solutions.count(SVector)) {
@@ -597,7 +621,8 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
 
   double E2 = 0; //square of E abs. (with epsilon weight)
   std::map<ID, double> Fexc2; // square of Fexc abs. For each well.
-  std::map<ID, Point> FexcE; // integral of Fexc*E.  For each well.
+  std::map<ID, Point> FexcEreal; // integral of Fexc*Ereal.  For each well.
+  std::map<ID, Point> FexcEimag; // integral of Fexc*Eimag.  For each well.
 
   EigenSystem& system = get_equation_systems().get_system<EigenSystem>("Maxwell");
 
@@ -620,7 +645,8 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
     ID subdomain = elem->subdomain_id();
     if (!Fexc2.count(subdomain)) {
       Fexc2[subdomain] = 0;
-      FexcE[subdomain] = Point(0);
+      FexcEreal[subdomain] = Point(0);
+      FexcEimag[subdomain] = Point(0);
     }
 
     //OpticPropsInterface* opticModel = getOpticModel(elem);
@@ -644,20 +670,30 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
         double Xden = 0.0;//std::abs(point(0)) < 2 ? 1 : 0;
         _exciton_sim->get_solution(elem, densityId, Xden, point);
 
+        std::vector<double> Esolution_real;
+        std::vector<double> Esolution_imag;
         std::vector<double> Esolution;
-        //std::map<ID, std::vector<double> >& solutions
+
         get_solution(elem, Efield + 0, Esolution, point);
+        get_solution(elem, Efield_imag + 0, Esolution_imag, point);
+        get_solution(elem, Efield_real + 0, Esolution_real, point);
 
-	double epsilon;
+        std::vector<double> epsilonTensor;
 
-	get_solution(elem, Epsilon, epsilon, point);
+        get_solution(elem, Epsilon, epsilonTensor, point);
+
+        double epsilon = epsilonTensor[0];
+
         Point E(Esolution[0], Esolution[1], Esolution[2]);
+        Point E_imag(Esolution_imag[0], Esolution_imag[1], Esolution_imag[2]);
+        Point E_real(Esolution_real[0], Esolution_real[1], Esolution_real[2]);
 
         E2 += JxW[qp] * (epsilon * E * E);
 
         if (inWell) {
           Fexc2[subdomain] += JxW[qp] * Xden;
-          FexcE[subdomain] += JxW[qp] * std::sqrt(Xden) * E;
+          FexcEimag[subdomain] += JxW[qp] * std::sqrt(Xden) * E_imag;
+          FexcEreal[subdomain] += JxW[qp] * std::sqrt(Xden) * E_real;
         }
       }
     }
@@ -665,8 +701,10 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
 
   delete fe;
 
-  std::map<ID, double> Vi2;
-  double sum_Vi = 0;
+  std::map<ID, std::complex<double>> Vi2;
+  std::complex<double> sum_Vi2 = 0;
+  double sum_absVi2 = 0;
+
 
   //std::cout << "WC=" << Wc0 << " Wexc0=" << Wexc0 << " Wlt=" << Wlt << "\n";
   for (std::map<ID, double>::iterator it = Fexc2.begin(); it != Fexc2.end(); it++) {
@@ -676,20 +714,27 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
 
     double q = Wlt * a_b_GaN * a_b_GaN * a_b_GaN / (lwell * a_b_GaN_2D * a_b_GaN_2D);
 
-    Vi2[id] = (Fexc2[id] == 0) ? 0.0 : (q * std::abs(Wc0) * ((FexcE[id] * FexcE[id]) / Fexc2[id] / E2));
-    sum_Vi += Vi2[id];
+    std::complex<double> FexcE0(FexcEreal[id](0), FexcEimag[id](0));
+    std::complex<double> FexcE1(FexcEreal[id](1), FexcEimag[id](1));
+    std::complex<double> FexcE2(FexcEreal[id](2), FexcEimag[id](2));
+
+    std::complex<double> sqrFexcE = FexcE0 * FexcE0 + FexcE1 * FexcE1 + FexcE2 * FexcE2;
+
+    Vi2[id] = (Fexc2[id] == 0) ? 0.0 : (q * Wc0.real() * (sqrFexcE / Fexc2[id] / E2));
+    sum_Vi2 += Vi2[id];
+    sum_absVi2 += std::abs(Vi2[id]);
   }
 
   Complex two(2, 0);
 
 
-  WPolaritonLow = (Wc0 + Wexc0) / two - std::sqrt((Wc0 - Wexc0) / two * (Wc0 - Wexc0) / two + sum_Vi);
+  WPolaritonLow = (Wc0 + Wexc0) / two - std::sqrt((Wc0 - Wexc0) / two * (Wc0 - Wexc0) / two + sum_Vi2);
   std::cout << "Wpolariton low: " << WPolaritonLow << "\n";
 
   for (std::map<ID, double>::iterator it = Fexc2.begin(); it != Fexc2.end(); it++) {
     ID id = it->first;
 
-    hopfieldCoeeficients[id] = Vi2[id] / (sum_Vi + std::abs((WPolaritonLow - Wexc0) * (WPolaritonLow - Wexc0)));
+    hopfieldCoeeficients[id] = std::abs(Vi2[id]) / (sum_absVi2 + std::abs((WPolaritonLow - Wexc0) * (WPolaritonLow - Wexc0)));
     //std::cout << "Hop " << id << " " << Vi2[id] << " " << sum_Vi << " " << std::abs((WPolaritonLow - Wexc0) * (WPolaritonLow - Wexc0)) << "\n";
     //std::cout << "Hop result: " << id << " " << hopfieldCoeeficients[id] << "\n";
   }

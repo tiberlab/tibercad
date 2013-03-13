@@ -2,9 +2,12 @@
 
 topdir := ../../../..
 
-include $(topdir)/Make.module
+include $(topdir)/Make.common
 
-MODULE_NAME := maxwellabsorption
-$(eval $(call MODULE, MaxwellAbsorption.C))
+target := modules
+
+modules: module.conf
+	@$(BUILDMODULE) module.conf
+
 
 include $(topdir)/Make.rules

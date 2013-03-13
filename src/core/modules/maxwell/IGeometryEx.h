@@ -160,7 +160,7 @@ class IGeometryEx {
       //if (properties != NULL) {
         //std::cout << "PA TYPE " << properties->isSource();
       //}
-      return properties == NULL || properties->isDirichle();
+      return properties != NULL && properties->isDirichle();
     }
 
     virtual bool excludeFunction(const Elem* elem, FunctionInfo& info) {

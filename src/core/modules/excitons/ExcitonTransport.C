@@ -936,13 +936,13 @@ ExcitonTransport::do_setup_solution_variables(void) {
     declare_solution_ext("exc_exc_recombination", EXCEXCPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
     declare_solution_ext("exc_phonon_recombination", EXCPHONONPOLARITON, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
     declare_solution_ext("pol_rad_power", POLRADPOWER, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "W");
-    declare_solution_ext("mott_density", MOTTDENSITY, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "x");
+    declare_solution_ext("mott_density", MOTTDENSITY, SolutionDescriptor::REAL, SolutionDescriptor::GLOBAL, "cm-2");
   }
 }
 
 void ExcitonTransport::get_solution_secure(std::map<ID, std::vector<double> >& solutions) {
   if (solutions.count(MOTTDENSITY)) {
-    solutions[MOTTDENSITY][0] = excpolprops.max_density * excpolprops.lwell / (3e11); // all in cm here
+    solutions[MOTTDENSITY][0] = excpolprops.max_density * excpolprops.lwell; // all in cm here
   }
 
   if (solutions.count(NPOLARITON)) {
