@@ -144,7 +144,7 @@ the program:
 GMSH   Quick Tutorial
 =================================================
 
-To  use  tiberCAD,   as a first step you  need  to model the device and  generate  a suitable mesh  grid. This  can  be  done  by  using DEVISE module of ISE-TCAD 9.5 software package or GMSH program.
+To  use  tiberCAD,   as a first step you  need  to model the device and  generate  a suitable mesh. This  can  be  done  by  using S-Devise of the Synopsys TCAD software package (exporting the mesh in ``grd`` format) or the free GMSH program.
 
 
 In the following we will see how to write a basic GMSH script in 1 and 2D; for any details please refer to GMSH manual  (http://geuz.org/gmsh/).
@@ -381,10 +381,10 @@ The  *Physical surfaces* are the 2D Physical regions of  the  mesh and will  be 
 
 
                                                
-**Definition of the Phisical Lines**
+**Definition of the Physical Lines**
 
-In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Phisical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation). Thus *Physical Line* **source** refers to the source contact, *Physical Line* **gate**  to the gate contact, *Physical Line*  **drain**  to the drain contact.
-The names of these *Phisical Lines*  will be  assigned to tiberCAD *Contacts*.
+In this 2D simulation, 1D physical regions are used to carry information about boundary condition regions. In  other words, each *Physical Line* corresponds to a boundary condition (a contact in the case of a driftdiffusion calculation). Thus *Physical Line* **source** refers to the source contact, *Physical Line* **gate**  to the gate contact, *Physical Line*  **drain**  to the drain contact.
+The names of these *Physical Lines*  will be  assigned to tiberCAD *Contacts*.
 
 ::
 
@@ -524,6 +524,10 @@ be defined. The most important one is the specification of the mesh file, which 
 
  ``mesh_units`` : double
      units used in the meshfile in meters, default is ``1e-6`` corresponding to micrometers
+
+ ``write_boundary_mesh`` : bool
+     if set to ``true``, the region boundaries will be written to a file (currently only for mesh
+     dimensions > 1, using VTK format)
 
 
 .. warning::
