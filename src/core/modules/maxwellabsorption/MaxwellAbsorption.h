@@ -47,6 +47,7 @@ class MaxwellAbsorption : public SimulationInterface
 
     std::vector<double> input_lambda;
     std::vector<double> input_intencity;
+    double intensity_scaling;
 
     double lambdaStart;
     double lambdaEnd;

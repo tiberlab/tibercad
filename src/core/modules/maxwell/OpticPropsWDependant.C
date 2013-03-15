@@ -55,7 +55,7 @@ void OpticPropsWDependant::do_init(void) {
       if (useEpsilon) {
       	epsilon[i] = Complex(epsilon_real[i], epsilon_imag[i]);
       } else {
-        epsilon[i] = std::sqrt(Complex(epsilon_real[i], epsilon_imag[i]));
+        epsilon[i] = Complex(epsilon_real[i], epsilon_imag[i]) * Complex(epsilon_real[i], epsilon_imag[i]);
       }
     }
 
@@ -65,11 +65,13 @@ void OpticPropsWDependant::do_init(void) {
 }
 
 void OpticPropsWDependant::do_reinit() {
+
+	//std::cout << "reinit\n";
   MaxwellBoundaryEquations* maxwell = dynamic_cast<MaxwellBoundaryEquations*>(SimulationInterface::get_simulation(get_simulator_id()));
 
   double W = maxwell->getW();
 
-  double lambda =  2 * M_PI * Constants::c / W;
+  double lambda =  2 * M_PI * Constants::c / W / 1.0e-9; // in nm
 
   int newIndex = currentIndex;
 
@@ -77,8 +79,8 @@ void OpticPropsWDependant::do_reinit() {
     newIndex++;
   }
 
-  currentIndex = (newIndex < params.size()) ? newIndex : params.size() - 1;
-
+  currentIndex = (newIndex < params.size()) ? newIndex : (params.size() - 1);
+  
   if (lambda <= params[0]) {
     currentEpsilon = epsilon[0];
   } else if (lambda >= params[params.size() - 1]) {

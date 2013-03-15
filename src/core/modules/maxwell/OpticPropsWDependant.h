@@ -32,7 +32,8 @@ class OpticPropsWDependant: public OpticPropsInterface
      virtual Complex get_dielectric_constant() const;
 
      virtual const TensorValue<Complex> get_optical_epsilon() const {
-       return TensorValue<Complex>(get_dielectric_constant());
+       Complex t = get_dielectric_constant();
+       return TensorValue<Complex>(t, 0, 0, 0, t, 0, 0, 0, t);
      }
 
      virtual double get_permeability_constant() const {

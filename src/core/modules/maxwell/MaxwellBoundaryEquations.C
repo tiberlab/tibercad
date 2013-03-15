@@ -97,12 +97,13 @@ void MaxwellBoundaryEquations::do_init() {
 
 void MaxwellBoundaryEquations::do_reinit() {
   W = get_options().get_option("W", 0.0) / Constants::hbar * Constants::e;
+  //std::cout << "WW = " << W << "\n";
 }
 
 //=======================================================================================================//
 void MaxwellBoundaryEquations::do_solve() {
   std::ostringstream os;
-  os << "Lambda is " << 2 * M_PI * Constants::c / W;
+  //os << "Lambda is " << 2 * M_PI * Constants::c / W;
   Messages::info(os.str());
 
   EquationSystems& equation_systems = get_equation_systems();
@@ -226,7 +227,7 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
 
             Complex aValue = 0;
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
-              aValue += simulation->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())(0)),  opticModel->get_optical_epsilon()) * JxW[qp];
+              aValue += simulation->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())),  opticModel->get_optical_epsilon()) * JxW[qp];
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j + edge_phi.size()]);

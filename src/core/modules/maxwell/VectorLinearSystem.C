@@ -13,7 +13,6 @@ VectorLinearSystem::~VectorLinearSystem () {
 }
 
 void VectorLinearSystem::reinit () {
-  //TiberLinearSystem::reinit();
 }
 
 void VectorLinearSystem::solve () {
@@ -35,6 +34,9 @@ void VectorLinearSystem::solve () {
 
 
   /***************************************************************************/
+  matA.clear();
+  columnB.clear();
+
   this->assemble ();
   // TODO for one test
   //addBValue(Complex(1, 0), (systemSize - 1) / 2);

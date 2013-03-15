@@ -383,7 +383,7 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
 
             Complex aValue = 0;
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
-              aValue += this_mme->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())(0)),  opticModel->get_optical_epsilon()) * JxW[qp];
+              aValue += this_mme->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())),  opticModel->get_optical_epsilon()) * JxW[qp];
             }
 
             system.addAValue(aValue, all_dof_indices[i], all_dof_indices[j + edge_phi.size()]);

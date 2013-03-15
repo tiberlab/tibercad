@@ -45,6 +45,7 @@ void MaxwellAbsorption::do_solve() {
   db2.set_data_file(intencityFile);
   db2.get("lambda", input_lambda);
   db2.get("intensity", input_intencity);
+  intensity_scaling = db2.get("scaling", 1.0);
   db2.close();
 
   int currentIndex = 0;
@@ -77,8 +78,9 @@ void MaxwellAbsorption::do_solve() {
 
     }
 
+    currentIntensity *= intensity_scaling;
 
-    double W = 2 * M_PI / lambda * Constants::c;
+    double W = 2 * M_PI / (lambda * 1e-9) * Constants::c;
     double W_in_eV = Constants::hbar * W / Constants::e;
 
     char buffer [50];
@@ -141,9 +143,10 @@ void MaxwellAbsorption::do_solve() {
 
         double realESquared = eSquared * intencity / (Constants::epsilon * Constants::c / 2);
 
-        double absrobed_I = realESquared * 2 * n.imag() * W /Constants::c;
+        //double absrobed_I = 2 * realESquared * 2 * n.imag() * W /Constants::c / 100; //
+        double absrobed_I = n.imag() * Constants::epsilon * realESquared * n.real() * W / 1e6; // 1e6 m-3 -> cm-3
         double absorbed_ph = absrobed_I / Constants::hbar / W;
-        //std::cout << photons << "\n";
+
         solution_energy[elem->centroid()][i] += absrobed_I;
         solution_photon[elem->centroid()][i] += absorbed_ph;
       }
@@ -156,8 +159,8 @@ void MaxwellAbsorption::do_solve() {
 void
 MaxwellAbsorption::do_setup_solution_variables(void)
 {
-  declare_solution_ext("Absorbed energy", Absorption_Energy, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "J/m^3");
-  declare_solution_ext("Absorbed photons", Absorption_Photon, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "1/m^3");
+  declare_solution_ext("Absorbed energy", Absorption_Energy, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "J/cm^3/c");
+  declare_solution_ext("Absorbed photons", Absorption_Photon, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "1/cm^3/c");
 }
 
 void MaxwellAbsorption::get_solution_secure(const Elem* elem,
@@ -171,6 +174,11 @@ void MaxwellAbsorption::get_solution_secure(const Elem* elem,
 
     std::vector<double>& sol_ph = solutions[Absorption_Photon];
     sol_ph.resize(points.size());
+
+    for (int i = 0; i < points.size(); i++) {
+      sol_e[i] = 0;
+      sol_ph[i] = 0;
+    }
 
     const unsigned int dim = get_mesh().mesh_dimension();
 
