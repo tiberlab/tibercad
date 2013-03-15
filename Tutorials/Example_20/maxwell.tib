@@ -2,10 +2,17 @@ Device
 {
   meshfile = testline.msh
 
-   Region air
+   Region device
+   {
+     material = Air
+     optical_epsilon = 4
+   }
+
+   Region pml
    {
      material = Air
      optical_epsilon = 1
+     sPML = 12
    }
 
   mesh_units = 1
@@ -16,8 +23,8 @@ Module maxwell
   plot = (all)
 
   approxOrder = 2
-
-  eigenCount = 10
+  
+  eigenCount = 40
   eigensOut = 10
 
   errorEstimate = 0
