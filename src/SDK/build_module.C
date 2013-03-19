@@ -796,12 +796,10 @@ void process_module(const string& name, const ModelOptions& options)
   // the module library, if present
   string modulelib;
 
-  string instpath = options.get_option("installpath", "@ARCH/modules/@MODULE");
+  string instpath = options.get_option("installpath", "@ROOT/@ARCH/modules/@MODULE");
   BuildModule::replace(instpath, "@ARCH", ARCH);
   BuildModule::replace(instpath, "@ROOT", BuildModule::tc_root);
   BuildModule::replace(instpath, "@MODULE", modulename);
-  if (instpath[0] != '/')
-    instpath = BuildModule::tc_root + "/" + instpath;
 
 
   // the compile and link flags
