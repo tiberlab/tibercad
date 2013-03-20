@@ -29,6 +29,7 @@
 #include "dense_subvector.h"
 #include "TiberNonlinearScalarSolver.h"
 // C++ includes
+#include "TiberModule.h"
 
 using namespace std;
 
