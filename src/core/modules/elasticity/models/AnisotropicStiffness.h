@@ -41,6 +41,8 @@ class TBDLLOCAL AnisotropicStiffness : public StiffnessModel
     /* This is not used here: */
   virtual void read_database(void);
 
+  virtual void do_print_info(void);
+
 
     /* We do not use this here: */
     // virtual void read_interface_database(void);

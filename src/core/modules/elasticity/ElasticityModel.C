@@ -31,13 +31,10 @@ ElasticityModel::do_init(void)
 void
 ElasticityModel::do_print_info(void)
 {
-Messages::info("Stiffness Constant:");
-ostringstream os;
-os <<"  C11: "<<_stiffness(1,1,1,1)<<" GPa\n";
-os <<"  C12: "<<_stiffness(2,2,1,1)<<" GPa\n";
-os <<"  C13: "<<_stiffness(3,3,1,1)<<" GPa\n";
-os <<"  C44: "<<_stiffness(3,2,3,2)<<" GPa\n";
-Messages::info(os.str());
+  PhysicalModelInterface::SubmodelIterator it(submodels_begin("stiffness"));
+  StiffnessModel* sm = dynamic_cast<StiffnessModel*> ((*it).second);
+  sm->print_info();
+
 }
 
 void

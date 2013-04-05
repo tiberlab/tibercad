@@ -2,9 +2,11 @@
 
 #include "AnisotropicStiffness.h"
 #include "Database.h"
+#include "Messages.h"
 
 #include "TiberModule.h"
 
+#include <sstream>
 
 using namespace std;
 
@@ -82,6 +84,27 @@ AnisotropicStiffness::do_init(void)
 }
 
 
+void
+AnisotropicStiffness::do_print_info(void)
+{
+  Messages::info("Stiffness Constants (GPa, in calculation coordinate system):");
+  ostringstream os;
+  if (get_material()->get_structure() == "wz")
+  {
+    os << "  C11 = " << get_stiffness()(1,1,1,1);
+    os << " C12 = " << get_stiffness()(2,2,1,1);
+    os << " C13 = " << get_stiffness()(3,3,1,1);
+    os << " C33 = " << get_stiffness()(3,3,3,3);
+    os << " C44 = " << get_stiffness()(3,2,3,2);
+  }
+  else
+  {
+    os << "  C11 = " << get_stiffness()(1,1,1,1);
+    os << " C12 = " << get_stiffness()(2,2,1,1);
+    os << " C44 = " << get_stiffness()(3,2,3,2);
+  }
+  Messages::info(os.str());
+}
 
 
  
