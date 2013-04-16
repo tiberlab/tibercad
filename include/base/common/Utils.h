@@ -102,6 +102,11 @@ class Utils
         std::vector<std::string>& tokens, const char* delimiter = ".");
 
 
+    //! Find matching strings in a vector of strings
+    static void find_matching_strings(const std::string& regex,
+        const std::vector<std::string>& in, std::vector<std::string>& out) {};
+
+
     //! A functor that checks if two double values are almost equal
     /*!
      * \em almost \em equal means the following:

@@ -8,11 +8,14 @@
 
 #include "mesh.h"
 #include "elem.h"
+#include "mesh_tools.h"
+#include "mesh_base.h"
 
 #include <cassert>
 #include <list>
 
 
+using namespace std;
 
 
 void
@@ -33,7 +36,7 @@ MeshUtils::get_subdomain_ids(MeshBase& mesh, std::set<ID>& subdomain_ids)
 }
 
 
-bool MeshUtils::may_belong_to_element(const Elem* element, Point& point)
+bool MeshUtils::may_belong_to_element(const Elem* element, const Point& point)
 {
   Point vertex(element->point(0));
   double min_x = vertex(0);
@@ -187,3 +190,70 @@ MeshUtils::create_boundary_mesh(const MeshBase& mesh)
 
   return AutoPtr<MeshBase>(bdmesh);
 }
+
+
+
+const Elem*
+MeshUtils::search_element(const MeshBase* mesh, const Point& point)
+{
+  return GridMapper::get_mapper(mesh).get_element(point);
+}
+
+
+
+MeshUtils::GridMapper::GridMapper(const MeshBase* mesh)
+: _mesh(mesh)
+{
+  setup();
+}
+
+
+void
+MeshUtils::GridMapper::setup(void)
+{
+  MeshTools::BoundingBox bb(MeshTools::bounding_box(*_mesh));
+  _tensor_grid.setup(bb.min(), bb.max(), 50, 50, 50);
+}
+
+
+
+MeshUtils::GridMapper&
+MeshUtils::GridMapper::get_mapper(const MeshBase* mesh)
+{
+  std::map<const MeshBase*, GridMapper>::iterator it(_mappers.find(mesh));
+  if (it == _mappers.end())
+  {
+    it = (_mappers.insert(make_pair(mesh, GridMapper(mesh)))).first;
+  }
+
+  return it->second;
+}
+
+
+const Elem*
+MeshUtils::GridMapper::get_element(const Point& point) const
+{
+  const Elem* el = NULL;
+
+  int tgrid_el = _tensor_grid.find_element(point);
+  // we can assume that _elem_list is assembled when getting here
+  vector<const Elem*>& list = _elem_list[tgrid_el];
+
+  for (int i = 0; i < list.size(); ++i)
+  {
+    const Elem* elem = list[i];
+    if (MeshUtils::may_belong_to_element(elem, point))
+    {
+      if (elem->contains_point(point))
+      {
+        el = elem;
+        break;
+      }
+    }
+  }
+
+  return el;
+}
+
+
+
