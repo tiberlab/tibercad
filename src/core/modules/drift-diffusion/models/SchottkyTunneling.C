@@ -17,6 +17,7 @@
 
 #include "TiberModule.h"
 
+//TIBER_MODULE(SchottkyTunneling, recombination, schottky_tunneling)
 
 using namespace std;
 
