@@ -237,7 +237,7 @@ MeshUtils::GridMapper::get_element(const Point& point) const
 
   int tgrid_el = _tensor_grid.find_element(point);
   // we can assume that _elem_list is assembled when getting here
-  vector<const Elem*>& list = _elem_list[tgrid_el];
+  const vector<const Elem*>& list = _elem_list[tgrid_el];
 
   for (int i = 0; i < list.size(); ++i)
   {
