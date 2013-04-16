@@ -1180,8 +1180,8 @@ DriftDiffusion::parse_const_options(void)
     myopts.current_calculation = RSTF;
   else if (method == "compact_rstf")
     myopts.current_calculation = RSTF_COMPACT;
-  //else if (method == "surface_integral")
-  //  myopts.current_calculation = SURFINT;
+  else if (method == "surface_integral")
+    myopts.current_calculation = SURFINT;
   else throw InitFailedException("Unknown current integration method: "
       + method + " in DriftDiffusion.");
 
@@ -1509,7 +1509,7 @@ DriftDiffusion::RSTFSys::user_assembly(void)
 
           for (unsigned int i = 0; i < elem->n_nodes(); i++)
           {
-            if (elem->is_node_on_side(i, s))
+            //if (elem->is_node_on_side(i, s))
             {
               Ke(i, i) += penalty;
               Fe[bdid](i) += penalty;
@@ -3806,6 +3806,8 @@ DriftDiffusion::calculate_currents(void)
   if (get_my_options().current_calculation == RSTF)
     calculate_currents_rstf_global();
   else if (get_my_options().current_calculation == RSTF_COMPACT)
+    calculate_currents_rstf_compact();
+  else
     calculate_currents_surfint();
 }
 
