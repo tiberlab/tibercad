@@ -201,6 +201,11 @@ MeshUtils::search_element(const MeshBase* mesh, const Point& point)
 
 
 
+std::map<const MeshBase*, MeshUtils::GridMapper>
+MeshUtils::GridMapper::_mappers;
+
+
+
 MeshUtils::GridMapper::GridMapper(const MeshBase* mesh)
 : _mesh(mesh)
 {

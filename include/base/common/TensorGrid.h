@@ -70,12 +70,14 @@ class TensorGrid
 
 
 
+inline
 TensorGrid::TensorGrid(const Point& p0, const Point& p1, int nk, int nl, int nm)
 {
   setup(p0, p1, nk, nl, nm);
 }
 
 
+inline
 void
 TensorGrid::setup(const Point& p0, const Point& p1, int nk, int nl, int nm)
 {
@@ -91,7 +93,7 @@ TensorGrid::setup(const Point& p0, const Point& p1, int nk, int nl, int nm)
 
 
 
-
+inline
 int
 TensorGrid::find_element(const Point& p) const
 {
@@ -109,6 +111,7 @@ TensorGrid::find_element(const Point& p) const
 }
 
 
+inline
 int
 TensorGrid::num_elements(void) const
 {
