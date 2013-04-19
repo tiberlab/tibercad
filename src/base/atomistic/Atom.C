@@ -1,6 +1,5 @@
 #include "Atom.h"
 #include "elem.h"
-#include"elem.h"
 
 
 Atom::Atom()
@@ -35,7 +34,7 @@ Atom::~Atom()
 }
 
 
-void Atom::set_elem(Elem* el)
+void Atom::set_elem(const Elem* el)
 {
   _el = el;
 }

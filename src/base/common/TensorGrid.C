@@ -1,0 +1,31 @@
+// $Id$
+
+#include "TensorGrid.h"
+
+
+
+void
+TensorGrid::setup(const Point& p0, const Point& p1, int nk, int nl, int nm)
+{
+  _p0 = p0;
+  _p1 = p1;
+  _nk = nk;
+  _nl = nl;
+  _nm = nm;
+
+  double lx = _p1(0) - _p0(0);
+  double ly = _p1(1) - _p0(1);
+  double lz = _p1(2) - _p0(2);
+  double eps = 1e-6;
+  _p0(0) -= eps * (lx + 1);
+  _p0(1) -= eps * (ly + 1);
+  _p0(2) -= eps * (lz + 1);
+  _p1(0) += eps * (lx + 1);
+  _p1(1) += eps * (ly + 1);
+  _p1(2) += eps * (lz + 1);
+
+  _dx = (_p1(0) - _p0(0)) / _nk;
+  _dy = (_p1(1) - _p0(1)) / _nl;
+  _dz = (_p1(2) - _p0(2)) / _nm;
+}
+

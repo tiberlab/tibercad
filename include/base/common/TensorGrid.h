@@ -35,8 +35,23 @@ class TensorGrid
     int find_element(const Point& p) const;
     
 
+    //! Find the element for a given point
+    /*!
+     * The element is identified by the triple (k,l,m).
+     */
+    void find_element(const Point& p, int indices[3]) const;
+
+
     //! Get the number of elements
     int num_elements(void) const;
+
+
+    //! Get the element for given coordinate index triple (k,l,m)
+    int index_to_element(int indices[3]) const;
+
+
+    //! Get the element for given coordinate index triple (k,l,m)
+    int index_to_element(unsigned int k, unsigned int l, unsigned int m) const;
 
 
   private:
@@ -77,18 +92,14 @@ TensorGrid::TensorGrid(const Point& p0, const Point& p1, int nk, int nl, int nm)
 }
 
 
+
 inline
 void
-TensorGrid::setup(const Point& p0, const Point& p1, int nk, int nl, int nm)
+TensorGrid::find_element(const Point& p, int indices[3]) const
 {
-  _p0 = p0;
-  _p1 = p1;
-  _nk = nk;
-  _nl = nl;
-  _nm = nm;
-  _dx = (_p1(0) - _p0(0)) / _nk;
-  _dy = (_p1(1) - _p0(1)) / _nl;
-  _dz = (_p1(2) - _p0(2)) / _nm;
+  indices[0] = floor((p(0) - _p0(0)) / _dx);
+  indices[1] = floor((p(1) - _p0(1)) / _dy);
+  indices[2] = floor((p(2) - _p0(2)) / _dz);
 }
 
 
@@ -107,7 +118,7 @@ TensorGrid::find_element(const Point& p) const
   if ((k > _nk) || (l > _nl) || (m > _nm))
     return -1;
 
-  return m*_nl*_nk + l*_nk + k;
+  return(m*_nl*_nk + l*_nk + k);
 }
 
 
@@ -118,5 +129,19 @@ TensorGrid::num_elements(void) const
   return _nk * _nl * _nm;
 }
 
+
+inline
+int
+TensorGrid::index_to_element(int indices[3]) const
+{
+  return(indices[2]*_nl*_nk + indices[1]*_nk + indices[0]);
+}
+
+inline
+int
+TensorGrid::index_to_element(unsigned int k, unsigned int l, unsigned int m) const
+{
+  return(m*_nl*_nk + l*_nk + k);
+}
 
 #endif // _TENSORGRID_H_

@@ -76,20 +76,19 @@ void
 BondMap::do_init(const unsigned int structure_size)
 {
 
-  Messages::info("Calculating Bond Map");
+  Messages::info("Calculating Bond Map... ");
 
   // Allocate bond map
-    _bond_map.resize(structure_size);
+  _bond_map.resize(structure_size);
   for (unsigned int i = 0; i < structure_size; i++)
   {
     _bond_map[i].reserve(4);
   }
   _translation.resize(structure_size);
-    for (unsigned int i = 0; i < structure_size; i++)
-    {
-      _translation[i].reserve(4);
-    }
-  std::cout << "done" << std::endl;
+  for (unsigned int i = 0; i < structure_size; i++)
+  {
+    _translation[i].reserve(4);
+  }
 
 }
 

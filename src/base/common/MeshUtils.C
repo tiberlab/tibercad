@@ -2,6 +2,8 @@
 
 
 #include "MeshUtils.h"
+#include "Utils.h"
+#include "Messages.h"
 #include "HashMap.h"
 #include "HashSet.h"
 #include "RuntimeException.h"
@@ -13,6 +15,7 @@
 
 #include <cassert>
 #include <list>
+#include <algorithm>
 
 
 using namespace std;
@@ -201,7 +204,7 @@ MeshUtils::search_element(const MeshBase* mesh, const Point& point)
 
 
 
-std::map<const MeshBase*, MeshUtils::GridMapper>
+map<const MeshBase*, MeshUtils::GridMapper*>
 MeshUtils::GridMapper::_mappers;
 
 
@@ -213,11 +216,99 @@ MeshUtils::GridMapper::GridMapper(const MeshBase* mesh)
 }
 
 
+MeshUtils::GridMapper::~GridMapper(void)
+{
+  map<const MeshBase*, GridMapper*>::iterator it(_mappers.begin());
+  map<const MeshBase*, GridMapper*>::iterator end(_mappers.end());
+  for ( ; it != end; ++it)
+  {
+    delete it->second;
+  }
+}
+
+
+
 void
 MeshUtils::GridMapper::setup(void)
 {
   MeshTools::BoundingBox bb(MeshTools::bounding_box(*_mesh));
-  _tensor_grid.setup(bb.min(), bb.max(), 50, 50, 50);
+
+  int nx = 50, ny = 1, nz = 1;
+  switch (_mesh->mesh_dimension())
+  {
+    case 3:
+      nz = 50;
+
+    case 2:
+      ny = 50;
+      break;
+  }
+
+  _tensor_grid.setup(bb.min(), bb.max(), nx, ny, nz);
+
+  _elem_list.resize(_tensor_grid.num_elements());
+
+  MeshBase::const_element_iterator it = _mesh->local_elements_begin();
+  const MeshBase::const_element_iterator end = _mesh->local_elements_end();
+
+  Messages::newline();
+  Messages::info("Setup of grid mapper: ", false);
+  Utils::Timer timer;
+
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+
+    // we decide whether an element touches a certain tensor grid element
+    // by looking at the bounding box
+
+    // get the bounding box
+    Point p0(elem->point(0));
+    Point p1(elem->point(1));
+    for (unsigned int n = 2; n < elem->n_nodes(); n++)
+    {
+      const Point& pn = elem->point(n);
+      if (pn(0) < p0(0)) p0(0) = pn(0);
+      if (pn(1) < p0(1)) p0(1) = pn(1);
+      if (pn(2) < p0(2)) p0(2) = pn(2);
+      if (pn(0) > p1(0)) p1(0) = pn(0);
+      if (pn(1) > p1(1)) p1(1) = pn(1);
+      if (pn(2) > p1(2)) p1(2) = pn(2);
+    }
+
+    int tg0[3];
+    int tg1[3];
+    _tensor_grid.find_element(p0, tg0);
+    _tensor_grid.find_element(p1, tg1);
+
+    // all tensor grid elements in the cube [tg0, tg1] may be touched
+    // by elem
+
+    for (unsigned int k = tg0[0]; k <= tg1[0]; ++k)
+      for (unsigned int l = tg0[1]; l <= tg1[1]; ++l)
+        for (unsigned int m = tg0[2]; m <= tg1[2]; ++m)
+        {
+          int tgrid_el = _tensor_grid.index_to_element(k, l, m);
+
+
+          vector<const Elem*>& ellist = _elem_list[tgrid_el];
+          vector<const Elem*>::iterator it(find(ellist.begin(), ellist.end(), elem));
+
+          if (it == ellist.end())
+            ellist.push_back(elem);
+        }
+  }
+
+  long unsigned int mem = 0;
+  for (unsigned int i = 0; i < _elem_list.size(); ++i)
+    mem += _elem_list[i].size();
+
+  mem *= sizeof(const Elem*);
+
+  ostringstream os;
+  os << timer.elapsed_string() << ", memory usage: "
+      << mem / (1024*1024) << " MB";
+  Messages::info(os.str());
 }
 
 
@@ -225,15 +316,21 @@ MeshUtils::GridMapper::setup(void)
 MeshUtils::GridMapper&
 MeshUtils::GridMapper::get_mapper(const MeshBase* mesh)
 {
-  std::map<const MeshBase*, GridMapper>::iterator it(_mappers.find(mesh));
+  map<const MeshBase*, GridMapper*>::iterator it(_mappers.find(mesh));
   if (it == _mappers.end())
   {
-    it = (_mappers.insert(make_pair(mesh, GridMapper(mesh)))).first;
+    it = (_mappers.insert(make_pair(mesh, new GridMapper(mesh)))).first;
   }
 
-  return it->second;
+  return(*(it->second));
 }
 
+
+MeshUtils::GridMapper&
+MeshUtils::GridMapper::get_mapper(const MeshBase& mesh)
+{
+  return(get_mapper(&mesh));
+}
 
 const Elem*
 MeshUtils::GridMapper::get_element(const Point& point) const
@@ -241,23 +338,28 @@ MeshUtils::GridMapper::get_element(const Point& point) const
   const Elem* el = NULL;
 
   int tgrid_el = _tensor_grid.find_element(point);
-  // we can assume that _elem_list is assembled when getting here
-  const vector<const Elem*>& list = _elem_list[tgrid_el];
 
-  for (int i = 0; i < list.size(); ++i)
+  if (tgrid_el >= 0)
   {
-    const Elem* elem = list[i];
-    if (MeshUtils::may_belong_to_element(elem, point))
+    // we can assume that _elem_list is assembled when getting here
+    const vector<const Elem*>& list = _elem_list[tgrid_el];
+
+    for (int i = 0; i < list.size(); ++i)
     {
-      if (elem->contains_point(point))
+      const Elem* elem = list[i];
+      // note: by construction it is inside the bounding box of elem
+      //if (MeshUtils::may_belong_to_element(elem, point))
       {
-        el = elem;
-        break;
+        if (elem->contains_point(point))
+        {
+          el = elem;
+          break;
+        }
       }
     }
   }
 
-  return el;
+  return(el);
 }
 
 

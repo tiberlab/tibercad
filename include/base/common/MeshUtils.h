@@ -31,8 +31,14 @@ class MeshUtils
     {
       public:
 
+        //! Destructor
+        ~GridMapper(void);
+
         //! Obtain the GridMapper object for a given mesh
         static GridMapper& get_mapper(const MeshBase* mesh);
+
+        //! Obtain the GridMapper object for a given mesh
+        static GridMapper& get_mapper(const MeshBase& mesh);
 
         //! Get the element a given point is in
         const Elem* get_element(const Point& point) const;
@@ -42,8 +48,11 @@ class MeshUtils
 
         typedef std::vector<std::vector<const Elem*>>  ElementList;
 
+        //! Default constructor is disabled
+        GridMapper(void);
+
         //! Constructor
-        GridMapper(const MeshBase* mesh);
+        explicit GridMapper(const MeshBase* mesh);
 
         //! The real mesh
         const MeshBase* _mesh;
@@ -59,7 +68,7 @@ class MeshUtils
 
 
         //! A static list of all GridMapper objects
-        static std::map<const MeshBase*, GridMapper> _mappers;
+        static std::map<const MeshBase*, GridMapper*> _mappers;
 
     };
 

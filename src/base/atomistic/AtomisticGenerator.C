@@ -105,6 +105,8 @@ AtomisticGenerator::do_init()
   _as->get_device()->get_active_region_ids(ref_region, ids);
   if (ids.size() == 0)
     throw InitFailedException("Reference region badly defined for structure " +  _as->get_name() );
+
+  _reference_region_id = *ids.begin();
   _reference_material = _as->get_device()->get_material(*ids.begin());
   structure =  _reference_material->get_structure();
 
@@ -283,8 +285,17 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   assign.clear();
   _structure_basis.reserve(_super_basis.size());
 
+  std::set<ID> reg_ids(_as->get_IDset());
+  // we will need the reference region for atoms falling outside of
+  // the atomistic structure's regions
+  reg_ids.insert(_reference_region_id);
 
-  for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); reg++)
+  // the tensor grid to real mesh mapper for fast association atom->Elem
+  MeshUtils::GridMapper& mapper =
+      MeshUtils::GridMapper::get_mapper(_as->get_device()->get_mesh());
+
+  std::set<ID>::iterator reg(reg_ids.begin());
+  for ( ; reg != reg_ids.end(); ++reg)
   {
 
     const Material* mat = _as->get_device()->get_material( (*reg) );
@@ -317,8 +328,9 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
   }
 
-  //Cycle upon all atoms and change specie according to assign map
-  Point p(0.0, 0.0, 0.0);
+  //
+  // Cycle upon all atoms and change specie according to assign map
+  //
 
   progress_step = _super_basis.size()/100;
   progress_counter = 0;
@@ -335,64 +347,61 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
     //bool not_already_included is needed because a point can be contained by more than one element
     //if it falls exactly on the boundary
     
-    for ( std::vector<Atom>::iterator atom = _super_basis.begin();
+    for (std::vector<Atom>::iterator atom = _super_basis.begin();
         atom != _super_basis.end(); ++atom)
     {
 
+      Point p((*atom).get_position());
+      p *= 1.0 / scale;
 
-      done = false;
-
-      p(0) = (*atom).get_position(0) / scale;
-
-      if ( (_dim == 2) || (_dim == 3) )   p(1) = (*atom).get_position(1) / scale;
-
-      if ( (_dim == 3) )  p(2) = (*atom).get_position(2) / scale;
-      for (std::vector<Elem*>::iterator it = _structure_elements.begin();
-          it != _structure_elements.end(); it++)
+      // set unneeded dimensions to 0, so the atoms are associated to the correct
+      // elements
+      switch (_dim)
       {
-        Elem* elem = *it;
-        el_reg = elem->subdomain_id();
-
-        if (MeshUtils::may_belong_to_element(elem, p)){
-
-          if ( ( elem->contains_point(p) ) ) {
-            if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-            {
-              Specie tmp =  assign[el_reg][(*atom).get_flag()];
-              (*atom).set_specie(tmp);
-              //(*atom).set_flag(0);
-              (*atom).belong_to_structure = true;
-              (*atom).set_elem(elem);
-              _structure_basis.push_back(*atom);
-              done = true;
-            }
-            else
-            {
-              std::cout << "Warning, atom is included but no assignment map member could be built " << std::endl;
-            }
-            break;
-          }
-
-        }
-
-
+        case 0:
+          p(0) = 0;
+        case 1:
+          p(1) = 0;
+        case 2:
+          p(2) = 0;
+        default:
+          break;
       }
 
-      //If atom does not belong to element, push it and flag it as non internal
-      if (done == false)
+
+      const Elem* elem = mapper.get_element(p);
+      bool done = false;
+
+      if (elem != NULL)
       {
-        if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
+        el_reg = elem->subdomain_id();
+
+        if (reg_ids.count(el_reg))
         {
+          // this should be always present
+          //if (assign[el_reg].find((*atom).get_flag()) != assign[el_reg].end())
+          //{
+
           Specie tmp =  assign[el_reg][(*atom).get_flag()];
           (*atom).set_specie(tmp);
           //(*atom).set_flag(0);
-          (*atom).belong_to_structure = false;
+          (*atom).belong_to_structure = true;
+          (*atom).set_elem(elem);
           _structure_basis.push_back(*atom);
+          done = true;
+
+          //}
         }
-        else
-        {
-          Messages::warning("Warning, atom is included but no assignment map member could be built");
-        }
+      }
+
+      if (!done)
+      {
+        Specie tmp =  assign[_reference_region_id][(*atom).get_flag()];
+        (*atom).set_specie(tmp);
+        //(*atom).set_flag(0);
+        (*atom).belong_to_structure = false;
+        (*atom).set_elem(elem);
+        _structure_basis.push_back(*atom);
       }
 
       progress_counter += 1;
@@ -413,6 +422,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
     {
       done = false;
 
+      Point p(0.0, 0.0, 0.0);
       p(0) = (*lattice)(1) / scale;
 
       if ( (_dim == 2) || (_dim == 3) )   p(1) = (*lattice)(2) / scale;
@@ -504,6 +514,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
       for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++)
       {
 
+        Point p(0.0, 0.0, 0.0);
         p(0) = (*conv)(1) / scale;
 
         if ( (_dim == 2) || (_dim == 3) )   p(1) = (*conv)(2) / scale;
@@ -1062,9 +1073,15 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   //----------------------------------------------------
 
   //Define vectors with same direction of conventional cell vectors, but with size specifed by l1,l2,l3
-  supercell_vect(1,1) = _conv_vect(1,1) * (l1 / conv_l1); supercell_vect(2,1) = _conv_vect(2,1) * (l1 / conv_l1); supercell_vect(3,1) = _conv_vect(3,1) * (l1 / conv_l1);
-  supercell_vect(1,2) = _conv_vect(1,2) * (l2 / conv_l2); supercell_vect(2,2) = _conv_vect(2,2) * (l2 / conv_l2); supercell_vect(3,2) = _conv_vect(3,2) * (l2 / conv_l2);
-  supercell_vect(1,3) = _conv_vect(1,3) * (l3 / conv_l3); supercell_vect(2,3) = _conv_vect(2,3) * (l3 / conv_l3); supercell_vect(3,3) = _conv_vect(3,3) * (l3 / conv_l3);
+  supercell_vect(1,1) = _conv_vect(1,1) * (l1 / conv_l1);
+  supercell_vect(2,1) = _conv_vect(2,1) * (l1 / conv_l1);
+  supercell_vect(3,1) = _conv_vect(3,1) * (l1 / conv_l1);
+  supercell_vect(1,2) = _conv_vect(1,2) * (l2 / conv_l2);
+  supercell_vect(2,2) = _conv_vect(2,2) * (l2 / conv_l2);
+  supercell_vect(3,2) = _conv_vect(3,2) * (l2 / conv_l2);
+  supercell_vect(1,3) = _conv_vect(1,3) * (l3 / conv_l3);
+  supercell_vect(2,3) = _conv_vect(2,3) * (l3 / conv_l3);
+  supercell_vect(3,3) = _conv_vect(3,3) * (l3 / conv_l3);
   inv_supercell_vect = inv(supercell_vect);
 
   //std::cout << "I'm bulding a supercell with " << n1 << n2 << n3 << "conventional cells" << std::endl;

@@ -118,11 +118,14 @@ protected:
   //! An internal instance of BondMap, to make passivation and final bond map
   BondMap* _bondmapobject;
 
+  //! Reference region ID
+  ID _reference_region_id;
+
   //! Reference material
   const Material* _reference_material;
 
-    //! Database of reference material
-    Database _reference_material_db;
+  //! Database of reference material
+  Database _reference_material_db;
 
   //! Missing super_conv (vector of conventional cells edges).
   //!If it will be needed remember to uncomment proper lines in make_supercell!!!!!!!!!!!!!!!!

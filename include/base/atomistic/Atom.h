@@ -76,7 +76,7 @@ public:
   bool belong_to_structure;
 
   //!Set element
-  void set_elem(Elem* el);
+  void set_elem(const Elem* el);
 
   //!Get element
   const Elem* get_elem() const;
@@ -84,7 +84,7 @@ public:
 private:
 
   //!Element atom belongs to
-  Elem* _el;
+  const Elem* _el;
 
   //! Atomic specie (short name)
   Specie _specie;
