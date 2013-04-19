@@ -294,7 +294,8 @@ Utils::convert<bool>(const std::string& val)
 {
   bool res;
 
-  if ((val == "true") || (val == "1") || (val == "TRUE"))
+  if ((val == "true") || (val == "1") || (val == "TRUE")
+      || (val == "yes") || (val == "y"))
     res = true;
   else
     res = false;

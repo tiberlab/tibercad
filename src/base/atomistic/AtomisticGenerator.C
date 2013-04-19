@@ -167,25 +167,6 @@ AtomisticGenerator::do_init()
 
   set_prim_miller(miller);
 
-  //-------------------------------------------------------------------------------------------
-
-
-  // Set the vector of elements covered by structure regions, useful for change specie and cut
-  MeshBase::element_iterator el = _as->get_device()->get_mesh().elements_begin();
-  const MeshBase::element_iterator el_end = _as->get_device()->get_mesh().elements_end();
-  //TODO: find a way to reserve this vector, if you can get information about
-  //number of elements in atomistic regions
-  for ( ; el != el_end; el++)
-  {           Elem* elem = *el;
-  if (_as->get_IDset().find( elem->subdomain_id() ) != _as->get_IDset().end() ) _structure_elements.push_back(elem);
-  }
-
-  //--------------------------------------------
-  os << "Atomistic region contains " << _structure_elements.size() << " elements"
-  << std::endl;
-  Messages::debug(os.str());
-  os.str(std::string());
-  //----------------------------------------------
 
   //A translation vector can be specified to modify supercell alignment
   std::vector<double> translation (3,0.0);
@@ -203,13 +184,12 @@ AtomisticGenerator::do_init()
   preserve = _as->get_options().get_option("preserve", "none");
   cut_and_change_specie(preserve);
 
-  if (_as->is_random_alloy()) build_random_alloy();
+  if (_as->is_random_alloy())
+    build_random_alloy();
 
-  std::string passivation;
-  passivation = _as->get_options().get_option("passivation", "no");
+  if (_as->get_options().get_option("passivation", false))
+    passivate();
 
-//  if (passivation.compare("yes") == 0 || passivation.compare("true")){passivate();}
-  if ( (passivation.compare("yes") == 0) || (passivation.compare("true") == 0) ){passivate();}
 
 
   //BondMap pointer is used for passivation, delete it and refresh bond map
@@ -343,10 +323,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   //Different strategies if preserving conventional cell or preserving basis are needed
   if (preserve.compare("none") == 0)
   {
-
-    //bool not_already_included is needed because a point can be contained by more than one element
-    //if it falls exactly on the boundary
-    
     for (std::vector<Atom>::iterator atom = _super_basis.begin();
         atom != _super_basis.end(); ++atom)
     {
@@ -405,12 +381,15 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
       }
 
       progress_counter += 1;
-      if (((progress_counter % progress_step) == 0) && ((progress_counter / progress_step) % 2 == 0))
+      if (((progress_counter % progress_step) == 0) &&
+          ((progress_counter / progress_step) % 2 == 0))
           std::cout << "\b\b\b\b\b\b\b\b" << std::setw(3) <<
             progress_counter / progress_step << "% ..." << std::flush;
     }
   }
   std::cout << " done" << std::endl;
+
+
 
 
   if (preserve.compare("lattice") == 0)
@@ -420,83 +399,68 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
     for ( std::vector<Tensor1>::iterator lattice = _super_lattice.begin();
         lattice != _super_lattice.end(); lattice++)
     {
-      done = false;
 
-      Point p(0.0, 0.0, 0.0);
-      p(0) = (*lattice)(1) / scale;
+      Point p((*lattice)(1), (*lattice)(2), (*lattice)(3));
+      p *= 1.0 / scale;
 
-      if ( (_dim == 2) || (_dim == 3) )   p(1) = (*lattice)(2) / scale;
-
-      if ( (_dim == 3) )  p(2) = (*lattice)(3) / scale;
-
-      for (std::vector<Elem*>::iterator it = _structure_elements.begin();
-          it != _structure_elements.end(); it++)
+      // set unneeded dimensions to 0, so the atoms are associated to the correct
+      // elements
+      switch (_dim)
       {
+        case 0:
+          p(0) = 0;
+        case 1:
+          p(1) = 0;
+        case 2:
+          p(2) = 0;
+        default:
+          break;
+      }
 
-        Elem* elem = *it;
+
+
+      const Elem* elem = mapper.get_element(p);
+      bool done = false;
+
+      if (elem != NULL)
+      {
         el_reg = elem->subdomain_id();
 
-        if (MeshUtils::may_belong_to_element(elem,p))
+        if (reg_ids.count(el_reg))
         {
 
-          if ( (elem->contains_point(p) ) )
+          for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
+              atom != _crystal_basis.end(); atom++)
           {
-            done = true;
-            for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-                atom != _crystal_basis.end(); atom++)
-            {
 
-              tmp_atom.set_position( (*lattice)+ rotated_primvec*(*atom).get_ttype_position() );
-
-              if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-              {
-                Specie tmp =  assign[el_reg][(*atom).get_flag()];
-                tmp_atom.set_specie(tmp);
-                tmp_atom.belong_to_structure = true;
+            tmp_atom.set_position((*lattice) + rotated_primvec*(*atom).get_ttype_position());
 
 
-                p(0) = tmp_atom.get_position(0) / scale;
-                if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position(1) / scale;
-                if ( (_dim == 3) )  p(2) = tmp_atom.get_position(2) / scale;
-                if (MeshUtils::may_belong_to_element(elem,p))
-                {
-                  if ( (elem->contains_point(p) ) ) tmp_atom.set_elem(elem);
-                }
+            Specie tmp =  assign[el_reg][(*atom).get_flag()];
+            tmp_atom.set_specie(tmp);
+            tmp_atom.belong_to_structure = true;
+            // TODO what if it falls out of the current element?
+            tmp_atom.set_elem(elem);
 
-
-                _structure_basis.push_back(tmp_atom);
-              }
-              else
-              {
-                Messages::warning("Warning, atom is included but no assignment map member could be built");
-              }
-            }
-            break;
+            _structure_basis.push_back(tmp_atom);
           }
 
+          done = true;
         }
-
-
       }
-      if (done == false)
+
+      if (!done)
       {
         for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
             atom != _crystal_basis.end(); atom++)
         {
 
-          tmp_atom.set_position( (*lattice)+ rotated_primvec*(*atom).get_ttype_position() );
+          tmp_atom.set_position((*lattice) + rotated_primvec*(*atom).get_ttype_position());
 
-          if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-          {
-            Specie tmp =  assign[el_reg][(*atom).get_flag()];
-            tmp_atom.set_specie(tmp);
-            tmp_atom.belong_to_structure = false;
-            _structure_basis.push_back(tmp_atom);
-          }
-          else
-          {
-            Messages::warning("Warning, atom is included but no assignment map member could be built");
-          }
+          Specie tmp = assign[_reference_region_id][(*atom).get_flag()];
+          tmp_atom.set_specie(tmp);
+          tmp_atom.belong_to_structure = false;
+          _structure_basis.push_back(tmp_atom);
         }
       }
     }
@@ -506,72 +470,62 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   {
 
     Atom tmp_atom;
-    for ( std::vector<Tensor1>::iterator conv = _super_conv.begin(); conv != _super_conv.end(); conv++)
+    for (std::vector<Tensor1>::iterator conv = _super_conv.begin();
+        conv != _super_conv.end(); conv++)
     {
 
-      done = false;
+      Point p((*conv)(1), (*conv)(2), (*conv)(3));
+      p *= 1.0 / scale;
 
-      for (std::vector<Elem*>::iterator it = _structure_elements.begin(); it != _structure_elements.end(); it++)
+      // set unneeded dimensions to 0, so the atoms are associated to the correct
+      // elements
+      switch (_dim)
       {
-
-        Point p(0.0, 0.0, 0.0);
-        p(0) = (*conv)(1) / scale;
-
-        if ( (_dim == 2) || (_dim == 3) )   p(1) = (*conv)(2) / scale;
-
-        if ( (_dim == 3) )  p(2) = (*conv)(3) / scale;
-
-        Elem* elem = *it;
-        el_reg = elem->subdomain_id();
-
-
-        if (MeshUtils::may_belong_to_element(elem,p))
-        {
-
-          if ( (elem->contains_point(p) ) )
-          {
-            done = true;
-
-            for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
-                conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
-            {
-              for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-                  atom != _crystal_basis.end(); atom++)
-              {
-                tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                    rotated_primvec*(*atom).get_ttype_position());
-                if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-                {
-                  Specie tmp =  assign[el_reg][(*atom).get_flag()];
-                  tmp_atom.set_specie(tmp);
-                  tmp_atom.belong_to_structure = true;
-
-                  p(0) = tmp_atom.get_position(0) / scale;
-                  if ( (_dim == 2) || (_dim == 3) )   p(1) = tmp_atom.get_position(1) / scale;
-                  if ( (_dim == 3) )  p(2) = tmp_atom.get_position(2) / scale;
-                  if (MeshUtils::may_belong_to_element(elem,p))
-                  {
-                    if ( (elem->contains_point(p) ) ) tmp_atom.set_elem(elem);
-                  }
-
-                  _structure_basis.push_back(tmp_atom);
-                }
-                else
-                {
-                  Messages::warning("Warning, atom is included but no assignment map member could be built");
-                }
-              }
-            }
-            break;
-          }
-
-        }
-
-
-
+        case 0:
+          p(0) = 0;
+        case 1:
+          p(1) = 0;
+        case 2:
+          p(2) = 0;
+        default:
+          break;
       }
 
-      if (done == false)
+
+
+      const Elem* elem = mapper.get_element(p);
+      bool done = false;
+
+      if (elem != NULL)
+      {
+        el_reg = elem->subdomain_id();
+
+        if (reg_ids.count(el_reg))
+        {
+          done = true;
+
+          for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
+              conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
+          {
+            for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
+                atom != _crystal_basis.end(); atom++)
+            {
+              tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
+                  rotated_primvec*(*atom).get_ttype_position());
+              Specie tmp =  assign[el_reg][(*atom).get_flag()];
+              tmp_atom.set_specie(tmp);
+              tmp_atom.belong_to_structure = true;
+              // TODO what if it falls out of the current element?
+              tmp_atom.set_elem(elem);
+
+
+              _structure_basis.push_back(tmp_atom);
+            }
+          }
+        }
+      }
+
+      if (!done)
       {
         for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
             conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
@@ -581,24 +535,17 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
           {
             tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
                 rotated_primvec*(*atom).get_ttype_position());
-            if ( assign[el_reg].find( (*atom).get_flag() ) != assign[el_reg].end() )
-            {
-              Specie tmp =  assign[el_reg][(*atom).get_flag()];
-              tmp_atom.set_specie(tmp);
-              tmp_atom.belong_to_structure = false;
-              _structure_basis.push_back(tmp_atom);
-            }
-            else
-            {
-              Messages::warning("Warning, atom is included but no assignment map member could be built");
-            }
+
+            Specie tmp =  assign[_reference_region_id][(*atom).get_flag()];
+            tmp_atom.set_specie(tmp);
+            tmp_atom.belong_to_structure = false;
+            _structure_basis.push_back(tmp_atom);
           }
         }
       }
-
-
     }
   }
+
   std::ostringstream os;
   os << "Atomistic structure build time: " << tt.elapsed_string();
   Messages::newline();
@@ -606,7 +553,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
   Messages::debug("Finished cut_and_change_specie");
 
-};
+}
 
 
 void
