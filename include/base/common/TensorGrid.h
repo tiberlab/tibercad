@@ -115,7 +115,7 @@ TensorGrid::find_element(const Point& p) const
   if ((k < 0) || (l < 0) || (m < 0))
     return -1;
 
-  if ((k > _nk) || (l > _nl) || (m > _nm))
+  if ((k >= _nk) || (l >= _nl) || (m >= _nm))
     return -1;
 
   return(m*_nl*_nk + l*_nk + k);
@@ -126,7 +126,7 @@ inline
 int
 TensorGrid::num_elements(void) const
 {
-  return _nk * _nl * _nm;
+  return _nk * _nl * _nm ;
 }
 
 

@@ -168,6 +168,28 @@ AtomisticGenerator::do_init()
   set_prim_miller(miller);
 
 
+  // Set the vector of elements covered by structure regions,
+  // useful for change specie and cut
+  MeshBase::element_iterator el(_as->get_device()->get_mesh().elements_begin());
+  const MeshBase::element_iterator el_end(_as->get_device()->get_mesh().elements_end());
+  //number of elements in atomistic regions
+  unsigned int num_elem = 0;
+  for ( ; el != el_end; el++)
+  {
+    Elem* elem = *el;
+    if (_as->get_IDset().count(elem->subdomain_id()))
+      ++num_elem;
+  }
+  _structure_elements.reserve(num_elem);
+  for (el = _as->get_device()->get_mesh().elements_begin(); el != el_end; el++)
+  {
+    Elem* elem = *el;
+    if (_as->get_IDset().count(elem->subdomain_id()))
+      _structure_elements.push_back(elem);
+  }
+
+
+
   //A translation vector can be specified to modify supercell alignment
   std::vector<double> translation (3,0.0);
   if ( _as->get_options().find_option("translation") )
