@@ -35,26 +35,6 @@ BoundaryProperties* MaxwellBoundaryEquations::create_boundary_model(const ModelO
 }
 
 //=======================================================================================================//
-PhysicalModel*  MaxwellBoundaryEquations::create_physical_model(const ModelOptions& options,
-    const Material* mat) const throw (ModelErrorException)
-{
-  const std::string& modelname = get_option((mat->get_name() + "_opticmodel"), "");
-
-  if (modelname == "") {
-    return OpticPropsModel::create(options);
-  } else {
-    OpticPropsInterface* model =
-        OpticPropsInterface::create(modelname, mat, options);
-
-    if (model == NULL)
-      throw ModelErrorException(
-          "Maxwell: No such physical model: " + modelname);
-
-    return model;
-  }
-}
-
-//=======================================================================================================//
 
 void MaxwellBoundaryEquations::do_init() {
   approxOrder = get_options().get_option("approxOrder", 0);
@@ -117,7 +97,6 @@ void MaxwellBoundaryEquations::do_solve() {
 void
 MaxwellBoundaryEquations::do_setup_solution_variables(void)
 {
-  declare_solution(Intensity, SolutionDescriptor::REAL, NODES, "abs");
   declare_solution(Efield, VECTOR, NODES, "abs");
   declare_solution(Efield_real, VECTOR, NODES, "abs");
   declare_solution(Efield_imag, VECTOR, NODES, "abs");
@@ -128,6 +107,15 @@ MaxwellBoundaryEquations::do_setup_solution_variables(void)
   declare_solution(Mu,
       SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
   declare_solution(SVector,
+      SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
+
+  declare_solution(Bfield,
+      SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
+  declare_solution(Bfield_real,
+      SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
+  declare_solution(Bfield_imag,
+      SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
+  declare_solution(Poynting,
       SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
 }
 
@@ -292,87 +280,63 @@ void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
   fe->reinit(elem, system.getEdgeDofMap(false)->getPOrder(elem, 0), &points);
   const std::vector<VectorFunction>& edge_phi = fe->getFunctions();
 
- // std::cout << "1:" << tt.elapsed_string() << "\n";
-  if (solutions.count(Efield)) {
-    std::vector<double>& solution = solutions[Efield];
-    std::vector<double>& solution_real = solutions[Efield_real];
-    std::vector<double>& solution_imag = solutions[Efield_imag];
-    std::vector<double>& solution_intensity = solutions[Intensity];
+  //////////////////////////////
 
-    //std::vector<Complex> edgeSolution;
-    //system.get_solution(edgeSolution);
-    //std::cout << "2:" << tt.elapsed_string() << "\n";
-/*
-    if (edge_dof_indices[0] == 0) {
-      //std::cout << "EDGE SOLUTION: \n";
-      for (int iii = 0; iii < edgeSolution.size(); iii++) {
-        std::cout << iii << " " << edgeSolution[iii];
-      }
+  const std::vector<Point>& xyz = fe->get_xyz();
+
+  PML pml = system.getGeometryEx()->pml;
+
+  OpticPropsInterface* opticModel = getOpticModel(elem);
+
+  for (unsigned int qp = 0; qp < points.size(); qp++) {
+    if (solutions.count(Mu)) {
+      solutions[Mu][qp] = opticModel->get_permeability_constant();
     }
-*/
 
-    solution.resize(points.size()*3);
-    solution_real.resize(points.size()*3);
-    solution_imag.resize(points.size()*3);
+    addTensorSolutionR(solutions, Epsilon, opticModel->get_optical_epsilon(), 6*qp);
+    addTensorSolutionI(solutions, Epsilon_imag, opticModel->get_optical_epsilon(), 6*qp);
 
-    for (unsigned int qp = 0; qp < points.size(); qp++) {
-      Point realValue;
-      Point imagValue;
-      for (unsigned int j = 0; j < edge_dof_indices.size(); j++) {
-        if (edge_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
-          realValue +=edgeSolution[edge_dof_indices[j]].real() * edge_phi[j].phi[qp];
-          imagValue +=edgeSolution[edge_dof_indices[j]].imag() * edge_phi[j].phi[qp];
-        }
-      }
+    if (solutions.count(SVector)) {
+      Complex one(1, 0);
+      VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
 
-      solution[qp*3] = std::sqrt(realValue(0) * realValue(0) + imagValue(0) * imagValue(0));
-      solution[qp*3 + 1] = std::sqrt(realValue(1) * realValue(1) + imagValue(1) * imagValue(1));
-      solution[qp*3 + 2] = std::sqrt(realValue(2) * realValue(2) + imagValue(2) * imagValue(2));
-//      solution[qp*3] = (realValue(0) * realValue(0) + imagValue(0) * imagValue(0));
-//      solution[qp*3 + 1] = (realValue(1) * realValue(1) + imagValue(1) * imagValue(1));
-//      solution[qp*3 + 2] = (realValue(2) * realValue(2) + imagValue(2) * imagValue(2));
-
-      solution_real[qp*3] = realValue(0);
-      solution_real[qp*3 + 1] = realValue(1);
-      solution_real[qp*3 + 2] = realValue(2);
-
-      solution_imag[qp*3] = imagValue(0);
-      solution_imag[qp*3 + 1] = imagValue(1);
-      solution_imag[qp*3 + 2] = imagValue(2);
-
-      solution_intensity[qp] = realValue * realValue + imagValue * imagValue;
+      solutions[SVector][qp*3] = (one / sVector(0)).imag();
+      solutions[SVector][qp*3 + 1] = (one / sVector(1)).imag();
+      solutions[SVector][qp*3 + 2] = (one / sVector(2)).imag();
     }
   }
-  //std::cout << "3:" << tt.elapsed_string() << "\n";
-  if (solutions.count(Mu) || solutions.count(Epsilon) || solutions.count(SVector)) {
-    const std::vector<Point>& xyz = fe->get_xyz();
 
-    PML pml = system.getGeometryEx()->pml;
+  /////////////////////////////
 
-    OpticPropsInterface* opticModel = getOpticModel(elem);
 
-    for (unsigned int qp = 0; qp < points.size(); qp++) {
-      if (solutions.count(Mu)) {
-        solutions[Mu][qp] = opticModel->get_permeability_constant();
-      }
+  for (unsigned int qp = 0; qp < points.size(); qp++) {
+    VectorValue<Complex> E_value;
+    VectorValue<Complex> B_value;
 
-      if (solutions.count(Epsilon)) {
-        addTensorSolutionR(solutions[Epsilon], opticModel->get_optical_epsilon(), 6*qp);
-      }
-
-      if (solutions.count(Epsilon_imag)) {
-        addTensorSolutionI(solutions[Epsilon_imag], opticModel->get_optical_epsilon(), 6*qp);
-      }
-
-      if (solutions.count(SVector)) {
-        Complex one(1, 0);
-        VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
-
-        solutions[SVector][qp*3] = (one / sVector(0)).imag();
-        solutions[SVector][qp*3 + 1] = (one / sVector(1)).imag();
-        solutions[SVector][qp*3 + 2] = (one / sVector(2)).imag();
+    for (unsigned int j = 0; j < edge_dof_indices.size(); j++) {
+      if (edge_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
+        E_value += getVectorValue(edge_phi[j].phi[qp]) * edgeSolution[edge_dof_indices[j]];
+        B_value += edge_phi[j].curl(qp) * edgeSolution[edge_dof_indices[j]];
       }
     }
+
+    B_value = B_value / Complex(0, 1) / W / system.simulationInterface->get_environment().get_device().get_mesh_units() / system.getGeometryEx()->getScaling().get_length_scaling();
+
+    addVectorSolutionR(solutions, Efield_real, E_value, qp*3);
+    addVectorSolutionI(solutions, Efield_imag, E_value, qp*3);
+    addVectorSolutionA(solutions, Efield, E_value, qp*3);
+
+    addVectorSolutionR(solutions, Bfield_real, B_value, qp*3);
+    addVectorSolutionI(solutions, Bfield_imag, B_value, qp*3);
+    addVectorSolutionA(solutions, Bfield, B_value, qp*3);
+
+    double mu0 = 4 * M_PI * 1e-7; //Si units
+    VectorValue<Complex> H_value = B_value * (1 / opticModel->get_permeability_constant() / mu0);
+
+    VectorValue<Complex> H_conj(std::conj(H_value(0)), std::conj(H_value(1)), std::conj(H_value(2)));
+    VectorValue<Complex> P_value = E_value.cross(H_conj) * 0.5;
+
+    addVectorSolutionR(solutions, Poynting, P_value, qp*3);
   }
 
   delete fe;

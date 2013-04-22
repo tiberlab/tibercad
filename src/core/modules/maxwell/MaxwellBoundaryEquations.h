@@ -44,7 +44,10 @@ class MaxwellBoundaryEquations : public MaxwellEquationsCommon
       Epsilon_imag,
       Mu,
       SVector,
-      Intensity
+      Bfield,
+      Bfield_real,
+      Bfield_imag,
+      Poynting
     };
 
     //!constructor
@@ -53,9 +56,6 @@ class MaxwellBoundaryEquations : public MaxwellEquationsCommon
     //!destructor
     virtual
     ~MaxwellBoundaryEquations(void) {};
-
-    virtual PhysicalModel* create_physical_model(const ModelOptions& options, const Material* mat) const
-            throw (ModelErrorException);
 
     virtual BoundaryProperties* create_boundary_model(const ModelOptions& options) const
         throw (ModelErrorException);

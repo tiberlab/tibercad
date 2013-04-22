@@ -49,6 +49,9 @@ public:
       lambda1 = value;
     }
 
+    virtual Complex getLambda1() {
+      return lambda1;
+    }
     /**
      * Assembles the system matrix.
      */

@@ -18,7 +18,6 @@
 #include "IScalarFEBase.h"
 #include "limits.h"
 #include "Utils.h"
-#include "ExcitonLayer.h"
 #include "PMLFilter.h"
 
 
@@ -49,13 +48,6 @@ BoundaryProperties* MaxwellEquations::create_boundary_model(const ModelOptions& 
 }
 
 //=======================================================================================================//
-PhysicalModel*  MaxwellEquations::create_physical_model(const ModelOptions& options,
-    const Material* mat) const throw (ModelErrorException)
-{
-  return OpticPropsModel::create(options);
-}
-
-//=======================================================================================================//
 
 void MaxwellEquations::do_init() {
   eigenCount = get_options().get_option("eigenCount", 15);
@@ -81,7 +73,7 @@ void MaxwellEquations::do_init() {
   wellMaterial = get_options().get_option("wellMaterial", "GaN");
   lwell = get_options().get_option("lwell", 3.0) * 1e-9;
   errorEstamite = get_options().get_option("errorEstimate", false);
-  useCubic = false;
+  useCubic = cubics.size() > 0;
 
   Wlt = get_options().get_option("Wlt", 0.0) / Constants::hbar * Constants::e;
 
@@ -94,7 +86,7 @@ void MaxwellEquations::do_init() {
   EquationSystems& equation_systems = get_equation_systems();
 
 
-  if (polaritons && useCubic) {
+  if (useCubic) {
     equation_systems.add_system<CubicEigenSystem> ("Maxwell");
   } else {
     equation_systems.add_system<EigenSystem> ("Maxwell");
@@ -138,31 +130,35 @@ void MaxwellEquations::do_solve() {
 
   EigenSystem& system = equation_systems.get_system<EigenSystem> ("Maxwell");
 
-  if (polaritons && !useCubic) { // We already obtained Wc0 & Some hopfield coefficients
+  if (polaritons) { // We already obtained Wc0 & Some hopfield coefficients
     if (Wc0.real() > 0) {
-/*
-      ExcitonLayer layer(system.getEdgeDofMap(false)->getGeometryEx()->getScaling().get_length_scaling() *
-          system.simulationInterface->get_environment().get_device().get_mesh_units(), this);
+      if (useCubic) {
+        //TODO
+        /*
+              ExcitonLayer layer(system.getEdgeDofMap(false)->getGeometryEx()->getScaling().get_length_scaling() *
+                  system.simulationInterface->get_environment().get_device().get_mesh_units(), this);
 
-      Complex newVRabiApprox = layer.getApproximateRabiSplitting(system);
-      if (VRabiApprox.real() > 0) {
-        std::cout << "NEW RABI APPROX IN eV: " <<  newVRabiApprox * Constants::hbar / Constants::e << "\n";
-        std::cout << "OLD RABI APPROX IN eV: " <<  VRabiApprox * Constants::hbar / Constants::e << "\n";
-        std::cout << "DIFF IN %: " <<  std::abs((VRabiApprox - newVRabiApprox)/VRabiApprox) << "\n";
-        if (std::abs((VRabiApprox - newVRabiApprox)/VRabiApprox) <= 0.01) {
-          std::cout << "Polariton mode didnt changed\n";
-          return;
-        } else {
-          VRabiApprox = newVRabiApprox;
-          std::cout << "Polariton mode changed\n";
-          //return;
-        }
-        flush(std::cout);
+              Complex newVRabiApprox = layer.getApproximateRabiSplitting(system);
+              if (VRabiApprox.real() > 0) {
+                std::cout << "NEW RABI APPROX IN eV: " <<  newVRabiApprox * Constants::hbar / Constants::e << "\n";
+                std::cout << "OLD RABI APPROX IN eV: " <<  VRabiApprox * Constants::hbar / Constants::e << "\n";
+                std::cout << "DIFF IN %: " <<  std::abs((VRabiApprox - newVRabiApprox)/VRabiApprox) << "\n";
+                if (std::abs((VRabiApprox - newVRabiApprox)/VRabiApprox) <= 0.01) {
+                  std::cout << "Polariton mode didnt changed\n";
+                  return;
+                } else {
+                  VRabiApprox = newVRabiApprox;
+                  std::cout << "Polariton mode changed\n";
+                  //return;
+                }
+                flush(std::cout);
+              }
+              VRabiApprox = newVRabiApprox;
+        */
+      } else {
+        calculateHopfieldCoefficients();
+        return;
       }
-      VRabiApprox = newVRabiApprox;
-*/
-      calculateHopfieldCoefficients();
-      return;
     }
   }
 
@@ -244,6 +240,10 @@ void MaxwellEquations::filterEigenValues() {
 
   Utils::Timer tt;
 
+  for (int i = eigensOut; i < system.get_n_converged(); i++) {
+    declare_E_solutions(i, true);
+  }
+
   filter.filter(system, eigenIndices, storedSolutions, pmlXYZ);
 
   //std::cout << "Filtered in " << tt.elapsed_string() << "\n";
@@ -270,9 +270,7 @@ MaxwellEquations::do_setup_solution_variables(void)
   }
 
   for (int i = 0; i < eigensOut; i++) {
-    declare_E_solution("Efield", i, Efield + 3*i);
-    declare_E_solution("Efield_real", i, Efield_real + 3*i);
-    declare_E_solution("Efield_imag", i, Efield_imag + 3*i);
+    declare_E_solutions(i);
   }
 
   declare_solution(XHopfield, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "abs");
@@ -284,11 +282,37 @@ MaxwellEquations::do_setup_solution_variables(void)
 }
 
 void
-MaxwellEquations::declare_E_solution(const char* name, int localIndex, int solutionIndex) {
+MaxwellEquations::declare_E_solutions(int i, bool declareOnly) {
+  int solSize = get_solution_for_each_mode_size();
+  declare_E_solution("Efield", Efield, i, declareOnly);
+  declare_E_solution("Efield_real", Efield_real, i, declareOnly);
+  declare_E_solution("Efield_imag", Efield_imag, i, declareOnly);
+
+  declare_E_solution("Bfield", Bfield, i, declareOnly);
+  declare_E_solution("Bfield_real", Bfield_real, i, declareOnly);
+  declare_E_solution("Bfield_imag", Bfield_imag, i, declareOnly);
+
+  declare_E_solution("Poynting", Poynting, i, declareOnly);
+}
+
+void
+MaxwellEquations::declare_E_solution(const char* name, int baseIndex, int number, bool declareOnly) {
   char buffer [50];
-  sprintf(buffer, "%s_%d", name, localIndex);
+  sprintf(buffer, "%s_%d", name, number);
+  int solutionIndex = baseIndex + get_solution_for_each_mode_size() * number;
   declare_solution_ext(buffer , solutionIndex,
       SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "abs");
+  if (declareOnly) {
+    remove_plot_variable(solutionIndex);
+  } else {
+    if (plot_solution(name)) {
+      add_plot_variable(solutionIndex);
+    }
+  }
+}
+
+int MaxwellEquations::get_solution_for_each_mode_size() const {
+  return 7;
 }
 
 void
@@ -304,11 +328,10 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
   MaxwellEquations* this_mme = dynamic_cast<MaxwellEquations*>(system.simulationInterface);
 
   // Here we should pass all length scaling
-  ExcitonLayer layer(system.getEdgeDofMap(false)->getGeometryEx()->getScaling().get_length_scaling() *
-      system.simulationInterface->get_environment().get_device().get_mesh_units(), this_mme);
-
-  if (this_mme->polaritons && this_mme->useCubic) {
-    layer.preset(system);
+  if (this_mme->useCubic) {
+    for (int i = 0; i < this_mme->cubics.size(); i++) {
+      this_mme->cubics[i].init(dynamic_cast<CubicEigenSystem&>(system));
+    }
   }
 
   EdgeDofMap* dof_map = system.getEdgeDofMap(false);
@@ -374,7 +397,6 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
         }
       }
 
-      //TODO add svector here???
       if (fe_sc != NULL) {
         const std::vector<ScalarFunction >& scalar_phi = fe_sc->getFunctions();
 
@@ -399,9 +421,10 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
   }
 
 
-  if (this_mme->polaritons && this_mme->Wc0.real() > 0 && this_mme->useCubic) {
-    //std::cout << "Add data Called\n"; flush(std::cout);
-    layer.addData(system);
+  if ((!this_mme->polaritons || this_mme->Wc0.real() > 0) && this_mme->useCubic) {
+    for (int i = 0; i < this_mme->cubics.size(); i++) {
+      this_mme->cubics[i].addCData(dynamic_cast<CubicEigenSystem&>(system));
+    }
   }
 }
 
@@ -409,7 +432,6 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& solutions,
     const std::vector<Point>& points)
 {
-
   EigenSystem& system = get_equation_systems().get_system<EigenSystem>("Maxwell");
 
   std::vector<unsigned int> edge_dof_indices;
@@ -418,84 +440,86 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
   fe->reinit(elem, system.getEdgeDofMap(false)->getPOrder(elem, 0), &points);
   const std::vector<VectorFunction>& edge_phi = fe->getFunctions();
 
-  int iMax = relativeIndexing ? accepted_eigen_count : system.get_n_converged();
+  //////////////////////////////
+
+  const std::vector<Point>& xyz = fe->get_xyz();
+
+  PML pml = system.getGeometryEx()->pml;
+
+  OpticPropsInterface* opticModel = getOpticModel(elem);
+
+  for (unsigned int qp = 0; qp < points.size(); qp++) {
+    if (solutions.count(Mu)) {
+      solutions[Mu][qp] = opticModel->get_permeability_constant();
+    }
+
+    addTensorSolutionR(solutions, Epsilon, opticModel->get_optical_epsilon(), 6*qp);
+    addTensorSolutionI(solutions, Epsilon_imag, opticModel->get_optical_epsilon(), 6*qp);
+
+    if (solutions.count(SVector)) {
+      Complex one(1, 0);
+      VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
+
+      solutions[SVector][qp*3] = (one / sVector(0)).imag();
+      solutions[SVector][qp*3 + 1] = (one / sVector(1)).imag();
+      solutions[SVector][qp*3 + 2] = (one / sVector(2)).imag();
+    }
+  }
+
+  /////////////////////////////
+  int iMax = relativeIndexing ? std::max(accepted_eigen_count, eigensOut) : system.get_n_converged();
+
+  int diffSolCount = get_solution_for_each_mode_size();
+
 
   for (int i = 0; i < iMax; i++) {
-    if (solutions.count(Efield + 3*i) || solutions.count(Efield_real + 3*i) || solutions.count(Efield_imag + 3*i)) {
-      std::vector<double>& solutionE = solutions[Efield + 3*i];
-      std::vector<double>& solutionE_imag = solutions[Efield_real + 3*i];
-      std::vector<double>& solutionE_real = solutions[Efield_imag + 3*i];
+    int ii = relativeIndexing ? eigenIndices[i] : i;
 
-      int ii = relativeIndexing ? eigenIndices[i] : i;
-
-      std::vector<Complex> edgeSolution;
-      if (!storeSolutions) {
-        system.get_eigen_vector(ii, edgeSolution);
-      }
-
-      solutionE.resize(points.size()*3);
-      solutionE_imag.resize(points.size()*3);
-      solutionE_real.resize(points.size()*3);
-
-      for (unsigned int qp = 0; qp < points.size(); qp++) {
-        Point value;
-        Point value_c;
-        for (unsigned int j = 0; j < edge_dof_indices.size(); j++) {
-          if (edge_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
-            if (!storeSolutions) {
-              value = value + edgeSolution[edge_dof_indices[j]].real() * edge_phi[j].phi[qp];
-              value_c = value_c + edgeSolution[edge_dof_indices[j]].imag() * edge_phi[j].phi[qp];
-            } else {
-              value = value + storedSolutions[ii][edge_dof_indices[j]].real() * edge_phi[j].phi[qp];
-              value_c = value_c + storedSolutions[ii][edge_dof_indices[j]].imag() * edge_phi[j].phi[qp];
-            }
-          }
-        }
-        solutionE[qp*3] = std::sqrt(value_c(0)*value_c(0) + value(0)*value(0));
-        solutionE[qp*3 + 1] = std::sqrt(value_c(1)*value_c(1) + value(1)*value(1));
-        solutionE[qp*3 + 2] = std::sqrt(value_c(2)*value_c(2) + value(2)*value(2));
-
-        solutionE_imag[qp*3] = value_c(0);
-        solutionE_imag[qp*3 + 1] = value_c(1);
-        solutionE_imag[qp*3 + 2] = value_c(2);
-
-        solutionE_real[qp*3] = value(0);
-        solutionE_real[qp*3 + 1] = value(1);
-        solutionE_real[qp*3 + 2] = value(2);
-      }
+    std::vector<Complex> edgeSolution;
+    if (!storeSolutions) {
+      system.get_eigen_vector(ii, edgeSolution);
     }
-  }
-
-  if (solutions.count(Mu) || solutions.count(Epsilon) || solutions.count(SVector)) {
-    const std::vector<Point>& xyz = fe->get_xyz();
-
-    PML pml = system.getGeometryEx()->pml;
-
-    OpticPropsInterface* opticModel = getOpticModel(elem);
 
     for (unsigned int qp = 0; qp < points.size(); qp++) {
-      if (solutions.count(Mu)) {
-        solutions[Mu][qp] = opticModel->get_permeability_constant();
+      VectorValue<Complex> E_value;
+      VectorValue<Complex> B_value;
+
+      // H = 1/(mu*i*w)*rotE; TODO mu0?
+      // Poyinting = E x H.
+
+
+      for (unsigned int j = 0; j < edge_dof_indices.size(); j++) {
+        if (edge_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
+          if (!storeSolutions) {
+            E_value += getVectorValue(edge_phi[j].phi[qp]) * edgeSolution[edge_dof_indices[j]];
+            B_value += edge_phi[j].curl(qp) * edgeSolution[edge_dof_indices[j]];
+          } else {
+            E_value += getVectorValue(edge_phi[j].phi[qp]) * storedSolutions[ii][edge_dof_indices[j]];
+            B_value += edge_phi[j].curl(qp) * storedSolutions[ii][edge_dof_indices[j]];
+          }
+        }
       }
 
-      if (solutions.count(Epsilon)) {
-        addTensorSolutionR(solutions[Epsilon], opticModel->get_optical_epsilon(), 6*qp);
-      }
+      Complex W = system.get_eigen_lambda(ii) * c / system.simulationInterface->get_environment().get_device().get_mesh_units();
+      B_value = B_value / Complex(0, 1) / W / system.simulationInterface->get_environment().get_device().get_mesh_units() / system.getGeometryEx()->getScaling().get_length_scaling();
 
-      if (solutions.count(Epsilon_imag)) {
-        addTensorSolutionI(solutions[Epsilon_imag], opticModel->get_optical_epsilon(), 6*qp);
-      }
+      addVectorSolutionR(solutions, Efield_real + diffSolCount*i, E_value, qp*3);
+      addVectorSolutionI(solutions, Efield_imag + diffSolCount*i, E_value, qp*3);
+      addVectorSolutionA(solutions, Efield + diffSolCount*i, E_value, qp*3);
 
-      if (solutions.count(SVector)) {
-        Complex one(1, 0);
-        VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
+      addVectorSolutionR(solutions, Bfield_real + diffSolCount*i, B_value, qp*3);
+      addVectorSolutionI(solutions, Bfield_imag + diffSolCount*i, B_value, qp*3);
+      addVectorSolutionA(solutions, Bfield + diffSolCount*i, B_value, qp*3);
 
-        solutions[SVector][qp*3] = (one / sVector(0)).imag();
-        solutions[SVector][qp*3 + 1] = (one / sVector(1)).imag();
-        solutions[SVector][qp*3 + 2] = (one / sVector(2)).imag();
-      }
+      double mu0 = 4 * M_PI * 1e-7; //Si units
+      VectorValue<Complex> H_value = B_value * (1 / opticModel->get_permeability_constant() / mu0);
+      VectorValue<Complex> H_conj(std::conj(H_value(0)), std::conj(H_value(1)), std::conj(H_value(2)));
+      VectorValue<Complex> P_value = E_value.cross(H_conj) * 0.5;
+
+      addVectorSolutionR(solutions, Poynting + diffSolCount*i, P_value, qp*3);
     }
   }
+
 
   delete fe;
 
@@ -515,7 +539,7 @@ void MaxwellEquations::get_solution_secure(std::map<ID, std::vector<double> >& s
   if (solutions.count(EigenValue)) {
     std::vector<double>& solution = solutions[EigenValue];
     solution.resize(0);
-    for (int i = 0; i < accepted_eigen_count && i < eigensOut; i++) {
+    for (int i = 0; i < std::max(accepted_eigen_count, eigensOut); i++) {
       double eigen1 = system.get_eigen_lambda(eigenIndices[i]).real();
 
       solution.push_back(eigen1 * c / system.simulationInterface->get_environment().get_device().get_mesh_units());
@@ -525,7 +549,7 @@ void MaxwellEquations::get_solution_secure(std::map<ID, std::vector<double> >& s
   if (solutions.count(EigenValue_eV)) {
     std::vector<double>& solution = solutions[EigenValue_eV];
     solution.resize(0);
-    for (int i = 0; i < accepted_eigen_count && i < eigensOut; i++) {
+    for (int i = 0; i < std::max(accepted_eigen_count, eigensOut); i++) {
       double eigen1 = system.get_eigen_lambda(eigenIndices[i]).real();
 
       solution.push_back(eigen1 * c / system.simulationInterface->get_environment().get_device().get_mesh_units() * Constants::hbar / Constants::e);
@@ -535,7 +559,7 @@ void MaxwellEquations::get_solution_secure(std::map<ID, std::vector<double> >& s
   if (solutions.count(EigenValueImag)) {
     std::vector<double>& solution = solutions[EigenValueImag];
     solution.resize(0);
-    for (int i = 0; i < accepted_eigen_count && i < eigensOut; i++) {
+    for (int i = 0; i < std::max(accepted_eigen_count, eigensOut); i++) {
       double eigen1 = system.get_eigen_lambda(eigenIndices[i]).imag();
 
       solution.push_back(eigen1 * c / system.simulationInterface->get_environment().get_device().get_mesh_units());
@@ -611,7 +635,7 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
   SimulationInterface* _exciton_sim = find_simulation("excitontransport");
 
   if (_exciton_sim == NULL) {
-    std::string msg("ExcitonLayer: Simulation not found");
+    std::string msg("ExcitonSimulation: Simulation not found");
     throw InitFailedException(msg);
   } else if (!_exciton_sim->is_solved() || Wc0.real() == -1) {
     return;

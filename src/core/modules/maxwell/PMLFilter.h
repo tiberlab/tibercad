@@ -17,10 +17,10 @@
 class PMLFilter {
   private:
     double factor;
-    SimulationInterface* maxwell;
+    MaxwellEquations* maxwell;
 
   public:
-    PMLFilter(double value, SimulationInterface* maxwellEquations) {
+    PMLFilter(double value, MaxwellEquations* maxwellEquations) {
       factor = value;
       maxwell = maxwellEquations;
     }
@@ -29,10 +29,6 @@ class PMLFilter {
       eigenIndices.clear();
 
       std::map<ID, std::vector<double> > solutions;
-
-      for (int i = 0; i < system.get_n_converged(); i++) {
-        solutions[MaxwellEquations::Efield + 3*i].resize(0);
-      }
 
       MeshBase& mesh = maxwell->get_mesh();
 
@@ -48,12 +44,16 @@ class PMLFilter {
       for (; el != end_el; ++el) {
         const Elem* elem = *el;
 
+        for (int i = 0; i < system.get_n_converged(); i++) {
+          solutions[MaxwellEquations::Efield + maxwell->get_solution_for_each_mode_size()*i].resize(3*elem->n_nodes());
+        }
+
         maxwell->get_solution(elem, solutions);
 
         bool isPML = pml.isPMLRegion(elem, maxwell); // respect to +, * etc. slow operation
         for (int i = 0; i < system.get_n_converged(); i++) {
           for (int qp = 0; qp < elem->n_nodes(); qp++) {
-            std::vector<double>& solution = solutions[MaxwellEquations::Efield + 3*i];
+            std::vector<double>& solution = solutions[MaxwellEquations::Efield + maxwell->get_solution_for_each_mode_size()*i];
             double E = std::sqrt(solution[3*qp] * solution[3*qp] +
                                  solution[3*qp + 1] * solution[3*qp + 1] +
                                  solution[3*qp + 2] * solution[3*qp + 2]);

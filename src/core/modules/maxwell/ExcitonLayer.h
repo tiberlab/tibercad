@@ -37,7 +37,7 @@ class ExcitonLayer
     virtual ~ExcitonLayer() {
     }
 
-    void preset(EigenSystem& system) {
+    void init(EigenSystem& system) {
       CubicEigenSystem& cubicSystem = dynamic_cast<CubicEigenSystem&>(system);
       cubicSystem.setLambda1(Wexc);
     }

@@ -34,6 +34,7 @@
 #include "SolverException.h"
 #include "OpticPropsInterface.h"
 #include "MaxwellEquationsCommon.h"
+#include "ICubic.h"
 
 using namespace libMesh;
 using namespace std;
@@ -57,7 +58,11 @@ class MaxwellEquations : public MaxwellEquationsCommon
       SVector,
       Efield,
       Efield_real,
-      Efield_imag
+      Efield_imag,
+      Bfield,
+      Bfield_real,
+      Bfield_imag,
+      Poynting
       // NB: To add solution variable - add it to the start of this list
     };
 
@@ -68,9 +73,6 @@ class MaxwellEquations : public MaxwellEquationsCommon
     virtual
     ~MaxwellEquations(void) {};
 
-    virtual PhysicalModel* create_physical_model(const ModelOptions& options, const Material* mat) const
-            throw (ModelErrorException);
-
     virtual BoundaryProperties* create_boundary_model(const ModelOptions& options) const
         throw (ModelErrorException);
 
@@ -79,6 +81,9 @@ class MaxwellEquations : public MaxwellEquationsCommon
     virtual void plot_globaldata();
 
     OpticPropsInterface* getOpticModel(const Elem*);
+
+    virtual int get_solution_for_each_mode_size() const; // Return how much solutions we have for each mode. Now it is 6: E, Ereal, Eimag, H, Himag, Hreal, Poyinting.
+
   protected:
     //virtual void build_nodal_results(const std::set<std::string>& variables, std::vector<
         //double>& results, std::vector<std::string>& legend);
@@ -97,7 +102,10 @@ class MaxwellEquations : public MaxwellEquationsCommon
     virtual void parse_options(void) {
     }
 
-    virtual void declare_E_solution(const char* name, int localIndex, int solutionIndex);
+    virtual void declare_E_solution(const char* name, int baseIndex, int number, bool declareOnly = false);
+
+    virtual void declare_E_solutions(int localIndex, bool declareOnly = false);
+
   private:
 
     //!pointer to the device object
@@ -153,6 +161,7 @@ class MaxwellEquations : public MaxwellEquationsCommon
     Complex Wc0;
     Complex Wexc0;
     double Wlt;
+    std::vector<ICubic> cubics;
 };
 
 inline MaxwellEquations*

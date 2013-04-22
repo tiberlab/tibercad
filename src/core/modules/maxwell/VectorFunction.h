@@ -106,10 +106,14 @@ class VectorFunction {
       return result;
     }
 
-    /*    VectorValue<Complex> curl(unsigned int qp) const {
-      VectorValue<Complex> sVector(1, 1, 1);
-      return curls(qp, sVector);
-    }*/
+
+    VectorValue<Complex> curl(unsigned int qp) const {
+      return  VectorValue<Complex>(
+          dphidy[qp](2) - dphidz[qp](1),
+          dphidz[qp](0) - dphidx[qp](2),
+          dphidx[qp](1) - dphidy[qp](0)
+      );
+    }
 };
 
 #endif
