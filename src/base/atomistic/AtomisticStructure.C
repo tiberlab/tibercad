@@ -46,7 +46,8 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
  _scale(1.0),
  _device(NULL),
  _random_alloy(false),
- _atom_types()
+ _atom_types(),
+ _N_without_H(0)
 {
   // Default initializations
   N_atoms = 0;
@@ -181,6 +182,10 @@ AtomisticStructure::init(const std::string& name,
       os.str(std::string());
       //---------------------------------------------------------------
     }
+
+  //Calculate the number of atoms excluding hydrogens 
+  //(Useful for passivated semiconductors)
+  compute_N_without_H();
 
 }
 
@@ -1348,11 +1353,10 @@ AtomisticStructure::build_elem_to_atoms(void)
 }
 
 
-unsigned int
-AtomisticStructure::get_N_without_H(void)
+void
+AtomisticStructure::compute_N_without_H(void)
 {
   unsigned int N = 0;
-
   for (unsigned int i = 0; i < _structure_atoms.size(); i++)
     {
       if (_structure_atoms[i].get_specie() != Specie::H)
@@ -1360,9 +1364,7 @@ AtomisticStructure::get_N_without_H(void)
           N++;
         }
     }
-
-  return N;
-
+  _N_without_H = N;
 }
 
 

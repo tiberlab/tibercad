@@ -164,7 +164,7 @@ public:
   //std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
   
   //! Get number of non hydrogen atoms
-  unsigned int get_N_without_H(void);
+  const unsigned int get_N_without_H(void) const;
 
   //! Set the model options
     void set_options(const ModelOptions& options);
@@ -194,7 +194,11 @@ public:
 
 
 private:
-  
+
+    //! Calculate the number of atoms excluding hydrogens, usefule for 
+    //! passivated structures
+    void compute_N_without_H(void);
+
     //!Override lattice vectors from structure generation
     void parse_lattice_vectors(void); 
 
@@ -273,6 +277,9 @@ private:
 
   //! Database of reference material
   Database _reference_material_db;
+
+  //!Number of atoms excluding hydrogens
+  unsigned int _N_without_H;
 
   //! Build bond map
   void build_bond_map(void);
@@ -431,6 +438,13 @@ const Specie&
 AtomisticStructure::get_specie(unsigned int i) const
 {
   return _structure_atoms[i].get_specie();
+}
+
+inline
+const unsigned int
+AtomisticStructure::get_N_without_H(void) const
+{
+  return _N_without_H;
 }
 
 //inline
