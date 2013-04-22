@@ -835,6 +835,11 @@ SimulationInterface::add_plot_variable(ID id)
   _plotvariable_ids.insert(id);
 }
 
+void
+SimulationInterface::remove_plot_variable(ID id)
+{
+  _plotvariable_ids.erase(id);
+}
 
 
 void
