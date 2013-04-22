@@ -864,6 +864,9 @@ class SimulationInterface : public TiberModelObject
     void add_plot_variable(ID id);
 
 
+    //! Removes a solution id to the plot variable list
+    void remove_plot_variable(ID id);
+
     //! Checks if a solution variable should be plotted
     bool plot_solution(const std::string& name) const;
 
