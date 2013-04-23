@@ -264,8 +264,8 @@ MeshUtils::GridMapper::setup(void)
 
     // get the bounding box
     Point p0(elem->point(0));
-    Point p1(elem->point(1));
-    for (unsigned int n = 2; n < elem->n_nodes(); n++)
+    Point p1(p0);
+    for (unsigned int n = 1; n < elem->n_nodes(); n++)
     {
       const Point& pn = elem->point(n);
       if (pn(0) < p0(0)) p0(0) = pn(0);
@@ -275,6 +275,8 @@ MeshUtils::GridMapper::setup(void)
       if (pn(1) > p1(1)) p1(1) = pn(1);
       if (pn(2) > p1(2)) p1(2) = pn(2);
     }
+
+
 
     int tg0[3];
     int tg1[3];
