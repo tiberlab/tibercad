@@ -113,6 +113,8 @@ class TiberPetscLinearSolver : public TiberLinearSolver
     //! Tells if xmonitor is already opened
     bool _xmonitor_open;
 
+    //! The PC type
+    std::string _solver_package;
 
     //! Check convergence
     std::pair<unsigned int, double> check_convergence(void);

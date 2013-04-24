@@ -142,6 +142,11 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   TiberPetscUtils::checkerr(ierr);
 
   ierr = PCSetType(pc, _pc_type.c_str());
+
+  if (_solver_package != "") {
+    PCFactorSetMatSolverPackage(pc, _solver_package.c_str());
+  }
+
   TiberPetscUtils::checkerr(ierr);
   // for composite type, do some extra stuff
   if (_pc_type.compare(PCCOMPOSITE) == 0)
@@ -358,6 +363,7 @@ TiberPetscLinearSolver::do_parse_options(void)
 
   _pc_type = TiberPetscUtils::extract_PCType(get_options());
 
+  _solver_package = get_option("solver_package", "", false);
 
   _monitor = get_option("monitor", false);
   _xmonitor = get_option("xmonitor", false);

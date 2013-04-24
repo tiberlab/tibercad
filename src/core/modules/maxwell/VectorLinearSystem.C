@@ -108,6 +108,7 @@ void VectorLinearSystem::solve () {
   ModelOptions options = ModelOptions();
   options.set_option("relative_tolerance", 1e-12);
   options.set_option("preconditioner", "lu");
+  options.set_option("solver_package", "mumps");
   //options.
 
 
