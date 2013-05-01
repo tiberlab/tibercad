@@ -3,6 +3,7 @@
 #include "MeshReader.h"
 #include "ReadISEGrid.h"
 #include "ReadGMSH.h"
+#include "ReadComsol.h"
 #include "BoundaryRegions.h"
 #include "InitFailedException.h"
 
@@ -31,6 +32,11 @@ void MeshReader::read_mesh(const string& filename, MeshBase& mesh,
     {
       ReadGMSH msh_mesh(mesh, region_info, bd_regions);
       msh_mesh.read(filename);
+    }
+    else if (filename.rfind(".mphtxt") < filename.size())
+    {
+      ReadComsol comsol_mesh(mesh, region_info, bd_regions);
+      comsol_mesh.read(filename);
     }
     else
     {
