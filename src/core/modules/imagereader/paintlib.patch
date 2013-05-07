@@ -1,0 +1,284 @@
+diff -r -u ./common/Filter/pl2passscale.h ../paintlib-2.6.2-new/common/Filter/pl2passscale.h
+--- ./common/Filter/pl2passscale.h	2004-10-25 18:43:02.000000000 +0200
++++ ../paintlib-2.6.2-new/common/Filter/pl2passscale.h	2013-04-25 20:57:53.000000000 +0200
+@@ -15,6 +15,7 @@
+ #include "../plpaintlibdefs.h"
+ 
+ #include <math.h>
++#include <cstring>
+ 
+ // Not every math.h defines this :-(.
+ #ifndef  min
+diff -r -u ./common/Filter/plfiltercrop.cpp ../paintlib-2.6.2-new/common/Filter/plfiltercrop.cpp
+--- ./common/Filter/plfiltercrop.cpp	2004-10-25 18:43:03.000000000 +0200
++++ ../paintlib-2.6.2-new/common/Filter/plfiltercrop.cpp	2013-04-25 20:57:28.000000000 +0200
+@@ -11,6 +11,7 @@
+ #include "plfiltercrop.h"
+ #include "plbitmap.h"
+ #include "plrect.h"
++#include <cstring>
+ 
+ 
+ PLFilterCrop::PLFilterCrop(int XMin, int YMin, int XMax, int YMax)
+diff -r -u ./common/Filter/plfilterflip.cpp ../paintlib-2.6.2-new/common/Filter/plfilterflip.cpp
+--- ./common/Filter/plfilterflip.cpp	2004-10-03 19:49:22.000000000 +0200
++++ ../paintlib-2.6.2-new/common/Filter/plfilterflip.cpp	2013-04-25 20:59:52.000000000 +0200
+@@ -12,6 +12,7 @@
+ #include "plbitmap.h"
+ #include "plfilterflip.h"
+ #include "plpoint.h"
++#include <cstring>
+ 
+ //////////////////////////////////////////////////////////////////////
+ // Construction/Destruction
+diff -r -u ./common/Filter/plfilterquantize.cpp ../paintlib-2.6.2-new/common/Filter/plfilterquantize.cpp
+--- ./common/Filter/plfilterquantize.cpp	2004-09-11 16:23:02.000000000 +0200
++++ ../paintlib-2.6.2-new/common/Filter/plfilterquantize.cpp	2013-04-25 20:59:23.000000000 +0200
+@@ -31,6 +31,7 @@
+ #include "plfilterquantize.h"
+ #include "plbitmap.h"
+ #include "plexcept.h"
++#include <cstring>
+ 
+ #ifndef  min
+ #define min(a, b)       ((a) < (b) ? (a) : (b))
+diff -r -u ./common/plbitmap.cpp ../paintlib-2.6.2-new/common/plbitmap.cpp
+--- ./common/plbitmap.cpp	2004-09-11 16:22:43.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plbitmap.cpp	2013-04-25 21:03:11.000000000 +0200
+@@ -17,6 +17,7 @@
+ #include "plfilterquantize.h"
+ 
+ #include <iostream>
++#include <cstring>
+ 
+ using namespace std;
+ 
+diff -r -u ./common/plbmpbase.cpp ../paintlib-2.6.2-new/common/plbmpbase.cpp
+--- ./common/plbmpbase.cpp	2004-10-03 19:49:22.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plbmpbase.cpp	2013-04-25 21:06:01.000000000 +0200
+@@ -14,6 +14,7 @@
+ #include "Filter/plfilterquantize.h"
+ 
+ #include <iostream>
++#include <cstring>
+ 
+ using namespace std;
+ 
+diff -r -u ./common/plbmpdec.cpp ../paintlib-2.6.2-new/common/plbmpdec.cpp
+--- ./common/plbmpdec.cpp	2004-09-11 16:23:01.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plbmpdec.cpp	2013-04-25 21:03:45.000000000 +0200
+@@ -15,6 +15,7 @@
+ 
+ #include "plbmpdec.h"
+ #include "plexcept.h"
++#include <cstring>
+ 
+ PLBmpDecoder::PLBmpDecoder
+ () : PLPicDecoder (),
+diff -r -u ./common/plexif.cpp ../paintlib-2.6.2-new/common/plexif.cpp
+--- ./common/plexif.cpp	2004-09-11 16:23:02.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plexif.cpp	2013-04-25 21:05:18.000000000 +0200
+@@ -21,6 +21,7 @@
+ #include "plexcept.h"
+ 
+ #include <sstream>
++#include <cstring>
+ #include <cctype>
+ #include <iomanip>
+ #include <memory>
+diff -r -u ./common/pljpegdec.cpp ../paintlib-2.6.2-new/common/pljpegdec.cpp
+--- ./common/pljpegdec.cpp	2004-09-11 16:23:02.000000000 +0200
++++ ../paintlib-2.6.2-new/common/pljpegdec.cpp	2013-04-25 21:17:23.000000000 +0200
+@@ -23,6 +23,8 @@
+ #define JPEG_INTERNALS
+ #include <jmorecfg.h>
+ 
++#include <cstring>
++
+ 
+ /////////////////////////////////////////////////////////////////////
+ // Error handling.
+diff -r -u ./common/pljpegenc.cpp ../paintlib-2.6.2-new/common/pljpegenc.cpp
+--- ./common/pljpegenc.cpp	2005-01-09 21:15:19.000000000 +0100
++++ ../paintlib-2.6.2-new/common/pljpegenc.cpp	2013-04-25 21:16:52.000000000 +0200
+@@ -31,6 +31,7 @@
+ #include <jmorecfg.h>
+ 
+ #include <stdio.h>
++#include <cstring>
+ 
+ /////////////////////////////////////////////////////////////////////
+ // Error handling.
+diff -r -u ./common/plpcxdec.cpp ../paintlib-2.6.2-new/common/plpcxdec.cpp
+--- ./common/plpcxdec.cpp	2004-09-11 16:23:02.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plpcxdec.cpp	2013-04-25 21:04:04.000000000 +0200
+@@ -13,6 +13,7 @@
+ #include "plexcept.h"
+ 
+ #include <iostream>
++#include <cstring>
+ 
+ PLPCXDecoder::PLPCXDecoder()
+   : PLPicDecoder()
+diff -r -u ./common/plpgmdec.h ../paintlib-2.6.2-new/common/plpgmdec.h
+--- ./common/plpgmdec.h	2004-06-20 15:14:36.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plpgmdec.h	2013-04-25 21:02:48.000000000 +0200
+@@ -72,7 +72,7 @@
+       PLDataSource * pDataSrc
+     );
+ 
+-  PLBYTE PLPGMDecoder::readASCIIPixel8
++  PLBYTE readASCIIPixel8
+     ( int MaxGrayValue,
+       PLDataSource * pDataSrc
+     );
+diff -r -u ./common/plpicdec.cpp ../paintlib-2.6.2-new/common/plpicdec.cpp
+--- ./common/plpicdec.cpp	2005-01-09 21:15:19.000000000 +0100
++++ ../paintlib-2.6.2-new/common/plpicdec.cpp	2013-04-25 21:04:27.000000000 +0200
+@@ -27,6 +27,7 @@
+ #include "planybmp.h"
+ 
+ #include <stdio.h>
++#include <cstring>
+ 
+ // Set default Trace configuration here. The defined levels are
+ // explained in picdec.h.
+diff -r -u ./common/plpicenc.cpp ../paintlib-2.6.2-new/common/plpicenc.cpp
+--- ./common/plpicenc.cpp	2005-01-09 21:15:19.000000000 +0100
++++ ../paintlib-2.6.2-new/common/plpicenc.cpp	2013-04-25 21:00:23.000000000 +0200
+@@ -19,6 +19,7 @@
+ #include "plpicdec.h"
+ 
+ #include <errno.h>
++#include <cstring>
+ 
+ PLPicEncoder::PLPicEncoder()
+   : PLObject()
+diff -r -u ./common/plpictdec.cpp ../paintlib-2.6.2-new/common/plpictdec.cpp
+--- ./common/plpictdec.cpp	2004-10-03 21:24:29.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plpictdec.cpp	2013-04-25 21:00:58.000000000 +0200
+@@ -25,6 +25,7 @@
+ #include "plexcept.h"
+ 
+ #include <stdio.h>
++#include <cstring>
+ 
+ PLPictDecoder::PLPictDecoder
+     ( PLJPEGDecoder * pJPEGDecoder
+diff -r -u ./common/plpixelformat.cpp ../paintlib-2.6.2-new/common/plpixelformat.cpp
+--- ./common/plpixelformat.cpp	2004-10-03 19:49:22.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plpixelformat.cpp	2013-04-25 21:06:45.000000000 +0200
+@@ -12,6 +12,8 @@
+ 
+ #include <vector>
+ #include <sstream>
++#include <cstring>
++#include <cstdlib>
+ 
+ using namespace std;
+ 
+diff -r -u ./common/plpngdec.h ../paintlib-2.6.2-new/common/plpngdec.h
+--- ./common/plpngdec.h	2004-06-20 15:14:37.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plpngdec.h	2013-04-25 21:01:42.000000000 +0200
+@@ -49,12 +49,12 @@
+ 
+ private:
+ 
+-  static void PLPNGDecoder::user_error_fn
++  static void user_error_fn
+     ( png_structp png_ptr,
+       png_const_charp error_msg
+     );
+ 
+-  static void PLPNGDecoder::user_warning_fn
++  static void user_warning_fn
+     ( png_structp png_ptr,
+       png_const_charp warning_msg
+     );
+diff -r -u ./common/plppmdec.h ../paintlib-2.6.2-new/common/plppmdec.h
+--- ./common/plppmdec.h	2004-06-20 15:14:37.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plppmdec.h	2013-04-25 21:02:07.000000000 +0200
+@@ -78,7 +78,7 @@
+     );
+ 
+ 
+-  PLPixel32 PLPPMDecoder::readASCIIPixel32
++  PLPixel32 readASCIIPixel32
+     ( int MaxGrayValue,
+       PLDataSource * pDataSrc
+     );
+diff -r -u ./common/plpsddec.cpp ../paintlib-2.6.2-new/common/plpsddec.cpp
+--- ./common/plpsddec.cpp	2004-09-11 16:23:02.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plpsddec.cpp	2013-04-25 21:04:55.000000000 +0200
+@@ -15,6 +15,7 @@
+ #include "plfilesrc.h"
+ 
+ #include <stdio.h>
++#include <cstring>
+ 
+ using namespace std;
+ 
+diff -r -u ./common/plsgidec.cpp ../paintlib-2.6.2-new/common/plsgidec.cpp
+--- ./common/plsgidec.cpp	2004-09-11 16:23:02.000000000 +0200
++++ ../paintlib-2.6.2-new/common/plsgidec.cpp	2013-04-25 21:05:41.000000000 +0200
+@@ -11,6 +11,7 @@
+ 
+ #include "plsgidec.h"
+ #include "plexcept.h"
++#include <cstring>
+ 
+ const PLWORD SGI_MAGIC = 474;
+ 
+diff -r -u ./common/pltiffdec.cpp ../paintlib-2.6.2-new/common/pltiffdec.cpp
+--- ./common/pltiffdec.cpp	2005-01-09 21:15:20.000000000 +0100
++++ ../paintlib-2.6.2-new/common/pltiffdec.cpp	2013-04-25 21:16:26.000000000 +0200
+@@ -14,6 +14,7 @@
+ #include "config.h"
+ #include "pltiffdec.h"
+ #include "plexcept.h"
++#include <cstring>
+ 
+ extern "C"
+ {
+diff -r -u ./common/test/pltestdecoders.cpp ../paintlib-2.6.2-new/common/test/pltestdecoders.cpp
+--- ./common/test/pltestdecoders.cpp	2004-10-03 19:49:22.000000000 +0200
++++ ../paintlib-2.6.2-new/common/test/pltestdecoders.cpp	2013-04-25 21:17:50.000000000 +0200
+@@ -19,6 +19,7 @@
+ #include "pltester.h"
+ 
+ #include <string>
++#include <cstring>
+ #include <iostream>
+ 
+ using namespace std;
+--- ./common/plpixelformat.cpp.orig	2013-05-07 10:43:06.249158411 +0200
++++ ./common/plpixelformat.cpp	2013-05-07 10:43:18.049600686 +0200
+@@ -229,7 +229,7 @@
+ 				string sBitCount(numStart, i+1 == sNameCopy.end() ? sNameCopy.end() : i);
+ 				int nBitCount = atoi(sBitCount.c_str());
+ 									
+-				channelInfo[channelIndex] = make_pair<int,int>(bitOffset, nBitCount);
++				channelInfo[channelIndex] = make_pair(bitOffset, nBitCount);
+ 				bitOffset += nBitCount;
+ 				numStart = sNameCopy.end();
+ 			}
+--- ./common/plpaintlibdefs.h.orig	2013-05-07 13:31:24.977249759 +0200
++++ ./common/plpaintlibdefs.h	2013-05-07 11:44:45.433248063 +0200
+@@ -15,11 +15,17 @@
+ #ifndef INCL_PLPAINTLIBDEFS
+ #define INCL_PLPAINTLIBDEFS
+ 
++#include <cstdint>
++
+ typedef unsigned char       PLBYTE;
+ typedef unsigned int        PLUINT;
+ typedef unsigned short      PLWORD;         // This is 16 bit.
+ typedef long                PLLONG;         // This is 32 bit.
++#if defined(__LP64__) || defined(_LP64)
+ typedef unsigned long       PLULONG;
++#else
++typedef uint32_t       PLULONG;
++#endif
+ 
+ #ifndef NULL
+ #define NULL    0
