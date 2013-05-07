@@ -7,6 +7,7 @@
 #include "EigenSolver.h"
 #include "RuntimeException.h"
 #include "slepceps.h"
+#include "petscsys.h"
 
 #include "private/matimpl.h"
 
@@ -14,7 +15,8 @@ namespace
 {
   Mat A; //Hamiltonian
   Mat B; //S-matrix
-  EPS eps; //EigenSolver
+  EPS eps = NULL; //EigenSolver
+  MPI_Comm comm;
   double shift; //could be stored in ST but lapack does not apply any shift
 }
 
@@ -39,6 +41,8 @@ void EigenSolver::slepc_init(int argc1, char** argv1)
 
 /*  SlepcInitialize(&argc1,&argv1,NULL,NULL);*/
   PetscPopSignalHandler();
+
+  comm = PETSC_COMM_WORLD;
 
 }
 
@@ -505,10 +509,15 @@ int EigenSolver::prepare_slepc()
      Create eigensolver context
   */
   int ierr;
-  ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
 
 
-  ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
+  if (eps == NULL)
+  {
+    //ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
+    ierr = EPSCreate(comm ,&eps);CHKERRQ(ierr);
+
+    ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
+  }
 
 
   return(ierr);
@@ -530,7 +539,8 @@ int EigenSolver::clear_slepc()
     if ( generalized)  ierr = MatDestroy(B);CHKERRQ(ierr);
   }
 
-  ierr = EPSDestroy(eps);CHKERRQ(ierr);
+  //ierr = EPSDestroy(eps);CHKERRQ(ierr);
+  //eps = NULL;
 
 
 
@@ -717,8 +727,7 @@ int  EigenSolver::preallocate_H_matrix(unsigned int matrix_size,  int*  non_zero
 
   int ierr;
 
-  ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &A);
-
+  ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &A);
   _size_of_matrix = matrix_size;
 
   return(ierr);
@@ -728,7 +737,7 @@ int  EigenSolver::preallocate_S_matrix(unsigned int matrix_size,  int*  non_zero
 {
   int ierr;
 
-  ierr = MatCreateSeqAIJ (PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
+  ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
 
   return(ierr);
 }
