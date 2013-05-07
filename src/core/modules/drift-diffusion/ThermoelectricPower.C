@@ -74,7 +74,8 @@ void
 ThermoelectricPower::do_init(void)
 {
 
-  const std::string& TEmodel = get_option("model", "diffusivity_model");
+  std::string TEmodel = get_option("type", "diffusivity_model");
+  TEmodel = get_option("model", TEmodel);
 
   if (TEmodel == "constant")
   {
