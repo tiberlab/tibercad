@@ -20,10 +20,24 @@ class TensorGrid
     TensorGrid(void) {};
 
     //! Constructor
+    /*!
+     * \param p0 lower left corner
+     * \param p1 upper right corner
+     * \param nk number of elements along x
+     * \param nl number of elements along y
+     * \param nm number of elements along z
+     */
     TensorGrid(const Point& p0, const Point& p1, int nk = 50, int nl = 50, int nm = 50);
 
 
     //! Setup a tensor grid
+    /*!
+     * \param p0 lower left corner
+     * \param p1 upper right corner
+     * \param nk number of elements along x
+     * \param nl number of elements along y
+     * \param nm number of elements along z
+     */
     void setup(const Point& p0, const Point& p1, int nk = 50, int nl = 50, int nm = 50);
 
 

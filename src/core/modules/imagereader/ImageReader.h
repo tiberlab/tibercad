@@ -5,6 +5,9 @@
 
 #include "SimulationInterface.h"
 
+class TensorGrid;
+
+
 /*!
  * 
  * \brief Extract data from image files
@@ -91,6 +94,9 @@ class TBDLLOCAL ImageReader : public SimulationInterface
 
     //! The data vector
     std::vector<double> _data;
+
+    //! The associated tensor grid
+    TensorGrid* _tensorgrid;
 
 };
 
