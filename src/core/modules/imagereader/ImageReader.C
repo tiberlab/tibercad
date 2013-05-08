@@ -5,6 +5,11 @@
 #include "TensorGrid.h"
 #include "Messages.h"
 
+#include "mesh.h"
+#include "dof_map.h"
+#include "elem.h"
+#include "fe_interface.h"
+
 #include "planydec.h"
 #include "plpngenc.h"
 #include "planybmp.h"
@@ -58,8 +63,15 @@ ImageReader::do_init(void)
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(0);
 
   system.add_variable("data", libMeshEnums::FIRST);
+  system.init();
 
   _import_picture();
+
+  // tag it as "solved"
+  increment_solve_sequence_number();
+
+  if (plot_solution(Data))
+    plot();
 }
 
 
@@ -81,47 +93,47 @@ void
 ImageReader::get_solution_secure(const Elem* elem,
     map<ID, vector<double> >& values, const vector<Point>& p)
 {
-  TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
-  const NumericVector<Number>& solution = system->get_solution_vector();
-  const DofMap& dof_map = system->get_dof_map();
+  if (values.count(Data))
+  {
+    TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
+    const NumericVector<Number>& solution = system->get_solution_vector();
+    const DofMap& dof_map = system->get_dof_map();
 
-  unsigned int dim = get_mesh().mesh_dimension();
+    unsigned int dim = get_mesh().mesh_dimension();
 
-  const unsigned int varid = system->variable_number("data");
+    const unsigned int varid = system->variable_number("data");
 
-   FEType fe_type = system->variable_type(varid);
-   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    FEType fe_type = system->variable_type(varid);
+    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
 
-   vector<unsigned int> dof_indices;
+    vector<unsigned int> dof_indices;
 
-   //element shape functions
-   const vector<vector<Real> >& phi = fe->get_phi();
-   //const vector<vector<RealGradient> >& dphi = fe->get_dphi();
-   const vector<Point>& real_pts = fe->get_xyz();
+    //element shape functions
+    const vector<vector<Real> >& phi = fe->get_phi();
+    //const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+    const vector<Point>& real_pts = fe->get_xyz();
 
-   ID subdomain = elem->subdomain_id();
+    ID subdomain = elem->subdomain_id();
 
-   fe->reinit(elem, &p);
+    fe->reinit(elem, &p);
 
-   dof_map.dof_indices(elem, dof_indices, varid);
+    dof_map.dof_indices(elem, dof_indices, varid);
 
-   const unsigned int n_dofs = dof_indices.size();
+    const unsigned int n_dofs = dof_indices.size();
 
-   for (unsigned int n = 0; n < p.size(); n++)
-   {
-     if (values.count(Data))
-     {
-       double data = 0.0;
-       //for (unsigned int i = 0; i < n_dofs; i++)
-       //  data += phi[i][n] * solution(dof_indices[i]);
+    for (unsigned int n = 0; n < p.size(); n++)
+    {
+      double data = 0.0;
+      //for (unsigned int i = 0; i < n_dofs; i++)
+      //  data += phi[i][n] * solution(dof_indices[i]);
 
-       int pos = _tensorgrid->find_element(p[n]);
-       if ((pos >= 0) && (pos < _tensorgrid->num_elements()))
-         data = _data[pos];
+      int pos = _tensorgrid->find_element(real_pts[n]);
+      if ((pos >= 0) && (pos < _tensorgrid->num_elements()))
+        data = _data[pos];
 
-       values[Data][n] = data;
-     }
-   }
+      values[Data][n] = data;
+    }
+  }
 }
 
 void
@@ -153,6 +165,10 @@ ImageReader::_import_picture(void)
   p1(0) += _pix_size * width;
   p1(1) += _pix_size * height;
 
+  double meshunits = this->get_mesh_units();
+  _origin /= meshunits;
+  p1 /= meshunits;
+
   _tensorgrid = new TensorGrid(_origin, p1, width, height, 1);
 
   //int bpp = Bmp.GetBitsPerPixel();
@@ -169,7 +185,9 @@ ImageReader::_import_picture(void)
   // Iterate through the lines
   for (y = 0; y < height; y++)
   {
-    pLine = pLineArray[y];
+    // note: the image origin is the upper left corner, as usual
+    // in informatics!
+    pLine = pLineArray[height - y - 1];
 
     // Iterate through the pixels
     for (x = 0; x < width; x++)
