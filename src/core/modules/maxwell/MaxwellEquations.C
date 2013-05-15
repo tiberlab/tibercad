@@ -467,7 +467,7 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
   }
 
   /////////////////////////////
-  int iMax = relativeIndexing ? std::max(accepted_eigen_count, eigensOut) : system.get_n_converged();
+  int iMax = relativeIndexing ? std::min(accepted_eigen_count, eigensOut) : system.get_n_converged();
 
   int diffSolCount = get_solution_for_each_mode_size();
 
@@ -539,7 +539,7 @@ void MaxwellEquations::get_solution_secure(std::map<ID, std::vector<double> >& s
   if (solutions.count(EigenValue)) {
     std::vector<double>& solution = solutions[EigenValue];
     solution.resize(0);
-    for (int i = 0; i < std::max(accepted_eigen_count, eigensOut); i++) {
+    for (int i = 0; i < std::min(accepted_eigen_count, eigensOut); i++) {
       double eigen1 = system.get_eigen_lambda(eigenIndices[i]).real();
 
       solution.push_back(eigen1 * c / system.simulationInterface->get_environment().get_device().get_mesh_units());
@@ -549,7 +549,7 @@ void MaxwellEquations::get_solution_secure(std::map<ID, std::vector<double> >& s
   if (solutions.count(EigenValue_eV)) {
     std::vector<double>& solution = solutions[EigenValue_eV];
     solution.resize(0);
-    for (int i = 0; i < std::max(accepted_eigen_count, eigensOut); i++) {
+    for (int i = 0; i < std::min(accepted_eigen_count, eigensOut); i++) {
       double eigen1 = system.get_eigen_lambda(eigenIndices[i]).real();
 
       solution.push_back(eigen1 * c / system.simulationInterface->get_environment().get_device().get_mesh_units() * Constants::hbar / Constants::e);
@@ -559,7 +559,7 @@ void MaxwellEquations::get_solution_secure(std::map<ID, std::vector<double> >& s
   if (solutions.count(EigenValueImag)) {
     std::vector<double>& solution = solutions[EigenValueImag];
     solution.resize(0);
-    for (int i = 0; i < std::max(accepted_eigen_count, eigensOut); i++) {
+    for (int i = 0; i < std::min(accepted_eigen_count, eigensOut); i++) {
       double eigen1 = system.get_eigen_lambda(eigenIndices[i]).imag();
 
       solution.push_back(eigen1 * c / system.simulationInterface->get_environment().get_device().get_mesh_units());
@@ -738,6 +738,8 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
 
     double q = Wlt * a_b_GaN * a_b_GaN * a_b_GaN / (lwell * a_b_GaN_2D * a_b_GaN_2D);
 
+    q *= 240.0 / (240 + 520);
+
     std::complex<double> FexcE0(FexcEreal[id](0), FexcEimag[id](0));
     std::complex<double> FexcE1(FexcEreal[id](1), FexcEimag[id](1));
     std::complex<double> FexcE2(FexcEreal[id](2), FexcEimag[id](2));
@@ -752,7 +754,7 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
   Complex two(2, 0);
 
 
-  WPolaritonLow = (Wc0 + Wexc0) / two - std::sqrt((Wc0 - Wexc0) / two * (Wc0 - Wexc0) / two + sum_Vi2);
+  WPolaritonLow = (Wc0 + Wexc0) / two - std::sqrt((Wc0 - Wexc0) / two * (Wc0 - Wexc0) / two + sum_absVi2);
   std::cout << "Wpolariton low: " << WPolaritonLow << "\n";
 
   for (std::map<ID, double>::iterator it = Fexc2.begin(); it != Fexc2.end(); it++) {
