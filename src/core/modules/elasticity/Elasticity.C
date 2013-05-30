@@ -493,10 +493,11 @@ Elasticity::get_solution_secure(const Elem* elem,
 
      if (values.count(EnergyDensity))
      {
+       // E = 1/2*C_ijkl\eps_ij\eps_kl + \sigma_ext_ij\eps_ij
        double energy = 0;
        for (ID i = 0; i < 3; i++)
          for (ID j = 0; j < 3; j++)
-           energy += total_stress(i,j) * total_strain(i,j);
+           energy += (total_stress(i,j) + stress_source(i,j)) * total_strain(i,j);
        values[EnergyDensity][n] = 0.5e9 * energy;
      }
 
