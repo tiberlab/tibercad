@@ -296,12 +296,8 @@ class Device
 
     QuantumContact* get_quantum_contact(const std::string& name);
 
-    //! Compute normal vector to a boundary region
- //   Point get_normal(const std::set<ID>& rg_ids, const std::set<ID>& bd_ids, unsigned int& count) const;
 
-   // void extend_mesh(const std::set<ID>& rg_ids, const std::set<ID>& bd_ids, const Point& normal, double length, const std::string &name);
 
-    //double Deter (const Point& P1, const Point& P2, const Point& P3);
   private:
 
 

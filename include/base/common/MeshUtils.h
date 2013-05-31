@@ -25,52 +25,10 @@ class MeshUtils
 
   public:
 
-
-    //! A helper class to map grids onto a TensorGrid
-    class GridMapper
-    {
-      public:
-
-        //! Destructor
-        ~GridMapper(void);
-
-        //! Obtain the GridMapper object for a given mesh
-        static GridMapper& get_mapper(const MeshBase* mesh);
-
-        //! Obtain the GridMapper object for a given mesh
-        static GridMapper& get_mapper(const MeshBase& mesh);
-
-        //! Get the element a given point is in
-        const Elem* get_element(const Point& point) const;
+    class GridMapper;
 
 
-      private:
 
-        typedef std::vector<std::vector<const Elem*>>  ElementList;
-
-        //! Default constructor is disabled
-        GridMapper(void);
-
-        //! Constructor
-        explicit GridMapper(const MeshBase* mesh);
-
-        //! The real mesh
-        const MeshBase* _mesh;
-
-        //! The tensor grid
-        TensorGrid _tensor_grid;
-
-        //! The datastructure containing the element lists
-        ElementList _elem_list;
-
-        //! Setup the mapping
-        void setup(void);
-
-
-        //! A static list of all GridMapper objects
-        static std::map<const MeshBase*, GridMapper*> _mappers;
-
-    };
 
 
     //! Get all the subdomain IDs present in the mesh
@@ -109,6 +67,74 @@ class MeshUtils
     MeshUtils(void);
 
 
+
+  public:
+
+    //! A helper class to map grids onto a TensorGrid
+    /*!
+     * It is assumed that there are no overlapping elements.
+     * In presence of e.g. automatically generated quantum contacts this may
+     * not be the case, but such pieces of the mesh should append elements to
+     * the end, which would not be seen normally by the GridMapper.
+     * If the GridMapper should include such regions, the set of IDs has to be
+     * specified explicitly.
+     */
+    class GridMapper
+    {
+      public:
+
+        //! Destructor
+        ~GridMapper(void);
+
+        //! Obtain the GridMapper object for a given mesh
+        /*!
+         * \param regions a subset of the region IDs of \c mesh
+         */
+        static GridMapper& get_mapper(const MeshBase* mesh,
+            const std::set<ID>& regions = std::set<ID>());
+
+        //! Obtain the GridMapper object for a given mesh
+        /*!
+         * \param regions a subset of the region IDs of \c mesh
+         */
+        static GridMapper& get_mapper(const MeshBase& mesh,
+            const std::set<ID>& regions = std::set<ID>());
+
+        //! Get the element a given point is in
+        const Elem* get_element(const Point& point) const;
+
+
+      private:
+
+        typedef std::vector<std::vector<const Elem*>>  ElementList;
+
+        //! Default constructor is disabled
+        GridMapper(void);
+
+        //! Constructor
+        explicit GridMapper(const MeshBase* mesh,
+            const std::set<ID>& regions = std::set<ID>());
+
+        //! The real mesh
+        const MeshBase* _mesh;
+
+        //! The subset of mesh region IDs
+        std::set<ID> _regids;
+
+        //! The tensor grid
+        TensorGrid _tensor_grid;
+
+        //! The datastructure containing the element lists
+        ElementList _elem_list;
+
+        //! Setup the mapping
+        void setup(void);
+
+
+        //! A static list of all GridMapper objects
+        static std::map<const MeshBase*, GridMapper*> _mappers;
+
+    };
 };
 
 

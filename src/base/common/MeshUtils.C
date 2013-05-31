@@ -209,8 +209,9 @@ MeshUtils::GridMapper::_mappers;
 
 
 
-MeshUtils::GridMapper::GridMapper(const MeshBase* mesh)
-: _mesh(mesh)
+MeshUtils::GridMapper::GridMapper(const MeshBase* mesh, const set<ID>& regions)
+: _mesh(mesh),
+  _regids(regions)
 {
   setup();
 }
@@ -258,6 +259,10 @@ MeshUtils::GridMapper::setup(void)
   for ( ; it != end; ++it)
   {
     const Elem* elem = *it;
+
+    // only if the subdomain ID is in the required subset we proceed
+    if (_regids.empty() || !_regids.count(elem->subdomain_id()))
+      continue;
 
     // we decide whether an element touches a certain tensor grid element
     // by looking at the bounding box
@@ -316,12 +321,12 @@ MeshUtils::GridMapper::setup(void)
 
 
 MeshUtils::GridMapper&
-MeshUtils::GridMapper::get_mapper(const MeshBase* mesh)
+MeshUtils::GridMapper::get_mapper(const MeshBase* mesh, const set<ID>& regions)
 {
   map<const MeshBase*, GridMapper*>::iterator it(_mappers.find(mesh));
   if (it == _mappers.end())
   {
-    it = (_mappers.insert(make_pair(mesh, new GridMapper(mesh)))).first;
+    it = (_mappers.insert(make_pair(mesh, new GridMapper(mesh, regions)))).first;
   }
 
   return(*(it->second));
@@ -329,9 +334,9 @@ MeshUtils::GridMapper::get_mapper(const MeshBase* mesh)
 
 
 MeshUtils::GridMapper&
-MeshUtils::GridMapper::get_mapper(const MeshBase& mesh)
+MeshUtils::GridMapper::get_mapper(const MeshBase& mesh, const set<ID>& regions)
 {
-  return(get_mapper(&mesh));
+  return(get_mapper(&mesh, regions));
 }
 
 const Elem*
