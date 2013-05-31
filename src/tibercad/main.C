@@ -31,7 +31,7 @@ using namespace std;
 
 #if defined(_WIN32)
 // Return filename from file open dialog
-static string open_file(const char *filter = "All Files (*.*)\0*.*\0", HWND owner = NULL)
+static string open_file(const char *filter = "tiberCAD input files (*.tib)\0*.tib\0", HWND owner = NULL)
 {
   char fileName[MAX_PATH] = "";
   OPENFILENAME ofn;
