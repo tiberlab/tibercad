@@ -23,7 +23,7 @@
 #include <ctime>
 #include <tr1/random>
 
-
+using namespace std;
 
 AtomisticGenerator::AtomisticGenerator(void)
 :_bondmapobject(NULL),
@@ -283,9 +283,11 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
   Messages::debug("Running cut_and_change_specie");
 
+  int n_super_basis = _super_basis.size();
+
   _structure_basis.clear();
   assign.clear();
-  _structure_basis.reserve(_super_basis.size());
+  _structure_basis.reserve(n_super_basis);
 
   std::set<ID> reg_ids(_as->get_IDset());
   // we will need the reference region for atoms falling outside of
@@ -293,8 +295,11 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   reg_ids.insert(_reference_region_id);
 
   // the tensor grid to real mesh mapper for fast association atom->Elem
+  // NOTE: we pass the relevant ID set, since Quantum contacts could be present
+  //       which have to be included in the atomistic structure
   MeshUtils::GridMapper& mapper =
-      MeshUtils::GridMapper::get_mapper(_as->get_device()->get_mesh());
+      MeshUtils::GridMapper::get_mapper(_as->get_device()->get_mesh(),
+          _as->get_IDset());
 
   std::set<ID>::iterator reg(reg_ids.begin());
   for ( ; reg != reg_ids.end(); ++reg)
@@ -334,7 +339,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   // Cycle upon all atoms and change specie according to assign map
   //
 
-  progress_step = _super_basis.size()/100;
+  progress_step = (n_super_basis > 100) ? n_super_basis / 100 : 1;
   progress_counter = 0;
 
   Utils::Timer tt;
@@ -406,7 +411,7 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
       if (((progress_counter % progress_step) == 0) &&
           ((progress_counter / progress_step) % 2 == 0))
           std::cout << "\b\b\b\b\b\b\b\b" << std::setw(3) <<
-            progress_counter / progress_step << "% ..." << std::flush;
+            100 * progress_counter / n_super_basis << "% ..." << std::flush;
     }
   }
   std::cout << " done" << std::endl;
