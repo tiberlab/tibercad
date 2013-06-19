@@ -149,7 +149,7 @@ Module sweep
 
 Module negf
 {
-  plot = (Current)
+  plot = (Current, elDensity)
   regions = double_barrier
 
   potential_simulation = driftdiffusion

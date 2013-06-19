@@ -14,7 +14,7 @@ Extended::do_init(void)
   RealGradient  R(0);
   double A(0);
 
-  //set_is_extended(true);
+  set_is_extended(true);
   
   set_coefficients(H,A,R);
 

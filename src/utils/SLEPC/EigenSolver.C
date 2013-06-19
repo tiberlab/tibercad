@@ -540,6 +540,8 @@ int EigenSolver::clear_slepc()
   }
 
 
+  // NOTE: with real MPI this leads to too many communicators
+  // in a future version of SLEPc one could maybe use EPSReset()
   ierr = EPSDestroy(eps);CHKERRQ(ierr);
   eps = NULL;
 

@@ -228,6 +228,10 @@ SimulationInterface::exclude_solve_from_subdomains(const set<ID>& ids,
   get_environment().prepare_for_solve();
 
   find_excluded_dofs(ids, variables);
+
+  for (set<ID>::iterator it(ids.begin()); it != ids.end(); ++it)
+    for (int i = 0; i < variables.size(); ++i)
+      _excluded_domains[*it].insert(variables[i]);
 }
 
 

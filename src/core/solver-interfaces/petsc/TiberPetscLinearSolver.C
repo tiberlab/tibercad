@@ -363,7 +363,7 @@ TiberPetscLinearSolver::do_parse_options(void)
 
   _pc_type = TiberPetscUtils::extract_PCType(get_options());
 
-  _solver_package = get_option("solver_package", "", false);
+  _solver_package = get_option("solver_package", "");
 
   _monitor = get_option("monitor", false);
   _xmonitor = get_option("xmonitor", false);

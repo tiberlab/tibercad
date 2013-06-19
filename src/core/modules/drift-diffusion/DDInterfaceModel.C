@@ -20,9 +20,12 @@ DDInterfaceModel::DDInterfaceModel(const ModelOptions& options) :
   DriftDiffusionProperties(options),
   _internal_bd(false),
   _has_current(false),
+  _ref_fermi_e(0),
+  _ref_fermi_h(0),
   _emission(NULL),
   _eflux(0.0),
   _eflux_sim(NULL),
+  _flux_predictor(false),
   _eflux_controlled(false),
   _ddprop_A(NULL),
   _ddprop_B(NULL)
@@ -228,11 +231,14 @@ DDInterfaceModel::do_init(void)
           throw InitFailedException(msg);
         }
 
+        _flux_predictor = get_option("flux_predictor", false);
+
         _eflux_id = _eflux_sim->get_solution_id("eCurrentDensity");
         if (_eflux_id == INVALID_ID)
           throw InitFailedException("Module '" +
               eflux + "' does not contain solution variable 'eCurrentDensity'");
       }
+      //has_current(true);
     }
 
     _eflux_controlled = true;
@@ -364,6 +370,20 @@ DDInterfaceModel::compute()
           data, get_coordinates()))
       {
         flux = data[0] * _normal(0) + data[1] * _normal(1) + data[2] * _normal(2);
+
+        if (_flux_predictor)
+        {
+          double dV = pd.old_fermi_e - _ref_fermi_e;
+          if ((abs(dV) > 1e-9) && (abs(flux) > 0))
+          {
+            double rho = abs(dV / flux);
+
+            flux = (pd.fermi_e - _ref_fermi_e) / rho;
+            //std::cerr << (pd.fermi_e - pd.old_fermi_e) / rho << " " << flux << std::endl;
+            _jacobian[1][1] -= 1.0 / rho / Constants::e;
+          }
+        }
+
       }
     }
 

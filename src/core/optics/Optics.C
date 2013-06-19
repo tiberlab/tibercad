@@ -271,7 +271,7 @@ void Optics::compute_matrix_elements()
   int verbose = SimulationOptions::verbose();
 
   if (verbose > 0)
-    Messages::info("calculation of matrix elements for dipole optical transition...", true);
+    Messages::info("calculation of matrix elements for dipole optical transition...");
 
   set_states();
 

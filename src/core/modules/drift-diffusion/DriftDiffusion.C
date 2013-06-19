@@ -529,6 +529,7 @@ DriftDiffusion::do_solve(void)
     get_my_options().coupling = coupling;
   }
 
+
   //set_dirichlet_bc();
   if (get_option("use_weight", false))
     calculate_weights();
@@ -634,6 +635,9 @@ DriftDiffusion::do_solve(void)
   }
 
   calculate_field_emission();
+
+  // calculate the mean fermi levels on the contacts
+  calculate_mean_fermi_levels();
 
 }
 
@@ -1933,6 +1937,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   unsigned int np = points.size();
 
+  ID subdomain = elem->subdomain_id();
+
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>(0);
 
   const NumericVector<Number>& solution = system->get_solution_vector();
@@ -1942,13 +1948,26 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
   const DofMap& dof_map = system->get_dof_map();
 
-  const unsigned int u_var = system->variable_number("potential");
+  unsigned int u_var = system->variable_number("potential");
   unsigned int en_var = system->variable_number("fermi_e");
   unsigned int ep_var = system->variable_number("fermi_h");
   if (_useparticle == 'e')
     ep_var = en_var;
   else if (_useparticle == 'h')
     en_var = ep_var;
+
+  bool exclude_e = false;
+  bool exclude_h = false;
+  map<ID, set<string>>::const_iterator it(get_excluded_domains().find(subdomain));
+  if (it != get_excluded_domains().end())
+  {
+    if ((it->second).count("fermi_e"))
+      exclude_e = true;
+    if ((it->second).count("fermi_h"))
+      exclude_h = true;
+  }
+
+
 
   FEType fe_type = system->variable_type(u_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
@@ -1961,8 +1980,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   const vector<vector<Real> >& phi = fe->get_phi();
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
   const vector<Point>& real_pts = fe->get_xyz();
-
-  ID subdomain = elem->subdomain_id();
 
   DDBulkModel* sc =
     dynamic_cast<DDBulkModel*>(
@@ -2044,6 +2061,9 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     e_field *= -phi0;
     grad_en_loc *= phi0;
     grad_ep_loc *= phi0;
+
+    if (exclude_e) grad_en_loc = 0;
+    if (exclude_h) grad_ep_loc = 0;
 
 
     sc->set_coordinates(real_pts[n]);
@@ -2308,6 +2328,209 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 }
 
 
+
+void
+DriftDiffusion::calculate_mean_fermi_levels(void)
+{
+  ContactData::iterator it = _boundary_eqfermi.begin();
+  for ( ; it != _boundary_eqfermi.end(); ++it)
+  {
+    // zero out current
+    (*it).second = 0.0;
+  }
+
+  for (it =  _boundary_hqfermi.begin(); it != _boundary_hqfermi.end(); ++it)
+  {
+    // zero out current
+    (*it).second = 0.0;
+  }
+
+  ContactData boundary_area;
+
+  SimulationEnvironment& env = get_environment();
+
+  const MeshBase& mesh = get_mesh();
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+  const NumericVector<Number>& solution = system.get_solution_vector();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  //const Device& device = *_device;
+  //const SimulationEnvironment& environment = get_environment();
+
+  DenseVector<Number> X;
+  DenseSubVector<Number>
+    Xu(X),
+    Xn(X),
+    Xp(X);
+
+  const Options& params = get_my_options();
+
+  // the scaling parameters
+  const Scaling& scaling = get_scaling();
+  const double x0 = scaling.get_length_scaling();
+  const double phi0 = scaling.get_potential_scaling();
+
+  const DofMap& dof_map = system.get_dof_map();
+
+  // numeric ids corresponding to the variables
+  const unsigned int en_var = system.variable_number("fermi_e");
+  const unsigned int ep_var = system.variable_number("fermi_h");
+
+  FEType fe_type = system.variable_type(en_var);
+
+  libMeshEnums::Order integration_order = params.integration_order;
+
+  // the finite element for boundary integration
+  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+
+
+  AutoPtr<QBase> qface(QBase::build(
+        params.quadrature_type, dim - 1, libMeshEnums::CONSTANT));
+  fe_face->attach_quadrature_rule(qface.get());
+
+
+  const vector<vector<Real> >&  phi_face = fe_face->get_phi();
+  //
+  const vector<vector<RealGradient> >&  dphi_face = fe_face->get_dphi();
+  //
+  // physical coordinates of the quadrature points
+  const vector<Point>& q_point_face = fe_face->get_xyz();
+  // Jacobian * quadrature weight at each integration point.
+  const vector<Real>& JxW_face = fe_face->get_JxW();
+
+  vector<unsigned int> dof_indices;
+  vector<unsigned int> dof_indices_en;
+  vector<unsigned int> dof_indices_ep;
+
+  // we construct a map of all interface models, and remember the
+  // associated Boundary pointer.
+  map<DDInterfaceModel*, Boundary*> ifmodels;
+
+
+  BoundaryElementMap::iterator bel(env.boundary_elements_begin());
+  const BoundaryElementMap::iterator bend(env.boundary_elements_end());
+  //MeshBase::const_element_iterator el =
+  //                                mesh.active_local_elements_begin();
+  //const MeshBase::const_element_iterator end_el =
+  //                                mesh.active_local_elements_end();
+
+  // loop over all active elements
+  for ( ; bel != bend ; ++bel)
+  {
+    const Elem* elem = *bel;
+    const Elem* top_parent = elem->top_parent();
+
+    dof_map.dof_indices(elem, dof_indices);
+    dof_map.dof_indices(elem, dof_indices_en, en_var);
+    dof_map.dof_indices(elem, dof_indices_ep, ep_var);
+
+    unsigned int n_dofs     = dof_indices_en.size();
+    unsigned int n_dofs_tot = 3 * n_dofs;
+
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+      Boundary* bd = get_environment().get_boundary(ElementSide(elem, s));
+      if (bd == NULL)
+        continue;
+
+      DDInterfaceModel* sm = get_interface_model<DDInterfaceModel>(elem, s);
+
+      if (sm != NULL)
+      {
+
+        X.resize(n_dofs_tot);    Xu.reposition(0, n_dofs);
+        if (_useparticle == 'h')
+          Xn.reposition(2 * n_dofs, n_dofs);
+        else
+          Xn.reposition(n_dofs, n_dofs);
+        if (_useparticle == 'e')
+          Xp.reposition(n_dofs, n_dofs);
+        else
+          Xp.reposition(2 * n_dofs, n_dofs);
+
+        dof_map.extract_local_vector(solution, dof_indices, X);
+
+        fe_face->reinit(elem, s);
+
+        int phi_size = phi_face.size();
+
+        // now integrate to include von Neumann and mixed type BCs
+        // and polarization
+        for (unsigned int qp = 0; qp < qface->n_points(); qp++)
+        {
+          // get the solution values at the quadrature point
+          Real en = 0.0;
+          Real ep = 0.0;
+          for (unsigned int i = 0; i < n_dofs; i++)
+          {
+            en += phi_face[i][qp] * Xn(i);
+            ep += phi_face[i][qp] * Xp(i);
+          }
+
+          // the jacobian x weight x scaling
+          double J = JxW_face[qp];
+
+          _boundary_eqfermi[bd] += J * en * phi0;
+          _boundary_hqfermi[bd] += J * ep * phi0;
+          boundary_area[bd] += J;
+        }
+
+        ifmodels[sm] = bd;
+
+      }
+    }
+  }
+
+  for (it = _boundary_eqfermi.begin(); it != _boundary_eqfermi.end(); ++it)
+  {
+    it->second /= boundary_area[it->first];
+  }
+  for (it = _boundary_hqfermi.begin(); it != _boundary_hqfermi.end(); ++it)
+  {
+    it->second /= boundary_area[it->first];
+  }
+
+  // search for interface models with external current source
+  // TODO to be implemented also for holes
+  map<const SimulationInterface*, set<Boundary*>> fluxmodels;
+  map<DDInterfaceModel*, Boundary*>::iterator ifit(ifmodels.begin());
+  for ( ; ifit != ifmodels.end(); ++ifit)
+  {
+    if ((ifit->first)->get_eflux_simulation() != NULL)
+      fluxmodels[(ifit->first)->get_eflux_simulation()].insert(ifit->second);
+  }
+
+  map<const SimulationInterface*, double> reffermi_e;
+  map<const SimulationInterface*, set<Boundary*>>::iterator sit(fluxmodels.begin());
+  for ( ; sit != fluxmodels.end(); ++sit)
+  {
+    const set<Boundary*>& bdset = sit->second;
+    reffermi_e[sit->first] = 0;
+    double count = bdset.size();
+    for (set<Boundary*>::iterator bdit(bdset.begin()); bdit != bdset.end(); ++bdit)
+      reffermi_e[sit->first] += _boundary_eqfermi[*bdit] / count;
+  }
+
+
+  ifit = ifmodels.begin();
+  for ( ; ifit != ifmodels.end(); ++ifit)
+  {
+    double eref = 0.0;
+    double href = 0.0;
+
+    if ((ifit->first)->get_eflux_simulation() != NULL)
+    {
+      map<const SimulationInterface*, double>::iterator simit(
+          reffermi_e.find((ifit->first)->get_eflux_simulation()));
+      if (simit != reffermi_e.end())
+        eref = simit->second;
+    }
+
+    (ifit->first)->set_reference_fermi_potentials(eref, href);
+  }
+}
 
 
 void

@@ -26,6 +26,7 @@
 
 
 template <typename T> class InitializerBase;
+class Point;
 
 
 //! The base class for all TiberCAD model classes
@@ -227,6 +228,11 @@ class TiberModelObject
 
     //! Get an option which is a vector of values
     void get_option(const std::string& name, RealTensor& vec,
+        bool override = true) const;
+
+
+    //! Get an option as a Point
+    void get_option(const std::string& name, Point& point,
         bool override = true) const;
 
 

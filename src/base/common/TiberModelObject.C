@@ -7,6 +7,7 @@
 #include "ModelErrorException.h"
 
 #include <vector_value.h>
+#include <point.h>
 
 #include <cassert>
 #include <sstream>
@@ -181,6 +182,25 @@ TiberModelObject::get_option(const std::string& name,
   Utils::extract_vector(val, vec);
 }
 
+
+void
+TiberModelObject::get_option(const std::string& name,
+    Point& point, bool override) const
+{
+  string val(_options.get_option(name, ""));
+  if (Variable::check_string(val))
+    throw ModelErrorException("Option \'" + name + "\' cannot "
+        " be used as variable (" + val +")");
+  // if one needs override from strange other sources
+  if (override) override_parameter_string(name, val);
+
+  if (val.empty()) return;
+
+  //Variable::check_and_register(val, variable, this, initfunc);
+  RealVectorValue vec(point);
+  Utils::extract_vector(val, vec);
+  point = vec;
+}
 
 void
 TiberModelObject::get_option(const std::string& name,

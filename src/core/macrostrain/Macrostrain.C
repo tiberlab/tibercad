@@ -703,7 +703,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   // Boundary integration requires one quadraure rule,
   // with dimensionality one less than the dimensionality
   // of the element.
-  QGauss qface(dim-1, THIRD);
+  QGauss qface(dim-1, CONSTANT);
 
   // Tell the finite element object to use our
   // quadrature rule.
@@ -1023,15 +1023,13 @@ void Macrostrain::do_assemble(EquationSystems& es,
 		  {
 
 
-
 		    Tensor2Gen t = doubleContraction(C_tensor_el->C_calc, eps_const) - stress_converse_piezo;
+
 
 		    Tensor1 v;
 		    v(1) = normal[qp](0);  v(2) = normal[qp](1);  v(3) = normal[qp](2);
 
 		    Tensor1 v1 = t*v;
-
-
 		    Fe_sub(p1) += JxW_face[qp] * phi_face[p1][qp] * v1(j+1);
 
 
@@ -1408,6 +1406,10 @@ void Macrostrain::do_assemble(EquationSystems& es,
    }
 
 
+  system.matrix->close();
+  system.matrix->print_matlab("K_ms.m");
+  system.rhs->close();
+  system.rhs->print_matlab("F_ms.m");
 /*
    {
 

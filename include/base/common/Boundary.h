@@ -119,6 +119,8 @@ class Boundary
 
     //! The models for the different simulations
     ModelMap _models;
+
+    //! Obsolete
     PropertyMap _oldmodels;
 
     //! The user defined name of this boundary

@@ -848,6 +848,9 @@ class SimulationInterface : public TiberModelObject
         const std::vector<std::string>& variables);
 
 
+    //! Get the map containing all excluded domains
+    const std::map<ID, std::set<std::string>>& get_excluded_domains(void) const;
+
     //! Declare this module to be a task or not
     void is_task(bool task);
 
@@ -1414,6 +1417,10 @@ class SimulationInterface : public TiberModelObject
     AtomisticStructure* _atomistic_structure;
 
 
+    //! The excluded domains
+    std::map<ID, std::set<std::string>> _excluded_domains;
+
+
     //! create a unique name for the equation system
     void create_equation_system_name(void) TBDLLOCAL;
 
@@ -1492,6 +1499,12 @@ SimulationInterface::get_equation_system(ID i)
 }
 
 
+inline
+const std::map<ID, std::set<std::string>>&
+SimulationInterface::get_excluded_domains(void) const
+{
+  return _excluded_domains;
+}
 
 
 

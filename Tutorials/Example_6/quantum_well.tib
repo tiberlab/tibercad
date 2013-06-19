@@ -70,7 +70,7 @@ Module elasticity
   name = strain
   regions = all
 
-  plot = (Strain, Stress)
+  plot = (Strain, Stress, Displacement)
 
 
   Physics 

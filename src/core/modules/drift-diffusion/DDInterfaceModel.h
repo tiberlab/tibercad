@@ -60,6 +60,10 @@ class DDInterfaceModel : public DriftDiffusionProperties
     void set_face_normal(const Point& n);
 
 
+    //! Set a reference fermi level
+    void set_reference_fermi_potentials(double fermi_e, double fermi_h);
+
+
     //! Compute the coefficients and their derivatives
     void compute();
 
@@ -125,6 +129,10 @@ class DDInterfaceModel : public DriftDiffusionProperties
     FowlerNordheim* get_field_emission_model(void);
 
 
+    //! Get the electron flux simulation
+    SimulationInterface* get_eflux_simulation(void) const;
+
+
 
   protected:
 
@@ -180,6 +188,7 @@ class DDInterfaceModel : public DriftDiffusionProperties
     //! Get the current face normal
     const Point& get_face_normal(void) const;
 
+    void get_reference_fermi_potentials(double& fermi_e, double& fermi_h) const;
 
 
   private:
@@ -212,6 +221,11 @@ class DDInterfaceModel : public DriftDiffusionProperties
     //! The current face normal
     Point _normal;
 
+    //! A reference electron Fermi potential
+    double _ref_fermi_e;
+
+    //! A reference hole Fermi potential
+    double _ref_fermi_h;
 
     //! The electron traps
     std::set<Trap*> _etraps;
@@ -234,6 +248,9 @@ class DDInterfaceModel : public DriftDiffusionProperties
 
     //! The solution ID for the electron current density
     ID _eflux_id;
+
+    //! True if a flux predictor should be used
+    bool _flux_predictor;
 
     //! True if flux controlled for electrons
     bool _eflux_controlled;
@@ -317,6 +334,25 @@ DDInterfaceModel::set_face_normal(const Point& n)
 {
   _normal = n;
 }
+
+
+inline
+void
+DDInterfaceModel::set_reference_fermi_potentials(double fermi_e, double fermi_h)
+{
+  _ref_fermi_e = fermi_e;
+  _ref_fermi_h = fermi_h;
+}
+
+inline
+void
+DDInterfaceModel::get_reference_fermi_potentials(double& fermi_e,
+    double& fermi_h) const
+{
+  fermi_e = _ref_fermi_e;
+  fermi_h = _ref_fermi_h;
+}
+
 
 
 inline
@@ -440,6 +476,13 @@ DDInterfaceModel::internal_bondary(bool is_internal_boundary)
   _internal_bd = is_internal_boundary;
 }
 
+
+inline
+SimulationInterface*
+DDInterfaceModel::get_eflux_simulation(void) const
+{
+  return(_eflux_sim);
+}
 
 
 #endif // _DDINTERFACEMODEL_H_

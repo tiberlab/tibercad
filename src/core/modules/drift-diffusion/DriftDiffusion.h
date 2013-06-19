@@ -540,6 +540,12 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      */
     ContactData _boundary_currents;
 
+    //! the mean electron quasi Fermi potential
+    ContactData _boundary_eqfermi;
+
+    //! the mean hole quasi Fermi potential
+    ContactData _boundary_hqfermi;
+
 
     //! The voltages of the former solve step
     ContactData _voltages;
@@ -632,6 +638,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
     //! Find elements that touch a real contact
     void find_contact_elements(void);
+
+    //! Calculate mean Fermi level on boundaries
+    void calculate_mean_fermi_levels(void);
 
 
     //! Reset solver environment.
