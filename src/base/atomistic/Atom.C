@@ -29,11 +29,6 @@ _specie(specie)
   _flag = flag;
 }
 
-Atom::~Atom()
-{
-}
-
-
 void Atom::set_elem(const Elem* el)
 {
   _el = el;

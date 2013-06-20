@@ -59,17 +59,6 @@ BondMap::set_cutoff()
       }
 
      file.close();
-
-  //TODO: cutoff must be scecified in separated file
-  //_cutoff["Si"] = 1.25;
-  //_cutoff["Ga"] = 1.2;
-  //_cutoff["As"] = 1.4;
-  //_cutoff["N"] = 1.2;
-  //_cutoff["Al"] = 1.2;
-  //_cutoff["H"] = 0.05;
-  //_cutoff["InGa"] = 1.4;
-  //_cutoff["In"] = 1.2;
-  //_cutoff["AlGa"] = 1.4;
 }
 
 void
@@ -295,6 +284,7 @@ BondMap::process_cell(const std::vector<Atom>& basis, const unsigned int x1,
     int x2, int y2, int z2)
 {
   Tensor1 shift(0);
+
   Tensor1 period_x(0), period_y(0), period_z(0);
 
   period_x(1) = _period(1,1); period_x(2) = _period(2,1); period_x(3) = _period(3,1);

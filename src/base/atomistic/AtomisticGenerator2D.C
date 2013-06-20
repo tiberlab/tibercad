@@ -17,11 +17,7 @@ AtomisticGenerator2D::create(AtomisticStructure* const as)
 AtomisticGenerator2D::AtomisticGenerator2D(AtomisticStructure* const as)
 {
   _dim = 2;
-                   _as = as;
-	_rotation(1,1) = 1.0; _rotation(1,2) = 0.0; _rotation(1,3) = 0.0; _rotation(2,1) = 0.0; _rotation(2,2) = 1.0;
-	_rotation(2,3) = 0.0; _rotation(3,1) = 0.0; _rotation(3,2) = 0.0; _rotation(3,3) = 1.0;
-
-	_lattice_constant[0] = 0.0; _lattice_constant[1] = 0.0; _lattice_constant[2] = 0.0;
+  _as = as;
 }
 
 
@@ -35,8 +31,8 @@ void
    Elem* elem = NULL;
    Node* nd = NULL;
 
-   //Only 1D and 2D structures are intended to be periodical
-      _as->_atomistic_structure_options.is_periodical = true;
+   //1D and 2D structures are intended to be periodical
+      _as->set_periodic(true);
 
 //Common building operations
 	 make_conv_cell();

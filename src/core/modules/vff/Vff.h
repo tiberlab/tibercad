@@ -3,6 +3,7 @@
 #define _VFF_H_
 
 #include "SimulationInterface.h"
+#include "StrainLattice.h"
 
 //extern "C"
 //{
@@ -16,6 +17,24 @@ class TBDLLOCAL Vff : public SimulationInterface
 {
 
 public:
+
+  //! These are the known solution variables
+  /*!
+   * This is an enum, but we use the string representation of
+   * the enum values to refer to solutions for plotting or
+   * for data exchange with other modules.
+   *
+   * \note Do \em not use (\c INVALID_ID - 1) or the strings \c RegionIDs
+   * or \c materials as they are used to plot the materials/region IDs.
+   *
+   * \note The name "all" is used to plot all solutions
+   */
+  enum Solutions
+  {
+    Strain,
+    Strain2,
+    Displacement
+  };
 
   //! Destructor
   /*!
@@ -76,28 +95,13 @@ protected:
   //! We have to provide somehow our solution variables
   virtual void get_solution_secure(const Elem* elem,
       std::map<ID, std::vector<double> >& values,
-      const std::vector<Point>& p){};
+      const std::vector<Point>& p);
 
 
 
 
 private:
 
-  //! These are the known solution variables
-  /*!
-   * This is an enum, but we use the string representation of
-   * the enum values to refer to solutions for plotting or
-   * for data exchange with other modules.
-   *
-   * \note Do \em not use (\c INVALID_ID - 1) or the strings \c RegionIDs
-   * or \c materials as they are used to plot the materials/region IDs.
-   *
-   * \note The name "all" is used to plot all solutions
-   */
-  enum Solutions
-  {
-    Displacement     /*!< the atom displacement */
-  };
 
   //! The constructor
   /*!
@@ -169,6 +173,9 @@ private:
 
   //Set coordinates used
   void set_coords(void);
+
+  //Utility for strain projection
+  StrainLattice _strain;
 
 };
 

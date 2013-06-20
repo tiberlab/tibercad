@@ -1600,7 +1600,6 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
       exit(1);
     }
 
-  double* period = get_atomistic_structure()->get_periodicity_vectors();
   std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
 
 

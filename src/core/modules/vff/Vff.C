@@ -8,10 +8,10 @@
 #include "OptGpl.h"
 #include "Atom.h"
 #include "RuntimeException.h"
-
 #include "TiberModule.h"
-
+#include "point.h"
 #include <cmath>
+#include "mesh.h"
 
 
 Vff*
@@ -72,7 +72,8 @@ Vff::do_init()
   Messages::debug("Setting boundary conditions");
   check_structure();
   parse_options();
-
+  declare_solution(Strain, NTUPLE, NODES,"unitless",6);
+  declare_solution(Strain2, NTUPLE, CELL,"unitless",6);
 }
 
 void
@@ -93,6 +94,13 @@ Vff::do_solve(void)
 
    //Apply displacement to AtomisticStructure instance
    displace_atoms();
+
+   std::cout << "Invoking StrainLattice " << std::endl;
+   _strain.init(get_atomistic_structure());
+   std::cout << "Trying to solve"  << std::endl;
+   _strain.do_solve();
+   std::cout << "Init done " << std::endl;
+
 }
 
 void
@@ -362,19 +370,6 @@ Vff::build_parameters(void)
           if (get_atomistic_structure()->get_specie(j) != Specie::H)
             {
               const Atom& atm_j = get_atomistic_structure()->get_structure_atom(j);
-
-              //              //Here I check who's the anion. This check is not really elegant, maybe the
-              //              //PhysicalModel should do that. For checking here, I just cycle on the materials
-              //              //supported by TiberCAD
-              //              if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
-              //                  || (atm_i.get_specie() == Specie::Al))
-              //                {
-              //                  pm_a = get_bulk_model<VffModel>(atm_i, parent);
-              //                }
-              //              else
-              //                {
-              //                  pm_a = get_bulk_model<VffModel>(atm_j, parent);
-              //                }
               pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
               _alpha[i][counter_j] = pm_a->get_alpha(atm_i, atm_j);
               _d[i][counter_j] = pm_a->get_d(atm_i, atm_j);
@@ -385,19 +380,9 @@ Vff::build_parameters(void)
                   const Atom& atm_k = get_atomistic_structure()->get_structure_atom(k);
                   if (get_atomistic_structure()->get_specie(k) != Specie::H)
                     {
-                      //                     if ((atm_i.get_specie() == Specie::In) || (atm_i.get_specie() == Specie::Ga)
-                      //                         || (atm_i.get_specie() == Specie::Al))
-                      //                       {
-                      //                         pm_a = get_bulk_model<VffModel>(atm_i, parent);
-                      //                         pm_b = get_bulk_model<VffModel>(atm_i, parent);
-                      //                       }
-                      //                     else
-                      //                       {
-                      //                         pm_a = get_bulk_model<VffModel>(atm_j, parent);
-                      //                         pm_b = get_bulk_model<VffModel>(atm_k, parent);
-                      //                       }
                       pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
                       pm_b = get_bulk_model<VffModel>(atm_i, atm_k, parent);
+
                       _teta[i][counter_j][counter_k] =
                           (pm_a->get_costeta(atm_i, atm_j, atm_k) +
                               pm_b->get_costeta(atm_i, atm_j, atm_k)) / 2.0;
@@ -413,80 +398,6 @@ Vff::build_parameters(void)
     }
 }
 
-//void
-//Vff::build_parameters(void)
-//{
-//  //Dummy hardcoded for debug purpose
-//  int n_atoms = get_atomistic_structure()->get_N_without_H();
-//  unsigned int n_max_neighbors = 4;
-//  double alpha = 80.0;
-//  double d = 2.4479;
-//  double beta = 20.0;
-//  double teta = -0.3333;
-//  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
-//
-//  for (unsigned int i = 0; i < n_atoms; i++)
-//    {
-//      unsigned int n_bonds = bondmap[i].size();
-//      for (unsigned int counter_j = 0; counter_j < n_bonds; counter_j++)
-//        {
-//
-//          unsigned int j = bondmap[i][counter_j];
-//          //You don't want informations for passivation bonds
-//          if (get_atomistic_structure()->get_specie(j) != Specie::H)
-//            {
-//
-//          //Alpha, d for InAs
-//          if ((get_atomistic_structure()->get_specie(i) == Specie::In) || (get_atomistic_structure()->get_specie(j) == Specie::In))
-//              {
-//              //_alpha[i][counter_j] = 83.5582;
-//              _alpha[i][counter_j] = 33.199;
-//              _d[i][counter_j] = 2.6233;
-//
-//
-//              for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
-//                {
-//                  unsigned int k = bondmap[i][counter_k];
-//                  if (get_atomistic_structure()->get_specie(k) != Specie::H)
-//                    {
-//                  _teta[i][counter_j][counter_k] = teta;
-//                  if (get_atomistic_structure()->get_specie(k) == Specie::Ga)
-//                    //_beta[i][counter_j][counter_k] =  sqrt(26.7576 * 14.4855)      ;
-//                    _beta[i][counter_j][counter_k] =  sqrt(5.7554 * 9.2571)      ;
-//                  else
-//                    //_beta[i][counter_j][counter_k] = 14.4855;
-//                    _beta[i][counter_j][counter_k] = 5.7554;
-//                    }
-//                }
-//              }
-//          if ((get_atomistic_structure()->get_specie(i) == Specie::Ga) || (get_atomistic_structure()->get_specie(j) == Specie::Ga))
-//              {
-//              //_alpha[i][counter_j] = 119.2451;
-//              _alpha[i][counter_j] = 41.254;
-//              _d[i][counter_j] = 2.4479;
-//
-//
-//              for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
-//                {
-//                  unsigned int k = bondmap[i][counter_k];
-//                  if (get_atomistic_structure()->get_specie(k) != Specie::H)
-//                                     {
-//                  _teta[i][counter_j][counter_k] = teta;
-//                  if (get_atomistic_structure()->get_specie(k) == Specie::In)
-//                    //_beta[i][counter_j][counter_k] = sqrt(26.7576 * 14.4855)       ;
-//                    _beta[i][counter_j][counter_k] =  sqrt(5.7554 * 9.2571)      ;
-//                  else
-//                    //_beta[i][counter_j][counter_k] = 26.7576;
-//                    _beta[i][counter_j][counter_k] = 9.2571;
-//                                     }
-//
-//                }
-//              }
-//        }
-//        }
-//    }
-//
-//}
 
 double
 Vff::keating_potential(void)
@@ -762,3 +673,97 @@ Vff::optimize(void)
 }
 
 
+void
+Vff::get_solution_secure(const Elem* elem,
+    std::map<ID, std::vector<double> >& values,
+    const std::vector<Point>& p)
+{
+//TODO: these methods are experimental, their only purpose is to test different
+//techniques, they should not be trusted without speaking with the developer
+//
+unsigned int np = p.size();
+double scale = get_atomistic_structure()->get_scale();
+unsigned int dim = get_mesh().mesh_dimension();
+Point phys_p;
+if (values.count(Strain))
+{
+for (unsigned int n = 0; n < np; n++)
+  {
+  if (dim == 1)
+   phys_p = FE< 1, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+  if (dim == 2)
+   phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+  if (dim == 3)
+   phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+   double min = 1e5;
+   Tensor2Gen sol(0);
+   for (unsigned int i=0; i < _strain.get_solution().size(); i++)
+   {
+     double distance =
+     (_strain.get_solution()[i].atom_p->get_position()(0) - phys_p(0)*scale) *
+     (_strain.get_solution()[i].atom_p->get_position()(0) - phys_p(0)*scale) +
+     (_strain.get_solution()[i].atom_p->get_position()(1) - phys_p(1)*scale) *
+     (_strain.get_solution()[i].atom_p->get_position()(1) - phys_p(1)*scale) +
+     (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale) *
+     (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale);
+     if (distance<min) 
+     {sol = _strain.get_solution()[i].tensor;min=distance;}     
+   }
+   values[Strain][6*n]=sol(1,1);
+   values[Strain][6*n+1]=sol(2,2);
+   values[Strain][6*n+2]=sol(3,3);
+   values[Strain][6*n+3]=sol(1,2);
+   values[Strain][6*n+4]=sol(1,3);
+   values[Strain][6*n+5]=sol(2,3);
+}
+}
+
+//Element solution, take the average of all the tensors included in the 
+//element, if not any take the nearest
+if (values.count(Strain2))
+{
+
+  unsigned int contribs = 0;
+  
+  Tensor2Gen sol(0);
+   phys_p = elem->centroid();
+   double min = 1e5;
+
+   for (unsigned int i=0; i < _strain.get_solution().size(); i++)
+   { 
+    if (_strain.get_solution()[i].atom_p->get_elem() == elem)
+    {
+      contribs +=1;
+      sol += _strain.get_solution()[i].tensor;
+    }
+   }
+   if (contribs == 0)
+   {
+     contribs = 1;
+   for (unsigned int i=0; i < _strain.get_solution().size(); i++)
+   { 
+     double distance =
+     (_strain.get_solution()[i].atom_p->get_position()(0) - phys_p(0)*scale) *
+     (_strain.get_solution()[i].atom_p->get_position()(0) - phys_p(0)*scale) +
+     (_strain.get_solution()[i].atom_p->get_position()(1) - phys_p(1)*scale) *
+     (_strain.get_solution()[i].atom_p->get_position()(1) - phys_p(1)*scale) +
+     (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale) *
+     (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale);
+     if (distance<min) 
+     {sol = _strain.get_solution()[i].tensor;min=distance;}     
+  }
+   }
+   sol = sol / contribs;
+for (unsigned int n = 0; n < np; n++)
+{
+   values[Strain2][0]=sol(1,1);
+   values[Strain2][1]=sol(2,2);
+   values[Strain2][2]=sol(3,3);
+   values[Strain2][3]=sol(1,2);
+   values[Strain2][4]=sol(1,3);
+   values[Strain2][5]=sol(2,3);
+
+}
+}
+
+}

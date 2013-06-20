@@ -85,9 +85,13 @@ VffModel::get_costeta(const Atom& atm1, const Atom& atm2, const Atom& atm3) cons
   if (get_material()->get_structure() == "zb")
     return _keating->get_costeta_0();
   else if (along_c(atm1, atm2) || along_c(atm1, atm3) || along_c(atm2, atm3))
+  {
     return _keating->get_costeta_1();
+  }
   else
+  {
     return _keating->get_costeta_0();
+  }
 }
 
 
@@ -96,7 +100,7 @@ VffModel::along_c(const Atom& atm1, const Atom& atm2) const
 {
   //Note: tolerance must ne high because it's supposed to work even when the
   //material is strained
-  double tol = 0.1;
+  double tol = 0.2;
   double x_d = atm1.get_position(0) - atm2.get_position(0);
   double y_d = atm1.get_position(1) - atm2.get_position(1);
   double z_d = atm1.get_position(2) - atm2.get_position(2);

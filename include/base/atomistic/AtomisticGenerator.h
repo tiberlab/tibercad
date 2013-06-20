@@ -13,7 +13,7 @@
 #include "Database.h"
 #include "Alloy.h"
 #include "mesh.h"
-
+#include "BulkCrystal.h"
 
 //! A class for building Atomistic Structure from mesh informations
 /*!
@@ -51,17 +51,13 @@ public:
   //! Scaling value respect to TiberCAD units (usually Amstrong instead of micron)
   double scale;
 
-  //! Set primitive vectors, depending on lattice name
-  void set_lattice_type(const std::string lattice_name);
-
   //Print atom_basis in xyz file (for debugging)
   void print_basis(std::vector<Atom> &basis, const std::string filename);
 
+  //Copy back information to AtomisticStructure
+  void finalize(void);
 
 protected:
-
-  //lattice constants
-  double _lattice_constant[3];
 
   //! Change atom species according to regions
   void cut_and_change_specie(std::string preserve);
@@ -69,9 +65,6 @@ protected:
   //  //! Fast bond map generation, suitable for both
   //   unsigned int** fast_bond_map(const std::vector<Atom> &basis,
   //		   Tensor1& edge_min, Tensor1& edge_max, Tensor2Gen& period);
-
-  //! Primitive vectors in real space, stored by columns in a 3x3 matrix
-  Tensor2Gen _prim_vec;
 
   //! Conventional cell vectors in absolute basis
   Tensor2Gen _conv_vect;
@@ -82,20 +75,11 @@ protected:
   //! Conventional cell basis atoms
   std::vector<Tensor1> _conv_lattice_basis;
 
-  //!Rotation tensor
-  Tensor2Gen _rotation;
-
   //! Localo origin
   Tensor1 _local_origin;
   
-  //! Name of lattice type
-  std::string _lattice_type;
-
   //! Name of basis type
   std::string _basis_type;
-
-  //! Atomic basis arrays
-  std::vector<Atom> _crystal_basis;
 
   //! Supercell atom basis points
   std::vector<Atom> _super_basis;
@@ -164,13 +148,6 @@ protected:
   //! Set the atomic basis for the lattice (This function is no longer used!)
   //void set_crystal_basis(const std::string basis_name, const std::string specie1 = "not_specified", const std::string specie2 = "not_specified", double u = 0.0);
 
-  //! Build miller indexes in primitive basis (In some lattices like ZincBlende Miller indexes are not defined
-  //! on Wiegner-Seitz Cell). Cut_planes are 3X1 Miller indexes arrays stored by columns
-  void set_prim_miller(Tensor2Gen cut_planes);
-
-  //! Cut planes as reciprocal space indexes in reciprocal primitive basis
-  Tensor2Gen _prim_miller;
-
   //! Setting growth conventional cell vectors (in primitive vectors basis)
   void make_conv_cell();
 
@@ -183,14 +160,9 @@ protected:
   //! Virtual function for building up the structure.
   virtual void build() = 0;
 
-  //! Parsing of atomistic infos to build lattice and basis vectors
-  void parse_parameters(const Material* mat);
 
 
   //Some data manipulation function useful only in this class
-
-
-
 
   //Calculate a reciprocal basis from a real basis
   static Tensor2Gen reciprocal(Tensor2Gen real_basis);
@@ -225,11 +197,16 @@ protected:
 
 private:
 
+  //Common 0d,1d,2d,3d init operations
+  void init_commons();
+
   //Build random alloy structure
   void build_random_alloy(void);
 
   double substitution_probability(size_t id, const Specie& sp);
 
+  //! BulkCrystal of the reference material
+  BulkCrystal* _bulk;
 
 };
 

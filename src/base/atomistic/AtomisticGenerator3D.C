@@ -15,12 +15,8 @@ AtomisticGenerator3D::create(AtomisticStructure* const as)
 
 AtomisticGenerator3D::AtomisticGenerator3D(AtomisticStructure* const as)
 {
-  _dim = 3;
-                   _as = as;
-	_rotation(1,1) = 1.0; _rotation(1,2) = 0.0; _rotation(1,3) = 0.0; _rotation(2,1) = 0.0; _rotation(2,2) = 1.0;
-	_rotation(2,3) = 0.0; _rotation(3,1) = 0.0; _rotation(3,2) = 0.0; _rotation(3,3) = 1.0;
-
-	_lattice_constant[0] = 0.0; _lattice_constant[1] = 0.0; _lattice_constant[2] = 0.0;
+    _dim = 3;
+    _as = as;
 }
 
 
@@ -38,8 +34,9 @@ AtomisticGenerator3D::build()
   std::cerr << "Calling AtomisticGenerator3D::build() " << std::endl;
 #endif
 
-  //Only 1D and 2D structures are intended to be periodical
-     _as->_atomistic_structure_options.is_periodical = false;
+  //3D structure is considered cluster as far as lattice vectors 
+  //are not explicitely passed
+  _as->set_periodic(false);
 
   //Common building operations
   make_conv_cell();

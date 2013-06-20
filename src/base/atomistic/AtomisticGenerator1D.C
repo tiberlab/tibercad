@@ -12,7 +12,6 @@ AtomisticGenerator1D::create(AtomisticStructure* const as)
   AtomisticGenerator1D* ag =  NULL;
   std::cout << "creating 1D atomistic structure... ";
   ag = new AtomisticGenerator1D(as);
-  std::cout << "done" << std::endl;
   return ag;
 }
 
@@ -21,10 +20,6 @@ AtomisticGenerator1D::AtomisticGenerator1D(AtomisticStructure* const as)
 {
   _dim = 1;
   _as = as;
-  _rotation(1,1) = 1.0; _rotation(1,2) = 0.0; _rotation(1,3) = 0.0; _rotation(2,1) = 0.0; _rotation(2,2) = 1.0;
-  _rotation(2,3) = 0.0; _rotation(3,1) = 0.0; _rotation(3,2) = 0.0; _rotation(3,3) = 1.0;
-
-  _lattice_constant[0] = 0.0; _lattice_constant[1] = 0.0; _lattice_constant[2] = 0.0;
 }
 
 
@@ -37,8 +32,8 @@ void
 AtomisticGenerator1D::build()
 {
 
-  //Only 1D and 2D structures are intended to be periodical
-  _as->_atomistic_structure_options.is_periodical = true;
+  //1D and 2D structures are intended to be periodical
+  _as->set_periodic(true);
 
   Elem* elem = NULL;
   Node* nd = NULL;
@@ -46,8 +41,6 @@ AtomisticGenerator1D::build()
   //Common building operations
   make_conv_cell();
   make_conv_basis();
-
-  //unsigned int dimension = _as->get_device()->get_mesh().mesh_dimension();
 
   //Check edges of segment for building structure
   //MeshBase::node_iterator nd = _as->get_device()->get_mesh().nodes_begin();
@@ -74,9 +67,6 @@ AtomisticGenerator1D::build()
     }
   }
 
-  //edge_min -= 10 / scale;
-  //edge_max += 10 / scale;
-
   _local_origin(1) += edge_min * scale;
   _local_origin(2) += 0.0;
   _local_origin(3) += 0.0;
@@ -88,10 +78,6 @@ AtomisticGenerator1D::build()
   double l3 = _as->get_options().get_option("z_length", 0.0);
 
   make_supercell( l1, l2, l3);
-
-  //print_basis(_super_basis, "supercell.xyz");
-
-  //std::cout << "Period is " << _period << std::endl;
 
 }
 

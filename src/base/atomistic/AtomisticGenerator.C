@@ -10,6 +10,8 @@
 #include "MeshUtils.h"
 #include "Specie.h"
 #include "Utils.h"
+#include "RotatedCrystal.h"
+#include "Atom.h"
 
 #include <stdio.h>
 #include <cmath>
@@ -23,17 +25,16 @@
 #include <ctime>
 #include <tr1/random>
 
-using namespace std;
+
 
 AtomisticGenerator::AtomisticGenerator(void)
 :_bondmapobject(NULL),
 _reference_material(NULL),
-_prim_vec(0),
 _conv_vect(0),
 _conv_prim(0),
-_rotation(0),
 _local_origin(0),
-_period(0)
+_period(0),
+_bulk(NULL)
 {
 
 }
@@ -83,19 +84,17 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
 };
 
 
+
 void
-AtomisticGenerator::do_init()
+AtomisticGenerator::init_commons()
 {
+
   std::ostringstream os;
-
-  Messages::info("Building Atomistic Structure " + _as->get_name());
-
+  
   //Set dimensional scale
   scale = _as->get_scale();
   // Set material informations
   //-----------------------------------------------------------------------------------------
-  std::string structure;
-  structure = "none";
   if (!(_as->get_options().find_option("reference_region"))){
     Messages::warning("No material could be set: reference_region is mandatory in Atomistic section"
         "when no structure path is specified ");}
@@ -108,65 +107,37 @@ AtomisticGenerator::do_init()
 
   _reference_region_id = *ids.begin();
   _reference_material = _as->get_device()->get_material(*ids.begin());
-  structure =  _reference_material->get_structure();
+
+  //Build the right BulkCrystal object
+  //Additional options respect to the region should be specified here
+  _bulk = BulkCrystal::create(_reference_material); 
 
   Messages::debug("Parsing atomistic structure parameters");
-  parse_parameters(_reference_material);
-
-
-  //Set Growth direction informations
-  Tensor2Gen miller(1);
-  miller(2,2) = 0.0;
-  miller(3,3) = 0.0;
-
-  std::vector<int> growth_direction;
-
-  if (! ( (_reference_material->get_options().find_option("x-growth-direction")) || (_as->get_options().find_option("x-growth-direction")) ) )
+  
+  _bulk->do_init();
+  //-----------------------------------------------------------------------
+  
+  //A translation vector can be specified to modify supercell alignment
+  std::vector<double> translation (3,0.0);
+  if ( _as->get_options().find_option("translation") )
   {
-    //---------------------------------------------------------
-    os << "Warning, no x-growth-direction is set for atomistic structure " << _as->get_name() << " Setting (1,0,0) as default " << std::endl;
-    Messages::warning(os.str());
-    os.str(std::string());
-    //-----------------------------------------------------------
+   _as->get_options().get_option("translation", translation);
+   _local_origin(1) += translation[0]; 
+   _local_origin(2) += translation[1]; 
+   _local_origin(3) += translation[2];
   }
 
-  if (_reference_material != NULL){
-    if (_reference_material->get_options().find_option("x-growth-direction")){
-      _reference_material->get_options().get_option("x-growth-direction", growth_direction);
-      miller(1,1) = growth_direction[0]; miller(2,1) = growth_direction[1]; miller(3,1) = growth_direction[2];
-      if (growth_direction.size() == 4) miller(3,1) = growth_direction[3];
-    }
-    if (_reference_material->get_options().find_option("y-growth-direction")){
-      _reference_material->get_options().get_option("y-growth-direction", growth_direction);
-      miller(1,2) = growth_direction[0]; miller(2,2) = growth_direction[1]; miller(3,2) = growth_direction[2];
-      if (growth_direction.size() == 4) miller(3,2) = growth_direction[3];
-    }
-    if (_reference_material->get_options().find_option("z-growth-direction")){
-      _reference_material->get_options().get_option("z-growth-direction", growth_direction);
-      miller(1,3) = growth_direction[0]; miller(2,3) = growth_direction[1]; miller(3,3) = growth_direction[2];
-      if (growth_direction.size() == 4) miller(3,3) = growth_direction[3];
-    }
-  }
+}
 
-  //If Miller indexes specified in Atomistic options, take them
-  if (_as->get_options().find_option("x-growth-direction")){
-    _reference_material->get_options().get_option("x-growth-direction", growth_direction);
-    miller(1,1) = growth_direction[0]; miller(2,1) = growth_direction[1]; miller(3,1) = growth_direction[2];
-    if (growth_direction.size() == 4) miller(3,1) = growth_direction[3];
-  }
-  if (_as->get_options().find_option("y-growth-direction")){
-    _reference_material->get_options().get_option("y-growth-direction", growth_direction);
-    miller(1,2) = growth_direction[0]; miller(2,2) = growth_direction[1]; miller(3,2) = growth_direction[2];
-    if (growth_direction.size() == 4) miller(3,2) = growth_direction[3];
-  }
-  if (_as->get_options().find_option("z-growth-direction")){
-    _reference_material->get_options().get_option("z-growth-direction", growth_direction);
-    miller(1,3) = growth_direction[0]; miller(2,3) = growth_direction[1]; miller(3,3) = growth_direction[2];
-    if (growth_direction.size() == 4) miller(3,3) = growth_direction[3];
-  }
 
-  set_prim_miller(miller);
+void
+AtomisticGenerator::do_init()
+{
+  std::ostringstream os;
 
+  //Messages::info("Building Atomistic Structure " + _as->get_name());
+
+  init_commons();
 
   // Set the vector of elements covered by structure regions,
   // useful for change specie and cut
@@ -188,15 +159,6 @@ AtomisticGenerator::do_init()
       _structure_elements.push_back(elem);
   }
 
-
-
-  //A translation vector can be specified to modify supercell alignment
-  std::vector<double> translation (3,0.0);
-  if ( _as->get_options().find_option("translation") )
-  {
-   _as->get_options().get_option("translation", translation);
-   _local_origin(1) += translation[0]; _local_origin(2) += translation[1]; _local_origin(3) += translation[2];
-  }
 
   //Build up supercell structure with proper options
   build();
@@ -225,7 +187,6 @@ AtomisticGenerator::do_init()
   std::vector<Atom> tmp_structure;
   tmp_structure.reserve(_structure_basis.size());
 
-  std::cout << "Deleting uncontained atoms " << std::endl;
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
   {
     if ((_structure_basis[i].belong_to_structure))
@@ -237,12 +198,18 @@ AtomisticGenerator::do_init()
   _structure_basis.clear();
   _structure_basis.reserve(tmp_structure.size());
   _structure_basis.swap(tmp_structure);
-  std::cout << "At the end structure basis is sized " << _structure_basis.size() << std::endl;
+  os << "Atomistic Structure containing " << _structure_basis.size() << 
+    "has been built. " <<std::endl;
+  Messages::info(os.str());
   //-------------------------------------------------------------
 
 
+};
 
 
+void 
+AtomisticGenerator::finalize(void)
+{
 
   //Pass data to AtomisticStructure
   //--------------------------------------------------------------------------------------------------
@@ -251,7 +218,7 @@ AtomisticGenerator::do_init()
   //TODO:not safe, better swap arrays, so then we can delete AtomisticGenerator instance
   _as->set_structure_atoms(_structure_basis);
   
-  _as->set_periodicity_vectors(_period);
+  _as->set_ttype_lattice_vectors(_period);
 
   _as->set_N_atoms( _structure_basis.size() );
 
@@ -267,6 +234,7 @@ AtomisticGenerator::do_init()
 
   _as->set_atom_types(atom_types);
 
+
 };
 
 
@@ -279,7 +247,8 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   bool done;
   ID el_reg;
   unsigned int progress_counter, progress_step;
-  Tensor2Gen rotated_primvec;
+  Tensor2Gen rotated_primvec = _bulk->get_rotated_prim_vec();
+  std::vector<Atom> basis = _bulk->get_rotated_basis();
 
   Messages::debug("Running cut_and_change_specie");
 
@@ -345,7 +314,6 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
   Utils::Timer tt;
 
   std::cout << "Atomistic Generator progress   0% ..." << std::flush;
-  rotated_primvec = _rotation * _prim_vec;
 
   //Different strategies if preserving conventional cell or preserving basis are needed
   if (preserve.compare("none") == 0)
@@ -456,12 +424,11 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
         if (reg_ids.count(el_reg))
         {
 
-          for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-              atom != _crystal_basis.end(); atom++)
+          for ( std::vector<Atom>::const_iterator atom = basis.begin();
+              atom != basis.end(); atom++)
           {
 
-            tmp_atom.set_position((*lattice) + rotated_primvec*(*atom).get_ttype_position());
-
+            tmp_atom.set_position((*lattice) + (*atom).get_ttype_position());
 
             Specie tmp =  assign[el_reg][(*atom).get_flag()];
             tmp_atom.set_specie(tmp);
@@ -478,11 +445,11 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
 
       if (!done)
       {
-        for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-            atom != _crystal_basis.end(); atom++)
+        for ( std::vector<Atom>::const_iterator atom = basis.begin();
+            atom != basis.end(); atom++)
         {
 
-          tmp_atom.set_position((*lattice) + rotated_primvec*(*atom).get_ttype_position());
+          tmp_atom.set_position((*lattice) + (*atom).get_ttype_position());
 
           Specie tmp = assign[_reference_region_id][(*atom).get_flag()];
           tmp_atom.set_specie(tmp);
@@ -534,11 +501,11 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
           for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
               conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
           {
-            for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-                atom != _crystal_basis.end(); atom++)
+            for ( std::vector<Atom>::const_iterator atom = basis.begin();
+                atom != basis.end(); atom++)
             {
               tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                  rotated_primvec*(*atom).get_ttype_position());
+                  (*atom).get_ttype_position());
               Specie tmp =  assign[el_reg][(*atom).get_flag()];
               tmp_atom.set_specie(tmp);
               tmp_atom.belong_to_structure = true;
@@ -557,11 +524,11 @@ AtomisticGenerator::cut_and_change_specie(std::string preserve){
         for ( std::vector<Tensor1>::iterator conv_lattice_basis_it = _conv_lattice_basis.begin();
             conv_lattice_basis_it != _conv_lattice_basis.end(); conv_lattice_basis_it++)
         {
-          for ( std::vector<Atom>::iterator atom = _crystal_basis.begin();
-              atom != _crystal_basis.end(); atom++)
+          for ( std::vector<Atom>::const_iterator atom = basis.begin();
+              atom != basis.end(); atom++)
           {
             tmp_atom.set_position( (*conv) + (*conv_lattice_basis_it) +
-                rotated_primvec*(*atom).get_ttype_position());
+                (*atom).get_ttype_position());
 
             Specie tmp =  assign[_reference_region_id][(*atom).get_flag()];
             tmp_atom.set_specie(tmp);
@@ -839,160 +806,10 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 }
 
 
-//Note:: make_supercell is called only with preserve_basis and preserve_conv
-//This is the complete function after some modifications in Atom structure (added
-// conventional cell address and ID). It's commented and the function is rewritten
-// keeping only preserve_basis and preserve_conv instructions, so it's more readable
-// and modifications are easier. If some change in strategy would occur we can come back
-// to this one. Note that also header has been modifying, removing preserve_basis and
-// preserve_conv
-//
-//void AtomisticGenerator::make_supercell(double l1, double l2, double l3, bool preserve_basis, bool preserve_conv){
-//
-//  //Build a supercell, defined by the lenght of conventional growth cell vectors
-//  std::vector<Tensor1>::iterator conv_iterator;
-//  std::vector<Atom>::iterator basis_iterator;
-//  int i,j,l;
-//  int n1,n2,n3;
-//  double conv_l1, conv_l2, conv_l3;
-//  Atom basis_atom;
-//  Tensor1 lattice_point;
-//  Tensor2Gen supercell_vect,inv_supercell_vect;
-//  Tensor1 tmp_check, tmp_conv;
-//  bool check_boundary, check_boundary2;
-//
-//  //#ifdef DEBUG
-//  //  std::cerr << "Building a supercell sized " << l1 << " " << l2 << " " << l3 << " Amstrong" << std::endl;
-//  //#endif
-//
-//  //Check values. l1,l2,l3 cannot be unwisely large (no more than (1um)^3)
-//  assert((l1*l2*l3) < 1e+12);
-//
-//  //Find lenght of conventional cell sides
-//  conv_l1 = sqrt(_conv_vect(1,1) * _conv_vect(1,1) + _conv_vect(2,1) * _conv_vect(2,1) + _conv_vect(3,1) * _conv_vect(3,1));
-//  conv_l2 = sqrt(_conv_vect(1,2) * _conv_vect(1,2) + _conv_vect(2,2) * _conv_vect(2,2) + _conv_vect(3,2) * _conv_vect(3,2));
-//  conv_l3 = sqrt(_conv_vect(1,3) * _conv_vect(1,3) + _conv_vect(2,3) * _conv_vect(2,3) + _conv_vect(3,3) * _conv_vect(3,3));
-//
-//  n1 = int(floor(l1 / conv_l1)); n2 = int(floor(l2 / conv_l2)); n3 = int(floor(l3 / conv_l3));
-//
-//  if (preserve_conv) {
-//
-//    l1 = (n1 + 1) * conv_l1; l2 = (n2 +1) * conv_l2; l3 = (n3 + 1) * conv_l3;
-//
-//  }
-//
-//
-//  //Set supercell periodical vectors
-//  Tensor2Gen lmat(0);
-//
-//
-//  lmat(1,1) = (n1 + 1);
-//  lmat(2,2) = (n2 + 1); lmat(3,3) = (n3 +1);
-//  // Periodicity along x or y or z direction is set to a big value (double of structure lenght) (non periodic along x)
-//  //according to dimensionality of the system
-//
-//  if (_dim == 1) lmat(1,1) = (n1 + 1) * 2;
-//  if (_dim == 2) {lmat(1,1) = (n1 + 1) * 2; lmat(2,2) = (n2 + 1) * 2;}
-//  if (_dim == 3) {lmat(1,1) = (n1 + 1) * 2; lmat(2,2) = (n2 + 1) * 2; lmat(3,3) = (n3 +1) * 2;}
-//
-//  _period = _conv_vect * lmat;
-//
-//  //Define vectors with same direction of conventional cell vectors, but with size specifed by l1,l2,l3
-//  supercell_vect(1,1) = _conv_vect(1,1) * (l1 / conv_l1); supercell_vect(2,1) = _conv_vect(2,1) * (l1 / conv_l1); supercell_vect(3,1) = _conv_vect(3,1) * (l1 / conv_l1);
-//  supercell_vect(1,2) = _conv_vect(1,2) * (l2 / conv_l2); supercell_vect(2,2) = _conv_vect(2,2) * (l2 / conv_l2); supercell_vect(3,2) = _conv_vect(3,2) * (l2 / conv_l2);
-//  supercell_vect(1,3) = _conv_vect(1,3) * (l3 / conv_l3); supercell_vect(2,3) = _conv_vect(2,3) * (l3 / conv_l3); supercell_vect(3,3) = _conv_vect(3,3) * (l3 / conv_l3);
-//  inv_supercell_vect = inv(supercell_vect);
-//
-//  for (i = -1 ; i <= n1 + 1 ; i++){
-//    for (j = -1 ; j <= n2 + 1 ; j++){
-//      for (l = -1 ; l <= n3 + 1 ; l++){
-//
-//	conv_iterator = _conv_lattice_basis.begin();
-//
-//	//Fill conventional edges basis (super_conv)
-//	if ( (i != -1)&&(i <= n1 )&&(j != -1)&&(j <= n2)&& (l != -1)&&(l <= n3) ){
-//	  tmp_conv(1) = (i * _conv_vect(1,1)) + (j * _conv_vect(1,2)) + (l * _conv_vect(1,3));
-//	  tmp_conv(2) = (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
-//	  tmp_conv(3) = (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
-//	  _super_conv.push_back(tmp_conv + _local_origin);}
-//
-//	do{
-//	  //Assign lattice point position
-//	  lattice_point(1) = (*conv_iterator)(1) + (i * _conv_vect(1,1)) + (j * _conv_vect(1,2)) + (l * _conv_vect(1,3));
-//	  lattice_point(2) = (*conv_iterator)(2) + (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
-//	  lattice_point(3) = (*conv_iterator)(3) + (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
-//
-//	  if (preserve_basis){
-//
-//	    //Check if lattice point is inside bonduary
-//	    if ((i >= n1) || (i <= 0) || (j >= n2) || (j<= 0) || (l >= n3) || (l <= 0)) {
-//	      tmp_check = inv_supercell_vect * lattice_point;
-//	      check_boundary = ((tmp_check(1) >= -tol) && (tmp_check(1) <(1.0 - tol))) &&
-//		((tmp_check(2) >= -tol) && (tmp_check(2) < (1.0 - tol))) &&
-//		((tmp_check(3) >= -tol) && (tmp_check(3) < (1.0 - tol)));
-//	    }
-//
-//	    else (check_boundary = 1);
-//
-//	    if (check_boundary){
-//	      //Put lattice point into supercell lattice points array
-//	      _super_lattice.push_back(lattice_point + _local_origin);
-//	      basis_iterator=_crystal_basis.begin();
-//
-//	      do{
-//		basis_atom = (*basis_iterator);
-//		basis_atom.set_position ( _local_origin + lattice_point+
-//					  _rotation*_prim_vec*(*basis_iterator).get_position() );
-//
-//		_super_basis.push_back(basis_atom);
-//		basis_iterator++;
-//
-//	      }while(basis_iterator != _crystal_basis.end());
-//	    }
-//	  }
-//
-//	  else{
-//
-//
-//	    //Put lattice point into supercell lattice points array
-//	    _super_lattice.push_back(lattice_point + _local_origin);
-//
-//	    basis_iterator=_crystal_basis.begin();
-//
-//	    do{
-//	      basis_atom = (*basis_iterator);
-//	      basis_atom.set_position ( _local_origin + lattice_point +
-//					_rotation*_prim_vec*(*basis_iterator).get_position() );
-//
-//	      //Check if basis atom is inside bonduary when preserve_basis is off
-//	      if ((i >= n1) || (i <= 0) || (j >= n2) || (j<= 0) || (l >= n3) || (l <= 0)) {
-//		tmp_check = inv_supercell_vect * basis_atom.get_position();
-//		check_boundary2 = ((tmp_check(1) >= -tol) && (tmp_check(1) <(1.0 + tol))) &&
-//		  ((tmp_check(2) >= -tol) && (tmp_check(2) < (1.0 + tol))) &&
-//		  ((tmp_check(3) >= -tol) && (tmp_check(3) < (1.0 + tol)));
-//		if (check_boundary2) _super_basis.push_back(basis_atom);
-//	      }
-//	      else _super_basis.push_back(basis_atom);
-//	      basis_iterator++;
-//	    }while(basis_iterator != _crystal_basis.end());
-//	  }
-//
-//
-//	  conv_iterator++;
-//	}while(conv_iterator != _conv_lattice_basis.end());
-//
-//      };
-//    };
-//  };
-//};
-
-
-
 void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
 
   //Build a supercell, defined by the lenght of conventional growth cell vectors
   std::vector<Tensor1>::iterator conv_iterator;
-  std::vector<Atom>::iterator basis_iterator;
   int i,j,l;
   int n1,n2,n3,start_i,start_j,start_l;
   double conv_l1, conv_l2, conv_l3;
@@ -1001,11 +818,10 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   Tensor2Gen supercell_vect,inv_supercell_vect;
   Tensor1 tmp_check, tmp_conv;
   std::ostringstream os;
+  Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+  std::vector<Atom> basis = _bulk->get_rotated_basis();
+  std::vector<Atom>::const_iterator basis_iterator = basis.begin();
 
-
-  //#ifdef DEBUG
-  //  std::cerr << "Building a supercell sized " << l1 << " " << l2 << " " << l3 << " Amstrong" << std::endl;
-  //#endif
 
   Messages::debug("Running make_supercell");
 
@@ -1058,17 +874,16 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   supercell_vect(3,3) = _conv_vect(3,3) * (l3 / conv_l3);
   inv_supercell_vect = inv(supercell_vect);
 
-  //std::cout << "I'm bulding a supercell with " << n1 << n2 << n3 << "conventional cells" << std::endl;
-
-  if (_dim == 1) {start_i = -1; start_j = 0; start_l = 0; n1 = n1 + 1;}
-  if (_dim == 2) {start_i = -1; start_j =-1; start_l = 0; n1 = n1 + 1; n2 = n2 + 1;}
-  if (_dim == 3) {start_i = -1; start_j =-1; start_l = -1; n1 = n1 + 1; n2 = n2 + 1; n3 = n3 + 1;}
+  if (_dim == 1) {start_i = -2; start_j = 0; start_l = 0; n1 = n1 + 2;}
+  if (_dim == 2) {start_i = -2; start_j =-1; start_l = 0; n1 = n1 + 2; n2 = n2 + 2;}
+  if (_dim == 3) {start_i = -2; start_j =-2; start_l = -2; n1 = n1 + 2; n2 = n2 + 2; n3 = n3 + 2;}
 
   //Definition of number of conventional cells, useful for reserving arrays
   unsigned int max_number_of_cells = n1 + n2 + n3 + 6;
   _super_conv.reserve(max_number_of_cells);
   _super_lattice.reserve(max_number_of_cells * _conv_lattice_basis.size());
-  _super_basis.reserve(max_number_of_cells * _conv_lattice_basis.size() * _crystal_basis.size());
+  _super_basis.reserve(max_number_of_cells * _conv_lattice_basis.size() * basis.size());
+
 
   //Need to construct a redundant supercell (for passivation purposes)
   //Note that it must be redundant only in non periodic directions
@@ -1079,7 +894,12 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
         conv_iterator = _conv_lattice_basis.begin();
 
         //Fill conventional edges basis (super_conv)
-        //        if ( (i != -1)&&(i <= n1 )&&(j != -1)&&(j <= n2)&& (l != -1)&&(l <= n3) ){
+        //Note: we don't know if the vectors conv_vect are positively or
+        //negatively oriented along the standard basis x,y,z.
+        //For the way we build the supercell (going from edge_min to edge_max 
+        //in positive x,y,z direction) we need positive conv_vect. 
+        //IF the supercell is built along standard basis, we can simply take the
+        //absolute value of the component of conv_vect
         tmp_conv(1) = (i * _conv_vect(1,1)) + (j * _conv_vect(1,2)) + (l * _conv_vect(1,3));
         tmp_conv(2) = (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
         tmp_conv(3) = (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
@@ -1095,17 +915,16 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
 
           //Put lattice point into supercell lattice points array
           _super_lattice.push_back(lattice_point + _local_origin);
-
-          basis_iterator=_crystal_basis.begin();
+          basis_iterator = basis.begin();
 
           do{
             basis_atom = (*basis_iterator);
             basis_atom.set_position ( _local_origin + lattice_point +
-                _rotation*_prim_vec*(*basis_iterator).get_ttype_position() );
+                (*basis_iterator).get_ttype_position() );
             _super_basis.push_back(basis_atom);
             ++basis_iterator;
 
-          }while(basis_iterator != _crystal_basis.end());
+          }while(basis_iterator != basis.end());
 
 
           conv_iterator++;
@@ -1120,411 +939,32 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
 
 
 
-void
-AtomisticGenerator::set_lattice_type(const std::string lattice_name)
-{
-
-  Tensor2Gen prim_vec_dir(0);
-  std::ostringstream os;
-
-  //Set the lattice type. It defines the primitive vectors
-  _lattice_type=lattice_name;
-
-  if (_lattice_type.compare("cubic") == 0) {
-
-    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
-
-    prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
-    prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1; prim_vec_dir(3,2) = 0;
-    prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1;
-
-    _prim_vec = prim_vec_dir * _lattice_constant[0];
-
-  }
-
-  else if (_lattice_type.compare("bcc") == 0) {
-
-    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
-
-    prim_vec_dir(1,1) = -0.5; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
-    prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = -0.5; prim_vec_dir(3,2) = 0.5;
-    prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = -0.5;
-
-    _prim_vec = prim_vec_dir * _lattice_constant[0];
-
-  }
-
-  else if (_lattice_type.compare("fcc") == 0) {
-
-    assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
-
-    prim_vec_dir(1,1) = 0.0; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
-    prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = 0.0; prim_vec_dir(3,2) = 0.5;
-    prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.0;
-
-    _prim_vec = prim_vec_dir * _lattice_constant[0];
-
-  }
-
-  else if (_lattice_type.compare("fcc-strained") == 0) {
-
-    prim_vec_dir(1,1) = 0.0; prim_vec_dir(2,1) = 0.5; prim_vec_dir(3,1) = 0.5;
-    prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = 0.0; prim_vec_dir(3,2) = 0.5;
-    prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.0;
-
-    _prim_vec(2,1) = prim_vec_dir(2,1) * _lattice_constant[1];
-    _prim_vec(3,1) = prim_vec_dir(3,1) * _lattice_constant[2];
-    _prim_vec(1,2) = prim_vec_dir(1,2) * _lattice_constant[0];
-    _prim_vec(3,2) = prim_vec_dir(3,2) * _lattice_constant[2];
-    _prim_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[0];
-    _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[1];
-
-  }
-
-  else if (_lattice_type.compare("hexagonal") == 0) {
-
-    assert(_lattice_constant[0] == _lattice_constant[1]);
-
-    prim_vec_dir(1,1) = 0.5; prim_vec_dir(2,1) = -sqrt(3.0) / 2.0; prim_vec_dir(3,1) = 0.0;
-    prim_vec_dir(1,2) = 0.5; prim_vec_dir(2,2) = sqrt(3.0) / 2.0; prim_vec_dir(3,2) = 0.0;
-    prim_vec_dir(1,3) = 0.0; prim_vec_dir(2,3) = 0.0; prim_vec_dir(3,3) = 1.0;
-
-    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0]; _prim_vec(2,1) = prim_vec_dir(2,1) * _lattice_constant[0];
-    _prim_vec(1,2) = prim_vec_dir(1,2) * _lattice_constant[0]; _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[0];
-    _prim_vec(1,3) = 0.0; _prim_vec(2,3) = 0.0; _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
-
-  }
-  else if (_lattice_type.compare("anatase") == 0) {
-
-    assert(_lattice_constant[0] == _lattice_constant[1]);
-
-    prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0.0; prim_vec_dir(3,1) = 0.0;
-    prim_vec_dir(1,2) = 0.0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0.0;
-    prim_vec_dir(1,3) = 0.5; prim_vec_dir(2,3) = 0.5; prim_vec_dir(3,3) = 0.5;
-
-    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0];
-    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[0];
-    _prim_vec(1,3) = prim_vec_dir(1,3) * _lattice_constant[0]; _prim_vec(2,3) = prim_vec_dir(2,3) * _lattice_constant[0]; _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
-
-  }
-
-  else
-  {
-    os << "Lattice type " << _lattice_type << " doesn't exist" << std::endl;
-    Messages::error(os.str());
-    os.str(std::string());
-  }
-
-};
-
-
-void AtomisticGenerator::set_prim_miller(Tensor2Gen cut_planes)
-{
-  //Reduce cut planes if they're not in minimal integer form
-
-  cut_planes = reduce_vector(cut_planes);
-
-  //Transform miller indexes in primitive reciprocal vectors basis
-  //Needed when conventional cell differs from primitive cell
-  Tensor2Gen prim_miller_basis = reciprocal(_prim_vec);
-
-  if (_lattice_type.compare("cubic") == 0){
-    //In cubic lattice conventional cell equals to unit cell
-    _prim_miller = cut_planes / (_lattice_constant[0]);
-  }
-
-  else if (_lattice_type.compare("bcc") == 0){
-    _prim_miller = (inv(prim_miller_basis) * cut_planes / (_lattice_constant[0]));
-    scale_to_int(_prim_miller);
-  }
-
-  else if (_lattice_type.compare("fcc") == 0){
-    _prim_miller=inv(prim_miller_basis) * cut_planes / (_lattice_constant[0]);
-    scale_to_int(_prim_miller);
-  }
-
-  else if (_lattice_type.compare("fcc-strained") == 0){
-    _prim_miller=inv(prim_miller_basis) * cut_planes / (_lattice_constant[0]);
-    scale_to_int(_prim_miller);
-  }
-
-  else if (_lattice_type.compare("hexagonal") == 0){
-    _prim_miller(1,1) = cut_planes(1,1) / _lattice_constant[0]; _prim_miller(2,1) = cut_planes(2,1) / _lattice_constant[1]; _prim_miller(3,1) = cut_planes(3,1) / _lattice_constant[2];
-    _prim_miller(1,2) = cut_planes(1,2) / _lattice_constant[0]; _prim_miller(2,2) = cut_planes(2,2) / _lattice_constant[1]; _prim_miller(3,2) = cut_planes(3,2) / _lattice_constant[2];
-    _prim_miller(1,3) = cut_planes(1,3) / _lattice_constant[0]; _prim_miller(2,3) = cut_planes(2,3) / _lattice_constant[1]; _prim_miller(3,3)=cut_planes(3,3) / _lattice_constant[2];
-    scale_to_int(_prim_miller);
-  }
-
-  else {
-    _prim_miller(1,1) = cut_planes(1,1) / _lattice_constant[0]; _prim_miller(2,1) = cut_planes(2,1) / _lattice_constant[1]; _prim_miller(3,1) = cut_planes(3,1) / _lattice_constant[2];
-    _prim_miller(1,2) = cut_planes(1,2) / _lattice_constant[0]; _prim_miller(2,2) = cut_planes(2,2) / _lattice_constant[1]; _prim_miller(3,2) = cut_planes(3,2) / _lattice_constant[2];
-    _prim_miller(1,3) = cut_planes(1,3) / _lattice_constant[0]; _prim_miller(2,3) = cut_planes(2,3) / _lattice_constant[1]; _prim_miller(3,3) = cut_planes(3,3) / _lattice_constant[2];
-    scale_to_int(_prim_miller);
-  };
-
-
-};
-
-
-
-
-void AtomisticGenerator::parse_parameters(const Material* mat)
-{
-
-  Atom tmp;
-  Tensor1 T;
-  unsigned int i, j, n;
-
-  if ( !(mat->is_alloy()) )
-  {
-    //WORKS ONLY FOR BULK, EXTEND TO ALLOY
-
-    //lattice constant are expressed in Amstrong
-    //_lattice_constant[0] = data("a", 0.0) * 10.0;
-
-    Database db = mat->get_database();
-    db.set_section("lattice");
-    _lattice_constant[0] = db.get("a", 0.0) * 10.0;
-    if (_lattice_constant[0] == 0.0) Messages::error("At least "
-        "lattice constant a must be defined !!!!");
-    _lattice_constant[1] = db.get("b", 0.0) * 10.0;
-    if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
-    _lattice_constant[2] = db.get("c", 0.0) * 10.0;
-    if (_lattice_constant[2] == 0.0) _lattice_constant[2] = _lattice_constant[0];
-    db.set_section("atomistic_structure");
-    set_lattice_type(db.get("lattice_type", "none"));
-
-    unsigned int n_basis_specie = db.get("n_basis_specie", 0);
-
-    for (i = 1; i <= n_basis_specie; i++)
-    {
-      std::string record, s, n_s;
-      std::stringstream out;
-
-      out << i;
-      s = out.str();
-
-      record = "n_" + s;
-
-      n = db.get(record.c_str(), 0);
-
-      for (j = 1; j <= n; j++)
-      {
-        record.clear(); n_s.clear();
-        record = "T_" + s + "_";
-        out.str(std::string());
-        out.clear(std::stringstream::goodbit);
-        out << j;
-        n_s = out.str();
-        n_s = record + n_s;
-
-        //Putting specie (defined by an integer) temporary in flag data
-        //It's used in cut_and_change_specie() and build_random_alloy()
-        tmp.set_flag(i);
-
-        record = n_s + "_x";
-        T(1) = db.get(record, 0.0);
-        record = n_s + "_y";
-        T(2) = db.get(record, 0.0);
-        record = n_s + "_z";
-        T(3) = db.get(record, 0.0);
-
-        tmp.set_position(T);
-        //Insert tmp in basis
-        _crystal_basis.push_back(tmp);
-      }
-    }
-  }
-
-  if (mat->is_alloy())
-  {
-    //Cannot act dynamic cast on mat itself because constant
-    const Alloy* mat_alloy = dynamic_cast<const Alloy*>(mat);
-
-    //Get database for alloy (db) and for parental materials
-    //NOTE: IMPLEMENTATION IS GOOD ONLY FOR BINARY COMPOUNDS
-    //Nota: usiamo solo un pointer perche' per tutti i materiali viene istanziato solo un oggetto
-    //database, a cui di volta in volta (ogni volta che chiamiamo un get) viene associato un data file.
-    //Quindi non possiamo inizializzare 3 oggetti database e portarceli appresso, perche' saranno tutti
-    //collegati al datafile settato dall'ultima assegnazione. Questa cosa va cambiata nella classe Database
-    // (TODO)
-    //This take two lines as I don't know how to specify that i call non constant method
-    //if I do Database* db = &(mat_alloy->get_database())
-    Database tmp_db = mat_alloy->get_database();
-    Database* db = &tmp_db;
-
-    //std::cout << "component A is  " << mat_alloy->get_component_A()->get_name() << std::endl;
-    //std::cout << "component B is  " << mat_alloy->get_component_B()->get_name() << std::endl;
-    //Database& db1 = mat_alloy->get_component_A()->get_database();
-    //Database& db2 = mat_alloy->get_component_B()->get_database();
-
-    if (db->get("alloy_type", 2) == 2)
-    {
-      double ax_1, ay_1, az_1, ax_2, ay_2, az_2;
-      db = &(mat_alloy->get_component_A()->get_database());
-      db->set_section("lattice");
-
-      //We express lattice constant in Amstrong
-      ax_1 = db->get("a", 0.0) * 10.0;
-      if (ax_1 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
-
-      ay_1 = db->get("b", 0.0) * 10.0;
-      if (ay_1 == 0.0) ay_1 = ax_1;
-
-      az_1 = db->get("c", 0.0) * 10.0;
-      if (az_1 == 0.0) az_1 = ax_1;
-
-      db = &(mat_alloy->get_component_B()->get_database());
-      db->set_section("lattice");
-
-      ax_2 = db->get("a", 0.0) * 10.0;
-      if (ax_2 == 0.0) std::cerr << "At least lattice constant a must be defined !!!!" << std::endl;
-
-      ay_2 = db->get("b", 0.0) * 10.0;
-      if (ay_2 == 0.0) ay_2 = ax_2;
-
-      az_2 = db->get("c", 0.0) * 10.0;
-      if (az_2 == 0.0) az_2 = ax_2;
-
-      //Setting lattice parameters for the alloy
-      double molar_fraction = mat->get_options().get_option("x", 1.0);
-      _lattice_constant[0] = ax_1 * molar_fraction + ax_2 * (1.0 - molar_fraction);
-      _lattice_constant[1] = ay_1 * molar_fraction + ay_2 * (1.0 - molar_fraction);
-      _lattice_constant[2] = az_1 * molar_fraction + az_2 * (1.0 - molar_fraction);
-
-    }
-    std::cout << "lattice constant" << _lattice_constant[0]  << " " <<  _lattice_constant[1]  << " " << _lattice_constant[2]  << std::endl;
-    tmp_db = mat_alloy->get_database();
-    db = &tmp_db;
-    db->set_section("");
-    db->set_section("atomistic_structure");
-    set_lattice_type(db->get("lattice_type", "none"));
-
-    tmp_db = mat_alloy->get_database();
-    db = &tmp_db;
-
-    db->set_section("atomistic_structure");
-
-    unsigned int n_basis_specie = db->get("n_basis_specie", 0);
-
-    db = &(mat_alloy->get_component_A()->get_database());
-    db->set_section("atomistic_structure");
-
-    for (i = 1; i <= n_basis_specie; i++)
-    {
-      std::string record("");
-      std::string s("");
-      std::stringstream out;
-      out << i;
-      s = out.str();
-      record = "n_" + s;
-
-      unsigned int n_x = (db->get(record, 0));
-      for (j = 1; j <= n_x; j++)
-      {
-        std::string s2;
-        record = "T_" + s + "_";
-        out.str(std::string());
-        out.clear(std::stringstream::goodbit);
-        out << j;
-        s2 = out.str();
-        s2 = record + s2;
-
-        //Putting specie (defined by an integer) temporary in flag data
-        //It's used in cut_and_change_specie() and build_random_alloy()
-        tmp.set_flag(i);
-
-        record = s2 + "_x";
-        T(1) = db->get(record, 0.0);
-        record = s2 + "_y";
-        T(2) = db->get(record, 0.0);
-        record = s2 + "_z";
-        T(3) = db->get(record, 0.0);
-        tmp.set_position(T);
-
-        //Insert tmp in basis
-        _crystal_basis.push_back(tmp);
-      }
-    }
-
-
-  }
-
-
-};
-
-
-
-
 void AtomisticGenerator::make_conv_cell()
 {
   //Calculate conventional cell vectors in the directions given by cut planes (conventional growth cell)
   Tensor1 m1,m2,m3,select_vect(0);
   Tensor1 conv1, conv2, conv3;
-  int i;
-  Tensor2Gen prim_miller_basis(0);
-
-  prim_miller_basis = reciprocal(_prim_vec);
-  _conv_prim = inv(_prim_vec) * prim_miller_basis * _prim_miller;
+  Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+  
+  _conv_prim = inv(rotated_prim_vec);
   scale_to_int(_conv_prim);
-  _conv_vect = _prim_vec * _conv_prim;
+  _conv_vect = rotated_prim_vec * _conv_prim;
 
-  for (i = 1; i <= 3; i++) {conv1(i) = _conv_vect(i, 1); conv2(i) = _conv_vect(i, 2); conv3(i) = _conv_vect(i, 3);};
-
-      //At least x growth index must be specified (growth direction in 1D structure)
-      assert (norm(conv1) > tol);
-
-      // If no other indexes are specified, set y growth direction by default (orthogonal to x index)
-      if ((norm(conv2) < tol)&&(norm(conv3) < tol)) {
-
-        std::cerr << "Warning: only x growth direction is defined. Building other direction orthogonal " << std::endl;
-
-        conv2(1) = - conv1(3); conv2(2) = 0.0; conv2(3) = conv1(1);
-        conv3 =  vectorProduct(conv1, conv2);
-        conv3 = conv3 / norm(conv3);
-      }
-
-      //If only one index is not specified, build it by default (orthogonal)
-      else if (norm(conv2) < tol){
-
-        std::cerr << "Warning: only x and z growth direction is defined. Building y direction orthogonal " << std::endl;
-
-        conv2 =  vectorProduct(conv1, conv3);
-        conv2 = conv2 / norm(conv2);
-      }
-
-      else if (norm(conv3) < tol){
-
-        std::cerr << "Warning: only x and y growth direction is defined. Building z direction orthogonal " << std::endl;
-
-        conv3 =  vectorProduct(conv1, conv2);
-        conv3 = conv3 / norm(conv3);
-      };
-
-
-      //   //If not all miller indexes are specified, build others as a default
-      //   if (norm(conv1) < tol) {conv1(1) = - conv3(3); conv1(2) = 0.0; conv1(3) = conv3(1);}
-
-      //   //If only z and x miller indexes are specifed, get y miller index
-      //   if (norm(conv2) < tol) {
-      //     conv2 =  vectorProduct(conv1, conv3);
-      //     conv2 = conv2 / norm(conv2);
-      //   };
-
-
-      for (i = 1; i <= 3; i++) {_conv_vect(i, 1) = conv1(i); _conv_vect(i, 2) = conv2(i); _conv_vect(i, 3) = conv3(i);};
-
-
-          _conv_prim = inv(_prim_vec) * _conv_vect;
-          scale_to_int(_conv_prim);
-          _conv_vect = _prim_vec * _conv_prim;
-
-          // Calculate distance between equivalent planes for every cut plane
-          //prim_miller = inv(prim_miller_basis) * prim_vec * conv_prim;
-          //for (i = 1; i <= 3; i++) {m1(i) = prim_miller(i, 1); m2(i) = prim_miller(i, 2); m3(i) = prim_miller(i, 3);};
-          //planar_distance[0] = 1 / norm(prim_miller_basis * m1);
-          //planar_distance[1] =1 / norm(prim_miller_basis * m2);
-          //planar_distance[2] = 1 / norm(prim_miller_basis * m3);
+  //Note: we don't know if the vectors conv_vect are positively or
+  //negatively oriented along the standard basis x,y,z.
+  //For the way we build the supercell (going from edge_min to edge_max 
+  //in positive x,y,z direction) we need positive conv_vect. 
+  //IF the supercell is built along standard basis, we can simply take the
+  //absolute value of the component of conv_vect. Conv_vect defines
+  //a lattice vectors, therefore if magnitude and angles are preserved, the
+  //definition is still legit
+  for (int i = 1; i <=3; i++)
+  {
+     for (int j = 1; j <=3; j++)
+     {
+       _conv_vect(i,j) = fabs(_conv_vect(i,j));
+     }
+  }
 
 };
 
@@ -1536,52 +976,22 @@ void AtomisticGenerator::make_conv_basis()
   Tensor1 prim_position, tmp_check;
   Tensor1 tmp_position;
   Tensor1 vec_x(0),vec_y(0),vec_z(0);
-  std::vector<Atom>::iterator basis_iterator;
-  Tensor2Gen rot_tmp;
-
+  std::vector<Atom>::const_iterator basis_iterator;
+  Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+  
   //Make a preliminar rotation only if conventional cell vectors are orthogonal
 
   vec_x(1) = _conv_vect(1,1); vec_x(2) = _conv_vect(2,1); vec_x(3) = _conv_vect(3,1);
   vec_y(1) = _conv_vect(1,2); vec_y(2) = _conv_vect(2,2); vec_y(3) = _conv_vect(3,2);
   vec_z(1) = _conv_vect(1,3); vec_z(2) = _conv_vect(2,3); vec_z(3) = _conv_vect(3,3);
 
-
-  //If z and y vectors are not orthogonal, build rotation vector y as a vector orthogonal to x
-  if ( (vec_z * vec_y ) > 1e-10) {
-
-    if ( (vec_y * vec_x) < 1e-10 ) {vec_z = vectorProduct(vec_x, vec_y);}
-    else if  ( (vec_z * vec_x) < 1e-10)  {vec_y = vectorProduct(vec_x, vec_z);}
-
-    else {std::cout << "Warning: at least x or y growth direction should be orthogonal to z growth direction" << std::endl;}
-
-  }
-
-
-  //vec_y = vectorProduct(vec_x, vec_z);
-  if (((vec_x * vec_y) < 1e-10) && ((vec_x * vec_z) < 1e-10) && ((vec_y * vec_z) < 1e-10)) {
-
-    assert(norm(vec_x) > 1e-10);
-    assert(norm(vec_y) > 1e-10);
-    assert(norm(vec_z) > 1e-10);
-
-    for ( int i = 1; i <=3; i++ )  rot_tmp(1,i) = vec_x(i)/norm(vec_x);
-    for ( int i = 1; i <=3; i++ )  rot_tmp(2,i) = vec_y(i)/norm(vec_y);
-    for ( int i = 1; i <=3; i++ )  rot_tmp(3,i) = vec_z(i)/norm(vec_z);
-  }
-  else {
-    rot_tmp(1,1) = 1.0; rot_tmp(1,2) = 0.0; rot_tmp(1,3) = 0.0;
-    rot_tmp(2,1) = 0.0; rot_tmp(2,2) = 1.0; rot_tmp(2,3) = 0.0;
-    rot_tmp(3,1) = 0.0; rot_tmp(3,2) = 0.0; rot_tmp(3,3) = 1.0;
-    std::cout << "Warning: no rotation has been done, orientation of atoms in space depends on primitive vectors definitions" << std::endl;
-  }
-
-  //Also a user-defined rotation is allowed, which put the axes in a direction different
-  //from canonical basis
-  for (i = 1; i <= 3; i++){vec_x(i) = _rotation(i,1); vec_y(i) = _rotation(i,2); vec_z(i) = _rotation(i,3);}
-  vec_x =vec_x / norm(vec_x); vec_y = vec_y / norm(vec_y); vec_z = vec_z / norm(vec_z);
-  for (i = 1; i <= 3; i++){_rotation(i,1) = vec_x(i); _rotation(i,2) = vec_y(i); _rotation(i,3) = vec_z(i);}
-  _rotation = _rotation * rot_tmp;
-
+  //Check orthogonality
+  assert(((vec_x * vec_y) < 1e-10) && 
+      ((vec_x * vec_z) < 1e-10) && 
+      ((vec_y * vec_z) < 1e-10) &&
+    (norm(vec_x) > 1e-10) &&
+    (norm(vec_y) > 1e-10) &&
+    (norm(vec_z) > 1e-10)); 
 
   //Define a box including conventional cell
   lower_1 = int(std::min(0.0,std::min(_conv_prim(1,1),std::min(_conv_prim(1,2),_conv_prim(1,3)))));
@@ -1595,21 +1005,18 @@ void AtomisticGenerator::make_conv_basis()
     for (int j = lower_2 - 1; j <= upper_2 + 1; j++){
       for (int l = lower_3 - 1; l <= upper_3 + 1; l++){
 
-        prim_position(1) = double(i); prim_position(2) = double(j); prim_position(3) = double(l);
-
+        prim_position(1) = double(i); 
+        prim_position(2) = double(j); 
+        prim_position(3) = double(l);
         tmp_position = prim_position;
-
         bool check_boundary;
-
         tmp_check = inv(_conv_prim) * tmp_position;
-
         check_boundary= ((tmp_check(1) >= -tol) && (tmp_check(1) < (1.0 - tol)))&&
             ((tmp_check(2) >= -tol) && (tmp_check(2) < (1.0 - tol))) &&
             ((tmp_check(3) >= -tol) && (tmp_check(3) < (1.0 - tol)));
 
         if (check_boundary){
-          tmp_position = _rotation * _prim_vec * prim_position;
-
+          tmp_position = rotated_prim_vec * prim_position;
           _conv_lattice_basis.push_back(tmp_position);
 
         }
@@ -1617,7 +1024,6 @@ void AtomisticGenerator::make_conv_basis()
       };
     };
   };
-  _conv_vect = _rotation * _conv_vect;
 
 };
 
@@ -1645,8 +1051,6 @@ void  AtomisticGenerator::bond_map_gen(std::vector<Atom> &basis){
 
   _bondmapobject->do_init(basis.size());
   _bondmapobject->do_solve(basis, _period);
-  //std::cout << "Getting and returning ";
-  //return _bondmapobject->get_bond_map();
 
 };
 

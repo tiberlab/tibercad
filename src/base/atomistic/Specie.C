@@ -10,12 +10,12 @@ Specie::~Specie(void)
 
 }
 
-Specie::Specie(std::string& type)
+Specie::Specie(const std::string& type)
 {
   _type = string_to_specie[type];
 }
 
-Specie::Specie(Specie::Type& type)
+Specie::Specie(const Specie::Type& type)
 {
   _type = type;
 }

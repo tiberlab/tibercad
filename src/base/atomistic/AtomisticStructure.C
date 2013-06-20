@@ -25,37 +25,24 @@
 
 
 AtomisticStructure::AtomisticStructure()
-:_bondmap(NULL),
- _device(NULL),
+:_device(NULL),
  _random_alloy(false),
- _clustering(false),
-  _atom_types()
+ _clustering(false)
 {
   N_atoms = 0;
-  for (unsigned int i = 0; i < 9; i++)
-    {
-      _periodicity_vectors[i] = 0.0;
-    }
 }
 
 
 AtomisticStructure::AtomisticStructure(const std::string& name)
 :_name(name),
- _bondmap(NULL),
  _atomistic_structure_options(),
  _scale(1.0),
  _device(NULL),
  _random_alloy(false),
- _atom_types(),
  _N_without_H(0)
 {
   // Default initializations
   N_atoms = 0;
-  for (unsigned int i = 0; i < 9; i++)
-    {
-      _periodicity_vectors[i] = 0.0;
-    }
-
 }
 
 
@@ -75,8 +62,7 @@ AtomisticStructure::create()
 
 
 AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
-:is_periodical(false),
- is_associated(false)
+:is_associated(false)
 {}
 
 
@@ -200,18 +186,18 @@ AtomisticStructure::parse_lattice_vectors(void)
  
     if (lattice_vectors.size() == 3)
     {  
-       _atomistic_structure_options.is_periodical = true;
-       _periodicity_vectors[0] = lattice_vectors[0];
-       _periodicity_vectors[4] = lattice_vectors[1];
-       _periodicity_vectors[8] = lattice_vectors[2];
+       _is_periodic = true;
+       _lattice_vectors[0] = lattice_vectors[0];
+       _lattice_vectors[4] = lattice_vectors[1];
+       _lattice_vectors[8] = lattice_vectors[2];
     }
  
     else if (lattice_vectors.size() == 9)
     {
        for (int i = 0; i < 9; i++)
        {
-         _atomistic_structure_options.is_periodical = true;
-         _periodicity_vectors[i] = lattice_vectors[i]; 
+         _is_periodic = true;
+         _lattice_vectors[i] = lattice_vectors[i]; 
        }
     }
  
@@ -255,67 +241,6 @@ AtomisticStructure::parse_regions(void)
   std::string physreg = _options.get_option("regions", "all");
   _device->extract_physical_regions(physreg, _IDset);
 
-  /*
-
-  //If no physical regions are specified, "all" is the default
-  if ( (get_options().is_empty()) || (!get_options().find_option("physical_regions")) )
-    _regionset.insert("all");
-
-  //Put physical regions specified in input file in _regions
-  //A vector is needed as temporary container
-  std::vector<std::string> region_string;
-  _options.get_option("physical_regions", region_string);
-
-  for (unsigned int i = 0; i < region_string.size(); i++)
-  {
-    _regionset.insert(region_string[i]);
-  }
-  region_string.clear();
-
-  //If all regions are specified (value = "all", must fill with real names of all regions)
-  if ( _regionset.count("all") == 1)
-  {
-    _regionset.clear();
-    std::set < ID >::iterator region_ID_iterator = get_device()->get_active_region_ids().begin();
-
-    for (unsigned int i = 0; i < get_device()->get_active_region_ids().size(); i++)
-    {
-      _regionset.insert( get_device()->get_region_name(*region_ID_iterator) );
-      region_ID_iterator ++;
-    }
-
-  }
-
-  //Build an array of physical regions ID
-  for (std::set<std::string>::iterator i = _regionset.begin(); i != _regionset.end(); i++)
-  {
-    std::set<ID> tmp_ID;
-    get_device()->get_active_region_ids( (*i), tmp_ID);
-    _IDset.insert(tmp_ID.begin(), tmp_ID.end());
-  }
-   */
-}
-
-
-void
-AtomisticStructure::build_bond_map(void)
-{
-  if (_bondmap != NULL)
-    {
-      delete _bondmap;
-    }
-  _bondmap = new BondMap;
-  _bondmap->do_init(_structure_atoms.size());
-  Tensor2Gen period;
-  for (unsigned int i = 0; i < 3; i++)
-    {
-      for (unsigned int j = 0; j < 3; j++)
-        {
-          period(j + 1, i + 1) = _periodicity_vectors[i*3 + j];
-        }
-    }
-  _bondmap->do_solve(_structure_atoms, period);
-
 }
 
 
@@ -343,7 +268,7 @@ AtomisticStructure::init_mesh_structure()
   os.str(std::string());
   //-----------------------------------------------------------
 
-  _structure_atoms.clear();
+  _atoms.clear();
 
   //---------------------------------------------------------------
   // Extend mesh for contacts
@@ -360,13 +285,14 @@ AtomisticStructure::init_mesh_structure()
   if ( _device->get_mesh().mesh_dimension() == 3 ) generate = static_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
 
   generate->do_init();
+  generate->finalize();
   parse_lattice_vectors();
   build_bond_map();
 
   //if (_atomistic_structure_options.is_associated == false) associate_elements();
 
   //Refresh some information after structure building
-  N_atoms = _structure_atoms.size();
+  N_atoms = _atoms.size();
 
   print_driver();
 
@@ -410,7 +336,7 @@ AtomisticStructure::associate_elements()
                 {
                   if ( (elem->contains_point(p) ) )
                     {
-                      _structure_atoms[i].set_elem(elem);
+                      _atoms[i].set_elem(elem);
                     }
 
                   set = true;
@@ -442,7 +368,7 @@ AtomisticStructure::read_structure(const std::string& path)
   Messages::debug("Reading structure from file");
 
   // Delete eventually existing structure
-  if (!(_structure_atoms.empty())) _structure_atoms.clear();
+  if (!(_atoms.empty())) _atoms.clear();
   if (!(_atom_types.empty())) _atom_types.clear();
 
   file.open(path.c_str(), std::ifstream::in);
@@ -462,6 +388,7 @@ AtomisticStructure::read_structure(const std::string& path)
       // First line is number of atoms
       getline(file, line);
       N_atoms = atoi(line.c_str());
+      _atoms.reserve(N_atoms);
 
       if (N_atoms == 0)
         {
@@ -509,11 +436,11 @@ AtomisticStructure::read_structure(const std::string& path)
 
           tmp_atom.set_position( pos );
 
-          _structure_atoms.push_back(tmp_atom);
+          _atoms.push_back(tmp_atom);
 
         }
 
-      if ( (_structure_atoms.size()) != N_atoms )
+      if ( (_atoms.size()) != N_atoms )
         std::cerr << "Warning: in file xyz number of atoms is wrong \n";
 
 
@@ -533,7 +460,7 @@ AtomisticStructure::read_structure(const std::string& path)
       line_string >> record;
 
       N_atoms = atoi(line.c_str());
-
+      _atoms.reserve(N_atoms);
       //#ifdef DEBUG
       //      std::cerr << "N_atoms is " << N_atoms << std::endl;
       //#endif
@@ -547,9 +474,9 @@ AtomisticStructure::read_structure(const std::string& path)
       line_string >> record;
 
       if ( (record.compare("S") == 0) || (record.compare("s") == 0))
-        _atomistic_structure_options.is_periodical = true;
+        _is_periodic = true;
       else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
-        _atomistic_structure_options.is_periodical = false;
+        _is_periodic = false;
       else
         std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
 
@@ -587,7 +514,7 @@ AtomisticStructure::read_structure(const std::string& path)
               pos(j) =  atof(record.c_str());
             }
           tmp_atom.set_position( pos );
-          _structure_atoms.push_back(tmp_atom);
+          _atoms.push_back(tmp_atom);
         }
 
       // An additional line is present in GEN files. It's the coordinates origin and it's
@@ -605,7 +532,7 @@ AtomisticStructure::read_structure(const std::string& path)
           for (unsigned int j = 0; j < 3; j++)
             {
               line_string >> record;
-              _periodicity_vectors[count] = atof(record.c_str());
+              _lattice_vectors[count] = atof(record.c_str());
               count++;
             }
         }
@@ -666,7 +593,7 @@ AtomisticStructure::read_tgn(const std::string& path)
   line_string >> record;
 
   N_atoms = atoi(record.c_str());
-  _structure_atoms.reserve(N_atoms);
+  _atoms.reserve(N_atoms);
 
   //Prepare bond map object
   if ( _bondmap == NULL) _bondmap = new BondMap;
@@ -682,14 +609,14 @@ AtomisticStructure::read_tgn(const std::string& path)
       std::cerr << "No atoms in structure files or non valid integer in first line. \n";
       exit(1);
     }
-  _structure_atoms.resize(N_atoms);
+  _atoms.resize(N_atoms);
 
   line_string >> record;
 
   if ( (record.compare("S") == 0) || (record.compare("s") == 0))
-    _atomistic_structure_options.is_periodical = true;
+    _is_periodic = true;
   else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
-    _atomistic_structure_options.is_periodical = false;
+    _is_periodic = false;
   else
     std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
 
@@ -727,8 +654,8 @@ AtomisticStructure::read_tgn(const std::string& path)
           line_string >> record;
           pos(j) =  atof(record.c_str());
         }
-      _structure_atoms[i - 1].set_specie(_atom_types[n_specie -1]);
-      _structure_atoms[i - 1].set_position(pos);
+      _atoms[i - 1].set_specie(_atom_types[n_specie -1]);
+      _atoms[i - 1].set_position(pos);
 
       //Get bond map
       line_string >> record;
@@ -744,10 +671,10 @@ AtomisticStructure::read_tgn(const std::string& path)
       line_string >> record;
       int tmp_id = atoi(record.c_str());
 
-      if (tmp_id == -1) _structure_atoms[i - 1].set_elem(NULL);
+      if (tmp_id == -1) _atoms[i - 1].set_elem(NULL);
       else
         {
-          _structure_atoms[i - 1].set_elem(_device->get_mesh().elem(tmp_id));
+          _atoms[i - 1].set_elem(_device->get_mesh().elem(tmp_id));
         }
     }
 
@@ -766,7 +693,7 @@ AtomisticStructure::read_tgn(const std::string& path)
       for (unsigned int j = 0; j < 3; j++)
         {
           line_string >> record;
-          _periodicity_vectors[count] = atof(record.c_str());
+          _lattice_vectors[count] = atof(record.c_str());
           count++;
         }
     }
@@ -776,6 +703,83 @@ AtomisticStructure::read_tgn(const std::string& path)
 
 }
 
+
+void
+AtomisticStructure::print_tgn(const std::string& path) const
+{
+  std::ofstream file;
+  // -------------------------------------------
+
+  std::string outdir = TiberCad::get_output_dir();
+  std::string file_name = outdir + "/" + path;
+
+  // --------------------------------------------
+  file.open(file_name.c_str());
+      if (_is_periodic) file << std::setw(10) << "S \n";
+      else file << std::setw(10) << "C \n";
+
+      for (unsigned int i = 0; i < _atom_types.size(); i++)
+        {
+          file << std::setw(6) << _atom_types[i];
+        }
+      file << std::endl;
+
+      for (unsigned int i = 0; i < _atoms.size(); i++)
+        {
+          unsigned int n_specie;
+          for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
+            {
+              if ( _atom_types[n_specie] == _atoms[i].get_specie() ) break;
+            }
+          file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(0))
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(1))
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(2)) ;
+
+          if (_bondmap != NULL)
+            {
+
+              file << std::setw(5) << _bondmap->get_bond_map()[i].size();
+
+              // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!
+              for (unsigned int j = 0; j < _bondmap->get_bond_map()[i].size(); j++)
+                {
+                  file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
+                }
+              ///////////////////////////////////////////
+
+            }
+
+          //ID of element is saved (note: no modifications to mesh are allowed to preserve compatibility)
+          file << std::setw(14);
+          if (_atoms[i].get_elem() == NULL) file << -1;
+          else file << _atoms[i].get_elem()->id();
+
+          file << std::endl;
+
+        }
+
+
+
+      //A line of zeros is put here (coordinates origin)
+      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+        << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+        << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
+
+      // Periodicity vectors at the bottom
+      unsigned int count = 0;
+      for (unsigned int i = 0; i < 3; i++)
+        {
+          for (unsigned int j = 0; j < 3; j++)
+            { 
+              file << std::setw(20) << std::setprecision(10) << std::fixed <<
+                  _lattice_vectors[count];
+              count++;
+            }
+          file << "\n";
+        }
+      file.close();
+}
 
 void
 AtomisticStructure::print_structure(const std::string& path)
@@ -803,177 +807,23 @@ AtomisticStructure::print_structure(const std::string& path)
 
   if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
     {
-
-      file.open(file_name.c_str());
-
-      file << _structure_atoms.size() << std::endl << std::endl;
-
-      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
-        {
-          file << std::setw(2) << _structure_atoms[i].get_specie()
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) << "\n";
-
-        }
-
+     print_xyz(path);
     }
 
   else if ( (extension.compare(".xyb") == 0) || (extension.compare(".XYB") == 0) )
     {
-
-      file.open(file_name.c_str());
-
-      file << _structure_atoms.size() << std::endl << std::endl;
-
-      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
-        {
-          file << std::setw(2) << _structure_atoms[i].get_specie()
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2));
-
-          if (_bondmap != NULL)
-            {
-
-              file << std::setw(5) << _bondmap->get_bond_map()[i].size();
-
-              // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!
-              for (unsigned int j = 0; j < _bondmap->get_bond_map()[i].size(); j++)
-                {
-                  file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
-                }
-              ///////////////////////////////////////////
-
-            }
-
-          file << std::endl;
-        }
-
-
+     print_xyb(path);
     }
 
   else if ( (extension.compare(".tgn") == 0) || (extension.compare(".TGN") == 0) )
     {
-
-      file.open(file_name.c_str());
-
-      file << _structure_atoms.size();
-
-      if (_atomistic_structure_options.is_periodical) file << std::setw(10) << "S \n";
-      else file << std::setw(10) << "C \n";
-
-      for (unsigned int i = 0; i < _atom_types.size(); i++)
-        {
-          file << std::setw(6) << _atom_types[i];
-        }
-      file << std::endl;
-
-      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
-        {
-          unsigned int n_specie;
-          for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
-            {
-              if ( _atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
-            }
-          file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) ;
-
-          if (_bondmap != NULL)
-            {
-
-              file << std::setw(5) << _bondmap->get_bond_map()[i].size();
-
-              // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!
-              for (unsigned int j = 0; j < _bondmap->get_bond_map()[i].size(); j++)
-                {
-                  file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
-                }
-              ///////////////////////////////////////////
-
-            }
-
-          //ID of element is saved (note: no modifications to mesh are allowed to preserve compatibility)
-          file << std::setw(14);
-          if (_structure_atoms[i].get_elem() == NULL) file << -1;
-          else file << _structure_atoms[i].get_elem()->id();
-
-          file << std::endl;
-
-        }
-
-
-
-      //A line of zeros is put here (coordinates origin)
-      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-        << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-        << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
-
-      // Periodicity vectors at the bottom
-      unsigned int count = 0;
-      for (unsigned int i = 0; i < 3; i++)
-        {
-          for (unsigned int j = 0; j < 3; j++)
-            { 
-              file << std::setw(20) << std::setprecision(10) << std::fixed <<
-                  _periodicity_vectors[count];
-              count++;
-            }
-          file << "\n";
-        }
-
+    print_tgn(path);
     }
 
 
   else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
     {
-
-      file.open(file_name.c_str());
-
-      file << _structure_atoms.size();
-
-      if (_atomistic_structure_options.is_periodical) file << std::setw(10) << "S \n";
-      else file << std::setw(10) << "C \n";
-
-      for (unsigned int i = 0; i < _atom_types.size(); i++)
-        {
-          file << std::setw(6) << _atom_types[i];
-        }
-      file << std::endl;
-
-      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
-        {
-          unsigned int n_specie;
-          for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
-            {
-              if (_atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
-            }
-          file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2)) << "\n";
-        }
-
-      //A line of zeros is put here (coordinates origin)
-      file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-        << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-        << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
-
-      // Periodicity vectors at the bottom
-      unsigned int count = 0;
-      for (unsigned int i = 0; i < 3; i++)
-        {
-          for (unsigned int j = 0; j < 3; j++)
-            {
-              file << std::setw(20) << std::setprecision(10) << std::fixed <<
-                  _periodicity_vectors[count];
-              count++;
-            }
-          file << "\n";
-        }
-
+      print_gen(path);
     }
 
   else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
@@ -1029,9 +879,9 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         }
 
       //Standard gen section (modified with material index)
-      file << _structure_atoms.size();
+      file << _atoms.size();
 
-      if (_atomistic_structure_options.is_periodical) file << std::setw(10) << "S \n";
+      if (_is_periodic) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -1040,30 +890,30 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         }
       file << std::endl;
 
-      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+      for (unsigned int i = 0; i < _atoms.size(); i++)
         {
           unsigned int n_specie;
           for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
             {
-              if (_atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
+              if (_atom_types[n_specie] == _atoms[i].get_specie() ) break;
             }
           file << std::setw(10);
-          if (_structure_atoms[i].get_specie() ==  Specie::H)
+          if (_atoms[i].get_specie() ==  Specie::H)
             {
-              file << material_map[_device->get_material(_structure_atoms[get_bond_map()[i][0]].get_region_ID()) ];
+              file << material_map[_device->get_material(_atoms[get_bond_map()[i][0]].get_region_ID()) ];
             }
           else
             {
-              file << material_map[ (_device->get_material(_structure_atoms[i].get_region_ID())) ];
+              file << material_map[ (_device->get_material(_atoms[i].get_region_ID())) ];
             }
 
           file << std::setw(5) << n_specie + 1
               << std::setw(20) << std::setprecision(10)
-          << std::fixed << double(_structure_atoms[i].get_position(0))
+          << std::fixed << double(_atoms[i].get_position(0))
           << std::setw(20) << std::setprecision(10)
-          << std::fixed  << double(_structure_atoms[i].get_position(1))
+          << std::fixed  << double(_atoms[i].get_position(1))
           << std::setw(20) << std::setprecision(10)
-          << std::fixed  << double(_structure_atoms[i].get_position(2));
+          << std::fixed  << double(_atoms[i].get_position(2));
 
 
           if (_bondmap != NULL)
@@ -1083,7 +933,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         }
 
       // Periodicity vectors at the bottom
-      if (_atomistic_structure_options.is_periodical)
+      if (_is_periodic)
         {
 
           //A line of zeros is put here (coordinates origin)
@@ -1097,7 +947,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
               for (unsigned int j = 0; j < 3; j++)
                 {
                   file << std::setw(20) << std::setprecision(10) << std::fixed <<
-                      _periodicity_vectors[count];
+                      _lattice_vectors[count];
                   count++;
                 }
               file << std::endl;
@@ -1219,14 +1069,14 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 
   if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
     {
-      file << _structure_atoms.size() << std::endl << std::endl;
+      file << _atoms.size() << std::endl << std::endl;
 
-      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+      for (unsigned int i = 0; i < _atoms.size(); i++)
         {
-          file << std::setw(2) << _structure_atoms[i].get_specie()
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
+          file << std::setw(2) << _atoms[i].get_specie()
+          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(0))
+          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(1))
+          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(2))
           << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";
         }
 
@@ -1234,9 +1084,9 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 
   else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
     {
-      file << _structure_atoms.size();
+      file << _atoms.size();
 
-      if (_atomistic_structure_options.is_periodical) file << std::setw(10) << "S \n";
+      if (_is_periodic) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -1245,17 +1095,17 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
         }
       file << std::endl;
 
-      for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+      for (unsigned int i = 0; i < _atoms.size(); i++)
         {
           unsigned int n_specie;
           for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
             {
-              if ( _atom_types[n_specie] == _structure_atoms[i].get_specie() ) break;
+              if ( _atom_types[n_specie] == _atoms[i].get_specie() ) break;
             }
           file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(0))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(1))
-              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_structure_atoms[i].get_position(2))
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(0))
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(1))
+              << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(2))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(charges[i]) << "\n";
         }
 
@@ -1265,7 +1115,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
         << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
-      if (_atomistic_structure_options.is_periodical)
+      if (_is_periodic)
         {
           unsigned int count = 0;
           for (unsigned int i = 0; i < 3; i++)
@@ -1273,7 +1123,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
               for (unsigned int j = 0; j < 3; j++)
                 {
                   file << std::setw(20) << std::setprecision(10) << std::fixed <<
-                      _periodicity_vectors[count];
+                      _lattice_vectors[count];
                   count++;
                 }
               file << "\n";
@@ -1297,45 +1147,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 
 
 
-void
-AtomisticStructure::set_periodicity_vectors(const Tensor2Gen& T)
-{
 
-  unsigned int count = 0;
-
-  for (int i = 0; i < 3 ; i++)
-    {
-      for (int j = 0; j < 3 ; j++)
-        {
-          _periodicity_vectors[count] = T(j+1,i+1);
-          count++;
-        }
-    }
-}
-
-void
-AtomisticStructure::set_atom_types(const std::set<std::string>& atom_types)
-{
-
-  for (std::set<std::string>::iterator types = atom_types.begin(); types != atom_types.end(); types++)
-    {
-      _atom_types.push_back( *types );
-    }
-
-}
-
-
-int
-AtomisticStructure::get_type_index(const std::string& type)
-{
-  int result = 0;
-  for (int i = 0; i < N_types; i++){
-      if ( (type.compare( _atom_types[i] ) == 0) ) result = i + 1;
-  }
-
-  return result;
-
-}
 
 //TODO: not allocating arrays could be too slow, find a way to
 //implement some memory reservation
@@ -1343,11 +1155,11 @@ void
 AtomisticStructure::build_elem_to_atoms(void)
 {
   //Get information from Atom objects
-  for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+  for (unsigned int i = 0; i < _atoms.size(); i++)
     {
-      if (_structure_atoms[i].get_elem() != NULL)
+      if (_atoms[i].get_elem() != NULL)
         {
-          _elem_to_atoms[_structure_atoms[i].get_elem()].push_back(i);
+          _elem_to_atoms[_atoms[i].get_elem()].push_back(i);
         }
     }
 }
@@ -1357,9 +1169,9 @@ void
 AtomisticStructure::compute_N_without_H(void)
 {
   unsigned int N = 0;
-  for (unsigned int i = 0; i < _structure_atoms.size(); i++)
+  for (unsigned int i = 0; i < _atoms.size(); i++)
     {
-      if (_structure_atoms[i].get_specie() != Specie::H)
+      if (_atoms[i].get_specie() != Specie::H)
         {
           N++;
         }
@@ -1387,14 +1199,6 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
  if (parent)
    {
      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
-     //TODO: At first we only consider InGaX, AlGaX alloys with this hardcoded trick.
-     //To be generalized.
-     //if ((atom.get_specie() == Specie::Ga))
-     //  {
-     //    return alloy->get_component_B();
-     //  }
-     //else return alloy->get_component_A();
-     //
      if (alloy->get_component_A()->has_specie(atom.get_specie()) &&
          (!alloy->get_component_B()->has_specie(atom.get_specie())))
        return alloy->get_component_A();
@@ -1402,7 +1206,7 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
          (!alloy->get_component_A()->has_specie(atom.get_specie())))       
        return alloy->get_component_B();
      else
-       throw RuntimeException("Ambiguity for alloy component assignation"
+       Messages::error("Ambiguity for alloy component assignation"
            "in AtomisticStructure::get_material(Atom&, bool)");
 
    }
@@ -1420,15 +1224,17 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
  const Material* mat1 = get_device()->get_material(atom1.get_region_ID());
  const Material* mat2 = get_device()->get_material(atom2.get_region_ID());
 
+ //If not, we need to decide based on some other criteria. Up to now we're able to
+ //decide only for III-V or II-VI alloys with different cations (eg. Ga-As belong to GaAs)
  if (atom1.get_specie() == Specie::In || atom1.get_specie() == Specie::Al
      || atom1.get_specie() == Specie::Ga)
    return get_material(atom1, parent);
  else if (atom2.get_specie() == Specie::In || atom2.get_specie() == Specie::Al
      || atom2.get_specie() == Specie::Ga)
    return get_material(atom2, parent);
- else
-   throw RuntimeException("WARNING: material for couple of atoms is decided "
-       "depending on the anion specie. I cannot find a valid anion "
+ else 
+ //If no value was already returned, throw an exception 
+ Messages::error("WARNING: material for couple of atoms is decided "
+       "depending on the cation specie. I cannot find a valid cation "
        "(only In, Al, Ga supported)");
-
 }

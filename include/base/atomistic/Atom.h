@@ -31,9 +31,6 @@ public:
   //!Complete constructor: specifies all atom characteristics
   Atom(std::string& specie, Tensor1& position, unsigned int flag);
 
-  //! Atom destructor
-  ~Atom();
-
   //! Set atom specie name
   void set_specie(const std::string& sp);
 
@@ -94,8 +91,6 @@ private:
 
   //! A general purpose integer flag (for example used in passivation)
   unsigned int _flag;
-
-  Tensor1 _ttype_position;
 
 };
 
