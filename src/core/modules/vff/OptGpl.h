@@ -44,7 +44,7 @@ class OptGpl
 
   ~OptGpl(void);
 
-  void solve();
+  void solve(double tolerance = 1e-5);
 
   private:
 

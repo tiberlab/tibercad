@@ -18,7 +18,7 @@ OptGpl::~OptGpl(void)
 }
 
 void
-OptGpl::solve()
+OptGpl::solve(double tolerance)
 {
   double *x ;
   int i, n ;
@@ -37,7 +37,7 @@ OptGpl::solve()
 
         /* run the code */
     /*  cg_descent (x, n, NULL, NULL, 1.e-8, myvalue, mygrad, myvalgrad, NULL) ;*/
-        cg_descent (x, n, NULL, &Parm, 1.e-5, NULL) ;
+        cg_descent (x, n, NULL, &Parm, tolerance, NULL) ;
 
 
         free (x) ;

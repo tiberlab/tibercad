@@ -21,7 +21,9 @@ Vff::_this = NULL;
 Vff::Options::Options(void)
 : boundary_conditions("free_standing"),
   substrate_plane("z"),
-  substrate_tol(1.0)
+  substrate_tol(1.0),
+  absolute_tolerance(1e-4),
+  method("cg")
 {
 }
 
@@ -56,9 +58,13 @@ Vff::parse_options()
   const ModelOptions& opts = get_options();
   Options& myopts = get_my_options();
 
-  myopts.boundary_conditions = opts.get_option("boundary_conditions", "free_standing");
+   myopts.boundary_conditions = opts.get_option("boundary_conditions", "free_standing");
    myopts.substrate_plane = opts.get_option("substrate_plane", "z");
    myopts.substrate_tol = opts.get_option("substrate_tol", 1.0);
+
+   //Solver options
+   myopts.method = get_solver_options().get_option("method", "cg");
+   myopts.absolute_tolerance = get_solver_options().get_option("absolute_tolerance", 1e-4);
 }
 
 void
@@ -666,9 +672,15 @@ Vff::keating_gradient(void)
 void
 Vff::optimize(void)
 {
-  OptGpl solver(*this);
-
-  solver.solve();
+  if (get_my_options().method == "cg") 
+  {
+    //Convert absolute tolerance from eV/A to internal units 10^-20J/A
+    double tol = get_my_options().absolute_tolerance * 0.0625; 
+    OptGpl solver(*this);
+    solver.solve(tol);
+  }
+  else
+    Messages::error("Error in VFF: solver method does not exist.");
 
 }
 

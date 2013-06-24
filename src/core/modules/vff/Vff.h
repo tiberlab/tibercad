@@ -53,7 +53,7 @@ public:
   //! Calculate Keating potential
   /*!
    * Keating potential is calculated. Resulting potential is in 10^-20 J (N/m * A^2).
-   * Potential in eV can be obtained multiplying by 10/1.602
+   * Potential in eV can be obtained multiplying by 16
    */
   double keating_potential(double* x, int n);
 
@@ -120,6 +120,13 @@ private:
     std::string boundary_conditions;
     std::string substrate_plane;
     double substrate_tol;
+
+    //Solver options
+    //--------------------------
+    //! Minimization method
+    std::string method;
+    //! Tolerance (eV/A)
+    double absolute_tolerance;
 
   };
 
