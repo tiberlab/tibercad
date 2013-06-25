@@ -32,6 +32,9 @@ class AtomisticBasis
   //! Return a const reference to structure atoms
   const std::vector<Atom>& get_structure_atoms(void) const;
 
+  //! Return a reference to structure atoms
+  std::vector<Atom>& get_structure_atoms(void);
+
   //! Return a cons reference to an atom
   const Atom& get_structure_atom(unsigned int i) const;
 
@@ -161,6 +164,13 @@ AtomisticBasis::get_neighbor_translation(void) const
 inline
 const std::vector<Atom>& 
 AtomisticBasis::get_structure_atoms(void) const
+{
+  return _atoms;
+}
+
+inline
+std::vector<Atom>&
+AtomisticBasis::get_structure_atoms(void)
 {
   return _atoms;
 }

@@ -132,6 +132,10 @@ class SimulationEnvironment
     MeshBase& get_mesh(void);
 
 
+    //! Set the mesh
+    void set_mesh(MeshBase* mesh);
+
+
 
     //! Add a boundary
     /*!
@@ -417,6 +421,10 @@ class SimulationEnvironment
     Device* _device;
 
 
+    //! The mesh
+    MeshBase* _mesh;
+
+
     //! The region numbers for this simulation
     std::set<ID> _region_numbers;
 
@@ -493,7 +501,7 @@ inline
 MeshBase&
 SimulationEnvironment::get_mesh(void)
 {
-  return get_device().get_mesh();
+  return *_mesh;
 }
 
 

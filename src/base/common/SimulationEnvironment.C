@@ -21,6 +21,7 @@ SimulationEnvironment::_environments;
 SimulationEnvironment::SimulationEnvironment(
     Device& device, const set<ID>& region_numbers)
   : _device(&device),
+    _mesh(&device.get_mesh()),
     _region_numbers(region_numbers),
     _is_initialized(false),
     _is_prepared(false)
@@ -38,6 +39,17 @@ SimulationEnvironment::~SimulationEnvironment(void)
     delete *it;
 
   _environments.erase(this);
+}
+
+void
+SimulationEnvironment::set_mesh(MeshBase* mesh)
+{
+  if (_mesh != mesh)
+  {
+    _mesh = mesh;
+    if (this->is_prepared())
+      prepare();
+  }
 }
 
 
@@ -86,7 +98,7 @@ void
 SimulationEnvironment::create_element_list(void)
 {
   _element_list.clear();
-  MeshBase& mesh = _device->get_mesh();
+  MeshBase& mesh = get_mesh();
 
   MeshBase::element_iterator it = mesh.active_elements_begin();
   const MeshBase::element_iterator end = mesh.active_elements_end();
@@ -118,7 +130,7 @@ SimulationEnvironment::create_bc_maps(void)
   BCMap::const_iterator bc_it;
   const BCMap::const_iterator bc_end(_bc_map.end());
 
-  const MeshBase& mesh = _device->get_mesh();
+  const MeshBase& mesh = get_mesh();
   const unsigned dim = mesh.mesh_dimension();
 
   // we only look on level zero
@@ -234,7 +246,7 @@ SimulationEnvironment::update_boundary_node_map(void)
   BoundarySideIterator it(boundary_sides_begin());
   const BoundarySideIterator end(boundary_sides_end());
 
-  if ((_device->get_mesh()).mesh_dimension() == 1)
+  if ((get_mesh()).mesh_dimension() == 1)
   {
     // 1D case is easy: boundary nodes will always be the same
     // Nevertheless we always compute them as this does not take much time
@@ -345,7 +357,7 @@ SimulationEnvironment::prepare_for_solve(void)
   if (!_is_initialized)
     init();
 
-  MeshBase& mesh = _device->get_mesh();
+  MeshBase& mesh = get_mesh();
 
   MeshBase::element_iterator it = mesh.elements_begin();
   const MeshBase::element_iterator end = mesh.elements_end();

@@ -12,6 +12,10 @@
 #include "Material.h"
 #include "RuntimeException.h"
 
+
+#include "mesh_tetgen_support.h"
+
+
 //C++ includes
 //--------------------
 #include <vector>
@@ -22,6 +26,7 @@
 #include <map>
 //---------------------
 
+using namespace std;
 
 
 AtomisticStructure::AtomisticStructure()
@@ -1237,4 +1242,102 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
  Messages::error("WARNING: material for couple of atoms is decided "
        "depending on the cation specie. I cannot find a valid cation "
        "(only In, Al, Ga supported)");
+}
+
+
+
+
+void
+AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh) const
+{
+  mesh.set_mesh_dimension(3);
+  const std::vector<Atom>& structure = get_structure_atoms();
+
+  mesh.reserve_nodes(structure.size());
+  //mesh.reserve_elem(_structure_atoms.size());
+
+  const Bondmap& bm = _bondmap->get_bond_map();
+
+  map<ID, ID> nodes;
+  unsigned int ctr = 0;
+  unsigned int elem_ctr = 0;
+
+  // WARNING this works only for tetrahedric cells
+  for (unsigned int i = 0; i < structure.size(); i++)
+  {
+    const Atom& atom = get_structure_atom(i);
+
+    //if (atom.get_specie() == Specie::In ||
+    //    atom.get_specie() == Specie::Al ||
+    //    atom.get_specie() == Specie::Ga) 
+    //if (atom.get_specie() != Specie::H)
+    {
+      Point p(atom.get_position());
+      p *= 0.1;
+      mesh.add_point(p);
+      /*
+      const vector<unsigned int>& neigh = bm[i];
+      if (neigh.size() == 4)
+      {
+        bool gonext = false;
+        for (unsigned int j = 0; j < neigh.size(); ++j)
+        {
+          if(get_structure_atom(neigh[j]).get_specie() ==  Specie::H)
+            gonext = true;
+        }
+        if (gonext)
+          continue;
+
+        Elem* elem = Elem::build(TET4).release();
+        elem->set_id(elem_ctr);
+        mesh.add_elem(elem);
+
+        vector<unsigned int> local_nodes(4);
+        for (unsigned int j = 0; j < neigh.size(); ++j)
+        {
+          map<ID,ID>::iterator it(nodes.find(neigh[j]));
+          if (it == nodes.end())
+          {
+            it = (nodes.insert(make_pair(neigh[j], ctr))).first;
+
+            const Atom& atomj = get_structure_atom(neigh[j]);
+            Node* node = mesh.add_point(atomj.get_position(), ctr);
+            ctr++;
+          }
+          local_nodes[j] = it->second;
+          elem->set_node(j) = mesh.node_ptr(local_nodes[j]);
+        }
+
+        elem_ctr++;
+      }
+      */
+    }
+  }
+
+  TetGenMeshInterface tetgenif(mesh);
+  tetgenif.triangulate_pointset();
+
+  mesh.prepare_for_use();
+
+  ID id = *(get_IDset().begin());
+  MeshBase::element_iterator it(mesh.elements_begin());
+  ctr = 0;
+  for ( ; it != mesh.elements_end(); ++it)
+  {
+    (*it)->subdomain_id() = id;
+    if ((*it)->volume() < 0)
+    {
+      unsigned int n1 = (*it)->node(0);
+      (*it)->set_node(0) = mesh.node_ptr((*it)->node(1));
+      (*it)->set_node(1) = mesh.node_ptr(n1);
+    }
+    if (ctr < 0)
+    {
+      cerr << (*it)->point(0) << endl;
+      cerr << (*it)->point(1) << endl;
+      cerr << (*it)->point(2) << endl;
+      cerr << (*it)->point(3) << endl;
+    }
+    ctr++;
+  }
 }

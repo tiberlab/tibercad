@@ -12,6 +12,7 @@
 #include "AtomisticBasis.h"
 
 class Material;
+class UnstructuredMesh;
 
 //! Contains all needed data for an atomic structure
 /*!
@@ -56,7 +57,7 @@ public:
   const std::set<std::string>& get_region(void);
 
   //! Get set of regions covered by atomistic structure (IDs)
-  const std::set<ID>& get_IDset(void);
+  const std::set<ID>& get_IDset(void) const;
 
    //! Set the device we're working with
   void set_device(const Device* const device);
@@ -64,8 +65,9 @@ public:
   //! Get Device reference
   const Device*  get_device(void) const;
 
-  //! Return a writable reference to structure atoms
-  std::vector<Atom>& get_structure_atoms(void);
+  //! Create a grid aligned on the atoms
+  void create_conformal_grid(UnstructuredMesh& mesh) const;
+
 
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)
   const double& get_scale(void);
@@ -262,13 +264,6 @@ const double& AtomisticStructure::get_scale(void)
 }
 
 
-inline
-std::vector<Atom>& AtomisticStructure::get_structure_atoms(void)
-{
-  return _atoms;
-}
-
-
 
 
 
@@ -302,7 +297,7 @@ AtomisticStructure::get_region(void)
 
 inline
 const std::set<ID>&
-AtomisticStructure::get_IDset(void)
+AtomisticStructure::get_IDset(void) const
 {
   return _IDset;
 }

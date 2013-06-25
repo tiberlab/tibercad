@@ -1025,7 +1025,7 @@ ETB::write_shifts(void)
 void
 ETB::project_atom_strain(void)
 {  
-  std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+  const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
   unsigned int Number_of_atoms =  get_atomistic_structure()->get_N_without_H();
   std::vector<double> exx(Number_of_atoms, 0.0);
   std::vector<double> eyy(Number_of_atoms, 0.0);  
@@ -1478,7 +1478,7 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const 
   }
  
   //! get structure
-  std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+  const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
   //! get atoms that contribute to the density of an element
   std::vector<unsigned int> atoms = get_neigh_atoms(elem->id());
 
@@ -1540,7 +1540,7 @@ ETB::build_rho2d(const std::vector<double>& tb_density, const Elem* elem, const 
     exit(1);
   }
 
-  std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+  const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
 
   //! get atoms that contribute to the density of an element
   std::vector<unsigned int> atoms = get_neigh_atoms(elem->id());
@@ -1600,7 +1600,7 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
       exit(1);
     }
 
-  std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+  const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
 
 
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)

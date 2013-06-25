@@ -402,7 +402,7 @@ TightBinding::build_map_elem_atoms(double projection_length)
   std::cout<<"(TB) Rmax: "<<deltar_max<<std::endl;
   std::cout<<"(TB) Nat: "<<Nat<<std::endl;
 
-  std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+  const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
 
   MeshBase::const_element_iterator it = get_mesh().elements_begin();
   const MeshBase::const_element_iterator end = get_mesh().elements_end();

@@ -540,13 +540,13 @@ SimulationInterface::setup_environment(Device& device, const set<ID>& region_num
     if (_environment != NULL) delete _environment;
     _environment = new SimulationEnvironment(device, region_numbers);
 
+    // get atomistic structure
+    setup_atomistic_structure();
+
     // get the mesh pointer
     setup_mesh();
     if (_mesh == NULL)
       throw InitFailedException("No simulation mesh provided for \'" + get_name() + "\'");
-
-    // get atomistic structure
-    setup_atomistic_structure();
   }
 }
 
@@ -554,7 +554,16 @@ SimulationInterface::setup_environment(Device& device, const set<ID>& region_num
 void
 SimulationInterface::setup_mesh(void)
 {
-  // For now just take the device mesh
+  if (get_option("atomistic_mesh", false))
+  {
+    UnstructuredMesh* mesh = new Mesh(3);
+    if (get_atomistic_structure() == NULL)
+      throw InitFailedException(get_name() + ": could not find atomistic structure");
+
+    get_atomistic_structure()->create_conformal_grid(*mesh);
+    get_environment().set_mesh(mesh);
+  }
+
   _mesh = &get_environment().get_mesh();
 }
 
@@ -755,7 +764,7 @@ SimulationInterface::get_region_ids(std::set<ID>& region_ids) const
 EquationSystems&
 SimulationInterface::get_equation_systems(void) const
 {
-  return _environment->get_device().get_equation_systems();
+  return _environment->get_device().get_equation_systems(_mesh);
 }
 
 

@@ -62,6 +62,8 @@ Module vff
  atomistic_structure = tb1
  boundary_conditions = free_standing
 
+ plot = Strain
+
  Solver 
  {
   method = cg

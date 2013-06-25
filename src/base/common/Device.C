@@ -19,6 +19,7 @@
 #include "gmsh_io.h"
 #include "equation_systems.h"
 #include "mesh.h"
+#include "unstructured_mesh.h"
 #include "elem.h"
 #include "Messages.h"
 
@@ -384,6 +385,13 @@ Device::setup_atomistic_structures(void)
     // Defined atomistic structure is put in the atomistic_structure_map
     _atomistic_structure_map[st_name] = st;
 
+    //UnstructuredMesh* mesh = new Mesh(3);
+    //st->create_conformal_grid(*mesh);
+    //DataOutput* dto = DataOutput::create("vtk");
+    //dto->set_filename("pippo");
+    //dto->set_output_directory("./");
+    //dto->set_mesh(*mesh);
+    //dto->write(true);
   }
 
   Messages::debug("Control::create_atomistic_structures() end");
@@ -616,6 +624,28 @@ Device::get_atomistic_structures(const string& names,
 }
 
 
+EquationSystems&
+Device::get_equation_systems(MeshBase* mesh)
+{
+  EquationSystems* eqsys;
+  if (mesh == _mesh)
+    eqsys = _eq_system;
+  else
+  {
+    map<const MeshBase*, EquationSystems*>::iterator it =
+        _eq_sys_map.find(mesh);
+
+    if (it == _eq_sys_map.end())
+    {
+      eqsys = new EquationSystems(*mesh);
+      it = (_eq_sys_map.insert(make_pair(mesh, eqsys))).first;
+    }
+
+    eqsys = it->second;
+  }
+
+  return(*eqsys);
+}
 
 
 

@@ -777,6 +777,10 @@ class SimulationInterface : public TiberModelObject
     virtual void setup_mesh(void);
 
 
+    //! Set the internal mesh pointer
+    void set_mesh(MeshBase* mesh);
+
+
     //! Initialize the internal atomistic structure pointer
     /*!
      * The default implementation just takes the structure pointer from the device,
@@ -1539,6 +1543,13 @@ SimulationInterface::get_mesh(void) const
   return *_mesh;
 }
 
+
+inline
+void
+SimulationInterface::set_mesh(MeshBase* mesh)
+{
+  _mesh = mesh;
+}
 
 
 inline

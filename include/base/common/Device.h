@@ -80,6 +80,13 @@ class Device
     EquationSystems& get_equation_systems(void) const;
 
 
+    //! Get a reference to the equation systems object for a given mesh
+    /*!
+     * If it does not exist yet, it will be created.
+     */
+    EquationSystems& get_equation_systems(MeshBase* mesh);
+
+
     //! Prepare the device
     /*!
      * This creates all device regions, materials and
@@ -247,7 +254,7 @@ class Device
     void extract_physical_regions(const std::string& str, IDSet& ids) const;
 
 
-    /* //! Get a const reference to the boundary region descriptor */
+    /* // ! Get a const reference to the boundary region descriptor */
     //const BoundaryRegions& get_boundary_regions(void) const;
 
 
@@ -430,6 +437,10 @@ class Device
      * of the device
      */
     EquationSystems* _eq_system;
+
+
+    //! A map with equations systems for all used meshes
+    std::map<const MeshBase*, EquationSystems*> _eq_sys_map;
 
 
     //! A map that contains all nodes for boundary conditions
