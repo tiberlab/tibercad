@@ -1306,23 +1306,27 @@ DriftDiffusion::rebuild_equation_system(void)
 
   ModelOptions& linopts = linit->second;
 
-  // default is bcgsl
-  if (!linopts.find_option("method"))
-    linopts["method"] = "bcgsl";
+  if ((linopts.get_name() == "") ||
+      (linopts.get_name() == "petsc"))
+  {
+    // default is bcgsl
+    if (!linopts.find_option("method"))
+      linopts["method"] = "bcgsl";
 
-  // in 1D bcgs seems to work better than bcgsl
-  const unsigned int dim = get_mesh().mesh_dimension();
-  if ((dim == 1) && (linopts["method"] == "bcgsl"))
-    linopts["method"] = "bcgs";
+    // in 1D bcgs seems to work better than bcgsl
+    const unsigned int dim = get_mesh().mesh_dimension();
+    if ((dim == 1) && (linopts["method"] == "bcgsl"))
+      linopts["method"] = "bcgs";
 
-  if (!linopts.find_option("preconditioner"))
-    if (dim < 3)
-      linopts["preconditioner"] = "lu";
-    else
-      linopts["preconditioner"] = "ilu";
+    if (!linopts.find_option("preconditioner"))
+      if (dim < 3)
+        linopts["preconditioner"] = "lu";
+      else
+        linopts["preconditioner"] = "ilu";
 
-  if (linopts.get_option("absolute_tolerance", -1.0) < 0)
-    linopts["absolute_tolerance"] = "1e-15";
+    if (linopts.get_option("absolute_tolerance", -1.0) < 0)
+      linopts["absolute_tolerance"] = "1e-15";
+  }
 
 
 
