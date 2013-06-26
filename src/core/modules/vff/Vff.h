@@ -153,7 +153,6 @@ private:
   //Initial coordinates. To keep track of hydrogen displacement
   std::vector<double> _initial_coords;
 
-
   void
   check_structure(void);
 
@@ -165,24 +164,34 @@ private:
   void
   resize_parameters(void);
 
-  void
-  build_parameters(void);
+  //! This setup all the arrays of parameters (alpha, beta, d0, teta0)
+  void build_parameters(void);
 
+  //! Routine to calculate Keating Potential
   double keating_potential(void);
 
-
+  //!Routine to calculate analytical gradient of Keating potential
   std::vector<double> keating_gradient(void);
 
 
   void optimize(void);
 
+  //! Apply the displacement from temporary coordinates 
+  //!to the atomistic structure
   void displace_atoms(void);
 
-  //Set coordinates used
+  //!Set coordinates used
   void set_coords(void);
 
-  //Utility for strain projection
+  //!Utility for strain projection
   StrainLattice _strain;
+
+  //! Prepare stuff which will be needed for the solutions
+  void prepare_solutions(void);
+
+  //! Contains a map of solution for any active element, to speed up the get_element
+  std::map<Elem*, Tensor2Gen> _elem_strain_map;
+   
 
 };
 

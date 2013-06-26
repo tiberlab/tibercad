@@ -9,6 +9,7 @@
 #include "AtomisticBasis.h"
 #include "Specie.h"
 #include "Atom.h"
+#include "mesh.h"
 
 StrainLattice::StrainLattice()
 :_as(NULL)
@@ -74,7 +75,7 @@ StrainLattice::do_solve(void)
 {
   Tensor2Gen strain;
   Tensor2Gen identity(1);
-  Tetra tet;
+  Tetra tet, tmp;
   const Bondmap& bondmap = _as->get_bond_map();
   const std::vector<Atom>& atoms = _as->get_structure_atoms();
   _solution.reserve(_as->get_N_without_H() / 2 + 1);
@@ -96,8 +97,34 @@ StrainLattice::do_solve(void)
     if (atm.get_specie() == ref.vertex_sp) continue;
 
     //If previuos conditions were not fullfilled, we should have a valid one, we calculate the strain.
-    tet = rearrange(ref, build_tetraedron(_as, ind));
+    tmp = build_tetraedron(_as, ind);
+    tet = rearrange(ref, tmp);
     strain = tet.edges * inv(ref.edges) - identity;
+    //Dirty hack to deal with WZ double basis (you have 2 tetraedra there!!)
+    //ONLY TEMPORARY, and only good in the direction I'm using for the calculations!!!
+    if (norm(strain) > 0.5)
+    {
+    if (_as->get_device()->get_mesh().mesh_dimension() == 3)
+    {
+      tmp.bonds[0](1) = -1.0 * tmp.bonds[0](1);
+      tmp.bonds[1](1) = -1.0 * tmp.bonds[1](1);
+      tmp.bonds[2](1) = -1.0 * tmp.bonds[2](1);
+      tmp.bonds[3](1) = -1.0 * tmp.bonds[3](1);
+    }
+    if (_as->get_device()->get_mesh().mesh_dimension() == 1)
+    {
+      tmp.bonds[0](2) = -1.0 * tmp.bonds[0](2);
+      tmp.bonds[1](2) = -1.0 * tmp.bonds[1](2);
+      tmp.bonds[2](2) = -1.0 * tmp.bonds[2](2);
+      tmp.bonds[3](2) = -1.0 * tmp.bonds[3](2);
+    }
+
+      tet = rearrange(ref, tmp);
+      strain = tet.edges * inv(ref.edges) - identity;
+    }  
+    //END HACK
+
+
     sol.tensor = strain;
     sol.atom_p = &atm;
     _solution.push_back(sol);

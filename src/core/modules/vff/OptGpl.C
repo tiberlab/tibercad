@@ -1703,10 +1703,10 @@ void OptGpl::cg_default
   /* Stop Rules:
      T => ||grad||_infty <= max(grad_tol, initial |grad|_infty*StopFact)
      F => ||grad||_infty <= grad_tol*(1 + |f_k|) */
-  //Parm->StopRule = TRUE ;
-  //Parm->StopFac = 0.e-5 ;
-  Parm->StopRule = FALSE ;
-  Parm->StopFac = 1.e-2 ;
+  Parm->StopRule = TRUE ;
+  Parm->StopFac = 0.e-5 ;
+  //Parm->StopRule = FALSE ;
+  //Parm->StopFac = 1.e-2 ;
 
   /* T => estimated error in function value is eps*Ck,
      F => estimated error in function value is eps */

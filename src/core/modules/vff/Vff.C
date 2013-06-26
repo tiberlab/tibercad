@@ -22,7 +22,7 @@ Vff::Options::Options(void)
 : boundary_conditions("free_standing"),
   substrate_plane("z"),
   substrate_tol(1.0),
-  absolute_tolerance(1e-4),
+  absolute_tolerance(1e-3),
   method("cg")
 {
 }
@@ -64,7 +64,7 @@ Vff::parse_options()
 
    //Solver options
    myopts.method = get_solver_options().get_option("method", "cg");
-   myopts.absolute_tolerance = get_solver_options().get_option("absolute_tolerance", 1e-4);
+   myopts.absolute_tolerance = get_solver_options().get_option("absolute_tolerance", 1e-3);
 }
 
 void
@@ -675,7 +675,7 @@ Vff::optimize(void)
   if (get_my_options().method == "cg") 
   {
     //Convert absolute tolerance from eV/A to internal units 10^-20J/A
-    double tol = get_my_options().absolute_tolerance * 0.0625; 
+    double tol = get_my_options().absolute_tolerance * 16.0; 
     OptGpl solver(*this);
     solver.solve(tol);
   }
@@ -747,6 +747,7 @@ if (values.count(Strain2))
     {
       contribs +=1;
       sol += _strain.get_solution()[i].tensor;
+      //std::cout << "from element " << sol << " contribs " << contribs << std::endl;
     }
    }
    if (contribs == 0)
@@ -762,10 +763,11 @@ if (values.count(Strain2))
      (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale) *
      (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale);
      if (distance<min) 
-     {sol = _strain.get_solution()[i].tensor;min=distance;}     
+     {sol = _strain.get_solution()[i].tensor;min=distance;}
   }
    }
    sol = sol / contribs;
+   //std::cout << "sol " <<  sol << " contribs " << contribs <<std::endl;
 for (unsigned int n = 0; n < np; n++)
 {
    values[Strain2][0]=sol(1,1);
@@ -774,7 +776,7 @@ for (unsigned int n = 0; n < np; n++)
    values[Strain2][3]=sol(1,2);
    values[Strain2][4]=sol(1,3);
    values[Strain2][5]=sol(2,3);
-
+   //std::cout << " values " <<  values[Strain2][0] << std::endl;
 }
 }
 
