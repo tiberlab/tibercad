@@ -1270,7 +1270,7 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh) const
     //if (atom.get_specie() == Specie::In ||
     //    atom.get_specie() == Specie::Al ||
     //    atom.get_specie() == Specie::Ga) 
-    //if (atom.get_specie() != Specie::H)
+    if (atom.get_specie() != Specie::H)
     {
       Point p(atom.get_position());
       p *= 0.1;
@@ -1317,27 +1317,42 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh) const
   TetGenMeshInterface tetgenif(mesh);
   tetgenif.triangulate_pointset();
 
+  MeshBase::element_iterator it(mesh.elements_begin());
+  while (it != mesh.elements_end())
+  {
+    Elem* el = *it;
+//    if (el->volume() < 0)
+//    {
+//      unsigned int n1 = el->node(0);
+//      el->set_node(0) = mesh.node_ptr(el->node(1));
+//      el->set_node(1) = mesh.node_ptr(n1);
+//    }
+
+    ++it;
+
+    if (el->volume() <= 1e-12)
+    {
+      // eliminate all degenerate elements
+      mesh.delete_elem(el);
+    }
+    else
+    {
+      Point centroid(el->centroid());
+      const Elem* dev_el = MeshUtils::search_element(
+          &(get_device()->get_mesh()), centroid);
+      ID id = INVALID_ID;
+      if (dev_el != NULL)
+        id = dev_el->subdomain_id();
+
+      el->subdomain_id() = id;
+
+      // eliminate all elements that seem to lie outside of the structure
+      if (id == INVALID_ID)
+        mesh.delete_elem(el);
+    }
+  }
+
   mesh.prepare_for_use();
 
-  ID id = *(get_IDset().begin());
-  MeshBase::element_iterator it(mesh.elements_begin());
-  ctr = 0;
-  for ( ; it != mesh.elements_end(); ++it)
-  {
-    (*it)->subdomain_id() = id;
-    if ((*it)->volume() < 0)
-    {
-      unsigned int n1 = (*it)->node(0);
-      (*it)->set_node(0) = mesh.node_ptr((*it)->node(1));
-      (*it)->set_node(1) = mesh.node_ptr(n1);
-    }
-    if (ctr < 0)
-    {
-      cerr << (*it)->point(0) << endl;
-      cerr << (*it)->point(1) << endl;
-      cerr << (*it)->point(2) << endl;
-      cerr << (*it)->point(3) << endl;
-    }
-    ctr++;
-  }
+
 }

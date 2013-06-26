@@ -70,6 +70,9 @@ class TensorGrid
 
   private:
 
+    //! The mesh dimension
+    unsigned int _dimension;
+
     //! The origin
     Point _p0;
 
@@ -112,8 +115,8 @@ void
 TensorGrid::find_element(const Point& p, int indices[3]) const
 {
   indices[0] = floor((p(0) - _p0(0)) / _dx);
-  indices[1] = floor((p(1) - _p0(1)) / _dy);
-  indices[2] = floor((p(2) - _p0(2)) / _dz);
+  indices[1] = (_dimension > 1) ? floor((p(1) - _p0(1)) / _dy) : 0;
+  indices[2] = (_dimension > 2) ? floor((p(2) - _p0(2)) / _dz) : 0;
 }
 
 
@@ -123,8 +126,8 @@ int
 TensorGrid::find_element(const Point& p) const
 {
   int k = floor((p(0) - _p0(0)) / _dx);
-  int l = floor((p(1) - _p0(1)) / _dy);
-  int m = floor((p(2) - _p0(2)) / _dz);
+  int l = (_dimension > 1) ? floor((p(1) - _p0(1)) / _dy) : 0;
+  int m = (_dimension > 2) ? floor((p(2) - _p0(2)) / _dz) : 0;
 
   if ((k < 0) || (l < 0) || (m < 0))
     return -1;
