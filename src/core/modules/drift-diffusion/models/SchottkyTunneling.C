@@ -112,9 +112,17 @@ SchottkyTunneling::do_init(void)
           get_options().set_option("barrier",
               mod->get_options().get_option("barrier", _barrier));
       }
-
-      string band = mod->get_options().get_option("band", "c");
-      _band = band[0];
+      
+      if (!has_option("band"))
+      {
+        string band = mod->get_options().get_option("band", "c");
+        _band = band[0];
+      }
+      else
+      {
+        string band = get_option("barrier", "c");
+        _band = band[0];
+      }
     }
 
     for (unsigned int i = 0; i < elem->n_nodes(); ++i)
