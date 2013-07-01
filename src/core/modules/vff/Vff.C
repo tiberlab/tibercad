@@ -61,6 +61,7 @@ Vff::parse_options()
    myopts.boundary_conditions = opts.get_option("boundary_conditions", "free_standing");
    myopts.substrate_plane = opts.get_option("substrate_plane", "z");
    myopts.substrate_tol = opts.get_option("substrate_tol", 1.0);
+   myopts.substrate_updown = opts.get_option("substrate_updown", false);
 
    //Solver options
    myopts.method = get_solver_options().get_option("method", "cg");
@@ -273,21 +274,29 @@ Vff::set_boundary(void)
              plane = 0;
      double min_coord =
          get_atomistic_structure()->get_structure_atoms()[0].get_position(plane);
+     double max_coord =
+         get_atomistic_structure()->get_structure_atoms()[0].get_position(plane);
+     bool condition = false;
      for (unsigned int i = 0; i < n_atoms; i++)
      {
        double coord =
            get_atomistic_structure()->get_structure_atoms()[i].get_position(plane);
        if (coord < min_coord)
            min_coord = coord;
+       if (coord > max_coord)
+         max_coord = coord;
      }
      for (unsigned int i = 0; i < n_atoms; i++)
           {
             double coord =
                 get_atomistic_structure()->get_structure_atoms()[i].get_position(plane);
-            if (coord > min_coord + tol)
+            if (!get_my_options().substrate_updown)
+              condition = (coord > min_coord + tol);
+            if (get_my_options().substrate_updown)
+              condition = (coord > min_coord + tol) && (coord < max_coord - tol);
+            if (condition)
             {
               free_atoms.push_back(i);
-
             }
           }
    }

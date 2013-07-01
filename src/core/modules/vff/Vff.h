@@ -120,6 +120,7 @@ private:
     std::string boundary_conditions;
     std::string substrate_plane;
     double substrate_tol;
+    bool substrate_updown;
 
     //Solver options
     //--------------------------
