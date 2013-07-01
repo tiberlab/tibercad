@@ -28,7 +28,8 @@ Vff::Options::Options(void)
 }
 
 Vff::Vff(const ModelOptions& options) :
-              SimulationInterface(options)
+              SimulationInterface(options),
+              _has_strain_tensor(false)
 {
   // there's nothing to be done
 }
@@ -79,8 +80,8 @@ Vff::do_init()
   Messages::debug("Setting boundary conditions");
   check_structure();
   parse_options();
-  declare_solution(Strain, NTUPLE, NODES,"unitless",6);
-  declare_solution(Strain2, NTUPLE, CELL,"unitless",6);
+  declare_solution(StrainNodes, NTUPLE, NODES,"unitless",6);
+  declare_solution(StrainCells, NTUPLE, CELL,"unitless",6);
 }
 
 void
@@ -101,12 +102,6 @@ Vff::do_solve(void)
 
    //Apply displacement to AtomisticStructure instance
    displace_atoms();
-
-   std::cout << "Invoking StrainLattice " << std::endl;
-   _strain.init(get_atomistic_structure());
-   std::cout << "Trying to solve"  << std::endl;
-   _strain.do_solve();
-   std::cout << "Init done " << std::endl;
 
 }
 
@@ -702,11 +697,22 @@ Vff::get_solution_secure(const Elem* elem,
 //TODO: these methods are experimental, their only purpose is to test different
 //techniques, they should not be trusted without speaking with the developer
 //
+//
+if (!_has_strain_tensor)
+{
+   std::cout << "Invoking StrainLattice " << std::endl;
+   _strain.init(get_atomistic_structure());
+   std::cout << "Calculating strain tensor "  << std::endl;
+   _strain.do_solve();
+   std::cout << "Strain tensor available " << std::endl;
+   _has_strain_tensor = true;
+}
+
 unsigned int np = p.size();
 double scale = get_atomistic_structure()->get_scale();
 unsigned int dim = get_mesh().mesh_dimension();
 Point phys_p;
-if (values.count(Strain))
+if (values.count(StrainNodes))
 {
 for (unsigned int n = 0; n < np; n++)
   {
@@ -730,18 +736,18 @@ for (unsigned int n = 0; n < np; n++)
      if (distance<min) 
      {sol = _strain.get_solution()[i].tensor;min=distance;}     
    }
-   values[Strain][6*n]=sol(1,1);
-   values[Strain][6*n+1]=sol(2,2);
-   values[Strain][6*n+2]=sol(3,3);
-   values[Strain][6*n+3]=sol(1,2);
-   values[Strain][6*n+4]=sol(1,3);
-   values[Strain][6*n+5]=sol(2,3);
+   values[StrainNodes][6*n]=sol(1,1);
+   values[StrainNodes][6*n+1]=sol(2,2);
+   values[StrainNodes][6*n+2]=sol(3,3);
+   values[StrainNodes][6*n+3]=sol(1,2);
+   values[StrainNodes][6*n+4]=sol(1,3);
+   values[StrainNodes][6*n+5]=sol(2,3);
 }
 }
 
 //Element solution, take the average of all the tensors included in the 
 //element, if not any take the nearest
-if (values.count(Strain2))
+if (values.count(StrainCells))
 {
 
   unsigned int contribs = 0;
@@ -779,12 +785,12 @@ if (values.count(Strain2))
    //std::cout << "sol " <<  sol << " contribs " << contribs <<std::endl;
 for (unsigned int n = 0; n < np; n++)
 {
-   values[Strain2][0]=sol(1,1);
-   values[Strain2][1]=sol(2,2);
-   values[Strain2][2]=sol(3,3);
-   values[Strain2][3]=sol(1,2);
-   values[Strain2][4]=sol(1,3);
-   values[Strain2][5]=sol(2,3);
+   values[StrainCells][0]=sol(1,1);
+   values[StrainCells][1]=sol(2,2);
+   values[StrainCells][2]=sol(3,3);
+   values[StrainCells][3]=sol(1,2);
+   values[StrainCells][4]=sol(1,3);
+   values[StrainCells][5]=sol(2,3);
    //std::cout << " values " <<  values[Strain2][0] << std::endl;
 }
 }

@@ -31,8 +31,8 @@ public:
    */
   enum Solutions
   {
-    Strain,
-    Strain2,
+    StrainNodes,
+    StrainCells,
     Displacement
   };
 
@@ -192,7 +192,9 @@ private:
 
   //! Contains a map of solution for any active element, to speed up the get_element
   std::map<Elem*, Tensor2Gen> _elem_strain_map;
-   
+  
+ //!Check if we have already calculated the strain tensor, to avoid useless calculation
+ bool _has_strain_tensor;
 
 };
 
