@@ -52,6 +52,9 @@ class Device
     //! The atomistic structures iterator type
     typedef AtomStructMap::iterator atomistic_structure_iterator;
 
+    //! The quantum contact iterator type
+    typedef QuantumContactMap::iterator quantum_contact_iterator;
+
 
     //! Destructor
     ~Device();
@@ -302,6 +305,12 @@ class Device
 
 
     QuantumContact* get_quantum_contact(const std::string& name);
+
+    //! Get the iterator to the first quantum contact
+    quantum_contact_iterator quantum_contacts_begin(void);
+
+    //! Get the past-the-end iterator for the quantum contacts
+    quantum_contact_iterator quantum_contacts_end(void);
 
 
 
@@ -670,6 +679,21 @@ Device::atomistic_structure_iterator
 Device::atomistic_structures_end(void)
 {
   return _atomistic_structure_map.end();
+}
+
+
+inline
+Device::quantum_contact_iterator
+Device::quantum_contacts_begin(void)
+{
+  return _quantum_contact_map.begin();
+}
+
+inline
+Device::quantum_contact_iterator
+Device::quantum_contacts_end(void)
+{
+  return _quantum_contact_map.end();
 }
 
 

@@ -12,10 +12,15 @@
 #include "AtomisticStructure.h"
 #include "Constants.h"
 #include "PotentialInterface.h"
+#include "QuantumContact.h"
 
 
 //libmesh includes
 #include "mesh.h"
+
+#include <map>
+
+using namespace std;
 
 //-----------------------------------------------------------------------
 
@@ -269,69 +274,90 @@ TightBinding::project_potential(const std::string model_name, const std::string 
     throw InitFailedException("Potential model has not been solved");
 
   if (mode == "point")
-    {//In point mode potential on atom is just kept as value on atom position
-      //vector returned is sized number of atoms
+  {//In point mode potential on atom is just kept as value on atom position
+    //vector returned is sized number of atoms
 
-      _pot_shift.clear();
-      _pot_shift.resize(get_atomistic_structure()->get_N_atoms(), 0.0);
-      _el_chem_pot.clear();
-      _el_chem_pot.resize(get_atomistic_structure()->get_N_atoms(), 0.0);
-      _hl_chem_pot.clear();
-      _hl_chem_pot.resize(get_atomistic_structure()->get_N_atoms(), 0.0);
-
-      // maybe we should take the mesh from the PotentialInterface?
-      unsigned int dim = get_mesh().mesh_dimension();
-
-      for (unsigned int i = 0; i < _pot_shift.size(); i++)
-	{
-	  if (get_atomistic_structure()->get_structure_atoms()[i].get_elem() != NULL)
-	    {
-	      p(0) = get_atomistic_structure()->get_structure_atoms()[i].get_position(0)
-                / get_atomistic_structure()->get_scale();
-	      p(1) = get_atomistic_structure()->get_structure_atoms()[i].get_position(1)
-		/ get_atomistic_structure()->get_scale();
-	      p(2) = get_atomistic_structure()->get_structure_atoms()[i].get_position(2)
-		/ get_atomistic_structure()->get_scale();
-
-	      if (dim == 1) {p(1) = 0.0; p(2) = 0.0;}
-	      if (dim == 2) {p(2) = 0.0;}
+    // atoms might be in quantum contacts, so we first obtain all IDs of
+    // quantum contacts
+    map<ID, QuantumContact*> quantum_contacts;
+    Device& dev = get_environment().get_device();
+    Device::quantum_contact_iterator qit(dev.quantum_contacts_begin());
+    for ( ; qit != dev.quantum_contacts_end(); ++qit)
+    {
+      QuantumContact* qct = qit->second;
+      quantum_contacts[qct->get_id()] = qct;
+    }
 
 
-	      // pot_shift is without "-" because the minus-sign is explicitly set in the
-	      // TB-codes. 
-	      _pot_shift[i] = model.get_potential(get_atomistic_structure()->
-						  get_structure_atoms()[i].get_elem(), p);
-	      _el_chem_pot[i] = model.get_el_chem_potential(get_atomistic_structure()->
-	                                          get_structure_atoms()[i].get_elem(), p);
-	      _hl_chem_pot[i] = model.get_hl_chem_potential(get_atomistic_structure()->
-	                                          get_structure_atoms()[i].get_elem(), p);
-	      //std::cout << " shifting " << _pot_shift[i] << std::endl;
-	    }
-	  //else
-	  //  {
-	  //    _pot_shift[i] = 0.0;
-	  //    _el_chem_pot[i] = 0.0;
-	  //    _hl_chem_pot[i] = 0.0;
-	  //  }
-	}
-      //If atom has no element assigned, assigned the potential of the nearest neighbour
-      //with non NULL element assigned
+    _pot_shift.clear();
+    _pot_shift.resize(get_atomistic_structure()->get_N_atoms(), 0.0);
+    _el_chem_pot.clear();
+    _el_chem_pot.resize(get_atomistic_structure()->get_N_atoms(), 0.0);
+    _hl_chem_pot.clear();
+    _hl_chem_pot.resize(get_atomistic_structure()->get_N_atoms(), 0.0);
+
+    // maybe we should take the mesh from the PotentialInterface?
+    unsigned int dim = get_mesh().mesh_dimension();
 
     for (unsigned int i = 0; i < _pot_shift.size(); i++)
+    {
+      const Elem* elem = get_atomistic_structure()->get_structure_atom(i).get_elem();
+      if (elem != NULL)
       {
-        //TODO: it works only for no-preserve and hydrogenation
-        //we need to extend exploring neighbours until we don't reach one with non NULL
-        //(it's not assured it will be the first one)
-        if (get_atomistic_structure()->get_structure_atoms()[i].get_elem() == NULL)
-          {
-            int neighbour = get_atomistic_structure()->get_bond_map()[i][0];
-            _pot_shift[i] = _pot_shift[neighbour];
-            _el_chem_pot[i] = _el_chem_pot[neighbour];
-            _hl_chem_pot[i] = _hl_chem_pot[neighbour];
-          }
-      }
 
+        p(0) = get_atomistic_structure()->get_structure_atoms()[i].get_position(0)
+                    / get_atomistic_structure()->get_scale();
+        p(1) = get_atomistic_structure()->get_structure_atoms()[i].get_position(1)
+		    / get_atomistic_structure()->get_scale();
+        p(2) = get_atomistic_structure()->get_structure_atoms()[i].get_position(2)
+		    / get_atomistic_structure()->get_scale();
+
+        if (dim == 1) {p(1) = 0.0; p(2) = 0.0;}
+        if (dim == 2) {p(2) = 0.0;}
+
+
+        unsigned int subdomain = elem->subdomain_id();
+        if (quantum_contacts.count(subdomain))
+        {
+          // this atom is in a quantum contact!
+          QuantumContact* qct = quantum_contacts[subdomain];
+          pair<const Elem*, Point> projected(qct->project_on_boundary(elem, p));
+          elem = projected.first;
+          p = projected.second;
+        }
+
+        // pot_shift is without "-" because the minus-sign is explicitly set in the
+        // TB-codes.
+        _pot_shift[i] = model.get_potential(elem, p);
+        _el_chem_pot[i] = model.get_el_chem_potential(elem, p);
+        _hl_chem_pot[i] = model.get_hl_chem_potential(elem, p);
+        //std::cout << " shifting " << _pot_shift[i] << std::endl;
+      }
+      //else
+      //  {
+      //    _pot_shift[i] = 0.0;
+      //    _el_chem_pot[i] = 0.0;
+      //    _hl_chem_pot[i] = 0.0;
+      //  }
     }
+    //If atom has no element assigned, assigned the potential of the nearest neighbour
+    //with non NULL element assigned
+
+    for (unsigned int i = 0; i < _pot_shift.size(); i++)
+    {
+      //TODO: it works only for no-preserve and hydrogenation
+      //we need to extend exploring neighbours until we don't reach one with non NULL
+      //(it's not assured it will be the first one)
+      if (get_atomistic_structure()->get_structure_atoms()[i].get_elem() == NULL)
+      {
+        int neighbour = get_atomistic_structure()->get_bond_map()[i][0];
+        _pot_shift[i] = _pot_shift[neighbour];
+        _el_chem_pot[i] = _el_chem_pot[neighbour];
+        _hl_chem_pot[i] = _hl_chem_pot[neighbour];
+      }
+    }
+
+  }
 
   //Process potential values to shift the smallest value to 0
   _pot_min = 0;
@@ -361,7 +387,7 @@ TightBinding::project_potential(const std::string model_name, const std::string 
     pot[i] = _pot_shift[i];
   get_atomistic_structure()->print_structure("pot_on_atom.xyz", pot);
   delete pot;
-  */
+   */
 
 }
 

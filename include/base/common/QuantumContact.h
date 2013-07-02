@@ -24,6 +24,9 @@ class QuantumContact
 {
   public:
 
+    typedef std::map<const Elem*, const ElementSide*> ContactElemMap;
+    typedef std::map<const Elem*, const ElementSide*>::iterator ContactElemIterator;
+
     // get normal 
     const Point& get_normal(void) const;
     
@@ -34,10 +37,7 @@ class QuantumContact
     void extend_mesh(void);
 
     // Project of any point in the extended mesh into a boundary point
-    std::pair<const Elem*, Point> project_on_boundary (const Elem*,const Point&);
-
-    //Calculate 3X3 matrix's determinant
-    double Deter (const Point& P1, const Point& P2, const Point& P3);
+    std::pair<const Elem*, Point> project_on_boundary(const Elem*, const Point&);
 
 
     ID get_id(void) const;
@@ -46,6 +46,14 @@ class QuantumContact
 
     const std::set<ID>& get_bd_ids(void) const;
 
+    //! Get the internal region ids touching the contact
+    const std::set<ID>& get_region_ids(void) const;
+
+    //! Get the iterator to the first contact element
+    ContactElemIterator contact_elements_begin(void);
+
+    //! Get the past-the-end iterator for the contact elements
+    ContactElemIterator contact_elements_end(void);
 
     //! Destructor
     /*!
@@ -86,6 +94,9 @@ class QuantumContact
     Point get_normal( double& area);
 
     void write_neighbors(void) const;
+
+    //Calculate 3X3 matrix's determinant
+    double Deter(const Point& P1, const Point& P2, const Point& P3);
 
     Device* _device;
 
@@ -128,6 +139,12 @@ const std::set<ID>& QuantumContact::get_bd_ids(void) const
 }
 
 inline
+const std::set<ID>& QuantumContact::get_region_ids(void) const
+{
+  return _rg_ids;
+}
+
+inline
 std::string QuantumContact::get_name(void) const
 {
   return _name;
@@ -145,5 +162,18 @@ double QuantumContact::get_area(void) const
    return _area;
 }
 
+inline
+QuantumContact::ContactElemIterator
+QuantumContact::contact_elements_begin(void)
+{
+  return(_elemsidemap.begin());
+}
+
+inline
+QuantumContact::ContactElemIterator
+QuantumContact::contact_elements_end(void)
+{
+  return(_elemsidemap.end());
+}
 
 #endif /* QUANTUMCONTACT_H_ */

@@ -20,6 +20,8 @@
 #include "TensorOperators.h"
 #include "RotatedCrystal.h"
 #include "AtomisticStructure.h"
+#include "QuantumContact.h"
+#include "DataOutput.h"
 
 #include "TiberModule.h"
 
@@ -854,9 +856,11 @@ Elasticity::apply_shape_deformation()
   //Atomistics deformation-----
   vector<AtomisticStructure*> atom_structures;
 
-  get_environment().get_device().get_atomistic_structures(myopt.structure_to_be_strained,atom_structures);
+  Device& device = get_environment().get_device();
+  device.get_atomistic_structures(myopt.structure_to_be_strained,atom_structures);
    
   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
+  const unsigned int system_number = system->number();
   
   // TODO CHECK THIS! It seems that this was terribly wrong and worked only
   // for one deformation step
@@ -904,6 +908,24 @@ Elasticity::apply_shape_deformation()
         p_ref[0] = structure[neighbor].get_position() / scale;
       }
 
+      if (!get_environment().contains_element(elem))
+      {
+        // it must be in a quantum contact, otherwise the problem is badly set up
+        Device::quantum_contact_iterator it(device.quantum_contacts_begin());
+        Device::quantum_contact_iterator end(device.quantum_contacts_end());
+        for ( ; it != end; ++it)
+        {
+          QuantumContact* qct = it->second;
+          pair<const Elem*, Point> proj = qct->project_on_boundary(elem, p_ref[0]);
+          if (proj.first != NULL)
+          {
+            elem = proj.first;
+            p_ref[0] = proj.second;
+            break;
+          }
+        }
+      }
+
       p_ref[0] = FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, p_ref[0]);
 
       fe->reinit(elem, &p_ref);
@@ -925,14 +947,74 @@ Elasticity::apply_shape_deformation()
       
     }
     atom_structures[ns]->print_structure("strained.xyz");
- 
   }
-      
-  const unsigned int system_number = system->number();
+  
+  //
+  // we may have to move some quantum contact regions
+  //
+  Device::quantum_contact_iterator it(device.quantum_contacts_begin());
+  Device::quantum_contact_iterator end(device.quantum_contacts_end());
+  for ( ; it != end; ++it)
+  {
+    QuantumContact* qct = it->second;
+    const set<ID>& regions = qct->get_region_ids();
+    bool touches = false;
+    for (set<ID>::iterator sit(regions.begin()); sit != regions.end(); ++sit)
+      touches |= get_environment().contains_region(*sit);
+
+    if (touches)
+    {
+      vector<Point> proj_point(1);
+
+      set<const Node*> visited;
+      QuantumContact::ContactElemIterator cel(qct->contact_elements_begin());
+      QuantumContact::ContactElemIterator cend(qct->contact_elements_end());
+      for ( ; cel != cend; ++cel)
+      {
+        const Elem* elem = cel->first;
+        for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+        {
+          Node* node = elem->get_node(n);
+          if ((node->n_dofs(system_number, uvar[0]) != 0) ||
+              visited.count(node))
+          {
+            continue;
+          }
+
+          visited.insert(node);
+          
+          pair<const Elem*, Point> proj = qct->project_on_boundary(elem, elem->point(n));
+          const Elem* proj_elem = proj.first;
+          proj_point[0] = proj.second;
+
+          proj_point[0] = FEInterface::inverse_map(get_mesh().mesh_dimension(),
+              FEType(), proj_elem, proj_point[0]);
+
+          fe->reinit(proj_elem, &proj_point);
+
+          for (unsigned int i = 0; i < 3 ; i++)
+            dof_map.dof_indices(proj_elem, dof_indices[i], uvar[i]);
+
+          Point displ(0);
+          for (unsigned int i = 0; i < 3; i++)
+            for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
+              displ(i) += (solution)(dof_indices[i][alpha]) * phi[alpha][0];
+
+          node->add(displ / get_scaling().get_calc_mesh_units());
+        }
+      }
+
+    }
+  }
+
+
+  //
+  // now move the mesh
+  //
   const MeshBase& mesh = get_mesh();
   MeshBase::const_node_iterator  nd  = mesh.active_nodes_begin();
   const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
-  
+
   for ( ;  nd != nd_end ; ++nd)
   {
     Node* node = *nd;
@@ -944,17 +1026,31 @@ Elasticity::apply_shape_deformation()
     Point pos;
     for(unsigned int i = 0; i<dim; i++)
       pos(i) = (*node)(i);
-    
+
     for (unsigned int i = 0; i < dim; i++)
     {
       const unsigned int  n_dof = node->dof_number(system_number,uvar[i],0);
-      pos(i) += (solution)(n_dof)/ get_scaling().get_calc_mesh_units(); 
+      pos(i) += (solution)(n_dof) / get_scaling().get_calc_mesh_units();
     }
-    
+
     *node = pos;
   }
- 
 
+  /*
+  it = device.quantum_contacts_begin();
+  for ( ; it != end; ++it)
+    it->second->activate_elements();
+
+  DataOutput* dop = DataOutput::create("vtk");
+  dop->set_mesh(mesh);
+  dop->set_filename("deformed");
+  dop->set_output_directory("./");
+  dop->write(true);
+
+  it = device.quantum_contacts_begin();
+  for ( ; it != end; ++it)
+    it->second->inactivate_elements();
+  */
 }
 
 void

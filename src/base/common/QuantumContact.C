@@ -27,6 +27,9 @@
 #include <fstream>
 #include <set>
 
+using namespace std;
+
+
 
 QuantumContact::QuantumContact(void)
 : _device(NULL),
@@ -606,67 +609,74 @@ QuantumContact::write_neighbors(void) const
 std::pair<const Elem*, Point>
 QuantumContact::project_on_boundary(const Elem* elem,const Point& point )
 {
-  std::vector<Point> p;
+  const Elem* sidelem = NULL;
   Point out;
 
-  p.reserve(4);
+  map<const Elem*,const ElementSide*>::iterator elit(_elemsidemap.find(elem));
 
-  const ElementSide* elemside = _elemsidemap[elem];
-
-  const Elem* sidelem = elemside->elem();
-
-  ID side = elemside->side();
-
-  p.clear();
-
-  for(ID nde = 0; nde < sidelem->n_nodes(); nde++)
+  if (elit != _elemsidemap.end())
   {
-    if (sidelem->is_node_on_side(nde, side))
+
+    vector<Point> p;
+    p.reserve(4);
+
+    const ElementSide* elemside = elit->second;
+
+    sidelem = elemside->elem();
+
+    ID side = elemside->side();
+
+    p.clear();
+
+    for(ID nde = 0; nde < sidelem->n_nodes(); nde++)
     {
-      p.push_back(sidelem->point(nde));
+      if (sidelem->is_node_on_side(nde, side))
+      {
+        p.push_back(sidelem->point(nde));
+      }
+    }
+
+    Point a = p[1]-p[0];
+    Point b = point - p[0];
+
+    if(_mesh->mesh_dimension() == 1)
+    {
+      out = p[0];
+    }
+    // 2D case=====================================
+    //             point
+    //            / |
+    //         b /  |
+    //          /   |
+    //         /    |
+    //      p[0]---out----p[1]
+    //
+    //  3D case=============================================
+    //
+    //
+    //
+    if(_mesh->mesh_dimension() == 2)
+    {
+      double c = a*b;
+      double d = a*a;
+      Point w = a*c;
+      Point y = w/d;
+      out = p[0] + y;
+    }
+
+    if(_mesh->mesh_dimension() == 3)
+    {
+      Point e = p[2]-p[0];
+      Point f = a.cross(e);
+      double g = b*f;
+      double h = f*f;
+      Point i = f*g;
+      Point l = i/h;
+      out = b-l+p[0];
     }
   }
 
-  Point a = p[1]-p[0];
-  Point b = point - p[0];
-
-  if(_mesh->mesh_dimension() == 1)
-  {
-    out = p[0];
-  }
-// 2D case=====================================
-//             point
-//            / |
-//         b /  |
-//          /   |
-//         /    |
-//      p[0]---out----p[1]
-//
-//  3D case=============================================
-//
-//
-//
-  if(_mesh->mesh_dimension() == 2)
-  {
-    double c = a*b;
-    double d = a*a;
-    Point w = a*c;
-    Point y = w/d;
-    out = p[0] + y;
-  }
-
-  if(_mesh->mesh_dimension() == 3)
-  {
-    Point e = p[2]-p[0];
-    Point f = a.cross(e);
-    double g = b*f;
-    double h = f*f;
-    Point i = f*g;
-    Point l = i/h;
-    out = b-l+p[0];
-  }
-
- return std::make_pair(sidelem,out);
+  return(make_pair(sidelem, out));
 }
 
 void
