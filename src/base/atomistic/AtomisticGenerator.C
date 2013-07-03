@@ -578,11 +578,15 @@ AtomisticGenerator::build_random_alloy()
   double rand_percentage;
   if (clustering)
     rand_percentage = _as->get_options().get_option("cluster_seeds", 0.02);
+  bool fix_mean_alloy_concentration =
+      _as->get_options().get_option("fix_mean_alloy_concentration", true);
 
   Messages::debug("Running build_random_alloy()");
 
   // By default in VCA the specie assigned is the one of parent A
   // so we first swap all atoms and then change back to species A
+  // I do this because otherwise then the rest of the code becomes
+  // more intuitive.
 
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
   {
@@ -634,6 +638,19 @@ AtomisticGenerator::build_random_alloy()
     }
   }
 
+  // A random starting seed is needed to actually have different sequences
+  // we try to use something that is different also if launching simulations
+  // at the same time
+  int seed = _as->get_options().get_option("random_generator_seed",
+      static_cast<int>(time(NULL) * std::tr1::random_device()()));
+  {
+    std::ostringstream os;
+    os << "Initializing  MT19937 random generator with seed " << seed;
+        //std::ios::hex << seed;
+    Messages::info(os.str());
+  }
+  std::tr1::mt19937 generator(seed);
+
 
   //
   // First we count for each region the number of atoms that have to be substituted
@@ -669,33 +686,26 @@ AtomisticGenerator::build_random_alloy()
   {
     if (num_to_substitute[i] > 0)
     {
-      double x = a_to_b_prob[i];
-      // NOTE: we use floor() here to not have any fluctuation due to numerical
-      // roundoff errors
-      int n_tot = num_to_substitute[i];
-      num_to_substitute[i] = std::floor(x * num_to_substitute[i]);
-      std::ostringstream os;
-      os << "Region " << i << ": x = " << x << " -> " << num_to_substitute[i] <<
-          " atoms out of " << n_tot << " to be substituted" << std::endl;
-      Messages::info(os.str());
+      // if we want to fix the number of atmos to be substituted,
+      // we calculated this number now
+      if (fix_mean_alloy_concentration)
+      {
+        double x = a_to_b_prob[i];
+        // NOTE: we use floor() here to not have any fluctuation due to numerical
+        // roundoff errors
+        int n_tot = num_to_substitute[i];
+        num_to_substitute[i] = std::floor(x * num_to_substitute[i]);
+        std::ostringstream os;
+        os << "Region " << i << ": x = " << x << " -> " << num_to_substitute[i] <<
+            " atoms out of " << n_tot << " to be substituted" << std::endl;
+        Messages::info(os.str());
+      }
 
       not_finished.insert(i);
     }
   }
 
-  // A random starting seed is needed to actually have different sequences
-  // we try to use something that is different also if launching simulations
-  // at the same time
-  //int seed = time(NULL) * std::tr1::random_device()();
-  int seed = _as->get_options().get_option("random_generator_seed",
-      static_cast<int>(time(NULL) * std::tr1::random_device()()));
-  {
-    std::ostringstream os;
-    os << "Initializing  MT19937 random generator with seed " << seed;
-        //std::ios::hex << seed;
-    Messages::info(os.str());
-  }
-  std::tr1::mt19937 generator(seed);
+
 
   //
   // Now we extract random numbers between 0 and _structure_basis.size() - 1
@@ -711,9 +721,14 @@ AtomisticGenerator::build_random_alloy()
   std::tr1::uniform_real<double> random2;
 
   size_t ctr = 0;
-  for (; !not_finished.empty(); ++ctr)
+  size_t id = 0;
+  for (; (!not_finished.empty() && (ctr < _structure_basis.size())); ++ctr)
   {
-    size_t id = random(generator);
+    if (fix_mean_alloy_concentration)
+      id = random(generator);
+    else
+      id = ctr;
+
     Atom& atm = _structure_basis[id];
     if (atm.belong_to_structure && (atm.get_flag() == 1))
     {
@@ -728,9 +743,14 @@ AtomisticGenerator::build_random_alloy()
           double prob = 1.0;
           double rnd = 0.0;
           // the first X% will be distributed randomly
-          if (clustering && (num_substituted[regid] > rand_percentage * num_to_substitute[regid]))
+          //if (clustering && (num_substituted[regid] > rand_percentage * num_to_substitute[regid]))
+          //{
+          //  prob = substitution_probability(id, sp);
+          //  rnd = static_cast<double>(generator()) / generator.max();
+          //}
+          if (!fix_mean_alloy_concentration)
           {
-            prob = substitution_probability(id, sp);
+            prob = a_to_b_prob[regid];
             rnd = static_cast<double>(generator()) / generator.max();
           }
           if (rnd <= prob)
@@ -745,14 +765,34 @@ AtomisticGenerator::build_random_alloy()
     }
   }
 
-  size_t subst = 0;
-  for (int i = 0; i < num_substituted.size(); ++i)
-    subst += num_substituted[i];
+  if (fix_mean_alloy_concentration)
+  {
+    size_t subst = 0;
+    for (int i = 0; i < num_substituted.size(); ++i)
+      subst += num_substituted[i];
 
-  std::ostringstream os;
-  os << "Needed " << ctr << " random number extractions to substitute " << subst << " atoms";
-  Messages::info(os.str());
-  Messages::newline();
+    std::ostringstream os;
+    os << "Needed " << ctr << " random number extractions to substitute " << subst << " atoms";
+    Messages::info(os.str());
+    Messages::newline();
+  }
+  else
+  {
+    for (int i = 0; i < num_substituted.size(); ++i)
+    {
+      if (num_to_substitute[i] > 0)
+      {
+        std::ostringstream os;
+        os << _as->get_device()->get_region_name(i) << " : substituted "
+            << num_substituted[i] << " out of " << num_to_substitute[i]
+            << " ( " << static_cast<double>(100 * num_substituted[i])
+                             / num_to_substitute[i]
+            << "%, nominally " << 100 * a_to_b_prob[i] << "%)";
+        Messages::info(os.str());
+      }
+    }
+    Messages::newline();
+  }
 }
 
 
