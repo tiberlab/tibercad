@@ -1,5 +1,11 @@
 #include "Keating.h"
 #include "Database.h"
+#include "Messages.h"
+
+#include <strstream>
+
+using namespace std;
+
 
 void
 Keating::do_init(void)
@@ -28,4 +34,28 @@ Keating::do_init(void)
       _costeta_0 = (3.0 * _c * _c * v * v - 2.0 * _a * _a) / (3.0 * _c * _c * v * v + 4.0 * _a * _a);
     }
 
+}
+
+
+
+
+void
+Keating::do_print_info(void)
+{
+  if (get_material()->get_structure() == "zb")
+  {
+    ostringstream os;
+    os << "Keating parameters: alpha = " <<
+        get_alpha_0() << ", beta = " << get_beta_0();
+    Messages::info(os.str());
+  }
+  else if (get_material()->get_structure() == "wz")
+  {
+    ostringstream os;
+    os << "Keating parameters: alpha_0 = " <<
+        get_alpha_0() << ", alpha_1 = " <<
+        get_alpha_1() << ", beta_0 = " <<
+        get_beta_0() << ", beta_1 = " << get_beta_1();
+    Messages::info(os.str());
+  }
 }

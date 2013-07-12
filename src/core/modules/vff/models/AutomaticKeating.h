@@ -1,8 +1,10 @@
 #ifndef _AUTOMATICKEATING_H_
 #define _AUTOMATICKEATING_H_
 
-#include "tiber_dll.h"
 #include "Keating.h"
+
+template<typename T> class DenseMatrix;
+template<typename T> class DenseVector;
 
 //! User defined Keating model parameters
 class TBDLLOCAL AutomaticKeating : public Keating
@@ -30,11 +32,17 @@ private:
   //! Calculate zb beta from stiffness constants
   void calculate_zb_beta(void);
 
-  //! Calculate wz alpha from stiffness constants
-  void calculate_wz_alpha(void);
+  //! Optimize wz alpha and beta to fit bulk elastic constants
+  void calculate_wz_params(void);
 
-  //! Calculate wz beta from stiffness constants
-  void calculate_wz_beta(void);
+  //! Calculate elastic constants residual from Keating parameters
+  /*!
+   * Ordering is C11, C33, C12, C13, C44, C66
+   */
+  void residual_wz(double a, double c, double u,
+      const DenseVector<double>& keating,
+      DenseVector<double>& residual,
+      DenseMatrix<double>& gradients);
 
   //! Get needed information from material database
   /*
@@ -57,6 +65,17 @@ private:
   double _c44;
   double _c13;
   double _c33;
+
+  //! Weights for the error functional
+  /*!
+   * Order is: C11, C12, C33, C13, C44, C66
+   * Default:  1,   1,   2,   2,   0.5, 0
+   */
+  std::vector<double> _weights;
+
+
+  //! Whether we should use four parameters for wurtzite
+  bool _use_four_wz_params;
 
 };
 

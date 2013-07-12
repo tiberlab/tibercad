@@ -80,7 +80,7 @@ protected:
 
 
   //! Print some useful information
-  virtual void do_print_info(void){};
+  //virtual void do_print_info(void){};
 
 
   //! We need to create a physical model

@@ -54,6 +54,7 @@ protected:
   virtual void do_init(void);
 
   //virtual void prepare_submodels(void);
+  virtual void do_print_info(void);
 
 private:
 

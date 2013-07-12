@@ -45,7 +45,8 @@ Library tibercad
     include/core/kintegrations,
     include/core/eigenvalue,
     include/utils/Tensor,
-    include/utils/SLEPC
+    include/utils/SLEPC,
+    include/utils/FADBAD++
   )
   libpath = @ARCH/lib
   linker_flags = -ltibercad

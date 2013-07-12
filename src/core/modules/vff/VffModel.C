@@ -133,3 +133,9 @@ VffModel::along_c(const Atom& atm1, const Atom& atm2) const
     return false;
 }
 
+
+void
+VffModel::do_print_info(void)
+{
+  _keating->print_info();
+}
