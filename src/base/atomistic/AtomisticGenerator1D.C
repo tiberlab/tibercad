@@ -67,9 +67,11 @@ AtomisticGenerator1D::build()
     }
   }
 
-  _local_origin(1) += edge_min * scale;
-  _local_origin(2) += 0.0;
-  _local_origin(3) += 0.0;
+  // the small shift of 1e-3 prevents from subsequently cutting away
+  // atoms due to roundoff errors
+  _local_origin(1) += edge_min * scale + 1e-3;
+  //_local_origin(2) += 0.0;
+  //_local_origin(3) += 0.0;
   double l1 = (fabs(edge_max - edge_min)) * scale;
 
   //Minimum periodic direction is considered along y and z axis, but eventually other lenghts can be
