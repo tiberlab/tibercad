@@ -155,6 +155,9 @@ class EigenvalueProblem : public SimulationInterface
     //! method used to plot quantum dispersion
     virtual void plot_dispersion(void);
 
+    //! Calculate the DOS
+    void calculate_dos(void);
+
     //!pointer to the imaginary part of the Hamiltonian
     SparseMatrix<double>* _H_real;
 

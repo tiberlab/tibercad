@@ -4,6 +4,9 @@
 #include "DataOutput.h"
 #include<fstream>
 
+using namespace std;
+
+
 void EigenvalueProblem::init_kspace(void)
 {
    do_dispersion=false;
@@ -208,6 +211,31 @@ EigenvalueProblem::plot_dispersion(void)
   }
 
 }
+
+
+void EigenvalueProblem::calculate_dos(void)
+{
+  const Mesh* kmesh = _kspace->get_k_mesh();
+  unsigned int number_of_k_points = kmesh->n_nodes();
+
+  vector<vector<eigen_problem_solution>> solutions(number_of_k_points);
+
+  for (unsigned int i = 1; i < number_of_k_points; i++)
+  {
+    const Point&  k_point = kmesh->point(i);
+
+    solve_for_kpoint(k_point);
+    int number_of_eigs = get_num_states();
+    solutions[i].resize(number_of_eigs);
+
+    for (unsigned int j = 0 ; j < number_of_eigs; j++)
+      solutions[i][j] = _solution[j];
+
+  }
+}
+
+
+
 
 void EigenvalueProblem::do_plot(void)
 {
