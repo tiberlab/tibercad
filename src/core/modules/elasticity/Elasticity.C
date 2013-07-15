@@ -671,7 +671,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   const vector<Real>& JxW_face = fe_face->get_JxW();
   const vector<Point>& qface_point = fe_face->get_xyz();
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-  const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
+  const vector<vector<RealGradient> >& dphi_face = fe_face->get_dphi();
   const vector<Point>& normal = fe_face->get_normals();
 
 
@@ -798,42 +798,84 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
           fe_face->reinit(elem, s);
 
-          RealTensor H(0);
-          RealGradient R(0);
-
-          if (boundary_mod != NULL)
-          {
-            boundary_mod->set_normal(normal[0]);
-            boundary_mod->calculate(elem, s,elem->centroid());
-            double b(0);
-            boundary_mod->get_coefficients(H, b, R);
-
-            //if (boundary_mod->get_type() == "ebnd_extended")
-            //{
-            //  mod.calculate(elem, qface.qp(0));
-            //  const RealTensor& strain =  mod.get_strain_source();
-            //  const RealTensor& stress =  mod.get_stress_source();
-            //  const Tensor4DSym& C = mod.get_stiffness();
-            //  R = ( C * strain) * normal[0];
-            //}
-
-            if ((b < 1e-10) && (b >= 0)) b = 1e-20;
-            else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
-            H /= b;
-            R /= b;
-          }
 
           for (unsigned int qp = 0; qp < qface.n_points(); qp++)
-            for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
-              for (unsigned int i =0; i<3; i++)
+          {
+
+            RealTensor H(0);
+            RealGradient R(0);
+
+            if (boundary_mod != NULL)
+            {
+              /*
+              boundary_mod->set_normal(normal[qp]);
+              boundary_mod->calculate(elem, s, qface.qp(qp));
+              double b(0);
+              boundary_mod->get_coefficients(H, b, R);
+
+              //if (boundary_mod->get_type() == "ebnd_extended")
+              //{
+              //  mod.calculate(elem, qface.qp(0));
+              //  const RealTensor& strain =  mod.get_strain_source();
+              //  const RealTensor& stress =  mod.get_stress_source();
+              //  const Tensor4DSym& C = mod.get_stiffness();
+              //  R = ( C * strain) * normal[0];
+              //}
+
+              if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+              else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+              H /= b;
+              R /= b;
+              */
+
+              if (boundary_mod->is_extended())
               {
-                (*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
+                mod.calculate(elem, qface.qp(qp));
+                RealTensor strain(mod.get_strain_source());
+                strain += accum_strain;
+                const Tensor4DSym& C = mod.get_stiffness();
+                RealTensor stress(mod.get_stress_source());
+                stress += C * strain;
+                R = stress * normal[0];
 
-                for (unsigned int j =0; j<3; j++)
-                  for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)
-                    (*(K[i][j]))(alpha,beta) += JxW_face[qp] * H(i,j) * phi_face[alpha][qp] * phi_face[beta][qp];
+                for (unsigned int alpha = 0; alpha < n_dofs_vec[0]; alpha++)
+                  for (unsigned int i = 0; i < 3; i++)
+                  {
+                    (*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
 
+                    for (unsigned int j = 0; j < 3; j++)
+                      for (unsigned int beta = 0; beta < n_dofs_vec[0]; beta++)
+                        (*(K[i][j]))(alpha,beta) -= JxW_face[qp] * phi_face[alpha][qp] *
+                            normal[qp] * (get_subtensor(C,i,j) * dphi_face[beta][qp]);
+                  }
               }
+              else
+              {
+                boundary_mod->set_normal(normal[qp]);
+                boundary_mod->calculate(elem, s, qface.qp(qp));
+                double b(0);
+                boundary_mod->get_coefficients(H, b, R);
+
+                if ((b < 1e-10) && (b >= 0)) b = 1e-20;
+                else if ((b > -1e-10) && (b<= 0)) b = -1e-20;
+                H /= b;
+                R /= b;
+
+                for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
+                  for (unsigned int i =0; i<3; i++)
+                  {
+                    (*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
+
+                    for (unsigned int j =0; j<3; j++)
+                      for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)
+                        (*(K[i][j]))(alpha,beta) += JxW_face[qp] * H(i,j) * phi_face[alpha][qp] * phi_face[beta][qp];
+
+                  }
+              }
+
+            }
+
+          }
       }
     }
 
