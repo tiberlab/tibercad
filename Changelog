@@ -7,6 +7,7 @@ Bug fixes:
 
 	- interface models for drift-diffusion now correctly consider the
 	  min/max of the band edges and densities from the two sides
+	- extended boundary condition in elasticity module works correctly
 
 
 Version 2.2.0
