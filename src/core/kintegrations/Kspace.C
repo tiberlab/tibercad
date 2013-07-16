@@ -338,7 +338,7 @@ void Kspace::do_init() throw (InitFailedException)
     //num_nodes(k_dim,0);
 
     mod_opt.get_option("number_of_nodes",num_nodes);
-    std::cout<<"(KSP) num nodes "<<num_nodes[0]  << std::endl;
+    //std::cout<<"(KSP) num nodes "<<num_nodes[0]  << std::endl;
     if ( num_nodes.size() != k_dim ) 
     {
       ostringstream temp; temp << setw(4) << k_dim; 

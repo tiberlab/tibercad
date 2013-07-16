@@ -32,6 +32,25 @@ void EigenvalueProblem::init_kspace(void)
 
      do_dispersion=true;
    }
+
+   if(get_options().has_submodel("DOS"))
+   {
+     ModelOptions::submodel_iterator it(get_options().submodels_begin("DOS"));
+
+     const ModelOptions& opts = it->second;
+
+     //disp_range[0] = opts.get_option("min_eigenvalue_number", 0);
+     //disp_range[1] = opts.get_option("max_eigenvalue_number", 100);
+
+     const ModelOptions kopts = parse_kspace_options(opts);
+
+     _kspace = new Kspace(kopts);
+
+     if(_kspace==NULL)
+       throw InitFailedException("Could not initialize k-space");
+     else
+       Messages::info("k-space initialized");
+   }
 }
  
 ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
@@ -215,12 +234,14 @@ EigenvalueProblem::plot_dispersion(void)
 
 void EigenvalueProblem::calculate_dos(void)
 {
+  if (_kspace == NULL) return;
+
   const Mesh* kmesh = _kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
 
   vector<vector<eigen_problem_solution>> solutions(number_of_k_points);
 
-  for (unsigned int i = 1; i < number_of_k_points; i++)
+  for (unsigned int i = 0; i < number_of_k_points; i++)
   {
     const Point&  k_point = kmesh->point(i);
 
@@ -231,6 +252,41 @@ void EigenvalueProblem::calculate_dos(void)
     for (unsigned int j = 0 ; j < number_of_eigs; j++)
       solutions[i][j] = _solution[j];
 
+  }
+
+
+
+
+  {
+    std::vector<double> results;
+    std::vector<std::string> names;
+
+    unsigned int number_of_eigs = solutions[0].size();
+    names.resize(number_of_eigs);
+
+    unsigned int number_of_k_points = kmesh->n_nodes();
+    results.resize( number_of_eigs * number_of_k_points );
+
+
+    for (unsigned int i = 0; i < number_of_eigs ; i++)
+    {
+      std::ostringstream i_str;
+      //The states are numbered starting from 0
+      i_str << "state_number_" << i;
+      names[i] = i_str.str();
+
+      for (unsigned int j = 0; j < number_of_k_points ; j++)
+        results[number_of_eigs * j + i] = solutions[j][i].eigen_energy;
+    }
+
+
+    std::string filename(get_name() + "_dos");
+
+    DataOutput data_output(*kmesh, "vtk");
+    data_output.set_output_directory(get_output_directory());
+    //data_output.set_filename(filename);
+
+    data_output.write_nodal_data(filename, results, names);
   }
 }
 
@@ -246,6 +302,7 @@ void EigenvalueProblem::do_plot(void)
       compute_dispersion();	  
       plot_dispersion();
   }
+  calculate_dos();
 }
  
 void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
@@ -385,6 +442,7 @@ double  EigenvalueProblem::get_population(int i) const
       
   }
 
+  return 0;
 }
 
 double  EigenvalueProblem::Fermi(double Energy, double Fermi_energy, double Temperature) const
