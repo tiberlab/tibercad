@@ -131,6 +131,12 @@ class EigenvalueProblem : public SimulationInterface
 
     virtual void do_plot(void);
 
+    virtual ID do_remember_current_solution(ID id);
+
+    virtual void do_set_to_remembered_solution(ID id);
+
+    virtual void do_delete_remembered_solution(ID id);
+
     //!read SLEPc solutions
     /*!
  
@@ -158,6 +164,10 @@ class EigenvalueProblem : public SimulationInterface
     //! Calculate the DOS
     void calculate_dos(void);
 
+    //! process an element and its neighbours
+    void process_element(const Elem* elem, unsigned int entryside,
+        std::vector<std::vector<eigen_problem_solution>>& ordered_solutions);
+
     //!pointer to the imaginary part of the Hamiltonian
     SparseMatrix<double>* _H_real;
 
@@ -184,6 +194,9 @@ class EigenvalueProblem : public SimulationInterface
   private:
   
      bool _new_k;
+
+     //! to remember solutions
+     std::map<ID, std::vector<eigen_problem_solution>> _remembered_sol;
 
 };
 

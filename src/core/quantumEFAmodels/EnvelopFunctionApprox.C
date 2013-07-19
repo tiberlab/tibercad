@@ -1331,6 +1331,13 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
   else
     solution_size = number_of_ev;
 
+  if (solution_size < number_of_ev)
+  {
+    ostringstream os;
+    os << "kp found only " << solution_size << " eigenvalues instead of " << number_of_ev;
+    Messages::warning(os.str());
+  }
+
 
   //--------------------------------------------------------------------
   //read eigenvectors

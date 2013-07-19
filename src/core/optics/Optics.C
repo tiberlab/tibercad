@@ -438,6 +438,11 @@ void Optics::calculate_for_k_point(const Point& k_point,
 void Optics::do_solve()
 {
  
+  // backup current solutions in initial and final state models
+  ID init_sol_id = _initial_state_model->remember_current_solution();
+  ID final_sol_id = INVALID_ID;
+  if( _initial_state_model != _final_state_model)
+    final_sol_id = _final_state_model->remember_current_solution();
 
 
   if (norm(_opt.polariz) != 0)
@@ -560,6 +565,15 @@ void Optics::do_solve()
   os << "Total " << ((type == "emission") ? "recombination" : "generation") << " rate: "
       << _recombination << " " << get_solution_descriptor(Recombination).units();
   Messages::info(os.str());
+
+
+  _initial_state_model->set_to_remembered_solution(init_sol_id);
+  _initial_state_model->delete_remembered_solution(init_sol_id);
+  if( _initial_state_model != _final_state_model)
+  {
+    _final_state_model->set_to_remembered_solution(final_sol_id);
+    _final_state_model->delete_remembered_solution(final_sol_id);
+  }
 }
 
 //=====================================================================================================

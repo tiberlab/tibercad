@@ -2,10 +2,25 @@
 #include "Constants.h"
 #include "Messages.h"
 #include "DataOutput.h"
-#include<fstream>
+
+#include "elem.h"
+
+#include <boost/shared_ptr.hpp>
+#include <fstream>
 
 using namespace std;
 
+namespace 
+{
+  double scalar_prod(const vector<Complex>& a, const vector<Complex>& b)
+  {
+    Complex result = 0;
+    for (size_t i = 0; i < a.size(); ++i)
+      result += a[i] * conj(b[i]);
+
+    return abs(result);
+  }
+}
 
 void EigenvalueProblem::init_kspace(void)
 {
@@ -133,7 +148,8 @@ void EigenvalueProblem::compute_dispersion(void)
 {
   if (!do_dispersion) return;
  
-  std::cout<<"Compute Dispersion ..." << std::endl;  
+  Messages::info("Compute Dispersion ...");
+
   const Mesh* kmesh = _kspace->get_k_mesh(); 	
   unsigned int number_of_k_points = kmesh->n_nodes();
 
@@ -232,15 +248,136 @@ EigenvalueProblem::plot_dispersion(void)
 }
 
 
+void
+EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
+    vector<vector<eigen_problem_solution>>& ordered_solutions)
+{
+  //ofstream of("test.dat", ofstream::app);
+
+  bool already_done = true;
+
+  // choose reference node
+  unsigned int ref_node;
+  for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+  {
+    if (elem->is_node_on_side(n, entryside))
+    { 
+      ref_node = elem->node(n);
+      if (ordered_solutions[ref_node].empty())
+      {
+        const Point& k_point = elem->point(n);
+
+        solve_for_kpoint(k_point);
+        int number_of_eigs = get_num_states();
+        ordered_solutions[ref_node].resize(number_of_eigs);
+
+        for (unsigned int j = 0 ; j < number_of_eigs; j++)
+          ordered_solutions[ref_node][j] = _solution[j];
+      }
+
+      break;
+    }
+  }
+
+  // the number of the reference solutions
+  // (should be usually the same as the solution size)
+  int ref_size = ordered_solutions[ref_node].size();
+
+  for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+  {
+    unsigned int node_id = elem->node(n);
+    if (ordered_solutions[node_id].empty())
+    {
+      const Point& k_point = elem->point(n);
+
+      solve_for_kpoint(k_point);
+      int number_of_eigs = get_num_states();
+      // we take the maximum only to make everything crash if the two numbers
+      // do not correspond. However, this is usually sign of a badly posed
+      // simulation setup
+      ordered_solutions[node_id].resize(max(number_of_eigs, ref_size));
+
+
+      //of << node_id << " ";
+      //k_point.write_unformatted(of, true);
+
+      set<unsigned int> ids;
+
+      for (unsigned int j = 0 ; j < number_of_eigs; j++)
+      {
+        unsigned int idx = j;
+        double max_sp = 0;
+        //cerr << j << " : ";
+        for (unsigned int k = 0 ; k < ref_size; k++)
+        {
+          if (!ids.count(k))
+          {
+            double proj = scalar_prod(ordered_solutions[ref_node][k].eigen_vector,
+                _solution[j].eigen_vector);
+            //cerr << proj << " ";
+            if (proj > max_sp)
+            {
+              max_sp = proj;
+              idx = k;
+            }
+          }
+        }
+        //cerr << endl;
+        ids.insert(idx);
+        //cerr << j << " " << idx << " " << max_sp << endl;
+        ordered_solutions[node_id][idx] = _solution[j];
+      }
+
+      already_done = false;
+    }
+  }
+
+  // go into neighbours
+  if (!already_done)
+  {
+    for (unsigned int n = 0; n < elem->n_sides(); ++n)
+    {
+      if (n != entryside)
+      {
+        const Elem* neigh = elem->neighbor(n);
+        if (neigh != NULL)
+        {
+          int neigh_entry;
+          for (unsigned int ns = 0; ns < neigh->n_sides(); ++ns)
+          {
+            if (neigh->neighbor(ns) == elem)
+            {
+              neigh_entry = ns;
+              break;
+            }
+          }
+
+          process_element(neigh, neigh_entry, ordered_solutions);
+        }
+
+      }
+    }
+  }
+}
+
+
 void EigenvalueProblem::calculate_dos(void)
 {
-  if (_kspace == NULL) return;
+  if(!get_options().has_submodel("DOS") || (_kspace == NULL)) return;
+
+  Messages::info("Compute DOS ...");
 
   const Mesh* kmesh = _kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
 
+  //typedef boost::shared_ptr<eigen_problem_solution> ptr_type;
+
+  //vector<vector<ptr_type>> solutions(number_of_k_points);
   vector<vector<eigen_problem_solution>> solutions(number_of_k_points);
 
+  process_element(kmesh->elem(0), 0, solutions);
+
+  /*
   for (unsigned int i = 0; i < number_of_k_points; i++)
   {
     const Point&  k_point = kmesh->point(i);
@@ -251,8 +388,10 @@ void EigenvalueProblem::calculate_dos(void)
 
     for (unsigned int j = 0 ; j < number_of_eigs; j++)
       solutions[i][j] = _solution[j];
+//      solutions[i][j] = ptr_type(new eigen_problem_solution(_solution[j]));
 
   }
+  */
 
 
 
@@ -290,7 +429,49 @@ void EigenvalueProblem::calculate_dos(void)
   }
 }
 
+ID
+EigenvalueProblem::do_remember_current_solution(ID id)
+{
+  map<ID, vector<eigen_problem_solution>>::iterator end(_remembered_sol.end());
+  map<ID, vector<eigen_problem_solution>>::iterator it(_remembered_sol.find(id));
 
+  if (it != end)
+    it->second = _solution;
+  else
+  {
+    if (_remembered_sol.begin() == end)
+      id = 1;
+    else
+      id = (--end)->first + 1;
+
+    _remembered_sol[id] = _solution;
+  }
+
+
+  return id;
+}
+
+
+void
+EigenvalueProblem::do_set_to_remembered_solution(ID id)
+{
+  map<ID, vector<eigen_problem_solution>>::iterator end(_remembered_sol.end());
+  map<ID, vector<eigen_problem_solution>>::iterator it(_remembered_sol.find(id));
+
+  if (it != end)
+    _solution = it->second;
+}
+
+
+void
+EigenvalueProblem::do_delete_remembered_solution(ID id)
+{
+  map<ID, vector<eigen_problem_solution>>::iterator end(_remembered_sol.end());
+  map<ID, vector<eigen_problem_solution>>::iterator it(_remembered_sol.find(id));
+
+  if (it != end)
+    _remembered_sol.erase(it);
+}
 
 
 void EigenvalueProblem::do_plot(void)
