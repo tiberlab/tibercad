@@ -588,6 +588,8 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
   if (verbose > 0)
     Messages::info("calculation of optical spectrum...", true);
 
+  bool absorption = !(get_option("type", "emission") == "emission");
+
   std::vector<double> fs_eigen_values;
   std::vector<double> is_eigen_values;
 
@@ -627,8 +629,8 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
-      trans_energy =  is_eigen_values[_initial_indices[i]]
-	             - fs_eigen_values[_final_indices[j]];
+      trans_energy =  abs(is_eigen_values[_initial_indices[i]]
+	             - fs_eigen_values[_final_indices[j]]);
 
       if (_opt.get_occ)
       {
@@ -639,6 +641,12 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       else
       {
         f1 = 1.0; f2 = 1.0;
+      }
+
+      if (absorption)
+      {
+        f1 = 1 - f1;
+        f2 = 1 - f2;
       }
 
 
