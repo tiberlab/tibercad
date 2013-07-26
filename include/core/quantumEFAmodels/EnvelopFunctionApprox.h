@@ -373,6 +373,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
  
   virtual void do_assemble(const ModelOptions& options);
 
+ private:
+
+  bool check_confinement(const std::vector<Complex>& state);
 
 };
 //-------------------------------------------------------------------
