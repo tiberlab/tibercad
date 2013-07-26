@@ -1380,6 +1380,10 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
       unsigned int solution_number = it->second;
       
       EigenSolver::get_eigen_vector(solution_number, temp);
+
+
+
+
       //-----------------------------------------------------------------------------
       //put independent dofs in the eigenvectors that may contain also non independent dofs
       for (unsigned j = 0; j < number_of_all_dofs; j++)
@@ -1441,9 +1445,18 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
     
     for (unsigned int j = 0; j < n1; j++)
       _solution[i].eigen_vector[j] /= Complex(norm, 0.0);
+
+//    if (!check_confinement(_solution[i].eigen_vector))
+//    {
+//      ostringstream os;
+//      os << "State " << i << " is not confined!";
+//      Messages::warning(os.str());
+//    }
   }
   
   
+
+
   //Fermi energy calculation
   
   if (poisson_equation != NULL)
@@ -1468,6 +1481,83 @@ void EnvelopFunctionApprox::read_SLEPC_solution(unsigned int number_of_ev )
 
 }
 
+
+
+
+bool
+EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
+{
+  bool confined = true;
+
+  IDSet reg_ids;
+  get_environment().get_device().extract_physical_regions(
+      get_option("check_confinement", ""), reg_ids);
+
+  if (reg_ids.empty()) return confined;
+
+
+
+  DofMap& dof_map = system->get_dof_map();
+
+  FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
+
+  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+
+  QGauss qrule (dim, SECOND);
+
+  fe -> attach_quadrature_rule (&qrule);
+
+
+  const std::vector<Real>& JxW = fe->get_JxW();
+
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+  std::vector<unsigned int> dof_indices;
+
+
+  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+  Complex sum(0.0, 0.0);
+
+  for ( ; el != end_el ; ++el)
+  {
+    const Elem* elem = *el;
+
+    if (!reg_ids.count(elem->subdomain_id()))
+      continue;
+
+    fe->reinit (elem);
+
+    for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+    {
+      dof_map.dof_indices (elem, dof_indices, psi_index);
+      const unsigned int n_psi_dofs = dof_indices.size();
+
+      for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+      {//qp
+        for (unsigned int p1=0; p1<n_psi_dofs; p1++)
+        {
+          Complex eigen_f_value1(state[dof_indices[p1]]);
+          for (unsigned int p2=0; p2<n_psi_dofs; p2++)
+          {
+            Complex eigen_f_value2(state[dof_indices[p2]]);
+            Complex tmp = JxW[qp] * phi[p1][qp] * eigen_f_value1 *
+                phi[p2][qp] * conj(eigen_f_value2);
+            sum += tmp;
+          }
+        }
+      }
+    }
+  }
+
+
+
+  double confinement_threshold = get_option("confinement_threshold", 0.2);
+  confined = (sqrt(abs(sum)) > confinement_threshold) ? true : false;
+
+  return confined;
+}
 
 
 void

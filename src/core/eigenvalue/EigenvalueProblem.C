@@ -303,14 +303,14 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
 
       set<unsigned int> ids;
 
-      for (unsigned int j = 0 ; j < number_of_eigs; j++)
+      for (unsigned int k = 0 ; k < ref_size; k++)
       {
-        unsigned int idx = j;
+        unsigned int idx = k;
         double max_sp = 0;
-        //cerr << j << " : ";
-        for (unsigned int k = 0 ; k < ref_size; k++)
+        //cerr << k << " : ";
+        for (unsigned int j = 0 ; j < number_of_eigs; j++)
         {
-          if (!ids.count(k))
+          if (!ids.count(j))
           {
             double proj = scalar_prod(ordered_solutions[ref_node][k].eigen_vector,
                 _solution[j].eigen_vector);
@@ -318,14 +318,14 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
             if (proj > max_sp)
             {
               max_sp = proj;
-              idx = k;
+              idx = j;
             }
           }
         }
         //cerr << endl;
         ids.insert(idx);
         //cerr << j << " " << idx << " " << max_sp << endl;
-        ordered_solutions[node_id][idx] = _solution[j];
+        ordered_solutions[node_id][k] = _solution[idx];
       }
 
       already_done = false;
