@@ -19,7 +19,11 @@ void Plane::calculate(const Elem* elem, unsigned int side,
   double y = _normal(1);
   double z = _normal(2);
 
+  H(0,0) = _normal(0);
+  H(1,1) = _normal(1);
+  H(2,2) = _normal(2);
 
+  /*
   H(0,0) = 0.0;
   H(0,1) = -z;
   H(0,2) = y;
@@ -31,6 +35,7 @@ void Plane::calculate(const Elem* elem, unsigned int side,
   H(2,0) = -y;
   H(2,1) = x;
   H(2,2) = 0.0;
+  */
 
   set_coefficients(H,A,R);
 
