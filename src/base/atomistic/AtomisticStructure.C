@@ -1231,17 +1231,14 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
 
  //If not, we need to decide based on some other criteria. Up to now we're able to
  //decide only for III-V or II-VI alloys with different cations (eg. Ga-As belong to GaAs)
- if (atom1.get_specie() == Specie::In || atom1.get_specie() == Specie::Al
-     || atom1.get_specie() == Specie::Ga)
+ if (mat1->is_cation(atom1.get_specie()))
    return get_material(atom1, parent);
- else if (atom2.get_specie() == Specie::In || atom2.get_specie() == Specie::Al
-     || atom2.get_specie() == Specie::Ga)
+ else if (mat2->is_cation(atom2.get_specie()))
    return get_material(atom2, parent);
  else 
  //If no value was already returned, throw an exception 
  Messages::error("WARNING: material for couple of atoms is decided "
-       "depending on the cation specie. I cannot find a valid cation "
-       "(only In, Al, Ga supported)");
+       "depending on the cation specie. I cannot find a valid cation ");
 }
 
 

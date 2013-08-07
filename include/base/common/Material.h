@@ -121,6 +121,13 @@ class Material : public PhysicalObject
     //! Tells if a specie belongs to the material
     bool has_specie(Specie) const;
 
+    //! Tells if a specie is defined as anion
+    virtual bool is_anion(Specie) const;
+
+    //! Tells if a specie is defined as cation
+    virtual bool is_cation(Specie) const;
+
+
   protected:
 
     //! Construct a material

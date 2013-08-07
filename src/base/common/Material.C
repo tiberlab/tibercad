@@ -7,7 +7,7 @@
 #include "RotatedCrystal.h"
 #include "Dopant.h"
 #include "Messages.h"
-
+#include "CrystalDefs.h"
 
 
 
@@ -288,7 +288,7 @@ Material::fill_species(void)
   {
     std::string s;
     std::stringstream out;
-    out << i;
+    out << i + 1; //Species are defined with Fortran indexing in materials file
     s = out.str();
     std::string sp;
     sp = get_database().get("specie_" + s, "None");
@@ -308,5 +308,33 @@ Material::has_specie(Specie sp) const
     else
     {
       return true;
+    }
+}
+
+bool
+Material::is_anion(Specie sp) const
+{
+    if (!has_specie(sp))
+    {
+      Messages::error("Error in is_anion(): specie " +
+              sp.get_string() + "not found in material " + get_name());
+    }
+    else
+    {
+      return CrystalDefs::is_anion(get_name(), sp);
+    }
+}
+
+bool
+Material::is_cation(Specie sp) const
+{
+    if (!has_specie(sp))
+    {
+      Messages::error("Error in is_cation(): specie " +
+              sp.get_string() + "not found in material " + get_name());
+    }
+    else
+    {
+      return CrystalDefs::is_cation(get_name(), sp);
     }
 }

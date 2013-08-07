@@ -24,20 +24,28 @@ StrainLattice::init(AtomisticStructure* as)
   _as = as;
   fill_materials_set();
   //! Build reference for every material
-  for (std::set<const Material*>::iterator it = _materials.begin();
-      it != _materials.end(); ++it)
+  std::set<const Material*>::iterator it;
+  for (it = _materials.begin(); it != _materials.end(); ++it)
   {
   BulkCrystal* bulk = BulkCrystal::create(*it);
   bulk->do_init();
   const AtomisticBasis* structure =  bulk; 
   assert(bulk->get_structure_atoms().size() > 0);
 
-  _reference[*it] = build_tetraedron(structure, 0);
-  //Routine only support III-V materials, and the specie
-  //must be ordered in the materials file in the expected way
-  assert((structure->get_structure_atoms()[0] == "In") ||
-    (structure->get_structure_atoms()[0] == "Al") ||
-    (structure->get_structure_atoms()[0] == "Ga"));
+  //Center the reference on the cation
+  unsigned int ref_center = 0;
+  Atom ref_atm = bulk->get_structure_atoms()[0]; 
+  //Note that you dereference the iterator to get a pointer
+  if ((*it)->is_cation(ref_atm.get_specie()))
+    _reference[*it] = build_tetraedron(structure, 0);
+  else 
+  {
+    ref_atm = bulk->get_structure_atoms()[1]; 
+    if ((*it)->is_cation(ref_atm.get_specie()))
+        _reference[*it] = build_tetraedron(structure, 1);
+    else
+      Messages::error("Could not find cation in StrainLattice");
+  }
 
   delete bulk; 
   }

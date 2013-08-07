@@ -5,6 +5,7 @@
 #include "RotatedCrystal.h"
 #include "PhysicalModel.h"
 #include "Messages.h"
+#include "CrystalDefs.h"
 
 
 Alloy::Alloy(const std::string& name, const ModelOptions& options)
@@ -162,4 +163,33 @@ Alloy::create(const std::string& name, const ModelOptions& options)
   return mat;
 }
 
+bool
+Alloy::is_anion(Specie sp) const
+{
+  if (!((_mat_A->has_specie(sp)) || (_mat_B->has_specie(sp))))
+    {
+      Messages::error("Error in is_anion: specie not defined for any parent material");
+    }
+    else
+    {
+      return 
+      (CrystalDefs::is_anion(_mat_A->get_name(), sp) || 
+       CrystalDefs::is_anion(_mat_B->get_name(), sp));
+    }
+}
+
+bool
+Alloy::is_cation(Specie sp) const
+{
+  if (!((_mat_A->has_specie(sp)) || (_mat_B->has_specie(sp))))
+    {
+      Messages::error("Error in is_cation: specie" + sp.get_string() + " not defined for any parent material");
+    }
+    else
+    {
+      return 
+      (CrystalDefs::is_cation(_mat_A->get_name(), sp) || 
+       CrystalDefs::is_cation(_mat_B->get_name(), sp));
+    }
+}
 

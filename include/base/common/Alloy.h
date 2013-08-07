@@ -47,6 +47,13 @@ class Alloy : public Material
     //! Return the name of component material B
     const std::string& get_name_B(void) const;
 
+    //! Tells if a specie is defined as anion
+    //! (reimplemented for alloy)
+    bool is_anion(Specie) const;
+
+    //! Tells if a specie is defined as cation
+    //! (reimplemented for alloy)
+    bool is_cation(Specie) const;
 
   protected:
 
