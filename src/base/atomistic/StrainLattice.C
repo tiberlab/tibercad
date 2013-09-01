@@ -20,6 +20,9 @@ StrainLattice::StrainLattice()
 void
 StrainLattice::init(AtomisticStructure* as)
 { 
+  Atom ref_atm;
+  int ref_found = -1;
+  int ref_found2 = -1;
   Messages::info("Initializing atomistic strain projection");
   _as = as;
   fill_materials_set();
@@ -30,22 +33,59 @@ StrainLattice::init(AtomisticStructure* as)
   BulkCrystal* bulk = BulkCrystal::create(*it);
   bulk->do_init();
   const AtomisticBasis* structure =  bulk; 
-  assert(bulk->get_structure_atoms().size() > 0);
+  assert(bulk->get_N_atoms() > 0);
 
-  //Center the reference on the cation
-  unsigned int ref_center = 0;
-  Atom ref_atm = bulk->get_structure_atoms()[0]; 
-  //Note that you dereference the iterator to get a pointer
-  if ((*it)->is_cation(ref_atm.get_specie()))
-    _reference[*it] = build_tetraedron(structure, 0);
-  else 
+  //Up to now we work only with fcc and wz. Here we make some sanity check
+  ////////////////////////////////////////////////////////////////////////
+  assert((*it)->get_structure == "fcc" || (*it)->get_structure() == "wz");
+  if ((*it)->get_structure() == "fcc")
   {
-    ref_atm = bulk->get_structure_atoms()[1]; 
-    if ((*it)->is_cation(ref_atm.get_specie()))
-        _reference[*it] = build_tetraedron(structure, 1);
-    else
-      Messages::error("Could not find cation in StrainLattice");
+    assert(bulk->get_structure_atoms().size() == 2);
   }
+  if ((*it)->get_structure() == "wz")
+  {
+    assert(bulk->get_structure_atoms().size() == 4);
+  }
+  ////////////////////////////////////////////////////////////////////////
+ 
+  //TODO: this separate check on the cation is not that fancy. This part should 
+  //be automatized a bit better
+  //It should be enough to store all possible tetraedra
+  //and look always for the smallest strain 
+  //Center the reference on the cation, look for the first one
+  for (unsigned int i = 0; i < bulk->get_N_atoms(); i++)
+  {
+  ref_atm = bulk->get_structure_atoms()[i]; 
+  //Note that you dereference the iterator to get a pointer
+    if ((*it)->is_cation(ref_atm.get_specie()))
+    {
+    _reference[*it] = build_tetraedron(structure, i);
+    ref_found = i;
+    break;
+    }
+  }
+  if (ref_found == -1)
+  {
+    Messages::error("Could not find cation in StrainLattice");
+  }
+
+  //If the structure is wurtzite, we need a second reference (the tetraedron rotated
+  //in the opposite direction)
+  for (unsigned int i = 0; i < bulk->get_N_atoms(); i++)
+  {
+  ref_atm = bulk->get_structure_atoms()[i]; 
+  //Note that you dereference the iterator to get a pointer
+    if ((*it)->is_cation(ref_atm.get_specie()) && i != ref_found)
+    {
+    _reference2[*it] = build_tetraedron(structure, i);
+    ref_found2 = i;
+    break;
+    }
+  }
+  if (ref_found2 == -1)
+  {
+    Messages::error("Could not find second cation in StrainLattice");
+  } 
 
   delete bulk; 
   }
@@ -81,7 +121,7 @@ StrainLattice::fill_materials_set(void)
 void
 StrainLattice::do_solve(void)
 {
-  Tensor2Gen strain;
+  Tensor2Gen strain, strain2;
   Tensor2Gen identity(1);
   Tetra tet, tmp;
   const Bondmap& bondmap = _as->get_bond_map();
@@ -93,7 +133,7 @@ StrainLattice::do_solve(void)
   for (unsigned int ind = 0; ind < _as->get_N_without_H(); ind++)
   {
     const Atom& atm = atoms[ind];
-    const Tetra& ref = _reference[_as->get_material(atm)];
+    Tetra &ref = _reference[_as->get_material(atm)];
     //If bonded to hydrogen or not 4-coordinate, discharge
     if (bondmap[ind].size() != 4) continue;
     if ((atoms[bondmap[ind][0]].get_specie() == Specie::H) ||
@@ -104,34 +144,26 @@ StrainLattice::do_solve(void)
     //Check if it's the right specie, i.e. not reference vertex
     if (atm.get_specie() == ref.vertex_sp) continue;
 
-    //If previuos conditions were not fullfilled, we should have a valid one, we calculate the strain.
+    //If previuos conditions were not fullfilled, we should have a valid one, 
+    //we calculate the strain.
     tmp = build_tetraedron(_as, ind);
     tet = rearrange(ref, tmp);
     strain = tet.edges * inv(ref.edges) - identity;
-    //Dirty hack to deal with WZ double basis (you have 2 tetraedra there!!)
-    //ONLY TEMPORARY, and only good in the direction I'm using for the calculations!!!
-    if (norm(strain) > 0.5)
-    {
-    if (_as->get_device()->get_mesh().mesh_dimension() == 3)
-    {
-      tmp.bonds[0](1) = -1.0 * tmp.bonds[0](1);
-      tmp.bonds[1](1) = -1.0 * tmp.bonds[1](1);
-      tmp.bonds[2](1) = -1.0 * tmp.bonds[2](1);
-      tmp.bonds[3](1) = -1.0 * tmp.bonds[3](1);
+    //Deal with WZ double basis (you have 2 tetraedra there!!)
+    //Choose the solution with smaller strain, as wrong orientation 
+    //usually give larger than normal strain
+    
+    if (_as->get_material(atm)->get_structure() == "wz")
+    { 
+      Tetra &ref2 = _reference2[_as->get_material(atm)];
+      tmp = build_tetraedron(_as, ind);
+      tet = rearrange(ref2, tmp);
+      strain2 = tet.edges * inv(ref2.edges) - identity;
+      if (norm(strain2) < norm(strain))
+      {
+        strain = strain2;
+      }
     }
-    if (_as->get_device()->get_mesh().mesh_dimension() == 1)
-    {
-      tmp.bonds[0](2) = -1.0 * tmp.bonds[0](2);
-      tmp.bonds[1](2) = -1.0 * tmp.bonds[1](2);
-      tmp.bonds[2](2) = -1.0 * tmp.bonds[2](2);
-      tmp.bonds[3](2) = -1.0 * tmp.bonds[3](2);
-    }
-
-      tet = rearrange(ref, tmp);
-      strain = tet.edges * inv(ref.edges) - identity;
-    }  
-    //END HACK
-
 
     sol.tensor = strain;
     sol.atom_p = &atm;

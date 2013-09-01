@@ -70,6 +70,9 @@ class StrainLattice
     //! Reference tetraedron for every material
     std::map<const Material*, Tetra> _reference;
 
+    //! Additional reference tetraedron for wurtztite
+    std::map<const Material*, Tetra> _reference2;
+    
     //! Structure to be processed
     AtomisticStructure* _as;
 
