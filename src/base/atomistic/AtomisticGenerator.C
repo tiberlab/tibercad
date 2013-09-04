@@ -12,6 +12,7 @@
 #include "Utils.h"
 #include "RotatedCrystal.h"
 #include "Atom.h"
+#include "BulkCrystal.h"
 
 #include <stdio.h>
 #include <cmath>

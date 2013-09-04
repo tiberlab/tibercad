@@ -13,7 +13,6 @@
 #include "Database.h"
 #include "Alloy.h"
 #include "mesh.h"
-#include "BulkCrystal.h"
 
 //! A class for building Atomistic Structure from mesh informations
 /*!
@@ -27,6 +26,7 @@
 //forward declaration
 class AtomisticStructure;
 class BondMap;
+class BulkCrystal;
 
 
 
