@@ -60,6 +60,8 @@ a = 0.3545
 c = 0.5703
 u = 0.379
 
+thermal_coefficient = (3.8e-6, 2.9e-6)
+
 # stiffness data [6]
 [elasticity]
 C11 = 223
