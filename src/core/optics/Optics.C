@@ -470,6 +470,8 @@ void Optics::do_solve()
       do_k_space_integration();
       //_spectrum_z = _k_integration->get_solution();
       _k_integration->get_solution(_spectrum_z);
+
+      _opt.polariz = 0.0;
     }
     else
     {
