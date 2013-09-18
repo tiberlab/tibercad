@@ -807,7 +807,6 @@ void EnvelopFunctionApprox::do_solve()
 void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 {
    
-  set_k_point(k_point);
 
   if (opt.job == BULKEIGENSTATES )
   {

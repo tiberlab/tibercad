@@ -488,7 +488,11 @@ void EigenvalueProblem::do_plot(void)
  
 void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
 {
+  const Point oldk(_k_vector[0], _k_vector[1], _k_vector[2]);
+  set_k_point(kpoint);
   do_solve_for_kpoint(kpoint);
+  set_k_point(oldk);
+  k_is_old();
 }
  
  
