@@ -251,10 +251,10 @@ void ETB::reinit(void){
     Messages::info(os.str());
 
     if (!solopts.find_option("guess_conduction"))
-      _upt_solver_options.guess_cb = cb_min;
+      _upt_solver_options.guess_cb = cb_min - 0.3;
 
     if (!solopts.find_option("guess_valence"))
-      _upt_solver_options.guess_vb = vb_max;
+      _upt_solver_options.guess_vb = vb_max + 0.3;
   }
 
   std::string upt_filename;
@@ -951,27 +951,62 @@ ETB::add_pot_shifts(void)
 void
 ETB::add_band_shifts(void)
 {
+  AtomisticStructure* as = get_atomistic_structure();
+  bool randomalloy = as->is_random_alloy();
+
+  unsigned int N = as->get_N_atoms();
   _band_shift.clear();
-  unsigned int N = get_atomistic_structure()->get_N_atoms();
   _band_shift.resize(N, 0.0);
 
-  const std::vector< Atom >& atom = get_atomistic_structure()->get_structure_atoms();
+  const std::vector< Atom >& atom = as->get_structure_atoms();
 
-  const Bondmap& b_map = get_atomistic_structure()->get_bond_map();
+  const Bondmap& b_map = as->get_bond_map();
 
-  for (unsigned int i = 0; i < N; i++)
+  if (randomalloy)
   {
-   
-    if (atom[i].get_specie() == Specie::H)
+    for (unsigned int i = 0; i < N; i++)
     {
-      // the sign is inverted because in upt the potential is subtracted
-      _band_shift[i]= - _map_ID_Evb[atom[b_map[i][0]].get_region_ID()] + _vb_shift;
+      unsigned int nn =  b_map[i].size();
+      unsigned int ctr = 0;
+      double shift = 0.0;
+
+      for (unsigned int n = 0; n < nn; ++n)
+      {
+        unsigned int j = b_map[i][n];
+        if (atom[j].get_specie() != Specie::H)
+        {
+          shift += _map_pairs_Evb[
+                make_pair(atom[i].get_specie(), atom[j].get_specie())];
+          ctr++;
+        }
+      }
+      shift /= ctr;
+      _band_shift[i] = -shift + _vb_shift;
+
     }
-    else
-    {
-      _band_shift[i]= - _map_ID_Evb[atom[i].get_region_ID()] + _vb_shift;
-    } 
+
+    // for the H atoms take the neighbours' values
+    for (unsigned int i = 0; i < N; i++)
+      if (atom[i].get_specie() == Specie::H)
+        _band_shift[i] = _band_shift[b_map[i][0]];
   }
+  else
+  {
+    for (unsigned int i = 0; i < N; i++)
+    {
+
+      if (atom[i].get_specie() == Specie::H)
+      {
+        // the sign is inverted because in upt the potential is subtracted
+        _band_shift[i]= - _map_ID_Evb[atom[b_map[i][0]].get_region_ID()] + _vb_shift;
+      }
+      else
+      {
+        _band_shift[i]= - _map_ID_Evb[atom[i].get_region_ID()] + _vb_shift;
+      }
+    }
+  }
+
   inst->add_potential(_band_shift);
 }
 
@@ -1217,28 +1252,69 @@ void ETB::get_band_edges(void)
   
   AtomisticStructure* as = get_atomistic_structure();
   std::set<ID> IDs = as->get_IDset();
+  bool randomalloy = as->is_random_alloy();
 
   for(std::set<ID>::iterator reg = IDs.begin(); reg != IDs.end(); reg++)
   {
       const Material* mat = as->get_device()->get_material( (*reg) );
       {
-	Database db = mat->get_database();
-	db.set_section("valenceband");
-	double vb = db.get("E_v",0.0);
+        if (randomalloy)
+        {
+          // we get the pure materials' shifts for all atom pairs
+          // this works only for binaries up to now
+          if (mat->is_alloy())
+          {
+            const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
+            vector<const Material*> mats(2);
+            mats[0] = alloy->get_component_A();
+            mats[1] = alloy->get_component_B();
+            for (int i = 0; i < mats.size(); ++i)
+            {
+              Database db = mats[i]->get_database();
+              db.set_section("atomistic_structure");
+              string atom1 = db.get("specie_1", "", true);
+              string atom2 = db.get("specie_2", "", true);
 
-	_map_ID_Evb[*reg] = vb;
+              db.set_section("valenceband");
+              double vb = db.get("E_v",0.0);
 
-	db.set_section("bandgap");
-	double Eg = min( db.get("Eg_G", 1e6), db.get("Eg_X", 1e6));
-	Eg = min( db.get("Eg_L", 1e6), Eg);
+              _map_pairs_Evb[make_pair(Specie(atom1), Specie(atom2))] = vb;
+              _map_pairs_Evb[make_pair(Specie(atom2), Specie(atom1))] = vb;
+            }
+          }
+          else
+          {
+            Database db = mat->get_database();
+            db.set_section("atomistic_structure");
+            string atom1 = db.get("specie_1", "", true);
+            string atom2 = db.get("specie_2", "", true);
 
-	//std::cerr << "Eg: " << Eg << std::endl;
-	//std::cerr << "Vb: " << vb << std::endl; 
-	//std::cerr << "Cb: " << vb+Eg << std::endl;
+            db.set_section("valenceband");
+            double vb = db.get("E_v",0.0);
 
-	_map_ID_Ecb[*reg] = vb + Eg; // Gap at 0 K.
-	
-	db.set_section("");
+            _map_pairs_Evb[make_pair(Specie(atom1), Specie(atom2))] = vb;
+            _map_pairs_Evb[make_pair(Specie(atom2), Specie(atom1))] = vb;
+          }
+        }
+
+
+        Database db = mat->get_database();
+        db.set_section("valenceband");
+        double vb = db.get("E_v",0.0);
+
+        _map_ID_Evb[*reg] = vb;
+
+        db.set_section("bandgap");
+        double Eg = min( db.get("Eg_G", 1e6), db.get("Eg_X", 1e6));
+        Eg = min( db.get("Eg_L", 1e6), Eg);
+
+        //std::cerr << "Eg: " << Eg << std::endl;
+        //std::cerr << "Vb: " << vb << std::endl;
+        //std::cerr << "Cb: " << vb+Eg << std::endl;
+
+        _map_ID_Ecb[*reg] = vb + Eg; // Gap at 0 K.
+
+        db.set_section("");
       }
 
   }

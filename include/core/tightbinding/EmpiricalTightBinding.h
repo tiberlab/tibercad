@@ -250,6 +250,9 @@ class ETB : public TightBinding
   std::map<ID, double > _map_ID_Evb;
   std::map<ID, double > _map_ID_Ecb;  
 
+  // map atom pairs to shifts
+  std::map<std::pair<Specie, Specie>, double> _map_pairs_Evb;
+
   //!Vector for atom-projected band shifts
   std::vector<double> _band_shift;
   
