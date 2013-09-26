@@ -20,7 +20,7 @@ NegfWrapper::NegfWrapper()
       std::cout << _handler[ii] << " ";
     }
     std::cout << std::endl;
-    f77_negf_getversion(_handler);
+    f77_negf_get_version(_handler);
 
 }
 
@@ -31,14 +31,28 @@ NegfWrapper::~NegfWrapper()
     f77_negf_destruct_session(_handler);
 }
 
-int
+void
 NegfWrapper::init()
 {
   f77_negf_init(_handler);
-  return 0;
 }
 
 
+int
+NegfWrapper::read_HS()
+{
+  f77_negf_read_hs(_handler);
+
+  return 0;
+}
+
+int
+NegfWrapper::read_input()
+{
+  f77_negf_read_input(_handler);
+
+  return 0;
+}
 
 void NegfWrapper::set_verbose(int verbose_lev)
 {
@@ -61,7 +75,7 @@ int
 NegfWrapper::density(std::vector<double>& density)
 {
    int size = density.size();
-   f77_negf_density(_handler, size, &density.front());
+   f77_negf_density_efa(_handler, size, &density.front());
 }
 
 
@@ -136,3 +150,26 @@ NegfWrapper::partition_info(void)
 {
    f77_negf_write_partition(_handler);
 }
+
+void 
+NegfWrapper::set_H_csr(int nrow, char fmt, std::vector<Complex >& A, 
+                           std::vector<int>& JA, std::vector<int>& IA)
+{
+  f77_negf_set_h(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
+}
+
+void 
+NegfWrapper::set_S_csr(int nrow, char fmt, std::vector<Complex >& A, 
+                           std::vector<int>& JA, std::vector<int>& IA)
+{
+  f77_negf_set_s(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
+}
+
+
+void 
+NegfWrapper::set_S_id(int nrow) 
+{
+  f77_negf_set_s_id(_handler,nrow);
+}
+
+

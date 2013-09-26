@@ -30,7 +30,13 @@ public:
   static NegfWrapper* create(); 
 
   //!Initialize the Negf instance
-  int init();
+  void init();
+
+  //!read H and S hamiltonians 
+  int read_HS();
+
+  //!read 'negf.in'
+  int read_input();
 
   //!Compute current
   double current();
@@ -76,6 +82,15 @@ public:
 
   //! write partition info 
   void partition_info(void);
+  
+  //! set H via file
+  void set_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
+                                                     std::vector<int>& IA );
+  //! set H via file
+  void set_S_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
+                                                     std::vector<int>& IA );
+
+  void set_S_id(int nrow);
 
 private:
   int _handler[NEGF_HSIZE];

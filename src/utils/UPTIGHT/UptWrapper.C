@@ -126,6 +126,11 @@ void UptWrapper::compute_H(char* sprs_fmt){
   f77_upt_createhamiltonian(_handler, sprs_fmt);
 }
 
+//! print ETB Hamiltonian
+void UptWrapper::print_H(void){	
+  f77_upt_printhamiltonian(_handler);
+}
+
 
 //! build ETB Hamiltonian with Uptight
 void UptWrapper::compute_P_matrix(int poldir, char* sprs_fmt)
@@ -140,10 +145,10 @@ void UptWrapper::compute_P_matrix(int poldir, char* sprs_fmt)
 void UptWrapper::lanczos_diag(int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                                 int min_iter, int long_iter, int max_iter,
 				double fast_tol, double long_tol, double ort_tol,
-				int twice_vb, int twice_cb) {
+				int twice_vb, int twice_cb, int dynamic) {
 
   f77_upt_lanczosdiag(_handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
-		       max_iter, fast_tol, long_tol, ort_tol, twice_vb, twice_cb);
+		       max_iter, fast_tol, long_tol, ort_tol, twice_vb, twice_cb,dynamic);
 
 
 }
@@ -190,6 +195,16 @@ void UptWrapper::get_H_row(int row, int* colind, Complex* vals) {
 //! write eigenstates on file
 void UptWrapper::write_states() {	
   f77_upt_write_states(_handler);
+}
+
+//! set outpath
+void UptWrapper::set_outpath(const char* outpath) {
+  f77_upt_setoutpath(_handler, outpath); 
+}
+
+//! set workpath
+void UptWrapper::set_workpath(const char* workpath) {
+  f77_upt_setworkpath(_handler, workpath); 
 }
 
 //! read eigenstates from file

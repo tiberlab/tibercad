@@ -4,6 +4,8 @@
 #define _NEGF_H_
 
 #include "SimulationInterface.h"
+#include "EigenvalueProblem.h"
+#include "AtomisticStructure.h"
 #include "ModelOptions.h"
 #include "QuantumContact.h"
 #include "TiberLinearSystem.h"
@@ -12,6 +14,13 @@
 #include "KspaceIntegration.h"
 
 #include <string>
+
+struct sortclass{
+  sortclass(const std::vector<Atom>& atoms){_atoms=atoms;};
+  ~sortclass(){};
+  bool operator() (int i, int j) { return (_atoms[i].get_position()(0)<_atoms[j].get_position()(0)); };
+  std::vector<Atom> _atoms;
+};
 
 /*!
  *
@@ -37,8 +46,9 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     enum kIntegrationType
     {
-       kintegrationdensity
-
+       INTDENSITYEL, 
+       INTDENSITYHL, 
+       INTCURRENT
     };
     //! Destructor
     /*!
@@ -74,7 +84,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void print_ham(std::string form);
 
-    void print_Lib(void);
+    void print_Lib(unsigned int n_vars, double Ec, double Ev);
 
     //! We need to create a physical model
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
@@ -93,7 +103,13 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     virtual void get_solution_secure(std::map<ID, std::vector<double> >& values);
 
-    void setup_effectivemass_hamil(void);
+    void init_hamil(void);
+
+    void setup_hamil(void);
+
+    void setup_negf(void);
+    
+    void finalize(void);
 
     void compute_current(void);
 
@@ -116,6 +132,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     void calculate_density(const std::string& particle);
 
     void init_k_space_integration(void);
+    
+    void init_k_space(ModelOptions& opt);
 
     struct options
     {
@@ -163,6 +181,16 @@ class TBDLLOCAL Negf : public SimulationInterface
     const Boundary* get_boundary(const QuantumContact* qc);
 
     void apply_dirichlet_bc(void);
+    
+    void init_efa_hamil(void);
+
+    void init_etb_hamil(void);
+
+    
+    void setup_efa_hamil(void);
+    
+    void setup_etb_hamil(void);
+    
 
     Device* _device;
 
@@ -173,6 +201,8 @@ class TBDLLOCAL Negf : public SimulationInterface
     std::map<const Boundary*, QuantumContact*> _qc_boundaries;
 
     std::map<const QuantumContact*, const Boundary*> _bd_map;
+    
+    std::map<const Boundary*, unsigned int> _bd_num;
 
     //! Map quantumContact ID to pointers
     std::map<ID, QuantumContact*> _quantum_contacts;
@@ -194,8 +224,6 @@ class TBDLLOCAL Negf : public SimulationInterface
     std::vector<unsigned int> _dev;
 
     std::vector<unsigned int> _qc_n_dofs;
-
-    std::vector<unsigned int> _qc;
 
     NegfWrapper* _libnegf;
 
@@ -222,6 +250,11 @@ class TBDLLOCAL Negf : public SimulationInterface
     std::map<const QuantumContact*, double> _contact_current;
 
     double mumin, mumax;
+
+    EigenvalueProblem* _ext_module;
+
+    AtomisticStructure* _atom_structure;
 };
+
 
 #endif

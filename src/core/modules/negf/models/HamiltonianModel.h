@@ -11,25 +11,19 @@ class HamiltonianModel : public PhysicalModelInterface
 
     virtual ~HamiltonianModel(void) {};
 
-    static HamiltonianModel* create(const ModelOptions& options);
-
     const TensorValue<double>& get_inv_mass(void) const;
 
     double get_degeneracy(void) const;
 
     const std::string& get_band_type(void) const;
 
+    const std::string& get_model(void) const;
+    
+    const std::string& get_simulation(void) const;
+
   protected:
 
     HamiltonianModel(const ModelOptions& options);
-
-    virtual void read_database(void);
-
-    virtual void do_init(void);
-
-    void set_invmass_tensor(void);
-
-  private:
 
     TensorValue<double> _inv_mass_crys;
 
@@ -39,14 +33,11 @@ class HamiltonianModel : public PhysicalModelInterface
 
     std::string _band_type;
 
+    std::string _model;
+
+    std::string _simulation;
 };
 
-inline
-HamiltonianModel*
-HamiltonianModel::create(const ModelOptions& options)
-{
-  return new HamiltonianModel(options);
-}
 
 inline
 const TensorValue<double>&
@@ -68,4 +59,25 @@ HamiltonianModel::get_band_type(void) const
 {
   return _band_type;
 }
+
+inline
+const std::string&
+HamiltonianModel::get_model(void) const
+{
+  return _model;
+}
+
+inline
+const std::string&
+HamiltonianModel::get_simulation(void) const
+{
+  return _simulation;
+}
+
+inline
+HamiltonianModel::HamiltonianModel(const ModelOptions& options)
+  : PhysicalModelInterface(options)
+{
+}
+
 

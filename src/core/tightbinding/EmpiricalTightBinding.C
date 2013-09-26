@@ -19,6 +19,8 @@
 #include "EigenSolver.h"
 #include "RotatedCrystal.h"
 
+#include "petsc_matrix.h"
+
 #include <fstream>
 #include <sstream>
 #include <utility>
@@ -114,7 +116,8 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    long_tol(1e-10),
    ort_tol(1e-4),
    twice_cb(0),
-   twice_vb(0)
+   twice_vb(0),
+   dynamic(0)	
 {
 }
 
@@ -162,7 +165,7 @@ ETB::do_init(void){
   if(get_atomistic_structure()==NULL)
     throw InitFailedException("ETB: atomistic structure not created");
 
-  get_band_edges();  //reads band edges from database
+  get_bulk_edges();  //reads band edges from database
 
   parse_options();   
 
@@ -184,43 +187,25 @@ ETB::do_init(void){
 
   std::size_t length = 0;
   length = database_path.copy(_upt_options.database_path, database_path.size() );
-  //_upt_options.database_path[length] = '\0';
   length = work_path.copy(_upt_options.work_path, work_path.size() );
-  //_upt_options.work_path[length] = '\0';
   length = gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size() );
-  //_upt_options.gen_outfile[length] = '\0';
   length = out_path.copy(_upt_options.out_path, out_path.size() );
-  //_upt_options.out_path[length] = '\0';
 
   _dim = get_mesh().mesh_dimension();
-
-  //inst->addskdata(_dftb_options.skNames, _dftb_options.mAngs,
-  //    _dftb_options.orbResolved, _dftb_options.skInterp, _dftb_options.nType);
-
 
   Messages::info("(ETB) creating map elem->atoms");
   build_map_elem_atoms(_upt_options.projection_length);
 
   
-  MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
 
-  //for ( ; it != end; ++it)
-  //{ 
-  //  const Elem* elem = *it;
-  //  int id = elem->id();
-  //  if(get_neigh_atoms(id).size()>0)
-  //     cout<<"elem "<<id<<" n.n: "<<get_neigh_atoms(id).size()<<endl;
-  //}
-
-  _init = 1;      // initialization must be called
-  _assemble = 1;  // matrix assemble must be done
+  _init = true;      // initialization must be called
+  _assemble = true;  // matrix assemble must be done
 
 }
 
 //-------------------------------------------------------------------------
-void ETB::reinit(void){
-
+void ETB::do_reinit(void)
+{
 
   std::cout << "(ETB) clean uptight data container" << std::endl;
 
@@ -268,13 +253,14 @@ void ETB::reinit(void){
 
     upt_filename = get_atomistic_structure()->get_name() + ".upg";
 
-    Messages::info("printing structure "+upt_filename);
+    //Messages::info("(ETB) printing structure "+upt_filename);
 
-    get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset);
+    get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset, 
+                                                      !_upt_options.band_shift_flag);
 
-    std::cout << "Number of atoms: " <<get_atomistic_structure()->get_N_atoms() << std::endl;
+    std::cout << "(ETB) Number of atoms: " <<get_atomistic_structure()->get_N_atoms() << std::endl;
 
-    std::cout << "Numb. without H: " <<get_atomistic_structure()->get_N_without_H()
+    std::cout << "(ETB) Numb. without H: " <<get_atomistic_structure()->get_N_without_H()
 	      << std::endl;
   }
 
@@ -329,8 +315,8 @@ void ETB::reinit(void){
 
   if(_upt_options.verbose>3) print_upt_options();
 
-  _init = 0;
-  _assemble = 1; //must reassemble matrix
+  _init = false;
+  _assemble = true; //must reassemble matrix
 
 
 }
@@ -374,24 +360,9 @@ void ETB::do_solve(void){
   sol_opt.find_option("simulation"); // remove simulation name
   sol_opt.check_unused(); 
   
-
-  ModelOptions options;
-
   std::cout << "(ETB) Tight-Binding calculations" << std::endl;
 
-  std::set<ID> IDs = get_atomistic_structure()->get_IDset();
-  std::set<ID>::iterator reg;
-
-  //for (reg = IDs.begin(); reg != IDs.end(); reg++)
-  //{
-  //  std::cerr<< "Valence= "<<_map_ID_Evb[*reg] << std::endl;
-  //  std::cerr<< "Conduct= "<<_map_ID_Ecb[*reg] << std::endl;   
-  //}
-
-  //std::cerr << "Vb Max= " << _vb_shift << std::endl;
-
-  reinit(); 
-
+  ModelOptions options;
 
   if (_assemble && _upt_options.assemble_H) assemble(options);
 
@@ -451,7 +422,8 @@ void ETB::do_solve(void){
                      _upt_solver_options.min_iter, _upt_solver_options.long_iter,
                      _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
                      _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
-                     _upt_solver_options.twice_vb, _upt_solver_options.twice_cb);
+                     _upt_solver_options.twice_vb, _upt_solver_options.twice_cb,
+		     _upt_solver_options.dynamic);
   }
 
   if (_upt_solver_options.solver.compare("feast") == 0) 
@@ -467,6 +439,7 @@ void ETB::do_solve(void){
 
   }
     
+  Messages::info(" "); 
   Messages::info("(ETB) copy states from uptight"); 
 
   int hdim = inst->get_H_dim();
@@ -538,17 +511,9 @@ void ETB::do_solve(void){
 
 
   // write state infos on screen.
+  Messages::info(" "); 
   write_states();
 
-  //Calculate electron and holes charge density on atoms (hydrogen not included)
-
-  Messages::info("(ETB) compute atom-projected charges"); 
-
-  _el_atomic_charges.resize(_N_without_H, 0.0);
-  _hl_atomic_charges.resize(_N_without_H, 0.0);
-
-  compute_atomic_charges("el", _el_atomic_charges);
-  compute_atomic_charges("hl", _hl_atomic_charges);
 
   //_eigenvector_mag.insert(make_pair(1, std::vector<double>(_N_without_H)));
   for (unsigned int i = 0; i < _solution_size; i++)
@@ -562,19 +527,6 @@ void ETB::do_solve(void){
   else if (_dim == 3) units = "/cm^3";
   declare_solution(MeshStates, NTUPLE, CELL, "1"+units, _solution_size);
   declare_solution(MeshStatesNodes, NTUPLE, NODES, "1"+units, _solution_size);
-
-  //Print for debug charges on atoms
-  Messages::info("(ETB) print atom-projected charges on files"); 
-
-  double* charges;
-  charges = new double[get_atomistic_structure()->get_N_atoms()];
-  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _el_atomic_charges[i];
-  for (unsigned int i = _N_without_H + 1; i < get_atomistic_structure()->get_N_atoms(); i++) charges[i] = 0.0;
-  get_atomistic_structure()->print_structure("charges_el.xyz", charges);
-
-  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _hl_atomic_charges[i];
-  for (unsigned int i = _N_without_H + 1; i < get_atomistic_structure()->get_N_atoms(); i++) charges[i] = 0.0;
-  get_atomistic_structure()->print_structure("charges_hl.xyz", charges);
 
 }
 
@@ -624,9 +576,21 @@ void ETB::do_assemble(const ModelOptions& options)
 
   }
 
-  _assemble = 0;
+  _assemble = false;
 
 }
+
+//-------------------------------------------------------------------------
+void ETB::print_H(const std::string& outpath) const
+{
+   char* path; path=new char[UPT_LC];   
+   memset(path, UPT_PADCHAR, UPT_LC);
+   outpath.copy(path,outpath.size());
+   inst->set_workpath(path);
+   inst->print_H();
+   delete path;
+}
+
 //-------------------------------------------------------------------------
 void ETB::create_dummy_H(void)
 {
@@ -697,10 +661,43 @@ void ETB::solve_for_particle(const std::string& particle)
     _upt_solver_options.n_cb = temp_n_cb;
   }
 
-
-
 }
 
+//-------------------------------------------------------------------------
+void 
+ETB::plot_atomisticdata(void)
+{
+  //Calculate electron and holes charge density on atoms (hydrogen not included)
+  Messages::info("(ETB) compute atom-projected charges"); 
+
+  _el_atomic_charges.resize(_N_without_H, 0.0);
+  _hl_atomic_charges.resize(_N_without_H, 0.0);
+
+  compute_atomic_charges("el", _el_atomic_charges);
+  compute_atomic_charges("hl", _hl_atomic_charges);
+
+  //Print for debug charges on atoms
+  Messages::info("(ETB) print atom-projected charges on files"); 
+
+  string out_path = get_output_directory();
+  double* charges;
+  charges = new double[get_atomistic_structure()->get_N_atoms()];
+  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _el_atomic_charges[i];
+  for (unsigned int i = _N_without_H + 1; i < get_atomistic_structure()->get_N_atoms(); i++) charges[i] = 0.0;
+  get_atomistic_structure()->print_structure(out_path+"/charges_el.xyz", charges);
+
+  for (unsigned int i = 0; i < _N_without_H; i++) charges[i] = _hl_atomic_charges[i];
+  for (unsigned int i = _N_without_H + 1; i < get_atomistic_structure()->get_N_atoms(); i++) charges[i] = 0.0;
+  get_atomistic_structure()->print_structure(out_path+"/charges_hl.xyz", charges);
+
+  if ( plot_solution("tbstates") || plot_solution("JmolStates") )
+  {
+    Messages::info("(ETB) write wave functions on files");
+    inst->write_states();
+  }
+
+}
+	
 //-------------------------------------------------------------------------
 void
 ETB::plot_globaldata(void)
@@ -709,6 +706,7 @@ ETB::plot_globaldata(void)
   string outdir = get_output_directory();
 
   string filename(outdir + "/" + get_output_filename() + ".dat");
+  
   ofstream file;
   file.open(filename.c_str());
 
@@ -731,12 +729,6 @@ ETB::plot_globaldata(void)
     }
   }
 
-  if ( plot_solution("tbstates") || plot_solution("JmolStates") )
-  {
-    Messages::info("(ETB) write wave functions on files");
-    inst->write_states();
-  }
-
 }
 
 //-------------------------------------------------------------------------
@@ -755,15 +747,19 @@ void ETB::parse_options(void)
   _upt_options.etb_dataset = get_option("dataset","");
   _upt_options.max_TB_order = get_option("max_TB_order", 2);
 
-  std::string sparse_fmt = get_option("sparse_format", "upper");
+  std::string sparse_fmt = get_option("sparse_format", "full");
   sparse_fmt.copy(_upt_options.sparse_fmt, sparse_fmt.size() );
 
   _upt_options.check_bondmap = get_option("check_bondmap", false);
 
   _upt_options.relat_flag = get_option("relativistic", true);
 
-  _upt_options.temperature = get_option("temperature",
-			SimulationOptions::temperature );
+  _upt_options.temperature = get_option("temperature", SimulationOptions::temperature);
+
+  if (_upt_options.temperature != 0.0)
+  {
+     Messages::warning("Empirical tight binding calculations are preformed at T=0");
+  }
 
   //_upt_options.opt_flag = get_option("optical_transitions", false);
   //_upt_options.poldir = get_option("polarization_direction", 1);
@@ -806,11 +802,11 @@ void ETB::parse_options(void)
   //---------------------------------------------------------------------------------------
   // Dangling bond scaling
   _upt_options.dg_scale = get_option("dangling_bond_scaling",100.0);
-  _upt_options.dg_onsite = get_option("dangling_bond_onsite",-50.0);    
+  _upt_options.dg_onsite = get_option("dangling_bond_onsite",-200.0);    
 
   //---------------------------------------------------------------------------------------
   //Choose passivation model
-  std::string passivation_model = get_option("passivation_model","hydrogen");
+  std::string passivation_model = get_option("passivation_model","hybrid");
   if ( passivation_model == "hybrid" )
       {_upt_options.hybrid_passivation = true;}
 
@@ -829,18 +825,26 @@ void ETB::parse_options(void)
   if( _upt_solver_options.n_vb == 0) {
     _upt_solver_options.n_vb =  solopts.get_option("num_hole_states", 0);
   }
+  
+  if (_upt_solver_options.n_vb%2==1) _upt_solver_options.n_vb += 1;
+  
   _upt_solver_options.n_cb =  solopts.get_option("num_conduction_eigenvalues", 0);
   if( _upt_solver_options.n_cb == 0) {
     _upt_solver_options.n_cb =  solopts.get_option("num_electron_states", 0);
   }
-  _upt_solver_options.min_iter =  solopts.get_option("min_iter", 2);
-  _upt_solver_options.long_iter =  solopts.get_option("long_iter", 30);
-  _upt_solver_options.max_iter =  solopts.get_option("max_iter", 15000);
+
+  if (_upt_solver_options.n_cb%2==1) _upt_solver_options.n_cb += 1;
+  
+  _upt_solver_options.min_iter =  solopts.get_option("min_iter", 30);
+  _upt_solver_options.long_iter =  solopts.get_option("long_iter", 32);
+  _upt_solver_options.max_iter =  solopts.get_option("max_iter", 10000);
 
   bool flag = solopts.get_option("remove_folded_sols_conduction",false);
   if (flag) _upt_solver_options.twice_cb = 1;
   flag = solopts.get_option("remove_folded_sols_valence",false);
   if (flag) _upt_solver_options.twice_vb = 1;
+  flag = solopts.get_option("dynamic_search",true);
+  if (flag) _upt_solver_options.dynamic = 1;
 
   //Feast options
   _upt_solver_options.e_min =  solopts.get_option("Emin", 0.0);
@@ -849,7 +853,7 @@ void ETB::parse_options(void)
 
   //---------------------------------------------------------------------------------------
   // output wavevetors format
-  std::string out_fmt = get_option("jmol_output_format", "jvxl");
+  std::string out_fmt = get_option("jmol_output_format", "cube");
 
   // the next lines are ludicrous in order to solve a crazy problem 
   // in passing char* to fortran  
@@ -874,8 +878,8 @@ void ETB::parse_options(void)
   //_upt_options.vb_shift = options.get_option("vb_shift", 0.0);
 
   _upt_solver_options.fast_tol =  solopts.get_option("fast_tolerance", 1e-1);
-  _upt_solver_options.long_tol =  solopts.get_option("long_tolerance", 1e-10);
-  _upt_solver_options.ort_tol =  solopts.get_option("orthogonality_tolerance", 1e-5);
+  _upt_solver_options.long_tol =  solopts.get_option("long_tolerance", 1e-9);
+  _upt_solver_options.ort_tol =  solopts.get_option("orthogonality_tolerance", 1e-6);
 
   //Get projection_length for quantum charge projection (Ang)
   _upt_options.projection_length = get_option("projection_length", 2.0);
@@ -1119,7 +1123,6 @@ ETB::calculate_fermi_averaged(unsigned int i)
 
   if(_solution[i].particle == "el" || _solution[i].particle == "electron")
   {
-    //cout<<"state el: "<<i<<endl;    
     for (j = 0; j < N_atoms_wo_H; j++)
     {
       atom_sum = 0.0;
@@ -1247,7 +1250,7 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
   }
 }
 
-void ETB::get_band_edges(void)
+void ETB::get_bulk_edges(void)
 {
   
   AtomisticStructure* as = get_atomistic_structure();
@@ -1321,6 +1324,77 @@ void ETB::get_band_edges(void)
   
 }
 
+double
+ETB::get_band_edge(const std::string& edge)
+{
+  if (edge!="Ec" && edge!="Ev") 
+     throw RuntimeException("invalid band-edge"); 
+
+  double sign = (edge=="Ec") ? 1.0 : -1.0;
+  double band_edge = sign * numeric_limits<double>::max();
+
+  if (_upt_options.potential_flag)
+  {
+    SimulationInterface* sim =
+        SimulationInterface::find_simulation(_upt_options.potential_sim);
+
+    Messages::info("(ETB) get band extrema from "+_upt_options.potential_sim);
+
+    ID id = sim->get_solution_id(edge);
+
+    if ((id == INVALID_ID))
+      throw RuntimeException("Simulation \'" + sim->get_name() +
+          "\' lacks band edge solution variables.");
+
+    vector<double> edges(8,0.0);
+
+    MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+
+    for ( ; it != end; ++it)
+    { 
+      const Elem* elem = *it;
+      vector<Point> p(elem->n_nodes());
+
+      for (size_t i = 0; i < elem->n_nodes(); ++i)
+        p[i] = elem->point(i);
+
+      sim->get_solution(elem, id, edges, p);
+
+      for (size_t i = 0; i < elem->n_nodes(); ++i)
+      {
+        double be = edges[i];
+        // sign trick: 
+        // for Ec::  be<edge ? be:edge
+        // for Ev:: -be<-edge => be>edge ? be:edge
+        band_edge = (sign*be < sign*band_edge) ? be : band_edge;
+      }
+
+    }
+
+  }
+  else
+  {
+    //computes guess from database band edges
+    std::set<ID> IDs = get_atomistic_structure()->get_IDset();
+    std::set<ID>::iterator reg;
+
+    for (reg = IDs.begin(); reg != IDs.end(); reg++)
+    {
+      if (edge=="Ec")
+      {
+        band_edge = (_map_ID_Ecb[*reg] < band_edge) ? _map_ID_Ecb[*reg] : band_edge; 
+      }
+      else
+      {
+        band_edge = (_map_ID_Evb[*reg] > band_edge) ? _map_ID_Evb[*reg] : band_edge; 
+      }
+    }
+  }
+
+  return band_edge;
+
+}
 
 
 void
@@ -1556,9 +1630,10 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const 
   //! get structure
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
   //! get atoms that contribute to the density of an element
+  //std::cout<<"(ETB) get neigh_atoms "<<endl;
   std::vector<unsigned int> atoms = get_neigh_atoms(elem->id());
 
-  //cout<<x<<" "<<y<<" "<<z<<endl;
+  //std::cout<<"point: "<<x<<" "<<y<<" "<<z<<endl;
 
   for (unsigned int id = 0; id  < atoms.size(); id++)
   {
@@ -1678,7 +1753,6 @@ ETB::build_average_rho1d(const std::vector<double>& tb_density, const Elem* elem
 
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
 
-
   for (unsigned int iatm = 0; iatm  < _N_without_H; iatm++)
     {
 
@@ -1796,6 +1870,32 @@ void ETB::do_copy_H_to_solver( )
 
   EigenSolver::finalize_H_assembly();
   
+}
+
+int
+ETB::get_H_dim() const
+{
+  return inst->get_H_dim();
+}
+
+int
+ETB::get_H_nnz() const
+{
+  return inst->get_H_nnz();
+}
+
+void
+ETB::get_H_csr(std::vector<Complex>& A,std::vector<int>& JA, std::vector<int>& IA) const
+{
+   int nrow = inst->get_H_dim();
+   inst->get_H_csr(nrow,' ',A,JA,IA);
+}
+
+unsigned int
+ETB::get_number_of_bands(void) const
+{
+   unsigned int num = _upt_options.relat_flag ? 20 : 10;
+   return num;
 }
 
 #endif

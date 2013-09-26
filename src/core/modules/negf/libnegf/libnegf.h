@@ -46,13 +46,13 @@ inline void f77_negf_init_session (f77_int* handler)
 }
 
 
-extern "C" void negf_getversion_ (f77_int*);
+extern "C" void negf_get_version_ (f77_int*);
 
-// Corresponding F77 arguments for f77_negf_getversion:
+// Corresponding F77 arguments for f77_negf_get_version:
 // integer, intent(inout) :: handler(DAC_handlerSize)
-inline void f77_negf_getversion (f77_int* handler)
+inline void f77_negf_get_version (f77_int* handler)
 {
-  negf_getversion_ (handler);
+  negf_get_version_ (handler);
 }
 
 
@@ -66,15 +66,68 @@ inline void f77_negf_init (f77_int* handler)
 }
 
 
-extern "C" void negf_fillparameters_ (f77_int const*, f77_int const&);
+extern "C" void negf_set_h_ (f77_int*, f77_int&, f77_char&, f77_complex*, 
+    f77_int*, f77_int*);
 
-// Corresponding F77 arguments for f77_negf_fillparameters:
-// integer, intent(in) :: handler(DAC_handlerSize)
-// integer, intent(in) :: infile
-inline void f77_negf_fillparameters (f77_int const* handler, f77_int const& 
-    infile)
+// Corresponding F77 arguments for f77_negf_set_h:
+// integer, intent(inout) :: handler(DAC_handlerSize)
+// integer, intent(out) :: nrow
+// character(1), intent(out) :: fmt
+// complex(dp), intent(out) :: A(*)
+// integer, intent(out) :: JA(*)
+// integer, intent(out) :: IA(*)
+inline void f77_negf_set_h (f77_int* handler, f77_int& nrow, f77_char& fmt, 
+    f77_complex* A, f77_int* JA, f77_int* IA)
 {
-  negf_fillparameters_ (handler, infile);
+  negf_set_h_ (handler, nrow, fmt, A, JA, IA);
+}
+
+
+extern "C" void negf_set_s_ (f77_int*, f77_int&, f77_char&, f77_complex*, 
+    f77_int*, f77_int*);
+
+// Corresponding F77 arguments for f77_negf_set_s:
+// integer, intent(inout) :: handler(DAC_handlerSize)
+// integer, intent(out) :: nrow
+// character(1), intent(out) :: fmt
+// complex(dp), intent(out) :: A(*)
+// integer, intent(out) :: JA(*)
+// integer, intent(out) :: IA(*)
+inline void f77_negf_set_s (f77_int* handler, f77_int& nrow, f77_char& fmt, 
+    f77_complex* A, f77_int* JA, f77_int* IA)
+{
+  negf_set_s_ (handler, nrow, fmt, A, JA, IA);
+}
+
+
+extern "C" void negf_set_s_id_ (f77_int*, f77_int&);
+
+// Corresponding F77 arguments for f77_negf_set_s_id:
+// integer, intent(inout) :: handler(DAC_handlerSize)
+// integer, intent(out) :: nrow
+inline void f77_negf_set_s_id (f77_int* handler, f77_int& nrow)
+{
+  negf_set_s_id_ (handler, nrow);
+}
+
+
+extern "C" void negf_read_input_ (f77_int*);
+
+// Corresponding F77 arguments for f77_negf_read_input:
+// integer, intent(inout) :: handler(DAC_handlerSize)
+inline void f77_negf_read_input (f77_int* handler)
+{
+  negf_read_input_ (handler);
+}
+
+
+extern "C" void negf_read_hs_ (f77_int*);
+
+// Corresponding F77 arguments for f77_negf_read_hs:
+// integer, intent(inout) :: handler(DAC_handlerSize)
+inline void f77_negf_read_hs (f77_int* handler)
+{
+  negf_read_hs_ (handler);
 }
 
 
@@ -121,17 +174,31 @@ inline void f77_negf_current (f77_int const* handler, f77_double& current)
 }
 
 
-extern "C" void negf_density_ (f77_int const*, f77_int const&, f77_double 
+extern "C" void negf_density_efa_ (f77_int const*, f77_int const&, f77_double 
     const*);
 
-// Corresponding F77 arguments for f77_negf_density:
+// Corresponding F77 arguments for f77_negf_density_efa:
 // integer, intent(in) :: handler(DAC_handlerSize)
 // integer, intent(in) :: ndofs
 // real(dp), intent(in) :: density(ndofs)
-inline void f77_negf_density (f77_int const* handler, f77_int const& ndofs, 
+inline void f77_negf_density_efa (f77_int const* handler, f77_int const& ndofs, 
     f77_double const* density)
 {
-  negf_density_ (handler, ndofs, density);
+  negf_density_efa_ (handler, ndofs, density);
+}
+
+
+extern "C" void negf_density_dft_ (f77_int const*, f77_int const&, f77_double 
+    const*);
+
+// Corresponding F77 arguments for f77_negf_density_dft:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: ndofs
+// real(dp), intent(in) :: density(ndofs)
+inline void f77_negf_density_dft (f77_int const* handler, f77_int const& ndofs, 
+    f77_double const* density)
+{
+  negf_density_dft_ (handler, ndofs, density);
 }
 
 

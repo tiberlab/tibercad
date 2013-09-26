@@ -182,7 +182,7 @@ Vff::displace_atoms(void)
   get_coords().resize(0);
   _dof.resize(0);
 
-  get_atomistic_structure()->print_structure("strained.xyz");
+  get_atomistic_structure()->print_structure("strained_VFF.xyz");
 }
 
 void

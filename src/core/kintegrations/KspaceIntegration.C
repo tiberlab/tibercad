@@ -191,8 +191,6 @@ void KspaceIntegration::calculate_convergent_density()
 
   int verbose = get_option("verbose",SimulationOptions::verbose());
 
-   cout<<"verbose: "<<verbose<<endl;
-
   Mesh* kmesh = const_cast <Mesh*> (_kspace->get_k_mesh() );
 
   if (verbose>1)
@@ -338,6 +336,19 @@ void KspaceIntegration::do_init(void)
   else
    throw InitFailedException("K-integration internal error: k_space_dimension must be initialized");	  
 
+  if (get_option("gamma_point_calculation",false))
+  { 
+    kopts.set_option("wedge","all");
+    unsigned int dim = get_option("k_space_dimension",0);
+    std::vector<unsigned int>  n_nodes(dim,0);
+    for (unsigned int i = 0; i<dim; i++) 
+       n_nodes[i] = 2;
+    ModelOptions new_opt;
+    new_opt.set_option("number_of_nodes",n_nodes);
+    new_opt.set_option("quadrature_order","first");
+    set_options(new_opt); 
+  }
+
   std::vector<unsigned int>  num_nodes;
  
   if (has_option("number_of_nodes"))
@@ -393,7 +404,6 @@ void KspaceIntegration::do_init(void)
     throw InitFailedException("Could not initialize k-space");
   else
     Messages::info("k-space initialized");
-
 
   parse_options();
 

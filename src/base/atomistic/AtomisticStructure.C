@@ -833,7 +833,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
   else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
     {
-      print_upg(file_name, "VOID");
+      print_upg(file_name, "");
     }
 
   else
@@ -853,7 +853,8 @@ AtomisticStructure::print_structure(const std::string& path)
 
 
 void
-AtomisticStructure::print_upg(const std::string& path, const std::string& etb_dataset)
+AtomisticStructure::print_upg(const std::string& path, const std::string& etb_dataset,
+                                                       bool band_offsets)
 {
 
   std::ofstream file, os;
@@ -964,7 +965,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       file << "#Materials " << std::endl;
 
       for (std::map<const Material*, unsigned int>::iterator mat_it = material_map.begin(); mat_it != material_map.end(); mat_it++)
-        {
+      {
           //Note: material_map has material in ascending order, starting from one, despite any general enumeration
           //in TiberCAD. Check some lines above how it's built. In file they need to be stored in ascending order,
           //that's why I'm not using safer iterators and I work in this way
@@ -980,6 +981,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           db.set_section("atomistic_structure");
 
           std::string alloy_type;
+          std::vector<double> Ev(2,0.0);
 
           //TODO: IT NEEDS TO BE EXTENDED WORKING WITH OTHER ALLOYS (QUATERNARY...)
           if (mat->is_alloy())  {alloy_type = "ternary";}
@@ -987,12 +989,29 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           else if (db.get("n_basis_specie", 0) == 2 ) {alloy_type = "binary";}
           else Messages::error("Could not define alloy_type variable in AtomisticStructure.C");
 
+          if (alloy_type=="ternary")
+          {
+  	     const Material* mat1 = (static_cast<const Alloy*>(mat))->get_component_A();	  
+             Database db1 = mat1->get_database();
+	     db1.set_section("valenceband");
+	     Ev[0]=db1.get("E_v",0.0);
+  	     mat1 = (static_cast<const Alloy*>(mat))->get_component_B();	  
+             Database db2 = mat1->get_database();
+	     db2.set_section("valenceband");
+	     Ev[1]=db2.get("E_v",0.0);
+          }
+	  else
+	  { 
+             db.set_section("valenceband");
+	     Ev[0]=db.get("E_v",0.0);
+	  }
+
           //Mancano da inserire i file con i dati per Uptight
           std::string path = "./ ";
           std::string structure = "unknown";
 
           if (! mat->is_alloy())
-            {
+          {
               file << std::setw(3)  << (*mat_it).second
                    << std::setw(12) << mat->get_name()
                    << std::setw(6)  << mat->get_structure()
@@ -1001,11 +1020,16 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
                    << std::setw(5)  << "CRY"
                    << std::setw(8)  << mat->get_name()
                    << std::setw(10) << std::setprecision(3) << 1.0
-                   << std::setw(10) << mat->get_name() << etb_dataset + ".etb"
-                   << " 0.0  0.0"   << std::endl;
-            };
+                   << std::setw(10) << mat->get_name() << etb_dataset + ".etb";
+              if (band_offsets)
+              {               
+		   file << std::setw(10) << Ev[0];
+              } 
+              file << " 0.0  0.0"   << std::endl;
+          }
+
           if (mat->is_alloy() && !(is_random_alloy()))
-            {
+          {
               file << std::setw(3)  << (*mat_it).second
                    << std::setw(12) << mat->get_name()
                    << std::setw(6)  << mat->get_structure()
@@ -1020,12 +1044,18 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
                    << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_A()
                                     << etb_dataset + ".etb"
                    << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_B()
-                                    << etb_dataset + ".etb"
-                                    << " 0.0  0.0"
-                                    << " 0.0  0.0" << std::endl;
-            };
+                                    << etb_dataset + ".etb";
+              if (band_offsets)
+              {               
+                file << std::setw(10) << Ev[0] << " "
+                     << std::setw(10) << Ev[1] << " ";
+              }
+              file << " 0.0  0.0"
+                   << " 0.0  0.0" << std::endl;
+          }
+
           if (mat->is_alloy() && (is_random_alloy()))
-                      {
+          {
               file << std::setw(3)  << (*mat_it).second
                                  << std::setw(12) << mat->get_name()
                                  << std::setw(6)  << mat->get_structure()
@@ -1040,12 +1070,17 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
                                  << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_A()
                                                   << etb_dataset + ".etb"
                                  << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_B()
-                                                  << etb_dataset + ".etb"
-                                                  << " 0.0  0.0"
+                                                  << etb_dataset + ".etb";
+              if (band_offsets)
+              {               
+                  file           << std::setw(10) << Ev[0] << " "
+                                 << std::setw(10) << Ev[1] << " ";
+              }
+                  file                            << " 0.0  0.0"
                                                   << " 0.0  0.0" << std::endl;
-                      };
+           };
 
-        }
+      }
 
       file.close();
     }
@@ -1241,7 +1276,56 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
        "depending on the cation specie. I cannot find a valid cation ");
 }
 
+void
+AtomisticStructure::reorder(const std::vector<unsigned int>& P)
+{
+  if (P.size() != _atoms.size()) 
+    Messages::error("Reorder size is wrong");
 
+
+  // Inverse Permutation vector for reordering bondmap
+  std::vector<int> invP(_atoms.size());
+  for(unsigned int i=0; i<_atoms.size(); i++)
+  {
+    invP[P[i]]=i;
+  }
+
+  // Define a new vector of atoms and Bondamp
+  std::vector<Atom> new_atoms(_atoms.size()); 
+  Bondmap new_bondmap;
+  new_bondmap.resize(_atoms.size());
+
+  for (unsigned int i=0; i< _atoms.size(); i++)
+  {
+    new_atoms[i] = _atoms[P[i]];
+    //std::cout<<i<<" "<<new_atoms[i].get_position(0)<<" "<<_atoms[P[i]].get_position(0)
+    //            <<" | "<<new_atoms[i].get_elem()<<" "<<_atoms[P[i]].get_elem()
+    //            <<" | "<<new_atoms[i].get_specie()<<" "<<_atoms[P[i]].get_specie()<<"  ";
+
+    new_bondmap[i].resize( _bondmap->get_bond_map()[P[i]].size() );
+
+    for (unsigned int j = 0; j < new_bondmap[i].size(); j++)
+    {
+       new_bondmap[i][j] = invP[_bondmap->get_bond_map()[P[i]][j]];
+       //std::cout<<" "<<new_bondmap[i][j];
+    }
+    //std::cout<<std::endl;
+  }
+
+  // Copy the old atoms on the new atoms
+  for (unsigned int i=0; i< _atoms.size(); i++)
+  {
+    _atoms[i] = new_atoms[i]; 
+    
+    _bondmap->get_bond_map()[i].resize(new_bondmap[i].size());
+
+    for (unsigned int j = 0; j < new_bondmap[i].size(); j++)
+    {
+      _bondmap->get_bond_map()[i][j] = new_bondmap[i][j];
+    }
+  }
+
+}
 
 
 void

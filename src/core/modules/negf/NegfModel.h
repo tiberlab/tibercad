@@ -29,6 +29,10 @@ class TBDLLOCAL NegfModel : public PhysicalModel
 
     double get_degeneracy(ID id) const;
 
+    std::string get_simulation(ID id) const;
+    
+    std::string get_model(ID id) const;
+
   protected:
 
     virtual void prepare_submodels(void);
@@ -82,5 +86,18 @@ double NegfModel::get_degeneracy(ID id) const
 {
    return _ham_models[id]->get_degeneracy();
 }
+
+inline
+std::string NegfModel::get_simulation(ID id) const
+{
+   return _ham_models[id]->get_simulation();
+}
+
+inline
+std::string NegfModel::get_model(ID id) const
+{
+   return _ham_models[id]->get_model();
+}
+
 
 #endif /* NEGFMODEL_H_ */

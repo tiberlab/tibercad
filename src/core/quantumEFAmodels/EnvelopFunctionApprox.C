@@ -46,7 +46,7 @@ inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, cons
 */
 //---------------------------------------------------------------------------------//
 
-inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem) const
+inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::string& particle) const
 {
   vector<double> values(elem->n_nodes());
   vector<Point> p(elem->n_nodes());
@@ -61,7 +61,7 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem) const
   for (size_t i = 1; i < elem->n_nodes(); ++i)
   {
      double temp = values[i];
-     if(opt.particle == "el")
+     if(particle == "el")
         bedge = (temp < bedge) ? temp : bedge;
      else
         bedge = (temp > bedge) ? temp : bedge;
@@ -323,7 +323,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
 
 
 //====================================================//
-double EnvelopFunctionApprox::get_band_edge() const
+double EnvelopFunctionApprox::get_band_edge(const std::string& particle) 
 {
 
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
@@ -331,7 +331,7 @@ double EnvelopFunctionApprox::get_band_edge() const
 
   assert(el != end_el);
 
-  double band_edge = get_band_edge(*el);
+  double band_edge = get_band_edge(*el, particle);
   ++el;
 
 
@@ -339,9 +339,9 @@ double EnvelopFunctionApprox::get_band_edge() const
   {
     const Elem* elem = *el;
 
-    double temp = get_band_edge( elem);
+    double temp = get_band_edge(elem, particle);
 
-    if (opt.particle == "el")
+    if (particle == "el")
     {
       if (band_edge > temp)
 	band_edge = temp;
@@ -1171,7 +1171,7 @@ void EnvelopFunctionApprox::estimate_spectrum_shift(void)
 {
  if (opt.estimate_spectrum_shift)
  {
-   solver_opt.spectrum_shift = get_band_edge();
+   solver_opt.spectrum_shift = get_band_edge(opt.particle);
    if (opt.particle == "el") solver_opt.spectrum_shift -= 0.05;
    if (opt.particle == "hl") solver_opt.spectrum_shift += 0.05;    
 
@@ -2346,7 +2346,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   bool found = false;
   const Elem* mat_elem;
-
+  std::cout<<"bulk calculation"<<std::endl;
   for ( ; (el != end_el) && (!found) ; ++el)
   {
     const Elem* elem = *el;
@@ -2366,6 +2366,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   EFAbulkHamiltonian* element_hamiltonian;
 
+  std::cout<<"elem H"<<std::endl;
 
   element_hamiltonian = get_bulk_model<EFAbulkModel>(mat_elem)->get_Hamiltonian_model();
 
@@ -2373,12 +2374,15 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   element_hamiltonian->calculate_Hamiltonian_k_par();
 
+  std::cout<<"strain"<<std::endl;
   Tensor2Sym strain_crystal_system(0);
   _strain_interface.get_crystal_strain(mat_elem, qp, strain_crystal_system);
 
   std::cout<<"(EP) strain exx "<<strain_crystal_system(1,1)<<std::endl;
   std::cout<<"(EP) strain eyy "<<strain_crystal_system(2,2)<<std::endl;
   std::cout<<"(EP) strain ezz "<<strain_crystal_system(3,3)<<std::endl;
+
+  std::cout<<"pot"<<std::endl;
 
   double electric_potential = 0;
   if (opt.consider_potential_bulk)
