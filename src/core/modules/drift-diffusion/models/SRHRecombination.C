@@ -237,7 +237,7 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
   {
     // definition of integration limit
     double Ec = dd.get_conduction_band_edge();
-    double Efn = dd.get_electron_electro_chemical_potential();
+    double Efn = -dd.get_electron_electro_chemical_potential() + dd.get_electric_potential();
     double dE_n = 0;
     if (Efn <= Ec)
     {
@@ -251,14 +251,14 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
     tau_n *= gamman;
 
     double Ev = dd.get_valence_band_edge();
-    double Efp = dd.get_hole_electro_chemical_potential();
+    double Efp = -dd.get_hole_electro_chemical_potential() + dd.get_electric_potential();
     double dE_p = 0;
     if (Efp >= Ev)
     {
       if (Efp <= Et)
         dE_p = Efp - Ev;
       else
-        dE_p = Et - Ev;
+        dE_p = Et- Ev;
     }
     double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
     gammap = 1.0 / (gammap + 1);
@@ -307,7 +307,7 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   {
     // definition of integration limit
     double Ec = dd.get_conduction_band_edge();
-    double Efn = dd.get_electron_electro_chemical_potential();
+    double Efn = -dd.get_electron_electro_chemical_potential() + dd.get_electric_potential();
     double dE_n = 0;
     if (Efn <= Ec)
     {
@@ -321,7 +321,7 @@ SRHRecombination::get_net_recombination_rate_derivatives(
     tau_n *= gamman;
 
     double Ev = dd.get_valence_band_edge();
-    double Efp = dd.get_hole_electro_chemical_potential();
+    double Efp = -dd.get_hole_electro_chemical_potential() + dd.get_electric_potential();
     double dE_p = 0;
     if (Efp >= Ev)
     {
