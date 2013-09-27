@@ -39,7 +39,8 @@ SRHRecombination::TrapAssisted::get_gamma(double F, double T, double Et)
     const double a1 = 0.3480242;
     const double a2 = -0.0958798;
     const double a3 = 0.7478556;
-    const double p1 = 0.47047;
+    //const double p1 = 0.47047; // ?
+    const double p1 = 0.61685; // ?
 
     double ttn = 1.0 / (1 + p1 * (0.5 * Et_kT - Kn*0.75) / sqrt(Kn * 0.375));
     gamma = Et_kT * sqrt(2 * M_PI / (3 * Kn)) *
@@ -135,6 +136,7 @@ SRHRecombination::do_init(void)
   {
     get_parameter("sigma_n", _sigma_n);
     get_parameter("sigma_p", _sigma_p);
+    get_parameter("Nt", _density);
     _trap = true;
   }
 
@@ -142,7 +144,6 @@ SRHRecombination::do_init(void)
   get_parameter("tau_p", _tau_p);
 
   get_parameter("Et", _E_t);
-  get_parameter("Nt", _density);
 
   std::string tmp("m");
   tmp[0] = _energy_reference;
@@ -263,6 +264,7 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
     double gammap = _tat->get_gamma(dd.get_electric_field().size() * 100, T, dE_p);
     gammap = 1.0 / (gammap + 1);
     tau_p *= gammap;
+    //std::cerr << gamman << " "  << gammap << std::endl;
   }
 
   double denom = tau_p * (n + gn * n0 * f) + tau_n * (p + gp * p0 / f);
