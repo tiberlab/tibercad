@@ -65,6 +65,9 @@ public:
   //! out_format == 2 => CUBE
   void set_output(int out_format, double scale);
 
+  void set_workpath(const char* workPath);
+  
+  void set_outpath(const char* outPath);
 
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);
@@ -101,6 +104,9 @@ public:
   //!Computes Hamiltonian (must be called after inituptight)
   void compute_H(char* sprs_fmt);
 
+  //!Computes Hamiltonian (must be called after inituptight)
+  void print_H(void);
+
   //!Computes P-matrix for optics (must be called after inituptight)
   void compute_P_matrix(int poldir, char* sprs_fmt);
 
@@ -117,11 +123,14 @@ public:
    * double fast_tol   : tolerance for fast loop        (~1e-1)
    * double long_tol   : tolerance on long loop         (~1e-10)
    * double ort_tol    : orthogonality tolerance        (~1e-5)
+   * int twice_vb      : old way of removing folded (not to use)
+   * int twice_cb      : old way
+   * int dynamic       : new way using dynamical shift
    */
   void lanczos_diag (int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                      int min_iter, int long_iter, int max_iter, 
                      double fast_tol, double long_tol, double ort_tol,
-		     int twice_cb, int twice_vb);
+		     int twice_cb, int twice_vb, int dynamic);
 
   void set_num_states(int n_vb, int n_cb);
 
@@ -132,6 +141,12 @@ public:
   int get_H_row_size(int row);
 
   void get_H_row(int row, int* colind, Complex* vals);
+  
+  void get_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
+                                                     std::vector<int>& IA );
+  
+  void set_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
+                                                     std::vector<int>& IA );
 
   void write_states(void);
 
@@ -140,16 +155,9 @@ public:
   void get_states(int num_ev, int hdim, double* eigenvals,
                   Complex* states, int* particles); 
 
-
   Complex get_matel(int i, int j);
 
   void get_ion_numorbitals(std::vector<int>& ion_block_vector);
-
-  void get_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
-                                                     std::vector<int>& IA );
-  
-  void set_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
-                                                     std::vector<int>& IA );
 
 
   void complex_test(double& re, double& im, Complex& zz);

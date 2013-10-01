@@ -112,6 +112,29 @@ inline void f77_upt_fillbasicparameters (f77_int const* handler, f77_int const&
 }
 
 
+extern "C" void upt_setworkpath_ (f77_int const*, f77_char const*);
+
+// Corresponding F77 arguments for f77_upt_setworkpath:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// character(LST), intent(in) :: workPath(1)
+inline void f77_upt_setworkpath (f77_int const* handler, f77_char const* 
+    workPath)
+{
+  upt_setworkpath_ (handler, workPath);
+}
+
+
+extern "C" void upt_setoutpath_ (f77_int const*, f77_char const*);
+
+// Corresponding F77 arguments for f77_upt_setoutpath:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// character(LST), intent(in) :: outPath(1)
+inline void f77_upt_setoutpath (f77_int const* handler, f77_char const* outPath)
+{
+  upt_setoutpath_ (handler, outPath);
+}
+
+
 extern "C" void upt_setloadpath_ (f77_int const*, f77_char const*);
 
 // Corresponding F77 arguments for f77_upt_setloadpath:
@@ -208,6 +231,16 @@ inline void f77_upt_createhamiltonian (f77_int const* handler, f77_char const*
 }
 
 
+extern "C" void upt_printhamiltonian_ (f77_int const*);
+
+// Corresponding F77 arguments for f77_upt_printhamiltonian:
+// integer, intent(in) :: handler(DAC_handlerSize)
+inline void f77_upt_printhamiltonian (f77_int const* handler)
+{
+  upt_printhamiltonian_ (handler);
+}
+
+
 extern "C" void upt_setkpoint_ (f77_int const*, f77_double const*);
 
 // Corresponding F77 arguments for f77_upt_setkpoint:
@@ -222,7 +255,8 @@ inline void f77_upt_setkpoint (f77_int const* handler, f77_double const* k_vec)
 extern "C" void upt_lanczosdiag_ (f77_int const*, f77_int const&, f77_int 
     const&, f77_int const&, f77_int const&, f77_double const&, f77_double 
     const&, f77_int const&, f77_int const&, f77_int const&, f77_double const&, 
-    f77_double const&, f77_double const&, f77_int const&, f77_int const&);
+    f77_double const&, f77_double const&, f77_int const&, f77_int const&, 
+    f77_int const&);
 
 // Corresponding F77 arguments for f77_upt_lanczosdiag:
 // integer, intent(in) :: handler(DAC_handlerSize)
@@ -240,16 +274,17 @@ extern "C" void upt_lanczosdiag_ (f77_int const*, f77_int const&, f77_int
 // real(dp), intent(in) :: ort_tol
 // integer, intent(in) :: twice_vb
 // integer, intent(in) :: twice_cb
+// integer, intent(in) :: dynamic
 inline void f77_upt_lanczosdiag (f77_int const* handler, f77_int const& st_vb, 
     f77_int const& st_cb, f77_int const& n_vb, f77_int const& n_cb, f77_double 
     const& guess_vb, f77_double const& guess_cb, f77_int const& min_iter, 
     f77_int const& long_iter, f77_int const& max_iter, f77_double const& 
     fast_tol, f77_double const& long_tol, f77_double const& ort_tol, f77_int 
-    const& twice_vb, f77_int const& twice_cb)
+    const& twice_vb, f77_int const& twice_cb, f77_int const& dynamic)
 {
   upt_lanczosdiag_ (handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, 
       min_iter, long_iter, max_iter, fast_tol, long_tol, ort_tol, twice_vb, 
-      twice_cb);
+      twice_cb, dynamic);
 }
 
 

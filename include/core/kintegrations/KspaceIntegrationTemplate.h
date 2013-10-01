@@ -4,6 +4,11 @@
 #include "KspaceIntegration.h"
 #include "ModelOptions.h"
 
+//! Template class for KspaceIntegration.
+//! The template is used to store a general pointer to an object invoking kintegration
+//! The class must implement a method "calculate_for_k_point(..)"  
+//! With the same interface as described here.
+  
 template <class T>
 class KspaceIntegrationTemplate : public KspaceIntegration 
 {
@@ -21,7 +26,7 @@ class KspaceIntegrationTemplate : public KspaceIntegration
    //!calculates density that is necessary for eack k-point and a number that will be used for refinement 
    virtual void calculate_for_k_point(const Point& k_point, 
                                       DofField& density, 
-                                      double& integrated_quantity);
+                                      double& estimator);
 
   private:
 

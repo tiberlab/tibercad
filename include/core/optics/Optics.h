@@ -13,7 +13,13 @@ class Tensor1;
 //! A base class of optics calculation
 /*!
  * The task of this class is to calculate the spectrum at a certain given
- * k-point and compute k-space integrations of the spectrum
+ * k-point and compute k-space integrations of the spectrum.
+ *
+ * k-integrations are performed implementing calculate_for_k_point() 
+ * invoked by KspaceIntegrations.
+ *
+ * In turn this method calls solve_for_kpoint() interface implemented in 
+ * the base class EigenvalueProblem for spectral calculations.
  */
 
 
@@ -73,7 +79,7 @@ class Optics : public SimulationInterface
     //! Set k-vector for calculation
     void set_k_point(const Point& k_vec);
 
-    //! call-back method that KspaceIntegration invokes
+    //! method invoked by KspaceIntegration via the hook 
     void calculate_for_k_point(const Point& kpoint, DofField& spectrum, double& estimator);  
 
     void assemble(const ModelOptions& opt = ModelOptions());

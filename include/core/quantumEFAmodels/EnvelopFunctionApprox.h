@@ -102,8 +102,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
  
  
-  //! returns conduction band minima for holes and valence band maximum for holes 
-  double get_band_edge() const;
+  //! returns conduction band minima for electrons and valence band maximum for holes 
+  double get_band_edge(const std::string& band);
 
 
   
@@ -325,7 +325,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   void  get_electric_potential(const Elem* elem, const std::vector<Point>& q_point, std::vector<double> electric_potential) const;
 
   //!returns band edge (without potential)
-  double get_band_edge( const Elem* elem) const;
+  double get_band_edge(const Elem* elem, const std::string& particle) const;
 
   //!return electric potential from drift-diffusion
   double get_electric_potential(const Elem* elem, const Point&  qp) const;

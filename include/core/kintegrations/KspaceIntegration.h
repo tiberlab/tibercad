@@ -19,6 +19,16 @@
 #include <iomanip>
 #include <map>
 
+/*! 
+ * General class used to perform Kspace Integrations. 
+ * It is used with Kspace and KspaceIntegrationTemplate
+ * The class can perform integrations over a generic Kspace
+ * of any field. For generality the field is a general vector<double>.
+ *
+ * Adaptive Mesh refinements over the Kspace are possible using libmesh 
+ * for this calculate_for_k_point( ) must return into "double estimator"
+ * a meaningful error estimator scalar at the given k_point.   
+ */
 
 //! Definition of DofField that maps a dof index to a double.
 typedef std::vector<double> DofField;
@@ -85,7 +95,7 @@ class KspaceIntegration : public TiberModelObject
   //!calculates density that is necessary for eack k-point and a number that will be used for refinement 
   virtual void calculate_for_k_point(const Point& k_point, 
 				     DofField& density, 
-				     double& integrated_quantity)=0;
+				     double& estimator)=0;
 
   
   virtual double estimate_error(void);

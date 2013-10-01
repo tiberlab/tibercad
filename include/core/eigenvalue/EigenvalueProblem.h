@@ -9,7 +9,6 @@
 #include "sparse_matrix.h"
 #include <complex>
 #include <vector>
-#include <petsc_matrix.h>
 
 //! Abstract class to solve complex valued eigenvalue problem
 class EigenvalueProblem : public SimulationInterface
@@ -100,6 +99,17 @@ class EigenvalueProblem : public SimulationInterface
  
     //!passes S matrix to the eigensolver
     void copy_S_to_solver(void);    
+   
+    //! get H and S
+    virtual int get_H_dim() const {};
+    
+    virtual int get_H_nnz() const {};
+
+    virtual void get_H_csr(std::vector<Complex>& A,std::vector<int>& JA,std::vector<int>& IA)const{};
+
+    virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,std::vector<int>& IA)const{};
+
+    virtual void print_H(const std::string& outpath) const {};
  
     //! returns a reference to _solution
     //! this is dangerous and should be substituted with calls to get_eigenvectors()
@@ -110,7 +120,11 @@ class EigenvalueProblem : public SimulationInterface
 
     //! compares eigenstate energy for holes needed for sorting
     static bool compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2);
-   
+
+    virtual double get_band_edge(const std::string& band){};    
+
+    virtual unsigned int get_number_of_bands(void) const {};    
+  
   protected:
 
     std::vector<eigen_problem_solution> _solution;

@@ -88,6 +88,7 @@ class ETB : public TightBinding
     int twice_vb;
     int twice_cb;
     bool read_states;
+    int dynamic;
   };
 
   //! Constructor
@@ -102,8 +103,6 @@ class ETB : public TightBinding
   virtual PhysicalModel* create_physical_model(const ModelOptions &options,
       const Material* mat) const throw (ModelErrorException);
 
-  //! initialize or reinitialize the library container's with structure data
-  void reinit(void);
 
   //! assemble the matrix again w/o init overheads
   void reassemble(void);
@@ -127,15 +126,20 @@ class ETB : public TightBinding
   //! compute state density for a single state
   void compute_eigenvector_mag(unsigned int, std::vector<double>&);
 
+  //! print out H in matlab format 
+  void print_H(const std::string& outpath) const;
+
   //! Provide solution values
   virtual void
     get_solution_secure(const Elem* elem, std::map<ID, std::vector<double>>& values,
         const std::vector<Point>& p);
 
+  unsigned int get_number_of_bands(void) const;
 
  protected:
 
-//  void build_statedens(std::vector<double>& values, const Point& r);
+  //! get band-edges including potential
+  double get_band_edge(const std::string& band);
 
   double build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const Point& r);
 
@@ -145,9 +149,14 @@ class ETB : public TightBinding
 
   virtual void do_init(void);
 
+  //! initialize or reinitialize the library container's with structure data
+  virtual void do_reinit(void);
+
   virtual void do_solve (void);
 
   virtual void plot_globaldata (void);
+  
+  virtual void plot_atomisticdata (void);
 
   virtual void parse_options(void);
 
@@ -157,6 +166,12 @@ class ETB : public TightBinding
   virtual void do_setup_solution_variables(void);
 
   virtual void do_copy_H_to_solver(void);
+
+  virtual int get_H_dim(void) const;
+  
+  virtual int get_H_nnz(void) const;
+  
+  virtual void get_H_csr(std::vector<Complex>& A, std::vector<int>& JA, std::vector<int>& IA) const;
 
   //Mesh dimension (used many times by charge projection function)
   int _dim;
@@ -200,7 +215,7 @@ class ETB : public TightBinding
   void project_atom_strain(void);
 
   //! subroutine used to read band-edges from database
-  void get_band_edges(void);
+  void get_bulk_edges(void);
 
   //! get the band extrema
   void get_band_extrema(double& cb_min, double& vb_max);
@@ -224,10 +239,10 @@ class ETB : public TightBinding
   UptWrapper* inst;
 
   //! flag to decide whether init the structure (e.g. if strained)
-  int _init;
+  bool _init;
 
   //! flag to decide whether assemble the matrix again on not
-  int _assemble;
+  bool _assemble;
 
   //! flag to decide whether to read a structure from file
   std::string _upg_filename;
@@ -258,7 +273,6 @@ class ETB : public TightBinding
   
   double _vb_shift;
 
-    
   //! Size of the solution (number of states)
   unsigned int _solution_size;
   
@@ -278,7 +292,7 @@ ETB* ETB::create(const ModelOptions& options)
 inline
 void ETB::reassemble()
 {
-  _assemble = 1;
+  _assemble = true;
 }
 
 inline
@@ -296,6 +310,6 @@ bool ETB::is_relativistic(void)
 }
 
 
-
+//-------------------------------------------------------------------------
 
 #endif

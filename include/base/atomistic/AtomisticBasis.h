@@ -31,7 +31,7 @@ class AtomisticBasis
 
   //! Return a const reference to structure atoms
   const std::vector<Atom>& get_structure_atoms(void) const;
-
+  
   //! Return a reference to structure atoms
   std::vector<Atom>& get_structure_atoms(void);
 

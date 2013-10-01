@@ -88,7 +88,8 @@ public:
   void print_tgn(const std::string& path) const;
 
   //! Print upg file (etb_dataset may be changed into type options)
-  void print_upg(const std::string& path, const std::string& etb_dataset);
+  void print_upg(const std::string& path, const std::string& etb_dataset, 
+                                          bool band_offsets = false);
 
 
   //! AtomisticStructureOptions object pointer
@@ -129,6 +130,9 @@ public:
   //! Get the reference material
   const Material* get_reference_material(void) const;
 
+  //! Apply reordering to atoms
+  void reorder(const std::vector<unsigned int>& P);
+
 private:
 
   //! Constructor for AtomisticStructure class object
@@ -140,6 +144,9 @@ private:
   AtomisticStructure();
 
   AtomisticStructure(const std::string& name);
+  
+  //! copy constructor
+  AtomisticStructure(const AtomisticStructure& other);
   
   //! Calculate the number of atoms excluding hydrogens, usefule for 
     //! passivated structures
