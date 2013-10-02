@@ -486,6 +486,8 @@ Device::extract_physical_regions(const std::string& str, IDSet& ids) const
 
   // the IDs that have to be excluded ("-pippo" syntax)
   IDSet exclude;
+  // the IDs that have to be included
+  IDSet include;
 
   // we have to get it as vector (for the moment at least)
   vector<string> preg;
@@ -512,14 +514,18 @@ Device::extract_physical_regions(const std::string& str, IDSet& ids) const
     if (preg[i].at(0) == '-')
       exclude.insert(preg_ids.begin(), preg_ids.end());
     else
-      ids.insert(preg_ids.begin(), preg_ids.end());
+      include.insert(preg_ids.begin(), preg_ids.end());
   }
 
-  if (ids.empty() && !exclude.empty())
+  if (!exclude.empty())
+  {
     ids = get_active_region_ids();
 
-  for (IDSet::iterator it(exclude.begin()); it != exclude.end(); ++it)
-    ids.erase(*it);
+    for (IDSet::iterator it(exclude.begin()); it != exclude.end(); ++it)
+      ids.erase(*it);
+  }
+
+  ids.insert(include.begin(), include.end());
 }
 
 
