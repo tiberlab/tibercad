@@ -236,7 +236,7 @@ Simulation
   #solve = (driftdiffusion,negf) 
   solve = (sweep_drain)
   resultpath = output
-  scratchpath = /work/fpalomba/GS
+  scratchpath = /work/pecchia/GS
   output_format = grace 
 }
 
