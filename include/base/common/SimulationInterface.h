@@ -1451,8 +1451,8 @@ class SimulationInterface : public TiberModelObject
     //! \see get_bulk_model()
     PhysicalModel* _get_bulk_model(const Elem* elem) const;
 
-    //! \see get_bulk_model()
-    PhysicalModel* _get_bulk_model(const Atom& atom, bool parent) const;
+    // ! \see get_bulk_model()
+    //PhysicalModel* _get_bulk_model(const Atom& atom, bool parent) const;
 
     //! \see get_bulk_model()
     PhysicalModel* _get_bulk_model(const Atom& atom1, const Atom& atom2, bool parent) const;
@@ -1899,7 +1899,7 @@ SimulationInterface::get_bulk_model(const Elem* elem) const
   return dynamic_cast<T*>(_get_bulk_model(elem));
 }
 
-
+/*
 template <typename T>
 inline
 T*
@@ -1907,7 +1907,7 @@ SimulationInterface::get_bulk_model(const Atom& atom, bool parent) const
 {
   return dynamic_cast<T*>(_get_bulk_model(atom, parent));
 }
-
+*/
 
 template <typename T>
 inline

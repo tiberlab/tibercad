@@ -384,6 +384,7 @@ Vff::build_parameters(void)
               _alpha[i][counter_j] = pm_a->get_alpha(atm_i, atm_j);
               _d[i][counter_j] = pm_a->get_d(atm_i, atm_j);
 
+              // TODO get rid of redundancy
               for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
                 {
                   unsigned int k = bondmap[i][counter_k];

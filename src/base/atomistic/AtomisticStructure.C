@@ -1226,33 +1226,23 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
 {
  const Material* mat = get_device()->get_material(atom.get_region_ID());
 
- if (!(mat->is_alloy()))
-    {
-     return mat;
-    }
-
- if (!(parent))
-    {
-     return mat;
-    }
-
- if (parent)
+ if (parent && mat->is_alloy())
    {
      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
      if (alloy->get_component_A()->has_specie(atom.get_specie()) &&
          (!alloy->get_component_B()->has_specie(atom.get_specie())))
-       return alloy->get_component_A();
+       mat = alloy->get_component_A();
      else if (alloy->get_component_B()->has_specie(atom.get_specie()) &&
          (!alloy->get_component_A()->has_specie(atom.get_specie())))       
-       return alloy->get_component_B();
+       mat = alloy->get_component_B();
      else
+     {
        Messages::error("Ambiguity for alloy component assignation"
            "in AtomisticStructure::get_material(Atom&, bool)");
-
+     }
    }
 
-
- return NULL;
+ return mat;
 
 }
 

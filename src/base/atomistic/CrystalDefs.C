@@ -1,5 +1,7 @@
 #include "CrystalDefs.h"
 #include "Messages.h"
+#include "ModelErrorException.h"
+
 #include <fstream>
 #include <boost/assign/list_of.hpp>
 
@@ -35,35 +37,35 @@ CrystalDefs::cation = boost::assign::map_list_of("AlAs", Specie::Al)
 
 bool CrystalDefs::is_anion(const std::string mat_name, const Specie sp)
 {
-  std::ostringstream os;
-  std::map<const std::string, Specie::Type>::iterator end = 
-    CrystalDefs::anion.end();
+  std::map<const std::string, Specie::Type>::iterator it(
+      CrystalDefs::anion.find(mat_name));
 
-  if (CrystalDefs::anion.find(mat_name) == end)
+  if (it == CrystalDefs::anion.end())
   {
-    os << "CrystalDefs: Anion not defined for material";
+    std::ostringstream os;
+    os << "CrystalDefs: Anion not defined for material ";
     os << mat_name;
-    Messages::error(os.str());
+    throw(ModelErrorException(os.str()));
   }
-  else
-    return CrystalDefs::anion[mat_name];
+
+  return(it->second == sp);
 }
 
 
 bool CrystalDefs::is_cation(const std::string mat_name, const Specie sp)
 {
-  std::ostringstream os;
-  std::map<const std::string, Specie::Type>::iterator end = 
-    CrystalDefs::cation.end();
+  std::map<const std::string, Specie::Type>::iterator it(
+      CrystalDefs::cation.find(mat_name));
 
-  if (CrystalDefs::cation.find(mat_name) == end)
+  if (it == CrystalDefs::cation.end())
   {
-    os << "CrystalDefs: Anion not defined for material";
+    std::ostringstream os;
+    os << "CrystalDefs: Cation not defined for material ";
     os << mat_name;
-    Messages::error(os.str());
+    throw(ModelErrorException(os.str()));
   }
-  else
-    return CrystalDefs::cation[mat_name];
+
+  return(it->second == sp);
 }
 
 

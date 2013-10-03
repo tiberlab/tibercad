@@ -434,7 +434,7 @@ SimulationInterface::_get_bulk_model(const Elem* elem) const
 }
 
 
-
+/*
 PhysicalModel*
 SimulationInterface::_get_bulk_model(const Atom& atom, bool parent) const
 {
@@ -445,7 +445,7 @@ SimulationInterface::_get_bulk_model(const Atom& atom, bool parent) const
 
   return mod;
 }
-
+*/
 
 PhysicalModel*
 SimulationInterface::_get_bulk_model(const Atom& atom1, const Atom& atom2, bool parent) const
