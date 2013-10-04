@@ -12,7 +12,8 @@ run:
 	@echo "Running test in $(notdir $(PWD)) ..."
 	@echo ""
 	@ln -f -s $(topdir)/bin/tibercad
-	@./tibercad $(inputfile)
+
+#@./tibercad $(inputfile)
 
 
 clean:
