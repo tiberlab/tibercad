@@ -120,15 +120,15 @@ AtomisticStructure::init(const std::string& name,
     {
       std::string filename;
 
+      if (_options.find_option("load_structure")) filename = _options.get_option("load_structure","none");
+      if (_options.find_option("load")) filename = _options.get_option("load","none");
+
       //------------------------------------------------------------
       os << "Reading structure from file " << filename <<
           ". Any further information will be neglected" << std::endl;
       Messages::info(os.str(), true);
       os.str(std::string());
       //---------------------------------------------------------------
-
-      if (_options.find_option("load_structure")) filename = _options.get_option("load_structure","none");
-      if (_options.find_option("load")) filename = _options.get_option("load","none");
 
       init(filename);
 
@@ -370,7 +370,7 @@ AtomisticStructure::read_structure(const std::string& path)
   Atom tmp_atom;
   Tensor1 pos;
 
-  Messages::debug("Reading structure from file");
+  Messages::debug("Reading structure from file "+path);
 
   // Delete eventually existing structure
   if (!(_atoms.empty())) _atoms.clear();
@@ -379,10 +379,9 @@ AtomisticStructure::read_structure(const std::string& path)
   file.open(path.c_str(), std::ifstream::in);
 
   if (!file)
-    {
-      std::cerr << "Unable to open file " << path << ". Cannot read Atomistic Structure. \n";
-      exit(1);   // call system to stop
-    }
+  {
+    Messages::error("Unable to open file "+path+". Cannot read Atomistic Structure.");
+  }
 
   // Recognize type of input file and read it properly
   std::string extension = path.substr(path.size()-4);
@@ -551,8 +550,7 @@ AtomisticStructure::read_structure(const std::string& path)
 
   else
     {
-      std::cerr << "Structure file extension is not recognized. \n";
-      exit(1);
+      Messages::error("Structure file extension is not recognized. ");
     }
 
   file.close();
@@ -596,6 +594,9 @@ AtomisticStructure::read_tgn(const std::string& path)
   line_string.str(line);
 
   line_string >> record;
+ 
+  std::cout<<"head:"<<record<<std::endl;
+
 
   N_atoms = atoi(record.c_str());
   _atoms.reserve(N_atoms);
@@ -720,6 +721,8 @@ AtomisticStructure::print_tgn(const std::string& path) const
 
   // --------------------------------------------
   file.open(file_name.c_str());
+      
+      file << _atoms.size();
       if (_is_periodic) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
