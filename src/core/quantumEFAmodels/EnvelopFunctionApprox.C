@@ -249,7 +249,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
 
     vector<double> prob_dens(np, 0.0);
 
-    for (int psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+    for (int psi_index = 0; psi_index < number_of_bands; psi_index++)
     {
       dof_map.dof_indices(elem, dof_indices, psi_index);
 
@@ -480,14 +480,18 @@ void EnvelopFunctionApprox::parse_options()
   //Poisson model
   opt.consider_potential = false;
   opt.consider_potential_bulk = false;
+  opt.consider_strain_bulk = true;
 
   std::string  poisson_model_name = get_option("poisson_model_name","");
   poisson_model_name = get_option("poisson_simulation", poisson_model_name);
+
   if ( poisson_model_name != "" )
   {
     opt.consider_potential = true;
 
     opt.consider_potential_bulk = get_option("potential_in_bulk",true);
+
+    opt.consider_strain_bulk = get_option("strain_in_bulk",true);
 
     poisson_equation  = find_simulation ( poisson_model_name );
 
@@ -633,10 +637,10 @@ void EnvelopFunctionApprox::do_init( )
 
   //--------------------------------------------------------------------------------------------------------//
   //add variables
-  opt.number_of_bands = calculate_number_of_bands( );
+  number_of_bands = calculate_number_of_bands( );
 
   psi_name.clear();
-  for (short i = 0; i < opt.number_of_bands; i++)
+  for (short i = 0; i < number_of_bands; i++)
     {
       std::ostringstream var_str;
       var_str << "psi" << i ;
@@ -736,7 +740,7 @@ void EnvelopFunctionApprox::do_init( )
     EFAbulkHamiltonian* element_hamiltonian =
       get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
     
-    opt.kp_bands = element_hamiltonian->get_kp_bands_map();
+    band_map = element_hamiltonian->get_kp_bands_map();
     
     opt.degeneracy = element_hamiltonian->get_degeneracy();
   }
@@ -846,9 +850,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   //material list
   //assemble_material_list();
 
- vector<unsigned int> psivar(opt.number_of_bands);
+ vector<unsigned int> psivar(number_of_bands);
  //get numbers of variables
- for (unsigned int i = 0; i < opt.number_of_bands; i++)
+ for (unsigned int i = 0; i < number_of_bands; i++)
  {
    psivar[i] = system->variable_number(psi_name[i]);
  }
@@ -927,7 +931,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       int n_nodes = elem->n_nodes();
       fe->reinit(elem);
 
-      for (unsigned int b = 0; b < opt.number_of_bands; b++)
+      for (unsigned int b = 0; b < number_of_bands; b++)
       {
         dof_map.dof_indices(elem, dof_indices_component, psivar[b]);
         const unsigned int n_dofs = dof_indices_component.size();
@@ -1010,12 +1014,12 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
-        for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
+        for (unsigned int band1 = 0; band1 < number_of_bands; band1++)
         {//band1
           dof_map.dof_indices (elem, dof_indices_component, psivar[band1]);
           const unsigned int n_psi_dofs = dof_indices_component.size();
 
-          for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
+          for (unsigned int band2 = 0; band2 < number_of_bands; band2++)
           {//band2
 
             //Hamiltonian
@@ -1528,7 +1532,7 @@ EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
 
     fe->reinit (elem);
 
-    for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+    for (short psi_index = 0; psi_index < number_of_bands; psi_index++)
     {
       dof_map.dof_indices (elem, dof_indices, psi_index);
       const unsigned int n_psi_dofs = dof_indices.size();
@@ -1671,7 +1675,7 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
       const Elem* elem = *el;
       fe->reinit (elem);
 
-      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+      for (short psi_index = 0; psi_index < number_of_bands; psi_index++)
 	{
 	  dof_map.dof_indices (elem, dof_indices, psi_index);
 	  const unsigned int n_psi_dofs = dof_indices.size();
@@ -1812,7 +1816,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i)
 
 
 
-      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+      for (short psi_index = 0; psi_index < number_of_bands; psi_index++)
 	{
 	  dof_map.dof_indices (elem, dof_indices, psi_index);
 	  const unsigned int n_psi_dofs = dof_indices.size();
@@ -1957,7 +1961,7 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 
 
 
-      for (short psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+      for (short psi_index = 0; psi_index < number_of_bands; psi_index++)
 	{
 	  dof_map.dof_indices (elem, dof_indices, psi_index);
 	  const unsigned int n_psi_dofs = dof_indices.size();
@@ -2252,7 +2256,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
       const Elem* elem = *el;
       dof_map_qdens.dof_indices(elem, dof_indices_qdens, 0);
 
-      for (int psi_index = 0; psi_index < opt.number_of_bands; psi_index++)
+      for (int psi_index = 0; psi_index < number_of_bands; psi_index++)
       {
         dof_map.dof_indices(elem, dof_indices, psi_index);
 
@@ -2395,43 +2399,43 @@ void EnvelopFunctionApprox::solve_bulk(void)
   std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
 	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
 
-  std::cout<<"number of bands: " << opt.number_of_bands<<std::endl;
+  std::cout<<"number of bands: " << number_of_bands<<std::endl;
 
-  std::complex<double> ham_matrix[opt.number_of_bands * opt.number_of_bands ];
+  std::complex<double> ham_matrix[number_of_bands * number_of_bands ];
 
-  for (unsigned int band1 = 0; band1 < opt.number_of_bands; band1++)
-    for (unsigned int band2 = 0; band2 < opt.number_of_bands; band2++)
+  for (unsigned int band1 = 0; band1 < number_of_bands; band1++)
+    for (unsigned int band2 = 0; band2 < number_of_bands; band2++)
     {
-      ham_matrix[band1 + band2 * opt.number_of_bands] = model_Ham[band1][band2].constant;
+      ham_matrix[band1 + band2 * number_of_bands] = model_Ham[band1][band2].constant;
 
     }
 
 
   _solution.clear();
-  _solution.resize(opt.number_of_bands);
+  _solution.resize(number_of_bands);
 
   {
      char jobs = 'V';
      char UPLO = 'U';
-     int  N = opt.number_of_bands;
-     double eigvals[opt.number_of_bands];
-     std::complex<double> WORK[2*opt.number_of_bands-1];
-     int LWORK = 2*opt.number_of_bands-1;
-     double RWORK[3*opt.number_of_bands-2];
+     int  N = number_of_bands;
+     double eigvals[number_of_bands];
+     std::complex<double> WORK[2*number_of_bands-1];
+     int LWORK = 2*number_of_bands-1;
+     double RWORK[3*number_of_bands-2];
      int info;
 
      zheev_(jobs, UPLO, N, ham_matrix, N, eigvals, WORK, LWORK, RWORK, info);
 
      if (info !=0 ) throw SolveFailedException("LAPACK problem\n");;
 
-     for (short i = 0; i < opt.number_of_bands ; i++)
+     for (short i = 0; i < number_of_bands ; i++)
      {
 
        _solution[i].eigen_energy = eigvals[i]*Hartree;
-       _solution[i].eigen_vector.resize(opt.number_of_bands);
-       for (short j = 0; j < opt.number_of_bands ; j++)
+       _solution[i].eigen_vector.resize(number_of_bands);
+       for (short j = 0; j < number_of_bands ; j++)
        {
-	 _solution[i].eigen_vector[j] = ham_matrix[i * opt.number_of_bands + j];
+	 _solution[i].eigen_vector[j] = ham_matrix[i * number_of_bands + j];
        }
      }
   }

@@ -105,7 +105,8 @@ Module empirical_tb
   Harrison_scaling = false
   potential_simulation = driftdiffusion
   relativistic = true
-
+  add_band_shifts = false	
+  
   plot = (tbstates)
 
   sparse_format = full 
@@ -113,6 +114,7 @@ Module empirical_tb
   Solver
   {
     guess_valence = -0.5
+    guess_conduction = 0.0
     num_valence_eigenvalues = 4
     num_conduction_eigenvalues = 4
   }

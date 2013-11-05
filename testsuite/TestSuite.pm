@@ -684,7 +684,7 @@ sub compare_data_vectors($$$) {
   for (my $i = 0; $i <= $n; $i++) {
     my $diff = $data1[$i] - $data2[$i];
     if (abs($diff) > $prec * (1.0 + abs($data1[$i]))) {
-      #print "$data1[$i] $data2[$i] $diff\n";
+      print "$data1[$i] $data2[$i] $diff\n";
       $difference = 1;
       last;
     }

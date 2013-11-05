@@ -168,7 +168,7 @@ DDsemiconductor::DDsemiconductor(const ModelOptions& options)
     bulk_ham(NULL),
     energy_cutoff(4.0),
     strained(false),
-    k_max(1e-4)
+    k_max(1e-4)    //k_max(0.0529177e-4)
 {
 }
 
@@ -185,9 +185,13 @@ void DDsemiconductor::prepare_submodels(void)
   assert(semiconductor == NULL);
   assert(bulk_ham == NULL);
 
-  const ModelOptions& opt =  get_options();
+  //create semiconductor for electron parameters
+  ModelOptions  kp_options;
+  kp_options["model"] = "single_band";
+  kp_options["kp_model"] = "2x2";
+  kp_options["particle"] = "el";
 
-  semiconductor = Semiconductor::create(get_material(), opt);
+  semiconductor = Semiconductor::create(get_material(), kp_options);
   if (semiconductor == NULL)
   {
     string msg("Cannot create semiconductor model for ");
@@ -198,10 +202,10 @@ void DDsemiconductor::prepare_submodels(void)
   }
   add_submodel("semiconductor", semiconductor);
 
-
-  ModelOptions  kp_options;
+  //create kp hamiltonian for hole parameters
   kp_options["model"] = "kp";
   kp_options["kp_model"] = "6x6";
+  kp_options["particle"] = "hl";
 
   bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
       EFAbulkHamiltonian::create(get_material(), kp_options));
@@ -209,10 +213,6 @@ void DDsemiconductor::prepare_submodels(void)
   if (bulk_ham == NULL)
     throw InitFailedException(string("Cannot create bulk hamiltonian for ")
         + get_material()->get_name());
-
-  // dummy reads
-  bulk_ham->get_options().get_option("kp_model", "");
-  bulk_ham->get_options().get_option("model", "");
 
   add_submodel("bulk_ham", bulk_ham);
 }
@@ -715,8 +715,14 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
 
       if (imass_DOS <= 0.0)
       {
-      //  throw SolverException("Negative valence band DOS mass");
+      //  throw SolverException("Negative valence band DOS mass")
         Messages::warning("Negative valence band DOS mass, setting to 1.0");
+	std::cout<<"band "<<ind<<std::endl;
+	std::cout<<"Mass Tensor: "<<std::endl;
+	std::cout<<imass(1,1)<<" "<<imass(1,2)<<" "<<imass(1,3)<<std::endl;
+	std::cout<<imass(2,1)<<" "<<imass(2,2)<<" "<<imass(2,3)<<std::endl;
+	std::cout<<imass(3,1)<<" "<<imass(3,2)<<" "<<imass(3,3)<<std::endl;
+
         imass_DOS = 1.0;
       }
 

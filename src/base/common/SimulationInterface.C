@@ -16,8 +16,6 @@
 #include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
 #include "OpticsKP.h"
-#include "Dftb.h"
-#include "EmpiricalTightBinding.h"
 #include "OpticsTB.h"
 #include "Sweep.h"
 #include "RelaxationMethod.h"
@@ -127,15 +125,11 @@ SimulationInterface::create(const string& type,
     sim = RelaxationMethod::create(options);
   else if (type_name == "opticskp")
     sim = OpticsKP::create(options);
+  else if (type_name == "opticstb")
+    sim = OpticsTB::create(options);
 #ifdef ENABLE_DFTB
   else if (type_name == "densityfunctional_tb")
     sim = Dftb::create(options);
-#endif
-#ifdef ENABLE_UPTIGHT
-  else if (type_name == "empirical_tb")
-    sim = ETB::create(options);
-  else if (type_name == "opticstb")
-    sim = OpticsTB::create(options);
 #endif
 
   if (sim == NULL)

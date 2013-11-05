@@ -29,8 +29,8 @@
 #include "KPbulkHamiltonian.h"
 #include "EFAbulkModel.h"
 
-#include  "DftbModel.h"
-#include  "EtbModel.h"
+//#include  "DftbModel.h"
+//#include  "EtbModel.h"
 
 
 //#include  "ZbOptDielectricConstant.h"
@@ -108,10 +108,10 @@ PhysicalModelInterface::_create(const string& name,
     mod = WzDDsemiconductor::create(options);
   else if (name == "EFAmodel")
     mod = EFAbulkModel::create(options);
-  else if (name == "dftb")
-    mod = DftbModel::create(options);
-  else if (name == "etb")
-    mod = ETBModel::create(options);
+  //else if (name == "dftb")
+  //  mod = DftbModel::create(options);
+  //else if (name == "etb")
+  //  mod = ETBModel::create(options);
   //else if (name == "opt_dielectric_constant_zb")
   //  mod = ZbOptDielectricConstant::create(options);
   //else if (name == "opt_dielectric_constant_wz")
@@ -269,6 +269,7 @@ PhysicalModelInterface::copy(void) const
     new_copy->set_owner(_owner);
     new_copy->set_material(_bulk_material);
     new_copy->set_name(get_name());
+    new_copy->_set_type(get_type());
     new_copy->_simulator_id = _simulator_id;
     new_copy->_set_module_name(get_module_name());
 

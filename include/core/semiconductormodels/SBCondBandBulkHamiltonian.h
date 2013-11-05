@@ -37,7 +37,7 @@ class SBCondBandBulkHamiltonian: public SBbulkHamiltonian
 
  virtual void prepare_submodels(void);
 
- 
+  
 
  //! a pointer to a semiconductor that contains parameters
  Semiconductor* semiconductor;

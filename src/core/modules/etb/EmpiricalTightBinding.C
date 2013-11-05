@@ -1,12 +1,10 @@
 
 #include "tiber_config.h"
 
-
 #ifdef ENABLE_UPTIGHT
 
 #include "EmpiricalTightBinding.h"
 #include "PhysicalModel.h"
-#include "EtbModel.h"
 #include "AtomisticStructure.h"
 #include "SimulationOptions.h"
 #include "TiberCad.h"
@@ -19,8 +17,6 @@
 #include "EigenSolver.h"
 #include "RotatedCrystal.h"
 
-#include "petsc_matrix.h"
-
 #include <fstream>
 #include <sstream>
 #include <utility>
@@ -29,6 +25,7 @@
 #include <algorithm>
 #include <limits>
  
+#include "TiberModule.h"
 
 //#include <complex>
 using namespace std;
@@ -43,6 +40,10 @@ ETB::ETB(const ModelOptions& options)
   inst = new UptWrapper;
 }
 
+ETB* ETB::create(const ModelOptions& options)
+{
+  return new ETB(options);
+}
 
 ETB::~ETB(void)
 {
@@ -125,22 +126,6 @@ ETB::UptSolverOptions::~UptSolverOptions(void)
 {
 
 }
-
-//-------------------------------------------------------------------------
-PhysicalModel*
-ETB::create_physical_model(const ModelOptions &options,
-			     const Material* mat) const throw (ModelErrorException)
-{
-
-      ETBModel* model = PhysicalModelInterface::create<ETBModel>("etb", mat, options);
-
-      if (model == NULL)
-        throw ModelErrorException("TightBinding: ETB physical model is not created" );
-
-      return model;
-
-}
-
 
 //-------------------------------------------------------------------------
 void
@@ -1848,7 +1833,7 @@ void ETB::do_copy_H_to_solver( )
 
       n_cols = inst->get_H_row_size(row);
  
-      cols = new PetscInt[n_cols];
+      cols = new int[n_cols]; //PetscInt[n_cols];
       row_vals = new Complex[n_cols];
 
       inst->get_H_row(row, cols, row_vals);

@@ -27,7 +27,7 @@ delta = 0.1
 [atomistic_structure]
 n_basis_specie=2
 
-specie_1=GaIn
+specie_1=Ga
 specie_2=Sb
 
 [densityfunctional_tb]

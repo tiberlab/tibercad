@@ -62,7 +62,8 @@ class SBbulkHamiltonian : public EFAbulkHamiltonian
   virtual PhysicalModelInterface* create_new(void) const = 0;
 
   virtual void do_init(void) = 0;
- 
+
+  virtual void do_print_info(void);
 
  private:
 

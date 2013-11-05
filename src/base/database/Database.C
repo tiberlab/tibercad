@@ -7,7 +7,6 @@
 
 #include "getpot.h"
 #include "dense_vector.h"
-#include "vector_value.h"
 
 #include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -467,15 +466,15 @@ Database::get(const string& variable,
    {
      size_t n = get_number_of_components();
      result = _comp_db[0].get(variable, default_value, required);
-     for (size_t i = 1; i < n; i++)
-       if (result != _comp_db[i].get(variable, default_value, required))
-       {
-         ostringstream os;
-         os << "In database of " << get_material() << ": parameter "
-           << variable << " in section " << get_section()
-           << " has different values in the alloy components.";
-         Messages::warning(os.str());
-       }
+     //for (size_t i = 1; i < n; i++)
+     //  if (result != _comp_db[i].get(variable, default_value, required))
+     //  {
+     //    ostringstream os;
+     //    os << "In database of " << get_material() << ": parameter "
+     //      << variable << " in section " << get_section()
+     //      << " has different values in the alloy components.";
+     //    Messages::warning(os.str());
+     //  }
    }
    else
    {
@@ -733,6 +732,49 @@ Database::get(const std::string& variable, RealVectorValue& data,
   }
 
 }
+
+void
+Database::get(const string& variable, RealTensor& tensor, 
+    bool required) const
+{
+  open();
+
+  if (is_alloy() && (_mixing_type != NONE))
+  {
+    size_t n = get_number_of_components();
+
+    RealTensor tmp;
+
+    for (size_t i = 0; i < n; i++)
+    {
+      _comp_db[i].get(variable, tmp, required);
+
+      tensor += _comp_fractions[i] * tmp;
+    }
+
+    if (n == 2)
+    {
+      RealTensor bow;
+      string s((*_file)(string("bow_" + variable).c_str(),"0.0"));
+
+      Utils::extract_tensor(s, bow);
+
+      tensor -= bow * _comp_fractions[0] * _comp_fractions[1];
+
+    }
+
+  }
+  else
+  {
+    if (required) require_variable(variable);
+    else if (!has_variable(variable)) return;
+
+    string s(get(variable, ""));
+    Utils::extract_tensor(s, tensor);
+  }
+
+}
+
 
 
 

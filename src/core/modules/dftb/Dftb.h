@@ -68,9 +68,6 @@ public:
   //! Create object
   static Dftb* create(const ModelOptions& options);
 
-  virtual PhysicalModel* create_physical_model(const ModelOptions &options,
-      const Material* mat) const throw (ModelErrorException);
-
 private:
 
   //! A map containing which kind of shell parametrization is used for any specie (maximum angular momentum + 1)

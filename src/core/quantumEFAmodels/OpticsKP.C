@@ -212,13 +212,13 @@ void OpticsKP::calculate_matrix_bulk(void)
 
   //!number of bands in initial state
   //short    num_bands_initial = initial_state_model->get_number_of_bands();
-  const map<short, short>&  kp_bands_map_in = initial_state_model->get_kp_bands();
+  const map<short, short>&  kp_bands_map_in = initial_state_model->get_band_map();
 
   assert( kp_bands_map_in.size() > 0);
 
   //number of bands in final state
   //short    num_bands_final   = final_state_model->get_number_of_bands();
-  const map<short, short>&  kp_bands_map_fi = final_state_model->get_kp_bands();
+  const map<short, short>&  kp_bands_map_fi = final_state_model->get_band_map();
 
   assert( kp_bands_map_fi.size() > 0);
 
@@ -515,13 +515,13 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
   //!number of bands in initial state
   //short    num_bands_initial = initial_state_model->get_number_of_bands();
-  const map<short, short>&  kp_bands_map_in = initial_state_model->get_kp_bands();
+  const map<short, short>&  kp_bands_map_in = initial_state_model->get_band_map();
 
   assert( kp_bands_map_in.size() > 0);
 
   //number of bands in final state
   //short    num_bands_final   = final_state_model->get_number_of_bands();
-  const map<short, short>&  kp_bands_map_fi = final_state_model->get_kp_bands();
+  const map<short, short>&  kp_bands_map_fi = final_state_model->get_band_map();
 
   assert( kp_bands_map_fi.size() > 0);
 

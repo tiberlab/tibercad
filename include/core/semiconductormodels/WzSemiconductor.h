@@ -7,7 +7,7 @@
 #include "Semiconductor.h"
 #include "KPbulkHamiltonian.h"
 
-#include<vector>
+#include <vector>
 //! A class for wurtzite crystal
 class  WzSemiconductor : public Semiconductor
 
@@ -98,8 +98,46 @@ class  WzSemiconductor : public Semiconductor
   };
 
  
-  
+ 
+  //! Get a writeable reference to the physical parameters
+  const WzDDparameters& get_parameters(void);
 
+  //! Get a  reference to the initial physical parameters
+  const WzDDparameters& get_initial_parameters(void) const;
+
+
+ 
+  static WzSemiconductor* create(const ModelOptions& options);
+ 
+  //! apply varshni formulas
+  virtual void apply_temperature(void);
+
+ protected:
+
+  //Constructor
+  WzSemiconductor(const ModelOptions& options);
+
+  virtual PhysicalModelInterface* create_new(void) const;
+
+  virtual void do_init(void);
+
+  virtual void read_database(void);
+
+  virtual void read_database_alloy(void);
+
+
+  virtual void do_calculate_kp_params (KPparams& par);
+
+ private:
+  //!parameters that TiberCAD should use (e.g. for the actual temperature)
+  WzDDparameters par; 
+
+  //!initial parameters from the database (e.g. zero temperature)
+  WzDDparameters  par_initial;
+
+
+  //!bowing parameters
+  WzDDparameters bow; 
   //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
   /*!
     \f$
@@ -131,57 +169,13 @@ class  WzSemiconductor : public Semiconductor
     \f$
     
   */
-  virtual KPparams do_calculate_6x6_kp_params (void );
 
-  //! Calculates k.p parameters in atomic units for 8 band valence band calculation (see below)
-  /*
-    
-   */
-  virtual KPparams do_calculate_8x8_kp_params (void );
+  void calculate_6x6_kp_params(KPparams& par);
 
+  void calculate_8x8_kp_params(KPparams& par);
 
+  void calculate_14x14_kp_params(KPparams& par);
  
-
-  //! Get a writeable reference to the physical parameters
-  const WzDDparameters& get_parameters(void);
-
-  //! Get a  reference to the initial physical parameters
-  const WzDDparameters& get_initial_parameters(void) const;
-
-
- 
-  static WzSemiconductor* create(const ModelOptions& options);
- 
-  //! apply varshni formulas
-  virtual void apply_temperature(void);
-
- private:
-  //!parameters that TiberCAD should use (e.g. for the actual temperature)
-  WzDDparameters par; 
-
-  //!initial parameters from the database (e.g. zero temperature)
-  WzDDparameters  par_initial;
-
-
-  //!bowing parameters
-  WzDDparameters bow; 
-
-  
-
- protected:
-
-  //Constructor
-  WzSemiconductor(const ModelOptions& options);
-
-  virtual PhysicalModelInterface* create_new(void) const;
-
-  virtual void do_init(void);
-
-  virtual void read_database(void);
-
-  virtual void read_database_alloy(void);
- 
-
 };
 
 inline PhysicalModelInterface* WzSemiconductor::create_new( ) const

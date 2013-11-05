@@ -124,7 +124,6 @@ Module elasticity
     body_force lattice_mismatch 
     {
       reference_material = GaAs
-      structure = zb    
     }
        
   }
@@ -148,7 +147,6 @@ Module efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy)
 
   x-periodicity = false
-  Dirichlet_bc_everywhere = true
    
   particle = el
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
@@ -178,7 +176,6 @@ Module efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy)
 
   x-periodicity = false
-  Dirichlet_bc_everywhere = true
    
   particle = hl
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 

@@ -7,11 +7,13 @@
 
 #include <string>
 #include <vector>
+#include "vector_value.h"
+#include "tensor_value.h"
 
 class GetPot;
 
-template <typename T> class VectorValue;
-typedef VectorValue<double> RealVectorValue;
+//template <typename T> class VectorValue;
+//typedef VectorValue<double> RealVectorValue;
 
 
 class Database
@@ -146,20 +148,6 @@ class Database
     T get(const std::string& variable, T default_value,
         bool required = false) const;
 
-
-    //! Get string data
-    std::string get(const std::string& variable,
-        const std::string& default_value, bool required = false) const;
-
-    //! Get string data
-    std::string get(const std::string& variable,
-        const char* default_value, bool required = false) const;
-
-    //! Get data in a libmesh vector type
-    void get(const std::string& variable, RealVectorValue& data,
-        bool required = false) const;
-
-
     //! Get data array/vector
     /*!
      * If \c variable is not present in the database, the input vector
@@ -182,6 +170,23 @@ class Database
     void get(const std::string& variable,
         std::vector<std::vector<T> >& data, bool required = false) const;
 
+
+
+    //! Get string data
+    std::string get(const std::string& variable,
+        const std::string& default_value, bool required = false) const;
+
+    //! Get string data
+    std::string get(const std::string& variable,
+        const char* default_value, bool required = false) const;
+
+    //! Get data in a libmesh vector type
+    void get(const std::string& variable, RealVectorValue& data,
+        bool required = false) const;
+
+    //! Get data in a libmesh tensor type
+    void get(const std::string& variable, RealTensor& tensor, 
+        bool required = false) const;
 
 
   private:

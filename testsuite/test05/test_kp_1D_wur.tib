@@ -285,7 +285,7 @@ Simulation
   verbose = 1
   #solve = (elasticity, dd, quantum_el, quantum_hl, dispersion_el, dispersion_hl)  
   solve = (elasticity, dd, quantum_el, quantum_hl)  
-  #solve = (elasticity, dd, quantum_hl)  
+  #solve = (elasticity, dd)  
 
   resultpath = output
   output_format = grace

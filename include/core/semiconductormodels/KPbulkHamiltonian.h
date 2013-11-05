@@ -16,10 +16,6 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
  public:
 
  
-
-
-
- 
   //! destructor. 
   ~KPbulkHamiltonian(void);
   
@@ -42,8 +38,6 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   void calculate_optical_operator_k_par(void);
 
  
-  Tensor2Sym strainM;
-
   void set_parameters(const KPparams&  par1 );
 
 
@@ -63,7 +57,6 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   //! sets temperature
   virtual void set_temperature(double Temperature);
  
-  virtual void do_print_info(void);
 
  private:
   //!simmetrize valence-valence term 
@@ -82,14 +75,14 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   //! minimal used band in 8x8 Hamiltonian 
   short band_min;
 
-
   //! maximal used band in 8x8 Hamiltonian 
   short band_max;
 
+  //! number of bands (8 or 14)
+  short num_bands;
  
-  //! Hamiltonian without k|| application
+  //! Hamiltonian without k application and without strain
   std::vector<std::vector<MatrixElement> > Ham; 
-
 
 
   //! P-operator matrixes with k|| applied
@@ -109,11 +102,9 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
   void   nullify_parameters(void); 
 
   //! k.p wurztzite parameters
-  KPparams par ;
+  KPparams par;
 
- 
- 
- 
+
 
  protected:
 
@@ -124,11 +115,10 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
 
   virtual void do_init(void);
 
-  virtual void prepare_submodels(void);
-
-
- 
+  virtual void do_print_info(void);
   
+  virtual void prepare_submodels(void);
+ 
 };
 
 

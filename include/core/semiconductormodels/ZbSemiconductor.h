@@ -3,7 +3,7 @@
 
 
 #include "Semiconductor.h"
-#include<vector>
+#include <vector>
 #include <complex>
 #include "KPbulkHamiltonian.h" 
 
@@ -48,6 +48,13 @@ class ZbSemiconductor  : public Semiconductor
     double varshni_beta_X; //!< Varshni parameter beta for X valley
     double varshni_beta_L; //!< Varshni parameter beta for L valley
 
+    double Eg1;           //!< band gap between Gamma_8c and Gamma_7v (from valence to second conduction)
+    double delta_c;       //!< spin-orbit in second conduction band
+    double delta_cf;      //!< spin-orbit (crystal field?) between conduction-valence bands
+    double Ep1;           //!< coupling terms between second conduction and conduction
+    double Ep2;           //!< coupling terms between second conduction and valence
+   
+    double m_c2; 
     
 
   };
@@ -64,8 +71,43 @@ class ZbSemiconductor  : public Semiconductor
   const ZbDDparameters& get_initial_parameters(void) const;
 
   
+  //! apply varshni formulas
+  virtual void apply_temperature(void) ;
 
-  //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
+  static ZbSemiconductor* create(const ModelOptions& options);
+
+ protected:
+
+  //!Constructor
+  ZbSemiconductor(const ModelOptions& options);
+
+  virtual PhysicalModelInterface* create_new(void) const;
+
+  virtual void do_init(void);
+
+  virtual void read_database(void);
+
+  virtual void read_database_alloy(void);
+ 
+  virtual void do_calculate_kp_params (KPparams& par);
+ 
+
+ private:
+
+  //-------------------------------------------------------------------------------//
+  //material data block:
+
+  //! parameters that TiberCAD should use (e.g. for the actual temperature)
+  ZbDDparameters  par;
+
+  //!initial parameters from the database (e.g. zero temperature)
+  ZbDDparameters  par_initial;
+
+  ZbDDparameters  bow;
+
+  //---------------------------------------------------------------------------------//
+  // k.p Hamiltonian section
+ //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
 
   /*! Valence band k.p parameters:
 
@@ -100,7 +142,7 @@ class ZbSemiconductor  : public Semiconductor
 
   */
  
-  virtual KPparams do_calculate_6x6_kp_params (void );
+   void calculate_6x6_kp_params(KPparams& par);
 
   //! Calculates k.p parameters in atomic units for 8 band valence band calculation (see below)
   /*!
@@ -119,49 +161,28 @@ class ZbSemiconductor  : public Semiconductor
     \f$
 
   */
-  virtual KPparams do_calculate_8x8_kp_params (void );
+   void calculate_8x8_kp_params(KPparams& par);
 
-  //! apply varshni formulas
-  virtual void apply_temperature(void) ;
+  //! Calculates k.p parameters in atomic units for 14 band valence band calculation (see below)
+  /*!
+    \f$
 
-  static ZbSemiconductor* create(const ModelOptions& options);
+     S =  \\
+     E_c = E_v + \frac{\Delta}{3} + Eg \\
 
- private:
+     \f$
 
-  //-------------------------------------------------------------------------------//
-  //material data block:
+    \f$
+    L^{14 \times 14} =  L^{8 \times 8};\\
+    N^{14 \times 14} =  N^{8 \times 8} + \frac{P^2}{E_g1 + {\Delta}/{3} + 2 {\Delta_c}/{3}} ;\\
+    M^{14 \times 14} =  M^{8 \times 8} + \frac{P^2}{E_g1 + {\Delta}/{3} + 2 {\Delta_c}/{3}}. \\
+    \f$
 
-  //! parameters that TiberCAD should use (e.g. for the actual temperature)
-  ZbDDparameters  par;
-
-  //!initial parameters from the database (e.g. zero temperature)
-  ZbDDparameters  par_initial;
-
-  ZbDDparameters  bow;
-
-  //---------------------------------------------------------------------------------//
-  // k.p Hamiltonian section
-
-
-
+  */
+  void calculate_14x14_kp_params(KPparams& par);
   //--------------------------------------------------------------------------------//
 
 
- protected:
-
-  //!Constructor
-  ZbSemiconductor(const ModelOptions& options);
-
-  virtual PhysicalModelInterface* create_new(void) const;
-
-  virtual void do_init(void);
-
-  virtual void read_database(void);
-
-  virtual void read_database_alloy(void);
- 
-
- 
 };
 
 

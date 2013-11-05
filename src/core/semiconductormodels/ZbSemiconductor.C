@@ -1,3 +1,4 @@
+
 // $Id$
 
 #include "ZbSemiconductor.h"
@@ -5,11 +6,9 @@
 #include "Material.h"
 #include "Constants.h"
 
+#include "tensor_value.h"
+
 using namespace std;
-
-
-
-
 
 
 //--------------------------------------------//
@@ -18,7 +17,7 @@ void ZbSemiconductor::do_init()
   Semiconductor::do_init();
 
   //-----------------------------------------------------------------------------
-  //parameters
+  //parameters (do_init comes ofter read_database so input file can override)
   get_parameter("Eg_G",  par.EgGamma );
   get_parameter("Eg_L",  par.EgL);
   get_parameter("Eg_X",  par.EgX);
@@ -74,52 +73,92 @@ void ZbSemiconductor::read_database( )
 
   // defaults for GaAs
   db.set_section("bandgap");
-  par.EgGamma = db.get("Eg_G", 1.519);
-  par.EgL = db.get("Eg_L", 1.815);
-  par.EgX = db.get("Eg_X", 1.981);
+  par.EgGamma = db.get("Eg_G", 1.00);
+  par.EgL = db.get("Eg_L", 1.00);
+  par.EgX = db.get("Eg_X", 1.00);
 
-  par.varshni_alpha_G = db.get("varshni_alpha_G", 0.0);
-  par.varshni_alpha_L = db.get("varshni_alpha_L", 0.0);
-  par.varshni_alpha_X = db.get("varshni_alpha_X", 0.0);
 
-  par.varshni_beta_G = db.get("varshni_beta_G", 0.0);
-  par.varshni_beta_L = db.get("varshni_beta_L", 0.0);
-  par.varshni_beta_X = db.get("varshni_beta_X", 0.0);
-
+  if (_consider_temperature)
+  {
+     par.varshni_alpha_G = db.get("varshni_alpha_G", 0.0);
+     par.varshni_alpha_L = db.get("varshni_alpha_L", 0.0);
+     par.varshni_alpha_X = db.get("varshni_alpha_X", 0.0);
+     par.varshni_beta_G = db.get("varshni_beta_G", 0.0);
+     par.varshni_beta_L = db.get("varshni_beta_L", 0.0);
+     par.varshni_beta_X = db.get("varshni_beta_X", 0.0);
+  }
+  else
+  {
+    par.varshni_alpha_G = 0.0;
+    par.varshni_alpha_L = 0.0;
+    par.varshni_alpha_X = 0.0;
+    par.varshni_beta_G = 0.0;
+    par.varshni_beta_L = 0.0;
+    par.varshni_beta_X = 0.0;
+  }
 
 
   db.set_section("valenceband");
-  par.Ev = db.get("E_v", 1.346);
+  par.Ev = db.get("E_v", 0.0);
 
 
   db.set_section("conductionband");
-  par.m_G = db.get("m_G", 0.067);
-  par.m_l_L = db.get("m_L_l", 1.9);
-  par.m_t_L = db.get("m_L_t", 0.0754);
-  par.m_l_X = db.get("m_X_l", 1.3);
-  par.m_t_X = db.get("m_X_t", 0.23);
+  
+  //par.m_G = db.get("m_G", 0.0);
+  
+  RealTensor mten;
+  db.get("m_G",mten,true);
+  par.m_G = (mten(0,0)+mten(1,1)+mten(2,2))/3.0;
+
+  par.m_l_L = db.get("m_L_l", 0.0);
+  par.m_t_L = db.get("m_L_t", 0.0);
+  par.m_l_X = db.get("m_X_l", 0.0);
+  par.m_t_X = db.get("m_X_t", 0.0);
 
 
+  // either use old 'kdotp' block or override with 'kdotp_6x6' 	  
   db.set_section("kdotp");
-  par.delta = db.get("delta", 0.341);
-  par.gamma1 = db.get("gamma1", 6.98);
-  par.gamma2 = db.get("gamma2", 2.06);
-  par.gamma3 = db.get("gamma3", 2.93);
+  par.delta = db.get("delta", 0.0);
+  par.gamma1 = db.get("gamma1", 0.0);
+  par.gamma2 = db.get("gamma2", 0.0);
+  par.gamma3 = db.get("gamma3", 0.0);
+  par.Ep = db.get("Ep", 0.0);
+  par.Ep1 = db.get("Ep1", 0.00);
+  par.Ep2 = db.get("Ep2", 0.00);
+  par.m_G = db.get("m_c", par.m_G);
+  par.m_c2 = db.get("m_c2", 1.0);
+  par.Eg1 = db.get("Eg1", 0.00);
 
-  par.Ep = db.get("Ep", 25.0);
+  //override with specific section e.g., 'kdotp_8x8'
+  
+  db.set_section("kdotp_"+_kp_model);
 
+  par.delta = db.get("delta", par.delta);
+  par.gamma1 = db.get("gamma1", par.gamma1);
+  par.gamma2 = db.get("gamma2", par.gamma2);
+  par.gamma3 = db.get("gamma3", par.gamma3);
+  par.Ep = db.get("Ep", par.Ep);
+  par.Ep1 = db.get("Ep1", par.Ep1);
+  par.Ep2 = db.get("Ep2",par.Ep2);
+  
+  par.Eg1 = db.get("Eg1", par.Eg1);
+  par.delta_c = db.get("delta_c", par.delta_c);
+  par.delta_cf = db.get("delta_cf", par.delta_cf);
 
+  par.m_G = db.get("m_c", par.m_G);
+  par.m_c2 = db.get("m_c2", par.m_c2);
+  
 
   db.set_section("deformation_potentials");
-  par.a_c = db.get("a_c", -9.36);
-  par.a_v = db.get("a_v", -1.21);
-  par.b = db.get("b", -2.0);
-  par.d = db.get("d", -4.8);
+  par.a_c = db.get("a_c", 0.0);
+  par.a_v = db.get("a_v", 0.0);
+  par.b = db.get("b", 0.0);
+  par.d = db.get("d", 0.0);
 
-  par.def_vol_X = db.get("abs_def_pot_X", -0.16);
-  par.def_uniax_X = db.get("uniax_def_pot_X", 14.26);
-  par.def_vol_L = db.get("abs_def_pot_L", -4.91);
-  par.def_uniax_L = db.get("uniax_def_pot_L", 6.5);
+  par.def_vol_X = db.get("abs_def_pot_X", 0.0);
+  par.def_uniax_X = db.get("uniax_def_pot_X", 0.0);
+  par.def_vol_L = db.get("abs_def_pot_L", 0.0);
+  par.def_uniax_L = db.get("uniax_def_pot_L", 0.0);
 
 }
 
@@ -149,84 +188,22 @@ ZbSemiconductor::ZbSemiconductor(const ModelOptions& options)
 
 }
 
-
-//-----------------------------------------------------------//
-
-KPparams ZbSemiconductor::do_calculate_8x8_kp_params (void )
+void ZbSemiconductor::do_calculate_kp_params (KPparams& par)
 {
-
-
-  //we start from 6x6 kp parameters
-  KPparams  result = calculate_6x6_kp_params();
-
-
-
-  //------------------------------------------------------------------
-  //CONDUCTION BAND
-  //we renormalize conduction band quadratic part to free electron mass
-  result.s1 = 1.0;
-  result.s2 = 1.0;
-
-  // from database we get the valence band maximum (VBM)
-  double Ev_top = par.Ev;
-
-  result.E_c =  (Ev_top + par.EgGamma)/Constants::Hartree;
-
-
-
-  //--------------------------------------------------------------------
-
-  double Ep; //Ep = P^2 * 2.0;
-
-  double s = 1.0;
-
-  Ep = s*(1.0/par.m_G - 1.0)*
-    par.EgGamma * ( (par.EgGamma +  par.delta )/(par.EgGamma + 2.0/3.0 * par.delta ) ) / Constants::Hartree;
-
-
-
-  result.P1 = std::sqrt( 0.5*Ep);
-  result.P2 = std::sqrt( 0.5*Ep);
-
-
-  //result.P1 =  result.P2 = 0;
-
-  //rescale L and N
-
-  double t =   0.5*Ep/( (par.EgGamma +  par.delta/3.0)/Constants::Hartree );
-
-
-
-  result.L1 += t;
-  result.L2 += t;
-
-  result.N1 += t;
-  result.N2 += t;
-
-
-  result.N1_yx = result.M1;  result.N2_yx = result.N1_yx;
-  result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N1_xy;
-
-
-
-  return(result);
+  if(_kp_model=="6x6") calculate_6x6_kp_params(par);
+  if(_kp_model=="8x8") calculate_8x8_kp_params(par);
+  if(_kp_model=="14x14") calculate_14x14_kp_params(par);
 }
 
-//-----------------------------------------------------------//
 
-KPparams ZbSemiconductor::do_calculate_6x6_kp_params (void )
-
+//=================================================================================//
+void ZbSemiconductor::calculate_6x6_kp_params (KPparams&  result)
 {
 
-  KPparams  result;
-
-
-
   //-----------------------------------------------
- // Valence band k.p parameters:
+  // Valence band k.p parameters:
 
     /*
-
           L = \frac{1}{2} (-\gamma_1 - 4 \gamma_2 - 1)  ;
 
           M = \frac{1}{2} ( 2\gamma_2 - \gamma_1  - 1 ) ;
@@ -236,21 +213,22 @@ KPparams ZbSemiconductor::do_calculate_6x6_kp_params (void )
 	  N_{yx} = M;
 
           N_{xy} = N -  N_{yx};
-
      */
 
-
-  result.L1 = 0.5 * (- par.gamma1 - 4.0 * par.gamma2 - 1.0); result.L2 = result.L1;
-
-  result.M1 = 0.5 * (2 * par.gamma2 - par.gamma1 - 1.0); result.M2 = result.M1;
+  result.L1 = 0.5 * (- par.gamma1 - 4.0 * par.gamma2 - 1.0);
+  result.L2 = result.L1;
+  result.M1 = 0.5 * (2 * par.gamma2 - par.gamma1 - 1.0);
+  result.M2 = result.M1;
   result.M3 = result.M1;
 
-  result.N1 = -3.0 * par.gamma3; result.N2 = -3.0 * par.gamma3;
+  result.N1 = -3.0 * par.gamma3;
+  result.N2 = -3.0 * par.gamma3;
 
-  result.N1_yx = result.M1;  result.N2_yx = result.N1_yx;
-
-
-  result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N1_xy;
+  // Burd format operator ordering (see also Foreman)
+  result.N1_yx = result.M1;
+  result.N2_yx = result.N1_yx;
+  result.N1_xy = result.N1 - result.N1_yx;
+  result.N2_xy = result.N1_xy;
 
 
   //-------------------------------------------------------------------------------//
@@ -276,7 +254,7 @@ KPparams ZbSemiconductor::do_calculate_6x6_kp_params (void )
 
 
   //------------------------------------------------------------------------------//
-  //  Averaged valence band energy
+  // valence bands center of mass
   //
   result.E_v = (par.Ev - par.delta / 3.0) / Constants::Hartree;
 
@@ -284,15 +262,175 @@ KPparams ZbSemiconductor::do_calculate_6x6_kp_params (void )
   //------------------------------------------------------------------------------//
   //spin-orbit energy
   result.d1 = 0.0 ; //no crystal field splitting
-  result.d2 = (par.delta/3) / Constants::Hartree;
-  result.d3 = (par.delta/3) / Constants::Hartree;
+  result.d2 = (par.delta/3.0) / Constants::Hartree;
+  result.d3 = (par.delta/3.0) / Constants::Hartree;
 
   result.P1  = std::sqrt(par.Ep * 0.5 / Constants::Hartree);
   result.P2  = result.P1;
 
-  return(result);
 
 }
+
+//=================================================================================//
+void ZbSemiconductor::calculate_8x8_kp_params (KPparams&  result )
+{
+
+  //we start from 6x6 kp parameters
+  calculate_6x6_kp_params(result);
+
+  //------------------------------------------------------------------
+  // CONDUCTION BAND
+  // Treatment of the spurious solutions
+  //
+  // No special care. Normal k.p model
+  //
+  if (_spurious=="none")
+  {
+    result.s1 = 1.0/par.m_G - par.Ep/3.0 * (2.0/par.EgGamma + 1.0/(par.EgGamma + par.delta) );
+    
+    result.s2 = result.s1;
+  }
+  else if (_spurious=="Foreman")
+  {
+    // Foreman: Ac = 0.0
+    result.s1 = 0.0;
+    result.s2 = 0.0;
+
+    par.Ep = 3.0/par.m_G * (par.EgGamma +  par.delta )/(3.0 * par.EgGamma + 2.0 * par.delta ) 
+              * par.EgGamma;
+    
+  }
+  else if (_spurious=="Chuang")
+  {
+    // Chuang/Povolotskty: Ac = 1/2.0  (division by 2 is done on assembly)
+    result.s1 = 1.0/par.m_c2;
+    result.s2 = 1.0/par.m_c2;
+       
+    par.Ep = 3.0*(1.0/par.m_G - result.s1)*(par.EgGamma+par.delta)/(3.0*par.EgGamma + 2.0*par.delta )
+              * par.EgGamma;
+    
+  }
+  result.P1  = std::sqrt(par.Ep * 0.5 / Constants::Hartree);
+  result.P2 = result.P1;
+ 
+  if (_spurious == "none") 
+  {
+    std::cout<<"m_c= "<<1.0/result.s1<<std::endl;
+  }
+  else
+  {
+    std::cout<<"Ep= "<<par.Ep<<std::endl;
+  }  
+  //--------------------------------------------------------------------
+  //rescale L and N
+  // this comes from gamma1= gamma1_L - 1/3 Ep / (Eg + delta/3)
+  //                 gamma2= gamma2_L - 1/6 Ep / (Eg + delta/3) = gamma3
+  double t = 0.5*par.Ep/( (par.EgGamma +  par.delta/3.0));
+
+  result.L1 += t;
+  result.L2 += t;
+
+
+  result.N1 += t;
+  result.N2 += t;
+
+  // Burd format operator ordering
+  result.N1_yx = result.M1;                  //N-
+  result.N2_yx = result.N1_yx;
+  result.N1_xy = result.N1 - result.N1_yx;   //N+
+  result.N2_xy = result.N1_xy;
+
+
+  // from database we get the valence band maximum (VBM)
+
+  result.E_c =  (par.Ev + par.EgGamma)/Constants::Hartree;
+
+}
+
+//=================================================================================//
+void ZbSemiconductor::calculate_14x14_kp_params(KPparams&  result)
+{
+
+  //we start from 8x8 kp parameters
+  calculate_8x8_kp_params(result);
+
+  // 14x14 correction
+   double r = par.Ep1/3.0 * ( 1.0/(par.Eg1-par.EgGamma) + 2.0/(par.Eg1-par.EgGamma+par.delta_c) );
+  //double r = 0.0;
+
+  if (_spurious=="none")
+  {
+      result.s1 += r;
+      result.s2 = result.s1;
+  }
+  else if (_spurious=="Foreman")
+  {
+    // Foreman: Ac = 0.0
+    result.s1 = 0.0;
+    result.s2 = 0.0;
+
+    par.Ep = 3.0*(1.0/par.m_G + r) * (par.EgGamma +  par.delta )/(3.0 * par.EgGamma + 2.0 * par.delta ) 
+              * par.EgGamma;
+    
+  }
+  else if (_spurious=="Chuang")
+  {
+    result.s1 = 1.0/par.m_c2;
+    result.s2 = 1.0/par.m_c2;
+       
+    par.Ep = 3.0*(1.0/par.m_G - result.s1 + r)*(par.EgGamma+par.delta)/(3.0*par.EgGamma + 2.0*par.delta )
+              * par.EgGamma;
+    
+  }
+
+  if (_spurious == "none") 
+  {
+    std::cout<<"Ac= "<<result.s1<<std::endl;
+  }
+  else
+  {
+    std::cout<<"Ep= "<<par.Ep<<std::endl;
+  }  
+  //rescale L and N
+  // this comes from gamma1_14x14= gamma1_8x8 - 2/3 Ep2 / (Eg1 + delta/3 + 2 delta' /3)
+  //                 gamma2_14x14= gamma2_8x8 + 1/6 Ep2 / (Eg1 + delta/3 + 2 delta' /3)
+  //                 gamma3_14x14= gamma3_8x8 - 1/6 Ep2 / (Eg1 + delta/3 + 2 delta' /3)
+  //
+  double q = 0.5* par.Ep2/( (par.Eg1 +  par.delta/3.0 + 2.0*par.delta_c/3.0));
+  //double q =0.0;
+
+  result.M1 += q;
+  result.M2 = result.M1;
+  result.M3 = result.M1;
+
+  result.N1 += q;
+  result.N2 += q;
+
+  // Burd format operator ordering
+  result.N1_yx = result.M1;
+  result.N2_yx = result.N1_yx;
+  result.N1_xy = result.N1 - result.N1_yx;
+  result.N2_xy = result.N1_xy;
+
+  // restore standard P0
+  result.P1 = std::sqrt(0.5*par.Ep/Constants::Hartree);
+  result.P2 = result.P1;
+
+  result.P1_c = std::sqrt(0.5*par.Ep1/Constants::Hartree);
+  result.P2_c = std::sqrt(0.5*par.Ep2/Constants::Hartree);
+
+  result.E_c1 = (par.Ev + par.Eg1 + 2.0/3.0*par.delta_c )/Constants::Hartree;
+
+
+  result.d4 = par.delta_c/3.0 / Constants::Hartree;
+  result.d5 = par.delta_cf/3.0 / Constants::Hartree;
+
+  result.s3 = 0.0; //1.0/par.m_c2;
+  result.s4 = 0.0; //1.0/par.m_c2;
+  
+
+}
+
 
 //=================================================================================//
 void ZbSemiconductor::apply_temperature(void)

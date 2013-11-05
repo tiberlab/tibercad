@@ -19,12 +19,22 @@ EFAbulkModel::~EFAbulkModel()
 
 void EFAbulkModel::do_print_info()
 {
+  //std::cout<<"(EFAbulkModel) "<< get_type() << "  "
+  //         <<_bulkHamiltonian->get_type()<<" INFO:"<<std::endl;
+
   _bulkHamiltonian->print_info();
 }
 
-
+//===================================//
 void EFAbulkModel::do_init()
 {
+
+  get_option("kp_model","");
+  get_option("model","");
+  get_option("particle","");
+  get_option("kpVVtermSymmetric","");
+  get_option("kpCVtermSymmetric","");
+  get_option("temperature_scaling","");
 
   if (_bulkHamiltonian == NULL)
   {
@@ -34,10 +44,6 @@ void EFAbulkModel::do_init()
     _bulkHamiltonian->set_owner(get_owner());
     _bulkHamiltonian->init();
   }
-
-  get_option("kp_model","");
-  get_option("model","");
-  get_option("particle","");
 
 }
 

@@ -11,7 +11,8 @@ struct  KPparams
     double M2;
     double M3;
     double N1;
-    double N2;    
+    double N2;
+    double P0;
     double P1;
     double P2;
     double s1;
@@ -21,6 +22,8 @@ struct  KPparams
     double d1;
     double d2;
     double d3;
+    double d4;
+    double d5;
     double N1_xy;
     double N1_yx; 
     double N2_xy; 
@@ -34,6 +37,11 @@ struct  KPparams
     double m3s;
     double axs;
     double azs;
+    double P1_c;
+    double P2_c;
+    double E_c1;
+    double s3;
+    double s4;
   };
 
 #endif

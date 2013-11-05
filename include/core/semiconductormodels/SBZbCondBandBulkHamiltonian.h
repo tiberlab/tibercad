@@ -46,6 +46,8 @@ class SBZbCondBandBulkHamiltonian : public SBCondBandBulkHamiltonian
 
   virtual void calculate_for_init(void);
 
+  virtual void do_print_info(void);
+
 
 };
 
@@ -58,5 +60,6 @@ inline SBZbCondBandBulkHamiltonian* SBZbCondBandBulkHamiltonian::create(const Mo
 {
   return new SBZbCondBandBulkHamiltonian(options);
 }
+
 
 #endif

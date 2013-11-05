@@ -18,10 +18,20 @@ m_G = 0.28
 E_v = 0.0
 m_dos = 0.59
 
+[kdotp]
+A1 = -7.21
+A2 = -0.44
+A3 = 6.68
+A4 = -3.46
+A5 = -3.4
+A6 = -4.9
+
+delta_cr = 0.01
+delta_s = 0.017
+
 
 [deformation_potentials]
-a_x = 0.0
-a_z = 0.0
+a_c = 0.0
 D_1 = 0.0
 D_2 = 0.0
 D_3 = 0.0

@@ -25,16 +25,7 @@ class  WzDDsemiconductor : public DDsemiconductor
   //Destructor
   virtual ~WzDDsemiconductor(void) {};
 
- 
-  
 
-  
-
- 
-
- 
-
- 
   static WzDDsemiconductor* create(const ModelOptions& options);
  
  private:

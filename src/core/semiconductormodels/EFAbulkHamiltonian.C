@@ -20,6 +20,10 @@ void EFAbulkHamiltonian::do_init()
   _degeneracy = 1;
 
   set_rotation_matrix();
+
+  get_option("particle","");
+  get_option("spurious","");
+  get_option("temperature_scaling","");
  
 }
 

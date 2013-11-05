@@ -10,8 +10,6 @@
 #include "TemperatureInterface.h"
 #include "KPparameters.h"
 
-#include "tensor.h"
-
 #include <vector>
 
 class TBDLEXPORT Semiconductor : public PhysicalModelInterface
@@ -23,32 +21,16 @@ class TBDLEXPORT Semiconductor : public PhysicalModelInterface
    virtual ~Semiconductor(void) {};
 
 
-
-
-  //! Calculates k.p parameters in atomic units for 6 band valence band calculation
-  virtual KPparams   calculate_6x6_kp_params (void );
-
-  //! Calculates k.p parameters in atomic units for 8 band valence band calculation
-  virtual KPparams   calculate_8x8_kp_params (void );
-
-
-
-  //! Calculates k.p parameters in atomic units for 6 band valence band calculation with temperature dependence
-  virtual KPparams   calculate_6x6_kp_params (const Elem* element, const Point& point) ;
-
-  //! Calculates k.p parameters in atomic units for 8 band valence band calculation with temperature dependence
-  virtual KPparams   calculate_8x8_kp_params (const Elem* element, const Point& point) ;
-
-
   //! apply varshni formulas
   virtual void apply_temperature(void) = 0;
 
 
 
   //! Calculates k.p parameters in atomic units for 6 or 8 band valence band calculation
-  KPparams   calculate_kp_params (std::string kp_model );
+  void calculate_kp_params(KPparams& par);
 
-
+  //! used to set or reset kp model
+  void set_kp_model(std::string kp_model);
   
   //! creates new object
   static Semiconductor* create(const Material* mat,  const ModelOptions& options);
@@ -84,12 +66,8 @@ class TBDLEXPORT Semiconductor : public PhysicalModelInterface
   //! interface for temperature acquisition
   TemperatureInterface temp_interface;
 
-
-  //! Calculates k.p parameters in atomic units for 6 band valence band calculation
-  virtual KPparams   do_calculate_6x6_kp_params (void )=0;
-
-  //! Calculates k.p parameters in atomic units for 8 band valence band calculation
-  virtual KPparams   do_calculate_8x8_kp_params (void )=0;
+  //! Calculates k.p parameters in atomic units (will depend on _kp_model)
+  virtual void do_calculate_kp_params (KPparams& par)=0;
 
   //! pointer to a parent model A (needed only for alloys) 
   const Semiconductor* modelA;
@@ -100,6 +78,9 @@ class TBDLEXPORT Semiconductor : public PhysicalModelInterface
   //! molar fraction (a local copy)
   double _xa;
 
+  std::string _kp_model;
+
+  std::string _spurious;
 
 };
 
@@ -119,44 +100,21 @@ void Semiconductor::set_temperature(const Elem* element, const Point& point )
    _temperature = temp_interface.get_temperature (element, point);
 }
 
-inline  
-KPparams   Semiconductor::calculate_6x6_kp_params()
-{
-  if (_consider_temperature) apply_temperature();
-
-  return(do_calculate_6x6_kp_params());
-}
-
-inline 
-KPparams   Semiconductor::calculate_8x8_kp_params()
-{ 
-
-  if (_consider_temperature) apply_temperature();
-
-  return(do_calculate_8x8_kp_params());
-}
-
-
-
-
 inline
-KPparams   Semiconductor::calculate_6x6_kp_params (const Elem* element, const Point& point) 
+void Semiconductor::set_kp_model(std::string kp_model)
 {
-
-  _temperature = temp_interface.get_temperature ( element, point);
-  return(calculate_6x6_kp_params());
-
+  _kp_model = kp_model;
 }
 
-  
+
 inline  
-KPparams  Semiconductor:: calculate_8x8_kp_params (const Elem* element, const Point& point) 
+void Semiconductor::calculate_kp_params(KPparams& par)
 {
-  _temperature = temp_interface.get_temperature ( element, point);
+  if (_consider_temperature) apply_temperature();
 
-  return(calculate_8x8_kp_params());
-
+  do_calculate_kp_params(par);
 }
+
 
 
 

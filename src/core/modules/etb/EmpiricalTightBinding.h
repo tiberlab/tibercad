@@ -100,10 +100,6 @@ class ETB : public TightBinding
   //! Create object
   static ETB* create(const ModelOptions& options);
 
-  virtual PhysicalModel* create_physical_model(const ModelOptions &options,
-      const Material* mat) const throw (ModelErrorException);
-
-
   //! assemble the matrix again w/o init overheads
   void reassemble(void);
 
@@ -283,11 +279,6 @@ class ETB : public TightBinding
 // Inline members definition
 //----------------------------
 
-inline
-ETB* ETB::create(const ModelOptions& options)
-{
-  return new ETB(options);
-}
 
 inline
 void ETB::reassemble()

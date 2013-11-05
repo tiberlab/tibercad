@@ -30,10 +30,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   struct options
   {
     
-    unsigned int number_of_bands; //!< number of bands in EFA 
-
-    std::map<short, short> kp_bands; //!< map between band numbers: from 8 band scheem to any band scheem
-
     std::string particle;   //!< particle name "el" or "hl"
 
     unsigned int degeneracy; //!< the degeneracy factor
@@ -47,6 +43,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     bool  consider_potential; //!< apply potential to the EFA Hamiltonian;
 
     bool  consider_potential_bulk; //!< apply potential to the bulk EFA Hamiltonian;
+
+    bool  consider_strain_bulk; //!< apply strain to the bulk EFA Hamiltonian;
 
     bool estimate_spectrum_shift; //!< calculate spectrum shift from band edges;
 
@@ -153,7 +151,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
   //!returns map for kp bands
-  inline const std::map<short, short>& get_kp_bands(void) const;
+  inline const std::map<short, short>& get_band_map(void) const;
 
 
   //! get the  vector of  eigenvalues 
@@ -189,6 +187,11 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   options opt;
 
+  //!< number of bands in EFA 
+  unsigned int number_of_bands; 
+
+  //!< map between band numbers: from 8 band scheme to any band scheme
+  std::map<short, short> band_map; 
   
   std::string system_name;
 
@@ -426,14 +429,14 @@ inline EnvelopFunctionApprox*  EnvelopFunctionApprox::create(const ModelOptions&
 
 inline  unsigned int EnvelopFunctionApprox::get_number_of_bands(void) const
 {
-  return (opt.number_of_bands);
+  return (number_of_bands);
 }
 
 //--------------------------------------------------------------------
-inline const std::map<short, short>& EnvelopFunctionApprox::get_kp_bands(void) const
+inline const std::map<short, short>& EnvelopFunctionApprox::get_band_map(void) const
 {
 
-  return (opt.kp_bands);
+  return (band_map);
 
 }
 

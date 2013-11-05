@@ -3,11 +3,28 @@
 #include "SBZbCondBandBulkHamiltonian.h"
 #include "ZbSemiconductor.h"
 #include "Constants.h"
+#include "Messages.h"
 
 using namespace std;
 using namespace Constants;
 
 
+void 
+SBZbCondBandBulkHamiltonian::do_print_info(void)
+{
+
+  ostringstream os;
+  os << "single-band  ";
+
+  os << "Mass = " << zb_par->m_G << std::endl;
+
+  //os << "M_xx= " << imass(1,1)  << "M_yy= " << imass(2,2) 
+  //   << "M_zz= " << imass(3,3) << std::endl;
+  //os << "M_xy= " << imass(1,2)  << "M_xz= " << imass(1,3) 
+  //   << "M_yz= " << imass(2,3) << std::endl;
+
+  Messages::info(os.str());
+}
 
 
 
@@ -18,6 +35,7 @@ void SBZbCondBandBulkHamiltonian::calculate_for_init(void)
 
   zb_par = &par;
 
+  //std::cout<<"calculate_for_init"<<std::endl;
 
   const ModelOptions& opt =  get_options ();
 

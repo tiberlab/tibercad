@@ -2,6 +2,7 @@
 
 #include "SBbulkHamiltonian.h"
 #include "Constants.h"
+#include "Messages.h"
 
 using namespace std;
 using namespace Constants;
@@ -19,7 +20,19 @@ SBbulkHamiltonian::SBbulkHamiltonian(const ModelOptions& options)
  
 }
 
+void SBbulkHamiltonian::do_print_info(void)
+{
 
+  ostringstream os;
+  os << "single-band "<<std::endl;
+
+  //os << "M_xx= " << imass(1,1)  << "M_yy= " << imass(2,2) 
+  //   << "M_zz= " << imass(3,3) << std::endl;
+  //os << "M_xy= " << imass(1,2)  << "M_xz= " << imass(1,3) 
+  //   << "M_yz= " << imass(2,3) << std::endl;
+
+  Messages::info(os.str());
+}
 //======================================================================//
 
 void SBbulkHamiltonian::calculate_Hamiltonian_gen(void)

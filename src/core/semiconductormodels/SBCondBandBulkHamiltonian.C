@@ -3,7 +3,9 @@
 #include "SBCondBandBulkHamiltonian.h"
 #include "Semiconductor.h"
 #include "Material.h"
+#include "Messages.h"
 
+using namespace std;
 
 SBCondBandBulkHamiltonian::~SBCondBandBulkHamiltonian(void)
 {

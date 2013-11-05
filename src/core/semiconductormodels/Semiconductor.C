@@ -16,9 +16,9 @@ Semiconductor::Semiconductor(const ModelOptions& options)
 
   modelB = NULL;
 
-  get_options().get_option("kp_model","");
-  get_options().get_option("model","");
-  get_options().get_option("particle","");
+  //database is read before do_init() and this parameter must be ready.
+  _kp_model = get_option("kp_model","6x6");
+  _consider_temperature = get_option("consider_temperature",  true );
 }
 
 
@@ -35,12 +35,28 @@ void Semiconductor::do_init ()
 
   int verbose = SimulationOptions::verbose ();
 
+  get_option("model","");
+  get_option("particle","");
+  get_option("spurious","");
+  get_option("kpVVtermSymmetric","");
+  get_option("kpCVtermSymmetric","");
+
+  // the temperature simulation
+  string temp_simul = get_option("thermal_simulation", "");
+
+  temp_interface.set_simulation(temp_simul);
 
 
-  _consider_temperature = get_option("consider_temperature",  true );
+  _spurious = get_option("spurious","Chuang");
 
+  _temperature = 0.0;
+  if (_consider_temperature)
+  { 
+      _temperature = get_option("temperature", SimulationOptions::T);
+  }
+  
 
-/*
+  /*
 
   if  (verbose > 0)
     if (_consider_temperature)
@@ -48,42 +64,15 @@ void Semiconductor::do_init ()
     else
       std::cout << "Semiconductor: band gap does not depend on temperature\n";
 
-*/
-
-
-
-  _temperature = get_option("temperature", SimulationOptions::T);
-
-
-
-
-
-  // the temperature simulation
-  string temp_simul = get_option("thermal_simulation", "");
-
-
-  temp_interface.set_simulation(temp_simul);
-
-/*
-
   if  (verbose > 0)
     if (temp_simul != "")
       std::cout << "Semiconductor: temparature is taken from the simulation " << temp_simul << "\n";
 
 
- */
+  */
 }
 
 
-
-
-
-//---------------------------------------------------------------------------------------------//
-KPparams   Semiconductor::calculate_kp_params (std::string kp_model )
-{
-  if (kp_model == "6x6")   return(calculate_6x6_kp_params());
-  if (kp_model == "8x8")   return(calculate_8x8_kp_params());
-}
 
 
 

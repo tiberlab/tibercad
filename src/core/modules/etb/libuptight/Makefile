@@ -1,0 +1,38 @@
+# $Id$
+
+topdir := ../../../../..
+
+include $(topdir)/Make.defs
+ARCH = $(shell uname -m)
+
+CXXFLAGS = -fPIC -I . 
+
+
+target := libuptight$(shared_libext)
+
+
+libuptight$(shared_libext) :  .$(ARCH)/UptWrapper$(obj-suffix) libuptight_$(ARCH).a
+	@echo "Linking libuptight$(shared_libext) ..."
+	@$(CXX) -shared -o $@ $< \
+		-Wl,--version-script,export.map \
+		-Wl,-Bsymbolic -Wl,-Bstatic \
+		-L. libuptight_$(ARCH).a \
+		-Wl,-Bdynamic
+
+libuptight_$(ARCH).a: checkout
+	@echo "Update libuptight..."
+	@cd src; svn up lib_uptight; svn up api; svn up make.common; \
+	echo "Compile libuptight..."; \
+	$(MAKE) -C api libuptight; cd ..; 
+	mv src/api/libuptight_$(ARCH).a .	
+	cp src/api/fortran.h .
+	cp src/api/uptight.h . 
+	
+checkout:
+	@echo "Checkout libuptight..."
+	@if [ ! -e src/api ]; then svn co svn://svn/uptight/branches/tibercad/src --depth empty; fi
+	
+
+	
+
+include $(topdir)/Make.rules
