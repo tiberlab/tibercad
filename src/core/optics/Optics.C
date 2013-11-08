@@ -222,9 +222,9 @@ void Optics::do_init()
 				     EDGE2);
 
 
-  _spectrum_x.resize(_energy_mesh->n_nodes(),0.0);
-  _spectrum_y.resize(_energy_mesh->n_nodes(),0.0);
-  _spectrum_z.resize(_energy_mesh->n_nodes(),0.0);
+  _spectrum_x.resize(3*_energy_mesh->n_nodes(),0.0);
+  _spectrum_y.resize(3*_energy_mesh->n_nodes(),0.0);
+  _spectrum_z.resize(3*_energy_mesh->n_nodes(),0.0);
 
 
  // Kintegration options ----------------------------------------------------------
@@ -525,7 +525,7 @@ void Optics::do_solve()
   */
 
   // the last node
-  size_t N = _spectrum_x.size() - 1;
+  size_t N = _energy_mesh->n_nodes() - 1;
 
   // use trapez formula
   for (size_t i = 1; i < N; i++)
@@ -590,8 +590,6 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
   if (verbose > 0)
     Messages::info("calculation of optical spectrum...", true);
 
-  bool absorption = !(get_option("type", "emission") == "emission");
-
   std::vector<double> fs_eigen_values;
   std::vector<double> is_eigen_values;
 
@@ -621,8 +619,8 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
   // loop on  eigenstates
   //cout << "Energy nodes: " << Energy.n_nodes()<<endl; 
   spectrum.clear();
-  spectrum.reserve(Energy.n_nodes());
-  for (unsigned int el=0; el < Energy.n_nodes(); el++)
+  spectrum.reserve(3 * Energy.n_nodes());
+  for (unsigned int el=0; el < 3 * Energy.n_nodes(); el++)
           spectrum.push_back(0.0);
 
   for (unsigned i = 0; i < n1; i++)  // "upper" states
@@ -645,24 +643,12 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
         f1 = 1.0; f2 = 1.0;
       }
 
-      if (absorption)
-      {
-        f1 = 1 - f1;
-        f2 = 1 - f2;
-      }
-
 
       Complex Me = _P_matrix[0][i][j] * polariz(1) +
 	           _P_matrix[1][i][j] * polariz(2) +
 	           _P_matrix[2][i][j] * polariz(3);
 
-      //cout << _initial_indices[i] << " -> " 
-      //     << _final_indices[j] << endl;
 
-      //cout << is_eigen_values[_initial_indices[i]] << " -> " 
-      //     << fs_eigen_values[_final_indices[j]] << endl;
-
-      //cout<<trans_energy<<"  "<<Me<<endl;
 
       double c = 1.0/Constants::fine_structure_constant;
       double omega = trans_energy/Constants::Hartree;
@@ -675,6 +661,9 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       double strength = 2 * _opt.nr * (omega * omega) / (c*c*c) * abs (Me) * abs (Me);
 
       double power = strength * f1 * f2;
+      double stimulated = strength * (f1 + f2 - 1);
+      double gain = stimulated * M_PI * M_PI * c * c /
+          (_opt.nr * _opt.nr * omega * omega);
 
       //Note(alex): The original factor 1/(2*PI*PI) was changed to 1/(2*PI) (see below)
       //            and finally multiplied by 4 PI for angular integration (17/10/2011).
@@ -707,7 +696,8 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 
 
 
-      for (unsigned int el=0; el < Energy.n_nodes(); el++)
+      unsigned int n_energy = Energy.n_nodes();
+      for (unsigned int el = 0; el < n_energy; el++)
       {
 
         double En =  Energy.point(el)(0); //elem->centroid()(0);
@@ -719,17 +709,12 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 	// should be "Lorenzian * Hartree"
 
         spectrum[el] += power * Lorenzian;
+        spectrum[el + n_energy] += stimulated * Lorenzian;
+        spectrum[el + 2*n_energy] += gain * Lorenzian;
 
      }
     }
   }
-
-
-  //cout<<"spectrum size: "<<spectrum.size()<<endl;
-  //cout<<"spectrum capacity: "<<spectrum.capacity()<<endl;
-  //for (unsigned int el=0; el < Energy.n_nodes(); el++)
-  //          cout<<spectrum[el]<<endl;
-
 }
 
 //============================================================================
@@ -738,8 +723,6 @@ void Optics::do_plot()
   // get  spectrum calculation  options from  opticsKP model  section
   // for  calculation of  spectrum for a single k-point
 
-  string dimension;
-  double area_dim_factor = 1;
   short k_dim = 3 - get_mesh().mesh_dimension(); 
 
   if (plot_solution("matrix_elements"))
@@ -747,9 +730,9 @@ void Optics::do_plot()
     plot_globaldata();
   }
 
-  vector<double> results(_energy_mesh->n_nodes() * 3,0.0);
+  vector<double> results(_energy_mesh->n_nodes() * 9,0.0);
   
-  vector<string> names(3);
+  vector<string> names(9);
     
   string filename;
   string format = get_option("output_format", "grace");
@@ -757,60 +740,64 @@ void Optics::do_plot()
   DataOutput data_output(*_energy_mesh, format);
   data_output.set_output_directory(get_output_directory());
 
-  cout<<"output: "<<format<<endl; 
+  filename = get_name() + "_spectrum";
 
   if (plot_solution("optical_spectrum_k_0"))
   {
-    filename = get_name() + "_spectrum_k_0" + TiberCad::get_filename_suffix();
-
-    names[0] = "power_density_k0_Px[W/eV]";  //As it's a power density (W) per photon (eV)
-    names[1] = "power_density_k0_Py[W/eV]";  //Depending on simulation dimension it will be
-    names[2] = "power_density_k0_Pz[W/eV]";  // W/(eV) (3D), W/(eV*cm) (2D), W/(eV*cm^2) (1D)
-       
+    filename += "_k_0";
   }
   
+  filename += TiberCad::get_filename_suffix();
   
-  if (plot_solution("optical_spectrum"))
+
+
+  string dimension;
+  string gaindim;
+  double area_dim_factor = 1;
+  double gain_factor = 1;
+  if (k_dim == 1)
   {
-
-    filename = get_name() + "_spectrum" + TiberCad::get_filename_suffix();
-     
-    if (k_dim == 1)
-    {
-      dimension = "/cm";
-      area_dim_factor  = (Constants::bohr_radius * 1e2);
-    }
-    else if (k_dim == 2)
-    {
-      dimension = "/cm^2";
-      area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
-    }
-    else if (k_dim == 3)
-    {
-      dimension = "/cm^3";
-      area_dim_factor  = (Constants::bohr_radius * 1e2) * 
-                         (Constants::bohr_radius * 1e2) * 
-                         (Constants::bohr_radius * 1e2);
-    }
-    
-    names[0] = "power_density_Px[W/eV" + dimension + "]";
-    names[1] = "power_density_Py[W/eV" + dimension + "]"; 
-    names[2] = "power_density_Pz[W/eV" + dimension + "]"; 
-        
+    dimension = "/cm";
+    gaindim = "cm";
+    area_dim_factor  = (Constants::bohr_radius * 1e2);
+    gain_factor = (Constants::bohr_radius * 1e2);
   }
+  else if (k_dim == 2)
+  {
+    dimension = "/cm^2";
+    gaindim = "-";
+    area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
+  }
+  else if (k_dim == 3)
+  {
+    dimension = "/cm^3";
+    gaindim = "1/cm";
+    area_dim_factor  = (Constants::bohr_radius * 1e2) *
+        (Constants::bohr_radius * 1e2) *
+        (Constants::bohr_radius * 1e2);
+    gain_factor = 1 / (Constants::bohr_radius * 1e2);
+  }
+
 
 
   if (plot_solution("optical_spectrum") || plot_solution("optical_spectrum_k_0"))
   {
 
+    names[0] = "spontaneous_power_density_Px[W/eV" + dimension + "]";
+    names[1] = "spontaneous_power_density_Py[W/eV" + dimension + "]";
+    names[2] = "spontaneous_power_density_Pz[W/eV" + dimension + "]";
+    names[3] = "stimulated_power_density_Px[W/eV" + dimension + "]";
+    names[4] = "stimulated_power_density_Py[W/eV" + dimension + "]";
+    names[5] = "stimulated_power_density_Pz[W/eV" + dimension + "]";
+    names[6] = "gain_Px[" + gaindim + "]";
+    names[7] = "gain_Py[" + gaindim + "]";
+    names[8] = "gain_Pz[" + gaindim + "]";
+        
+
     int point = 0;
     
-    //cout<<"Packing spectrum x, y, z "<<_energy_mesh->n_nodes()<<endl; 
-    //cout<<"size x, y, z "<<_spectrum_x.size()<<endl; 
-    //cout<<"size x, y, z "<<_spectrum_y.size()<<endl; 
-    //cout<<"size x, y, z "<<_spectrum_z.size()<<endl; 
-  
-    for(unsigned int el=0; el < _energy_mesh->n_nodes(); el++)
+    unsigned int n_el = _energy_mesh->n_nodes();
+    for(unsigned int el = 0; el < n_el; el++)
     {
       double value;
       
@@ -819,26 +806,57 @@ void Optics::do_plot()
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[3*point + 0] = value;
+      results[9*point + 0] = value;
+
+      value = _spectrum_x[el + n_el];
+      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+      value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+      results[9*point + 3] = value;
+
+      value = _spectrum_x[el + 2*n_el];
+      value *= gain_factor;
+      results[9*point + 6] = value;
+
       
       //--y - polarization
       value = _spectrum_y[el];
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[3*point + 1] = value;
+      results[9*point + 1] = value;
       
+      value = _spectrum_y[el + n_el];
+      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+      value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+      results[9*point + 4] = value;
+
+      value = _spectrum_y[el + 2*n_el];
+      value *= gain_factor;
+      results[9*point + 7] = value;
+
+
       //--z - polarization
       value = _spectrum_z[el];
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[3*point + 2] = value;
+      results[9*point + 2] = value;
            
+      value = _spectrum_z[el + n_el];
+      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+      value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+      results[9*point + 5] = value;
+
+      value = _spectrum_z[el + 2*n_el];
+      value *= gain_factor;
+      results[9*point + 8] = value;
+
       point++;
     }
        
-    cout<<"writing nodal data "<<endl; 
     data_output.write_nodal_data(filename, results, names);
 
   }
