@@ -21,8 +21,6 @@ class Tensor1;
  * In turn this method calls solve_for_kpoint() interface implemented in 
  * the base class EigenvalueProblem for spectral calculations.
  */
-
-
 class Optics : public SimulationInterface
 {
 
@@ -80,6 +78,9 @@ class Optics : public SimulationInterface
     void set_k_point(const Point& k_vec);
 
     //! method invoked by KspaceIntegration via the hook 
+    /*!
+     * Warning: this method uses internally _spectrum_z as temporary container.
+     */
     void calculate_for_k_point(const Point& kpoint, DofField& spectrum, double& estimator);  
 
     void assemble(const ModelOptions& opt = ModelOptions());
