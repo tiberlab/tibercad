@@ -30,7 +30,7 @@ libuptight_$(ARCH).a: checkout
 	
 checkout:
 	@echo "Checkout libuptight..."
-	@if [ ! -e src/api ]; then svn co svn://svn/uptight/branches/tibercad/src --depth empty; fi
+	@if [ ! -e src/api ]; then svn co https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad/src --depth empty; fi
 	
 
 	
