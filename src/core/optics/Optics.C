@@ -300,19 +300,7 @@ void Optics::set_states()
   {
     std::vector<ID> inum = _initial_state_model->get_state_indices(_initial_state_particle);
 
-    //for (ID i = 0; i < inum.size(); i++)
-    // {
-    //  std::cout << "initial state indeces = " << inum[i] << std::endl;
-    // }
-
-
     get_option("initial_eigenstates", _initial_indices);
-
-    //for (ID i = 0; i < _initial_indices.size(); i++)
-    // {
-    //  std::cout << "initial indeces = " << _initial_indices[i] << std::endl;
-    // }
-
 
     if (_initial_indices.size() > 0) 
     {
@@ -419,7 +407,26 @@ void Optics::calculate_for_k_point(const Point& k_point,
 
   compute_matrix_elements(); //calculate matrix elements of P operator
 
-  calculate_spectrum(*_energy_mesh, _opt.Gamma, _opt.polariz,  spectrum);
+  if (norm(_opt.polariz) == 0.0)
+  {
+    spectrum.resize(0);
+    spectrum.reserve(9 * _energy_mesh->n_nodes());
+
+    Tensor1 polariz; 
+    polariz(1)=1.0;  polariz(2)=0.0; polariz(3)=0.0; 
+    calculate_spectrum(*_energy_mesh, _opt.Gamma, polariz, _spectrum_z);
+    spectrum.insert(spectrum.end(), _spectrum_z.begin(), _spectrum_z.end());
+
+    polariz(1)=0.0;  polariz(2)=1.0; polariz(3)=0.0; 
+    calculate_spectrum(*_energy_mesh, _opt.Gamma, polariz, _spectrum_z);
+    spectrum.insert(spectrum.end(), _spectrum_z.begin(), _spectrum_z.end());
+
+    polariz(1)=0.0;  polariz(2)=0.0; polariz(3)=1.0; 
+    calculate_spectrum(*_energy_mesh, _opt.Gamma, polariz, _spectrum_z);
+    spectrum.insert(spectrum.end(), _spectrum_z.begin(), _spectrum_z.end());
+  }
+  else
+    calculate_spectrum(*_energy_mesh, _opt.Gamma, _opt.polariz,  spectrum);
 
   //std::cout<<"(OPT) calc for k: "<<spectrum.size()<<std::endl;
 
@@ -453,59 +460,36 @@ void Optics::do_solve()
 
   if (plot_solution("optical_spectrum")) 
   {
+    do_k_space_integration();
+    const DofField& spectra = _k_integration->get_solution();
+
+    unsigned int n = 3*_energy_mesh->n_nodes();
+    _spectrum_x.assign(spectra.begin(), spectra.begin() + n-1);
 
     if (norm(_opt.polariz) == 0.0)
     {
-      _opt.polariz(1)=1.0; _opt.polariz(2)=0.0; _opt.polariz(3)=0.0;  
-      do_k_space_integration();
-      //_spectrum_x = _k_integration->get_solution();
-      _k_integration->get_solution(_spectrum_x);
-      
-      _opt.polariz(1)=0.0; _opt.polariz(2)=1.0; _opt.polariz(3)=0.0;  
-      do_k_space_integration();
-      //_spectrum_y = _k_integration->get_solution();
-      _k_integration->get_solution(_spectrum_y);
-      
-      _opt.polariz(1)=0.0; _opt.polariz(2)=0.0; _opt.polariz(3)=1.0; 
-      do_k_space_integration();
-      //_spectrum_z = _k_integration->get_solution();
-      _k_integration->get_solution(_spectrum_z);
-
-      _opt.polariz = 0.0;
+      _spectrum_y.assign(spectra.begin() + n, spectra.begin() + 2*n-1);
+      _spectrum_z.assign(spectra.begin() + 2*n, spectra.begin() + 3*n-1);
     }
-    else
-    {
-      do_k_space_integration();
-      //_spectrum_x = _k_integration->get_solution();
-      _k_integration->get_solution(_spectrum_x);
-    }
-
-
   }
   //---------------------------------------------------------------------------------
   
   if (plot_solution("optical_spectrum_k_0"))
   {
-    Point k_point(3,0.0);
+
+    double dummy;
+    Point k_point;
     for(short i=0; i<3; i++) k_point(i) = _k_vector[i];
 
-    _initial_state_model->solve_for_kpoint(k_point); //calculate eigenstates
+    calculate_for_k_point(k_point, _spectrum_x, dummy);
 
-    if(_initial_state_model != _final_state_model)
-       _final_state_model->solve_for_kpoint(k_point); //calculate eigenstates
-
-    compute_matrix_elements();
-       
-    Tensor1 polariz; 
-    polariz(1)=1.0;  polariz(2)=0.0; polariz(3)=0.0; 
-    calculate_spectrum(*_energy_mesh, _opt.Gamma, polariz,  _spectrum_x );
-
-    polariz(1)=0.0;  polariz(2)=1.0; polariz(3)=0.0; 
-    calculate_spectrum(*_energy_mesh, _opt.Gamma, polariz,  _spectrum_y );
-
-    polariz(1)=0.0;  polariz(2)=0.0; polariz(3)=1.0; 
-    calculate_spectrum(*_energy_mesh, _opt.Gamma, polariz,  _spectrum_z );
-
+    if (norm(_opt.polariz) == 0.0)
+    {
+      unsigned int n = 3*_energy_mesh->n_nodes();
+      _spectrum_y.assign(_spectrum_x.begin() + n, _spectrum_x.begin() + 2*n-1);
+      _spectrum_z.assign(_spectrum_x.begin() + 2*n, _spectrum_x.begin() + 3*n-1);
+      _spectrum_x.resize(n);
+    }
   }
 
   _total_power = 0;
@@ -588,7 +572,13 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
   int verbose = SimulationOptions::verbose();
 
   if (verbose > 0)
-    Messages::info("calculation of optical spectrum...", true);
+  {
+    ostringstream os;
+    os << "calculation of optical spectrum, e = ("
+        << polariz(1) << ", " <<  polariz(2) << ", " << polariz(3)
+        << ")";
+    Messages::info(os.str());
+  }
 
   std::vector<double> fs_eigen_values;
   std::vector<double> is_eigen_values;
@@ -622,6 +612,9 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
   spectrum.reserve(3 * Energy.n_nodes());
   for (unsigned int el=0; el < 3 * Energy.n_nodes(); el++)
           spectrum.push_back(0.0);
+  // try:
+  // spectrum.resize(3 * Energy.n_nodes(), 0.0);
+
 
   for (unsigned i = 0; i < n1; i++)  // "upper" states
   {
@@ -730,9 +723,12 @@ void Optics::do_plot()
     plot_globaldata();
   }
 
-  vector<double> results(_energy_mesh->n_nodes() * 9,0.0);
+
+  int n_sets = (norm(_opt.polariz) == 0.0) ? 9 : 3;
+
+  vector<double> results(_energy_mesh->n_nodes() * n_sets,0.0);
   
-  vector<string> names(9);
+  vector<string> names(n_sets);
     
   string filename;
   string format = get_option("output_format", "grace");
@@ -783,16 +779,24 @@ void Optics::do_plot()
   if (plot_solution("optical_spectrum") || plot_solution("optical_spectrum_k_0"))
   {
 
-    names[0] = "spontaneous_power_density_Px[W/eV" + dimension + "]";
-    names[1] = "spontaneous_power_density_Py[W/eV" + dimension + "]";
-    names[2] = "spontaneous_power_density_Pz[W/eV" + dimension + "]";
-    names[3] = "stimulated_power_density_Px[W/eV" + dimension + "]";
-    names[4] = "stimulated_power_density_Py[W/eV" + dimension + "]";
-    names[5] = "stimulated_power_density_Pz[W/eV" + dimension + "]";
-    names[6] = "gain_Px[" + gaindim + "]";
-    names[7] = "gain_Py[" + gaindim + "]";
-    names[8] = "gain_Pz[" + gaindim + "]";
-        
+    if (n_sets == 9)
+    {
+      names[0] = "spontaneous_power_density_Px[W/eV" + dimension + "]";
+      names[1] = "spontaneous_power_density_Py[W/eV" + dimension + "]";
+      names[2] = "spontaneous_power_density_Pz[W/eV" + dimension + "]";
+      names[3] = "stimulated_power_density_Px[W/eV" + dimension + "]";
+      names[4] = "stimulated_power_density_Py[W/eV" + dimension + "]";
+      names[5] = "stimulated_power_density_Pz[W/eV" + dimension + "]";
+      names[6] = "gain_Px[" + gaindim + "]";
+      names[7] = "gain_Py[" + gaindim + "]";
+      names[8] = "gain_Pz[" + gaindim + "]";
+    }
+    else // n_sets == 3
+    {
+      names[0] = "spontaneous_power_density[W/eV" + dimension + "]";
+      names[1] = "stimulated_power_density[W/eV" + dimension + "]";
+      names[2] = "gain[" + gaindim + "]";
+    }
 
     int point = 0;
     
@@ -806,17 +810,20 @@ void Optics::do_plot()
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[9*point + 0] = value;
+      results[n_sets*point + 0] = value;
 
-      value = _spectrum_x[el + n_el];
-      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
-      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
-      value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[9*point + 3] = value;
+      if (n_sets == 9)
+      {
+        value = _spectrum_x[el + n_el];
+        value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+        value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+        value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+        results[n_sets*point + 3] = value;
 
-      value = _spectrum_x[el + 2*n_el];
-      value *= gain_factor;
-      results[9*point + 6] = value;
+        value = _spectrum_x[el + 2*n_el];
+        value *= gain_factor;
+        results[n_sets*point + 6] = value;
+      }
 
       
       //--y - polarization
@@ -824,17 +831,20 @@ void Optics::do_plot()
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[9*point + 1] = value;
+      results[n_sets*point + 1] = value;
       
-      value = _spectrum_y[el + n_el];
-      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
-      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
-      value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[9*point + 4] = value;
+      if (n_sets == 9)
+      {
+        value = _spectrum_y[el + n_el];
+        value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+        value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+        value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+        results[n_sets*point + 4] = value;
 
-      value = _spectrum_y[el + 2*n_el];
-      value *= gain_factor;
-      results[9*point + 7] = value;
+        value = _spectrum_y[el + 2*n_el];
+        value *= gain_factor;
+        results[n_sets*point + 7] = value;
+      }
 
 
       //--z - polarization
@@ -842,17 +852,20 @@ void Optics::do_plot()
       value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
       value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
       value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[9*point + 2] = value;
-           
-      value = _spectrum_z[el + n_el];
-      value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
-      value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
-      value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
-      results[9*point + 5] = value;
+      results[n_sets*point + 2] = value;
 
-      value = _spectrum_z[el + 2*n_el];
-      value *= gain_factor;
-      results[9*point + 8] = value;
+      if (n_sets == 9)
+      {
+        value = _spectrum_z[el + n_el];
+        value /= Constants::atomic_time; //[1/second/((bohr_radius)^kdim)]
+        value *= Constants::elementary_charge; //[J/(eV*second)/((bohr_radius)^kdim)]
+        value /= area_dim_factor ; //[J/(eV*s)/((cm)^kdim)]
+        results[n_sets*point + 5] = value;
+
+        value = _spectrum_z[el + 2*n_el];
+        value *= gain_factor;
+        results[n_sets*point + 8] = value;
+      }
 
       point++;
     }
