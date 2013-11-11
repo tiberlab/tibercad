@@ -26,7 +26,8 @@ cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
   if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
     if [ ! -e libmesh-${LIBMESHVERSION}.tbz ]; then
-      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}
+#      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}
+      svn -r ${REVISION} co https://svn.code.sf.net/p/libmesh/svn/trunk/libmesh libmesh-${LIBMESHVERSION}
       tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}
       mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$TCHOST
     else

@@ -7,7 +7,7 @@ fi
 
 . common.sh
 
-VERSION=1_47_0
+VERSION=1_54_0
 ARCHIVE=boost_${VERSION}.tar.bz2
 
 echo "Compiling boost libraries"
