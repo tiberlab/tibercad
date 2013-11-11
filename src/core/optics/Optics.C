@@ -401,8 +401,6 @@ void Optics::calculate_for_k_point(const Point& k_point,
     _final_state_model->solve_for_kpoint(k_point); //calculate eigenstates
   }
 
-  //std::cout << "(Optics) k_point  " <<  k_point << "\n";
-
   set_k_point(k_point);
 
   compute_matrix_elements(); //calculate matrix elements of P operator
@@ -428,15 +426,12 @@ void Optics::calculate_for_k_point(const Point& k_point,
   else
     calculate_spectrum(*_energy_mesh, _opt.Gamma, _opt.polariz,  spectrum);
 
-  //std::cout<<"(OPT) calc for k: "<<spectrum.size()<<std::endl;
 
   //for integrated quantity I take a sum of the map
   integrated_quantity = 0.0;
 
   for (unsigned int k=0; k < _energy_mesh->n_nodes(); k++)
     integrated_quantity += abs(spectrum[k]);
-
-  //std::cout<<"(Optics) integrated quantity: "<< integrated_quantity<< std::endl;
 
 }
 
@@ -452,11 +447,11 @@ void Optics::do_solve()
     final_sol_id = _final_state_model->remember_current_solution();
 
 
-  if (norm(_opt.polariz) != 0)
-  {
-    std::cout<<"(Optics) polarization: ( "<<_opt.polariz(1)<<" "
-             <<_opt.polariz(2)<<" "<<_opt.polariz(3)<<")"<<std::endl;
-  }
+  //if (norm(_opt.polariz) != 0)
+  //{
+  //  std::cout<<"(Optics) polarization: ( "<<_opt.polariz(1)<<" "
+  //           <<_opt.polariz(2)<<" "<<_opt.polariz(3)<<")"<<std::endl;
+  //}
 
   if (plot_solution("optical_spectrum")) 
   {
@@ -656,7 +651,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       double power = strength * f1 * f2;
       double stimulated = strength * (f1 + f2 - 1);
       double gain = stimulated * M_PI * M_PI * c * c /
-          (_opt.nr * _opt.nr * omega * omega);
+          (_opt.nr * _opt.nr * omega * omega * omega);
 
       //Note(alex): The original factor 1/(2*PI*PI) was changed to 1/(2*PI) (see below)
       //            and finally multiplied by 4 PI for angular integration (17/10/2011).
