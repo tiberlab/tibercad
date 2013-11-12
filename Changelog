@@ -2,12 +2,16 @@ Version 2.3.0
 -------------
 
 New features:
+	- optics now calculates also stimulated emission and gain spectra
+	- recombination from optics can be included selfconsistently in
+	  drift-diffusion
 
 Bug fixes:
 
 	- interface models for drift-diffusion now correctly consider the
 	  min/max of the band edges and densities from the two sides
 	- extended boundary condition in elasticity module works correctly
+	- bug fix in TAT model
 
 
 Version 2.2.0
