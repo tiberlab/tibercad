@@ -9,4 +9,5 @@ Modules
 .. include:: modules/DriftDiffusion.rst
 .. include:: modules/EFA.rst
 .. include:: modules/Dsc.rst
+.. include:: modules/ETB.rst
 
