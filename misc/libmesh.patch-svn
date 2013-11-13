@@ -1232,3 +1232,19 @@ Index: include/parallel/parallel.h
    {
      receive (src_processor_id,
  	     buf,
+Index: extern/libmesh-svn-x86_64-linux/src/fe/fe_map.C
+===================================================================
+--- extern/libmesh-svn-x86_64-linux/src/fe/fe_map.C	(revision 3581)
++++ extern/libmesh-svn-x86_64-linux/src/fe/fe_map.C	(working copy)
+@@ -995,9 +995,9 @@
+ INSTANTIATE_IMAP(2);
+ INSTANTIATE_IMAP(3);
+ 
+-#if defined(__INTEL_COMPILER)
++//#if defined(__INTEL_COMPILER)
+ INSTANTIATE_MAP(0);
+ INSTANTIATE_MAP(1);
+ INSTANTIATE_MAP(2);
+ INSTANTIATE_MAP(3);
+-#endif
++//#endif
