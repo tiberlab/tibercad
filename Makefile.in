@@ -34,10 +34,10 @@ ifeq ($(target_os),darwin)
 endif
 
 
-all: tibercad modules
+all: core modules
 
 
-tibercad: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
+core: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 	@$(MAKE) --no-print-directory -C src/tibercad tibercad
 
 
@@ -60,6 +60,7 @@ ifeq ($(build_modules),yes)
 modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 	@mkdir -p SDK/etc
 	@cp share/modules.conf SDK/etc
+	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
 	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 else
 modules:
@@ -92,6 +93,7 @@ src:
 	@if test -d extern/$(ARCH); then rm -f $(ARCH)/extern && cd $(ARCH) && ln -s ../extern/$(ARCH) extern; fi
 	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
 ifneq ($(build_modules),yes)
+	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
 	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 endif
 
