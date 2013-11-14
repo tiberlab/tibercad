@@ -19,6 +19,12 @@
 #include <iomanip>
 #include <map>
 
+
+//! Definition of DofField that maps a dof index to a double.
+typedef std::vector<double> DofField;
+// TO DO Change in NumericVector:
+//typedef NumericVector<double> DofField;
+
 /*! 
  * General class used to perform Kspace Integrations. 
  * It is used with Kspace and KspaceIntegrationTemplate
@@ -29,12 +35,6 @@
  * for this calculate_for_k_point( ) must return into "double estimator"
  * a meaningful error estimator scalar at the given k_point.   
  */
-
-//! Definition of DofField that maps a dof index to a double.
-typedef std::vector<double> DofField;
-// TO DO Change in NumericVector:
-//typedef NumericVector<double> DofField;
-
 class KspaceIntegration : public TiberModelObject 
 {
  public:
@@ -65,8 +65,17 @@ class KspaceIntegration : public TiberModelObject
   }; 
 
 
-  
-  KspaceIntegration(const ModelOptions& options);
+  //! Creator for KspaceIntegration objects
+  /*!
+   * \param hook the pointer to the object which will calculate quantities
+   *        at each k-point
+   * \param callback the member function of the above class that does the calculation
+   * \param opts options to control the integration
+   */
+  template <class T>
+  static KspaceIntegration* create(T* hook,
+      void (T::*callback)(const Point&, DofField&, double&),
+      const ModelOptions& opts);
 
 
   virtual ~KspaceIntegration();
@@ -77,10 +86,12 @@ class KspaceIntegration : public TiberModelObject
 
   const DofField& get_solution(void) const;
  
-  void get_solution(DofField& density) const; 
+  void get_solution(DofField& density) const;
 
 
  protected:
+
+  KspaceIntegration(const ModelOptions& options);
 
   virtual void do_init(void);
 
@@ -106,17 +117,6 @@ class KspaceIntegration : public TiberModelObject
   //!calculates integrated quantity distribution over k space
   //virtual std::vector<double>  get_density_in_k_space(void)  const;
 
-  //!result after integration: maps the real space mesh to the integrated quantity
-  DofField real_space_density;
- 
-  //! temporary field arrays
-  DofField dens_at_k_elem;
-
-  DofField dens_at_k_point;
-
-  //! kspace must be built in the derived classes
-  Kspace* _kspace;
-
   
  private:
 
@@ -138,6 +138,17 @@ class KspaceIntegration : public TiberModelObject
   //!fem_order;
   libMeshEnums::Order fem_order;
   
+
+  //!result after integration: maps the real space mesh to the integrated quantity
+  DofField real_space_density;
+
+  //! temporary field arrays
+  DofField dens_at_k_elem;
+
+  DofField dens_at_k_point;
+
+  //! kspace must be built in the derived classes (??)
+  Kspace* _kspace;
 
   //!maps k-space to a real space density (which is a map between real space elements and density)   
   std::map< const KElem*, DofField > density_at_k;
@@ -162,6 +173,21 @@ class KspaceIntegration : public TiberModelObject
 };
 
 
+#include "KspaceIntegrationTemplate.h"
+
+template <class T>
+KspaceIntegration*
+KspaceIntegration::create(T* hook,
+    void (T::*callback)(const Point&, DofField&, double&),
+    const ModelOptions& opts)
+{
+  KspaceIntegrationTemplate<T>* templ = new KspaceIntegrationTemplate<T>(hook, opts);
+  templ->_callback = callback;
+  return templ;
+}
+
+
+
 inline
 void
 KspaceIntegration::init(void)
@@ -175,6 +201,7 @@ KspaceIntegration::solve(void)
 {
   do_solve();
 }
+
 
 
 inline

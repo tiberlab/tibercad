@@ -48,6 +48,7 @@ void EigenvalueProblem::init_kspace(void)
      do_dispersion=true;
    }
 
+   /*
    if(get_options().has_submodel("DOS"))
    {
      ModelOptions::submodel_iterator it(get_options().submodels_begin("DOS"));
@@ -66,6 +67,7 @@ void EigenvalueProblem::init_kspace(void)
      else
        Messages::info("k-space initialized");
    }
+   */
 }
  
 ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
@@ -361,21 +363,107 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
 }
 
 
+
+
+void EigenvalueProblem::_dos_for_kpoint(const Point& k_point, DofField& density,
+    double& integrated_quantity)
+{
+  ModelOptions& opts = get_options().submodels_begin("DOS")->second;
+  double s = opts.get_option("gaussian_width", 0.01);
+
+  unsigned int n_energy = _energy_mesh->n_nodes();
+
+  this->solve_for_kpoint(k_point);
+
+  unsigned int n_eigs = _solution.size();
+
+  double a = 1.0 / (s * sqrt(2*M_PI));
+
+  density.resize(n_energy);
+
+  for (unsigned int n = 0; n < n_energy; n++)
+  {
+    double erg =  _energy_mesh->point(n)(0);
+
+    double sum = 0.0;
+
+    for (unsigned int i = 0; i < n_eigs; ++i)
+    {
+      double ediff = (erg - _solution[i].eigen_energy) / s;
+      double arg = 0.5 * ediff * ediff;
+      sum += exp(-arg);
+    }
+
+    density[n] = a * sum;
+  }
+}
+
+
+
+
 void EigenvalueProblem::calculate_dos(void)
 {
-  if(!get_options().has_submodel("DOS") || (_kspace == NULL)) return;
+  if (!get_options().has_submodel("DOS")) return;
 
   Messages::info("Compute DOS ...");
 
-  const Mesh* kmesh = _kspace->get_k_mesh();
-  unsigned int number_of_k_points = kmesh->n_nodes();
+  ModelOptions& opts = get_options().submodels_begin("DOS")->second;
 
-  //typedef boost::shared_ptr<eigen_problem_solution> ptr_type;
+  delete _energy_mesh;
+  _energy_mesh = new Mesh(1);
 
-  //vector<vector<ptr_type>> solutions(number_of_k_points);
-  vector<vector<eigen_problem_solution>> solutions(number_of_k_points);
+  double emin = opts.get_option("Emin", 0);
+  double emax = opts.get_option("Emax", 5);
+  unsigned int num_elem = static_cast<unsigned int>((emax - emin) / opts.get_option("dE", 0.001));
 
-  process_element(kmesh->elem(0), 0, solutions);
+  MeshTools::Generation::build_cube (*_energy_mesh,
+                                     num_elem, 0, 0,
+                                     emin, emax,
+                                     0, 0,
+                                     0, 0,
+                                     EDGE2);
+
+  ///*
+
+  //
+  // The simple approach integrates in k-space with a gaussian weight
+  //
+  ModelOptions kopts;
+  if (opts.has_submodel("k-space"))
+    kopts = opts.submodels_begin("k-space")->second;
+  kopts += parse_kspace_options(kopts);
+
+//  KspaceIntegration* kint = KspaceIntegrationTemplate<EigenvalueProblem>::create(this,
+  KspaceIntegration* kint = KspaceIntegration::create(this,
+      &EigenvalueProblem::_dos_for_kpoint, kopts);
+  kint->init();
+
+  kint->solve();
+/*
+  //DofField doff;
+  //Point kp(0);
+  //double dummy;
+  //_dos_for_kpoint(kp, doff, dummy);
+
+  vector<double> results(_energy_mesh->n_nodes(),0.0);
+
+  vector<string> names(1, "DOS");
+
+  string filename;
+  string format = opts.get_option("output_format", "grace");
+
+  DataOutput data_output(*_energy_mesh, format);
+  data_output.set_output_directory(get_output_directory());
+
+  filename = get_name() + "_dos" + TiberCad::get_filename_suffix();
+  unsigned int n_erg = _energy_mesh->n_nodes();
+  for(unsigned int n = 0; n < n_erg; n++)
+  {
+    results[n] = kint->get_solution()[n];
+  }
+
+  data_output.write_nodal_data(filename, results, names);
+  */
 
   /*
   for (unsigned int i = 0; i < number_of_k_points; i++)
@@ -396,6 +484,21 @@ void EigenvalueProblem::calculate_dos(void)
 
 
 
+  ///*
+
+  const Mesh* kmesh = _kspace->get_k_mesh();
+  unsigned int number_of_k_points = kmesh->n_nodes();
+
+  //typedef boost::shared_ptr<eigen_problem_solution> ptr_type;
+
+  //vector<vector<ptr_type>> solutions(number_of_k_points);
+  vector<vector<eigen_problem_solution>> solutions(number_of_k_points);
+
+  // order the solutions according to the bands
+  process_element(kmesh->elem(0), 0, solutions);
+
+
+  // this plots the dispersion
   {
     std::vector<double> results;
     std::vector<std::string> names;
@@ -427,6 +530,7 @@ void EigenvalueProblem::calculate_dos(void)
 
     data_output.write_nodal_data(filename, results, names);
   }
+  //*/
 }
 
 ID
@@ -507,7 +611,7 @@ void EigenvalueProblem::get_eigenvalues(const std::string& particle,
 
   for (unsigned int i = 0; i < n; i++)
   {
-    if(_solution[i].particle == particle)
+    if(particle.empty() || (_solution[i].particle == particle))
     {  
       num_st++;
 

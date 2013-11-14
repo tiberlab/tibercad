@@ -5,10 +5,13 @@
 
 #include "SimulationInterface.h"
 #include "Kspace.h"
+#include "KspaceIntegration.h"
 
 #include "sparse_matrix.h"
 #include <complex>
 #include <vector>
+
+
 
 //! Abstract class to solve complex valued eigenvalue problem
 class EigenvalueProblem : public SimulationInterface
@@ -206,17 +209,25 @@ class EigenvalueProblem : public SimulationInterface
     int disp_range[2];
 
   private:
-  
-     bool _new_k;
 
-     //! to remember solutions
-     std::map<ID, std::vector<eigen_problem_solution>> _remembered_sol;
+    bool _new_k;
+
+    Mesh* _energy_mesh;
+
+    //! to remember solutions
+    std::map<ID, std::vector<eigen_problem_solution>> _remembered_sol;
+
+    //! Callback function for dos_calculation
+    void _dos_for_kpoint(const Point& k_point,
+        DofField& density,
+        double& integrated_quantity);
 
 };
 
 inline
 EigenvalueProblem::EigenvalueProblem(const ModelOptions& options)
- : SimulationInterface(options)
+ : SimulationInterface(options),
+   _energy_mesh(0)
 {
   _k_vector[0]=0.0;   _k_vector[1]=0.0;   _k_vector[2]=0.0; 
   _kspace = NULL;

@@ -103,7 +103,7 @@ void Kspace::build_k_grid()
     rotate_mesh();
   
  
-    kmesh->print_info();
+    //kmesh->print_info();
 
     //MeshBase::element_iterator it_k_space= kmesh->active_elements_begin();
     //const MeshBase::element_iterator it_k_end  = kmesh->active_elements_end();

@@ -11,7 +11,6 @@
 #include "InitFailedException.h"
 #include "PotentialInterface.h"
 #include "KspaceIntegration.h"
-#include "KspaceIntegrationTemplate.h"
 
 // To be able to compile as module
 #include "TiberModule.h"
@@ -426,7 +425,7 @@ Negf::init_k_space_integration(void)
    
     init_k_space(kopts); 
 
-    _k_int_density = KspaceIntegrationTemplate<Negf>::create(this,kopts);
+    _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts);
 
     if (_k_int_density == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -445,7 +444,7 @@ Negf::init_k_space_integration(void)
 
     init_k_space(kopts); 
     
-    _k_int_current = KspaceIntegrationTemplate<Negf>::create(this,kopts);
+    _k_int_current = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts);
 
     if (_k_int_current == NULL)
       throw InitFailedException("Could not create k-integration");

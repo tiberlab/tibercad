@@ -400,7 +400,7 @@ void KspaceIntegration::do_init(void)
 
   _kspace = new Kspace(kopts);
 
-  if(_kspace==NULL)
+  if(_kspace == NULL)
     throw InitFailedException("Could not initialize k-space");
   else
     Messages::info("k-space initialized");

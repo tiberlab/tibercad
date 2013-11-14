@@ -8,7 +8,6 @@
 #include "Boundary.h"
 #include "TiberMath.h"
 #include "TiberLinearSystem.h"
-#include <gnuplot_io.h>
 #include "SimulationOptions.h"
 #include "tensor.h"
 

@@ -4,65 +4,81 @@
 #include "KspaceIntegration.h"
 #include "ModelOptions.h"
 
+
+
 //! Template class for KspaceIntegration.
-//! The template is used to store a general pointer to an object invoking kintegration
-//! The class must implement a method "calculate_for_k_point(..)"  
-//! With the same interface as described here.
-  
+/*!
+ * The template is used to store a general pointer to an object invoking kintegration
+ * The class must implement a method \c calculate_for_k_point(..)
+ * With the same interface as described here.
+ */
 template <class T>
-class KspaceIntegrationTemplate : public KspaceIntegration 
+class KspaceIntegrationTemplate : public KspaceIntegration
 {
   public:
 
-    KspaceIntegrationTemplate(T* hook, const ModelOptions& opts);
+    //! callback type for the simple integration
+    typedef void (T::*Callback)(const Point&, DofField&, double&);
+
+    //! callback type for integration in ordered mode
+    /*!
+     * The second Point is the last called k-point which is a neighor of the new one
+     */
+    typedef void (T::*Callback2)(const Point&, const Point&, DofField&, double&);
 
     virtual ~KspaceIntegrationTemplate(void){};
 
-    static KspaceIntegration* create(T* hook, const ModelOptions& opts);
-		 
 
   protected:
 
-   //!calculates density that is necessary for eack k-point and a number that will be used for refinement 
-   virtual void calculate_for_k_point(const Point& k_point, 
-                                      DofField& density, 
-                                      double& estimator);
+    //! calculates density for each k-point
+    /*!
+     *
+     */
+    virtual void calculate_for_k_point(const Point& k_point,
+        DofField& density,
+        double& estimator);
 
   private:
 
+    //! Let base class be friend
+    friend class KspaceIntegration;
+
+    KspaceIntegrationTemplate(T* hook, const ModelOptions& opts);
+
+    //! The object which knows how to calculate the density
     T* _hook;
+
+    //! The method of object to be called
+    Callback _callback;
+
 
 };
 
 template <class T>
 inline
 KspaceIntegrationTemplate<T>::KspaceIntegrationTemplate(T* hook, const ModelOptions& opt)
-	: KspaceIntegration(opt)
+  : KspaceIntegration(opt),
+    _callback(0)
 {
    _hook = hook;
 }
 
-//template <class T>
-//inline
-//KspaceIntegrationTemplate<T>::~KspaceIntegrationTemplate
-//{
-//}
+
+
+
 
 template <class T>
 inline
 void KspaceIntegrationTemplate<T>::calculate_for_k_point(const Point& k_point, 
-        	         			     DofField& density, 
-	         	         		     double& integrated_quantity)
+    DofField& density,
+    double& integrated_quantity)
 {
-    _hook->calculate_for_k_point(k_point, density, integrated_quantity);
+  if (_callback != 0)
+    (_hook->*_callback)(k_point, density, integrated_quantity);
 }
 
 
-template <class T>
-inline
-KspaceIntegration* KspaceIntegrationTemplate<T>::create(T* hook, const ModelOptions& opts)
-{
-  return new KspaceIntegrationTemplate<T>(hook, opts);
-}
+
 
 #endif

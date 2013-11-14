@@ -2,8 +2,6 @@
 
 #include "Optics.h"
 #include "EigenvalueProblem.h"
-//#include "KspaceIntegration.h"
-#include "KspaceIntegrationTemplate.h"
 #include "SimulationInterface.h"
 #include "SimulationOptions.h"
 #include "Messages.h"
@@ -247,7 +245,7 @@ void Optics::init_k_space_integration(void)
    kopts.set_option("verbose", SimulationOptions::verbose() );
 
 
-   _k_integration = KspaceIntegrationTemplate<Optics>::create(this,kopts);
+   _k_integration = KspaceIntegration::create(this, &Optics::calculate_for_k_point, kopts);
 
    if (_k_integration == NULL)
       throw InitFailedException("Could not create k-integration");
