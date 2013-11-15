@@ -32,6 +32,7 @@ all: tibercad
 
 tibercad: $(objects) 
 	@echo "Compiling tibercad executable ..."
+	@mkdir -p $(topdir)/$(ARCH)/bin
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad$(SUFF) \
 		-L$(libdir) \
 		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
