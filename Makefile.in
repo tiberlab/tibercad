@@ -42,13 +42,13 @@ core: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
 
 
 .PHONY: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
-$(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): 
-	@$(MAKE) --no-print-directory -C src all
+$(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
 		$(MODULE_LIBS) $(DLLNAME) $(LDFLAGS)
 		
+#	@$(MAKE) --no-print-directory -C src all
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-Wl,-soname,libtibercad.so.0 -o lib/libtibercad.so.0.0 \
 		$(MODULE_LIBS) -lmkl_lapack $(LDFLAGS)
@@ -89,13 +89,14 @@ distclean: src doc
 
 .PHONY: src
 src:
-	@mkdir -p $(ARCH)/bin
-	@if test -d extern/$(ARCH); then rm -f $(ARCH)/extern && cd $(ARCH) && ln -s ../extern/$(ARCH) extern; fi
 	@$(MAKE) --no-print-directory -C src $(MAKECMDGOALS)
-ifneq ($(build_modules),yes)
-	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
-	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
-endif
+
+#	@mkdir -p $(ARCH)/bin
+#	@if test -d extern/$(ARCH); then rm -f $(ARCH)/extern && cd $(ARCH) && ln -s ../extern/$(ARCH) extern; fi
+#ifneq ($(build_modules),yes)
+#	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
+#	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
+#endif
 
 
 
