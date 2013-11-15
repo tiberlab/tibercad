@@ -363,9 +363,9 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
 }
 
 
-
-
-void EigenvalueProblem::_dos_for_kpoint(const Point& k_point, DofField& density,
+void EigenvalueProblem::_dos_for_kpoint(const Point& k_point,
+    const Point& refpoint,
+    DofField& density,
     double& integrated_quantity)
 {
   ModelOptions& opts = get_options().submodels_begin("DOS")->second;
@@ -373,9 +373,22 @@ void EigenvalueProblem::_dos_for_kpoint(const Point& k_point, DofField& density,
 
   unsigned int n_energy = _energy_mesh->n_nodes();
 
-  this->solve_for_kpoint(k_point);
+  // calculate for k-point, but only if it is not already there
+  KSolutions::iterator it(_ksolutions.find(k_point));
+  if (it == _ksolutions.end())
+  {
+    this->solve_for_kpoint(k_point);
+    it = (_ksolutions.insert(make_pair(k_point, _solution))).first;
+  }
 
-  unsigned int n_eigs = _solution.size();
+  const vector<eigen_problem_solution>& solution = it->second;
+
+  // now order, but only if k_point != refpoint
+  if (k_point != refpoint)
+  {
+  }
+
+  unsigned int n_eigs = solution.size();
 
   double a = 1.0 / (s * sqrt(2*M_PI));
 
@@ -389,7 +402,7 @@ void EigenvalueProblem::_dos_for_kpoint(const Point& k_point, DofField& density,
 
     for (unsigned int i = 0; i < n_eigs; ++i)
     {
-      double ediff = (erg - _solution[i].eigen_energy) / s;
+      double ediff = (erg - solution[i].eigen_energy) / s;
       double arg = 0.5 * ediff * ediff;
       sum += exp(-arg);
     }
@@ -439,7 +452,7 @@ void EigenvalueProblem::calculate_dos(void)
   kint->init();
 
   kint->solve();
-/*
+
   //DofField doff;
   //Point kp(0);
   //double dummy;
@@ -463,7 +476,7 @@ void EigenvalueProblem::calculate_dos(void)
   }
 
   data_output.write_nodal_data(filename, results, names);
-  */
+  //*/
 
   /*
   for (unsigned int i = 0; i < number_of_k_points; i++)
@@ -484,7 +497,7 @@ void EigenvalueProblem::calculate_dos(void)
 
 
 
-  ///*
+  /*
 
   const Mesh* kmesh = _kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
@@ -530,7 +543,7 @@ void EigenvalueProblem::calculate_dos(void)
 
     data_output.write_nodal_data(filename, results, names);
   }
-  //*/
+  */
 }
 
 ID

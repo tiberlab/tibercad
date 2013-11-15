@@ -36,6 +36,7 @@ class KspaceIntegrationTemplate : public KspaceIntegration
      *
      */
     virtual void calculate_for_k_point(const Point& k_point,
+        const Point& refpoint,
         DofField& density,
         double& estimator);
 
@@ -52,6 +53,8 @@ class KspaceIntegrationTemplate : public KspaceIntegration
     //! The method of object to be called
     Callback _callback;
 
+    //! Another callback
+    Callback2 _callback2;
 
 };
 
@@ -59,7 +62,8 @@ template <class T>
 inline
 KspaceIntegrationTemplate<T>::KspaceIntegrationTemplate(T* hook, const ModelOptions& opt)
   : KspaceIntegration(opt),
-    _callback(0)
+    _callback(0),
+    _callback2(0)
 {
    _hook = hook;
 }
@@ -71,10 +75,13 @@ KspaceIntegrationTemplate<T>::KspaceIntegrationTemplate(T* hook, const ModelOpti
 template <class T>
 inline
 void KspaceIntegrationTemplate<T>::calculate_for_k_point(const Point& k_point, 
+    const Point& refpoint,
     DofField& density,
     double& integrated_quantity)
 {
-  if (_callback != 0)
+  if (_callback2 != 0)
+    (_hook->*_callback2)(k_point, refpoint, density, integrated_quantity);
+  else if (_callback != 0)
     (_hook->*_callback)(k_point, density, integrated_quantity);
 }
 

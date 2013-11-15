@@ -77,6 +77,11 @@ class KspaceIntegration : public TiberModelObject
       void (T::*callback)(const Point&, DofField&, double&),
       const ModelOptions& opts);
 
+  template <class T>
+  static KspaceIntegration* create(T* hook,
+      void (T::*callback)(const Point&, const Point&, DofField&, double&),
+      const ModelOptions& opts);
+
 
   virtual ~KspaceIntegration();
   
@@ -104,9 +109,10 @@ class KspaceIntegration : public TiberModelObject
   virtual void calculate_convergent_density(void);
 
   //!calculates density that is necessary for eack k-point and a number that will be used for refinement 
-  virtual void calculate_for_k_point(const Point& k_point, 
-				     DofField& density, 
-				     double& estimator)=0;
+  virtual void calculate_for_k_point(const Point& k_point,
+      const Point& refpoint,
+      DofField& density,
+      double& estimator) = 0;
 
   
   virtual double estimate_error(void);
@@ -183,6 +189,17 @@ KspaceIntegration::create(T* hook,
 {
   KspaceIntegrationTemplate<T>* templ = new KspaceIntegrationTemplate<T>(hook, opts);
   templ->_callback = callback;
+  return templ;
+}
+
+template <class T>
+KspaceIntegration*
+KspaceIntegration::create(T* hook,
+    void (T::*callback)(const Point&, const Point&, DofField&, double&),
+    const ModelOptions& opts)
+{
+  KspaceIntegrationTemplate<T>* templ = new KspaceIntegrationTemplate<T>(hook, opts);
+  templ->_callback2 = callback;
   return templ;
 }
 

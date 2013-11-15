@@ -210,7 +210,7 @@ AutomaticKeating::calculate_wz_params(void)
   // then we need the gradients \nabla r_i, and the approximate
   // Hessian is given by J'J, with J = dr_i/dx_j
 
-  // we use a quasi Newton with backtracking anc Wolfe condition check
+  // we use a quasi Newton with backtracking and Wolfe condition check
   double c1 = 1e-4;
   double rho = 0.8;
 

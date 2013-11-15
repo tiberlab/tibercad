@@ -210,17 +210,25 @@ class EigenvalueProblem : public SimulationInterface
 
   private:
 
+    //! A map to contain solutions at k-points
+    typedef std::map<const Point, std::vector<eigen_problem_solution> > KSolutions;
+
     bool _new_k;
 
     Mesh* _energy_mesh;
+
+    //! Already calculated k-points
+    KSolutions _ksolutions;
 
     //! to remember solutions
     std::map<ID, std::vector<eigen_problem_solution>> _remembered_sol;
 
     //! Callback function for dos_calculation
     void _dos_for_kpoint(const Point& k_point,
+        const Point& refpoint,
         DofField& density,
         double& integrated_quantity);
+
 
 };
 

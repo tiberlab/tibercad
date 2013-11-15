@@ -108,7 +108,7 @@ void KspaceIntegration::calculate_density()
 	double error_value;
         //dens_at_k_point.clear();
 
-	calculate_for_k_point( q_point[qp], dens_at_k_point, error_value);
+	calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
 
         // build the map between k-points and the integrated error quantity
 	error_estimator[kelem] += error_value * JxW[qp] * factor;
