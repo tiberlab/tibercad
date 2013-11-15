@@ -91,7 +91,7 @@ $(subdirs):
 
 ifeq (x$(findstring clean,$(MAKECMDGOALS)),x)
 ifneq (x$(srcfiles),x)
-srcfiltered=$($filter %.C, srcfiles)
+srcfiltered=$(filter %.C, $(srcfiles))
 include $(addprefix .$(ARCH)/,$(srcfiltered:.C=.d))
 endif
 endif
