@@ -196,7 +196,11 @@ The available output variables for **Module**  ``empirical_tb`` , to be specifie
    states eigenfuctions in  *cube*  format
 
  ``MeshStatesNodes``: 
-    ???
+    plots  staes  on  the  mesh. MeshStatesNodes is not supported in 1D calculations 
+
+ ``MeshStates``: 
+    plots  states  on  the  mesh in 1D calculations (ee.g. Quantum wells).  
+
 
 
 By  deafault  the list of  eigenvalues[eV] is printed  in the output  directory 
