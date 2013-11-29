@@ -29,6 +29,7 @@
 #include "system.h"
 
 #include <sstream>
+#include <algorithm>
 
 
 
@@ -331,6 +332,14 @@ SimulationInterface::includes_region(ID region_id) const
   return get_environment().contains_region(region_id);
 }
 
+
+bool
+SimulationInterface::includes_regions(std::set<ID> region_ids) const
+{
+  return includes(get_environment().get_region_ids().begin(),
+      get_environment().get_region_ids().end(),
+      region_ids.begin(), region_ids.end());
+}
 
 
 PhysicalModel*

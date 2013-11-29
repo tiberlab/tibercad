@@ -592,6 +592,10 @@ class SimulationInterface : public TiberModelObject
     bool includes_region(ID region_id) const;
 
 
+    //! Check if all IDs in \c region_ids are included in this simulation
+    bool includes_regions(std::set<ID> region_ids) const;
+
+
     //! Create a bulk physical model to be used with this simulation
     PhysicalModel* new_bulk_model(const ModelOptions& options,
         const Material* material);
