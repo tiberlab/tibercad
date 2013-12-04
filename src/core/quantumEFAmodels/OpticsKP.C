@@ -276,7 +276,8 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
 
   DofMap& dof_map = system->get_dof_map();
 
-  system->reinit();
+  // this makes at least the windows version to crash:
+  //system->reinit();
 
   FEType fe_type = dof_map.variable_type(psivar[0]);
 

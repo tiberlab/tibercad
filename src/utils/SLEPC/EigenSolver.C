@@ -7,7 +7,7 @@
 #include "EigenSolver.h"
 #include "RuntimeException.h"
 #include "slepceps.h"
-#include "petscsys.h"
+//#include "petscsys.h"
 
 #include "private/matimpl.h"
 
@@ -15,8 +15,8 @@ namespace
 {
   Mat A; //Hamiltonian
   Mat B; //S-matrix
-  EPS eps = NULL; //EigenSolver
-  MPI_Comm comm;
+  EPS eps; //EigenSolver
+//  MPI_Comm comm;
   double shift; //could be stored in ST but lapack does not apply any shift
 }
 
@@ -31,6 +31,7 @@ void EigenSolver::slepc_init(int argc1, char** argv1)
   //Seems to work ^^
   //  TODO Looks poor, but in current version of petsc there is no methods for it. (In later releases there is ...)
   // It fix problem when during factorization MUMPS does not have have enouph memory.
+/*
   int __empty_argc = 3;
   char** __empty_argv = new char*[3];
   __empty_argv[0] = "tibercad";
@@ -38,11 +39,11 @@ void EigenSolver::slepc_init(int argc1, char** argv1)
   __empty_argv[2] = "100";
 
   SlepcInitialize(&__empty_argc,&__empty_argv,NULL,NULL);
-
-/*  SlepcInitialize(&argc1,&argv1,NULL,NULL);*/
+*/
+  SlepcInitialize(&argc1,&argv1,NULL,NULL);
   PetscPopSignalHandler();
 
-  comm = PETSC_COMM_WORLD;
+//  comm = PETSC_COMM_WORLD;
 
 }
 
@@ -511,10 +512,10 @@ int EigenSolver::prepare_slepc()
   int ierr;
 
 
-  if (eps == NULL)
+//  if (eps == NULL)
   {
-    //ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
-    ierr = EPSCreate(comm ,&eps);CHKERRQ(ierr);
+    ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
+//    ierr = EPSCreate(comm ,&eps);CHKERRQ(ierr);
 
     ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
   }
@@ -543,7 +544,7 @@ int EigenSolver::clear_slepc()
   // NOTE: with real MPI this leads to too many communicators
   // in a future version of SLEPc one could maybe use EPSReset()
   ierr = EPSDestroy(eps);CHKERRQ(ierr);
-  eps = NULL;
+  //eps = NULL;
 
 
 
