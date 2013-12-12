@@ -29,12 +29,7 @@
 #include "KPbulkHamiltonian.h"
 #include "EFAbulkModel.h"
 
-//#include  "DftbModel.h"
-//#include  "EtbModel.h"
 
-
-//#include  "ZbOptDielectricConstant.h"
-//#include  "WzOptDielectricConstant.h"
 
 //#include "PhononModel.h"
 //#include "ZbFreeDynamicalMatrix.h"
@@ -108,17 +103,6 @@ PhysicalModelInterface::_create(const string& name,
     mod = WzDDsemiconductor::create(options);
   else if (name == "EFAmodel")
     mod = EFAbulkModel::create(options);
-  //else if (name == "dftb")
-  //  mod = DftbModel::create(options);
-  //else if (name == "etb")
-  //  mod = ETBModel::create(options);
-  //else if (name == "opt_dielectric_constant_zb")
-  //  mod = ZbOptDielectricConstant::create(options);
-  //else if (name == "opt_dielectric_constant_wz")
-  //  mod = WzOptDielectricConstant::create(options);
-  //else if (name == "maxwell")
-  //  mod = MaxwellPhysicalModel::create(options);
-  //else if  (name == "phonon")
   //  mod = PhononModel::create(options);
   //else if  (name == "free_dynamical_matrix_zb")
   //  mod = ZbFreeDynamicalMatrix::create(options);

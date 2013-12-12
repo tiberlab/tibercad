@@ -128,10 +128,6 @@ SimulationInterface::create(const string& type,
     sim = OpticsKP::create(options);
   else if (type_name == "opticstb")
     sim = OpticsTB::create(options);
-#ifdef ENABLE_DFTB
-  else if (type_name == "densityfunctional_tb")
-    sim = Dftb::create(options);
-#endif
 
   if (sim == NULL)
   {
