@@ -595,7 +595,7 @@ EigenvalueProblem::do_delete_remembered_solution(ID id)
 
 void EigenvalueProblem::do_plot(void)
 {
-  std::cout<<"Plots results"<<std::endl;
+
   SimulationInterface::do_plot();
 
   if (do_dispersion)

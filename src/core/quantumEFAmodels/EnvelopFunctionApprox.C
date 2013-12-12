@@ -763,11 +763,11 @@ void EnvelopFunctionApprox::do_solve()
  sol_opt.find_option("simulation"); // remove simulation name 
  sol_opt.check_unused();
 
- if (opt.job == BULKEIGENSTATES )
- {
-   solve_bulk();
- }
- else
+ //if (opt.job == BULKEIGENSTATES )
+ //{
+ //  solve_bulk();
+ //}
+ //else
  { 
 
 

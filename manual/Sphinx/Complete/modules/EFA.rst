@@ -378,6 +378,8 @@ The optical spectrum from spontaneous emission is calculated in the following wa
 
 where :math:`f_i` and :math:`f_j` are the Fermi distributions and :math:`M_{i,j}` is the optical matrix element between the states  :math:`i` and :math:`j`.
 
+``opticskp`` also calculates the stimulated emission and gain spectra.
+
 ::
 
   Module opticskp

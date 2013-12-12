@@ -1,7 +1,4 @@
-
-#include "tiber_config.h"
-
-#ifdef ENABLE_UPTIGHT
+// $Id$
 
 #include "EmpiricalTightBinding.h"
 #include "PhysicalModel.h"
@@ -1884,5 +1881,4 @@ ETB::get_number_of_bands(void) const
    return num;
 }
 
-#endif
 
