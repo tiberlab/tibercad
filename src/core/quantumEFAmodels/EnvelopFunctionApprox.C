@@ -771,9 +771,7 @@ void EnvelopFunctionApprox::do_solve()
  { 
 
 
-   if (_calculate_density && _k_vector[0] == 0.0 
-                          && _k_vector[1] == 0.0 
-                          && _k_vector[2] == 0.0 )
+   if (_calculate_density && (get_k_point().size() == 0.0))
 
    {
      estimate_spectrum_shift();
@@ -782,9 +780,7 @@ void EnvelopFunctionApprox::do_solve()
    }
    else
    {
-     Point k_vec;
-     for (short i = 0; i < 3; i++) k_vec(i)=_k_vector[i];
-     solve_for_kpoint(k_vec);
+     solve_for_kpoint(get_k_point());
    }
 
  
@@ -824,8 +820,7 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
     if (verbose() > 0)
     {
       ostringstream os;
-      os << "(EFA) Solving for k = ( "<<
-        _k_vector[0]<<" "<<_k_vector[1]<<" "<<_k_vector[2]<< " )";
+      os << "(EFA) Solving for k = " << get_k_point();
       Messages::info(os.str());
     }
     
@@ -955,7 +950,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
   EFAbulkHamiltonian* element_hamiltonian;
 
-
+  // a temporary array to pass k point to models
+  double k_vector[3] = {  get_k_point()(0), 
+                          get_k_point()(1), 
+                          get_k_point()(2)}; 
 
   for ( ; el != end_el ; ++el)
     {//el
@@ -967,7 +965,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       element_hamiltonian->set_temperature(_temp_interface.get_temperature( elem, elem->centroid()));
 
-      element_hamiltonian->set_k_vector(_k_vector);
+      element_hamiltonian->set_k_vector(k_vector);
 
       element_hamiltonian->calculate_Hamiltonian_k_par();
 
@@ -2369,11 +2367,15 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   EFAbulkHamiltonian* element_hamiltonian;
 
-  std::cout<<"elem H"<<std::endl;
+  //std::cout<<"elem H"<<std::endl;
 
   element_hamiltonian = get_bulk_model<EFAbulkModel>(mat_elem)->get_Hamiltonian_model();
 
-  element_hamiltonian->set_k_vector(_k_vector);
+  // a temporary array to pass k point to models
+  double k_vector[3] = { get_k_point()(0),
+                         get_k_point()(1),
+                         get_k_point()(2)};
+  element_hamiltonian->set_k_vector(k_vector);
 
   element_hamiltonian->calculate_Hamiltonian_k_par();
 

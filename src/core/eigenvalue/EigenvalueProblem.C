@@ -254,7 +254,7 @@ void
 EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
     vector<vector<eigen_problem_solution>>& ordered_solutions)
 {
-  //ofstream of("test.dat", ofstream::app);
+  ofstream of("test.dat", ofstream::app);
 
   bool already_done = true;
 
@@ -309,14 +309,14 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
       {
         unsigned int idx = k;
         double max_sp = 0;
-        //cerr << k << " : ";
+        cerr << k << " : ";
         for (unsigned int j = 0 ; j < number_of_eigs; j++)
         {
           if (!ids.count(j))
           {
             double proj = scalar_prod(ordered_solutions[ref_node][k].eigen_vector,
                 _solution[j].eigen_vector);
-            //cerr << proj << " ";
+            cerr << j << " - " << proj << " ";
             if (proj > max_sp)
             {
               max_sp = proj;
@@ -324,9 +324,9 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
             }
           }
         }
-        //cerr << endl;
+        cerr << endl;
         ids.insert(idx);
-        //cerr << j << " " << idx << " " << max_sp << endl;
+        cerr << idx << " " << max_sp << endl;
         ordered_solutions[node_id][k] = _solution[idx];
       }
 
@@ -436,7 +436,6 @@ void EigenvalueProblem::calculate_dos(void)
                                      0, 0,
                                      EDGE2);
 
-  ///*
 
   //
   // The simple approach integrates in k-space with a gaussian weight
@@ -446,6 +445,9 @@ void EigenvalueProblem::calculate_dos(void)
     kopts = opts.submodels_begin("k-space")->second;
   kopts += parse_kspace_options(kopts);
 
+  _kspace = new Kspace(kopts);
+
+  /*
 //  KspaceIntegration* kint = KspaceIntegrationTemplate<EigenvalueProblem>::create(this,
   KspaceIntegration* kint = KspaceIntegration::create(this,
       &EigenvalueProblem::_dos_for_kpoint, kopts);
@@ -476,7 +478,7 @@ void EigenvalueProblem::calculate_dos(void)
   }
 
   data_output.write_nodal_data(filename, results, names);
-  //*/
+  */
 
   /*
   for (unsigned int i = 0; i < number_of_k_points; i++)
@@ -497,7 +499,7 @@ void EigenvalueProblem::calculate_dos(void)
 
 
 
-  /*
+  ///*
 
   const Mesh* kmesh = _kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
@@ -543,7 +545,7 @@ void EigenvalueProblem::calculate_dos(void)
 
     data_output.write_nodal_data(filename, results, names);
   }
-  */
+  //*/
 }
 
 ID
@@ -612,8 +614,16 @@ void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
   set_k_point(oldk);
   k_is_old();
 }
- 
- 
+
+
+void
+EigenvalueProblem::do_solve_for_kpoint(const Point& k_point)
+{
+  reinit();
+  solve();
+}
+
+
 void EigenvalueProblem::get_eigenvalues(const std::string& particle, 
 					std::vector<double>& values) const
 {

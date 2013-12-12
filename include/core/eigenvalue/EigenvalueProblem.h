@@ -53,11 +53,11 @@ class EigenvalueProblem : public SimulationInterface
     //! Set k-vector for calculation
     void set_k_point(const Point& k_vec);
 
+    //! Get the k point
+    Point get_k_point(void) const;
+
     //! to check if k-vector has changed 
     bool has_new_k(void) const;
-
-    //! to set that k-vector is not new
-    void k_is_old(void);
 
     //! Used to retrieve eigenvalues from other modules
     void get_eigenvalues(const std::string& particle, std::vector<double>& values) const;
@@ -138,7 +138,7 @@ class EigenvalueProblem : public SimulationInterface
 
     virtual void init_kspace(void);
 
-    virtual void do_solve_for_kpoint(const Point& k_point){};
+    virtual void do_solve_for_kpoint(const Point& k_point);
 
     virtual void do_copy_H_to_solver(void){};
 
@@ -197,16 +197,13 @@ class EigenvalueProblem : public SimulationInterface
     //!pointer to the real part of S matrix 
     SparseMatrix<double>* _S_imag;
 
-    //!k-vector in atomic units
-    double _k_vector[3];
-
     Kspace* _kspace;
 
     bool do_dispersion;
 
     std::vector< std::vector<double> > _dispersion;
 
-    int disp_range[2];
+    //int disp_range[2];
 
   private:
 
@@ -220,6 +217,9 @@ class EigenvalueProblem : public SimulationInterface
     //! Already calculated k-points
     KSolutions _ksolutions;
 
+    //!k-vector in atomic units
+    double _k_vector[3];
+
     //! to remember solutions
     std::map<ID, std::vector<eigen_problem_solution>> _remembered_sol;
 
@@ -229,6 +229,9 @@ class EigenvalueProblem : public SimulationInterface
         DofField& density,
         double& integrated_quantity);
 
+
+    //! to set that k-vector is not new
+    void k_is_old(void);
 
 };
 
@@ -240,8 +243,8 @@ EigenvalueProblem::EigenvalueProblem(const ModelOptions& options)
   _k_vector[0]=0.0;   _k_vector[1]=0.0;   _k_vector[2]=0.0; 
   _kspace = NULL;
   do_dispersion = false;
-  disp_range[0]=0; 
-  disp_range[1]=0;
+  //disp_range[0]=0;
+  //disp_range[1]=0;
 }
 
 inline
@@ -263,6 +266,15 @@ void EigenvalueProblem::set_k_point(const Point& k_vec)
   for (short i = 0; i < 3; i++) _k_vector[i] = k_vec(i);
   _new_k = true;
 }
+
+
+inline
+Point EigenvalueProblem::get_k_point(void) const
+{
+  return Point(_k_vector[0], _k_vector[1], _k_vector[2]);
+}
+
+
 
 inline 
 bool EigenvalueProblem::has_new_k(void) const

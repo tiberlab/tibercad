@@ -179,11 +179,11 @@ class ETB : public TightBinding
 							const std::string& j_particle,
 							unsigned int j);
 
-  /*! Note: for the moment calculate_matrix_element relays on the fact that the first
-     *  n_vb states are valence states, then there are all the electron states.
-     *  This should change if we want to put a self-consistent density calculation
-     *  that will dynamically append new states to the _solution vector.
-     */
+  /* Note: for the moment calculate_matrix_element relays on the fact that the first
+   *  n_vb states are valence states, then there are all the electron states.
+   *  This should change if we want to put a self-consistent density calculation
+   *  that will dynamically append new states to the _solution vector.
+   */
 
 
  private:
