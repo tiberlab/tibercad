@@ -251,6 +251,7 @@ Database::set_default_search_path(const string& path)
 const string
 Database::find_file(const string& file) const
 {
+  /*
   // TODO treat absolute filename
   string s(_path);
   s += "/" + file;
@@ -269,9 +270,9 @@ Database::find_file(const string& file) const
   }
 
   return s;
+  */
 
-  /*
-   * Needs boost >1.41
+  // Needs boost >1.41
   boost::filesystem::path p(file);
   if (p.is_relative())
     p = _path / p;
@@ -282,15 +283,13 @@ Database::find_file(const string& file) const
 
     if ((_default_path.size() == 0) || (!check_data_file(p.string())))
     {
-      //string msg("Cannot find material data file ");
-      //msg += material + ".dat";
+      //string msg("Cannot find material data file " + file);
       //throw DatabaseException(msg);
-      s = "";
+      p = "";
     }
   }
 
   return p.string();
-  */
 }
 
 
