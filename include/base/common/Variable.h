@@ -51,9 +51,9 @@ class Variable
         iterator(const iterator& other) : _iter(other._iter) {};
         iterator(const VariableMap::iterator& it) : _iter(it) {};
 
-        iterator& operator++(void) { ++_iter; };
-        iterator& operator--(void) { --_iter; };
-        iterator& operator=(const iterator& rhs) { _iter = rhs._iter; };
+        iterator& operator++(void) { ++_iter; return *this;};
+        iterator& operator--(void) { --_iter; return *this;};
+        iterator& operator=(const iterator& rhs) { _iter = rhs._iter; return *this;};
         bool operator==(const iterator& rhs) { return _iter == rhs._iter; };
         bool operator!=(const iterator& rhs) { return _iter != rhs._iter; };
         Variable* operator*(void) { return _iter->second; };
