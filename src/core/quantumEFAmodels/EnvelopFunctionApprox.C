@@ -1021,9 +1021,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
             //Hamiltonian
 
-
             ham_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
             ham_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
+
             for (unsigned int p1=0; p1<n_psi_dofs; p1++)
             {
               for (unsigned int p2=0; p2<n_psi_dofs; p2++)
@@ -1058,8 +1058,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
                                * (-1.0); //Complex(0.0,-1.0) * Complex(0.0, -1.0);
 
                   }
-
-
 
 
 
@@ -1104,8 +1102,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
         {
           for (unsigned int j = 0; j < n_dofs; j++)
           {
-            double scale =
-                _sqrt_S_inv[dof_indices[i]] * _sqrt_S_inv[dof_indices[j]];
+            double scale = _sqrt_S_inv[dof_indices[i]] * _sqrt_S_inv[dof_indices[j]];
             ham_real(i, j) *= scale;
             ham_imag(i, j) *= scale;
             // this is not needed, as we do not solve a generalized problem

@@ -33,7 +33,7 @@ OptGpl::solve(double tolerance)
     for (i = 0; i < n; i++) x [i] = _vff.get_dof()[i] ;
 
     cg_default (&Parm) ;    /* set default parameter values */
-    Parm.PrintLevel = 2 ;
+    Parm.PrintLevel = 1 ;
 
         /* run the code */
     /*  cg_descent (x, n, NULL, NULL, 1.e-8, myvalue, mygrad, myvalgrad, NULL) ;*/
@@ -254,7 +254,7 @@ OptGpl::cg_descent(
 
   if ( PrintLevel >= 1 )
   {
-      printf ("iter: %5i f: %13.6e df: %13.6e gnorm: %13.6e\n",
+      printf ("iteration: %5i f: %13.6e df: %13.6e gnorm: %13.6e\n",
       (int) 0, f, -gnorm2, gnorm) ;
   }
 
@@ -325,7 +325,7 @@ OptGpl::cg_descent(
                       else alpha = MAX (t, Com.alpha*Parm->QuadSafe) ;
                   }
               }
-              if ( PrintLevel >= 1 )
+              if ( PrintLevel >= 2 )
               {
                   if ( denom <= ZERO )
                   {
@@ -424,7 +424,7 @@ OptGpl::cg_descent(
           IterRestart = 0 ;
           IterQuad = 0 ;
           /* search direction d = -g */
-          if ( PrintLevel >= 1 ) printf ("RESTART CG\n") ;
+          if ( PrintLevel >= 2 ) printf ("RESTART CG\n") ;
           gnorm = ZERO ;
           gnorm2 = ZERO ;
           cg_copy (x, xtemp, n) ;
@@ -635,7 +635,7 @@ OptGpl::cg_descent(
 
       if ( PrintLevel >= 1 )
       {
-          printf ("\niter: %5i f = %13.6e gnorm = %13.6e\n",
+          printf ("iteration: %5i f = %13.6e |Df| = %13.6e\n",
                    (int) iter, f, gnorm) ;
       }
 
@@ -686,7 +686,8 @@ Exit:
       const char mess4 [] = "   - your gradient routine has an error" ;
       const char mess5 [] = "   - the parameter epsilon in cg_descent_c.parm "
                             "is too small" ;
-      printf ("\nTermination status: %i\n", status) ;
+      //printf ("\nTermination status: %i\n", status) ;
+      printf ("\n\n") ;
       if ( status == -2 )
       {
           printf ("At iteration %10.0f function value became nan\n",
@@ -886,7 +887,7 @@ int OptGpl::cg_line
   AWolfe = Com->AWolfe ;
   Parm = Com->Parm ;
   PrintLevel = Parm->PrintLevel ;
-  if ( PrintLevel >= 1 )
+  if ( PrintLevel >= 2 )
   {
       if ( AWolfe )
       {
@@ -930,7 +931,7 @@ int OptGpl::cg_line
   a1 = ZERO ;
   d1 = d0 ;
   fa = Com->f0 ;
-  if ( PrintLevel >= 1 )
+  if ( PrintLevel >= 2 )
   {
       fmt1 = "%9s %2s a: %13.6e b: %13.6e fa: %13.6e fb: %13.6e "
              "da: %13.6e db: %13.6e\n" ;

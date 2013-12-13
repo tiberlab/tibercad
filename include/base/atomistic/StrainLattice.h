@@ -32,7 +32,7 @@ class StrainLattice
   {
     public:
     //TODO: coord is ging to be deprecated, all we need is in Atom
-    Point coord;
+    //Point coord;
     //------------------------------------------------------------
     const Atom* atom_p;
     Tensor2Gen tensor;
@@ -64,8 +64,10 @@ class StrainLattice
     };
 
     //! Build tetraedron for a given atom of a given structure
-    Tetra build_tetraedron(const AtomisticBasis* as,
-        unsigned int atm);
+    //Tetra build_tetraedron(const AtomisticBasis* as,
+    //    unsigned int atm);
+    void build_tetraedron(const AtomisticBasis* as,
+        unsigned int atm, Tetra& tet);
 
     //! Reference tetraedron for every material
     std::map<const Material*, Tetra> _reference;

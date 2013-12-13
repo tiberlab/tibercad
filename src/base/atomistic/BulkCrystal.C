@@ -25,12 +25,8 @@ _rotated_prim_vec(0)
 void
 BulkCrystal::do_init(void)
 {
-  std::ostringstream os;
+ 
   Atom tmp_atom;
-
-  os << "Creating Bulk Crystal for " << _mat->get_name()
-    << std::endl;
-  Messages::info(os.str());
 
   //Careful with the order of the calls, it's important
   read_database();
@@ -47,8 +43,8 @@ BulkCrystal::do_init(void)
   build_rotation();
   set_ttype_lattice_vectors(_rotated_prim_vec);
   _atoms = _rotated_basis;
+
   refresh();
-  //print_xyb("bulk.xyb");
 
 };
 
@@ -64,10 +60,12 @@ BulkCrystal::build_rotation(void)
   //be calculated directly here
   _rotation = _mat->get_rotated_crystal().RotMatrix; 
   
-  os << "Bulk Material " << _mat->get_name() << 
-    " is created with a rotation " << _rotation << std::endl;
-  Messages::debug(os.str());
+  //os << "Bulk Material " << _mat->get_name() << 
+  //  " is created with a rotation " << std::endl<< _rotation << std::endl;
+  //Messages::info(os.str());
   
+
+
   _rotated_prim_vec = _rotation * _prim_vec;
 
   //! Keep a copy of rotated crystal basis
@@ -86,7 +84,7 @@ BulkCrystal::read_database(void)
 {
   Atom tmp;
   Tensor1 T;
-  unsigned int i, j, n;
+  unsigned int j, n;
   std::string specie;
 
   if ( !(_mat->is_alloy()) )
@@ -107,7 +105,7 @@ BulkCrystal::read_database(void)
 
     unsigned int n_basis_specie = db.get("n_basis_specie", 0);
 
-    for (i = 1; i <= n_basis_specie; i++)
+    for (unsigned int i = 1; i <= n_basis_specie; i++)
     {
       std::string record, s, n_s;
       std::stringstream out;
@@ -130,9 +128,9 @@ BulkCrystal::read_database(void)
         n_s = out.str();
         n_s = record + n_s;
 
-        //Putting specie (defined by an integer) temporary in flag data
+        //Putting specie label (defined by an integer) in label data
         //It's used in cut_and_change_specie() and build_random_alloy()
-        tmp.set_flag(i);
+        tmp.set_label(static_cast<unsigned char>(i));
         tmp.set_specie(specie);
 
         record = n_s + "_x";
@@ -216,7 +214,7 @@ BulkCrystal::read_database(void)
     db = &(mat_alloy->get_component_A()->get_database());
     db->set_section("atomistic_structure");
 
-    for (i = 1; i <= n_basis_specie; i++)
+    for (unsigned int i = 1; i <= n_basis_specie; i++)
     {
       std::string record("");
       std::string s("");
@@ -238,9 +236,9 @@ BulkCrystal::read_database(void)
         s2 = out.str();
         s2 = record + s2;
 
-        //Putting specie (defined by an integer) temporary in flag data
+        //Putting specie label (defined by an integer) in label data
         //It's used in cut_and_change_specie() and build_random_alloy()
-        tmp.set_flag(i);
+        tmp.set_label(static_cast<unsigned char>(i));
         tmp.set_specie(specie);
         record = s2 + "_x";
         T(1) = db->get(record, 0.0);
@@ -263,15 +261,14 @@ BulkCrystal::set_prim_vec(void)
 {
 
   Tensor2Gen prim_vec_dir(0);
-  std::ostringstream os;
 
   if (_lattice_type.compare("cubic") == 0) {
 
     assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
 
     prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
-    prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1; prim_vec_dir(3,2) = 0;
-    prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1;
+    prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
+    prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1.0;
 
     _prim_vec = prim_vec_dir * _lattice_constant[0];
 
@@ -338,11 +335,10 @@ BulkCrystal::set_prim_vec(void)
 
   else
   {
-    os << "Lattice type " << _lattice_type << " doesn't exist" << std::endl;
-    Messages::error(os.str());
-    os.str(std::string());
+    Messages::error("Lattice type "+ _lattice_type + " doesn't exist");
   }
 
-
+  //Messages::info( "Bulk Material "+ _mat->get_name()+
+  //                               " is created with primitive vectors ");
 };
 

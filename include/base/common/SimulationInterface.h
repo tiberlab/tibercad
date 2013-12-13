@@ -60,6 +60,7 @@ class SimulationInterface : public TiberModelObject
 
   public:
 
+    typedef std::vector< std::vector<unsigned int> > ElemAtomsMap;
 
     //! An iterator to iterate over all simulations
     class SimulationIterator
@@ -565,8 +566,21 @@ class SimulationInterface : public TiberModelObject
      */
     AtomisticStructure* get_atomistic_structure(void) const;
 
+    //! Build ElemAtomsMap between elements and atoms
+    /*! The map contains all atoms in the 'sphere of influence' of an element.
+     * In practice, such that Normal(R_{max},sigma) > cutoff (1e-5) giving,
+     * R_{max} = 2.0*\sigma*\sigma*(5.0*log(10.0) - 1.5*log(2.0*3.141593*\sigma))
+     * Atoms are mapped to elements if 
+     * \|R_{centroid} - R_{atom}\| < R_{max}
+     * The subroutine returns R_{max}
+     */
+    double build_map_elem_atoms(double sigma = 2.0, double cutoff = 1e-5);
 
+    //! Get map elem_to_atoms
+    const ElemAtomsMap& get_map_elem_atoms(void) const;
 
+    //! Return the vector of atom for a given element id 
+    const std::vector<unsigned int>& get_elem_atoms(unsigned int id) const;
 
     //! Build a finite element
     /*!
@@ -652,7 +666,7 @@ class SimulationInterface : public TiberModelObject
     //! Get the physical model for a given couple of atoms
     /*!
      * This method has been added to deal with binary compounds,
-     * where a bon (for example In-As) can be assigned without ambiguity
+     * where a bond (for example In-As) can be assigned without ambiguity
      * to a material even when the two atoms are falling in different
      * regions with namely different materials.
      * \return \c NULL if no model is present for \c atom
@@ -1298,7 +1312,8 @@ class SimulationInterface : public TiberModelObject
      */
     virtual void do_load_data(std::istream& is);
 
-
+    //! A pointer to the principal atomistic structure
+    AtomisticStructure* _atomistic_structure;
 
   private:
 
@@ -1421,8 +1436,12 @@ class SimulationInterface : public TiberModelObject
     MeshBase* _mesh;
 
 
-    //! A pointer to the principal atomistic structure
-    AtomisticStructure* _atomistic_structure;
+
+
+    //! A map between elements of _mesh and atoms
+    //! It is defined as vector for fast indexing on elem ID.
+    ElemAtomsMap _elem_to_atoms;
+
 
 
     //! The excluded domains
@@ -1562,6 +1581,22 @@ SimulationInterface::get_atomistic_structure(void) const
 {
   return _atomistic_structure;
 }
+
+inline
+const std::vector< std::vector<unsigned int> >& 
+SimulationInterface::get_map_elem_atoms(void) const
+{
+  return _elem_to_atoms;
+}
+
+
+inline
+const std::vector<unsigned int>& SimulationInterface::get_elem_atoms(unsigned int id) const
+{
+  return get_map_elem_atoms()[id];
+}
+
+
 
 
 inline

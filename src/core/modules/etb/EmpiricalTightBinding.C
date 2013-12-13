@@ -142,7 +142,7 @@ ETB::do_init(void){
   }
 
 
-  TightBinding::do_init(); //gets mesh and get_atomistic_structure()
+  TightBinding::do_init(); 
 
   if(get_atomistic_structure()==NULL)
     throw InitFailedException("ETB: atomistic structure not created");
@@ -176,6 +176,7 @@ ETB::do_init(void){
   _dim = get_mesh().mesh_dimension();
 
   Messages::info("(ETB) creating map elem->atoms");
+
   build_map_elem_atoms(_upt_options.projection_length);
 
   
@@ -189,22 +190,44 @@ ETB::do_init(void){
 void ETB::do_reinit(void)
 {
 
-  std::cout << "(ETB) clean uptight data container" << std::endl;
+  std::cerr << "(ETB) clean uptight data container" << std::endl;
 
   inst->cleanuptight();
+
+  if (!includes_regions(get_atomistic_structure()->get_IDset()))
+  {
+     std::cerr << "(ETB) restrict on active regions" << std::endl;
+
+     std::set<ID> reg_ids;
+     get_region_ids(reg_ids);
+
+     get_atomistic_structure()->restrict(reg_ids);
+    
+     std::cerr<< "(ETB) Build Map Elem->Atom "<<std::endl;
+
+     double Rmax = build_map_elem_atoms(_upt_options.projection_length);
+     
+     std::cerr<< "(ETB) Rmax= "<<Rmax<<std::endl;
+  }
 
   _vb_shift = 0.0;
 
   // checks that the strain simulation, if specified has been done
   if(_upt_options.strain_sim != "no_sim")
   {
-    _strain_int.set_simulation(_upt_options.strain_sim);
-
     SimulationInterface* strsim = _strain_int.get_simulation();
 
     if( ! strsim->is_solved() ) 
       throw InitFailedException("Strain model has not been solved");
   }
+
+  // checks that the potential simulation, if specified has been done
+  if(_upt_options.potential_sim != "no_sim")
+  {
+    if( ! _dd_int->is_solved() )
+      throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
+  }
+
 
   // Get the minimum CB and maximum VB edges
   ModelOptions solopts = get_solver_options();
@@ -749,12 +772,12 @@ void ETB::parse_options(void)
   _upt_options.opt_flag = false; // these are set via OpticsTB
   _upt_options.poldir = 1;       //   "    "   "   "    "
 
-  if (has_option("potential_simulation"))
-  {
-    _upt_options.potential_sim = get_option("potential_simulation","");
-    _upt_options.potential_flag = true;
-  }
-  else 
+  //---------------------------------------------------------------------------------------
+  // potential_simulation
+
+  _upt_options.potential_sim = get_option("potential_simulation","no_sim");
+
+  if (_upt_options.potential_sim == "no_sim")
   {
    if (!has_option("el_qfermi_level")) 
      Messages::warning("Neither potential_simulation nor el_qfermi_level have been specified");
@@ -762,21 +785,32 @@ void ETB::parse_options(void)
    if (!has_option("hl_qfermi_level")) 
      Messages::warning("Neither potential_simulation nor hl_qfermi_level have been specified");
   }
+  else
+  {
+    _dd_int = find_simulation(_upt_options.potential_sim);
+    if (_dd_int == NULL)
+      throw InitFailedException("potential simulation not found");
+    _upt_options.potential_flag = true;
+  } 
 
   _upt_options.el_chem_pot = get_option("el_qfermi_level", 0.0);
   _upt_options.hl_chem_pot = get_option("hl_qfermi_level", 0.0);
 
-
+  //---------------------------------------------------------------------------------------
+  // Get strain simulation.
+  // both 'strain_model_name' || 'strain_simulation' are accepted keywords
   _upt_options.strain_sim = get_option("strain_model_name", "no_sim");
   _upt_options.strain_sim = get_option("strain_simulation", _upt_options.strain_sim);
 
   if (_upt_options.strain_sim == "no_sim")
   {
     _upt_options.harrison_flag = get_option("Harrison_scaling", false);
+    _upt_options.harrison_flag = get_option("harrison_scaling", _upt_options.harrison_flag);
     _upt_options.d_states_correction = get_option("d_splitting",false); 
   }
   else
   {
+    _strain_int.set_simulation(_upt_options.strain_sim);
     _upt_options.harrison_flag = get_option("Harrison_scaling", true);
     _upt_options.d_states_correction = get_option("d_splitting",true);     
   }
@@ -947,7 +981,7 @@ ETB::add_band_shifts(void)
 
   const std::vector< Atom >& atom = as->get_structure_atoms();
 
-  const Bondmap& b_map = as->get_bond_map();
+  const BondMap& b_map = as->get_bond_map();
 
   if (randomalloy)
   {
@@ -1318,15 +1352,13 @@ ETB::get_band_edge(const std::string& edge)
 
   if (_upt_options.potential_flag)
   {
-    SimulationInterface* sim =
-        SimulationInterface::find_simulation(_upt_options.potential_sim);
 
     Messages::info("(ETB) get band extrema from "+_upt_options.potential_sim);
 
-    ID id = sim->get_solution_id(edge);
+    ID id = _dd_int->get_solution_id(edge);
 
     if ((id == INVALID_ID))
-      throw RuntimeException("Simulation \'" + sim->get_name() +
+      throw RuntimeException("Simulation \'" + _dd_int->get_name() +
           "\' lacks band edge solution variables.");
 
     vector<double> edges(8,0.0);
@@ -1342,7 +1374,7 @@ ETB::get_band_edge(const std::string& edge)
       for (size_t i = 0; i < elem->n_nodes(); ++i)
         p[i] = elem->point(i);
 
-      sim->get_solution(elem, id, edges, p);
+      _dd_int->get_solution(elem, id, edges, p);
 
       for (size_t i = 0; i < elem->n_nodes(); ++i)
       {
@@ -1385,20 +1417,17 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
 {
   if (_upt_options.potential_flag)
   {
-    SimulationInterface* sim =
-        SimulationInterface::find_simulation(_upt_options.potential_sim);
-
     Messages::info("(ETB) get band extrema from "+_upt_options.potential_sim);
 
     string cbedge("Ec");
     string vbedge("Ev");
 
     // here we assume that the simulation exists (it was checked before)
-    ID cb_id = sim->get_solution_id(cbedge);
-    ID vb_id = sim->get_solution_id(vbedge);
+    ID cb_id = _dd_int->get_solution_id(cbedge);
+    ID vb_id = _dd_int->get_solution_id(vbedge);
 
     if ((cb_id == INVALID_ID) || (vb_id == INVALID_ID))
-      throw RuntimeException("Simulation \'" + sim->get_name() +
+      throw RuntimeException("Simulation \'" + _dd_int->get_name() +
           "\' lacks band edge solution variables.");
 
     vb_max = -numeric_limits<double>::max();
@@ -1419,8 +1448,8 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
       for (size_t i = 0; i < elem->n_nodes(); ++i)
         p[i] = elem->point(i);
 
-      sim->get_solution(elem, vb_id, vb_edges, p);
-      sim->get_solution(elem, cb_id, cb_edges, p);
+      _dd_int->get_solution(elem, vb_id, vb_edges, p);
+      _dd_int->get_solution(elem, cb_id, cb_edges, p);
 
       //for (size_t i = 0; i < elem->n_nodes(); ++i)
       //  std::cout<<vb_edges[i]<<" ";
@@ -1614,7 +1643,7 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const 
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
   //! get atoms that contribute to the density of an element
   //std::cout<<"(ETB) get neigh_atoms "<<endl;
-  std::vector<unsigned int> atoms = get_neigh_atoms(elem->id());
+  const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
 
   //std::cout<<"point: "<<x<<" "<<y<<" "<<z<<endl;
 
@@ -1677,7 +1706,7 @@ ETB::build_rho2d(const std::vector<double>& tb_density, const Elem* elem, const 
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
 
   //! get atoms that contribute to the density of an element
-  std::vector<unsigned int> atoms = get_neigh_atoms(elem->id());
+  const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
 
 
   for (unsigned int id = 0; id  < atoms.size(); id++)
@@ -1697,7 +1726,6 @@ ETB::build_rho2d(const std::vector<double>& tb_density, const Elem* elem, const 
 
   double norm = 2.0 * 3.141592653589793 * sigma; 
   rho = rho / norm;
-  //rho = rho / (2.0 * 3.141592653589793);
 
   //scale rho from q/Ang^2 to q/cm^2 (carrier density)
   rho =  rho * 1e16;
@@ -1879,6 +1907,31 @@ ETB::get_number_of_bands(void) const
 {
    unsigned int num = _upt_options.relat_flag ? 20 : 10;
    return num;
+}
+
+void
+ETB::setup_atomistic_structure(void)
+{
+  string name(get_option("atomistic_structure", ""));
+  if (!name.empty())
+  {
+    _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
+    if (_atomistic_structure == NULL)
+      throw InitFailedException("No atomistic structure \'" + name + "\' found "
+          "for simulation \'" + get_name());
+
+    if (!includes_regions(_atomistic_structure->get_IDset())) 
+    { 
+       Messages::warning("Module will restrict the atomistic structure");      
+
+
+       AtomisticStructure* new_as = AtomisticStructure::create(*get_atomistic_structure());
+       
+
+       _atomistic_structure = new_as;
+    
+    }
+  }
 }
 
 

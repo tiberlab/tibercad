@@ -169,6 +169,8 @@ class ETB : public TightBinding
   
   virtual void get_H_csr(std::vector<Complex>& A, std::vector<int>& JA, std::vector<int>& IA) const;
 
+  virtual void setup_atomistic_structure(void);
+
   //Mesh dimension (used many times by charge projection function)
   int _dim;
 
@@ -273,6 +275,8 @@ class ETB : public TightBinding
   unsigned int _solution_size;
   
   StrainInterface _strain_int;
+
+  SimulationInterface* _dd_int;
 
 };
 

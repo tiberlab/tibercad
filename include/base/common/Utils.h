@@ -229,6 +229,25 @@ class Utils
     };
 
 
+    //! Class to print loop progress in percentage
+    class Progress
+    {
+      public:
+
+        //! Constructor with message line and max size
+        Progress(const std::string message, const unsigned int max_size);
+        ~Progress(void);
+        
+        //void first_message(void);
+
+        void progress_message(unsigned int progress);
+
+      private:
+      
+        std::string _message;
+        unsigned int _progress_size;
+        unsigned int _progress_step;    
+    };
 
   private:
 

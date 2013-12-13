@@ -8,6 +8,7 @@
 #include "BondMap.h"
 #include "Messages.h"
 #include "MeshUtils.h"
+#include "Utils.h"
 #include "TiberCad.h"
 #include "Material.h"
 #include "RuntimeException.h"
@@ -64,6 +65,18 @@ AtomisticStructure::create()
   st = new AtomisticStructure();
   return st;
 }
+
+AtomisticStructure*
+AtomisticStructure::create(const AtomisticStructure& as)
+{
+  AtomisticStructure* st =  NULL;
+  st = new AtomisticStructure();
+
+  *st = as;
+
+  return st;
+}
+
 
 
 AtomisticStructure::AtomisticStructureOptions::AtomisticStructureOptions(void)
@@ -129,12 +142,11 @@ AtomisticStructure::init(const std::string& name,
       Messages::info(os.str(), true);
       os.str(std::string());
       //---------------------------------------------------------------
-
+      Messages::info("Reading "+filename);
       init(filename);
 
+      Messages::info("Parse regions");
       parse_regions();
-
-      if (_atomistic_structure_options.is_associated == false) associate_elements();
 
       //TODO: I'm calculating the bond map again anyway because otherwise the translation vectors are not
       //correctly reproduced for periodic structures. If we really want to import the bond map,
@@ -144,9 +156,14 @@ AtomisticStructure::init(const std::string& name,
         delete _bondmap;
         _bondmap = NULL;
       }
-      if (_bondmap == NULL) build_bond_map();
 
+      Messages::info("Build Bond Map");
+      build_bond_map();
 
+      Messages::info("Associate elements");
+      if (_atomistic_structure_options.is_associated == false) associate_elements();
+
+      Messages::info("Output structure(s)");
       print_driver();
 
     }
@@ -161,7 +178,13 @@ AtomisticStructure::init(const std::string& name,
   else if ( (_options.find_option("reference_region"))
       && ( _options.find_option("regions")) )
     {
+      Utils::Timer tt;
+      tt.reset();
       init_mesh_structure();
+      Messages::info("Output structure(s)");
+      print_driver();
+      Messages::newline();
+      Messages::info("Atomistic structure build time: "+tt.elapsed_string());     
     }
 
   else
@@ -177,6 +200,11 @@ AtomisticStructure::init(const std::string& name,
   //Calculate the number of atoms excluding hydrogens 
   //(Useful for passivated semiconductors)
   compute_N_without_H();
+
+  os << "Atomistic Structure containing " << N_atoms << 
+    " atoms has been built. " <<std::endl;
+  os << "Size not counting passivation hydrogens: "<< get_N_without_H()<<std::endl;
+  Messages::info(os.str());
 
 }
 
@@ -268,92 +296,128 @@ AtomisticStructure::init_mesh_structure()
   parse_regions();
 
   //--------------------------------------------------------------
-  os << "Atomistic structure builder started " << path << std::endl;
-  Messages::info(os.str(), true);
-  os.str(std::string());
+  Messages::info("Building Atomistic Structure " + get_name());
   //-----------------------------------------------------------
 
   _atoms.clear();
 
   //---------------------------------------------------------------
-  // Extend mesh for contacts
+  // Extend mesh for contacts 
   //unsigned int num_sides;
   //Point normal = Device::get_normal();
 
 
   //---------------------------------------------------------------
 
-  AtomisticGenerator* generate;
+  AtomisticGenerator* generator 
+    = AtomisticGenerator::create(this, _device->get_mesh().mesh_dimension());
 
-  if ( _device->get_mesh().mesh_dimension() == 1 ) generate = static_cast<AtomisticGenerator1D*> ( AtomisticGenerator::create(this, 1 ) );
-  if ( _device->get_mesh().mesh_dimension() == 2 ) generate = static_cast<AtomisticGenerator2D*> ( AtomisticGenerator::create(this, 2 ) );
-  if ( _device->get_mesh().mesh_dimension() == 3 ) generate = static_cast<AtomisticGenerator3D*> ( AtomisticGenerator::create(this, 3 ) );
+  generator->do_init();
+ 
+  generator->finalize();
 
-  generate->do_init();
-  generate->finalize();
   parse_lattice_vectors();
+ 
+  Messages::info("Build final Bond Map...");
   build_bond_map();
 
-  //if (_atomistic_structure_options.is_associated == false) associate_elements();
-
-  //Refresh some information after structure building
-  N_atoms = _atoms.size();
-
-  print_driver();
+  delete generator;
 
 }
 
 
 void
+AtomisticStructure::restrict(const std::set<ID>& rgn_ids) 
+{
+  _IDset = rgn_ids;
+
+
+  AtomisticGenerator* generator 
+    = AtomisticGenerator::create(this, _device->get_mesh().mesh_dimension());
+
+  generator->restrict();
+
+  generator->finalize();
+
+  Messages::info("Build final Bond Map...");
+  build_bond_map();
+  
+  compute_N_without_H();
+
+  delete generator;
+
+  std::cout<< "(AS) size: " << N_atoms <<std::endl; 
+  std::cout<< "(AS) without H: " << _N_without_H <<std::endl; 
+}
+
+
+
+void
 AtomisticStructure::associate_elements()
 {
-  //Associate atoms with NULL element pointer to right mesh elements
-  //TODO: it's almost a O(n^2) algorithm, but with no smarter solution
-  //to manage mesh and atoms together it's the only way!!!
+  // the tensor grid to real mesh mapper for fast association atom->Elem
+  // NOTE: we pass the relevant ID set, since Quantum contacts could be present
+  //       which have to be included in the atomistic structure
+  MeshUtils::GridMapper& mapper =
+      MeshUtils::GridMapper::get_mapper(_device->get_mesh(), _IDset);
 
-  Messages::debug("Starting associate_elements");
+  std::vector<Atom>::iterator atom = _atoms.begin();
 
-  bool set = false;
-  Point p;
-  unsigned int dim = get_device()->get_mesh().mesh_dimension();
+  unsigned int dim =  _device->get_mesh().mesh_dimension();
 
-  //Get iterators to all elements
-  MeshBase::element_iterator  el_start = get_device()->get_mesh().elements_begin();
-  MeshBase::element_iterator  el_end = get_device()->get_mesh().elements_end();
-  MeshBase::element_iterator  it = el_start;
+  Utils::Progress prog("Assign elements", _atoms.size());
+  unsigned int progress = 0;
 
-  for (unsigned int i = 0; i < get_structure_atoms().size(); i++)
+  // NOTE: Hydrogens remains outside regions and are not associated to elements
+  // BondMap has not been created yet
+
+  for ( ; atom != _atoms.end(); ++atom)
+  {
+    
+    Point p((*atom).get_position());
+    p *= 1.0 / _scale;
+    
+    // set unneeded dim to 0, so atoms are associated to the correct elements
+    switch ( dim )
     {
-      //Up to now avoid association for hydrogens (as they're always (UP TO NOW) passivation atoms
-      // and their associated element is not important)
-      if (get_structure_atoms()[i].get_elem() == NULL)
-        {
-          set = false;
-          p(0) = 0.0; p(1) = 0.0; p(2) = 0.0;
-          p(0) = get_structure_atoms()[i].get_position(0) / get_scale();
-          if ( (dim == 2) || (dim == 3) )   p(1) = get_structure_atoms()[i].get_position(1) / get_scale();
-          if ( (dim == 3) )  p(2) = get_structure_atoms()[i].get_position(2) / get_scale();
-
-          for (it = el_start; it != el_end; it++)
-            {
-              Elem* elem = *it;
-              if (MeshUtils::may_belong_to_element(elem,p))
-                {
-                  if ( (elem->contains_point(p) ) )
-                    {
-                      _atoms[i].set_elem(elem);
-                    }
-
-                  set = true;
-                }
-            }
-
-          //TODO: UNCOMMENT THIS LINE, COMMENTED ONLY FOR DIRTY WORKS PURPOSE
-          //(some passivation atoms stand out of mesh)
-          //if (!set) Messages::warning("An atom has NULL element pointer: it stands outside mesh! ");
-
-        }
+    case 0:
+      p(0) = 0.0;
+    case 1:
+      p(1) = 0.0;
+    case 2:
+      p(2) = 0.0;
+    default:
+      break;
     }
+        
+    const Elem* elem = mapper.get_element(p);
+    
+    if (elem != NULL) (*atom).set_elem(elem);
+
+    progress++;
+    prog.progress_message(progress);
+
+  }
+  std::cout << std::endl;
+
+  /*
+  if (_bondmap != NULL)
+  {
+    const BondMap& bondmap = *_bondmap;
+
+    for (unsigned int i=0; i < _atoms.size(); i++)
+    {
+      if ( _atoms[i].get_specie() == Specie::H )
+      {
+        for (unsigned int j=0; j < bondmap[i].size(); j++)
+        { 
+          const Elem* elem = _atoms[bondmap[i][j]].get_elem();
+          if (elem != NULL) _atoms[i].set_elem(elem);
+        }        
+      }      
+    }    
+  }
+  */
 
   Messages::debug("Finished associate_elements");
 
@@ -482,7 +546,9 @@ AtomisticStructure::read_structure(const std::string& path)
       else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
         _is_periodic = false;
       else
-        std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
+        std::cerr << "Warning (in GEN file at first line): "
+                  << "Cluster (C) or Supercell (S) must be specified. "
+                  << " By default a Cluster (no periodicity) is considered. \n";
 
       getline(file, line);
 
@@ -526,8 +592,6 @@ AtomisticStructure::read_structure(const std::string& path)
       getline(file, line);
 
       // Read periodicity vectors anyway, if system is not periodical they will be ignored
-      //    if (_atomistic_structure_options.is_periodical)
-      //    {
       unsigned int count = 0;
       for (unsigned int i = 0; i < 3; i++)
         {
@@ -540,7 +604,6 @@ AtomisticStructure::read_structure(const std::string& path)
               count++;
             }
         }
-      //    }
     }
 
   else if ( (extension.compare(".tgn") == 0) || (extension.compare(".TGN") == 0) )
@@ -595,20 +658,19 @@ AtomisticStructure::read_tgn(const std::string& path)
 
   line_string >> record;
  
-  std::cout<<"head:"<<record<<std::endl;
-
 
   N_atoms = atoi(record.c_str());
   _atoms.reserve(N_atoms);
 
   //Prepare bond map object
-  if ( _bondmap == NULL) _bondmap = new BondMap;
+  if ( _bondmap == NULL) _bondmap = new BondMap(N_atoms);
   else
-    {
+  {
       delete _bondmap;
-      _bondmap = new BondMap;
-    }
-  _bondmap->do_init(N_atoms);
+      _bondmap = new BondMap(N_atoms);
+  }
+
+  BondMap& bondmap = *_bondmap;
 
   if (N_atoms == 0)
     {
@@ -624,7 +686,11 @@ AtomisticStructure::read_tgn(const std::string& path)
   else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
     _is_periodic = false;
   else
-    std::cerr << "Warning (in GEN file at first line): Cluster (C) or Supercell (S) must be specified. By default a Cluster (no periodicity) is considered. \n";
+  {
+    std::cerr << "Warning (in GEN file at first line): " 
+              << "Cluster (C) or Supercell (S) must be specified. " 
+              << "By default a Cluster (no periodicity) is considered. \n"<<std::endl;
+  }
 
   getline(file, line);
 
@@ -665,13 +731,14 @@ AtomisticStructure::read_tgn(const std::string& path)
 
       //Get bond map
       line_string >> record;
-      //TODO: write a set_bond_map function. Change pointers in vectors to manage constness more easily
-      _bondmap->get_bond_map()[i - 1].resize(atoi(record.c_str()));
+      //TODO: write a set_bond_map function.
+      // Change pointers in vectors to manage constness more easily
+      bondmap[i-1].resize( atoi(record.c_str()) );
 
-      for (unsigned int j = 0; j < _bondmap->get_bond_map()[i - 1].size(); j++)
+      for (unsigned int j = 0; j < bondmap[i - 1].size(); j++)
         {
           line_string >> record;
-          _bondmap->get_bond_map()[i - 1][j] = atoi(record.c_str()) - 1;
+          bondmap[i - 1][j] = atoi(record.c_str()) - 1;
         }
 
       line_string >> record;
@@ -714,6 +781,8 @@ void
 AtomisticStructure::print_tgn(const std::string& path) const
 {
   std::ofstream file;
+
+  const BondMap& bondmap = *_bondmap;
   // -------------------------------------------
 
   std::string outdir = TiberCad::get_output_dir();
@@ -747,12 +816,12 @@ AtomisticStructure::print_tgn(const std::string& path) const
           if (_bondmap != NULL)
             {
 
-              file << std::setw(5) << _bondmap->get_bond_map()[i].size();
+              file << std::setw(5) << bondmap[i].size();
 
               // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!
-              for (unsigned int j = 0; j < _bondmap->get_bond_map()[i].size(); j++)
+              for (unsigned int j = 0; j < bondmap[i].size(); j++)
                 {
-                  file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
+                  file << std::setw(10) << bondmap[i][j] + 1;
                 }
               ///////////////////////////////////////////
 
@@ -795,7 +864,7 @@ AtomisticStructure::print_structure(const std::string& path)
   std::ofstream file;
 
 
-  // -------------------------------------------
+  // -------------------------------- -----------
 
   std::string outdir = TiberCad::get_output_dir();
   std::string file_name = outdir + "/" + path;
@@ -804,7 +873,7 @@ AtomisticStructure::print_structure(const std::string& path)
 
 
 
-  //#ifdef DEBUG
+  //#ifdef DEBUG 
   //  std::cerr << "AtomisticStructure::print_structure(path) begin. \n";
   //#endif
 
@@ -861,6 +930,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 {
 
   std::ofstream file, os;
+  const BondMap& bondmap = *_bondmap;
 
   Messages::debug("Printing upg file for Uptight");
 
@@ -927,12 +997,12 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
           if (_bondmap != NULL)
             {
-              file << std::setw(5) << _bondmap->get_bond_map()[i].size();
+              file << std::setw(5) << bondmap[i].size();
 
               // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!
-              for (unsigned int j = 0; j < _bondmap->get_bond_map()[i].size(); j++)
+              for (unsigned int j = 0; j < bondmap[i].size(); j++)
                 {
-                  file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
+                  file << std::setw(10) << bondmap[i][j] + 1;
                 }
               ///////////////////////////////////////////
 
@@ -1190,37 +1260,33 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
 
 
 
-
-
-//TODO: not allocating arrays could be too slow, find a way to
-//implement some memory reservation
-void
-AtomisticStructure::build_elem_to_atoms(void)
-{
-  //Get information from Atom objects
-  for (unsigned int i = 0; i < _atoms.size(); i++)
-    {
-      if (_atoms[i].get_elem() != NULL)
-        {
-          _elem_to_atoms[_atoms[i].get_elem()].push_back(i);
-        }
-    }
-}
-
-
 void
 AtomisticStructure::compute_N_without_H(void)
 {
   unsigned int N = 0;
-  for (unsigned int i = 0; i < _atoms.size(); i++)
+  const unsigned int size = _atoms.size();
+  for (unsigned int i = 0; i < size; i++)
+  {
+    if (_atoms[i].get_specie() != Specie::H)
     {
-      if (_atoms[i].get_specie() != Specie::H)
-        {
-          N++;
-        }
+      N++;
     }
+  }
   _N_without_H = N;
 }
+ 
+unsigned int
+AtomisticStructure::compute_N_cations(void) const
+{
+  unsigned int N = 0;
+  for (unsigned int i = 0; i < _atoms.size(); i++)
+  {
+    if (_atoms[i].is_cation()) N++;
+  }
+ 
+  return N;
+}
+
 
 
 //! Get atom Material
@@ -1254,14 +1320,20 @@ const Material*
 AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
     bool parent) const
 {
- const Material* mat1 = get_device()->get_material(atom1.get_region_ID());
- const Material* mat2 = get_device()->get_material(atom2.get_region_ID());
+ //const Material* mat1 = get_device()->get_material(atom1.get_region_ID());
+ //const Material* mat2 = get_device()->get_material(atom2.get_region_ID());
 
  //If not, we need to decide based on some other criteria. Up to now we're able to
  //decide only for III-V or II-VI alloys with different cations (eg. Ga-As belong to GaAs)
- if (mat1->is_cation(atom1.get_specie()))
+ //if (mat1->is_cation(atom1.get_specie()))
+ //  return get_material(atom1, parent);
+ //else if (mat2->is_cation(atom2.get_specie()))
+ //  return get_material(atom2, parent);
+ //else
+ //(Alex) Test using the label on atoms rather than hardcoded CrystalDefs. 
+ if (atom1.is_cation())
    return get_material(atom1, parent);
- else if (mat2->is_cation(atom2.get_specie()))
+ else if (atom2.is_cation())
    return get_material(atom2, parent);
  else 
  //If no value was already returned, throw an exception 
@@ -1285,8 +1357,9 @@ AtomisticStructure::reorder(const std::vector<unsigned int>& P)
 
   // Define a new vector of atoms and Bondamp
   std::vector<Atom> new_atoms(_atoms.size()); 
-  Bondmap new_bondmap;
-  new_bondmap.resize(_atoms.size());
+
+  BondMap new_bondmap(_atoms.size());
+  BondMap& bondmap = *_bondmap;
 
   for (unsigned int i=0; i< _atoms.size(); i++)
   {
@@ -1295,11 +1368,11 @@ AtomisticStructure::reorder(const std::vector<unsigned int>& P)
     //            <<" | "<<new_atoms[i].get_elem()<<" "<<_atoms[P[i]].get_elem()
     //            <<" | "<<new_atoms[i].get_specie()<<" "<<_atoms[P[i]].get_specie()<<"  ";
 
-    new_bondmap[i].resize( _bondmap->get_bond_map()[P[i]].size() );
+    new_bondmap[i].resize( bondmap[P[i]].size() );
 
     for (unsigned int j = 0; j < new_bondmap[i].size(); j++)
     {
-       new_bondmap[i][j] = invP[_bondmap->get_bond_map()[P[i]][j]];
+       new_bondmap[i][j] = invP[bondmap[P[i]][j]];
        //std::cout<<" "<<new_bondmap[i][j];
     }
     //std::cout<<std::endl;
@@ -1310,11 +1383,11 @@ AtomisticStructure::reorder(const std::vector<unsigned int>& P)
   {
     _atoms[i] = new_atoms[i]; 
     
-    _bondmap->get_bond_map()[i].resize(new_bondmap[i].size());
+    bondmap[i].resize(new_bondmap[i].size());
 
     for (unsigned int j = 0; j < new_bondmap[i].size(); j++)
     {
-      _bondmap->get_bond_map()[i][j] = new_bondmap[i][j];
+      bondmap[i][j] = new_bondmap[i][j];
     }
   }
 
@@ -1330,7 +1403,7 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh) const
   mesh.reserve_nodes(structure.size());
   //mesh.reserve_elem(_structure_atoms.size());
 
-  const Bondmap& bm = _bondmap->get_bond_map();
+  const BondMap& bm = *_bondmap;
 
   map<ID, ID> nodes;
   unsigned int ctr = 0;

@@ -162,11 +162,11 @@ Negf::init_hamil(void)
   MeshBase::const_element_iterator el = mesh.active_elements_begin();
   NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
   
-  std::cout<<"(negf) init: "<< negfmod->get_model(0) <<std::endl;
+  std::cout<<"(negf) init: "<< negfmod->get_model_name(0) <<std::endl;
 
-  ModelOptions::const_submodel_iterator sit(get_options().submodels_begin("hamiltonian"));  
+  //ModelOptions::const_submodel_iterator sit(get_options().submodels_begin("hamiltonian"));  
 
-  if (negfmod->get_model(0) == "etb")  
+  if (negfmod->get_model_name(0) == "etb")  
   {
      std::string sim = negfmod->get_simulation(0);
      std::cout<<"(negf) sim: "<< sim <<std::endl;
@@ -175,11 +175,11 @@ Negf::init_hamil(void)
   
      init_etb_hamil();
   }
- 
-  if (negfmod->get_model(0) == "single_band")  
+  else //if (negfmod->get_model_name(0) == "single_band")  
   {
       init_efa_hamil();
   }
+    
   
   std::cout<<"(negf) init done: " <<std::endl;
   
@@ -1007,18 +1007,18 @@ Negf::ham_assemble(EquationSystems& es, const std::string& system_name)
 void
 Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 {
-  SimulationInterface* model;
+  SimulationInterface* potmodel;
   ID sol_id;
 
   if (opt.pot_module != "none")
   {
-    model = SimulationInterface::find_simulation(opt.pot_module);
-    if (!model->is_solved() )
+    potmodel = SimulationInterface::find_simulation(opt.pot_module);
+    if (!potmodel->is_solved() )
       throw SolveFailedException("Simulation "+opt.pot_module+" must be solved first");
   }
   else
   {
-    model = NULL;
+    potmodel = NULL;
   }
 
   const double newconst = 0.5 * Hartree * bohr_radius/get_mesh_units() * bohr_radius/get_mesh_units();
@@ -1085,40 +1085,52 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
     //get effective mass tensor for elem
     NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
 
+    // ... to be implemented as in k.p:
+    //bulk_ham = get_bulk_model<NegfModel>(elem)->get_Hamiltonian_model();
+    //bulk_ham->calculate_Hamiltonian_k_par(_k_vec);
+
+
     for (unsigned int band=0; band < negfmod->get_n_bands(); band++)
     {
       dof_map.dof_indices(elem, dof_indices, band);
+      const unsigned int n_dofs = dof_indices.size();
 
       invMass = negfmod->get_inv_mass(band);
 
-      // gets from model which band ("Ec" or "Ev")
-      sol_id = model->get_solution_id(negfmod->get_band(band));
-
-      const unsigned int n_dofs = dof_indices.size();
-
+      // we must reinit here cause later we reinit on sideelem
       fe->reinit(elem);
 
-      //get potential from dd model
-      V.resize(qrule.n_points());
-      V.assign(qrule.n_points(), 0.0);
+      //get potential from dd model----------------------------------------
+      V.resize(q_point.size());
+      V.assign(q_point.size(), 0.0);
 
       std::map<ID, QuantumContact*>::iterator qc_it;
 
-      if (model != NULL)
+      if (potmodel != NULL)
       {
+        // gets from potmodel which band ("Ec" or "Ev")
+        sol_id = potmodel->get_solution_id(negfmod->get_band(band));
+        // if element is inside quantum contact 
+        // project point on boundary and get potential there.
         if ( (qc_it = _quantum_contacts.find(elem->subdomain_id())) != qc_end)
         {
           for (unsigned int qp=0; qp<q_point.size(); qp++)
           {
             std::pair<const Elem*, Point> pair = qc_it->second->project_on_boundary(elem, q_point[qp]);
-            model->get_solution(pair.first, sol_id, V[qp], pair.second);
+            potmodel->get_solution(pair.first, sol_id, V[qp], pair.second);
           }
         }
         else
         {
-          model->get_solution(elem, sol_id, V, q_point);
+          potmodel->get_solution(elem, sol_id, V, q_point);
         }
       }
+
+      //-------------------------------------------------------------------
+      // What about strain ??
+
+      //-------------------------------------------------------------------
+
 
       Hr.resize(n_dofs, n_dofs);
       Sr.resize(n_dofs, n_dofs);
@@ -1129,7 +1141,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
       Hi.zero();
       Si.zero();
 
-      for (unsigned int qp=0; qp<qrule.n_points(); qp++)
+      for (unsigned int qp=0; qp<q_point.size(); qp++)
         for (unsigned int i=0; i<phi.size(); i++)
           for (unsigned int j=0; j<phi.size(); j++)
           {
@@ -1137,6 +1149,21 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
             Hr(i,j) += JxW[qp]* newconst * dphi[i][qp] * (invMass*dphi[j][qp]);
             Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
             Hr(i,j) += JxW[qp] * newconst * (_k_vec * (invMass * _k_vec)) * phi[i][qp] * phi[j][qp];
+
+            // How it should be for general k.p:
+            // bulk_ham[band1][band2].constant: scalar
+            // bulk_ham[band1][band2].linear: vector
+            // bulk_ham[band1][band2].quad: tensor 
+            //
+            //Sr(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp] * bulk_ham[band1][band2].constant;
+            //Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp] * bulk_ham[band1][band2].constant;
+            //Hr(i,j) += JxW[qp] * dphi[i][qp] * ( bulk_ham[band1][band2].quad * dphi[j][qp]);
+            //Hr(i,j) += JxW[qp] * dphi[i][qp] * ( bulk_ham[band1][band2].linear_left * phi[j][qp]) 
+            //                                      * Complex(0.0, -1.0);
+            //Hr(i,j) += JxW[qp] * phi[i][qp] * ( bulk_ham[band1][band2].linear_right * dphi[j][qp]) 
+            //                                      * Complex(0.0, -1.0);
+
+
           }
 
       // DIRICHLET BC (Make sense only in 2D and 3D)---------------------------------

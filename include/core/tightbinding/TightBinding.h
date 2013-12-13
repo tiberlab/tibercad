@@ -87,7 +87,7 @@ protected:
   std::map<Specie, std::map<Shell, double> > _u_hub;
 
   //! Build charge density on given point
-  double build_rho(const Point& r);
+  double build_rho(const Elem* elem, const Point& r);
 
   // Build states density 
 //  virtual void 
@@ -111,11 +111,6 @@ protected:
   //!Vector for atom-projected hole chemical potential
   std::vector<double> _hl_chem_pot;
 
-  std::vector< std::vector<unsigned int> > _elem_to_atoms;
-
-  void build_map_elem_atoms(double projection_length);
-
-  const std::vector<unsigned int>& get_neigh_atoms(unsigned int id);
 
 };
 
@@ -126,11 +121,6 @@ TightBinding* TightBinding::create(const ModelOptions& options)
   return new  TightBinding(options);
 }
 
-inline
-const std::vector<unsigned int>& TightBinding::get_neigh_atoms(unsigned int id)
-{
-  return _elem_to_atoms[id];
-}
 
 
 #endif

@@ -9,9 +9,6 @@ UptWrapper::UptWrapper(){
     f77_upt_initsession(_handler);
     std::cout << "done." << std::endl;
 
-    for  (int ii = 0; ii < UPT_HSIZE; ++ii) {
-      std::cout << _handler[ii] << " ";
-    }
     std::cout << std::endl;
     f77_upt_getversion(_handler);
 }

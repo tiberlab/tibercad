@@ -23,7 +23,7 @@
 #include "DataOutput.h"
 #include "Messages.h"
 #include "AtomisticStructure.h"
-
+#include "GridCells.h"
 
 // LibMesh includes
 #include "system.h"
@@ -441,7 +441,7 @@ SimulationInterface::_get_bulk_model(const Atom& atom, bool parent) const
   const Material* mat = get_atomistic_structure()->get_material(atom, parent);
   if (mat != NULL)
     mod = mat->get_model(get_id());
-
+ 
   return mod;
 }
 */
@@ -451,9 +451,12 @@ SimulationInterface::_get_bulk_model(const Atom& atom1, const Atom& atom2, bool 
 {
   PhysicalModel* mod = NULL;
   const Material* mat = get_atomistic_structure()->get_material(atom1, atom2, parent);
-  if (mat != NULL)
-    mod = mat->get_model(get_id());
 
+  if (mat != NULL) mod = mat->get_model(get_id());
+  else
+  {
+    std::cerr<<"ERROR: NULL Material"<<std::endl;
+  }
   return mod;
 }
 
@@ -575,8 +578,12 @@ SimulationInterface::setup_atomistic_structure(void)
   {
     _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
     if (_atomistic_structure == NULL)
-      throw ModelErrorException("No atomistic structure \'" + name + "\' found "
+      throw InitFailedException("No atomistic structure \'" + name + "\' found "
           "for simulation \'" + get_name());
+
+    if (!includes_regions(_atomistic_structure->get_IDset()))  
+      Messages::error("Module will restrict the atomistic structure");      
+    
   }
 }
 
@@ -2600,7 +2607,7 @@ SimulationInterface::print_info(void)
         os << "" << it->second.type();
         w += width[2];
         os.width(w - os.tellp());
-        os << "" << it->second.location();
+                os << "" << it->second.location();
         w += width[3];
         os.width(w - os.tellp());
         os << "" << (plot_solution(it->first) ? "y" : "n");
@@ -2630,5 +2637,114 @@ SimulationInterface::print_info(void)
 // {
 
 
-
 // }
+
+double
+SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
+{
+  
+  // Get total number of elements
+  // (the map is oversized, but faster since the elem ID is used as key)
+  _elem_to_atoms.resize(get_mesh().n_elem());
+
+  double scale = get_atomistic_structure()->get_scale();
+
+  // Maximum cutoff distance
+  //const double tau = 1.0 / projection_length; // projection in Angstroms
+  //const double deltar_max = (5.0*log(10.0) - log( 8.0*3.141593/(tau*tau*tau) )  ) / tau;   
+
+  const double sigma2 = 2.0*sigma*sigma;
+  const double deltar2_max = -sigma2*(log(cutoff) + 1.5*log(2.0*3.141593*sigma)); 
+  const double deltar_max = sqrt(deltar2_max);
+  
+  unsigned int N_wo_H = get_atomistic_structure()->get_N_without_H();
+  // Estimate number of atoms in a sphere
+  unsigned int Nat = round( sqrt(3.0)*3.1416/2.0 * pow(deltar_max/1.90, 3.0) );
+
+  //std::cout<<"Scale: "<<scale<<std::endl;
+  //std::cout<<"Sigma: "<<sigma<<std::endl;
+  //std::cout<<"Rmax: "<<deltar_max<<std::endl;
+  //std::cout<<"Atoms in sphere Rmax: "<<Nat<<std::endl;
+
+  const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
+ 
+  // Partition the structure into cells for O(N) scheme
+  Tensor2Gen period = get_atomistic_structure()->get_ttype_lattice_vectors(); 
+  GridCells cells(structure, period, deltar_max);
+  //cells.print_statistics();
+
+  unsigned int notassociated = 0;
+
+  MeshBase::const_element_iterator elit = get_mesh().elements_begin();
+  const MeshBase::const_element_iterator elend = get_mesh().elements_end();
+  
+  for ( ; elit != elend; ++elit)
+  { 
+    const Elem* elem = *elit;
+ 
+    Point pc = elem->centroid() * scale;
+    double x=pc(0), y=pc(1), z=pc(2);
+
+    std::vector<unsigned int> temp;
+    temp.reserve(Nat);
+
+    // Find the cell containing the element centroid
+    unsigned int l, m, n;
+    cells.get_cell(pc, l, m, n); 
+
+    // Loop on all 27 neighboring cells (periodicity is taken care by the iterator)    
+    GridCells::NeighborIterator it = cells.begin(l,m,n);
+    GridCells::NeighborIterator end = cells.end(l,m,n);
+    unsigned int count = 0;
+
+    for ( ; it!=end; ++it)
+    {
+      unsigned int c1 = (*it).first;
+      const Tensor1& shift = *((*it).second);
+   
+      //unsigned int u,v,w; cells.index(c1,u,v,w);
+      //std::cout<<"cell: "<<u<<" "<<v<<" "<<w<<" natoms: "<<cells[c1].size()<<std::endl;
+      // Loop over all atoms in each cell
+      for (unsigned int i = 0; i < cells[c1].size(); i++)
+      {     
+        unsigned int iatm = cells[c1][i];
+
+        if (structure[iatm].get_specie()==Specie::H ) continue;
+
+        Point pat = structure[iatm].get_position();
+        
+        double x1 = pat(0);
+        if (abs(x-x1) > deltar_max) continue;
+        double y1 = pat(1);
+        if (abs(y-y1) > deltar_max) continue;
+        double z1 = pat(2);
+        if (abs(z-z1) > deltar_max) continue;
+        
+        double deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1);
+        
+        if (deltar2 > deltar2_max) continue;
+        else
+        {
+          temp.push_back(iatm);
+          count++;
+        }
+      }    
+    }
+
+
+    ID id = elem->id();
+
+    _elem_to_atoms[id].resize(count);
+
+    for (unsigned int iatm = 0; iatm  <  count; iatm++)
+    	_elem_to_atoms[id][iatm]=temp[iatm];
+
+    temp.clear();
+  }
+  
+  //std::cerr<<"Map done"<<std::endl;
+
+  return deltar_max;
+
+}
+

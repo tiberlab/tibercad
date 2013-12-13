@@ -2,7 +2,7 @@
 #include "AtomisticStructure.h"
 #include "mesh.h"
 #include "BondMap.h"
-
+#include "Messages.h"
 
 AtomisticGenerator3D*
 AtomisticGenerator3D::create(AtomisticStructure* const as)
@@ -30,9 +30,7 @@ AtomisticGenerator3D::build()
   Elem* elem = NULL;
   Node* nd = NULL;
 
-#ifdef DEBUG
-  std::cerr << "Calling AtomisticGenerator3D::build() " << std::endl;
-#endif
+  Messages::debug("Calling AtomisticGenerator3D::build()");
 
   //3D structure is considered cluster as far as lattice vectors 
   //are not explicitely passed
@@ -83,15 +81,14 @@ AtomisticGenerator3D::build()
   double l2 = (fabs(max_y - min_y)) * scale;
   double l3 = (fabs(max_z - min_z)) * scale;
 
+  
   make_supercell( l1, l2, l3);
 
   //print_basis(_super_basis, "supercell.xyz");
 
   //std::cout << "Period is " << _period << std::endl;
 
-#ifdef DEBUG
-  std::cerr << "AtomisticGenerator3D::build() done " << std::endl;
-#endif
+  Messages::debug("AtomisticGenerator3D::build() done ");
 
 }
 

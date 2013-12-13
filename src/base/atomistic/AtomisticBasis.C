@@ -33,8 +33,25 @@ AtomisticBasis::set_ttype_lattice_vectors(const Tensor2Gen& T)
           count++;
         }
     }
-  _is_periodic = true;}
+  _is_periodic = true;
+}
 
+Tensor2Gen 
+AtomisticBasis::get_ttype_lattice_vectors(void)
+{
+  Tensor2Gen T;
+  unsigned int count = 0;
+  for (int i = 0; i < 3 ; i++)
+  {
+      for (int j = 0; j < 3 ; j++)
+      {
+          T(j+1,i+1) = _lattice_vectors[count];
+          count++;
+      }
+  }
+  return T;
+
+}
 
 int
 AtomisticBasis::get_type_index(const std::string& type)
@@ -66,11 +83,11 @@ void
 AtomisticBasis::build_bond_map(void)
 {
   if (_bondmap != NULL)
-    {
-      delete _bondmap;
-    }
-  _bondmap = new BondMap;
-  _bondmap->do_init(_atoms.size());
+  {
+    delete _bondmap;
+  }
+  _bondmap = new BondMap(_atoms.size());
+
   Tensor2Gen period;
   for (unsigned int i = 0; i < 3; i++)
     {
@@ -151,12 +168,12 @@ AtomisticBasis::print_xyb(const std::string& path) const
           if (_bondmap != NULL)
             {
 
-              file << std::setw(5) << _bondmap->get_bond_map()[i].size();
+              file << std::setw(5) << (*_bondmap)[i].size();
 
               // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!!!!!!
-              for (unsigned int j = 0; j < _bondmap->get_bond_map()[i].size(); j++)
+              for (unsigned int j = 0; j < (*_bondmap)[i].size(); j++)
                 {
-                  file << std::setw(10) << _bondmap->get_bond_map()[i][j] + 1;
+                  file << std::setw(10) << (*_bondmap)[i][j] + 1;
                 }
               ///////////////////////////////////////////
 

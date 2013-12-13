@@ -49,8 +49,9 @@ public:
   //! Set position
   void set_position(const Point& p);
 
-  //! Get absolute position coordinate i (x=0, y=1, z=2) 
-  //! atomic coordinates are stored in Angstrom
+  /*! \brief Get absolute position coordinate i (x=0, y=1, z=2) 
+   * atomic coordinates are stored in Angstrom
+   */
   double get_position(int i) const;
 
   //! Get the whole position (1X3 Tensor)
@@ -59,15 +60,31 @@ public:
   //! Get the position as a Point object
   Point get_position() const;
 
-  //! Get the ID of the region the atom belongs to
-  //! (Note: it will get the region from associated element)
+  /*! \brief Get the ID of the region the atom belongs to
+   * (Note: it will get the region from associated element)
+   */
   int get_region_ID() const;
 
-  //! Set a general purpose integer flag, used internally. 0 is default safe value
-  void set_flag(const unsigned int fg);
+   /*! \brief Set label
+    *   
+    *  Label is used to mark the atom number within the primitive cell
+    *  In binary materials this is equivalent to cation/anion species
+    *  Database follows the convention that specie_1 is cation
+    *  Valid numbers are in the range 0 to 255 (unsigned char)
+    */
+  void set_label(unsigned int fg);
+
+  //! Get atomic label
+  unsigned char get_label(void) const;
+
+  //! checks whether an atom is cation, which by CONVENTION is label ==1 
+  bool is_cation(void) const;
+  
+  //! Get the general purpose flag
+  void set_flag(char fg);
 
   //! Get the general purpose flag
-  unsigned int get_flag() const;
+  char get_flag(void) const;
 
   //! True if atom belong to structure. Useful during structure construction
   bool belong_to_structure;
@@ -89,8 +106,11 @@ private:
   //! Atom position
   Point _position;
 
-  //! A general purpose integer flag (for example used in passivation)
-  unsigned int _flag;
+  //! Atom number is primitive cell (e.g. anion/cation)
+  unsigned char _label;
+
+  //! Used as generic flag 
+  char _flag;
 
 };
 
@@ -136,18 +156,40 @@ Point Atom::get_position() const
   return _position;
 }  
 
+
 inline
-void Atom::set_flag(const unsigned int fg)
+void Atom::set_label(unsigned int fg)
+{
+  _label = static_cast<unsigned char>(fg);
+}
+
+inline
+unsigned char Atom::get_label(void) const
+{
+  return _label;
+}
+
+inline
+bool Atom::is_cation(void) const
+{
+  return (get_label() == 1);
+}
+
+
+inline
+void Atom::set_flag(char fg)
 {
   _flag = fg;
 }
 
 
 inline
-unsigned int Atom::get_flag() const
+char Atom::get_flag() const
 {
   return _flag;
 }
+
+
 
 
 inline

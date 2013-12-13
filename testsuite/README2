@@ -10,7 +10,7 @@ test07     QW GaAs/AlGaAs       Elasticity + DD + k.p
 test08     Si pn 2D             DD + Thermal
 test09     GaN/AlGaN            Elasticity
 test10     Qdot GaN Atomistic   TB (+ reload) + opticsTB
-test11     QW  GaAs/AlGaAs      TB
+test11     QW  InAs/GaAs        TB
 test12     Bulk Si              DD + traps
 test13     QW  GaAs/AlGaAs      Elasticity + DD
 test14     Column GaN           Elasticity

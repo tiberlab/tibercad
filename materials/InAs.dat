@@ -11,11 +11,14 @@ a = 0.605830
 
 [valenceband] # [1]
 E_v = -0.59
-
-
+m_HH = 0.41
+m_LH = 0.026
+m_SO = 0.16
+m_dos = 0.16
 
 [conductionband] # [1]
-m_G = 0.026
+m_G = 0.026 
+#m_G = 0.026 # original mass
 m_L_t = 0.05
 m_L_l = 0.64
 m_X_l = 1.13
@@ -25,7 +28,7 @@ m_X_t = 0.16
 
 [bandgap] # [1]
 # 0 K values
-Eg_G = 0.417
+Eg_G = 0.4175
 Eg_L = 1.133
 Eg_X = 1.433
 
@@ -38,15 +41,52 @@ varshni_beta_X = 93
 varshni_alpha_L = 0.276e-3
 varshni_beta_L = 93
 
-
-
-[kdotp] # [1]
-delta = 0.39
-gamma1 = 20
+[kdotp] # 6x6 Vurghafman [1]
+delta = 0.390
+gamma1 = 20.0
 gamma2 = 8.5
 gamma3 = 9.2
 
+[kdotp_8x8] # Fitted against TB
+gamma1 = 13.4027
+gamma2 = 5.3761
+gamma3 = 6.2569
+delta = 0.3801
+Ep = 20.0645
 
+[kdotp_8x8_tomic] # Tomic
+gamma1 = 19.67
+gamma2 = 8.40
+gamma3 = 9.30
+delta = 0.380
+Ep = 21.846
+
+[kdotp_14x14_Tomic] # Tomic
+gamma1 = 19.67
+gamma2 = 8.40
+gamma3 = 9.30
+delta = 0.380
+delta_c = 0.190
+delta_cf = 0.085
+Ep = 21.846   # CV coupling
+Ep1 = 0.03   # C2-C coupling 
+Ep2 = 13.0 #19.0  # C2-V coupling
+Eg1 = 4.38
+m_c2 = 1e10
+
+[kdotp_14x14] # Fitted against TB
+gamma1 = 14.7178
+gamma2 = 5.9533
+gamma3 = 6.9302
+delta = 0.3801
+delta_c = 0.3569
+delta_cf = 0.2090
+Ep = 21.3955   # CV coupling
+Ep1 = 0.0 #0.3128   # C2-C coupling 
+Ep2 = 8.6 #9.5 #13.4974  # C2-V coupling
+Eg1 = 3.0553
+m_c2 = 1.0 
+m_c = 0.024 #0.0233
 
 [deformation_potentials] # [3]
 a_c = -5.08

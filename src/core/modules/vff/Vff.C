@@ -12,6 +12,8 @@
 #include "point.h"
 #include <cmath>
 #include "mesh.h"
+#include "Utils.h"
+#include <fstream>
 
 
 Vff*
@@ -64,9 +66,14 @@ Vff::parse_options()
    myopts.substrate_tol = opts.get_option("substrate_tol", 1.0);
    myopts.substrate_updown = opts.get_option("substrate_updown", false);
 
+   myopts.sigma = opts.get_option("sigma",2.0);
+   myopts.cutoff = opts.get_option("cutoff",1e-4);
+
    //Solver options
    myopts.method = get_solver_options().get_option("method", "cg");
    myopts.absolute_tolerance = get_solver_options().get_option("absolute_tolerance", 1e-3);
+
+   
 }
 
 void
@@ -148,7 +155,8 @@ Vff::displace_atoms(void)
   std::vector<unsigned int>& free_atoms = get_free_atoms();
 
   //Displace hydrogens according to bonded atom
-  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  const BondMap& bondmap = get_atomistic_structure()->get_bond_map();
+
   double x_t, y_t, z_t;
   unsigned int n_atoms = get_atomistic_structure()->get_N_without_H();
   unsigned int n_all_atoms = get_atomistic_structure()->get_N_atoms();
@@ -182,7 +190,7 @@ Vff::displace_atoms(void)
   get_coords().resize(0);
   _dof.resize(0);
 
-  get_atomistic_structure()->print_structure("strained_VFF.xyz");
+  get_atomistic_structure()->print_structure("strained_vff.xyz");
 }
 
 void
@@ -191,7 +199,7 @@ Vff::set_boundary(void)
   //WARNING: passivation hydrogens are always left out!!!
 
   int n_atoms = get_atomistic_structure()->get_N_without_H();
-  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  const BondMap& bondmap = get_atomistic_structure()->get_bond_map();
 
   std::vector<unsigned int>& free_atoms = get_free_atoms();
   std::vector<Atom>& atoms = get_atomistic_structure()->get_structure_atoms();
@@ -362,51 +370,55 @@ Vff::resize_parameters(void)
 void
 Vff::build_parameters(void)
 {
-  int n_atoms = get_atomistic_structure()->get_N_without_H();
-  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  AtomisticStructure* as = get_atomistic_structure();
+  int n_atoms = as->get_N_without_H();
+  const BondMap& bondmap = as->get_bond_map();
   VffModel* pm_a = NULL;
   VffModel* pm_b = NULL;
 
-  bool parent(get_atomistic_structure()->is_random_alloy());
+  bool parent(as->is_random_alloy());
 
   for (unsigned int i = 0; i < n_atoms; i++)
+  {
+    const Atom& atm_i = as->get_structure_atom(i);
+
+    unsigned int n_bonds = bondmap[i].size();
+    for (unsigned int counter_j = 0; counter_j < n_bonds; counter_j++)
     {
-      const Atom& atm_i = get_atomistic_structure()->get_structure_atom(i);
-      unsigned int n_bonds = bondmap[i].size();
-      for (unsigned int counter_j = 0; counter_j < n_bonds; counter_j++)
+      unsigned int j = bondmap[i][counter_j];
+      const Atom& atm_j = as->get_structure_atom(j);
+      //You don't want informations for passivation bonds
+      if (atm_j.get_specie() != Specie::H)
+      {
+
+        pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
+
+        _alpha[i][counter_j] = pm_a->get_alpha(atm_i, atm_j);
+        _d[i][counter_j] = pm_a->get_d(atm_i, atm_j);
+        
+        // TODO get rid of redundancy
+        for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
         {
-          unsigned int j = bondmap[i][counter_j];
-          //You don't want informations for passivation bonds
-          if (get_atomistic_structure()->get_specie(j) != Specie::H)
-            {
-              const Atom& atm_j = get_atomistic_structure()->get_structure_atom(j);
-              pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
-              _alpha[i][counter_j] = pm_a->get_alpha(atm_i, atm_j);
-              _d[i][counter_j] = pm_a->get_d(atm_i, atm_j);
-
-              // TODO get rid of redundancy
-              for (unsigned int counter_k = 0; counter_k < n_bonds; counter_k++)
-                {
-                  unsigned int k = bondmap[i][counter_k];
-                  const Atom& atm_k = get_atomistic_structure()->get_structure_atom(k);
-                  if (get_atomistic_structure()->get_specie(k) != Specie::H)
-                    {
-                      pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
-                      pm_b = get_bulk_model<VffModel>(atm_i, atm_k, parent);
-
-                      _teta[i][counter_j][counter_k] =
-                          (pm_a->get_costeta(atm_i, atm_j, atm_k) +
-                              pm_b->get_costeta(atm_i, atm_j, atm_k)) / 2.0;
-                      _beta[i][counter_j][counter_k] = sqrt(
-                          pm_a->get_beta(atm_i, atm_j, atm_k) *
-                          pm_b->get_beta(atm_i, atm_j, atm_k));
-                    }
-
-                }
-
-            }
+          unsigned int k = bondmap[i][counter_k];
+          const Atom& atm_k = as->get_structure_atom(k);
+          if (atm_k.get_specie() != Specie::H)
+          {
+            pm_a = get_bulk_model<VffModel>(atm_i, atm_j, parent);
+            pm_b = get_bulk_model<VffModel>(atm_i, atm_k, parent);
+            
+            _teta[i][counter_j][counter_k] =
+              (pm_a->get_costeta(atm_i, atm_j, atm_k) +
+               pm_b->get_costeta(atm_i, atm_j, atm_k)) / 2.0;
+            _beta[i][counter_j][counter_k] = 
+              sqrt(pm_a->get_beta(atm_i, atm_j, atm_k) *
+                   pm_b->get_beta(atm_i, atm_j, atm_k));
+          }
+          
         }
+        
+      }
     }
+  }
 }
 
 
@@ -416,7 +428,7 @@ Vff::keating_potential(void)
   double u = 0.0;
   //Atoms to be considered in keating potential (H passivation not included)
   int n_atoms = _n_atoms;
-  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  const BondMap& bondmap = get_atomistic_structure()->get_bond_map();
   const std::vector<std::vector<Tensor1> > translation =
       get_atomistic_structure()->get_neighbor_translation();
   std::vector<double>& coords = get_coords();
@@ -502,7 +514,6 @@ Vff::keating_potential(void)
         }
 
     }
-  std::cout << "potential calculated " << u << std::endl;
 
   return u;
 
@@ -557,7 +568,7 @@ Vff::keating_gradient(void)
 
   //Atoms to be considered in gradient (H passivation not included)
   int n_atoms = _n_atoms;
-  const Bondmap& bondmap = get_atomistic_structure()->get_bond_map();
+  const BondMap& bondmap = get_atomistic_structure()->get_bond_map();
   std::vector<double> coords = get_coords();
   const std::vector<std::vector<Tensor1> > translation =
       get_atomistic_structure()->get_neighbor_translation();
@@ -695,105 +706,188 @@ Vff::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
     const std::vector<Point>& p)
 {
-//TODO: these methods are experimental, their only purpose is to test different
-//techniques, they should not be trusted without speaking with the developer
-//
-//
-if (!_has_strain_tensor)
-{
-   std::cout << "Invoking StrainLattice " << std::endl;
-   _strain.init(get_atomistic_structure());
-   std::cout << "Calculating strain tensor "  << std::endl;
-   _strain.do_solve();
-   std::cout << "Strain tensor available " << std::endl;
-   _has_strain_tensor = true;
-}
-
-unsigned int np = p.size();
-double scale = get_atomistic_structure()->get_scale();
-unsigned int dim = get_mesh().mesh_dimension();
-Point phys_p;
-if (values.count(StrainNodes))
-{
-for (unsigned int n = 0; n < np; n++)
-  {
-  if (dim == 1)
-   phys_p = FE< 1, libMeshEnums::LAGRANGE>::map(elem, p[n]);
-  if (dim == 2)
-   phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
-  if (dim == 3)
-   phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
-   double min = 1e5;
-   Tensor2Gen sol(0);
-   for (unsigned int i=0; i < _strain.get_solution().size(); i++)
-   {
-     double distance =
-     (_strain.get_solution()[i].atom_p->get_position()(0) - phys_p(0)*scale) *
-     (_strain.get_solution()[i].atom_p->get_position()(0) - phys_p(0)*scale) +
-     (_strain.get_solution()[i].atom_p->get_position()(1) - phys_p(1)*scale) *
-     (_strain.get_solution()[i].atom_p->get_position()(1) - phys_p(1)*scale) +
-     (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale) *
-     (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale);
-     if (distance<min) 
-     {sol = _strain.get_solution()[i].tensor;min=distance;}     
-   }
-   values[StrainNodes][6*n]=sol(1,1);
-   values[StrainNodes][6*n+1]=sol(2,2);
-   values[StrainNodes][6*n+2]=sol(3,3);
-   values[StrainNodes][6*n+3]=sol(1,2);
-   values[StrainNodes][6*n+4]=sol(1,3);
-   values[StrainNodes][6*n+5]=sol(2,3);
-}
-}
-
-//Element solution, take the average of all the tensors included in the 
-//element, if not any take the nearest
-if (values.count(StrainCells))
-{
-
-  unsigned int contribs = 0;
+  //TODO: these methods are experimental, their only purpose is to test different
+  //techniques, they should not be trusted without speaking with the developer
+  //
+  //
+  Utils::Timer timer;
   
-  Tensor2Gen sol(0);
-   phys_p = elem->centroid();
-   double min = 1e5;
-
-   for (unsigned int i=0; i < _strain.get_solution().size(); i++)
-   { 
-    if (_strain.get_solution()[i].atom_p->get_elem() == elem)
-    {
-      contribs +=1;
-      sol += _strain.get_solution()[i].tensor;
-      //std::cout << "from element " << sol << " contribs " << contribs << std::endl;
-    }
-   }
-   if (contribs == 0)
-   {
-     contribs = 1;
-   for (unsigned int i=0; i < _strain.get_solution().size(); i++)
-   { 
-     double distance =
-     (_strain.get_solution()[i].atom_p->get_position()(0) - phys_p(0)*scale) *
-     (_strain.get_solution()[i].atom_p->get_position()(0) - phys_p(0)*scale) +
-     (_strain.get_solution()[i].atom_p->get_position()(1) - phys_p(1)*scale) *
-     (_strain.get_solution()[i].atom_p->get_position()(1) - phys_p(1)*scale) +
-     (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale) *
-     (_strain.get_solution()[i].atom_p->get_position()(2) - phys_p(2)*scale);
-     if (distance<min) 
-     {sol = _strain.get_solution()[i].tensor;min=distance;}
+  if (!_has_strain_tensor)
+  {
+    _strain.init(get_atomistic_structure());
+    Messages::info("Calculating strain tensor... ");
+    timer.reset();
+    _strain.do_solve();
+    Messages::info("Computation time: "+timer.elapsed_string());
+    _has_strain_tensor = true;
+    
+    timer.reset();
+    double sigma = get_my_options().sigma;
+    double cutoff = get_my_options().cutoff;
+    Messages::info("Build Elem->Atoms Map");
+    build_map_elem_atoms(sigma,cutoff);
+    Messages::info("Computation time: "+timer.elapsed_string());
+    
+    /*const std::vector<StrainLattice::TensorField>& strain = _strain.get_solution();
+      std::ofstream fs("strain.dat");
+      for (unsigned int i=0; i < get_atomistic_structure()->get_N_without_H(); i++)
+      { 
+      fs<<i+1
+      <<"  "<< strain[i].tensor(1,1)
+      <<"  "<< strain[i].tensor(2,2)
+      <<"  "<< strain[i].tensor(3,3)<<std::endl;
+      }
+      fs.close();
+    */
   }
-   }
-   sol = sol / contribs;
-   //std::cout << "sol " <<  sol << " contribs " << contribs <<std::endl;
-for (unsigned int n = 0; n < np; n++)
-{
-   values[StrainCells][0]=sol(1,1);
-   values[StrainCells][1]=sol(2,2);
-   values[StrainCells][2]=sol(3,3);
-   values[StrainCells][3]=sol(1,2);
-   values[StrainCells][4]=sol(1,3);
-   values[StrainCells][5]=sol(2,3);
-   //std::cout << " values " <<  values[Strain2][0] << std::endl;
-}
-}
+ 
+  Point phys_p = elem->centroid();
+  unsigned int np = p.size();
+  double scale = get_atomistic_structure()->get_scale();
+  unsigned int dim = get_mesh().mesh_dimension();
+  const std::vector<StrainLattice::TensorField>& strain = _strain.get_solution();
+  //const ElemAtomsMap& elematoms = get_map_elem_atoms();
+  const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
+
+  // Projection of Strain on Nodes ----------------------------- 
+  if (values.count(StrainNodes))
+  {
+    for (unsigned int n = 0; n < np; n++)
+    {
+      switch (dim)
+      {
+      case 1 : phys_p = FE< 1, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        break;
+      case 2 : phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        break;
+      case 3 : phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+      }
+      
+      //double min = 1e5;
+      Tensor2Gen sol(0);
+      double min = 1e5;
+      unsigned int contribs = 0;
+      unsigned int minidx = 0;
+      
+      // Process atoms inside elem. 
+      for (unsigned int i=0; i < atoms.size(); i++)
+      { 
+        unsigned int at = atoms[i];
+        if (strain[at].atom_p->is_cation())
+        {
+          contribs +=1;
+          sol += strain[at].tensor;
+        }
+        /*
+        double dx = strain[at].atom_p->get_position()(0) - phys_p(0)*scale;
+        double dy = strain[at].atom_p->get_position()(1) - phys_p(1)*scale;
+        double dz = strain[at].atom_p->get_position()(2) - phys_p(2)*scale;
+        
+        double distance = dx*dx + dy*dy + dz*dz;
+        
+        if (distance<min) 
+        { 
+          minidx = at;
+          min = distance;
+        }
+        */
+      }
+        
+      //sol = strain[minidx].tensor;
+      //contribs = 1;
+      
+
+      values[StrainNodes][6*n]=sol(1,1)/contribs;
+      values[StrainNodes][6*n+1]=sol(2,2)/contribs;
+      values[StrainNodes][6*n+2]=sol(3,3)/contribs;
+      values[StrainNodes][6*n+3]=sol(1,2)/contribs;
+      values[StrainNodes][6*n+4]=sol(1,3)/contribs;
+      values[StrainNodes][6*n+5]=sol(2,3)/contribs;
+      
+    }
+  }
+  // -------------------------------------------------------------- 
+  // Projection of Strain on Elements ----------------------------- 
+  //Element solution, take the average of all the tensors included in the 
+  //element, if not any take the nearest
+  if (values.count(StrainCells))
+  {
+    
+    Tensor2Gen sol(0);
+    double min = 1e5;
+    unsigned int contribs = 0;
+    unsigned int minidx = 0;
+    
+    // Process atoms near elem. 
+    for (unsigned int i=0; i < atoms.size(); i++)
+    { 
+      unsigned int at = atoms[i];
+      if (strain[at].atom_p->is_cation())
+      { 
+        sol += strain[at].tensor;
+        contribs +=1;
+      }
+      /*
+      if (!strain[at].atom_p->is_cation()) continue;
+              
+      double dx = strain[at].atom_p->get_position()(0) - phys_p(0)*scale;
+      double dy = strain[at].atom_p->get_position()(1) - phys_p(1)*scale;
+      double dz = strain[at].atom_p->get_position()(2) - phys_p(2)*scale;
+      
+      double distance = dx*dx + dy*dy + dz*dz;
+      
+      if (distance<min) 
+      { 
+        minidx = at;
+        min = distance;
+      }
+      */
+    }
+    //sol = strain[minidx].tensor; 
+    //contribs = 1;
+        
+    for (unsigned int n = 0; n < np; n++)
+    {
+      values[StrainCells][0]=sol(1,1)/contribs;
+      values[StrainCells][1]=sol(2,2)/contribs;
+      values[StrainCells][2]=sol(3,3)/contribs;
+      values[StrainCells][3]=sol(1,2)/contribs;
+      values[StrainCells][4]=sol(1,3)/contribs;
+      values[StrainCells][5]=sol(2,3)/contribs;
+    }
+    
+  }
 
 }
+
+  // process elements without atoms. 
+  // simply take strain from the closest atom
+  /* 
+  if (contribs == 0)
+  {
+     unsigned int minidx = 0;
+     
+     phys_p = elem->centroid();
+
+     Messages::info("Processing orphan element ");
+
+     for (unsigned int i=0; i < strain.size(); i++)
+     { 
+       double dx = strain[i].atom_p->get_position()(0) - phys_p(0)*scale;
+       double dy = strain[i].atom_p->get_position()(1) - phys_p(1)*scale;
+       double dz = strain[i].atom_p->get_position()(2) - phys_p(2)*scale;
+
+       double distance = dx*dx + dy*dy + dz*dz;
+
+       if (distance<min) 
+       { 
+         minidx = i;
+         min = distance;
+       }
+     }
+
+     sol = strain[minidx].tensor; 
+     contribs = 1;
+
+   }
+   */

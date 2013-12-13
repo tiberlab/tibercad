@@ -44,17 +44,18 @@ public:
   //! Destructor for AtomisticStructure class object
   ~AtomisticStructure(void);
 
- //! Create a material with name /c name
+  //! Create a material with name /c name
   static AtomisticStructure* create();
+
+  //! Create a material with name /c name
+  static AtomisticStructure* create(const AtomisticStructure& as);
 
   //! Get the structure options
   ModelOptions& get_options(void);
 
   //! Get the structure name
-  const std::string& get_name(void);
+  const std::string& get_name(void) const;
 
-  //! Get set of regions covered by atomistic structure
-  const std::set<std::string>& get_region(void);
 
   //! Get set of regions covered by atomistic structure (IDs)
   const std::set<ID>& get_IDset(void) const;
@@ -70,7 +71,7 @@ public:
 
 
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)
-  const double& get_scale(void);
+  const double& get_scale(void) const;
 
   //! Initialize a structure (to be read from input file)
   void init(const std::string& name, const Device* const device, const ModelOptions& options);
@@ -94,15 +95,16 @@ public:
 
   //! AtomisticStructureOptions object pointer
   AtomisticStructureOptions _atomistic_structure_options;
-
-  // Get element->atoms map
-  //std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
   
   //! Get number of non hydrogen atoms
-  const unsigned int get_N_without_H(void) const;
+  unsigned int get_N_without_H(void) const;
+
+  //! Calculate the number of cations
+  unsigned int compute_N_cations(void) const;
+
 
   //! Set the model options
-    void set_options(const ModelOptions& options);
+  void set_options(const ModelOptions& options);
 
   //! Get specie of atom i
   const Specie& get_specie(unsigned int i) const;
@@ -133,6 +135,9 @@ public:
   //! Apply reordering to atoms
   void reorder(const std::vector<unsigned int>& P);
 
+  //! Restrict the atomistic structure to given sub-regions
+  void restrict(const std::set<ID>& rgn_ids);
+
 private:
 
   //! Constructor for AtomisticStructure class object
@@ -148,30 +153,20 @@ private:
   //! copy constructor
   AtomisticStructure(const AtomisticStructure& other);
   
-  //! Calculate the number of atoms excluding hydrogens, usefule for 
-    //! passivated structures
-    void compute_N_without_H(void);
-
-    //!Override lattice vectors from structure generation
-    void parse_lattice_vectors(void); 
-
-     //! Initialize the structure using mesh infos
-    void init_mesh_structure(void);
-
-    //Build mesh regions infos
-    void parse_regions(void);
-
-  //!Build element to atoms association map
-  void build_elem_to_atoms(void);
-
-  //! Associate at any alement atoms contained
-      std::map<const Elem*, std::vector<unsigned int> > _elem_to_atoms;
+  //! Calculate the number of atoms excluding hydrogens, usefule for passivated structures
+  void compute_N_without_H(void);
+  
+  //!Override lattice vectors from structure generation
+  void parse_lattice_vectors(void); 
+  
+  //! Initialize the structure using mesh infos
+  void init_mesh_structure(void);
+  
+  //!Build mesh regions infos
+  void parse_regions(void);
 
   //!Associate elements: any atom keep tracks of the elements he belongs to
   void associate_elements();
-
-  //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
-  double _scale;
 
   //! Read structure from file
   void read_structure(const std::string& path);
@@ -180,15 +175,15 @@ private:
   void read_tgn(const std::string& path);
 
 
+  //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
+  double _scale;
+
   //! Options for the structure (from Atomistic Region)
   ModelOptions _options;
 
   //! Name of the structure (will be the same of associated Atomistic region)
   std::string _name;
 
-  //! Set of regions covered by atomistic structure (names: TiberCAD
-  //! defined regions)
-  //std::set <std::string> _regionset;
 
   //! Set of mesh regions covered by atomistic structure (numbers: mesh
   //! regiones)
@@ -258,14 +253,14 @@ void AtomisticStructure::set_options(const ModelOptions& options)
 
 
 inline
-const std::string& AtomisticStructure::get_name(void)
+const std::string& AtomisticStructure::get_name(void) const
 {
   return _name;
 }
 
 
 inline
-const double& AtomisticStructure::get_scale(void)
+const double& AtomisticStructure::get_scale(void) const
 {
   return _scale;
 }
@@ -292,16 +287,6 @@ void AtomisticStructure::set_device(const Device* const device)
 }
 
 
-/*
-inline
-const std::set<std::string>&
-AtomisticStructure::get_region(void)
-{
-  return _regionset;
-}
-*/
-
-
 inline
 const std::set<ID>&
 AtomisticStructure::get_IDset(void) const
@@ -318,7 +303,7 @@ AtomisticStructure::get_specie(unsigned int i) const
 }
 
 inline
-const unsigned int
+unsigned int
 AtomisticStructure::get_N_without_H(void) const
 {
   return _N_without_H;
@@ -331,12 +316,5 @@ AtomisticStructure::get_reference_material(void) const
 {
   return _reference_material;
 }
-
-//inline
-//std::map<const Elem*, std::vector<unsigned int> >&
-//AtomisticStructure::get_elem_to_atoms(void)
-//{
-//return _elem_to_atoms;
-//}
 
 #endif // _ATOMISTICSTRUCTURE_H_

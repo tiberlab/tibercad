@@ -68,31 +68,25 @@ throw (ModelErrorException)
 
 {
   BoundaryProperties* model = NULL;
-
-  // these come from other models!
-  /*
-  const std::string& modelname = options.get_option("type", "Heat_reservoir");
-
-    model = ElectricalContact::create(modelname, options);
-
-    if (model == NULL)
-      throw ModelErrorException("TightBinding: No such boundary model: " + modelname);
-   */
   return model;
-
 }
 
 
 
 
 double
-TightBinding::build_rho(const Point& r)
+TightBinding::build_rho(const Elem* elem, const Point& r)
 {
-  const double deltar_max = 7.5 / get_atomistic_structure()->get_scale(); //Maximum cutoff distance in Amstrong
+  AtomisticStructure *as = get_atomistic_structure();
+  double scale = as->get_scale();
+  const double deltar_max = 7.5 / scale; //Maximum cutoff distance in Amstrong
   double deltar, uhatom;
   double rho = 0.0;
   double x1, y1, z1;
   double x ,y, z;
+
+  const std::vector<Atom>& structure = as->get_structure_atoms();
+  const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
 
   x = r(0); y = r(1); z = r(2);
 
@@ -103,17 +97,19 @@ TightBinding::build_rho(const Point& r)
       exit(1);
     }
 
-  for (unsigned int iatm = 0; iatm  < get_atomistic_structure()->get_N_atoms(); iatm++)
+
+  for (unsigned int id = 0; id  < atoms.size(); id++)
     {
       //Getting Hubbard parameter
       //Up to now densities are mapped on orbital S
-      Specie sp = get_atomistic_structure()->get_structure_atoms()[iatm].get_specie();
+      unsigned int iatm = atoms[id];
+      Specie sp = structure[iatm].get_specie();
       uhatom = _u_hub[sp][S];
 
       //Convert atom position to mesh units
-      x1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(0) / get_atomistic_structure()->get_scale();
-      y1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(1) / get_atomistic_structure()->get_scale();
-      z1 = get_atomistic_structure()->get_structure_atoms()[iatm].get_position(2) / get_atomistic_structure()->get_scale();
+      x1 = structure[iatm].get_position(0) / scale;
+      y1 = structure[iatm].get_position(1) / scale;
+      z1 = structure[iatm].get_position(2) / scale;
 
       //delta_r is already in mesh units in this way
       deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
@@ -140,21 +136,6 @@ TightBinding::build_rho(const Point& r)
 
 }
 
-
-//ID
-//TightBinding::convert_variable_name_to_id(const std:: string& variable_name) const
-//{
-//
-//  ID id = INVALID_ID;
-//
-//
-//  if (variable_name == "charge_density" )
-//    id  = CHARGE;
-//
-//  return id;
-//}
-
-
 void
 TightBinding::get_solution_secure(const Elem* elem,
     const std::set<ID>& ids, std::vector<std::map<ID, double> >& values)
@@ -180,85 +161,14 @@ TightBinding::get_solution_secure(const Elem* elem, const std::vector<Point>& p,
   values.resize(np);
 
   if (ids.count(CHARGE))
+  {
+    for (unsigned int n = 0; n < np; n++)
     {
-      for (unsigned int n = 0; n < np; n++)
-        {
-        values[n][CHARGE] = build_rho(p[n]);
-        }
+      values[n][CHARGE] = build_rho(elem, p[n]);
     }
-
+  }
+  
 }
-
-
-//void
-//TightBinding::build_elemental_results(const std::set<std::string>& variables,
-//    std::vector<double>& results, std::vector<std::string>& legend)
-//{
-//
-//
-//  // we only do something if we are on processor 0
-//  // TODO parallelize
-//  if (libMesh::processor_id() != 0)
-//    return;
-//
-//
-//  // if there is no mesh we can return immediately
-//  if (_mesh == NULL)
-//    return;
-//
-//
-//
-//  unsigned int n_vars = 0;
-//  const unsigned int nn  = _mesh->n_active_elem();
-//  int ch = -1;
-//
-//  if (variables.count("QuantumCharge"))
-//    {
-//      legend.resize( 1 );
-//      legend[0] = "qDensity";
-//      ch = n_vars;
-//      n_vars++;
-//    }
-//
-//
-//  legend.resize(n_vars);
-//
-//  results.resize(nn * n_vars,0.0);
-//
-//  MeshBase::const_element_iterator it =  _mesh->active_local_elements_begin();
-//  const MeshBase::const_element_iterator end =     _mesh->active_local_elements_end();
-//
-//
-//  unsigned int elem_number = 0;
-//  for ( ; it != end; ++it)
-//    {
-//
-//      const Elem* elem = *it;
-//
-//      unsigned int id = n_vars * elem_number;
-//
-//      std::vector<std::map<ID, double> > values;
-//
-//      std::set<ID> ids;
-//      ids.insert(CHARGE);
-//
-//      get_solution_secure(elem, ids, values);
-//
-//      double charge = values[0][CHARGE];
-//
-//
-//      if (ch != -1)
-//        {
-//          results[id + ch] = charge;
-//        }
-//
-//
-//      elem_number++;
-//    } //over element
-//
-//  results.resize(elem_number * n_vars);
-//
-//}
 
 
 void
@@ -332,14 +242,9 @@ TightBinding::project_potential(const std::string model_name, const std::string 
         _pot_shift[i] = model.get_potential(elem, p);
         _el_chem_pot[i] = model.get_el_chem_potential(elem, p);
         _hl_chem_pot[i] = model.get_hl_chem_potential(elem, p);
-        //std::cout << " shifting " << _pot_shift[i] << std::endl;
+
       }
-      //else
-      //  {
-      //    _pot_shift[i] = 0.0;
-      //    _el_chem_pot[i] = 0.0;
-      //    _hl_chem_pot[i] = 0.0;
-      //  }
+
     }
     //If atom has no element assigned, assigned the potential of the nearest neighbour
     //with non NULL element assigned
@@ -363,115 +268,8 @@ TightBinding::project_potential(const std::string model_name, const std::string 
   //Process potential values to shift the smallest value to 0
   _pot_min = 0;
 
-  /*
-  _pot_min = _pot_shift[0];
-  double tmp;
-  for (unsigned int i = 1; i < _pot_shift.size(); i++)
-  {
-  //TODO: change in a cycle without passivation atoms (and move to empirical tight binding module!),
-  //comparison with "H" in any cycle is not a good idea
-      if ( (_pot_shift[i] < _pot_min) && 
-      (get_atomistic_structure()->get_structure_atoms()[i].get_specie() != "H")) _pot_min = _pot_shift[i];
-  }
-  //std::cout << "pot_min is " << _pot_min << std::endl;
-  for (unsigned int i = 0; i < _pot_shift.size(); i++)
-  {
-      tmp = _pot_shift[i] - _pot_min;
-      _pot_shift[i] = tmp;
-      //Switch off potential projection for passivation atoms!!!!!! Potential shift is set at 0.0
-      if (get_atomistic_structure()->get_structure_atoms()[i].get_specie() == "H")
-      _pot_shift[i] = 0.0;
-  }
-
-  double* pot = new double[_pot_shift.size()];
-  for (unsigned int i = 0; i < _pot_shift.size(); i++)
-    pot[i] = _pot_shift[i];
-  get_atomistic_structure()->print_structure("pot_on_atom.xyz", pot);
-  delete pot;
-   */
-
 }
 
 
 
 
-void
-TightBinding::build_map_elem_atoms(double projection_length)
-{
-  
-  // Get total number of elements
-  // (the map is oversized, but faster since the elem ID is used as key)
-  _elem_to_atoms.resize(get_mesh().n_elem());
-
-  double scale = get_atomistic_structure()->get_scale();
-
-  // Maximum cutoff distance
-  //const double tau = 1.0 / projection_length; // projection in Angstroms
-  //const double deltar_max = (5.0*log(10.0) - log( 8.0*3.141593/(tau*tau*tau) )  ) / tau;   
-
-  
-  const double sigma = projection_length;
-  const double sigma2 = 2.0*sigma*sigma;
-  const double deltar2_max = sigma2*(5.0*log(10.0) - 1.5*log(2.0*3.141593*sigma)); 
-  const double deltar_max = sqrt(deltar2_max);
-
-  double deltar, deltar2, uhatom;
-  double rho = 0.0;
-  double x1, y1, z1;
-  double x ,y, z;
-  
-  unsigned int N_wo_H = get_atomistic_structure()->get_N_without_H();
-
-  // Estimate number of atoms in a sphere
-  unsigned int Nat = round( sqrt(3.0)*3.1416/2.0 * pow(deltar_max/1.90, 3.0) );
-
-  std::cout<<"(TB) proj length: "<<projection_length<<std::endl;
-  std::cout<<"(TB) Rmax: "<<deltar_max<<std::endl;
-  std::cout<<"(TB) Nat: "<<Nat<<std::endl;
-
-  const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
-
-  MeshBase::const_element_iterator it = get_mesh().elements_begin();
-  const MeshBase::const_element_iterator end = get_mesh().elements_end();
-
-  for ( ; it != end; ++it)
-  { 
-    const Elem* elem = *it;
-    int id = elem->id();
-    std::vector<unsigned int> temp;
-    unsigned int count = 0;
-
-    temp.reserve(Nat);
- 
-    Point p = elem->centroid();
-    x=p(0)*scale;
-    y=p(1)*scale;
-    z=p(2)*scale;
-
-    for (unsigned int iatm = 0; iatm  <  N_wo_H; iatm++)
-    {
-   
-      x1 = structure[iatm].get_position(0);
-      y1 = structure[iatm].get_position(1);
-      z1 = structure[iatm].get_position(2);
-
-      //deltar = sqrt( (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1));
-      deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1);
-
-      if (deltar2 > deltar2_max) continue;
-      else
-      {
-        temp.push_back(iatm);
-	count++;
-      }
-    }
-
-    _elem_to_atoms[id].resize(count);
-
-    for (unsigned int iatm = 0; iatm  <  count; iatm++)
-    	_elem_to_atoms[id][iatm]=temp[iatm];
-
-    temp.clear();
-    
-  }
-}

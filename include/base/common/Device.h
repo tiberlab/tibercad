@@ -433,6 +433,15 @@ class Device
     MeshBase* _mesh;
 
 
+    //! A typdef for the bulk materials
+    //typedef HashMap<Elem*, std::vector<unsigned int>* >::Type ElemAtomsMap;
+
+
+    //! A map between elements of _mesh and atoms
+    //! It is defined as vector for fast indexing on elem ID.
+    // std::map<AtomisticStructure*, ElemAtomsMap> _as_elematom_map;
+
+
     //! The mesh unit in m
     /*!
      * A distance of 1 in the mesh corresponds to \c _mesh_units m

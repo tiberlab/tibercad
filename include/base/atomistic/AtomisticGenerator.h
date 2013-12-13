@@ -57,6 +57,19 @@ public:
   //Copy back information to AtomisticStructure
   void finalize(void);
 
+  //! assign element to each atom
+  // This iterates on _super_basis 
+  void assign_elements(const std::set<ID>& reg_ids);
+  
+  //! cut the structure (only flags atoms)
+  void cut(const std::set<ID>& reg_ids, const std::string preserve = "none");
+
+  //! assign the correct specie to each atom
+  // iterates on _super_basis and creates _structure_basis with active atoms only
+  void assign_species(void);
+
+  void restrict(bool passivation = true);
+
 protected:
 
   //! Change atom species according to regions
@@ -100,7 +113,7 @@ protected:
   int _conv_cells_supercell_lenght[3];
 
   //! An internal instance of BondMap, to make passivation and final bond map
-  BondMap* _bondmapobject;
+  BondMap* _bondmap;
 
   //! Reference region ID
   ID _reference_region_id;
@@ -115,10 +128,11 @@ protected:
   //!If it will be needed remember to uncomment proper lines in make_supercell!!!!!!!!!!!!!!!!
 
 
-  //Bond map generation
-  void bond_map_gen(std::vector<Atom> &basis);
+  //!Bond map generation
+  void bond_map_gen(const std::vector<Atom>& basis);
 
-
+  //!Actually remove marked atoms from structure
+  void remove_atoms(void);
 
   // Build cutoff distancies map
   //void set_cutoff();
@@ -146,7 +160,9 @@ protected:
   std::vector<Elem*> _structure_elements;
 
   //! Set the atomic basis for the lattice (This function is no longer used!)
-  //void set_crystal_basis(const std::string basis_name, const std::string specie1 = "not_specified", const std::string specie2 = "not_specified", double u = 0.0);
+  //void set_crystal_basis(const std::string basis_name, 
+  //const std::string specie1 = "not_specified", 
+  //const std::string specie2 = "not_specified", double u = 0.0);
 
   //! Setting growth conventional cell vectors (in primitive vectors basis)
   void make_conv_cell();

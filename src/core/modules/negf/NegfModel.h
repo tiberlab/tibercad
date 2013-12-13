@@ -31,13 +31,13 @@ class TBDLLOCAL NegfModel : public PhysicalModel
 
     std::string get_simulation(ID id) const;
     
-    std::string get_model(ID id) const;
+    std::string get_model_name(ID id) const;
+
+    HamiltonianModel* get_Hamiltonian_model(ID id) const;
 
   protected:
 
     virtual void prepare_submodels(void);
-
-
 
   private:
 
@@ -72,7 +72,13 @@ const TensorValue<double>& NegfModel::get_inv_mass(ID id) const
 inline
 unsigned int NegfModel::get_n_bands(void) const
 {
-   return _ham_models.size();
+  int n_bands=0;
+
+  for (unsigned int i=0; i<_ham_models.size(); i++)
+  {
+    n_bands += _ham_models[i]->get_n_bands();
+  }
+
 }
 
 inline
@@ -94,10 +100,15 @@ std::string NegfModel::get_simulation(ID id) const
 }
 
 inline
-std::string NegfModel::get_model(ID id) const
+std::string NegfModel::get_model_name(ID id) const
 {
-   return _ham_models[id]->get_model();
+   return _ham_models[id]->get_model_name();
 }
 
+inline
+HamiltonianModel* NegfModel::get_Hamiltonian_model(ID id) const
+{
+  return _ham_models[id];
+}
 
 #endif /* NEGFMODEL_H_ */

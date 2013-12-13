@@ -122,6 +122,9 @@ private:
     double substrate_tol;
     bool substrate_updown;
 
+    double sigma;
+    double cutoff;
+
     //Solver options
     //--------------------------
     //! Minimization method

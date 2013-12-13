@@ -23,6 +23,8 @@ SingleBand::do_init(void)
 
   _model = "single_band"; 
 
+  _num_bands = 1;
+
   std::string particle = get_option("particle","el");
 
   if (particle=="el")

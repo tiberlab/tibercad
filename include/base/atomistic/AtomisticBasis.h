@@ -22,12 +22,11 @@ class AtomisticBasis
   virtual ~AtomisticBasis();
 
   //! Get bond map
-  const Bondmap& get_bond_map(void) const;
+  const BondMap& get_bond_map(void) const;
     
   //! Get neighbor periodic image translation
   //! (same indexing as bondmap)
-  const std::vector<std::vector<Tensor1>>&
-  get_neighbor_translation(void) const;
+  const BondMap::Translation& get_neighbor_translation(void) const;
 
   //! Return a const reference to structure atoms
   const std::vector<Atom>& get_structure_atoms(void) const;
@@ -47,6 +46,9 @@ class AtomisticBasis
 
   //! Set the periodicity
   void set_ttype_lattice_vectors(const Tensor2Gen& T);
+  
+  //! Set the periodicity
+  Tensor2Gen get_ttype_lattice_vectors(void);
 
   //! get the number of atoms in the structure
   int get_N_atoms() const {return N_atoms;}
@@ -87,6 +89,8 @@ class AtomisticBasis
   //!Tells if the structure is periodical
   bool is_periodic() const;
 
+  const Atom& operator[](unsigned int i) const;
+
   protected:
  
   //! Now we don't allow direct declaration of AtomisticBasis,
@@ -107,8 +111,8 @@ class AtomisticBasis
   //! Tells if the structure is periodical
   bool _is_periodic; 
 
-  //! Vector containing structure atoms
-  std::vector<Atom> _atoms;
+  //! Vector containing structure atoms 
+  std::vector<Atom>  _atoms;
   
   //! Periodicity vectors in canonical basis
   //TODO: this should be changed back in Tensor2Gen 
@@ -146,15 +150,15 @@ AtomisticBasis::set_periodic(bool periodic)
 }
 
 inline
-const Bondmap&
+const BondMap&
 AtomisticBasis::get_bond_map() const
 {
-  return _bondmap->get_bond_map();
+  return *_bondmap;
 }
 
 
 inline
-const std::vector<std::vector<Tensor1>>&
+const BondMap::Translation&
 AtomisticBasis::get_neighbor_translation(void) const
 {
   return _bondmap->get_translation();
@@ -182,6 +186,14 @@ AtomisticBasis::get_structure_atom(unsigned int i) const
 {
   return _atoms[i];
 }
+
+inline
+const Atom& 
+AtomisticBasis::operator[](unsigned int i) const
+{
+  return _atoms[i];
+}
+
 
 
 inline
