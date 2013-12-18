@@ -531,7 +531,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
 
   // In some cases guess can be Inf or NaN. Then we set it to midband energy
-  //if (std::isinf(guess) || std::isnan(guess))
+  if (std::isinf(guess) || std::isnan(guess))
     guess = 0.5 * (Ec + Ev);
 
   /*
@@ -616,7 +616,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
     error = fabs(dx);
     //cerr << "x = " << y << " error = " << dx << " res. dens. = "
-    //  << residual_dens << endl;
+    //  << residual_dens << " Ec = " << Ec << " Ev = " << Ev << endl;
 
     x = y;
 
