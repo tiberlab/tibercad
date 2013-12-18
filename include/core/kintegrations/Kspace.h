@@ -35,8 +35,9 @@ class Kspace
 
   double get_degeneracy_factor(void);
 
-  //libMeshEnums::Order get_integration_order(void);
-  //libMeshEnums::QuadratureType get_quadrature_type();
+  //! Transform a k-point to relative coordinates
+  void inverse_transform(Point& p) const;
+
 
   enum Wedge
   {
@@ -116,7 +117,7 @@ class Kspace
    //!Brilluoin zone
    Mesh* kmesh;
 
-   //!Boundaries of the Brilluoin zone [atomic units]
+   //!Boundaries of the Brilluoin zone
    double kmin[3], kmax[3];
 
    //!Dimension of the k_space
@@ -142,19 +143,7 @@ inline  double Kspace::get_degeneracy_factor(void)
     return  degeneracy_factor;
 }
 
-//inline libMeshEnums::Order Kspace::get_integration_order(void)
-//{
-//   return integration_order;
-//}
 
-//inline libMeshEnums::QuadratureType Kspace::get_quadrature_type(void)
-//{
-//   return quadrature_type;
-//}
-//inline Mesh* Kspace::get_k_mesh()
-//{
- // return(kmesh);
-//}
 
 inline const Mesh* Kspace::get_k_mesh()
 {

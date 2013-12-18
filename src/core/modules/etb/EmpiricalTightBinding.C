@@ -310,9 +310,10 @@ void ETB::do_reinit(void)
 
   if (has_new_k())
   {
-    _upt_options.k_point[0] = get_k_point()(0);
-    _upt_options.k_point[1] = get_k_point()(1);
-    _upt_options.k_point[2] = get_k_point()(2);
+    Point kp(get_k_point(true));
+    _upt_options.k_point[0] = kp(0);
+    _upt_options.k_point[1] = kp(1);
+    _upt_options.k_point[2] = kp(2);
   
     inst->set_kpoint(_upt_options.k_point); 
     // this is now private, and maybe not really needed here:
@@ -910,9 +911,10 @@ void ETB::parse_options(void)
   set_k_point(k_vec);
 
   // get kpoint as parameter
-  get_parameter("k_x", _upt_options.k_point[0], get_k_point()(0) );
-  get_parameter("k_y", _upt_options.k_point[1], get_k_point()(1) );
-  get_parameter("k_z", _upt_options.k_point[2], get_k_point()(2) );
+  Point kp(get_k_point(true));
+  get_parameter("k_x", _upt_options.k_point[0], kp(0) );
+  get_parameter("k_y", _upt_options.k_point[1], kp(1) );
+  get_parameter("k_z", _upt_options.k_point[2], kp(2) );
 
 
 }

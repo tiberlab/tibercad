@@ -820,7 +820,9 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
     if (verbose() > 0)
     {
       ostringstream os;
-      os << "(EFA) Solving for k = " << get_k_point();
+      os << "(EFA) Solving for k = (";
+      get_k_point().write_unformatted(os, false);
+      os << ") /nm";
       Messages::info(os.str());
     }
     
@@ -951,9 +953,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   EFAbulkHamiltonian* element_hamiltonian;
 
   // a temporary array to pass k point to models
-  double k_vector[3] = {  get_k_point()(0), 
-                          get_k_point()(1), 
-                          get_k_point()(2)}; 
+  double k_vector[3] = {  get_k_point()(0) * 1e9 * Constants::bohr_radius,
+                          get_k_point()(1) * 1e9 * Constants::bohr_radius,
+                          get_k_point()(2) * 1e9 * Constants::bohr_radius};
 
   for ( ; el != end_el ; ++el)
     {//el
@@ -2368,10 +2370,10 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   element_hamiltonian = get_bulk_model<EFAbulkModel>(mat_elem)->get_Hamiltonian_model();
 
-  // a temporary array to pass k point to models
-  double k_vector[3] = { get_k_point()(0),
-                         get_k_point()(1),
-                         get_k_point()(2)};
+  // a temporary array to pass k point to models, ASSUMING k TO BE IN nm
+  double k_vector[3] = { get_k_point()(0) * 1e9 * Constants::bohr_radius,
+                         get_k_point()(1) * 1e9 * Constants::bohr_radius,
+                         get_k_point()(2) * 1e9 * Constants::bohr_radius};
   element_hamiltonian->set_k_vector(k_vector);
 
   element_hamiltonian->calculate_Hamiltonian_k_par();

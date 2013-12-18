@@ -1,4 +1,7 @@
+// $Id$
+
 #include "EigenvalueProblem.h"
+#include "AtomisticStructure.h"
 #include "Constants.h"
 #include "Messages.h"
 #include "DataOutput.h"
@@ -72,57 +75,87 @@ void EigenvalueProblem::init_kspace(void)
  
 ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
 {
-  ModelOptions kopts;
+  ModelOptions kopts(opts);
 
-  kopts.set_option("mesh_units",get_mesh_units());
+  kopts.set_option("mesh_units", get_mesh_units());
   
   unsigned int k_dim = 3 - get_mesh().mesh_dimension();
 
   if (opts.find_option("k_space_dimension"))
-  {
-      k_dim = opts.get_option("k_space_dimension",k_dim);
-  }
+    k_dim = opts.get_option("k_space_dimension", k_dim);
 
-  kopts.set_option("k_space_dimension",k_dim);
+  kopts.set_option("k_space_dimension", k_dim);
 
-  std::vector<unsigned int>  num_nodes;
+  //std::vector<unsigned int>  num_nodes;
 
   if (opts.find_option("k_path") || opts.find_option("k-path"))
   {	  
     std::string kpath = opts.get_option("k-path","");
     kpath = opts.get_option("k_path",kpath);    
     kopts.set_option("k-path",kpath);
-    num_nodes.push_back(10);
-    kopts.set_option("number_of_nodes",num_nodes);
-    ModelOptions newopts;
-    newopts.set_option("output_format","grace");
-    set_options( newopts );
+    //num_nodes.push_back(10);
+    //kopts.set_option("number_of_nodes",num_nodes);
+    //ModelOptions newopts;
+    //newopts.set_option("output_format","grace");
+    //set_options( newopts );
   }
  
-  if (opts.find_option("number_of_nodes"))
+  //if (opts.find_option("number_of_nodes"))
+  //{
+  //   opts.get_option("number_of_nodes",num_nodes);
+  //   kopts.set_option("number_of_nodes", num_nodes);
+  //}
+  //else if (opts.find_option("number_of_elem"))
+  //{
+  //   opts.get_option("number_of_elem",num_nodes);
+  //   for(int i=0; i< num_nodes.size(); i++)
+  //         if(num_nodes[i]>0) ++num_nodes[i];
+
+  //   kopts.set_option("number_of_nodes", num_nodes);
+  //}
+
+  //if (opts.find_option("wedge"))
+  //  kopts.set_option("wedge", opts.get_option("wedge",""));
+
+  // these are the real space lattice vectors, in nm
+  RealVectorValue a(2, 0, 0), b(0, 2, 0), c(0, 0, 2);
+
+  // if there is an atomistic structure, we can take the lattice vectors from it
+  // (they come in Angstrom!)
+  if (get_atomistic_structure() != NULL)
   {
-     opts.get_option("number_of_nodes",num_nodes);
-     kopts.set_option("number_of_nodes", num_nodes);
+    get_atomistic_structure()->get_lattice_vectors(a, b, c);
+    a *= 0.1;
+    b *= 0.1;
+    c *= 0.1;
   }
-  else if (opts.find_option("number_of_elem"))
+
+  switch (k_dim)
   {
-     opts.get_option("number_of_elem",num_nodes);
-     for(int i=0; i< num_nodes.size(); i++)
-           if(num_nodes[i]>0) ++num_nodes[i];
+    case 1:
+      kopts.set_option("r1", c);
+      break;
 
-     kopts.set_option("number_of_nodes", num_nodes);
+    case 2:
+      kopts.set_option("r1", b);
+      kopts.set_option("r2", c);
+      break;
+
+    case 3:
+      kopts.set_option("r1", a);
+      kopts.set_option("r2", b);
+      kopts.set_option("r3", c);
+      break;
+
+    default:
+      break;
   }
 
-  if (opts.find_option("wedge"))
-    kopts.set_option("wedge", opts.get_option("wedge",""));
+  //kopts.set_option("k_space_basis", opts.get_option("k_space_basis", true));
 
-  
-  kopts.set_option("k_space_basis", opts.get_option("k_space_basis",true));
-
-
-  double k_max = opts.get_option("k_max",0.1);
-
-  kopts.set_option("k_max",k_max);
+/*
+  double k_max = opts.get_option("k_max", 0.1);
+  kopts.set_option("k_max", k_max);
 
 
   std::vector<double> k_vector(3,0.0);   
@@ -138,13 +171,31 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   k_vector[0]=k_max;     k_vector[1]=0.0;     k_vector[2]=0.0; 
   opts.get_option("k3", k_vector);
   kopts.set_option("k3",k_vector);  
-    
+*/
 
-  kopts.set_option("mesh_order",opts.get_option("mesh_order","first") );
+  kopts.set_option("mesh_order", opts.get_option("mesh_order", "first"));
 
   return kopts;
 }
-  
+
+
+
+
+
+Point EigenvalueProblem::get_k_point(bool relative_coord) const
+{
+  Point kp(_k_vector[0], _k_vector[1], _k_vector[2]);
+  if (relative_coord)
+  {
+    _kspace->inverse_transform(kp);
+  }
+
+  return kp;
+}
+
+
+
+
 
 void EigenvalueProblem::compute_dispersion(void)
 {

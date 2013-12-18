@@ -54,7 +54,7 @@ class EigenvalueProblem : public SimulationInterface
     void set_k_point(const Point& k_vec);
 
     //! Get the k point
-    Point get_k_point(void) const;
+    Point get_k_point(bool relative_coord = false) const;
 
     //! to check if k-vector has changed 
     bool has_new_k(void) const;
@@ -77,7 +77,7 @@ class EigenvalueProblem : public SimulationInterface
     virtual Complex calculate_matrix_element(const std::string& i_particle,
 							  unsigned int i, 
 							  const std::string& j_particle,
-							  unsigned int j){}; 
+							  unsigned int j) { return 0; }
 
     //! get number of states
     unsigned int get_num_states(void) const;
@@ -104,13 +104,13 @@ class EigenvalueProblem : public SimulationInterface
     void copy_S_to_solver(void);    
    
     //! get H and S
-    virtual int get_H_dim() const {};
+    virtual int get_H_dim() const { return 0; }
     
-    virtual int get_H_nnz() const {};
+    virtual int get_H_nnz() const { return 0; }
 
-    virtual void get_H_csr(std::vector<Complex>& A,std::vector<int>& JA,std::vector<int>& IA)const{};
+    virtual void get_H_csr(std::vector<Complex>& A,std::vector<int>& JA,std::vector<int>& IA) const {};
 
-    virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,std::vector<int>& IA)const{};
+    virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,std::vector<int>& IA) const {};
 
     virtual void print_H(const std::string& outpath) const {};
  
@@ -124,9 +124,9 @@ class EigenvalueProblem : public SimulationInterface
     //! compares eigenstate energy for holes needed for sorting
     static bool compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2);
 
-    virtual double get_band_edge(const std::string& band){};    
+    virtual double get_band_edge(const std::string& band) { return 0; }
 
-    virtual unsigned int get_number_of_bands(void) const {};    
+    virtual unsigned int get_number_of_bands(void) const { return 0; }
   
   protected:
 
@@ -168,7 +168,7 @@ class EigenvalueProblem : public SimulationInterface
 
 
     //!put spectrum shift energy to be almost equal to the 1st eigenvalue
-    virtual double get_new_spectrum_shift(void){};
+    virtual double get_new_spectrum_shift(void) { return 0; }
 
     ModelOptions parse_kspace_options(const ModelOptions&);
 
@@ -197,8 +197,6 @@ class EigenvalueProblem : public SimulationInterface
     //!pointer to the real part of S matrix 
     SparseMatrix<double>* _S_imag;
 
-    Kspace* _kspace;
-
     bool do_dispersion;
 
     std::vector< std::vector<double> > _dispersion;
@@ -217,7 +215,10 @@ class EigenvalueProblem : public SimulationInterface
     //! Already calculated k-points
     KSolutions _ksolutions;
 
-    //!k-vector in atomic units
+    //! The reciprocal space description
+    Kspace* _kspace;
+
+    //! k-vector in arbitrary units (for now)
     double _k_vector[3];
 
     //! to remember solutions
@@ -268,11 +269,6 @@ void EigenvalueProblem::set_k_point(const Point& k_vec)
 }
 
 
-inline
-Point EigenvalueProblem::get_k_point(void) const
-{
-  return Point(_k_vector[0], _k_vector[1], _k_vector[2]);
-}
 
 
 

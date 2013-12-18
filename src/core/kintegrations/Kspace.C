@@ -36,6 +36,22 @@ Kspace::~Kspace()
 }
 
 
+
+
+
+void
+Kspace::inverse_transform(Point& p) const
+{
+  Tensor1 vec;
+  vec(1) = p(0);
+  vec(2) = p(1);
+  vec(3) = p(2);
+
+  vec = inv(transform_matrix) * vec;
+
+  p = Point(vec(1), vec(2), vec(3));
+}
+
 //---------------------------------------------------------------------//
 
 void Kspace::build_k_grid()
@@ -93,31 +109,18 @@ void Kspace::build_k_grid()
 
 
     MeshTools::Generation::build_cube (*kmesh, 
-				       num_nodes[0], num_nodes[1], num_nodes[2], 
+				       num_nodes[0]-1, num_nodes[1]-1, num_nodes[2]-1,
 				       kmin[0], kmax[0], 
 				       kmin[1], kmax[1], 
 				       kmin[2], kmax[2],
 				       type);
 
   
-    rotate_mesh();
-  
- 
-    //kmesh->print_info();
-
-    //MeshBase::element_iterator it_k_space= kmesh->active_elements_begin();
-    //const MeshBase::element_iterator it_k_end  = kmesh->active_elements_end();
- 
-    //for ( ; it_k_space != it_k_end ; ++it_k_space)
-    // {
-    //  Elem* kelem = *it_k_space;
-    //  
-    // cout<<"volume: " << kelem->volume()<<endl;
-    //  cout<<"centroid: " << kelem->centroid()<<endl;
-    //
-    // }
   }
 }
+
+
+
 //---------------------------------------------------------------------------//
 void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 {
@@ -136,8 +139,6 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
     kmax[0] =  norm_k;
   } 
   
-
-  num_nodes[0] = n-1;
 
   kmin[1] = 0.0; kmin[2] = 0.0;
   kmax[1] = 0.0; kmax[2] = 0.0;
@@ -181,8 +182,10 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2, unsigned int m)
 {
 
-  double norm_k1 = norm(k_vector1);
-  double norm_k2 = norm(k_vector2);
+  //double norm_k1 = norm(k_vector1);
+  //double norm_k2 = norm(k_vector2);
+  double norm_k1 = 1;
+  double norm_k2 = 1;
 
   if (wedge == QUARTER)
   {
@@ -212,21 +215,21 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
     kmin[1] = -norm_k2;  kmax[1] = norm_k2; num_nodes[1] = m;
   }
 
-  num_nodes[0] = n-1; num_nodes[1] = m-1;
-
   kmin[2] = 0.0; kmax[2] = 0.0;
   
-  Tensor1 basis1 = k_vector1/norm_k1;
-  Tensor1 basis2 = k_vector2/norm_k2;
-  Tensor1 basis3 = vectorProduct(basis1, basis2);
+  Tensor1 basis2 = k_vector1/norm_k1;
+  Tensor1 basis3 = k_vector2/norm_k2;
+  Tensor1 basis1 = vectorProduct(basis2, basis3);
 
 
   for (short i = 1; i < 4; i++)
-    {
-      transform_matrix(i,1) = basis1(i);
-      transform_matrix(i,2) = basis2(i);
-      transform_matrix(i,3) = basis3(i);
-    }
+  {
+    transform_matrix(i,1) = basis1(i);
+    transform_matrix(i,2) = basis2(i);
+    transform_matrix(i,3) = basis3(i);
+  }
+
+  cerr << setw(12) << transform_matrix << endl;
 
   //  k_dim = 2;
 
@@ -247,33 +250,33 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
  {
 
   
-   kmin[0] = -norm_k1;  kmax[0] = norm_k1; num_nodes[0] = n;
+   kmin[0] = -norm_k1;  kmax[0] = norm_k1;
    
-   kmin[1] = -norm_k2;  kmax[1] = norm_k2; num_nodes[1] = m;
+   kmin[1] = -norm_k2;  kmax[1] = norm_k2;
 
-   kmin[2] = -norm_k3;  kmax[2] = norm_k3; num_nodes[2] = k;
+   kmin[2] = -norm_k3;  kmax[2] = norm_k3;
 
  }
 
  if (wedge == HALF)
  {
 
-   kmin[0] = -norm_k1;  kmax[0] = norm_k1; num_nodes[0] = n;
+   kmin[0] = -norm_k1;  kmax[0] = norm_k1;
 
-   kmin[1] = -norm_k2;  kmax[1] = norm_k2; num_nodes[1] = m;
+   kmin[1] = -norm_k2;  kmax[1] = norm_k2;
 
-   kmin[2] = 0;  kmax[2] = norm_k3; num_nodes[2] = k;
+   kmin[2] = 0;  kmax[2] = norm_k3;
 
  }
  
  if (wedge == QUARTER)
  {
 
-   kmin[0] = -norm_k1;  kmax[0] = norm_k1; num_nodes[0] = n;
+   kmin[0] = -norm_k1;  kmax[0] = norm_k1;
 
-   kmin[1] = 0;  kmax[1] = norm_k2; num_nodes[1] = m;
+   kmin[1] = 0;  kmax[1] = norm_k2;
 
-   kmin[2] = 0;  kmax[2] = norm_k3; num_nodes[2] = k;
+   kmin[2] = 0;  kmax[2] = norm_k3;
 
  }
  
@@ -281,11 +284,11 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
  if (wedge == EIGHTH)
  {
 
-   kmin[0] = 0;  kmax[0] = norm_k1; num_nodes[0] = n-1;
+   kmin[0] = 0;  kmax[0] = norm_k1;
 
-   kmin[1] = 0;  kmax[1] = norm_k2; num_nodes[1] = m-1;
+   kmin[1] = 0;  kmax[1] = norm_k2;
 
-   kmin[2] = 0;  kmax[2] = norm_k3; num_nodes[2] = k-1;
+   kmin[2] = 0;  kmax[2] = norm_k3;
 
  }
  
@@ -318,7 +321,7 @@ void Kspace::do_init() throw (InitFailedException)
   if (! mod_opt.find_option("k_space_dimension") ) 
     throw  InitFailedException("Kspace: k_space_dimension must be defined");
   
-  k_space_dim = mod_opt.get_option("k_space_dimension",0);
+  k_space_dim = mod_opt.get_option("k_space_dimension", 0);
  
   k_dim = k_space_dim;
 
@@ -327,8 +330,8 @@ void Kspace::do_init() throw (InitFailedException)
 
   if (mod_opt.find_option("k-path") && k_dim > 1)
   {
-  std::cout<<"(KSP) found k-path "  << std::endl;
-    k_dim = 1; 
+    //std::cout<<"(KSP) found k-path "  << std::endl;
+    //k_dim = 1;
     k_path = true;
   }
 
@@ -337,13 +340,13 @@ void Kspace::do_init() throw (InitFailedException)
   {
     //num_nodes(k_dim,0);
 
-    mod_opt.get_option("number_of_nodes",num_nodes);
-    //std::cout<<"(KSP) num nodes "<<num_nodes[0]  << std::endl;
-    if ( num_nodes.size() != k_dim ) 
-    {
-      ostringstream temp; temp << setw(4) << k_dim; 
-      throw  InitFailedException("Kspace: number_of_nodes should contain " + temp.str() + " elements");
-    }
+    mod_opt.get_option("number_of_nodes", num_nodes);
+//    if ( num_nodes.size() != k_dim )
+//    {
+//      ostringstream temp; temp << setw(4) << k_dim;
+//      throw  InitFailedException("Kspace: number_of_nodes should contain " + temp.str() + " elements");
+//    }
+    num_nodes.resize(k_dim);
 
   }
 
@@ -353,11 +356,7 @@ void Kspace::do_init() throw (InitFailedException)
   else if (mesh_order == "second") mesh_order =  SECOND;
   else throw  InitFailedException("Kspace: incorrect mesh order " + mesh_order );
 
-  if (k_path) 
-  {
-    define_k_path();
-    return;
-  }
+
 
   {
     string def_weg;
@@ -413,9 +412,11 @@ void Kspace::do_init() throw (InitFailedException)
     {
       mod_opt.get_option("k1", k_vector);
 
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: k1 vector size must be equal to 3");
+      if (k_vector.size() != 3)
+        throw  InitFailedException("Kspace: k1 vector size must be equal to 3");
 
-      for (short i = 0; i < 3; i++)  vec(i + 1) = k_vector[i];
+      for (short i = 0; i < 3; i++)
+        vec(i + 1) = k_vector[i];
     }
     else
     {
@@ -427,14 +428,14 @@ void Kspace::do_init() throw (InitFailedException)
 
       for (short i = 0; i < 3; i++)  vec(i + 1) = k_vector[i];
 
-      vec /= (Constants::bohr_radius / mesh_units); //transform real space vector in atomic units;
+      //vec /= (Constants::bohr_radius / mesh_units); //transform real space vector in atomic units;
 
       vec = ( M_PI * vec)/(norm(vec)*norm(vec));
        
     }
 
-    num_nodes.push_back(0);
-    num_nodes.push_back(0);
+    //num_nodes.push_back(0);
+    //num_nodes.push_back(0);
 
 
     define_k_space(vec, num_nodes[0]);
@@ -474,17 +475,22 @@ void Kspace::do_init() throw (InitFailedException)
 
       mod_opt.get_option("r1", k_vector);
 
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
+      if (k_vector.size() != 3)
+        throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
 
-      for (short i = 0; i < 3; i++)  vec1_real(i + 1) = k_vector[i]/(Constants::bohr_radius / mesh_units);
+      for (short i = 0; i < 3; i++)
+        vec1_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
 
-      if (! mod_opt.find_option("r2") ) throw  InitFailedException("Kspace: r2 vector must be defined"); 
+      if (! mod_opt.find_option("r2") )
+        throw  InitFailedException("Kspace: r2 vector must be defined");
 
       mod_opt.get_option("r2", k_vector);
       
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: r2 vector size must be equal to 3");
+      if (k_vector.size() != 3)
+        throw  InitFailedException("Kspace: r2 vector size must be equal to 3");
 
-      for (short i = 0; i < 3; i++)  vec2_real(i + 1) = k_vector[i]/(Constants::bohr_radius / mesh_units);
+      for (short i = 0; i < 3; i++)
+        vec2_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
 
 
       Tensor1 vec3_real = vectorProduct(vec1_real, vec2_real);
@@ -496,16 +502,16 @@ void Kspace::do_init() throw (InitFailedException)
 
       if (volume == 0.0) throw  InitFailedException("Kspace: r1 and r2  vectors may be collinear ");
 
-      vec1 = M_PI* vectorProduct(vec2_real, vec3_real)/volume;
+      vec1 = 2 * M_PI * vectorProduct(vec2_real, vec3_real) / volume;
 
-      vec2 = M_PI* vectorProduct(vec3_real, vec1_real)/volume;
+      vec2 = 2 * M_PI * vectorProduct(vec3_real, vec1_real) / volume;
         
 
     }
 
 
 
-    num_nodes.push_back(0);
+    //num_nodes.push_back(0);
 
     define_k_space(vec1, num_nodes[0],vec2, num_nodes[1] );
 
@@ -559,7 +565,8 @@ void Kspace::do_init() throw (InitFailedException)
 
       if (k_vector.size() != 3) throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
     
-      for (short i = 0; i < 3; i++)  vec1_real(i + 1) = k_vector[i]/(Constants::bohr_radius / mesh_units);
+      for (short i = 0; i < 3; i++)
+        vec1_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
       
       if (! mod_opt.find_option("r2") ) throw  InitFailedException("Kspace: r2 vector must be defined");
       
@@ -567,14 +574,16 @@ void Kspace::do_init() throw (InitFailedException)
 
       if (k_vector.size() != 3) throw  InitFailedException("Kspace: r2 vector size must be equal to 3");
       
-      for (short i = 0; i < 3; i++)  vec2_real(i + 1) = k_vector[i]/(Constants::bohr_radius / mesh_units);
+      for (short i = 0; i < 3; i++)
+        vec2_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
 
       if (! mod_opt.find_option("r3") ) throw  InitFailedException("Kspace: r3 vector must be defined"); 
       mod_opt.get_option("r3", k_vector);
 
       if (k_vector.size() != 3) throw  InitFailedException("Kspace: k3 vector size must be equal to 3");
       
-      for (short i = 0; i < 3; i++)  vec3_real(i + 1) = k_vector[i]/(Constants::bohr_radius / mesh_units);
+      for (short i = 0; i < 3; i++)
+        vec3_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
 
       
       double volume = (vec1_real * vectorProduct(vec2_real, vec3_real));
@@ -605,17 +614,34 @@ void Kspace::do_init() throw (InitFailedException)
   {
      throw  InitFailedException("Kspace: k_space_dimension should be or 0 or  1 or 2 or 3");
   }
-
-  build_k_grid();
   
 
+  if (k_path)
+  {
+    k_dim = 1;
+    define_k_path();
+  }
+  else
+    build_k_grid();
+
+  // transform the mesh to real units
+  rotate_mesh();
+
 }
+
+
+
+
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::define_k_path(void)
 {
   kmesh = new Mesh(k_space_dim);
 
-  std::cout<<"(KSP) k_space_dim "<<k_space_dim<<std::endl;
+  // to restrict the extension of the k-space
+  double k_max = mod_opt.get_option("k_max", 1.0);
+
+  int npoints = num_nodes[0];
+  int nelem = max(npoints - 1, 1);
 
   if (k_space_dim == 2)
   {    
@@ -623,11 +649,10 @@ void Kspace::define_k_path(void)
     double *k1, *k2;
     
 
-    double k_max = mod_opt.get_option("k_max",0.1);
 
     G[0]=0.0;  G[1]=0.0;  G[2]=0.0;   //( 0   0    0  ) 
     M[0]=0.0;  M[1]=0.5*k_max;  M[2]=0.5*k_max;   //( 0  1/2  1/2 )  
-    X[0]=0.0;  X[1]=0.5*k_max;  X[2]=0.0*k_max;   //( 0  1/2   0  )      
+    X[0]=0.0;  X[1]=0.5*k_max;  X[2]=0.0;   //( 0  1/2   0  )
     X1[0]=0.0; X1[1]=0.0; X1[2]=0.5*k_max;  //( 0   0   1/2 )        
 
     std::vector<std::string> tokens;
@@ -641,10 +666,9 @@ void Kspace::define_k_path(void)
 
     unsigned int id = 0;
 
-    for(short i=1; i<tokens.size(); i++)
+    for (short i = 1; i < tokens.size(); i++)
     {
 
-      //std::cout<< "#"<<tokens[i-1]<<"-"<<tokens[i]<<"#" << endl;
       if(tokens[i-1]=="G")        k1 = G;
       else if(tokens[i-1]=="M")   k1 = M;
       else if(tokens[i-1]=="X")   k1 = X;
@@ -657,15 +681,12 @@ void Kspace::define_k_path(void)
       else if(tokens[i]=="X'")    k2 = X1;
       else                        k2 = G;
 
-      unsigned int npoints=num_nodes[0];
-
-      for (unsigned int j=0; j < npoints; j++)
+      for (int j = 0; j < npoints; j++)
       {
-        double b1 = k1[0]*(npoints-j)/npoints + k2[0]*j/npoints;
-        double b2 = k1[1]*(npoints-j)/npoints + k2[1]*j/npoints;
-        double b3 = k1[2]*(npoints-j)/npoints + k2[2]*j/npoints;
+        double b1 = k1[0]*(npoints-j)/nelem + k2[0]*j/nelem;
+        double b2 = k1[1]*(npoints-j)/nelem + k2[1]*j/nelem;
+        double b3 = k1[2]*(npoints-j)/nelem + k2[2]*j/nelem;
 
-        //std::cout << b1 << " " << b2 << " " << b3 << endl;
 
         Point pt(b1,b2,b3);
 
@@ -682,7 +703,6 @@ void Kspace::define_k_path(void)
     double G[3], X1[3], X2[3], X3[3], K[3], L[3];
     double *k1, *k2;
     
-    double k_max = mod_opt.get_option("k_max",0.1);
 
     // Problems with k-points in k.p and full band!
     // Needs to define a common unit system !! 
@@ -702,10 +722,9 @@ void Kspace::define_k_path(void)
 
     unsigned int id = 0;
 
-    for(short i=1; i<tokens.size(); i++)
+    for (short i = 1; i < tokens.size(); i++)
     {
 
-      std::cout<< "#"<<tokens[i-1]<<"-"<<tokens[i]<<"#" << endl;
 
        if(tokens[i-1]=="G")        k1 = G;   
        else if(tokens[i-1]=="K")   k1 = K;    
@@ -723,15 +742,12 @@ void Kspace::define_k_path(void)
        else if(tokens[i]=="L")     k2 = L;
        else                        k2 = G;    
 
-      unsigned int npoints=num_nodes[0];
 
-      for (unsigned int j=0; j < npoints; j++)
+      for (int j = 0; j < npoints; j++)
       {
         double b1 = k1[0]*(npoints-j)/npoints + k2[0]*j/npoints;
         double b2 = k1[1]*(npoints-j)/npoints + k2[1]*j/npoints;
         double b3 = k1[2]*(npoints-j)/npoints + k2[2]*j/npoints;
-
-        //std::cout << b1 << " " << b2 << " " << b3 << endl;
 
         Point pt(b1,b2,b3);
 
@@ -745,10 +761,11 @@ void Kspace::define_k_path(void)
   }
 
   //kmesh->print_info();
-
-
-
 }
+
+
+
+
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::tokenize(const std::string& str,
               std::vector<std::string>& tokens,
@@ -769,6 +786,9 @@ void Kspace::tokenize(const std::string& str,
         pos = str.find_first_of(delimiters, lastPos);
     }
 }
+
+
+
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::parse_options(void)
 {
@@ -797,6 +817,8 @@ void Kspace::rotate_mesh(void)
   }
 
 }
+
+
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::inv_rotate_mesh(void)
 {
