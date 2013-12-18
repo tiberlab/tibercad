@@ -14,6 +14,11 @@
 #include <set>
 //-------------------
 
+template <typename T> class VectorValue;
+typedef VectorValue<double> RealVectorValue;
+
+
+
 class AtomisticBasis
 {
   public:
@@ -43,6 +48,8 @@ class AtomisticBasis
   //! Get periodicity vectors for the structure:
   //[x1, y1, z1, x2, y2, z2, x3, y3, z3]
   const std::vector<double>& get_lattice_vectors(void) const;
+
+  void get_lattice_vectors(RealVectorValue& a, RealVectorValue& b, RealVectorValue& c) const;
 
   //! Set the periodicity
   void set_ttype_lattice_vectors(const Tensor2Gen& T);
@@ -210,6 +217,7 @@ AtomisticBasis::get_lattice_vectors(void) const
 {
   return _lattice_vectors;
 }
+
 
 
 

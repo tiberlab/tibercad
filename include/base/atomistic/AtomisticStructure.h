@@ -93,8 +93,8 @@ public:
                                           bool band_offsets = false);
 
 
-  //! AtomisticStructureOptions object pointer
-  AtomisticStructureOptions _atomistic_structure_options;
+  // Get element->atoms map
+  //std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
   
   //! Get number of non hydrogen atoms
   unsigned int get_N_without_H(void) const;
@@ -164,6 +164,16 @@ private:
   
   //!Build mesh regions infos
   void parse_regions(void);
+
+
+  //!Build element to atoms association map
+  void build_elem_to_atoms(void);
+
+  //! AtomisticStructureOptions object pointer
+  AtomisticStructureOptions _atomistic_structure_options;
+
+  //! Associate at any alement atoms contained
+  std::map<const Elem*, std::vector<unsigned int> > _elem_to_atoms;
 
   //!Associate elements: any atom keep tracks of the elements he belongs to
   void associate_elements();

@@ -625,11 +625,11 @@ AtomisticGenerator::build_random_alloy()
           double prob = 1.0;
           double rnd = 0.0;
           // the first X% will be distributed randomly
-          //if (clustering && (num_substituted[regid] > rand_percentage * num_to_substitute[regid]))
-          //{
-          //  prob = substitution_probability(id, sp);
-          //  rnd = static_cast<double>(generator()) / generator.max();
-          //}
+          if (clustering && (num_substituted[regid] > rand_percentage * num_to_substitute[regid]))
+          {
+            prob = substitution_probability(id, sp);
+            rnd = static_cast<double>(generator()) / generator.max();
+          }
           if (!fix_mean_alloy_concentration)
           {
             prob = a_to_b_prob[regid];

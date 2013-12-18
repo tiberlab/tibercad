@@ -1,6 +1,8 @@
 #include "AtomisticBasis.h"
 #include "Device.h"
 
+#include "vector_value.h"
+
 
 //STD library includes
 #include<iostream>
@@ -18,6 +20,16 @@ AtomisticBasis::AtomisticBasis(void)
 _lattice_vectors(9,0.0)
 {
 
+}
+
+
+
+void
+AtomisticBasis::get_lattice_vectors(RealVectorValue& a, RealVectorValue& b, RealVectorValue& c) const
+{
+  a = RealVectorValue(_lattice_vectors[0], _lattice_vectors[1], _lattice_vectors[2]);
+  b = RealVectorValue(_lattice_vectors[3], _lattice_vectors[4], _lattice_vectors[5]);
+  c = RealVectorValue(_lattice_vectors[6], _lattice_vectors[7], _lattice_vectors[8]);
 }
 
 

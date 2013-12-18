@@ -201,6 +201,24 @@ AtomisticStructure::init(const std::string& name,
   //(Useful for passivated semiconductors)
   compute_N_without_H();
 
+  {
+    Messages m;
+    m.info("Lattice vectors (nm):");
+    m.indent();
+
+    RealVectorValue a, b, c;
+    get_lattice_vectors(a, b, c);
+    os << "a1 = (";
+    a.write_unformatted(os, false);
+    os << ")\na2 = (";
+    b.write_unformatted(os, false);
+    os << ")\na3 = (";
+    c.write_unformatted(os, false);
+    os << ")\n";
+    m.info(os.str());
+    os.str(std::string());
+  }
+
   os << "Atomistic Structure containing " << N_atoms << 
     " atoms has been built. " <<std::endl;
   os << "Size not counting passivation hydrogens: "<< get_N_without_H()<<std::endl;
