@@ -44,7 +44,7 @@ DataOutput::create(const std::string& format)
 {
   DataOutput* writer = NULL;
 
-  if (format == "vtk")
+  if (format == "vtk" || format == "vtu")
     writer = new TiberVTKIO();
   else if ((format == "grace") || format == "dat")
     writer = new GraceIO();

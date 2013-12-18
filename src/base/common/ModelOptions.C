@@ -4,6 +4,8 @@
 #include "Messages.h"
 #include "InitFailedException.h"
 
+#include "vector_value.h"
+
 #include <sstream>
 #include <iostream>
 #include <list>
@@ -44,6 +46,17 @@ ModelOptions::set_option(const string& name, const T& value)
 {
   ostringstream s;
   s << value;
+
+  _options[name] = s.str();
+}
+
+
+template <>
+void
+ModelOptions::set_option<RealVectorValue>(const string& name, const RealVectorValue& value)
+{
+  ostringstream s;
+  s << "(" << value(0) << "," << value(1) << "," << value(2) << ")";
 
   _options[name] = s.str();
 }
