@@ -12,9 +12,12 @@ class AtomisticStructure;
 class Material;
 class AtomisticBasis;
 
-//! This class implement a strain projector based on 
-//! deformation of single tetraedra of fcc and wz structures
-//! The algorithm is taken from J. Appl.Phys. 83, 2548 (1998)
+/*!
+ * \brief This class implement a strain projector based on
+ * deformation of single tetraedra of fcc and wz structures
+ *
+ * The algorithm is taken from J. Appl.Phys. 83, 2548 (1998)
+ */
 class StrainLattice
 {
 
@@ -24,7 +27,7 @@ class StrainLattice
 
   void init(AtomisticStructure* as);
 
-  //!Calculate the solution vector
+  //! Calculate the solution vector
   void do_solve(void);
 
   //! A solution point is identified by a coordinate and a tensor
@@ -87,7 +90,9 @@ class StrainLattice
     std::set<const Material*> _materials;
 
     //! Return a tetraedron with vertices arranged as reference.
-    //! Decision is made by maximizing dot product of bond vectors
+    /*!
+     * Decision is made by maximizing dot product of bond vectors
+     */
     Tetra rearrange(const Tetra& ref, const Tetra& tet);
 
     //! Solution vector

@@ -26,7 +26,7 @@ StrainLattice::init(AtomisticStructure* as)
   Messages::info("Initializing atomistic strain projection");
   _as = as;
   fill_materials_set();
-  //! Build reference for every material
+  // Build reference for every material
   std::set<const Material*>::iterator it;
   for (it = _materials.begin(); it != _materials.end(); ++it)
   {
@@ -141,7 +141,7 @@ StrainLattice::do_solve(void)
   _solution.resize(_as->get_N_without_H());
   TensorField sol;
   
-  //!Do the job on any atom which is compatible with reference tetraedra
+  //Do the job on any atom which is compatible with reference tetraedra
   for (unsigned int ind = 0; ind < _as->get_N_without_H(); ind++)
   {
     const Atom& atm = atoms[ind];
@@ -199,8 +199,8 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
   Tensor1 edge;
   const std::vector<Atom>& atoms = as->get_structure_atoms();
 
-  //!Store first specie as reference (it should be the cation 
-  //! in III-V alloys)
+  //Store first specie as reference (it should be the cation
+  // in III-V alloys)
   tet.sp = atoms[atm].get_specie();
 
   //Bulid bonds and tetraedron

@@ -228,7 +228,6 @@ AtomisticStructure::init(const std::string& name,
 
 void
 AtomisticStructure::parse_lattice_vectors(void)
-//Overrides supercell options
 {
   if (_options.find_option("lattice_vectors"))
   {
@@ -254,8 +253,8 @@ AtomisticStructure::parse_lattice_vectors(void)
  
     else Messages::error("lattice_vectors must have 3 or 9 components");
   }
+}
 
-} 
 
 void
 AtomisticStructure::init(const std::string& filename)
@@ -1354,9 +1353,13 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
  else if (atom2.is_cation())
    return get_material(atom2, parent);
  else 
- //If no value was already returned, throw an exception 
- Messages::error("WARNING: material for couple of atoms is decided "
-       "depending on the cation specie. I cannot find a valid cation ");
+ {
+   //If no value was already returned, throw an exception
+   Messages::error("Material for couple of atoms is decided "
+       "depending on the cation species. I cannot find a valid cation ");
+   throw RuntimeException("Cannot find valid cation");
+ }
+ return NULL;
 }
 
 void
