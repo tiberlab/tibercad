@@ -17,10 +17,13 @@ public:
   //! Creator function
   static AutomaticKeating* create(const ModelOptions& options);
 
+protected:
+
   //! Assign value to parameters
   virtual void do_init(void);
 
-protected:
+  //! Print some info
+  virtual void do_print_info(void);
 
 private:
 

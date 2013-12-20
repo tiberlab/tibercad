@@ -5,15 +5,9 @@
 #include "SimulationInterface.h"
 #include "StrainLattice.h"
 
-//extern "C"
-//{
-//#include "cg_user.h"
-//#include "cg_descent.h"
-//}
 
 
 class TBDLLOCAL Vff : public SimulationInterface
-
 {
 
 public:
@@ -79,7 +73,7 @@ protected:
   virtual void do_solve(void);
 
 
-  //! Print some useful information
+  // ! Print some useful information
   //virtual void do_print_info(void){};
 
 
@@ -87,7 +81,7 @@ protected:
   virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
       const Material* mat) const;
 
-  //! We need to create boundary condition model
+  // ! We need to create boundary condition model
 //  virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
 //      const Material* material_A, const Material* material_B) const{};
 

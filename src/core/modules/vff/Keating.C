@@ -2,7 +2,7 @@
 #include "Database.h"
 #include "Messages.h"
 
-#include <strstream>
+#include <sstream>
 
 using namespace std;
 
@@ -29,9 +29,11 @@ Keating::do_init(void)
       double v = 1.0 - 2.0 * _u;
       double sq_3 = sqrt(3.0);
       _d_0 = (sqrt(3.0 * _c * _c * v * v + 4.0 * _a * _a) / (2.0 * sq_3)) * 10.0;
+      //cerr << "d0 = " << _d_0 << " d1 = " << _d_1 << endl;
 
       _costeta_1 = (-1.0 * sq_3 * _c * v) / sqrt(3.0 * _c * _c * v * v + 4.0 * _a * _a);
       _costeta_0 = (3.0 * _c * _c * v * v - 2.0 * _a * _a) / (3.0 * _c * _c * v * v + 4.0 * _a * _a);
+      //cerr << "costeta_0 = " << _costeta_0 << " costeta_1 = " << _costeta_1 << endl;
     }
 
 }

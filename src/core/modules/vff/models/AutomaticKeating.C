@@ -18,8 +18,13 @@ using namespace fadbad;
 namespace
 {
 
+  /*
+   * Calculates the elastic moduli from given keating parameters
+   * x: keating parameters alpha, beta, alpha1, beta1
+   * y: elastic moduli C11, C12, C33, C13, C44, C66
+   */
   template<typename valueT>
-  inline void keating_wz(double a, double c, double u,
+  void keating_wz(double a, double c, double u,
       const vector<valueT>& x, vector<valueT>& y)
   {
 
@@ -93,19 +98,20 @@ AutomaticKeating::do_init(void)
   Keating::do_init();
 
   std::string warning1("Calculating keating parameters for alloy with Vegard's law. This is not safe.");
+
   if (get_material()->get_structure() == "zb")
   {
     parse_zb_database();
     if ((alpha_0() == 0.0) || (alpha_1() == 0.0))
     {
-      if (get_material()->is_alloy())
-        Messages::warning(warning1);
+      //if (get_material()->is_alloy())
+      //  Messages::warning(warning1);
       calculate_zb_alpha();
     }
     if ((beta_0() == 0.0) || (beta_1() == 0.0))
     {
-      if (get_material()->is_alloy())
-        Messages::warning(warning1);
+      //if (get_material()->is_alloy())
+      //  Messages::warning(warning1);
       calculate_zb_beta();
     }
   }
@@ -118,10 +124,33 @@ AutomaticKeating::do_init(void)
     if ((alpha_0() == 0.0) || (alpha_1() == 0.0) ||
         (beta_0() == 0.0) || (beta_1() == 0.0))
     {
+      //ostringstream os;
+      //os << "Using weights: " << _weights[0] << " " << _weights[1] << " " << _weights[2] << " "<<
+      //    _weights[3] << " " << _weights[4] << " " << _weights[5] <<
+      //    "  (C11 C12 C33 C13 C44 C66)";
+      //Messages::info(os.str());
       calculate_wz_params();
     }
   }
 
+}
+
+
+
+void
+AutomaticKeating::do_print_info(void)
+{
+  Keating::do_print_info();
+
+  vector<double> keating = {alpha_0(), beta_0(), alpha_1(), beta_1()};
+  vector<double> moduli;
+  keating_wz(get_a(), get_c(), get_u(), keating, moduli);
+  ostringstream os;
+  Messages::info("Stiffness Constants (in crystal coordinates): ");
+  os << "  C11 = " << moduli[0] << " C12 = " << moduli[1] <<
+      " C13 = " << moduli[3] << " C33 = " << moduli[2] <<
+      " C44 = " << moduli[4];
+  Messages::info(os.str());
 }
 
 void
@@ -288,8 +317,6 @@ AutomaticKeating::calculate_wz_params(void)
 
   //cerr << "after " << iter << " iterations:\n";
   //cerr << c_calc << endl;
-
-  cerr << keating << endl;
 }
 
 
