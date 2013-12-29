@@ -10,6 +10,9 @@ Kspace::Kspace(const ModelOptions& options)
  : mod_opt(options)
 {
   kmesh = NULL;
+
+  transform_matrix = Tensor2Gen(1);
+
   do_init();
 }
 
@@ -56,7 +59,6 @@ Kspace::inverse_transform(Point& p) const
 
 void Kspace::build_k_grid()
 {
-
 
   if (k_dim > 0)
   {
@@ -108,14 +110,24 @@ void Kspace::build_k_grid()
     }
 
 
+    // to restrict the extension of the k-space
+    double k_max = mod_opt.get_option("k_max", 1.0);
+
     MeshTools::Generation::build_cube (*kmesh, 
-				       num_nodes[0]-1, num_nodes[1]-1, num_nodes[2]-1,
-				       kmin[0], kmax[0], 
-				       kmin[1], kmax[1], 
-				       kmin[2], kmax[2],
+				       num_nodes[0] - 1,
+				       num_nodes[1] - 1,
+				       num_nodes[2] - 1,
+				       kmin[0] * k_max, kmax[0] * k_max,
+				       kmin[1] * k_max, kmax[1] * k_max,
+				       kmin[2] * k_max, kmax[2] * k_max,
 				       type);
 
   
+  }
+  else
+  {
+    kmesh = new Mesh(0);
+    kmesh->add_point(Point(0,0,0), 0, 0);
   }
 }
 
@@ -126,7 +138,7 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 {
 
 
-  double norm_k = norm(k_vector);
+  double norm_k = 0.5;
 
   if (wedge == HALF)
   {
@@ -143,8 +155,7 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
   kmin[1] = 0.0; kmin[2] = 0.0;
   kmax[1] = 0.0; kmax[2] = 0.0;
   
-  //TODO has to be changed!!
-  Tensor1 basis1 = k_vector/norm_k;
+  Tensor1 basis1 = k_vector;
 
   if (basis1(1) == 1)
     transform_matrix = Tensor2Sym(1);
@@ -155,8 +166,6 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
       basis2(1) = 0;
       basis2(2) = -basis1(3);
       basis2(3) =  basis1(2);
-
-      basis2 = basis2/norm(basis2);
 
       Tensor1 basis3 = vectorProduct(basis1, basis2);
 
@@ -182,10 +191,10 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2, unsigned int m)
 {
 
-  //double norm_k1 = norm(k_vector1);
-  //double norm_k2 = norm(k_vector2);
-  double norm_k1 = 1;
-  double norm_k2 = 1;
+  double norm_k1 = 0.5;
+  double norm_k2 = 0.5;
+  //double norm_k1 = 1;
+  //double norm_k2 = 1;
 
   if (wedge == QUARTER)
   {
@@ -217,9 +226,9 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
 
   kmin[2] = 0.0; kmax[2] = 0.0;
   
-  Tensor1 basis2 = k_vector1/norm_k1;
-  Tensor1 basis3 = k_vector2/norm_k2;
-  Tensor1 basis1 = vectorProduct(basis2, basis3);
+  Tensor1 basis1 = k_vector1;
+  Tensor1 basis2 = k_vector2;
+  Tensor1 basis3 = vectorProduct(basis1, basis2);
 
 
   for (short i = 1; i < 4; i++)
@@ -229,7 +238,7 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
     transform_matrix(i,3) = basis3(i);
   }
 
-  cerr << setw(12) << transform_matrix << endl;
+  //cerr << setw(12) << transform_matrix << endl;
 
   //  k_dim = 2;
 
@@ -242,9 +251,9 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
 {
 
 
-  double norm_k1 = norm(k_vector1);
-  double norm_k2 = norm(k_vector2);
-  double norm_k3 = norm(k_vector3);
+  double norm_k1 = 0.5;
+  double norm_k2 = 0.5;
+  double norm_k3 = 0.5;
 
  if (wedge == ALL)
  {
@@ -295,9 +304,9 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
   
  for (short i = 1; i < 4; i++)
  {
-   transform_matrix(i,1) = k_vector1(i)/norm_k1; 
-   transform_matrix(i,2) = k_vector2(i)/norm_k2;
-   transform_matrix(i,3) = k_vector3(i)/norm_k3;
+   transform_matrix(i,1) = k_vector1(i);
+   transform_matrix(i,2) = k_vector2(i);
+   transform_matrix(i,3) = k_vector3(i);
  }
 
 
@@ -346,7 +355,7 @@ void Kspace::do_init() throw (InitFailedException)
 //      ostringstream temp; temp << setw(4) << k_dim;
 //      throw  InitFailedException("Kspace: number_of_nodes should contain " + temp.str() + " elements");
 //    }
-    num_nodes.resize(k_dim);
+    num_nodes.resize(3, 5);
 
   }
 
@@ -359,10 +368,24 @@ void Kspace::do_init() throw (InitFailedException)
 
 
   {
-    string def_weg;
-    if (k_dim == 1) def_weg = "half";
-    if (k_dim == 2) def_weg = "quarter";
-    if (k_dim == 3) def_weg = "eighth";
+    string def_weg("all");
+    switch (k_dim)
+    {
+      case 1:
+        def_weg = "half";
+        break;
+
+      case 2:
+        def_weg = "quarter";
+        break;
+
+      case 3:
+        def_weg = "eighth";
+        break;
+
+      default:
+        break;
+    }
 
     string wedge_type = mod_opt.get_option("wedge", def_weg);
     if (wedge_type == "all" )
@@ -397,8 +420,8 @@ void Kspace::do_init() throw (InitFailedException)
 
 
   bool k_basis =  mod_opt.find_option("k1");
-  if (!k_basis && !mod_opt.find_option("r1"))
-     throw  InitFailedException("Kspace: either k1 or r1 must be defined");
+  //if (!k_basis && !mod_opt.find_option("r1"))
+  //   throw  InitFailedException("Kspace: either k1 or r1 must be defined");
   
   std::vector<double> k_vector(3,0.0);
   
@@ -434,8 +457,8 @@ void Kspace::do_init() throw (InitFailedException)
        
     }
 
-    //num_nodes.push_back(0);
-    //num_nodes.push_back(0);
+    num_nodes[1] = 1;
+    num_nodes[2] = 1;
 
 
     define_k_space(vec, num_nodes[0]);
@@ -511,7 +534,7 @@ void Kspace::do_init() throw (InitFailedException)
 
 
 
-    //num_nodes.push_back(0);
+    num_nodes[2] = 1;
 
     define_k_space(vec1, num_nodes[0],vec2, num_nodes[1] );
 
@@ -704,8 +727,6 @@ void Kspace::define_k_path(void)
     double *k1, *k2;
     
 
-    // Problems with k-points in k.p and full band!
-    // Needs to define a common unit system !! 
     G[0]=0.0;    G[1]=0.0;    G[2]=0.0;  //( 0  0  0 ) 
     K[0]=0.0;    K[1]=0.5*k_max;    K[2]=0.5*k_max;  //( 0  1/2  1/2 )
     X1[0]=0.5*k_max;   X1[1]=0.0;   X1[2]=0.0;
@@ -825,7 +846,7 @@ void Kspace::inv_rotate_mesh(void)
 
   Tensor1 vec1;
 
-  Tensor2Gen inv_matrix = transform_matrix.transpose(); 
+  Tensor2Gen inv_matrix = inv(transform_matrix); //.transpose();
 
   for (unsigned int n=0; n < kmesh->n_nodes(); n++)
   {

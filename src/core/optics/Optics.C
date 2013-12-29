@@ -236,13 +236,54 @@ void Optics::do_init()
 
 void Optics::init_k_space_integration(void)
 {
+
+  // maybe this stuff should be taken from the intial/final state models?
+
    ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration"));
 
    ModelOptions& kopts = it->second;
    
    kopts.set_option("mesh_units",get_mesh_units()); 
-   kopts.set_option("k_space_dimension",3 - get_mesh().mesh_dimension());
+   int k_dim = 3 - get_mesh().mesh_dimension();
+   kopts.set_option("k_space_dimension", k_dim);
+
    kopts.set_option("verbose", SimulationOptions::verbose() );
+
+   // these are the real space lattice vectors, in nm
+   RealVectorValue a(2, 0, 0), b(0, 2, 0), c(0, 0, 2);
+
+   /*
+   // if there is an atomistic structure, we can take the lattice vectors from it
+   // (they come in Angstrom!)
+   if (get_atomistic_structure() != NULL)
+   {
+     get_atomistic_structure()->get_lattice_vectors(a, b, c);
+     a *= 0.1;
+     b *= 0.1;
+     c *= 0.1;
+   }
+   */
+
+   switch (k_dim)
+   {
+     case 1:
+       kopts.set_option("r1", c);
+       break;
+
+     case 2:
+       kopts.set_option("r1", b);
+       kopts.set_option("r2", c);
+       break;
+
+     case 3:
+       kopts.set_option("r1", a);
+       kopts.set_option("r2", b);
+       kopts.set_option("r3", c);
+       break;
+
+     default:
+       break;
+   }
 
 
    _k_integration = KspaceIntegration::create(this, &Optics::calculate_for_k_point, kopts);
@@ -516,18 +557,23 @@ void Optics::do_solve()
   _total_power += dP0 + dPN;
   _recombination += dP0 / _energy_mesh->point(0)(0) + dPN / _energy_mesh->point(N)(0);
 
+  // k-space is assumed to be in 1/nm, and all output quantities
+  // are given in 1/cm
   double area_dim_factor = 1.0;
   int dim = get_mesh().mesh_dimension();
   switch (dim)
   {
     case 0:
-      area_dim_factor *= Constants::bohr_radius * 1e2;
+//      area_dim_factor *= Constants::bohr_radius * 1e2;
+      area_dim_factor *= 1e-9 * 1e2;
 
     case 1:
-      area_dim_factor *= Constants::bohr_radius * 1e2;
+//      area_dim_factor *= Constants::bohr_radius * 1e2;
+      area_dim_factor *= 1e-9 * 1e2;
 
     case 2:
-      area_dim_factor *= Constants::bohr_radius * 1e2;
+//      area_dim_factor *= Constants::bohr_radius * 1e2;
+      area_dim_factor *= 1e-9 * 1e2;
 
     default:
       break;
@@ -744,27 +790,29 @@ void Optics::do_plot()
   string gaindim;
   double area_dim_factor = 1;
   double gain_factor = 1;
+  //double length_factor = Constants::bohr_radius * 1e2;
+  double length_factor = 1e-9 * 1e2;
   if (k_dim == 1)
   {
     dimension = "/cm";
     gaindim = "cm";
-    area_dim_factor  = (Constants::bohr_radius * 1e2);
-    gain_factor = (Constants::bohr_radius * 1e2);
+    area_dim_factor  = length_factor;
+    gain_factor = length_factor;
   }
   else if (k_dim == 2)
   {
     dimension = "/cm^2";
     gaindim = "-";
-    area_dim_factor  = (Constants::bohr_radius * 1e2) * (Constants::bohr_radius * 1e2);
+    area_dim_factor  = length_factor * length_factor;
   }
   else if (k_dim == 3)
   {
     dimension = "/cm^3";
     gaindim = "1/cm";
-    area_dim_factor  = (Constants::bohr_radius * 1e2) *
-        (Constants::bohr_radius * 1e2) *
-        (Constants::bohr_radius * 1e2);
-    gain_factor = 1 / (Constants::bohr_radius * 1e2);
+    area_dim_factor  = length_factor *
+        length_factor *
+        length_factor;
+    gain_factor = 1 / length_factor;
   }
 
 

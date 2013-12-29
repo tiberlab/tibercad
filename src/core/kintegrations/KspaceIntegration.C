@@ -324,17 +324,17 @@ void KspaceIntegration::do_init(void)
 {
   
   std::cout<<"(KSI) k-int: "<<std::endl;
-  ModelOptions kopts;
+  ModelOptions kopts(get_options());
 
-  if(has_option("mesh_units"))
-   kopts.set_option("mesh_units",get_option("mesh_units",0.0));
-  else  
-   throw InitFailedException("K-integration internal error: mesh_units must be initialized");	  
+  //if(has_option("mesh_units"))
+  // kopts.set_option("mesh_units",get_option("mesh_units",0.0));
+  //else
+  // throw InitFailedException("K-integration internal error: mesh_units must be initialized");
 
-  if(has_option("k_space_dimension"))
-   kopts.set_option("k_space_dimension",get_option("k_space_dimension",0));
-  else
-   throw InitFailedException("K-integration internal error: k_space_dimension must be initialized");	  
+  //if(has_option("k_space_dimension"))
+  // kopts.set_option("k_space_dimension",get_option("k_space_dimension",0));
+  //else
+  // throw InitFailedException("K-integration internal error: k_space_dimension must be initialized");
 
   if (get_option("gamma_point_calculation",false))
   { 
@@ -349,32 +349,32 @@ void KspaceIntegration::do_init(void)
     set_options(new_opt); 
   }
 
-  std::vector<unsigned int>  num_nodes;
+  //std::vector<unsigned int>  num_nodes;
  
-  if (has_option("number_of_nodes"))
-  {
-     get_option("number_of_nodes",num_nodes);
-     kopts.set_option("number_of_nodes", num_nodes);
-  }
-  else if (has_option("number_of_elements"))
-  {
-     get_option("number_of_elements",num_nodes);
-     for(int i=0; i< num_nodes.size(); i++)
-           if(num_nodes[i]>0) ++num_nodes[i];
+  //if (has_option("number_of_nodes"))
+  //{
+  //   get_option("number_of_nodes",num_nodes);
+  //   kopts.set_option("number_of_nodes", num_nodes);
+  //}
+  //else if (has_option("number_of_elements"))
+  //{
+  //   get_option("number_of_elements",num_nodes);
+  //   for(int i=0; i< num_nodes.size(); i++)
+  //         if(num_nodes[i]>0) ++num_nodes[i];
 
-     kopts.set_option("number_of_nodes", num_nodes);
-  }
-  else
-   throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");	  
+  //   kopts.set_option("number_of_nodes", num_nodes);
+  //}
+  //else
+  // throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");
 
-  if (has_option("wedge"))
-    kopts.set_option("wedge", get_option("wedge",""));
+  //if (has_option("wedge"))
+  //  kopts.set_option("wedge", get_option("wedge",""));
 
   
-  kopts.set_option("k_space_basis", get_option("k_space_basis",true));
+  //kopts.set_option("k_space_basis", get_option("k_space_basis",true));
 
-
-  double k_max = get_option("k_max",0.1);
+/*
+  //double k_max = get_option("k_max",0.1);
   std::cout<<"(KSI) k_max: "<< k_max<<std::endl;
 
   kopts.set_option("k_max",k_max);
@@ -395,7 +395,7 @@ void KspaceIntegration::do_init(void)
   kopts.set_option("k3",k_vector);  
     
   kopts.set_option("mesh_order",get_option("mesh_order","first"));
-
+*/
   std::cout<<"(KSI) kspace init: "<<std::endl;
 
   _kspace = new Kspace(kopts);

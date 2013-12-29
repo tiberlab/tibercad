@@ -877,6 +877,10 @@ void process_module(const string& name, const ModelOptions& options)
 
     modulelib = modulename + libsuffix;
 
+    string linkflags(ldflags);
+    if ((ARCH == "i686-linux") || (ARCH == "x86_64-linux"))
+      linkflags += " -Wl,-soname," + modulelib + " ";
+
     using namespace boost::filesystem;
 
     // build full installation path
@@ -885,7 +889,7 @@ void process_module(const string& name, const ModelOptions& options)
       create_directories(instpath_p);
     modulelib = instpath + "/" + modulelib;
 
-    Compiler::link(modulelib, objects, ldflags);
+    Compiler::link(modulelib, objects, linkflags);
   }
 
   // recursively process submodules

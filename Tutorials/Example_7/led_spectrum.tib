@@ -343,8 +343,8 @@ Module opticskp
 
   k_integration
   {
-     k_max = 0.05     
-     number_of_elements = (5,5)
+     k_max = 0.5     
+     number_of_nodes = (6,6)
      quadrature_type = gaussian 
      quadrature_order = third 
 

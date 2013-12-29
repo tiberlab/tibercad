@@ -27,7 +27,17 @@ namespace
 
 void EigenvalueProblem::init_kspace(void)
 {
-   do_dispersion=false;
+   ModelOptions kopts = parse_kspace_options(ModelOptions());
+
+   _kspace = new Kspace(kopts);
+
+   if(_kspace==NULL)
+     throw InitFailedException("Could not initialize k-space");
+   else
+     Messages::info("k-space initialized");
+
+   /*
+   do_dispersion = false;
 
    //! Is used to parse dispersion options
    if(get_options().has_submodel("Dispersion"))
@@ -48,8 +58,9 @@ void EigenvalueProblem::init_kspace(void)
      else
        Messages::info("k-space initialized");
 
-     do_dispersion=true;
+     do_dispersion = true;
    }
+   */
 
    /*
    if(get_options().has_submodel("DOS"))
@@ -199,48 +210,76 @@ Point EigenvalueProblem::get_k_point(bool relative_coord) const
 
 void EigenvalueProblem::compute_dispersion(void)
 {
-  if (!do_dispersion) return;
- 
-  Messages::info("Compute Dispersion ...");
 
-  const Mesh* kmesh = _kspace->get_k_mesh(); 	
-  unsigned int number_of_k_points = kmesh->n_nodes();
-
-  //if (disp_range[0] < 0) disp_range[0]=0;
-  unsigned int number_of_eigs;
-
-  std::cout<<"(EP) number of kpoints: " << number_of_k_points << std::endl;  
-
+  if(get_options().has_submodel("Dispersion"))
   {
-    unsigned int i = 0;
-    const Point&  k_point = kmesh->point(i);  
+    Messages m;
+    m.info("Compute Dispersion ...");
+    m.indent();
 
-    solve_for_kpoint(k_point);
-    number_of_eigs = get_num_states();
-        
-    std::vector<double> temp(number_of_eigs);
-    _dispersion.resize(number_of_k_points, temp);  
-    
-    for (unsigned int j = 0 ; j <  _dispersion[0].size(); j++)
-      _dispersion[0][j] = _solution[j].eigen_energy;
-    
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("Dispersion"));
+
+    const ModelOptions& opts = it->second;
+
+    //disp_range[0] = opts.get_option("min_eigenvalue_number", 0);
+    //disp_range[1] = opts.get_option("max_eigenvalue_number", 100);
+
+    const ModelOptions kopts = parse_kspace_options(opts);
+
+    // NOTE: this is not very elegant
+    Kspace* original_kspace = _kspace;
+    _kspace = new Kspace(kopts);
+
+    if(_kspace==NULL)
+      throw InitFailedException("Could not initialize k-space");
+    else
+      Messages::info("k-space for dispersion initialized");
+
+
+
+    const Mesh* kmesh = _kspace->get_k_mesh();
+    unsigned int number_of_k_points = kmesh->n_nodes();
+
+    //if (disp_range[0] < 0) disp_range[0]=0;
+    unsigned int number_of_eigs;
+
+    std::cout<<"(EP) number of kpoints: " << number_of_k_points << std::endl;
+
+    {
+      unsigned int i = 0;
+      const Point&  k_point = kmesh->point(i);
+
+      solve_for_kpoint(k_point);
+      number_of_eigs = get_num_states();
+
+      std::vector<double> temp(number_of_eigs);
+      _dispersion.resize(number_of_k_points, temp);
+
+      for (unsigned int j = 0 ; j <  _dispersion[0].size(); j++)
+        _dispersion[0][j] = _solution[j].eigen_energy;
+
+    }
+
+    for (unsigned int i = 1; i < number_of_k_points; i++)
+    {
+
+      const Point&  k_point = kmesh->point(i);
+
+      solve_for_kpoint(k_point);
+      number_of_eigs = get_num_states();
+
+      for (unsigned int j = 0 ; j < _dispersion[i].size() ; j++)
+        _dispersion[i][j] = _solution[j].eigen_energy;
+
+
+    }
+
+    _kspace = original_kspace;
   }
 
-  for (unsigned int i = 1; i < number_of_k_points; i++)
-  {
-
-    const Point&  k_point = kmesh->point(i);
-
-    solve_for_kpoint(k_point);
-    number_of_eigs = get_num_states();
-    
-    for (unsigned int j = 0 ; j < _dispersion[i].size() ; j++)
-      _dispersion[i][j] = _solution[j].eigen_energy;
-    
-
-  }
-	
 }
+
+
 
 void
 EigenvalueProblem::plot_dispersion(void)
