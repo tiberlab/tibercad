@@ -428,8 +428,14 @@ sub compare_results_with_reference($$) {
     my $reffile = "$refdir/$file";
 
     my ($filename, $path, $suffix) = fileparse($file, @known_suffixes);
-    length($suffix) || die "Filetype unknown: $file";
-    (-e $reffile ) || die "No such reference file: $reffile";
+    if (! length($suffix)) {
+      print "Filetype unknown: $file";
+      return 1;
+    }
+    if (! -e $reffile ) {
+      print "No such reference file: $reffile";
+      return 1;
+    }
 
     if ($#{$vars} < 0) {
       print(pad_to_textwidth("    $file (no variables to check)",
