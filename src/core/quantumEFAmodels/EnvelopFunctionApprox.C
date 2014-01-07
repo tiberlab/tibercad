@@ -596,7 +596,7 @@ void EnvelopFunctionApprox::parse_options()
   //--------------------------------------------------------------------------------------------//
   // Block QuantumDensity  //
   opt.first_state = 0; 
-  opt.k_val = 0.01;
+  opt.k_val = 0.188; //0.01;
   opt.assume_paraboloid = false;
 
   if (get_options().has_submodel("QuantumDensity"))
@@ -2041,9 +2041,6 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   m.info("(EFA) Calculating quantum density");
   m.indent();
 
-  double a_B =  Constants::bohr_radius;
-  double scaling =  1.0 / (a_B * a_B * a_B * 1.0e6 );
-
   vector<double> energy_k_0;
   vector<double> energy_k_1;
   vector<double> energy_k_2;
@@ -2133,8 +2130,11 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
   solver_opt.solve_ev_problem_twice = solve_twice;
 
-
-  double Eh_k2 = Constants::Hartree * opt.k_val * opt.k_val;
+  // 2014-01-07: before, k-points were measured in Bohr radii, but now they
+  //             are in nm!
+  //double Eh_k2 = Constants::Hartree * opt.k_val * opt.k_val;
+  double Eh_k2 = opt.k_val * opt.k_val *
+      (hbar * hbar) / (electron_mass * 1e-18 * elementary_charge);
 
   if (dim == 1)
   {
@@ -2207,6 +2207,10 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
   }
 
+
+  // this is for the length scaling, EFA uses Bohr radii internally
+  double a_B =  Constants::bohr_radius;
+  double scaling =  1.0 / (a_B * a_B * a_B * 1.0e6 );
 
   for (unsigned int i = opt.first_state; i < num_states; i++)
   {
