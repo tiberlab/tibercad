@@ -274,6 +274,8 @@ void EigenvalueProblem::compute_dispersion(void)
 
     }
 
+    plot_dispersion();
+
     _kspace = original_kspace;
   }
 
@@ -285,58 +287,56 @@ void
 EigenvalueProblem::plot_dispersion(void)
 {
 
-  std::vector<std::string> formats;
-  get_output_format(formats);
+    std::vector<std::string> formats;
+    get_output_format(formats);
 
 
-  const Mesh* kmesh = _kspace->get_k_mesh();
-  short kdim =  _kspace->mesh_dimension();
+    const Mesh* kmesh = _kspace->get_k_mesh();
+    short kdim =  _kspace->mesh_dimension();
 
     std::cout<<"(EP) kdim: "<< kdim  << std::endl;
-   
-
-  for(short k=0; k<formats.size();k++)
-  {
-
-    std::string format = formats[k];
-  
-    if ((format == "grace") && (kdim > 1)) format="vtk";
- 
-    std::cout<<"(EP) format: "<< format  << std::endl;
-   
-    std::vector<double> results;
-    std::vector<std::string> names;    
-    
-    unsigned int number_of_eigs = _dispersion[0].size();
-    names.resize(number_of_eigs);
-
-    unsigned int number_of_k_points = kmesh->n_nodes();
-    results.resize( number_of_eigs * number_of_k_points );
 
 
-    for (unsigned int i = 0; i < number_of_eigs ; i++)
+    for(short k=0; k<formats.size();k++)
     {
-      std::ostringstream i_str;
-      //The states are numbered starting from 0
-      i_str << "state_number_" << i;
-      names[i] = i_str.str();
 
-      for (unsigned int j = 0; j < number_of_k_points ; j++)
-        results[number_of_eigs * j + i] = _dispersion[j][i];
+      std::string format = formats[k];
+
+      if ((format == "grace") && (kdim > 1)) format = "vtk";
+
+      std::cout<<"(EP) format: "<< format  << std::endl;
+
+      std::vector<double> results;
+      std::vector<std::string> names;
+
+      unsigned int number_of_eigs = _dispersion[0].size();
+      names.resize(number_of_eigs);
+
+      unsigned int number_of_k_points = kmesh->n_nodes();
+      results.resize( number_of_eigs * number_of_k_points );
+
+      for (unsigned int i = 0; i < number_of_eigs ; i++)
+      {
+        std::ostringstream i_str;
+        //The states are numbered starting from 0
+        i_str << "state_number_" << i;
+        names[i] = i_str.str();
+
+        for (unsigned int j = 0; j < number_of_k_points ; j++)
+          results[number_of_eigs * j + i] = _dispersion[j][i];
+      }
+
+
+      std::string filename(get_name() + "_dispersion");
+      //+ TiberCad::get_filename_suffix());
+
+      DataOutput data_output(*kmesh, format);
+      data_output.set_output_directory(get_output_directory());
+      //data_output.set_filename(filename);
+
+      data_output.write_nodal_data(filename, results, names);
+
     }
-
-
-    std::string filename(get_name() + "_dispersion"); 
-                         //+ TiberCad::get_filename_suffix());
-
-    DataOutput data_output(*kmesh, format);
-    data_output.set_output_directory(get_output_directory());
-    //data_output.set_filename(filename);
-    
-    data_output.write_nodal_data(filename, results, names);
-    
-  }
-
 }
 
 
@@ -688,11 +688,8 @@ void EigenvalueProblem::do_plot(void)
 
   SimulationInterface::do_plot();
 
-  if (do_dispersion)
-  {  
-      compute_dispersion();	  
-      plot_dispersion();
-  }
+  compute_dispersion();
+
   calculate_dos();
 }
  

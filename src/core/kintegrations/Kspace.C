@@ -340,7 +340,7 @@ void Kspace::do_init() throw (InitFailedException)
   if (mod_opt.find_option("k-path") && k_dim > 1)
   {
     //std::cout<<"(KSP) found k-path "  << std::endl;
-    //k_dim = 1;
+    k_dim = 1;
     k_path = true;
   }
 
@@ -369,7 +369,7 @@ void Kspace::do_init() throw (InitFailedException)
 
   {
     string def_weg("all");
-    switch (k_dim)
+    switch (k_space_dim)
     {
       case 1:
         def_weg = "half";
@@ -402,14 +402,14 @@ void Kspace::do_init() throw (InitFailedException)
     {
       wedge = QUARTER;
       degeneracy_factor = 4.0;
-      if (k_dim == 1)
+      if (k_space_dim == 1)
 	throw  InitFailedException("Kspace: wedge " + wedge_type + " cannot be used with 1D k-space");
     }
     else if (wedge_type == "eighth")
     {
       wedge = EIGHTH;
       degeneracy_factor = 8.0;
-      if (k_dim != 3)
+      if (k_space_dim != 3)
 	throw  InitFailedException("Kspace: wedge " + wedge_type + " can be used only with 3D k-space");
     }
     else 
@@ -426,222 +426,227 @@ void Kspace::do_init() throw (InitFailedException)
   std::vector<double> k_vector(3,0.0);
   
 
-  if (k_dim == 1)
+  switch (k_space_dim)
   {
-
-    Tensor1 vec;
-
-    if (k_basis)
-    {
-      mod_opt.get_option("k1", k_vector);
-
-      if (k_vector.size() != 3)
-        throw  InitFailedException("Kspace: k1 vector size must be equal to 3");
-
-      for (short i = 0; i < 3; i++)
-        vec(i + 1) = k_vector[i];
-    }
-    else
-    {
-    
-      //k = 2*pi/r
-      mod_opt.get_option("r1", k_vector);
-
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
-
-      for (short i = 0; i < 3; i++)  vec(i + 1) = k_vector[i];
-
-      //vec /= (Constants::bohr_radius / mesh_units); //transform real space vector in atomic units;
-
-      vec = ( M_PI * vec)/(norm(vec)*norm(vec));
-       
-    }
-
-    num_nodes[1] = 1;
-    num_nodes[2] = 1;
-
-
-    define_k_space(vec, num_nodes[0]);
-    
-  }
-  else if (k_dim == 2)
-  {
-
-    Tensor1 vec1;
-    Tensor1 vec2;
-
-
-    if (k_basis)
+    case 1:
     {
 
-      if (! mod_opt.find_option("k1") ) throw  InitFailedException("Kspace: k1 vector must be defined"); 
+      Tensor1 vec;
 
-      mod_opt.get_option("k1", k_vector);
+      if (k_basis)
+      {
+        mod_opt.get_option("k1", k_vector);
 
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: k1 vector size must be equal to 3");
+        if (k_vector.size() != 3)
+          throw  InitFailedException("Kspace: k1 vector size must be equal to 3");
 
-      for (short i = 0; i < 3; i++)  vec1(i + 1) = k_vector[i];
+        for (short i = 0; i < 3; i++)
+          vec(i + 1) = k_vector[i];
+      }
+      else
+      {
 
-      if (! mod_opt.find_option("k2") ) throw  InitFailedException("Kspace: k2 vector must be defined"); 
+        //k = 2*pi/r
+        mod_opt.get_option("r1", k_vector);
 
-      mod_opt.get_option("k2", k_vector);
-      
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: k2 vector size must be equal to 3");
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
 
-      for (short i = 0; i < 3; i++)  vec2(i + 1) = k_vector[i];
-    }
-    else
-    {
+        for (short i = 0; i < 3; i++)  vec(i + 1) = k_vector[i];
 
-      Tensor1 vec1_real;
-      Tensor1 vec2_real;
+        //vec /= (Constants::bohr_radius / mesh_units); //transform real space vector in atomic units;
 
-      mod_opt.get_option("r1", k_vector);
+        vec = ( M_PI * vec)/(norm(vec)*norm(vec));
 
-      if (k_vector.size() != 3)
-        throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
+      }
 
-      for (short i = 0; i < 3; i++)
-        vec1_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
-
-      if (! mod_opt.find_option("r2") )
-        throw  InitFailedException("Kspace: r2 vector must be defined");
-
-      mod_opt.get_option("r2", k_vector);
-      
-      if (k_vector.size() != 3)
-        throw  InitFailedException("Kspace: r2 vector size must be equal to 3");
-
-      for (short i = 0; i < 3; i++)
-        vec2_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
+      num_nodes[1] = 1;
+      num_nodes[2] = 1;
 
 
-      Tensor1 vec3_real = vectorProduct(vec1_real, vec2_real);
-      vec3_real = vec3_real/norm(vec3_real);
-
-
-      double volume = (vec1_real * vectorProduct(vec2_real, vec3_real));
-     
-
-      if (volume == 0.0) throw  InitFailedException("Kspace: r1 and r2  vectors may be collinear ");
-
-      vec1 = 2 * M_PI * vectorProduct(vec2_real, vec3_real) / volume;
-
-      vec2 = 2 * M_PI * vectorProduct(vec3_real, vec1_real) / volume;
-        
+      define_k_space(vec, num_nodes[0]);
 
     }
+    break;
 
-
-
-    num_nodes[2] = 1;
-
-    define_k_space(vec1, num_nodes[0],vec2, num_nodes[1] );
-
-
-  }
-  else if (k_dim == 3)
-  {
-    std::vector<double> k_vector;
-
-    Tensor1 vec1;
-    Tensor1 vec2;
-    Tensor1 vec3;
-
-
-    if (k_basis)
+    case 2:
     {
 
-      if (! mod_opt.find_option("k1") ) throw  InitFailedException("Kspace: k1 vector must be defined"); 
-
-      mod_opt.get_option("k1", k_vector);
-
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: k1 vector size must be equal to 3");
-    
-      for (short i = 0; i < 3; i++)  vec1(i + 1) = k_vector[i];
-      
-      if (! mod_opt.find_option("k2") ) throw  InitFailedException("Kspace: k2 vector must be defined"); 
-
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: k2 vector size must be equal to 3");
-      
-      for (short i = 0; i < 3; i++)  vec2(i + 1) = k_vector[i];
-
-      if (! mod_opt.find_option("k3") ) throw  InitFailedException("Kspace: k3 vector must be defined"); 
-
-      mod_opt.get_option("k3", k_vector);
-
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: k3 vector size must be equal to 3");
-      
-      for (short i = 0; i < 3; i++)  vec3(i + 1) = k_vector[i];
-
-    }
-    else
-    {
-      Tensor1 vec1_real;
-      Tensor1 vec2_real;
-      Tensor1 vec3_real;
+      Tensor1 vec1;
+      Tensor1 vec2;
 
 
-      if (! mod_opt.find_option("r1") ) throw  InitFailedException("Kspace: r1 vector must be defined");
- 
-      mod_opt.get_option("r1", k_vector);
+      if (k_basis)
+      {
 
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
-    
-      for (short i = 0; i < 3; i++)
-        vec1_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
-      
-      if (! mod_opt.find_option("r2") ) throw  InitFailedException("Kspace: r2 vector must be defined");
-      
-      mod_opt.get_option("r2", k_vector);
+        if (! mod_opt.find_option("k1") ) throw  InitFailedException("Kspace: k1 vector must be defined");
 
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: r2 vector size must be equal to 3");
-      
-      for (short i = 0; i < 3; i++)
-        vec2_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
+        mod_opt.get_option("k1", k_vector);
 
-      if (! mod_opt.find_option("r3") ) throw  InitFailedException("Kspace: r3 vector must be defined"); 
-      mod_opt.get_option("r3", k_vector);
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: k1 vector size must be equal to 3");
 
-      if (k_vector.size() != 3) throw  InitFailedException("Kspace: k3 vector size must be equal to 3");
-      
-      for (short i = 0; i < 3; i++)
-        vec3_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
+        for (short i = 0; i < 3; i++)  vec1(i + 1) = k_vector[i];
 
-      
-      double volume = (vec1_real * vectorProduct(vec2_real, vec3_real));
-      
-      if (volume == 0.0) throw  InitFailedException("Kspace: r1, r2,  r3  vectors may be conplanar ");
+        if (! mod_opt.find_option("k2") ) throw  InitFailedException("Kspace: k2 vector must be defined");
+
+        mod_opt.get_option("k2", k_vector);
+
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: k2 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)  vec2(i + 1) = k_vector[i];
+      }
+      else
+      {
+
+        Tensor1 vec1_real;
+        Tensor1 vec2_real;
+
+        mod_opt.get_option("r1", k_vector);
+
+        if (k_vector.size() != 3)
+          throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)
+          vec1_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
+
+        if (! mod_opt.find_option("r2") )
+          throw  InitFailedException("Kspace: r2 vector must be defined");
+
+        mod_opt.get_option("r2", k_vector);
+
+        if (k_vector.size() != 3)
+          throw  InitFailedException("Kspace: r2 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)
+          vec2_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
 
 
-      vec1 = 2.0 * M_PI *  vectorProduct(vec2_real, vec3_real)/volume;
+        Tensor1 vec3_real = vectorProduct(vec1_real, vec2_real);
+        vec3_real = vec3_real/norm(vec3_real);
 
-      vec2 = 2.0 * M_PI *  vectorProduct(vec3_real, vec1_real)/volume;
 
-      vec3 = 2.0 * M_PI *  vectorProduct(vec1_real, vec3_real)/volume;
+        double volume = (vec1_real * vectorProduct(vec2_real, vec3_real));
+
+
+        if (volume == 0.0) throw  InitFailedException("Kspace: r1 and r2  vectors may be collinear ");
+
+        vec1 = 2 * M_PI * vectorProduct(vec2_real, vec3_real) / volume;
+
+        vec2 = 2 * M_PI * vectorProduct(vec3_real, vec1_real) / volume;
+
+
+      }
+
+
+
+      num_nodes[2] = 1;
+
+      define_k_space(vec1, num_nodes[0],vec2, num_nodes[1] );
 
 
     }
-      
-    
-    define_k_space(vec1, num_nodes[0],vec2, num_nodes[1],vec3, num_nodes[2]);
-   
+    break;
+
+    case 3:
+    {
+      std::vector<double> k_vector;
+
+      Tensor1 vec1;
+      Tensor1 vec2;
+      Tensor1 vec3;
 
 
-  } 
-  else if (k_dim == 0)
-  {
-    //do nothing
-  } 
-  else
-  {
-     throw  InitFailedException("Kspace: k_space_dimension should be or 0 or  1 or 2 or 3");
+      if (k_basis)
+      {
+
+        if (! mod_opt.find_option("k1") ) throw  InitFailedException("Kspace: k1 vector must be defined");
+
+        mod_opt.get_option("k1", k_vector);
+
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: k1 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)  vec1(i + 1) = k_vector[i];
+
+        if (! mod_opt.find_option("k2") ) throw  InitFailedException("Kspace: k2 vector must be defined");
+
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: k2 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)  vec2(i + 1) = k_vector[i];
+
+        if (! mod_opt.find_option("k3") ) throw  InitFailedException("Kspace: k3 vector must be defined");
+
+        mod_opt.get_option("k3", k_vector);
+
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: k3 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)  vec3(i + 1) = k_vector[i];
+
+      }
+      else
+      {
+        Tensor1 vec1_real;
+        Tensor1 vec2_real;
+        Tensor1 vec3_real;
+
+
+        if (! mod_opt.find_option("r1") ) throw  InitFailedException("Kspace: r1 vector must be defined");
+
+        mod_opt.get_option("r1", k_vector);
+
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: r1 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)
+          vec1_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
+
+        if (! mod_opt.find_option("r2") ) throw  InitFailedException("Kspace: r2 vector must be defined");
+
+        mod_opt.get_option("r2", k_vector);
+
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: r2 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)
+          vec2_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
+
+        if (! mod_opt.find_option("r3") ) throw  InitFailedException("Kspace: r3 vector must be defined");
+        mod_opt.get_option("r3", k_vector);
+
+        if (k_vector.size() != 3) throw  InitFailedException("Kspace: k3 vector size must be equal to 3");
+
+        for (short i = 0; i < 3; i++)
+          vec3_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
+
+
+        double volume = (vec1_real * vectorProduct(vec2_real, vec3_real));
+
+        if (volume == 0.0) throw  InitFailedException("Kspace: r1, r2,  r3  vectors may be conplanar ");
+
+
+        vec1 = 2.0 * M_PI *  vectorProduct(vec2_real, vec3_real)/volume;
+
+        vec2 = 2.0 * M_PI *  vectorProduct(vec3_real, vec1_real)/volume;
+
+        vec3 = 2.0 * M_PI *  vectorProduct(vec1_real, vec3_real)/volume;
+
+
+      }
+
+
+      define_k_space(vec1, num_nodes[0],vec2, num_nodes[1],vec3, num_nodes[2]);
+
+
+
+    }
+
+    case 0:
+      break;
+
+    default:
+      throw  InitFailedException("Kspace: k_space_dimension should be or 0 or  1 or 2 or 3");
+      break;
   }
   
 
   if (k_path)
   {
-    k_dim = 1;
     define_k_path();
   }
   else
