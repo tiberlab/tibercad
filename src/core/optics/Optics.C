@@ -4,6 +4,7 @@
 #include "EigenvalueProblem.h"
 #include "SimulationInterface.h"
 #include "SimulationOptions.h"
+#include "AtomisticStructure.h"
 #include "Messages.h"
 #include "DataOutput.h"
 #include "Constants.h"
@@ -250,9 +251,9 @@ void Optics::init_k_space_integration(void)
    kopts.set_option("verbose", SimulationOptions::verbose() );
 
    // these are the real space lattice vectors, in nm
+   // NOTE: factor of 2 because in Kspace the limits are at 1/2
    RealVectorValue a(2, 0, 0), b(0, 2, 0), c(0, 0, 2);
 
-   /*
    // if there is an atomistic structure, we can take the lattice vectors from it
    // (they come in Angstrom!)
    if (get_atomistic_structure() != NULL)
@@ -262,7 +263,6 @@ void Optics::init_k_space_integration(void)
      b *= 0.1;
      c *= 0.1;
    }
-   */
 
    switch (k_dim)
    {
