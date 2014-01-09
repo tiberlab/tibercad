@@ -123,7 +123,10 @@ my $topdir = get_option("topdir");
 
 # get some repository info
 my @svninfo = (`svn info $topdir`);
-($#svninfo <= 0) && die "Is $topdir under subversion control?";
+#($#svninfo <= 0) && die "Is $topdir under subversion control?";
+if ($#svninfo <= 0) {
+  @svninfo = q('dummy' 'dummy');
+}
 my $repo = (grep(/URL/, @svninfo))[0];
 my $revision = (grep(/Revision/, @svninfo))[0];
 my $last_changed_author = (grep(/Author/, @svninfo))[0];

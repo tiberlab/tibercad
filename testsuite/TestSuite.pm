@@ -260,7 +260,13 @@ sub read_configuration($) {
          last SWITCH;
 
        /\s*topdir\s*=(.+)/ && do {
-         $options{'topdir'} = getcwd() . "/" . trim($1);
+         my $topdir = trim($1);
+         if ($topdir =~ /^\s*\/+/) {
+           $options{'topdir'} = $topdir;
+         }
+         else {
+           $options{'topdir'} = getcwd() . "/" . $topdir;
+         }
          last SWITCH;
        };
        
