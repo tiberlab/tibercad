@@ -7,6 +7,7 @@ ARCH = $(shell uname -m)
 
 CXXFLAGS = -fPIC -I . 
 
+UPTREV=248
 
 target := libuptight$(shared_libext)
 
@@ -21,7 +22,7 @@ libuptight$(shared_libext) :  .$(ARCH)/UptWrapper$(obj-suffix) libuptight_$(ARCH
 
 libuptight_$(ARCH).a: checkout
 	@echo "Update libuptight..."
-	@cd src; svn up lib_uptight; svn up api; svn up make.common; \
+	@cd src; svn -r $(UPTREV) up lib_uptight; svn -r $(UPTREV) up api; svn -r $(UPTREV) up make.common; \
 	echo "Compile libuptight..."; \
 	$(MAKE) -C api libuptight; cd ..; 
 	mv src/api/libuptight_$(ARCH).a .	
@@ -30,7 +31,7 @@ libuptight_$(ARCH).a: checkout
 	
 checkout:
 	@echo "Checkout libuptight..."
-	@if [ ! -e src/api ]; then svn co https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad/src --depth empty; fi
+	@if [ ! -e src/api ]; then svn -r $(UPTREV) co https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad/src --depth empty; fi
 	
 
 	
