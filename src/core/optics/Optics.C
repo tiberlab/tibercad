@@ -433,11 +433,14 @@ void Optics::calculate_for_k_point(const Point& k_point,
 {
 
 
-  _initial_state_model->solve_for_kpoint(k_point); //calculate eigenstates
-
-  if( _initial_state_model != _final_state_model)
+  if (!get_option("skip_solve", false))
   {
-    _final_state_model->solve_for_kpoint(k_point); //calculate eigenstates
+    _initial_state_model->solve_for_kpoint(k_point); //calculate eigenstates
+
+    if( _initial_state_model != _final_state_model)
+    {
+      _final_state_model->solve_for_kpoint(k_point); //calculate eigenstates
+    }
   }
 
   set_k_point(k_point);
