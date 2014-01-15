@@ -72,13 +72,14 @@ const TensorValue<double>& NegfModel::get_inv_mass(ID id) const
 inline
 unsigned int NegfModel::get_n_bands(void) const
 {
-  int n_bands=0;
+  int n_bands = 0;
 
   for (unsigned int i=0; i<_ham_models.size(); i++)
   {
     n_bands += _ham_models[i]->get_n_bands();
   }
 
+  return n_bands;
 }
 
 inline

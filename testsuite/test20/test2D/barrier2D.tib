@@ -74,6 +74,8 @@ Device
 
    Region well
    {
+material = InAs
+x = 0.3
      Doping {
        type = donor
        Nd = 2e18 
@@ -97,6 +99,15 @@ Device
     regions = (drain_region,oxide1,oxide2)
     length = 0.25
    }
+
+   Atomistic tb
+   {
+   reference_region = int_source
+   regions = (barrier, int_source, int_drain)
+   passivation = yes
+   print = (xyz)
+   }
+
 
 }
 
@@ -179,6 +190,30 @@ Module negf
 
 }
 
+Module elasticity
+{
+
+  name = strain
+  plot = (Strain, Stress)
+  nonlinear_strain = true
+
+  Physics
+  {
+    body_force lattice_mismatch
+    {
+      reference_material = GaAs
+    }
+
+  }
+    
+  Boundary source
+  {
+    type = clamp
+  }
+    
+}
+
+
 Module efaschroedinger
 {
   name = quantum_el
@@ -211,7 +246,7 @@ Module efaschroedinger
 Simulation
 {
   temperature = 300
-  solve = (driftdiffusion,negf,quantum_el)
+  solve = (strain, driftdiffusion,negf,quantum_el)
 
   resultpath = output
   scratchpath = /work/fpalomba/

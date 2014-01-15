@@ -383,14 +383,15 @@ Negf::do_reinit(void)
 void
 Negf::init_k_space(ModelOptions& kopts)
 {
+    double cf = 1e-10/get_mesh_units(); //conversion from Angstrom to M.U.
+    unsigned int dim = get_mesh().mesh_dimension();
+
     if (_ext_module != NULL) 
     {
     // Define k-space from cartesian lattice vectors 
       std::vector<double> vectors = _ext_module->get_atomistic_structure()->get_lattice_vectors();
       std::vector<double> r1(3,0.0);
       std::vector<double> r2(3,0.0);
-      double cf = 1e-10/get_mesh_units(); //conversion from Angstrom to M.U.
-      unsigned int dim = get_mesh().mesh_dimension();
       switch (dim)
       {
          case 1:
@@ -401,9 +402,39 @@ Negf::init_k_space(ModelOptions& kopts)
            kopts.set_option("r1",r1);  
            kopts.set_option("r2",r2);  
            break;
+
          case 2:
            r1[0] = cf*vectors[6]; r1[1] = cf*vectors[7]; r1[2] = cf*vectors[8];
            kopts.set_option("r1",r1);  
+           break;
+
+         default:
+           break;
+      }
+    }
+    else
+    {
+      // it is efa, we setup just some lattice vectors
+
+      // we use 1 nm as default k-space extension default
+      // the factor of 2 is due to the fact that the k-space limits
+      // in Kspace are 1/2
+      cf *= 20;
+      // these are the real space lattice vectors, 1 cf = 1 nm
+      RealVectorValue a(cf, 0, 0), b(0, cf, 0), c(0, 0, cf);
+      switch (dim)
+      {
+        case 2:
+          kopts.set_option("r1", c);
+          break;
+
+        case 1:
+          kopts.set_option("r1", b);
+          kopts.set_option("r2", c);
+          break;
+
+        default:
+          break;
       }
     }
 
@@ -1007,7 +1038,7 @@ Negf::ham_assemble(EquationSystems& es, const std::string& system_name)
 void
 Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 {
-  SimulationInterface* potmodel;
+  SimulationInterface* potmodel = NULL;
   ID sol_id;
 
   if (opt.pot_module != "none")
@@ -1015,10 +1046,6 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
     potmodel = SimulationInterface::find_simulation(opt.pot_module);
     if (!potmodel->is_solved() )
       throw SolveFailedException("Simulation "+opt.pot_module+" must be solved first");
-  }
-  else
-  {
-    potmodel = NULL;
   }
 
   const double newconst = 0.5 * Hartree * bohr_radius/get_mesh_units() * bohr_radius/get_mesh_units();
@@ -1032,6 +1059,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
   const unsigned int dim = mesh.mesh_dimension();
 
   DofMap& dof_map = _sys_H->get_dof_map();
+
 
   FEType fe_type = dof_map.variable_type(0);
 
@@ -1134,12 +1162,12 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
       Hr.resize(n_dofs, n_dofs);
       Sr.resize(n_dofs, n_dofs);
-      Hr.zero();
-      Sr.zero();
+      //Hr.zero(); // is done by resize()
+      //Sr.zero();
       Hi.resize(n_dofs, n_dofs);
       Si.resize(n_dofs, n_dofs);
-      Hi.zero();
-      Si.zero();
+      //Hi.zero();
+      //Si.zero();
 
       for (unsigned int qp=0; qp<q_point.size(); qp++)
         for (unsigned int i=0; i<phi.size(); i++)

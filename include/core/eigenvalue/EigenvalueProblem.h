@@ -197,7 +197,7 @@ class EigenvalueProblem : public SimulationInterface
     //!pointer to the real part of S matrix 
     SparseMatrix<double>* _S_imag;
 
-    bool do_dispersion;
+    //bool do_dispersion;
 
     std::vector< std::vector<double> > _dispersion;
 
@@ -243,7 +243,7 @@ EigenvalueProblem::EigenvalueProblem(const ModelOptions& options)
 {
   _k_vector[0]=0.0;   _k_vector[1]=0.0;   _k_vector[2]=0.0; 
   _kspace = NULL;
-  do_dispersion = false;
+  //do_dispersion = false;
   //disp_range[0]=0;
   //disp_range[1]=0;
 }

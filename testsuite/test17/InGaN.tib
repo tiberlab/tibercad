@@ -56,6 +56,9 @@ Device
 	  reference_region = barrier_left
 	  regions = Quantum 
 	  passivation = yes
+          random_alloy = true
+          y_length = 5
+          z_length = 5
 	  print = (xyb, xyz, gen, tgn)
 	}
 
@@ -76,18 +79,13 @@ Module empirical_tb
   sparse_format = full   
 
   projection_length = 1.0
-  dangling_bond_scaling = 1.0
-  dangling_bond_onsite = -5.0
 
   plot = (tbstates, ProbabilityDensity)
   jmol_output_format = cube
 
-  #assemble_hamiltonian = false 
 
   Solver
   {
-    #load_states = true 
-    #load_path = output3
     num_valence_eigenvalues = 2 
     num_conduction_eigenvalues = 2 
     long_tolerance = 1e-6
@@ -106,8 +104,8 @@ Module opticstb
   final_state_model = tb
 
 
-  Emin = 3.0
-  Emax  = 5.0
+  Emin = 2.0
+  Emax  = 4.0
   dE = 0.001
 
 }
@@ -129,7 +127,7 @@ shape_iteration = 1
    body_force lattice_mismatch
    {
      
-    material = GaN
+    reference_material = GaN
 
     structure = wz
     x-growth-direction = (0,0,0,1)
@@ -143,42 +141,6 @@ shape_iteration = 1
   Contact cathode{type = clamp}
 
 }
-
-
-
-#Module  macrostrain
-#{
-
-#  name = strain
-#  regions = all
-
-#  plot = (Strain, PiezoPolarization)
-
-#  number_shape_steps = 1  #  for  atom displacement  calculation
-#  strain_atomistic_structure = tb  # tb1 = atomistic_structure
-#  internal_strain_correction = true 
-
-#  Boundary   cathode
-#  {
-#    type = substrate
-#    material = GaN
-
-#    structure = wz
-#    x-growth-direction = (0,0,0,1)
-#    y-growth-direction = (1,0,-1,0)
-#    z-growth-direction = (-1,2,-1,0)
-#  }
-
-#  Solver
-#  {
-    #  xmonitor = true
-#  }
-    
-#} #endmacrostrain
-
-
-
-
 
 
 Module driftdiffusion
@@ -200,7 +162,6 @@ Module driftdiffusion
 
      strain_simulation = strain
 
-     use_density_predictor = true
      background_conductivity = 1e-6
 
 
@@ -209,7 +170,7 @@ Module driftdiffusion
 
      recombination  direct
      { 
-        C = 1.1e-8
+        C = 1.1e-10
      }
 
     mobility
@@ -294,10 +255,8 @@ Simulation
 {
   verbose = 4
   temperature = 300
-  #searchpath = /home/mlopez/Desktop/materials
 
-  solve = strain
-  #solve = (strain,driftdiffusion,tb,spectrum)
+  solve = (strain,driftdiffusion,tb,spectrum)
 
   resultpath =  output
   output_format = grace

@@ -9,7 +9,8 @@ Device
   Region well
   {
     mesh_regions = 1
-    material = GaAs
+    material = InGaAs
+    x = 0.3
 
     Doping {
       Nd = 1e15
@@ -66,6 +67,7 @@ Module elasticity
 
   name = str
   plot = (Strain, Stress)
+  #nonlinear_strain = true
 
   Physics
   {

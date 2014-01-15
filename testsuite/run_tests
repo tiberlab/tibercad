@@ -173,6 +173,9 @@ foreach (@tests) {
   my $result = run_test($dir);
   check($result);
   $checklist{$dir} = $result;
+  if ($result) {
+    print "Test ",$dir," failed.\n";
+  }
 
   if (($purge > 1) || ($purge && not $result)) {
     cleanup_test_dir($dir);
@@ -210,6 +213,7 @@ if ($failure_detected and $sendmail) {
     'message' => $msg);
   send_email(\%message);
 }
+
 
 
 $datetime = localtime;

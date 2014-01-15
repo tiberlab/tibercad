@@ -184,16 +184,15 @@ AtomisticGenerator::do_init()
   // iterates on _super_basis and assign species
   assign_species();
 
-  if (_as->is_random_alloy())
-    build_random_alloy();
-
-
   if (_as->get_options().get_option("passivation", false))
     passivate();
 
   delete _bondmap;  _bondmap=NULL;
 
   remove_atoms();
+
+  if (_as->is_random_alloy())
+    build_random_alloy();
 
 };
 
@@ -289,7 +288,6 @@ AtomisticGenerator::assign_elements(const std::set<ID>& reg_ids)
     prog.progress_message(progress);
 
   }
-  std::cout << std::endl;
 }
 
 
@@ -405,8 +403,6 @@ AtomisticGenerator::assign_species(void)
     prog.progress_message(progress_counter);
   }
 
-  std::cout << std::endl;
-
 
 }
 
@@ -442,7 +438,7 @@ AtomisticGenerator::build_random_alloy()
   Messages::newline();
   Messages::info("Building random alloy ...");
 
-  if (_bondmap == NULL) bond_map_gen(_super_basis);
+  if (_bondmap == NULL) bond_map_gen(_structure_basis);
 
   Messages m;
   m.indent();
@@ -463,11 +459,9 @@ AtomisticGenerator::build_random_alloy()
   bool fix_mean_alloy_concentration =
       _as->get_options().get_option("fix_mean_alloy_concentration", true);
 
-  Messages::debug("Running build_random_alloy()");
-
   // By default in VCA the specie assigned is the one of parent A
   // so we first swap all atoms and then change back to species A
-  // I do this because otherwise then the rest of the code becomes
+  // I do this because then the rest of the code becomes
   // more intuitive.
 
   for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
@@ -543,6 +537,7 @@ AtomisticGenerator::build_random_alloy()
       *(std::max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1, 0);
   std::vector<int> num_substituted(num_to_substitute.size(), 0);
 
+
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
   {
     Atom& atm = _structure_basis[i];
@@ -597,21 +592,21 @@ AtomisticGenerator::build_random_alloy()
   // of atoms.
   //
 
-  std::tr1::uniform_int<size_t> random(0, _super_basis.size() - 1);
+  std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
 
   // this we need for the substitution probability
   std::tr1::uniform_real<double> random2;
 
   size_t ctr = 0;
   size_t id = 0;
-  for (; (!not_finished.empty() && (ctr < _super_basis.size())); ++ctr)
+  for (; !not_finished.empty(); ++ctr)
   {
     if (fix_mean_alloy_concentration)
       id = random(generator);
     else
       id = ctr;
 
-    Atom& atm = _super_basis[id];
+    Atom& atm = _structure_basis[id];
     if (atm.belong_to_structure && (atm.get_label() == 1))
     {
       ID regid = atm.get_region_ID();
@@ -620,6 +615,7 @@ AtomisticGenerator::build_random_alloy()
         // NOTE: random numbers may repeat, so we have to check if this atom
         // has already been substituted!!
         Specie sp(assignA[regid][atm.get_label()]);
+
         if (atm.get_specie() != sp)
         {
           double prob = 1.0;
@@ -698,7 +694,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
       {
         n_neigh++;
         visited.insert(nn[j]);
-        if (_super_basis[nn[j]].get_specie() == sp)
+        if (_structure_basis[nn[j]].get_specie() == sp)
           same_species += 1;
 
         const std::vector<unsigned int>& nn2 = bm[neigh[j]];
@@ -711,7 +707,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
             {
               n_neigh++;
               visited.insert(nn[jj]);
-              if (_super_basis[nn[jj]].get_specie() == sp)
+              if (_structure_basis[nn[jj]].get_specie() == sp)
                 same_species++;
             }
           }
@@ -1000,7 +996,9 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   //os.str(std::string());
   //---------------------------------------------------------------------------
 
+  using namespace std;
   Messages::info("Building Bond Map...");
+  cerr << setw(12) << _period << endl;
   _bondmap->do_solve(basis, _period);
   Messages::info("Bond Map completed");
 
