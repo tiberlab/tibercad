@@ -3,6 +3,8 @@
 #include "Constants.h"
 #include "Messages.h"
 
+#include <mesh_modification.h>
+
 using namespace std;
 
 //------------------------------------------------------------------------------//
@@ -113,6 +115,10 @@ void Kspace::build_k_grid()
     // to restrict the extension of the k-space
     double k_max = mod_opt.get_option("k_max", 1.0);
 
+    // NOTE: build cube produces a mesh along x for 1D and on
+    //       x-y plane for 2D, but 1D k-space is along z and 2D one
+    //       is on y-z plane, so we rotate the mesh after its creation
+
     MeshTools::Generation::build_cube (*kmesh, 
 				       num_nodes[0] - 1,
 				       num_nodes[1] - 1,
@@ -121,6 +127,20 @@ void Kspace::build_k_grid()
 				       kmin[1] * k_max, kmax[1] * k_max,
 				       kmin[2] * k_max, kmax[2] * k_max,
 				       type);
+
+    switch (k_dim)
+    {
+      case 2:
+        MeshTools::Modification::rotate(*kmesh, 90, 90, 0);
+        break;
+
+      case 1:
+        MeshTools::Modification::rotate(*kmesh, 0, 90, 90);
+        break;
+
+      default:
+        break;
+    }
 
   
   }
@@ -137,6 +157,7 @@ void Kspace::build_k_grid()
 void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 {
 
+  // k_vector is along z
 
   double norm_k = 0.5;
 
@@ -172,9 +193,9 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
       
       for (short i = 1; i < 4; i++)
 	{
-	  transform_matrix(i,1) = basis1(i);
-	  transform_matrix(i,2) = basis2(i);
-	  transform_matrix(i,3) = basis3(i);
+	  transform_matrix(i,1) = basis2(i);
+	  transform_matrix(i,2) = basis3(i);
+	  transform_matrix(i,3) = basis1(i);
 	}
       
     }
@@ -190,6 +211,7 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
 //-----------------------------------------------------------------------------//
 void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2, unsigned int m)
 {
+  // 1 -> y, 2 -> z
 
   double norm_k1 = 0.5;
   double norm_k2 = 0.5;
@@ -226,19 +248,19 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
 
   kmin[2] = 0.0; kmax[2] = 0.0;
   
-  Tensor1 basis1 = k_vector1;
-  Tensor1 basis2 = k_vector2;
-  Tensor1 basis3 = vectorProduct(basis1, basis2);
+  Tensor1 basis1 = k_vector1;  // y
+  Tensor1 basis2 = k_vector2;  // z
+  Tensor1 basis3 = vectorProduct(basis1, basis2);  // x
 
 
   for (short i = 1; i < 4; i++)
   {
-    transform_matrix(i,1) = basis1(i);
-    transform_matrix(i,2) = basis2(i);
-    transform_matrix(i,3) = basis3(i);
+    transform_matrix(i,1) = basis3(i);
+    transform_matrix(i,2) = basis1(i);
+    transform_matrix(i,3) = basis2(i);
   }
 
-  //cerr << setw(12) << transform_matrix << endl;
+  cerr << setw(12) << transform_matrix << endl;
 
   //  k_dim = 2;
 
@@ -430,6 +452,7 @@ void Kspace::do_init() throw (InitFailedException)
   {
     case 1:
     {
+      // 1D BZ is along z
 
       Tensor1 vec;
 
@@ -455,7 +478,7 @@ void Kspace::do_init() throw (InitFailedException)
 
         //vec /= (Constants::bohr_radius / mesh_units); //transform real space vector in atomic units;
 
-        vec = ( M_PI * vec)/(norm(vec)*norm(vec));
+        vec = (2 * M_PI * vec)/(norm(vec)*norm(vec));
 
       }
 
@@ -470,6 +493,7 @@ void Kspace::do_init() throw (InitFailedException)
 
     case 2:
     {
+      // 2D BZ is on y-z plane
 
       Tensor1 vec1;
       Tensor1 vec2;
@@ -532,7 +556,6 @@ void Kspace::do_init() throw (InitFailedException)
         vec1 = 2 * M_PI * vectorProduct(vec2_real, vec3_real) / volume;
 
         vec2 = 2 * M_PI * vectorProduct(vec3_real, vec1_real) / volume;
-
 
       }
 

@@ -187,7 +187,8 @@ AtomisticGenerator::do_init()
   if (_as->get_options().get_option("passivation", false))
     passivate();
 
-  delete _bondmap;  _bondmap=NULL;
+  delete _bondmap;
+  _bondmap = NULL;
 
   remove_atoms();
 
@@ -541,6 +542,9 @@ AtomisticGenerator::build_random_alloy()
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
   {
     Atom& atm = _structure_basis[i];
+
+    if (atm.get_specie() == Specie::H)
+      continue;
 
     // if it is flagged as first atom in the basis it may be substituted
     if (atm.belong_to_structure && (atm.get_label() == 1))
@@ -996,9 +1000,7 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   //os.str(std::string());
   //---------------------------------------------------------------------------
 
-  using namespace std;
   Messages::info("Building Bond Map...");
-  cerr << setw(12) << _period << endl;
   _bondmap->do_solve(basis, _period);
   Messages::info("Bond Map completed");
 
