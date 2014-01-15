@@ -75,11 +75,12 @@ Utils::Progress::Progress(const string message, const unsigned int max_size)
   _progress_size = max_size;
   _progress_step = (max_size > 100) ? max_size*2 : 100;
  
-  cout << _message<<" progress   0% ..." << flush;
+  cout << _message << " progress   0% ..." << flush;
 }
 
 Utils::Progress::~Progress(void)
 {
+  cout << "\n";
 }
 
 void
