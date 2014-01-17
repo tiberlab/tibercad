@@ -372,7 +372,29 @@ Device::setup_atomistic_structures(void)
   const ModelOptions::const_submodel_iterator end(_options.submodels_end("Atomistic"));
   for ( ; it != end; ++it)
   {
-    const ModelOptions& data = it->second;
+    ModelOptions data(it->second);
+    // The default material is Si
+    string material = _options.get_option("material", "Si");
+    material = data.get_option("reference_material", material);
+    string x_frac = _options.get_option("x", "0.5");
+    string xdir = _options.get_option("x-growth-direction", "");
+    string ydir = _options.get_option("y-growth-direction", "");
+    string zdir = _options.get_option("z-growth-direction", "");
+
+    ModelOptions refopts;
+    refopts.set_name(material);
+    refopts["x"] = x_frac;
+    xdir = refopts.get_option("x-growth-direction", xdir);
+    ydir = refopts.get_option("y-growth-direction", ydir);
+    zdir = refopts.get_option("z-growth-direction", zdir);
+
+    ModelOptions::submodel_iterator it(data.submodels_begin("reference_material"));
+    if (it != data.submodels_end("reference_material"))
+    {
+      refopts += it->second;
+      data.delete_submodels("reference_material");
+    }
+    data.add_submodel("reference_material", refopts);
 
     const string& st_name = data.get_name();
 

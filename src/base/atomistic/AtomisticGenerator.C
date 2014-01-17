@@ -106,11 +106,28 @@ AtomisticGenerator::init_commons()
   std::string ref_region;
   ref_region = _as->get_options().get_option("reference_region", "None");
   _as->get_device()->get_active_region_ids(ref_region, ids);
-  if (ids.size() == 0)
-    throw InitFailedException("Reference region badly defined for structure " +  _as->get_name() );
+  if (ids.size() != 0)
+  {
+    _reference_region_id = *ids.begin();
+    _reference_material = _as->get_device()->get_material(*ids.begin());
+  }
+  else
+  {
+    ModelOptions::const_submodel_iterator it =
+        _as->get_options().submodels_begin("reference_material");
+    if (it != _as->get_options().submodels_end("reference_material"))
+    {
+      const ModelOptions& refmat_opts = it->second;
+      Material* refmat = Material::create(refmat_opts.get_name(), refmat_opts);
+      refmat->init();
+      _reference_material = refmat;
+    }
+    _reference_region_id = *(_as->get_IDset().begin());
+  }
 
-  _reference_region_id = *ids.begin();
-  _reference_material = _as->get_device()->get_material(*ids.begin());
+  if (_reference_material == NULL)
+    throw InitFailedException("Reference region/material badly "
+        "defined for structure " + _as->get_name() );
 
   //Build the right BulkCrystal object
   //Additional options respect to the region should be specified here
