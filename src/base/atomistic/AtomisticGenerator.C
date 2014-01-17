@@ -788,27 +788,6 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
 
   lmat(1,1) = (n1 + 1); lmat(2,2) = (n2 + 1); lmat(3,3) = (n3 +1);
 
-  // Periodicity along x or y or z direction is set to a big value 
-  // (ten times structure lenght) (non periodic along x)
-  // according to dimensionality of the system
-
-  if (_dim == 1) lmat(1,1) = (n1 + 1) * 10;
-  if (_dim == 2) {lmat(1,1) = (n1 + 1) * 10; lmat(2,2) = (n2 + 1) * 10;}
-  if (_dim == 3) {lmat(1,1) = (n1 + 1) * 10; lmat(2,2) = (n2 + 1) * 10; lmat(3,3) = (n3 +1) * 10;}
-
-  //----------------------------------------------------
-  //os << "_conv_vect is "
-  //<< _conv_vect(1,1)<<" "<< _conv_vect(2,2)<<" "<< _conv_vect(3,3) << std::endl;
-  //Messages::info(os.str());
-  //os.str(std::string());
-
-  //os << "lmat is "
-  //<< lmat(1,1)<<" "<< lmat(2,2)<<" "<< lmat(3,3) << std::endl;
-  //Messages::info(os.str());
-
-  //----------------------------------------------------
-
-
   _period = _conv_vect * lmat;
 
   //----------------------------------------------------
@@ -862,7 +841,8 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
 
         //        }
 
-        do{
+        do
+        {
           //Assign lattice point position
           lattice_point(1) = (*conv_iterator)(1) + (i * _conv_vect(1,1)) 
                                                  + (j * _conv_vect(1,2)) 
@@ -878,19 +858,22 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
           _super_lattice.push_back(lattice_point + _local_origin);
           basis_iterator = basis.begin();
 
-          do{
+          do
+          {
             basis_atom = (*basis_iterator);
             basis_atom.set_position ( _local_origin + lattice_point +
                 (*basis_iterator).get_ttype_position() );
             _super_basis.push_back(basis_atom);
             ++basis_iterator;
 
-          }while(basis_iterator != basis.end());
+          }
+          while(basis_iterator != basis.end());
 
 
           conv_iterator++;
 
-        }while(conv_iterator != _conv_lattice_basis.end());
+        }
+        while(conv_iterator != _conv_lattice_basis.end());
         
       };
     };
@@ -1017,8 +1000,34 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   //os.str(std::string());
   //---------------------------------------------------------------------------
 
+  // Increase periodicity in non-periodic directions
+  Tensor2Gen periods(0);
+
+  periods(1,1) = 1;
+  periods(2,2) = 1;
+  periods(3,3) = 1;
+
+  if (_as->get_options().get_option("periodic", false))
+  {
+    switch (_dim)
+    {
+      case 3:
+        periods(3,3) *= 10;
+
+      case 2:
+        periods(2,2) *= 10;
+
+      case 1:
+        periods(1,1) *= 10;
+
+      default:
+        break;
+    }
+  }
+
+
   Messages::info("Building Bond Map...");
-  _bondmap->do_solve(basis, _period);
+  _bondmap->do_solve(basis, _period * periods);
   Messages::info("Bond Map completed");
 
 };
