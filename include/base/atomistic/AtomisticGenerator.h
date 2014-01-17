@@ -122,7 +122,7 @@ protected:
   const Material* _reference_material;
 
   //! Database of reference material
-  Database _reference_material_db;
+  //Database _reference_material_db;
 
   // Missing super_conv (vector of conventional cells edges).
   //If it will be needed remember to uncomment proper lines in make_supercell!!!!!!!!!!!!!!!!

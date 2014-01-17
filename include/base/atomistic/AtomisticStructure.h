@@ -217,7 +217,7 @@ private:
   Material* _reference_material;
 
   //! Database of reference material
-  Database _reference_material_db;
+  //Database _reference_material_db;
 
   //!Number of atoms excluding hydrogens
   unsigned int _N_without_H;

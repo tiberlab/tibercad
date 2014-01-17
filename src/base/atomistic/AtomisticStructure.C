@@ -129,7 +129,7 @@ AtomisticStructure::init(const std::string& name,
   _clustering = _options.get_option("clustering", false);
 
 
-  if (_options.find_option("load_structure")||_options.find_option("load"))
+  if (_options.find_option("load_structure") || _options.find_option("load"))
     {
       std::string filename;
 
@@ -167,19 +167,13 @@ AtomisticStructure::init(const std::string& name,
       print_driver();
 
     }
-  // Build material representation
-  //else if ( (_options.find_option("reference_region"))
-  //    && (! _options.find_option("regions")) )
-  //{
-
-  //}
-
-  // Build mesh based representation
-  else if ( (_options.find_option("reference_region"))
-      && ( _options.find_option("regions")) )
+  else if (_options.find_option("regions"))
     {
+    // Build mesh based representation
       Utils::Timer tt;
       tt.reset();
+      Messages m;
+      m.indent();
       init_mesh_structure();
       Messages::info("Output structure(s)");
       print_driver();
@@ -191,7 +185,7 @@ AtomisticStructure::init(const std::string& name,
     {
       //------------------------------------------------------------
       os << "Error in Atomistic structure " << _name <<
-          "input block. You need to define reference_region and regions." << std::endl;
+          "input block. You need to define regions or load from file." << std::endl;
       Messages::info(os.str(), true);
       os.str(std::string());
       //---------------------------------------------------------------

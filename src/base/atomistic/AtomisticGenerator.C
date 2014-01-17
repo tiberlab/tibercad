@@ -96,15 +96,15 @@ AtomisticGenerator::init_commons()
   scale = _as->get_scale();
   // Set material informations
   //-----------------------------------------------------------------------------------------
-  if (!(_as->get_options().find_option("reference_region")))
-  {
-    os << "No material could be set: reference_region is mandatory " 
-       <<  "in Atomistic section when no structure path is specified " << std::endl;
-    Messages::warning(os.str());
-  }
+  //if (!(_as->get_options().find_option("reference_region")))
+  //{
+  //  os << "No material could be set: reference_region is mandatory "
+  //     <<  "in Atomistic section when no structure path is specified " << std::endl;
+  //  Messages::warning(os.str());
+  //}
   std::set<ID> ids;
   std::string ref_region;
-  ref_region = _as->get_options().get_option("reference_region", "None");
+  ref_region = _as->get_options().get_option("reference_region", "");
   _as->get_device()->get_active_region_ids(ref_region, ids);
   if (ids.size() != 0)
   {

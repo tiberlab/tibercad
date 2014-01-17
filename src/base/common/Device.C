@@ -384,9 +384,17 @@ Device::setup_atomistic_structures(void)
     ModelOptions refopts;
     refopts.set_name(material);
     refopts["x"] = x_frac;
+    refopts.set_option("dimension", get_mesh().mesh_dimension());
+
     xdir = refopts.get_option("x-growth-direction", xdir);
+    if (!xdir.empty())
+      refopts["x-growth-direction"] = xdir;
     ydir = refopts.get_option("y-growth-direction", ydir);
+    if (!ydir.empty())
+      refopts["y-growth-direction"] = ydir;
     zdir = refopts.get_option("z-growth-direction", zdir);
+    if (!zdir.empty())
+      refopts["z-growth-direction"] = zdir;
 
     ModelOptions::submodel_iterator it(data.submodels_begin("reference_material"));
     if (it != data.submodels_end("reference_material"))
