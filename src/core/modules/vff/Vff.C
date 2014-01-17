@@ -190,7 +190,20 @@ Vff::displace_atoms(void)
   get_coords().resize(0);
   _dof.resize(0);
 
-  get_atomistic_structure()->print_structure("strained_vff.xyz");
+}
+
+void
+Vff::plot_globaldata()
+{
+  if (plot_solution("xyz"))
+  {  
+     get_atomistic_structure()->print_structure("strained_vff.xyz");
+  }
+
+  if (plot_solution("tgn"))
+  {  
+     get_atomistic_structure()->print_structure("strained_vff.tgn");
+  }
 }
 
 void

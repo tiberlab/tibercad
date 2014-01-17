@@ -130,7 +130,10 @@ public:
   void lanczos_diag (int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                      int min_iter, int long_iter, int max_iter, 
                      double fast_tol, double long_tol, double ort_tol,
-		     int twice_cb, int twice_vb, int dynamic);
+		                 int twice_cb, int twice_vb, int dynamic);
+
+  // Solver flag. currently 0: CPU solver; 1: GPU; 2: GPU-split version 
+  void set_solver_flag(int flag);
 
   void set_num_states(int n_vb, int n_cb);
 

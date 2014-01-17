@@ -76,6 +76,8 @@ protected:
   // ! Print some useful information
   //virtual void do_print_info(void){};
 
+  //! Print some useful information
+  virtual void plot_globaldata(void);
 
   //! We need to create a physical model
   virtual PhysicalModel* create_bulk_model(const ModelOptions& options,

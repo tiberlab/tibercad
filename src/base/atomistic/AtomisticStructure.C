@@ -727,7 +727,7 @@ AtomisticStructure::read_tgn(const std::string& path)
       line_string.clear();
       line_string.str(line);
 
-      // First value is ignored (just atoms enumeration)
+      // First value is ignored (contains physical region) 
       line_string >> record;
       line_string >> record;
       n_specie = atoi(record.c_str());
@@ -799,6 +799,22 @@ AtomisticStructure::print_tgn(const std::string& path) const
   std::string outdir = TiberCad::get_output_dir();
   std::string file_name = outdir + "/" + path;
 
+  //I must build a materials map
+  std::map<const Material*, unsigned int> material_map;
+
+  std::set<ID>::iterator ID_it;
+
+  unsigned int id = 1;
+  const Material* mat = NULL;
+
+  for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ID_it ++)
+    {
+      mat = _device->get_material(*ID_it);
+      material_map.insert(std::pair<const Material*, unsigned int>(mat, id));
+      id++;
+    }
+
+  //Standard gen section (modified with material index)
   // --------------------------------------------
   file.open(file_name.c_str());
       
@@ -819,7 +835,17 @@ AtomisticStructure::print_tgn(const std::string& path) const
             {
               if ( _atom_types[n_specie] == _atoms[i].get_specie() ) break;
             }
-          file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
+          
+          if (_atoms[i].get_specie() ==  Specie::H)
+            {
+              file << material_map[_device->get_material(_atoms[get_bond_map()[i][0]].get_region_ID()) ];
+            }
+          else
+            {
+              file << material_map[ (_device->get_material(_atoms[i].get_region_ID())) ];
+            }
+
+          file << std::setw(5) << n_specie + 1
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(0))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(1))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(2)) ;

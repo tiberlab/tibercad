@@ -290,9 +290,11 @@ void ETB::do_reinit(void)
 		   _upt_options.relat_flag, _upt_options.potential_flag,
 		   _upt_options.opt_flag, _upt_options.poldir,
 		   _upt_options.c_axis, _upt_options.check_bondmap,
-                   _upt_options.dg_scale, _upt_options.dg_onsite,
-                   _upt_options.hybrid_passivation);
-  
+       _upt_options.dg_scale, _upt_options.dg_onsite,
+       _upt_options.hybrid_passivation);
+ 
+  std::cout << "(ETB) set solver flag "<< _upt_solver_options.solver_flag << std::endl;
+  inst->set_solver_flag(_upt_solver_options.solver_flag); 
 	  
   inst->set_output((int) _upt_options.out_format, _upt_options.grid_step);
 
@@ -838,6 +840,10 @@ void ETB::parse_options(void)
  
   // Solver options: "upt_lanczos"  
   _upt_solver_options.solver = solopts.get_option("solver", "upt_lanczos");
+  std::string solver_type = solopts.get_option("solver_type", "cpu");
+  if ( solver_type == "cpu") _upt_solver_options.solver_flag = 0;
+  if ( solver_type == "gpu") _upt_solver_options.solver_flag = 1;
+  if ( solver_type == "gpu-split") _upt_solver_options.solver_flag = 2;
 
   _upt_solver_options.n_vb =  solopts.get_option("num_valence_eigenvalues", 0);
   if( _upt_solver_options.n_vb == 0) {

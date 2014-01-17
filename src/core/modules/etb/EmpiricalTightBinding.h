@@ -89,6 +89,7 @@ class ETB : public TightBinding
     int twice_cb;
     bool read_states;
     int dynamic;
+    int solver_flag;
   };
 
   //! Constructor

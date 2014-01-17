@@ -7,7 +7,7 @@ ARCH = $(shell uname -m)
 
 CXXFLAGS = -fPIC -I . 
 
-UPTREV=248
+UPTREV=HEAD
 
 target := libuptight$(shared_libext)
 
@@ -19,6 +19,8 @@ libuptight$(shared_libext) :  .$(ARCH)/UptWrapper$(obj-suffix) libuptight_$(ARCH
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L. libuptight_$(ARCH).a \
 		-Wl,-Bdynamic
+	
+.$(ARCH)/UptWrapper$(obj-suffix) : libuptight_$(ARCH).a 
 
 libuptight_$(ARCH).a: checkout
 	@echo "Update libuptight..."

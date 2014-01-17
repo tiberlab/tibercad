@@ -59,6 +59,11 @@ void UptWrapper::fill_param(int verbose_lev, char *databasePath, char *workPath,
 
 }
 
+void UptWrapper::set_solver_flag(int flag)
+{ 
+  f77_upt_solver_flag(_handler, flag);
+}
+
 //! set output wavefunction parameters
 void UptWrapper::set_output(int format, double step)
 {

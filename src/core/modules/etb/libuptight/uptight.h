@@ -288,6 +288,17 @@ inline void f77_upt_lanczosdiag (f77_int const* handler, f77_int const& st_vb,
 }
 
 
+extern "C" void upt_solver_flag_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_upt_solver_flag:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: flag
+inline void f77_upt_solver_flag (f77_int const* handler, f77_int const& flag)
+{
+  upt_solver_flag_ (handler, flag);
+}
+
+
 extern "C" void upt_feastsolver_ (f77_int const*, f77_double const&, f77_double 
     const&, f77_int const&);
 
