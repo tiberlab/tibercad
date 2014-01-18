@@ -561,6 +561,7 @@ AtomisticGenerator::build_random_alloy()
   {
     Atom& atm = _structure_basis[i];
 
+    // we skip passivation atoms
     if (atm.get_specie() == Specie::H)
       continue;
 
@@ -586,7 +587,7 @@ AtomisticGenerator::build_random_alloy()
     if (num_to_substitute[i] > 0)
     {
       // if we want to fix the number of atmos to be substituted,
-      // we calculated this number now
+      // we calculate this number now
       if (fix_mean_alloy_concentration)
       {
         double x = a_to_b_prob[i];
@@ -596,7 +597,9 @@ AtomisticGenerator::build_random_alloy()
         num_to_substitute[i] = std::floor(x * num_to_substitute[i]);
         std::ostringstream os;
         os << "Region " << i << ": x = " << x << " -> " << num_to_substitute[i] <<
-            " atoms out of " << n_tot << " to be substituted" << std::endl;
+            " atoms out of " << n_tot << " to be substituted (x_eff = " <<
+            std::setprecision(3) <<
+            static_cast<float>(num_to_substitute[i]) / n_tot << ")" << std::endl;
         Messages::info(os.str());
       }
 
@@ -607,7 +610,7 @@ AtomisticGenerator::build_random_alloy()
 
 
   //
-  // Now we extract random numbers between 0 and _super_basis.size() - 1
+  // Now we extract random numbers between 0 and _structure_basis.size() - 1
   // to randomly pick an atom. If it is flagged as 1, and is in a region where
   // atoms need to be substituted, and is not already substituted it will be changed.
   // This is repeated until in all regions we have substituted the required number
@@ -629,7 +632,9 @@ AtomisticGenerator::build_random_alloy()
 
     Atom& atm = _structure_basis[id];
 
-    if (atm.belong_to_structure && (atm.get_label() == 1) && (atm.get_specie()!=Specie::H) )
+    if (atm.belong_to_structure &&
+        (atm.get_label() == 1) &&
+        (atm.get_specie() != Specie::H))
     {
       ID regid = atm.get_region_ID();
 
@@ -637,7 +642,6 @@ AtomisticGenerator::build_random_alloy()
       {
         // NOTE: random numbers may repeat, so we have to check if this atom
         // has already been substituted!!
-        Messages::info("assign specie sp");
         Specie sp(assignA[regid][atm.get_label()]);
 
         if (atm.get_specie() != sp)
@@ -684,10 +688,6 @@ AtomisticGenerator::build_random_alloy()
   }
   else
   {
-    std::ostringstream os;
-    os << "Num substituted: " << num_substituted.size() << std::endl;
-    Messages::info(os.str());
-
     for (int i = 0; i < num_substituted.size(); ++i)
     {
       if (num_to_substitute[i] > 0)
@@ -792,12 +792,16 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   _conv_cells_supercell_lenght[1] = n2 + 1;
   _conv_cells_supercell_lenght[2] = n3 + 1;
 
-  l1 = (n1 + 1) * conv_l1; l2 = (n2 +1) * conv_l2; l3 = (n3 + 1) * conv_l3;
+  l1 = (n1 + 1) * conv_l1;
+  l2 = (n2 + 1) * conv_l2;
+  l3 = (n3 + 1) * conv_l3;
 
   //Set supercell periodical vectors
   Tensor2Gen lmat(0);
 
-  lmat(1,1) = (n1 + 1); lmat(2,2) = (n2 + 1); lmat(3,3) = (n3 +1);
+  lmat(1,1) = (n1 + 1);
+  lmat(2,2) = (n2 + 1);
+  lmat(3,3) = (n3 + 1);
 
   _period = _conv_vect * lmat;
 
