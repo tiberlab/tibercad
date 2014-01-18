@@ -316,8 +316,6 @@ AtomisticStructure::init_mesh_structure()
   // Extend mesh for contacts 
   //unsigned int num_sides;
   //Point normal = Device::get_normal();
-
-
   //---------------------------------------------------------------
 
   AtomisticGenerator* generator 

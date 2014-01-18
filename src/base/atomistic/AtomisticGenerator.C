@@ -190,8 +190,6 @@ AtomisticGenerator::do_init()
   std::string preserve;
   preserve = _as->get_options().get_option("preserve", "none");
  
-  //cut_and_change_specie(preserve);
-
   // assign the right element to each atom
   assign_elements(_as->get_IDset());
   
@@ -204,13 +202,16 @@ AtomisticGenerator::do_init()
   if (_as->get_options().get_option("passivation", false))
     passivate();
 
-  delete _bondmap;
-  _bondmap = NULL;
-
+  // remove unflagged atoms
   remove_atoms();
 
+  // assign random-alloy species (only cations for the moment)
   if (_as->is_random_alloy())
     build_random_alloy();
+
+  // delete generator bondmap
+  delete _bondmap;
+  _bondmap = NULL;
 
 };
 
@@ -577,7 +578,7 @@ AtomisticGenerator::build_random_alloy()
     }
   }
 
-  // this set is used to check if we have to do something
+  // this set is used to check if we have to do something in a region
   std::set<ID> not_finished;
 
   for (int i = 0; i < num_to_substitute.size(); ++i)
@@ -612,7 +613,6 @@ AtomisticGenerator::build_random_alloy()
   // This is repeated until in all regions we have substituted the required number
   // of atoms.
   //
-
   std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
 
   // this we need for the substitution probability
@@ -628,13 +628,16 @@ AtomisticGenerator::build_random_alloy()
       id = ctr;
 
     Atom& atm = _structure_basis[id];
-    if (atm.belong_to_structure && (atm.get_label() == 1))
+
+    if (atm.belong_to_structure && (atm.get_label() == 1) && (atm.get_specie()!=Specie::H) )
     {
       ID regid = atm.get_region_ID();
+
       if (num_substituted[regid] < num_to_substitute[regid])
       {
         // NOTE: random numbers may repeat, so we have to check if this atom
         // has already been substituted!!
+        Messages::info("assign specie sp");
         Specie sp(assignA[regid][atm.get_label()]);
 
         if (atm.get_specie() != sp)
@@ -660,8 +663,12 @@ AtomisticGenerator::build_random_alloy()
         }
       }
       else
+      {  
         not_finished.erase(regid);
+      }  
+
     }
+
   }
 
   if (fix_mean_alloy_concentration)
@@ -677,6 +684,10 @@ AtomisticGenerator::build_random_alloy()
   }
   else
   {
+    std::ostringstream os;
+    os << "Num substituted: " << num_substituted.size() << std::endl;
+    Messages::info(os.str());
+
     for (int i = 0; i < num_substituted.size(); ++i)
     {
       if (num_to_substitute[i] > 0)
@@ -1007,27 +1018,31 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   periods(2,2) = 1;
   periods(3,3) = 1;
 
-  if (_as->get_options().get_option("periodic", false))
+  bool periodic = _as->get_options().get_option("periodic", false);
+  if (_as->get_options().get_option("passivation", false)) periodic = false;
+
+  if ( !periodic )
   {
     switch (_dim)
     {
       case 3:
-        periods(3,3) *= 10;
+        periods(3,3) *= 2;
 
       case 2:
-        periods(2,2) *= 10;
+        periods(2,2) *= 2;
 
       case 1:
-        periods(1,1) *= 10;
+        periods(1,1) *= 2;
 
       default:
         break;
     }
   }
 
+  _period = _period * periods;
 
   Messages::info("Building Bond Map...");
-  _bondmap->do_solve(basis, _period * periods);
+  _bondmap->do_solve(basis, _period);
   Messages::info("Bond Map completed");
 
 };
