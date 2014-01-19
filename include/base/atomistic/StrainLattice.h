@@ -51,18 +51,27 @@ class StrainLattice
     class Tetra
     {
       public:
+
       Tetra(void);
+
       //!Edges R12, R23, R34 stored by columns
       Tensor2Gen edges;
+
       //! Bonds R01, R02, R03, R04 
-      //Note: bonds are redundant, geometry is defined by edges, 
-      //but it's handy to have them separated if the overload 
-      //is not too high
+      /*! Note: bonds are redundant, geometry is defined by edges,
+       * but it's handy to have them separated if the overhead
+       * is not too high.
+       */
       std::vector<Tensor1> bonds;
-      //!Specie of central atom
+
+      //! Specie of central atom
       Specie sp;
-      //!Specie of vertices (useful to discriminate central atom
-      //in alloys)
+
+      //! label of central atom
+      unsigned char central_atom_label;
+
+      //! Specie of vertices
+      /*! useful to discriminate central atom in alloys */
       Specie vertex_sp;
     };
 

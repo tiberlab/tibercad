@@ -61,16 +61,17 @@ StrainLattice::init(AtomisticStructure* as)
     {
       ref_atm = bulk->get_structure_atoms()[i]; 
      
-      if (ref_atm.get_label()==1) //label 1 <==> cation 
+      if (ref_atm.get_label() == 1) //label 1 <==> cation
       {
-      //_reference[*it] = build_tetraedron(structure, i);
-      build_tetraedron(structure, i, _reference[*it]);
-      ref_found = i;
-      break;
+        //_reference[*it] = build_tetraedron(structure, i);
+        build_tetraedron(structure, i, _reference[*it]);
+        ref_found = i;
+        break;
       }
     }
     if (ref_found == -1)
     {
+      // we should not get here, since all structures have one atom labelled '1'
       Messages::error("Could not find cation in StrainLattice");
     }
  
@@ -82,7 +83,7 @@ StrainLattice::init(AtomisticStructure* as)
        {
          ref_atm = bulk->get_structure_atoms()[i]; 
        
-         if (ref_atm.get_label()==1 && i != ref_found)
+         if (ref_atm.get_label() == 1 && i != ref_found)
          {
          //_reference2[*it] = build_tetraedron(structure, i);
          build_tetraedron(structure, i, _reference2[*it]);
@@ -136,7 +137,7 @@ StrainLattice::do_solve(void)
   const BondMap& bondmap = _as->get_bond_map();
   const std::vector<Atom>& atoms = _as->get_structure_atoms();
   
-  std::cout<<"Strain size: "<<_as->get_N_without_H()<<std::endl;
+  //std::cout<<"Strain size: "<<_as->get_N_without_H()<<std::endl;
 
   _solution.resize(_as->get_N_without_H());
   TensorField sol;
@@ -149,12 +150,12 @@ StrainLattice::do_solve(void)
 
     // Check if it's the right specie, i.e. not reference vertex
     // or is attached to an H or not with 4 bonds
-    if (atm.get_specie() == ref.vertex_sp ||
-        bondmap[ind].size() != 4 ||
-        atoms[bondmap[ind][0]].get_specie() == Specie::H ||
-        atoms[bondmap[ind][1]].get_specie() == Specie::H ||
-        atoms[bondmap[ind][2]].get_specie() == Specie::H ||
-        atoms[bondmap[ind][3]].get_specie() == Specie::H) 
+    if ((atm.get_label() != ref.central_atom_label) ||
+        (bondmap[ind].size() != 4) ||
+        (atoms[bondmap[ind][0]].get_specie() == Specie::H) ||
+        (atoms[bondmap[ind][1]].get_specie() == Specie::H) ||
+        (atoms[bondmap[ind][2]].get_specie() == Specie::H) ||
+        (atoms[bondmap[ind][3]].get_specie() == Specie::H))
     {
       sol.atom_p = &atm;
       sol.tensor = 0.0;
@@ -202,6 +203,7 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
   //Store first specie as reference (it should be the cation
   // in III-V alloys)
   tet.sp = atoms[atm].get_specie();
+  tet.central_atom_label = atoms[atm].get_label();
 
   //Bulid bonds and tetraedron
   const BondMap& bondmap = as->get_bond_map();
