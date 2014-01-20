@@ -127,7 +127,8 @@ private:
     std::string method;
     //! Tolerance (eV/A)
     double absolute_tolerance;
-
+    //! Print Level 0, 1, 2 
+    int print_lev;
   };
 
   Options _options;

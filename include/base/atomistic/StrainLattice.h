@@ -65,14 +65,14 @@ class StrainLattice
       std::vector<Tensor1> bonds;
 
       //! Specie of central atom
-      Specie sp;
+      //Specie sp;
 
       //! label of central atom
       unsigned char central_atom_label;
 
       //! Specie of vertices
       /*! useful to discriminate central atom in alloys */
-      Specie vertex_sp;
+      unsigned char vertex_label;
     };
 
     //! Build tetraedron for a given atom of a given structure

@@ -12,48 +12,42 @@ Device
 
 	Region QW
 	{
-
-	material = InGaN
-        x=0.1
-
+	  material = InGaN
+    x=0.1
 	}
 
 	Region barrier_left
 	{
-	material = GaN
-
+   	material = GaN
 	}
 
 	Region barrier_right
 	{
-	material = GaN
+   	material = GaN
 	}
 
 	Region device_left
 	{
-
-	material = GaN
-
+	  material = GaN
 	}
 
 	Region device_right
 	{
-	material = GaN
-
+  	material = GaN
 	}
 
 	# group together the regions for the quantum simulation
 
 	Cluster Quantum
 	{
-	regions = (barrier_left, barrier_right, QW)
+	  regions = (barrier_left, barrier_right, QW)
 	}
 
 
 
 	Atomistic tb
 	{
-	  reference_region = barrier_left
+	  reference_region = device_left
 	  regions = Quantum 
 	  passivation = yes
 	  print = (xyb, xyz, gen, tgn)
@@ -115,69 +109,47 @@ Module opticstb
 Module elasticity
 {
 
-name = strain
+ name = strain
+ non_linear_strain = true
+ shape_iterations = 1
 
-plot = (Strain,Stress,Displacement)
+ plot = (Strain,Stress,Displacement)
 
-non_linear_strain = true
+ Physics
+ {
 
-shape_iteration = 1
-
-  Physics
+  body_force lattice_mismatch
   {
-
-   body_force lattice_mismatch
-   {
-     
-    material = GaN
-
-    structure = wz
-    x-growth-direction = (0,0,0,1)
-    y-growth-direction = (1,0,-1,0)
-    z-growth-direction = (-1,2,-1,0)
-
-   }
+    
+   reference_material = GaN
+   x-growth-direction = (0,0,0,1)
+   y-growth-direction = (1,0,-1,0)
+   z-growth-direction = (-1,2,-1,0)
 
   }
 
-  Contact cathode{type = clamp}
+ }
+
+ Contact cathode{type = clamp}
 
 }
 
 
 
-#Module  macrostrain
-#{
+Module vff
+{
+  regions = all
+  plot = (tgn, StrainNodes) 
 
-#  name = strain
-#  regions = all
-
-#  plot = (Strain, PiezoPolarization)
-
-#  number_shape_steps = 1  #  for  atom displacement  calculation
-#  strain_atomistic_structure = tb  # tb1 = atomistic_structure
-#  internal_strain_correction = true 
-
-#  Boundary   cathode
-#  {
-#    type = substrate
-#    material = GaN
-
-#    structure = wz
-#    x-growth-direction = (0,0,0,1)
-#    y-growth-direction = (1,0,-1,0)
-#    z-growth-direction = (-1,2,-1,0)
-#  }
-
-#  Solver
-#  {
-    #  xmonitor = true
-#  }
-    
-#} #endmacrostrain
-
-
-
+  atomistic_structure = tb
+  boundary_conditions = all_around
+ 
+  Solver
+  {
+     absolute_tolerance = 1e-4
+     print_level = 0 
+  } 
+}
 
 
 
@@ -296,7 +268,7 @@ Simulation
   temperature = 300
   #searchpath = /home/mlopez/Desktop/materials
 
-  solve = strain
+  solve = (strain, vff)
   #solve = (strain,driftdiffusion,tb,spectrum)
 
   resultpath =  output

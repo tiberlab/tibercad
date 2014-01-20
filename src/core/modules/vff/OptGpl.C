@@ -18,7 +18,7 @@ OptGpl::~OptGpl(void)
 }
 
 void
-OptGpl::solve(double tolerance)
+OptGpl::solve(double tolerance, int printlev)
 {
   double *x ;
   int i, n ;
@@ -33,7 +33,7 @@ OptGpl::solve(double tolerance)
     for (i = 0; i < n; i++) x [i] = _vff.get_dof()[i] ;
 
     cg_default (&Parm) ;    /* set default parameter values */
-    Parm.PrintLevel = 1 ;
+    Parm.PrintLevel = printlev;
 
         /* run the code */
     /*  cg_descent (x, n, NULL, NULL, 1.e-8, myvalue, mygrad, myvalgrad, NULL) ;*/

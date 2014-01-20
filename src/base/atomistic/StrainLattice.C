@@ -34,7 +34,14 @@ StrainLattice::init(AtomisticStructure* as)
                    +(*it)->get_name() +" "+(*it)->get_structure());
     BulkCrystal* bulk = BulkCrystal::create(*it);
     bulk->do_init();
-    //bulk->print_xyb((*it)->get_name()+".xyb");
+    
+    bulk->print_gen((*it)->get_name()+".gen");
+    bulk->print_xyb((*it)->get_name()+".xyb");
+    
+    for (unsigned int i = 0; i < bulk->get_N_atoms(); i++)
+    {
+      ref_atm = bulk->get_structure_atoms()[i]; 
+    }  
 
     const AtomisticBasis* structure =  bulk; 
     assert(bulk->get_N_atoms() > 0);
@@ -60,10 +67,8 @@ StrainLattice::init(AtomisticStructure* as)
     for (unsigned int i = 0; i < bulk->get_N_atoms(); i++)
     {
       ref_atm = bulk->get_structure_atoms()[i]; 
-     
-      if (ref_atm.get_label() == 1) //label 1 <==> cation
+      if (ref_atm.get_label() == 1) 
       {
-        //_reference[*it] = build_tetraedron(structure, i);
         build_tetraedron(structure, i, _reference[*it]);
         ref_found = i;
         break;
@@ -85,10 +90,9 @@ StrainLattice::init(AtomisticStructure* as)
        
          if (ref_atm.get_label() == 1 && i != ref_found)
          {
-         //_reference2[*it] = build_tetraedron(structure, i);
-         build_tetraedron(structure, i, _reference2[*it]);
-         ref_found2 = i;
-         break;
+           build_tetraedron(structure, i, _reference2[*it]);
+           ref_found2 = i;
+           break;
          }
        }
        if (ref_found2 == -1)
@@ -138,12 +142,13 @@ StrainLattice::do_solve(void)
   const std::vector<Atom>& atoms = _as->get_structure_atoms();
   
   //std::cout<<"Strain size: "<<_as->get_N_without_H()<<std::endl;
+  unsigned int natoms = _as->get_N_without_H();
 
   _solution.resize(_as->get_N_without_H());
   TensorField sol;
   
   //Do the job on any atom which is compatible with reference tetraedra
-  for (unsigned int ind = 0; ind < _as->get_N_without_H(); ind++)
+  for (unsigned int ind = 0; ind < natoms; ind++)
   {
     const Atom& atm = atoms[ind];
     Tetra &ref = _reference[_as->get_material(atm)];
@@ -162,8 +167,7 @@ StrainLattice::do_solve(void)
       _solution[ind] = sol;
       continue;
     }
-
- 
+    
     //If previuos conditions were not fullfilled, we should have a valid one, 
     //we calculate the strain.
     build_tetraedron(_as, ind, tmp);
@@ -202,7 +206,6 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
 
   //Store first specie as reference (it should be the cation
   // in III-V alloys)
-  tet.sp = atoms[atm].get_specie();
   tet.central_atom_label = atoms[atm].get_label();
 
   //Bulid bonds and tetraedron
@@ -215,12 +218,12 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
     Messages::error("Bulk badly defined in StrainLattice. An atom has not 4 bonds.");
 
   //All the vertices are supposed to have same specie, we pick the first neighbor
-  tet.vertex_sp = atoms[bondmap[atm][0]].get_specie();
+  tet.vertex_label = atoms[bondmap[atm][0]].get_label();
 
-  //We check that all neghbors are really of the same specie
+  //We check that all neghbors are really of the same type (cations or anions)
   for (unsigned int i = 0; i < n_bonds; i++)
   {
-    if (atoms[bondmap[atm][i]].get_specie() != tet.vertex_sp)
+    if (atoms[bondmap[atm][i]].get_label() != tet.vertex_label)
       Messages::error("Error in StrainLattice. Try to build tetraedron on ill conditioned structure");
   } 
   

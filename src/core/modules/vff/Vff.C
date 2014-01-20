@@ -72,6 +72,7 @@ Vff::parse_options()
    //Solver options
    myopts.method = get_solver_options().get_option("method", "cg");
    myopts.absolute_tolerance = get_solver_options().get_option("absolute_tolerance", 1e-3);
+   myopts.print_lev = get_solver_options().get_option("print_level", 1);
 
    
 }
@@ -705,8 +706,9 @@ Vff::optimize(void)
   {
     //Convert absolute tolerance from eV/A to internal units 10^-20J/A
     double tol = get_my_options().absolute_tolerance * 16.0; 
+    int printlev =  get_my_options().print_lev;
     OptGpl solver(*this);
-    solver.solve(tol);
+    solver.solve(tol,printlev);
   }
   else
     Messages::error("Error in VFF: solver method does not exist.");

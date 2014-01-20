@@ -198,6 +198,7 @@ BulkCrystal::read_database(void)
     }
     else
       throw RuntimeException("Could not initialize bulk for non-binar alloy");
+      
 
     tmp_db = mat_alloy->get_database();
     db = &tmp_db;
@@ -211,11 +212,13 @@ BulkCrystal::read_database(void)
     db->set_section("atomistic_structure");
     unsigned int n_basis_specie = db->get("n_basis_specie", 0);
 
-    // Read in basis vectors of component B first
-    Tensor1 Tb;
-    db = &(mat_alloy->get_component_B()->get_database());
-    db->set_section("atomistic_structure");
-
+    // Read in basis vectors
+    Tensor1 Tb, Ta;
+    Database* dbB = &(mat_alloy->get_component_B()->get_database());
+    Database* dbA = &(mat_alloy->get_component_A()->get_database());
+    dbB->set_section("atomistic_structure");
+    dbA->set_section("atomistic_structure");
+        
     for (unsigned int i = 1; i <= n_basis_specie; i++)
     {
       std::string record("");
@@ -224,47 +227,12 @@ BulkCrystal::read_database(void)
       out << i;
       s = out.str();
       record = "n_" + s;
-      unsigned int n_x = (db->get(record, 0));
+      unsigned int n_x = (dbB->get(record, 0));
+      if (dbA->get(record,0) != n_x) 
+        Messages::error("Alloy bulks do not correspond");
+
       record = "specie_" + s;
-      specie = db->get(record.c_str(), "H");
-      
-      for (j = 1; j <= n_x; j++)
-      {
-        std::string s2;
-        record = "T_" + s + "_";
-        out.str(std::string());
-        out.clear(std::stringstream::goodbit);
-        out << j;
-        s2 = out.str();
-        s2 = record + s2;
-
-        //Putting specie label (defined by an integer) in label data
-        //It's used in cut_and_change_specie() and build_random_alloy()
-        record = s2 + "_x";
-        Tb(1) = db->get(record, 0.0);
-        record = s2 + "_y";
-        Tb(2) = db->get(record, 0.0);
-        record = s2 + "_z";
-        Tb(3) = db->get(record, 0.0);
-      }
-    }
-
-    // Read in basis vectors of component A and take vca-average
-    Tensor1 Ta;
-    db = &(mat_alloy->get_component_A()->get_database());
-    db->set_section("atomistic_structure");
-
-    for (unsigned int i = 1; i <= n_basis_specie; i++)
-    {
-      std::string record("");
-      std::string s("");
-      std::stringstream out;
-      out << i;
-      s = out.str();
-      record = "n_" + s;
-      unsigned int n_x = (db->get(record, 0));
-      record = "specie_" + s;
-      specie = db->get(record.c_str(), "H");
+      specie = dbA->get(record.c_str(), "H");
       
       for (j = 1; j <= n_x; j++)
       {
@@ -280,16 +248,21 @@ BulkCrystal::read_database(void)
         //It's used in cut_and_change_specie() and build_random_alloy()
         tmp.set_label(static_cast<unsigned char>(i));
         tmp.set_specie(specie);
-        record = s2 + "_x";
-        Ta(1) = db->get(record, 0.0);
-        record = s2 + "_y";
-        Ta(2) = db->get(record, 0.0);
-        record = s2 + "_z";
-        Ta(3) = db->get(record, 0.0);
 
-        T = Ta * molar_fraction + Tb * (1.0 - molar_fraction);
+        record = s2 + "_x";
+        Tb(1) = dbB->get(record, 0.0);
+        Ta(1) = dbA->get(record, 0.0);
+        record = s2 + "_y";
+        Tb(2) = dbB->get(record, 0.0);
+        Ta(2) = dbA->get(record, 0.0);
+        record = s2 + "_z";
+        Tb(3) = dbB->get(record, 0.0);
+        Ta(3) = dbA->get(record, 0.0);
+
+        T = Ta * (molar_fraction) + Tb * (1.0 - molar_fraction);
         tmp.set_position(T);
         _lattice_basis.push_back(tmp);
+
       }
     }
 
