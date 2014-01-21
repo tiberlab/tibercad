@@ -692,6 +692,9 @@ SVN
 MKL_LIBS
 MKL_INCLUDEDIR
 HAVE_MKL
+CUDA_LIBS
+CUDA_INCLUDEDIR
+HAVE_CUDA
 ENABLE_PARDISO
 ENABLE_DFTB
 ENABLE_UPTIGHT
@@ -1317,6 +1320,7 @@ Optional Packages:
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --with-subversion=PROG  specify the subversion executable
   --with-mkl=DIR          specify the MKL installation path
+  --with-cuda=DIR         specify the CUDA Toolkit installation path
   --with-libmesh-prefix=DIR
                           specify the libmesh installation prefix
   --with-libmesh-config=PROG
@@ -4263,6 +4267,36 @@ echo "${ECHO_T}$tc_cv_mkl_dir" >&6; }
  # Check whether --enable-pardiso was given.
 if test "${enable_pardiso+set}" = set; then
   enableval=$enable_pardiso; if test $enableval != "no"; then
+
+# CUDA TOOLKIT
+{ echo "$as_me:$LINENO: checking whether CUDA is available" >&5
+echo $ECHO_N "checking whether CUDA is available... $ECHO_C" >&6; }
+if test "${cuda_dir+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+# Check whether --with-cuda was given.
+if test "${with_cuda+set}" = set; then
+  withval=$with_cuda; cuda_dir="$with_cuda"
+fi
+
+  HAVE_CUDA="${cuda_dir:-no}"
+  if test "$HAVE_CUDA" != no
+  then
+    CUDA_INCLUDEDIR="$cuda_dir/include"
+    HAVE_CUDA="yes"
+    case $host in
+      x86_64-*-*) CUDA_LIBS="-L$cuda_dir/lib64 -Wl,-rpath,$cuda_dir/lib64 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
+      i?86-*-*) CUDA_LIBS="-L$cuda_dir/lib32 -Wl,-rpath,$cuda_dir/lib32  -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
+      *) cuda_dir="no"; HAVE_CUDA="no"; CUDA_LIBS= ; CUDA_INCLUDEDIR= ;;
+    esac
+
+  fi
+
+fi
+{ echo "$as_me:$LINENO: result: $cuda_dir" >&5
+echo "${ECHO_T}$cuda_dir" >&6; }
 
 cat >>confdefs.h <<\_ACEOF
 #define ENABLE_PARDISO 1
@@ -8645,6 +8679,9 @@ SVN!$SVN$ac_delim
 MKL_LIBS!$MKL_LIBS$ac_delim
 MKL_INCLUDEDIR!$MKL_INCLUDEDIR$ac_delim
 HAVE_MKL!$HAVE_MKL$ac_delim
+CUDA_LIBS!$CUDA_LIBS$ac_delim
+CUDA_INCLUDEDIR!$CUDA_INCLUDEDIR$ac_delim
+HAVE_CUDA!$HAVE_CUDA$ac_delim
 ENABLE_PARDISO!$ENABLE_PARDISO$ac_delim
 ENABLE_DFTB!$ENABLE_DFTB$ac_delim
 ENABLE_UPTIGHT!$ENABLE_UPTIGHT$ac_delim
@@ -8668,7 +8705,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 BUILD_TIBER_MODULES!$BUILD_TIBER_MODULES$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 100; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

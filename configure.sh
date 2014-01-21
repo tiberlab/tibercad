@@ -22,8 +22,9 @@ export LDFLAGS="-Wl,-rpath,${FORTRANDIR}/lib/intel64"
   --with-petsc-arch=${ARCH}-complex \
   --with-slepc-prefix=${SDKDIR}/build/slepc-3.0.0-p7 \
   --with-mkl=/usr/pack/intel_mkl-10.2-gp \
+  --with-cuda=/usr/pack/cudatoolkit-5.5.11-ma \
   --with-subversion=svn-1.6.5 \
-  --enable-uptight\
+  --enable-uptight \
   --enable-pardiso \
   --with-boost-prefix=$SDKDIR --with-boost-libdir=${SDKDIR}/${ARCH}/lib \
   --with-libmesh-petsc-libdir=${SDKDIR}/${ARCH}/lib \

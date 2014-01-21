@@ -25,6 +25,8 @@ enable_uptight = @ENABLE_UPTIGHT@
 # do we have MKL?
 have_mkl = @HAVE_MKL@
 
+# do we have CUDA toolkit
+have_cuda = @HAVE_CUDA@
 
 
 # gmsh
@@ -91,6 +93,12 @@ endif
 
 LDFLAGS += $(BLASLAPACK_LDFLAGS)
 NON_TIBER_INCLUDES += $(BLASLAPACK_INCLUDE)
+
+
+ifeq ($(have_cuda),yes)
+ LDFLAGS += @CUDA_LIBS@
+ CUDA_INCLUDE = -I@CUDA_INCLUDEDIR@
+endif
 
 
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
