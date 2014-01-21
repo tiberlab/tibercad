@@ -130,6 +130,9 @@ protected:
 
   //!Bond map generation
   void bond_map_gen(const std::vector<Atom>& basis);
+  
+  //!enlarge supercell vectors for dummy periodicities
+  void check_periodic(void);
 
   //!Actually remove marked atoms from structure
   void remove_atoms(void);

@@ -199,6 +199,9 @@ AtomisticGenerator::do_init()
   // iterates on _super_basis and assign species
   assign_species();
 
+  //eventually enlarge along dummy supercell directions
+  check_periodic();
+
   if (_as->get_options().get_option("passivation", false))
     passivate();
 
@@ -993,29 +996,10 @@ void AtomisticGenerator::make_conv_basis()
 
 };
 
+// Increase periodicity in non-periodic directions 'periodic' flag
+void AtomisticGenerator::check_periodic(void)
+{
 
-
-//Bond map generation (cluster)
-void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
-
-  std::ostringstream os;
-
-  //use internal member, if already used delete it
-  if (_bondmap == NULL) _bondmap = new BondMap(basis.size());
-  else
-  {
-    delete _bondmap;
-    _bondmap = new BondMap(basis.size());
-  }
-
-  //--------------------------------------------------------------------------
-  //os << "calling bond map with period "
-  //<< _period(1,1)<<" "<<_period(2,2)<<" "<< _period(3,3) << std::endl;
-  //Messages::debug(os.str());
-  //os.str(std::string());
-  //---------------------------------------------------------------------------
-
-  // Increase periodicity in non-periodic directions
   Tensor2Gen periods(0);
 
   periods(1,1) = 1;
@@ -1044,6 +1028,28 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   }
 
   _period = _period * periods;
+
+}
+
+//Bond map generation (cluster)
+void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
+
+  std::ostringstream os;
+
+  //use internal member, if already used delete it
+  if (_bondmap == NULL) _bondmap = new BondMap(basis.size());
+  else
+  {
+    delete _bondmap;
+    _bondmap = new BondMap(basis.size());
+  }
+
+  //--------------------------------------------------------------------------
+  //os << "calling bond map with period "
+  //<< _period(1,1)<<" "<<_period(2,2)<<" "<< _period(3,3) << std::endl;
+  //Messages::debug(os.str());
+  //os.str(std::string());
+  //---------------------------------------------------------------------------
 
   Messages::info("Building Bond Map...");
   _bondmap->do_solve(basis, _period);
