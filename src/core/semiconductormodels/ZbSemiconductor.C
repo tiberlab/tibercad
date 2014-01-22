@@ -313,14 +313,14 @@ void ZbSemiconductor::calculate_8x8_kp_params (KPparams&  result )
   result.P1  = std::sqrt(par.Ep * 0.5 / Constants::Hartree);
   result.P2 = result.P1;
  
-  if (_spurious == "none") 
-  {
-    std::cout<<"m_c= "<<1.0/result.s1<<std::endl;
-  }
-  else
-  {
-    std::cout<<"Ep= "<<par.Ep<<std::endl;
-  }  
+  //if (_spurious == "none") 
+  //{
+  //  std::cout<<"m_c= "<<1.0/result.s1<<std::endl;
+  // }
+  //else
+  //{
+  //  std::cout<<"Ep= "<<par.Ep<<std::endl;
+  //}  
   //--------------------------------------------------------------------
   //rescale L and N
   // this comes from gamma1= gamma1_L - 1/3 Ep / (Eg + delta/3)

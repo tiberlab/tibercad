@@ -195,8 +195,18 @@ AtomisticStructure::init(const std::string& name,
   //(Useful for passivated semiconductors)
   compute_N_without_H();
 
+  Messages m;
+  m.newline();
+  m.indent();
+  os << "Atomistic Structure containing " << N_atoms << 
+        " atoms has been built. " <<std::endl;
+  os << "Size not counting passivation hydrogens: "<< get_N_without_H()<<std::endl;
+  m.info(os.str());
+  os.str(std::string());
+
+  if (is_periodic())
   {
-    Messages m;
+    m.info("Supercell structure");
     m.info("Lattice vectors (nm):");
     m.indent();
 
@@ -211,12 +221,9 @@ AtomisticStructure::init(const std::string& name,
     os << ")\n";
     m.info(os.str());
     os.str(std::string());
+    //Messages::info(os.str());
   }
 
-  os << "Atomistic Structure containing " << N_atoms << 
-    " atoms has been built. " <<std::endl;
-  os << "Size not counting passivation hydrogens: "<< get_N_without_H()<<std::endl;
-  Messages::info(os.str());
 
 }
 

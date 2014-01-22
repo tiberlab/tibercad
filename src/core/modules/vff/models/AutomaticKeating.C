@@ -46,7 +46,7 @@ namespace
     double w2 = w*w;
 
 
-    y.resize(6);
+    y.resize(8);
 
     // C11
     valueT D1 = (2*A + B) * ( 8*A1*u2 + 6*(A+2*B)*v2 + 3*B1*w2 );
@@ -74,7 +74,32 @@ namespace
     // C66
     y[5] = 0.5 * (y[0] - y[1]);
 
+    // Kleinmann zeta2 (note factor 4* with respect to Camacho-Niquet)
+    valueT D3 = (8*A1*u2 + 6*(A+2*B)*v2 + 3*B1*w2 );
+    y[6] = 8*a*a/(c*c) * (A-B)*v / D3;
+    // Kleinmann zeta3 (note factor 4* with respect to Camacho-Niquet)
+    y[7] = 4* ((8*A1*u2 + 6*B1*v*w)*u-3*(A+2*B)*v2*v) / D3;
+
   }
+
+  template<typename valueT>
+  void keating_zb(double a, const vector<valueT>& x, vector<valueT>& y)
+  {
+    double sq3 = std::sqrt(3.0);
+    double r0 = sq3 * a / 4.0;
+   
+    y.resize(7);
+
+    // C11
+    y[0] = (x[0] + 3 * x[1])/a;
+    // C12
+    y[1] = (x[0] - x[1])/a;
+    // C44
+    y[4] = 4/a * (x[0]*x[1])/(x[0]+x[1]);
+    // Kleinmann zeta
+    y[6] = (x[0]-x[1])/(x[0]+x[1]);
+  }
+
 }
 
 
@@ -142,15 +167,38 @@ AutomaticKeating::do_print_info(void)
 {
   Keating::do_print_info();
 
-  vector<double> keating = {alpha_0(), beta_0(), alpha_1(), beta_1()};
-  vector<double> moduli;
-  keating_wz(get_a(), get_c(), get_u(), keating, moduli);
-  ostringstream os;
-  Messages::info("Stiffness Constants (in crystal coordinates): ");
-  os << "  C11 = " << moduli[0] << " C12 = " << moduli[1] <<
-      " C13 = " << moduli[3] << " C33 = " << moduli[2] <<
-      " C44 = " << moduli[4];
-  Messages::info(os.str());
+  if (get_material()->get_structure() == "wz")
+  {
+    vector<double> keating = {alpha_0(), beta_0(), alpha_1(), beta_1()};
+    vector<double> moduli;
+    keating_wz(get_a(), get_c(), get_u(), keating, moduli);
+    ostringstream os;
+    Messages::info("Stiffness Constants (in crystal coordinates): ");
+    os << "  C11 = " << moduli[0] << " C12 = " << moduli[1] <<
+          " C13 = " << moduli[3] << " C33 = " << moduli[2] <<
+          " C44 = " << moduli[4];
+    Messages::info(os.str());
+    os.str(std::string());
+    Messages::info("Kleinmann Parameters: ");
+    os << "  zeta2 = "<<moduli[6]<<" zeta3 = "<<moduli[7];
+    Messages::info(os.str());
+
+  }
+  if (get_material()->get_structure() == "zb")
+  {
+    vector<double> keating = {alpha_0(), beta_0()};
+    vector<double> moduli;
+    keating_zb(get_a(), keating, moduli);
+    ostringstream os;
+    Messages::info("Stiffness Constants (in crystal coordinates): ");
+    os << "  C11 = " << moduli[0] << " C12 = " << moduli[1] <<
+          " C44 = " << moduli[4];
+    Messages::info(os.str());
+    os.str(std::string());
+    Messages::info("Kleinmann Parameter: ");
+    os << " zeta = "<< moduli[6];
+    Messages::info(os.str());
+  }
 }
 
 void

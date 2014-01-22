@@ -19,6 +19,7 @@ Semiconductor::Semiconductor(const ModelOptions& options)
   //database is read before do_init() and this parameter must be ready.
   _kp_model = get_option("kp_model","6x6");
   _consider_temperature = get_option("consider_temperature",  true );
+  _consider_temperature = get_option("temperature_scaling", _consider_temperature );
 }
 
 

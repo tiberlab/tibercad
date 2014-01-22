@@ -505,7 +505,7 @@ Control::setup_module(Device* device, const ModelOptions& opts)
     //
     // now we have to create the bulk models
     //
-    m.newline();
+    //m.newline();
     m.info("Creating bulk models... ");
     m.indent();
 

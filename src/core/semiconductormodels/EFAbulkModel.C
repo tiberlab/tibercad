@@ -35,6 +35,8 @@ void EFAbulkModel::do_init()
   get_option("kpVVtermSymmetric","");
   get_option("kpCVtermSymmetric","");
   get_option("temperature_scaling","");
+  get_option("consider_temperature","");
+  get_option("spurious","");
 
   if (_bulkHamiltonian == NULL)
   {

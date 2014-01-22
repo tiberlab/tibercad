@@ -606,6 +606,7 @@ Device::init(void)
   Messages m;
 
   // init all materials
+  m.newline();
   m.info("Setting up bulk models ...");
   m.indent();
   MaterialMap::iterator it(_material_map.begin());
