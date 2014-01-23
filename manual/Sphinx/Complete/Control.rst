@@ -44,10 +44,14 @@ A  typical application  of a user-defined *variable* is  in  the  *Sweep* calcul
 Sweep
 ---------
 
-Performs a linear sweep for a given variable.
+Performs a linear or logarithmic sweep for a given variable.
+
 
 
 Options and  parameters:
+
+ ``type`` :  string
+    type of sweep, ``linear`` (default) or ``log``
 
  ``solve`` :  string
     a list of simulations to be solved, eg. ``(strain, dd)``
@@ -62,7 +66,9 @@ Options and  parameters:
     the last value of the sweep
 
  ``steps`` : integer
-    the number of steps the interval (start, stop) gets subdivided in
+    the number of steps the interval (start, stop) gets subdivided in.
+    For logarithmic sweeps, default number of steps is calculated assuming
+    a factor of 10 between successive values. 
 
  ``values`` :  double
   instead of ``start``, ``stop`` and ``steps``, provide the sweep values explicitly

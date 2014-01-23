@@ -122,9 +122,31 @@ Sweep::parse_options(void)
   get_option("file_mode", "");
   get_option("ignore_failure", "");
 
+  string type = get_option("type", "linear");
+  if (type == "linear")
+    _type = LINEAR;
+  else if (type == "log")
+    _type = LOG;
+  else
+    throw ModelErrorException("'" + type + "' is unknown for sweep");
+
   double start = get_option("start", 0.0);
   double stop = get_option("stop", 0.0);
-  unsigned int steps = get_option("steps", 1);
+  unsigned int steps = 1;
+
+  if (_type == LOG)
+  {
+    if (start <= 0.0 || stop <= 0.0)
+      Messages::warning("Logarithmic sweep cannot work with negative values");
+
+    start = log10(start);
+    stop = log10(stop);
+    steps = static_cast<unsigned int>(abs(stop - start));
+  }
+
+  steps = get_option("steps", steps);
+
+
   steps = (steps < 1) ? 1 : steps;
 
   double step = (stop - start) / steps;
@@ -140,6 +162,7 @@ Sweep::parse_options(void)
   for (unsigned int i = 0; i <= steps; i++)
     _values[i] = start + i * step;
 
+
   // we can also specify a vector with the values
   get_option("values", _values);
 
@@ -149,7 +172,8 @@ Sweep::parse_options(void)
   {
     ostringstream o;
     o << "Sweep: The variable " << _variable << " is not defined.";
-    throw InitFailedException(o.str());
+    Messages::warning(o.str());
+    //throw InitFailedException(o.str());
   }
 
 
@@ -469,6 +493,10 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
   for (unsigned int i = 0; i < n; i++)
   {
     _goal = values[i];
+    if (_type == LOG)
+    {
+      _goal = pow(10, _goal);
+    }
 
     {
       ostringstream os;

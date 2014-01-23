@@ -98,11 +98,21 @@ class TBDLLOCAL Sweep : public SimulationInterface
 
   private:
 
+    //! Types of sweeps
+    enum Type
+    {
+      LINEAR,
+      LOG
+    };
+
     //! The simulations for which we do the sweep
     std::vector<SimulationInterface*> _simulations;
 
     //! A pointer to the sweepable variable
     std::string _variable;
+
+    //! The type of the sweep
+    Type _type;
 
     //! A vector containing all the simulation values
     std::vector<double> _values;
