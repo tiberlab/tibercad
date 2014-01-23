@@ -53,8 +53,7 @@ public:
    * dg_onsite                 : scaling factor for dg-onsite energies
    * hybrid_passivation        : perform Boykin-type passivation
    */
-  void fill_param(int verbose_lev, char *databasePath, char *workPath, char *outPath, 
-                   char *gen_filename, char *gen_outname, char *sparse_fmt, 
+  void fill_param(int verbose_lev, char *gen_filename, char *gen_outname, char *sparse_fmt, 
 		   int max_n_n, bool harrison_flag, bool relat_flag, 
 		   bool potential_flag, bool optmat_flag, int poldir, 
 		   double *c_axis, bool check_bondmap, 
@@ -64,6 +63,9 @@ public:
   //! out_format == 1 => JVXL
   //! out_format == 2 => CUBE
   void set_output(int out_format, double scale);
+
+  void set_paths(const char* defaultPath, const char* databasePath, 
+                 const char* workPath, const char* outPath); 
 
   void set_workpath(const char* workPath);
   

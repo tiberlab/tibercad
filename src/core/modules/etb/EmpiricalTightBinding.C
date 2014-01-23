@@ -77,6 +77,7 @@ ETB::UptOptions::UptOptions(void)
   c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0;
   //k_point.reserve(3);
   k_point[0]=0.0; k_point[1]=0.0; k_point[2]=0.0;
+  default_path = new char[UPT_LC];  memset(default_path, UPT_PADCHAR, UPT_LC);
   database_path = new char[UPT_LC]; memset(database_path, UPT_PADCHAR, UPT_LC);
   work_path = new char[UPT_LC];     memset(work_path, UPT_PADCHAR, UPT_LC);
   load_path = new char[UPT_LC];     memset(load_path, UPT_PADCHAR, UPT_LC);
@@ -97,6 +98,7 @@ ETB::UptOptions::~UptOptions(void)
   delete[] sparse_fmt;
   //delete[] out_format;
   delete[] database_path;
+  delete[] default_path;
 }
 
 ETB::UptSolverOptions::UptSolverOptions(void)
@@ -158,6 +160,7 @@ ETB::do_init(void){
 
   // Get database path from Database class
   //  std::string database_path = Database::get_default_search_path();
+  std::string default_path = get_option("default_path",Database::get_default_search_path());
   std::string database_path = get_option("database_path",Database::get_search_path());
   std::string work_path = ".";
   std::string gen_outfile = "out.gen";
@@ -168,6 +171,7 @@ ETB::do_init(void){
 
 
   std::size_t length = 0;
+  length = default_path.copy(_upt_options.default_path, default_path.size() );
   length = database_path.copy(_upt_options.database_path, database_path.size() );
   length = work_path.copy(_upt_options.work_path, work_path.size() );
   length = gen_outfile.copy(_upt_options.gen_outfile, gen_outfile.size() );
@@ -282,9 +286,10 @@ void ETB::do_reinit(void)
   std::cout << "(ETB) fill parameter " << std::endl;
 
   //  Set parameters for Uptight instance
-  inst->fill_param(_upt_options.verbose, _upt_options.database_path,
-		   _upt_options.work_path, _upt_options.out_path,
-		   _upt_options.upt_filename,
+  inst->set_paths(_upt_options.default_path, _upt_options.database_path, 
+                  _upt_options.work_path, _upt_options.out_path);
+  
+  inst->fill_param(_upt_options.verbose, _upt_options.upt_filename,
 		   _upt_options.gen_outfile, _upt_options.sparse_fmt,
 		   _upt_options.max_TB_order, _upt_options.harrison_flag,
 		   _upt_options.relat_flag, _upt_options.potential_flag,

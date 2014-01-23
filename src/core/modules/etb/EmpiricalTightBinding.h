@@ -41,6 +41,7 @@ class ETB : public TightBinding
     std::string potential_sim;
     std::string strain_sim;
     std::string etb_dataset;
+    char* default_path;
     char* database_path;
     char* work_path;
     char* out_path;
