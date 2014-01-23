@@ -131,7 +131,15 @@ void Kspace::build_k_grid()
     switch (k_dim)
     {
       case 2:
-        MeshTools::Modification::rotate(*kmesh, 90, 90, 0);
+        for (unsigned int n=0; n < kmesh->n_nodes(); n++)
+        {
+          Point& p = kmesh->node(n);
+          p(2) = p(1);
+          p(1) = p(0);
+          p(0) = 0.0;
+          cerr << p << endl;
+        }
+        //MeshTools::Modification::rotate(*kmesh, 90, 90, 0);
         break;
 
       case 1:
