@@ -179,6 +179,12 @@ AutomaticKeating::do_print_info(void)
           " C44 = " << moduli[4];
     Messages::info(os.str());
     os.str(std::string());
+    Messages::info("(Weights for optimization:                    ");
+    os << "  C11 = " << _weights[0] << " C12 = " << _weights[1] <<
+	    " C13 = " << _weights[3] << " C33 = " << _weights[2] <<
+	    " C44 = " << _weights[4] << ")";
+    Messages::info(os.str());
+    os.str(std::string());
     Messages::info("Kleinmann Parameters: ");
     os << "  zeta2 = "<<moduli[6]<<" zeta3 = "<<moduli[7];
     Messages::info(os.str());

@@ -88,8 +88,8 @@ Vff::do_init()
   Messages::debug("Setting boundary conditions");
   check_structure();
   parse_options();
-  declare_solution(StrainNodes, NTUPLE, NODES,"unitless",6);
-  declare_solution(StrainCells, NTUPLE, CELL,"unitless",6);
+  declare_solution(StrainNodes, TENSOR, NODES,"unitless");
+  declare_solution(StrainCells, TENSOR, CELL,"unitless");
 }
 
 void
@@ -771,11 +771,15 @@ Vff::get_solution_secure(const Elem* elem,
     {
       switch (dim)
       {
-      case 1 : phys_p = FE< 1, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+      case 1 :
+        phys_p = FE< 1, libMeshEnums::LAGRANGE>::map(elem, p[n]);
         break;
-      case 2 : phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+      case 2 :
+        phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
         break;
-      case 3 : phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+      case 3 :
+        phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        break;
       }
       
       //double min = 1e5;
@@ -790,7 +794,7 @@ Vff::get_solution_secure(const Elem* elem,
         unsigned int at = atoms[i];
         if (strain[at].atom_p->is_cation())
         {
-          contribs +=1;
+          contribs += 1;
           sol += strain[at].tensor;
         }
         /*
@@ -808,16 +812,15 @@ Vff::get_solution_secure(const Elem* elem,
         */
       }
         
-      //sol = strain[minidx].tensor;
-      //contribs = 1;
+      if (contribs == 0) contribs = 1;
       
 
       values[StrainNodes][6*n]=sol(1,1)/contribs;
       values[StrainNodes][6*n+1]=sol(2,2)/contribs;
       values[StrainNodes][6*n+2]=sol(3,3)/contribs;
       values[StrainNodes][6*n+3]=sol(1,2)/contribs;
-      values[StrainNodes][6*n+4]=sol(1,3)/contribs;
-      values[StrainNodes][6*n+5]=sol(2,3)/contribs;
+      values[StrainNodes][6*n+4]=sol(2,3)/contribs;
+      values[StrainNodes][6*n+5]=sol(1,3)/contribs;
       
     }
   }
@@ -830,8 +833,8 @@ Vff::get_solution_secure(const Elem* elem,
     
     Tensor2Gen sol(0);
     double min = 1e5;
-    unsigned int contribs = 0;
     unsigned int minidx = 0;
+    unsigned int contribs = 0;
     
     // Process atoms near elem. 
     for (unsigned int i=0; i < atoms.size(); i++)
@@ -858,51 +861,21 @@ Vff::get_solution_secure(const Elem* elem,
       }
       */
     }
-    //sol = strain[minidx].tensor; 
-    //contribs = 1;
+
+    if (contribs == 0) contribs = 1;
         
-    for (unsigned int n = 0; n < np; n++)
-    {
+    //for (unsigned int n = 0; n < np; n++)
+    //{
       values[StrainCells][0]=sol(1,1)/contribs;
       values[StrainCells][1]=sol(2,2)/contribs;
       values[StrainCells][2]=sol(3,3)/contribs;
       values[StrainCells][3]=sol(1,2)/contribs;
-      values[StrainCells][4]=sol(1,3)/contribs;
-      values[StrainCells][5]=sol(2,3)/contribs;
-    }
+      values[StrainCells][4]=sol(2,3)/contribs;
+      values[StrainCells][5]=sol(1,3)/contribs;
+    //}
     
   }
 
 }
 
-  // process elements without atoms. 
-  // simply take strain from the closest atom
-  /* 
-  if (contribs == 0)
-  {
-     unsigned int minidx = 0;
-     
-     phys_p = elem->centroid();
 
-     Messages::info("Processing orphan element ");
-
-     for (unsigned int i=0; i < strain.size(); i++)
-     { 
-       double dx = strain[i].atom_p->get_position()(0) - phys_p(0)*scale;
-       double dy = strain[i].atom_p->get_position()(1) - phys_p(1)*scale;
-       double dz = strain[i].atom_p->get_position()(2) - phys_p(2)*scale;
-
-       double distance = dx*dx + dy*dy + dz*dz;
-
-       if (distance<min) 
-       { 
-         minidx = i;
-         min = distance;
-       }
-     }
-
-     sol = strain[minidx].tensor; 
-     contribs = 1;
-
-   }
-   */
