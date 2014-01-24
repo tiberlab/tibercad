@@ -57,6 +57,13 @@ class AtomisticBasis
   //! Set the periodicity
   Tensor2Gen get_ttype_lattice_vectors(void);
 
+  //! Build and return a BondMap object
+  /*!
+   * \param periodicity indicates periodicity along the three
+   *        lattice vectors (1 = periodic)
+   */
+  BondMap* build_bond_map(bool periodicity[3]) const;
+
   //! get the number of atoms in the structure
   int get_N_atoms() const {return N_atoms;}
 

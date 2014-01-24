@@ -90,6 +90,25 @@ AtomisticBasis::set_atom_types(const std::set<std::string>& atom_types)
 }
 
 
+BondMap*
+AtomisticBasis::build_bond_map(bool periodicity[3]) const
+{
+  BondMap* bm = new BondMap(_atoms.size());
+
+  Tensor2Gen period;
+  for (unsigned int i = 0; i < 3; i++)
+  {
+    double scale = periodicity[i] ? 1 : 10;
+    for (unsigned int j = 0; j < 3; j++)
+    {
+      period(j + 1, i + 1) = scale * _lattice_vectors[i*3 + j];
+    }
+  }
+  bm->do_solve(_atoms, period);
+
+  return bm;
+}
+
 
 void
 AtomisticBasis::build_bond_map(void)
