@@ -2683,7 +2683,7 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
     const Elem* elem = *elit;
  
     Point pc = elem->centroid() * scale;
-    double x=pc(0), y=pc(1), z=pc(2);
+    //double x=pc(0), y=pc(1), z=pc(2);
 
     std::vector<unsigned int> temp;
     temp.reserve(Nat);
@@ -2711,31 +2711,25 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
 
         if (structure[iatm].get_specie() == Specie::H ) continue;
 
-        Point pat = structure[iatm].get_position();
+        Point delta_r(structure[iatm].get_position() - pc);
         
         // the following is quite a hack, just to make it take all atoms in the
         // directions orthogonal to the simulation domain
-        double x1 = pat(0);
-        if (abs(x-x1) > deltar_max) continue;
-        
-        if (get_mesh().mesh_dimension() > 1)
+        switch (get_mesh().mesh_dimension())
         {
-          double y1 = pat(1);
-          if (abs(y-y1) > deltar_max) continue;
+          case 1:
+            delta_r(1) = 0.0;
 
-          double deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1);
+          case 2:
+            delta_r(2) = 0.0;
 
-          if (get_mesh().mesh_dimension() > 2)
-          {
-            double z1 = pat(2);
-            if (abs(z-z1) > deltar_max) continue;
-
-            deltar2 += (z - z1) * (z - z1);
-          }
-
-
-          if (deltar2 > deltar2_max) continue;
+          default:
+            break;
         }
+        
+        // do we need the checks in single directions?
+
+        if (delta_r * delta_r > deltar2_max) continue;
 
 
         temp.push_back(iatm);
@@ -2749,7 +2743,7 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
     _elem_to_atoms[id].resize(count);
 
     for (unsigned int iatm = 0; iatm  <  count; iatm++)
-    	_elem_to_atoms[id][iatm]=temp[iatm];
+    	_elem_to_atoms[id][iatm] = temp[iatm];
 
     temp.clear();
   }
