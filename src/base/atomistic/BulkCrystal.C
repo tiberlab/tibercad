@@ -157,6 +157,9 @@ BulkCrystal::read_database(void)
     //Quindi non possiamo inizializzare 3 oggetti database e portarceli appresso, perche' saranno tutti
     //collegati al datafile settato dall'ultima assegnazione. Questa cosa va cambiata nella classe Database
     // (TODO)
+    //
+    // 2014-01-19 Matthias: I dont' think this is the case anymore??
+
     //This take two lines as I don't know how to specify that i call non constant method
     //if I do Database* db = &(mat_alloy->get_database())
     Database tmp_db = mat_alloy->get_database();

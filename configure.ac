@@ -128,6 +128,9 @@ TC_SUBVERSION
 # PARDISO
 TC_PARDISO
 
+# CUDA
+TC_CUDA
+
 # DFTB+
 TC_DFTB
 
@@ -286,8 +289,6 @@ AC_CONFIG_FILES([Make.common
                  Makefile
                  doc/Makefile
                  src/tibercad/Makefile
-                 src/utils/DFTB/Makefile
-                 src/utils/UPTIGHT/Makefile
                  src/utils/SLEPC/Makefile
                  contrib/crypto++/make.defs
                  installer/Makefile

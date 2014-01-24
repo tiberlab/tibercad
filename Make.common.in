@@ -100,6 +100,10 @@ ifeq ($(have_cuda),yes)
  CUDA_INCLUDE = -I@CUDA_INCLUDEDIR@
 endif
 
+ifeq ($(target_os), linux)
+ LDFLAGS += -ldl
+endif
+
 
 NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 

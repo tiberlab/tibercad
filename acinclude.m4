@@ -160,6 +160,32 @@ AC_CACHE_CHECK([wether Boost::filesystem is available], tc_cv_boost_filesystem_l
 ])dnl
 
 
+dnl check for CUDA
+dnl
+AC_DEFUN([TC_CUDA],
+[AC_CACHE_CHECK([whether CUDA is available], tc_cv_cuda_dir,
+ [AC_ARG_WITH([cuda], AS_HELP_STRING([--with-cuda=DIR],
+ 	[specify the CUDA toolkit path]),
+	[tc_cv_cuda_dir="$with_cuda"])
+  HAVE_CUDA="${tc_cv_cuda_dir:-no}"
+  if test "$HAVE_CUDA" != no
+  then
+    CUDA_INCLUDEDIR="$tc_cv_cuda_dir/include"
+    HAVE_CUDA="yes"
+    case $host in
+      x86_64-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib64 -Wl,-rpath,$tc_cv_cuda_dir/lib64 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
+      i?86-*-*) CUDA_LIBS="-L$tc_cv_cuda_dir/lib32 -Wl,-rpath,$tc_cv_cuda_dir/lib32 -lcublas -lcusparse -lcurand -lcudart -lrt" ;;
+      *) tc_cv_cuda_dir="no"; HAVE_CUDA="no"; CUDA_LIBDIR= ; CUDA_INCLUDEDIR= ;;
+    esac
+    AC_SUBST([CUDA_LIBS])
+    AC_SUBST([CUDA_INCLUDEDIR])
+    AC_SUBST([HAVE_CUDA])
+  fi
+ ])dnl
+])dnl
+
+
+
 dnl check for MKL
 dnl
 AC_DEFUN([TC_MKL],
