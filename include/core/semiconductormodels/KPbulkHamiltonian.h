@@ -1,6 +1,5 @@
 #ifndef _KPBULKHAMILTONIAN_H_
 #define _KPBULKHAMILTONIAN_H_
-//! A class that builds kp bulk Hamiltonian
 
 #include <complex>
 #include <vector>
@@ -11,6 +10,7 @@
 #include "KPparameters.h"
 typedef std::complex<double> Complex;
 
+//! A class that builds kp bulk Hamiltonian
 class KPbulkHamiltonian : public EFAbulkHamiltonian
 {
  public:
@@ -91,7 +91,6 @@ class KPbulkHamiltonian : public EFAbulkHamiltonian
     i1 - P-vector component number in crystal system: 0 - "x", 1 - "y", 2 - "z"
     i2, i3 - band indexes like in the Hamiltonian matrix.
   */
-
   std::vector< std::vector <std::vector<MatrixElement> > > P; 
 
 

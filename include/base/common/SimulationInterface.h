@@ -1474,11 +1474,12 @@ class SimulationInterface : public TiberModelObject
     //! \see get_bulk_model()
     PhysicalModel* _get_bulk_model(const Elem* elem) const;
 
-    // ! \see get_bulk_model()
+    //  \see get_bulk_model()
     //PhysicalModel* _get_bulk_model(const Atom& atom, bool parent) const;
 
     //! \see get_bulk_model()
-    PhysicalModel* _get_bulk_model(const Atom& atom1, const Atom& atom2, bool parent) const;
+    PhysicalModel* _get_bulk_model(const Atom& atom1, const Atom& atom2,
+        bool parent) const;
 
     //! \see get_interface_model()
     PhysicalModel* _get_interface_model(const Elem* elem, int side) const;
