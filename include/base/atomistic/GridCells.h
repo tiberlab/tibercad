@@ -19,7 +19,8 @@ class GridCells
   
   class NeighborIterator;
 
-  GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period, const double minimum_spacing);
+  GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
+      const double minimum_spacing, unsigned int projected_dim = 3);
 
   ~GridCells(void);
 
@@ -87,8 +88,14 @@ class GridCells
   Tensor1 _edge_max;
 
 
-  //! minimal spacing used for the grid
-  double _minimum_spacing; 
+  //! minimal spacing along x used for the grid
+  double _minimum_spacing_x;
+
+  //! minimal spacing along y used for the grid
+  double _minimum_spacing_y;
+
+  //! minimal spacing along z used for the grid
+  double _minimum_spacing_z;
 
   //! Spacing of the grid along x axis
   double _x_spacing;
@@ -154,8 +161,7 @@ public:
        
        bool operator !=(const NeighborIterator& it)
        {
-         return ( _x != it._x || _y != it._y || _z != it._z || 
-              _dx != it._dx || _dy != it._dy || _dz != it._dz );
+         return(!(*this == it));
        }
 
        //! dereferencing operator, return cell and shift vector 

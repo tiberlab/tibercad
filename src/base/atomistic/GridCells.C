@@ -1,13 +1,43 @@
 
 #include "GridCells.h"
+#include "vector_value.h"
 
 
-GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period, const double minimum_spacing)                  
+
+
+GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
+    const double minimum_spacing, unsigned int projected_dim)
 {
-  _minimum_spacing = minimum_spacing;     
-
   _period = period;
+
+  _minimum_spacing_x = minimum_spacing;
+  _minimum_spacing_y = minimum_spacing;
+  _minimum_spacing_z = minimum_spacing;
   
+  if (projected_dim < 3)
+  {
+    RealVectorValue period_x(0.0), period_y(0.0), period_z(0.0);
+    period_x(0) = _period(1,1);
+    period_x(1) = _period(2,1);
+    period_x(2) = _period(3,1);
+    period_y(0) = _period(1,2);
+    period_y(1) = _period(2,2);
+    period_y(2) = _period(3,2);
+    period_z(0) = _period(1,3);
+    period_z(1) = _period(2,3);
+    period_z(2) = _period(3,3);
+    switch (projected_dim)
+    {
+      case 0:
+        _minimum_spacing_x = period_x.size();
+
+      case 1:
+        _minimum_spacing_y = period_y.size();
+
+      case 2:
+        _minimum_spacing_z = period_z.size();
+    }
+  }
 
   define_edges(basis);
 
@@ -81,13 +111,13 @@ GridCells::define_grid(void)
   lenght_y = _edge_max(2) - _edge_min(2);
   lenght_z = _edge_max(3) - _edge_min(3);
 
-  n_x = static_cast<unsigned int>((floor(lenght_x / _minimum_spacing)) + 1); 
+  n_x = static_cast<unsigned int>((floor(lenght_x / _minimum_spacing_x)) + 1);
   _x_spacing = lenght_x / n_x;
 
-  n_y = static_cast<unsigned int>((floor(lenght_y / _minimum_spacing)) + 1); 
+  n_y = static_cast<unsigned int>((floor(lenght_y / _minimum_spacing_y)) + 1);
   _y_spacing = lenght_y / n_y;
 
-  n_z = static_cast<unsigned int>((floor(lenght_z / _minimum_spacing)) + 1); 
+  n_z = static_cast<unsigned int>((floor(lenght_z / _minimum_spacing_z)) + 1);
   _z_spacing = lenght_z / n_z;
 
 }

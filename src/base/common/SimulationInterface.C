@@ -2667,10 +2667,10 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
   //std::cout<<"Atoms in sphere Rmax: "<<Nat<<std::endl;
 
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
- 
+
   // Partition the structure into cells for O(N) scheme
   Tensor2Gen period = get_atomistic_structure()->get_ttype_lattice_vectors(); 
-  GridCells cells(structure, period, deltar_max);
+  GridCells cells(structure, period, deltar_max, get_mesh().mesh_dimension());
   //cells.print_statistics();
 
   unsigned int notassociated = 0;
@@ -2697,7 +2697,7 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
     GridCells::NeighborIterator end = cells.end(l,m,n);
     unsigned int count = 0;
 
-    for ( ; it!=end; ++it)
+    for ( ; it != end; ++it)
     {
       unsigned int c1 = (*it).first;
       const Tensor1& shift = *((*it).second);
@@ -2709,25 +2709,37 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
       {     
         unsigned int iatm = cells[c1][i];
 
-        if (structure[iatm].get_specie()==Specie::H ) continue;
+        if (structure[iatm].get_specie() == Specie::H ) continue;
 
         Point pat = structure[iatm].get_position();
         
+        // the following is quite a hack, just to make it take all atoms in the
+        // directions orthogonal to the simulation domain
         double x1 = pat(0);
         if (abs(x-x1) > deltar_max) continue;
-        double y1 = pat(1);
-        if (abs(y-y1) > deltar_max) continue;
-        double z1 = pat(2);
-        if (abs(z-z1) > deltar_max) continue;
         
-        double deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1) + (z - z1) * (z - z1);
-        
-        if (deltar2 > deltar2_max) continue;
-        else
+        if (get_mesh().mesh_dimension() > 1)
         {
-          temp.push_back(iatm);
-          count++;
+          double y1 = pat(1);
+          if (abs(y-y1) > deltar_max) continue;
+
+          double deltar2 = (x - x1) * (x - x1) + (y - y1) * (y - y1);
+
+          if (get_mesh().mesh_dimension() > 2)
+          {
+            double z1 = pat(2);
+            if (abs(z-z1) > deltar_max) continue;
+
+            deltar2 += (z - z1) * (z - z1);
+          }
+
+
+          if (deltar2 > deltar2_max) continue;
         }
+
+
+        temp.push_back(iatm);
+        count++;
       }    
     }
 
