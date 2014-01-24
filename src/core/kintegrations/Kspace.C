@@ -137,13 +137,20 @@ void Kspace::build_k_grid()
           p(2) = p(1);
           p(1) = p(0);
           p(0) = 0.0;
-          cerr << p << endl;
         }
+        // does not work for some reason:
         //MeshTools::Modification::rotate(*kmesh, 90, 90, 0);
         break;
 
       case 1:
-        MeshTools::Modification::rotate(*kmesh, 0, 90, 90);
+        for (unsigned int n=0; n < kmesh->n_nodes(); n++)
+        {
+          Point& p = kmesh->node(n);
+          p(2) = p(0);
+          p(1) = 0.0;
+          p(0) = 0.0;
+        }
+        //MeshTools::Modification::rotate(*kmesh, 0, 90, 90);
         break;
 
       default:
