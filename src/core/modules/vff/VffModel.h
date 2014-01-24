@@ -25,21 +25,21 @@ public:
   //! Creator function
   static VffModel* create(const Material* mat, const ModelOptions& options);
 
-  const double get_alpha(void) const;
+  double get_alpha(void) const;
 
-  const double get_beta(void) const;
+  double get_beta(void) const;
 
-  const double get_costeta(void) const;
+  double get_costeta(void) const;
 
-  const double get_d(void) const;
+  double get_d(void) const;
 
-  const double get_alpha(const Atom& atm1, const Atom& atm2) const;
+  double get_alpha(const Atom& atm1, const Atom& atm2) const;
 
-  const double get_beta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const;
+  double get_beta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const;
 
-  const double get_costeta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const;
+  double get_costeta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const;
 
-  const double get_d(const Atom& atm1, const Atom& atm2) const;
+  double get_d(const Atom& atm1, const Atom& atm2) const;
 
 
 protected:
@@ -100,25 +100,25 @@ void  VffModel::_destroy( TiberModelObject* p)
 }
 
 inline
-const double VffModel::get_alpha(void) const
+double VffModel::get_alpha(void) const
 {
   return _keating->get_alpha_0();
 }
 
 inline
-const double VffModel::get_beta(void) const
+double VffModel::get_beta(void) const
 {
   return _keating->get_beta_0();
 }
 
 inline
-const double VffModel::get_costeta(void) const
+double VffModel::get_costeta(void) const
 {
   return _keating->get_costeta_0();
 }
 
 inline
-const double VffModel::get_d(void) const
+double VffModel::get_d(void) const
 {
   return _keating->get_d_0();
 }

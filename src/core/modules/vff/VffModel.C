@@ -43,7 +43,7 @@ VffModel::do_init( )
 }
 
 
-const double
+double
 VffModel::get_alpha(const Atom& atm1, const Atom& atm2) const
 {
   if (get_material()->get_structure() == "zb")
@@ -55,7 +55,7 @@ VffModel::get_alpha(const Atom& atm1, const Atom& atm2) const
 }
 
 
-const double
+double
 VffModel::get_beta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const
 {
   if (get_material()->get_structure() == "zb")
@@ -67,7 +67,7 @@ VffModel::get_beta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const
 }
 
 
-const double
+double
 VffModel::get_d(const Atom& atm1, const Atom& atm2) const
 {
   if (get_material()->get_structure() == "zb")
@@ -79,7 +79,7 @@ VffModel::get_d(const Atom& atm1, const Atom& atm2) const
 }
 
 
-const double
+double
 VffModel::get_costeta(const Atom& atm1, const Atom& atm2, const Atom& atm3) const
 {
   if (get_material()->get_structure() == "zb")
