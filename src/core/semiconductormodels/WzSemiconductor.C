@@ -146,12 +146,52 @@ void WzSemiconductor::read_database( )
 
 void WzSemiconductor::do_calculate_kp_params (KPparams& par)
 {
-  if(_kp_model=="6x6") calculate_6x6_kp_params(par);
-  if(_kp_model=="8x8") calculate_8x8_kp_params(par);
-  if(_kp_model=="14x14") calculate_14x14_kp_params(par);
+  if(_kp_model=="2x2") calculate_2x2_kp_params(par);
+  else if(_kp_model=="6x6") calculate_6x6_kp_params(par);
+  else if(_kp_model=="8x8") calculate_8x8_kp_params(par);
+  else if(_kp_model=="14x14") calculate_14x14_kp_params(par);
 }
 
-//--------------------------------------------------
+
+
+void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
+{
+  // Valence band k.p parameters:
+
+  result.L1 = 0.5 * (par.A5 + par.A4 + par.A2 - 1.0);
+
+  result.L2 = 0.5 * (par.A1 - 1.0);
+
+  result.M1 = 0.5 * (par.A4 + par.A2 - par.A5 - 1.0);
+
+  result.M2 = 0.5 * (par.A1 + par.A3 - 1.0);
+
+  result.M3 = 0.5 * (par.A2 - 1.0);
+
+  result.l1s = (par.D5 +  par.D4 + par.D2)/Constants::Hartree; result.l2s = par.D1/Constants::Hartree;
+
+  result.m1s = (par.D4 + par.D2 - par.D5)/Constants::Hartree;  result.m2s = (par.D1 + par.D3)/Constants::Hartree;
+
+  result.m3s = par.D2/Constants::Hartree;
+
+  result.n1s = 2.0 * par.D5/Constants::Hartree; result.n2s = sqrt(2.0) * par.D6/Constants::Hartree;
+
+
+  //------------------------------------------------------------------------------//
+  // conduction band strain
+  result.axs = par.a_x / Constants::Hartree;
+  result.azs = par.a_z / Constants::Hartree;
+
+  result.E_v = par.Ev / Constants::Hartree;
+
+
+  // conduction band
+  result.s1 = 1.0/par.m_c_zz;
+  result.s2 = 1.0/par.m_c_xx;
+  result.E_c =  (par.Ev + par.EgGamma)/Constants::Hartree;
+}
+
+
 void WzSemiconductor::calculate_6x6_kp_params (KPparams&  result)
 {
 

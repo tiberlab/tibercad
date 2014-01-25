@@ -138,6 +138,7 @@ class  WzSemiconductor : public Semiconductor
 
   //!bowing parameters
   WzDDparameters bow; 
+
   //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
   /*!
     \f$
@@ -169,8 +170,9 @@ class  WzSemiconductor : public Semiconductor
     \f$
     
   */
-
   void calculate_6x6_kp_params(KPparams& par);
+
+  void calculate_2x2_kp_params(KPparams& par);
 
   void calculate_8x8_kp_params(KPparams& par);
 
