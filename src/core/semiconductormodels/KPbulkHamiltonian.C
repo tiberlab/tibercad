@@ -269,9 +269,18 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
     Ham[0][0].quad[0][0] = 0.5*par.s2;
     Ham[0][0].quad[1][1] = 0.5*par.s2;
     Ham[0][0].quad[2][2] = 0.5*par.s1;
+
     Ham[1][1].quad[0][0] = par.L1 + 0.5;
     Ham[1][1].quad[1][1] = par.M1 + 0.5;
     Ham[1][1].quad[2][2] = par.M2 + 0.5;
+
+    //Ham[1][1].quad[0][0] = par.M1 + 0.5;
+    //Ham[1][1].quad[1][1] = par.L1 + 0.5;
+    //Ham[1][1].quad[2][2] = par.M2 + 0.5;
+
+    //Ham[1][1].quad[0][0] = par.M3 + 0.5;
+    //Ham[1][1].quad[1][1] = par.M3 + 0.5;
+    //Ham[1][1].quad[2][2] = par.L2 + 0.5;
 
     Ham[0][0].constant += par.E_c;
     Ham[1][1].constant += par.E_v;
@@ -817,7 +826,16 @@ void KPbulkHamiltonian::apply_strain_and_potential(Tensor2Sym& strain_crystal, d
 
   if (num_bands == 2)
   {
+    //conduction band
+    strain_Ham_Bir_Pikus[0][0]  = par.axs * ( strain_crystal(1,1) + strain_crystal(2,2) ) +
+                                  par.azs * strain_crystal(3,3);
 
+    strain_Ham_Bir_Pikus[1][1]  = par.l1s*strain_crystal(1,1)+
+                                  par.m1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3);
+    //strain_Ham_Bir_Pikus[1][1]  = par.m1s*strain_crystal(1,1)+
+    //                              par.l1s*strain_crystal(2,2)+par.m2s*strain_crystal(3,3);
+    //strain_Ham_Bir_Pikus[1][1]  = par.m3s*strain_crystal(1,1)+
+    //                              par.m3s*strain_crystal(2,2)+par.l2s*strain_crystal(3,3);
   }
   else //if (num_bands > 2)
   {
