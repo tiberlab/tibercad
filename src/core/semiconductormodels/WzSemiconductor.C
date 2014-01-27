@@ -218,8 +218,37 @@ void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
   result.E_c =  (par.Ev + par.EgGamma)/Constants::Hartree;
 
   // CB-VB coupling
-  result.P1 = std::sqrt(par.Ep_1 * 0.5 / Constants::Hartree);
-  result.P2 = std::sqrt(par.Ep_2 * 0.5 / Constants::Hartree);
+
+  if (_spurious == "none")
+  {
+    result.s1 -= par.Ep_1 / par.EgGamma;
+    result.s2 -= par.Ep_2 / par.EgGamma;
+  }
+  else if (_spurious == "Foreman")
+  {
+    // Foreman: Ac = 0.0
+    result.s1 = 0.0;
+    result.s2 = 0.0;
+
+    par.Ep_1 = par.m_c_zz * par.EgGamma;
+
+    par.Ep_2 = par.m_c_xx * par.EgGamma;
+  }
+  else if (_spurious == "Chuang")
+  {
+    //we renormalize conduction band quadratic part to free electron mass
+    // Chuang/Povolotskty: Ac = 1/2.0  (division by 2 is done on assembly)
+
+    result.s1 = 1.0;
+    result.s2 = 1.0;
+
+    par.Ep_1 = (1.0/par.m_c_zz - result.s1) * par.EgGamma;
+
+    par.Ep_2 = (1.0/par.m_c_xx - result.s2) * par.EgGamma;
+  }
+
+  result.P1 = std::sqrt(0.5 * par.Ep_1 / Constants::Hartree);
+  result.P2 = std::sqrt(0.5 * par.Ep_2 / Constants::Hartree);
 
 }
 

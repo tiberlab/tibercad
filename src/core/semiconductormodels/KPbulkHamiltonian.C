@@ -282,6 +282,39 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
     //Ham[1][1].quad[1][1] = par.M3 + 0.5;
     //Ham[1][1].quad[2][2] = par.L2 + 0.5;
 
+    //cv part
+    if (kpCVtermSymmetric)
+    {
+      // we assume an s-like hole orbital
+      Ham[0][1].linear_left[0] = par.P2 * 0.5 *  Complex(0.0, 1.0);
+      Ham[0][1].linear_left[1] = par.P2 * 0.5 *  Complex(0.0, 1.0);
+      Ham[0][1].linear_left[2] = par.P1 * 0.5 *  Complex(0.0, 1.0);
+
+      Ham[0][1].linear_right[0] = Ham[0][1].linear_left[0];
+      Ham[0][1].linear_right[1] = Ham[0][1].linear_left[1];
+      Ham[0][1].linear_right[2] = Ham[0][1].linear_left[2];
+
+      for (short i = 0; i < 3; i++)
+      {
+        Ham[1][0].linear_left[i] =  conj(Ham[0][1].linear_left[i]);
+        Ham[1][0].linear_right[i] = conj(Ham[0][1].linear_right[i]);
+      }
+    }
+    else
+    {
+      Ham[0][1].linear_left[0] = par.P2 *  Complex(0, 1.0);
+      Ham[0][1].linear_left[1] = par.P2 *  Complex(0, 1.0);
+      Ham[0][1].linear_left[2] = par.P1 *  Complex(0, 1.0);
+
+      for (short i = 0; i < 3; i++)
+      {
+        Ham[1][0].linear_right[i] = conj(Ham[0][1].linear_left[i]);
+      }
+    }
+
+
+
+
     Ham[0][0].constant += par.E_c;
     Ham[1][1].constant += par.E_v;
   }
