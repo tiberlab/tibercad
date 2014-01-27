@@ -105,10 +105,11 @@ class ZbSemiconductor  : public Semiconductor
 
   ZbDDparameters  bow;
 
-  //---------------------------------------------------------------------------------//
-  // k.p Hamiltonian section
- //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
+  //! Calculates k.p parameters in atomic units for 2 band calculation
+  void calculate_2x2_kp_params(KPparams& par);
 
+
+  //! Calculates k.p parameters in atomic units for 6 band valence band calculation (see below)
   /*! Valence band k.p parameters:
 
       \f$
@@ -141,7 +142,6 @@ class ZbSemiconductor  : public Semiconductor
       \f$
 
   */
- 
    void calculate_6x6_kp_params(KPparams& par);
 
   //! Calculates k.p parameters in atomic units for 8 band valence band calculation (see below)

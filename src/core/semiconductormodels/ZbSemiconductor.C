@@ -190,13 +190,26 @@ ZbSemiconductor::ZbSemiconductor(const ModelOptions& options)
 
 void ZbSemiconductor::do_calculate_kp_params (KPparams& par)
 {
-  if(_kp_model=="6x6") calculate_6x6_kp_params(par);
-  if(_kp_model=="8x8") calculate_8x8_kp_params(par);
-  if(_kp_model=="14x14") calculate_14x14_kp_params(par);
+  if(_kp_model=="2x2") calculate_2x2_kp_params(par);
+  else if(_kp_model=="6x6") calculate_6x6_kp_params(par);
+  else if(_kp_model=="8x8") calculate_8x8_kp_params(par);
+  else if(_kp_model=="14x14") calculate_14x14_kp_params(par);
 }
 
 
-//=================================================================================//
+void ZbSemiconductor::calculate_2x2_kp_params (KPparams&  result)
+{
+  calculate_6x6_kp_params(result);
+
+  result.E_v = par.Ev / Constants::Hartree;
+
+  result.s1 = 1.0/par.m_G;
+  result.s2 = result.s1;
+
+  result.E_c =  (par.Ev + par.EgGamma)/Constants::Hartree;
+}
+
+
 void ZbSemiconductor::calculate_6x6_kp_params (KPparams&  result)
 {
 

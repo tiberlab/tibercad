@@ -168,6 +168,14 @@ void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
 
   result.M3 = 0.5 * (par.A2 - 1.0);
 
+  result.N1 = par.A5;
+
+  result.N2 = par.A6/sqrt(2.0);
+
+  result.N1_yx = result.M1;  result.N2_yx = result.M2;
+
+  result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N2 - result.N2_yx;
+
   result.l1s = (par.D5 +  par.D4 + par.D2)/Constants::Hartree; result.l2s = par.D1/Constants::Hartree;
 
   result.m1s = (par.D4 + par.D2 - par.D5)/Constants::Hartree;  result.m2s = (par.D1 + par.D3)/Constants::Hartree;
