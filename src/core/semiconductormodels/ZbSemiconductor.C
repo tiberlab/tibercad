@@ -39,6 +39,16 @@ void ZbSemiconductor::do_init()
   par.gamma2 = get_option("gamma2", par.gamma2);
   par.gamma3 = get_option("gamma3", par.gamma3);
 
+  if (_kp_model == "2x2")
+  {
+    double m_v = get_option("m_v", 0.0);
+    if (m_v != 0.0)
+    {
+      par.gamma1 = 1.0 / m_v;
+      par.gamma2 = 0.0;
+    }
+  }
+
   par.def_vol_X   = get_option("abs_def_pot_X",      par.def_vol_X );
   par.def_uniax_X = get_option("uniax_def_pot_X",  par.def_uniax_X);
   par.def_vol_L   = get_option("abs_def_pot_L",      par.def_vol_L);
@@ -206,7 +216,9 @@ void ZbSemiconductor::calculate_2x2_kp_params (KPparams&  result)
   result.s1 = 1.0/par.m_G;
   result.s2 = result.s1;
 
-  result.E_c =  (par.Ev + par.EgGamma)/Constants::Hartree;
+  result.E_c = (par.Ev + par.EgGamma)/Constants::Hartree;
+  result.l1s = par.a_v/Constants::Hartree; result.l2s = result.l1s;
+  result.m1s = par.a_v/Constants::Hartree; result.m2s = result.m1s;
 }
 
 

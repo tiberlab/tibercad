@@ -53,7 +53,24 @@ void WzSemiconductor::do_init()
   par.varshni_beta_G  = get_option("varshni_beta_G",  par.varshni_beta_G);
   
   
-  //here zero temperature and work parameters coinside
+  // we override with hole band masses for 2x2
+  if(_kp_model=="2x2")
+  {
+    double ma = 0.0;
+    ma = get_option("m_v_xx", ma);
+    double mc = 0.0;
+    mc = get_option("m_v_zz", mc);
+
+    if (ma != 0.0)
+      par.A2 = par.A4 = -0.5 / ma;
+
+    if (mc != 0.0)
+      par.A1 = par.A3 = -0.5 / mc;
+  }
+
+
+
+  //here zero temperature and work parameters coincide
   par_initial = par;
 }
 
@@ -158,16 +175,17 @@ void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
 {
   // Valence band k.p parameters:
 
-  result.L1 = 0.5 * (par.A5 + par.A4 + par.A2 - 1.0);
+  result.L1 = 0.5 * (par.A4 + par.A2 - 1.0);
 
-  result.L2 = 0.5 * (par.A1 - 1.0);
+  //result.L2 = 0.5 * (par.A1 - 1.0);
 
-  result.M1 = 0.5 * (par.A4 + par.A2 - par.A5 - 1.0);
+  result.M1 = 0.5 * (par.A4 + par.A2 - 1.0);
 
   result.M2 = 0.5 * (par.A1 + par.A3 - 1.0);
 
-  result.M3 = 0.5 * (par.A2 - 1.0);
+  //result.M3 = 0.5 * (par.A2 - 1.0);
 
+  /*
   result.N1 = par.A5;
 
   result.N2 = par.A6/sqrt(2.0);
@@ -175,14 +193,15 @@ void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
   result.N1_yx = result.M1;  result.N2_yx = result.M2;
 
   result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N2 - result.N2_yx;
+  */
 
-  result.l1s = (par.D5 +  par.D4 + par.D2)/Constants::Hartree; result.l2s = par.D1/Constants::Hartree;
+  result.l1s = (par.D4 + par.D2)/Constants::Hartree;
+  result.m1s = (par.D4 + par.D2)/Constants::Hartree;
+  result.m2s = (par.D1 + par.D3)/Constants::Hartree;
 
-  result.m1s = (par.D4 + par.D2 - par.D5)/Constants::Hartree;  result.m2s = (par.D1 + par.D3)/Constants::Hartree;
+  //result.m3s = par.D2/Constants::Hartree;
 
-  result.m3s = par.D2/Constants::Hartree;
-
-  result.n1s = 2.0 * par.D5/Constants::Hartree; result.n2s = sqrt(2.0) * par.D6/Constants::Hartree;
+  //result.n1s = 2.0 * par.D5/Constants::Hartree; result.n2s = sqrt(2.0) * par.D6/Constants::Hartree;
 
 
   //------------------------------------------------------------------------------//
@@ -197,6 +216,11 @@ void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
   result.s1 = 1.0/par.m_c_zz;
   result.s2 = 1.0/par.m_c_xx;
   result.E_c =  (par.Ev + par.EgGamma)/Constants::Hartree;
+
+  // CB-VB coupling
+  result.P1 = std::sqrt(par.Ep_1 * 0.5 / Constants::Hartree);
+  result.P2 = std::sqrt(par.Ep_2 * 0.5 / Constants::Hartree);
+
 }
 
 
