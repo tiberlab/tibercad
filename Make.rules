@@ -73,6 +73,7 @@ $(subdirs):
 	
 
 .$(ARCH)/%.d: %.C 
+	@mkdir -p .$(ARCH)
 	@$(CC) -MG -MT .$(ARCH)/$(basename $<)$(obj-suffix) -MM $(CPPFLAGS) $(CXXFLAGS) $< > $@.$$$$ ; \
 	 sed -e 's,\($*\)\$(obj-suffix)[ :]*,\1.\*\.o : $@ ,g' < $@.$$$$ > $@ ; \
 	 sed -e 's/.*://' -e 's/\\$$//' < $@.$$$$ | fmt -1 \
