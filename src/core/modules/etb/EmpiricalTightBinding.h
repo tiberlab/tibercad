@@ -152,8 +152,6 @@ class ETB : public TightBinding
 
   virtual void do_solve (void);
 
-  virtual void plot_globaldata (void);
-  
   virtual void plot_atomisticdata (void);
 
   virtual void parse_options(void);

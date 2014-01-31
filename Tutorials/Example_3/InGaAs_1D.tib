@@ -186,8 +186,7 @@ Module efaschroedinger
 
   Physics
   {
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
+    model = 6x6   #  k.p  for  valence  band
   }
 
   

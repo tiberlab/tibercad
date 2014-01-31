@@ -149,10 +149,9 @@ void KPbulkHamiltonian::do_init()
 
   nullify_parameters();
 
-  // dummy
-  get_option("model","");
+  model_name = get_option("model", "6x6");
 
-  model_name = get_option("kp_model","6x6");
+  model_name = get_option("kp_model", model_name);
 
   kpVVtermSymmetric = get_option("kpVVtermSymmetric", false);
 

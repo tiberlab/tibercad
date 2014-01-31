@@ -5,50 +5,19 @@
 
 #include "EigenvalueProblem.h"
 
-// Basic include files needed for the mesh functionality.
-#include "mesh.h"
-#include "linear_implicit_system.h"
 
-#include "getpot.h"
-
-// Define the Finite Element object.
-#include "fe.h"
-#include "elem.h"
-
-// Define Gauss quadrature rules.
-#include "quadrature_gauss.h" 
-
-// Define useful datatypes for finite element
-// matrix and vector components.
-#include "sparse_matrix.h"
-#include "numeric_vector.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
 
 // Define the DofMap, which handles degree of freedom
 // indexing.
 #include "dof_map.h"
 
-#include "fe_interface.h"
-#include <stdio.h>
-#include <stdlib.h>
 #include <vector>
 #include <complex>
-
-
-#include <fstream>
-#include <iomanip>
-
-//------------------------------------------------------------------------------
-
-#include <complex>
-#include <vector>
-#include <petsc_matrix.h>
-#include <algorithm>
 #include <set>
-#include "mesh_data.h"
 
 class EquationSystems;
+class MeshBase;
+class LinearImplicitSystem;
 
 //! Base class to solve complex valued eigenvalue problems based on FEM
 class FEMEigenvalueProblem : public  EigenvalueProblem
@@ -82,8 +51,6 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
     unsigned int max_iteration_number;  //!< maximum number of iterations for the eigenvalue solver
     
     double    eigen_solver_tolerance;   //!< tolerance for eigenvalue solver 
-   
-    bool solve_ev_problem_twice;        //!< if true, calculate the first eigenvalue only and then run again
    
     unsigned int number_of_eigenstates; //!< number of eigenstates to be calculated
     

@@ -139,11 +139,21 @@ ParticleDensity::add_quantum_density(const std::string& name)
 
     // We let it override with a more specific name
     if (_name == "electron")
+      density_name = "eDensity";
+    else if (_name == "hole")
+      density_name = "hDensity";
+
+    ID spec_id = qd->get_solution_id(density_name);
+    if (spec_id != INVALID_ID)
+      density_id = spec_id;
+
+    // We let it override with a more specific name
+    if (_name == "electron")
       density_name = "elDensity";
     else if (_name == "hole")
       density_name = "hlDensity";
 
-    ID spec_id = qd->get_solution_id(density_name);
+    spec_id = qd->get_solution_id(density_name);
     if (spec_id != INVALID_ID)
       density_id = spec_id;
 
@@ -249,7 +259,10 @@ ParticleDensity::quantum_density(void)
       _quantum_density[i]->get_solution(tmp);
       size_t n = tmp[_3D_edge[i]].size();
       if (n > 0)
-        continuum = max(continuum, tmp[_3D_edge[i]][n - 1]);
+        if (_charge < 0) // electron
+          continuum = max(continuum, tmp[_3D_edge[i]][n - 1]);
+        else
+          continuum = max(continuum, tmp[_3D_edge[i]][0]);
     }
   }
 

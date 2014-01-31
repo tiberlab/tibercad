@@ -525,7 +525,6 @@ void ETB::do_solve(void){
 
 
   // write state infos on screen.
-  Messages::info(" "); 
   write_states();
 
 
@@ -712,38 +711,7 @@ ETB::plot_atomisticdata(void)
 
 }
 	
-//-------------------------------------------------------------------------
-void
-ETB::plot_globaldata(void)
-{
 
-  string outdir = get_output_directory();
-
-  string filename(outdir + "/" + get_output_filename() + ".dat");
-  
-  ofstream file;
-  file.open(filename.c_str());
-
-  if (file.good())
-  {
-    // header
-    file << "# TB eigenstates (" << get_name() << ")\n";
-
-    file << "# Index" << setw(9)<< "Particle" << setw(12) << "EigenEnergy" 
-         << setw(15) << "Occupation"
-         << setw(12) << "FermiLevel" << setw(12) << "Temperature" << "\n";
-
-    for (unsigned int i = 0; i < _solution.size(); i++)
-    {
-        file << setw(7) << i << setw(8) << _solution[i].particle 
-             << setw(14) << _solution[i].eigen_energy << " "
-             << setw(14) << get_population(i) << " "
-             << setw(14) << _solution[i].electro_chem_pot << " "
-             << setw(11) << _solution[i].temperature << "\n";
-    }
-  }
-
-}
 
 //-------------------------------------------------------------------------
 

@@ -13,17 +13,15 @@
 
 using namespace std;
 
-namespace 
-{
-  double scalar_prod(const vector<Complex>& a, const vector<Complex>& b)
-  {
-    Complex result = 0;
-    for (size_t i = 0; i < a.size(); ++i)
-      result += a[i] * conj(b[i]);
 
-    return abs(result);
-  }
+
+void
+EigenvalueProblem::initialize_solution_container(size_t num_solutions)
+{
+  _solution.clear();
+  _solution.resize(num_solutions);
 }
+
 
 void EigenvalueProblem::init_kspace(void)
 {
@@ -341,6 +339,42 @@ EigenvalueProblem::plot_dispersion(void)
 
 
 void
+EigenvalueProblem::plot_globaldata(void)
+{
+
+  string outdir = get_output_directory();
+
+  string filename(outdir + "/" + get_output_filename() + ".dat");
+
+  ofstream file;
+  file.open(filename.c_str());
+
+  if (file.good())
+  {
+    // header
+    file << "# " << get_type() << " eigenstates (" << get_name() << ")\n";
+
+    file << "# Index" << setw(9)<< "Particle" << setw(12) << "EigenEnergy"
+         << setw(15) << "Occupation"
+         << setw(12) << "FermiLevel" << setw(12) << "Temperature" << "\n";
+
+    for (unsigned int i = 0; i < _solution.size(); i++)
+    {
+        file << setw(7) << i << setw(8) << _solution[i].particle
+             << setw(14) << _solution[i].eigen_energy << " "
+             << setw(14) << get_population(i) << " "
+             << setw(14) << _solution[i].electro_chem_pot << " "
+             << setw(11) << _solution[i].temperature << "\n";
+    }
+  }
+
+}
+
+
+
+
+
+void
 EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
     vector<vector<eigen_problem_solution>>& ordered_solutions)
 {
@@ -404,8 +438,8 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
         {
           if (!ids.count(j))
           {
-            double proj = scalar_prod(ordered_solutions[ref_node][k].eigen_vector,
-                _solution[j].eigen_vector);
+            double proj =
+                abs(scalar_product(ordered_solutions[ref_node][k], _solution[j]));
             cerr << j << " - " << proj << " ";
             if (proj > max_sp)
             {
@@ -816,48 +850,47 @@ void EigenvalueProblem::get_populations(const std::string& particle,
  
 double  EigenvalueProblem::get_population(int i) const
 {
-  
+
+  double val = 0.0;
+
   if(_solution[i].statistics == "Fermi")
   {        
-    double val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
-			 _solution[i].temperature);
-    
-      if(_solution[i].particle == "el" || _solution[i].particle == "electron")
-      {
-	  return val;	  
-      }	
-      
-      if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
-      {	
-	  return 1-val;	  
-      }
-      
+    val = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
+        _solution[i].temperature);
+
+
+    if(_solution[i].particle == "hl" || _solution[i].particle == "hole")
+    {
+      val = 1 - val;
+    }
+
   }
   else
   {
-    double val = Bose(_solution[i].eigen_energy, _solution[i].electro_chem_pot, 
-		      _solution[i].temperature);
-    
-    return val;	
-      
+    val = Bose(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
+        _solution[i].temperature);
+
   }
 
-  return 0;
+  return val;
 }
+
+
+
 
 double  EigenvalueProblem::Fermi(double Energy, double Fermi_energy, double Temperature) const
 {
   double T_EV = Temperature * Constants::k_Boltzmann;
   double exp_arg =  (Energy - Fermi_energy)/T_EV;
   
-  double el_fermi;
+  double occupation;
   
   if (exp_arg > 35) 
-    el_fermi = 0.0;
+    occupation = std::exp(-exp_arg);
   else
-    el_fermi = 1.0/(std::exp(exp_arg) + 1.0);
+    occupation = 1.0/(std::exp(exp_arg) + 1.0);
   
-  return el_fermi;
+  return occupation;
 
 }
 
@@ -869,7 +902,7 @@ double  EigenvalueProblem::Bose(double Energy, double electro_chem_pot, double T
   double bose;
   
   if (exp_arg > 35) 
-    bose = 0.0;
+    bose = std::exp(-exp_arg);
   else
     bose = 1.0/(std::exp(exp_arg) - 1.0);
   
@@ -883,39 +916,24 @@ void EigenvalueProblem::write_states(void) const
 
   int num_st=_solution.size();
 
-  std::cout<<std::endl;
-  std::cout<<  "# T   level    stat.     pot.       pop."<<std::endl;
+  Messages::newline();
+  Messages::info("#  type   level    stat.     pot.       pop.");
 
 
   for(int i=0; i< num_st; i++)
   {
-    std::cout<<i<<" "<<_solution[i].particle<<" "<< std::setprecision(6)
-	     <<_solution[i].eigen_energy<<" "<<_solution[i].statistics
-	     <<" "<<std::setw(10)<<_solution[i].electro_chem_pot
-	     <<" "<<std::setw(10)<<get_population(i)<<std::endl;
+    ostringstream os;
+    os << i << " " << _solution[i].particle << " " << std::setprecision(6)
+	     << _solution[i].eigen_energy << " " <<_solution[i].statistics
+	     << " " <<std::setw(10) << _solution[i].electro_chem_pot
+	     << " " <<std::setw(10) << get_population(i);
+    Messages::info(os.str());
   }
-  std::cout<<std::endl;
+  Messages::newline();
+
 }
 
-void EigenvalueProblem::write_states(const std::string& filename) const
-{
 
-  int num_st=_solution.size();
-  std::ofstream file;
-  file.open(filename.c_str());
-  
-  file << "# T   level    stat.     pot.       pop."<<std::endl;
-
-  for(int i=0; i< num_st; i++)
-  {
-    file <<i<<" "<<_solution[i].particle<<" "<< std::setprecision(6)
-	 <<_solution[i].eigen_energy<<" "<<_solution[i].statistics
-	 <<" "<<std::setw(10)<<_solution[i].electro_chem_pot
-	 <<" "<<std::setw(10)<<get_population(i)<<std::endl;
-  }
-
-  file.close();
-}
 
   
 void EigenvalueProblem::copy_H_to_solver( )
@@ -928,4 +946,31 @@ void EigenvalueProblem::copy_S_to_solver( )
   do_copy_S_to_solver();
 }
 
- 
+
+
+
+
+Complex
+EigenvalueProblem::scalar_product(const eigen_problem_solution& a,
+                                  const eigen_problem_solution& b) const
+{
+  return scalar_product(a.eigen_vector, b.eigen_vector);
+}
+
+
+
+Complex
+EigenvalueProblem::scalar_product(const vector<Complex>& a,
+                                  const vector<Complex>& b) const
+{
+  Complex sprod(0,0);
+
+  if (a.size() == b.size())
+  {
+    size_t length = a.size();
+    for (size_t i = 0; i < length; ++i)
+      sprod += conj(a[i]) * b[i];
+  }
+
+  return sprod;
+}

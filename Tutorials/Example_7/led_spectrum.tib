@@ -281,8 +281,6 @@ Module efaschroedinger
 
   number_of_eigenstates = 20 
 
-  particle = el
-
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
   strain_simulation = strain
 
@@ -303,15 +301,12 @@ Module efaschroedinger
 
   number_of_eigenstates = 20 
 
-  particle = hl
-
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
   strain_simulation = strain
 
   Physics
   {
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
+    model = 6x6   #  k.p  for  valence  band
   }
 
 }

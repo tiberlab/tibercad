@@ -4,13 +4,15 @@
 #define _EIGENVALUEPROBLEM_H_
 
 #include "SimulationInterface.h"
-#include "Kspace.h"
 #include "KspaceIntegration.h"
 
 #include "sparse_matrix.h"
 #include <complex>
 #include <vector>
 
+
+class Kspace;
+class Mesh;
 
 
 //! Abstract class to solve complex valued eigenvalue problem
@@ -31,6 +33,7 @@ class EigenvalueProblem : public SimulationInterface
     {
       double energy;
       unsigned int index;
+      std::string particle;
     };
 
     //! Container for eigenstates 
@@ -95,7 +98,6 @@ class EigenvalueProblem : public SimulationInterface
 
     void write_states(void) const;
 
-    void write_states(const std::string& filename) const;
 
     //!passes H matrix to the eigensolver
     void copy_H_to_solver(void);
@@ -118,15 +120,24 @@ class EigenvalueProblem : public SimulationInterface
     //! this is dangerous and should be substituted with calls to get_eigenvectors()
     const std::vector<eigen_problem_solution>& get_solution(void) const {return _solution;};
 
-    //! compares eigenstate energy for electrons needed for sorting
-    static bool compare_eigen_energy_electrons(const eigen_state& state1, const eigen_state& state2);
+    //  ! compares eigenstate energy for electrons needed for sorting
+    //static bool compare_eigen_energy_electrons(const eigen_state& state1, const eigen_state& state2);
 
-    //! compares eigenstate energy for holes needed for sorting
-    static bool compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2);
+    //  ! compares eigenstate energy for holes needed for sorting
+    //static bool compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2);
 
     virtual double get_band_edge(const std::string& band) { return 0; }
 
     virtual unsigned int get_number_of_bands(void) const { return 0; }
+
+    /*!
+     * \brief initialize the solution container to hold \c num_solutions solutions
+     *
+     * It is responsibility of the user to call this method before solving
+     * or before extracting solutions.
+     */
+    void initialize_solution_container(size_t num_solutions);
+
   
   protected:
 
@@ -156,6 +167,7 @@ class EigenvalueProblem : public SimulationInterface
 
     //!read SLEPc solutions
     /*!
+     * \return true when all required eigenstates are found
  
     1) Read all eigenvalues
     2) Sort the eigenvalues and select those we want 
@@ -164,7 +176,7 @@ class EigenvalueProblem : public SimulationInterface
  
     \param number_of_ev number of eigen functions to read
     */
-    virtual void read_SLEPC_solution(unsigned int number_of_ev) {};
+    virtual bool read_SLEPC_solution(void) { return true; }
 
 
     //!put spectrum shift energy to be almost equal to the 1st eigenvalue
@@ -178,12 +190,23 @@ class EigenvalueProblem : public SimulationInterface
     //! method used to plot quantum dispersion
     virtual void plot_dispersion(void);
 
+    //! Write out eigenvalues
+    virtual void plot_globaldata(void);
+
     //! Calculate the DOS
     void calculate_dos(void);
 
     //! process an element and its neighbours
     void process_element(const Elem* elem, unsigned int entryside,
         std::vector<std::vector<eigen_problem_solution>>& ordered_solutions);
+
+    //! Calculate the scalar product between states a and b
+    Complex scalar_product(const eigen_problem_solution& a,
+                           const eigen_problem_solution& b) const;
+
+    //! Calculate the scalar product between states a and b
+    Complex scalar_product(const std::vector<Complex>& a,
+                           const std::vector<Complex>& b) const;
 
     //!pointer to the imaginary part of the Hamiltonian
     SparseMatrix<double>* _H_real;
@@ -284,19 +307,19 @@ void EigenvalueProblem::k_is_old(void)
   _new_k=false;
 }
 
-inline
-bool EigenvalueProblem::compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2)
-{
-  return(state1.energy> state2.energy);
-}
+//inline
+//bool EigenvalueProblem::compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2)
+//{
+//  return(state1.energy> state2.energy);
+//}
 
 //=======================================================================//
 
-inline
-bool EigenvalueProblem::compare_eigen_energy_electrons(const eigen_state& state1, const eigen_state& state2)
-{
-  return(state1.energy< state2.energy);
-}
+//inline
+//bool EigenvalueProblem::compare_eigen_energy_electrons(const eigen_state& state1, const eigen_state& state2)
+//{
+//  return(state1.energy< state2.energy);
+//}
 
 
 //=======================================================================//

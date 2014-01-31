@@ -11,7 +11,6 @@ subdirs += kintegrations
 subdirs += quantumEFAmodels
 subdirs += tightbinding
 subdirs += optics 
-subdirs += macrostrain
 subdirs += eigenvalue
 subdirs += embracing
 subdirs += models

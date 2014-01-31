@@ -7,6 +7,14 @@
 #include "Messages.h"
 
 #include "equation_systems.h"
+#include "linear_implicit_system.h"
+#include "sparse_matrix.h"
+#include "numeric_vector.h"
+#include "dense_matrix.h"
+#include "dense_vector.h"
+//#include "fe.h"
+#include "fe_interface.h"
+#include "petsc_matrix.h"
 
 using namespace std;
 
@@ -270,6 +278,10 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
  
   assemble(); //calculate Hamiltonian and S matrix
 
+  // for practical reasons, we let ev_number always be even
+  if ((ev_number % 2) == 1)
+    ev_number += 1;
+
   
   if (ev_number > _hamiltonian_size)
     throw SolveFailedException("FEMEigenvalueProblem: number of requested eigenvalues is bigger than the  Hamiltonian size");
@@ -296,6 +308,9 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
   slep_opt.pc_type = solver_opt.preconditioner;
 
   slep_opt.st_ksp_type = solver_opt.st_ksp_type;
+
+  slep_opt.use_deflation_space =
+      get_solver_options().get_option("use_deflation_space", true);
  
  
   slep_opt.monitor = solver_opt.monitor;
@@ -303,56 +318,6 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
   slep_opt.spectrum_inversion_tolerance = solver_opt.spectrum_inversion_tolerance;
 
   //EigenSolver::check_matrices(1e-10,true);
-
-  vector<Complex> initial_vector;
-
-
-  if (solver_opt.solve_ev_problem_twice)
-  {
-
-    slep_opt.ev_number = 1;
-
-   
-    slep_opt.eps_tolerance =  solver_opt.eigen_solver_tolerance;
-   
-       
-    slep_opt.spectrum_shift = st_shift_value;
-
-
-    slep_opt.matrix_output = false;
-  
-   
-
-    {
-      if (verbose() > 0)
-        Messages::info("Solve to obtain spectrum shift ... ", false);
-
-      int result;
-      if (solver_opt.discretization_method == FEM) 
-	result = EigenSolver::eig_value_problem_general(slep_opt);
-      else
-	result = EigenSolver::eig_value_problem(slep_opt);
-
-
-      if (result !=0 )
-      {
-	throw SolveFailedException("Eigensolver problem\n");
-      }
-
-      if (verbose() > 0)
-        Messages::info("done");
-
-    
-    }
-   
-    st_shift_value = get_new_spectrum_shift();
-    
-    EigenSolver::get_eigen_vector( 0, initial_vector);
-    
-    EigenSolver::set_initial_vector(initial_vector);
-  
-  }
-
 
   slep_opt.eps_tolerance = solver_opt.eigen_solver_tolerance;
 
@@ -362,6 +327,9 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
  
   //std::cout << "  (EFA) Solving using guess (Hartree) " << st_shift_value << endl;
 
+  bool foundall = false;
+
+  while (!foundall)
   {
     int result;
     if (solver_opt.discretization_method == FEM) 
@@ -369,18 +337,15 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
     else
       result = EigenSolver::eig_value_problem(slep_opt);
       
-      
-
     if (result !=0 )
-    {
       throw SolveFailedException("Eigensolver problem\n");
-    }
+
+    foundall = read_SLEPC_solution();
+
+    slep_opt.spectrum_shift = get_new_spectrum_shift();
+    slep_opt.ev_number = solver_opt.number_of_eigenstates;
   }
   
-
-
-
-  read_SLEPC_solution(ev_number);
 
   int result = EigenSolver::clear_slepc();
  
@@ -405,9 +370,6 @@ void FEMEigenvalueProblem::parse_options()
   solver_opt.max_iteration_number = sol_opt.get_option("max_iteration_number",30000);
 
   solver_opt.eigen_solver_tolerance  = sol_opt.get_option("eigen_solver_tolerance",1e-9);
-
-  solver_opt.solve_ev_problem_twice  = sol_opt.get_option("solve_ev_problem_twice",false);
-
 
   solver_opt.spectral_trans = sol_opt.get_option("spectral_transformation","shift_and_invert");
 

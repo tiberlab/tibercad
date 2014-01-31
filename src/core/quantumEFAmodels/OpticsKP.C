@@ -13,8 +13,11 @@
 #include "ModelOptions.h"
 
 #include <equation_systems.h>
+#include <linear_implicit_system.h>
 #include <dense_submatrix.h>
 #include <mesh_generation.h>
+#include <petsc_matrix.h>
+#include <quadrature_gauss.h>
 
 #include <cstdlib>
 

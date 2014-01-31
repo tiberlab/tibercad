@@ -30,7 +30,11 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   struct options
   {
     
-    std::string particle;   //!< particle name "el" or "hl"
+    //std::string particle;   //!< particle name "el" or "hl"
+
+    unsigned int num_el_states; //!< number of electron states to be calculated
+
+    unsigned int num_hl_states; //!< number of hole states to be calculated
 
     unsigned int degeneracy; //!< the degeneracy factor
 
@@ -38,7 +42,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
     //bool periodicity[3];    //!< periodic boundary conditions
 
-    double spectrum_shift;    //!< shift of spectrum ised in matrix assembly[eV]
+    //double spectrum_shift;    //!< shift of spectrum used in matrix assembly[eV]
 
     bool  consider_potential; //!< apply potential to the EFA Hamiltonian;
 
@@ -110,7 +114,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     \param  i number of state
    
    */
-  double calculate_fermi_averaged(unsigned int i);
+  double calculate_fermi_averaged(unsigned int i, const std::string& particle);
 
 
   
@@ -142,9 +146,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     
    
 
-  //!returns a constant reference calculated density
-  const std::map<const Elem*, double>& get_density(void) const 
-  { return _density; } ;
+  //returns a constant reference calculated density
+  //const std::map<const Elem*, double>& get_density(void) const
+  //{ return _density; } ;
 
   //!returns number of bands
   inline unsigned int get_number_of_bands(void) const;
@@ -161,10 +165,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   void get_occupations(std::vector<double>& values) const;
 
 
-  inline double get_particle_charge(void) const;
- 
-
-
   //! returns element used for bulk calculation 
   inline const Elem*  return_bulk_element(void) const;
 
@@ -176,7 +176,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     EigenEnergy,
     Occupation,
     EigenEnergyOnMesh,
-    QuantumDensity
+    eDensity,
+    hDensity
   };
 
   //! interface for temperature acquisition
@@ -203,10 +204,12 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   ID potential_ID;
 
   //! ID of electro chemical potential in poisson_equation for particles
-  ID electro_chem_pot_ID;
+  ID el_electro_chem_pot_ID;
+  ID hl_electro_chem_pot_ID;
 
   //! band edge ID in poisson_equation
-  ID band_edge_ID;
+  ID cb_band_edge_ID;
+  ID vb_band_edge_ID;
 
   
   //! If \c true we have to calculate the density
@@ -250,11 +253,11 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
  
     \param number_of_ev number of eigen functions to read
   */
-  void read_SLEPC_solution(unsigned int number_of_ev);
+  bool read_SLEPC_solution(void);
 
 
-  //! Transform the eigenstates with S^-1/2, if needed
-  void transform_eigenstates(void);
+  //! Transform the eigenstate with S^-1/2, if needed
+  void transform_eigenstate(std::vector<Complex>& eigvec);
 
  
   //!creates constraints
@@ -299,7 +302,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     \param Fermi_energy  Fermi energy [eV]
     \param temperature   temperature [K] 
    */
-  double Fermi_statistics_probability(double Energy, double Fermi_energy, double temperature) const;
+  double Fermi_statistics_probability(double Energy, double Fermi_energy,
+      double temperature, const std::string& particle) const;
 
 
   //!Calculate number of bands in the Hamiltonian 
@@ -334,7 +338,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   double get_electric_potential(const Elem* elem, const Point&  qp) const;
 
   //!return electro chemical potential from drift-diffusion
-  double get_electro_chem_potential(const Elem* elem) const; 
+  double get_el_electro_chem_potential(const Elem* elem) const;
+  double get_hl_electro_chem_potential(const Elem* elem) const;
 
 
   //!point for bulk dispersion
@@ -371,7 +376,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   virtual void do_solve_for_kpoint(const Point& kpoint);
 
   //! We override this to write in our own format
-  virtual void plot_globaldata(void);
+  //virtual void plot_globaldata(void);
 
  
   virtual void do_assemble(const ModelOptions& options);
@@ -381,9 +386,11 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   bool check_confinement(const std::vector<Complex>& state);
 
 };
+
+
 //-------------------------------------------------------------------
 inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy, double Fermi_energy,
-                                                                  double Temperature) const
+                                                                  double Temperature, const std::string& particle) const
 {
   
 
@@ -399,7 +406,7 @@ inline double EnvelopFunctionApprox::Fermi_statistics_probability(double Energy,
 
 
  
-  if (opt.particle == "el")
+  if (particle == "el")
     return(el_fermi);
   else
     return(1.0 - el_fermi);
@@ -440,14 +447,7 @@ inline const std::map<short, short>& EnvelopFunctionApprox::get_band_map(void) c
 
 }
 
-//--------------------------------------------------------------------
-inline double EnvelopFunctionApprox::get_particle_charge(void) const
-{
-  if (opt.particle == "el")
-    return -1.0;
-  else
-    return +1.0;
-} 
+
 
 inline const Elem*  EnvelopFunctionApprox::return_bulk_element(void) const
 {

@@ -168,7 +168,6 @@ Module  efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
    
-  particle = el
   poisson_simulation = dd
   strain_simulation = strain  
 
@@ -192,20 +191,17 @@ Module  efaschroedinger
 
 {
  
-  name = quantum_hl
   regions = Quantum_dot 
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
-  particle = hl
   poisson_simulation = dd
   strain_simulation = strain 
   
 
   Physics
   {
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
+    model = 6x6
   }
 
   Solver

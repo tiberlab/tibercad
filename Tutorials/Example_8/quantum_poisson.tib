@@ -141,8 +141,7 @@ Module efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
-  particle = el
-  number_of_eigenstates = 22
+  num_electron_states = 22
   poisson_simulation = dd
   strain_simulation = strain 
 

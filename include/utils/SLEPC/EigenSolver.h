@@ -36,6 +36,8 @@ class EigenSolver
 
     bool matrix_output;
 
+    bool use_deflation_space;
+
     std::string pc_type; //<! preconditioner name
 
     std::string spectral_trans;

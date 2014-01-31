@@ -590,8 +590,19 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 
   ierr = EPSSolve(eps);
 
-  //ierr =  EPSGetConverged(eps,&nconv);  CHKERRQ(ierr);
+  if (opt.use_deflation_space)
+  {
+    ierr =  EPSGetConverged(eps, &nconv);  CHKERRQ(ierr);
 
+    Vec* v = new Vec[nconv];
+    for (int i = 0; i < nconv; ++i)
+    {
+      MatGetVecs(A,PETSC_NULL,&v[i]);
+    }
+    EPSGetInvariantSubspace(eps, v);
+    EPSAttachDeflationSpace(eps, nconv, v, PETSC_TRUE);
+    // TODO do we need to delete explicitly the vectors??
+  }
 
   return ierr;
 

@@ -162,7 +162,6 @@ Module efaschroedinger
   regions = quantum 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
-  particle = el
   poisson_simulation = dd
   strain_simulation = strain
 
@@ -184,15 +183,13 @@ Module efaschroedinger
   regions =  quantum
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
-  particle = hl
   poisson_simulation = dd
   strain_simulation =  strain
     
   
   Physics
   {
-    model = kp
-    kp_model = 6x6
+    model = 6x6
   }
   
   Solver

@@ -138,7 +138,7 @@ Module  efaschroedinger
  
   Dispersion
   {
-    k-path = K-G-M
+    k-path = G-M
     k_max = 0.1
     number_of_nodes = 10	
   }	
@@ -173,7 +173,7 @@ Module  efaschroedinger
 
   Dispersion
   {
-    k-path = K-G-M
+    k-path = G-M
     k_max = 0.1
     number_of_nodes = 10	
   }	
@@ -184,8 +184,7 @@ Module  efaschroedinger
 
   Physics
   { 
-    model = kp  
-    kp_model = 6x6 # 8x8
+    model = 6x6  
   }
 
 }

@@ -76,7 +76,6 @@ Module elasticity
   regions = all
 
   plot = (Strain, StrainCell,Stress,Displacement )
-  lin_rel_tol = 1e-6 
 
   Physics 
   {
@@ -186,7 +185,6 @@ Module efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
-  particle = el
   number_of_eigenstates = 3
   poisson_model_name = dd
   strain_model_name = strain 
@@ -209,16 +207,14 @@ Module efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
-  particle = hl
-  number_of_eigenstates = 12
+  num_hole_states = 12
   poisson_model_name = dd
   strain_model_name = strain 
   quadrature_rule = trapez
   
   Physics
   {
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
+    model = 6x6
   }
 
 }

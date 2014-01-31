@@ -166,8 +166,6 @@ Module efaschroedinger
   name = quantum_el
   regions = (1, 4, 5)
 
-  particle = el
-  
   poisson_model_name = dd
   strain_model_name = str
 
@@ -176,11 +174,11 @@ Module efaschroedinger
 
   Solver
   {
-    number_of_eigenstates = 5 
+    num_electron_states = 5
     #solver = lapack
   }
 
-  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+  plot = (ProbabilityDensity, EigenEnergy, eDensity)
 
   Physics
   {
@@ -188,31 +186,6 @@ Module efaschroedinger
   }
 }
 
-
-Module efaschroedinger
-{
-  name = quantum_hl
-  regions = all
-
-  particle = hl
-  poisson_model_name = dd
-  strain_model_name = str
-  
-  Solver
-  {
-     number_of_eigenstates = 10
-     solver = arnoldi
-  }
-
-  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
-  
-  Physics
-  {
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
-  }
-}
-  
 
 
 

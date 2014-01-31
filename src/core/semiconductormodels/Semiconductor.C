@@ -37,8 +37,6 @@ void Semiconductor::do_init ()
   int verbose = SimulationOptions::verbose ();
 
   get_option("model","");
-  get_option("particle","");
-  get_option("spurious","");
   get_option("kpVVtermSymmetric","");
   get_option("kpCVtermSymmetric","");
 

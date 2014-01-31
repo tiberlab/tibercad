@@ -7,13 +7,13 @@
 #include "Material.h"
 #include "Atom.h"
 #include "MaterialBoundary.h"
+#include "PhysicalModel.h"
 #include "EdgeObject.h"
 #include "NodeObject.h"
 #include "Alloy.h"
 #include "Embracing.h"
 #include "Variable.h"
 
-#include "Macrostrain.h"
 #include "EnvelopFunctionApprox.h"
 #include "OpticsKP.h"
 #include "OpticsTB.h"
@@ -27,6 +27,7 @@
 
 // LibMesh includes
 #include "system.h"
+#include "fe_interface.h"
 
 #include <sstream>
 #include <algorithm>
@@ -113,9 +114,7 @@ SimulationInterface::create(const string& type,
   if (flavour.size() != 0)
     type_name += "_" + flavour;
 
-  if (type_name == "macrostrain")
-    sim = Macrostrain::create(options);
-  else if (type_name == "efaschroedinger")
+  if (type_name == "efaschroedinger")
     sim = EnvelopFunctionApprox::create(options);
   else if (type_name == "sweep")
     sim = Sweep::create(options);

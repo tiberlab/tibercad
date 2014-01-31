@@ -2,6 +2,7 @@
 
 #include "tiber_config.h"
 #include "PhysicalModelInterface.h"
+#include "SimulationInterface.h"
 #include "MaterialBoundary.h"
 #include "Material.h"
 #include "Variable.h"
@@ -11,13 +12,8 @@
 #include "Trap.h"
 #include "ParticleDensity.h"
 
-#include "ZbStiffness.h"
-#include "WzStiffness.h"
-#include "ZbPiezoelectricity.h"
-#include "WzPiezoelectricity.h"
 #include "ZbRotatedCrystal.h"
 #include "WzRotatedCrystal.h"
-#include "MacrostrainModel.h"
 #include "ZbSemiconductor.h"
 #include "WzSemiconductor.h"
 #include "ZbDDsemiconductor.h"
@@ -71,20 +67,10 @@ PhysicalModelInterface::_create(const string& name,
 
   PhysicalModelInterface* mod = NULL;
 
-  if (name == "stiffness_zb")
-    mod = ZbStiffness::create(options);
-  else if (name == "stiffness_wz")
-    mod = WzStiffness::create(options);
-  else if (name == "piezo_zb")
-    mod = ZbPiezoelectricity::create(options);
-  else if (name == "piezo_wz")
-    mod = WzPiezoelectricity::create(options);
-  else if (name == "cryst_zb")
+  if (name == "cryst_zb")
     mod = ZbRotatedCrystal::create(options);
   else if (name == "cryst_wz")
     mod = WzRotatedCrystal::create(options);
-  else if (name == "macrostrain")
-    mod = MacrostrainModel::create(options);
   else if (name == "semicond_zb")
     mod = ZbSemiconductor::create(options);
   else if (name == "semicond_wz")
