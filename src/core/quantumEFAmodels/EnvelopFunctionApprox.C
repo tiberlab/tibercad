@@ -66,8 +66,9 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::
   for (size_t i = 0; i < elem->n_nodes(); ++i)
         p[i] = elem->point(i);
 
+  bool electron = (particle == "el") || (particle == "Ec");
 
-  if(particle == "el")
+  if (electron)
     poisson_equation->get_solution(elem, cb_band_edge_ID, values, p);
   else
     poisson_equation->get_solution(elem, vb_band_edge_ID, values, p);
@@ -77,7 +78,7 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::
   for (size_t i = 1; i < elem->n_nodes(); ++i)
   {
      double temp = values[i];
-     if(particle == "el")
+     if (electron)
         bedge = (temp < bedge) ? temp : bedge;
      else
         bedge = (temp > bedge) ? temp : bedge;
@@ -385,6 +386,8 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
   double band_edge = get_band_edge(*el, particle);
   ++el;
 
+  bool condband = (particle == "el") || (particle == "Ec");
+
 
   for (; el != end_el ; ++el )
   {
@@ -392,7 +395,7 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
 
     double temp = get_band_edge(elem, particle);
 
-    if (particle == "el")
+    if (condband)
     {
       if (band_edge > temp)
 	band_edge = temp;
@@ -1332,11 +1335,6 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
 
   number_of_converged_solutions = EigenSolver::number_of_converged_eigenvalues();
 
-  //if (number_of_converged_solutions < number_of_ev)
-  //  throw SolveFailedException(get_name() + " obtained less eigenvalues than requested.");
-
-
-
   //--------------------------------------------------------------------
   //read eigenvalues
   //store also eigenvalue index for sorting
@@ -1485,6 +1483,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
         }
       }
     }
+    //check_orthogonality = true;
 
     // we found a (potentially) valid slot and fill it
     _solution[index].eigen_energy = ev[i].energy;
@@ -1545,11 +1544,13 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     //
     if (check_orthogonality)
     {
+      //cerr << "orthogonality (" << index << ") :";
       int inc = (_solution[index].particle == "el") ? -1 : 1;
       int ind = index + inc;
 
       while ((ind >= 0) && (ind < n_states))
       {
+        //if (_solution[ind].eigen_vector.size() == 0) break;
         if ((_solution[index].eigen_energy < (_solution[ind].eigen_energy - delta)) ||
             (_solution[index].eigen_energy > (_solution[ind].eigen_energy + delta)))
           break;
@@ -1557,13 +1558,15 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
         // we orthogonalize incrementally, relying on the fact that present
         // eigenstates are already orthogonal.
         // This does no harm if they are already orthogonal
-        Complex norm = scalar_product(_solution[ind], _solution[ind]);
+        Complex norm = sqrt(scalar_product(_solution[ind], _solution[ind]));
         Complex alpha = scalar_product(_solution[ind], _solution[index]) / norm;
+        //cerr << " (" << ind << ") " << alpha << ",";
         for (size_t j = 0; j < number_of_all_dofs; j++)
           _solution[index].eigen_vector[j] -= alpha * _solution[ind].eigen_vector[j];
 
         ind += inc;
       }
+      //cerr << "\n";
 
       double dotprod = abs(scalar_product(_solution[index], _solution[index]));
       if (dotprod < 1e-6)
@@ -1930,10 +1933,6 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
    std::vector<unsigned int> dof_indices_component;
 
    std::vector<unsigned int> dof_indices;
-
-   //-------------------------------------------------------------
-
-  //----------------------------------------------------//
 
 
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
