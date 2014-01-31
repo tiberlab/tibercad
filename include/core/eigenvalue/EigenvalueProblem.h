@@ -130,6 +130,12 @@ class EigenvalueProblem : public SimulationInterface
 
     virtual unsigned int get_number_of_bands(void) const { return 0; }
 
+    void set_permutation(const std::vector<unsigned int>& p);
+
+    void init_permutation(const unsigned int n_dofs);
+
+    bool is_generalized() const;
+
     /*!
      * \brief initialize the solution container to hold \c num_solutions solutions
      *
@@ -208,23 +214,28 @@ class EigenvalueProblem : public SimulationInterface
     Complex scalar_product(const std::vector<Complex>& a,
                            const std::vector<Complex>& b) const;
 
-    //!pointer to the imaginary part of the Hamiltonian
+    //! pointer to the real part of the Hamiltonian
     SparseMatrix<double>* _H_real;
 
-    //!pointer to the imaginary part of the Hamiltonian
+    //! pointer to the imaginary part of the Hamiltonian
     SparseMatrix<double>* _H_imag;
 
-    //!pointer to the real part of S matrix 
+    //! pointer to the real part of S matrix 
     SparseMatrix<double>* _S_real;
 
-    //!pointer to the real part of S matrix 
+    //! pointer to the real part of S matrix 
     SparseMatrix<double>* _S_imag;
 
-    //bool do_dispersion;
+    //! Stores a general permutation on dofs
+    std::vector<ID> _perm;
+    std::vector<ID> _inv_perm;
 
+    //! bool do_dispersion;
     std::vector< std::vector<double> > _dispersion;
 
     //int disp_range[2];
+    bool _haveS;
+
 
   private:
 
@@ -257,6 +268,7 @@ class EigenvalueProblem : public SimulationInterface
     //! to set that k-vector is not new
     void k_is_old(void);
 
+  
 };
 
 inline
@@ -291,8 +303,21 @@ void EigenvalueProblem::set_k_point(const Point& k_vec)
   _new_k = true;
 }
 
+inline
+void EigenvalueProblem::init_permutation(const unsigned int n_dofs)
+{
+  _perm.resize(n_dofs);
+  for(unsigned int i=0; i<n_dofs; i++)
+    _perm[i] = i;
+}
 
-
+inline
+void EigenvalueProblem::set_permutation(const std::vector<unsigned int>& p)
+{
+  _perm.resize(p.size());
+  for(unsigned int i=0; i<p.size(); i++)
+    _perm[i] = p[i];
+}
 
 
 inline 
@@ -321,6 +346,11 @@ void EigenvalueProblem::k_is_old(void)
 //  return(state1.energy< state2.energy);
 //}
 
+inline
+bool EigenvalueProblem::is_generalized(void) const
+{
+  return _haveS;
+}
 
 //=======================================================================//
 

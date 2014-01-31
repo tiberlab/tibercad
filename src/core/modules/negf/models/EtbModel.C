@@ -26,5 +26,6 @@ EtbModel::do_init(void)
     exit(1);
   }
 
+  _degeneracy = 1;
 }
 

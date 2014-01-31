@@ -613,6 +613,8 @@ Device::init(void)
   const MaterialMap::iterator end(_material_map.end());
   for ( ; it != end; ++it)
     (it->second)->init();
+
+
   m.unindent();
   m.newline();
 
@@ -779,6 +781,8 @@ Device::get_material(const std::string& name) const
 
   return mat;
 }
+
+
 
 
 MaterialBoundary*

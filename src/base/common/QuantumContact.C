@@ -604,80 +604,106 @@ QuantumContact::write_neighbors(void) const
 
 }
 
-
-//Need to project a point on boundary element
-std::pair<const Elem*, Point>
-QuantumContact::project_on_boundary(const Elem* elem,const Point& point )
+std::pair<const Elem*, Point >
+QuantumContact::project_on_boundary(const Elem* elem, const Point& point ) 
 {
   const Elem* sidelem = NULL;
   Point out;
 
-  map<const Elem*,const ElementSide*>::iterator elit(_elemsidemap.find(elem));
+  map<const Elem*, const ElementSide*>::iterator elit(_elemsidemap.find(elem));
 
   if (elit != _elemsidemap.end())
   {
+      std::vector<Point> p;
+          
+      const ElementSide* elemside = elit->second;
+      
+      sidelem = elemside->elem();
+      
+      ID side = elemside->side();
 
-    vector<Point> p;
-    p.reserve(4);
-
-    const ElementSide* elemside = elit->second;
-
-    sidelem = elemside->elem();
-
-    ID side = elemside->side();
-
-    p.clear();
-
-    for(ID nde = 0; nde < sidelem->n_nodes(); nde++)
-    {
-      if (sidelem->is_node_on_side(nde, side))
+      p.reserve(4);
+      p.clear();
+      
+      for(ID nde = 0; nde < sidelem->n_nodes(); nde++)
       {
-        p.push_back(sidelem->point(nde));
+        if (sidelem->is_node_on_side(nde, side))
+        {
+          p.push_back(sidelem->point(nde));
+        }
       }
-    }
+      
 
-    Point a = p[1]-p[0];
-    Point b = point - p[0];
+      // 1D case=====================================
+      if(_mesh->mesh_dimension() == 1)
+      {
+        out = p[0];
+      }
+      
+      // 2D case=====================================
+      //             point
+      //            / |
+      //         b /  |
+      //          /   |
+      //         /    |
+      //      p[0]---out----p[1]
+      //
+      //  3D case=============================================
+      //
+      //
+      //
+      else if(_mesh->mesh_dimension() == 2)
+      {
+        
+        Point a = p[1]-p[0];
+        Point b = point - p[0];     
+        double c = a*b;
+        double d = a*a;
+        Point w = a*c;
+        Point y = w/d;
+        out = p[0] + y;
+      }
 
-    if(_mesh->mesh_dimension() == 1)
-    {
-      out = p[0];
-    }
-    // 2D case=====================================
-    //             point
-    //            / |
-    //         b /  |
-    //          /   |
-    //         /    |
-    //      p[0]---out----p[1]
-    //
-    //  3D case=============================================
-    //
-    //
-    //
-    if(_mesh->mesh_dimension() == 2)
-    {
-      double c = a*b;
-      double d = a*a;
-      Point w = a*c;
-      Point y = w/d;
-      out = p[0] + y;
-    }
-
-    if(_mesh->mesh_dimension() == 3)
-    {
-      Point e = p[2]-p[0];
-      Point f = a.cross(e);
-      double g = b*f;
-      double h = f*f;
-      Point i = f*g;
-      Point l = i/h;
-      out = b-l+p[0];
-    }
+      // 3D case=====================================
+      else if(_mesh->mesh_dimension() == 3)
+      {   
+        Point a = p[1]-p[0];
+        Point b = point - p[0];
+        Point e = p[2]-p[0];
+        Point f = a.cross(e);
+        double g = b*f;
+        double h = f*f;
+        Point i = f*g;
+        Point l = i/h;
+        out = b-l+p[0];
+      }
   }
+  
 
   return(make_pair(sidelem, out));
 }
+
+
+//Need to project a point on boundary element
+std::pair<const Elem*, std::vector<Point> >
+QuantumContact::project_on_boundary(const Elem* elem, const std::vector<Point>& point ) 
+{
+  std::vector<Point> out(point.size());
+  const Elem* sideel = NULL;
+
+  for (unsigned int qp=0; qp<point.size(); qp++)
+  {
+    std::pair<const Elem*, Point> pp( project_on_boundary(elem, point[qp]) );
+ 
+    out[qp] = pp.second;
+    sideel = pp.first;
+  }
+
+  return(make_pair(sideel, out));
+
+}
+
+
 
 void
 QuantumContact::activate_elements(void)

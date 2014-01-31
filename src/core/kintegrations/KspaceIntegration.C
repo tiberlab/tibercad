@@ -103,7 +103,8 @@ void KspaceIntegration::calculate_density()
                         " point "<< qp+1 <<"/"<<q_point.size() << std::endl;
         }
 	if (verbose > 3) 
-		std::cout << "(KIntegration) k_point:  "<<  q_point[qp] << std::endl;
+          std::cout << "(KIntegration) k_point= ("<<q_point[qp](0)<<", "<<q_point[qp](1)
+                    << ", "<<q_point[qp](2)<<")" << std::endl;
       
 	double error_value;
         //dens_at_k_point.clear();
@@ -114,7 +115,7 @@ void KspaceIntegration::calculate_density()
 	error_estimator[kelem] += error_value * JxW[qp] * factor;
 
         //std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
- 
+  
 	// add quad point contrib for every real-space element-------------         
         if (dens_at_k_elem.size() == 0)
 	{	
@@ -325,77 +326,40 @@ void KspaceIntegration::do_init(void)
   
   std::cout<<"(KSI) k-int: "<<std::endl;
   ModelOptions kopts(get_options());
-
-  //if(has_option("mesh_units"))
-  // kopts.set_option("mesh_units",get_option("mesh_units",0.0));
-  //else
-  // throw InitFailedException("K-integration internal error: mesh_units must be initialized");
-
-  //if(has_option("k_space_dimension"))
-  // kopts.set_option("k_space_dimension",get_option("k_space_dimension",0));
-  //else
-  // throw InitFailedException("K-integration internal error: k_space_dimension must be initialized");
-
+  
+  if (has_option("number_of_elements"))
+  {
+    std::vector<unsigned int>  num_nodes;
+    get_option("number_of_elements",num_nodes);
+    for(int i=0; i< num_nodes.size(); i++)
+      if(num_nodes[i]>0) ++num_nodes[i];
+    kopts.set_option("number_of_nodes", num_nodes); 
+  }
+  
   if (get_option("gamma_point_calculation",false))
   { 
     kopts.set_option("wedge","all");
     unsigned int dim = get_option("k_space_dimension",0);
     std::vector<unsigned int>  n_nodes(dim,0);
-    for (unsigned int i = 0; i<dim; i++) 
-       n_nodes[i] = 2;
-    ModelOptions new_opt;
-    new_opt.set_option("number_of_nodes",n_nodes);
-    new_opt.set_option("quadrature_order","first");
-    set_options(new_opt); 
+    for (unsigned int i = 0; i<dim; i++) n_nodes[i] = 2;
+    kopts.set_option("number_of_nodes",n_nodes);
+    ModelOptions new_opts;
+    new_opts.set_option("quadrature_order","first");
+    set_options(new_opts);
   }
-
-  //std::vector<unsigned int>  num_nodes;
- 
-  //if (has_option("number_of_nodes"))
-  //{
-  //   get_option("number_of_nodes",num_nodes);
-  //   kopts.set_option("number_of_nodes", num_nodes);
-  //}
-  //else if (has_option("number_of_elements"))
-  //{
-  //   get_option("number_of_elements",num_nodes);
-  //   for(int i=0; i< num_nodes.size(); i++)
-  //         if(num_nodes[i]>0) ++num_nodes[i];
-
-  //   kopts.set_option("number_of_nodes", num_nodes);
-  //}
-  //else
-  // throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");
-
-  //if (has_option("wedge"))
-  //  kopts.set_option("wedge", get_option("wedge",""));
-
   
-  //kopts.set_option("k_space_basis", get_option("k_space_basis",true));
+  
+  // few sanity checks that Kspace has options for initialization
+  if( !kopts.find_option("mesh_units"))
+    throw InitFailedException("K-integration internal error: mesh_units must be initialized");
+  
+  if( !kopts.find_option("k_space_dimension"))
+    throw InitFailedException("K-integration internal error: k_space_dimension must be initialized");
 
-/*
-  //double k_max = get_option("k_max",0.1);
-  std::cout<<"(KSI) k_max: "<< k_max<<std::endl;
-
-  kopts.set_option("k_max",k_max);
+  if ( !kopts.find_option("number_of_nodes"))
+    throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");  
 
 
-  std::vector<double> k_vector(3,0.0);   
-  k_vector[0]=0.0;     k_vector[1]=0.0;     k_vector[2]=k_max; 
-
-  get_option("k1", k_vector);
-  kopts.set_option("k1",k_vector);
-
-  k_vector[0]=0.0;     k_vector[1]=k_max;     k_vector[2]=0.0; 
-  get_option("k2", k_vector);
-  kopts.set_option("k2",k_vector);
-
-  k_vector[0]=k_max;     k_vector[1]=0.0;     k_vector[2]=0.0; 
-  get_option("k3", k_vector);
-  kopts.set_option("k3",k_vector);  
-    
-  kopts.set_option("mesh_order",get_option("mesh_order","first"));
-*/
   std::cout<<"(KSI) kspace init: "<<std::endl;
 
   _kspace = new Kspace(kopts);

@@ -49,8 +49,9 @@ Device
 	{
 	  reference_region = device_left
 	  regions = Quantum 
-	  passivation = yes
+	  passivation = no 
 	  print = (xyb, xyz, gen, tgn)
+    periodic = no
 	}
 
 }#Device

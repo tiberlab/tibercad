@@ -1,0 +1,25 @@
+'/work/pecchia/GS/Hr.m'
+'/work/pecchia/GS/Hi.m'
+'/work/pecchia/GS/Sr.m'
+'/work/pecchia/GS/Si.m'
+N.conts  2
+N.PLs  0
+Cont.dofs 642 646 
+Dev.dofs  638 642 
+V1.V2  0 0
+Ec.Ev  -0.352089 -0.502906
+DEc.DEv  0 0
+Emin.Emax  -0.3 0.4 0.01
+kbT  0.025852
+wght  1
+Np_n  0 0 
+Np_p  0 0 
+Np_real  1000
+n_kT  10
+n_poles  0
+spin  2
+delta  0.002
+nLDOS  0
+LDOS  
+Ef  0 0 
+mu  0.1 7.33775e-09 

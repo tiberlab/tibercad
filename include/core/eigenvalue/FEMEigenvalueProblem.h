@@ -83,6 +83,17 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
   virtual ~FEMEigenvalueProblem() {};
 
+  //! get H and S
+  virtual int get_H_dim() const; 
+  
+  virtual int get_H_nnz() const;
+
+  virtual void get_H_csr(std::vector<Complex>& A,std::vector<int>& JA,std::vector<int>& IA) const;
+
+  virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,std::vector<int>& IA) const;
+
+  virtual void print_H(const std::string& outpath) const;
+
  protected:
 
   virtual void do_init();
@@ -167,8 +178,9 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   /*!
     \param ev_number number of eigenvalues requested
     \param spectrum_shift additional spectrum shift 
+    \param haveS decides whether it is a generalize eigenproblem
   */
-  void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0 );
+  void solve_eigen_value_problem(unsigned int ev_number, double spectrum_shift = 0.0);
 
 
   //!simulation domain boundary

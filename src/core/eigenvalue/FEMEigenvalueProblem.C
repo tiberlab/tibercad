@@ -3,6 +3,7 @@
 #include "FEMEigenvalueProblem.h"
 #include "Boundary.h"
 #include "SimulationEnvironment.h"
+#include "SimulationOptions.h"
 #include "EigenSolver.h"
 #include "Messages.h"
 
@@ -277,14 +278,18 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
  
   assemble(); //calculate Hamiltonian and S matrix
+  
+  copy_H_to_solver( );
 
+  if (_haveS)  copy_S_to_solver( );
+  
   // for practical reasons, we let ev_number always be even
   if ((ev_number % 2) == 1)
     ev_number += 1;
-
   
   if (ev_number > _hamiltonian_size)
-    throw SolveFailedException("FEMEigenvalueProblem: number of requested eigenvalues is bigger than the  Hamiltonian size");
+    throw SolveFailedException("Number of requested eigenvalues is bigger than the Hamiltonian size");
+
   
 
   EigenSolver::prepare_slepc();
@@ -332,7 +337,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
   while (!foundall)
   {
     int result;
-    if (solver_opt.discretization_method == FEM) 
+    if (_haveS) 
       result = EigenSolver::eig_value_problem_general(slep_opt);
     else
       result = EigenSolver::eig_value_problem(slep_opt);
@@ -377,8 +382,9 @@ void FEMEigenvalueProblem::parse_options()
 
   solver_opt.spectrum_shift = sol_opt.get_option("guess",0.0);
 
-  solver_opt.Dirichlet_bc_everywhere = sol_opt.get_option("Dirichlet_bc_everywhere", true);
-
+  // only Dirichlet BC works at the moment !
+  //solver_opt.Dirichlet_bc_everywhere = sol_opt.get_option("Dirichlet_bc_everywhere", true);
+  solver_opt.Dirichlet_bc_everywhere = true;
 
   solver_opt.monitor = sol_opt.get_option("monitor", false);
 
@@ -470,7 +476,7 @@ void FEMEigenvalueProblem::do_copy_H_to_solver( )
 
       insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
       
-      ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
+      ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real, &petsc_row_vals_real);
       CHKERRABORT(libMesh::COMM_WORLD,ierr);
       real_column.clear();
       real_values.clear();
@@ -970,6 +976,153 @@ void FEMEigenvalueProblem::make_nodes_periodic()
 void FEMEigenvalueProblem::do_init()
 {
 
+}
+
+//============================================================//
+
+void FEMEigenvalueProblem::print_H(const std::string& outpath) const
+{
+  //std::string path = SimulationOptions::scratch_path;
+
+  _H_real->print_matlab(outpath+"/Hr.m");
+  _H_imag->print_matlab(outpath+"/Hi.m");
+  if (_haveS) _S_real->print_matlab(outpath+"/Sr.m");
+
+}
+
+
+int FEMEigenvalueProblem::get_H_dim() const 
+{ 
+  return  _H_real->n();
+}
+    
+
+int 
+FEMEigenvalueProblem::get_H_nnz() const 
+{ 
+ 
+
+  DofMap& dof_map = system->get_dof_map();
+
+  const std::vector<unsigned int>& n_nz = dof_map.get_n_nz();
+
+  unsigned int row_start = _H_real->row_start();
+  unsigned int row_stop = _H_real->row_stop();
+  unsigned int nnz=0;
+
+  for (unsigned int i = row_start ; i < row_stop; i++)
+    nnz += n_nz[i];
+
+  return nnz;
+
+}
+
+
+
+void 
+FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
+                                std::vector<int>& JA,
+                                std::vector<int>& IA) const 
+
+{
+
+  PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(_H_real);
+  H_real_matrix->close();
+
+
+  PetscMatrix<Number>* H_imag_matrix = static_cast<PetscMatrix<Number>* >(_H_imag);
+  H_imag_matrix->close();
+
+  unsigned int row_start = _H_real->row_start();
+  unsigned int row_stop = _H_real->row_stop();
+  unsigned int row, col, ind = 0;
+
+  IA[0] = 0;
+
+  for (unsigned int row = row_start ; row < row_stop; row++)
+  {
+    int ierr = 0;
+    const PetscScalar *petsc_row_vals_real;
+    const PetscScalar *petsc_row_vals_imag;
+    const PetscInt *petsc_cols;
+    int n_cols_real = 0;
+    int n_cols_imag = 0;
+    
+    ierr = MatGetRow(H_real_matrix->mat(), row, &n_cols_real, &petsc_cols, &petsc_row_vals_real);
+    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+    ierr = MatGetRow(H_imag_matrix->mat(), row, &n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
+    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+    if (n_cols_real != n_cols_imag) Messages::error("n_cols_real != n_cols_imag");
+
+    for (unsigned int j = 0; j<n_cols_real; j++)
+    {
+      col = petsc_cols[j];
+      
+      A[ind] = Complex(petsc_row_vals_real[j], petsc_row_vals_imag[j]); 
+      JA[ind] = petsc_cols[j];
+
+      ind++;  
+    } 
+   
+    IA[row+1]= ind;
+
+    ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols, &petsc_row_vals_real);
+    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+      
+    ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
+    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+ 
+
+  }
+
+}
+
+
+
+void 
+FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A, 
+                                std::vector<int>& JA, 
+                                std::vector<int>& IA) const 
+{
+  PetscMatrix<Number>* S_real_matrix = static_cast<PetscMatrix<Number>* >(_S_real);
+  S_real_matrix->close();
+
+  unsigned int row_start = _S_real->row_start();
+  unsigned int row_stop = _S_real->row_stop();
+  unsigned int row, col, ind = 0;
+
+  IA[0] = 0;
+
+  for (unsigned int row = row_start ; row < row_stop; row++)
+  {
+    int ierr = 0;
+    const PetscScalar *petsc_row_vals;
+    const PetscInt *petsc_cols;
+    int n_cols = 0;
+    
+  
+    ierr = MatGetRow(S_real_matrix->mat(), row, &n_cols, &petsc_cols, &petsc_row_vals);
+    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+
+    for (unsigned int j = 0; j<n_cols; j++)
+    {
+      col = petsc_cols[j];
+      
+      A[ind] = Complex(petsc_row_vals[j], 0.0); 
+      JA[ind] = petsc_cols[j];
+      ind++;  
+    } 
+   
+    IA[row+1]= ind;
+
+
+    ierr = MatRestoreRow(S_real_matrix->mat(), row ,&n_cols, &petsc_cols, &petsc_row_vals);
+    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+       
+
+  }
 
 
 }

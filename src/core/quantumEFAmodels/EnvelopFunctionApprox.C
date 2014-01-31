@@ -850,6 +850,10 @@ void EnvelopFunctionApprox::do_init( )
 
   EigenvalueProblem::init_kspace();
 
+  // Initialize identity permutation: does not have constrained dofs 
+  if (solver_opt.Dirichlet_bc_everywhere) 
+    EigenvalueProblem::init_permutation(dof_map.n_dofs());
+
 }
 
 
@@ -863,16 +867,8 @@ void EnvelopFunctionApprox::do_solve()
  sol_opt.find_option("simulation"); // remove simulation name 
  sol_opt.check_unused();
 
- //if (opt.job == BULKEIGENSTATES )
- //{
- //  solve_bulk();
- //}
- //else
- { 
-
 
    if (_calculate_density && (get_k_point().size() == 0.0))
-
    {
      estimate_spectrum_shift();
      apply_bc();
@@ -897,7 +893,6 @@ void EnvelopFunctionApprox::do_solve()
    declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
    declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
    declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
- }
 
 
 }
@@ -944,7 +939,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   _H_real->zero();
   _H_imag->zero();
   _S_real->zero();
-
+ 
+  _haveS = (solver_opt.discretization_method == FEM);
+  
   //material list
   //assemble_material_list();
 
@@ -1080,8 +1077,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
       ham_real.resize(n_dofs, n_dofs);
       ham_imag.resize(n_dofs, n_dofs);
-      if (solver_opt.discretization_method == FEM)
-        s_real.resize(n_dofs, n_dofs);
+      if (_haveS) s_real.resize(n_dofs, n_dofs);
 
       fe->reinit (elem);
 
@@ -1123,8 +1119,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
           for (unsigned int band2 = 0; band2 < number_of_bands; band2++)
           {//band2
 
-            //Hamiltonian
-
+            // Reposition the submatrix relative to the indices of the block
+            // corresponding to band1-band2 inside the whole dense block
             ham_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
             ham_imag_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
 
@@ -1164,8 +1160,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
                   }
 
 
-
-
                 ham_real_sub(p1,p2) += value.real();
                 ham_imag_sub(p1,p2) += value.imag();
 
@@ -1176,7 +1170,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
             //S-matrix
-            if (solver_opt.discretization_method == FEM)
+            if (_haveS)
               if (band1 == band2)
               {
                 s_real_sub.reposition(psivar[band1]*n_psi_dofs, psivar[band2]*n_psi_dofs, n_psi_dofs, n_psi_dofs);
@@ -1195,10 +1189,6 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       }
 
 
-      //if (solver_opt.discretization_method == FEM) 
-      //  ham_real.add( - solver_opt.spectrum_shift/Hartree, s_real);//apply spectrum shift.
-
-
       if (_quadrature_type == QTRAP)
       {
         // apply S^-1/2 H S^-1/2
@@ -1211,56 +1201,53 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
             ham_imag(i, j) *= scale;
             // this is not needed, as we do not solve a generalized problem
             // in this case
-            if (solver_opt.discretization_method == FEM)
-              s_real(i, j) *= scale;
+            if (_haveS) s_real(i, j) *= scale;
           }
         }
       }
 
 
-      vector<unsigned int> dof_indices_tmp;
-
-      if (solver_opt.discretization_method == FEM)
+      // case of constrained Dofs (permutation was not defined)
+      if (_perm.size() == 0)  
       {
-	dof_indices_tmp = dof_indices;
+        vector<unsigned int> dof_indices_tmp;
+        
+        if (_haveS)
+        {
+          dof_indices_tmp = dof_indices;
+          dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
+          _S_real->add_matrix(s_real,dof_indices_tmp);
+        }
+       
+        dof_indices_tmp = dof_indices;
+        dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
+        _H_real->add_matrix(ham_real,dof_indices_tmp);
 
-	dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
-	_S_real->add_matrix(s_real,dof_indices_tmp);
+        dof_indices_tmp = dof_indices;
+        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
+        _H_imag->add_matrix(ham_imag,dof_indices_tmp);
       }
+      else
+      {
+        vector<unsigned int> new_dof_indices;
 
-      dof_indices_tmp = dof_indices;
+        new_dof_indices.resize(n_dofs);
+        for (unsigned int i=0; i< n_dofs; i++)
+          new_dof_indices[i] = _perm[dof_indices[i]];
+        
+        if (_haveS)
+        {
+          _S_real->add_matrix(s_real,new_dof_indices);
+        }
 
-      dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
-      _H_real->add_matrix(ham_real,dof_indices_tmp);
-
-      dof_indices_tmp = dof_indices;
-
-      dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
-      _H_imag->add_matrix(ham_imag,dof_indices_tmp);
-
+        _H_real->add_matrix(ham_real,new_dof_indices);
+        
+        _H_imag->add_matrix(ham_imag,new_dof_indices);
+        
+      }
 
 
     }
-
-
-//this is only to test
-  /*
-  _H_real->print_matlab("ham_r_matlab.m");
-  //_H_imag->print_matlab("ham_i_matlab.m");
-  _S_real->print_matlab("s.m");
-  */
-
-
-
-
-  copy_H_to_solver( );
-
-
-
-  if (solver_opt.discretization_method == FEM)  copy_S_to_solver( );
-
-
-
 
 
   //  dof_map.print_dof_constraints();

@@ -19,6 +19,14 @@ class DofMap;
 class MeshRegionInfo;
 class BoundaryRegions;
 
+/*
+ * A QuantumContact is extruded from a set of boundaries of a set regions (reg_ids)
+ *
+ * Problem: currently we assign a unique id to a QuantumContact and to all its elem.
+ *          
+ *          this is not good in case we extrude from different material regions. 
+ *
+ */
 
 class QuantumContact
 {
@@ -38,6 +46,10 @@ class QuantumContact
 
     // Project of any point in the extended mesh into a boundary point
     std::pair<const Elem*, Point> project_on_boundary(const Elem*, const Point&);
+
+    // Project of point in the extended mesh into a boundary point
+    std::pair<const Elem*, std::vector<Point> > project_on_boundary(const Elem*, 
+                                                  const std::vector<Point>& p);
 
 
     ID get_id(void) const;
@@ -63,7 +75,7 @@ class QuantumContact
     ~QuantumContact(void);
 
     //! We need a public static creator function
-    static QuantumContact* create(void);
+    static QuantumContact* create(void) TBDLLOCAL;
 
 
     void init(const ID id,
@@ -72,7 +84,7 @@ class QuantumContact
               BoundaryRegions* bd_regions,
               const std::vector<ID>& rg_ids,
               const std::vector<ID>& bd_ids,
-              double length);
+              double length)  TBDLLOCAL;
 
     void plot(const std::string& name);
 

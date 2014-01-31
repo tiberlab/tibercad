@@ -18,6 +18,24 @@ libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 		-L. libnegf_$(ARCH).a \
 		-Wl,-Bdynamic
 
+.$(ARCH)/NegfWrapper$(obj-suffix) : libnegf_$(ARCH).a 
+
+libnegf_$(ARCH).a: checkout
+	#cd /home/pecchia/projects/libNEGF/dev_libnegf/src/api; make
+	@echo "Updating libNEGF ..."  
+	cd libnegf; git pull; \
+	@echo "Compiling libNEGF ..."; \
+	$(MAKE) -C src/api ; cd .. ; 
+	mv libnegf/src/api/libnegf_$(ARCH).a .	
+	cp libnegf/src/api/fortran.h .
+	cp libnegf/src/api/libnegf.h . 
+
+
+checkout:
+	@echo "Checkout libNEGF..."
+	@if [ ! -e libnegf ]; then git clone https://pecchia@bitbucket.org/pecchia/libnegf.git; fi
+
+
 
 
 include $(topdir)/Make.rules

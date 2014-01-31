@@ -52,6 +52,45 @@
 using namespace Constants;
 
 
+/* -----------------------------------------------------------------
+ *  do_init
+ *  {
+ *     init quantum contacts
+ *     init_hamil()      
+ *  }
+ *  
+ *  init_hamil()
+ *  {
+ *      attach_systems() 
+ *      _sys_H, _sys_S, _reorder, _qdens
+ *      reorder() //works also for ext_module if defined on the same regions
+ *  }
+ *
+ *  do_solve()
+ *  { 
+ *    setup_hamil()
+ *    calculate_density||current()
+ *    OR
+ *    k->solve()
+ *  }
+ * 
+ *  calculate_for_k_point()
+ *  {
+ *      setup_hamil()
+ *      calculate_density||current()
+ *  }   
+ *
+ *  get_solution()
+ *  {
+ *     
+ * 
+ *  }
+ * 
+ */
+ 
+
+
+
 Negf* Negf::static_this;
 
 Negf::Negf(const ModelOptions& options) :
@@ -162,11 +201,11 @@ Negf::init_hamil(void)
   MeshBase::const_element_iterator el = mesh.active_elements_begin();
   NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
   
-  std::cout<<"(negf) init: "<< negfmod->get_model_name(0) <<std::endl;
+  _hamil_type = negfmod->get_model_name(0);
 
-  //ModelOptions::const_submodel_iterator sit(get_options().submodels_begin("hamiltonian"));  
+  std::cout<<"(negf) init: "<< _hamil_type  <<std::endl;
 
-  if (negfmod->get_model_name(0) == "etb")  
+  if ( _hamil_type == "etb")  
   {
      std::string sim = negfmod->get_simulation(0);
      std::cout<<"(negf) sim: "<< sim <<std::endl;
@@ -175,9 +214,22 @@ Negf::init_hamil(void)
   
      init_etb_hamil();
   }
-  else //if (negfmod->get_model_name(0) == "single_band")  
+  else if ( _hamil_type == "efa")
   {
-      init_efa_hamil();
+     std::string sim = negfmod->get_simulation(0);
+     std::cout<<"(negf) sim: "<< sim <<std::endl;
+     
+     _ext_module = dynamic_cast<EigenvalueProblem*>(find_simulation(sim));
+  
+     init_efa_hamil();
+  }  
+  else if ( _hamil_type == "single_band")
+  {
+     init_efa_hamil();
+  }
+  else 
+  {
+    Messages::error("undefined hamiltonian type "+_hamil_type);
   }
     
   
@@ -192,18 +244,29 @@ Negf::init_efa_hamil(void)
 {
 
   // get the number of subbands.
-   const MeshBase& mesh = get_mesh();
-   MeshBase::const_element_iterator el = mesh.active_elements_begin();
-   const Elem* elem = *el;
+  const MeshBase& mesh = get_mesh();
+  MeshBase::const_element_iterator el = mesh.active_elements_begin();
+  const Elem* elem = *el;
+  unsigned int n_bands;
 
-  NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
+  if (_ext_module == NULL)
+  {
+    NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
+    n_bands = negfmod->get_n_bands();
+  }
+  else
+  {
+    n_bands = _ext_module->get_number_of_bands();
+  }
+
   // Setup a simple effective mass Hamiltonian
-  std::cout<<"(negf) create eq sys for H"<<std::endl;
+  std::cout<<"(negf) create eq_sys with "<<n_bands<<" bands"<<std::endl;
+
   ID id = create_equation_system("linear","");
   _sys_H = &get_equation_system<TiberLinearSystem>(id);
 
   // attach a variable for each subband
-  for (unsigned int band=0; band < negfmod->get_n_bands(); band++)
+  for (unsigned int band=0; band < n_bands; band++)
   {
     std::stringstream out;
     out<<"phi"<<band;
@@ -218,7 +281,7 @@ Negf::init_efa_hamil(void)
   _sys_S = &get_equation_system<TiberLinearSystem>(id);
 
   // attach a variable for each subband
-  for (unsigned int band=0; band < negfmod->get_n_bands(); band++)
+  for (unsigned int band=0; band < n_bands; band++)
   {
     std::stringstream out;
     out<<"phi"<<band;
@@ -259,6 +322,7 @@ Negf::init_efa_hamil(void)
   reorder(); // dof indices reorder
 
 }
+
 
 void
 Negf::init_etb_hamil(void)
@@ -327,7 +391,8 @@ Negf::init_etb_hamil(void)
 
    //for (unsigned int i=0; i< N_atoms; i++)
    //{
-   //   std::cout<<"atom "<<i<<" reg "<<atoms[i].get_region_ID()<<"iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
+   //   std::cout<<"atom "<<i<<" reg "<<atoms[i].get_region_ID()
+   //            <<"iperm "<<_inv_perm[i]<<" perm "<<_perm[i]<<std::endl;
    //}
    
   
@@ -386,7 +451,7 @@ Negf::init_k_space(ModelOptions& kopts)
     double cf = 1e-10/get_mesh_units(); //conversion from Angstrom to M.U.
     unsigned int dim = get_mesh().mesh_dimension();
 
-    if (_ext_module != NULL) 
+    if ( _hamil_type == "etb" ) 
     {
     // Define k-space from cartesian lattice vectors 
       std::vector<double> vectors = _ext_module->get_atomistic_structure()->get_lattice_vectors();
@@ -452,8 +517,11 @@ Negf::init_k_space_integration(void)
 
     kopts.set_option("mesh_units",get_mesh_units());
     kopts.set_option("k_space_dimension",3 - dim);
-    kopts.set_option("verbose", SimulationOptions::verbose() );
-   
+    if ( !kopts.find_option("verbose"))
+    {
+      kopts.set_option("verbose", SimulationOptions::verbose() );
+    }
+
     init_k_space(kopts); 
 
     _k_int_density = KspaceIntegration::create(this, &Negf::calculate_for_k_point, kopts);
@@ -471,7 +539,10 @@ Negf::init_k_space_integration(void)
 
     kopts.set_option("mesh_units",get_mesh_units());
     kopts.set_option("k_space_dimension",3 - get_mesh().mesh_dimension());
-    kopts.set_option("verbose", SimulationOptions::verbose() );
+    if (! kopts.find_option("verbose"))
+    {
+      kopts.set_option("verbose", SimulationOptions::verbose() );
+    }
 
     init_k_space(kopts); 
     
@@ -488,34 +559,79 @@ Negf::init_k_space_integration(void)
 void
 Negf::setup_hamil(void)
 {
-  if (_ext_module == NULL)
+  if ( _hamil_type == "single_band")
+  {
+      setup_sb_hamil();
+  }
+  else if ( _hamil_type == "efa")
   {
       setup_efa_hamil();
   }
-  else
+  else if ( _hamil_type == "etb")
   {
       setup_etb_hamil();
   }
 }
 
 void
-Negf::setup_efa_hamil(void)
+Negf::setup_sb_hamil(void)
 {
-
+  //std::cout<<"(negf) do reinit ..." << std::endl;
   do_reinit();
 
+  //std::cout<<"(negf) assemle ..." << std::endl;
   _sys_H->assemble();
 
+  //std::cout<<"(negf) print H ..." << std::endl;
   print_ham("matlab");
 
   unsigned int n_vars = _sys_H->n_vars();
   double Ec = get_band_edge("Ec");
   double Ev = get_band_edge("Ev");
-  print_Lib(n_vars, Ec, Ev);
   
+  //std::cout<<"(negf) nvars= "<<n_vars<<std::endl;
+  //std::cout<<"(negf) Ec= "<<Ec<<" Ev= "<<Ev<<std::endl;
+
+  print_Lib(n_vars, Ec, Ev);
+
+  //std::cout<<"(negf) setup negf ..." << std::endl;
   setup_negf();
 
 }
+
+void
+Negf::setup_efa_hamil(void)
+{
+  do_reinit();
+   
+  //apply permutation to dofs
+  //std::cout<<"(negf) Reordering dofs ..." << std::endl;
+  _ext_module->set_permutation(_inv_perm);
+  
+  Point k_point; 
+  for(short i=0;i<3;i++) k_point(i) = _k_vec(i);
+
+  _ext_module->set_k_point(k_point);
+
+  //std::cout<<"(negf) Reinit ..." << std::endl;
+  _ext_module->reinit();
+ 
+  //std::cout<<"(negf) Assemble ..." << std::endl;
+  _ext_module->assemble();
+
+  //_ext_module->print_H(SimulationOptions::scratch_path);
+ 
+  double Ec = _ext_module->get_band_edge("el");
+  double Ev = _ext_module->get_band_edge("hl");
+  unsigned int n_vars = _ext_module->get_number_of_bands();
+
+  //std::cout<<"(negf) Ec= "<<Ec<<" Ev= "<<Ev<<std::endl;
+
+  print_Lib(n_vars, Ec, Ev);
+
+  setup_negf();
+}
+
 
 void
 Negf::setup_etb_hamil(void)
@@ -541,7 +657,7 @@ Negf::setup_etb_hamil(void)
   double Ec = _ext_module->get_band_edge("Ec");
   double Ev = _ext_module->get_band_edge("Ev");
 
-  std::cout<<"(negf) Ec "<<Ec<<" Ev "<<Ev<<std::endl;
+  //std::cout<<"(negf) Ec= "<<Ec<<" Ev= "<<Ev<<std::endl;
   print_Lib(n_vars, Ec, Ev);
 
   setup_negf();
@@ -551,28 +667,52 @@ void
 Negf::setup_negf(void)
 {
 
-  std::cout<<"(negf) negf init"<<std::endl;
   _libnegf->init();
 
-  if (_ext_module!=NULL)
+  if (_ext_module == NULL)
   {
+    _libnegf->read_HS();
+  }
+  else
+  {
+    //std::cout<<"(negf) print H in "<<SimulationOptions::scratch_path<<std::endl;
+    //_ext_module->print_H(SimulationOptions::scratch_path);
+    
     int nrow = _ext_module->get_H_dim();
     int nnz = _ext_module->get_H_nnz();
  
     std::vector<int> IA(nrow+1,0);
     std::vector<int> JA(nnz,0);
     std::vector<Complex> A(nnz);
- 
+
+    //std::cout<<"(negf) Get H csr "<<nrow<<"  "<<nnz<<std::endl;
     _ext_module->get_H_csr(A,JA,IA);
+
+    //std::cout<<"(negf) Set H in libNEGF; nnz="<<IA[nrow]<<std::endl;
+
+    _libnegf->set_H_csr(nrow,A,JA,IA);
+
+    if (_ext_module->is_generalized())
+    {
+
+      std::vector<Complex> S(nnz);
+     
+      //std::cout<<"(negf) Get S csr "<<std::endl;
+      _ext_module->get_S_csr(A,JA,IA);
  
-    _libnegf->set_H_csr(nrow,' ',A,JA,IA);
- 
-    _libnegf->set_S_id(nrow);
+      //std::cout<<"(negf) Set S in libNEGF; nnz="<<IA[nrow]<<std::endl;
+      _libnegf->set_S_csr(nrow,A,JA,IA);
+
+    }
+    else
+    {
+      //std::cout<<"(negf) Set S id "<<std::endl;
+      _libnegf->set_S_id(nrow);
+    }
+
   }
-  else
-  {
-    _libnegf->read_HS();
-  }
+  //Messages::info("setting scratch path to "+SimulationOptions::scratch_path);
+  _libnegf->set_scratch_path(SimulationOptions::scratch_path);
 
   _libnegf->read_input();
 
@@ -586,10 +726,6 @@ Negf::setup_negf(void)
 
   _libnegf->set_iteration(1);
 
-  Messages::info("setting scratch path to "+SimulationOptions::scratch_path);
-  _libnegf->set_scratch_path(SimulationOptions::scratch_path);
-
-  Messages::info("setting output path to "+get_output_directory());
   _libnegf->set_output_path(get_output_directory());
 
   // set not to compute Device-Contact blocks
@@ -598,17 +734,23 @@ Negf::setup_negf(void)
   // set reference contact at maximum electrochem pot.
   _libnegf->set_reference(1);
 
-  std::cout<<"(negf) done"<<std::endl;
+  //Messages::info("(negf) Setup done");
+
 }
 
 void
 Negf::finalize(void)
 {
   // restore the original atomistic structure
-  if (_ext_module != NULL)
+  if ( _hamil_type == "etb" )
   {
-     _ext_module->get_atomistic_structure()->reorder(_inv_perm);
+    _ext_module->get_atomistic_structure()->reorder(_inv_perm);
   }
+  if ( _hamil_type == "efa" )
+  {
+    _ext_module->init_permutation(_inv_perm.size());
+  }
+
 }
 
 void
@@ -655,11 +797,11 @@ Negf::do_solve(void)
     else
     {
       _k_vec.zero();
-
+      
       setup_hamil();
 
       calculate_density("el");
-    
+
       finalize();
     }
 
@@ -725,6 +867,8 @@ Negf::do_solve(void)
         sign = 1.0;
       else
         sign =-1.0;
+      //std::cout<<"(negf) I= "<<current[id]<<std::endl;
+      //std::cout<<"(negf) sgn, deg area "<<sign<<" "<<deg<<" "<<area_factor<<std::endl;
 
       _contact_current[it->second] = sign * deg * current[id] * area_factor;
       id++;
@@ -774,7 +918,6 @@ Negf::calculate_for_k_point(const Point& k_point,
        field.clear();
        compute_current();
        //double curr = _libnegf->current();
-       //std::cout<<"current: "<< curr<<std::endl;
        //_contact_potential[]
        //field.push_back(curr);
        //field.push_back(-curr);
@@ -1138,20 +1281,9 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
       {
         // gets from potmodel which band ("Ec" or "Ev")
         sol_id = potmodel->get_solution_id(negfmod->get_band(band));
-        // if element is inside quantum contact 
-        // project point on boundary and get potential there.
-        if ( (qc_it = _quantum_contacts.find(elem->subdomain_id())) != qc_end)
-        {
-          for (unsigned int qp=0; qp<q_point.size(); qp++)
-          {
-            std::pair<const Elem*, Point> pair = qc_it->second->project_on_boundary(elem, q_point[qp]);
-            potmodel->get_solution(pair.first, sol_id, V[qp], pair.second);
-          }
-        }
-        else
-        {
-          potmodel->get_solution(elem, sol_id, V, q_point);
-        }
+
+        potmodel->get_solution(elem, sol_id, V, q_point);
+
       }
 
       //-------------------------------------------------------------------
@@ -1268,8 +1400,6 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
       // -----------------------------------------------------------------------------------
 
       new_dof_indices.resize(n_dofs);
-
-
       for (unsigned int i=0; i< n_dofs; i++)
         new_dof_indices[i] = _inv_perm[dof_indices[i]];
 
@@ -1300,8 +1430,16 @@ Negf::print_ham(std::string form)
     _sys_S->get_matrix("Si").print_matlab(outpath+"/Si.m");
     //std::cout<<"print Matlab matrices"<<std::endl;
   }
-
 }
+
+bool
+Negf::is_generalized(void)
+{
+  if (_ext_module == NULL) return true;
+  else
+    return _ext_module->is_generalized();
+}
+
 /*
  *'outputd10nml50/Hr.m'
  *'outputd10nml50/Hi.m'
@@ -1393,23 +1531,24 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
 
   ff<<"'"+outpath+"/Hr.m'"<<std::endl;
   ff<<"'"+outpath+"/Hi.m'"<<std::endl;
-  if (_ext_module==NULL)
-  {
+  
+  if (is_generalized())
+  {  
     ff<<"'"+outpath+"/Sr.m'"<<std::endl;
-    ff<<"'"+outpath+"/Si.m'"<<std::endl;
+    ff<<"'"+outpath+"/Si.m'"<<std::endl; 
   }
   else
   {
     ff<<"'identity'"<<std::endl;
     ff<<"'identity'"<<std::endl;
   }
-
-  ff<<_quantum_contacts.size()<<std::endl;
+  
+  ff<<"N.conts  "<<_quantum_contacts.size()<<std::endl;
   
   
   // Nblocks (if 0 are partitioned by the library)
   unsigned int nPL=sol_opt.get_option("number_of_PL",0);
-  ff<<nPL<<std::endl;
+  ff<<"N.PLs  "<<nPL<<std::endl;
   if (nPL>0)
   { 
     unsigned int sizePL=sol_opt.get_option("size_of_PL",1);
@@ -1422,26 +1561,29 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
   //ff<<floor(_device_n_dofs*n_vars/2)<<" "<<_device_n_dofs*n_vars<<std::endl;
 
   // contact end dofs:
+  ff<<"Cont.dofs ";
   for (unsigned int i = 0; i <_quantum_contacts.size(); i++)
     ff<<_qc_n_dofs[i]*n_vars<<" ";
   ff<<std::endl;
 
-  ff<<_device_n_dofs*n_vars<<" ";
+  ff<<"Dev.dofs  "<<_device_n_dofs*n_vars<<" ";
   for (unsigned int i = 0; i <(_quantum_contacts.size()-1); i++)
     ff<<_qc_n_dofs[i]*n_vars<<" ";
   ff<<std::endl;
 
-  ff<<mu_n<<" "<<mu_p<<std::endl;
-  ff<<Ec+DeltaEc<<" "<<Ev+DeltaEv<<std::endl;
-  ff<<0.0<<" "<<0.0<<std::endl;                // DEc DEv = 0 (are set above)
-  ff<<opt.Emin<<" "<<opt.Emax<<" "<<opt.Estep<<std::endl;
-  ff<<kbT<<std::endl;
-  ff<<wght<<std::endl;
+  ff<<"V1.V2  "<<mu_n<<" "<<mu_p<<std::endl;
+  ff<<"Ec.Ev  "<<Ec+DeltaEc<<" "<<Ev+DeltaEv<<std::endl;
+  ff<<"DEc.DEv  "<<0.0<<" "<<0.0<<std::endl;                // DEc DEv = 0 (are set above)
+  ff<<"Emin.Emax  "<<opt.Emin<<" "<<opt.Emax<<" "<<opt.Estep<<std::endl;
+  ff<<"kbT  "<<kbT<<std::endl;
+  ff<<"wght  "<<wght<<std::endl;
 
+  ff<<"Np_n  ";
   for (unsigned int i = 0; i < 2; i++)
     ff<<opt.Np_n[i]<<" ";
   ff<<std::endl;
 
+  ff<<"Np_p  ";
   for (unsigned int i = 0; i < 2; i++)
     ff<<Np_p[i]<<" ";
   ff<<std::endl;
@@ -1462,25 +1604,28 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
      }
   }
 
-  ff<< Np <<std::endl;
-  ff<<opt.n_kT<<std::endl;
-  ff<<opt.n_poles<<std::endl;
-  ff<<spin<<std::endl;
-  ff<<opt.delta<<std::endl;
-  ff<<nLDOS<<std::endl;
+  ff<<"Np_real  "<< Np <<std::endl;
+  ff<<"n_kT  "<<opt.n_kT<<std::endl;
+  ff<<"n_poles  "<<opt.n_poles<<std::endl;
+  ff<<"spin  "<<spin<<std::endl;
+  ff<<"delta  "<<opt.delta<<std::endl;
+  ff<<"nLDOS  "<<nLDOS<<std::endl;
 
+  ff<<"LDOS  ";
   for (unsigned int i = 0; i < 2*nLDOS; i++)
     ff<<LDOS[i]<<" ";
 
   ff<<std::endl;
 
   // Sets 0 for the Fermi level for LIBNEGF
+  ff<<"Ef  ";
   for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
     ff<<0.0<<" ";
   ff<<std::endl;
 
   // takes -mu (ELECTROCHEMICAL potential) as LibNEGF will turn back the sign
   // Ef[k]-mu[k] = 0 - mu[k]   for LibNEGF
+  ff<<"mu  ";
   for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
     ff<<-mu[i]<<" ";
   ff<<std::endl;
@@ -1548,7 +1693,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     // NOTE: maybe one should check if this gives really a better result
     // NOTE: 2011-12-01 the above turned out to be wrong
     //  phi[i] rho[i][j] phi[j] ~~  phi[i] rho[i][i] phi[i]
-    // rho[i][i] is the correct density at node i: phi is used linear interpolation.
+    // rho[i][i] is the correct density at node i: phi is used for linear interpolation.
     if (_k_int_density!=NULL)
     {
 

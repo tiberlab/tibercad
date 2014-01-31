@@ -591,6 +591,8 @@ void ETB::do_assemble(const ModelOptions& options)
 
   _assemble = false;
 
+  _haveS = false;
+
 }
 
 //-------------------------------------------------------------------------

@@ -66,37 +66,35 @@ inline void f77_negf_init (f77_int* handler)
 }
 
 
-extern "C" void negf_set_h_ (f77_int*, f77_int&, f77_char&, f77_complex*, 
-    f77_int*, f77_int*);
+extern "C" void negf_set_h_ (f77_int*, f77_int&, f77_complex*, f77_int*, 
+    f77_int*);
 
 // Corresponding F77 arguments for f77_negf_set_h:
 // integer, intent(inout) :: handler(DAC_handlerSize)
 // integer, intent(out) :: nrow
-// character(1), intent(out) :: fmt
 // complex(dp), intent(out) :: A(*)
 // integer, intent(out) :: JA(*)
 // integer, intent(out) :: IA(*)
-inline void f77_negf_set_h (f77_int* handler, f77_int& nrow, f77_char& fmt, 
-    f77_complex* A, f77_int* JA, f77_int* IA)
+inline void f77_negf_set_h (f77_int* handler, f77_int& nrow, f77_complex* A, 
+    f77_int* JA, f77_int* IA)
 {
-  negf_set_h_ (handler, nrow, fmt, A, JA, IA);
+  negf_set_h_ (handler, nrow, A, JA, IA);
 }
 
 
-extern "C" void negf_set_s_ (f77_int*, f77_int&, f77_char&, f77_complex*, 
-    f77_int*, f77_int*);
+extern "C" void negf_set_s_ (f77_int*, f77_int&, f77_complex*, f77_int*, 
+    f77_int*);
 
 // Corresponding F77 arguments for f77_negf_set_s:
 // integer, intent(inout) :: handler(DAC_handlerSize)
 // integer, intent(out) :: nrow
-// character(1), intent(out) :: fmt
 // complex(dp), intent(out) :: A(*)
 // integer, intent(out) :: JA(*)
 // integer, intent(out) :: IA(*)
-inline void f77_negf_set_s (f77_int* handler, f77_int& nrow, f77_char& fmt, 
-    f77_complex* A, f77_int* JA, f77_int* IA)
+inline void f77_negf_set_s (f77_int* handler, f77_int& nrow, f77_complex* A, 
+    f77_int* JA, f77_int* IA)
 {
-  negf_set_s_ (handler, nrow, fmt, A, JA, IA);
+  negf_set_s_ (handler, nrow, A, JA, IA);
 }
 
 
@@ -108,6 +106,16 @@ extern "C" void negf_set_s_id_ (f77_int*, f77_int&);
 inline void f77_negf_set_s_id (f77_int* handler, f77_int& nrow)
 {
   negf_set_s_id_ (handler, nrow);
+}
+
+
+extern "C" void negf_print_mat_ (f77_int*);
+
+// Corresponding F77 arguments for f77_negf_print_mat:
+// integer, intent(inout) :: handler(DAC_handlerSize)
+inline void f77_negf_print_mat (f77_int* handler)
+{
+  negf_print_mat_ (handler);
 }
 
 

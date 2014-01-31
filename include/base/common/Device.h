@@ -11,6 +11,7 @@
 #include "IDSet.h"
 #include "ModelOptions.h"
 #include "DeviceException.h"
+#include "QuantumContact.h"
 
 #include "elem.h"
 
@@ -27,7 +28,6 @@ class AtomisticStructure;
 class MeshRegionInfo;
 class BoundaryRegions;
 class Point;
-class QuantumContact;
 
 //! Higher-level definition of the  structure to  be  simulated.
 /*!
@@ -303,8 +303,19 @@ class Device
     //! Get the past-the-end iterator for the atomistic structures
     atomistic_structure_iterator atomistic_structures_end(void);
 
-
+    //! get quantum contact from contact name
     QuantumContact* get_quantum_contact(const std::string& name);
+
+  
+    //! get quantum contact from region id
+    const QuantumContact* get_quantum_contact(ID region_id) const;
+  
+    QuantumContact* get_quantum_contact(ID region_id);
+
+    //! get quantum contact from element
+    const QuantumContact* get_quantum_contact(const Elem* elem) const;  
+
+    QuantumContact* get_quantum_contact(const Elem* elem);  
 
     //! Get the iterator to the first quantum contact
     quantum_contact_iterator quantum_contacts_begin(void);
@@ -726,5 +737,57 @@ Device::get_quantum_contact(const std::string& name)
   else
     return NULL;
 }
+
+
+inline
+const QuantumContact*
+Device::get_quantum_contact(ID region_id) const
+{
+  QuantumContactMap::const_iterator it(_quantum_contact_map.begin());
+  QuantumContactMap::const_iterator end(_quantum_contact_map.end());
+
+  for( it; it != end; ++it)
+  {
+    if (it->second->get_id() == region_id) 
+      return it->second;
+  }  
+
+  return NULL;
+}
+
+inline
+const QuantumContact*
+Device::get_quantum_contact(const Elem* elem) const
+{
+  return get_quantum_contact(elem->subdomain_id());
+}
+
+inline
+QuantumContact*
+Device::get_quantum_contact(ID region_id)
+{
+  QuantumContactMap::iterator it(_quantum_contact_map.begin());
+  QuantumContactMap::iterator end(_quantum_contact_map.end());
+
+  for( it; it != end; ++it)
+  {
+    if (it->second->get_id() == region_id) 
+      return it->second;
+  }  
+
+  return NULL;
+}
+
+inline
+QuantumContact*
+Device::get_quantum_contact(const Elem* elem)
+{
+  return get_quantum_contact(elem->subdomain_id());
+}
+
+
+
+
+
 
 #endif //  __DEVICE_H__

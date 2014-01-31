@@ -2,7 +2,7 @@
 
 well_lenght = 5.0; //50.0;
 
-quantum_barrier_lenght = 20.0; //200.0;
+quantum_barrier_lenght = 19.0; //200.0;
 
 device_lenght = 50.0; //500.0;
 

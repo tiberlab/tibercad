@@ -1902,7 +1902,7 @@ SimulationInterface::get_integrated_quantities_description(
 
 
 
-/*
+ /*
 bool
 SimulationInterface::get_solution(const Elem* elem, const set<ID>& ids,
                                   vector<map<ID, double> >& values)
@@ -2131,6 +2131,41 @@ SimulationInterface::get_solution(const Elem* elem,
   if (!is_solved()) return false;
 
   vector<Point> points(p);
+
+  // perhaps is in a quantum_contact ?
+  QuantumContact* qc = get_environment().get_device().get_quantum_contact(elem);
+  if (qc != NULL)
+  {
+    if (local_coord)
+    {
+      for (unsigned int qp=0; qp<points.size(); qp++)
+      {
+        // old style. In new libMESH this is in FEInterface
+        switch(get_mesh().mesh_dimension())
+        {
+        case 1:
+          points[qp]=FE<1, LAGRANGE>::map(elem, p[qp]);
+          break;
+        case 2: 
+          points[qp]=FE<2, LAGRANGE>::map(elem, p[qp]);
+          break;
+        case 3:
+          points[qp]=FE<3, LAGRANGE>::map(elem, p[qp]);
+        }
+      }
+    }
+ 
+    std::pair<const Elem*, std::vector<Point> > 
+      pair = qc->project_on_boundary(elem, points);
+
+    elem = pair.first;
+
+    FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, pair.second, points);
+   
+    local_coord = true;
+  }
+
+
   unsigned int nn = points.size();
   if (nn == 0)
   {
@@ -2151,6 +2186,7 @@ SimulationInterface::get_solution(const Elem* elem,
   const Elem* el = elem;
 
   bool flag = true;
+
 
   // first resize all data vectors to the right size
   map<ID, vector<double> >::iterator it(values.begin());
@@ -2177,8 +2213,11 @@ SimulationInterface::get_solution(const Elem* elem,
     }
   }
 
+
+
   if (!env.contains_element(elem))
   {
+
     // perhaps the parent is?
     const Elem* parent = elem->parent();
 

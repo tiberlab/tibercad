@@ -17,6 +17,7 @@ class EtbModel : public HamiltonianModel
 
     void do_init(void);
 
+
 };
 
 inline

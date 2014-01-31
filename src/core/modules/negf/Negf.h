@@ -186,11 +186,13 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void init_etb_hamil(void);
 
-    
+    void setup_sb_hamil(void); 
+   
     void setup_efa_hamil(void);
     
     void setup_etb_hamil(void);
-    
+
+    bool is_generalized(void);
 
     Device* _device;
 
@@ -251,10 +253,14 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     double mumin, mumax;
 
+    std::string _hamil_type;
+
     EigenvalueProblem* _ext_module;
 
     AtomisticStructure* _atom_structure;
 };
+
+
 
 
 #endif

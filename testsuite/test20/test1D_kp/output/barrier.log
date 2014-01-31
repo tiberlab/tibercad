@@ -1,0 +1,607 @@
+
+Log start: Fri Jan 31 17:15:44 2014
+
+
+tiberCAD release 2.3.0 (rev. 3757, x86_64-linux)
+
+Input file: barrier.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/pecchia/projects/tibercad/trunk/materials
+  Log file              : output/barrier.log
+
+Setup mesh
+  Reading mesh file test.msh ... done.
+  mesh units          : 1e-09 m
+  mesh dimension      :       1
+  number of nodes     :    1317
+  number of elements  :    1316
+  number of subdomains:       7
+
+Create materials ...
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs is 0.53.
+  Added material InGaAs for region 'source_region' (mesh regions 1)
+    (using datafile /home/pecchia/projects/tibercad/trunk/materials/InGaAs.dat)
+    alloy with 0.53 InAs, 0.47 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  GaInP is an alloy with components GaP and InP and molar fraction of GaP is 0.3.
+  Added material GaInP for region 'barrier1' (mesh regions 2)
+    (using datafile /home/pecchia/projects/tibercad/trunk/materials/GaInP.dat)
+    alloy with 0.3 GaP, 0.7 InP
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  GaInP is an alloy with components GaP and InP and molar fraction of GaP is 0.3.
+  Added material GaInP for region 'barrier2' (mesh regions 4)
+    (using datafile /home/pecchia/projects/tibercad/trunk/materials/GaInP.dat)
+    alloy with 0.3 GaP, 0.7 InP
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs is 0.53.
+  Added material InGaAs for region 'drain_region' (mesh regions 5)
+    (using datafile /home/pecchia/projects/tibercad/trunk/materials/InGaAs.dat)
+    alloy with 0.53 InAs, 0.47 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs is 0.53.
+  Added material InGaAs for region 'dd_drain_region' (mesh regions 7)
+    (using datafile /home/pecchia/projects/tibercad/trunk/materials/InGaAs.dat)
+    alloy with 0.53 InAs, 0.47 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs is 0.53.
+  Added material InGaAs for region 'dd_source_region' (mesh regions 6)
+    (using datafile /home/pecchia/projects/tibercad/trunk/materials/InGaAs.dat)
+    alloy with 0.53 InAs, 0.47 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs is 0.53.
+  Added material InGaAs for region 'well' (mesh regions 3)
+    (using datafile /home/pecchia/projects/tibercad/trunk/materials/InGaAs.dat)
+    alloy with 0.53 InAs, 0.47 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up Cluster 'double_barrier' containing regions 1, 2, 3, 4, 5
+ 
+Creating quantum contact int_drain
+Added material InGaAs for region 'int_drain' (mesh regions 8)
+  (using datafile /home/pecchia/projects/tibercad/trunk/materials/InGaAs.dat)
+  alloy with 0.53 InAs, 0.47 GaAs
+  x growth direction : (1,0,0)
+  y growth direction : (0,1,0)
+  z growth direction : (0,0,1)
+ 
+Creating quantum contact int_source
+Added material InGaAs for region 'int_source' (mesh regions 9)
+  (using datafile /home/pecchia/projects/tibercad/trunk/materials/InGaAs.dat)
+  alloy with 0.53 InAs, 0.47 GaAs
+  x growth direction : (1,0,0)
+  y growth direction : (0,1,0)
+  z growth direction : (0,0,1)
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+  Adding boundary 'source'
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+  Adding boundary 'drain'
+Creating bulk models... 
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+
+Setting up simulation of type 'efaschroedinger' ...
+Creating bulk models... 
+
+Setting up simulation of type 'sweep' ...
+
+Setting up simulation of type 'negf' ...
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/negf/negf.so)
+  Adding boundary 'int_source'
+  Adding boundary 'int_drain'
+Creating bulk models... 
+
+Setting up bulk models ...
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/band_properties_kp.so)
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+  (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/negf/hamiltonian_efa.so)
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+Setting up lower dimensional (boundary) models ...
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+*** Warning: found unused options in block semiconductor: particle
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (driftdiffusion)
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Ec                       eV             real      nodal       y
+Ev                       eV             real      nodal       y
+eQFermi                  eV             real      nodal       y
+hQFermi                  eV             real      nodal       n
+ElPotential              V              real      nodal       y
+Ec0                      eV             real      nodal       n
+Ev0                      eV             real      nodal       n
+Eg                       eV             real      nodal       n
+ConductionBands          eV             n-tuple   cell        n
+ValenceBands             eV             n-tuple   cell        n
+eDensity                 cm^-3          real      nodal       y
+hDensity                 cm^-3          real      nodal       y
+eMobility                cm^2/(V*s)     real      nodal       n
+hMobility                cm^2/(V*s)     real      nodal       n
+eConductivity            S/cm           real      nodal       n
+hConductivity            S/cm           real      nodal       n
+ElField                  V/cm           vector    cell        y
+Polarization             C/m^2          vector    cell        n
+CurrentDensity           A/cm^2         vector    cell        n
+eCurrentDensity          A/cm^2         vector    cell        y
+hCurrentDensity          A/cm^2         vector    cell        y
+IonizedDonors            cm^-3          real      nodal       n
+IonizedAcceptors         cm^-3          real      nodal       n
+IonizedElectronTraps     cm^-3          real      nodal       n
+IonizedHoleTraps         cm^-3          real      nodal       n
+eThElPower               eV/K           real      nodal       n
+hThElPower               eV/K           real      nodal       n
+eJoule                   W/cm^3         real      nodal       n
+hJoule                   W/cm^3         real      nodal       n
+ePowerFlux               W/cm^2         vector    nodal       n
+hPowerFlux               W/cm^2         vector    nodal       n
+ePeltier                 W/cm^3         real      nodal       n
+hPeltier                 W/cm^3         real      nodal       n
+RecombHeat               W/cm^3         real      nodal       n
+IQE                                     real      none        n
+NetRecombination         1/(s*cm^3)     real      nodal       y
+drain.current            A/cm^2         real      none        y
+source.current           A/cm^2         real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : driftdiffusion
+
+
+solving for : poisson electrons 
+using local scaling
+
+# Region barrier1, GaInP (x = 0.3)
+  Conduction band:
+    (band parameters obtained from bulk k.p)
+    Ec = 0.614413, Nc = 6.10276e+17 cm^-3
+    m_dos = 0.08394, v_th = 3.19956e+07 cm/s
+  Valence band:
+    (band parameters obtained from bulk k.p)
+    Ev = -1.039, Nv = 1.35386e+19 cm^-3
+    m_dos = 0.662727, v_th = 1.1387e+07 cm/s
+  Eg = 1.65341, Ef0 = -0.172231, ni = 37197.1
+
+# Region barrier2, GaInP (x = 0.3)
+  Conduction band:
+    (band parameters obtained from bulk k.p)
+    Ec = 0.614413, Nc = 6.10276e+17 cm^-3
+    m_dos = 0.08394, v_th = 3.19956e+07 cm/s
+  Valence band:
+    (band parameters obtained from bulk k.p)
+    Ev = -1.039, Nv = 1.35386e+19 cm^-3
+    m_dos = 0.662727, v_th = 1.1387e+07 cm/s
+  Eg = 1.65341, Ef0 = -0.172231, ni = 37197.1
+
+# Region dd_drain_region, InGaAs (x = 0.53)
+  Conduction band:
+    (band parameters obtained from bulk k.p)
+    Ec = 0.14348, Nc = 2.23781e+17 cm^-3
+    m_dos = 0.0430032, v_th = 4.47018e+07 cm/s
+  Valence band:
+    (band parameters obtained from bulk k.p)
+    Ev = -0.594042, Nv = 8.35987e+18 cm^-3
+    m_dos = 0.480564, v_th = 1.33721e+07 cm/s
+  Eg = 0.737522, Ef0 = 0.153377, ni = 7.30241e+11
+
+# Region dd_source_region, InGaAs (x = 0.53)
+  Conduction band:
+    (band parameters obtained from bulk k.p)
+    Ec = 0.14348, Nc = 2.23781e+17 cm^-3
+    m_dos = 0.0430032, v_th = 4.47018e+07 cm/s
+  Valence band:
+    (band parameters obtained from bulk k.p)
+    Ev = -0.594042, Nv = 8.35987e+18 cm^-3
+    m_dos = 0.480564, v_th = 1.33721e+07 cm/s
+  Eg = 0.737522, Ef0 = 0.153377, ni = 7.30241e+11
+
+# Region drain_region, InGaAs (x = 0.53)
+  Conduction band:
+    (band parameters obtained from bulk k.p)
+    Ec = 0.14348, Nc = 2.23781e+17 cm^-3
+    m_dos = 0.0430032, v_th = 4.47018e+07 cm/s
+  Valence band:
+    (band parameters obtained from bulk k.p)
+    Ev = -0.594042, Nv = 8.35987e+18 cm^-3
+    m_dos = 0.480564, v_th = 1.33721e+07 cm/s
+  Eg = 0.737522, Ef0 = 0.153377, ni = 7.30241e+11
+
+# Region source_region, InGaAs (x = 0.53)
+  Conduction band:
+    (band parameters obtained from bulk k.p)
+    Ec = 0.14348, Nc = 2.23781e+17 cm^-3
+    m_dos = 0.0430032, v_th = 4.47018e+07 cm/s
+  Valence band:
+    (band parameters obtained from bulk k.p)
+    Ev = -0.594042, Nv = 8.35987e+18 cm^-3
+    m_dos = 0.480564, v_th = 1.33721e+07 cm/s
+  Eg = 0.737522, Ef0 = 0.153377, ni = 7.30241e+11
+
+# Region well, InGaAs (x = 0.53)
+  Conduction band:
+    (band parameters obtained from bulk k.p)
+    Ec = 0.14348, Nc = 2.23781e+17 cm^-3
+    m_dos = 0.0430032, v_th = 4.47018e+07 cm/s
+  Valence band:
+    (band parameters obtained from bulk k.p)
+    Ev = -0.594042, Nv = 8.35987e+18 cm^-3
+    m_dos = 0.480564, v_th = 1.33721e+07 cm/s
+  Eg = 0.737522, Ef0 = -0.178482, ni = 8.7319e+11
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for quantum_el (efaschroedinger)
+k-space creation
+k-space initialized
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ProbabilityDensity       1/cm           n-tuple   nodal       y
+EigenEnergy              eV             n-tuple   none        y
+Occupation                              n-tuple   none        n
+EigenEnergyOnMesh        eV             n-tuple   nodal       y
+eDensity                 1/cm^3         real      nodal       y
+hDensity                 1/cm^3         real      nodal       y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : quantum_el
+
+
+# Region barrier1, GaInP (x = 0.3)
+  2x2  L = -5.4195 M = -1.6185 N = -5.535
+
+# Region barrier2, GaInP (x = 0.3)
+  2x2  L = -5.4195 M = -1.6185 N = -5.535
+
+# Region drain_region, InGaAs (x = 0.53)
+  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+
+# Region int_drain, InGaAs (x = 0.53)
+  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+
+# Region int_source, InGaAs (x = 0.53)
+  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+
+# Region source_region, InGaAs (x = 0.53)
+  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+
+# Region well, InGaAs (x = 0.53)
+  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep_drain (sweep)
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for negf (negf)
+k-space creation
+k-space initialized
+k-space creation
+k-space initialized
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+ReorderPotential                        real      nodal       n
+elDensity                1/cm^3         real      nodal       n
+hDensity                 1/cm^3         real      nodal       n
+eCurrentDensity          A/cm^2         real      nodal       n
+hCurrentDensity          A/cm^2         real      nodal       n
+int_drain.current        A/cm^2         real      none        y
+int_source.current       A/cm^2         real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : negf
+
+
+# Region barrier1, GaInP (x = 0.3)
+
+# Region barrier2, GaInP (x = 0.3)
+
+# Region drain_region, InGaAs (x = 0.53)
+
+# Region source_region, InGaAs (x = 0.53)
+
+# Region well, InGaAs (x = 0.53)
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+Output directory      : output
+Output file format    : grace
+Output file basename  : sweep_drain
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: driftdiffusion negf 
+
+>>>>----------------------------- (driftdiffusion) -----------------------------
+  Setting max_iterations for nonlinear solver to 150
+  Solving equilibrium
+  it 1, |du| = 12.8701, |r| = 0.000536792  alpha = 1
+  it 2, |du| = 0.318893, |r| = 7.99206e-06  alpha = 1
+  it 3, |du| = 0.00475175, |r| = 1.61244e-09  alpha = 1
+
+  iterations: 4, |du| = 1.06462e-06, |r| = 2.17604e-14
+  Equilibrium done
+  it 1, |du| = 3.86817, |r| = 0.0111876  alpha = 1
+  it 2, |du| = 0.508291, |r| = 0.00561923  alpha = 0.5
+  it 3, |du| = 0.236857, |r| = 0.000945854  alpha = 1
+  it 4, |du| = 0.0213059, |r| = 9.70453e-06  alpha = 1
+
+  iterations: 5, |du| = 0.000203658, |r| = 1.01209e-09
+  Surface recombination current = 0
+
+  contact name:       voltage:            current:
+  drain               0.1                -0.881376
+  source              0                   0.881376
+
+Solve time: 0h 0m 0.5s
+<<<<----------------------------------------------------------------------------
+
+>>>>---------------------------------- (negf) ----------------------------------
+  Computing Current
+  Current done
+
+Solve time: 0h 0m 0.3s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 0.87s
+Simulation finished.
+
+107 warnings during run
+0 errors detected
+
+
+Log end: Fri Jan 31 17:15:46 2014
+
+

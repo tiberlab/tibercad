@@ -130,10 +130,33 @@ Module driftdiffusion
  
   Contact drain
   {
-    voltage = $Vd[0.0]
+    voltage = $Vd[0.10]
   }
 }
 
+Module efaschroedinger
+{
+  name = quantum_el
+  regions =(int_source, double_barrier, int_drain)
+
+  #particle = el
+  
+  poisson_model_name = driftdiffusion
+
+  #quadrature_rule = trapez
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  Solver
+  {
+    number_of_eigenstates = 6
+  }
+
+  Physics
+  {
+    model = 2x2
+    #kp_model = 2x2    
+  }
+}
 
 
 Module sweep
@@ -142,14 +165,14 @@ Module sweep
   solve = (driftdiffusion,negf)
   variable = $Vd
   start = 0.0
-  stop = 0.3
-  steps = 3 
+  stop = 1.0
+  steps = 50 
   plot_data = true
 }
 
 Module negf
 {
-  plot = (Current, elDensity)
+  plot = (Current)
   regions = double_barrier
 
   potential_simulation = driftdiffusion
@@ -174,20 +197,24 @@ Module negf
   Physics
   {
     # hamiltonian single_band { } 
-     hamiltonian single_band {valley = G}
+    # hamiltonian single_band {valley = G}
+    hamiltonian efa {simulation = quantum_el}
   }
   
-  #k_integration_density
-  #{
-  # k_max = 0.750
-  # number_of_elements = (4,4)
-  #}
+  k_integration_density
+  {
+    verbose = 4 
+    gamma_point_calculation = true
+    # k_max = 0.750
+    #number_of_elements = (4,4)
+  }
 
  k_integration_current
  {
-   verbose = 4  
-   k_max = 0.5
-   number_of_elements = (5,5)
+   verbose = 4
+   gamma_point_calculation = true
+  #k_max = 0.5
+  #number_of_elements = (5,5)
  }
 
 
@@ -234,8 +261,9 @@ Module negf
 Simulation
 {
   temperature = 300
-  #solve = (driftdiffusion,negf) 
-  solve = (sweep_drain)
+  solve = (driftdiffusion,negf) 
+  #solve = (driftdiffusion, quantum_el) 
+  #solve = (sweep_drain)
   resultpath = output
   scratchpath = /work/pecchia/GS
   output_format = grace 

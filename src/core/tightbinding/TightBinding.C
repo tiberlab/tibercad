@@ -232,7 +232,7 @@ TightBinding::project_potential(const std::string model_name, const std::string 
         {
           // this atom is in a quantum contact!
           QuantumContact* qct = quantum_contacts[subdomain];
-          pair<const Elem*, Point> projected(qct->project_on_boundary(elem, p));
+          pair<const Elem*, Point > projected(qct->project_on_boundary(elem, p));
           elem = projected.first;
           p = projected.second;
         }

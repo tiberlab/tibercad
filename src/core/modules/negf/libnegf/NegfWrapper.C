@@ -152,17 +152,17 @@ NegfWrapper::partition_info(void)
 }
 
 void 
-NegfWrapper::set_H_csr(int nrow, char fmt, std::vector<Complex >& A, 
+NegfWrapper::set_H_csr(int nrow, std::vector<Complex >& A, 
                            std::vector<int>& JA, std::vector<int>& IA)
 {
-  f77_negf_set_h(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
+  f77_negf_set_h(_handler,nrow,&A.front(),&JA.front(),&IA.front());
 }
 
 void 
-NegfWrapper::set_S_csr(int nrow, char fmt, std::vector<Complex >& A, 
+NegfWrapper::set_S_csr(int nrow, std::vector<Complex >& A, 
                            std::vector<int>& JA, std::vector<int>& IA)
 {
-  f77_negf_set_s(_handler,nrow,fmt,&A.front(),&JA.front(),&IA.front());
+  f77_negf_set_s(_handler,nrow,&A.front(),&JA.front(),&IA.front());
 }
 
 
@@ -172,4 +172,10 @@ NegfWrapper::set_S_id(int nrow)
   f77_negf_set_s_id(_handler,nrow);
 }
 
+
+void 
+NegfWrapper::print_mat(void) 
+{
+  f77_negf_print_mat(_handler);
+}
 

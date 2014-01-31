@@ -384,16 +384,8 @@ void Kspace::do_init() throw (InitFailedException)
 
   if (k_dim > 0)
   {
-    //num_nodes(k_dim,0);
-
     mod_opt.get_option("number_of_nodes", num_nodes);
-//    if ( num_nodes.size() != k_dim )
-//    {
-//      ostringstream temp; temp << setw(4) << k_dim;
-//      throw  InitFailedException("Kspace: number_of_nodes should contain " + temp.str() + " elements");
-//    }
-    num_nodes.resize(3, 5);
-
+    if ( num_nodes.size() == 0 ) num_nodes.resize(3, 5);
   }
 
   string mesh_order = mod_opt.get_option("mesh_order","first");

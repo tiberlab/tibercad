@@ -212,7 +212,8 @@ Module selfconsistent
 Simulation
 {
   temperature = 300
-  solve = (str, dd, quantum_el, selfconsistent)
+  #solve = (str, dd, quantum_el, selfconsistent)
+  solve = (str, dd, quantum_hl)
   #solve = (str, dd, quantum_el)
   resultpath = output
   output_format = grace

@@ -1,0 +1,342 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = test.msh  
+  mesh_units = 1e-9
+
+  material = GaN 
+  x-growth-direction = (0, 0, 0, 1)
+  y-growth-direction = (1, 0,-1, 0)
+  z-growth-direction = (-1,2,-1, 0)
+
+   Region dd_source_region
+   {
+     Doping {
+       type = donor 
+       Nd = 2e18 
+     }
+   }
+
+  Region source_region
+  {
+     Doping {
+       type = donor
+       Nd = 2e18 
+     }
+   }
+
+   Region barrier1
+   {
+     Doping {
+       type = acceptor
+       density= 2e18 
+     }
+     material = AlGaN
+     x = 0.15           
+   }
+
+   Region drain_region
+   {
+     Doping {
+       type = acceptor
+       density = 2e18 
+     }
+   }
+
+   Region dd_drain_region
+   {
+     Doping {
+       type = acceptor 
+       density = 2e18 
+     }
+   }
+   
+   Quantum_contact c_drain
+   {
+    regions = drain_region
+    length = 0.51
+    #length = 0.50
+   }
+
+   Quantum_contact c_source
+   {
+    regions = source_region  
+    length = 0.50
+   }
+   
+   Cluster quantum
+   {
+    regions=(source_region,barrier1,drain_region)
+   }
+
+
+   Atomistic str 
+   {
+      reference_region = source_region 
+      regions = (c_source, quantum, c_drain)
+      passivation = no 
+      #Per caricare il file
+      # load = output_well_3nm/w5nm/vff/tb.tgn
+      # test_QD/x01_swapInGa/all_around/tb_test_struct.tgn
+ 
+      #random_alloy = true 
+      #fix_mean_alloy_concentration = true #false 
+ 
+      z_length = 6 
+      y_length = 6
+      
+      print = (xyz, tgn)
+  }
+
+}
+
+Fodule elasticity
+{
+  regions = all
+  
+  non_linear_strain = true
+
+  shape_iteration = 2
+
+ Physics
+ {
+   body_force lattice_mismatch
+   {
+    reference_material = GaN
+    x-growth-direction = (0, 0, 0, 1)
+    y-growth-direction = (1, 0,-1, 0)
+    z-growth-direction = (-1,2,-1, 0)
+   }
+ }
+
+ Contact substrate
+ { 
+   type = clamp
+   regions = source 
+ }
+
+}
+
+Fodule vff
+{
+ atomistic_structure = str 
+ boundary_conditions = all_around 
+
+ plot = Strain
+
+ Solver 
+ {
+  method = cg
+  absolute_tolerance = 1e-4
+ }
+
+ Physics
+ { 
+  keating user
+  {
+   regions = AlGaN
+   component AlN
+   {
+    alpha = 84.241
+    beta = 20.362
+   }
+   component GaN
+   {
+    alpha = 84.028
+    beta = 19.679
+   }
+  }
+  keating user
+  {
+   regions = GaN
+   alpha = 84.028
+   beta = 19.679
+  }
+ }
+
+}
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{
+  regions=(dd_source_region, quantum, dd_drain_region)
+  # is default
+  # statistics = fermidirac
+
+  # we solve only for electrons
+  #coupling = electrons
+
+  #save_state = true
+  load_state = driftdiffusion_Vd_3.tsv
+  
+  plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Physics
+  {
+   particle_density
+   { 
+      statistics =  fermidirac
+   }
+   polarization (piezo, pyro){}
+   #mobility doping_dependent{}
+   recombination srh {}
+  }
+
+  Contact source
+  {
+    voltage = 0.0
+  }
+ 
+  Contact drain
+  {
+    voltage = $Vd[0.0]
+  }
+}
+
+Module empirical_tb
+{
+  regions = (c_source, quantum, c_drain)
+  name = tb
+  atomistic_structure = str 
+  Harrison_scaling = false 
+  potential_simulation = driftdiffusion
+
+  plot = (tbstates)
+
+  Solver
+  {
+    num_valence_eigenvalues = 2   
+    num_conduction_eigenvalues = 2   
+    guess_valence = -3.0
+    guess_conduction = -0.2
+    long_tolerance = 1e-4
+  }
+
+}
+
+
+Module negf
+{
+  plot = (Current)
+  regions = quantum
+
+  potential_simulation = driftdiffusion
+  Boundary c_source{}
+  Boundary c_drain{}
+
+  Solver
+  {
+    verbosity = 100
+    number_of_PL = 268
+    size_of_PL = 8 #24 
+
+    #Np_contour = (0,0)
+    #Np_real = 1000
+    #Npoles = 0 
+    #deltaEc = 0.25
+
+    delta = 1e-3
+    Emin = 0.30
+    Emax = 0.70
+    Estep = 0.05
+    writeLDOS = 1
+  }
+
+  Physics
+  {
+     #hamiltonian single_band {valley = G}
+     hamiltonian etb {simulation = tb}
+  }
+  
+  #k_integration_density
+  #{
+  # k_max = 0.750
+  # number_of_elements = (4,4)
+  #}
+
+  k_integration_current
+  {
+    verbose = 3
+    gamma_point_calculation = true
+  }
+
+}
+
+
+Module sweep
+{
+  name = sweep_drain 
+  solve = (driftdiffusion)
+  variable = $Vd
+  start = 0.0
+  stop = 3.00
+  steps = 30
+  plot_data = true
+}
+
+#Module efaschroedinger
+#{
+#  name = quantum_el
+
+#  regions = double_barrier 
+  
+#  particle = el
+#  poisson_model_name = driftdiffusion
+
+#  plot = (EigenFunctions, EigenEnergy, EnergyLevels,ProbabilityDensity,QuantumDensity)
+
+#  Solver
+#  {
+#    number_of_eigenstates = 4 
+#  }	
+
+
+#  Physics
+#  {
+#    model = conduction_band
+
+    #model = kp   #  k.p  for  valence  band
+    #kp_model = 8x8
+#  }
+
+#}
+
+
+#Module selfconsistent
+#{
+# solve = (driftdiffusion,negf) 
+# max_iteration = 100
+# absolute_tollerance = 5e-4
+# relative_tollerance = 1e-9
+# monitor = true
+#} 
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  #solve = (elasticity,vff) 
+  #solve = (elasticity,vff,driftdiffusion,negf) 
+  solve = (driftdiffusion,negf) 
+  #solve = (sweep_drain)
+  resultpath = output2
+  scratchpath = /work/pecchia/GS
+  output_format = grace 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

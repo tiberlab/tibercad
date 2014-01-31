@@ -188,7 +188,7 @@ void DDsemiconductor::prepare_submodels(void)
   //create semiconductor for electron parameters
   ModelOptions  kp_options;
   kp_options["model"] = "single_band";
-  kp_options["kp_model"] = "2x2";
+  kp_options["kp_model"] = "single_band";
   kp_options["particle"] = "el";
 
   semiconductor = Semiconductor::create(get_material(), kp_options);

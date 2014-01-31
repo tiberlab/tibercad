@@ -219,8 +219,30 @@ void ZbSemiconductor::calculate_2x2_kp_params (KPparams&  result)
   result.E_c = (par.Ev + par.EgGamma)/Constants::Hartree;
   result.l1s = par.a_v/Constants::Hartree; result.l2s = result.l1s;
   result.m1s = par.a_v/Constants::Hartree; result.m2s = result.m1s;
-}
 
+  if (_spurious=="none")
+  {
+    result.s1 = 1.0/par.m_G - par.Ep/par.EgGamma;
+    result.s2 = result.s1;
+  }
+  else if (_spurious=="Foreman")
+  {
+    result.s1 = 0.0;
+    result.s2 = 0.0;
+    par.Ep = par.EgGamma / par.m_G;
+  }  
+  else if (_spurious=="Chuang")
+  {
+    result.s1 = 1.0/par.m_c2;
+    result.s2 = 1.0/par.m_c2;
+    par.Ep = (1.0/par.m_G - result.s1)* par.EgGamma;
+  }
+
+  result.P1  = std::sqrt(par.Ep * 0.5 / Constants::Hartree);
+  result.P2  = result.P1;
+  
+}
+//=================================================================================//
 
 void ZbSemiconductor::calculate_6x6_kp_params (KPparams&  result)
 {

@@ -84,13 +84,16 @@ public:
   void partition_info(void);
   
   //! set H via file
-  void set_H_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
+  void set_H_csr(int nrow, std::vector<Complex >& A, std::vector<int>& JA,
                                                      std::vector<int>& IA );
   //! set H via file
-  void set_S_csr(int nrow, char fmt, std::vector<Complex >& A, std::vector<int>& JA,
+  void set_S_csr(int nrow, std::vector<Complex >& A, std::vector<int>& JA,
                                                      std::vector<int>& IA );
 
   void set_S_id(int nrow);
+
+
+  void print_mat(void);
 
 private:
   int _handler[NEGF_HSIZE];
