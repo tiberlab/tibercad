@@ -765,6 +765,9 @@ AtomisticStructure::read_tgn(const std::string& path)
         {
           _atoms[i - 1].set_elem(_device->get_mesh().elem(tmp_id));
         }
+
+      line_string >> record;
+      _atoms[i - 1].set_label(atoi(record.c_str()));
     }
 
   // An additional line is present in GEN files. It's the coordinates origin and it's
@@ -873,6 +876,10 @@ AtomisticStructure::print_tgn(const std::string& path) const
           file << std::setw(14);
           if (_atoms[i].get_elem() == NULL) file << -1;
           else file << _atoms[i].get_elem()->id();
+
+          // Print atom label 
+          file << std::setw(3);
+          file<< static_cast<unsigned int>(_atoms[i].get_label());
 
           file << std::endl;
 
