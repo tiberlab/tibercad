@@ -179,7 +179,6 @@ PhysicalModel* EnvelopFunctionApprox::create_bulk_model(const ModelOptions& opti
 {
 
   ModelOptions opts(options);
-  opts.set_option("particle", get_option("particle", ""));
 
   EFAbulkModel* model = PhysicalModelInterface::create<EFAbulkModel>("EFAmodel", mat, opts);
 
@@ -452,6 +451,8 @@ void EnvelopFunctionApprox::parse_options()
       singleband = '1';
     else if (model == "valence_band")
       singleband = 'v';
+    else if (model == "2x2")
+      singleband = 'b';
     else if (model == "6x6")
       singleband = 'v';
 
@@ -462,6 +463,7 @@ void EnvelopFunctionApprox::parse_options()
         if (model == "6x6")
           break;
 
+      case 'b':
       case 'c':
       case '1':
         opt.degeneracy *= 2;
@@ -1421,9 +1423,9 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     // we need a small delta to decide if two states may be degenerate
     // TODO adjust it automatically
     const double delta = 1e-5;
-    // if this is true, then we have to check orthogonality with neighbouring
+    // if this is true, then we have to check linear dependency with neighbouring
     // states in the interval +/- delta
-    int check_orthogonality = false;
+    int check_linear_dependency = false;
 
     // look for the first available slot
     if (ev[i].particle == "el")
@@ -1444,7 +1446,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
         if (ev[i].energy < (_solution[index - 1].eigen_energy + delta))
         {
           // we may have found a degenerate eigenvalue
-          check_orthogonality = true;
+          check_linear_dependency = true;
         }
       }
     }
@@ -1466,7 +1468,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
         if (ev[i].energy > _solution[index + 1].eigen_energy - delta)
         {
           // we may have found a degenerate eigenvalue
-          check_orthogonality = true;
+          check_linear_dependency = true;
         }
       }
     }
@@ -1529,8 +1531,14 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     // for a second time. If so, we delete the eigenvector and go to the
     // next state.
     //
-    if (check_orthogonality)
+    // TODO is this check correct? It should, because linearly independent eigenvectors
+    //      should be so even if it is a generalized EVP. But actually, it should not be
+    //      needed because now we add a deflation space.
+    //
+    if (check_linear_dependency)
     {
+      vector<Complex> tempvec(_solution[index].eigen_vector);
+
       //cerr << "orthogonality (" << index << ") :";
       int inc = (_solution[index].particle == "el") ? -1 : 1;
       int ind = index + inc;
@@ -1542,20 +1550,17 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
             (_solution[index].eigen_energy > (_solution[ind].eigen_energy + delta)))
           break;
 
-        // we orthogonalize incrementally, relying on the fact that present
-        // eigenstates are already orthogonal.
-        // This does no harm if they are already orthogonal
         Complex norm = sqrt(scalar_product(_solution[ind], _solution[ind]));
-        Complex alpha = scalar_product(_solution[ind], _solution[index]) / norm;
+        Complex alpha = scalar_product(_solution[ind].eigen_vector, tempvec) / norm;
         //cerr << " (" << ind << ") " << alpha << ",";
         for (size_t j = 0; j < number_of_all_dofs; j++)
-          _solution[index].eigen_vector[j] -= alpha * _solution[ind].eigen_vector[j];
+          tempvec[j] -= alpha * _solution[ind].eigen_vector[j];
 
         ind += inc;
       }
       //cerr << "\n";
 
-      double dotprod = abs(scalar_product(_solution[index], _solution[index]));
+      double dotprod = abs(scalar_product(tempvec, tempvec));
       if (dotprod < 1e-6)
       {
         // we delete it and skip to the next state;

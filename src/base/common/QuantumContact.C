@@ -623,7 +623,7 @@ QuantumContact::project_on_boundary(const Elem* elem, const Point& point )
       ID side = elemside->side();
 
       p.reserve(4);
-      p.clear();
+      // p.clear(); ???
       
       for(ID nde = 0; nde < sidelem->n_nodes(); nde++)
       {
@@ -679,7 +679,6 @@ QuantumContact::project_on_boundary(const Elem* elem, const Point& point )
       }
   }
   
-
   return(make_pair(sidelem, out));
 }
 
