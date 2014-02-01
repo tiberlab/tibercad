@@ -61,12 +61,9 @@ ifeq ($(target_os), darwin)
 endif
 LDFLAGS += -L$(libdir) 
 
-LDFLAGS += -ltensor 
+LDFLAGS += -Wl,--whole-archive -ltensor -Wl,--no-whole-archive
 
 LDFLAGS += @LIBMESH_PETSC_LIBS@
-ifneq ($(target_os), linux) 
- MODULE_LDFLAGS += -L$(libdir) -ltibercad -leigen_solver @LIBMESH_PETSC_LIBS@
-endif
 
 LDFLAGS += @BOOST_REGEX_LIB@ @BOOST_FILESYSTEM_LIB@
 
