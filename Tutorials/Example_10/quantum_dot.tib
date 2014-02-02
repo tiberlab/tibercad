@@ -191,6 +191,7 @@ Module  efaschroedinger
 
 {
  
+  name = quantum_hl
   regions = Quantum_dot 
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
