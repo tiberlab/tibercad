@@ -207,6 +207,9 @@ Module opticskp
   name = optics
   regions =  quantum
 
+  # for now, we use this trick:
+  skip_solve = true
+
   plot = (optical_spectrum_k_0)
   output_format = grace
 
