@@ -880,24 +880,9 @@ void EnvelopFunctionApprox::do_solve()
    {
      solve_for_kpoint(get_k_point());
    }
-
- 
-   // we have to redeclare the solution variables to adjust the number
-   // of eigenstates
-   const unsigned int num_states = _solution.size();
-   unsigned int dim = get_mesh().mesh_dimension();
-   string units("1/cm");
-   if (dim == 2)
-     units = "1/cm^2";
-   else if (dim == 3)
-     units = "1/cm^3";
-   declare_solution(ProbabilityDensity, NTUPLE, NODES, units, num_states);
-   declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
-   declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
-   declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
-
-
 }
+
+
 
 //===========================================================//
 void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
@@ -930,6 +915,20 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
     solve_eigen_value_problem((opt.num_el_states + opt.num_hl_states) / 2 + 1,
                               solver_opt.spectrum_shift/Hartree);
 
+
+    // we have to redeclare the solution variables to adjust the number
+    // of eigenstates
+    const unsigned int num_states = _solution.size();
+    unsigned int dim = get_mesh().mesh_dimension();
+    string units("1/cm");
+    if (dim == 2)
+      units = "1/cm^2";
+    else if (dim == 3)
+      units = "1/cm^3";
+    declare_solution(ProbabilityDensity, NTUPLE, NODES, units, num_states);
+    declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
+    declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
+    declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
   }
 }
 

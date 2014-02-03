@@ -148,7 +148,6 @@ Module efaschroedinger
 
   x-periodicity = false
    
-  particle = el
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
   strain_simulation = strain 
  
@@ -177,7 +176,6 @@ Module efaschroedinger
 
   x-periodicity = false
    
-  particle = hl
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
   strain_simulation  = strain  
  

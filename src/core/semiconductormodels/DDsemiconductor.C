@@ -188,8 +188,6 @@ void DDsemiconductor::prepare_submodels(void)
   //create semiconductor for electron parameters
   ModelOptions  kp_options;
   kp_options["model"] = "single_band";
-  kp_options["kp_model"] = "single_band";
-  kp_options["particle"] = "el";
 
   semiconductor = Semiconductor::create(get_material(), kp_options);
   if (semiconductor == NULL)
@@ -203,9 +201,7 @@ void DDsemiconductor::prepare_submodels(void)
   add_submodel("semiconductor", semiconductor);
 
   //create kp hamiltonian for hole parameters
-  kp_options["model"] = "kp";
-  kp_options["kp_model"] = "6x6";
-  kp_options["particle"] = "hl";
+  kp_options["model"] = "6x6";
 
   bulk_ham = dynamic_cast<KPbulkHamiltonian*>(
       EFAbulkHamiltonian::create(get_material(), kp_options));

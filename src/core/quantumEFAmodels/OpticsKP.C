@@ -37,8 +37,7 @@ PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
 {
   ModelOptions kp8x8options = options;
 
-  kp8x8options["model"] = "kp";
-  kp8x8options["kp_model"] = "8x8";
+  kp8x8options["model"] = "8x8";
 
   EFAbulkModel* model = PhysicalModelInterface::create<EFAbulkModel>("EFAmodel", mat, kp8x8options);
 

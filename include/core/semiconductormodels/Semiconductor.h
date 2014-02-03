@@ -1,10 +1,6 @@
 #ifndef _SEMICONDUCTOR_H_
 #define _SEMICONDUCTOR_H_
 
-//!  A general crystal semiconductor class.
-/*!
-     The class can read parameters database and convert them into kp parameters 
-*/
 
 #include "PhysicalModelInterface.h"
 #include "TemperatureInterface.h"
@@ -12,6 +8,10 @@
 
 #include <vector>
 
+//!  A general crystal semiconductor class.
+/*!
+     The class can read parameters database and convert them into kp parameters
+*/
 class TBDLEXPORT Semiconductor : public PhysicalModelInterface
 {
  public:
@@ -29,8 +29,8 @@ class TBDLEXPORT Semiconductor : public PhysicalModelInterface
   //! Calculates k.p parameters in atomic units for 6 or 8 band valence band calculation
   void calculate_kp_params(KPparams& par);
 
-  //! used to set or reset kp model
-  void set_kp_model(std::string kp_model);
+  //  ! used to set or reset kp model
+  //void set_kp_model(std::string kp_model);
   
   //! creates new object
   static Semiconductor* create(const Material* mat,  const ModelOptions& options);
@@ -100,11 +100,11 @@ void Semiconductor::set_temperature(const Elem* element, const Point& point )
    _temperature = temp_interface.get_temperature (element, point);
 }
 
-inline
-void Semiconductor::set_kp_model(std::string kp_model)
-{
-  _kp_model = kp_model;
-}
+//inline
+//void Semiconductor::set_kp_model(std::string kp_model)
+//{
+//  _kp_model = kp_model;
+//}
 
 
 inline  

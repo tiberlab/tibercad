@@ -29,7 +29,6 @@ void EFAbulkModel::do_print_info()
 void EFAbulkModel::do_init()
 {
 
-  get_option("kp_model","");
   get_option("model","");
   get_option("particle","");
   get_option("kpVVtermSymmetric","");

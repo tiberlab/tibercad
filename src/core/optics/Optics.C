@@ -435,17 +435,46 @@ void Optics::calculate_for_k_point(const Point& k_point,
 
   if (!get_option("skip_solve", false))
   {
+    short k_dim = 3 - get_mesh().mesh_dimension();
+
     _initial_state_model->solve_for_kpoint(k_point); //calculate eigenstates
 
-    TiberCad::prepend_to_filename_suffix("k_0");
-    if (plot_solution("EigenStates") && (k_point.size() < 1e-6))
+    if (plot_solution("EigenStates_k_0"))
+        TiberCad::prepend_to_filename_suffix("k_0");
+    else
+    {
+      ostringstream os;
+      os << "k_(";
+      switch (k_dim)
+      {
+        case 3:
+          os << k_point(0) << ",";
+
+        case 2:
+          os << k_point(1) << ",";
+
+        case 1:
+          os << k_point(2);
+          break;
+
+        default:
+          os << "0";
+          break;
+      }
+      os << ")";
+      TiberCad::prepend_to_filename_suffix(os.str());
+    }
+
+    if ((plot_solution("EigenStates_k_0") && (k_point.size() < 1e-6)) ||
+        plot_solution("EigenStates"))
       _initial_state_model->plot();
 
     if( _initial_state_model != _final_state_model)
     {
       _final_state_model->solve_for_kpoint(k_point); //calculate eigenstates
-      if (plot_solution("EigenStates") && (k_point.size() < 1e-6))
-        _final_state_model->plot();
+      if ((plot_solution("EigenStates_k_0") && (k_point.size() < 1e-6)) ||
+          plot_solution("EigenStates"))
+          _final_state_model->plot();
     }
     TiberCad::drop_first_filename_suffix();
   }

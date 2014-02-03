@@ -214,7 +214,6 @@ Module driftdiffusion
 Module efaschroedinger    #electrons
 {
   name = kp_electrons
-  particle = el
 
   poisson_model_name = driftdiffusion
   strain_model_name = strain
@@ -231,7 +230,7 @@ Module efaschroedinger    #electrons
 
   Physics
   {
-      model =   conduction_band
+      model =  conduction_band
   }
 
 }#endefaschroedinger electrons
@@ -239,7 +238,6 @@ Module efaschroedinger    #electrons
 Module efaschroedinger   #holes
 {
   name = kp_holes
-  particle = hl
   regions = Quantum 
 
   poisson_model_name = driftdiffusion
@@ -256,8 +254,7 @@ Module efaschroedinger   #holes
 
   Physics
   {
-    model = kp
-    kp_model = 6x6
+    model = 6x6
   }
 
 }#efaschroedinger   holes

@@ -180,7 +180,6 @@ Module efaschroedinger
   regions = (1,2)
   plot = (ProbabilityDensity, EigenEnergy)
 
-  particle = el
   poisson_model_name = dd
   strain_model_name = str
   #quadrature_rule = trapez
@@ -206,7 +205,6 @@ Module efaschroedinger
   regions = (1,2)
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
-  particle = hl
   poisson_model_name = dd
   strain_model_name = str
   #quadrature_rule = trapez
@@ -221,8 +219,7 @@ Module efaschroedinger
 
   Physics
   {
-    model = kp
-    kp_model = 6x6
+    model = 6x6
   }
 }
 

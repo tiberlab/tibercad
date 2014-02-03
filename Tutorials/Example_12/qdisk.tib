@@ -195,6 +195,7 @@ Module efaschroedinger
   Solver
   {
     number_of_eigenstates = 80
+    use_deflation_space = false
     #solve_ev_problem_twice = true
     #ksp_type = gmres
     #pc_type = ilu	  
@@ -207,7 +208,7 @@ Module opticskp
   name = optics
   regions =  quantum
 
-  # for now, we use this trick:
+  # we have already solved them, in this case
   skip_solve = true
 
   plot = (optical_spectrum_k_0)

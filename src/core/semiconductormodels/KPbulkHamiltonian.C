@@ -151,8 +151,6 @@ void KPbulkHamiltonian::do_init()
 
   model_name = get_option("model", "6x6");
 
-  model_name = get_option("kp_model", model_name);
-
   kpVVtermSymmetric = get_option("kpVVtermSymmetric", false);
 
   kpCVtermSymmetric = get_option("kpCVtermSymmetric", true);
@@ -186,7 +184,7 @@ void KPbulkHamiltonian::do_init()
   }
   else
   {
-    Messages::error("Wrong kp model: "+model_name);
+    Messages::error("Wrong kp model: " + model_name);
   }
 
 
@@ -201,7 +199,7 @@ void KPbulkHamiltonian::do_init()
   }
   
   //(re)set semiconductor model
-  semiconductor->set_kp_model(model_name);
+  //semiconductor->set_kp_model(model_name);
 
   //prepare k.p parameter
   semiconductor->calculate_kp_params(par);

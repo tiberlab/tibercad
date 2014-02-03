@@ -131,7 +131,6 @@ Module  efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy)
 
-  particle = el
   number_of_eigenstates = 10
   poisson_simulation = dd
   strain_simulation  = strain 
@@ -166,7 +165,6 @@ Module  efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy)
 
   
-  particle = hl
   number_of_eigenstates = 15
   poisson_simulation  = dd
   strain_simulation = strain 

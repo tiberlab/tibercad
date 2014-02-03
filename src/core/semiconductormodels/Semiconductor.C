@@ -17,7 +17,7 @@ Semiconductor::Semiconductor(const ModelOptions& options)
   modelB = NULL;
 
   //database is read before do_init() and this parameter must be ready.
-  _kp_model = get_option("kp_model","6x6");
+  _kp_model = get_option("model", "6x6");
   _consider_temperature = get_option("consider_temperature",  true );
   _consider_temperature = get_option("temperature_scaling", _consider_temperature );
 }
@@ -36,7 +36,7 @@ void Semiconductor::do_init ()
 
   int verbose = SimulationOptions::verbose ();
 
-  get_option("model","");
+  get_option("particle","");
   get_option("kpVVtermSymmetric","");
   get_option("kpCVtermSymmetric","");
 
