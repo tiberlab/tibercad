@@ -437,10 +437,17 @@ void Optics::calculate_for_k_point(const Point& k_point,
   {
     _initial_state_model->solve_for_kpoint(k_point); //calculate eigenstates
 
+    TiberCad::prepend_to_filename_suffix("k_0");
+    if (plot_solution("EigenStates") && (k_point.size() < 1e-6))
+      _initial_state_model->plot();
+
     if( _initial_state_model != _final_state_model)
     {
       _final_state_model->solve_for_kpoint(k_point); //calculate eigenstates
+      if (plot_solution("EigenStates") && (k_point.size() < 1e-6))
+        _final_state_model->plot();
     }
+    TiberCad::drop_first_filename_suffix();
   }
 
   set_k_point(k_point);

@@ -31,6 +31,8 @@ FEMEigenvalueProblem::FEMEigenvalueProblem(const ModelOptions& options)
 
   _hamiltonian_size = 0;
 
+  // dummy read
+  get_solver_options().get_option("use_deflation_space", true);
 }
 
 //===============================================================//
