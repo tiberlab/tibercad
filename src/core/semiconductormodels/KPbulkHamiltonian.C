@@ -17,7 +17,7 @@ void KPbulkHamiltonian::do_print_info(void)
 {
 
   ostringstream os;
-  os << model_name<<"  ";
+  os << "KxP " << model_name << std::endl << "  ";
   os << "L = " << par.L1 << " M = " << par.M1 << " N = " << par.N1;
 
   if ((model_name == "8x8") || (model_name == "2x2"))
@@ -29,7 +29,7 @@ void KPbulkHamiltonian::do_print_info(void)
   {
     os << " P1 = " << par.P1_c << std::endl;
   }
-
+  os << "  s = " << par.s1;
   Messages::info(os.str());
   /*
   std::cout<<"6x6 parameters:"<<std::endl;

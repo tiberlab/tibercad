@@ -449,7 +449,7 @@ Device::setup_quantum_contacts(void)
     double length = data.get_option("length", 0.5);
 
     Messages::info(" ");
-    Messages::info("Creating quantum contact "+name);
+    Messages::info("Creating quantum contact " + name);
 
     std::vector<ID> rg_ids, bd_ids;
     std::set<ID> ids;
@@ -484,8 +484,15 @@ Device::setup_quantum_contacts(void)
 
     std::vector<ID> vid(1, newid);
 
-    // Only one material/region can be created !!
-    set_material(get_material(rg_ids[0]), vid, name);
+    // Only one material/region can be created (for now) !!
+
+    const Material* refmat = get_material(rg_ids[0]);
+    const ModelOptions& refopts = refmat->get_options();
+    // here we can be sure that material is given
+    string material = refopts.get_option("material", "");
+
+    Material* newmat = Material::create(material, refopts);
+    set_material(newmat, vid, name);
 
     // We have to erase the region id from the list of active regions, otherwise
     // we mess up the other modules (quantum contact regions should be invisible
