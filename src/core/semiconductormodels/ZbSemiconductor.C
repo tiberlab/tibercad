@@ -47,6 +47,12 @@ void ZbSemiconductor::do_init()
       par.gamma1 = 1.0 / m_v;
       par.gamma2 = 0.0;
     }
+
+    double m_c = get_option("m_c", 0.0);
+    if (m_c != 0.0)
+    {
+      par.m_G = m_c;
+    }
   }
 
   par.def_vol_X   = get_option("abs_def_pot_X",      par.def_vol_X );
@@ -120,8 +126,6 @@ void ZbSemiconductor::read_database( )
 
 
   db.set_section("conductionband");
-  
-  //par.m_G = db.get("m_G", 0.0);
   
   RealTensor mten;
   db.get("m_G",mten,true);

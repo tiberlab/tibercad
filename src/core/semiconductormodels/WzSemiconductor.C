@@ -56,27 +56,20 @@ void WzSemiconductor::do_init()
   // we override with hole band masses for 2x2
   if(_kp_model=="2x2")
   {
-    double ma = 0.0, mc = 0.0;
-    //RealTensor mten(0.0);
-    //db.get("m_G",mten);
-    //ma = mten(0,0);
-    //pc = mten(2,2);
-    ma = get_option("m_v_xx", ma);
-    mc = get_option("m_v_zz", mc);
+    RealTensor mten(0.0);
+    get_option("m_v",mten);
 
-    if (ma != 0.0)
-      par.A2 = par.A4 = -0.5 / ma;
+    if (mten(0,0) != 0.0)
+      par.A2 = par.A4 = -0.5 / mten(0,0);
 
-    if (mc != 0.0)
-      par.A1 = par.A3 = -0.5 / mc;
+    if (mten(2,2) != 0.0)
+      par.A1 = par.A3 = -0.5 / mten(2,2);
 
-    ma = 0.0; mc = 0.0;
-    ma = get_option("m_c_xx", ma);
-    mc = get_option("m_c_zz", mc);
+    mten(0,0) = 0.0; mten(2,2) = 0.0;
 
-    if (ma != 0.0) par.m_c_xx = ma;
-
-    if (mc != 0.0) par.m_c_zz = mc;
+    get_option("m_c",mten);
+    if (mten(0,0) != 0.0) par.m_c_xx = mten(0,0);
+    if (mten(2,2) != 0.0) par.m_c_zz = mten(2,2);
 
   }
 
