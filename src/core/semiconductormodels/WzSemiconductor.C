@@ -71,6 +71,8 @@ void WzSemiconductor::do_init()
     if (mten(0,0) != 0.0) par.m_c_xx = mten(0,0);
     if (mten(2,2) != 0.0) par.m_c_zz = mten(2,2);
 
+    std::cout<<"(semiconductor) m_c = "<<par.m_c_xx<<"  "<<par.m_c_zz<<std::endl;
+    std::cout<<"(semiconductor) m_v = "<<mten(0,0)<<"  "<<mten(2,2)<<std::endl;
   }
 
   if (!_couple_bands) 
@@ -187,32 +189,13 @@ void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
 
   result.L1 = 0.5 * (par.A4 + par.A2 - 1.0);
 
-  //result.L2 = 0.5 * (par.A1 - 1.0);
-
   result.M1 = 0.5 * (par.A4 + par.A2 - 1.0);
 
   result.M2 = 0.5 * (par.A1 + par.A3 - 1.0);
 
-  //result.M3 = 0.5 * (par.A2 - 1.0);
-
-  /*
-  result.N1 = par.A5;
-
-  result.N2 = par.A6/sqrt(2.0);
-
-  result.N1_yx = result.M1;  result.N2_yx = result.M2;
-
-  result.N1_xy = result.N1 - result.N1_yx; result.N2_xy = result.N2 - result.N2_yx;
-  */
-
   result.l1s = (par.D4 + par.D2)/Constants::Hartree;
   result.m1s = (par.D4 + par.D2)/Constants::Hartree;
   result.m2s = (par.D1 + par.D3)/Constants::Hartree;
-
-  //result.m3s = par.D2/Constants::Hartree;
-
-  //result.n1s = 2.0 * par.D5/Constants::Hartree; result.n2s = sqrt(2.0) * par.D6/Constants::Hartree;
-
 
   //------------------------------------------------------------------------------//
   // conduction band strain
@@ -241,7 +224,6 @@ void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
     result.s2 = 0.0;
 
     par.Ep_1 = par.m_c_zz * par.EgGamma;
-
     par.Ep_2 = par.m_c_xx * par.EgGamma;
   }
   else if (_spurious == "Chuang")
@@ -253,12 +235,18 @@ void WzSemiconductor::calculate_2x2_kp_params (KPparams&  result)
     result.s2 = 1.0;
 
     par.Ep_1 = (1.0/par.m_c_zz - result.s1) * par.EgGamma;
-
     par.Ep_2 = (1.0/par.m_c_xx - result.s2) * par.EgGamma;
   }
 
   result.P1 = std::sqrt(0.5 * par.Ep_1 / Constants::Hartree);
   result.P2 = std::sqrt(0.5 * par.Ep_2 / Constants::Hartree);
+
+  double t1 = 0.5*par.Ep_1/par.EgGamma;
+  double t2 = 0.5*par.Ep_2/par.EgGamma;
+
+  result.L1 += t2;
+  result.M1 += t1;
+  result.M2 += t1;
 
 }
 

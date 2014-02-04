@@ -319,9 +319,9 @@ void KPbulkHamiltonian::calculate_Hamiltonian_gen(void)
   {
     //=================================================================
     //-------H_vv + h^2/2m(kx^2+ky^2+kz^2) in crystal system-----------//
-    Ham[2][2].quad[0][0]  = par.L1  + 0.5;
-    Ham[2][2].quad[1][1]  = par.M1  + 0.5;
-    Ham[2][2].quad[2][2]  = par.M2  + 0.5;
+    Ham[2][2].quad[0][0] = par.L1 + 0.5;
+    Ham[2][2].quad[1][1] = par.M1 + 0.5;
+    Ham[2][2].quad[2][2] = par.M2 + 0.5;
 
     Ham[3][3].quad[0][0] = par.M1 + 0.5;
     Ham[3][3].quad[1][1] = par.L1 + 0.5;
