@@ -504,7 +504,7 @@ void EnvelopFunctionApprox::parse_options()
         " one of 'num_electron_states' or 'num_hole_states'");
   }
 
-  if (singleband)
+  if (singleband && (singleband != 'b'))
   {
     if ((opt.num_hl_states > 0) && (opt.num_el_states > 0))
       throw InitFailedException("In " +  get_name() + ": you cannot ask for both hole and "
@@ -843,6 +843,7 @@ void EnvelopFunctionApprox::do_init( )
     
     band_map = element_hamiltonian->get_kp_bands_map();
     
+    // TODO there is some mess with the degeneracy, I believe
     opt.degeneracy = element_hamiltonian->get_degeneracy();
   }
   //------------------------------------------------------------------------------------------------------//
@@ -2362,6 +2363,18 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     }
   }
   qdens.close();
+
+  // we have to redeclare the solution variables to adjust the number
+  // of eigenstates
+  string units("1/cm");
+  if (dim == 2)
+    units = "1/cm^2";
+  else if (dim == 3)
+    units = "1/cm^3";
+  declare_solution(ProbabilityDensity, NTUPLE, NODES, units, _solution.size());
+  declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", _solution.size());
+  declare_solution(Occupation, NTUPLE, GLOBAL, "", _solution.size());
+  declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", _solution.size());
 
   // set them back to original values
   if (opt.num_el_states > 0) opt.num_el_states--;

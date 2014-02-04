@@ -20,14 +20,14 @@ void KPbulkHamiltonian::do_print_info(void)
   os << model_name<<"  ";
   os << "L = " << par.L1 << " M = " << par.M1 << " N = " << par.N1;
 
-  if (model_name == "8x8")
+  if ((model_name == "8x8") || (model_name == "2x2"))
   {
-    os << "P0 = " << par.P0 << std::endl;
+    os << " P0 = " << par.P1 << std::endl;
   }
   
   if (model_name == "14x14")
   {
-    os << "P1 = " << par.P1_c << std::endl;
+    os << " P1 = " << par.P1_c << std::endl;
   }
 
   Messages::info(os.str());
