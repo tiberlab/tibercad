@@ -93,6 +93,8 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,std::vector<int>& IA) const;
 
   virtual void print_H(const std::string& outpath) const;
+ 
+  virtual double get_H_units(void) const;
 
  protected:
 
@@ -237,5 +239,9 @@ inline bool FEMEigenvalueProblem::element_on_boundary(const Elem* element)
   
 }
 
+inline double FEMEigenvalueProblem::get_H_units(void) const
+{
+  return 1.0;
+}
 
 #endif // _FEMEIGENVALUEPROBLEM_H_

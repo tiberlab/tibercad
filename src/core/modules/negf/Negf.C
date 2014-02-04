@@ -619,7 +619,6 @@ Negf::setup_efa_hamil(void)
   //std::cout<<"(negf) Assemble ..." << std::endl;
   _ext_module->assemble();
 
-  //_ext_module->print_H(SimulationOptions::scratch_path);
  
   double Ec = _ext_module->get_band_edge("el");
   double Ev = _ext_module->get_band_edge("hl");
@@ -713,6 +712,9 @@ Negf::setup_negf(void)
   }
   //Messages::info("setting scratch path to "+SimulationOptions::scratch_path);
   _libnegf->set_scratch_path(SimulationOptions::scratch_path);
+
+  if (get_option("print_matrices",false))
+     _libnegf->print_mat();  
 
   _libnegf->read_input();
 
@@ -1480,6 +1482,7 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
   mu_n = mu_p = 0.0;     // set to 0.0 for libnegf:
                          // we set  Ef  as   Ef - mu (see below)
 
+  // Takes kb in eV/K so assuming eV as energy units.
   double kbT = SimulationOptions::temperature * Constants::kb;
   double wght = 1.0;
 
@@ -1514,7 +1517,8 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
   for (; it != end; ++it)
   {
     get_boundary_potentials(it->second, phi[id], mu[id]);
-
+    mu[id];
+     
     if(mu[id]>mumax){mumax = mu[id];}
     if(mu[id]<mumin){mumin = mu[id];}
     _contact_potential[it->second] = mu[id];
@@ -1595,7 +1599,7 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
   }
   else
   {  
-     Np = (abs(mu[0]-mu[1])+ 2 * opt.n_kT)/opt.deltaE;
+     Np = (abs(mu[0]-mu[1])+ 2 * opt.n_kT)/opt.deltaE ;
      if (Np>1000) 
      {	   
         std::ostringstream os;

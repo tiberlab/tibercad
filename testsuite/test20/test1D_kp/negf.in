@@ -4,8 +4,8 @@
 '/work/pecchia/GS/Si.m'
 N.conts  2
 N.PLs  0
-Cont.dofs 642 646 
-Dev.dofs  638 642 
+Cont.dofs 2568 2584 
+Dev.dofs  2552 2568 
 V1.V2  0 0
 Ec.Ev  -0.352089 -0.502906
 DEc.DEv  0 0

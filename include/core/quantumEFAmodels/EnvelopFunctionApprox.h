@@ -350,6 +350,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //! bulk eigenstates
   void solve_bulk(void);
 
+  virtual double get_H_units(void) const;
+
  protected:
 
 
@@ -452,6 +454,11 @@ inline const std::map<short, short>& EnvelopFunctionApprox::get_band_map(void) c
 inline const Elem*  EnvelopFunctionApprox::return_bulk_element(void) const
 {
   return _bulk_mat_element;
+}
+
+inline double EnvelopFunctionApprox::get_H_units(void) const
+{
+  return Constants::Hartree;
 }
 
 #endif

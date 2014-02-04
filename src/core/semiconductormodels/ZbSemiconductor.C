@@ -68,8 +68,15 @@ void ZbSemiconductor::do_init()
   par.varshni_beta_X = get_option("varshni_beta_X",  par.varshni_beta_X);
 
 
-  //here zero temperature and work parameters coinside
+  if (!_couple_bands) 
+  {
+    _spurious = "none";
+    par.Ep = 0.0;
+  }
+
+  //here zero temperature and work parameters coincide
   par_initial = par;
+  
 
 }
 

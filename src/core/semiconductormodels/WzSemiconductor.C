@@ -52,13 +52,16 @@ void WzSemiconductor::do_init()
   par.varshni_alpha_G = get_option("varshni_alpha_G", par.varshni_alpha_G );
   par.varshni_beta_G  = get_option("varshni_beta_G",  par.varshni_beta_G);
   
-  
+   
   // we override with hole band masses for 2x2
   if(_kp_model=="2x2")
   {
-    double ma = 0.0;
+    double ma = 0.0, mc = 0.0;
+    //RealTensor mten(0.0);
+    //db.get("m_G",mten);
+    //ma = mten(0,0);
+    //pc = mten(2,2);
     ma = get_option("m_v_xx", ma);
-    double mc = 0.0;
     mc = get_option("m_v_zz", mc);
 
     if (ma != 0.0)
@@ -66,8 +69,23 @@ void WzSemiconductor::do_init()
 
     if (mc != 0.0)
       par.A1 = par.A3 = -0.5 / mc;
+
+    ma = 0.0; mc = 0.0;
+    ma = get_option("m_c_xx", ma);
+    mc = get_option("m_c_zz", mc);
+
+    if (ma != 0.0) par.m_c_xx = ma;
+
+    if (mc != 0.0) par.m_c_zz = mc;
+
   }
 
+  if (!_couple_bands) 
+  {
+    _spurious = "none";
+    par.Ep_1 = 0.0;
+    par.Ep_2 = 0.0;
+  }
 
 
   //here zero temperature and work parameters coincide
@@ -158,7 +176,6 @@ void WzSemiconductor::read_database( )
   par.D5 = db.get("D5", par.D5);
   par.D6 = db.get("D6", par.D6);
   
-
 }
 
 void WzSemiconductor::do_calculate_kp_params (KPparams& par)

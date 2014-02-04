@@ -1,8 +1,8 @@
 
-Log start: Fri Jan 31 17:15:44 2014
+Log start: Sat Feb  1 15:05:46 2014
 
 
-tiberCAD release 2.3.0 (rev. 3757, x86_64-linux)
+tiberCAD release 2.3.0 (rev. 3758, x86_64-linux)
 
 Input file: barrier.tib
 
@@ -112,223 +112,9 @@ Setting up bulk models ...
   (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/permittivity_constant.so)
   (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/band_properties_kp.so)
   (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
   (using /home/pecchia/projects/tibercad/trunk/x86_64-linux/modules/negf/hamiltonian_efa.so)
 
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
 Setting up lower dimensional (boundary) models ...
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
-
-*** Warning: found unused options in block semiconductor: particle
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 Simulation options for driftdiffusion (driftdiffusion)
@@ -490,25 +276,25 @@ Output file basename  : quantum_el
 
 
 # Region barrier1, GaInP (x = 0.3)
-  2x2  L = -5.4195 M = -1.6185 N = -5.535
+  8x8  L = 0.0329887 M = -1.6185 N = -0.0825113P0 = 0
 
 # Region barrier2, GaInP (x = 0.3)
-  2x2  L = -5.4195 M = -1.6185 N = -5.535
+  8x8  L = 0.0329887 M = -1.6185 N = -0.0825113P0 = 0
 
 # Region drain_region, InGaAs (x = 0.53)
-  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+  8x8  L = -7.59082 M = -1.9671 N = -7.96342P0 = 0
 
 # Region int_drain, InGaAs (x = 0.53)
-  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+  8x8  L = -7.59082 M = -1.9671 N = -7.96342P0 = 0
 
 # Region int_source, InGaAs (x = 0.53)
-  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+  8x8  L = -7.59082 M = -1.9671 N = -7.96342P0 = 0
 
 # Region source_region, InGaAs (x = 0.53)
-  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+  8x8  L = -7.59082 M = -1.9671 N = -7.96342P0 = 0
 
 # Region well, InGaAs (x = 0.53)
-  2x2  L = -18.3867 M = -1.9671 N = -18.7593
+  8x8  L = -7.59082 M = -1.9671 N = -7.96342P0 = 0
 
 
 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
@@ -585,23 +371,23 @@ We solve: driftdiffusion negf
   drain               0.1                -0.881376
   source              0                   0.881376
 
-Solve time: 0h 0m 0.5s
+Solve time: 0h 0m 0.46s
 <<<<----------------------------------------------------------------------------
 
 >>>>---------------------------------- (negf) ----------------------------------
   Computing Current
   Current done
 
-Solve time: 0h 0m 0.3s
+Solve time: 0h 0m 1.1s
 <<<<----------------------------------------------------------------------------
 
-Total solve time: 0h 0m 0.87s
+Total solve time: 0h 0m 1.6s
 Simulation finished.
 
-107 warnings during run
+0 warnings during run
 0 errors detected
 
 
-Log end: Fri Jan 31 17:15:46 2014
+Log end: Sat Feb  1 15:05:48 2014
 
 

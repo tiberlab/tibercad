@@ -71,7 +71,7 @@ QuantumContact::init(const ID id,
 
   _normal = get_normal(_area);
 
-  //std::cout<<"normal: "<<_normal(0)<<" "<<_normal(1)<<" "<<_normal(2)<<std::endl; // plot normal
+  std::cout<<"normal: "<<_normal(0)<<" "<<_normal(1)<<" "<<_normal(2)<<std::endl; // plot normal
 
   extend_mesh();
 }
@@ -162,41 +162,45 @@ QuantumContact::extend_mesh(void)
   //  --------------------------------------------------------------
   if(_mesh->mesh_dimension() == 1)
   {
-    for (unsigned int i = 0 ; i < _mesh->mesh_dimension(); ++i)
-    {
-      // Adding first node
-      const ElementSide& elemside = *++it;
-
+    
+   // Adding first node
+    for ( ; it != end; ++it)
+    { 
+      const ElementSide& elemside = *it; 
+      
       ID side = elemside.side();
-
+      
       const Elem* elem = elemside.elem();
-
+      
+      if (!_rg_ids.count(elem->subdomain_id())) continue;   
+      
       Elem* newelem = _mesh->add_elem(new Edge2);
-
+      
       newelem->subdomain_id() = _id;
-
+      
       _elemmap[elem] = newelem;
-
+      
       _elemsidemap[newelem] = &elemside;
-
+      
       ID id = 0; ID inc = 1;
-
+      
+      
       for(ID nde = 0; nde < elem->n_nodes(); nde++)
       {
         if (elem->is_node_on_side(nde, side))
         {
           ID nodeid = elem->node(nde);
           nodeit = nodemap.find(nodeid);
-
+          
           if(nodeit == nodemap.end())
           {
             _mesh->add_point(_mesh->point(nodeid)+(_normal*_length),numnode);
             nodeit = nodemap.insert(std::make_pair(nodeid, numnode)).first;
             numnode++;
           }
-
+          
           ID num = nodeit->second;
-
+          
           newelem->set_node(id) = _mesh->node_ptr(nodeid);
           newelem->set_node(id+inc) = _mesh->node_ptr(num);
         }
@@ -207,41 +211,49 @@ QuantumContact::extend_mesh(void)
     {
       BoundaryRegions::side_iterator it =  _bd_regions->sides_begin(_bd_ids);
       const BoundaryRegions::side_iterator end =  _bd_regions->sides_end(_bd_ids);
+      
+      for ( ; it != end; ++it)
+      {      
+        const ElementSide& elemside = *it; 
+        
+        std::map<const Elem*, Elem*>::iterator itmap(_elemmap.find(elemside.elem()));
 
-      for (unsigned int i = 0 ; i < _mesh->mesh_dimension(); ++i)
-      {
-        const ElementSide& elemside = *++it;
-
-        const Elem* elem = _elemmap[elemside.elem()];
-
-        Elem* newelem = _mesh->add_elem(new Edge2);
-
-        newelem->subdomain_id() = _id;
-
-        _elemsidemap[newelem] = &elemside;
-
-        ID id = 0; ID inc = 1;
-
-        for(ID nde = 0; nde < elem->n_nodes(); nde++)
+        if ( itmap!=_elemmap.end() )
         {
-          if (elem->is_node_on_side(nde, 1))
-          {
-            ID nodeid = elem->node(nde);
-            nodeit = nodemap.find(nodeid);
+      
+          const Elem* elem = itmap->second; //_elemmap[elemside.elem()];
+          
+          Elem* newelem = _mesh->add_elem(new Edge2);
+                    
+          _elemsidemap[newelem] = &elemside;
 
-            if(nodeit == nodemap.end())
+          newelem->subdomain_id() = _id;
+          
+          ID id = 0; ID inc = 1;
+          
+          for(ID nde = 0; nde < elem->n_nodes(); nde++)
+          {
+            if (elem->is_node_on_side(nde, 1))
             {
-              _mesh->add_point(_mesh->point(nodeid)+(_normal*_length),numnode);
-              nodeit = nodemap.insert(std::make_pair(nodeid, numnode)).first;
-              numnode++;
+              ID nodeid = elem->node(nde);
+              nodeit = nodemap.find(nodeid);
+              
+              if(nodeit == nodemap.end())
+              {
+                _mesh->add_point(_mesh->point(nodeid)+(_normal*_length),numnode);
+                nodeit = nodemap.insert(std::make_pair(nodeid, numnode)).first;
+                numnode++;
+              }
+              ID num = nodeit->second;
+              newelem->set_node(id) = _mesh->node_ptr(nodeid);
+              newelem->set_node(id+inc) = _mesh->node_ptr(num);
             }
-            ID num = nodeit->second;
-            newelem->set_node(id) = _mesh->node_ptr(nodeid);
-            newelem->set_node(id+inc) = _mesh->node_ptr(num);
           }
+          
         }
       }
     }
+
   }
 
   // 2D CASE -------------------------------------------------------
@@ -305,7 +317,6 @@ QuantumContact::extend_mesh(void)
         std::map<const Elem*, Elem*>::iterator itmap(_elemmap.find(elemside.elem()));
 
         if ( itmap!=_elemmap.end() )
-
         {
 
           const Elem* elem = itmap->second;

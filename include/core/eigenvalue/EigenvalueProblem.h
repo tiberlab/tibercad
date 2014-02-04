@@ -110,12 +110,16 @@ class EigenvalueProblem : public SimulationInterface
     
     virtual int get_H_nnz() const { return 0; }
 
+    //! The Hamiltonian is returned in eV 
     virtual void get_H_csr(std::vector<Complex>& A,std::vector<int>& JA,std::vector<int>& IA) const {};
 
     virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,std::vector<int>& IA) const {};
 
     virtual void print_H(const std::string& outpath) const {};
- 
+
+    //! Return the Hamiltonian Units in eV
+    virtual double get_H_units(void) const{};
+
     //! returns a reference to _solution
     //! this is dangerous and should be substituted with calls to get_eigenvectors()
     const std::vector<eigen_problem_solution>& get_solution(void) const {return _solution;};
@@ -144,7 +148,7 @@ class EigenvalueProblem : public SimulationInterface
      */
     void initialize_solution_container(size_t num_solutions);
 
-  
+     
   protected:
 
     std::vector<eigen_problem_solution> _solution;

@@ -153,8 +153,7 @@ Module efaschroedinger
 
   Physics
   {
-    model = 2x2
-    #kp_model = 2x2    
+    model = 8x8 
   }
 }
 

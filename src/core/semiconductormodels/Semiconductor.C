@@ -20,6 +20,7 @@ Semiconductor::Semiconductor(const ModelOptions& options)
   _kp_model = get_option("model", "6x6");
   _consider_temperature = get_option("consider_temperature",  true );
   _consider_temperature = get_option("temperature_scaling", _consider_temperature );
+  _couple_bands = get_option("cb_vb_coupling", true );
 }
 
 
@@ -36,6 +37,7 @@ void Semiconductor::do_init ()
 
   int verbose = SimulationOptions::verbose ();
 
+  get_option("particle","");
   get_option("particle","");
   get_option("kpVVtermSymmetric","");
   get_option("kpCVtermSymmetric","");

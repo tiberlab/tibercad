@@ -59,6 +59,8 @@ class TBDLEXPORT Semiconductor : public PhysicalModelInterface
   //! if true band gap is temperature 
   bool _consider_temperature;
   
+  bool _couple_bands;
+  
   
   //! lattice temperature [K]
   double _temperature;

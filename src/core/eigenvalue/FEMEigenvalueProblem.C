@@ -1031,9 +1031,10 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
   PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(_H_real);
   H_real_matrix->close();
 
-
   PetscMatrix<Number>* H_imag_matrix = static_cast<PetscMatrix<Number>* >(_H_imag);
   H_imag_matrix->close();
+
+  double UnitsConversion = get_H_units(); 
 
   unsigned int row_start = _H_real->row_start();
   unsigned int row_stop = _H_real->row_stop();
@@ -1062,7 +1063,7 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
     {
       col = petsc_cols[j];
       
-      A[ind] = Complex(petsc_row_vals_real[j], petsc_row_vals_imag[j]); 
+      A[ind] = UnitsConversion * Complex(petsc_row_vals_real[j], petsc_row_vals_imag[j]); 
       JA[ind] = petsc_cols[j];
 
       ind++;  
