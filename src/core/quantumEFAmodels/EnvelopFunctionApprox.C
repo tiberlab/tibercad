@@ -1210,7 +1210,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
       // case of constrained Dofs (permutation was not defined)
-      if (_perm.size() == 0)  
+      if (_perm.size() == 0)
       {
         vector<unsigned int> dof_indices_tmp;
         
@@ -1251,6 +1251,10 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
     }
 
+  //_H_real->print_matlab("Hr.m");
+  //_H_imag->print_matlab("Hi.m");
+  //if (_haveS)
+  //  _S_real->print_matlab("S.m");
 
   //  dof_map.print_dof_constraints();
 
@@ -2571,5 +2575,19 @@ void EnvelopFunctionApprox::solve_bulk(void)
         _temp_interface.get_temperature(mat_elem, mat_elem->centroid());
   }
 
+
+   // we have to redeclare the solution variables to adjust the number
+   // of eigenstates
+   const unsigned int num_states = _solution.size();
+   unsigned int dim = get_mesh().mesh_dimension();
+   string units("1/cm");
+   if (dim == 2)
+     units = "1/cm^2";
+   else if (dim == 3)
+     units = "1/cm^3";
+   declare_solution(ProbabilityDensity, NTUPLE, NODES, units, num_states);
+   declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
+   declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
+   declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
 
 }
