@@ -2452,13 +2452,13 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
 void EnvelopFunctionApprox::solve_bulk(void)
 {
+  //std::cout<<"bulk calculation"<<std::endl;
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
-
   bool found = false;
   const Elem* mat_elem;
-  std::cout<<"bulk calculation"<<std::endl;
+
   for ( ; (el != end_el) && (!found) ; ++el)
   {
     const Elem* elem = *el;
@@ -2486,19 +2486,19 @@ void EnvelopFunctionApprox::solve_bulk(void)
   double k_vector[3] = { get_k_point()(0) * 1e9 * Constants::bohr_radius,
                          get_k_point()(1) * 1e9 * Constants::bohr_radius,
                          get_k_point()(2) * 1e9 * Constants::bohr_radius};
+
   element_hamiltonian->set_k_vector(k_vector);
 
   element_hamiltonian->calculate_Hamiltonian_k_par();
 
-  std::cout<<"strain"<<std::endl;
   Tensor2Sym strain_crystal_system(0);
   _strain_interface.get_crystal_strain(mat_elem, qp, strain_crystal_system);
 
-  std::cout<<"(EP) strain exx "<<strain_crystal_system(1,1)<<std::endl;
-  std::cout<<"(EP) strain eyy "<<strain_crystal_system(2,2)<<std::endl;
-  std::cout<<"(EP) strain ezz "<<strain_crystal_system(3,3)<<std::endl;
+  //std::cout<<"strain"<<std::endl;
+  //std::cout<<"(EP) strain exx "<<strain_crystal_system(1,1)<<std::endl;
+  //std::cout<<"(EP) strain eyy "<<strain_crystal_system(2,2)<<std::endl;
+  //std::cout<<"(EP) strain ezz "<<strain_crystal_system(3,3)<<std::endl;
 
-  std::cout<<"pot"<<std::endl;
 
   double electric_potential = 0;
   if (opt.consider_potential_bulk)
@@ -2511,7 +2511,6 @@ void EnvelopFunctionApprox::solve_bulk(void)
   std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
 	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
 
-  std::cout<<"number of bands: " << number_of_bands<<std::endl;
 
   std::complex<double> ham_matrix[number_of_bands * number_of_bands ];
 
@@ -2546,7 +2545,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
        _solution[i].eigen_vector.resize(number_of_bands);
        for (short j = 0; j < number_of_bands ; j++)
        {
-	 _solution[i].eigen_vector[j] = ham_matrix[i * number_of_bands + j];
+	       _solution[i].eigen_vector[j] = ham_matrix[i * number_of_bands + j];
        }
      }
   }

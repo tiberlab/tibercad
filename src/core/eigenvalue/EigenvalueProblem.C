@@ -95,36 +95,18 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
 
   kopts.set_option("k_space_dimension", k_dim);
 
-  //std::vector<unsigned int>  num_nodes;
 
   if (opts.find_option("k_path") || opts.find_option("k-path"))
   {	  
     std::string kpath = opts.get_option("k-path","");
     kpath = opts.get_option("k_path",kpath);    
     kopts.set_option("k-path",kpath);
-    //num_nodes.push_back(10);
+    //std::vector<unsigned int>  num_nodes(1,20);
     //kopts.set_option("number_of_nodes",num_nodes);
     //ModelOptions newopts;
     //newopts.set_option("output_format","grace");
     //set_options( newopts );
   }
- 
-  //if (opts.find_option("number_of_nodes"))
-  //{
-  //   opts.get_option("number_of_nodes",num_nodes);
-  //   kopts.set_option("number_of_nodes", num_nodes);
-  //}
-  //else if (opts.find_option("number_of_elem"))
-  //{
-  //   opts.get_option("number_of_elem",num_nodes);
-  //   for(int i=0; i< num_nodes.size(); i++)
-  //         if(num_nodes[i]>0) ++num_nodes[i];
-
-  //   kopts.set_option("number_of_nodes", num_nodes);
-  //}
-
-  //if (opts.find_option("wedge"))
-  //  kopts.set_option("wedge", opts.get_option("wedge",""));
 
   // these are the real space lattice vectors, in nm
   RealVectorValue a(2, 0, 0), b(0, 2, 0), c(0, 0, 2);

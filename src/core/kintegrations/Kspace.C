@@ -379,6 +379,8 @@ void Kspace::do_init() throw (InitFailedException)
     //std::cout<<"(KSP) found k-path "  << std::endl;
     k_dim = 1;
     k_path = true;
+    mod_opt.get_option("number_of_nodes", num_nodes);
+    if ( num_nodes.size() == 0 ) num_nodes.resize(1, 20);
   }
 
 
