@@ -125,9 +125,8 @@ Module empirical_tb
 
 Module efaschroedinger
 {
-  name = kp_electrons
+  name = kp
   regions = (barrier_left, barrier_right, QW)
-  particle = el
 
   poisson_model_name = driftdiffusion
   number_of_eigenstates = 4 
@@ -136,30 +135,7 @@ Module efaschroedinger
 
   Physics
   {
-    model = kp
-    kp_model = 8x8
-  }
-}
-
-Module efaschroedinger
-{
-  simulation_name = kp_holes
-  physical_regions = (barrier_left, barrier_right, QW)
-  particle = hl
-
-
-  log_output= false
-
-  plot = (EigenFunctions, EigenEnergy)
-
-  poisson_model_name = driftdiffusion  
- 
-  number_of_eigenstates = 4 
-
-  Physics
-  {
-    model = kp
-    kp_model = 8x8
+    model = 8x8
   }
 }
 
