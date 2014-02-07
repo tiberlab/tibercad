@@ -60,6 +60,12 @@ inline void EnvelopFunctionApprox::get_electric_potential(const Elem* elem, cons
 
 inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::string& particle) const
 {
+  if (poisson_equation==NULL) 
+  {
+    Messages::warning("trying to find band-edge without drift-diffusion: return 0");
+    return 0.0;
+  }
+
   vector<double> values(elem->n_nodes());
   vector<Point> p(elem->n_nodes());
   
@@ -104,7 +110,7 @@ inline double EnvelopFunctionApprox::get_el_electro_chem_potential(const Elem* e
   vector<double> values;
   vector<Point> qp(1, elem->centroid());
 
-  poisson_equation->get_solution (elem, el_electro_chem_pot_ID, values, qp);
+  poisson_equation->get_solution(elem, el_electro_chem_pot_ID, values, qp);
 
   return values[0];
 }
@@ -115,7 +121,7 @@ inline double EnvelopFunctionApprox::get_hl_electro_chem_potential(const Elem* e
   vector<double> values;
   vector<Point> qp(1, elem->centroid());
 
-  poisson_equation->get_solution (elem, hl_electro_chem_pot_ID, values, qp);
+  poisson_equation->get_solution(elem, hl_electro_chem_pot_ID, values, qp);
 
   return values[0];
 }
@@ -547,17 +553,14 @@ void EnvelopFunctionApprox::parse_options()
 
   std::string  job_name = get_option("job","eigenstates");
   if (job_name == "eigenstates")
-    opt.job = EIGENSTATES;
-  else if (job_name == "density")
-    opt.job = DENSITY;
+    _job = EIGENSTATES;
   else if (job_name == "bulk")
-    opt.job = BULKEIGENSTATES;
-  else if (job_name == "bulkdensity")
-    opt.job = BULKDENSITY;
+    _job = BULKEIGENSTATES;
   else
     throw InitFailedException( "EnvelopeFunctionApprox: Incorrect job " + job_name );
 
-  if (opt.job == BULKEIGENSTATES || opt.job == BULKDENSITY)
+  
+  if (_job == BULKEIGENSTATES)
   {
     if (has_option("bulk_point"))
     {
@@ -571,10 +574,10 @@ void EnvelopFunctionApprox::parse_options()
       throw InitFailedException( "You have to specify a bulk_point");
     }
   }
+ 
 
 
-
-  //-------------------------------------------------------------------------------------------//
+ //-------------------------------------------------------------------------------------------//
   //Strain model
   std::string strain_model_name = get_option("strain_model_name","");
   strain_model_name = get_option("strain_simulation", strain_model_name);
@@ -619,11 +622,7 @@ void EnvelopFunctionApprox::parse_options()
 
 
   }
-  else
-  {
-    throw InitFailedException("Needed poisson_simulation");
-    opt.consider_potential = false;
-  }
+
   //---------------------------------------------------------------------------------//
   //Heat model
   std::string heat_model_name = get_option("heat_model","");
@@ -634,7 +633,7 @@ void EnvelopFunctionApprox::parse_options()
 
   //--------------------------------------------------------------------------------------------//
   //Spectrum Shift
-  //as default, we  estimate spectrum shift only in electric potential is defined
+  //as default, we  estimate spectrum shift only if electric potential is defined
   const ModelOptions& sol_opt = get_solver_options();
 
   opt.estimate_spectrum_shift =  opt.consider_potential;
@@ -851,7 +850,7 @@ void EnvelopFunctionApprox::do_init( )
 
   parse_options();
 
-  EigenvalueProblem::init_kspace();
+  init_kspace(ModelOptions());
 
   // Initialize identity permutation: does not have constrained dofs 
   if (solver_opt.Dirichlet_bc_everywhere) 
@@ -890,7 +889,7 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 {
    
 
-  if (opt.job == BULKEIGENSTATES )
+  if ( _job == BULKEIGENSTATES )
   {
     solve_bulk();
   }
@@ -1615,7 +1614,11 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
   if (n_eig == opt.num_hl_states)
   {
     // in this case we found no electron state at all, so set shift near Ec
-    solver_opt.spectrum_shift = get_band_edge("el") - 0.01;
+    if (opt.estimate_spectrum_shift)
+      solver_opt.spectrum_shift = get_band_edge("el") - 0.01;
+    else
+      solver_opt.spectrum_shift += 0.3;  //!? Rise a little the guess and restart  
+
     solver_opt.number_of_eigenstates = opt.num_el_states - n_eig + opt.num_hl_states + 1;
   }
 
@@ -1638,7 +1641,11 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     if (n_eig == static_cast<int>(opt.num_hl_states) - 1)
     {
       // in this case we found no state at all, so set shift near Ev
-      solver_opt.spectrum_shift = get_band_edge("hl") + 0.01;
+      if (opt.estimate_spectrum_shift)
+        solver_opt.spectrum_shift = get_band_edge("hl") + 0.01;
+      else
+        solver_opt.spectrum_shift -= 0.3;  //!? Lower a little the guess and restart
+
       solver_opt.number_of_eigenstates = n_eig + 1;
     }
 

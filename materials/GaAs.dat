@@ -45,12 +45,12 @@ gamma2 = 2.06
 gamma3 = 2.93
 delta = 0.341
 
-[kdotp_8x8] # Fitted against TB
-gamma1 = 6.6923
-gamma2 = 1.8889
-gamma3 = 2.8761
-delta = 0.341
-Ep = 23.0 
+#[kdotp_8x8] # Fitted against TB
+#gamma1 = 6.6923
+#gamma2 = 1.8889
+#gamma3 = 2.8761
+#delta = 0.341
+#Ep = 23.0 
 
 [kdotp_14x14_Tomic] # Tomic 
 gamma1 = 7.10

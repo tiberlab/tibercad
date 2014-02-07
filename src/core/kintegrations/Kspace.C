@@ -699,28 +699,32 @@ void Kspace::define_k_path(void)
 
   // to restrict the extension of the k-space
   double k_max = mod_opt.get_option("k_max", 1.0);
-
+  std::string kpath = mod_opt.get_option("k_path","");
+  // alternative accepted input:
+  kpath = mod_opt.get_option("k-path",kpath);
   int npoints = num_nodes[0];
   int nelem = max(npoints - 1, 1);
+
+
+  Messages::info("(KSP) defining a k-path: " + kpath);
+  ostringstream os;
+  os <<"(KSP) k-dimension: "<< k_space_dim<<std::endl;
+  os <<"(KSP) k_max: "<<k_max<<std::endl; 
+  os <<"(KSP) points per line "<<npoints<<std::endl; 
+  Messages::info(os.str());
 
   if (k_space_dim == 2)
   {    
     double G[3], M[3], X[3], X1[3];
     double *k1, *k2;
-    
 
 
-    G[0]=0.0;  G[1]=0.0;  G[2]=0.0;   //( 0   0    0  ) 
-    M[0]=0.0;  M[1]=0.5*k_max;  M[2]=0.5*k_max;   //( 0  1/2  1/2 )  
-    X[0]=0.0;  X[1]=0.5*k_max;  X[2]=0.0;   //( 0  1/2   0  )
-    X1[0]=0.0; X1[1]=0.0; X1[2]=0.5*k_max;  //( 0   0   1/2 )        
+    G[0]=0.0;  G[1]=0.0;       G[2]=0.0;        //( 0   0    0  ) 
+    M[0]=0.0;  M[1]=0.5*k_max; M[2]=0.5*k_max;  //( 0  1/2  1/2 )  
+    X[0]=0.0;  X[1]=0.5*k_max; X[2]=0.0;        //( 0  1/2   0  )
+    X1[0]=0.0; X1[1]=0.0;      X1[2]=0.5*k_max; //( 0   0   1/2 )        
 
     std::vector<std::string> tokens;
-    std::string kpath = mod_opt.get_option("k_path","");
-    // alternative accepted input:
-    kpath = mod_opt.get_option("k-path",kpath);
-
-    Messages::info("(KSP) defining a k-path: " + kpath);
 
     tokenize(kpath, tokens, "-");
 
@@ -760,21 +764,20 @@ void Kspace::define_k_path(void)
   }
   else if (k_space_dim == 3)
   {
-    double G[3], X1[3], X2[3], X3[3], K[3], L[3];
+    double G[3], X1[3], X2[3], X3[3], M[3], M1[3], M2[3],  L[3];
     double *k1, *k2;
     
 
-    G[0]=0.0;    G[1]=0.0;    G[2]=0.0;  //( 0  0  0 ) 
-    K[0]=0.0;    K[1]=0.5*k_max;    K[2]=0.5*k_max;  //( 0  1/2  1/2 )
-    X1[0]=0.5*k_max;   X1[1]=0.0;   X1[2]=0.0;
-    X2[0]=0.0;   X2[1]=0.5*k_max;   X2[2]=0.0;
-    X3[0]=0.0;   X3[1]=0.0;   X3[2]=0.5*k_max;
-
+    G[0]=0.0;        G[1]=0.0;        G[2]=0.0;  //( 0  0  0 ) 
+    M[0]=0.5*k_max;  M[1]=0.5*k_max;  M[2]=0.0;  //( 1/2  1/2  0 )
+    M1[0]=0.5*k_max; M1[1]=0.0;       M1[2]=0.5*k_max;  //( 1/2  0  1/2 )
+    M2[0]=0.0;       M2[1]=0.5*k_max; M2[2]=0.5*k_max;  //( 0  1/2  1/2 )
+    X1[0]=0.5*k_max; X1[1]=0.0;       X1[2]=0.0;
+    X2[0]=0.0;       X2[1]=0.5*k_max; X2[2]=0.0;
+    X3[0]=0.0;       X3[1]=0.0;       X3[2]=0.5*k_max;
+    L[0]=0.5*k_max;  L[1]=0.5*k_max;  L[2]=0.5*k_max;  //( 1/2  1/2  1/2 )
 
     std::vector<std::string> tokens;
-    std::string kpath = mod_opt.get_option("k-path","");
-
-    Messages::info("(KSP) defining a k-path: " + kpath);
 
     tokenize(kpath, tokens, "-");
 
@@ -785,7 +788,10 @@ void Kspace::define_k_path(void)
 
 
        if(tokens[i-1]=="G")        k1 = G;   
-       else if(tokens[i-1]=="K")   k1 = K;    
+       else if(tokens[i-1]=="M")   k1 = M; 
+       else if(tokens[i-1]=="M1")  k1 = M1; 
+       else if(tokens[i-1]=="M2")  k1 = M2; 
+       else if(tokens[i-1]=="X")   k1 = X1;   
        else if(tokens[i-1]=="X1")  k1 = X1;    
        else if(tokens[i-1]=="X2")  k1 = X2;    
        else if(tokens[i-1]=="X3")  k1 = X3;   
@@ -793,7 +799,10 @@ void Kspace::define_k_path(void)
        else                        k1 = G;  
                                               
        if(tokens[i]=="G")          k2 = G;    
-       else if(tokens[i]=="K")     k2 = K;    
+       else if(tokens[i]=="M")     k2 = M; 
+       else if(tokens[i]=="M1")    k2 = M1; 
+       else if(tokens[i]=="M2")    k2 = M2; 
+       else if(tokens[i]=="X")     k2 = X1;
        else if(tokens[i]=="X1")    k2 = X1; 
        else if(tokens[i]=="X2")    k2 = X2;    
        else if(tokens[i]=="X3")    k2 = X3;   

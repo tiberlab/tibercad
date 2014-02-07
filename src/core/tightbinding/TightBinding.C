@@ -45,7 +45,7 @@ TightBinding::~TightBinding()
 void
 TightBinding::do_init()
 {
-  init_kspace();
+  init_kspace(ModelOptions());
 }
 
 

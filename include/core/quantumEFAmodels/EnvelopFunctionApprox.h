@@ -13,18 +13,6 @@
 class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 {
  public:
-  //!control options
-
-  enum JobKind
-  {
-    EIGENSTATES = 0, //!< eigenenergies
-    DENSITY = 1, //!<particle density
-    BULKEIGENSTATES=2, //!< bulk eigenenergies
-    BULKDENSITY = 3 //!< bulk density
-  };
-
-
-
 
   //! data structure that contains options for effective mass
   struct options
@@ -59,8 +47,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     double relative_density_tolerance; //!< stops itarations if \f$ \rho_i / \rho_{i+1} < \varepsilon    \f$, where \f$ \rho \f$ is the                                              total density 
  
     double eigen_number_increase_factor; //!< to increase number of eigenstates for the next iteration 
-
-    JobKind job; //!< a job to do
 
     bool local_occupation; //!<If a local occupation is considered 
 
@@ -342,9 +328,6 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   double get_hl_electro_chem_potential(const Elem* elem) const;
 
 
-  //!point for bulk dispersion
-  Point _bulk_point;
-  
 
 
   //! bulk eigenstates

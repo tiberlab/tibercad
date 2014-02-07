@@ -21,6 +21,14 @@ class EigenvalueProblem : public SimulationInterface
 
   public:
 
+    //!control options
+    enum JobKind
+    {
+      EIGENSTATES = 0, //!< eigenenergies
+      BULKEIGENSTATES=1, //!< bulk eigenenergies
+    };
+
+
     //! Constructor
     EigenvalueProblem(const ModelOptions& options);
 
@@ -157,7 +165,7 @@ class EigenvalueProblem : public SimulationInterface
 
     double Bose(double Energy, double elec_chem, double Temperature) const;
 
-    virtual void init_kspace(void);
+    virtual void init_kspace(const ModelOptions& opt);
 
     virtual void do_solve_for_kpoint(const Point& k_point);
 
@@ -198,7 +206,7 @@ class EigenvalueProblem : public SimulationInterface
     virtual void compute_dispersion(void);
 
     //! method used to plot quantum dispersion
-    virtual void plot_dispersion(void);
+    virtual void plot_dispersion(const std::string& filename);
 
     //! Write out eigenvalues
     virtual void plot_globaldata(void);
@@ -239,7 +247,11 @@ class EigenvalueProblem : public SimulationInterface
 
     //int disp_range[2];
     bool _haveS;
+    
+    JobKind _job; //!< a job to do
 
+    //!point for bulk dispersion
+    Point _bulk_point;
 
   private:
 

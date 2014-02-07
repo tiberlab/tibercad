@@ -251,7 +251,8 @@ void ZbSemiconductor::calculate_2x2_kp_params (KPparams&  result)
 
   result.P1  = std::sqrt(par.Ep * 0.5 / Constants::Hartree);
   result.P2  = result.P1;
-  
+
+    
 }
 //=================================================================================//
 

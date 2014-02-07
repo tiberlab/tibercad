@@ -1495,7 +1495,8 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
 
   unsigned int spin = 2;
   unsigned int nLDOS = 0;
-
+  if (opt.writeLDOS) nLDOS = 1;
+ 
   std::vector <unsigned int> LDOS(2*nLDOS);
 
   if (nLDOS > 0)

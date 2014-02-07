@@ -23,9 +23,9 @@ EigenvalueProblem::initialize_solution_container(size_t num_solutions)
 }
 
 
-void EigenvalueProblem::init_kspace(void)
+void EigenvalueProblem::init_kspace(const ModelOptions& opt)
 {
-   ModelOptions kopts = parse_kspace_options(ModelOptions());
+   ModelOptions kopts = parse_kspace_options(opt);
 
    _kspace = new Kspace(kopts);
 
@@ -34,52 +34,6 @@ void EigenvalueProblem::init_kspace(void)
    else
      Messages::info("k-space initialized");
 
-   /*
-   do_dispersion = false;
-
-   //! Is used to parse dispersion options
-   if(get_options().has_submodel("Dispersion"))
-   { 
-     ModelOptions::submodel_iterator it(get_options().submodels_begin("Dispersion"));
-
-     const ModelOptions& opts = it->second;
- 
-     //disp_range[0] = opts.get_option("min_eigenvalue_number", 0);
-     //disp_range[1] = opts.get_option("max_eigenvalue_number", 100);
-
-     const ModelOptions kopts = parse_kspace_options(opts);
-     
-     _kspace = new Kspace(kopts);
-     
-     if(_kspace==NULL)
-       throw InitFailedException("Could not initialize k-space");
-     else
-       Messages::info("k-space initialized");
-
-     do_dispersion = true;
-   }
-   */
-
-   /*
-   if(get_options().has_submodel("DOS"))
-   {
-     ModelOptions::submodel_iterator it(get_options().submodels_begin("DOS"));
-
-     const ModelOptions& opts = it->second;
-
-     //disp_range[0] = opts.get_option("min_eigenvalue_number", 0);
-     //disp_range[1] = opts.get_option("max_eigenvalue_number", 100);
-
-     const ModelOptions kopts = parse_kspace_options(opts);
-
-     _kspace = new Kspace(kopts);
-
-     if(_kspace==NULL)
-       throw InitFailedException("Could not initialize k-space");
-     else
-       Messages::info("k-space initialized");
-   }
-   */
 }
  
 ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
@@ -94,7 +48,6 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
     k_dim = opts.get_option("k_space_dimension", k_dim);
 
   kopts.set_option("k_space_dimension", k_dim);
-
 
   if (opts.find_option("k_path") || opts.find_option("k-path"))
   {	  
@@ -142,27 +95,6 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
       break;
   }
 
-  //kopts.set_option("k_space_basis", opts.get_option("k_space_basis", true));
-
-/*
-  double k_max = opts.get_option("k_max", 0.1);
-  kopts.set_option("k_max", k_max);
-
-
-  std::vector<double> k_vector(3,0.0);   
-  k_vector[0]=0.0;     k_vector[1]=0.0;     k_vector[2]=k_max; 
-
-  opts.get_option("k1", k_vector);
-  kopts.set_option("k1",k_vector);
-
-  k_vector[0]=0.0;     k_vector[1]=k_max;     k_vector[2]=0.0; 
-  opts.get_option("k2", k_vector);
-  kopts.set_option("k2",k_vector);
-
-  k_vector[0]=k_max;     k_vector[1]=0.0;     k_vector[2]=0.0; 
-  opts.get_option("k3", k_vector);
-  kopts.set_option("k3",k_vector);  
-*/
 
   kopts.set_option("mesh_order", opts.get_option("mesh_order", "first"));
 
@@ -191,40 +123,10 @@ Point EigenvalueProblem::get_k_point(bool relative_coord) const
 void EigenvalueProblem::compute_dispersion(void)
 {
 
-  if(get_options().has_submodel("Dispersion"))
-  {
-    Messages m;
-    m.info("Compute Dispersion ...");
-    m.indent();
-
-    ModelOptions::submodel_iterator it(get_options().submodels_begin("Dispersion"));
-
-    const ModelOptions& opts = it->second;
-
-    //disp_range[0] = opts.get_option("min_eigenvalue_number", 0);
-    //disp_range[1] = opts.get_option("max_eigenvalue_number", 100);
-
-    const ModelOptions kopts = parse_kspace_options(opts);
-
-    // NOTE: this is not very elegant
-    Kspace* original_kspace = _kspace;
-    _kspace = new Kspace(kopts);
-
-    if(_kspace==NULL)
-      throw InitFailedException("Could not initialize k-space");
-    else
-      Messages::info("k-space for dispersion initialized");
-
-
-
     const Mesh* kmesh = _kspace->get_k_mesh();
     unsigned int number_of_k_points = kmesh->n_nodes();
-
-    //if (disp_range[0] < 0) disp_range[0]=0;
     unsigned int number_of_eigs;
-
-    std::cout<<"(EP) number of kpoints: " << number_of_k_points << std::endl;
-
+    
     {
       unsigned int i = 0;
       const Point&  k_point = kmesh->point(i);
@@ -237,12 +139,10 @@ void EigenvalueProblem::compute_dispersion(void)
 
       for (unsigned int j = 0 ; j <  _dispersion[0].size(); j++)
         _dispersion[0][j] = _solution[j].eigen_energy;
-
     }
 
     for (unsigned int i = 1; i < number_of_k_points; i++)
     {
-
       const Point&  k_point = kmesh->point(i);
 
       solve_for_kpoint(k_point);
@@ -250,21 +150,15 @@ void EigenvalueProblem::compute_dispersion(void)
 
       for (unsigned int j = 0 ; j < _dispersion[i].size() ; j++)
         _dispersion[i][j] = _solution[j].eigen_energy;
-
-
     }
 
-    plot_dispersion();
-
-    _kspace = original_kspace;
-  }
 
 }
 
 
 
 void
-EigenvalueProblem::plot_dispersion(void)
+EigenvalueProblem::plot_dispersion(const std::string& filename)
 {
 
     std::vector<std::string> formats;
@@ -274,7 +168,6 @@ EigenvalueProblem::plot_dispersion(void)
     const Mesh* kmesh = _kspace->get_k_mesh();
     short kdim =  _kspace->mesh_dimension();
 
-    std::cout<<"(EP) kdim: "<< kdim  << std::endl;
 
 
     for(short k=0; k<formats.size();k++)
@@ -283,8 +176,6 @@ EigenvalueProblem::plot_dispersion(void)
       std::string format = formats[k];
 
       if ((format == "grace") && (kdim > 1)) format = "vtk";
-
-      std::cout<<"(EP) format: "<< format  << std::endl;
 
       std::vector<double> results;
       std::vector<std::string> names;
@@ -306,9 +197,6 @@ EigenvalueProblem::plot_dispersion(void)
           results[number_of_eigs * j + i] = _dispersion[j][i];
       }
 
-
-      std::string filename(get_name() + "_dispersion");
-      //+ TiberCad::get_filename_suffix());
 
       DataOutput data_output(*kmesh, format);
       data_output.set_output_directory(get_output_directory());
@@ -702,11 +590,77 @@ EigenvalueProblem::do_delete_remembered_solution(ID id)
 void EigenvalueProblem::do_plot(void)
 {
 
-  SimulationInterface::do_plot();
 
-  compute_dispersion();
+  if(get_options().has_submodel("Dispersion"))
+  {
+    Messages m;
+    m.info("Compute Dispersion ...");
+    m.indent();
+  
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("Dispersion"));
+    const ModelOptions& opts = it->second;
+    
+    // Back up model kspace
+    Kspace* original_kspace = _kspace;
+
+    init_kspace(opts);
+    
+    compute_dispersion();
+    
+    std::string filename(get_name() + "_dispersion");
+    plot_dispersion(filename);
+
+    _kspace = original_kspace;
+  }  
+  
+  if(get_options().has_submodel("BulkDispersion"))
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("BulkDispersion"));
+    ModelOptions::submodel_iterator end(get_options().submodels_end("BulkDispersion"));
+    
+    // Back up model kspace
+    Kspace* original_kspace = _kspace;
+    JobKind original_job = _job;
+  
+
+    for( ; it != end ; it++)
+    {  
+       ModelOptions& opts = it->second;  
+
+       _job = BULKEIGENSTATES;
+       vector<double> point(3,0.0);
+       opts.get_option("point",point);
+       _bulk_point(0) = point[0]; 
+       _bulk_point(1) = point[1]; 
+       _bulk_point(2) = point[2]; 
+       
+       ostringstream os; 
+       os<<"("<<point[0]<<","<<point[1]<<","<<point[2]<<")";
+       
+       Messages m;
+       m.info("Compute Bulk Dispersion at point "+ os.str() +" ...");
+       m.indent();
+       opts.set_option("k_space_dimension",3);
+   
+       Messages::info("Init k-space");
+       init_kspace(opts);
+    
+       Messages::info("Compute dispersion");
+       compute_dispersion();
+    
+       std::string filename(get_name() + "_dispersion_" + os.str() );
+       Messages::info("Plot dispersion");
+       plot_dispersion(filename);
+
+       delete _kspace;
+    }
+
+    _kspace = original_kspace;
+    _job = original_job;
+  }
 
   calculate_dos();
+  SimulationInterface::do_plot();
 }
  
 void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)

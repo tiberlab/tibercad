@@ -29,7 +29,7 @@ void KPbulkHamiltonian::do_print_info(void)
   {
     os << " P1 = " << par.P1_c << std::endl;
   }
-  os << "  s = " << par.s1;
+  os << "  m_c = " << 1/par.s1;
   Messages::info(os.str());
   /*
   std::cout<<"6x6 parameters:"<<std::endl;
