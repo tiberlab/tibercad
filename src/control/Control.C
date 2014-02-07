@@ -517,10 +517,11 @@ Control::setup_module(Device* device, const ModelOptions& opts)
       ID reg_id = *reg_it;
       Material* mat = device->get_material(reg_id);
 
+      m.info("Region: "+device->get_region_name(reg_id));
       if (mat == NULL)
       {
         ostringstream s;
-        s << "Physical region " << reg_id <<
+        s << "Physical region " << device->get_region_name(reg_id) <<
             " has no material associated!";
         Messages::warning(s.str());
         continue;

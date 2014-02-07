@@ -159,7 +159,7 @@ Negf::do_init(void)
         _qc_boundaries[*it] = qc;
         _bd_map[qc] = *it;
 
-        std::cerr<<"(negf) _quantum_contact "<<qc->get_id()<<" "<<(*it)->get_name()<<std::endl;
+        //std::cerr<<"(negf) _quantum_contact "<<qc->get_id()<<" "<<(*it)->get_name()<<std::endl;
         // Quantum Contacts are activated here: so dof_map come out correctly
         qc->activate_elements();
         qc->set_neighbor_map();
@@ -170,7 +170,6 @@ Negf::do_init(void)
         if ((*it)->get_options().get_option("dirichlet",false))
         {
           _dirichlet_boundaries.insert(*it);
-          std::cout<<"dirichlet bc on "<<(*it)->get_name()<<std::endl;
         }
       }
 
@@ -199,7 +198,21 @@ Negf::init_hamil(void)
   // setup external module as Hamiltonian generator
   const MeshBase& mesh = get_mesh();
   MeshBase::const_element_iterator el = mesh.active_elements_begin();
-  NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
+  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  NegfModel* negfmod;
+  for ( ; el != end_el; ++el)
+  {
+    negfmod = get_bulk_model<NegfModel>(*el);
+    if (negfmod == NULL)
+    {
+      ID subid = (*el)->id();
+      std::ostringstream os;
+      os <<"element "<<subid<<" in material region "<<
+        _device->get_region_name(subid)<<std::endl;
+      Messages::error(os.str());
+      throw InitFailedException("Not all elements have a proper model");
+    }
+  }
   
   _hamil_type = negfmod->get_model_name(0);
 
@@ -579,7 +592,7 @@ Negf::setup_sb_hamil(void)
   //std::cout<<"(negf) do reinit ..." << std::endl;
   do_reinit();
 
-  //std::cout<<"(negf) assemle ..." << std::endl;
+
   _sys_H->assemble();
 
   //std::cout<<"(negf) print H ..." << std::endl;
@@ -1245,6 +1258,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
   _sys_S->matrix->zero();
   _sys_S->get_matrix("Si").zero();
 
+
   //ITERATION OVER ACTIVE DEVICE REGION
   MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
@@ -1253,35 +1267,34 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
   {
     const Elem* elem = *el;
 
-
     //-------------------------------------------------------
     //get effective mass tensor for elem
     NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
-
-    // ... to be implemented as in k.p:
-    //bulk_ham = get_bulk_model<NegfModel>(elem)->get_Hamiltonian_model();
-    //bulk_ham->calculate_Hamiltonian_k_par(_k_vec);
-
+    
 
     for (unsigned int band=0; band < negfmod->get_n_bands(); band++)
     {
+
+
+
       dof_map.dof_indices(elem, dof_indices, band);
       const unsigned int n_dofs = dof_indices.size();
 
       invMass = negfmod->get_inv_mass(band);
 
+
       // we must reinit here cause later we reinit on sideelem
       fe->reinit(elem);
+      
 
       //get potential from dd model----------------------------------------
       V.resize(q_point.size());
       V.assign(q_point.size(), 0.0);
 
-      std::map<ID, QuantumContact*>::iterator qc_it;
-
       if (potmodel != NULL)
       {
         // gets from potmodel which band ("Ec" or "Ev")
+        
         sol_id = potmodel->get_solution_id(negfmod->get_band(band));
 
         potmodel->get_solution(elem, sol_id, V, q_point);
@@ -1292,7 +1305,6 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
       // What about strain ??
 
       //-------------------------------------------------------------------
-
 
       Hr.resize(n_dofs, n_dofs);
       Sr.resize(n_dofs, n_dofs);
@@ -1312,22 +1324,9 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
             Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
             Hr(i,j) += JxW[qp] * newconst * (_k_vec * (invMass * _k_vec)) * phi[i][qp] * phi[j][qp];
 
-            // How it should be for general k.p:
-            // bulk_ham[band1][band2].constant: scalar
-            // bulk_ham[band1][band2].linear: vector
-            // bulk_ham[band1][band2].quad: tensor 
-            //
-            //Sr(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp] * bulk_ham[band1][band2].constant;
-            //Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp] * bulk_ham[band1][band2].constant;
-            //Hr(i,j) += JxW[qp] * dphi[i][qp] * ( bulk_ham[band1][band2].quad * dphi[j][qp]);
-            //Hr(i,j) += JxW[qp] * dphi[i][qp] * ( bulk_ham[band1][band2].linear_left * phi[j][qp]) 
-            //                                      * Complex(0.0, -1.0);
-            //Hr(i,j) += JxW[qp] * phi[i][qp] * ( bulk_ham[band1][band2].linear_right * dphi[j][qp]) 
-            //                                      * Complex(0.0, -1.0);
-
-
           }
-
+ 
+     
       // DIRICHLET BC (Make sense only in 2D and 3D)---------------------------------
       if (dim>1)
       {
@@ -1341,9 +1340,10 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
           bool set_dirichlet = false;
 
           std::map<ID, QuantumContact*>::iterator it;
-
-          if ( (it = _quantum_contacts.find(elem->subdomain_id())) != _quantum_contacts.end() )  //in quantum contact
+         
+          if ( (it = _quantum_contacts.find(elem->subdomain_id())) != _quantum_contacts.end() ) 
           {
+
             if (elem->neighbor(side)==NULL)
             {
               set_dirichlet = opt.set_dirichlet_bc; //set to default value
@@ -1360,18 +1360,8 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
                 if  (sign*face_normals[0](dir) > 0) set_dirichlet = true;
               }
             }
-            //std::cout<<"in qc "<<it->second->get_name()<<" "<<set_dirichlet<<std::endl;
+            
           }
-
-          /*if(_quantum_contacts.count(elem->subdomain_id())) //in quantum contact
-          {
-            if(elem->neighbor(side)==NULL)
-            {
-               //int sbd= (int) elem->subdomain_id();
-               //std::cout<<"elem "<<sbd<<" : "<<elem->id()<<"  side:  "<<side<<std::endl;
-               set_dirichlet = opt.set_dirichlet_bc; //set to default
-            }
-          }*/
           else if(_env->is_outer_boundary(elside))  //in device region
           {
             Boundary* bd = _env->get_boundary(elside);
@@ -1380,7 +1370,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
             {
               set_dirichlet = true;
             }
-           }
+          }
 
           if (set_dirichlet)
           {
@@ -1400,7 +1390,6 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
       }
       // -----------------------------------------------------------------------------------
-
       new_dof_indices.resize(n_dofs);
       for (unsigned int i=0; i< n_dofs; i++)
         new_dof_indices[i] = _inv_perm[dof_indices[i]];
