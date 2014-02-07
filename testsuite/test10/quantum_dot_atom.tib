@@ -4,7 +4,7 @@ Device qdot
   mesh_units = 1e-9
   dimension = 3
 
-  y-growth-direction = (-1,0,1,0)
+  y-growth-direction = (1,0,-1,0)
   x-growth-direction = (-1,2,-1,0)   
   z-growth-direction = (0,0,0,1)
 
@@ -103,7 +103,7 @@ Module empirical_tb
 
   Solver
   {
-    solver_type = gpu
+    #solver_type = gpu
     num_valence_eigenvalues = 1 
     num_conduction_eigenvalues = 1
     long_tolerance = 1e-4  
@@ -138,31 +138,30 @@ Module empirical_tb
 
 
 
-Module macrostrain
+Module elasticity
 {
   name = str
 
-  plot = (Strain, PiezoPolarization)
- 
+  plot = (Strain)
 
-  number_shape_steps = 1  #  for  atom displacement  calculation
-  strain_atomistic_structure = tb1  # tb1 = atomistic_structure
+  non_linear_strain = true
+  shape_iterations = 1
 
-  Solver
+  Physics 
   {
-
-   #xmonitor =  true
+    body_force lattice_mismatch 
+    {
+      reference_material = AlN
+      y-growth-direction = (1,0,-1,0)
+      x-growth-direction = (-1,2,-1,0)   
+      z-growth-direction = (0,0,0,1)
+    }
+       
   }
 
-  Boundary cathode
-  {
-    type = substrate
-    material = AlN  # GaN
+  Contact cathode  
+  {type = clamp}
 
-    y-growth-direction = (-1,0,1,0)
-    x-growth-direction = (-1,2,-1,0)   
-    z-growth-direction = (0,0,0,1)
-  }
 } 
 
 
