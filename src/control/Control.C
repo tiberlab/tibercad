@@ -157,6 +157,15 @@ Control::init(void)
   //SignalHandler::activate_sigint();
 
 
+  // get the global rank
+  // we then define MPI_PROC to the global rank so we can
+  // use this in the input file to change e.g. output directory
+  int proc_id;
+  MPI_Comm_rank(MPI_COMM_WORLD, &proc_id);
+  ostringstream os;
+  os << proc_id;
+  InputParser::add_defined("MPI_PROC", os.str());
+
 
   ModelOptions input;
   InputParser parser;

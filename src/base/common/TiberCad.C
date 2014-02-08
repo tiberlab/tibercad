@@ -169,11 +169,29 @@ TiberCad::init(const std::string& inputfile)
   __empty_argv[0] = __executable;
 
 
+  MPI_Comm local_comm;
+  int proc_id, p;
+
+  /* starts MPI */
+  MPI_Init(&__empty_argc, &__empty_argv);
+  /* get current process id */
+  MPI_Comm_rank(MPI_COMM_WORLD, &proc_id);
+  MPI_Comm_size(MPI_COMM_WORLD, &p);    /* get number of processes */
+  MPI_Comm_split(MPI_COMM_WORLD, proc_id, 0, &local_comm);
+
+  int local_id;
+  MPI_Comm_rank(local_comm, &local_id);
+  MPI_Barrier(MPI_COMM_WORLD);
+
+  //if (proc_id == 1) sleep(2);
+  //std::cerr << "global: rank = " << proc_id << " np = " << p << std::endl;
+  //std::cerr << "local : rank = " << local_id << std::endl;
+
   // prepare libMesh
-  _libmeshinit = new LibMeshInit(__empty_argc, __empty_argv);
+  _libmeshinit = new LibMeshInit(__empty_argc, __empty_argv, local_comm);
 
   // prepare EigenSolver
-  EigenSolver::slepc_init(__empty_argc, __empty_argv);
+  EigenSolver::slepc_init(__empty_argc, __empty_argv);//, local_comm);
 
   PetscPopSignalHandler();
 
@@ -211,6 +229,8 @@ TiberCad::cleanup(void)
 
   // close libMesh and return
   delete _libmeshinit;
+
+  MPI_Finalize();
 
   delete [] __empty_argv;
 }
