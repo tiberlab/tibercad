@@ -85,6 +85,8 @@ make_petsc()
     cp ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ${TOPDIR}/${TCHOST}/lib/${libname}${dll_libext}
   fi
 
+  rm conftest* reconfigure*
+
 }
 
 
@@ -140,14 +142,15 @@ then
     --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
     --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
 else
-  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
+  COMPILERS=
+  #"--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
 fi
 
 
 if [ $MPI == 'n' ]; then
   MPI="--with-mpi=0"
 else
-  MPI="--with-mpi-dir=${MPIDIR}"
+  MPI="--with-mpi-dir=${MPIDIR}  --with-mpi-shared=1"
 fi
 #MPI="--download-mpich=1 --with-mpi-shared=0"
 

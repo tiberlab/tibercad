@@ -36,7 +36,7 @@ MKLDIR=${MKLDIR:-"/usr/pack/intel_mkl-10.2-gp"}
 
 # MPI
 MPI=${MPI:-'n'}
-#MPIDIR=${MPIDIR:-"/usr/pack/mpich-1.2.7p1-ma"}
+MPIDIR=${MPIDIR:-"/usr/lib/openmpi/"}
 
 target=@host_cpu@-@host_os@
 
