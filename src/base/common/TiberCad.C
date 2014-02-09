@@ -61,21 +61,34 @@ const int
 TiberCad::_SvnRevision = SVNREVISION;
 
 
+MPI_Comm
+TiberCad::_mpi_comm;
 
 
-TiberCad::TiberCad(void) :
+
+TiberCad::TiberCad(MPI_Comm mpi_comm) :
   _libmeshinit(NULL)
 {
   if (_object_counter > 0)
     throw InitFailedException("Only one TiberCAD instance may exist in a process!");
 
   _object_counter++;
+
+  _mpi_comm = mpi_comm;
 }
 
 
 TiberCad::~TiberCad(void)
 {
   cleanup();
+}
+
+
+
+MPI_Comm
+TiberCad::get_mpi_comm()
+{
+  return(_mpi_comm);
 }
 
 
@@ -172,16 +185,14 @@ TiberCad::init(const std::string& inputfile)
   MPI_Comm local_comm;
   int proc_id, p;
 
-  /* starts MPI */
-  MPI_Init(&__empty_argc, &__empty_argv);
   /* get current process id */
-  MPI_Comm_rank(MPI_COMM_WORLD, &proc_id);
-  MPI_Comm_size(MPI_COMM_WORLD, &p);    /* get number of processes */
-  MPI_Comm_split(MPI_COMM_WORLD, proc_id, 0, &local_comm);
+  MPI_Comm_rank(_mpi_comm, &proc_id);
+  MPI_Comm_size(_mpi_comm, &p);    /* get number of processes */
+  MPI_Comm_split(_mpi_comm, proc_id, 0, &local_comm);
 
   int local_id;
   MPI_Comm_rank(local_comm, &local_id);
-  MPI_Barrier(MPI_COMM_WORLD);
+  MPI_Barrier(_mpi_comm);
 
   //if (proc_id == 1) sleep(2);
   //std::cerr << "global: rank = " << proc_id << " np = " << p << std::endl;
@@ -191,7 +202,7 @@ TiberCad::init(const std::string& inputfile)
   _libmeshinit = new LibMeshInit(__empty_argc, __empty_argv, local_comm);
 
   // prepare EigenSolver
-  EigenSolver::slepc_init(__empty_argc, __empty_argv);//, local_comm);
+  EigenSolver::slepc_init(__empty_argc, __empty_argv, local_comm);
 
   PetscPopSignalHandler();
 
@@ -229,8 +240,6 @@ TiberCad::cleanup(void)
 
   // close libMesh and return
   delete _libmeshinit;
-
-  MPI_Finalize();
 
   delete [] __empty_argv;
 }

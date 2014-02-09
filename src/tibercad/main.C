@@ -27,6 +27,7 @@
 #include <cstdio>
 #include <getopt.h>
 
+
 using namespace std;
 
 #if defined(_WIN32)
@@ -85,6 +86,12 @@ namespace
 // and so on
 int main (int argc, char** argv)
 {
+
+  /*
+   * As first thing, we start MPI
+   */
+  MPI_Init(&argc, &argv);
+
 
 #ifdef _WIN32
   interactive = true;
@@ -254,36 +261,49 @@ int main (int argc, char** argv)
   Messages::interactive() = interactive;
   Messages::stop_on_warning() = stop_on_warning;
 
-  // Create the entry point object
-  TiberCad tibercad;
-
-  try {
-
-    tibercad.init(inputfile);
-
-    tibercad.run();
-
-    Messages::info("Simulation finished.");
-
-    error = 0;
-  }
-  catch (exception& e)
   {
-    Messages::error(e.what());
-  }
-  catch (...)
-  {
-    Messages::error("TiberCAD crashed for unknown reason.");
-  }
+    /*
+     * We have this inside a defined scope so that no
+     * MPI-using objects will be destroyed after MPI_Finalize
+     */
+
+    // Create the entry point object
+    // here we pass MPI_COMM_WORLD because we are in the main
+    TiberCad tibercad(MPI_COMM_WORLD);
+
+    try {
+
+      tibercad.init(inputfile);
+
+      tibercad.run();
+
+      Messages::info("Simulation finished.");
+
+      error = 0;
+    }
+    catch (exception& e)
+    {
+      Messages::error(e.what());
+    }
+    catch (...)
+    {
+      Messages::error("TiberCAD crashed for unknown reason.");
+    }
 #if defined(_WIN32)
-  cout << "press Enter ...";
-  if (interactive) cin.get();
+    cout << "press Enter ...";
+    if (interactive) cin.get();
 #endif
 
-  Messages::print_statistics();
-  Messages::close_log_file();
+    Messages::print_statistics();
+    Messages::close_log_file();
 
-  Messages::info("Goodbye");
+    Messages::info("Goodbye");
+  }
+
+  /*
+   * As last thing, finalize MPI
+   */
+  MPI_Finalize();
 
   return error;
 }

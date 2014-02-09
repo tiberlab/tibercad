@@ -9,6 +9,8 @@
 #include <string>
 #include <list>
 
+#include <mpi.h>
+
 class Control;
 class LibMeshInit;
 
@@ -37,7 +39,10 @@ class TiberCad
 
 
     //! Constructor
-    TiberCad(void);
+    /*
+     * \param mpi_comm the MPI communicator we should use
+     */
+    TiberCad(MPI_Comm mpi_comm);
 
 
     //! Destructor
@@ -132,6 +137,10 @@ class TiberCad
     static const std::string& get_output_format(void);
 
 
+    //! Get our MPI Communicator
+    static MPI_Comm get_mpi_comm();
+
+
 
   private:
 
@@ -177,6 +186,10 @@ class TiberCad
 
     //! The list from which the filename suffix gets constructed
     static std::list<std::string> _filename_suffix;
+
+
+    //! This is our MPI communicator
+    static MPI_Comm _mpi_comm;
 
 
 };

@@ -5,6 +5,8 @@
 #include <string>
 #include <complex>
 
+#include <mpi.h>
+
 typedef std::complex<double> Complex;
 
 //! SLEPc interface class 
@@ -59,7 +61,7 @@ class EigenSolver
   static int eig_value_problem(const SLEPCoptions& opt) ;
 
   //!has to be called at the beginning of tibecad
-  static void slepc_init(int argc1, char** argv1);
+  static void slepc_init(int argc1, char** argv1, MPI_Comm comm);
 
   //!has to be called at the end of tibecad
   static void slepc_done(void);

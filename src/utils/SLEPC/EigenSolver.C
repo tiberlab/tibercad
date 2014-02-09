@@ -25,8 +25,10 @@ static int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt);
 
 int EigenSolver::_size_of_matrix;
 //-------------------------------------------------------------//
-void EigenSolver::slepc_init(int argc1, char** argv1)
+void EigenSolver::slepc_init(int argc1, char** argv1, MPI_Comm comm)
 {
+
+  PETSC_COMM_WORLD = comm;
 
   //Seems to work ^^
   //  TODO Looks poor, but in current version of petsc there is no methods for it. (In later releases there is ...)
