@@ -35,7 +35,7 @@ tibercad: $(objects)
 	@mkdir -p $(topdir)/$(ARCH)/bin
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/tibercad$(SUFF) \
 		-L$(libdir) \
-		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(PACKAGEFLAGS)
+		-l$(TIBERLIBNAME) $(ADDITIONAL_LIBS) $(LDFLAGS)  $(PACKAGEFLAGS)
 
 
 tibercad_static: $(objects)
