@@ -590,6 +590,7 @@ EigenvalueProblem::do_delete_remembered_solution(ID id)
 void EigenvalueProblem::do_plot(void)
 {
 
+  SimulationInterface::do_plot();
 
   if(get_options().has_submodel("Dispersion"))
   {
@@ -660,7 +661,6 @@ void EigenvalueProblem::do_plot(void)
   }
 
   calculate_dos();
-  SimulationInterface::do_plot();
 }
  
 void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
