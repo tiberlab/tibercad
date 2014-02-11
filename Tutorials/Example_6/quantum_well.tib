@@ -137,8 +137,8 @@ Module  efaschroedinger
  
   Dispersion
   {
-    k-path = G-M
-    k_max = 0.1
+    k-path = X-G-M
+    k_max = 1
     number_of_nodes = 10	
   }	
 
@@ -171,8 +171,8 @@ Module  efaschroedinger
 
   Dispersion
   {
-    k-path = G-M
-    k_max = 0.1
+    k-path = X-G-M
+    k_max = 1
     number_of_nodes = 10	
   }	
 

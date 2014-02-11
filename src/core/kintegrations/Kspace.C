@@ -359,10 +359,10 @@ void Kspace::do_init() throw (InitFailedException)
 
   Messages::info("k-space creation\n");
 
-  if (! mod_opt.find_option("mesh_units") ) 
-    throw  InitFailedException("Kspace: mesh_units must be defined");
+  //if (! mod_opt.find_option("mesh_units") )
+  //  throw  InitFailedException("Kspace: mesh_units must be defined");
 
-  double mesh_units = mod_opt.get_option("mesh_units",1.0);
+  //double mesh_units = mod_opt.get_option("mesh_units",1.0);
 
   if (! mod_opt.find_option("k_space_dimension") ) 
     throw  InitFailedException("Kspace: k_space_dimension must be defined");
@@ -745,11 +745,11 @@ void Kspace::define_k_path(void)
       else if(tokens[i]=="X'")    k2 = X1;
       else                        k2 = G;
 
-      for (int j = 0; j < npoints; j++)
+      for (int j = (i > 1) ? 1 : 0; j < npoints; j++)
       {
-        double b1 = k1[0]*(npoints-j)/nelem + k2[0]*j/nelem;
-        double b2 = k1[1]*(npoints-j)/nelem + k2[1]*j/nelem;
-        double b3 = k1[2]*(npoints-j)/nelem + k2[2]*j/nelem;
+        double b1 = k1[0]*(nelem-j)/nelem + k2[0]*j/nelem;
+        double b2 = k1[1]*(nelem-j)/nelem + k2[1]*j/nelem;
+        double b3 = k1[2]*(nelem-j)/nelem + k2[2]*j/nelem;
 
 
         Point pt(b1,b2,b3);
@@ -810,11 +810,11 @@ void Kspace::define_k_path(void)
        else                        k2 = G;    
 
 
-      for (int j = 0; j < npoints; j++)
+      for (int j = (i > 1) ? 1 : 0; j < npoints; j++)
       {
-        double b1 = k1[0]*(npoints-j)/npoints + k2[0]*j/npoints;
-        double b2 = k1[1]*(npoints-j)/npoints + k2[1]*j/npoints;
-        double b3 = k1[2]*(npoints-j)/npoints + k2[2]*j/npoints;
+        double b1 = k1[0]*(nelem-j)/nelem + k2[0]*j/nelem;
+        double b2 = k1[1]*(nelem-j)/nelem + k2[1]*j/nelem;
+        double b3 = k1[2]*(nelem-j)/nelem + k2[2]*j/nelem;
 
         Point pt(b1,b2,b3);
 
