@@ -40,7 +40,7 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
 {
   ModelOptions kopts(opts);
 
-  kopts.set_option("mesh_units", get_mesh_units());
+  //kopts.set_option("mesh_units", get_mesh_units());
   
   unsigned int k_dim = 3 - get_mesh().mesh_dimension();
 
@@ -62,7 +62,9 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   }
 
   // these are the real space lattice vectors, in nm
-  RealVectorValue a(2, 0, 0), b(0, 2, 0), c(0, 0, 2);
+  // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
+  // k_max can be interpreted in nm^-1
+  RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
 
   // if there is an atomistic structure, we can take the lattice vectors from it
   // (they come in Angstrom!)

@@ -251,8 +251,9 @@ void Optics::init_k_space_integration(void)
    kopts.set_option("verbose", SimulationOptions::verbose() );
 
    // these are the real space lattice vectors, in nm
-   // NOTE: factor of 2 because in Kspace the limits are at 1/2
-   RealVectorValue a(2, 0, 0), b(0, 2, 0), c(0, 0, 2);
+   // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
+   // k_max can be interpreted in nm^-1
+   RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
 
    // if there is an atomistic structure, we can take the lattice vectors from it
    // (they come in Angstrom!)
