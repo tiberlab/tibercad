@@ -10,6 +10,7 @@
 
 #include "tiber_config.h"
 
+#include "auto_ptr.h"
 
 #include <iostream>
 #ifdef HAVE_LIBREADLINE
@@ -59,6 +60,9 @@ namespace
   bool interactive;
   bool stop_on_warning = false;
 
+  AutoPtr<ofstream> nullstream(NULL);
+  streambuf* cout_original_rdbuf(NULL);
+
   void usage(void)
   {
 #if defined(_WIN32)
@@ -91,6 +95,15 @@ int main (int argc, char** argv)
    * As first thing, we start MPI
    */
   MPI_Init(&argc, &argv);
+
+  int my_rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+  if (my_rank != 0)
+  {
+    nullstream.reset(new ofstream("/dev/null"));
+    cout_original_rdbuf = cout.rdbuf(nullstream->rdbuf());
+  }
+  
 
 
 #ifdef _WIN32
@@ -299,6 +312,12 @@ int main (int argc, char** argv)
 
     Messages::info("Goodbye");
   }
+
+  if (my_rank != 0)
+  {
+    cout.rdbuf(cout_original_rdbuf);
+  }
+
 
   /*
    * As last thing, finalize MPI
