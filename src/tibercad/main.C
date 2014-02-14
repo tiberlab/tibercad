@@ -60,8 +60,8 @@ namespace
   bool interactive;
   bool stop_on_warning = false;
 
+  // TODO doe sthis work in windows?
   AutoPtr<ofstream> nullstream(NULL);
-  streambuf* cout_original_rdbuf(NULL);
 
   void usage(void)
   {
@@ -98,12 +98,13 @@ int main (int argc, char** argv)
 
   int my_rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+  // on rank 0 we set stdout to cout
   if (my_rank != 0)
   {
     nullstream.reset(new ofstream("/dev/null"));
-    cout_original_rdbuf = cout.rdbuf(nullstream->rdbuf());
+    Messages::set_stdout(*nullstream);
   }
-  
 
 
 #ifdef _WIN32
@@ -311,11 +312,6 @@ int main (int argc, char** argv)
     Messages::close_log_file();
 
     Messages::info("Goodbye");
-  }
-
-  if (my_rank != 0)
-  {
-    cout.rdbuf(cout_original_rdbuf);
   }
 
 

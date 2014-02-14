@@ -70,6 +70,9 @@ class Messages
     //! Close the log file
     static void close_log_file(void);
 
+    //! Set the stdout stream
+    static void set_stdout(std::ostream& os);
+
 
     //! Our own endline
     static const std::string endl;
@@ -96,6 +99,9 @@ class Messages
 
     //! The log file
     static std::ofstream _log;
+
+    //! The stdout
+    static std::ostream* _cout;
 
     //! The maximum line width
     static const int _max_width;

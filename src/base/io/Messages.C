@@ -70,6 +70,9 @@ Messages::_stop_on_warning = false;
 ofstream
 Messages::_log;
 
+ostream*
+Messages::_cout(&std::cout);
+
 
 
 void
@@ -84,6 +87,11 @@ Messages::print_statistics(void)
 }
 
 
+void
+Messages::set_stdout(std::ostream& os)
+{
+  _cout = &os;
+}
 
 
 void
@@ -149,7 +157,7 @@ Messages::close_log_file(void)
 void
 Messages::warning(const string& msg)
 {
-  TeeStream ts(cout, _log);
+  TeeStream ts(*_cout, _log);
   ts << Messages::endl;
 #ifdef _WIN32
   HANDLE hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -157,20 +165,20 @@ Messages::warning(const string& msg)
   GetConsoleScreenBufferInfo(hstdout, &csbi);
   SetConsoleTextAttribute(hstdout, FOREGROUND_GREEN | FOREGROUND_BLUE);
 #else
-  cout << yellowb;
+  *_cout << yellowb;
 #endif
   _log << "*** ";
   ts << "Warning: ";
 #ifdef _WIN32
   SetConsoleTextAttribute(hstdout, csbi.wAttributes);
 #else
-  cout << normal;
+  *_cout << normal;
 #endif
   ts << msg << endl << flush;
 
   if (stop_on_warning())
   {
-    cout << "press any key to continue ...";
+    *_cout << "press any key to continue ...";
     cin.get();
   }
 
@@ -197,13 +205,13 @@ Messages::error(const string& msg)
 #ifdef _WIN32
   SetConsoleTextAttribute(hstdout, csbi.wAttributes);
 #else
-  cout << normal;
+  *_cout << normal;
 #endif
   ts << msg << endl << flush;
 
   if (interactive())
   {
-    cout << "press any key to continue ...";
+    *_cout << "press any key to continue ...";
     cin.get();
   }
 
@@ -220,7 +228,7 @@ Messages::info(const string& msg, bool newline)
   vector<string> lines;
   Utils::tokenize(msg, lines, "\n");
 
-  TeeStream ts(cout, _log);
+  TeeStream ts(*_cout, _log);
 
   size_t nl = lines.size();
 
@@ -256,7 +264,7 @@ Messages::debug(const string& msg)
 void
 Messages::newline(void)
 {
-  TeeStream ts(cout, _log);
+  TeeStream ts(*_cout, _log);
   ts << endl << flush;
 }
 
