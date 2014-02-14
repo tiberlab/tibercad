@@ -260,7 +260,8 @@ void ETB::do_reinit(void)
   else
   {
 
-    upt_filename = get_atomistic_structure()->get_name() + ".upg";
+    upt_filename = get_output_directory() + "/" +
+        get_atomistic_structure()->get_name() + ".upg";
 
     //Messages::info("(ETB) printing structure "+upt_filename);
 
