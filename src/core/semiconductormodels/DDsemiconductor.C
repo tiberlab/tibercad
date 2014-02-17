@@ -186,7 +186,7 @@ void DDsemiconductor::prepare_submodels(void)
   assert(bulk_ham == NULL);
 
   //create semiconductor for electron parameters
-  ModelOptions  kp_options;
+  ModelOptions  kp_options(get_options());
   kp_options["model"] = "single_band";
 
   semiconductor = Semiconductor::create(get_material(), kp_options);
