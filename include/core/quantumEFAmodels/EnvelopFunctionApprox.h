@@ -335,6 +335,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   virtual double get_H_units(void) const;
 
+  //! Redeclare the solutions, if number of states changed
+  void redeclare_solutions(void);
+
  protected:
 
 

@@ -864,23 +864,49 @@ void EnvelopFunctionApprox::do_init( )
 void EnvelopFunctionApprox::do_solve()
 {
 
- // check unused tags in solver_options
- const ModelOptions& sol_opt = get_solver_options();
- sol_opt.find_option("simulation"); // remove simulation name 
- sol_opt.check_unused();
+  // check unused tags in solver_options
+  const ModelOptions& sol_opt = get_solver_options();
+  sol_opt.find_option("simulation"); // remove simulation name
+  sol_opt.check_unused();
 
+  if (_solution.size() !=
+      get_solution_descriptor(EigenEnergy).n_components())
+  {
+    redeclare_solutions();
+  }
 
-   if (_calculate_density && (get_k_point().size() == 0.0))
-   {
-     estimate_spectrum_shift();
-     apply_bc();
-     calculate_density_analytic();
-   }
-   else
-   {
-     solve_for_kpoint(get_k_point());
-   }
+  if (_calculate_density && (get_k_point().size() == 0.0))
+  {
+    estimate_spectrum_shift();
+    apply_bc();
+    calculate_density_analytic();
+  }
+  else
+  {
+    solve_for_kpoint(get_k_point());
+  }
 }
+
+
+
+void
+EnvelopFunctionApprox::redeclare_solutions(void)
+{
+  // we have to redeclare the solution variables to adjust the number
+  // of eigenstates
+  const unsigned int num_states = _solution.size();
+  unsigned int dim = get_mesh().mesh_dimension();
+  string units("1/cm");
+  if (dim == 2)
+    units = "1/cm^2";
+  else if (dim == 3)
+    units = "1/cm^3";
+  declare_solution(ProbabilityDensity, NTUPLE, NODES, units, num_states);
+  declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
+  declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
+  declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
+}
+
 
 
 
@@ -895,6 +921,7 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
   }
   else
   { 
+
     estimate_spectrum_shift();
     
     apply_bc(); 
@@ -916,19 +943,7 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
                               solver_opt.spectrum_shift/Hartree);
 
 
-    // we have to redeclare the solution variables to adjust the number
-    // of eigenstates
-    const unsigned int num_states = _solution.size();
-    unsigned int dim = get_mesh().mesh_dimension();
-    string units("1/cm");
-    if (dim == 2)
-      units = "1/cm^2";
-    else if (dim == 3)
-      units = "1/cm^3";
-    declare_solution(ProbabilityDensity, NTUPLE, NODES, units, num_states);
-    declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
-    declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
-    declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
+    redeclare_solutions();
   }
 }
 
