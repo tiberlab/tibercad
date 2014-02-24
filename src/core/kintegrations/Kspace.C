@@ -347,6 +347,7 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
  }
 
 
+  cerr << setw(12) << transform_matrix << endl;
 
  // k_dim = 3;
 
@@ -656,7 +657,7 @@ void Kspace::do_init() throw (InitFailedException)
 
         vec2 = 2.0 * M_PI *  vectorProduct(vec3_real, vec1_real)/volume;
 
-        vec3 = 2.0 * M_PI *  vectorProduct(vec1_real, vec3_real)/volume;
+        vec3 = 2.0 * M_PI *  vectorProduct(vec1_real, vec2_real)/volume;
 
 
       }
