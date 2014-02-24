@@ -382,33 +382,46 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
 //====================================================//
 double EnvelopFunctionApprox::get_band_edge(const std::string& particle) 
 {
+  double band_edge = 0;
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-  assert(el != end_el);
-
-  double band_edge = get_band_edge(*el, particle);
-  ++el;
-
-  bool condband = (particle == "el") || (particle == "Ec");
-
-
-  for (; el != end_el ; ++el )
+  if (_job == BULKEIGENSTATES)
   {
-    const Elem* elem = *el;
-
-    double temp = get_band_edge(elem, particle);
-
-    if (condband)
-    {
-      if (band_edge > temp)
-	band_edge = temp;
-    }
+    if ((particle == "el") || (particle == "Ec"))
+      poisson_equation->get_solution(_bulk_mat_element,
+          cb_band_edge_ID, band_edge, _bulk_point);
     else
+      poisson_equation->get_solution(_bulk_mat_element,
+          vb_band_edge_ID, band_edge, _bulk_point);
+  }
+  else
+  {
+    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+    assert(el != end_el);
+
+    band_edge = get_band_edge(*el, particle);
+    ++el;
+
+    bool condband = (particle == "el") || (particle == "Ec");
+
+
+    for (; el != end_el ; ++el )
     {
-      if (band_edge < temp)
-	band_edge = temp;
+      const Elem* elem = *el;
+
+      double temp = get_band_edge(elem, particle);
+
+      if (condband)
+      {
+        if (band_edge > temp)
+          band_edge = temp;
+      }
+      else
+      {
+        if (band_edge < temp)
+          band_edge = temp;
+      }
     }
   }
 
@@ -2500,6 +2513,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   if (!found) throw SolveFailedException("Bad material point\n");
 
+
   Point qp = mat_elem->centroid();
 
   EFAbulkHamiltonian* element_hamiltonian;
@@ -2528,7 +2542,10 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   double electric_potential = 0;
   if (opt.consider_potential_bulk)
-      electric_potential = get_electric_potential( mat_elem, qp );
+  {
+    electric_potential = get_electric_potential( mat_elem, qp );
+    estimate_spectrum_shift();
+  }
 
 
   element_hamiltonian->apply_strain_and_potential(strain_crystal_system, electric_potential);
@@ -2568,10 +2585,15 @@ void EnvelopFunctionApprox::solve_bulk(void)
      {
 
        _solution[i].eigen_energy = eigvals[i]*Hartree;
+       _solution[i].statistics = "Fermi";
+       if (_solution[i].eigen_energy < solver_opt.spectrum_shift)
+         _solution[i].particle = "hl";
+       else
+         _solution[i].particle = "el";
        _solution[i].eigen_vector.resize(number_of_bands);
        for (short j = 0; j < number_of_bands ; j++)
        {
-	       _solution[i].eigen_vector[j] = ham_matrix[i * number_of_bands + j];
+         _solution[i].eigen_vector[j] = ham_matrix[i * number_of_bands + j];
        }
      }
   }

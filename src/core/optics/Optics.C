@@ -81,20 +81,8 @@ Optics::get_solution_secure(map<ID, vector<double> >& values)
 void Optics::parse_options()
 {
    
-  std::string type = get_option("type", "emission");
-
-  if (type == "emission")
-  { 
-    _initial_state_particle = "el";
-    _final_state_particle = "hl";
-  }
-  else if (type == "absorption")
-  { 
-    _initial_state_particle = "hl";
-    _final_state_particle = "el";
-  }
-  else
-    throw InitFailedException("Invalid type "+type); 
+  _initial_state_particle = "el";
+  _final_state_particle = "hl";
 
 
   //k-vector
@@ -107,7 +95,7 @@ void Optics::parse_options()
 
   if (job_name == "matrix_elements")
     job = MATREL;
-  else if (job_name == "bulk_matrix_elements")
+  else if (job_name == "bulk")
     job = BULKMATREL;
   else
     throw InitFailedException( "OpticsKP: Incorrect job: " + job_name);
@@ -246,6 +234,8 @@ void Optics::init_k_space_integration(void)
    
    kopts.set_option("mesh_units",get_mesh_units()); 
    int k_dim = 3 - get_mesh().mesh_dimension();
+   if (job == BULKMATREL)
+     k_dim = 3;
    kopts.set_option("k_space_dimension", k_dim);
 
    kopts.set_option("verbose", SimulationOptions::verbose() );
