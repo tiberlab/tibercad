@@ -19,3 +19,7 @@ References for material parameters
     M Eickhoff, M Stutzmann F Bernardini V Fiorentini, V Tilak,
     B Schaff and L F Eastman: "Pyroelectric properties of Al(In)GaN/GaN hetero- and
     quantum well structures", J. Phys.: Condens. Matter, Vol. 14, 2002, pp. 3399-3434
+
+[7] Vurgaftman, JAP, 94, 3675, (2003)
+
+
