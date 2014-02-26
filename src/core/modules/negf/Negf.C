@@ -196,24 +196,29 @@ Negf::init_hamil(void)
 {
 
   // setup external module as Hamiltonian generator
+  
   const MeshBase& mesh = get_mesh();
   MeshBase::const_element_iterator el = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
   NegfModel* negfmod;
+  /* Cannot check here models of external module
   for ( ; el != end_el; ++el)
   {
     negfmod = get_bulk_model<NegfModel>(*el);
     if (negfmod == NULL)
     {
-      ID subid = (*el)->id();
+      ID subid = (*el)->subdomain_id();
       std::ostringstream os;
-      os <<"element "<<subid<<" in material region "<<
+      os <<"element "<<(*el)->id()<<" in material region "<<
         _device->get_region_name(subid)<<std::endl;
       Messages::error(os.str());
       throw InitFailedException("Not all elements have a proper model");
     }
   }
-  
+  */
+
+  negfmod = get_bulk_model<NegfModel>(*el);
+
   _hamil_type = negfmod->get_model_name(0);
 
   std::cout<<"(negf) init: "<< _hamil_type  <<std::endl;
@@ -913,11 +918,17 @@ Negf::calculate_for_k_point(const Point& k_point,
 
        field.clear();
        field.reserve(_device_n_dofs);
+       
+       error = 0.0;
 
        for (unsigned int el=0; el < _device_n_dofs; el++)
+       {
          field.push_back(qdens(el));
+         error += qdens(el);
+       }
 
-       error = 0.0;
+       error /= _device_n_dofs;
+
 
        return;
    }
@@ -938,7 +949,7 @@ Negf::calculate_for_k_point(const Point& k_point,
        //field.push_back(-curr);
        field = current;
 
-       error = 0.0;
+       error = current[0];
        return;
    }
       
@@ -969,6 +980,7 @@ Negf::calculate_density(const std::string& particle)
   //-------------------------------------------------------
   // HERE WE COMPUTE DENSITY!
   //-------------------------------------------------------
+ 
   _libnegf->density(density);
 
   // ---- debug ---------------------------------------------
@@ -996,6 +1008,7 @@ Negf::calculate_density(const std::string& particle)
   DofMap& dof_map_qdens = _qdens_sys->get_dof_map();
   std::vector<unsigned int> dof_indices_qdens;
   // setup output vector qdens
+
   NumericVector<Number>& qdens = *_qdens_sys->solution;
   qdens.zero();
 
@@ -1026,19 +1039,18 @@ Negf::calculate_density(const std::string& particle)
   MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
   const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
 
+  NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
+  double deg = negfmod->get_degeneracy(0);
+
   for ( ; el != end_el; ++el)
   {
     const Elem* elem = *el;
-
-    NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
 
     dof_map_qdens.dof_indices(elem, dof_indices_qdens, particle_id);
 
     for (int band = 0; band < n_vars; band++)
     {
       dof_map.dof_indices(elem, dof_indices, band);
-
-      double deg = negfmod->get_degeneracy(band);
 
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
