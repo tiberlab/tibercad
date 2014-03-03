@@ -206,7 +206,11 @@ void OpticsKP::calculate_matrix_bulk(void)
   for (unsigned i = 0; i < 3; i++)
   {
     _P_matrix[i].resize(n_i);
-    for (unsigned j = 0; j < n_i; j++)   _P_matrix[i][j].resize(n_f);
+    for (unsigned j = 0; j < n_i; j++)
+    {
+      _P_matrix[i][j].clear();
+      _P_matrix[i][j].resize(n_f, 0.0);
+    }
   }
 
 
