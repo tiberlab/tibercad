@@ -590,7 +590,7 @@ void Optics::do_solve()
   // k-space is assumed to be in 1/nm, and all output quantities
   // are given in 1/cm
   double area_dim_factor = 1.0;
-  int dim = get_mesh().mesh_dimension();
+  int dim = (job == BULKMATREL) ? 0 : get_mesh().mesh_dimension();
   switch (dim)
   {
     case 0:
@@ -785,8 +785,6 @@ void Optics::do_plot()
   // get  spectrum calculation  options from  opticsKP model  section
   // for  calculation of  spectrum for a single k-point
 
-  short k_dim = 3 - get_mesh().mesh_dimension(); 
-
   if (plot_solution("matrix_elements"))
   {
     plot_globaldata();
@@ -822,6 +820,8 @@ void Optics::do_plot()
   double gain_factor = 1;
   //double length_factor = Constants::bohr_radius * 1e2;
   double length_factor = 1e-9 * 1e2;
+
+  short k_dim = (job == BULKMATREL) ? 3 : 3 - get_mesh().mesh_dimension();
   if (k_dim == 1)
   {
     dimension = "/cm";
