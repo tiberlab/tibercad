@@ -181,6 +181,7 @@ void EnvelopFunctionApprox::get_occupations(std::vector<double>& values) const
 
 //====================================================//
 PhysicalModel* EnvelopFunctionApprox::create_bulk_model(const ModelOptions& options,
+
     const Material* mat) const
 {
 
@@ -564,7 +565,7 @@ void EnvelopFunctionApprox::parse_options()
   }
   //-------------------------------------------------------------------------------------------//
 
-  std::string  job_name = get_option("job","eigenstates");
+  std::string  job_name = get_option("job", "eigenstates");
   if (job_name == "eigenstates")
     _job = EIGENSTATES;
   else if (job_name == "bulk")
@@ -1609,15 +1610,6 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
       _solution[index].eigen_vector[j] /= Complex(norm, 0.0);
 
 
-    // Fermi energy calculation
-    if (poisson_equation != NULL)
-      _solution[index].electro_chem_pot = calculate_fermi_averaged(index,
-          _solution[index].particle);
-
-
-    //Temperature calculation
-    _solution[index].temperature = calculate_temperature_averaged(index);
-
 
   }
 
@@ -1677,8 +1669,22 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
       solver_opt.number_of_eigenstates = n_eig + 1;
     }
 
+    //redeclare_solutions();
   }
 
+
+  if (foundall)
+  {
+    for (unsigned int i = 0; i < n_states; i++)
+    {
+      // Fermi energy calculation
+      if (poisson_equation != NULL)
+        _solution[i].electro_chem_pot = calculate_fermi_averaged(i,
+            _solution[i].particle);
+
+
+      //Temperature calculation
+      _solution[i].temperature = calculate_temperature_averaged(i);
 
 //    if (!check_confinement(_solution[i].eigen_vector))
 //    {
@@ -1686,6 +1692,9 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
 //      os << "State " << i << " is not confined!";
 //      Messages::warning(os.str());
 //    }
+    }
+  }
+
   
   return foundall;
 

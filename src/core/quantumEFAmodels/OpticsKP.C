@@ -232,7 +232,6 @@ void OpticsKP::calculate_matrix_bulk(void)
     for (unsigned int band2 = 0; band2 < 8; band2++)
     {
 
-      Complex value = P[0][band1][band2].constant;
       band_it = kp_bands_map_in.find( band1);
 
       if (band_it != kp_bands_map_in.end())
