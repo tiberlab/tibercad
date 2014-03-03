@@ -203,7 +203,6 @@ void OpticsKP::calculate_matrix_bulk(void)
   unsigned int n_i =  _initial_state_numbers.size();
   unsigned int n_f =  _final_state_numbers.size();
 
-
   for (unsigned i = 0; i < 3; i++)
   {
     _P_matrix[i].resize(n_i);
@@ -233,37 +232,40 @@ void OpticsKP::calculate_matrix_bulk(void)
     for (unsigned int band2 = 0; band2 < 8; band2++)
     {
 
+      Complex value = P[0][band1][band2].constant;
       band_it = kp_bands_map_in.find( band1);
 
       if (band_it != kp_bands_map_in.end())
       {
 
-	short number1 = band_it->second;
+        short number1 = band_it->second;
 
 
 
-	band_it = kp_bands_map_fi.find( band2);
+        band_it = kp_bands_map_fi.find( band2);
 
-	if (band_it != kp_bands_map_fi.end())
-	{
+        if (band_it != kp_bands_map_fi.end())
+        {
 
-	  short number2 = band_it->second;
+          short number2 = band_it->second;
 
-	  for (unsigned int i1 = 0; i1 < n_i; i1++)
-	    for (unsigned int i2 = 0; i2 < n_f; i2++)
-	    {
+          for (unsigned int i1 = 0; i1 < n_i; i1++)
+          {
+            for (unsigned int i2 = 0; i2 < n_f; i2++)
+            {
+              unsigned int is = _initial_state_numbers[_initial_indices[i1]];
+              unsigned int fs = _final_state_numbers[_final_indices[i2]];
 
-	      for (short pol = 0; pol < 3; pol++)
-	      {
-		_P_matrix[pol][i1][i2] +=  P[pol][band1][band2].constant *
-		  conj( _i_states[i1].eigen_vector[number1] ) *
-                  ( _f_states[i2].eigen_vector[number2] );
+              for (short pol = 0; pol < 3; pol++)
+              {
+                _P_matrix[pol][i1][i2] +=  P[pol][band1][band2].constant *
+                    conj( _i_states[is].eigen_vector[number1] ) *
+                    ( _f_states[fs].eigen_vector[number2] );
 
-
-
-	      }
-	    }
-	}
+              }
+            }
+          }
+        }
       }
 
     }
