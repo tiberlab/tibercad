@@ -54,16 +54,17 @@ void WzSemiconductor::do_init()
   
    
   // we override with hole band masses for 2x2
-  if(_kp_model=="2x2")
+  if(_kp_model == "2x2")
   {
     RealTensor mten(0.0);
-    get_option("m_v",mten);
+    get_option("m_v", mten);
 
     if (mten(0,0) != 0.0)
       par.A2 = par.A4 = -0.5 / mten(0,0);
 
     if (mten(2,2) != 0.0)
       par.A1 = par.A3 = -0.5 / mten(2,2);
+    //std::cout<<"(semiconductor) m_v = "<<mten(0,0)<<"  "<<mten(2,2)<<std::endl;
 
     mten(0,0) = 0.0; mten(2,2) = 0.0;
 
@@ -71,8 +72,7 @@ void WzSemiconductor::do_init()
     if (mten(0,0) != 0.0) par.m_c_xx = mten(0,0);
     if (mten(2,2) != 0.0) par.m_c_zz = mten(2,2);
 
-    std::cout<<"(semiconductor) m_c = "<<par.m_c_xx<<"  "<<par.m_c_zz<<std::endl;
-    std::cout<<"(semiconductor) m_v = "<<mten(0,0)<<"  "<<mten(2,2)<<std::endl;
+    //std::cout<<"(semiconductor) m_c = "<<par.m_c_xx<<"  "<<par.m_c_zz<<std::endl;
   }
 
   if (!_couple_bands) 
