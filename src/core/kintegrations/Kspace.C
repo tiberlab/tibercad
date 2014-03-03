@@ -1,7 +1,10 @@
+// $Id$
+
 #include "Kspace.h"
 #include "SimulationEnvironment.h"
 #include "Constants.h"
 #include "Messages.h"
+//#include "gmsh_io.h"
 
 #include <mesh_modification.h>
 
@@ -17,6 +20,7 @@ Kspace::Kspace(const ModelOptions& options)
 
   do_init();
 }
+
 
 // Copy constructor
 Kspace::Kspace( const Kspace& kspace)
@@ -70,7 +74,7 @@ void Kspace::build_k_grid()
 
 
 
-    ElemType type;
+    ElemType type(EDGE2);
     if (mesh_order == SECOND)
     {
 
@@ -687,6 +691,8 @@ void Kspace::do_init() throw (InitFailedException)
 
   // transform the mesh to real units
   rotate_mesh();
+
+  //GmshIO(*kmesh).write("kspace");
 
 }
 

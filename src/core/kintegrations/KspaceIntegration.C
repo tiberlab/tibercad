@@ -65,11 +65,9 @@ void KspaceIntegration::calculate_density()
 
 
   double factor = 1.0;
-  {
-    for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
-
+  for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
     factor *= _kspace->get_degeneracy_factor() * opt.degeneracy;
-  }
+
 
   //std::vector<unsigned int> dof_indices;
   // ------- INTEGRATION --------------------------------------------------------
@@ -299,7 +297,7 @@ void KspaceIntegration::parse_options( )
   opt.uniform_refinement      = mod_opt.get_option("uniform_refinement",false);
 
   opt.refine_fraction         = mod_opt.get_option("refine_fraction", 0.3);
-  opt.maximum_ref_level       = mod_opt.get_option("maximum_ref_level", 8);
+  opt.maximum_ref_level       = mod_opt.get_option("maximum_ref_level", 3);
   opt.relative_accuracy       = mod_opt.get_option("relative_accuracy", 1e-2);
 
   opt.degeneracy                = mod_opt.get_option("degeneracy",1);
@@ -350,8 +348,8 @@ void KspaceIntegration::do_init(void)
   
   
   // few sanity checks that Kspace has options for initialization
-  if( !kopts.find_option("mesh_units"))
-    throw InitFailedException("K-integration internal error: mesh_units must be initialized");
+  //if( !kopts.find_option("mesh_units"))
+  //  throw InitFailedException("K-integration internal error: mesh_units must be initialized");
   
   if( !kopts.find_option("k_space_dimension"))
     throw InitFailedException("K-integration internal error: k_space_dimension must be initialized");
