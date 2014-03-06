@@ -5,6 +5,7 @@ New features:
 	- optics now calculates also stimulated emission and gain spectra
 	- recombination from optics can be included selfconsistently in
 	  drift-diffusion
+	- can now define a default for doping in Device block
 
 Bug fixes:
 

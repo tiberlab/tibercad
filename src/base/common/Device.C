@@ -308,6 +308,14 @@ Device::setup_regions(void)
 
     data.set_option("dimension", get_mesh().mesh_dimension());
 
+    if (!data.has_submodel("Doping"))
+    {
+      ModelOptions::const_submodel_iterator dop_it(
+          _options.submodels_begin("Doping"));
+      if (dop_it != _options.submodels_end("Doping"))
+        data.add_submodel("Doping", dop_it->second);
+    }
+
     Material* mat = Material::create(material, data);
     set_material(mat, region_ids, data.get_name());
   }
