@@ -401,12 +401,12 @@ Elasticity::get_solution_secure(const Elem* elem,
      //Internal Strain
      if (values.count(RelativeStrain))
      {
-       values[Strain][6*n] =   strain(0,0);
-       values[Strain][6*n+1] = strain(1,1);
-       values[Strain][6*n+2] = strain(2,2);
-       values[Strain][6*n+3] = strain(1,0);
-       values[Strain][6*n+4] = strain(2,1);
-       values[Strain][6*n+5] = strain(2,0);
+       values[RelativeStrain][6*n] =   strain(0,0);
+       values[RelativeStrain][6*n+1] = strain(1,1);
+       values[RelativeStrain][6*n+2] = strain(2,2);
+       values[RelativeStrain][6*n+3] = strain(1,0);
+       values[RelativeStrain][6*n+4] = strain(2,1);
+       values[RelativeStrain][6*n+5] = strain(2,0);
      }
 
      //Total strain in the crystal system
