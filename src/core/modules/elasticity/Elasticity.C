@@ -134,6 +134,7 @@ Elasticity::do_setup_solution_variables(void)
   // we declare our solution variables
 
   declare_solution(Strain, TENSOR, NODES, "");
+  declare_solution(RelativeStrain, TENSOR, NODES, "");
   declare_solution(StrainCell, TENSOR, CELL, "");
   declare_solution(StrainCrystal, TENSOR, NODES, "");
   //declare_solution(Energy, REAL, NODES, "Joule");
