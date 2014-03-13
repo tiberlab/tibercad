@@ -398,7 +398,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      }
      
      //Internal Strain
-     if (values.count(InternalStrain))
+     if (values.count(RelativeStrain))
      {
        values[Strain][6*n] =   strain(0,0);
        values[Strain][6*n+1] = strain(1,1);
@@ -437,6 +437,7 @@ Elasticity::get_solution_secure(const Elem* elem,
      }
 
      //Internal Stress
+     /*
      if (values.count(InternalStress))
      {
 
@@ -448,6 +449,7 @@ Elasticity::get_solution_secure(const Elem* elem,
        values[InternalStress][6*n+5] = stress(2,0);
 
      }
+     */
   
      //----------Stress crystal
      if (values.count(StressCrystal))
@@ -570,6 +572,7 @@ Elasticity::compute_elastic_energy(void)
 
 }
 
+/*
 RealTensor
 Elasticity::get_stress(const Elem* elem, const Point& p)
 {
@@ -595,8 +598,8 @@ Elasticity::get_stress(const Elem* elem, const Point& p)
 
   return stress;
 }
-
-
+*/
+/*
 RealTensor
 Elasticity::get_internal_stress(const Elem* elem, const Point& p)
 {
@@ -622,7 +625,7 @@ Elasticity::get_internal_stress(const Elem* elem, const Point& p)
 
   return stress;
 }
-
+*/
 
 
 void
