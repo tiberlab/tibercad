@@ -401,12 +401,22 @@ Elasticity::get_solution_secure(const Elem* elem,
      //Internal Strain
      if (values.count(RelativeStrain))
      {
-       values[RelativeStrain][6*n] =   strain(0,0);
-       values[RelativeStrain][6*n+1] = strain(1,1);
-       values[RelativeStrain][6*n+2] = strain(2,2);
-       values[RelativeStrain][6*n+3] = strain(1,0);
-       values[RelativeStrain][6*n+4] = strain(2,1);
-       values[RelativeStrain][6*n+5] = strain(2,0);
+       // The relative strain is
+       // 1 + eps
+       // ---------  -  1
+       // 1 + eps_0
+       //
+       // where eps_0 is strain_source, assuming it contains
+       // only lattice matching strain
+       RealTensor t(1,0,0, 0,1,0, 0,0,1);
+       t -= strain_source + strain_source * strain_source;
+       t = strain * t;
+       values[RelativeStrain][6*n] =   t(0,0);
+       values[RelativeStrain][6*n+1] = t(1,1);
+       values[RelativeStrain][6*n+2] = t(2,2);
+       values[RelativeStrain][6*n+3] = t(1,0);
+       values[RelativeStrain][6*n+4] = t(2,1);
+       values[RelativeStrain][6*n+5] = t(2,0);
      }
 
      //Total strain in the crystal system
