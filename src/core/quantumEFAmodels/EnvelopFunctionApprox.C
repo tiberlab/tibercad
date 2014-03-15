@@ -236,6 +236,13 @@ EnvelopFunctionApprox::do_setup_solution_variables(void)
 
 
 void
+EnvelopFunctionApprox::do_set_to_remembered_solution(ID id)
+{
+  FEMEigenvalueProblem::do_set_to_remembered_solution(id);
+  redeclare_solutions();
+}
+
+void
 EnvelopFunctionApprox::get_solution_secure(map<ID, vector<double> >& values)
 {
   if (values.count(EigenEnergy))
@@ -289,7 +296,9 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
 
     // number of states
     const unsigned int num_states = _solution.size();
-    values[ProbabilityDensity] = vector<double>(np * num_states, 0.0);
+    //values[ProbabilityDensity] = vector<double>(np * num_states, 0.0);
+    values[ProbabilityDensity].clear();
+    values[ProbabilityDensity].resize(np * num_states, 0.0);
 
     // they should all be the same size
     unsigned int n_dofs = phi.size();
@@ -1675,6 +1684,8 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
 
   if (foundall)
   {
+    redeclare_solutions();
+
     for (unsigned int i = 0; i < n_states; i++)
     {
       // Fermi energy calculation
@@ -2412,17 +2423,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   }
   qdens.close();
 
-  // we have to redeclare the solution variables to adjust the number
-  // of eigenstates
-  string units("1/cm");
-  if (dim == 2)
-    units = "1/cm^2";
-  else if (dim == 3)
-    units = "1/cm^3";
-  declare_solution(ProbabilityDensity, NTUPLE, NODES, units, _solution.size());
-  declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", _solution.size());
-  declare_solution(Occupation, NTUPLE, GLOBAL, "", _solution.size());
-  declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", _solution.size());
+  redeclare_solutions();
 
   // set them back to original values
   if (opt.num_el_states > 0) opt.num_el_states--;

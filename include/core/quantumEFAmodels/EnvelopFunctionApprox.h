@@ -351,6 +351,13 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   virtual void do_setup_solution_variables(void);
 
+  //! set to a remembered solution
+  /*
+   * The actual implementation is in a base class, but we
+   * need to also redeclare the solution variables with the
+   * right number of solutions.
+   */
+  virtual void do_set_to_remembered_solution(ID id);
 
   virtual void 	do_init(void);
 
