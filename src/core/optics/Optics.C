@@ -339,10 +339,8 @@ void Optics::set_states()
         for (ID i = 0; i < _initial_indices.size(); i++)
         {
           //std::cout << "initial state indeces = " << temp[i] << std::endl;
-         
           if(_initial_indices[i]<0 || _initial_indices[i]>inum.size()) continue;
           _initial_state_numbers[_initial_indices[i]] = inum[_initial_indices[i]];
-
         }
       }
     }
@@ -352,10 +350,9 @@ void Optics::set_states()
       _initial_indices.resize(inum.size());
       for (ID i = 0; i < inum.size(); i++)
       {
-        //std::cout << "final state indeces = " << inum[i] << std::endl;
+        //std::cout << "initial state indeces = " << inum[i] << std::endl;
         _initial_indices[i] = i;
         _initial_state_numbers[i] = inum[i];
-        
       }      
       
     }
@@ -386,11 +383,9 @@ void Optics::set_states()
       {
         for (ID i = 0; i < _final_indices.size(); i++)
         {
-          //std::cout << "initial state indeces = " << temp[i] << std::endl;
-         
+          //std::cout << "final state indeces = " << temp[i] << std::endl;
           if(_final_indices[i]<0 || _final_indices[i]>fnum.size()) continue;
           _final_state_numbers[_final_indices[i]] = fnum[_final_indices[i]];
-
         }
       }
     }
@@ -400,7 +395,7 @@ void Optics::set_states()
       _final_indices.resize(fnum.size());
       for (ID i = 0; i < fnum.size(); i++)
       {
-        //std::cout << "final state indeces = " << inum[i] << std::endl;
+        //std::cout << "final state indeces = " << fnum[i] << std::endl;
         _final_indices[i] = i;
         _final_state_numbers[i] = fnum[i];
         
@@ -528,12 +523,12 @@ void Optics::do_solve()
     const DofField& spectra = _k_integration->get_solution();
 
     unsigned int n = 3*_energy_mesh->n_nodes();
-    _spectrum_x.assign(spectra.begin(), spectra.begin() + n-1);
+    _spectrum_x.assign(spectra.begin(), spectra.begin() + n);
 
     if (norm(_opt.polariz) == 0.0)
     {
-      _spectrum_y.assign(spectra.begin() + n, spectra.begin() + 2*n-1);
-      _spectrum_z.assign(spectra.begin() + 2*n, spectra.begin() + 3*n-1);
+      _spectrum_y.assign(spectra.begin() + n, spectra.begin() + 2*n);
+      _spectrum_z.assign(spectra.begin() + 2*n, spectra.begin() + 3*n);
     }
   }
   //---------------------------------------------------------------------------------
@@ -550,8 +545,8 @@ void Optics::do_solve()
     if (norm(_opt.polariz) == 0.0)
     {
       unsigned int n = 3*_energy_mesh->n_nodes();
-      _spectrum_y.assign(_spectrum_x.begin() + n, _spectrum_x.begin() + 2*n-1);
-      _spectrum_z.assign(_spectrum_x.begin() + 2*n, _spectrum_x.begin() + 3*n-1);
+      _spectrum_y.assign(_spectrum_x.begin() + n, _spectrum_x.begin() + 2*n);
+      _spectrum_z.assign(_spectrum_x.begin() + 2*n, _spectrum_x.begin() + 3*n);
       _spectrum_x.resize(n);
     }
   }
@@ -656,7 +651,6 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
   std::vector<double> is_occupations;
 
 
-  double     trans_energy, f1, f2;
 
 
   unsigned int n1 =  _initial_state_numbers.size();
@@ -691,25 +685,22 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
     for (unsigned j = 0; j < n2; j++)  // "lower" states
     {
 
-      trans_energy =  abs(is_eigen_values[_initial_indices[i]]
-	             - fs_eigen_values[_final_indices[j]]);
+      double trans_energy =  abs(is_eigen_values[_initial_indices[i]]
+	                       - fs_eigen_values[_final_indices[j]]);
 
+      double f1 = 1.0;
+      double f2 = 1.0;
       if (_opt.get_occ)
       {
         f1 = is_occupations[_initial_indices[i]];   // occupation for  electron
         
         f2 = fs_occupations[_final_indices[j]]; // occupation for  holes
       }
-      else
-      {
-        f1 = 1.0; f2 = 1.0;
-      }
 
 
       Complex Me = _P_matrix[0][i][j] * polariz(1) +
 	           _P_matrix[1][i][j] * polariz(2) +
 	           _P_matrix[2][i][j] * polariz(3);
-
 
 
       double c = 1.0/Constants::fine_structure_constant;
@@ -766,9 +757,6 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 
         double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)
                             + (0.5*Gamma)*(0.5*Gamma)) / M_PI * Hartree;
-
-	// Note(alex): the division by Hartree seems wrong. Lorenzian is in 1/eV, so transformation
-	// should be "Lorenzian * Hartree"
 
         spectrum[el] += power * Lorenzian;
         spectrum[el + n_energy] += stimulated * Lorenzian;
