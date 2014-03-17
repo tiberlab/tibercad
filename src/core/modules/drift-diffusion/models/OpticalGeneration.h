@@ -59,11 +59,8 @@ class TBDLLOCAL OpticalGeneration : public RecombinationModelInterface
     //! Generation rate parameter
     double _generation;
 
-    //! Flag to decide to upload an external generation file
-    bool _read_file;
-
-    //! Number of suns
-    double _sun;
+    //! A multiplier
+    double _multiplier;
 
     //! The generation model
     std::vector<SimulationInterface*> _generation_model;
@@ -84,8 +81,7 @@ inline
 OpticalGeneration::OpticalGeneration(const ModelOptions& options)
   : RecombinationModelInterface(options),
     _generation(0.0),
-    _sun(0.0),
-    _read_file(false)
+    _multiplier(1.0)
 {
 }
 

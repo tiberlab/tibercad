@@ -344,12 +344,14 @@ Optical generation
 
 A very simple model for photoelectric generation of electron-hole pairs is implemented
 in tiberCAD. It is enabled by specifying a ``generation`` submodel of type optical The
-model imposes a constant generation rate which has to be provided by the keyword G in
-units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` . 
+model imposes a constant generation rate which has to be provided by the keyword ``generation`` in
+units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` .
+With the second option ``multiplier`` it is possible to scale the value given in ``generation``. This is 
+useful for defining sweeps over the generation rate when the rate is different in distinct regions.
 
 .. note:: 
           Usually the simulation should define a sweep on the value
-          of G from 0 to the desired generation.
+          of ``generation`` (or ``multiplier``) from 0 to the desired generation.
 
 
 .. _ThermoelectricPower:
