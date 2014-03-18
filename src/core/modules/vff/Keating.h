@@ -81,9 +81,9 @@ inline
 double
 Keating::get_alpha_0(void) const
 {
-  std::string msg("Keating parameters alpha is 0");
-  if ((_alpha_0 == 0.0))
-    Messages::warning(msg);
+  //std::string msg("Keating parameters alpha is 0");
+  //if ((_alpha_0 == 0.0))
+  //  Messages::warning(msg);
   return _alpha_0;
 }
 
@@ -91,9 +91,9 @@ inline
 double
 Keating::get_alpha_1(void) const
 {
-  std::string msg("Keating parameters alpha is 0");
-  if ((_alpha_1 == 0.0))
-    Messages::warning(msg);
+  //std::string msg("Keating parameters alpha is 0");
+  //if ((_alpha_1 == 0.0))
+  //  Messages::warning(msg);
   return _alpha_1;
 }
 
@@ -103,8 +103,8 @@ Keating::get_beta_0(void) const
 {
   std::string msg("Keating parameters beta is 0");
 //  std::cout << "beta " << _beta_0 << "material " << get_material()->get_name();
-  if ((_beta_0 == 0.0))
-    Messages::warning(msg);
+  //if ((_beta_0 == 0.0))
+  //  Messages::warning(msg);
   return _beta_0;
 }
 
@@ -114,8 +114,8 @@ Keating::get_beta_1(void) const
 {
   std::string msg("Keating parameters beta is 0");
 //  std::cout << "beta " << _beta_0 << "material " << get_material()->get_name();
-  if ((_beta_1 == 0.0))
-    Messages::warning(msg);
+  //if ((_beta_1 == 0.0))
+  //  Messages::warning(msg);
   return _beta_1;
 }
 
@@ -124,8 +124,8 @@ double
 Keating::get_d_0(void) const
 {
   std::string msg("Vff parameters d is 0");
-  if ((_d_0 == 0.0))
-    Messages::warning(msg);
+  //if ((_d_0 == 0.0))
+  //  Messages::warning(msg);
   return _d_0;
 }
 
@@ -134,8 +134,8 @@ double
 Keating::get_d_1(void) const
 {
   std::string msg("Vff parameters d is 0");
-  if ((_d_1 == 0.0))
-    Messages::warning(msg);
+  //if ((_d_1 == 0.0))
+  //  Messages::warning(msg);
   return _d_1;
 }
 
@@ -144,8 +144,8 @@ double
 Keating::get_costeta_0(void) const
 {
   std::string msg("Vff parameters teta is 0");
-  if ((_costeta_0 == 0.0))
-    Messages::warning(msg);
+  //if ((_costeta_0 == 0.0))
+  //  Messages::warning(msg);
   return _costeta_0;
 }
 
@@ -154,8 +154,8 @@ double
 Keating::get_costeta_1(void) const
 {
   std::string msg("Vff parameters teta is 0");
-  if ((_costeta_1 == 0.0))
-    Messages::warning(msg);
+  //if ((_costeta_1 == 0.0))
+  //  Messages::warning(msg);
   return _costeta_1;
 }
 
