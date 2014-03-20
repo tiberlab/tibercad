@@ -533,6 +533,8 @@ int EigenSolver::clear_slepc()
   /*
     Free memory
    */
+  //EPSRemoveDeflationSpace(eps);
+
   int ierr;
   ierr = MatDestroy(A);CHKERRQ(ierr);
   {
@@ -603,7 +605,7 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
     }
     EPSGetInvariantSubspace(eps, v);
     EPSAttachDeflationSpace(eps, nconv, v, PETSC_TRUE);
-    // TODO do we need to delete explicitly the vectors??
+    VecDestroyVecs(v, nconv);
   }
 
   return ierr;
