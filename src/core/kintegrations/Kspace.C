@@ -12,7 +12,8 @@ using namespace std;
 
 //------------------------------------------------------------------------------//
 Kspace::Kspace(const ModelOptions& options)
- : mod_opt(options)
+ : mod_opt(options),
+   mesh_order(FIRST)
 {
   kmesh = NULL;
 
@@ -392,8 +393,13 @@ void Kspace::do_init() throw (InitFailedException)
   if (k_dim > 0)
   {
     mod_opt.get_option("number_of_nodes", num_nodes);
-    if ( num_nodes.size() == 0 ) num_nodes.resize(3, 5);
+    if ( num_nodes.size() == 0 ) num_nodes.resize(k_dim, 5);
   }
+
+  // NOTE: for the mesh creation we always need all three indices
+  // of num_nodes, so we define the missing ones as 1
+  num_nodes.resize(k_dim);
+  num_nodes.resize(3, 1);
 
   string mesh_order = mod_opt.get_option("mesh_order","first");
 
@@ -496,10 +502,6 @@ void Kspace::do_init() throw (InitFailedException)
 
       }
 
-      num_nodes[1] = 1;
-      num_nodes[2] = 1;
-
-
       define_k_space(vec, num_nodes[0]);
 
     }
@@ -572,10 +574,6 @@ void Kspace::do_init() throw (InitFailedException)
         vec2 = 2 * M_PI * vectorProduct(vec3_real, vec1_real) / volume;
 
       }
-
-
-
-      num_nodes[2] = 1;
 
       define_k_space(vec1, num_nodes[0],vec2, num_nodes[1] );
 

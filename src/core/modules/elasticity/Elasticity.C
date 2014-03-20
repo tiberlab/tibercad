@@ -698,16 +698,10 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   DenseMatrix<Number> Ke;
   DenseVector<Number> Fe;
 
-  std::vector< DenseSubVector<Number>* > F(3);
-  std::vector<std::vector< DenseSubMatrix<Number>* > > K(3);
-  for (unsigned int i= 0;i<3; i++)
-  {
-    K[i].resize(3);
-    for (unsigned int j= 0;j<3; j++)
-      K[i][j] = new  DenseSubMatrix<Number> (Ke);
+  std::vector<DenseSubVector<Number>> F(3, DenseSubVector<Number>(Fe));
+  std::vector<std::vector<DenseSubMatrix<Number>>> K(3,
+      vector<DenseSubMatrix<Number>>(3, DenseSubMatrix<Number>(Ke)));
 
-    F[i] = new DenseSubVector<Number> (Fe) ;
-  }
   //----------------------------------------------------------
   std::vector< std::vector<unsigned int> > dof_indices_vec(3);
   std::vector<unsigned int> dof_indices;
@@ -738,12 +732,12 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
     for (unsigned int i = 0;i <3; i++)
     {
-      (F[i])->reposition(uvar[i] *n_dofs_vec[i],n_dofs_vec[i]);
-      (F[i])->zero();
+      F[i].reposition(uvar[i] *n_dofs_vec[i],n_dofs_vec[i]);
+      F[i].zero();
       for (unsigned int j = 0;j <3; j++)
       {
-        (K[i][j])->reposition(uvar[i] * n_dofs_vec[i], uvar[j] * n_dofs_vec[i],  n_dofs_vec[i] , n_dofs_vec[j] );
-	(K[i][j])->zero();
+        K[i][j].reposition(uvar[i] * n_dofs_vec[i], uvar[j] * n_dofs_vec[i],  n_dofs_vec[i] , n_dofs_vec[j] );
+	K[i][j].zero();
       }
     }
 
@@ -779,7 +773,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
              //  strain(i,j) += 0.5 * ((solution)(dof_indices_vec[i][alpha]) * dphi[alpha][qp](j) + (solution)(dof_indices_vec[j][alpha]) * dphi[alpha][qp](i));
 
              for (ID beta=0; beta<n_dofs_vec[j]; beta++)
-               (*(K[i][j]))(alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
+               K[i][j](alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
            }
 
        RealTensor total_stress(stress_source);
@@ -792,7 +786,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
 	  RealGradient tmp = total_stress * dphi[alpha][qp] + force *  phi[alpha][qp];
 	  for (ID i = 0;i <3; i++)
-	    (*(F[i]))(alpha) -= JxW[qp] * tmp(i);
+	    F[i](alpha) -= JxW[qp] * tmp(i);
 
 	}
       
@@ -835,11 +829,11 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
                 for (unsigned int alpha = 0; alpha < n_dofs_vec[0]; alpha++)
                   for (unsigned int i = 0; i < 3; i++)
                   {
-                    (*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
+                    F[i](alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
 
                     for (unsigned int j = 0; j < 3; j++)
                       for (unsigned int beta = 0; beta < n_dofs_vec[0]; beta++)
-                        (*(K[i][j]))(alpha,beta) -= JxW_face[qp] * phi_face[alpha][qp] *
+                        K[i][j](alpha,beta) -= JxW_face[qp] * phi_face[alpha][qp] *
                             normal[qp] * (get_subtensor(C,i,j) * dphi_face[beta][qp]);
                   }
               }
@@ -858,11 +852,11 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
                 for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
                   for (unsigned int i =0; i<3; i++)
                   {
-                    (*(F[i]))(alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
+                    F[i](alpha) +=  JxW_face[qp] * phi_face[alpha][qp] * R(i);
 
                     for (unsigned int j =0; j<3; j++)
                       for (unsigned int beta=0; beta<n_dofs_vec[0]; beta++)
-                        (*(K[i][j]))(alpha,beta) += JxW_face[qp] * H(i,j) * phi_face[alpha][qp] * phi_face[beta][qp];
+                        K[i][j](alpha,beta) += JxW_face[qp] * H(i,j) * phi_face[alpha][qp] * phi_face[beta][qp];
 
                   }
               }
