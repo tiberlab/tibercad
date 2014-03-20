@@ -803,8 +803,6 @@ void EnvelopFunctionApprox::do_init( )
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
-  bool temp = true;
-  
   for ( ; el != end_el ; ++el) 
   {
     const Elem* elem = *el;
@@ -812,23 +810,11 @@ void EnvelopFunctionApprox::do_init( )
     for (short i1 = 0; i1 < n1 ; i1++)
     {
       
-      
       const Point& p = elem->point(i1);
       for (unsigned i = 0; i < 3; i++)
       {
-        
-        if (temp)
-        {
-          min_coord[i] = p(i);
-          max_coord[i] = p(i);
-          temp = false;
-        }
-        else
-        {
-          
-          if (min_coord[i] < p(i)) min_coord[i] = p(i);
-          if (max_coord[i] > p(i)) max_coord[i] = p(i);
-        }
+        if (min_coord[i] > p(i)) min_coord[i] = p(i);
+        if (max_coord[i] < p(i)) max_coord[i] = p(i);
       }
       
     }
