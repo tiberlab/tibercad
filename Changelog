@@ -5,6 +5,8 @@ New features:
 	- optics now calculates also stimulated emission and gain spectra
 	- recombination from optics can be included selfconsistently in
 	  drift-diffusion
+	- EFA can now treat electrons and holes in a unified way
+	- k-space is measured in 1/nm
 	- can now define a default for doping in Device block
 
 Bug fixes:
