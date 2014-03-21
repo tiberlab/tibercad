@@ -28,6 +28,8 @@ Optics::Optics(const ModelOptions& options)
   _energy_mesh = NULL;
   _k_vector[0]=0.0;   _k_vector[1]=0.0;   _k_vector[2]=0.0; 
   _k_integration = NULL;
+
+  has_solution_vector(false);
 }
 
 //==============================================//
