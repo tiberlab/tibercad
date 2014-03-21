@@ -71,7 +71,7 @@ class Messages
     static void close_log_file(void);
 
     //! Set the stdout stream
-    static void set_stdout(std::ostream& os);
+    static void set_stdout(std::ostream& os = nullstream);
 
 
     //! Our own endline
@@ -102,6 +102,9 @@ class Messages
 
     //! The stdout
     static std::ostream* _cout;
+
+    //! A stream writing to /dev/null
+    static std::ofstream nullstream;
 
     //! The maximum line width
     static const int _max_width;

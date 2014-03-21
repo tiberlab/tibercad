@@ -37,6 +37,7 @@ namespace
   const char* white   = "";
   const char* normal  = "";
 #endif
+
 }
 
 using namespace std;
@@ -72,6 +73,9 @@ Messages::_log;
 
 ostream*
 Messages::_cout(&std::cout);
+
+ofstream
+Messages::nullstream("/dev/null");
 
 
 
