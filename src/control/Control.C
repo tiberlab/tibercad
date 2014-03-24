@@ -686,12 +686,12 @@ Control::create_boundary(SimulationInterface* sim, const ModelOptions& opts)
     //
     // this is the old way -->
 
-    BoundaryProperties* bdprop = sim->new_boundary_model(opts);
+    //BoundaryProperties* bdprop = sim->new_boundary_model(opts);
 
     // NOTE: bdprop could be NULL, but we don't care about. Who tells us that
     // every simulation necessarily needs a boundary model?
-    if (bdprop != NULL)
-      bnd->add_boundary_properties(bdprop, sim->get_id());
+    //if (bdprop != NULL)
+    //  bnd->add_boundary_properties(bdprop, sim->get_id());
 
     // <-- end of old way
     //

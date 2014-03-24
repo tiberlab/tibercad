@@ -202,7 +202,8 @@ TiberCad::init(const std::string& inputfile)
   _libmeshinit = new LibMeshInit(__empty_argc, __empty_argv, local_comm);
 
   // prepare EigenSolver
-  EigenSolver::slepc_init(__empty_argc, __empty_argv, local_comm);
+  //EigenSolver::slepc_init(__empty_argc, __empty_argv, local_comm);
+  EigenSolver::slepc_init(__empty_argc, __empty_argv, _mpi_comm);
 
   PetscPopSignalHandler();
 

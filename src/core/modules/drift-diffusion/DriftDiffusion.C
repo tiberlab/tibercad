@@ -188,9 +188,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
     const Elem* top_parent = (*el)->top_parent();
 
     assert(_device->get_material(elem->subdomain_id()) != NULL);
-    DDBulkModel* sc =
-      dynamic_cast<DDBulkModel*>(
-          get_physical_model(elem->subdomain_id()));
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(sc->get_equilibrium_fermi_level());
@@ -391,9 +389,7 @@ DriftDiffusion::find_dielectric_boundary_nodes(void)
   {
     const Elem* el = *it;
 
-    DDBulkModel* sc =
-      dynamic_cast<DDBulkModel*>(
-          get_physical_model(el->subdomain_id()));
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(el);
 
     // we are only interested in boundaries between semiconductor/dielectric
     if (sc->is_dielectric())
@@ -403,9 +399,7 @@ DriftDiffusion::find_dielectric_boundary_nodes(void)
         if (get_environment().is_inner_boundary(ElementSide(el, s)))
         {
           // get the model of the neighbor element
-          DDBulkModel* scn =
-            dynamic_cast<DDBulkModel*>(
-                get_physical_model(el->neighbor(s)->subdomain_id()));
+          DDBulkModel* scn = get_bulk_model<DDBulkModel>(el->neighbor(s));
 
 
           // if neighbor is not dielectric we record it
@@ -1114,9 +1108,7 @@ DriftDiffusion::guess_equilibrium(void)
   {
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
-    DDBulkModel* sc =
-      dynamic_cast<DDBulkModel*>(
-          get_physical_model(elem->subdomain_id()));
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
     dof_map_u.dof_indices(elem, dof_indices_u, u_var);
     for (int i = 0; i < elem->n_nodes(); i++)
@@ -1985,9 +1977,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
   const vector<Point>& real_pts = fe->get_xyz();
 
-  DDBulkModel* sc =
-    dynamic_cast<DDBulkModel*>(
-        get_physical_model(subdomain));
+  DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
   assert(sc != NULL);
 
@@ -3211,15 +3201,12 @@ DriftDiffusion::calculate_currents_surfint(void)
     const Elem* elem = *el;
     const Elem* top_parent = (*el)->top_parent();
 
-    ID subdomain = elem->subdomain_id();
-
     // get DOF indices
     dof_map.dof_indices(elem, dof_indices_u, u_var);
     dof_map.dof_indices(elem, dof_indices_en, en_var);
     dof_map.dof_indices(elem, dof_indices_ep, ep_var);
 
-    DDBulkModel* sc =
-      dynamic_cast<DDBulkModel*>(get_physical_model(subdomain));
+    DDBulkModel* sc = get_bulk_model<DDBulkModel>(elem);
 
     assert(sc != NULL);
 

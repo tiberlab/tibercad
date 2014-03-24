@@ -1557,9 +1557,7 @@ DSSC::find_internal_boundary_nodes(void)
   {
     const Elem* el = *it;
 
-    DSSCModel* sc =
-      dynamic_cast<DSSCModel*>(
-          get_physical_model(el->subdomain_id()));
+    DSSCModel* sc = get_bulk_model<DSSCModel>(el);
 
     // we are only interested in boundaries between semiconductor/dielectric
     if (sc->is_TiO2())
@@ -1569,9 +1567,7 @@ DSSC::find_internal_boundary_nodes(void)
         if (get_environment().is_inner_boundary(ElementSide(el, s)))
         {
           // get the model of the neighbor element
-          DSSCModel* scn =
-            dynamic_cast<DSSCModel*>(
-                get_physical_model(el->neighbor(s)->subdomain_id()));
+          DSSCModel* scn = get_bulk_model<DSSCModel>(el->neighbor(s));
 
 
           // if neighbor is not dielectric we record it
@@ -3061,9 +3057,7 @@ DSSC::get_solution_secure(const Elem* elem,
 
   ID subdomain = elem->subdomain_id();
 
-  DSSCModel* sc =
-    dynamic_cast<DSSCModel*>(
-        get_physical_model(subdomain));
+  DSSCModel* sc = get_bulk_model<DSSCModel>(elem);
 
   assert(sc != NULL);
 

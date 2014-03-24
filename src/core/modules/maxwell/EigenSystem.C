@@ -45,7 +45,6 @@ void EigenSystem::solve () {
   countNonZeros(matB, nonZerosB, systemSize);
 
   EigenSolver::preallocate_H_matrix(systemSize, nonZerosA);
-
   EigenSolver::preallocate_S_matrix(systemSize, nonZerosB);
 
   tt.reset();

@@ -28,16 +28,6 @@ class MaxwellAbsorption : public SimulationInterface
     virtual
     ~MaxwellAbsorption(void) {};
 
-    virtual PhysicalModel* create_physical_model(const ModelOptions& options, const Material* mat) const
-            throw (ModelErrorException) {
-      return NULL;
-    }
-
-    virtual BoundaryProperties* create_boundary_model(const ModelOptions& options) const
-        throw (ModelErrorException) {
-      return NULL;
-    }
-
     static MaxwellAbsorption* create(const ModelOptions& options);
 
   protected:

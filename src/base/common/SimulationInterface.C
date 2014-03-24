@@ -350,13 +350,13 @@ SimulationInterface::new_bulk_model(const ModelOptions& options,
 }
 
 
-BoundaryProperties*
-SimulationInterface::new_boundary_model(const ModelOptions& options)
-{
-  BoundaryProperties* bp = create_boundary_model(options);
+//BoundaryProperties*
+//SimulationInterface::new_boundary_model(const ModelOptions& options)
+//{
+//  BoundaryProperties* bp = create_boundary_model(options);
 
-  return bp;
-}
+//  return bp;
+//}
 
 
 PhysicalModel*
@@ -398,17 +398,6 @@ SimulationInterface::new_node_model(const ModelOptions& options,
 }
 
 
-
-PhysicalModel*
-SimulationInterface::get_physical_model(ID region_id) const
-{
-  PhysicalModel* mod = NULL;
-  Material* mat = get_environment().get_device().get_material(region_id);
-  if (mat != NULL)
-    mod = mat->get_model(get_id());
-
-  return mod;
-}
 
 
 
@@ -967,30 +956,12 @@ SimulationInterface::do_set_solution_vector(
 
 
 
-BoundaryProperties*
-SimulationInterface::create_boundary_model(const ModelOptions&) const
-  throw (ModelErrorException)
-{
-  return NULL;
-}
-
-
-
-PhysicalModel*
-SimulationInterface::create_physical_model(const ModelOptions&,
-    const Material*) const
-  throw (ModelErrorException)
-{
-  return NULL;
-}
-
 
 PhysicalModel*
 SimulationInterface::create_bulk_model(const ModelOptions& options,
     const Material* material) const
 {
-  // call the old implementation for back compatibility
-  return create_physical_model(options, material);
+  return NULL;
 }
 
 

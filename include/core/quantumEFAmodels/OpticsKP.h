@@ -31,15 +31,10 @@ class OpticsKP: public Optics
 
 
   virtual PhysicalModel*
-    create_physical_model(const ModelOptions& options,
-        const Material* mat) const throw (ModelErrorException);
+    create_bulk_model(const ModelOptions& options,
+        const Material* mat) const;
     
   
-  //!Here returns NULL
-  virtual BoundaryProperties*
-    create_boundary_model(const ModelOptions& options) const
-    throw (ModelErrorException);
-
 
  protected:
 

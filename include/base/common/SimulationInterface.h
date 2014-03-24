@@ -619,7 +619,7 @@ class SimulationInterface : public TiberModelObject
     /*!
      * deprecated the use of BoundaryProperties is obsolete
      */
-    BoundaryProperties* new_boundary_model(const ModelOptions& options);
+    //BoundaryProperties* new_boundary_model(const ModelOptions& options);
 
 
     //! Create a boundary model to be used with this simulation
@@ -636,13 +636,6 @@ class SimulationInterface : public TiberModelObject
     PhysicalModel* new_node_model(const ModelOptions& options,
         const NodeObject* node);
 
-
-    //! Get the physical model for a certain region ID
-    /*!
-     * \return \c NULL if no model is present for region \c region_id
-     * \deprecated get_bulk_model should be used instead
-     */
-    PhysicalModel* get_physical_model(ID region_id) const;
 
 
     //! Get the material for a given element
@@ -1236,11 +1229,6 @@ class SimulationInterface : public TiberModelObject
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
         const Material* mat) const;
 
-    virtual PhysicalModel*
-      create_physical_model(const ModelOptions& options,
-                            const Material* mat) const
-      throw (ModelErrorException);
-
 
     //! Create a boundary model that can be used by this type of simulation
     /*!
@@ -1255,10 +1243,6 @@ class SimulationInterface : public TiberModelObject
      */
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
         const MaterialBoundary* boundary) const;
-
-    virtual BoundaryProperties*
-      create_boundary_model(const ModelOptions& options) const
-      throw (ModelErrorException);
 
 
     //! Create an edge model that can be used by this type of simulation

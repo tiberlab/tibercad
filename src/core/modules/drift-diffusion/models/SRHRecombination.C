@@ -346,8 +346,8 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   long double b = n / denom;
   b = b - tau_n * SRH / denom;
 
-  if (a < 0) a = p / denom;
-  if (b < 0) b = n / denom;
+  //if (a < 0) a = p / denom;
+  //if (b < 0) b = n / denom;
 
   recomb_e[0] = recomb_h[0] = a;
   recomb_e[1] = recomb_h[1] = b;

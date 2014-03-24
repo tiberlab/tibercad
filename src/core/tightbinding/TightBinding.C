@@ -62,16 +62,6 @@ TightBinding::obtain_hubbard_parameters(){}
 
 
 
-//Careful!!!! What means boundary condition in tight binding????????
-BoundaryProperties* TightBinding::create_boundary_model (const ModelOptions &options) const
-throw (ModelErrorException)
-
-{
-  BoundaryProperties* model = NULL;
-  return model;
-}
-
-
 
 
 double

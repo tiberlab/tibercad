@@ -32,8 +32,8 @@ OpticsKP::~OpticsKP()
  
 
 //===============================================//
-PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
-    const Material* mat) const throw (ModelErrorException)
+PhysicalModel* OpticsKP::create_bulk_model(const ModelOptions& options,
+    const Material* mat) const
 {
   ModelOptions kp8x8options = options;
 
@@ -48,13 +48,7 @@ PhysicalModel* OpticsKP::create_physical_model(const ModelOptions& options,
 
 }
 
-//===============================================//
-BoundaryProperties* OpticsKP::create_boundary_model(const ModelOptions& options) const
- throw (ModelErrorException)
-{
 
-  return NULL;
-}
 
 //===============================================//
 OpticsKP::OpticsKP(const ModelOptions& options)

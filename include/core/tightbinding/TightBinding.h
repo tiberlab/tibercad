@@ -45,8 +45,6 @@ public:
   //! Create TightBinding object
   static TightBinding* create(const ModelOptions& options);
 
-  virtual BoundaryProperties* create_boundary_model(const ModelOptions &options) const
-  throw (ModelErrorException);
 
   virtual void get_solution_secure(const Elem* elem,
       const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);

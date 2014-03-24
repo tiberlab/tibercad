@@ -535,6 +535,7 @@ void FEMEigenvalueProblem::do_copy_H_to_solver( )
   }
 
   EigenSolver::preallocate_H_matrix(number_of_new_dofs,  non_zeros_number);
+  //EigenSolver::init_H_matrix(number_of_new_dofs);
   _hamiltonian_size = number_of_new_dofs;
 
   //----------------------------------------------------------------------------------------------------//
@@ -702,6 +703,7 @@ void FEMEigenvalueProblem::do_copy_S_to_solver()
 
 
   EigenSolver::preallocate_S_matrix(number_of_new_dofs,  non_zeros_number);
+  //EigenSolver::init_S_matrix(number_of_new_dofs);
 
   //--------------assebmle data--------------------------------------------------------
 

@@ -13,8 +13,9 @@ class MaxwellEquationsCommon : public SimulationInterface {
     {
     }
 
-    virtual PhysicalModel* create_physical_model(const ModelOptions& options, const Material* mat) const
-            throw (ModelErrorException) {
+    virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
+        const Material* mat) const
+    {
       const std::string& modelname = get_option((mat->get_name() + "_opticmodel"), "");
 
       if (modelname == "") {
