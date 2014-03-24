@@ -14,13 +14,6 @@
 #include "Alloy.h"
 #include "mesh.h"
 
-//! A class for building Atomistic Structure from mesh informations
-/*!
- *Atomistic Generator can create 1D, 2D and 3D atomistic structure
- *(directions confinement define structure periodicity), according
- *to mesh informations. Material parameters (kind of lattice, atomic basis, ecc.)
- *are read from material files
- */
 
 
 //forward declaration
@@ -31,6 +24,13 @@ class BulkCrystal;
 
 
 
+//! A class for building Atomistic Structure from mesh informations
+/*!
+ *Atomistic Generator can create 1D, 2D and 3D atomistic structure
+ *(directions confinement define structure periodicity), according
+ *to mesh informations. Material parameters (kind of lattice, atomic basis, ecc.)
+ *are read from material files
+ */
 class TBDLLOCAL AtomisticGenerator
 {
 
@@ -58,14 +58,18 @@ public:
   void finalize(void);
 
   //! assign element to each atom
-  // This iterates on _super_basis 
+  /*!
+   * This iterates on _super_basis
+   */
   void assign_elements(const std::set<ID>& reg_ids);
   
   //! cut the structure (only flags atoms)
   void cut(const std::set<ID>& reg_ids, const std::string preserve = "none");
 
   //! assign the correct specie to each atom
-  // iterates on _super_basis and creates _structure_basis with active atoms only
+  /*!
+   * iterates on _super_basis and creates _structure_basis with active atoms only
+   */
   void assign_species(void);
 
   void restrict(bool passivation = true);
@@ -75,7 +79,7 @@ protected:
   //! Change atom species according to regions
   void cut_and_change_specie(std::string preserve);
 
-  //  //! Fast bond map generation, suitable for both
+  //  // Fast bond map generation, suitable for both
   //   unsigned int** fast_bond_map(const std::vector<Atom> &basis,
   //		   Tensor1& edge_min, Tensor1& edge_max, Tensor2Gen& period);
 
@@ -121,7 +125,7 @@ protected:
   //! Reference material
   const Material* _reference_material;
 
-  //! Database of reference material
+  // ! Database of reference material
   //Database _reference_material_db;
 
   // Missing super_conv (vector of conventional cells edges).
@@ -156,13 +160,15 @@ protected:
   std::map<std::string, double> _cutoff;
 
   //! AtomisticStructure instance which invoked AtomisticGenerator
-  //Note: pointer is constant, variable pointed is not constant
+  /*!
+   * Note: pointer is constant, variable pointed is not constant
+   */
   AtomisticStructure*  _as;
 
   //! List of elements covered by structure
   std::vector<Elem*> _structure_elements;
 
-  //! Set the atomic basis for the lattice (This function is no longer used!)
+  //  ! Set the atomic basis for the lattice (This function is no longer used!)
   //void set_crystal_basis(const std::string basis_name, 
   //const std::string specie1 = "not_specified", 
   //const std::string specie2 = "not_specified", double u = 0.0);
