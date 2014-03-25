@@ -322,7 +322,7 @@ void KspaceIntegration::do_solve( )
 void KspaceIntegration::do_init(void)
 {
   
-  std::cout<<"(KSI) k-int: "<<std::endl;
+  //std::cout<<"(KSI) k-int: "<<std::endl;
   ModelOptions kopts(get_options());
   
   if (has_option("number_of_elements"))
@@ -344,6 +344,15 @@ void KspaceIntegration::do_init(void)
     ModelOptions new_opts;
     new_opts.set_option("quadrature_order","first");
     set_options(new_opts);
+
+    Messages::info("Doing Gamma point calculation");
+  }
+  else
+  {
+    unsigned int dim = get_option("k_space_dimension", 0);
+    ostringstream os;
+    os << "Setting up " << dim << "-dimensional k-space";
+    Messages::info(os.str());
   }
   
   
@@ -358,7 +367,7 @@ void KspaceIntegration::do_init(void)
     throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");  
 
 
-  std::cout<<"(KSI) kspace init: "<<std::endl;
+  //std::cout<<"(KSI) kspace init: "<<std::endl;
 
   _kspace = new Kspace(kopts);
 

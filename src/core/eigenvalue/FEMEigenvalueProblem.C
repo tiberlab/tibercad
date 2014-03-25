@@ -21,12 +21,12 @@ using namespace std;
 
 FEMEigenvalueProblem::FEMEigenvalueProblem(const ModelOptions& options)
  : EigenvalueProblem(options),
-   min_coord({numeric_limits<double>::max(),
+   min_coord {numeric_limits<double>::max(),
               numeric_limits<double>::max(),
-              numeric_limits<double>::max()}),
-   max_coord({numeric_limits<double>::min(),
+              numeric_limits<double>::max()},
+   max_coord {numeric_limits<double>::min(),
               numeric_limits<double>::min(),
-              numeric_limits<double>::min()})
+              numeric_limits<double>::min()}
 {
 
   es = NULL;

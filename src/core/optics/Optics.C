@@ -234,7 +234,7 @@ void Optics::init_k_space_integration(void)
 
    ModelOptions& kopts = it->second;
    
-   kopts.set_option("mesh_units",get_mesh_units()); 
+   kopts.set_option("mesh_units", get_mesh_units());
    int k_dim = 3 - get_mesh().mesh_dimension();
    if (job == BULKMATREL)
      k_dim = 3;
@@ -278,6 +278,10 @@ void Optics::init_k_space_integration(void)
        break;
    }
 
+
+   Messages m;
+   m.info("Setting up k-space integration");
+   m.indent();
 
    _k_integration = KspaceIntegration::create(this, &Optics::calculate_for_k_point, kopts);
 
