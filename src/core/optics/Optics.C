@@ -236,6 +236,7 @@ void Optics::init_k_space_integration(void)
    
    kopts.set_option("mesh_units", get_mesh_units());
    int k_dim = 3 - get_mesh().mesh_dimension();
+   k_dim = kopts.get_option("k_space_dimension", k_dim);
    if (job == BULKMATREL)
      k_dim = 3;
    kopts.set_option("k_space_dimension", k_dim);
