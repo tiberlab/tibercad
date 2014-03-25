@@ -21,7 +21,7 @@ namespace
   /*
    * Calculates the elastic moduli from given keating parameters
    * x: keating parameters alpha, beta, alpha1, beta1
-   * y: elastic moduli C11, C12, C33, C13, C44, C66
+   * y: elastic moduli C11, C12, C33, C13, C44, C66 + Kleinmann parameters
    */
   template<typename valueT>
   void keating_wz(double a, double c, double u,
@@ -396,7 +396,9 @@ AutomaticKeating::residual_wz(double a, double c, double u,
   vector<double_t> y;
   keating_wz(a, c, u, x, y);
 
-  unsigned int N = y.size();
+  // WARNING: y contains the 6 elastic constants, plus the two Kleinmann parameters,
+  //          but we use only the former.
+  unsigned int N = 6;
   gradients.resize(N, nvar);
   residual.resize(N);
 

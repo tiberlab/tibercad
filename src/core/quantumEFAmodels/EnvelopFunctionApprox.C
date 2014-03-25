@@ -589,7 +589,8 @@ void EnvelopFunctionApprox::parse_options()
     {
       vector<double> point;
 
-      get_option("bulk_point",point);
+      get_option("bulk_point", point);
+      point.resize(3, 0);
       for (short i = 0; i < 3; i++)  _bulk_point(i) = point[i];
     }
     else
