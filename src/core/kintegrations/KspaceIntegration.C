@@ -34,6 +34,16 @@ KspaceIntegration::~KspaceIntegration()
 {
   delete _kspace;
 }
+
+
+unsigned int
+KspaceIntegration::get_k_space_dimension(void) const
+{
+  return _kspace->mesh_dimension();
+}
+
+
+
 //-------------------------------------------------------//
 void KspaceIntegration::calculate_density()
 {

@@ -187,6 +187,8 @@ Elasticity::do_solve(void)
 
     accumulate_strain();
     apply_shape_deformation();
+    //if (shape_iteration == 1)
+    //  internal_strain_correction(NULL);
     system.solution->zero();
 
     system.solve();
@@ -214,6 +216,19 @@ Elasticity::do_solve(void)
  // } while (error_u > max_error);
 
   } while ((error_u > myopt.shape_error) && (shape_iteration < max_iterations));
+
+  {
+    if (get_option("internal_strain_correction", false))
+      internal_strain_correction(NULL);
+
+    vector<AtomisticStructure*> atom_structures;
+
+    Device& device = get_environment().get_device();
+    device.get_atomistic_structures(myopt.structure_to_be_strained,atom_structures);
+
+    for (unsigned int ns = 0; ns < atom_structures.size(); ns++)
+      atom_structures[ns]->print_structure("strained.xyz");
+  }
 
   //double elastic_energy = abs(compute_elastic_energy());
   //if ((SimulationOptions::verbose() > 2) && myopt.shape_iterations > 1)
@@ -305,7 +320,6 @@ Elasticity::get_solution_secure(const Elem* elem,
  
    unsigned int np = p.size();
    
- 
    TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
 
    const NumericVector<Number>& solution = system->get_solution_vector();
@@ -976,7 +990,9 @@ Elasticity::apply_shape_deformation()
       structure[na].set_position(old_pos);
       
     }
-    atom_structures[ns]->print_structure("strained.xyz");
+
+    //if (get_option("internal_strain_correction", false))
+    //  internal_strain_correction(atom_structures[ns]);
   }
   
   //
@@ -1082,6 +1098,116 @@ Elasticity::apply_shape_deformation()
     it->second->inactivate_elements();
   */
 }
+
+
+
+
+void
+Elasticity::internal_strain_correction(AtomisticStructure* as)
+{
+  //Atomistics deformation-----
+  vector<AtomisticStructure*> atom_structures;
+
+  Device& device = get_environment().get_device();
+  device.get_atomistic_structures(myopt.structure_to_be_strained,atom_structures);
+
+  for (unsigned int ns = 0; ns < atom_structures.size(); ns++)
+  {
+    as = atom_structures[ns];
+
+
+  vector<Atom>& structure = as->get_structure_atoms();
+
+  set<ID> IDs = as->get_IDset();
+
+  // create a map between region IDs and lattice constants (for later fast access)
+  // (a0 and c0 are the relaxed lattice constants of each material or alloy)
+  map<ID,double> a, c;
+  map<ID,const Tensor2Gen*> RotM;
+
+  for(set<ID>::iterator reg = IDs.begin(); reg != IDs.end(); reg++)
+  {
+    const Material* mat = as->get_device()->get_material( (*reg) );
+
+    if (mat->get_structure() == "wz")
+    {
+      Database db = mat->get_database();
+      db.set_section("lattice");
+      a[*reg] = db.get("a",0.0);
+      c[*reg] = db.get("c",0.0);
+
+      const RotatedCrystal& cry =  mat->get_rotated_crystal();
+      RotM[*reg] = &cry.RotMatrix;
+
+      //std::cout << "RotM: "<< cry.RotMatrix(1,3) << " " << cry.RotMatrix(2,3)  << " " << cry.RotMatrix(3,3)  <<std::endl;
+    }
+    else
+    {
+      a[*reg] = 0.0;
+      RotM[*reg] = NULL;
+    }
+
+  }
+
+  // Main Loop on structure
+
+  vector<Point> point_vec(1);
+  map<ID, vector<double>> data;
+  data[StrainCrystal] = vector<double>(6);
+  data[Strain] = vector<double>(6);
+
+  unsigned int Number_of_atoms = structure.size();
+
+  for (unsigned int i = 0; i < Number_of_atoms ; i++)
+  {
+
+    ID id = structure[i].get_region_ID();
+
+    if (structure[i].get_specie() == Specie::N && RotM[id]!=NULL)
+    {
+
+      const Elem* elem = structure[i].get_elem();
+      ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);
+      mod.calculate(elem, elem->centroid());
+
+      RealTensor total_strain;
+      _accumulated_strain[elem].get_tensor(total_strain);
+      total_strain += mod.get_strain_source();
+      RealTensor crystal_strain = (*RotM[id]).transpose() * (total_strain * (*RotM[id]));
+
+
+      double exx = crystal_strain(0,0);
+      double eyy = crystal_strain(1,1);
+      double ezz = crystal_strain(2,2);
+
+      double a0 = a[id];
+      double c0 = c[id];
+
+      // compute internal displacement:
+      // du = a0^2/(3*c0^2) * (exx+eyy-2ezz) * c0
+
+      Tensor1 du_cry(0), du(0), ro(0), r(0);
+
+      du_cry(3) = a0*a0/(3*c0) * (exx+eyy-2*ezz) * 10.0; //1 nm -> 10.0 Angstroms
+
+      du = *(RotM[id]) * du_cry;
+
+      ro = structure[i].get_ttype_position();
+
+      r = ro + du;
+
+      //std::cout<< "dr: "<< du_cry(1) <<" "<< du_cry(2) <<" "<< du_cry(3) << std::endl;
+      //std::cout<< "ro: "<< ro(1) <<" "<< ro(2) <<" "<< ro(3) << std::endl;
+      //std::cout<< "r: "<< r(1) <<" "<< r(2) <<" "<<r(3) << std::endl;
+
+      structure[i].set_position(r);
+
+    }
+  }
+  }
+}
+
+
 
 void
 Elasticity::restore_shape()

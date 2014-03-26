@@ -177,7 +177,6 @@ void Optics::do_init()
     _initial_state_model = dynamic_cast<EigenvalueProblem*> (find_simulation(quantum_model));
     if (_initial_state_model == NULL)
       throw InitFailedException("Optics: invalid initial_state_model " + quantum_model);
-
   }
   else
     throw InitFailedException("Optics: initial_state_model must be defined\n");
@@ -250,9 +249,9 @@ void Optics::init_k_space_integration(void)
 
    // if there is an atomistic structure, we can take the lattice vectors from it
    // (they come in Angstrom!)
-   if (get_atomistic_structure() != NULL)
+   if (_initial_state_model->get_atomistic_structure() != NULL)
    {
-     get_atomistic_structure()->get_lattice_vectors(a, b, c);
+     _initial_state_model->get_atomistic_structure()->get_lattice_vectors(a, b, c);
      a *= 0.1;
      b *= 0.1;
      c *= 0.1;
@@ -428,7 +427,7 @@ void Optics::calculate_for_k_point(const Point& k_point,
 
   if (!get_option("skip_solve", false))
   {
-    short k_dim = 3 - get_mesh().mesh_dimension();
+    short k_dim = _k_integration->get_k_space_dimension();
 
     _initial_state_model->solve_for_kpoint(k_point); //calculate eigenstates
 
@@ -592,7 +591,8 @@ void Optics::do_solve()
   // k-space is assumed to be in 1/nm, and all output quantities
   // are given in 1/cm
   double area_dim_factor = 1.0;
-  int dim = (job == BULKMATREL) ? 0 : get_mesh().mesh_dimension();
+  unsigned int kdim = _k_integration->get_k_space_dimension();
+  int dim = (job == BULKMATREL) ? 0 : 3 - kdim;
   switch (dim)
   {
     case 0:
@@ -816,7 +816,7 @@ void Optics::do_plot()
   //double length_factor = Constants::bohr_radius * 1e2;
   double length_factor = 1e-9 * 1e2;
 
-  short k_dim = (job == BULKMATREL) ? 3 : 3 - get_mesh().mesh_dimension();
+  short k_dim = (job == BULKMATREL) ? 3 : _k_integration->get_k_space_dimension();
   if (k_dim == 1)
   {
     dimension = "/cm";

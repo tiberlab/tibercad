@@ -207,6 +207,9 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     //! Apply the deformation
     void apply_shape_deformation();
 
+    //! Apply correction for internal strain to atoms
+    void internal_strain_correction(AtomisticStructure* as);
+
     //! Update the aqccumulated strain
     void accumulate_strain(void);
 

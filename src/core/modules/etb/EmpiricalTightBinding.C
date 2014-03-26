@@ -35,6 +35,8 @@ ETB::ETB(const ModelOptions& options)
   _upt_options()
 {
   inst = new UptWrapper;
+
+  has_solution_vector(false);
 }
 
 ETB* ETB::create(const ModelOptions& options)
@@ -319,6 +321,7 @@ void ETB::do_reinit(void)
   if (has_new_k())
   {
     Point kp(get_k_point(true));
+    cerr << kp << endl;
     _upt_options.k_point[0] = kp(0);
     _upt_options.k_point[1] = kp(1);
     _upt_options.k_point[2] = kp(2);

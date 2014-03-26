@@ -678,7 +678,6 @@ void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
 void
 EigenvalueProblem::do_solve_for_kpoint(const Point& k_point)
 {
-  reinit();
   solve();
 }
 

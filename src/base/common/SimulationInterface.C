@@ -2369,7 +2369,8 @@ SimulationInterface::get_solution(const Atom* atom, map<ID, vector<double> >& va
 bool
 SimulationInterface::get_solution(map<ID, vector<double> >& values)
 {
-  if (!is_solved()) return false;
+  if (!is_solved())
+    return(false);
 
   if (values.size() == 0)
   {
@@ -2396,12 +2397,12 @@ SimulationInterface::get_solution(map<ID, vector<double> >& values)
           << "\' as global (mesh-independent) quantity.";
       throw RuntimeException(os.str());
     }
-
     values[it->first].resize(n_comp);
   }
 
   get_solution_secure(values);
-  return true;
+
+  return(true);
 }
 
 

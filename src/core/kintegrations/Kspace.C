@@ -4,7 +4,7 @@
 #include "SimulationEnvironment.h"
 #include "Constants.h"
 #include "Messages.h"
-//#include "gmsh_io.h"
+#include "gmsh_io.h"
 
 #include <mesh_modification.h>
 
@@ -408,7 +408,6 @@ void Kspace::do_init() throw (InitFailedException)
   else throw  InitFailedException("Kspace: incorrect mesh order " + mesh_order );
 
 
-
   {
     string def_weg("all");
     switch (k_space_dim)
@@ -649,7 +648,6 @@ void Kspace::do_init() throw (InitFailedException)
         for (short i = 0; i < 3; i++)
           vec3_real(i + 1) = k_vector[i]; // /(Constants::bohr_radius / mesh_units);
 
-
         double volume = (vec1_real * vectorProduct(vec2_real, vec3_real));
 
         if (volume == 0.0) throw  InitFailedException("Kspace: r1, r2,  r3  vectors may be conplanar ");
@@ -687,10 +685,11 @@ void Kspace::do_init() throw (InitFailedException)
   else
     build_k_grid();
 
+  GmshIO(*kmesh).write("kspace_as_built.msh");
   // transform the mesh to real units
   rotate_mesh();
 
-  //GmshIO(*kmesh).write("kspace");
+  GmshIO(*kmesh).write("kspace.msh");
 
 }
 
