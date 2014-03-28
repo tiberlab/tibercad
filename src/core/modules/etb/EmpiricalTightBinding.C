@@ -321,7 +321,6 @@ void ETB::do_reinit(void)
   if (has_new_k())
   {
     Point kp(get_k_point(true));
-    cerr << kp << endl;
     _upt_options.k_point[0] = kp(0);
     _upt_options.k_point[1] = kp(1);
     _upt_options.k_point[2] = kp(2);
