@@ -745,6 +745,30 @@ SimulationInterface::find_simulation(const string& name)
 
 
 
+pair<SimulationInterface*, ID>
+SimulationInterface::find_solution_provider(const string& simulation,
+    const string& solution)
+{
+  pair<SimulationInterface*, ID> result(NULL, INVALID_ID);
+
+  vector<string> tokens;
+
+  Utils::tokenize(simulation, tokens, ".");
+
+  result.first = find_simulation(tokens[0]);
+
+  if (result.first != NULL)
+  {
+    if (tokens.size() > 1)
+      result.second = result.first->get_solution_id(tokens[1]);
+    else
+      result.second = result.first->get_solution_id(solution);
+  }
+
+  return result;
+}
+
+
 void
 SimulationInterface::get_region_ids(std::set<ID>& region_ids) const
 {

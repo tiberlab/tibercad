@@ -276,7 +276,7 @@ class Device
         std::vector<ID>& ids) const;
 
 
-    //! Set the name for a boundary region
+    //  ! Set the name for a boundary region
     //void set_boundary_region_name(const std::string& name,
     //    const std::vector<ID>& ids);
 
@@ -393,6 +393,11 @@ class Device
 
     //! Setup all regions and materials
     void setup_regions(void);
+
+
+    //! Decompose region according to alloy composition
+    void decompose_region(const ModelOptions& options,
+        std::vector<ID>& region_ids, std::vector<double>& composition);
 
 
     //! Setup clusters

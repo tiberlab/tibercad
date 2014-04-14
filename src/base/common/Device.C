@@ -235,6 +235,12 @@ Device::setup_regions(void)
   // first we process the physical regions
   //
 
+  //
+  // 2014-04-03 A way to treat variable alloy composition:
+  //   subdivide the region in subregions according to intervals
+  //   in the composition.
+  //
+
   // iterate the regions and create the materials
   ModelOptions::const_submodel_iterator rit(_options.submodels_begin("Region"));
   const ModelOptions::const_submodel_iterator rend(_options.submodels_end("Region"));
@@ -316,8 +322,42 @@ Device::setup_regions(void)
         data.add_submodel("Doping", dop_it->second);
     }
 
-    Material* mat = Material::create(material, data);
-    set_material(mat, region_ids, data.get_name());
+    // now we check if we should use variable alloy composition
+    if (data.has_submodel("alloy_composition"))
+    {
+      const ModelOptions& alloy =
+          data.submodels_begin("alloy_composition")->second;
+      Messages::info("decompose region " + data.get_name() +
+          " to account for variable alloy composition.");
+
+      vector<ID> reg_ids;
+      vector<double> comp;
+      decompose_region(alloy, reg_ids, comp);
+      for (int i = 0; i < reg_ids.size(); ++i)
+      {
+        cerr << reg_ids[i] << " -> " << comp[i] << endl;
+
+        data.set_option("x", comp[i]);
+        Material* mat = Material::create(material, data);
+
+        ostringstream os;
+        os << data.get_name() << "_" << i;
+        set_material(mat, vector<ID>(1, reg_ids[i]), os.str());
+      }
+
+      // backup solution for pathologic cases
+      if (reg_ids.empty())
+      {
+        Material* mat = Material::create(material, data);
+        set_material(mat, region_ids, data.get_name());
+      }
+
+    }
+    else
+    {
+      Material* mat = Material::create(material, data);
+      set_material(mat, region_ids, data.get_name());
+    }
   }
 
   m.unindent();
@@ -1168,6 +1208,50 @@ Device::set_cluster(const string& name, const vector<ID>& ids)
 
 
 
+void
+Device::decompose_region(const ModelOptions& options,
+    vector<ID>& region_ids, vector<double>& composition)
+{
+  int intervals = options.get_option("intervals", 10);
+  double delta_rel = 1.0 / intervals;
+  double min_x = options.get_option("min_content", 0.0);
+  double max_x = options.get_option("max_content", 1.0);
+  double delta = (max_x - min_x) * delta_rel;
 
+  region_ids.clear();
+  composition.clear();
+
+  ID first_id = _mesh_region_info->next_id();
+  set<ID> used_ids;
+
+  srand(time(NULL));
+
+  MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
+  const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
+
+  for ( ; el != el_end; ++el)
+  {
+    Elem* elem = *el;
+    ID id = elem->subdomain_id();
+
+    double rnd = static_cast<double>(rand()) / RAND_MAX;
+    int offset = floor(rnd / delta_rel);
+
+    id = first_id + offset;
+    elem->subdomain_id() = id;
+    used_ids.insert(offset);
+  }
+
+  set<ID>::iterator it(used_ids.begin());
+  const set<ID>::iterator end(used_ids.end());
+
+  for ( ; it != end; ++it)
+  {
+    ID id = *it;
+    _mesh_region_info->add_id(first_id + id);
+    region_ids.push_back(first_id + id);
+    composition.push_back(id*delta + min_x);
+  }
+}
 
 

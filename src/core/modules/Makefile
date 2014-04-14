@@ -4,7 +4,10 @@
 topdir := ../../..
 
 # we have to compile each module
-subdirs :=  excitons dssc common boltzmann thermal drift-diffusion elasticity maxwell vff negf maxwellabsorption etb 
+subdirs :=  excitons dssc common boltzmann
+subdirs += thermal drift-diffusion elasticity
+subdirs += maxwell vff negf maxwellabsorption etb 
+subdirs += imagereader
 
 include $(topdir)/Make.common
 

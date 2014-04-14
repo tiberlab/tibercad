@@ -381,6 +381,19 @@ class SimulationInterface : public TiberModelObject
     //! Get a pointer to the simulation with ID \c id
     static SimulationInterface* get_simulation(ID id);
 
+    //! Find a simulation/solution ID pair
+    /*
+     * \param simulation the name of the simulation
+     * \param solution the identifier of the solution
+     *
+     * Instead of providing the simulation and solution names in
+     * two strings, it can be given in the first argument as a single
+     * string, using a single dot '.' as divisor.
+     */
+    static std::pair<SimulationInterface*, ID>
+    find_solution_provider(const std::string& simulation,
+        const std::string& solution = "");
+
 
     //! Check if this simulation is initialized
     bool is_initialized(void) const;
