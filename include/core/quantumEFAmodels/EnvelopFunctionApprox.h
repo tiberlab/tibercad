@@ -163,7 +163,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     Occupation,
     EigenEnergyOnMesh,
     eDensity,
-    hDensity
+    hDensity,
+    EnvelopeFunctions
   };
 
   //! interface for temperature acquisition

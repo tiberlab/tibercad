@@ -209,6 +209,7 @@ EnvelopFunctionApprox::do_setup_solution_variables(void)
   else if (dim == 3)
     units = "1/cm^3";
   declare_solution(ProbabilityDensity, NTUPLE, NODES, units);
+  declare_solution(EnvelopeFunctions, NTUPLE, NODES, "");
   add_alias("EigenFunctions", ProbabilityDensity);
   declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV");
   declare_solution(Occupation, NTUPLE, GLOBAL, "");
@@ -303,8 +304,6 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
     // they should all be the same size
     unsigned int n_dofs = phi.size();
 
-    vector<double> prob_dens(np, 0.0);
-
     for (int psi_index = 0; psi_index < number_of_bands; psi_index++)
     {
       dof_map.dof_indices(elem, dof_indices, psi_index);
@@ -330,6 +329,59 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
       }
     }
   }
+
+  if (values.count(EnvelopeFunctions))
+  {
+    unsigned int dim = get_mesh().mesh_dimension();
+    double scale = Constants::bohr_radius * 1e2;
+   if (dim > 1)
+     scale *= Constants::bohr_radius * 1e2;
+   if (dim > 2)
+     scale *= Constants::bohr_radius * 1e2;
+
+    FEType fe_type = system->variable_type(0);
+    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    const vector<vector<Real> >& phi = fe->get_phi();
+
+    fe->reinit(elem, &points);
+
+    DofMap& dof_map = system->get_dof_map();
+    std::vector<unsigned int> dof_indices;
+
+    // number of states
+    const unsigned int num_states = _solution.size();
+    //values[ProbabilityDensity] = vector<double>(np * num_states, 0.0);
+    values[EnvelopeFunctions].clear();
+    values[EnvelopeFunctions].resize(np * num_states * 2 * number_of_bands, 0.0);
+
+    // they should all be the same size
+    unsigned int n_dofs = phi.size();
+
+    for (int psi_index = 0; psi_index < number_of_bands; psi_index++)
+    {
+      dof_map.dof_indices(elem, dof_indices, psi_index);
+
+      for (unsigned int n = 0; n < np; n++)
+      {
+        for (unsigned int sn = 0; sn < num_states; sn++)
+        {
+          Complex value(0.0);
+
+          // interpolate
+          for (unsigned int i = 0; i < n_dofs; i++)
+          {
+            value += phi[i][n] * _solution[sn].eigen_vector[dof_indices[i]];
+          }
+
+          // the number of components should be set already to the right number
+          values[EnvelopeFunctions][num_states * n + sn] = real(value) / scale;
+        }
+      }
+    }
+  }
+
+
+
 
   if (values.count(EigenEnergyOnMesh))
   {
@@ -912,6 +964,7 @@ EnvelopFunctionApprox::redeclare_solutions(void)
   else if (dim == 3)
     units = "1/cm^3";
   declare_solution(ProbabilityDensity, NTUPLE, NODES, units, num_states);
+  declare_solution(EnvelopeFunctions, NTUPLE, NODES, "", num_states * 2 * number_of_bands);
   declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
   declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
   declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
@@ -2617,18 +2670,8 @@ void EnvelopFunctionApprox::solve_bulk(void)
   }
 
 
-   // we have to redeclare the solution variables to adjust the number
-   // of eigenstates
-   const unsigned int num_states = _solution.size();
-   unsigned int dim = get_mesh().mesh_dimension();
-   string units("1/cm");
-   if (dim == 2)
-     units = "1/cm^2";
-   else if (dim == 3)
-     units = "1/cm^3";
-   declare_solution(ProbabilityDensity, NTUPLE, NODES, units, num_states);
-   declare_solution(EigenEnergy, NTUPLE, GLOBAL, "eV", num_states);
-   declare_solution(Occupation, NTUPLE, GLOBAL, "", num_states);
-   declare_solution(EigenEnergyOnMesh, NTUPLE, NODES, "eV", num_states);
+  // we have to redeclare the solution variables to adjust the number
+  // of eigenstates
+  redeclare_solutions();
 
 }
