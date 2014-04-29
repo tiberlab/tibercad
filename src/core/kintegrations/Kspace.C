@@ -685,11 +685,11 @@ void Kspace::do_init() throw (InitFailedException)
   else
     build_k_grid();
 
-  GmshIO(*kmesh).write("kspace_as_built.msh");
+  //GmshIO(*kmesh).write("kspace_as_built.msh");
   // transform the mesh to real units
   rotate_mesh();
 
-  GmshIO(*kmesh).write("kspace.msh");
+  //GmshIO(*kmesh).write("kspace.msh");
 
 }
 
