@@ -424,56 +424,60 @@ void Optics::calculate_for_k_point(const Point& k_point,
                                    double& integrated_quantity)
 {
 
+  short k_dim = _k_integration->get_k_space_dimension();
+  if (plot_solution("EigenStates_k_0"))
+    TiberCad::prepend_to_filename_suffix("k_0");
+  else
+  {
+    ostringstream os;
+    os << "k_(";
+    switch (k_dim)
+    {
+      case 3:
+        os << k_point(0) << ",";
+
+      case 2:
+        os << k_point(1) << ",";
+
+      case 1:
+        os << k_point(2);
+        break;
+
+      default:
+        os << "0";
+        break;
+    }
+    os << ")";
+    TiberCad::prepend_to_filename_suffix(os.str());
+  }
 
   if (!get_option("skip_solve", false))
   {
-    short k_dim = _k_integration->get_k_space_dimension();
-
     _initial_state_model->solve_for_kpoint(k_point); //calculate eigenstates
-
-    if (plot_solution("EigenStates_k_0"))
-        TiberCad::prepend_to_filename_suffix("k_0");
-    else
-    {
-      ostringstream os;
-      os << "k_(";
-      switch (k_dim)
-      {
-        case 3:
-          os << k_point(0) << ",";
-
-        case 2:
-          os << k_point(1) << ",";
-
-        case 1:
-          os << k_point(2);
-          break;
-
-        default:
-          os << "0";
-          break;
-      }
-      os << ")";
-      TiberCad::prepend_to_filename_suffix(os.str());
-    }
-
-    if ((plot_solution("EigenStates_k_0") && (k_point.size() < 1e-6)) ||
-        plot_solution("EigenStates"))
-      _initial_state_model->plot();
 
     if( _initial_state_model != _final_state_model)
     {
       _final_state_model->solve_for_kpoint(k_point); //calculate eigenstates
-      if ((plot_solution("EigenStates_k_0") && (k_point.size() < 1e-6)) ||
-          plot_solution("EigenStates"))
-          _final_state_model->plot();
     }
-    TiberCad::drop_first_filename_suffix();
   }
 
   set_k_point(k_point);
 
   compute_matrix_elements(); //calculate matrix elements of P operator
+
+
+  if ((plot_solution("EigenStates_k_0") && (k_point.size() < 1e-6)) ||
+      plot_solution("EigenStates"))
+  {
+    _initial_state_model->plot();
+    if( _initial_state_model != _final_state_model)
+      _final_state_model->plot();
+
+    plot_globaldata();
+  }
+
+  TiberCad::drop_first_filename_suffix();
+
 
   if (norm(_opt.polariz) == 0.0)
   {
@@ -642,7 +646,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 
   int verbose = SimulationOptions::verbose();
 
-  if (verbose > 0)
+  if (verbose > 3)
   {
     ostringstream os;
     os << "calculation of optical spectrum, e = ("
