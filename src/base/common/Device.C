@@ -345,6 +345,8 @@ Device::setup_regions(void)
         set_material(mat, vector<ID>(1, reg_ids[i]), os.str());
       }
 
+      set_cluster(data.get_name(), reg_ids);
+
       // backup solution for pathologic cases
       if (reg_ids.empty())
       {
