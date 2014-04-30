@@ -732,17 +732,17 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
         if (_structure_basis[nn[j]].get_specie() == sp)
           same_species += 1;
 
-        const std::vector<unsigned int>& nn2 = bm[neigh[j]];
+        const std::vector<unsigned int>& nn2 = bm[nn[j]];
         for (unsigned int ii = 0; ii < nn2.size(); ++ii)
         {
-          const std::vector<unsigned int>& nn3 = bm[neigh[ii]];
-          for (unsigned int jj = 0; jj < nn2.size(); ++jj)
+          const std::vector<unsigned int>& nn3 = bm[nn2[ii]];
+          for (unsigned int jj = 0; jj < nn3.size(); ++jj)
           {
-            if (!visited.count(nn[jj]))
+            if (!visited.count(nn3[jj]))
             {
               n_neigh++;
-              visited.insert(nn[jj]);
-              if (_structure_basis[nn[jj]].get_specie() == sp)
+              visited.insert(nn3[jj]);
+              if (_structure_basis[nn3[jj]].get_specie() == sp)
                 same_species++;
             }
           }
@@ -751,9 +751,11 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
     }
   }
 
-  n_neigh = 13;
+  //n_neigh = 13;
   double ratio = static_cast<double>(same_species) / n_neigh;
   ratio = (ratio < 1) ? ratio : 1;
+  ratio = (1 - cos(ratio*M_PI));
+  ratio *= ratio;
   //ratio = 1 - (1 - ratio)*(1 - ratio)*(1 - ratio);
   return ratio;
 }
