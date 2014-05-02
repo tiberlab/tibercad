@@ -706,6 +706,8 @@ AtomisticGenerator::build_random_alloy()
     }
     Messages::newline();
   }
+
+  extract_statistics();
 }
 
 
@@ -760,6 +762,29 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
   //ratio *= ratio;
   return ratio;
 }
+
+
+
+
+
+void
+AtomisticGenerator::extract_statistics(void)
+{
+  if (!_as->get_options().get_option("extract_alloy_statistics", false))
+    return;
+
+  const BondMap bm = *_bondmap;
+  const BondMap::Translation& translation = bm.get_translation();
+
+  for (unsigned int i = 0; i < _structure_basis.size(); i++)
+  {
+    Atom& atm = _structure_basis[i];
+    //_structure_basis[bm[i][j]].get_ttype_position() + translation[i][j]
+    //                  - _structure_basis[i].get_ttype_position();
+  }
+}
+
+
 
 
 void AtomisticGenerator::make_supercell(double l1, double l2, double l3){

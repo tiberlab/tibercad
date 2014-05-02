@@ -225,10 +225,14 @@ private:
   //Common 0d,1d,2d,3d init operations
   void init_commons();
 
-  //Build random alloy structure
+  //! Build random alloy structure
   void build_random_alloy(void);
 
+  //! Calculate environment dependent substitution probability
   double substitution_probability(size_t id, const Specie& sp);
+
+  //! extract alloy distribution statistics
+  void extract_statistics(void);
 
   //! BulkCrystal of the reference material
   BulkCrystal* _bulk;
