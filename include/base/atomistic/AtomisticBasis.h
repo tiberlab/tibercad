@@ -30,7 +30,9 @@ class AtomisticBasis
   const BondMap& get_bond_map(void) const;
     
   //! Get neighbor periodic image translation
-  //! (same indexing as bondmap)
+  /*!
+   * (same indexing as bondmap)
+   */
   const BondMap::Translation& get_neighbor_translation(void) const;
 
   //! Return a const reference to structure atoms
@@ -46,7 +48,9 @@ class AtomisticBasis
   void set_structure_atoms(const std::vector<Atom>& atoms);
 
   //! Get periodicity vectors for the structure:
-  //[x1, y1, z1, x2, y2, z2, x3, y3, z3]
+  /*!
+   * [x1, y1, z1, x2, y2, z2, x3, y3, z3]
+   */
   const std::vector<double>& get_lattice_vectors(void) const;
 
   void get_lattice_vectors(RealVectorValue& a, RealVectorValue& b, RealVectorValue& c) const;
@@ -107,16 +111,18 @@ class AtomisticBasis
 
   protected:
  
-  //! Now we don't allow direct declaration of AtomisticBasis,
-  //! maybe this will change in the future
+  /*! Now we don't allow direct declaration of AtomisticBasis,
+   * maybe this will change in the future
+   */
   AtomisticBasis(void);
 
   //! Build bond map
   void build_bond_map(void);
 
   //! Refresh (or build) information as bondmap, number of atoms etc.
-  //! This can be needed if we move atoms and the bondmap change, or
-  //! we change total number of atoms
+  /*! This can be needed if we move atoms and the bondmap change, or
+   * we change total number of atoms
+   */
   void refresh(void);
     
   //! Bond Map object pointer
@@ -128,11 +134,11 @@ class AtomisticBasis
   //! Vector containing structure atoms 
   std::vector<Atom>  _atoms;
   
-  //! Periodicity vectors in canonical basis
   //TODO: this should be changed back in Tensor2Gen 
   //or all the other Tensor2Gen should be changed.
   //There's no reason why we should use two different 
   //representations
+  //! Periodicity vectors in canonical basis
   std::vector<double> _lattice_vectors;
   
   //! Number of atoms in structure
