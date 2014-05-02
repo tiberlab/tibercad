@@ -208,13 +208,13 @@ AtomisticGenerator::do_init()
   // remove unflagged atoms
   remove_atoms();
 
-  // assign random-alloy species (only cations for the moment)
-  if (_as->is_random_alloy())
-    build_random_alloy();
-
   // delete generator bondmap
   delete _bondmap;
   _bondmap = NULL;
+
+  // assign random-alloy species (only cations for the moment)
+  if (_as->is_random_alloy())
+    build_random_alloy();
 
 };
 
@@ -714,8 +714,8 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 {
   const BondMap& bm = *_bondmap;
 
-  int same_species = 1;
-  int n_neigh = 1;
+  int same_species = 0;
+  int n_neigh = 0;
 
   std::set<size_t> visited;
   visited.insert(id);
@@ -731,32 +731,33 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
         visited.insert(nn[j]);
         if (_structure_basis[nn[j]].get_specie() == sp)
           same_species += 1;
+      }
 
-        const std::vector<unsigned int>& nn2 = bm[nn[j]];
-        for (unsigned int ii = 0; ii < nn2.size(); ++ii)
+      const std::vector<unsigned int>& nn2 = bm[nn[j]];
+      for (unsigned int ii = 0; ii < nn2.size(); ++ii)
+      {
+        const std::vector<unsigned int>& nn3 = bm[nn2[ii]];
+        for (unsigned int jj = 0; jj < nn3.size(); ++jj)
         {
-          const std::vector<unsigned int>& nn3 = bm[nn2[ii]];
-          for (unsigned int jj = 0; jj < nn3.size(); ++jj)
+          if (!visited.count(nn3[jj]))
           {
-            if (!visited.count(nn3[jj]))
-            {
-              n_neigh++;
-              visited.insert(nn3[jj]);
-              if (_structure_basis[nn3[jj]].get_specie() == sp)
-                same_species++;
-            }
+            n_neigh++;
+            visited.insert(nn3[jj]);
+            if (_structure_basis[nn3[jj]].get_specie() == sp)
+              same_species++;
           }
         }
       }
     }
   }
 
-  //n_neigh = 13;
+  // for zb, wz:
+  // # nn = 12
+  // # nn2 = 56
+  if (n_neigh == 0) n_neigh = 1;
   double ratio = static_cast<double>(same_species) / n_neigh;
-  ratio = (ratio < 1) ? ratio : 1;
   ratio = (1 - cos(ratio*M_PI));
-  ratio *= ratio;
-  //ratio = 1 - (1 - ratio)*(1 - ratio)*(1 - ratio);
+  //ratio *= ratio;
   return ratio;
 }
 
