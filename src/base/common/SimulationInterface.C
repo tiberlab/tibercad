@@ -24,6 +24,7 @@
 #include "Messages.h"
 #include "AtomisticStructure.h"
 #include "GridCells.h"
+#include "MeshUtils.h"
 
 // LibMesh includes
 #include "system.h"
@@ -1037,6 +1038,7 @@ SimulationInterface::plot(void)
     get_environment().prepare_for_solve();
 
   do_plot();
+  project_on_tensor_grid();
 }
 
 
@@ -2793,3 +2795,192 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
 
 }
 
+
+
+
+void
+SimulationInterface::project_on_tensor_grid(void)
+{
+  if (!get_options().has_submodel("Projection"))
+    return;
+
+  Messages msg;
+  msg.info("Project solutions on tensor grid");
+  msg.indent();
+
+  const ModelOptions& opts = (get_options().submodels_begin("Projection"))->second;
+
+  if (get_mesh().mesh_dimension() != 2)
+  {
+    Messages::warning("Projection is implemented only for 2D meshes.");
+    return;
+  }
+
+  string format = opts.get_option("format", "ascii");
+  if (format != "ascii")
+  {
+    Messages::warning("Projection is implemented only for ascii format.");
+    return;
+  }
+
+  IDSet sol_ids;
+  vector<string> solutionnames;
+  opts.get_option("solutions", solutionnames);
+  for (int i = 0; i < solutionnames.size(); ++i)
+  {
+    sol_ids.insert(get_solution_id(solutionnames[i]));
+  }
+
+  if (sol_ids.empty())
+    sol_ids = get_plotvariable_ids();
+
+
+
+  // get the bounding box
+
+  MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+
+  Point pmax(std::numeric_limits<double>::min(), std::numeric_limits<double>::min(), 0);
+  Point pmin(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0);
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+    {
+      const Point& p = elem->point(i);
+      if ((p(0) < pmin(0)) && (p(1) < pmin(1)))
+        pmin = p;
+      else if ((p(0) > pmax(0)) && (p(1) > pmax(1)))
+        pmax = p;
+    }
+  }
+
+  ostringstream os;
+  os << "Bounding box: (" << pmin(0) << ", " << pmin(1) << ") - ("
+      << pmax(0) << ", " << pmax(1) << ")\n";
+  msg.info(os.str());
+  pmin(0) += 1e-11;
+  pmin(1) += 1e-11;
+  pmax(0) -= 1e-11;
+  pmax(1) -= 1e-11;
+
+  double dx = opts.get_option("spacing", get_mesh_units());
+  dx /= get_mesh_units();
+  int Nx = ceil((pmax(0) - pmin(0)) / dx);
+  int Ny = ceil((pmax(1) - pmin(1)) / dx);
+
+
+  string basename = get_output_directory() + "/" + get_output_filename() + "_projected_";
+  string extension = ".dat";
+
+  // to get solutions
+  map<ID, vector<double>> solutions;
+
+  // the file streams
+  map<ID, vector<ofstream*>> fstreams;
+
+  IDSet::const_iterator idit(sol_ids.begin());
+  IDSet::const_iterator idend(sol_ids.end());
+
+  for ( ; idit != idend; ++idit)
+  {
+    const SolutionDescriptor& descr = get_solution_descriptor(*idit);
+    if (descr.on_mesh())
+    {
+      solutions[*idit].clear();
+      int ncomp = descr.n_components();
+      fstreams[*idit].resize(ncomp, NULL);
+
+      vector<string> comp(ncomp, "");
+      if (ncomp == 3)
+      {
+        comp[0] = "_x";
+        comp[1] = "_y";
+        comp[2] = "_z";
+      }
+      else if (ncomp == 6)
+      {
+        comp[0] = "_xx";
+        comp[1] = "_yy";
+        comp[2] = "_zz";
+        comp[3] = "_xy";
+        comp[4] = "_yz";
+        comp[5] = "_xz";
+      }
+      else
+      {
+        for (int i = 0; i < ncomp; ++i)
+        {
+          ostringstream os;
+          os << "_" << i;
+          comp[i] = os.str();
+        }
+      }
+
+      for (int i = 0; i < ncomp; ++i)
+      {
+        fstreams[*idit][i] = new ofstream(basename + descr.name() + comp[i] + extension);
+        (*fstreams[*idit][i]) << "% " << get_name() << " " << descr.name() << comp[i] <<
+            "\n% pmin = (" << pmin(0) << ", " << pmin(1) <<
+            "), dx = " << dx*get_mesh_units() << " Nx = " << Nx << " Ny = " << Ny << endl;
+      }
+    }
+  }
+
+
+  map<ID, vector<double>>::iterator mit(solutions.begin());
+  map<ID, vector<double>>::iterator mend(solutions.end());
+
+  for (unsigned int j = 0; j < Ny; ++j)
+  {
+    for (unsigned int i = 0; i < Nx; ++i)
+    {
+      Point p(pmin(0) + i * dx, pmin(1) + j * dx, 0);
+      const Elem* elem = MeshUtils::search_element(&get_mesh(), p);
+
+      if ((elem == NULL) || !get_solution(elem, solutions, vector<Point>(1, p)))
+      {
+        for (mit = solutions.begin(); mit != mend; ++mit)
+        {
+          int ncomp = get_solution_descriptor(mit->first).n_components();
+          (mit->second).clear();
+          (mit->second).resize(ncomp, 0.0);
+        }
+      }
+
+      for (mit = solutions.begin(); mit != mend; ++mit)
+      {
+        int ncomp = get_solution_descriptor(mit->first).n_components();
+        for (unsigned int c = 0; c < ncomp; ++c)
+        {
+          (*fstreams[mit->first][c]) << (mit->second)[c] << " ";
+        }
+      }
+    }
+
+    for (mit = solutions.begin(); mit != mend; ++mit)
+    {
+      int ncomp = get_solution_descriptor(mit->first).n_components();
+      for (unsigned int c = 0; c < ncomp; ++c)
+      {
+        (*fstreams[mit->first][c]) << endl;
+      }
+    }
+  }
+
+
+  for ( ; idit != idend; ++idit)
+  {
+    const SolutionDescriptor& descr = get_solution_descriptor(*idit);
+    if (descr.on_mesh())
+    {
+      for (int i = 0; i < descr.n_components(); ++i)
+      {
+        fstreams[*idit][i]->flush();
+        fstreams[*idit][i]->close();
+        delete fstreams[*idit][i];
+      }
+    }
+  }
+}

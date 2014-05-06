@@ -261,7 +261,7 @@ MeshUtils::GridMapper::setup(void)
     const Elem* elem = *it;
 
     // only if the subdomain ID is in the required subset we proceed
-    if (_regids.empty() || !_regids.count(elem->subdomain_id()))
+    if (!_regids.empty() && !_regids.count(elem->subdomain_id()))
       continue;
 
     // we decide whether an element touches a certain tensor grid element

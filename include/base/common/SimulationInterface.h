@@ -395,6 +395,9 @@ class SimulationInterface : public TiberModelObject
         const std::string& solution = "");
 
 
+
+
+
     //! Check if this simulation is initialized
     bool is_initialized(void) const;
 
@@ -949,6 +952,10 @@ class SimulationInterface : public TiberModelObject
      * cases and should then be reimplemented.
      */
     virtual void plot_globaldata(void);
+
+
+    //! Project on a tensor grid
+    void project_on_tensor_grid(void);
 
 
     //! Print simulation info
