@@ -8,6 +8,9 @@ New features:
 	- EFA can now treat electrons and holes in a unified way
 	- k-space is measured in 1/nm
 	- can now define a default for doping in Device block
+	- can use Projection block in modules to project solutions on a
+	  regular tensor grid
+	- atomistic structure can calculate alloy statistics
 
 Bug fixes:
 
