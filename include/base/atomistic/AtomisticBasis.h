@@ -10,6 +10,8 @@
 #include "InitFailedException.h"
 #include "BondMap.h"
 
+#include "HashSet.h"
+
 //STD library includes
 #include <set>
 //-------------------
@@ -22,6 +24,9 @@ typedef VectorValue<double> RealVectorValue;
 class AtomisticBasis
 {
   public:
+
+  //! An iterator to iterate over atoms in neighbor ordered way
+  class neighbor_iterator;
 
   //! Virtual destructor, in case of cast of derived class 
   virtual ~AtomisticBasis();
@@ -109,6 +114,14 @@ class AtomisticBasis
 
   const Atom& operator[](unsigned int i) const;
 
+
+  //! Get the neighbour iterator for an atom
+  neighbor_iterator neighbors_begin(unsigned int index, double cutoff = 1.0);
+
+  //! Get the past-the-end iterator for an atom
+  neighbor_iterator neighbors_end(unsigned int index, double cutoff = 1.0);
+
+
   protected:
  
   /*! Now we don't allow direct declaration of AtomisticBasis,
@@ -152,6 +165,61 @@ class AtomisticBasis
   
   private:
 
+
+  public:
+
+  class neighbor_iterator
+  {
+    public:
+    neighbor_iterator(const AtomisticBasis& structure,
+        unsigned int start, double cutoff = 10, bool begin = true);
+
+    neighbor_iterator(const neighbor_iterator& rhs);
+
+    neighbor_iterator& operator++(void);
+
+
+    bool operator==(const neighbor_iterator& rhs)
+    {
+      bool equal = &_structure == &rhs._structure;
+      equal &= _start == rhs._start;
+      equal &= _current == rhs._current;
+      equal &= _counter == rhs._counter;
+      return(equal);
+    }
+
+    bool operator!=(const neighbor_iterator& rhs)
+    {
+      return(!(*this == rhs));
+    }
+
+    const Atom* operator*(void)
+    {
+      const Atom* at =
+          (_current < _structure.get_N_atoms()) ?
+              &_structure.get_structure_atom(_current) : NULL;
+
+      return(at);
+    }
+
+
+    private:
+
+    neighbor_iterator& operator=(const neighbor_iterator& rhs);
+
+    const AtomisticBasis& _structure;
+    unsigned int _start;
+    unsigned int _current;
+    unsigned int _counter;
+
+    double _cutoff;
+
+    HashSet<unsigned int>::Type _visited;
+    HashSet<unsigned int>::Type _setA;
+    HashSet<unsigned int>::Type _setB;
+    HashSet<unsigned int>::Type::iterator _itA;
+
+  };
 };
 
 

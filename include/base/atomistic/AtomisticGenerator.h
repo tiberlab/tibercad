@@ -231,8 +231,6 @@ private:
   //! Calculate environment dependent substitution probability
   double substitution_probability(size_t id, const Specie& sp);
 
-  //! extract alloy distribution statistics
-  void extract_statistics(void);
 
   //! BulkCrystal of the reference material
   BulkCrystal* _bulk;

@@ -93,6 +93,15 @@ public:
                                           bool band_offsets = false);
 
 
+  //! extract alloy distribution statistics
+  /*!
+   * \param stats the map to put statistics in
+   * \param regions the regions to be used
+   * \param cutoff the cutoff radius in nm
+   */
+  void extract_statistics(std::map<Specie, std::vector<unsigned int>>& stats,
+      std::set<ID>& regions, double cutoff = 1.0);
+
   // Get element->atoms map
   //std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
   

@@ -10,6 +10,11 @@
 #include<sstream>
 //-------------------
 
+
+using namespace std;
+
+
+
 AtomisticBasis::~AtomisticBasis(void)
 {
   if (_bondmap != NULL) delete _bondmap;
@@ -272,3 +277,110 @@ AtomisticBasis::print_gen(const std::string& path) const
   file.close();
 
 }
+
+
+
+
+
+
+AtomisticBasis::neighbor_iterator::neighbor_iterator(const AtomisticBasis& structure,
+    unsigned int start, double cutoff, bool begin)
+: _structure(structure),
+  _start(start),
+  _current(start),
+  _counter(0),
+  _cutoff(cutoff)
+{
+  if (begin)
+  {
+    _visited.insert(_start);
+    const std::vector<unsigned int>& curr = _structure.get_bond_map()[_current];
+    for (unsigned int i = 0; i < curr.size(); i++)
+      _setA.insert(curr[i]);
+
+    _itA = _setA.begin();
+  }
+  else
+  {
+    _current = _structure.get_N_atoms();
+    _counter = _current;
+  }
+}
+
+
+AtomisticBasis::neighbor_iterator::neighbor_iterator(const neighbor_iterator& rhs)
+: _structure(rhs._structure),
+  _start(rhs._start),
+  _current(rhs._current),
+  _counter(rhs._counter),
+  _cutoff(rhs._cutoff),
+  _visited(rhs._visited),
+  _setA(rhs._setA),
+  _setB(rhs._setB),
+  _itA(rhs._itA)
+{}
+
+
+AtomisticBasis::neighbor_iterator&
+AtomisticBasis::neighbor_iterator::operator++(void)
+{
+  if (_counter < _structure.get_N_atoms())
+  {
+    if (_itA != _setA.end())
+    {
+      _current = *_itA;
+      _visited.insert(_current);
+
+      const vector<unsigned int>& nn = _structure.get_bond_map()[_current];
+      for (unsigned int i = 0; i < nn.size(); ++i)
+      {
+        if (!_visited.count(nn[i]))
+        {
+          const BondMap::Translation& nt = _structure.get_neighbor_translation();
+          double d = norm(_structure.get_structure_atom(_start).get_ttype_position()
+              - _structure.get_structure_atom(nn[i]).get_ttype_position());
+              //- nt[_current][nn[i]]);
+
+          if (d < _cutoff)
+            _setB.insert(nn[i]);
+        }
+
+      }
+      ++_itA;
+      ++_counter;
+    }
+    else
+    {
+      if (_setB.empty())
+      {
+        _current = _structure.get_N_atoms();
+        _counter = _current;
+      }
+      else
+      {
+        _setA.swap(_setB);
+        _itA = _setA.begin();
+        _setB.clear();
+
+        ++(*this);
+      }
+    }
+  }
+  return *this;
+}
+
+AtomisticBasis::neighbor_iterator
+AtomisticBasis::neighbors_begin(unsigned int index, double cutoff)
+{
+  return neighbor_iterator(*this, index, 10 * cutoff);
+}
+
+AtomisticBasis::neighbor_iterator
+AtomisticBasis::neighbors_end(unsigned int index, double cutoff)
+{
+  return neighbor_iterator(*this, index, 10 * cutoff, false);
+}
+
+
+
+

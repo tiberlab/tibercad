@@ -69,7 +69,7 @@ AtomisticStructure::create()
 AtomisticStructure*
 AtomisticStructure::create(const AtomisticStructure& as)
 {
-  AtomisticStructure* st =  NULL;
+  AtomisticStructure* st = NULL;
   st = new AtomisticStructure();
 
   *st = as;
@@ -178,7 +178,56 @@ AtomisticStructure::init(const std::string& name,
       Messages::info("Output structure(s)");
       print_driver();
       Messages::newline();
-      Messages::info("Atomistic structure build time: "+tt.elapsed_string());     
+      Messages::info("Atomistic structure build time: "+tt.elapsed_string());
+      map<Specie, vector<unsigned int>> stats;
+
+
+      if (_options.get_option("extract_alloy_statistics", false))
+      {
+
+        ofstream of(TiberCad::get_output_dir() + "/" + this->get_name() +
+            "_statistics.dat");
+
+        extract_statistics(stats, this->_IDset);
+
+        of << "% ";
+
+        int NN = 0;
+        map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
+        map<Specie, vector<unsigned int>>::iterator mend(stats.end());
+        for ( ; mit != mend; ++mit)
+        {
+          of << mit->first << "  ";
+          NN = (mit->second).size();
+        }
+        of << "\n";
+
+        vector<unsigned int> sums(NN, 0);
+        unsigned int max = 0;
+        for (int i = 0; i < NN; ++i)
+        {
+          mit = stats.begin();
+          for ( ; mit != mend; ++mit)
+            sums[i] += (mit->second)[i];
+
+          if (sums[i] > max)
+            max = sums[i];
+        }
+
+        for (int i = 0; i < NN; ++i)
+        {
+          if (sums[i] >= 0.95*max)
+          {
+            mit = stats.begin();
+            for ( ; mit != mend; ++mit)
+              of << (mit->second)[i] << " ";
+            of << "\n";
+          }
+        }
+
+      }
+
+
     }
 
   else
@@ -1556,3 +1605,62 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh) const
 
 
 }
+
+
+
+
+
+void
+AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
+    set<ID>& regions, double cutoff)
+{
+
+  cutoff = _options.get_option("control_volume_radius", cutoff);
+
+  unsigned int ref_atom = _options.get_option("reference_atom", 1);
+
+  for (unsigned int i = 0; i < get_N_atoms(); i++)
+  {
+    const Atom& atm = get_structure_atom(i);
+    ID subdomain = atm.get_region_ID();
+
+
+    if ((atm.get_label() == ref_atom) && regions.count(subdomain))
+    {
+      unsigned int counter = 0;
+      unsigned int total = 1;
+
+      if (!stats.count(atm.get_specie()))
+      {
+        stats[atm.get_specie()];
+        stats[atm.get_specie()].resize((stats.begin()->second).size(), 0);
+      }
+
+      map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
+      map<Specie, vector<unsigned int>>::iterator mend(stats.end());
+      for ( ; mit != mend; ++mit)
+        (mit->second).push_back(0);
+
+      stats[atm.get_specie()].back() += 1;
+
+      neighbor_iterator it(neighbors_begin(i, cutoff));
+      neighbor_iterator end(neighbors_end(i));
+      for ( ; it != end; ++it)
+      {
+        const Atom& neigh = *(*it);
+
+        if (!regions.count(neigh.get_region_ID()))
+            continue;
+
+        if (!stats.count(neigh.get_specie()))
+        {
+          stats[neigh.get_specie()];
+          stats[neigh.get_specie()].resize(stats[atm.get_specie()].size(), 0);
+        }
+
+        stats[neigh.get_specie()].back() += 1;
+      }
+    }
+  }
+}
+
