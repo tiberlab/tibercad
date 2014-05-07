@@ -1496,10 +1496,13 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     // calculate the index in the final solution structure
     int index = static_cast<int>(opt.num_hl_states + i) - first_el_index;
     if (ev[i].particle == "hl")
-      index = static_cast<int>(opt.num_hl_states) - i - 1;
+      index = i;
 
-    if ((index < 0) || (index >= n_states))
+    if (((ev[i].particle == "hl") && (index >= first_el_index)) ||
+        ((ev[i].particle == "el") && (index < first_el_index)) ||
+        ((index < 0) || (index >= n_states)))
         continue;
+
 
     // we need a small delta to decide if two states may be degenerate
     // TODO adjust it automatically
@@ -1533,20 +1536,20 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     }
     else // if (ev[i].particle == "hl")
     {
-      while ((index >= 0) &&
+      while ((index < static_cast<int>(opt.num_hl_states)) &&
              (_solution[index].eigen_vector.size() > 0))
       {
-        index--;
+        index++;
       }
 
-      if (index < (static_cast<int>(opt.num_hl_states) - 1))
+      if (index > 0)
       {
-        if ((index < 0) ||
-            (ev[i].energy > _solution[index + 1].eigen_energy + delta)) // go to the next state
+        if ((index >= static_cast<int>(opt.num_hl_states)) ||
+            (ev[i].energy > _solution[index - 1].eigen_energy + delta)) // go to the next state
           continue;
 
 
-        if (ev[i].energy > _solution[index + 1].eigen_energy - delta)
+        if (ev[i].energy > _solution[index - 1].eigen_energy - delta)
         {
           // we may have found a degenerate eigenvalue
           check_linear_dependency = true;
@@ -1621,8 +1624,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
       vector<Complex> tempvec(_solution[index].eigen_vector);
 
       //cerr << "orthogonality (" << index << ") :";
-      int inc = (_solution[index].particle == "el") ? -1 : 1;
-      int ind = index + inc;
+      int ind = index - 1;
 
       while ((ind >= 0) && (ind < n_states))
       {
@@ -1637,7 +1639,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
         for (size_t j = 0; j < number_of_all_dofs; j++)
           tempvec[j] -= alpha * _solution[ind].eigen_vector[j];
 
-        ind += inc;
+        ind--;
       }
       //cerr << "\n";
 
