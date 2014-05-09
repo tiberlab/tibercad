@@ -792,6 +792,22 @@ void EnvelopFunctionApprox::parse_options()
 
 
 
+void EnvelopFunctionApprox::do_print_info(void)
+{
+   Messages m;
+   ostringstream os;
+
+   os << "Number of bands: " << get_number_of_bands();
+   m.info(os.str());
+
+   os.str("");
+   os << "Degeneracy: " << opt.degeneracy;
+   m.info(os.str());
+   m.newline();
+
+}
+
+
 //===================================================//
 void EnvelopFunctionApprox::do_init( )
 {
@@ -2395,8 +2411,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
   }
 
-  unsigned int start = (opt.num_hl_states > 0) ? 1 : 0;
-  unsigned int stop  = (opt.num_el_states > 0) ? num_states - 1 : num_states;
+  unsigned int start = 0;
+  unsigned int stop  = num_states - 1;
 
   // this is for the length scaling, EFA uses Bohr radii internally
   double a_B =  Constants::bohr_radius;
