@@ -217,8 +217,7 @@ void Optics::do_init()
 
  // Kintegration options ----------------------------------------------------------
 
- if (get_options().has_submodel("k_integration")) 
-      init_k_space_integration();
+  init_k_space_integration();
 
 }
 
@@ -229,9 +228,16 @@ void Optics::init_k_space_integration(void)
 
   // maybe this stuff should be taken from the intial/final state models?
 
-   ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration"));
 
-   ModelOptions& kopts = it->second;
+   ModelOptions kopts;
+
+   if (get_options().has_submodel("k_integration"))
+   {
+     ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration"));
+     kopts = it->second;
+   }
+   else
+     kopts.set_option("gamma_point_calculation", true);
    
    kopts.set_option("mesh_units", get_mesh_units());
    int k_dim = 3 - get_mesh().mesh_dimension();
