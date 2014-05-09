@@ -262,7 +262,16 @@ ParticleDensity::quantum_density(void)
         if (_charge < 0) // electron
           continuum = max(continuum, tmp[_3D_edge[i]][n - 1]);
         else
-          continuum = max(continuum, tmp[_3D_edge[i]][0]);
+        {
+          double last = tmp[_3D_edge[i]][0];
+          for (int k = 1; k < tmp[_3D_edge[i]].size(); ++k)
+          {
+            if (tmp[_3D_edge[i]][k] > last)
+              break;
+            last = tmp[_3D_edge[i]][k];
+          }
+          continuum = max(continuum, last);
+        }
     }
   }
 
