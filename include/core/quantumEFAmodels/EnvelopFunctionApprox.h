@@ -364,6 +364,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
   virtual void 	do_solve (void);
 
+  virtual void do_print_info(void);
+
   virtual void 	parse_options (void);
 
   //virtual void do_plot(void);
