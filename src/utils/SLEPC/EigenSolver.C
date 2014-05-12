@@ -519,7 +519,7 @@ int EigenSolver::prepare_slepc()
     ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
 //    ierr = EPSCreate(comm ,&eps);CHKERRQ(ierr);
 
-//    ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
+    ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
   }
 
 
@@ -629,8 +629,7 @@ int EigenSolver::init_H_matrix(unsigned int n)
   CHKERRQ(ierr);
 
 
-  //ierr = MatSetFromOptions(A);
-  MatSetType(A, MATAIJ);
+  ierr = MatSetFromOptions(A);
 
 
   CHKERRQ(ierr);
@@ -659,8 +658,7 @@ int EigenSolver::init_S_matrix(unsigned int n)
   CHKERRQ(ierr);
 
 
-  MatSetType(B, MATAIJ);
-  //ierr = MatSetFromOptions(B);
+  ierr = MatSetFromOptions(B);
   CHKERRQ(ierr);
 
 
@@ -699,10 +697,7 @@ int EigenSolver::finalize_S_assembly(void)
 
 int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value_vector)
 {
-  int ierr = 0, rank;
-  //MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-  //if (rank == 0)
-  {
+  int ierr;
   int number_of_columns =  colums.size();
   PetscInt col[number_of_columns];
   PetscScalar value[number_of_columns];
@@ -715,9 +710,10 @@ int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums,
 
 
   ierr = MatSetValues(A,1,&row,number_of_columns,col,value,INSERT_VALUES);
-  CHKERRQ(ierr);
-  }
 
+
+
+  CHKERRQ(ierr);
   return(ierr);
 
 
@@ -727,10 +723,7 @@ int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums,
 
 int EigenSolver::insert_S_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value_vector)
 {
-  int ierr = 0, rank;
-  //MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-  //if (rank == 0)
-  {
+  int ierr;
   int number_of_columns =  colums.size();
   PetscInt col[number_of_columns];
   PetscScalar value[number_of_columns];
@@ -743,9 +736,8 @@ int EigenSolver::insert_S_row( int row, const std::vector<unsigned int>& colums,
 
 
   ierr = MatSetValues(B,1,&row,number_of_columns,col,value,INSERT_VALUES);
-  CHKERRQ(ierr);
-  }
 
+  CHKERRQ(ierr);
   return(ierr);
 }
 //------------------------------------------------------------------------------------//
