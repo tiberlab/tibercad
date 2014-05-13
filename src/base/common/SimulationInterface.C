@@ -2849,10 +2849,16 @@ SimulationInterface::project_on_tensor_grid(void)
     for (unsigned int i = 0; i < elem->n_nodes(); ++i)
     {
       const Point& p = elem->point(i);
-      if ((p(0) < pmin(0)) && (p(1) < pmin(1)))
-        pmin = p;
-      else if ((p(0) > pmax(0)) && (p(1) > pmax(1)))
-        pmax = p;
+      if (p(0) < pmin(0))
+        pmin(0) = p(0);
+      else if (p(0) > pmax(0))
+        pmax(0) = p(0);
+
+      if (p(1) < pmin(1))
+        pmin(1) = p(1);
+      else if (p(1) > pmax(1))
+        pmax(1) = p(1);
+
     }
   }
 
