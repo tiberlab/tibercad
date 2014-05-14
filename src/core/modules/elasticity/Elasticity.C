@@ -423,8 +423,8 @@ Elasticity::get_solution_secure(const Elem* elem,
        // where eps_0 is strain_source, assuming it contains
        // only lattice matching strain
        RealTensor t(1,0,0, 0,1,0, 0,0,1);
-       t -= strain_source + strain_source * strain_source;
-       t = strain * t;
+       t -= strain_source;
+       t = (total_strain - strain_source) * t;
        values[RelativeStrain][6*n] =   t(0,0);
        values[RelativeStrain][6*n+1] = t(1,1);
        values[RelativeStrain][6*n+2] = t(2,2);
