@@ -72,9 +72,11 @@ public:
    *
    * \param mesh the mesh to be created
    * \param labels the atoms inside the basis to include in the mesh
+   * \param keep_node_order if true, the nodes will be ordered in the same way as the atoms
    */
   void create_conformal_grid(UnstructuredMesh& mesh,
-      std::set<unsigned int> labels = std::set<unsigned int>()) const;
+      std::set<unsigned int> labels = std::set<unsigned int>(),
+      bool keep_node_order = false) const;
 
 
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)

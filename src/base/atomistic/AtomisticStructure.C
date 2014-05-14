@@ -265,7 +265,7 @@ AtomisticStructure::init(const std::string& name,
         unsigned int ref_atom = _options.get_option("reference_atom", 1);
         IDSet refatoms;
         refatoms.insert(ref_atom);
-        create_conformal_grid(*mesh, refatoms);
+        create_conformal_grid(*mesh, refatoms, true);
 
         AutoPtr<DataOutput> writer(DataOutput::create(
             _options.get_option("meshdata_format", "vtk")));
@@ -293,11 +293,29 @@ AtomisticStructure::init(const std::string& name,
           }
         }
 
+        IDSet reg_ids;
         IDSet::iterator id_it(_IDset.begin());
         const IDSet::iterator id_end(_IDset.end());
         for ( ; id_it != id_end; ++id_it)
         {
-          const Material* mat = _device->get_material(*id_it);
+          //const Material* mat = _device->get_material(*id_it);
+
+          // we extract statistics only for alloys
+          //if (!mat->is_alloy())
+          //  continue;
+
+          reg_ids.insert(*id_it);
+        }
+
+        map<Specie, vector<unsigned int>> stats;
+        extract_statistics(stats, reg_ids);
+
+        // to keep track of already used nodes
+        set<unsigned int> used_nodes;
+
+        for (id_it = _IDset.begin(); id_it != id_end; ++id_it)
+        {
+          //const Material* mat = _device->get_material(*id_it);
 
           // we extract statistics only for alloys
           //if (!mat->is_alloy())
@@ -306,41 +324,42 @@ AtomisticStructure::init(const std::string& name,
           map<SolutionDescriptor, vector<double>>::iterator solit(solmap.begin());
           const map<SolutionDescriptor, vector<double>>::iterator solend(solmap.end());
           for ( ; solit != solend; ++solit)
-              (solit->second).clear();
-
-
-          IDSet reg_ids;
-          reg_ids.insert(*id_it);
-
-          map<Specie, vector<unsigned int>> stats;
-          extract_statistics(stats, reg_ids);
-
-
-          ID ctr = 0;
-          size_t n = 0; // should be the same for all species
-          map<Specie, vector<unsigned int>>::iterator it(stats.begin());
-          const map<Specie, vector<unsigned int>>::iterator end(stats.end());
-          for ( ; it != end; ++it, ++ctr)
           {
-            SolutionDescriptor& desc = species_to_descr[it->first];
-
-            n = (it->second).size();
-            solmap[desc].resize(n);
-            for (size_t i = 0; i < n; ++i)
-              solmap[desc][i] = (it->second)[i];
-          }
-
-          for (solit = solmap.begin(); solit != solend; ++solit)
-          {
-            if ((solit->second).size() != n)
-              (solit->second).resize(n, 0.0);
+            (solit->second).clear();
+            (solit->second).reserve(mesh->n_nodes());
           }
 
 
+          MeshBase::element_iterator elit(mesh->active_local_elements_begin());
+          const MeshBase::element_iterator elend(mesh->active_local_elements_end());
+          for ( ; elit != elend; ++elit)
+          {
+            const Elem* elem = *elit;
+
+            if (elem->subdomain_id() == *id_it)
+            {
+              for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+              {
+                if (!used_nodes.count(elem->node(n)))
+                {
+                  used_nodes.insert(elem->node(n));
+
+                  map<Specie, vector<unsigned int>>::iterator it(stats.begin());
+                  const map<Specie, vector<unsigned int>>::iterator end(stats.end());
+                  for ( ; it != end; ++it)
+                  {
+                    SolutionDescriptor& desc = species_to_descr[it->first];
+                    // +1 because the first values are the totals !
+                    solmap[desc].push_back((it->second)[elem->node(n) + 1]);
+                  }
+                }
+              }
+            }
+          }
           writer->set_data(solmap, *id_it);
         }
 
-        writer->write(true);
+        writer->write();
       }
 
     }
@@ -1613,8 +1632,11 @@ AtomisticStructure::reorder(const std::vector<unsigned int>& P)
 
 void
 AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
-    set<unsigned int> labels) const
+    set<unsigned int> labels, bool keep_node_order) const
 {
+
+  Messages::info("Creating FEM mesh conforming with the atomistic structure."
+      " This may take some time... ", false);
   mesh.set_mesh_dimension(3);
   const std::vector<Atom>& structure = get_structure_atoms();
 
@@ -1718,8 +1740,9 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
     }
   }
 
-  mesh.prepare_for_use();
+  mesh.prepare_for_use(keep_node_order);
 
+  Messages::info("done");
 
 }
 
