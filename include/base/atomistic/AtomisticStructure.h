@@ -67,7 +67,14 @@ public:
   const Device*  get_device(void) const;
 
   //! Create a grid aligned on the atoms
-  void create_conformal_grid(UnstructuredMesh& mesh) const;
+  /*!
+   * This is tested for tetrahedrically bonded materials (III-V, III-nitrides)
+   *
+   * \param mesh the mesh to be created
+   * \param labels the atoms inside the basis to include in the mesh
+   */
+  void create_conformal_grid(UnstructuredMesh& mesh,
+      std::set<unsigned int> labels = std::set<unsigned int>()) const;
 
 
   //! Get scale factor (from mesh_units to amstrong mesh_units/1e-10)

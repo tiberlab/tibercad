@@ -11,19 +11,20 @@
 #include "Utils.h"
 #include "TiberCad.h"
 #include "Material.h"
+#include "DataOutput.h"
 #include "RuntimeException.h"
 
-
 #include "mesh_tetgen_support.h"
-
+// unfortunately tetgen defines REAL
+#undef REAL
 
 //C++ includes
 //--------------------
 #include <vector>
 #include <set>
-#include<iostream>
-#include<fstream>
-#include<sstream>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include <map>
 //---------------------
 
@@ -179,7 +180,6 @@ AtomisticStructure::init(const std::string& name,
       print_driver();
       Messages::newline();
       Messages::info("Atomistic structure build time: "+tt.elapsed_string());
-      map<Specie, vector<unsigned int>> stats;
 
 
       if (_options.get_option("extract_alloy_statistics", false))
@@ -208,6 +208,8 @@ AtomisticStructure::init(const std::string& name,
 
           IDSet reg_ids;
           reg_ids.insert(*id_it);
+
+          map<Specie, vector<unsigned int>> stats;
           extract_statistics(stats, reg_ids);
 
           of << "% alloy statistics for structure " << get_name() <<
@@ -255,6 +257,91 @@ AtomisticStructure::init(const std::string& name,
         }
       }
 
+      if (_options.get_option("plot_alloy_composition", false))
+      {
+
+        AutoPtr<UnstructuredMesh> mesh(new Mesh(3));
+
+        unsigned int ref_atom = _options.get_option("reference_atom", 1);
+        IDSet refatoms;
+        refatoms.insert(ref_atom);
+        create_conformal_grid(*mesh, refatoms);
+
+        AutoPtr<DataOutput> writer(DataOutput::create(
+            _options.get_option("meshdata_format", "vtk")));
+
+        writer->set_mesh(*mesh);
+        writer->set_output_directory(TiberCad::get_output_dir());
+        writer->set_filename(get_name() + "_alloycomposition");
+
+
+        map<SolutionDescriptor, vector<double>> solmap;
+        map<Specie, SolutionDescriptor> species_to_descr;
+        const vector<string>& atom_types = get_atom_types();
+        unsigned int ctr = 0;
+        for (unsigned int i = 0; i < atom_types.size(); ++i)
+        {
+          Specie sp(atom_types[i]);
+          if (!species_to_descr.count(sp) && !(sp == Specie::H))
+          {
+            SolutionDescriptor desc(atom_types[i], ctr,
+              SolutionDescriptor::REAL, SolutionDescriptor::NODES);
+            solmap[desc].resize(0);
+
+            species_to_descr[sp] = desc;
+            ++ctr;
+          }
+        }
+
+        IDSet::iterator id_it(_IDset.begin());
+        const IDSet::iterator id_end(_IDset.end());
+        for ( ; id_it != id_end; ++id_it)
+        {
+          const Material* mat = _device->get_material(*id_it);
+
+          // we extract statistics only for alloys
+          //if (!mat->is_alloy())
+          //  continue;
+
+          map<SolutionDescriptor, vector<double>>::iterator solit(solmap.begin());
+          const map<SolutionDescriptor, vector<double>>::iterator solend(solmap.end());
+          for ( ; solit != solend; ++solit)
+              (solit->second).clear();
+
+
+          IDSet reg_ids;
+          reg_ids.insert(*id_it);
+
+          map<Specie, vector<unsigned int>> stats;
+          extract_statistics(stats, reg_ids);
+
+
+          ID ctr = 0;
+          size_t n = 0; // should be the same for all species
+          map<Specie, vector<unsigned int>>::iterator it(stats.begin());
+          const map<Specie, vector<unsigned int>>::iterator end(stats.end());
+          for ( ; it != end; ++it, ++ctr)
+          {
+            SolutionDescriptor& desc = species_to_descr[it->first];
+
+            n = (it->second).size();
+            solmap[desc].resize(n);
+            for (size_t i = 0; i < n; ++i)
+              solmap[desc][i] = (it->second)[i];
+          }
+
+          for (solit = solmap.begin(); solit != solend; ++solit)
+          {
+            if ((solit->second).size() != n)
+              (solit->second).resize(n, 0.0);
+          }
+
+
+          writer->set_data(solmap, *id_it);
+        }
+
+        writer->write(true);
+      }
 
     }
 
@@ -1525,7 +1612,8 @@ AtomisticStructure::reorder(const std::vector<unsigned int>& P)
 
 
 void
-AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh) const
+AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
+    set<unsigned int> labels) const
 {
   mesh.set_mesh_dimension(3);
   const std::vector<Atom>& structure = get_structure_atoms();
@@ -1547,7 +1635,8 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh) const
     //if (atom.get_specie() == Specie::In ||
     //    atom.get_specie() == Specie::Al ||
     //    atom.get_specie() == Specie::Ga) 
-    if (atom.get_specie() != Specie::H)
+    if ((atom.get_specie() != Specie::H) &&
+        (labels.empty() || labels.count(atom.get_label())))
     {
       Point p(atom.get_position());
       p *= 0.1;
@@ -1645,7 +1734,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
 
   cutoff = _options.get_option("control_volume_radius", cutoff);
 
-  unsigned int ref_atom = _options.get_option("reference_atom", 1);
+  int ref_atom = _options.get_option("reference_atom", 1);
 
   for (unsigned int i = 0; i < get_N_atoms(); i++)
   {
@@ -1666,7 +1755,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
 
       stats[atm.get_specie()][0] += 1;
 
-      if (atm.get_label() == ref_atom)
+      if ((ref_atom < 0) || (atm.get_label() == ref_atom))
       {
         unsigned int counter = 0;
         unsigned int total = 1;
