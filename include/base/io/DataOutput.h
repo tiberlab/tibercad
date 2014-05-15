@@ -91,7 +91,8 @@ class DataOutput
      * \param data the map containing all data of a certain zone
      * \param zone the zone ID (e.g. mesh subdomain)
      *
-     * If \c zone is not specified, data is assumed to be on all zones
+     * Only a reference to the \c data object is kept internally, i.e. the
+     * provided data container must persist until after calling \c write().
      */
     void set_data(const std::map<SolutionDescriptor,
         std::vector<double> >& data, ID zone);

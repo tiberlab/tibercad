@@ -262,9 +262,10 @@ AtomisticStructure::init(const std::string& name,
 
         AutoPtr<UnstructuredMesh> mesh(new Mesh(3));
 
-        unsigned int ref_atom = _options.get_option("reference_atom", 1);
+        int ref_atom = _options.get_option("reference_atom", -1);
         IDSet refatoms;
-        refatoms.insert(ref_atom);
+        if (ref_atom >= 0)
+          refatoms.insert(ref_atom);
         create_conformal_grid(*mesh, refatoms, true);
 
         AutoPtr<DataOutput> writer(DataOutput::create(
@@ -274,9 +275,10 @@ AtomisticStructure::init(const std::string& name,
         writer->set_output_directory(TiberCad::get_output_dir());
         writer->set_filename(get_name() + "_alloycomposition");
 
-
-        map<SolutionDescriptor, vector<double>> solmap;
+        map<ID, map<SolutionDescriptor, vector<double>>> solmap;
         map<Specie, SolutionDescriptor> species_to_descr;
+
+        // setup a map Specie->SolutionDescriptor
         const vector<string>& atom_types = get_atom_types();
         unsigned int ctr = 0;
         for (unsigned int i = 0; i < atom_types.size(); ++i)
@@ -286,7 +288,6 @@ AtomisticStructure::init(const std::string& name,
           {
             SolutionDescriptor desc(atom_types[i], ctr,
               SolutionDescriptor::REAL, SolutionDescriptor::NODES);
-            solmap[desc].resize(0);
 
             species_to_descr[sp] = desc;
             ++ctr;
@@ -298,31 +299,39 @@ AtomisticStructure::init(const std::string& name,
         const IDSet::iterator id_end(_IDset.end());
         for ( ; id_it != id_end; ++id_it)
         {
-          //const Material* mat = _device->get_material(*id_it);
-
-          // we extract statistics only for alloys
-          //if (!mat->is_alloy())
-          //  continue;
 
           reg_ids.insert(*id_it);
+
+          // we extract statistics only for alloys
+          const Material* mat = _device->get_material(*id_it);
+          if (!mat->is_alloy())
+            continue;
+          map<Specie, SolutionDescriptor>::iterator s_it(species_to_descr.begin());
+          const map<Specie, SolutionDescriptor>::iterator s_end(species_to_descr.end());
+          for ( ; s_it != s_end; ++s_it)
+            solmap[*id_it][s_it->second].resize(0);
         }
+
+
+
 
         map<Specie, vector<unsigned int>> stats;
         extract_statistics(stats, reg_ids);
 
-        // to keep track of already used nodes
-        set<unsigned int> used_nodes;
-
         for (id_it = _IDset.begin(); id_it != id_end; ++id_it)
         {
-          //const Material* mat = _device->get_material(*id_it);
+          ID domain = *id_it;
 
           // we extract statistics only for alloys
-          //if (!mat->is_alloy())
-          //  continue;
+          const Material* mat = _device->get_material(*id_it);
+          if (!mat->is_alloy())
+            continue;
 
-          map<SolutionDescriptor, vector<double>>::iterator solit(solmap.begin());
-          const map<SolutionDescriptor, vector<double>>::iterator solend(solmap.end());
+          // to keep track of already used nodes
+          set<unsigned int> used_nodes;
+
+          map<SolutionDescriptor, vector<double>>::iterator solit(solmap[domain].begin());
+          const map<SolutionDescriptor, vector<double>>::iterator solend(solmap[domain].end());
           for ( ; solit != solend; ++solit)
           {
             (solit->second).clear();
@@ -336,7 +345,7 @@ AtomisticStructure::init(const std::string& name,
           {
             const Elem* elem = *elit;
 
-            if (elem->subdomain_id() == *id_it)
+            if (elem->subdomain_id() == domain)
             {
               for (unsigned int n = 0; n < elem->n_nodes(); ++n)
               {
@@ -350,13 +359,13 @@ AtomisticStructure::init(const std::string& name,
                   {
                     SolutionDescriptor& desc = species_to_descr[it->first];
                     // +1 because the first values are the totals !
-                    solmap[desc].push_back((it->second)[elem->node(n) + 1]);
+                    solmap[domain][desc].push_back((it->second)[elem->node(n) + 1]);
                   }
                 }
               }
             }
           }
-          writer->set_data(solmap, *id_it);
+          writer->set_data(solmap[domain], domain);
         }
 
         writer->write();
@@ -1757,7 +1766,20 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
 
   cutoff = _options.get_option("control_volume_radius", cutoff);
 
-  int ref_atom = _options.get_option("reference_atom", 1);
+  int ref_atom = _options.get_option("reference_atom", -1);
+
+  Messages m;
+  m.info("Extracting alloy statistics for structure " + this->get_name() + ": ");
+  m.indent();
+  ostringstream os;
+  os << "control sphere radius: " << cutoff << " nm";
+  m.info(os.str());
+  if (ref_atom >= 0)
+  {
+    os.str("");
+    os << "control volumes centered at atoms with label (= reference atom): " << ref_atom;
+    m.info(os.str());
+  }
 
   for (unsigned int i = 0; i < get_N_atoms(); i++)
   {

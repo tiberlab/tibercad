@@ -592,67 +592,69 @@ TiberVTKIO::do_write(void)
   {
     ID id = it->first;
 
-    const vector<unsigned int>& nodevec = nodes[id];
-    const vector<VTKElem>& elemvec = vtk_elem[id];
-    unsigned int num_pt = nodevec.size();
-    unsigned int num_el = elemvec.size();
-    of << "<Piece NumberOfPoints=\"" << num_pt << "\" "
-      << "NumberOfCells=\"" << num_el << "\">\n";
-
-    vector<float> buffer;
-
-    of << "<Points>\n";
-    buffer.resize(3 * num_pt);
-    for (unsigned int i = 0; i < num_pt; ++i)
-    {
-      const Point& p = mesh.point(nodevec[i]);
-      buffer[3 * i] = static_cast<float>(p(0));
-      buffer[3 * i + 1] = static_cast<float>(p(1));
-      buffer[3 * i + 2] = static_cast<float>(p(2));
-    }
-    write_data_array("", 3, buffer, of);
-    buffer.clear();
-    of << "</Points>\n";
-
-    vector<uint32_t> intbuf;
-    of << "<Cells>\n";
-    intbuf.reserve(4 * num_el);
-    for (size_t i = 0; i < num_el; ++i)
-    {
-      const VTKElem& el = elemvec[i];
-      size_t elconn = el.connectivity.size();
-      if (intbuf.capacity() < (intbuf.size() + elconn))
-        intbuf.reserve(2 * intbuf.capacity());
-
-      for (size_t n = 0; n < el.connectivity.size(); n++)
-        intbuf.push_back(static_cast<uint32_t>(el.connectivity[n]));
-    }
-    write_data_array("connectivity", 1, intbuf, of);
-
-    intbuf.resize(num_el);
-    size_t offset = 0;
-    for (size_t i = 0; i < num_el; ++i)
-    {
-      const VTKElem& el = elemvec[i];
-      offset += el.connectivity.size();
-      intbuf[i] = static_cast<uint32_t>(offset);
-    }
-    write_data_array("offsets", 1, intbuf, of);
-    intbuf.clear();
-
-
-    vector<uint8_t> shortbuf(num_el);
-    for (size_t i = 0; i < num_el; ++i)
-    {
-      const VTKElem& el = elemvec[i];
-      shortbuf[i] = static_cast<uint8_t>(el.type);
-    }
-    write_data_array("types", 1, shortbuf, of);
-    intbuf.clear();
-    of << "</Cells>\n";
-
+    // only pieces with data are written
     if (has_data(id))
     {
+
+      const vector<unsigned int>& nodevec = nodes[id];
+      const vector<VTKElem>& elemvec = vtk_elem[id];
+      unsigned int num_pt = nodevec.size();
+      unsigned int num_el = elemvec.size();
+      of << "<Piece NumberOfPoints=\"" << num_pt << "\" "
+          << "NumberOfCells=\"" << num_el << "\">\n";
+
+      vector<float> buffer;
+
+      of << "<Points>\n";
+      buffer.resize(3 * num_pt);
+      for (unsigned int i = 0; i < num_pt; ++i)
+      {
+        const Point& p = mesh.point(nodevec[i]);
+        buffer[3 * i] = static_cast<float>(p(0));
+        buffer[3 * i + 1] = static_cast<float>(p(1));
+        buffer[3 * i + 2] = static_cast<float>(p(2));
+      }
+      write_data_array("", 3, buffer, of);
+      buffer.clear();
+      of << "</Points>\n";
+
+      vector<uint32_t> intbuf;
+      of << "<Cells>\n";
+      intbuf.reserve(4 * num_el);
+      for (size_t i = 0; i < num_el; ++i)
+      {
+        const VTKElem& el = elemvec[i];
+        size_t elconn = el.connectivity.size();
+        if (intbuf.capacity() < (intbuf.size() + elconn))
+          intbuf.reserve(2 * intbuf.capacity());
+
+        for (size_t n = 0; n < el.connectivity.size(); n++)
+          intbuf.push_back(static_cast<uint32_t>(el.connectivity[n]));
+      }
+      write_data_array("connectivity", 1, intbuf, of);
+
+      intbuf.resize(num_el);
+      size_t offset = 0;
+      for (size_t i = 0; i < num_el; ++i)
+      {
+        const VTKElem& el = elemvec[i];
+        offset += el.connectivity.size();
+        intbuf[i] = static_cast<uint32_t>(offset);
+      }
+      write_data_array("offsets", 1, intbuf, of);
+      intbuf.clear();
+
+
+      vector<uint8_t> shortbuf(num_el);
+      for (size_t i = 0; i < num_el; ++i)
+      {
+        const VTKElem& el = elemvec[i];
+        shortbuf[i] = static_cast<uint8_t>(el.type);
+      }
+      write_data_array("types", 1, shortbuf, of);
+      intbuf.clear();
+      of << "</Cells>\n";
+
       const DataMap& data = get_zone_data(id);
 
       of << "<PointData";
@@ -729,9 +731,9 @@ TiberVTKIO::do_write(void)
           write_data_array(descr.name(), descr.n_components(), it->second, of);
       }
       of << "</CellData>\n";
-    }
 
-    of << "</Piece>\n";
+      of << "</Piece>\n";
+    }
   }
 
   of << "</UnstructuredGrid>\n"
