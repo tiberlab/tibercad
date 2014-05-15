@@ -91,6 +91,9 @@ class DataOutput
      * \param data the map containing all data of a certain zone
      * \param zone the zone ID (e.g. mesh subdomain)
      *
+     * Nodal data in \c data has to be in the same order as when doing
+     * a loop over the elements and then over nodes of the element.
+     *
      * Only a reference to the \c data object is kept internally, i.e. the
      * provided data container must persist until after calling \c write().
      */
