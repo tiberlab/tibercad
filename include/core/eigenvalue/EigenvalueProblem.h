@@ -86,9 +86,9 @@ class EigenvalueProblem : public SimulationInterface
     
     //! computes matrix elements between state i of particle_i and state j of particle_j
     virtual Complex calculate_matrix_element(const std::string& i_particle,
-							  unsigned int i, 
-							  const std::string& j_particle,
-							  unsigned int j) { return 0; }
+        unsigned int i, 
+        const std::string& j_particle,
+        unsigned int j) { return 0; }
 
     //! get number of states
     unsigned int get_num_states(void) const;
@@ -141,6 +141,8 @@ class EigenvalueProblem : public SimulationInterface
     virtual double get_band_edge(const std::string& band) { return 0; }
 
     virtual unsigned int get_number_of_bands(void) const { return 0; }
+
+    virtual unsigned int get_degeneracy(void) const { return 1; }
 
     void set_permutation(const std::vector<unsigned int>& p);
 

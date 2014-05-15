@@ -137,8 +137,9 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   //{ return _density; } ;
 
   //!returns number of bands
-  inline unsigned int get_number_of_bands(void) const;
+  unsigned int get_number_of_bands(void) const;
 
+  unsigned int get_degeneracy(void) const;
 
   //!returns map for kp bands
   inline const std::map<short, short>& get_band_map(void) const;
@@ -432,9 +433,16 @@ inline EnvelopFunctionApprox*  EnvelopFunctionApprox::create(const ModelOptions&
 
 //---------------------------------------------------------
 
-inline  unsigned int EnvelopFunctionApprox::get_number_of_bands(void) const
+inline unsigned int EnvelopFunctionApprox::get_number_of_bands(void) const
 {
   return (number_of_bands);
+}
+
+//---------------------------------------------------------
+
+inline unsigned int EnvelopFunctionApprox::get_degeneracy(void) const
+{
+  return (opt.degeneracy);
 }
 
 //--------------------------------------------------------------------

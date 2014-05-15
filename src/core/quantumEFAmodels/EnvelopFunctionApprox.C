@@ -374,7 +374,9 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
           }
 
           // the number of components should be set already to the right number
-          values[EnvelopeFunctions][num_states * n + sn] = real(value) / scale;
+          unsigned int index = 2 * (number_of_bands * num_states * n + number_of_bands * sn + psi_index);
+          values[EnvelopeFunctions][index] = real(value) / scale;
+          values[EnvelopeFunctions][index + 1] = imag(value) / scale;
         }
       }
     }
