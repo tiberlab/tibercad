@@ -106,10 +106,10 @@ public:
   /*!
    * \param stats the map to put statistics in
    * \param regions the regions to be used
-   * \param cutoff the cutoff radius in nm
+   * \param cutoff the cutoff radius in nm (default 0.5 nm)
    */
   void extract_statistics(std::map<Specie, std::vector<unsigned int>>& stats,
-      std::set<ID>& regions, double cutoff = 1.0);
+      std::set<ID>& regions, double cutoff = 0.5);
 
   // Get element->atoms map
   //std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
