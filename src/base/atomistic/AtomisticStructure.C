@@ -182,6 +182,9 @@ AtomisticStructure::init(const std::string& name,
       Messages::info("Atomistic structure build time: "+tt.elapsed_string());
 
 
+      double cutoff = _options.get_option("control_volume_radius", 0.5);
+      string cutoff_str = _options.get_option("control_volume_radius", "0.5");
+
       if (_options.get_option("extract_alloy_statistics", false))
       {
 
@@ -204,13 +207,13 @@ AtomisticStructure::init(const std::string& name,
           }
 
           ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
-              "_" + reg_name + "_statistics.dat");
+              "_" + reg_name + "_statistics_R" + cutoff_str + ".dat");
 
           IDSet reg_ids;
           reg_ids.insert(*id_it);
 
           map<Specie, vector<unsigned int>> stats;
-          extract_statistics(stats, reg_ids);
+          extract_statistics(stats, reg_ids, cutoff);
 
           of << "% alloy statistics for structure " << get_name() <<
               ", region " << reg_name << "\n";
@@ -273,7 +276,7 @@ AtomisticStructure::init(const std::string& name,
 
         writer->set_mesh(*mesh);
         writer->set_output_directory(TiberCad::get_output_dir());
-        writer->set_filename(get_name() + "_alloycomposition");
+        writer->set_filename(get_name() + "_alloycomposition_R" + cutoff_str);
 
         map<ID, map<SolutionDescriptor, vector<double>>> solmap;
         map<Specie, SolutionDescriptor> species_to_descr;
@@ -316,7 +319,7 @@ AtomisticStructure::init(const std::string& name,
 
 
         map<Specie, vector<unsigned int>> stats;
-        extract_statistics(stats, reg_ids);
+        extract_statistics(stats, reg_ids, cutoff);
 
         for (id_it = _IDset.begin(); id_it != id_end; ++id_it)
         {
