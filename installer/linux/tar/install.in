@@ -291,7 +291,7 @@ echo "- ${instpath}/bin/TiberCAD.sh" >> ${instpath}/files.lst
 
 
 cat > ${instpath}/bin/uninstall <<EOF
-#!/bin/sh
+#!/bin/bash
 
 instpath=${instpath}
 
@@ -306,14 +306,14 @@ case \$answer in
     do
       md5=\`echo \$line | awk '{print \$1}'\`
       file=\`echo \$line | awk '{print \$2}'\`
-      if [ -f \$file ]
+      if test -f \$file 
       then
         md5new=\`md5sum \$file | awk '{print \$1}'\`
-        if [ \$md5 == \$md5new || \$md5 == "-" ]
+        if test "\$md5" == "\$md5new" || "\$md5" == "-" 
         then
           rm -f \$file
         fi
-      elif [ -L \$file ]
+      elif test -L \$file 
       then
         rm -f \$file
       else
@@ -326,7 +326,7 @@ case \$answer in
     cd ..
     rmdir -p \${instpath}/bin >& /dev/null
 
-    if [ -d \${instpath} ]
+    if test -d \${instpath} 
     then
       echo ""
       echo "I could not delete all directories due to presence of modified or added files."
