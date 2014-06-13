@@ -1,15 +1,16 @@
 // $Id$
 
 #include "PoissonBoundaryModel.h"
+#include "MaterialBoundary.h"
 
 using namespace std;
 
 PoissonBoundaryModel*
-PoissonBoundaryModel::create(const ModelOptions& options)
+PoissonBoundaryModel::create(const MaterialBoundary* boundary, const ModelOptions& options)
 {
   std::string type = options.get_option("type", "dirichlet");
-  PoissonBoundaryModel* mod = dynamic_cast<PoissonBoundaryModel*>(
-      PhysicalModelInterface::create("contact_" + type, options));
+  PoissonBoundaryModel* mod = 
+      PhysicalModelInterface::create<PoissonBoundaryModel>("contact_" + type, boundary, options);
 
   if (mod == NULL)
   {

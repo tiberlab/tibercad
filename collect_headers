@@ -2,7 +2,7 @@
 
 topdir=`pwd`
 
-ARCH=i686-mingw32
+ARCH=`${topdir}/share/arch.sh`
 PETSC=petsc-3.0.0-p12
 SLEPC=slepc-3.0.0-p7
 
@@ -10,8 +10,6 @@ mkdir -p SDK/include/libmesh
 cd SDK/include
 
 cp -r ${topdir}/extern/libmesh-svn-${ARCH}/include/* libmesh
-find . -type d -name .svn -exec rm -rf {} \;
-find . -name .cvsignore -exec rm {} \;
 mkdir -p libmesh/${ARCH}
 mv libmesh/base/libmesh_config.h libmesh/${ARCH}
 mv libmesh/base/libmesh_contrib_config.h libmesh/${ARCH}
@@ -28,6 +26,10 @@ cp -r ${topdir}/extern/${PETSC}/${ARCH}/include/* ${PETSC}/${ARCH}
 find ${PETSC} -name "makefile" -exec rm -f {} \;
 
 mkdir -p tibercad/$ARCH
-mkdir  tibercad/core
-mkdir  tibercad/io
-mkdir  tibercad/solvers
+awk ' {system("mkdir -p $(dirname tibercad/"$1") ; cp -r '${topdir}'/include/"$1" tibercad/"$1); }' ${topdir}/share/sdk_headers
+mv tibercad/base/common/tiber_config.h tibercad/$ARCH
+rm tibercad/base/common/*.in
+
+find . -type d -name .svn -exec rm -rf {} \;
+find . -name .cvsignore -exec rm {} \;
+

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-GMSHVER=2.5.0
+GMSHVER=2.8.4
 
 make_windows_package () {
 
@@ -204,7 +204,8 @@ prepare_linux_package () {
 
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
-  rm -rf ${files}/examples/Modules
+  #rm -rf ${files}/examples/Modules
+
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
@@ -213,9 +214,9 @@ prepare_linux_package () {
 
   if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
   then
-    wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux.tgz
-    tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux.tgz
-    rm -f gmsh-${GMSHVER}-Linux.tgz
+    wget http://www.geuz.org/gmsh/bin/Linux/gmsh-${GMSHVER}-Linux64.tgz
+    tar -C ${topdir}/contrib/ -zxf gmsh-${GMSHVER}-Linux64.tgz
+    rm -f gmsh-${GMSHVER}-Linux64.tgz
   fi
   if [ -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
   then
@@ -225,6 +226,7 @@ prepare_linux_package () {
       mv gmsh.pdf ${topdir}/contrib/gmsh-${GMSHVER}-Linux
     fi
     cp -r  ${topdir}/contrib/gmsh-${GMSHVER}-Linux ${files}/tools/gmsh
+    rm -rf ${files}/tools/gmsh/include
     chmod a+x ${files}/tools/gmsh/bin/gmsh
   fi
 

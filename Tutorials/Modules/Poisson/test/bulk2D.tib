@@ -1,63 +1,62 @@
 
 # Description of  the  device physical regions
-$Device
+Device
 {
-  Options
-  {
-    meshfile = bulk2D.msh
-  }
+   meshfile = bulk2D.msh
 
    Region bulk 
    {
      material = Si
-     doping = 1e16 doping_type = donor
+     Doping {
+       density = 1e16
+       type = donor
+     }
    }
 
 }
 
 
-# Definition of  Simulation Models  and associated Boundary Conditions 
-$Models
+Module poisson_example
 { 
 
-  model mypoisson
-  { 
+  name = poisson
               
-    options
+  plot = (Potential, ElField, Displacement)
+
+
+  Physics
+  {
+  
+    charge_density constant
     {
-      plot = (Potential, Field, Displacement, materials)
+      charge_density = 0e19
     }
 
-    BC_Regions  
-    {
-      BC_Region anode
-      {
-        type = dirichlet
-        potential = @Va[1]
-      }
+  }
+  
 
-      BC_Region cathode
-      {
-        type = dirichlet
-        potential = 0.0
-      }
-    }
+  Contact anode
+  {
+    type = dirichlet
+    potential = $Va[1]
+  }
 
-  }  
-
+  Contact cathode
+  {
+    type = dirichlet
+    potential = 0.0
+  }
 }
 
-$Solver
-{
-}
 
-# Definition of  model-indipendent parameters of the Simulation
-$Simulation
+Simulation
 {
   verbose = 2
   temperature = 300
-  solve = mypoisson
-  resultpath = output
+  
+  solve = poisson
+  
+  resultpath = output2D
   output_format = vtk
 }
 

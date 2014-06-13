@@ -1,0 +1,93 @@
+Compiler
+{
+
+  linker_flags = "-pthread -shared -Wl,-rpath,'$ORIGIN' -Wl,-rpath,'$ORIGIN/../lib'"
+
+  C++
+  {
+    executable = @CXX@
+    compiler_flags = "-g -O3 -std=gnu++0x -pthread -fPIC -c"
+    # -fvisibility=hidden
+  }
+
+  C
+  {
+    executable = @CC@
+  }
+
+  Fortran
+  {
+    executable = @FC@
+  }
+}
+
+Library tibercad
+{
+  path = @ROOT
+  includes = (
+    base/common,
+    base/atomistic,
+    base/common,
+    base/database,
+    base/io,
+    base/math,
+    base/simulations,
+    pmi,
+    core/models,
+    core/tightbinding,
+    core/semiconductormodels,
+    core/macrostrain,
+    core/embracing,
+    core/solver-interfaces,
+    core/solver-interfaces/petsc,
+    core/quantumEFAmodels,
+    core/optics,
+    core/kintegrations,
+    core/eigenvalue,
+    utils/Tensor,
+    utils/SLEPC,
+    utils/FADBAD++
+  )
+  libpath = @ARCH/lib
+  linker_flags = -ltibercad
+}
+
+
+
+
+Library boost
+{
+  includes = @LIBMESH_PETSC_LIBDIR@/../../include
+}
+
+
+Library libmesh
+{
+  path = @LIBMESH_PREFIX@
+  includes = (base, error_estimation,
+              geom, numerics, partitioning,
+              solvers, utils, enums,
+              fe, mesh, parallel,
+              quadrature, systems)
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lmesh
+}
+
+
+Library petsc
+{ 
+  path = @LIBMESH_PREFIX@/../petsc-3.0.0-p12
+  includes = (., mpiuni, ../@ARCH/include)
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lpetsc_real
+}
+
+Library slepc
+{
+  path = @LIBMESH_PREFIX@/../slepc-3.0.0-p7
+  includes = (.)
+  libpath = @LIBMESH_PETSC_LIBDIR@
+  linker_flags = -lslepc_real
+}
+
+		

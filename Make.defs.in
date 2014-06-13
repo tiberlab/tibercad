@@ -47,9 +47,9 @@ RANLIB := @RANLIB@
 
 # the build_module tool: for cross compilation we need it compiled also
 # for the BUILD architecture
-BUILDMODULE := $(topdir)/bin/build_module
+BUILDMODULE := $(topdir)/bin/build_module -c $(topdir)/share/coremodules.conf
 ifeq ($(cross_compiling), yes)
-  BUILDMODULE := export TIBERCADROOT=$(topdir) && $(topdir)/bin/build_module-$(BUILD)
+  BUILDMODULE := export TIBERCADROOT=$(topdir) && $(topdir)/bin/build_module-$(BUILD) -c $(topdir)/share/coremodules.conf
 endif
 
 SVN := @SVN@

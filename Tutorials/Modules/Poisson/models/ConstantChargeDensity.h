@@ -3,14 +3,14 @@
 #ifndef _CONSTANTCHARGEDENSITY_H_
 #define _CONSTANTCHARGEDENSITY_H_
 
-#include "MyChargeDensityModel.h"
+#include "ChargeDensityModel.h"
 
 
 class Elem;
 class Point;
 
 // Base class for charge density models
-class ConstantChargeDensity : public MyChargeDensityModel
+class ConstantChargeDensity : public ChargeDensityModel
 {
 
   public:
@@ -37,7 +37,7 @@ class ConstantChargeDensity : public MyChargeDensityModel
 
 inline
 ConstantChargeDensity::ConstantChargeDensity(const ModelOptions& options) :
-  MyChargeDensityModel(options),
+  ChargeDensityModel(options),
   _charge_density(0.0)
 {
 }

@@ -21,7 +21,8 @@ class PoissonBoundaryModel : public PhysicalModel
     ~PoissonBoundaryModel(void) {};
 
     //! Creator function
-    static PoissonBoundaryModel* create(const ModelOptions& options);
+    static PoissonBoundaryModel* create(const MaterialBoundary* boundary,
+        const ModelOptions& options);
 
 
     //! Calculate for a point on the given side

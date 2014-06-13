@@ -83,7 +83,7 @@ namespace BuildModule
     cout << "press Enter ...";
     if (interactive) cin.get();
 # else
-    cout << endl << "Usage: tibercad configfile" << endl << endl;
+    cout << endl << "Usage: build_module [-b] [-v] [-c globalconfig] moduleconfig" << endl << endl;
 # endif
   }
 
@@ -126,7 +126,7 @@ class Compiler
 
     string _linker_flags;
 
-    string _executable(void);
+    string _executable;
 
     //! Check dependency timestamps
     /*!
@@ -158,12 +158,13 @@ void check_dependency(const ModelOptions& options, const string& modulename,
 
 // Will be extended with tools for command line argument parsing
 // and so on
-int main (int argc, char** argv)
+int main(int argc, char** argv)
 {
 
+  string global_config_file;
   opterr = 0;
   int c;
-  while ((c = getopt(argc, argv, "bv")) != -1)
+  while ((c = getopt(argc, argv, "bvc:")) != -1)
     switch (c)
     {
       case 'b':
@@ -172,6 +173,10 @@ int main (int argc, char** argv)
 
       case 'v':
         BuildModule::verbose = true;
+        break;
+
+      case 'c':
+        global_config_file = string(optarg);
         break;
 
       case '?':
@@ -309,7 +314,9 @@ int main (int argc, char** argv)
 
   InputParser parser;
   ModelOptions global_config;
-  parser.parse_file(BuildModule::tc_root + "/SDK/etc/modules.conf", global_config);
+  if (global_config_file.empty())
+    global_config_file = BuildModule::tc_root + "/SDK/etc/modules.conf";
+  parser.parse_file(global_config_file, global_config);
 
   ModelOptions::submodel_iterator it(global_config.submodels_begin("Compiler"));
   if (it == global_config.submodels_end("Compiler"))
@@ -449,7 +456,7 @@ Compiler::add_library(const ModelOptions& options, const string& compiler)
 {
   ostringstream pre;
 
-  string path = options.get_option("path", BuildModule::tc_root);
+  string path = options.get_option("path", BuildModule::tc_root + "/SDK");
   BuildModule::replace(path, "@ROOT", BuildModule::tc_root);
   BuildModule::replace(path, "@ARCH", ARCH);
   if (path[0] != '/')
@@ -463,14 +470,14 @@ Compiler::add_library(const ModelOptions& options, const string& compiler)
     BuildModule::replace(inc, "@ROOT", BuildModule::tc_root);
     BuildModule::replace(inc, "@ARCH", ARCH);
     if (inc[0] != '/')
-      pre << " -I" << path << "/" << inc;
+      pre << " -I" << path << "/include/" << inc;
     else
       pre << " -I" << inc;
   }
 
   ostringstream linkerflags;
 
-  string libpath;
+  string libpath(path + "@ARCH/lib");
   libpath = options.get_option("libpath", libpath);
   if (!libpath.empty())
   {
@@ -513,17 +520,32 @@ Compiler::Compiler(const ModelOptions& options) :
   ostringstream pre;
   pre << "-DARCH=" + string(ARCH);
 
-  string path = options.get_option("sdk_path", BuildModule::tc_root);
+  string path = options.get_option("path", "");
   BuildModule::replace(path, "@ROOT", BuildModule::tc_root);
   BuildModule::replace(path, "@ARCH", ARCH);
+
+  _executable = options.get_option("executable", _executable);
+  BuildModule::replace(_executable, "@ARCH", ARCH);
+  BuildModule::replace(_executable, "@ROOT", BuildModule::tc_root);
+  if (_executable.empty())
+  {
+    cerr << "You must give executable name for compilers (in "
+      << options.get_name() << ")";
+    exit(1);
+  }
+
+  if ((_executable[0] != '/') && !path.empty())
+    _executable = path + "/" + _executable;
 
   vector<string> includes;
   options.get_option("includes", includes);
   for (size_t i = 0; i < includes.size(); ++i)
   {
     string inc = includes[i];
+    BuildModule::replace(inc, "@ROOT", BuildModule::tc_root);
     BuildModule::replace(inc, "@ARCH", ARCH);
-    pre << " -I" << path << "/" << inc;
+
+    pre << " -I" << inc;
   }
 
   pre << " -I " << boost::filesystem::current_path();
@@ -548,16 +570,6 @@ Compiler::Compiler(const ModelOptions& options) :
 }
 
 
-inline
-string
-Compiler::_executable(void)
-{
-  string exe(_options["executable"]);
-  BuildModule::replace(exe, "@ARCH", ARCH);
-  BuildModule::replace(exe, "@ROOT", BuildModule::tc_root);
-
-  return exe;
-}
 
 bool
 Compiler::_needs_build(const string& target,
@@ -609,7 +621,7 @@ Compiler::_compile(const string& source, const string& flags)
   // check dependencies
   string depfile = _outdir + "/" + basename + ".d";
   ostringstream cmdline;
-  cmdline << _executable() << " " << _preprocessor_flags
+  cmdline << _executable << " " << _preprocessor_flags
       << " -MG -MM -MF " << depfile << " " << source;
   system(cmdline.str().c_str());
 
@@ -637,7 +649,7 @@ Compiler::_compile(const string& source, const string& flags)
   if (_needs_build(target, dependencies))
   {
     ostringstream cmdline;
-    cmdline << _executable() << " " << _preprocessor_flags << " " <<
+    cmdline << _executable << " " << _preprocessor_flags << " " <<
         _compiler_flags << " " << flags << " -o " <<
         target << " " << source;
 
@@ -666,7 +678,7 @@ Compiler::_link(const string& target, const vector<string>& objects,
   {
     cout << " ...\n";
     ostringstream cmdline;
-    cmdline << _executable();
+    cmdline << _executable;
     for (size_t i = 0; i < objects.size(); ++i)
       cmdline << " " << objects[i];
 

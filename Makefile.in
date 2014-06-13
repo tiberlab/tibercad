@@ -58,8 +58,6 @@ $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 
 ifeq ($(build_modules),yes)
 modules: $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext)
-	@mkdir -p SDK/etc
-	@cp share/modules.conf SDK/etc
 	@$(MAKE) --no-print-directory -C src/SDK $(MAKECMDGOALS)
 	@$(MAKE) --no-print-directory -C src/core/modules $(MAKECMDGOALS)
 else
@@ -121,6 +119,14 @@ completemanual:
 
 wininstaller linuxinstaller deb tgz tbz: completemanual SHAREDLIBS
 	@$(MAKE) --no-print-directory -C installer $(MAKECMDGOALS)
+
+
+sdk:
+	@mkdir -p SDK/etc
+	@cp share/modules.conf SDK/etc
+	@collect_headers
+	@tar jcf SDK.tbz SDK
+
 
 
 SHAREDLIBS:

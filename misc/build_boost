@@ -52,7 +52,8 @@ fi
 if [ "$target_os" = win32 ]; then
   echo "using gcc : : $CXX : <cxxflags>-std=gnu++0x <src>$(echo $CC | sed 's/gcc/windres/') <archiver>$AR ;" > tools/build/v2/user-config.jam
 else
-  echo "using $toolset : : $CXX : <cxxflags>-std=gnu++11 <linkflags>-Wl,-rpath,'\$ORIGIN' ;" > tools/build/v2/user-config.jam
+  #echo "using $toolset : : $CXX : <cxxflags>-std=gnu++11 <linkflags>-Wl,-rpath,'\$ORIGIN' ;" > tools/build/v2/user-config.jam
+  echo "using $toolset : : $CXX : <cxxflags>-std=gnu++0x <linkflags>-Wl,-rpath,'\$ORIGIN' ;" > tools/build/v2/user-config.jam
 #  if [ "$MPI" = y ]; then
 #    echo "using mpi ;" >> tools/build/v2/user-config.jam
 #  fi

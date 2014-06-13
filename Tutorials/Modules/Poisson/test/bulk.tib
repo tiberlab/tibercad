@@ -16,8 +16,10 @@ Device
 }
 
 
-Module mypoisson
+Module poisson_example
 { 
+
+  name = poisson
               
   plot = (Potential, ElField, Displacement)
 
@@ -52,7 +54,7 @@ Simulation
   verbose = 2
   temperature = 300
   
-  solve = mypoisson
+  solve = poisson
   
   resultpath = output
   output_format = dat
