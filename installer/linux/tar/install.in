@@ -4,7 +4,7 @@ TIBERVER=@TIBERVERSION@
 
 ARCH=`uname -m`-linux
 
-GMSHVER=2.5.0
+GMSHVER=2.8.0
 
 
 
@@ -227,7 +227,6 @@ IFS=
 PATH=/usr/bin:/bin
 
 VER=$TIBERVER
-GMSHVER=${GMSHVER}
 ARCH=${ARCH}
 
 # put your installation directory here (this is done automatically by the
@@ -251,6 +250,14 @@ case \$prog in
     progname="gmsh"
     executable="\${TIBERCADROOT}/tools/gmsh/bin/\$progname"
     ;;
+
+  build_module*)
+    progname="build_module"
+    # this is needed by some compiler binaries:
+    export LD_LIBRARY_PATH=${TIBERCADROOT}/SDK/${ARCH}/lib
+    executable="${TIBERCADROOT}/SDK/${ARCH}/bin/$progname"
+    ;;
+
 
   *)
     echo "\${prog}: Unknown TiberCAD tool"
