@@ -80,6 +80,10 @@ DEPEPREFIX=$EPREFIX
 PREFIX=$INSTALLPREFIX
 EPREFIX=$INSTALLEPREFIX
 
+mkdir -p ${EPREFIX}/lib
+cp -a ${DEPEPREFIX}/lib/*.so* ${EPREFIX}/lib
+
+
 if prepare ftp://mirror.switch.ch/mirror/gnu/${PROD}/${PROD}-${VERSION} ${PROD}-${VERSION}.tar.bz2
 then
 
@@ -95,4 +99,7 @@ then
   #./${ARCH}/bin/gcc -dumpspecs > ./${ARCH}/lib/gcc/${GCCARCH}/${VERSION}/specs
   #patch -p0 -l <${WORKDIR}/specs.patch
   rm bin/${GCCARCH}*
+
+  startfiledir=$(find /usr/ -name crti.o | dirname)
+  cp ${startfiledir}/crt*.o ${EPREFIX}/lib
 fi

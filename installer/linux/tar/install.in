@@ -281,7 +281,7 @@ fi
 
 if [ -x \$executable ]
 then
-  exec \$executable \$@
+  exec \$executable "\$@"
 else
   echo "Cannot execute \$progname. Perhaps broken installation?"
 fi
