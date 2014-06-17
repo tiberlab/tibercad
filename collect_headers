@@ -13,7 +13,7 @@ cp -r ${topdir}/extern/libmesh-svn-${ARCH}/include/* libmesh
 mkdir -p libmesh/${ARCH}
 mv libmesh/base/libmesh_config.h libmesh/${ARCH}
 mv libmesh/base/libmesh_contrib_config.h libmesh/${ARCH}
-rm libmesh/base/libmesh_contrib_config.h.in
+rm libmesh/base/*.h.in
 
 mkdir -p ${SLEPC}
 cp -r ${topdir}/extern/${SLEPC}/include/* ${SLEPC}
@@ -22,13 +22,15 @@ find ${SLEPC} -name "*.html" -exec rm -f {} \;
 mkdir -p ${PETSC}/${ARCH}/
 cp -r ${topdir}/extern/${PETSC}/include/* ${PETSC}/
 cp -r ${topdir}/extern/${PETSC}/${ARCH}/include/* ${PETSC}/${ARCH}
-#rm ${PETSC}/${ARCH}/*.mod
+rm ${PETSC}/${ARCH}/*.mod
 find ${PETSC} -name "makefile" -exec rm -f {} \;
 
 mkdir -p tibercad/$ARCH
 awk ' {system("mkdir -p $(dirname tibercad/"$1") ; cp -r '${topdir}'/include/"$1" tibercad/"$1); }' ${topdir}/share/sdk_headers
 mv tibercad/base/common/tiber_config.h tibercad/$ARCH
 rm tibercad/base/common/*.in
+#find tibercad -path "tibercad/utils/Tensor/*" -prune -o -name "*.h" -execdir echo {} \;
+find tibercad -path "tibercad/utils/Tensor/*" -prune -o -name "*.h" -execdir sh -c "cat ${topdir}/share/Copyright_sdk.txt {} > {}.tmp && mv {}.tmp {}" \;
 
 find . -type d -name .svn -exec rm -rf {} \;
 find . -name .cvsignore -exec rm {} \;

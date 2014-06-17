@@ -1,0 +1,16 @@
+core/eigenvalue/
+core/embracing/
+core/kintegrations/
+core/models/
+core/optics/
+core/solver-interfaces/
+utils/SLEPC/
+utils/Tensor/
+pmi/
+base/atomistic/Atom.h
+base/atomistic/Specie.h
+base/common/
+base/database/
+base/io/DataOutput.h
+base/io/Messages.h
+base/math/

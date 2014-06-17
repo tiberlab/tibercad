@@ -1,0 +1,16 @@
+/*
+ * tiberCAD Software Development Kit header file
+ *
+ * Copyright (c) 2014 TiberLab s.r.l; All Rights Reserved
+ *
+ * This file is part of the tiberCAD SDK.
+ *
+ * It may be used to develop new modules to be run in the framework
+ * of tiberCAD. This file may not be distributed without written
+ * permission by TiberLab s.r.l.
+ *
+ * tiberCAD software and SDK are supplied WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.
+ */
+
