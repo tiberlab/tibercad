@@ -249,13 +249,23 @@ case \$prog in
   gmsh*)
     progname="gmsh"
     executable="\${TIBERCADROOT}/tools/gmsh/bin/\$progname"
+    if [ -x \$executable ]
+    then
+      echo "You do not appear to have GMSH installed with tiberCAD."
+      exit 1
+    fi
     ;;
 
   build_module*)
     progname="build_module"
     # this is needed by some compiler binaries:
-    export LD_LIBRARY_PATH=${TIBERCADROOT}/SDK/${ARCH}/lib
-    executable="${TIBERCADROOT}/SDK/${ARCH}/bin/$progname"
+    export LD_LIBRARY_PATH=\${TIBERCADROOT}/SDK/\${ARCH}/lib
+    executable="\${TIBERCADROOT}/SDK/\${ARCH}/bin/\$progname"
+    if [ -x \$executable ]
+    then
+      echo "You do not appear to have the SDK installed."
+      exit 1
+    fi
     ;;
 
 
@@ -273,9 +283,9 @@ export TIBERCADROOT
 # stack size limit / VM may be too small
 if [ ! \`echo "\$ARCH" | grep "darwin"\` ]
 then  
-  ulimit -v unlimited
-  ulimit -s unlimited
-  ulimit -c 0
+  ulimit -v unlimited >& /dev/null
+  ulimit -s unlimited >& /dev/null
+  ulimit -c 0 >& /dev/null
 fi
 
 
@@ -290,7 +300,7 @@ EOF
 chmod a+x ${instpath}/bin/TiberCAD.sh
 
 here=`pwd`
-cd ${instpath}/bin && ln -s TiberCAD.sh tibercad
+cd ${instpath}/bin && ln -s TiberCAD.sh tibercad && ln -s TiberCAD.sh build_module
 cd $here
 
 echo "- ${instpath}/bin/tibercad" >> ${instpath}/files.lst
