@@ -326,7 +326,7 @@ case \$answer in
       if test -f \$file 
       then
         md5new=\`md5sum \$file | awk '{print \$1}'\`
-        if test "\$md5" == "\$md5new" || "\$md5" == "-" 
+        if test "\$md5" == "\$md5new" -o "\$md5" == "-" 
         then
           rm -f \$file
         fi
