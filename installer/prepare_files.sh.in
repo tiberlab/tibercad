@@ -32,6 +32,8 @@ make_windows_package () {
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
   rm -rf ${files}/examples/Modules
+  rm -rf ${files}/examples/Example_1[7-9]
+  rm -rf ${files}/examples/Example_2[0-9]
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
@@ -101,6 +103,8 @@ make_windows_package_cygwin () {
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   rm -rf ${files}/examples/Modules
+  rm -rf ${files}/examples/Example_1[7-9]
+  rm -rf ${files}/examples/Example_2[0-9]
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
@@ -206,6 +210,8 @@ prepare_linux_package () {
   # for now:
   #rm -rf ${files}/examples/Modules
 
+  rm -rf ${files}/examples/Example_1[7-9]
+  rm -rf ${files}/examples/Example_2[0-9]
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
