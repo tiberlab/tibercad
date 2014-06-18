@@ -221,7 +221,7 @@ install_files ${srcpath}/share $instpath
 [ -d ${instpath}/bin ] || mkdir -p ${instpath}/bin
 
 cat > ${instpath}/bin/TiberCAD.sh <<EOF
-#!/bin/sh
+#!/bin/bash
 
 IFS=
 PATH=/usr/bin:/bin
@@ -249,7 +249,7 @@ case \$prog in
   gmsh*)
     progname="gmsh"
     executable="\${TIBERCADROOT}/tools/gmsh/bin/\$progname"
-    if [ -x \$executable ]
+    if [ ! -x \$executable ]
     then
       echo "You do not appear to have GMSH installed with tiberCAD."
       exit 1
@@ -261,7 +261,7 @@ case \$prog in
     # this is needed by some compiler binaries:
     export LD_LIBRARY_PATH=\${TIBERCADROOT}/SDK/\${ARCH}/lib
     executable="\${TIBERCADROOT}/SDK/\${ARCH}/bin/\$progname"
-    if [ -x \$executable ]
+    if [ ! -x \$executable ]
     then
       echo "You do not appear to have the SDK installed."
       exit 1
