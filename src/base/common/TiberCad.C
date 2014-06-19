@@ -234,7 +234,10 @@ TiberCad::run(void)
 void
 TiberCad::cleanup(void)
 {
-  delete _control;
+  //
+  // NOTE: this seems to be responsible for the MPI_Comm error
+  // need to find the real cause
+  //delete _control;
 
   // close EigenSolver
   EigenSolver::slepc_done();

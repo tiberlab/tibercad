@@ -190,6 +190,15 @@ prepare_linux_package () {
   chmod a+x ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
   cp -r ${topdir}/${ARCH}/modules ${files}/${ARCH}
+  #
+  # for now, delete some modules
+  #
+  rm -rf ${files}/${ARCH}/modules/boltzmann
+  rm -rf ${files}/${ARCH}/modules/empirical_tb
+  rm -rf ${files}/${ARCH}/modules/vff
+  rm -rf ${files}/${ARCH}/modules/negf
+  #
+  #
   cp ${topdir}/share/tibercad.ico ${files}/share
   cp ${topdir}/share/Copyright.txt ${files}/share
   cp ${topdir}/Changelog ${files}/share
