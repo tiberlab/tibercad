@@ -6,6 +6,7 @@
 #include "SimulationInterface.h"
 #include "Messages.h"
 #include "Trap.h"
+#include "Particle.h"
 
 
 #include "elem.h"
@@ -412,11 +413,14 @@ DSSCModel::calculate_traps(void)
     double kT = Constants::k_B * SimulationOptions::T;
 //    set<Trap*>::iterator it(_etraps.begin());
 //    const set<Trap*>::iterator end(_etraps.end());
+    vector<double> derivatives;
     for ( int i = 0; i < _etraps.size(); ++i)
     {
-      _etraps[i]->set_energies(Ec, Ev, -_pd.fermi_n, kT);
-      nt += _etraps[i]->get_ionized_density();
-      dnt += _etraps[i]->get_ionized_density_derivative();
+      _etraps[i]->set_energies(Ec, Ev);
+      Particle el(-1, _pd.density_n, _pd.fermi_n, kT);
+      Particle hl(1, 0, 0, kT);
+      nt += _etraps[i]->get_ionized_density_and_derivative(el, hl, derivatives);
+      dnt += derivatives[0];
     }
 
 
@@ -441,11 +445,14 @@ DSSCModel::calculate_equilibrium_traps(void)
     double kT = Constants::k_B * SimulationOptions::T;
 //    set<Trap*>::iterator it(_etraps.begin());
 //    const set<Trap*>::iterator end(_etraps.end());
+    vector<double> derivatives;
     for ( int i = 0; i < _etraps.size(); ++i)
     {
-      _etraps[i]->set_energies(Ec, Ev, 0.0, kT);
-      nt += _etraps[i]->get_ionized_density();
-      dnt += _etraps[i]->get_ionized_density_derivative();
+      _etraps[i]->set_energies(Ec, Ev);
+      Particle el(-1, _pd.density_n, _pd.fermi_n, kT);
+      Particle hl(1, 0, 0, kT);
+      nt += _etraps[i]->get_ionized_density_and_derivative(el, hl, derivatives);
+      dnt += derivatives[0];
     }
 
 

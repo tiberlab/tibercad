@@ -2,6 +2,39 @@
 
 #include "TiberMath.h"
 #include "Messages.h"
+
+#include <cmath>
+
+
+using namespace std;
+
+pair<double, double>
+Distributions::fermi_dirac(double E, double kT)
+{
+  double f = 0, deriv = 0;
+  double g = 1;
+  double arg = -E / kT;
+  if (arg > 50)
+  {
+    f = exp(-arg) / g;
+    deriv = -f;
+  }
+  else if (arg < -50)
+  {
+    deriv = -g * exp(arg);
+    f = 1 + deriv;
+  }
+  else
+  {
+    double expfac = g * exp(arg);
+    double denom = 1.0 + expfac;
+    f = 1.0 / denom;
+    deriv = -expfac * f / denom;
+  }
+
+  return make_pair(f, -deriv / kT);
+}
+
 /*
 #include "dense_matrix.h"
 #include "dense_vector.h"

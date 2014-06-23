@@ -2,12 +2,18 @@
 
 #include "SRHRecombination.h"
 #include "DriftDiffusionProperties.h"
+#include "DensityOfStates.h"
+#include "TiberMath.h"
 
 #include "Material.h"
 #include "Database.h"
 
 
 #include "TiberModule.h"
+
+
+using namespace std;
+
 
 
 
@@ -51,10 +57,48 @@ SRHRecombination::TrapAssisted::get_gamma(double F, double T, double Et)
 }
 
 
+
+SRHRecombination::SRHRecombination(const ModelOptions& options) :
+  RecombinationModelInterface(options),
+  _trap(false),
+  _tau_n(1e-9),
+  _tau_p(1e-9),
+  _sigma_n(1e-15),
+  _sigma_p(1e-15),
+  _gen_TC(0.0),
+  _gen_VT(0.0),
+  _E_t(0.0),
+  _density(1e16),
+  _energy_reference('m'),
+  _Talpha_e(0.0),
+  _Talpha_h(0.0),
+  _Tcoeff_e(0.0),
+  _Tcoeff_h(0.0),
+  _tat(NULL),
+  _dos(NULL)
+{
+}
+
+
+
 SRHRecombination::~SRHRecombination(void)
 {
   delete _tat;
 }
+
+
+
+void
+SRHRecombination::prepare_submodels(void)
+{
+  if (get_options().has_submodel("density_of_states"))
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("density_of_states"));
+    _dos = DensityOfStates::create(it->second);
+    add_submodel("dos", _dos);
+  }
+}
+
 
 
 void
@@ -137,6 +181,10 @@ SRHRecombination::do_init(void)
     get_parameter("sigma_n", _sigma_n);
     get_parameter("sigma_p", _sigma_p);
     get_parameter("Nt", _density);
+
+    get_parameter("trap_to_cb_rate", _gen_TC);
+    get_parameter("vb_to_trap_rate", _gen_VT);
+
     _trap = true;
   }
 
@@ -208,17 +256,13 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
+  double Efn  = -dd.get_electron_electro_chemical_potential();
+  double Efp  = -dd.get_hole_electro_chemical_potential();
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
-  double n0 = dd.get_equilibrium_electron_density();
-  double p0 = dd.get_equilibrium_hole_density();
-  double gn = dd.get_point_data().gamma_n;
-  double gp = dd.get_point_data().gamma_p;
   double T = dd.get_lattice_temperature();
-  // TODO should take carrier temperatures
 
   double Et = get_trap_level();
-  double f = std::exp((Et - dd.get_equilibrium_fermi_level()) / T);
 
   double tau_n = _tau_n;
   double tau_p = _tau_p;
@@ -267,9 +311,59 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
     //std::cerr << gamman << " "  << gammap << std::endl;
   }
 
-  double denom = tau_p * (n + gn * n0 * f) + tau_n * (p + gp * p0 / f);
-  double tmp = n * p / denom;
-  recomb_e = recomb_h = tmp - gn * gp * n0 * p0 / denom;
+  // TODO should take carrier temperatures
+  double kT_e = T;
+  double kT_h = T;
+  double arg_e = get_trap_level() - Efn - dd.get_electric_potential();
+  double arg_h = get_trap_level() - Efp - dd.get_electric_potential();
+  double f_e, f_h;
+
+  // get the occupations
+  if (_dos == NULL)
+  {
+    std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
+    f_e = occ_e.first;
+    //deriv_e = occ_e.second;
+
+    std::pair<double, double> occ_h(Distributions::fermi_dirac(-arg_h, kT_h));
+    f_h = occ_h.first;
+    //deriv_h = occ_h.second;
+  }
+  else
+  {
+    f_h = _dos->get_occupied_density(-arg_h, kT_h);
+    //deriv_h = _dos->get_occupied_density_derivative(-arg_h, kT_h);
+
+    f_e = _dos->get_occupied_density(-arg_e, kT_e);
+    //deriv_e = _dos->get_occupied_density_derivative(-arg_e, kT_e);
+  }
+
+  double gc = (1.0 - f_e) / f_e;
+  double gv = f_h / (1.0 - f_h);
+
+  //if (arg_e / kT_e > 50)
+    gc = exp(arg_e / kT_e);
+  //if (arg_e / kT_e < -50)
+    gv = exp(-arg_h / kT_h);
+
+
+
+  double a = 1 + gc;
+  double b = 1 + gv;
+  double c = 1 - gc*gv;
+
+  //a = 1 + exp((Et - Efn) / T);
+  //b = 1 + exp((Efp - Et) / T);
+  //c = 1 - exp((Efp - Efn) / T);
+
+
+  double denom = tau_p * n * a + tau_n * p * b + tau_n * tau_p * (_gen_VT + _gen_TC);
+  double nom = n * p * c - (tau_p * n * gc * _gen_VT +
+      tau_n * p * gv * _gen_TC + tau_n * tau_p * _gen_VT * _gen_TC);
+
+  recomb_e = nom / denom;
+  recomb_h = recomb_e;
+
 }
 
 
@@ -280,12 +374,10 @@ SRHRecombination::get_net_recombination_rate_derivatives(
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
+  double Efn  = -dd.get_electron_electro_chemical_potential();
+  double Efp  = -dd.get_hole_electro_chemical_potential();
   double n  = dd.get_electron_density();
   double p  = dd.get_hole_density();
-  double n0 = dd.get_equilibrium_electron_density();
-  double p0 = dd.get_equilibrium_hole_density();
-  double gn = dd.get_point_data().gamma_n;
-  double gp = dd.get_point_data().gamma_p;
   double T = dd.get_lattice_temperature();
 
   double Et = get_trap_level();
@@ -337,20 +429,82 @@ SRHRecombination::get_net_recombination_rate_derivatives(
     tau_p *= gammap;
   }
 
-  long double denom = tau_p * (n + gn * n0 * f) + tau_n * (p + gp * p0 / f);
-  long double tmp = n * p / denom;
-  long double SRH = tmp - gn * gp * n0 * p0 / denom;
 
-  long double a = p / denom;
-  a = a - tau_p * SRH / denom;
-  long double b = n / denom;
-  b = b - tau_n * SRH / denom;
+  // TODO should take carrier temperatures
+  double kT_e = T;
+  double kT_h = T;
+  double arg_e = get_trap_level() - Efn - dd.get_electric_potential();
+  double arg_h = get_trap_level() - Efp - dd.get_electric_potential();
+  double f_e, f_h;
+  double deriv_e, deriv_h;
 
   //if (a < 0) a = p / denom;
   //if (b < 0) b = n / denom;
+  // get the occupations
+  if (_dos == NULL)
+  {
+    std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
+    f_e = occ_e.first;
+    deriv_e = occ_e.second;
 
-  recomb_e[0] = recomb_h[0] = a;
-  recomb_e[1] = recomb_h[1] = b;
+    std::pair<double, double> occ_h(Distributions::fermi_dirac(-arg_h, kT_h));
+    f_h = occ_h.first;
+    deriv_h = occ_h.second;
+  }
+  else
+  {
+    f_h = _dos->get_occupied_density(-arg_h, kT_h);
+    deriv_h = _dos->get_occupied_density_derivative(-arg_h, kT_h);
+
+    f_e = _dos->get_occupied_density(-arg_e, kT_e);
+    deriv_e = _dos->get_occupied_density_derivative(-arg_e, kT_e);
+  }
+
+  double gc = (1.0 - f_e) / f_e;
+  double gv = f_h / (1.0 - f_h);
+  double deriv_gc = -deriv_e / (f_e * f_e);
+  double deriv_gv =  deriv_h / ((1 - f_h) * (1 - f_h));
+
+  //if (arg_e / kT_e > 50)
+  {
+    gc = exp(arg_e / kT_e);
+    deriv_gc = -gc / kT_e;
+  }
+  //if (arg_h / kT_h < -50)
+  {
+    gv = exp(-arg_h / kT_h);
+    deriv_gv = gv / kT_h;
+  }
+
+  double a = 1 + gc;
+  double b = 1 + gv;
+  double c = 1 - gc*gv;
+
+  //a = 1 + exp((Et - Efn) / T);
+  //b = 1 + exp((Efp - Et) / T);
+  //c = 1 - exp((Efp - Efn) / T);
+
+  double nom = n * p * c - (tau_p * n * gc * _gen_VT +
+      tau_n * p * gv * _gen_TC + tau_n * tau_p * _gen_VT * _gen_TC);
+
+  double denom = tau_p * n * a + tau_n * p * b + tau_n * tau_p * (_gen_VT + _gen_TC);
+  double denom2 = denom * denom;
+
+  double r_e = nom / denom;
+  double r_h = r_e;
+
+  double dRedn = (p * c - tau_p * gc * _gen_VT - r_e * tau_p * a) / denom;
+  double dRedp = (n * c - tau_n * gv * _gen_TC - r_e * tau_n * b) / denom;
+
+
+  double dRedEfn = n * deriv_gc * (p * gv + tau_p * (_gen_VT + r_e)) / denom;
+  double dRedEfp = p * deriv_gv * (n * gc + tau_n * (_gen_TC + r_e)) / denom;
+
+
+  recomb_e[0] = recomb_h[0] = dRedn;
+  recomb_e[1] = recomb_h[1] = dRedp;
+  recomb_e[2] = recomb_h[2] = dRedEfn;
+  recomb_e[3] = recomb_h[3] = dRedEfp;
 }
 
 

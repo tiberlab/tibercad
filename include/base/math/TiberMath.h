@@ -5,6 +5,8 @@
 
 #include "tiber_dll.h"
 
+#include <utility>
+
 namespace {
 
   //! The fermi integral of order -1/2
@@ -39,6 +41,16 @@ namespace TiberMath
 
   //! Calculate SVD of a matrix
   //void svd(DenseMatrix<double>& matrix, DenseVector<double>& sigma)
+}
+
+
+//! Distribution functions
+namespace Distributions
+{
+
+  //! The Fermi-Dirac distribution
+  std::pair<double, double> fermi_dirac(double E, double kT);
+
 }
 
 

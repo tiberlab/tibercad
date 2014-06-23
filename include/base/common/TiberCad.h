@@ -4,7 +4,7 @@
 #define _TIBERCAD_H_
 
 #include "tiber_dll.h"
-#include "TiberMath.h"
+//#include "TiberMath.h"
 
 #include <string>
 #include <list>

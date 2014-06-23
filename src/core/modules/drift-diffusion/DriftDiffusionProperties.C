@@ -4,19 +4,18 @@
 #include "ParticleDensity.h"
 #include "RecombinationModelInterface.h"
 #include "MobilityModelInterface.h"
-//#include "ThermoelectricPower.h"
 #include "SimulationInterface.h"
 #include "Material.h"
 #include "Database.h"
 #include "Dopant.h"
 #include "Trap.h"
+#include "Particle.h"
 #include "Constants.h"
 #include "InitFailedException.h"
 #include "RotatedCrystal.h"
 #include "Embracing.h"
 #include "Messages.h"
 #include "TypeDefs.h"
-//#include "PolarizationModel.h"
 
 #include "elem.h"
 
@@ -33,9 +32,9 @@ DriftDiffusionProperties::PointData::PointData(void)
   : //electron_conductivity_derivatives(3, 0.0),
     //hole_conductivity_derivatives(3, 0.0),
     electron_recombination_rate(0.0),
-    electron_recombination_rate_derivatives(3, 0.0),
+    electron_recombination_rate_derivatives(4, 0.0),
     hole_recombination_rate(0.0),
-    hole_recombination_rate_derivatives(3, 0.0)
+    hole_recombination_rate_derivatives(4, 0.0)
 {
 }
 
@@ -646,41 +645,57 @@ DriftDiffusionProperties::calculate_traps(void)
   double Ev = get_valence_band_edge() - _pd->electric_potential;
 
   _pd->ionized_electron_traps = 0.0;
-  _pd->ionized_electron_traps_derivative = 0.0;
+  _pd->ionized_hole_traps = 0.0;
+  vector<double>& dntdEf = _pd->ionized_traps_derivative;
+  dntdEf.resize(2);
+  dntdEf[0] = dntdEf[1] = 0.0;
+
   if (_etraps.size() > 0)
   {
-    double nt = 0, dnt = 0;
-    double kT = _pd->electron_vt;
+    double nt = 0;
+    std::vector<double> derivatives;
     set<Trap*>::iterator it(_etraps.begin());
     const set<Trap*>::iterator end(_etraps.end());
     for ( ; it != end; ++it)
     {
-      (*it)->set_energies(Ec, Ev, -_pd->fermi_e, kT);
-      nt += (*it)->get_ionized_density();
-      dnt += (*it)->get_ionized_density_derivative();
+      (*it)->set_energies(Ec, Ev);
+      Particle el(-1, _pd->electron_density, _pd->fermi_e, _pd->electron_vt);
+      Particle hl(1, _pd->hole_density, _pd->fermi_h, _pd->hole_vt);
+      nt += (*it)->get_ionized_density_and_derivative(el, hl, derivatives);
+      // the negative sign is because the derivative is given with respect
+      // to the quasi fermi level, not the electrochemical potential.
+      dntdEf[0] -=
+          derivatives[0] * _pd->electron_density_derivative +
+          derivatives[2];
+      dntdEf[1] -=
+          derivatives[1] * _pd->hole_density_derivative +
+          derivatives[3];
     }
 
     _pd->ionized_electron_traps = nt;
-    _pd->ionized_electron_traps_derivative = dnt;
   }
 
-  _pd->ionized_hole_traps = 0;
-  _pd->ionized_hole_traps_derivative = 0;
   if (_htraps.size() > 0)
   {
-    double nt = 0, dnt = 0;
-    double kT = _pd->hole_vt;
+    double nt = 0;
+    std::vector<double> derivatives;
     set<Trap*>::iterator it(_htraps.begin());
     const set<Trap*>::iterator end(_htraps.end());
     for ( ; it != end; ++it)
     {
-      (*it)->set_energies(Ec, Ev, -_pd->fermi_h, kT);
-      nt += (*it)->get_ionized_density();
-      dnt += (*it)->get_ionized_density_derivative();
+      (*it)->set_energies(Ec, Ev);
+      Particle el(-1, _pd->electron_density, _pd->fermi_e, _pd->electron_vt);
+      Particle hl(1, _pd->hole_density, _pd->fermi_h, _pd->hole_vt);
+      nt += (*it)->get_ionized_density_and_derivative(el, hl, derivatives);
+      dntdEf[0] -=
+          derivatives[0] * _pd->electron_density_derivative +
+          derivatives[2];
+      dntdEf[1] -=
+          derivatives[1] * _pd->hole_density_derivative +
+          derivatives[3];
     }
 
     _pd->ionized_hole_traps = nt;
-    _pd->ionized_hole_traps_derivative = dnt;
   }
 }
 
@@ -732,12 +747,16 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
   _pd->electron_recombination_rate = 0;
   _pd->electron_recombination_rate_derivatives[0] = 0;
   _pd->electron_recombination_rate_derivatives[1] = 0;
+  _pd->electron_recombination_rate_derivatives[2] = 0;
+  _pd->electron_recombination_rate_derivatives[3] = 0;
   _pd->hole_recombination_rate = 0;
   _pd->hole_recombination_rate_derivatives[0] = 0;
   _pd->hole_recombination_rate_derivatives[1] = 0;
+  _pd->hole_recombination_rate_derivatives[2] = 0;
+  _pd->hole_recombination_rate_derivatives[3] = 0;
 
   double Re, Rh;
-  vector<double> dRe(3), dRh(3);
+  vector<double> dRe(4), dRh(4);
 
   recomb_iterator it = _recombination_models.begin();
   recomb_iterator end = _recombination_models.end();
@@ -749,9 +768,13 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     _pd->electron_recombination_rate += Re;
     _pd->electron_recombination_rate_derivatives[0] += dRe[0];
     _pd->electron_recombination_rate_derivatives[1] += dRe[1];
+    _pd->electron_recombination_rate_derivatives[2] += dRe[2];
+    _pd->electron_recombination_rate_derivatives[3] += dRe[3];
     _pd->hole_recombination_rate += Rh;
     _pd->hole_recombination_rate_derivatives[0] += dRh[0];
     _pd->hole_recombination_rate_derivatives[1] += dRh[1];
+    _pd->hole_recombination_rate_derivatives[2] += dRh[2];
+    _pd->hole_recombination_rate_derivatives[3] += dRh[3];
   }
 }
 
@@ -827,22 +850,24 @@ DriftDiffusionProperties::get_net_recombination_rate_IDs(
 
 
 
-double
+pair<double, double>
 DriftDiffusionProperties::get_net_recombination_rate(ID id)
 {
-  double rec = 0.0;
+  double rece = 0.0;
+  double rech = 0.0;
 
   recomb_iterator it = _recombination_models.begin();
   recomb_iterator end = _recombination_models.end();
   for ( ; it != end; ++it)
     if (it->first == id)
     {
-      double r, dummy;
-      it->second->get_net_recombination_rates(r, dummy);
-      rec += r;
+      double re, rh;
+      it->second->get_net_recombination_rates(re, rh);
+      rece += re;
+      rech += rh;
     }
 
-  return rec;
+  return(make_pair(rece, rech));
 }
 
 

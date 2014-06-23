@@ -148,14 +148,11 @@ class DriftDiffusionProperties : public PhysicalModel
         //! The trapped electron density
         double ionized_electron_traps;
 
-        //! The trapped electron density derivative
-        double ionized_electron_traps_derivative;
-
         //! The trapped hole density
         double ionized_hole_traps;
 
-        //! The trapped hole density derivative
-        double ionized_hole_traps_derivative;
+        //! The trapped density derivatives d/dfermi_e, d/dfermi_h
+        std::vector<double> ionized_traps_derivative;
 
         //! The total charge density
         double charge_density;
@@ -190,12 +187,18 @@ class DriftDiffusionProperties : public PhysicalModel
         double electron_recombination_rate;
 
         //! The derivatives of the net electron recombination rate
+        /*!
+         * order is: d/dn, d/dp, d/dfermi_e, d/dfermi_h
+         */
         std::vector<double> electron_recombination_rate_derivatives;
 
         //! The net hole recombination rate
         double hole_recombination_rate;
 
         //! The derivatives of the net hole recombination rate
+        /*!
+         * order is: d/dn, d/dp, d/dfermi_e, d/dfermi_h
+         */
         std::vector<double> hole_recombination_rate_derivatives;
 
     };
@@ -687,7 +690,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! get the net recombination rate of model \c id
-    double get_net_recombination_rate(ID id);
+    std::pair<double, double> get_net_recombination_rate(ID id);
 
 
     //! Clear all recombination rates
@@ -1236,11 +1239,11 @@ DriftDiffusionProperties::get_charge_density_derivatives(
 {
   long double der0 = static_cast<long double>(get_electron_density_derivative())
       - static_cast<long double>(get_ionized_donor_density_derivative())
-      - static_cast<long double>(_pd->ionized_electron_traps_derivative);
+      + static_cast<long double>(_pd->ionized_traps_derivative[0]);
 
   long double der1 = -static_cast<long double>(get_hole_density_derivative())
       + static_cast<long double>(get_ionized_acceptor_density_derivative())
-      - static_cast<long double>(_pd->ionized_hole_traps_derivative);
+      + static_cast<long double>(_pd->ionized_traps_derivative[1]);
 
   derivatives[0] = static_cast<double>(der0);
   derivatives[1] = static_cast<double>(der1);

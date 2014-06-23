@@ -11,6 +11,10 @@ New features:
 	- can use Projection block in modules to project solutions on a
 	  regular tensor grid
 	- atomistic structure can calculate alloy statistics
+	- trap occupation is now based on both quasi Fermi levels
+	- can have generation rates between SRH trap states and bands
+	- output for recombination rates is given for electrons and holes
+	  distinctly
 
 Bug fixes:
 

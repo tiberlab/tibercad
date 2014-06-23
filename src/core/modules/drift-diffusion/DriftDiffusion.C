@@ -886,10 +886,10 @@ DriftDiffusion::calculate_iqe(void)
     }
   }
 
-  ID rec_id = get_solution_id("DirectRecombination");
-  ID netrec_id = get_solution_id("NetRecombination");
-  ID srh_id = get_solution_id("SRHRecombination");
-  ID aug_id = get_solution_id("AugerRecombination");
+  ID rec_id = get_solution_id("eDirectRecombination");
+  ID netrec_id = get_solution_id("eNetRecombination");
+  ID srh_id = get_solution_id("eSRHRecombination");
+  ID aug_id = get_solution_id("eAugerRecombination");
   double Rtot = 0.0, Rsrh = 0.0, Raug = 0.0;
 
   if (rec_id == INVALID_ID)
@@ -1795,13 +1795,20 @@ DriftDiffusion::do_setup_solution_variables(void)
 
   declare_solution(RecombHeat, REAL, NODES, "W/cm^3");
 
-  declare_solution(NetRecombination, REAL, NODES, "1/(s*cm^3)");
+  if (plot_solution("NetRecombination"))
+  {
+    add_plot_variable(eNetRecombination);
+    add_plot_variable(hNetRecombination);
+  }
+  declare_solution(eNetRecombination, REAL, NODES, "1/(s*cm^3)");
+  declare_solution(hNetRecombination, REAL, NODES, "1/(s*cm^3)");
   // add the single recombination rates
   {
     //size_t num_cb = 1;
     //size_t num_vb = 1;
 
-    bool plot_rec = plot_solution(NetRecombination);
+    bool plot_erec = plot_solution(eNetRecombination);
+    bool plot_hrec = plot_solution(hNetRecombination);
 
     const set<PhysicalModel*>& pm = get_physical_models();
     set<PhysicalModel*>::const_iterator it(pm.begin());
@@ -1828,14 +1835,19 @@ DriftDiffusion::do_setup_solution_variables(void)
 
       for (int i = 0; i < n; i++)
       {
-        ID id = static_cast<ID>(NetRecombination) + ids[i];
+        ID eid = static_cast<ID>(eNetRecombination) + ids[i];
+        ID hid = static_cast<ID>(hNetRecombination) + ids[i];
         const std::string& name =
             sc->get_recombination_model(ids[i])->get_default_name();
         // if recombination should be plotted, add it also to the plot variables
-        if (plot_rec) add_plot_variable(name);
-        declare_solution_ext(name, id, SolutionDescriptor::REAL,
+        if (plot_erec) add_plot_variable("e" + name);
+        if (plot_hrec) add_plot_variable("h" + name);
+        declare_solution_ext("e"+name, eid, SolutionDescriptor::REAL,
             SolutionDescriptor::NODES, "1/(s*cm^3)");
-        _recombination_ids.insert(id);
+        declare_solution_ext("h"+name, hid, SolutionDescriptor::REAL,
+            SolutionDescriptor::NODES, "1/(s*cm^3)");
+
+        _recombination_ids.insert(ids[i]);
       }
     }
   }
@@ -2047,7 +2059,6 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     }
 
-    //cout<<e_field<<endl;
     // scale the potential back
     u *= phi0;
     en *= phi0;
@@ -2196,14 +2207,18 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
       values[hThElPower][n] = Pp;
 
     {
-      bool get_recomb = values.count(NetRecombination);
-      double tot_rec = 0;
+      bool get_recomb_e = values.count(eNetRecombination);
+      bool get_recomb_h = values.count(hNetRecombination);
+      bool get_recomb = get_recomb_e || get_recomb_h;
+      double tot_rec_e = 0;
+      double tot_rec_h = 0;
 
       bool need_recomb = get_recomb;
       set<ID>::const_iterator rec_it(_recombination_ids.begin());
       for ( ; rec_it != _recombination_ids.end(); ++rec_it)
       {
-        need_recomb |= values.count(*rec_it);
+        need_recomb |= values.count(*rec_it + eNetRecombination) ||
+            values.count(*rec_it + hNetRecombination);
       }
 
       if (need_recomb)
@@ -2212,20 +2227,28 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
         rec_it = _recombination_ids.begin();
         for ( ; rec_it != _recombination_ids.end(); ++rec_it)
         {
-          bool requested = values.count(*rec_it);
-          double rec = 0;
-          if (get_recomb || requested)
-            rec = sc->get_net_recombination_rate(*rec_it - NetRecombination);
+          bool requested_e = values.count(*rec_it + eNetRecombination);
+          bool requested_h = values.count(*rec_it + hNetRecombination);
+          pair<double, double> rec;
+          if (get_recomb || requested_e || requested_h)
+            rec = sc->get_net_recombination_rate(*rec_it);
 
-          if (requested)
-            values[*rec_it][n] = rec;
+          if (requested_e)
+            values[*rec_it + eNetRecombination][n] = rec.first;
+          if (requested_h)
+            values[*rec_it + hNetRecombination][n] = rec.second;
 
           if (get_recomb)
-            tot_rec += rec;
+          {
+            tot_rec_e += rec.first;
+            tot_rec_h += rec.second;
+          }
         }
 
-        if (get_recomb)
-          values[NetRecombination][n] = tot_rec;
+        if (get_recomb_e)
+          values[eNetRecombination][n] = tot_rec_e;
+        if (get_recomb_h)
+          values[hNetRecombination][n] = tot_rec_h;
       }
     }
 
@@ -2254,11 +2277,17 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     {
       vector<ID> rec_model_ids;
       int n_rec = sc->get_net_recombination_rate_IDs(rec_model_ids);
-      double rec = 0.0;
+      double rec_e = 0;
+      double rec_h = 0;
       for (int i = 0; i < n_rec; i++)
-	rec += sc->get_net_recombination_rate(rec_model_ids[i]);
+      {
+        pair<double, double> rec(sc->get_net_recombination_rate(rec_model_ids[i]));
+        rec_e += rec.first;
+        rec_h += rec.second;
+      }
 
-      values[RecombHeat][n] = Constants::e * rec * (ep - en + T * (Pp - Pn));
+      values[RecombHeat][n] = Constants::e * (rec_h * (ep + T * Pp) -
+          rec_e * (en + T * Pn));
     }
 
   }
@@ -4517,16 +4546,22 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           sc->get_net_electron_recombination_rate_derivatives()[0];
         long double dRn_dp =
           sc->get_net_electron_recombination_rate_derivatives()[1];
+        long double dRn_dEfn =
+          sc->get_net_electron_recombination_rate_derivatives()[2];
+        long double dRn_dEfp =
+          sc->get_net_electron_recombination_rate_derivatives()[3];
         long double dRp_dn = sc->get_net_hole_recombination_rate_derivatives()[0];
         long double dRp_dp = sc->get_net_hole_recombination_rate_derivatives()[1];
+        long double dRp_dEfn = sc->get_net_hole_recombination_rate_derivatives()[2];
+        long double dRp_dEfp = sc->get_net_hole_recombination_rate_derivatives()[3];
 
         long double dRn[3];
         long double dRp[3];
-        dRn[1] = -dRn_dn * dn_dphi * phi0 / R0_e;
-        dRn[2] = -dRn_dp * dp_dphi * phi0 / R0_e;
+        dRn[1] = (dRn_dEfn - dRn_dn * dn_dphi) * phi0 / R0_e;
+        dRn[2] = (dRn_dEfp - dRn_dp * dp_dphi) * phi0 / R0_e;
         dRn[0] = -(dRn[1] + dRn[2]);
-        dRp[1] = -dRp_dn * dn_dphi * phi0 / R0_h;
-        dRp[2] = -dRp_dp * dp_dphi * phi0 / R0_h;
+        dRp[1] = (dRp_dEfn - dRp_dn * dn_dphi) * phi0 / R0_h;
+        dRp[2] = (dRp_dEfp - dRp_dp * dp_dphi) * phi0 / R0_h;
         dRp[0] = -(dRp[1] + dRp[2]);
 
         if (Rn == 0.0)

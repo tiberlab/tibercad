@@ -165,6 +165,10 @@ DDInterfaceModel::do_init(void)
   // we set a bulk material, just in case a submodel needs it
   set_material(mat);
 
+  // Set bulk conduction and valence band since submodels may need them
+  set_conduction_band(&_ddprop_A->get_conduction_band());
+  set_valence_band(&_ddprop_A->get_valence_band());
+
   // to setup common submodels
   DriftDiffusionProperties::do_init();
 
@@ -316,8 +320,8 @@ DDInterfaceModel::compute()
     // i.e. refers to the negative charge density
     calculate_traps();
     double q = pd.ionized_electron_traps + pd.ionized_hole_traps;
-    double dq_dEfn = pd.ionized_electron_traps_derivative;
-    double dq_dEfp = pd.ionized_hole_traps_derivative;
+    double dq_dEfn = pd.ionized_traps_derivative[0];
+    double dq_dEfp = pd.ionized_traps_derivative[1];
     if (is_internal_boundary())
     {
       q /= 2;

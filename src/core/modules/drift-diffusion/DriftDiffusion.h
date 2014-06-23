@@ -135,9 +135,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
       hPeltier,         /*!< Electron Peltier-Thomson heat source */
       RecombHeat,       /*!< Recombination heat  */
       IQE,              /*!< Internal quantum efficiency */
-      NetRecombination = 100,  /*!< base number for recombination models */
-      ContactCurrent   = 200,  /*!< base number for contact currents */
-      ContactVoltage   = 300   /*!< base number for contact voltages */
+      eNetRecombination = 100,  /*!< base number for el recombination models */
+      hNetRecombination = 200,  /*!< base number for hl recombination models */
+      ContactCurrent   = 300,  /*!< base number for contact currents */
+      ContactVoltage   = 400   /*!< base number for contact voltages */
 
     };
 

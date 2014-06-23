@@ -577,7 +577,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
   // the maximum x (above the zero, f < 0)
   double xmax = Ec + 0.5;
 
-  //cerr << "***\n";
+  //cerr << "***" << get_owner()->get_name() << endl;;
   for (unsigned int i = 0; i < 200; ++i)
   {
     set_potentials(x);

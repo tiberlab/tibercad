@@ -7,6 +7,7 @@
 #include "PhysicalModelInterface.h"
 
 class DensityOfStates;
+class Particle;
 
 /*!
  * \brief Base class for traps in semiconductors
@@ -41,26 +42,23 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
 
 
     /*!
-     * \brief Set the relevant energies
+     * \brief Set the relevant band edge energies
      *
      * \param Ec the conduction band edge in eV
      * \param Ev the valence band edge in eV
-     * \param Ef the quasi fermi level in eV (\f$E_f = -q\phi\f$)
-     * \param kT the thermal energy (in eV
      */
-    void set_energies(double Ec, double Ev, double Ef, double kT);
+    void set_energies(double Ec, double Ev);
 
 
     //! Get ionized density (= charge density, cm^-3)
     /*!
      * \return the charge density in cm^-3 including sign
+     * \param el the electron population
+     * \param hl the hole population
+     * \param will be filled with the partial derivatives: [d/dn d/dp d/dEfn d/dEfp]
      */
-    double get_ionized_density(void) const;
-
-
-    //! Get the derivative with respect to the quasi fermi level
-    double get_ionized_density_derivative(void) const;
-
+    double get_ionized_density_and_derivative(const Particle& el,
+        const Particle& hl, std::vector<double>& derivatives) const;
 
     //! Get the particle type
     char get_particle(void) const;
@@ -111,11 +109,26 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
     //! The valence band
     double _Ev;
 
-    //! The quasi fermi level
-    double _fermi_level;
 
-    //! The thermal energy
-    double _kT;
+    //! e cross section
+    double _sigma_n;
+
+    //! h cross section
+    double _sigma_p;
+
+    //! e thermal velocity
+    double _e_vth;
+
+    //! h thermal velocity
+    double _h_vth;
+
+
+    //! Trap-to-CB generation
+    double _gen_TC;
+
+    //! VB-to-trap generation
+    double _gen_VT;
+
 
     //! The density of states
     DensityOfStates* _dos;
@@ -142,12 +155,10 @@ Trap::create(const ModelOptions& options)
 
 inline
 void
-Trap::set_energies(double Ec, double Ev, double Ef, double kT)
+Trap::set_energies(double Ec, double Ev)
 {
   _Ec = Ec;
   _Ev = Ev;
-  _fermi_level = Ef;
-  _kT = kT;
 }
 
 

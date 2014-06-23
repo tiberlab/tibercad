@@ -115,8 +115,8 @@ class DDBulkModel : public DriftDiffusionProperties
     virtual void calculate_equilibrium_properties(void);
 
 
-    //! Get the total charge density
-    /*!
+    // ! Get the total charge density
+    /* !
      *
      * \f$ \rho = p - n + N_D^+ - N_A^- \f$
      *
@@ -126,14 +126,14 @@ class DDBulkModel : public DriftDiffusionProperties
      * The charge density is returned in units of the elementary charge
      * \f$e\f$, \em not in Coulomb!
      */
-    double get_charge_density(void) const;
+    //double get_charge_density(void) const;
 
 
-    //! Get the derivatives of the total charge density
-    /*!
+    // ! Get the derivatives of the total charge density
+    /* !
      * The derivatives are given w.r.t. the two quasi Fermi levels
      */
-    void get_charge_density_derivatives(double derivatives[2]) const;
+    //void get_charge_density_derivatives(double derivatives[2]) const;
 
 
 
@@ -403,7 +403,7 @@ DDBulkModel::get_element(void) const
 */
 
 
-
+/*
 inline
 double
 DDBulkModel::get_charge_density(void) const
@@ -429,11 +429,11 @@ DDBulkModel::get_charge_density_derivatives(
 {
   long double der0 = static_cast<long double>(get_electron_density_derivative())
       - static_cast<long double>(get_ionized_donor_density_derivative())
-      - static_cast<long double>(get_pd().ionized_electron_traps_derivative);
+      - static_cast<long double>(get_pd().ionized_traps_derivative[0]);
 
   long double der1 = -static_cast<long double>(get_hole_density_derivative())
       + static_cast<long double>(get_ionized_acceptor_density_derivative())
-      - static_cast<long double>(get_pd().ionized_hole_traps_derivative);
+      - static_cast<long double>(get_pd().ionized_traps_derivative[1]);
 
   derivatives[0] = static_cast<double>(der0);
   derivatives[1] = static_cast<double>(der1);
@@ -445,7 +445,7 @@ DDBulkModel::get_charge_density_derivatives(
   //  + get_ionized_acceptor_density_derivative()
   //  - _pd->ionized_hole_traps_derivative;
 }
-
+*/
 
 
 

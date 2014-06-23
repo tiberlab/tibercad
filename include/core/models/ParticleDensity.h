@@ -153,7 +153,8 @@ class ParticleDensity : public PhysicalModelInterface
     //! Get particle density derivative
     /*!
      * set_classical_parameters() and set_element_and_point() have to be
-     * called before this one
+     * called before this one. The derivative is given with respect to the
+     * electrostatic potential/quasi Fermi level.
      *
      * \attention 
      *   The particle density derivative is calculated only once for given

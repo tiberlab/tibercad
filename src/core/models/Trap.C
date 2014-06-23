@@ -1,11 +1,17 @@
 // $Id$
 
 #include "Trap.h"
+#include "Particle.h"
 #include "DensityOfStates.h"
+#include "TiberMath.h"
 
-//TIBER _MODULE(Trap, trap)
+#include "fstream"
 
 using namespace std;
+
+
+
+
 
 Trap::Trap(const ModelOptions& options) :
   PhysicalModelInterface(options),
@@ -14,6 +20,12 @@ Trap::Trap(const ModelOptions& options) :
   _particle('e'),
   _level(0.0),
   _energy_reference('m'),
+  _sigma_n(1e-15),
+  _sigma_p(1e-15),
+  _e_vth(1e7),
+  _h_vth(1e7),
+  _gen_TC(0.0),
+  _gen_VT(0.0),
   _dos(NULL)
 {
   string type = get_option("type", "");
@@ -71,6 +83,42 @@ Trap::do_init(void)
   get_parameter("Nt", _density);
   get_parameter("Et", _level);
 
+  get_parameter("sigma_n", _sigma_n);
+  get_parameter("sigma_p", _sigma_p);
+
+  // TODO to be obtained from DOS model (?)
+  get_parameter("thermal_velocity_n", _e_vth);
+  get_parameter("thermal_velocity_p", _h_vth);
+
+  get_parameter("trap_to_cb_rate", _gen_TC);
+  get_parameter("vb_to_trap_rate", _gen_VT);
+
+  /* for testing
+  double Ec = 1,  Ev = 0;
+  string name = "trap_";
+  name += _particle;
+  name += ".dat";
+  ofstream of(name.c_str());
+  double h = 1.0 / 10000;
+  of << "# " << Ec << " " << Ev << "\n";
+  for (unsigned int i = 0; i < 10000; i++)
+  {
+    double phi = i * h;
+    double Efn = 0;
+    double Efp = 0;
+
+    double n = 1e19*exp(-(Ec-phi) / 0.026);
+    double p = 1e19*exp((Ev-phi) / 0.026);
+    Particle el(-1, n, Efn, 0.026);
+    Particle hl(1, p, Efp, 0.026);
+    vector<double> der;
+    set_energies(Ec-phi, Ev-phi);
+    double f = get_ionized_density_and_derivative(el, hl, der);
+    of << phi << " " << n << " " << p  << " " <<
+        f << " " << der[0] << " " << der[1] << " " << der[2] << " " << der[3] <<  "\n";
+  }
+  of.close();
+  */
 }
 
 
@@ -98,37 +146,126 @@ Trap::_trap_level(void) const
 }
 
 
+
 double
-Trap::get_ionized_density(void) const
+Trap::get_ionized_density_and_derivative(const Particle& el,
+    const Particle& hl, std::vector<double>& derivatives) const
 {
   double dens = _density;
+  derivatives.resize(4);
+  derivatives[0] = derivatives[1] = derivatives[2] = derivatives[3] = 0.0;
 
-  if (_type != FIXED)
+  if ((_type != FIXED) && (dens > 0.0))
   {
-    double f;
-    double arg = _trap_level() - _fermi_level;
+    double f_e, f_h;
+    double deriv_e, deriv_h;
     double g = 1;
     double Nt = _density;
+
+    double kT_e = el.kT();
+    double kT_h = hl.kT();
+    double arg_e = _trap_level() + el.fermi_level();
+    double arg_h = _trap_level() + hl.fermi_level();
+
+    double Cn = _sigma_n * _e_vth;
+    double Cp = _sigma_p * _h_vth;
+
+    double n = el.density();
+    double p = hl.density();
+
+    // occupations in terms of electrons
+    if (_dos == NULL)
+    {
+      std::pair<double, double> occ_e(Distributions::fermi_dirac(-arg_e, kT_e));
+      f_e = occ_e.first;
+      deriv_e = occ_e.second;
+
+      std::pair<double, double> occ_h(Distributions::fermi_dirac(-arg_h, kT_h));
+      f_h = occ_h.first;
+      deriv_h = occ_h.second;
+    }
+    else
+    {
+      f_h = _dos->get_occupied_density(-arg_h, kT_h);
+      deriv_h = _dos->get_occupied_density_derivative(-arg_h, kT_h);
+
+      f_e = _dos->get_occupied_density(-arg_e, kT_e);
+      deriv_e = _dos->get_occupied_density_derivative(-arg_e, kT_e);
+    }
+
+    double f;
+    if (f_e < 1e-12)
+    {
+      f_e = 1e-12;
+      deriv_e = 0;
+    }
+    if (f_h > (1.0 - 1e-12))
+    {
+      f_h = 1.0 - 1e-12;
+      deriv_h = 0;
+    }
 
     switch (_particle)
     {
       case 'h':
-        if (_dos == NULL)
-          f = 1.0 / (1.0 + g * exp(-arg / _kT));
-        else
-          // it needs the fermi level shifted by trap_level
-          f = _dos->get_occupied_density(arg, _kT);
+      {
+        double gc = (1.0 - f_e) / f_e;
+        double gv = f_h / (1.0 - f_h);
+
+        //double nom = Cp * p + Cn * n * gc - (_gen_VT - _gen_TC) / Nt;
+        //double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv);
+        double nom = Cp * p + Cn * n * gc + _gen_TC / Nt;
+        double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv) + (_gen_VT + _gen_TC) / Nt;
+
+        // refactorized to prevent numerical problems
+        //double nom = ((Cp * p + _gen_TC / Nt) * f_e + Cn * n * (1 - f_e)) * (1 - f_h);
+        //double denom = (Cn * n  + f_e * (_gen_VT + _gen_TC) / Nt) * (1 - f_h)
+        //    + Cp * p * f_e;
+
+        f = nom / denom;
+
+        double dfdp = Cp * (1.0 - f * (1 + gv)) / denom;
+        double dfdn = Cn * (gc - f * (1 + gc)) / denom;
+
+        double dfdEfn = -(deriv_e / f_e) * ((1 - f) / f_e) * Cn * n / denom;
+        double dfdEfp = -(f / (1 - f_h)) * (deriv_h / (1 - f_h)) * Cp * p / denom;
+
+        derivatives[0] = Nt * dfdn;
+        derivatives[1] = Nt * dfdp;
+        derivatives[2] = Nt * dfdEfn;
+        derivatives[3] = Nt * dfdEfp;
+
         break;
+      }
 
       case 'e':
       default:
+      {
+        double gc = (1.0 - f_e) / f_e;
+        double gv = f_h / (1.0 - f_h);
+
+        //double nom = Cn * n + Cp * p * gv + (_gen_VT - _gen_TC) / Nt;
+        //double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv);
+        double nom = Cn * n + Cp * p * gv + _gen_VT / Nt;
+        double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv) + (_gen_VT + _gen_TC) / Nt;
+
+        f = nom / denom;
+
+        double dfdn = Cn * (1.0 - f * (1 + gc)) / denom;
+        double dfdp = Cp * (gv - f * (1 + gv)) / denom;
+
+        double dfdEfn = (deriv_e / f_e) * (f / f_e) * Cn * n / denom;
+        double dfdEfp = ((1 - f) / (1 - f_h)) * (deriv_h / (1 - f_h)) * Cp * p / denom;
+
         Nt = -Nt;
-        if (_dos == NULL)
-          f = 1.0 / (1.0 + exp(arg / _kT) / g);
-        else
-          // it needs the fermi level shifted by trap_level
-          f = _dos->get_occupied_density(-arg, _kT);
+
+        derivatives[0] = Nt * dfdn;
+        derivatives[1] = Nt * dfdp;
+        derivatives[2] = Nt * dfdEfn;
+        derivatives[3] = Nt * dfdEfp;
+
         break;
+      }
     }
 
     dens = Nt * f;
@@ -141,57 +278,3 @@ Trap::get_ionized_density(void) const
 }
 
 
-
-double
-Trap::get_ionized_density_derivative(void) const
-{
-  double deriv = 0.0;
-
-  if (_type != FIXED)
-  {
-    double arg = _trap_level() - _fermi_level;
-    double g = 1;
-    double Nt = _density;
-    double expfac;
-
-    switch (_particle)
-    {
-      case 'h':
-      {
-        if (_dos == NULL)
-        {
-          expfac = g * exp(-arg / _kT);
-          double denom = 1.0 + expfac;
-          deriv = -Nt / _kT * expfac / (denom * denom);
-        }
-        else
-          // it needs the fermi level shifted by trap_level
-          // The derivative is given w.r.t the argument
-          deriv = -Nt * _dos->get_occupied_density_derivative(arg, _kT);
-
-        break;
-      }
-
-      case 'e':
-      default:
-      {
-        if (_dos == NULL)
-        {
-          expfac = exp(arg / _kT) / g;
-          double denom = 1.0 + expfac;
-          deriv = -Nt / _kT * expfac / (denom * denom);
-        }
-        else
-          // it needs the fermi level shifted by trap_level
-          // The derivative is given w.r.t the argument
-          deriv = -Nt * _dos->get_occupied_density_derivative(-arg, _kT);
-
-        break;
-      }
-    }
-
-
-  }
-
-  return deriv;
-}

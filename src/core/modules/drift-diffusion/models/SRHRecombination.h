@@ -6,6 +6,7 @@
 #include "RecombinationModelInterface.h"
 #include "TypeDefs.h"
 
+class DensityOfStates;
 
 //! Implementation of SRH recombination
 /*!
@@ -63,6 +64,9 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! \copydoc RecombinationModelInterface::read_interface_database()
     virtual void read_interface_database(void);
 
+    //! \copydoc RecombinationModelInterface::prepare_submodels()
+    virtual void prepare_submodels(void);
+
     //! \copydoc RecombinationModelInterface::do_init()
     virtual void do_init(void);
 
@@ -113,6 +117,13 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! The trap density
     double _density;
 
+    //! Trap-to-CB generation
+    double _gen_TC;
+
+    //! VB-to-trap generation
+    double _gen_VT;
+
+
     //! The energy reference
     char _energy_reference;
 
@@ -131,6 +142,9 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
     //! The TAT coefficients, if present
     TrapAssisted* _tat;
 
+    //! The density of states, if provided
+    DensityOfStates* _dos;
+
     //! Get the trap level
     double get_trap_level(void);
 };
@@ -141,24 +155,7 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 //
 
 
-inline
-SRHRecombination::SRHRecombination(const ModelOptions& options) :
-  RecombinationModelInterface(options),
-  _trap(false),
-  _tau_n(1e-9),
-  _tau_p(1e-9),
-  _sigma_n(1e-15),
-  _sigma_p(1e-15),
-  _E_t(0.0),
-  _density(0),
-  _energy_reference('m'),
-  _Talpha_e(0.0),
-  _Talpha_h(0.0),
-  _Tcoeff_e(0.0),
-  _Tcoeff_h(0.0),
-  _tat(NULL)
-{
-}
+
 
 
 inline
