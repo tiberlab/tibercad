@@ -65,7 +65,7 @@ Module driftdiffusion
   {
      mobility doping_dependent {}
 
-     recombination (srh, auger) {}
+     recombination (srh) {}
   }
 
   Contact base
