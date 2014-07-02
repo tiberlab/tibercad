@@ -292,7 +292,7 @@ Device::setup_regions(void)
 
     // The default material is Si
     string material = _options.get_option("material", "Si");
-    string x_frac = _options.get_option("x", "0.5");
+    double x_frac = _options.get_option("x", 0.5);
     string xdir = _options.get_option("x-growth-direction", "");
     string ydir = _options.get_option("y-growth-direction", "");
     string zdir = _options.get_option("z-growth-direction", "");
@@ -301,7 +301,8 @@ Device::setup_regions(void)
     material = data.get_option("material", material);
     data["material"] = material;
     x_frac = data.get_option("x", x_frac);
-    data["x"] = x_frac;
+    //data.set_option("x", x_frac);
+
     xdir = data.get_option("x-growth-direction", xdir);
     if (!xdir.empty())
       data["x-growth-direction"] = xdir;
@@ -322,6 +323,7 @@ Device::setup_regions(void)
         data.add_submodel("Doping", dop_it->second);
     }
 
+
     // now we check if we should use variable alloy composition
     if (data.has_submodel("alloy_composition"))
     {
@@ -330,36 +332,31 @@ Device::setup_regions(void)
       Messages::info("decompose region " + data.get_name() +
           " to account for variable alloy composition.");
 
-      vector<ID> reg_ids;
       vector<double> comp;
-      decompose_region(alloy, reg_ids, comp);
-      for (int i = 0; i < reg_ids.size(); ++i)
+
+      // this will change the region_ids, but it needs the original ones
+      decompose_region(alloy, region_ids, comp);
+
+      for (int i = 0; i < region_ids.size(); ++i)
       {
-        cerr << reg_ids[i] << " -> " << comp[i] << endl;
+        cerr << region_ids[i] << " -> " << comp[i] << endl;
 
         data.set_option("x", comp[i]);
         Material* mat = Material::create(material, data);
 
         ostringstream os;
         os << data.get_name() << "_" << i;
-        set_material(mat, vector<ID>(1, reg_ids[i]), os.str());
+        set_material(mat, vector<ID>(1, region_ids[i]), os.str());
       }
 
-      set_cluster(data.get_name(), reg_ids);
-
-      // backup solution for pathologic cases
-      if (reg_ids.empty())
-      {
-        Material* mat = Material::create(material, data);
-        set_material(mat, region_ids, data.get_name());
-      }
+      set_cluster(data.get_name(), region_ids);
 
     }
-    else
-    {
-      Material* mat = Material::create(material, data);
-      set_material(mat, region_ids, data.get_name());
-    }
+
+    // also create the original ones
+    //data["x"] = x_frac;
+    //Material* mat = Material::create(material, data);
+    //set_material(mat, region_ids, data.get_name());
   }
 
   m.unindent();
@@ -1266,19 +1263,25 @@ Device::decompose_region(const ModelOptions& options,
   double max_x = options.get_option("max_content", 1.0);
   double delta = (max_x - min_x) * delta_rel;
 
+  int n_orig = region_ids.size();
+  double mean_x = 0.5 * (max_x + min_x);
+
   string content = options.get_option("content", "");
 
-  region_ids.clear();
-  composition.clear();
+  vector<ID> reg_ids;
+  reg_ids.reserve(intervals + 1);
+  composition.reserve(intervals + 1);
 
   ID id = _mesh_region_info->next_id();
 
   for (double x = min_x; x <= max_x; x += delta, ++id)
   {
     _mesh_region_info->add_id(id);
-    region_ids.push_back(id);
+    reg_ids.push_back(id);
     composition.push_back(x);
   }
+
+  region_ids.insert(region_ids.begin(), reg_ids.begin(), reg_ids.end());
 
   /*
   set<ID> used_ids;
@@ -1316,6 +1319,7 @@ Device::decompose_region(const ModelOptions& options,
   SimulationInterface::register_callback(content,
       boost::bind(&Device::reassign_alloy_regions, this, content,
       region_ids, composition));
-}
 
+  composition.insert(composition.end(), n_orig, mean_x);
+}
 

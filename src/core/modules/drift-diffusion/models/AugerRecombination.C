@@ -97,20 +97,21 @@ AugerRecombination::get_net_recombination_rates(double& recomb_e,
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
+  double T = dd.get_lattice_temperature();
+  double Efn  = -dd.get_electron_electro_chemical_potential();
+  double Efp  = -dd.get_hole_electro_chemical_potential();
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
-  long double ni = dd.get_intrinsic_density();
-  double gn = dd.get_point_data().gamma_n;
-  double gp = dd.get_point_data().gamma_p;
-  long double ni2 = ni * ni * gn * gp;
   long double np = n * p;
+
+  long double g = 1.0 - exp((Efp - Efn) / T);
 
   double Cn = get_Cn();
   double Cp = get_Cp();
 
   long double A = Cn * n;
   long double B = Cp * p;
-  recomb_e = recomb_h = (A + B) * (np - ni2);
+  recomb_e = recomb_h = (A + B) * np * g;
 }
 
 
@@ -121,22 +122,31 @@ AugerRecombination::get_net_recombination_rate_derivatives(
 {
   const DriftDiffusionProperties& dd = get_driftdiffusionproperties();
 
+  double T = dd.get_lattice_temperature();
+  double Efn  = -dd.get_electron_electro_chemical_potential();
+  double Efp  = -dd.get_hole_electro_chemical_potential();
   long double n  = dd.get_electron_density();
   long double p  = dd.get_hole_density();
-  long double ni = dd.get_intrinsic_density();
-  double gn = dd.get_point_data().gamma_n;
-  double gp = dd.get_point_data().gamma_p;
-  long double ni2 = ni * ni * gn * gp;
   long double np = n * p;
+
+  long double e = exp((Efp - Efn) / T);
+  long double g = 1 - e;
 
   double Cn = get_Cn();
   double Cp = get_Cp();
 
-  long double A = Cn * (np - ni2);
-  long double B = Cp * (np - ni2);
+  long double A = Cn * n;
+  long double B = Cp * p;
 
-  recomb_e[0] = recomb_h[0] = Cn * np + Cp * p * p + A;
-  recomb_e[1] = recomb_h[1] = Cp * np + Cn * n * n + B;
+  long double dRedn = (2*A + B) * p * g;
+  long double dRedp = (2*B + A) * n * g;
+  long double dRedEfn = -(A + B) * np * e / T;
+  long double dRedEfp = -dRedEfn;
+
+  recomb_e[0] = recomb_h[0] = dRedn;
+  recomb_e[1] = recomb_h[1] = dRedp;
+  recomb_e[2] = recomb_h[2] = dRedEfn;
+  recomb_e[3] = recomb_h[3] = dRedEfp;
 }
 
 
