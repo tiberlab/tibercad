@@ -40,6 +40,9 @@ using namespace std;
 SimulationInterface::SimulationMap
 SimulationInterface::_simulation_map;
 
+map<string, list<boost::function<void(void)>>>
+SimulationInterface::_callback_functions;
+
 SolutionDescriptor
 SimulationInterface::_invalid_descr = SolutionDescriptor();
 
@@ -163,6 +166,22 @@ SimulationInterface::create(const string& type,
   }
 
   return sim;
+}
+
+
+
+void
+SimulationInterface::register_callback(string& name,
+    boost::function<void(void)> callback)
+{
+  if (!name.empty())
+  {
+    vector<string> tokens;
+
+    Utils::tokenize(name, tokens, ".");
+
+    _callback_functions[tokens[0]].push_back(callback);
+  }
 }
 
 
@@ -852,6 +871,30 @@ SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
 
   }
 }
+
+
+
+
+void
+SimulationInterface::increment_solve_sequence_number(void)
+{
+  ++_solve_sequence_nr;
+
+  // here we also call all callbacks
+  map<string, list<boost::function<void(void)>>>::iterator mit =
+      _callback_functions.find(get_name());
+
+  if (mit != _callback_functions.end())
+  {
+    list<boost::function<void(void)>>::iterator it((mit->second).begin());
+    for ( ; it != (mit->second).end(); ++it)
+    {
+      (*it)();
+    }
+  }
+}
+
+
 
 
 void

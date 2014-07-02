@@ -399,6 +399,11 @@ class Device
     void decompose_region(const ModelOptions& options,
         std::vector<ID>& region_ids, std::vector<double>& composition);
 
+    //! Reassign the variable alloy subdomain IDs
+    void reassign_alloy_regions(const std::string& source,
+        const std::vector<ID>& region_ids,
+        const std::vector<double>& composition);
+
 
     //! Setup clusters
     /*!

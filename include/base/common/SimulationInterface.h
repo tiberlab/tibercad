@@ -21,6 +21,9 @@
 // LibMesh includes
 #include "numeric_vector.h"
 
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+
 #include <cassert>
 #include <map>
 #include <set>
@@ -174,6 +177,11 @@ class SimulationInterface : public TiberModelObject
 
     //! Get the past-the-end iterator of the simulation list
     static SimulationIterator simulations_end(void);
+
+
+    //! Register a callback to be executed after a solve
+    static void register_callback(std::string& name,
+        boost::function<void(void)> callback);
 
 
     //! Prepare the simulation
@@ -1424,6 +1432,11 @@ class SimulationInterface : public TiberModelObject
     static SimulationMap _simulation_map;
 
 
+    //! The map with callbacks
+    static std::map<std::string,
+      std::list<boost::function<void(void)>>> _callback_functions;
+
+
     //! An invalid solution descriptor
     /*!
      * Some accessor methods need to return a reference to
@@ -2005,11 +2018,6 @@ SimulationInterface::simulations_end(void)
   return SimulationIterator();
 }
 
-inline
-void
-SimulationInterface::increment_solve_sequence_number(void)
-{
-  ++_solve_sequence_nr;
-}
+
 
 #endif // _SIMULATIONINTERFACE_H_

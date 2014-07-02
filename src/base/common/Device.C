@@ -1211,6 +1211,52 @@ Device::set_cluster(const string& name, const vector<ID>& ids)
 
 
 void
+Device::reassign_alloy_regions(const string& source,
+    const vector<ID>& region_ids,
+    const vector<double>& composition)
+{
+  Messages m;
+  m.info("Re-assigning alloy subregion IDs...");
+  m.indent();
+
+  pair<SimulationInterface*, ID> provider(
+      SimulationInterface::find_solution_provider(source));
+
+  if (provider.first != NULL)
+  {
+    m.info("Alloy composition provided by " + provider.first->get_name());
+
+    set<ID> reg_ids;
+    for (int i = 0; i < region_ids.size(); ++i)
+      reg_ids.insert(region_ids[i]);
+
+    MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
+    const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
+
+    for ( ; el != el_end; ++el)
+    {
+      Elem* elem = *el;
+      ID id = elem->subdomain_id();
+
+      if (reg_ids.count(id))
+      {
+        double x;
+        provider.first->get_solution(
+            elem, provider.second, x, elem->centroid());
+
+        int i = 0;
+        while ((i < (composition.size() - 1)) &&
+               (x > 0.5*(composition[i] + composition[i+1])))
+          i++;
+
+        elem->subdomain_id() = region_ids[i];
+      }
+    }
+  }
+}
+
+
+void
 Device::decompose_region(const ModelOptions& options,
     vector<ID>& region_ids, vector<double>& composition)
 {
@@ -1220,10 +1266,21 @@ Device::decompose_region(const ModelOptions& options,
   double max_x = options.get_option("max_content", 1.0);
   double delta = (max_x - min_x) * delta_rel;
 
+  string content = options.get_option("content", "");
+
   region_ids.clear();
   composition.clear();
 
-  ID first_id = _mesh_region_info->next_id();
+  ID id = _mesh_region_info->next_id();
+
+  for (double x = min_x; x <= max_x; x += delta, ++id)
+  {
+    _mesh_region_info->add_id(id);
+    region_ids.push_back(id);
+    composition.push_back(x);
+  }
+
+  /*
   set<ID> used_ids;
 
   srand(time(NULL));
@@ -1254,6 +1311,11 @@ Device::decompose_region(const ModelOptions& options,
     region_ids.push_back(first_id + id);
     composition.push_back(id*delta + min_x);
   }
+  */
+
+  SimulationInterface::register_callback(content,
+      boost::bind(&Device::reassign_alloy_regions, this, content,
+      region_ids, composition));
 }
 
 

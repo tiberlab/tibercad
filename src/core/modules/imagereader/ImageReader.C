@@ -154,6 +154,8 @@ ImageReader::_import_picture(void)
   int height = Bmp.GetHeight();
   int width = Bmp.GetWidth();
 
+  double scale = get_option("data_scaling", 1.0);
+
   double imwidth = get_option("width", 0.0);
   if (imwidth > 0)
   {
@@ -198,7 +200,7 @@ ImageReader::_import_picture(void)
       //double b = static_cast<double>(pLine[x].GetB());
       //fp_rgb_to_hsv(&r, &g, &b);
 
-      _data[x + y*width] = r;
+      _data[x + y*width] = scale * r;
     }
   }
 }
