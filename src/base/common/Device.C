@@ -1318,7 +1318,7 @@ Device::decompose_region(const ModelOptions& options,
   */
 
   SimulationInterface::register_callback(source,
-      boost::bind(&Device::reassign_alloy_regions, this, content,
+      boost::bind(&Device::reassign_alloy_regions, this, source,
       region_ids, composition));
 
 }
