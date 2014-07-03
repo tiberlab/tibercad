@@ -323,6 +323,10 @@ Device::setup_regions(void)
         data.add_submodel("Doping", dop_it->second);
     }
 
+    // create the materials
+    data["x"] = x_frac;
+    Material* mat = Material::create(material, data);
+    set_material(mat, region_ids, data.get_name());
 
     // now we check if we should use variable alloy composition
     if (data.has_submodel("alloy_composition"))
@@ -337,7 +341,7 @@ Device::setup_regions(void)
       // this will change the region_ids, but it needs the original ones
       decompose_region(alloy, region_ids, comp);
 
-      for (int i = 0; i < region_ids.size(); ++i)
+      for (int i = 0; i < comp.size(); ++i)
       {
         cerr << region_ids[i] << " -> " << comp[i] << endl;
 
@@ -353,10 +357,7 @@ Device::setup_regions(void)
 
     }
 
-    // also create the original ones
-    //data["x"] = x_frac;
-    //Material* mat = Material::create(material, data);
-    //set_material(mat, region_ids, data.get_name());
+
   }
 
   m.unindent();
@@ -1266,7 +1267,7 @@ Device::decompose_region(const ModelOptions& options,
   int n_orig = region_ids.size();
   double mean_x = 0.5 * (max_x + min_x);
 
-  string content = options.get_option("content", "");
+  string source = options.get_option("source", "");
 
   vector<ID> reg_ids;
   reg_ids.reserve(intervals + 1);
@@ -1316,10 +1317,9 @@ Device::decompose_region(const ModelOptions& options,
   }
   */
 
-  SimulationInterface::register_callback(content,
+  SimulationInterface::register_callback(source,
       boost::bind(&Device::reassign_alloy_regions, this, content,
       region_ids, composition));
 
-  composition.insert(composition.end(), n_orig, mean_x);
 }
 

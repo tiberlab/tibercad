@@ -19,7 +19,7 @@ Device
        min_content = 0.0
        max_content = 0.3
        #intervals = 20
-       content = imagereader.Data
+       source = imagereader.Data
      }
    }
 

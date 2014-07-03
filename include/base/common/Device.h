@@ -396,6 +396,18 @@ class Device
 
 
     //! Decompose region according to alloy composition
+    /*!
+     * \param options the options from the alloy_composition block
+     *
+     * \param region_ids must contain the original region IDs. At exit,
+     *     it will contain the new region IDs at the beginning, and the
+     *     original ones at the end
+     *
+     * \param composition will contain at exit the compositions for the new
+     *     regions only
+     *
+     * Note: composition.size() < region_ids.size()
+     */
     void decompose_region(const ModelOptions& options,
         std::vector<ID>& region_ids, std::vector<double>& composition);
 
