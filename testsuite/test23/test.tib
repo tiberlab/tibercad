@@ -16,7 +16,13 @@ Device
    {
      alloy_composition 1d_profile
      { 
+       # takes min and max from data file
+       # subdivisions:
        intervals = 20
+       # direction, default is x = (1 0 0):
+       direction = (1, 1, 0)
+       # we can specify the origin, default (0,0,0)
+       origin = (2, 2, 0)
        source = profile.dat
      }
    }
