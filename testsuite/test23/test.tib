@@ -1,0 +1,93 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = test.msh
+  material = InGaAs
+  mesh_units = 1e-9
+
+  Doping {
+    type = donor
+    density = 1e17
+  }
+
+
+   Region bulk 
+   {
+     alloy_composition 1d_profile
+     { 
+       intervals = 20
+       source = profile.dat
+     }
+   }
+
+}
+
+Module driftdiffusion
+{ 
+              
+  name = dd
+  plot = (Ec, Ev, Ec0, eQFermi, ElPotential, hQFermi, eDensity, hDensity, NetRecombination, ContactCurrents, RegionIDs)
+
+  Physics
+  {
+
+    particle_density
+    { 
+      statistics = boltzmann
+    }
+
+
+    recombination srh {}
+
+  }   
+
+
+# Contact anode
+# {
+#   type = ohmic
+#   voltage = $Vb
+# }
+#
+# Contact cathode
+# {
+#   type = ohmic
+#   voltage = 0.0
+# }
+
+}  
+
+
+
+#Module sweep
+#{
+#  solve = driftdiffusion
+#  variable = $Vb
+#  start = 0.0
+#  stop = 1
+#  steps = 10
+#}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = dd
+  resultpath = output
+  output_format = vtk
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

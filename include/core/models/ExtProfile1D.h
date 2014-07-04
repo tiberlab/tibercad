@@ -31,7 +31,7 @@ class ExtProfile1D : public ExternalProfile
 
     std::vector<double> _x_coord;
     std::vector<double> _values;
-    std::vector<size_t> _addressing;
+    std::vector<unsigned int> _addressing;
 
     double _min;
     double _max;

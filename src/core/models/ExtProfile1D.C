@@ -83,8 +83,8 @@ ExtProfile1D::_read_source(void)
   double dx = (_x_coord.back() - _x_coord.front()) / N;
   _addressing.resize(N);
 
-  size_t ctr = 0;
-  for (size_t i = 0; i < N; ++i)
+  unsigned int ctr = 0;
+  for (unsigned int i = 0; i < N; ++i)
   {
     double x = _min + i * dx;
 
@@ -115,10 +115,10 @@ ExtProfile1D::get_data(const Point& p) const
 
   // calculate index for adressing array
   double dx = (_x_coord.back() - _x_coord.front()) / _addressing.size();
-  size_t index = max(0, floor((xcoord - _min) / dx));
+  unsigned int index = max(0, static_cast<int>(floor((xcoord - _min) / dx)));
   index = min(index, _addressing.size() - 1);
 
-  size_t ctr = _addressing[index];
+  unsigned int ctr = _addressing[index];
 
   while ((_x_coord[ctr] < xcoord) && (ctr < _x_coord.size()))
       ++ctr;
