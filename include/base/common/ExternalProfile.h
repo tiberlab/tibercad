@@ -1,5 +1,8 @@
 // $Id$
 
+#ifndef _EXTERNALPROFILE_H_
+#define _EXTERNALPROFILE_H_
+
 #include "TiberModelObject.h"
 
 class Point;
@@ -15,14 +18,22 @@ class ExternalProfile : protected TiberModelObject
     virtual ~ExternalProfile(void);
 
     //! The creation method
-    ExternalProfile* create(const ModelOptions& options);
+    static ExternalProfile* create(const ModelOptions& options);
 
     //! Get the data at a coordinate
     virtual double get_data(const Point& p) const = 0;
 
-  private:
+    //! Get extremal values
+    virtual std::pair<double, double> get_min_max(void) const = 0;
+
+
+  protected:
 
     //! Constructor
     ExternalProfile(const ModelOptions& options);
 
 };
+
+
+
+#endif //_EXTERNALPROFILE_H_

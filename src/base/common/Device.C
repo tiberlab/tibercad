@@ -15,6 +15,7 @@
 #include "SimulationOptions.h"
 #include "AtomisticStructure.h"
 #include "QuantumContact.h"
+#include "ExternalProfile.h"
 
 #include "gmsh_io.h"
 #include "equation_systems.h"
@@ -1258,16 +1259,28 @@ void
 Device::decompose_region(const ModelOptions& options,
     vector<ID>& region_ids, vector<double>& composition)
 {
+
+  ExternalProfile* profile = nullptr;
+  if (!options.get_name().empty() && (options.get_name() != "extern"))
+    profile = ExternalProfile::create(options);
+
+  double min_x = 0.0;
+  double max_x = 1.0;
+
+  if (profile != nullptr)
+  {
+    min_x = profile->get_min_max().first;
+    max_x = profile->get_min_max().second;
+  }
+
   int intervals = options.get_option("intervals", 10);
   double delta_rel = 1.0 / intervals;
-  double min_x = options.get_option("min_content", 0.0);
-  double max_x = options.get_option("max_content", 1.0);
+  min_x = options.get_option("min_content", min_x);
+  max_x = options.get_option("max_content", max_x);
   double delta = (max_x - min_x) * delta_rel;
 
   int n_orig = region_ids.size();
   double mean_x = 0.5 * (max_x + min_x);
-
-  string source = options.get_option("source", "");
 
   vector<ID> reg_ids;
   reg_ids.reserve(intervals + 1);
@@ -1284,42 +1297,66 @@ Device::decompose_region(const ModelOptions& options,
 
   region_ids.insert(region_ids.begin(), reg_ids.begin(), reg_ids.end());
 
-  /*
-  set<ID> used_ids;
-
-  srand(time(NULL));
-
-  MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
-  const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
-
-  for ( ; el != el_end; ++el)
+  if (profile != nullptr)
   {
-    Elem* elem = *el;
-    ID id = elem->subdomain_id();
 
-    double rnd = static_cast<double>(rand()) / RAND_MAX;
-    int offset = floor(rnd / delta_rel);
+    set<ID> used_ids;
+    for (int i = 0; i < region_ids.size(); ++i)
+      used_ids.insert(region_ids[i]);
 
-    id = first_id + offset;
-    elem->subdomain_id() = id;
-    used_ids.insert(offset);
+    //srand(time(NULL));
+
+    MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
+    const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
+
+    for ( ; el != el_end; ++el)
+    {
+      Elem* elem = *el;
+      ID id = elem->subdomain_id();
+
+      if (!used_ids.count(id))
+        continue;
+
+      // TODO better would be to take the mean value
+      double x = profile->get_data(elem->centroid());
+
+      int i = 0;
+      while ((i < (composition.size() - 1)) &&
+          (x > 0.5*(composition[i] + composition[i+1])))
+        i++;
+
+      elem->subdomain_id() = region_ids[i];
+
+      //double rnd = static_cast<double>(rand()) / RAND_MAX;
+      //int offset = floor(rnd / delta_rel);
+
+      //id = first_id + offset;
+      //elem->subdomain_id() = id;
+      //used_ids.insert(offset);
+    }
+
+
+    /*
+    set<ID>::iterator it(used_ids.begin());
+    const set<ID>::iterator end(used_ids.end());
+
+    for ( ; it != end; ++it)
+    {
+      ID id = *it;
+      _mesh_region_info->add_id(first_id + id);
+      region_ids.push_back(first_id + id);
+      composition.push_back(id*delta + min_x);
+    }
+    */
   }
-
-  set<ID>::iterator it(used_ids.begin());
-  const set<ID>::iterator end(used_ids.end());
-
-  for ( ; it != end; ++it)
+  else
   {
-    ID id = *it;
-    _mesh_region_info->add_id(first_id + id);
-    region_ids.push_back(first_id + id);
-    composition.push_back(id*delta + min_x);
-  }
-  */
+    string source = options.get_option("source", "");
 
-  SimulationInterface::register_callback(source,
-      boost::bind(&Device::reassign_alloy_regions, this, source,
-      region_ids, composition));
+    SimulationInterface::register_callback(source,
+        boost::bind(&Device::reassign_alloy_regions, this, source,
+            region_ids, composition));
+  }
 
 }
 
