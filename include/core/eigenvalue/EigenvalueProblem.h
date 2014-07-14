@@ -129,7 +129,9 @@ class EigenvalueProblem : public SimulationInterface
     virtual double get_H_units(void) const{};
 
     //! returns a reference to _solution
-    //! this is dangerous and should be substituted with calls to get_eigenvectors()
+    /*!
+     * this is dangerous and should be substituted with calls to get_eigenvectors()
+     */
     const std::vector<eigen_problem_solution>& get_solution(void) const {return _solution;};
 
     //  ! compares eigenstate energy for electrons needed for sorting
