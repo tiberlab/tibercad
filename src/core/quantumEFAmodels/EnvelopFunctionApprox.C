@@ -2668,26 +2668,35 @@ void EnvelopFunctionApprox::solve_bulk(void)
      }
   }
 
-
-
-
-
-
   unsigned int n = _solution.size();
+
+  // reorder
+  int max_hl = 0;
+
+  double el_chem = 0;
+  double hl_chem = 0;
+  double temp = _temp_interface.get_temperature(mat_elem, mat_elem->centroid());
+  if (poisson_equation != NULL)
+  {
+    get_el_electro_chem_potential(mat_elem);
+    get_hl_electro_chem_potential(mat_elem);
+  }
 
   for (unsigned int i = 0; i < n ; i++)
   {
-    _solution[i].electro_chem_pot = 0;
+    _solution[i].temperature = temp;
 
-    if (poisson_equation != NULL)
-      if (_solution[i].particle == "el")
-    	_solution[i].electro_chem_pot = get_el_electro_chem_potential(mat_elem);
-      else
-    	_solution[i].electro_chem_pot = get_hl_electro_chem_potential(mat_elem);
-
-    _solution[i].temperature =
-        _temp_interface.get_temperature(mat_elem, mat_elem->centroid());
+    if (_solution[i].particle == "el")
+      _solution[i].electro_chem_pot = el_chem;
+    else
+    {
+      _solution[i].electro_chem_pot = hl_chem;
+      max_hl = i;
+    }
   }
+
+  for (unsigned int i = 0; i < max_hl ; i++)
+    swap(_solution[i], _solution[max_hl - i]);
 
 
   // we have to redeclare the solution variables to adjust the number

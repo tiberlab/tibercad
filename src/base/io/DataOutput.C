@@ -62,7 +62,7 @@ DataOutput::tell_data_format(const std::string& format)
 
   if ((format == "ise") || (format == "tecplot"))
     df = TECPLOT;
-  else if (format == "grace")
+  else if ((format == "grace") || (format == "dat"))
     df = GRACE;
   else if ((format == "vtk") || (format == "paraview"))
     df = VTK;
