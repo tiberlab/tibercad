@@ -13,7 +13,7 @@ using namespace std;
 //------------------------------------------------------------------------------//
 Kspace::Kspace(const ModelOptions& options)
  : mod_opt(options),
-   mesh_order(FIRST)
+   _mesh_order(FIRST)
 {
   kmesh = NULL;
 
@@ -27,7 +27,7 @@ Kspace::Kspace(const ModelOptions& options)
 Kspace::Kspace( const Kspace& kspace)
  : mod_opt(kspace.mod_opt),
    degeneracy_factor(kspace.degeneracy_factor),
-   mesh_order(kspace.mesh_order),
+   _mesh_order(kspace._mesh_order),
    k_dim(kspace.k_dim),
    num_nodes(kspace.num_nodes)
 {
@@ -74,9 +74,8 @@ void Kspace::build_k_grid()
     kmesh = new Mesh(k_dim);
 
 
-
     ElemType type(EDGE2);
-    if (mesh_order == SECOND)
+    if (_mesh_order == SECOND)
     {
 
       if (k_dim == 1)
@@ -403,8 +402,8 @@ void Kspace::do_init() throw (InitFailedException)
 
   string mesh_order = mod_opt.get_option("mesh_order","first");
 
-  if ( mesh_order == "first") mesh_order = FIRST;
-  else if (mesh_order == "second") mesh_order =  SECOND;
+  if ( mesh_order == "first") _mesh_order = FIRST;
+  else if (mesh_order == "second") _mesh_order =  SECOND;
   else throw  InitFailedException("Kspace: incorrect mesh order " + mesh_order );
 
 

@@ -111,7 +111,7 @@ class Kspace
    Wedge wedge;
 
    //!mesh_order;
-   libMeshEnums::Order mesh_order;
+   libMeshEnums::Order _mesh_order;
 
 
    //!Brilluoin zone
