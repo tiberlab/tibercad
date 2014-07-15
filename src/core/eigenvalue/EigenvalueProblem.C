@@ -446,63 +446,10 @@ void EigenvalueProblem::calculate_dos(void)
     kopts += opts.submodels_begin("k-space")->second;
   kopts += parse_kspace_options(kopts);
 
-  _kspace = new Kspace(kopts);
-
-  /*
-//  KspaceIntegration* kint = KspaceIntegrationTemplate<EigenvalueProblem>::create(this,
-  KspaceIntegration* kint = KspaceIntegration::create(this,
-      &EigenvalueProblem::_dos_for_kpoint, kopts);
-  kint->init();
-
-  kint->solve();
-
-  //DofField doff;
-  //Point kp(0);
-  //double dummy;
-  //_dos_for_kpoint(kp, doff, dummy);
-
-  vector<double> results(_energy_mesh->n_nodes(),0.0);
-
-  vector<string> names(1, "DOS");
-
-  string filename;
-  string format = opts.get_option("output_format", "grace");
-
-  DataOutput data_output(*_energy_mesh, format);
-  data_output.set_output_directory(get_output_directory());
-
-  filename = get_name() + "_dos" + TiberCad::get_filename_suffix();
-  unsigned int n_erg = _energy_mesh->n_nodes();
-  for(unsigned int n = 0; n < n_erg; n++)
-  {
-    results[n] = kint->get_solution()[n];
-  }
-
-  data_output.write_nodal_data(filename, results, names);
-  */
-
-  /*
-  for (unsigned int i = 0; i < number_of_k_points; i++)
-  {
-    const Point&  k_point = kmesh->point(i);
-
-    solve_for_kpoint(k_point);
-    int number_of_eigs = get_num_states();
-    solutions[i].resize(number_of_eigs);
-
-    for (unsigned int j = 0 ; j < number_of_eigs; j++)
-      solutions[i][j] = _solution[j];
-//      solutions[i][j] = ptr_type(new eigen_problem_solution(_solution[j]));
-
-  }
-  */
+  Kspace* kspace = new Kspace(kopts);
 
 
-
-
-  ///*
-
-  const Mesh* kmesh = _kspace->get_k_mesh();
+  const Mesh* kmesh = kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
 
   //typedef boost::shared_ptr<eigen_problem_solution> ptr_type;
@@ -530,60 +477,29 @@ void EigenvalueProblem::calculate_dos(void)
   const unsigned int n_energy = _energy_mesh->n_nodes();
   vector<double> dos(n_energy, 0.0);
 
-  //MeshBase::const_element_iterator kelem(kmesh->elements_begin());
-  //const MeshBase::const_element_iterator kend(kmesh->elements_end());
-  //for ( ; kelem != kend; ++kelem)
-  //{
-  //  for (unsigned int i = 0; i < kelem->n_nodes(); ++i)
-  //  {
-  //    unsigned int node = kelem->node(i);
-  //    unsigned int n_eigs = solutions[node].size();
-  //  }
 
   double a = 1.0 / (sigma * sqrt(2*M_PI));
-
-  for (unsigned int i = 0; i < number_of_k_points; i++)
+  double factor = 1.0 / (2 * M_PI);
+  switch (kmesh->mesh_dimension())
   {
-
-    unsigned int n_eigs = solutions[i].size();
-
-    for (unsigned int n = 0; n < n_energy; n++)
-    {
-      double erg =  _energy_mesh->point(n)(0);
-
-      double sum = 0.0;
-
-      for (unsigned int k = 0; k < n_eigs; ++k)
-      {
-        double ediff = (erg - solutions[i][k].eigen_energy) / sigma;
-        double arg = 0.5 * ediff * ediff;
-        sum += exp(-arg);
-      }
-
-      dos[n] += a * sum;
-    }
+    case 3:
+      a *= factor;
+    case 2:
+      a *= factor;
+    default:
+      a *= factor;
   }
 
-  std::string filename(get_name() + "_dos");
-
-  DataOutput data_output(*_energy_mesh, "dat");
-  data_output.set_output_directory(get_output_directory());
-  //data_output.set_filename(filename);
-
-  vector<string> names(1, "DOS");
-  data_output.write_nodal_data(filename, dos, names);
 
 
-  for (int i = 0; i < n_energy; ++i)
-    dos[i] = 0.0;
-
-  AutoPtr<FEBase> fe(FEBase::build(_kspace->mesh_dimension(),
+  AutoPtr<FEBase> fe(FEBase::build(kspace->mesh_dimension(),
       FEType(SECOND, LAGRANGE)));
 
-  QGauss qrule(_kspace->mesh_dimension(), SEVENTEENTH);
+  QGauss qrule(kspace->mesh_dimension(),
+      static_cast<libMeshEnums::Order>(opts.get_option("integration_order", 17)));
   fe->attach_quadrature_rule(&qrule);
 
-  //const std::vector<Real>& JxW = fe->get_JxW();
+  const std::vector<Real>& JxW = fe->get_JxW();
   //const std::vector<Point>& q_point = fe->get_xyz();
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
@@ -598,6 +514,8 @@ void EigenvalueProblem::calculate_dos(void)
 
     for (unsigned int qp = 0; qp < qrule.n_points(); qp++)
     {
+      double w = JxW[qp];
+
       vector<double> energy(n_eigs, 0.0);
       for (unsigned int i = 0; i < kelem->n_nodes(); ++i)
       {
@@ -621,18 +539,22 @@ void EigenvalueProblem::calculate_dos(void)
           sum += exp(-arg);
         }
 
-        dos[n] += a * sum;
+        dos[n] += w * a * sum;
       }
     }
 
   }
 
-  filename += "_2";
+  std::string filename(get_name() + "_dos");
+
+  DataOutput data_output(*_energy_mesh, "dat");
+  data_output.set_output_directory(get_output_directory());
+  //data_output.set_filename(filename);
+
+  vector<string> names(1, "DOS");
   data_output.write_nodal_data(filename, dos, names);
 
 
-
-  /*
   // this plots the dispersion
   {
     std::vector<double> results;
@@ -657,7 +579,7 @@ void EigenvalueProblem::calculate_dos(void)
     }
 
 
-    std::string filename(get_name() + "_dos");
+    std::string filename(get_name() + "_dispersion");
 
     DataOutput data_output(*kmesh, "vtk");
     data_output.set_output_directory(get_output_directory());
@@ -665,8 +587,8 @@ void EigenvalueProblem::calculate_dos(void)
 
     data_output.write_nodal_data(filename, results, names);
   }
-  */
 }
+
 
 ID
 EigenvalueProblem::do_remember_current_solution(ID id)
