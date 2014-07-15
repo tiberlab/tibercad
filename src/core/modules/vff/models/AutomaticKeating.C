@@ -112,7 +112,7 @@ AutomaticKeating::AutomaticKeating(const ModelOptions& options):
   _c13(0.0),
   _c33(0.0),
   _weights({1, 1, 2, 2, 0.5, 0}),
-  _use_four_wz_params(false)
+  _use_four_wz_params(true)
 {
 
 }
