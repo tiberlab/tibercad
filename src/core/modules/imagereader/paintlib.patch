@@ -282,3 +282,66 @@ diff -r -u ./common/test/pltestdecoders.cpp ../paintlib-2.6.2-new/common/test/pl
  
  #ifndef NULL
  #define NULL    0
+--- common/tif_msrc.c.orig	2014-04-03 21:03:01.052188204 +0200
++++ common/tif_msrc.c	2014-04-03 21:03:15.920188897 +0200
+@@ -208,7 +208,7 @@
+ {
+ 	memset(p, v, c);
+ }
+-
++/*
+ void
+ _TIFFmemcpy(void* d, const tdata_t s, tsize_t c)
+ {
+@@ -220,7 +220,7 @@
+ {
+ 	return memcmp (p1, p2, c);
+ }
+-
++*/
+ TIFFErrorHandler _TIFFerrorHandler = NULL;
+ TIFFErrorHandler _TIFFwarningHandler = NULL;
+ #endif /* NON-MACOSX */
+--- common/pljpegenc.cpp.orig	2014-04-03 21:09:11.300205469 +0200
++++ common/pljpegenc.cpp	2014-04-03 21:28:12.640258691 +0200
+@@ -95,7 +95,7 @@
+   */
+ 
+     // Initialize custom data destination
+-    jpeg_mem_dest(m_pcinfo, pDataSink->GetBufferPtr(), pDataSink->GetMaxDataSize(), pDataSink);
++    jpeg_mem_dest_my(m_pcinfo, pDataSink->GetBufferPtr(), pDataSink->GetMaxDataSize(), pDataSink);
+ 
+     // Set Header Fields
+     m_pcinfo->image_width = pBmp->GetWidth();
+--- common/jmemdest.cpp.orig	2014-04-03 21:27:15.124256009 +0200
++++ common/jmemdest.cpp	2014-04-03 21:26:59.440255277 +0200
+@@ -110,7 +110,7 @@
+  */
+ 
+ GLOBAL(void)
+-jpeg_mem_dest(
++jpeg_mem_dest_my(
+   j_compress_ptr cinfo,
+   JOCTET * pData,
+   int FileSize,
+--- common/plgifdec.cpp.orig	2014-04-03 21:28:47.412260312 +0200
++++ common/plgifdec.cpp	2014-04-03 21:29:07.568261252 +0200
+@@ -15,6 +15,7 @@
+ #include "planybmp.h"
+ 
+ #include <stdio.h>
++#include <cstring>
+ 
+ extern "C"
+ {
+--- common/jmemdest.h.orig	2014-07-15 22:06:45.360048365 +0200
++++ common/jmemdest.h	2014-04-03 21:27:29.468256678 +0200
+@@ -1,7 +1,7 @@
+ extern "C" {
+ 
+ GLOBAL(void)
+-jpeg_mem_dest (j_compress_ptr cinfo,
++jpeg_mem_dest_my (j_compress_ptr cinfo,
+               JOCTET * pData,
+               int FileSize,
+               PLDataSink * pDataSrc
