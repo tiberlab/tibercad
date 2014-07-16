@@ -360,53 +360,6 @@ EigenvalueProblem::process_element(const Elem* elem, unsigned int entryside,
 }
 
 
-void EigenvalueProblem::_dos_for_kpoint(const Point& k_point,
-    const Point& refpoint,
-    DofField& density,
-    double& integrated_quantity)
-{
-  ModelOptions& opts = get_options().submodels_begin("DOS")->second;
-  double s = opts.get_option("gaussian_width", 0.01);
-
-  unsigned int n_energy = _energy_mesh->n_nodes();
-
-  // calculate for k-point, but only if it is not already there
-  KSolutions::iterator it(_ksolutions.find(k_point));
-  if (it == _ksolutions.end())
-  {
-    this->solve_for_kpoint(k_point);
-    it = (_ksolutions.insert(make_pair(k_point, _solution))).first;
-  }
-
-  const vector<eigen_problem_solution>& solution = it->second;
-
-  // now order, but only if k_point != refpoint
-  if (k_point != refpoint)
-  {
-  }
-
-  unsigned int n_eigs = solution.size();
-
-  double a = 1.0 / (s * sqrt(2*M_PI));
-
-  density.resize(n_energy);
-
-  for (unsigned int n = 0; n < n_energy; n++)
-  {
-    double erg =  _energy_mesh->point(n)(0);
-
-    double sum = 0.0;
-
-    for (unsigned int i = 0; i < n_eigs; ++i)
-    {
-      double ediff = (erg - solution[i].eigen_energy) / s;
-      double arg = 0.5 * ediff * ediff;
-      sum += exp(-arg);
-    }
-
-    density[n] = a * sum;
-  }
-}
 
 
 
@@ -440,16 +393,22 @@ void EigenvalueProblem::calculate_dos(void)
   //
   // The simple approach integrates in k-space with a gaussian weight
   //
+  Kspace* kspace_old = _kspace;
+
   ModelOptions kopts;
-  kopts.set_option("mesh_order", "second");
+  //if (get_options().has_submodel("k-space"))
+  //  kopts += get_options().submodels_begin("k-space")->second;
+
   if (opts.has_submodel("k-space"))
     kopts += opts.submodels_begin("k-space")->second;
+
+  kopts.set_option("mesh_order", "second");
   kopts += parse_kspace_options(kopts);
 
-  Kspace* kspace = new Kspace(kopts);
+  _kspace = new Kspace(kopts);
 
 
-  const Mesh* kmesh = kspace->get_k_mesh();
+  const Mesh* kmesh = _kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
 
   //typedef boost::shared_ptr<eigen_problem_solution> ptr_type;
@@ -492,10 +451,10 @@ void EigenvalueProblem::calculate_dos(void)
 
 
 
-  AutoPtr<FEBase> fe(FEBase::build(kspace->mesh_dimension(),
+  AutoPtr<FEBase> fe(FEBase::build(_kspace->mesh_dimension(),
       FEType(SECOND, LAGRANGE)));
 
-  QGauss qrule(kspace->mesh_dimension(),
+  QGauss qrule(_kspace->mesh_dimension(),
       static_cast<libMeshEnums::Order>(opts.get_option("integration_order", 17)));
   fe->attach_quadrature_rule(&qrule);
 
@@ -587,6 +546,8 @@ void EigenvalueProblem::calculate_dos(void)
 
     data_output.write_nodal_data(filename, results, names);
   }
+
+  _kspace = kspace_old;
 }
 
 

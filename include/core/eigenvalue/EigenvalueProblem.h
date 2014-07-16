@@ -278,12 +278,6 @@ class EigenvalueProblem : public SimulationInterface
     //! to remember solutions
     std::map<ID, std::vector<eigen_problem_solution>> _remembered_sol;
 
-    //! Callback function for dos_calculation
-    void _dos_for_kpoint(const Point& k_point,
-        const Point& refpoint,
-        DofField& density,
-        double& integrated_quantity);
-
 
     //! to set that k-vector is not new
     void k_is_old(void);
