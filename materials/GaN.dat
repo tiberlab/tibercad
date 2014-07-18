@@ -79,7 +79,7 @@ C13 = 103.0
 C33 = 405.0
 C44 = 95.0
 
-# piezoelectricity data  
+# piezoelectricity data 
 [piezoelectricity]
 e33 = 0.67
 e31 = -0.39
@@ -87,6 +87,14 @@ e15 = -0.15
 
 [pyroelectricity]
 Pz = -0.034
+
+[polarization/PRB88]
+# PRB 88, 121304 
+Pz = -0.027
+e33 = 0.75
+e31 = -0.44
+e15 = -0.31
+2nd_order_coefficients = (3.8, 2.3, 2.7, 6.2, 3.3, 0.4, -21.4, 0.4)
 
 
 #
@@ -166,7 +174,7 @@ N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 #Lattice thermal conductivity 
 [thermal_conductivity/constant]
-ThermCond = (130,130)
+ThermCond = (130, 130)
 
 [sound_velocity/constant]
 vg = 7.914e3 #m/s

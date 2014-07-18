@@ -13,6 +13,11 @@ bow_Eg_X = 0.69
 bow_Eg_L = 1.84
 
 
+[polarization/PRB88]
+bow_Pz = -0.037
+bow_e33 = -0.55
+bow_e31 = 0.222
+bow_e15 = -0.275
 
 [pyroelectricity]
 bow_Pz = -0.037

@@ -14,6 +14,12 @@ bow_Eg_X = 0.61
 bow_Eg_L = 0.8
 
 
+[polarization/PRB88]
+bow_Pz = -0.070
+bow_e33 = -2.178
+bow_e31 = 0.54
+bow_e15 = -0.305
+
 # spontaneous polariz.
 [pyroelectricity]
 bow_Pz = -0.070
