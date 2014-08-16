@@ -605,7 +605,10 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
     }
     EPSGetInvariantSubspace(eps, v);
     EPSAttachDeflationSpace(eps, nconv, v, PETSC_TRUE);
-    VecDestroyVecs(v, nconv);
+    for (int i = 0; i < nconv; ++i)
+      VecDestroy(v[i]);
+    delete [] v;
+    //VecDestroyVecs(v, nconv);
   }
 
   return ierr;
