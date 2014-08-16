@@ -783,7 +783,6 @@ DriftDiffusion::do_equilibrium(void)
   // make a rough guess
   guess_equilibrium();
 
-
   build_local_scaling();
 
 
@@ -3969,6 +3968,7 @@ DriftDiffusion::build_local_scaling(void)
 
     loc_scaling.add_vector(local_scaling, dof_indices);
   } // end loop over elements
+  loc_scaling.close();
 
   set<unsigned int>::iterator dirit(dirichlet_dofs.begin());
   const set<unsigned int>::iterator dirend(dirichlet_dofs.end());
