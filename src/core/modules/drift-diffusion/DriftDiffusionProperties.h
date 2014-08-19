@@ -225,8 +225,8 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
 
-    //! Lock the parameters
-    /*!
+    // ! Lock the parameters
+    /* !
      * Call this method before reinit()
      *
      * You can provide a pointer to a PointData object created outside
@@ -235,15 +235,15 @@ class DriftDiffusionProperties : public PhysicalModel
     //void lock(PointData* pd = NULL);
 
 
-    //! Unlock the parameters
-    /*!
+    // ! Unlock the parameters
+    /* !
      * Call this after all calculations on the element hav been done
      */
     //void unlock(void);
 
 
-    //! (Re-)Initialize for the given element
-    /*!
+    // ! (Re-)Initialize for the given element
+    /* !
      * \c reinit() calls \c prepare_element_data() which needs to be
      * implemented in derived classes
      */

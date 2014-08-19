@@ -304,24 +304,32 @@ DDInterfaceModel::compute()
       _jacobian[i][2] = 0;
     }
   }
-
   calculate_densities();
   calculate_traps();
 
   do_compute();
 
   // now add common stuff if needed
-    const PointData& pd = get_point_data();
+  const PointData& pd = get_point_data();
+
+  // for now we cannot put doping on interfaces
+  /*
+  get_pd().ionized_donor_density = 0;
+  get_pd().ionized_acceptor_density = 0;
+  get_pd().ionized_donor_density_derivative = 0;
+  get_pd().ionized_acceptor_density_derivative = 0;
+  */
 
   // surface states
   if (get_type(0) == NEUMANN)
   {
     // NOTE we invert the signs because g = \epsilon \nabla\varphi \hat{n}
     // i.e. refers to the negative charge density
-    calculate_traps();
-    double q = pd.ionized_electron_traps + pd.ionized_hole_traps;
-    double dq_dEfn = pd.ionized_traps_derivative[0];
-    double dq_dEfp = pd.ionized_traps_derivative[1];
+    // 2014-8-19 the above note seems misleading, the signs below are the right ones!
+    //calculate_traps();
+    double q = (pd.ionized_electron_traps + pd.ionized_hole_traps);
+    double dq_dEfn = -pd.ionized_traps_derivative[0];
+    double dq_dEfp = -pd.ionized_traps_derivative[1];
     if (is_internal_boundary())
     {
       q /= 2;
