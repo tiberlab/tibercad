@@ -246,12 +246,30 @@ void ETB::do_reinit(void)
     os << "CB min = " << cb_min << "  VB max = " << vb_max << endl;
     Messages::info(os.str());
 
-    if (!solopts.find_option("guess_conduction"))
-      _upt_solver_options.guess_cb = cb_min - 0.3;
+    double gap = cb_min - vb_max;
+    if (gap <= 0.0)
+    {
+      Messages::warning("Your system apparently does not have a global gap: "
+          "cannot find reasonable guess.");
+      Messages::warning("Will use mean value of band edges");
+      cb_min = (cb_min + vb_max) / 2.0;
+      vb_max = cb_min;
+    }
+    else
+    {
+      cb_min -= gap / 4.0;
+      vb_max += gap / 4.0;
+    }
 
-    if (!solopts.find_option("guess_valence"))
-      _upt_solver_options.guess_vb = vb_max + 0.3;
+    _upt_solver_options.guess_cb = cb_min;
+    _upt_solver_options.guess_vb = vb_max;
   }
+  _upt_solver_options.guess_vb =
+      solopts.get_option("guess_valence", _upt_solver_options.guess_vb);
+  _upt_solver_options.guess_cb =
+      solopts.get_option("guess_conduction", _upt_solver_options.guess_cb);
+
+
 
   std::string upt_filename;
   // Getting reference to atomistic structure for calculation
@@ -873,8 +891,6 @@ void ETB::parse_options(void)
   //---------------------------------------------------------------------------------------
 
   _upt_options.band_shift_flag = get_option("add_band_shifts", true);
-  _upt_solver_options.guess_vb = solopts.get_option("guess_valence", 0.0);
-  _upt_solver_options.guess_cb = solopts.get_option("guess_conduction", 0.0);
 
   // da togliere e leggere dal database: shift della banda di valenza (che e` 0)
   //_upt_options.vb_shift = options.get_option("vb_shift", 0.0);
