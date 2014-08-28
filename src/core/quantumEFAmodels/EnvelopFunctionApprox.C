@@ -1364,12 +1364,20 @@ void EnvelopFunctionApprox::estimate_spectrum_shift(void)
    double Ec = get_band_edge("el");
    double Ev = get_band_edge("hl");
 
-   int states = opt.num_el_states + opt.num_hl_states;
-   double frac = opt.num_el_states / states;
-   double margin = 0.1 * (Ec - Ev);
-   solver_opt.spectrum_shift = Ev + margin + frac * (Ec - 2*margin - Ev);
-   //solver_opt.spectrum_shift = Ec - 0.05;
-
+   if ((Ec - Ev) <= 0.0)
+   {
+     Messages::warning("Your system apparently does not have a global gap: "
+         "cannot find reasonable guess.");
+     Messages::warning("Will use mean value of band edges");
+     solver_opt.spectrum_shift = (Ec + Ev) / 2.0;
+   }
+   else
+   {
+     int states = opt.num_el_states + opt.num_hl_states;
+     double frac = opt.num_el_states / states;
+     double margin = 0.1 * (Ec - Ev);
+     solver_opt.spectrum_shift = Ev + margin + frac * (Ec - 2*margin - Ev);
+   }
    std::cout<<"  (EFA) Estimated guess (eV): " << solver_opt.spectrum_shift << std::endl;
  }
 
@@ -1685,6 +1693,14 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
   // the 1e-5 below is to not make the Hamiltonian singular,
   // and to be sure to take all states
 
+  double Ec = shift;
+  double Ev = shift;
+  if (opt.estimate_spectrum_shift)
+  {
+    Ec = get_band_edge("el");
+    Ev = get_band_edge("hl");
+  }
+
   bool foundall = true;
 
   // did we find all electron eigenstates?
@@ -1704,7 +1720,14 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
   {
     // in this case we found no electron state at all, so set shift near Ec
     if (opt.estimate_spectrum_shift)
-      solver_opt.spectrum_shift = get_band_edge("el") - 0.01;
+    {
+      solver_opt.spectrum_shift = Ec - 0.05;
+      // If there is no gap, we leave the guess at the mean band edge energy.
+      // Sooner or later we will find all states, and el/hl does not make
+      // really sense here anyway.
+      if ((Ec - Ev) <= 0.0)
+        solver_opt.spectrum_shift = (Ec + Ev) / 2.0;
+    }
     else
       solver_opt.spectrum_shift += 0.3;  //!? Rise a little the guess and restart  
 
@@ -1731,7 +1754,11 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     {
       // in this case we found no state at all, so set shift near Ev
       if (opt.estimate_spectrum_shift)
-        solver_opt.spectrum_shift = get_band_edge("hl") + 0.01;
+      {
+        solver_opt.spectrum_shift = Ev + 0.05;
+        if ((Ec - Ev) <= 0.0)
+          solver_opt.spectrum_shift = (Ec + Ev) / 2.0;
+      }
       else
         solver_opt.spectrum_shift -= 0.3;  //!? Lower a little the guess and restart
 
