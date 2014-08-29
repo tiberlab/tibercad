@@ -34,7 +34,7 @@ libuptight_$(ARCH).a: checkout
 	
 checkout:
 	@echo "Checkout libuptight ..."
-	@if [ ! -e src/api ]; then svn -r $(UPTREV) co $(UPTREPO) --depth empty; fi
+	@if [ ! -d src/api ]; then svn -r $(UPTREV) co $(UPTREPO) --depth empty; fi
 	
 
 	
