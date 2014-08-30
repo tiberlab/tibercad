@@ -6,13 +6,13 @@ topdir := ../..
 include $(topdir)/Make.common
 
 # we have to compile each module
-subdirs := Tensor SLEPC license
+subdirs := Tensor SLEPC 
 ifeq ($(enable_dftb), yes)
  subdirs += DFTB
 endif
-#ifeq ($(enable_uptight), yes)
-# subdirs += UPTIGHT
-#endif
+ifeq ($(enable_license_check), yes)
+ subdirs += license
+endif
 ifeq ($(enable_hetero), yes)
  subdirs += HETERO
 endif
