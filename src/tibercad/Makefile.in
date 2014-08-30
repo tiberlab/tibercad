@@ -4,7 +4,10 @@ topdir := ../..
 
 include $(topdir)/Make.common
 
-ADDITIONAL_LIBS = @LIBREADLINE@ $(topdir)/src/utils/license/.$(ARCH)/liblicense.a
+ADDITIONAL_LIBS = @LIBREADLINE@ 
+ifeq ($(enable_license_check), yes)
+ ADDITIONAL_LIBS += $(topdir)/src/utils/license/.$(ARCH)/liblicense.a
+endif
 
 ifeq ($(target_os), linux)
  PACKAGEFLAGS := -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
