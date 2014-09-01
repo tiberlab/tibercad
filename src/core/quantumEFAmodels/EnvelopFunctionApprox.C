@@ -465,6 +465,7 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
     assert(el != end_el);
 
     band_edge = get_band_edge(*el, particle);
+
     ++el;
 
     bool condband = (particle == "el") || (particle == "Ec");
@@ -475,6 +476,7 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
       const Elem* elem = *el;
 
       double temp = get_band_edge(elem, particle);
+
 
       if (condband)
       {
@@ -1364,6 +1366,12 @@ void EnvelopFunctionApprox::estimate_spectrum_shift(void)
    double Ec = get_band_edge("el");
    double Ev = get_band_edge("hl");
 
+   ostringstream os;
+   os <<"Maximum of Ev (eV) :" <<Ev<<std::endl;
+   os <<"Minimum of Ec (eV) :" <<Ec<<std::endl;
+   Messages::info(os.str());
+   os.str("");
+
    if ((Ec - Ev) <= 0.0)
    {
      Messages::warning("Your system apparently does not have a global gap: "
@@ -1378,7 +1386,8 @@ void EnvelopFunctionApprox::estimate_spectrum_shift(void)
      double margin = 0.1 * (Ec - Ev);
      solver_opt.spectrum_shift = Ev + margin + frac * (Ec - 2*margin - Ev);
    }
-   std::cout<<"  (EFA) Estimated guess (eV): " << solver_opt.spectrum_shift << std::endl;
+   os<<"(EFA) Estimated guess (eV): " << solver_opt.spectrum_shift << std::endl;
+   Messages::info(os.str());
  }
 
 }
