@@ -93,7 +93,9 @@ class EFAbulkHamiltonian: public PhysicalModelInterface
   
 
   //! result Hamiltonian in k representation
-  //! |s_u>  |s_d>  |px_u>  |py_u>  |pz_u>  |px_d>  |py_d>  |pz_d>
+  /*!
+   * |s_u>  |s_d>  |px_u>  |py_u>  |pz_u>  |px_d>  |py_d>  |pz_d>
+   */
   std::vector< std::vector<MatrixElement > > Hamiltonian;
 
 
