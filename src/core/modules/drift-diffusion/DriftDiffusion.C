@@ -1190,7 +1190,8 @@ DriftDiffusion::parse_const_options(void)
 
   _do_local_scaling = opts.get_option("local_scaling", true);
 
-  string qrule = get_mesh().mesh_dimension() == 1 ? "trapez" : "gauss";
+  //string qrule = get_mesh().mesh_dimension() == 1 ? "trapez" : "gauss";
+  string qrule = "trapez";
   qrule = opts.get_option("quadrature_rule", qrule);
   if (qrule == "gauss")
     myopts.quadrature_type = QGAUSS;
