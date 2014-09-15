@@ -827,7 +827,7 @@ Control::run_simulation(void)
     catch (runtime_error& e)
     {
       // we plot anyway, maybe it helps to identify the problem
-      sim->plot();
+      //sim->plot();
       ostringstream s;
       s << "Solve of " << sim->get_name() << " failed." << endl <<
            "    Cause: " << e.what();
