@@ -3,10 +3,10 @@
 #ifndef _DSSCCONTACT_H_
 #define _DSSCCONTACT_H_
 
-#include "BoundaryProperties.h"
+#include "PhysicalModel.h"
 
 
-class DSSCContact : public BoundaryProperties
+class DSSCContact : public PhysicalModel
 {
 
   public:
@@ -20,7 +20,7 @@ class DSSCContact : public BoundaryProperties
 
 
     //! Create a contact
-    static DSSCContact* create(const std::string& name,
+    static DSSCContact* create(const MaterialBoundary* boundary,
         const ModelOptions& options = ModelOptions());
 
 
@@ -125,22 +125,7 @@ class DSSCContact : public BoundaryProperties
 // inline members
 //
 
-inline
-DSSCContact::DSSCContact(const ModelOptions& options)
-  // open circuit value
-  : BoundaryProperties(options),
-    //_boundary_value(1e10),
-    _bias(0.0),
-    _res(1e10),
-    _cathode(false),
-    _gate(false),
-    _j0(0.1),
-    _beta(1.0),
-    _current(0.0),
-    _barrier(0.0),
-    _kinetic_rate(1e4)
-{
-}
+
 
 
 inline

@@ -11,23 +11,49 @@ DSSCContact::_open_circuit = true;
 
 
 
+
+DSSCContact::DSSCContact(const ModelOptions& options)
+  // open circuit value
+  : PhysicalModel(options),
+    //_boundary_value(1e10),
+    _bias(0.0),
+    _res(1e10),
+    _cathode(false),
+    _gate(false),
+    _j0(0.1),
+    _beta(1.0),
+    _current(0.0),
+    _barrier(0.0),
+    _kinetic_rate(1e4)
+{
+}
+
+
+
 DSSCContact*
-DSSCContact::create(const std::string& name,
+DSSCContact::create(const MaterialBoundary* boundary,
     const ModelOptions& options)
 {
   DSSCContact* ct = NULL;
 
+  string name = options.get_option("type", "");
+
   ct = new DSSCContact(options);
 
   if (ct != NULL)
+  {
     ct->set_options(options);
 
-
-  if (name == "Pt")
-    ct->is_cathode() = true;
-
-  if (name == "Gate")
-    ct->is_gate() = true;
+    if (name == "Pt")
+      ct->is_cathode() = true;
+    else if (name == "Gate")
+      ct->is_gate() = true;
+    else if (name != "ohmic")
+      throw ModelErrorException(
+          "DSSC: No such boundary model: " + name);
+  }
+  else
+    throw ModelErrorException("Could not create DSSC boundary model");
 
   return ct;
 }

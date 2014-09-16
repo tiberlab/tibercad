@@ -109,9 +109,9 @@ class DSSC : public SimulationInterface
 
 
     /*! \copydoc SimulationInterface::create_boundary_model() */
-    virtual BoundaryProperties*
-      create_boundary_model(const ModelOptions& options) const
-      throw (ModelErrorException);
+    virtual PhysicalModel*
+      create_boundary_model(const ModelOptions& options,
+          const MaterialBoundary* boundar) const;
 
 
     //! Get the mesh

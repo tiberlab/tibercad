@@ -88,22 +88,15 @@ DSSC::create_bulk_model(const ModelOptions& options,
 
 
 
-BoundaryProperties*
-DSSC::create_boundary_model(const ModelOptions& options) const
-throw (ModelErrorException)
+PhysicalModel*
+DSSC::create_boundary_model(const ModelOptions& options,
+    const MaterialBoundary* boundary) const
 {
-  const string& modelname = options.get_option("type", "");
 
-  BoundaryProperties* model = NULL;
+  PhysicalModel* model = NULL;
 
-  //if (modelname != "")
-  //{
-    model =  DSSCContact::create(modelname, options);
+  model =  DSSCContact::create(boundary, options);
 
-    if (model == NULL)
-      throw ModelErrorException(
-          "DSSC: No such boundary model: " + modelname);
-  //}
 
   return model;
 }
@@ -723,7 +716,7 @@ DSSC::do_solve(void)
     ostringstream os;
     os << setprecision(6);
     DSSCContact* cnt =
-      static_cast<DSSCContact*>(it->first->get_boundary_properties(get_id()));
+      static_cast<DSSCContact*>(it->first->models_begin()->second);
     os << it->first->get_name();
     os.width(width - os.tellp());
     os << "";
@@ -758,7 +751,7 @@ DSSC::do_EIS(void)
   for ( ; it != curr_R.end(); ++it)
   {
     DSSCContact* contact = dynamic_cast<DSSCContact*>(
-        (*it).first->get_boundary_properties(get_id()));
+        (*it).first->models_begin()->second);
 //    if (!(contact->is_cathode() || contact->is_gate()))
     if (contact->is_cathode() )
       bnd = (*it).first;
@@ -1000,25 +993,27 @@ DSSC::do_init(void)
 
   rebuild_equation_system();
 
-  // prepare the _boundary_currents
-  // we will rely on the fact that it contains an entry for every boundary
-  SimulationEnvironment::BoundaryIterator
-    it(get_environment().boundaries_begin());
-  const SimulationEnvironment::BoundaryIterator
-    end(get_environment().boundaries_end());
+  // check the boundaries if they are internal or not
+  const set<PhysicalModel*>& pm = get_interface_models();
+  set<PhysicalModel*>::const_iterator it(pm.begin());
+  const set<PhysicalModel*>::const_iterator end(pm.end());
   for ( ; it != end; ++it)
   {
-      BoundaryProperties* bd = (*it)->get_boundary_properties(get_id());
-      if (bd != NULL)
-      {
-        DSSCContact* contact = dynamic_cast<DSSCContact*>(bd);
-        if (contact != NULL)
-        {
-          _boundary_currents[(*it)] = 0.0;
-          _voltages[(*it)] = 0.0;
-        }
-      }
+    DSSCContact* mod = static_cast<DSSCContact*>(*it);
+
+    //const MaterialBoundary* bd =
+    //    static_cast<const MaterialBoundary*>(mod->get_owner());
+
+
+    // register the contact if it is a real contact (with current)
+    const Boundary* bnd = get_environment().get_boundary(mod->get_name());
+    if (bnd != NULL)
+    {
+      _boundary_currents[bnd] = 0.0;
+      _voltages[bnd] = 0.0;
     }
+  }
+
 
 }
 
@@ -1083,7 +1078,7 @@ DSSC::find_dirichlet_nodes(void)
 
         DSSCContact* contact = NULL;
         contact = dynamic_cast<DSSCContact*>(
-            bd->get_boundary_properties(get_id()));
+            bd->models_begin()->second);
 
         if (contact != NULL)
         {
@@ -1287,7 +1282,7 @@ DSSC::calculate_currents_rstf(void)
         if (boundary != NULL)
         {
           DSSCContact* contact = dynamic_cast<DSSCContact*>(
-                boundary->get_boundary_properties(get_id()));
+                boundary->models_begin()->second);
           //if (contact->is_real_contact())
             _boundary_currents[boundary] += j * dphi[n][qp];
         }
@@ -2246,7 +2241,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         DSSCContact* contact = NULL;
         if (boundary != NULL)
           contact = dynamic_cast<DSSCContact*>(
-              boundary->get_boundary_properties(get_id()));
+              boundary->models_begin()->second);
 
         AutoPtr<Elem> side(elem->build_side(s));
 
@@ -2747,7 +2742,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         {
           Boundary* bd = node_it->second;
           DSSCContact* contact = dynamic_cast<DSSCContact*>(
-              bd->get_boundary_properties(get_id()));
+              bd->models_begin()->second);
           //contact->set_material(sc);
 
           // we only impose Dirichlet type BCs if the node has an associated
@@ -4222,7 +4217,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
         DSSCContact* contact = NULL;
         if (boundary != NULL)
           contact = dynamic_cast<DSSCContact*>(
-              boundary->get_boundary_properties(get_id()));
+              boundary->models_begin()->second);
 
         AutoPtr<Elem> side(elem->build_side(s));
 
@@ -4654,7 +4649,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
         {
           Boundary* bd = node_it->second;
           DSSCContact* contact = dynamic_cast<DSSCContact*>(
-              bd->get_boundary_properties(get_id()));
+              bd->models_begin()->second);
           //contact->set_material(sc);
 
           // we only impose Dirichlet type BCs if the node has an associated
@@ -5049,7 +5044,7 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
         if (boundary != NULL)
         {
           DSSCContact* contact = dynamic_cast<DSSCContact*>(
-                boundary->get_boundary_properties(get_id()));
+                boundary->models_begin()->second);
           //if (contact->is_real_contact())
           curr_R[boundary] += j_R * dphi[n][qp];
           curr_I[boundary] += j_I * dphi[n][qp];
