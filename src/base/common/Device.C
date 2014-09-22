@@ -1317,8 +1317,8 @@ Device::decompose_region(const ModelOptions& options,
       if (!used_ids.count(id))
         continue;
 
-      // TODO better would be to take the mean value
-      double x = profile->get_data(elem->centroid());
+      double x = profile->get_data(elem);
+      //cerr << "x = " << x << endl;
 
       int i = 0;
       while ((i < (composition.size() - 1)) &&

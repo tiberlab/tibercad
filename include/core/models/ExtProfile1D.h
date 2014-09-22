@@ -7,6 +7,7 @@
 #include "ExternalProfile.h"
 
 #include "point.h"
+#include "elem.h"
 
 #include <vector>
 
@@ -21,7 +22,7 @@ class ExtProfile1D : public ExternalProfile
     //! Destructor
     virtual ~ExtProfile1D(void);
 
-    virtual double get_data(const Point& p) const;
+    virtual double get_data(const Elem* elem, const Point& p) const;
 
     virtual std::pair<double, double> get_min_max(void) const;
 

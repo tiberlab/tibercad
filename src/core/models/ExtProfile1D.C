@@ -108,8 +108,11 @@ ExtProfile1D::get_min_max(void) const
   return(make_pair(_min, _max));
 }
 
+
+
+
 double
-ExtProfile1D::get_data(const Point& p) const
+ExtProfile1D::get_data(const Elem* elem, const Point& p) const
 {
   double data;
 
