@@ -2583,7 +2583,13 @@ const SolutionDescriptor&
 SimulationInterface::get_solution_descriptor(const std::string& solution_name) const
 {
   ID id = INVALID_ID;
-  map<const string, ID>::const_iterator it(_solution_ids.find(solution_name));
+
+  // first split any strain:xx:yy:zz
+  vector<string> tokens;
+  Utils::tokenize(solution_name, tokens, ":");
+
+  // the first token is the solution name
+  map<const string, ID>::const_iterator it(_solution_ids.find(tokens[0]));
   if (it != _solution_ids.end())
     id = it->second;
 

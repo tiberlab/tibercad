@@ -9,6 +9,7 @@
 #include <string>
 #include <cassert>
 #include <iostream>
+#include <set>
 
 
 //! A structure describing the properties of a solution
@@ -23,7 +24,7 @@ struct SolutionDescriptor
       REAL,     //!< a real value
       COMPLEX,  //!< a complex value, ordered as (real, imag)
       VECTOR,   //!< a real 3D vector (x, y, z)
-      TENSOR,   //!< a real 3D symmetric tensor of second rank (xx, yy, zz, xy, yz, zz)
+      TENSOR,   //!< a real 3D symmetric tensor of second rank (xx, yy, zz, xy, yz, xz)
       NTUPLE    //!< a generic n-tuple
     };
 
@@ -77,6 +78,13 @@ struct SolutionDescriptor
 
     //! Get the number of components
     unsigned int n_components(void) const { return _n_comp; }
+
+    //! Extract component indices from a variable name or string
+    /*!
+     * The syntax is [name:]xx:yy:zz, where component names or numbers are
+     * divided by colons
+     */
+    void get_components(const std::string& str, std::set<int> comp) const;
 
     //! Return \c true if the quantity is located on the mesh
     bool on_mesh(void) const;

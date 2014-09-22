@@ -1,6 +1,7 @@
 // $Id$
 
 #include "SolutionDescriptor.h"
+#include "Utils.h"
 
 #define CASE(key, str) case SolutionDescriptor::key: os << #str; break;
 #define DEFAULT default: os << "unknown"; break;
@@ -32,4 +33,67 @@ std::ostream& operator<<(std::ostream& os, SolutionDescriptor::Location location
     DEFAULT
   }
   return os;
+}
+
+
+void
+SolutionDescriptor::get_components(const std::string& str, std::set<int> comp) const
+{
+  std::vector<std::string> tokens;
+  Utils::tokenize(str, tokens, ":");
+
+  for (int i = 0; i < tokens.size(); ++i)
+  {
+    switch (_type)
+    {
+      case COMPLEX:
+        if (tokens[i] == "real")
+          comp.insert(0);
+        else if (tokens[i] == "imag")
+          comp.insert(1);
+        break;
+
+      case VECTOR:
+        if      (tokens[i] == "x")
+          comp.insert(0);
+        else if (tokens[i] == "y")
+          comp.insert(1);
+        else if (tokens[i] == "z")
+          comp.insert(2);
+        break;
+
+      case TENSOR:
+        if      (tokens[i] == "xx")
+          comp.insert(0);
+        else if (tokens[i] == "yy")
+          comp.insert(1);
+        else if (tokens[i] == "zz")
+          comp.insert(2);
+        else if (tokens[i] == "xy")
+          comp.insert(3);
+        else if (tokens[i] == "yz")
+          comp.insert(4);
+        else if (tokens[i] == "xz")
+          comp.insert(5);
+        break;
+
+      case NTUPLE:
+      {
+        int n = atoi(tokens[i].c_str());
+        if (n < n_components())
+          comp.insert(n);
+        break;
+      }
+
+      default:
+        break;
+    }
+  }
+
+
+  if (comp.empty())
+  {
+    for (int i = 0; i < n_components(); ++i)
+      comp.insert(i);
+  }
 }
