@@ -29,7 +29,7 @@ UniformRandomAlloy::UniformRandomAlloy(const ModelOptions& options) :
     throw InitFailedException("Uniform random alloy profile needs the "
         "mean composition as option.");
 
-  _rnd_generator.seed(static_cast<int>(time(NULL) * tr1::random_device()()));
+  _rnd_generator.seed(static_cast<int>(time(NULL) * random_device()()));
 }
 
 UniformRandomAlloy::~UniformRandomAlloy(void)
@@ -50,7 +50,7 @@ UniformRandomAlloy::get_data(const Elem* elem) const
   double volume = elem->volume();
 
   int n_sites = _site_density / volume;
-  tr1::binomial_distribution<int> binomial(n_sites, _mean_composition);
+  binomial_distribution<int> binomial(n_sites, _mean_composition);
   double data = binomial(_rnd_generator);
 
   return(data / n_sites);

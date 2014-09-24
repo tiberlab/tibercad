@@ -6,7 +6,7 @@
 
 #include "ExternalProfile.h"
 
-#include <tr1/random>
+#include <random>
 
 
 //! Class to read an external line profile
@@ -38,7 +38,7 @@ class UniformRandomAlloy : public ExternalProfile
     double _site_density;
 
     //! Random number generator engine
-    mutable std::tr1::mt19937 _rnd_generator;
+    mutable std::mt19937 _rnd_generator;
 
 };
 
