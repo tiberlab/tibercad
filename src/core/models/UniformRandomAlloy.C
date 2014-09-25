@@ -52,8 +52,12 @@ UniformRandomAlloy::get_data(const Elem* elem) const
   int n_sites = _site_density / volume;
   binomial_distribution<int> binomial(n_sites, _mean_composition);
   double data = binomial(_rnd_generator);
+  data /= n_sites;
 
-  return(data / n_sites);
+  if (data > _max) data = _max;
+  else if (data < _min) data = _min;
+
+  return(data);
 }
 
 

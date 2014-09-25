@@ -2,6 +2,7 @@
 
 #include "Device.h"
 #include "Material.h"
+#include "Alloy.h"
 #include "MeshUtils.h"
 #include "MeshReader.h"
 #include "DataOutput.h"
@@ -141,6 +142,35 @@ Device::prepare(void)
       writer->set_mesh(*bdmesh);
       writer->write(true);
     }
+  }
+
+  if (_options.get_option("plot_alloy_composition", false))
+  {
+    string format = "vtk";
+    if (get_mesh().mesh_dimension() == 1)
+      format = "dat";
+
+    DataOutput writer(get_mesh(), format);
+    writer.set_output_directory(_options.get_option("output_path", "./"));
+    //writer->set_filename(Utils::basename(_options["meshfile"]) + "_alloy_comp");
+    //writer.set_mesh(get_mesh());
+
+    vector<double> data(get_mesh().n_active_elem(), 0.0);
+    size_t ctr = 0;
+    MeshBase::element_iterator el(get_mesh().active_elements_begin());
+    MeshBase::element_iterator end(get_mesh().active_elements_end());
+    for ( ; el != end; ++el, ++ctr)
+    {
+      const Elem* elem = *el;
+      const Material* mat = get_material(elem);
+      if (mat->is_alloy())
+        data[ctr] = static_cast<const Alloy*>(mat)->get_molar_fraction();
+    }
+
+    vector<string> legend(1, "x");
+    string filename = Utils::basename(_options["meshfile"]) + "_alloy_comp";
+    writer.write_cell_data(filename, data, legend);
+
   }
 }
 
