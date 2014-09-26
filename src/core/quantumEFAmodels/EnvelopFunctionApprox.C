@@ -1329,18 +1329,34 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       else
       {
         vector<unsigned int> new_dof_indices;
+        vector<unsigned int> dof_indices_tmp;
 
-        new_dof_indices.resize(n_dofs);
-        for (unsigned int i=0; i< n_dofs; i++)
-          new_dof_indices[i] = _perm[dof_indices[i]];
+        //new_dof_indices.resize(n_dofs);
+        //for (unsigned int i=0; i< n_dofs; i++)
+        //  new_dof_indices[i] = _perm[dof_indices[i]];
         
         if (_haveS)
         {
+          dof_indices_tmp = dof_indices;
+          dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
+        new_dof_indices.resize(dof_indices_tmp.size());
+        for (unsigned int i=0; i< new_dof_indices.size(); i++)
+          new_dof_indices[i] = _perm[dof_indices_tmp[i]];
           _S_real->add_matrix(s_real,new_dof_indices);
         }
 
+        dof_indices_tmp = dof_indices;
+        dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
+        new_dof_indices.resize(dof_indices_tmp.size());
+        for (unsigned int i=0; i< new_dof_indices.size(); i++)
+          new_dof_indices[i] = _perm[dof_indices_tmp[i]];
         _H_real->add_matrix(ham_real,new_dof_indices);
         
+        dof_indices_tmp = dof_indices;
+        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
+        new_dof_indices.resize(dof_indices_tmp.size());
+        for (unsigned int i=0; i< new_dof_indices.size(); i++)
+          new_dof_indices[i] = _perm[dof_indices_tmp[i]];
         _H_imag->add_matrix(ham_imag,new_dof_indices);
         
       }
