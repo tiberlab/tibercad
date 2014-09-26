@@ -391,8 +391,8 @@ void FEMEigenvalueProblem::parse_options()
   solver_opt.spectrum_shift = sol_opt.get_option("guess",0.0);
 
   // only Dirichlet BC works at the moment !
-  //solver_opt.Dirichlet_bc_everywhere = sol_opt.get_option("Dirichlet_bc_everywhere", true);
-  solver_opt.Dirichlet_bc_everywhere = true;
+  solver_opt.Dirichlet_bc_everywhere = sol_opt.get_option("Dirichlet_bc_everywhere", true);
+  //solver_opt.Dirichlet_bc_everywhere = true;
 
   solver_opt.monitor = sol_opt.get_option("monitor", false);
 
@@ -899,7 +899,9 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 			  el_number++;
 			}
 		      
-		      if (!found)  throw ModelErrorException("EnvelopFunctionApprox: Mesh periproblem");
+		      //if (!found)  throw ModelErrorException("EnvelopFunctionApprox: Mesh periproblem");
+		      if (!found)
+		        continue;
 		  
 		      
 

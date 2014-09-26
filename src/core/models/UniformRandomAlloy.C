@@ -2,6 +2,7 @@
 
 #include "UniformRandomAlloy.h"
 #include "InitFailedException.h"
+#include "Messages.h"
 
 #include "elem.h"
 
@@ -29,7 +30,14 @@ UniformRandomAlloy::UniformRandomAlloy(const ModelOptions& options) :
     throw InitFailedException("Uniform random alloy profile needs the "
         "mean composition as option.");
 
-  _rnd_generator.seed(static_cast<int>(time(NULL) * random_device()()));
+  int seed = get_option("random_generator_seed",
+      static_cast<int>(time(NULL) * random_device()()));
+
+  std::ostringstream os;
+  os << "Initializing  MT19937 random generator with seed " << seed;
+  Messages::info(os.str());
+
+  _rnd_generator.seed(seed);
 }
 
 UniformRandomAlloy::~UniformRandomAlloy(void)
