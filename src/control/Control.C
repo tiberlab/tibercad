@@ -719,9 +719,13 @@ Control::create_boundary(SimulationInterface* sim, const ModelOptions& opts)
       ID ida = bd->get_id_A();
       ID idb = bd->get_id_B();
       if (!sim->includes_region(ida) && !sim->includes_region(idb))
-        throw InitFailedException("Boundary \'" + boundary_name +
+      {
+        continue;
+
+        Messages::warning("At least part of boundary \'" + boundary_name +
             "\' does not touch any region of simulation \'" +
             sim->get_name() + "\'");
+      }
 
       pm = sim->new_boundary_model(opts, bd);
       bd->add_model(pm, sim->get_id());
