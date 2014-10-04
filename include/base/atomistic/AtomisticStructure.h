@@ -11,6 +11,9 @@
 #include "InitFailedException.h"
 #include "AtomisticBasis.h"
 
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+
 class Material;
 class UnstructuredMesh;
 
@@ -156,6 +159,18 @@ public:
   //! Restrict the atomistic structure to given sub-regions
   void restrict(const std::set<ID>& rgn_ids);
 
+  //! Get the atoms in a given mesh element
+  const std::vector<unsigned int>& get_atoms_in_elem(const Elem* element) const;
+
+  //! Register a callback to be executed after structure creation
+  /*!
+   * This is used to synchronize random alloy distributions between
+   * atomistic and continuous representation
+   */
+  static void register_callback(std::string& name,
+      boost::function<void(void)> callback);
+
+
 private:
 
   //! Constructor for AtomisticStructure class object
@@ -239,6 +254,11 @@ private:
 
   //!Number of atoms excluding hydrogens
   unsigned int _N_without_H;
+
+  //! The map with callbacks
+  static std::map<std::string,
+    std::list<boost::function<void(void)>>> _callback_functions;
+
 
   //! Manage structure printing
   void print_driver(void);

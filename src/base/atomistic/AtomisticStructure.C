@@ -30,6 +30,10 @@
 
 using namespace std;
 
+map<string, list<boost::function<void(void)>>>
+AtomisticStructure::_callback_functions;
+
+
 
 AtomisticStructure::AtomisticStructure()
 :_device(NULL),
@@ -513,6 +517,7 @@ AtomisticStructure::init_mesh_structure()
   //-----------------------------------------------------------
 
   _atoms.clear();
+  _elem_to_atoms.clear();
 
   //---------------------------------------------------------------
   // Extend mesh for contacts 
@@ -528,9 +533,26 @@ AtomisticStructure::init_mesh_structure()
   generator->finalize();
 
   parse_lattice_vectors();
+
+  for (size_t i = 0; i < _atoms.size(); ++i)
+  {
+    _elem_to_atoms[_atoms[i].get_elem()].push_back(i);
+  }
  
   Messages::info("Build final Bond Map...");
   build_bond_map();
+
+  map<string, list<boost::function<void(void)>>>::iterator mit =
+      _callback_functions.find(get_name());
+
+  if (mit != _callback_functions.end())
+  {
+    list<boost::function<void(void)>>::iterator it((mit->second).begin());
+    for ( ; it != (mit->second).end(); ++it)
+    {
+      (*it)();
+    }
+  }
 
   delete generator;
 
@@ -572,20 +594,20 @@ AtomisticStructure::associate_elements()
   MeshUtils::GridMapper& mapper =
       MeshUtils::GridMapper::get_mapper(_device->get_mesh(), _IDset);
 
-  std::vector<Atom>::iterator atom = _atoms.begin();
 
   unsigned int dim =  _device->get_mesh().mesh_dimension();
 
-  Utils::Progress prog("Assign elements", _atoms.size());
+  size_t n_atoms = _atoms.size();
+  Utils::Progress prog("Assign elements", n_atoms);
   unsigned int progress = 0;
 
   // NOTE: Hydrogens remains outside regions and are not associated to elements
   // BondMap has not been created yet
 
-  for ( ; atom != _atoms.end(); ++atom)
+  for (size_t atom = 0; atom < n_atoms; ++atom)
   {
     
-    Point p((*atom).get_position());
+    Point p(_atoms[atom].get_position());
     p *= 1.0 / _scale;
     
     // set unneeded dim to 0, so atoms are associated to the correct elements
@@ -603,7 +625,11 @@ AtomisticStructure::associate_elements()
         
     const Elem* elem = mapper.get_element(p);
     
-    if (elem != NULL) (*atom).set_elem(elem);
+    if (elem != NULL)
+    {
+      _atoms[atom].set_elem(elem);
+      _elem_to_atoms[elem].push_back(atom);
+    }
 
     progress++;
     prog.progress_message(progress);
@@ -634,6 +660,35 @@ AtomisticStructure::associate_elements()
 
 }
 
+
+void
+AtomisticStructure::register_callback(string& name,
+    boost::function<void(void)> callback)
+{
+  if (!name.empty())
+  {
+    vector<string> tokens;
+
+    Utils::tokenize(name, tokens, ".");
+
+    _callback_functions[tokens[0]].push_back(callback);
+  }
+}
+
+
+
+const std::vector<unsigned int>&
+AtomisticStructure::get_atoms_in_elem(const Elem* element) const
+{
+  static std::vector<unsigned int> empty_int_vector(0);
+
+  std::map<const Elem*, std::vector<unsigned int>>::const_iterator
+    it(_elem_to_atoms.find(element));
+  if (it != _elem_to_atoms.end())
+    return(it->second);
+
+  return(empty_int_vector);
+}
 
 void
 AtomisticStructure::read_structure(const std::string& path)

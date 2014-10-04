@@ -487,12 +487,12 @@ Device::setup_atomistic_structures(void)
 
     AtomisticStructure* st = AtomisticStructure::create();
 
+    // Defined atomistic structure is put in the atomistic_structure_map
+    _atomistic_structure_map[st_name] = st;
+
     //WARNING: For debugging purposes, initialization of
     //atomistic structures is here, but it's not the right place! (maybe it is...)
     st->init(st_name, this, data);
-
-    // Defined atomistic structure is put in the atomistic_structure_map
-    _atomistic_structure_map[st_name] = st;
 
     //UnstructuredMesh* mesh = new Mesh(3);
     //st->create_conformal_grid(*mesh);
@@ -1251,13 +1251,13 @@ Device::reassign_alloy_regions(const string& source,
   pair<SimulationInterface*, ID> provider(
       SimulationInterface::find_solution_provider(source));
 
+  set<ID> reg_ids;
+  for (int i = 0; i < region_ids.size(); ++i)
+    reg_ids.insert(region_ids[i]);
+
   if (provider.first != NULL)
   {
     m.info("Alloy composition provided by " + provider.first->get_name());
-
-    set<ID> reg_ids;
-    for (int i = 0; i < region_ids.size(); ++i)
-      reg_ids.insert(region_ids[i]);
 
     MeshBase::const_element_iterator el(get_mesh().level_elements_begin(0));
     const MeshBase::const_element_iterator el_end(get_mesh().level_elements_end(0));
@@ -1279,6 +1279,66 @@ Device::reassign_alloy_regions(const string& source,
           i++;
 
         elem->subdomain_id() = region_ids[i];
+      }
+    }
+  }
+  else
+  {
+    // it might be an Atomistic:tb like string
+    vector<string> tokens;
+    Utils::tokenize(source, tokens, ":");
+    if ((tokens[0] != "Atomistic") || (tokens.size() < 2))
+      throw InitFailedException("You must provide a module name or atomistic "
+          "structure for external alloy profile source");
+
+    const AtomisticStructure* str = get_atomistic_structure(tokens[1]);
+
+    if (str == NULL)
+      throw InitFailedException("Unknown atomistic structure: " + tokens[1]);
+
+    m.info("Alloy composition provided by atomistic structure " + tokens[1]);
+
+    MeshBase::element_iterator el(get_mesh().local_elements_begin());
+    MeshBase::element_iterator end(get_mesh().local_elements_end());
+
+    for ( ; el != end; ++el)
+    {
+      Elem* elem = *el;
+      ID id = elem->subdomain_id();
+
+      if (reg_ids.count(id))
+      {
+        const vector<unsigned int>& atoms = str->get_atoms_in_elem(elem);
+        Material* mat = get_material(elem);
+
+        if (mat->is_alloy())
+        {
+          const Alloy* alloy = static_cast<const Alloy*>(mat);
+          const Material* matA = alloy->get_component_A();
+
+          double sites = 1e-6; // this eliminates the 0/0 case
+          int ctr = 0;
+          for (int i = 0; i < atoms.size(); ++i)
+          {
+            // TODO alloys now work only for cation based ones
+            if ((str->get_structure_atom(atoms[i])).is_cation())
+            {
+              sites++;
+              if (matA->has_specie(str->get_structure_atom(atoms[i]).get_specie()))
+                ctr++;
+            }
+          }
+
+          // this is the local composition
+          double x = ctr / sites;
+
+          int i = 0;
+          while ((i < (composition.size() - 1)) &&
+              (x > 0.5*(composition[i] + composition[i+1])))
+            i++;
+
+          elem->subdomain_id() = region_ids[i];
+        }
       }
     }
   }
@@ -1383,9 +1443,20 @@ Device::decompose_region(const ModelOptions& options,
   {
     string source = options.get_option("source", "");
 
-    SimulationInterface::register_callback(source,
-        boost::bind(&Device::reassign_alloy_regions, this, source,
-            region_ids, composition));
+    // it might be an Atomistic:tb like string
+    vector<string> tokens;
+    Utils::tokenize(source, tokens, ":");
+
+    if ((tokens[0] == "Atomistic") && (tokens.size() == 2))
+    {
+      AtomisticStructure::register_callback(tokens[1],
+          boost::bind(&Device::reassign_alloy_regions, this, source,
+              region_ids, composition));
+    }
+    else
+      SimulationInterface::register_callback(source,
+          boost::bind(&Device::reassign_alloy_regions, this, source,
+              region_ids, composition));
   }
 
 }
