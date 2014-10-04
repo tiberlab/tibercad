@@ -51,7 +51,7 @@ class TBDLLOCAL TiberVTKIO : public DataOutput
  protected:
 
   //! The implementation of the writing routine
-  virtual void do_write(void);
+  virtual void do_write(bool force);
 
 
 

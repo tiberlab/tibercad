@@ -565,7 +565,7 @@ TiberVTKIO::get_VTK_cell_type(const Elem* elem)
 
 
 void
-TiberVTKIO::do_write(void)
+TiberVTKIO::do_write(bool force)
 {
   const MeshBase& mesh = get_mesh();
   string file = get_filename() + ".vtu";
@@ -593,7 +593,7 @@ TiberVTKIO::do_write(void)
     ID id = it->first;
 
     // only pieces with data are written
-    if (has_data(id))
+    if (has_data(id) || force)
     {
 
       const vector<unsigned int>& nodevec = nodes[id];
@@ -655,82 +655,85 @@ TiberVTKIO::do_write(void)
       intbuf.clear();
       of << "</Cells>\n";
 
-      const DataMap& data = get_zone_data(id);
-
-      of << "<PointData";
-      DataMap::const_iterator it(data.begin());
-      const DataMap::const_iterator end(data.end());
-
-      bool scalar_ok = false;
-      bool vector_ok = false;
-      bool tensor_ok = false;
-      for ( ; it != end; ++it)
+      if (has_data(id))
       {
-        const SolutionDescriptor& descr = it->first;
-        if (descr.location() == SolutionDescriptor::NODES)
+        const DataMap& data = get_zone_data(id);
+
+        of << "<PointData";
+        DataMap::const_iterator it(data.begin());
+        const DataMap::const_iterator end(data.end());
+
+        bool scalar_ok = false;
+        bool vector_ok = false;
+        bool tensor_ok = false;
+        for ( ; it != end; ++it)
         {
-          if (!scalar_ok && (descr.n_components() == 1))
+          const SolutionDescriptor& descr = it->first;
+          if (descr.location() == SolutionDescriptor::NODES)
           {
-            of << " Scalars=\"" << descr.name() << "\"";
-            scalar_ok = true;
-          }
-          else if (!vector_ok && (descr.n_components() == 3))
-          {
-            of << " Vectors=\"" << descr.name() << "\"";
-            vector_ok = true;
-          }
-          else if (!tensor_ok && (descr.n_components() == 9))
-          {
-            of << " Tensors=\"" << descr.name() << "\"";
-            tensor_ok = true;
+            if (!scalar_ok && (descr.n_components() == 1))
+            {
+              of << " Scalars=\"" << descr.name() << "\"";
+              scalar_ok = true;
+            }
+            else if (!vector_ok && (descr.n_components() == 3))
+            {
+              of << " Vectors=\"" << descr.name() << "\"";
+              vector_ok = true;
+            }
+            else if (!tensor_ok && (descr.n_components() == 9))
+            {
+              of << " Tensors=\"" << descr.name() << "\"";
+              tensor_ok = true;
+            }
           }
         }
-      }
-      of << ">\n";
+        of << ">\n";
 
-      // loop over all data
-      for (it = data.begin(); it != end; ++it)
-      {
-        const SolutionDescriptor& descr = it->first;
-        if (descr.location() == SolutionDescriptor::NODES)
-          write_data_array(descr.name(), descr.n_components(), it->second, of);
-      }
-      of << "</PointData>\n";
-
-      of << "<CellData";
-      scalar_ok = false;
-      vector_ok = false;
-      tensor_ok = false;
-      for (it = data.begin(); it != end; ++it)
-      {
-        const SolutionDescriptor& descr = it->first;
-        if (descr.location() == SolutionDescriptor::CELL)
+        // loop over all data
+        for (it = data.begin(); it != end; ++it)
         {
-          if (!scalar_ok && (descr.n_components() == 1))
+          const SolutionDescriptor& descr = it->first;
+          if (descr.location() == SolutionDescriptor::NODES)
+            write_data_array(descr.name(), descr.n_components(), it->second, of);
+        }
+        of << "</PointData>\n";
+
+        of << "<CellData";
+        scalar_ok = false;
+        vector_ok = false;
+        tensor_ok = false;
+        for (it = data.begin(); it != end; ++it)
+        {
+          const SolutionDescriptor& descr = it->first;
+          if (descr.location() == SolutionDescriptor::CELL)
           {
-            of << " Scalars=\"" << descr.name() << "\"";
-            scalar_ok = true;
-          }
-          else if (!vector_ok && (descr.n_components() == 3))
-          {
-            of << " Vectors=\"" << descr.name() << "\"";
-            vector_ok = true;
-          }
-          else if (!tensor_ok && (descr.n_components() == 9))
-          {
-            of << " Tensors=\"" << descr.name() << "\"";
-            tensor_ok = true;
+            if (!scalar_ok && (descr.n_components() == 1))
+            {
+              of << " Scalars=\"" << descr.name() << "\"";
+              scalar_ok = true;
+            }
+            else if (!vector_ok && (descr.n_components() == 3))
+            {
+              of << " Vectors=\"" << descr.name() << "\"";
+              vector_ok = true;
+            }
+            else if (!tensor_ok && (descr.n_components() == 9))
+            {
+              of << " Tensors=\"" << descr.name() << "\"";
+              tensor_ok = true;
+            }
           }
         }
+        of << ">\n";
+        for (it = data.begin(); it != end; ++it)
+        {
+          const SolutionDescriptor& descr = it->first;
+          if (descr.location() == SolutionDescriptor::CELL)
+            write_data_array(descr.name(), descr.n_components(), it->second, of);
+        }
+        of << "</CellData>\n";
       }
-      of << ">\n";
-      for (it = data.begin(); it != end; ++it)
-      {
-        const SolutionDescriptor& descr = it->first;
-        if (descr.location() == SolutionDescriptor::CELL)
-          write_data_array(descr.name(), descr.n_components(), it->second, of);
-      }
-      of << "</CellData>\n";
 
       of << "</Piece>\n";
     }

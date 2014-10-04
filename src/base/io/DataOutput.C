@@ -212,7 +212,7 @@ void
 DataOutput::write(bool force)
 {
   if (has_data() || force)
-    do_write();
+    do_write(force);
 }
 
 

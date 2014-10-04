@@ -102,6 +102,10 @@ class DataOutput
 
 
     //! Write out everything
+    /*!
+     * When \c force \c = \c true, file is written even if there
+     * is no data.
+     */
     void write(bool force = false);
 
 
@@ -143,7 +147,7 @@ class DataOutput
     const DataMap& get_zone_data(ID zone);
 
     //! The actual writer
-    virtual void do_write(void) {}; // = 0;
+    virtual void do_write(bool force) {}; // = 0;
 
 
 
