@@ -61,7 +61,13 @@ void RotatedCrystal::calculate_rot_matrix(const Tensor1& vec_x, const Tensor1& v
 {
  
   //calculate 3rd vector in the basis
-  const Tensor1 vec_z = vectorProduct(vec_x, vec_y) ;
+  const Tensor1 vec_z = vectorProduct(vec_x, vec_y);
+
+  double scal = fabs(vec_x * vec_y);
+  if (scal > 1e-6)
+  {
+    throw ModelErrorException("Provided x and y directions are non-orthogonal!");
+  }
 
   assert(norm(vec_x) > 1e-10);
   assert(norm(vec_y) > 1e-10);
@@ -73,7 +79,6 @@ void RotatedCrystal::calculate_rot_matrix(const Tensor1& vec_x, const Tensor1& v
   for ( int i = 1; i <=3; i++ )  RotMatrix(1,i) = vec_x(i)/norm(vec_x);
   for ( int i = 1; i <=3; i++ )  RotMatrix(2,i) = vec_y(i)/norm(vec_y);
   for ( int i = 1; i <=3; i++ )  RotMatrix(3,i) = vec_z(i)/norm(vec_z);
-
 
 }
 
