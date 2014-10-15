@@ -55,7 +55,17 @@ void KspaceIntegration::calculate_density()
 
 
   unsigned int k_dim = kmesh->mesh_dimension();
+
+  real_space_density.clear();
     
+  double error_value;
+
+  // if k space is 0-dim, calculate and return
+  if (k_dim == 0)
+  {
+    calculate_for_k_point(Point(0), Point(0), real_space_density, error_value);
+    return;
+  }
   //-----------------------------------------------------------
 
   AutoPtr<FEBase> fe( FEBase::build(k_dim, FEType(fem_order) ));
@@ -84,7 +94,6 @@ void KspaceIntegration::calculate_density()
 
   dens_at_k_elem.clear();
   dens_at_k_point.clear();
-  real_space_density.clear();      
 
   for ( ; it_k_space != it_k_end ; ++it_k_space) //loop over k space elements
   {
@@ -114,7 +123,6 @@ void KspaceIntegration::calculate_density()
           std::cout << "(KIntegration) k_point= ("<<q_point[qp](0)<<", "<<q_point[qp](1)
                     << ", "<<q_point[qp](2)<<")" << std::endl;
       
-	double error_value;
         //dens_at_k_point.clear();
 
 	calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
