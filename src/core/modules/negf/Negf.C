@@ -50,6 +50,7 @@
 #include <cmath>
 
 using namespace Constants;
+using namespace std;
 
 
 /* -----------------------------------------------------------------
@@ -89,6 +90,24 @@ using namespace Constants;
  */
  
 
+
+namespace
+{
+  double fermi(double Energy, double Fermi_energy, double Temperature)
+  {
+    double T_EV = Temperature * Constants::k_Boltzmann;
+    double exp_arg =  (Energy - Fermi_energy)/T_EV;
+
+    double occupation;
+
+    if (exp_arg > 35)
+      occupation = std::exp(-exp_arg);
+    else
+      occupation = 1.0/(std::exp(exp_arg) + 1.0);
+
+    return occupation;
+  }
+}
 
 
 Negf* Negf::static_this;
@@ -274,6 +293,8 @@ Negf::init_efa_hamil(void)
   }
   else
   {
+    if (!_ext_module->is_initialized())
+      _ext_module->init();
     n_bands = _ext_module->get_number_of_bands();
   }
 
@@ -315,15 +336,17 @@ Negf::init_efa_hamil(void)
   _sys = &get_equation_system<TiberLinearSystem>(id);
 
   // We add a second system just to contain the density
-  if (plot_solution(elDensity))
+  if (plot_solution(elDensity) || plot_solution(hlDensity) ||
+      plot_solution("LDOS"))
   {
     std::cout<<"(negf) create eq sys for elDensity"<<std::endl;
     id = create_equation_system("linear","");
     _qdens_sys = &get_equation_system<TiberLinearSystem>(id);
     _qdens_sys->add_variable("edens", libMeshEnums::FIRST);
-    //_qdens_sys->add_variable("hdens", libMeshEnums::FIRST);
-
+    _qdens_sys->add_variable("hdens", libMeshEnums::FIRST);
+    _qdens_sys->init();
   }
+
   std::cout<<"(negf) init H and S"<<std::endl;
   _sys_H->attach_assemble_function(ham_assemble);
 
@@ -466,12 +489,13 @@ Negf::do_reinit(void)
 void
 Negf::init_k_space(ModelOptions& kopts)
 {
-    double cf = 1e-10/get_mesh_units(); //conversion from Angstrom to M.U.
     unsigned int dim = get_mesh().mesh_dimension();
 
     if ( _hamil_type == "etb" ) 
     {
-    // Define k-space from cartesian lattice vectors 
+      // Define k-space from cartesian lattice vectors
+      double cf = 0.1; //conversion from Angstrom to nm
+
       std::vector<double> vectors = _ext_module->get_atomistic_structure()->get_lattice_vectors();
       std::vector<double> r1(3,0.0);
       std::vector<double> r2(3,0.0);
@@ -499,12 +523,10 @@ Negf::init_k_space(ModelOptions& kopts)
     {
       // it is efa, we setup just some lattice vectors
 
-      // we use 1 nm as default k-space extension default
-      // the factor of 2 is due to the fact that the k-space limits
-      // in Kspace are 1/2
-      cf *= 20;
-      // these are the real space lattice vectors, 1 cf = 1 nm
-      RealVectorValue a(cf, 0, 0), b(0, cf, 0), c(0, 0, cf);
+      // these are the real space lattice vectors, in nm
+      // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
+      // k_max can be interpreted in nm^-1
+      RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
       switch (dim)
       {
         case 2:
@@ -530,7 +552,9 @@ Negf::init_k_space_integration(void)
   {
     //-----------------DENSITY ---------------------------------------------
     ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_density"));
-    ModelOptions& kopts = it->second;
+    ModelOptions kopts;
+    //if (it != get_options().submodels_end("k_integration_density"))
+      kopts = it->second;
     int dim = get_mesh().mesh_dimension();
 
     kopts.set_option("mesh_units",get_mesh_units());
@@ -798,11 +822,17 @@ Negf::do_solve(void)
 
   //reorder(); // dof indices reorder
 
-  if ( plot_solution("elDensity") )
+  if (plot_solution(elDensity) || plot_solution(hlDensity) ||
+      plot_solution("LDOS"))
   {
-    Messages::info("Computing Density");
-
     _qdens_sys->init();
+
+    (_qdens_sys->solution)->zero();
+  }
+
+  if ( plot_solution(elDensity) )
+  {
+    Messages::info("Computing Electronic Density");
 
 
     if (get_options().has_submodel("k_integration_density"))
@@ -811,7 +841,7 @@ Negf::do_solve(void)
 
       _k_int_density->solve();
 
-      density = _k_int_density->get_solution();
+      transfer_density(_k_int_density->get_solution(), "el");
 
     }
     else
@@ -821,6 +851,53 @@ Negf::do_solve(void)
       setup_hamil();
 
       calculate_density("el");
+
+      // write qdens on eldensity
+      NumericVector<Number>& qdens = *_qdens_sys->solution;
+      unsigned int p_id = _qdens_sys->variable_number("edens");
+      unsigned int p_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
+      unsigned int start = p_id * p_dofs;
+      _eldensity.reserve(_device_n_dofs);
+      for (unsigned int i=0; i < _device_n_dofs; i++)
+        _eldensity.push_back( qdens(start+i) );
+
+
+      finalize();
+    }
+
+    Messages::info("Density done");
+
+  }
+
+  if ( plot_solution("hlDensity") )
+  {
+    Messages::info("Computing Hole Density");
+
+    if (get_options().has_submodel("k_integration_density"))
+    {
+      _which_integration = INTDENSITYHL;
+
+      _k_int_density->solve();
+
+      transfer_density(_k_int_density->get_solution(), "hl");
+
+    }
+    else
+    {
+      _k_vec.zero();
+      
+      setup_hamil();
+
+      calculate_density("hl");
+
+      // write qdens on hldensity
+      NumericVector<Number>& qdens = *_qdens_sys->solution;
+      unsigned int p_id = _qdens_sys->variable_number("hdens");
+      unsigned int p_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
+      unsigned int start = p_id * p_dofs;
+      _hldensity.reserve(_device_n_dofs);
+      for (unsigned int i=0; i < _device_n_dofs; i++)
+        _hldensity.push_back( qdens(start+i) );
 
       finalize();
     }
@@ -871,11 +948,10 @@ Negf::do_solve(void)
     }
 
     //get degeneracy of first band
-    const MeshBase& mesh = get_mesh();
-    MeshBase::const_element_iterator el = mesh.active_elements_begin();
-    const Elem* elem = *el;
-    NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
-    double deg = negfmod->get_degeneracy(0);
+    //const MeshBase& mesh = get_mesh();
+    //MeshBase::const_element_iterator el = mesh.active_elements_begin();
+    //const Elem* elem = *el;
+    //NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
 
     ID id = 0;
     double sign;
@@ -890,7 +966,7 @@ Negf::do_solve(void)
       //std::cout<<"(negf) I= "<<current[id]<<std::endl;
       //std::cout<<"(negf) sgn, deg area "<<sign<<" "<<deg<<" "<<area_factor<<std::endl;
 
-      _contact_current[it->second] = sign * deg * current[id] * area_factor;
+      _contact_current[it->second] = sign * current[id] * area_factor;
       id++;
     }
 
@@ -900,7 +976,251 @@ Negf::do_solve(void)
   }
 
   deactivate_quantum_contacts();
+
+  if (opt.writeLDOS)
+  {
+    int esteps = (opt.Emax - opt.Emin) / opt.Estep + 1;
+    int npoints = _device_n_dofs * _ext_module->get_number_of_bands();
+    std::vector<double> ldos(esteps * npoints);
+    _libnegf->ldos(ldos, esteps, npoints);
+    plot_LDOS(ldos);
+    //occupy_LDOS(ldos);
+  }
+
 }
+
+
+
+void
+Negf::plot_LDOS(const std::vector<double>& ldos, const string& mod)
+{
+  string file = get_output_directory() + "/" + get_output_filename_prefix()
+      + "_" + mod + TiberCad::get_filename_suffix() + ".m";
+  ofstream of(file);
+
+  int esteps = (opt.Emax - opt.Emin) / opt.Estep + 1;
+  unsigned int bands = _ext_module->get_number_of_bands();
+  int npoints = _device_n_dofs * bands;
+
+  of << "energy = [";
+  for (double erg = opt.Emin; erg < (opt.Emax + 0.5*opt.Estep); erg += opt.Estep)
+    of << erg << " ";
+  of << "];\n";
+
+
+  DofMap& dof_map = _sys_H->get_dof_map();
+  std::vector<unsigned int> dof_indices;
+
+  //set<double> coordinates;
+  vector<double> coordinates(_device_n_dofs);
+  const MeshBase& mesh = get_mesh();
+
+  MeshBase::const_element_iterator       nd     = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator nd_end = mesh.active_elements_end();
+  for ( ; nd != nd_end; ++nd)
+  {
+    const Elem* elem = *nd;
+    dof_map.dof_indices(elem, dof_indices, 0);
+
+    for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+    {
+      unsigned int id = _inv_perm[dof_indices[n]];
+      coordinates[id / bands] = elem->point(n)(0);
+    }
+    //  coordinates.insert(elem->point(n)(0));
+  }
+
+
+  of << "x = [";
+  //set<double>::iterator cit(coordinates.begin());
+  //const set<double>::iterator cend(coordinates.end());
+  //for ( ; cit != cend; ++cit)
+  //  of << *cit << " ";
+  for (size_t i = 0; i < _device_n_dofs; ++i)
+    of << coordinates[i] << " ";
+  of << "];\n";
+
+  of << "LDOS = [";
+  for (int i = 0; i < esteps; i++)
+  {
+    for (int j = 0; j < npoints; j += bands)
+    {
+      double node_dos = 0.0;
+      for (int b = 0; b < bands; ++b)
+        node_dos += ldos[i + (j + b)*esteps];
+      of << node_dos << " ";
+    }
+    of << "\n";
+  }
+  of << "];\n";
+
+  //of << "x=1:" << _device_n_dofs << ";\n";
+  of << "pcolor(x, energy, log(abs(LDOS))), shading flat\n";
+  of << "ylabel('Energy')\n";
+  of << "xlabel('x')\n";
+}
+
+
+
+
+void
+Negf::occupy_LDOS(const std::vector<double>& ldos)
+{
+  // the following is quite ineffective, but it was easier like that...
+
+  SimulationInterface* potmodel = SimulationInterface::find_simulation(opt.pot_module);
+  ID efermi_id = INVALID_ID, hfermi_id = INVALID_ID;
+
+  if (potmodel != NULL)
+  {
+    efermi_id = potmodel->get_solution_id("eQFermi");
+    hfermi_id = potmodel->get_solution_id("hQFermi");
+  }
+
+  if ((efermi_id == INVALID_ID) || (hfermi_id == INVALID_ID))
+  {
+    Messages::warning("cannot occupy LDOS with classical Fermi levels");
+    return;
+  }
+
+
+  if (!potmodel->is_solved())
+      throw SolveFailedException("Simulation "+opt.pot_module+" must be solved first");
+
+
+  double Ec = get_band_edge("Ec");
+  double Ev = get_band_edge("Ev");
+
+  // energy grid
+  int esteps = (opt.Emax - opt.Emin) / opt.Estep + 1;
+  unsigned int bands = _ext_module->get_number_of_bands();
+  int npoints = _device_n_dofs * bands;
+
+
+  int limit_id = (0.5 * (Ec + Ev) - opt.Emin) / opt.Estep;
+
+  double u = get_mesh_units();
+  unsigned int dim = get_mesh().mesh_dimension();
+
+  double equ;
+  switch (dim)
+  {
+    case 1:
+      equ = 1.0e14/(u*1.0e2); //  k^2 is in 1/nm^2 => 1e14 1/cm^2  / mesh_units -> cm
+      break;
+    case 2:
+      equ = 1.0e7/(u*u*1.0e4); //
+      break;
+    case 3:
+      equ = 1.0/(u*u*u*1.0e6);
+      break;
+  }
+
+  DofMap& dof_map_qdens = _qdens_sys->get_dof_map();
+  std::vector<unsigned int> dof_indices_eldens;
+  std::vector<unsigned int> dof_indices_hldens;
+
+  NumericVector<Number>& qdens = *_qdens_sys->solution;
+  qdens.zero();
+
+  int el_id = _qdens_sys->variable_number("edens");
+  int hl_id = _qdens_sys->variable_number("hdens");
+
+  // compute connectivity of each node
+  // we need the connectivity of the nodes to not double count
+  //std::vector<int> connectivity(_device_n_dofs * n_vars, 0);
+  //std::cout<<"qdens.size: "<<qdens.size()<<std::endl;
+
+  std::vector<int> connectivity(qdens.size(), 0);
+  {
+    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    for ( ; el != end_el; ++el)
+    {
+      const Elem* elem = *el;
+      dof_map_qdens.dof_indices(elem, dof_indices_eldens, el_id);
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+        connectivity[dof_indices_eldens[n]]++;
+    }
+  }
+
+
+  unsigned int n_vars = _sys_H->n_vars();
+
+  vector<double> occupied_states(ldos.size());
+
+
+  // The _sys_H system contains the nodal dofmap (all variables)
+  DofMap& dof_map = _sys_H->get_dof_map();
+  std::vector<unsigned int> dof_indices;
+
+  MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+
+  NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
+
+  for ( ; el != end_el; ++el)
+  {
+    const Elem* elem = *el;
+
+    dof_map_qdens.dof_indices(elem, dof_indices_eldens, el_id);
+    dof_map_qdens.dof_indices(elem, dof_indices_hldens, hl_id);
+
+    // get the Fermi levels on the centroid
+    double e_qfermi = 0;
+    double h_qfermi = 0;
+    potmodel->get_solution(elem, efermi_id, e_qfermi, elem->centroid());
+    potmodel->get_solution(elem, hfermi_id, h_qfermi, elem->centroid());
+
+    for (int band = 0; band < n_vars; band++)
+    {
+      dof_map.dof_indices(elem, dof_indices, band);
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        // the index in the ldos vector
+        unsigned int id = _inv_perm[dof_indices[n]];
+
+        double edens = 0;
+        double hdens = 0;
+        for (int i = 0; i < esteps; i++)
+        {
+          if (i > limit_id)
+          {
+            double f = fermi(opt.Emin + i * opt.Estep, e_qfermi, SimulationOptions::T);
+            edens += ldos[i + id*esteps] * f * opt.Estep;
+            occupied_states[i + id*esteps] += ldos[i + id*esteps] * f / connectivity[dof_indices_eldens[n]];
+          }
+          else
+          {
+            double f = fermi(-(opt.Emin + i * opt.Estep), -h_qfermi, SimulationOptions::T);
+            hdens += ldos[i + id*esteps] * f * opt.Estep;
+            occupied_states[i + id*esteps] += ldos[i + id*esteps] * f / connectivity[dof_indices_eldens[n]];
+          }
+        }
+
+
+        //std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
+
+        double vale = equ * edens / connectivity[dof_indices_eldens[n]];
+        double valh = equ * hdens / connectivity[dof_indices_eldens[n]];
+
+        qdens.add(dof_indices_eldens[n], vale);
+        qdens.add(dof_indices_hldens[n], valh);
+      }
+
+    }
+  }
+
+  qdens.close();
+
+  plot_LDOS(occupied_states, "OCC");
+
+}
+
+
+
 
 void
 Negf::calculate_for_k_point(const Point& k_point,
@@ -911,31 +1231,42 @@ Negf::calculate_for_k_point(const Point& k_point,
 
    setup_hamil();
 
+   unsigned int n_vars = _sys_H->n_vars();
+   field.resize(_device_n_dofs * n_vars);
+
    if (_which_integration == INTDENSITYEL)
    {
-       calculate_density("el");
-       NumericVector<Number>& qdens = *_qdens_sys->solution;
 
-       field.clear();
-       field.reserve(_device_n_dofs);
-       
-       error = 0.0;
+     _libnegf->density(field, "el");
 
-       for (unsigned int el=0; el < _device_n_dofs; el++)
-       {
-         field.push_back(qdens(el));
-         error += qdens(el);
-       }
+     error = 0.0;
 
-       error /= _device_n_dofs;
+     for (unsigned int i=0; i < field.size(); i++)
+     {
+       error += field[i];
+     }
+
+     error /= _device_n_dofs;
 
 
-       return;
+     return;
    }
 
    if (_which_integration == INTDENSITYHL)
    {
-       return;
+
+     _libnegf->density(field, "hl");
+
+     error = 0.0;
+
+     for (unsigned int i=0; i < field.size(); i++)
+     {
+       error += field[i];
+     }
+
+     error /= _device_n_dofs;
+
+     return;
    }
 
 
@@ -959,7 +1290,7 @@ Negf::calculate_for_k_point(const Point& k_point,
 
 
 void
-Negf::calculate_density(const std::string& particle)
+Negf::transfer_density(std::vector<double> density, const std::string& particle)
 {
   double u = get_mesh_units();
   unsigned int dim = get_mesh().mesh_dimension();
@@ -974,22 +1305,6 @@ Negf::calculate_density(const std::string& particle)
 
   if (particle == "el") particle_id = _qdens_sys->variable_number("edens");
   if (particle == "hl") particle_id = _qdens_sys->variable_number("hdens");
-
-  std::vector<double> density(_device_n_dofs * n_vars, 0.0);
-
-  //-------------------------------------------------------
-  // HERE WE COMPUTE DENSITY!
-  //-------------------------------------------------------
- 
-  _libnegf->density(density);
-
-  // ---- debug ---------------------------------------------
-  std::string out_file = "density.dat";
-  std::fstream ff(out_file.c_str(),std::fstream::out);
-  for (unsigned int i = 0; i < density.size(); i++)
-        ff<< density[i] <<std::endl;
-  ff.close();
-  // ---------------------------------------------------------
 
 
   double equ;
@@ -1010,7 +1325,7 @@ Negf::calculate_density(const std::string& particle)
   // setup output vector qdens
 
   NumericVector<Number>& qdens = *_qdens_sys->solution;
-  qdens.zero();
+  //qdens.zero();
 
   // compute connectivity of each node
   // we need the connectivity of the nodes to not double count
@@ -1040,7 +1355,6 @@ Negf::calculate_density(const std::string& particle)
   const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
 
   NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
-  double deg = negfmod->get_degeneracy(0);
 
   for ( ; el != end_el; ++el)
   {
@@ -1056,11 +1370,11 @@ Negf::calculate_density(const std::string& particle)
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
 
-        double dens = density[_inv_perm[dof_indices[n]]];
+        double dens = abs(density[_inv_perm[dof_indices[n]]]);
 
         //std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
 
-        double val = equ * deg * dens / connectivity[dof_indices_qdens[n]];
+        double val = equ * dens / connectivity[dof_indices_qdens[n]];
 
         qdens.add( dof_indices_qdens[n], val);
       }
@@ -1072,7 +1386,126 @@ Negf::calculate_density(const std::string& particle)
   }
 
   qdens.close();
+  activate_quantum_contacts();
+}
 
+
+
+
+void
+Negf::calculate_density(const std::string& particle)
+{
+  double u = get_mesh_units();
+  unsigned int dim = get_mesh().mesh_dimension();
+
+  deactivate_quantum_contacts();
+
+  // compute total number of n_vars n_dofs
+  unsigned int n_vars = _sys_H->n_vars();
+  unsigned int n_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
+
+  int particle_id;
+
+  if (particle == "el") particle_id = _qdens_sys->variable_number("edens");
+  if (particle == "hl") particle_id = _qdens_sys->variable_number("hdens");
+
+  std::vector<double> density(_device_n_dofs * n_vars, 0.0);
+
+  //-------------------------------------------------------
+  // HERE WE COMPUTE DENSITY!
+  //-------------------------------------------------------
+ 
+  _libnegf->density(density, particle);
+
+  // ---- debug ---------------------------------------------
+  //std::string out_file = "density.dat";
+  //std::fstream ff(out_file.c_str(),std::fstream::out);
+  //for (unsigned int i = 0; i < density.size(); i++)
+  //      ff<< density[i] <<std::endl;
+  //ff.close();
+  // ---------------------------------------------------------
+
+
+  double equ;
+  switch (dim)
+  {
+    case 1:
+      equ = 1.0e14/(u*1.0e2); //  k^2 is in 1/nm^2 => 1e14 1/cm^2  / mesh_units -> cm
+      break;
+    case 2:
+      equ = 1.0e7/(u*u*1.0e4); //
+      break;
+    case 3:
+      equ = 1.0/(u*u*u*1.0e6);
+  }
+
+  DofMap& dof_map_qdens = _qdens_sys->get_dof_map();
+  std::vector<unsigned int> dof_indices_qdens;
+  // setup output vector qdens
+
+  NumericVector<Number>& qdens = *_qdens_sys->solution;
+  //qdens.zero();
+
+  // compute connectivity of each node
+  // we need the connectivity of the nodes to not double count
+  //std::vector<int> connectivity(_device_n_dofs * n_vars, 0);
+  //std::cout<<"qdens.size: "<<qdens.size()<<std::endl;
+
+  std::vector<int> connectivity(qdens.size(), 0);
+  {
+    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    for ( ; el != end_el; ++el)
+    {
+      const Elem* elem = *el;
+      dof_map_qdens.dof_indices(elem, dof_indices_qdens, particle_id);
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+        connectivity[dof_indices_qdens[n]]++;
+    }
+  }
+
+
+  // The _sys_H system contains the nodal dofmap (all variables)
+  DofMap& dof_map = _sys_H->get_dof_map();
+  std::vector<unsigned int> dof_indices;
+
+  MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+
+  NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
+
+  for ( ; el != end_el; ++el)
+  {
+    const Elem* elem = *el;
+
+    dof_map_qdens.dof_indices(elem, dof_indices_qdens, particle_id);
+
+    for (int band = 0; band < n_vars; band++)
+    {
+      dof_map.dof_indices(elem, dof_indices, band);
+
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+
+        double dens = abs(density[_inv_perm[dof_indices[n]]]);
+
+        //std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
+
+        double val = equ * dens / connectivity[dof_indices_qdens[n]];
+
+        qdens.add( dof_indices_qdens[n], val);
+      }
+
+      //for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      //std::cout<<connectivity[ dof_indices_qdens[n]]<<std::endl;
+
+    }
+  }
+
+  qdens.close();
+  activate_quantum_contacts();
 }
 
 
@@ -1112,7 +1545,8 @@ Negf::parse_options(void)
 
   opt.verbosity = sol_opt.get_option("verbosity",0);
   //sol_opt.check_unused();
-  opt.writeLDOS = sol_opt.get_option("writeLDOS",false);
+  opt.writeLDOS = plot_solution("LDOS");
+  opt.writeLDOS = sol_opt.get_option("writeLDOS", opt.writeLDOS);
 
   opt.set_dirichlet_bc = get_option("dirichlet", false);
 
@@ -1125,7 +1559,7 @@ Negf::do_setup_solution_variables(void)
 
   declare_solution(ReorderPotential, REAL, NODES, "");
   declare_solution(elDensity, REAL, NODES, "1/cm^3");
-  declare_solution(hDensity, REAL, NODES, "1/cm^3");
+  declare_solution(hlDensity, REAL, NODES, "1/cm^3");
   declare_solution(eCurrentDensity, REAL, NODES, "A/cm^2");
   declare_solution(hCurrentDensity, REAL, NODES, "A/cm^2");
 
@@ -1296,6 +1730,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
 
       // we must reinit here cause later we reinit on sideelem
+
       fe->reinit(elem);
       
 
@@ -1452,7 +1887,6 @@ Negf::is_generalized(void)
  *0                 ! n_blocks (0 libnegf do it)
  *26118 27270       ! cont_end 
  *24966 26118       ! surf_end
- *0 0               ! mu_n mu_p
  *-2 0              ! Ec Ev
  *0 0               ! DEc DEv
  *-0.25 0 0.01      ! Emin Emax Estep
@@ -1467,49 +1901,50 @@ Negf::is_generalized(void)
  *1e-05             ! delta
  *0                 ! n_ldos
  *                  ! --
- *0 0               ! Efermi
- *0.115355 0.184647 ! mu 
+ *0 0               !   
+ *0.115355 0.184647 ! -mu_n  
+ *0.115355 0.184647 !  mu_p 
  */
 
 void
 Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
 {
   ModelOptions& sol_opt = get_solver_options();
-  double mu_n;
-  double mu_p;
   double DeltaEc = -opt.DEc;
   double DeltaEv =  opt.DEv;
-
-  mu_n = mu_p = 0.0;     // set to 0.0 for libnegf:
-                         // we set  Ef  as   Ef - mu (see below)
 
   // Takes kb in eV/K so assuming eV as energy units.
   double kbT = SimulationOptions::temperature * Constants::kb;
   double wght = 1.0;
 
 
+  // for now, use the same parameters
   std::vector <double> Np_p(2);
   for (unsigned int i = 0; i < 2; i++)
   {
-    Np_p[i] = 0.0;
+    Np_p[i] = opt.Np_n[i];
   }
 
-  unsigned int spin = 2;
+  // degeneracy is accounted for in libnegf
+  unsigned int spin = _ext_module->get_degeneracy();
   unsigned int nLDOS = 0;
-  if (opt.writeLDOS) nLDOS = 1;
+  unsigned int n_bands = _ext_module->get_number_of_bands();
+  if (opt.writeLDOS) nLDOS = _device_n_dofs * n_bands;
  
   std::vector <unsigned int> LDOS(2*nLDOS);
 
-  if (nLDOS > 0)
+  unsigned int ctr = 1;
+  for (unsigned int i = 0; i < 2*nLDOS; i += 2, ctr++)
   {
-    LDOS[0]=1; LDOS[1]=_device_n_dofs;
+    LDOS[i] = ctr;
+    LDOS[i + 1] = ctr;
   }
 
   // phi: potential at boundaries (quantum contacts)
   // mu : electrochemical potential at boundaries (qc)
   std::vector <double> phi(_quantum_contacts.size(), 0.0);
-  std::vector <double> mu(_quantum_contacts.size(), 0.0);
-
+  std::vector <double> mu_n(_quantum_contacts.size(), 0.0);
+  std::vector <double> mu_p(_quantum_contacts.size(), 0.0);
 
   mumin=10000;
   mumax=-10000;
@@ -1518,12 +1953,11 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
   const std::map<ID, QuantumContact*>::iterator end = _quantum_contacts.end();
   for (; it != end; ++it)
   {
-    get_boundary_potentials(it->second, phi[id], mu[id]);
-    mu[id];
+    get_boundary_potentials(it->second, phi[id], mu_n[id], mu_p[id]);
      
-    if(mu[id]>mumax){mumax = mu[id];}
-    if(mu[id]<mumin){mumin = mu[id];}
-    _contact_potential[it->second] = mu[id];
+    if(mu_n[id]>mumax){mumax = mu_n[id];}
+    if(mu_n[id]<mumin){mumin = mu_n[id];}
+    _contact_potential[it->second] = mu_n[id];
 
     id++;
   }
@@ -1577,7 +2011,6 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
     ff<<_qc_n_dofs[i]*n_vars<<" ";
   ff<<std::endl;
 
-  ff<<"V1.V2  "<<mu_n<<" "<<mu_p<<std::endl;
   ff<<"Ec.Ev  "<<Ec+DeltaEc<<" "<<Ev+DeltaEv<<std::endl;
   ff<<"DEc.DEv  "<<0.0<<" "<<0.0<<std::endl;                // DEc DEv = 0 (are set above)
   ff<<"Emin.Emax  "<<opt.Emin<<" "<<opt.Emax<<" "<<opt.Estep<<std::endl;
@@ -1601,7 +2034,7 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
   }
   else
   {  
-     Np = (abs(mu[0]-mu[1])+ 2 * opt.n_kT)/opt.deltaE ;
+     Np = (abs(mu_n[0]-mu_n[1])+ 2 * opt.n_kT)/opt.deltaE ;
      if (Np>1000) 
      {	   
         std::ostringstream os;
@@ -1623,19 +2056,26 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
 
   ff<<std::endl;
 
-  // Sets 0 for the Fermi level for LIBNEGF
+  // Set Ef = 0.0 
+
   ff<<"Ef  ";
   for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
     ff<<0.0<<" ";
   ff<<std::endl;
 
-  // takes -mu (ELECTROCHEMICAL potential) as LibNEGF will turn back the sign
-  // Ef[k]-mu[k] = 0 - mu[k]   for LibNEGF
-  ff<<"mu  ";
+  // takes -mu_n (ELECTROCHEMICAL potential for electrons) as LibNEGF will turn back the sign
+  // Ef[k]-mu_n[k] = 0 - mu_n[k]   for LibNEGF
+  ff<<"mu_n  ";
   for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
-    ff<<-mu[i]<<" ";
+    ff<<-mu_n[i]<<" ";
   ff<<std::endl;
 
+  // takes mu_p (ELECTROCHEMICAL potential for holes)
+  // Ef[k]+mu_p[k] = 0 + mu_p[k]   for LibNEGF
+  ff<<"mu_p  ";
+  for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
+    ff<<mu_p[i]<<" ";
+  ff<<std::endl;
   ff.close();
 
 }
@@ -1677,21 +2117,29 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     }
   }
 
-  if (values.count(elDensity))
+  bool do_edens = values.count(elDensity);
+  bool do_hdens = values.count(hlDensity);
+  if (do_edens || do_hdens)
   {
     //std::cout<<"(Negf) Getting electron density"<<std::endl;
     _sys_H = &get_equation_system<TiberLinearSystem>(0);
+    // internal variables of _qdens_sys (el: 0, hl: 1)
+    ID el_id = _qdens_sys->variable_number("edens");
+    ID hl_id = _qdens_sys->variable_number("hdens");
+
     NumericVector<Number>& qdens = *_qdens_sys->solution;
 
-    FEType fe_type = _qdens_sys->variable_type(0);
+    FEType fe_type = _qdens_sys->variable_type(el_id);
     AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
     const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &p);
 
     DofMap& dof_map = _qdens_sys->get_dof_map();
-    std::vector<unsigned int> dof_indices;
-    dof_map.dof_indices(elem, dof_indices, 0);
+    std::vector<unsigned int> dof_indices_e;
+    std::vector<unsigned int> dof_indices_h;
+    dof_map.dof_indices(elem, dof_indices_e, el_id);
+    dof_map.dof_indices(elem, dof_indices_h, hl_id);
     unsigned int n_dofs = phi.size();
 
     // the phi^2 factor comes from the fact that the more correct interpolation is the square
@@ -1700,31 +2148,41 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     // NOTE: 2011-12-01 the above turned out to be wrong
     //  phi[i] rho[i][j] phi[j] ~~  phi[i] rho[i][i] phi[i]
     // rho[i][i] is the correct density at node i: phi is used for linear interpolation.
-    if (_k_int_density!=NULL)
+    if (do_edens)
     {
 
       for (unsigned int n = 0; n < np; n++)
       {
-        double value = 0;
+        double value_n = 0;
+
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
-          value += phi[i][n] * density[dof_indices[i]];
+//          value_n += phi[i][n] * _eldensity[dof_indices_e[i]];
+          value_n += phi[i][n] * qdens(dof_indices_e[i]);
         }
 
-        values[elDensity][n] = value;
+        values[elDensity][n] = value_n;
+
       }
     }
-    else
+
+    if (do_hdens)
     {
+
       for (unsigned int n = 0; n < np; n++)
       {
-        double value = 0;
+        double value_p = 0;
+
 
         for (unsigned int i = 0; i < n_dofs; i++)
-          value += phi[i][n]  * qdens(dof_indices[i]);
+        {
+//          value_p += phi[i][n] * _hldensity[dof_indices_e[i]];
+          value_p += phi[i][n] * qdens(dof_indices_h[i]);
+        }
 
-        values[elDensity][n] = value;
+        values[hlDensity][n] = value_p;
+
       }
     }
   }
@@ -2121,11 +2579,12 @@ Negf::do_compare(ID i, ID j)
 }
 
 void
-Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu)
+Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n, double& av_mu_p)
 {
   PotentialInterface model;
   av_V = 0.0;
-  av_mu = 0.0;
+  av_mu_n = 0.0;
+  av_mu_p = 0.0;
 
   if (opt.pot_module == "none") return;
   else model.set_simulation(opt.pot_module);
@@ -2178,7 +2637,8 @@ Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu)
         std::pair<const Elem*, Point> pair = qc->project_on_boundary(elem, q_point[qp]);
 
         av_V += model.get_potential(pair.first, pair.second) * elem->volume()/volume ;
-        av_mu += model.get_el_chem_potential(pair.first, pair.second) * elem->volume()/volume;
+        av_mu_n += model.get_el_chem_potential(pair.first, pair.second) * elem->volume()/volume;
+        av_mu_p += model.get_hl_chem_potential(pair.first, pair.second) * elem->volume()/volume;
       }
     }
   }

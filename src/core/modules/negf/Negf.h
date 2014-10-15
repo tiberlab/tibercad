@@ -16,10 +16,10 @@
 #include <string>
 
 struct sortclass{
-  sortclass(const std::vector<Atom>& atoms){_atoms=atoms;};
+  sortclass(const std::vector<Atom>& atoms) : _atoms(atoms) {}
   ~sortclass(){};
-  bool operator() (int i, int j) { return (_atoms[i].get_position()(0)<_atoms[j].get_position()(0)); };
-  std::vector<Atom> _atoms;
+  bool operator() (int i, int j) { return (_atoms[i].get_position()(0)<_atoms[j].get_position()(0)); }
+  const std::vector<Atom>& _atoms;
 };
 
 /*!
@@ -38,9 +38,10 @@ class TBDLLOCAL Negf : public SimulationInterface
     {
        ReorderPotential,  // Laplace equation solution from reordering routines
        elDensity,  // Electron QuantumDensity from Negf
-       hDensity,  // Hole QuantumDensity from Negf
+       hlDensity,  // Hole QuantumDensity from Negf
        eCurrentDensity,    //
        hCurrentDensity,    // Contact Currents
+       LDOS,               // LDOS and occupation
        ContactCurrent = 100
     };
 
@@ -127,7 +128,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     bool do_compare(ID i, ID j);
 
-    void get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu);
+    void get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n, double& av_mu_p);
 
     void calculate_density(const std::string& particle);
 
@@ -194,6 +195,13 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     bool is_generalized(void);
 
+    void plot_LDOS(const std::vector<double>& ldos,
+        const std::string& mod = "LDOS");
+    void occupy_LDOS(const std::vector<double>& ldos);
+
+    void transfer_density(std::vector<double> density,
+        const std::string& particle);
+
     Device* _device;
 
     SimulationEnvironment* _env;
@@ -243,7 +251,9 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     VectorValue<double> _k_vec;
 
-    DofField density;
+    DofField _eldensity;
+
+    DofField _hldensity;
 
     DofField current;
 

@@ -72,10 +72,22 @@ NegfWrapper::current()
 }
 
 int
-NegfWrapper::density(std::vector<double>& density)
+NegfWrapper::density(std::vector<double>& density, std::string particle)
 {
    int size = density.size();
-   f77_negf_density_efa(_handler, size, &density.front());
+   int p = 0;
+
+   if (particle == "el"){ p = +1;}
+   if (particle == "hl"){ p = -1;}
+   
+   f77_negf_density_efa(_handler, size, &density.front(), p);
+}
+
+
+void
+NegfWrapper::ldos(std::vector<double>& ldos, int esteps, int npoints)
+{
+  f77_negf_get_ldos(_handler, esteps, npoints, &ldos.front());
 }
 
 

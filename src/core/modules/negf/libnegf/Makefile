@@ -35,7 +35,10 @@ checkout:
 	@echo "Checkout libNEGF..."
 	@if [ ! -e libnegf ]; then git clone https://pecchia@bitbucket.org/pecchia/libnegf.git; fi
 
-
+clean:
+	@echo "Clean libnegf..."
+	rm -f libnegf_$(ARCH).a libnegf.so
+	cd libnegf/src/api; make clean;	
 
 
 include $(topdir)/Make.rules

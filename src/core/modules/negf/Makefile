@@ -9,12 +9,14 @@ target := modules
 modules: libnegf module.conf
 	@$(BUILDMODULE) module.conf
 
-.PHONY: libnegf
+.PHONY: libnegf clean
 libnegf:
 	-@$(MAKE) --no-print-directory -C libnegf $(MAKECMDGOALS)
 	@mkdir -p $(topdir)/$(ARCH)/modules/negf
 	-@cp libnegf/libnegf.so $(topdir)/$(ARCH)/modules/negf
 
+clean:
+	cd libnegf; $(MAKE) clean
 
 
 include $(topdir)/Make.rules
