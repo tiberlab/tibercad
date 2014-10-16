@@ -20,7 +20,7 @@ Module elasticity
 
     body_force lattice_mismatch
     {
-      x-growth-direction = (-1,0,1,0) 
+      x-growth-direction = (1,0,-1,0) 
       y-growth-direction = (-1,2,-1,0) 
       z-growth-direction = (0,0,0,1) 
       reference_material = AlGaN
