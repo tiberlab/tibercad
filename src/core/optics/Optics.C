@@ -1116,7 +1116,7 @@ Optics::plot_globaldata(void)
 
   if (file.good())
   {
-    file << "# initial_state final_state Px Py Pz\n";
+    file << "# initial_state final_state |Px|^2 |Py|^2 |Pz|^2\n";
     unsigned int n1 =  _initial_state_numbers.size();
     unsigned int n2 =  _final_state_numbers.size();
 
@@ -1127,6 +1127,7 @@ Optics::plot_globaldata(void)
         file << i << "  " << j;
         for (unsigned int p = 0; p < 3; p++)
         {
+          // norm returns the square of the absolute value
           file << "  " << std::norm(_P_matrix[p][i][j]);
         }        
         file << "\n";
