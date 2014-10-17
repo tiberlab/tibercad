@@ -321,16 +321,18 @@ inline
 void EigenvalueProblem::init_permutation(const unsigned int n_dofs)
 {
   _perm.resize(n_dofs);
+  _inv_perm.resize(n_dofs);
   for(unsigned int i=0; i<n_dofs; i++)
-    _perm[i] = i;
+    _perm[i] = _inv_perm[i] = i;
 }
 
 inline
 void EigenvalueProblem::set_permutation(const std::vector<unsigned int>& p)
 {
-  _perm.resize(p.size());
-  for(unsigned int i=0; i<p.size(); i++)
-    _perm[i] = p[i];
+  _perm = p;
+  _inv_perm.resize(p.size());
+  for(unsigned int i = 0; i < p.size(); i++)
+    _inv_perm[p[i]] = i;
 }
 
 
