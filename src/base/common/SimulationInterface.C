@@ -1311,7 +1311,7 @@ SimulationInterface::plot_meshdata(void)
     }
   }
 
-  do_plot_old();
+  //do_plot_old();
 
 }
 

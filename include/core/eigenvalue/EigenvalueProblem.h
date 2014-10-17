@@ -118,15 +118,17 @@ class EigenvalueProblem : public SimulationInterface
     
     virtual int get_H_nnz() const { return 0; }
 
-    //! The Hamiltonian is returned in eV 
-    virtual void get_H_csr(std::vector<Complex>& A,std::vector<int>& JA,std::vector<int>& IA) const {};
+    //! The Hamiltonian is returned in eV
+    virtual void get_H_csr(std::vector<Complex>& A, std::vector<int>& JA,
+        std::vector<int>& IA) const {}
 
-    virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,std::vector<int>& IA) const {};
+    virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,
+        std::vector<int>& IA) const {}
 
-    virtual void print_H(const std::string& outpath) const {};
+    virtual void print_H(const std::string& outpath) const {}
 
     //! Return the Hamiltonian Units in eV
-    virtual double get_H_units(void) const{};
+    virtual double get_H_units(void) const { return 1.0; }
 
     //! returns a reference to _solution
     /*!

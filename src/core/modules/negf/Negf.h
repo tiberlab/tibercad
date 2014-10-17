@@ -199,7 +199,7 @@ class TBDLLOCAL Negf : public SimulationInterface
         const std::string& mod = "LDOS");
     void occupy_LDOS(const std::vector<double>& ldos);
 
-    void transfer_density(std::vector<double> density,
+    void transfer_density(const std::vector<double>& density,
         const std::string& particle);
 
     Device* _device;

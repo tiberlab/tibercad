@@ -66,11 +66,15 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::
     return 0.0;
   }
 
-  vector<double> values(elem->n_nodes());
-  vector<Point> p(elem->n_nodes());
+  // 2014-09-05 this gives sometimes wrong results, try with centroid
+  //vector<double> values(elem->n_nodes());
+  //vector<Point> p(elem->n_nodes());
+
+  //for (size_t i = 0; i < elem->n_nodes(); ++i)
+  //      p[i] = elem->point(i);
   
-  for (size_t i = 0; i < elem->n_nodes(); ++i)
-        p[i] = elem->point(i);
+  vector<double> values(1);
+  vector<Point> p(1, elem->centroid());
 
   bool electron = (particle == "el") || (particle == "Ec");
 
@@ -81,7 +85,7 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::
 
   double bedge = values[0];
 
-  for (size_t i = 1; i < elem->n_nodes(); ++i)
+  for (size_t i = 1; i < values.size(); ++i)
   {
      double temp = values[i];
      if (electron)
@@ -935,8 +939,8 @@ void EnvelopFunctionApprox::do_init( )
   init_kspace(ModelOptions());
 
   // Initialize identity permutation: does not have constrained dofs 
-  if (solver_opt.Dirichlet_bc_everywhere) 
-    EigenvalueProblem::init_permutation(dof_map.n_dofs());
+  //if (solver_opt.Dirichlet_bc_everywhere)
+  EigenvalueProblem::init_permutation(dof_map.n_dofs());
 
 }
 
@@ -960,7 +964,7 @@ void EnvelopFunctionApprox::do_solve()
   if (_calculate_density && (get_k_point().size() == 0.0))
   {
     estimate_spectrum_shift();
-    apply_bc();
+    //apply_bc();
     calculate_density_analytic();
   }
   else
@@ -997,6 +1001,14 @@ EnvelopFunctionApprox::redeclare_solutions(void)
 void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 {
    
+  if (verbose() > 0)
+  {
+    ostringstream os;
+    os << "(EFA) Solving for k = (";
+    get_k_point().write_unformatted(os, false);
+    os << ") /nm";
+    Messages::info(os.str());
+  }
 
   if ( _job == BULKEIGENSTATES )
   {
@@ -1007,18 +1019,8 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 
     estimate_spectrum_shift();
     
-    apply_bc(); 
+    //apply_bc();
     
-    if (verbose() > 0)
-    {
-      ostringstream os;
-      os << "(EFA) Solving for k = (";
-      get_k_point().write_unformatted(os, false);
-      os << ") /nm";
-      Messages::info(os.str());
-    }
-    
-    //assemble();
 
     initialize_solution_container(opt.num_el_states + opt.num_hl_states);
     
@@ -1034,6 +1036,7 @@ void EnvelopFunctionApprox::do_solve_for_kpoint(const Point& k_point)
 void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 {
 
+  apply_bc();
 
   _H_real->zero();
   _H_imag->zero();
@@ -1305,32 +1308,49 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
         }
       }
 
+      // penalty method for Dirichlet nodes
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+        if (dirichlet_dofs.count(dof_indices[i]))
+          ham_real(i, i) += ham_real(i, i) / abs(ham_real(i,i)) * 1e6;
+      }
+
 
       // case of constrained Dofs (permutation was not defined)
-      if (_perm.size() == 0)
+      if (0) // (_perm.size() == 0)
       {
         vector<unsigned int> dof_indices_tmp;
         
         if (_haveS)
         {
           dof_indices_tmp = dof_indices;
-          dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
+          dof_map.constrain_element_matrix(s_real, dof_indices_tmp, false);
           _S_real->add_matrix(s_real,dof_indices_tmp);
         }
        
         dof_indices_tmp = dof_indices;
-        dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
+        dof_map.constrain_element_matrix(ham_real, dof_indices_tmp, false);
+        for (unsigned int i=0; i< dof_indices_tmp.size(); i++)
+        {
+          if (my_dof_constraints.find(dof_indices_tmp[i]) != my_dof_constraints.end())
+          {
+            double sign = ham_real(i,i) / abs(ham_real(i,i));
+            ham_real(i,i) = sign * 1e6;
+            for (int j = 0; j < ham_real.n(); j++)
+              if (my_dof_constraints.find(dof_indices_tmp[i])->second.count(dof_indices_tmp[j]))
+                ham_real(i,j) = -sign * 1e6;
+          }
+        }
         _H_real->add_matrix(ham_real,dof_indices_tmp);
 
         dof_indices_tmp = dof_indices;
-        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
+        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
         _H_imag->add_matrix(ham_imag,dof_indices_tmp);
       }
       else
       {
         vector<unsigned int> new_dof_indices;
         vector<unsigned int> dof_indices_tmp;
-
         //new_dof_indices.resize(n_dofs);
         //for (unsigned int i=0; i< n_dofs; i++)
         //  new_dof_indices[i] = _perm[dof_indices[i]];
@@ -1338,25 +1358,34 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
         if (_haveS)
         {
           dof_indices_tmp = dof_indices;
-          dof_map.constrain_element_matrix(s_real, dof_indices_tmp);
-        new_dof_indices.resize(dof_indices_tmp.size());
-        for (unsigned int i=0; i< new_dof_indices.size(); i++)
-          new_dof_indices[i] = _perm[dof_indices_tmp[i]];
+          dof_map.constrain_element_matrix(s_real, dof_indices_tmp, false);
+          new_dof_indices.resize(dof_indices_tmp.size());
+          for (unsigned int i=0; i< new_dof_indices.size(); i++)
+            new_dof_indices[i] = _perm[dof_indices_tmp[i]];
           _S_real->add_matrix(s_real,new_dof_indices);
         }
 
         dof_indices_tmp = dof_indices;
-        dof_map.constrain_element_matrix(ham_real, dof_indices_tmp);
-        new_dof_indices.resize(dof_indices_tmp.size());
+        dof_map.constrain_element_matrix(ham_real, dof_indices_tmp, false);
+        if (!_haveS)
+          new_dof_indices.resize(dof_indices_tmp.size());
         for (unsigned int i=0; i< new_dof_indices.size(); i++)
-          new_dof_indices[i] = _perm[dof_indices_tmp[i]];
+        {
+          if (my_dof_constraints.find(dof_indices_tmp[i]) != my_dof_constraints.end())
+          {
+            double sign = ham_real(i,i) / abs(ham_real(i,i));
+            ham_real(i,i) = sign * 1e6;
+            for (int j = 0; j < ham_real.n(); j++)
+              if (my_dof_constraints.find(dof_indices_tmp[i])->second.count(dof_indices_tmp[j]))
+                ham_real(i,j) = -sign * 1e6;
+          }
+          if (!_haveS)
+            new_dof_indices[i] = _perm[dof_indices_tmp[i]];
+        }
         _H_real->add_matrix(ham_real,new_dof_indices);
         
         dof_indices_tmp = dof_indices;
-        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp);
-        new_dof_indices.resize(dof_indices_tmp.size());
-        for (unsigned int i=0; i< new_dof_indices.size(); i++)
-          new_dof_indices[i] = _perm[dof_indices_tmp[i]];
+        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
         _H_imag->add_matrix(ham_imag,new_dof_indices);
         
       }
@@ -1632,7 +1661,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
       }
     }
 
-
+/*
     //put constrained dofs
 
     for (unsigned int j = 0; j < number_of_all_dofs; j++)
@@ -1653,6 +1682,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
         }
       }
     }
+*/
 
     //
     // apply transformation if needed

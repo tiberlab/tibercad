@@ -62,18 +62,18 @@ void FEMEigenvalueProblem::make_new_dofs( )
 
   for (unsigned int i = 0; i < number_of_all_dofs ; i++)
     {
-      if ( !( dof_map.is_constrained_dof(i) ) && (find(n_begin, n_end, i) == n_end))
+//      if ( !( dof_map.is_constrained_dof(i) ) && (find(n_begin, n_end, i) == n_end))
 	{
 	    new_dofs[i].independent = true;
 	    new_dofs[i].new_number = number_it;
 	    number_it++;
 
 	  }
-	else
-	  {
+//	else
+//	  {
 	  
-	    new_dofs[i].independent = false;
-	  }
+//	    new_dofs[i].independent = false;
+//	  }
     }
 
   
@@ -937,8 +937,9 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 			    
 			    }
 			}
-		       
 
+
+		       
 		      dof_map.add_constraint_row (n_dof,  constraint); 
                       my_dof_constraints.insert(pair<unsigned int, DofConstraintRow>(n_dof,  constraint));
 		      
@@ -1034,9 +1035,11 @@ FEMEigenvalueProblem::get_H_nnz() const
 void 
 FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
                                 std::vector<int>& JA,
-                                std::vector<int>& IA) const 
+                                std::vector<int>& IA) const
 
 {
+
+  DofMap& dof_map = system->get_dof_map();
 
   PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(_H_real);
   H_real_matrix->close();
@@ -1054,6 +1057,9 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
 
   for (unsigned int row = row_start ; row < row_stop; row++)
   {
+    //if (dof_map.is_constrained_dof(_inv_perm[row]))
+    //  continue;
+
     int ierr = 0;
     const PetscScalar *petsc_row_vals_real;
     const PetscScalar *petsc_row_vals_imag;
@@ -1073,11 +1079,24 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
     {
       col = petsc_cols[j];
       
+      //if (dof_map.is_constrained_dof(_inv_perm[col]))
+      //  continue;
+
+
+      if (A.size() <= ind)
+      {
+        A.reserve(5 * A.size() / 4);
+        JA.reserve(5 * A.size() / 4);
+      }
+
       A[ind] = UnitsConversion * Complex(petsc_row_vals_real[j], petsc_row_vals_imag[j]); 
       JA[ind] = petsc_cols[j];
 
       ind++;  
-    } 
+    }
+    //A.resize(ind);
+    //JA.resize(ind);
+    //IA.resize(row+2);
    
     IA[row+1]= ind;
 
@@ -1102,6 +1121,8 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
   PetscMatrix<Number>* S_real_matrix = static_cast<PetscMatrix<Number>* >(_S_real);
   S_real_matrix->close();
 
+  DofMap& dof_map = system->get_dof_map();
+
   unsigned int row_start = _S_real->row_start();
   unsigned int row_stop = _S_real->row_stop();
   unsigned int row, col, ind = 0;
@@ -1110,6 +1131,9 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
 
   for (unsigned int row = row_start ; row < row_stop; row++)
   {
+    //if (dof_map.is_constrained_dof(_inv_perm[row]))
+    //  continue;
+
     int ierr = 0;
     const PetscScalar *petsc_row_vals;
     const PetscInt *petsc_cols;
@@ -1123,10 +1147,17 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
     {
       col = petsc_cols[j];
       
+      //if (dof_map.is_constrained_dof(_inv_perm[col]))
+      //  continue;
+
       A[ind] = Complex(petsc_row_vals[j], 0.0); 
       JA[ind] = petsc_cols[j];
       ind++;  
     } 
+    //A.resize(ind);
+    //JA.resize(ind);
+    //IA.resize(row+2);
+
    
     IA[row+1]= ind;
 
