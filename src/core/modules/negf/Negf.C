@@ -728,6 +728,7 @@ Negf::setup_negf(void)
 
     //std::cout<<"(negf) Get H csr "<<nrow<<"  "<<nnz<<std::endl;
     _ext_module->get_H_csr(A,JA,IA);
+    nrow = IA.size() - 1;
 
     //std::cout<<"(negf) Set H in libNEGF; nnz="<<IA[nrow]<<std::endl;
 
@@ -1290,7 +1291,7 @@ Negf::calculate_for_k_point(const Point& k_point,
 
 
 void
-Negf::transfer_density(std::vector<double> density, const std::string& particle)
+Negf::transfer_density(const std::vector<double>& density, const std::string& particle)
 {
   double u = get_mesh_units();
   unsigned int dim = get_mesh().mesh_dimension();
