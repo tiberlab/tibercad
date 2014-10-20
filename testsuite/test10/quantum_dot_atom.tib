@@ -4,9 +4,9 @@ Device qdot
   mesh_units = 1e-9
   dimension = 3
 
-  y-growth-direction = (-1,0,1,0)
+  y-growth-direction = (1,0,-1,0)
   x-growth-direction = (-1,2,-1,0)   
-  z-growth-direction = (0,0,0,1)
+  z-growth-direction = (0,0,0,-1)
 
   Region ball
   {
