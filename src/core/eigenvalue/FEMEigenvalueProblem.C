@@ -1047,7 +1047,17 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
   PetscMatrix<Number>* H_imag_matrix = static_cast<PetscMatrix<Number>* >(_H_imag);
   H_imag_matrix->close();
 
-  double UnitsConversion = get_H_units(); 
+  const Scaling& sc = get_scaling();
+  double UnitsConversion = get_H_units() * sc.get_length_scaling() / sc.get_calc_mesh_units();
+  switch (get_mesh().mesh_dimension())
+  {
+    case 3:
+      UnitsConversion *= sc.get_length_scaling() / sc.get_calc_mesh_units();
+    case 2:
+      UnitsConversion *= sc.get_length_scaling() / sc.get_calc_mesh_units();
+    default:
+      break;
+  }
 
   unsigned int row_start = _H_real->row_start();
   unsigned int row_stop = _H_real->row_stop();
@@ -1083,11 +1093,11 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
       //  continue;
 
 
-      if (A.size() <= ind)
-      {
-        A.reserve(5 * A.size() / 4);
-        JA.reserve(5 * A.size() / 4);
-      }
+      //if (A.size() <= ind)
+      //{
+      //  A.reserve(5 * A.size() / 4);
+      //  JA.reserve(5 * A.size() / 4);
+      //}
 
       A[ind] = UnitsConversion * Complex(petsc_row_vals_real[j], petsc_row_vals_imag[j]); 
       JA[ind] = petsc_cols[j];
@@ -1129,6 +1139,19 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
 
   IA[0] = 0;
 
+  // scale away length scaling in integration
+  const Scaling& sc = get_scaling();
+  double scale = sc.get_length_scaling() / sc.get_calc_mesh_units();
+  switch (get_mesh().mesh_dimension())
+  {
+    case 3:
+      scale *= sc.get_length_scaling() / sc.get_calc_mesh_units();
+    case 2:
+      scale *= sc.get_length_scaling() / sc.get_calc_mesh_units();
+    default:
+      break;
+  }
+
   for (unsigned int row = row_start ; row < row_stop; row++)
   {
     //if (dof_map.is_constrained_dof(_inv_perm[row]))
@@ -1150,7 +1173,7 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
       //if (dof_map.is_constrained_dof(_inv_perm[col]))
       //  continue;
 
-      A[ind] = Complex(petsc_row_vals[j], 0.0); 
+      A[ind] = Complex(scale * petsc_row_vals[j], 0.0);
       JA[ind] = petsc_cols[j];
       ind++;  
     } 

@@ -130,7 +130,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n, double& av_mu_p);
 
-    void calculate_density(const std::string& particle);
+    //void calculate_density(const std::string& particle);
 
     void init_k_space_integration(void);
     
@@ -251,9 +251,9 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     VectorValue<double> _k_vec;
 
-    DofField _eldensity;
+    //DofField _eldensity;
 
-    DofField _hldensity;
+    //DofField _hldensity;
 
     DofField current;
 

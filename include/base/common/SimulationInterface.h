@@ -573,6 +573,10 @@ class SimulationInterface : public TiberModelObject
     Scaling& get_scaling(void);
 
 
+    //! Get the scaling parameters
+    const Scaling& get_scaling(void) const;
+
+
     //! Get the mesh
     /*!
      * \return a constant reference to the simulation mesh
@@ -1841,6 +1845,13 @@ SimulationInterface::add_scaled_remembered_solution(ID id, double factor)
 inline
 Scaling&
 SimulationInterface::get_scaling(void)
+{
+  return _scaling;
+}
+
+inline
+const Scaling&
+SimulationInterface::get_scaling(void) const
 {
   return _scaling;
 }

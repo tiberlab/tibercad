@@ -851,16 +851,21 @@ Negf::do_solve(void)
       
       setup_hamil();
 
-      calculate_density("el");
+      unsigned int n_vars = _sys_H->n_vars();
+      std::vector<double> density(_device_n_dofs * n_vars, 0.0);
+
+      _libnegf->density(density, "el");
+
+      transfer_density(density, "el");
 
       // write qdens on eldensity
-      NumericVector<Number>& qdens = *_qdens_sys->solution;
-      unsigned int p_id = _qdens_sys->variable_number("edens");
-      unsigned int p_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
-      unsigned int start = p_id * p_dofs;
-      _eldensity.reserve(_device_n_dofs);
-      for (unsigned int i=0; i < _device_n_dofs; i++)
-        _eldensity.push_back( qdens(start+i) );
+      //NumericVector<Number>& qdens = *_qdens_sys->solution;
+      //unsigned int p_id = _qdens_sys->variable_number("edens");
+      //unsigned int p_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
+      //unsigned int start = p_id * p_dofs;
+      //_eldensity.reserve(_device_n_dofs);
+      //for (unsigned int i=0; i < _device_n_dofs; i++)
+      //  _eldensity.push_back( qdens(start+i) );
 
 
       finalize();
@@ -889,16 +894,21 @@ Negf::do_solve(void)
       
       setup_hamil();
 
-      calculate_density("hl");
+      unsigned int n_vars = _sys_H->n_vars();
+      std::vector<double> density(_device_n_dofs * n_vars, 0.0);
+
+      _libnegf->density(density, "hl");
+
+      transfer_density(density, "hl");
 
       // write qdens on hldensity
-      NumericVector<Number>& qdens = *_qdens_sys->solution;
-      unsigned int p_id = _qdens_sys->variable_number("hdens");
-      unsigned int p_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
-      unsigned int start = p_id * p_dofs;
-      _hldensity.reserve(_device_n_dofs);
-      for (unsigned int i=0; i < _device_n_dofs; i++)
-        _hldensity.push_back( qdens(start+i) );
+      //NumericVector<Number>& qdens = *_qdens_sys->solution;
+      //unsigned int p_id = _qdens_sys->variable_number("hdens");
+      //unsigned int p_dofs = _qc_n_dofs[_quantum_contacts.size()-1];
+      //unsigned int start = p_id * p_dofs;
+      //_hldensity.reserve(_device_n_dofs);
+      //for (unsigned int i=0; i < _device_n_dofs; i++)
+      //  _hldensity.push_back( qdens(start+i) );
 
       finalize();
     }
@@ -1240,6 +1250,12 @@ Negf::calculate_for_k_point(const Point& k_point,
 
      _libnegf->density(field, "el");
 
+     //std::string out_file = "density_new.dat";
+     //std::fstream ff(out_file.c_str(),std::fstream::out);
+     //for (unsigned int i = 0; i < field.size(); i++)
+     //      ff<< field[i] <<std::endl;
+     //ff.close();
+
      error = 0.0;
 
      for (unsigned int i=0; i < field.size(); i++)
@@ -1293,8 +1309,6 @@ Negf::calculate_for_k_point(const Point& k_point,
 void
 Negf::transfer_density(const std::vector<double>& density, const std::string& particle)
 {
-  double u = get_mesh_units();
-  unsigned int dim = get_mesh().mesh_dimension();
 
   deactivate_quantum_contacts();
 
@@ -1309,6 +1323,8 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
 
 
   double equ;
+  double u = get_mesh_units();
+  unsigned int dim = get_mesh().mesh_dimension();
   switch (dim)
   {
     case 1:
@@ -1319,6 +1335,7 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
       break;
     case 3:
       equ = 1.0/(u*u*u*1.0e6);
+      break;
   }
 
   DofMap& dof_map_qdens = _qdens_sys->get_dof_map();
@@ -1391,12 +1408,18 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
 }
 
 
-
-
+/*
 void
 Negf::calculate_density(const std::string& particle)
 {
   double u = get_mesh_units();
+
+  if (_ext_module != NULL)
+  {
+    const Scaling& sc = _ext_module->get_scaling();
+    //u = sc.get_length_scaling() / sc.get_calc_mesh_units();
+  }
+
   unsigned int dim = get_mesh().mesh_dimension();
 
   deactivate_quantum_contacts();
@@ -1419,11 +1442,11 @@ Negf::calculate_density(const std::string& particle)
   _libnegf->density(density, particle);
 
   // ---- debug ---------------------------------------------
-  //std::string out_file = "density.dat";
-  //std::fstream ff(out_file.c_str(),std::fstream::out);
-  //for (unsigned int i = 0; i < density.size(); i++)
-  //      ff<< density[i] <<std::endl;
-  //ff.close();
+  std::string out_file = "density_new.dat";
+  std::fstream ff(out_file.c_str(),std::fstream::out);
+  for (unsigned int i = 0; i < density.size(); i++)
+        ff<< density[i] <<std::endl;
+  ff.close();
   // ---------------------------------------------------------
 
 
@@ -1508,6 +1531,7 @@ Negf::calculate_density(const std::string& particle)
   qdens.close();
   activate_quantum_contacts();
 }
+*/
 
 
 void
