@@ -30,7 +30,10 @@ class KPBand : public BandProperties
     virtual void prepare_submodels(void);
 
     //! Initialize
-    //virtual void do_init(void);
+    virtual void do_init(void);
+
+    //! Read database
+    virtual void read_database(void);
 
     //! \copydoc PhysicalModelInterface::do_print_info(void)
     virtual void do_print_info(void);
@@ -44,6 +47,11 @@ class KPBand : public BandProperties
     //! The physical model for this semiconductor
     DDsemiconductor* _bulk_model;
 
+    //! An alternative DOS mass, not from kp
+    /*!
+     * For holes, warping leads to errors in the DOS mass calculation
+     */
+    double _dos_mass;
 
 };
 

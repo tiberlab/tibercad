@@ -4,16 +4,18 @@
 #include "DDsemiconductor.h"
 #include "DriftDiffusionProperties.h"
 #include "Material.h"
+#include "Database.h"
 #include "Messages.h"
 
 #include "TiberModule.h"
 
 
-
+using namespace std;
 
 KPBand::KPBand(const ModelOptions& options) :
   BandProperties(options),
-  _bulk_model(NULL)
+  _bulk_model(NULL),
+  _dos_mass(-1)
 {
 
 }
@@ -22,7 +24,40 @@ KPBand::KPBand(const ModelOptions& options) :
 
 KPBand::~KPBand(void)
 {
+}
 
+
+void
+KPBand::read_database(void)
+{
+  const Database& db = get_database();
+  if (get_option("particle", "el") == "el")
+    db.set_section("conductionband");
+  else
+    db.set_section("valenceband");
+
+  _dos_mass = db.get("m_dos", _dos_mass);
+
+}
+
+
+void
+KPBand::do_init(void)
+{
+  if (get_option("m_dos", "") == "database")
+  {
+    if (_dos_mass < 0)
+    {
+      ostringstream os;
+      os << "Parameter m_dos for particle " << get_option("particle", "el") <<
+          " does not exist in database of material " <<
+          get_material()->get_name();
+      Messages::warning(os.str());
+      Messages::warning("  -> falling back to k.p");
+    }
+  }
+  else
+    get_parameter("m_dos", _dos_mass);
 }
 
 
@@ -122,11 +157,18 @@ KPBand::do_calculate(void)
     }
     effective_mass() = std::pow(tmp, 2.0 / 3.0);
   }
+
+  if (_dos_mass > 0)
+    effective_mass() = _dos_mass * std::pow(degeneracy(), 2.0 / 3.0);
 }
 
 
 void
 KPBand::do_print_info(void)
 {
-  Messages::info("(band parameters obtained from bulk k.p)");
+  if (_dos_mass < 0)
+    Messages::info("(band parameters obtained from bulk k.p)");
+  else
+    Messages::info("(band parameters obtained from bulk k.p, "
+        "DOS mass from database/input file)");
 }

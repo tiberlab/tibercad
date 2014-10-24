@@ -96,9 +96,10 @@ void ZbSemiconductor::read_database( )
 
   // defaults for GaAs
   db.set_section("bandgap");
-  par.EgGamma = db.get("Eg_G", 1.00);
-  par.EgL = db.get("Eg_L", 1.00);
-  par.EgX = db.get("Eg_X", 1.00);
+
+  par.EgGamma = db.get("Eg_G", 1.00, true);
+  par.EgL = db.get("Eg_L", 100.00);
+  par.EgX = db.get("Eg_X", 100.00);
 
 
   if (_consider_temperature)
@@ -122,13 +123,13 @@ void ZbSemiconductor::read_database( )
 
 
   db.set_section("valenceband");
-  par.Ev = db.get("E_v", 0.0);
+  par.Ev = db.get("E_v", 0.0, true);
 
 
   db.set_section("conductionband");
   
   RealTensor mten;
-  db.get("m_G",mten,true);
+  db.get("m_G", mten, true);
   par.m_G = (mten(0,0)+mten(1,1)+mten(2,2))/3.0;
 
   par.m_l_L = db.get("m_L_l", 0.0);
