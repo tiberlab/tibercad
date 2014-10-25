@@ -57,7 +57,11 @@ KPBand::do_init(void)
     }
   }
   else
+  {
+    // reset
+    _dos_mass = -1.0;
     get_parameter("m_dos", _dos_mass);
+  }
 }
 
 
