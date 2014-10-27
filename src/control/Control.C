@@ -204,6 +204,10 @@ Control::init(void)
     if (!opts.find_option("resultpath"))
       opts.set_option("resultpath", global_opts.get_option("resultpath", "."));
 
+    if (!opts.find_option("scratchpath"))
+      opts.set_option("scratchpath", global_opts.get_option("scratchpath",
+          opts.get_option("resultpath", ".")));
+
     if (!opts.find_option("output_format"))
       opts.set_option("output_format", global_opts.get_option("output_format", "vtk"));
 

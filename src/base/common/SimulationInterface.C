@@ -1,5 +1,8 @@
 // $Id$
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/convenience.hpp>
+
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 #include "TiberEqSystem.h"
@@ -646,6 +649,45 @@ SimulationInterface::init(void)
       _scaling.set_calc_mesh_units(get_mesh_units());
     }
 
+    using namespace boost::filesystem;
+
+    // check output and scratch path
+    path outpath(get_output_directory());
+    if (!exists(outpath))
+    {
+      // we catch any error here without doing anything yet
+      try {
+        create_directories(outpath);
+      }
+      catch (...) {}
+    }
+
+    if (!(exists(outpath) && is_directory(outpath)))
+    {
+      string msg("Cannot create or use '");
+      msg += outpath.string() + "' as output directory.";
+      throw InitFailedException(msg);
+    }
+
+    if (get_output_directory() != get_scratch_directory())
+    {
+      path outpath(get_scratch_directory());
+      if (!exists(outpath))
+      {
+        // we catch any error here without doing anything yet
+        try {
+          create_directories(outpath);
+        }
+        catch (...) {}
+      }
+
+      if (!(exists(outpath) && is_directory(outpath)))
+      {
+        string msg("Cannot create or use '");
+        msg += outpath.string() + "' as output directory.";
+        throw InitFailedException(msg);
+      }
+    }
 
     _verbosity = get_option("verbose", _verbosity);
     do_init();
@@ -1105,6 +1147,13 @@ string
 SimulationInterface::get_output_directory(void) const
 {
   return get_option("resultpath", ".");
+}
+
+
+string
+SimulationInterface::get_scratch_directory(void) const
+{
+  return get_option("scratchpath", ".");
 }
 
 

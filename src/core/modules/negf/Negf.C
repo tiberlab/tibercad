@@ -113,13 +113,13 @@ namespace
 Negf* Negf::static_this;
 
 Negf::Negf(const ModelOptions& options) :
-                              SimulationInterface(options)
+  SimulationInterface(options),
+  _device_n_dofs(0),
+  _k_int_density(NULL),
+  _k_int_current(NULL),
+  _ext_module(NULL)
 {
-  _device_n_dofs = 0;
-  _k_int_density = NULL;
-  _k_int_current = NULL;
   _libnegf = NegfWrapper::create();
-  _ext_module = NULL;
 
   this->has_solution_vector(false);
 }
@@ -709,6 +709,7 @@ Negf::setup_negf(void)
 {
 
   _libnegf->init();
+  _libnegf->set_scratch_path(get_scratch_directory());
 
   if (_ext_module == NULL)
   {
@@ -753,8 +754,6 @@ Negf::setup_negf(void)
     }
 
   }
-  //Messages::info("setting scratch path to "+SimulationOptions::scratch_path);
-  _libnegf->set_scratch_path(SimulationOptions::scratch_path);
 
   if (get_option("print_matrices",false))
      _libnegf->print_mat();  
@@ -1883,7 +1882,7 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 void
 Negf::print_ham(std::string form)
 {
-  std::string outpath = SimulationOptions::scratch_path;
+  std::string outpath = get_scratch_directory();
 
   if (form=="matlab")
   {
@@ -1990,8 +1989,8 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
   opt.Emin = sol_opt.get_option("Emin",-mumax-opt.n_kT*kbT);
   opt.Emax = sol_opt.get_option("Emax",-mumin+opt.n_kT*kbT);
 
-  std::string outpath = SimulationOptions::scratch_path;
-  std::string out_file = "negf.in";
+  std::string outpath = get_scratch_directory();
+  std::string out_file = outpath + "/negf.in";
   std::fstream ff(out_file.c_str(),std::fstream::out);
 
   ff<<"'"+outpath+"/Hr.m'"<<std::endl;

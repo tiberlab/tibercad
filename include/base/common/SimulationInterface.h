@@ -1093,6 +1093,10 @@ class SimulationInterface : public TiberModelObject
     std::string get_output_directory(void) const;
 
 
+    //! Get the scratch directory
+    std::string get_scratch_directory(void) const;
+
+
     //! Get the output filename prefix
     std::string get_output_filename_prefix(void) const;
 
