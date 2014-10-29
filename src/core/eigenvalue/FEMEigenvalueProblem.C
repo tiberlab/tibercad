@@ -1063,6 +1063,10 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
   unsigned int row_stop = _H_real->row_stop();
   unsigned int row, col, ind = 0;
 
+  unsigned int n_rows = row_stop - row_start;
+
+  IA.resize(n_rows + 1);
+
   IA[0] = 0;
 
   for (unsigned int row = row_start ; row < row_stop; row++)
@@ -1093,22 +1097,19 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
       //  continue;
 
 
-      //if (A.size() <= ind)
-      //{
-      //  A.reserve(5 * A.size() / 4);
-      //  JA.reserve(5 * A.size() / 4);
-      //}
+      if (A.size() <= ind)
+      {
+        A.resize(5 * A.size() / 4);
+        JA.resize(5 * A.size() / 4);
+      }
 
       A[ind] = UnitsConversion * Complex(petsc_row_vals_real[j], petsc_row_vals_imag[j]); 
       JA[ind] = petsc_cols[j];
 
       ind++;  
     }
-    //A.resize(ind);
-    //JA.resize(ind);
-    //IA.resize(row+2);
    
-    IA[row+1]= ind;
+    IA[row + 1]= ind;
 
     ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols, &petsc_row_vals_real);
     CHKERRABORT(libMesh::COMM_WORLD,ierr);
@@ -1118,6 +1119,8 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
  
 
   }
+  A.resize(ind);
+  JA.resize(ind);
 
 }
 
@@ -1136,6 +1139,10 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
   unsigned int row_start = _S_real->row_start();
   unsigned int row_stop = _S_real->row_stop();
   unsigned int row, col, ind = 0;
+
+  unsigned int n_rows = row_stop - row_start;
+
+  IA.resize(n_rows + 1);
 
   IA[0] = 0;
 
@@ -1173,16 +1180,19 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
       //if (dof_map.is_constrained_dof(_inv_perm[col]))
       //  continue;
 
+      if (A.size() <= ind)
+      {
+        A.resize(5 * A.size() / 4);
+        JA.resize(5 * A.size() / 4);
+      }
+
       A[ind] = Complex(scale * petsc_row_vals[j], 0.0);
       JA[ind] = petsc_cols[j];
       ind++;  
     } 
-    //A.resize(ind);
-    //JA.resize(ind);
-    //IA.resize(row+2);
 
    
-    IA[row+1]= ind;
+    IA[row + 1]= ind;
 
 
     ierr = MatRestoreRow(S_real_matrix->mat(), row ,&n_cols, &petsc_cols, &petsc_row_vals);
@@ -1190,6 +1200,7 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
        
 
   }
-
+  A.resize(ind);
+  JA.resize(ind);
 
 }

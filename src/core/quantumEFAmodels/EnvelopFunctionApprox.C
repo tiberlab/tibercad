@@ -904,7 +904,7 @@ void EnvelopFunctionApprox::do_init( )
 
   scaling.set_length_scaling(Constants::bohr_radius);
 
-  scaling.set_calc_mesh_units(get_mesh_units());
+  //scaling.set_calc_mesh_units(get_mesh_units());
 
   system->init();
 
@@ -1308,95 +1308,87 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
         }
       }
 
+      double penalty = 1e6;
+
       // penalty method for Dirichlet nodes
       for (unsigned int i = 0; i < n_dofs; i++)
       {
+        double sign = ham_real(i, i) / abs(ham_real(i,i));
         if (dirichlet_dofs.count(dof_indices[i]))
-          ham_real(i, i) += ham_real(i, i) / abs(ham_real(i,i)) * 1e6;
+        {
+          ham_real(i, i) += sign * penalty;
+
+          //for (unsigned int j = 0; j < n_dofs; j++)
+          //{
+          //  ham_real(i, j) /= penalty;
+          //  ham_imag(i, j) /= penalty;
+          //  s_real(i, j) /= penalty;
+          //}
+        }
       }
 
 
-      // case of constrained Dofs (permutation was not defined)
-      if (0) // (_perm.size() == 0)
-      {
-        vector<unsigned int> dof_indices_tmp;
-        
-        if (_haveS)
-        {
-          dof_indices_tmp = dof_indices;
-          dof_map.constrain_element_matrix(s_real, dof_indices_tmp, false);
-          _S_real->add_matrix(s_real,dof_indices_tmp);
-        }
-       
-        dof_indices_tmp = dof_indices;
-        dof_map.constrain_element_matrix(ham_real, dof_indices_tmp, false);
-        for (unsigned int i=0; i< dof_indices_tmp.size(); i++)
-        {
-          if (my_dof_constraints.find(dof_indices_tmp[i]) != my_dof_constraints.end())
-          {
-            double sign = ham_real(i,i) / abs(ham_real(i,i));
-            ham_real(i,i) = sign * 1e6;
-            for (int j = 0; j < ham_real.n(); j++)
-              if (my_dof_constraints.find(dof_indices_tmp[i])->second.count(dof_indices_tmp[j]))
-                ham_real(i,j) = -sign * 1e6;
-          }
-        }
-        _H_real->add_matrix(ham_real,dof_indices_tmp);
-
-        dof_indices_tmp = dof_indices;
-        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
-        _H_imag->add_matrix(ham_imag,dof_indices_tmp);
-      }
-      else
       {
         vector<unsigned int> new_dof_indices;
         vector<unsigned int> dof_indices_tmp;
-        //new_dof_indices.resize(n_dofs);
-        //for (unsigned int i=0; i< n_dofs; i++)
-        //  new_dof_indices[i] = _perm[dof_indices[i]];
         
-        if (_haveS)
-        {
-          dof_indices_tmp = dof_indices;
-          dof_map.constrain_element_matrix(s_real, dof_indices_tmp, false);
-          new_dof_indices.resize(dof_indices_tmp.size());
-          for (unsigned int i=0; i< new_dof_indices.size(); i++)
-            new_dof_indices[i] = _perm[dof_indices_tmp[i]];
-          _S_real->add_matrix(s_real,new_dof_indices);
-        }
+        //set<unsigned int> constrained;
 
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_real, dof_indices_tmp, false);
-        if (!_haveS)
-          new_dof_indices.resize(dof_indices_tmp.size());
+        new_dof_indices.resize(dof_indices_tmp.size());
         for (unsigned int i=0; i< new_dof_indices.size(); i++)
         {
           if (my_dof_constraints.find(dof_indices_tmp[i]) != my_dof_constraints.end())
           {
+            //constrained.insert(i);
             double sign = ham_real(i,i) / abs(ham_real(i,i));
-            ham_real(i,i) = sign * 1e6;
+            ham_real(i,i) += sign * penalty;
             for (int j = 0; j < ham_real.n(); j++)
               if (my_dof_constraints.find(dof_indices_tmp[i])->second.count(dof_indices_tmp[j]))
-                ham_real(i,j) = -sign * 1e6;
+                ham_real(i,j) -= sign * penalty;
           }
-          if (!_haveS)
-            new_dof_indices[i] = _perm[dof_indices_tmp[i]];
+
+          new_dof_indices[i] = _perm[dof_indices_tmp[i]];
         }
-        _H_real->add_matrix(ham_real,new_dof_indices);
         
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
-        _H_imag->add_matrix(ham_imag,new_dof_indices);
         
+        if (_haveS)
+        {
+          dof_indices_tmp = dof_indices;
+          dof_map.constrain_element_matrix(s_real, dof_indices_tmp, false);
+        }
+
+        /*
+        set<unsigned int>::iterator it = constrained.begin();
+        for ( ; it != constrained.end(); ++it)
+        {
+          unsigned int i = *it;
+          for (int j = 0; j < ham_real.n(); j++)
+          {
+            ham_real(i,j) /= penalty;
+            ham_imag(i,j) /= penalty;
+            if (_haveS)
+              s_real(i,j) /= penalty;
+          }
+        }
+        */
+
+        _H_real->add_matrix(ham_real, new_dof_indices);
+        _H_imag->add_matrix(ham_imag, new_dof_indices);
+        if (_haveS)
+          _S_real->add_matrix(s_real, new_dof_indices);
       }
 
 
     }
 
-  //_H_real->print_matlab("Hr.m");
+  _H_real->print_matlab("Hr.m");
   //_H_imag->print_matlab("Hi.m");
-  //if (_haveS)
-  //  _S_real->print_matlab("S.m");
+  if (_haveS)
+    _S_real->print_matlab("S.m");
 
   //  dof_map.print_dof_constraints();
 
