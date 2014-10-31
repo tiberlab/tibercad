@@ -877,6 +877,14 @@ void EnvelopFunctionApprox::do_init( )
   solver_opt.periodicity[2]          = get_option("z-periodicity", false);
   
    
+  pair<Point, Point> bbox(get_environment().get_bounding_box());
+  for (unsigned i = 0; i < 3; i++)
+  {
+    min_coord[i] = bbox.first(i);
+    max_coord[i] = bbox.second(i);
+  }
+
+  /*
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
@@ -897,6 +905,7 @@ void EnvelopFunctionApprox::do_init( )
     }
     
   }
+  */
   //---------------------------------------------------------------------------------------------------------//
 
 
@@ -1341,6 +1350,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
         {
           if (my_dof_constraints.find(dof_indices_tmp[i]) != my_dof_constraints.end())
           {
+            double arg = get_k_point() * get_periodicity_vector(dof_indices_tmp[i]);
+            Complex phase = exp(Complex(0.0, 1.0)*arg);
+            //cerr << "arg = " << arg << " " << get_k_point() << " " << get_periodicity_vector(dof_indices_tmp[i]) << endl;
             //constrained.insert(i);
             double sign = ham_real(i,i) / abs(ham_real(i,i));
             ham_real(i,i) += sign * penalty;

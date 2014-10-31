@@ -1,6 +1,7 @@
 // $Id$
 
 #include "EigenvalueProblem.h"
+#include "SimulationEnvironment.h"
 #include "AtomisticStructure.h"
 #include "Constants.h"
 #include "Messages.h"
@@ -43,7 +44,17 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
 
   //kopts.set_option("mesh_units", get_mesh_units());
   
-  unsigned int k_dim = 3 - get_mesh().mesh_dimension();
+  // find k-space dimension, considering real space periodicities
+  unsigned int mesh_dim = get_mesh().mesh_dimension();
+  unsigned int k_dim = 3 - mesh_dim;
+  if (get_option("x-periodicity", false))
+    k_dim++;
+  if (get_option("y-periodicity", false))
+    k_dim++;
+  if (get_option("z-periodicity", false))
+    k_dim++;
+
+  k_dim = min(k_dim, 3u);
 
   if (opts.find_option("k_space_dimension"))
     k_dim = opts.get_option("k_space_dimension", k_dim);
@@ -66,6 +77,14 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
   // k_max can be interpreted in nm^-1
   RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+  auto bbox = get_environment().get_bounding_box();
+  if (get_option("x-periodicity", false) && (mesh_dim > 0))
+    a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
+  if (get_option("y-periodicity", false) && (mesh_dim > 1))
+    b(1) = (bbox.second(1) - bbox.first(1)) * get_mesh_units() * 1e9;
+  if (get_option("z-periodicity", false) && (mesh_dim > 2))
+    c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
+
 
   // if there is an atomistic structure, we can take the lattice vectors from it
   // (they come in Angstrom!)
@@ -80,10 +99,34 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   switch (k_dim)
   {
     case 1:
+      if (mesh_dim == 3)
+      {
+        if (get_option("x-periodicity", false))
+          c = a;
+        else if (get_option("y-periodicity", false))
+          c = b;
+      }
       kopts.set_option("r1", c);
       break;
 
     case 2:
+      if (mesh_dim == 3)
+      {
+        if (!get_option("z-periodicity", false))
+        {
+          c = b;
+          b = a;
+        }
+        else if (get_option("x-periodicity", false))
+        {
+          b = a;
+        }
+      }
+      else if (mesh_dim == 2)
+      {
+        if (get_option("x-periodicity", false))
+          b = a;
+      }
       kopts.set_option("r1", b);
       kopts.set_option("r2", c);
       break;

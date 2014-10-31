@@ -489,7 +489,8 @@ Negf::do_reinit(void)
 void
 Negf::init_k_space(ModelOptions& kopts)
 {
-    unsigned int dim = get_mesh().mesh_dimension();
+    unsigned int dim = kopts.get_option("k_space_dimension", 0);
+    unsigned int mesh_dim = get_mesh().mesh_dimension();
 
     if ( _hamil_type == "etb" ) 
     {
@@ -501,7 +502,7 @@ Negf::init_k_space(ModelOptions& kopts)
       std::vector<double> r2(3,0.0);
       switch (dim)
       {
-         case 1:
+         case 2:
            r1[0] = cf*vectors[3]; r1[1] = cf*vectors[4]; r1[2] = cf*vectors[5];
            r2[0] = cf*vectors[6]; r2[1] = cf*vectors[7]; r2[2] = cf*vectors[8];
            std::cout<<"(Negf) lattice vec:"<<r1[0]<<" "<<r1[1]<<" "<<r1[2]<<std::endl;
@@ -510,7 +511,7 @@ Negf::init_k_space(ModelOptions& kopts)
            kopts.set_option("r2",r2);  
            break;
 
-         case 2:
+         case 1:
            r1[0] = cf*vectors[6]; r1[1] = cf*vectors[7]; r1[2] = cf*vectors[8];
            kopts.set_option("r1",r1);  
            break;
@@ -527,19 +528,58 @@ Negf::init_k_space(ModelOptions& kopts)
       // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
       // k_max can be interpreted in nm^-1
       RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+      auto bbox = get_environment().get_bounding_box();
+      if (get_option("x-periodicity", false) && (mesh_dim > 0))
+        a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
+      if (get_option("y-periodicity", false) && (mesh_dim > 1))
+        b(1) = (bbox.second(1) - bbox.first(1)) * get_mesh_units() * 1e9;
+      if (get_option("z-periodicity", false) && (mesh_dim > 2))
+        c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
+
       switch (dim)
       {
-        case 2:
+        case 1:
+          if (mesh_dim == 3)
+          {
+            if (get_option("x-periodicity", false))
+              c = a;
+            else if (get_option("y-periodicity", false))
+              c = b;
+          }
           kopts.set_option("r1", c);
           break;
 
-        case 1:
+        case 2:
+          if (mesh_dim == 3)
+          {
+            if (!get_option("z-periodicity", false))
+            {
+              c = b;
+              b = a;
+            }
+            else if (get_option("x-periodicity", false))
+            {
+              b = a;
+            }
+          }
+          else if (mesh_dim == 2)
+          {
+            if (get_option("x-periodicity", false))
+              b = a;
+          }
           kopts.set_option("r1", b);
           kopts.set_option("r2", c);
           break;
 
+        case 3:
+          kopts.set_option("r1", a);
+          kopts.set_option("r2", b);
+          kopts.set_option("r3", c);
+          break;
+
         default:
           break;
+
       }
     }
 
@@ -548,6 +588,19 @@ Negf::init_k_space(ModelOptions& kopts)
 void
 Negf::init_k_space_integration(void)
 {
+  int dim = get_mesh().mesh_dimension();
+
+  unsigned int k_dim = 3 - dim;
+  if (get_option("x-periodicity", false))
+    k_dim++;
+  if (get_option("y-periodicity", false))
+    k_dim++;
+  if (get_option("z-periodicity", false))
+    k_dim++;
+
+  k_dim = min(k_dim, 3u);
+
+
   if (get_options().has_submodel("k_integration_density"))
   {
     //-----------------DENSITY ---------------------------------------------
@@ -555,10 +608,10 @@ Negf::init_k_space_integration(void)
     ModelOptions kopts;
     //if (it != get_options().submodels_end("k_integration_density"))
       kopts = it->second;
-    int dim = get_mesh().mesh_dimension();
 
-    kopts.set_option("mesh_units",get_mesh_units());
-    kopts.set_option("k_space_dimension",3 - dim);
+    //kopts.set_option("mesh_units", get_mesh_units());
+
+    kopts.set_option("k_space_dimension",k_dim);
     if ( !kopts.find_option("verbose"))
     {
       kopts.set_option("verbose", SimulationOptions::verbose() );
@@ -579,8 +632,8 @@ Negf::init_k_space_integration(void)
     ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_current"));
     ModelOptions& kopts = it->second;
 
-    kopts.set_option("mesh_units",get_mesh_units());
-    kopts.set_option("k_space_dimension",3 - get_mesh().mesh_dimension());
+    //kopts.set_option("mesh_units", get_mesh_units());
+    kopts.set_option("k_space_dimension", k_dim);
     if (! kopts.find_option("verbose"))
     {
       kopts.set_option("verbose", SimulationOptions::verbose() );
@@ -808,9 +861,9 @@ Negf::compute_current(void)
   current.resize(2,0.0);
 
   //TODO: elCurrent. hlCurrent
-
   current[0] = _libnegf->current();
   current[1] = current[0];
+  cout << "curr from negf : " << current[0] << endl;
 }
 
 void
@@ -1241,8 +1294,10 @@ Negf::calculate_for_k_point(const Point& k_point,
 
    setup_hamil();
 
-   unsigned int n_vars = _sys_H->n_vars();
-   field.resize(_device_n_dofs * n_vars);
+   //unsigned int n_vars = _sys_H->n_vars();
+   //field.resize(_device_n_dofs * n_vars);
+   unsigned int n_vars = _ext_module->get_H_dim();
+   field.resize(n_vars);
 
    if (_which_integration == INTDENSITYEL)
    {
@@ -2598,8 +2653,10 @@ Negf::compare(ID i, ID j)
 bool
 Negf::do_compare(ID i, ID j)
 {
+  // 2014-31-10 i and j were interchanged, before in 1D order of DOFs was flipped
+  // Was this on purpose??
   const NumericVector<Number>& solution = _sys->get_solution_vector();
-  return (solution(i) < solution(j));
+  return (solution(j) < solution(i));
 }
 
 void
