@@ -168,6 +168,13 @@ class SimulationEnvironment
     void prepare_for_solve(void);
 
 
+    //! Get the bounding box of the simulation domain
+    /*!
+     * \param recalculate if \c true it will recalculate the bounding box
+     */
+    std::pair<Point, Point> get_bounding_box(bool recalculate = false);
+
+
     //! Check if a node is part of a given boundary
     bool is_node_on_boundary(const Node* node, const Boundary* boundary) const;
 
@@ -408,6 +415,9 @@ class SimulationEnvironment
     void create_bc_maps(void) TBDLLOCAL;
 
 
+    //! Calculate the bounding box
+    void calculate_bounding_box(void);
+
 
     //! Invalidate all relevant environments
     /*!
@@ -424,6 +434,8 @@ class SimulationEnvironment
     //! The mesh
     MeshBase* _mesh;
 
+    //! The bounding box of the simulation domain
+    std::pair<Point, Point> _bbox;
 
     //! The region numbers for this simulation
     std::set<ID> _region_numbers;

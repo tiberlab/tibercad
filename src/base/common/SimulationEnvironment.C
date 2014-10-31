@@ -60,6 +60,7 @@ SimulationEnvironment::prepare(void)
   create_element_list();
   create_bc_maps();
   update_boundary_node_map();
+  calculate_bounding_box();
 }
 
 
@@ -425,6 +426,47 @@ SimulationEnvironment::is_node_on_boundary(const Node* node,
   return found;
 }
 
+
+
+void
+SimulationEnvironment::calculate_bounding_box(void)
+{
+  MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
+  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+
+  Point pmax(std::numeric_limits<double>::min(), std::numeric_limits<double>::min(), 0);
+  Point pmin(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0);
+  for ( ; it != end; ++it)
+  {
+    const Elem* elem = *it;
+    for (unsigned int i = 0; i < elem->n_nodes(); ++i)
+    {
+      const Point& p = elem->point(i);
+      if (p(0) < pmin(0))
+        pmin(0) = p(0);
+      else if (p(0) > pmax(0))
+        pmax(0) = p(0);
+
+      if (p(1) < pmin(1))
+        pmin(1) = p(1);
+      else if (p(1) > pmax(1))
+        pmax(1) = p(1);
+
+    }
+  }
+
+  _bbox = make_pair(pmin, pmax);
+}
+
+
+std::pair<Point, Point>
+SimulationEnvironment::get_bounding_box(bool recalculate)
+{
+  if (recalculate)
+    calculate_bounding_box();
+
+  return(_bbox);
+}
 
 
 Boundary*
