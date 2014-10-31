@@ -191,6 +191,8 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   double max_coord[3];
 
 
+  //! Get periodicity vector of a constrained DOF
+  Point get_periodicity_vector(unsigned int dof) const;
 
 
  private:
@@ -198,8 +200,24 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   //!size of the Hamiltonian matrix
   unsigned int _hamiltonian_size;
 
+  std::map<unsigned int, Point> _constrained_dof_periodicity;
+
 
 };
+
+
+inline
+Point
+FEMEigenvalueProblem::get_periodicity_vector(unsigned int dof) const
+{
+  Point p(0);
+  std::map<unsigned int, Point>::const_iterator it(
+      _constrained_dof_periodicity.find(dof));
+  if (it != _constrained_dof_periodicity.end())
+    p = it->second;
+
+  return p;
+}
 
 
 //---------------------------------------------------------------------------------//

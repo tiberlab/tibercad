@@ -904,6 +904,8 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 		        continue;
 		  
 		      
+		      _constrained_dof_periodicity[n_dof](i) = min_coord[i] - max_coord[i];
+
 
 		      
 		      //active elem1 contains the opposite  point, we can constrain it now
