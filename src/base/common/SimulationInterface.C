@@ -2936,11 +2936,16 @@ SimulationInterface::project_on_tensor_grid(void)
 
   // get the bounding box
 
+  auto bbox(get_environment().get_bounding_box(true));
+  Point& pmax = bbox.second;
+  Point& pmin = bbox.first;
+
+  /*
   MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
   const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
 
-  Point pmax(std::numeric_limits<double>::min(), std::numeric_limits<double>::min(), 0);
-  Point pmin(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0);
+  Point pmax(numeric_limits<double>::min(), numeric_limits<double>::min(), 0);
+  Point pmin(numeric_limits<double>::max(), numeric_limits<double>::max(), 0);
   for ( ; it != end; ++it)
   {
     const Elem* elem = *it;
@@ -2959,7 +2964,7 @@ SimulationInterface::project_on_tensor_grid(void)
 
     }
   }
-
+*/
   ostringstream os;
   os << "Bounding box: (" << pmin(0) << ", " << pmin(1) << ") - ("
       << pmax(0) << ", " << pmax(1) << ")\n";
