@@ -214,6 +214,12 @@ EigenvalueProblem::plot_dispersion(const std::string& filename)
     const Mesh* kmesh = _kspace->get_k_mesh();
     short kdim =  _kspace->mesh_dimension();
 
+    if (kdim == 1)
+    {
+      formats.resize(1);
+      formats[0] = "grace";
+    }
+
 
 
     for(short k=0; k<formats.size();k++)
