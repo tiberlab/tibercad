@@ -1,0 +1,184 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = bulk.msh  
+  mesh_units = 1e-9
+
+  material = GaAs
+#  y-growth-direction = (1,0,-1,0)
+#  z-growth-direction = (-1,2,-1,0)
+#  x-growth-direction = (0,0,0,1)
+
+   Doping { Nd = 1e17 type = donor}
+
+   Region bulk 
+   {
+   }
+
+   Region ndop 
+   {
+   }
+
+   Quantum_contact anode
+   {
+    regions = ndop
+    length = 0.01
+   }
+
+   Quantum_contact cathode
+   {
+    regions = ndop
+    length = 0.01
+   }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{
+  regions = (all)
+  # is default
+  # statistics = fermidirac
+
+  #save_state = true
+  #load_state = outputd10nml50/driftdiffusion_Vd_0.3_Vg_0.4.tsv
+  plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
+          eCurrentDensity, hCurrentDensity, NetRecombination,
+          ElField, ElPotential, ContactCurrent)
+
+  Contact cathode
+  {
+    voltage = 0.0
+  }
+ 
+  Contact anode
+  {
+    voltage = $Vd[0.0]
+  }
+}
+
+Module efaschroedinger
+{
+  name = quantum_el
+  regions = (anode, cathode, bulk, ndop)
+  poisson_model_name = driftdiffusion
+
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+
+  Solver
+  {
+    number_of_eigenstates = 6
+    Dirichlet_bc_everywhere = false
+  }
+
+  Physics
+  {
+    model = conduction_band #8x8
+    spurious = none #  Foreman
+    #model = conduction_band
+    #cb_vb_coupling = false
+    #kpVVtermSymmetric = true
+    #Ep_1 = 2
+    #Ep_2 = 2
+    #m_c = 0.2
+    #m_v = 1.5
+  }
+
+  DDispersion
+  {
+    k-path = G-X
+    k_max = 1.0
+    number_of_nodes = 10	
+  }	
+}
+
+
+Module sweep
+{
+  name = sweep_drain 
+  solve = (driftdiffusion,negf)
+  variable = $Vd
+  start = 0.0
+  stop = 1.0
+  steps = 50 
+  plot_data = true
+}
+
+Module negf
+{
+  plot = (elDensity, hlDensity)
+  regions = (bulk, ndop)
+
+  potential_simulation = driftdiffusion
+  Boundary anode{}
+  Boundary cathode{}
+  #print_matrices = true
+ 
+  Solver
+  {
+    #verbosity = 99 
+    #writeLDOS = 1
+    Np_contour = (50,100)
+    Np_real = 0
+    Npoles = 1 
+    delta = 1e-12
+    n_kT = 30
+    deltaEc = 0.1
+    Emin = -0.5
+    Emax = 0.5
+    Estep = 0.002
+  }
+
+  Physics
+  {
+    hamiltonian efa {simulation = quantum_el}
+  }
+  
+  k_integration_density
+  {
+    k_max = 1.5
+#    verbose = 4 
+#    gamma_point_calculation = true
+    # k_max = 0.750
+    number_of_elements = (5,5)
+  }
+
+# k_integration_current
+# {
+#   verbose = 4
+#   gamma_point_calculation = true
+  #k_max = 0.5
+  #number_of_elements = (5,5)
+# }
+
+
+}
+
+
+# Definition of  model-independent parameters of the Simulation
+Simulation
+{
+  temperature = 300
+  #solve = (driftdiffusion,negf) 
+  solve = (driftdiffusion, negf) 
+  #solve = (sweep_drain)
+  resultpath = output
+  #scratchpath = /scratch/maufder/scratch_NEGF
+  output_format = grace 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
