@@ -1819,7 +1819,7 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
 
 void
 AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
-    set<ID>& regions, double cutoff)
+    set<ID>& regions, double cutoff) const
 {
 
   cutoff = _options.get_option("control_volume_radius", cutoff);

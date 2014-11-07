@@ -28,6 +28,9 @@ class AtomisticBasis
   //! An iterator to iterate over atoms in neighbor ordered way
   class neighbor_iterator;
 
+  //! An iterator to iterate over atoms in neighbor ordered way
+  //class const_neighbor_iterator;
+
   //! Virtual destructor, in case of cast of derived class 
   virtual ~AtomisticBasis();
 
@@ -116,10 +119,10 @@ class AtomisticBasis
 
 
   //! Get the neighbour iterator for an atom
-  neighbor_iterator neighbors_begin(unsigned int index, double cutoff = 1.0);
+  neighbor_iterator neighbors_begin(unsigned int index, double cutoff = 1.0) const;
 
   //! Get the past-the-end iterator for an atom
-  neighbor_iterator neighbors_end(unsigned int index, double cutoff = 1.0);
+  neighbor_iterator neighbors_end(unsigned int index, double cutoff = 1.0) const;
 
 
   protected:

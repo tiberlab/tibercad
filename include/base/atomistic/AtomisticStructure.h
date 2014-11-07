@@ -56,6 +56,9 @@ public:
   //! Get the structure options
   ModelOptions& get_options(void);
 
+  //! Get the structure options
+  const ModelOptions& get_options(void) const;
+
   //! Get the structure name
   const std::string& get_name(void) const;
 
@@ -112,7 +115,7 @@ public:
    * \param cutoff the cutoff radius in nm (default 0.5 nm)
    */
   void extract_statistics(std::map<Specie, std::vector<unsigned int>>& stats,
-      std::set<ID>& regions, double cutoff = 0.5);
+      std::set<ID>& regions, double cutoff = 0.5) const;
 
   // Get element->atoms map
   //std::map<const Elem*, std::vector<unsigned int> >& get_elem_to_atoms(void);
@@ -273,11 +276,15 @@ private:
 inline
 ModelOptions& AtomisticStructure::get_options(void)
 {
-    assert( !(_options.is_empty()) );
-
     return _options;
+}
 
- }
+
+inline
+const ModelOptions& AtomisticStructure::get_options(void) const
+{
+    return _options;
+}
 
 inline
 bool AtomisticStructure::is_random_alloy(void)

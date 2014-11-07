@@ -1298,6 +1298,26 @@ Device::reassign_alloy_regions(const string& source,
 
     m.info("Alloy composition provided by atomistic structure " + tokens[1]);
 
+    double cutoff = str->get_options().get_option("control_volume_radius", 1);
+
+    map<Specie, vector<unsigned int>> stats;
+    str->extract_statistics(stats, reg_ids, cutoff);
+
+    double scale = 1e-9 / this->get_mesh_units();
+    double control_vol = cutoff * scale;
+    switch (this->get_mesh().mesh_dimension())
+    {
+      case 3:
+        control_vol *= 4.0/3.0 * cutoff * scale;
+      case 2:
+        control_vol *= M_PI * cutoff * scale;
+        break;
+    }
+
+    // Idea: get the local concentration at the nodes for a given control volume,
+    //       then take the mean value for the element.This should work well on small
+    //       elements and worse on big elements.
+
     MeshBase::element_iterator el(get_mesh().local_elements_begin());
     MeshBase::element_iterator end(get_mesh().local_elements_end());
 
@@ -1308,14 +1328,160 @@ Device::reassign_alloy_regions(const string& source,
 
       if (reg_ids.count(id))
       {
-        const vector<unsigned int>& atoms = str->get_atoms_in_elem(elem);
         Material* mat = get_material(elem);
 
         if (mat->is_alloy())
         {
           const Alloy* alloy = static_cast<const Alloy*>(mat);
           const Material* matA = alloy->get_component_A();
+          const Material* matB = alloy->get_component_B();
 
+          // this is the local composition
+          double x = alloy->get_molar_fraction();
+
+          //
+          // if the element is small
+          if (elem->volume() < control_vol)
+          {
+            const vector<unsigned int>& atoms = str->get_atoms_in_elem(elem);
+            int atom = -1;
+
+            //
+            // it may not even contain atoms
+            if (!atoms.empty())
+            {
+              // ok, there is at least one atom inside
+              // atomic coordinates are in Angstrom
+              Point center = 10 * elem->centroid();
+              double min_dist = Point(center -
+                  str->get_structure_atom(atoms[0]).get_position()).size();
+              unsigned int nearest = 0;
+
+              // look for the atom nearest to the center
+              for (unsigned int i = 1; i < atoms.size(); ++i)
+              {
+                double dist = Point(center -
+                    str->get_structure_atom(atoms[i]).get_position()).size();
+                if (dist < min_dist)
+                {
+                  min_dist = dist;
+                  nearest = i;
+                }
+              }
+              atom = atoms[nearest];
+            }
+            else
+            {
+              cerr << "no atom inside\n";
+              // we try to find some nearby atom
+              set<const Elem*> processed_elems;
+              set<const Elem*> to_process;
+              to_process.insert(elem);
+
+              unsigned int nearest = 0;
+              double min_dist = 100 * 10 * cutoff * scale;
+
+              set<const Elem*>::iterator it(to_process.begin());
+              while (it != to_process.end())
+              {
+                const Elem* next_el = *it;
+
+
+                const vector<unsigned int>& atoms = str->get_atoms_in_elem(next_el);
+                if (!atoms.empty())
+                {
+                  // ok, there is at least one atom inside
+                  // atomic coordinates are in Angstrom
+                  Point center = 10 * next_el->centroid();
+                  double min_dist = Point(center -
+                      str->get_structure_atom(atoms[0]).get_position()).size();
+                  unsigned int nearest = 0;
+
+                  // look for the atom nearest to the center
+                  for (unsigned int i = 1; i < atoms.size(); ++i)
+                  {
+                    double dist = Point(center -
+                        str->get_structure_atom(atoms[i]).get_position()).size();
+                    if (dist < min_dist)
+                    {
+                      min_dist = dist;
+                      nearest = i;
+                    }
+                  }
+                  atom = atoms[nearest];
+                }
+
+                for (int s = 0; s < next_el->n_sides(); s++)
+                {
+
+                  const Elem* neigh = next_el->neighbor(s);
+
+                  if (Point(elem->centroid() - neigh->centroid()).size() <
+                      scale * 5 * cutoff)
+                  {
+                    to_process.insert(neigh);
+                  }
+                }
+
+                set<const Elem*>::iterator curr(it);
+                ++it;
+                to_process.erase(curr);
+
+                processed_elems.insert(next_el);
+              }
+            }
+
+            cerr << atom << " " << str->get_structure_atom(atom).get_specie() << " : ";
+
+            double sum = 0;
+            map<Specie, vector<unsigned int>>::iterator stat_it(stats.begin());
+            map<Specie, vector<unsigned int>>::iterator stat_end(stats.end());
+            for ( ; stat_it != stat_end; ++stat_it)
+            {
+              if (matA->has_specie(stat_it->first) && matA->is_cation(stat_it->first))
+              {
+                x = (stat_it->second)[atom];
+                sum += x;
+              }
+              else if (matB->has_specie(stat_it->first) && matB->is_cation(stat_it->first))
+                sum += (stat_it->second)[atom];
+            }
+            cerr << x << " " << sum << endl;
+            x /= sum;
+          }
+          else
+          {
+            // there must be at least an atom inside, otherwise there is something strange
+
+            const vector<unsigned int>& atoms = str->get_atoms_in_elem(elem);
+            int atom = -1;
+
+            if (!atoms.empty())
+            {
+              const vector<unsigned int>* catA;
+              const vector<unsigned int>* catB;
+              map<Specie, vector<unsigned int>>::iterator stat_it(stats.begin());
+              map<Specie, vector<unsigned int>>::iterator stat_end(stats.end());
+              for ( ; stat_it != stat_end; ++stat_it)
+              {
+                if (matA->has_specie(stat_it->first) && matA->is_cation(stat_it->first))
+                  catA = &(stat_it->second);
+                else if (matB->has_specie(stat_it->first) && matB->is_cation(stat_it->first))
+                  catB = &(stat_it->second);
+              }
+
+              x = 0;
+              for (unsigned int i = 0; i < atoms.size(); ++i)
+              {
+                x += (*catA)[atoms[i]] / ((*catA)[atoms[i]] + (*catB)[atoms[i]]);
+              }
+              x /= atoms.size();
+            }
+
+          }
+
+
+          /*
           double sites = 1e-6; // this eliminates the 0/0 case
           int ctr = 0;
           for (int i = 0; i < atoms.size(); ++i)
@@ -1331,6 +1497,7 @@ Device::reassign_alloy_regions(const string& source,
 
           // this is the local composition
           double x = ctr / sites;
+          */
 
           int i = 0;
           while ((i < (composition.size() - 1)) &&

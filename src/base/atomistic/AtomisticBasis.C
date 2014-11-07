@@ -370,13 +370,13 @@ AtomisticBasis::neighbor_iterator::operator++(void)
 }
 
 AtomisticBasis::neighbor_iterator
-AtomisticBasis::neighbors_begin(unsigned int index, double cutoff)
+AtomisticBasis::neighbors_begin(unsigned int index, double cutoff) const
 {
   return neighbor_iterator(*this, index, 10 * cutoff);
 }
 
 AtomisticBasis::neighbor_iterator
-AtomisticBasis::neighbors_end(unsigned int index, double cutoff)
+AtomisticBasis::neighbors_end(unsigned int index, double cutoff) const
 {
   return neighbor_iterator(*this, index, 10 * cutoff, false);
 }
