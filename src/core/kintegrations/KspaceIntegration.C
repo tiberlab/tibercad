@@ -54,10 +54,20 @@ void KspaceIntegration::calculate_density()
   //const Mesh* kmesh =  _kspace->get_k_mesh();
 
 
+  // New approach to be implemented:
+  /*
+   * 1. loop over elements, get k-points and weights
+   * 2. loop over k-points and build weighted sums
+   */
+
+
+  map<Point, double> k_points;
+
+
   unsigned int k_dim = kmesh->mesh_dimension();
 
   real_space_density.clear();
-    
+
   double error_value;
 
   // if k space is 0-dim, calculate and return
@@ -66,6 +76,7 @@ void KspaceIntegration::calculate_density()
     calculate_for_k_point(Point(0), Point(0), real_space_density, error_value);
     return;
   }
+
   //-----------------------------------------------------------
 
   AutoPtr<FEBase> fe( FEBase::build(k_dim, FEType(fem_order) ));
@@ -83,10 +94,9 @@ void KspaceIntegration::calculate_density()
   const MeshBase::const_element_iterator it_k_end  = kmesh->active_elements_end();
 
 
-
   double factor = 1.0;
   for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
-    factor *= _kspace->get_degeneracy_factor() * opt.degeneracy;
+  factor *= _kspace->get_degeneracy_factor() * opt.degeneracy;
 
 
   //std::vector<unsigned int> dof_indices;
@@ -94,6 +104,7 @@ void KspaceIntegration::calculate_density()
 
   dens_at_k_elem.clear();
   dens_at_k_point.clear();
+  real_space_density.clear();      
 
   for ( ; it_k_space != it_k_end ; ++it_k_space) //loop over k space elements
   {
@@ -112,69 +123,109 @@ void KspaceIntegration::calculate_density()
       fe->reinit(kelem);
 
       for (unsigned int qp=0; qp<q_point.size(); qp++)
-      {//qp
-
-	if (verbose > 2)
-	{
-          std::cout<<"(KIntegration) element "<< kelem->id()+1 <<"/" << kmesh->n_elem() <<
-                        " point "<< qp+1 <<"/"<<q_point.size() << std::endl;
-        }
-	if (verbose > 3) 
-          std::cout << "(KIntegration) k_point= ("<<q_point[qp](0)<<", "<<q_point[qp](1)
-                    << ", "<<q_point[qp](2)<<")" << std::endl;
-      
-        //dens_at_k_point.clear();
-
-	calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
-
-        // build the map between k-points and the integrated error quantity
-	error_estimator[kelem] += error_value * JxW[qp] * factor;
-
-        //std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
-  
-	// add quad point contrib for every real-space element-------------         
-        if (dens_at_k_elem.size() == 0)
-	{	
-            dens_at_k_elem.resize(dens_at_k_point.size());
-
-            for(unsigned int el=0; el < dens_at_k_point.size(); el++) 
-                 dens_at_k_elem[el] = dens_at_k_point[el] * JxW[qp] * factor;
-	}
-	else
-	{	
-	    for(unsigned int el=0; el < dens_at_k_point.size(); el++) 
-                 dens_at_k_elem[el] += dens_at_k_point[el] * JxW[qp] * factor;
-	}
-        //-------------------------------------------------------------------   
-      }  //qp sum (dens_at_k_elem is computed)
- 
-      if (verbose > 3)
-	  std::cout << "Contribution at k-element  "<<error_estimator[kelem]<<"\n";
-
-      // either register on a map (density_at_k) or update immediatly real_space_dens
-      if (opt.k_domain_refinement)
-	density_at_k.insert(pair<const KElem*, DofField >(kelem, dens_at_k_elem));
-      else
       {
-	if (real_space_density.size() == 0 )
-	{	
+
+	double w = k_points[q_point[qp]];
+	k_points[q_point[qp]] = w + JxW[qp] * factor;
+
+
+	if (this->quadrature_type == QGAUSS)
+	{
+	  if (verbose > 2)
+	  {
+	    std::cout<<"(KIntegration) element "<< kelem->id()+1 <<"/" << kmesh->n_elem() <<
+	        " point "<< qp+1 <<"/"<<q_point.size() << std::endl;
+	  }
+	  if (verbose > 3)
+	    std::cout << "(KIntegration) k_point= ("<<q_point[qp](0)<<", "<<q_point[qp](1)
+	    << ", "<<q_point[qp](2)<<")" << std::endl;
+
+	  double error_value;
+	  //dens_at_k_point.clear();
+
+	  calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
+
+	  // build the map between k-points and the integrated error quantity
+	  error_estimator[kelem] += error_value * JxW[qp] * factor;
+
+	  //std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
+
+	  // add quad point contrib for every real-space element-------------
+	  if (dens_at_k_elem.size() == 0)
+	  {
+	    dens_at_k_elem.resize(dens_at_k_point.size());
+
+	    for(unsigned int el=0; el < dens_at_k_point.size(); el++) 
+	      dens_at_k_elem[el] = dens_at_k_point[el] * JxW[qp] * factor;
+	  }
+	  else
+	  {
+	    for(unsigned int el=0; el < dens_at_k_point.size(); el++)
+	      dens_at_k_elem[el] += dens_at_k_point[el] * JxW[qp] * factor;
+	  }
+	}
+      }  //qp sum (dens_at_k_elem is computed)
+
+      if (this->quadrature_type == QGAUSS)
+      {
+
+        if (verbose > 3)
+          std::cout << "Contribution at k-element  "<<error_estimator[kelem]<<"\n";
+
+        // either register on a map (density_at_k) or update immediatly real_space_dens
+        if (opt.k_domain_refinement)
+          density_at_k.insert(pair<const KElem*, DofField >(kelem, dens_at_k_elem));
+        else
+        {
+          if (real_space_density.size() == 0 )
+          {
             real_space_density.reserve(dens_at_k_elem.size());
 
             for(unsigned int el=0; el <dens_at_k_elem.size(); el++) 
-                 real_space_density.push_back(dens_at_k_elem[el]);
-	}
-	else
-	{	
+              real_space_density.push_back(dens_at_k_elem[el]);
+          }
+          else
+          {
             for(unsigned int el=0; el <dens_at_k_elem.size(); el++) 
-      		 real_space_density[el] += dens_at_k_elem[el];
-  	}  
+              real_space_density[el] += dens_at_k_elem[el];
+          }
+        }
+        //std::cout<<"dens_at_k_elem: "<<dens_at_k_elem.size()<<std::endl;
+        dens_at_k_elem.clear();
       }
-      //std::cout<<"dens_at_k_elem: "<<dens_at_k_elem.size()<<std::endl;
-      dens_at_k_elem.clear();
-
     } // if new k_elem
-  
+
   } // end loop on active kelem
+
+
+
+  if (this->quadrature_type == QTRAP)
+  {
+
+    real_space_density.resize(0);
+
+    map<Point, double>::iterator kp_it(k_points.begin());
+    const map<Point, double>::iterator kp_end(k_points.end());
+
+    for ( ; kp_it != kp_end; ++kp_it)
+    {
+      double error_value;
+      const Point& kp = kp_it->first;
+
+      ostringstream os;
+      os << "k = (" << kp(0) << ", " << kp(1) << ", " << kp(2) <<
+          "), w = " << kp_it->second << endl;
+      Messages::info(os.str());
+      calculate_for_k_point(kp, kp, dens_at_k_point, error_value);
+
+      // resize if needed
+      real_space_density.resize(dens_at_k_point.size(), 0.0);
+
+      for(unsigned int i = 0; i < dens_at_k_point.size(); i++)
+        real_space_density[i] += kp_it->second * dens_at_k_point[i];
+
+    }
+  }
 
   //--------------------------------------------------------------------------//
   if (opt.k_domain_refinement)
@@ -320,6 +371,11 @@ void KspaceIntegration::parse_options( )
 
   opt.degeneracy                = mod_opt.get_option("degeneracy",1);
   opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
+  if ((quadrature_type == QTRAP) && opt.k_domain_refinement)
+  {
+    Messages::warning("k-mesh refinement is not supported for trapezoidal quadrature.");
+    opt.k_domain_refinement = false;
+  }
   opt.log_output                = mod_opt.get_option("log_output",  false);
 
   //additional_name_suffix  = mod_opt.get_option("suffix", "");
