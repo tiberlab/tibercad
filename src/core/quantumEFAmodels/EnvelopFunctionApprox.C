@@ -1343,9 +1343,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
         
         //set<unsigned int> constrained;
 
+
         dof_indices_tmp = dof_indices;
         dof_map.constrain_element_matrix(ham_real, dof_indices_tmp, false);
         new_dof_indices.resize(dof_indices_tmp.size());
+
+        dof_indices_tmp = dof_indices;
+        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
+
         for (unsigned int i=0; i< new_dof_indices.size(); i++)
         {
           if (my_dof_constraints.find(dof_indices_tmp[i]) != my_dof_constraints.end())
@@ -1358,14 +1363,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
             ham_real(i,i) += sign * penalty;
             for (int j = 0; j < ham_real.n(); j++)
               if (my_dof_constraints.find(dof_indices_tmp[i])->second.count(dof_indices_tmp[j]))
-                ham_real(i,j) -= sign * penalty;
+              {
+                ham_real(i,j) -= sign * penalty * real(phase);
+                ham_imag(i,j) -= sign * penalty * imag(phase);
+              }
           }
 
           new_dof_indices[i] = _perm[dof_indices_tmp[i]];
         }
-        
-        dof_indices_tmp = dof_indices;
-        dof_map.constrain_element_matrix(ham_imag, dof_indices_tmp, false);
         
         if (_haveS)
         {
