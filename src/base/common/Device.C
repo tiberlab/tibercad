@@ -1298,10 +1298,10 @@ Device::reassign_alloy_regions(const string& source,
 
     m.info("Alloy composition provided by atomistic structure " + tokens[1]);
 
-    double cutoff = str->get_options().get_option("control_volume_radius", 1);
+    double cutoff = str->get_options().get_option("control_volume_radius", 1.0);
 
-    map<Specie, vector<unsigned int>> stats;
-    str->extract_statistics(stats, reg_ids, cutoff);
+    //map<Specie, vector<unsigned int>> stats;
+    //str->extract_statistics(stats, reg_ids, cutoff);
 
     double scale = 1e-9 / this->get_mesh_units();
     double control_vol = cutoff * scale;
@@ -1372,7 +1372,6 @@ Device::reassign_alloy_regions(const string& source,
             }
             else
             {
-              cerr << "no atom inside\n";
               // we try to find some nearby atom
               set<const Elem*> processed_elems;
               set<const Elem*> to_process;
@@ -1381,11 +1380,10 @@ Device::reassign_alloy_regions(const string& source,
               unsigned int nearest = 0;
               double min_dist = 100 * 10 * cutoff * scale;
 
-              set<const Elem*>::iterator it(to_process.begin());
-              while (it != to_process.end())
+              while (!to_process.empty())
               {
+                set<const Elem*>::iterator it(to_process.begin());
                 const Elem* next_el = *it;
-
 
                 const vector<unsigned int>& atoms = str->get_atoms_in_elem(next_el);
                 if (!atoms.empty())
@@ -1416,37 +1414,41 @@ Device::reassign_alloy_regions(const string& source,
 
                   const Elem* neigh = next_el->neighbor(s);
 
-                  if (Point(elem->centroid() - neigh->centroid()).size() <
-                      scale * 5 * cutoff)
+                  if ((neigh != NULL) &&
+                      reg_ids.count(neigh->subdomain_id()) &&
+                      !processed_elems.count(neigh) &&
+                      (Point(elem->centroid() - neigh->centroid()).size() <
+                          scale * 3 * cutoff))
                   {
                     to_process.insert(neigh);
                   }
                 }
 
-                set<const Elem*>::iterator curr(it);
-                ++it;
-                to_process.erase(curr);
-
                 processed_elems.insert(next_el);
+                to_process.erase(it);
               }
             }
 
-            cerr << atom << " " << str->get_structure_atom(atom).get_specie() << " : ";
+            //cerr << atom << " " << str->get_structure_atom(atom).get_specie() << " : ";
+
+            map<Specie, unsigned int> counts;
+            str->extract_statistics(atom, counts, reg_ids, cutoff);
+
 
             double sum = 0;
-            map<Specie, vector<unsigned int>>::iterator stat_it(stats.begin());
-            map<Specie, vector<unsigned int>>::iterator stat_end(stats.end());
+            map<Specie, unsigned int>::iterator stat_it(counts.begin());
+            map<Specie, unsigned int>::iterator stat_end(counts.end());
             for ( ; stat_it != stat_end; ++stat_it)
             {
               if (matA->has_specie(stat_it->first) && matA->is_cation(stat_it->first))
               {
-                x = (stat_it->second)[atom];
+                x = stat_it->second;
                 sum += x;
               }
               else if (matB->has_specie(stat_it->first) && matB->is_cation(stat_it->first))
-                sum += (stat_it->second)[atom];
+                sum += stat_it->second;
             }
-            cerr << x << " " << sum << endl;
+            //cerr << x << " " << sum << endl;
             x /= sum;
           }
           else
@@ -1456,27 +1458,31 @@ Device::reassign_alloy_regions(const string& source,
             const vector<unsigned int>& atoms = str->get_atoms_in_elem(elem);
             int atom = -1;
 
-            if (!atoms.empty())
+
+            x = 0;
+            for (unsigned int i = 0; i < atoms.size(); ++i)
             {
-              const vector<unsigned int>* catA;
-              const vector<unsigned int>* catB;
-              map<Specie, vector<unsigned int>>::iterator stat_it(stats.begin());
-              map<Specie, vector<unsigned int>>::iterator stat_end(stats.end());
+              map<Specie, unsigned int> counts;
+              str->extract_statistics(atoms[i], counts, reg_ids, cutoff);
+
+              double conc = 0;
+              double sum = 0;
+              map<Specie, unsigned int>::iterator stat_it(counts.begin());
+              map<Specie, unsigned int>::iterator stat_end(counts.end());
               for ( ; stat_it != stat_end; ++stat_it)
               {
                 if (matA->has_specie(stat_it->first) && matA->is_cation(stat_it->first))
-                  catA = &(stat_it->second);
+                {
+                  conc = stat_it->second;
+                  sum += conc;
+                }
                 else if (matB->has_specie(stat_it->first) && matB->is_cation(stat_it->first))
-                  catB = &(stat_it->second);
+                  sum += stat_it->second;
               }
 
-              x = 0;
-              for (unsigned int i = 0; i < atoms.size(); ++i)
-              {
-                x += (*catA)[atoms[i]] / ((*catA)[atoms[i]] + (*catB)[atoms[i]]);
-              }
-              x /= atoms.size();
+              x += conc / sum;
             }
+            x /= atoms.size();
 
           }
 

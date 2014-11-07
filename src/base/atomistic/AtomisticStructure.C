@@ -1819,7 +1819,7 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
 
 void
 AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
-    set<ID>& regions, double cutoff) const
+    const set<ID>& regions, double cutoff) const
 {
 
   cutoff = _options.get_option("control_volume_radius", cutoff);
@@ -1892,3 +1892,23 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
   }
 }
 
+
+void
+AtomisticStructure::extract_statistics(unsigned int atom,
+    map<Specie, unsigned int>& counts, const set<ID>& regions, double cutoff) const
+{
+  const Atom& at = this->get_structure_atom(atom);
+  counts[at.get_specie()] += 1;
+
+  neighbor_iterator it(neighbors_begin(atom, cutoff));
+  neighbor_iterator end(neighbors_end(atom));
+  for ( ; it != end; ++it)
+  {
+    const Atom& neigh = *(*it);
+
+    if (!regions.count(neigh.get_region_ID()))
+      continue;
+
+    counts[neigh.get_specie()] += 1;
+  }
+}
