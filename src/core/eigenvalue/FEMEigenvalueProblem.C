@@ -844,7 +844,6 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 	    {
 	      const Node* node1 = vec[n];
 	      
-	    
 		 
 	      for (unsigned int var_index = 0 ; var_index  <  number_of_variables;  var_index ++)
 		{//let us find dof for it-----------------
@@ -864,7 +863,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 		      //let us make a  point that lies at the opposite side
 		      Point point2(*node1);
 		
-		      point2(i) = point2(i) + max_coord[i] - min_coord[i];
+		      point2(i) = point2(i) + max_coord[i] - min_coord[i] - 1e-12;
 		  
 		      
 		      //corresponding point is created
@@ -901,9 +900,10 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 		      
 		      //if (!found)  throw ModelErrorException("EnvelopFunctionApprox: Mesh periproblem");
 		      if (!found)
+		      {
 		        continue;
+		      }
 		  
-		      
 		      _constrained_dof_periodicity[n_dof](i) = min_coord[i] - max_coord[i];
 
 

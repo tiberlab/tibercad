@@ -434,11 +434,19 @@ SimulationEnvironment::calculate_bounding_box(void)
   MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
   const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
 
-  Point pmax(std::numeric_limits<double>::min(), std::numeric_limits<double>::min(), 0);
-  Point pmin(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0);
+  Point pmax(std::numeric_limits<double>::min(),
+             std::numeric_limits<double>::min(),
+             std::numeric_limits<double>::min());
+  Point pmin(std::numeric_limits<double>::max(),
+             std::numeric_limits<double>::max(),
+             std::numeric_limits<double>::max());
   for ( ; it != end; ++it)
   {
     const Elem* elem = *it;
+
+    if (!_region_numbers.count(elem->subdomain_id()))
+      continue;
+
     for (unsigned int i = 0; i < elem->n_nodes(); ++i)
     {
       const Point& p = elem->point(i);
@@ -451,6 +459,11 @@ SimulationEnvironment::calculate_bounding_box(void)
         pmin(1) = p(1);
       else if (p(1) > pmax(1))
         pmax(1) = p(1);
+
+      if (p(2) < pmin(2))
+        pmin(2) = p(2);
+      else if (p(2) > pmax(2))
+        pmax(2) = p(2);
 
     }
   }
