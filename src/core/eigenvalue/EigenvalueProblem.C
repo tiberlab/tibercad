@@ -726,6 +726,17 @@ void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
   const Point oldk(_k_vector[0], _k_vector[1], _k_vector[2]);
   set_k_point(kpoint);
   do_solve_for_kpoint(kpoint);
+  ostringstream os;
+  if (get_option("plot_at_every_k", false))
+  {
+    os << "(" << _k_vector[0] << "," <<  _k_vector[1] << "," <<
+        _k_vector[2] << ")";
+    TiberCad::prepend_to_filename_suffix(os.str());
+    this->plot_meshdata();
+    this->plot_globaldata();
+    this->plot_atomisticdata();
+    TiberCad::drop_first_filename_suffix();
+  }
   set_k_point(oldk);
   k_is_old();
 }
