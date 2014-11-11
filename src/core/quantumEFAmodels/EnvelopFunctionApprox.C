@@ -1353,7 +1353,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
         for (unsigned int i=0; i< new_dof_indices.size(); i++)
         {
-          if (my_dof_constraints.find(dof_indices_tmp[i]) != my_dof_constraints.end())
+          DofConstraints::iterator it = my_dof_constraints.find(dof_indices_tmp[i]);
+          if (it != my_dof_constraints.end())
           {
             double arg = get_k_point() * get_periodicity_vector(dof_indices_tmp[i]);
             Complex phase = exp(Complex(0.0, 1.0)*arg);
@@ -1362,11 +1363,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
             double sign = ham_real(i,i) / abs(ham_real(i,i));
             ham_real(i,i) += sign * penalty;
             for (int j = 0; j < ham_real.n(); j++)
-              if (my_dof_constraints.find(dof_indices_tmp[i])->second.count(dof_indices_tmp[j]))
+            {
+              DofConstraintRow::iterator constr = it->second.find(dof_indices_tmp[j]);
+              if (constr != it->second.end())
               {
-                ham_real(i,j) -= sign * penalty * real(phase);
-                ham_imag(i,j) -= sign * penalty * imag(phase);
+                ham_real(i,j) -= sign * penalty * real(phase) * constr->second;
+                ham_imag(i,j) -= sign * penalty * imag(phase) * constr->second;
               }
+            }
           }
 
           new_dof_indices[i] = _perm[dof_indices_tmp[i]];
