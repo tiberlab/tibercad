@@ -1609,7 +1609,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
         index++;
       }
 
-      if (index > 0)
+      if (index > opt.num_hl_states)
       {
         if ((index >= n_states) ||
             (ev[i].energy < (_solution[index - 1].eigen_energy - delta))) // go to the next state
