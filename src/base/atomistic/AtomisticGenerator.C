@@ -35,6 +35,7 @@ _conv_vect(0),
 _conv_prim(0),
 _local_origin(0),
 _period(0),
+_periodicity(3, false),
 _bulk(NULL)
 {
 
@@ -150,13 +151,13 @@ AtomisticGenerator::init_commons()
    _local_origin(3) += translation[2];
   }
 
+  _as->get_options().get_option("periodicity", _periodicity);
 }
 
 
 void
 AtomisticGenerator::do_init()
 {
-  std::ostringstream os;
 
   init_commons();
 
@@ -181,11 +182,12 @@ AtomisticGenerator::do_init()
   }
 
   //Build up supercell structure with proper options
+  std::ostringstream os;
   Messages::debug("(AG) Build supercell");
   build();
   
-  //os<<"Initial structure with "<<_super_basis.size()<<" atoms"<<std::endl;
-  //Messages::info(os.str());
+  os<<"Initial structure with "<<_super_basis.size()<<" atoms"<<std::endl;
+  Messages::info(os.str());
 
   std::string preserve;
   preserve = _as->get_options().get_option("preserve", "none");
@@ -199,15 +201,35 @@ AtomisticGenerator::do_init()
   // iterates on _super_basis and assign species
   assign_species();
 
+  // eliminate unbonded atoms
+  // does not make much sense
+  /*
+  _period *= 5;
+  bond_map_gen(_super_basis);
+  _bondmap->print(_super_basis);
+  _period /= 5;
+
+  _structure_basis.clear();
+  _structure_basis.reserve(_super_basis.size());
+
+  for (unsigned int i = 0; i < _super_basis.size(); i++)
+  {
+    if (!(*_bondmap)[i].empty())
+      _structure_basis.push_back(_super_basis[i]);
+  }
+  _super_basis = _structure_basis;
+  */
+
   //eventually enlarge along dummy supercell directions
   check_periodic();
+  delete _bondmap; _bondmap = NULL;
+  bond_map_gen(_super_basis);
 
   if (_as->get_options().get_option("passivation", false))
     passivate();
 
   // remove unflagged atoms
   remove_atoms();
-
   // delete generator bondmap
   delete _bondmap;
   _bondmap = NULL;
@@ -224,6 +246,7 @@ AtomisticGenerator::do_init()
 void
 AtomisticGenerator::remove_atoms(void)
 {
+  _structure_basis.clear();
   _structure_basis.reserve(_super_basis.size());
 
   for (unsigned int i = 0; i < _super_basis.size(); i++)
@@ -278,7 +301,7 @@ AtomisticGenerator::assign_elements(const std::set<ID>& reg_ids)
       MeshUtils::GridMapper::get_mapper(_as->get_device()->get_mesh(), reg_ids);
 
 
-  Utils::Progress prog("Assign elements",_super_basis.size());
+  Utils::Progress prog("Assign elements", _super_basis.size());
   unsigned int progress = 0;
 
   std::vector<Atom>::iterator atom = _super_basis.begin();
@@ -773,13 +796,12 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   //Build a supercell, defined by the lenght of conventional growth cell vectors
   std::vector<Tensor1>::iterator conv_iterator;
   int i,j,l;
-  int n1,n2,n3,start_i,start_j,start_l;
+  int n1,n2,n3,start_i = 0, start_j = 0, start_l = 0;
   double conv_l1, conv_l2, conv_l3;
   Atom basis_atom;
   Tensor1 lattice_point;
   Tensor2Gen supercell_vect,inv_supercell_vect;
   Tensor1 tmp_check, tmp_conv;
-  std::ostringstream os;
 
   std::vector<Atom> basis = _bulk->get_rotated_basis();
   std::vector<Atom>::const_iterator basis_iterator = basis.begin();
@@ -800,20 +822,20 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
 
   n1 = int(floor(l1 / conv_l1)); n2 = int(floor(l2 / conv_l2)); n3 = int(floor(l3 / conv_l3));
 
-  _conv_cells_supercell_lenght[0] = n1 + 1;
-  _conv_cells_supercell_lenght[1] = n2 + 1;
-  _conv_cells_supercell_lenght[2] = n3 + 1;
+  std::ostringstream os;
+  os << "Conventional cells along x, y, z: " << n1 << " " << n2  << " " << n3;
+  Messages::info(os.str());
 
-  l1 = (n1 + 1) * conv_l1;
-  l2 = (n2 + 1) * conv_l2;
-  l3 = (n3 + 1) * conv_l3;
+  _conv_cells_supercell_lenght[0] = n1;
+  _conv_cells_supercell_lenght[1] = n2;
+  _conv_cells_supercell_lenght[2] = n3;
 
   //Set supercell periodical vectors
   Tensor2Gen lmat(0);
 
-  lmat(1,1) = (n1 + 1);
-  lmat(2,2) = (n2 + 1);
-  lmat(3,3) = (n3 + 1);
+  lmat(1,1) = (n1);
+  lmat(2,2) = (n2);
+  lmat(3,3) = (n3);
 
   _period = _conv_vect * lmat;
 
@@ -825,6 +847,11 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   //----------------------------------------------------
 
   //Define vectors with same direction of conventional cell vectors, but with size specifed by l1,l2,l3
+  /*
+  l1 = (n1 + 1) * conv_l1;
+  l2 = (n2 + 1) * conv_l2;
+  l3 = (n3 + 1) * conv_l3;
+
   supercell_vect(1,1) = _conv_vect(1,1) * (l1 / conv_l1);
   supercell_vect(2,1) = _conv_vect(2,1) * (l1 / conv_l1);
   supercell_vect(3,1) = _conv_vect(3,1) * (l1 / conv_l1);
@@ -835,10 +862,27 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   supercell_vect(2,3) = _conv_vect(2,3) * (l3 / conv_l3);
   supercell_vect(3,3) = _conv_vect(3,3) * (l3 / conv_l3);
   inv_supercell_vect = inv(supercell_vect);
+  */
 
-  if (_dim == 1) {start_i = -2; start_j = 0; start_l = 0; n1 = n1 + 2;}
-  if (_dim == 2) {start_i = -2; start_j =-1; start_l = 0; n1 = n1 + 2; n2 = n2 + 2;}
-  if (_dim == 3) {start_i = -2; start_j =-2; start_l = -2; n1 = n1 + 2; n2 = n2 + 2; n3 = n3 + 2;}
+  //if (_dim == 1) {start_i = -2; start_j = 0; start_l = 0; n1 = n1 + 2;}
+  //if (_dim == 2) {start_i = -2; start_j =-2; start_l = 0; n1 = n1 + 2; n2 = n2 + 2;}
+  //if (_dim == 3) {start_i = -2; start_j = 0; start_l = 0; n1 = n1 + 2;}
+  //if (_dim == 3) {start_i = -2; start_j =-2; start_l = -2; n1 = n1 + 2; n2 = n2 + 2; n3 = n3 + 2;}
+  if (!_periodicity[0])
+  {
+    start_i = -2;
+    n1 = n1 + 2;
+  }
+  if (!_periodicity[1])
+  {
+    start_j = -2;
+    n2 = n2 + 2;
+  }
+  if (!_periodicity[2])
+  {
+    start_l = -2;
+    n3 = n3 + 2;
+  }
 
   //Definition of number of conventional cells, useful for reserving arrays
   unsigned int max_number_of_cells = n1 + n2 + n3 + 6;
@@ -848,9 +892,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
 
   //Need to construct a redundant supercell (for passivation purposes)
   //Note that it must be redundant only in non periodic directions
-  for (i = start_i; i <= n1; i++){
-    for (j = start_j; j <= n2; j++){
-      for (l = start_l; l <= n3; l++){
+  for (i = start_i; i < n1; i++){
+    for (j = start_j; j < n2; j++){
+      for (l = start_l; l < n3; l++){
 
         conv_iterator = _conv_lattice_basis.begin();
 
@@ -902,11 +946,11 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
         }
         while(conv_iterator != _conv_lattice_basis.end());
         
-      };
-    };
-  };
+      }
+    }
+  }
 
-};
+}
 
 
 
@@ -1008,7 +1052,103 @@ void AtomisticGenerator::make_conv_basis()
 // Increase periodicity in non-periodic directions 'periodic' flag
 void AtomisticGenerator::check_periodic(void)
 {
+  Messages msg;
+  msg.info("Check periodicity ... ");
+  msg.indent();
 
+  Tensor2Gen periods(0);
+  periods(1,1) = 1;
+  periods(2,2) = 1;
+  periods(3,3) = 1;
+
+  switch (_dim)
+  {
+    case 3:
+      if (!_periodicity[2])
+        periods(3,3) *= 2;
+
+    case 2:
+      if (!_periodicity[1])
+        periods(2,2) *= 2;
+
+    case 1:
+      if (!_periodicity[0])
+        periods(1,1) *= 2;
+
+    default:
+      break;
+  }
+
+  _period = _period * periods;
+  _as->set_ttype_lattice_vectors(_period);
+  if (_bondmap == NULL) bond_map_gen(_super_basis);
+
+  BondMap& bond_map = *_bondmap;
+
+  // maybe need map pair<i,j>
+  std::vector<std::set<unsigned int>> added(3);
+
+  //Warning: cycle end must be defined before as size will change dynamically during cycle
+  //and we need acting only on already defined structure
+  unsigned int size_before_passivating = _super_basis.size();
+
+  for (unsigned int i = 0; i < size_before_passivating; i++)
+  {
+    if (_super_basis[i].belong_to_structure)
+    {
+
+      for (unsigned int j = 0; j < bond_map[i].size(); j++)
+      {
+
+        Atom* bonded_atom = &(_super_basis[bond_map[i][j]]);
+        if (((*bonded_atom).belong_to_structure))
+        {
+          // is it a periodic one?
+          Tensor1 shift(_bondmap->get_translation()[i][j]);
+          double norm = shift(1)*shift(1) + shift(2)*shift(2) + shift(3)*shift(3);
+          if (norm > 1e-9)
+          {
+            // check periodicity
+            for (int d = 0; d < 3; ++d)
+            {
+              if (!_periodicity[d])
+              {
+                if ((fabs(_period(d+1) * shift) > 1e-6) && !added[d].count(bond_map[i][j]))
+                {
+                  Atom tmp(*bonded_atom);
+                  tmp.belong_to_structure = false;
+
+                  //Tensor1 bonded_rel_position = bonded_atom->get_ttype_position() +
+                  //    _bondmap->get_translation()[i][j] - _super_basis[i].get_ttype_position();
+
+                  Tensor1 position(bonded_atom->get_ttype_position() + shift);
+                  tmp.set_position(position);
+                  //std::cerr << "adding atom at " << position << "\n";
+                  _super_basis.push_back(tmp);
+                  added[d].insert(bond_map[i][j]);
+
+                }
+
+                // adjust bond map
+              }
+            }
+          }
+        }
+      }
+    }
+
+  }
+
+
+
+  msg.unindent();
+  Messages::info("done");
+
+
+
+
+
+  /*
   Tensor2Gen periods(0);
 
   periods(1,1) = 1;
@@ -1037,7 +1177,7 @@ void AtomisticGenerator::check_periodic(void)
   }
 
   _period = _period * periods;
-
+*/
 }
 
 //Bond map generation (cluster)
@@ -1060,9 +1200,12 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   //os.str(std::string());
   //---------------------------------------------------------------------------
 
-  Messages::info("Building Bond Map...");
+  Messages msg;
+  msg.info("Building Bond Map...");
+  msg.indent();
   _bondmap->do_solve(basis, _period);
-  Messages::info("Bond Map completed");
+  msg.unindent();
+  msg.info("Bond Map completed");
 
 };
 
@@ -1078,6 +1221,7 @@ void AtomisticGenerator::passivate()
   if (_bondmap == NULL) bond_map_gen(_super_basis);
 
   const BondMap& bond_map = *_bondmap;
+  //_bondmap->print(_super_basis);
 
 
   //Warning: cycle end must be defined before as size will change dynamically during cycle
@@ -1103,6 +1247,7 @@ void AtomisticGenerator::passivate()
           Atom tmp(*bonded_atom);
           tmp.set_specie("H");
           tmp.set_label((*bonded_atom).get_label());
+          tmp.set_elem(_super_basis[i].get_elem());
           tmp.belong_to_structure = true;
           Tensor1 bonded_rel_position = bonded_atom->get_ttype_position() +
               _bondmap->get_translation()[i][j] - _super_basis[i].get_ttype_position();

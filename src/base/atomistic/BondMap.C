@@ -104,7 +104,7 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
   GridCells cells(basis, period, 6.0);
 
   // Loop on all cells
-  Utils::Progress prog("BondMap",cells.size());
+  Utils::Progress prog("BondMap", cells.size());
 
   for (unsigned int c1=0; c1 < cells.size(); c1++)
   {
@@ -135,8 +135,6 @@ BondMap::do_solve(const std::vector<Atom>& basis, const Tensor2Gen& period)
       
     }
   }
-  std::cout << std::endl;
-  
 }
 
 

@@ -9,6 +9,7 @@
 #include "boost/filesystem/convenience.hpp"
 
 #include "Utils.h"
+#include "Messages.h"
 #include "RuntimeException.h"
 
 #include <vector_value.h>
@@ -73,22 +74,30 @@ Utils::Progress::Progress(const string message, const unsigned int max_size)
 {  
   _message = message;
   _progress_size = max_size;
-  _progress_step = (max_size > 100) ? max_size*2 : 100;
+  _progress_step = max_size;
+  //_progress_step = (max_size > 100) ? max_size*2 : 100;
  
-  cout << _message << " progress   0% ..." << flush;
+  ostringstream os;
+  os << _message << " progress ";
+  Messages::info(os.str(), false);
+  cout << "  0% ..." << flush;
 }
 
 Utils::Progress::~Progress(void)
 {
-  cout << "\n";
+  Messages::info(" done.");
 }
 
 void
 Utils::Progress::progress_message(unsigned int progress_counter)
 {
-  if ( progress_counter*100 % _progress_step == 0 )
+  if ( (progress_counter * 100) % _progress_step == 0 )
   {
-    cout << "\b\b\b\b\b\b\b\b" << setw(3) << 
+    //ostringstream os;
+    //os << "\b\b\b\b\b\b\b\b" << setw(3) <<
+    //    static_cast<int>(100 * progress_counter / _progress_size) << "% ...";
+    //Messages::info(os.str(), false);
+    cout << "\b\b\b\b\b\b\b\b" << setw(3) <<
       static_cast<int>(100 * progress_counter / _progress_size) << "% ..." << flush;
   }
 }

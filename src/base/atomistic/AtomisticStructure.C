@@ -191,30 +191,35 @@ AtomisticStructure::init(const std::string& name,
 
       if (_options.get_option("extract_alloy_statistics", false))
       {
+        vector<string> reg_names(1, "all");
+        _options.get_option("regions", reg_names);
 
-        IDSet::iterator id_it(_IDset.begin());
-        const IDSet::iterator id_end(_IDset.end());
-        for ( ; id_it != id_end; ++id_it)
+        for (unsigned int i = 0; i < reg_names.size(); ++i)
         {
-          const Material* mat = _device->get_material(*id_it);
 
-          // we extract statistics only for alloys
-          if (!mat->is_alloy())
+          IDSet reg_ids;
+          _device->extract_physical_regions(reg_names[i], reg_ids);
+          IDSet::iterator id_it(reg_ids.begin());
+          while (id_it != reg_ids.end())
+          {
+            const Material* mat = _device->get_material(*id_it);
+
+            // we extract statistics only for alloys
+            IDSet::iterator to_be_deleted(id_it);
+            ++id_it;
+
+            if (!mat->is_alloy())
+              reg_ids.erase(to_be_deleted);
+          }
+
+          // if there are no ids, we have no alloy
+          if (reg_ids.empty())
             continue;
 
-          string reg_name = _device->get_region_name(*id_it);
-          if (reg_name.empty())
-          {
-            ostringstream os;
-            os << *id_it;
-            reg_name = os.str();
-          }
+          string reg_name = reg_names[i];
 
           ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
               "_" + reg_name + "_statistics_R" + cutoff_str + ".dat");
-
-          IDSet reg_ids;
-          reg_ids.insert(*id_it);
 
           map<Specie, vector<unsigned int>> stats;
           extract_statistics(stats, reg_ids, cutoff);
@@ -281,6 +286,7 @@ AtomisticStructure::init(const std::string& name,
         writer->set_mesh(*mesh);
         writer->set_output_directory(TiberCad::get_output_dir());
         writer->set_filename(get_name() + "_alloycomposition_R" + cutoff_str);
+        //writer->write(1);
 
         map<ID, map<SolutionDescriptor, vector<double>>> solmap;
         map<Specie, SolutionDescriptor> species_to_descr;
@@ -295,6 +301,7 @@ AtomisticStructure::init(const std::string& name,
           {
             SolutionDescriptor desc(atom_types[i], ctr,
               SolutionDescriptor::REAL, SolutionDescriptor::NODES);
+            cerr << "Atom : " << atom_types[i] << endl;
 
             species_to_descr[sp] = desc;
             ++ctr;
@@ -364,9 +371,13 @@ AtomisticStructure::init(const std::string& name,
                   const map<Specie, vector<unsigned int>>::iterator end(stats.end());
                   for ( ; it != end; ++it)
                   {
-                    SolutionDescriptor& desc = species_to_descr[it->first];
-                    // +1 because the first values are the totals !
-                    solmap[domain][desc].push_back((it->second)[elem->node(n) + 1]);
+                    auto desc(species_to_descr.find(it->first));
+                    if (desc != species_to_descr.end())
+                    {
+                      SolutionDescriptor& descr = species_to_descr[it->first];
+                      // +1 because the first values are the totals !
+                      solmap[domain][descr].push_back((it->second)[elem->node(n) + 1]);
+                    }
                   }
                 }
               }
@@ -406,7 +417,7 @@ AtomisticStructure::init(const std::string& name,
   if (is_periodic())
   {
     m.info("Supercell structure");
-    m.info("Lattice vectors (nm):");
+    m.info("Lattice vectors (A):");
     m.indent();
 
     RealVectorValue a, b, c;
@@ -509,6 +520,26 @@ AtomisticStructure::init_mesh_structure()
   Messages::debug(os.str());
   os.str(std::string());
   //--------------------------------------------------------------
+
+
+  // set a default for the periodicity
+  if (!this->get_options().find_option("periodicity"))
+  {
+    switch (this->get_device()->get_mesh().mesh_dimension())
+    {
+      case 1:
+        this->get_options().set_option("periodicity", "(0, 1, 1)");
+        break;
+
+      case 2:
+        this->get_options().set_option("periodicity", "(0, 0, 1)");
+        break;
+
+      default:
+        break;
+    }
+  }
+
 
   parse_regions();
 
@@ -1241,20 +1272,19 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
 
       file.open(path.c_str());
 
-      //I must build a materials map
-      std::map<const Material*, unsigned int> material_map;
+      //I must build a materials map with new enumeration
+      std::map<const Material*, ID> material_map;
 
-      std::set<ID>::iterator ID_it;
+      //std::set<ID>::iterator ID_it;
 
-      unsigned int id = 1;
       const Material* mat = NULL;
 
-      for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ID_it ++)
-        {
-          mat = _device->get_material(*ID_it);
-          material_map.insert(std::pair<const Material*, unsigned int>(mat, id));
-          id++;
-        }
+      //for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ID_it ++)
+      //  {
+      //    mat = _device->get_material(*ID_it);
+      //    material_map.insert(std::pair<const Material*, unsigned int>(mat, id));
+      //    id++;
+      //  }
 
       //Standard gen section (modified with material index)
       file << _atoms.size();
@@ -1267,6 +1297,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           file << std::setw(6) << _atom_types[i];
         }
       file << std::endl;
+      
+      // we need to know which regions have been used actually, otherwise
+      // we will write too many materials at the end.
+      unsigned int id = 1;
 
       for (unsigned int i = 0; i < _atoms.size(); i++)
         {
@@ -1276,14 +1310,24 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
               if (_atom_types[n_specie] == _atoms[i].get_specie() ) break;
             }
           file << std::setw(10);
-          if (_atoms[i].get_specie() ==  Specie::H)
-            {
-              file << material_map[_device->get_material(_atoms[get_bond_map()[i][0]].get_region_ID()) ];
-            }
-          else
-            {
-              file << material_map[ (_device->get_material(_atoms[i].get_region_ID())) ];
-            }
+
+          // add to the map if not present
+          if (!material_map.count(_device->get_material(_atoms[i].get_region_ID())))
+          {
+            material_map.insert(std::make_pair(_device->get_material(_atoms[i].get_region_ID()), id));
+            ++id;
+          }
+
+          ID reg_id = material_map[(_device->get_material(_atoms[i].get_region_ID()))];
+          file << reg_id;
+          //if (_atoms[i].get_specie() ==  Specie::H)
+          //  {
+          //    file << material_map[_device->get_material(_atoms[get_bond_map()[i][0]].get_region_ID()) ];
+          //  }
+          //else
+          //  {
+          //    file << material_map[ (_device->get_material(_atoms[i].get_region_ID())) ];
+          //  }
 
           file << std::setw(5) << n_specie + 1
               << std::setw(20) << std::setprecision(10)
@@ -1348,6 +1392,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
           //  {
           //    if ((*mat_it).second == i) break;
           //  }
+
           const Material* mat = (*mat_it).first;
           Database db = mat->get_database();
           db.set_section("atomistic_structure");

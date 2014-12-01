@@ -156,6 +156,9 @@ protected:
   //!Supercell periodicity vectors
   Tensor2Gen _period;
 
+  //! Periodicity for each direction
+  std::vector<bool> _periodicity;
+
   //Map for cutoff parameters
   std::map<std::string, double> _cutoff;
 
