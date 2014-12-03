@@ -144,6 +144,7 @@ Elasticity::do_setup_solution_variables(void)
   declare_solution(StrainSource, TENSOR, NODES, "");
   declare_solution(StressSource, TENSOR, NODES, "GPa");
   declare_solution(ForceSource, TENSOR, NODES, "N/m3 ");
+  declare_solution(HydrostaticStrain, REAL, NODES, "");
   declare_solution(EnergyDensity, REAL, NODES, "J/m^3");
 
 }
@@ -412,6 +413,12 @@ Elasticity::get_solution_secure(const Elem* elem,
        values[Strain][6*n+5] = total_strain(2,0);
      }
      
+     if (values.count(HydrostaticStrain))
+     {
+       values[HydrostaticStrain][n] = total_strain(0,0) +
+           total_strain(1,1) + total_strain(2,2);
+     }
+
      //Internal Strain
      if (values.count(RelativeStrain))
      {

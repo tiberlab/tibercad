@@ -178,6 +178,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
       ForceSource,      /*!< force source */
       StrainSource,     /*!< strain source */
       StressSource,     /*!< stress source */
+      HydrostaticStrain, /*!< the hydrostatic strain */
       EnergyDensity,    /*!< elastic energy density */
       Energy             /*!< Force */
     };
