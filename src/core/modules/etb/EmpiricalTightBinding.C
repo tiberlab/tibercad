@@ -1,5 +1,7 @@
 // $Id$
 
+#include <boost/filesystem/operations.hpp>
+
 #include "EmpiricalTightBinding.h"
 #include "PhysicalModel.h"
 #include "AtomisticStructure.h"
@@ -436,8 +438,26 @@ void ETB::do_solve(void){
 
     inst->set_num_states(_upt_solver_options.n_vb, _upt_solver_options.n_cb);
 
-    int n_vb, n_cb;
-    inst->read_old_states(_upt_options.load_path, n_vb, n_cb);
+    int n_vb = 0, n_cb = 0;
+
+    // the following is stupid, but needed for the way the path is stored
+    string tmpstr;
+    for (int i = 0; i < UPT_LC; ++i)
+    {
+      if (_upt_options.load_path[i] != UPT_PADCHAR)
+        tmpstr.append(1, _upt_options.load_path[i]);
+      else
+        break;
+    }
+
+    boost::filesystem::path loadfile(tmpstr);
+    if (!boost::filesystem::exists(loadfile))
+    {
+      Messages::warning("File " + loadfile.string() +
+          " does not exist: skipping file reading.");
+    }
+    else
+      inst->read_old_states(_upt_options.load_path, n_vb, n_cb);
 
     Messages::info("...done\n");
     
