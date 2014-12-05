@@ -199,8 +199,14 @@ void UptWrapper::get_H_row(int row, int* colind, Complex* vals) {
    f77_upt_get_hamil_row(_handler,row,colind,vals);
 }
 
+//! set the file to write states to
+void UptWrapper::set_statefile(const char* filename)
+{
+  f77_upt_setstatefile(_handler, filename);
+}
+
 //! write eigenstates on file
-void UptWrapper::write_states() {	
+void UptWrapper::write_states() {
   f77_upt_write_states(_handler);
 }
 
@@ -216,8 +222,8 @@ void UptWrapper::set_workpath(const char* workpath) {
 
 //! read eigenstates from file
 void UptWrapper::read_old_states(char* load_path, int& nev, int& nec) {	
-  f77_upt_setloadpath(_handler, load_path); 
-  f77_upt_read_states(_handler, nev, nec);
+  //f77_upt_setloadpath(_handler, load_path);
+  f77_upt_read_states(_handler, load_path, nev, nec);
 }
 
 

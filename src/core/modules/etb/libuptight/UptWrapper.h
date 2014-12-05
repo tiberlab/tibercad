@@ -71,6 +71,8 @@ public:
   
   void set_outpath(const char* outPath);
 
+  void set_statefile(const char* filename);
+
   //! Set verbosity level for the library screen output
   void set_verbose(int verbose_lev);
 

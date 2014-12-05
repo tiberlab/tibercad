@@ -83,6 +83,7 @@ ETB::UptOptions::UptOptions(void)
   database_path = new char[UPT_LC]; memset(database_path, UPT_PADCHAR, UPT_LC);
   work_path = new char[UPT_LC];     memset(work_path, UPT_PADCHAR, UPT_LC);
   load_path = new char[UPT_LC];     memset(load_path, UPT_PADCHAR, UPT_LC);
+  write_state = new char[UPT_LC];   memset(write_state, UPT_PADCHAR, UPT_LC);
   out_path = new char[UPT_LC];      memset(out_path, UPT_PADCHAR, UPT_LC);
   upt_filename = new char[UPT_MC];  memset(upt_filename, UPT_PADCHAR, UPT_MC);
   gen_outfile = new char[UPT_MC];   memset(gen_outfile, UPT_PADCHAR, UPT_MC);
@@ -94,6 +95,7 @@ ETB::UptOptions::~UptOptions(void)
 {
   delete[] work_path;
   delete[] load_path;
+  delete[] write_state;
   delete[] out_path;
   delete[] upt_filename;
   delete[] gen_outfile;
@@ -234,6 +236,29 @@ void ETB::do_reinit(void)
       throw InitFailedException(_upt_options.potential_sim+" model has not been solved");
   }
 
+  Point kp(get_k_point(true));
+  string load_path = get_option("load_path", get_output_directory());
+  string statefile("states.upt");
+  // create default name
+  if (kp.size() > 1e-6) // k = Gamma
+  {
+    ostringstream os;
+    os.precision(4);
+    os << "states_(" << fixed << kp(0) << "," << kp(1) << "," << kp(2) << ").upt";
+    statefile = os.str();
+  }
+
+  string load_file(load_path + "/" + statefile);
+  load_file = get_option("load_file", load_file);
+  memset(_upt_options.load_path, UPT_PADCHAR, UPT_LC);
+  load_file.copy(_upt_options.load_path, load_file.size());
+
+  string write_state = get_option("states_file", statefile);
+  if (write_state.at(0) != '/')
+    write_state =  get_output_directory() +  "/" + write_state;
+
+  memset(_upt_options.write_state, UPT_PADCHAR, UPT_LC);
+  write_state.copy(_upt_options.write_state, write_state.size());
 
   // Get the minimum CB and maximum VB edges
   ModelOptions solopts = get_solver_options();
@@ -396,6 +421,8 @@ void ETB::do_solve(void){
   sol_opt.check_unused(); 
   
   std::cout << "(ETB) Tight-Binding calculations" << std::endl;
+  
+  inst->set_statefile(_upt_options.write_state);
 
   ModelOptions options;
 
@@ -745,6 +772,24 @@ void ETB::parse_options(void)
   const ModelOptions& solopts = get_solver_options();
   
 
+  // get kpoint
+  RealVectorValue k_vec;
+  get_option("k_vector", k_vec);
+  set_k_point(k_vec);
+
+  // get kpoint as parameter
+  Point kp(get_k_point(true));
+  // the following seems problematic, since the upt k-point may become inconsistent with that
+  // in the base class?
+  //get_parameter("k_x", _upt_options.k_point[0], kp(0) );
+  //get_parameter("k_y", _upt_options.k_point[1], kp(1) );
+  //get_parameter("k_z", _upt_options.k_point[2], kp(2) );
+  _upt_options.k_point[0] = kp(0);
+  _upt_options.k_point[1] = kp(1);
+  _upt_options.k_point[2] = kp(2);
+
+
+
   _upg_filename = get_option("upg_filename", "none");
 
   _upt_options.verbose = get_option("verbose", SimulationOptions::verbose());
@@ -822,7 +867,7 @@ void ETB::parse_options(void)
 
   //---------------------------------------------------------------------------------------
   //Choose passivation model
-  std::string passivation_model = get_option("passivation_model","hybrid");
+  string passivation_model = get_option("passivation_model","hybrid");
   if ( passivation_model == "hybrid" )
       {_upt_options.hybrid_passivation = true;}
 
@@ -831,12 +876,13 @@ void ETB::parse_options(void)
   _upt_options.assemble_H = get_option("assemble_hamiltonian",true);
 
   _upt_solver_options.read_states = solopts.get_option("load_states", false);
-  std::string load_path = solopts.get_option("load_path", ".");
-  load_path.copy(_upt_options.load_path, load_path.size() );
+  _upt_solver_options.read_states = get_option("load_states", _upt_solver_options.read_states);
+
+
  
   // Solver options: "upt_lanczos"  
   _upt_solver_options.solver = solopts.get_option("solver", "upt_lanczos");
-  std::string solver_type = solopts.get_option("solver_type", "cpu");
+  string solver_type = solopts.get_option("solver_type", "cpu");
   if ( solver_type == "cpu") _upt_solver_options.solver_flag = 0;
   if ( solver_type == "gpu") _upt_solver_options.solver_flag = 1;
   if ( solver_type == "gpu-split") _upt_solver_options.solver_flag = 2;
@@ -904,17 +950,6 @@ void ETB::parse_options(void)
 
   //std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
   //std::cout << "done" << std::endl;
-
-  // get kpoint
-  RealVectorValue k_vec;
-  get_option("k_vector",k_vec);
-  set_k_point(k_vec);
-
-  // get kpoint as parameter
-  Point kp(get_k_point(true));
-  get_parameter("k_x", _upt_options.k_point[0], kp(0) );
-  get_parameter("k_y", _upt_options.k_point[1], kp(1) );
-  get_parameter("k_z", _upt_options.k_point[2], kp(2) );
 
 
 }

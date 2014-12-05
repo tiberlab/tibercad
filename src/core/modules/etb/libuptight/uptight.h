@@ -159,6 +159,18 @@ inline void f77_upt_setloadpath (f77_int const* handler, f77_char const*
 }
 
 
+extern "C" void upt_setstatefile_ (f77_int const*, f77_char const*);
+
+// Corresponding F77 arguments for f77_upt_setstatefile:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// character(LST), intent(in) :: filename(1)
+inline void f77_upt_setstatefile (f77_int const* handler, f77_char const* 
+    filename)
+{
+  upt_setstatefile_ (handler, filename);
+}
+
+
 extern "C" void upt_setoutput_ (f77_int const*, f77_int const&, f77_double 
     const&);
 
@@ -360,16 +372,18 @@ inline void f77_upt_set_num_states (f77_int const* handler, f77_int const&
 }
 
 
-extern "C" void upt_read_states_ (f77_int const*, f77_int&, f77_int&);
+extern "C" void upt_read_states_ (f77_int const*, f77_char const*, f77_int&, 
+    f77_int&);
 
 // Corresponding F77 arguments for f77_upt_read_states:
 // integer, intent(in) :: handler(DAC_handlerSize)
+// character(LST), intent(in) :: filename(1)
 // integer, intent(inout) :: nev
 // integer, intent(inout) :: nec
-inline void f77_upt_read_states (f77_int const* handler, f77_int& nev, f77_int& 
-    nec)
+inline void f77_upt_read_states (f77_int const* handler, f77_char const* 
+    filename, f77_int& nev, f77_int& nec)
 {
-  upt_read_states_ (handler, nev, nec);
+  upt_read_states_ (handler, filename, nev, nec);
 }
 
 

@@ -46,6 +46,7 @@ class ETB : public TightBinding
     char* work_path;
     char* out_path;
     char* load_path;
+    char* write_state;
     char* upt_filename;
     char* gen_outfile;
     char* sparse_fmt;
