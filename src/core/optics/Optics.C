@@ -478,9 +478,10 @@ void Optics::calculate_for_k_point(const Point& k_point,
     _initial_state_model->plot();
     if( _initial_state_model != _final_state_model)
       _final_state_model->plot();
-
-    plot_globaldata();
   }
+
+  if (plot_solution("matrix_elements"))
+    plot_globaldata();
 
   TiberCad::drop_first_filename_suffix();
 
