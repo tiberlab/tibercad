@@ -3,6 +3,7 @@
 #include "Optics.h"
 #include "EigenvalueProblem.h"
 #include "SimulationInterface.h"
+#include "SimulationEnvironment.h"
 #include "SimulationOptions.h"
 #include "AtomisticStructure.h"
 #include "Messages.h"
@@ -228,6 +229,9 @@ void Optics::init_k_space_integration(void)
 
   // maybe this stuff should be taken from the intial/final state models?
 
+  bool x_per = _initial_state_model->get_options().get_option("x-periodicity", false);
+  bool y_per = _initial_state_model->get_options().get_option("y-periodicity", false);
+  bool z_per = _initial_state_model->get_options().get_option("z-periodicity", false);
 
    ModelOptions kopts;
 
@@ -240,8 +244,23 @@ void Optics::init_k_space_integration(void)
      kopts.set_option("gamma_point_calculation", true);
    
    kopts.set_option("mesh_units", get_mesh_units());
-   int k_dim = 3 - get_mesh().mesh_dimension();
-   k_dim = kopts.get_option("k_space_dimension", k_dim);
+   unsigned int mesh_dim = get_mesh().mesh_dimension();
+   unsigned int k_dim = 3 - mesh_dim;
+   if (x_per)
+     k_dim++;
+   if (y_per)
+     k_dim++;
+   if (z_per)
+     k_dim++;
+
+   k_dim = min(k_dim, 3u);
+
+   if (kopts.find_option("k_space_dimension"))
+     k_dim = kopts.get_option("k_space_dimension", k_dim);
+
+   kopts.set_option("k_space_dimension", k_dim);
+
+
    if (job == BULKMATREL)
      k_dim = 3;
    kopts.set_option("k_space_dimension", k_dim);
@@ -252,6 +271,13 @@ void Optics::init_k_space_integration(void)
    // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
    // k_max can be interpreted in nm^-1
    RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+   auto bbox = _initial_state_model->get_environment().get_bounding_box();
+   if (x_per && (mesh_dim > 0))
+     a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
+   if (y_per && (mesh_dim > 1))
+     b(1) = (bbox.second(1) - bbox.first(1)) * get_mesh_units() * 1e9;
+   if (z_per && (mesh_dim > 2))
+     c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
 
    // if there is an atomistic structure, we can take the lattice vectors from it
    // (they come in Angstrom!)
@@ -514,6 +540,21 @@ void Optics::calculate_for_k_point(const Point& k_point,
   for (unsigned int k=0; k < _energy_mesh->n_nodes(); k++)
     integrated_quantity += abs(spectrum[k]);
 
+
+  if (plot_solution("matrix_elements"))
+  {
+    ostringstream os;
+    // create default name
+    if (k_point.size() > 1e-6) // k = Gamma
+    {
+      os.precision(4);
+      os << "(" << fixed << k_point(0) << "," << k_point(1) << "," << k_point(2) << ")";
+    }
+
+    TiberCad::append_to_filename_suffix(os.str());
+    plot_globaldata();
+    TiberCad::drop_last_filename_suffix();
+  }
 }
 
 //================================================================//
@@ -788,8 +829,6 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 //============================================================================
 void Optics::do_plot()
 {
-  // get  spectrum calculation  options from  opticsKP model  section
-  // for  calculation of  spectrum for a single k-point
 
   if (plot_solution("matrix_elements"))
   {
