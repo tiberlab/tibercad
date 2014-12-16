@@ -54,10 +54,15 @@ void KspaceIntegration::calculate_density()
   //const Mesh* kmesh =  _kspace->get_k_mesh();
 
 
-  // New approach to be implemented:
   /*
+   * New approach:
+   *
    * 1. loop over elements, get k-points and weights
    * 2. loop over k-points and build weighted sums
+   *
+   * Currently this does not allow refinement.
+   *
+   * Default is the old one, allowing for refinement.
    */
 
 
@@ -345,7 +350,8 @@ void KspaceIntegration::parse_options( )
 
   fem_order = FIRST;
 
-  string quad_type = mod_opt.get_option("quadrature_type","gaussian");
+  string quad_type = mod_opt.get_option("quadrature_rule", "gaussian");
+  quad_type = mod_opt.get_option("quadrature_type", quad_type);
 
   if(quad_type == "gaussian") quadrature_type = QGAUSS;
   else if(quad_type == "trapezoidal") quadrature_type = QTRAP;

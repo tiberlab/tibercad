@@ -6,6 +6,7 @@
 #include "Constants.h"
 #include "Messages.h"
 #include "DataOutput.h"
+#include "SimulationOptions.h"
 
 #include "elem.h"
 #include "quadrature_gauss.h"
@@ -720,6 +721,121 @@ void EigenvalueProblem::do_plot(void)
 
   calculate_dos();
 }
+
+
+
+
+
+
+void
+EigenvalueProblem::integrate_density(DofField& density)
+{
+  // maybe this stuff should be taken from the intial/final state models?
+
+  bool x_per = get_options().get_option("x-periodicity", false);
+  bool y_per = get_options().get_option("y-periodicity", false);
+  bool z_per = get_options().get_option("z-periodicity", false);
+
+  ModelOptions kopts;
+
+  if (get_options().has_submodel("k_integration"))
+  {
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration"));
+    kopts = it->second;
+  }
+  else
+    kopts.set_option("gamma_point_calculation", true);
+
+  kopts.set_option("mesh_units", get_mesh_units());
+  unsigned int mesh_dim = get_mesh().mesh_dimension();
+  unsigned int k_dim = 3 - mesh_dim;
+  if (x_per)
+    k_dim++;
+  if (y_per)
+    k_dim++;
+  if (z_per)
+    k_dim++;
+
+  k_dim = min(k_dim, 3u);
+
+  if (kopts.find_option("k_space_dimension"))
+    k_dim = kopts.get_option("k_space_dimension", k_dim);
+
+  kopts.set_option("k_space_dimension", k_dim);
+
+  kopts.set_option("verbose", SimulationOptions::verbose() );
+
+  // these are the real space lattice vectors, in nm
+  // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
+  // k_max can be interpreted in nm^-1
+  RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+  auto bbox = get_environment().get_bounding_box();
+  if (x_per && (mesh_dim > 0))
+    a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
+  if (y_per && (mesh_dim > 1))
+    b(1) = (bbox.second(1) - bbox.first(1)) * get_mesh_units() * 1e9;
+  if (z_per && (mesh_dim > 2))
+    c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
+
+  // if there is an atomistic structure, we can take the lattice vectors from it
+  // (they come in Angstrom!)
+  if (get_atomistic_structure() != NULL)
+  {
+    get_atomistic_structure()->get_lattice_vectors(a, b, c);
+    a *= 0.1;
+    b *= 0.1;
+    c *= 0.1;
+  }
+
+  switch (k_dim)
+  {
+    case 1:
+      kopts.set_option("r1", c);
+      break;
+
+    case 2:
+      kopts.set_option("r1", b);
+      kopts.set_option("r2", c);
+      break;
+
+    case 3:
+      kopts.set_option("r1", a);
+      kopts.set_option("r2", b);
+      kopts.set_option("r3", c);
+      break;
+
+    default:
+      break;
+  }
+
+
+  Messages m;
+  m.info("Setting up k-space integration");
+  m.indent();
+
+  KspaceIntegration* kint = KspaceIntegration::create(this,
+      &EigenvalueProblem::calculate_density_at_k, kopts);
+
+  if (kint == NULL)
+    throw InitFailedException("Could not create k-integration for density calculation");
+
+  kint->init();
+
+  kint->solve();
+
+  density = kint->get_solution();
+}
+
+
+void
+EigenvalueProblem::calculate_density_at_k(const Point& k_point,
+        DofField& density, double& error)
+{
+  solve_for_kpoint(k_point);
+  do_calculate_density_at_k(density);
+}
+
+
  
 void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
 {

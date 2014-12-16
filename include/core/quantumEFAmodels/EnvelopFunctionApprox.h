@@ -56,6 +56,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
     
     bool assume_paraboloid;
 
+    bool analytic_k_int; //!< do analytic k-integration, assuming parabolic DOS
+
 
   };
 
@@ -370,6 +372,8 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
   virtual void 	parse_options (void);
 
   //virtual void do_plot(void);
+
+  virtual void do_calculate_density_at_k(DofField& density);
 
 
   virtual void do_solve_for_kpoint(const Point& kpoint);

@@ -783,6 +783,11 @@ void EnvelopFunctionApprox::parse_options()
   opt.k_val = 0.188; //0.01;
   opt.assume_paraboloid = false;
 
+  if (get_options().has_submodel("k_integration"))
+    opt.analytic_k_int = false;
+
+  opt.analytic_k_int = get_option("analytic_k_integration", opt.analytic_k_int);
+
   if (get_options().has_submodel("QuantumDensity"))
   {
     ModelOptions::submodel_iterator it(get_options().submodels_begin("QuantumDensity"));
@@ -791,6 +796,7 @@ void EnvelopFunctionApprox::parse_options()
     opt.first_state = opts.get_option("first_state", opt.first_state);
     opt.k_val = opts.get_option("k_value", opt.k_val);
     opt.assume_paraboloid = opts.get_option("assume_diagonal_mass_matrix", opt.assume_paraboloid);
+    opt.analytic_k_int = opts.get_option("analytic_k_integration", opt.analytic_k_int);
   }
 
 
@@ -974,7 +980,23 @@ void EnvelopFunctionApprox::do_solve()
   {
     estimate_spectrum_shift();
     //apply_bc();
-    calculate_density_analytic();
+
+    if (opt.analytic_k_int)
+    {
+      calculate_density_analytic();
+    }
+    else
+    {
+      DofField dens;
+      integrate_density(dens);
+
+      TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>();
+      NumericVector<Number>& qdens = *qdens_sys.solution;
+      for (unsigned int i = 0; i < qdens.size(); ++i)
+        qdens.set(i, dens[i]);
+
+      qdens.close();
+    }
   }
   else
   {
@@ -2584,6 +2606,102 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   if (opt.num_el_states > 0) opt.num_el_states--;
   if (opt.num_hl_states > 0) opt.num_hl_states--;
 }
+
+
+
+
+void
+EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
+{
+  FEType fe_type = system->variable_type(0);
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+
+  DofMap& dof_map = system->get_dof_map();
+  std::vector<unsigned int> dof_indices;
+
+  // The qdens_sys system contains the nodal quantum density
+  TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>();
+  DofMap& dof_map_qdens = qdens_sys.get_dof_map();
+  std::vector<unsigned int> dof_indices_qdens;
+  //std::vector<unsigned int> dof_indices_qdens_p;
+  NumericVector<Number>& qdens = *qdens_sys.solution;
+  qdens.zero();
+
+  // we need the connectivity of the nodes to not double count
+  vector<int> connectivity(qdens.size(), 0.0);
+  {
+    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    for ( ; el != end_el; ++el)
+    {
+      const Elem* elem = *el;
+      dof_map_qdens.dof_indices(elem, dof_indices_qdens, 0);
+      //dof_map_qdens.dof_indices(elem, dof_indices_qdens_p, 1);
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        connectivity[dof_indices_qdens[n]]++;
+        //connectivity[dof_indices_qdens_p[n]]++;
+      }
+    }
+  }
+
+  density.clear();
+  density.resize(qdens.size(), 0.0);
+
+  // this is for the length scaling, EFA uses Bohr radii internally
+  double a_B =  Constants::bohr_radius;
+  double scaling =  1e18 * opt.degeneracy / 1e6;
+  switch (dim)
+  {
+    case 3:
+      scaling /= a_B;
+    case 2:
+      scaling /= a_B;
+    case 1:
+      scaling /= a_B;
+    default:
+      break;
+  }
+
+
+  for (unsigned int i = 0; i < _solution.size(); i++)
+  {
+    double fermi_energy = _solution[i].electro_chem_pot;
+    double kT = _solution[i].temperature * Constants::k_Boltzmann;
+
+    double energy = _solution[i].eigen_energy;
+
+    unsigned int particletype = 0;
+    if (_solution[i].particle == "hl")
+      particletype = 1;
+
+    double dos_factor = Fermi_statistics_probability(energy, fermi_energy,
+        _solution[i].temperature, _solution[i].particle);
+
+    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    for ( ; el != end_el; ++el)
+    {
+      const Elem* elem = *el;
+      dof_map_qdens.dof_indices(elem, dof_indices_qdens, particletype);
+
+      for (int psi_index = 0; psi_index < number_of_bands; psi_index++)
+      {
+        dof_map.dof_indices(elem, dof_indices, psi_index);
+
+        for (unsigned int n = 0; n < elem->n_nodes(); n++)
+        {
+          double psi = abs(_solution[i].eigen_vector[dof_indices[n]]);
+          double val = scaling * dos_factor * psi * psi / connectivity[dof_indices_qdens[n]];
+          density[dof_indices_qdens[n]] += val;
+        }
+      }
+    }
+  }
+}
+
+
+
 
 
 //==============================================================================//

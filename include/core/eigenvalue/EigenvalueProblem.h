@@ -220,6 +220,17 @@ class EigenvalueProblem : public SimulationInterface
     //! Calculate the DOS
     void calculate_dos(void);
 
+    //! Do k-integration of density
+    void integrate_density(DofField& density);
+
+    //! Calculate density
+    void calculate_density_at_k(const Point& k_point,
+        DofField& density, double& error);
+
+    //! Calculate density for the current solution
+    virtual void do_calculate_density_at_k(DofField& density) {};
+
+
     //! process an element and its neighbours
     void process_element(const Elem* elem, unsigned int entryside,
         std::vector<std::vector<eigen_problem_solution>>& ordered_solutions);

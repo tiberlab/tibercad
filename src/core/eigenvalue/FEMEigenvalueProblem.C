@@ -794,6 +794,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 
   unsigned int number_of_variables = dof_map.n_variables();
   
+  double tolerance = 1e-6;
  
   // The dimension that we are running
   //const unsigned int dim = mesh.mesh_dimension();
@@ -863,7 +864,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 		      //let us make a  point that lies at the opposite side
 		      Point point2(*node1);
 		
-		      point2(i) = point2(i) + max_coord[i] - min_coord[i] - 1e-12;
+		      point2(i) = point2(i) + max_coord[i] - min_coord[i] - tolerance;
 		  
 		      
 		      //corresponding point is created
