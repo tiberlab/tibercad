@@ -783,6 +783,7 @@ void EnvelopFunctionApprox::parse_options()
   opt.k_val = 0.188; //0.01;
   opt.assume_paraboloid = false;
 
+  opt.analytic_k_int = true;
   if (get_options().has_submodel("k_integration"))
     opt.analytic_k_int = false;
 
