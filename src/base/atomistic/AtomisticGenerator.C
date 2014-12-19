@@ -820,7 +820,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   conv_l3 = sqrt(_conv_vect(1,3) * _conv_vect(1,3) + _conv_vect(2,3) * _conv_vect(2,3) 
                                                    + _conv_vect(3,3) * _conv_vect(3,3));
 
-  n1 = int(floor(l1 / conv_l1)); n2 = int(floor(l2 / conv_l2)); n3 = int(floor(l3 / conv_l3));
+  n1 = std::max(1, static_cast<int>(floor(l1 / conv_l1)));
+  n2 = std::max(1, static_cast<int>(floor(l2 / conv_l2)));
+  n3 = std::max(1, static_cast<int>(floor(l3 / conv_l3)));
 
   std::ostringstream os;
   os << "Conventional cells along x, y, z: " << n1 << " " << n2  << " " << n3;
