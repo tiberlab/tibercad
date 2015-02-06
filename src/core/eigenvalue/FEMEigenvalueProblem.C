@@ -392,6 +392,8 @@ void FEMEigenvalueProblem::parse_options()
 
   // only Dirichlet BC works at the moment !
   solver_opt.Dirichlet_bc_everywhere = sol_opt.get_option("Dirichlet_bc_everywhere", true);
+  solver_opt.Dirichlet_bc_everywhere = get_option("Dirichlet_bc_everywhere",
+      solver_opt.Dirichlet_bc_everywhere);
   //solver_opt.Dirichlet_bc_everywhere = true;
 
   solver_opt.monitor = sol_opt.get_option("monitor", false);
