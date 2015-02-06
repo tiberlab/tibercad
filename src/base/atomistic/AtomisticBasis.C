@@ -22,7 +22,8 @@ AtomisticBasis::~AtomisticBasis(void)
 
 AtomisticBasis::AtomisticBasis(void)
 :_bondmap(NULL),
-_lattice_vectors(9,0.0)
+_lattice_vectors(9,0.0),
+_periodicity({0, 0, 0})
 {
 
 }
@@ -50,7 +51,6 @@ AtomisticBasis::set_ttype_lattice_vectors(const Tensor2Gen& T)
           count++;
         }
     }
-  _is_periodic = true;
 }
 
 Tensor2Gen 
@@ -235,7 +235,7 @@ AtomisticBasis::print_gen(const std::string& path) const
   file.open(file_name.c_str());
      file << _atoms.size();
 
-      if (_is_periodic) file << std::setw(10) << "S \n";
+      if (this->is_periodic()) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -288,22 +288,21 @@ AtomisticBasis::neighbor_iterator::neighbor_iterator(const AtomisticBasis& struc
 : _structure(structure),
   _start(start),
   _current(start),
-  _counter(0),
   _cutoff(cutoff)
 {
   if (begin)
   {
-    _visited.insert(_start);
+    _visited.insert(make_pair(_start, Point(0)));
     const std::vector<unsigned int>& curr = _structure.get_bond_map()[_current];
+    const BondMap::Translation& nt = _structure.get_neighbor_translation();
     for (unsigned int i = 0; i < curr.size(); i++)
-      _setA.insert(curr[i]);
+      _setA.insert(make_pair(curr[i], nt[_current][i]));
 
     _itA = _setA.begin();
   }
   else
   {
     _current = _structure.get_N_atoms();
-    _counter = _current;
   }
 }
 
@@ -312,7 +311,6 @@ AtomisticBasis::neighbor_iterator::neighbor_iterator(const neighbor_iterator& rh
 : _structure(rhs._structure),
   _start(rhs._start),
   _current(rhs._current),
-  _counter(rhs._counter),
   _cutoff(rhs._cutoff),
   _visited(rhs._visited),
   _setA(rhs._setA),
@@ -324,37 +322,52 @@ AtomisticBasis::neighbor_iterator::neighbor_iterator(const neighbor_iterator& rh
 AtomisticBasis::neighbor_iterator&
 AtomisticBasis::neighbor_iterator::operator++(void)
 {
-  if (_counter < _structure.get_N_atoms())
-  {
     if (_itA != _setA.end())
     {
-      _current = *_itA;
-      _visited.insert(_current);
+      _current = _itA->first;
+      Point shift(_itA->second);
+      _visited.insert(make_pair(_current, shift));
 
       const vector<unsigned int>& nn = _structure.get_bond_map()[_current];
       for (unsigned int i = 0; i < nn.size(); ++i)
       {
-        if (!_visited.count(nn[i]))
+        auto range(_visited.equal_range(nn[i]));
+
+        const BondMap::Translation& nt = _structure.get_neighbor_translation();
+
+        // this neighbour would be shifted by this amount, if periodic copy
+        Point new_shift(nt[_current][i] + shift);
+
+        // did we already use this (periodic) atom?
+        bool visited = false;
+        HMMap::iterator it(range.first);
+        for ( ; it != range.second; ++it)
+          if (it->second == new_shift)
+          {
+            visited = true;
+            break;
+          }
+
+        //if (!_visited.count(nn[i]))// ||
+            //(std::find(range.first, range.second, shift) != range.second))
+        if (!visited)
         {
-          const BondMap::Translation& nt = _structure.get_neighbor_translation();
-          double d = norm(_structure.get_structure_atom(_start).get_ttype_position()
-              - _structure.get_structure_atom(nn[i]).get_ttype_position());
-              //- nt[_current][nn[i]]);
+          double d = Point(_structure.get_structure_atom(_start).get_position()
+              - _structure.get_structure_atom(nn[i]).get_position()
+              + new_shift).size();
 
           if (d < _cutoff)
-            _setB.insert(nn[i]);
+            _setB.insert(make_pair(nn[i], new_shift));
         }
 
       }
       ++_itA;
-      ++_counter;
     }
     else
     {
       if (_setB.empty())
       {
         _current = _structure.get_N_atoms();
-        _counter = _current;
       }
       else
       {
@@ -365,20 +378,20 @@ AtomisticBasis::neighbor_iterator::operator++(void)
         ++(*this);
       }
     }
-  }
+
   return *this;
 }
 
 AtomisticBasis::neighbor_iterator
 AtomisticBasis::neighbors_begin(unsigned int index, double cutoff) const
 {
-  return neighbor_iterator(*this, index, 10 * cutoff);
+  return neighbor_iterator(*this, index, cutoff);
 }
 
 AtomisticBasis::neighbor_iterator
 AtomisticBasis::neighbors_end(unsigned int index, double cutoff) const
 {
-  return neighbor_iterator(*this, index, 10 * cutoff, false);
+  return neighbor_iterator(*this, index, cutoff, false);
 }
 
 

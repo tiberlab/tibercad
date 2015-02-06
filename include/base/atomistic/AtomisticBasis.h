@@ -11,6 +11,7 @@
 #include "BondMap.h"
 
 #include "HashSet.h"
+#include "HashMap.h"
 
 //STD library includes
 #include <set>
@@ -26,9 +27,11 @@ class AtomisticBasis
   public:
 
   //! An iterator to iterate over atoms in neighbor ordered way
+  /*!
+   * This iterator honours periodicity of the structure
+   */
   class neighbor_iterator;
 
-  //! An iterator to iterate over atoms in neighbor ordered way
   //class const_neighbor_iterator;
 
   //! Virtual destructor, in case of cast of derived class 
@@ -110,18 +113,34 @@ class AtomisticBasis
   void set_atom_types(const std::set<std::string>& types);
 
   //! Set periodicity information
-  void set_periodic(bool periodic);
+  void set_periodicity(std::vector<bool> periodicity);
 
-  //!Tells if the structure is periodical
-  bool is_periodic() const;
+  //! Ask for periodicity along coordinate axes
+  /*!
+   * 0 = x, 1 = y, 2 = z
+   */
+  bool is_periodic(unsigned int direction) const;
+
+  void set_periodic(bool periodic) {};
+
+  //! Tells if the structure is periodic in any direction
+  bool is_periodic(void) const;
 
   const Atom& operator[](unsigned int i) const;
 
 
   //! Get the neighbour iterator for an atom
+  /*!
+   * \param index index of the atom
+   * \param cutoff cutoff distance in A
+   */
   neighbor_iterator neighbors_begin(unsigned int index, double cutoff = 1.0) const;
 
   //! Get the past-the-end iterator for an atom
+  /*!
+   * \param index index of the atom
+   * \param cutoff cutoff distance in A
+   */
   neighbor_iterator neighbors_end(unsigned int index, double cutoff = 1.0) const;
 
 
@@ -144,9 +163,6 @@ class AtomisticBasis
   //! Bond Map object pointer
   BondMap* _bondmap;
 
-  //! Tells if the structure is periodical
-  bool _is_periodic; 
-
   //! Vector containing structure atoms 
   std::vector<Atom>  _atoms;
   
@@ -166,7 +182,11 @@ class AtomisticBasis
   //! Set of all atom types in structure
   std::vector<std::string> _atom_types;
   
+
   private:
+
+  //! Periodicity for each direction
+  std::vector<bool> _periodicity;
 
 
   public:
@@ -187,7 +207,6 @@ class AtomisticBasis
       bool equal = &_structure == &rhs._structure;
       equal &= _start == rhs._start;
       equal &= _current == rhs._current;
-      equal &= _counter == rhs._counter;
       return(equal);
     }
 
@@ -205,40 +224,67 @@ class AtomisticBasis
       return(at);
     }
 
+    unsigned int atom_index(void)
+    {
+      return _current;
+    }
+
 
     private:
+
+    typedef HashMultiMap<unsigned int, Point>::Type HMMap;
+    typedef HashMap<unsigned int, Point>::Type HMap;
 
     neighbor_iterator& operator=(const neighbor_iterator& rhs);
 
     const AtomisticBasis& _structure;
     unsigned int _start;
     unsigned int _current;
-    unsigned int _counter;
 
     double _cutoff;
 
-    HashSet<unsigned int>::Type _visited;
-    HashSet<unsigned int>::Type _setA;
-    HashSet<unsigned int>::Type _setB;
-    HashSet<unsigned int>::Type::iterator _itA;
+    HMMap _visited;
+    HMap _setA;
+    HMap _setB;
+    HMap::iterator _itA;
 
   };
 };
 
 
-inline
-bool
-AtomisticBasis::is_periodic() const 
-{
-  return _is_periodic;
-}
 
 inline
 void
-AtomisticBasis::set_periodic(bool periodic)
+AtomisticBasis::set_periodicity(std::vector<bool> periodicity)
 {
-  _is_periodic = periodic;
+  _periodicity = periodicity;
 }
+
+
+inline
+bool
+AtomisticBasis::is_periodic(unsigned int direction) const
+{
+  assert(direction < 3);
+  return(_periodicity[direction]);
+}
+
+
+
+
+inline
+bool
+AtomisticBasis::is_periodic(void) const
+{
+  return(is_periodic(0) || is_periodic(1) || is_periodic(2));
+}
+
+//inline
+//void
+//AtomisticBasis::set_periodic(bool periodic)
+//{
+//  _is_periodic = periodic;
+//}
 
 inline
 const BondMap&
