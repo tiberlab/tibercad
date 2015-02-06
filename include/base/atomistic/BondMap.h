@@ -7,7 +7,6 @@
 
 #include "BondMap.h"
 #include "Atom.h"
-#include "tensor.h"
 #include "Specie.h"
 #include "GridCells.h"
 #include "tiber_dll.h"
@@ -29,14 +28,12 @@
  * Bond Map are stored in a vector. Last elements of each
  * row is the number of neighbours.
  */
-
-
 class BondMap : public std::vector<std::vector<unsigned int>> 
 {
 
 public:
   
-  typedef std::vector<std::vector<Tensor1>> Translation;
+  typedef std::vector<std::vector<Point>> Translation;
 
 
   //!BondMap constructor with size as number of atoms
@@ -79,10 +76,12 @@ private:
   void clean() TBDLLOCAL;
 
 
-  //! Translation vector for periodic images (tells for each neighbour the translation
-  //! vector for which it's a neighbour)
+  //! Translation vector for periodic images
+  /*!
+   * tells for each neighbour the translation
+   * vector for which it's a neighbour
+   */
   Translation _translation;
-  //--------------------------------------------------------------------
 
   //! Structure periodicity
   Tensor2Gen _period;

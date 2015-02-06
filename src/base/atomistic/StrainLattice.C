@@ -230,7 +230,7 @@ StrainLattice::build_tetraedron(const AtomisticBasis* as, unsigned int atm, Stra
   for (unsigned int i = 0; i < n_bonds; i++)
   {
    //calculate bonds and put in tet.bonds R01 = R1 - R0
-   tet.bonds[i] = atoms[bondmap[atm][i]].get_ttype_position() + translation[atm][i] 
+   tet.bonds[i] = atoms[bondmap[atm][i]].get_ttype_position() + Tensor1(translation[atm][i])
                   - atoms[atm].get_ttype_position();
   }  
   //do similar job with edges R12, R23, R34 and store them by column

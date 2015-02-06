@@ -443,7 +443,7 @@ Vff::keating_potential(void)
   //Atoms to be considered in keating potential (H passivation not included)
   int n_atoms = _n_atoms;
   const BondMap& bondmap = get_atomistic_structure()->get_bond_map();
-  const std::vector<std::vector<Tensor1> > translation =
+  const BondMap::Translation& translation =
       get_atomistic_structure()->get_neighbor_translation();
   std::vector<double>& coords = get_coords();
 
@@ -470,9 +470,9 @@ Vff::keating_potential(void)
         {
 
           unsigned int j = bondmap[i][counter_j];
-          double t_j_x = translation[i][counter_j](1);
-          double t_j_y = translation[i][counter_j](2);
-          double t_j_z = translation[i][counter_j](3);
+          double t_j_x = translation[i][counter_j](0);
+          double t_j_y = translation[i][counter_j](1);
+          double t_j_z = translation[i][counter_j](2);
           // t_j_x = 0.0;
           // t_j_y = 0.0;
           // t_j_z = 0.0;
@@ -499,9 +499,9 @@ Vff::keating_potential(void)
                     {
 
                       unsigned int k = bondmap[i][counter_k];
-                      double t_k_x = translation[i][counter_k](1);
-                      double t_k_y = translation[i][counter_k](2);
-                      double t_k_z = translation[i][counter_k](3);
+                      double t_k_x = translation[i][counter_k](0);
+                      double t_k_y = translation[i][counter_k](1);
+                      double t_k_z = translation[i][counter_k](2);
                       // t_k_x = 0.0;
                       // t_k_y = 0.0;
                       // t_k_z = 0.0;
@@ -584,7 +584,7 @@ Vff::keating_gradient(void)
   int n_atoms = _n_atoms;
   const BondMap& bondmap = get_atomistic_structure()->get_bond_map();
   std::vector<double> coords = get_coords();
-  const std::vector<std::vector<Tensor1> > translation =
+  const BondMap::Translation& translation =
       get_atomistic_structure()->get_neighbor_translation();
 
   //Note: grad_all is introduced as it's easier coding the gradient in a general way
@@ -615,9 +615,9 @@ Vff::keating_gradient(void)
         {
 
           unsigned int j = bondmap[i][counter_j];
-          double t_j_x = translation[i][counter_j](1);
-          double t_j_y = translation[i][counter_j](2);
-          double t_j_z = translation[i][counter_j](3);
+          double t_j_x = translation[i][counter_j](0);
+          double t_j_y = translation[i][counter_j](1);
+          double t_j_z = translation[i][counter_j](2);
 //           t_j_x = 0.0;
 //           t_j_y = 0.0;
 //           t_j_z = 0.0;
@@ -646,9 +646,9 @@ Vff::keating_gradient(void)
                   if (counter_k != counter_j)
                     {
                       unsigned int k = bondmap[i][counter_k];
-                      double t_k_x = translation[i][counter_k](1);
-                      double t_k_y = translation[i][counter_k](2);
-                      double t_k_z = translation[i][counter_k](3);
+                      double t_k_x = translation[i][counter_k](0);
+                      double t_k_y = translation[i][counter_k](1);
+                      double t_k_z = translation[i][counter_k](2);
 //                       t_k_x = 0.0;
 //                       t_k_y = 0.0;
 //                       t_k_z = 0.0;

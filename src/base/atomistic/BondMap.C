@@ -149,6 +149,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
   bool not_already_signed;
   double cutofftmp;
   Tensor1 position1, position2;
+  Point per(period(1), period(2), period(3));
 
   if ((i != j))
   {
@@ -168,8 +169,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
       {
         for (unsigned int n = 0; n < put_here; n++){
           
-          //TODO: norm is slow, you whould study a new strategy overloading == operator
-          if ((*this)[i][n] == j && norm(_translation[i][n] - period) < 1e-6)
+          if ((*this)[i][n] == j && Point(_translation[i][n] - per).size() < 1e-6)
           {
             not_already_signed = false;
             break;
@@ -182,7 +182,7 @@ BondMap::process_atoms(const std::vector<Atom>& basis,
       if (not_already_signed)
       {
         (*this)[i].push_back(j);
-        _translation[i].push_back(period);
+        _translation[i].push_back(Point(period(1), period(2), period(3)));
       }
       
     }
