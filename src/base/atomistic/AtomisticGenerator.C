@@ -1252,7 +1252,7 @@ void AtomisticGenerator::passivate()
           tmp.set_elem(_super_basis[i].get_elem());
           tmp.belong_to_structure = true;
           Tensor1 bonded_rel_position = bonded_atom->get_ttype_position() +
-              _bondmap->get_translation()[i][j] - _super_basis[i].get_ttype_position();
+              Tensor1(_bondmap->get_translation()[i][j]) - _super_basis[i].get_ttype_position();
 
           position = _super_basis[i].get_ttype_position() +
               ( ( bonded_rel_position) /

@@ -182,6 +182,8 @@ class AtomisticBasis
   //! Set of all atom types in structure
   std::vector<std::string> _atom_types;
   
+  // TODO to be deleted
+  bool _is_periodic;
 
   private:
 
