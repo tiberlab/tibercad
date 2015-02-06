@@ -39,7 +39,7 @@ KspaceIntegration::~KspaceIntegration()
 unsigned int
 KspaceIntegration::get_k_space_dimension(void) const
 {
-  return _kspace->mesh_dimension();
+  return _kspace->dimension();
 }
 
 
@@ -99,7 +99,7 @@ void KspaceIntegration::calculate_density()
   const MeshBase::const_element_iterator it_k_end  = kmesh->active_elements_end();
 
 
-  double factor = 1.0;
+  double factor = opt.normalization_volume;
   for (short i = 0; i < k_dim; i++)  factor /= (2.0 * M_PI);
   factor *= _kspace->get_degeneracy_factor() * opt.degeneracy;
 
@@ -136,6 +136,7 @@ void KspaceIntegration::calculate_density()
 
 	if (this->quadrature_type == QGAUSS)
 	{
+	  /*
 	  if (verbose > 2)
 	  {
 	    std::cout<<"(KIntegration) element "<< kelem->id()+1 <<"/" << kmesh->n_elem() <<
@@ -144,10 +145,15 @@ void KspaceIntegration::calculate_density()
 	  if (verbose > 3)
 	    std::cout << "(KIntegration) k_point= ("<<q_point[qp](0)<<", "<<q_point[qp](1)
 	    << ", "<<q_point[qp](2)<<")" << std::endl;
+	  */
 
 	  double error_value;
 	  //dens_at_k_point.clear();
 
+	  ostringstream os;
+	  os << "k = (" << q_point[qp](0) << ", " << q_point[qp](1) << ", " <<
+	      q_point[qp](2) << "), w = " << (JxW[qp] * factor) << endl;
+	  Messages::info(os.str());
 	  calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
 
 	  // build the map between k-points and the integrated error quantity
@@ -368,12 +374,15 @@ void KspaceIntegration::parse_options( )
   else if(int_order == "seventh") integration_order = SEVENTH;
   else if(int_order == "eighth") integration_order = EIGHTH;
   else throw  InitFailedException("Kspace: unsupported quadrature order: "+int_order+"\n" );   
-   
-  opt.uniform_refinement      = mod_opt.get_option("uniform_refinement",false);
 
-  opt.refine_fraction         = mod_opt.get_option("refine_fraction", 0.3);
-  opt.maximum_ref_level       = mod_opt.get_option("maximum_ref_level", 3);
-  opt.relative_accuracy       = mod_opt.get_option("relative_accuracy", 1e-2);
+  opt.normalization_volume = mod_opt.get_option("normalization_volume", 1.0);
+
+   
+  opt.uniform_refinement   = mod_opt.get_option("uniform_refinement",false);
+
+  opt.refine_fraction      = mod_opt.get_option("refine_fraction", 0.3);
+  opt.maximum_ref_level    = mod_opt.get_option("maximum_ref_level", 3);
+  opt.relative_accuracy    = mod_opt.get_option("relative_accuracy", 1e-2);
 
   opt.degeneracy                = mod_opt.get_option("degeneracy",1);
   opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
@@ -457,6 +466,24 @@ void KspaceIntegration::do_init(void)
     Messages::info("k-space initialized");
 
   parse_options();
+
+  {
+    ostringstream os;
+    os << "cell volume for normalization : " <<
+        opt.normalization_volume << " nm";
+    switch (_kspace->dimension())
+    {
+      case 2:
+        os << "^2";
+        break;
+      case 3:
+        os << "^3";
+        break;
+      default:
+        break;
+    }
+    Messages::info(os.str());
+  }
 
 }
 

@@ -31,7 +31,7 @@ class Kspace
 
   const Mesh* get_k_mesh(void);
 
-  short mesh_dimension(void);
+  unsigned int dimension(void) const;
 
   double get_degeneracy_factor(void);
 
@@ -150,7 +150,7 @@ inline const Mesh* Kspace::get_k_mesh()
   return kmesh;
 }
 
-inline short Kspace::mesh_dimension(void)
+inline unsigned int Kspace::dimension(void) const
 {
   return k_dim;
 }

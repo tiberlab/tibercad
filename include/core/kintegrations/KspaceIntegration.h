@@ -42,27 +42,6 @@ class KspaceIntegration : public TiberModelObject
   typedef Elem KElem;
   typedef std::map <const KElem*, double> KMeshToIntegratedValue;
 
-  //!options for charge density
-  struct options
-  {   
-    //!< if true user provides Brilluoin zone size. Otherwise, it is calculated by the program
-    bool k_domain_user_input;    
-    //!< if true, program will refine the Brilluoin zone adaptively
-    bool k_domain_refinement;          
-    //!< if true, all the cells in the k-space are refined
-    bool uniform_refinement;       
-    //!< fraction of the elements to be refined
-    double refine_fraction;        
-    //!< stop refinement if \f$ ||\rho_{i+1} - \rho_i||/||rho_i|| < \epsilon \f$
-    double relative_accuracy;          
-    //!< maximum level for k space refinement
-    unsigned int maximum_ref_level;
-    //!< degeneracy factor
-    unsigned int degeneracy; 
-    //!<perflog output
-    bool log_output;  
-
-  }; 
 
 
   //! Creator for KspaceIntegration objects
@@ -127,6 +106,38 @@ class KspaceIntegration : public TiberModelObject
 
   
  private:
+
+
+  //!options for charge density
+  struct options
+  {
+    //! if true user provides Brillouin zone size. Otherwise, it is calculated by the program
+    bool k_domain_user_input;
+
+    //! if true, program will refine the Brilluoin zone adaptively
+    bool k_domain_refinement;
+
+    //! if true, all the cells in the k-space are refined
+    bool uniform_refinement;
+
+    //! fraction of the elements to be refined
+    double refine_fraction;
+
+    //! stop refinement if \f$ ||\rho_{i+1} - \rho_i||/||rho_i|| < \epsilon \f$
+    double relative_accuracy;
+
+    //! maximum level for k space refinement
+    unsigned int maximum_ref_level;
+
+    //! degeneracy factor
+    unsigned int degeneracy;
+
+    //!perflog output
+    bool log_output;
+
+    //! normalization volume
+    double normalization_volume;
+  };
 
   //! KIntegration options
   options opt; 
