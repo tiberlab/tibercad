@@ -230,6 +230,9 @@ class EigenvalueProblem : public SimulationInterface
     //! Calculate density for the current solution
     virtual void do_calculate_density_at_k(DofField& density) {};
 
+    //! Get the k-space
+    const Kspace* get_kspace(void) const;
+
 
     //! process an element and its neighbours
     void process_element(const Elem* elem, unsigned int entryside,
@@ -329,6 +332,15 @@ void EigenvalueProblem::set_k_point(const Point& k_vec)
   for (short i = 0; i < 3; i++) _k_vector[i] = k_vec(i);
   _new_k = true;
 }
+
+
+inline
+const Kspace* EigenvalueProblem::get_kspace(void) const
+{
+  return _kspace;
+}
+
+
 
 inline
 void EigenvalueProblem::init_permutation(const unsigned int n_dofs)

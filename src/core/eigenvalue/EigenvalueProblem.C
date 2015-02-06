@@ -213,7 +213,7 @@ EigenvalueProblem::plot_dispersion(const std::string& filename)
 
 
     const Mesh* kmesh = _kspace->get_k_mesh();
-    short kdim =  _kspace->mesh_dimension();
+    short kdim =  _kspace->dimension();
 
     if (kdim == 1)
     {
@@ -489,7 +489,7 @@ void EigenvalueProblem::calculate_dos(void)
 
   double a = 1.0 / (sigma * sqrt(2*M_PI));
   double factor = 1.0 / (2 * M_PI);
-  switch (kmesh->mesh_dimension())
+  switch (_kspace->dimension())
   {
     case 3:
       a *= factor;
@@ -501,10 +501,10 @@ void EigenvalueProblem::calculate_dos(void)
 
 
 
-  AutoPtr<FEBase> fe(FEBase::build(_kspace->mesh_dimension(),
+  AutoPtr<FEBase> fe(FEBase::build(_kspace->dimension(),
       FEType(SECOND, LAGRANGE)));
 
-  QGauss qrule(_kspace->mesh_dimension(),
+  QGauss qrule(_kspace->dimension(),
       static_cast<libMeshEnums::Order>(opts.get_option("integration_order", 17)));
   fe->attach_quadrature_rule(&qrule);
 
@@ -763,7 +763,11 @@ EigenvalueProblem::integrate_density(DofField& density)
 
   kopts.set_option("k_space_dimension", k_dim);
 
-  kopts.set_option("verbose", SimulationOptions::verbose() );
+  int verbose = kopts.get_option("verbose", SimulationOptions::verbose());
+  kopts.set_option("verbose", verbose);
+
+  // the normalization volume (in nm)
+  double normalization_volume = 1;
 
   // these are the real space lattice vectors, in nm
   // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
@@ -771,29 +775,75 @@ EigenvalueProblem::integrate_density(DofField& density)
   RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
   auto bbox = get_environment().get_bounding_box();
   if (x_per && (mesh_dim > 0))
+  {
     a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
+    normalization_volume *= a(0);
+  }
   if (y_per && (mesh_dim > 1))
+  {
     b(1) = (bbox.second(1) - bbox.first(1)) * get_mesh_units() * 1e9;
+    normalization_volume *= b(1) * 1e-9;
+  }
   if (z_per && (mesh_dim > 2))
+  {
     c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
+    normalization_volume *= c(1);
+  }
 
   // if there is an atomistic structure, we can take the lattice vectors from it
   // (they come in Angstrom!)
   if (get_atomistic_structure() != NULL)
   {
-    get_atomistic_structure()->get_lattice_vectors(a, b, c);
+    const AtomisticStructure* as = get_atomistic_structure();
+    as->get_lattice_vectors(a, b, c);
+    // scale to nm
     a *= 0.1;
     b *= 0.1;
     c *= 0.1;
+
+    normalization_volume = 1;
+    if (as->is_periodic(0))
+      normalization_volume *= a(0);
+    if (as->is_periodic(1))
+      normalization_volume *= b(1);
+    if (as->is_periodic(2))
+      normalization_volume *= c(2);
   }
+
+  kopts.set_option("normalization_volume", normalization_volume);
+
 
   switch (k_dim)
   {
     case 1:
+      if (mesh_dim == 3)
+      {
+        if (get_option("x-periodicity", false))
+          c = a;
+        else if (get_option("y-periodicity", false))
+          c = b;
+      }
       kopts.set_option("r1", c);
       break;
 
     case 2:
+      if (mesh_dim == 3)
+      {
+        if (!get_option("z-periodicity", false))
+        {
+          c = b;
+          b = a;
+        }
+        else if (get_option("x-periodicity", false))
+        {
+          b = a;
+        }
+      }
+      else if (mesh_dim == 2)
+      {
+        if (get_option("x-periodicity", false))
+          b = a;
+      }
       kopts.set_option("r1", b);
       kopts.set_option("r2", c);
       break;
