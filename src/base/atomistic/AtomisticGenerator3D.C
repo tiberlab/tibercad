@@ -32,9 +32,6 @@ AtomisticGenerator3D::build()
 
   Messages::debug("Calling AtomisticGenerator3D::build()");
 
-  //3D structure is considered cluster as far as lattice vectors 
-  //are not explicitely passed
-  _as->set_periodic(false);
 
   //Common building operations
   make_conv_cell();

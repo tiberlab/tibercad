@@ -32,9 +32,6 @@ void
 AtomisticGenerator1D::build()
 {
 
-  //1D and 2D structures are intended to be periodical
-  _as->set_periodic(true);
-
   Elem* elem = NULL;
   Node* nd = NULL;
 

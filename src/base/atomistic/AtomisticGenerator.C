@@ -27,6 +27,8 @@
 #include <tr1/random>
 
 
+using namespace std;
+
 
 AtomisticGenerator::AtomisticGenerator(void)
 :_bondmap(NULL),
@@ -35,7 +37,6 @@ _conv_vect(0),
 _conv_prim(0),
 _local_origin(0),
 _period(0),
-_periodicity(3, false),
 _bulk(NULL)
 {
 
@@ -151,7 +152,6 @@ AtomisticGenerator::init_commons()
    _local_origin(3) += translation[2];
   }
 
-  _as->get_options().get_option("periodicity", _periodicity);
 }
 
 
@@ -230,6 +230,11 @@ AtomisticGenerator::do_init()
 
   // remove unflagged atoms
   remove_atoms();
+
+  //os.str("");
+  //os<<"Structure cut to "<<_structure_basis.size()<<" atoms"<<std::endl;
+  //Messages::info(os.str());
+
   // delete generator bondmap
   delete _bondmap;
   _bondmap = NULL;
@@ -238,7 +243,7 @@ AtomisticGenerator::do_init()
   if (_as->is_random_alloy())
     build_random_alloy();
 
-};
+}
 
 
 //Eliminate not included atoms from structure
@@ -328,6 +333,10 @@ AtomisticGenerator::assign_elements(const std::set<ID>& reg_ids)
     const Elem* elem = mapper.get_element(p);
     
     if (elem != NULL) (*atom).set_elem(elem);
+    else
+    {
+      cerr << "no element : " << atom->get_position() << endl;
+    }
 
     progress++;
     prog.progress_message(progress);
@@ -791,7 +800,8 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 
 
 
-void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
+void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
+{
 
   //Build a supercell, defined by the lenght of conventional growth cell vectors
   std::vector<Tensor1>::iterator conv_iterator;
@@ -870,24 +880,24 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3){
   //if (_dim == 2) {start_i = -2; start_j =-2; start_l = 0; n1 = n1 + 2; n2 = n2 + 2;}
   //if (_dim == 3) {start_i = -2; start_j = 0; start_l = 0; n1 = n1 + 2;}
   //if (_dim == 3) {start_i = -2; start_j =-2; start_l = -2; n1 = n1 + 2; n2 = n2 + 2; n3 = n3 + 2;}
-  if (!_periodicity[0])
+  if (!_as->is_periodic(0))
   {
     start_i = -2;
     n1 = n1 + 2;
   }
-  if (!_periodicity[1])
+  if (!_as->is_periodic(1))
   {
     start_j = -2;
     n2 = n2 + 2;
   }
-  if (!_periodicity[2])
+  if (!_as->is_periodic(2))
   {
     start_l = -2;
     n3 = n3 + 2;
   }
 
   //Definition of number of conventional cells, useful for reserving arrays
-  unsigned int max_number_of_cells = n1 + n2 + n3 + 6;
+  unsigned int max_number_of_cells = n1*n2*n3;
   _super_conv.reserve(max_number_of_cells);
   _super_lattice.reserve(max_number_of_cells * _conv_lattice_basis.size());
   _super_basis.reserve(max_number_of_cells * _conv_lattice_basis.size() * basis.size());
@@ -962,6 +972,8 @@ void AtomisticGenerator::make_conv_cell()
   Tensor1 m1,m2,m3,select_vect(0);
   Tensor1 conv1, conv2, conv3;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+  cerr << "rotated_prim_vec: " << endl;
+  cerr << rotated_prim_vec << endl;
   
   //std::cout<<"rotated_prim_vec:"<<std::endl;
   //std::cout<<rotated_prim_vec<<std::endl;
@@ -1042,14 +1054,15 @@ void AtomisticGenerator::make_conv_basis()
         if (check_boundary){
           tmp_position = rotated_prim_vec * prim_position;
           _conv_lattice_basis.push_back(tmp_position);
+          cerr << tmp_position << endl;
 
         }
 
-      };
-    };
-  };
+      }
+    }
+  }
 
-};
+}
 
 // Increase periodicity in non-periodic directions 'periodic' flag
 void AtomisticGenerator::check_periodic(void)
@@ -1057,6 +1070,19 @@ void AtomisticGenerator::check_periodic(void)
   Messages msg;
   msg.info("Check periodicity ... ");
   msg.indent();
+
+  if (_as->is_periodic())
+  {
+    ostringstream os;
+    os << "structure is periodic along";
+    if (_as->is_periodic(0))
+      os << " x";
+    if (_as->is_periodic(1))
+      os << " y";
+    if (_as->is_periodic(2))
+      os << " z";
+    msg.info(os.str());
+  }
 
   Tensor2Gen periods(0);
   periods(1,1) = 1;
@@ -1066,15 +1092,15 @@ void AtomisticGenerator::check_periodic(void)
   switch (_dim)
   {
     case 3:
-      if (!_periodicity[2])
+      if (!_as->is_periodic(2))
         periods(3,3) *= 2;
 
     case 2:
-      if (!_periodicity[1])
+      if (!_as->is_periodic(1))
         periods(2,2) *= 2;
 
     case 1:
-      if (!_periodicity[0])
+      if (!_as->is_periodic(0))
         periods(1,1) *= 2;
 
     default:
@@ -1106,14 +1132,16 @@ void AtomisticGenerator::check_periodic(void)
         if (((*bonded_atom).belong_to_structure))
         {
           // is it a periodic one?
-          Tensor1 shift(_bondmap->get_translation()[i][j]);
+          Point trnsl(_bondmap->get_translation()[i][j]);
+          Tensor1 shift;
+          shift(1) = trnsl(0); shift(2) = trnsl(1); shift(3) = trnsl(2);
           double norm = shift(1)*shift(1) + shift(2)*shift(2) + shift(3)*shift(3);
           if (norm > 1e-9)
           {
             // check periodicity
             for (int d = 0; d < 3; ++d)
             {
-              if (!_periodicity[d])
+              if (!_as->is_periodic(d))
               {
                 if ((fabs(_period(d+1) * shift) > 1e-6) && !added[d].count(bond_map[i][j]))
                 {
@@ -1214,7 +1242,6 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
 
 void AtomisticGenerator::passivate()
 {
-  Tensor1 position;
   double hydrogen_distance = 1.2;
   Atom* bonded_atom;
 
@@ -1251,12 +1278,12 @@ void AtomisticGenerator::passivate()
           tmp.set_label((*bonded_atom).get_label());
           tmp.set_elem(_super_basis[i].get_elem());
           tmp.belong_to_structure = true;
-          Tensor1 bonded_rel_position = bonded_atom->get_ttype_position() +
-              Tensor1(_bondmap->get_translation()[i][j]) - _super_basis[i].get_ttype_position();
+          Point bonded_rel_position = bonded_atom->get_position() +
+              _bondmap->get_translation()[i][j] - _super_basis[i].get_position();
 
-          position = _super_basis[i].get_ttype_position() +
+          Point position = _super_basis[i].get_position() +
               ( ( bonded_rel_position) /
-                  norm(bonded_rel_position ) *
+                  bonded_rel_position.size() *
                   hydrogen_distance);
           tmp.set_position(position);
 

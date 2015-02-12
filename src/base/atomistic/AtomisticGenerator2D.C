@@ -25,20 +25,17 @@ AtomisticGenerator2D::~AtomisticGenerator2D(void) {};
 
 
 void
- AtomisticGenerator2D::build()
- {
-   double min_x, min_y, max_x, max_y;
-   Elem* elem = NULL;
-   Node* nd = NULL;
+AtomisticGenerator2D::build()
+{
+  double min_x, min_y, max_x, max_y;
+  Elem* elem = NULL;
+  Node* nd = NULL;
 
-   //1D and 2D structures are intended to be periodical
-      _as->set_periodic(true);
+  //Common building operations
+  make_conv_cell();
+  make_conv_basis();
 
-//Common building operations
-	 make_conv_cell();
-	 make_conv_basis();
-
- //Check edges of segment for building structure
+  //Check edges of segment for building structure
 
   elem = (*_structure_elements.begin());
   nd = elem->get_node(1);
@@ -69,17 +66,17 @@ void
   _local_origin(2) += min_y * scale + 1e-3;
   //_local_origin(3) += 0.0;
 
-	double l1 = (fabs(max_x - min_x)) * scale;
-	double l2 = (fabs(max_y - min_y)) * scale;
+  double l1 = (fabs(max_x - min_x)) * scale;
+  double l2 = (fabs(max_y - min_y)) * scale;
 
-	//Minimum periodic direction is considered along z axis, but eventually other lenghts can be
-	//specified by user in input (conventional cells along these direction are assured also in this case!!)
-	//double l2 = _as->get_options().get_option("y_length", 0.0);
-	double l3 = _as->get_options().get_option("z_length", 0.0);
+  //Minimum periodic direction is considered along z axis, but eventually other lenghts can be
+  //specified by user in input (conventional cells along these direction are assured also in this case!!)
+  //double l2 = _as->get_options().get_option("y_length", 0.0);
+  double l3 = _as->get_options().get_option("z_length", 0.0);
 
-	make_supercell( l1, l2, l3);
+  make_supercell( l1, l2, l3);
 
-	//print_basis(_super_basis, "supercell.xyz");
+  //print_basis(_super_basis, "supercell.xyz");
  }
 
 

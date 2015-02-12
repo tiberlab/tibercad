@@ -414,25 +414,21 @@ AtomisticStructure::init(const std::string& name,
   m.info(os.str());
   os.str(std::string());
 
-  if (is_periodic())
-  {
-    m.info("Supercell structure");
-    m.info("Lattice vectors (A):");
-    m.indent();
+  m.info("Supercell structure");
+  m.info("Lattice vectors (A):");
+  m.indent();
 
-    RealVectorValue a, b, c;
-    get_lattice_vectors(a, b, c);
-    os << "a1 = (";
-    a.write_unformatted(os, false);
-    os << ")\na2 = (";
-    b.write_unformatted(os, false);
-    os << ")\na3 = (";
-    c.write_unformatted(os, false);
-    os << ")\n";
-    m.info(os.str());
-    os.str(std::string());
-    //Messages::info(os.str());
-  }
+  RealVectorValue a, b, c;
+  get_lattice_vectors(a, b, c);
+  os << "a1 = (";
+  a.write_unformatted(os, false);
+  os << ")\na2 = (";
+  b.write_unformatted(os, false);
+  os << ")\na3 = (";
+  c.write_unformatted(os, false);
+  os << ")\n";
+  m.info(os.str());
+  os.str(std::string());
 
 
 }
@@ -447,7 +443,6 @@ AtomisticStructure::parse_lattice_vectors(void)
  
     if (lattice_vectors.size() == 3)
     {  
-       _is_periodic = true;
        _lattice_vectors[0] = lattice_vectors[0];
        _lattice_vectors[4] = lattice_vectors[1];
        _lattice_vectors[8] = lattice_vectors[2];
@@ -457,7 +452,6 @@ AtomisticStructure::parse_lattice_vectors(void)
     {
        for (int i = 0; i < 9; i++)
        {
-         _is_periodic = true;
          _lattice_vectors[i] = lattice_vectors[i]; 
        }
     }
@@ -539,6 +533,10 @@ AtomisticStructure::init_mesh_structure()
         break;
     }
   }
+
+  vector<bool> periodicity;
+  this->get_options().get_option("periodicity", periodicity);
+  this->set_periodicity(periodicity);
 
 
   parse_regions();
@@ -839,9 +837,9 @@ AtomisticStructure::read_structure(const std::string& path)
       line_string >> record;
 
       if ( (record.compare("S") == 0) || (record.compare("s") == 0))
-        _is_periodic = true;
+        set_periodicity({1, 1, 1});
       else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
-        _is_periodic = false;
+        set_periodicity({0, 0, 0});
       else
         std::cerr << "Warning (in GEN file at first line): "
                   << "Cluster (C) or Supercell (S) must be specified. "
@@ -979,9 +977,9 @@ AtomisticStructure::read_tgn(const std::string& path)
   line_string >> record;
 
   if ( (record.compare("S") == 0) || (record.compare("s") == 0))
-    _is_periodic = true;
+    set_periodicity({1, 1, 1});
   else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
-    _is_periodic = false;
+    set_periodicity({0, 0, 0});
   else
   {
     std::cerr << "Warning (in GEN file at first line): " 
@@ -1108,7 +1106,7 @@ AtomisticStructure::print_tgn(const std::string& path) const
   file.open(file_name.c_str());
       
       file << _atoms.size();
-      if (_is_periodic) file << std::setw(10) << "S \n";
+      if (is_periodic()) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -1289,7 +1287,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       //Standard gen section (modified with material index)
       file << _atoms.size();
 
-      if (_is_periodic) file << std::setw(10) << "S \n";
+      if (is_periodic()) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -1355,7 +1353,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         }
 
       // Periodicity vectors at the bottom
-      if (_is_periodic)
+      if (is_periodic())
         {
 
           //A line of zeros is put here (coordinates origin)
@@ -1543,7 +1541,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
     {
       file << _atoms.size();
 
-      if (_is_periodic) file << std::setw(10) << "S \n";
+      if (is_periodic()) file << std::setw(10) << "S \n";
       else file << std::setw(10) << "C \n";
 
       for (unsigned int i = 0; i < _atom_types.size(); i++)
@@ -1572,7 +1570,7 @@ AtomisticStructure::print_structure(const std::string& path, double const* const
         << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
 
       // Periodicity vectors at the bottom
-      if (_is_periodic)
+      if (is_periodic())
         {
           unsigned int count = 0;
           for (unsigned int i = 0; i < 3; i++)
@@ -1894,6 +1892,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     {
       if (!stats.count(atm.get_specie()))
       {
+        // this species is found for the first time
         size_t len = 1;
         if (stats.begin() != stats.end())
           len = (stats.begin()->second).size();
@@ -1913,9 +1912,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
         for ( ; mit != mend; ++mit)
           (mit->second).push_back(0);
 
-        stats[atm.get_specie()].back() += 1;
-
-        neighbor_iterator it(neighbors_begin(i, cutoff));
+        neighbor_iterator it(neighbors_begin(i, 10 * cutoff));
         neighbor_iterator end(neighbors_end(i));
         for ( ; it != end; ++it)
         {
@@ -1945,7 +1942,7 @@ AtomisticStructure::extract_statistics(unsigned int atom,
   const Atom& at = this->get_structure_atom(atom);
   counts[at.get_specie()] += 1;
 
-  neighbor_iterator it(neighbors_begin(atom, cutoff));
+  neighbor_iterator it(neighbors_begin(atom, 10 * cutoff));
   neighbor_iterator end(neighbors_end(atom));
   for ( ; it != end; ++it)
   {
@@ -1956,4 +1953,103 @@ AtomisticStructure::extract_statistics(unsigned int atom,
 
     counts[neigh.get_specie()] += 1;
   }
+}
+
+
+int
+AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, double cutoff)
+{
+  ID id = elem->subdomain_id();
+
+  // atomic coordinates are in Angstrom
+  Point center = 10 * point;
+
+  //if (reg_ids.count(id))
+  //{
+
+  const vector<unsigned int>& atoms = get_atoms_in_elem(elem);
+  int atom = -1;
+
+  //
+  // it may not even contain atoms
+  if (!atoms.empty())
+  {
+    // ok, there is at least one atom inside
+    double min_dist = 1e9;
+    unsigned int nearest = 0;
+
+    // look for the atom nearest to the center
+    for (unsigned int i = 0; i < atoms.size(); ++i)
+    {
+      if (get_structure_atom(atoms[i]).get_specie() == Specie::H)
+        continue;
+
+      double dist = Point(center -
+          get_structure_atom(atoms[i]).get_position()).size();
+      if (dist < min_dist)
+      {
+        min_dist = dist;
+        nearest = i;
+      }
+    }
+    atom = atoms[nearest];
+  }
+  else
+  {
+    // we try to find some nearby atom
+    set<const Elem*> processed_elems;
+    set<const Elem*> to_process;
+    to_process.insert(elem);
+
+    unsigned int nearest = 0;
+    double min_dist = 1e9;
+
+    while (!to_process.empty())
+    {
+      set<const Elem*>::iterator it(to_process.begin());
+      const Elem* next_el = *it;
+
+      const vector<unsigned int>& atoms = get_atoms_in_elem(next_el);
+      if (!atoms.empty())
+      {
+        // ok, there is at least one atom inside
+        // atomic coordinates are in Angstrom
+
+        // look for the atom nearest to the center
+        for (unsigned int i = 0; i < atoms.size(); ++i)
+        {
+          if (get_structure_atom(atoms[i]).get_specie() == Specie::H)
+            continue;
+
+          double dist = Point(center -
+              get_structure_atom(atoms[i]).get_position()).size();
+          if (dist < min_dist)
+          {
+            min_dist = dist;
+            nearest = i;
+          }
+        }
+        atom = atoms[nearest];
+      }
+
+      for (int s = 0; s < next_el->n_sides(); s++)
+      {
+
+        const Elem* neigh = next_el->neighbor(s);
+
+        if ((neigh != NULL) &&
+            !processed_elems.count(neigh) &&
+            (Point(elem->centroid() - neigh->centroid()).size() <
+                _scale * 2 * cutoff / 10))
+        {
+          to_process.insert(neigh);
+        }
+      }
+
+      processed_elems.insert(next_el);
+      to_process.erase(it);
+    }
+  }
+
+  return atom;
 }

@@ -51,10 +51,10 @@ public:
   //! Scaling value respect to TiberCAD units (usually Amstrong instead of micron)
   double scale;
 
-  //Print atom_basis in xyz file (for debugging)
+  //! Print atom_basis in xyz file (for debugging)
   void print_basis(std::vector<Atom> &basis, const std::string filename);
 
-  //Copy back information to AtomisticStructure
+  //! Copy back information to AtomisticStructure
   void finalize(void);
 
   //! assign element to each atom
@@ -125,12 +125,6 @@ protected:
   //! Reference material
   const Material* _reference_material;
 
-  // ! Database of reference material
-  //Database _reference_material_db;
-
-  // Missing super_conv (vector of conventional cells edges).
-  //If it will be needed remember to uncomment proper lines in make_supercell!!!!!!!!!!!!!!!!
-
 
   //!Bond map generation
   void bond_map_gen(const std::vector<Atom>& basis);
@@ -141,13 +135,6 @@ protected:
   //!Actually remove marked atoms from structure
   void remove_atoms(void);
 
-  // Build cutoff distancies map
-  //void set_cutoff();
-
-
-  //Passivation routine for bulk structures (periodicization is achieved in derived classes, in hydrogenation routine)
-  //void passivate_cluster(std::vector<Atom> &basis);
-
 
   //! Real passivation routine (implemented in derived classes, it takes in account periodicity)
   void passivate();
@@ -156,10 +143,7 @@ protected:
   //!Supercell periodicity vectors
   Tensor2Gen _period;
 
-  //! Periodicity for each direction
-  std::vector<bool> _periodicity;
-
-  //Map for cutoff parameters
+  //! Map for cutoff parameters
   std::map<std::string, double> _cutoff;
 
   //! AtomisticStructure instance which invoked AtomisticGenerator
@@ -171,10 +155,6 @@ protected:
   //! List of elements covered by structure
   std::vector<Elem*> _structure_elements;
 
-  //  ! Set the atomic basis for the lattice (This function is no longer used!)
-  //void set_crystal_basis(const std::string basis_name, 
-  //const std::string specie1 = "not_specified", 
-  //const std::string specie2 = "not_specified", double u = 0.0);
 
   //! Setting growth conventional cell vectors (in primitive vectors basis)
   void make_conv_cell();
@@ -190,7 +170,6 @@ protected:
 
 
 
-  //Some data manipulation function useful only in this class
 
   //Calculate a reciprocal basis from a real basis
   static Tensor2Gen reciprocal(Tensor2Gen real_basis);

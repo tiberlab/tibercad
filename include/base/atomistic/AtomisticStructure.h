@@ -118,6 +118,12 @@ public:
       const std::set<ID>& regions, double cutoff = 0.5) const;
 
   //! Extract statistics in volume around a single atom
+  /*!
+   * \param atom center of control volume
+   * \param counts the counts of the different species
+   * \param regions the regions to be used
+   * \param cutoff the cutoff radius in nm (default 0.5 nm)
+   */
   void extract_statistics(unsigned int atom, std::map<Specie, unsigned int>& counts,
       const std::set<ID>& regions, double cutoff) const;
 
@@ -131,6 +137,11 @@ public:
   //! Calculate the number of cations
   unsigned int compute_N_cations(void) const;
 
+  //! Find the atom index nearest to a point in an element
+  /*!
+   * Will return -1 if no atom can be found up to a distance of \c cutoff nm
+   */
+  int find_nearest_atom(const Elem* elem, const Point& point, double cutoff);
 
   //! Set the model options
   void set_options(const ModelOptions& options);
