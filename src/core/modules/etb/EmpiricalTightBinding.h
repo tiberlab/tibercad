@@ -87,8 +87,6 @@ class ETB : public TightBinding
     double ort_tol;
     double e_min;
     double e_max;
-    int twice_vb;
-    int twice_cb;
     bool read_states;
     int dynamic;
     int solver_flag;

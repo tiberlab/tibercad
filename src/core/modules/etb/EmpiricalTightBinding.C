@@ -25,6 +25,7 @@
 #include <limits>
  
 #include "TiberModule.h"
+#include <mpi.h>
 
 //#include <complex>
 using namespace std;
@@ -36,7 +37,14 @@ ETB::ETB(const ModelOptions& options)
 : TightBinding(options),
   _upt_options()
 {
-  inst = new UptWrapper;
+  inst = UptWrapper::create();
+
+  int rank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+  cout << "rank: "<<rank<<endl;
+
+  inst->set_mpi_comm(MPI_COMM_WORLD);
 
   has_solution_vector(false);
 }
@@ -121,8 +129,6 @@ ETB::UptSolverOptions::UptSolverOptions(void)
    fast_tol(1e-1),
    long_tol(1e-10),
    ort_tol(1e-4),
-   twice_cb(0),
-   twice_vb(0),
    dynamic(0)	
 {
 }
@@ -136,7 +142,7 @@ ETB::UptSolverOptions::~UptSolverOptions(void)
 void
 ETB::do_init(void){
 
-  std::cerr << "(ETB) Empirical TB Initialisation..." << std::endl;
+  std::cerr << "("+get_name()+") Empirical TB Initialisation..." << std::endl;
 
   //sanity check of complex number passing (this should be checked elsewere perhaps)
   Complex zz;
@@ -185,10 +191,15 @@ ETB::do_init(void){
 
   _dim = get_mesh().mesh_dimension();
 
-  Messages::info("(ETB) creating map elem->atoms");
+  Messages::info("("+get_name()+") creating map elem->atoms");
 
   build_map_elem_atoms(_upt_options.projection_length);
 
+
+  Messages::info("("+get_name()+") database path: "+database_path);
+  Messages::info("("+get_name()+") default  path: "+default_path);
+  Messages::info("("+get_name()+") work path: "+work_path);
+  Messages::info("("+get_name()+") output path: "+out_path);
   
 
   _init = true;      // initialization must be called
@@ -200,24 +211,22 @@ ETB::do_init(void){
 void ETB::do_reinit(void)
 {
 
-  std::cerr << "(ETB) clean uptight data container" << std::endl;
-
   inst->cleanuptight();
 
   if (!includes_regions(get_atomistic_structure()->get_IDset()))
   {
-     std::cerr << "(ETB) restrict on active regions" << std::endl;
+     std::cerr << "("+get_name()+") restrict on active regions" << std::endl;
 
      std::set<ID> reg_ids;
      get_region_ids(reg_ids);
 
-     get_atomistic_structure()->restrict(reg_ids);
+     get_atomistic_structure()->dorestrict(reg_ids);
     
-     std::cerr<< "(ETB) Build Map Elem->Atom "<<std::endl;
+     std::cerr<< "("+get_name()+") Build Map Elem->Atom "<<std::endl;
 
      double Rmax = build_map_elem_atoms(_upt_options.projection_length);
      
-     std::cerr<< "(ETB) Rmax= "<<Rmax<<std::endl;
+     std::cerr<< "("+get_name()+") Rmax= "<<Rmax<<std::endl;
   }
 
   _vb_shift = 0.0;
@@ -239,9 +248,9 @@ void ETB::do_reinit(void)
   }
 
   Point kp(get_k_point(true));
-  string load_path = get_option("load_path", get_output_directory());
+
+  // create default name for state files
   string statefile("states.upt");
-  // create default name
   if (kp.size() > 1e-6) // k = Gamma
   {
     ostringstream os;
@@ -249,18 +258,21 @@ void ETB::do_reinit(void)
     os << "states_(" << fixed << kp(0) << "," << kp(1) << "," << kp(2) << ").upt";
     statefile = os.str();
   }
-
+  
+  // set writing state file  
+  string write_state = get_option("states_file", statefile);
+  if (write_state.at(0) != '/')
+    write_state =  get_output_directory() +  "/" + write_state;
+  memset(_upt_options.write_state, UPT_PADCHAR, UPT_LC);
+  write_state.copy(_upt_options.write_state, write_state.size());
+  
+  // set load state file  
+  string load_path = get_option("load_path", get_output_directory());
   string load_file(load_path + "/" + statefile);
   load_file = get_option("load_file", load_file);
   memset(_upt_options.load_path, UPT_PADCHAR, UPT_LC);
   load_file.copy(_upt_options.load_path, load_file.size());
 
-  string write_state = get_option("states_file", statefile);
-  if (write_state.at(0) != '/')
-    write_state =  get_output_directory() +  "/" + write_state;
-
-  memset(_upt_options.write_state, UPT_PADCHAR, UPT_LC);
-  write_state.copy(_upt_options.write_state, write_state.size());
 
   // Get the minimum CB and maximum VB edges
   ModelOptions solopts = get_solver_options();
@@ -270,7 +282,7 @@ void ETB::do_reinit(void)
     double cb_min, vb_max;
     get_band_extrema(cb_min, vb_max);
     ostringstream os;
-    os << "CB min = " << cb_min << "  VB max = " << vb_max << endl;
+    os << "      CB min = " << cb_min << "  VB max = " << vb_max << endl;
     Messages::info(os.str());
 
     double gap = cb_min - vb_max;
@@ -291,11 +303,6 @@ void ETB::do_reinit(void)
     _upt_solver_options.guess_cb = cb_min;
     _upt_solver_options.guess_vb = vb_max;
   }
-  _upt_solver_options.guess_vb =
-      solopts.get_option("guess_valence", _upt_solver_options.guess_vb);
-  _upt_solver_options.guess_cb =
-      solopts.get_option("guess_conduction", _upt_solver_options.guess_cb);
-
 
 
   std::string upt_filename;
@@ -310,14 +317,14 @@ void ETB::do_reinit(void)
     upt_filename = get_output_directory() + "/" +
         get_atomistic_structure()->get_name() + ".upg";
 
-    //Messages::info("(ETB) printing structure "+upt_filename);
+    //Messages::info("("+get_name()+") printing structure "+upt_filename);
 
     get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset, 
                                                       !_upt_options.band_shift_flag);
 
-    std::cout << "(ETB) Number of atoms: " <<get_atomistic_structure()->get_N_atoms() << std::endl;
+    std::cout << "("+get_name()+") Number of atoms: " <<get_atomistic_structure()->get_N_atoms() << std::endl;
 
-    std::cout << "(ETB) Numb. without H: " <<get_atomistic_structure()->get_N_without_H()
+    std::cout << "("+get_name()+") Numb. without H: " <<get_atomistic_structure()->get_N_without_H()
 	      << std::endl;
   }
 
@@ -328,15 +335,16 @@ void ETB::do_reinit(void)
   // Use rotated crystal to obtain direction of c-axis (z-direction)
   get_c_axis();
 
-  std::cout << "(ETB) c-axis: "<<_upt_options.c_axis[0]<<" "
+  std::cout << "("+get_name()+") c-axis: "<<_upt_options.c_axis[0]<<" "
             <<_upt_options.c_axis[1]<<" "<<_upt_options.c_axis[2]<<std::endl;  
   
-  std::cout << "(ETB) fill parameter " << std::endl;
 
   //  Set parameters for Uptight instance
   inst->set_paths(_upt_options.default_path, _upt_options.database_path, 
                   _upt_options.work_path, _upt_options.out_path);
   
+  std::cout << "("+get_name()+") fill parameter " << std::endl;
+
   inst->fill_param(_upt_options.verbose, _upt_options.upt_filename,
 		   _upt_options.gen_outfile, _upt_options.sparse_fmt,
 		   _upt_options.max_TB_order, _upt_options.harrison_flag,
@@ -346,12 +354,12 @@ void ETB::do_reinit(void)
        _upt_options.dg_scale, _upt_options.dg_onsite,
        _upt_options.hybrid_passivation);
  
-  std::cout << "(ETB) set solver flag "<< _upt_solver_options.solver_flag << std::endl;
+  std::cout << "("+get_name()+") set solver flag "<< _upt_solver_options.solver_flag << std::endl;
   inst->set_solver_flag(_upt_solver_options.solver_flag); 
 	  
   inst->set_output((int) _upt_options.out_format, _upt_options.grid_step);
 
-  //std::cout << "(ETB) fill parameter done" << std::endl;
+  //std::cout << "("+get_name()+") fill parameter done" << std::endl;
   //std::cout.flush();
 
   if(inst->inituptight() != 0){ 
@@ -422,7 +430,7 @@ void ETB::do_solve(void){
   sol_opt.find_option("simulation"); // remove simulation name
   sol_opt.check_unused(); 
   
-  std::cout << "(ETB) Tight-Binding calculations" << std::endl;
+  //std::cout << "(ETB) Tight-Binding calculations" << std::endl;
   
   inst->set_statefile(_upt_options.write_state);
 
@@ -434,7 +442,7 @@ void ETB::do_solve(void){
 
   if (_upt_solver_options.read_states)
   {
-    Messages::info("(ETB) reading old states");
+    Messages::info("("+get_name()+") reading old states");
 
     inst->set_num_states(_upt_solver_options.n_vb, _upt_solver_options.n_cb);
 
@@ -478,7 +486,7 @@ void ETB::do_solve(void){
     int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
     Complex matel;
 
-    Messages::info("\n(ETB) consistency check:");
+    Messages::info("\n("+get_name()+") consistency check:");
 
     for(int i=1; i<= num_ev; i++)
     {
@@ -490,13 +498,7 @@ void ETB::do_solve(void){
   if (_upt_solver_options.solver.compare("upt_lanczos") == 0) 
   {
 
-    Messages::info("\n(ETB) solving using lanczos");
-
-    if (_upt_solver_options.twice_cb)
-      std::cout << "(ETB) twice cb: true " << std::endl;
-
-    if (_upt_solver_options.twice_vb)    
-      std::cout << "(ETB) twice vb: true " << std::endl;
+    Messages::info("\n("+get_name()+") solving using lanczos");
 
     inst->lanczos_diag(_upt_solver_options.start_vb, _upt_solver_options.start_cb, 
 		     _upt_solver_options.n_vb, _upt_solver_options.n_cb,
@@ -504,8 +506,7 @@ void ETB::do_solve(void){
                      _upt_solver_options.min_iter, _upt_solver_options.long_iter,
                      _upt_solver_options.max_iter, _upt_solver_options.fast_tol,
                      _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
-                     _upt_solver_options.twice_vb, _upt_solver_options.twice_cb,
-		     _upt_solver_options.dynamic);
+		                _upt_solver_options.dynamic);
   }
 
   if (_upt_solver_options.solver.compare("feast") == 0) 
@@ -522,7 +523,7 @@ void ETB::do_solve(void){
   }
     
   Messages::info(" "); 
-  Messages::info("(ETB) copy states from uptight"); 
+  Messages::info("("+get_name()+") copy states from uptight"); 
 
   int hdim = inst->get_H_dim();
   int num_vb = _upt_solver_options.n_vb;
@@ -635,13 +636,13 @@ void ETB::do_assemble(const ModelOptions& options)
 
     if(_upt_options.band_shift_flag)
     {
-      std::cout<< "(ETB) including band shifts" <<std::endl;
+      std::cout<< "("+get_name()+") including band shifts" <<std::endl;
       add_band_shifts();
     }
 
     if(_upt_options.potential_flag)
     {
-      std::cout<< "(ETB) passing potential" <<std::endl;
+      std::cout<< "("+get_name()+") passing potential" <<std::endl;
       add_pot_shifts();
     }
 
@@ -649,7 +650,7 @@ void ETB::do_assemble(const ModelOptions& options)
     
     if(_upt_options.d_states_correction)
     {
-      std::cout<< "(ETB) passing strain" <<std::endl;
+      std::cout<< "("+get_name()+") passing strain" <<std::endl;
       project_atom_strain();
     }
 
@@ -751,7 +752,7 @@ void
 ETB::plot_atomisticdata(void)
 {
   //Calculate electron and holes charge density on atoms (hydrogen not included)
-  Messages::info("(ETB) compute atom-projected charges"); 
+  Messages::info("("+get_name()+") compute atom-projected charges"); 
 
   _el_atomic_charges.resize(_N_without_H, 0.0);
   _hl_atomic_charges.resize(_N_without_H, 0.0);
@@ -760,7 +761,7 @@ ETB::plot_atomisticdata(void)
   compute_atomic_charges("hl", _hl_atomic_charges);
 
   //Print for debug charges on atoms
-  Messages::info("(ETB) print atom-projected charges on files"); 
+  Messages::info("("+get_name()+") print atom-projected charges on files"); 
 
   string out_path = get_output_directory();
   double* charges;
@@ -775,7 +776,7 @@ ETB::plot_atomisticdata(void)
 
   if ( plot_solution("tbstates") || plot_solution("JmolStates") )
   {
-    Messages::info("(ETB) write wave functions on files");
+    Messages::info("("+get_name()+") write wave functions on files");
     inst->write_states();
   }
 
@@ -787,7 +788,7 @@ ETB::plot_atomisticdata(void)
 
 void ETB::parse_options(void)
 {
-  //std::cout << "(ETB) parse_options() begin...";
+  //std::cout << "("+get_name()+") parse_options() begin...";
 
   const ModelOptions& solopts = get_solver_options();
   
@@ -807,7 +808,6 @@ void ETB::parse_options(void)
   _upt_options.k_point[0] = kp(0);
   _upt_options.k_point[1] = kp(1);
   _upt_options.k_point[2] = kp(2);
-
 
 
   _upg_filename = get_option("upg_filename", "none");
@@ -925,13 +925,9 @@ void ETB::parse_options(void)
   _upt_solver_options.long_iter =  solopts.get_option("long_iter", 32);
   _upt_solver_options.max_iter =  solopts.get_option("max_iter", 10000);
 
-  bool flag = solopts.get_option("remove_folded_sols_conduction",false);
-  if (flag) _upt_solver_options.twice_cb = 1;
-  flag = solopts.get_option("remove_folded_sols_valence",false);
-  if (flag) _upt_solver_options.twice_vb = 1;
-  flag = solopts.get_option("dynamic_search",true);
+  bool flag = solopts.get_option("dynamic_search",true);
   if (flag) _upt_solver_options.dynamic = 1;
-
+  
   //Feast options
   _upt_solver_options.e_min =  solopts.get_option("Emin", 0.0);
   _upt_solver_options.e_max =  solopts.get_option("Emax", 3.0);
@@ -968,6 +964,16 @@ void ETB::parse_options(void)
   //Get projection_length for quantum charge projection (Ang)
   _upt_options.projection_length = get_option("projection_length", 2.0);
 
+  _upt_solver_options.guess_vb =
+      solopts.get_option("guess_valence", _upt_solver_options.guess_vb);
+  _upt_solver_options.guess_cb =
+      solopts.get_option("guess_conduction", _upt_solver_options.guess_cb);
+
+   //parse these to avoid warnings
+   get_option("states_file", "none");
+   get_option("load_file", "none");
+   get_option("load_path", "none");
+
   //std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
   //std::cout << "done" << std::endl;
 
@@ -980,7 +986,7 @@ void
 ETB::print_upt_options(void)
 {
 
-  std::cout << "(ETB) UPTIGHT_OPTIONS: " << std::endl;
+  std::cout << "("+get_name()+") UPTIGHT_OPTIONS: " << std::endl;
 
   int n_files = 0;
 
@@ -1410,7 +1416,7 @@ ETB::get_band_edge(const std::string& edge)
   if (_upt_options.potential_flag)
   {
 
-    Messages::info("(ETB) get band extrema from "+_upt_options.potential_sim);
+    Messages::info("("+get_name()+") get potential from "+_upt_options.potential_sim);
 
     ID id = _dd_int->get_solution_id(edge);
 
@@ -1474,7 +1480,7 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
 {
   if (_upt_options.potential_flag)
   {
-    Messages::info("(ETB) get band extrema from "+_upt_options.potential_sim);
+    Messages::info("("+get_name()+") get band edges from model: "+_upt_options.potential_sim);
 
     string cbedge("Ec");
     string vbedge("Ev");
@@ -1699,7 +1705,7 @@ ETB::build_rho3d(const std::vector<double>& tb_density, const Elem* elem, const 
   //! get structure
   const std::vector<Atom>& structure = get_atomistic_structure()->get_structure_atoms();
   //! get atoms that contribute to the density of an element
-  //std::cout<<"(ETB) get neigh_atoms "<<endl;
+  //std::cout<<"("+get_name()+") get neigh_atoms "<<endl;
   const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
 
   //std::cout<<"point: "<<x<<" "<<y<<" "<<z<<endl;
@@ -1979,11 +1985,10 @@ ETB::setup_atomistic_structure(void)
 
     if (!includes_regions(_atomistic_structure->get_IDset())) 
     { 
-       Messages::warning("Module will restrict the atomistic structure");      
-
+       Messages::warning("Module will restrict the atomistic structure '"+name+"'");      
+       Messages::info("Note: the module will work on a copy of the original structure");      
 
        AtomisticStructure* new_as = AtomisticStructure::create(*get_atomistic_structure());
-       
 
        _atomistic_structure = new_as;
     
