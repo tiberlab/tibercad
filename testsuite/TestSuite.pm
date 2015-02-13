@@ -83,7 +83,7 @@ $to_log_file = " 2> $options{'logfile'} > $options{'logfile'}";
 $textwidth = 50;
 $padchar = ".";
 $default_precision = 1e-4;
-@known_suffixes = ('dat', 'gmv', 'vtu');
+@known_suffixes = ('dat', 'gmv', 'vtu', 'xyz');
 
 
 
@@ -182,13 +182,28 @@ sub extract_data_from_gmv($$);
 ##
 sub extract_data_from_vtu($$);
 
+##
+## Extract data fields from a .xyz file
+##
+## Returns the data in a list
+##
+sub extract_data_from_xyz($$);
+
 
 ##
-## Compare the data in two lists wit a certain precision
+## Compare numeric data in two lists with a certain precision
 ##
 ## returns 0 if the data lists are equal, 1 if there is a difference
 ##
 sub compare_data_vectors($$$);
+
+
+##
+## Compare string data in two lists
+##
+## returns 0 if the string lists are equal, 1 if there is a difference
+##
+sub compare_string_vectors($$);
 
 
 ##
@@ -462,7 +477,7 @@ sub compare_results_with_reference($$) {
 
     foreach my $var (@{$vars}) {
 
-      my ($variable, $prec) = split_variable($var);
+      my ($variable, $prec, $type) = split_variable($var);
 
       print(pad_to_textwidth("      $variable", $padchar)) if verbose();
       my @data1 = ();
@@ -487,6 +502,11 @@ sub compare_results_with_reference($$) {
             last SWITCH;
           };
 
+          /xyz/   && do {
+            $extract_func = \&extract_data_from_xyz;
+            last SWITCH;
+          };
+
       }
 
       @data2 = &$extract_func($variable, $reffile);
@@ -496,7 +516,15 @@ sub compare_results_with_reference($$) {
 
       @data1 = &$extract_func($variable, $datafile);
 
-      my $fail = compare_data_vectors(\@data1, \@data2, $prec);
+      my $fail = 0;
+      if ($type eq 's')
+      {
+        $fail = compare_string_vectors(\@data1, \@data2);
+      }
+      else
+      {
+        $fail = compare_data_vectors(\@data1, \@data2, $prec);
+      }
 
       if ($fail != 0) { $result = 1 };
       print_result($fail) if verbose();
@@ -546,6 +574,47 @@ sub extract_data_from_characteristic($$) {
   $index--;
 
   if ($index == $#vars) { return @data };
+
+  while (not eof)  {
+    my @l = (split(/\s+/, trim(<SF>)));
+    if ($#l > 0) { push @data, ($l[$index]) }; 
+  }
+
+  return @data;
+}
+
+
+sub extract_data_from_xyz($$) {
+
+  my ($variable, $file) = @_;
+
+  open(SF, '<', $file);
+
+  eof(SF) && die "Data file does not exist.";
+
+  my @data = ();
+
+  my $pos = 0;
+  my $oldpos = 0;
+  while (not eof) {
+    $oldpos = $pos;
+    $pos = tell;
+    my @line = (split(/\s+/, trim(<SF>)));
+    ($#line >= 4) && last;
+  }
+  $pos = $oldpos;
+
+  seek SF, $pos, 0;
+
+  my $index = 0;
+  foreach my $item ('species', 'x', 'y', 'z')
+  {
+    ($item eq $variable) && last;
+
+    $index++;
+  }
+
+  if ($index == 4) { return @data };
 
   while (not eof)  {
     my @l = (split(/\s+/, trim(<SF>)));
@@ -706,6 +775,27 @@ sub compare_data_vectors($$$) {
 }
 
 
+sub compare_string_vectors($$) {
+
+  my @data1 = @{$_[0]};
+  my @data2 = @{$_[1]};
+
+  my $n = $#data1;
+
+  if ($n != $#data2) { return 1 };
+  my $difference = 0;
+  for (my $i = 0; $i <= $n; $i++) {
+    if (trim($data1[$i]) ne trim($data2[$i])) {
+      $difference = 1;
+      last;
+    }
+  }
+
+  return $difference;
+}
+
+
+
 
 sub read_checks_from_config($$) {
 
@@ -849,12 +939,14 @@ sub split_variable($) {
 
   my $var = "";
   my $prec = $default_precision;
+  my $type = 'n'; # for numeric data
 
-  $_[0] =~ /([^\s()]+)(\(([\s\deE\+-\.]+)\))?/;
+  $_[0] =~ /([^\s()<>]+)(<s>)?(\(([\s\deE\+-\.]+)\))?/;
   $var = $1 if defined($1);
   $prec = 1.0 * $3 if defined($3);
-  
-  return ($var, $prec);
+  $type = 's' if defined($2);
+
+  return ($var, $prec, $type);
 }
 
 
