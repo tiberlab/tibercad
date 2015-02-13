@@ -39,7 +39,9 @@ public:
   int read_input();
 
   //!Compute current
-  double current();
+  //! unitsOfH is a string like "H", "eV", "cm^-1"
+  //! unitsOfJ is a string like "A"
+  double current(std::string unitsOfH, std::string unitsOfJ);
 
   //!Compute charge density
   int density(std::vector<double>& density, std::string particle);
@@ -77,25 +79,25 @@ public:
   //! Get library version
   void get_version(void);
 
-  //! used to set if print LDOS
+  //! used to set if print tunneling.dat 
   void set_write_tunn(bool flag);
 
-  //! used to set if print LDOS
+  //! used to set if print LDOS.dat
   void set_write_ldos(bool flag);
 
   //! write partition info 
   void partition_info(void);
   
-  //! set H via file
+  //! set H via memcopy to libnegf container
   void set_H_csr(int nrow, std::vector<Complex >& A, std::vector<int>& JA,
                                                      std::vector<int>& IA );
-  //! set H via file
+  //! set S via memcopy to libnegf container
   void set_S_csr(int nrow, std::vector<Complex >& A, std::vector<int>& JA,
                                                      std::vector<int>& IA );
-
+  //! Set S as and Identity matrix
   void set_S_id(int nrow);
 
-
+  //! Print matrix
   void print_mat(void);
 
 private:

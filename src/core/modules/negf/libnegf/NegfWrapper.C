@@ -62,11 +62,16 @@ void NegfWrapper::set_verbose(int verbose_lev)
 }
 
 double
-NegfWrapper::current()
+NegfWrapper::current(std::string unitsOfH, std::string unitsOfJ)
 {
   double current;
+  char *unitH = new char[NEGF_SC];
+  char *unitJ = new char[NEGF_SC];
+  memset(unitH,NEGF_PADCHAR,NEGF_SC);
+  unitsOfH.copy(unitH,unitsOfH.size());
+  unitsOfJ.copy(unitJ,unitsOfJ.size());
 
-  f77_negf_current(_handler, current);
+  f77_negf_current(_handler, current, unitH, unitJ);
 
   return current;
 }

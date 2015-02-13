@@ -20,16 +20,17 @@ libnegf$(shared_libext) :  .$(ARCH)/NegfWrapper$(obj-suffix) libnegf_$(ARCH).a
 
 .$(ARCH)/NegfWrapper$(obj-suffix) : libnegf_$(ARCH).a 
 
-libnegf_$(ARCH).a: checkout
-	#cd /home/pecchia/projects/libNEGF/dev_libnegf/src/api; make
+libnegf_$(ARCH).a: update
 	@echo "Updating libNEGF ..."  
-	cd libnegf; git pull; \
-	@echo "Compiling libNEGF ..."; \
+	cd libnegf; git status; \
+	echo "Compiling libNEGF ...";\
 	$(MAKE) -C src/api ; cd .. ; 
 	mv libnegf/src/api/libnegf_$(ARCH).a .	
 	cp libnegf/src/api/fortran.h .
 	cp libnegf/src/api/libnegf.h . 
 
+update: checkout
+	#cd libnegf; git pull origin; cd ..;
 
 checkout:
 	@echo "Checkout libNEGF..."

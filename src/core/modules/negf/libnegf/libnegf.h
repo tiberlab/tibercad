@@ -171,14 +171,18 @@ inline void f77_negf_set_verbosity (f77_int const* handler, f77_int const&
 }
 
 
-extern "C" void negf_current_ (f77_int const*, f77_double&);
+extern "C" void negf_current_ (f77_int const*, f77_double&, f77_char const*, 
+    f77_char const*);
 
 // Corresponding F77 arguments for f77_negf_current:
 // integer, intent(in) :: handler(DAC_handlerSize)
 // real(dp), intent(inout) :: current
-inline void f77_negf_current (f77_int const* handler, f77_double& current)
+// character(SST), intent(in) :: unitOfH(1)
+// character(SST), intent(in) :: unitOfJ(1)
+inline void f77_negf_current (f77_int const* handler, f77_double& current, 
+    f77_char const* unitOfH, f77_char const* unitOfJ)
 {
-  negf_current_ (handler, current);
+  negf_current_ (handler, current, unitOfH, unitOfJ);
 }
 
 

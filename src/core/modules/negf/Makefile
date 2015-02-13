@@ -4,7 +4,8 @@ topdir := ../../../..
 
 include $(topdir)/Make.common
 
-target := modules
+#target := modules
+target := 
 
 modules: libnegf module.conf
 	@$(BUILDMODULE) module.conf

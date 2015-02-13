@@ -85,7 +85,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void print_ham(std::string form);
 
-    void print_Lib(unsigned int n_vars, double Ec, double Ev);
+    void print_Lib(void);
 
     //! We need to create a physical model
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
@@ -116,7 +116,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     static void reorder_assemble(EquationSystems& es, const std::string& system_name);
 
-    static void ham_assemble(EquationSystems& es, const std::string& system_name);
+    //static void ham_assemble(EquationSystems& es, const std::string& system_name);
 
     static Negf* static_this;
 
@@ -124,7 +124,7 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void do_reorder_assemble(EquationSystems& es, const std::string& system_name);
 
-    void do_ham_assemble(EquationSystems& es, const std::string& system_name);
+    //void do_ham_assemble(EquationSystems& es, const std::string& system_name);
 
     bool do_compare(ID i, ID j);
 
@@ -181,13 +181,13 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     const Boundary* get_boundary(const QuantumContact* qc);
 
-    void apply_dirichlet_bc(void);
+    //void apply_dirichlet_bc(void);
     
     void init_efa_hamil(void);
 
     void init_etb_hamil(void);
 
-    void setup_sb_hamil(void); 
+    //void setup_sb_hamil(void); 
    
     void setup_efa_hamil(void);
     
@@ -251,8 +251,10 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     VectorValue<double> _k_vec;
 
+    DofField _eldensity;
     //DofField _eldensity;
 
+    DofField _hldensity;
     //DofField _hldensity;
 
     DofField current;

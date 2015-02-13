@@ -220,21 +220,6 @@ Negf::init_hamil(void)
   MeshBase::const_element_iterator el = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
   NegfModel* negfmod;
-  /* Cannot check here models of external module
-  for ( ; el != end_el; ++el)
-  {
-    negfmod = get_bulk_model<NegfModel>(*el);
-    if (negfmod == NULL)
-    {
-      ID subid = (*el)->subdomain_id();
-      std::ostringstream os;
-      os <<"element "<<(*el)->id()<<" in material region "<<
-        _device->get_region_name(subid)<<std::endl;
-      Messages::error(os.str());
-      throw InitFailedException("Not all elements have a proper model");
-    }
-  }
-  */
 
   negfmod = get_bulk_model<NegfModel>(*el);
 
@@ -260,17 +245,13 @@ Negf::init_hamil(void)
   
      init_efa_hamil();
   }  
-  else if ( _hamil_type == "single_band")
-  {
-     init_efa_hamil();
-  }
   else 
   {
     Messages::error("undefined hamiltonian type "+_hamil_type);
   }
     
   
-  std::cout<<"(negf) init done: " <<std::endl;
+  std::cout<<"(negf) init done. " <<std::endl;
   
 }
 
@@ -348,7 +329,8 @@ Negf::init_efa_hamil(void)
   }
 
   std::cout<<"(negf) init H and S"<<std::endl;
-  _sys_H->attach_assemble_function(ham_assemble);
+  //H-assembly only outside module
+  //_sys_H->attach_assemble_function(ham_assemble);
 
   _sys_H->init();
   _sys_S->init();
@@ -493,10 +475,9 @@ Negf::init_k_space(ModelOptions& kopts)
     unsigned int mesh_dim = get_mesh().mesh_dimension();
 
     if ( _hamil_type == "etb" ) 
-    {
+    {       
       // Define k-space from cartesian lattice vectors
-      double cf = 0.1; //conversion from Angstrom to nm
-
+      double cf = 0.1;  //conversion factor from Angstrom to nm 
       std::vector<double> vectors = _ext_module->get_atomistic_structure()->get_lattice_vectors();
       std::vector<double> r1(3,0.0);
       std::vector<double> r2(3,0.0);
@@ -524,10 +505,20 @@ Negf::init_k_space(ModelOptions& kopts)
     {
       // it is efa, we setup just some lattice vectors
 
+      // Modifiche Alex rimaste appese. Ricordo problema se mesh in um !
+      //double cf = 1e-10/get_mesh_units(); //conversion from Angstrom to M.U.
+      // the factor of 2 is due to the fact that the k-space limits
+      // in Kspace are 1/2
+      //cf *= 20;
+      // these are the real space lattice vectors, 1 cf = 1 nm
+      //RealVectorValue a(cf, 0, 0), b(0, cf, 0), c(0, 0, cf);
+
+      // we use 1 nm^-1 as default k-space extension (max k)
       // these are the real space lattice vectors, in nm
       // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
       // k_max can be interpreted in nm^-1
       RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+
       auto bbox = get_environment().get_bounding_box();
       if (get_option("x-periodicity", false) && (mesh_dim > 0))
         a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
@@ -606,8 +597,9 @@ Negf::init_k_space_integration(void)
     //-----------------DENSITY ---------------------------------------------
     ModelOptions::submodel_iterator it(get_options().submodels_begin("k_integration_density"));
     ModelOptions kopts;
+    kopts = it->second;
+
     //if (it != get_options().submodels_end("k_integration_density"))
-      kopts = it->second;
 
     //kopts.set_option("mesh_units", get_mesh_units());
 
@@ -654,11 +646,7 @@ Negf::init_k_space_integration(void)
 void
 Negf::setup_hamil(void)
 {
-  if ( _hamil_type == "single_band")
-  {
-      setup_sb_hamil();
-  }
-  else if ( _hamil_type == "efa")
+  if ( _hamil_type == "efa")
   {
       setup_efa_hamil();
   }
@@ -666,32 +654,6 @@ Negf::setup_hamil(void)
   {
       setup_etb_hamil();
   }
-}
-
-void
-Negf::setup_sb_hamil(void)
-{
-  //std::cout<<"(negf) do reinit ..." << std::endl;
-  do_reinit();
-
-
-  _sys_H->assemble();
-
-  //std::cout<<"(negf) print H ..." << std::endl;
-  print_ham("matlab");
-
-  unsigned int n_vars = _sys_H->n_vars();
-  double Ec = get_band_edge("Ec");
-  double Ev = get_band_edge("Ev");
-  
-  //std::cout<<"(negf) nvars= "<<n_vars<<std::endl;
-  //std::cout<<"(negf) Ec= "<<Ec<<" Ev= "<<Ev<<std::endl;
-
-  print_Lib(n_vars, Ec, Ev);
-
-  //std::cout<<"(negf) setup negf ..." << std::endl;
-  setup_negf();
-
 }
 
 void
@@ -713,17 +675,14 @@ Negf::setup_efa_hamil(void)
  
   //std::cout<<"(negf) Assemble ..." << std::endl;
   _ext_module->assemble();
-
  
-  double Ec = _ext_module->get_band_edge("el");
-  double Ev = _ext_module->get_band_edge("hl");
-  unsigned int n_vars = _ext_module->get_number_of_bands();
-
   //std::cout<<"(negf) Ec= "<<Ec<<" Ev= "<<Ev<<std::endl;
 
-  print_Lib(n_vars, Ec, Ev);
+  print_Lib();
 
+  //std::cout<<"(negf) setup negf ..." << std::endl;
   setup_negf();
+  //std::cout<<"(negf) setup done." << std::endl;
 }
 
 
@@ -744,15 +703,9 @@ Negf::setup_etb_hamil(void)
 
   _ext_module->assemble();
 
-  //_ext_module->print_H(SimulationOptions::scratch_path);
+  //_ext_module->print_H(get_scratch_directory());
 
-  unsigned int n_vars = _ext_module->get_number_of_bands();
-  
-  double Ec = _ext_module->get_band_edge("Ec");
-  double Ev = _ext_module->get_band_edge("Ev");
-
-  //std::cout<<"(negf) Ec= "<<Ec<<" Ev= "<<Ev<<std::endl;
-  print_Lib(n_vars, Ec, Ev);
+  print_Lib();
 
   setup_negf();
 }
@@ -760,18 +713,16 @@ Negf::setup_etb_hamil(void)
 void
 Negf::setup_negf(void)
 {
-
   _libnegf->init();
-  _libnegf->set_scratch_path(get_scratch_directory());
 
   if (_ext_module == NULL)
   {
-    _libnegf->read_HS();
+    throw InitFailedException("Negf requires and external module");
   }
   else
   {
-    //std::cout<<"(negf) print H in "<<SimulationOptions::scratch_path<<std::endl;
-    //_ext_module->print_H(SimulationOptions::scratch_path);
+    //std::cout<<"(negf) print H in "<<get_scratch_directory()<<std::endl;
+    //_ext_module->print_H(get_scratch_directory());
     
     int nrow = _ext_module->get_H_dim();
     int nnz = _ext_module->get_H_nnz();
@@ -782,10 +733,8 @@ Negf::setup_negf(void)
 
     //std::cout<<"(negf) Get H csr "<<nrow<<"  "<<nnz<<std::endl;
     _ext_module->get_H_csr(A,JA,IA);
-    nrow = IA.size() - 1;
 
     //std::cout<<"(negf) Set H in libNEGF; nnz="<<IA[nrow]<<std::endl;
-
     _libnegf->set_H_csr(nrow,A,JA,IA);
 
     if (_ext_module->is_generalized())
@@ -807,6 +756,10 @@ Negf::setup_negf(void)
     }
 
   }
+  //Messages::info("setting scratch path to: "+get_scratch_directory());
+  _libnegf->set_scratch_path(get_scratch_directory());
+  
+  _libnegf->set_output_path(get_output_directory());
 
   if (get_option("print_matrices",false))
      _libnegf->print_mat();  
@@ -822,8 +775,6 @@ Negf::setup_negf(void)
   _libnegf->set_write_tunn(true);
 
   _libnegf->set_iteration(1);
-
-  _libnegf->set_output_path(get_output_directory());
 
   // set not to compute Device-Contact blocks
   _libnegf->device_contact_dm(0);
@@ -861,7 +812,7 @@ Negf::compute_current(void)
   current.resize(2,0.0);
 
   //TODO: elCurrent. hlCurrent
-  current[0] = _libnegf->current();
+  current[0] = _libnegf->current("eV","A");
   current[1] = current[0];
   cout << "curr from negf : " << current[0] << endl;
 }
@@ -886,7 +837,6 @@ Negf::do_solve(void)
   if ( plot_solution(elDensity) )
   {
     Messages::info("Computing Electronic Density");
-
 
     if (get_options().has_submodel("k_integration_density"))
     {
@@ -922,6 +872,9 @@ Negf::do_solve(void)
 
       finalize();
     }
+      
+    //for (unsigned int i=0; i < _device_n_dofs; i++)
+    //  std::cout<<_eldensity[i]<<std::endl;
 
     Messages::info("Density done");
 
@@ -964,6 +917,9 @@ Negf::do_solve(void)
 
       finalize();
     }
+      
+    //for (unsigned int i=0; i < _device_n_dofs; i++)
+    //  std::cout<<_hldensity[i]<<std::endl;
 
     Messages::info("Density done");
 
@@ -1015,6 +971,7 @@ Negf::do_solve(void)
     //MeshBase::const_element_iterator el = mesh.active_elements_begin();
     //const Elem* elem = *el;
     //NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
+    double deg = _ext_module->get_degeneracy();
 
     ID id = 0;
     double sign;
@@ -1029,7 +986,7 @@ Negf::do_solve(void)
       //std::cout<<"(negf) I= "<<current[id]<<std::endl;
       //std::cout<<"(negf) sgn, deg area "<<sign<<" "<<deg<<" "<<area_factor<<std::endl;
 
-      _contact_current[it->second] = sign * current[id] * area_factor;
+      _contact_current[it->second] = sign * deg * current[id] * area_factor;
       id++;
     }
 
@@ -1222,6 +1179,7 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
   const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
 
   NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
+  double deg = _ext_module->get_degeneracy();
 
   for ( ; el != end_el; ++el)
   {
@@ -1266,8 +1224,8 @@ Negf::occupy_LDOS(const std::vector<double>& ldos)
 
         //std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
 
-        double vale = equ * edens / connectivity[dof_indices_eldens[n]];
-        double valh = equ * hdens / connectivity[dof_indices_eldens[n]];
+        double vale = equ * deg * edens / connectivity[dof_indices_eldens[n]];
+        double valh = equ * deg * hdens / connectivity[dof_indices_eldens[n]];
 
         qdens.add(dof_indices_eldens[n], vale);
         qdens.add(dof_indices_hldens[n], valh);
@@ -1290,6 +1248,7 @@ Negf::calculate_for_k_point(const Point& k_point,
                                    DofField& field,
                                    double& error)
 {
+
    for(short i=0;i<3;i++) _k_vec(i) = k_point(i);
 
    setup_hamil();
@@ -1319,6 +1278,7 @@ Negf::calculate_for_k_point(const Point& k_point,
 
      error /= _device_n_dofs;
 
+     //cout<<"(negf) density error: "<<error<<endl;
 
      return;
    }
@@ -1442,7 +1402,8 @@ Negf::transfer_density(const std::vector<double>& density, const std::string& pa
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
 
-        double dens = abs(density[_inv_perm[dof_indices[n]]]);
+        //double dens = abs(density[_inv_perm[dof_indices[n]]]);
+        double dens = density[_inv_perm[dof_indices[n]]];
 
         //std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
 
@@ -1498,6 +1459,8 @@ Negf::calculate_density(const std::string& particle)
   // ---- debug ---------------------------------------------
   std::string out_file = "density_new.dat";
   std::fstream ff(out_file.c_str(),std::fstream::out);
+  ff << "nvars: "<<n_vars <<endl;
+  ff << "device ndofs: "<<_device_n_dofs <<endl;
   for (unsigned int i = 0; i < density.size(); i++)
         ff<< density[i] <<std::endl;
   ff.close();
@@ -1552,6 +1515,7 @@ Negf::calculate_density(const std::string& particle)
   const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
 
   NegfModel* negfmod = get_bulk_model<NegfModel>(*el);
+  double deg = _ext_module->get_degeneracy();
 
   for ( ; el != end_el; ++el)
   {
@@ -1571,7 +1535,7 @@ Negf::calculate_density(const std::string& particle)
 
         //std::cout<<band*n_dofs+n<<" dens: "<<dens<<std::endl;
 
-        double val = equ * dens / connectivity[dof_indices_qdens[n]];
+        double val = equ * deg * dens / connectivity[dof_indices_qdens[n]];
 
         qdens.add( dof_indices_qdens[n], val);
       }
@@ -1711,228 +1675,6 @@ Negf::plot_globaldata (void)
 }
 
 
-void
-Negf::ham_assemble(EquationSystems& es, const std::string& system_name)
-{
-  static_this->do_ham_assemble(es, system_name);
-}
-
-
-void
-Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
-{
-  SimulationInterface* potmodel = NULL;
-  ID sol_id;
-
-  if (opt.pot_module != "none")
-  {
-    potmodel = SimulationInterface::find_simulation(opt.pot_module);
-    if (!potmodel->is_solved() )
-      throw SolveFailedException("Simulation "+opt.pot_module+" must be solved first");
-  }
-
-  const double newconst = 0.5 * Hartree * bohr_radius/get_mesh_units() * bohr_radius/get_mesh_units();
-
-  TensorValue<double> invMass(0.0);
-
-  std::vector<double> V;
-
-  const MeshBase& mesh = get_mesh();
-
-  const unsigned int dim = mesh.mesh_dimension();
-
-  DofMap& dof_map = _sys_H->get_dof_map();
-
-
-  FEType fe_type = dof_map.variable_type(0);
-
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
-  AutoPtr<FEBase> fe_face(FEBase::build(dim,fe_type));
-
-  QGauss qrule(dim, THIRD);
-  QGauss qrule_face(dim-1,CONSTANT);
-  //QTrap qrule(dim);
-
-  fe->attach_quadrature_rule(&qrule);
-  fe_face->attach_quadrature_rule(&qrule_face);
-
-  const std::vector<Real>& JxW = fe->get_JxW();
-
-  const std::vector<Point>& q_point = fe->get_xyz();
-
-  const std::vector<std::vector<Real> >& phi = fe->get_phi();
-
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
-  const std::vector<Point>& face_normals = fe_face->get_normals();
-
-  DenseMatrix<Number> Hr; // Interaction hamiltonian matrix real part
-  DenseMatrix<Number> Sr; // Overlap matrix real part
-  DenseMatrix<Number> Hi; // Interaction hamiltonian matrix immaginary part
-  DenseMatrix<Number> Si; // Overlap matrix immaginary part
-
-  std::vector<unsigned int> dof_indices,new_dof_indices;
-
-  std::map<ID, QuantumContact*>::iterator qc_end = _quantum_contacts.end();
-
-  //ACTIVATE QC
-  activate_quantum_contacts();
-
-  // Zero H and S
-  _sys_H->matrix->zero();
-  _sys_H->get_matrix("Hi").zero();
-  _sys_S->matrix->zero();
-  _sys_S->get_matrix("Si").zero();
-
-
-  //ITERATION OVER ACTIVE DEVICE REGION
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
-
-  for ( ; el != end_el; ++el)
-  {
-    const Elem* elem = *el;
-
-    //-------------------------------------------------------
-    //get effective mass tensor for elem
-    NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
-    
-
-    for (unsigned int band=0; band < negfmod->get_n_bands(); band++)
-    {
-
-
-
-      dof_map.dof_indices(elem, dof_indices, band);
-      const unsigned int n_dofs = dof_indices.size();
-
-      invMass = negfmod->get_inv_mass(band);
-
-
-      // we must reinit here cause later we reinit on sideelem
-
-      fe->reinit(elem);
-      
-
-      //get potential from dd model----------------------------------------
-      V.resize(q_point.size());
-      V.assign(q_point.size(), 0.0);
-
-      if (potmodel != NULL)
-      {
-        // gets from potmodel which band ("Ec" or "Ev")
-        
-        sol_id = potmodel->get_solution_id(negfmod->get_band(band));
-
-        potmodel->get_solution(elem, sol_id, V, q_point);
-
-      }
-
-      //-------------------------------------------------------------------
-      // What about strain ??
-
-      //-------------------------------------------------------------------
-
-      Hr.resize(n_dofs, n_dofs);
-      Sr.resize(n_dofs, n_dofs);
-      //Hr.zero(); // is done by resize()
-      //Sr.zero();
-      Hi.resize(n_dofs, n_dofs);
-      Si.resize(n_dofs, n_dofs);
-      //Hi.zero();
-      //Si.zero();
-
-      for (unsigned int qp=0; qp<q_point.size(); qp++)
-        for (unsigned int i=0; i<phi.size(); i++)
-          for (unsigned int j=0; j<phi.size(); j++)
-          {
-            Sr(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp];
-            Hr(i,j) += JxW[qp]* newconst * dphi[i][qp] * (invMass*dphi[j][qp]);
-            Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
-            Hr(i,j) += JxW[qp] * newconst * (_k_vec * (invMass * _k_vec)) * phi[i][qp] * phi[j][qp];
-
-          }
- 
-     
-      // DIRICHLET BC (Make sense only in 2D and 3D)---------------------------------
-      if (dim>1)
-      {
-        unsigned int n_sides = elem->n_sides();
-
-
-        for (short side = 0; side < n_sides; side++)
-        {
-
-          const ElementSide elside(elem->top_parent(), side);
-          bool set_dirichlet = false;
-
-          std::map<ID, QuantumContact*>::iterator it;
-         
-          if ( (it = _quantum_contacts.find(elem->subdomain_id())) != _quantum_contacts.end() ) 
-          {
-
-            if (elem->neighbor(side)==NULL)
-            {
-              set_dirichlet = opt.set_dirichlet_bc; //set to default value
-              fe_face->reinit(elem, side);
-              const Boundary* bd = get_boundary(it->second);
-              std::string bc = bd->get_options().get_option("dirichlet","");
-              if (bc!="")
-              {
-                int sign = (bc[0]=='-' ? -1: 1);
-                int dir;
-                if (bc[1]=='x') dir = 0;
-                if (bc[1]=='y') dir = 1;
-                if (bc[1]=='z') dir = 2;
-                if  (sign*face_normals[0](dir) > 0) set_dirichlet = true;
-              }
-            }
-            
-          }
-          else if(_env->is_outer_boundary(elside))  //in device region
-          {
-            Boundary* bd = _env->get_boundary(elside);
-            // bd==NULL => not defined in input (!quantum_contact)
-            if ((bd == NULL && opt.set_dirichlet_bc) || _dirichlet_boundaries.count(bd) )
-            {
-              set_dirichlet = true;
-            }
-          }
-
-          if (set_dirichlet)
-          {
-            //std::cout<<elem->id()<<"  ";
-            //if (elem->neighbor(side) !=NULL) std::cout<<(elem->neighbor(side))->id()<<std::endl;
-            //else std::cout<<std::endl;
-            for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
-            {
-              if (elem->is_node_on_side(nd, side))
-              {
-                Hr(nd,nd) = newconst/0.01;
-              }
-            }
-          }
-
-        }
-
-      }
-      // -----------------------------------------------------------------------------------
-      new_dof_indices.resize(n_dofs);
-      for (unsigned int i=0; i< n_dofs; i++)
-        new_dof_indices[i] = _inv_perm[dof_indices[i]];
-
-
-      _sys_S->matrix->add_matrix(Sr, new_dof_indices);
-
-      _sys_H->matrix->add_matrix(Hr, new_dof_indices);
-
-      _sys_S->get_matrix("Si").add_matrix(Si, new_dof_indices);
-
-      _sys_H->get_matrix("Hi").add_matrix(Hi, new_dof_indices);
-
-    }//BAND LOOP
-  }//ELEM LOOP
-
-}
 
 void
 Negf::print_ham(std::string form)
@@ -1969,7 +1711,7 @@ Negf::is_generalized(void)
  *-2 0              ! Ec Ev
  *0 0               ! DEc DEv
  *-0.25 0 0.01      ! Emin Emax Estep
- *0.025             ! kT
+ *0.025 0.025       ! kT
  *1                 ! weight of k-point
  *20 20             ! Np_n(1:2)
  *0 0               ! Np_p(1:2)
@@ -1980,13 +1722,12 @@ Negf::is_generalized(void)
  *1e-05             ! delta
  *0                 ! n_ldos
  *                  ! --
- *0 0               !   
- *0.115355 0.184647 ! -mu_n  
- *0.115355 0.184647 !  mu_p 
+ *0.115355 0.184647 ! mu_n  
+ *0.115355 0.184647 ! mu_p 
  */
 
 void
-Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
+Negf::print_Lib()
 {
   ModelOptions& sol_opt = get_solver_options();
   double DeltaEc = -opt.DEc;
@@ -2004,19 +1745,23 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
     Np_p[i] = opt.Np_n[i];
   }
 
-  // degeneracy is accounted for in libnegf
+  // spin degeneracy must be passed 
+  unsigned int n_vars = _ext_module->get_number_of_bands();
+  double Ec = _ext_module->get_band_edge("Ec");
+  double Ev = _ext_module->get_band_edge("Ev");
+
   unsigned int spin = _ext_module->get_degeneracy();
   unsigned int nLDOS = 0;
   unsigned int n_bands = _ext_module->get_number_of_bands();
   if (opt.writeLDOS) nLDOS = _device_n_dofs * n_bands;
- 
-  std::vector <unsigned int> LDOS(2*nLDOS);
+
+  // NOTE: adapted to new libnegf working with indeces 
+  std::vector <unsigned int> LDOSindeces(nLDOS);
 
   unsigned int ctr = 1;
-  for (unsigned int i = 0; i < 2*nLDOS; i += 2, ctr++)
+  for (unsigned int i = 0; i < nLDOS; ctr++)
   {
-    LDOS[i] = ctr;
-    LDOS[i + 1] = ctr;
+    LDOSindeces[i] = ctr;
   }
 
   // phi: potential at boundaries (quantum contacts)
@@ -2090,10 +1835,8 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
     ff<<_qc_n_dofs[i]*n_vars<<" ";
   ff<<std::endl;
 
-  ff<<"Ec.Ev  "<<Ec+DeltaEc<<" "<<Ev+DeltaEv<<std::endl;
-  ff<<"DEc.DEv  "<<0.0<<" "<<0.0<<std::endl;                // DEc DEv = 0 (are set above)
   ff<<"Emin.Emax  "<<opt.Emin<<" "<<opt.Emax<<" "<<opt.Estep<<std::endl;
-  ff<<"kbT  "<<kbT<<std::endl;
+  ff<<"kbT  "<<kbT<<"  "<<kbT<<std::endl;
   ff<<"wght  "<<wght<<std::endl;
 
   ff<<"Np_n  ";
@@ -2117,8 +1860,8 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
      if (Np>1000) 
      {	   
         std::ostringstream os;
-	os << "Np_real has been set to "<<Np;
-	Messages::warning(os.str());
+        os << "Np_real has been set to "<<Np;
+	      Messages::warning(os.str());
      }
   }
 
@@ -2128,33 +1871,39 @@ Negf::print_Lib(unsigned int n_vars, double Ec, double Ev)
   ff<<"spin  "<<spin<<std::endl;
   ff<<"delta  "<<opt.delta<<std::endl;
   ff<<"nLDOS  "<<nLDOS<<std::endl;
+  
+  if (nLDOS>0)
+  {
+    ff<<"LDOS  ";
+    for (unsigned int i = 0; i < nLDOS; i++)
+      ff<<LDOSindeces[i]<<" ";
 
-  ff<<"LDOS  ";
-  for (unsigned int i = 0; i < 2*nLDOS; i++)
-    ff<<LDOS[i]<<" ";
+    ff<<std::endl;
+  }
 
+  ff<<"Ec.Ev  ";
+  
+  for (unsigned int i = 0; i < nLDOS; i++)
+    ff<<Ec<<" "<<Ev<<std::endl;
+  
   ff<<std::endl;
-
-  // Set Ef = 0.0 
-
-  ff<<"Ef  ";
-  for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
-    ff<<0.0<<" ";
-  ff<<std::endl;
-
-  // takes -mu_n (ELECTROCHEMICAL potential for electrons) as LibNEGF will turn back the sign
-  // Ef[k]-mu_n[k] = 0 - mu_n[k]   for LibNEGF
+  // takes mu_n (ELECTROCHEMICAL potential for electrons) 
+  //       mu_p (ELECTROCHEMICAL potential for holes)
+  // NOTE: Ef has been removed now. 
+  // libNEGF works with eletrochemical potential, mu
+  // (e=|e|) For Ef=0, mu_n=-eV, mu_p=eV:
+  // OLD: Ef-(-mu_n) = mu_n ; Ef-mu_p = -mu_p
+  // NEW: pass mu_n and -mu_p
   ff<<"mu_n  ";
   for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
-    ff<<-mu_n[i]<<" ";
+    ff<<mu_n[i]<<" ";
   ff<<std::endl;
 
-  // takes mu_p (ELECTROCHEMICAL potential for holes)
-  // Ef[k]+mu_p[k] = 0 + mu_p[k]   for LibNEGF
   ff<<"mu_p  ";
   for (unsigned int i = 0; i < _quantum_contacts.size(); i++)
-    ff<<mu_p[i]<<" ";
+    ff<<-mu_p[i]<<" ";
   ff<<std::endl;
+  ff<<"DEc.DEv  "<<DeltaEc<<" "<<DeltaEv<<std::endl;    
   ff.close();
 
 }
@@ -2227,19 +1976,15 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     // NOTE: 2011-12-01 the above turned out to be wrong
     //  phi[i] rho[i][j] phi[j] ~~  phi[i] rho[i][i] phi[i]
     // rho[i][i] is the correct density at node i: phi is used for linear interpolation.
+
     if (do_edens)
     {
-
       for (unsigned int n = 0; n < np; n++)
       {
         double value_n = 0;
-
-
+ 
         for (unsigned int i = 0; i < n_dofs; i++)
-        {
-//          value_n += phi[i][n] * _eldensity[dof_indices_e[i]];
           value_n += phi[i][n] * qdens(dof_indices_e[i]);
-        }
 
         values[elDensity][n] = value_n;
 
@@ -2248,20 +1993,14 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 
     if (do_hdens)
     {
-
       for (unsigned int n = 0; n < np; n++)
       {
         double value_p = 0;
 
-
         for (unsigned int i = 0; i < n_dofs; i++)
-        {
-//          value_p += phi[i][n] * _hldensity[dof_indices_e[i]];
           value_p += phi[i][n] * qdens(dof_indices_h[i]);
-        }
 
         values[hlDensity][n] = value_p;
-
       }
     }
   }
@@ -2281,25 +2020,25 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 
       if (b != NULL && qc != NULL)
       {
-	Point point_current;      
+        Point point_current;      
         if (dim>1)
         { 
           AutoPtr<Elem> elside = elem->build_side(side); 		
           point_current = _contact_current[qc] * qc->get_normal() * elside->volume() / qc->get_area();
         }
-	else
-	{
+        else
+        {
           point_current = _contact_current[qc] * qc->get_normal(); 
-	}
+        }
 	      
         // assign the same current to all points
         for (unsigned int n = 0; n < np; n++)
         {
-	   //std::cout<<"point: "<<p[n](0)<< " "<<p[n](1)<<" "<<p[n](2)<<std::endl;
+	         //std::cout<<"point: "<<p[n](0)<< " "<<p[n](1)<<" "<<p[n](2)<<std::endl;
            values[eCurrentDensity][n*3]   =  point_current(0);
            values[eCurrentDensity][n*3+1] =  point_current(1);
            values[eCurrentDensity][n*3+2] =  point_current(2);
-	   //std::cout<<"current: "<<point_current(0)<< " "<<point_current(1)<<" "<<point_current(2)<<std::endl;
+	         //std::cout<<"current: "<<point_current(0)<< " "<<point_current(1)<<" "<<point_current(2)<<std::endl;
         }
         break;
       }
@@ -2653,10 +2392,11 @@ Negf::compare(ID i, ID j)
 bool
 Negf::do_compare(ID i, ID j)
 {
-  // 2014-31-10 i and j were interchanged, before in 1D order of DOFs was flipped
-  // Was this on purpose??
   const NumericVector<Number>& solution = _sys->get_solution_vector();
   return (solution(j) < solution(i));
+  // 2014-31-10 i and j were interchanged, before in 1D order of DOFs was flipped
+  // Was this on purpose??
+  //return (solution(i) < solution(j));
 }
 
 void
@@ -2801,7 +2541,7 @@ inline double Negf::get_band_edge(SimulationInterface* model, const std::string&
 
 
 
-
+/*
 void
 Negf::apply_dirichlet_bc(void)
 {
@@ -2885,7 +2625,7 @@ Negf::apply_dirichlet_bc(void)
 
   }// close element loop
 }
-
+*/
 
 const Boundary*
 Negf::get_boundary(const QuantumContact* qc)
@@ -2893,3 +2633,221 @@ Negf::get_boundary(const QuantumContact* qc)
   std::map<const QuantumContact*, const Boundary*>::iterator it = _bd_map.find(qc);
   return it->second;
 }
+
+/*
+void
+Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
+{
+  SimulationInterface* potmodel = NULL;
+  ID sol_id;
+
+  if (opt.pot_module != "none")
+  {
+    potmodel = SimulationInterface::find_simulation(opt.pot_module);
+    if (!potmodel->is_solved() )
+      throw SolveFailedException("Simulation "+opt.pot_module+" must be solved first");
+  }
+
+  const double newconst = 0.5 * Hartree * bohr_radius/get_mesh_units() * bohr_radius/get_mesh_units();
+
+  TensorValue<double> invMass(0.0);
+
+  std::vector<double> V;
+
+  const MeshBase& mesh = get_mesh();
+
+  const unsigned int dim = mesh.mesh_dimension();
+
+  DofMap& dof_map = _sys_H->get_dof_map();
+
+
+  FEType fe_type = dof_map.variable_type(0);
+
+  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  AutoPtr<FEBase> fe_face(FEBase::build(dim,fe_type));
+
+  QGauss qrule(dim, THIRD);
+  QGauss qrule_face(dim-1,CONSTANT);
+  //QTrap qrule(dim);
+
+  fe->attach_quadrature_rule(&qrule);
+  fe_face->attach_quadrature_rule(&qrule_face);
+
+  const std::vector<Real>& JxW = fe->get_JxW();
+
+  const std::vector<Point>& q_point = fe->get_xyz();
+
+  const std::vector<std::vector<Real> >& phi = fe->get_phi();
+
+  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  const std::vector<Point>& face_normals = fe_face->get_normals();
+
+  DenseMatrix<Number> Hr; // Interaction hamiltonian matrix real part
+  DenseMatrix<Number> Sr; // Overlap matrix real part
+  DenseMatrix<Number> Hi; // Interaction hamiltonian matrix immaginary part
+  DenseMatrix<Number> Si; // Overlap matrix immaginary part
+
+  std::vector<unsigned int> dof_indices,new_dof_indices;
+
+  std::map<ID, QuantumContact*>::iterator qc_end = _quantum_contacts.end();
+
+  //ACTIVATE QC
+  activate_quantum_contacts();
+
+  // Zero H and S
+  _sys_H->matrix->zero();
+  _sys_H->get_matrix("Hi").zero();
+  _sys_S->matrix->zero();
+  _sys_S->get_matrix("Si").zero();
+
+
+  //ITERATION OVER ACTIVE DEVICE REGION
+  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+
+  for ( ; el != end_el; ++el)
+  {
+    const Elem* elem = *el;
+
+    //-------------------------------------------------------
+    //get effective mass tensor for elem
+    NegfModel* negfmod = get_bulk_model<NegfModel>(elem);
+    
+
+    for (unsigned int band=0; band < negfmod->get_n_bands(); band++)
+    {
+
+
+
+      dof_map.dof_indices(elem, dof_indices, band);
+      const unsigned int n_dofs = dof_indices.size();
+
+      invMass = negfmod->get_inv_mass(band);
+
+
+      // we must reinit here cause later we reinit on sideelem
+
+      fe->reinit(elem);
+      
+
+      //get potential from dd model----------------------------------------
+      V.resize(q_point.size());
+      V.assign(q_point.size(), 0.0);
+
+      if (potmodel != NULL)
+      {
+        // gets from potmodel which band ("Ec" or "Ev")
+        
+        sol_id = potmodel->get_solution_id(negfmod->get_band(band));
+
+        potmodel->get_solution(elem, sol_id, V, q_point);
+
+      }
+
+      //-------------------------------------------------------------------
+      // What about strain ??
+
+      //-------------------------------------------------------------------
+
+      Hr.resize(n_dofs, n_dofs);
+      Sr.resize(n_dofs, n_dofs);
+      //Hr.zero(); // is done by resize()
+      //Sr.zero();
+      Hi.resize(n_dofs, n_dofs);
+      Si.resize(n_dofs, n_dofs);
+      //Hi.zero();
+      //Si.zero();
+
+      for (unsigned int qp=0; qp<q_point.size(); qp++)
+        for (unsigned int i=0; i<phi.size(); i++)
+          for (unsigned int j=0; j<phi.size(); j++)
+          {
+            Sr(i,j) += JxW[qp]* phi[i][qp] * phi[j][qp];
+            Hr(i,j) += JxW[qp]* newconst * dphi[i][qp] * (invMass*dphi[j][qp]);
+            Hr(i,j) += JxW[qp] * V[qp] * phi[i][qp] * phi[j][qp];
+            Hr(i,j) += JxW[qp] * newconst * (_k_vec * (invMass * _k_vec)) * phi[i][qp] * phi[j][qp];
+
+          }
+ 
+     
+      // DIRICHLET BC (Make sense only in 2D and 3D)---------------------------------
+      if (dim>1)
+      {
+        unsigned int n_sides = elem->n_sides();
+
+
+        for (short side = 0; side < n_sides; side++)
+        {
+
+          const ElementSide elside(elem->top_parent(), side);
+          bool set_dirichlet = false;
+
+          std::map<ID, QuantumContact*>::iterator it;
+         
+          if ( (it = _quantum_contacts.find(elem->subdomain_id())) != _quantum_contacts.end() ) 
+          {
+
+            if (elem->neighbor(side)==NULL)
+            {
+              set_dirichlet = opt.set_dirichlet_bc; //set to default value
+              fe_face->reinit(elem, side);
+              const Boundary* bd = get_boundary(it->second);
+              std::string bc = bd->get_options().get_option("dirichlet","");
+              if (bc!="")
+              {
+                int sign = (bc[0]=='-' ? -1: 1);
+                int dir;
+                if (bc[1]=='x') dir = 0;
+                if (bc[1]=='y') dir = 1;
+                if (bc[1]=='z') dir = 2;
+                if  (sign*face_normals[0](dir) > 0) set_dirichlet = true;
+              }
+            }
+            
+          }
+          else if(_env->is_outer_boundary(elside))  //in device region
+          {
+            Boundary* bd = _env->get_boundary(elside);
+            // bd==NULL => not defined in input (!quantum_contact)
+            if ((bd == NULL && opt.set_dirichlet_bc) || _dirichlet_boundaries.count(bd) )
+            {
+              set_dirichlet = true;
+            }
+          }
+
+          if (set_dirichlet)
+          {
+            //std::cout<<elem->id()<<"  ";
+            //if (elem->neighbor(side) !=NULL) std::cout<<(elem->neighbor(side))->id()<<std::endl;
+            //else std::cout<<std::endl;
+            for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
+            {
+              if (elem->is_node_on_side(nd, side))
+              {
+                Hr(nd,nd) = newconst/0.01;
+              }
+            }
+          }
+
+        }
+
+      }
+      // -----------------------------------------------------------------------------------
+      new_dof_indices.resize(n_dofs);
+      for (unsigned int i=0; i< n_dofs; i++)
+        new_dof_indices[i] = _inv_perm[dof_indices[i]];
+
+
+      _sys_S->matrix->add_matrix(Sr, new_dof_indices);
+
+      _sys_H->matrix->add_matrix(Hr, new_dof_indices);
+
+      _sys_S->get_matrix("Si").add_matrix(Si, new_dof_indices);
+
+      _sys_H->get_matrix("Hi").add_matrix(Hi, new_dof_indices);
+
+    }//BAND LOOP
+  }//ELEM LOOP
+
+}
+*/
