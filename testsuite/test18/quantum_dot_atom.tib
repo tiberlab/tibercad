@@ -1,0 +1,257 @@
+Device qdot
+{
+  meshfile = box_in_cube.msh 
+  mesh_units = 1e-9
+  dimension = 3
+  
+  x-growth-direction = (1,1,0)   
+  y-growth-direction = (1,-1,0)
+  z-growth-direction = (0,0,1)
+
+  Region ball
+  {
+    material = InGaAs 
+    x = 0.5 
+    Doping {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+    }
+
+  }
+
+  Region  qbox
+  {
+    material = InGaAs
+    x=0.01
+    Doping {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+    }
+    
+  }
+
+
+  Region  intrinsic
+  {
+    material = InP 
+    Doping {
+      Nd = 1e15
+      type =  donor
+      Ed = 0.025
+    }
+    
+  }
+
+  Region  nside
+  {
+    material = InP
+    Doping {
+      Nd = 1e18
+      type =  donor
+      Ed = 0.025
+    }
+  }
+
+
+  Region  pside
+  {
+    material = InP
+    Doping {
+      Nd = 1e18
+      type =  donor
+      Ed = 0.025
+    }
+  }
+
+
+  Cluster atomistic
+  {
+    regions=(ball, qbox)
+  }
+
+
+  Atomistic tb1
+  {
+    regions = atomistic 
+    reference_material = InP 
+    random_alloy = true 
+    random_generator_seed = 1244
+    translation = (0.0, 0.0, 0.0)    
+    periodicity = (true, true, true)
+    print=(xyz,gen,tgn,upg)
+    passivation = yes 
+  }
+
+  Atomistic tb2
+  {
+    regions = atomistic
+    load = output/tb1.xyz
+    print = (tgn,upg)
+  }
+}
+
+
+
+
+Fodule empirical_tb
+{
+  regions = atomistic 
+  name = tb
+
+  atomistic_structure = tb1
+  potential_simulation = dd
+  add_band_shifts = false
+  plot = (tbstates)
+
+  Solver
+  {
+    #solver_type = gpu
+    num_valence_eigenvalues = 1 
+    num_conduction_eigenvalues = 1
+    long_tolerance = 1e-4  
+  }
+
+}
+
+Fodule empirical_tb
+{
+  regions = atomistic 
+  name = tb2
+
+  atomistic_structure = tb1
+  potential_simulation = dd
+  add_band_shifts = false
+
+  projection_length = 2.0
+  
+
+  plot = (tbstates, MeshStatesNodes)
+
+  Solver
+  {
+    load_states = true
+    load_path = output    
+    num_valence_eigenvalues = 2 
+    num_conduction_eigenvalues = 2 
+    long_tolerance = 1e-4  
+  }
+
+}
+
+
+
+Fodule elasticity
+{
+  name = str
+
+  plot = (Strain)
+
+  mesh_deformation = true
+  shape_iterations = 1
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = GaP 
+    }
+       
+  }
+
+  Contact cathode  
+  {type = clamp}
+
+} 
+
+
+Fodule  driftdiffusion
+{ 
+
+  name = dd
+ 
+  plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity, ElPotential)
+
+  Solver
+  {
+    #nonlinear_solver = tiber
+    #linear_solver = pardiso
+   
+    max_iterations = 25
+    relative_tolerance = 1e-12
+ 
+    step_tolerance = 1e-5
+  
+    #max_step = 4
+  }
+ 
+
+  Physics
+  {
+    strain_simulation = str
+
+    particle_density
+    {
+      statistics = fermidirac
+    }
+
+
+    recombination srh {}
+
+    recombination direct
+    { 
+     C = 1.1e-8
+    }
+  
+    polarization (piezo, pyro) {}
+
+     
+    mobility doping_dependent {}
+  }
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+}
+
+Fodule opticstb
+{
+  name = opt
+  regions = atomistic 
+
+  initial_state_model = tb2
+  final_state_model = tb2
+  
+  compute_strengths = true
+
+  plot = (matrix_elements, optical_spectrum_k_0)
+  output_format = grace
+
+  Emin = 4.25
+  Emax = 4.75
+  dE = 0.001
+
+}
+
+
+Simulation
+{
+  temperature = 300
+
+  #solve = (str, dd) 
+  #, tb, tb2, opt)
+  #solve = (dd, tb)
+
+  resultpath = output 
+  output_format = vtk 
+}

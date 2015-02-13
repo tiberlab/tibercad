@@ -1,0 +1,265 @@
+
+# Description of  the  device physical regions
+Device
+{
+   meshfile = qdot_Zb.msh
+   mesh_units = 1e-9
+   dimension = 3
+
+   structure = zb
+   x-growth-direction = (1,0,0)
+   y-growth-direction = (0,1,0)
+   z-growth-direction = (0,0,1)
+
+   Region box
+   {
+     material = GaAs
+   }
+
+   Region buffer_up
+   {
+     material =  GaAs
+   }
+
+   Region buffer_down
+   {
+     material =  GaAs
+   }
+
+   Region Atomistic_cube_up
+   {
+     material =  GaAs
+   }
+
+   Region Atomistic_cube_down
+   {
+     material =  GaAs
+   }
+
+   Region dot
+   {
+     material = InGaAs 
+     x = 0.7 
+   }
+
+   Region buffer_WL
+   {
+     material = InGaAs 
+     x = 0.7 
+   }
+
+   Region Atomistic_cube_WL
+   {
+     material = InGaAs 
+     x = 0.7 
+   }
+
+
+   # group together the regions for the quantum simulation
+   Cluster Quantum_Atomistic
+   {
+     regions = (Atomistic_cube_WL,Atomistic_cube_down,Atomistic_cube_up,dot)
+   }
+
+   Cluster Quantum_buffer
+   {
+     regions = (Atomistic_cube_WL,Atomistic_cube_down,Atomistic_cube_up,dot,buffer_up,buffer_down,buffer_WL)
+   }
+
+  #Atomistic e' la keyword per definire una regione atomistica
+  Atomistic dot_atoms
+  {
+   #regions specifica dove definire gli atomi
+   regions = Quantum_buffer
+   #reference_region stabilisce il reticolo di riferimento
+   reference_region = Atomistic_cube_down
+   #Enable hydrogen passivation
+   passivation = yes
+   #salva la struttura in vari formati, xyz per controllare con jmol, tgn per ricaricarla in tibercad
+   #Nota: la struttura puo' essere ricaricata dal file tgn per risparmiare tempo
+  #ma la MESH deve essere la stessa di quando la struttura e' stata salvata, altrimenti
+   #i risultati non sono consistenti! Il file tgn viene salvato in path, l'xyz tra gli output
+   print = (xyz, tgn)
+  } 
+}
+
+
+
+
+
+Module elasticity
+{
+
+  name = strain
+  plot = (Strain,Stress,Displacement) 
+  
+  mesh_deformation = true
+  shape_error = 0.1
+  #shape_iterations = 3
+  strain_atomistic_structure = dot_atoms
+  
+  Physics {
+    body_force lattice_mismatch
+    {
+      reference_material = GaAs 
+    }
+  }
+
+  Solver
+  {
+    relative_tolerance = 1e-6
+  }
+
+  Contact bottom {type = clamp}
+
+} 
+
+
+Module vff
+{
+ atomistic_structure = dot_atoms 
+ boundary_conditions = all_around  
+ plot = (xyz)
+}
+
+
+Module driftdiffusion
+{ 
+
+  name = dd
+  plot = (Ec, Ev, ElPotential, ElField, Polarization)
+  regions = all
+  coupling = poisson
+  integration_order = 2
+
+  #save_state = true 
+  load_state = ./prova2/dd.tsv
+
+  Physics
+  {
+    strain_simulation = strain
+    recombination srh { }
+    polarization (piezo, pyro) { } 
+  }
+}
+
+Fodule efaschroedinger
+{
+  name = quantum_electrons
+  regions = Quantum_Atomistic
+  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+
+  particle = el
+  poisson_model_name = dd
+  strain_model_name = strain
+
+  Physics
+  {
+    model = kp
+    kp_model = 8x8
+  }
+
+  Solver
+  {
+    number_of_eigenstates = 1 
+    estimate_spectrum_shift = false
+    spectrum_shift = 0.1
+    solver = krylovshur 
+    ksp_type = gmres
+    pc_type =  ilu
+    monitor = true
+  }
+}
+
+
+
+
+
+
+Fodule efaschroedinger
+{
+  name = quantum_holes
+  regions = Quantum_Atomistic
+  plot = (EigenFunctions, EigenEnergy, EnergyLevels)
+
+  particle = hl
+  poisson_model_name = dd
+  strain_model_name = strain
+
+  Physics
+  {
+    model = kp
+    kp_model = 8x8
+  }
+
+  Solver
+  {
+    estimate_spectrum_shift = false
+    spectrum_shift = -0.55
+    number_of_eigenstates = 1
+    solver = krylovshur 
+    ksp_type = gmres
+    pc_type =  ilu
+    monitor = true
+  }
+}
+
+
+Module empirical_tb
+{
+  #Nome di riferimento della simulazione etb
+  name = tb
+  #Regioni mesh del dominio
+  regions = Quantum_Atomistic
+  #Regioni atomistiche del dominio
+  atomistic_structure = dot_atoms
+  #Attiva/Disattiva Harrison scaling per lo strain. Default yes
+  Harrison_scaling = false 
+  #Simulazione driftdiffusion da cui prendere i potenziali
+  potential_simulation = dd
+  
+  sparse_format = full
+ 
+  #Plot in uscita, tbstates indica gli stati in formato cub o jvxl (plot sugli atomi)
+  plot = (MeshStates,MeshStatesNodes)
+
+  #Scelta del formato di output degli stati. Il formato cub e' MOLTO grosso (1GB nel mio calcolo) ma 
+  #allo stato attuale funziona anche su strutture grandi. JVXL e' molto piu' piccolo,
+  #forse con la nuova mesh funziona dato che non calcoliamo il WL. In caso prova a cambiare
+  #da jvxl a cub. jvxl e' il default
+  jmol_output_format = cube 
+
+  Solver 
+  {
+   #Numero di autovalori da calcolare (valenza e conduzione)
+   load_states = true
+   load_path = prova
+
+   num_valence_eigenvalues = 0 
+   num_conduction_eigenvalues = 2 
+   long_tolerance = 1e-7
+   #PARAMETRI IMPORTANTI: il guess vicino al valore dell'autovalore fa si 
+   #che non si prendano stati spuri dati dal folding dell'Hamiltoniana
+   #internamente sono calcolati dei guess plausibili, ma per dot piccoli
+   #lo shift e' tale che e' difficile dare un guess automatico. 
+   #Il riferimento per il guess e' edge di valenza a 0.0
+   guess_conduction = 0.15
+   guess_valence = -0.10
+  }
+}
+
+
+# Definition of  model-indipendent parameters of the Simulation
+Simulation
+{
+
+  temperature = 300
+  solve =  (strain,vff,dd,tb)
+  resultpath = output 
+  output_format = vtk
+}
+
+
+
+
+

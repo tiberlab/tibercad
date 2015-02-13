@@ -1,0 +1,83 @@
+
+Log start: Thu Feb 12 17:39:27 2015
+
+
+tiberCAD release 2.3.0 (rev. 3981, x86_64-linux)
+
+Input file: InGaAs_3D.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials
+  Log file              : prova2/InGaAs_3D.log
+
+Setup mesh
+  Reading mesh file qdot_Zb.msh ... done.
+  mesh units          : 1e-09 m
+  mesh dimension      :       3
+  number of nodes     :  109383
+  number of elements  :  640746
+  number of subdomains:       8
+
+Create materials ...
+  Added material GaAs for region 'box' (mesh regions 5)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'buffer_up' (mesh regions 2)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'buffer_down' (mesh regions 4)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'Atomistic_cube_up' (mesh regions 7)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material GaAs for region 'Atomistic_cube_down' (mesh regions 9)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/GaAs.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs 0.7.
+  Added material InGaAs for region 'dot' (mesh regions 6)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/InGaAs.dat)
+    alloy with 0.7 InAs, 0.3 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs 0.7.
+  Added material InGaAs for region 'buffer_WL' (mesh regions 3)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/InGaAs.dat)
+    alloy with 0.7 InAs, 0.3 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs 0.7.
+  Added material InGaAs for region 'Atomistic_cube_WL' (mesh regions 8)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/InGaAs.dat)
+    alloy with 0.7 InAs, 0.3 GaAs
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up Cluster 'Quantum_Atomistic' containing regions 6, 7, 8, 9
+
+Setting up Cluster 'Quantum_buffer' containing regions 2, 3, 4, 6, 7, 8, 9
+  Building Atomistic Structure dot_atoms
+  BondMap progress  done.
+  Conventional cells along x, y, z: 106 106 10
+
+  Setup of grid mapper: 0h 0m 0.39s, memory usage: 13 MB
+  Assign elements progress  done.
+  Assign Species progress  done.
+  Check periodicity ... 
+    Building Bond Map...
+      BondMap progress 

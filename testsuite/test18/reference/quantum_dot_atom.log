@@ -1,0 +1,133 @@
+
+Log start: Fri Feb 13 16:39:51 2015
+
+
+tiberCAD release 2.3.0 (rev. 3981, x86_64-linux)
+
+Input file: quantum_dot_atom.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials
+  Log file              : output/quantum_dot_atom.log
+
+Setup mesh
+  Reading mesh file box_in_cube.msh ... done.
+  mesh units          : 1e-09 m
+  mesh dimension      :       3
+  number of nodes     :    1925
+  number of elements  :   11171
+  number of subdomains:       5
+
+Create materials ...
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs 0.5.
+  Added material InGaAs for region 'ball' (mesh regions 1)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/InGaAs.dat)
+    alloy with 0.5 InAs, 0.5 GaAs
+    x growth direction : (1,1,0)
+    y growth direction : (1,-1,0)
+    z growth direction : (0,0,1)
+  InGaAs is an alloy with components InAs and GaAs and molar fraction of InAs 0.01.
+  Added material InGaAs for region 'qbox' (mesh regions 2)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/InGaAs.dat)
+    alloy with 0.01 InAs, 0.99 GaAs
+    x growth direction : (1,1,0)
+    y growth direction : (1,-1,0)
+    z growth direction : (0,0,1)
+  Added material InP for region 'intrinsic' (mesh regions 5)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/InP.dat)
+    x growth direction : (1,1,0)
+    y growth direction : (1,-1,0)
+    z growth direction : (0,0,1)
+  Added material InP for region 'nside' (mesh regions 3)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/InP.dat)
+    x growth direction : (1,1,0)
+    y growth direction : (1,-1,0)
+    z growth direction : (0,0,1)
+  Added material InP for region 'pside' (mesh regions 4)
+    (using datafile /home/pecchia/projects/tibercad/trunk_trunk/trunk/materials/InP.dat)
+    x growth direction : (1,1,0)
+    y growth direction : (1,-1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up Cluster 'atomistic' containing regions 1, 2
+  Building Atomistic Structure tb1
+  BondMap progress  done.
+  new origin: 0 0 1.46742
+  Conventional cells along x, y, z: 9 7 6
+
+  Setup of grid mapper: 0h 0m 0.011s, memory usage: 0 MB
+  Assign elements progress  done.
+  Assign Species progress  done.
+  Check periodicity ... 
+    structure is periodic along x y z
+    Building Bond Map...
+      BondMap progress  done.
+    Bond Map completed
+  done
+  Building Bond Map...
+    BondMap progress  done.
+  Bond Map completed
+  Starting passivation...
+  Cut & Passivation done
+
+  Building random alloy ...
+    Initializing  MT19937 random generator with seed 1244
+    Region 1: x = 0.5 -> 39 atoms out of 78 to be substituted (x_eff = 0.5)
+    Region 2: x = 0.01 -> 6 atoms out of 678 to be substituted (x_eff = 0.00885)
+    Needed 1123 random number extractions to substitute 45 atoms
+
+  Build final Bond Map...
+  BondMap progress  done.
+  Output structure(s)
+
+  Atomistic structure build time: 0h 0m 0.26s
+
+  Atomistic Structure containing 1512 atoms has been built. 
+  Size not counting passivation hydrogens: 1512
+  Supercell structure
+  Lattice vectors (A):
+    a1 = (37.3545 0.00000 0.00000 )
+    a2 = (0.00000 29.0535 0.00000 )
+    a3 = (0.00000 0.00000 35.2182 )
+Reading structure from file output/tb1.xyz. Any further information will be neglected
+Reading output/tb1.xyz
+Parse regions
+Build Bond Map
+BondMap progress  done.
+Associate elements
+Assign elements progress  done.
+Starting passivation...
+Building Bond Map...
+  BondMap progress  done.
+Bond Map completed
+Cut & Passivation done
+Build final Bond Map...
+BondMap progress  done.
+Output structure(s)
+Assign Virtual Species
+
+  Atomistic Structure containing 1512 atoms has been built. 
+  Size not counting passivation hydrogens: 1512
+  Supercell structure
+  Lattice vectors (A):
+    a1 = (0.00000 0.00000 0.00000 )
+    a2 = (0.00000 0.00000 0.00000 )
+    a3 = (0.00000 0.00000 0.00000 )
+
+Setting up bulk models ...
+
+Setting up lower dimensional (boundary) models ...
+We solve: 
+
+Total solve time: 0h 0m 9.5e-07s
+Simulation finished.
+
+0 warnings during run
+0 errors detected
+
+
+Log end: Fri Feb 13 16:39:52 2015
+
+
