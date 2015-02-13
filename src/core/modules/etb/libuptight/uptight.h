@@ -66,6 +66,17 @@ inline void f77_upt_getversion (f77_int const* handler)
 }
 
 
+extern "C" void upt_setmpicomm_ (f77_int const*, f77_int const&);
+
+// Corresponding F77 arguments for f77_upt_setmpicomm:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: comm
+inline void f77_upt_setmpicomm (f77_int const* handler, f77_int const& comm)
+{
+  upt_setmpicomm_ (handler, comm);
+}
+
+
 extern "C" void upt_set_paths_ (f77_int const*, f77_char const*, f77_char 
     const*, f77_char const*, f77_char const*);
 
@@ -279,8 +290,7 @@ inline void f77_upt_setkpoint (f77_int const* handler, f77_double const* k_vec)
 extern "C" void upt_lanczosdiag_ (f77_int const*, f77_int const&, f77_int 
     const&, f77_int const&, f77_int const&, f77_double const&, f77_double 
     const&, f77_int const&, f77_int const&, f77_int const&, f77_double const&, 
-    f77_double const&, f77_double const&, f77_int const&, f77_int const&, 
-    f77_int const&);
+    f77_double const&, f77_double const&, f77_int const&);
 
 // Corresponding F77 arguments for f77_upt_lanczosdiag:
 // integer, intent(in) :: handler(DAC_handlerSize)
@@ -296,19 +306,16 @@ extern "C" void upt_lanczosdiag_ (f77_int const*, f77_int const&, f77_int
 // real(dp), intent(in) :: fast_tol
 // real(dp), intent(in) :: long_tol
 // real(dp), intent(in) :: ort_tol
-// integer, intent(in) :: twice_vb
-// integer, intent(in) :: twice_cb
 // integer, intent(in) :: dynamic
 inline void f77_upt_lanczosdiag (f77_int const* handler, f77_int const& st_vb, 
     f77_int const& st_cb, f77_int const& n_vb, f77_int const& n_cb, f77_double 
     const& guess_vb, f77_double const& guess_cb, f77_int const& min_iter, 
     f77_int const& long_iter, f77_int const& max_iter, f77_double const& 
     fast_tol, f77_double const& long_tol, f77_double const& ort_tol, f77_int 
-    const& twice_vb, f77_int const& twice_cb, f77_int const& dynamic)
+    const& dynamic)
 {
   upt_lanczosdiag_ (handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, 
-      min_iter, long_iter, max_iter, fast_tol, long_tol, ort_tol, twice_vb, 
-      twice_cb, dynamic);
+      min_iter, long_iter, max_iter, fast_tol, long_tol, ort_tol, dynamic);
 }
 
 

@@ -5,9 +5,9 @@
 
 
 UptWrapper::UptWrapper(){
-  std::cout << "\nCreating UPTIGHT instance... ";
+    std::cout << "\nCreating UPTIGHT instance... ";
     f77_upt_initsession(_handler);
-    std::cout << "done." << std::endl;
+    std::cout << _handler << std::endl;
 
     std::cout << std::endl;
     f77_upt_getversion(_handler);
@@ -91,6 +91,21 @@ int UptWrapper::inituptight()
     }
 }
 
+int UptWrapper::set_mpi_comm(MPI_Comm comm)
+{
+    // checks that MPI_comm can be casted to integer
+    int icomm = (int) comm;
+    if (icomm != comm) 
+    {
+      return 1;
+    }
+    else
+    {
+      f77_upt_setmpicomm(_handler, comm);
+      return 0;
+    }
+}
+
 //! Get Uptight version
 void UptWrapper::get_version()
 {
@@ -151,11 +166,11 @@ void UptWrapper::compute_P_matrix(int poldir, char* sprs_fmt)
 //! Lanczos diagonalization
 void UptWrapper::lanczos_diag(int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                                 int min_iter, int long_iter, int max_iter,
-				double fast_tol, double long_tol, double ort_tol,
-				int twice_vb, int twice_cb, int dynamic) {
+				                        double fast_tol, double long_tol, double ort_tol,
+				                      int dynamic) {
 
   f77_upt_lanczosdiag(_handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, min_iter, long_iter,
-		       max_iter, fast_tol, long_tol, ort_tol, twice_vb, twice_cb,dynamic);
+		       max_iter, fast_tol, long_tol, ort_tol, dynamic);
 
 
 }

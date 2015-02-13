@@ -7,6 +7,7 @@
 #include <complex>
 #include <vector>
 
+#include <mpi.h>
 //-----------------------------------------------------------------------
 typedef std::complex<double> Complex; 
 
@@ -30,9 +31,11 @@ public:
   ~UptWrapper();
 
 
-  //!Static method to create a Upt wrapper instance
+  //! Static method to create a Upt wrapper instance
   static UptWrapper* create(); 
 
+  //! Initialize the MPI communicator for the library
+  int set_mpi_comm(MPI_Comm comm);
 
   //!Function to fill Upt parameters:
   /*!
@@ -127,14 +130,12 @@ public:
    * double fast_tol   : tolerance for fast loop        (~1e-1)
    * double long_tol   : tolerance on long loop         (~1e-10)
    * double ort_tol    : orthogonality tolerance        (~1e-5)
-   * int twice_vb      : old way of removing folded (not to use)
-   * int twice_cb      : old way
    * int dynamic       : new way using dynamical shift
    */
   void lanczos_diag (int st_vb, int st_cb, int n_vb, int n_cb, double guess_vb, double guess_cb,
                      int min_iter, int long_iter, int max_iter, 
                      double fast_tol, double long_tol, double ort_tol,
-		                 int twice_cb, int twice_vb, int dynamic);
+		                 int dynamic);
 
   // Solver flag. currently 0: CPU solver; 1: GPU; 2: GPU-split version 
   void set_solver_flag(int flag);

@@ -3,9 +3,12 @@
 topdir := ../../../../..
 
 include $(topdir)/Make.defs
+include Make.defs
+
+
 ARCH = $(shell uname -m)
 
-CXXFLAGS = -fPIC -I . 
+CXXFLAGS = -fPIC -I$(MPIINCL) -I . 
 
 UPTREV=HEAD
 UPTREPO=https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad/src
