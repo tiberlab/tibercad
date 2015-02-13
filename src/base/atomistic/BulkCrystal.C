@@ -45,7 +45,8 @@ BulkCrystal::do_init(void)
   _atoms = _rotated_basis;
 
   refresh();
-
+   
+  
 };
 
 
@@ -130,14 +131,14 @@ BulkCrystal::read_database(void)
 
         //Putting specie label (defined by an integer) in label data
         //It's used in cut_and_change_specie() and build_random_alloy()
-        tmp.set_label(static_cast<unsigned char>(i));
+        tmp.set_label(static_cast<Atom::label_t>(i));
         tmp.set_specie(specie);
 
-        record = n_s + "_x";
+        record = n_s + "_a";
         T(1) = db.get(record, 0.0);
-        record = n_s + "_y";
+        record = n_s + "_b";
         T(2) = db.get(record, 0.0);
-        record = n_s + "_z";
+        record = n_s + "_c";
         T(3) = db.get(record, 0.0);
         tmp.set_position(T);
         _lattice_basis.push_back(tmp);
@@ -249,16 +250,16 @@ BulkCrystal::read_database(void)
 
         //Putting specie label (defined by an integer) in label data
         //It's used in cut_and_change_specie() and build_random_alloy()
-        tmp.set_label(static_cast<unsigned char>(i));
+        tmp.set_label(static_cast<Atom::label_t>(i));
         tmp.set_specie(specie);
 
-        record = s2 + "_x";
+        record = s2 + "_a";
         Tb(1) = dbB->get(record, 0.0);
         Ta(1) = dbA->get(record, 0.0);
-        record = s2 + "_y";
+        record = s2 + "_b";
         Tb(2) = dbB->get(record, 0.0);
         Ta(2) = dbA->get(record, 0.0);
-        record = s2 + "_z";
+        record = s2 + "_c";
         Tb(3) = dbB->get(record, 0.0);
         Ta(3) = dbA->get(record, 0.0);
 
@@ -353,7 +354,7 @@ BulkCrystal::set_prim_vec(void)
 
   else
   {
-    Messages::error("Lattice type "+ _lattice_type + " doesn't exist");
+    Messages::error("Lattice type "+ _lattice_type + " doesn't exist in material "+_mat->get_name());
   }
 
   //Messages::info( "Bulk Material "+ _mat->get_name()+

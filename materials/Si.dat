@@ -169,24 +169,21 @@ lattice_type = fcc
 #Basis 
 
 #Number of basis specie
-n_basis_specie = 2 
+n_basis_specie = 1 
 #Number of basis atoms for any specie
-n_1 = 1
-n_2 = 1
+n_1 = 2 
 #Basis vectors T_"specie"_"#of atom"_"direction"
-T_1_1_x = 0.0
-T_1_1_y = 0.0
-T_1_1_z = 0.0
-T_1_2_x = 0.25
-T_1_2_y = 0.25
-T_1_2_z = 0.25
+T_1_1_a = 0.0
+T_1_1_b = 0.0
+T_1_1_c = 0.0
+T_1_2_a = 0.25
+T_1_2_b = 0.25
+T_1_2_c = 0.25
 
 #Name of species
 specie_1 = Si
-specie_2 = Si
 
 mass_1 = 28.00
-mass_2 = 28.00
 
 [densityfunctional_tb]
 

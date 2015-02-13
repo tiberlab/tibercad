@@ -50,5 +50,6 @@ if [ $usegdb -eq 1 ]
 then
   gdb -nx -ex run --args ${executable} $@
 else
-  exec ${executable} $@
+  /usr/pack/tibercad_sdk-2.2-ma/build/petsc-3.0.0-p12/externalpackages/mpich2-1.0.8/bin/mpiexec -n 2 ${executable} $@
+  #exec ${executable} $@
 fi

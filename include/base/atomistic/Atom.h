@@ -11,7 +11,7 @@
 
 class Elem;
 
-
+#define ILLEGAL_VALUE 255 
 //! Contains Atom definition
 /*!
  * Atom is defined mainly by atomic specie and
@@ -22,6 +22,9 @@ class Atom
 {
 public:
 
+  typedef unsigned char label_t;
+  typedef unsigned char atom_t;
+
   //! Atom constructor
   Atom();
 
@@ -29,7 +32,7 @@ public:
   Atom(std::string& init_specie, Tensor1& init_position);
 
   //!Complete constructor: specifies all atom characteristics
-  Atom(std::string& specie, Tensor1& position, unsigned int flag);
+  Atom(std::string& specie, Tensor1& position, label_t label, atom_t type);
 
   //! Set atom specie name
   void set_specie(const std::string& sp);
@@ -75,19 +78,17 @@ public:
   void set_label(unsigned int fg);
 
   //! Get atomic label
-  unsigned char get_label(void) const;
+  label_t get_label(void) const;
 
   //! checks whether an atom is cation, which by CONVENTION is label ==1 
   bool is_cation(void) const;
   
   //! Get the general purpose flag
-  void set_flag(char fg);
+  void set_type(atom_t fg);
 
   //! Get the general purpose flag
-  char get_flag(void) const;
+  atom_t get_type(void) const;
 
-  //! True if atom belong to structure. Useful during structure construction
-  bool belong_to_structure;
 
   //!Set element
   void set_elem(const Elem* el);
@@ -106,11 +107,11 @@ private:
   //! Atom position
   Point _position;
 
-  //! Atom number is primitive cell (e.g. anion/cation)
-  unsigned char _label;
+  //! Atom number in primitive cell (e.g. anion/cation)
+  label_t _label;
 
-  //! Used as generic flag 
-  char _flag;
+  //! Used for special purposes
+  atom_t _virtual_type;
 
 };
 
@@ -160,11 +161,11 @@ Point Atom::get_position() const
 inline
 void Atom::set_label(unsigned int fg)
 {
-  _label = static_cast<unsigned char>(fg);
+  _label = static_cast<Atom::label_t>(fg);
 }
 
 inline
-unsigned char Atom::get_label(void) const
+Atom::label_t Atom::get_label(void) const
 {
   return _label;
 }
@@ -177,16 +178,16 @@ bool Atom::is_cation(void) const
 
 
 inline
-void Atom::set_flag(char fg)
+void Atom::set_type(Atom::atom_t fg)
 {
-  _flag = fg;
+  _virtual_type = fg;
 }
 
 
 inline
-char Atom::get_flag() const
+Atom::atom_t Atom::get_type() const
 {
-  return _flag;
+  return _virtual_type;
 }
 
 

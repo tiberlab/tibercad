@@ -111,7 +111,7 @@ Module elasticity
 {
 
  name = strain
- non_linear_strain = true
+ mesh_deformation = true
  shape_iterations = 1
 
  plot = (Strain,Stress,Displacement)

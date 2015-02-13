@@ -463,17 +463,8 @@ Database::get(const string& variable,
 
    if (is_alloy() && (_mixing_type != NONE))
    {
-     size_t n = get_number_of_components();
+     //for alloys we always get the string of the first component
      result = _comp_db[0].get(variable, default_value, required);
-     //for (size_t i = 1; i < n; i++)
-     //  if (result != _comp_db[i].get(variable, default_value, required))
-     //  {
-     //    ostringstream os;
-     //    os << "In database of " << get_material() << ": parameter "
-     //      << variable << " in section " << get_section()
-     //      << " has different values in the alloy components.";
-     //    Messages::warning(os.str());
-     //  }
    }
    else
    {

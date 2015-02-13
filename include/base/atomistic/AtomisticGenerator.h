@@ -14,6 +14,13 @@
 #include "Alloy.h"
 #include "mesh.h"
 
+//! A class for building Atomistic Structure from mesh informations
+/*!
+ *Atomistic Generator can create 1D, 2D and 3D atomistic structure
+ *(directions confinement define structure periodicity), according
+ *to mesh informations. Material parameters (kind of lattice, atomic basis, ecc.)
+ *are read from material files
+ */
 
 
 //forward declaration
@@ -24,13 +31,6 @@ class BulkCrystal;
 
 
 
-//! A class for building Atomistic Structure from mesh informations
-/*!
- *Atomistic Generator can create 1D, 2D and 3D atomistic structure
- *(directions confinement define structure periodicity), according
- *to mesh informations. Material parameters (kind of lattice, atomic basis, ecc.)
- *are read from material files
- */
 class TBDLLOCAL AtomisticGenerator
 {
 
@@ -57,22 +57,23 @@ public:
   //! Copy back information to AtomisticStructure
   void finalize(void);
 
-  //! assign element to each atom
+  //! associate element to each atom
   /*!
    * This iterates on _super_basis
    */
-  void assign_elements(const std::set<ID>& reg_ids);
+  void associate_elements(const std::set<ID>& reg_ids);
   
   //! cut the structure (only flags atoms)
   void cut(const std::set<ID>& reg_ids, const std::string preserve = "none");
 
+  void dorestrict(bool passivation = true);
+  
   //! assign the correct specie to each atom
   /*!
    * iterates on _super_basis and creates _structure_basis with active atoms only
    */
   void assign_species(void);
-
-  void restrict(bool passivation = true);
+  
 
 protected:
 
@@ -105,10 +106,10 @@ protected:
   std::vector<Atom> _structure_basis;
 
   //!Supercell lattice points
-  std::vector<Tensor1> _super_lattice;
+  //std::vector<Tensor1> _super_lattice;
 
   //! Supercell conventional cell edges points
-  std::vector<Tensor1> _super_conv;
+  //std::vector<Tensor1> _super_conv;
 
   //! Dimensionality of the system (1, 2 or 3)
   unsigned int _dim;
@@ -119,12 +120,8 @@ protected:
   //! An internal instance of BondMap, to make passivation and final bond map
   BondMap* _bondmap;
 
-  //! Reference region ID
-  ID _reference_region_id;
-
   //! Reference material
   const Material* _reference_material;
-
 
   //!Bond map generation
   void bond_map_gen(const std::vector<Atom>& basis);
@@ -134,7 +131,6 @@ protected:
 
   //!Actually remove marked atoms from structure
   void remove_atoms(void);
-
 
   //! Real passivation routine (implemented in derived classes, it takes in account periodicity)
   void passivate();
@@ -209,16 +205,17 @@ private:
 
   //! Build random alloy structure
   void build_random_alloy(void);
+  void build_random_alloy2(void);
 
   //! Calculate environment dependent substitution probability
   double substitution_probability(size_t id, const Specie& sp);
 
-
   //! BulkCrystal of the reference material
   BulkCrystal* _bulk;
 
-};
+  std::vector<bool> _belong_to_structure;
 
+};
 
 
 

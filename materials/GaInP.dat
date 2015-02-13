@@ -27,7 +27,7 @@ bow_Eg_X = 0.2
 [atomistic_structure]
 n_basis_specie=2
 
-specie_1=Ga
+specie_1=GaIn
 specie_2=P
 
 [densityfunctional_tb]

@@ -51,8 +51,6 @@ void KspaceIntegration::calculate_density()
   int verbose = get_option("verbose",SimulationOptions::verbose());
 
   Mesh* kmesh = const_cast <Mesh*>( _kspace->get_k_mesh() );
-  //const Mesh* kmesh =  _kspace->get_k_mesh();
-
 
   /*
    * New approach:
@@ -64,7 +62,6 @@ void KspaceIntegration::calculate_density()
    *
    * Default is the old one, allowing for refinement.
    */
-
 
   map<Point, double> k_points;
 
@@ -111,6 +108,7 @@ void KspaceIntegration::calculate_density()
   dens_at_k_point.clear();
   real_space_density.clear();      
 
+
   for ( ; it_k_space != it_k_end ; ++it_k_space) //loop over k space elements
   {
     const KElem* kelem = *it_k_space;
@@ -130,51 +128,40 @@ void KspaceIntegration::calculate_density()
       for (unsigned int qp=0; qp<q_point.size(); qp++)
       {
 
-	double w = k_points[q_point[qp]];
-	k_points[q_point[qp]] = w + JxW[qp] * factor;
-
-
-	if (this->quadrature_type == QGAUSS)
-	{
-	  /*
-	  if (verbose > 2)
-	  {
-	    std::cout<<"(KIntegration) element "<< kelem->id()+1 <<"/" << kmesh->n_elem() <<
-	        " point "<< qp+1 <<"/"<<q_point.size() << std::endl;
-	  }
-	  if (verbose > 3)
-	    std::cout << "(KIntegration) k_point= ("<<q_point[qp](0)<<", "<<q_point[qp](1)
-	    << ", "<<q_point[qp](2)<<")" << std::endl;
-	  */
-
-	  double error_value;
-	  //dens_at_k_point.clear();
-
-	  ostringstream os;
-	  os << "k = (" << q_point[qp](0) << ", " << q_point[qp](1) << ", " <<
-	      q_point[qp](2) << "), w = " << (JxW[qp] * factor) << endl;
-	  Messages::info(os.str());
-	  calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
-
-	  // build the map between k-points and the integrated error quantity
-	  error_estimator[kelem] += error_value * JxW[qp] * factor;
-
-	  //std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
-
-	  // add quad point contrib for every real-space element-------------
-	  if (dens_at_k_elem.size() == 0)
-	  {
-	    dens_at_k_elem.resize(dens_at_k_point.size());
-
-	    for(unsigned int el=0; el < dens_at_k_point.size(); el++) 
-	      dens_at_k_elem[el] = dens_at_k_point[el] * JxW[qp] * factor;
-	  }
-	  else
-	  {
-	    for(unsigned int el=0; el < dens_at_k_point.size(); el++)
-	      dens_at_k_elem[el] += dens_at_k_point[el] * JxW[qp] * factor;
-	  }
-	}
+				double w = k_points[q_point[qp]];
+				k_points[q_point[qp]] = w + JxW[qp] * factor;
+      
+      
+				if (this->quadrature_type == QGAUSS)
+				{
+				  double error_value;
+				  //dens_at_k_point.clear();
+      
+				  ostringstream os;
+				  os << "k = (" << q_point[qp](0) << ", " << q_point[qp](1) << ", " <<
+				      q_point[qp](2) << "), w = " << (JxW[qp] * factor) << endl;
+				  Messages::info(os.str());
+				  calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
+      
+				  // build the map between k-points and the integrated error quantity
+				  error_estimator[kelem] += error_value * JxW[qp] * factor;
+      
+				  //std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
+      
+				  // add quad point contrib for every real-space element-------------
+				  if (dens_at_k_elem.size() == 0)
+				  {
+				    dens_at_k_elem.resize(dens_at_k_point.size());
+      
+				    for(unsigned int el=0; el < dens_at_k_point.size(); el++) 
+				      dens_at_k_elem[el] = dens_at_k_point[el] * JxW[qp] * factor;
+				  }
+				  else
+				  {
+				    for(unsigned int el=0; el < dens_at_k_point.size(); el++)
+				      dens_at_k_elem[el] += dens_at_k_point[el] * JxW[qp] * factor;
+				  }
+				}
       }  //qp sum (dens_at_k_elem is computed)
 
       if (this->quadrature_type == QGAUSS)
@@ -279,8 +266,6 @@ void KspaceIntegration::calculate_convergent_density()
 
   error_estimator.clear();
 
-  //real_space_density.clear();
-
   calculate_density();
 
 
@@ -297,50 +282,50 @@ void KspaceIntegration::calculate_convergent_density()
     while(norm_of_error > opt.relative_accuracy)
     {
       if (opt.uniform_refinement)
-	mesh_refinement.uniformly_refine(1);
+       	mesh_refinement.uniformly_refine(1);
       else
       {
 
-	ErrorVector error = ErrorVector(kmesh->n_elem(), kmesh);
-
-	estimate_error_for_refinement(error);
-
-	mesh_refinement.refine_fraction() = opt.refine_fraction;
-
-	mesh_refinement.max_h_level() = opt.maximum_ref_level;
-
-	mesh_refinement.coarsen_fraction() = 0.0;
-
-	if (verbose > 3)
-	{
-	  cout << "\nError vector:  " << error.size() << "\n";
-	  for (unsigned int i = 0; i < error.size(); i++ )
-	    cout << setprecision(10) <<  error[i] << "\n";
-	}
-
-	mesh_refinement.flag_elements_by_error_fraction(error);
-
-	mesh_refinement.refine_and_coarsen_elements();
-
-	if (verbose > 1)
-	{
-	  cout << "\nThe new mesh: \n";
-	  kmesh->print_info();
-	}
-
-	old_density = real_space_density;
-
-	//real_space_density.clear();
-
-	calculate_density();
-
-	norm_of_error = estimate_error();
-
-	if (verbose > 1)
-	  std::cout <<  "\n\n Relative Error: " << norm_of_error<<"\n"<<std::endl;
-
-      } // h-refinement
-
+      ErrorVector error = ErrorVector(kmesh->n_elem(), kmesh);
+  
+  		estimate_error_for_refinement(error);
+    
+  		mesh_refinement.refine_fraction() = opt.refine_fraction;
+    
+  		mesh_refinement.max_h_level() = opt.maximum_ref_level;
+    
+  		mesh_refinement.coarsen_fraction() = 0.0;
+    
+  		if (verbose > 3)
+  		{
+  		  cout << "\nError vector:  " << error.size() << "\n";
+  		  for (unsigned int i = 0; i < error.size(); i++ )
+  		    cout << setprecision(10) <<  error[i] << "\n";
+  		}
+    
+  		mesh_refinement.flag_elements_by_error_fraction(error);
+    
+  		mesh_refinement.refine_and_coarsen_elements();
+    
+  		if (verbose > 1)
+  		{
+  		  cout << "\nThe new mesh: \n";
+  		  kmesh->print_info();
+  		}
+    
+  		old_density = real_space_density;
+    
+  		//real_space_density.clear();
+    
+  		calculate_density();
+    
+  		norm_of_error = estimate_error();
+    
+  		if (verbose > 1)
+  		  std::cout <<  "\n\n Relative Error: " << norm_of_error<<"\n"<<std::endl;
+    
+         } // h-refinement
+    
     } //refinement loop
 
   }//end of refinement block
@@ -455,15 +440,11 @@ void KspaceIntegration::do_init(void)
   if ( !kopts.find_option("number_of_nodes"))
     throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");  
 
-
-  //std::cout<<"(KSI) kspace init: "<<std::endl;
-
   _kspace = new Kspace(kopts);
 
   if(_kspace == NULL)
     throw InitFailedException("Could not initialize k-space");
-  else
-    Messages::info("k-space initialized");
+  
 
   parse_options();
 

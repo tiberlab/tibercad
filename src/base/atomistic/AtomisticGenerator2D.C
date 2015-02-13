@@ -31,6 +31,11 @@ AtomisticGenerator2D::build()
   Elem* elem = NULL;
   Node* nd = NULL;
 
+   //<<<<<<< .mine
+   //1D and 2D structures are intended to be periodical
+   //set_periodicity(false,false,true);
+  //=======
+
   //Common building operations
   make_conv_cell();
   make_conv_basis();

@@ -10,7 +10,7 @@ Device
 #  z-growth-direction = (-1,2,-1,0)
 #  x-growth-direction = (0,0,0,1)
 
-   Doping { Nd = 1e17 type = donor}
+   Doping { Nd = 1e17  type = acceptor  level = 0.025  g=2} 
 
    Region bulk 
    {
@@ -57,6 +57,15 @@ Module driftdiffusion
   {
     voltage = $Vd[0.0]
   }
+
+  Physics
+  {
+    band_properties simple
+    {
+       m_dos_e = 0.0422 #known issue of factor 2^(2/3)
+       m_dos_h = 0.0422
+    }
+  }
 }
 
 Module efaschroedinger
@@ -65,7 +74,7 @@ Module efaschroedinger
   regions = (anode, cathode, bulk, ndop)
   poisson_model_name = driftdiffusion
 
-  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+  plot = (ProbabilityDensity, EigenEnergy, QuantumDensity,k_dispersion)
 
   Solver
   {
@@ -75,19 +84,19 @@ Module efaschroedinger
 
   Physics
   {
-    model = conduction_band #8x8
+    model = 2x2 #conduction_band #8x8
     spurious = none #  Foreman
-    #model = conduction_band
-    #cb_vb_coupling = false
+    cb_vb_coupling = false
     #kpVVtermSymmetric = true
     #Ep_1 = 2
     #Ep_2 = 2
     #m_c = 0.2
-    #m_v = 1.5
+    m_v = 0.067 
   }
 
-  DDispersion
+  NOTBulkDispersion
   {
+    point=(0.0 0.0 0.0)
     k-path = G-X
     k_max = 1.0
     number_of_nodes = 10	
@@ -108,13 +117,14 @@ Module sweep
 
 Module negf
 {
-  plot = (elDensity, hlDensity)
+  plot = (hlDensity)
+  #plot = (elDensity)
   regions = (bulk, ndop)
 
   potential_simulation = driftdiffusion
   Boundary anode{}
   Boundary cathode{}
-  #print_matrices = true
+  print_matrices = true
  
   Solver
   {
@@ -126,6 +136,7 @@ Module negf
     delta = 1e-12
     n_kT = 30
     deltaEc = 0.1
+    deltaEv = 0.1
     Emin = -0.5
     Emax = 0.5
     Estep = 0.002
@@ -138,11 +149,11 @@ Module negf
   
   k_integration_density
   {
-    k_max = 1.5
+    k_max = 1.30
 #    verbose = 4 
 #    gamma_point_calculation = true
     # k_max = 0.750
-    number_of_elements = (5,5)
+    number_of_elements = (6,6)
   }
 
 # k_integration_current
@@ -161,7 +172,7 @@ Module negf
 Simulation
 {
   temperature = 300
-  #solve = (driftdiffusion,negf) 
+  #solve = (driftdiffusion, quantum_el) 
   solve = (driftdiffusion, negf) 
   #solve = (sweep_drain)
   resultpath = output

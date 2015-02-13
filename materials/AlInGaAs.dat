@@ -3,8 +3,8 @@
 alloy = 2
 structure = zb
 
-comp_A = GaInP
-comp_B = AlGaP
+comp_A = GaInAs
+comp_B = AlGaAs
 x_A = 0.5
 x_B = 0.5
 
@@ -25,7 +25,7 @@ bow_Eg_X = 0
 n_basis_specie=2
 
 specie_1=AlGaIn
-specie_2=P
+specie_2=As
 
 [densityfunctional_tb]
 

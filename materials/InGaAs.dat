@@ -47,7 +47,7 @@ bow_d = 0.0
 [atomistic_structure]
 n_basis_specie=2
 
-specie_1=In
+specie_1=InGa
 specie_2=As
 
 [densityfunctional_tb]

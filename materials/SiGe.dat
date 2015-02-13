@@ -1,20 +1,22 @@
-# AlGaAs
+# SiGe 
 
 alloy = 2
+alloy_type=binary
 structure = zb
 
-comp_A = AlAs
-comp_B = GaAs
+comp_A = Si
+comp_B = Ge
 
 
 
 #Atomistic structure informations
 #
 [atomistic_structure]
-n_basis_specie=2
+n_basis_specie=1
 
-specie_1=AlGa
-specie_2=As
+specie_1=SiGe
+
+#specie_2=SiGe
 
 [densityfunctional_tb]
 

@@ -284,16 +284,13 @@ Material::fill_species(void)
   //Useful for assigning components to atoms in random alloys
   get_database().set_section("atomistic_structure");
   unsigned int n_species = get_database().get("n_basis_specie", 0);
-  for (unsigned int i = 0; i < n_species; i++)
+  for (unsigned int i = 1; i <= n_species; i++)
   {
-    std::string s;
     std::stringstream out;
-    out << i + 1; //Species are defined with Fortran indexing in materials file
-    s = out.str();
-    std::string sp;
-    sp = get_database().get("specie_" + s, "None");
-    Specie tmp(sp);
+    out << i; 
+    Specie tmp(get_database().get("specie_" + out.str(), "None"));
     _species.insert(tmp);
+    _crystal_type_map[i].insert(tmp);
   }
 }
 
@@ -312,19 +309,62 @@ Material::has_specie(Specie sp) const
 }
 
 bool
-Material::is_anion(Specie sp) const
+Material::is_specie(Specie sp, unsigned int label) const
 {
-    if (!has_specie(sp))
-    {
-      Messages::error("Error in is_anion(): specie " +
-              sp.get_string() + "not found in material " + get_name());
-    }
-    else
-    {
-      return CrystalDefs::is_anion(get_name(), sp);
-    }
+  if (!has_specie(sp))
+  {
+    Messages::error("Error in is_specie(): specie " +
+                    sp.get_string() + "not found in material " + get_name());
+  }
+  else
+  {
+    return ( ((_crystal_type_map.find(label))->second).count(sp) > 0 ); 
+  }
+
 }
 
+unsigned int
+Material::get_label(Specie sp) const
+{
+  if (!has_specie(sp))
+  {
+    return 255;
+  }
+  else
+  {
+    std::map<unsigned int, std::set<Specie>>::const_iterator
+      it = _crystal_type_map.begin();
+    
+    for ( ; it != _crystal_type_map.end(); ++it)
+      if ( (it->second).count(sp) > 0 ) return it->first; 
+    
+  }
+}
+
+void
+Material::print_species(void) const
+{
+  std::cout<<"Species: ";
+  std::set<Specie>::iterator sp = _species.begin();
+  for( ; sp != _species.end(); ++sp)
+    std::cout<< (*sp)<<"  ";
+  std::cout<<std::endl;
+  
+  for (unsigned int i=1; i<= _crystal_type_map.size(); i++)
+  {
+    std::set<Specie>::iterator it =  (_crystal_type_map.find(i)->second).begin();
+    std::cout<<i;
+    
+    for( ; it != (_crystal_type_map.find(i)->second).end(); ++it)
+    {
+      std::cout<<"  "<< (*it);
+    }
+    std::cout<<std::endl;
+  }
+}
+
+/*
+// Assumes cation is first specie in compound
 bool
 Material::is_cation(Specie sp) const
 {
@@ -335,6 +375,8 @@ Material::is_cation(Specie sp) const
     }
     else
     {
-      return CrystalDefs::is_cation(get_name(), sp);
+      return is_specie(sp, 1);
     }
 }
+*/
+

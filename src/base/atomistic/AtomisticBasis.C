@@ -71,7 +71,7 @@ AtomisticBasis::get_ttype_lattice_vectors(void)
 }
 
 int
-AtomisticBasis::get_type_index(const std::string& type)
+AtomisticBasis::get_type_index(const std::string& type) const
 {
   int result = 0;
   for (int i = 0; i < N_types; i++){
@@ -246,12 +246,8 @@ AtomisticBasis::print_gen(const std::string& path) const
 
       for (unsigned int i = 0; i < _atoms.size(); i++)
         {
-          unsigned int n_specie;
-          for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
-            {
-              if (_atom_types[n_specie] == _atoms[i].get_specie() ) break;
-            }
-          file << std::setw(10) << i + 1 << std::setw(5) << n_specie + 1
+          std::string strsp = _atoms[i].get_specie().get_string();
+          file << std::setw(10) << i + 1 << std::setw(5) << get_type_index(strsp) 
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(0))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(1))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(2)) << "\n";

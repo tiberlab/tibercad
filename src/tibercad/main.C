@@ -281,6 +281,9 @@ int main (int argc, char** argv)
      * MPI-using objects will be destroyed after MPI_Finalize
      */
 
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
     // Create the entry point object
     // here we pass MPI_COMM_WORLD because we are in the main
     TiberCad tibercad(MPI_COMM_WORLD);

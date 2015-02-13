@@ -4,29 +4,28 @@
 
 Atom::Atom()
 :_specie(),
-belong_to_structure(false),
 _el(NULL),
 _position()
 {
-  _flag = 0;
+  _virtual_type = ILLEGAL_VALUE;
 }
 
 Atom::Atom(std::string& specie, Tensor1& position)
-:belong_to_structure(false),
-_el(NULL),
+:_el(NULL),
 _position(position(1), position(2), position(3)),
 _specie(specie)
 {
-  _flag = 0;
+  _virtual_type = ILLEGAL_VALUE;
+  _label = ILLEGAL_VALUE;
 }
 
-Atom::Atom(std::string& specie, Tensor1& position, unsigned int flag)
-:belong_to_structure(false),
-_el(NULL),
+Atom::Atom(std::string& specie, Tensor1& position, label_t label, atom_t type)
+:_el(NULL),
 _position(position(1), position(2), position(3)),
-_specie(specie)
+ _specie(specie),
+ _label(label),
+ _virtual_type(type)
 {
-  _flag = flag;
 }
 
 void Atom::set_elem(const Elem* el)

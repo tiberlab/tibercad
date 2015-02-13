@@ -95,7 +95,7 @@ Fodule elasticity
 {
   regions = all
   
-  non_linear_strain = true
+  mesh_deformation = true
 
   shape_iteration = 2
 

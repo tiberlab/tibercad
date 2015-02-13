@@ -104,7 +104,7 @@ class AtomisticBasis
   const std::vector<std::string>& get_atom_types (void);
 
   //! Get atom type index (types are stored in _atom_types)
-  int get_type_index   (  const std::string &   type    );
+  int get_type_index(  const std::string &   type ) const;
 
   //! Empty list of atom types
   void clear_atom_types(){_atom_types.clear();};
@@ -114,6 +114,7 @@ class AtomisticBasis
 
   //! Set periodicity information
   void set_periodicity(std::vector<bool> periodicity);
+  void set_periodicity(bool, bool, bool);
 
   //! Ask for periodicity along coordinate axes
   /*!
@@ -121,7 +122,7 @@ class AtomisticBasis
    */
   bool is_periodic(unsigned int direction) const;
 
-  void set_periodic(bool periodic) {};
+  //void set_periodic(bool periodic) {};
 
   //! Tells if the structure is periodic in any direction
   bool is_periodic(void) const;
@@ -181,9 +182,6 @@ class AtomisticBasis
 
   //! Set of all atom types in structure
   std::vector<std::string> _atom_types;
-  
-  // TODO to be deleted
-  bool _is_periodic;
 
   private:
 
@@ -262,6 +260,16 @@ AtomisticBasis::set_periodicity(std::vector<bool> periodicity)
   _periodicity = periodicity;
 }
 
+inline
+void
+AtomisticBasis::set_periodicity(bool px, bool py, bool pz)
+{
+  _periodicity.resize(3);
+  _periodicity[0] = px;
+  _periodicity[1] = py;
+  _periodicity[2] = pz;
+}
+
 
 inline
 bool
@@ -278,15 +286,8 @@ inline
 bool
 AtomisticBasis::is_periodic(void) const
 {
-  return(is_periodic(0) || is_periodic(1) || is_periodic(2));
+  return(_periodicity[0] || _periodicity[1] || _periodicity[2]);
 }
-
-//inline
-//void
-//AtomisticBasis::set_periodic(bool periodic)
-//{
-//  _is_periodic = periodic;
-//}
 
 inline
 const BondMap&

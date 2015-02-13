@@ -39,6 +39,8 @@ class Material : public PhysicalObject
     //! An iterator to iterate over all dopants
     typedef std::set<Dopant*>::iterator dopant_iterator;
 
+    typedef std::set<Specie>::iterator crystal_species_iterator;
+  
     //! A const iterator to iterate over all dopants
     //typedef std::set<Dopant*>::const_iterator const_dopant_iterator;
 
@@ -117,16 +119,26 @@ class Material : public PhysicalObject
 
     //! Print some information
     void info(void) const;
-
+ 
     //! Tells if a specie belongs to the material
     bool has_specie(Specie) const;
 
-    //! Tells if a specie is defined as anion
-    virtual bool is_anion(Specie) const;
+    //! tells if a specie occupies a defined position in lattice
+    bool is_specie(Specie, unsigned int) const; 
+   
+    //! gives label (atom position in unit cell) from specie
+    unsigned int get_label(Specie) const;
 
-    //! Tells if a specie is defined as cation
-    virtual bool is_cation(Specie) const;
+    //! count all atomic species of a given label 
+    unsigned int count_species(unsigned int) const;
 
+    //! iterators over all species in one specific position
+    crystal_species_iterator species_begin(unsigned int label) const;
+  
+    crystal_species_iterator species_end(unsigned int label) const;
+    
+    //! Print the list of atomic species in material
+    void print_species(void) const;
 
   protected:
 
@@ -166,8 +178,17 @@ class Material : public PhysicalObject
     void set_crystal(RotatedCrystal* crystal);
 
     //! Fill list of species, to be used during initialization
-    void fill_species(void);
+    virtual void fill_species(void);
 
+    
+     //! List of all species in material (irrespective of their label) 
+    std::set<Specie> _species;
+
+    /*! Map atomic labels into a set of species. 
+     *  e.g. InGaAs has atoms with label 1 -> (In, Ga)
+     *              and atoms with label 2 -> As
+     */ 
+    std::map<unsigned int, std::set<Specie>> _crystal_type_map;
 
   private:
 
@@ -197,8 +218,6 @@ class Material : public PhysicalObject
     //! Clear all doping
     void clear_doping(void) TBDLLOCAL;
 
-    //! List of all species 
-    std::set<Specie> _species;
 
 };
 
@@ -297,5 +316,35 @@ Material::acceptors_end(void) const
   return _acceptors.end();
 }
 
+  
+inline
+Material::crystal_species_iterator 
+Material::species_begin(unsigned int label) const
+{
+  if (_crystal_type_map.count(label)>0)
+    return (_crystal_type_map.find(label)->second).begin();
+  else
+    return (_crystal_type_map.find(1)->second).end();
+}
+
+inline
+Material::crystal_species_iterator 
+Material::species_end(unsigned int label) const
+{
+  if (_crystal_type_map.count(label)>0)
+    return (_crystal_type_map.find(label)->second).end();
+  else
+    return (_crystal_type_map.find(1)->second).end();
+}
+
+inline
+unsigned int
+Material::count_species(unsigned int label) const
+{
+  if (_crystal_type_map.count(label)>0)
+    return (_crystal_type_map.find(label)->second).size();
+  else
+    return 0;
+}
 
 #endif // _MATERIAL_H_

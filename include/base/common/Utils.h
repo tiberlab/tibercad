@@ -101,6 +101,9 @@ class Utils
     static void tokenize(const std::string& input,
         std::vector<std::string>& tokens, const char* delimiter = ".");
 
+    //! Cuts a string into tokens using CamelRules
+    static void camel_tokenize(const std::string& input,       
+        std::vector<std::string>& tokens);
 
     //! Find matching strings in a vector of strings
     static void find_matching_strings(const std::string& regex,
@@ -247,6 +250,20 @@ class Utils
         std::string _message;
         unsigned int _progress_size;
         unsigned int _progress_step;    
+    };
+
+
+    //! Symmetric pair: <A,B>==<B,A>, is obtained by ordering a pair<A,B> such that A<=B
+    template <class T > 
+    class Couple : public std::pair<T, T> 
+    {
+      public:
+     
+      Couple(const T& a, const T& b): std::pair<T,T>(a,b)
+      {if(a>b){(*this).first = b ; (*this).second = a; }};
+
+      virtual ~Couple(){};
+
     };
 
   private:
@@ -407,7 +424,6 @@ Utils::bernoulli_inv(double x)
 
   return res;
 }
-
 
 
 

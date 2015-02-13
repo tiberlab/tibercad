@@ -175,5 +175,10 @@ config.status: configure VERSION
 aclocal.m4: acinclude.m4
 	aclocal -I /usr/share/autoconf-archive/
     
+.PHONY: echo_cuda
+
+echo_cuda:
+	@echo $(have_cuda)
+
 
 include Make.rules

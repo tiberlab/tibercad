@@ -16,4 +16,10 @@ test13     QW  GaAs/AlGaAs      Elasticity + DD
 test14     Column GaN           Elasticity
 test15     Si pn 1D             DD + Thermal
 test16     ZnO column           Elasticity + DD    
-test17     QW GaN/InGaN         Elasticity + Macrostrain + DD + TB + opticsTB 
+test17     QW GaN/InGaN         Elasticity + Macrostrain + DD + TB + opticsTB
+test18     Atomistic            Atomistic generator test 
+test19
+test20                          Negf tests
+test21
+test22
+test23

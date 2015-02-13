@@ -120,6 +120,7 @@ Elasticity::parse_options(void)
   myopt.shape_error = opt.get_option("shape_error",1e-2);
   myopt.non_linear_strain = opt.get_option("non_linear_strain",false);
   myopt.non_linear_strain = opt.get_option("nonlinear_strain", myopt.non_linear_strain);
+  myopt.non_linear_strain = opt.get_option("mesh_deformation", myopt.non_linear_strain);
   myopt.shape_iterations = opt.get_option("shape_iterations",20);
   //myopt.deformation = opt.get_option("do_deformation",false);
   myopt.magnification = opt.get_option("magnification",1);

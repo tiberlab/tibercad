@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#create unrolled geo file
+gmsh -0 $1
+
+drawlines $1_unrolled > script.jmol
+
+
+

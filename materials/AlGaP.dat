@@ -22,7 +22,7 @@ bow_Eg_X = 0.13
 [atomistic_structure]
 n_basis_specie=2
 
-specie_1=Al
+specie_1=AlGa
 specie_2=P
 
 [densityfunctional_tb]

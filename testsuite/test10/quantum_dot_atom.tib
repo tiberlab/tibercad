@@ -83,7 +83,8 @@ Device qdot
     reference_region = nside  # barrier1 
     #path = tb1.gen
     passivation = yes
-    #preserve = conventional
+    print = (gen, xyz, tgn)
+    translation = (0.0,  0.8983559, -4.39363) 
   }
 
 }
@@ -144,7 +145,7 @@ Module elasticity
 
   plot = (Strain)
 
-  non_linear_strain = true
+  mesh_deformation = true
   shape_iterations = 1
 
   Physics 

@@ -321,18 +321,16 @@ Device::setup_regions(void)
 
     // some options can be provided globally for all regions
 
-    // The default material is Si
-    string material = _options.get_option("material", "Si");
-    string x_frac = _options.get_option("x", "0.5");
+    // No default material
+    string material = _options.get_option("material", "none");
+    string x_frac = _options.get_option("x", "0.0");
     string xdir = _options.get_option("x-growth-direction", "");
     string ydir = _options.get_option("y-growth-direction", "");
     string zdir = _options.get_option("z-growth-direction", "");
 
-
     material = data.get_option("material", material);
     data["material"] = material;
     x_frac = data.get_option("x", x_frac);
-    //data.set_option("x", x_frac);
 
     xdir = data.get_option("x-growth-direction", xdir);
     if (!xdir.empty())
@@ -452,36 +450,39 @@ Device::setup_atomistic_structures(void)
   for ( ; it != end; ++it)
   {
     ModelOptions data(it->second);
-    // The default material is Si
-    string material = _options.get_option("material", "Si");
-    material = data.get_option("reference_material", material);
-    string x_frac = _options.get_option("x", "0.5");
+    // use device global material as reference  
+    string material = _options.get_option("material", "none");  
+    string x_frac = _options.get_option("x", "0.0");
     string xdir = _options.get_option("x-growth-direction", "");
     string ydir = _options.get_option("y-growth-direction", "");
     string zdir = _options.get_option("z-growth-direction", "");
+    material = data.get_option("reference_material", material);
 
-    ModelOptions refopts;
-    refopts.set_name(material);
-    refopts["x"] = x_frac;
-    refopts.set_option("dimension", get_mesh().mesh_dimension());
-
-    xdir = refopts.get_option("x-growth-direction", xdir);
-    if (!xdir.empty())
-      refopts["x-growth-direction"] = xdir;
-    ydir = refopts.get_option("y-growth-direction", ydir);
-    if (!ydir.empty())
-      refopts["y-growth-direction"] = ydir;
-    zdir = refopts.get_option("z-growth-direction", zdir);
-    if (!zdir.empty())
-      refopts["z-growth-direction"] = zdir;
-
-    ModelOptions::submodel_iterator it(data.submodels_begin("reference_material"));
-    if (it != data.submodels_end("reference_material"))
+    if (material != "")
     {
-      refopts += it->second;
-      data.delete_submodels("reference_material");
+      ModelOptions refopts;
+      refopts.set_name(material);
+      refopts["x"] = x_frac;
+      refopts.set_option("dimension", get_mesh().mesh_dimension());
+ 
+      xdir = refopts.get_option("x-growth-direction", xdir);
+      if (!xdir.empty())
+        refopts["x-growth-direction"] = xdir;
+      ydir = refopts.get_option("y-growth-direction", ydir);
+      if (!ydir.empty())
+        refopts["y-growth-direction"] = ydir;
+      zdir = refopts.get_option("z-growth-direction", zdir);
+      if (!zdir.empty())
+        refopts["z-growth-direction"] = zdir;
+     
+      ModelOptions::submodel_iterator it(data.submodels_begin("reference_material"));
+      if (it != data.submodels_end("reference_material"))
+      {
+        refopts += it->second;
+        data.delete_submodels("reference_material");
+      }
+      data.add_submodel("reference_material", refopts);
     }
-    data.add_submodel("reference_material", refopts);
 
     const string& st_name = data.get_name();
 
@@ -1440,12 +1441,14 @@ Device::reassign_alloy_regions(const string& source,
             map<Specie, unsigned int>::iterator stat_end(counts.end());
             for ( ; stat_it != stat_end; ++stat_it)
             {
-              if (matA->has_specie(stat_it->first) && matA->is_cation(stat_it->first))
+              bool inA = matA->has_specie(stat_it->first);
+              bool inB = matB->has_specie(stat_it->first);
+              if (inA && !inB) 
               {
                 x = stat_it->second;
                 sum += x;
               }
-              else if (matB->has_specie(stat_it->first) && matB->is_cation(stat_it->first))
+              else if (!inA && inB)
                 sum += stat_it->second;
             }
             //cerr << x << " " << sum << endl;
@@ -1471,12 +1474,14 @@ Device::reassign_alloy_regions(const string& source,
               map<Specie, unsigned int>::iterator stat_end(counts.end());
               for ( ; stat_it != stat_end; ++stat_it)
               {
-                if (matA->has_specie(stat_it->first) && matA->is_cation(stat_it->first))
+                bool inA = matA->has_specie(stat_it->first);
+                bool inB = matB->has_specie(stat_it->first);
+                if (inA && !inB)
                 {
                   conc = stat_it->second;
                   sum += conc;
                 }
-                else if (matB->has_specie(stat_it->first) && matB->is_cation(stat_it->first))
+                else if (!inA && inB)
                   sum += stat_it->second;
               }
 
@@ -1486,24 +1491,6 @@ Device::reassign_alloy_regions(const string& source,
 
           }
 
-
-          /*
-          double sites = 1e-6; // this eliminates the 0/0 case
-          int ctr = 0;
-          for (int i = 0; i < atoms.size(); ++i)
-          {
-            // TODO alloys now work only for cation based ones
-            if ((str->get_structure_atom(atoms[i])).is_cation())
-            {
-              sites++;
-              if (matA->has_specie(str->get_structure_atom(atoms[i]).get_specie()))
-                ctr++;
-            }
-          }
-
-          // this is the local composition
-          double x = ctr / sites;
-          */
 
           int i = 0;
           while ((i < (composition.size() - 1)) &&

@@ -170,16 +170,29 @@ public:
   bool build_clusters(void);
 
   //! Get the reference material
-  const Material* get_reference_material(void) const;
+  //const Material* get_reference_material(void) const;
 
   //! Apply reordering to atoms
   void reorder(const std::vector<unsigned int>& P);
 
   //! Restrict the atomistic structure to given sub-regions
-  void restrict(const std::set<ID>& rgn_ids);
+  void dorestrict(const std::set<ID>& rgn_ids);
 
-  //! Get the atoms in a given mesh element
+   //! Get the atoms in a given mesh element
   const std::vector<unsigned int>& get_atoms_in_elem(const Elem* element) const;
+
+  
+  //! Used to set the virtual types. 
+  void set_virtual_types(const std::set<std::string>& types);
+
+  //! clear the atom_type set
+  void clear_virtual_types(){_virtual_atom_types.clear();};
+
+  //! Get atom type index (types are stored in _virtual_atom_types)
+  unsigned int get_virtual_type_index(const std::string &  type) const;
+  
+  //! used by print upg (temporarily here)
+  void assign_virtual_species(void);
 
   //! Register a callback to be executed after structure creation
   /*!
@@ -189,6 +202,14 @@ public:
   static void register_callback(std::string& name,
       boost::function<void(void)> callback);
 
+  void interface_interactions(const Material* mat1, 
+                              const Material* mat2, 
+                              std::set<std::string>& str);
+
+  void interface_interactions(const Material* mat1, 
+                              const Material* mat2, 
+                              std::vector<std::string>& str,
+                              std::vector<double>& frac);
 
 private:
 
@@ -234,8 +255,16 @@ private:
   void read_structure(const std::string& path);
 
   //! Read tgn structure
-  void read_tgn(const std::string& path);
+  void read_xyz(const std::string& path, const Tensor1& transl);
+  
+  //! Read xyz structure
+  void read_gen(const std::string& path, const Tensor1& transl);
 
+  //! Read gen structure
+  void read_tgn(const std::string& path, const Tensor1& transl);
+
+  //! set the labels (used e.g. when reading xyz)
+  void set_labels(void);
 
   //! Scale factor (from mesh_units to amstrong mesh_units/1e-10)
   double _scale;
@@ -266,7 +295,7 @@ private:
   const Device* _device;
 
   //! Reference material
-  Material* _reference_material;
+  //Material* _reference_material;
 
   //! Database of reference material
   //Database _reference_material_db;
@@ -282,6 +311,11 @@ private:
   //! Manage structure printing
   void print_driver(void);
 
+  //! Set virtual atom types in structure as for VCA InGaAs (InGa), As 
+  std::vector<std::string> _virtual_atom_types;
+
+  std::map<std::string, unsigned int> _virtual_type_idx;
+
 };
 
 //----------------------------------------------------
@@ -292,6 +326,8 @@ private:
 inline
 ModelOptions& AtomisticStructure::get_options(void)
 {
+    assert( !(_options.is_empty()) );
+
     return _options;
 }
 
@@ -381,11 +417,11 @@ AtomisticStructure::get_N_without_H(void) const
 }
 
 
-inline 
-const Material* 
-AtomisticStructure::get_reference_material(void) const
-{
-  return _reference_material;
-}
+//inline 
+//const Material* 
+//AtomisticStructure::get_reference_material(void) const
+//{
+//  return _reference_material;
+//}
 
 #endif // _ATOMISTICSTRUCTURE_H_

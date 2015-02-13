@@ -109,25 +109,79 @@ The  following kewords may  be  defined in *Atomistic*  block
  ``reference_region`` : string 
     defines the name of the region whose  material  and  growth directions  are  taken  as  a  reference for  lattice  construction
 
+ ``reference_material`` : string 
+    defines a general reference  material  and  growth directions that are taken as a  reference for  lattice  construction
+
  ``passivation`` : boolean
-    if true an hydrogen passivation is  applied to the structure. Hydrogen atoms are put at a distance of 1A, in the same direction of the original crystal bond.
+    if true an hydrogen passivation is  applied to the structure. 
+    Hydrogen atoms are inserted at a defined distance in the same direction of the original crystal bond.
+
+ ``hydrogen_distance`` : real
+    defines the bond length at which Hydrogens are placed from the surface atoms (default 1.2 Angstrom)
+
+ ``periodic`` : boolean
+    if **true** makes the structure periodic. For instance for a 3D mesh the structure is made periodic in all 3 cartesian directions.
+    Limitations: the geometry must be a simple box with sides oriented along the cartesians directions.
+
+ ``translation`` : real vector
+    defines a translation vector as (dx, dy, dz) used to move the atomistic structure w.r.t. the mesh regions. 
+    It is useful for fine alignments of atoms to the mesh. 
+ 
+ ``preserve`` : string
+    **Not active yet**. In principle should be used to ensure that all atoms of unit cell or conventional cell are kept in the structure
+
+ ``load or load_structure`` : string
+    specifies a (relative) path/file for loading of an external structure. valid formats are tgn, xyz, gen.
+    The structure is trimmed out the regions on which the atomistic structure is defined. 
+    Note: when loading xyz files, the supercell vectors must be defined in the input file.
+
+  ``lattice_vectors`` : list of floating
+    specifies the periodicity  vectors used  in  a  supercell  calculation.
+    The format is (x1,y1,z1,x2,y2,z2, x3,y3,z3),  values  are  in  A, e.g.( 52.728 , 0.0, 0.0 , 0.0, 45.664 , 0.0, 0,0, 42.758 )
+
+ ``y_length`` : real
+    defines the lateral supercell size (in Angstrom) in 1D (quantu wells) and 2D (nanowires) structures.
+
+ ``z_length`` : real
+    defines the lateral supercell size (in Angstrom) in 1D and 2D structures.
+
+ ``random_alloy`` : boolean
+    defines generation of a random alloy structure (default = **false**). 
+
+ ``random_generator_seed`` : integer
+    an integer defining the seed. Useful to produce exactly the same random structure.   
+
+ ``fix_mean_alloy_concentration`` : boolean
+    if **true** the number of substituted atoms is as close as possible to the nominal molar fraction of the alloy.
+    if **false** each atom is substituted with a probability proportional to the molar fraction. 
+
+ ``clustering`` : boolean
+    if **true** an alloy with clustering is generated. This is done by placing a fraction of seed atoms (cluster_seed) with uniform 
+    distribution, then the remaing fraction of atoms is placed biased with a larger probability near existing ions.  
+
+ ``cluster_seeds`` : real
+    defines the fraction of ions placed with uniform distribution. Must be >0. (default = 0.02). 
+
+ ``extract_alloy_statistics`` : boolean
+    if **true** the local concentration is computed by averaging over small local spheres of radius defined by control_volume_radius.
+
+ ``control_volume_radius`` : real
+    defines the radius of a sphere on which local concentration is computed (default = 0.5 nm).     
+   
+ ``reference_atom`` : integer
+    sets the atom label (typically 1=cations, 2=anions) where local concentration is computed     
+
+ ``plot_alloy_statistics`` : boolean 
+    if **true**, the local concentration is mapped on the mesh and plotted in a mesh format.
+
+ ``meshdata_format`` : string
+    defines the output format of the alloy statistics (default = "vtk")
 
  ``print`` : string
    *xyz*:  xyz file  format;
    *xyb*: modified xyz format with additional columns containing the bond map;
    *gen*: gen file  format;
    *tgn*: tibercad format which combines informations on the mesh and the atoms.
-
-
- ``load`` : string
-    specifies a  (relative) path for  loading of a  .tgn  file. In  this  way a  previously created atomistic/mesh structure may be  used  for further calculations  
-
-
- ``lattice_vectors`` : list of floating 
-    specifies the periodicity  vectors used  in  a  periodical supercell  calculation.
-    The format is (x1,y1,z1,x2,y2,z2, x3,y3,z3),  values  are  in  A, e.g.( 52.728 , 0.0, 0.0 , 0.0, 45.664 , 0.0, 0,0, 42.758 )
-
-
 
 Module empirical_tb 
 -----------------------

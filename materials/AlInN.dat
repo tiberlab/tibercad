@@ -24,6 +24,12 @@ bow_e15 = -0.305
 [pyroelectricity]
 bow_Pz = -0.070
 
+[atomistic_structure]
+
+n_basis_specie=2
+specie_1=AlIn
+specie_2=N
+
 
 [densityfunctional_tb]
 

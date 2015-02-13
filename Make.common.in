@@ -144,7 +144,7 @@ target := $(objects)
 
 # for the following targets we set the target variable and go down
 # into subdirectories (if defined)
-.PHONY: all clean distclean
+.PHONY: all clean distclean 
 
 
 # default target

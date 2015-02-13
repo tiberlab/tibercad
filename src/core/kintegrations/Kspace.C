@@ -200,7 +200,7 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
   if (basis1(1) == 1)
     transform_matrix = Tensor2Sym(1);
   else
-    {
+  {
       Tensor1 basis2;
      
       basis2(1) = 0;
@@ -210,20 +210,14 @@ void  Kspace::define_k_space(Tensor1 k_vector, unsigned int n)
       Tensor1 basis3 = vectorProduct(basis1, basis2);
 
       
-      for (short i = 1; i < 4; i++)
-	{
-	  transform_matrix(i,1) = basis2(i);
-	  transform_matrix(i,2) = basis3(i);
-	  transform_matrix(i,3) = basis1(i);
-	}
+     for (short i = 1; i < 4; i++)
+	   {
+	     transform_matrix(i,1) = basis2(i);
+	     transform_matrix(i,2) = basis3(i);
+	     transform_matrix(i,3) = basis1(i);
+	   }
       
-    }
-
- 
-
-  // k_dim = 1;
-
- 
+  }
 
 }
 
@@ -279,9 +273,7 @@ void Kspace::define_k_space(Tensor1 k_vector1,unsigned int n,  Tensor1 k_vector2
     transform_matrix(i,3) = basis2(i);
   }
 
-  cerr << setw(12) << transform_matrix << endl;
-
-  //  k_dim = 2;
+  // cerr << setw(12) << transform_matrix << endl;
 
 }
 
@@ -351,9 +343,7 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
  }
 
 
-  cerr << setw(12) << transform_matrix << endl;
-
- // k_dim = 3;
+ // cerr << setw(12) << transform_matrix << endl;
 
 }
 
@@ -361,8 +351,6 @@ void Kspace::define_k_space(Tensor1 k_vector1, unsigned int n, Tensor1 k_vector2
 //----------------------------------------------------------------------------------------//
 void Kspace::do_init() throw (InitFailedException)
 {
-
-  Messages::info("k-space creation\n");
 
   //if (! mod_opt.find_option("mesh_units") )
   //  throw  InitFailedException("Kspace: mesh_units must be defined");

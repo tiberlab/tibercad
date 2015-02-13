@@ -139,6 +139,36 @@ Utils::tokenize(const std::string& input, std::vector<std::string>& tokens,
 }
 
 
+void
+Utils::camel_tokenize(const std::string& input, std::vector<std::string>& tokens)
+{
+
+  if (input.size()==0) return;
+
+  std::stringstream ss, tok;
+  ss << input;
+
+  char c = ss.get();
+  if (!isupper(c)) return;
+
+  tok << c;
+
+  while (ss.good())
+  {
+    c = ss.get();
+    if (c == EOF) break;
+    if (isupper(c))
+    {
+      tokens.push_back(tok.str());
+      tok.str("");
+    }
+
+    tok<<c;
+  }
+
+  tokens.push_back(tok.str());
+ 
+}
 
 
 string

@@ -6,7 +6,6 @@
 
 #include "Material.h"
 
-
 //! Description of  an  alloy  material.
 /*!
  * An alloy is thought to be of the form \f$A_xB_{1-x}C\f$.
@@ -29,10 +28,11 @@ class Alloy : public Material
     static Alloy* create(const std::string& name,
         const ModelOptions& options);
 
-
     //! Get the molar fraction of the component A
     double get_molar_fraction(void) const;
 
+    //! Get molar fraction for an atomic specie
+    double get_molar_fraction(unsigned int label, Specie sp) const;
 
     //! Return the component A
     Material* get_component_A(void) const;
@@ -47,13 +47,22 @@ class Alloy : public Material
     //! Return the name of component material B
     const std::string& get_name_B(void) const;
 
-    //! Tells if a specie is defined as anion
-    //! (reimplemented for alloy)
-    bool is_anion(Specie) const;
+    // Tells if a specie is defined as anion
+    // (reimplemented for alloy)
+    //bool is_anion(Specie) const;
 
-    //! Tells if a specie is defined as cation
-    //! (reimplemented for alloy)
-    bool is_cation(Specie) const;
+    // Tells if a specie is defined as cation
+    // (reimplemented for alloy)
+    //bool is_cation(Specie) const;
+
+    //! decide whether a specie can be substituted
+    bool is_mutable(unsigned int) const; 
+
+    //! get the map between species and molar fractions for a given label
+    const std::map<Specie, double>& get_species_map(unsigned int) const;
+
+    //! get the map between species and molar fractions for a given label
+    const std::vector<std::map<Specie, double>>& get_species_map(void) const;
 
   protected:
 
@@ -72,6 +81,11 @@ class Alloy : public Material
     //! Print info on Alloy composition
     virtual void do_info(void) const;
 
+
+    //! set all species in the Alloy 
+    virtual void fill_species(void);
+
+
   private:
 
     //! Molar fraction x of the \c Alloy
@@ -87,6 +101,10 @@ class Alloy : public Material
 
     //! The component B
     Material* _mat_B;
+
+  
+    //! Map a specie in molar fraction (sum= atoms per cell)
+    std::vector<std::map<Specie, double>> _specie_fraction;
 
 };
 
@@ -121,6 +139,17 @@ Alloy::get_molar_fraction(void) const
   return _molar_fraction;
 }
 
+inline
+double
+Alloy::get_molar_fraction(unsigned int label, Specie sp) const
+{
+  std::map<Specie, double>::const_iterator it = _specie_fraction[label].find(sp);
+  if (it == _specie_fraction[label].end() ) 
+    return 0.0;
+  else
+    return it->second;
+}
+
 
 inline
 Material*
@@ -137,6 +166,19 @@ Alloy::get_component_B(void) const
   return _mat_B;
 }
 
+inline
+const std::map<Specie, double>& 
+Alloy::get_species_map(unsigned int i) const
+{
+  return _specie_fraction[i];
+}
+
+inline
+const std::vector<std::map<Specie, double>>& 
+Alloy::get_species_map(void) const
+{
+  return _specie_fraction;
+}
 
 
 #endif /* _ALLOY_H_ */

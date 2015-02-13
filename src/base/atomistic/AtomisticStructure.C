@@ -37,10 +37,13 @@ AtomisticStructure::_callback_functions;
 
 AtomisticStructure::AtomisticStructure()
 :_device(NULL),
+ _atomistic_structure_options(),
+ _scale(1.0),
  _random_alloy(false),
- _clustering(false)
+ _clustering(false),
+ _N_without_H(0)
 {
-  N_atoms = 0;
+  N_atoms= 0;
 }
 
 
@@ -52,8 +55,7 @@ AtomisticStructure::AtomisticStructure(const std::string& name)
  _random_alloy(false),
  _N_without_H(0)
 {
-  // Default initializations
-  N_atoms = 0;
+  N_atoms= 0;
 }
 
 
@@ -74,7 +76,7 @@ AtomisticStructure::create()
 AtomisticStructure*
 AtomisticStructure::create(const AtomisticStructure& as)
 {
-  AtomisticStructure* st = NULL;
+  AtomisticStructure* st =  NULL;
   st = new AtomisticStructure();
 
   *st = as;
@@ -133,9 +135,10 @@ AtomisticStructure::init(const std::string& name,
 
   _clustering = _options.get_option("clustering", false);
 
+  _elem_to_atoms.clear();
 
   if (_options.find_option("load_structure") || _options.find_option("load"))
-    {
+  {
       std::string filename;
 
       if (_options.find_option("load_structure")) filename = _options.get_option("load_structure","none");
@@ -148,12 +151,12 @@ AtomisticStructure::init(const std::string& name,
       os.str(std::string());
       //---------------------------------------------------------------
       Messages::info("Reading "+filename);
-      init(filename);
+      read_structure(filename);
 
       Messages::info("Parse regions");
       parse_regions();
 
-      //TODO: I'm calculating the bond map again anyway because otherwise the translation vectors are not
+      //NOTE: I'm calculating the bond map again anyway because otherwise the translation vectors are not
       //correctly reproduced for periodic structures. If we really want to import the bond map,
       //this needs to be changed
       if (_bondmap != NULL)
@@ -166,22 +169,30 @@ AtomisticStructure::init(const std::string& name,
       build_bond_map();
 
       Messages::info("Associate elements");
-      if (_atomistic_structure_options.is_associated == false) associate_elements();
+      if (!_atomistic_structure_options.is_associated) associate_elements();
+
+      set_labels();
+
+      dorestrict(_IDset);
 
       Messages::info("Output structure(s)");
       print_driver();
 
-    }
-  else if (_options.find_option("regions"))
-    {
-    // Build mesh based representation
+   }
+   else 
+   {
+      // Build mesh based representation
       Utils::Timer tt;
       tt.reset();
       Messages m;
       m.indent();
+
+      parse_regions();
       init_mesh_structure();
+      
       Messages::info("Output structure(s)");
       print_driver();
+ 
       Messages::newline();
       Messages::info("Atomistic structure build time: "+tt.elapsed_string());
 
@@ -257,7 +268,6 @@ AtomisticStructure::init(const std::string& name,
 
           for (int i = 0; i < NN; ++i)
           {
-//            if (sums[i] >= ceil(0.95*max))
             if (sums[i] >= (max - 1))
             {
               for (mit = stats.begin(); mit != mend; ++mit)
@@ -327,8 +337,6 @@ AtomisticStructure::init(const std::string& name,
         }
 
 
-
-
         map<Specie, vector<unsigned int>> stats;
         extract_statistics(stats, reg_ids, cutoff);
 
@@ -389,47 +397,36 @@ AtomisticStructure::init(const std::string& name,
         writer->write();
       }
 
-    }
+   }
 
-  else
-    {
-      //------------------------------------------------------------
-      os << "Error in Atomistic structure " << _name <<
-          "input block. You need to define regions or load from file." << std::endl;
-      Messages::info(os.str(), true);
-      os.str(std::string());
-      //---------------------------------------------------------------
-    }
+   //Calculate the number of atoms excluding hydrogens 
+   //(Useful for passivated semiconductors)
+   compute_N_without_H();
 
-  //Calculate the number of atoms excluding hydrogens 
-  //(Useful for passivated semiconductors)
-  compute_N_without_H();
-
-  Messages m;
-  m.newline();
-  m.indent();
-  os << "Atomistic Structure containing " << N_atoms << 
-        " atoms has been built. " <<std::endl;
-  os << "Size not counting passivation hydrogens: "<< get_N_without_H()<<std::endl;
-  m.info(os.str());
-  os.str(std::string());
-
-  m.info("Supercell structure");
-  m.info("Lattice vectors (A):");
-  m.indent();
-
-  RealVectorValue a, b, c;
-  get_lattice_vectors(a, b, c);
-  os << "a1 = (";
-  a.write_unformatted(os, false);
-  os << ")\na2 = (";
-  b.write_unformatted(os, false);
-  os << ")\na3 = (";
-  c.write_unformatted(os, false);
-  os << ")\n";
-  m.info(os.str());
-  os.str(std::string());
-
+   Messages m;
+   m.newline();
+   m.indent();
+   os << "Atomistic Structure containing " << N_atoms << 
+         " atoms has been built. " <<std::endl;
+   os << "Size not counting passivation hydrogens: "<< get_N_without_H()<<std::endl;
+   m.info(os.str());
+   os.str(std::string());
+ 
+   m.info("Supercell structure");
+   m.info("Lattice vectors (A):");
+   m.indent();
+ 
+   RealVectorValue a, b, c;
+   get_lattice_vectors(a, b, c);
+   os << "a1 = (";
+   a.write_unformatted(os, false);
+   os << ")\na2 = (";
+   b.write_unformatted(os, false);
+   os << ")\na3 = (";
+   c.write_unformatted(os, false);
+   os << ")\n";
+   m.info(os.str());
+   os.str(std::string());
 
 }
 
@@ -443,6 +440,8 @@ AtomisticStructure::parse_lattice_vectors(void)
  
     if (lattice_vectors.size() == 3)
     {  
+       //<<<<<<< .mine
+       //set_periodicity( true, true, true);
        _lattice_vectors[0] = lattice_vectors[0];
        _lattice_vectors[4] = lattice_vectors[1];
        _lattice_vectors[8] = lattice_vectors[2];
@@ -452,6 +451,7 @@ AtomisticStructure::parse_lattice_vectors(void)
     {
        for (int i = 0; i < 9; i++)
        {
+         //set_periodicity( true, true, true);
          _lattice_vectors[i] = lattice_vectors[i]; 
        }
     }
@@ -464,10 +464,6 @@ AtomisticStructure::parse_lattice_vectors(void)
 void
 AtomisticStructure::init(const std::string& filename)
 {
-  std::ostringstream os;
-
-  read_structure(filename);
-
 }
 
 
@@ -495,7 +491,6 @@ AtomisticStructure::parse_regions(void)
 {
   std::string physreg = _options.get_option("regions", "all");
   _device->extract_physical_regions(physreg, _IDset);
-
 }
 
 
@@ -538,16 +533,10 @@ AtomisticStructure::init_mesh_structure()
   this->get_options().get_option("periodicity", periodicity);
   this->set_periodicity(periodicity);
 
-
-  parse_regions();
-
   //--------------------------------------------------------------
   Messages::info("Building Atomistic Structure " + get_name());
   //-----------------------------------------------------------
-
-  _atoms.clear();
-  _elem_to_atoms.clear();
-
+  
   //---------------------------------------------------------------
   // Extend mesh for contacts 
   //unsigned int num_sides;
@@ -557,16 +546,28 @@ AtomisticStructure::init_mesh_structure()
   AtomisticGenerator* generator 
     = AtomisticGenerator::create(this, _device->get_mesh().mesh_dimension());
 
+  //build();
+  //associate_elements(_as->get_IDset());
+  //cut the structure (only flags atoms)
+  //iterates on _super_basis and assign species
+  //check_periodic(); Eventually enlarge along dummy supercell directions
+  //passivate();
+  //remove_atoms();
+  //build_random_alloy();  
   generator->do_init();
- 
+
+
+  // Copy the structure back from the generator here
+  // This callback scheme is not that elegant ... 
+  //_as->set_structure_atoms(_structure_basis);
+  //_as->set_ttype_lattice_vectors(_period);
+  //_as->set_N_atoms( _structure_basis.size() );
+  //_as->set_N_types( atom_types.size() );
+  //_as->set_atom_types(atom_types);
   generator->finalize();
 
-  parse_lattice_vectors();
-
   for (size_t i = 0; i < _atoms.size(); ++i)
-  {
     _elem_to_atoms[_atoms[i].get_elem()].push_back(i);
-  }
  
   Messages::info("Build final Bond Map...");
   build_bond_map();
@@ -589,15 +590,14 @@ AtomisticStructure::init_mesh_structure()
 
 
 void
-AtomisticStructure::restrict(const std::set<ID>& rgn_ids) 
+AtomisticStructure::dorestrict(const std::set<ID>& rgn_ids) 
 {
   _IDset = rgn_ids;
-
 
   AtomisticGenerator* generator 
     = AtomisticGenerator::create(this, _device->get_mesh().mesh_dimension());
 
-  generator->restrict();
+  generator->dorestrict();
 
   generator->finalize();
 
@@ -623,6 +623,7 @@ AtomisticStructure::associate_elements()
   MeshUtils::GridMapper& mapper =
       MeshUtils::GridMapper::get_mapper(_device->get_mesh(), _IDset);
 
+  std::vector<Atom>::iterator atom = _atoms.begin();
 
   unsigned int dim =  _device->get_mesh().mesh_dimension();
 
@@ -631,8 +632,6 @@ AtomisticStructure::associate_elements()
   unsigned int progress = 0;
 
   // NOTE: Hydrogens remains outside regions and are not associated to elements
-  // BondMap has not been created yet
-
   for (size_t atom = 0; atom < n_atoms; ++atom)
   {
     
@@ -666,29 +665,9 @@ AtomisticStructure::associate_elements()
   }
   std::cout << std::endl;
 
-  /*
-  if (_bondmap != NULL)
-  {
-    const BondMap& bondmap = *_bondmap;
-
-    for (unsigned int i=0; i < _atoms.size(); i++)
-    {
-      if ( _atoms[i].get_specie() == Specie::H )
-      {
-        for (unsigned int j=0; j < bondmap[i].size(); j++)
-        { 
-          const Elem* elem = _atoms[bondmap[i][j]].get_elem();
-          if (elem != NULL) _atoms[i].set_elem(elem);
-        }        
-      }      
-    }    
-  }
-  */
-
   Messages::debug("Finished associate_elements");
 
 }
-
 
 void
 AtomisticStructure::register_callback(string& name,
@@ -705,7 +684,6 @@ AtomisticStructure::register_callback(string& name,
 }
 
 
-
 const std::vector<unsigned int>&
 AtomisticStructure::get_atoms_in_elem(const Elem* element) const
 {
@@ -719,15 +697,160 @@ AtomisticStructure::get_atoms_in_elem(const Elem* element) const
   return(empty_int_vector);
 }
 
+
+
+
+void
+AtomisticStructure::set_virtual_types(const std::set<std::string>& atom_types)
+{
+  if (_virtual_atom_types.size()>0)  _virtual_atom_types.clear();
+
+  std::set<std::string>::iterator type = atom_types.begin();
+  for ( ; type != atom_types.end(); type++)
+    _virtual_atom_types.push_back( *type );
+  
+  for(unsigned int i=0; i<_virtual_atom_types.size(); i++)
+  {
+    _virtual_type_idx.insert( std::make_pair( _virtual_atom_types[i], i+1) );
+  }
+}
+
+unsigned int
+AtomisticStructure::get_virtual_type_index(const std::string& type) const
+{
+  unsigned int result = 0;
+  for (unsigned int i = 0; i < N_types; i++){
+      if ( (type.compare( _atom_types[i] ) == 0) ) result = i + 1;
+  }
+
+  return result;
+
+}
+
+
+
+// Virtual species are defined in the alloy database (InGa, AsP, ...)
+void
+AtomisticStructure::assign_virtual_species(void)
+{
+  std::set<ID> reg_ids(get_IDset());
+  // For each region we have a map: label -> virtual_type
+  // So map< region, map<label,virtual_type> >
+  // 
+  // Finally we need a map: label -> type_idx (atom_t)
+  // This is done with an intermediate map:
+  // virtual_type::iterator -> type_idx
+  //
+  std::set<std::string> atom_types;
+  std::map<ID, std::map<Atom::atom_t, std::string > > assign;
+  std::pair<std::set<std::string>::iterator, bool> ret;
+
+  Messages::info("Assign Virtual Species");
+
+  std::set<ID>::iterator reg(reg_ids.begin());
+
+  for ( ; reg != reg_ids.end(); ++reg)
+  {
+    const Material* mat = get_device()->get_material( (*reg) );
+
+    Database db = mat->get_database();
+    // by setting no-mixing db.get() takes the first component
+    db.set_alloy_mixing(Database::NONE);
+    
+    db.set_section("atomistic_structure");
+    unsigned int n_species = db.get("n_basis_specie", 0);
+
+    //Build up conversion map from file
+    for (unsigned int i = 1; i <= n_species; i++)
+    {
+      std::string record;
+      std::string s;
+      std::stringstream out;
+      
+      out << i;
+      s = out.str();
+      record = "specie_" + s;
+      std::string specie = db.get(record.c_str(),"none");
+
+      ret = atom_types.insert(specie);
+      
+      assign[*reg][static_cast<Atom::atom_t>(i)] = *(ret.first);
+      
+    }
+      
+    //No more reading from section atomistic_structure in database are needed
+    db.set_section("");
+    
+  }
+ 
+  // Passivation Hydrogen has label 0 (we insert Hx by default)
+  atom_types.insert("Hx");
+
+  // Setup a map between the strings and label index
+  // set _virtual_atom_types needed later 
+  set_virtual_types(atom_types); 
+   
+  // -- DEBUG ---
+  //std::cout<<"type set:"<<std::endl;
+  //std::set<std::string>::iterator it=atom_types.begin();
+  //for( ; it!=atom_types.end(); it++)
+  //  std::cout<<*it<<" : "<<static_cast<unsigned int>(idx[*it])<<std::endl;
+
+  // Cycle upon all atoms and change specie according to assign map
+  unsigned int count=1;
+   
+  std::vector<Atom>::iterator atom = _atoms.begin();
+  for ( ; atom != _atoms.end(); ++atom)
+  {
+    //cout<< count<< " label: "<<static_cast<unsigned int>((*atom).get_label())<<endl;
+
+    // For now passivation atoms have label == 0
+    if ((*atom).get_label() == 0)
+    {
+      (*atom).set_type( _virtual_type_idx["Hx"] );
+    }
+    else
+    {
+      if ((*atom).get_elem() == NULL) Messages::error("atom with no element!");
+
+      ID el_reg = (*atom).get_elem()->subdomain_id();
+      
+      std::string str = assign[el_reg][(*atom).get_label()];
+      
+      (*atom).set_type( _virtual_type_idx[str] );
+    }
+     
+    count++;
+  }
+ 
+  
+}
+
+
+void
+AtomisticStructure::set_labels(void)
+{
+  for (unsigned int i = 0; i < N_atoms; i++)
+  {
+    Atom& atom = _atoms[i];
+    if ( atom.get_elem() == NULL)
+      atom.set_label(0);
+    else
+    {
+      const Material* mat = get_material(atom,false);
+      atom.set_label( mat->get_label(atom.get_specie()) );
+    }
+  }
+}
+
+
+
 void
 AtomisticStructure::read_structure(const std::string& path)
 {
 
   std::ifstream file;
-  std::string line, record;
-  unsigned int n_specie;
-  Atom tmp_atom;
-  Tensor1 pos;
+  Tensor1 transl;
 
   Messages::debug("Reading structure from file "+path);
 
@@ -744,187 +867,215 @@ AtomisticStructure::read_structure(const std::string& path)
 
   // Recognize type of input file and read it properly
   std::string extension = path.substr(path.size()-4);
+  
+  //A translation vector can be specified to modify supercell alignment
+  std::vector<double> translation (3,0.0);
+  if ( get_options().find_option("translation") )
+  {
+   get_options().get_option("translation", translation);
+   transl(1) += translation[0]; 
+   transl(2) += translation[1]; 
+   transl(3) += translation[2];
+  }
+
 
   // XYZ file
   if ( (extension.compare(".xyz") == 0) || (extension.compare(".XYZ") == 0) )
-    {
-      // First line is number of atoms
-      getline(file, line);
-      N_atoms = atoi(line.c_str());
-      _atoms.reserve(N_atoms);
-
-      if (N_atoms == 0)
-        {
-          std::cerr << "No atoms in structure files or non valid integer in first line \n";
-          exit(1);
-        }
-
-      // Skip second line
-      getline(file, line);
-
-      // Start reading  lines
-      // Note: Multiple initialization of line_string are allowed as inside a command block.
-      // It's a suggested solution as it allows inner loop on record to work well
-      // without further line_string manipulation
-      while (getline(file, line))
-        {
-          std::stringstream line_string(line);
-          // Extract atom type and check if it's a new type
-          line_string >> record;
-
-          if ( ~(_atom_types.empty()) )
-            {
-              bool not_present = true;
-
-              for (unsigned int i = 0; i < ( _atom_types.size()); i++)
-                {
-                  if ( record.compare(_atom_types[i]) == 0) not_present = false;
-                }
-
-              if (not_present) _atom_types.push_back(record);
-            }
-          else
-            {
-              _atom_types.push_back(record);
-            }
-
-          tmp_atom.set_specie( record );
-
-          for (unsigned int i = 1; i < 4; i++)
-            {
-
-              line_string >> record;
-              pos(i) = atof(record.c_str());
-            }
-
-          tmp_atom.set_position( pos );
-
-          _atoms.push_back(tmp_atom);
-
-        }
-
-      if ( (_atoms.size()) != N_atoms )
-        std::cerr << "Warning: in file xyz number of atoms is wrong \n";
-
-
-      N_types = _atom_types.size();
-
-      // Warning: XYZ file has no informations about structure periodicity
-
-    }
-
-  // GEN file
+  {
+    read_xyz(path, transl);
+  }
   else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
-
-    {
-      getline(file, line);
-      std::stringstream line_string(line);
-
-      line_string >> record;
-
-      N_atoms = atoi(line.c_str());
-      _atoms.reserve(N_atoms);
-      //#ifdef DEBUG
-      //      std::cerr << "N_atoms is " << N_atoms << std::endl;
-      //#endif
-
-      if (N_atoms == 0)
-        {
-          std::cerr << "No atoms in structure files or non valid integer in first line. \n";
-          exit(1);
-        }
-
-      line_string >> record;
-
-      if ( (record.compare("S") == 0) || (record.compare("s") == 0))
-        set_periodicity({1, 1, 1});
-      else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
-        set_periodicity({0, 0, 0});
-      else
-        std::cerr << "Warning (in GEN file at first line): "
-                  << "Cluster (C) or Supercell (S) must be specified. "
-                  << " By default a Cluster (no periodicity) is considered. \n";
-
-      getline(file, line);
-
-      //  //This line clean stringstream in a safe way
-      line_string.str(std::string());
-      line_string.clear(std::stringstream::goodbit);
-      //---------------------------------------------
-
-      line_string << line;
-
-      while ( line_string >> record)
-        {
-          _atom_types.push_back(record);
-        }
-
-      N_types = _atom_types.size();
-
-      // Cycle upon specified number of atoms (last rows are for periodicity vectors)
-      for (unsigned int i = 1; i <= N_atoms; i++)
-        {
-          getline(file, line);
-          std::stringstream line_string(line);
-
-          // First value is ignored (just atoms enumeration)
-          line_string >> record;
-          line_string >> record;
-          n_specie = atoi(record.c_str());
-          tmp_atom.set_specie ( _atom_types[n_specie -1] );
-
-          for (unsigned int j = 1; j <= 3; j++)
-            {
-              line_string >> record;
-              pos(j) =  atof(record.c_str());
-            }
-          tmp_atom.set_position( pos );
-          _atoms.push_back(tmp_atom);
-        }
-
-      // An additional line is present in GEN files. It's the coordinates origin and it's
-      // not needed
-      getline(file, line);
-
-      // Read periodicity vectors anyway, if system is not periodical they will be ignored
-      unsigned int count = 0;
-      for (unsigned int i = 0; i < 3; i++)
-        {
-          getline(file, line);
-          std::stringstream line_string(line);
-          for (unsigned int j = 0; j < 3; j++)
-            {
-              line_string >> record;
-              _lattice_vectors[count] = atof(record.c_str());
-              count++;
-            }
-        }
-    }
-
+  {
+    read_gen(path, transl);
+  }
   else if ( (extension.compare(".tgn") == 0) || (extension.compare(".TGN") == 0) )
-    {
-      read_tgn(path);
-    }
-
+  {
+    read_tgn(path, transl);
+  }
   else
-    {
-      Messages::error("Structure file extension is not recognized. ");
-    }
+  {
+    Messages::error("Structure file extension is not recognized. ");
+  }
 
   file.close();
 
-  //#ifdef DEBUG
-  //  std::cerr << "AtomisticStructure::read_structure(path) end. \n";
-  //#endif
-
 }
+
+void
+AtomisticStructure::read_xyz(const std::string& path, const Tensor1& transl)
+{
+  std::ifstream file;
+  file.open(path.c_str(), std::ifstream::in);
+
+  std::string line, record;
+  unsigned int n_specie;
+  Atom tmp_atom;
+  Tensor1 pos;
+  // First line is number of atoms
+  
+  getline(file, line);
+  N_atoms = atoi(line.c_str());
+  _atoms.reserve(N_atoms);
+
+  if (N_atoms == 0)
+  {
+    std::cerr << "No atoms in structure files or non valid integer in first line \n";
+    exit(1);
+  }
+
+  // Skip second line
+  getline(file, line);
+
+  // Start reading  lines
+  // Note: Multiple initialization of line_string are allowed as inside a command block.
+  // It's a suggested solution as it allows inner loop on record to work well
+  // without further line_string manipulation
+  while (getline(file, line))
+  {
+    std::stringstream line_string(line);
+    // Extract atom type and check if it's a new type
+    line_string >> record;
+
+    if ( ~(_atom_types.empty()) )
+      {
+        bool not_present = true;
+
+        for (unsigned int i = 0; i < ( _atom_types.size()); i++)
+          {
+            if ( record.compare(_atom_types[i]) == 0) not_present = false;
+          }
+
+        if (not_present) _atom_types.push_back(record);
+      }
+    else
+      {
+        _atom_types.push_back(record);
+      }
+
+    tmp_atom.set_specie( record );
+
+    for (unsigned int i = 1; i < 4; i++)
+      {
+
+        line_string >> record;
+        pos(i) = atof(record.c_str());
+        
+      }
+
+    tmp_atom.set_position( pos+transl );
+
+    _atoms.push_back(tmp_atom);
+
+  }
+
+  if ( (_atoms.size()) != N_atoms )
+    std::cerr << "Warning: in file xyz number of atoms is wrong \n";
+
+  // Warning: XYZ file has no informations about structure periodicity
+  parse_lattice_vectors();
+
+  N_types = _atom_types.size();
+
+}  // end read_xyz
+
+void
+AtomisticStructure::read_gen(const std::string& path, const Tensor1& transl)
+{
+  std::ifstream file;
+  file.open(path.c_str(), std::ifstream::in);
+
+  std::string line, record;
+  unsigned int n_specie;
+  Atom tmp_atom;
+  Tensor1 pos;
+
+  getline(file, line);
+  std::stringstream line_string(line);
+
+  N_atoms = atoi(line.c_str());
+  _atoms.reserve(N_atoms);
+
+  if (N_atoms == 0)
+  {
+    std::cerr << "No atoms in structure files or non valid integer in first line. \n";
+    exit(1);
+  }
+
+  line_string >> record;
+
+  if ( (record.compare("S") == 0) || (record.compare("s") == 0))
+    set_periodicity( true, true, true);
+  else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
+    set_periodicity(false, false, false);
+  else
+    std::cerr << "Warning (in GEN file at first line): "
+              << "Cluster (C) or Supercell (S) must be specified. "
+              << " By default a Cluster (no periodicity) is considered. \n";
+
+  getline(file, line);
+
+  //  //This line clean stringstream in a safe way
+  line_string.str(std::string());
+  line_string.clear(std::stringstream::goodbit);
+  //---------------------------------------------
+
+  line_string << line;
+
+  while ( line_string >> record)
+  {
+    _atom_types.push_back(record);
+  }
+
+  N_types = _atom_types.size();
+
+  // Cycle upon specified number of atoms (last rows are for periodicity vectors)
+  for (unsigned int i = 1; i <= N_atoms; i++)
+  {
+    getline(file, line);
+    std::stringstream line_string(line);
+
+    // First value is ignored (just atoms enumeration)
+    line_string >> record;
+    line_string >> record;
+    n_specie = atoi(record.c_str());
+    tmp_atom.set_specie( _atom_types[n_specie -1] );
+
+    for (unsigned int j = 1; j <= 3; j++)
+      {
+        line_string >> record;
+        pos(j) =  atof(record.c_str());
+      }
+    tmp_atom.set_position( pos+transl );
+    _atoms.push_back(tmp_atom);
+  }
+
+  // An additional line is present in GEN files. It's the coordinates origin and it's
+  // not needed
+  getline(file, line);
+
+  // Read periodicity vectors anyway, if system is not periodical they will be ignored
+  unsigned int count = 0;
+  for (unsigned int i = 0; i < 3; i++)
+  {
+    getline(file, line);
+    std::stringstream line_string(line);
+    for (unsigned int j = 0; j < 3; j++)
+    {
+      line_string >> record;
+      _lattice_vectors[count] = atof(record.c_str());
+      count++;
+    }
+  }
+} // end read_gen
 
 
 void
-AtomisticStructure::read_tgn(const std::string& path)
+AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
 {
 
   std::ifstream file;
+  file.open(path.c_str(), std::ifstream::in);
+  
   std::string line, record;
   unsigned int n_specie;
   Atom tmp_atom;
@@ -933,18 +1084,6 @@ AtomisticStructure::read_tgn(const std::string& path)
   std::ostringstream os;
 
   Messages::debug("Reading tgn file. Loading atom coords and bond map ");
-
-  file.open(path.c_str());
-
-  if ( !(file.is_open()) )
-    {
-      //-------------------------------------------------------------------------------
-      os << "Unable to open file " << path << ". Cannot read Atomistic Structure. \n";
-      Messages::error(os.str());
-      //--------------------------------------------------------------------------------
-
-      exit(1);   // call system to stop
-    }
 
   getline(file, line);
 
@@ -977,9 +1116,9 @@ AtomisticStructure::read_tgn(const std::string& path)
   line_string >> record;
 
   if ( (record.compare("S") == 0) || (record.compare("s") == 0))
-    set_periodicity({1, 1, 1});
+    set_periodicity( true, true, true);
   else  if ( (record.compare("C") == 0) || (record.compare("c") == 0))
-    set_periodicity({0, 0, 0});
+    set_periodicity(false, false, false);
   else
   {
     std::cerr << "Warning (in GEN file at first line): " 
@@ -1022,7 +1161,7 @@ AtomisticStructure::read_tgn(const std::string& path)
           pos(j) =  atof(record.c_str());
         }
       _atoms[i - 1].set_specie(_atom_types[n_specie -1]);
-      _atoms[i - 1].set_position(pos);
+      _atoms[i - 1].set_position(pos+transl);
 
       //Get bond map
       line_string >> record;
@@ -1094,7 +1233,7 @@ AtomisticStructure::print_tgn(const std::string& path) const
   unsigned int id = 1;
   const Material* mat = NULL;
 
-  for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ID_it ++)
+  for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ++ID_it)
     {
       mat = _device->get_material(*ID_it);
       material_map.insert(std::pair<const Material*, unsigned int>(mat, id));
@@ -1123,7 +1262,11 @@ AtomisticStructure::print_tgn(const std::string& path) const
               if ( _atom_types[n_specie] == _atoms[i].get_specie() ) break;
             }
           
-          if (_atoms[i].get_specie() ==  Specie::H)
+          // Print atom label 
+          file << std::setw(3);
+          file<< static_cast<unsigned int>(_atoms[i].get_label());
+
+          /*if (_atoms[i].get_elem() ==  NULL)
             {
               file << material_map[_device->get_material(_atoms[get_bond_map()[i][0]].get_region_ID()) ];
             }
@@ -1131,7 +1274,7 @@ AtomisticStructure::print_tgn(const std::string& path) const
             {
               file << material_map[ (_device->get_material(_atoms[i].get_region_ID())) ];
             }
-
+          */
           file << std::setw(5) << n_specie + 1
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(0))
               << std::setw(20) << std::setprecision(10)<< std::fixed  << double(_atoms[i].get_position(1))
@@ -1156,9 +1299,6 @@ AtomisticStructure::print_tgn(const std::string& path) const
           if (_atoms[i].get_elem() == NULL) file << -1;
           else file << _atoms[i].get_elem()->id();
 
-          // Print atom label 
-          file << std::setw(3);
-          file<< static_cast<unsigned int>(_atoms[i].get_label());
 
           file << std::endl;
 
@@ -1222,18 +1362,18 @@ AtomisticStructure::print_structure(const std::string& path)
 
   else if ( (extension.compare(".tgn") == 0) || (extension.compare(".TGN") == 0) )
     {
-    print_tgn(path);
+     print_tgn(path);
     }
 
 
   else if ( (extension.compare(".gen") == 0) || (extension.compare(".GEN") == 0) )
     {
-      print_gen(path);
+     print_gen(path);
     }
 
   else if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
     {
-      print_upg(file_name, "");
+      print_upg(file_name, "", true);
     }
 
   else
@@ -1252,261 +1392,487 @@ AtomisticStructure::print_structure(const std::string& path)
 
 
 
+/*
+* Quaternary Type A
+*
+* Al(x)In(y)Ga(1-x-y)P = x AlP + y InP + (1-x-y) GaP
+* [Al(b)Ga(1-b)P](a) + [In(b)Ga(1-b)P](1-a)
+* ab AlP + a(1-b) GaP + (1-a)b InP + (1-a)(1-b) GaP
+* ab AlP + (1-a)b InP + (1-b) GaP
+*
+* x = ab    
+* y = b - x  
+*
+* Quaternary Type B
+*
+* Al(x)Ga(1-x)As(y)P(1-y) = xy AlAs + (1-x)(1-y) GaP + x(1-y) AlP + y(1-x) GaAs
+* [Al(b)Ga(1-b)As](a) + [Al(b)Ga(1-b)P](1-a)
+* ab AlAs + a(1-b) GaAs + (1-a)b AlP + (1-a)(1-b) GaP
+*
+* a=y 
+* b=x
+*
+*/
+
 void
 AtomisticStructure::print_upg(const std::string& path, const std::string& etb_dataset,
                                                        bool band_offsets)
 {
+  // assign virtual species (essentially setup _virtual_atom_types)
+  if (is_random_alloy()) 
+  {
+    _virtual_atom_types = _atom_types;
+  }
+  else
+  {
+     assign_virtual_species();
+  }
 
   std::ofstream file, os;
   const BondMap& bondmap = *_bondmap;
+
+  if (_bondmap == NULL)
+    Messages::error("print upg file requires a valid bondmap");
 
   Messages::debug("Printing upg file for Uptight");
 
   // Recognize type of input file and print it properly
   std::string extension = path.substr(path.size()-4);
   //Gen format modified for uptight input
-  if ( (extension.compare(".upg") == 0) || (extension.compare(".UPG") == 0) )
+
+  file.open(path.c_str());
+  
+  //Material -> index 
+  std::map<const Material*, unsigned int> material_map;
+  
+  // Create Material map--------------------------------------
+  std::set<ID>::iterator ID_it;
+  
+  unsigned int id = 1;
+  const Material* mat = NULL;
+  
+  for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ++ID_it)
+  {
+    mat = _device->get_material(*ID_it);
+    material_map.insert(std::pair<const Material*, unsigned int>(mat, id));
+    id++;
+  }
+  //-----------------------------------------------------------
+
+  std::set<Utils::Couple<const Material* > > interfaces;
+
+  //Standard gen section (modified with material index)
+  file << _atoms.size();
+  
+  if (is_periodic()) file << std::setw(10) << "S \n";
+  else file << std::setw(10) << "C \n";
+  
+  for (unsigned int i = 0; i < _virtual_atom_types.size(); i++)
+  {
+    file << std::setw(7) << _virtual_atom_types[i];
+  }
+  file << std::endl;
+  
+  for (unsigned int i = 0; i < _atoms.size(); i++)
+  {
+    const Material *mati = NULL;
+    const Material *matj = NULL;
+
+    file << std::setw(10);
+    if (_atoms[i].get_elem() ==  NULL)
+    {
+      mati = _device->get_material(_atoms[bondmap[i][0]].get_region_ID()); 
+      file << material_map[mati];
+    }
+    else
+    {
+      mati = _device->get_material(_atoms[i].get_region_ID()); 
+      file << material_map[ mati ];
+    }
+    if (is_random_alloy())
+    { 
+      file << std::setw(5) << get_type_index(_atoms[i].get_specie().get_string());
+    } 
+    else
+    { 
+      file << std::setw(5) << static_cast<unsigned int>(_atoms[i].get_type());
+    }
+
+      file << std::setw(20) << std::setprecision(10)
+           << std::fixed << double(_atoms[i].get_position(0))
+           << std::setw(20) << std::setprecision(10)
+           << std::fixed  << double(_atoms[i].get_position(1))
+           << std::setw(20) << std::setprecision(10)
+           << std::fixed  << double(_atoms[i].get_position(2));
+    
+    
+    file << std::setw(5) << bondmap[i].size();
+    
+    // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !
+    for (unsigned int j = 0; j < bondmap[i].size(); j++)
+    {
+      file << std::setw(10) << bondmap[i][j] + 1;
+   
+      if(_atoms[bondmap[i][j]].get_elem() != NULL)
+      {
+        matj = _device->get_material(_atoms[bondmap[i][j]].get_region_ID()); 
+        if (mati != matj)
+          interfaces.insert( Utils::Couple<const Material*>(mati,matj) );
+      }
+    }
+    
+    file << std::endl;
+    
+  }
+  
+
+  // Periodicity vectors at the bottom
+  if (is_periodic())
+  {
+    
+    //A line of zeros is put here (coordinates origin)
+    file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+         << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
+         << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
+    
+    unsigned int count = 0;
+    for (unsigned int i = 0; i < 3; i++)
+    {
+      for (unsigned int j = 0; j < 3; j++)
+      {
+        file << std::setw(20) << std::setprecision(10) << std::fixed <<
+          _lattice_vectors[count];
+        count++;
+      }
+      file << std::endl;
+    }
+  }
+  
+  //Information about materials
+  
+  file << "#Materials " << std::endl;
+
+  std::map<const Material*, unsigned int> n_species_map;
+ 
+  std::map<const Material*, unsigned int>::iterator mat_it = material_map.begin();
+  for ( ; mat_it != material_map.end(); ++mat_it)
+  {
+    //Note: material_map has material in ascending order, starting from one, despite any general enumeration
+    //in TiberCAD. Check some lines above how it's built. In file they need to be stored in ascending order,
+    //that's why I'm not using safer iterators and I work in this way
+    
+    //  std::map<Material*, unsigned int>::iterator mat_it = material_map.begin();
+    ////Select material with this id in material_map
+    //  for (mat_it = material_map.begin(); mat_it != material_map.end(); ++mat_it)
+    //  {
+    //    if ((*mat_it).second == i) break;
+    //  }
+    const Material* mat = (*mat_it).first;
+    
+    Database db = mat->get_database();
+    db.set_section("atomistic_structure");
+    db.set_alloy_mixing(Database::NONE);
+    n_species_map[mat] =  db.get("n_basis_specie", 0);
+
+    std::string alloy_type("");
+    
+    if      ( n_species_map[mat] == 1 ){ alloy_type = "simple";}
+    else if ( n_species_map[mat] == 2 ){ alloy_type = "binary";}
+    else if ( n_species_map[mat] == 3 ){ alloy_type = "ternary";}
+    if (mat->is_alloy())
+    {
+      db.set_section("");
+      alloy_type = db.get("alloy_type", "ternary");
+
+    } 
+    if (alloy_type == "")
+      Messages::error("Could not define alloy_type in AtomisticStructure.C");
+
+    std::vector<double> Ev(2,0.0);
+    
+    if (mat->is_alloy())
     {
 
-      file.open(path.c_str());
+      file << std::setw(3)  << (*mat_it).second
+           << std::setw(12) << mat->get_name()
+           << std::setw(6)  << mat->get_structure()
+           << std::setw(12) << alloy_type;
 
-      //I must build a materials map with new enumeration
-      std::map<const Material*, ID> material_map;
+      if (alloy_type == "binary")
+        file << std::setw(3)  << 2;
+      else if (alloy_type == "ternary")
+        file << std::setw(3)  << 2;
+      else if (alloy_type == "quaternary")
+        file << std::setw(3)  << 4;
 
-      //std::set<ID>::iterator ID_it;
+      if (is_random_alloy())
+        file << std::setw(4)  << "RND";
+      else
+        file << std::setw(4)  << "VCA";
 
-      const Material* mat = NULL;
+      std::string nameA = (static_cast<const Alloy*>(mat))->get_name_A();
+      std::string nameB = (static_cast<const Alloy*>(mat))->get_name_B();
+      const Material* matA = (static_cast<const Alloy*>(mat))->get_component_A();	  
+      const Material* matB = (static_cast<const Alloy*>(mat))->get_component_B();	
+      double x =  (static_cast<const Alloy*>(mat))->get_molar_fraction();
+      //  double x = mat->get_options().get_option("x",1.0);
 
-      //for (ID_it = _IDset.begin(); ID_it != _IDset.end(); ID_it ++)
-      //  {
-      //    mat = _device->get_material(*ID_it);
-      //    material_map.insert(std::pair<const Material*, unsigned int>(mat, id));
-      //    id++;
-      //  }
-
-      //Standard gen section (modified with material index)
-      file << _atoms.size();
-
-      if (is_periodic()) file << std::setw(10) << "S \n";
-      else file << std::setw(10) << "C \n";
-
-      for (unsigned int i = 0; i < _atom_types.size(); i++)
-        {
-          file << std::setw(6) << _atom_types[i];
-        }
-      file << std::endl;
-      
-      // we need to know which regions have been used actually, otherwise
-      // we will write too many materials at the end.
-      unsigned int id = 1;
-
-      for (unsigned int i = 0; i < _atoms.size(); i++)
-        {
-          unsigned int n_specie;
-          for (n_specie = 0; n_specie < _atom_types.size(); n_specie++)
-            {
-              if (_atom_types[n_specie] == _atoms[i].get_specie() ) break;
-            }
-          file << std::setw(10);
-
-          // add to the map if not present
-          if (!material_map.count(_device->get_material(_atoms[i].get_region_ID())))
-          {
-            material_map.insert(std::make_pair(_device->get_material(_atoms[i].get_region_ID()), id));
-            ++id;
-          }
-
-          ID reg_id = material_map[(_device->get_material(_atoms[i].get_region_ID()))];
-          file << reg_id;
-          //if (_atoms[i].get_specie() ==  Specie::H)
-          //  {
-          //    file << material_map[_device->get_material(_atoms[get_bond_map()[i][0]].get_region_ID()) ];
-          //  }
-          //else
-          //  {
-          //    file << material_map[ (_device->get_material(_atoms[i].get_region_ID())) ];
-          //  }
-
-          file << std::setw(5) << n_specie + 1
-              << std::setw(20) << std::setprecision(10)
-          << std::fixed << double(_atoms[i].get_position(0))
-          << std::setw(20) << std::setprecision(10)
-          << std::fixed  << double(_atoms[i].get_position(1))
-          << std::setw(20) << std::setprecision(10)
-          << std::fixed  << double(_atoms[i].get_position(2));
-
-
-          if (_bondmap != NULL)
-            {
-              file << std::setw(5) << bondmap[i].size();
-
-              // N.B. Indexing is in Fortran notation (first atom is labelled as 1) !!!!!!!!!!!
-              for (unsigned int j = 0; j < bondmap[i].size(); j++)
-                {
-                  file << std::setw(10) << bondmap[i][j] + 1;
-                }
-              ///////////////////////////////////////////
-
-            }
-          file << std::endl;
-
-        }
-
-      // Periodicity vectors at the bottom
-      if (is_periodic())
-        {
-
-          //A line of zeros is put here (coordinates origin)
-          file <<  std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0)
-          << std::setw(20) << std::setprecision(10)<< std::fixed  << double(0.0) << "\n";
-
-          unsigned int count = 0;
-          for (unsigned int i = 0; i < 3; i++)
-            {
-              for (unsigned int j = 0; j < 3; j++)
-                {
-                  file << std::setw(20) << std::setprecision(10) << std::fixed <<
-                      _lattice_vectors[count];
-                  count++;
-                }
-              file << std::endl;
-            }
-        }
-
-      //Information about materials
-
-      file << "#Materials " << std::endl;
-
-      for (std::map<const Material*, unsigned int>::iterator mat_it = material_map.begin(); mat_it != material_map.end(); mat_it++)
+      if (alloy_type == "binary" || alloy_type == "ternary")
       {
-          //Note: material_map has material in ascending order, starting from one, despite any general enumeration
-          //in TiberCAD. Check some lines above how it's built. In file they need to be stored in ascending order,
-          //that's why I'm not using safer iterators and I work in this way
-
-          //  std::map<Material*, unsigned int>::iterator mat_it = material_map.begin();
-          ////Select material with this id in material_map
-          //  for (mat_it = material_map.begin(); mat_it != material_map.end(); mat_it++)
-          //  {
-          //    if ((*mat_it).second == i) break;
-          //  }
-
-          const Material* mat = (*mat_it).first;
-          Database db = mat->get_database();
-          db.set_section("atomistic_structure");
-
-          std::string alloy_type;
-          std::vector<double> Ev(2,0.0);
-
-          //TODO: IT NEEDS TO BE EXTENDED WORKING WITH OTHER ALLOYS (QUATERNARY...)
-          if (mat->is_alloy())  {alloy_type = "ternary";}
-          else if (db.get("n_basis_specie", 0) == 1) {alloy_type = "simple";}
-          else if (db.get("n_basis_specie", 0) == 2 ) {alloy_type = "binary";}
-          else Messages::error("Could not define alloy_type variable in AtomisticStructure.C");
-
-          if (alloy_type=="ternary")
-          {
-  	     const Material* mat1 = (static_cast<const Alloy*>(mat))->get_component_A();	  
-             Database db1 = mat1->get_database();
-	     db1.set_section("valenceband");
-	     Ev[0]=db1.get("E_v",0.0);
-  	     mat1 = (static_cast<const Alloy*>(mat))->get_component_B();	  
-             Database db2 = mat1->get_database();
-	     db2.set_section("valenceband");
-	     Ev[1]=db2.get("E_v",0.0);
-          }
-	  else
-	  { 
-             db.set_section("valenceband");
-	     Ev[0]=db.get("E_v",0.0);
-	  }
-
-          //Mancano da inserire i file con i dati per Uptight
-          std::string path = "./ ";
-          std::string structure = "unknown";
-
-          if (! mat->is_alloy())
-          {
-              file << std::setw(3)  << (*mat_it).second
-                   << std::setw(12) << mat->get_name()
-                   << std::setw(6)  << mat->get_structure()
-                   << std::setw(12) << alloy_type
-                   << std::setw(4)  << 1
-                   << std::setw(5)  << "CRY"
-                   << std::setw(8)  << mat->get_name()
-                   << std::setw(10) << std::setprecision(3) << 1.0
-                   << std::setw(10) << mat->get_name() << etb_dataset + ".etb";
-              if (band_offsets)
-              {               
-		   file << std::setw(10) << Ev[0];
-              } 
-              file << " 0.0  0.0"   << std::endl;
-          }
-
-          if (mat->is_alloy() && !(is_random_alloy()))
-          {
-              file << std::setw(3)  << (*mat_it).second
-                   << std::setw(12) << mat->get_name()
-                   << std::setw(6)  << mat->get_structure()
-                   << std::setw(12) << alloy_type
-                   << std::setw(4)  << 2
-                   << std::setw(5)  << "VCA"
-                   << std::setw(8)  << (static_cast<const Alloy*>(mat))->get_name_A()
-                   << std::setw(8)  << (static_cast<const Alloy*>(mat))->get_name_B()
-                   << std::setw(10) <<  std::setprecision(3)  << mat->get_options().get_option("x",1.0)
-                                    << std::setw(10) << std::setprecision(3)
-                                    <<  ( 1.0 - mat->get_options().get_option("x",1.0) )
-                   << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_A()
-                                    << etb_dataset + ".etb"
-                   << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_B()
-                                    << etb_dataset + ".etb";
-              if (band_offsets)
-              {               
-                file << std::setw(10) << Ev[0] << " "
-                     << std::setw(10) << Ev[1] << " ";
-              }
-              file << " 0.0  0.0"
-                   << " 0.0  0.0" << std::endl;
-          }
-
-          if (mat->is_alloy() && (is_random_alloy()))
-          {
-              file << std::setw(3)  << (*mat_it).second
-                                 << std::setw(12) << mat->get_name()
-                                 << std::setw(6)  << mat->get_structure()
-                                 << std::setw(12) << alloy_type
-                                 << std::setw(4)  << 2
-                                 << std::setw(5)  << "RND"
-                                 << std::setw(8)  << (static_cast<const Alloy*>(mat))->get_name_A()
-                                 << std::setw(8)  << (static_cast<const Alloy*>(mat))->get_name_B()
-                                 << std::setw(10) <<  std::setprecision(3)  << mat->get_options().get_option("x",1.0)
-                                                  << std::setw(10) << std::setprecision(3)
-                                                  <<  ( 1.0 - mat->get_options().get_option("x",1.0) )
-                                 << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_A()
-                                                  << etb_dataset + ".etb"
-                                 << std::setw(10) << (static_cast<const Alloy*>(mat))->get_name_B()
-                                                  << etb_dataset + ".etb";
-              if (band_offsets)
-              {               
-                  file           << std::setw(10) << Ev[0] << " "
-                                 << std::setw(10) << Ev[1] << " ";
-              }
-                  file                            << " 0.0  0.0"
-                                                  << " 0.0  0.0" << std::endl;
-           };
-
+        file << std::setw(8)  << nameA 
+             << std::setw(8)  << nameB
+             << std::setw(10) << std::setprecision(3) << x
+             << std::setw(10) << std::setprecision(3) << 1.0 - x
+             << std::setw(10) << nameA
+             << etb_dataset + ".etb"
+             << std::setw(10) << nameB
+             << etb_dataset + ".etb";
       }
 
-      file.close();
+      if (alloy_type=="binary")
+      {
+        file << "  "
+             << nameA
+             << nameB
+             << etb_dataset + ".etb";
+      }
+    
+      if (alloy_type == "quaternary")
+      {
+        db.set_section("");
+        double x_A = db.get("x_A",1.0);
+
+        file << std::setw(6)  << (static_cast<const Alloy*>(matA))->get_name_A()
+             << std::setw(6)  << (static_cast<const Alloy*>(matA))->get_name_B()
+             << std::setw(6)  << (static_cast<const Alloy*>(matB))->get_name_A()
+             << std::setw(6)  << (static_cast<const Alloy*>(matB))->get_name_B()
+             << std::setw(8) <<  std::setprecision(3) <<  x*x_A        
+             << std::setw(8) <<  std::setprecision(3) <<  x*(1-x_A) 
+             << std::setw(8) <<  std::setprecision(3) <<  (1-x)*x_A   
+             << std::setw(8) <<  std::setprecision(3) <<  (1-x)*(1-x_A)
+             << std::setw(10) << (static_cast<const Alloy*>(matA))->get_name_A() << etb_dataset + ".etb"
+             << std::setw(10) << (static_cast<const Alloy*>(matA))->get_name_B() << etb_dataset + ".etb"
+             << std::setw(10) << (static_cast<const Alloy*>(matB))->get_name_A() << etb_dataset + ".etb"
+             << std::setw(10) << (static_cast<const Alloy*>(matB))->get_name_B() << etb_dataset + ".etb";
+      }
+
+      if (band_offsets)
+      { 
+        const Database& dbA = matA->get_database();
+        const Database& dbB = matB->get_database();
+        dbA.set_section("valenceband");
+        dbB.set_section("valenceband");
+    
+        file           << std::setw(10) << dbA.get("E_v",0.0) << " "
+                       << std::setw(10) << dbB.get("E_v",0.0) << " ";
+      }
+      file                            << " 0.0  0.0"
+                                      << " 0.0  0.0" << std::endl;
     }
-  else
+    else
     {
-      Messages::warning("File extension does not correspond to any internal format. File not print.");
+      db.set_section("valenceband");
+      file << std::setw(3)  << (*mat_it).second
+           << std::setw(12) << mat->get_name()
+           << std::setw(6)  << mat->get_structure()
+           << std::setw(12) << alloy_type
+           << std::setw(4)  << 1
+           << std::setw(5)  << "CRY"
+           << std::setw(8)  << mat->get_name()
+           << std::setw(10) << std::setprecision(3) << 1.0
+           << std::setw(10) << mat->get_name() << etb_dataset + ".etb";
+      if (band_offsets)
+      {               
+        file << std::setw(10) << db.get("E_v",0.0);
+      } 
+      file << " 0.0  0.0"   << std::endl;
     }
+
+  }
+ 
+  //std::cout<<"Print interfaces: "<<interfaces.size()<<std::endl;
+  
+
+  file << "#Interfaces " << std::endl;
+
+  std::set<Utils::Couple<const Material*>>::iterator int_it = interfaces.begin(); 
+  for (;int_it != interfaces.end(); ++int_it)
+  {
+    const Material* mat1 = (*int_it).first;
+    const Material* mat2 = (*int_it).second;
+    // Put interfaces in increasing order
+    if (material_map[mat1] > material_map[mat2])
+    {
+      mat1 = (*int_it).second;
+      mat2 = (*int_it).first;
+    }
+
+    file << std::setw(3) << material_map[mat1]<<"  "<< material_map[mat2]<<"  ";
+
+    if (mat1->is_alloy() || mat2->is_alloy()) 
+    {
+      if (is_random_alloy())
+        file << std::setw(4)  << "RND";
+      else
+        file << std::setw(4)  << "VCA";
+    }
+    else
+    {
+      file << std::setw(4)  << "CRY";
+    }
+
+    std::vector<std::string> str;
+    std::vector<double> frac;
+    str.reserve(8); frac.reserve(8);
+
+    interface_interactions(mat1, mat2, str, frac);
+ 
+    unsigned int size1 = str.size();
+    file << std::setw(4) << size1 << "  "; 
+
+    interface_interactions(mat2, mat1, str, frac);
+    
+    file << std::setw(4) << str.size()-size1 << "  "; 
+
+    for (unsigned int i=0; i < str.size(); i++) 
+        file <<"  " << str[i];
+    
+    for (unsigned int i=0; i < str.size(); i++)
+        file <<"  " << frac[i];
+ 
+    for (unsigned int i=0; i<str.size(); i++)
+       file <<"  " << str[i]<<etb_dataset<<".etb";
+       //if (check_data_file(Database::get_search_path()+"/"+str[i]+etb_dataset+".etb") ) 
+       //    file <<"  " << str[i]<<etb_dataset<<".etb";
+       //else
+       //  Messages::error("Database file does not exist"+Database::get_search_path()+"/"+str[i]+etb_dataset+".etb");
+    
+    file<<std::endl;
+  }
+
+  file.close();
+
 
   Messages::debug("upg file printed");
 
 }
+ 
+void
+AtomisticStructure::interface_interactions(const Material* mat1, 
+                                           const Material* mat2, 
+                                            std::set<std::string>& str)
+{
+  str.clear();
+  stringstream ss;
+     
+  {
+    // sets all possible cation then all anions, e.g. AlGa-AsP = AlAs, AlP, GaAs, GaP
+    // If a material has no anions (e.g. Si, Ge) species are inverted (not that robust!)
+    // e.g.: SiGe-Si = SiSi SiGe (GeSi inverted)
+    //       SiGe-SiGe = SiSi SiGe 
+    Material::crystal_species_iterator sp_it1 = mat1->species_begin(1);
+    Material::crystal_species_iterator sp_end1 = mat1->species_end(1);
+    for (;sp_it1 != sp_end1; ++sp_it1)
+    {
+      Material::crystal_species_iterator sp_it2 = mat2->species_begin(2);
+      Material::crystal_species_iterator sp_end2 = mat2->species_end(2);
+      if ( sp_it2 != sp_end2 )
+      {
+        for (;sp_it2 != sp_end2; ++sp_it2)
+        {
+          ss << (*sp_it1)<<(*sp_it2);
+          str.insert(ss.str());
+          ss.str("");
+        }
+      }
+      else
+      {
+        sp_it2 = mat2->species_begin(1);
+        ss << (*sp_it2)<<(*sp_it1);
+        str.insert(ss.str());
+        ss.str("");
+      }
+    }
+  }
+  
+  {
+    Material::crystal_species_iterator sp_it1 = mat2->species_begin(1);
+    Material::crystal_species_iterator sp_end1 = mat2->species_end(1);
+    for (;sp_it1 != sp_end1; ++sp_it1)
+    {
+      Material::crystal_species_iterator sp_it2 = mat1->species_begin(2);       
+      Material::crystal_species_iterator sp_end2 = mat1->species_end(2);
+      if ( sp_it2 != sp_end2 )
+      {
+        for (;sp_it2 != sp_end2; ++sp_it2)
+        {
+          ss << (*sp_it1)<<(*sp_it2);
+          str.insert(ss.str());
+          ss.str("");
+        }
+      }
+      else
+      {
+        sp_it2 = mat1->species_begin(1);
+        ss << (*sp_it2)<<(*sp_it1);
+        str.insert(ss.str());
+        ss.str("");
+      }
+    }
+  }
+
+}
+
+void
+AtomisticStructure::interface_interactions(const Material* mat1, 
+                                           const Material* mat2, 
+                                           std::vector<std::string>& str,
+                                           std::vector<double>& frac)
+{
+  //str.clear();
+  stringstream ss;
+  double conc1, conc2; 
+  Material::crystal_species_iterator sp_it1;  
+  Material::crystal_species_iterator sp_end1;
+  
+  // Number of interctions (ca1)*(an2)
+  // sets all possible cation then all anions, e.g. AlGa-AsP = AlAs, AlP, GaAs, GaP
+  // repetitions are possible!
+  // e.g.: SiGe-SiGe = SiSi SiGe GeSi GeGe
+  sp_it1 = mat1->species_begin(1);
+  sp_end1 = mat1->species_end(1);
+  for (;sp_it1 != sp_end1; ++sp_it1)
+  {
+    conc1 = 1.0;
+    if (mat1->is_alloy())    
+      conc1=(static_cast<const Alloy*>(mat1))->get_molar_fraction(1, *sp_it1);
+    
+    unsigned int label=2;
+    Material::crystal_species_iterator sp_it2 = mat2->species_begin(label);
+    Material::crystal_species_iterator sp_end2 = mat2->species_end(label);
+
+    if ( sp_it2 == sp_end2 ) label = 1;
+    
+    sp_it2 = mat2->species_begin(label);
+    sp_end2 = mat2->species_end(label);
+
+    for (;sp_it2 != sp_end2; ++sp_it2)
+    {
+      ss << (*sp_it1)<<(*sp_it2);
+      str.push_back(ss.str());
+      ss.str("");
+      
+      conc2 = 1.0;
+      if (mat2->is_alloy())    
+        conc2=(static_cast<const Alloy*>(mat2))->get_molar_fraction(label, *sp_it2);
+
+      frac.push_back(conc1*conc2); 
+    }
+
+  }
+ 
+}
+
 
 void
 AtomisticStructure::print_structure(const std::string& path, double const* const charges)
@@ -1609,7 +1975,7 @@ AtomisticStructure::compute_N_without_H(void)
   const unsigned int size = _atoms.size();
   for (unsigned int i = 0; i < size; i++)
   {
-    if (_atoms[i].get_specie() != Specie::H)
+    if (_atoms[i].get_label() != 0)
     {
       N++;
     }
@@ -1639,17 +2005,18 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
 
  if (parent && mat->is_alloy())
    {
-     const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
-     if (alloy->get_component_A()->has_specie(atom.get_specie()) &&
-         (!alloy->get_component_B()->has_specie(atom.get_specie())))
-       mat = alloy->get_component_A();
-     else if (alloy->get_component_B()->has_specie(atom.get_specie()) &&
-         (!alloy->get_component_A()->has_specie(atom.get_specie())))       
-       mat = alloy->get_component_B();
+     const Material* matA = (static_cast<const Alloy*>(mat))->get_component_A();	  
+     const Material* matB = (static_cast<const Alloy*>(mat))->get_component_B();	
+     if (matA->has_specie(atom.get_specie()) &&
+         (!matB->has_specie(atom.get_specie())))
+       mat = matA;
+     else if (matB->has_specie(atom.get_specie()) &&
+         (!matA->has_specie(atom.get_specie())))       
+       mat = matB;
      else
      {
        Messages::error("Ambiguity for alloy component assignation"
-           "in AtomisticStructure::get_material(Atom&, bool)");
+           " in AtomisticStructure::get_material(Atom&, bool)");
      }
    }
 
