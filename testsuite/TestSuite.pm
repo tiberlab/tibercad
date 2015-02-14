@@ -600,7 +600,7 @@ sub extract_data_from_xyz($$) {
     $oldpos = $pos;
     $pos = tell;
     my @line = (split(/\s+/, trim(<SF>)));
-    ($#line >= 4) && last;
+    ($#line >= 3) && last;
   }
   $pos = $oldpos;
 
@@ -941,10 +941,10 @@ sub split_variable($) {
   my $prec = $default_precision;
   my $type = 'n'; # for numeric data
 
-  $_[0] =~ /([^\s()<>]+)(<s>)?(\(([\s\deE\+-\.]+)\))?/;
+  $_[0] =~ /([^\s()<>]+)(<[sn]>)?(\(([\s\deE\+-\.]+)\))?/;
   $var = $1 if defined($1);
-  $prec = 1.0 * $3 if defined($3);
-  $type = 's' if defined($2);
+  $prec = 1.0 * $4 if defined($4);
+  $type = 's' if (defined($2) && $2 eq '<s>');
 
   return ($var, $prec, $type);
 }
