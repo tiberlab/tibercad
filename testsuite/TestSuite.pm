@@ -757,7 +757,7 @@ sub compare_data_vectors($$$) {
   my @data1 = @{$_[0]};
   my @data2 = @{$_[1]};
   my $prec = $_[2];
-  my $eps = 1e-12;
+  my $eps = 1e-9;
 
   my $n = $#data1;
 
@@ -765,8 +765,8 @@ sub compare_data_vectors($$$) {
   my $difference = 0;
   for (my $i = 0; $i <= $n; $i++) {
     my $diff = $data1[$i] - $data2[$i];
-    if (abs($diff) > ($prec * abs($data1[$i] + $eps))) {
-      #print "$data1[$i] $data2[$i] $diff\n";
+    if (abs($diff) > ($prec * abs($data1[$i]) + $eps)) {
+      print "$data1[$i] $data2[$i] $diff\n";
       $difference = 1;
       last;
     }
