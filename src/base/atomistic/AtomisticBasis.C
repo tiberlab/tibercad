@@ -88,10 +88,11 @@ AtomisticBasis::set_atom_types(const std::set<std::string>& atom_types)
 {
 
   for (std::set<std::string>::iterator types = atom_types.begin(); types != atom_types.end(); types++)
-    {
-      _atom_types.push_back( *types );
-    }
+  {
+    _atom_types.push_back( *types );
+  }
 
+  N_types = _atom_types.size();
 }
 
 
