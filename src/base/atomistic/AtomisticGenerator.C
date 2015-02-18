@@ -627,7 +627,12 @@ AtomisticGenerator::build_random_alloy()
     if (fix_mean_alloy_concentration)
       id = random(generator);
     else
+    {
+      // in this case we visit every atom
       id = ctr;
+      if (id >= _structure_basis.size())
+        break;
+    }
 
     Atom& atm = _structure_basis[id];
 
@@ -657,6 +662,7 @@ AtomisticGenerator::build_random_alloy()
             prob = a_to_b_prob[regid];
             rnd = static_cast<double>(generator()) / generator.max();
           }
+
           if (rnd <= prob)
           {
             atm.set_specie(sp);
