@@ -462,24 +462,27 @@ void Optics::calculate_for_k_point(const Point& k_point,
   else
   {
     ostringstream os;
-    os << "k_(";
-    switch (k_dim)
+    if (k_dim > 0)
     {
-      case 3:
-        os << k_point(0) << ",";
+      os << "k(";
+      switch (k_dim)
+      {
+        case 3:
+          os << k_point(0) << ",";
 
-      case 2:
-        os << k_point(1) << ",";
+        case 2:
+          os << k_point(1) << ",";
 
-      case 1:
-        os << k_point(2);
-        break;
+        case 1:
+          os << k_point(2);
+          break;
 
-      default:
-        os << "0";
-        break;
+        default:
+          os << "0";
+          break;
+      }
+      os << ")";
     }
-    os << ")";
     TiberCad::prepend_to_filename_suffix(os.str());
   }
 
@@ -541,20 +544,6 @@ void Optics::calculate_for_k_point(const Point& k_point,
     integrated_quantity += abs(spectrum[k]);
 
 
-  if (plot_solution("matrix_elements"))
-  {
-    ostringstream os;
-    // create default name
-    if (k_point.size() > 1e-6) // k = Gamma
-    {
-      os.precision(4);
-      os << "(" << fixed << k_point(0) << "," << k_point(1) << "," << k_point(2) << ")";
-    }
-
-    TiberCad::append_to_filename_suffix(os.str());
-    plot_globaldata();
-    TiberCad::drop_last_filename_suffix();
-  }
 }
 
 //================================================================//
