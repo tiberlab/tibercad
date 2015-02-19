@@ -747,40 +747,48 @@ AtomisticStructure::assign_virtual_species(void)
 
   Messages::info("Assign Virtual Species");
 
-  std::set<ID>::iterator reg(reg_ids.begin());
-
-  for ( ; reg != reg_ids.end(); ++reg)
+  if (!this->is_random_alloy())
   {
-    const Material* mat = get_device()->get_material( (*reg) );
+    std::set<ID>::iterator reg(reg_ids.begin());
 
-    Database db = mat->get_database();
-    // by setting no-mixing db.get() takes the first component
-    db.set_alloy_mixing(Database::NONE);
-    
-    db.set_section("atomistic_structure");
-    unsigned int n_species = db.get("n_basis_specie", 0);
-
-    //Build up conversion map from file
-    for (unsigned int i = 1; i <= n_species; i++)
+    for ( ; reg != reg_ids.end(); ++reg)
     {
-      std::string record;
-      std::string s;
-      std::stringstream out;
-      
-      out << i;
-      s = out.str();
-      record = "specie_" + s;
-      std::string specie = db.get(record.c_str(),"none");
+      const Material* mat = get_device()->get_material( (*reg) );
 
-      ret = atom_types.insert(specie);
-      
-      assign[*reg][static_cast<Atom::atom_t>(i)] = *(ret.first);
-      
+      Database db = mat->get_database();
+      // by setting no-mixing db.get() takes the first component
+      db.set_alloy_mixing(Database::NONE);
+
+      db.set_section("atomistic_structure");
+      unsigned int n_species = db.get("n_basis_specie", 0);
+
+      //Build up conversion map from file
+      for (unsigned int i = 1; i <= n_species; i++)
+      {
+        std::string record;
+        std::string s;
+        std::stringstream out;
+
+        out << i;
+        s = out.str();
+        record = "specie_" + s;
+        std::string specie = db.get(record.c_str(),"none");
+
+        ret = atom_types.insert(specie);
+
+        assign[*reg][static_cast<Atom::atom_t>(i)] = *(ret.first);
+
+      }
+
+      //No more reading from section atomistic_structure in database are needed
+      db.set_section("");
+
     }
-      
-    //No more reading from section atomistic_structure in database are needed
-    db.set_section("");
-    
+  }
+  else
+  {
+    atom_types.insert(_atom_types.begin(), _atom_types.end());
+    atom_types.erase(atom_types.find("H"));
   }
  
   // Passivation Hydrogen has label 0 (we insert Hx by default)
@@ -811,12 +819,14 @@ AtomisticStructure::assign_virtual_species(void)
     }
     else
     {
-      if ((*atom).get_elem() == NULL) Messages::error("atom with no element!");
+      std::string str(atom->get_specie().get_string());
 
-      ID el_reg = (*atom).get_elem()->subdomain_id();
-      
-      std::string str = assign[el_reg][(*atom).get_label()];
-      
+      if (!this->is_random_alloy())
+      {
+        ID el_reg = (*atom).get_elem()->subdomain_id();
+        str = assign[el_reg][(*atom).get_label()];
+      }
+
       (*atom).set_type( _virtual_type_idx[str] );
     }
      
@@ -1419,14 +1429,8 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
                                                        bool band_offsets)
 {
   // assign virtual species (essentially setup _virtual_atom_types)
-  if (is_random_alloy()) 
-  {
-    _virtual_atom_types = _atom_types;
-  }
-  else
-  {
-     assign_virtual_species();
-  }
+
+  assign_virtual_species();
 
   std::ofstream file, os;
   const BondMap& bondmap = *_bondmap;
@@ -1489,22 +1493,16 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       mati = _device->get_material(_atoms[i].get_region_ID()); 
       file << material_map[ mati ];
     }
-    if (is_random_alloy())
-    { 
-      file << std::setw(5) << get_type_index(_atoms[i].get_specie().get_string());
-    } 
-    else
-    { 
-      file << std::setw(5) << static_cast<unsigned int>(_atoms[i].get_type());
-    }
 
-      file << std::setw(20) << std::setprecision(10)
-           << std::fixed << double(_atoms[i].get_position(0))
-           << std::setw(20) << std::setprecision(10)
-           << std::fixed  << double(_atoms[i].get_position(1))
-           << std::setw(20) << std::setprecision(10)
-           << std::fixed  << double(_atoms[i].get_position(2));
-    
+    file << std::setw(5) << static_cast<unsigned int>(_atoms[i].get_type());
+
+    file << std::setw(20) << std::setprecision(10)
+    << std::fixed << double(_atoms[i].get_position(0))
+    << std::setw(20) << std::setprecision(10)
+    << std::fixed  << double(_atoms[i].get_position(1))
+    << std::setw(20) << std::setprecision(10)
+    << std::fixed  << double(_atoms[i].get_position(2));
+
     
     file << std::setw(5) << bondmap[i].size();
     

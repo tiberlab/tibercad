@@ -1391,7 +1391,7 @@ Device::reassign_alloy_regions(const string& source,
                 {
                   // ok, there is at least one atom inside
                   // atomic coordinates are in Angstrom
-                  Point center = 10 * next_el->centroid();
+                  Point center = 10 * elem->centroid();
                   double min_dist = Point(center -
                       str->get_structure_atom(atoms[0]).get_position()).size();
                   unsigned int nearest = 0;
