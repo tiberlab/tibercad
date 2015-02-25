@@ -281,11 +281,14 @@ AtomisticBasis::print_gen(const std::string& path) const
 
 
 AtomisticBasis::neighbor_iterator::neighbor_iterator(const AtomisticBasis& structure,
-    unsigned int start, double cutoff, bool begin)
+    unsigned int start, double length, double height, double width, bool begin)
 : _structure(structure),
   _start(start),
   _current(start),
-  _cutoff(cutoff)
+  _length(length),
+  _height(height),
+  _width(width),
+  _image(0)
 {
   if (begin)
   {
@@ -304,11 +307,14 @@ AtomisticBasis::neighbor_iterator::neighbor_iterator(const AtomisticBasis& struc
 }
 
 
+
 AtomisticBasis::neighbor_iterator::neighbor_iterator(const neighbor_iterator& rhs)
 : _structure(rhs._structure),
   _start(rhs._start),
   _current(rhs._current),
-  _cutoff(rhs._cutoff),
+  _length(rhs._length),
+  _height(rhs._height),
+  _width(rhs._width),
   _visited(rhs._visited),
   _setA(rhs._setA),
   _setB(rhs._setB),
@@ -322,8 +328,8 @@ AtomisticBasis::neighbor_iterator::operator++(void)
     if (_itA != _setA.end())
     {
       _current = _itA->first;
-      Point shift(_itA->second);
-      _visited.insert(make_pair(_current, shift));
+      _image = (_itA->second);
+      _visited.insert(make_pair(_current, _image));
 
       const vector<unsigned int>& nn = _structure.get_bond_map()[_current];
       for (unsigned int i = 0; i < nn.size(); ++i)
@@ -333,7 +339,7 @@ AtomisticBasis::neighbor_iterator::operator++(void)
         const BondMap::Translation& nt = _structure.get_neighbor_translation();
 
         // this neighbour would be shifted by this amount, if periodic copy
-        Point new_shift(nt[_current][i] + shift);
+        Point new_shift(nt[_current][i] + _image);
 
         // did we already use this (periodic) atom?
         bool visited = false;
@@ -345,16 +351,31 @@ AtomisticBasis::neighbor_iterator::operator++(void)
             break;
           }
 
-        //if (!_visited.count(nn[i]))// ||
-            //(std::find(range.first, range.second, shift) != range.second))
+        //if you use only length you consider a sphere with radius equal to length
+        //if you define length, height and width you consider a parallelepiped
         if (!visited)
         {
-          double d = Point(_structure.get_structure_atom(_start).get_position()
-              - _structure.get_structure_atom(nn[i]).get_position()
-              + new_shift).size();
+          if( _height == 0 && _width == 0 )
+          {
+            double d = Point(_structure.get_structure_atom(_start).get_position()
+                - _structure.get_structure_atom(nn[i]).get_position()
+                + new_shift).size();
 
-          if (d < _cutoff)
-            _setB.insert(make_pair(nn[i], new_shift));
+            if (d < _length)
+              _setB.insert(make_pair(nn[i], new_shift));
+          }
+          else
+          {
+            double dx  = Point (_structure.get_structure_atom(_start).get_position(0)
+                - _structure.get_structure_atom(nn[i]).get_position(0) + new_shift(0)).size();
+            double dy  = Point (_structure.get_structure_atom(_start).get_position(1)
+                - _structure.get_structure_atom(nn[i]).get_position(1) + new_shift(1)).size();
+            double dz  = Point (_structure.get_structure_atom(_start).get_position(2)
+                - _structure.get_structure_atom(nn[i]).get_position(2) + new_shift(2)).size();
+
+            if (dx < (_length/2) && dy < (_height/2) && dz < (_width/2))
+              _setB.insert(make_pair(nn[i], new_shift)) ;
+           }
         }
 
       }
@@ -380,15 +401,15 @@ AtomisticBasis::neighbor_iterator::operator++(void)
 }
 
 AtomisticBasis::neighbor_iterator
-AtomisticBasis::neighbors_begin(unsigned int index, double cutoff) const
+AtomisticBasis::neighbors_begin(unsigned int index, double length, double height, double width) const
 {
-  return neighbor_iterator(*this, index, cutoff);
+  return neighbor_iterator(*this, index, length, height, width);
 }
 
 AtomisticBasis::neighbor_iterator
-AtomisticBasis::neighbors_end(unsigned int index, double cutoff) const
+AtomisticBasis::neighbors_end(unsigned int index, double length, double height, double width) const
 {
-  return neighbor_iterator(*this, index, cutoff, false);
+  return neighbor_iterator(*this, index, length, height, width, false);
 }
 
 

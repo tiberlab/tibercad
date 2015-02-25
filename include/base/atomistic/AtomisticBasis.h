@@ -135,14 +135,14 @@ class AtomisticBasis
    * \param index index of the atom
    * \param cutoff cutoff distance in A
    */
-  neighbor_iterator neighbors_begin(unsigned int index, double cutoff = 1.0) const;
+  neighbor_iterator neighbors_begin(unsigned int index, double length = 1.0, double height = 1.0, double width = 1.0) const;
 
   //! Get the past-the-end iterator for an atom
   /*!
    * \param index index of the atom
    * \param cutoff cutoff distance in A
    */
-  neighbor_iterator neighbors_end(unsigned int index, double cutoff = 1.0) const;
+  neighbor_iterator neighbors_end(unsigned int index, double length = 1.0, double height = 1.0, double width = 1.0) const;
 
 
   protected:
@@ -195,7 +195,7 @@ class AtomisticBasis
   {
     public:
     neighbor_iterator(const AtomisticBasis& structure,
-        unsigned int start, double cutoff = 10, bool begin = true);
+        unsigned int start, double length = 10, double height = 10, double width = 10, bool begin = true);
 
     neighbor_iterator(const neighbor_iterator& rhs);
 
@@ -230,6 +230,12 @@ class AtomisticBasis
     }
 
 
+    Point atom_translation(void)
+    {
+      return _image;
+    }
+
+
     private:
 
     typedef HashMultiMap<unsigned int, Point>::Type HMMap;
@@ -241,7 +247,13 @@ class AtomisticBasis
     unsigned int _start;
     unsigned int _current;
 
-    double _cutoff;
+
+    double _length;
+    double _height;
+    double _width;
+
+    Point _image;
+
 
     HMMap _visited;
     HMap _setA;
