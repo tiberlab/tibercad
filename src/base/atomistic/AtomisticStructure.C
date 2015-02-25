@@ -2341,7 +2341,6 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
   {
     // ok, there is at least one atom inside
     double min_dist = 1e9;
-    unsigned int nearest = 0;
 
     // look for the atom nearest to the center
     for (unsigned int i = 0; i < atoms.size(); ++i)
@@ -2354,10 +2353,9 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
       if (dist < min_dist)
       {
         min_dist = dist;
-        nearest = i;
+        atom = atoms[i];
       }
     }
-    atom = atoms[nearest];
   }
   else
   {
@@ -2366,7 +2364,6 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
     set<const Elem*> to_process;
     to_process.insert(elem);
 
-    unsigned int nearest = 0;
     double min_dist = 1e9;
 
     while (!to_process.empty())
@@ -2388,13 +2385,13 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
 
           double dist = Point(center -
               get_structure_atom(atoms[i]).get_position()).size();
+
           if (dist < min_dist)
           {
             min_dist = dist;
-            nearest = i;
+            atom = atoms[i];
           }
         }
-        atom = atoms[nearest];
       }
 
       for (int s = 0; s < next_el->n_sides(); s++)
