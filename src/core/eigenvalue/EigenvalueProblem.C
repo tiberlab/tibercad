@@ -44,23 +44,11 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   ModelOptions kopts(opts);
 
   //kopts.set_option("mesh_units", get_mesh_units());
-  
-  // find k-space dimension, considering real space periodicities
   unsigned int mesh_dim = get_mesh().mesh_dimension();
-  unsigned int k_dim = 3 - mesh_dim;
-  if (get_option("x-periodicity", false))
-    k_dim++;
-  if (get_option("y-periodicity", false))
-    k_dim++;
-  if (get_option("z-periodicity", false))
-    k_dim++;
-
-  k_dim = min(k_dim, 3u);
-
-  if (opts.find_option("k_space_dimension"))
-    k_dim = opts.get_option("k_space_dimension", k_dim);
-
-  kopts.set_option("k_space_dimension", k_dim);
+  
+  bool x_periodic = get_option("x-periodicity", false);
+  bool y_periodic = get_option("y-periodicity", (mesh_dim < 2));
+  bool z_periodic = get_option("z-periodicity", (mesh_dim < 3));
 
   if (opts.find_option("k_path") || opts.find_option("k-path"))
   {	  
@@ -95,16 +83,37 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
     a *= 0.1;
     b *= 0.1;
     c *= 0.1;
+
+    x_periodic = get_atomistic_structure()->is_periodic(0);
+    y_periodic = get_atomistic_structure()->is_periodic(1);
+    z_periodic = get_atomistic_structure()->is_periodic(2);
   }
+
+  // find k-space dimension, considering real space periodicities
+  unsigned int k_dim = 0;
+  if (x_periodic)
+    k_dim++;
+  if (y_periodic)
+    k_dim++;
+  if (z_periodic)
+    k_dim++;
+
+  //k_dim = min(k_dim, 3u);
+
+  if (opts.find_option("k_space_dimension"))
+    k_dim = opts.get_option("k_space_dimension", k_dim);
+
+  kopts.set_option("k_space_dimension", k_dim);
+
 
   switch (k_dim)
   {
     case 1:
       if (mesh_dim == 3)
       {
-        if (get_option("x-periodicity", false))
+        if (x_periodic)
           c = a;
-        else if (get_option("y-periodicity", false))
+        else if (y_periodic)
           c = b;
       }
       kopts.set_option("r1", c);
@@ -113,19 +122,19 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
     case 2:
       if (mesh_dim == 3)
       {
-        if (!get_option("z-periodicity", false))
+        if (!z_periodic)
         {
           c = b;
           b = a;
         }
-        else if (get_option("x-periodicity", false))
+        else if (x_periodic)
         {
           b = a;
         }
       }
       else if (mesh_dim == 2)
       {
-        if (get_option("x-periodicity", false))
+        if (x_periodic)
           b = a;
       }
       kopts.set_option("r1", b);
@@ -731,10 +740,11 @@ void
 EigenvalueProblem::integrate_density(DofField& density)
 {
   // maybe this stuff should be taken from the intial/final state models?
+  unsigned int mesh_dim = get_mesh().mesh_dimension();
 
-  bool x_per = get_options().get_option("x-periodicity", false);
-  bool y_per = get_options().get_option("y-periodicity", false);
-  bool z_per = get_options().get_option("z-periodicity", false);
+  bool x_per = get_option("x-periodicity", false);
+  bool y_per = get_option("y-periodicity", (mesh_dim < 2));
+  bool z_per = get_option("z-periodicity", (mesh_dim < 3));
 
   ModelOptions kopts;
 
@@ -747,21 +757,7 @@ EigenvalueProblem::integrate_density(DofField& density)
     kopts.set_option("gamma_point_calculation", true);
 
   kopts.set_option("mesh_units", get_mesh_units());
-  unsigned int mesh_dim = get_mesh().mesh_dimension();
-  unsigned int k_dim = 3 - mesh_dim;
-  if (x_per)
-    k_dim++;
-  if (y_per)
-    k_dim++;
-  if (z_per)
-    k_dim++;
 
-  k_dim = min(k_dim, 3u);
-
-  if (kopts.find_option("k_space_dimension"))
-    k_dim = kopts.get_option("k_space_dimension", k_dim);
-
-  kopts.set_option("k_space_dimension", k_dim);
 
   int verbose = kopts.get_option("verbose", SimulationOptions::verbose());
   kopts.set_option("verbose", verbose);
@@ -777,7 +773,7 @@ EigenvalueProblem::integrate_density(DofField& density)
   if (x_per && (mesh_dim > 0))
   {
     a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
-    normalization_volume *= a(0);
+    normalization_volume *= a(0) * 1e-9;
   }
   if (y_per && (mesh_dim > 1))
   {
@@ -787,7 +783,7 @@ EigenvalueProblem::integrate_density(DofField& density)
   if (z_per && (mesh_dim > 2))
   {
     c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
-    normalization_volume *= c(1);
+    normalization_volume *= c(1) * 1e-9;
   }
 
   // if there is an atomistic structure, we can take the lattice vectors from it
@@ -802,25 +798,40 @@ EigenvalueProblem::integrate_density(DofField& density)
     c *= 0.1;
 
     normalization_volume = 1;
-    if (as->is_periodic(0))
+    if ((x_per = as->is_periodic(0)))
       normalization_volume *= a(0);
-    if (as->is_periodic(1))
+    if ((y_per = as->is_periodic(1)))
       normalization_volume *= b(1);
-    if (as->is_periodic(2))
+    if ((z_per = as->is_periodic(2)))
       normalization_volume *= c(2);
   }
 
   kopts.set_option("normalization_volume", normalization_volume);
 
 
+  unsigned int k_dim = 0;
+  if (x_per)
+    k_dim++;
+  if (y_per)
+    k_dim++;
+  if (z_per)
+    k_dim++;
+
+  //k_dim = min(k_dim, 3u);
+
+  if (kopts.find_option("k_space_dimension"))
+    k_dim = kopts.get_option("k_space_dimension", k_dim);
+
+  kopts.set_option("k_space_dimension", k_dim);
+
   switch (k_dim)
   {
     case 1:
       if (mesh_dim == 3)
       {
-        if (get_option("x-periodicity", false))
+        if (x_per)
           c = a;
-        else if (get_option("y-periodicity", false))
+        else if (y_per)
           c = b;
       }
       kopts.set_option("r1", c);
@@ -829,19 +840,19 @@ EigenvalueProblem::integrate_density(DofField& density)
     case 2:
       if (mesh_dim == 3)
       {
-        if (!get_option("z-periodicity", false))
+        if (!z_per)
         {
           c = b;
           b = a;
         }
-        else if (get_option("x-periodicity", false))
+        else if (x_per)
         {
           b = a;
         }
       }
       else if (mesh_dim == 2)
       {
-        if (get_option("x-periodicity", false))
+        if (x_per)
           b = a;
       }
       kopts.set_option("r1", b);
@@ -895,7 +906,7 @@ void EigenvalueProblem::solve_for_kpoint(const Point& kpoint)
   ostringstream os;
   if (get_option("plot_at_every_k", false))
   {
-    os << "(" << _k_vector[0] << "," <<  _k_vector[1] << "," <<
+    os << "k(" << _k_vector[0] << "," <<  _k_vector[1] << "," <<
         _k_vector[2] << ")";
     TiberCad::prepend_to_filename_suffix(os.str());
     this->plot_meshdata();

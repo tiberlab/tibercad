@@ -128,40 +128,40 @@ void KspaceIntegration::calculate_density()
       for (unsigned int qp=0; qp<q_point.size(); qp++)
       {
 
-				double w = k_points[q_point[qp]];
-				k_points[q_point[qp]] = w + JxW[qp] * factor;
-      
-      
-				if (this->quadrature_type == QGAUSS)
-				{
-				  double error_value;
-				  //dens_at_k_point.clear();
-      
-				  ostringstream os;
-				  os << "k = (" << q_point[qp](0) << ", " << q_point[qp](1) << ", " <<
-				      q_point[qp](2) << "), w = " << (JxW[qp] * factor) << endl;
-				  Messages::info(os.str());
-				  calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
-      
-				  // build the map between k-points and the integrated error quantity
-				  error_estimator[kelem] += error_value * JxW[qp] * factor;
-      
-				  //std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
-      
-				  // add quad point contrib for every real-space element-------------
-				  if (dens_at_k_elem.size() == 0)
-				  {
-				    dens_at_k_elem.resize(dens_at_k_point.size());
-      
-				    for(unsigned int el=0; el < dens_at_k_point.size(); el++) 
-				      dens_at_k_elem[el] = dens_at_k_point[el] * JxW[qp] * factor;
-				  }
-				  else
-				  {
-				    for(unsigned int el=0; el < dens_at_k_point.size(); el++)
-				      dens_at_k_elem[el] += dens_at_k_point[el] * JxW[qp] * factor;
-				  }
-				}
+        double w = k_points[q_point[qp]];
+        k_points[q_point[qp]] = w + JxW[qp] * factor;
+
+
+        if (this->quadrature_type == QGAUSS)
+        {
+          double error_value;
+          //dens_at_k_point.clear();
+
+          ostringstream os;
+          os << "k = (" << q_point[qp](0) << ", " << q_point[qp](1) << ", " <<
+              q_point[qp](2) << "), w = " << (JxW[qp] * factor) << endl;
+          Messages::info(os.str());
+          calculate_for_k_point(q_point[qp], q_point[qp], dens_at_k_point, error_value);
+
+          // build the map between k-points and the integrated error quantity
+          error_estimator[kelem] += error_value * JxW[qp] * factor;
+
+          //std::cout<<"dens_at_k_point: "<<dens_at_k_point.size()<<std::endl;
+
+          // add quad point contrib for every real-space element-------------
+          if (dens_at_k_elem.size() == 0)
+          {
+            dens_at_k_elem.resize(dens_at_k_point.size());
+
+            for(unsigned int el=0; el < dens_at_k_point.size(); el++)
+              dens_at_k_elem[el] = dens_at_k_point[el] * JxW[qp] * factor;
+          }
+          else
+          {
+            for(unsigned int el=0; el < dens_at_k_point.size(); el++)
+              dens_at_k_elem[el] += dens_at_k_point[el] * JxW[qp] * factor;
+          }
+        }
       }  //qp sum (dens_at_k_elem is computed)
 
       if (this->quadrature_type == QGAUSS)

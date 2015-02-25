@@ -117,7 +117,8 @@ void Kspace::build_k_grid()
 
 
     // to restrict the extension of the k-space
-    double k_max = mod_opt.get_option("k_max", 1.0);
+    RealVectorValue k_max(1.0, 1.0, 1.0);
+    mod_opt.get_option("k_max", k_max);
 
     // NOTE: build cube produces a mesh along x for 1D and on
     //       x-y plane for 2D, but 1D k-space is along z and 2D one
@@ -127,9 +128,9 @@ void Kspace::build_k_grid()
 				       num_nodes[0] - 1,
 				       num_nodes[1] - 1,
 				       num_nodes[2] - 1,
-				       kmin[0] * k_max, kmax[0] * k_max,
-				       kmin[1] * k_max, kmax[1] * k_max,
-				       kmin[2] * k_max, kmax[2] * k_max,
+				       kmin[0] * k_max(0), kmax[0] * k_max(0),
+				       kmin[1] * k_max(1), kmax[1] * k_max(1),
+				       kmin[2] * k_max(2), kmax[2] * k_max(2),
 				       type);
 
     switch (k_dim)
@@ -689,7 +690,9 @@ void Kspace::define_k_path(void)
   kmesh = new Mesh(k_space_dim);
 
   // to restrict the extension of the k-space
-  double k_max = mod_opt.get_option("k_max", 1.0);
+  RealVectorValue k_max(1.0, 1.0, 1.0);
+  mod_opt.get_option("k_max", k_max);
+
   std::string kpath = mod_opt.get_option("k_path","");
   // alternative accepted input:
   kpath = mod_opt.get_option("k-path",kpath);
@@ -700,7 +703,7 @@ void Kspace::define_k_path(void)
   Messages::info("(KSP) defining a k-path: " + kpath);
   ostringstream os;
   os <<"(KSP) k-dimension: "<< k_space_dim<<std::endl;
-  os <<"(KSP) k_max: "<<k_max<<std::endl; 
+  os <<"(KSP) k_max: "<< k_max(0) << " " << k_max(1) << " " << k_max(2) <<std::endl;
   os <<"(KSP) points per line "<<npoints<<std::endl; 
   Messages::info(os.str());
 
@@ -710,10 +713,10 @@ void Kspace::define_k_path(void)
     double *k1, *k2;
 
 
-    G[0]=0.0;  G[1]=0.0;       G[2]=0.0;        //( 0   0    0  ) 
-    M[0]=0.0;  M[1]=0.5*k_max; M[2]=0.5*k_max;  //( 0  1/2  1/2 )  
-    X[0]=0.0;  X[1]=0.5*k_max; X[2]=0.0;        //( 0  1/2   0  )
-    X1[0]=0.0; X1[1]=0.0;      X1[2]=0.5*k_max; //( 0   0   1/2 )        
+    G[0]=0.0;  G[1]=0.0;          G[2]=0.0;        //( 0   0    0  )
+    M[0]=0.0;  M[1]=0.5*k_max(1); M[2]=0.5*k_max(2);  //( 0  1/2  1/2 )
+    X[0]=0.0;  X[1]=0.5*k_max(1); X[2]=0.0;        //( 0  1/2   0  )
+    X1[0]=0.0; X1[1]=0.0;         X1[2]=0.5*k_max(2); //( 0   0   1/2 )
 
     std::vector<std::string> tokens;
 
@@ -759,14 +762,14 @@ void Kspace::define_k_path(void)
     double *k1, *k2;
     
 
-    G[0]=0.0;        G[1]=0.0;        G[2]=0.0;  //( 0  0  0 ) 
-    M[0]=0.5*k_max;  M[1]=0.5*k_max;  M[2]=0.0;  //( 1/2  1/2  0 )
-    M1[0]=0.5*k_max; M1[1]=0.0;       M1[2]=0.5*k_max;  //( 1/2  0  1/2 )
-    M2[0]=0.0;       M2[1]=0.5*k_max; M2[2]=0.5*k_max;  //( 0  1/2  1/2 )
-    X1[0]=0.5*k_max; X1[1]=0.0;       X1[2]=0.0;
-    X2[0]=0.0;       X2[1]=0.5*k_max; X2[2]=0.0;
-    X3[0]=0.0;       X3[1]=0.0;       X3[2]=0.5*k_max;
-    L[0]=0.5*k_max;  L[1]=0.5*k_max;  L[2]=0.5*k_max;  //( 1/2  1/2  1/2 )
+    G[0]=0.0;           G[1]=0.0;           G[2]=0.0;  //( 0  0  0 )
+    M[0]=0.5*k_max(0);  M[1]=0.5*k_max(1);  M[2]=0.0;  //( 1/2  1/2  0 )
+    M1[0]=0.5*k_max(0); M1[1]=0.0;          M1[2]=0.5*k_max(2);  //( 1/2  0  1/2 )
+    M2[0]=0.0;          M2[1]=0.5*k_max(1); M2[2]=0.5*k_max(2);  //( 0  1/2  1/2 )
+    X1[0]=0.5*k_max(0); X1[1]=0.0;          X1[2]=0.0;
+    X2[0]=0.0;          X2[1]=0.5*k_max(1); X2[2]=0.0;
+    X3[0]=0.0;          X3[1]=0.0;          X3[2]=0.5*k_max(2);
+    L[0]=0.5*k_max(0);  L[1]=0.5*k_max(1);  L[2]=0.5*k_max(2);  //( 1/2  1/2  1/2 )
 
     std::vector<std::string> tokens;
 
