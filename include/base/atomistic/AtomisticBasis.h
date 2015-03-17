@@ -114,6 +114,8 @@ class AtomisticBasis
 
   //! Set periodicity information
   void set_periodicity(std::vector<bool> periodicity);
+
+  //! Set periodicity information
   void set_periodicity(bool, bool, bool);
 
   //! Ask for periodicity along coordinate axes
@@ -135,14 +137,16 @@ class AtomisticBasis
    * \param index index of the atom
    * \param cutoff cutoff distance in A
    */
-  neighbor_iterator neighbors_begin(unsigned int index, double length = 1.0, double height = 1.0, double width = 1.0) const;
+  neighbor_iterator neighbors_begin(unsigned int index,
+      double length = 5.0, double height = 0.0, double width = 0.0) const;
 
   //! Get the past-the-end iterator for an atom
   /*!
    * \param index index of the atom
    * \param cutoff cutoff distance in A
    */
-  neighbor_iterator neighbors_end(unsigned int index, double length = 1.0, double height = 1.0, double width = 1.0) const;
+  neighbor_iterator neighbors_end(unsigned int index,
+      double length = 5.0, double height = 0.0, double width = 0.0) const;
 
 
   protected:

@@ -276,16 +276,17 @@ private:
   std::string _name;
 
 
-  //! Set of mesh regions covered by atomistic structure (numbers: mesh
-  //! regiones)
+  //! Set of mesh regions covered by atomistic structure (numbers: mesh regions)
   std::set <ID> _IDset;
 
   //! Tell if the object has been already initialized
   bool _is_initialized;
 
   //! True if the alloy must be treated as a Random Alloy
-  //! (Species are used to distinguish the parent material the atom
-  //! belongs to). By default VCA is used
+  /*!
+   * (Species are used to distinguish the parent material the atom
+   * belongs to). By default VCA is used
+   */
   bool _random_alloy;
 
   //! True if clustering should be applied
@@ -293,12 +294,6 @@ private:
 
   //! Contains reference to device we're working with
   const Device* _device;
-
-  //! Reference material
-  //Material* _reference_material;
-
-  //! Database of reference material
-  //Database _reference_material_db;
 
   //!Number of atoms excluding hydrogens
   unsigned int _N_without_H;
