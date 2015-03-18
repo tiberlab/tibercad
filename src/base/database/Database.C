@@ -124,8 +124,8 @@ Database::do_open(void) const
 
   if (!check_data_file(_datafile) && !is_interface())
   {
-    string msg("Cannot open material data file ");
-    msg += _datafile;
+    string msg("Cannot open material data file '");
+    msg += _datafile + "'";
     throw DatabaseException(msg);
   }
 
