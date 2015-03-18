@@ -136,7 +136,7 @@ Module driftdiffusion
   integration_order = 2
 
   #save_state = true 
-  load_state = ./prova2/dd.tsv
+  load_state = ./reference/dd.tsv
 
   Physics
   {
