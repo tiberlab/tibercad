@@ -867,13 +867,15 @@ DriftDiffusion::calculate_iqe(void)
   _iqe = 0;
 
   set<ID> active_regs = get_environment().get_region_ids();
+  bool recomb_only = false;
 
   ModelOptions::submodel_iterator opts(get_options().submodels_begin("iqe"));
   if (opts != get_options().submodels_end("iqe"))
   {
+    recomb_only = (opts->second).get_option("use_recombinations_only", recomb_only);
     string reg = (opts->second).get_option("active_regions", "all");
     set<ID> tmp;
-    get_environment().get_device().extract_physical_regions("reg", tmp);
+    get_environment().get_device().extract_physical_regions(reg, tmp);
 
     set<ID>::iterator it(active_regs.begin());
     set<ID>::iterator end(active_regs.end());
@@ -1013,6 +1015,10 @@ DriftDiffusion::calculate_iqe(void)
     _iqe += iqe_el;
   }
 
+  // 2015-03-02: we take now only direct, SRH and Auger for the definition
+  // this eliminates problems in presence of optical generation
+  Rtot = _iqe + Rsrh + Raug;
+
   ostringstream rec;
   rec << "Rrad = " << _iqe * Constants::e << 
     " Rsrh = " << Rsrh * Constants::e <<
@@ -1020,27 +1026,35 @@ DriftDiffusion::calculate_iqe(void)
     " Rtot = " << Rtot * Constants::e << "\n";
   Messages::info(rec.str());
 
-  double current = 0;
-
-  // now take the total outflowing current
-  ContactData::const_iterator it(_boundary_currents.begin());
-  for ( ; it != _boundary_currents.end(); ++it)
+  if (recomb_only)
   {
-    DDInterfaceModel* ifmod =
-        static_cast<DDInterfaceModel*>(it->first->models_begin()->second);
-
-    // we print only contacts with a current
-    if (!ifmod->has_current())
-      continue;
-
-    if (it->second > 0)
-      current += it->second;
+    _iqe /= Rtot;
   }
-
-  if (current > 0)
-    _iqe *= Constants::e / current;
   else
-    _iqe = 0;
+  {
+    double current = 0;
+
+    // now take the total outflowing current
+    ContactData::const_iterator it(_boundary_currents.begin());
+    for ( ; it != _boundary_currents.end(); ++it)
+    {
+      DDInterfaceModel* ifmod =
+          static_cast<DDInterfaceModel*>(it->first->models_begin()->second);
+
+      // we print only contacts with a current
+      if (!ifmod->has_current())
+        continue;
+
+      if (it->second > 0)
+        current += it->second;
+    }
+
+    if (current > 0)
+      _iqe *= Constants::e / current;
+    else
+      _iqe = 0;
+
+  }
 }
 
 
