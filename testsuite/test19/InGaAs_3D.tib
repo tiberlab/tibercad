@@ -75,6 +75,9 @@ Device
    reference_region = Atomistic_cube_down
    #Enable hydrogen passivation
    passivation = yes
+
+   random_alloy = true
+   
    #salva la struttura in vari formati, xyz per controllare con jmol, tgn per ricaricarla in tibercad
    #Nota: la struttura puo' essere ricaricata dal file tgn per risparmiare tempo
   #ma la MESH deve essere la stessa di quando la struttura e' stata salvata, altrimenti
