@@ -69,8 +69,17 @@ Material::do_preinit(void)
 
   if (get_options().find_option("a"))
     opts["a"] = get_options()["a"];
+  if (get_options().find_option("b"))
+    opts["b"] = get_options()["b"];
   if (get_options().find_option("c"))
     opts["c"] = get_options()["c"];
+
+  if (get_options().find_option("alpha"))
+    opts["alpha"] = get_options()["alpha"];
+  if (get_options().find_option("beta"))
+    opts["beta"] = get_options()["beta"];
+  if (get_options().find_option("gamma"))
+    opts["gamma"] = get_options()["gamma"];
 
   opts["x-growth-direction"] = get_options()["x-growth-direction"];
   opts["y-growth-direction"] = get_options()["y-growth-direction"];
@@ -158,14 +167,21 @@ Material::preinit(void)
   bool use_defaults = !hasx;
 
   unsigned int dim = get_option("dimension", 4);
+  
+  if (dim == 4)
+      Messages::warning("Material " + get_name() + " has no mesh dimension "
+          "associated. Cannot guess crystal directions.");
+
+  if (use_defaults)
+  {
+    get_options()["x-growth-direction"] = "(1,0,0)";
+    get_options()["y-growth-direction"] = "(0,1,0)";
+    get_options()["z-growth-direction"] = "(0,0,1)";
+  }
 
   // read or set default growth directions for wurtzite
   if (_structure == "wz")
   {
-    if (dim == 4)
-      Messages::warning("Material " + get_name() + " has no mesh dimension "
-          "associated. Cannot guess crystal directions.");
-
     if (use_defaults)
     {
       switch (dim)
@@ -191,15 +207,6 @@ Material::preinit(void)
       }
     }
 
-  }
-  else if (_structure == "zb")
-  {
-    if (use_defaults)
-    {
-      get_options()["x-growth-direction"] = "(1,0,0)";
-      get_options()["y-growth-direction"] = "(0,1,0)";
-      get_options()["z-growth-direction"] = "(0,0,1)";
-    }
   }
 
 

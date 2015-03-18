@@ -1,7 +1,5 @@
 #include "AtomisticGenerator3D.h"
 #include "AtomisticStructure.h"
-#include "mesh.h"
-#include "BondMap.h"
 #include "Messages.h"
 
 AtomisticGenerator3D*
@@ -94,18 +92,3 @@ AtomisticGenerator3D::build()
 }
 
 
-
-//void AtomisticGenerator3D::passivate(void){
-//
-//  unsigned int ** bond_map;
-//
-//  //bond_map_periodic = bond_map_gen(&(periodic_basis));
-//  //bond_map = bond_map_gen(_structure_basis);
-//  std::cout << "_bondmapobject " << _bondmapobject << std::endl;
-//  if (_bondmapobject != NULL) {delete _bondmapobject; _bondmapobject = new BondMap;}
-//  std::cout << "_bondmapobject " << _bondmapobject << std::endl;
-//
-//  passivate_cluster(_structure_basis);
-//
-//
-//};

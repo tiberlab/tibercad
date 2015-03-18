@@ -166,9 +166,6 @@ public:
   //! Tells if random alloy approximation is used
   bool is_random_alloy(void);
 
-  //! Tells if clustering should be applied
-  bool build_clusters(void);
-
   //! Get the reference material
   //const Material* get_reference_material(void) const;
 
@@ -289,9 +286,6 @@ private:
    */
   bool _random_alloy;
 
-  //! True if clustering should be applied
-  bool _clustering;
-
   //! Contains reference to device we're working with
   const Device* _device;
 
@@ -310,6 +304,18 @@ private:
   std::vector<std::string> _virtual_atom_types;
 
   std::map<std::string, unsigned int> _virtual_type_idx;
+
+  // calculate autocorrelation function for a given specie
+  void compute_g(const Specie& );
+
+  // assign basket
+  void assign_basket(const Point&, const Specie&, unsigned int);
+
+  std::vector<unsigned int> _g;
+
+  double _Rc;
+
+  double _dr;
 
 };
 
@@ -337,13 +343,6 @@ inline
 bool AtomisticStructure::is_random_alloy(void)
 {
   return _random_alloy;
-}
-
-
-inline
-bool AtomisticStructure::build_clusters(void)
-{
-  return _clustering;
 }
 
 

@@ -205,7 +205,9 @@ private:
 
   //! Build random alloy structure
   void build_random_alloy(void);
-  void build_random_alloy2(void);
+  
+  //! old routine maintained for checking
+  void build_random_old(void);
 
   //! Calculate environment dependent substitution probability
   double substitution_probability(size_t id, const Specie& sp);

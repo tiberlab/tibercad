@@ -47,15 +47,7 @@ class Alloy : public Material
     //! Return the name of component material B
     const std::string& get_name_B(void) const;
 
-    // Tells if a specie is defined as anion
-    // (reimplemented for alloy)
-    //bool is_anion(Specie) const;
-
-    // Tells if a specie is defined as cation
-    // (reimplemented for alloy)
-    //bool is_cation(Specie) const;
-
-    //! decide whether a specie can be substituted
+    //! decide whether an atom with a label can be substituted
     bool is_mutable(unsigned int) const; 
 
     //! get the map between species and molar fractions for a given label
@@ -102,8 +94,12 @@ class Alloy : public Material
     //! The component B
     Material* _mat_B;
 
-  
-    //! Map a specie in molar fraction (sum= atoms per cell)
+    //! Map for each label (starting from 1)
+    /*! mapping Specie to molar fraction. E.g.
+     *  In(x)Ga(1-x)As
+     *  _specie_fraction[1]=<In,x> <Ga,1-x>
+     *  _specie_fraction[2]=<As,1.0>
+     */  
     std::vector<std::map<Specie, double>> _specie_fraction;
 
 };

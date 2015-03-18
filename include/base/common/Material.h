@@ -132,6 +132,9 @@ class Material : public PhysicalObject
     //! count all atomic species of a given label 
     unsigned int count_species(unsigned int) const;
 
+    //! returns all possible atomic labels  
+    unsigned int count_labels() const;
+
     //! iterators over all species in one specific position
     crystal_species_iterator species_begin(unsigned int label) const;
   
@@ -346,5 +349,13 @@ Material::count_species(unsigned int label) const
   else
     return 0;
 }
+
+inline
+unsigned int
+Material::count_labels(void) const
+{
+  return _crystal_type_map.size();
+}
+
 
 #endif // _MATERIAL_H_

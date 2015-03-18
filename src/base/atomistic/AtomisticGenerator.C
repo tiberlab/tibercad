@@ -124,7 +124,7 @@ AtomisticGenerator::init_commons()
 
   //Build the right BulkCrystal object
   //Additional options respect to the region should be specified here
-  Messages::debug("(AG) Create bulk "+_reference_material->get_name());
+  Messages::info("Create reference lattice: "+_reference_material->get_name());
 
   _bulk = BulkCrystal::create(_reference_material); 
   
@@ -174,14 +174,14 @@ AtomisticGenerator::do_init()
   }
 
   //Build up supercell structure with proper options
-  Messages::debug("(AG) Build supercell");
+  Messages::info("Build a first oversized structure");
   build();
   
   //os<<"Initial structure with "<<_super_basis.size()<<" atoms"<<std::endl;
   //Messages::info(os.str());
 
-  std::string preserve;
-  preserve = _as->get_options().get_option("preserve", "none");
+  std::string preserve="none";
+  //preserve = _as->get_options().get_option("preserve", "none");
  
   // associate the right element to each atom
   associate_elements(_as->get_IDset());
@@ -197,6 +197,7 @@ AtomisticGenerator::do_init()
   check_periodic();
 
   //rebuild bondmap with new periodicity
+  Messages::info("Rebuild bondmap");
   delete _bondmap; _bondmap = NULL;
   bond_map_gen(_super_basis);
 
@@ -209,7 +210,14 @@ AtomisticGenerator::do_init()
 
   // assign random-alloy species (only cations for the moment)
   if (_as->is_random_alloy())
-    build_random_alloy();
+  {
+    if (_as->get_options().get_option("old_random_routine",false))
+    {
+      build_random_old();
+    }
+    else
+      build_random_alloy();
+  }
 
   // delete generator bondmap
   delete _bondmap;
@@ -385,9 +393,9 @@ AtomisticGenerator::assign_species(void)
       out << i;
       s = out.str();
       record = "specie_" + s;
+      //note: db gets the species of the first alloy component
       std::string db_record = db.get(record.c_str(),"none");
       assign[*reg][static_cast<Atom::label_t>(i)] = Specie(db_record);
- 
     }
 
     //No more reading from section atomistic_structure in database are needed
@@ -450,267 +458,6 @@ AtomisticGenerator::dorestrict(bool passivation)
 }
 
 
-void
-AtomisticGenerator::build_random_alloy()
-{
-  Messages::newline();
-  Messages::info("Building random alloy ...");
-
-  if (_bondmap == NULL) bond_map_gen(_structure_basis);
-
-  Messages m;
-  m.indent();
-
-  std::map<ID, std::map<unsigned char, Specie> > assignA;
-  std::map<ID, std::map<unsigned char, Specie> > assignB;
-  std::map<ID, double> a_to_b_prob;
-  bool done;
-
-  if (_as->is_random_alloy() == false)
-    Messages::error("build_random_alloy is called but AtomisticStructure is not "
-        "a random alloy");
-
-  bool clustering = _as->build_clusters();
-  double rand_percentage;
-  if (clustering)
-    rand_percentage = _as->get_options().get_option("cluster_seeds", 0.02);
-  bool fix_mean_alloy_concentration =
-      _as->get_options().get_option("fix_mean_alloy_concentration", true);
-
-  // By default in VCA the specie assigned is the one of parent A
-  // so we first swap all atoms and then change back to species A
-  // I do this because then the rest of the code becomes
-  // more intuitive.
-
-  for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
-  {
-    const Material* mat = _as->get_device()->get_material( (*reg) );
-
-    if (mat->is_alloy())
-    {
-      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
-      const Material* matA = alloy->get_component_A();
-      const Material* matB = alloy->get_component_B();
-
-      Database dbA = matA->get_database();
-      Database dbB = matB->get_database();
-
-      dbA.set_section("atomistic_structure");
-      dbB.set_section("atomistic_structure");
-
-      // Build up conversion map from file
-      for (unsigned int i = 1; i <= dbA.get("n_basis_specie", 0); i++)
-      {
-        std::string record;
-        std::string s;
-        std::stringstream out;
-
-        out << i;
-        s = out.str();
-
-        record = "specie_" + s;
-        std::string db_record = dbA.get(record.c_str(),"none");
-        assignA[*reg][static_cast<unsigned char>(i)] = Specie(db_record);
-        // Note: probability to switch specie is 1-x
-        a_to_b_prob[*reg] = mat->get_options().get_option("x", 1.0);
-      }
-
-      for (int i = 1; i <= dbB.get("n_basis_specie", 0); i++)
-      {
-        std::string record;
-        std::string s;
-        std::stringstream out;
-
-        out << i;
-        s = out.str();
-
-        record = "specie_" + s;
-        std::string db_record = dbB.get(record.c_str(),"none");
-        assignB[*reg][static_cast<unsigned char>(i)] = Specie(db_record);
-      }
-
-    }
-  }
-
-  // A random starting seed is needed to actually have different sequences
-  // we try to use something that is different also if launching simulations
-  // at the same time
-  int seed = _as->get_options().get_option("random_generator_seed",
-      static_cast<int>(time(NULL) * std::tr1::random_device()()));
-  {
-    std::ostringstream os;
-    os << "Initializing  MT19937 random generator with seed " << seed;
-        //std::ios::hex << seed;
-    Messages::info(os.str());
-  }
-  std::tr1::mt19937 generator(seed);
-
-
-  //
-  // First we count for each region the number of atoms that have to be substituted
-  //
-
-  // these vectors have space for all regions, so we can access them in a fast way
-  std::vector<int> num_to_substitute(
-      *(std::max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1, 0);
-  std::vector<int> num_substituted(num_to_substitute.size(), 0);
-
-
-  for (unsigned int i = 0; i < _structure_basis.size(); i++)
-  {
-    Atom& atm = _structure_basis[i];
-
-    // we skip passivation atoms
-    if (atm.get_specie() == Specie::H)
-      continue;
-
-    // if it is flagged as first atom in the basis it may be substituted
-    if (atm.get_label() == 1)
-    {
-      ID regid = atm.get_region_ID();
-      const Material* mat = _as->get_material(atm);
-      if (mat->is_alloy())
-      {
-        num_to_substitute[regid] += 1;
-        // swap species
-        atm.set_specie(assignB[regid][atm.get_label()]);
-      }
-    }
-  }
-
-  // this set is used to check if we have to do something in a region
-  std::set<ID> not_finished;
-
-  for (int i = 0; i < num_to_substitute.size(); ++i)
-  {
-    if (num_to_substitute[i] > 0)
-    {
-      // if we want to fix the number of atmos to be substituted,
-      // we calculate this number now
-      if (fix_mean_alloy_concentration)
-      {
-        double x = a_to_b_prob[i];
-        // NOTE: we use floor() here to not have any fluctuation due to numerical
-        // roundoff errors
-        int n_tot = num_to_substitute[i];
-        num_to_substitute[i] = std::floor(x * num_to_substitute[i]);
-        std::ostringstream os;
-        os << "Region " << i << ": x = " << x << " -> " << num_to_substitute[i] <<
-            " atoms out of " << n_tot << " to be substituted (x_eff = " <<
-            std::setprecision(3) <<
-            static_cast<float>(num_to_substitute[i]) / n_tot << ")" << std::endl;
-        Messages::info(os.str());
-      }
-
-      not_finished.insert(i);
-    }
-  }
-
-
-
-  //
-  // Now we extract random numbers between 0 and _structure_basis.size() - 1
-  // to randomly pick an atom. If it is flagged as 1, and is in a region where
-  // atoms need to be substituted, and is not already substituted it will be changed.
-  // This is repeated until in all regions we have substituted the required number
-  // of atoms.
-  //
-  std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
-
-  // this we need for the substitution probability
-  std::tr1::uniform_real<double> random2;
-
-  size_t ctr = 0;
-  size_t id = 0;
-  for (; !not_finished.empty(); ++ctr)
-  {
-    if (fix_mean_alloy_concentration)
-      id = random(generator);
-    else
-    {
-      // in this case we visit every atom
-      id = ctr;
-      if (id >= _structure_basis.size())
-        break;
-    }
-
-    Atom& atm = _structure_basis[id];
-
-    if ((atm.get_label() == 1) &&
-        (atm.get_specie() != Specie::H))
-    {
-      ID regid = atm.get_region_ID();
-
-      if (num_substituted[regid] < num_to_substitute[regid])
-      {
-        // NOTE: random numbers may repeat, so we have to check if this atom
-        // has already been substituted!!
-        Specie sp(assignA[regid][atm.get_label()]);
-
-        if (atm.get_specie() != sp)
-        {
-          double prob = 1.0;
-          double rnd = 0.0;
-          // the first X% will be distributed randomly
-          if (clustering && (num_substituted[regid] > rand_percentage * num_to_substitute[regid]))
-          {
-            prob = substitution_probability(id, sp);
-            rnd = static_cast<double>(generator()) / generator.max();
-          }
-          if (!fix_mean_alloy_concentration)
-          {
-            prob = a_to_b_prob[regid];
-            rnd = static_cast<double>(generator()) / generator.max();
-          }
-
-          if (rnd <= prob)
-          {
-            atm.set_specie(sp);
-            ++num_substituted[regid];
-          }
-        }
-      }
-      else
-      {  
-        not_finished.erase(regid);
-      }  
-
-    }
-
-  }
-
-  if (fix_mean_alloy_concentration)
-  {
-    size_t subst = 0;
-    for (int i = 0; i < num_substituted.size(); ++i)
-      subst += num_substituted[i];
-
-    std::ostringstream os;
-    os << "Needed " << ctr << " random number extractions to substitute " << subst << " atoms";
-    Messages::info(os.str());
-    Messages::newline();
-  }
-  else
-  {
-    for (int i = 0; i < num_substituted.size(); ++i)
-    {
-      if (num_to_substitute[i] > 0)
-      {
-        std::ostringstream os;
-        os << _as->get_device()->get_region_name(i) << " : substituted "
-            << num_substituted[i] << " out of " << num_to_substitute[i]
-            << " ( " << static_cast<double>(100 * num_substituted[i])
-                             / num_to_substitute[i]
-            << "%, nominally " << 100 * a_to_b_prob[i] << "%)";
-        Messages::info(os.str());
-      }
-    }
-    Messages::newline();
-  }
-
-}
-
-
 double
 AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
 {
@@ -758,11 +505,9 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
   // # nn2 = 56
   if (n_neigh == 0) n_neigh = 1;
   double ratio = static_cast<double>(same_species) / n_neigh;
-  ratio = (1 - cos(ratio*M_PI));
-  //ratio *= ratio;
+  ratio = (1 - cos(ratio*M_PI/2.0));
   return ratio;
 }
-
 
 
 
@@ -881,6 +626,8 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
 
 void AtomisticGenerator::make_conv_cell()
 {
+  Messages::info("Make conventional cell");
+
   //Calculate conventional cell vectors in the directions given by cut planes (conventional growth cell)
   Tensor1 vec_x(0),vec_y(0),vec_z(0);
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
@@ -983,7 +730,7 @@ void AtomisticGenerator::make_conv_basis()
   _local_origin -= min_pos;
  
   ostringstream os;
-  os<< "new origin: "<<_local_origin;
+  os<< "New origin: "<<_local_origin;
   Messages msg;
   msg.info(os.str()); 
 
@@ -1037,6 +784,8 @@ void AtomisticGenerator::check_periodic(void)
   if (_bondmap == NULL) bond_map_gen(_super_basis);
 
   BondMap& bond_map = *_bondmap;
+
+  Messages::info("Adding needed atoms for correct passivation");
 
   // maybe need map pair<i,j>
   std::vector<std::set<unsigned int>> added(3);
@@ -1118,12 +867,7 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
   //os.str(std::string());
   //---------------------------------------------------------------------------
 
-  Messages msg;
-  msg.info("Building Bond Map...");
-  msg.indent();
   _bondmap->do_solve(basis, _period);
-  msg.unindent();
-  msg.info("Bond Map completed");
 
 };
 
@@ -1401,14 +1145,14 @@ AtomisticGenerator::reduce_vector(Tensor2Gen a)
 
 };
 
-
-/*
+  
 void
-AtomisticGenerator::build_random_alloy2()
+AtomisticGenerator::build_random_alloy()
 {
   using namespace std;
   // map between species and nominal concentrations 
-  typedef map<Specie, double> specie_map;
+  typedef map<Specie, double> specie_fraction;
+  typedef map<Specie, unsigned int> specie_number;
 
   Messages::newline();
   Messages::info("Building random alloy ...");
@@ -1417,74 +1161,649 @@ AtomisticGenerator::build_random_alloy2()
     Messages::error("build_random_alloy is called but AtomisticStructure is not "
         "a random alloy");
 
+  if (_bondmap == NULL)
+  {
+    std::cout<< "yet another bondmap..."<<std::endl;
+    bond_map_gen(_structure_basis);
+  }
+
+  Messages m;
+  m.indent();
+
+  vector<string> cluster;
+  _as->get_options().get_option("clustering", cluster);
+  bool clustering = (cluster.size() > 0);
+
+  vector<double> cluster_seeds(cluster.size(),0.01);
+  if (clustering)
+    _as->get_options().get_option("cluster_seeds", cluster_seeds);
+
+  bool fix_mean_alloy_concentration =
+      _as->get_options().get_option("fix_mean_alloy_concentration", true);
+
+  // build a map associating species to seeds
+  map<Specie, double> rand_percentage; 
+  for (int i=0; i < cluster_seeds.size(); i++)
+  {
+    Specie tmp(cluster[i]);
+    rand_percentage[tmp] = cluster_seeds[i];
+  }
+
+  // A random starting seed is needed to actually have different sequences
+  // we try to use something that is different also if launching simulations
+  // at the same time
+  int seed = _as->get_options().get_option("random_generator_seed",
+      static_cast<int>(time(NULL) * std::tr1::random_device()()));
+  {
+    std::ostringstream os;
+    os << "Initializing  MT19937 random generator with seed " << seed;
+        //std::ios::hex << seed;
+    Messages::info(os.str());
+  }
+  std::tr1::mt19937 generator(seed);
+
+
+  // First build up a map with info per region and label between species and fractions
+  vector<vector<specie_fraction>> frac;
+  // define two vectors   num_to_substitute[region][label][Specie]
+  vector<vector<specie_number>> num_to_substitute;
+  vector<vector<specie_number>> num_substituted;
+  // define vectors atm_to_substitute[region][label]
+  vector<vector<unsigned int>> atm_to_substitute;
+  vector<vector<bool>> done;
+
+  // the number of regions is counted in excess as max between region ids + 1 
+  int numregions = *(max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1;
+  frac.resize(numregions);
+  num_to_substitute.resize(numregions);
+  num_substituted.resize(numregions);
+  atm_to_substitute.resize(numregions);
+  done.resize(numregions);
+
+  for (set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
+  {
+    const Material* mat = _as->get_device()->get_material( (*reg) );
+    unsigned int num_labels = mat->count_labels();
+    num_to_substitute[*reg].resize(num_labels+1); //+1 to start from 1
+    num_substituted[*reg].resize(num_labels+1);
+    atm_to_substitute[*reg].resize(num_labels+1);
+    frac[*reg].resize(num_labels+1);
+    done[*reg].resize(num_labels+1);
+
+    if (mat->is_alloy())
+    {
+      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
+      for (unsigned int lb=1; lb<=num_labels; lb++)
+      {
+        const specie_fraction& speciemap = alloy->get_species_map(lb);
+        frac[*reg][lb] = speciemap;
+        done[*reg][lb] = false; 
+      }
+    }
+    else
+    {
+      for (unsigned int lb=1; lb<=num_labels; lb++)
+      {
+        done[*reg][lb] = false; 
+        Material::crystal_species_iterator it = mat->species_begin(lb);
+        Material::crystal_species_iterator itend = mat->species_end(lb);
+        for ( ; it != itend; ++it)
+          frac[*reg][lb][*it] = 1.0;
+      }
+    }
+  }
+
+  /* Debug messages 
+  for (set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
+  {
+    std::cout<<"reg id: "<<*reg<<std::endl;
+    for (unsigned int lb=1; lb<frac[*reg].size(); lb++)
+    {
+      specie_fraction::iterator it    = frac[*reg][lb].begin();
+      specie_fraction::iterator itend = frac[*reg][lb].end();
+      for( ; it != itend; ++it)
+      {
+        std::cout<<"lb: "<<lb<<" "<<(it->first).get_string()
+                 <<" frac: "<<frac[*reg][lb][it->first]<<std::endl;
+      }
+    }
+  }
+  */
+  
+  // now we count how many atms with a given label 
+  // may be substituted in each region
+  // temporary use atm flag virtual_type to flag mutable atoms 
+  for (unsigned int i = 0; i < _structure_basis.size(); i++)
+  {
+    Atom& atm = _structure_basis[i];
+    unsigned int lb = static_cast<unsigned int>(atm.get_label());
+
+    atm.set_type(0); 
+    unsigned int regid = atm.get_region_ID();
+    done[regid][lb] = true;
+    // we skip passivation atoms 
+    if (lb == 0) continue;
+
+    const Material* mat = _as->get_material(atm);
+    if (mat->is_alloy())
+    {
+      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
+      if (alloy->is_mutable(lb))
+      {
+        atm_to_substitute[regid][lb] += 1;
+        atm.set_type(1);
+        done[regid][lb] = false;
+        
+        if (clustering)
+        {
+          specie_fraction::iterator it = frac[regid][lb].begin();
+          for(; rand_percentage.count(atm.get_specie()) > 0; )
+          {     
+            atm.set_specie(it->first);
+            if ( (++it) == frac[regid][lb].end() ) break;
+          }
+          //std::cout<<"Clustering, initial ion: "<<atm.get_specie().get_string()<<std::endl;
+        }
+      }
+    }
+  }
+  
+  // Loop to actually compute the number of atoms that need to be substituted.
+  // this set is used to check if we have to do something in a region
+  std::set<ID> not_finished;
+  int total_subst = 0;
+
+  for (set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
+  {
+    for (unsigned int lb=1; lb < atm_to_substitute[*reg].size(); ++lb)
+    {
+      if (atm_to_substitute[*reg][lb] > 0)
+      {
+        // Compute number of atoms in each specie, ok if (fix_mean_alloy_concentration)
+        int count = 0;
+        specie_fraction::iterator it = frac[*reg][lb].begin(); 
+        specie_fraction::iterator itend = frac[*reg][lb].end(); 
+        for(; it != itend; ++it)
+        { 
+          // floor is used. Later the last ion is adjusted to ensure sum.
+          num_to_substitute[*reg][lb][it->first] = 
+                                     std::floor(it->second * atm_to_substitute[*reg][lb]);
+          count += num_to_substitute[*reg][lb][it->first];
+        }
+
+        // here the number of ions can fluctuate in a multinomial way. 
+        // Approximate by a normal distribution with 
+        // mean=x*N and sigma=sqrt(N*x*(1-x))
+        if (!fix_mean_alloy_concentration)
+        {
+          count = 0;
+          specie_fraction::iterator it = frac[*reg][lb].begin(); 
+          for(; it != itend; ++it)
+          { 
+             const double eps = std::numeric_limits<double>::min();
+             double u1;
+             do{  
+               u1 = static_cast<double>(generator()) / generator.max();
+             }while (u1 <= eps);
+             double u2 = static_cast<double>(generator()) / generator.max();
+             double z = sqrt(-2.0 * log(u1)) * cos(2.0 * M_PI * u2);
+             unsigned int N = num_to_substitute[*reg][lb][it->first];
+             double x = frac[*reg][lb][it->first];
+             double sigma = sqrt(N*x*(1-x));
+             num_to_substitute[*reg][lb][it->first] = z * sigma + N;
+             count += num_to_substitute[*reg][lb][it->first];
+          }
+        }
+        
+        // correct last specie to ensure sum rule
+        specie_fraction::reverse_iterator rit = frac[*reg][lb].rbegin();  
+        num_to_substitute[*reg][lb][rit->first] += (atm_to_substitute[*reg][lb] - count);
+
+        // Write some output 
+        double n_tot = atm_to_substitute[*reg][lb]; 
+        total_subst += n_tot;
+        it = frac[*reg][lb].begin(); 
+        for(; it != itend; ++it)
+        { 
+          Specie sp(it->first);
+          std::ostringstream os;
+          os << "Region " << *reg << " Label "<<lb<<" Specie "
+             << sp.get_string()<<": x = " << it->second << " -> " 
+             << num_to_substitute[*reg][lb][sp] << " atoms out of " << n_tot 
+             << " to be substituted (x_eff = " << std::setprecision(3) 
+             << static_cast<float>(num_to_substitute[*reg][lb][sp]) / n_tot << ")" << std::endl;
+          Messages::info(os.str());
+        }
+        not_finished.insert(*reg);
+      }
+    }    
+  }
+
+  
+  Messages::info("Substituting atoms randomly");
+
+  //
+  // Now we extract random numbers between 0 and _structure_basis.size() - 1
+  // to randomly pick an atom. If it is flagged as 1, and is in a region where
+  // atoms need to be substituted, and is not already substituted it will be changed.
+  // This is repeated until in all regions we have substituted the required number
+  // of atoms.
+  //
+  std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
+
+  // We keep drowing numbers until a region is done (not_finished)
+  size_t ctr = 0;
+  size_t id = 0;
+  for (; !not_finished.empty(); ++ctr)
+  {
+    id = random(generator);
+    Atom& atm = _structure_basis[id];
+    unsigned int regid = atm.get_region_ID();
+    unsigned int lb = atm.get_label();
+
+    //std::cout << "atom: "<<id<<" reg: "<<regid<<" lb: "<<lb<<"; fg: "
+    //          << static_cast<unsigned int>(atm.get_type())
+    //          << " is done? "<<done[regid][lb]<<std::endl;
+
+    // NOTE: random numbers may repeat, so we have to check if this atom
+    // has already been substituted: we use atom.type to flag substituted atoms
+    if ( atm.get_type() && !done[regid][lb] )
+    {
+
+      map<Specie, double> new_frac(frac[regid][lb]);
+      specie_fraction::iterator it = new_frac.begin(); 
+      unsigned int nsp = new_frac.size();
+      Specie clust_sp(it->first); // clustering specie 
+
+      //for ( ; it != new_frac.end(); ++it)
+      //{
+      //  if (rand_percentage.count(it->first))
+      //      std::cout<< (it->first).get_string()<<": "<<rand_percentage[it->first]<<" ";
+      //}
+      //std::cout<< std::endl;
+
+      // CLUSTERING
+      // rr is used in case of clustering to increase the prob
+      // of the clustering specie w.r.t. to the others:
+      //
+      // x' = rr
+      // y' = (1-rr)/(1-x) y
+      // z' = (1-rr)/(1-x) z
+      //
+      // x'+y'+z' = 1
+      //
+      // NOTE 1: Clustering occurs only after some atoms have been placed at rnd. 
+      // NOTE 2: First we need to place all clustering ions 
+      if (clustering)
+      {
+        double rr=0.0;
+        double ss=0.0;
+        //changed=true when frac are actually redefined for clustering
+        bool changed = false; 
+        it = new_frac.begin();
+        Specie sp(it->first);
+        // first sets rr and ss for the clustering specie
+        for ( ; it != new_frac.end(); ++it)
+        {
+          sp = it->first;
+          // note: rand_percentage is used to see if a specie is a clustering specie
+          if (rand_percentage.count(sp))  clust_sp = sp;
+
+          if (rand_percentage.count(sp) && num_substituted[regid][lb][sp] > 
+                      rand_percentage[sp] * num_to_substitute[regid][lb][sp])
+          {
+             rr = substitution_probability(id, sp);
+             ss = it->second; 
+             //std::cout<<"rr: "<<rr<<std::endl;
+             new_frac[sp] = rr;
+             changed = true;
+             //std::cout<<"clustering: "<<sp.get_string()<<" "<<num_substituted[regid][lb][sp]
+             //      <<"/"<<rand_percentage[sp] * num_to_substitute[regid][lb][sp]
+             //      <<" : "<<num_to_substitute[regid][lb][sp] <<std::endl;
+          }
+        }
+
+        it = new_frac.begin();
+        for ( ; it != new_frac.end(); ++it)
+        {
+          sp = it->first;
+          if (!rand_percentage.count(sp) &&  changed)
+             new_frac[sp] = (1.0 - rr)/(1.0 - ss) * new_frac[sp]; 
+        }
+      }
+
+      // Assign a specie according to fraction
+      // we set one of the possible species at random
+      // e.g., for quaternaries set sp according to fraction:
+      //    x        y        1-x-y
+      // |------|-------*-|-----------|
+      // 0           rnd^             1
+      // 
+      it = new_frac.begin(); 
+      Specie sp(it->first);
+      double x = it->second;
+
+      double rnd = static_cast<double>(generator()) / generator.max();
+      //std::cout<<"nsp "<<nsp<<" x "<<x<<" "<<rnd<<std::endl;
+      for (unsigned int i=0; i < nsp; i++)
+      {
+        if (rnd <= x)
+        {
+          sp = it->first;
+          break;
+        }
+        ++it;
+        x += it->second; 
+      }
+
+      // if (clustering)  => a specie can be substituted ONLY IF 
+      // all clustering species have been already substituted.
+      // This is done to avoid that non-clustering ions take away all slots,
+      // restraining the clustering ions into forced positions 
+      if ( !clustering || sp == clust_sp || num_substituted[regid][lb][clust_sp] 
+                             >= num_to_substitute[regid][lb][clust_sp] )
+      {
+        if (num_substituted[regid][lb][sp] < num_to_substitute[regid][lb][sp])
+        {
+          atm.set_specie(sp);
+          //std::cout<<sp.get_string()<<" subs "<<num_substituted[regid][lb][sp]
+          //              <<"/"<<num_to_substitute[regid][lb][sp] << std::endl;
+          num_substituted[regid][lb][sp] += 1;
+          atm.set_type(0); // flag atom as substituted
+        }
+      }
+
+      // checks whether a region/label is done
+      if (num_substituted[regid][lb][sp] >= num_to_substitute[regid][lb][sp])
+      {
+         specie_number::iterator it = num_substituted[regid][lb].begin(); 
+         specie_number::iterator itend = num_substituted[regid][lb].end(); 
+         done[regid][lb] = true;
+         for ( ; it != itend; ++it)
+         {
+            if (num_substituted[regid][lb][it->first] < 
+                                  num_to_substitute[regid][lb][it->first])
+            {
+                done[regid][lb] = false;
+                break;
+            }
+         }
+         // remove a region when all of a lb are substituted
+         bool alldone = true; 
+         for (unsigned int i=1; i < done[regid].size(); i++)
+         {
+           //std::cout<<"reg: "<<regid<<" "<<done[regid][i]<<";"; 
+           if (done[regid][i] == false){ alldone=false; break;}
+         }
+         //std::cout<<std::endl;
+         if (alldone) not_finished.erase(regid);
+      }  
+
+    }
+  }
+
+  std::ostringstream os;
+  os << "Needed " << ctr << " random number extractions to substitute " << total_subst << " atoms";
+  Messages::info(os.str());
+  Messages::newline();
+          
+}
+
+
+void
+AtomisticGenerator::build_random_old()
+{
+  Messages::newline();
+  Messages::info("Building random alloy ...");
+
   if (_bondmap == NULL) bond_map_gen(_structure_basis);
 
   Messages m;
   m.indent();
-  
-  bool done=false;
 
-  bool clustering = _as->build_clusters();
+  std::map<ID, std::map<unsigned char, Specie> > assignA;
+  std::map<ID, std::map<unsigned char, Specie> > assignB;
+  std::map<ID, double> a_to_b_prob;
+
+  if (_as->is_random_alloy() == false)
+    Messages::error("build_random_alloy is called but AtomisticStructure is not "
+        "a random alloy");
+
+  bool clustering = _as->get_options().get_option("clustering", false);
   double rand_percentage;
   if (clustering)
     rand_percentage = _as->get_options().get_option("cluster_seeds", 0.02);
   bool fix_mean_alloy_concentration =
       _as->get_options().get_option("fix_mean_alloy_concentration", true);
 
-  // First build up a map with info per region and label between species and frac or Num atoms
-  vector<vector<specie_map>> frac_specie;
-  vector<vector<specie_map>> num_specie;
+  // By default in VCA the specie assigned is the one of parent A
+  // so we first swap all atoms and then change back to species A
+  // I do this because then the rest of the code becomes
+  // more intuitive.
 
-  int numregions = *(max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1;
-
-  for (set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
+  for (std::set<ID>::iterator reg = _as->get_IDset().begin(); reg != _as->get_IDset().end(); ++reg)
   {
     const Material* mat = _as->get_device()->get_material( (*reg) );
-    
-    auto &specie_map_label = mat->get_species_map();
-     
-  }
 
-    for (lb=0; specie_map_label.size(); lb++)
+    if (mat->is_alloy())
     {
-       frac_specie[reg][lb] = specie_map_label[lb];
-       num_specie[reg][lb] = specie_map_label[lb];
-    }
+      const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
+      const Material* matA = alloy->get_component_A();
+      const Material* matB = alloy->get_component_B();
 
+      Database dbA = matA->get_database();
+      Database dbB = matB->get_database();
+
+      dbA.set_section("atomistic_structure");
+      dbB.set_section("atomistic_structure");
+
+      // Build up conversion map from file
+      for (unsigned int i = 1; i <= dbA.get("n_basis_specie", 0); i++)
+      {
+        std::string record;
+        std::string s;
+        std::stringstream out;
+
+        out << i;
+        s = out.str();
+
+        record = "specie_" + s;
+        std::string db_record = dbA.get(record.c_str(),"none");
+        assignA[*reg][static_cast<unsigned char>(i)] = Specie(db_record);
+        // Note: probability to switch specie is 1-x
+        a_to_b_prob[*reg] = mat->get_options().get_option("x", 1.0);
+      }
+
+      for (int i = 1; i <= dbB.get("n_basis_specie", 0); i++)
+      {
+        std::string record;
+        std::string s;
+        std::stringstream out;
+
+        out << i;
+        s = out.str();
+
+        record = "specie_" + s;
+        std::string db_record = dbB.get(record.c_str(),"none");
+        assignB[*reg][static_cast<unsigned char>(i)] = Specie(db_record);
+      }
+
+    }
   }
+
+  // A random starting seed is needed to actually have different sequences
+  // we try to use something that is different also if launching simulations
+  // at the same time
+  int seed = _as->get_options().get_option("random_generator_seed",
+      static_cast<int>(time(NULL) * std::tr1::random_device()()));
+  {
+    std::ostringstream os;
+    os << "Initializing  MT19937 random generator with seed " << seed;
+        //std::ios::hex << seed;
+    Messages::info(os.str());
+  }
+  std::tr1::mt19937 generator(seed);
+
+
+  //
+  // First we count for each region the number of atoms that have to be substituted
+  //
+
+  // these vectors have space for all regions, so we can access them in a fast way
+  std::vector<int> num_to_substitute(
+      *(std::max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1, 0);
+  std::vector<int> num_substituted(num_to_substitute.size(), 0);
 
 
   for (unsigned int i = 0; i < _structure_basis.size(); i++)
   {
     Atom& atm = _structure_basis[i];
-    Atom::label_t atm_label = atm.get_label();
 
-    // we skip passivation atoms 
-    if (atm_label == 0) continue;
+    // we skip passivation atoms
+    if (atm.get_specie() == Specie::H)
+      continue;
 
     // if it is flagged as first atom in the basis it may be substituted
-    const Material* mat = _as->get_material(atm);
-    if (mat->is_alloy())
+    if (atm.get_label() == 1)
     {
-      std::map<Atom::label_t, std::vector<int>>::iterator mapit(num_to_substitute.find(atm_label));
-      if (mapit == num_to_substitute.end())
+      ID regid = atm.get_region_ID();
+      const Material* mat = _as->get_material(atm);
+      if (mat->is_alloy())
       {
-         mapit = num_to_substitute.insert(make_pair(atm_label, std::vector<int>() )); 
-         (mapit->second).resize(*(std::max_element(_as->get_IDset().begin(), _as->get_IDset().end())) + 1,0);       
-         num_substituted[atm_label].resize((mapit->second).size(), 0);
+        num_to_substitute[regid] += 1;
+        // swap species
+        atm.set_specie(assignB[regid][atm.get_label()]);
       }
-      // retrieve the nominal concentration for a given specie
-      auto &specie_map = mat->get_species_map(atm_label);
-      if (specie_map.size() > 1)
+    }
+  }
+
+  // this set is used to check if we have to do something in a region
+  std::set<ID> not_finished;
+
+  for (int i = 0; i < num_to_substitute.size(); ++i)
+  {
+    if (num_to_substitute[i] > 0)
+    {
+      // if we want to fix the number of atmos to be substituted,
+      // we calculate this number now
+      if (fix_mean_alloy_concentration)
       {
-         (mapit->second)[atm.get_region_ID()] += 1;
+        double x = a_to_b_prob[i];
+        // NOTE: we use floor() here to not have any fluctuation due to numerical
+        // roundoff errors
+        int n_tot = num_to_substitute[i];
+        num_to_substitute[i] = std::floor(x * num_to_substitute[i]);
+        std::ostringstream os;
+        os << "Region " << i << ": x = " << x << " -> " << num_to_substitute[i] <<
+            " atoms out of " << n_tot << " to be substituted (x_eff = " <<
+            std::setprecision(3) <<
+            static_cast<float>(num_to_substitute[i]) / n_tot << ")" << std::endl;
+        Messages::info(os.str());
       }
-      // set the first specie 
-      atm.set_specie( (species_map.begin())->first );
+
+      not_finished.insert(i);
     }
   }
 
 
 
+  //
+  // Now we extract random numbers between 0 and _structure_basis.size() - 1
+  // to randomly pick an atom. If it is flagged as 1, and is in a region where
+  // atoms need to be substituted, and is not already substituted it will be changed.
+  // This is repeated until in all regions we have substituted the required number
+  // of atoms.
+  //
+  std::tr1::uniform_int<size_t> random(0, _structure_basis.size() - 1);
+
+
+  size_t ctr = 0;
+  size_t id = 0;
+  for (; !not_finished.empty(); ++ctr)
+  {
+    if (fix_mean_alloy_concentration)
+      id = random(generator);
+    else
+    {
+      // in this case we visit every atom
+      id = ctr;
+      if (id >= _structure_basis.size())
+        break;
+    }
+
+    Atom& atm = _structure_basis[id];
+
+    if ((atm.get_label() == 1) &&
+        (atm.get_specie() != Specie::H))
+    {
+      ID regid = atm.get_region_ID();
+
+      if (num_substituted[regid] < num_to_substitute[regid])
+      {
+        // NOTE: random numbers may repeat, so we have to check if this atom
+        // has already been substituted!!
+        Specie sp(assignA[regid][atm.get_label()]);
+
+        if (atm.get_specie() != sp)
+        {
+          double prob = 1.0;
+          double rnd = 0.0;
+          // the first X% will be distributed randomly
+          if (clustering && (num_substituted[regid] > rand_percentage * num_to_substitute[regid]))
+          {
+            prob = substitution_probability(id, sp);
+            rnd = static_cast<double>(generator()) / generator.max();
+          }
+          if (!fix_mean_alloy_concentration)
+          {
+            prob = a_to_b_prob[regid];
+            rnd = static_cast<double>(generator()) / generator.max();
+          }
+
+          if (rnd <= prob)
+          {
+            atm.set_specie(sp);
+            ++num_substituted[regid];
+          }
+        }
+      }
+      else
+      {  
+        not_finished.erase(regid);
+      }  
+
+    }
+
+  }
+
+  if (fix_mean_alloy_concentration)
+  {
+    size_t subst = 0;
+    for (int i = 0; i < num_substituted.size(); ++i)
+      subst += num_substituted[i];
+
+    std::ostringstream os;
+    os << "Needed " << ctr << " random number extractions to substitute " << subst << " atoms";
+    Messages::info(os.str());
+    Messages::newline();
+  }
+  else
+  {
+    for (int i = 0; i < num_substituted.size(); ++i)
+    {
+      if (num_to_substitute[i] > 0)
+      {
+        std::ostringstream os;
+        os << _as->get_device()->get_region_name(i) << " : substituted "
+            << num_substituted[i] << " out of " << num_to_substitute[i]
+            << " ( " << static_cast<double>(100 * num_substituted[i])
+                             / num_to_substitute[i]
+            << "%, nominally " << 100 * a_to_b_prob[i] << "%)";
+        Messages::info(os.str());
+      }
+    }
+    Messages::newline();
+  }
+
 }
-*/
+

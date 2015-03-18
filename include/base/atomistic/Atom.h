@@ -176,13 +176,18 @@ bool Atom::is_cation(void) const
   return (get_label() == 1);
 }
 
-
 inline
 void Atom::set_type(Atom::atom_t fg)
 {
   _virtual_type = fg;
 }
-
+/*
+inline
+void Atom::set_type(unsigned int fg)
+{
+  _virtual_type = static_cast<Atom::atom_t>(fg);
+}
+*/
 
 inline
 Atom::atom_t Atom::get_type() const

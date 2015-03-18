@@ -160,7 +160,6 @@ Alloy::fill_species(void)
   std::map<const Material*, double> mmap;
   
   if (_specie_fraction.size()>0) _specie_fraction.clear();
-  _specie_fraction.resize(3); 
   _species.clear();
 
   // Ga(x)In(1-x)N =>  GaN(x) InN(1-x)
@@ -200,6 +199,8 @@ Alloy::fill_species(void)
   for( ; it != materials.end(); ++it)
   {
     const Database& db = (*it)->get_database();
+    _specie_fraction.resize((*it)->count_labels()+1);
+
     db.set_section("atomistic_structure");
     unsigned int n_species = db.get("n_basis_specie", 0);
     for (unsigned int i = 1; i <= n_species; i++)
@@ -208,8 +209,6 @@ Alloy::fill_species(void)
       out << i; 
       Specie tmp(db.get("specie_"+out.str(), "None"));
       _species.insert(tmp);
-
-      if (_specie_fraction.size() < i) _specie_fraction.resize(i+1); 
 
       double x=0.0;
       if ( _specie_fraction[i].count(tmp)){ x=_specie_fraction[i][tmp]; }
