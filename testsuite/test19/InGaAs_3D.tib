@@ -235,8 +235,8 @@ Module empirical_tb
   Solver 
   {
    #Numero di autovalori da calcolare (valenza e conduzione)
-   load_states = true
-   load_path = prova
+   #load_states = true
+   #load_path = prova
 
    num_valence_eigenvalues = 0 
    num_conduction_eigenvalues = 2 
