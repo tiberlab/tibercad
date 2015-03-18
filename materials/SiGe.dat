@@ -12,11 +12,10 @@ comp_B = Ge
 #Atomistic structure informations
 #
 [atomistic_structure]
-n_basis_specie=1
+n_basis_specie=2
 
 specie_1=SiGe
-
-#specie_2=SiGe
+specie_2=SiGe
 
 [densityfunctional_tb]
 
