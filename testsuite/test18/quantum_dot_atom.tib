@@ -79,12 +79,12 @@ Device qdot
     random_alloy = true 
     random_generator_seed = 1244
     fix_mean_alloy_concentration = true
-    clustering = In
-    cluster_seeds = 0.3
+    #clustering = In
+    #cluster_seeds = 0.3
     radial_distribution = true 
     cutoff_radius = 10.0 #Angstroms
     grid_spacing = 0.01
-    specie = In
+    species = (In,Ga)
     translation = (0.0, 0.0, 0.0)    
     periodicity = (true, true, true)
     print=(xyz,gen,tgn,upg)
