@@ -86,23 +86,44 @@ void
 Database::set_material(const string& material,
     const string& datafile)
 {
+  if (material.find("%", 0) != string::npos)
+  {
+    // this is an interface!
+    _is_interface = true;
+  }
+
   string df(datafile);
   if (df.size() == 0)
     df = find_file(material + ".dat");
   else
     df = find_file(df);
 
+
+  if (df.empty())
+  {
+    string msg;
+    if (!datafile.empty())
+    {
+      // we must have a datafile in this case
+      msg = "Cannot find material data file " + datafile;
+      throw DatabaseException(msg);
+    }
+    else if (!_is_interface)
+    {
+      // we must have a datafile in this case
+      msg = "Cannot find material data file for material " + material;
+      throw DatabaseException(msg);
+    }
+  }
+
+
   if ((_material != material) || (_datafile != df))
   {
     _material = material;
     _datafile = df;
 
-    if (_material.find("%", 0) != string::npos)
-    {
-      // this is an interface!
-      _is_interface = true;
-    }
-    else
+
+    if (!_is_interface)
     {
       // it might be an alloy
       open();
