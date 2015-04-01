@@ -745,9 +745,6 @@ Several simplified tunneling models are implemented in tiberCAD. They are derive
 models under simplifying assumptions and cast into local recombination-generation models.
 
 
-Schottky contact tunneling
-.............................
-
 
 
 Trap-assisted tunneling
