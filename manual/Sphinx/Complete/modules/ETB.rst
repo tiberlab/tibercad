@@ -126,19 +126,18 @@ The  following kewords may  be  defined in *Atomistic*  block
     defines a translation vector as *(dx, dy, dz)* used to move the atomistic structure w.r.t. the mesh regions. 
     It is useful for fine alignments of atoms to the mesh. 
  
-
  ``load_structure`` : string
     specifies a (relative) path/file for the loading of an external structure. Valid formats are *tgn, xyz, gen*.
     The external structure is trimmed outside  the regions on which the atomistic structure is defined in the input file. 
-Note: when loading *xyz* files, the supercell vectors must be defined  through the keyword *lattice_vectors* (see below)
+    Note: when loading *xyz* files, the supercell vectors must be defined  through the keyword *lattice_vectors* (see below)
 
  ``lattice_vectors`` : list of floating
     specifies the periodicity  vectors used when importing an external atomic structure in *xyz* format (see *load_structure*). The format is (x1,y1,z1,x2,y2,z2, x3,y3,z3),  values  are  in  A, e.g.( 52.728 , 0.0, 0.0 , 0.0, 45.664 , 0.0, 0,0, 42.758 ). 
 
- ``y_length`` : real
+ ``supercell_size_y`` : real
     defines the lateral supercell size on *y-axis* (in Angstrom) in 1D (quantum wells) and 2D (nanowires) structures.
 
- ``z_length`` : real
+ ``supercell_size_z`` : real
     defines the lateral supercell size on *z-axis* (in Angstrom) in 1D and 2D structures.
 
  ``random_alloy`` : boolean
@@ -151,15 +150,13 @@ Note: when loading *xyz* files, the supercell vectors must be defined  through t
     if **true** the number of substituted atoms in a random alloy is as close as possible to the nominal molar fraction of the alloy.
     If **false** each atom is substituted with a probability proportional to the defined nominal molar fraction. The resulting actual number of substituted atoms may differ from the nominal  concentration value.
 
- ``clustering`` : boolean
-    if **true** an alloy with clustering is generated. This is done by placing a fraction of seed atoms (defined by **cluster_seed**) with uniform 
-    distribution, then the remaing fraction of atoms is placed biased with a larger probability near existing ions.  
+ ``clustering`` : specie name 
+    Alloy models with clustering on the given atomic specie are produces. This is done by placing a fraction of seed 
+    atoms (cluster_seed) with uniform distribution, then the remaing fraction of atoms is placed biased with a larger 
+    probability near existing ions.  
 
  ``cluster_seeds`` : real
     defines the fraction of ions placed with uniform distribution. Must be > 0. (*default = 0.02*). 
-
- ``extract_alloy_statistics`` : boolean
-    if **true** the local concentration is computed by averaging over small local spheres of radius defined by *control_volume_radius*.
 
  ``control_volume_radius`` : real
     defines the radius of a sphere on which local concentration is computed (default = 0.5 nm).     
@@ -167,14 +164,58 @@ Note: when loading *xyz* files, the supercell vectors must be defined  through t
  ``reference_atom`` : integer
     sets the atom label (typically 1=cations, 2=anions) where local concentration is computed. Default is cations.    
 
- ``plot_alloy_statistics`` : boolean 
-    if **true**, the local concentration is mapped on the mesh and plotted in a mesh format.
-
  ``meshdata_format`` : string
     defines the output format of the alloy statistics (default = "vtk") plotted when *plot_alloy_statistics = true*.
 
  ``print`` : string
     print the  generated atomic  structure with  one  of  the  following formats: *xyz*:  xyz file  format; *gen*: gen file  format; *tgn*: tibercad format which combines informations on the mesh and the atoms.
+
+ ``alloy_statistics`` : block 
+    if defined, the local concentration is computed by averaging over small local spheres of radius 
+    defined by control_volume_radius. Example
+
+  alloy_statistics
+  {
+    control_volume_radius = 1.0 
+    plot_alloy_composition = true
+  }
+ 
+ ``control_volume_radius`` : real
+   sets the radius of the control volume. 
+
+ ``plot_alloy_composition`` : boolean
+   if **true** the alloy composition is mapped on the mesh and plotted in a vtk file format. 
+
+ ``radial_distribution`` : block 
+    if set, the radial distribution function, g(r), is computed. The distribution represents the probability density
+    of finding an atom at a given distance from a reference atom. It is computed by counting all atoms that are found 
+    at a distance (r, r+dr) and normalized to the total volume and total number of atoms. Example
+
+  radial_distribution
+  {
+     species = (In, Ga )
+     cutoff_radius = 1.0 
+     resolution = 0.001 
+  }
+
+  ``cutoff_radius`` : real
+    is used to set the maximum distance of the distribution.
+
+  ``resolution`` : real
+    is used to specify the binning distance step (dr).
+
+  ``species`` : specie names
+    For each specie a radial distribution function is computed. The distribution is also resolved into the 
+    other species present in the atomistic structure. Files are produced in output with names,
+    structure_name_Specie_radial_suffix.dat, with column structure
+    r   specie_1  specie_2   ...
+   ...    ...       ...      ...
+
+    In practice each column represents the probability density to finding a specie_i at distance r from the 
+    reference specie. 
+    The radial distribution can be computed also after VFF optimization by adding **radial_distribution** 
+    to the plot line.
+
 
 
 
@@ -311,6 +352,7 @@ We  define a *random_generator_seed = 5*,  which  can  be  used  in  a  followin
 
 
 
+>>>>>>> .r4032
 Module empirical_tb 
 -----------------------
 

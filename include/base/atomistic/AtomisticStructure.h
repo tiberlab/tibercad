@@ -208,6 +208,15 @@ public:
                               std::vector<std::string>& str,
                               std::vector<double>& frac);
 
+  // extract alloy statistics
+  void extract_alloy_statistics(const ModelOptions& );
+
+  // plot alloy composition on a vtk file
+  void plot_alloy_composition(const ModelOptions& );
+
+  // compute radial distribution
+  void radial_distribution(std::string suffix = "");
+
 private:
 
   //! Constructor for AtomisticStructure class object
@@ -305,17 +314,8 @@ private:
 
   std::map<std::string, unsigned int> _virtual_type_idx;
 
-  // calculate autocorrelation function for a given specie
-  void compute_g(const Specie& );
-
-  // assign basket
-  void assign_basket(const Point&, const Specie&, unsigned int);
-
-  std::vector<unsigned int> _g;
-
-  double _Rc;
-
-  double _dr;
+  // calculate radial distribution function for a given specie
+  void compute_g(const Specie&, double Rc, double dr, std::vector<std::map<Specie,unsigned int>>& g);
 
 };
 

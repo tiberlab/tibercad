@@ -69,20 +69,32 @@ Device
   #Atomistic e' la keyword per definire una regione atomistica
   Atomistic dot_atoms
   {
-   #regions specifica dove definire gli atomi
-   regions = Quantum_buffer
-   #reference_region stabilisce il reticolo di riferimento
-   reference_region = Atomistic_cube_down
-   #Enable hydrogen passivation
-   passivation = yes
-
-   random_alloy = true
+    #regions specifica dove definire gli atomi
+    regions = Quantum_buffer
+    #reference_region stabilisce il reticolo di riferimento
+    reference_region = Atomistic_cube_down
+    #Enable hydrogen passivation
+    passivation = yes
    
-   #salva la struttura in vari formati, xyz per controllare con jmol, tgn per ricaricarla in tibercad
-   #Nota: la struttura puo' essere ricaricata dal file tgn per risparmiare tempo
-  #ma la MESH deve essere la stessa di quando la struttura e' stata salvata, altrimenti
-   #i risultati non sono consistenti! Il file tgn viene salvato in path, l'xyz tra gli output
-   print = (xyz, tgn)
+    random_alloy = true
+    
+    #salva la struttura in vari formati, xyz per controllare con jmol, tgn per ricaricarla in tibercad
+    #Nota: la struttura puo' essere ricaricata dal file tgn per risparmiare tempo
+   #ma la MESH deve essere la stessa di quando la struttura e' stata salvata, altrimenti
+    #i risultati non sono consistenti! Il file tgn viene salvato in path, l'xyz tra gli output
+    print = (xyz, tgn)
+    
+    radial_distribution{ 
+       species = (In,Ga)
+       cutoff_radius = 1.0
+       resolution = 0.001
+    }
+ 
+    alloy_statistics{
+       control_volume_radius = 1.0
+       plot_alloy_composition = true
+    }
+
   } 
 }
 
@@ -122,7 +134,7 @@ Module vff
 {
  atomistic_structure = dot_atoms 
  boundary_conditions = all_around  
- plot = (xyz)
+ plot = (xyz,radial_distribution)
 }
 
 
@@ -257,7 +269,8 @@ Simulation
 {
 
   temperature = 300
-  solve =  (strain,vff,dd,tb)
+  #solve =  (strain,vff,dd,tb)
+  solve =  (strain,vff)
   resultpath = output 
   output_format = vtk
 }

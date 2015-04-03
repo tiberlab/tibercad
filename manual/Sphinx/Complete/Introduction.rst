@@ -644,6 +644,24 @@ Regions and clusters represent the macroscopical description of the device or st
 to be be simulated in tiberCAD. In the rest of the input file, the regions
 associated to the Modules will be indicated by means of tiberCAD region names and cluster names.
 
+Atomistic structure
+^^^^^^^^^^^^^^^^^^^
+
+The definition of an atomistic structure can be done using the keyword ``Atomistic``. 
+
+::
+   
+  Atomistic qw
+  {
+    regions = (all)
+    reference_region = barrier1
+  }
+
+The atomistic generator produces an atomistic model over all the specified regions. Currently the structure
+can only be a pseudomorphic structure. The reference region is used to define the crystal lattice for the 
+whole structure. More details about the atomistic generator can be found in the module Empirical Tight Binding (ETB).
+
+
 Modules
 ------------
 

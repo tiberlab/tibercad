@@ -205,6 +205,13 @@ Vff::plot_globaldata()
   {  
      get_atomistic_structure()->print_structure("strained_vff.tgn");
   }
+
+  if (plot_solution("radial_distribution"))
+  {
+    Messages::info("computing radial distribution function");
+    get_atomistic_structure()->radial_distribution("_vff");
+  }
+
 }
 
 void

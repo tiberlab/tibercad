@@ -76,19 +76,29 @@ Device qdot
   {
     regions = atomistic 
     reference_material = InP 
+    translation = (0.0, 0.0, 0.0)    
+    periodicity = (true, true, true)
+    print=(xyz,gen,tgn,upg)
+    passivation = yes
+
     random_alloy = true 
     random_generator_seed = 1244
     fix_mean_alloy_concentration = true
     #clustering = In
     #cluster_seeds = 0.3
-    radial_distribution = true 
-    cutoff_radius = 10.0 #Angstroms
-    grid_spacing = 0.01
-    species = (In,Ga)
-    translation = (0.0, 0.0, 0.0)    
-    periodicity = (true, true, true)
-    print=(xyz,gen,tgn,upg)
-    passivation = yes 
+
+    radial_distribution
+    { 
+      species = (In, Ga )
+      cutoff_radius = 1.0 
+      resolution = 0.001 
+    }
+    
+    alloy_statistics
+    {
+      control_volume_radius = 1.0 
+      plot_alloy_composition = true
+    }
   }
 
   Atomistic tb2
@@ -99,6 +109,12 @@ Device qdot
   }
 }
 
+Module vff
+{
+ atomistic_structure = tb1 
+ boundary_conditions = free_standing  
+ plot = (xyz,radial_distribution)
+}
 
 
 
@@ -131,7 +147,7 @@ Fodule empirical_tb
   potential_simulation = dd
   add_band_shifts = false
 
-  projection_length = 2.0
+  projection_length = 2.0 # Angstrom
   
 
   plot = (tbstates, MeshStatesNodes)
@@ -257,7 +273,7 @@ Simulation
 
   #solve = (str, dd) 
   #, tb, tb2, opt)
-  #solve = (dd, tb)
+  solve = (vff)
 
   resultpath = output 
   output_format = vtk 
