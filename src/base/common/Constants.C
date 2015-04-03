@@ -79,3 +79,7 @@ Constants::field_gauss_unit = 1/(1e6 /(c * 1e2));
 
 const double
 Constants::avogadro = 6.02214179e23;
+
+const double
+Constants::EE = 1.439966289;
+

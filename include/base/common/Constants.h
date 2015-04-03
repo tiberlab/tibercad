@@ -81,6 +81,8 @@ namespace Constants
   //! Avogadro's number
   extern const double avogadro;
 
+  //! e^2/(4 pi e0) in eV * nm  
+  extern const double EE;
 }
 
 
