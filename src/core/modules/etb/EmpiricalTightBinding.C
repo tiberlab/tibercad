@@ -259,23 +259,29 @@ void ETB::do_reinit(void)
     statefile = os.str();
   }
   
+  ModelOptions& solopts = get_solver_options();
   // set writing state file  
-  string write_state = get_option("states_file", statefile);
+  string write_state = solopts.get_option("states_file", statefile);
   if (write_state.at(0) != '/')
     write_state =  get_output_directory() +  "/" + write_state;
   memset(_upt_options.write_state, UPT_PADCHAR, UPT_LC);
   write_state.copy(_upt_options.write_state, write_state.size());
   
   // set load state file  
-  string load_path = get_option("load_path", get_output_directory());
-  string load_file(load_path + "/" + statefile);
-  load_file = get_option("load_file", load_file);
-  memset(_upt_options.load_path, UPT_PADCHAR, UPT_LC);
-  load_file.copy(_upt_options.load_path, load_file.size());
+  _upt_solver_options.read_states = false;
+  if (solopts.find_option("load_file") || solopts.find_option("load_path"))
+  {
+    _upt_solver_options.read_states = true;
+    string load_path = solopts.get_option("load_path", get_output_directory());
+    string load_file(load_path + "/" + statefile);
+  
+    load_file = solopts.get_option("load_file", load_file);
 
+    memset(_upt_options.load_path, UPT_PADCHAR, UPT_LC);
+    load_file.copy(_upt_options.load_path, load_file.size());
+  }
 
   // Get the minimum CB and maximum VB edges
-  ModelOptions solopts = get_solver_options();
   if (!solopts.find_option("guess_conduction") ||
       !solopts.find_option("guess_valence"))
   {
@@ -894,9 +900,6 @@ void ETB::parse_options(void)
   //---------------------------------------------------------------------------------------
  
   _upt_options.assemble_H = get_option("assemble_hamiltonian",true);
-
-  _upt_solver_options.read_states = solopts.get_option("load_states", false);
-  _upt_solver_options.read_states = get_option("load_states", _upt_solver_options.read_states);
 
 
  
