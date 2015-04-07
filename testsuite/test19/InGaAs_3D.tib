@@ -76,7 +76,7 @@ Device
     #Enable hydrogen passivation
     passivation = yes
    
-    random_alloy = true
+    #random_alloy = true
     
     #salva la struttura in vari formati, xyz per controllare con jmol, tgn per ricaricarla in tibercad
     #Nota: la struttura puo' essere ricaricata dal file tgn per risparmiare tempo
@@ -84,16 +84,16 @@ Device
     #i risultati non sono consistenti! Il file tgn viene salvato in path, l'xyz tra gli output
     print = (xyz, tgn)
     
-    radial_distribution{ 
-       species = (In,Ga)
-       cutoff_radius = 1.0
-       resolution = 0.001
-    }
+    #radial_distribution{ 
+    #   species = (In,Ga)
+    #   cutoff_radius = 1.0
+    #   resolution = 0.001
+    #}
  
-    alloy_statistics{
-       control_volume_radius = 1.0
-       plot_alloy_composition = true
-    }
+    #alloy_statistics{
+    #   control_volume_radius = 1.0
+    #   plot_alloy_composition = true
+    #}
 
   } 
 }
@@ -269,8 +269,8 @@ Simulation
 {
 
   temperature = 300
-  #solve =  (strain,vff,dd,tb)
-  solve =  (strain,vff)
+  solve =  (strain,vff,dd,tb)
+  #solve =  (strain,vff)
   resultpath = output 
   output_format = vtk
 }
