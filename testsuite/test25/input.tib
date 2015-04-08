@@ -1,0 +1,44 @@
+Device
+{
+  meshfile = mesh100x100.msh 
+  mesh_units = 1e-9
+  dimension = 3
+
+  Region qbox
+  {
+    material = Si
+  }
+}
+
+Module polarizationgrid
+{
+  regions = (qbox)
+  plot = (Polarization)
+
+  Nx = 100 
+  Ny = 100
+  Nz = 1
+  grid_step = 0.65
+ 
+  Nstep = 25e6
+  IOstep = 1e5
+  write_file = polarization.dat 
+  read_file = output/polarization.dat
+
+  dipole_units = Debye
+  dipole = 13.74 
+  
+  eps_r = 10.0
+
+  kbT = 0.0
+  external_field=(0,0,0) 
+
+  seed = 345678912 
+}
+
+Simulation
+{
+  solve = polarizationgrid
+  resultpath = output
+}
+
