@@ -271,7 +271,7 @@ To  calculate the  quantum dispersion we  need  to  define the  block *Dispersio
   {
     k-path = G-K-M
     number_of_nodes = 10
-    k_max = 0.1  
+    k_max = 1  
   }
 
 The dispersion of quantum states is calculated at k-points that are nodes of a mesh
@@ -285,8 +285,9 @@ The main parameters are:
  ``number_of_nodes`` : 
    number of nodes in the mesh along each  direction
 
- ``k-max`` : 
-   max value  of  k in  each  direction (default = 0.1)
+ ``k_max`` : 
+   maximum value of k (in units of 1/nm) in each direction. Can be specified as vector in order to have
+   different extensions in different directions.
 
 
 
@@ -463,7 +464,7 @@ In  this  case,  one  has  to  define a  **k-integration**  block inside  **Modu
   k-integration
   {
    
-     k_max = 0.05     
+     k_max = 0.5     
      number_of_elements = (5,5)
      quadrature_type = gaussian 
      quadrature_order = third 
@@ -478,7 +479,7 @@ In  this  case,  one  has  to  define a  **k-integration**  block inside  **Modu
 The parameters for the *k-space* integration are the following
 
  ``k_max`` :
-    max  value  of k  
+    maximum  value of k (in each direction, if given as vector)
 
  ``quadrature_type`` : 
     type of  integration, default is  *gaussian* 
