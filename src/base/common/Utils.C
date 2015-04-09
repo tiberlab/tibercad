@@ -75,6 +75,7 @@ Utils::Progress::Progress(const string message, const unsigned int max_size)
   _message = message;
   _progress_size = max_size;
   _progress_step = max_size;
+  _progress_counter = 0;
   //_progress_step = (max_size > 100) ? max_size*2 : 100;
  
   ostringstream os;
@@ -101,6 +102,7 @@ Utils::Progress::progress_message(unsigned int progress_counter)
       static_cast<int>(100 * progress_counter / _progress_size) << "% ..." << flush;
   }
 }
+
 
 
 

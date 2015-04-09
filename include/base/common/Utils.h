@@ -3,6 +3,8 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#include "InitFailedException.h"
+
 #include <typeinfo>
 #include <string>
 #include <vector>
@@ -244,12 +246,15 @@ class Utils
         //void first_message(void);
 
         void progress_message(unsigned int progress);
+        void progress_message(void)
+        { progress_message(++_progress_counter); }
 
       private:
       
         std::string _message;
         unsigned int _progress_size;
-        unsigned int _progress_step;    
+        unsigned int _progress_step;
+        unsigned int _progress_counter;
     };
 
 
@@ -283,7 +288,12 @@ inline
 double
 Utils::convert<double>(const std::string& val)
 {
-  return std::atof(val.c_str());
+  char* end_p;
+  double value = std::strtod(val.c_str(), &end_p);
+  //if (end_p != NULL)
+  //  throw InitFailedException("\"" + val + "\" is not a valid double value.");
+
+  return(value);
 }
 
 
