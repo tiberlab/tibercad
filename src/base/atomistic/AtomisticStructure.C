@@ -2060,7 +2060,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
     const set<ID>& regions, double cutoff) const
 {
 
-  cutoff = _options.get_option("control_volume_radius", cutoff);
+  //cutoff = _options.get_option("control_volume_radius", cutoff);
 
   int ref_atom = _options.get_option("reference_atom", -1);
 
@@ -2080,8 +2080,13 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
   for (unsigned int i = 0; i < get_N_atoms(); i++)
   {
     const Atom& atm = get_structure_atom(i);
-    ID subdomain = atm.get_region_ID();
 
+    // we skip atoms with no "real" label (such as passivation H)
+    if (atm.get_label() == 0)
+      continue;
+
+
+    ID subdomain = atm.get_region_ID();
 
     if (regions.count(subdomain))
     {
@@ -2157,7 +2162,7 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
   ID id = elem->subdomain_id();
 
   // atomic coordinates are in Angstrom
-  Point center = 10 * point;
+  Point center = _scale * point;
 
   //if (reg_ids.count(id))
   //{
@@ -2186,12 +2191,14 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
         atom = atoms[i];
       }
     }
+    //cerr << " found in elem: " << get_structure_atom(atom).get_position();
   }
   else
   {
-    // we try to find some nearby atom
+    // we try to find some nearby atom, proceeding in shells
     set<const Elem*> processed_elems;
     set<const Elem*> to_process;
+    set<const Elem*> next_to_process;
     to_process.insert(elem);
 
     double min_dist = 1e9;
@@ -2222,6 +2229,9 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
             atom = atoms[i];
           }
         }
+
+        // and now we can jump out and look at the neighbors
+        break;
       }
 
       for (int s = 0; s < next_el->n_sides(); s++)
@@ -2229,21 +2239,28 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
 
         const Elem* neigh = next_el->neighbor(s);
 
-        if ((neigh != NULL) &&
+        if ((neigh != NULL) && //!processed_elems.count(neigh))
             !processed_elems.count(neigh) &&
-            (Point(elem->centroid() - neigh->centroid()).size() <
-                _scale * 2 * cutoff / 10))
+            !to_process.count(neigh) &&
+            (Point(point - neigh->centroid()).size() <
+                min_dist / _scale))
         {
-          to_process.insert(neigh);
+          next_to_process.insert(neigh);
         }
       }
 
       processed_elems.insert(next_el);
       to_process.erase(it);
+
+      if (to_process.empty())
+      {
+        to_process = next_to_process;
+        next_to_process.clear();
+      }
     }
   }
 
-  return atom;
+  return(atom);
 }
    
 //
