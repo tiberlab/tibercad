@@ -1298,8 +1298,14 @@ Device::reassign_alloy_regions(const string& source,
       throw InitFailedException("Unknown atomistic structure: " + tokens[1]);
 
     m.info("Alloy composition provided by atomistic structure " + tokens[1]);
+    m.indent();
 
     double cutoff = str->get_options().get_option("control_volume_radius", 1.0);
+    {
+      ostringstream os;
+      os << "control volume radius is " << cutoff << " nm";
+      m.info(os.str());
+    }
 
     //map<Specie, vector<unsigned int>> stats;
     //str->extract_statistics(stats, reg_ids, cutoff);

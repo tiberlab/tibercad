@@ -2329,7 +2329,11 @@ SimulationInterface::get_solution(const Elem* elem,
       // TODO This part is not tested at all !!!
       // Alex: indeed it does crash with selfcons negf/dd
       // commented out temporarily
-      // need flag = false in this case!
+
+      // for now, we do not do mesh refinement, so we use this in the case of
+      // different meshes:
+      //const Elem* meshel =
+      //    MeshUtils::GridMapper::get_mapper(this->get_mesh()).get_element(p);
       flag = false;
       /*vector<const Elem*> tree;
       elem->family_tree(tree, false);

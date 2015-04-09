@@ -199,7 +199,9 @@ class AtomisticBasis
   {
     public:
     neighbor_iterator(const AtomisticBasis& structure,
-        unsigned int start, double length = 10, double height = 10, double width = 10, bool begin = true);
+        unsigned int start,
+        double length = 10, double height = 0, double width = 0,
+        bool begin = true);
 
     neighbor_iterator(const neighbor_iterator& rhs);
 
