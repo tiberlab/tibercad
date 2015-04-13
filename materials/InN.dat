@@ -40,13 +40,22 @@ delta_s = 0.005
 
 [deformation_potentials] 
 # [7]
-a_c = (1.0, 1.0, -7.2)  #? 1.0 !!
+#a_c = (1.0, 1.0, -7.2)  #? 1.0 !!
+#D1 = -3.7
+#D2 = 4.5
+#D3 = 8.2
+#D4 = -4.1
+#D5 = -4.0
+#D6 = -5.5
 
-D1 = -3.7
-D2 = 4.5
-D3 = 8.2
-D4 = -4.1
-D5 = -4.0
+# from APL 95 121111 (2009)
+# and Appl. Phys. Lett. 83, 4963 (2003)
+a_c = (-3.6, -3.6, -4.22)
+D1 = -0.4 # a_cz - D1 = -3.62
+D2 = 1.0 # a_ct - D2 = -4.6
+D3 = 2.68
+D4 = -1.74
+D5 = -2.07
 D6 = -5.5
 
 
@@ -73,9 +82,9 @@ C44 = 48
 
 # piezoelectricity data
 [piezoelectricity]
-e33 =  0.81
-e31 = -0.49
-e15 = -0.11
+ e33 =  0.81
+ e31 = -0.49
+ e15 = -0.11
 
 # Osram
 #e33 =  0.43
@@ -87,14 +96,6 @@ e15 = -0.11
 [pyroelectricity]
 Pz = -0.042
 
-
-# PRB 88, 121304 
-[polarization/PRB88]
-Pz = -0.035
-e33 =  1.14
-e31 = -0.59
-e15 = -0.43
-2nd_order_coefficients = (4.5, 2.8, 1.6, 4.8, 3.7, 0.5, -18.6, 0.5)
 
 
 #
@@ -171,7 +172,7 @@ N0 = (1.0000e+18 ,	1.0000e+18)	# [cm^(-3)]
 
 [thermal_conductivity/constant]
 #Lattice thermal conductivity
-ThermCond = (45, 45)
+ThermCond = 45
 
 #Atomistic structure informations
 #
