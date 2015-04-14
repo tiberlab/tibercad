@@ -15,7 +15,8 @@ PolarizationGrid::PolarizationGrid(const ModelOptions& options) :
   cutoff(100.0),
   dipole(0.0),
   Nstep(100000),
-  kbT(0.026)
+  kbT(0.026),
+  _write_file(false)
 {
 }
 
@@ -46,31 +47,36 @@ PolarizationGrid::do_init()
 
   declare_solution(Polarization, VECTOR, CELL, "C/m^2");
 
+  if (get_options().find_option("write_file"))
+    _write_file = true;
 }
  
 void
 PolarizationGrid::setup_mesh(void)
 {
   // the grid must be created first (before any other option)
-  nx = get_option("Nx",10); 
-  ny = get_option("Ny",10); 
-  nz = get_option("Nz",1); 
+  _nx[0] = get_option("Nx",10); 
+  _nx[1] = get_option("Ny",10); 
+  _nx[2] = get_option("Nz",1); 
 
-  double aa = get_option("grid_step",0.65); // in nanometers
+  double gs = get_option("grid_step",0.65); // in nanometers
+  double aa = get_option("grid_step_a",gs); // in nanometers
+  double bb = get_option("grid_step_b",aa); // in nanometers
+  double cc = get_option("grid_step_c",gs); // in nanometers
 
   Point p1(0,0,0);
-  Point p2(nx*aa,ny*aa,nz*aa);
-  setup_grid(p1,p2,nx,ny,nz);
+  Point p2(_nx[0]*aa,_nx[1]*bb,_nx[2]*cc);
+  setup_grid(p1,p2,_nx[0],_nx[1],_nx[2]);
   //create internal rectangular mesh 
   //
   Mesh* mymesh = new Mesh(3);
   ElemType type(HEX8);
 
   MeshTools::Generation::build_cube(*mymesh, 
-				       nx, ny, nz,
-               0.0, nx * aa, 
-               0.0, ny * aa,
-               0.0, nz * aa,
+				       _nx[0], _nx[1], _nx[2],
+               0.0, _nx[0] * aa, 
+               0.0, _nx[1] * bb,
+               0.0, _nx[2] * cc,
                type);
 
   // set in environment
@@ -89,8 +95,7 @@ PolarizationGrid::do_solve()
 {
   this->kmc();
 
-  if (get_options().find_option("write_file"))
-        write_dipoles();
+  if (_write_file) write_dipoles();
 
   write_antiferro();
 }
@@ -105,6 +110,10 @@ PolarizationGrid::parse_options(void)
   double dip = get_option("dipole", 2.29);
   set_dipole(dip,units);
 
+  ostringstream ostr;
+  ostr<<"dipole= "<<dipole<<" e*nm "<<endl;
+  Messages::info(ostr.str());  
+
   vector<double> E(3,0.0);
   get_option("external_field",E);
   set_efield(E);
@@ -113,6 +122,16 @@ PolarizationGrid::parse_options(void)
   
   seed = get_option("seed",
       static_cast<int>(time(NULL) * random_device()()));
+
+  // faster (I think) to use array than std::vector;
+  vector<bool> periodic;
+  get_option("periodic",periodic);
+
+  for (int i=0; i<3; i++)
+  {
+    _periodic[i] = 0;
+    if (periodic[i]) _periodic[i] = 1;
+  }
 
 }
 
@@ -126,13 +145,27 @@ PolarizationGrid::set_cutoff(void)
   double tmp = 4 * Constants::EE * dipole * dipole / eps_r;
  
   // cutoff in nm to get 1 meV energy difference
-  cutoff = pow(tmp/0.001,1.0/3.0);
+  cutoff = pow(tmp/0.0001,1.0/3.0);
 
   cutoff = get_option("cutoff",cutoff);
   
-  dk =static_cast<int>( ceil(cutoff/grid.grid_step(0)) );
-  dl =static_cast<int>( ceil(cutoff/grid.grid_step(1)) );
-  dm =static_cast<int>( ceil(cutoff/grid.grid_step(2)) );
+  for(unsigned int i=0; i<3; i++) 
+  {
+    _dx[i] =static_cast<int>( ceil(cutoff/grid.grid_step(i)) );
+
+    if(_periodic[i]) 
+    {
+      _ncell[i] = cutoff / _nx[i] + 1;
+    }
+    else
+    {
+      _ncell[i]=0;
+    }
+  }
+
+  ostringstream os;
+  os<<"Cutoff= "<<cutoff<<endl;
+  Messages::info(os.str());
 }
 
 void
@@ -141,10 +174,10 @@ PolarizationGrid::set_dipole(double p, string str)
   // The dipole must be transformed in e*nm
   if (str == "Debye")
   {
-    // 1 Debye = 3.336 e-30 C m = 0.0208 e * nm
+    // 1 Debye = 3.336 10^-30 C m = 0.0208 e * nm
     dipole = p * 0.0208;
   }
-  else if (str == "Cm")
+  else if (str == "C*m")
   {
     // 1 C m =  e/(1.60e-19) *  nm/1e9 
     dipole = p / 1.60e-10;
@@ -153,9 +186,11 @@ PolarizationGrid::set_dipole(double p, string str)
   {
     // P*vol = C/m^2 * nm*nm^2 = C/m^2 * nm*1e-18 m^2 = 1e-18/1.60e-19 e*nm;
     double vol = grid.grid_step(0)*grid.grid_step(1)*grid.grid_step(2);
+    //cout<<"vol= "<<vol<<"nm^3"<<endl;
     dipole = p * vol / 0.1602;
+    //cout<<"dipole= "<<dipole<<" e*nm"<<endl;
   }
-  else if (str == "eA")
+  else if (str == "e*nm")
   {
     dipole = p;
   }
@@ -189,28 +224,38 @@ PolarizationGrid::set_efield(const vector<double>& E)
 void
 PolarizationGrid::rnd_orientation(Point &p)
 {
-   uniform_int_distribution<int> random1(0, 179);
-   uniform_int_distribution<int> random2(0, 89);
+
+   uniform_real_distribution<float> random1(0.0, 1.0);
 
    double teta;
-
    if (grid.num_elements(2) > 1)
    {
-     teta = static_cast<double>(random2(generator)) * 2.0; 
+     teta = acos(2.0 * random1(generator) - 1.0); 
    }
    else
    {
-     teta = 90.0;
+     teta = M_PI/2.0; 
    }
+  
+   double phi = random1(generator) * 2.0 * M_PI; 
+   
+   p(0) = sin(teta) * cos(phi);
+   p(1) = sin(teta) * sin(phi);    
+   p(2) = cos(teta);
 
-   double phi = static_cast<double>(random1(generator)) * 2.0; 
+   p *= dipole;
 
-   p(0) = cos(phi * M_PI/180.0) * sin(teta * M_PI/180.0);
-   p(1) = sin(phi * M_PI/180.0) * sin(teta * M_PI/180.0);    
-   p(2) = cos(teta * M_PI/180.0);
-
-   p *= dipole; 
 }
+/*
+void
+PolarizationGrid::rnd_distrib(Point &p)
+{
+  uniform_real_distribution<float> random1(0.0, M_PI);
+
+  teta = random1(generator); 
+
+}
+*/
 
 void
 PolarizationGrid::write_dipoles()
@@ -289,29 +334,49 @@ PolarizationGrid::energy2(unsigned int i)
 {
 
   double en = 0.0;
-  int k,l,m;
+  int ii[3];
+  int start[3], end[3];
 
-  grid.element_to_index(i,k,l,m);
+  grid.element_to_index(i,ii[0],ii[1],ii[2]);
 
-  unsigned int kstart = (k-dk >= 0 ? k-dk : 0);
-  unsigned int kend = (k+dk <= nx-1 ? k+dk : nx-1);
-  unsigned int lstart = (l-dl >= 0 ? l-dl : 0);
-  unsigned int lend = (l+dl <= ny-1 ? l+dl : ny-1);  
-  unsigned int mstart = (m-dm >= 0 ? m-dm : 0);
-  unsigned int mend = (m+dm <= nz-1 ? m+dm : nz-1);
-
-  for (unsigned int k1 = kstart; k1<=kend; k1++)
+  // way of treating periodicity: 
+  // define start-end grid points and fold to central cell.
+  for (unsigned int l = 0; l < 3; l++)
   {
-    for (unsigned int l1 = lstart; l1<=lend; l1++)
+    if (_periodic[l])
+    {
+      start[l] = ii[l] - _dx[l];
+      end[l] = ii[l] + _dx[l];
+    }
+    else
+    {
+      // start = min(0, ii[l] - _dx[l]); 
+      start[l] = ii[l] - _dx[l] > 0 ? ii[l] - _dx[l] : 0;
+      // start = max(ii[l] + _dx[l], _nx[l]-1); 
+      end[l] = ii[l] + _dx[l] < _nx[l]-1 ? ii[l] + _dx[l] :  _nx[l]-1;
+    }
+  }
+
+  for (int k1 = start[0]; k1<=end[0]; k1++)
+  {
+    for (int l1 = start[1]; l1<=end[1]; l1++)
     { 
-      for (unsigned int m1 = mstart; m1<=mend; m1++) 
+      for (int m1 = start[2]; m1<=end[2]; m1++) 
       {
-        int j = grid.index_to_element(k1,l1,m1);
-        if (j==i) continue;
-        Point rr = grid.distance(k,l,m,k1,l1,m1);
+        if (k1==ii[0] && l1==ii[1] && m1==ii[2]) continue;
+
+        // note: distance also works for folded cells
+        Point rr = grid.distance(ii[0],ii[1],ii[2], k1,l1,m1);
         double dd = rr.size();
         rr /= dd; 
-        en += (pp[i]*pp[j] + 3.0*(pp[i]*rr) * (pp[j]*rr))/(dd*dd*dd); 
+
+        // fold to central cell (nx folds to 0 and so on)
+        unsigned int kk1 = (k1 + _ncell[0] * _nx[0])%_nx[0];
+        unsigned int ll1 = (l1 + _ncell[1] * _nx[1])%_nx[1];
+        unsigned int mm1 = (m1 + _ncell[2] * _nx[2])%_nx[2];
+        int j = grid.index_to_element(kk1,ll1,mm1);
+        
+        en += (pp[i]*pp[j] - 3.0*(pp[i]*rr) * (pp[j]*rr))/(dd*dd*dd); 
       }
     }
   } 
@@ -335,6 +400,9 @@ PolarizationGrid::kmc(void)
   file.precision(8);
   ostr.precision(8);
 
+  ostr<<"Computing total energy"<<endl;
+  Messages::info(ostr.str());
+  ostr.str("");
   double En_before=0.0, En_after=0.0, En_total=0.0;
   for (unsigned int l=0; l<grid.num_elements(); l++)
     En_total += energy1(l) + 0.5 * energy2(l); 
@@ -366,7 +434,7 @@ PolarizationGrid::kmc(void)
 
     if (l%IOstep == 0)
     {
-      ostr<<"Iteration "<<l<<": Energy = "<<En_total<<endl;
+      ostr<<"Iteration "<<l<<": Energy = "<<En_total<<" dE = "<<En_after - En_before<<endl;
       Messages::info(ostr.str());
       ostr.str("");
       file<<l<<"   "<<En_total<<endl; 

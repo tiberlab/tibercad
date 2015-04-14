@@ -95,8 +95,15 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
 
   mt19937 generator;
 
-  unsigned int nx, ny, nz;
-  int dk, dl, dm;
+  unsigned int _nx[3];
+
+  int _dx[3];
+
+  unsigned int _ncell[3];
+  
+  bool _write_file;
+
+  int _periodic[3];
 
 };
 
