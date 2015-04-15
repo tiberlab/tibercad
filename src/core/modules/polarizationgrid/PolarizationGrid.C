@@ -246,11 +246,12 @@ PolarizationGrid::rnd_orientation(Point &p)
    p *= dipole;
 
 }
+
 /*
 void
-PolarizationGrid::rnd_distrib(Point &p)
+PolarizationGrid::rnd_orientation(Point &p)
 {
-  uniform_real_distribution<float> random1(0.0, M_PI);
+  uniform_int_distribution<int> random1(0.0, M_PI);
 
   teta = random1(generator); 
 
