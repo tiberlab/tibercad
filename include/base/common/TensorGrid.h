@@ -56,9 +56,14 @@ class TensorGrid
     void find_element(const Point& p, int indices[3]) const;
 
 
+    //! get grid spacing
+    double grid_step(int i) const;  
+
     //! Get the number of elements
     int num_elements(void) const;
 
+    //! Get number of elements along direction (0,1,2) 
+    int num_elements(int) const;
 
     //! Get the element for given coordinate index triple (k,l,m)
     int index_to_element(int indices[3]) const;
@@ -66,6 +71,16 @@ class TensorGrid
 
     //! Get the element for given coordinate index triple (k,l,m)
     int index_to_element(unsigned int k, unsigned int l, unsigned int m) const;
+
+    //! element to index triple
+    void element_to_index(unsigned int i, unsigned int& k, unsigned int& l, unsigned int& m) const;
+    //! element to index triple
+    void element_to_index(unsigned int i, int& k, int& l, int& m) const;
+
+    
+    //! return a normalized vector r and distance
+    Point distance(int k1, int l1, int m1,
+                   int k2, int l2, int m2 ) const;
 
 
   private:
@@ -97,6 +112,8 @@ class TensorGrid
     //! The interval in z
     double _dz;
 
+
+
 };
 
 
@@ -118,7 +135,6 @@ TensorGrid::find_element(const Point& p, int indices[3]) const
   indices[1] = (_dimension > 1) ? floor((p(1) - _p0(1)) / _dy) : 0;
   indices[2] = (_dimension > 2) ? floor((p(2) - _p0(2)) / _dz) : 0;
 }
-
 
 
 inline
@@ -146,6 +162,25 @@ TensorGrid::num_elements(void) const
   return _nk * _nl * _nm ;
 }
 
+inline
+int
+TensorGrid::num_elements(int dir) const
+{
+  if (dir==0) return _nk;
+  if (dir==1) return _nl;
+  if (dir==2) return _nm;
+}
+
+inline
+double
+TensorGrid::grid_step(int dir) const
+{
+  if (dir==0) return _dx;
+  if (dir==1) return _dy;
+  if (dir==2) return _dz;
+}
+
+
 
 inline
 int
@@ -160,5 +195,36 @@ TensorGrid::index_to_element(unsigned int k, unsigned int l, unsigned int m) con
 {
   return(m*_nl*_nk + l*_nk + k);
 }
+
+inline
+void
+TensorGrid::element_to_index(unsigned int i, unsigned int& k, unsigned int& l, unsigned int& m) const
+{
+  m = i/(_nk * _nl);
+  l = (i - m * _nk * _nl)/_nk;
+  k = i - m *_nk *_nl - l*_nk ;
+}
+
+inline
+void
+TensorGrid::element_to_index(unsigned int i, int& k, int& l, int& m) const
+{
+  m = i/(_nk * _nl);
+  l = (i - m * _nk * _nl)/_nk;
+  k = i - m *_nk *_nl - l*_nk ;
+}
+
+
+inline
+Point
+TensorGrid::distance(int k1, int l1, int m1,
+                     int k2, int l2, int m2) const
+{
+  Point r((k2-k1)*_dx, (l2-l1)*_dy, (m2-m1)*_dz);
+  return r;
+}
+
+
+
 
 #endif // _TENSORGRID_H_
