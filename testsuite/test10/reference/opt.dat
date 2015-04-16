@@ -1,12 +1,5 @@
-polarization = 0  state i = 0   state j =   0      0.0401625
-polarization = 0  state i = 0   state j =   1      0.00701874
-polarization = 0  state i = 1   state j =   0      0.0070188
-polarization = 0  state i = 1   state j =   1      0.0401622
-polarization = 1  state i = 0   state j =   0      0.00692824
-polarization = 1  state i = 0   state j =   1      6.33307e-05
-polarization = 1  state i = 1   state j =   0      6.33429e-05
-polarization = 1  state i = 1   state j =   1      0.00692821
-polarization = 2  state i = 0   state j =   0      0.0654171
-polarization = 2  state i = 0   state j =   1      0.0363499
-polarization = 2  state i = 1   state j =   0      0.03635
-polarization = 2  state i = 1   state j =   1      0.0654173
+# initial_state final_state |Px|^2 |Py|^2 |Pz|^2
+0  0  2.93142e-07  0.000629723  0.568007
+0  1  0.000603533  4.39637e-07  0.000430418
+1  0  0.000604036  4.52885e-07  0.000430255
+1  1  1.19814e-06  0.000602491  0.568009
