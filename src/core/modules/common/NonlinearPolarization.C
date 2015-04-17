@@ -1,0 +1,119 @@
+// $Id$
+
+#include "NonlinearPolarization.h"
+#include "SimulationInterface.h"
+#include "Database.h"
+#include "Material.h"
+#include "TensorOperators.h"
+
+#include "TiberModule.h"
+
+
+using namespace std;
+
+
+void
+NonlinearPolarization::do_init(void)
+{
+  PolarizationModel::do_init();
+
+  std::string sim_name = "";
+  get_parameter("strain_simulation", sim_name);
+  _strain.set_simulation(sim_name);
+
+}
+
+
+void
+NonlinearPolarization::read_database(void)
+{
+  // get piezoelectric_coefficients
+  const Database& db = get_database();
+      
+  if (get_material()->get_structure() == "wz")
+  {
+    db.set_section("polarization/PRB88");
+    _e33 = db.get("e33", 0.0);
+    _e31 = db.get("e31", 0.0);
+    _e15 = db.get("e15", 0.0);
+
+    db.get("2nd_order_coefficients", _2nd_order_coeff);
+
+    _Psp = db.get("Pz", _Psp);
+  } 
+  else if (get_material()->get_structure() == "zb")
+  {
+    db.set_section("piezoelectricity");
+    _e14 = db.get("e14", 0.0);
+  }
+
+}
+
+
+void
+NonlinearPolarization::do_calculate(const Elem* elem, const Point& point)
+{  
+
+  RealVectorValue polarization(0);
+
+  Tensor2Sym& strain = get_strain();
+  _strain.get_crystal_strain(elem, point, strain);
+  
+
+  // compute polarization
+  if (get_material()->get_structure() == "wz")
+  {
+    // strain in Voigt notation
+    double e1 = strain(1,1);
+    double e2 = strain(2,2);
+    double e3 = strain(3,3);
+    double e4 = 2*strain(3,2);
+    double e5 = 2*strain(3,1);
+    double e6 = 2*strain(2,1);
+
+    // a = 0, b = 1, .. h = 7
+    double B125 = _2nd_order_coeff[1];
+    double B115 = _2nd_order_coeff[0];
+    double B135 = _2nd_order_coeff[2];
+    double B146 = 0.5 * (_2nd_order_coeff[0] - _2nd_order_coeff[1]);
+    double B214 = B125;
+    double B224 = B115;
+    double B234 = B135;
+    double B256 = B146;
+    double B311 = _2nd_order_coeff[3];
+    double B322 = B311;
+    double B333 = _2nd_order_coeff[6];
+    double B344 = _2nd_order_coeff[7];
+    double B355 = B344;
+    double B366 = 0.5 * (_2nd_order_coeff[3] - _2nd_order_coeff[4]);
+    double B312 = _2nd_order_coeff[4];
+    double B313 = _2nd_order_coeff[5];
+    double B323 = B313;
+
+    polarization(0) = _e15 * e5;
+    polarization(1) = _e15 * e4;
+    polarization(2) = _e31 * e1 + _e31 * e2 + _e33 * e3;
+
+    polarization(0) += 0.5 * (B125 * e2 * e5 + B115 * e1 * e5 +
+                              B135 * e3 * e5 + B146 * e4 * e6);
+    polarization(1) += 0.5 * (B214 * e1 * e4 + B224 * e2 * e4 +
+                              B234 * e3 * e4 + B256 * e5 * e6);
+    polarization(2) += 0.5 * (B311 * e1 * e1 + B322 * e2 * e2 + B333 * e3 * e3 +
+                              B344 * e4 * e4 + B355 * e5 * e5 + B366 * e6 * e6 +
+                              B312 * e1 * e2 + B313 * e1 * e3 + B323 * e2 * e3);
+
+
+    polarization(2) += _Psp;
+  }
+  else
+  {
+    polarization(0) = 2.0 * _e14 * strain(3,2);
+    polarization(1) = 2.0 * _e14 * strain(3,1);
+    polarization(2) = 2.0 * _e14 * strain(2,1);
+  }
+  set_polarization(polarization);
+
+  // rotate polarization to calculation system
+  rotate();
+
+}
