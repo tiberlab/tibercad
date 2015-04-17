@@ -15,6 +15,7 @@ using namespace std;
 void
 Piezopolarization::do_init(void)
 {
+  PolarizationModel::do_init();
 
   std::string sim_name = "";
   get_parameter("strain_simulation", sim_name);
@@ -43,7 +44,7 @@ Piezopolarization::read_database(void)
 
 
 void
-Piezopolarization::calculate(const Elem* elem, const Point& point)
+Piezopolarization::do_calculate(const Elem* elem, const Point& point)
 {  
 
   RealVectorValue polarization(0);

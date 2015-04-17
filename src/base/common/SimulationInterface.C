@@ -807,11 +807,11 @@ SimulationInterface::find_simulation(const string& name)
 
 
 
-pair<SimulationInterface*, ID>
+SimulationInterface::SolutionProvider
 SimulationInterface::find_solution_provider(const string& simulation,
     const string& solution)
 {
-  pair<SimulationInterface*, ID> result(NULL, INVALID_ID);
+  SolutionProvider result(NULL, INVALID_ID);
 
   vector<string> tokens;
 

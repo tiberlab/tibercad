@@ -18,12 +18,6 @@ Pyropolarization::do_init(void)
   get_parameter("Pz", _Pz, true, initializer(&Pyropolarization::_initP));
   _initP();
   
-  if (has_parameter("P"))
-  {
-    // read the polarization vector in the calc system
-    get_parameter("P", polarization());
-  }
-
 }
 
 
@@ -42,7 +36,8 @@ Pyropolarization::read_database(void)
 void
 Pyropolarization::_initP(void)
 {
-  polarization() = 0;
-  polarization()(2) = _Pz;
+  PolarizationModel::do_init();
+
+  set_polarization(RealVectorValue(0, 0, _Pz));
   rotate();
 }

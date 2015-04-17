@@ -4,6 +4,7 @@
 #define _POLARIZATIONMODEL_H_
 
 #include "PhysicalModelInterface.h"
+#include "SimulationInterface.h"
 #include "vector_value.h"
 #include "tensor_value.h"
 #include "RotatedCrystal.h"
@@ -21,6 +22,9 @@ class PolarizationModel : public PhysicalModelInterface
   public:
 
    virtual ~PolarizationModel(void) {};
+
+   //! Creator for the most basic model
+   static PolarizationModel* create(const ModelOptions& options);
   
    //! Get the polarization vector
    /*!
@@ -33,18 +37,36 @@ class PolarizationModel : public PhysicalModelInterface
     * Strain tensor has to be provided in crystal coordinate system
     */
    void set_strain(const Tensor2Sym& strain);
-  
-   virtual void calculate(const Elem* elem, const Point& point) = 0;
+
+   //! Calculate the polarization
+   /*!
+    * If a constant value or module name is given in the input file,
+    * this will override any internally calculated polarization.
+    */
+   void calculate(const Elem* elem, const Point& point);
   
 
   protected:
   
    PolarizationModel(const ModelOptions& options);
+  
+   //! Calculate the polarization in model specific way
+   virtual void do_calculate(const Elem* elem, const Point& point);
 
+   //! Initialize the bas class model
+   /*!
+    * You \c must call this method from derived classes if you want to use
+    * default behaviour.
+    */
+   virtual void do_init(void);
+
+   //! Print some info
+   virtual void do_print_info(void);
+
+   //! Set the polarization vector
    void set_polarization(const RealVectorValue& polarization);
    
-   RealVectorValue& polarization(void);
-
+   //! Rotate the polarization vector to calculation system
    void rotate(void);
 
    Tensor2Sym& get_strain(void);
@@ -55,6 +77,12 @@ class PolarizationModel : public PhysicalModelInterface
    RealVectorValue _polarization;
 
    Tensor2Sym _strain;
+
+   //! We may take it from some other module
+   SimulationInterface::SolutionProvider _polarization_source;
+
+   //! \c true if polarization is given from input or from other module
+   bool _fixed_or_external;
 
 };
 
@@ -76,12 +104,6 @@ PolarizationModel::get_strain(void)
 }
 
 
-inline
-PolarizationModel::PolarizationModel(const ModelOptions& options) :
-  PhysicalModelInterface(options)
-{
-}
-
 
 inline
 const RealVectorValue&
@@ -95,27 +117,31 @@ inline
 void
 PolarizationModel::set_polarization(const RealVectorValue& polarization)
 {
+  if (!_fixed_or_external)
    _polarization = polarization;
 }
 
-
+/*
 inline
 RealVectorValue&
 PolarizationModel::polarization(void)
 {
   return _polarization;
 }
-
+*/
 
 inline
 void 
 PolarizationModel::rotate(void)
 {
 
-  const Material* mat = get_material();
-  const RotatedCrystal&   cr = mat->get_rotated_crystal();
+  if (!_fixed_or_external)
+  {
+    const Material* mat = get_material();
+    const RotatedCrystal& cr = mat->get_rotated_crystal();
 
-  _polarization = cr.RotMatrix * _polarization;
+    _polarization = cr.RotMatrix * _polarization;
+  }
 
 }
 

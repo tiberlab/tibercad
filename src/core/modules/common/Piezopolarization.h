@@ -29,7 +29,7 @@ class TBDLLOCAL Piezopolarization: public PolarizationModel
 
     virtual void read_database(void);
 
-    virtual void calculate(const Elem* elem, const Point& point);
+    virtual void do_calculate(const Elem* elem, const Point& point);
 
   private:
 

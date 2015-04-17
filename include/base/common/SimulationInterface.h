@@ -65,6 +65,9 @@ class SimulationInterface : public TiberModelObject
 
     typedef std::vector< std::vector<unsigned int> > ElemAtomsMap;
 
+    typedef std::pair<SimulationInterface*, ID> SolutionProvider;
+
+
     //! An iterator to iterate over all simulations
     class SimulationIterator
     {
@@ -398,7 +401,7 @@ class SimulationInterface : public TiberModelObject
      * two strings, it can be given in the first argument as a single
      * string, using a single dot '.' as divisor.
      */
-    static std::pair<SimulationInterface*, ID>
+    static SolutionProvider
     find_solution_provider(const std::string& simulation,
         const std::string& solution = "");
 

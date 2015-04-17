@@ -11,6 +11,7 @@
 #include "Utils.h"
 #include "Trap.h"
 #include "ParticleDensity.h"
+#include "PolarizationModel.h"
 
 #include "ZbRotatedCrystal.h"
 #include "WzRotatedCrystal.h"
@@ -102,6 +103,8 @@ PhysicalModelInterface::_create(const string& name,
   //  mod = WzPiezoelectricModel::create(options);
   else if (name == "trap")
     mod = Trap::create(options);
+  else if (name == "polarization")
+    mod = PolarizationModel::create(options);
   else if (name == "particle_density")
     mod = ParticleDensity::create(options);
 
