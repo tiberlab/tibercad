@@ -1,6 +1,6 @@
 Device
 {
-  meshfile = mesh100x100.msh 
+  meshfile = mesh25x25.msh  #mesh25x25x25.msh 
   mesh_units = 1e-9
   dimension = 3
 
@@ -15,30 +15,56 @@ Module polarizationgrid
   regions = (qbox)
   plot = (Polarization)
 
-  Nx = 100 
-  Ny = 100
-  Nz = 1
-  grid_step = 0.65
+  Nx = 25
+  Ny = 25
+  Nz = 1 
+
+  grid_step = 1.2685
+  #grid_step_a = 0.88
+  #grid_step_c = 1.2685
+
+  periodic = (true, true, true)
+  cutoff = 8.0
  
-  Nstep = 25e6
+  seed = 345678912 
+  Nstep = 1e7 
   IOstep = 1e5
-  write_file = polarization.dat 
-  read_file = output/polarization.dat
 
   dipole_units = Debye
-  dipole = 13.74 
-  
+  dipole = 13.74
+  # walsh:  
+  #dipole = 2.29 
+ 
+  #dipole_units = C/m^2
+  #dipole = 0.08  
+
   eps_r = 10.0
 
-  kbT = 0.0
+  kbT = 0.026
+
+  # Field in V/cm
   external_field=(0,0,0) 
 
-  seed = 345678912 
+  #read_file = output25x25x25/polarization.dat
+  write_file = polarization.dat 
+
 }
+
+Module driftdiffusion
+{ 
+  
+  Physics
+  {
+     polarization{ polarization = polarizationgrid.Polarization } 
+  }
+
+}
+
 
 Simulation
 {
-  solve = polarizationgrid
-  resultpath = output
+  solve = (polarizationgrid, driftdiffusion)
+
+  resultpath = output_dd_pp
 }
 
