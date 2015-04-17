@@ -76,23 +76,25 @@ PolarizationGrid::setup_mesh(void)
   setup_grid(p1,p2,_nx[0],_nx[1],_nx[2]);
   //create internal rectangular mesh 
   //
-  Mesh* mymesh = new Mesh(3);
-  ElemType type(HEX8);
+  //Mesh* mymesh = new Mesh(3);
+  //ElemType type(HEX8);
 
-  MeshTools::Generation::build_cube(*mymesh, 
-				       _nx[0], _nx[1], _nx[2],
-               0.0, _nx[0] * aa, 
-               0.0, _nx[1] * bb,
-               0.0, _nx[2] * cc,
-               type);
+  //MeshTools::Generation::build_cube(*mymesh, 
+	//			       _nx[0], _nx[1], _nx[2],
+  //             0.0, _nx[0] * aa, 
+  //             0.0, _nx[1] * bb,
+  //             0.0, _nx[2] * cc,
+  //             type);
 
   // set in environment
-  get_environment().set_mesh(mymesh);
+  //get_environment().set_mesh(mymesh);
 
   // set in my object
-  set_mesh(mymesh);
+  //set_mesh(mymesh);
+ 
+  SimulationInterface::setup_mesh();
 
-  GmshIO(*mymesh).write("mymesh.msh");
+  //GmshIO(*mymesh).write("mymesh.msh");
 
 }
 
@@ -215,8 +217,8 @@ PolarizationGrid::set_dipole(double p, string str)
   }
   else if (str == "C*m")
   {
-    // 1 C m =  e/(1.60e-19) *  nm/1e9 
-    dipole = p / 1.60e-10;
+    // 1 C m =  e/(1.60e-19) *  nm/1e-9 
+    dipole = p / 1.60e-28;
   }
   else if (str == "C/m^2")
   {
@@ -285,11 +287,18 @@ PolarizationGrid::rnd_orientation(Point &p)
 
 /*
 void
-PolarizationGrid::rnd_orientation(Point &p)
+PolarizationGrid::rnd_orientation_discrete(Point &p)
 {
-  uniform_int_distribution<int> random1(0.0, M_PI);
+  uniform_int_distribution<int> random1(0, 23);
 
-  teta = random1(generator); 
+  int rnd = random1(generator); 
+ 
+  double P1 = 0.0669; 
+  double P2 = 
+
+  switch(rnd)
+  case 1:
+    p(0) = 
 
 }
 */
@@ -494,12 +503,12 @@ PolarizationGrid::get_solution_secure(const Elem* elem,
    {  
      int i = grid.find_element(elem->centroid());
      double vol = grid.grid_step(0)*grid.grid_step(1)*grid.grid_step(2);
-
+     
      for (int k=0; k<p.size(); k=k+3)
      { 
-       values[Polarization][k] = pp[i](0);
-       values[Polarization][k+1] = pp[i](1);
-       values[Polarization][k+2] = pp[i](2);
+       values[Polarization][k] = pp[i](0) * Constants::e/vol*1e18;  // C/m^2
+       values[Polarization][k+1] = pp[i](1) * Constants::e/vol*1e18;
+       values[Polarization][k+2] = pp[i](2) * Constants::e/vol*1e18;
      }
    }
 
