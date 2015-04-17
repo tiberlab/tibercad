@@ -2,6 +2,7 @@
 
 #include "PolarizationModel.h"
 #include "InitFailedException.h"
+#include "Messages.h"
 
 
 using namespace std;
