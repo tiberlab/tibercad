@@ -82,6 +82,9 @@ class TensorGrid
     Point distance(int k1, int l1, int m1,
                    int k2, int l2, int m2 ) const;
 
+    //! Get the center point of an element \c i
+    Point get_centroid(unsigned int i) const;
+
 
   private:
 

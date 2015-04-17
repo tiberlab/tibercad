@@ -58,6 +58,8 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   
   PolarizationGrid(const ModelOptions& opt);
 
+  void do_setup_solution_variables(void);
+
   void do_init(void); 
 
   void do_solve(void);

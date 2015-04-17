@@ -1,5 +1,6 @@
 #include "PolarizationGrid.h"
 #include "InitFailedException.h"
+#include "MeshUtils.h"
 #include "Constants.h"
 #include "mesh_generation.h" 
 #include "SimulationEnvironment.h"
@@ -28,6 +29,14 @@ PolarizationGrid::create(const ModelOptions& opt)
 
 
 void
+PolarizationGrid::do_setup_solution_variables(void)
+{
+  declare_solution(Polarization, VECTOR, CELL, "C/m^2");
+}
+
+
+
+void
 PolarizationGrid::do_init()
 { 
   parse_options();  
@@ -44,8 +53,6 @@ PolarizationGrid::do_init()
   }
 
   set_cutoff();
-
-  declare_solution(Polarization, VECTOR, CELL, "C/m^2");
 
   if (get_options().find_option("write_file"))
     _write_file = true;
@@ -93,6 +100,35 @@ PolarizationGrid::setup_mesh(void)
 void
 PolarizationGrid::do_solve()
 {
+  // If the electric field is taken from an external module we
+  // have to reload the fields
+  string poisson = get_option("poisson_model", "");
+  if (!poisson.empty())
+  {
+    SolutionProvider poisson_sol = this->find_solution_provider(poisson);
+    // check
+
+    SimulationInterface* poisson_mod = poisson_sol.first;
+    ID sol_id = poisson_sol.second;
+
+    MeshUtils::GridMapper& mapper =
+        MeshUtils::GridMapper::get_mapper(poisson_mod->get_mesh());
+
+    vector<double> values(3, 0.0);
+
+    for (unsigned int i = 0; i < grid.num_elements(); ++i)
+    {
+      Point p(grid.get_centroid(i));
+      const Elem* elem = mapper.get_element(p);
+      if ((elem != NULL) && poisson_mod->get_solution(elem, sol_id, values, p))
+      {
+        efield[i](0) = values[0] * 1e-7; // V/nm
+        efield[i](1) = values[1] * 1e-7;
+        efield[i](2) = values[2] * 1e-7;
+      }
+    }
+  }
+
   this->kmc();
 
   if (_write_file) write_dipoles();

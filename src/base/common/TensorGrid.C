@@ -35,3 +35,15 @@ TensorGrid::setup(const Point& p0, const Point& p1, int nk, int nl, int nm)
   _dz = (_p1(2) - _p0(2)) / _nm;
 }
 
+
+Point
+TensorGrid::get_centroid(unsigned int i) const
+{
+  unsigned int k, l, m;
+  element_to_index(i, k, l, m);
+
+  Point centroid(_p0);
+  centroid += Point((k+0.5)*_dx, (l+0.5)*_dy, (m+0.5)*_dz);
+
+  return(centroid);
+}
