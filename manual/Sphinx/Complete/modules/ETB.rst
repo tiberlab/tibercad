@@ -76,6 +76,21 @@ For  example, the  atomistic  structure ``tb``  is created  by  the  **Atomistic
 	  regions = Quantum 
 	  passivation = yes
 	  print = (xyz, gen, tgn)
+          random_alloy = true
+
+          radial_distribution
+           { 
+             species = (In,Ga)
+             cutoff_radius = 1.0
+             resolution = 0.001
+           }
+
+          alloy_statistics
+           {
+           control_volume_radius = 1.0
+           plot_alloy_composition = true
+           }
+
 	}
 
 
@@ -97,10 +112,10 @@ In this way,  only the atomic species are changed according to the different mat
 The structure may  be eventually relaxed by  projecting strain  calculated with a continuum elasticity model, or by  minimizing  the  energy  of  the  system applying  a  valence force field (VFF) model.
 
 
-Options
+General Options
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The  following kewords may  be  defined in *Atomistic*  block
+The  following kewords may  be  defined in **Atomistic**  block
 
 
  ``regions`` : string
@@ -157,10 +172,7 @@ The  following kewords may  be  defined in *Atomistic*  block
 
  ``cluster_seeds`` : real
     defines the fraction of ions placed with uniform distribution. Must be > 0. (*default = 0.02*). 
-
- ``control_volume_radius`` : real
-    defines the radius of a sphere on which local concentration is computed (default = 0.5 nm).     
-   
+     
  ``reference_atom`` : integer
     sets the atom label (typically 1=cations, 2=anions) where local concentration is computed. Default is cations.    
 
@@ -170,33 +182,52 @@ The  following kewords may  be  defined in *Atomistic*  block
  ``print`` : string
     print the  generated atomic  structure with  one  of  the  following formats: *xyz*:  xyz file  format; *gen*: gen file  format; *tgn*: tibercad format which combines informations on the mesh and the atoms.
 
- ``alloy_statistics`` : block 
-    if defined, the local concentration is computed by averaging over small local spheres of radius 
-    defined by control_volume_radius. Example
+
+
+Optional Blocks
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Two  optional blocks may  be  present in  **Atomistic**  block:
+
+
+Block  **alloy_statistics**: 
+this  block performs  the  calculation of   the local concentration  by averaging over small 
+local spheres of radius defined by the  keyword *control_volume_radius*. 
+
+Example:  ::
 
   alloy_statistics
   {
     control_volume_radius = 1.0 
     plot_alloy_composition = true
   }
- 
- ``control_volume_radius`` : real
-   sets the radius of the control volume. 
 
- ``plot_alloy_composition`` : boolean
-   if **true** the alloy composition is mapped on the mesh and plotted in a vtk file format. 
+The  following kewords may  be  defined in **alloy_statistics**  block
 
- ``radial_distribution`` : block 
-    if set, the radial distribution function, g(r), is computed. The distribution represents the probability density
-    of finding an atom at a given distance from a reference atom. It is computed by counting all atoms that are found 
-    at a distance (r, r+dr) and normalized to the total volume and total number of atoms. Example
+
+  ``control_volume_radius``: real
+    sets the radius of the control volume, that is  of a sphere on which local concentration is computed (default = 0.5 nm).
+
+  ``plot_alloy_composition`` : boolean
+   if **true** the alloy composition is mapped on the mesh and plotted in a *vtk* file format. 
+
+
+Block **radial_distribution**:
+if set, the radial distribution function, g(r), is computed. The distribution represents the probability density 
+of finding an atom at a given distance from a reference atom. It is computed by counting all atoms that are found 
+at a distance (r, r+dr) and normalized to the total volume and total number of atoms. 
+
+Example:  ::
 
   radial_distribution
   {
-     species = (In, Ga )
+     species = (In, Ga)
      cutoff_radius = 1.0 
      resolution = 0.001 
   }
+
+The  following kewords may  be  defined in **radial_distribution**  block
+
 
   ``cutoff_radius`` : real
     is used to set the maximum distance of the distribution.
@@ -206,15 +237,17 @@ The  following kewords may  be  defined in *Atomistic*  block
 
   ``species`` : specie names
     For each specie a radial distribution function is computed. The distribution is also resolved into the 
-    other species present in the atomistic structure. Files are produced in output with names,
-    structure_name_Specie_radial_suffix.dat, with column structure
-    r   specie_1  specie_2   ...
-   ...    ...       ...      ...
+    other species present in the atomistic structure. Files are produced in output with names given by
+    *<structure_name_Specie_radial_suffix>*.dat, with column structure  ::
 
-    In practice each column represents the probability density to finding a specie_i at distance r from the 
-    reference specie. 
-    The radial distribution can be computed also after VFF optimization by adding **radial_distribution** 
-    to the plot line.
+    r   specie_1  specie_2   ...
+   
+
+    In practice each column represents the probability density to find a specie *specie_i* 
+    at a distance *r* from the reference specie. 
+    The radial distribution can be computed also after VFF optimization, by adding **radial_distribution** 
+    to the *plot* instruction.
+
 
 
 
@@ -275,7 +308,7 @@ Random generation is  ruled by  a  random seed,  which is  in  general different
 By default,  the  random alloy  structure is    built  with  an uniformly random approach. An option of  random  alloy  generation allows to  generate  **clustering** in  random  configuration. This  is  made  by  defining *clustering = true*. In  this  way,  the  alloy  structure is  not  built  entirely with  an uniformly random approach. Instead,  the  formation of clusters  of  substitution  atoms (e.g. In  atoms in  InGaN  alloy) is  favoured.  
 The  keyword *clustering_seeds* define the fraction (default is 0.02) of  substitution ions which  are  placed  with an uniform distribution.  The  remaining fraction of ions  is placed with  a  higher  probability in  positions close to other  substitution ions.
 
-Alloy  statistic, local  concentration...
+
 
 
 
@@ -352,7 +385,8 @@ We  define a *random_generator_seed = 5*,  which  can  be  used  in  a  followin
 
 
 
->>>>>>> .r4032
+
+
 Module empirical_tb 
 -----------------------
 
