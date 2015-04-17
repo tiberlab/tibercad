@@ -18,10 +18,17 @@ TensorGrid::setup(const Point& p0, const Point& p1, int nk, int nl, int nm)
   double ly = _p1(1) - _p0(1);
   double lz = _p1(2) - _p0(2);
   if (lz == 0)
+  {
     _dimension = 2;
+    _nm = 1;
+  }
   if (ly == 0)
+  {
     _dimension = 1;
+    _nl = 1;
+  }
 
+  // 2015-04-17 why did I write (lx + 1) ?
   double eps = 1e-6;
   _p0(0) -= eps * (lx + 1);
   _p0(1) -= eps * (ly + 1);
