@@ -141,16 +141,20 @@ Module options
 
 The following options influence the behaviour of the Elasticity module:
 
- ``non_linear_strain`` : bool
+
+ ``mesh_deformation`` : bool
    if :math:`true` the strain is computed iteratively until the convergence on the structure deformation is reached  (default = :math:`false`) 
+  
+
+ ``shape_error`` : double
+   defines the maximum tolerated error in non-linear strain computation (default = :math:`1e-3`) 
+  
 
  ``shape_iterations`` : integer
     defines the number of  shape iterations for non-linear strain computation. 
     The default is ``10``.
 
- ``shape_error`` : double
-   defines the maximum tolerated error in non-linear strain computation (default = :math:`1e-3`) 
-  
+
 
 Solution/Plot variables
 -----------------------

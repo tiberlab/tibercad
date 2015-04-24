@@ -39,6 +39,7 @@ in the system under observation are perturbations
 of the atomic states, it's convenient to use the LCAO basis:
 
 .. math::
+    :label: lcao_basis 
 
     \left|\Psi\right\rangle=\sum_{\alpha \Vec{R}}C_{\alpha\Vec{R}}\left|{\alpha,\Vec{R}}\right\rangle
 
@@ -52,6 +53,7 @@ Using the previous relation  in the time independent Schroedinger equation,
 we obtain  the expression:
 
 .. math::
+    :label: eq_schroed
 
     \sum_{\alpha'\Vec{R}^{'}}C_{\alpha'\Vec{R}^{'}}\left[H_{\alpha'\Vec{R}^{'}\alpha\Vec{R}}-ES_{\alpha'\Vec{R}^{'}\alpha\Vec{R}}\right] = 0
 
@@ -63,6 +65,7 @@ are the hamiltonian matrix element and the overlap matrix and
 are respectively given by:
 
 .. math::
+    :label: matrix_elem
 
     H_{n'\alpha',n\alpha} = \left\langle n'\alpha'\right| H \left|n\alpha\right\rangle 
 
@@ -184,7 +187,7 @@ With this approach it's possible to get a ten band nearest neghbour
 accuracy bulk IV group semiconductors, zincblend and wurtzite III-V
 materials and ternary alloys. 
 
-:math:`sp^{3}s^{*}`  has been used for years and it's still
+The :math:`sp^{3}s^{*}`  parameterization has been used for years and it's still
 routinely applied. However, it still suffers some inner 
 limitations. For example, it cannot fit the *X* valley transverse mass
 , making its application critical
@@ -199,7 +202,7 @@ For the reasons previously explained, we find
 more convenient not to discard  the nearest neighbour approach.
 Luckily we can rely on modern parameterizations
 that include *d* orbitals, leading to a *30* bands description.
-The parametrization by Jancu 
+The :math:`sp^{3}s^{*}d` parameterization by Jancu 
 (see [Jancu]_ , [Jancuwz]_ ), 
 gives a very accurate
 description of  C, Si, Ge, AlP, InP, GaAs, AlAs, InAs, GaSb, AlSb, InSb, 
@@ -534,9 +537,9 @@ First,  the  Device  structure  is  defined ::
   {
     regions = atomistic 
     reference_region = nside  # barrier1 
-    #path = tb1.gen
     passivation = yes
-    #preserve = conventional
+    print = (gen, xyz, tgn)
+
   }
 
 }
@@ -597,7 +600,7 @@ Tight  binding  calculation  of  quantum  states  in  the  system  made  by  the
     potential_simulation = dd
     strain_simulation = str  
     sparse_format = full	
-    plot = (tbstates)
+    plot = (tbstates, MeshStatesNodes)
 
     Solver
      {
@@ -610,7 +613,7 @@ Tight  binding  calculation  of  quantum  states  in  the  system  made  by  the
 
 
 Note  that  the  results of potential (from driftdiffusion)  and  strain (from  elasticity) simulations   are  recalled,  to  project  the  correct  potential  profile  and  atom  displacement  to  the  TB  Hamiltonian.
-In  output,  the ground  states  of  conduction  and  valence  bands  are saved  together  with  the  wavefunctions.
+In  output,  the ground  states  of  conduction  and  valence  bands  are saved  together  with  the  wavefunctions.States  are  also  plotted  on  the  FEM  grid (through *MeshStatesNodes*).
 
 Based  on  these  results, *optical  properties*  are  calculated through  the Module  opticstb ::
 
@@ -648,6 +651,16 @@ The  energy range  for  the  calculation of  the  optical  spectrum  is  defined
   Emin = 4.25
   Emax = 4.75
   dE = 0.001
+
+
+The  output of  calculation is  composed  by  the *matrix elements* file *opt.dat* and  by the  optical spectrum in :math:`\Gamma` point, in  file *opt_spectrum_k_0.dat*.
+For  the  latter output, the  keyword ::
+
+  compute_strengths = true
+
+is  necessary,  to calculate   emission spectrum power  assuming  all  occupations equal to  one,  since  the  simulation is  performed  at  equilibrium and  thus with nominal zero  occupation of states.
+  
+
 
 
 
@@ -722,7 +735,8 @@ First,  the  Device  structure  is  defined ::
 
    Cluster Quantum_buffer
    {
-     regions = (Atomistic_cube_WL,Atomistic_cube_down,Atomistic_cube_up,dot,buffer_up,buffer_down,buffer_WL)
+     regions = (Atomistic_cube_WL,Atomistic_cube_down,Atomistic_cube_up,dot,
+       buffer_up,buffer_down,buffer_WL)
    }
 
 
@@ -735,17 +749,15 @@ Next, the Atomistic block defines the atomistic structure *dot_atoms*, associate
    
    Atomistic dot_atoms
    {
-   #regions specifica dove definire gli atomi
+   
    regions = Quantum_buffer
-   #reference_region stabilisce il reticolo di riferimento
+   #reference_region defines the reference lattice  
    reference_region = Atomistic_cube_down
    #Enable hydrogen passivation
    passivation = yes
-   #salva la struttura in vari formati, xyz per controllare con jmol, tgn per ricaricarla in tibercad
-   #Nota: la struttura puo' essere ricaricata dal file tgn per risparmiare tempo
-  #ma la MESH deve essere la stessa di quando la struttura e' stata salvata, altrimenti
-   #i risultati non sono consistenti! Il file tgn viene salvato in path, l'xyz tra gli output
+  
    print = (xyz, tgn)
+   # save the structure in  several formats 
    } 
   }
 
@@ -761,7 +773,7 @@ Next, Elasticity Module is defined. In  this  way,  macroscopic strain  is  calc
   
   mesh_deformation = true
   shape_error = 0.1
-  #shape_iterations = 3
+ 
   strain_atomistic_structure = dot_atoms
   
   Physics {
@@ -806,7 +818,7 @@ Drift-diffusion Module will be  executed to  solve  Poisson at  equilibrium  ::
   integration_order = 2
 
   #save_state = true 
-  load_state = ./prova2/dd.tsv
+  # load_state = ./prova2/dd.tsv
 
   Physics
    {
@@ -816,6 +828,9 @@ Drift-diffusion Module will be  executed to  solve  Poisson at  equilibrium  ::
    }
   }
 
+In  alternative,  a  previuosly calculated solution  from  drift-diffusion may be  loaded through ::
+
+    load_state = <path>
 
 Finally,  we  define  **empirical_tb** Module  ::
 
@@ -825,40 +840,44 @@ Finally,  we  define  **empirical_tb** Module  ::
    
    name = tb
   
+   # Physical  regions to which etb is applied
    regions = Quantum_Atomistic
  
+   # atomistic  structure on  which etb is calculated
    atomistic_structure = dot_atoms
   
-   Harrison_scaling = false 
- 
    potential_simulation = dd
   
-   sparse_format = full
- 
-   #Plot in uscita, tbstates indica gli stati in formato cub o jvxl (plot sugli atomi)
    plot = (MeshStates,MeshStatesNodes)
 
-  
    jmol_output_format = cube 
 
    Solver 
    {
     
-    load_states = true
-    load_path = prova
+    #  load_states = true
+    #  load_path = prova
 
     num_valence_eigenvalues = 0 
     num_conduction_eigenvalues = 2 
     long_tolerance = 1e-7
-   #PARAMETRI IMPORTANTI: il guess vicino al valore dell'autovalore fa si 
-   #che non si prendano stati spuri dati dal folding dell'Hamiltoniana
-   #internamente sono calcolati dei guess plausibili, ma per dot piccoli
-   #lo shift e' tale che e' difficile dare un guess automatico. 
-   #Il riferimento per il guess e' edge di valenza a 0.0
+
     guess_conduction = 0.15
     guess_valence = -0.10
    }
   }
+
+
+By  default, reasonable  guesses are  generated  internally to  help  the solver  to get convergence. 
+Usually these  values  are  good  enough to  get  a steady covergence  of  solutions.
+However, in  this particular case of small  energy  gap  material (InGaAs), 
+it  may be  necessary to  set manually a  guess close to the expected value of  the eigenstate. ::
+
+   guess_conduction = 0.15
+   guess_valence = -0.10
+
+In this way, we  avoid erroneous states due to the  folding of the Hamiltonian.
+The reference of the guess is the valence top band edge at 0.0 eV.
 
 
 Note  that ETB  will be  applied to the **atomistic_structure** *dot_atoms* (*atomistic_structure = dot_atoms*) , but only  to  the subset  of it whose  atoms  are  associated to the  regions included in **Cluster** *Quantum_Atomistic* (*regions = Quantum_Atomistic*).  ::
@@ -871,7 +890,7 @@ Note  that ETB  will be  applied to the **atomistic_structure** *dot_atoms* (*at
    temperature = 300
    solve =  (strain,vff,dd,tb)
    resultpath = output 
-   _format = vtk
+   format = vtk
   }
 
 
