@@ -10,9 +10,214 @@ Empirical Tight Binding
 Theory
 --------------------------------
 
+
+Tight Binding approach
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The Tight binding method (TB) is a technique to describe
+the electronic and optical properties of a material through
+an atomistic description. A corpuscolar approach is needed
+in devices with nanometric features, where a detailed description
+of electronic ad optical properties cannot be reached with an
+effective description.
+
+In the following we  will give a brief description of general features
+of Tight Binding Model. Then we will focus on the  technique implemented
+in TiberCAD, namely Empirical Tight Binding (ETB).
+
+
+The TB model has been introduces by Slater and Koster in 
+a notable publication in 1954
+(see [SlaterKoster]_).
+
+The starting point is the *LCAO*  (linear combination
+of atomic orbitals) representation. 
+
+If we assume that the electronic
+states :math:`\Psi`
+in the system under observation are perturbations
+of the atomic states, it's convenient to use the LCAO basis:
+
+.. math::
+
+    \left|\Psi\right\rangle=\sum_{\alpha \Vec{R}}C_{\alpha\Vec{R}}\left|{\alpha,\Vec{R}}\right\rangle
+
+
+Where *R* is the atom position and :math:`\alpha` a quantum number
+to distinguish between different orbitals.
+
+
+
+Using the previous relation  in the time independent Schroedinger equation,
+we obtain  the expression:
+
+.. math::
+
+    \sum_{\alpha'\Vec{R}^{'}}C_{\alpha'\Vec{R}^{'}}\left[H_{\alpha'\Vec{R}^{'}\alpha\Vec{R}}-ES_{\alpha'\Vec{R}^{'}\alpha\Vec{R}}\right] = 0
+
+
+where 
+
+:math:`H_{\alpha'\Vec{R}^{'}\alpha\Vec{R}}` and :math:`S_{\alpha'\Vec{R}^{'}\alpha\Vec{R}}`
+are the hamiltonian matrix element and the overlap matrix and 
+are respectively given by:
+
+.. math::
+
+    H_{n'\alpha',n\alpha} = \left\langle n'\alpha'\right| H \left|n\alpha\right\rangle 
+
+
+    S_{n'\alpha',n\alpha} = \left\langle n'\alpha'|n\alpha\right\rangle
+
+
+
+The Hamiltonian may possibly  include an external potential 
+:math:`V_{ext}` term, including an externally applied potential and mean field
+corrections. 
+The overlap matrix is the identity when the basis is orthogonal.
+This is not the case in general, since usually  atomic orbitals have non zero
+overlap. However,  the basis set can be orthogonalized using a 
+Lowdin orthogonalization. Anyway, resulting wavefunctions
+have longer range, and it determines  a worst numerical formulation
+than when using a non orthogonal basis. 
+The overlap matrix *S* can be calculated from the basis function, but 
+in order to solve the generalized eigenvalue problem 
+the matrix elements of the Hamiltonian
+need to be evaluated. The method used to obtain these matrix elements
+classifies the different TB implementations.
+
+
+The Hamiltonian matrix elements can be classified in four categories
+(see [DiCarloreview]_)
+
+
+  * ``On-site``:  when the atomic wavefunctions and the potential are centerd on the same site
+
+  * ``Two-centre``:  when wavefunction and potential are on the same site and the other wavefunctions are on different sites
+
+  * ``Three-centre``:  when the wavefunctions and the potential are all on different sites
+
+  * ``Local environment correction``:  when the two wavefunctions are on the same site and the potential is on a different site
+
+ 
+In the following we will consider only on-site and two-centre 
+contributions,  a reasonable trade-off between
+computational effort and accuracy.
+
+
+Empirical Tight Binding
+^^^^^^^^^^^^^^^^^^^^^^^
+
+As seen in previous section, the type of matrix element included 
+in a TB representation is one of the discriminants between one model and
+another.
+The other features which differentiate  TB models
+are the number of interacting neighbours (usually nearest neighbours or
+second nearest neighbours), the orthogonality of the basis set and the method 
+used to calculate the matrix elements.
+Focusing on the last point, there are three main techniques to evaluate 
+these parameters: empirical, semi-empirical and ab initio methods.
+
+In empirical tight binding (ETB), matrix elements are calculated
+as fitting parameters of characteristic bulk quantities, such as
+effective mass, energy gap and split-off energy.
+
+
+In order to
+solve the Schrodinger equation 
+we need to evaluate
+two different kinds of matrix element: *on-site*  matrix elements and
+*hopping*  matrix elements.
+
+The **empirical tight binding** technique consists in finding these quantities
+by fitting the bulk properties of semiconductors, assuming an orthogonal basis,
+i.e. *S =* **I** with **I** the identity matrix. 
+
+
+The physical meaning of the on-site term is straight: it's the eigenenergy of
+the corresponding orbital. The hopping energy can be written in different notations.
+In the original work of Slater and Koster (see [SlaterKoster]_), 
+hopping elements are given by
+linear combinations of atomic orbitals in a two centre approximation.
+Note that Slater and Koster work is based on a Lowdin orthogonalized basis,
+leading to zero overlap between orbitals. This is a crucial point in ETB
+technique, as it allows  to solve an eigenvalue problem instead of a generalized
+eigenvalue problem, with a much lower computational effort, and it's the key
+for the efficiency of ETB respect to ab initio techniques.
+
+It means that any interatomic parameter is labeled as :math:`V_{\alpha\beta\mu}`,
+where :math:`\alpha, \beta = (s, p, d)` are the atomic orbitals involved and
+:math:`\mu` is the component of angular momentum around the bond axis, 
+i.e. :math:`\mu = \sigma`, :math:`\mu = (\sigma, \pi)`, :math:`\mu=(\sigma, \pi, \delta)`
+respectively for :math:`ss, sp, sd, pp` and :math:`dd` bonds. 
+This is the so called **molecular orbital** notation. 
+The relationship between these quantities and hopping matrix elements
+(Koster notation) is shown in Slater and Koster work.  
+
+
+
+The chemestry of localized states in covalent semiconductors needs at 
+least an eight band parameterization (one *s* and three *p* orbitals with spin
+degeneracy) 
+(see [Vogl]_ ).
+
+
+
+Historically, the first approach to empirical
+tight binding has been performed by using these :math:`sp^{3}` basis, often expanding the interaction to second nearest neighbours.
+In fact first-neighbour :math:`sp^{3}` models fail in 
+many points: it's proved that they can not
+reproduce an indirect gap in diamond and zincblende materials
+and they cannot fit even the lowest conduction bands
+of semiconductors as Ge, Si, AlAs and GaP.
+
+However a second-neighbour basis is not desirable as it
+cannot be used to describe random alloys and heterointerfaces in a straight way,
+while first neighbour parameterizations are used under the assumption
+that parameters are portable when we're not dealing with bulk structures,
+and locally the neighbours interact as in the corresponding bulk material.
+
+It is possible to overcome these deficiencies by including 
+an excited *s* state, i.e. the :math:`s^{*}` state, on each atom (see [Vogl]_). 
+With this approach it's possible to get a ten band nearest neghbour
+:math:`sp^{3}s^{*}` parameterization which describe with a good degree of 
+accuracy bulk IV group semiconductors, zincblend and wurtzite III-V
+materials and ternary alloys. 
+
+:math:`sp^{3}s^{*}`  has been used for years and it's still
+routinely applied. However, it still suffers some inner 
+limitations. For example, it cannot fit the *X* valley transverse mass
+, making its application critical
+in cases where *X* valley contribution are important, 
+such as higly confined structures or materials with a band minimum in 
+*X* like Silicon. There are two ways to overcome
+these limitation: increasing the number of neighbours or
+increasing the number of parameters.
+
+
+For the reasons previously explained, we find
+more convenient not to discard  the nearest neighbour approach.
+Luckily we can rely on modern parameterizations
+that include *d* orbitals, leading to a *30* bands description.
+The parametrization by Jancu 
+(see [Jancu]_ , [Jancuwz]_ ), 
+gives a very accurate
+description of  C, Si, Ge, AlP, InP, GaAs, AlAs, InAs, GaSb, AlSb, InSb, 
+GaN, AlN and InN. This parameterization introduces
+seven additional hopping matrix elements but, at the
+cost of an increased computational cost, it offers a very accurate description
+of nanostructures. 
+
+
+
+
 TBC
 
 
+
+
+Module empirical_tb 
+-----------------------
 
 
 In  tiberCAD,  it  is  possible  to  perform atomistic quantum  calculations in  the  framework  of  Empirical Tight Binding (ETB):  eigenstates, eigenfunctions and  quantum  density of  a  given system   can  be  obtained  by solving a tight-binding Hamiltonian by means  of the module:
@@ -79,8 +284,7 @@ See   section :ref:`Atomisticgen`  for  a  detailed description of the  Atomisti
 
 
 
-Module empirical_tb 
------------------------
+
 
 
 Module options
