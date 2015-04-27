@@ -1,0 +1,26 @@
+CXX := @CXX@
+CC := @CC@
+#FC := @FC@
+FC := ifort-11.1
+
+#UPT_MPI=Y
+
+have_cuda = @HAVE_CUDA@
+
+#MPIDIR=/usr/pack/tibercad_sdk-2.2-ma/build/petsc-3.0.0-p12/externalpackages/mpich2-1.0.8
+#MPILIB=/usr/pack/tibercad_sdk-2.2-ma/build/petsc-3.0.0-p12/x86_64-linux-complex/lib
+#MPIINCL=$(MPIDIR)/src/include
+
+#INCLUDE += -I$(MPIINCL)
+#SHOW = -show
+
+
+#ifeq ($(have_cuda),yes)
+# CUDA = Y
+# LDFLAGS += @CUDA_LIBS@
+# CUDA_INCLUDE = -I@CUDA_INCLUDEDIR@
+#endif
+
+
+LIBMKL = @MKL_LIBS@
+MKLINC = -I@MKL_INCLUDEDIR@

@@ -7963,7 +7963,7 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/SLEPC/Makefile contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/coremodules.conf"
+ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/SLEPC/Makefile src/core/modules/etb/libuptight/Make.defs contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/coremodules.conf"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
 
@@ -8534,6 +8534,7 @@ do
     "doc/Makefile") CONFIG_FILES="$CONFIG_FILES doc/Makefile" ;;
     "src/tibercad/Makefile") CONFIG_FILES="$CONFIG_FILES src/tibercad/Makefile" ;;
     "src/utils/SLEPC/Makefile") CONFIG_FILES="$CONFIG_FILES src/utils/SLEPC/Makefile" ;;
+    "src/core/modules/etb/libuptight/Make.defs") CONFIG_FILES="$CONFIG_FILES src/core/modules/etb/libuptight/Make.defs" ;;
     "contrib/crypto++/make.defs") CONFIG_FILES="$CONFIG_FILES contrib/crypto++/make.defs" ;;
     "installer/Makefile") CONFIG_FILES="$CONFIG_FILES installer/Makefile" ;;
     "installer/windows/tibercad.bim") CONFIG_FILES="$CONFIG_FILES installer/windows/tibercad.bim" ;;
