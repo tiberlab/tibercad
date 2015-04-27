@@ -629,6 +629,7 @@ void Optics::do_solve()
   _total_power += dP0 + dPN;
   _recombination += dP0 / _energy_mesh->point(0)(0) + dPN / _energy_mesh->point(N)(0);
 
+
   // k-space is assumed to be in 1/nm, and all output quantities
   // are given in 1/cm
   double area_dim_factor = 1.0;
@@ -761,7 +762,12 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       //spectrum[elem] += 1 / (2 * M_PI ) * (omega * omega) /(c*c*c)  * Lorenzian * abs (Me) * abs (Me) * f1 * f2;
       double strength = 2 * _opt.nr * (omega * omega) / (c*c*c) * abs (Me) * abs (Me);
 
-      double power = strength * f1 * f2;
+      //  we need to take 2/3, since in the integration over the solid angle the 3
+      // polarizations turn out to be summed as (px+py+pz)/3, and the two polarization
+      // directions are not in the above formula
+      double power = 2.0 * strength * f1 * f2 / 3.0;
+      // these are not very satisfactory, since one should rather calculate absorption
+      // and stimulated emission for a determinate optical mode (that is polarization)
       double stimulated = strength * (f1 + f2 - 1);
       double gain = stimulated * M_PI * M_PI * c * c /
           (_opt.nr * _opt.nr * omega * omega * omega);
