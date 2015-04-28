@@ -54,6 +54,8 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
  
   void write_antiferro(void);
 
+  void average_dipole(void);
+
  protected:
   
   PolarizationGrid(const ModelOptions& opt);

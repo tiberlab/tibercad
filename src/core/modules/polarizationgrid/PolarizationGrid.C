@@ -184,6 +184,10 @@ PolarizationGrid::set_cutoff(void)
  
   // cutoff in nm to get 1 meV energy difference
   cutoff = pow(tmp/0.0001,1.0/3.0);
+  
+  ostringstream os;
+  os<<"Computed Cutoff= "<<cutoff<<endl;
+  Messages::info(os.str());
 
   cutoff = get_option("cutoff",cutoff);
   
@@ -201,7 +205,7 @@ PolarizationGrid::set_cutoff(void)
     }
   }
 
-  ostringstream os;
+  os.str("");
   os<<"Cutoff= "<<cutoff<<endl;
   Messages::info(os.str());
 }
@@ -372,7 +376,7 @@ double
 PolarizationGrid::energy1(unsigned int i)
 {
   // e*nm  * V/nm  = eV
-  return pp[i]*efield[i];
+  return -pp[i]*efield[i];
 }
 
 double 
@@ -514,4 +518,21 @@ PolarizationGrid::get_solution_secure(const Elem* elem,
 
 }
 
+void 
+PolarizationGrid::average_dipole()
+{
+   Point p;
+   p(0) = 0.0; p(1) =0.0; p(2)=0.0;
 
+   for (unsigned int i = 0; i < grid.num_elements(); ++i)
+   {
+     p = p + pp[i];
+   }
+
+   p = p / grid.num_elements();
+
+   ostringstream os;
+   os<<"Average Dipole P= "<<p(0)<<" "<<p(1)<<" "<<p(2)<<endl;
+   Messages::info(os.str());
+
+}
