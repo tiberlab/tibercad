@@ -17,6 +17,7 @@
 #include <dense_submatrix.h>
 #include <mesh_generation.h>
 #include <petsc_matrix.h>
+#include <petsc_vector.h>
 #include <quadrature_gauss.h>
 
 #include <cstdlib>
@@ -529,8 +530,79 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
   map<short, short>::const_iterator  band_it;
 
+  //AutoPtr<NumericVector<double>> eigvec_i_re = NumericVector<double>::build();
+  //eigvec_i_re->init(size_matrix);
+
+  // create vectors with size of the P-matrix and put the solution vectors'
+  // entries into the right place
+  PetscVector<Real> vec_i_r(size_matrix);
+  PetscVector<Real> vec_i_i(size_matrix);
+  PetscVector<Real> vec_f_r(size_matrix);
+  PetscVector<Real> vec_f_i(size_matrix);
+
+  for (size_t i = 0; i < size_matrix; ++i)
+  {
+    // calculate the dof in the optical matrix
+    // assumes band-major ordering
+    short band_number = i / number_of_nodes;
+
+    band_it = kp_bands_map_in.find(band_number);
+
+    if (band_it != kp_bands_map_in.end())
+    {
+      //band exists in kp model of the initial state
+      unsigned int dof_in_initial_eigenvector =
+          band_it->second * number_of_nodes + i % number_of_nodes;
+
+      Complex value = eigen_vector_i[dof_in_initial_eigenvector];
+      vec_i_r.set(i, std::real(value));
+      vec_i_i.set(i, std::imag(value));
+    }
 
 
+    band_it = kp_bands_map_fi.find(band_number);
+
+    if (band_it != kp_bands_map_fi.end())
+    {
+      //band exists in kp model of the initial state
+      unsigned int dof_in_final_eigenvector =
+          band_it->second * number_of_nodes + i % number_of_nodes;
+
+      Complex value = eigen_vector_f[dof_in_final_eigenvector];
+      vec_f_r.set(i, std::real(value));
+      vec_f_i.set(i, std::imag(value));
+    }
+  }
+  vec_i_r.close();
+  vec_i_i.close();
+  vec_f_r.close();
+  vec_f_i.close();
+
+  PetscVector<Real> tmp_r(size_matrix);
+  PetscVector<Real> tmp_i(size_matrix);
+  // now we have the initial and final eigenvector expanded to the bands
+  // of the optical matrix
+  for (short pol = 0; pol < 3; pol++)
+  {
+    // y_r = P_r * v_r - P_i * v_i
+    // y_i = P_r * v_i + P_i * v_r
+
+    tmp_r.zero();
+    tmp_i.zero();
+    P_imag_p[pol]->vector_mult(tmp_r, vec_i_i);
+    tmp_r.scale(-1.0);
+    P_real_p[pol]->vector_mult_add(tmp_r, vec_i_r);
+
+    P_imag_p[pol]->vector_mult(tmp_i, vec_i_r);
+    P_real_p[pol]->vector_mult_add(tmp_i, vec_i_i);
+
+    double mme_r = vec_f_r.dot(tmp_r) + vec_f_i.dot(tmp_i);
+    double mme_i = vec_f_r.dot(tmp_i) - vec_f_i.dot(tmp_r);
+
+    result[pol] = Complex(mme_r, mme_i);
+  }
+
+/*
   for (short pol = 0; pol < 3; pol++)
   {//polarization
     for (int row = 0 ; row < size_matrix; row++)
@@ -643,6 +715,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
       }
     }
   }
+*/
 
   return(result);
 }
