@@ -144,9 +144,12 @@ PolarizationGrid::parse_options(void)
   Nstep = get_option("Nstep",10);
   IOstep = get_option("IOstep",1000);
   eps_r = get_option("eps_r",1.0);
+  scaling = 1.0;
+  get_parameter("scaling_factor", scaling);
   string units = get_option("dipole_units","Debye");
   double dip = get_option("dipole", 2.29);
   set_dipole(dip,units);
+
 
   ostringstream ostr;
   ostr<<"dipole= "<<dipole<<" e*nm "<<endl;
@@ -334,6 +337,7 @@ PolarizationGrid::read_dipoles()
      file>>pp[i](0);
      file>>pp[i](1);
      file>>pp[i](2);
+     pp[i] = pp[i] * scaling;
    }
    file.close();
 }
