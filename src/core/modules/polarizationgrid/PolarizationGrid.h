@@ -88,7 +88,9 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   double cutoff;
 
   double dipole;
- 
+
+  double scaling;
+
   int seed;
 
   TensorGrid grid;
