@@ -99,10 +99,21 @@ PolarizationGrid::setup_mesh(void)
 
 }
 
+void
+PolarizationGrid::do_reinit()
+{
+}
 
 void
 PolarizationGrid::do_solve()
 {
+
+  for (unsigned int i = 0; i < grid.num_elements(); ++i)
+  {
+     pp[i] = pp[i] * scaling;
+  }
+
+
   // If the electric field is taken from an external module we
   // have to reload the fields
   string poisson = get_option("poisson_model", "");
@@ -136,7 +147,13 @@ PolarizationGrid::do_solve()
 
   if (_write_file) write_dipoles();
 
-  write_antiferro();
+  //write_antiferro();
+
+  for (unsigned int i = 0; i < grid.num_elements(); ++i)
+  {
+     pp[i] = pp[i] / scaling;
+  }
+
 }
 
 void
@@ -146,6 +163,7 @@ PolarizationGrid::parse_options(void)
   IOstep = get_option("IOstep",1000);
   eps_r = get_option("eps_r",1.0);
   scaling = 1.0;
+  scaling_bkp = 1.0;
   get_parameter("scaling_factor", scaling);
   string units = get_option("dipole_units","Debye");
   double dip = get_option("dipole", 2.29);
@@ -330,6 +348,7 @@ void
 PolarizationGrid::read_dipoles()
 {
    string file_name = get_option("read_file","polarization.dat");
+  
    ifstream file; 
 
    file.open(file_name.c_str());
@@ -338,7 +357,6 @@ PolarizationGrid::read_dipoles()
      file>>pp[i](0);
      file>>pp[i](1);
      file>>pp[i](2);
-     pp[i] = pp[i] * scaling;
    }
    file.close();
 }

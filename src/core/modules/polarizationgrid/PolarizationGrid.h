@@ -63,6 +63,8 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   void do_setup_solution_variables(void);
 
   void do_init(void); 
+  
+  void do_reinit(void); 
 
   void do_solve(void);
 
@@ -92,6 +94,8 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   double dipole;
 
   double scaling;
+  
+  double scaling_bkp;
 
   int seed;
 
