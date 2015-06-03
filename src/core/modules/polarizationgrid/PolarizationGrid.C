@@ -19,6 +19,7 @@ PolarizationGrid::PolarizationGrid(const ModelOptions& options) :
   kbT(0.026),
   _write_file(false)
 {
+   has_solution_vector(false);
 }
 
 PolarizationGrid*

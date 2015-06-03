@@ -71,7 +71,9 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   void get_solution_secure(const Elem* elem,
                            map<ID, std::vector<double> >& values,
                            const vector<Point>& p);
-   
+  
+  //NumericVector<double>& do_get_solution_vector(void);
+    
   void setup_mesh(void);
 
  private:  
