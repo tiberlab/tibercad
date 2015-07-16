@@ -1,0 +1,91 @@
+Device
+{
+  meshfile = testline.msh
+
+   Region air
+   {
+     material = SiO2
+     optical_epsilon = 1
+   }
+
+   Region sio2
+   {
+     material = SiO2
+   }
+
+   Region ito
+   {
+     material = ITOsorizon
+   }
+
+   Region pedot
+   {
+     material = PEDOT
+   }
+
+   Region blend
+   {
+     material = Blend
+   }
+
+   Region Ca
+   {
+     material = Ca
+   }
+
+   Region Al
+   {
+     material = Al
+   }
+
+   Region pml
+   {
+     material = Air
+     sPML = 12.0
+     optical_epsilon = 1
+   }
+
+  mesh_units = 1e-9
+}
+
+Module maxwell_boundary
+{
+  plot = (all)
+
+  extraQOrder = 0
+  approxOrder = 2
+  inplane = no
+
+  Al_opticmodel = w_dependant
+  Ca_opticmodel = w_dependant
+  PEDOT_opticmodel = w_dependant
+  Blend_opticmodel = w_dependant
+  ITOsorizon_opticmodel = w_dependant
+  SiO2_opticmodel = w_dependant
+
+  W = 1e99    # in eV
+
+  Contact source
+  {
+  	type = Source
+        direction = 3
+  }
+}
+
+Module maxwell_absorption
+{
+  plot = (all)
+  maxwell_simulation = maxwell_boundary
+  lambdaStart = 350
+  lambdaEnd = 800
+  lambdaStep = 1
+  plotAll = 0
+}
+
+Simulation
+{  
+  temperature = 300
+  solve = (maxwell_absorption)   
+  resultpath = output
+  output_format = vtk
+}
