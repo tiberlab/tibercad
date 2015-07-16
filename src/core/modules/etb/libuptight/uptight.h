@@ -330,6 +330,28 @@ inline void f77_upt_solver_flag (f77_int const* handler, f77_int const& flag)
 }
 
 
+extern "C" void upt_jd_diag_ (f77_int const*, f77_int const&, f77_int const&, 
+    f77_int const&, f77_int const&, f77_double const&, f77_double const&, 
+    f77_double const&);
+
+// Corresponding F77 arguments for f77_upt_jd_diag:
+// integer, intent(in) :: handler(DAC_handlerSize)
+// integer, intent(in) :: st_vb
+// integer, intent(in) :: st_cb
+// integer, intent(in) :: n_vb
+// integer, intent(in) :: n_cb
+// real(dp), intent(in) :: guess_vb
+// real(dp), intent(in) :: guess_cb
+// real(dp), intent(in) :: long_tol
+inline void f77_upt_jd_diag (f77_int const* handler, f77_int const& st_vb, 
+    f77_int const& st_cb, f77_int const& n_vb, f77_int const& n_cb, f77_double 
+    const& guess_vb, f77_double const& guess_cb, f77_double const& long_tol)
+{
+  upt_jd_diag_ (handler, st_vb, st_cb, n_vb, n_cb, guess_vb, guess_cb, 
+      long_tol);
+}
+
+
 extern "C" void upt_feastsolver_ (f77_int const*, f77_double const&, f77_double 
     const&, f77_int const&);
 

@@ -77,7 +77,7 @@ Library libmesh
 Library petsc
 { 
   path = @LIBMESH_PREFIX@/../petsc-3.0.0-p12
-  includes = (., ../@ARCH/include)
+  includes = (.,../include/mpiuni, ../@ARCH/include)
   libpath = @LIBMESH_PETSC_LIBDIR@
   linker_flags = -lpetsc_real
 }

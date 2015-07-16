@@ -25,7 +25,6 @@
 #include <limits>
  
 #include "TiberModule.h"
-#include <mpi.h>
 
 //#include <complex>
 using namespace std;

@@ -1,5 +1,5 @@
 
-#UPT_MPI=Y
+UPT_MPI=Y
 
 MPIDIR=/usr/pack/tibercad_sdk-2.2-ma/build/petsc-3.0.0-p12/externalpackages/mpich2-1.0.8
 MPILIB=/usr/pack/tibercad_sdk-2.2-ma/build/petsc-3.0.0-p12/x86_64-linux-complex/lib

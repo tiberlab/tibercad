@@ -37,13 +37,13 @@ then
   GCCARCH=x86_64-unknown-linux-gnu
   LIBSWITCH='%{!m32:64}%{m32:32}'
 
-  cd ${EPREFIX}
-  if test ! -L lib64
-  then
-    ls
-    ln -s lib lib64
-  fi
-  cd ${WORKDIR}
+#  cd ${EPREFIX}
+#  if test ! -L lib64
+#  then
+#    ls
+#    ln -s lib lib64
+#  fi
+#  cd ${WORKDIR}
 fi
 
 #cat <<PATCH >$WORKDIR/specs.patch
@@ -100,6 +100,10 @@ then
   #patch -p0 -l <${WORKDIR}/specs.patch
   rm bin/${GCCARCH}*
 
-  startfiledir=$(find /usr/ -name crti.o | dirname)
+  startfiledir=$(dirname "$(find /usr/lib -name crti.o)")
   cp ${startfiledir}/crt*.o ${EPREFIX}/lib
+
+  cp ${EPREFIX}/lib64/libstdc++.so.6 ${topdir}/${ARCH}/lib
+  cp ${EPREFIX}/lib64/libgfortran.so.3 ${topdir}/${ARCH}/lib
+  cp ${EPREFIX}/lib64/libgcc_s.so.1 ${topdir}/${ARCH}/lib
 fi

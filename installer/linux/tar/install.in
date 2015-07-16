@@ -259,7 +259,7 @@ case \$prog in
   build_module*)
     progname="build_module"
     # this is needed by some compiler binaries:
-    export LD_LIBRARY_PATH=\${TIBERCADROOT}/SDK/\${ARCH}/lib
+    export LD_LIBRARY_PATH=\${TIBERCADROOT}/SDK/\${ARCH}/lib:\${TIBERCADROOT}/SDK/lib
     executable="\${TIBERCADROOT}/SDK/\${ARCH}/bin/\$progname"
     if [ ! -x \$executable ]
     then

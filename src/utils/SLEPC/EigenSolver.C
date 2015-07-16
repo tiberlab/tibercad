@@ -911,7 +911,7 @@ int EigenSolver::eig_value_problem_general2(const EigenSolver::SLEPCoptions& opt
 
   KSPGetPC( ksp,&pc);
   PCSetType(pc, PCLU);
-  PCFactorSetMatSolverPackage(pc, "mumps");
+  //PCFactorSetMatSolverPackage(pc, "mumps");
 
   EPSSetOperators(eps,A,B);
   EPSSetDimensions(eps, opt.ev_number, PETSC_DECIDE, PETSC_DECIDE);

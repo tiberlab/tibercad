@@ -142,8 +142,7 @@ then
     --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
     --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
 else
-  COMPILERS=
-  #"--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
+  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
 fi
 
 

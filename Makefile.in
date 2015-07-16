@@ -124,7 +124,7 @@ wininstaller linuxinstaller deb tgz tbz: completemanual SHAREDLIBS
 sdk:
 	@mkdir -p SDK/etc
 	@cp share/modules.conf SDK/etc
-	@collect_headers
+	@./collect_headers
 	@tar jcf SDK.tbz SDK
 
 
