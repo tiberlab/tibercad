@@ -1,1 +1,0 @@
-Maxwell absorption example. To run example copy materials/*.dat files to ../../materials/
