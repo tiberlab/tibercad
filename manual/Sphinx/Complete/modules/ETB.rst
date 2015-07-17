@@ -214,8 +214,6 @@ of nanostructures.
 
 
 
-TBC
-
 
 
 
@@ -434,13 +432,6 @@ The output  file  for optical matrix elements is  named *<simulation_name>.dat* 
   initial_state final_state |Px|^2 |Py|^2 |Pz|^2
 
 
-
-
-Integrated spectrum
-^^^^^^^^^^^^^^^^^^^^^^^
-
-
-.....................
 
 
 
