@@ -32,3 +32,8 @@ Example 15: Si bipolar transistor
 
 Example 16: I-V characteristic of a Dye Solar Cell
 
+Example 17: TB simulation of a InAs/GaAs QW
+
+Example 18: 3D TB simulation of GaN/AlN Qdot
+
+
