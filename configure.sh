@@ -18,7 +18,7 @@ SLEPC_DIR=${BUILDDIR}/slepc-3.0.0-p7
 #export FC=ifort-11.1
 export CXX=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx
 export CC=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicc
-export FC=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpif90
+export FC="/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpif90 -fc=ifort-11.1"
 export FCFLAGS="${FCFLAGS} -fexceptions -gcc-name=${CC} -gxx-name=${CXX} -nofor-main"
 #export LDFLAGS="${LDFLAGS} `/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx -showme:link`"
 #export LDFLAGS="${LDFLAGS} `${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx -showme:link`"

@@ -1,9 +1,9 @@
 CXX := @CXX@
 CC := @CC@
-#FC := @FC@
-FC := ifort-11.1
+FC := @FC@
+#FC := ifort-11.1
 
-#UPT_MPI=Y
+UPT_MPI=Y
 
 have_cuda = @HAVE_CUDA@
 
