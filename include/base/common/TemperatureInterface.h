@@ -31,6 +31,10 @@ class TemperatureInterface
     TemperatureInterface(void);
 
 
+    //! Assignment operator
+    TemperatureInterface& operator=(const TemperatureInterface& rhs);
+
+
     //! Specify the temperature simulation to use
     /*!
      * Returns true if \c name refers to a valid temperature
@@ -102,5 +106,13 @@ TemperatureInterface::get_simulation(void)
   return _simulation;
 }
 
+inline
+TemperatureInterface&
+TemperatureInterface::operator=(const TemperatureInterface& rhs)
+{
+  _simulation = rhs._simulation;
+  _variable_name = rhs._variable_name;
+  _id = rhs._id;
+}
 
 #endif // _TEMPERATUREINTERFACE_H_

@@ -401,7 +401,7 @@ DDBulkModel::create_mobility_model(const ModelOptions& options)
 
 
 void
-DDBulkModel::reinit(const Elem* elem)
+DDBulkModel::do_reinit(const Elem* elem)
 {
 
   if (get_element() != elem)
@@ -427,7 +427,7 @@ DDBulkModel::reinit(const Elem* elem)
       }
       set_polarization(_polarization);
 
-      this->prepare_element_data();
+      //this->prepare_element_data();
   }
 
   // here we assume thermal equilibrium
@@ -454,8 +454,12 @@ DDBulkModel::calculate_mobilities(void)
   else
   {
     pd.electron_mobility = _electron_mobility->get_mobility();
+    pd.electron_mobility_derivative_potential = _electron_mobility->get_derivative_potential();
+    _electron_mobility->get_derivative_grad_potential(pd.electron_mobility_derivative_grad_potential);
     _electron_mobility->get_derivative_grad_fermi(pd.electron_mobility_derivatives);
     pd.hole_mobility = _hole_mobility->get_mobility();
+    pd.hole_mobility_derivative_potential = _hole_mobility->get_derivative_potential();
+    _hole_mobility->get_derivative_grad_potential(pd.hole_mobility_derivative_grad_potential);
     _hole_mobility->get_derivative_grad_fermi(pd.hole_mobility_derivatives);
   }
 
@@ -503,10 +507,10 @@ DDBulkModel::calculate_equilibrium_properties(void)
   int coupling_bkp = get_coupling_type();
   set_coupling_type(DriftDiffusionDefs::BOTH);
 
-  bool quantum_el = get_electrons().has_quantum_density();
-  bool quantum_hl = get_holes().has_quantum_density();
-  get_electrons().use_quantum_density(false);
-  get_holes().use_quantum_density(false);
+  bool quantum_el = cb.has_quantum();
+  bool quantum_hl = vb.has_quantum();
+  cb.use_quantum(false);
+  vb.use_quantum(false);
 
 
   double Nd = get_material()->get_total_donor_density();
@@ -531,7 +535,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
 
   // In some cases guess can be Inf or NaN. Then we set it to midband energy
-  if (std::isinf(guess) || std::isnan(guess))
+  //if (std::isinf(guess) || std::isnan(guess))
     guess = 0.5 * (Ec + Ev);
 
   /*
@@ -542,7 +546,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
   double x = guess;
   // 1e-4 V error seems to be good enough...
-  double eps = 1e-4, dens_max = 1e6;
+  double eps = 1e-4, dens_max = 1e10;
   double error, residual_dens, y;
 
   //set_carrier_temperatures(kT, kT);
@@ -577,8 +581,9 @@ DDBulkModel::calculate_equilibrium_properties(void)
   // the maximum x (above the zero, f < 0)
   double xmax = Ec + 0.5;
 
+
   //cerr << "***" << get_owner()->get_name() << endl;;
-  for (unsigned int i = 0; i < 200; ++i)
+  for (unsigned int i = 0; i < 10000; ++i)
   {
     set_potentials(x);
     calculate_densities();
@@ -589,6 +594,8 @@ DDBulkModel::calculate_equilibrium_properties(void)
     double df_fermi[2];
     get_charge_density_derivatives(df_fermi);
     double df = -(df_fermi[0] + df_fermi[1]);
+
+    //cout << "x = " << x << " f = " << f << " df = " << df << endl;
 
     if (f > 0) xmin = x;
     else if (f < 0) xmax = x;
@@ -615,7 +622,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
     y = x + dx;
 
     error = fabs(dx);
-    //cerr << "x = " << y << " error = " << dx << " res. dens. = "
+    //cout << "x = " << y << " error = " << dx << " res. dens. = "
     //  << residual_dens << " Ec = " << Ec << " Ev = " << Ev << endl;
 
     x = y;
@@ -649,8 +656,8 @@ DDBulkModel::calculate_equilibrium_properties(void)
   // restore original coupling
   set_coupling_type(coupling_bkp);
 
-  get_electrons().use_quantum_density(quantum_el);
-  get_holes().use_quantum_density(quantum_hl);
+  cb.use_quantum(quantum_el);
+  vb.use_quantum(quantum_hl);
 }
 
 
@@ -766,7 +773,7 @@ DDBulkModel::do_print_info(void)
   set_lattice_temperature(SimulationOptions::T);
   calculate_equilibrium_properties();
 
-  double deg = std::pow(2.0, 2.0 / 3.0);
+  //double deg = std::pow(2.0, 2.0 / 3.0);
 
   m.info("Conduction band:");
   m.indent();
@@ -775,11 +782,21 @@ DDBulkModel::do_print_info(void)
   ostringstream os;
   os << "Ec = " << get_conduction_band().get_band_edge()
       << ", Nc = " << get_conduction_band().get_effective_DOS() << " cm^-3\n"
+      << "m_dos = " << get_conduction_band().get_effective_mass()
+      << ", v_th = " << get_conduction_band().get_thermal_velocity(
+          Constants::k_B * SimulationOptions::T)
+      << " cm/s\n";
+  Messages::info(os.str());
+
+/*
+  os << "Ec = " << get_conduction_band().get_band_edge()
+      << ", Nc = " << get_conduction_band().get_effective_DOS() << " cm^-3\n"
       << "m_dos = " << get_conduction_band().get_effective_mass() / deg
       << ", v_th = " << get_conduction_band().get_thermal_velocity(
           Constants::k_B * SimulationOptions::T)
       << " cm/s\n";
   Messages::info(os.str());
+*/
 
   m.unindent();
 
@@ -791,11 +808,21 @@ DDBulkModel::do_print_info(void)
 
   os << "Ev = " << get_valence_band().get_band_edge()
       << ", Nv = " << get_valence_band().get_effective_DOS() << " cm^-3\n"
+      << "m_dos = " << get_valence_band().get_effective_mass()
+      << ", v_th = " << get_valence_band().get_thermal_velocity(
+          Constants::k_B *SimulationOptions::T)
+      << " cm/s\n";
+  Messages::info(os.str());
+
+/*
+  os << "Ev = " << get_valence_band().get_band_edge()
+      << ", Nv = " << get_valence_band().get_effective_DOS() << " cm^-3\n"
       << "m_dos = " << get_valence_band().get_effective_mass() / deg
       << ", v_th = " << get_valence_band().get_thermal_velocity(
           Constants::k_B *SimulationOptions::T)
       << " cm/s\n";
   Messages::info(os.str());
+*/
 
   m.unindent();
   os.str("");

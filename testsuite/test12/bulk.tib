@@ -37,14 +37,15 @@ Module driftdiffusion
 
   Physics
   {
-
-    particle_density
-    { 
-      statistics = boltzmann
-    }
-
-
+ 
     recombination srh {}
+
+    band_properties
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
 
     trap acceptor
     {

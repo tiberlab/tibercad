@@ -41,10 +41,6 @@ Module driftdiffusion
 
   Physics
   {
-    particle_density
-    {
-      statistics = boltzmann
-    }
 
     # use a field dependent mobility model with the
     # gradient of the electrochem. potential as field

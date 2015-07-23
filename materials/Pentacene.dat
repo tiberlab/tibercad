@@ -1,3 +1,4 @@
+<<<<<<< .working
 # Pentacene
 
 structure = zb
@@ -178,3 +179,53 @@ specie_1 = Si
 
 dataset = pbc
 
+=======
+#Pentacene
+
+[valenceband]
+E_v = -5.0
+
+[bandgap]
+Eg_G = 2.0
+Eg_L = 2.0
+Eg_X = 2.0
+
+[permittivity]
+permittivity = 3.0
+
+#Lattice thermal conductivity [W/(cm*K)]
+[thermal_conductivity/constant]
+ThermCond = 0.45
+
+# SRH recombination
+[recombination/SRH]
+taumin = (0e-9,		0e-9)
+taumax = (1.0e-5,	1e-5)
+Nref   = (1.0e+16,	1.0e+16)
+gamma  = (1,		1)
+Talpha = (-1.5,		-1.5)
+Tcoeff = (2.55,		2.55)
+
+[mobility/constant]
+mu_max   = (1.5,   1.5)
+exponent = (0, 0)
+
+#Germanium
+#taumin = (0.0, 0.0)
+#taumax = (1.0e-5, 3.0e-6)
+
+[conductionband]
+m_G = 1
+m_L_t = 1
+m_L_l = 1
+m_X_t = 1
+m_X_l = 1
+
+[valenceband ]
+m_HH = 1
+m_LH = 1
+
+m_dos = 1
+
+
+>>>>>>> .merge-right.r4088

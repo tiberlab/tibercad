@@ -140,46 +140,110 @@ can be controlled by special submodel blocks in different ways:
 
 In the current version, there are two different implementations of band parameter models:
 
- ``simple``
-   a simple model assuming a parabolic dispersion,
-   requesting the input of the band edge energies and effective DOS masses or effective DOS
+Density of states (DOS)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
- ``kp``
-   a model based on bulk :math:`k\cdot p` including strain corrections
+The density of states for electrons and/or holes can be set using the ``density_of_states`` submodel block inside the ``band_properties`` block, as follows::
 
+   band_properties # or conduction_band or valence_band
+   {
+     density_of_states [type]
+     {
+       ...
+     }
+   }
 
-Whereas the :math:`k\cdot p` based model takes all model parameters from the materials database, parameters can be provided in 
-the input file for the simple model in the following ways.
-If the ``band_properties`` block is used, then one can provide the following options:
+3D Bulk DOS (default)
+............................................
 
-  ``Ec`` *or* ``band_gap``
-    The conduction band edge, or the band gap
+This is the default model describing the 3D DOS of a parabolic band semiconductor.
+Band edge energies and the DOS mass are taken from the database, or can be provided from the input file.
+In the current version, if band  parameters have to be given from the input file, it is necessary to use the ``conduction_band`` and ``valence_band`` blocks instead of ``band_properties``.
+In the ``density_of_states`` subblock, one can then give the band edge and the DOS mass the keywords ``level``, and ``dos_mass``, respectively.
+A degeneracy can be specified with the ``degeneracy`` keyword.
 
-  ``Ev``
-    the valence band edge
+Bulk kp DOS
+............................................
+This model for bulk band parameters can be chosen by specifying ``density_of_states bulk_kp``. It calculates the band edge energies and masses from bulk kp theory, including Pikus-Bir strain corrections.
+To include strain corrections, the keyword ``strain_simulation`` has to be used, providing the name of the module instance which calculates strain.
+In the current version it is not possible to provide kp parameters from the input file.
 
-  ``Nc`` *or* ``m_dos_e``
-    the electron effective density of states, or the DOS mass
+Gaussian DOS
+............................................
 
-  ``Nv`` *or* ``m_dos_h``
-    the hole effective density of states, or the DOS mass
+The gaussian DOS model is identified by the identifier ``gauss``. The gaussian DOS has the following form
 
-For the ``conduction_band`` and ``valence_band`` blocks the following options need to be used:
+.. math::
+   g(E, \sigma) dE = \frac{N_0}{\sigma \sqrt{2 \pi}} \exp \left( - \frac{1}{2} \frac{\left(E- E_{C,V}\right)^2}{\sigma^2} \right) dE
 
-  ``band_edge``
-    the band edge energy
+where :math:`N_0` (:math:`cm^{-3}`) is the maximum occupied density of carriers; :math:`\sigma` (:math:`eV`) is the variance of the gaussian, hence it is a measure of the energy disorder; :math:`E_C` and :math:`E_V` are the conduction and valence band edges respectively. Band edges are set in the material files of TiberCAD, but a different center for the gaussian can be specified with the keyword ``level = [value]``. :math:`N_0` and :math:`\sigma` can be set with the keywords ``N0 = [value]`` and ``sigma = value`` respectively.
 
-  ``band_gap`` *and* ``reference_energy``
-    a reference energy and a band gap such that ``band_edge`` = ``reference_energy`` + ``band_gap``
+The gaussian DOS can be used also to define a distribution of trap states (see section :ref:`DD_trapmodels`), for example::
 
-  ``DOS_mass`` *or* ``effective_DOS``
-    the DOS mass or the effective DOS
-  
+   trap eNeutral
+   {
+     regions = ...
+     Nt = 1e18
+     Et = 1.0
+     reference = cb
 
-.. note:: Remember that you can provide the ``regions`` option to limit a models validity
-          to a subset of the simulaton domain. This way it is possible to mix the ``simple`` and
-          ``kp`` models in the same simulation.
+     density_of_states
+     {
+       type = gauss
+       N0 = 1
+       sigma = 0.1
+     }
+   }
 
+According with the conventions used in TiberCAD the maximum density of traps is obtained as the product ``Nt`` :math:`\times` ``N0``, hence one can set indifferently ``Nt`` or ``N0``, leaving one parameter set to 1. The center of the gaussian is set with the value ``Et``, thus it is not necessary to provide a value for ``level``. ``Et`` is specified with respect to the conduction band (``reference = cb``), or the valence band (``reference = vb``) or the midgap (``reference = m``). The example sets a gaussian distribution of ``eNeutral`` traps whose center is 1 :math:`eV` below the conduction band.
+
+Constant DOS
+............................................
+
+The constant DOS model is identified by the identifier ``constant``. The constant DOS has the following form, for :math:`E_{min} \le E \le E_{max}`:
+
+.. math::
+   g(E) dE = \frac{N_0}{E_{max} - E_{min}} dE
+
+and :math:`g(E) = 0` otherwise. In the input file the constant DOS is set using three keywords, ``N0``, ``level`` and ``Ewidth``. The first one is used to set the maximum occupied density :math:`N_0` (:math:`cm^{-3}`). If a value for ``level`` is not specified in the input file, it will be set by default as the conduction band edge (:math:`E_C`) for electrons, and as the valence band edge (:math:`E_V`) for holes. The values of :math:`E_C` and :math:`E_V` are taken from material files. For electrons :math:`E_{min} =` ``level``, and :math:`E_{max} =` ``level`` + ``Ewidth``; for holes :math:`E_{max} =` ``level``, and :math:`E_{min} =` ``level`` - ``Ewidth``.
+
+The gaussian DOS can be used also to define a distribution of trap states (see section :ref:`DD_trapmodels`). This is particularly useful when modeling metal/semiconductor interfaces using the IDIS model (Induced Density of Interface States, see [Santoni]_). According to the IDIS model a density :math:`N_{trap}` of traps is distributed on the interface and a Charge Neutrality Level (CNL) is defined in such a way that when the fermi level is below the CNL the interface is positively charged, and when the fermi level is above the CNL the interface is negatively charged. This situation can be simulated using ``eNeutral`` traps over the CNL, and ``hNeutral`` traps below the CNL. For :math:`Alq_3` the CNL is 1.68 :math:`eV` above the valence band and :math:`N_{trap} = 2.63\times10^{19} \ cm^{-3} eV^{-1}`. Thus if we want to simulate a constant distribution of ``eNeutral`` traps above the CNL extending up to the conduction band edge (bandgap for :math:`Alq_3` is 2.9 :math:`eV`) we have to set::
+
+  trap eNeutral
+  {
+    regions = ...
+    Nt = 3.21e19
+    Et = 1.68  #level of the constant DOS is automatically 
+                fixed by this value
+    reference = vb #Et is set w. r. t. valence band edge
+
+    density_of_states
+    {
+      type = constant
+      Ewidth = 1.22 #Alq3 bandgap - Et
+      N0 = 1
+    }
+  }
+
+And to set a constant distribution of ``hNeutral`` traps between the valence band edge and the CNL we write::
+
+  trap hNeutral
+  {
+    regions = ...
+    Nt = 4.42e19
+    Et = 1.68  
+    reference = vb 
+
+    density_of_states
+    {
+      type = constant
+      Ewidth = 1.68 #it is the same value of Et because
+                     we have set Et as the CNL w. r. t. valence band
+      N0 = 1
+    }
+  }
+
+According with the conventions used in TiberCAD the maximum density of traps is obtained as the product ``Nt`` :math:`\times` ``N0``, hence one can set indifferently ``Nt`` or ``N0``, leaving one parameter set to 1. We have also to keep in mind that the constant distribution is normalized in energy, so ``Nt`` (or ``N0``) is automatically divided by ``Ewidth``. But the density of states :math:`N_{trap}` is already in :math:`cm^{-3} eV^{-1}` units, so we have to multiply it by 2.9 - 1.68 = 1.22 :math:`eV` for ``eNeutral`` and by 1.68 :math:`eV` for ``hNeutral`` in order to get the correct volume density for ``Nt`` (or ``N0``).
 
 Particle density
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -311,9 +375,24 @@ Direct recombination is modeled as follows:
 The material data file and the input file use the same keyword C for the parameter C. The
 database value can be overridden from the input file as described for SRH recombination.
 
-Auger recombination
+Langevin (radiative) recombination
 .................................
 
+The Langevin recombination model can be enabled in the input file by defining a
+``recombination`` submodel of type ``langevin`` .
+
+Langevin recombination is modeled as follows:
+
+.. math::
+   :label: dd_eq_reclangevin
+
+    R_{Langevin} = \gamma \frac{e}{\varepsilon} (\mu_n + \mu_p) (np - n_0 p_0)
+
+:math:`\mu_n` and :math:`\mu_p` are electron and hole mobilities respectively and their values are taken from the proper model specified in the simulation (see :ref:`Mobility_models`); :math:`n_0` and :math:`p_0` are equilibrium electron and hole densities respectively; :math:`\gamma` is a constant that can be set using the keyword ``gamma = [value]`` (by default ``value`` is set to 1).
+
+
+Auger recombination
+.................................
 
 
 The Auger recombination model can be enabled in the input file by defining a recombination
@@ -344,14 +423,12 @@ Optical generation
 
 A very simple model for photoelectric generation of electron-hole pairs is implemented
 in tiberCAD. It is enabled by specifying a ``generation`` submodel of type optical The
-model imposes a constant generation rate which has to be provided by the keyword ``generation`` in
-units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` .
-With the second option ``multiplier`` it is possible to scale the value given in ``generation``. This is 
-useful for defining sweeps over the generation rate when the rate is different in distinct regions.
+model imposes a constant generation rate which has to be provided by the keyword G in
+units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` . 
 
 .. note:: 
           Usually the simulation should define a sweep on the value
-          of ``generation`` (or ``multiplier``) from 0 to the desired generation.
+          of G from 0 to the desired generation.
 
 
 .. _ThermoelectricPower:
@@ -377,6 +454,8 @@ database) or ``diffusivity_model`` where the thermoelectric powers are computed 
     P_p & = \frac{k_b}{q}\left( \frac{5}{2} - \frac{e \phi_p + E_v - e \varphi}{k_b T} \right)
 
 The default is :math:`P_n = P_p = 0`
+
+.. _Mobility_models:
 
 Mobility models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -499,7 +578,6 @@ Field dependent mobility model
 ............................................
 
 
-
 The field dependent mobility model describes the degradation of mobility at high driving
 fields. It is identified by the identifier field_dependent. The electric field component
 in direction of the current 
@@ -551,7 +629,6 @@ Field assisted mobility model
 ............................................
 
 
-
 The field assisted mobility model describes the enhancement of the carrier mobility by an electric field in organic
 semiconductors. It is identified by the identifier field_enhanced. 
 
@@ -592,6 +669,46 @@ The parameters for the field assisted mobility model are the following (summariz
     \end{tabular}
     \caption{Field assisted mobility parameters}
     \end{table}
+
+
+Hopping mobility model
+............................................
+
+The hopping mobility model is obtained as a parametrical fit of numerical solutions of a system of master equations implementing the Miller-Abrahams hopping model between localized states with a gaussian energy distribution (see [Pasveer]_). It is identified by the identifier ``hopping_mobility``. The expression for mobility is:
+
+.. math::
+
+    \mu (T, \rho, F) = \mu(T,\rho) f(T,F)
+
+.. math::
+
+    \mu(T, \rho) = \mu_0 c_1 \exp \left[-c_2 \left(\frac{\sigma}{k_B T}\right)^2\right] \exp \left[\frac{1}{2 k_B T} \left(\frac{\sigma^2}{k_B T} - \sigma \right) \left(2 \rho a^3 \right)^\delta \right]
+
+.. math::
+
+    f (T,F) = \exp \left\{ 0.44 \left[\left( \frac{\sigma}{k_B T} \right)^{\frac{3}{2}} - 2.2 \right] \left[ \sqrt{1+0.8\left(\frac{eFa}{\sigma} \right)^2} -1 \right] \right\}
+
+where :math:`\rho` is the carrier density (electrons or holes); :math:`F` is the electric field; :math:`T` the temperature :math:`a = N_0^{-\frac{1}{3}}` is the average distance between sites (:math:`N_0` is the maximum carrier density (:math:`cm^{-3}`) for the gaussian DOS); :math:`\sigma` is the variance of the gaussian DOS; :math:`\nu_0` is the attempt to jump frequency of the Miller-Abrahams model; :math:`c_1 = 1.8 \times 10^{-9}`; :math:`c_2 = 0.42` and
+
+.. math::
+
+   \delta = 2 \frac{\log\left(s^2 -s\right) - \log \left(\log 4\right)}{s^2} \ \ \ \ \mu_0 = \frac{a^2 \nu_0 e}{\sigma}
+
+where :math:`s=\frac{\sigma}{k_B T}`. 
+
+It is important to notice that this formula makes sense physically only if the condition :math:`\left( \frac{\sigma}{k_B T} \right)^{\frac{3}{2}} - 2.2 > 0` is fulfilled. In the TiberCAD input file the hopping mobility model has to be set providing values for :math:`\sigma`, :math:`N_0` and :math:`\nu_0` using the respective keywords ``sigma = [value]``, ``N0 =`` ... and ``nu0 =`` ... . This mobility model makes sense only if used together with the gaussian density of states, hence the values of ``sigma`` and ``N0`` have to be the same as the corresponding values set in the density of states model for the gaussian DOS.
+
+As explained in [Santoni]_ two cut-off have been implemented. For :math:`F > \frac{2 \sigma}{ea}`
+
+.. math::
+
+   f(T,F) = f(T, \frac{2 \sigma}{ea})
+
+For :math:`\rho > 0.1 N_0`
+
+.. math::
+
+   \mu (T, \rho) = \mu (T, 0.1 N_0)
 
 
 Polarization models
@@ -642,10 +759,7 @@ The strain is obtained from the simulation specified in the ``Physics`` section,
 be overridden by providing a name for the strain simulation inside the polarization block
 using the ``strain_simulation`` option.
 
-
-
-.. _Dd_trapmodel:
-
+.. _DD_trapmodels:
 
 Trap models
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -750,91 +864,10 @@ models under simplifying assumptions and cast into local recombination-generatio
 Trap-assisted tunneling
 ........................
 
-Trap-assisted tunneling in  both  forward and  reverse  bias is  taken  into  account with  a  recombination  model  proposed  by  Hurkx (see  [Hurkx]_). In this  model, a modified  expression  for  the  SRH recombination is  found,  which includes the field-effect  functions :math:`\Gamma_n` and :math:`\Gamma_p`,  which tend  to  vanish  for weak  electric fields, yielding the conventional  SRH  formula.
-
-
-The model for  the  Trap-assisted tunneling can  be enabled by defining a ``recombination`` submodel of  type ``srh``, adding the  keyword ``trap_assisted_tunneling`` as  follows::
-
-  recombination srh 
-  {
-       Et = 0.56  
-       reference = cb
-       trap_assisted_tunneling = true
-  }
-
-
-
-The parameters  are  the  following (see also  section :ref:`Dd_trapmodel`   )  : 
-
-  ``Et``
-      The trap level in eV with respect to the reference energy.
-
-  ``reference`` 
-         The reference energy. The default is ``m`` for midgap.
-         Possible values are ``cb``, ``vb`` or ``m`` 
-
-  ``trap_assisted_tunneling``
-      if **true** tunneling  through the  defined trap is switched on 
-
-
-
 (see [Hurkx]_).
-
-
 
 Band-to-band tunneling
 ........................
-
-
-
-In  the  Hurkx model the tunneling  carriers  are  modeled by  defining an  additional  generation-recombination process.
-
-
-.. math::
-   :label: Hurkx_model
-
-   G^{b2b} = B E^\sigma exp(E_0/E) 
-
-
-The model for  the  band to band  tunneling  can therefore be enabled by defining a ``recombination`` submodel of  type ``band2band``, as  follows::
-
-
-  recombination band2band
-    {
-       B = 4e14  
-       E0 = 1.9e7  
-       sigma = 2.5 
-    }
-
-
-The parameters for the band to band  tunneling  model are summarized in Table :ref:`Hurkx band to band tunneling parameters<b2b_tunnel>`, together with  their default value:
-
-
-
-
-..  _b2b_tunnel :
-
-.. math::
-   :nowrap:
-
-    \begin{table}[!ht]
-    \center
-    \begin{tabular}{l|r|r|l}
-    \hline
-    \textbf{parameter name} & \multicolumn{2}{r|}{\textbf{default value}} & \textbf{units} \\
-    \hline
-    \hline
-    \texttt{B} & \multicolumn{2}{r|}{$4\cdot 10^{14}$} & 1/cm$^3$s \\
-    \texttt{E0} & \multicolumn{2}{r|}{$1.9\cdot 10^7$} & V/cm \\
-    \texttt{sigma} & \multicolumn{2}{r|}{$2.5$} & 1 \\
-    \hline
-    \end{tabular}
-    \caption{Hurkx Band to band tunneling parameters}
-    \end{table}
-
-
-
-
 
 (see [Hurkx]_).
 
@@ -902,18 +935,47 @@ inverted sign.
           aligned with the band energies given in the material files,
           *not* with that resulting from simulation.
 
-The ``fixed_barrier`` controls the
-behaviour of the barrier height for strained materials. If it is set to true, the barrier will
-be independent of strain (default behaviour). If it is set to ``false`` , the given barrier is
-used as barrier for the unstrained case and will depend on strain during simulation. If
-the metal work function is specified, the barrier will be strain dependent as default.
-Thermionic emission is by default switched on, but can be disabled by specifying
-``thermionic_emission = false`` .
+The ``fixed_barrier`` controls the behaviour of the barrier height for strained materials. 
+If it is set to true, the barrier willbe independent of strain (default behaviour). 
+If it is set to ``false`` , the given barrier is used as barrier for the unstrained case 
+and will depend on strain during simulation. If the metal work function is specified, the barrier 
+will be strain dependent as default. Thermionic emission is by default switched on, but can 
+be disabled by specifying ``thermionic_emission = false`` .
 
 .. warning::  If a Schottky contact is touching different materials, one should specify the work
               function instead of the barrier.
 
+``barrier_lowering = true`` activates the image charge lowering of the Schottky barrier (see [Santoni]_);
+if it is not specified, by default it is set to false. The Schottky barrier :math:`\phi_B` is lowered by a
+quantity depending on the electric field :math:`F`:
 
+.. math::
+   \phi_B = \phi_{B0} - \sqrt{\frac{eF}{4 \pi \varepsilon}}
+
+Internally TiberCAD sets conduction and valence band edges, then it fixes the barrier setting a value of the
+fermi level inside the band gap. It is the important to notice that it is not possible to lower the barrier for
+both electrons and holes, in fact lowering the barrier for electrons (``band = c``) means to shift the fermi level 
+toward the conduction band, and accordingly the barrier for holes raises, and vice versa lowering the barrier for
+holes (``band = v``) means to shift the fermi level toward the valence band, and accordingly the barrier for
+electrons raises.
+
+``scott_malliaras = true`` tells TiberCAD to use the [Scott]_ and Malliaras model of recombination velocity at the contact;
+if it is not specified, by default it is set to false and the thermal velocity is used instead.
+
+.. math::
+   v_{rec} = v_{SM} \left(f\right) = \frac{v_{SM} \left(0\right)}{4} \left(\frac{1}{\psi^2 \left(f\right)} - f\right)
+
+.. math::
+   v_{SM} \left(0\right) = \frac{16 \pi \varepsilon \left(k_B T\right)^2 \mu}{e^3}
+
+.. math::
+   \psi \left(f\right) = f^{-1} + f^{-\frac{1}{2}} - f^{-1} \left(1 + 2 f^{\frac{1}{2}}\right)^{\frac{1}{2}}
+
+.. math::
+   f = \frac{eFr_C}{k_B T} \ \ \ \ r_C = \frac{e^2}{4 \pi \varepsilon k_B T}
+
+The Scott and Malliaras model takes into account the effect of the electric field, and it is used in organic semiconductors
+because it does not depend on the effective mass, a parameter not well defined in organic materials.
 
 
 Interface/surface model

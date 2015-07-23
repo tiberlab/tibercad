@@ -34,6 +34,19 @@ using namespace std;
 using namespace Constants;
 
 
+//TODO
+//TODO remove code duplication
+//TODO
+
+#include "TiberModule.h"
+
+#include <ctime>
+#include <cassert>
+
+using namespace std;
+using namespace Constants;
+
+
 MaxwellEquations::MaxwellEquations(const ModelOptions& options)
  : MaxwellEquationsCommon(options)
 {

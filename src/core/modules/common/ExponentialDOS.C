@@ -18,6 +18,7 @@ void
 ExponentialDOS::do_init(void)
 {
   get_parameter("alpha", _alpha);
+  effective_mass() = 1.0;
 }
 
 inline
@@ -40,14 +41,29 @@ double _get_value_derivative(double e, double E, double kT) const
 */
 
 
-double
-ExponentialDOS::get_occupied_density(double E, double kT) const
+std::pair<double, double>
+ExponentialDOS::calculate_density_and_derivative(double E, double Epot,
+    double kT, double kTlattice, const Elem* elem, const Point& p) const
 {
+  return calculate_density_and_derivative(E, Epot, kT, kTlattice);
+}
+
+std::pair<double, double>
+ExponentialDOS::calculate_density_and_derivative(double E, double Epot, double kT, double kTlattice) const
+{
+  E -= get_reference_energy() + Epot;
+
   double sum = 0;
+  double der = 0;
 
   if (_alpha < 0.5 * kT)
+  {
     // it's almost a delta
-    sum = 1.0 / (1.0 + exp(-E / kT));
+    double exp_E_kT = exp(-E / kT);
+    sum = 1.0 / (1.0 + exp_E_kT);
+    der = sum / (1 + exp_E_kT);
+    der *= exp_E_kT / kT;
+  }
   else
   {
     // We divide integration into 3 parts
@@ -75,29 +91,17 @@ ExponentialDOS::get_occupied_density(double E, double kT) const
         double e = emin + h * i;
         sum += h * _get_value(e, E, kT);
       }
+
+      der = sum - 1.0 / (1 + exp(-E / kT));
+      der /= _alpha;
     }
     else
+    {
       sum = 1;
+      der = 0;
+    }
   }
 
-  return sum;
+  return make_pair(sum, der);
 }
 
-
-double
-ExponentialDOS::get_occupied_density_derivative(double E, double kT) const
-{
-  double der = get_occupied_density(E, kT);
-  if (_alpha < 0.5 * kT)
-  {
-    // it's almost a delta
-    der /= kT * (1 + exp(-E / kT));
-    der *= exp(-E/kT);
-  }
-  else
-  {
-    der -= 1.0 / (1 + exp(-E / kT));
-    der /= _alpha;
-  }
-  return der;
-}

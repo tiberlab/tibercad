@@ -60,12 +60,6 @@ Module driftdiffusion
   Physics
   {
 
-    particle_density
-    {
-      # use Fermi-Dirac statistics
-      statistics = fermidirac
-    }
-
 
     recombination srh {}
 

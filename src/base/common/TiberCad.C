@@ -195,8 +195,8 @@ TiberCad::init(const std::string& inputfile)
   MPI_Barrier(_mpi_comm);
 
   //if (proc_id == 1) sleep(2);
-  std::cerr << "global: rank = " << proc_id << " np = " << p << std::endl;
-  std::cerr << "local : rank = " << local_id << std::endl;
+  //std::cerr << "global: rank = " << proc_id << " np = " << p << std::endl;
+  //std::cerr << "local : rank = " << local_id << std::endl;
 
   // prepare libMesh
   _libmeshinit = new LibMeshInit(__empty_argc, __empty_argv, local_comm);

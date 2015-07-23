@@ -58,6 +58,8 @@ $(topdir)/$(ARCH)/bin/build_module$(SUFF): $(objects)
 	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(BOOST_LIBS) $(PACKAGEFLAGS)
 	@mkdir -p $(topdir)/SDK/$(ARCH)/bin
 	@cp $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(topdir)/SDK/$(ARCH)/bin
+	@mkdir -p $(topdir)/SDK/$(ARCH)/bin
+	@cp $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(topdir)/SDK/$(ARCH)/bin
 
 $(topdir)/bin/build_module-$(BUILD): $(cross_srcfiles)
 	@echo "compiling build_module for cross compilation ..."

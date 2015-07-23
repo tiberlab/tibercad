@@ -195,9 +195,14 @@ Module  driftdiffusion
   Physics
   {
 
-    strain_simulation = strain
+    band_properties {
+      density_of_states bulk_kp {
+        strain_simulation = strain
+      }
+    }
 
-    polarization (piezo, pyro) {}
+    polarization piezo { strain_simulation = strain }
+    polarization pyro {}
 
     recombination srh {}
 
@@ -355,7 +360,7 @@ Module opticskp
 Module sweep
 {
   name = sweep
-  solve = (driftdiffusion, QW3_electrons, QW3_holes, spectrum)
+  solve = (driftdiffusion) #, QW3_electrons, QW3_holes, spectrum)
 
   variable = $Vb
   start = 0.0

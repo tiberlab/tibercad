@@ -79,6 +79,7 @@ Module elasticity
     z-growth-direction = (-1,2,-1,0)
     x-growth-direction = (0,0,0,1)
    }
+
  }
 
  Contact substrate
@@ -118,17 +119,21 @@ Module  driftdiffusion
   Physics
   {
 
-    strain_simulation = elasticity # str
+    recompute_band_parameters = true
 
-    particle_density
-    { 
-      statistics = boltzmann
+    band_properties
+    {
+      density_of_states bulk_kp
+      {
+        strain = elasticity
+      }
     }
 
 
     recombination srh {}
 
-    polarization (piezo, pyro) {}
+    polarization pyro {}
+    polarization piezo { strain_simulation = elasticity }
   
     mobility doping_dependent {}
 

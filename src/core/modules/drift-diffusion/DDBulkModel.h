@@ -73,7 +73,7 @@ class DDBulkModel : public DriftDiffusionProperties
      * \c reinit() calls \c prepare_element_data() which needs to be
      * implemented in derived classes
      */
-    void reinit(const Elem* elem);
+    virtual void do_reinit(const Elem* elem);
 
 
     //! Set the coupling type

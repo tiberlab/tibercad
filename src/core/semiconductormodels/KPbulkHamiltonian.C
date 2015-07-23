@@ -204,6 +204,8 @@ void KPbulkHamiltonian::do_init()
   //prepare k.p parameter
   semiconductor->calculate_kp_params(par);
 
+
+
   //calculate general Hamiltonian
   calculate_Hamiltonian_gen();
 

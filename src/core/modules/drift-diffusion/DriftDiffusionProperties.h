@@ -160,12 +160,20 @@ class DriftDiffusionProperties : public PhysicalModel
         //! The electron mobility
         double electron_mobility;
 
+        double electron_mobility_derivative_potential;
+
+        RealGradient electron_mobility_derivative_grad_potential;
+
         //! The electron mobility derivative w.r.t gradient of Fermi level
         RealGradient electron_mobility_derivatives;
 
 
         //! The hole mobility
         double hole_mobility;
+
+        double hole_mobility_derivative_potential;
+
+        RealGradient hole_mobility_derivative_grad_potential;
 
         //! The hole mobility derivative w.r.t gradient of Fermi level
         RealGradient hole_mobility_derivatives;
@@ -320,6 +328,8 @@ class DriftDiffusionProperties : public PhysicalModel
      * \param E the electric field
      */
     void set_electric_field(const RealGradient& E);
+    void set_old_electric_field(const RealGradient& E);
+
 
     //! Set the gradient of the electron electr-chemical potential
     void set_grad_fermi_e(const RealGradient& grad_Fe);
@@ -329,6 +339,8 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Get the electric field
     const RealGradient& get_electric_field(void) const;
+    const RealGradient& get_old_electric_field(void) const;
+
 
     //! Get the gradient of the electron electr-chemical potential
     const RealGradient& get_grad_fermi_e(void) const;
@@ -608,15 +620,29 @@ class DriftDiffusionProperties : public PhysicalModel
       { return _pd->hole_mobility; };
 
 
-    //! Get the electron mobility derivatives
-    void get_electron_mobility_derivatives(RealGradient& dmu) const
-      { dmu = _pd->electron_mobility_derivatives; }
+    //! Get the electron mobility derivative w.r.t. electric potential
+    double get_electron_mobility_derivative_potential(void) const
+      { return _pd->electron_mobility_derivative_potential; };
 
+    //! Get the hole mobility derivative w.r.t. electric potential
+    double get_hole_mobility_derivative_potential(void) const
+      { return _pd->hole_mobility_derivative_potential; };
 
-    //! Get the hole mobility derivatives
-    void get_hole_mobility_derivatives(RealGradient& dmu) const
-      { dmu = _pd->hole_mobility_derivatives; }
+    //! Get the electron mobility derivative w.r.t. gradient of the electric potential
+    void get_electron_mobility_derivative_grad_potential(RealGradient& dmu) const
+      { dmu = _pd->electron_mobility_derivative_grad_potential; };
 
+    //! Get the hole mobility derivative w.r.t. gradient of the electric potential
+    void get_hole_mobility_derivative_grad_potential(RealGradient& dmu) const
+      { dmu = _pd->hole_mobility_derivative_grad_potential; };
+
+    //! Get the electron mobility derivative w.r.t. gradient of the fermi potential
+    void get_electron_mobility_derivative_grad_fermi(RealGradient& dmu) const
+      { dmu = _pd->electron_mobility_derivatives; };
+
+    //! Get the hole mobility derivative w.r.t. gradient of the fermi potential
+    void get_hole_mobility_derivative_grad_fermi(RealGradient& dmu) const
+      { dmu = _pd->hole_mobility_derivatives; };
 
     //! Get the square of the intrinsic density
     double get_intrinsic_density_squared(void) const
@@ -665,14 +691,13 @@ class DriftDiffusionProperties : public PhysicalModel
     double get_band_gap(void) const
       { return _conduction_band->get_band_edge() - _valence_band->get_band_edge(); };
 
-
+    //void get_net_recombination_rates(std::vector<double>& rates);
     //! Get the iterator to the first recombination model
     RecombinationModelIterator recombination_models_begin(void);
 
 
     //! Get the past-the-end iterator for the recombination models
     RecombinationModelIterator recombination_models_end(void);
-
 
     //! Get the IDs of the registered recombination models
     /*!
@@ -773,11 +798,11 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
     //! Get the electrons
-    ParticleDensity& get_electrons(void);
 
 
-    //! Get the holes
-    ParticleDensity& get_holes(void);
+
+    //! Tells if we are doing equilibrium calculation
+    bool has_solution(void) const;
 
 
 
@@ -835,17 +860,17 @@ class DriftDiffusionProperties : public PhysicalModel
     bool is_inhomogeneous(void) const;
 
 
-    //! Tells if we are doing equilibrium calculation
-    bool has_solution(void) const;
 
 
-    //! Tells if we should use a predictor for quantum densities
-    bool use_predictor(void) const;
 
 
     //! Set the relative permittivity tensor
     void set_relative_permittivity(const RealTensor& eps)
       { _permittivity = eps; };
+
+
+
+
 
     //! Set the equilibrium Fermi level
     void set_equilibrium_fermi_level(double Ef)
@@ -896,8 +921,8 @@ class DriftDiffusionProperties : public PhysicalModel
     //! \c true if we should assume inhomogeneous band parameters
     bool _is_inhomogeneous;
 
-    //! \c true if we should use a predictor for quantum densities
-    bool _use_predictor;
+
+
 
 
     //! The equilibrium fermi level
@@ -933,6 +958,8 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! The electric field
     RealGradient _electric_field;
+    RealGradient _old_electric_field;
+
 
     //! The gradient of the electron chemical-potential
     RealGradient _grad_fermi_e;
@@ -1024,12 +1051,12 @@ class DriftDiffusionProperties : public PhysicalModel
     bool _is_dielectric;
 
 
-    //! The electrons
-    ParticleDensity* _electrons;
 
 
-    //! The holes
-    ParticleDensity* _holes;
+
+
+
+
 
 
     //! The relaxation factor for the polarization
@@ -1111,6 +1138,20 @@ DriftDiffusionProperties::set_electric_field(const RealGradient& E)
   _electric_field = E;
 }
 
+
+
+
+
+
+
+
+inline
+void
+DriftDiffusionProperties::set_old_electric_field(const RealGradient& E)
+{
+  _old_electric_field = E;
+}
+
 inline
 void
 DriftDiffusionProperties::set_grad_fermi_e(const RealGradient& grad_Fe)
@@ -1134,6 +1175,18 @@ DriftDiffusionProperties::get_electric_field(void) const
 {
   return _electric_field;
 }
+
+inline
+const RealGradient&
+DriftDiffusionProperties::get_old_electric_field(void) const
+{
+  return _old_electric_field;
+}
+
+
+
+
+
 
 
 
@@ -1395,31 +1448,6 @@ DriftDiffusionProperties::is_inhomogeneous(void) const
 
 
 inline
-bool
-DriftDiffusionProperties::use_predictor(void) const
-{
-  return _use_predictor;
-}
-
-
-
-inline
-ParticleDensity&
-DriftDiffusionProperties::get_electrons(void)
-{
-  return *_electrons;
-}
-
-
-inline
-ParticleDensity&
-DriftDiffusionProperties::get_holes(void)
-{
-  return *_holes;
-}
-
-
-inline
 DriftDiffusionProperties::RecombinationModelIterator
 DriftDiffusionProperties::recombination_models_begin(void)
 {
@@ -1433,7 +1461,6 @@ DriftDiffusionProperties::recombination_models_end(void)
 {
   return(RecombinationModelIterator(_recombination_models.end()));
 }
-
 
 
 #endif /* _DRIFTDIFFUSIONPROPERTIES_H_ */

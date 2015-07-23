@@ -22,6 +22,8 @@ Trap::Trap(const ModelOptions& options) :
   _energy_reference('m'),
   _sigma_n(1e-15),
   _sigma_p(1e-15),
+  _tau_n(0.0),
+  _tau_p(0.0),
   _e_vth(1e7),
   _h_vth(1e7),
   _gen_TC(0.0),
@@ -85,6 +87,9 @@ Trap::do_init(void)
 
   get_parameter("sigma_n", _sigma_n);
   get_parameter("sigma_p", _sigma_p);
+
+  get_parameter("tau_n", _tau_n);
+  get_parameter("tau_p", _tau_p);
 
   // TODO to be obtained from DOS model (?)
   get_parameter("thermal_velocity_n", _e_vth);
@@ -152,8 +157,8 @@ Trap::get_ionized_density_and_derivative(const Particle& el,
     const Particle& hl, std::vector<double>& derivatives) const
 {
   double dens = _density;
-  derivatives.resize(4);
-  derivatives[0] = derivatives[1] = derivatives[2] = derivatives[3] = 0.0;
+  derivatives.resize(5);
+  derivatives[0] = derivatives[1] = derivatives[2] = derivatives[3] = derivatives [4] = 0.0;
 
   if ((_type != FIXED) && (dens > 0.0))
   {
@@ -167,8 +172,21 @@ Trap::get_ionized_density_and_derivative(const Particle& el,
     double arg_e = _trap_level() + el.fermi_level();
     double arg_h = _trap_level() + hl.fermi_level();
 
-    double Cn = _sigma_n * _e_vth;
-    double Cp = _sigma_p * _h_vth;
+    double Cn = 1.0 /_tau_n / Nt;
+    double Cp = 1.0 /_tau_p / Nt;
+
+    //cout << Cn << Cp << endl;
+
+    if (_tau_n == 0.0)
+    {
+      Cn = _sigma_n * _e_vth;
+    }
+
+    if (_tau_p == 0.0)
+    {
+      Cp = _sigma_p * _h_vth;
+    }
+
 
     double n = el.density();
     double p = hl.density();
@@ -183,92 +201,130 @@ Trap::get_ionized_density_and_derivative(const Particle& el,
       std::pair<double, double> occ_h(Distributions::fermi_dirac(-arg_h, kT_h));
       f_h = occ_h.first;
       deriv_h = occ_h.second;
-    }
-    else
-    {
-      f_h = _dos->get_occupied_density(-arg_h, kT_h);
-      deriv_h = _dos->get_occupied_density_derivative(-arg_h, kT_h);
 
-      f_e = _dos->get_occupied_density(-arg_e, kT_e);
-      deriv_e = _dos->get_occupied_density_derivative(-arg_e, kT_e);
-    }
 
-    double f;
-    if (f_e < 1e-12)
-    {
-      f_e = 1e-12;
-      deriv_e = 0;
-    }
-    if (f_h > (1.0 - 1e-12))
-    {
-      f_h = 1.0 - 1e-12;
-      deriv_h = 0;
-    }
-
-    switch (_particle)
-    {
-      case 'h':
+      double f;
+      if (f_e < 1e-12)
       {
-        double gc = (1.0 - f_e) / f_e;
-        double gv = f_h / (1.0 - f_h);
-
-        //double nom = Cp * p + Cn * n * gc - (_gen_VT - _gen_TC) / Nt;
-        //double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv);
-        double nom = Cp * p + Cn * n * gc + _gen_TC / Nt;
-        double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv) + (_gen_VT + _gen_TC) / Nt;
-
-        // refactorized to prevent numerical problems
-        //double nom = ((Cp * p + _gen_TC / Nt) * f_e + Cn * n * (1 - f_e)) * (1 - f_h);
-        //double denom = (Cn * n  + f_e * (_gen_VT + _gen_TC) / Nt) * (1 - f_h)
-        //    + Cp * p * f_e;
-
-        f = nom / denom;
-
-        double dfdp = Cp * (1.0 - f * (1 + gv)) / denom;
-        double dfdn = Cn * (gc - f * (1 + gc)) / denom;
-
-        double dfdEfn = -(deriv_e / f_e) * ((1 - f) / f_e) * Cn * n / denom;
-        double dfdEfp = -(f / (1 - f_h)) * (deriv_h / (1 - f_h)) * Cp * p / denom;
-
-        derivatives[0] = Nt * dfdn;
-        derivatives[1] = Nt * dfdp;
-        derivatives[2] = Nt * dfdEfn;
-        derivatives[3] = Nt * dfdEfp;
-
-        break;
+        f_e = 1e-12;
+        deriv_e = 0;
+      }
+      if (f_h > (1.0 - 1e-12))
+      {
+        f_h = 1.0 - 1e-12;
+        deriv_h = 0;
       }
 
-      case 'e':
-      default:
+      switch (_particle)
       {
-        double gc = (1.0 - f_e) / f_e;
-        double gv = f_h / (1.0 - f_h);
+        case 'h':
+        {
+          double gc = (1.0 - f_e) / f_e;
+          double gv = f_h / (1.0 - f_h);
 
-        //double nom = Cn * n + Cp * p * gv + (_gen_VT - _gen_TC) / Nt;
-        //double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv);
-        double nom = Cn * n + Cp * p * gv + _gen_VT / Nt;
-        double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv) + (_gen_VT + _gen_TC) / Nt;
+          //double nom = Cp * p + Cn * n * gc - (_gen_VT - _gen_TC) / Nt;
+          //double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv);
+          double nom = Cp * p + Cn * n * gc + _gen_TC / Nt;
+          double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv) + (_gen_VT + _gen_TC) / Nt;
 
-        f = nom / denom;
+          // refactorized to prevent numerical problems
+          //double nom = ((Cp * p + _gen_TC / Nt) * f_e + Cn * n * (1 - f_e)) * (1 - f_h);
+          //double denom = (Cn * n  + f_e * (_gen_VT + _gen_TC) / Nt) * (1 - f_h)
+          //    + Cp * p * f_e;
 
-        double dfdn = Cn * (1.0 - f * (1 + gc)) / denom;
-        double dfdp = Cp * (gv - f * (1 + gv)) / denom;
+          f = nom / denom;
 
-        double dfdEfn = (deriv_e / f_e) * (f / f_e) * Cn * n / denom;
-        double dfdEfp = ((1 - f) / (1 - f_h)) * (deriv_h / (1 - f_h)) * Cp * p / denom;
+          double dfdp = Cp * (1.0 - f * (1 + gv)) / denom;
+          double dfdn = Cn * (gc - f * (1 + gc)) / denom;
 
-        Nt = -Nt;
+          double dfdEfn = -(deriv_e / f_e) * ((1 - f) / f_e) * Cn * n / denom;
+          double dfdEfp = -(f / (1 - f_h)) * (deriv_h / (1 - f_h)) * Cp * p / denom;
 
-        derivatives[0] = Nt * dfdn;
-        derivatives[1] = Nt * dfdp;
-        derivatives[2] = Nt * dfdEfn;
-        derivatives[3] = Nt * dfdEfp;
+          derivatives[0] = Nt * dfdn;
+          derivatives[1] = Nt * dfdp;
+          derivatives[2] = Nt * dfdEfn;
+          derivatives[3] = Nt * dfdEfp;
 
-        break;
+          break;
+        }
+
+        case 'e':
+        default:
+        {
+          double gc = (1.0 - f_e) / f_e;
+          double gv = f_h / (1.0 - f_h);
+
+          //double nom = Cn * n + Cp * p * gv + (_gen_VT - _gen_TC) / Nt;
+          //double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv);
+          double nom = Cn * n + Cp * p * gv + _gen_VT / Nt;
+          double denom = Cn * n * (1 + gc) + Cp * p * (1 + gv) + (_gen_VT + _gen_TC) / Nt;
+
+          f = nom / denom;
+
+          double dfdn = Cn * (1.0 - f * (1 + gc)) / denom;
+          double dfdp = Cp * (gv - f * (1 + gv)) / denom;
+
+          double dfdEfn = (deriv_e / f_e) * (f / f_e) * Cn * n / denom;
+          double dfdEfp = ((1 - f) / (1 - f_h)) * (deriv_h / (1 - f_h)) * Cp * p / denom;
+
+          Nt = -Nt;
+
+          derivatives[0] = Nt * dfdn;
+          derivatives[1] = Nt * dfdp;
+          derivatives[2] = Nt * dfdEfn;
+          derivatives[3] = Nt * dfdEfp;
+
+          break;
+        }
       }
-    }
 
-    dens = Nt * f;
+      //cout << "f = " << f << endl;
+      dens = Nt * f;
+    }  // end _dos == NULL
+
+    else // _dos != NULL
+    {
+      double f, deriv;
+      double level = _trap_level();
+      double Nt = _density;
+
+      switch (_particle)
+      {
+        case 'h':
+        {
+          // set the reference energy
+          // NOTE: need to take away electrostatic energy because it is
+          // added internally in the DOS model
+          _dos->set_reference_energy(- level - _phi);
+          //cout<<"- hl.fermi_level() = " << - hl.fermi_level() << " _phi = " << _phi << endl;
+          //cout<<"hl.fermi_level() = " << hl.fermi_level() << endl ;
+          std::pair<double, double> result(
+              _dos->get_occupied_density_and_derivative(hl.fermi_level(), _phi, kT_h));
+          f = result.first;
+          deriv = -Nt * result.second;
+          //cout<<"f_h = " << f << " deriv_h = " << deriv << endl;
+          break;
+        }
+        case 'e':
+        default:
+        {
+          Nt = -Nt;
+          // it needs the fermi level shifted by trap_level
+          _dos->set_reference_energy(level + _phi);
+          //cout<<"level + _phi = " << level + _phi << endl;
+          
+          std::pair<double, double> result(
+              _dos->get_occupied_density_and_derivative(-el.fermi_level(), - _phi, kT_e));
+          f = result.first;
+          deriv = Nt * result.second;
+          //cout<<"f_e = " << f << " deriv_e = " << deriv << endl;
+          break;
+        }
+      }
+
+      derivatives[4] = deriv;
+      dens = Nt * f;
+    } // end _dos != NULL
 
     if (_type == CHARGED)
       dens -= Nt;

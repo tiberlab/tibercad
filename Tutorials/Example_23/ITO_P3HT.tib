@@ -1,0 +1,177 @@
+# We simulate the HOMO level of P3HT on an ITO substrate, using the experimental UPS data from
+#
+# [1] M. Schneider et al., "Band bending at the P3HT/ITO interface studied by photoelectron spectroscopy"
+#     Org. Electron. 15 (2014) 1552
+#
+# UPS data for P3HT HOMO are in "homo_experimental.dat"
+#
+# In [1] the fit (shown in Figure "homo_tiberCAD.png") is obtained solving 
+# the Poisson equation imposing zero barrier for holes at the ITO/P3HT interface
+# Numerical data of the fitted HOMO curve are in "homo_fit.dat"
+# Band gap of P3HT = 2.6 eV
+# Gaussian DOS with N0 = 1e21 cm^-3; sigma = 0.155 eV
+# p-doping concentration Nd = 5e15 cm^-3
+# relative dielectric constant of P3HT = 3.4
+# 
+# In [1] the HOMO level of P3HT is not set since they impose zero barrier as a boundary condition.
+# Instead in this TiberCAD simulation we set ITO work function to 4.78 eV (as reported in [1]) and
+# we get the HOMO level fitting the experimental data.
+#
+# We get a better fit than in [1] using
+#
+# HOMO = 5.17 eV (set in P3HT material file, this value is consistent with values found in literature)
+# Band gap of P3HT = 2.6 eV
+# Gaussian DOS with N0 = 2e20 cm^-3; sigma = 0.17 eV
+# p-doping concentration Nd = 7e15 cm^-3
+# relative dielectric constant of P3HT = 3.4
+#
+# As shown in Figure "homo_tiberCAD.png" barrier lowering is necessary to get the correct barrier
+#
+# Our N0 is quite different from [1] (an order of magnitude) but other parameters are 
+# consistent with [1] given the errors reported there.
+
+
+Device
+{
+  meshfile = bulk.msh
+  mesh_units = 1e-9
+
+  material = P3HT
+
+  Region bulk { 
+    Doping
+    {
+      type = acceptor
+      Nd = 7e15 
+    }
+  }
+  Region int_anode {
+    Doping
+    {
+      type = acceptor
+      Nd = 7e15
+    }
+  }
+  Region int_cathode {
+    Doping
+    {
+      type = acceptor
+      Nd = 7e15
+    }
+  }
+}
+
+Module driftdiffusion
+{ 
+  # what we want to plot
+  plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+          hQFermi, hDensity, hCurrentDensity, hMobility,
+          eConductivity, hConductivity, NetRecombination, ElField, ElPotential, ContactCurrents, 
+          IonizedDonors, IonizedAcceptors, IonizedElectronTraps, IonizedHoleTraps, SchottkyTunneling)
+
+  Physics
+  {
+
+    recombination langevin
+    {
+      gamma = 1
+    }
+
+    conduction_band
+    {
+      density_of_states gauss
+      {
+        regions = (int_anode, int_cathode, bulk)
+        sigma = 0.17  
+        N0 = 2e20    
+      }
+    }
+
+    valence_band
+    {
+      density_of_states gauss
+     {
+        regions = (int_anode, int_cathode, bulk)
+        sigma = 0.17
+        N0= 2e20
+     }
+    }
+
+    electron_mobility
+    {
+      regions = (int_anode, int_cathode, bulk)
+      type = constant
+      mu_e = 1e-2
+    }
+
+    hole_mobility
+    {
+      regions = (int_anode, int_cathode, bulk)
+      type = constant
+      mu_h = 1e-2
+    }
+
+  }
+
+
+  Contact anode 
+  { 
+    type = schottky
+    band = v                     # setting the reference band is necessary to get the correct barrier lowering (see Shottky contacts in the TiberCAD manual)
+    metal_fermilevel = -4.78
+    scott_malliaras = true
+    barrier_lowering = true
+    voltage = $Vg
+  }
+
+  Contact cathode 
+  { 
+    type = ohmic
+    voltage = 0
+  }
+
+  Solver
+  {
+    max_iterations = 150
+    step_tolerance = 1e-5
+    absolute_tolerance = 1e-1
+    relative_tolerance = 1e-3
+  }
+}
+
+Module sweep
+{
+  name = sweep_forward
+  variable = $Vg
+  solve = (driftdiffusion)
+
+  start = 0
+  stop =  0
+  steps = 1
+  plot_data = true  
+}
+
+Simulation
+{
+  verbose = 2
+  temperature = 300
+  solve = (sweep_forward)
+
+  resultpath = output/b_low
+  output_format = grace
+  plot_data = true
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

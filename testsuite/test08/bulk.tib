@@ -43,6 +43,13 @@ Module driftdiffusion
     recombination srh{}
     thermoelectric_power diffusivity_model{}
     mobility doping_dependent{}
+
+    band_properties
+    {
+      density_of_states bulk_kp
+      {
+      }
+    }
   }  
 
   Contact anode

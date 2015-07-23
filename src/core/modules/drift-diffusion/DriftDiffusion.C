@@ -4593,16 +4593,30 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
         // field dependent mobility
         // the factor phi_0 / x0 comes from the derivative with respect to the
         // gradient of the potential
-        RealGradient dmu_e(0);
-        RealGradient dmu_h(0);
-        if (dim > 1)
+        RealGradient dmu_e_grad_v(0);
+        RealGradient dmu_h_grad_w(0);
+   
+	if (dim > 1)
         {
-          sc->get_electron_mobility_derivatives(dmu_e);
-          dmu_e *= J * phi0 / (mu0 * C0_e) * n / x0;
-          sc->get_hole_mobility_derivatives(dmu_h);
-          dmu_h *= J * phi0 / (mu0 * C0_h) * p / x0;
+	  sc->get_electron_mobility_derivative_grad_fermi(dmu_e_grad_v);
+          dmu_e_grad_v *= J * phi0 / (mu0 * C0_e) * n / x0;
+          sc->get_hole_mobility_derivative_grad_fermi(dmu_h_grad_w);
+          dmu_h_grad_w *= J * phi0 / (mu0 * C0_h) * p / x0;
         }
 
+        RealGradient dmu_e_grad_u(0);
+        RealGradient dmu_h_grad_u(0);
+        sc->get_electron_mobility_derivative_grad_potential(dmu_e_grad_u);
+        dmu_e_grad_u *= J * phi0 / (mu0 * C0_e) * n / x0;
+        sc->get_hole_mobility_derivative_grad_potential(dmu_h_grad_u);
+        dmu_h_grad_u *= J * phi0 / (mu0 * C0_h) * p / x0;
+        
+        double dmu_e_u = sc->get_electron_mobility_derivative_potential();
+        double dmu_h_u = sc->get_hole_mobility_derivative_potential();
+        dmu_e_u *= J * phi0 / (mu0 * C0_e) * n;
+        dmu_h_u *= J * phi0 / (mu0 * C0_h) * p;
+
+        //cout<<"dmu_e_u = "<<dmu_e_u<<" dmu_h_u = "<<dmu_h_u<<" dmu_e_grad_u = "<<dmu_e_grad_u.size()<<" dmu_h_grad_u = "<<dmu_h_grad_u.size()<<endl;
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
@@ -4623,23 +4637,30 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               double dsigma_e_x_phi = dsigma_e_x_lap * phi[j][qp];
               double dsigma_h_x_phi = dsigma_h_x_lap * phi[j][qp];
 
-              double dmu_e_x_dphi = dmu_e * dphi[j][qp];
-              double dmu_h_x_dphi = dmu_h * dphi[j][qp];
+              double dmu_e_grad_v_x_dphi = dmu_e_grad_v * dphi[j][qp];
+              double dmu_h_grad_w_x_dphi = dmu_h_grad_w * dphi[j][qp];
+
+              double dmu_e_u_x_phi = dmu_e_u * phi[j][qp];
+              double dmu_h_u_x_phi = dmu_h_u * phi[j][qp];
+
+              double dmu_e_grad_u_x_dphi = dmu_e_grad_u * dphi[j][qp];
+              double dmu_h_grad_u_x_dphi = dmu_h_grad_u * dphi[j][qp];
+
 
               if (coupling & ECURRENT)
               {
                 if (coupling & POISSON)
-                  Knu(i,j) += dsigma_e_x_phi;
+                  Knu(i,j) += dsigma_e_x_phi + (dmu_e_u_x_phi + dmu_e_grad_u_x_dphi) * lap_e;
 
-                Knn(i,j) += dmu_e_x_dphi * lap_e - dsigma_e_x_phi;
+                Knn(i,j) += (dmu_e_grad_v_x_dphi - dmu_e_u_x_phi) * lap_e - dsigma_e_x_phi;
               }
 
               if (coupling & HCURRENT)
               {
                 if (coupling & POISSON)
-                  Kpu(i,j) += dsigma_h_x_phi;
+                  Kpu(i,j) += dsigma_h_x_phi + (dmu_h_u_x_phi + dmu_h_grad_u_x_dphi) * lap_h;
 
-                Kpp(i,j) += dmu_h_x_dphi * lap_h - dsigma_h_x_phi;
+                Kpp(i,j) += (dmu_h_grad_w_x_dphi - dmu_h_u_x_phi) * lap_h - dsigma_h_x_phi;
               }
 
             }
@@ -4846,13 +4867,13 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             grad_ep += dphi_face[i][qp] * Xp(i);
           }
 
-          //sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-          //sc->set_coordinates(q_point_face[qp]);
-          //sc->set_electric_field(phi0 / x0 * e_field);
-          //sc->set_grad_fermi_e(phi0 / x0 * grad_en);
-          //sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
-          //sc->calculate_densities();
-          //sc->calculate_mobilities();
+          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+          sc->set_coordinates(q_point_face[qp]);
+          sc->set_electric_field(phi0 / x0 * e_field);
+          sc->set_grad_fermi_e(phi0 / x0 * grad_en);
+          sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
+          sc->calculate_densities();
+          sc->calculate_mobilities();
 
           // we put the phi0 here for convenience
           //double sigma_e = phi0 * sc->get_electron_conductivity();
@@ -4885,7 +4906,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
           if (jacobian != NULL)
           {
             // for Dirichlet DOFs we do not add anything
-            double scale_u = J * phi0 / x0 / C0;;
+            double scale_u = J * phi0 / x0 / C0;
             if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
               scale_u = 0;
 
@@ -4988,6 +5009,29 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             else
               value_u = coeff_g[0] / phi0;
 
+            if (true_boundary)
+            {
+              // If we are on an outer boundary, we include
+              // the polarization
+
+              if (params.default_boundary_condition == ZEROFIELD)
+              {
+
+                RealVectorValue P(0.0);
+                P = sc->get_total_polarization();
+                double Pn = (P * face_normals[qp]) / P0;
+                double value_u = -J * Pn;
+
+                if (coupling & POISSON)
+                {
+                  for (unsigned int i = 0; i < n_dofs; i++)
+                  {
+                    Fu(i) -= value_u * phi_face[i][qp] / scaleu(i);
+                  }
+                }
+              }
+            }
+
             value_n = (coeff_g[1] - coeff_a[1] * en * phi0);
             if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)
               value_n *= J / (x0 * R0_e);
@@ -5000,6 +5044,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
               value_p *= J / (x0 * R0_h);
             else
               value_p = coeff_g[2] / phi0;
+
+         
 
 
             for (unsigned int i = 0; i < n_dofs; i++)

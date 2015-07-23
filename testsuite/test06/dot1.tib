@@ -150,17 +150,17 @@ Module driftdiffusion
 
   Physics
   {
- 
-    strain_simulation = str
-
-    particle_density
-    {
-      statistics = fermidirac
-    }
 
     recombination srh { }
 
-    polarization (piezo, pyro) { } 
+    polarization piezo { strain_simulation = str  }
+    polarization pyro { } 
+
+    band_properties {
+      density_of_states bulk_kp {
+        strain = str
+      }
+    }
   
     electron_mobility doping_dependent { }
 

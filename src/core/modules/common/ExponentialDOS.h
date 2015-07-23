@@ -24,25 +24,22 @@ class TBDLEXPORT ExponentialDOS : public DensityOfStates
 
 
 
-    //! Get occupied states
-    /*!
-     * \return the density of occupied states in cm^-3
-     * for the given energy \c E, where \c E is something
-     * like \$E_0 - E_f\$.
-     */
-    virtual double get_occupied_density(double E, double kT) const;
-
-
-    //! Get the derivative with respect to the argument \c E
-    virtual double get_occupied_density_derivative(double E, double kT) const;
-
-
   protected:
 
     //! Constructor
     ExponentialDOS(const ModelOptions& options);
 
     virtual void do_init(void);
+
+
+    //! Get occupied states and derivative
+    virtual std::pair<double, double>
+    calculate_density_and_derivative(double E, double Epot,
+        double kT, double kTlattice, const Elem* elem, const Point& p) const;
+
+    //overloading for Trap.C
+    virtual std::pair<double, double>
+    calculate_density_and_derivative(double E, double Epot, double kT, double kTlattice) const;
 
 
   private:
@@ -53,8 +50,6 @@ class TBDLEXPORT ExponentialDOS : public DensityOfStates
     //! Calculates the value under the integral
     double _get_value(double e, double E, double kT) const;
 
-    //! Calculates the derivative w.r.t the fermi level
-    //double _get_value_derivative(double e, double E, double kT) const;
 
 };
 

@@ -9,8 +9,8 @@
 OhmicContact::OhmicContact(const ModelOptions& options)
  : ElectricalContact(options)
 {
-  set_type(0, DIRICHLET);
-  //set_type(0, NEUMANN);
+  //set_type(0, DIRICHLET);
+  set_type(0, NEUMANN);
 
   // as default we apply the potential
   set_type(1, DIRICHLET);

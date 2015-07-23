@@ -174,26 +174,29 @@ Device
 
     Physics
     {
-      strain_simulation = strain
+
       relax_polarization = $polariz[0.0]
 
-
-      particle_density
-      {
-        statistics = fermidirac
-      }
-
-
-      recombination srh {}
+      #recombination srh {}
 
       recombination direct
       {
         C =  0.47e-10  
       }
 
-      polarization (piezo, pyro) {}
-  
-    }   
+      polarization piezo { strain_simulation = strain }
+      polarization pyro {}
+
+      band_properties
+      {
+
+        density_of_states bulk_kp
+        {
+          strain = strain
+        }
+      }
+
+    }
 
 
     Contact p_contact
@@ -203,8 +206,8 @@ Device
       zero_grad_fermi_e = true
       voltage = $Vb[0.0] 
     }
-      
-      
+
+
     Contact n_contact
     {
       regions = 20

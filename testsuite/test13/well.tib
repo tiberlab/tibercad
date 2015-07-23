@@ -40,7 +40,13 @@ Module driftdiffusion
 
   Physics
   {
-    strain_simulation = elasticity
+
+    band_properties {
+      density_of_states bulk_kp {
+        strain = elasticity
+      }
+    }
+
   }
 }
 

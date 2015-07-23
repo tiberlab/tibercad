@@ -42,6 +42,13 @@ Module driftdiffusion
 
       thermal_simulation = thermal
       recombination srh{}
+
+      band_properties
+      {
+        density_of_states bulk_kp
+        {
+        }
+      }
      
      } 
  

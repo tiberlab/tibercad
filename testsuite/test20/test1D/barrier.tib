@@ -114,12 +114,22 @@ Module driftdiffusion
     #{
     #  model = srh
     #}
-   particle_density
-   { 
-   
-    statistics =  fermidirac
-   
+    conduction_band
+    {
+      density_of_states bulk_kp
+      {
+        regions = all 
+      }
     }
+    
+    valence_band
+    {
+      density_of_states bulk_kp
+      {
+        regions = all 
+      }
+    }
+
 
   }
 

@@ -7,7 +7,7 @@
 
 .. [Arora] N D Arora, J R  Hauser and D J Roulston, "Electron and Hole Mobilities in Silicon as a Function of Concentration and Temperature", *IEEE Trans. on Electron Devices*, 29, 292-295, 1982.
 
-.. [Hurkx] G.A.M.Hurkx, D. B. M. Klaassen, and M. P. G. Knuvers, "A New Recombination Model for Device Simulation Including Tunneling", *IEEE Trans. on Electron Devices*, 39, 331-338, 1992
+.. [Hurkx] G A M Hurkx, D. B. M. Klaassen, and M. P. G. Knuvers, "A New Recombination Model for Device Simulation Including Tunneling", *IEEE Trans. on Electron Devices*, 39, 331-338, 1992
 
 
 .. [Kalyanasundaram] Kalyanasundaram Kuppuswamy, "Dye-Sensitized Solar Cells", *Editor Crc Pr Inc.* , 2010.
@@ -27,6 +27,7 @@
 .. [Gao] Gao et al. NanoLetter (2009).
 */
 
+.. [Pasveer] W F Pasveer et al. "Unified description of charge-carrier mobilities in disordered semiconducting polymers", *Phys. Rev. Lett.* 94 (2005) 206601
 
 .. [Wachutka] Gerhard K. Wachutka, "Rigorous thermodynamic treatment of heat generation and conduction in semiconductor device modeling", *IEEE Transaction on Computer-aided Design*, vol. 9, pp. 11, 1990.
 
@@ -45,4 +46,8 @@
 
 
 
+
+.. [Santoni] F Santoni, A Gagliardi, M Auf der Maur, A Di Carlo, "The relevance of correct injection model to simulate electrical properties of organic semiconductors", *Org. Electron* 15 (2014) 1557.
+
+.. [Scott] J C Scott, G C Malliaras, "Charge injection and recombination at the metal-organic interface", *Chem. Phys. Lett.* 299 (1999) 115
 

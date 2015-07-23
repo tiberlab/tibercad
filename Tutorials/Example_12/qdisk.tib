@@ -108,23 +108,16 @@ Module driftdiffusion
 
   Physics
   {
-    strain_simulation = strain
-
-    polarization (piezo, pyro) {}
-
-    particle_density
-    {
-      particle = electron
-      # this is the default:
-      # statistics = fermidirac
+    band_properties {
+      density_of_states bulk_kp {
+        strain_simulation = strain
+      }
     }
 
-    particle_density
-    {
-      particle = hole
-      # this is the default:
-      # statistics = fermidirac
-    }
+    polarization piezo { strain_simulation = strain }
+    polarization pyro {}
+
+
 
     recombination (srh, direct) {}
 

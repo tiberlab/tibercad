@@ -117,20 +117,29 @@ Module driftdiffusion
     
   Physics
   {
-    strain_simulation = str
-
-    #use_density_predictor = true
 
     recombination srh { }
 
-    
-    particle_density
+    valence_band
     {
-      particle = electron
-      statistics = fermidirac
+      density_of_states bulk_kp
+      {
+        strain = str
+      }
+    }
+    
+    conduction_band
+    {
+      density_of_states quantum
+      {
+        quantum_simulation = quantum_el
+        barrier_regions = buffer
 
-      quantum_density = quantum_el
-      barrier_regions = buffer
+        classical_DOS bulk_kp 
+        {
+          strain = str
+        }
+      }
     }
   
      
@@ -201,7 +210,7 @@ Module selfconsistent
 {
   solve = (quantum_el, dd)
   #relaxation_factor = 0.1
-  max_iterations = 100
+  max_iterations = 10
   absolute_tolerance = 5e-4
   relative_tolerance = 1e-9
   monitor = true

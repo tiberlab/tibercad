@@ -1,0 +1,218 @@
+
+Log start: Thu May 14 14:31:53 2015
+
+
+tiberCAD release 2.3.0 (rev. 4046, x86_64-linux)
+
+Input file: ITO_P3HT.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/fsantoni/trunk_DOS4/materials
+  Log file              : output/b_low/ITO_P3HT.log
+
+Setup mesh
+  Reading mesh file bulk.msh ... done.
+  mesh units          : 1e-09 m
+  mesh dimension      :       1
+  number of nodes     :     411
+  number of elements  :     410
+  number of subdomains:       3
+
+Create materials ...
+  Added material P3HT for region 'bulk' (mesh regions 1)
+    (using datafile /home/fsantoni/trunk_DOS4/materials/P3HT.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material P3HT for region 'int_anode' (mesh regions 2)
+    (using datafile /home/fsantoni/trunk_DOS4/materials/P3HT.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+  Added material P3HT for region 'int_cathode' (mesh regions 3)
+    (using datafile /home/fsantoni/trunk_DOS4/materials/P3HT.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'driftdiffusion' ...
+  (using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/driftdiffusion/driftdiffusion.so)
+  Adding boundary 'anode'
+  (using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/driftdiffusion/ddbnd_schottky.so)
+  Adding boundary 'cathode'
+  (using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/driftdiffusion/ddbnd_ohmic.so)
+Creating bulk models... 
+  Region: bulk
+  (using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/driftdiffusion/ddbulk_default.so)
+  Region: int_anode
+  Region: int_cathode
+(using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/driftdiffusion/recombination_langevin.so)
+
+Setting up simulation of type 'sweep' ...
+
+Setting up bulk models ...
+  (using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/driftdiffusion/band_properties.so)
+  (using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/permittivity_constant.so)
+  (using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/driftdiffusion/mobility_constant.so)
+  (using /home/fsantoni/trunk_DOS4/x86_64-linux/modules/density_of_states_gauss.so)
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for driftdiffusion (driftdiffusion)
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Ec                       eV             real      nodal       y
+Ev                       eV             real      nodal       y
+eQFermi                  eV             real      nodal       y
+hQFermi                  eV             real      nodal       y
+ElPotential              V              real      nodal       y
+Ec0                      eV             real      nodal       n
+Ev0                      eV             real      nodal       n
+Eg                       eV             real      nodal       n
+ConductionBands          eV             n-tuple   cell        n
+ValenceBands             eV             n-tuple   cell        n
+eDensity                 cm^-3          real      nodal       y
+hDensity                 cm^-3          real      nodal       y
+eMobility                cm^2/(V*s)     real      nodal       y
+hMobility                cm^2/(V*s)     real      nodal       y
+eConductivity            S/cm           real      nodal       y
+hConductivity            S/cm           real      nodal       y
+ElField                  V/cm           vector    cell        y
+Polarization             C/m^2          vector    cell        n
+CurrentDensity           A/cm^2         vector    cell        n
+eCurrentDensity          A/cm^2         vector    cell        y
+hCurrentDensity          A/cm^2         vector    cell        y
+IonizedDonors            cm^-3          real      nodal       y
+IonizedAcceptors         cm^-3          real      nodal       y
+IonizedElectronTraps     cm^-3          real      nodal       y
+IonizedHoleTraps         cm^-3          real      nodal       y
+eThElPower               eV/K           real      nodal       n
+hThElPower               eV/K           real      nodal       n
+eJoule                   W/cm^3         real      nodal       n
+hJoule                   W/cm^3         real      nodal       n
+ePowerFlux               W/cm^2         vector    nodal       n
+hPowerFlux               W/cm^2         vector    nodal       n
+ePeltier                 W/cm^3         real      nodal       n
+hPeltier                 W/cm^3         real      nodal       n
+RecombHeat               W/cm^3         real      nodal       n
+IQE                                     real      none        n
+eNetRecombination        1/(s*cm^3)     real      nodal       y
+eLangevinRecombination   1/(s*cm^3)     real      nodal       y
+hNetRecombination        1/(s*cm^3)     real      nodal       y
+hLangevinRecombination   1/(s*cm^3)     real      nodal       y
+anode.current            A/cm^2         real      none        y
+cathode.current          A/cm^2         real      none        y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output/b_low
+Output file format    : grace
+Output file basename  : driftdiffusion
+
+
+solving for : poisson electrons holes 
+using local scaling
+
+# Region bulk, P3HT
+  Conduction band:
+    DOS: gauss
+    Ec = -2.57, Nc = 0 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Valence band:
+    DOS: gauss
+    Ev = -5.17, Nv = 0 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 2.6, Ef0 = -4.45872, ni = 7.9234e+06
+
+# Region int_anode, P3HT
+  Conduction band:
+    DOS: gauss
+    Ec = -2.57, Nc = 0 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Valence band:
+    DOS: gauss
+    Ev = -5.17, Nv = 0 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 2.6, Ef0 = -4.45872, ni = 7.9234e+06
+
+# Region int_cathode, P3HT
+  Conduction band:
+    DOS: gauss
+    Ec = -2.57, Nc = 0 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Valence band:
+    DOS: gauss
+    Ev = -5.17, Nv = 0 cm^-3
+    m_dos = 1, v_th = 1.16793e+07 cm/s
+  Eg = 2.6, Ef0 = -4.45872, ni = 7.9234e+06
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for sweep_forward (sweep)
+
+Output directory      : output/b_low
+Output file format    : grace
+Output file basename  : sweep_forward
+
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: sweep_forward 
+
+>>>>----------------------------- (sweep_forward) ------------------------------
+  Ramping to sweep value $Vg = 0
+
+*** Warning: driftdiffusion has never been solved before ramping.
+  Trying $Vg = 0
+
+  >>>>---------------------------- (driftdiffusion) ----------------------------
+    Solving equilibrium
+    it 1, |du| = 12.4276, |r| = 2.45818  alpha = 1
+    it 2, |du| = 0.0766428, |r| = 2.59636  alpha = 0.03125
+    it 3, |du| = 0.0809803, |r| = 2.71715  alpha = 0.03125
+    it 4, |du| = 0.084771, |r| = 2.82318  alpha = 0.03125
+    it 5, |du| = 0.0880982, |r| = 2.9165  alpha = 0.03125
+    it 6, |du| = 0.091026, |r| = 2.99871  alpha = 0.03125
+    it 7, |du| = 0.093605, |r| = 3.07112  alpha = 0.03125
+    it 8, |du| = 0.0958764, |r| = 3.13481  alpha = 0.03125
+    it 9, |du| = 0.0978745, |r| = 3.1907  alpha = 0.03125
+    it 10, |du| = 0.0996281, |r| = 3.23959  alpha = 0.03125
+    it 11, |du| = 0.101162, |r| = 3.28214  alpha = 0.03125
+    it 12, |du| = 3.27991, |r| = 3.2652  alpha = 1
+    it 13, |du| = 3.26515, |r| = 2.15714  alpha = 1
+    it 14, |du| = 2.15707, |r| = 1.70099  alpha = 1
+    it 15, |du| = 1.70098, |r| = 1.2473  alpha = 1
+    it 16, |du| = 1.24729, |r| = 0.908743  alpha = 1
+    it 17, |du| = 0.908741, |r| = 0.647667  alpha = 1
+    it 18, |du| = 0.647666, |r| = 0.45411  alpha = 1
+    it 19, |du| = 0.45411, |r| = 0.314345  alpha = 1
+    it 20, |du| = 0.314345, |r| = 0.215578  alpha = 1
+    it 21, |du| = 0.215578, |r| = 0.146874  alpha = 1
+
+    iterations: 22, |du| = 0.146874, |r| = 0.0996127
+    Equilibrium done
+
+  Solve time: 0h 0m 0.53s
+  <<<<--------------------------------------------------------------------------
+
+Solve time: 0h 0m 0.68s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 0.76s
+Simulation finished.
+
+1 warnings during run
+0 errors detected
+
+
+Log end: Thu May 14 14:31:54 2015
+
+

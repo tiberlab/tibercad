@@ -98,7 +98,6 @@ Module sweep
 # Definition of  model-indipendent parameters of the Simulation
 Simulation
 {
-  searchpath = ../../materials
   solve = (sweep_gen, sweep_V)
   resultpath = output
   output_format = grace

@@ -333,6 +333,7 @@ ModelOptions& AtomisticStructure::get_options(void)
 }
 
 
+
 inline
 const ModelOptions& AtomisticStructure::get_options(void) const
 {

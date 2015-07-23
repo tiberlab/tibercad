@@ -241,7 +241,7 @@ DSSCModel::calculate_densities(void)
   if (is_TiO2())
   {
     _electrons.set_element_and_point(_elem, _pd.coordinates);
-    _electrons.set_classical_parameters(_eq_conc.n,
+    _electrons.set_classical_parameters_comp(_eq_conc.n,
         -_pd.electric_potential, -_pd.fermi_n, _pd.kT);
     _pd.density_n = _electrons.get_particle_density();
 
@@ -273,22 +273,23 @@ DSSCModel::calculate_densities(void)
   if (is_electrolyte())
   {
     _iodide.set_element_and_point(_elem, _pd.coordinates);
-    _iodide.set_classical_parameters(_eq_conc.I, -_pd.electric_potential,
+    _iodide.set_classical_parameters_comp(_eq_conc.I, -_pd.electric_potential,
         -_pd.fermi_I, _pd.kT);
     _pd.density_I = _iodide.get_particle_density();
 
     _triiodide.set_element_and_point(_elem, _pd.coordinates);
-    _triiodide.set_classical_parameters(_eq_conc.I3, -_pd.electric_potential,
+    _triiodide.set_classical_parameters_comp(_eq_conc.I3, -_pd.electric_potential,
        -_pd.fermi_I3, _pd.kT);
     _pd.density_I3 = _triiodide.get_particle_density();
 
     _cation.set_element_and_point(_elem, _pd.coordinates);
-    _cation.set_classical_parameters(_eq_conc.C, _pd.electric_potential,
+    _cation.set_classical_parameters_comp(_eq_conc.C, _pd.electric_potential,
         _pd.fermi_C, _pd.kT);
     _pd.density_C = _cation.get_particle_density();
   }
 
   _pd.ionized_dye = _pd.generation_rate / _k3;
+
 }
 
 
@@ -404,6 +405,7 @@ DSSCModel::calculate_traps(void)
   //double Ev = get_valence_band_edge() - _pd->electric_potential;
   double Ec = 0.93 - _pd.electric_potential;
   double Ev = (0.93 - 3.2)  - _pd.electric_potential;
+  double phi = _pd.electric_potential;
 
   _pd.ionized_electron_traps = 0.0;
   _pd.ionized_electron_traps_derivative = 0.0;
@@ -416,7 +418,7 @@ DSSCModel::calculate_traps(void)
     vector<double> derivatives;
     for ( int i = 0; i < _etraps.size(); ++i)
     {
-      _etraps[i]->set_energies(Ec, Ev);
+      _etraps[i]->set_energies(Ec, Ev, phi);
       Particle el(-1, _pd.density_n, _pd.fermi_n, kT);
       Particle hl(1, 0, 0, kT);
       nt += _etraps[i]->get_ionized_density_and_derivative(el, hl, derivatives);
@@ -437,6 +439,7 @@ DSSCModel::calculate_equilibrium_traps(void)
   //double Ev = get_valence_band_edge() - _pd->electric_potential;
   double Ec = 0.93;
   double Ev = (0.93 - 3.2);
+  double phi = _pd.electric_potential;
 
   _pd.ionized_equilibrium_electron_traps = 0.0;
   if (_etraps.size() > 0)
@@ -448,7 +451,7 @@ DSSCModel::calculate_equilibrium_traps(void)
     vector<double> derivatives;
     for ( int i = 0; i < _etraps.size(); ++i)
     {
-      _etraps[i]->set_energies(Ec, Ev);
+      _etraps[i]->set_energies(Ec, Ev, phi);
       Particle el(-1, _pd.density_n, _pd.fermi_n, kT);
       Particle hl(1, 0, 0, kT);
       nt += _etraps[i]->get_ionized_density_and_derivative(el, hl, derivatives);

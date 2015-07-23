@@ -46,8 +46,9 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
      *
      * \param Ec the conduction band edge in eV
      * \param Ev the valence band edge in eV
+     * \param phi the electrostatic potential
      */
-    void set_energies(double Ec, double Ev);
+    void set_energies(double Ec, double Ev, double phi);
 
 
     //! Get ionized density (= charge density, cm^-3)
@@ -109,12 +110,21 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
     //! The valence band
     double _Ev;
 
+    //! The electrostatic potential
+    double _phi;
+
 
     //! e cross section
     double _sigma_n;
 
     //! h cross section
     double _sigma_p;
+
+    //! e capture rate
+    double _tau_n;
+
+    //! e capture rate
+    double _tau_p;
 
     //! e thermal velocity
     double _e_vth;
@@ -155,10 +165,12 @@ Trap::create(const ModelOptions& options)
 
 inline
 void
-Trap::set_energies(double Ec, double Ev)
+Trap::set_energies(double Ec, double Ev, double phi)
 {
   _Ec = Ec;
   _Ev = Ev;
+  _phi = phi;
+
 }
 
 

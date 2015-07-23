@@ -22,18 +22,19 @@ Device
 
 Module driftdiffusion
 { 
-              
+
   name = driftdiffusion
   plot = (Ec, Ev, eQFermi, hQFermi, NetRecombination, ContactCurrents)
 
   Physics
   {
 
-    particle_density
-    { 
-      statistics = boltzmann
+    band_properties
+    {
+      density_of_states bulk_kp
+      {
+      }
     }
-
 
     recombination srh {}
 

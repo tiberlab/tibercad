@@ -1,0 +1,34 @@
+#Alq3
+
+[valenceband]
+E_v = -5.8
+
+[bandgap]
+Eg_G = 2.9
+Eg_L = 2.9
+Eg_X = 2.9
+
+[permittivity]
+permittivity = 3.53
+
+[thermal_conductivity/constant]
+ThermCond = 0.45
+
+[mobility/constant]
+mu_max   = (5e-6,   5e-8)
+exponent = (0, 0)
+
+[conductionband]
+m_G = 1
+m_L_t = 1
+m_L_l = 1
+m_X_t = 1
+m_X_l = 1
+
+[valenceband ]
+m_HH = 1
+m_LH = 1
+
+m_dos = 1
+
+
