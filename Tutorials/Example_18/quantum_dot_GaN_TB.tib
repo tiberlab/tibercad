@@ -129,8 +129,6 @@ Module empirical_tb
   Solver
   {
 
-    #  to load states from file
- #   load_states = true
 
     load_path = output_tb1 
    
@@ -179,8 +177,6 @@ Module  driftdiffusion
 
   Solver
   {
-    #nonlinear_solver = tiber
-    #linear_solver = pardiso
    
     max_iterations = 25
     relative_tolerance = 1e-12
@@ -195,7 +191,7 @@ Module  driftdiffusion
   {
     band_properties {
       density_of_states bulk_kp {
-        strain_simulation = strain
+        strain_simulation = str
       }
     }
 
@@ -207,7 +203,7 @@ Module  driftdiffusion
     }
   
     polarization pyro {}
-    polarization piezo { strain_simulation = strain }
+    polarization piezo { strain_simulation = str }
 
      
     mobility doping_dependent {}
@@ -255,7 +251,7 @@ Simulation
 {
   temperature = 300
 
-   solve = (str, dd, tb1) 
+   solve = (str, dd, tb1, tb2) 
 
 #  solve = (str, dd, tb2, opt)
 
