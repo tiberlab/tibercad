@@ -36,8 +36,8 @@ Example 17: Tight-binding simulation of a InAs/GaAs QW
 
 Example 18: 3D tight-binding simulation of GaN/AlN Qdot
 
-Example 22: I-V characteristic of a single layer organic device (ITO/aNPD (200nm)/Pd)
+Example 19: I-V characteristic of a single layer organic device (ITO/aNPD (200nm)/Pd)
 
-Example 23: ITO/P3HT interface
+Example 20: ITO/P3HT interface
 
 
