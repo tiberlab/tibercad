@@ -269,16 +269,16 @@ classical and quantum density:
      Regions which can be regarded as pure barriers. In these regions a classical density will be added using the barrier
      materials bulk band edge.
 
-  ``add_continuum_in_well``
+..  ``add_continuum_in_well``
      If this option is set to true, the energy level of the first state after the ones considered for the quantum
      density is used as an effective bulk band edge and a classical carrier density will be added accordingly.
 
-If a quantum density is used, then it is useful to define also an embracing region
-where the model gradually switches from a fully classical to a fully quantum density.
-The options for the embracing are specified in a block with keyword ``embracing`` . It
-accepts the following options:
+.. If a quantum density is used, then it is useful to define also an embracing region
+.. where the model gradually switches from a fully classical to a fully quantum density.
+.. The options for the embracing are specified in a block with keyword ``embracing`` . It
+.. accepts the following options:
 
-  ``embracing_length = double`` 
+..   ``embracing_length = double`` 
        When the domain of the quantum simulation is smaller
        than the domain of the full simulation, the boundary conditions for the :math:`Schr\ddot{o}dinger` 
        equation will disturb the transfer from classical to quantum density. By defining an
@@ -287,13 +287,13 @@ accepts the following options:
        effective density :math:`\rho = x\cdot\rho_{\mathrm{quantum}} + (1-x)\cdot\rho_{\mathrm{classical}}` . 
        The default is no embracing region at all (zero extension).
 
-  ``cutoff = double`` 
+..   ``cutoff = double`` 
        If an embracing region is used, a part of this region near the boundary
        of the quantum region can be cut off so that only the classical density is considered
        in that part. ``cutoff`` is specified as a percentage of the embracing length and should
        therefore be between 0.0 and 1.0.
 
-  ``plot_embracing_region = bool`` 
+..   ``plot_embracing_region = bool`` 
        Whereas the automatic creation of the embracing region 
        in 1D is a very simple task, it is a more difficult one in higher dimensions. 
        By setting this flag to true, the embracing region and the mixing coefficient x will be
@@ -301,6 +301,7 @@ accepts the following options:
        The default is ``false`` .
 
 
+.. _DD_recombinationmodels:
 
 Recombination/generation models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -848,9 +849,19 @@ where :math:`\sigma^{n,p}` are the capture cross sections, :math:`v_{th}^{n,p}` 
 
    n_1 = n_{i,\mathrm{eff}}\exp(E_{trap}/k_BT),\quad p_1 = n_{i,\mathrm{eff}}\exp(-E_{trap}/k_BT)
 
-The recombination model associated with a trap has to be enabled explicitly by using the option
+The SRH (see :ref:`DD_recombinationmodels`) recombination model associated with a trap has to be enabled explicitly by using the option
 ``recombination_center = true`` in the trap definition.
+If ``recombination_center = true`` is specified, trap-assisted tunneling (TAT)as described in the following section can be enabled by adding a subblock
+``trap_assisted_tunneling`` as follows::
+
+  trap_assisted_tunneling
+  {
+    tunneling_mass = 0.45
+  }
+
    
+This will activate the Hurkx TAT model with the specified tunneling mass, using the trap energy level given in the trap description.
+
 
 Tunneling models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -864,10 +875,87 @@ models under simplifying assumptions and cast into local recombination-generatio
 Trap-assisted tunneling
 ........................
 
+Trap-assisted tunneling (TAT) in  both  forward and  reverse  bias is  taken  into  account with  a  recombination  model  proposed  by  Hurkx (see  [Hurkx]_). In this  model, a modified  expression  for  the  SRH recombination is  found,  where the carrier SRH lifetimes are modified by field-effect  functions :math:`\Gamma_n` and :math:`\Gamma_p` as :math:`\tau_{n,p} = {\tau_{n,p}}^0/(1+\Gamma_{n,p})`. The field-effect functions vanish  for weak  electric fields, yielding the conventional  SRH  formula.
+
+
+The model for  the  Trap-assisted tunneling can  be enabled by defining a ``recombination`` submodel of  type ``srh``, adding the  keyword ``trap_assisted_tunneling`` as  follows::
+
+  recombination srh 
+  {
+       Et = 0.56  
+       reference = cb
+       trap_assisted_tunneling = true
+  }
+
+
+
+The parameters  are  the  following (see also  section :ref:`DD_trapmodels`   )  : 
+
+  ``Et``
+      The trap level in eV with respect to the reference energy.
+
+  ``reference`` 
+         The reference energy. The default is ``m`` for midgap.
+         Possible values are ``cb``, ``vb`` or ``m`` 
+
+  ``trap_assisted_tunneling``
+      if **true** tunneling  through the  defined trap is switched on 
+
+
+
 (see [Hurkx]_).
+
+
 
 Band-to-band tunneling
 ........................
+
+For direct band-to-band tunneling, a model that is also due to  Hurkx is implemented. This model can be written as a local  generation-recombination process:
+
+
+.. math::
+   :label: Hurkx_model
+
+   G^{b2b} = B E^\sigma exp(E_0/E) 
+
+
+The model is activated by defining a ``recombination`` submodel of  type ``band2band`` as  follows::
+
+
+  recombination band2band
+    {
+       B = 4e14  
+       E0 = 1.9e7  
+       sigma = 2.5 
+    }
+
+
+The parameters for the band to band  tunneling  model are summarized in Table :ref:`Hurkx band to band tunneling parameters<b2b_tunnel>`, together with  their default value:
+
+
+
+
+..  _b2b_tunnel :
+
+.. math::
+   :nowrap:
+
+    \begin{table}[!ht]
+    \center
+    \begin{tabular}{l|r|r|l}
+    \hline
+    \textbf{parameter name} & \multicolumn{2}{r|}{\textbf{default value}} & \textbf{units} \\
+    \hline
+    \hline
+    \texttt{B} & \multicolumn{2}{r|}{$4\cdot 10^{14}$} & 1/cm$^3$s \\
+    \texttt{E0} & \multicolumn{2}{r|}{$1.9\cdot 10^7$} & V/cm \\
+    \texttt{sigma} & \multicolumn{2}{r|}{$2.5$} & 1 \\
+    \hline
+    \end{tabular}
+    \caption{Hurkx Band to band tunneling parameters}
+    \end{table}
+
+
 
 (see [Hurkx]_).
 

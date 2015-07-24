@@ -257,7 +257,6 @@ void KspaceIntegration::calculate_convergent_density()
 
   int verbose = get_option("verbose",SimulationOptions::verbose());
 
-   cout<<"verbose: "<<verbose<<endl;
 
   Mesh* kmesh = const_cast <Mesh*> (_kspace->get_k_mesh() );
 
