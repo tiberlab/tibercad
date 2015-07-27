@@ -5009,7 +5009,8 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
             else
               value_u = coeff_g[0] / phi0;
 
-            if (true_boundary)
+            /*
+            if (0) //(true_boundary)
             {
               // If we are on an outer boundary, we include
               // the polarization
@@ -5031,6 +5032,7 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
                 }
               }
             }
+            */
 
             value_n = (coeff_g[1] - coeff_a[1] * en * phi0);
             if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)

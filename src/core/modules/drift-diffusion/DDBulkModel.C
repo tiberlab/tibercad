@@ -52,7 +52,6 @@ DDBulkModel::DDBulkModel(const ModelOptions& options)
     _polarization(0),
     _background_conductivity(0.0),
     _thermoelectric_power(NULL),
-    _is_dielectric(false),
     _relax_polariz(1.0)
 {
 }
@@ -73,10 +72,10 @@ DDBulkModel::read_database(void)
 {
   const Database& db = get_database();
   db.set_section("");
-  _is_dielectric = db.get("dielectric", _is_dielectric);
+  is_dielectric() = db.get("dielectric", is_dielectric());
 
   bool diel_as_sc = get_option("dielectric_as_semiconductor", false);
-  _is_dielectric &= !diel_as_sc;
+  is_dielectric() &= !diel_as_sc;
 
 }
 
@@ -92,10 +91,10 @@ DDBulkModel::parse_options(void)
 
   _use_predictor = get_option("use_density_predictor", _use_predictor);
 
-  _is_dielectric = get_option("dielectric", _is_dielectric);
+  is_dielectric() = get_option("dielectric", is_dielectric());
 
   bool diel_as_sc = get_option("dielectric_as_semiconductor", false);
-  _is_dielectric &= !diel_as_sc;
+  is_dielectric() &= !diel_as_sc;
 
 
 
@@ -116,6 +115,11 @@ DDBulkModel::parse_options(void)
 void
 DDBulkModel::prepare_submodels(void)
 {
+  if (is_dielectric())
+  {
+    get_options().delete_submodels("recombination");
+    get_options().delete_submodels("generation");
+  }
 
   DriftDiffusionProperties::prepare_submodels();
 

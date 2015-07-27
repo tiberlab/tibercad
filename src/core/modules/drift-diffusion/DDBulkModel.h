@@ -76,11 +76,6 @@ class DDBulkModel : public DriftDiffusionProperties
     virtual void do_reinit(const Elem* elem);
 
 
-    //! Set the coupling type
-
-    //! Tells if this model is for a dielectric
-    bool is_dielectric(void) const;
-
 
     //! Set the polarization vector
     void set_polarization(const RealVectorValue& polarization);
@@ -345,10 +340,6 @@ class DDBulkModel : public DriftDiffusionProperties
     std::vector<double> _nodal_lattice_vt;
 
 
-    //! True if this is a dielectric
-    bool _is_dielectric;
-
-
     //! The relaxation factor for the polarization
     double _relax_polariz;
 
@@ -363,13 +354,6 @@ class DDBulkModel : public DriftDiffusionProperties
 
 
 
-
-inline
-bool
-DDBulkModel::is_dielectric(void) const
-{
-  return _is_dielectric;
-}
 
 
 

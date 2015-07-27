@@ -275,6 +275,9 @@ class DriftDiffusionProperties : public PhysicalModel
     //! Tells if this model is for a dielectric
     bool is_dielectric(void) const;
 
+    //! Get or set dielectric flag
+    bool& is_dielectric(void);
+
 
     //! Set the polarization vector
     //void set_polarization(const RealVectorValue& polarization);
@@ -1081,6 +1084,14 @@ DriftDiffusionProperties::is_dielectric(void) const
   return _is_dielectric;
 }
 
+
+
+inline
+bool&
+DriftDiffusionProperties::is_dielectric(void)
+{
+  return _is_dielectric;
+}
 
 
 inline
