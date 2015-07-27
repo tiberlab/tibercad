@@ -142,7 +142,7 @@ Device
   Region p_AlGaN
   {
     material = AlGaN
-    x = 0.250 
+    x = 0.2 
 
     Doping
     {
@@ -189,6 +189,7 @@ Module  driftdiffusion
   plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity,
           eCurrentDensity, hCurrentDensity, ContactCurrent, eMobility, hMobility)
 
+  # save_state = true
   load_state = reference/driftdiffusion_Vb_3.5.tsv
   solve_after_load = true
 

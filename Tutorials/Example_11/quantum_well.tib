@@ -81,7 +81,8 @@ Module elasticity
   {
     body_force lattice_mismatch 
     {
-      reference_material = GaAs
+      reference_material = AlGaAs
+      x = 0.3
    
     }
        
