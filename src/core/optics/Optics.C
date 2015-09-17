@@ -87,6 +87,9 @@ void Optics::parse_options()
   _initial_state_particle = "el";
   _final_state_particle = "hl";
 
+  _initial_state_particle = get_option("initial_state_particle", _initial_state_particle);
+  _final_state_particle = get_option("final_state_particle", _final_state_particle);
+
 
   //k-vector
   RealVectorValue k_vec(0.0);
@@ -254,6 +257,8 @@ void Optics::init_k_space_integration(void)
      k_dim++;
 
    k_dim = min(k_dim, 3u);
+   if (job == BULKMATREL)
+     k_dim = 3;
 
    if (kopts.find_option("k_space_dimension"))
      k_dim = kopts.get_option("k_space_dimension", k_dim);
@@ -261,8 +266,6 @@ void Optics::init_k_space_integration(void)
    kopts.set_option("k_space_dimension", k_dim);
 
 
-   if (job == BULKMATREL)
-     k_dim = 3;
    kopts.set_option("k_space_dimension", k_dim);
 
    kopts.set_option("verbose", SimulationOptions::verbose() );

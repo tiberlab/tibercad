@@ -17,13 +17,17 @@ ExtProfile1D::ExtProfile1D(const ModelOptions& options) :
   _scale(1.0),
   _data_scale(1.0)
 {
-  _read_source();
-
   get_option("origin", _origin);
   get_option("direction", _direction);
   _direction /= _direction.size();
   _scale = get_option("length_scaling", _scale);
   _data_scale = get_option("data_scaling", _data_scale);
+
+  _max = get_option("max_value", _max);
+  _min = get_option("min_value", _min);
+
+  _read_source();
+
 }
 
 ExtProfile1D::~ExtProfile1D(void)
@@ -124,7 +128,7 @@ ExtProfile1D::get_data(const Elem* elem, const Point& p) const
 
   // calculate index for adressing array
   double dx = (_x_coord.back() - _x_coord.front()) / _addressing.size();
-  int index = max(0, static_cast<int>(floor((xcoord - _min) / dx)));
+  int index = max(0, static_cast<int>(floor((xcoord - _x_coord.front()) / dx)));
   index = min(index, static_cast<int>(_addressing.size() - 1));
 
   unsigned int ctr = _addressing[index];
