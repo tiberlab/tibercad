@@ -15,7 +15,6 @@ class DftbpWrapper;
 class UptWrapper;
 
 //!Main class for Atomistic Tight Binding simulation at equilibrium
-//! DFTB code is used for simulations
 class TightBinding : public EigenvalueProblem{
 
 
@@ -53,9 +52,6 @@ public:
   get_solution_secure(const Elem* elem, const std::vector<Point>& p,
       const std::set<ID>& ids, std::vector<std::map<ID, double> >& values);
  
-//  //! Order the solution in correct mode
-//  virtual void build_elemental_results(const std::set<std::string>& variables,
-//      std::vector<double>& results, std::vector<std::string>& legend);
 
   
 
