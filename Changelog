@@ -1,3 +1,11 @@
+Version 2.5.0
+-------------
+
+Bug fixes:
+
+	- interface models for drift-diffusion now correctly consider the
+	- missing factor of 2/3 added in spontaneous emission
+
 Version 2.3.0
 -------------
 
@@ -15,6 +23,9 @@ New features:
 	- can have generation rates between SRH trap states and bands
 	- output for recombination rates is given for electrons and holes
 	  distinctly
+	- can have variable alloy fractions, based on external input or with
+	  uniform random distribution (plot_alloy_composition = true for
+	  plotting)
 
 Bug fixes:
 

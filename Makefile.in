@@ -73,6 +73,7 @@ $(libdir)/libdl.a:
 
 clean: src
 	@$(MAKE) --no-print-directory -C src/tibercad clean
+	@$(MAKE) --no-print-directory -C src/SDK clean
 	@$(MAKE) --no-print-directory -C src/core/modules clean
 
 
@@ -80,6 +81,7 @@ clean: src
 distclean: src doc
 	@$(MAKE) --no-print-directory -C manual distclean
 	@$(MAKE) --no-print-directory -C src/tibercad distclean
+	@$(MAKE) --no-print-directory -C src/SDK distclean
 	@$(MAKE) --no-print-directory -C src/core/modules distclean
 	@rm -rf $(ARCH)
 
