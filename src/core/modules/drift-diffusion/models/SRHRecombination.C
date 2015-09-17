@@ -354,7 +354,7 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
 
   //a = 1 + exp((Et - Efn) / T);
   //b = 1 + exp((Efp - Et) / T);
-  //c = 1 - exp((Efp - Efn) / T);
+  c = 1 - exp((Efp - Efn) / T);
 
 
   double denom = tau_p * n * a + tau_n * p * b + tau_n * tau_p * (_gen_VT + _gen_TC);
@@ -460,10 +460,10 @@ SRHRecombination::get_net_recombination_rate_derivatives(
     deriv_e = _dos->get_occupied_density_derivative(-arg_e, kT_e);
   }
 
-  double gc = (1.0 - f_e) / f_e;
-  double gv = f_h / (1.0 - f_h);
-  double deriv_gc = -deriv_e / (f_e * f_e);
-  double deriv_gv =  deriv_h / ((1 - f_h) * (1 - f_h));
+  long double gc = (1.0 - f_e) / f_e;
+  long double gv = f_h / (1.0 - f_h);
+  long double deriv_gc = -deriv_e / (f_e * f_e);
+  long double deriv_gv =  deriv_h / ((1 - f_h) * (1 - f_h));
 
   //if (arg_e / kT_e > 50)
   {
@@ -476,29 +476,29 @@ SRHRecombination::get_net_recombination_rate_derivatives(
     deriv_gv = gv / kT_h;
   }
 
-  double a = 1 + gc;
-  double b = 1 + gv;
-  double c = 1 - gc*gv;
+  long double a = 1 + gc;
+  long double b = 1 + gv;
+  long double c = 1 - gc*gv;
 
   //a = 1 + exp((Et - Efn) / T);
   //b = 1 + exp((Efp - Et) / T);
-  //c = 1 - exp((Efp - Efn) / T);
+  c = 1 - exp((Efp - Efn) / T);
 
-  double nom = n * p * c - (tau_p * n * gc * _gen_VT +
+  long double nom = n * p * c - (tau_p * n * gc * _gen_VT +
       tau_n * p * gv * _gen_TC + tau_n * tau_p * _gen_VT * _gen_TC);
 
-  double denom = tau_p * n * a + tau_n * p * b + tau_n * tau_p * (_gen_VT + _gen_TC);
-  double denom2 = denom * denom;
+  long double denom = tau_p * n * a + tau_n * p * b + tau_n * tau_p * (_gen_VT + _gen_TC);
+  long double denom2 = denom * denom;
 
-  double r_e = nom / denom;
-  double r_h = r_e;
+  long double r_e = nom / denom;
+  long double r_h = r_e;
 
-  double dRedn = (p * c - tau_p * gc * _gen_VT - r_e * tau_p * a) / denom;
-  double dRedp = (n * c - tau_n * gv * _gen_TC - r_e * tau_n * b) / denom;
+  long double dRedn = (p * c - tau_p * gc * _gen_VT - r_e * tau_p * a) / denom;
+  long double dRedp = (n * c - tau_n * gv * _gen_TC - r_e * tau_n * b) / denom;
 
 
-  double dRedEfn = n * deriv_gc * (p * gv + tau_p * (_gen_VT + r_e)) / denom;
-  double dRedEfp = p * deriv_gv * (n * gc + tau_n * (_gen_TC + r_e)) / denom;
+  long double dRedEfn = n * deriv_gc * (p * gv + tau_p * (_gen_VT + r_e)) / denom;
+  long double dRedEfp = p * deriv_gv * (n * gc + tau_n * (_gen_TC + r_e)) / denom;
 
 
   recomb_e[0] = recomb_h[0] = dRedn;
