@@ -119,7 +119,7 @@ AtomisticGenerator::init_commons()
   }
 
   if (_reference_material == NULL)
-    throw InitFailedException("Reference region/material badly "
+    throw InitFailedException("Reference region/material missing or badly "
         "defined for structure " + _as->get_name() );
 
   //Build the right BulkCrystal object

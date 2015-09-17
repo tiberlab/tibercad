@@ -175,9 +175,9 @@ AtomisticStructure::init(const std::string& name,
    }
    else 
    {
-      if (!_options.find_option("reference_region") &&
-          !_options.find_option("reference_material"))
-         throw RuntimeException("missing reference_region or reference_material");
+      //if (!_options.find_option("reference_region") &&
+      //    !_options.find_option("reference_material"))
+      //   throw RuntimeException("missing reference_region or reference_material");
           
       // Build mesh based representation
       Utils::Timer tt;
