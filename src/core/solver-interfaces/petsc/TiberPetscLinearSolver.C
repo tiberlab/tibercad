@@ -141,6 +141,9 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   ierr = KSPGetPC(_ksp, &pc);
   TiberPetscUtils::checkerr(ierr);
 
+  if (matrix != precond)
+    _pc_type = PCMAT;
+
   ierr = PCSetType(pc, _pc_type.c_str());
 
   if (_solver_package != "") {
