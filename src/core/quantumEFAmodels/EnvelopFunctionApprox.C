@@ -502,14 +502,12 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
 //===================================================//
 EnvelopFunctionApprox::EnvelopFunctionApprox(const ModelOptions& options)
  : FEMEigenvalueProblem(options),
-   _calculate_density(false)
+   _calculate_density(false),
+   poisson_equation(NULL),
+   _bulk_mat_element(NULL)
 {
-  poisson_equation = NULL;
-
-  _bulk_mat_element = NULL;
 
   has_solution_vector(false);
-
 
 }
 
@@ -657,6 +655,27 @@ void EnvelopFunctionApprox::parse_options()
     {
       throw InitFailedException( "You have to specify a bulk_point");
     }
+
+    // get the bulk point's element
+
+    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+
+    bool found = false;
+
+    for ( ; (el != end_el) && (!found) ; ++el)
+    {
+      const Elem* elem = *el;
+      if (elem->contains_point(_bulk_point))
+      {
+        found = true;
+        _bulk_mat_element = elem;
+        break;
+      }
+
+    }
+
+    if (!found) throw SolveFailedException("Bad bulk material point\n");
   }
  
 
@@ -2626,7 +2645,7 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
   std::vector<unsigned int> dof_indices_qdens;
   //std::vector<unsigned int> dof_indices_qdens_p;
   NumericVector<Number>& qdens = *qdens_sys.solution;
-  qdens.zero();
+  //qdens.zero();
 
   // we need the connectivity of the nodes to not double count
   vector<int> connectivity(qdens.size(), 0.0);
@@ -2651,7 +2670,7 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
 
   // this is for the length scaling, EFA uses Bohr radii internally
   double a_B =  Constants::bohr_radius;
-  double scaling =  1e18 * opt.degeneracy / 1e6;
+  double scaling = opt.degeneracy / 1e6;
   switch (dim)
   {
     case 3:
@@ -2660,6 +2679,19 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
       scaling /= a_B;
     case 1:
       scaling /= a_B;
+    default:
+      break;
+  }
+
+  // k-space uses nm as units
+  switch (get_kspace()->dimension())
+  {
+    case 3:
+      scaling *= 1e9;
+    case 2:
+      scaling *= 1e9;
+    case 1:
+      scaling *= 1e9;
     default:
       break;
   }
@@ -2775,7 +2807,7 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
 void EnvelopFunctionApprox::solve_bulk(void)
 {
-  //std::cout<<"bulk calculation"<<std::endl;
+  /*
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
@@ -2796,15 +2828,15 @@ void EnvelopFunctionApprox::solve_bulk(void)
   }
 
   if (!found) throw SolveFailedException("Bad material point\n");
+  */
 
-
-  Point qp = mat_elem->centroid();
+  Point qp = _bulk_mat_element->centroid();
 
   EFAbulkHamiltonian* element_hamiltonian;
 
   //std::cout<<"elem H"<<std::endl;
 
-  element_hamiltonian = get_bulk_model<EFAbulkModel>(mat_elem)->get_Hamiltonian_model();
+  element_hamiltonian = get_bulk_model<EFAbulkModel>(_bulk_mat_element)->get_Hamiltonian_model();
 
   // a temporary array to pass k point to models, ASSUMING k TO BE IN nm
   double k_vector[3] = { get_k_point()(0) * 1e9 * Constants::bohr_radius,
@@ -2816,7 +2848,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
   element_hamiltonian->calculate_Hamiltonian_k_par();
 
   Tensor2Sym strain_crystal_system(0);
-  _strain_interface.get_crystal_strain(mat_elem, qp, strain_crystal_system);
+  _strain_interface.get_crystal_strain(_bulk_mat_element, qp, strain_crystal_system);
 
   //std::cout<<"strain"<<std::endl;
   //std::cout<<"(EP) strain exx "<<strain_crystal_system(1,1)<<std::endl;
@@ -2827,7 +2859,7 @@ void EnvelopFunctionApprox::solve_bulk(void)
   double electric_potential = 0;
   if (opt.consider_potential_bulk)
   {
-    electric_potential = get_electric_potential( mat_elem, qp );
+    electric_potential = get_electric_potential(_bulk_mat_element, qp );
     estimate_spectrum_shift();
   }
 
@@ -2889,11 +2921,11 @@ void EnvelopFunctionApprox::solve_bulk(void)
 
   double el_chem = 0;
   double hl_chem = 0;
-  double temp = _temp_interface.get_temperature(mat_elem, mat_elem->centroid());
+  double temp = _temp_interface.get_temperature(_bulk_mat_element, _bulk_mat_element->centroid());
   if (poisson_equation != NULL)
   {
-    get_el_electro_chem_potential(mat_elem);
-    get_hl_electro_chem_potential(mat_elem);
+    get_el_electro_chem_potential(_bulk_mat_element);
+    get_hl_electro_chem_potential(_bulk_mat_element);
   }
 
   for (unsigned int i = 0; i < n ; i++)
@@ -2909,8 +2941,16 @@ void EnvelopFunctionApprox::solve_bulk(void)
     }
   }
 
-  for (unsigned int i = 0; i < max_hl ; i++)
-    swap(_solution[i], _solution[max_hl - i]);
+  // reorder according to energy
+  for (unsigned int i = 0; i <= max_hl ; i++)
+  {
+    unsigned int max_id = i;
+    for (unsigned int j = i+1; j <= max_hl; j++)
+      if (_solution[j].eigen_energy > _solution[max_id].eigen_energy)
+        max_id = j;
+
+    swap(_solution[i], _solution[max_id]);
+  }
 
 
   // we have to redeclare the solution variables to adjust the number
