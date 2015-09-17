@@ -5198,7 +5198,52 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    //sysmat.close();
+
+    /*
+    DenseMatrix<Number> Pe(3, 3);
+    Pe.zero();
+
+    unsigned int sysnum = system.get_libmesh_system()->number();
+    MeshBase::const_node_iterator nit(mesh.active_nodes_begin());
+    const MeshBase::const_node_iterator nend(mesh.active_nodes_end());
+    for ( ; nit != nend; ++nit)
+    {
+      if ((*nit)->has_dofs(sysnum))
+      {
+        unsigned int dof_1 = (*nit)->dof_number(sysnum, 0, 0);
+        unsigned int dof_2 = (*nit)->dof_number(sysnum, 1, 0);
+        unsigned int dof_3 = (*nit)->dof_number(sysnum, 2, 0);
+
+        double a11 = (*jacobian)(dof_1, dof_1);
+        double a12 = (*jacobian)(dof_1, dof_2);
+        double a13 = (*jacobian)(dof_1, dof_3);
+        double a21 = (*jacobian)(dof_2, dof_1);
+        double a22 = (*jacobian)(dof_2, dof_2);
+        double a23 = (*jacobian)(dof_2, dof_3);
+        double a31 = (*jacobian)(dof_3, dof_1);
+        double a32 = (*jacobian)(dof_3, dof_2);
+        double a33 = (*jacobian)(dof_3, dof_3);
+
+        Pe(0, 0) = a22*a33 - a32*a23;
+        Pe(0, 1) = a13*a32 - a33*a12;
+        Pe(0, 2) = a12*a23 - a22*a13;
+        Pe(1, 0) = a23*a31 - a33*a21;
+        Pe(1, 1) = a11*a33 - a31*a13;
+        Pe(1, 2) = a13*a21 - a23*a11;
+        Pe(2, 0) = a21*a32 - a31*a22;
+        Pe(2, 1) = a12*a31 - a32*a11;
+        Pe(2, 2) = a11*a22 - a21*a12;
+        double det = a11 * Pe(0, 0) + a21 * Pe(0, 1) + a31 * Pe(0, 2);
+        Pe.scale(1.0 / det);
+
+        sysmat.add_matrix(Pe, {dof_1, dof_2, dof_3});
+
+
+
+      }
+    }
+    sysmat.close();
+    */
     /*
     if (coupling & ELECTRONS)
     {
@@ -5210,13 +5255,14 @@ DriftDiffusion::do_assembly(const NumericVector<Number>& x,
       jacobian->print_matlab("J" + os.str());
       sysmat.print_matlab("precond" + os.str());
     }
-    //if (coupling & ELECTRONS) __private_counter++;
+    if (coupling & ELECTRONS) __private_counter++;
     //if (__private_counter == 2) exit(0);
     */
   }
   else
   {
     residual->close();
+
     //sysmat.close();
     //sysmat.print_matlab("sysmat.m");
     /*

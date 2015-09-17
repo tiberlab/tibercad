@@ -50,7 +50,8 @@ DDBulkModel::DDBulkModel(const ModelOptions& options)
     _eTEpower(0),
     _hTEpower(0),
     _polarization(0),
-    _background_conductivity(0.0),
+    _background_conductivity_e(0.0),
+    _background_conductivity_h(0.0),
     _thermoelectric_power(NULL),
     _is_dielectric(false),
     _relax_polariz(1.0)
@@ -339,8 +340,17 @@ DDBulkModel::do_init(void)
   //  _background_conductivity =
   //      0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
   //else
-    _background_conductivity =
-        0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
+  _background_conductivity_e =
+      0.5 * get_option("background_conductivity", 1e-3 * Constants::e);
+  _background_conductivity_h = _background_conductivity_e;
+
+  _background_conductivity_e = get_option("background_conductivity_e",
+      _background_conductivity_e);
+  _background_conductivity_h = get_option("background_conductivity_h",
+      _background_conductivity_h);
+
+  _background_conductivity_e /= Constants::e;
+  _background_conductivity_h /= Constants::e;
 
 
   // calculate the equilibrium
@@ -460,9 +470,9 @@ DDBulkModel::calculate_mobilities(void)
   }
 
   pd.electron_conductivity =
-    pd.electron_mobility * pd.electron_density + _background_conductivity;
+    pd.electron_mobility * pd.electron_density + _background_conductivity_e;
   pd.hole_conductivity =
-    pd.hole_mobility * pd.hole_density + _background_conductivity;
+    pd.hole_mobility * pd.hole_density + _background_conductivity_h;
 }
 
 

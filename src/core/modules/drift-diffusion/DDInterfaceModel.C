@@ -153,9 +153,6 @@ DDInterfaceModel::do_init(void)
     _ddprop_B = NULL;
   }
 
-  set_conduction_band(&_ddprop_A->get_conduction_band());
-  set_valence_band(&_ddprop_A->get_valence_band());
-
   SimulationInterface* si = SimulationInterface::get_simulation(get_simulator_id());
   if (!si->includes_region(bnd->get_id_A()))
     mat = bnd->get_material_B();
@@ -321,6 +318,8 @@ DDInterfaceModel::compute()
   */
 
   // surface states
+  if (!get_bulk_dd_properties()->is_dielectric())
+  {
   if (get_type(0) == NEUMANN)
   {
     // NOTE we invert the signs because g = \epsilon \nabla\varphi \hat{n}
@@ -365,6 +364,7 @@ DDInterfaceModel::compute()
     _jacobian[2][0] -= dRp_dEfn + dRp_dEfp;
     _jacobian[2][1] += dRp_dEfn;
     _jacobian[2][2] += dRp_dEfp;
+  }
   }
 
   if (_eflux_controlled)

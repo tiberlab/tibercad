@@ -279,12 +279,19 @@ class DDBulkModel : public DriftDiffusionProperties
     RealVectorValue _polarization;
 
 
-    //! A background conductivity
+    //! A background conductivity for electrons
     /*!
      * Mainly used for stability reasons in pathologic cases
      * Units are S/cm
      */
-    double _background_conductivity;
+    double _background_conductivity_e;
+
+    //! A background conductivity for holes
+    /*!
+     * Mainly used for stability reasons in pathologic cases
+     * Units are S/cm
+     */
+    double _background_conductivity_h;
 
 
 
