@@ -12,11 +12,9 @@ class ETB : public TightBinding
   enum Solutions
   {
     MeshStates,  //Eigenstate Magnitude projected on mesh
-    ElQuantumDensity,  //Electron charge density on mesh cells
-    HlQuantumDensity,  //Hole charge density on mesh cells
     MeshStatesNodes,  //Eigenstate Magnitude projected on mesh nodes
-    ElQuantumDensityNodes,  //Electron charge density on mesh nodes
-    HlQuantumDensityNodes  //Hole charge density on mesh nodes
+    eDensity,  //Electron charge density on mesh nodes
+    hDensity  //Hole charge density on mesh nodes
   };
 
   typedef enum {JVXL=1, CUBE=2} OutputFormat;
@@ -63,6 +61,7 @@ class ETB : public TightBinding
     bool hybrid_passivation;
     bool d_states_correction;
     bool assemble_H;
+    bool compute_densities;
   };
 
   class UptSolverOptions
@@ -149,13 +148,17 @@ class ETB : public TightBinding
   //! initialize or reinitialize the library container's with structure data
   virtual void do_reinit(void);
 
-  virtual void do_solve (void);
+  virtual void do_solve(void);
+
+  virtual void do_solve_for_kpoint(const Point& k_point);
 
   virtual void plot_atomisticdata (void);
 
   virtual void parse_options(void);
 
   virtual void do_assemble(const ModelOptions& options);
+
+  virtual void do_calculate_density_at_k(DofField& density);
 
   //! Setup the available variables
   virtual void do_setup_solution_variables(void);
@@ -174,7 +177,9 @@ class ETB : public TightBinding
   int _dim;
 
   //! computes the matrix element for the optical matrix
-  //! the P matrix comes out in   eV * Ang  (setting m=1,hbar=1)
+  /*!
+   * the P matrix comes out in   eV * Ang  (setting m=1,hbar=1)
+   */
   virtual std::complex<double> calculate_matrix_element(const std::string& i_particle,
 							unsigned int i,
 							const std::string& j_particle,
@@ -198,6 +203,9 @@ class ETB : public TightBinding
   //! Print all _dftb_options for debugging purposes
   void print_upt_options(void);
 
+  //! Prepare and call uptight
+  void call_uptight(void);
+
   void read_kpoints(void);
 
   //! Add potential shifts
@@ -210,6 +218,10 @@ class ETB : public TightBinding
 
   //! project strain on atom (Macrostrain)
   void project_atom_strain(void);
+
+  //! Project atomic densities onto mesh
+  std::pair<double, double> project_densities(
+      const Elem* elem, const Point& point, double cutoff);
 
   //! subroutine used to read band-edges from database
   void get_bulk_edges(void);

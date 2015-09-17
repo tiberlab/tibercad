@@ -6,15 +6,19 @@
 #include "PhysicalModel.h"
 #include "AtomisticStructure.h"
 #include "SimulationOptions.h"
+#include "TiberLinearSystem.h"
 #include "TiberCad.h"
 #include "UptWrapper.h"
 #include "uptight.h"
 #include "Material.h"
 #include "Alloy.h"
 #include "Messages.h"
-#include "mesh.h"
 #include "EigenSolver.h"
 #include "RotatedCrystal.h"
+#include "Utils.h"
+
+#include "mesh.h"
+#include "dof_map.h"
 
 #include <fstream>
 #include <sstream>
@@ -83,7 +87,8 @@ ETB::UptOptions::UptOptions(void)
  hybrid_passivation(false),
  dg_scale(1.0),
  dg_onsite(-200.0),
- grid_step(0.5)
+ grid_step(0.5),
+ compute_densities(false)
 {
   //c_axis.reserve(3);
   c_axis[0]=0.0; c_axis[1]=0.0; c_axis[2]=1.0;
@@ -195,6 +200,7 @@ ETB::do_init(void){
 
   build_map_elem_atoms(_upt_options.projection_length);
 
+  cerr << "done\n";
 
   Messages::info("("+get_name()+") database path: "+database_path);
   Messages::info("("+get_name()+") default  path: "+default_path);
@@ -204,6 +210,15 @@ ETB::do_init(void){
 
   _init = true;      // initialization must be called
   _assemble = true;  // matrix assemble must be done
+
+
+
+  // We add a second system just to contain the density
+  create_equation_system("linear");
+  TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(0);
+  linsys.add_variable("edens", libMeshEnums::FIRST);
+  linsys.add_variable("hdens", libMeshEnums::FIRST);
+  linsys.init();
 
 }
 
@@ -325,6 +340,7 @@ void ETB::do_reinit(void)
 
     //Messages::info("("+get_name()+") printing structure "+upt_filename);
 
+
     get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset, 
                                                       !_upt_options.band_shift_flag);
 
@@ -428,8 +444,111 @@ void ETB::get_c_axis(void)
 
 }
 
+
+
+
+void ETB::do_calculate_density_at_k(DofField& density)
+{
+  _el_atomic_charges.clear();
+  _el_atomic_charges.resize(_N_without_H, 0.0);
+  _hl_atomic_charges.clear();
+  _hl_atomic_charges.resize(_N_without_H, 0.0);
+
+  compute_atomic_charges("el", _el_atomic_charges);
+  compute_atomic_charges("hl", _hl_atomic_charges);
+
+  //cerr << "####\n";
+  //for (int i = 0; i < _el_atomic_charges.size(); ++i)
+  //{
+  //  cerr << i+1 << " " << _el_atomic_charges[i] << " " << _hl_atomic_charges[i] << endl;
+  //}
+  //cerr << "####\n";
+
+  density = _el_atomic_charges;
+  density.reserve(2 * _el_atomic_charges.size());
+  density.insert(density.end(), _hl_atomic_charges.begin(), _hl_atomic_charges.end());
+}
+
+
+
+
+void ETB::do_solve_for_kpoint(const Point& k_point)
+{
+  reinit();
+  call_uptight();
+}
+
+
 //-------------------------------------------------------------------------
-void ETB::do_solve(void){
+void ETB::do_solve(void) {
+
+  if (_upt_options.compute_densities)
+  {
+    // calculate the atomic density
+    DofField dens;
+    integrate_density(dens);
+
+    // put densities back into the qdensity vectors
+    unsigned int n_atoms = dens.size() / 2;
+    for (unsigned int i = 0; i < n_atoms; ++i)
+    {
+      //cerr << dens[i] << " " << dens[i + n_atoms] << std::endl;
+      _el_atomic_charges[i] = dens[i];
+      _hl_atomic_charges[i] = dens[i + n_atoms];
+    }
+
+    // The qdens_sys system contains the nodal quantum density
+    TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>();
+    NumericVector<Number>& qdens = *qdens_sys.solution;
+
+    FEType fe_type = qdens_sys.variable_type(0);
+    AutoPtr<FEBase> fe(build_finite_element(_dim, fe_type));
+
+    DofMap& dof_map = qdens_sys.get_dof_map();
+    vector<unsigned int> dof_indices_e;
+    vector<unsigned int> dof_indices_h;
+
+    // we play a trick: only DoFs with value == -1 need to be updated
+    qdens.zero();
+    qdens.add(-1.0);
+
+    // the cutoff distance for near atoms in A
+    double cutoff = _upt_options.projection_length;
+
+    Utils::Progress prog("Project densities", get_mesh().n_active_elem());
+
+
+    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    for ( ; el != end_el; ++el)
+    {
+      const Elem* elem = *el;
+      dof_map.dof_indices(elem, dof_indices_e, 0);
+      dof_map.dof_indices(elem, dof_indices_h, 1);
+
+      for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      {
+        //if (qdens(dof_indices_e[n]) < 0)
+        {
+          auto densities = project_densities(elem, elem->point(n), cutoff);
+          qdens.set(dof_indices_e[n], densities.first);
+          qdens.set(dof_indices_h[n], densities.second);
+        }
+      }
+      prog.progress_message();
+
+    }
+
+    qdens.close();
+  }
+  else
+    call_uptight();
+}
+
+
+void
+ETB::call_uptight(void)
+{
 
   // check unused tags in solver_options
   const ModelOptions& sol_opt = get_solver_options();
@@ -490,13 +609,12 @@ void ETB::do_solve(void){
     }
       
     int num_ev = _upt_solver_options.n_vb + _upt_solver_options.n_cb;
-    Complex matel;
 
     Messages::info("\n("+get_name()+") consistency check:");
 
     for(int i=1; i<= num_ev; i++)
     {
-	matel = inst->get_matel(i,i);
+	Complex matel = inst->get_matel(i,i);
 	std::cout << "  <"<<i<<"| H |"<<i<<"> = " << matel << std::endl;
     }
   }
@@ -594,9 +712,9 @@ void ETB::do_solve(void){
 
   }
 
-  delete eigvals;
-  delete eigvects;
-  delete particles;
+  delete [] eigvals;
+  delete [] eigvects;
+  delete [] particles;
 
 
   // write state infos on screen.
@@ -910,17 +1028,23 @@ void ETB::parse_options(void)
   if ( solver_type == "gpu") _upt_solver_options.solver_flag = 1;
   if ( solver_type == "gpu-split") _upt_solver_options.solver_flag = 2;
 
-  _upt_solver_options.n_vb =  solopts.get_option("num_valence_eigenvalues", 0);
-  if( _upt_solver_options.n_vb == 0) {
-    _upt_solver_options.n_vb =  solopts.get_option("num_hole_states", 0);
-  }
+  _upt_solver_options.n_vb = get_option("num_valence_eigenvalues", 0);
+  _upt_solver_options.n_vb =
+      get_option("num_hole_states", _upt_solver_options.n_vb);
+  _upt_solver_options.n_vb =
+      solopts.get_option("num_valence_eigenvalues", _upt_solver_options.n_vb);
+  _upt_solver_options.n_vb =
+      solopts.get_option("num_hole_states", _upt_solver_options.n_vb);
   
   if (_upt_solver_options.n_vb%2==1) _upt_solver_options.n_vb += 1;
   
-  _upt_solver_options.n_cb =  solopts.get_option("num_conduction_eigenvalues", 0);
-  if( _upt_solver_options.n_cb == 0) {
-    _upt_solver_options.n_cb =  solopts.get_option("num_electron_states", 0);
-  }
+  _upt_solver_options.n_cb =  get_option("num_conduction_eigenvalues", 0);
+  _upt_solver_options.n_cb =
+      get_option("num_electron_states", _upt_solver_options.n_cb);
+  _upt_solver_options.n_cb =
+      solopts.get_option("num_conduction_eigenvalues", _upt_solver_options.n_cb);
+  _upt_solver_options.n_cb =
+      solopts.get_option("num_electron_states", _upt_solver_options.n_cb);
 
   if (_upt_solver_options.n_cb%2==1) _upt_solver_options.n_cb += 1;
   
@@ -965,7 +1089,7 @@ void ETB::parse_options(void)
   _upt_solver_options.ort_tol =  solopts.get_option("orthogonality_tolerance", 1e-6);
 
   //Get projection_length for quantum charge projection (Ang)
-  _upt_options.projection_length = get_option("projection_length", 2.0);
+  _upt_options.projection_length = get_option("projection_length", 5.0);
 
   _upt_solver_options.guess_vb =
       solopts.get_option("guess_valence", _upt_solver_options.guess_vb);
@@ -980,7 +1104,9 @@ void ETB::parse_options(void)
   //std::cout << "Projection lenght set to " <<  _upt_options.projection_length << std::endl;
   //std::cout << "done" << std::endl;
 
-
+  if (plot_solution("eDensity") ||
+      plot_solution("hDensity"))
+    _upt_options.compute_densities = true;
 }
 
 //-------------------------------------------------------------------------
@@ -1263,7 +1389,9 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
   if(qmat.size() < N_atoms_wo_H)
     throw InitFailedException("(INT. ERROR) array mismatch in compute_atomic_charges");
 
-  for(j=0; j<N_atoms_wo_H; j++){qmat[j] = 0.0; }
+  for(j=0; j<N_atoms_wo_H; j++)
+    qmat[j] = 0.0;
+
   for(i = 0; i < n; i++)
   {
     if(_solution[i].particle == particle)
@@ -1279,6 +1407,8 @@ ETB::compute_atomic_charges(const std::string& particle, std::vector<double>& qm
 
 	k_at = k;
 
+	// TODO it may be better to change sign of energies for holes, instead of doing the
+	// 1-pop thing afterwards
 	double pop = Fermi(_solution[i].eigen_energy, _solution[i].electro_chem_pot,
 		       _solution[i].temperature);
 
@@ -1564,7 +1694,53 @@ ETB::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& values,
     const std::vector<Point>& p)
 {
+  unsigned int np = p.size();
 
+  bool do_edens = values.count(eDensity);
+  bool do_hdens = values.count(hDensity);
+
+  if (do_edens || do_hdens)
+  {
+    TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>(0);
+    NumericVector<Number>& qdens = *qdens_sys.solution;
+    unsigned int dim = get_mesh().mesh_dimension();
+
+    FEType fe_type = qdens_sys.variable_type(0);
+    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    const vector<vector<Real> >& phi = fe->get_phi();
+
+    fe->reinit(elem, &p);
+
+    DofMap& dof_map = qdens_sys.get_dof_map();
+    std::vector<unsigned int> dof_indices_el, dof_indices_hl;
+    dof_map.dof_indices(elem, dof_indices_el, 0);
+    dof_map.dof_indices(elem, dof_indices_hl, 1);
+    unsigned int n_dofs = phi.size();
+
+    for (unsigned int n = 0; n < np; n++)
+    {
+      double value_e = 0;
+      double value_h = 0;
+
+      // the phi^2 factor comes from the fact that the more correct interpolation is the square
+      // of the basis function, because the probability densities are the square of the states
+      // NOTE: maybe one should check if this gives really a better result
+      // NOTE: 2011-12-01 the above turned out to be wrong: phi is used only as linear interp. !
+      for (unsigned int i = 0; i < n_dofs; i++)
+      {
+         value_e += phi[i][n] * qdens(dof_indices_el[i]);
+         value_h += phi[i][n] * qdens(dof_indices_hl[i]);
+      }
+
+      if (do_edens)
+        values[eDensity][n] = value_e;
+      if (do_hdens)
+        values[hDensity][n] = value_h;
+    }
+
+  }
+
+  /*
   //CELL values
   //
   if (values.count(ElQuantumDensity))
@@ -1586,6 +1762,7 @@ ETB::get_solution_secure(const Elem* elem,
     else if (_dim == 1)
       values[HlQuantumDensity][0] = build_average_rho1d(_hl_atomic_charges, elem);
     }
+  */
 
   if (values.count(MeshStates))
     {
@@ -1601,12 +1778,11 @@ ETB::get_solution_secure(const Elem* elem,
     }
 
   //NODES values
-  unsigned int np = p.size();
-
 
   //Get point coordinate as physical_point
   Point phys_p;
 
+  /*
   if (values.count(ElQuantumDensityNodes))
     {
     for (unsigned int n = 0; n < np; n++)
@@ -1651,6 +1827,7 @@ ETB::get_solution_secure(const Elem* elem,
 
       }
     }
+  */
 
   if (values.count(MeshStatesNodes))
     {
@@ -1878,10 +2055,10 @@ ETB::do_setup_solution_variables(void)
   else if (dim == 3)
      units = "/cm^3";
 
-  declare_solution(ElQuantumDensity, REAL, CELL, "q"+units);
-  declare_solution(HlQuantumDensity, REAL, CELL, "q"+units);
-  declare_solution(ElQuantumDensityNodes, REAL, NODES, "q"+units);
-  declare_solution(HlQuantumDensityNodes, REAL, NODES, "q"+units);
+  //declare_solution(ElQuantumDensity, REAL, CELL, "q"+units);
+  //declare_solution(HlQuantumDensity, REAL, CELL, "q"+units);
+  declare_solution(eDensity, REAL, NODES, "q"+units);
+  declare_solution(hDensity, REAL, NODES, "q"+units);
   declare_solution(MeshStates, NTUPLE, CELL, "1"+units, 1);
   declare_solution(MeshStatesNodes, NTUPLE, NODES, "1"+units, 1);
 
@@ -2000,3 +2177,148 @@ ETB::setup_atomistic_structure(void)
 }
 
 
+pair<double, double>
+ETB::project_densities(const Elem* elem, const Point& point, double cutoff)
+{
+  pair<double, double> densities(0, 0);
+
+  AtomisticStructure* as = get_atomistic_structure();
+
+
+  if (get_option("new_projection", false))
+  {
+    // TODO WARNING assuming cutoff in A, but find_nearest_atom expects nm
+    int index = as->find_nearest_atom(elem, point, 2 * cutoff / 10.0);
+
+    if (index >= 0)
+    {
+
+      const BondMap& bondmap = as->get_bond_map();
+      int coordination = bondmap[index].size();
+
+      if (coordination == 4)
+      {
+        BondMap::Translation tr = bondmap.get_translation();
+        // take the first as origin
+        Point o(as->get_structure_atom(bondmap[index][0]).get_position()
+            + tr[index][0]);
+        Point a(as->get_structure_atom(bondmap[index][1]).get_position()
+            + tr[index][1] - o);
+        Point b(as->get_structure_atom(bondmap[index][2]).get_position()
+            + tr[index][2] - o);
+        Point c(as->get_structure_atom(bondmap[index][3]).get_position()
+            + tr[index][3] - o);
+
+        // volume of the tetrahedron
+        double vol = 1.0/6.0 * a * b.cross(c);
+        double normalization = 0.5* 1e24 / fabs(vol);
+        //double normalization = 1e24;
+
+        densities.first += _el_atomic_charges[index] * normalization;
+        densities.second += _hl_atomic_charges[index] * normalization;
+
+        for (unsigned int k = 0; k < 4; ++k)
+        {
+          unsigned int atom_id = bondmap[index][k];
+          int coordination = bondmap[atom_id].size();
+          if (coordination == 4)
+          {
+            densities.first += _el_atomic_charges[atom_id] * normalization / coordination;
+            densities.second += _hl_atomic_charges[atom_id] * normalization / coordination;
+          }
+        }
+      }
+    }
+  }
+  else
+  {
+
+    const double scale = get_atomistic_structure()->get_scale();
+    const double sigma = cutoff;
+    const double sigma2 = 2.0*sigma*sigma;
+
+    // the point in Angstrom
+    Point coord(point);
+    coord *= get_mesh_units() / 1e-10;
+
+    // normalization/scale factor
+    double normalization = 1.0;
+    switch (_dim)
+    {
+//      case 1:
+//        normalization = 1e8;
+//        break;
+
+//      case 2:
+//        normalization = 1e16 / (2.0 * M_PI * sigma);
+//        break;
+
+      default:
+      {
+        double tmp = 1 / (2.0 * M_PI * sigma * sigma);
+        normalization = 1e24 * sqrt(tmp * tmp * tmp);
+        break;
+      }
+    }
+    //normalization = 3.0 / (4 * M_PI * sigma * sigma * sigma) * 1e24;
+
+    // this approach does not need the elem_atoms map, but then it needs to be able
+    // to find atoms not only in spheres.
+    ///*
+    int index = as->find_nearest_atom(elem, point, 2 * cutoff / 10.0);
+    AtomisticBasis::neighbor_iterator it(
+        get_atomistic_structure()->neighbors_begin(index, cutoff));
+    const AtomisticBasis::neighbor_iterator end(
+        get_atomistic_structure()->neighbors_end(index, cutoff));
+
+    // the charge of the nearest atom
+    //densities.first += _el_atomic_charges[index] * normalization;
+    //densities.second += _hl_atomic_charges[index] * normalization;
+
+    for (; it != end; ++it)
+    {
+      const Atom* atom = *it;
+      unsigned int atom_id = it.atom_index();
+
+      //cerr << " " << atom_id << endl;
+      Point atom_pos(atom->get_position() + it.atom_translation());
+    //*/
+
+    /*
+    const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
+    for (int i = 0; i < atoms.size(); ++i)
+    {
+      unsigned int atom_id = atoms[i];
+      const Atom* atom = &get_atomistic_structure()->get_structure_atom(atom_id);
+      Point atom_pos(atom->get_position());
+    */
+
+      Point delta_r = coord - atom_pos;
+
+      switch (_dim)
+      {
+//        case 1:
+          // set dy = 0, the rest is the same as in 3D
+//          delta_r(1) = 0.0;
+
+//        case 2:
+          // set dz = 0, the rest is the same as in 3D
+//          delta_r(2) = 0.0;
+
+        default:
+        {
+          double factor = normalization * exp(-delta_r.size_sq() / sigma2);
+          densities.first += _el_atomic_charges[atom_id] * factor;
+          densities.second += _hl_atomic_charges[atom_id] * factor;
+          //densities.first += _el_atomic_charges[atom_id] * normalization / coordination;
+          //densities.second += _hl_atomic_charges[atom_id] * normalization / coordination;
+          break;
+        }
+      }
+    }
+   //cerr << densities.first << endl;
+
+  }
+
+  return densities;
+}
