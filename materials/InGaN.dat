@@ -14,10 +14,11 @@ bow_Eg_L = 1.84
 
 
 [polarization/PRB88]
+# Note: PRB88 defines the bowing with different sign
 bow_Pz = -0.037
-bow_e33 = -0.55
-bow_e31 = 0.222
-bow_e15 = -0.275
+bow_e33 = 0.55
+bow_e31 = -0.222
+bow_e15 = 0.275
 
 [pyroelectricity]
 bow_Pz = -0.037

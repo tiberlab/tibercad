@@ -48,15 +48,17 @@ delta_s = 0.005
 #D5 = -4.0
 #D6 = -5.5
 
-# from APL 95 121111 (2009)
-# and Appl. Phys. Lett. 83, 4963 (2003)
-a_c = (-3.6, -3.6, -4.22)
-D1 = -0.4 # a_cz - D1 = -3.62
+# Deformation potentials have been taken from [8,9],
+# missing values from [7], and adjusted to reproduce
+# approximately the band shifts from sp3d5s* empirical
+# tight binding
+a_c = (-3.6, -3.6, -4.22) # from [8,9]
+D1 = -0.4 # a_cz - D1 = -3.62 , all D_i from [8]
 D2 = 1.0 # a_ct - D2 = -4.6
 D3 = 2.68
 D4 = -1.74
 D5 = -2.07
-D6 = -5.5
+D6 = -5.5  # from Vurgaftman [7]
 
 
 [permittivity]

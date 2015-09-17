@@ -15,10 +15,11 @@ bow_Eg_L = 0.8
 
 
 [polarization/PRB88]
+# PRB88 has other sign convention for bowing
 bow_Pz = -0.021
-bow_e33 = -0.671
-bow_e31 = 0.106
-bow_e15 = -0.032
+bow_e33 = 0.671
+bow_e31 = -0.106
+bow_e15 = 0.032
 
 # spontaneous polariz.
 [pyroelectricity]
