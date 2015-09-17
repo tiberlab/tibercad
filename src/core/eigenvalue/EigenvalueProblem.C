@@ -783,7 +783,7 @@ EigenvalueProblem::integrate_density(DofField& density)
   if (z_per && (mesh_dim > 2))
   {
     c(2) = (bbox.second(2) - bbox.first(2)) * get_mesh_units() * 1e9;
-    normalization_volume *= c(1) * 1e-9;
+    normalization_volume *= c(2) * 1e-9;
   }
 
   // if there is an atomistic structure, we can take the lattice vectors from it
