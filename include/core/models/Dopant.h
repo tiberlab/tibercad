@@ -5,6 +5,7 @@
 
 #include "ModelOptions.h"
 #include "tiber_dll.h"
+#include "ExternalProfile.h";
 
 #include <string>
 
@@ -19,13 +20,6 @@ class TBDLEXPORT Dopant
 
   public:
 
-    //! The doping profile
-    enum DopingProfile
-    {
-      CONSTANT = 0, /*!< constant doping density */
-      VARIABLE,     /*!< spatially variable profile */
-      USERDEFINED   /*!< a user defined function */
-    };
 
     //! The type of the dopant
     enum DopingType
@@ -51,7 +45,7 @@ class TBDLEXPORT Dopant
 
 
     // Destructor
-    virtual ~Dopant(void) {};
+    ~Dopant(void) {};
 
 
     //! Create a doping with given profile and options
@@ -104,9 +98,6 @@ class TBDLEXPORT Dopant
 
   protected:
 
-    //! Calculate the doping density
-    virtual double do_calculate_doping_density(const Elem* elem, const Point& p);
-
 
     //! Get the options
     ModelOptions& get_options(void);
@@ -116,7 +107,7 @@ class TBDLEXPORT Dopant
   private:
 
     //! The doping profile function
-    DopingProfile _profile;
+    ExternalProfile* _profile;
 
     //! The doping density
     double _density;
@@ -145,7 +136,7 @@ class TBDLEXPORT Dopant
 inline
 Dopant::Dopant(double density, double ionisation_energy,
                int g_factor, DopingType type)
-  : _profile(CONSTANT),
+  : _profile(nullptr),
     _density(density),
     _type(type),
     _ionisation_energy(ionisation_energy),
@@ -176,8 +167,8 @@ inline
 void
 Dopant::calculate_doping_density(const Elem* elem, const Point& p)
 {
-  if (_profile != CONSTANT)
-    _density = do_calculate_doping_density(elem, p);
+  if (_profile != nullptr)
+    _density = _profile->get_data(elem, p);
 }
 
 
@@ -212,14 +203,6 @@ Dopant::get_options(void)
   return _options;
 }
 
-
-
-inline
-double
-Dopant::do_calculate_doping_density(const Elem*, const Point&)
-{
-  return 0.0;
-}
 
 
 

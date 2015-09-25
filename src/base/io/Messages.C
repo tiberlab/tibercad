@@ -209,7 +209,7 @@ Messages::error(const string& msg)
 #ifdef _WIN32
   SetConsoleTextAttribute(hstdout, csbi.wAttributes);
 #else
-  *_cout << normal;
+  cerr << normal;
 #endif
   ts << msg << endl << flush;
 

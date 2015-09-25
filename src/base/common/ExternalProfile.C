@@ -4,6 +4,7 @@
 
 #include "ExtProfile1D.h"
 #include "UniformRandomAlloy.h"
+#include "LinearProfile.h"
 
 using namespace std;
 
@@ -28,6 +29,8 @@ ExternalProfile::create(const ModelOptions& options)
     pr = new ExtProfile1D(options);
   else if (options.get_name() == "uniform_random")
     pr = new UniformRandomAlloy(options);
+  else if (options.get_name() == "linear")
+    pr = new LinearProfile(options);
 
   return pr;
 }

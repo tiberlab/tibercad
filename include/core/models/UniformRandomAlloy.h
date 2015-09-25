@@ -9,7 +9,7 @@
 #include <random>
 
 
-//! Class to read an external line profile
+//! Class to create a uniform random distribution
 class UniformRandomAlloy : public ExternalProfile
 {
   public:

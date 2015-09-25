@@ -27,11 +27,14 @@ Dopant::create(const std::string& profile, const ModelOptions& options)
   }
   g_factor = options.get_option("g", g_factor);
 
-  if (profile.empty() || (profile == "constant"))
-    dop = new Dopant(density, ionisation_energy, g_factor, type);
+  dop = new Dopant(density, ionisation_energy, g_factor, type);
+  dop->_options = options;
 
-  if (dop != NULL)
-    dop->_options = options;
+  if (options.has_submodel("profile"))
+  {
+    dop->_profile = ExternalProfile::create(
+        options.submodels_begin("profile")->second);
+  }
 
   return dop;
 }
