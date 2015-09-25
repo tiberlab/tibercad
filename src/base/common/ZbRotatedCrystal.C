@@ -127,6 +127,7 @@ void ZbRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
 
   Tensor1 vec_x;
   Tensor1 vec_y;
+  Tensor1 vec_z;
 
   if (vec_x_mil.size() == 3)
   {
@@ -138,6 +139,34 @@ void ZbRotatedCrystal::calculate_rot_matrix_miller(std::vector<int> vec_x_mil, s
     vec_y(1) = a_lat* vec_y_mil[0];
     vec_y(2) = a_lat* vec_y_mil[1];
     vec_y(3) = a_lat* vec_y_mil[2];
+
+    vec_z(1) = a_lat* z_miller[0];
+    vec_z(2) = a_lat* z_miller[1];
+    vec_z(3) = a_lat* z_miller[2];
+    
+    bool error = (fabs(vec_x * vec_y) > 1e-9);
+    error |= (fabs(vec_x * vec_z) > 1e-9);
+    error |= (fabs(vec_y * vec_z) > 1e-9);
+    error |= (vec_x * vectorProduct(vec_y, vec_z) < 1e-9);
+
+    if (error)
+    {
+      Messages m;
+      m.error("These crystal directions are inconsistent "
+          "(they do not build right-handed orthogonal system):");
+      m.indent();
+      std::ostringstream os;
+      os << "x = [" << x_miller[0] << " " << x_miller[1] << " " << x_miller[2] << "]";
+      m.error(os.str());
+      os.str("");
+      os << "y = [" << y_miller[0] << " " << y_miller[1] << " " << y_miller[2] << "]";
+      m.error(os.str());
+      os.str("");
+      os << "z = [" << z_miller[0] << " " << z_miller[1] << " " << z_miller[2] << "]";
+      m.error(os.str());
+      os.str("");
+      throw InitFailedException("Inconsistent crystal directions");
+    }
   }
   else
   {
