@@ -622,7 +622,7 @@ class SimulationInterface : public TiberModelObject
      * \param scale include length scaling if true
      */
     AutoPtr<FEBase> build_finite_element(unsigned int dim, FEType type,
-        bool scale = false);
+        bool scale = false) const;
 
 
     //! Tell the level of verbosity

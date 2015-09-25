@@ -4,7 +4,7 @@ TIBERVER=@TIBERVERSION@
 
 ARCH=`uname -m`-linux
 
-GMSHVER=2.8.0
+GMSHVER=2.8.4
 
 
 
@@ -233,7 +233,19 @@ ARCH=${ARCH}
 # installation script)
 TIBERCADROOT=${instpath}
 
+n_mpi_procs=1
 
+OPTERR=0
+opts="n:"
+while getopts $opts flag
+do
+  case "$flag" in
+    n) n_mpi_procs=${OPTARG} ;;
+    *) OPTIND=$(( $OPTIND - 1 )); break ;;
+  esac
+done
+
+shift $(( $OPTIND - 1 ))
 
 # the program to call
 prog=\`basename \$0\`
@@ -243,7 +255,7 @@ case \$prog in
 
   tibercad*)
     progname="tibercad"
-    executable="\${TIBERCADROOT}/\${ARCH}/bin/\$progname"
+    executable="\${TIBERCADROOT}/\${ARCH}/bin/mpiexec.hydra -n ${n_mpi_procs} \${TIBERCADROOT}/\${ARCH}/bin/\$progname"
     ;;
 
   gmsh*)
@@ -259,7 +271,7 @@ case \$prog in
   build_module*)
     progname="build_module"
     # this is needed by some compiler binaries:
-    export LD_LIBRARY_PATH=\${TIBERCADROOT}/SDK/\${ARCH}/lib
+    export LD_LIBRARY_PATH=\${TIBERCADROOT}/SDK/\${ARCH}/lib:\${TIBERCADROOT}/SDK/lib
     executable="\${TIBERCADROOT}/SDK/\${ARCH}/bin/\$progname"
     if [ ! -x \$executable ]
     then

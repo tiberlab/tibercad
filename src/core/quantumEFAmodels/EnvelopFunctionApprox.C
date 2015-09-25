@@ -995,6 +995,15 @@ void EnvelopFunctionApprox::do_solve()
   {
     redeclare_solutions();
   }
+   RealVectorValue k_vec(0.0);
+   _calculate_density = true;
+   if (has_option("k_vector"))
+   {
+     get_parameter("k_vector", k_vec);
+     Messages::warning("k-vector given, will skip density calculation.");
+     _calculate_density = false;
+   }
+   set_k_point(k_vec);
 
   if (_calculate_density && (get_k_point().size() == 0.0))
   {
@@ -1095,6 +1104,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
  
   _haveS = (solver_opt.discretization_method == FEM);
   
+  apply_bc();
+
   //material list
   //assemble_material_list();
 

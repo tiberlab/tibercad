@@ -73,13 +73,8 @@ class DDBulkModel : public DriftDiffusionProperties
      * \c reinit() calls \c prepare_element_data() which needs to be
      * implemented in derived classes
      */
-    void reinit(const Elem* elem);
+    virtual void do_reinit(const Elem* elem);
 
-
-    //! Set the coupling type
-
-    //! Tells if this model is for a dielectric
-    bool is_dielectric(void) const;
 
 
     //! Set the polarization vector
@@ -352,10 +347,6 @@ class DDBulkModel : public DriftDiffusionProperties
     std::vector<double> _nodal_lattice_vt;
 
 
-    //! True if this is a dielectric
-    bool _is_dielectric;
-
-
     //! The relaxation factor for the polarization
     double _relax_polariz;
 
@@ -370,13 +361,6 @@ class DDBulkModel : public DriftDiffusionProperties
 
 
 
-
-inline
-bool
-DDBulkModel::is_dielectric(void) const
-{
-  return _is_dielectric;
-}
 
 
 

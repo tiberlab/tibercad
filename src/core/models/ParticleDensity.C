@@ -13,6 +13,8 @@
 using namespace std;
 
 
+
+
 const double
 ParticleDensity::MINDENSITY = 1e-64;
 
@@ -49,9 +51,11 @@ ParticleDensity::ParticleDensity(const string& name,
   _embracing(NULL),
   _add_continuum(true)
 {
-  if (name == "electron")
+  if (name == string("el") || name == string("e") ||
+      name == string("electron"))
     _charge = -1;
-  else if (name == "hole")
+  else if (name == string("hl") || name == string("h") ||
+      name == string("hole"))
     _charge = 1;
   //else
   //  Messages::warning("The particle \'" + name + "\' is not known.");
@@ -72,14 +76,16 @@ ParticleDensity::do_init(void)
 {
   _name = get_option("particle", _name);
 
-  if (_name == "electron")
+  if (_name == string("el") || _name == string("e") ||
+      _name == string("electron"))
     _charge = -1;
-  else if (_name == "hole")
+  else if (_name == string("hl") || _name == string("h") ||
+      _name == string("hole"))
     _charge = 1;
 
   _charge = get_option("charge", _charge);
 
-  string stat("boltzmann");
+  string stat("fermidirac");
   stat = get_option("statistics", stat);
   if (stat == "boltzmann")
     _statistics = TiberCad::BOLTZMANN;
@@ -87,6 +93,11 @@ ParticleDensity::do_init(void)
     _statistics = TiberCad::FERMIDIRAC;
   else
     throw InitFailedException("Unknown statistics: " + stat);
+
+
+  _dos_factor = pow(2.0 * M_PI *
+      Constants::me / (Constants::h * Constants::h) *
+      Constants::e, 1.5) / 1e6;
 
 
   vector<string> qd;

@@ -500,6 +500,7 @@ AtomisticGenerator::substitution_probability(size_t id, const Specie& sp)
     }
   }
 
+
   // for zb, wz:
   // # nn = 12
   // # nn2 = 56

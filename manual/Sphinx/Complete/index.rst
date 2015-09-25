@@ -10,9 +10,12 @@ Welcome to TiberCAD's manual
    :noindex:
 
    Introduction
+   Tiber_input.rst
    Theory
    Control
    Bibliography
+
+
    
 
 .. Glossary

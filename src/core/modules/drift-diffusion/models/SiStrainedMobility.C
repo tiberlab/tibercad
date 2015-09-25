@@ -10,7 +10,6 @@
 
 
 
-
 SiStrainedMobility::SiStrainedMobility(const ModelOptions& options)
   : MobilityModelInterface(options),
     mu0_(1000),

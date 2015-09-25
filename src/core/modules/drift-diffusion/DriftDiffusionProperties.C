@@ -46,7 +46,7 @@ DriftDiffusionProperties::PointData::PointData(void)
 DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
   : PhysicalModel(options),
     _is_inhomogeneous(false),
-    _use_predictor(true),
+
     _pd(NULL),
     _elem(NULL),
     _coupling(DriftDiffusionDefs::BOTH),
@@ -64,8 +64,8 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
     //_polarization(0),
     _permittivity(0),
     //_thermoelectric_power(NULL),
-    _electrons(NULL),
-    _holes(NULL),
+
+
     _is_dielectric(false)
     //_relax_polariz(1)
 {
@@ -388,22 +388,13 @@ void
 DriftDiffusionProperties::do_init(void)
 {
 
-  // they must be here
-  SubmodelIterator it = submodels_begin("particle_density");
-  SubmodelIterator end = submodels_end("particle_density");
-  for ( ; it != end; ++it)
-  {
-    ParticleDensity* pd = static_cast<ParticleDensity*>(it->second);
-
-    if (pd->get_particle_name() == "electron")
-      _electrons = pd;
-    else if (pd->get_particle_name() == "hole")
-      _holes = pd;
-  }
+  // hand the temperature interface over to the band parameter models
+  _conduction_band->set_temperature_interface(_lattice_temp);
+  _valence_band->set_temperature_interface(_lattice_temp);
 
 
-  it = submodels_begin("trap");
-  end = submodels_end("trap");
+  SubmodelIterator it = submodels_begin("trap");
+  SubmodelIterator end = submodels_end("trap");
   for ( ; it != end; ++it)
   {
     Trap* t = static_cast<Trap*>(it->second);
@@ -535,93 +526,23 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 void
 DriftDiffusionProperties::calculate_densities(void)
 {
-  //double kT = _lattice_vt;
-  double kTe = _pd->electron_vt;
-  double kTh = _pd->hole_vt;
-
   BandProperties& cb = get_conduction_band();
   BandProperties& vb = get_valence_band();
-
+  double kTe = _pd->electron_vt;
+  double kTh = _pd->hole_vt;
   cb.set_temperature(kTe);
   vb.set_temperature(kTh);
 
-  double Ec = get_conduction_band_edge();
-  double Ev = get_valence_band_edge();
+  pair<double, double> el(cb.get_density_and_derivative(_pd->fermi_e, _pd->electric_potential));
+  _pd->electron_density = el.first;
+  _pd->electron_density_derivative = el.second;
 
-  _electrons->set_element_and_point(_elem, _coord);
+  pair<double, double> hl(vb.get_density_and_derivative(_pd->fermi_h, _pd->electric_potential));
+  _pd->hole_density = hl.first;
+  _pd->hole_density_derivative = hl.second;
 
-  if (_electrons->is_quantum_density() && has_solution() && use_predictor())
-  {
-    // set the OLD potentials
-    _electrons->set_classical_parameters(cb.get_effective_DOS(),
-        Ec - _pd->old_electric_potential, -_pd->old_fermi_e, kTe);
-
-    double qdens = _electrons->get_particle_density();
-
-    // now get the old classical density
-    _electrons->use_quantum_density(false);
-    double old_dens = _electrons->get_particle_density();
-
-    // now get the new classical density and derivative
-    _electrons->set_classical_parameters(cb.get_effective_DOS(),
-        Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
-    _pd->electron_density = _electrons->get_particle_density();
-    _pd->electron_density_derivative = _electrons->get_particle_density_derivative();
-
-    double fac = qdens / old_dens;
-    _pd->electron_density *= fac;
-    _pd->electron_density_derivative *= fac;
-    _pd->gamma_n = _electrons->get_gamma();
-
-    _electrons->use_quantum_density(true);
-
-  }
-  else
-  {
-    _electrons->set_classical_parameters(cb.get_effective_DOS(),
-        Ec - _pd->electric_potential, -_pd->fermi_e, kTe);
-    _pd->electron_density = _electrons->get_particle_density();
-    _pd->electron_density_derivative = _electrons->get_particle_density_derivative();
-    _pd->gamma_n = _electrons->get_gamma();
-  }
-
-
-  _holes->set_element_and_point(_elem, _coord);
-
-  if (_holes->is_quantum_density() && has_solution() && use_predictor())
-  {
-    // set the OLD potentials
-    _holes->set_classical_parameters(vb.get_effective_DOS(),
-        -Ev + _pd->old_electric_potential, _pd->old_fermi_h, kTh);
-
-    double qdens = _holes->get_particle_density();
-
-    // now get the old classical density
-    _holes->use_quantum_density(false);
-    double old_dens = _holes->get_particle_density();
-
-    // now get the new classical density and derivative
-    _holes->set_classical_parameters(vb.get_effective_DOS(),
-        -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
-    _pd->hole_density = _holes->get_particle_density();
-    _pd->hole_density_derivative = -_holes->get_particle_density_derivative();
-
-    double fac = qdens / old_dens;
-    _pd->hole_density *= fac;
-    _pd->hole_density_derivative *= fac;
-    _pd->gamma_p = _holes->get_gamma();
-
-    _holes->use_quantum_density(true);
-
-  }
-  else
-  {
-    _holes->set_classical_parameters(vb.get_effective_DOS(),
-        -Ev + _pd->electric_potential, _pd->fermi_h, kTh);
-    _pd->hole_density = _holes->get_particle_density();
-    _pd->hole_density_derivative = -_holes->get_particle_density_derivative();
-    _pd->gamma_p = _holes->get_gamma();
-  }
+  _pd->gamma_n = cb.get_gamma();
+  _pd->gamma_p = vb.get_gamma();
 
   if (!(_coupling & DriftDiffusionDefs::ELECTRONS))
   {
@@ -643,6 +564,7 @@ DriftDiffusionProperties::calculate_traps(void)
 {
   double Ec = get_conduction_band_edge() - _pd->electric_potential;
   double Ev = get_valence_band_edge() - _pd->electric_potential;
+  double phi =  _pd->electric_potential;
 
   _pd->ionized_electron_traps = 0.0;
   _pd->ionized_hole_traps = 0.0;
@@ -658,7 +580,7 @@ DriftDiffusionProperties::calculate_traps(void)
     const set<Trap*>::iterator end(_etraps.end());
     for ( ; it != end; ++it)
     {
-      (*it)->set_energies(Ec, Ev);
+      (*it)->set_energies(Ec, Ev, phi);
       Particle el(-1, _pd->electron_density, _pd->fermi_e, _pd->electron_vt);
       Particle hl(1, _pd->hole_density, _pd->fermi_h, _pd->hole_vt);
       nt += (*it)->get_ionized_density_and_derivative(el, hl, derivatives);
@@ -666,7 +588,7 @@ DriftDiffusionProperties::calculate_traps(void)
       // to the quasi fermi level, not the electrochemical potential.
       dntdEf[0] -=
           derivatives[0] * _pd->electron_density_derivative +
-          derivatives[2];
+          derivatives[2] + derivatives[4];
       dntdEf[1] -=
           derivatives[1] * _pd->hole_density_derivative +
           derivatives[3];
@@ -683,7 +605,7 @@ DriftDiffusionProperties::calculate_traps(void)
     const set<Trap*>::iterator end(_htraps.end());
     for ( ; it != end; ++it)
     {
-      (*it)->set_energies(Ec, Ev);
+      (*it)->set_energies(Ec, Ev, phi);
       Particle el(-1, _pd->electron_density, _pd->fermi_e, _pd->electron_vt);
       Particle hl(1, _pd->hole_density, _pd->fermi_h, _pd->hole_vt);
       nt += (*it)->get_ionized_density_and_derivative(el, hl, derivatives);
@@ -692,7 +614,7 @@ DriftDiffusionProperties::calculate_traps(void)
           derivatives[2];
       dntdEf[1] -=
           derivatives[1] * _pd->hole_density_derivative +
-          derivatives[3];
+          derivatives[3] + derivatives[4];
     }
 
     _pd->ionized_hole_traps = nt;
@@ -782,6 +704,52 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
 
 
 
+
+/*
+double 
+DriftDiffusionProperties::get_electron_mobility_derivative_potential(void) const
+{
+  if (!is_dielectric())
+    _electron_mobility->get_derivative_potential();
+}
+
+double 
+DriftDiffusionProperties::get_hole_mobility_derivative_potential(void) const
+{
+  if (!is_dielectric())
+    _hole_mobility->get_derivative_potential();
+}
+
+void 
+DriftDiffusionProperties::get_electron_mobility_derivative_grad_potential(RealGradient& dmu) const
+{
+  if (!is_dielectric())
+    _electron_mobility->get_derivative_grad_potential(dmu);
+}
+
+void 
+DriftDiffusionProperties::get_hole_mobility_derivative_grad_potential(RealGradient& dmu) const
+{
+  if (!is_dielectric())
+    _hole_mobility->get_derivative_grad_potential(dmu);
+}
+
+void
+DriftDiffusionProperties::get_electron_mobility_derivative_grad_fermi(RealGradient& dmu) const
+{
+  if (!is_dielectric())
+    _electron_mobility->get_derivative_grad_fermi(dmu);
+}
+
+
+
+void
+DriftDiffusionProperties::get_hole_mobility_derivative_grad_fermi(RealGradient& dmu) const
+{
+  if (!is_dielectric())
+    _hole_mobility->get_derivative_grad_fermi(dmu);
+}
+*/
 
 
 void
@@ -956,7 +924,6 @@ DriftDiffusionProperties::compute_thermoelectric_power_gradient(void)
    }
 }
 */
-
 
 
 

@@ -26,7 +26,7 @@ RotatedCrystal::create(const Material* owner,
 
   RotatedCrystal* rc = NULL;
 
-  if (structure == "am")
+  if ((structure == "am") || (structure == "amorphous"))
   {
     rc = new RotatedCrystal(ModelOptions());
     rc->set_owner(owner);

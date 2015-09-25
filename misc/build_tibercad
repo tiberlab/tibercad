@@ -10,7 +10,7 @@ fi
 
 . common.sh
 
-TIBEROPTS=${TIBEROPTS:-"--disable-uptight --enable-license-check --disable-hetero"}
+TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
 #TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
 
 if [ "$MKL" = y ]; then

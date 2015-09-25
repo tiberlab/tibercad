@@ -1,0 +1,151 @@
+Device
+{
+  meshfile = InAs_qw.msh 
+ 
+  mesh_units = 1e-10
+  dimension = 1
+
+  x-growth-direction = (0, 0, 1)
+  y-growth-direction = (0, 1, 0)
+  z-growth-direction = (1, 0, 0)
+
+
+  Region QW
+  {
+    material = InAs
+  }
+
+  Region barrier_left
+  {
+    material =  GaAs
+  }
+
+  Region barrier_right
+  {
+    material =  GaAs
+  }
+
+  Region device_left
+  {
+    material = GaAs
+  }
+
+  Region device_right
+  {
+    material = GaAs
+  }
+
+  # group together the regions for the quantum simulation
+  Cluster Quantum
+  {
+    regions = (barrier_left, barrier_right, QW)
+  }
+
+
+
+  Atomistic tb
+  {
+    reference_region = barrier_left
+    regions = Quantum
+    passivation = yes
+    print = (xyb, xyz, gen, tgn)
+  }
+
+}
+
+
+Module driftdiffusion
+{ 
+
+  name = driftdiffusion
+  coupling = poisson
+
+  #save_state = true
+
+# load existing driftdiffusion solution
+  load_state = dd.tsv
+
+  plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, Polarization)
+
+  Solver linesearch
+  {
+    relative_tolerance = 1e-14  
+    absolute_tolerance =  1e-50  
+    step_tolerance = 1e-3
+    max_step = 1.0 
+    max_iterations = 30
+  }
+
+  Physics
+  {
+
+  }   
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+      
+      
+  Contact cathode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]  
+  }
+} 
+
+
+ 
+Module empirical_tb
+{
+  regions = Quantum
+  name = tb
+  atomistic_structure = tb
+  Harrison_scaling = false
+  potential_simulation = driftdiffusion
+
+	  
+  plot = (tbstates)
+
+  Solver
+  {
+    guess_valence = -0.5
+    guess_conduction = 0.0
+    num_valence_eigenvalues = 4
+    num_conduction_eigenvalues = 4
+
+  }
+
+}
+
+
+Module efaschroedinger
+{
+  name = kp
+  regions = (barrier_left, barrier_right, QW)
+
+  poisson_model_name = driftdiffusion
+  number_of_eigenstates = 4 
+
+  plot = (EigenFunctions, EigenEnergy)
+
+  Physics
+  {
+    model = 8x8
+  }
+}
+
+
+
+
+Simulation
+{
+  temperature = 1
+  solve = (driftdiffusion,tb)
+  resultpath =  output
+  output_format = grace
+
+}
+
+

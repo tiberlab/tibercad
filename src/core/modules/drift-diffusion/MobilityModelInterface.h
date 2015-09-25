@@ -26,6 +26,12 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
     //! Get the derivatives of the mobility
     virtual void get_mobility_derivatives(std::vector<double>& dm) = 0;
 
+    //! Get the derivative of the mobility w.r.t. the electric potential
+    virtual double get_derivative_potential(void);
+
+    //! Get the derivative of the mobility w.r.t. the gradient of the electric potential
+    virtual void get_derivative_grad_potential(RealGradient& dm);
+
     //! Get the derivatives with respect to the fermi-level gradient
     virtual void get_derivative_grad_fermi(RealGradient& dm);
 
@@ -109,6 +115,20 @@ char
 MobilityModelInterface::get_carrier_type(void) const
 {
   return _carrier;
+}
+
+inline
+double
+MobilityModelInterface::get_derivative_potential(void)
+{
+  return 0.0;
+}
+
+inline
+void
+MobilityModelInterface::get_derivative_grad_potential(RealGradient& dm)
+{
+  dm.zero();
 }
 
 inline

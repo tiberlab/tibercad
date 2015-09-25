@@ -45,10 +45,11 @@ class TBDLLOCAL SchottkyContact : public ElectricalContact
     //! Do we include thermionic emission?
     bool _thermionic_emission;
 
+    //! Do we use Scott and Malliaras field and mobility dependent recombination velocity? (Chem. Phys. Lett. 299 (1999) 115)
+    bool _scott_malliaras;
 
-    //! Do we include tunneling?
-    //bool _tunneling;
-
+    //! Image-force lowering
+    bool _barrier_lowering;
 };
 
 

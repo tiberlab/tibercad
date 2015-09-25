@@ -32,13 +32,14 @@ make_windows_package () {
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
   rm -rf ${files}/examples/Modules
-  rm -rf ${files}/examples/Example_1[7-9]
-  rm -rf ${files}/examples/Example_2[0-9]
+  #rm -rf ${files}/examples/Example_1[7-9]
+  #rm -rf ${files}/examples/Example_2[0-9]
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
+  cp ${topdir}/materials/*.etb ${files}/materials
 
   unix2dos=`which unix2dos`
   [ "x$unix2dos" == "x" ] && unix2dos=`which todos` ;
@@ -78,78 +79,78 @@ make_windows_package () {
 
 
 
-make_windows_package_cygwin () {
-
-  mkdir -m 0755 ${files}
-  mkdir -p ${files}/doc
-  mkdir -p ${files}/examples
-  mkdir -p ${files}/materials
-  mkdir -p ${files}/lib
-
-  # copy all files
-  cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
-  cp ${topdir}/${ARCH}/lib/*.dll ${files}
-  cp -r ${topdir}/${ARCH}/modules ${files}
-  cp ${topdir}/share/tibercad.ico ${files}
-  cp ${topdir}/share/Copyright.txt ${files}
-  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
-  if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
-    cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
-  fi
-  if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
-    cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
-  fi
-  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
-  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
-  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
-  rm -rf ${files}/examples/Modules
-  rm -rf ${files}/examples/Example_1[7-9]
-  rm -rf ${files}/examples/Example_2[0-9]
-  find ${files}/examples -name "test.conf" -exec rm -f {} \;
-  cp ${topdir}/materials/*.txt ${files}/materials
-  cp ${topdir}/materials/*.dat ${files}/materials
-
-  curdir=`pwd`
-  cd ${files}
-  find ./materials -type f -exec unix2dos {} \;
-  find ./examples -type f -exec unix2dos {} \;
-  unix2dos Copyright.txt
-  unix2dos Readme.txt
-
-  cd ${topdir}/contrib
-  if [ ! -d gmsh-${GMSHVER} ]
-  then
-    mkdir gmsh-${GMSHVER}
-    cd gmsh-${GMSHVER}
-    wget http://www.geuz.org/gmsh/bin/Windows/gmsh-${GMSHVER}-Windows.zip
-  fi
-  if [ ! -f gmsh.pdf ]
-  then
-    wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
-  fi
-  cd ${curdir}
-  cd ${files}
-  mkdir -p tools/gmsh-${GMSHVER}
-  cd tools/gmsh-${GMSHVER}
-  unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
-  mv gmsh-${GMSHVER}-Windows/* .
-  rmdir gmsh-${GMSHVER}-Windows
-  cp ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf .
-
-  cd $curdir
-  cd ${files}
-
-  # copy cygwin system libraries
-  test ! -x /usr/bin/cygcheck.exe && exit 1
-
-  for lib in `cygcheck ./tibercad.exe | awk '/cyg/'` ; do
-    cp `cygpath -u -a $lib` .
-  done
-
-  cd $curdir
-
-  return
-}
+#make_windows_package_cygwin () {
+#
+#  mkdir -m 0755 ${files}
+#  mkdir -p ${files}/doc
+#  mkdir -p ${files}/examples
+#  mkdir -p ${files}/materials
+#  mkdir -p ${files}/lib
+#
+#  # copy all files
+#  cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
+#  cp ${topdir}/${ARCH}/lib/*.dll ${files}
+#  cp -r ${topdir}/${ARCH}/modules ${files}
+#  cp ${topdir}/share/tibercad.ico ${files}
+#  cp ${topdir}/share/Copyright.txt ${files}
+#  sed -e "s/<TIBERVERSION>/$version/" ${topdir}/share/Readme.txt > ${files}/Readme.txt
+#  if test -e ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ; then
+#    cp ${topdir}/manual/Sphinx/TiberCAD_Examples.pdf ${files}/doc/Examples.pdf
+#  fi
+#  if test -e ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ; then
+#    cp ${topdir}/manual/Sphinx/TiberCAD_MultiUsers.pdf ${files}/doc/MultiUsers.pdf
+#  fi
+#  cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
+#  find ${files} -type d -name ".svn*" -exec rm -rf {} \;
+#  find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
+#  rm -rf ${files}/examples/Modules
+#  rm -rf ${files}/examples/Example_1[7-9]
+#  rm -rf ${files}/examples/Example_2[0-9]
+#  find ${files}/examples -name "test.conf" -exec rm -f {} \;
+#  cp ${topdir}/materials/*.txt ${files}/materials
+#  cp ${topdir}/materials/*.dat ${files}/materials
+#
+#  curdir=`pwd`
+#  cd ${files}
+#  find ./materials -type f -exec unix2dos {} \;
+#  find ./examples -type f -exec unix2dos {} \;
+#  unix2dos Copyright.txt
+#  unix2dos Readme.txt
+#
+#  cd ${topdir}/contrib
+#  if [ ! -d gmsh-${GMSHVER} ]
+#  then
+#    mkdir gmsh-${GMSHVER}
+#    cd gmsh-${GMSHVER}
+#    wget http://www.geuz.org/gmsh/bin/Windows/gmsh-${GMSHVER}-Windows.zip
+#  fi
+#  if [ ! -f gmsh.pdf ]
+#  then
+#    wget http://www.geuz.org/gmsh/doc/texinfo/gmsh.pdf
+#  fi
+#  cd ${curdir}
+#  cd ${files}
+#  mkdir -p tools/gmsh-${GMSHVER}
+#  cd tools/gmsh-${GMSHVER}
+#  unzip ${topdir}/contrib/gmsh-${GMSHVER}/gmsh-${GMSHVER}-Windows.zip
+#  mv gmsh-${GMSHVER}-Windows/* .
+#  rmdir gmsh-${GMSHVER}-Windows
+#  cp ${topdir}/contrib/gmsh-${GMSHVER}/gmsh.pdf .
+#
+#  cd $curdir
+#  cd ${files}
+#
+#  # copy cygwin system libraries
+#  test ! -x /usr/bin/cygcheck.exe && exit 1
+#
+#  for lib in `cygcheck ./tibercad.exe | awk '/cyg/'` ; do
+#    cp `cygpath -u -a $lib` .
+#  done
+#
+#  cd $curdir
+#
+#  return
+#}
 
 
 prepare_linux_package () {
@@ -181,11 +182,14 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep quadmath | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep intel | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep mkl | awk '{print $3}'`"
+  libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep mpi | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libmesh | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep petsc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep slepc | awk '{print $3}'`"
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
+  cp /usr/pack/intel_mkl-11.2-ma/mkl/lib/intel64/libmkl_def.so ${files}/${ARCH}/lib
   cp $libs ${files}/${ARCH}/lib
+  cp ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra ${files}/${ARCH}/bin
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad
   cp ${topdir}/${ARCH}/lib/lib*.so* ${files}/${ARCH}/lib
@@ -194,8 +198,8 @@ prepare_linux_package () {
   # for now, delete some modules
   #
   rm -rf ${files}/${ARCH}/modules/boltzmann
-  rm -rf ${files}/${ARCH}/modules/empirical_tb
-  rm -rf ${files}/${ARCH}/modules/vff
+  #rm -rf ${files}/${ARCH}/modules/empirical_tb
+  #rm -rf ${files}/${ARCH}/modules/vff
   rm -rf ${files}/${ARCH}/modules/negf
   #
   #
@@ -217,15 +221,14 @@ prepare_linux_package () {
 
   cp -r ${topdir}/Tutorials/[^.]* ${files}/examples
   # for now:
-  #rm -rf ${files}/examples/Modules
+  rm -rf ${files}/examples/Modules
 
-  rm -rf ${files}/examples/Example_1[7-9]
-  rm -rf ${files}/examples/Example_2[0-9]
   find ${files} -type d -name ".svn*" -exec rm -rf {} \;
   #find ${files}/examples -type d -name "reference" -exec rm -rf {} \;
   find ${files}/examples -name "test.conf" -exec rm -f {} \;
   cp ${topdir}/materials/*.txt ${files}/materials
   cp ${topdir}/materials/*.dat ${files}/materials
+  cp ${topdir}/materials/*.etb ${files}/materials
 
   if [ ! -d ${topdir}/contrib/gmsh-${GMSHVER}-Linux ]
   then

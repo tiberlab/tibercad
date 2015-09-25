@@ -81,7 +81,8 @@ Module elasticity
   {
     body_force lattice_mismatch 
     {
-      reference_material = GaAs
+      reference_material = AlGaAs
+      x = 0.3
    
     }
        
@@ -106,49 +107,56 @@ Module driftdiffusion
 
   Physics
   {
-    strain_simulation = strain 
-
-    # we us a predictor corrector scheme for the selfconsistent loop
-    use_density_predictor = true
-
 
     recombination srh {}
 
-    particle_density
-    { 
-      particle = electron
-      statistics = fermidirac
+    conduction_band 
+    {
+      density_of_states quantum
+      { 
+        # where to get the quantum density from
+        quantum_simulation = quantum_el
+        barrier_regions = buffer_quantum
 
-      # where to get the quantum density from
-      quantum_density = quantum_el
-      barrier_regions = buffer_quantum
+        # we use an embracing region to get a continuous transition from 
+        # classical to quantum density
+        #embracing
+        #{
+        #  embracing_length = 8e-9
+        #  plot_embracing_regions = true
+        #}
 
-      # we use an embracing region to get a continuous transition from 
-      # classical to quantum density
-      #embracing
-      #{
-      #  embracing_length = 8e-9
-      #  plot_embracing_regions = true
-      #}
+	classical_DOS bulk_kp 
+        {
+          strain_simulation = strain
+        }
+
+      }
     }
 
    
-    particle_density
-    { 
-      particle = hole
-      statistics = fermidirac
+    valence_band 
+    {
+      density_of_states quantum
+      { 
+        # where to get the quantum density from
+        quantum_simulation = quantum_hl
+        barrier_regions = buffer_quantum
 
-      # where to get the quantum density from
-      quantum_density = quantum_hl
-      barrier_regions = buffer_quantum
+        # we use an embracing region to get a continuous transition from 
+        # classical to quantum density
+        #embracing
+        #{
+        #  embracing_length = 8e-9
+        #  plot_embracing_regions = true
+        #}
 
-      # we use an embracing region to get a continuous transition from 
-      # classical to quantum density
-      #embracing
-      #{
-      #  embracing_length = 8e-9
-      #  plot_embracing_regions = true
-      #}
+	classical_DOS bulk_kp 
+        {
+          strain_simulation = strain
+        }
+
+      }
     }
 
   

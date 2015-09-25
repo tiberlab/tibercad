@@ -113,12 +113,25 @@ class ParticleDensity : public PhysicalModelInterface
 
     //! Set the parameters for the classical density
     /*!
-     * \param N_eff the effective density of states
+     * \param mDOS the DOS effective mass
      * \param E the particle energy
      * \param E_F the electro-chemical potential
      * \param kT the temperature in eV
      */
-    void set_classical_parameters(double N_eff, double E,
+    void set_classical_parameters(double mDOS, double E,
+        double E_F = 0.0, double kT = -1.0);
+
+
+    //! Set the parameters for the classical density
+    /*!
+     * For compatibility only.
+     *
+     * \param Neff the effective DOS
+     * \param E the particle energy
+     * \param E_F the electro-chemical potential
+     * \param kT the temperature in eV
+     */
+    void set_classical_parameters_comp(double Neff, double E,
         double E_F = 0.0, double kT = -1.0);
 
 
@@ -139,7 +152,7 @@ class ParticleDensity : public PhysicalModelInterface
      * set_classical_parameters() and set_element_and_point() have to be
      * called before this one.
      *
-     * \return teh particle density in cm^-3
+     * \return the particle density in cm^-3
      *
      * \attention 
      *   The particle density is calculated only once for given parameters.
@@ -233,6 +246,13 @@ class ParticleDensity : public PhysicalModelInterface
     //! The effective density of states
     double _N_eff;
 
+    //! The DOS mass, including degeneracy
+    double _dos_mass;
+
+
+    //! The DOS factor
+    double _dos_factor;
+
 
     //! The electro-chemical potential in eV
     double _E_F;
@@ -287,6 +307,10 @@ class ParticleDensity : public PhysicalModelInterface
     //! Calculate classical particle density
     template <TiberCad::Statistics>
     void classical_density(void) TBDLLOCAL;
+
+
+    //! Calculate the effective DOS from the DOS mass
+    void calculate_effective_DOS(void);
 
 };
 
@@ -367,21 +391,55 @@ ParticleDensity::has_quantum_density(void) const
 
 
 
+inline
+void
+ParticleDensity::calculate_effective_DOS(void)
+{
+  _N_eff = _dos_factor * std::pow(_kT * _dos_mass, 1.5);
+}
+
+
+
 
 inline
 void
-ParticleDensity::set_classical_parameters(double N_eff, double E,
+ParticleDensity::set_classical_parameters(double mDOS, double E,
     double E_F, double kT)
 {
-  _N_eff = N_eff;
+  //_N_eff = N_eff;
+  _dos_mass = mDOS;
   _E = E;
   _E_F = E_F;
   _kT = (kT >= 0) ? kT : SimulationOptions::temperature * Constants::k_B;
+
+  calculate_effective_DOS();
 
   _argument = (_E_F - E) / _kT;
 
   _density = -1.0;
 }
+
+
+inline
+void
+ParticleDensity::set_classical_parameters_comp(double N_eff, double E,
+    double E_F, double kT)
+{
+  _N_eff = N_eff;
+  _dos_mass = 1; // TODO calculate DOS mass from N_eff
+  _E = E;
+  _E_F = E_F;
+  _kT = (kT >= 0) ? kT : SimulationOptions::temperature * Constants::k_B;
+
+  //calculate_effective_DOS();
+
+  _argument = (_E_F - E) / _kT;
+
+  _density = -1.0;
+}
+
+
+
 
 
 

@@ -8,8 +8,20 @@
 using namespace std;
 
 DensityOfStates::DensityOfStates(const ModelOptions& options) :
-    PhysicalModelInterface(options)
+  PhysicalModelInterface(options),
+  _reference_energy(0.0),
+  _effective_mass(1.0),
+  _particle(' '),
+  _use_quantum(false),
+  _is_quantum(false)
 {
+  string particle = get_option("particle", "-");
+  if (particle == string("el") || particle == string("e") ||
+      particle == string("electron"))
+    _particle = 'e';
+  else if (particle == string("hl") || particle == string("h") ||
+      particle == string("hole"))
+    _particle = 'h';
 }
 
 
@@ -23,15 +35,10 @@ DensityOfStates::create(const ModelOptions& options)
   if (name.empty())
     name = "delta";
 
-  if (name == "delta")
-    dos_ptr = NULL;
-  else
-  {
-    dos_ptr = dynamic_cast<DensityOfStates*>(
-        PhysicalModelInterface::create("density_of_states_" + name, NULL, options));
-    if (dos_ptr == NULL)
-      throw ModelErrorException("Unknown density of states type: " + name);
-  }
+  dos_ptr = dynamic_cast<DensityOfStates*>(
+      PhysicalModelInterface::create("density_of_states_" + name, NULL, options));
+  if (dos_ptr == NULL)
+    throw ModelErrorException("Unknown density of states type: " + name);
 
   return dos_ptr;
 }

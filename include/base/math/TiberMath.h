@@ -13,14 +13,14 @@ namespace {
   /*!
    * 
    */
-  extern "C" double TBDLLOCAL fdm0p5_(double&);
+  extern "C" double fdm0p5_(double&);
 
 
   //! The fermi integral of order +1/2
   /*!
    * 
    */
-  extern "C" double TBDLLOCAL fdp0p5_(double&);
+  extern "C" double fdp0p5_(double&);
 }
 
 //! Mathematical functions

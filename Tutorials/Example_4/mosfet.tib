@@ -48,6 +48,7 @@ Module driftdiffusion
   Solver
   {
     type = linesearch
+    max_iterations = 20
 
     linear_solver
     {
@@ -59,12 +60,6 @@ Module driftdiffusion
 
   Physics
   {
-
-    particle_density
-    {
-      # use Fermi-Dirac statistics
-      statistics = fermidirac
-    }
 
 
     recombination srh {}

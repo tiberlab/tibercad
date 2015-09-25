@@ -1,0 +1,235 @@
+// $Id$
+
+#include "GaussDOS.h"
+#include "Constants.h"
+#include "Material.h"
+#include "TiberMath.h"
+#include "Database.h"
+#include "InitFailedException.h"
+
+#include "TiberModule.h"
+
+
+using namespace std;
+
+const double pi = 3.14159265358979323846;
+
+GaussDOS::GaussDOS(const ModelOptions& options) :
+  DensityOfStates(options),
+  _E0(0), _sigma(0.1)
+{
+
+}
+
+void
+GaussDOS::read_database(void)
+{
+  // when reading from the database, we use the same data
+  // as for kp
+  const Database& db = get_database();
+
+  if (get_particle() == 'e')
+  {
+    // TODO: should bowing be applied to Eg(T) or Eg(0) ?
+
+    db.set_section("valenceband");
+    reference_energy() = db.get("E_v", 0.0);
+
+    db.set_section("bandgap");
+    double bandgap = db.get("Eg_G", 1e3);
+
+    reference_energy() += bandgap;
+  }
+  else if (get_particle() == 'h')
+  {
+    db.set_section("valenceband");
+    reference_energy() = db.get("E_v", 0.0);
+  }
+}
+
+void
+GaussDOS::do_init(void)
+{
+  if (get_particle() == 'e')
+  {
+    if (has_parameter("level"))
+    {
+      get_parameter("level", reference_energy());
+    }
+    get_parameter("sigma", _sigma);
+    get_parameter("N0", _N0);
+  }
+  else
+  {
+    if (has_parameter("level"))
+    {
+      get_parameter("level", reference_energy());
+    }
+    get_parameter("sigma", _sigma);
+    get_parameter("N0", _N0);
+  }
+  effective_mass() = 1.0;
+}
+
+double GaussDOS::erfc(double x) const
+{
+
+  if (fabs(x)<=4)
+  {
+    const double ec = 1e-9;
+    double e;
+
+    int n = 0;
+    double Sn = 2.0*x / sqrt(pi);
+    double S = 0.0;
+
+    do
+    {
+      S += Sn;
+      e = 100 * fabs(Sn / S);	
+
+      Sn *= -1.0 * x * x * (2.0*n + 1.0) / ((n+1.0)*(2.0*n + 3.0));
+      n++;
+    } while (e > ec);
+    return 1.0-S;
+  }
+  else
+  {
+    const double a1 = 0.254829592;
+    const double a2 = -0.284496736;
+    const double a3 = 1.421413741; 
+    const double a4 = -1.453152027;
+    const double a5 = 1.061405429;
+    const double p = 0.3275911;
+
+    if (x > 0)
+    {
+      double t = 1 / (1 + p*x); 	
+      return ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * exp(-1*x*x);
+    }
+    else
+    {
+      x *= -1.0;
+      double t = 1 / (1 + p*x);
+      return 2 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * exp(-1*x*x);
+    }
+  }
+}
+
+double GaussDOS::inverfc(double x) const
+{
+  if ((x >= 2.0) || (x <= 0.0)) { return 0.0; }
+	
+  if (x>=0.003 && x<=1.997)
+  {
+    const double ec = 1e-7;
+    double e;
+	
+    double Sn;
+    double S = 0.0;
+
+    long n = 0;
+    long m;
+
+    double p;
+    p = 0.5 * sqrt(pi) * (x - 1.0);
+
+    double f;
+    f = p;
+
+    long double cn;
+    vector<long double> c;
+    c.push_back(1.0);
+
+    do
+    {
+      Sn = c[n] * f / (2.0*n + 1.0);
+      S += Sn;
+      e = 100.0 * Sn / S;
+
+      n++;
+      f *= p*p;
+
+      cn = 0.0;
+      for (m = 0; m<=n-1; m++) 
+      {
+        cn += (c[m]/(2.0*m+1.0))*(c[n-1-m]/(m+1.0));
+      }
+      c.push_back(cn);
+      //cout<<"c["<<n<<"] = "<<cn<<endl;	
+    } while (e>ec);
+    if (x < 1.0) 
+    {
+      return -1 * S;
+    }
+    else
+    {
+      return S;
+    }
+  }
+
+  else //use the asymptotic expansion
+  {
+    if (x < 1)
+    {
+      return sqrt( - log(x) - 0.5 * log(- pi * log(x) - 0.5 * log(- pi * log(x))));
+    }
+    else
+    {
+      x = 2 - x;
+      return  - sqrt( - log(x) - 0.5 * log(- pi * log(x) - 0.5 * log(- pi * log(x))));
+    }
+  }
+}
+
+double GaussDOS::H(double x) const
+{
+  return sqrt(2.0) * inverfc(exp(-0.5 * x * x)) / x;
+}
+
+double GaussDOS::K(double x, double h) const
+{ 
+  return 2.0*(1.0 - exp(0.5 * x * x * (1.0 - h * h)) * (h * sqrt(2.0/pi))/x);
+}
+
+std::pair<double, double>
+GaussDOS::calculate_density_and_derivative(double Ef, double Epot,
+    double kT, double kTlattice, const Elem* elem, const Point& p) const
+{
+  return calculate_density_and_derivative(Ef, Epot, kT, kTlattice);
+}
+
+std::pair<double, double>
+GaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const
+{
+  double dens, der;
+
+  double ref_en = get_reference_energy();
+  if (get_particle() == 'h') ref_en *= -1.0;
+  //cout<<"ref_energy "<<reference_energy()<<endl;
+  double z = (Ef - ref_en - Epot) / kT;
+
+  double s = _sigma / kT;
+  //cout<<"particle="<<get_particle()<<" Ef="<<Ef<<" E0="<<_E0<<" epot="<<Epot<<" z="<<z<<endl;
+
+  double hs;
+  hs = H(s);
+
+  if (z <= -1.0*s*s) 
+  {
+    double espf;
+    double ks;
+    ks = K(s, hs);
+    espf = exp( ks * (z + s*s));
+    dens = _N0 * exp(z + 0.5 *s*s) / (espf + 1.0);	
+    der = dens * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT;
+    //cout<<"s="<<s<<"z="<<z<<" dens="<<dens<<" der="<<der<<endl;	
+  }
+  else
+  {
+    dens = _N0 * 0.5 * erfc(-1.0 * hs * z / (s * sqrt(2.0)) );
+    der = _N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*pi) * kT);
+    //cout<<"s="<<s<<" z="<<z<<" dens="<<dens<<endl;
+  }
+  return make_pair(dens, der);
+}

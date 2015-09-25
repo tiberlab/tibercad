@@ -88,9 +88,10 @@ FieldAssistedMobility::get_mobility_derivatives(std::vector<double>& dm)
 void
 FieldAssistedMobility::get_derivative_grad_fermi(RealGradient& dm)
 {
+  //std::cout<<"#############################____##############################"<<std::endl;
   dm.zero();
   //double T = get_driftdiffusionproperties().get_lattice_temperature();
-  double E = 0.0;
+  //double E = 0.0;
   //if (get_carrier_type() == 'e')
   //  E = get_driftdiffusionproperties().get_grad_fermi_e().size();
   //else

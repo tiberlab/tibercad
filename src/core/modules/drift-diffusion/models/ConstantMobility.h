@@ -33,6 +33,12 @@ class TBDLLOCAL ConstantMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::get_mobility_derivatives()
     virtual void get_mobility_derivatives(std::vector<double>& dm);
 
+    //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
+    virtual void get_derivative_grad_potential(RealGradient& dm);
+
+    //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
+    virtual void get_derivative_grad_fermi(RealGradient& dm);
+
 
   protected:
 

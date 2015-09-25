@@ -345,7 +345,6 @@ SimulationEnvironment::get_boundary(const string& name) const
 
 
 
-
 void
 SimulationEnvironment::prepare_for_solve(void)
 {

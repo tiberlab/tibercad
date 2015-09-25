@@ -4,6 +4,14 @@ topdir := ../..
 
 include $(topdir)/Make.common
 
+ifeq ($(target_os), linux)
+ PACKAGEFLAGS := -Wl,-rpath,'$$ORIGIN/../$(relative_libdir)' -Wl,-rpath-link,$(libdir)
+endif
+ifeq ($(target_os), darwin)
+ PACKAGEFLAGS := -Wl,-rpath,@loader_path/.. -Wl,-rpath,@loader_path/../extern 
+endif
+
+
 
 srcfiles := build_module.C
 objects	:= $(patsubst %.C, .$(ARCH)/%$(obj-suffix), $(srcfiles))
@@ -47,7 +55,9 @@ endif
 $(topdir)/$(ARCH)/bin/build_module$(SUFF): $(objects) 
 	@echo "Compiling build_module executable ..."
 	@mkdir -p $(topdir)/$(ARCH)/bin
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(BOOST_LIBS)
+	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(BOOST_LIBS) $(PACKAGEFLAGS)
+	@mkdir -p $(topdir)/SDK/$(ARCH)/bin
+	@cp $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(topdir)/SDK/$(ARCH)/bin
 	@mkdir -p $(topdir)/SDK/$(ARCH)/bin
 	@cp $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(topdir)/SDK/$(ARCH)/bin
 

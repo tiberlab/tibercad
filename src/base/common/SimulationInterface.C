@@ -965,6 +965,12 @@ SimulationInterface::solve(void)
 {
 
 
+  Messages m;
+  m.newline();
+  m.frameline(">>>>",'-',get_name());
+
+  m.indent();
+
   if (_environment != NULL)
     _environment->prepare_for_solve();
 
@@ -977,13 +983,6 @@ SimulationInterface::solve(void)
   assert(is_initialized());
 
   Utils::Timer tt;
-
-  Messages m;
-  m.newline();
-  m.frameline(">>>>",'-',get_name());
-
-  m.indent();
-
 
 
   try
@@ -1897,7 +1896,7 @@ SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
 
 AutoPtr<FEBase>
 SimulationInterface::build_finite_element(unsigned int dim, FEType type,
-                                          bool scale)
+                                          bool scale) const
 {
 
   double x0 = scale ? get_scaling().get_length_scaling() : 1.0;
@@ -2235,6 +2234,37 @@ SimulationInterface::get_solution(const Elem* elem,
     local_coord = true;
   }
 
+  // first resize all data vectors to the right size
+  map<ID, vector<double> >::iterator it(values.begin());
+  const map<ID, vector<double> >::iterator end(values.end());
+  for ( ; it != end; ++it)
+  {
+    const SolutionDescriptor& sd = get_solution_descriptor(it->first);
+    assert(sd.id() != INVALID_ID);
+    unsigned int n_comp = sd.n_components();
+    switch (sd.location())
+    {
+      case SolutionDescriptor::CELL:
+      case SolutionDescriptor::NODES:
+        values[it->first].resize(nn * n_comp);
+        break;
+
+      default:
+      {
+        ostringstream os;
+        os << "In get_solution(): solution variable \'" << sd.name()
+                        << "\' seems not to be associated to the mesh.";
+        throw ModelErrorException(os.str());
+      }
+    }
+  }
+
+
+  // check if we have some cached data
+//  if (_data_cache.has_elem(elem))
+//  {
+//
+//  }
 
   // perhaps is in a quantum_contact ?
   QuantumContact* qc = get_environment().get_device().get_quantum_contact(elem);
@@ -2281,30 +2311,6 @@ SimulationInterface::get_solution(const Elem* elem,
   bool flag = true;
 
 
-  // first resize all data vectors to the right size
-  map<ID, vector<double> >::iterator it(values.begin());
-  const map<ID, vector<double> >::iterator end(values.end());
-  for ( ; it != end; ++it)
-  {
-    const SolutionDescriptor& sd = get_solution_descriptor(it->first);
-    assert(sd.id() != INVALID_ID);
-    unsigned int n_comp = sd.n_components();
-    switch (sd.location())
-    {
-      case SolutionDescriptor::CELL:
-      case SolutionDescriptor::NODES:
-        values[it->first].resize(nn * n_comp);
-        break;
-
-      default:
-      {
-        ostringstream os;
-        os << "In get_solution(): solution variable \'" << sd.name()
-                        << "\' seems not to be associated to the mesh.";
-        throw ModelErrorException(os.str());
-      }
-    }
-  }
 
 
 

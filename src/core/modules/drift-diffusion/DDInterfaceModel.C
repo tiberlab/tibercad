@@ -162,7 +162,6 @@ DDInterfaceModel::do_init(void)
   // we set a bulk material, just in case a submodel needs it
   set_material(mat);
 
-  // Set bulk conduction and valence band since submodels may need them
   set_conduction_band(&_ddprop_A->get_conduction_band());
   set_valence_band(&_ddprop_A->get_valence_band());
 
@@ -307,7 +306,7 @@ DDInterfaceModel::compute()
   do_compute();
 
   // now add common stuff if needed
-  const PointData& pd = get_point_data();
+    const PointData& pd = get_point_data();
 
   // for now we cannot put doping on interfaces
   /*
@@ -406,3 +405,102 @@ DDInterfaceModel::compute()
 
 }
 
+/*
+
+void
+DDInterfaceModel::_calculate_traps(double& q, double& dq_dEfn, double& dq_dEfp)
+{
+  DriftDiffusionProperties* ddprop = get_dd_properties();
+  assert(ddprop != NULL);
+
+  q = dq_dEfn = dq_dEfp = 0.0;
+
+  double phi = ddprop->get_electric_potential();
+  double Ec = ddprop->get_conduction_band_edge() - phi;
+  double Ev = ddprop->get_valence_band_edge() - phi;
+  double kT = ddprop->get_lattice_temperature();
+
+  const DriftDiffusionProperties::PointData& pd = ddprop->get_point_data();
+
+  double ionized_electron_traps = 0.0;
+  double ionized_electron_traps_derivative = 0.0;
+  if (_etraps.size() > 0)
+  {
+    double nt = 0, dnt = 0;
+    set<Trap*>::iterator it(_etraps.begin());
+    const set<Trap*>::iterator end(_etraps.end());
+    for ( ; it != end; ++it)
+    {
+      (*it)->set_energies(Ec, Ev, phi, -pd.fermi_e, kT);
+      nt += (*it)->get_ionized_density();
+      dnt += (*it)->get_ionized_density_derivative();
+    }
+
+    ionized_electron_traps = nt;
+    ionized_electron_traps_derivative = dnt;
+  }
+
+  double ionized_hole_traps = 0;
+  double ionized_hole_traps_derivative = 0;
+  if (_htraps.size() > 0)
+  {
+    double nt = 0, dnt = 0;
+    set<Trap*>::iterator it(_htraps.begin());
+    const set<Trap*>::iterator end(_htraps.end());
+    for ( ; it != end; ++it)
+    {
+      (*it)->set_energies(Ec, Ev, phi, -pd.fermi_h, kT);
+      nt += (*it)->get_ionized_density();
+      dnt += (*it)->get_ionized_density_derivative();
+    }
+
+    ionized_hole_traps = nt;
+    ionized_hole_traps_derivative = dnt;
+  }
+
+  q = ionized_electron_traps + ionized_hole_traps;
+  dq_dEfn = ionized_electron_traps_derivative;
+  dq_dEfp = ionized_hole_traps_derivative;
+  if (is_internal_boundary())
+  {
+    q *= 0.5;
+    dq_dEfn *= 0.5;
+    dq_dEfp *= 0.5;
+  }
+}
+
+
+void
+DDInterfaceModel::_calculate_recombination(double rec[6])
+{
+  rec[0] = rec[1] = rec[2] = rec[3] = rec[4] = rec[5] = 0.0;
+
+  double Re, Rh;
+  vector<double> dRe(3), dRh(3);
+
+  set<RecombinationModelInterface*>::iterator it(_recombination_models.begin());
+  const set<RecombinationModelInterface*>::iterator end(_recombination_models.end());
+  for ( ; it != end; ++it)
+  {
+    (*it)->get_net_recombination_rates(Re, Rh);
+    (*it)->get_net_recombination_rate_derivatives(dRe, dRh);
+
+    rec[0] += Re;
+    rec[1] += dRe[0];
+    rec[2] += dRe[1];
+    rec[3] += Rh;
+    rec[4] += dRh[0];
+    rec[5] += dRh[1];
+  }
+
+  if (is_internal_boundary())
+  {
+    rec[0] /= 2;
+    rec[1] /= 2;
+    rec[2] /= 2;
+    rec[3] /= 2;
+    rec[4] /= 2;
+    rec[5] /= 2;
+  }
+}
+*/

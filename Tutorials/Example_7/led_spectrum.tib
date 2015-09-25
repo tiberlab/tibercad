@@ -142,7 +142,7 @@ Device
   Region p_AlGaN
   {
     material = AlGaN
-    x = 0.250 
+    x = 0.2 
 
     Doping
     {
@@ -189,15 +189,21 @@ Module  driftdiffusion
   plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity,
           eCurrentDensity, hCurrentDensity, ContactCurrent, eMobility, hMobility)
 
+  # save_state = true
   load_state = reference/driftdiffusion_Vb_3.5.tsv
   solve_after_load = true
 
   Physics
   {
 
-    strain_simulation = strain
+    band_properties {
+      density_of_states bulk_kp {
+        strain_simulation = strain
+      }
+    }
 
-    polarization (piezo, pyro) {}
+    polarization piezo { strain_simulation = strain }
+    polarization pyro {}
 
     recombination srh {}
 
@@ -355,7 +361,7 @@ Module opticskp
 Module sweep
 {
   name = sweep
-  solve = (driftdiffusion, QW3_electrons, QW3_holes, spectrum)
+  solve = (driftdiffusion) #, QW3_electrons, QW3_holes, spectrum)
 
   variable = $Vb
   start = 0.0

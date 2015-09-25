@@ -1,0 +1,56 @@
+
+#ifndef _CONSTANTDOS_H_
+#define _CONSTANTDOS_H_
+
+
+#include "DensityOfStates.h"
+
+class TBDLEXPORT ConstantDOS : public DensityOfStates
+{
+
+  public:
+
+    //! Destructor
+    virtual ~ConstantDOS(void) {};
+
+    //! Creator function
+    static ConstantDOS* create(const ModelOptions& options);
+
+  protected:
+
+    //! Constructor
+    ConstantDOS(const ModelOptions& options);
+
+    virtual void read_database(void);
+
+    //! Get occupied states and the derivative with respect to phi
+    virtual std::pair<double, double> calculate_density_and_derivative(double E, double Epot, 
+                                      double kT, double kTlattice, const Elem* elem, const Point& p) const;
+
+    //overloading for Trap.C
+    virtual std::pair<double, double> calculate_density_and_derivative(double E, double Epot, double kT, double kTlattice) const;
+
+    virtual void do_init(void);
+	
+  private:
+  	
+    //
+    double _Ewidth;
+
+    //Total density parameter
+    double _N0;
+};
+
+//
+// inline methods
+//
+
+inline
+ConstantDOS*
+ConstantDOS::create(const ModelOptions& options)
+{
+  return new ConstantDOS(options);
+}
+
+
+#endif // _CONSTANTDOS_H_

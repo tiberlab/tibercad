@@ -388,6 +388,20 @@ PhysicalModelInterface::reinit(void)
 
 
 
+void
+PhysicalModelInterface::reinit(const Elem* elem)
+{
+  // reinit submodels
+  SubmodelIterator smit(submodels_begin());
+  const SubmodelIterator smend(submodels_end());
+  for ( ; smit != smend; ++smit)
+    smit->second->reinit(elem);
+
+  do_reinit(elem);
+}
+
+
+
 
 void
 PhysicalModelInterface::init_interface(const Material* comp_A,

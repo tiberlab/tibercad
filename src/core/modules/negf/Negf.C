@@ -119,6 +119,8 @@ Negf::Negf(const ModelOptions& options) :
   _k_int_current(NULL),
   _ext_module(NULL)
 {
+  _k_int_density = NULL;
+  _k_int_current = NULL;
   _libnegf = NegfWrapper::create();
 
   this->has_solution_vector(false);
@@ -261,10 +263,13 @@ void
 Negf::init_efa_hamil(void)
 {
 
+  std::cout<<"this & "<<static_this<<std::endl;
+
   // get the number of subbands.
-  const MeshBase& mesh = get_mesh();
-  MeshBase::const_element_iterator el = mesh.active_elements_begin();
-  const Elem* elem = *el;
+   const MeshBase& mesh = get_mesh();
+   MeshBase::const_element_iterator el = mesh.active_elements_begin();
+   const Elem* elem = *el;
+
   unsigned int n_bands;
 
   if (_ext_module == NULL)
@@ -2230,6 +2235,16 @@ Negf::reorder_assemble(EquationSystems& es, const std::string& system_name)
 void
 Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 {
+
+  std::map<const Boundary*, int> boundary_ids;
+  int id = 0;
+  std::map<const Boundary*, QuantumContact*>::iterator it = _qc_boundaries.begin();
+  const std::map<const Boundary*, QuantumContact*>::iterator end = _qc_boundaries.end();
+  for( ; it != end; ++it, ++id)
+  {
+    boundary_ids[it->first] = id;
+  }
+
 
   const MeshBase& mesh = get_mesh();
 

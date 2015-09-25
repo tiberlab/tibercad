@@ -1,0 +1,17 @@
+# HOMO level of P3HT on ITO substrate obtained with UPS
+#
+# ref. M. Schneider et al., Org. Electron. 15 (2014) 1552
+#
+# x: layer thickness (nm) measured from ITO/P3HT interface
+# y: HOMO energy (eV) with respect to the Fermi level
+# dx, -dx, dy, -dy: experimental errors on x and y
+#
+# x y dx -dx dy -dy
+5.142 -0.22022 0.727 0.689 0.02034 0.02111
+6.297 -0.33999 0.804 0.766 0.02059 0.02085
+10.63 -0.46993 1.34 1.341 0.02085 0.02034
+13.966 -0.55995 1.914 1.954 0.02085 0.02085
+24.959 -0.59987 2.987 3.025 0.02085 0.02059
+27.642 -0.6398 4.021 4.021 0.0211 0.02035
+51.962 -0.69472 2.948 3.025 0.02111 0.02034
+151.992 -0.71024 7.965 8.042 0.02085 0.02111

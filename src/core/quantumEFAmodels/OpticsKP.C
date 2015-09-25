@@ -89,10 +89,10 @@ void OpticsKP::do_init()
   //-------------------------------------------------------------------------------------------------
   //-Initialize a (fake) system used to build the P- matrix on FEM --------------------------
   //
-  system_name = get_equation_system_name();
-  es = &(get_equation_systems());
-  es->add_system<LinearImplicitSystem> (system_name);
-  system = &( es->get_system<LinearImplicitSystem>(system_name));
+  string system_name(get_equation_system_name());
+  EquationSystems& es = get_equation_systems();
+  es.add_system<LinearImplicitSystem>(system_name);
+  system = &(es.get_system<LinearImplicitSystem>(system_name));
 
   //-------------------------------------------------------------------------------------------------
   //add variables for an 8x8 k.p problem
@@ -272,9 +272,9 @@ void OpticsKP::calculate_matrix_bulk(void)
 //=========================================================================//
 void OpticsKP::do_assemble(const ModelOptions& opts)
 {
-  unsigned int dim = (es->get_mesh()).mesh_dimension();
 
-  const MeshBase* mesh = &(es->get_mesh());
+  const MeshBase* mesh = &get_mesh();
+  unsigned int dim = mesh->mesh_dimension();
 
   DofMap& dof_map = system->get_dof_map();
 

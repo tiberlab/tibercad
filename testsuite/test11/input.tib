@@ -75,10 +75,7 @@ Module driftdiffusion
 
   Physics
   {
-    particle_density
-    {
-      statistics = fermidirac
-    }
+
   }   
 
   Contact anode

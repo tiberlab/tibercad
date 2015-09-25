@@ -53,4 +53,15 @@ ConstantMobility::get_mobility_derivatives(std::vector<double>& dm)
   dm[0] = dm[1] = dm[2] = 0.0;
 }
 
+void
+ConstantMobility::get_derivative_grad_potential(RealGradient& dm)
+{
+  dm.zero();
+}
+
+void
+ConstantMobility::get_derivative_grad_fermi(RealGradient& dm)
+{
+  dm.zero();
+}
 

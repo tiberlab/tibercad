@@ -50,12 +50,6 @@ class OpticsKP: public Optics
 
  private:
 
-  //!equation systems object
-  EquationSystems* es ;
-
-  //!name of the system
-  std::string system_name;
-
   //!system that we add to the equation systems
   LinearImplicitSystem* system;
 

@@ -253,7 +253,6 @@ AtomisticStructure::parse_lattice_vectors(void)
  
     if (lattice_vectors.size() == 3)
     {  
-       //<<<<<<< .mine
        //set_periodicity( true, true, true);
        _lattice_vectors[0] = lattice_vectors[0];
        _lattice_vectors[4] = lattice_vectors[1];
@@ -401,6 +400,7 @@ AtomisticStructure::init_mesh_structure()
     _elem_to_atoms[_atoms[i].get_elem()].push_back(i);
  
   Messages::info("Build final Bond Map...");
+  parse_lattice_vectors();
   build_bond_map();
 
   delete generator;
@@ -2578,4 +2578,5 @@ AtomisticStructure::compute_g(const Specie& sp, double Rc, double dr, vector<map
   }
 
 }
+
 

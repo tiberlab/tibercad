@@ -1,0 +1,209 @@
+# Organic single layer device: ITO/a-NPD (200 nm)/Pd
+
+# Simulation of this device is illustrated in details in:
+# [1] F. Santoni, A. Gagliardi, M. Auf der Maur, A. Di Carlo,
+# "The relevance of correct injection model to simulate electrical properties of organic semiconductors"
+# Org. Electron. 15 (2014) 1557
+
+# Experimental I-V from: [2] S. L. M. van Mensfoort et al., J. Appl. Phys. 107 (2010) 113710 (data in "I_V_experimental.dat")
+# Experimental a-NPD hole mobility from: [3] S. Naka et al., Synth. Met. 111-112 (2000) 331  (data in "a-NPD_hole_mobility_experimental.dat")
+
+# As explained in [1] the simulation is divided in four stages.
+# 1) I-V characteristic is obtained setting the parameters to the same values reported in [2] 
+#    (the calculated mobility is quite far from experimental values reported in [3]
+# 2) Parameters are changed in order to fit the experimental mobility reported in [3]
+# 3) The experimental I-V curve is fitted keeping the mobility as close as possible to experimental values [3]
+# 4) Instead to use the Pd work function as a fitting parameter, we keep it at the nominal value 5 eV and use the IDIS model (see [1])
+#    in order to get the correct barrier shift.
+
+# Results are reported in Figure "I_Vs.png": the I-V curve calculated with the IDIS model is the one that best fits experimental data.
+
+#Simulation parameters:
+#-----------------------------------------------------------------------------------------------------
+#| Simulation stage        |  N0 (cm^-3)  |  sigma (eV)  |  nu0 (s^-1)  |  wf_Pd (eV)  |  wf_ITO (eV)|
+#-----------------------------------------------------------------------------------------------------
+#| 1) Mensfoort et al. [2] |  2e20        |  0.14        |  5e20        |  3.5         |  5          |
+#| 2) Naka [3] mobility    |  5e19        |  0.14        |  1.9e22      |  3.4         |  4.85       |
+#| 3) Fit without IDIS     |  7e18        |  0.14        |  6.2e21      |  3.35        |  4.9        |
+#| 4) Fit with IDIS        |  7e18        |  0.14        |  6.2e21      |  5           |  4.9        |
+#-----------------------------------------------------------------------------------------------------
+
+
+Device
+{
+
+  meshfile = bulk.msh
+
+  material = aNPD
+
+  Region bulk { }
+  Region int_anode { }
+  Region int_cathode { }
+
+}
+
+
+# Definition of Simulation Models 
+
+Module driftdiffusion
+{ 
+  # name = driftdiffusion  # this is the default name
+
+  # what we want to plot
+  plot = (Ec, Ev, eQFermi, eDensity, eCurrentDensity, eMobility,
+          hQFermi, hDensity, hCurrentDensity, hMobility,
+          eConductivity, hConductivity, NetRecombination, ElField, ElPotential, ContactCurrents, 
+          IonizedDonors, IonizedAcceptors, IonizedElectronTraps, IonizedHoleTraps, SchottkyTunneling)
+
+  Physics
+  {
+
+    recombination langevin
+    {
+      gamma = 1
+    }
+
+    conduction_band
+    {
+      density_of_states gauss
+      {
+        regions = (bulk, int_anode, int_cathode)
+        sigma = 0.14  #same value for all stages
+        N0 = 7e18     # 1) 2e20  # 2) 5e19     # 3-4) 7e18
+      }
+    }
+
+    valence_band
+    {
+      density_of_states gauss
+      {
+        regions = (bulk, int_anode, int_cathode)
+        sigma = 0.14
+        N0 = 7e18
+      }
+    }
+
+    hole_mobility
+    {
+      regions = (bulk, int_anode, int_cathode)
+      type = hopping_mobility
+      sigma = 0.14   #same value for all stages
+      N0 =  7e18     # 1) 2e20    # 2) 5e19     # 3-4) 7e18
+      nu0 = 6.2e21     # 1) 5e20    # 2) 1.9e22   # 3-4) 6.2e21
+    }
+
+    electron_mobility #the device is essentially monopolar, we set electron mobility equal to hole mobility, but it is irrelevant, 
+    {
+      regions = (bulk, int_anode, int_cathode)
+      type = hopping_mobility 
+      sigma = 0.14  
+      N0 =  7e18
+      nu0 = 6.2e21
+    }
+
+
+    # See [1] for the IDIS model and TiberCAD manual for the constant DOS and its use with the IDIS model
+    # Uncomment trap blocks to use IDIS model
+    trap eNeutral
+    {
+      recombination_center = false
+      regions = (int_cathode)
+      Nt = 3.54e19 # (cm^-3)           #IDIS model: 4.842e19 cm^-3 eV^-1    #Fit: 5.9e19 cm^-3 eV^-1 (Nt is obtained multiplying these densities by Ewidth)
+      Et = 2.7                         #IDIS model: 2.56                    #Fit: 2.7                (this is the CNL)
+      reference = vb
+      tau_n = 1e-9
+      tau_p = 1e-9
+      density_of_states
+      {
+        type = constant
+        N0 = 1 
+        Ewidth = 0.6
+      }
+    }
+
+    trap hNeutral
+    {
+      recombination_center = false
+      regions = (int_cathode)
+      Nt = 1.59e20
+      Et = 2.7
+      reference = vb
+      tau_n = 1e-9
+      tau_p = 1e-9
+      density_of_states
+      {
+        type = constant
+        N0 = 1 
+        Ewidth = 2.7
+      }
+    }
+
+  } # end of Physics
+
+
+  Contact anode # ITO
+  { 
+    type = schottky
+    metal_fermilevel = -4.9  # 1) -5.0   # 2) -4.85   # 3-4) -4.9
+    #band = v
+    scott_malliaras = true
+    barrier_lowering = false
+    voltage = $Vg
+
+  }
+
+  Contact cathode # Pd
+  { 
+    type = schottky 
+    metal_fermilevel = -5   # 1) -3.5    # 2) -3.4   # 3) -3.35  # 4) (IDIS) -5
+    scott_malliaras = true
+    barrier_lowering = true
+    voltage = 0
+  }
+
+  Solver
+  {
+    max_iterations = 300
+    step_tolerance = 1e-5
+    absolute_tolerance = 1e-2
+    relative_tolerance = 1e-4
+  }
+
+} #end of driftdiffusion
+
+Module sweep
+{
+  name = sweep_forward
+  variable = $Vg
+  solve = (driftdiffusion)
+
+  start = 0
+  stop =  8 
+  steps = 320 
+  plot_data = true   #to write data for each step
+}
+
+Simulation
+{
+  verbose = 2
+  temperature = 300
+  solve = (sweep_forward)
+
+ resultpath = output/stage_4
+ output_format = grace
+ plot_data = true
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -71,8 +71,6 @@ QuantumContact::init(const ID id,
 
   _normal = get_normal(_area);
 
-  std::cout<<"normal: "<<_normal(0)<<" "<<_normal(1)<<" "<<_normal(2)<<std::endl; // plot normal
-
   extend_mesh();
 }
 

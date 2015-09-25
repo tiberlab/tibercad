@@ -1,0 +1,264 @@
+Device qdot
+{
+  meshfile = quantum_dot_GaN_TB.msh 
+  mesh_units = 1e-9
+  dimension = 3
+
+  y-growth-direction = (1,0,-1,0)
+  x-growth-direction = (-1,2,-1,0)   
+  z-growth-direction = (0,0,0,-1)
+
+  Region ball
+  {
+    material = GaN  
+
+    Doping {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+    }
+
+  }
+
+  Region  qbox
+  {
+    material = AlN  
+ 
+    Doping {
+      Nd = 1e15
+      type = donor
+      Ed = 0.025
+    }
+    
+  }
+
+
+  Region  intrinsic
+  {
+    material =  AlN  
+   
+    Doping {
+      Nd = 1e16
+      type =  donor
+      Ed = 0.025
+    }
+    
+  }
+
+  Region  nside
+  {
+    material =  AlN 
+   
+    Doping {
+      Nd = 1e18
+      type =  donor
+      Ed = 0.025
+    }
+    
+  }
+
+
+  Region  pside
+  {
+    material =  AlN  
+   
+    Doping {
+      Nd = 1e18
+      type =  donor
+      Ed = 0.025
+    }
+    
+  }
+
+
+  Cluster atomistic
+  {
+    regions=(ball, qbox)
+  }
+
+
+  Atomistic tb1
+  {
+    regions = atomistic 
+    reference_region = nside  
+
+    passivation = yes
+    print = (gen, xyz, tgn)
+    translation = (0.0,  0.8983559, -4.39363) 
+  }
+
+}
+
+
+
+
+Module empirical_tb
+{
+  regions = atomistic 
+  name = tb1
+
+  atomistic_structure = tb1
+  potential_simulation = dd
+
+
+  plot = (tbstates, MeshStatesNodes )
+
+  Solver
+  {
+    #solver_type = gpu
+    num_valence_eigenvalues = 1 
+    num_conduction_eigenvalues = 1
+    long_tolerance = 1e-4  
+  }
+
+}
+
+Module empirical_tb
+{
+  regions = atomistic 
+  name = tb2
+
+  atomistic_structure = tb1
+  potential_simulation = dd
+
+
+  
+
+  plot = (tbstates, MeshStatesNodes)
+
+  Solver
+  {
+
+
+    load_path = output_tb1 
+   
+    num_valence_eigenvalues = 4 # 2 
+    num_conduction_eigenvalues = 4 # 2 
+    long_tolerance = 1e-4  
+  }
+
+}
+
+
+
+Module elasticity
+{
+  name = str
+
+  plot = (Strain)
+
+  mesh_deformation = true
+  shape_iterations = 1
+
+  Physics 
+  {
+    body_force lattice_mismatch 
+    {
+      reference_material = AlN
+      y-growth-direction = (1,0,-1,0)
+      x-growth-direction = (-1,2,-1,0)   
+      z-growth-direction = (0,0,0,-1)
+    }
+       
+  }
+
+  Contact cathode  
+  {type = clamp}
+
+} 
+
+
+Module  driftdiffusion
+{ 
+
+  name = dd
+ 
+  plot = (Polarization, Ec, Ev, eQFermi, hQFermi, ElField, eDensity, hDensity, ElPotential)
+
+  Solver
+  {
+   
+    max_iterations = 25
+    relative_tolerance = 1e-12
+ 
+    step_tolerance = 1e-5
+  
+    #max_step = 4
+  }
+ 
+
+  Physics
+  {
+    band_properties {
+      density_of_states bulk_kp {
+        strain_simulation = str
+      }
+    }
+
+    recombination srh {}
+
+    recombination direct
+    { 
+     C = 1.1e-8
+    }
+  
+    polarization pyro {}
+    polarization piezo { strain_simulation = str }
+
+     
+    mobility doping_dependent {}
+  }
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+}
+
+Module opticstb
+{
+  name = opt
+  regions = atomistic 
+
+  initial_state_model = tb2
+  final_state_model = tb2
+  
+  compute_strengths = true
+
+  plot = (matrix_elements, optical_spectrum_k_0)
+  output_format = grace
+
+  Emin = 4.25
+  Emax = 4.75
+  dE = 0.001
+
+}
+
+
+## NOTE: run tb1 for calculation of  first state
+## then run tb2 with load_states = true to load existing solution and  
+## calculate further states and then optical properties (opt)
+
+Simulation
+{
+  temperature = 300
+
+   solve = (str, dd, tb1, tb2) 
+
+#  solve = (str, dd, tb2, opt)
+
+  resultpath = output_tb1 # output_tb2  
+
+ 
+  output_format = vtk 
+
+
+}

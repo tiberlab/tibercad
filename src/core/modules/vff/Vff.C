@@ -16,6 +16,7 @@
 #include <fstream>
 
 
+
 Vff*
 Vff::_this = NULL;
 
@@ -400,7 +401,7 @@ Vff::build_parameters(void)
   bool parent(as->is_random_alloy());
 
   for (unsigned int i = 0; i < n_atoms; i++)
-  {
+    {
     const Atom& atm_i = as->get_structure_atom(i);
 
     unsigned int n_bonds = bondmap[i].size();

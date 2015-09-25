@@ -29,6 +29,8 @@ class MaterialBoundary;
 class EdgeObject;
 class NodeObject;
 class Database;
+class Elem;
+class Point;
 
 
 //! Base class for the different physical models
@@ -218,6 +220,10 @@ class PhysicalModelInterface : public TiberModelObject
     void reinit(void);
 
 
+    //! Call this to prepare model data
+    void reinit(const Elem* elem);
+
+
     //! Initialize this model as an alloy with two components
     /*!
      * It calls read_database_alloy(), do_init_alloy() and do_init()
@@ -235,7 +241,7 @@ class PhysicalModelInterface : public TiberModelObject
 
 
     //! Print some info
-    void print_info(void) TBDLLOCAL;
+    void print_info(void);
 
 
     //! Get the name of the module this object belong to
@@ -269,6 +275,13 @@ class PhysicalModelInterface : public TiberModelObject
      * May be reimplemented if necesary
      */
     virtual void do_reinit(void) {};
+
+
+    //! Reinitialize for a certain element to prepare model data
+    /*!
+     * May be reimplemented if necesary
+     */
+    virtual void do_reinit(const Elem* elem) {};
 
 
     //! Initialize the model

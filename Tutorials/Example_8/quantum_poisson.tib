@@ -103,27 +103,33 @@ Module  driftdiffusion
 
   Physics
   {
-    strain_simulation = strain 
 
-    # we us a predictor corrector scheme for the selfconsistent loop
-    use_density_predictor = true
+    valence_band
+    {
+      density_of_states bulk_kp
+      {
+        strain_simulation = strain
+      }
+    }
+    
+    conduction_band
+    {
+      density_of_states quantum
+      {
+        quantum_simulation = quantum_el
+        barrier_regions = (buffer1, buffer2)
+
+        classical_DOS bulk_kp 
+        {
+          strain_simulation = strain
+        }
+      }
+    }
 
 
     recombination srh {}
 
-    particle_density
-    { 
-
-      particle = electron
-      statistics = fermidirac
-
-      # where to get the quantum density from
-      quantum_density =  quantum_el 
-      barrier_regions = (buffer1,buffer2)
-      
-    }
-
-  
+   
     mobility doping_dependent {}
 
   }

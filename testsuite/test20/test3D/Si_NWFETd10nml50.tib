@@ -113,9 +113,9 @@ Module driftdiffusion
   # we solve only for electrons
   coupling = electrons
 
-  save_state = true
-  #load_state = outputd10nml50_ox/driftdiffusion.tsv
-  #solve_after_load = true
+  #save_state = true
+  load_state = outputd10nml50_ox/driftdiffusion.tsv  #_Vd_0.3_Vg_0.4.tsv
+  solve_after_load = true
 
   plot = (Ec, Ev, eQFermi, eQFermi, eDensity, hDensity,
           eCurrentDensity, hCurrentDensity, NetRecombination,
@@ -138,6 +138,26 @@ Module driftdiffusion
     {
       regions = (oxide,oxide1,oxide2)
     }
+    
+    conduction_band
+    {
+      density_of_states bulk_kp
+      {
+        regions = all
+      }
+    }
+
+    valence_band
+    {
+      density_of_states bulk_kp
+      {
+        regions = all 
+      }
+    }
+
+  
+ 
+
   }
 
 
@@ -225,7 +245,7 @@ Module efaschroedinger
 Module negf
 {
   regions = (channel,source_region,drain_region,oxide,oxide1,oxide2)
-  plot = (eDensity)
+  plot = (elDensity, Current)
 
   potential_simulation = driftdiffusion
 
@@ -263,7 +283,7 @@ Simulation
   solve = (driftdiffusion,negf)
   searchpath = .
   resultpath = outputd10nml50_ox
-  scratchpath = /work/fpalomba
+  scratchpath = /work/fsantoni
   output_format = vtk
 }
 

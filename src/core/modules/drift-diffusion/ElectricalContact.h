@@ -44,7 +44,7 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
 
     //! Set a BC to homogeneous von Neumann type
     /*!
-     * This is only useful if on has a Dirichlet type boundary condition
+     * This is only useful if one has a Dirichlet type boundary condition
      * and wants to change it into homogeneous von Neumann.
      * It can be used to have different BCs for electron and hole
      * electro-chemical potentials in small devices, or to change to zero
@@ -106,32 +106,37 @@ class TBDLEXPORT ElectricalContact : public DDInterfaceModel
     //! The boundary value (eg. applied voltage)
     double _voltage;
 
-
     //! The contact surface resistance
     double _surfres;
-
 
     //! The contact fermilevel
     double _contact_fermilevel;
 
-
     //! The electron surface recombination velocity
     double _vrec_n;
-
 
     //! The hole surface recombination velocity
     double _vrec_p;
 
-
     //! vrec_n has been overridden
     bool _fixed_vrec_n;
-
 
     //! vrec_p has been overridden
     bool _fixed_vrec_p;
 
-
-
+    //! tunneling option
+    bool _tunneling;
+    
+    //! tunneling parameters for electrons and holes
+    double _bias;
+    double _alpha_n;
+    double _mass_n;
+    double _phi_n;
+    double _alpha_p;
+    double _phi_p;
+    double _mass_p;
+    double _Vbi;
+    double _length;
 };
 
 

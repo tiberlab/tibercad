@@ -7,9 +7,8 @@ fi
 
 . common.sh
 
-VERSION=1.5
-#3.0.1
-ARCHIVE=mpich2-${VERSION}.tar.gz
+VERSION=3.1.1
+ARCHIVE=mpich-${VERSION}.tar.gz
 
 echo "Compiling openmpi libraries"
 
@@ -24,7 +23,7 @@ fi
 
 cd $BUILDDIR
 if [ ! -e ${ARCHIVE} ]; then
-  wget http://www.mpich.org/static/tarballs/${VERSION}/${ARCHIVE}
+  wget http://www.mpich.org/static/downloads/${VERSION}/${ARCHIVE}
 fi
 
 
@@ -33,20 +32,25 @@ if [ ! -e ${ARCHIVE} ]; then
   exit 1
 fi
 
-if [ ! -d mpich2-${VERSION} ]; then
+if [ ! -d mpich-${VERSION} ]; then
   tar zxf ${ARCHIVE}
 fi
 
 
 
-F90=
-export F90
+#F90=
+#export F90
 
-cd mpich2-${VERSION}
+
+cd mpich-${VERSION}
 
 ./configure --prefix=${SDKDIR} --enable-shared=yes \
-            --host=$HOST --build=$BUILD \
-            --with-cross=${TOPDIR}/misc/win_cross_values --with-thread-package=none --with-pmi=none --with-pm=none --with-shared-memory=no --enable-threads=single --disable-romio
+            --host=$HOST --build=$BUILD
+            
+#            --with-thread-package=none --with-pmi=none \
+#            --with-pm=none --with-shared-memory=no \
+#            --enable-threads=single --disable-romio
 
+#            --with-cross=${TOPDIR}/misc/win_cross_values \
 make install
 

@@ -186,33 +186,17 @@ inline void f77_negf_current (f77_int const* handler, f77_double& current,
 }
 
 
-extern "C" void negf_get_ldos_ (f77_int const*, f77_int const&, f77_int const&, 
-    f77_double const*);
-
-// Corresponding F77 arguments for f77_negf_get_ldos:
-// integer, intent(in) :: handler(DAC_handlerSize)
-// integer, intent(in) :: esteps
-// integer, intent(in) :: npoints
-// real(dp), intent(in) :: ldos(esteps, npoints)
-inline void f77_negf_get_ldos (f77_int const* handler, f77_int const& esteps, 
-    f77_int const& npoints, f77_double const* ldos)
-{
-  negf_get_ldos_ (handler, esteps, npoints, ldos);
-}
-
-
 extern "C" void negf_density_efa_ (f77_int const*, f77_int const&, f77_double 
-    const*, f77_int const&);
+    const*);
 
 // Corresponding F77 arguments for f77_negf_density_efa:
 // integer, intent(in) :: handler(DAC_handlerSize)
 // integer, intent(in) :: ndofs
 // real(dp), intent(in) :: density(ndofs)
-// integer, intent(in) :: particle
 inline void f77_negf_density_efa (f77_int const* handler, f77_int const& ndofs, 
-    f77_double const* density, f77_int const& particle)
+    f77_double const* density)
 {
-  negf_density_efa_ (handler, ndofs, density, particle);
+  negf_density_efa_ (handler, ndofs, density);
 }
 
 

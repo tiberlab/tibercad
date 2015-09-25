@@ -39,7 +39,7 @@ checkout:
 clean:
 	@echo "Clean libnegf..."
 	rm -f libnegf_$(ARCH).a libnegf.so
-	cd libnegf/src/api; make clean;	
+	if test -d libnegf/src/api ; then make -C libnegf/src/api clean; fi	
 
 
 include $(topdir)/Make.rules

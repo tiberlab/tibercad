@@ -9,7 +9,8 @@ Module sweep
   variable = $Vd
   start = 0.0 # 0.2
   stop = 1.0 
-  steps = 5 # 4 
+  steps = 10 # 4 
+
 }
 
 Module sweep
