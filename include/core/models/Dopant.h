@@ -5,7 +5,7 @@
 
 #include "ModelOptions.h"
 #include "tiber_dll.h"
-#include "ExternalProfile.h";
+#include "ExternalProfile.h"
 
 #include <string>
 

@@ -1,6 +1,6 @@
 // $Id$
 
-#include "LinearProfile.h"
+#include "ExponentialProfile.h"
 #include "InitFailedException.h"
 
 #include <limits>
@@ -8,23 +8,21 @@
 using namespace std;
 
 
-LinearProfile::LinearProfile(const ModelOptions& options) :
+ExponentialProfile::ExponentialProfile(const ModelOptions& options) :
   ExternalProfile(options),
-  _min(0.0),
   _max(0.0),
-  _distance(1.0),
+  _lambda(1),
   _direction(1, 0, 0),
   _origin(0)
 {
-  _min = get_option("min", _min);
   _max = get_option("max", _max);
   get_option("origin", _origin);
   get_option("direction", _direction);
-  _distance = get_option("distance", _distance);
+  _lambda = get_option("lambda", _lambda);
   _direction /= _direction.size();
 }
 
-LinearProfile::~LinearProfile(void)
+ExponentialProfile::~ExponentialProfile(void)
 {
 }
 
@@ -33,16 +31,16 @@ LinearProfile::~LinearProfile(void)
 
 
 pair<double, double>
-LinearProfile::get_min_max(void) const
+ExponentialProfile::get_min_max(void) const
 {
-  return(make_pair(_min, _max));
+  return(make_pair(0.0, _max));
 }
 
 
 
 
 double
-LinearProfile::get_data(const Elem* elem, const Point& p) const
+ExponentialProfile::get_data(const Elem* elem, const Point& p) const
 {
   double data = _max;
 
@@ -54,10 +52,7 @@ LinearProfile::get_data(const Elem* elem, const Point& p) const
 
   if (xcoord > 0)
   {
-    if (xcoord < _distance)
-      data = _max - xcoord / _distance * (_max - _min);
-    else
-      data = _min;
+    data = _max * exp(-xcoord * _lambda);
   }
 
   return data;

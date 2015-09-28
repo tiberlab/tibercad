@@ -301,7 +301,7 @@ AtomisticStructure::print_driver(void)
      this->radial_distribution(); 
   }
        
-  if (_options.find_option("alloy_statistics"))
+  if (_options.has_submodel("alloy_statistics"))
   {
      const ModelOptions& opt = (_options.submodels_begin("alloy_statistics"))->second;
      this->extract_alloy_statistics(opt); 

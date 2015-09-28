@@ -5,6 +5,8 @@
 #include "ExtProfile1D.h"
 #include "UniformRandomAlloy.h"
 #include "LinearProfile.h"
+#include "ExponentialProfile.h"
+#include "GaussianProfile.h"
 
 using namespace std;
 
@@ -31,6 +33,10 @@ ExternalProfile::create(const ModelOptions& options)
     pr = new UniformRandomAlloy(options);
   else if (options.get_name() == "linear")
     pr = new LinearProfile(options);
+  else if (options.get_name() == "exponential")
+    pr = new ExponentialProfile(options);
+  else if (options.get_name() == "gaussian")
+    pr = new GaussianProfile(options);
 
   return pr;
 }
