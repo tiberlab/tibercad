@@ -177,7 +177,7 @@ Device
 
       relax_polarization = $polariz[0.0]
 
-      #recombination srh {}
+      recombination srh { }
 
       recombination direct
       {

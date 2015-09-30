@@ -4,9 +4,9 @@ Device
   mesh_units = 1e-10
   dimension = 1
 
-  x-growth-direction = (0, 0, 1)
+  x-growth-direction = (1, 0, 0)
   y-growth-direction = (0, 1, 0)
-  z-growth-direction = (1, 0, 0)
+  z-growth-direction = (0, 0, 1)
 
 
 	Region QW
