@@ -31,11 +31,6 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
 
 
 
-    //! Set the effective DOS
-    /*! \deprecated */
-    //void set_effective_dos(double Neff);
-
-
     //! Get occupied states
     /*!
      * \return the density of occupied states in cm^-3
@@ -76,10 +71,21 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
 
 
     //! The reference energy
-    double get_reference_energy(void) const { return _reference_energy; }
+    const std::vector<double>& get_reference_energy(void) const
+        { return _reference_energy; }
 
     //! The effective mass
-    double get_effective_mass(void) const { return _effective_mass; }
+    const std::vector<double>& get_effective_mass(void) const
+        { return _effective_mass; }
+
+    //! The reference energy
+    std::vector<double>& reference_energy(void)
+        { return _reference_energy; }
+
+    //! The effective mass
+    std::vector<double>& effective_mass(void)
+        { return _effective_mass; }
+
 
     //! The effective DOS
     double get_effective_dos(void) const { return _effective_dos; }
@@ -89,12 +95,6 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
 
     //! Constructor
     DensityOfStates(const ModelOptions& options);
-
-    //! A readable reference to the reference energy
-    double& reference_energy(void) { return _reference_energy; }
-
-    //! A readable reference to the effective mass
-    double& effective_mass(void) { return _effective_mass; }
 
     //! A readable reference to the effective DOS
     double& effective_dos(void) { return _effective_dos; }
@@ -116,10 +116,10 @@ class TBDLEXPORT DensityOfStates : public PhysicalModelInterface
   private:
 
     //! The reference energy
-    double _reference_energy;
+    std::vector<double> _reference_energy;
 
     //! The effective_mass
-    double _effective_mass;
+    std::vector<double> _effective_mass;
 
     //! The effective DOS
     double _effective_dos;
@@ -149,7 +149,7 @@ inline
 void
 DensityOfStates::set_reference_energy(double E0)
 {
-  _reference_energy = E0;
+  _reference_energy[0] = E0;
 }
 
 

@@ -33,17 +33,17 @@ GaussDOS::read_database(void)
     // TODO: should bowing be applied to Eg(T) or Eg(0) ?
 
     db.set_section("valenceband");
-    reference_energy() = db.get("E_v", 0.0);
+    reference_energy()[0] = db.get("E_v", 0.0);
 
     db.set_section("bandgap");
     double bandgap = db.get("Eg_G", 1e3);
 
-    reference_energy() += bandgap;
+    reference_energy()[0] += bandgap;
   }
   else if (get_particle() == 'h')
   {
     db.set_section("valenceband");
-    reference_energy() = db.get("E_v", 0.0);
+    reference_energy()[0] = db.get("E_v", 0.0);
   }
 }
 
@@ -68,7 +68,7 @@ GaussDOS::do_init(void)
     get_parameter("sigma", _sigma);
     get_parameter("N0", _N0);
   }
-  effective_mass() = 1.0;
+  effective_mass()[0] = 1.0;
 }
 
 double GaussDOS::erfc(double x) const
@@ -204,7 +204,7 @@ GaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, do
 {
   double dens, der;
 
-  double ref_en = get_reference_energy();
+  double ref_en = get_reference_energy()[0];
   if (get_particle() == 'h') ref_en *= -1.0;
   //cout<<"ref_energy "<<reference_energy()<<endl;
   double z = (Ef - ref_en - Epot) / kT;

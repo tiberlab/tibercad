@@ -9,8 +9,8 @@ using namespace std;
 
 DensityOfStates::DensityOfStates(const ModelOptions& options) :
   PhysicalModelInterface(options),
-  _reference_energy(0.0),
-  _effective_mass(1.0),
+  _reference_energy({0.0}),
+  _effective_mass({1.0}),
   _particle(' '),
   _use_quantum(false),
   _is_quantum(false)

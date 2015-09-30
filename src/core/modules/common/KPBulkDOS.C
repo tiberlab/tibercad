@@ -168,12 +168,12 @@ KPBulkDOS::_solve_kp(void)
       dos_mass()[i] = cbs[i].mass_DOS;
       degeneracy()[i] = cbs[i].degeneracy;
 
-      if (cbs[i].energy < band_edge()[0])
-      {
-        swap(band_edge()[i], band_edge()[0]);
-        swap(dos_mass()[i], dos_mass()[0]);
-        swap(degeneracy()[i], degeneracy()[0]);
-      }
+      //if (cbs[i].energy < band_edge()[0])
+      //{
+      //  swap(band_edge()[i], band_edge()[0]);
+      //  swap(dos_mass()[i], dos_mass()[0]);
+      //  swap(degeneracy()[i], degeneracy()[0]);
+      //}
     }
   }
   else if (get_particle() == 'h')
@@ -198,14 +198,15 @@ KPBulkDOS::_solve_kp(void)
       dos_mass()[i] = vbs[i].mass_DOS;
       degeneracy()[i] = vbs[i].degeneracy;
 
-      if (vbs[i].energy > band_edge()[0])
-      {
-        swap(band_edge()[i], band_edge()[0]);
-        swap(dos_mass()[i], dos_mass()[0]);
-        swap(degeneracy()[i], degeneracy()[0]);
-      }
+      //if (vbs[i].energy > band_edge()[0])
+      //{
+      //  swap(band_edge()[i], band_edge()[0]);
+      //  swap(dos_mass()[i], dos_mass()[0]);
+      //  swap(degeneracy()[i], degeneracy()[0]);
+      //}
     }
 
+    /*
     double delta_max = 4.0 * kT;
     double tmp = 0;
     // include other bands
@@ -217,11 +218,12 @@ KPBulkDOS::_solve_kp(void)
           * std::exp(-delta / kT);
     }
     dos_mass()[0] = std::pow(tmp / degeneracy()[0], 2.0 / 3.0);
+    */
   }
 
   effective_dos() = _dos_factor * _degeneracy[0] * std::pow(kT * _dos_mass[0], 1.5);
-  reference_energy() = band_edge()[0];
-  effective_mass() = dos_mass()[0];
+  reference_energy() = band_edge();
+  effective_mass() = dos_mass();
 }
 
 
@@ -239,8 +241,8 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
   const double arg_min = -50;
   const double min_dens = 1e-64;
 
-  //for (int i = 0; i < _ref_energies.size(); ++i)
-  int i = 0;
+  for (int i = 0; i < _ref_energies.size(); ++i)
+  //int i = 0;
   {
     double dens, der;
 

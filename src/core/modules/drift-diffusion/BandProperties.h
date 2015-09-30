@@ -37,13 +37,14 @@ class BandProperties : public DriftDiffusionModelInterface
     void set_temperature(double temperature) { _temperature = temperature; }
 
     //! Get the band edge
-    double get_band_edge(void) const { return _dos_model->get_reference_energy(); }
+    double get_band_edge(void) const;
 
     //! Get all band energies
-    void get_bands(std::vector<double>& bands) const { bands = _band_edges; }
+    void get_bands(std::vector<double>& bands) const
+      { bands = _dos_model->get_reference_energy(); }
 
     //! Get the effective mass
-    double get_effective_mass(void) const { return _dos_model->get_effective_mass(); }
+    double get_effective_mass(void) const;
 
     //! Get the effective DOS
     double get_effective_DOS(void) const;
@@ -116,7 +117,7 @@ class BandProperties : public DriftDiffusionModelInterface
 
 
     //! Get all band edges
-    std::vector<double>& band_edges(void) { return _band_edges; }
+    std::vector<double>& band_edges(void) { return _dos_model->reference_energy(); }
 
 
     //! Get effective mass
@@ -139,8 +140,6 @@ class BandProperties : public DriftDiffusionModelInterface
     //! The band edge
     double _band_edge;
 
-    //! All different bands
-    std::vector<double> _band_edges;
 
     //! The effective mass for the DOS
     /*!

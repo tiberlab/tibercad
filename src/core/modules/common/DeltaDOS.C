@@ -16,7 +16,7 @@ void
 DeltaDOS::do_init(void)
 {
   get_parameter("level", reference_energy());
-  effective_mass() = 1.0;
+  effective_mass()[0] = 1.0;
 }
 
 std::pair<double, double>
@@ -29,7 +29,7 @@ DeltaDOS::calculate_density_and_derivative(double Ef, double Epot,
 std::pair<double, double>
 DeltaDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, double kTlattice) const
 {
-  double expf = exp(-(Ef - get_reference_energy() - Epot) / kT);
+  double expf = exp(-(Ef - get_reference_energy()[0] - Epot) / kT);
   double dens = 1.0 / (1.0 + expf);
   double der = dens;
 

@@ -63,8 +63,8 @@ class TBDLEXPORT KPBulkDOS : public DensityOfStates
       struct Data
       {
         int strain_seq_num = -1;
-        double ref_energy;
-        double dos_mass;
+        std::vector<double> ref_energy;
+        std::vector<double> dos_mass;
         double eff_dos;
       };
 

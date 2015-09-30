@@ -18,7 +18,7 @@ void
 ExponentialDOS::do_init(void)
 {
   get_parameter("alpha", _alpha);
-  effective_mass() = 1.0;
+  effective_mass()[0] = 1.0;
 }
 
 inline
@@ -51,7 +51,7 @@ ExponentialDOS::calculate_density_and_derivative(double E, double Epot,
 std::pair<double, double>
 ExponentialDOS::calculate_density_and_derivative(double E, double Epot, double kT, double kTlattice) const
 {
-  E -= get_reference_energy() + Epot;
+  E -= get_reference_energy()[0] + Epot;
 
   double sum = 0;
   double der = 0;

@@ -28,17 +28,17 @@ ConstantDOS::read_database(void)
     // TODO: should bowing be applied to Eg(T) or Eg(0) ?
 
     db.set_section("valenceband");
-    reference_energy() = db.get("E_v", 0.0);
+    reference_energy()[0] = db.get("E_v", 0.0);
 
     db.set_section("bandgap");
     double bandgap = db.get("Eg_G", 1e3);
 
-    reference_energy() += bandgap;
+    reference_energy()[0] += bandgap;
   }
   else if (get_particle() == 'h')
   {
     db.set_section("valenceband");
-    reference_energy() = db.get("E_v", 0.0);
+    reference_energy()[0] = db.get("E_v", 0.0);
   }
 }
 
@@ -70,7 +70,7 @@ ConstantDOS::do_init(void)
 	//_E0 *= -1.0;
         //cout<<"E0_h = "<<_E0<<endl;
   }
-  effective_mass() = 1.0;
+  effective_mass()[0] = 1.0;
 }
 
 std::pair<double, double>
@@ -86,7 +86,7 @@ ConstantDOS::calculate_density_and_derivative(double Ef, double Epot, double kT,
   double dens, der, Emin, Emax, exp_num, exp_den, ref_en;
   //cout<<"ref_energy "<<reference_energy()<<endl;
 
-  ref_en = get_reference_energy();
+  ref_en = get_reference_energy()[0];
   if (get_particle() == 'h') ref_en *= -1.0;
 
   if (get_particle() == 'e')

@@ -218,7 +218,7 @@ QuantumDOS::calculate_density_and_derivative(double Ef, double Epot,
       // in the well (or everywhere, if no barrier has been specified)
       // add a continuum from the next available energy level
 
-      double E = get_reference_energy() + Epot;
+      double E = get_reference_energy()[0] + Epot;
 
       // we do not accept it if it is lower than the bulk band edge
       // (for positive charge we have to change sign)
@@ -228,7 +228,7 @@ QuantumDOS::calculate_density_and_derivative(double Ef, double Epot,
         continuum = min(E, continuum);
 
 
-      double cl_ref = _classical->get_reference_energy();
+      double cl_ref = _classical->get_reference_energy()[0];
       pair<double, double> cl(_classical->get_occupied_density_and_derivative(
             Ef, continuum - cl_ref, kT, elem, p, kTlattice));
       density += cl.first;

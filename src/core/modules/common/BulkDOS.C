@@ -106,12 +106,12 @@ BulkDOS::read_database(void)
     gapparm.varshni_b = varshni_b;
     _gap_params.resize(1, gapparm);
 
-    effective_mass() = mass;
+    effective_mass()[0] = mass;
   }
   else if (get_particle() == 'h')
   {
     db.set_section("valenceband");
-    reference_energy() = db.get("E_v", 0.0);
+    reference_energy()[0] = db.get("E_v", 0.0);
 
     // we put the degeneracy to two, since the DOS mass contains the band degeneracy
     unsigned short int deg = db.get("degeneracy", 2);
@@ -120,7 +120,7 @@ BulkDOS::read_database(void)
     _dos_mass.resize(1, mass);
     _degeneracy.resize(1, deg);
 
-    effective_mass() = mass;
+    effective_mass()[0] = mass;
   }
 }
 
@@ -130,8 +130,8 @@ BulkDOS::do_init(void)
 {
 
   _ref_energies.resize(0);
-  get_parameter("level", reference_energy());
-  _ref_energies.push_back(reference_energy());
+  get_parameter("level", reference_energy()[0]);
+  _ref_energies.push_back(reference_energy()[0]);
 
   get_option("levels", _ref_energies);
   if (_ref_energies.size() > 1)
@@ -148,11 +148,11 @@ BulkDOS::do_init(void)
     {
       _ref_energies.resize(_gap_params.size(), 0.0);
       for (int i = 0; i < _gap_params.size(); ++i)
-        reference_energy() = _gap_params[i].gap(SimulationOptions::T) + _gap_params[i].Ev;
+        reference_energy()[0] = _gap_params[i].gap(SimulationOptions::T) + _gap_params[i].Ev;
     }
   }
   else
-    reference_energy() = _ref_energies[0];
+    reference_energy()[0] = _ref_energies[0];
 
 
   get_option("dos_mass", _dos_mass);

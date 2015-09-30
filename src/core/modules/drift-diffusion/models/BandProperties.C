@@ -11,6 +11,7 @@
 #include "TiberModule.h"
 
 #include <sstream>
+#include <algorithm>
 
 using namespace std;
 
@@ -114,7 +115,35 @@ BandProperties::calculate(double temperature)
 
 }
 
+double
+BandProperties::get_band_edge(void) const
+{
+  if (_particle == 'e')
+    return(*min_element(_dos_model->get_reference_energy().begin(),
+        _dos_model->get_reference_energy().end()));
+  else
+    return(*max_element(_dos_model->get_reference_energy().begin(),
+        _dos_model->get_reference_energy().end()));
+}
 
+double
+BandProperties::get_effective_mass(void) const
+{
+  size_t i = 0;
+  if (_particle == 'e')
+  {
+    i = distance(_dos_model->get_reference_energy().begin(),
+        min_element(_dos_model->get_reference_energy().begin(),
+            _dos_model->get_reference_energy().end()));
+  }
+  else
+  {
+    i = distance(_dos_model->get_reference_energy().begin(),
+        max_element(_dos_model->get_reference_energy().begin(),
+            _dos_model->get_reference_energy().end()));
+  }
+  return(_dos_model->get_effective_mass()[i]);
+}
 
 std::pair<double, double>
 BandProperties::get_density_and_derivative(void) const
