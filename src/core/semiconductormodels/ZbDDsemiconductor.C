@@ -80,7 +80,7 @@ using namespace Constants;
     }
     else
     {
-      band_ex.degeneracy = 16   ;
+      //band_ex.degeneracy = 16   ;
       /* spin degeneracy and  8 equivalent minima (
            [1,1, 1],[-1,-1,-1],
            [-1,1,1],[1,-1,-1]
@@ -88,10 +88,13 @@ using namespace Constants;
            [1,1,-1],[-1,-1,1]
        */
 
+      // Matthias 2015-09-24: let's always put them explicitly
+      band_ex.degeneracy = 4   ;
       band_ex.energy     = Ec_L;
       band_ex.mass_DOS = pow(par.m_t_L * par.m_t_L *  par.m_l_L, 1.0/3.0 );
+      for (short i = 0; i <4; i++)
+        result.push_back(band_ex);
 
-      result.push_back(band_ex);
     }
 
     //------------------------------------------------------------------
@@ -131,9 +134,12 @@ using namespace Constants;
     else
     {
       band_ex.energy     = Ec_X;
-      band_ex.degeneracy = 12   ; // spin degeneracy and 6 equivalent minima
+      //band_ex.degeneracy = 12   ; // spin degeneracy and 6 equivalent minima
+      // Matthias 2015-09-24: let's always put them explicitly
+      band_ex.degeneracy = 3;
       band_ex.mass_DOS = pow(par.m_t_X * par.m_t_X *  par.m_l_X, 1.0/3.0 );
-      result.push_back(band_ex);
+      for (short i = 0; i < 3; i++)
+        result.push_back(band_ex);
     }
 
     //------------------------------------------
