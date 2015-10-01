@@ -136,7 +136,7 @@ using namespace Constants;
       band_ex.energy     = Ec_X;
       //band_ex.degeneracy = 12   ; // spin degeneracy and 6 equivalent minima
       // Matthias 2015-09-24: let's always put them explicitly
-      band_ex.degeneracy = 3;
+      band_ex.degeneracy = 4;
       band_ex.mass_DOS = pow(par.m_t_X * par.m_t_X *  par.m_l_X, 1.0/3.0 );
       for (short i = 0; i < 3; i++)
         result.push_back(band_ex);

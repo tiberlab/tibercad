@@ -166,7 +166,7 @@ DDsemiconductor::DDsemiconductor(const ModelOptions& options)
   : PhysicalModelInterface(options),
     semiconductor(NULL),
     bulk_ham(NULL),
-    energy_cutoff(4.0),
+    energy_cutoff(10.0),
     strained(false),
     k_max(1e-4)    //k_max(0.0529177e-4)
 {
