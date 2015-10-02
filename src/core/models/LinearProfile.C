@@ -13,6 +13,7 @@ LinearProfile::LinearProfile(const ModelOptions& options) :
   _min(0.0),
   _max(0.0),
   _distance(1.0),
+  _type(onesided),
   _direction(1, 0, 0),
   _origin(0)
 {
@@ -22,6 +23,13 @@ LinearProfile::LinearProfile(const ModelOptions& options) :
   get_option("direction", _direction);
   _distance = get_option("distance", _distance);
   _direction /= _direction.size();
+
+  string type = get_option("type", "onesided");
+  if (type == "symmetric")
+    _type = symmetric;
+  else if (type == "continued")
+    _type = continued;
+
 }
 
 LinearProfile::~LinearProfile(void)
@@ -44,7 +52,7 @@ LinearProfile::get_min_max(void) const
 double
 LinearProfile::get_data(const Elem* elem, const Point& p) const
 {
-  double data = _max;
+  double data = 0.0;
 
   // shift to origin
   Point point(p - _origin);
@@ -52,13 +60,16 @@ LinearProfile::get_data(const Elem* elem, const Point& p) const
   // project onto _direction
   double xcoord = point * _direction;
 
-  if (xcoord > 0)
-  {
-    if (xcoord < _distance)
-      data = _max - xcoord / _distance * (_max - _min);
-    else
-      data = _min;
-  }
+  if (fabs(xcoord) < _distance)
+    data = _max - xcoord / _distance * (_max - _min);
+  else
+    data = _min;
+
+  if (xcoord < 0)
+    if (_type == continued)
+      data = _max;
+    else if (_type == onesided)
+      data = 0.0;
 
   return data;
 }

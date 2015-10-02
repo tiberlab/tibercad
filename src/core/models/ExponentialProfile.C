@@ -12,6 +12,7 @@ ExponentialProfile::ExponentialProfile(const ModelOptions& options) :
   ExternalProfile(options),
   _max(0.0),
   _lambda(1),
+  _type(onesided),
   _direction(1, 0, 0),
   _origin(0)
 {
@@ -20,6 +21,13 @@ ExponentialProfile::ExponentialProfile(const ModelOptions& options) :
   get_option("direction", _direction);
   _lambda = get_option("lambda", _lambda);
   _direction /= _direction.size();
+
+  string type = get_option("type", "onesided");
+  if (type == "symmetric")
+    _type = symmetric;
+  else if (type == "continued")
+    _type = continued;
+
 }
 
 ExponentialProfile::~ExponentialProfile(void)
@@ -42,7 +50,7 @@ ExponentialProfile::get_min_max(void) const
 double
 ExponentialProfile::get_data(const Elem* elem, const Point& p) const
 {
-  double data = _max;
+  double data = 0.0;
 
   // shift to origin
   Point point(p - _origin);
@@ -50,10 +58,11 @@ ExponentialProfile::get_data(const Elem* elem, const Point& p) const
   // project onto _direction
   double xcoord = point * _direction;
 
-  if (xcoord > 0)
-  {
-    data = _max * exp(-xcoord * _lambda);
-  }
+  if ((_type == symmetric) || (xcoord >= 0))
+    data = _max * exp(-fabs(xcoord) * _lambda);
+
+  if ((_type == continued) && (xcoord < 0))
+    data = _max;
 
   return data;
 }

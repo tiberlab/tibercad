@@ -32,6 +32,14 @@ class ExponentialProfile : public ExternalProfile
 
     double _lambda;
 
+    enum Type {
+      onesided,
+      symmetric,
+      continued,
+    };
+
+    Type _type;
+
     Point _direction;
     Point _origin;
 

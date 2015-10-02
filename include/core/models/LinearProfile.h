@@ -33,6 +33,14 @@ class LinearProfile : public ExternalProfile
 
     double _distance;
 
+    enum Type {
+      onesided,
+      symmetric,
+      continued,
+    };
+
+    Type _type;
+
     Point _direction;
     Point _origin;
 

@@ -12,6 +12,7 @@ GaussianProfile::GaussianProfile(const ModelOptions& options) :
   ExternalProfile(options),
   _max(0.0),
   _sigma(1.0),
+  _type(onesided),
   _direction(1, 0, 0),
   _origin(0)
 {
@@ -20,6 +21,12 @@ GaussianProfile::GaussianProfile(const ModelOptions& options) :
   get_option("direction", _direction);
   _sigma = get_option("sigma", _sigma);
   _direction /= _direction.size();
+  
+  string type = get_option("type", "onesided");
+  if (type == "symmetric")
+    _type = symmetric;
+  else if (type == "continued")
+    _type = continued;
 }
 
 GaussianProfile::~GaussianProfile(void)
@@ -42,7 +49,7 @@ GaussianProfile::get_min_max(void) const
 double
 GaussianProfile::get_data(const Elem* elem, const Point& p) const
 {
-  double data = _max;
+  double data = 0.0;
 
   // shift to origin
   Point point(p - _origin);
@@ -50,10 +57,11 @@ GaussianProfile::get_data(const Elem* elem, const Point& p) const
   // project onto _direction
   double xcoord = point * _direction;
 
-  if (xcoord > 0)
-  {
+  if ((_type == symmetric) || (xcoord >= 0))
     data = _max * exp(-xcoord * xcoord / (_sigma * _sigma));
-  }
+
+  if ((_type == continued) && (xcoord < 0))
+    data = _max;
 
   return data;
 }

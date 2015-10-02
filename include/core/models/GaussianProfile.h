@@ -32,6 +32,14 @@ class GaussianProfile : public ExternalProfile
 
     double _sigma;
 
+    enum Type {
+      onesided,
+      symmetric,
+      continued,
+    };
+
+    Type _type;
+
     Point _direction;
     Point _origin;
 

@@ -5,6 +5,7 @@
 
 
 #include "PhysicalModelInterface.h"
+#include "ExternalProfile.h"
 
 class DensityOfStates;
 class Particle;
@@ -58,8 +59,9 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
      * \param hl the hole population
      * \param will be filled with the partial derivatives: [d/dn d/dp d/dEfn d/dEfp]
      */
-    double get_ionized_density_and_derivative(const Particle& el,
-        const Particle& hl, std::vector<double>& derivatives) const;
+    double get_ionized_density_and_derivative(const Elem* elem, const Point& p,
+        const Particle& el, const Particle& hl,
+        std::vector<double>& derivatives) const;
 
     //! Get the particle type
     char get_particle(void) const;
@@ -90,6 +92,9 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
 
     //! The trap density in cm^-3
     double _density;
+
+    //! The trap profile function
+    ExternalProfile* _profile;
 
     //! The trap type
     Type _type;

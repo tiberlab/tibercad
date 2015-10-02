@@ -16,6 +16,7 @@ using namespace std;
 Trap::Trap(const ModelOptions& options) :
   PhysicalModelInterface(options),
   _density(0.0),
+  _profile(nullptr),
   _type(NEUTRAL),
   _particle('e'),
   _level(0.0),
@@ -60,6 +61,8 @@ Trap::Trap(const ModelOptions& options) :
 
 Trap::~Trap(void)
 {
+  destroy(_dos);
+  delete _profile;
 }
 
 
@@ -72,6 +75,7 @@ Trap::prepare_submodels(void)
     _dos = DensityOfStates::create(it->second);
     add_submodel("dos", _dos);
   }
+
 }
 
 
@@ -81,6 +85,13 @@ Trap::do_init(void)
   string tmp("m");
   tmp =  get_option("reference", tmp);
   _energy_reference = tmp[0];
+
+  if (get_options().has_submodel("profile"))
+  {
+    _profile = ExternalProfile::create(
+        get_options().submodels_begin("profile")->second);
+    _density = 1.0;
+  }
 
   get_parameter("Nt", _density);
   get_parameter("Et", _level);
@@ -153,10 +164,15 @@ Trap::_trap_level(void) const
 
 
 double
-Trap::get_ionized_density_and_derivative(const Particle& el,
-    const Particle& hl, std::vector<double>& derivatives) const
+Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
+    const Particle& el, const Particle& hl, std::vector<double>& derivatives) const
 {
   double dens = _density;
+  if (_profile != nullptr)
+    dens *= _profile->get_data(elem, p);
+
+  double Nt = dens;
+
   derivatives.resize(5);
   derivatives[0] = derivatives[1] = derivatives[2] = derivatives[3] = derivatives [4] = 0.0;
 
@@ -165,7 +181,6 @@ Trap::get_ionized_density_and_derivative(const Particle& el,
     double f_e, f_h;
     double deriv_e, deriv_h;
     double g = 1;
-    double Nt = _density;
 
     double kT_e = el.kT();
     double kT_h = hl.kT();
@@ -286,7 +301,7 @@ Trap::get_ionized_density_and_derivative(const Particle& el,
     {
       double f, deriv;
       double level = _trap_level();
-      double Nt = _density;
+      //double Nt = _density;
 
       switch (_particle)
       {
