@@ -421,7 +421,7 @@ DSSCModel::calculate_traps(void)
       _etraps[i]->set_energies(Ec, Ev, phi);
       Particle el(-1, _pd.density_n, _pd.fermi_n, kT);
       Particle hl(1, 0, 0, kT);
-      nt += _etraps[i]->get_ionized_density_and_derivative(el, hl, derivatives);
+      nt += _etraps[i]->get_ionized_density_and_derivative(_elem, _pd.coordinates, el, hl, derivatives);
       dnt += derivatives[0];
     }
 
@@ -454,7 +454,7 @@ DSSCModel::calculate_equilibrium_traps(void)
       _etraps[i]->set_energies(Ec, Ev, phi);
       Particle el(-1, _pd.density_n, _pd.fermi_n, kT);
       Particle hl(1, 0, 0, kT);
-      nt += _etraps[i]->get_ionized_density_and_derivative(el, hl, derivatives);
+      nt += _etraps[i]->get_ionized_density_and_derivative(_elem, _pd.coordinates, el, hl, derivatives);
       dnt += derivatives[0];
     }
 

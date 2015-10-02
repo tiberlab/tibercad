@@ -3,6 +3,7 @@
 #include "SRHRecombination.h"
 #include "DriftDiffusionProperties.h"
 #include "DensityOfStates.h"
+#include "ExternalProfile.h"
 #include "TiberMath.h"
 
 #include "Material.h"
@@ -72,8 +73,9 @@ SRHRecombination::SRHRecombination(const ModelOptions& options) :
   _Talpha_h(0.0),
   _Tcoeff_e(0.0),
   _Tcoeff_h(0.0),
-  _tat(NULL),
-  _dos(NULL)
+  _tat(nullptr),
+  _dos(nullptr),
+  _profile(nullptr)
 {
 }
 
@@ -82,6 +84,8 @@ SRHRecombination::SRHRecombination(const ModelOptions& options) :
 SRHRecombination::~SRHRecombination(void)
 {
   delete _tat;
+  delete _profile;
+  destroy(_dos);
 }
 
 
@@ -176,6 +180,13 @@ SRHRecombination::do_init(void)
 {
   if (get_option("trap", false))
   {
+    if (get_options().has_submodel("profile"))
+    {
+      _profile = ExternalProfile::create(
+          get_options().submodels_begin("profile")->second);
+      _density = 1.0;
+    }
+
     get_parameter("sigma_n", _sigma_n);
     get_parameter("sigma_p", _sigma_p);
     get_parameter("Nt", _density);
@@ -185,6 +196,7 @@ SRHRecombination::do_init(void)
 
     _trap = true;
   }
+
 
   get_parameter("tau_n", _tau_n);
   get_parameter("tau_p", _tau_p);
@@ -262,13 +274,17 @@ SRHRecombination::get_net_recombination_rates(double& recomb_e,
 
   double Et = get_trap_level();
 
+  double dens = _density;
+  if (_profile != nullptr)
+    dens *= _profile->get_data(dd.get_element(), dd.get_coordinates());
+
   double tau_n = _tau_n;
   double tau_p = _tau_p;
   if (_trap)
   {
-    if (_density == 0.0) _density = 1e-32;
-    tau_n = 1.0 / (_density * _sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
-    tau_p = 1.0 / (_density * _sigma_p * dd.get_valence_band().get_thermal_velocity(T));
+    dens = max(dens, 1e-32);
+    tau_n = 1.0 / (dens * _sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
+    tau_p = 1.0 / (dens * _sigma_p * dd.get_valence_band().get_thermal_velocity(T));
   }
   else
   {
@@ -385,13 +401,17 @@ SRHRecombination::get_net_recombination_rate_derivatives(
   double Et = get_trap_level();
   double f = std::exp((Et - dd.get_equilibrium_fermi_level()) / T);
 
+  double dens = _density;
+  if (_profile != nullptr)
+    dens *= _profile->get_data(dd.get_element(), dd.get_coordinates());
+
   double tau_n = _tau_n;
   double tau_p = _tau_p;
   if (_trap)
   {
-    if (_density == 0.0) _density = 1e-32;
-    tau_n = 1.0 / (_density * _sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
-    tau_p = 1.0 / (_density * _sigma_p * dd.get_valence_band().get_thermal_velocity(T));
+    dens = max(dens, 1e-32);
+    tau_n = 1.0 / (dens * _sigma_n * dd.get_conduction_band().get_thermal_velocity(T));
+    tau_p = 1.0 / (dens * _sigma_p * dd.get_valence_band().get_thermal_velocity(T));
   }
   else
   {

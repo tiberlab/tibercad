@@ -22,7 +22,7 @@ class BandProperties : public DriftDiffusionModelInterface
   public:
 
     //! Destructor
-    virtual ~BandProperties(void) {}
+    virtual ~BandProperties(void);
 
     //! Creator method
     static BandProperties* create(const ModelOptions& options);
@@ -49,7 +49,7 @@ class BandProperties : public DriftDiffusionModelInterface
     //! Get the effective DOS
     double get_effective_DOS(void) const;
 
-    //! Get degeneracy
+    // ! Get degeneracy
     //unsigned int get_degeneracy(void) const { return _degeneracy; }
 
     //! Get thermal velocity in cm/s
@@ -112,7 +112,7 @@ class BandProperties : public DriftDiffusionModelInterface
     virtual void do_print_info(void);
 
 
-    //! Get band edge
+    // ! Get band edge
     //double band_edge(void) const { return _dos_model->reference_energy(); }
 
 
@@ -124,7 +124,7 @@ class BandProperties : public DriftDiffusionModelInterface
     double& effective_mass(void) { return _effective_mass; }
 
 
-    //! Get degeneracy
+    // ! Get degeneracy
     //unsigned int& degeneracy(void) { return _degeneracy; }
 
     //! Get the DOS factor
@@ -147,7 +147,7 @@ class BandProperties : public DriftDiffusionModelInterface
      */
     double _effective_mass;
 
-    //! The total degeneracy, including spin
+    // ! The total degeneracy, including spin
     //unsigned int _degeneracy;
 
     //! The temperature in eV

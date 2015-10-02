@@ -36,6 +36,11 @@ BandProperties::BandProperties(const ModelOptions& options) :
     throw ModelErrorException("Unknown particle '" + particle + "'");
 }
 
+BandProperties::~BandProperties(void)
+{
+  destroy(_dos_model);
+}
+
 
 void
 BandProperties::prepare_submodels(void)

@@ -583,7 +583,7 @@ DriftDiffusionProperties::calculate_traps(void)
       (*it)->set_energies(Ec, Ev, phi);
       Particle el(-1, _pd->electron_density, _pd->fermi_e, _pd->electron_vt);
       Particle hl(1, _pd->hole_density, _pd->fermi_h, _pd->hole_vt);
-      nt += (*it)->get_ionized_density_and_derivative(el, hl, derivatives);
+      nt += (*it)->get_ionized_density_and_derivative(_elem, _coord, el, hl, derivatives);
       // the negative sign is because the derivative is given with respect
       // to the quasi fermi level, not the electrochemical potential.
       dntdEf[0] -=
@@ -608,7 +608,7 @@ DriftDiffusionProperties::calculate_traps(void)
       (*it)->set_energies(Ec, Ev, phi);
       Particle el(-1, _pd->electron_density, _pd->fermi_e, _pd->electron_vt);
       Particle hl(1, _pd->hole_density, _pd->fermi_h, _pd->hole_vt);
-      nt += (*it)->get_ionized_density_and_derivative(el, hl, derivatives);
+      nt += (*it)->get_ionized_density_and_derivative(_elem, _coord, el, hl, derivatives);
       dntdEf[0] -=
           derivatives[0] * _pd->electron_density_derivative +
           derivatives[2];

@@ -7,6 +7,7 @@
 #include "TypeDefs.h"
 
 class DensityOfStates;
+class ExternalProfile;
 
 //! Implementation of SRH recombination
 /*!
@@ -144,6 +145,9 @@ class TBDLLOCAL SRHRecombination : public RecombinationModelInterface
 
     //! The density of states, if provided
     DensityOfStates* _dos;
+
+    //! Trap density profile
+    ExternalProfile* _profile;
 
     //! Get the trap level
     double get_trap_level(void);

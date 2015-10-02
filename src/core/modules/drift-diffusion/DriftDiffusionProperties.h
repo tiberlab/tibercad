@@ -182,13 +182,13 @@ class DriftDiffusionProperties : public PhysicalModel
         //! The electron conductivity
         double electron_conductivity;
 
-        //! The derivatives of the electron conductivity
+        // ! The derivatives of the electron conductivity
         //std::vector<double> electron_conductivity_derivatives;
 
         //! The hole conductivity
         double hole_conductivity;
 
-        //! The derivatives of the hole conductivity
+        // ! The derivatives of the hole conductivity
         //std::vector<double> hole_conductivity_derivatives;
 
         //! The net electron recombination rate

@@ -432,6 +432,7 @@ DDBulkModel::do_reinit(const Elem* elem)
 
      _strain_if.get_crystal_strain(elem, elem->centroid(), get_strain());
 
+
       _polarization = 0;
       for (size_t n = 0; n < _pm.size(); n++)
       {
