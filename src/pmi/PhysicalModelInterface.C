@@ -68,7 +68,9 @@ PhysicalModelInterface::_create(const string& name,
 
   PhysicalModelInterface* mod = NULL;
 
-  if (name == "cryst_zb")
+  if (name == "cryst_gen")
+    mod = RotatedCrystal::create(options);
+  else if (name == "cryst_zb")
     mod = ZbRotatedCrystal::create(options);
   else if (name == "cryst_wz")
     mod = WzRotatedCrystal::create(options);
