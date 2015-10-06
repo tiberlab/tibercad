@@ -22,20 +22,18 @@ RotatedCrystal*
 RotatedCrystal::create(const Material* owner,
     const ModelOptions& options)
 {
-  std::string structure = static_cast<const Material*>(owner)->get_structure();
+  std::string structure = owner->get_structure();
 
   RotatedCrystal* rc = NULL;
 
+  if (structure != "zb" && structure != "wz")
+    structure = "gen";
+    
   if ((structure == "am") || (structure == "amorphous"))
-  {
-    rc = new RotatedCrystal(ModelOptions());
-    rc->set_owner(owner);
-  }
-  else
-  {
-    rc = PhysicalModelInterface::create<RotatedCrystal>(
+    structure = "gen";
+  
+  rc = PhysicalModelInterface::create<RotatedCrystal>(
       "cryst_" + structure, owner, options);
-  }
 
   if (rc == NULL)
   {
