@@ -5,6 +5,8 @@
 
 #include "PhysicalModelInterface.h"
 #include "tiber_dll.h"
+#include "AtomisticStructure.h"
+#include "BulkCrystal.h"
 
 #include "tensor.h"
 
@@ -24,7 +26,10 @@ class RotatedCrystal : public PhysicalModelInterface
    //! Create a RotatedCrystal object
    static RotatedCrystal* create(const Material* owner,
        const ModelOptions& options);
-   
+  
+   //! create a generic RotatedCrystal 
+   static RotatedCrystal* create(const ModelOptions& options);
+
   //! Rotation matrix  \f$ {\bf x}^{calc} = R {\bf x}^{cryst} \f$  \f$
   /*! 
     In matrix notation:  
@@ -135,9 +140,6 @@ class RotatedCrystal : public PhysicalModelInterface
   void calculate_euler_angles(void);
 
 
- private:
-
-
   //! Euler angle \f$\alpha\f$
   double _alpha;
 
@@ -147,13 +149,22 @@ class RotatedCrystal : public PhysicalModelInterface
   //! Euler angle \f$\gamma\f$
   double _gamma;
 
+  //! stor an atomistic structure of bulk conventional cell
+  BulkCrystal* _conv_basis;
 
+ private:
 
 };
 
 //
 // inline members
 //
+inline
+RotatedCrystal* RotatedCrystal::create(const ModelOptions& options)
+{
+  return new RotatedCrystal(options);
+}
+
 
 inline
 void
