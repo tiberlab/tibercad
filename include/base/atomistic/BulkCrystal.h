@@ -62,6 +62,9 @@ class BulkCrystal: public AtomisticBasis
   //lattice constants
   std::vector<double> _lattice_constant;
  
+  //angles
+  std::vector<double> _angles;
+ 
   //! Atomic basis arrays (non rotated)
   std::vector<Atom> _basis;
 

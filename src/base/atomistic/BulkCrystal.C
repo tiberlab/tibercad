@@ -13,6 +13,7 @@ BulkCrystal::create(const Material* mat, const ModelOptions& options)
 
 BulkCrystal::BulkCrystal(const Material* mat, const ModelOptions& options)
 :_lattice_constant(3, 0.0),
+_angles(3, 90.0),  
 _rotation(1),
 _prim_vec(0),
 _rotated_prim_vec(0)
@@ -101,7 +102,12 @@ BulkCrystal::read_database(void)
     if (_lattice_constant[1] == 0.0) _lattice_constant[1] = _lattice_constant[0];
     _lattice_constant[2] = db.get("c", 0.0) * 10.0;
     if (_lattice_constant[2] == 0.0) _lattice_constant[2] = _lattice_constant[0];
+    _angles[0] = db.get("alpha", 90.0);
+    _angles[1] = db.get("beta", 90.0);
+    _angles[2] = db.get("gamma", 90.0);
+
     db.set_section("atomistic_structure");
+
     _lattice_type = db.get("lattice_type", "none");
 
     unsigned int n_basis_specie = db.get("n_basis_specie", 0);
@@ -134,12 +140,23 @@ BulkCrystal::read_database(void)
         tmp.set_label(static_cast<Atom::label_t>(i));
         tmp.set_specie(specie);
 
-        record = n_s + "_a";
-        T(1) = db.get(record, 0.0);
-        record = n_s + "_b";
-        T(2) = db.get(record, 0.0);
-        record = n_s + "_c";
-        T(3) = db.get(record, 0.0);
+        std::vector<double> v(3,0.0);
+     
+        // offers two alternative ways of setting vectors
+        // either with component _a _b _c or as vectors 
+        if (db.has_variable(n_s+"_a"))
+        {
+          v[0] = db.get(n_s+"_a", 0.0);
+          v[1] = db.get(n_s+"_b", 0.0);
+          v[2] = db.get(n_s+"_c", 0.0);
+        }
+        else
+        {
+          db.get(n_s, v);
+        } 
+        T(1) = v[0]; 
+        T(2) = v[1];
+        T(3) = v[2];  
         tmp.set_position(T);
         _lattice_basis.push_back(tmp);
       }
@@ -281,11 +298,37 @@ BulkCrystal::set_prim_vec(void)
 
   Tensor2Gen prim_vec_dir(0);
 
+  if (_lattice_type.compare("orthorombic") == 0) {
+
+    prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
+    prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
+    prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1.0;
+
+    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0];
+    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[1];
+    _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
+
+  }
+
+  if (_lattice_type.compare("tetragonal") == 0) {
+ 
+    assert((_lattice_constant[0] == _lattice_constant[1]));
+
+    prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
+    prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
+    prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1.0;
+
+    _prim_vec(1,1) = prim_vec_dir(1,1) * _lattice_constant[0];
+    _prim_vec(2,2) = prim_vec_dir(2,2) * _lattice_constant[1];
+    _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
+
+  }
+
   if (_lattice_type.compare("cubic") == 0) {
 
     assert((_lattice_constant[0] == _lattice_constant[1]) && (_lattice_constant[1] == _lattice_constant[2]));
 
-    prim_vec_dir(1,1) = 1.0; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
+    prim_vec_dir(1,1) = 1.0 ; prim_vec_dir(2,1) = 0; prim_vec_dir(3,1) = 0;
     prim_vec_dir(1,2) = 0; prim_vec_dir(2,2) = 1.0; prim_vec_dir(3,2) = 0;
     prim_vec_dir(1,3) = 0; prim_vec_dir(2,3) = 0; prim_vec_dir(3,3) = 1.0;
 
@@ -351,7 +394,6 @@ BulkCrystal::set_prim_vec(void)
     _prim_vec(3,3) = prim_vec_dir(3,3) * _lattice_constant[2];
 
   }
-
   else
   {
     Messages::error("Lattice type "+ _lattice_type + " doesn't exist in material "+_mat->get_name());

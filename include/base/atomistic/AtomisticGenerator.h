@@ -90,11 +90,20 @@ protected:
   //! Conventional cell vectors in primitive real basis
   Tensor2Gen _conv_prim;
 
+  //! Lattice points in conventional basis
+  std::vector<Tensor1> _conv_lattice;
+
   //! Conventional cell basis atoms
-  std::vector<Tensor1> _conv_lattice_basis;
+  std::vector<Atom> _conv_basis;
 
   //! Localo origin
   Tensor1 _local_origin;
+  
+  //! global translation vector
+  Tensor1 _translation;
+  
+  //! cell translation vector
+  Tensor1 _cell_translation;
   
   //! Name of basis type
   std::string _basis_type;
@@ -155,16 +164,20 @@ protected:
   //! Setting growth conventional cell vectors (in primitive vectors basis)
   void make_conv_cell();
 
-  //! Filling conventional growth cell with basis atoms
+  //! Setting the conventional lattice
+  void make_conv_lattice();
+
+  //! Setting the conventional lattice + basis
   void make_conv_basis();
 
-  //! A function to build supercells
+  //! A function to build supercells (basis+lattice filling space)
   void make_supercell(double l1, double l2, double l3);
 
   //! Virtual function for building up the structure.
   virtual void build() = 0;
 
-
+  //! Find the origin of the conventional cell such that all atoms have positive coordinates
+  void move_origin();  
 
 
   //Calculate a reciprocal basis from a real basis

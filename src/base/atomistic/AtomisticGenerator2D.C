@@ -36,6 +36,8 @@ AtomisticGenerator2D::build()
 
   //Common building operations
   make_conv_cell();
+  make_conv_lattice();
+  move_origin();
   make_conv_basis();
 
   //Check edges of segment for building structure
