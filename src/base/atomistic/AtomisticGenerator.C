@@ -136,7 +136,20 @@ AtomisticGenerator::init_commons()
   //-----------------------------------------------------------------------
   
   //A translation vector can be specified to modify supercell alignment
-  std::vector<double> translation(3, 0.0);
+  if ( _as->get_options().find_option("cell_translation") )
+  {
+    std::vector<double> translation(3, 0.0);
+   _as->get_options().get_option("cell_translation", translation);
+   _cell_translation(1) = translation[0]; 
+   _cell_translation(2) = translation[1]; 
+   _cell_translation(3) = translation[2];
+   if (abs(_cell_translation(1)) > 1.0 || 
+       abs(_cell_translation(2)) > 1.0 || 
+       abs(_cell_translation(3)) > 1.0 )
+      throw InitFailedException("cell_translation in relative coordinates must be < 1.0");
+
+  }
+
   if ( _as->get_options().find_option("cell_translation") )
   {
    _as->get_options().get_option("cell_translation", translation);
@@ -152,6 +165,7 @@ AtomisticGenerator::init_commons()
 
   if ( _as->get_options().find_option("translation") )
   {
+    std::vector<double> translation(3, 0.0);
    _as->get_options().get_option("translation", translation);
    _translation(1) = translation[0]; 
    _translation(2) = translation[1]; 
@@ -602,6 +616,9 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   //Definition of number of conventional cells, useful for reserving arrays
   unsigned int max_number_of_cells = n1*n2*n3;
   _super_basis.reserve(max_number_of_cells * _conv_lattice.size() * basis.size());
+  
+  Tensor1 origin(_local_origin +  _translation);
+  cout<<origin<<endl;
 
    cout<<"(debug) basis size: "<<basis.size()<<endl;
    cout<<"(debug) conv_latt size: "<<_conv_lattice.size()<<endl;
@@ -620,7 +637,8 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
         tmp_conv(1) = (i * _conv_vect(1,1)) + (j * _conv_vect(1,2)) + (l * _conv_vect(1,3));
         tmp_conv(2) = (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
         tmp_conv(3) = (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
-
+  
+        /*
         basis_iterator = _conv_basis.begin();
 
         do
@@ -647,11 +665,11 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
           do
           {
             basis_atom = (*basis_iterator);
-            basis_atom.set_position ( _local_origin + lattice_point +
-                (*basis_iterator).get_ttype_position() );
+            basis_atom.set_position ( origin + lattice_point +
+                         (*basis_iterator).get_ttype_position() );
             _super_basis.push_back(basis_atom);
-            ++basis_iterator;
 
+            ++basis_iterator;
           }
           while(basis_iterator != basis.end());
 
@@ -659,7 +677,21 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
         }
         while(conv_iterator != _conv_lattice.end());
         */
+   
+        
+        basis_iterator = _conv_basis.begin();
 
+        do
+        {
+           basis_atom = (*basis_iterator);
+           basis_atom.set_position( origin + tmp_conv + 
+                (*basis_iterator).get_ttype_position() );
+            _super_basis.push_back(basis_atom);
+
+          ++basis_iterator;
+        }
+        while(basis_iterator != _conv_basis.end());
+       
       }
     }
   }
@@ -694,13 +726,10 @@ void AtomisticGenerator::make_conv_cell()
      { 
        _conv_vect(i,i) = -_conv_vect(i,i);
        for (int j = 1; j <=3; j++)
-          _conv_prim(1,j) = -_conv_prim(1,j);
+          _conv_prim(j,i) = -_conv_prim(j,i);
      }
   }
- 
-  cout<<"Conventional vectors: "<<endl;
-  cout<<_conv_vect<<endl; 
-  
+
   //Check orthogonality of the final conventional vectors
   vec_x(1) = _conv_vect(1,1); vec_x(2) = _conv_vect(2,1); vec_x(3) = _conv_vect(3,1);
   vec_y(1) = _conv_vect(1,2); vec_y(2) = _conv_vect(2,2); vec_y(3) = _conv_vect(3,2);
@@ -722,24 +751,59 @@ void AtomisticGenerator::make_conv_lattice()
   int lower_1, lower_2, lower_3, upper_1, upper_2, upper_3, i;
   Tensor1 prim_position, tmp_check, tmp_position;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+
+  /* IMPORTANT NOTE:
+   * The lattice points covering the conventional cells are obtained by looking at the indeces
+   * _conv_vect = rotated_prim_vec * _conv_prim
+   * Quindi, poiche' _conv_vect= (ax,ay,az) dove ax = (a,0,0); ay=(0,b,0); az=(0,0,c)
+   * ax = e1 * _conv_prim(1,1) + e2 * conv_prim(2,1) + e3 * conv_prim(3,1)   
+   * ay = e1 * _conv_prim(1,2) + e2 * conv_prim(2,2) + e3 * conv_prim(3,2)   
+   * az = e1 * _conv_prim(1,3) + e2 * conv_prim(2,3) + e3 * conv_prim(3,3)   
+   * 
+   * lo span della conv_cell si ha per i = min(0,_conv_prim(1,*)) : max(0,_conv_prim(1,*))
+   *                                   j = min(0,_conv_prim(2,*)) : max(0,_conv_prim(2,*))
+   *                                   k = min(0,_conv_prim(3,*)) : max(0,_conv_prim(3,*))
+   *
+   * Pero' in questo modo non e' garantito che anche il vertice (a,b,c) sia incluso!
+   * Quindi vengono calcolati gli indici di questo da 
+   * indxes = inv(rotated_prim_vec) * (a,b,c)
+   * 
+   * A questo punto, per costruzione anche (a,b,0) (0,b,c) e (a,0,c) 
+   * sono inclusi. 
+   */
+
+  Point p(_conv_vect(1,1), _conv_vect(2,2), _conv_vect(3,3));
+  Tensor1 vect(p);  
+  Tensor1 indxs = inv(rotated_prim_vec) * vect;
   
   //Define a box including conventional cell
-  lower_1 = int(min(0.0, min(_conv_prim(1,1), min(_conv_prim(1,2),_conv_prim(1,3)))));
-  upper_1 = int(max(0.0, max(_conv_prim(1,1), max(_conv_prim(1,2),_conv_prim(1,3)))));
-  lower_2 = int(min(0.0, min(_conv_prim(2,1), min(_conv_prim(2,2),_conv_prim(2,3)))));
-  upper_2 = int(max(0.0, max(_conv_prim(2,1), max(_conv_prim(2,2),_conv_prim(2,3)))));
-  lower_3 = int(min(0.0, min(_conv_prim(3,1), min(_conv_prim(3,2),_conv_prim(3,3)))));
-  upper_3 = int(max(0.0, max(_conv_prim(3,1), max(_conv_prim(3,2),_conv_prim(3,3)))));
-
-  for (int i = lower_1 - 1; i <= upper_1 + 1; i++){
-    for (int j = lower_2 - 1; j <= upper_2 + 1; j++){
-      for (int l = lower_3 - 1; l <= upper_3 + 1; l++){
+  
+  lower_1 = int(min(indxs(1), min(_conv_prim(1,1), min(_conv_prim(1,2),_conv_prim(1,3)))));
+  upper_1 = int(max(indxs(1), max(_conv_prim(1,1), max(_conv_prim(1,2),_conv_prim(1,3)))));
+  lower_2 = int(min(indxs(2), min(_conv_prim(2,1), min(_conv_prim(2,2),_conv_prim(2,3)))));
+  upper_2 = int(max(indxs(2), max(_conv_prim(2,1), max(_conv_prim(2,2),_conv_prim(2,3)))));
+  lower_3 = int(min(indxs(3), min(_conv_prim(3,1), min(_conv_prim(3,2),_conv_prim(3,3)))));
+  upper_3 = int(max(indxs(3), max(_conv_prim(3,1), max(_conv_prim(3,2),_conv_prim(3,3)))));
+ 
+  lower_1 = int(min(0, lower_1));
+  upper_1 = int(max(0, upper_1));
+  lower_2 = int(min(0, lower_2));
+  upper_2 = int(max(0, upper_2));
+  lower_3 = int(min(0, lower_3));
+  upper_3 = int(max(0, upper_3));
+  
+  for (int i = lower_1 ; i <= upper_1  ; i++){
+    for (int j = lower_2 ; j <= upper_2  ; j++){
+      for (int l = lower_3 ; l <= upper_3  ; l++){
 
         prim_position(1) = double(i); 
         prim_position(2) = double(j); 
         prim_position(3) = double(l);
         bool check_boundary;
         tmp_check = inv(_conv_prim) * prim_position;
+        check_boundary= ((tmp_check(1) > -tol) && (tmp_check(1) < (1.0 - tol)))&&
+                        ((tmp_check(2) > -tol) && (tmp_check(2) < (1.0 - tol))) &&
+                        ((tmp_check(3) > -tol) && (tmp_check(3) < (1.0 - tol)));
 
         check_boundary= ((tmp_check(1) > -tol) && (tmp_check(1) < (1.0 - tol)))&&
                         ((tmp_check(2) > -tol) && (tmp_check(2) < (1.0 - tol))) &&
@@ -812,20 +876,14 @@ void AtomisticGenerator::make_conv_basis()
                  basis_atom.get_ttype_position();
 
       // fold atom within the conventional cell
-      if (atm_coords(1)<0.0)
-          atm_coords(1) += _conv_vect(1,1);
-      if (atm_coords(1)>_conv_vect(1,1))
-          atm_coords(1) -= _conv_vect(1,1);
+      if (atm_coords(1)<0.0)             atm_coords(1) += _conv_vect(1,1);
+      if (atm_coords(1)>_conv_vect(1,1)) atm_coords(1) -= _conv_vect(1,1);
 
-      if (atm_coords(2)<0.0)
-          atm_coords(2) += _conv_vect(2,2);
-      if (atm_coords(2)>_conv_vect(2,2))
-          atm_coords(2) -= _conv_vect(2,2);
+      if (atm_coords(2)<0.0)             atm_coords(2) += _conv_vect(2,2);
+      if (atm_coords(2)>_conv_vect(2,2)) atm_coords(2) -= _conv_vect(2,2);
 
-      if (atm_coords(3)<0.0)
-          atm_coords(3) += _conv_vect(3,3);
-      if (atm_coords(3)>_conv_vect(3,3))
-          atm_coords(3) -= _conv_vect(3,3);
+      if (atm_coords(3)<0.0)             atm_coords(3) += _conv_vect(3,3);
+      if (atm_coords(3)>_conv_vect(3,3)) atm_coords(3) -= _conv_vect(3,3);
       // --------------------------------------
       
       basis_atom.set_position(atm_coords);
