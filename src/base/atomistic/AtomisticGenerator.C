@@ -150,18 +150,6 @@ AtomisticGenerator::init_commons()
 
   }
 
-  if ( _as->get_options().find_option("cell_translation") )
-  {
-   _as->get_options().get_option("cell_translation", translation);
-   _cell_translation(1) = translation[0]; 
-   _cell_translation(2) = translation[1]; 
-   _cell_translation(3) = translation[2];
-   if (abs(_cell_translation(1)) > 1.0 || 
-       abs(_cell_translation(2)) > 1.0 || 
-       abs(_cell_translation(3)) > 1.0 )
-      throw InitFailedException("cell_translation in relative coordinates must be < 1.0");
-
-  }
 
   if ( _as->get_options().find_option("translation") )
   {
@@ -622,8 +610,6 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
 
    cout<<"(debug) basis size: "<<basis.size()<<endl;
    cout<<"(debug) conv_latt size: "<<_conv_lattice.size()<<endl;
-
-   Tensor1 origin(_local_origin + _translation);
 
   //Need to construct a redundant supercell (for passivation purposes)
   //Note that it must be redundant only in non periodic directions
