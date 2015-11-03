@@ -35,8 +35,8 @@ make_petsc()
 
   if [ ! -e  reconfigure-${PETSC_ARCH}.py ] && [ ! -e  conftest-${PETSC_ARCH} ]; then
     ./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
-      --CFLAGS="${CFLAGS}" --FFLAGS="${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
-    cp conftest conftest-${PETSC_ARCH}
+      --CFLAGS="${CFLAGS}" --FFLAGS="-fno-range-check ${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+    #cp conftest conftest-${PETSC_ARCH}
     if [ "$target_os" != "win32" ]; then
       ./conftest-${PETSC_ARCH}
       cp reconfigure.py reconfigure-${PETSC_ARCH}.py
@@ -79,19 +79,19 @@ make_petsc()
       ${petsc_linker_flags} \
       ${ARCHIVES} \
       -Wl,-rpath,\$ORIGIN \
-      ${LDFLAGS} ${LAPACK_LIBS} ${FORTRAN_LIBS}
+       ${MPI_LIBS} ${LDFLAGS} ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
     mkdir -p ${TOPDIR}/${TCHOST}/lib
     cp ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ${TOPDIR}/${TCHOST}/lib/${libname}${dll_libext}
-  fi
 
-  rm conftest* reconfigure*
+    rm conftest* reconfigure*
+  fi
 
 }
 
 
 
-ARCHIVE="petsc-lite-${PETSCVERSION}${PETSCPATCHLEVEL}.tar.gz"
+ARCHIVE="petsc-${PETSCVERSION}${PETSCPATCHLEVEL}.tar.gz"
 PATCH=${PWD}/petsc.patch-${PETSCVERSION}
 
 echo "Compiling PETSc version $PETSCVERSION in $BUILDDIR ..."
@@ -127,7 +127,7 @@ cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 # PETSc shared libraries cannot be moved around, therefore
 # we compile them always statically
 
-SHARED="--with-shared=0 --with-dynamic=0"
+SHARED="--with-shared-libraries=0 --with-dynamic-loading=0"
   
 
 #COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
@@ -150,6 +150,10 @@ if [ $MPI == 'n' ]; then
   MPI="--with-mpi=0"
 else
   MPI="--with-mpi-dir=${MPIDIR}  --with-mpi-shared=1"
+  if [ "${target_os}" = "win32" ]
+  then
+    MPI="--with-mpi-compilers=0 --with-mpi-include=[${MPIDIR}/Include,${MPIDIR}/Include/x86] --with-mpi-lib=[-L,${MPIDIR}/Lib/x86,-Xlinker,-Bstatic,msmpifec,msmpi,quirk,-Xlinker,-Bdynamic] --known-mpi-shared-libraries=1"
+  fi
 fi
 #MPI="--download-mpich=1 --with-mpi-shared=0"
 
@@ -164,11 +168,11 @@ then
 fi
 
 
-CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 ${petsc_host}"
+CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0  ${petsc_host}"
 #CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 \
 #  ${petsc_host} --download-mumps=yes  --download-parmetis=1 --download-scalapack=1 --download-blacs=1"
 
-
+export FCFLAGS="-fno-range-check $FCFLAGS"
 
 make_petsc real
 make_petsc complex
