@@ -38,7 +38,7 @@ void TiberPetscLinearSolver::clear(void)
 
       int ierr = 0;
       
-      ierr = KSPDestroy(_ksp);
+      ierr = KSPDestroy(&_ksp);
       TiberPetscUtils::checkerr(ierr);
 	     
       // Mimic PETSc default solver and preconditioner
@@ -64,7 +64,7 @@ void TiberPetscLinearSolver::init(void)
 
 
     // Create the linear solver context
-    ierr = KSPCreate(libMesh::COMM_WORLD, &_ksp);
+    ierr = KSPCreate(PETSC_COMM_WORLD, &_ksp);
     TiberPetscUtils::checkerr(ierr);
 
     // Create the preconditioner context
@@ -165,6 +165,11 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
     PCILUSetZeroPivot(sub_pc, 1e-32);
     PCILUSetDamping(sub_pc, 1e-3);
+#elif (PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 1)
+    PCFactorSetShiftType(sub_pc, MAT_SHIFT_NONZERO);
+    PCFactorSetShiftAmount(sub_pc, 1e-3);
+    PCFactorSetZeroPivot(sub_pc, 1e-32);
+    //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
 #else
     PCFactorSetShiftNonzero(sub_pc, 1e-3);
     PCFactorSetZeroPivot(sub_pc, 1e-32);
@@ -328,7 +333,9 @@ TiberPetscLinearSolver::setup_monitors(void)
       {
         std::string sim_name(get_simulation_name());
         sim_name += ": Linear solver convergence monitor";
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 4))
+        ierr = KSPMonitorLGResidualNormCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
+#elif ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
         ierr = KSPMonitorLGCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #else
@@ -336,7 +343,9 @@ TiberPetscLinearSolver::setup_monitors(void)
 #endif
         TiberPetscUtils::checkerr(ierr);
     
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 4))
+        ierr = KSPMonitorSet(_ksp, KSPMonitorLGResidualNorm, _LG_monitor, 0);
+#elif ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
         ierr = KSPMonitorSet(_ksp, KSPMonitorLG, _LG_monitor, 0);
 #else

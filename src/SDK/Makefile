@@ -55,7 +55,7 @@ endif
 $(topdir)/$(ARCH)/bin/build_module$(SUFF): $(objects) 
 	@echo "Compiling build_module executable ..."
 	@mkdir -p $(topdir)/$(ARCH)/bin
-	@$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(BOOST_LIBS) $(PACKAGEFLAGS)
+	$(CXX) $(CXXFLAGS) $(objects) -o $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(BOOST_LIBS) $(PACKAGEFLAGS) $(LDFLAGS)
 	@mkdir -p $(topdir)/SDK/$(ARCH)/bin
 	@cp $(topdir)/$(ARCH)/bin/build_module$(SUFF) $(topdir)/SDK/$(ARCH)/bin
 	@mkdir -p $(topdir)/SDK/$(ARCH)/bin

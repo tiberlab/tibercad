@@ -13,6 +13,7 @@
 #include "InitFailedException.h"
 
 #include "libmesh.h"
+#include "petscsys.h"
 #include "petscerror.h"
 
 

@@ -157,9 +157,9 @@ extern "C"
 
   // This is the PETSc error handler
   PetscErrorCode
-  __tiber_petsc_snes_error_handler(int line, const char* func,
+  __tiber_petsc_snes_error_handler(MPI_Comm, int line, const char* func,
       const char* file, const char* dir, PetscErrorCode n,
-      int p, const char* mess, void* ctx) throw (PetscRuntimeError)
+      PetscErrorType p, const char* mess, void* ctx) throw (PetscRuntimeError)
   {
 #ifdef DEBUG
     std::ostringstream os;
@@ -294,7 +294,7 @@ void TiberPetscNonlinearSolver::clear(void)
 
     int ierr=0;
 
-    ierr = SNESDestroy(_snes);
+    ierr = SNESDestroy(&_snes);
     TiberPetscUtils::checkerr(ierr);
   }
 }
@@ -397,6 +397,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   SNESSetMaxLinearSolveFailures(_snes, get_nonlinear_max_it());
 #endif
 
+
   switch (_ls_type)
   {
     case 1:
@@ -426,7 +427,8 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   SNESSetLineSearchParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
   //SNESSetLineSearchParams(_snes, 0.00001, _ls_maxstep, PETSC_DEFAULT);
 #elif (PETSC_VERSION_MAJOR >= 3)
-  SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep);
+  SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
+  //SNESLineSearchSetTolerances(ls, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
 #else
   SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
 #endif
@@ -473,6 +475,11 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       PCILUSetZeroPivot(sub_pc, 1e-32);
       PCILUSetDamping(sub_pc, 1e-3);
+#elif (PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 1)
+    PCFactorSetShiftType(sub_pc, MAT_SHIFT_NONZERO);
+    PCFactorSetShiftAmount(sub_pc, 1e-3);
+    PCFactorSetZeroPivot(sub_pc, 1e-32);
+    //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
 #else
       PCFactorSetShiftNonzero(sub_pc, 1e-3);
       PCFactorSetZeroPivot(sub_pc, 1e-32);

@@ -82,6 +82,7 @@ KPBand::prepare_submodels(void)
 
   add_submodel("kp", _bulk_model);
   get_options().delete_submodels("kp");
+  
 }
 
 

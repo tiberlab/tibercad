@@ -31,7 +31,7 @@ case $os in
 
   *Darwin* | *darwin*) arch=x86_64-darwin ;;
 
-  *MINGW* | *mingw* ) arch=${cpu}-mingw32 ;;
+  *MINGW* | *mingw* ) arch=${cpu}-w64-mingw32 ;;
 
   *CYGWIN* | *cygwin* ) arch=${cpu}-cygwin ;;
 

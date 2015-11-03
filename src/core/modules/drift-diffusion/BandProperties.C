@@ -8,7 +8,6 @@
 #include "Messages.h"
 #include "Database.h"
 
-#include "TiberModule.h"
 
 #include <sstream>
 
@@ -109,9 +108,7 @@ void
 BandProperties::calculate(double temperature)
 {
   set_temperature(temperature);
-  //do_calculate();
-
-
+  do_calculate();
 }
 
 

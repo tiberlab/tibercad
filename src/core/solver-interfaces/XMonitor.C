@@ -32,8 +32,8 @@ XMonitor::~XMonitor(void)
   {
     PetscDrawFlush(_draw);
     PetscDrawViewPortsDestroy(_ports);
-    PetscDrawLGDestroy(_lg);
-    PetscDrawDestroy(_draw);
+    PetscDrawLGDestroy(&_lg);
+    PetscDrawDestroy(&_draw);
     _draw = NULL;
   }
 }
