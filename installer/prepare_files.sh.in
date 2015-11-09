@@ -14,6 +14,7 @@ make_windows_package () {
   cp ${topdir}/${ARCH}/bin/tibercad.exe ${files}
   cp ${topdir}/${ARCH}/lib/*.dll ${files}
   cp ${topdir}/SDK/${ARCH}/lib/*.dll ${files}
+  cp ${topdir}/SDK/${ARCH}/bin/*.dll ${files}
   cp -r ${topdir}/${ARCH}/modules ${files}
   cp ${topdir}/share/tibercad.ico ${files}
   cp ${topdir}/share/Copyright.txt ${files}

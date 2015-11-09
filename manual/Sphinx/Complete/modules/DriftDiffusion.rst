@@ -923,11 +923,11 @@ The model is activated by defining a ``recombination`` submodel of  type ``band2
 
 
   recombination band2band
-    {
-       B = 4e14  
-       E0 = 1.9e7  
-       sigma = 2.5 
-    }
+  {
+    B = 4e14  
+    E0 = 1.9e7  
+    sigma = 2.5 
+  }
 
 
 The parameters for the band to band  tunneling  model are summarized in Table :ref:`Hurkx band to band tunneling parameters<b2b_tunnel>`, together with  their default value:
