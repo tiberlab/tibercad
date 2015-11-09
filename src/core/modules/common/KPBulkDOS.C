@@ -133,9 +133,21 @@ void
 KPBulkDOS::do_print_info(void)
 {
   ostringstream os;
-  os << "band edge: " << band_edge()[0] <<
-      ", DOS mass: " << dos_mass()[0];// <<
-      //", degeneracy: " << degeneracy()[0];
+  os << "band edge :";
+  for (int i = 0; i < band_edge().size(); ++i)
+    os << "  " << band_edge()[i];
+  Messages::info(os.str());
+
+  os.str("");
+  os << "eff. mass :";
+  for (int i = 0; i < band_edge().size(); ++i)
+    os << "  " << dos_mass()[i];
+  Messages::info(os.str());
+
+  os.str("");
+  os << "degeneracy:";
+  for (int i = 0; i < band_edge().size(); ++i)
+    os << "  " << degeneracy()[i];
   Messages::info(os.str());
 }
 
@@ -167,7 +179,6 @@ KPBulkDOS::_solve_kp(void)
       band_edge()[i] = cbs[i].energy;
       dos_mass()[i] = cbs[i].mass_DOS;
       degeneracy()[i] = cbs[i].degeneracy;
-
       //if (cbs[i].energy < band_edge()[0])
       //{
       //  swap(band_edge()[i], band_edge()[0]);
@@ -242,7 +253,6 @@ KPBulkDOS::calculate_density_and_derivative(double Ef, double Epot,
   const double min_dens = 1e-64;
 
   for (int i = 0; i < _ref_energies.size(); ++i)
-  //int i = 0;
   {
     double dens, der;
 
