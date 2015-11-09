@@ -1,5 +1,23 @@
+Version 2.6.0
+-------------
+
+New features:
+	- kp based band parameters now explicitly uses all available bands to
+	  calculate the carrier densities, instead of extracting effective
+	  parameters for a single parabolic band (which has been done only for
+	  holes, anyway)
+	
+
 Version 2.5.0
 -------------
+
+New features:
+	- complete reorganization of handling of the band parameters in drift
+	  diffusion. Allows now for different DOS implemented as modules
+	- implemented several models for the simulation of organic materials,
+	  e.g. Gaussian DOS, Langevin recombination
+	- Valence force field is included
+	- Empirical tight binding is included
 
 Bug fixes:
 
