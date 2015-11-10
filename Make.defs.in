@@ -120,3 +120,8 @@ ifeq ($(METHOD),dbg)
   CXXFLAGS += -Woverloaded-virtual
 endif
 
+
+CXXFLAGS += -fopenmp
+CFLAGS += -fopenmp
+FCFLAGS += -fopenmp
+LDFLAGS += -fopenmp

@@ -16,6 +16,9 @@
 #include "petscsys.h"
 #include "petscerror.h"
 
+#ifdef _WIN32
+ #include "omp.h"
+#endif
 
 #ifndef ARCH
 #error "Architecture has to be specified on the command line as string"
@@ -182,6 +185,10 @@ TiberCad::init(const std::string& inputfile)
   // to the libraries we hand empty cmdline!
   __empty_argv[0] = __executable;
 
+#ifdef _WIN32
+  // a trick to get libgomp in
+  int omp_procs = omp_get_num_procs();
+#endif
 
   MPI_Comm local_comm;
   int proc_id, p;
