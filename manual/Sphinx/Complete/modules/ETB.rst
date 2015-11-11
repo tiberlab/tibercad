@@ -813,9 +813,18 @@ Drift-diffusion Module will be  executed to  solve  Poisson at  equilibrium  ::
 
   Physics
    {
-    strain_simulation = strain
+    band_properties 
+     {
+      density_of_states bulk_kp 
+      {
+        strain_simulation = strain
+      }
+     }
+    
     recombination srh { }
-    polarization (piezo, pyro) { } 
+    polarization (pyro) {}
+    polarization (piezo) {strain_simulation = strain}
+ 
    }
   }
 

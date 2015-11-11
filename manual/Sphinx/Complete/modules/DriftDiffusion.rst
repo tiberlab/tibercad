@@ -136,9 +136,10 @@ can be controlled by special submodel blocks in different ways:
 
 1. a single ``band_properties`` block containing parameters for conduction and for valence band
 
-2. ``conduction_band`` and ``valence_band`` blocks to control both bands independently
+2. ``conduction_band`` and ``valence_band`` blocks to control each band independently
 
-In the current version, there are two different implementations of band parameter models:
+Band parameter models may be defined through the block *density_of_states*, described in the following.
+
 
 Density of states (DOS)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -152,6 +153,9 @@ The density of states for electrons and/or holes can be set using the ``density_
        ...
      }
    }
+
+There are several types of density of states models.
+
 
 3D Bulk DOS (default)
 ............................................
@@ -167,6 +171,73 @@ Bulk kp DOS
 This model for bulk band parameters can be chosen by specifying ``density_of_states bulk_kp``. It calculates the band edge energies and masses from bulk kp theory, including Pikus-Bir strain corrections.
 To include strain corrections, the keyword ``strain_simulation`` has to be used, providing the name of the module instance which calculates strain.
 In the current version it is not possible to provide kp parameters from the input file.
+For example ::
+
+  band_properties 
+    {
+      density_of_states bulk_kp 
+      {
+        strain_simulation = strain
+      }
+    }
+
+
+Quantum DOS
+............................................
+
+With this model, the local DOS is obtained from the solution of the :math:`Schr\ddot{o}dinger` equation in a defined system. The following keywords are used to control this model :
+
+
+ ``quantum_simulation`` 
+     The name of a quantum density simulation. This will use the quantum mechanical particle density in the regions it was calculated. More than one simulations can be specified as a vector. In this case the sum of all quantum densities is taken.
+If  ``quantum_simulation`` is specified, the following additional options control the mixing between
+classical and quantum density:
+
+  ``barrier_regions``
+     Regions which can be regarded as pure barriers. In these regions a classical density will be added using the barrier  materials bulk band edge. 
+
+A further submodel block may be added to define an alternative  model to be used to obtain the DOS inside the barrier regions defined by *barrier_regions*, or when the quantum density is not available, for example because it has not been yet calculated in the simulation. 
+This block is called *classical_DOS* , and its type may be any one of the types defined for *density_of_states*  model, as follows::
+
+   classical_DOS [type]
+     {
+       ...
+     }
+   
+
+
+For example: ::
+
+  conduction_band
+    {
+      density_of_states quantum
+      {
+        # where to get the quantum density from
+        quantum_simulation = quantum_el
+        barrier_regions = buffer_quantum
+
+        classical_DOS bulk_kp
+        {
+          strain_simulation = strain
+        }
+
+      }
+    }
+
+Here, quantum DOS, and thus quantum density, for electrons, is obtained from the simulation *quantum_el*, for example an EFA calculation. A classical DOS is defined, to be obtained with the model *bulk_kp*.
+
+
+Constant DOS
+............................................
+
+The constant DOS model is identified by the identifier ``constant``. The constant DOS has the following form, for :math:`E_{min} \le E \le E_{max}`:
+
+.. math::
+   g(E) dE = \frac{N_0}{E_{max} - E_{min}} dE
+
+and :math:`g(E) = 0` otherwise. In the input file the constant DOS is set using three keywords, ``N0``, ``level`` and ``Ewidth``. The first one is used to set the maximum occupied density :math:`N_0` (:math:`cm^{-3}`). If a value for ``level`` is not specified in the input file, it will be set by default as the conduction band edge (:math:`E_C`) for electrons, and as the valence band edge (:math:`E_V`) for holes. The values of :math:`E_C` and :math:`E_V` are taken from material files. For electrons :math:`E_{min} =` ``level``, and :math:`E_{max} =` ``level`` + ``Ewidth``; for holes :math:`E_{max} =` ``level``, and :math:`E_{min} =` ``level`` - ``Ewidth``.
+
+
 
 Gaussian DOS
 ............................................
@@ -197,15 +268,7 @@ The gaussian DOS can be used also to define a distribution of trap states (see s
 
 According with the conventions used in TiberCAD the maximum density of traps is obtained as the product ``Nt`` :math:`\times` ``N0``, hence one can set indifferently ``Nt`` or ``N0``, leaving one parameter set to 1. The center of the gaussian is set with the value ``Et``, thus it is not necessary to provide a value for ``level``. ``Et`` is specified with respect to the conduction band (``reference = cb``), or the valence band (``reference = vb``) or the midgap (``reference = m``). The example sets a gaussian distribution of ``eNeutral`` traps whose center is 1 :math:`eV` below the conduction band.
 
-Constant DOS
-............................................
 
-The constant DOS model is identified by the identifier ``constant``. The constant DOS has the following form, for :math:`E_{min} \le E \le E_{max}`:
-
-.. math::
-   g(E) dE = \frac{N_0}{E_{max} - E_{min}} dE
-
-and :math:`g(E) = 0` otherwise. In the input file the constant DOS is set using three keywords, ``N0``, ``level`` and ``Ewidth``. The first one is used to set the maximum occupied density :math:`N_0` (:math:`cm^{-3}`). If a value for ``level`` is not specified in the input file, it will be set by default as the conduction band edge (:math:`E_C`) for electrons, and as the valence band edge (:math:`E_V`) for holes. The values of :math:`E_C` and :math:`E_V` are taken from material files. For electrons :math:`E_{min} =` ``level``, and :math:`E_{max} =` ``level`` + ``Ewidth``; for holes :math:`E_{max} =` ``level``, and :math:`E_{min} =` ``level`` - ``Ewidth``.
 
 The gaussian DOS can be used also to define a distribution of trap states (see section :ref:`DD_trapmodels`). This is particularly useful when modeling metal/semiconductor interfaces using the IDIS model (Induced Density of Interface States, see [Santoni]_). According to the IDIS model a density :math:`N_{trap}` of traps is distributed on the interface and a Charge Neutrality Level (CNL) is defined in such a way that when the fermi level is below the CNL the interface is positively charged, and when the fermi level is above the CNL the interface is negatively charged. This situation can be simulated using ``eNeutral`` traps over the CNL, and ``hNeutral`` traps below the CNL. For :math:`Alq_3` the CNL is 1.68 :math:`eV` above the valence band and :math:`N_{trap} = 2.63\times10^{19} \ cm^{-3} eV^{-1}`. Thus if we want to simulate a constant distribution of ``eNeutral`` traps above the CNL extending up to the conduction band edge (bandgap for :math:`Alq_3` is 2.9 :math:`eV`) we have to set::
 
@@ -245,29 +308,8 @@ And to set a constant distribution of ``hNeutral`` traps between the valence ban
 
 According with the conventions used in TiberCAD the maximum density of traps is obtained as the product ``Nt`` :math:`\times` ``N0``, hence one can set indifferently ``Nt`` or ``N0``, leaving one parameter set to 1. We have also to keep in mind that the constant distribution is normalized in energy, so ``Nt`` (or ``N0``) is automatically divided by ``Ewidth``. But the density of states :math:`N_{trap}` is already in :math:`cm^{-3} eV^{-1}` units, so we have to multiply it by 2.9 - 1.68 = 1.22 :math:`eV` for ``eNeutral`` and by 1.68 :math:`eV` for ``hNeutral`` in order to get the correct volume density for ``Nt`` (or ``N0``).
 
-Particle density
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Details for the calculation of the electron and hole densities can be given in the particle_density
-submodel. Its options are:
 
-  ``particle``
-      The particle this model is describing. Can be ``electron`` or ``hole`` .
-
-  ``statistics``
-      The statistics. Can be ``fermidirac`` (default) or ``boltzmann`` .
-
-  ``quantum_density``
-      The name of a quantum density simulation. 
-      This will use the quantum mechanical particle density in the regions it was calculated. More than one 
-      simulations can be specified as a vector. In this case the sum of all quantum densities is taken.
-
-If  ``quantum_density`` is specified, the following additional options control the mixing between
-classical and quantum density:
-
-  ``barrier_regions``
-     Regions which can be regarded as pure barriers. In these regions a classical density will be added using the barrier
-     materials bulk band edge.
 
 ..  ``add_continuum_in_well``
      If this option is set to true, the energy level of the first state after the ones considered for the quantum
@@ -758,7 +800,11 @@ The piezoelectric polarization is strain induced and given by the linear relatio
 where :math:`\varepsilon_{kl}` is the strain tensor. The piezoelectric coefficients :math:`e_{ikl}` are stored in the database.
 The strain is obtained from the simulation specified in the ``Physics`` section, but it can
 be overridden by providing a name for the strain simulation inside the polarization block
-using the ``strain_simulation`` option.
+using the ``strain_simulation`` option. ::
+
+  polarization (piezo) {strain_simulation = strain}
+
+
 
 .. _DD_trapmodels:
 
@@ -1081,8 +1127,9 @@ case.
 :math:`Schr\ddot{o}dinger`/Poisson/Drift-Diffusion calculations
 -----------------------------------------------------
 
-tiberCAD is able to perform selfconsistent :math:`Schr\ddot{o}dinger`-Poisson or :math:`Schr\ddot{o}dinger`-Drift-Diffusion calculations.  For this purpose, ``quantum_density`` has to be specified for at least one of
-the carriers,  and a selfconsistent simulation should be defined in the *Selfconsistent*
+tiberCAD is able to perform selfconsistent :math:`Schr\ddot{o}dinger`-Poisson or :math:`Schr\ddot{o}dinger`-Drift-Diffusion calculations.  For this purpose, a **density_of_states** model of type *quantum*
+has to be specified in **Physics** for at least one of
+the carriers,  and a *selfconsistent* simulation should be defined in the *Selfconsistent*
 block (see :ref:`Selfcons`).  The following option, to be specified in the Physics section,  controls the behaviour of the ``selfconsistent`` simulation.
 
  ``use_density_predictor`` 
@@ -1109,29 +1156,39 @@ For example, in **Module** *driftdiffusion*
 
   Physics
   {    
-    # we us a predictor corrector scheme for the selfconsistent loop
-    use_density_predictor = true
-
-    recombination srh {}
-
-    particle_density
+   conduction_band 
     {
-      particle = electron
-      statistics = fermidirac
+      density_of_states quantum
+      { 
+        # where to get the quantum density from
+        quantum_simulation = quantum_el
+        barrier_regions = buffer_quantum
 
-      # where to get the quantum density from
-      quantum_density = quantum_el
-      barrier_regions = buffer_quantum
+	classical_DOS bulk_kp 
+        {
+          strain_simulation = strain
+        }
 
-      # we use an embracing region to get a continuous transition from
-      # classical to quantum density
-      #embracing
-      #{
-      #  embracing_length = 8e-9
-      #  plot_embracing_regions = true
-      #}
+      }
     }
 
+  valence_band 
+    {
+      density_of_states quantum
+      { 
+        # where to get the quantum density from
+        quantum_simulation = quantum_hl
+        barrier_regions = buffer_quantum
+
+	classical_DOS bulk_kp 
+        {
+          strain_simulation = strain
+        }
+
+      }
+    }
+
+In this example, we include both electrons and holes in the selfconsistent simulation, by defining a *quantum* model of DOS for both *conduction_band* and *valence_band*. Here ``quantum_el`` and  ``quantum_hl`` are  the  *efaschroedinger* simulations which  calculate the quantum densities for  electron and  holes, respectively.
 
 Then, in **Module** *selfconsistent* ::
 
@@ -1149,7 +1206,7 @@ Then, in **Module** *selfconsistent* ::
 
 
 
-``quantum_el`` and  ``quantum_hl`` are  the  *efaschroedinger* simulations which  calculate the quantum densities for  electron and  holes. The  ``solve`` statement here specifies the order of execution in  the  self-consistent  cycle, which is  repeated until the  requested tolerance is  reached.
+Again, ``quantum_el`` and  ``quantum_hl`` are  the  *efaschroedinger* simulations which  calculate the quantum densities for  electron and  holes. The  ``solve`` statement here specifies the order of execution in  the  self-consistent  cycle, which is  repeated until the  requested tolerance is  reached.
 
 
 
@@ -1482,11 +1539,7 @@ The followng shows the module definition for the Drift-Diffusion simulation:
 
     Physics
     {
-      particle_density
-      {
-        statistics = fermidirac
-      }
-
+      
       recombination srh {}
 
       mobility
