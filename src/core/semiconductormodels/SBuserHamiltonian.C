@@ -42,7 +42,6 @@ void SBuserHamiltonian::do_init( )
     const Database& db = get_database();
     db.set_section("valenceband");
     edge = db.get("E_v", 0.0);
-  edge /= Constants::Hartree;
 
     // mass
     const string& band = get_option("band", "hh");
@@ -61,7 +60,7 @@ void SBuserHamiltonian::do_init( )
   // BUT: maybe optics cannot do anything with this single band anyways?
   kp_bands_map.insert(std::make_pair(3,0));
 
-  double mass = get_option("mass", 1.0);
+  double mass = get_option("effective_mass", 1.0);
 
   if (mass == 0.0) throw InitFailedException("User-defined Hamiltonian: zero mass");
 
