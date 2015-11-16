@@ -237,15 +237,15 @@ n_mpi_procs=1
 
 OPTERR=0
 opts="n:"
-while getopts $opts flag
+while getopts \$opts flag
 do
-  case "$flag" in
-    n) n_mpi_procs=${OPTARG} ;;
-    *) OPTIND=$(( $OPTIND - 1 )); break ;;
+  case "\$flag" in
+    n) n_mpi_procs=\${OPTARG} ;;
+    *) OPTIND=\$(( \$OPTIND - 1 )); break ;;
   esac
 done
 
-shift $(( $OPTIND - 1 ))
+shift \$(( \$OPTIND - 1 ))
 
 # the program to call
 prog=\`basename \$0\`
@@ -255,7 +255,8 @@ case \$prog in
 
   tibercad*)
     progname="tibercad"
-    executable="\${TIBERCADROOT}/\${ARCH}/bin/mpiexec.hydra -n ${n_mpi_procs} \${TIBERCADROOT}/\${ARCH}/bin/\$progname"
+    executable="\${TIBERCADROOT}/\${ARCH}/bin/mpiexec.hydra"
+    args=(-n \${n_mpi_procs} "\${TIBERCADROOT}/\${ARCH}/bin/\$progname")
     ;;
 
   gmsh*)
@@ -303,7 +304,7 @@ fi
 
 if [ -x \$executable ]
 then
-  exec \$executable "\$@"
+  exec \$executable \${args[*]} "\$@"
 else
   echo "Cannot execute \$progname. Perhaps broken installation?"
 fi

@@ -190,6 +190,8 @@ prepare_linux_package () {
   libs="$libs `ldd ${topdir}/${ARCH}/lib/libtibercad.so | grep libz | awk '{print $3}'`"
   cp /usr/pack/intel_mkl-11.2-ma/mkl/lib/intel64/libmkl_def.so ${files}/${ARCH}/lib
   cp $libs ${files}/${ARCH}/lib
+  cp ${topdir}/SDK/bin/mpiexec.hydra ${files}/${ARCH}/bin
+  cp ${topdir}/SDK/bin/hydra_pmi_proxy ${files}/${ARCH}/bin
   cp ${topdir}/SDK/${ARCH}/bin/mpiexec.hydra ${files}/${ARCH}/bin
   cp ${topdir}/${ARCH}/bin/tibercad ${files}/${ARCH}/bin/tibercad
   chmod a+x ${files}/${ARCH}/bin/tibercad

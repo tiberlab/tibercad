@@ -8,3 +8,4 @@ MPIINCL=$(MPIDIR)/src/include
 INCLUDE += -I$(MPIINCL)
 SHOW = -show
 
+#include ../../../../../Make.defs
