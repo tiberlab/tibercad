@@ -108,10 +108,10 @@ void
 PolarizationGrid::do_solve()
 {
 
-  for (unsigned int i = 0; i < grid.num_elements(); ++i)
-  {
-     pp[i] = pp[i] * scaling;
-  }
+  //for (unsigned int i = 0; i < grid.num_elements(); ++i)
+  //{
+  //   pp[i] = pp[i] * scaling;
+  //}
 
 
   // If the electric field is taken from an external module we
@@ -145,14 +145,18 @@ PolarizationGrid::do_solve()
 
   this->kmc();
 
-  if (_write_file) write_dipoles();
-
-  //write_antiferro();
-
-  for (unsigned int i = 0; i < grid.num_elements(); ++i)
+  if (_write_file)
   {
-     pp[i] = pp[i] / scaling;
+    write_dipoles();
+    //write_dipoles_man();
+    write_antiferro();
   }
+
+
+  //for (unsigned int i = 0; i < grid.num_elements(); ++i)
+  //{
+  //   pp[i] = pp[i] / scaling;
+  //}
 
 }
 
@@ -168,7 +172,6 @@ PolarizationGrid::parse_options(void)
   string units = get_option("dipole_units","Debye");
   double dip = get_option("dipole", 2.29);
   set_dipole(dip,units);
-
 
   ostringstream ostr;
   ostr<<"dipole= "<<dipole<<" e*nm "<<endl;
@@ -193,6 +196,8 @@ PolarizationGrid::parse_options(void)
     if (periodic[i]) _periodic[i] = 1;
   }
 
+  _discrete=get_option("discrete_orientations",false);
+
 }
 
 
@@ -204,7 +209,7 @@ PolarizationGrid::set_cutoff(void)
 
   double tmp = 4 * Constants::EE * dipole * dipole / eps_r;
  
-  // cutoff in nm to get 1 meV energy difference
+  // cutoff in nm to get 0.1 meV energy difference
   cutoff = pow(tmp/0.0001,1.0/3.0);
   
   ostringstream os;
@@ -311,23 +316,41 @@ PolarizationGrid::rnd_orientation(Point &p)
 
 }
 
-/*
+
 void
 PolarizationGrid::rnd_orientation_discrete(Point &p)
 {
-  uniform_int_distribution<int> random1(0, 23);
+  uniform_int_distribution<int> random1(0, 5);
 
   int rnd = random1(generator); 
- 
-  double P1 = 0.0669; 
-  double P2 = 
+    
+  p(0) = 0.0; 
+  p(1) = 0.0; 
+  p(2) = 0.0; 
 
   switch(rnd)
+  {
+  case 0:
+    p(0) = dipole; 
+    break;
   case 1:
-    p(0) = 
-
+    p(0) = -dipole; 
+    break;
+  case 2:
+    p(1) = dipole; 
+    break;
+  case 3:
+    p(1) = -dipole; 
+    break;
+  case 4:
+    p(2) = dipole; 
+    break;
+  case 5:
+    p(2) = -dipole; 
+    break;
+  }
 }
-*/
+
 
 void
 PolarizationGrid::write_dipoles()
@@ -382,16 +405,77 @@ PolarizationGrid::write_antiferro()
    file.close();
 }
   
+void
+PolarizationGrid::write_dipoles_man()
+{
+   int nx = 150;
+   int ny = 50;
+   int nzs = get_option("nz_start",20);
+   int nze = get_option("nz_end",24);
+   int nz = nze - nzs + 1;
+   double aa = get_option("grid_step",0.65); // in nanometers
+
+   Point p1(0,0,0);
+   Point p2(nx*aa,ny*aa,nz*aa);
+   TensorGrid grid2;
+   grid2.setup(p1,p2,nx,ny,nz);
+   vector<Point> pp2;
+   pp2.resize(grid2.num_elements());
+
+   // copy pp on pp2
+   for (int k1 = 0; k1 <= 49; k1++)
+   {
+     for (int l1 = 0; l1 <= 49; l1++)
+     { 
+       for (int m1 = nzs; m1 <= nze; m1++) 
+       {
+         int j = grid.index_to_element(k1,l1,m1);
+      
+         int j1 = grid2.index_to_element(k1,l1,m1-nzs);
+         pp2[j1] = pp[j];
+
+         j1 = grid2.index_to_element(k1 + 50,l1,m1-nzs);
+         pp2[j1] = pp[j];
+         
+
+         j1 = grid2.index_to_element(k1 + 100,l1,m1-nzs);
+         pp2[j1] = pp[j];
+        
+       }
+     }
+   }
+
+
+   string out_path = get_output_directory();
+   string file_name = out_path+"/"+get_option("filename","polarization_man.dat");
+   ofstream file; 
+
+   file.open(file_name.c_str());
+   for (unsigned int i=0; i<pp2.size(); i++)
+   {
+     file<<pp2[i](0)<<" "<<pp2[i](1)<<" "<<pp2[i](2)<<" ";
+   }
+   file.close();
+}
 
 void
 PolarizationGrid::set_rnd_dipoles(void)
 {
 
-  for (unsigned int i=0; i < pp.size(); i++) 
-  {
-    this->rnd_orientation(pp[i]);
+  if (_discrete)
+  { 
+    for (unsigned int i=0; i < pp.size(); i++) 
+    { 
+      this->rnd_orientation_discrete(pp[i]);
+    }
   }
-    
+  else
+  {
+    for (unsigned int i=0; i < pp.size(); i++) 
+    { 
+      this->rnd_orientation(pp[i]);
+    }
+  }  
 }
 
 
@@ -458,6 +542,134 @@ PolarizationGrid::energy2(unsigned int i)
   return en;
 }
 
+void
+PolarizationGrid::dot_product(unsigned int i, std::vector<double>& bins, double dr)
+{
+  int ii[3];
+  int start[3], end[3];
+
+  grid.element_to_index(i,ii[0],ii[1],ii[2]);
+
+  // way of treating periodicity: 
+  // define start-end grid points and fold to central cell.
+  for (unsigned int l = 0; l < 3; l++)
+  {
+    if (_periodic[l])
+    {
+      start[l] = ii[l] - _dx[l];
+      end[l] = ii[l] + _dx[l];
+    }
+    else
+    {
+      // start = min(0, ii[l] - _dx[l]); 
+      start[l] = ii[l] - _dx[l] > 0 ? ii[l] - _dx[l] : 0;
+      // start = max(ii[l] + _dx[l], _nx[l]-1); 
+      end[l] = ii[l] + _dx[l] < _nx[l]-1 ? ii[l] + _dx[l] :  _nx[l]-1;
+    }
+  }
+
+  for (int k1 = start[0]; k1<=end[0]; k1++)
+  {
+    for (int l1 = start[1]; l1<=end[1]; l1++)
+    { 
+      for (int m1 = start[2]; m1<=end[2]; m1++) 
+      {
+        // note: distance also works for folded cells
+        Point rr = grid.distance(ii[0],ii[1],ii[2], k1,l1,m1);
+        double dd = rr.size();
+
+        if (dd < 0.2){ continue; }
+        // fold to central cell (nx folds to 0 and so on)
+        unsigned int kk1 = (k1 + _ncell[0] * _nx[0])%_nx[0];
+        unsigned int ll1 = (l1 + _ncell[1] * _nx[1])%_nx[1];
+        unsigned int mm1 = (m1 + _ncell[2] * _nx[2])%_nx[2];
+        int j = grid.index_to_element(kk1,ll1,mm1);
+        
+        // define the proper bin 
+        int kk = (int) (dd/dr);
+
+        bins[kk] += (pp[i]*pp[j]) /(pp[i].size()*pp[j].size());
+        
+        //cout<<dd<<"  "<<kk<<"  "<<bins[kk]<<endl;
+
+      }
+    }
+  } 
+ 
+}
+
+
+
+void
+PolarizationGrid::autocorrelation(int dir, unsigned int l1, unsigned int l2, vector<double>& c)
+{
+  int ii[3];
+  int start[3], end[3];
+  int i,j;
+
+  for (unsigned int l=0; l < _nx[dir]; l++)
+  {
+
+    switch(dir)
+    {
+     case 0:
+       ii[0]=l; ii[1]=l1; ii[2]=l2;
+       i = grid.index_to_element(l,l1,l2);
+       break;
+     case 1:
+       ii[0]=l1; ii[1]=l; ii[2]=l2;
+       i = grid.index_to_element(l1,l,l2);
+       break;
+     case 2:
+       ii[0]=l1; ii[1]=l2; ii[2]=l;
+       i = grid.index_to_element(l1,l2,l);
+    }
+
+    // way of treating periodicity: 
+    // define start-end grid points and fold to central cell.
+    if (_periodic[dir])
+    {
+       start[dir] = ii[dir] - _dx[dir];
+       end[dir] = ii[dir] + _dx[dir];
+    }
+    else
+    {
+      start[dir] = ii[dir] - _dx[dir] > 0 ? ii[dir] - _dx[dir] : 0;
+      end[dir] = ii[dir] + _dx[dir] < _nx[dir]-1 ? ii[dir] + _dx[dir] :  _nx[dir]-1;
+    }
+    
+    for (int k = start[dir]; k <= end[dir]; k++)
+    { 
+       // array index (c[kk])
+       unsigned int kk = (k + _ncell[dir] * _nx[dir])%_nx[dir];
+       
+       // cell index for pp
+       unsigned int k1 = (k + l + _ncell[dir] * _nx[dir])%_nx[dir];
+
+       if (k1 > _nx[dir]-1){ continue; }
+
+       switch(dir)
+       {
+        case 0:
+          j = grid.index_to_element(k1,ii[1],ii[2]);
+          c[kk] += (pp[i](0)*pp[j](0)) / (pp[i].size()*pp[j].size());
+          break;
+        case 1:
+          j = grid.index_to_element(ii[0],k1,ii[2]);
+          c[kk] += (pp[i](1)*pp[j](1)) / (pp[i].size()*pp[j].size());
+          break;
+        case 2:
+          j = grid.index_to_element(ii[0],ii[1],k1);
+          c[kk] += (pp[i]*pp[j]) / (pp[i].size()*pp[j].size());
+       }
+
+          
+    }
+
+  }
+
+}
+
 
 void
 PolarizationGrid::kmc(void)
@@ -477,8 +689,11 @@ PolarizationGrid::kmc(void)
   Messages::info(ostr.str());
   ostr.str("");
   double En_before=0.0, En_after=0.0, En_total=0.0;
-  for (unsigned int l=0; l<grid.num_elements(); l++)
-    En_total += energy1(l) + 0.5 * energy2(l); 
+  if (Nstep>0) 
+  {
+    for (unsigned int l=0; l<grid.num_elements(); l++)
+      En_total += energy1(l) + 0.5 * energy2(l); 
+  }
 
   for(unsigned int l=0; l<Nstep; l++)
   {
@@ -487,7 +702,15 @@ PolarizationGrid::kmc(void)
     Point pp_tmp(pp[i]);
     // NOTE: in this energy difference the factor 1/2 is NOT needed !
     En_before = energy1(i) + energy2(i);
-    rnd_orientation(pp[i]);
+    if (_discrete) 
+    {
+      rnd_orientation_discrete(pp[i]);
+    }
+    else
+    {
+      rnd_orientation(pp[i]);
+    }
+
     En_after = energy1(i) + energy2(i);
     
     // Accept or Reject with a probability
@@ -559,3 +782,113 @@ PolarizationGrid::average_dipole()
    Messages::info(os.str());
 
 }
+
+void
+PolarizationGrid::plot_globaldata(void)
+{
+   double gs = get_option("grid_step",0.65); // in nanometers
+   double aa = get_option("grid_step_a",gs); // in nanometers
+   double bb = get_option("grid_step_b",aa); // in nanometers
+   double cc = get_option("grid_step_c",gs); // in nanometers
+
+   if (plot_solution("radial_correlation"))  
+   {
+     double rmax = get_option("rmax",2.0*cutoff);
+     double dr = get_option("dr",0.2);
+     int nint = (int) rmax/dr;
+     cout<<"computing radial "<<dr<<"  "<<nint<<endl;
+
+     std::vector<double> bins(nint,0.0);
+
+     for (unsigned int l=0; l < grid.num_elements(); l++)
+     {
+        dot_product(l,bins,dr);    
+     }
+
+     double rho2d = aa*bb;
+     double rho3d = aa*bb*cc;
+
+     for (unsigned int k=1; k < nint; k++)
+     {
+        double r = k*dr;
+        if (_nx[3]>1)
+        {
+           bins[k] /= grid.num_elements() * 2.0 * M_PI * r * dr * rho2d;
+        }
+        else
+        {
+           bins[k] /= grid.num_elements() * 2.0 * M_PI * r * r * dr * rho3d;
+        }    
+     }
+      
+     ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
+          "_radial.dat");
+
+     of << "# r  radial_distribution"<<endl; 
+     
+     for (unsigned int k=0; k < nint; k++)
+     {
+        of << dr*k<< "  " << bins[k] << endl;
+     }
+
+   }
+
+   if (plot_solution("autocorrelation"))  
+   {
+     vector<double> cx(_nx[0], 0.0);
+     vector<double> cy(_nx[1], 0.0);
+     vector<double> cz(_nx[2], 0.0);
+
+     cout<<"computing autocorrelation x "<<_nx[0]<<endl;
+     for (unsigned int l1 = 0; l1<_nx[1]; l1++)
+     {
+       for (unsigned int l2 = 0; l2<_nx[2]; l2++)
+       {
+         autocorrelation(0, l1, l2, cx);
+       }
+     }
+     ofstream ofx(TiberCad::get_output_dir() + "/" + get_name() +
+          "_autocorr_x.dat");
+     ofx << "# x autocorrelation_x"<<endl; 
+     for (unsigned int k=0; k < _nx[0]; k++)
+     {
+        ofx << aa*k<< "  " << cx[k]/(_nx[0]*_nx[1]*_nx[2]) << endl;
+     }
+     
+     
+     cout<<"computing autocorrelation y "<<_nx[1]<<endl;
+     for (unsigned int l1 = 0; l1<_nx[0]; l1++)
+     {
+       for (unsigned int l2 = 0; l2<_nx[2]; l2++)
+       {
+         autocorrelation(1, l1, l2, cy);
+       }
+     }
+     ofstream ofy(TiberCad::get_output_dir() + "/" + get_name() +
+          "_autocorr_y.dat");
+     ofy << "# y autocorrelation_y"<<endl; 
+     for (unsigned int k=0; k < _nx[1]; k++)
+     {
+        ofy << bb*k<< "  " << cy[k]/(_nx[0]*_nx[1]*_nx[2])  << endl;
+     }
+
+     cout<<"computing autocorrelation z "<<_nx[2]<<endl;
+     for (unsigned int l1 = 0; l1<_nx[0]; l1++)
+     {
+       for (unsigned int l2 = 0; l2<_nx[1]; l2++)
+       {
+         autocorrelation(2, l1, l2, cz);
+       }
+     }
+     ofstream ofz(TiberCad::get_output_dir() + "/" + get_name() +
+          "_autocorr_z.dat");
+     ofz << "# z autocorrelation_z"<<endl; 
+     for (unsigned int k=0; k < _nx[2]; k++)
+     {
+        ofz << cc*k<< "  " << cz[k]/(_nx[0]*_nx[1]*_nx[2])  << endl;
+     }
+
+   }
+
+}
+

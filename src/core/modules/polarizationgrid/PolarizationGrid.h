@@ -43,6 +43,8 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   void set_efield(const vector<double> &Efield);  
 
   void rnd_orientation(Point &p);
+  
+  void rnd_orientation_discrete(Point &p);
 
   void set_rnd_dipoles(void);
 
@@ -52,9 +54,12 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
 
   void kmc(void); 
  
+  void write_dipoles_man(void);
+
   void write_antiferro(void);
 
   void average_dipole(void);
+
 
  protected:
   
@@ -77,6 +82,12 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   //NumericVector<double>& do_get_solution_vector(void);
     
   void setup_mesh(void);
+ 
+  void dot_product(unsigned int i, std::vector<double>& bins, double dr);
+
+  void autocorrelation(int dir, unsigned int l1, unsigned int l2, vector<double>& c);
+
+  void plot_globaldata(void);
 
  private:  
   
@@ -116,6 +127,8 @@ class TBDLLOCAL PolarizationGrid : public SimulationInterface
   bool _write_file;
 
   int _periodic[3];
+
+  bool _discrete;
 
 };
 
