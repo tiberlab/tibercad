@@ -689,7 +689,7 @@ PolarizationGrid::kmc(void)
   Messages::info(ostr.str());
   ostr.str("");
   double En_before=0.0, En_after=0.0, En_total=0.0;
-  if (Nstep>0) 
+  if (Nstep>=0) 
   {
     for (unsigned int l=0; l<grid.num_elements(); l++)
       En_total += energy1(l) + 0.5 * energy2(l); 
