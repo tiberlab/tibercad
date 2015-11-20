@@ -2036,6 +2036,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
   RealGradient jp(0);
   RealGradient el_field(0);
   RealVectorValue polariz(0);
+  double el_pot;
 
   for (unsigned int n = 0; n < np; n++)
   {
@@ -2083,6 +2084,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     if (exclude_e) grad_en_loc = 0;
     if (exclude_h) grad_ep_loc = 0;
+
+    el_pot = u;
 
 
     sc->set_coordinates(real_pts[n]);
@@ -2351,7 +2354,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     vector<double> cb;
     sc->get_conduction_bands(cb);
     for (size_t i = 0; i < cb.size(); ++i)
-      values[ConductionBands][i] = cb[i];
+      values[ConductionBands][i] = cb[i] - el_pot;
   }
 
   if (values.count(ValenceBands))
@@ -2359,7 +2362,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     vector<double> vb;
     sc->get_valence_bands(vb);
     for (size_t i = 0; i < vb.size(); ++i)
-      values[ValenceBands][i] = vb[i];
+      values[ValenceBands][i] = vb[i] - el_pot;
   }
 
 }
