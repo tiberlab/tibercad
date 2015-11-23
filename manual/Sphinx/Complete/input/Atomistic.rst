@@ -111,7 +111,7 @@ The  following kewords may  be  defined in **Atomistic**  block
     If **false** each atom is substituted with a probability proportional to the defined nominal molar fraction. The resulting actual number of substituted atoms may differ from the nominal  concentration value.
 
  ``clustering`` : specie name 
-    Alloy models with clustering on the given atomic specie are produces. This is done by placing a fraction of seed 
+    Alloy models with clustering on the given atomic specie are produces, e.g. *clustering = In*. This is done by placing a fraction of seed 
     atoms (cluster_seed) with uniform distribution, then the remaing fraction of atoms is placed biased with a larger 
     probability near existing ions.  
 
@@ -265,7 +265,7 @@ In TiberCAD, a  random  alloy structure is generated if  *random_alloy = true* i
 Random generation is  ruled by  a  random seed,  which is  in  general different for  each  execution. In  case  one  needs  to  repeat calculations  with  exactly  the  same  random  configuration,  it  is  possible  to  keep it unmodified  by  defining the  same *random_generator_seed* in  all  the executions.
 
 
-By default,  the  random alloy  structure is    built  with  an uniformly random approach. An option of  random  alloy  generation allows to  generate  **clustering** in  random  configuration. This  is  made  by  defining *clustering = true*. In  this  way,  the  alloy  structure is  not  built  entirely with  an uniformly random approach. Instead,  the  formation of clusters  of  substitution  atoms (e.g. In  atoms in  InGaN  alloy) is  favoured.  
+By default,  the  random alloy  structure is    built  with  an uniformly random approach. An option of  random  alloy  generation allows to  generate  **clustering** in  random  configuration. This  is  made  by  defining the atomic specie subjected to clustering with *clustering = specie_name*, e.g. *clustering = In* (by default no clustering is applied). In  this  way,  the  alloy  structure is  not  built  entirely with  an uniformly random approach. Instead,  the  formation of clusters  of  substitution  atoms (e.g. In  atoms in  InGaN  alloy) is  favoured.  
 The  keyword *clustering_seeds* define the fraction (default is 0.02) of  substitution ions which  are  placed  with an uniform distribution.  The  remaining fraction of ions  is placed with  a  higher  probability in  positions close to other  substitution ions.
 
 
@@ -310,7 +310,7 @@ Here is an example of generation of  an  atomistic structure ::
    
     print = (xyz)
 
-    clustering = false
+ #   clustering = In
 
     
     #load =  output_x0.20_1200/tb.xyz
@@ -335,7 +335,7 @@ The  reference region is *qbarrierl*,  which means that  the  reference lattice 
 Passivation of  surface  states  is  *true*. 
 Since the  mesh  dimension is 1D, periodicity is  imposed along  y and  z  axis.
 
-*random_alloy = true*  means  that  the  InGaN alloy in  the  well1  region  will  be generated  with  random  substitution.  The  random  distribution  will be  uniform,  since *clustering = false*.
+*random_alloy = true*  means  that  the  InGaN alloy in  the  well1  region  will  be generated  with  random  substitution.  The  random  distribution  will be  uniform,  since *clustering = In* is commented.
 We  define a *random_generator_seed = 5*,  which  can  be  used  in  a  following calculation  to  obtain  exactly  the  same  atomic  structure.
 *extract_alloy_statistics = true* will  write info on  local concentration, obtained averaging on local  spheres defined by *control_volume_radius = 0.5*.
  
