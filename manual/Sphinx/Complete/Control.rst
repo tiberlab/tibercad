@@ -221,13 +221,13 @@ Petsc solver
 
 
  ``relative_tolerance``	: double
-    convergence criterion based on relative residual l_2-norm
+    convergence criterion based on relative residual l_2-norm, default 1e-6
 
  ``absolute_tolerance``	: double
-    convergence criterion based on the l_2-norm of the residual
+    convergence criterion based on the l_2-norm of the residual, default 1e-50
 
  ``max_iterations``:  integer
-    maximum number of iterations
+    maximum number of iterations, default 500
 
  ``step_tolerance`` : double
     tolerance criterion based on the l_2-norm of the correction step
@@ -246,13 +246,16 @@ Linesearch solver
 
 
  ``absolute_tolerance`` : double
-    convergence criterion based on the l_2-norm of the residual
+    convergence criterion based on the l_2-norm of the residual, default 1e-50
+
+ ``relative_tolerance``	: double
+    convergence criterion based on relative residual l_2-norm, default 1e-9 
 
  ``step_tolerance`` : double
-    tolerance criterion based on the l_infinity-norm of the correction step
+    tolerance criterion based on the l_infinity-norm of the correction step , default 1e-3
 
  ``max_iterations`` : integer
-    maximum number of iterations
+    maximum number of iterations , default 25
 
 ..
   .. index:: double:Solvers;linear
@@ -268,10 +271,13 @@ Linear solvers
 Petsc solver
 ...............
 
+The Krylov subspace method to be used can be selected with the keyword **method**. 
+For example ::
+  
+  method = cgs   
 
 
- ``method`` : string 
-    The Krylov subspace method to be used. Here  are  the  available options:
+Here  are  the  available values for *method*; default is **bcgs** :
   
  ``bcgs`` :
      BiCGstab
@@ -294,6 +300,9 @@ Petsc solver
  ``richardson`` :
       Richardson
 
+
+Other options :
+
  ``pconly`` :
      only apply preconditioner
 
@@ -307,7 +316,12 @@ Petsc solver
     maximum number of iterations
 
 
-Available types of Preconditioner :
+Preconditioner can be selected with the keyword **preconditioner**. 
+For example ::
+  
+  preconditioner = ilu   
+
+Available types of Preconditioner are :
 
  ``lu``	:
     LU

@@ -19,13 +19,7 @@
 .. [Povolotskyi] M.Povolotskyi et al. *JAP*, (2006).
 
 
-/* comment
-.. [Wang] Wang et al. Science (2006).
-*/
 
-/*
-.. [Gao] Gao et al. NanoLetter (2009).
-*/
 
 .. [Pasveer] W F Pasveer et al. "Unified description of charge-carrier mobilities in disordered semiconducting polymers", *Phys. Rev. Lett.* 94 (2005) 206601
 
