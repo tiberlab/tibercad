@@ -234,7 +234,7 @@ Default  treatment of  periodicity is  different  for  each  mesh dimension,  to
 
 
 For a  1D mesh, a  periodicity is  always applied in *y* and  *z*  directions. 
-As  a  default, a  minimal cell  is  built in  *yz* plane (*x* being  the predefined growth direction). This   reflects the case  of  a  quantum well structure. The periodicity  vectors are  by  default those of the  minimal  cell  for  the  given material. It is  possible  to build   a  supercell in  the  yz plane,  by  defining the supercell  size through the **y_length** and **z_length**  keywords. In  this  case, appropriate  periodicity vectors will be  obtained and applied. It  is  possible to  add  a  periodicity along the *x* (growth) direction  with the  keyword  *periodicity = true*,   to design a superlattice structure.
+As  a  default, a  minimal cell  is  built in  *yz* plane (*x* being  the predefined growth direction). This   reflects the case  of  a  quantum well structure. The periodicity  vectors are  by  default those of the  minimal  cell  for  the  given material. It is  possible  to build   a  supercell in  the  yz plane,  by  defining the supercell  size through the **supercell_size_y** and **supercell_size_z**  keywords. In  this  case, appropriate  periodicity vectors will be  obtained and applied. It  is  possible to  add  a  periodicity along the *x* (growth) direction  with the  keyword  *periodicity = true*,   to design a superlattice structure.
 
 For a  2D mesh, the  generated structure is  periodical  along  *z* axis. It  is  possible to  add  a  periodicity in *x* and *y* directions  with  the  keyword *periodicity = (<x-per>,<y-per>)*, where <x-per> and/or <y-per>  may  be  *true* or  *false*.
 
@@ -321,8 +321,8 @@ Here is an example of generation of  an  atomistic structure ::
     control_volume_radius = 0.5
     extract_alloy_statistics = true
 
-    #z_length = 20 
-    #y_length = 60  
+    #supercell_size_z = 20 
+    #supercell_size_y = 60  
 
 
   }
