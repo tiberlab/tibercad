@@ -307,13 +307,13 @@ Other options :
      only apply preconditioner
 
  ``relative_tolerance`` :
-     convergence criterion based on relative residual l_2-norm
+     convergence criterion based on relative residual l_2-norm, default 1e-6 
 
  ``absolute_tolerance`` :
-    convergence criterion based on the l_2-norm of the residual
+    convergence criterion based on the l_2-norm of the residual, default 1e-50 
 
  ``max_iterations`` :
-    maximum number of iterations
+    maximum number of iterations, default 1500
 
 
 Preconditioner can be selected with the keyword **preconditioner**. 
