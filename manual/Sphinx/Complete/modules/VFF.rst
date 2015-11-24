@@ -103,19 +103,6 @@ he tolerance is expressend as a force in ``eV/A`` and the default value is ``1e-
 
 
 
-Output
-^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
-
-The available output variables for **Module**  ``vff`` , to be specified in the plot option, are the following and correspond to the  strain tensor extrapolated from aton positions in the unit cell after relaxation:
-
- ``StrainNodes`` :
-   strain tensor associated to nodes
-
- ``StrainCells``: 
-    strain tensor associated to cells  
 
 
 
@@ -126,7 +113,7 @@ Physics
 
 
 
-The Physics section of the input file is used to allow a custom bond stretching parameter :math:`\alpha` and a custom bond bending parameter :math:`\beta` through the definition of blocks defined with the keyword ``keating user``. An example of custom parameters is ::
+The Physics section of the input file is used to allow the definition of a **custom** bond stretching parameter :math:`\alpha` and a **custom** bond bending parameter :math:`\beta` through special blocks **keating** with the type *user*. As a default, all these parameters are calculated internally. An example of custom parameters is ::
 
   Physics
   {
@@ -146,7 +133,7 @@ The Physics section of the input file is used to allow a custom bond stretching 
 
 In this example the user explicitely set the model coefficients for all the regions made of Indium Nitride and for all the region made of Gallium Nitride. The coefficients are specified in ``N/m``. 
 
-If at least one of the material is an alloy, the user may choose between a random alloy approximation or a virtual crystal approximation. In a random alloy approximation the two center parameters are assigned according to a reference bulk material which depend on the bond atoms (e.g. a Ga-N bond will get bulk GaN parameters assigned), and three center parameters will be assigned as an average of corresponding bulk terms (e.g. a In-N-Ga bond will have parameters averaged between bulk InN and GaN). In this case the user can specify both components as in the following example ::
+If at least one of the material is an **alloy**, the user may choose between a **random alloy** approximation or a **virtual crystal approximation (VCA)**. In a **random alloy** approximation the two center parameters are assigned according to a reference bulk material which depend on the bond atoms (e.g. a Ga-N bond will get bulk GaN parameters assigned), and three center parameters will be assigned as an average of corresponding bulk terms (e.g. a In-N-Ga bond will have parameters averaged between bulk InN and GaN). In the case of **random alloy** the user can specify both components as in the following example, where we consider two regions, one associated to alloy InGaN and one associated to GaN.   ::
 
   Physics
   {
@@ -172,7 +159,18 @@ If at least one of the material is an alloy, the user may choose between a rando
    }
   }
 
-In the virtual crystal approximation the coefficients are automatically calculated in order to approximate properly the alloy stiffness coefficient calculated with Vegard law, in order to ensure consistency with continuum models. A user may override these value by specifying the alloy coefficients, as in this example :: 
+
+For InGaN, parameters for each alloy component, InN and GaN are defined separately through the subblock **component**, where the keyword *component* is followed by the name of the alloy component, e.g. *InN*, as in the following ::
+
+  component InN
+   {
+     alpha = 67.38
+     beta = 10.01
+   }
+
+
+
+In the **virtual crystal approximation** the coefficients are automatically calculated in order to approximate properly the alloy stiffness coefficient calculated with Vegard law, in order to ensure consistency with continuum models. A user may override these value by specifying the alloy coefficients, as in this example :: 
 
   Physics
   {
@@ -190,7 +188,25 @@ In the virtual crystal approximation the coefficients are automatically calculat
    }
   }
 
-Different coefficients can be defined for different regions just by using the correct region Ids. Note that this settings have to be consistent with the definition ``random_alloy`` in the **Atomistic Generator**.   
+Different coefficients can be defined for different regions just by specifying  the correct region names. Note that this settings have to be consistent with the definition ``random_alloy`` in the **Atomistic Generator**.   
+
+
+
+Output
+^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
+The available output variables for **Module**  ``vff`` , to be specified in the plot option, are the following and correspond to the  strain tensor extrapolated from aton positions in the unit cell after relaxation:
+
+ ``StrainNodes`` :
+   strain tensor associated to nodes
+
+ ``StrainCells``: 
+    strain tensor associated to cells  
+
+
 
 
 Example

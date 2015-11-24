@@ -301,7 +301,7 @@ The following options influence the behaviour of the **Module**  ``empirical_tb`
     defines the regions associated to this ETB simulation
 
  ``atomistic_structure`` : string  
-    defines the name of the atomistic structure which  will  be  used  by ETB  to  create the  TB Hamiltonian. It  must be  the name  of  one  structure created  through an **Atomistic** block in  **Device**  section. 
+    defines the name of the atomistic structure which  will  be  used  by ETB  to  create the  TB Hamiltonian. It  must be  the name  of  a  structure created  through an **Atomistic** block in  **Device**  section. 
    
 
  ``potential_simulation`` : string
@@ -343,14 +343,11 @@ The Solver section of the **Module**  ``empirical_tb`` contains the following op
  ``load_path`` : string 
     path of  the file  from  which  tb  states  can  be loaded
 
- ``long_tolerance`` : double 
-    tolerance...
-
  ``guess_conduction`` : double
-     the algorithm try  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If not defined, then by  default it is  calculated internally based on  the band edges.
+     the solver algorithm tries  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If *guess_conduction* is not defined, then by  default it is  calculated internally based on  the band edges.
 
  ``guess_valence`` : double
-      the algorithm try  to  find  the closest eigenvalues to this absolute  value  of  energy (eV).If not defined, then by  default it is  calculated internally based on  the band edges. 
+      the solver algorithm tries  to  find  the closest eigenvalues to this absolute  value  of  energy (eV).If *guess_valence* is not defined, then by  default it is  calculated internally based on  the band edges. 
 
 
 With  the  keyword *load_states = true* it is  possible to resume a  calculation starting from the last of the states loaded from a  file. Also,  one  can use  a  set  of already calculated states for an optical  spectrum calculation (see in the following). 
@@ -372,12 +369,12 @@ The available output variables for **Module**  ``empirical_tb`` , to be specifie
     plots  states  on  the  mesh. MeshStatesNodes is not supported in 1D calculations 
 
  ``MeshStates``: 
-    plots  states  on  the  mesh in 1D calculations (ee.g. Quantum wells).  
+    plots  states  on  the  mesh in 1D calculations (e.g. Quantum wells).  
 
 
 
 By  default  the list of  eigenvalues[eV] is printed  in the output  directory in  the  output file *simulation_name*.dat.
-This  file contains the  values of all  the  electron  and  hole  calculated eigenvalues (*EigenEnergy*), the Fermi level energy (*FermiLevel*) and  the  occupation index (*Occupation*) of  each  state. 
+This  file contains the  values of all  the  calculated electron  and  hole eigenvalues (*EigenEnergy*), the Fermi level energy (*FermiLevel*) and  the  occupation index (*Occupation*) of  each  state. 
 
 Through the keyword *tbstates*, the  states eigenfuctions may be stored  in  a  cube file for  visualization of wawefunctions with the open-source viewer **jmol** (*http://jmol.sourceforge.net*).
 
