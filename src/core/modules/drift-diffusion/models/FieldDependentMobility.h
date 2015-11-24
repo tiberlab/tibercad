@@ -95,6 +95,10 @@ class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
     DrivingForce _force;
 
 
+    //! A damping parameter
+    double _damping;
+
+
 };
 
 //
@@ -111,7 +115,8 @@ FieldDependentMobility::FieldDependentMobility(const ModelOptions& options)
     _vsat_min(5e5),
     _vsat_formula(1),
     _low_field_mob(NULL),
-    _force(EFIELD)
+    _force(EFIELD),
+    _damping(1e9)
 {
 }
 

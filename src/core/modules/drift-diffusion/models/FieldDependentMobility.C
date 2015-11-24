@@ -89,6 +89,7 @@ FieldDependentMobility::do_init(void)
     _vsat_min = get_option("vsat_min", _vsat_min);
   }
 
+  _damping = get_option("damping_parameter", _damping);
 
   std::string force = get_option("driving_force", "grad_fermi");
   if (force == "efield")
@@ -131,6 +132,15 @@ FieldDependentMobility::get_mobility(void)
     E = std::sqrt(E);
   }
 
+  double n = (get_carrier_type() == 'e') ?
+      get_driftdiffusionproperties().get_electron_density() :
+      get_driftdiffusionproperties().get_hole_density();
+
+  double damp = n / (n + _damping);
+  E *= damp;
+
+
+
   double vsat;
   if (_vsat_formula == 1)
     vsat = _vsat0 * std::pow(T / T0, -_vsat_b);
@@ -166,7 +176,14 @@ FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
   else
     E = get_driftdiffusionproperties().get_grad_fermi_h().size();
 
-  if ((_force == GRADFERMI) && (E > 1))
+  double n = (get_carrier_type() == 'e') ?
+      get_driftdiffusionproperties().get_electron_density() :
+      get_driftdiffusionproperties().get_hole_density();
+
+  double damp = n / (n + _damping);
+  E *= damp;
+
+  if ((_force == GRADFERMI) && (E > 1e-6))
   {
 
     double vsat;
@@ -183,9 +200,9 @@ FieldDependentMobility::get_derivative_grad_fermi(RealGradient& dm)
     dmu *= std::pow(mu_lowfield * E / vsat, beta) / (E * E);
 
     if (get_carrier_type() == 'e')
-      dm = dmu * get_driftdiffusionproperties().get_grad_fermi_e();
+      dm = dmu * get_driftdiffusionproperties().get_grad_fermi_e() * damp * damp;
     else
-      dm = dmu * get_driftdiffusionproperties().get_grad_fermi_h();
+      dm = dmu * get_driftdiffusionproperties().get_grad_fermi_h() * damp * damp;
 
   }
 }

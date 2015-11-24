@@ -45,3 +45,5 @@
 
 .. [Scott] J C Scott, G C Malliaras, "Charge injection and recombination at the metal-organic interface", *Chem. Phys. Lett.* 299 (1999) 115
 
+
+.. [Zakhleniuk] N. A. Zakhleniuk, "Nonequilibrium drift-diffusion transport in semiconductors in presence of strong inhomogeneous electric fields",  *Applied physics letters*, 89, 252112, (2006)

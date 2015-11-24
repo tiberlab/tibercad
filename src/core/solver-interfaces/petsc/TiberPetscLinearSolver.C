@@ -4,12 +4,33 @@
 #include "TiberPetscLinearSolver.h"
 #include "TiberPetscUtils.h"
 #include "ModelOptions.h"
+#include "Messages.h"
 
 #include "libmesh_common.h"
 
 #include <cassert>
 #include <cstring>
 
+
+extern "C"
+{
+
+  PetscErrorCode
+  __tiber_petsc_error_handler(MPI_Comm, int line, const char* func,
+      const char* file, const char* dir, PetscErrorCode n,
+      PetscErrorType p, const char* mess, void* ctx) throw (PetscRuntimeError)
+  {
+//#ifdef DEBUG
+    std::ostringstream os;
+    os << "PETSc error " << n << " in " << file << ", line " << line;
+    Messages::error(os.str());
+//#endif
+    if ((n != 71) && (n != 72) && (n != 81) && (n != 82))
+      throw(PetscRuntimeError(n));
+    else
+      throw(PetscRuntimeError(n));
+  }
+}
 
 
 TiberPetscLinearSolver::TiberPetscLinearSolver(const ModelOptions& options)
@@ -120,6 +141,7 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   assert(solution != NULL);
   assert(rhs      != NULL);
 
+  PetscPushErrorHandler(__tiber_petsc_error_handler, (void*) this);
   
   int ierr = 0;
 

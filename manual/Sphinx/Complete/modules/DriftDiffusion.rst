@@ -618,19 +618,19 @@ The parameters are given in table at the end of the Chapter.
 
 
 Field dependent mobility model
-............................................
+..............................
 
 
 The field dependent mobility model describes the degradation of mobility at high driving
 fields. It is identified by the identifier field_dependent. The electric field component
 in direction of the current 
-ow or the gradient of the electro-chemical potential can be
+flow, the gradient of the electro-chemical potential or a so called "field parameter" can be
 chosen as driving force:
 
   ``driving_force = efield | grad_fermi | field_parameter``
 
 The default driving force is the gradient of the corresponding electro-chemical potential :math:`\nabla\phi` .
-``field_parameter`` uses a field parameter given by :math:`\sqrt{E\cdot\nabla\phi}`  as driving force.
+``field_parameter`` uses a field parameter given by :math:`\sqrt{E\cdot\nabla\phi}`  as driving force [Zakhleniuk]_ .
 
 The model is based on the Caughey-Thomas model, refined by Canali [6]:
 
@@ -645,7 +645,7 @@ with
 
     \beta = \beta_0(T/T_0)^b 
 
-:math:`|E|` is the modulus of the driving field, :math:`\mu_{lowfield}` is the low-field mobility. For the latter
+:math:`|E|` is the modulus of the driving field, multiplied by a damping factor :math:`n/(n+n_0)`, where :math:`n` is the electron or hole density, and :math:`n_0` is a parameterwith default :math:`10^{9}`.  :math:`\mu_{lowfield}` is the low-field mobility. For the latter
 one can specify the model to be used using the parameter ``lowfield_model`` . As default
 the doping dependent model is used.
 There are two models for vsat, identified with ``Vsat_Formula = 1`` and 2. 
