@@ -152,7 +152,18 @@ The following options influence the behaviour of the Elasticity module:
 
  ``shape_iterations`` : integer
     defines the number of  shape iterations for non-linear strain computation. 
-    The default is ``10``.
+    The default is ``20``.
+
+ ``strain_atomistic_structure`` : string 
+    defines the name of the **atomistic structure** to which  deformation will  be applied according to the strain calculated with **elasticity** 
+
+
+To apply a strain deformation to a defined atomistic structure, it is more convenient to define a *mesh_deformation* with the default number of *shape_iterations*. In this way, strain will computed iteratively until the convergence on the structure deformation is reached. It is also important to define the name of the atomistic structure to be deformed, with  *strain_atomistic_structure*. For example ::
+
+  mesh_deformation = true
+  strain_atomistic_structure = dot_atoms
+
+
 
 
 

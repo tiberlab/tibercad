@@ -457,3 +457,7 @@ Then, based  on this deformed mesh,  **vff** is  applied,  which  relaxes the  a
 
   }
 
+
+.. note:: 
+          Note that it is always highly advisable to solve first elasticity, before a VFF relaxation. This will provide a reasonable first guess for the VFF solver and also will apply the correct deformation to the mesh, assuring that atoms are still associated to the correct FEM elements.
+
