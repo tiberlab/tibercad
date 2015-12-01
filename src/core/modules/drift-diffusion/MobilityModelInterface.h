@@ -23,9 +23,6 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
     //! Get the mobility
     virtual double get_mobility(void) = 0;
 
-    //! Get the derivatives of the mobility
-    virtual void get_mobility_derivatives(std::vector<double>& dm) = 0;
-
     //! Get the derivative of the mobility w.r.t. the electric potential
     virtual double get_derivative_potential(void);
 
