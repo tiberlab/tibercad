@@ -65,7 +65,6 @@ Module driftdiffusion
 
     mobility field_dependent
     {
-      driving_force = grad_fermi
       low_field_model = doping_dependent
     }
   }
