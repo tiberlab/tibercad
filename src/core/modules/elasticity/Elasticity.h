@@ -116,8 +116,6 @@ class TBDLLOCAL Elasticity : public SimulationInterface
       double _val[6];
     };
 
-  //!shape iteration index
-  ID shape_iteration;
 
   //!node connection
   std::vector<unsigned short int> node_conn;
