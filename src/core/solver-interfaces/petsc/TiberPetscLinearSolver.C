@@ -20,11 +20,11 @@ extern "C"
       const char* file, const char* dir, PetscErrorCode n,
       PetscErrorType p, const char* mess, void* ctx) throw (PetscRuntimeError)
   {
-//#ifdef DEBUG
+#ifdef DEBUG
     std::ostringstream os;
     os << "PETSc error " << n << " in " << file << ", line " << line;
     Messages::error(os.str());
-//#endif
+#endif
     if ((n != 71) && (n != 72) && (n != 81) && (n != 82))
       throw(PetscRuntimeError(n));
     else
