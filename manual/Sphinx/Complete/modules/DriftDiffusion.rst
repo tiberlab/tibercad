@@ -467,7 +467,7 @@ Optical generation
 A very simple model for photoelectric generation of electron-hole pairs is implemented
 in tiberCAD. It is enabled by specifying a ``generation`` submodel of type optical The
 model imposes a constant generation rate which has to be provided by the keyword G in
-units of :math:`(\mathrm{cm}\cdot\mathrm{s})^{-1}` . 
+units of :math:`(\mathrm{cm}^{-3}\cdot\mathrm{s})^{-1}` . 
 
 .. note:: 
           Usually the simulation should define a sweep on the value
@@ -645,9 +645,9 @@ with
 
     \beta = \beta_0(T/T_0)^b 
 
-:math:`|E|` is the modulus of the driving field, multiplied by a damping factor :math:`n/(n+n_0)`, where :math:`n` is the electron or hole density, and :math:`n_0` is a parameterwith default :math:`10^{9}`.  :math:`\mu_{lowfield}` is the low-field mobility. For the latter
+:math:`|E|` is the modulus of the driving field, multiplied by a damping factor :math:`n/(n+n_0)`, where :math:`n` is the electron or hole density, and :math:`n_0` is a parameter with default :math:`10^{9}`.  :math:`\mu_{lowfield}` is the low-field mobility. For the latter
 one can specify the model to be used using the parameter ``lowfield_model`` . As default
-the doping dependent model is used.
+the doping dependent model is used. The damping factor is needed to improve convergence at low carrier densities.
 There are two models for vsat, identified with ``Vsat_Formula = 1`` and 2. 
 
 Formula 1 reads
