@@ -12,9 +12,9 @@ BUILDDIR=${BUILDDIR:-"$(dirname `pwd`)/extern"}
 SDKDIR=${SDKDIR:-"$(dirname `pwd`)/SDK"}
 
 # PETSc version
-PETSCVERSION=${PETSCVERSION:-"3.0.0"}
-PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-"-p12"}
-SLEPCPATCHLEVEL=${SLEPCPATCHLEVEL:-"-p7"}
+PETSCVERSION=${PETSCVERSION:-"3.2"}
+PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-"-p7"}
+SLEPCPATCHLEVEL=${SLEPCPATCHLEVEL:-"-p5"}
 
 # libMesh version
 LIBMESHVERSION=${LIBMESHVERSION:-"svn"}
@@ -103,14 +103,14 @@ CPP="@CPP@"
 CC="@CC@"
 CXX="@CXX@"
 FC="@FC@"
-F90="${F90:-$FC}"
+#F90="${F90:-$FC}"
 F77="${F77:-$FC}"
 RANLIB="@RANLIB@"
 
 
 #if [ "x$pre" != "x" ] || [ "x$gcc_version" != "x" ]
 #then
-  export CC CXX F77 F90 FC RANLIB LD AR CPP
+  export CC CXX F77 FC RANLIB LD AR CPP
 #fi
 
 # compiler flags
@@ -143,6 +143,14 @@ if [ "$MPI" = y ]; then
   #if [ -x ${MPIDIR}/bin/mpicxx ]; then
   #  LDFLAGS="${LDFLAGS} `${MPIDIR}/bin/mpicxx -showme:link`"
   #fi
+  if [ "${target_os}" = win32 ]
+  then
+    CXXFLAGS="${CXXFLAGS} -I${MPIDIR}/Include"
+    CFLAGS="${CFLAGS} -I${MPIDIR}/Include"
+    FCFLAGS="${FCFLAGS} -I${MPIDIR}/Include"
+    LDFLAGS="-L${MPIDIR}/Lib/x86"
+    MPI_LIBS="-L${MPIDIR}/Lib/x86 -lmsmpifec -lmsmpi"
+  fi
 fi
 
 # BLAS/LAPACK

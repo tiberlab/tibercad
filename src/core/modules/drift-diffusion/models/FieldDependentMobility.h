@@ -30,8 +30,8 @@ class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
     //! \copydoc MobilityModelInterface::get_mobility()
     virtual double get_mobility(void);
 
-    //! \copydoc MobilityModelInterface::get_mobility_derivatives()
-    virtual void get_mobility_derivatives(std::vector<double>& dm);
+    //! \copydoc MobilityModelInterface::get_derivative_grad_potential()
+    virtual void get_derivative_grad_potential(RealGradient& dm);
 
     //! \copydoc MobilityModelInterface::get_derivative_grad_fermi()
     virtual void get_derivative_grad_fermi(RealGradient& dm);
@@ -95,6 +95,10 @@ class TBDLLOCAL FieldDependentMobility : public MobilityModelInterface
     DrivingForce _force;
 
 
+    //! A damping parameter
+    double _damping;
+
+
 };
 
 //
@@ -111,7 +115,8 @@ FieldDependentMobility::FieldDependentMobility(const ModelOptions& options)
     _vsat_min(5e5),
     _vsat_formula(1),
     _low_field_mob(NULL),
-    _force(EFIELD)
+    _force(EFIELD),
+    _damping(1e9)
 {
 }
 

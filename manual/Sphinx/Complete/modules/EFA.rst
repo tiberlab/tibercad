@@ -50,22 +50,25 @@ A typical example is the following  ::
 
   Module efaschroedinger
     {
-     particle = el
-     poisson_model_name = dd
-     strain_model_name = strain # macrostrain
+     
      name = quantum_el
      regions = quantum
      plot = (EigenFunctions, EigenEnergy, EnergyLevels, QuantumDensity)
 
-     Solver
-       {
-        number_of_eigenstates = 10 # 30 
-       }
+    
+     poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
+   
+     strain_simulation = strain
+
+     number_of_eigenstates = 10  
+       
 
      Physics
        {
+        particle = el
         model = single_band
        }
+
     }
 
 
@@ -91,17 +94,13 @@ The  electron quantum density is  calculated by default if  the  keyword ``Quant
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)  
 
 
-A similar  definition may be  used  in a **Module** ``efaschroedinger`` for  the  calculation of hole  quantum  states, by  defining :: 
-
-  particle = hl
-
+A similar  definition may be  used  in a **Module** ``efaschroedinger`` for  the  calculation of hole  quantum  states 
 
 For  holes, one  can  choose, for example,  a  6 bands :math:`{\bf k \cdot p}`  model in  this  way::
 
   Physics
   {
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
+    model = 6x6
   }
 
 
@@ -111,21 +110,28 @@ Module options
 
 
 
-The following options influence the behaviour of the Module efaschroedinger:
+The following options are to be defined in the main block of Module efaschroedinger:
 
- ``particle`` : string  
-    defines for which particle (electron or hole) :math:`Schr\ddot{o}dinger` equation is solved. 
-    Possible values are ``el`` and ``hl``. A different **Module** ``efaschroedinger`` has to be
-    defined for each particle to be solved.
 
- ``poisson_model_name`` : string
+
+ ``poisson_simulation`` : string
     defines the name of the simulation (e.g.  ``driftdiffusion``) that can provide electric potential
 
- ``strain_model_name`` : string 
+ ``strain_simulation`` : string 
     defines the name of the simulation (e.g. ``elasticity``) that can provide elastic strain
 
+ ``number_of_eigenstates`` : integer 
+    defines the number of eigenvalues and eigenfunctions to be found.
+
+ ``num_valence_eigenvalues`` : integer 
+    defines the number of valence band eigenvalues and eigenfunctions to be found (for 8x8 :math:`{\bf k \cdot p}` model).
+
+ ``num_conduction_eigenvalues`` : integer 
+    defines the number of conduction  band eigenvalues and eigenfunctions to be found (for 8x8 :math:`{\bf k \cdot p}` model).
+ 
  ``regions`` : string 
     defines the regions associated to this EFA simulation
+
 
 
 Solver section
@@ -134,8 +140,6 @@ Solver section
 
 The Solver section of the Module efaschroedinger contains the following options:
 
- ``number_of_eigenstates`` : integer 
-    defines the number of eigenvalues and eigenfunctions to be found.
 
  ``Dirichlet_bc_everywhere`` : boolean 
     if *true* (default value), Dirichlet boundary conditions are imposed over all the boundaries of the simulation region
@@ -168,22 +172,108 @@ close to a specific number, referred to as the *guess*.
 Physics section
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+ ``particle`` : string  
+    defines for which particle (electron or hole) :math:`Schr\ddot{o}dinger` equation is solved with a *single band* model. 
+    Possible values are ``el`` and ``hl``. A different **Module** ``efaschroedinger`` has to be
+    defined for each particle to be solved with a *single band* model.
+
 
  ``model`` : string 
-    possible values are *single_band*, for single  band model (:math:`\Gamma` point) ;  *kp* for :math:`{\bf k \cdot p}` model
+    possible values are *6x6* for a 6 bands :math:`{\bf k \cdot p}`  model  , *8x8* for a 8 bands :math:`{\bf k \cdot p}`  model , *single_band* for a single band model (:math:`\Gamma` point).
 
- ``kp_model`` : string 
-    possible values are *6x6*, *8x8*. 
 
 
 In case *single_band* model is  applied to electrons, the  relevant  mass  is read from  the  material file. 
 When it is applied to  holes, in  *Physics*  section the  following options have  to be  defined:
 
- ``mass`` : double(units of :math:`m_0`)
-    effective  mass to  be  used  in *single_band* calculations for  holes 
+ ``effective_mass`` : double(units of :math:`m_0`)
+    effective mass to  be  used  in *single_band* calculations for  holes 
 
  ``band_edge`` : double
     optional override  of  band edge  energy  defined in the material file (:math:`E_v`)
+
+
+
+In the following some examples of use. 
+
+For a single **conduction** band calculation for electrons: ::
+
+  Module efaschroedinger
+
+  {
+   name = quantum_electrons
+   regions = Quantum_1 
+
+   .............. 
+
+   number_of_eigenstates = 6
+
+    Physics
+    {
+      particle = el 
+      model = single_band    
+    }
+  }
+
+
+In this case the total number of calculated eigenvalues is given by *number_of_eigenstates = 6*.
+
+For a single **valence** band calculation, **Physics** block becomes: ::
+  
+  Physics
+  {
+    particle = hl 
+    model = single_band 
+    effective_mass = ...
+  }
+
+Note that the **effective_mass** input value is compulsory.
+
+
+For a 6x6 :math:`{\bf k \cdot p}` model: ::
+
+  Module efaschroedinger
+
+  {
+   name = quantum_holes
+    ........
+
+   number_of_eigenstates = 12 
+
+   Physics
+  {
+    model = 6x6  
+  }
+
+In this case the total number of calculated (valence band) eigenvalues is given by *number_of_eigenstates = 12*.
+
+
+For a 8x8 :math:`{\bf k \cdot p}` model: ::
+
+  Module efaschroedinger
+
+  {
+   name = quantum_8x8
+    ........
+
+   num_valence_eigenvalues = 12
+   num_conduction_eigenvalues = 6
+
+   Physics
+  {
+    model = 8x8  
+  }
+
+Note that in this case it is possible to define separately the  number of calculated eigenvalues for valence band and conduction band respectively, through the keywords *num_valence_eigenvalues* and 
+*num_conduction_eigenvalues*.
+In this example the  number of calculated valence band eigenvalues is 12 and the number of calculated conduction  band eigenvalues is 6.
+
+In case *number_of_eigenstates* is used instead, e.g. ::
+
+  number_of_eigenstates = 10
+
+the total number of calculated eigenstates will be 20, 10 in CB and 10 in VB.
+
 
 
 
@@ -660,17 +750,23 @@ which  means that only Poisson  equation will  be  solved. ::
    Physics
     {
 
-      strain_simulation = strain
-
-      polarization (piezo, pyro) {}
-
-      recombination srh {}
-
-      recombination direct {}
-
+     band_properties {
+      density_of_states bulk_kp 
+      {
+        strain_simulation = strain
+      }
     }
 
+    polarization pyro {}
+    polarization piezo { strain_simulation = strain }
 
+    recombination srh {}
+    recombination direct {}
+
+  }
+
+Also, we define a **density_of_states** model of type *bulk_kp* to obtain band parameters.
+The elasticity simulation is used to obtain strain tensor necessary to calculate correctly  band parameters: *strain_simulation = strain*. 
 
 Finally, we define the model *efaschroedinger*, for quantum effective mass calculations.
 We are going to study quantized states of electrons and holes in the quantum well. 
@@ -685,16 +781,14 @@ Since the structure is 1D, each eigenstate is characterized by the energy level 
 
    plot = (ProbabilityDensity, EigenEnergy)
 
-    
-   particle = el
    poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
    strain_simulation = strain 
  
-
    number_of_eigenstates = 6
 
    Physics
    {
+    particle = el
     model = single_band    
    }
 
@@ -711,6 +805,7 @@ Electron eigenstates  will  be  obtained from a  single  band model, so we defin
 
   Physics
    {
+    particle = el
     model = single_band    
    }  
 
@@ -727,27 +822,24 @@ In  a  similar  way,  for  holes ::
 
    plot = (ProbabilityDensity, EigenEnergy)
 
-  
-   particle = hl
    poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
-   strain_simulation  = strain  
+   strain_simulation  = strain 
+ 
    number_of_eigenstates = 12
 
    Physics
    {
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
+     model = 6x6
    }
 
   
   }
 
-where, in  this  case,  we  use a  6x6 :math:`{\bf k \cdot p}`  model to  calculate  hole  eigenstates ::
+where, in  this  case,  we  use a  6x6 :math:`{\bf k \cdot p}`  model to  calculate  12 hole  eigenstates ::
 
   Physics
    {
-    model = kp   #  k.p  for  valence  band
-    kp_model = 6x6
+    model = 6x6
    }
 
 Finally, in  the  block  *Simulation*,  we  state  the *solve*  order. ::

@@ -535,7 +535,18 @@ void EnvelopFunctionApprox::parse_options()
     if (model == "conduction_band")
       singleband = 'c';
     else if (model == "single_band")
-      singleband = '1';
+    {
+      string particle = opts.get_option("particle", "el");
+      if (particle == "el")
+        singleband = 'c';
+      else if (particle == "hl")
+        singleband = 'v';
+      else
+      {
+        throw InitFailedException("In " +  get_name() + ": \'" + particle +
+          " is unknown particle for 'single_band' model.");
+      }
+    }
     else if (model == "valence_band")
       singleband = 'v';
     else if (model == "2x2")

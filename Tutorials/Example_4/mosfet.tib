@@ -61,12 +61,10 @@ Module driftdiffusion
   Physics
   {
 
-
     recombination srh {}
 
-    mobility
+    mobility field_dependent
     {
-      type = field_dependent
       low_field_model = doping_dependent
     }
   }

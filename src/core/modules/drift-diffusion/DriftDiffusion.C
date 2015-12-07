@@ -1412,6 +1412,7 @@ DriftDiffusion::RSTFSys::solve(void)
     ostringstream os;
     os << "rstf" << i;
 
+    get_vector(os.str()).close();
     *rhs = get_vector(os.str());
 
     LinearImplicitSystem::solve();
@@ -1443,6 +1444,7 @@ DriftDiffusion::RSTFSys::get_testfunction(const Boundary* bd)
     ostringstream os;
     os << "rstf" << bdit->second;
     vec = &get_vector(os.str());
+    vec->close();
   }
 
   return vec;

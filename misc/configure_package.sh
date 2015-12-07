@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #export BUILDDIR=/usr/pack/tibercad_sdk-2.2-ma/build
-export SDKDIR=/scratch/maufder/TiberCAD/2.5/SDK
+export SDKDIR=/scratch/maufder/TiberCAD/2.5.1_linux/SDK
 ARCH=x86_64-linux
 
 export MKL=y
@@ -33,6 +33,6 @@ export FCFLAGS="-fexceptions"
 #./build_mpi
 #./build_petsc
 #./build_slepc
-./build_libmesh
-./build_boost
+#./build_libmesh
+#./build_boost
 ./build_tibercad

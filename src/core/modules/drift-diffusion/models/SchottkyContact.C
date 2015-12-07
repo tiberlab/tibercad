@@ -125,7 +125,7 @@ SchottkyContact::do_compute(void)
     const RealGradient& eps_e_field = permittivity * e_field;
     double epsilon = Constants::e0 / (Constants::e * 100);
 
-    if (e_field.size() != 0 && !isnan(e_field.size()) )
+    if (e_field.size() != 0 && !std::isnan(e_field.size()) )
     {
       epsilon = (Constants::e0 / (Constants::e * 100)) * eps_e_field.size() /  e_field.size();   //this MUST be changed, it works only for homogeneous materials
     }

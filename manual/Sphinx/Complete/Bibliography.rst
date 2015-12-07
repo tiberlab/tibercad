@@ -19,13 +19,7 @@
 .. [Povolotskyi] M.Povolotskyi et al. *JAP*, (2006).
 
 
-/* comment
-.. [Wang] Wang et al. Science (2006).
-*/
 
-/*
-.. [Gao] Gao et al. NanoLetter (2009).
-*/
 
 .. [Pasveer] W F Pasveer et al. "Unified description of charge-carrier mobilities in disordered semiconducting polymers", *Phys. Rev. Lett.* 94 (2005) 206601
 
@@ -51,3 +45,5 @@
 
 .. [Scott] J C Scott, G C Malliaras, "Charge injection and recombination at the metal-organic interface", *Chem. Phys. Lett.* 299 (1999) 115
 
+
+.. [Zakhleniuk] N. A. Zakhleniuk, "Nonequilibrium drift-diffusion transport in semiconductors in presence of strong inhomogeneous electric fields",  *Applied physics letters*, 89, 252112, (2006)

@@ -167,7 +167,6 @@ Elasticity::do_solve(void)
   _accumulated_strain.clear();
   (system.solution)->zero();
 
-  shape_iteration = 0;
   double error_energy = 0.0;
   double error_u = 0.0;
   double tot_norm = 0.0;
@@ -184,6 +183,9 @@ Elasticity::do_solve(void)
   if (myopt.non_linear_strain == true)
      max_iterations = myopt.shape_iterations;
 
+
+  // iteration counter
+  int shape_iteration = 0;
 
   do {
 
@@ -215,9 +217,7 @@ Elasticity::do_solve(void)
     // apply_shape_deformation() leads to negative jacobian for certain structures??
     shape_iteration += 1;
 
- // } while (error_u > max_error);
-
-  } while ((error_u > myopt.shape_error) && (shape_iteration < max_iterations));
+  } while ((error_u > myopt.shape_error) && (shape_iteration <= max_iterations));
 
   {
     if (get_option("internal_strain_correction", false))

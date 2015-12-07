@@ -1,20 +1,25 @@
 #!/bin/bash
 PACKAGER=ma
-VERSION=4.6.0
+VERSION=4.8.1
 PROD=gcc_mingw32
 
-# SET THESE TO REASONABLE VALUES:
+topdir=$(dirname $(dirname $PWD))
+
 #PREFIX=/home/maufder/Programs
 #EPREFIX=/home/maufder/Programs
 #WORKDIR=/home/maufder/temp
-
+PREFIX=${topdir}/SDK
+EPREFIX=${topdir}/SDK
+WORKDIR=${topdir}/extern/gcc-$VERSION
 
 . `dirname $0`/INSTALL.lib
 
-#TARGET="i686-w64-mingw32 x86_64-w64-mingw32"
-#SYSROOT=(i686-w64-mingw32 x86_64-w64-mingw32)
+#TARGET="x86_64-w64-mingw32"
+#SYSROOT=(x86_64-w64-mingw32)
 TARGET="i686-w64-mingw32"
 SYSROOT=(i686-w64-mingw32)
+#TARGET="i686-w64-mingw32 x86_64-w64-mingw32"
+#SYSROOT=(i686-w64-mingw32 x86_64-w64-mingw32)
 
 i=0
 for target in $TARGET
@@ -25,8 +30,8 @@ do
 done
 
 
-#export CC=gcc-4.1.1
-#export CXX=g++-4.1.1
+export CC=gcc-4.8.1
+export CXX=g++-4.8.1
 
 GCCARCH=i686-pc-linux-gnu
 #LIBSWITCH=
@@ -54,17 +59,18 @@ GCCARCH=i686-pc-linux-gnu
 export LD_LIBRARY_PATH=${EPREFIX}/lib
 export LDFLAGS="-Wl,-rpath,${EPREFIX}/lib"
 
-simplebuild http://ftp.sunet.se/pub/gnu/gmp gmp-5.0.2.tar.bz2 --enable-cxx --enable-mpbsd
-simplebuild http://www.mpfr.org/mpfr-current mpfr-3.0.1.tar.bz2 --with-gmp=${EPREFIX}
-simplebuild http://www.multiprecision.org/mpc/download mpc-0.9.tar.gz --with-gmp-include=${EPREFIX}/include --with-gmp-lib=${EPREFIX}/lib --with-mpfr-include=${PREFIX}/include --with-mpfr-lib=${EPREFIX}/lib
-simplebuild http://www.cs.unipr.it/ppl/Download/ftp/releases/0.11.2/ ppl-0.11.2.tar.bz2 --with-libgmpxx-prefix=${EPREFIX} --with-cxxflags="-I ${PREFIX}/include"
+simplebuild http://ftp.sunet.se/pub/gnu/gmp gmp-5.1.3.tar.bz2 --enable-cxx --enable-mpbsd
+simplebuild http://www.mpfr.org/mpfr-current mpfr-3.1.2.tar.bz2 --with-gmp=${EPREFIX}
+simplebuild http://www.multiprecision.org/mpc/download mpc-1.0.1.tar.gz --with-gmp-include=${EPREFIX}/include --with-gmp-lib=${EPREFIX}/lib --with-mpfr-include=${PREFIX}/include --with-mpfr-lib=${EPREFIX}/lib
+#simplebuild http://www.cs.unipr.it/ppl/Download/ftp/releases/0.10.2/ ppl-0.10.2.tar.bz2 --with-libgmpxx-prefix=${EPREFIX} --with-cxxflags="-I ${PREFIX}/include"
 export CXXFLAGS="-I ${PREFIX}/include"
 export CFLAGS="-I ${PREFIX}/include"
-export CPPLAGS="-I ${PREFIX}/include"
-simplebuild ftp://gcc.gnu.org/pub/gcc/infrastructure cloog-ppl-0.15.11.tar.gz --with-ppl=${EPREFIX}/lib --with-gmp-library=${EPREFIX}/lib --with-gmp-include=${EPREFIX}/include
+export CPPFLAGS="-I ${PREFIX}/include"
+simplebuild ftp://gcc.gnu.org/pub/gcc/infrastructure isl-0.11.1.tar.bz2  
+simplebuild ftp://gcc.gnu.org/pub/gcc/infrastructure cloog-0.18.0.tar.gz  --with-gmp-library=${EPREFIX}/lib --with-gmp-eprefix=${EPREFIX} --with-gmp-prefix=${PREFIX} --with-isl=system --with-isl-prefix=${PREFIX} --with-isl-exec-prefix=${EPREFIX}
 
 
-if prepare ftp://mirror.switch.ch/mirror/gnu/binutils/ binutils-2.21.tar.bz2
+if prepare ftp://mirror.switch.ch/mirror/gnu/binutils/ binutils-2.24.tar.bz2
 then
   
   cd ..
@@ -74,23 +80,39 @@ then
     mkdir -p build-binutils-$target
     cd build-binutils-$target
 
-    ../binutils-2.21/configure --prefix=${PREFIX} --with-sysroot=${PREFIX}/${SYSROOT[$i]} \
+    ../binutils-2.24/configure --prefix=${PREFIX} --with-sysroot=${EPREFIX}/${SYSROOT[$i]} \
       --exec-prefix=${EPREFIX} --target=$target --disable-nls
     make
     make install
     cd ..
     i=$((i + 1))
   done
-  touch binutils-2.21.tar.bz2.ok
+  touch binutils-2.24.tar.bz2.ok
 fi
 
 
 
-MINGW_SRC=mingw-w64-v1.0-20110523
-#if [ -e mingw-w64-v1.0-snapshot-20110523.tar.bz2 ] && [ ! -e mingw-w64-v1.0-snapshot-20110523.tar.bz2.ok ]
-if prepare http://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-snapshot/ mingw-w64-v1.0-snapshot-20110523.tar.bz2
+cat > ${WORKDIR}/mingw.patch <<EOF
+--- build_mingw-w64-i686-w64-mingw32/crt/_mingw.h.orig	2013-11-11 15:49:55.000000000 +0100
++++ build_mingw-w64-i686-w64-mingw32/crt/_mingw.h	2013-11-11 15:50:01.000000000 +0100
+@@ -92,7 +92,7 @@
+      || (defined (__clang__))
+ #  define __CRT_INLINE extern inline __attribute__((__gnu_inline__))
+ # else
+-#  define __CRT_INLINE extern __inline__
++#  define __CRT_INLINE  __inline__
+ # endif
+ #endif
+ 
+EOF
+
+unset CFLAGS
+unset CXXLAGS
+unset CPPFLAGS
+
+MINGW_SRC=mingw-w64-v4.0.2
+if prepare http://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/ ${MINGW_SRC}.tar.bz2
 then
-  #tar jxf mingw-w64-v1.0-snapshot-20110523.tar.bz2
   cd ..
   
   i=0
@@ -99,8 +121,11 @@ then
     mkdir -p build_mingw-w64-$target
     cd build_mingw-w64-$target
 
-    ../${MINGW_SRC}/mingw-w64-headers/configure --host=$target --build=$GCCARCH --prefix=${EPREFIX}
-    #../${MINGW_SRC}/mingw-w64-headers/configure --host=$target --build=$GCCARCH --prefix=${PREFIX}/${SYSROOT[$i]}
+    #../${MINGW_SRC}/mingw-w64-headers/configure --host=$target --build=$GCCARCH --prefix=${EPREFIX}
+    ../${MINGW_SRC}/mingw-w64-headers/configure --host=$target --build=$GCCARCH --prefix=${EPREFIX}/${SYSROOT[$i]}
+
+    #patch -p1 < ${WORKDIR}/mingw.patch
+
     make install
     cd ..
 
@@ -113,6 +138,8 @@ then
 
     cd $WORKDIR
   done
+
+  touch ${MINGW_SRC}.tar.bz2.ok
 fi
 
 
@@ -131,32 +158,56 @@ then
     mkdir -p build-gcc-$target
     cd build-gcc-$target
 
-    #../${PROD}-${VERSION}/configure --prefix=${PREFIX} --with-sysroot=${PREFIX}/${SYSROOT[$i]} \
-    ../gcc-${VERSION}/configure --prefix=${PREFIX} --with-headers=${EPREFIX}/${target}/include --with-libs=${EPREFIX}/${target}/lib --with-sysroot=${EPREFIX}/${SYSROOT[$i]} \
-      --enable-languages=c,c++,fortran --enable-threads --exec-prefix=${EPREFIX} \
-      --with-gmp-include=${EPREFIX}/include --with-gmp-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" \
-      --with-mpfr-include=${PREFIX}/include --with-mpfr-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" \
-      --with-ppl=${EPREFIX} --with-cloog="${EPREFIX}" \
-      --target=$target --disable-multilib \
-      --enable-sjlj-exceptions --enable-shared --disable-nls
+#    ../gcc-${VERSION}/configure --prefix=${PREFIX} --with-headers=${EPREFIX}/${target}/include --with-libs=${EPREFIX}/${target}/lib --with-sysroot=${EPREFIX}/${SYSROOT[$i]} \
+#      --enable-languages=c,c++,fortran --exec-prefix=${EPREFIX} \
+#      --with-gmp-include=${EPREFIX}/include --with-gmp-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" \
+#      --with-mpfr-include=${PREFIX}/include --with-mpfr-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" \
+#      --with-ppl=${EPREFIX} --with-cloog="${EPREFIX}"  --with-isl-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" \
+#      --with-isl-include="${PREFIX}/include"\
+#      --target=$target --disable-multilib \
+#      --enable-sjlj-exceptions --enable-shared --disable-nls \
+#      --disable-win32-registry
 
-    make all-gcc
-    make install-gcc
+#    make all-gcc
+#    make install-gcc
     
   #cd ${PREFIX}
   #./${ARCH}/bin/gcc -dumpspecs > ${ARCH}/lib/gcc/${GCCARCH}/${VERSION}/specs
   #patch -p0 -l <${WORKDIR}/specs.patch
 
-    cd ..
-    [ -d build_crt-$target ] && rm -rf build_crt-$target
-    mkdir -p build_crt-$target
-    cd build_crt-$target
-    #../${MINGW_SRC}/mingw-w64-crt/configure --host=$target --prefix=${PREFIX}/${SYSROOT[$i]} --with-sysroot=${PREFIX}/${SYSROOT[$i]}
-    ../${MINGW_SRC}/mingw-w64-crt/configure --host=$target --prefix=${EPREFIX}
-    make
-    make install
+    unset CXX
+    unset CC
 
-    cd ../build-gcc-$target
+#    cd ..
+#    [ -d build_crt-$target ] && rm -rf build_crt-$target
+#    mkdir -p build_crt-$target
+#    cd build_crt-$target
+#    ../${MINGW_SRC}/mingw-w64-crt/configure --host=$target --prefix=${EPREFIX}/${SYSROOT[$i]} --with-sysroot=${EPREFIX}/${SYSROOT[$i]}
+#    #../${MINGW_SRC}/mingw-w64-crt/configure --host=$target --prefix=${EPREFIX}
+#    make
+#    make install
+   
+#    cd ..
+#    mkdir -p build_winpthreads-$target
+#    cd build_winpthreads-$target
+#    ../${MINGW_SRC}/mingw-w64-libraries/winpthreads/configure --host=$target --build=$GCCARCH --prefix=${EPREFIX}/${SYSROOT[$i]}
+#    make
+#    make install
+
+#    cd ../build-gcc-$target
+#    make dist-clean
+    #rm -f config.cache
+    ../gcc-${VERSION}/configure --prefix=${PREFIX} --with-headers=${EPREFIX}/${target}/include --with-libs=${EPREFIX}/${target}/lib --with-sysroot=${EPREFIX}/${SYSROOT[$i]} \
+      --enable-languages=c,c++,fortran \
+      --exec-prefix=${EPREFIX} \
+      --with-gmp-include=${EPREFIX}/include --with-gmp-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" \
+      --with-mpfr-include=${PREFIX}/include --with-mpfr-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" \
+      --with-ppl=${EPREFIX} --with-cloog="${EPREFIX}"  --with-isl-lib="${EPREFIX}/lib -Wl,-rpath,${EPREFIX}/lib" \
+      --with-isl-include="${PREFIX}/include"\
+      --target=$target --disable-multilib \
+      --enable-sjlj-exceptions --enable-shared --disable-nls \
+      --enable-threads=posix --enable-libgomp \
+      --disable-win32-registry
     make
     make install
     cd ..
@@ -165,7 +216,6 @@ then
 
   touch gcc-${VERSION}.tar.bz2.ok
 fi
-
 
 
 

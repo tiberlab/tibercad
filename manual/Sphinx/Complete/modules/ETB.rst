@@ -244,10 +244,10 @@ A typical example of tight-bind calculations is the following  ::
     strain_simulation = strain
     potential_simulation =  driftdiffusion
 
-    sparse_format = full
+  
  
-    plot = (tbstates, ProbabilityDensity)
-    jmol_output_format = cube
+    plot = (tbstates)
+  
 
   
 
@@ -255,13 +255,14 @@ A typical example of tight-bind calculations is the following  ::
       {
         #load_states = true 
         #load_path = output3
-         num_valence_eigenvalues = 2 
+
+        num_valence_eigenvalues = 2 
         num_conduction_eigenvalues = 2 
         long_tolerance = 1e-6
         guess_valence = -1.4 
       }
 
-  }#empirical_tb
+  }
 
 
 
@@ -301,15 +302,14 @@ The following options influence the behaviour of the **Module**  ``empirical_tb`
     defines the regions associated to this ETB simulation
 
  ``atomistic_structure`` : string  
-    defines the name of the atomistic structure which  will  be  used  by ETB  to  create the  TB Hamiltonian. It  must be  the name  of  one  structure created  through an **Atomistic** block in  **Device**  section. 
+    defines the name of the atomistic structure which  will  be  used  by ETB  to  create the  TB Hamiltonian. It  must be  the name  of  a  structure created  through an **Atomistic** block in  **Device**  section. 
    
 
  ``potential_simulation`` : string
     defines the name of the simulation (e.g.  ``driftdiffusion``) that can provide electric potential
 
  ``strain_simulation`` : string 
-    defines the name of the simulation (e.g. ``elasticity``) that can provide elastic strain
-
+    defines the name of the simulation (e.g. ``elasticity``) that can provide elastic strain. The strain tensor can then be used to calculate the scaling of some ETB parameters. 
 
 
  ``Harrison_scaling`` : boolean
@@ -343,14 +343,16 @@ The Solver section of the **Module**  ``empirical_tb`` contains the following op
  ``load_path`` : string 
     path of  the file  from  which  tb  states  can  be loaded
 
- ``long_tolerance`` : double 
-    tolerance...
-
  ``guess_conduction`` : double
-     the algorithm try  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If not defined, then by  default it is  calculated internally based on  the band edges.
+     the solver algorithm tries  to  find  the closest eigenvalues to this absolute  value  of  energy (eV). If *guess_conduction* is not defined, then by  default it is  calculated internally based on  the band edges.
 
  ``guess_valence`` : double
-      the algorithm try  to  find  the closest eigenvalues to this absolute  value  of  energy (eV).If not defined, then by  default it is  calculated internally based on  the band edges. 
+      the solver algorithm tries  to  find  the closest eigenvalues to this absolute  value  of  energy (eV).If *guess_valence* is not defined, then by  default it is  calculated internally based on  the band edges. 
+
+ ``long_tolerance`` : double
+      solver convergence criterion (default 1e-9) 
+
+
 
 
 With  the  keyword *load_states = true* it is  possible to resume a  calculation starting from the last of the states loaded from a  file. Also,  one  can use  a  set  of already calculated states for an optical  spectrum calculation (see in the following). 
@@ -372,12 +374,12 @@ The available output variables for **Module**  ``empirical_tb`` , to be specifie
     plots  states  on  the  mesh. MeshStatesNodes is not supported in 1D calculations 
 
  ``MeshStates``: 
-    plots  states  on  the  mesh in 1D calculations (ee.g. Quantum wells).  
+    plots  states  on  the  mesh in 1D calculations (e.g. Quantum wells).  
 
 
 
 By  default  the list of  eigenvalues[eV] is printed  in the output  directory in  the  output file *simulation_name*.dat.
-This  file contains the  values of all  the  electron  and  hole  calculated eigenvalues (*EigenEnergy*), the Fermi level energy (*FermiLevel*) and  the  occupation index (*Occupation*) of  each  state. 
+This  file contains the  values of all  the  calculated electron  and  hole eigenvalues (*EigenEnergy*), the Fermi level energy (*FermiLevel*) and  the  occupation index (*Occupation*) of  each  state. 
 
 Through the keyword *tbstates*, the  states eigenfuctions may be stored  in  a  cube file for  visualization of wawefunctions with the open-source viewer **jmol** (*http://jmol.sourceforge.net*).
 
@@ -553,12 +555,13 @@ Strain  due  to  lattice  mismatch  between GaN  and AlN (taken  as  reference  
   name = str  
   regions = all
 
+
+  mesh_deformation = true
+  strain_atomistic_structure = tb1 
+
   plot = (Strain, Stress, Displacement )
 
-  non_linear_strain = true
-  shape_error = 0.1
-
-
+  
   Physics
   {
     body_force lattice_mismatch
@@ -579,8 +582,9 @@ Strain  due  to  lattice  mismatch  between GaN  and AlN (taken  as  reference  
   }
 
 
+Note that to apply the  strain deformation to the  defined atomistic structure, we define *mesh_deformation = true*. In this way, strain will be computed iteratively until the convergence on the structure deformation is reached. It is also important to define the name of the atomistic structure to be deformed, with  *strain_atomistic_structure = tb1*.
 
-Tight  binding  calculation  of  quantum  states  in  the  system  made  by  the  QD  and  the  AlN  surrounding  box is  defined  by  the  Module empirical_tb ::
+Tight  binding  calculation  of  quantum  states  in  the  system  made  by  the  QD  and  the  AlN  surrounding  box is  defined  by  the  *Module* **empirical_tb** ::
 
   Module empirical_tb
   {
@@ -590,7 +594,7 @@ Tight  binding  calculation  of  quantum  states  in  the  system  made  by  the
     atomistic_structure = tb1
     potential_simulation = dd
     strain_simulation = str  
-    sparse_format = full	
+   	
     plot = (tbstates, MeshStatesNodes)
 
     Solver
@@ -753,8 +757,7 @@ Next, the Atomistic block defines the atomistic structure *dot_atoms*, associate
   }
 
 
-Next, Elasticity Module is defined. In  this  way,  macroscopic strain  is  calculated, deformation is  applied  to the  mesh (*mesh_deformation = true*) and displacement are  projected  to the  atomistic  structure (*strain_atomistic_structure = dot_atoms*).  ::
-
+Next, **Elasticity** Module is defined. In  this  way,  macroscopic strain  is  calculated, deformation is  applied  to the  mesh (*mesh_deformation = true*) and displacements are  projected  to the  atomistic  structure (*strain_atomistic_structure = dot_atoms*).  ::
 
   Module elasticity
   {
@@ -763,10 +766,9 @@ Next, Elasticity Module is defined. In  this  way,  macroscopic strain  is  calc
   plot = (Strain,Stress,Displacement) 
   
   mesh_deformation = true
-  shape_error = 0.1
- 
   strain_atomistic_structure = dot_atoms
-  
+
+
   Physics {
     body_force lattice_mismatch
     {
@@ -813,9 +815,18 @@ Drift-diffusion Module will be  executed to  solve  Poisson at  equilibrium  ::
 
   Physics
    {
-    strain_simulation = strain
+    band_properties 
+     {
+      density_of_states bulk_kp 
+      {
+        strain_simulation = strain
+      }
+     }
+    
     recombination srh { }
-    polarization (piezo, pyro) { } 
+    polarization (pyro) {}
+    polarization (piezo) {strain_simulation = strain}
+ 
    }
   }
 
@@ -838,10 +849,11 @@ Finally,  we  define  **empirical_tb** Module  ::
    atomistic_structure = dot_atoms
   
    potential_simulation = dd
+   strain_simulation = strain
   
    plot = (MeshStates,MeshStatesNodes)
 
-   jmol_output_format = cube 
+   
 
    Solver 
    {
@@ -858,6 +870,7 @@ Finally,  we  define  **empirical_tb** Module  ::
    }
   }
 
+The **ETB** calculations will be performed on the atomic structure *dot_atoms*, as deformed by the **VFF** relaxation. 
 
 By  default, reasonable  guesses are  generated  internally to  help  the solver  to get convergence. 
 Usually these  values  are  good  enough to  get  a steady covergence  of  solutions.
@@ -886,6 +899,16 @@ Note  that ETB  will be  applied to the **atomistic_structure** *dot_atoms* (*at
 
 
 We  solve for  *strain* from **elasticity**,  then  for  *vff*  relaxation.  *dd*  calculates  band structure at equilibrium based on which *tb*  simulation is  applied.
+
+.. note:: 
+          Note that it is always highly advisable to solve first elasticity, before a VFF relaxation. This will provide a reasonable first guess for the VFF solver and also will apply the correct deformation to the mesh, assuring that atoms are still associated to the correct FEM elements.
+
+
+
+
+
+
+ 
 
 
 

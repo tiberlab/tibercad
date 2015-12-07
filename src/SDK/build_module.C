@@ -561,7 +561,7 @@ Compiler::Compiler(const ModelOptions& options) :
 
   _linker_flags += options.get_option("linker_flags", "");
 
-  if ((ARCH == "i686-mingw32") || (ARCH == "x86_64-mingw32"))
+  if ((ARCH == "i686-w64-mingw32") || (ARCH == "x86_64-w64-mingw32"))
   {
     BuildModule::replace(_compiler_flags, "-fPIC", "");
     BuildModule::replace(_compiler_flags, "-pthread", "");
@@ -879,7 +879,7 @@ void process_module(const string& name, const ModelOptions& options)
 
     string binsuffix;
     string libsuffix(".so");
-    if ((ARCH == "i686-mingw32") || (ARCH == "x86_64-mingw32"))
+    if ((ARCH == "i686-w64-mingw32") || (ARCH == "x86_64-w64-mingw32"))
     {
       libsuffix = ".dll";
       binsuffix = ".exe";
