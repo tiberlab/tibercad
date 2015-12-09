@@ -1,5 +1,5 @@
 # Example 7: Optical properties of AlGaN/GaN LED (1D)
-# p
+
 
 
 # Description of  the  device physical regions
@@ -15,7 +15,7 @@ Device
   x-growth-direction = (0,0,0,1)
 
 
-  Region n-algan  #n-AlGaN
+  Region n-algan  
   {
  
 
@@ -33,7 +33,7 @@ Device
 
   }
 
-  Region alinn  # AlInN
+  Region alinn  
   {
  
     material = AlInN
@@ -50,7 +50,7 @@ Device
   }
    
  
-  Region algan_barr1   # AlGaN_barrier1_no_quantum
+  Region algan_barr1   
   {
 
     material = AlGaN
@@ -292,7 +292,8 @@ Module efaschroedinger
 
   Physics
   {
-    model = conduction_band    
+    particle = el
+    model = single_band   
   }
 
 }

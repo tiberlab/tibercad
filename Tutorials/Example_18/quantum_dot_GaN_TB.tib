@@ -105,7 +105,7 @@ Module empirical_tb
 
   Solver
   {
-    #solver_type = gpu
+    
     num_valence_eigenvalues = 1 
     num_conduction_eigenvalues = 1
     long_tolerance = 1e-4  
@@ -129,7 +129,7 @@ Module empirical_tb
   Solver
   {
 
-
+    load_states = true
     load_path = output_tb1 
    
     num_valence_eigenvalues = 4 # 2 
@@ -183,7 +183,6 @@ Module  driftdiffusion
  
     step_tolerance = 1e-5
   
-    #max_step = 4
   }
  
 
@@ -243,22 +242,23 @@ Module opticstb
 }
 
 
-## NOTE: run tb1 for calculation of  first state
-## then run tb2 with load_states = true to load existing solution and  
-## calculate further states and then optical properties (opt)
-
 Simulation
 {
   temperature = 300
 
-   solve = (str, dd, tb1, tb2) 
+
+## NOTE: run tb1 for calculation of  first state
+  solve = (str, dd, tb1)
+
+## then run tb2 with load_states = true to load existing solution and  
+## calculate further states and then optical properties (opt)
 
 #  solve = (str, dd, tb2, opt)
 
-  resultpath = output_tb1 # output_tb2  
-
+  resultpath = TEST # output_tb1 # output_tb2 
  
   output_format = vtk 
 
-
 }
+
+

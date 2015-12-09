@@ -158,14 +158,14 @@ Module efaschroedinger
   poisson_simulation = dd
   strain_simulation = strain
 
-  Solver
-  {
-     number_of_eigenstates = 20
-  }	
+
+  number_of_eigenstates = 20
+	
 
   Physics 
   {
-    model = conduction_band    
+    particle = el
+    model = single_band    
   }
 }
 
@@ -178,21 +178,13 @@ Module efaschroedinger
 
   poisson_simulation = dd
   strain_simulation =  strain
-    
+  number_of_eigenstates = 80
   
   Physics
   {
     model = 6x6
   }
   
-  Solver
-  {
-    number_of_eigenstates = 80
-    use_deflation_space = false
-    #solve_ev_problem_twice = true
-    #ksp_type = gmres
-    #pc_type = ilu	  
-  }
 }
 
 
@@ -243,7 +235,7 @@ Simulation
            dd, # sweep
            quantum_el, quantum_hl, optics)
 
-  resultpath = output 
+  resultpath = output
 
   output_format = vtk
 }

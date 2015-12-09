@@ -112,19 +112,6 @@ Module driftdiffusion
 
     polarization (piezo, pyro) {}
 
-    particle_density
-    {
-      particle = electron
-      # this is the default:
-      # statistics = fermidirac
-    }
-
-    particle_density
-    {
-      particle = hole
-      # this is the default:
-      # statistics = fermidirac
-    }
 
     recombination (srh, direct) {}
 
@@ -165,14 +152,15 @@ Module efaschroedinger
   poisson_simulation = dd
   strain_simulation = strain
 
-  Solver
-  {
-     number_of_eigenstates = 20
-  }	
+ 
+  number_of_eigenstates = 20
+  	
 
   Physics 
   {
-    model = conduction_band    
+    particle = el
+    model = single_band 
+       
   }
 }
 
@@ -185,20 +173,14 @@ Module efaschroedinger
 
   poisson_simulation = dd
   strain_simulation =  strain
-    
+  number_of_eigenstates = 80
   
   Physics
   {
     model = 6x6
   }
   
-  Solver
-  {
-    number_of_eigenstates = 80
-    #solve_ev_problem_twice = true
-    #ksp_type = gmres
-    #pc_type = ilu	  
-  }
+ 
 }
 
 

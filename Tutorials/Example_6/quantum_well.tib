@@ -154,7 +154,8 @@ Module  efaschroedinger
 
   Physics
   {
-    model = conduction_band  
+    particle = el
+    model = single_band  
   }
   
 

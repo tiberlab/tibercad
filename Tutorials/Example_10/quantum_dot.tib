@@ -174,19 +174,22 @@ Module  efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
    
   poisson_simulation = dd
-  strain_simulation = strain  
+  strain_simulation = strain 
+
+  number_of_eigenstates = 5
 
   Physics
   {
-    model = conduction_band    
+    particle = el
+    model = single_band     
   }
 
   Solver
   {
-     number_of_eigenstates = 5
-     solver = krylovshur 
-     ksp_type = bcgsl
-     pc_type =  jacobi
+    
+    solver = krylovshur 
+    ksp_type = bcgsl
+    pc_type =  jacobi
   }
 }
 
@@ -203,7 +206,7 @@ Module  efaschroedinger
 
   poisson_simulation = dd
   strain_simulation = strain 
-  
+  number_of_eigenstates = 8
 
   Physics
   {
@@ -212,7 +215,7 @@ Module  efaschroedinger
 
   Solver
   {
-     number_of_eigenstates = 8
+    
      solver = krylovshur 
      ksp_type = gmres 
      pc_type =  ilu
@@ -231,6 +234,7 @@ Simulation
   solve = (strain, dd, quantum_el, quantum_hl)
  
   resultpath = output
+
   output_format = vtk
 
 }

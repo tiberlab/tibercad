@@ -151,7 +151,6 @@ Module efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy)
 
-  x-periodicity = false
    
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
   strain_simulation = strain 
@@ -161,7 +160,8 @@ Module efaschroedinger
 
   Physics
   {
-    model = conduction_band    
+    particle = el
+    model = single_band     
   }
 
   
@@ -179,7 +179,6 @@ Module efaschroedinger
 
   plot = (ProbabilityDensity, EigenEnergy)
 
-  x-periodicity = false
    
   poisson_simulation = driftdiffusion  #  potential from driftdiffusion 
   strain_simulation  = strain  
@@ -205,7 +204,7 @@ Simulation
   temperature = 300
   solve =  (strain, driftdiffusion, quantum_electrons,quantum_holes )
 
-  resultpath =  output  
+  resultpath =  output
 
   output_format = grace
 

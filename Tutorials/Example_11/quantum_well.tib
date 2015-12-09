@@ -194,17 +194,19 @@ Module efaschroedinger
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
 
   number_of_eigenstates = 3
-  poisson_model_name = dd
-  strain_model_name = strain 
-  quadrature_rule = trapez
 
+  poisson_simulation = dd
+
+  strain_simulation = strain
 
   Physics
   {
-    model = conduction_band    
-  }
+    particle = el
+    model = single_band 
 
+  }
 }
+
 
 
 Module efaschroedinger
@@ -214,11 +216,12 @@ Module efaschroedinger
   regions = quantum
 
   plot = (ProbabilityDensity, EigenEnergy, QuantumDensity)
+ 
+  number_of_eigenstates = 12
 
-  num_hole_states = 12
-  poisson_model_name = dd
-  strain_model_name = strain 
-  quadrature_rule = trapez
+  poisson_simulation = dd
+
+  strain_simulation = strain
   
   Physics
   {
@@ -262,6 +265,8 @@ Simulation
   solve = (strain, sweep, selfconsistent)
 
   resultpath = output
+
   output_format = grace
 
 }
+
