@@ -1,0 +1,134 @@
+Device
+{
+
+  meshfile = diode.msh
+  dimension = 1
+  material = Si
+
+   Region n_side 
+   {
+     Doping
+     {
+       Nd = 1e18
+       type = donor
+     }
+   }
+
+   Region p_side 
+   {
+     Doping
+     {
+       Nd = 1e18
+       type = acceptor
+     }
+   }
+
+}
+
+Module excitons_density
+{
+
+  plot = (Xdens, net_recombination, dissociation)
+
+  Physics {
+
+    driftdiffusion_simulation = driftdiffusion
+
+    tau_diss = 1e-9
+    tau_nonrad = 1e-9
+    tau_rad = 1e-9
+  }
+
+}
+
+
+# Definition of  Simulation Models  and associated Boundary Conditions 
+Module driftdiffusion
+{ 
+              
+   plot = (Ec, Ev, Eg, ElField, eQFermi, hQFermi, eDensity, hDensity,
+           NetRecombination, eCurrentDensity, hCurrentDensity, CurrentDensity,
+           ContactCurrents, eMobility, hMobility, IonizedDonors, IonizedAcceptors)
+
+  Solver linesearch
+  {
+    relative_tolerance = 1e-12
+    step_tolerance = 1e-3
+
+    linear_solver petsc
+    {
+      relative_tolerance = 1e-6
+    }
+  }
+
+  Physics
+  {
+
+     recombination srh {}
+
+     recombination exciton_generation {}
+
+     recombination exciton_dissociation { exciton_simulation = excitons_density }
+
+     band_properties
+     {
+       density_of_states bulk_kp
+       {
+       }
+     }
+
+     mobility
+     { 
+       type  =  doping_dependent
+     }
+
+     hole_mobility
+     { 
+       type  =  doping_dependent
+     }
+
+  }   
+
+
+  Contact anode
+  {
+    type = ohmic
+    voltage = $Vb[0.0]
+  }
+
+  Contact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+ 
+}  
+
+
+Module sweep
+{
+    variable = $Vb
+    solve = (driftdiffusion, excitons_density)
+    start = 0.0
+    stop = 2.0
+    steps = 40
+    plot_data = true
+}
+
+
+
+
+
+Simulation
+{
+  temperature = 300
+  verbose = 3
+  solve = sweep
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
