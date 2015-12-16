@@ -192,6 +192,9 @@ Device::setup_mesh(void)
 
   const string& meshfile = _options["meshfile"];
 
+  if (meshfile.empty())
+    throw InitFailedException("'meshfile' must be provided in Device block.");
+
   {
     ostringstream os;
     os << "Reading mesh file " << meshfile << " ...";
