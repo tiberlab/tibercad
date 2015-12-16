@@ -115,7 +115,8 @@ public:
    * \param cutoff the cutoff radius in nm (default 0.5 nm)
    */
   void extract_statistics(std::map<Specie, std::vector<unsigned int>>& stats,
-      const std::set<ID>& regions, double cutoff = 0.5) const;
+      const std::set<ID>& regions, double cutoff = 0.5,
+      double y = 0, double z = 0) const;
 
   //! Extract statistics in volume around a single atom
   /*!

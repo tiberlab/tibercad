@@ -325,8 +325,32 @@ AtomisticBasis::neighbor_iterator::neighbor_iterator(const neighbor_iterator& rh
 AtomisticBasis::neighbor_iterator&
 AtomisticBasis::neighbor_iterator::operator++(void)
 {
-    if (_itA != _setA.end())
+  // we will look for neighbours of atoms slightly outside the
+  // desired range, to not loose valid atoms
+  bool advance = true;
+  while (advance)
+  {
+    // if we processed all in set A, pass to their neighbours
+    if (_itA == _setA.end())
     {
+      advance = false;
+      if (_setB.empty())
+      {
+        _current = _structure.get_N_atoms();
+      }
+      else
+      {
+        _setA.swap(_setB);
+        _itA = _setA.begin();
+        _setB.clear();
+
+        ++(*this);
+      }
+    }
+    else
+    {
+      // look for all his neighbors
+
       _current = _itA->first;
       _image = (_itA->second);
       _visited.insert(make_pair(_current, _image));
@@ -361,41 +385,51 @@ AtomisticBasis::neighbor_iterator::operator++(void)
                 - _structure.get_structure_atom(nn[i]).get_position()
                 + new_shift).size();
 
-            if (d < _length)
+            if (d < _length * 1.5)
               _setB.insert(make_pair(nn[i], new_shift));
           }
           else
           {
-            double dx  = Point (_structure.get_structure_atom(_start).get_position(0)
-                - _structure.get_structure_atom(nn[i]).get_position(0) + new_shift(0)).size();
-            double dy  = Point (_structure.get_structure_atom(_start).get_position(1)
-                - _structure.get_structure_atom(nn[i]).get_position(1) + new_shift(1)).size();
-            double dz  = Point (_structure.get_structure_atom(_start).get_position(2)
-                - _structure.get_structure_atom(nn[i]).get_position(2) + new_shift(2)).size();
+            double dx  = fabs(_structure.get_structure_atom(_start).get_position(0)
+                - _structure.get_structure_atom(nn[i]).get_position(0) + new_shift(0));
+            double dy  = fabs(_structure.get_structure_atom(_start).get_position(1)
+                - _structure.get_structure_atom(nn[i]).get_position(1) + new_shift(1));
+            double dz  = fabs(_structure.get_structure_atom(_start).get_position(2)
+                - _structure.get_structure_atom(nn[i]).get_position(2) + new_shift(2));
 
-            if (dx < (_length/2) && dy < (_height/2) && dz < (_width/2))
+            if (dx < (_length/2 + _min_bond) &&
+                dy < (_height/2 + _min_bond) &&
+                dz < (_width/2 + _min_bond))
               _setB.insert(make_pair(nn[i], new_shift)) ;
-           }
+          }
         }
 
       }
       ++_itA;
-    }
-    else
-    {
-      if (_setB.empty())
+
+      // check if _current is actually inside the desired domain. If not,
+      // pass to the next one
+      if( _height == 0 && _width == 0 )
       {
-        _current = _structure.get_N_atoms();
+        double d = Point(_structure.get_structure_atom(_start).get_position()
+            - _structure.get_structure_atom(_current).get_position()
+            + _image).size();
+
+        advance = d > _length;
       }
       else
       {
-        _setA.swap(_setB);
-        _itA = _setA.begin();
-        _setB.clear();
+        double dx  = fabs(_structure.get_structure_atom(_start).get_position(0)
+            - _structure.get_structure_atom(_current).get_position(0) + _image(0));
+        double dy  = fabs(_structure.get_structure_atom(_start).get_position(1)
+            - _structure.get_structure_atom(_current).get_position(1) + _image(1));
+        double dz  = fabs(_structure.get_structure_atom(_start).get_position(2)
+            - _structure.get_structure_atom(_current).get_position(2) + _image(2));
 
-        ++(*this);
+        advance = (dx > (_length/2)) || (dy > (_height/2)) || (dz > (_width/2));
       }
     }
+  }
 
   return *this;
 }

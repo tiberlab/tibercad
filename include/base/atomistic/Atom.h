@@ -61,7 +61,7 @@ public:
   Tensor1 get_ttype_position() const;
 
   //! Get the position as a Point object
-  Point get_position() const;
+  const Point& get_position() const;
 
   /*! \brief Get the ID of the region the atom belongs to
    * (Note: it will get the region from associated element)
@@ -152,7 +152,7 @@ void Atom::set_position(const Point& p)
 }
 
 inline 
-Point Atom::get_position() const
+const Point& Atom::get_position() const
 {
   return _position;
 }  

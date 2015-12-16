@@ -260,6 +260,8 @@ class AtomisticBasis
 
     Point _image;
 
+    double _min_bond = 4;
+
 
     HMMap _visited;
     HMap _setA;

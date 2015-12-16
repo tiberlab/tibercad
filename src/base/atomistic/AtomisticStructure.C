@@ -2057,7 +2057,7 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
 
 void
 AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
-    const set<ID>& regions, double cutoff) const
+    const set<ID>& regions, double cutoff, double y, double z) const
 {
 
   //cutoff = _options.get_option("control_volume_radius", cutoff);
@@ -2101,7 +2101,7 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
       }
 
       stats[atm.get_specie()][0] += 1;
-
+      //cerr << "start: " << i << endl;
       if ((ref_atom < 0) || (atm.get_label() == ref_atom))
       {
         unsigned int counter = 0;
@@ -2112,11 +2112,12 @@ AtomisticStructure::extract_statistics(map<Specie, vector<unsigned int>>& stats,
         for ( ; mit != mend; ++mit)
           (mit->second).push_back(0);
 
-        neighbor_iterator it(neighbors_begin(i, 10 * cutoff));
+        neighbor_iterator it(neighbors_begin(i, 10 * cutoff, 10 * y, 10 * z));
         neighbor_iterator end(neighbors_end(i));
         for ( ; it != end; ++it)
         {
           const Atom& neigh = *(*it);
+          //cerr << " " << it.atom_index() << endl;
 
           if (!regions.count(neigh.get_region_ID()))
             continue;
@@ -2302,8 +2303,45 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
      ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
          "_" + reg_name + "_statistics_R" + cutoff_str + ".dat");
 
+     // define the control volume
+     string shape = opt.get_option("control_volume", "sphere");
+     double x = cutoff;
+     double y = 0;
+     double z = 0;
+
+     if (shape == "cube")
+     {
+       x = opt.get_option("side_length", cutoff);
+       y = z = x;
+     }
+     else if (shape == "column")
+     {
+       RealVectorValue a, b, c;
+       get_lattice_vectors(a, b, c);
+       string dir = opt.get_option("orientation", "x");
+       double side = opt.get_option("side_length", cutoff);
+       switch (dir[0])
+       {
+
+         case 'y':
+           y = b.size() / 10.0;
+           x = z = side;
+           break;
+
+         case 'z':
+           z = c.size() / 10.0;
+           y = x = side;
+           break;
+
+         default: // 'x'
+           x = a.size() / 10.0;
+           y = z = side;
+           break;
+       }
+     }
+
      map<Specie, vector<unsigned int>> stats;
-     extract_statistics(stats, reg_ids, cutoff);
+     extract_statistics(stats, reg_ids, x, y, z);
 
      of << "% alloy statistics for structure " << get_name() <<
          ", region " << reg_name << "\n";
@@ -2410,9 +2448,45 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
       solmap[*id_it][s_it->second].resize(0);
   }
 
+  // define the control volume
+  string shape = opt.get_option("control_volume", "sphere");
+  double x = cutoff;
+  double y = 0;
+  double z = 0;
+
+  if (shape == "cube")
+  {
+    x = opt.get_option("side_length", cutoff);
+    y = z = x;
+  }
+  else if (shape == "column")
+  {
+    RealVectorValue a, b, c;
+    get_lattice_vectors(a, b, c);
+    string dir = opt.get_option("orientation", "x");
+    double side = opt.get_option("side_length", cutoff);
+    switch (dir[0])
+    {
+
+      case 'y':
+        y = b.size() / 10.0;
+        x = z = side;
+        break;
+
+      case 'z':
+        z = c.size() / 10.0;
+        y = x = side;
+        break;
+
+      default: // 'x'
+        x = a.size() / 10.0;
+        y = z = side;
+        break;
+    }
+  }
 
   map<Specie, vector<unsigned int>> stats;
-  extract_statistics(stats, reg_ids, cutoff);
+  extract_statistics(stats, reg_ids, x, y, z);
 
   for (id_it = _IDset.begin(); id_it != id_end; ++id_it)
   {
