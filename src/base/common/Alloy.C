@@ -32,6 +32,19 @@ Alloy::do_preinit(void)
   get_database().set_section("");
   get_database().get_components(names);
 
+  // the fractions of possible sub-alloys
+  double xa = -1.0;
+  double xb = -1.0;
+
+  if (get_options().find_option("comp_A"))
+  {
+    names.resize(2);
+    names[0] = get_options()["comp_A"];
+    names[1] = get_options()["comp_B"];
+    xa = get_options().get_option("x_A", xa);
+    xb = get_options().get_option("x_B", xb);
+  }
+
   // for now, alloys can have only two components!
   assert(names.size() == 2);
 
@@ -45,8 +58,8 @@ Alloy::do_preinit(void)
   // the components may be alloys
   Database::AlloyMixing mixing = get_database().get_alloy_mixing();
   get_database().set_alloy_mixing(Database::NONE);
-  double xa = get_database().get("x_A", -1.0);
-  double xb = get_database().get("x_B", -1.0);
+  xa = get_database().get("x_A", xa);
+  xb = get_database().get("x_B", xb);
   get_database().set_alloy_mixing(mixing);
 
   {

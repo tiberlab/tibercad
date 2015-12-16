@@ -125,21 +125,49 @@ Material::create(const std::string& name, const ModelOptions& options)
 {
   Material* mat = NULL;
 
-  Database db(name, options.get_option("datafile", ""));
-  db.set_section("");
+  // first check if an alloy is specified
+  if (options.has_submodel("alloy"))
+  {
+    ModelOptions alloy_opts(options.submodels_begin("alloy")->second);
 
-  if (db.is_alloy())
-    mat = Alloy::create(name, options);
+    ModelOptions::submodel_iterator comp_it(alloy_opts.submodels_begin("component"));
+    const ModelOptions::submodel_iterator comp_end(alloy_opts.submodels_end("component"));
+
+    if (std::distance(comp_it, comp_end) != 2)
+      throw InitFailedException("Currently alloys with more than two components "
+          "cannot be defined.");
+
+    //for ( ; comp_it != comp_end; ++comp_it)
+    //{
+    //
+    //}
+
+    std::string comp_A(comp_it->second.get_name());
+    double x_A = comp_it->second.get_option("x", 0.5);
+    ++comp_it;
+    std::string comp_B(comp_it->second.get_name());
+    double x_B = comp_it->second.get_option("x", 0.5);
+
+    // we use this to disable database files
+    alloy_opts["datafile"] = alloy_opts.get_option("datafile", "none");
+
+    mat = Alloy::create(alloy_opts.get_name(), alloy_opts);
+
+  }
   else
-    mat = new Material(name, options);
+  {
+    Database db(name, options.get_option("datafile", ""));
+    db.set_section("");
+
+    if (db.is_alloy())
+      mat = Alloy::create(name, options);
+    else
+      mat = new Material(name, options);
+
+  }
 
   if (mat != NULL)
   {
-    mat->set_database(db);
-
-    Messages::debug("Created Material " + name +
-      " (using parameter file " + db.get_data_file() + ")");
-
     mat->preinit();
   }
 
@@ -151,6 +179,10 @@ Material::create(const std::string& name, const ModelOptions& options)
 void
 Material::preinit(void)
 {
+  // set the database
+  Database db(get_name(), get_options().get_option("datafile", ""));
+  set_database(db);
+
   // set the crystal structure at this point
   _structure = get_database().get("structure", "zb");
 
