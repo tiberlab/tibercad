@@ -188,8 +188,9 @@ class Optics : public SimulationInterface
 
     enum Solutions
     {
-      OpticalPower, //!< the emitted optical power
-      Recombination //!< the total recombination rate
+      OpticalPower,  //!< the emitted optical power
+      Recombination, //!< the total recombination rate
+      PeakEnergy     //!< the emission peak energy
     };
 
     void set_states(void);
@@ -213,6 +214,9 @@ class Optics : public SimulationInterface
 
     //! The total recombination/generation rate
     double _recombination;
+
+    //! The emission peak energy
+    double _peak_energy;
 
 };
 
