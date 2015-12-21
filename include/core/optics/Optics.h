@@ -204,6 +204,10 @@ class Optics : public SimulationInterface
 
     void check_states(void);
 
+    double lorentzian(double arg, double fwhm);
+
+    double gaussian(double arg, double fwhm);
+
     //! The total emitted/absorbed power
     double _total_power;
 
@@ -232,5 +236,20 @@ void Optics::assemble(const ModelOptions& opts)
 { 
    do_assemble(opts);
 }
+
+
+inline
+double Optics::lorentzian(double arg, double fwhm)
+{
+  return (0.5*fwhm / (arg * arg + 0.25 * fwhm * fwhm) / M_PI);
+}
+
+inline
+double Optics::gaussian(double arg, double fwhm)
+{
+  double s = fwhm / 2.35482; // 2*sqrt(2*ln(2))
+  return (0.5 * M_SQRT1_2 * M_2_SQRTPI / s * exp(-0.5 * arg*arg / (s * s)));
+}
+
 
 #endif // _OPTICS_H_

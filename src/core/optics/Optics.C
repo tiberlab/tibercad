@@ -812,8 +812,13 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
 
         double En =  Energy.point(el)(0); //elem->centroid()(0);
 
-        double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)
-                            + (0.5*Gamma)*(0.5*Gamma)) / M_PI * Hartree;
+        double Lorenzian = 0;
+        if (get_option("line_shape", "lorentzian") == "gaussian")
+          Lorenzian = gaussian(trans_energy - En, Gamma) * Hartree;
+        else
+          Lorenzian = lorentzian(trans_energy - En, Gamma) * Hartree;
+        //double Lorenzian =  0.5*Gamma/( ( trans_energy - En) *  ( trans_energy - En)
+        //                    + (0.5*Gamma)*(0.5*Gamma)) / M_PI * Hartree;
 
         spectrum[el] += power * Lorenzian;
         spectrum[el + n_energy] += stimulated * Lorenzian;
