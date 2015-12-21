@@ -52,6 +52,7 @@ Optics::do_setup_solution_variables(void)
 
   declare_solution(OpticalPower, REAL, GLOBAL, "W" + unit);
   declare_solution(Recombination, REAL, GLOBAL, "1/s" + unit);
+  declare_solution(PeakEnergy, REAL, GLOBAL, "eV");
 }
 
 
@@ -73,6 +74,10 @@ Optics::get_solution_secure(map<ID, vector<double> >& values)
 
       case Recombination:
         values[id] = vector<double>(1, _recombination);
+        break;
+
+      case PeakEnergy:
+        values[id] = vector<double>(1, _peak_energy);
         break;
 
     }
@@ -617,6 +622,8 @@ void Optics::do_solve()
   }
   */
 
+  double peak = 0;
+
   // the last node
   size_t N = _energy_mesh->n_nodes() - 1;
 
@@ -626,6 +633,12 @@ void Optics::do_solve()
     double dP = _opt.dE * (_spectrum_x[i] + _spectrum_y[i] + _spectrum_z[i]);
     _total_power += dP;
     _recombination += dP / _energy_mesh->point(i)(0);
+
+    if (dP > peak)
+    {
+      peak = dP;
+      _peak_energy = _energy_mesh->point(i)(0);
+    }
   }
   double dP0 = 0.5 * _opt.dE * (_spectrum_x[0] + _spectrum_y[0] + _spectrum_z[0]);
   double dPN = 0.5 * _opt.dE * (_spectrum_x[N] + _spectrum_y[N] + _spectrum_z[N]);
@@ -662,10 +675,12 @@ void Optics::do_solve()
 
   std::string type = get_option("type", "emission");
   ostringstream os;
-  os << "Total " << ((type == "emission") ? "emitted" : "absorbed") << " power: "
+  os << "Total emitted power     : "
       << _total_power << " " << get_solution_descriptor(OpticalPower).units() << "\n";
-  os << "Total " << ((type == "emission") ? "recombination" : "generation") << " rate: "
-      << _recombination << " " << get_solution_descriptor(Recombination).units();
+  os << "Total recombination rate: "
+      << _recombination << " " << get_solution_descriptor(Recombination).units() << "\n";
+  os << "Peak emission energy    : "
+      << _peak_energy << " eV";
   Messages::info(os.str());
 
 
