@@ -201,6 +201,7 @@ BandProperties::get_thermal_velocity(double temp) const
   const double fac = 3 * Constants::e / Constants::me;
   double vth = fac * temp / get_effective_mass();
   //std::cout<<"effective_mass = "<<get_effective_mass()<<std::endl;
+  //std::cout<<"effective_mass = "<<_effective_mass<<std::endl;
   return (100.0 * std::sqrt(vth));
 }
 

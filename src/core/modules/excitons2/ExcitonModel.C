@@ -48,7 +48,8 @@ ExcitonModel::do_recombination()
 }
 
 
-double ExcitonModel::get_generation_rate() {
+double ExcitonModel::get_generation_rate() 
+{
   std::vector<double> G(1);
   _dd_sim->get_solution(get_element(), _gen_model, G,
       std::vector<Point>(1, get_coordinates()));

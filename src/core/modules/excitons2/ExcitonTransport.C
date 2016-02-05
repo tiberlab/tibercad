@@ -478,7 +478,7 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
   // scaling for recombination rates
   double R0 = C0 / scaling.get_time_scaling();
 
-  cerr << "C0 = " << C0 << endl;
+  //cerr << "C0 = " << C0 << endl;
 
 
   const DofMap& dof_map = system.get_dof_map();
