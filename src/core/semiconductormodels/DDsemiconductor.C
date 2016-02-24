@@ -711,12 +711,11 @@ void DDsemiconductor::do_calculate_valence_band_extremum(void)
 
       if (imass_DOS <= 0.0)
       {
-      //  throw SolverException("Negative valence band DOS mass")
         Messages::warning("Negative valence band DOS mass, setting to 1.0");
 	std::cout<<"band "<<ind<<std::endl;
 	std::cout<<"Mass Tensor: "<<std::endl;
-	std::cout<<imass(1,1)<<" "<<imass(1,2)<<" "<<imass(1,3)<<std::endl;
-	std::cout<<imass(2,1)<<" "<<imass(2,2)<<" "<<imass(2,3)<<std::endl;
+	std::cout<<imass(1,1)<<" "<<imass(2,1)<<" "<<imass(3,1)<<std::endl;
+	std::cout<<imass(2,1)<<" "<<imass(2,2)<<" "<<imass(3,2)<<std::endl;
 	std::cout<<imass(3,1)<<" "<<imass(3,2)<<" "<<imass(3,3)<<std::endl;
 
         imass_DOS = 1.0;
