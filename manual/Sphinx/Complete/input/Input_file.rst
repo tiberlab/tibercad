@@ -333,9 +333,9 @@ models and parameters for this module.
 Examples of *physical models* are, for the **driftdiffusion**  module, **recombination**, **electron mobility**, **trap**, **polarization** 
 and so on. A particular model is the **Boundary** model, which has an alias **Contact**
 for driftdiffusion module, as  we will  see in  the  following.
-The declaration of these models obey to the following syntax:
+The declaration of these models obey to the following syntax: 
 
-    *model_keyword* type_specifier
+  *model_keyword* type_specifier
     
         <block>
 
@@ -345,24 +345,86 @@ for that model and the  following block contains the options for the model. For 
 
   trap acceptor
     {
-     region = buffer
+     regions = buffer
      Nt = 7e16
      Et = 0.5
      reference = cb
     }
 
 An alternative multiple declaration is possible if no options, other than default, are
-declared:
+declared: 
 
     *model_keyword* (type specifier1, type specifier2,...)
 
-  ``recombination (srh, direct, auger) { }``
+For example: ::
+
+  recombination (srh, direct, auger) { }
 
 In this example, several recombination models are defined (srh, auger, direct) each one
 with default parameters.
+
+A very useful feature is the possibility to **restrict** the application of a given physical model to one or more regions of the simulated device.
+This can be obtained with the keyword ``regions``.
+For example: ::
+
+  regions = (buffer,substrate)
+
+where *buffer* and *substrate* are valid regions of the device.
+In the following example ::
+
+  valence_band 
+    {
+
+      regions = QWell
+          
+      density_of_states bulk
+
+      {
+
+        dos_mass = 0.80
+             
+      }
+    }
+
+the ``bulk DOS`` model of ``band properties`` for the valence band is restricted to the region named ``QWell`` ::
+
+  regions = QWell
+
+It is also possible to use the keyword ``regions`` to **exclude** one or more regions from the defined physical model, simply using a minus sign before the name of the region(s): ::
+
+  band_properties 
+    {
+
+      regions = -QWell
+          
+      density_of_states bulk_kp
+
+      {
+
+         strain_simulation = strain
+
+      }
+    }
+
+
+
+Here the region named ``QWell`` is excluded from ``bulk kp DOS`` model. ::
+
+  regions = -QWell  
+
+
+Thus this model will be applied to all the device, **except** the region ``QWell``.
+
 For a detailed description of the models, please refer to the reference guide.
 
-Two special modules are  the ``sweep`` and the ``selfconsistent`` modules
+Two special modules are  the ``sweep`` and the ``selfconsistent`` modules, which will be described in the following sections.
+
+
+
+
+
+
+
 
 Module sweep
 ^^^^^^^^^^^^^^^^^^^^^^^^

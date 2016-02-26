@@ -165,13 +165,40 @@ Band edge energies and the DOS mass are taken from the database, or can be provi
 In the current version, if band  parameters have to be given from the input file, it is necessary to use the ``conduction_band`` and ``valence_band`` blocks instead of ``band_properties``.
 In the ``density_of_states`` subblock, one can then give the band edge and the DOS mass the keywords ``level``, and ``dos_mass``, respectively.
 A degeneracy can be specified with the ``degeneracy`` keyword.
+The material whose band parameters are given in this way is defined through the keyword 
+``regions``, which is in general used in the input file to restrict a model to one or more regions of the device. Thus the entry ::
+
+  regions = QWell
+
+means that the following parameters refer to the material contained in region ``QWell``.
+
+For example: ::
+
+  valence_band 
+    {
+
+      regions = QWell
+          
+      density_of_states bulk
+
+      {
+
+        dos_mass = 0.80
+             
+      }
+    }
+
+
+Here, the **Bulk DOS** model is chosen for the *valence band* parameters, only for the case of the region  named *QWell*. The band parameter given is the DOS effective mass (``dos_mass = 0.80``).
+ 
+
 
 Bulk kp DOS
 ............................................
 This model for bulk band parameters can be chosen by specifying ``density_of_states bulk_kp``. It calculates the band edge energies and masses from bulk kp theory, including Pikus-Bir strain corrections.
 To include strain corrections, the keyword ``strain_simulation`` has to be used, providing the name of the module instance which calculates strain.
 In the current version it is not possible to provide kp parameters from the input file.
-For example ::
+For example: ::
 
   band_properties 
     {
@@ -181,6 +208,69 @@ For example ::
       }
     }
 
+defines the ``bulk kp`` model for all the materials of the device.
+
+It may happen that one would like  to apply the ``bulk kp`` model to all the device, **except** one or more regions, where some band parameters should be provided directly from input file.
+This can be obtained with the following syntax: ::
+
+  band_properties 
+    {
+
+      regions = -QWell
+          
+      density_of_states bulk_kp
+
+      {
+
+         strain_simulation = strain
+
+      }
+    }
+
+
+
+   conduction_band
+    {
+
+      regions = QWell
+          
+      density_of_states bulk_kp
+
+      {
+
+        strain_simulation = strain
+
+      }
+    }
+
+
+
+    valence_band 
+    {
+
+      regions = QWell
+          
+      density_of_states bulk
+
+      {
+
+        dos_mass = 0.80
+             
+      }
+    }
+
+
+In this example the ``bulk kp`` model is applied to all the regions (first block), **except** the region *QWell*. This is expressed by the syntax ::
+
+  regions = -QWell
+
+a minus sign before the name of the region(s) excludes this (or those) from the model.
+
+Then, in the second block, it is stated that the ``bulk kp`` model is to be applied to the region *QWell*, but only for the case of *conduction band*.
+Finally, in the third block, the *bulk* DOS model is assigned to the *valence band* of the region *QWell* and a value of *dos mass* is given in input (``dos_mass = 0.80``). 
+To summarize, in this way the *bulk kp* model is applied to all the regions of the device, except for one (*QWell*), where the *bulk kp* is used for CB, while the bulk model, with a user defined value of *dos mass*, is used for the material in the regione named *QWell*.
+
+  
 
 Quantum DOS
 ............................................
