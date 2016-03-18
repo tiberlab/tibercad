@@ -13,6 +13,7 @@
 #include "RotatedCrystal.h"
 #include "Atom.h"
 #include "BulkCrystal.h"
+#include <plane.h>
 
 #include <stdio.h>
 #include <cmath>
@@ -136,10 +137,10 @@ AtomisticGenerator::init_commons()
   //-----------------------------------------------------------------------
   
   //A translation vector can be specified to modify supercell alignment
-  if ( _as->get_options().find_option("cell_translation") )
+  if ( _as->get_options().find_option("conventional_cell_shift") )
   {
     std::vector<double> translation(3, 0.0);
-   _as->get_options().get_option("cell_translation", translation);
+   _as->get_options().get_option("conventional_cell_shift", translation);
    _cell_translation(1) = translation[0]; 
    _cell_translation(2) = translation[1]; 
    _cell_translation(3) = translation[2];
@@ -147,9 +148,7 @@ AtomisticGenerator::init_commons()
        abs(_cell_translation(2)) > 1.0 || 
        abs(_cell_translation(3)) > 1.0 )
       throw InitFailedException("cell_translation in relative coordinates must be < 1.0");
-
   }
-
 
   if ( _as->get_options().find_option("translation") )
   {
@@ -606,7 +605,6 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   _super_basis.reserve(max_number_of_cells * _conv_lattice.size() * basis.size());
   
   Tensor1 origin(_local_origin +  _translation);
-  cout<<origin<<endl;
 
    cout<<"(debug) basis size: "<<basis.size()<<endl;
    cout<<"(debug) conv_latt size: "<<_conv_lattice.size()<<endl;
@@ -623,47 +621,6 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
         tmp_conv(1) = (i * _conv_vect(1,1)) + (j * _conv_vect(1,2)) + (l * _conv_vect(1,3));
         tmp_conv(2) = (i * _conv_vect(2,1)) + (j * _conv_vect(2,2)) + (l * _conv_vect(2,3));
         tmp_conv(3) = (i * _conv_vect(3,1)) + (j * _conv_vect(3,2)) + (l * _conv_vect(3,3));
-  
-        /*
-        basis_iterator = _conv_basis.begin();
-
-        do
-        {
-           basis_atom = (*basis_iterator);
-           basis_atom.set_position( origin + tmp_conv + 
-                (*basis_iterator).get_ttype_position() );
-            _super_basis.push_back(basis_atom);
-
-          ++basis_iterator;
-        }
-        while(basis_iterator != _conv_basis.end());
-
-        /*
-        do
-        {
-          //Assign lattice point position
-          lattice_point(1) = (*conv_iterator)(1) + tmp_conv(1); 
-          lattice_point(2) = (*conv_iterator)(2) + tmp_conv(2);
-          lattice_point(3) = (*conv_iterator)(3) + tmp_conv(3);
-
-          // add the basis to lattice point
-          basis_iterator = basis.begin();
-          do
-          {
-            basis_atom = (*basis_iterator);
-            basis_atom.set_position ( origin + lattice_point +
-                         (*basis_iterator).get_ttype_position() );
-            _super_basis.push_back(basis_atom);
-
-            ++basis_iterator;
-          }
-          while(basis_iterator != basis.end());
-
-          ++conv_iterator;
-        }
-        while(conv_iterator != _conv_lattice.end());
-        */
-   
         
         basis_iterator = _conv_basis.begin();
 
@@ -694,10 +651,23 @@ void AtomisticGenerator::make_conv_cell()
   //Calculate conventional cell vectors in the directions given by cut planes (conventional growth cell)
   Tensor1 vec_x(0),vec_y(0),vec_z(0);
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
-  
-  _conv_prim = inv(rotated_prim_vec);
 
+  // In general:
+  // vj = e1 * _conv_prim(1,j) + e2 * _conv_prim(2,j) + e3 * _conv_prim(3,j)   
+  //
+  // for e1, e2, e3 rotated primitive vectors:
+  // (|  |  | )(n11 n12 n13) (a  0  0)
+  // (e1 e2 e3)(n21 n22 n23)=(0  b  0) 
+  // (|  |  | )(n31 n32 n33) (0  0  c)
+  // 
+  // the matrik nij is computed first by computing  U = e^-1  
+  // then the columns of U are scaled to integers 
+  //
+  _conv_prim = inv(rotated_prim_vec);
   scale_to_int(_conv_prim);
+ 
+  // now the matrix nij = _conv_prim
+  // so the orthogonal cell vectors are 
   _conv_vect = rotated_prim_vec * _conv_prim;
 
   //Note: we don't know if the vectors conv_vect are positively or
@@ -716,11 +686,11 @@ void AtomisticGenerator::make_conv_cell()
      }
   }
 
-  //Check orthogonality of the final conventional vectors
   vec_x(1) = _conv_vect(1,1); vec_x(2) = _conv_vect(2,1); vec_x(3) = _conv_vect(3,1);
   vec_y(1) = _conv_vect(1,2); vec_y(2) = _conv_vect(2,2); vec_y(3) = _conv_vect(3,2);
   vec_z(1) = _conv_vect(1,3); vec_z(2) = _conv_vect(2,3); vec_z(3) = _conv_vect(3,3);
-
+  
+  //Check orthogonality of the final conventional vectors
   assert(((vec_x * vec_y) < 1e-10) && 
       ((vec_x * vec_z) < 1e-10) && 
       ((vec_y * vec_z) < 1e-10) &&
@@ -728,14 +698,133 @@ void AtomisticGenerator::make_conv_cell()
     (norm(vec_y) > 1e-10) &&
     (norm(vec_z) > 1e-10)); 
 
+  // make a right-hended basis (for later use in fold to cell) 
+  if (det(_conv_vect)<0)
+  {
+     //swap vec_y <-> vec_z
+     _conv_vect(1,2) = vec_z(1); _conv_vect(2,2) = vec_z(2); _conv_vect(3,2) = vec_z(3); 
+     _conv_vect(1,3) = vec_y(1); _conv_vect(2,3) = vec_y(2); _conv_vect(3,3) = vec_y(3); 
+  } 
+
 };
 
+
+// -------------------------------------------------------------------------------
+// Minimal conv_cell for 1D heterostructures.
+// (|  |  | )(n11 n12 n13) (a |  | )
+// (e1 e2 e3)(n21 n22 n23)=(0 v1 v2) 
+// (|  |  | )(n31 n32 n33) (0 |  | )
+// 
+//  v1 = Sum_k{ek*nk1};  
+//  v2 = Sum_k{ek*nk2};  
+//
+//  We minimize the area product: A = |v1 x v2|
+//
+//  A = | sum_kl{(ek x el) nk2 nl3} |
+//  with constrains:
+//  v3*y = 0  v3*z = 0 => fix all numbers nk1
+//  
+//  v1*x = 0  v2*x = 0
+//  x*ek = ck : v1*x=0 =>  n12 = -(c2 n22 + c3 n32)/c1  
+//  x*ek = ck : v2*x=0 =>  n13 = -(c2 n23 + c3 n33)/c1  
+//  if c1==0 ?? 
+//
+//
+void AtomisticGenerator::minimal_conv_cell()
+{
+  Tensor1 v1, v2, vF, prim_pos1, prim_pos2;
+  double c[4], F, Fmin, AngMax, Ang, F1, F2;
+  int i,j, k,l, ilow,jlow,klow,llow, lower_2, lower_3, upper_2, upper_3;
+  Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
+
+  for (i = 1; i<=3; i++)
+    c[i] = rotated_prim_vec(1,i);
+
+  //Define a box including conventional cell (this should be the maximal area cell)
+  Point p(_conv_vect(1,1), _conv_vect(2,2), _conv_vect(3,3));
+  Tensor1 vect(p);  
+  Tensor1 indxs = inv(rotated_prim_vec) * vect;
+  
+  lower_2 = int(min(indxs(2), min(_conv_prim(2,1), min(_conv_prim(2,2),_conv_prim(2,3)))));
+  upper_2 = int(max(indxs(2), max(_conv_prim(2,1), max(_conv_prim(2,2),_conv_prim(2,3)))));
+  lower_3 = int(min(indxs(3), min(_conv_prim(3,1), min(_conv_prim(3,2),_conv_prim(3,3)))));
+  upper_3 = int(max(indxs(3), max(_conv_prim(3,1), max(_conv_prim(3,2),_conv_prim(3,3)))));
+ 
+  lower_2 = int(min(0, lower_2));
+  upper_2 = int(max(0, upper_2));
+  lower_3 = int(min(0, lower_3));
+  upper_3 = int(max(0, upper_3));
+  // ----------------------------------------------------------------------------
+  
+  Fmin = 1e6;
+  AngMax = 0.0; 
+
+  for (int i = lower_2 ; i <= upper_2  ; i++)
+  {
+    for (int j = lower_3 ; j <= upper_3  ; j++)
+    {
+      prim_pos1(1) = double(-c[2]*i-c[3]*j)/c[1]; 
+      prim_pos1(2) = double(i); 
+      prim_pos1(3) = double(j);
+      v1 = rotated_prim_vec * prim_pos1;
+      F1 = norm(v1);
+
+      for (int k = lower_2 ; k <= upper_2  ; k++)
+      {
+        for (int l = lower_3 ; l <= upper_3  ; l++)
+        {
+          prim_pos2(1) = double(-c[2]*k-c[3]*l)/c[1]; 
+          prim_pos2(2) = double(k); 
+          prim_pos2(3) = double(l); 
+          
+          v2 = rotated_prim_vec * prim_pos2;
+          F2 = norm(v2);
+          vF = v1^v2;
+          F = norm(vF);
+          Ang = asin(F/(F1*F2));
+
+          if (vF(1)>0)
+          {
+            if (F<=Fmin) Fmin = F;
+            if (F<=Fmin && Ang>AngMax)
+            {
+              ilow=i; jlow=j;klow=k;llow=l;
+              AngMax = Ang;
+              Fmin = F;
+            }
+          }
+          else
+          {
+            continue;
+          }
+        }
+      }    
+      
+    }
+  }
+
+  prim_pos1(1) = double(-c[2]*ilow-c[3]*jlow)/c[1];
+  prim_pos1(2) = double(ilow); 
+  prim_pos1(3) = double(jlow); 
+  prim_pos2(1) = double(-c[2]*klow-c[3]*llow)/c[1];
+  prim_pos2(2) = double(klow); 
+  prim_pos2(3) = double(llow); 
+  
+  v1 = rotated_prim_vec * prim_pos1;
+  v2 = rotated_prim_vec * prim_pos2;
+
+  _conv_vect(1,2) = v1(1); _conv_vect(2,2) = v1(2); _conv_vect(3,2) = v1(3); 
+  _conv_vect(1,3) = v2(1); _conv_vect(2,3) = v2(2); _conv_vect(3,3) = v2(3); 
+
+  cout<<"conv_vect"<<endl;
+  cout<<_conv_vect<<endl;
+}
 
 void AtomisticGenerator::make_conv_lattice()
 {
   //Fill the conventional growth cell with atomic basis
-  int lower_1, lower_2, lower_3, upper_1, upper_2, upper_3, i;
-  Tensor1 prim_position, tmp_check, tmp_position;
+  int lower[4],upper[4],i;
+  Tensor1 prim_position, tmp_position;
   Tensor2Gen rotated_prim_vec = _bulk->get_rotated_prim_vec();
 
   /* IMPORTANT NOTE:
@@ -758,45 +847,40 @@ void AtomisticGenerator::make_conv_lattice()
    * sono inclusi. 
    */
 
-  Point p(_conv_vect(1,1), _conv_vect(2,2), _conv_vect(3,3));
-  Tensor1 vect(p);  
+  Tensor1 vect;
+  vect(1) = _conv_vect(1,1)+_conv_vect(1,2)+_conv_vect(1,3);
+  vect(2) = _conv_vect(2,1)+_conv_vect(2,2)+_conv_vect(2,3);
+  vect(3) = _conv_vect(3,1)+_conv_vect(3,2)+_conv_vect(3,3);
   Tensor1 indxs = inv(rotated_prim_vec) * vect;
-  
+
+  Point a1,a2,a3,orig(-tol,-tol,-tol);
+  a1(0) = _conv_vect(1,1); a1(1) = _conv_vect(2,1); a1(2) = _conv_vect(3,1);
+  a2(0) = _conv_vect(1,2); a2(1) = _conv_vect(2,2); a2(2) = _conv_vect(3,2);
+  a3(0) = _conv_vect(1,3); a3(1) = _conv_vect(2,3); a3(2) = _conv_vect(3,3);
+
+  cout<<a1<<endl;
+  cout<<a2<<endl;
+  cout<<a3<<endl;
   //Define a box including conventional cell
-  
-  lower_1 = int(min(indxs(1), min(_conv_prim(1,1), min(_conv_prim(1,2),_conv_prim(1,3)))));
-  upper_1 = int(max(indxs(1), max(_conv_prim(1,1), max(_conv_prim(1,2),_conv_prim(1,3)))));
-  lower_2 = int(min(indxs(2), min(_conv_prim(2,1), min(_conv_prim(2,2),_conv_prim(2,3)))));
-  upper_2 = int(max(indxs(2), max(_conv_prim(2,1), max(_conv_prim(2,2),_conv_prim(2,3)))));
-  lower_3 = int(min(indxs(3), min(_conv_prim(3,1), min(_conv_prim(3,2),_conv_prim(3,3)))));
-  upper_3 = int(max(indxs(3), max(_conv_prim(3,1), max(_conv_prim(3,2),_conv_prim(3,3)))));
  
-  lower_1 = int(min(0, lower_1));
-  upper_1 = int(max(0, upper_1));
-  lower_2 = int(min(0, lower_2));
-  upper_2 = int(max(0, upper_2));
-  lower_3 = int(min(0, lower_3));
-  upper_3 = int(max(0, upper_3));
+  for (i=1; i<=3; i++)
+  {
+    double vals[]={0.0, indxs(i), _conv_prim(i,1), _conv_prim(i,2), _conv_prim(i,3)};
+    lower[i] = int( *min_element(vals, vals+5) );
+    upper[i] = int( *max_element(vals, vals+5) );
+  }
   
-  for (int i = lower_1 ; i <= upper_1  ; i++){
-    for (int j = lower_2 ; j <= upper_2  ; j++){
-      for (int l = lower_3 ; l <= upper_3  ; l++){
+  for (int i = lower[1]; i <= upper[1]; i++){
+    for (int j = lower[2]; j <= upper[2]; j++){
+      for (int l = lower[3]; l <= upper[3]; l++){
 
         prim_position(1) = double(i); 
         prim_position(2) = double(j); 
         prim_position(3) = double(l);
-        bool check_boundary;
-        tmp_check = inv(_conv_prim) * prim_position;
-        check_boundary= ((tmp_check(1) > -tol) && (tmp_check(1) < (1.0 - tol)))&&
-                        ((tmp_check(2) > -tol) && (tmp_check(2) < (1.0 - tol))) &&
-                        ((tmp_check(3) > -tol) && (tmp_check(3) < (1.0 - tol)));
+        tmp_position = rotated_prim_vec * prim_position;
+        Point p(tmp_position(1), tmp_position(2), tmp_position(3));
 
-        check_boundary= ((tmp_check(1) > -tol) && (tmp_check(1) < (1.0 - tol)))&&
-                        ((tmp_check(2) > -tol) && (tmp_check(2) < (1.0 - tol))) &&
-                        ((tmp_check(3) > -tol) && (tmp_check(3) < (1.0 - tol)));
-
-        if (check_boundary){
-           tmp_position = rotated_prim_vec * prim_position;
+        if (fold_in_cell(p,orig,a1,a2,a3,false)){
            _conv_lattice.push_back(tmp_position);
         }
 
@@ -805,7 +889,7 @@ void AtomisticGenerator::make_conv_lattice()
   }
 
 }
- 
+
 void AtomisticGenerator::move_origin()
 {
   // Now we place the basis and translate the origin of the conv_cell in order to have all atoms
@@ -849,7 +933,11 @@ void AtomisticGenerator::make_conv_basis()
   std::vector<Atom>::iterator basis_iterator;
   _conv_basis.reserve(_conv_lattice.size() * basis.size() );
   Atom basis_atom;
- 
+  Point a1, a2, a3, origP(0.0);
+  a1(0) = _conv_vect(1,1); a1(1) = _conv_vect(2,1); a1(2) = _conv_vect(3,1);
+  a2(0) = _conv_vect(1,2); a2(1) = _conv_vect(2,2); a2(2) = _conv_vect(3,2);
+  a3(0) = _conv_vect(1,3); a3(1) = _conv_vect(2,3); a3(2) = _conv_vect(3,3);
+
   do
   {
 
@@ -860,19 +948,20 @@ void AtomisticGenerator::make_conv_basis()
       basis_atom = (*basis_iterator);
       atm_coords = _local_origin + *conv_iterator +
                  basis_atom.get_ttype_position();
+      basis_atom.set_position(atm_coords);
 
       // fold atom within the conventional cell
-      if (atm_coords(1)<0.0)             atm_coords(1) += _conv_vect(1,1);
-      if (atm_coords(1)>_conv_vect(1,1)) atm_coords(1) -= _conv_vect(1,1);
+      fold_in_cell(basis_atom, origP, a1, a2, a3);
+      //if (atm_coords(1)<0.0)             atm_coords(1) += _conv_vect(1,1);
+      //if (atm_coords(1)>_conv_vect(1,1)) atm_coords(1) -= _conv_vect(1,1);
 
-      if (atm_coords(2)<0.0)             atm_coords(2) += _conv_vect(2,2);
-      if (atm_coords(2)>_conv_vect(2,2)) atm_coords(2) -= _conv_vect(2,2);
+      //if (atm_coords(2)<0.0)             atm_coords(2) += _conv_vect(2,2);
+      //if (atm_coords(2)>_conv_vect(2,2)) atm_coords(2) -= _conv_vect(2,2);
 
-      if (atm_coords(3)<0.0)             atm_coords(3) += _conv_vect(3,3);
-      if (atm_coords(3)>_conv_vect(3,3)) atm_coords(3) -= _conv_vect(3,3);
+      //if (atm_coords(3)<0.0)             atm_coords(3) += _conv_vect(3,3);
+      //if (atm_coords(3)>_conv_vect(3,3)) atm_coords(3) -= _conv_vect(3,3);
       // --------------------------------------
       
-      basis_atom.set_position(atm_coords);
       _conv_basis.push_back(basis_atom);
       ++basis_iterator;
 
@@ -883,6 +972,60 @@ void AtomisticGenerator::make_conv_basis()
   }
   while(conv_iterator != _conv_lattice.end());
 
+}
+
+
+bool AtomisticGenerator::fold_in_cell(Point& position,
+    const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold)
+{
+  bool is_inside=true;
+  bool pfold;
+  // The planes vectors are oriented to point outside the cell
+  // NOTE: below_surface() includes on the surface
+  Point origin(orig);
+
+  Plane p(origin, origin + a2, origin + a1);
+  pfold = p.below_surface(position);
+  if (!pfold && fold) position += a3;
+  is_inside &= pfold;
+
+  p.create_from_three_points(origin, origin + a3, origin + a2);
+  pfold = p.below_surface(position);
+  if (!pfold && fold) position += a1;
+  is_inside &= pfold;
+
+  p.create_from_three_points(origin, origin + a1, origin + a3);
+  pfold = p.below_surface(position);
+  if (!pfold && fold) position += a2;
+  is_inside &= pfold;
+
+  Point corner(origin + a1 + a2 + a3);
+
+  p.create_from_three_points(corner, corner + a1, corner + a2);
+  pfold = p.below_surface(position);
+  if (!pfold && fold) position -= a3;
+  is_inside &= pfold;
+
+  p.create_from_three_points(corner, corner + a2, corner + a3);
+  pfold = p.below_surface(position);
+  if (!pfold && fold) position -= a1;
+  is_inside &= pfold;
+
+  p.create_from_three_points(corner, corner + a3, corner + a1);
+  pfold = p.below_surface(position);
+  if (!pfold && fold) position -= a2;
+  is_inside &= pfold;
+
+  return is_inside;
+}
+
+bool AtomisticGenerator::fold_in_cell(Atom& atom,
+    const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold)
+{
+  Point p = atom.get_position();
+  bool is_in = fold_in_cell(p, orig, a1, a2, a3, fold);
+  if (!is_in && fold) atom.set_position(p);
+  return is_in;
 }
 
 

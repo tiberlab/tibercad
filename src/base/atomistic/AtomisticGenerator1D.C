@@ -39,6 +39,10 @@ AtomisticGenerator1D::build()
 
   //Common building operations
   make_conv_cell();
+  if (_as->get_options().get_option("minimal_cell",false))
+  {
+    minimal_conv_cell();
+  }
   make_conv_lattice();
   move_origin();
   make_conv_basis();

@@ -29,7 +29,6 @@ class TensorGrid
      */
     TensorGrid(const Point& p0, const Point& p1, int nk = 50, int nl = 50, int nm = 50);
 
-
     //! Setup a tensor grid
     /*!
      * \param p0 lower left corner
@@ -85,6 +84,8 @@ class TensorGrid
     //! Get the center point of an element \c i
     Point get_centroid(unsigned int i) const;
 
+    void get_bounding_box(Point& p0, Point& p1) const;
+
 
   private:
 
@@ -129,6 +130,14 @@ TensorGrid::TensorGrid(const Point& p0, const Point& p1, int nk, int nl, int nm)
 }
 
 
+inline
+void
+TensorGrid::get_bounding_box(Point& p0, Point& p1) const 
+{
+  p0 = _p0;
+  p1 = _p1;
+}
+ 
 
 inline
 void

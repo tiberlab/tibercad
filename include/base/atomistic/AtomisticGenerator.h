@@ -167,6 +167,8 @@ protected:
   //! Setting the conventional lattice
   void make_conv_lattice();
 
+  void minimal_conv_cell();
+
   //! Setting the conventional lattice + basis
   void make_conv_basis();
 
@@ -210,6 +212,10 @@ protected:
   //Same work with 3 vectors composing a tensor2Gen
   static void scale_to_int(Tensor2Gen& a);
 
+  //fold atoms into conventional cell
+  bool fold_in_cell(Atom& atom, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
+  //fold point into conventional cell
+  bool fold_in_cell(Point& p, const Point& orig, const Point& a1, const Point& a2, const Point& a3, bool fold=true);
 
 private:
 
