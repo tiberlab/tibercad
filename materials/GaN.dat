@@ -72,7 +72,7 @@ permittivity = (10.01, 10.01)
 
 
 optical_epsilon_x = 7.3
-optical_epsilon_z = 7.3
+optical_epsilon_c = 7.3
 
 
 # stiffness data [6]

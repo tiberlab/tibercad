@@ -762,17 +762,28 @@ sub compare_data_vectors($$$) {
   my $n = $#data1;
 
   if ($n != $#data2) { return 1 };
-  my $difference = 0;
+  my $maxdiff = 0;
   for (my $i = 0; $i <= $n; $i++) {
-    my $diff = $data1[$i] - $data2[$i];
-    if (abs($diff) > ($prec * abs($data1[$i]) + $eps)) {
-      #print "$data1[$i] $data2[$i] $diff\n";
-      $difference = 1;
-      last;
+    my $diff = 0;
+    my $comp = 0;
+    #if (abs($data1[$i]) != 0)
+    #{
+    #  $diff = abs($data1[$i] - $data2[$i])/abs($data1[$i]);
+    #  $comp = $prec;
+    #} 
+    #else 
+    {
+      $diff = abs($data1[$i] - $data2[$i]);
+      $comp = ($prec * abs($data1[$i]) + $eps);
+    }
+    if ($diff > $comp) {
+      if ($diff > $maxdiff) {
+         $maxdiff = $diff;
+      }
     }
   }
 
-  return $difference;
+  return $maxdiff;
 }
 
 
@@ -905,7 +916,7 @@ sub print_result($) {
   if ($_[0] == 0) {
     print(color("green"), "ok\n", color("reset"));
   } else {
-    print(color("red"),  "failed\n", color("reset"));
+    print(color("red"),  "failed: max|x - x_ref| = $_[0]\n", color("reset"));
   }
 }
 

@@ -57,6 +57,9 @@ class Database
     //! Get the system wide default search path
     static std::string& get_default_search_path(void);
 
+    //! Check the data file
+    static bool check_data_file(const std::string& name);
+
     //! Set the material
     /*!
      * \param material the name of the material
@@ -234,9 +237,6 @@ class Database
     //! The component fractions
     std::vector<double> _comp_fractions;
 
-
-    //! Check the data file
-    bool check_data_file(const std::string& name) const TBDLLOCAL;
 
     //! Find a file in the search path
     const std::string find_file(const std::string& file) const TBDLLOCAL;

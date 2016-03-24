@@ -10,7 +10,8 @@ ARCH = $(shell uname -m)
 
 CXXFLAGS = -fPIC -I$(MPIINCL) -I . 
 
-UPTREV=HEAD
+UPTREV=HEAD 
+#UPTREV=257
 UPTREPO=https://afrodite.eln.uniroma2.it/svn/uptight/branches/tibercad/src
 
 target := libuptight$(shared_libext)

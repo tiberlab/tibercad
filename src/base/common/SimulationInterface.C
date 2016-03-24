@@ -2858,7 +2858,7 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
       {     
         unsigned int iatm = cells[c1][i];
 
-        if (structure[iatm].get_specie() == Specie::H ) continue;
+        if (structure[iatm].get_elem() == NULL ) continue;
 
         Point delta_r(structure[iatm].get_position() - pc);
         

@@ -86,53 +86,58 @@ void
 Database::set_material(const string& material,
     const string& datafile)
 {
-  if (material.find("%", 0) != string::npos)
-  {
-    // this is an interface!
+
+  _material = material;
+
+  if (_material.find("%", 0) != string::npos)
     _is_interface = true;
-  }
+  
 
   string df(datafile);
   if (df.size() == 0)
+  {
+    
     df = find_file(material + ".dat");
+
+    // we would like to check different filenames 
+    // e.g. for alloys InGaP = GaInP
+    // So we try to invert the first two atom species
+    if (!check_data_file(df) && !is_interface())
+    {
+      std::vector<std::string> elems;
+      Utils::camel_tokenize(material, elems);
+      if (elems.size() >= 2)
+      {
+        ostringstream mat;
+        mat << elems[1]<<elems[0];
+
+        for (unsigned int k=2; k< elems.size(); k++)  
+          mat << elems[k];
+        
+        df = find_file(mat.str() + ".dat");
+      }
+
+    }
+      
+  }
   else
     df = find_file(df);
 
-
-  if (df.empty())
+  if (!check_data_file(df) && !is_interface() )
   {
-    string msg;
-    if (!datafile.empty())
-    {
-      // we must have a datafile in this case
-      msg = "Cannot find material data file " + datafile;
-      throw DatabaseException(msg);
-    }
-    else if (!_is_interface)
-    {
-      // we must have a datafile in this case
-      msg = "Cannot find material data file for material " + material;
-      throw DatabaseException(msg);
-    }
+    string msg("Cannot open material data file for ");
+    msg += material;
+    throw DatabaseException(msg);
   }
-
-
-  if ((_material != material) || (_datafile != df))
-  {
-    _material = material;
-    _datafile = df;
-
-
-    if (!_is_interface)
-    {
-      // it might be an alloy
-      open();
-      if (_file->have_variable("alloy"))
-        _is_alloy = true;
-
-      close();
-    }
-  }
+  
+  _datafile = df;
+  
+  // it might be an alloy
+  open();
+  if (_file->have_variable("alloy")) _is_alloy = true;
+  
+  close();
+  
 }
 
 
@@ -202,7 +207,7 @@ Database::get_components(vector<string>& comp) const
 
 
 bool
-Database::check_data_file(const string& name) const
+Database::check_data_file(const string& name)
 {
   bool ans = true;
 
@@ -272,6 +277,9 @@ Database::set_default_search_path(const string& path)
 const string
 Database::find_file(const string& file) const
 {
+
+  
+
   // Needs boost >1.41
   boost::filesystem::path p(file);
   if (p.is_relative())
@@ -283,8 +291,6 @@ Database::find_file(const string& file) const
 
     if ((_default_path.size() == 0) || (!check_data_file(p.string())))
     {
-      //string msg("Cannot find material data file " + file);
-      //throw DatabaseException(msg);
       p = "";
     }
   }

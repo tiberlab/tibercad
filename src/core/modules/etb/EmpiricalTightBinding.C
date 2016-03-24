@@ -178,7 +178,7 @@ ETB::do_init(void){
   //  std::string database_path = Database::get_default_search_path();
   std::string default_path = get_option("default_path",Database::get_default_search_path());
   std::string database_path = get_option("database_path",Database::get_search_path());
-  std::string work_path = ".";
+  std::string work_path = get_output_directory();
   std::string gen_outfile = "out.gen";
   std::string out_path = get_output_directory();
 
@@ -1185,7 +1185,7 @@ ETB::add_band_shifts(void)
       for (unsigned int n = 0; n < nn; ++n)
       {
         unsigned int j = b_map[i][n];
-        if (atom[j].get_specie() != Specie::H)
+        if (atom[j].get_elem() != NULL)
         {
           shift += _map_pairs_Evb[
                 make_pair(atom[i].get_specie(), atom[j].get_specie())];
@@ -1199,7 +1199,7 @@ ETB::add_band_shifts(void)
 
     // for the H atoms take the neighbours' values
     for (unsigned int i = 0; i < N; i++)
-      if (atom[i].get_specie() == Specie::H)
+      if (atom[i].get_elem() == NULL)
         _band_shift[i] = _band_shift[b_map[i][0]];
   }
   else
@@ -1207,7 +1207,7 @@ ETB::add_band_shifts(void)
     for (unsigned int i = 0; i < N; i++)
     {
 
-      if (atom[i].get_specie() == Specie::H)
+      if (atom[i].get_elem() == NULL)
       {
         // the sign is inverted because in upt the potential is subtracted
         _band_shift[i]= - _map_ID_Evb[atom[b_map[i][0]].get_region_ID()] + _vb_shift;

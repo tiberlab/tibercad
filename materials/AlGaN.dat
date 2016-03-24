@@ -29,6 +29,7 @@ bow_Pz = -0.021
 #Atomistic structure informations
 #
 [atomistic_structure]
+n_basis_specie=2
 
 n_basis_specie=2
 specie_1=AlGa

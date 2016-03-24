@@ -60,7 +60,7 @@ permittivity = 7.5
 
 # Optical dielectric constant @ 3.5 eV
 optical_epsilon_x = 7.3
-optical_epsilon_z = 7.3 
+optical_epsilon_c = 7.3 
 
 
 

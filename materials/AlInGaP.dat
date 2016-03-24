@@ -1,6 +1,7 @@
 # AlINGaP-zb
 
 alloy = 2
+alloy_type=quaternary
 structure = zb
 
 comp_A = GaInP

@@ -84,7 +84,8 @@ Device qdot
     #path = tb1.gen
     passivation = yes
     print = (gen, xyz, tgn)
-    translation = (0.0,  0.8983559, -4.39363) 
+    #translation = (0.0,  0.8983559, -4.39363) 
+    translation = (0.0, 1.79671093, 1.17674446) 
   }
 
 }
@@ -146,7 +147,6 @@ Module elasticity
   plot = (Strain)
 
   mesh_deformation = true
-  shape_iterations = 1
 
   Physics 
   {

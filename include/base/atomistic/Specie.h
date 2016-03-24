@@ -23,16 +23,6 @@ class Specie
 {
 public:
 
-  //enum Type
-  //    {
-  //       Hf, Al, Am, Sb, Ag, Ar, As, Ac, At, N, Ba, Bk, Be, Bi, Bh, B, Br, Cd, Ca, Cf, C,
-  //       Ce, Cs, Cl, Cr, Co, Kr, Cm, Ds, Dy, Db, Es, He, Er, Eu, Fm, Fe, F, Fr, Gd, Ga, Ge,
-  //       Hs, H, In, I, Ir, La, Lr, Pb, Li, Lu, Mg, Mn, Mt, Md, Hg, Mo, Nd, Ne, Np, Ni, Nb,
-  //       No, Ho, Au, Os, O, Pd, P, Pt, Pu, Po, K, Pr, Pm, Pa, Ra, Rn, Cu, Re, Rh, Rb, Ru,
-  //       Rf, Sm, Sc, Sg, Se, Si, Na, Sn, Sr, Ta, Tc, Te, Tb, Tl, Th, Tm, Ti, W, U, V, Xe,
-  //       Yb, Y, Zn, Zr, S
-  //    };
-
   enum Type {NONE=0, 
                 H ,                                                He,
                 Li,Be,                              B ,C ,N ,O ,F ,Ne,

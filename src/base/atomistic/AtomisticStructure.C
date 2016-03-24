@@ -239,7 +239,8 @@ AtomisticStructure::init(const std::string& name,
      }
    }
 
-
+  Messages::info("Output structure(s)");
+  print_driver();
 
 }
 
@@ -660,6 +661,7 @@ AtomisticStructure::assign_virtual_species(void)
 }
 
 
+// Virtual species are defined in the alloy database (InGa, AsP, ...)
 void
 AtomisticStructure::set_labels(void)
 {
@@ -990,8 +992,10 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
       line_string.clear();
       line_string.str(line);
 
-      // First value is ignored (contains physical region) 
+      // First value contains atom label 
       line_string >> record;
+      _atoms[i - 1].set_label(atoi(record.c_str()));
+
       line_string >> record;
       n_specie = atoi(record.c_str());
 
@@ -1024,8 +1028,7 @@ AtomisticStructure::read_tgn(const std::string& path, const Tensor1& transl)
           _atoms[i - 1].set_elem(_device->get_mesh().elem(tmp_id));
         }
 
-      line_string >> record;
-      _atoms[i - 1].set_label(atoi(record.c_str()));
+
     }
 
   // An additional line is present in GEN files. It's the coordinates origin and it's
@@ -1407,11 +1410,11 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     if      ( n_species_map[mat] == 1 ){ alloy_type = "simple";}
     else if ( n_species_map[mat] == 2 ){ alloy_type = "binary";}
     else if ( n_species_map[mat] == 3 ){ alloy_type = "ternary";}
+
     if (mat->is_alloy())
     {
       db.set_section("");
       alloy_type = db.get("alloy_type", "ternary");
-
     } 
     if (alloy_type == "")
       Messages::error("Could not define alloy_type in AtomisticStructure.C");
@@ -1959,9 +1962,6 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
   {
     const Atom& atom = get_structure_atom(i);
 
-    //if (atom.get_specie() == Specie::In ||
-    //    atom.get_specie() == Specie::Al ||
-    //    atom.get_specie() == Specie::Ga) 
     if ((atom.get_specie() != Specie::H) &&
         (labels.empty() || labels.count(atom.get_label())))
     {

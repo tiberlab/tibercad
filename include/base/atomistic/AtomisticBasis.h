@@ -102,13 +102,13 @@ class AtomisticBasis
 
   //! Return a reference to atom types
   const std::vector<std::string>& get_atom_types (void);
-
+  
   //! Get atom type index (types are stored in _atom_types)
   int get_type_index(  const std::string &   type ) const;
 
   //! Empty list of atom types
   void clear_atom_types(){_atom_types.clear();};
-
+  
   //! Set list of atom types
   void set_atom_types(const std::set<std::string>& types);
 
