@@ -1,61 +1,66 @@
 Device
 {
-  meshfile = mesh25x25.msh  #mesh25x25x25.msh 
+  #meshfile = mesh50x50x50.msh 
+  meshfile = mesh_equilibrated_50x150x1_0_65_sq_6.msh  
   mesh_units = 1e-9
-  dimension = 3
+  dimension = 2 
 
   Region qbox
   {
-    material = Si
+    material = Perovskite 
   }
 }
 
 Module polarizationgrid
 {
   regions = (qbox)
-  plot = (Polarization)
+  plot = (Polarization,autocorrelation)
 
-  Nx = 25
-  Ny = 25
+  Nx = 150
+  Ny = 50
   Nz = 1 
 
-  grid_step = 1.2685
-  #grid_step_a = 0.88
-  #grid_step_c = 1.2685
+  grid_step = 0.65 
 
-  periodic = (true, true, true)
+  periodic = (false, false, false)
   cutoff = 8.0
  
   seed = 345678912 
-  Nstep = 1e7 
-  IOstep = 1e5
+  Nstep = 1
+  IOstep = 1
 
-  dipole_units = Debye
-  dipole = 13.74
-  # walsh:  
-  #dipole = 2.29 
- 
-  #dipole_units = C/m^2
-  #dipole = 0.08  
+  dipole_units = C/m^2
+  dipole = 0.13
+  
+  #dipole = 13.75
+  #dipole_units = Debye
+  #dipole = 2.29
 
-  eps_r = 10.0
+  eps_r = 6.1
 
   kbT = 0.026
 
   # Field in V/cm
-  external_field=(0,0,0) 
+  #external_field=(1e5,1e5,0) 
 
-  #read_file = output25x25x25/polarization.dat
-  write_file = polarization.dat 
+  read_file = correlation_IEEE/polarization.dat
+  #nz_start = 20
+  #nz_end = 24
+  #write_file = polarization.dat 
 
 }
 
-Module driftdiffusion
+Fodule driftdiffusion
 { 
-  
+  plot = (Ec, Ev, eDensity, hDensity, ElField, ElPotential)  
+
+  coupling = poisson
+ 
   Physics
   {
      polarization{ polarization = polarizationgrid.Polarization } 
+
+     band_properties simple{}
   }
 
 }
@@ -63,8 +68,9 @@ Module driftdiffusion
 
 Simulation
 {
-  solve = (polarizationgrid, driftdiffusion)
+  solve = (polarizationgrid) 
+  #, driftdiffusion)
 
-  resultpath = output_dd_pp
+  resultpath = correlation_IEEE 
 }
 
