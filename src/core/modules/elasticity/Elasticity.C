@@ -999,8 +999,6 @@ Elasticity::apply_shape_deformation()
       
     }
 
-    //if (get_option("internal_strain_correction", false))
-    //  internal_strain_correction(atom_structures[ns]);
   }
   
   //
