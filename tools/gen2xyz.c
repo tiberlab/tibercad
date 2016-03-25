@@ -41,7 +41,7 @@ for(i=1; i<argc; i++)
    {
      strcpy(comment,argv[i+1]);
    }
-
+}
 fold=0;
 if (n1==0 && n2==0 && n3==0) fold=1;
 if (fold){n1 = 1; n2 = 1; n3 = 1;}
