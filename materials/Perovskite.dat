@@ -1,0 +1,164 @@
+# Perovskite mixed halide articolo science2013
+
+#[1] journal of the korean Physical Society vol44 n4 april 2004
+#[2] Science oct2013
+#[3] Mosconi jpcc 2013
+#[4] Scientific report 2013 per la fulllead perovskite 5.43 loaumentounpo
+#[5] chem mat Colella 2013 (pag4)
+#[6] Even, Phy.Statussolifi rrl 2013
+#[7] ishihara PRB 1990 (composto diverso
+#[8] ees shulz 2014 per la clorine doped
+
+#structure = perovskite 
+structure = zb 
+
+# lattice constant
+[lattice] # [5]
+a = 0.65
+#a = 0.88
+#c = 1.265
+
+[conductionband] 
+m_G = 0.156 #rif Si m_G = 0.15 #rif PbI3 Brivio ArxiveFeb2014
+m_L_t = 0.13
+m_L_l = 1.42
+m_X_t = 0.19
+m_X_l = 0.916
+#m_dos = 0.3 # [1] 
+
+
+[valenceband]
+#E_v = -5.43 # [4] [7]
+E_v = -5.4 # allineamento rispetto agli altri materiali vedi Bergman nat com 2014
+m_dos = 0.17 # [6] #  m_G = 0.12 #rif PbI3 Brivio ArxiveFeb2014
+
+[bandgap] 
+# T=0 K optical [5]
+Eg_G = 1.55
+
+[deformation_potentials] # [3]
+a_c = 0.0
+a_v = 0.0
+b = 0.0
+d = 0.0
+
+abs_def_pot_X = 0.0
+uniax_def_pot_X = 0.0
+abs_def_pot_L = 0.0
+uniax_def_pot_L = 0.0
+
+[permittivity] # [3]
+# with 0.7 porosity: Maxwell-Garnett
+# optical_epsilon = 27.47
+# optical_epsilon = 3
+#permittivity = 6.1
+permittivity = 10.0
+
+# mobility
+[mobility/constant] #[2] 
+mu_max   = (5.0, 5.0)
+exponent = (2.5, 2.2)
+
+#mobility
+[mobility/field_assisted]
+mu0 = (1.0, 10.0)
+E0 = (3.7e6, 2.0e6)
+
+# doping dependent per si ??
+[mobility/doping_dependent]
+mobility_formula = 1
+mumin1 = (52.2,		44.9)
+mumin2 = (52.2,		0.0)
+mu1    = (43.4,		29)
+Pc     = (0.0,		9.23e16)
+Cr     = (9.68e16,	2.23e17)
+Cs     = (3.43e20,	6.1e20)
+alpha  = (0.68,		0.719)
+beta   = (2,		2)
+
+
+# high field dependency per Si ??
+[mobility/field_dependent]
+Vsat_Formula = 1
+beta0   = (1.109,	1.213)
+betaexp = (0.66,	0.17)
+vsat0   = (1.07e7,	8.37e6)
+vsatexp = (0.87,	0.52)
+
+
+# radiative recombination per Si
+[recombination/direct]
+C = 2e-8
+
+
+
+# SRH recombination
+[recombination/SRH]
+Etrap  = 0.0
+taumin = (0.0,		0.0)
+taumax = (1.0e-5,	3.0e-6)
+Nref   = (1.0e+16,	1.0e+16)
+gamma  = (1,		1)
+Talpha = (-1.5,		-1.5)
+Tcoeff = (2.55,		2.55)
+
+
+[atomistic_structure]
+lattice_type = cubic 
+n_basis_specie = 5 
+specie_1 = Pb 
+specie_2 = I
+specie_3 = N
+specie_4 = C
+specie_5 = H
+n_1 = 4 
+n_2 = 3
+n_3 = 1
+n_4 = 1
+n_5 = 6
+
+#Basis vectors T_"specie"_"#of atom"_"direction"
+# Pb
+T_1_1_a = 0.0
+T_1_1_b = 0.0
+T_1_1_c = 0.0
+# I 
+T_2_1_a = 0.5
+T_2_1_b = 0.0
+T_2_1_c = 0.0
+T_2_2_a = 0.0
+T_2_2_b = 0.5
+T_2_2_c = 0.0
+T_2_3_a = 0.0
+T_2_3_b = 0.0
+T_2_3_c = 0.5
+# N
+T_3_1_a = 0.4
+T_3_1_b = 0.5
+T_3_1_c = 0.5
+# C
+T_4_1_a = 0.6
+T_4_1_b = 0.5
+T_4_1_c = 0.5
+# H
+T_5_1_a = 0.348711
+T_5_1_b = 0.422038
+T_5_1_c = 0.377689
+T_5_2_a = 0.348711
+T_5_2_b = 0.644906
+T_5_2_c = 0.493638
+T_5_3_a = 0.348711
+T_5_3_b = 0.433057
+T_5_3_c = 0.628672
+T_5_4_a = 0.656418
+T_5_4_b = 0.340605
+T_5_4_c = 0.506998
+T_5_5_a = 0.656418
+T_5_5_b = 0.585758
+T_5_5_c = 0.634542
+T_5_6_a = 0.656418
+T_5_6_b = 0.573637
+T_5_6_c = 0.35846 
+
+
+

@@ -1,13 +1,16 @@
-<<<<<<< .working
 # Pentacene
 
-structure = am
+structure = triclinic 
 
 
 # lattice constant
 [lattice] # [3]
-a = 0.54304
-
+a = 6.277
+b = 7.663
+c = 14.363
+alfa = 76.893
+beta = 88.182
+gamma = 84.326
 
 [valenceband]
 E_v = 1.10467
@@ -156,78 +159,127 @@ hTEpower =  0.001
 #Atomistic structure informations
 #
 [atomistic_structure]
-lattice_type = fcc
-
-#Basis 
+lattice_type = triclinic
 
 #Number of basis specie
 n_basis_specie = 2 
 #Number of basis atoms for any specie
 n_1 = 1
-n_2 = 2 
+n_2 = 1
 #Basis vectors T_"specie"_"#of atom"_"direction"
-T_1_1_a = 0.0
-T_1_1_b = 0.0
-T_1_1_c = 0.0
-T_1_2_a = 0.25
-T_1_2_b = 0.25
-T_1_2_c = 0.25
+T_1_1_a = 0.7010 
+T_1_1_b = 0.40059 
+T_1_1_c = 0.01612
+T_1_2_a = 0.5432
+T_1_2_b = 0.37090
+T_1_2_c = 0.08724
+T_1_3_a = 0.5778
+T_1_3_b = 0.24511
+T_1_3_c = 0.17491
+T_1_4_a = 0.4214
+T_1_4_b = 0.21774 
+T_1_4_c = 0.24535
+T_1_5_a = 0.4559
+T_1_5_b = 0.0927 
+T_1_5_c = 0.33527
+T_1_6_a = 0.3002
+T_1_6_b = 0.0696 
+T_1_6_c = 0.40311
+T_1_7_a = 0.0949
+T_1_7_b = 0.1708 
+T_1_7_c = 0.38655
+T_1_8_a = 0.0542
+T_1_8_b = 0.2906 
+T_1_8_c = 0.30274
+T_1_9_a = 0.2132
+T_1_9_b = 0.32033
+T_1_9_c = 0.22850
+T_1_10_a =  0.1761
+T_1_10_b =  0.44335
+T_1_10_c =  0.14271
+T_1_11_a =  0.6654
+T_1_11_b =  0.52590
+T_1_11_c = -0.07033
+T_1_12_a = -0.1816
+T_1_12_b = -0.04326
+T_1_12_c = -0.04185
+T_1_13_a = -0.1558
+T_1_13_b = -0.09971
+T_1_13_c =  0.05702
+T_1_14_a = -0.3059
+T_1_14_b = -0.19924
+T_1_14_c =  0.11683
+T_1_15_a = -0.2788
+T_1_15_b = -0.25490
+T_1_15_c =  0.21458
+T_1_16_a = -0.4297
+T_1_16_b = -0.35691
+T_1_16_c =  0.27553
+T_1_17_a = -0.3994
+T_1_17_b = -0.4106 
+T_1_17_c =  0.37083
+T_1_18_a = -0.2153
+T_1_18_b = -0.3661 
+T_1_18_c =  0.41408
+T_1_19_a = -0.0673
+T_1_19_b = -0.2710 
+T_1_19_c =  0.35924
+T_1_20_a = -0.0911
+T_1_20_b = -0.21086
+T_1_20_c =  0.25798
+T_1_21_a =  0.0573
+T_1_21_b = -0.11257
+T_1_21_c =  0.20025
+T_1_22_a = -0.0321
+T_1_22_b =  0.05508
+T_1_22_c = -0.10063
+T_2_1_a = 0.843
+T_2_1_b = 0.332
+T_2_1_c = 0.0269 
+T_2_2_a = 0.720
+T_2_2_b = 0.179
+T_2_2_c = 0.1853 
+T_2_3_a = 0.599
+T_2_3_b = 0.026
+T_2_3_c = 0.3450 
+T_2_4_a = 0.325
+T_2_4_b = -0.0141
+T_2_4_c =  0.4675
+T_2_5_a = -0.013
+T_2_5_b =  0.154
+T_2_5_c =  0.4396 
+T_2_6_a = -0.085
+T_2_6_b =  0.363
+T_2_6_c =  0.2899 
+T_2_7_a =  0.030
+T_2_7_b =  0.512
+T_2_7_c =  0.1321 
+T_2_8_a = -0.308
+T_2_8_b = -0.077
+T_2_8_c = -0.0728
+T_2_9_a = -0.434
+T_2_9_b = -0.231
+T_2_9_c =  0.0867 
+T_2_10_a = -0.555
+T_2_10_b = -0.389
+T_2_10_c =  0.2455 
+T_2_11_a = -0.496
+T_2_11_b = -0.480
+T_2_11_c =  0.4135 
+T_2_12_a = -0.199
+T_2_12_b = -0.405
+T_2_12_c =  0.4857 
+T_2_13_a =  0.062
+T_2_13_b = -0.240
+T_2_13_c =  0.3904 
+T_2_14_a =  0.187
+T_2_14_b = -0.081
+T_2_14_c =  0.2310 
 
 #Name of species
 specie_1 = C
 specie_2 = H 
 
 [densityfunctional_tb]
+dataset = mio 
 
-dataset = pbc
-
-=======
-#Pentacene
-
-[valenceband]
-E_v = -5.0
-
-[bandgap]
-Eg_G = 2.0
-Eg_L = 2.0
-Eg_X = 2.0
-
-[permittivity]
-permittivity = 3.0
-
-#Lattice thermal conductivity [W/(cm*K)]
-[thermal_conductivity/constant]
-ThermCond = 0.45
-
-# SRH recombination
-[recombination/SRH]
-taumin = (0e-9,		0e-9)
-taumax = (1.0e-5,	1e-5)
-Nref   = (1.0e+16,	1.0e+16)
-gamma  = (1,		1)
-Talpha = (-1.5,		-1.5)
-Tcoeff = (2.55,		2.55)
-
-[mobility/constant]
-mu_max   = (1.5,   1.5)
-exponent = (0, 0)
-
-#Germanium
-#taumin = (0.0, 0.0)
-#taumax = (1.0e-5, 3.0e-6)
-
-[conductionband]
-m_G = 1
-m_L_t = 1
-m_L_l = 1
-m_X_t = 1
-m_X_l = 1
-
-[valenceband ]
-m_HH = 1
-m_LH = 1
-
-m_dos = 1
-
-
->>>>>>> .merge-right.r4088
