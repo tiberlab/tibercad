@@ -367,6 +367,9 @@ DriftDiffusionProperties::create_recombination_models(void)
       opts.set_key("recombination");
       newopts.insert(newopts.end(), opts);
     }
+    // we must get rid of it in the options, otherwise we get
+    // trouble when copying
+    get_options().delete_submodels("generation");
 
     list<ModelOptions>::iterator lit(newopts.begin());
     list<ModelOptions>::iterator lend(newopts.end());
