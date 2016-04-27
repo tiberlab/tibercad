@@ -5,6 +5,7 @@
 #include "InitFailedException.h"
 
 #include "vector_value.h"
+#include "point.h"
 
 #include <sstream>
 #include <iostream>
@@ -123,6 +124,16 @@ ModelOptions::get_option(const string& name,
     Utils::extract_vector(it->second, vec);
 }
 
+
+void
+ModelOptions::get_option(const string& name,
+    Point& point) const
+{
+  OptionsMap::const_iterator it(_find(name));
+
+  if (it != _options.end())
+    Utils::extract_vector(it->second, point);
+}
 
 template <typename T>
 void

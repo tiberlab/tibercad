@@ -20,6 +20,7 @@
 template <typename T> class VectorValue;
 typedef VectorValue<double> RealVectorValue;
 
+class ModelOptions;
 
 
 class AtomisticBasis
@@ -130,6 +131,15 @@ class AtomisticBasis
   bool is_periodic(void) const;
 
   const Atom& operator[](unsigned int i) const;
+
+
+  //! Get a subset of atoms
+  /*!
+   * \param subset vector containing indices of atoms in the subvolume
+   * \param opt ModelOptions object describing the subvolume
+   */
+  void get_subset(std::vector<unsigned int>& subset,
+      const ModelOptions& opt);
 
 
   //! Get the neighbour iterator for an atom

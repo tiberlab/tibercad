@@ -113,6 +113,9 @@ public:
    * \param stats the map to put statistics in
    * \param regions the regions to be used
    * \param cutoff the cutoff radius in nm (default 0.5 nm)
+   * \param y if not 0, control volume is a cube instead of sphere
+   * \param z together with y defines the control cube
+   * \param atomlist (optional) will be filled with all atoms in the control volume
    */
   void extract_statistics(std::map<Specie, std::vector<unsigned int>>& stats,
       const std::set<ID>& regions, double cutoff = 0.5,

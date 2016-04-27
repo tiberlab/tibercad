@@ -1,5 +1,6 @@
 #include "AtomisticBasis.h"
 #include "Device.h"
+#include "ModelOptions.h"
 
 #include "vector_value.h"
 
@@ -276,6 +277,94 @@ AtomisticBasis::print_gen(const std::string& path) const
 }
 
 
+
+void
+AtomisticBasis::get_subset(vector<unsigned int>& subset,
+      const ModelOptions& opt)
+{
+
+  // length units in options are assumed in nm
+
+  Point center(0);
+  opt.get_option("center", center);
+  center *= 10;
+
+  // define the volume
+  string shape = opt.get_option("shape", "sphere");
+  double x = opt.get_option("radius", 0.5);
+  double y = 0;
+  double z = 0;
+
+  if (shape == "cube")
+  {
+    x = opt.get_option("side_length", x);
+    y = z = x;
+  }
+  else if (shape == "box")
+  {
+    Point sides(0);
+    opt.get_option("sides", sides);
+    x = sides(0);
+    y = sides(1);
+    z = sides(2);
+  }
+  else if (shape == "column")
+  {
+    RealVectorValue a, b, c;
+    get_lattice_vectors(a, b, c);
+    string dir = opt.get_option("orientation", "x");
+    double side = opt.get_option("side_length", x);
+    switch (dir[0])
+    {
+
+      case 'y':
+        y = b.size();
+        x = z = side;
+        break;
+
+      case 'z':
+        z = c.size();
+        y = x = side;
+        break;
+
+      default: // 'x'
+        x = a.size();
+        y = z = side;
+        break;
+    }
+  }
+
+  unsigned int center_atom = 0;
+  double min_dist = std::numeric_limits<double>::max();
+
+  // look for nearest atom
+  for (unsigned int i = 0; i < get_N_atoms(); i++)
+  {
+    const Atom& atm = get_structure_atom(i);
+
+    // we skip atoms with no "real" label (such as passivation H)
+    if (atm.get_label() == 0)
+      continue;
+
+    Point d(atm.get_position() - center);
+    double d_len = d.size();
+    if (d_len < min_dist)
+    {
+      min_dist = d_len;
+      center_atom = i;
+    }
+  }
+
+  neighbor_iterator it(neighbors_begin(center_atom, 10 * x, 10 * y, 10 * z));
+  neighbor_iterator end(neighbors_end(center_atom));
+  for ( ; it != end; ++it)
+  {
+    //const Atom& neigh = *(*it);
+    if ((*it)->get_label() != 0)
+      subset.push_back(it.atom_index());
+  }
+
+}
 
 
 

@@ -12,7 +12,7 @@
 #include "Messages.h"
 #include "RuntimeException.h"
 
-#include <vector_value.h>
+#include <type_vector.h>
 #include <tensor_value.h>
 
 #include <cctype>
@@ -522,7 +522,7 @@ Utils::extract_vector(const string& input, vector<double>& vec)
 
 
 void
-Utils::extract_vector(const string& input, RealVectorValue& vec)
+Utils::extract_vector(const string& input, TypeVector<double>& vec)
 {
   vector<double> v;
   extract_vector<double>(input, v);

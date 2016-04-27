@@ -12,8 +12,7 @@
 #include <cmath>
 #include <cstdlib>
 
-template <typename T> class VectorValue;
-typedef VectorValue<double> RealVectorValue;
+template <typename T> class TypeVector;
 
 template <typename T> class TensorValue;
 typedef TensorValue<double> RealTensor;
@@ -73,7 +72,7 @@ class Utils
      *
      * \return \c true if successful , \c false otherwise
      */
-    static void extract_vector(const std::string& input, RealVectorValue& vec);
+    static void extract_vector(const std::string& input, TypeVector<double>& vec);
 
 
     //! Extract a real tensor from a string

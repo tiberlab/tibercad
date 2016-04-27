@@ -2165,8 +2165,6 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
   // atomic coordinates are in Angstrom
   Point center = _scale * point;
 
-  //if (reg_ids.count(id))
-  //{
 
   const vector<unsigned int>& atoms = get_atoms_in_elem(elem);
   int atom = -1;
@@ -2270,6 +2268,82 @@ AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, doub
 void
 AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
 {
+
+  if (opt.get_option("control_volume", string("sphere")) == "column")
+  {
+
+    RealVectorValue a, b, c;
+    get_lattice_vectors(a, b, c);
+
+    double x = a.size() / 10;
+    double y = b.size() / 10;
+    double z = c.size() / 10;
+
+    string dir = opt.get_option("orientation", "x");
+
+    Point center(get_structure_atom(0).get_position());
+
+    // first find atoms on a plane orthogonal to the column orientation
+    switch (dir[0])
+    {
+
+      case 'y':
+        center(1) += y / 2.0;
+        y = 0.2;
+        break;
+
+      case 'z':
+        center(2) += z / 2.0;
+        z = 0.2;
+        break;
+
+      default: // 'x'
+        center(0) += x / 2.0;
+        x = 0.2;
+        break;
+    }
+
+    ostringstream os;
+    os << "(" << x << "," << y << "," << z << ")";
+    ModelOptions p_opts;
+    p_opts["shape"] = "box";
+    p_opts["sides"] = os.str();
+    os.str("");
+    os << "(" << center(0) << "," << center(1) << "," << center(2) << ")";
+    p_opts["center"] = os.str();
+
+
+    vector<unsigned int> atomlist;
+    get_subset(atomlist, p_opts);
+
+    ofstream of("test.xyz");
+    of << atomlist.size() << "\n\n";
+    for (unsigned int i = 0; i < atomlist.size(); ++i)
+    {
+      const Atom& atom = get_structure_atom(atomlist[i]);
+      of << atom.get_specie() << "  " <<
+          atom.get_position()(0) << "  " <<
+          atom.get_position()(1) << "  " <<
+          atom.get_position()(2) << "\n";
+
+    }
+
+    ModelOptions c_opts(opt);
+    for (unsigned int i = 0; i < atomlist.size(); ++i)
+    {
+      const Point& pos = get_structure_atom(atomlist[i]).get_position();
+      ostringstream os;
+      os << "(" << pos(0) << "," << pos(1) << "," << pos(2) << ")";
+      c_opts["center"] = os.str();
+
+      vector<unsigned int> column_atoms;
+      get_subset(column_atoms, c_opts);
+
+    }
+
+  }
+
+
    double cutoff = opt.get_option("control_volume_radius", 0.5);
    string cutoff_str = opt.get_option("control_volume_radius", "0.5");
 

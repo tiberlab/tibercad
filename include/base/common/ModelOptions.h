@@ -6,10 +6,16 @@
 #include "Utils.h"
 #include "tiber_dll.h"
 
+
 #include <map>
 #include <set>
 #include <vector>
 #include <string>
+
+template <typename T> class VectorValue;
+typedef VectorValue<double> RealVectorValue;
+
+class Point;
 
 //! A class to store model options
 /*!
@@ -105,6 +111,14 @@ class ModelOptions
      * \param vec the vector, where the values will be stored.
      */
     void get_option(const std::string& name, RealVectorValue& vec) const;
+
+
+    //! Get an option which is a point
+    /*!
+     * \param name the name of the option
+     * \param point the point, where the values will be stored.
+     */
+    void get_option(const std::string& name, Point& vec) const;
 
     //! Get an option which is a vector of vectors (with the same type)
     /*!
