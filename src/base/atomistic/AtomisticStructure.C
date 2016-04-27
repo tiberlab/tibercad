@@ -239,8 +239,6 @@ AtomisticStructure::init(const std::string& name,
      }
    }
 
-  Messages::info("Output structure(s)");
-  print_driver();
 
 }
 
@@ -2282,6 +2280,7 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
     string dir = opt.get_option("orientation", "x");
 
     Point center(get_structure_atom(0).get_position());
+    center *= 0.1;
 
     // first find atoms on a plane orthogonal to the column orientation
     switch (dir[0])
@@ -2316,22 +2315,31 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
     vector<unsigned int> atomlist;
     get_subset(atomlist, p_opts);
 
-    ofstream of("test.xyz");
-    of << atomlist.size() << "\n\n";
-    for (unsigned int i = 0; i < atomlist.size(); ++i)
+    /*
     {
-      const Atom& atom = get_structure_atom(atomlist[i]);
-      of << atom.get_specie() << "  " <<
-          atom.get_position()(0) << "  " <<
-          atom.get_position()(1) << "  " <<
-          atom.get_position()(2) << "\n";
-
+      ofstream of("test.xyz");
+      of << atomlist.size() << "\n\n";
+      for (unsigned int i = 0; i < atomlist.size(); ++i)
+      {
+        const Atom& atom = get_structure_atom(atomlist[i]);
+        of << atom.get_specie() << "  " <<
+            atom.get_position()(0) << "  " <<
+            atom.get_position()(1) << "  " <<
+            atom.get_position()(2) << "\n";
+      }
     }
+    */
+
+    map<Specie, vector<unsigned int>> stats;
 
     ModelOptions c_opts(opt);
+    c_opts["shape"] = "column";
+
     for (unsigned int i = 0; i < atomlist.size(); ++i)
     {
-      const Point& pos = get_structure_atom(atomlist[i]).get_position();
+      Point pos = get_structure_atom(atomlist[i]).get_position();
+      pos *= 0.1;
+
       ostringstream os;
       os << "(" << pos(0) << "," << pos(1) << "," << pos(2) << ")";
       c_opts["center"] = os.str();
@@ -2339,126 +2347,207 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
       vector<unsigned int> column_atoms;
       get_subset(column_atoms, c_opts);
 
+      /*
+      {
+        ostringstream fname;
+        fname << "test" << i << ".xyz";
+        ofstream ff(fname.str());
+        ff << column_atoms.size() << "\n\n";
+        for (unsigned int j = 0; j < column_atoms.size(); ++j)
+        {
+          const Atom& atom = get_structure_atom(column_atoms[j]);
+          ff << atom.get_specie() << "  " <<
+              atom.get_position()(0) << "  " <<
+              atom.get_position()(1) << "  " <<
+              atom.get_position()(2) << "\n";
+        }
+      }
+      */
+
+
+      for (unsigned int j = 0; j < column_atoms.size(); ++j)
+      {
+        const Atom& atom = get_structure_atom(column_atoms[j]);
+
+        //if (!regions.count(neigh.get_region_ID()))
+        //  continue;
+
+        if (!stats.count(atom.get_specie()))
+        {
+          stats[atom.get_specie()].resize(atomlist.size(), 0);
+          stats[atom.get_specie()][i] = 1;
+        }
+
+        stats[atom.get_specie()][i] += 1;
+      }
+    }
+
+    ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
+        "_columnwise_statistics.dat");
+
+
+    of << "% alloy statistics for structure " << get_name() <<
+        ", columnwise along " << dir << "\n";
+    //of << "% (first row gives total numbers)\n";
+    of << "% ";
+
+    int NN = 0;
+    map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
+    const map<Specie, vector<unsigned int>>::iterator mend(stats.end());
+    for ( ; mit != mend; ++mit)
+    {
+      of << mit->first << "  ";
+      NN = (mit->second).size();
+    }
+    of << "\n";
+
+    //of << "% ";
+    //for (mit = stats.begin(); mit != mend; ++mit)
+    //  of << (mit->second)[0] << " ";
+    //of << "\n";
+
+    vector<unsigned int> sums(NN, 0);
+    unsigned int max = 0;
+    for (int i = 0; i < NN; ++i)
+    {
+      for (mit = stats.begin(); mit != mend; ++mit)
+        sums[i] += (mit->second)[i];
+
+      if (sums[i] > max)
+        max = sums[i];
+    }
+
+    for (int i = 0; i < NN; ++i)
+    {
+      //if (sums[i] >= (max - 1))
+      {
+        for (mit = stats.begin(); mit != mend; ++mit)
+          of << (mit->second)[i] << " ";
+        of << "\n";
+      }
     }
 
   }
+  else
+  {
 
 
-   double cutoff = opt.get_option("control_volume_radius", 0.5);
-   string cutoff_str = opt.get_option("control_volume_radius", "0.5");
+    double cutoff = opt.get_option("control_volume_radius", 0.5);
+    string cutoff_str = opt.get_option("control_volume_radius", "0.5");
 
-   vector<string> reg_names(1, "all");
-   _options.get_option("regions", reg_names);
+    vector<string> reg_names(1, "all");
+    _options.get_option("regions", reg_names);
 
-   for (unsigned int i = 0; i < reg_names.size(); ++i)
-   {
+    for (unsigned int i = 0; i < reg_names.size(); ++i)
+    {
 
-     IDSet reg_ids;
-     _device->extract_physical_regions(reg_names[i], reg_ids);
-     IDSet::iterator id_it(reg_ids.begin());
-     while (id_it != reg_ids.end())
-     {
-       const Material* mat = _device->get_material(*id_it);
+      IDSet reg_ids;
+      _device->extract_physical_regions(reg_names[i], reg_ids);
+      IDSet::iterator id_it(reg_ids.begin());
+      while (id_it != reg_ids.end())
+      {
+        const Material* mat = _device->get_material(*id_it);
 
-       // we extract statistics only for alloys
-       IDSet::iterator to_be_deleted(id_it);
-       ++id_it;
+        // we extract statistics only for alloys
+        IDSet::iterator to_be_deleted(id_it);
+        ++id_it;
 
-       if (!mat->is_alloy())
-         reg_ids.erase(to_be_deleted);
-     }
+        if (!mat->is_alloy())
+          reg_ids.erase(to_be_deleted);
+      }
 
-     // if there are no ids, we have no alloy
-     if (reg_ids.empty())
-       continue;
+      // if there are no ids, we have no alloy
+      if (reg_ids.empty())
+        continue;
 
-     string reg_name = reg_names[i];
+      string reg_name = reg_names[i];
 
-     ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
-         "_" + reg_name + "_statistics_R" + cutoff_str + ".dat");
+      ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
+          "_" + reg_name + "_statistics_R" + cutoff_str + ".dat");
 
-     // define the control volume
-     string shape = opt.get_option("control_volume", "sphere");
-     double x = cutoff;
-     double y = 0;
-     double z = 0;
+      // define the control volume
+      string shape = opt.get_option("control_volume", "sphere");
+      double x = cutoff;
+      double y = 0;
+      double z = 0;
 
-     if (shape == "cube")
-     {
-       x = opt.get_option("side_length", cutoff);
-       y = z = x;
-     }
-     else if (shape == "column")
-     {
-       RealVectorValue a, b, c;
-       get_lattice_vectors(a, b, c);
-       string dir = opt.get_option("orientation", "x");
-       double side = opt.get_option("side_length", cutoff);
-       switch (dir[0])
-       {
+      if (shape == "cube")
+      {
+        x = opt.get_option("side_length", cutoff);
+        y = z = x;
+      }
+      else if (shape == "column")
+      {
+        RealVectorValue a, b, c;
+        get_lattice_vectors(a, b, c);
+        string dir = opt.get_option("orientation", "x");
+        double side = opt.get_option("side_length", cutoff);
+        switch (dir[0])
+        {
 
-         case 'y':
-           y = b.size() / 10.0;
-           x = z = side;
-           break;
+          case 'y':
+            y = b.size() / 10.0;
+            x = z = side;
+            break;
 
-         case 'z':
-           z = c.size() / 10.0;
-           y = x = side;
-           break;
+          case 'z':
+            z = c.size() / 10.0;
+            y = x = side;
+            break;
 
-         default: // 'x'
-           x = a.size() / 10.0;
-           y = z = side;
-           break;
-       }
-     }
+          default: // 'x'
+            x = a.size() / 10.0;
+            y = z = side;
+            break;
+        }
+      }
 
-     map<Specie, vector<unsigned int>> stats;
-     extract_statistics(stats, reg_ids, x, y, z);
+      map<Specie, vector<unsigned int>> stats;
+      extract_statistics(stats, reg_ids, x, y, z);
 
-     of << "% alloy statistics for structure " << get_name() <<
-         ", region " << reg_name << "\n";
-     of << "% (first row gives total numbers)\n";
-     of << "% ";
+      of << "% alloy statistics for structure " << get_name() <<
+          ", region " << reg_name << "\n";
+      of << "% (first row gives total numbers)\n";
+      of << "% ";
 
-     int NN = 0;
-     map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
-     const map<Specie, vector<unsigned int>>::iterator mend(stats.end());
-     for ( ; mit != mend; ++mit)
-     {
-       of << mit->first << "  ";
-       NN = (mit->second).size();
-     }
-     of << "\n";
+      int NN = 0;
+      map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
+      const map<Specie, vector<unsigned int>>::iterator mend(stats.end());
+      for ( ; mit != mend; ++mit)
+      {
+        of << mit->first << "  ";
+        NN = (mit->second).size();
+      }
+      of << "\n";
 
-     of << "% ";
-     for (mit = stats.begin(); mit != mend; ++mit)
-       of << (mit->second)[0] << " ";
-     of << "\n";
+      of << "% ";
+      for (mit = stats.begin(); mit != mend; ++mit)
+        of << (mit->second)[0] << " ";
+      of << "\n";
 
-     vector<unsigned int> sums(NN, 0);
-     unsigned int max = 0;
-     for (int i = 1; i < NN; ++i)
-     {
-       for (mit = stats.begin(); mit != mend; ++mit)
-         sums[i] += (mit->second)[i];
+      vector<unsigned int> sums(NN, 0);
+      unsigned int max = 0;
+      for (int i = 1; i < NN; ++i)
+      {
+        for (mit = stats.begin(); mit != mend; ++mit)
+          sums[i] += (mit->second)[i];
 
-       if (sums[i] > max)
-         max = sums[i];
-     }
+        if (sums[i] > max)
+          max = sums[i];
+      }
 
-     for (int i = 0; i < NN; ++i)
-     {
-       if (sums[i] >= (max - 1))
-       {
-         for (mit = stats.begin(); mit != mend; ++mit)
-           of << (mit->second)[i] << " ";
-         of << "\n";
-       }
-     }
+      for (int i = 0; i < NN; ++i)
+      {
+        if (sums[i] >= (max - 1))
+        {
+          for (mit = stats.begin(); mit != mend; ++mit)
+            of << (mit->second)[i] << " ";
+          of << "\n";
+        }
+      }
 
-   }
+    }
+  }
    
 }
 

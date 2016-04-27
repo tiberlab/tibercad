@@ -1467,7 +1467,7 @@ AtomisticGenerator::build_random_alloy()
   _as->get_options().get_option("clustering", cluster);
   bool clustering = (cluster.size() > 0);
 
-  vector<double> cluster_seeds(cluster.size(),0.01);
+  vector<double> cluster_seeds(cluster.size(), 0.01);
   if (clustering)
     _as->get_options().get_option("cluster_seeds", cluster_seeds);
 
