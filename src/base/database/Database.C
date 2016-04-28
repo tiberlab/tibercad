@@ -109,12 +109,18 @@ Database::set_material(const string& material,
       if (elems.size() >= 2)
       {
         ostringstream mat;
-        mat << elems[1]<<elems[0];
+        mat << elems[1] << elems[0];
 
-        for (unsigned int k=2; k< elems.size(); k++)  
+        for (unsigned int k = 2; k < elems.size(); k++)  
           mat << elems[k];
         
         df = find_file(mat.str() + ".dat");
+
+        // if it is found, we need to invert the alloy fractions accordingly
+        if (check_data_file(df) && !is_interface())
+        {
+          std::swap(_comp_fractions[0], _comp_fractions[1]);
+        }
       }
 
     }
@@ -148,14 +154,17 @@ Database::do_open(void) const
 {
   assert(_file == NULL);
 
-  if (!check_data_file(_datafile) && !is_interface())
+  if (!_datafile.empty() && (!check_data_file(_datafile) && !is_interface()))
   {
     string msg("Cannot open material data file '");
     msg += _datafile + "'";
     throw DatabaseException(msg);
   }
 
-  _file = new GetPot(_datafile);
+  if (_datafile.empty())
+    _file = new GetPot();
+  else
+    _file = new GetPot(_datafile);
 }
 
 
