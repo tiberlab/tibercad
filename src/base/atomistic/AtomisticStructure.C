@@ -1470,6 +1470,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
       {
         db.set_section("");
         double x_A = db.get("x_A",1.0);
+        double x_B = db.get("x_B",1.0);
 
         file << std::setw(6)  << (static_cast<const Alloy*>(matA))->get_name_A()
              << std::setw(6)  << (static_cast<const Alloy*>(matA))->get_name_B()
@@ -1477,8 +1478,8 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
              << std::setw(6)  << (static_cast<const Alloy*>(matB))->get_name_B()
              << std::setw(8) <<  std::setprecision(3) <<  x*x_A        
              << std::setw(8) <<  std::setprecision(3) <<  x*(1-x_A) 
-             << std::setw(8) <<  std::setprecision(3) <<  (1-x)*x_A   
-             << std::setw(8) <<  std::setprecision(3) <<  (1-x)*(1-x_A)
+             << std::setw(8) <<  std::setprecision(3) <<  (1-x)*x_B   
+             << std::setw(8) <<  std::setprecision(3) <<  (1-x)*(1-x_B)
              << std::setw(10) << (static_cast<const Alloy*>(matA))->get_name_A() << etb_dataset + ".etb"
              << std::setw(10) << (static_cast<const Alloy*>(matA))->get_name_B() << etb_dataset + ".etb"
              << std::setw(10) << (static_cast<const Alloy*>(matB))->get_name_A() << etb_dataset + ".etb"
@@ -1495,6 +1496,10 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
         file           << std::setw(10) << dbA.get("E_v",0.0) << " "
                        << std::setw(10) << dbB.get("E_v",0.0) << " ";
       }
+
+      if (alloy_type == "quaternary")
+        file                          << " 0.0  0.0";
+
       file                            << " 0.0  0.0"
                                       << " 0.0  0.0" << std::endl;
     }
