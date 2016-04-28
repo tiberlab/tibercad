@@ -211,6 +211,9 @@ class ETB : public TightBinding
   //! Add potential shifts
   void add_pot_shifts(void);
 
+  //! extract valence band shifts for pure materials from database
+  void get_valence_band_shifts(const Material* mat);
+
   //! Add band shifts
   void add_band_shifts(void);
 

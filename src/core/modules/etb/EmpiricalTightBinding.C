@@ -1462,6 +1462,34 @@ ETB::compute_eigenvector_mag(unsigned int eigenstate, std::vector<double>& densa
   }
 }
 
+
+void ETB::get_valence_band_shifts(const Material* mat)
+{
+  if (mat->is_alloy())
+  {
+    const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
+    vector<const Material*> mats(2);
+    mats[0] = alloy->get_component_A();
+    mats[1] = alloy->get_component_B();
+    for (int i = 0; i < mats.size(); ++i)
+      get_valence_band_shifts(mats[i]);
+  }
+  else
+  {
+    Database db = mat->get_database();
+    db.set_section("atomistic_structure");
+    string atom1 = db.get("specie_1", "", true);
+    string atom2 = db.get("specie_2", "", true);
+
+    db.set_section("valenceband");
+    double vb = db.get("E_v",0.0);
+
+    _map_pairs_Evb[make_pair(Specie(atom1), Specie(atom2))] = vb;
+    _map_pairs_Evb[make_pair(Specie(atom2), Specie(atom1))] = vb;
+  }
+}
+
+
 void ETB::get_bulk_edges(void)
 {
   
@@ -1475,42 +1503,9 @@ void ETB::get_bulk_edges(void)
       {
         if (randomalloy)
         {
-          // we get the pure materials' shifts for all atom pairs
-          // this works only for binaries up to now
-          if (mat->is_alloy())
-          {
-            const Alloy* alloy = dynamic_cast<const Alloy*>(mat);
-            vector<const Material*> mats(2);
-            mats[0] = alloy->get_component_A();
-            mats[1] = alloy->get_component_B();
-            for (int i = 0; i < mats.size(); ++i)
-            {
-              Database db = mats[i]->get_database();
-              db.set_section("atomistic_structure");
-              string atom1 = db.get("specie_1", "", true);
-              string atom2 = db.get("specie_2", "", true);
-
-              db.set_section("valenceband");
-              double vb = db.get("E_v",0.0);
-
-              _map_pairs_Evb[make_pair(Specie(atom1), Specie(atom2))] = vb;
-              _map_pairs_Evb[make_pair(Specie(atom2), Specie(atom1))] = vb;
-            }
-          }
-          else
-          {
-            Database db = mat->get_database();
-            db.set_section("atomistic_structure");
-            string atom1 = db.get("specie_1", "", true);
-            string atom2 = db.get("specie_2", "", true);
-
-            db.set_section("valenceband");
-            double vb = db.get("E_v",0.0);
-
-            _map_pairs_Evb[make_pair(Specie(atom1), Specie(atom2))] = vb;
-            _map_pairs_Evb[make_pair(Specie(atom2), Specie(atom1))] = vb;
-          }
+          get_valence_band_shifts(mat);
         }
+
 
 
         Database db = mat->get_database();
