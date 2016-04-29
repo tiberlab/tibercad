@@ -544,7 +544,7 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
 
   //Build a supercell, defined by the lenght of conventional growth cell vectors
   int i,j,l;
-  int n1,n2,n3,start_i = 0, start_j = 0, start_l = 0;
+  int start_i = 0, start_j = 0, start_l = 0;
   double conv_l1, conv_l2, conv_l3;
   Atom basis_atom;
   Tensor1 lattice_point;
@@ -569,9 +569,14 @@ void AtomisticGenerator::make_supercell(double l1, double l2, double l3)
   conv_l3 = sqrt(_conv_vect(1,3) * _conv_vect(1,3) + _conv_vect(2,3) * _conv_vect(2,3) 
                                                    + _conv_vect(3,3) * _conv_vect(3,3));
 
-  n1 = std::max(1, static_cast<int>(floor(l1 / conv_l1)));
-  n2 = std::max(1, static_cast<int>(floor(l2 / conv_l2)));
-  n3 = std::max(1, static_cast<int>(floor(l3 / conv_l3)));
+  int n1 = std::max(1, static_cast<int>(floor(l1 / conv_l1)));
+  int n2 = std::max(1, static_cast<int>(floor(l2 / conv_l2)));
+  int n3 = std::max(1, static_cast<int>(floor(l3 / conv_l3)));
+
+  // override with integer factors from input file
+  n1 = _as->get_options().get_option("cells_along_x", n1);
+  n2 = _as->get_options().get_option("cells_along_y", n2);
+  n3 = _as->get_options().get_option("cells_along_z", n3);
 
   os << "Conventional cells along x, y, z: " << n1 << " " << n2  << " " << n3;
   Messages::info(os.str());
