@@ -670,7 +670,7 @@ AtomisticStructure::set_labels(void)
       atom.set_label(0);
     else
     {
-      const Material* mat = get_material(atom,false);
+      const Material* mat = get_material(atom, false);
       unsigned int lb = mat->get_label(atom.get_specie());
       if (lb==255)
       {
@@ -1858,13 +1858,40 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
 
 }
 
-//! Get atom Material
 const Material*
 AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
     bool parent) const
 {
- //const Material* mat1 = get_device()->get_material(atom1.get_region_ID());
- //const Material* mat2 = get_device()->get_material(atom2.get_region_ID());
+  const Material* mat = nullptr;
+
+  // first look in the materials
+  const Material* mat1 = get_device()->get_material(atom1.get_region_ID());
+  const Material* mat2 = get_device()->get_material(atom2.get_region_ID());
+
+  if (mat1->has_specie(atom1.get_specie()) && mat1->has_specie(atom2.get_specie()))
+  {
+    // can take it from here
+    mat = mat1;
+  }
+
+  if (mat == nullptr)
+  {
+    // try here
+    if (mat2->has_specie(atom1.get_specie()) && mat2->has_specie(atom2.get_specie()))
+    {
+      // can take it from here
+      mat = mat2;
+    }
+  }
+
+  // if mat exists and is an alloy, go into components
+  if ((mat != nullptr) && (mat->is_alloy()))
+  {
+    const Alloy* alloy = static_cast<const Alloy*>(mat);
+    mat = alloy->get_parent(make_pair(atom1.get_specie(), atom2.get_specie()));
+  }
+
+  // if we didn't find it, we check interface materials (which is created if needed)
 
  //If not, we need to decide based on some other criteria. Up to now we're able to
  //decide only for III-V or II-VI alloys with different cations (eg. Ga-As belong to GaAs)
@@ -1874,6 +1901,7 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
  //  return get_material(atom2, parent);
  //else
  //(Alex) Test using the label on atoms rather than hardcoded CrystalDefs. 
+  /*
  if (atom1.is_cation())
    return get_material(atom1, parent);
  else if (atom2.is_cation())
@@ -1885,7 +1913,8 @@ AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
        "depending on the cation species. I cannot find a valid cation ");
    throw RuntimeException("Cannot find valid cation");
  }
- return NULL;
+ */
+ return(mat);
 }
 
 void

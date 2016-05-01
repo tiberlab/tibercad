@@ -47,6 +47,9 @@ class Alloy : public Material
     //! Return the name of component material B
     const std::string& get_name_B(void) const;
 
+    //! Get the parent material for the pair of species (bond)
+    const Material* get_parent(std::pair<Specie, Specie> atom_pair) const;
+
     //! decide whether an atom with a label can be substituted
     bool is_mutable(unsigned int) const; 
 

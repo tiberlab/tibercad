@@ -337,15 +337,22 @@ Material::fill_species(void)
 bool
 Material::has_specie(Specie sp) const
 {
-    if (_species.find(sp) == _species.end())
-    {
-      return false;
-    }
-    else
-    {
-      return true;
-    }
+  bool has_it = false;
+
+  if (this->is_alloy())
+  {
+    const Alloy* alloy = static_cast<const Alloy*>(this);
+    has_it = alloy->get_component_A()->has_specie(sp);
+
+    if (!has_it)
+      has_it = alloy->get_component_B()->has_specie(sp);
+  }
+  else
+    has_it = (_species.find(sp) != _species.end());
+
+  return has_it;
 }
+
 
 bool
 Material::is_specie(Specie sp, unsigned int label) const
@@ -367,6 +374,7 @@ Material::get_label(Specie sp) const
 {
   if (!has_specie(sp))
   {
+    // TODO no magic numbers, please...
     return 255;
   }
   else
@@ -402,20 +410,4 @@ Material::print_species(void) const
   }
 }
 
-/*
-// Assumes cation is first specie in compound
-bool
-Material::is_cation(Specie sp) const
-{
-    if (!has_specie(sp))
-    {
-      Messages::error("Error in is_cation(): specie " +
-              sp.get_string() + "not found in material " + get_name());
-    }
-    else
-    {
-      return is_specie(sp, 1);
-    }
-}
-*/
 

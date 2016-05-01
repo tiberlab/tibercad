@@ -266,34 +266,29 @@ Alloy::create(const std::string& name, const ModelOptions& options)
   return mat;
 }
 
-/*
-bool
-Alloy::is_anion(Specie sp) const
-{
-  if (!((_mat_A->has_specie(sp)) || (_mat_B->has_specie(sp))))
-    {
-      Messages::error("Error in is_anion: specie not defined for any parent material");
-    }
-    else
-    {
-      return 
-      (CrystalDefs::is_anion(_mat_A->get_name(), sp) || 
-       CrystalDefs::is_anion(_mat_B->get_name(), sp));
-    }
-}
 
-bool
-Alloy::is_cation(Specie sp) const
+const Material*
+Alloy::get_parent(std::pair<Specie, Specie> atom_pair) const
 {
-  if (!((_mat_A->has_specie(sp)) || (_mat_B->has_specie(sp))))
-    {
-      Messages::error("Error in is_cation: specie" + sp.get_string() + " not defined for any parent material");
-    }
-    else
-    {
-      return 
-      (CrystalDefs::is_cation(_mat_A->get_name(), sp) || 
-       CrystalDefs::is_cation(_mat_B->get_name(), sp));
-    }
+  const Material* mat = nullptr;
+  const Material* mat1 = this->get_component_A();
+  const Material* mat2 = this->get_component_B();
+  if (mat1->has_specie(atom_pair.first) && mat1->has_specie(atom_pair.second))
+  {
+    // can take it from here
+    mat = mat1;
+  }
+  else if (mat2->has_specie(atom_pair.first) && mat2->has_specie(atom_pair.second))
+  {
+    // can take it from here
+    mat = mat2;
+  }
+
+  if ((mat != nullptr) && (mat->is_alloy()))
+  {
+    const Alloy* alloy = static_cast<const Alloy*>(mat);
+    mat = alloy->get_parent(atom_pair);
+  }
+
+  return(mat);
 }
-*/
