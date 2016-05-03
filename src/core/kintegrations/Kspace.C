@@ -368,7 +368,8 @@ void Kspace::do_init() throw (InitFailedException)
   k_path = false;
   
 
-  if (mod_opt.find_option("k-path") && k_dim > 1)
+  if ((mod_opt.find_option("k-path") ||
+       mod_opt.find_option("k_path")) && k_dim > 1)
   {
     //std::cout<<"(KSP) found k-path "  << std::endl;
     k_dim = 1;
@@ -755,6 +756,18 @@ void Kspace::define_k_path(void)
 
     }
 
+    // if there is a single point only
+    if (id == 0)
+    {
+      if(tokens[0]=="G")          k1 = G;
+      else if(tokens[0]=="M")   k1 = M;
+      else if(tokens[0]=="X")   k1 = X;
+      else if(tokens[0]=="X'")  k1 = X1;
+      else                        k1 = G;
+
+      kmesh->add_point(Point(k1[0], k1[1], k1[2]),id,0);
+    }
+
   }
   else if (k_space_dim == 3)
   {
@@ -818,6 +831,25 @@ void Kspace::define_k_path(void)
       }
 
     }
+
+    // if there is a single point only
+    if (id == 0)
+    {
+      if(tokens[0]=="G")        k1 = G;   
+      else if(tokens[0]=="M")   k1 = M; 
+      else if(tokens[0]=="M1")  k1 = M1; 
+      else if(tokens[0]=="M2")  k1 = M2; 
+      else if(tokens[0]=="X")   k1 = X1;   
+      else if(tokens[0]=="X1")  k1 = X1;    
+      else if(tokens[0]=="X2")  k1 = X2;    
+      else if(tokens[0]=="X3")  k1 = X3;   
+      else if(tokens[0]=="L")   k1 = L;
+      else                      k1 = G;  
+
+      kmesh->add_point(Point(k1[0], k1[1], k1[2]),id,0);
+    }
+
+
  
   }
 
