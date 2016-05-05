@@ -93,15 +93,18 @@ int UptWrapper::inituptight()
 
 int UptWrapper::set_mpi_comm(MPI_Comm comm)
 {
+    // 4/5/2016 simply casting gives an error, we need to correctly
+    // convert the handle
+
     // checks that MPI_comm can be casted to integer
-    int icomm = (int) comm;
-    if (icomm != comm) 
+    //int icomm = (int) comm;
+    //if (icomm != comm) 
+    //{
+    //  return 1;
+    //}
+    //else
     {
-      return 1;
-    }
-    else
-    {
-      f77_upt_setmpicomm(_handler, comm);
+      f77_upt_setmpicomm(_handler, MPI_Comm_c2f(comm));
       return 0;
     }
 }
