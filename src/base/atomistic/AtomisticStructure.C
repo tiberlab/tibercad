@@ -1382,21 +1382,21 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
   file << "#Materials " << std::endl;
 
   std::map<const Material*, unsigned int> n_species_map;
- 
-  std::map<const Material*, unsigned int>::iterator mat_it = material_map.begin();
-  for ( ; mat_it != material_map.end(); ++mat_it)
+
+  // to get them ordered correctly
+  std::map<unsigned int, const Material*> inv_material_map;
   {
-    //Note: material_map has material in ascending order, starting from one, despite any general enumeration
-    //in TiberCAD. Check some lines above how it's built. In file they need to be stored in ascending order,
-    //that's why I'm not using safer iterators and I work in this way
-    
-    //  std::map<Material*, unsigned int>::iterator mat_it = material_map.begin();
-    ////Select material with this id in material_map
-    //  for (mat_it = material_map.begin(); mat_it != material_map.end(); ++mat_it)
-    //  {
-    //    if ((*mat_it).second == i) break;
-    //  }
-    const Material* mat = (*mat_it).first;
+    std::map<const Material*, unsigned int>::iterator mat_it = material_map.begin();
+    for ( ; mat_it != material_map.end(); ++mat_it)
+    {
+      inv_material_map[mat_it->second] = mat_it->first;
+    }
+  }
+
+  std::map<unsigned int, const Material*>::iterator mat_it = inv_material_map.begin();
+  for ( ; mat_it != inv_material_map.end(); ++mat_it)
+  {
+    const Material* mat = (*mat_it).second;
     
     Database db = mat->get_database();
     db.set_section("atomistic_structure");
@@ -1422,7 +1422,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     if (mat->is_alloy())
     {
 
-      file << std::setw(3)  << (*mat_it).second
+      file << std::setw(3)  << (*mat_it).first
            << std::setw(12) << mat->get_name()
            << std::setw(6)  << mat->get_structure()
            << std::setw(12) << alloy_type;
@@ -1506,7 +1506,7 @@ AtomisticStructure::print_upg(const std::string& path, const std::string& etb_da
     else
     {
       db.set_section("valenceband");
-      file << std::setw(3)  << (*mat_it).second
+      file << std::setw(3)  << (*mat_it).first
            << std::setw(12) << mat->get_name()
            << std::setw(6)  << mat->get_structure()
            << std::setw(12) << alloy_type
