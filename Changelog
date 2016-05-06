@@ -6,6 +6,8 @@ New features:
 	  calculate the carrier densities, instead of extracting effective
 	  parameters for a single parabolic band (which has been done only for
 	  holes, anyway)
+	- optics modules can now use Gaussian line shape (line_shape =
+	  gaussian | lorentzian)
 	
 
 Version 2.5.0
