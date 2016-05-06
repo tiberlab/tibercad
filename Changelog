@@ -6,6 +6,7 @@ New features:
 	  calculate the carrier densities, instead of extracting effective
 	  parameters for a single parabolic band (which has been done only for
 	  holes, anyway)
+	- quaternaries can now be used for atomistic simulations
 	- optics modules can now use Gaussian line shape (line_shape =
 	  gaussian | lorentzian)
 	
@@ -23,7 +24,6 @@ New features:
 
 Bug fixes:
 
-	- interface models for drift-diffusion now correctly consider the
 	- missing factor of 2/3 added in spontaneous emission
 
 Version 2.3.0
