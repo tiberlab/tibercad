@@ -9,7 +9,7 @@
 
 using namespace std;
 
-
+bool Trap::_coupled;
 
 
 
@@ -29,7 +29,8 @@ Trap::Trap(const ModelOptions& options) :
   _h_vth(1e7),
   _gen_TC(0.0),
   _gen_VT(0.0),
-  _dos(NULL)
+  _dos(NULL),
+  _ext_dens_sim(NULL)
 {
   string type = get_option("type", "");
   if (type == "eNeutral")
@@ -135,6 +136,27 @@ Trap::do_init(void)
   }
   of.close();
   */
+  _coupled = false;
+  if (_type == FIXED ) 
+  {
+    string sim = get_option("ext_dens_simulation", "");
+
+    _ext_dens_sim = SimulationInterface::find_simulation(sim);
+
+    
+    if ( ( _ext_dens_sim == NULL ) && ( sim != "" ) )
+    {
+      std::string msg("External density simulation " + std::string(sim) + " not found");
+      throw InitFailedException(msg);
+    }
+
+    
+
+    _eDensity = _ext_dens_sim->get_solution_id("eDensity");
+    _hDensity = _ext_dens_sim->get_solution_id("hDensity");
+
+    _coupled = true; 
+  }
 }
 
 
@@ -345,6 +367,26 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
       dens -= Nt;
   }
 
+  
+  if ( ( _type == FIXED ) && ( _ext_dens_sim != NULL ) )
+  {
+    
+    if ( _ext_dens_sim->is_solved() && _coupled )
+    {
+      double extn, extp = 0.0;
+
+      _coupled = false;
+
+      _ext_dens_sim->get_solution(elem, _eDensity, extn, p);
+      _ext_dens_sim->get_solution(elem, _hDensity, extp, p);
+
+      _coupled = true;
+
+      dens += extp - extn;
+    }
+    
+  }
+  
   return dens;
 }
 

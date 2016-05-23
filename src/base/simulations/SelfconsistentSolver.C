@@ -35,9 +35,12 @@ SelfconsistentSolver::do_init(void)
     if (_simulations[i] == NULL)
       throw InitFailedException("SelfconsistentSolver: Simulation " +
           sims[i] + " not found.");
-
+    
     if (sims[i] == get_option("convergence_check", ""))
+    {
       _convergence_check_id = i;
+      cout<<"Convergence check: "<<sims[i]<<endl; 
+    }
 
     // If it is not already initialized, we initialize now
     if (!_simulations[i]->is_initialized())
@@ -45,11 +48,11 @@ SelfconsistentSolver::do_init(void)
   }
 
 
-  if (!_simulations[num_of_sims - 1]->has_solution_vector())
+  if (!_simulations[_convergence_check_id]->has_solution_vector())
   {
     ostringstream s;
     s << "SelfconsistentSolver: Simulation "
-      << _simulations[num_of_sims - 1]->get_name() << " has no solution vector!";
+      << _simulations[_convergence_check_id]->get_name() << " has no solution vector!";
     throw InitFailedException(s.str());
   }
 
@@ -110,7 +113,8 @@ NumericVector<double>&
 SelfconsistentSolver::do_get_solution_vector(void)
 {
   int num_sim = _simulations.size();
-  return _simulations[num_sim - 1]->get_solution_vector();
+  //return _simulations[num_sim - 1]->get_solution_vector();
+  return _simulations[_convergence_check_id]->get_solution_vector();
 }
 
 
@@ -120,7 +124,8 @@ SelfconsistentSolver::do_set_solution_vector(
     const NumericVector<double>& new_solution)
 {
   int num_sim = _simulations.size();
-  _simulations[num_sim - 1]->set_solution_vector(new_solution);
+  //_simulations[num_sim - 1]->set_solution_vector(new_solution); 
+  _simulations[_convergence_check_id]->set_solution_vector(new_solution);
 }
 
 

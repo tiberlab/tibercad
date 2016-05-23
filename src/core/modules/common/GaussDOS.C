@@ -54,7 +54,7 @@ GaussDOS::do_init(void)
   {
     if (has_parameter("level"))
     {
-      get_parameter("level", reference_energy());
+      get_parameter("level", reference_energy()[0]);
     }
     get_parameter("sigma", _sigma);
     get_parameter("N0", _N0);
@@ -63,12 +63,13 @@ GaussDOS::do_init(void)
   {
     if (has_parameter("level"))
     {
-      get_parameter("level", reference_energy());
+      get_parameter("level", reference_energy()[0]);
     }
     get_parameter("sigma", _sigma);
     get_parameter("N0", _N0);
   }
   effective_mass()[0] = 1.0;
+  effective_dos() = _N0;
 }
 
 double GaussDOS::erfc(double x) const
@@ -206,7 +207,7 @@ GaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, do
 
   double ref_en = get_reference_energy()[0];
   if (get_particle() == 'h') ref_en *= -1.0;
-  //cout<<"ref_energy "<<reference_energy()<<endl;
+  //cout<<"ref_energy "<<get_reference_energy()[0]<<endl;
   double z = (Ef - ref_en - Epot) / kT;
 
   double s = _sigma / kT;
@@ -223,13 +224,13 @@ GaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, do
     espf = exp( ks * (z + s*s));
     dens = _N0 * exp(z + 0.5 *s*s) / (espf + 1.0);	
     der = dens * (1.0 - (ks * espf / (espf + 1.0) ) ) / kT;
-    //cout<<"s="<<s<<"z="<<z<<" dens="<<dens<<" der="<<der<<endl;	
+    //cout<<"s="<<s<<"<z="<<z<<" dens="<<dens<<" der="<<der<<endl;	
   }
   else
   {
     dens = _N0 * 0.5 * erfc(-1.0 * hs * z / (s * sqrt(2.0)) );
     der = _N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*pi) * kT);
-    //cout<<"s="<<s<<" z="<<z<<" dens="<<dens<<endl;
+    //cout<<"s="<<s<<" >z="<<z<<" dens="<<dens<<" der="<<der<<endl;
   }
   return make_pair(dens, der);
 }

@@ -424,6 +424,14 @@ class SimulationInterface : public TiberModelObject
     //! Check if the equilibrium for this simulation has been calculated
     bool equilibrium_done(void) const;
 
+    //! Check if we are at equilibrium
+    const bool& equilibrium(void)
+                { return _equilibrium; }
+
+    //! Set or unset the \c _equilibrium flag
+    void equilibrium(bool flag)
+         { _equilibrium = flag; }
+
 
     //! Get the ID associated to a solution variable
     /*!
@@ -1376,6 +1384,9 @@ class SimulationInterface : public TiberModelObject
 
     //! A flag indicating that equilibrium has been done
     bool _equilibrium_is_solved;
+
+    //! A flag indicating if we are at equilibrium
+    bool _equilibrium;
 
 
     //! Do we have a solution vector or not

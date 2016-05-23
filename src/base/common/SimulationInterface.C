@@ -21,6 +21,7 @@
 #include "OpticsKP.h"
 #include "OpticsTB.h"
 #include "Sweep.h"
+#include "SaveSolution.h"
 #include "RelaxationMethod.h"
 #include "Utils.h"
 #include "DataOutput.h"
@@ -125,7 +126,8 @@ SimulationInterface::create(const string& type,
     sim = EnvelopFunctionApprox::create(options);
   else if (type_name == "sweep")
     sim = Sweep::create(options);
-
+  else if (type_name == "savesolution")
+    sim = SaveSolution::create(options);
   else if (type_name == "selfconsistent")
     sim = RelaxationMethod::create(options);
   else if (type_name == "selfconsistent_relaxation")

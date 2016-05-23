@@ -205,7 +205,7 @@ ExcitonTransport::do_print_info(void)
   Messages::newline();
 
   ostringstream os;
-  os << "solving for : ";
+  os << "solving for: ";
   if (myopts.coupling & SINGLET)
     os << "singlets";
   if (myopts.coupling & TRIPLET)
@@ -834,8 +834,16 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
         solutions[SRNONRAD][n] = excitonmodel->get_s_nonradiative_recombination_rate();
       }
 
+      if (solutions.count(SHGRECOMB)) {
+        solutions[SHGRECOMB][n] = excitonmodel->get_s_hg_recombination_rate();
+      }
+
       if (solutions.count(SGEN)) {
         solutions[SGEN][n] = excitonmodel->get_s_generation_rate();
+      }
+
+      if (solutions.count(SHGGEN)) {
+        solutions[SHGGEN][n] = excitonmodel->get_s_hg_generation_rate();
       }
 
       if (solutions.count(SNETRECOMB)) {
@@ -844,9 +852,8 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
       }
 
       if (solutions.count(SRADPOWER)) {
-        solutions[SRADPOWER][n] =
-        excitonmodel->get_exciton_energy() * excitonmodel->get_s_density() /
-        excitonmodel->get_s_radiative_recombination_rate();
+        solutions[SRADPOWER][n] = 0.0;
+        //excitonmodel->get_exciton_energy() * excitonmodel->get_s_density() / excitonmodel->get_s_radiative_recombination_rate();
       }
 
 
@@ -877,6 +884,14 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
         solutions[TRNONRAD][n] = excitonmodel->get_t_nonradiative_recombination_rate();
       }
 
+      if (solutions.count(THGRECOMB)) {
+        solutions[THGRECOMB][n] = excitonmodel->get_t_hg_recombination_rate();
+      }
+
+      if (solutions.count(THGGEN)) {
+        solutions[THGGEN][n] = excitonmodel->get_t_hg_generation_rate();
+      }
+
       if (solutions.count(TGEN)) {
         solutions[TGEN][n] = excitonmodel->get_t_generation_rate();
       }
@@ -887,9 +902,8 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
       }
 
       if (solutions.count(TRADPOWER)) {
-        solutions[TRADPOWER][n] =
-        excitonmodel->get_exciton_energy() * excitonmodel->get_t_density() /
-        excitonmodel->get_t_radiative_recombination_rate();
+        solutions[TRADPOWER][n] = 0.0;
+        //excitonmodel->get_exciton_energy() * excitonmodel->get_t_density() / excitonmodel->get_t_radiative_recombination_rate();
       }
 
      if (solutions.count(RDISS)) {
@@ -924,6 +938,12 @@ ExcitonTransport::do_setup_solution_variables(void) {
   declare_solution_ext("t_rad_power", TRADPOWER, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
 
   declare_solution_ext("dissociation", RDISS, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+
+  declare_solution_ext("s_hg_recombination", SHGRECOMB, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("t_hg_recombination", THGRECOMB, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("s_hg_generation", SHGGEN, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("t_hg_generation", THGGEN, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+
 }
 
 void ExcitonTransport::get_solution_secure(std::map<ID, std::vector<double> >& solutions) {

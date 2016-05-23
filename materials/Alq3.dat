@@ -1,15 +1,15 @@
 #Alq3
 
 [valenceband]
-E_v = -5.8
+E_v = -5.7 #-5.8
 
 [bandgap]
-Eg_G = 2.9
-Eg_L = 2.9
-Eg_X = 2.9
+Eg_G = 2.8 #2.9  
+Eg_L = 2.8 #2.9
+Eg_X = 2.8 #2.9
 
 [permittivity]
-permittivity = 3.53
+permittivity = 3.0 #3.53
 
 [thermal_conductivity/constant]
 ThermCond = 0.45

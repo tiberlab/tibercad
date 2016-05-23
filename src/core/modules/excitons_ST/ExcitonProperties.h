@@ -149,6 +149,15 @@ class TBDLEXPORT ExcitonProperties : public PhysicalModel
 
     //! Get the singlet dissociation rate
     virtual double get_s_dissociation_rate(void);
+ 
+    //! Get the singlet generation rate
+    virtual double get_s_generation_rate(void);
+
+    //! Get the singlet host-guest recombination rate
+    virtual double get_s_hg_recombination_rate(void);
+
+    //! Get the singlet host-guest generation rate
+    virtual double get_s_hg_generation_rate(void);
 
     //! Get the ISC rate
     virtual double get_isc_rate(void);
@@ -172,27 +181,31 @@ class TBDLEXPORT ExcitonProperties : public PhysicalModel
     //! Get the triplet dissociation rate
     virtual double get_t_dissociation_rate(void);
 
-    //! Get the singlet mobility
+    //! Get the triplet generation rate
+    virtual double get_t_generation_rate(void);
+
+    //! Get the triplet host-guest recombination rate
+    virtual double get_t_hg_recombination_rate(void);
+
+    //! Get the triplet host-guest generation rate
+    virtual double get_t_hg_generation_rate(void);
+
+
+    //! Get the singlet diffusion coefficient
     /*!
-     * \return the singlet mobility
+     * \return the singlet diffusion coefficient
      */
     double get_s_diffusion(void) const
       { return s_diffusion; };
 
-    //! Get the triplet mobility
+    //! Get the triplet diffusion coefficient
     /*!
-     * \return the triplet mobility
+     * \return the triplet diffusion coefficient
      */
     double get_t_diffusion(void) const
       { return t_diffusion; };
 
-    virtual double get_s_generation_rate() {
-      return 0;
-    };
 
-    virtual double get_t_generation_rate() {
-      return 0;
-    };
 
   protected:
 
@@ -243,6 +256,9 @@ class TBDLEXPORT ExcitonProperties : public PhysicalModel
     //! The singlet nonradiative recombination rate
     double s_nonrad_recomb_rate;
 
+    //! The singlet host-guest recombination rate
+    double s_hg_recomb_rate;
+
     //! The singlet dissociation rate
     double s_dissoc_rate;
 
@@ -260,6 +276,9 @@ class TBDLEXPORT ExcitonProperties : public PhysicalModel
 
     //! The triplet nonradiative recombination rate
     double t_nonrad_recomb_rate;
+
+    //! The triplet host-guest recombination rate
+    double t_hg_recomb_rate;
 
     //! The triplet dissociation rate
     double t_dissoc_rate;
@@ -353,6 +372,27 @@ ExcitonProperties::get_s_dissociation_rate(void)
 
 inline
 double
+ExcitonProperties::get_s_hg_recombination_rate(void)
+{
+  return 0;
+}
+
+inline
+double
+ExcitonProperties::get_s_generation_rate(void)
+{
+  return 0;
+}
+
+inline
+double
+ExcitonProperties::get_s_hg_generation_rate(void)
+{
+  return 0;
+}
+
+inline
+double
 ExcitonProperties::get_isc_rate(void)
 {
   return 0;
@@ -393,6 +433,26 @@ ExcitonProperties::get_t_dissociation_rate(void)
   return 0;
 }
 
+inline
+double
+ExcitonProperties::get_t_hg_recombination_rate(void)
+{
+  return 0;
+}
+
+inline
+double
+ExcitonProperties::get_t_generation_rate(void)
+{
+  return 0;
+}
+
+inline
+double
+ExcitonProperties::get_t_hg_generation_rate(void)
+{
+  return 0;
+}
 
 inline
 const Elem*
@@ -436,6 +496,7 @@ inline
 double
 ExcitonProperties::get_exciton_energy(void)
 {
+  //std::cout<<"Ex energy = "<<_energy<<std::endl;
   return _energy;
 }
 

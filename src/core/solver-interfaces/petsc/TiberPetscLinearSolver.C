@@ -106,6 +106,7 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
 			     NumericVector<Number>& solution_in,
 			     NumericVector<Number>& rhs_in)
 {
+
   this->init();
   
   PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(&matrix_in);
@@ -199,6 +200,7 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
 
   // Solve the linear system
   ierr = KSPSolve(_ksp, rhs->vec(), solution->vec());
+
   //KSPConvergedReason reason;
   //KSPGetConvergedReason(_ksp, &reason);
   //std::cerr << "KSP convergence reason: " << reason << std::endl;
@@ -297,7 +299,7 @@ TiberPetscLinearSolver::check_convergence(void)
     if (throw_ex)
       throw(KSPDivergedError(reason, its, fnorm));
   }
-
+  
   return std::pair<unsigned int, double>(its, fnorm);
 }
 

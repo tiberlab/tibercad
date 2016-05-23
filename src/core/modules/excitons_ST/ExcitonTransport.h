@@ -69,7 +69,9 @@ class ExcitonTransport : public SimulationInterface
       SRDISS,           /*!< dissociation rate */
       SRRAD,            /*!< radiative recombination rate */
       SRNONRAD,         /*!< non radiative recombination rate */
+      SHGRECOMB,         /*!< host-guest recombination rate */
       SGEN,             /*!< exciton generation */
+      SHGGEN,            /*!< host-guest generation rate */
       SNETRECOMB,       /*!< net recombination rate */
       SRADPOWER,        /*!< radiative power density  */
 
@@ -79,14 +81,16 @@ class ExcitonTransport : public SimulationInterface
       TRDISS,           /*!< dissociation rate */
       TRRAD,            /*!< radiative recombination rate */
       TRNONRAD,         /*!< non radiative recombination rate */
+      THGRECOMB,          /*!< host-guest recombination rate */
       TGEN,             /*!< exciton generation */
+      THGGEN,            /*!< host-guest generation rate */
       TNETRECOMB,       /*!< net recombination rate */
       TRADPOWER,        /*!< radiative power density  */
 
       RDISS             /*!< total dissociation rate */
     };
+
  
-    
     /**
      * This class defines various parameters that control a
      * drift-diffusion calculation
@@ -96,7 +100,7 @@ class ExcitonTransport : public SimulationInterface
       public:
 
         Options(void);
-        
+
         Options(const Options& rhs);
 
         Options& operator=(const Options& rhs);
@@ -154,11 +158,10 @@ class ExcitonTransport : public SimulationInterface
         int coupling;
 
       private:
-        
+
         friend class ExcitonTransport;
     };
 
-    
 
     //! Constructor
     ExcitonTransport(const ModelOptions& options);
@@ -168,8 +171,8 @@ class ExcitonTransport : public SimulationInterface
 
     //! Create an ExcitonTransport object
     static ExcitonTransport* create(const ModelOptions& options);
-  
-    
+
+
     /*! \copydoc SimulationInterface::create_bulk_model() */
     virtual PhysicalModel*
       create_bulk_model(const ModelOptions& options,

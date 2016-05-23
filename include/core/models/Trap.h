@@ -5,6 +5,7 @@
 
 
 #include "PhysicalModelInterface.h"
+#include "SimulationInterface.h"
 #include "ExternalProfile.h"
 
 class DensityOfStates;
@@ -151,6 +152,16 @@ class TBDLEXPORT Trap : public PhysicalModelInterface
 
     //! Calculate the trap level
     double _trap_level(void) const TBDLLOCAL;
+
+    //! The simulation providing external electron and hole densities
+    SimulationInterface* _ext_dens_sim;
+
+    //! Flag preventing infinite recursion
+    static bool _coupled;
+
+    //! Solution IDs
+    ID _eDensity;
+    ID _hDensity;
 
 };
 

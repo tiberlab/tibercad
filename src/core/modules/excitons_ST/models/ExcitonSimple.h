@@ -63,8 +63,7 @@ class ExcitonSimple : public ExcitonProperties
     virtual double get_isc_rate_derivative(void);
 
     //! Get the singlet generation rate
-
-    virtual double get_s_generation_rate();
+    virtual double get_s_generation_rate(void);
 
     //! Get the triplet nonradiative recombination rate
     virtual double get_t_nonradiative_recombination_rate(void);
@@ -76,8 +75,7 @@ class ExcitonSimple : public ExcitonProperties
     virtual double get_t_dissociation_rate(void);
 
     //! Get the triplet generation rate
-
-    virtual double get_t_generation_rate();
+    virtual double get_t_generation_rate(void);
 
 
   private:

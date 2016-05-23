@@ -47,11 +47,11 @@ RelaxationMethod::do_solve(void)
 
 
     double x_old_norm = x_old->l2_norm();
-    {
-      //ostringstream file;
-      //file << "X_" << it << ".m";
-      //get_solution_vector().print_matlab(file.str());
-    }
+    //{
+    //  ostringstream file;
+    //  file << "X_" << it << ".m";
+    //  get_solution_vector().print_matlab(file.str());
+    //}
 
     solve_simulations();
 
@@ -59,11 +59,11 @@ RelaxationMethod::do_solve(void)
     get_solution_vector() -= *x_old;
     double norm = get_solution_vector().linfty_norm();
     double rel_err =  get_solution_vector().l2_norm() / x_old_norm;
-    {
-      //ostringstream file;
-      //file << "dX_" << it << ".m";
-      //get_solution_vector().print_matlab(file.str());
-    }
+    //{
+    //  ostringstream file;
+    //  file << "dX_" << it << ".m";
+    //  get_solution_vector().print_matlab(file.str());
+    //}
 
 
     converged = true;
@@ -82,8 +82,8 @@ RelaxationMethod::do_solve(void)
     draw_point(it, rel_err);
 
     // check for the difference between old and new solutions
-    if ((norm > get_absolute_tolerance()) &&
-        (rel_err > get_relative_tolerance()))
+    if (((norm > get_absolute_tolerance()) &&
+        (rel_err > get_relative_tolerance())) ||  isnan((long double) norm) || isnan((long double) rel_err) )
       converged = false;
 
     get_solution_vector().scale(relax);
