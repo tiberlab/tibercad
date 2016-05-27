@@ -2160,7 +2160,7 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
     double Pn =  sc->get_electron_thermoelectric_power();
     double Pp =  sc->get_hole_thermoelectric_power();
 
-    sc->calculate_net_recombination_rates();
+    //sc->calculate_net_recombination_rates();
 
     double sigma_e = Constants::e * sc->get_electron_conductivity();
     double sigma_h = Constants::e * sc->get_hole_conductivity();
