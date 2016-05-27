@@ -150,12 +150,13 @@ Trap::do_init(void)
       throw InitFailedException(msg);
     }
 
-    
+    if (_ext_dens_sim != nullptr)
+    {
+      _eDensity = _ext_dens_sim->get_solution_id("eDensity");
+      _hDensity = _ext_dens_sim->get_solution_id("hDensity");
 
-    _eDensity = _ext_dens_sim->get_solution_id("eDensity");
-    _hDensity = _ext_dens_sim->get_solution_id("hDensity");
-
-    _coupled = true; 
+      _coupled = true; 
+    }
   }
 }
 
