@@ -39,11 +39,16 @@ GaussDOS::read_database(void)
     double bandgap = db.get("Eg_G", 1e3);
 
     reference_energy()[0] += bandgap;
+
+    db.set_section("conductionband");
+    _N0 = db.get("N0", 1e18);
   }
   else if (get_particle() == 'h')
   {
     db.set_section("valenceband");
     reference_energy()[0] = db.get("E_v", 0.0);
+
+    _N0 = db.get("N0", 1e18);
   }
 }
 
@@ -69,6 +74,7 @@ GaussDOS::do_init(void)
     get_parameter("N0", _N0);
   }
   effective_mass()[0] = 1.0;
+  
   effective_dos() = _N0;
 }
 
