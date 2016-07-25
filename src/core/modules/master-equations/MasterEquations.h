@@ -168,13 +168,14 @@ class TBDLLOCAL MasterEquations : public SimulationInterface
     //! We have to provide somehow our solution variables // DA MODIF
     virtual void get_solution_secure(const Elem* elem,
         std::map<ID, std::vector<double> >& solutions,
-        const std::vector<Elem>& elements);
+        const std::vector<Point>& points);
 
 
     virtual void get_solution_secure(std::map<ID, std::vector<double> >& solutions);
 
 
-
+    //! We override this to not produce too many files ...
+    virtual void plot_globaldata(void) {};
 
   private:
 
@@ -224,9 +225,9 @@ class TBDLLOCAL MasterEquations : public SimulationInterface
           SparseMatrix<Number>* jacobian);
 
 
-    static void assemble_system(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-          SparseMatrix<Number>* jacobian);
+   static void transformation(NumericVector<Number>& u,
+        NumericVector<Number>& T,
+           NumericVector<Number>& TX, bool transf);
 
 
     //! The real assembly function
@@ -237,6 +238,11 @@ class TBDLLOCAL MasterEquations : public SimulationInterface
     template <int T>
     void do_assembly(const NumericVector<Number>& x, NumericVector<Number>* residual,
         SparseMatrix<Number>* jacobian);
+
+
+    void do_transformation(NumericVector<Number>& u,
+         NumericVector<Number>& T,
+            NumericVector<Number>& TX, bool transf);
 
 
     //! Rebuild the equation system if needed

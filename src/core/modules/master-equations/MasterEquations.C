@@ -123,6 +123,9 @@ MasterEquations::do_init(void)
   // assembly of the system
   system.attach_assembly_routine(assemble);
 
+  // attach transformation
+  system.attach_transformation_routine(transformation);
+
 
   // initialize the system
   system.init();
@@ -141,8 +144,12 @@ MasterEquations::do_init(void)
   const double scaling = 1;
 
   // set initial values of densities
-  double level_n = 0.1 * scaling;//1e6;
-  double level_p = 0.1 * scaling;//2e6;
+  double level_n = 0.0;//0.1 * scaling;//1e6;
+  double level_p = 0.0;//0.1 * scaling;//2e6;
+
+  double Ef_n = 2.8;
+  double Ef_p = 0.7;
+  double Ef_n0 = 2.7;
 
   // linear system of support to set values of energies (Ec and Ev) perturbated by gaussians
   create_equation_system("linear");
@@ -168,24 +175,22 @@ MasterEquations::do_init(void)
   const unsigned int Ec_var = _sys_EcEv->variable_number("Ec");
   const unsigned int Ev_var = _sys_EcEv->variable_number("Ev");
 
-  const double sigma = 0.01; // sigma of Gaussian expression (standard deviation)
-  const double mean = 0.0;  // mean value of gaussian
+  const double sigma = 0.06; // sigma of Gaussian expression (standard deviation)
+  const double mean = 0.00;  // mean value of gaussian
 
-  const double sigma_c = 0.01 * scaling; // sigma of Gaussian expression (standard deviation)
+  const double sigma_c = 0.02 * scaling; // sigma of Gaussian expression (standard deviation)
 
 
   const double level_Ec = 2.5;//Ec = db->get_conduction_band_edge();
 
-  const double level_Ev = 1;//Ev = db->get_valence_band_edge();;
+  const double level_Ev = 1;//Ev = db->get_valence_band_edge();
+
 
   // get mesh
   MeshBase& mesh = get_mesh();
 
+
   const int n_el = solution_E.size()/2;
-
-  //cerr << n_el << endl;
-
-  //const int n_elem = n_el/2;
 
 
   // define iterators which point to the active elements
@@ -199,6 +204,10 @@ MasterEquations::do_init(void)
   //const double log_sigma = log(1 / sigma * sqrt(2 * M_PI));
   std::tr1::mt19937 generator(seed);
 
+  const double KbT_elem = 0.026;
+
+  const double dE_min = log(1e-4) * KbT_elem;
+
   cerr<<"do_init loop over elements"<<endl;
 
   for (; el != end; ++el)
@@ -209,18 +218,8 @@ MasterEquations::do_init(void)
     unsigned const id_n = elem->dof_number(system.number(), n_var, 0 );
     unsigned const id_p = elem->dof_number(system.number(), p_var, 0 );
 
-    //vector<unsigned int> dof_indices_Ec;
-    //vector<unsigned int> dof_indices_Ev;
-
     unsigned const id_Ec = elem->dof_number(_sys_EcEv->number(), Ec_var, 0 );
     unsigned const id_Ev = elem->dof_number(_sys_EcEv->number(), Ev_var, 0 );
-
-    //cerr << "id_Ec" << endl << id_Ec << endl;
-    //cerr << "id_Ev" << endl << id_Ev << endl;
-
-
-    //dof_map_E.dof_indices(elem, dof_indices_Ec, 0);
-    //dof_map_E.dof_indices(elem, dof_indices_Ev, 0);
 
 
     const double eps = std::numeric_limits<double>::min();
@@ -281,35 +280,37 @@ MasterEquations::do_init(void)
 
     }
 
-    //cerr<< rn_1 << rn_2  << endl;
-
-
-    //unsigned int n_dofs = dof_indices_Ec.size();
-    //cerr<<""<<endl;
-
-
     solution_E.set(id_Ec, level_Ec + rn_1); //
     solution_E.set(id_Ev, level_Ev + rn_2); //
 
-    solution.set(id_n, level_n + rn_1_c); //
-    solution.set(id_p, level_p + rn_2_c ); //
 
+    if (solution_E(id_Ec) - Ef_n < dE_min)
+    {
+      level_n = 1 / ( 1 + exp (( solution_E(id_Ec) - 0.5 * ( solution_E(id_Ec) + sigma ) )/KbT_elem) );
+    }
+    else
+    {
+      level_n = 1 / ( 1 + exp (( solution_E(id_Ec) - Ef_n)/KbT_elem) );
+    }
 
-    //for(unsigned int i = 0; i < n_dofs; i++)
-    //{
+    if (-solution_E(id_Ev) + Ef_p < dE_min)
+    {
+      level_p = 1 / ( 1 + exp ((-solution_E(id_Ev) + solution_E(id_Ep) - sigma ) )/KbT_elem ) );
+    }
+    else
+    {
+      level_p = 1 / ( 1 + exp ((-solution_E(id_Ev) + Ef_p)/KbT_elem ) );
+    }
 
-     // solution_E.add(dof_indices_Ec[i], Ec   ); //+ rn_1
-
-     // solution_E.add(dof_indices_Ev[i], Ev   ); ///  rn_2 va aggiunto qualche shift ??
-    //}
-
+    solution.set(id_n, level_n ); //
+    solution.set(id_p, level_p ); //
 
   }
 
   cerr<<"do_init loop over elements done"<<endl;
 
+  cerr << solution << endl;
   //cerr << solution_E << endl;
-
 
   ofstream outFile;
   outFile.open("/home/drossi/TiberCAD/ME/OLED_2D/Test_1/output/Energies.txt");
@@ -478,6 +479,7 @@ MasterEquations::assemble(const NumericVector<Number>& x,
     NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
 {
+  //cerr << "assemble" << endl;
 
   switch (_this->_options.coupling)
   {
@@ -494,14 +496,23 @@ MasterEquations::assemble(const NumericVector<Number>& x,
 
 }
 
+void
+MasterEquations::transformation(NumericVector<Number>& u,
+     NumericVector<Number>& T,
+       NumericVector<Number>& TX, bool transf)
+{
+  //cerr << "transformation" << endl;
 
+  _this->do_transformation(u, T, TX, transf);
+}
 
 template <int coupling>
 void
 MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Number>* residual,
     SparseMatrix<Number>* jacobian)
 {
- //cerr<<"do_assembly"<<endl;
+
+  //cerr << "do_assembly: init" << endl;
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
   NumericVector<Number>& solution = get_solution_vector();
@@ -541,7 +552,7 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
   //cerr<<"do_assembly build finite elements"<<endl;
 
   const double alpha = 1e-9; //1e-9;
-  const double v_0 = 1e12; //1e12;
+  const double v_0 = 1; //1e12;
 
   FEType fe_type = system.variable_type(n_var); //
 
@@ -567,7 +578,6 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
 
   // the system matrix (will hold also element jacobian contribution)
   DenseMatrix<Number> Ke;
-  DenseMatrix<Number> Kij;
   // the system rhs (will hold also element rhs contribution)
   DenseVector<Number> Fe;
   // the local solution
@@ -578,10 +588,6 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
     Knn(Ke), Knp(Ke),
     Kpn(Ke), Kpp(Ke);
 
-  DenseSubMatrix<Number>
-    Kij_nn(Ke), Kij_np(Ke),
-    Kij_pn(Ke), Kij_pp(Ke);
-
   DenseSubVector<Number>
     Fn(Fe),
     Fp(Fe);
@@ -589,8 +595,6 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
   DenseSubVector<Number>
     Xn(X),
     Xp(X);
-
-
 
  // cerr<<"do_assembly matrix and vector init done"<<endl;
 
@@ -638,18 +642,13 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
   n_avg = 0.1;
   p_avg = 0.1;
 
-  //double n_tot;
-  //double p_tot;
 
+  double Ef_n = 2.35;
+  double Ef_p = 1.15;
+  double Ef_n0 = 2.6;
+  double Ef_p0 = 1.15;
 
-  double n_tot = 0.0;
-  double p_tot = 0.0;
-
-  for (unsigned int i = 0; i < n_elem; i++)
-  {
-    n_tot +=  solution(i);
-    p_tot +=  solution(i + n_elem);
-  }
+  const double KbT_elem = 0.026;
 
 
   //cerr<<"do_assembly: begin loop over elements"<<endl;
@@ -673,10 +672,8 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
     dof_map.dof_indices(elem, dof_indices_n, n_var);
     dof_map.dof_indices(elem, dof_indices_p, p_var);
 
-    dof_map_E.dof_indices(elem, dof_indices_Ec);
-    dof_map_E.dof_indices(elem, dof_indices_Ev);
-    //dof_map_E.dof_indices(elem, dof_indices_Ec, Ec_var);
-    //dof_map_E.dof_indices(elem, dof_indices_Ev, Ev_var);
+    dof_map_E.dof_indices(elem, dof_indices_Ec, Ec_var);
+    dof_map_E.dof_indices(elem, dof_indices_Ev, Ev_var);
 
 
     unsigned int n_dofs     = dof_indices_n.size(); // number of dofs of element for single variable
@@ -694,6 +691,8 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
     dof_indices_Ec.reserve(30);
     dof_indices_Ev.reserve(30);
 
+
+
     //cerr << dof_indices_p[0] << endl;
     //cerr << dof_indices_tot[1] << endl;
 
@@ -707,7 +706,7 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
       if (elem_neig != NULL) // out of boundary
       {
 
-        //std::vector<unsigned int> neig_dof_indices_tot;
+        std::vector<unsigned int> neig_dof_indices_tot;
         std::vector<unsigned int> neig_dof_indices_n;
         std::vector<unsigned int> neig_dof_indices_p;
 
@@ -756,15 +755,8 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
           //dof_indices_Ev.push_back(neig_dof_indices_Ev[0]);
         //}
       }
-      //else
-      //{
-        //dof_indices_n.push_back(0);
-        //dof_indices_p.push_back(n_elem-1);
-
-        //dof_indices_Ec.push_back(0);
-        //dof_indices_Ev.push_back(0);
-      //}
     }
+
 
     //std::vector<unsigned int> dof_indices_tot_neigh;
     dof_indices_tot_neigh.clear();
@@ -804,13 +796,10 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
     //for (unsigned int i =0; i < n_dofs_neigh; i++ )
     //  cerr << "dof_indices_Ev = " <<  dof_indices_Ev[i]<< endl;
 
-
     //unsigned int n_dofs_neigh_tot_max = elem->n_sides();
 
-    Ke.resize(n_dofs_tot, n_dofs_neigh_tot);
-    Kij.resize(n_dofs_tot, n_dofs_neigh_tot);
 
-    //cerr << "bug Ke" << endl;
+    Ke.resize(n_dofs_tot, n_dofs_neigh_tot);
 
     Fe.resize(n_dofs_tot); // n_dofs_tot
 
@@ -836,18 +825,6 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
     Kpn.reposition(n_dofs, 0, n_dofs, n_dofs_neigh); // nulli
     Kpp.reposition(n_dofs, n_dofs_neigh, n_dofs, n_dofs_neigh);
 
-
-
-    Kij_nn.reposition(0, 0, n_dofs, n_dofs_neigh);
-    Kij_np.reposition(0, n_dofs_neigh, n_dofs, n_dofs_neigh); // nulli n_dofs_neigh
-
-
-    //
-    Kij_pn.reposition(n_dofs, 0, n_dofs, n_dofs_neigh); // nulli
-    Kij_pp.reposition(n_dofs, n_dofs_neigh, n_dofs, n_dofs_neigh);
-
-
-
     //
     Fn.reposition(0, n_dofs);
     Fp.reposition(n_dofs, n_dofs);
@@ -866,7 +843,6 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
     Fp.zero();
 
     Ke.zero();
-    Kij.zero();
 
     //cerr << "Knn" << Knn << endl;
 
@@ -883,7 +859,7 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
 
 
 
-    const int sides = elem->n_sides();
+    //const int sides = elem->n_sides();
 
 
     //cerr << "n_avg" << n_avg << endl;
@@ -1001,13 +977,14 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
               exp_Ev_ij = 1;
             }
 
+
             if (coupling &BOTH)
             {
-              Knn(i,i) +=  v_0 * exp_d * ( x(dof_indices_n[i]) * (exp_Ec_ij - exp_Ec_ji) - exp_Ec_ij );  // diagonal  Jp - Jw
+              Knn(i,i) +=  v_0 * exp_d * ( x(dof_indices_n[ind]) * (exp_Ec_ij - exp_Ec_ji) - exp_Ec_ij );  // diagonal  Jp - Jw
 
               Knn(i,ind) += v_0 * exp_d * ( exp_Ec_ji - x(dof_indices_n[i]) * ( exp_Ec_ij - exp_Ec_ji ) ); //off diagonal -> Wji - Pi * (  Wij - Wji )
 
-              Kpp(i,i) +=  v_0 * exp_d * ( x(dof_indices_p[i]) * (exp_Ev_ij - exp_Ev_ji) - exp_Ev_ij );  // diagonal Jp - Jw
+              Kpp(i,i) +=  v_0 * exp_d * ( x(dof_indices_p[ind]) * (exp_Ev_ij - exp_Ev_ji) - exp_Ev_ij );  // diagonal Jp - Jw
 
               Kpp(i,ind) += v_0 * exp_d * ( exp_Ev_ji - x(dof_indices_p[i]) * ( exp_Ev_ij - exp_Ev_ji ) ); //off diagonal -> Wji - Pi * (  Wij - Wji )
             }
@@ -1104,13 +1081,14 @@ MasterEquations::do_assembly(const NumericVector<Number>& x, NumericVector<Numbe
               exp_Ev_ij = 1;
             }
 
+
             if (coupling & BOTH)
             {
-              Fn(i) += v_0 * exp_d * x(dof_indices_n[ind]) * ( exp_Ec_ji - x(dof_indices_n[i]) * ( exp_Ec_ij - exp_Ec_ji ) ); // + Kij * Pj = Pj * ( Wji - Pi * ( Wij - Wji ) )
+              Fn(i) += v_0 * exp_d * x(dof_indices_n[ind]) * ( exp_Ec_ji + x(dof_indices_n[i]) * ( exp_Ec_ij - exp_Ec_ji ) ); // + Kij * Pj = Pj * ( Wji - Pi * ( Wij - Wji ) )
 
               Fn(i) -= v_0 * exp_d * exp_Ec_ij * x(dof_indices_n[i]); // - Fi = - Pi * sum (Wij)
 
-              Fp(i) += v_0 * exp_d * x(dof_indices_p[ind]) * ( exp_Ev_ji - x(dof_indices_p[i]) * ( exp_Ev_ij - exp_Ev_ji ) ); // Kij * Pj = Wji - Pi * ( Wij - Wji )
+              Fp(i) += v_0 * exp_d * x(dof_indices_p[ind]) * ( exp_Ev_ji + x(dof_indices_p[i]) * ( exp_Ev_ij - exp_Ev_ji ) ); // Kij * Pj = Wji - Pi * ( Wij - Wji )
 
               Fp(i) -= v_0 * exp_d * exp_Ev_ij * x(dof_indices_p[i]); // - Fi = - Pi * sum (Wij)
             }
@@ -1141,9 +1119,14 @@ if (jacobian != NULL)
       for (unsigned int l = 0; l < n_elem  ; l++)
       {
         //cerr << n_elem << endl;
+        //jacobian->set(0, l , 1 / n_elem);
         jacobian->set(n_elem - 1, l , 1 / n_elem);
         jacobian->set(n_el - 1, l + n_elem, 1 / n_elem);
+        //jacobian->set(n_elem - 1, l , 0);
+        //jacobian->set(n_el - 1, l + n_elem, 0);
       }
+      //jacobian->set(n_elem - 1, n_elem-1,  1);
+      //jacobian->set(n_el - 1, n_el-1, 1);
   }
 
 
@@ -1156,18 +1139,36 @@ if (residual != NULL)
 
   double BCn = 0.0;
   double BCp = 0.0;
+  double BCn_0 = 0.0;
+  double BCp_0 = 0.0;
 
   for (unsigned int j = 0; j < n_elem; j++)
   {
+    //BCn_0 += ( 1 / n_elem )* x(j);
     BCn += ( 1 / n_elem )* x(j);
     BCp += ( 1 / n_elem )* x(j + n_elem);
   }
 
-  BCn -= n_avg;
-  BCp -= p_avg;
+  for (unsigned int j = 0; j < n_elem; j++)
+  {
+    if (j == 0)
+    {
+      //BCn_0 -= 1 / (( 1 + exp (( solution_E(j) - Ef_n0)/KbT_elem) ));
+    }
 
+
+    ///BCn_0 -= 1 / (( 1 + exp (( solution_E(j) - Ef_n)/KbT_elem) ));
+    BCn -= 1 / (n_elem * ( 1 + exp (( solution_E(j) - Ef_n)/KbT_elem) )); //n_avg;
+    BCp -= 1 / (n_elem * ( 1 + exp (( -solution_E(n_elem + j ) + Ef_p)/KbT_elem) ));
+  }
+  //BCn -= 1 / ( 1 + exp (( solution_E(n_elem - 1) - Ef_n)/KbT_elem) ); //n_avg;
+  //BCp -= 1 / ( 1 + exp (( -solution_E(n_el - 1) + Ef_p)/KbT_elem) );
+
+
+  //residual->set(0, BCn_0);
   residual->set(n_elem - 1, BCn);
-  residual->set(n_el - 1, BCp);
+  residual->set(n_el - 1, BCn);
+
 
 }
 
@@ -1208,7 +1209,6 @@ if (residual != NULL)
 
 
 
-
   string num;
   string it_el; // string which will contain the result
 
@@ -1235,29 +1235,184 @@ if (residual != NULL)
   outFile_res << Ke << endl;
   outFile_res.close();
 
-
+  //bool transf = 1;
 
   //cerr<<"do_assembly: done"<<endl;
+
+
 
 }
 
 
 
+void
+MasterEquations::do_transformation(NumericVector<Number>& u,
+    NumericVector<Number>& T,
+       NumericVector<Number>& TX, bool transf)
+{
+
+
+  //cerr << "do_transformation" << endl;
+  //T.zero();
+
+
+  TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
+
+  const MeshBase& mesh = get_mesh();
+  const unsigned int dim = mesh.mesh_dimension();
+
+  const unsigned int n_var = system.variable_number("n");
+  const unsigned int p_var = system.variable_number("p");
+
+  DofMap& dof_map =  system.get_dof_map();
+
+  NumericVector<Number>& solution = get_solution_vector();
+
+  TiberLinearSystem* _sys_EcEv = &get_equation_system<TiberLinearSystem>(1);
+
+  const unsigned int Ec_var = _sys_EcEv->variable_number("Ec");
+  const unsigned int Ev_var = _sys_EcEv->variable_number("Ev");
+
+  DofMap& dof_map_E = _sys_EcEv->get_dof_map();
+
+  NumericVector<Number>& solution_E = _sys_EcEv->get_solution_vector();
+
+
+  FEType fe_type = system.variable_type(n_var); //
+
+  // the volume finite element
+  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+
+
+  MeshBase::const_element_iterator el =
+                                    mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end =
+                                    mesh.active_local_elements_end();
+
+  const int n_el = solution_E.size();
+
+  const int n_elem = n_el/2;
+
+  const double KbT_elem = 0.026;
+
+  vector<unsigned int> dof_indices_tot;
+  vector<unsigned int> dof_indices_tot_neigh;
+
+  vector<unsigned int> dof_indices_n;
+  vector<unsigned int> dof_indices_p;
+
+  vector<unsigned int> dof_indices_tot_E;
+  vector<unsigned int> dof_indices_Ec;
+  vector<unsigned int> dof_indices_Ev;
+
+  unsigned int ind = 0.0;
+  unsigned int n = 1;
+  double sigma = 0.06;
+
+
+
+  for (; el != end; ++el)
+  {
+    double Ec_i = 0.0;
+    double Ev_i = 0.0;
+    double n_i = 0.0;
+    double p_i = 0.0;
+
+    const Elem* elem = *el;
+
+    dof_map.dof_indices(elem, dof_indices_tot);
+    dof_map.dof_indices(elem, dof_indices_n, n_var);
+    dof_map.dof_indices(elem, dof_indices_p, p_var);
+
+    dof_map_E.dof_indices(elem, dof_indices_Ec, Ec_var);
+    dof_map_E.dof_indices(elem, dof_indices_Ev, Ev_var);
+
+    Ec_i = solution_E(dof_indices_Ec[0]);
+    Ev_i = solution_E(dof_indices_Ev[0]);
+
+
+    n_i = u(dof_indices_n[0]);
+    p_i = u(dof_indices_p[0]);
+
+
+    if (transf == 1 )
+    {
+
+      TX.set(ind, Ec_i - KbT_elem * log( ( 1 - n_i )/ n_i ));
+      TX.set(ind + n_elem, Ev_i + KbT_elem * log( ( 1 - p_i )/ p_i ));
+
+      T.set(ind, KbT_elem / ( n_i * ( 1 - n_i ) ));
+      T.set(ind + n_elem, -KbT_elem / ( p_i * ( 1 - p_i )));
+
+
+    }
+    if (transf == 0)
+    {
+
+      if (TX(ind) >= Ec_i + n*sigma)
+      {
+        TX.set(ind,  Ec_i + n*sigma/2);
+      }
+      if (TX(ind + n_elem) <= Ev_i - n*sigma)
+      {
+        TX.set(ind + n_elem, Ev_i - n*sigma/2 );
+      }
+     // if (TX(ind) <= Ev_i - n*sigma)
+     // {
+     //   TX.set(ind, Ev_i + KbT_elem/2);
+      //}
+     // if (TX(ind + n_elem) >= Ec_i)
+      //{
+      //  TX.set(ind + n_elem, Ec_i - KbT_elem/2);
+      //}
+
+      //cerr << "Ec_i ="  << Ec_i << endl;
+      //cerr << "TX(0)(" << ind << ") ="  << TX(ind) << endl;
+      u.set(ind, 1 / ( 1 + exp( ( Ec_i - TX(ind) ) / KbT_elem ) ));
+      u.set(ind + n_elem, 1 / ( 1 + exp( ( -Ev_i + TX(ind + n_elem ) ) / KbT_elem ) ));
+
+      //cerr << "u(" << ind << ") ="  << u(ind) << endl;
+    }
+
+    ind += 1;
+  }
+
+
+
+  if (transf == 1 )
+  {
+    //cerr << "transf = 1" << endl;
+    //cerr << "u (n)" << u << endl;
+    //cerr << "TX" << TX << endl;
+    //cerr << "T" << T << endl;
+
+  }
+
+  if (transf == 0 )
+  {
+    //cerr << "transf = 0" << endl;
+    //cerr << "u (n+1) "<< u << endl;
+  }
+
+
+
+
+
+}
+
 
 void
 MasterEquations::get_solution_secure(const Elem* elem, std::map<ID,
     std::vector<double> >& solutions,
-      const std::vector<Elem>& elements)
+    const std::vector<Point>& points)
 {
 
-  unsigned int ne = elements.size();
 
-  //cerr << ne << endl;
+  unsigned int np = points.size();
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-  const NumericVector<Number>& sol = system->get_solution_vector();
-  //const NumericVector<Number>& old_sol = system->get_vector("me_old_sol");
+  const NumericVector<Number>& solution = system->get_solution_vector();
 
 
   const unsigned int dim = get_mesh().mesh_dimension();
@@ -1269,9 +1424,12 @@ MasterEquations::get_solution_secure(const Elem* elem, std::map<ID,
 
   TiberLinearSystem* _sys_EcEv = &get_equation_system<TiberLinearSystem>(1);
 
+  NumericVector<Number>& solution_E = _sys_EcEv->get_solution_vector();
+
   DofMap& dof_map_E = _sys_EcEv->get_dof_map();
 
-  NumericVector<Number>& solution_E = _sys_EcEv->get_solution_vector();
+  const unsigned int Ec_var = _sys_EcEv->variable_number("Ec");
+  const unsigned int Ev_var = _sys_EcEv->variable_number("Ev");
 
   FEType fe_type = system->variable_type(n_var);
   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
@@ -1282,46 +1440,34 @@ MasterEquations::get_solution_secure(const Elem* elem, std::map<ID,
   vector<unsigned int> dof_indices_Ec;
   vector<unsigned int> dof_indices_Ev;
 
+  const int n_elem = solution_E.size()/2;
 
-  // shape functions??
-
-  // element shape functions
-  const vector<vector<Real> >& phi = fe->get_phi();
-
-  fe->reinit(elem);
+  fe->reinit(elem, &points);
 
   dof_map.dof_indices(elem, dof_indices_n, n_var);
   dof_map.dof_indices(elem, dof_indices_p, p_var);
 
-  dof_map_E.dof_indices(elem, dof_indices_Ec);
-  dof_map_E.dof_indices(elem, dof_indices_Ev);
+  dof_map_E.dof_indices(elem, dof_indices_Ec, Ec_var);
+  dof_map_E.dof_indices(elem, dof_indices_Ev, Ev_var);
 
   const unsigned int n_dofs = dof_indices_n.size();
 
-  // manca ID?? e MasterEquationsProperties*
 
-  // scaling ??
-
-  //const int n_el = solution_E.size();
-
-  //const int n_elem = n_el/2;
-
-  for (unsigned int e = 0; e < ne; e++)
+  for (unsigned int e = 0; e < np; e++)
   {
-    double n ;
-    double p ;
+    double n = 0.0;
+    double p = 0.0;
 
-    double Ec = solution_E(dof_indices_Ec[e]);
-    double Ev = solution_E(dof_indices_Ev[e]);
-
-    //double oldn = 0.0;
-    //double oldp = 0.0;
+    double Ec = 0.0;
+    double Ev = 0.0;
 
     for (unsigned int i = 0; i < n_dofs; i++) // RIDONDANTE
     {
-      n += sol(dof_indices_n[i]);
-      p += sol(dof_indices_p[i]);
+      n += solution(dof_indices_n[i]);
+      p += solution(dof_indices_p[i]);
 
+      Ec += solution_E(dof_indices_Ec[i]);
+      Ev += solution_E(dof_indices_Ev[i]);
     }
 
 
@@ -1352,11 +1498,11 @@ void
 MasterEquations::do_setup_solution_variables(void)
 {
   // declare solutions variables
-  declare_solution(eDensity, REAL, CELL, "cm^-3");
-  declare_solution(hDensity, REAL, CELL, "cm^-3");
+  declare_solution(eDensity, SolutionDescriptor::REAL, SolutionDescriptor::CELL, "cm^-3");
+  declare_solution(hDensity, SolutionDescriptor::REAL, SolutionDescriptor::CELL, "cm^-3");
 
-  declare_solution(Ec_edge, REAL, CELL, "eV", 1);
-  declare_solution(Ev_edge, REAL, CELL, "eV", 1);
+  declare_solution(Ec_edge, SolutionDescriptor::REAL, SolutionDescriptor::CELL, "eV");
+  declare_solution(Ev_edge, SolutionDescriptor::REAL, SolutionDescriptor::CELL, "eV");
 
 }
 
