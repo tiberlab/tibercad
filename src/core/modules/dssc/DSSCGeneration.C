@@ -318,7 +318,8 @@ DSSCGeneration::_calculate_distances(void)
           double t2 = -(vz*xb*yc - vz*xc*yb - vy*xb*zc + vy*xc*zb + vx*yb*zc - vx*yc*zb) / det;
           double t3 = (vz*xa*yc - vz*xc*ya - vy*xa*zc + vy*xc*za + vx*ya*zc - vx*yc*za) / det;
 
-          if ((t1 >= 0) && (t2 >= 0) && (t3 >= 0))
+          //if ((t1 >= 0) && (t2 >= 0) && (t3 >= 0))
+          if (t1 >= 0)
           {
             Point p(node - t1 * _direction);
             if (side_el->contains_point(p))
