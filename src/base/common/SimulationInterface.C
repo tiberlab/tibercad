@@ -2915,14 +2915,15 @@ SimulationInterface::project_on_tensor_grid(void)
     return;
 
   Messages msg;
-  msg.info("Project solutions on tensor grid");
+  msg.info("Project solutions on 2D tensor grid");
   msg.indent();
 
   const ModelOptions& opts = (get_options().submodels_begin("Projection"))->second;
 
-  if (get_mesh().mesh_dimension() != 2)
+  if (get_mesh().mesh_dimension() < 2)
   {
-    Messages::warning("Projection is implemented only for 2D meshes.");
+    //Messages::warning("Projection is implemented only for 2D meshes.");
+    Messages::warning("Projection is implemented only for 2D and 3D meshes.");
     return;
   }
 
@@ -2952,44 +2953,64 @@ SimulationInterface::project_on_tensor_grid(void)
   Point& pmax = bbox.second;
   Point& pmin = bbox.first;
 
-  /*
-  MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
-
-  Point pmax(numeric_limits<double>::min(), numeric_limits<double>::min(), 0);
-  Point pmin(numeric_limits<double>::max(), numeric_limits<double>::max(), 0);
-  for ( ; it != end; ++it)
-  {
-    const Elem* elem = *it;
-    for (unsigned int i = 0; i < elem->n_nodes(); ++i)
-    {
-      const Point& p = elem->point(i);
-      if (p(0) < pmin(0))
-        pmin(0) = p(0);
-      else if (p(0) > pmax(0))
-        pmax(0) = p(0);
-
-      if (p(1) < pmin(1))
-        pmin(1) = p(1);
-      else if (p(1) > pmax(1))
-        pmax(1) = p(1);
-
-    }
-  }
-*/
   ostringstream os;
-  os << "Bounding box: (" << pmin(0) << ", " << pmin(1) << ") - ("
-      << pmax(0) << ", " << pmax(1) << ")\n";
+  os << "Bounding box: (" << pmin(0) << ", " << pmin(1) << ", " << pmin(2)
+      << ") - (" << pmax(0) << ", " << pmax(1) << ", " << pmax(2) << ")\n";
   msg.info(os.str());
   pmin(0) += 1e-11;
   pmin(1) += 1e-11;
+  pmin(2) += 1e-11;
   pmax(0) -= 1e-11;
   pmax(1) -= 1e-11;
+  pmax(2) -= 1e-11;
+
+  // get the projection plane
+  string pplane_s = opts.get_option("projection_plane", "xy");
+  int pplane = 0; // xy
+
+  if (pplane_s == "xz")
+  {
+    pplane = 1;
+  }
+  else if (pplane_s == "yz")
+  {
+    pplane = 2;
+  }
 
   double dx = opts.get_option("spacing", get_mesh_units());
   dx /= get_mesh_units();
+
   int Nx = ceil((pmax(0) - pmin(0)) / dx);
   int Ny = ceil((pmax(1) - pmin(1)) / dx);
+
+  if (pplane == 0)
+  {
+    pmin(2) = 0.5 * (pmax(2) + pmin(2));
+  }
+  else if (pplane == 1)
+  {
+    int Nx = ceil((pmax(0) - pmin(0)) / dx);
+    int Ny = ceil((pmax(2) - pmin(2)) / dx);
+    pmin(1) = 0.5 * (pmax(1) + pmin(1));
+  }
+  else if (pplane == 2)
+  {
+    int Nx = ceil((pmax(1) - pmin(1)) / dx);
+    int Ny = ceil((pmax(2) - pmin(2)) / dx);
+    pmin(0) = 0.5 * (pmax(0) + pmin(0));
+  }
+
+  // we allow two formats:
+  // 0:
+  //    x y data1 data2 ...
+  //
+  // 1: (one data per file)
+  //   data1(x1y1) data1(x2y1) ...
+  //   data1(x1y2) data1(x2y2) ...
+  int ascii_form = 0;
+  if (opts.get_option("ascii_format", "list") != "list")
+    ascii_form = 1;
+
 
 
   string basename = get_output_directory() + "/" + get_output_filename() + "_projected_";
@@ -3043,7 +3064,7 @@ SimulationInterface::project_on_tensor_grid(void)
       {
         fstreams[*idit][i] = new ofstream(basename + descr.name() + comp[i] + extension);
         (*fstreams[*idit][i]) << "% " << get_name() << " " << descr.name() << comp[i] <<
-            "\n% pmin = (" << pmin(0) << ", " << pmin(1) <<
+            "\n% pmin = (" << pmin(0) << ", " << pmin(1) << ", " << pmin(2) <<
             "), dx = " << dx*get_mesh_units() << " Nx = " << Nx << " Ny = " << Ny << endl;
       }
     }
@@ -3057,7 +3078,12 @@ SimulationInterface::project_on_tensor_grid(void)
   {
     for (unsigned int i = 0; i < Nx; ++i)
     {
-      Point p(pmin(0) + i * dx, pmin(1) + j * dx, 0);
+      Point p(pmin(0) + i * dx, pmin(1) + j * dx, pmin(2));
+      if (pplane == 1)
+        p = Point(pmin(0) + i * dx, pmin(1), pmin(2) + j * dx);
+      if (pplane == 2)
+        p = Point(pmin(0), pmin(1) + i * dx, pmin(2) + j * dx);
+
       const Elem* elem = MeshUtils::search_element(&get_mesh(), p);
 
       if ((elem == NULL) || !get_solution(elem, solutions, vector<Point>(1, p)))
