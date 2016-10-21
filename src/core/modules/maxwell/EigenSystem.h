@@ -8,8 +8,12 @@
 #include "VectorSystem.h"
 #include <vector>
 
-using namespace libMesh;
+
 using namespace libMeshEnums;
+
+namespace libMesh{
+class EquationSystems;
+}
 
 /**
  * This class provides a specific system class.  It aims
@@ -22,14 +26,14 @@ using namespace libMeshEnums;
 // ------------------------------------------------------------
 // EigenSystem class definition
 
-class EigenSystem : public VectorSystem, public System {
+class EigenSystem : public VectorSystem, public libMesh::System {
 
   public:
 
     /**
      * Constructor.
      */
-    EigenSystem (EquationSystems& es,
+    EigenSystem (libMesh::EquationSystems& es,
 	       const std::string& name,
 	       const unsigned int number);
 
@@ -68,10 +72,10 @@ class EigenSystem : public VectorSystem, public System {
    * Returns real and imaginary part of the ith eigenvalue and copies
    * the respective eigen vector to the solution vector.
    */
-  virtual Complex do_get_eigen_lambda (unsigned int i);
+  virtual libMesh::Complex do_get_eigen_lambda (unsigned int i);
 
   
-  virtual Complex get_eigen_lambda (unsigned int i);
+  virtual libMesh::Complex get_eigen_lambda (unsigned int i);
 
   /**
    * @returns \p "Eigen".  Helps in identifying
@@ -79,7 +83,7 @@ class EigenSystem : public VectorSystem, public System {
    */
   virtual std::string system_type () const { return "VectorEigen"; }
 
-  virtual void get_eigen_vector(const unsigned int i, std::vector<Complex>& eigen_vector_out);
+  virtual void get_eigen_vector(const unsigned int i, std::vector<libMesh::Complex>& eigen_vector_out);
 
   /**
    * @returns the number of converged eigenpairs.
@@ -92,16 +96,16 @@ class EigenSystem : public VectorSystem, public System {
     requested_eigenpairs = count;
   }
 
-  virtual void addAValue(Complex value, int i, int j) {
+  virtual void addAValue(libMesh::Complex value, int i, int j) {
     matA[std::make_pair(i, j)] += value;
   }
 
-  virtual void addBValue(Complex value, int i, int j) {
+  virtual void addBValue(libMesh::Complex value, int i, int j) {
     matB[std::make_pair(i, j)] += value;
     //EigenSolver::addBRow(i, 1, &j, value);
   }
 
-  virtual void setSpectrumShift(const Complex& shift);
+  virtual void setSpectrumShift(const libMesh::Complex& shift);
 
 protected:
 
@@ -112,11 +116,11 @@ protected:
 
   unsigned int requested_eigenpairs;
 
-  std::map<std::pair<int, int>, Complex> matA;
-  std::map<std::pair<int, int>, Complex> matB;
+  std::map<std::pair<int, int>, libMesh::Complex> matA;
+  std::map<std::pair<int, int>, libMesh::Complex> matB;
 
 public:
-  Complex spectrumShift;
+  libMesh::Complex spectrumShift;
   double solver_tolerance;
   int solver_max_it;
 };

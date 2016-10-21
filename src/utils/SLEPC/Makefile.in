@@ -15,7 +15,9 @@ PETSC_ARCH = @COMPLEX_PETSC_ARCH@
 
 SLEPC_DIR  = @SLEPC_DIR@
 
-CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC $(CC_INCLUDES) -I$(topdir)/include/utils/SLEPC $(TIBER_INCLUDES)
+include $(SLEPC_DIR)/lib/slepc/conf/slepc_variables
+CXXFLAGS += $(SLEPC_HAVE_ARPACK) -fPIC  $(SLEPC_INCLUDE) $(PETSC_CC_INCLUDES) -I$(topdir)/include/utils/SLEPC $(TIBER_INCLUDES)
+
 
 
 ifeq ($(METHOD), dbg)
@@ -35,8 +37,7 @@ ifneq ($(target_os),darwin)
 		-Wl,-Bsymbolic -Wl,-Bstatic \
 		-L$(SLEPC_LIB_DIR) -lslepc \
 		$(SLEPC_EXTERNAL_LIB) \
-		-L$(PETSC_LIB_DIR) -lpetscts \
-		  -lpetscksp -lpetscdm -lpetscmat -lpetscvec -lpetsc \
+		-L$(PETSC_LIB_DIR) $(PETSC_KSP_LIB_BASIC) \
 		-Wl,-Bdynamic -Wl,--as-needed $(LDFLAGS)
 	
 #$(PETSC_EXTERNAL_LIB_BASIC)
@@ -49,5 +50,4 @@ endif
 
 
 #include $(SLEPC_DIR)/bmake/slepc_common_variables
-include $(SLEPC_DIR)/conf/slepc_common_variables
 include $(topdir)/Make.rules

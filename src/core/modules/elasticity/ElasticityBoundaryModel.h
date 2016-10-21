@@ -9,8 +9,10 @@
 #include "tensor_value.h"
 #include "vector_value.h"
 #include "tiber_dll.h"
+#include "libMeshDefs.h"
 
-class Elem;
+//class Elem;
+//class Point;
 
 //! This is the base class for the Poisson physical model
 class ElasticityBoundaryModel : public PhysicalModel
@@ -22,8 +24,7 @@ class ElasticityBoundaryModel : public PhysicalModel
     virtual ~ElasticityBoundaryModel(void) {};
   
     //! Calculate properties 
-    virtual void calculate(const Elem* elem, unsigned int side,
-		   const Point& point) = 0;
+    virtual void calculate(const libMesh::Elem* elem, unsigned int side, const libMesh::Point& point) = 0;
 
     //! Creator function
     static ElasticityBoundaryModel* create(const MaterialBoundary* boundary,
@@ -31,7 +32,7 @@ class ElasticityBoundaryModel : public PhysicalModel
 
   const bool is_extended(void);
 
-  const void get_coefficients(RealTensor& H, double& A,RealGradient& R);
+  const void get_coefficients(libMesh::RealTensor& H, double& A,libMesh::RealGradient& R);
 
     void set_normal(const Point p);
 
@@ -41,7 +42,7 @@ class ElasticityBoundaryModel : public PhysicalModel
     //! Constructor
     ElasticityBoundaryModel(const ModelOptions& options);
 
-  void set_coefficients(RealTensor H,double A, RealGradient R);
+  void set_coefficients(libMesh::RealTensor H,double A, libMesh::RealGradient R);
   
   void set_is_extended(bool is_extended);
 
@@ -53,13 +54,13 @@ class ElasticityBoundaryModel : public PhysicalModel
  
 
   //! constrain matrix
-  RealTensor _H_tens; 
+  libMesh::RealTensor _H_tens;
  
   //! is extended
   double _coeff;
 
   //! contrain vector
-  RealGradient _R_vec;
+  libMesh::RealGradient _R_vec;
 
   //! is extended
   bool _is_extended;
@@ -73,7 +74,7 @@ class ElasticityBoundaryModel : public PhysicalModel
 inline
 const
 void
-ElasticityBoundaryModel::get_coefficients(RealTensor& H, double& A, RealGradient& R)
+ElasticityBoundaryModel::get_coefficients(libMesh::RealTensor& H, double& A, libMesh::RealGradient& R)
 {
   H = _H_tens;
   R = _R_vec;
@@ -105,7 +106,7 @@ ElasticityBoundaryModel::is_extended(void)
 
 inline
 void
-ElasticityBoundaryModel::set_coefficients(RealTensor H, double A, RealGradient R)
+ElasticityBoundaryModel::set_coefficients(libMesh::RealTensor H, double A, libMesh::RealGradient R)
 {
   _H_tens = H;
   _R_vec = R;

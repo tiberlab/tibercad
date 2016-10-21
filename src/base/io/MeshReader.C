@@ -16,12 +16,13 @@ using namespace std;
 
 
 
-void MeshReader::read_mesh(const string& filename, MeshBase& mesh,
+
+void MeshReader::read_mesh(const string& filename, libMesh::MeshBase& mesh,
     MeshRegionInfo& region_info, BoundaryRegions& bd_regions)
 {
 
   // we read only on processor 0
-  if (libMesh::processor_id() == 0)
+  if (mesh.comm().rank() == 0)
   {
     if  (filename.rfind(".grd") < filename.size())
     {
@@ -45,14 +46,15 @@ void MeshReader::read_mesh(const string& filename, MeshBase& mesh,
       os << "Known formats are: ISE grid (.grd), GMSH (.msh)";
       throw InitFailedException(os.str());
     }
-
-    // broadcast it to the other processors
-    MeshCommunication().broadcast(mesh);
-
-    // TODO we need to broadcast also region_info and bd_regions
   }
+
+  // broadcast it to the other processors
+  libMesh::MeshCommunication().broadcast(mesh);
+  region_info.broadcast();
+  bd_regions.broadcast();
 
   // now prepare it for use
   mesh.prepare_for_use();
+
   bd_regions.prepare_for_use();
 }

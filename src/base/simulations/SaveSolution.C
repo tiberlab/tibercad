@@ -28,6 +28,7 @@
 
 
 using namespace std;
+using namespace libMesh;
 
 SaveSolution::~SaveSolution(void)
 {
@@ -181,7 +182,7 @@ SaveSolution::get_solution_secure(const Elem* elem,
 
 
   FEType fe_type = eq.variable_type(dummy_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
 
   const vector<vector<Real> >& phi = fe->get_phi();
 

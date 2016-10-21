@@ -12,6 +12,7 @@
 
 using namespace Constants;
 
+
 OpticsTB::OpticsTB(const ModelOptions& options)
  : Optics(options)
 {
@@ -84,7 +85,9 @@ void OpticsTB::do_compute_matrix_elements( )
        }
    }
 
+
 }
+
 //=========================================================================================
 void
 OpticsTB::do_assemble(const ModelOptions& options)

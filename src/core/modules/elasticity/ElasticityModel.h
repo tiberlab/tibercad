@@ -13,7 +13,7 @@
 #include "tiber_dll.h"
 #include "Messages.h"
 class StiffnessModel;
-class Elem;
+//class Elem;
 
 
 //! This is the base class for the Poisson physical model
@@ -26,7 +26,7 @@ class TBDLLOCAL ElasticityModel : public PhysicalModel
     virtual ~ElasticityModel(void) {};
   
     //! Calculate properties 
-    void  calculate(const Elem* elem, const Point& point);
+    void  calculate(const libMesh::Elem* elem, const libMesh::Point& point);
 
 
     //! Creator function
@@ -34,11 +34,11 @@ class TBDLLOCAL ElasticityModel : public PhysicalModel
   
     const Tensor4DSym& get_stiffness(void);
   
-    const RealGradient& get_force_source(void);
+    const libMesh::RealGradient& get_force_source(void);
 
-    const RealTensor& get_stress_source(void);
+    const libMesh::RealTensor& get_stress_source(void);
 
-    const RealTensor& get_strain_source(void);
+    const libMesh::RealTensor& get_strain_source(void);
  
   protected:
 
@@ -65,11 +65,11 @@ class TBDLLOCAL ElasticityModel : public PhysicalModel
 
   Tensor4DSym _stiffness;
 
-  RealGradient _force;
+  libMesh::RealGradient _force;
   
-  RealTensor _strain;
+  libMesh::RealTensor _strain;
   
-  RealTensor _stress;
+  libMesh::RealTensor _stress;
 
  
    
@@ -85,21 +85,21 @@ ElasticityModel::get_stiffness()
 }
 
 inline 
-const RealGradient&
+const libMesh::RealGradient&
 ElasticityModel::get_force_source()
 {
   return _force;
 }
 
 inline 
-const RealTensor&
+const libMesh::RealTensor&
 ElasticityModel::get_strain_source()
 {
   return _strain;
 }
 
 inline 
-const RealTensor&
+const libMesh::RealTensor&
 ElasticityModel::get_stress_source()
 {
   return _stress;

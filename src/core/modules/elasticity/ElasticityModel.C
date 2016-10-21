@@ -38,7 +38,7 @@ ElasticityModel::do_print_info(void)
 }
 
 void
-ElasticityModel::calculate(const Elem* elem, const Point& point)
+ElasticityModel::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
 {
  
   //Update Body force model

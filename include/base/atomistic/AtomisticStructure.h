@@ -15,7 +15,10 @@
 #include <boost/function.hpp>
 
 class Material;
-class UnstructuredMesh;
+namespace libMesh
+{
+  class UnstructuredMesh;
+}
 
 //! Contains all needed data for an atomic structure
 /*!
@@ -80,7 +83,7 @@ public:
    * \param labels the atoms inside the basis to include in the mesh
    * \param keep_node_order if true, the nodes will be ordered in the same way as the atoms
    */
-  void create_conformal_grid(UnstructuredMesh& mesh,
+  void create_conformal_grid(libMesh::UnstructuredMesh& mesh,
       std::set<unsigned int> labels = std::set<unsigned int>(),
       bool keep_node_order = false) const;
 
@@ -256,7 +259,7 @@ private:
   AtomisticStructureOptions _atomistic_structure_options;
 
   //! Associate at any alement atoms contained
-  std::map<const Elem*, std::vector<unsigned int> > _elem_to_atoms;
+  std::map<const libMesh::Elem*, std::vector<unsigned int> > _elem_to_atoms;
 
   //!Associate elements: any atom keep tracks of the elements he belongs to
   void associate_elements();

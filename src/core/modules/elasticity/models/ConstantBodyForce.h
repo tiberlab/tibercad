@@ -10,7 +10,7 @@
 #include "vector_value.h"
 #include "tiber_dll.h"
 
-class Elem;
+//class Elem;
 
 
 
@@ -26,7 +26,7 @@ class TBDLLOCAL ConstantBodyForce : public BodyForceModel
   //! Creator function
   static ConstantBodyForce* create(const ModelOptions& options);
   
-  virtual void calculate(const Elem* elem, const Point& point){};
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
 
   protected:
 

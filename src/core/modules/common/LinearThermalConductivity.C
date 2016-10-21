@@ -4,6 +4,9 @@
 #include "Material.h"
 #include "LinearThermalConductivity.h"
 #include "RotatedCrystal.h"
+#include "libMeshDefs.h"
+#include "PhysicalModelInterface.h"
+#include "ModelOptions.h"
 
 #include "TiberModule.h"
 
@@ -51,7 +54,7 @@ LinearThermalConductivity::do_init(void)
 
 
 void 
-LinearThermalConductivity::calculate(const Elem* elem, const Point& point)
+LinearThermalConductivity::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
 {
    
   double x = point(0);

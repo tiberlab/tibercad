@@ -6,6 +6,7 @@
 #include "ModelOptions.h"
 #include "Initializer.h"
 #include "tiber_dll.h"
+#include "libMeshDefs.h"
 
 // For debugging
 #include "reference_counted_object.h"
@@ -26,7 +27,6 @@
 
 
 template <typename T> class InitializerBase;
-class Point;
 
 
 //! The base class for all TiberCAD model classes
@@ -37,7 +37,7 @@ class Point;
  * \li SimulationInterface
  */
 class TiberModelObject
-  : public ReferenceCountedObject<TiberModelObject>
+  : public libMesh::ReferenceCountedObject<TiberModelObject>
 {
 
   public:
@@ -205,8 +205,7 @@ class TiberModelObject
      *   implemented)
      */
     template <typename T>
-    T get_option(const std::string& name, T default_value,
-        bool override = true) const;
+    T get_option(const std::string& name, T default_value, bool override = true) const;
 
 
     //! Get a string option with default given as const char
@@ -217,18 +216,16 @@ class TiberModelObject
 
     //! Get an option which is a vector of values
     template <typename T>
-    void get_option(const std::string& name, std::vector<T>& vec,
+    void get_option(const std::string& name, std::vector<T>& vec, bool override = true) const;
+
+
+    //! Get an option which is a vector of values
+    void get_option(const std::string& name, libMesh::RealVectorValue& vec,
         bool override = true) const;
 
 
     //! Get an option which is a vector of values
-    void get_option(const std::string& name, RealVectorValue& vec,
-        bool override = true) const;
-
-
-    //! Get an option which is a vector of values
-    void get_option(const std::string& name, RealTensor& vec,
-        bool override = true) const;
+    void get_option(const std::string& name, libMesh::RealTensor& vec, bool override = true) const;
 
 
     //! Get an option as a Point

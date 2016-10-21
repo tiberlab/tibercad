@@ -4,6 +4,7 @@
 #include "InitFailedException.h"
 
 #include <limits>
+#include <fstream>
 
 using namespace std;
 

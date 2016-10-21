@@ -9,9 +9,13 @@
 #include "dof_object.h"
 #include "Specie.h"
 
-class Elem;
+
+#include "elem.h"
 
 #define ILLEGAL_VALUE 255 
+
+
+
 //! Contains Atom definition
 /*!
  * Atom is defined mainly by atomic specie and
@@ -50,7 +54,7 @@ public:
   void set_position(int i, double x);
 
   //! Set position
-  void set_position(const Point& p);
+  void set_position(const libMesh::Point& p);
 
   /*! \brief Get absolute position coordinate i (x=0, y=1, z=2) 
    * atomic coordinates are stored in Angstrom
@@ -61,7 +65,7 @@ public:
   Tensor1 get_ttype_position() const;
 
   //! Get the position as a Point object
-  const Point& get_position() const;
+  const libMesh::Point& get_position() const;
 
   /*! \brief Get the ID of the region the atom belongs to
    * (Note: it will get the region from associated element)
@@ -91,21 +95,21 @@ public:
 
 
   //!Set element
-  void set_elem(const Elem* el);
+  void set_elem(const libMesh::Elem* el);
 
   //!Get element
-  const Elem* get_elem() const;
+  const libMesh::Elem* get_elem() const;
 
 private:
 
   //!Element atom belongs to
-  const Elem* _el;
+  const libMesh::Elem* _el;
 
   //! Atomic specie (short name)
   Specie _specie;
 
   //! Atom position
-  Point _position;
+  libMesh::Point _position;
 
   //! Atom number in primitive cell (e.g. anion/cation)
   label_t _label;
@@ -146,13 +150,13 @@ double Atom::get_position(int i) const
 }
 
 inline
-void Atom::set_position(const Point& p)
+void Atom::set_position(const libMesh::Point& p)
 {
   _position = p;
 }
 
 inline 
-const Point& Atom::get_position() const
+const libMesh::Point& Atom::get_position() const
 {
   return _position;
 }  
@@ -199,7 +203,7 @@ Atom::atom_t Atom::get_type() const
 
 
 inline
-const Elem* Atom::get_elem() const
+const libMesh::Elem* Atom::get_elem() const
 {
   return _el;
 }

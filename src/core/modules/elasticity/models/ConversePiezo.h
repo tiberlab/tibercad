@@ -27,7 +27,7 @@ class TBDLLOCAL ConversePiezo : public BodyForceModel
   //! Creator function
   static ConversePiezo* create(const ModelOptions& options);
   
-  virtual void calculate(const Elem* elem, const Point& point);
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
 
   protected:
 

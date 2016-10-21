@@ -169,7 +169,7 @@ class ETB : public TightBinding
   
   virtual int get_H_nnz(void) const;
   
-  virtual void get_H_csr(std::vector<Complex>& A, std::vector<int>& JA, std::vector<int>& IA) const;
+  virtual void get_H_csr(std::vector<libMesh::Complex>& A, std::vector<int>& JA, std::vector<int>& IA) const;
 
   virtual void setup_atomistic_structure(void);
 

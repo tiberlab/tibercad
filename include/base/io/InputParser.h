@@ -48,7 +48,8 @@ class InputParser
 
 
   //! Define a macro
-  static void add_defined(const std::string& name, const std::string& value = "");
+  static void add_defined(const std::string& name,
+      const std::string& value = "", bool warn_on_redefine = true);
 
   //! Check if a macro is defined
   static bool defined(const std::string& name);

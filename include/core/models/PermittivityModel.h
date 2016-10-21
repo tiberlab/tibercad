@@ -4,15 +4,17 @@
 #define _PERMITTIVITYMODEL_H_
 
 #include "PhysicalModelInterface.h"
-#include "tensor_value.h"
-#include "vector_value.h"
 #include "RotatedCrystal.h"
 #include "Material.h"
 #include "tensor.h"
 #include "TensorOperators.h"
+#include "libMeshDefs.h"
 
-class Elem;
-class Point;
+#include "tensor_value.h"
+#include "vector_value.h"
+
+USELIBMESHTYPE(RealTensor);
+
 
 // Base class for charge density models
 class TBDLEXPORT PermittivityModel : public PhysicalModelInterface
@@ -24,13 +26,13 @@ class TBDLEXPORT PermittivityModel : public PhysicalModelInterface
   
   const RealTensor& get_permittivity(void) const;
   
-  virtual void calculate(const Elem* elem, const Point& point) = 0;
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point) = 0;
   
 protected:
   
     PermittivityModel(const ModelOptions& options);
 
-    void set_permittivity(const RealVectorValue& permittivity);
+    void set_permittivity(const libMesh::RealVectorValue& permittivity);
 
   // void set_permittivity(const std::vector<double>& permittivity);
    
@@ -64,7 +66,7 @@ PermittivityModel::get_permittivity() const
 
 inline
 void
-PermittivityModel::set_permittivity(const RealVectorValue& permittivity_diag)
+PermittivityModel::set_permittivity(const libMesh::RealVectorValue& permittivity_diag)
 {
   
   _permittivity(0,0) =  permittivity_diag(0);

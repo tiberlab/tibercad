@@ -4,8 +4,8 @@
 #define _EXTERNALPROFILE_H_
 
 #include "TiberModelObject.h"
+#include "libMeshDefs.h"
 
-class Point;
 class Elem;
 
 /*!

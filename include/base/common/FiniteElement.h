@@ -7,9 +7,18 @@
 
 #include "TiberCad.h"
 #include "tiber_dll.h"
+//#include "libMeshDefs.h"
 
 
-#include <fe.h>
+#include "fe.h"
+#include "elem.h"
+#include "point.h"
+
+
+
+//USELIBMESHTYPE(FEType);
+//USELIBMESHTYPE(Point);
+//USELIBMESHTYPE(Elem);
 
 
 //! A finite element extension which adds scaling and symmetry
@@ -20,19 +29,24 @@
  *
  * Explain how ...
  */
-template <unsigned int Dim, FEFamily T>
-class FiniteElement : public FE<Dim, T>
+template <unsigned int Dim, libMesh::FEFamily T>
+class FiniteElement : public libMesh::FE<Dim, T>
 {
 
   public:
 
-    FiniteElement(const FEType& type);
+    FiniteElement(const libMesh::FEType& type);
     
-    virtual void reinit(const Elem* elem,
-        const std::vector<Point>* points = NULL);
+    virtual void reinit(const libMesh::Elem* elem,
+        const std::vector<libMesh::Point>* const points = NULL,
+        const std::vector<double>* const weights = NULL);
 
-    virtual void reinit(const Elem* elem, const unsigned int side,
-        const Real tolerance = TOLERANCE);
+
+
+    virtual void reinit(const libMesh::Elem* elem, const unsigned int side,
+        const double tolerance = libMesh::TOLERANCE,
+        const std::vector<libMesh::Point>* const points = NULL,
+        const std::vector<double>* const weights = NULL);
     
     //! Set the symmetry
     void set_symmetry(TiberCad::Symmetry symmetry);
@@ -60,10 +74,10 @@ class FiniteElement : public FE<Dim, T>
 // inline methods
 // 
 
-template <unsigned int Dim, FEFamily T>
+template <unsigned int Dim, libMesh::FEFamily T>
 inline
-FiniteElement<Dim, T>::FiniteElement(const FEType& type)
-  : FE<Dim, T>(type),
+FiniteElement<Dim, T>::FiniteElement(const libMesh::FEType& type)
+  : libMesh::FE<Dim, T>(type),
     _symmetry(TiberCad::NONE),
     _length_scaling(1.0),
     _mesh_units(1.0)
@@ -71,7 +85,7 @@ FiniteElement<Dim, T>::FiniteElement(const FEType& type)
 }
 
 
-template <unsigned int Dim, FEFamily T>
+template <unsigned int Dim, libMesh::FEFamily T>
 inline
 void
 FiniteElement<Dim, T>::set_symmetry(TiberCad::Symmetry symmetry)
@@ -80,7 +94,7 @@ FiniteElement<Dim, T>::set_symmetry(TiberCad::Symmetry symmetry)
 }
 
 
-template <unsigned int Dim, FEFamily T>
+template <unsigned int Dim, libMesh::FEFamily T>
 inline
 void
 FiniteElement<Dim, T>::set_scaling(double length_scaling, double mesh_units)

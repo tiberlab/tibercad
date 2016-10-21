@@ -247,7 +247,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
 
   //! Transform the eigenstate with S^-1/2, if needed
-  void transform_eigenstate(std::vector<Complex>& eigvec);
+  void transform_eigenstate(std::vector<libMesh::Complex>& eigvec);
 
  
   //!creates constraints
@@ -386,7 +386,7 @@ class EnvelopFunctionApprox  : public FEMEigenvalueProblem
 
  private:
 
-  bool check_confinement(const std::vector<Complex>& state);
+  bool check_confinement(const std::vector<libMesh::Complex>& state);
 
 };
 

@@ -168,7 +168,7 @@ Sweep::parse_options(void)
 
 
   // check if our variable exists
-  if (!Variable::is_variable(_variable))
+  if (!VariableValue::is_variable(_variable))
   {
     ostringstream o;
     o << "Sweep: The variable " << _variable << " is not defined.";
@@ -245,6 +245,11 @@ Sweep::do_solve(void)
 void
 Sweep::write_global_data(SimulationInterface& simulation, ofstream*& plotfile)
 {
+  // we do this only on rank 0 of the given SimulationInterface
+  if (simulation.get_communicator().rank() != 0)
+    return;
+
+
   map<ID, vector<double> > data;
   simulation.get_solution(data);
 
@@ -622,7 +627,7 @@ Sweep::remember_solution(void)
 
   // the current variable value
   _remembered_sweep_value =
-    Variable::get_variable_value<double>(_variable);
+    VariableValue::get_variable_value<double>(_variable);
 
   return id;
 }
@@ -640,7 +645,7 @@ Sweep::do_set_to_remembered_solution(ID id)
     for (int i = 0; i < num_sim; i++)
       _simulations[i]->set_to_remembered_solution((it->second)[i]);
 
-  Variable::set_variable_value(_variable, _remembered_sweep_value);
+  VariableValue::set_variable_value(_variable, _remembered_sweep_value);
 }
 
 

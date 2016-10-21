@@ -21,6 +21,7 @@
 using namespace std;
 
 
+
 unsigned int
 Embracing::_counter = 0;
 
@@ -340,7 +341,7 @@ Embracing::calculate_mixing(void)
     ostringstream os;
     os << "Embracing" << _counter;
     SimulationEnvironment& in = _inner->get_environment();
-    EquationSystems& eq = in.get_device().get_equation_systems();
+    libMesh::EquationSystems& eq = in.get_device().get_equation_systems();
     _laplace = &eq.add_system<LaplaceEq>(os.str());
     if (_laplace == NULL)
     {
@@ -368,24 +369,24 @@ Embracing::assembly(LaplaceEq& system)
 {
   const unsigned int var = system.variable_number("u");
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
 
-  FEType fe_type = dof_map.variable_type(var);
+  libMesh::FEType fe_type = dof_map.variable_type(var);
 
   const MeshBase& mesh = system.get_mesh();
   unsigned int dim = mesh.mesh_dimension();
 
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
-  QGauss qrule(dim, SECOND);
+  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
+  libMesh::QGauss qrule(dim, libMesh::SECOND);
   fe->attach_quadrature_rule(&qrule);
 
   const std::vector<Real>& JxW = fe->get_JxW();
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   std::vector<unsigned int> dof_indices;
 
-  DenseMatrix<Number> Ke;
-  DenseVector<Number> Fe;
+  libMesh::DenseMatrix<Number> Ke;
+  libMesh::DenseVector<Number> Fe;
 
   const double penalty = 1e6;
 
@@ -478,7 +479,7 @@ Embracing::LaplaceEq::build_nodal_results(vector<double>& results,
     end(mesh.active_local_elements_end());
 
   vector<unsigned int> dof_indices;
-  DofMap& dof_map = get_dof_map();
+  libMesh::DofMap& dof_map = get_dof_map();
 
   for ( ; it != end; ++it)
   {
@@ -516,8 +517,8 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
       LaplaceEq& system = *_laplace;
 
       const unsigned int var = system.variable_number("u");
-      DofMap& dof_map = system.get_dof_map();
-      FEType fe_type = dof_map.variable_type(var);
+      libMesh::DofMap& dof_map = system.get_dof_map();
+      libMesh::FEType fe_type = dof_map.variable_type(var);
 
       const MeshBase& mesh = system.get_mesh();
       unsigned int dim = mesh.mesh_dimension();
@@ -525,11 +526,11 @@ Embracing::get_mixing_coefficient(const Elem* elem, const Point& p)
       vector<unsigned int> dof_indices;
       dof_map.dof_indices(elem, dof_indices);
 
-      AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+      libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, fe_type));
       const vector<vector<double> >& phi = fe->get_phi();
 
       vector<Point> points(1, p);
-      FEInterface::inverse_map(dim, fe_type, elem,
+      libMesh::FEInterface::inverse_map(dim, fe_type, elem,
           vector<Point>(1, p), points);
       fe->reinit(elem, &points);
 

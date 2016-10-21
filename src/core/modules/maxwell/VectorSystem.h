@@ -11,7 +11,7 @@
 
 #include <vector>
 
-using namespace libMesh;
+
 using namespace libMeshEnums;
 
 
@@ -42,7 +42,7 @@ class VectorSystem {
     virtual double getGeomScaling();
 
 
-    static void countNonZeros(std::map<std::pair<int, int>, Complex>& values, int* result, unsigned int size);
+    static void countNonZeros(std::map<std::pair<int, int>, libMesh::Complex>& values, int* result, unsigned int size);
 
   protected:
     virtual unsigned int initSystemSize();

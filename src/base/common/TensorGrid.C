@@ -5,7 +5,7 @@
 
 
 void
-TensorGrid::setup(const Point& p0, const Point& p1, int nk, int nl, int nm)
+TensorGrid::setup(const libMesh::Point& p0, const libMesh::Point& p1, int nk, int nl, int nm)
 {
   _dimension = 3;
   _p0 = p0;
@@ -43,14 +43,14 @@ TensorGrid::setup(const Point& p0, const Point& p1, int nk, int nl, int nm)
 }
 
 
-Point
+libMesh::Point
 TensorGrid::get_centroid(unsigned int i) const
 {
   unsigned int k, l, m;
   element_to_index(i, k, l, m);
 
-  Point centroid(_p0);
-  centroid += Point((k+0.5)*_dx, (l+0.5)*_dy, (m+0.5)*_dz);
+  libMesh::Point centroid(_p0);
+  centroid += libMesh::Point((k+0.5)*_dx, (l+0.5)*_dy, (m+0.5)*_dz);
 
   return(centroid);
 }

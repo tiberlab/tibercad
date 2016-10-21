@@ -6,6 +6,8 @@
 
 #include "DynamicalMatrix.h"
 
+#include <set>
+
 class PhononModel;
 class SimulationInterface;
 

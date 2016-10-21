@@ -52,7 +52,7 @@ class RotatedCrystal : public PhysicalModelInterface
 
 
   //! Calculates rotation matrix basing on miller indexes 
-  virtual void calculate_rot_matrix_miller(std::vector<int> vec_x_mil, std::vector<int> vec_y_mil) {};
+  virtual void calculate_rot_matrix_miller(std::vector<int> vec_x_mil, std::vector<int> vec_y_mil);
 
 
 
@@ -121,22 +121,9 @@ class RotatedCrystal : public PhysicalModelInterface
   double  lat_const_calc[3];
 
 
-  //!read lattice constant from the database
-  virtual void read_database(void) {};
-
-
- 
   virtual void do_init(void) ;
 
 
-  virtual void copy_from (const PhysicalModelInterface *rhs) {};
-
-
-  virtual void do_init_alloy (const PhysicalModelInterface *comp_A, const PhysicalModelInterface *comp_B, double xa) {};
-
-
-  virtual PhysicalModelInterface* create_new(void) const {};
- 
   void calculate_euler_angles(void);
 
 
@@ -174,5 +161,12 @@ RotatedCrystal::get_euler_angles(double& alpha, double& beta, double& gamma) con
   beta = _beta;
   gamma = _gamma;
 }
+
+inline
+void
+RotatedCrystal::calculate_rot_matrix_miller(std::vector<int>, std::vector<int>)
+{
+}
+
 
 #endif

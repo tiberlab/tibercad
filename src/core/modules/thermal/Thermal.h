@@ -56,7 +56,7 @@ class TBDLLOCAL Thermal : public SimulationInterface
 					   const Material* mat) const;
 
    /*! \copydoc SimulationInterface::do_get_solution_vector() */
-    virtual NumericVector<double>& do_get_solution_vector(void);
+    virtual libMesh::NumericVector<double>& do_get_solution_vector(void);
 
     //! We need to create boundary condition model
     virtual PhysicalModel* create_boundary_model(const ModelOptions& options,
@@ -110,10 +110,10 @@ class TBDLLOCAL Thermal : public SimulationInterface
     Thermal(const ModelOptions& options);
 
     //! The assembly function
-    static void assemble(EquationSystems& es, const std::string& system_name);
+    static void assemble(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! The real assembly function
-    void do_assemble(EquationSystems& es, const std::string& system_name);
+    void do_assemble(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! A static pointer to this
     static Thermal* _this;
@@ -125,7 +125,7 @@ class TBDLLOCAL Thermal : public SimulationInterface
 
 inline
 void
-Thermal::assemble(EquationSystems& es, const std::string& system_name)
+Thermal::assemble(libMesh::EquationSystems& es, const std::string& system_name)
 {
   _this->do_assemble(es, system_name);
 }

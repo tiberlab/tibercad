@@ -5,9 +5,10 @@
 using namespace std;
 
 
+
 BoundaryNodeMap::BoundaryNodeMap(void)
 {
-  _map[INVALID_ID] = set<const Node*>();
+  _map[INVALID_ID] = set<const libMesh::Node*>();
 }
 
 
@@ -26,7 +27,7 @@ BoundaryNodeMap::get_nodes(ID id) const
 
 
 bool
-BoundaryNodeMap::find_node(const Node* node, set<ID>& ids) const
+BoundaryNodeMap::find_node(const libMesh::Node* node, set<ID>& ids) const
 {
   bool found = false;
 
@@ -48,7 +49,7 @@ BoundaryNodeMap::find_node(const Node* node, set<ID>& ids) const
 
 
 bool
-BoundaryNodeMap::find_node(const Node* node, vector<ID>& ids) const
+BoundaryNodeMap::find_node(const libMesh::Node* node, vector<ID>& ids) const
 {
   bool found = false;
 

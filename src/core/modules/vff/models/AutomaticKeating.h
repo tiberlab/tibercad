@@ -3,8 +3,11 @@
 
 #include "Keating.h"
 
-template<typename T> class DenseMatrix;
-template<typename T> class DenseVector;
+namespace libMesh
+{
+  template<typename T> class DenseMatrix;
+  template<typename T> class DenseVector;
+}
 
 //! User defined Keating model parameters
 class TBDLLOCAL AutomaticKeating : public Keating
@@ -43,9 +46,9 @@ private:
    * Ordering is C11, C33, C12, C13, C44, C66
    */
   void residual_wz(double a, double c, double u,
-      const DenseVector<double>& keating,
-      DenseVector<double>& residual,
-      DenseMatrix<double>& gradients);
+      const libMesh::DenseVector<double>& keating,
+      libMesh::DenseVector<double>& residual,
+      libMesh::DenseMatrix<double>& gradients);
 
   //! Get needed information from material database
   /*

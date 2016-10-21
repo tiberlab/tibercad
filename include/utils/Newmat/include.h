@@ -9,7 +9,7 @@
 #ifndef INCLUDE_LIB
 #define INCLUDE_LIB
 
-#include "libmesh_common.h"
+#include "libMeshDefs.h"
 
 #define use_namespace                   // define name spaces
 

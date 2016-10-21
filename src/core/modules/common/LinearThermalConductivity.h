@@ -8,10 +8,14 @@
 #include "point.h"
 #include "tensor_value.h"
 #include "vector_value.h"
-#include "PhysicalModelInterface.h"
+
 #include "tiber_dll.h"
 
-class Elem;
+#include "elem.h"
+
+
+
+
 
 
 //! The base class for Poisson boundary conditions
@@ -26,7 +30,7 @@ public:
   //! Creator function
   static LinearThermalConductivity* create(const ModelOptions& options);
   
-  virtual void calculate(const Elem* elem, const Point& point);
+ virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
   
 protected:
   

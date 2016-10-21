@@ -137,6 +137,11 @@ public:
                      double fast_tol, double long_tol, double ort_tol,
 		                 int dynamic);
 
+  //! Interface for Jacobi-Davidson
+  void jacobidavidson(int st_cb, int st_vb, int n_vb, int n_cb, double guess_vb, double guess_cb,
+      double long_tol);
+
+
   // Solver flag. currently 0: CPU solver; 1: GPU; 2: GPU-split version 
   void set_solver_flag(int flag);
 

@@ -5,7 +5,7 @@
 
 // ------------------------------------------------------------
 // EigenSystem implementation
-VectorLinearSystem::VectorLinearSystem (EquationSystems& es, const std::string& name, const unsigned int number) :
+VectorLinearSystem::VectorLinearSystem (libMesh::EquationSystems& es, const std::string& name, const unsigned int number) :
   TiberLinearSystem (es, name, number) {
 }
 
@@ -46,9 +46,9 @@ void VectorLinearSystem::solve () {
   // A1x1-A2x2 = b1
   // A1x2+A2x1 = b2
   {
-    std::map<std::pair<int, int>, Complex>::iterator itA = matA.begin();
+    std::map<std::pair<int, int>, libMesh::Complex>::iterator itA = matA.begin();
     for (; itA != matA.end(); itA++) {
-      std::pair<std::pair<int, int>, Complex> pair = *itA;
+      std::pair<std::pair<int, int>, libMesh::Complex> pair = *itA;
       matrix->set(pair.first.first, pair.first.second, pair.second.real());
       matrix->set(pair.first.first, pair.first.second + systemSize, - pair.second.imag());
 
@@ -61,9 +61,9 @@ void VectorLinearSystem::solve () {
   }
 
   {
-    std::map<int, Complex>::iterator itB = columnB.begin();
+    std::map<int, libMesh::Complex>::iterator itB = columnB.begin();
     for (; itB != columnB.end(); itB++) {
-      std::pair<int, Complex> pair = *itB;
+      std::pair<int, libMesh::Complex> pair = *itB;
       rhs->set(pair.first, pair.second.real());
       rhs->set(systemSize + pair.first, pair.second.imag());
       //std::cout << "Matrix output B" << pair.first << " " << pair.second << " " << "\n";
@@ -125,10 +125,10 @@ void VectorLinearSystem::solve () {
 void VectorLinearSystem::init_data() {
 }
 
-void VectorLinearSystem::get_solution(std::vector<Complex>& result) {
+void VectorLinearSystem::get_solution(std::vector<libMesh::Complex>& result) {
   result.resize(systemSize);
   for (int i = 0; i < systemSize; i++) {
-    Complex tmp(solution->el(i), solution->el(systemSize + i));
+    libMesh::Complex tmp(solution->el(i), solution->el(systemSize + i));
     result[i] = tmp;
     //std::cout << "Solution " << i << " : " << tmp << "\n";
   }

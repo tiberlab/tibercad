@@ -18,7 +18,7 @@
 #include "TiberModule.h"
 
 using namespace std;
-
+using namespace libMesh;
 
 
 ImageReader*
@@ -104,7 +104,7 @@ ImageReader::get_solution_secure(const Elem* elem,
     const unsigned int varid = system->variable_number("data");
 
     FEType fe_type = system->variable_type(varid);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
 
     vector<unsigned int> dof_indices;
 

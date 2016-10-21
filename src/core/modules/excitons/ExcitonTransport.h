@@ -3,6 +3,7 @@
 #ifndef _EXCITONTRANSPORT_H_
 #define _EXCITONTRANSPORT_H_
 
+#include "TiberNonlinearSystem.h"
 #include "SimulationInterface.h"
 #include "SimulationOptions.h"
 #include "Device.h"
@@ -11,26 +12,33 @@
 #include "SNESDivergedError.h"
 #include "ExcPolProps.h"
 #include "TiberNonlinearScalarSolver.h"
+
 // Libmesh includes
 #include "libmesh_common.h"
 #include "enum_order.h"
 #include "point.h"
+//#include "nonlinear_implicit_system.h"
+#include "libMeshDefs.h"
 
 
 // C++ includes
 #include <vector>
 #include <map>
 
+namespace libMesh
+{
 // forward declarations
 class MeshBase;
-class Elem;
+//class Elem;
 class EquationSystems;
-class ExcitonProperties;
 
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
 
 template<typename T> class NonlinearSolver;
+}
+
+class ExcitonProperties;
 
 //! The main class to perform exciton drift-diffusion calculations
 /*!
@@ -248,7 +256,7 @@ class ExcitonTransport : public SimulationInterface
     //! We override this to not produce too many files ...
     virtual void plot_globaldata(void) {};
     
-    virtual void calc_excpol_integral(const NumericVector<Number>& x);
+    virtual void calc_excpol_integral(const libMesh::NumericVector<Number>& x);
   private:
     TiberNonlinearScalarSolver scalarSolver;
 
@@ -269,7 +277,7 @@ class ExcitonTransport : public SimulationInterface
     /*!
      * The equation system for this device
      */
-    EquationSystems* _eq_system;
+    libMesh::EquationSystems* _eq_system;
     
     /*!
      * If @c true, the equation system needs to be rebuilt
@@ -333,18 +341,19 @@ class ExcitonTransport : public SimulationInterface
      * This method gets called from the underlying nonlinear solver
      * library
      */
-    static void assemble(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+    static void assemble(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian,
+        libMesh::NonlinearImplicitSystem& sys);
 
     static void assemble_DRSystem(const double& x,
         double* rhs,
         double* jacobian);
 
     //! Do the actual assembly
-    void do_assembly(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+    void do_assembly(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian);
 
     void do_assembly_DRSystem(const double& x,
         double* rhs,
@@ -419,9 +428,10 @@ ExcitonTransport::get_mesh(void) const
 
 inline
 void
-ExcitonTransport::assemble(const NumericVector<Number>& x,
-    NumericVector<Number>* residual,
-    SparseMatrix<Number>* jacobian)
+ExcitonTransport::assemble(const libMesh::NumericVector<Number>& x,
+    libMesh::NumericVector<Number>* residual,
+    libMesh::SparseMatrix<Number>* jacobian,
+    libMesh::NonlinearImplicitSystem& sys)
 {
   _this->do_assembly(x, residual, jacobian);
 }

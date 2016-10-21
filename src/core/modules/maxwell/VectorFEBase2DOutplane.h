@@ -19,7 +19,7 @@ class VectorFEBase2DOutplane : public IVectorFEBase {
     VectorFEBase2DOutplane(double scaling) : IVectorFEBase(2, scaling), fe(scaling) {
     }
 
-    virtual void attach_quadrature_rule(QBase* q) {
+    virtual void attach_quadrature_rule(libMesh::QBase* q) {
       fe.attach_quadrature_rule(q);
     }
 
@@ -29,7 +29,7 @@ class VectorFEBase2DOutplane : public IVectorFEBase {
       copyFunctions();
     }
 
-    virtual void reinit(const Elem *elem, unsigned int order, const unsigned int side, const Real tolerance = TOLERANCE) {
+    virtual void reinit(const Elem *elem, unsigned int order, const unsigned int side, const Real tolerance = libMesh::TOLERANCE) {
       fe.length_scaling = length_scaling;
       fe.reinit(elem, order, side, tolerance);
       copyFunctions();

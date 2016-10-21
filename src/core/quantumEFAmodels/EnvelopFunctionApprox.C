@@ -12,6 +12,7 @@
 #include "tensor.h"
 
 #include "EigenSolver.h"
+#include "quadrature_gauss.h"
 
 
 #include <edge_edge2.h>
@@ -23,15 +24,15 @@
 #include "Messages.h"
 
 
-
 extern "C"
 {
    void zheev_(char& jobs, char& UPLO, int& N, Complex* ham6x6matrix, int& LDA,
 	       double* eigvals,  Complex* WORK, int& LWORK, double* RWORK, int& info);
-};
+}
 
 using namespace std;
 using namespace Constants;
+using namespace libMesh;
 
 
 namespace
@@ -93,6 +94,8 @@ inline double EnvelopFunctionApprox::get_band_edge(const Elem* elem, const std::
      else
         bedge = (temp > bedge) ? temp : bedge;
    }
+
+
 
   return bedge;
 }
@@ -291,7 +294,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
      scale *= Constants::bohr_radius * 1e2;
 
     FEType fe_type = system->variable_type(0);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &points);
@@ -344,7 +347,7 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
      scale *= Constants::bohr_radius * 1e2;
 
     FEType fe_type = system->variable_type(0);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &points);
@@ -405,10 +408,10 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
   if (do_edens || do_hdens)
   {
     TiberLinearSystem& qdens_sys = get_equation_system<TiberLinearSystem>(0);
-    NumericVector<Number>& qdens = *qdens_sys.solution;
+    libMesh::NumericVector<Number>& qdens = *qdens_sys.current_local_solution;
 
     FEType fe_type = qdens_sys.variable_type(0);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &points);
@@ -460,19 +463,17 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
     else
       poisson_equation->get_solution(_bulk_mat_element,
           vb_band_edge_ID, band_edge, _bulk_point);
+
+    // TODO when the bulk point is not on our processor???
   }
   else
   {
-    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-    assert(el != end_el);
-
-    band_edge = get_band_edge(*el, particle);
-
-    ++el;
+    MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
     bool condband = (particle == "el") || (particle == "Ec");
+
+    band_edge = (condband ? 1.0 : -1.0 ) * numeric_limits<double>::max();
 
 
     for (; el != end_el ; ++el )
@@ -493,6 +494,12 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
           band_edge = temp;
       }
     }
+
+    // get the extremum over all MPI processes
+    if (condband)
+      this->get_communicator().min(band_edge);
+    else
+      this->get_communicator().max(band_edge);
   }
 
   return (band_edge);
@@ -790,8 +797,8 @@ void EnvelopFunctionApprox::parse_options()
 
   std::set<const Node*> used_nodes;
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
@@ -870,6 +877,7 @@ void EnvelopFunctionApprox::do_init( )
   system = &( es->get_system<LinearImplicitSystem>( system_name ) );
 
   dim = mesh->mesh_dimension();
+
 
   //--------------------------------------------------------------------------------------------------------//
   //add variables
@@ -966,16 +974,37 @@ void EnvelopFunctionApprox::do_init( )
   //------------------------------------------------------------------------------------------------------//
   //kp bands map
   {
-    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-    const Elem* elem = *el;
-    
-    EFAbulkHamiltonian* element_hamiltonian =
-      get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
-    
-    band_map = element_hamiltonian->get_kp_bands_map();
-    
-    // TODO there is some mess with the degeneracy, I believe
-    opt.degeneracy = element_hamiltonian->get_degeneracy();
+    MeshBase::const_element_iterator  el     = mesh->active_local_elements_begin();
+    MeshBase::const_element_iterator  end_el = mesh->active_local_elements_end();
+
+    if (el != end_el)
+    {
+      const Elem* elem = *el;
+
+      EFAbulkHamiltonian* element_hamiltonian =
+          get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
+
+      band_map = element_hamiltonian->get_kp_bands_map();
+
+      // TODO there is some mess with the degeneracy, I believe
+      opt.degeneracy = element_hamiltonian->get_degeneracy();
+    }
+
+    // if we don't have active pieces, band_map is size zero, so let's distribute
+    // the band map from any other process.
+    vector<map<short,short>::size_type> band_map_sizes(this->get_communicator().size());
+    this->get_communicator().allgather(band_map.size(), band_map_sizes);
+
+    int proc_id = 0;
+    while ((proc_id < band_map_sizes.size()) && (band_map_sizes[proc_id] == 0))
+      proc_id++;
+
+    if (proc_id >= band_map_sizes.size())
+      throw InitFailedException("efaschroedinger: cannot identify bulk bands");
+
+    // now we can broadcast from processor
+    this->get_communicator().broadcast(band_map, proc_id);
+    this->get_communicator().broadcast(opt.degeneracy, proc_id);
   }
   //------------------------------------------------------------------------------------------------------//
  
@@ -1133,11 +1162,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
 
 
- AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+ UniquePtr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   // A 5th order Gauss quadrature rule for numerical integration.
   //QGauss qrule (dim, FIFTH);
-  AutoPtr<QBase> qrule(QBase::build(_quadrature_type, dim, SECOND));
+ UniquePtr<libMesh::QBase> qrule (libMesh::QBase::build(_quadrature_type, dim, SECOND));
 
   // Tell the finite element object to use our quadrature rule.
 
@@ -1168,14 +1197,14 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   //-------------------------------------------------------------
   //matrixes to built the system
 
-  DenseMatrix<Number> ham_real;
-  DenseMatrix<Number> ham_imag;
-  DenseMatrix<Number> s_real;
+ DenseMatrix<Number> ham_real;
+ DenseMatrix<Number> ham_imag;
+ DenseMatrix<Number> s_real;
 
 
-  DenseSubMatrix<Number> ham_real_sub(ham_real);
-  DenseSubMatrix<Number> ham_imag_sub(ham_imag);
-  DenseSubMatrix<Number> s_real_sub(s_real);
+ DenseSubMatrix<Number> ham_real_sub(ham_real);
+ DenseSubMatrix<Number> ham_imag_sub(ham_imag);
+ DenseSubMatrix<Number> s_real_sub(s_real);
 
   double initval = 1.0;
   if (_quadrature_type == QTRAP)
@@ -1193,8 +1222,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       scale *= Constants::bohr_radius * 1e9;
     scale = 1.0 / scale;
 
-    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+    MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
     for ( ; el != end_el ; ++el)
     {
       const Elem* elem = *el;
@@ -1212,6 +1241,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       }
     }
 
+    this->get_communicator().sum(_sqrt_S_inv);
+
     // build the square root and invert
     for (size_t i = 0; i < _sqrt_S_inv.size(); i++)
       _sqrt_S_inv[i] = 1.0 / sqrt(_sqrt_S_inv[i]);
@@ -1219,8 +1250,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   }
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
   double electric_potential = 0;
 
@@ -1428,8 +1459,9 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
             ham_real(i,i) += sign * penalty;
             for (int j = 0; j < ham_real.n(); j++)
             {
-              DofConstraintRow::iterator constr = it->second.find(dof_indices_tmp[j]);
-              if (constr != it->second.end())
+              DofConstraintRow::iterator constr(
+                  (it->second).find(dof_indices_tmp[j]));
+              if (constr != (it->second).end())
               {
                 ham_real(i,j) -= sign * penalty * real(phase) * constr->second;
                 ham_imag(i,j) -= sign * penalty * imag(phase) * constr->second;
@@ -1470,6 +1502,11 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
 
     }
 
+  
+  _H_real->close();
+  _H_imag->close();
+  if (_haveS)
+    _S_real->close();
   //_H_real->print_matlab("Hr.m");
   //_H_imag->print_matlab("Hi.m");
   //if (_haveS)
@@ -1719,23 +1756,26 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     _solution[index].eigen_energy = ev[i].energy;
     _solution[index].particle = ev[i].particle;
     _solution[index].statistics = "Fermi";
-    _solution[index].eigen_vector.resize(number_of_all_dofs, Complex(0.0, 0.0));
+    //_solution[index].eigen_vector.resize(number_of_all_dofs, Complex(0.0, 0.0));
     
-    vector<Complex> temp;
+    //vector<Complex> temp;
     
     unsigned int solution_number = ev[i].index;
 
-    EigenSolver::get_eigen_vector(solution_number, temp);
+    //EigenSolver::get_eigen_vector(solution_number, temp);
+    EigenSolver::get_eigen_vector(solution_number, _solution[index].eigen_vector);
 
+    this->get_communicator().allgather(_solution[index].eigen_vector);
 
     //-----------------------------------------------------------------------------
     //put independent dofs in the eigenvectors that may contain also non independent dofs
     for (int j = 0; j < number_of_all_dofs; j++)
     {
-      if (new_dofs[j].independent)
-      {
-        _solution[index].eigen_vector[j] = temp[new_dofs[j].new_number];
-      }
+      //_solution[index].eigen_vector[j] = temp[j];
+      //if (new_dofs[j].independent)
+      //{
+      //  _solution[index].eigen_vector[j] = temp[new_dofs[j].new_number];
+      //}
     }
 
 /*
@@ -1743,12 +1783,12 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
 
     for (unsigned int j = 0; j < number_of_all_dofs; j++)
     {
-      DofConstraints :: iterator it(my_dof_constraints.find(j));
+      DofConstraints::iterator it(my_dof_constraints.find(j));
 
       if (it != my_dof_constraints.end() )
       {
 
-        DofConstraintRow constr_row = it->second;
+        DofConstraintRow constr_row((it->second).first);
 
         DofConstraintRow::iterator  c =  constr_row.begin();
 
@@ -1900,7 +1940,6 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     //redeclare_solutions();
   }
 
-
   if (foundall)
   {
     redeclare_solutions();
@@ -1950,7 +1989,7 @@ EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
 
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  UniquePtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   QGauss qrule (dim, SECOND);
 
@@ -1964,8 +2003,8 @@ EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
   std::vector<unsigned int> dof_indices;
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
   Complex sum(0.0, 0.0);
 
@@ -1999,6 +2038,9 @@ EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
       }
     }
   }
+
+  // sum up over MPI processes
+  this->get_communicator().sum(sum);
 
 
 
@@ -2038,6 +2080,7 @@ EnvelopFunctionApprox::plot_globaldata(void)
     }
   }
 
+
 }
 */
 
@@ -2047,6 +2090,7 @@ EnvelopFunctionApprox::plot_globaldata(void)
 
 EnvelopFunctionApprox:: ~EnvelopFunctionApprox(void)
 {
+
   // es->delete_system(system_name);
 }
 
@@ -2083,11 +2127,11 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
 
   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-  // AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
-  //AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type)  );
-  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  // UniquePtr<FEBase> fe (FEBase::build(dim, fe_type));
+  //UniquePtr<FEBase> fe (  build_finite_element(dim, fe_type)  );
+  UniquePtr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
-  QGauss qrule (dim, SECOND);
+  QGauss qrule(dim, SECOND);
 
   fe -> attach_quadrature_rule (&qrule);
 
@@ -2099,8 +2143,8 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
   std::vector<unsigned int> dof_indices;
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
   Complex temp(0.0, 0.0);
   Complex eigen_f_value1, eigen_f_value2;
@@ -2140,6 +2184,7 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
     }
 
 
+  this->get_communicator().sum(temp);
 
   result = sqrt( abs(temp)  );
 
@@ -2178,10 +2223,10 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
   DofMap& dof_map = system->get_dof_map();
 
 
-   FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
+  FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-   //  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
-   AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+   //  UniquePtr<FEBase> fe (FEBase::build(dim, fe_type));
+   UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));
 
    // A 5th order Gauss quadrature rule for numerical integration.
    QGauss qrule (dim, SECOND);
@@ -2205,8 +2250,8 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
    std::vector<unsigned int> dof_indices;
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
 
   Complex eigen_f_value1;
@@ -2255,6 +2300,8 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
 	}
     }
 
+  this->get_communicator().sum(result);
+
   return(result.real());
 }
 
@@ -2273,6 +2320,8 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
   if (_temp_interface.has_simulation())
   {
 
+    result = 0.0;
+
     const vector< Complex >&   eigen_vector =  _solution[i].eigen_vector;
 
     //----------------------------------------------------//
@@ -2282,17 +2331,17 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 
     unsigned int dim = mesh->mesh_dimension();
 
-    system = &( es->get_system<LinearImplicitSystem>(system_name));
+    system = &( es->get_system<libMesh::LinearImplicitSystem>(system_name));
 
-    DofMap& dof_map = system->get_dof_map();
+    libMesh::DofMap& dof_map = system->get_dof_map();
 
     FEType fe_type = dof_map.variable_type(0); //all the variable have the same FE representation
 
-    //  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
-    AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+    //  UniquePtr<FEBase> fe (FEBase::build(dim, fe_type));
+    UniquePtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
     // A 5th order Gauss quadrature rule for numerical integration.
-    QGauss qrule (dim, SECOND);
+    QGauss qrule (dim, libMesh::SECOND);
 
     // Tell the finite element object to use our quadrature rule.
     fe -> attach_quadrature_rule (&qrule);
@@ -2306,7 +2355,6 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
     // The element shape functions evaluated at the quadrature points.
     const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
-
     //------------------------------------------------------------
     std::vector<unsigned int> dof_indices_component;
 
@@ -2317,16 +2365,13 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
     //----------------------------------------------------//
 
 
-    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+    MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
 
     Complex eigen_f_value1;
     Complex eigen_f_value2;
 
-
-
-    double Temperature;
 
     for ( ; el != end_el ; ++el)
     {//el
@@ -2336,7 +2381,7 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 
 
       Point center = elem->centroid();
-      Temperature = _temp_interface.get_temperature(elem, center);
+      double Temperature = _temp_interface.get_temperature(elem, center);
 
 
 
@@ -2364,9 +2409,8 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
         }
       }
     }
+    this->get_communicator().sum(result);
   }
-
-
 
   return(result.real());
 }
@@ -2375,7 +2419,7 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
 
 
 //--------------------------------------------------------------------------//
-void EnvelopFunctionApprox::do_assemble(const ModelOptions& options)
+void EnvelopFunctionApprox::do_assemble(const ModelOptions&)
 {
   calculate_Hamiltonian_and_S();
 }
@@ -2540,7 +2584,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
 
 
   FEType fe_type = system->variable_type(0);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
   DofMap& dof_map = system->get_dof_map();
   std::vector<unsigned int> dof_indices;
@@ -2556,8 +2600,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   // we need the connectivity of the nodes to not double count
   vector<int> connectivity(qdens.size(), 0.0);
   {
-    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator el = get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -2569,8 +2613,9 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
         connectivity[dof_indices_qdens_p[n]]++;
       }
     }
-
   }
+
+  this->get_communicator().sum(connectivity);
 
   unsigned int start = 0;
   unsigned int stop  = num_states - 1;
@@ -2619,8 +2664,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     if (_solution[i].particle == "hl")
       particletype = 1;
 
-    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator el = get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -2641,6 +2686,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     }
   }
   qdens.close();
+  qdens_sys.update();
 
   redeclare_solutions();
 
@@ -2656,7 +2702,7 @@ void
 EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
 {
   FEType fe_type = system->variable_type(0);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
 
   DofMap& dof_map = system->get_dof_map();
   std::vector<unsigned int> dof_indices;
@@ -2672,8 +2718,8 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
   // we need the connectivity of the nodes to not double count
   vector<int> connectivity(qdens.size(), 0.0);
   {
-    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator el = get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -2686,6 +2732,8 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
       }
     }
   }
+
+  this->get_communicator().sum(connectivity);
 
   density.clear();
   density.resize(qdens.size(), 0.0);
@@ -2733,8 +2781,8 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
     double dos_factor = Fermi_statistics_probability(energy, fermi_energy,
         _solution[i].temperature, _solution[i].particle);
 
-    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator el = get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -2764,12 +2812,13 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
 unsigned int EnvelopFunctionApprox::get_number_of_active_cells()
 {
   unsigned int result = 0;
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
     result++;
 
+  this->get_communicator().sum(result);
 
   return(result);
 
@@ -2781,28 +2830,17 @@ unsigned int EnvelopFunctionApprox::get_number_of_active_cells()
 short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 {
 
-  short result = 0;
+  // let -1 indicate absence of the model
+  short result = -1;
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-  EFAbulkHamiltonian* element_hamiltonian;
-
-  const Elem* elem = *el;
-  element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
-
-  std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
-	    model_Ham = ( element_hamiltonian->get_Hamiltonian() );
-
-  result = model_Ham.size();
-
-  if (result == 0)  throw InitFailedException("EnvelopFunctionApprox: Hamiltonian is empty");
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
 
-    element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
+    EFAbulkHamiltonian* element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
 
 
     const std::vector<std::vector<EFAbulkHamiltonian::MatrixElement> >&
@@ -2813,11 +2851,37 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
     if (result1 != result)
     {
-      std::string mess = "EnvelopFunctionApprox: Hamiltonians of different";
-      mess += " materials have different number of bands";
-      throw InitFailedException(mess);
+      if (result > -1)
+      {
+        std::string mess = "EnvelopFunctionApprox: Hamiltonians of different"
+            " materials have different number of bands";
+        throw InitFailedException(mess);
+      }
+      else
+        result = result1;
     }
 
+  }
+
+  vector<short> num_bands(this->get_communicator().size());
+  this->get_communicator().allgather(result, num_bands);
+
+  for (unsigned int i = 0; i < num_bands.size(); ++i)
+  {
+    if (result != num_bands[i])
+    {
+      if (result == -1)
+        result = num_bands[i];
+
+      break;
+    }
+  }
+
+  if (!this->get_communicator().verify(result))
+  {
+    std::string mess = "EnvelopFunctionApprox: Hamiltonians have different"
+       " different number of bands on different mesh pieces";
+    throw InitFailedException(mess);
   }
 
   return(result);
@@ -2830,8 +2894,8 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 void EnvelopFunctionApprox::solve_bulk(void)
 {
   /*
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
 
   bool found = false;
   const Elem* mat_elem;

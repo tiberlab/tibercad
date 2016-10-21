@@ -6,7 +6,16 @@
 #include "Constants.h"
 #include "Messages.h"
 #include "DataOutput.h"
+
+#include<fstream>
 #include "SimulationOptions.h"
+#include <iomanip> // ??
+#include <petsc_matrix.h>
+
+
+//#include<fstream>
+#include <iomanip> // ??
+#include <petsc_matrix.h>
 
 #include "elem.h"
 #include "quadrature_gauss.h"
@@ -15,7 +24,7 @@
 #include <fstream>
 
 using namespace std;
-
+using namespace libMesh;
 
 
 void
@@ -30,7 +39,7 @@ void EigenvalueProblem::init_kspace(const ModelOptions& opt)
 {
    ModelOptions kopts = parse_kspace_options(opt);
 
-   _kspace = new Kspace(kopts);
+   _kspace = new Kspace(kopts, get_communicator());
 
    if(_kspace==NULL)
      throw InitFailedException("Could not initialize k-space");
@@ -65,7 +74,7 @@ ModelOptions EigenvalueProblem::parse_kspace_options(const ModelOptions& opts)
   // these are the real space lattice vectors, in nm
   // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
   // k_max can be interpreted in nm^-1
-  RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+  RealVectorValue a(M_PI, 0.0, 0.0), b(0.0, M_PI, 0.0), c(0.0, 0.0, M_PI);
   auto bbox = get_environment().get_bounding_box();
   if (get_option("x-periodicity", false) && (mesh_dim > 0))
     a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
@@ -175,11 +184,41 @@ Point EigenvalueProblem::get_k_point(bool relative_coord) const
 
 
 
+void EigenvalueProblem::do_calculate_density_at_k(DofField&)
+{
+}
+
+void EigenvalueProblem::do_assemble(const ModelOptions&)
+{
+}
+
+
+void EigenvalueProblem::get_H_csr(std::vector<libMesh::Complex>&, std::vector<int>&,
+        std::vector<int>&) const
+{
+}
+
+
+void EigenvalueProblem::get_S_csr(std::vector<libMesh::Complex>&, std::vector<int>&,
+        std::vector<int>&) const
+{
+}
+
+void EigenvalueProblem::print_H(const std::string&) const
+{
+}
+
+
+double EigenvalueProblem::get_band_edge(const std::string&)
+{
+  return 0;
+}
+
 
 void EigenvalueProblem::compute_dispersion(void)
 {
 
-    const Mesh* kmesh = _kspace->get_k_mesh();
+    const MeshBase* kmesh = _kspace->get_k_mesh();
     unsigned int number_of_k_points = kmesh->n_nodes();
     unsigned int number_of_eigs;
     
@@ -216,12 +255,15 @@ void EigenvalueProblem::compute_dispersion(void)
 void
 EigenvalueProblem::plot_dispersion(const std::string& filename)
 {
+ 
+  std::cout<<"Compute Dispersion ..." << std::endl;  
+  const MeshBase* kmesh = _kspace->get_k_mesh();
+  unsigned int number_of_k_points = kmesh->n_nodes();
 
     std::vector<std::string> formats;
     get_output_format(formats);
 
 
-    const Mesh* kmesh = _kspace->get_k_mesh();
     short kdim =  _kspace->dimension();
 
     if (kdim == 1)
@@ -430,9 +472,14 @@ void EigenvalueProblem::calculate_dos(void)
   Messages::info("Compute DOS ...");
 
   ModelOptions& opts = get_options().submodels_begin("DOS")->second;
+  
+  // create a serial communicator from Device communicator
+  libMesh::Parallel::Communicator& comm = get_communicator();
+  libMesh::Parallel::Communicator serial_comm;
+  comm.split(0,0,serial_comm); 
 
   delete _energy_mesh;
-  _energy_mesh = new Mesh(1);
+  _energy_mesh = new Mesh(serial_comm,1);
 
   double sigma = opts.get_option("gaussian_width", 0.01);
 
@@ -464,10 +511,10 @@ void EigenvalueProblem::calculate_dos(void)
   kopts.set_option("mesh_order", "second");
   kopts += parse_kspace_options(kopts);
 
-  _kspace = new Kspace(kopts);
+  _kspace = new Kspace(kopts, serial_comm);
 
 
-  const Mesh* kmesh = _kspace->get_k_mesh();
+  const MeshBase* kmesh = _kspace->get_k_mesh();
   unsigned int number_of_k_points = kmesh->n_nodes();
 
   //typedef boost::shared_ptr<eigen_problem_solution> ptr_type;
@@ -510,7 +557,7 @@ void EigenvalueProblem::calculate_dos(void)
 
 
 
-  AutoPtr<FEBase> fe(FEBase::build(_kspace->dimension(),
+  UniquePtr<FEBase> fe(FEBase::build(_kspace->dimension(),
       FEType(SECOND, LAGRANGE)));
 
   QGauss qrule(_kspace->dimension(),
@@ -768,7 +815,7 @@ EigenvalueProblem::integrate_density(DofField& density)
   // these are the real space lattice vectors, in nm
   // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
   // k_max can be interpreted in nm^-1
-  RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+  RealVectorValue a(M_PI, 0.0, 0.0), b(0.0, M_PI, 0.0), c(0.0, 0.0, M_PI);
   auto bbox = get_environment().get_bounding_box();
   if (x_per && (mesh_dim > 0))
   {
@@ -875,7 +922,7 @@ EigenvalueProblem::integrate_density(DofField& density)
   m.indent();
 
   KspaceIntegration* kint = KspaceIntegration::create(this,
-      &EigenvalueProblem::calculate_density_at_k, kopts);
+      &EigenvalueProblem::calculate_density_at_k, kopts, get_communicator(), get_mesh().comm());
 
   if (kint == NULL)
     throw InitFailedException("Could not create k-integration for density calculation");

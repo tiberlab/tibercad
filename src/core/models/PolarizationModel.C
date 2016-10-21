@@ -25,7 +25,7 @@ PolarizationModel::create(const ModelOptions& options)
 
 
 void
-PolarizationModel::calculate(const Elem* elem, const Point& point)
+PolarizationModel::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
 {
   if (!_fixed_or_external)
     do_calculate(elem, point);

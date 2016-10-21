@@ -6,8 +6,6 @@
 #include "PhysicalModelInterface.h"
 
 
-class Elem;
-class Point;
 
 using namespace std;
 

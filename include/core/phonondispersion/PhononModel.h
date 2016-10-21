@@ -4,7 +4,7 @@
 #include "DynamicalMatrix.h"
 #include "RamanTensor.h"
 #include "PhysicalModel.h"
-#include "elem.h"
+#include "libMeshDefs.h"
 
 class RamanTensor;
        

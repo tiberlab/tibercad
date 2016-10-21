@@ -22,7 +22,7 @@ class LinearProfile : public ExternalProfile
     //! Destructor
     virtual ~LinearProfile(void);
 
-    virtual double get_data(const Elem* elem, const Point& p) const;
+    virtual double get_data(const libMesh::Elem* elem, const libMesh::Point& p) const;
 
     virtual std::pair<double, double> get_min_max(void) const;
 
@@ -41,8 +41,8 @@ class LinearProfile : public ExternalProfile
 
     Type _type;
 
-    Point _direction;
-    Point _origin;
+    libMesh::Point _direction;
+    libMesh::Point _origin;
 
 };
 

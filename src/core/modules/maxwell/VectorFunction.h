@@ -9,15 +9,15 @@
 
 class VectorFunction {
   public:
-    std::vector<Point> phi;
-    std::vector<Point> dphidx;
-    std::vector<Point> dphidy;
-    std::vector<Point> dphidz;
+    std::vector<libMesh::Point> phi;
+    std::vector<libMesh::Point> dphidx;
+    std::vector<libMesh::Point> dphidy;
+    std::vector<libMesh::Point> dphidz;
 
     VectorFunction() {
     }
 
-    VectorFunction(Point value, unsigned int size) {
+    VectorFunction(libMesh::Point value, unsigned int size) {
       for (unsigned int i = 0; i < size; i++) {
         phi.push_back(value);
         dphidx.push_back(0);
@@ -26,7 +26,7 @@ class VectorFunction {
       }
     }
 
-    VectorFunction(const std::vector<Point>& values, const std::vector<Point>& d_dx, const std::vector<Point>& d_dy, const std::vector<Point>& d_dz, double multiplier) {
+    VectorFunction(const std::vector<libMesh::Point>& values, const std::vector<libMesh::Point>& d_dx, const std::vector<libMesh::Point>& d_dy, const std::vector<libMesh::Point>& d_dz, double multiplier) {
       for (unsigned int i = 0; i < values.size(); i++) {
         phi.push_back(multiplier * values[i]);
         dphidx.push_back(multiplier * d_dx[i]);
@@ -95,7 +95,7 @@ class VectorFunction {
         Messages::error("Can not get gradient because second order derivatives is undefined.");
         return VectorFunction();
       }
-      VectorFunction result(Point(0, 0), scalarFunction.phi.size());
+      VectorFunction result(libMesh::Point(0, 0), scalarFunction.phi.size());
       for (int i = 0; i < scalarFunction.phi.size(); i++) {
         result.phi[i] = scalarFunction.grad[i];
         result.dphidx[i] = scalarFunction.dgraddx[i];

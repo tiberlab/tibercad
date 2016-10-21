@@ -15,6 +15,7 @@
 // C++ includes
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 #include <map>
 #include <stdexcept>
 #include <cstring>
@@ -38,8 +39,8 @@ void TiberVTKIO::write_nodal_data(const string& fname,
     const vector<string>& names)
 {
 
-  if(libMesh::processor_id() != 0)
-    return;
+  //if(libMesh::global_processor_id() != 0)
+  //  return;
 
   if (names.size() == 0)
     return;
@@ -211,8 +212,8 @@ void TiberVTKIO::write_elemental_data(const string& fname,
     const vector<string>& names)
 {
 
-  if(libMesh::processor_id() != 0)
-    return;
+  //if(libMesh::global_processor_id() != 0)
+  //  return;
 
   if (names.size() == 0)
     return;
@@ -831,7 +832,7 @@ void
 TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
     map<ID, vector<VTKElem> >& elems)
 {
-  if (libMesh::processor_id() == 0)
+  //if (libMesh::global_processor_id() == 0)
   {
     // # elements in each subdomain
     map<ID, unsigned int> n_elem;

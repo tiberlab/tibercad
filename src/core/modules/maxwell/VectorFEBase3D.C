@@ -2,12 +2,12 @@
 #include "fe_type.h"
 #include "VectorFunction.h"
 #include "ElementUtils.h"
-using namespace libMesh;
+
 
 VectorFEBase3D::VectorFEBase3D(double scaling) : IVectorFEBase(DIM, scaling) {
 }
 
-void VectorFEBase3D::addTetraFunctions(const Elem *elem, const std::vector<Point>& pts, int order) {
+void VectorFEBase3D::addTetraFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order) {
 
   //0,1 1,2 2,0 0,3 1,3 2,3
   VectorFunction nablal[elem->n_nodes()];

@@ -6,18 +6,22 @@
 #include "EigenvalueProblem.h"
 
 
-
-// Define the DofMap, which handles degree of freedom
-// indexing.
-#include "dof_map.h"
+#include "libmesh/elem.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/numeric_vector.h"
+#include "libmesh/dof_map.h"
 
 #include <vector>
 #include <complex>
+//#include <algorithm>
 #include <set>
 
+namespace libMesh
+{
 class EquationSystems;
-class MeshBase;
 class LinearImplicitSystem;
+}
+
 
 //! Base class to solve complex valued eigenvalue problems based on FEM
 class FEMEigenvalueProblem : public  EigenvalueProblem
@@ -88,9 +92,9 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   
   virtual int get_H_nnz() const;
 
-  virtual void get_H_csr(std::vector<Complex>& A,std::vector<int>& JA,std::vector<int>& IA) const;
+  virtual void get_H_csr(std::vector<libMesh::Complex>& A,std::vector<int>& JA,std::vector<int>& IA) const;
 
-  virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,std::vector<int>& IA) const;
+  virtual void get_S_csr(std::vector<libMesh::Complex>& A, std::vector<int>& JA,std::vector<int>& IA) const;
 
   virtual void print_H(const std::string& outpath) const;
  
@@ -102,6 +106,12 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   virtual void do_solve() {};
 
   virtual void parse_options();
+
+  //! Copy H or S to solver
+  /*!
+   * \param matrix 'H' or 'S' for Hamiltonian or overlap
+   */
+  void copy_matrix_to_solver(const char matrix);
 
   virtual void do_copy_H_to_solver();
   
@@ -127,7 +137,7 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
   std::vector<FEMEigenvalueProblem::dof_new> new_dofs;
 
   //! my copy of DofMap::_dof_constraints (I have to recalculate it because it is private)
-  DofConstraints 	my_dof_constraints;
+  libMesh::DofConstraints 	my_dof_constraints;
 
 
 
@@ -136,10 +146,10 @@ class FEMEigenvalueProblem : public  EigenvalueProblem
 
 
    //!pointer the equation systems object
-  EquationSystems* es;
+  libMesh::EquationSystems* es;
   
   //!system that we add to the equation systems
-  LinearImplicitSystem* system;
+  libMesh::LinearImplicitSystem* system;
 
 
   //!diriclet DOFS
@@ -222,7 +232,7 @@ FEMEigenvalueProblem::get_periodicity_vector(unsigned int dof) const
 
 //---------------------------------------------------------------------------------//
 
-inline bool FEMEigenvalueProblem::element_on_boundary(const Elem* element)
+inline bool FEMEigenvalueProblem::element_on_boundary(const libMesh::Elem* element)
 {
   bool result = false;
 

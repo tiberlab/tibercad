@@ -4,14 +4,16 @@
 #define _BOUNDARYELEMENTMAP_H_
 
 #include "TypeDefs.h"
+#include "libMeshDefs.h"
 
 #include <map>
 #include <set>
 #include <vector>
 #include <cstdlib> // for NULL
+#include "elem.h"
 
-class Elem;
 class Boundary;
+
 
 
 //! Contains a map connecting boundaries to set of elems

@@ -1,10 +1,11 @@
 // $Id$
 
+
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/convenience.hpp>
 
-#include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
+#include "SimulationInterface.h"
 #include "TiberEqSystem.h"
 #include "TiberLinearSystem.h"
 #include "Material.h"
@@ -15,11 +16,14 @@
 #include "NodeObject.h"
 #include "Alloy.h"
 #include "Embracing.h"
+
 #include "Variable.h"
 
 #include "EnvelopFunctionApprox.h"
+
 #include "OpticsKP.h"
 #include "OpticsTB.h"
+
 #include "Sweep.h"
 #include "SaveSolution.h"
 #include "RelaxationMethod.h"
@@ -30,16 +34,26 @@
 #include "GridCells.h"
 #include "MeshUtils.h"
 
+#include "libMeshDefs.h"
+
+
 // LibMesh includes
 #include "system.h"
+#include "elem.h"
 #include "fe_interface.h"
+//#include "elem.h"
 
 #include <sstream>
 #include <algorithm>
 
+namespace libMesh
+{
+  class Elem;
+}
 
 
 using namespace std;
+
 
 SimulationInterface::SimulationMap
 SimulationInterface::_simulation_map;
@@ -76,8 +90,8 @@ SimulationInterface::SimulationInterface(const ModelOptions& options)
 
 SimulationInterface::~SimulationInterface(void)
 {
-  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.begin());
-  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.begin());
+  map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
   for ( ; it != end; ++it)
     delete it->second;
 
@@ -265,14 +279,14 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
   vector<IDHashSet> bd_dofs(1);
 
   TiberEqSystem& tiber_sys = get_equation_system<TiberEqSystem>();
-  System* system = tiber_sys.get_libmesh_system();
+  libMesh::System* system = tiber_sys.get_libmesh_system();
 
   // In the remote case that system is NULL we return immediately
   if (system == NULL)
     return;
 
 
-  const DofMap& dof_map = system->get_dof_map();
+  const libMesh::DofMap& dof_map = system->get_dof_map();
   vector<unsigned int> dof_indices;
 
   // contains the 'active' DoFs, false means inactive
@@ -572,7 +586,7 @@ SimulationInterface::setup_mesh(void)
 {
   if (get_option("atomistic_mesh", false))
   {
-    UnstructuredMesh* mesh = new Mesh(3);
+    libMesh::UnstructuredMesh* mesh = new Mesh(TiberCad::get_mpi_comm() ,3);
     if (get_atomistic_structure() == NULL)
       throw InitFailedException(get_name() + ": could not find atomistic structure");
 
@@ -620,6 +634,19 @@ SimulationInterface::reinit(void)
 }
 
 
+void
+SimulationInterface::setup_mpi_comm(void)
+{
+  if (this->has_environment())
+    this->set_communicator(this->get_environment().get_device().get_communicator());
+  else
+    this->set_communicator(TiberCad::get_mpi_comm());
+
+  //cerr << "MPI rank " << this->get_communicator().rank()
+  //    << " out of " << this->get_communicator().size() << endl;
+}
+
+
 
 void
 SimulationInterface::init(void)
@@ -649,6 +676,17 @@ SimulationInterface::init(void)
     {
       _environment->prepare_for_solve();
       _scaling.set_calc_mesh_units(get_mesh_units());
+    }
+
+    this->setup_mpi_comm();
+
+    if (verbose() > 0)
+    {
+      ostringstream os;
+      os << "MPI: rank " << get_communicator().rank() <<
+          " of communicator with size " <<
+          get_communicator().size();
+      Messages::info(os.str());
     }
 
     using namespace boost::filesystem;
@@ -820,7 +858,6 @@ SimulationInterface::find_solution_provider(const string& simulation,
   Utils::tokenize(simulation, tokens, ".");
 
   result.first = find_simulation(tokens[0]);
-
   if (result.first != NULL)
   {
     if (tokens.size() > 1)
@@ -828,7 +865,6 @@ SimulationInterface::find_solution_provider(const string& simulation,
     else
       result.second = result.first->get_solution_id(solution);
   }
-
   return result;
 }
 
@@ -844,7 +880,7 @@ SimulationInterface::get_region_ids(std::set<ID>& region_ids) const
 
 
 
-EquationSystems&
+libMesh::EquationSystems&
 SimulationInterface::get_equation_systems(void) const
 {
   return _environment->get_device().get_equation_systems(_mesh);
@@ -896,8 +932,7 @@ SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
   if (!_equilibrium_is_solved)
   {
 
-    PerfLog perflog(get_name() + ": solve_equilibrium", false);
-    perflog.start_event("solve_equilibrium");
+    START_LOG(get_name() + ": solve_equilibrium", "");
 
     assert(is_initialized());
 
@@ -909,10 +944,10 @@ SimulationInterface::solve_equilibrium(void) throw (SolveFailedException)
 
     increment_solve_sequence_number();
 
-    perflog.stop_event("solve_equilibrium");
 
     _equilibrium_is_solved = true;
 
+    STOP_LOG(get_name() + ": solve_equilibrium", "");
   }
 }
 
@@ -961,7 +996,6 @@ SimulationInterface::remove_plot_variable(ID id)
   _plotvariable_ids.erase(id);
 }
 
-
 void
 SimulationInterface::solve(void)
 {
@@ -978,9 +1012,6 @@ SimulationInterface::solve(void)
 
   // call reinitialization
   reinit();
-
-  PerfLog perflog(get_name() + ": solve", false);
-  perflog.start_event("solve");
 
   assert(is_initialized());
 
@@ -1040,12 +1071,11 @@ SimulationInterface::solve(void)
 
   Messages::frameline("<<<<",'-');
 
-  perflog.stop_event("solve");
 }
 
 
 
-NumericVector<double>&
+libMesh::NumericVector<double>&
 SimulationInterface::do_get_solution_vector(void)
 {
   assert(_systems.size() > 0);
@@ -1058,7 +1088,7 @@ SimulationInterface::do_get_solution_vector(void)
 
 void
 SimulationInterface::do_set_solution_vector(
-    const NumericVector<double>& new_solution)
+    const libMesh::NumericVector<double>& new_solution)
 {
   get_solution_vector() = new_solution;
 }
@@ -1069,8 +1099,8 @@ SimulationInterface::do_set_solution_vector(
 
 
 PhysicalModel*
-SimulationInterface::create_bulk_model(const ModelOptions& options,
-    const Material* material) const
+SimulationInterface::create_bulk_model(const ModelOptions&,
+    const Material*) const
 {
   return NULL;
 }
@@ -1187,6 +1217,9 @@ SimulationInterface::binary_output(void) const
 void
 SimulationInterface::do_plot(void)
 {
+  //if (this->get_communicator().rank() != 0)
+  //  return;
+
   plot_meshdata();
   plot_atomisticdata();
   plot_globaldata();
@@ -1201,10 +1234,10 @@ SimulationInterface::plot_meshdata(void)
 
   const MeshBase& mesh = get_mesh();
 
-  //MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
-  //const MeshBase::const_element_iterator end = mesh.active_local_elements_end();
-  MeshBase::const_element_iterator it = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end = mesh.active_elements_end();
+  MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end = mesh.active_local_elements_end();
+  //libMesh::MeshBase::const_element_iterator it = mesh.active_elements_begin();
+  //const libMesh::MeshBase::const_element_iterator end = mesh.active_elements_end();
 
   // first gather subdomain infos
   // number of elements
@@ -1275,7 +1308,8 @@ SimulationInterface::plot_meshdata(void)
   }
 
 
-  for (it = mesh.active_elements_begin(); it != end; ++it)
+  //for (it = mesh.active_elements_begin(); it != end; ++it)
+  for (it = mesh.active_local_elements_begin(); it != end; ++it)
   {
     const Elem* elem = *it;
 
@@ -1558,8 +1592,8 @@ SimulationInterface::do_save_data(ostream& os)
 
   // first write all variables
   os << "<variables>" << eol;
-  Variable::iterator vit(Variable::begin());
-  const Variable::iterator vend(Variable::end());
+  VariableValue::iterator vit(VariableValue::begin());
+  const VariableValue::iterator vend(VariableValue::end());
   for ( ; vit != vend; ++vit)
   {
     os << (*vit)->get_name() << " " << (*vit)->get_value_string() << eol;
@@ -1572,7 +1606,7 @@ SimulationInterface::do_save_data(ostream& os)
     // then the data
     os << "<data>" << eol;
 
-    const NumericVector<Number>& solution =
+    const libMesh::NumericVector<Number>& solution =
         get_equation_system<TiberEqSystem>(i).get_solution_vector();
 
     for (size_t i = 0; i < solution.size(); ++i)
@@ -1626,7 +1660,7 @@ SimulationInterface::do_load_data(istream& is)
   const map<string, double>::iterator vend(values.end());
   for ( ; vit != vend; ++vit)
   {
-    Variable::set_variable_value(vit->first, vit->second);
+    VariableValue::set_variable_value(vit->first, vit->second);
   }
 
   if (!is.good()) throw InitFailedException("Bad datafile (missing data block?)");
@@ -1643,7 +1677,7 @@ SimulationInterface::do_load_data(istream& is)
       is.getline(buf, bufsize);
     }
 
-    NumericVector<Number>& solution = get_solution_vector();
+    libMesh::NumericVector<Number>& solution = get_solution_vector();
 
     for (size_t i = 0; i < solution.size(); ++i)
     {
@@ -1734,8 +1768,8 @@ SimulationInterface::do_remember_current_solution(ID id)
 {
   if (!has_solution_vector()) return INVALID_ID;
 
-  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
-  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
 
   if (it != end)
     *(it->second) = get_solution_vector();
@@ -1761,8 +1795,8 @@ void
 SimulationInterface::do_set_to_remembered_solution(ID id)
 {
 
-  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
-  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
 
   if (it != end)
     get_solution_vector() = *(it->second);
@@ -1774,8 +1808,8 @@ void
 SimulationInterface::do_delete_remembered_solution(ID id)
 {
 
-  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
-  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
   if (it != end)
   {
     delete it->second;
@@ -1785,13 +1819,13 @@ SimulationInterface::do_delete_remembered_solution(ID id)
 
 
 
-NumericVector<double>*
+libMesh::NumericVector<double>*
 SimulationInterface::get_remembered_solution(ID id)
 {
-  NumericVector<double>* vec = NULL;
+  libMesh::NumericVector<double>* vec = NULL;
 
-  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
-  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
   if (it != end)
     vec = it->second;
 
@@ -1804,12 +1838,12 @@ SimulationInterface::do_maximum_norm_of_difference(ID id)
 {
   double norm = 0.0;
 
-  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
-  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
   if (it != end)
   {
-    NumericVector<double>& old = *(it->second);
-    NumericVector<double>& current = get_solution_vector();
+    libMesh::NumericVector<double>& old = *(it->second);
+    libMesh::NumericVector<double>& current = get_solution_vector();
 
     assert(old.size() == current.size());
 
@@ -1831,12 +1865,12 @@ SimulationInterface::do_l2_norm_of_difference(ID id)
 {
   double norm = 0.0;
 
-  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
-  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
   if (it != end)
   {
-    NumericVector<double>& old = *(it->second);
-    NumericVector<double>& current = get_solution_vector();
+    libMesh::NumericVector<double>& old = *(it->second);
+    libMesh::NumericVector<double>& current = get_solution_vector();
 
     assert(old.size() == current.size());
 
@@ -1867,8 +1901,8 @@ SimulationInterface::do_scale_solution(double factor)
 void
 SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
 {
-  map<ID, NumericVector<double>*>::iterator end(_remembered_solutions.end());
-  map<ID, NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
+  map<ID, libMesh::NumericVector<double>*>::iterator end(_remembered_solutions.end());
+  map<ID, libMesh::NumericVector<double>*>::iterator it(_remembered_solutions.find(id));
   if (it != end)
   {
     get_solution_vector().add(factor, *(it->second));
@@ -1896,8 +1930,8 @@ SimulationInterface::do_add_scaled_remembered_solution(ID id, double factor)
       break; \
   }
 
-AutoPtr<FEBase>
-SimulationInterface::build_finite_element(unsigned int dim, FEType type,
+libMesh::UniquePtr<libMesh::FEBase>
+SimulationInterface::build_finite_element(unsigned int dim, libMesh::FEType type,
                                           bool scale) const
 {
 
@@ -1905,7 +1939,7 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
   double mu = get_scaling().get_calc_mesh_units();
   TiberCad::Symmetry sym = get_environment().get_device().get_symmetry();
 
-  FEBase* fe;
+  libMesh:: FEBase* fe;
 
   switch (dim)
   {
@@ -1926,7 +1960,7 @@ SimulationInterface::build_finite_element(unsigned int dim, FEType type,
   }
   assert(fe != NULL);
 
-  return AutoPtr<FEBase>(fe);
+  return libMesh::UniquePtr<libMesh::FEBase>(fe);
 }
 
 
@@ -2214,13 +2248,13 @@ SimulationInterface::get_solution(const Elem* elem, const vector<Point>& p,
 
 
 bool
-SimulationInterface::get_solution(const Elem* elem,
+SimulationInterface::get_solution(const libMesh::Elem* elem,
     map<ID, vector<double> >& values,
-    const vector<Point>& p, bool local_coord)
+    const vector<libMesh::Point>& p, bool local_coord)
 {
   if (!is_solved()) return false;
 
-  vector<Point> points(p);
+  vector<libMesh::Point> points(p);
 
 
   // if no points are given, we use the vertices
@@ -2231,7 +2265,7 @@ SimulationInterface::get_solution(const Elem* elem,
     points.resize(nn);
     for (unsigned int i = 0; i < nn; i++)
     {
-      points[i] = elem->local_node(elem->type(), i);
+      points[i] = elem->master_point(i);
     }
     local_coord = true;
   }
@@ -2280,13 +2314,13 @@ SimulationInterface::get_solution(const Elem* elem,
         switch (get_mesh().mesh_dimension())
         {
           case 1:
-            points[qp] = FE<1, LAGRANGE>::map(elem, points[qp]);
+            points[qp] = libMesh::FE<1, libMesh::LAGRANGE>::map(elem, points[qp]);
             break;
           case 2:
-            points[qp] = FE<2, LAGRANGE>::map(elem, points[qp]);
+            points[qp] = libMesh::FE<2, libMesh::LAGRANGE>::map(elem, points[qp]);
             break;
           case 3:
-            points[qp] = FE<3, LAGRANGE>::map(elem, points[qp]);
+            points[qp] = libMesh::FE<3, libMesh::LAGRANGE>::map(elem, points[qp]);
         }
       }
     }
@@ -2295,7 +2329,7 @@ SimulationInterface::get_solution(const Elem* elem,
 
     elem = pair.first;
 
-    FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, pair.second, points);
+    libMesh::FEInterface::inverse_map(get_mesh().mesh_dimension(), libMesh::FEType(), elem, pair.second, points);
    
     local_coord = true;
   }
@@ -2303,12 +2337,12 @@ SimulationInterface::get_solution(const Elem* elem,
 
   if (!local_coord)
   {
-    FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, p, points);
+    libMesh::FEInterface::inverse_map(get_mesh().mesh_dimension(), libMesh::FEType(), elem, p, points);
   }
 
   SimulationEnvironment& env = get_environment();
 
-  const Elem* el = elem;
+  const libMesh::Elem* el = elem;
 
   bool flag = true;
 
@@ -2386,7 +2420,7 @@ SimulationInterface::get_solution(const Elem* elem,
           for ( ; nit != nend; ++nit)
           {
             unsigned int node = *nit;
-            if (FEInterface::on_reference_element(points[node], el->type()))
+            if (libMesh::FEInterface::on_reference_element(points[node], el->type()))
             {
               nodenr.erase(nit);
               my_p.push_back(points[node]);
@@ -2649,10 +2683,13 @@ SimulationInterface::get_solution_descriptor(const std::string& solution_name) c
   vector<string> tokens;
   Utils::tokenize(solution_name, tokens, ":");
 
-  // the first token is the solution name
-  map<const string, ID>::const_iterator it(_solution_ids.find(tokens[0]));
-  if (it != _solution_ids.end())
-    id = it->second;
+  if (tokens.size() > 0)
+  {
+    // the first token is the solution name
+    map<const string, ID>::const_iterator it(_solution_ids.find(tokens[0]));
+    if (it != _solution_ids.end())
+      id = it->second;
+  }
 
   return get_solution_descriptor(id);
 }
@@ -2912,6 +2949,9 @@ void
 SimulationInterface::project_on_tensor_grid(void)
 {
   if (!get_options().has_submodel("Projection"))
+    return;
+
+  if (this->get_communicator().rank() != 0)
     return;
 
   Messages msg;

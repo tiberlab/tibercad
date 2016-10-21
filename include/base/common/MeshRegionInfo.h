@@ -8,9 +8,17 @@
 #include "IDSet.h"
 #include "tiber_dll.h"
 
+#include "parallel_object.h"
+
 #include <string>
 #include <sstream>
 #include <iostream>
+
+
+namespace libMesh
+{
+  class MeshBase;
+}
 
 
 //! A class containing information on the region IDs
@@ -18,13 +26,18 @@
  * Mesh region IDs are assumed to be unique, and the mapping with names
  * one-to-one.
  */
-class TBDLLOCAL MeshRegionInfo
+class MeshRegionInfo
+//: public libMesh::ParallelObject
 {
 
   public:
 
     //! Constructor
-    MeshRegionInfo(void) {}
+    MeshRegionInfo(libMesh::MeshBase &mesh) :
+     _mesh(mesh)
+    {}
+    //MeshRegionInfo(const libMesh::Parallel::Communicator &comm_in) :
+    // libMesh::ParallelObject(comm_in)
 
     //! Destructor
     virtual ~MeshRegionInfo(void);
@@ -65,7 +78,14 @@ class TBDLLOCAL MeshRegionInfo
     ID next_id(void) const;
 
 
+    //! Get the associated mesh object
+    const libMesh::MeshBase& get_mesh(void) const;
+
+
     void print_info() const;
+
+    //! Broadcast to all processors
+    void broadcast(void);
 
 
   protected:
@@ -75,6 +95,10 @@ class TBDLLOCAL MeshRegionInfo
     const std::string& get_name(ID id) const;
 
 
+    //! Do the actual broadcast
+    virtual void do_broadcast(void) {};
+
+
   private:
 
     //! ID to name map
@@ -82,13 +106,15 @@ class TBDLLOCAL MeshRegionInfo
      * This map contains all IDs present in the mesh, even those
      * that have not a name assigned.
      */
-    typedef HashMap<ID, std::string>::Type IDToNameMap;
+    //typedef HashMap<ID, std::string>::Type IDToNameMap;
+    typedef std::map<ID, std::string> IDToNameMap;
 
     //! name to ID map
     /*!
      * Each ID can in principle have different names associated.
      */
-    typedef HashMap<std::string, std::set<ID> >::Type NameToIDMap;
+    //typedef HashMap<std::string, std::set<ID> >::Type NameToIDMap;
+    typedef std::map<std::string, std::set<ID> > NameToIDMap;
 
 
 
@@ -104,6 +130,11 @@ class TBDLLOCAL MeshRegionInfo
 
     //! an empty set
     const IDSet _empty_set;
+
+
+    //! the mesh this object refers to
+    libMesh::MeshBase& _mesh;
+
 };
 
 
@@ -173,6 +204,12 @@ MeshRegionInfo::n_subdomains(void) const
   return _ids_to_names.size();
 }
 
+inline
+const libMesh::MeshBase&
+MeshRegionInfo::get_mesh(void) const
+{
+  return _mesh;
+}
 
 
 #endif // _REGIONINFO_H_

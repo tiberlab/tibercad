@@ -17,9 +17,12 @@
 #include "Scaling.h"
 #include "FiniteElement.h"
 #include "Atom.h"
+#include "libMeshDefs.h"
+
 
 // LibMesh includes
 #include "numeric_vector.h"
+#include "parallel.h"
 
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
@@ -37,19 +40,30 @@
 class SimulationEnvironment;
 class Embracing;
 class Device;
-class EquationSystems;
 class TiberEqSystem;
 class PhysicalModel;
 class BoundaryProperties;
-class Material;
 class MaterialBoundary;
 class EdgeObject;
 class NodeObject;
-class MeshBase;
-class Point;
-class DofObject;
 class AtomisticStructure;
+class Material;
 
+namespace libMesh
+{
+  class EquationSystems;
+}
+
+//LIBMESHCLASS(EquationSystems);
+//LIBMESHCLASS(DofObject);
+//USELIBMESHTYPE(UniquePtr);
+//USELIBMESHTYPE(FEBase);
+//USELIBMESHTYPE(FEType);
+//USELIBMESHTYPE(NumericVector);
+//USELIBMESHTYPE(RealGradient);
+//USELIBMESHTYPE(SparseMatrix);
+//USELIBMESHTYPE(Point);
+//USELIBMESHTYPE(Elem);
 
 //! The base class for any simulation
 class SimulationInterface : public TiberModelObject
@@ -210,6 +224,13 @@ class SimulationInterface : public TiberModelObject
     void reinit(void);
 
 
+    //! Get the associated MPI communicator object
+    libMesh::Parallel::Communicator& get_communicator(void);
+
+    //! Get the associated MPI communicator object
+    const libMesh::Parallel::Communicator& get_communicator(void) const;
+
+
     //! Setup the available solution variables
     /*!
      * This has to be done before calling init() of all models
@@ -317,7 +338,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get a remembered solution
-    NumericVector<double>* get_remembered_solution(ID id);
+    libMesh::NumericVector<double>* get_remembered_solution(ID id);
 
 
     /*!
@@ -348,14 +369,14 @@ class SimulationInterface : public TiberModelObject
     /*!
      * Calls do_get_solution_vector()
      */
-    NumericVector<double>& get_solution_vector(void);
+    libMesh::NumericVector<double>& get_solution_vector(void);
 
 
     //! Set the current solution to a given value
     /*!
      * Calls do_set_solution_vector()
      */
-    void set_solution_vector(const NumericVector<double>& new_solution);
+    void set_solution_vector(const libMesh::NumericVector<double>& new_solution);
 
 
     //! Scale the current solution by a real factor
@@ -484,8 +505,8 @@ class SimulationInterface : public TiberModelObject
      * locations of the solution variables.
      * \see SolutionDescriptor
      */
-    bool get_solution(const Elem* elem, std::map<ID, std::vector<double> >& values,
-        const std::vector<Point>& p = std::vector<Point>(),
+    bool get_solution(const libMesh::Elem* elem, std::map<ID, std::vector<double> >& values,
+        const std::vector<libMesh::Point>& p = std::vector<libMesh::Point>(),
         bool local_coords = false);
 
     //! Get a single solution
@@ -493,8 +514,8 @@ class SimulationInterface : public TiberModelObject
      * \see get_solution(const Elem*, std::map<ID, std::vector<double> >&,
      *   const std::vector<Point>&, bool)
      */
-    bool get_solution(const Elem* elem, ID id, std::vector<double>& values,
-        const std::vector<Point>& p = std::vector<Point>(),
+    bool get_solution(const libMesh::Elem* elem, ID id, std::vector<double>& values,
+        const std::vector<libMesh::Point>& p = std::vector<libMesh::Point>(),
         bool local_coords = false);
 
 
@@ -503,8 +524,8 @@ class SimulationInterface : public TiberModelObject
      * \see get_solution(const Elem*, std::map<ID, std::vector<double> >&,
      *   const std::vector<Point>&, bool)
      */
-    bool get_solution(const Elem* elem, ID id, double& value,
-        const Point& p, bool local_coords = false);
+    bool get_solution(const libMesh::Elem* elem, ID id, double& value,
+        const libMesh::Point& p, bool local_coords = false);
 
 
     //! Get a single solution at a single point
@@ -512,8 +533,8 @@ class SimulationInterface : public TiberModelObject
      * \see get_solution(const Elem*, std::map<ID, std::vector<double> >&,
      *   const std::vector<Point>&, bool)
      */
-    bool get_solution(const Elem* elem, ID id, std::vector<double>& value,
-        const Point& p, bool local_coords = false);
+    bool get_solution(const libMesh::Elem* elem, ID id, std::vector<double>& value,
+        const libMesh::Point& p, bool local_coords = false);
 
 
     //! Get solutions associated to an atom
@@ -592,7 +613,7 @@ class SimulationInterface : public TiberModelObject
     /*!
      * \return a constant reference to the simulation mesh
      */
-    MeshBase& get_mesh(void) const;
+    libMesh::MeshBase& get_mesh(void) const;
 
 
     //! Get the mesh units (in meters)
@@ -629,7 +650,7 @@ class SimulationInterface : public TiberModelObject
      * \param type the type of finite element
      * \param scale include length scaling if true
      */
-    AutoPtr<FEBase> build_finite_element(unsigned int dim, FEType type,
+    libMesh::UniquePtr<libMesh::FEBase> build_finite_element(unsigned int dim, libMesh::FEType type,
         bool scale = false) const;
 
 
@@ -678,7 +699,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get the material for a given element
-    Material* get_material(const Elem* elem) const;
+    Material* get_material(const libMesh::Elem* elem) const;
 
 
     //! Get the physical model for a given element
@@ -686,7 +707,7 @@ class SimulationInterface : public TiberModelObject
      * \return \c NULL if no model is present for \c elem
      */
     template <typename T>
-    T* get_bulk_model(const Elem* elem) const;
+    T* get_bulk_model(const libMesh::Elem* elem) const;
 
     //! Get the physical model for a given atom
     /*!
@@ -714,7 +735,7 @@ class SimulationInterface : public TiberModelObject
      * of \c elem
      */
     template <typename T>
-    T* get_interface_model(const Elem* elem, int side) const;
+    T* get_interface_model(const libMesh::Elem* elem, int side) const;
 
 
     //! Get the physical model associated to an element edge
@@ -725,7 +746,7 @@ class SimulationInterface : public TiberModelObject
      * of \c elem
      */
     template <typename T>
-    T* get_edge_model(const Elem* elem, int edge) const;
+    T* get_edge_model(const libMesh::Elem* elem, int edge) const;
 
 
     //! Get the physical model associated to an element node
@@ -736,7 +757,7 @@ class SimulationInterface : public TiberModelObject
      * of \c elem
      */
     template <typename T>
-    T* get_node_model(const Elem* elem, int node) const;
+    T* get_node_model(const libMesh::Elem* elem, int node) const;
 
 
 
@@ -778,7 +799,8 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get a reference to the equation system object
-    EquationSystems& get_equation_systems(void) const;
+    libMesh::EquationSystems& get_equation_systems(void) const;
+    
 
 
     //! Clear systems
@@ -827,6 +849,10 @@ class SimulationInterface : public TiberModelObject
     virtual void setup_mesh(void);
 
 
+    //! Setup the MPI communicator
+    virtual void setup_mpi_comm(void);
+
+
     //! Set the internal mesh pointer
     void set_mesh(MeshBase* mesh);
 
@@ -845,6 +871,9 @@ class SimulationInterface : public TiberModelObject
     //! Setup the available variables
     virtual void do_setup_solution_variables(void) {};
 
+
+    //! Set the associated MPI communicator object
+    void set_communicator(const libMesh::Parallel::Communicator& comm);
 
     //! Solve for equilibrium
     /*!
@@ -1007,7 +1036,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get a pointer to the solution vector
-    virtual NumericVector<double>& do_get_solution_vector(void);
+    virtual libMesh::NumericVector<double>& do_get_solution_vector(void);
 
 
     //! Set a new solution vector
@@ -1019,7 +1048,7 @@ class SimulationInterface : public TiberModelObject
      * \param new_solution the new solution to set
      */
     virtual void do_set_solution_vector(
-        const NumericVector<double>& new_solution);
+        const libMesh::NumericVector<double>& new_solution);
 
 
     //! Set to the remembered solution number \c id
@@ -1212,9 +1241,9 @@ class SimulationInterface : public TiberModelObject
      * \pre \c elem is an active element of this simulation
      * \pre all ids refer to solutions located on an element
      */
-    virtual void get_solution_secure(const Elem* elem,
+    virtual void get_solution_secure(const libMesh::Elem* elem,
         std::map<ID, std::vector<double> >& values,
-        const std::vector<Point>& p);
+        const std::vector<libMesh::Point>& p);
 
 
     //! Get solutions on an atom
@@ -1427,7 +1456,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! A map with remembered solutions
-    std::map<ID, NumericVector<double>*> _remembered_solutions;
+    std::map<ID, libMesh::NumericVector<double>*> _remembered_solutions;
 
 
     //! A set with all physical models of this simulation
@@ -1472,13 +1501,18 @@ class SimulationInterface : public TiberModelObject
 
 
     //! A pointer to the simulation mesh
-    MeshBase* _mesh;
+    libMesh::MeshBase* _mesh;
 
+
+    //! The associated MPI communicator
+    libMesh::Parallel::Communicator _mpi_comm;
 
 
 
     //! A map between elements of _mesh and atoms
-    //! It is defined as vector for fast indexing on elem ID.
+    /*!
+     * It is defined as vector for fast indexing on elem ID.
+     */
     ElemAtomsMap _elem_to_atoms;
 
 
@@ -1511,7 +1545,7 @@ class SimulationInterface : public TiberModelObject
 
 
     //! \see get_bulk_model()
-    PhysicalModel* _get_bulk_model(const Elem* elem) const;
+    PhysicalModel* _get_bulk_model(const libMesh::Elem* elem) const;
 
     //  \see get_bulk_model()
     //PhysicalModel* _get_bulk_model(const Atom& atom, bool parent) const;
@@ -1521,15 +1555,15 @@ class SimulationInterface : public TiberModelObject
         bool parent) const;
 
     //! \see get_interface_model()
-    PhysicalModel* _get_interface_model(const Elem* elem, int side) const;
+    PhysicalModel* _get_interface_model(const libMesh::Elem* elem, int side) const;
 
 
     //! \see get_edge_model()
-    PhysicalModel* _get_edge_model(const Elem* elem, int edge) const;
+    PhysicalModel* _get_edge_model(const libMesh::Elem* elem, int edge) const;
 
 
     //! \see get_node_model()
-    PhysicalModel* _get_node_model(const Elem* elem, int node) const;
+    PhysicalModel* _get_node_model(const libMesh::Elem* elem, int node) const;
 };
 
 
@@ -1596,7 +1630,7 @@ SimulationInterface::get_environment(void) const
 
 
 inline
-MeshBase&
+libMesh::MeshBase&
 SimulationInterface::get_mesh(void) const
 {
   if (_environment == NULL)
@@ -1613,6 +1647,31 @@ SimulationInterface::set_mesh(MeshBase* mesh)
 {
   _mesh = mesh;
 }
+
+
+inline
+libMesh::Parallel::Communicator&
+SimulationInterface::get_communicator(void)
+{
+  return(_mpi_comm);
+}
+
+inline
+const libMesh::Parallel::Communicator&
+SimulationInterface::get_communicator(void) const
+{
+  return(_mpi_comm);
+}
+
+
+
+inline
+void
+SimulationInterface::set_communicator(const libMesh::Parallel::Communicator& comm)
+{
+  _mpi_comm = comm;
+}
+
 
 
 inline
@@ -1885,14 +1944,14 @@ SimulationInterface::set_scaling(const Scaling& scaling)
 
 inline
 bool
-SimulationInterface::get_solution(const Elem* elem, ID id,
-    double& value, const Point& p,
+SimulationInterface::get_solution(const libMesh::Elem* elem, ID id,
+    double& value, const libMesh::Point& p,
     bool local_coords)
 {
-  std::vector<Point> point(1, p);
+  std::vector<libMesh::Point> point(1, p);
   std::vector<double> val(1, 0.0);
 
-  bool ok = get_solution(elem, id, val, point);
+  bool ok = get_solution(elem, id, val, point, local_coords);
   if (ok)
     value = val[0];
 
@@ -1901,21 +1960,21 @@ SimulationInterface::get_solution(const Elem* elem, ID id,
 
 inline
 bool
-SimulationInterface::get_solution(const Elem* elem, ID id,
-    std::vector<double>& value, const Point& p,
+SimulationInterface::get_solution(const libMesh::Elem* elem, ID id,
+    std::vector<double>& value, const libMesh::Point& p,
     bool local_coords)
 {
-  std::vector<Point> point(1, p);
-  return get_solution(elem, id, value, point);
+  std::vector<libMesh::Point> point(1, p);
+  return get_solution(elem, id, value, point, local_coords);
 }
 
 /*
 inline
 void
-SimulationInterface::get_solution_secure(const Elem* elem,
-    const Point& p, const std::set<ID>& ids, std::map<ID, double>& values)
+SimulationInterface::get_solution_secure(const libMesh::Elem* elem,
+    const libMesh::Point& p, const std::set<ID>& ids, std::map<ID, double>& values)
 {
-  std::vector<Point> pvec(1, p);
+  std::vector<libMesh::Point> pvec(1, p);
   std::vector<std::map<ID, double> > valvec(1);
 
   get_solution_secure(elem, pvec, ids, valvec);
@@ -1925,7 +1984,7 @@ SimulationInterface::get_solution_secure(const Elem* elem,
 */
 
 inline
-NumericVector<double>&
+libMesh::NumericVector<double>&
 SimulationInterface::get_solution_vector(void)
 {
   assert(has_solution_vector());
@@ -1936,7 +1995,7 @@ SimulationInterface::get_solution_vector(void)
 
 inline
 void
-SimulationInterface::set_solution_vector(const NumericVector<double>& new_solution)
+SimulationInterface::set_solution_vector(const libMesh::NumericVector<double>& new_solution)
 {
   if (has_solution_vector())
     do_set_solution_vector(new_solution);
@@ -1980,7 +2039,7 @@ SimulationInterface::verbose(void)
 template <typename T>
 inline
 T*
-SimulationInterface::get_bulk_model(const Elem* elem) const
+SimulationInterface::get_bulk_model(const libMesh::Elem* elem) const
 {
   return dynamic_cast<T*>(_get_bulk_model(elem));
 }
@@ -2007,7 +2066,7 @@ SimulationInterface::get_bulk_model(const Atom& atom1, const Atom& atom2, bool p
 template <typename T>
 inline
 T*
-SimulationInterface::get_interface_model(const Elem* elem, int side) const
+SimulationInterface::get_interface_model(const libMesh::Elem* elem, int side) const
 {
   return dynamic_cast<T*>(_get_interface_model(elem, side));
 }
@@ -2016,7 +2075,7 @@ SimulationInterface::get_interface_model(const Elem* elem, int side) const
 template <typename T>
 inline
 T*
-SimulationInterface::get_edge_model(const Elem* elem, int edge) const
+SimulationInterface::get_edge_model(const libMesh::Elem* elem, int edge) const
 {
   return dynamic_cast<T*>(_get_edge_model(elem, edge));
 }
@@ -2026,7 +2085,7 @@ SimulationInterface::get_edge_model(const Elem* elem, int edge) const
 template <typename T>
 inline
 T*
-SimulationInterface::get_node_model(const Elem* elem, int node) const
+SimulationInterface::get_node_model(const libMesh::Elem* elem, int node) const
 {
   return dynamic_cast<T*>(_get_node_model(elem, node));
 }

@@ -13,7 +13,7 @@
 #include "TiberLinearSystem.h"
 #include "linear_implicit_system.h"
 
-using namespace libMesh;
+
 using namespace libMeshEnums;
 
 /**
@@ -29,7 +29,7 @@ class VectorLinearSystem : public VectorSystem, public TiberLinearSystem {
   /**
    * Constructor.
    */
-    VectorLinearSystem (EquationSystems& es,
+    VectorLinearSystem (libMesh::EquationSystems& es,
 	       const std::string& name,
 	       const unsigned int number);
 
@@ -60,20 +60,20 @@ class VectorLinearSystem : public VectorSystem, public TiberLinearSystem {
      */
     virtual std::string system_type () const { return "VectorLinear"; }
 
-    virtual void addAValue(Complex value, int i, int j) {
+    virtual void addAValue(libMesh::Complex value, int i, int j) {
       matA[std::make_pair(i, j)] += value;
     }
 
-    virtual void addBValue(Complex value, int i) {
+    virtual void addBValue(libMesh::Complex value, int i) {
       columnB[i] += value;
     }
 
-    virtual void get_solution(std::vector<Complex>& result);
+    virtual void get_solution(std::vector<libMesh::Complex>& result);
   protected:
     virtual void init_data();
 
-    std::map<std::pair<int, int>, Complex> matA;
-    std::map<int, Complex> columnB;
+    std::map<std::pair<int, int>, libMesh::Complex> matA;
+    std::map<int, libMesh::Complex> columnB;
 
 
   private:

@@ -29,16 +29,16 @@ Module dssc
   {
     max_iterations = 300
     step_tolerance = 1e-5
-    linear_solver
-    {
-      preconditioner = lu
-    }
+#    linear_solver
+#    {
+#      preconditioner = lu
+#    }
   }
 
 
   Physics 
   {
-    generation = dssc_generation
+    generation = $x #dssc_generation
   }
 
 
@@ -64,7 +64,7 @@ Module dssc_generation
   regions = TiO2
   plot = (Distance, Generation)
   light_direction = (1, 0, 0)
-  light_intensity = $x[0.0]
+  light_intensity = $x[1.0]
   dye = N719
 
   Contact anode
@@ -78,9 +78,10 @@ Module dssc_generation
 Module sweep
 {
   name = sweep_gen
-  solve = (dssc_generation, dssc)
+  solve = (dssc)
   variable = $x
-  values = (0, 1e-12, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1)
+  #values = (0, 1e-12, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1)
+  values = (0, 1, 1e3, 1e6, 1e9, 1e12, 1e15, 1e18, 1e19, 1e20, 1e21)
   plot_data = true
 }
 
@@ -98,8 +99,8 @@ Module sweep
 # Definition of  model-indipendent parameters of the Simulation
 Simulation
 {
-  solve = (sweep_gen, sweep_V)
-  resultpath = output
+  solve = sweep_V #(sweep_gen, sweep_V)
+  resultpath = "output_"MPI_PROC
   output_format = grace
 }
 

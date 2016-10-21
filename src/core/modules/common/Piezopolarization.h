@@ -7,8 +7,6 @@
 #include "StrainInterface.h"
 #include "tiber_dll.h"
 
-class Elem;
-class Point;
 
 // Basic Piezopolarization model
 class TBDLLOCAL Piezopolarization: public PolarizationModel
@@ -29,7 +27,7 @@ class TBDLLOCAL Piezopolarization: public PolarizationModel
 
     virtual void read_database(void);
 
-    virtual void do_calculate(const Elem* elem, const Point& point);
+    virtual void do_calculate(const libMesh::Elem* elem, const libMesh::Point& point);
 
   private:
 

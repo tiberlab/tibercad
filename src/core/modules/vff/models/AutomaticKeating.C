@@ -12,7 +12,7 @@
 
 using namespace std;
 using namespace fadbad;
-
+using namespace libMesh;
 
 // an anonymous namespace
 namespace
@@ -376,9 +376,9 @@ AutomaticKeating::calculate_wz_params(void)
 
 void
 AutomaticKeating::residual_wz(double a, double c, double u,
-    const DenseVector<double>& keating,
-    DenseVector<double>& residual,
-    DenseMatrix<double>& gradients)
+    const libMesh::DenseVector<double>& keating,
+    libMesh::DenseVector<double>& residual,
+    libMesh::DenseMatrix<double>& gradients)
 {
 
   const int nvar = keating.size();

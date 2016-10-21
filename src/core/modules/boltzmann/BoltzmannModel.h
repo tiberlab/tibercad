@@ -10,9 +10,11 @@
 #include "vector_value.h"
 #include "HeatTransportModel.h"
 #include "tiber_dll.h"
+#include "ThermalConductivityModel.h"
+//#include "libMeshDefs.h"
 
 
-class Elem;
+
 class HeatSourceModel;
 class ThermalConductivityModel;
 
@@ -34,7 +36,7 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
 
   const double get_total_heat_source(void) const;
 
-  const RealTensor& get_total_thermal_conductivity(void) const;
+  const libMesh::RealTensor& get_total_thermal_conductivity(void) const;
 
   const double get_sound_velocity(void) const;
 
@@ -81,7 +83,7 @@ class TBDLLOCAL BoltzmannModel : public PhysicalModel
 
   double  _heat_source;
 
-  RealTensor _kappa;
+  libMesh::RealTensor _kappa;
   
   double _vg;
 
@@ -129,7 +131,7 @@ BoltzmannModel::get_total_heat_source(void) const
 }
 
 inline
-const RealTensor&
+const libMesh::RealTensor&
 BoltzmannModel::get_total_thermal_conductivity(void) const
 {
   return  _kappa;

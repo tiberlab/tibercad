@@ -4,6 +4,8 @@
 #include "TiberLinearSolver.h"
 #include "InitFailedException.h"
 
+#include "TiberCad.h"
+
 
 #include "equation_systems.h"
 #include "linear_solver.h"
@@ -12,7 +14,8 @@
 
 using namespace std;
 
-TiberLinearSystem::TiberLinearSystem(EquationSystems& es,
+
+TiberLinearSystem::TiberLinearSystem(libMesh::EquationSystems& es,
     const string& name, const unsigned int number)
 : TiberEqSystem(),
   LinearImplicitSystem(es, name, number)
@@ -24,7 +27,7 @@ TiberLinearSystem::TiberLinearSystem(EquationSystems& es,
 
 
 TiberLinearSystem*
-TiberLinearSystem::create(EquationSystems& es,
+TiberLinearSystem::create(libMesh::EquationSystems& es,
     const string& sysname, const ModelOptions& options)
 {
   TiberLinearSystem* sys = NULL;
@@ -44,8 +47,8 @@ TiberLinearSystem::create(EquationSystems& es,
 void
 TiberLinearSystem::user_initialization(void)
 {
-  TiberLinearSolver* lin_solver = TiberLinearSolver::create(get_options());
-  linear_solver = AutoPtr<LinearSolver<Real> >(lin_solver);
+  TiberLinearSolver* lin_solver = TiberLinearSolver::create(this->comm(), get_options());
+  linear_solver = libMesh::UniquePtr<libMesh::LinearSolver<Real> >(lin_solver);
 }
 
 
@@ -57,7 +60,7 @@ TiberLinearSystem::solve(void)
     this->assemble();
 
   // Get a reference to the EquationSystems
-  const EquationSystems& es =
+  const libMesh::EquationSystems& es =
     this->get_equation_systems();
 
   TiberLinearSolver* lin_solver =
@@ -70,10 +73,10 @@ TiberLinearSystem::solve(void)
   // Solve the linear system
   const std::pair<unsigned int, Real> rval;
   if (this->have_matrix("Preconditioner"))
-    linear_solver->solve(*matrix, this->get_matrix("Preconditioner"),
+    lin_solver->solve(*matrix, this->get_matrix("Preconditioner"),
         *solution, *rhs, lin_rel_tol, lin_max_it);
   else
-    linear_solver->solve(*matrix, *solution, *rhs, lin_rel_tol, lin_max_it);
+    lin_solver->solve(*matrix, *solution, *rhs, lin_rel_tol, lin_max_it);
 
 
   // Store the number of linear iterations required to
@@ -84,5 +87,5 @@ TiberLinearSystem::solve(void)
   // Update the system after the solve
   this->update();
 
-  linear_solver->clear();
+  lin_solver->clear();
 }

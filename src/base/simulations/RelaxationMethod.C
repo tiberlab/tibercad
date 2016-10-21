@@ -30,9 +30,11 @@ RelaxationMethod::do_solve(void)
 
   open_xmonitor();
 
-  AutoPtr<NumericVector<double> > x_old = NumericVector<double>::build();
+  libMesh::UniquePtr<libMesh::NumericVector<double> > x_old =
+      get_solution_vector().clone();
+  //    libMesh::NumericVector<double>::build();
   get_solution_vector().close();
-  x_old->init(get_solution_vector());
+  //x_old->init(get_solution_vector());
   //x_old->close();
 
   double relax = _relax;
@@ -88,6 +90,7 @@ RelaxationMethod::do_solve(void)
 
     get_solution_vector().scale(relax);
     get_solution_vector() += *x_old;
+    get_solution_vector().close();
 
     relax = sqrt(relax);
 

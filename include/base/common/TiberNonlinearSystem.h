@@ -4,23 +4,26 @@
 #define _TIBERNONLINEARSYSTEM_H_
 
 #include "TiberEqSystem.h"
+#include "libMeshDefs.h"
 #include "tiber_dll.h"
 
 #include "nonlinear_implicit_system.h"
 #include "enum_solver_type.h"
 #include "enum_preconditioner_type.h"
 
+//using namespace libMesh;
+
 
 class XMonitor;
 
 
 //! Base class for TiberCAD nonlinear systems
-class TiberNonlinearSystem : public TiberEqSystem, public NonlinearImplicitSystem
+class TiberNonlinearSystem : public TiberEqSystem, public libMesh::NonlinearImplicitSystem
 {
 
   public:
 
-    typedef NonlinearImplicitSystem Parent;
+    typedef libMesh::NonlinearImplicitSystem Parent;
 
     //! The nonlinear solver implementations
     enum NonlinearSystemType
@@ -42,9 +45,10 @@ class TiberNonlinearSystem : public TiberEqSystem, public NonlinearImplicitSyste
     
     
     //! The type of the assembly routine
-    typedef void (*AssemblyRoutine)(const NumericVector<Number> &X,
-                                    NumericVector<Number> *R,
-                                    SparseMatrix<Number> *J);
+    typedef void (*AssemblyRoutine)(const libMesh::NumericVector<Number> &X,
+                                    libMesh::NumericVector<Number> *R,
+                                    libMesh::SparseMatrix<Number> *J,
+                                    libMesh::NonlinearImplicitSystem& system);
     
  
 
@@ -60,7 +64,7 @@ class TiberNonlinearSystem : public TiberEqSystem, public NonlinearImplicitSyste
      * \param options the options for this system
      * \return a pointer to the newly created system
      */
-    static TiberNonlinearSystem* create(EquationSystems& es,
+    static TiberNonlinearSystem* create(libMesh::EquationSystems& es,
         const std::string& sysname, const ModelOptions& options);
 
 
@@ -82,7 +86,7 @@ class TiberNonlinearSystem : public TiberEqSystem, public NonlinearImplicitSyste
 
 
     //! Get the solution vector
-    virtual NumericVector<double>& get_solution_vector(void) = 0;
+    virtual libMesh::NumericVector<double>& get_solution_vector(void) = 0;
 
 
     //! Attach the assembly routine
@@ -105,7 +109,7 @@ class TiberNonlinearSystem : public TiberEqSystem, public NonlinearImplicitSyste
   protected:
 
     //! Constructor
-    TiberNonlinearSystem(EquationSystems& es,
+    TiberNonlinearSystem(libMesh::EquationSystems& es,
                          const std::string& name,
                          const unsigned int number);
    

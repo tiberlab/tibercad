@@ -12,10 +12,14 @@
 #include <vector>
 #include <string>
 
-class Elem;
-class Point;
 class SimulationInterface;
 class Tensor2Sym;
+
+namespace libMesh
+{
+class Elem;
+class Point;
+}
 
 
 //! An interface to a strain simulation.
@@ -42,16 +46,16 @@ class StrainInterface
 
     
     //! Get the strain in calculation coordinate system
-    void get_strain(const Elem* elem, const Point& point, Tensor2Sym& strain);
+    void get_strain(const libMesh::Elem* elem, const libMesh::Point& point, Tensor2Sym& strain);
 
     //! Get the strain in crystal coordinate system
-    void get_crystal_strain(const Elem* elem, const Point& point, Tensor2Sym& strain);
+    void get_crystal_strain(const libMesh::Elem* elem, const libMesh::Point& point, Tensor2Sym& strain);
 
     //! Get the stress in calculation coordinate system
-    void get_stress(const Elem* elem, const Point& point, Tensor2Sym& stress);
+    void get_stress(const libMesh::Elem* elem, const libMesh::Point& point, Tensor2Sym& stress);
 
     //! Get the stress in crystal coordinate system
-    void get_crystal_stress(const Elem* elem, const Point& point, Tensor2Sym& stress);
+    void get_crystal_stress(const libMesh::Elem* elem, const libMesh::Point& point, Tensor2Sym& stress);
 
 
     //! Tells if this interface has a simulation associated
@@ -84,7 +88,7 @@ class StrainInterface
     
 
     //! Get a tensor
-    void _get_data(const Elem* elem, const Point& point, Tensor2Sym& data, ID id);
+    void _get_data(const libMesh::Elem* elem, const libMesh::Point& point, Tensor2Sym& data, ID id);
 };
 
 

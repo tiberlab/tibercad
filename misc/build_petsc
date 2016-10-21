@@ -34,9 +34,16 @@ make_petsc()
   echo "Building with PETSC_ARCH=${PETSC_ARCH} ..."
 
   if [ ! -e  reconfigure-${PETSC_ARCH}.py ] && [ ! -e  conftest-${PETSC_ARCH} ]; then
-    ./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
-      --CFLAGS="${CFLAGS}" --FFLAGS="-fno-range-check ${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+    #./config/configure.py ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
+    #  --CFLAGS="${CFLAGS}" --FFLAGS="-fno-range-check ${FFLAGS}" --CXXFLAGS="${CXXFLAGS}" --LDFLAGS="${LDFLAGS}"
+    ./configure \
+    --CC="$CC" --CXX="$CXX" --FC="$FC" --F77="$F77" --CPP="$CPP" \
+    --CXXFLAGS="$CXXFLAGS" --FCFLAGS="$FCFLAGS" --CFLAGS="$CFLAGS" \
+    --FFLAGS="$FFLAGS" --LDFLAGS="$LDFLAGS" \
+    ${CONFIGOPTS} --with-debugging=${debug} --with-scalar-type=${datatype} \
+    --with-blas-lapack-lib="${LAPACK_LIBS}"
     #cp conftest conftest-${PETSC_ARCH}
+
     if [ "$target_os" != "win32" ]; then
       ./conftest-${PETSC_ARCH}
       #cp reconfigure.py reconfigure-${PETSC_ARCH}.py
@@ -55,7 +62,13 @@ make_petsc()
     make
 
     libname=${petsc_dll_name}_${datatype}
-    [ $debug -eq 1 ] && libname=${libname}_dbg
+    #[ $debug -eq 1 ] && libname=${libname}_dbg
+
+    # need to delete mpiuni, or we get troubles
+    if [ "$MPI" = y ]; then
+      echo "Remove libmpiuni.a"
+      rm ${PETSC_DIR}/${PETSC_ARCH}/lib/libmpiuni.a
+    fi
 
     ARCHIVES="-Wl,--whole-archive ${PETSC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive"
     if [ "$target_os" = darwin ]
@@ -73,7 +86,16 @@ make_petsc()
     fi
 
 
+    #echo "Copy shared library to ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
+    #cp ${PETSC_DIR}/${PETSC_ARCH}/lib/libpetsc.so ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext}
+
     echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
+    echo "${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} \
+      ${petsc_linker_flags} \
+      ${ARCHIVES} \
+      -Wl,-rpath,\$ORIGIN \
+      ${LDFLAGS} ${LAPACK_LIBS} ${FORTRAN_LIBS}"
+
     mkdir -p ${SDKDIR}/${TCHOST}/lib
     ${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} \
       ${petsc_linker_flags} \
@@ -127,13 +149,18 @@ cd petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 # PETSc shared libraries cannot be moved around, therefore
 # we compile them always statically
 
-SHARED="--with-shared-libraries=0 --with-dynamic-loading=0"
+SHARED="--with-shared-libraries=0"
   
 
 #COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
 #  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
 #  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
-COMPILERS=
+#COMPILERS="--CC=$CC --CXX=$CXX --FC=$FC --F77=$F77 --CPP=$CPP --CXXFLAGS=$CXXFLAGS --FCFLAGS=$FCFLAGS --CFLAGS=$CFLAGS --FFLAGS=$FFLAGS"
+#COMPILERS="--CXXFLAGS=$CXXFLAGS --FCFLAGS=$FCFLAGS --CFLAGS=$CFLAGS --FFLAGS=$FFLAGS"
+#COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB --with-cpp=$CPP --with-shared-ld=$LD --with-ar=${AR}"
+#COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC --with-ranlib=$RANLIB \
+#  --with-cpp=$(echo $CC | sed 's/gcc.*/cpp/') --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') --fPIC\
+#  --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
 
 if [ "${target_os}" = "win32" ]
 then
@@ -142,21 +169,24 @@ then
     --with-shared-ld=$(echo $CC | sed 's/gcc.*/ld/') \
     --with-ar=$(echo $CC | sed 's/gcc.*/ar/')"
 else
-  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
+
+#  COMPILERS="--with-cc=$CC --with-cxx=$CXX --with-fc=$FC"
+#COMPILERS="--CXXFLAGS=$CXXFLAGS --FCFLAGS=$FCFLAGS --CFLAGS=$CFLAGS --FFLAGS=$FFLAGS"
+#COMPILERS="--LDFLAGS=\"${LDFLAGS}\""
+COMPILERS=
 fi
 
 
 if [ $MPI == 'n' ]; then
-  MPI="--with-mpi=0"
+  MPIFLAGS="--with-mpi=0"
 else
-  MPI="--with-mpi-dir=${MPIDIR}  --known-mpi-shared-libraries=1"
+  #MPI="--with-mpi-dir=${MPIDIR}  --known-mpi-shared-libraries=1"
+  MPIFLAGS="--known-mpi-shared-libraries=1"
   if [ "${target_os}" = "win32" ]
   then
-    MPI="--with-mpi-compilers=0 --with-mpi-include=[${MPIDIR}/Include,${MPIDIR}/Include/x86] --with-mpi-lib=[-L,${MPIDIR}/Lib/x86,-Xlinker,-Bstatic,msmpifec,msmpi,quirk,-Xlinker,-Bdynamic] --known-mpi-shared-libraries=1"
+    MPIFLAGS="--with-mpi-compilers=0 --with-mpi-include=[${MPIDIR}/Include,${MPIDIR}/Include/x86] --with-mpi-lib=[-L,${MPIDIR}/Lib/x86,-Xlinker,-Bstatic,msmpifec,msmpi,quirk,-Xlinker,-Bdynamic] --known-mpi-shared-libraries=1"
   fi
 fi
-#MPI="--download-mpich=1 --with-mpi-shared=0"
-
 LAPACKLIBS=${LAPACKLIBS:-"--download-f-blas-lapack=1"}
 
 petsc_host=
@@ -168,20 +198,21 @@ then
 fi
 
 
-CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0  ${petsc_host}"
+CONFIGOPTS="--with-matlab=0 $SHARED  $MPIFLAGS $COMPILERS --with-clanguage=cxx --with-batch=1 --with-x=0 ${petsc_host} --with-ssl=0"
 #CONFIGOPTS="--with-matlab=0 $SHARED  $MPI $COMPILERS --with-clanguage=C++ ${LAPACKLIBS} --with-batch=1 --with-x=0 \
 #  ${petsc_host} --download-mumps=yes  --download-parmetis=1 --download-scalapack=1 --download-blacs=1"
 
 export FCFLAGS="-fno-range-check $FCFLAGS"
 
-make_petsc real
-make_petsc complex
+#if [ $DEBUG == 'y' ]
+#then
+#  make_petsc real 1
+#  make_petsc complex 1
+#else
+#  make_petsc real
+#  make_petsc complex
+#fi
 
-
-if [ $DEBUG == 'y' ]
-then
-  make_petsc real 1
-  make_petsc complex 1
-fi
-
+make_petsc real  
+make_petsc complex 
 

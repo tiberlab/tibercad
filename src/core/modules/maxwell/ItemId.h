@@ -6,13 +6,13 @@
 
 class ItemId {
   public:
-    Point id;
+    libMesh::Point id;
 
     ItemId() {
       id = 0;
     }
 
-    ItemId(const Point& iden) {
+    ItemId(const libMesh::Point& iden) {
       id = iden;
     }
 
@@ -25,15 +25,15 @@ class ItemId {
       return id == foo.id;
     }
 
-    static ItemId get(const Elem* elem) {
+    static ItemId get(const libMesh::Elem* elem) {
       return ItemId(elem->centroid());
     }
 
-    static ItemId get(const Elem* elem, unsigned int vertex) {
+    static ItemId get(const libMesh::Elem* elem, unsigned int vertex) {
       return ItemId(elem->point(vertex));
     }
 
-    static ItemId get(const Node* node) {
+    static ItemId get(const libMesh::Node* node) {
       return ItemId(*node);
     }
 };

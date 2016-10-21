@@ -2,12 +2,12 @@
 #include "fe_type.h"
 #include "VectorFunction.h"
 #include "ElementUtils.h"
-using namespace libMesh;
+
 
 ScalarFEBase2D::ScalarFEBase2D(double scaling) : IScalarFEBase(DIM, scaling) {
 }
 
-void ScalarFEBase2D::addTriFunctions(const Elem *elem, const std::vector<Point>& pts, int order) {
+void ScalarFEBase2D::addTriFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order) {
   std::vector<int> verticesIds;
   ElementUtils::getVertecesIds(elem, verticesIds);
 
@@ -48,7 +48,7 @@ void ScalarFEBase2D::addTriFunctions(const Elem *elem, const std::vector<Point>&
   }
 }
 
-void ScalarFEBase2D::addQuadFunctions(const Elem *elem, const std::vector<Point>& pts, int order) {
+void ScalarFEBase2D::addQuadFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order) {
   ScalarFunction function_x(pts, 0);
   ScalarFunction function_y(pts, 1);
   ScalarFunction function_one(1.0, pts.size());
@@ -87,8 +87,8 @@ void ScalarFEBase2D::addQuadFunctions(const Elem *elem, const std::vector<Point>
 void ScalarFEBase2D::change_coordinate_system() {
   unsigned int ptsCount = functions.size() > 0 ? functions[0].phi.size() : 0;
   if (ptsCount > 0) {
-    const std::vector<RealGradient>& dxyzdxi = scalarFe->get_dxyzdxi();
-    const std::vector<RealGradient>& dxyzdeta = scalarFe->get_dxyzdeta();
+    const std::vector<libMesh::RealGradient>& dxyzdxi = scalarFe->get_dxyzdxi();
+    const std::vector<libMesh::RealGradient>& dxyzdeta = scalarFe->get_dxyzdeta();
 
     //For each point
     for (unsigned int qp = 0; qp < ptsCount; qp++) {
@@ -103,7 +103,7 @@ void ScalarFEBase2D::change_coordinate_system() {
 
       //For each function
       for (unsigned int j = 0; j < functions.size(); j++) {
-        Point newPoint = changePoint(DF_T, Point(functions[j].grad[qp](0), functions[j].grad[qp](1)), 1);
+        libMesh::Point newPoint = changePoint(DF_T, libMesh::Point(functions[j].grad[qp](0), functions[j].grad[qp](1)), 1);
 
         functions[j].grad[qp] = newPoint;
       }

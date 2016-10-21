@@ -35,13 +35,14 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
     virtual void clear(void);
 
     //! Initialize data structures if not done so already.
-    virtual void init(void);
-
+    virtual void init(const char* name = NULL);
+    //virtual void init(void);
+    
     //!Call the Petsc solver.
     virtual std::pair<unsigned int, Real> solve(
         SparseMatrix<double>& jacobian,
-        NumericVector<double>& solution,
-        NumericVector<double>& residual);
+        libMesh::NumericVector<double>& solution,
+        libMesh::NumericVector<double>& residual);
 
     //! Get the divergence tolerance
     double get_divergence_tol(void) const;
@@ -55,6 +56,9 @@ class TiberPetscNonlinearSolver : public TiberNonlinearSolver
     /*! \copydoc TiberNonlinearSolver::parse_options() */
     virtual void parse_options(const ModelOptions& options);
     
+    virtual int get_total_linear_iterations ();
+    virtual unsigned get_current_nonlinear_iteration_number () const;
+
 
   private:
 
@@ -130,6 +134,19 @@ TiberPetscNonlinearSolver::old_gnorm(void)
 }
 
 
+inline
+int
+TiberPetscNonlinearSolver::get_total_linear_iterations(void)
+{
+  return 0;
+}
+
+inline
+unsigned
+TiberPetscNonlinearSolver::get_current_nonlinear_iteration_number(void) const
+{
+  return 0;
+}
 
 
 #endif // TIBERPETSCNONLINEARSOLVER_H_

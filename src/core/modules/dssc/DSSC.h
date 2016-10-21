@@ -7,6 +7,7 @@
 #include "SimulationOptions.h"
 #include "Device.h"
 #include "SolverException.h"
+#include "TiberNonlinearSystem.h"
 
 // Libmesh includes
 #include "libmesh_common.h"
@@ -21,7 +22,9 @@
 
 // forward declarations
 //class Device;
-class Boundary;
+namespace libMesh
+{
+
 class MeshBase;
 class Elem;
 class Point;
@@ -32,7 +35,9 @@ class EquationSystems;
 template<typename T> class DenseMatrix;
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
+}
 
+class Boundary;
 
 //! The main class to perform DSSC calculations
 class DSSC : public SimulationInterface
@@ -176,7 +181,7 @@ class DSSC : public SimulationInterface
 
 
     /*! \copydoc SimulationInterface::solution_vector() */
-    virtual NumericVector<double>& solution_vector(void);
+    virtual libMesh::NumericVector<double>& solution_vector(void);
 
 
 //    /*! \copydoc SimulationInterface::build_nodal_results() */
@@ -226,7 +231,7 @@ class DSSC : public SimulationInterface
 
 
     /*! \copydoc SimulationInterface::do_get_solution_vector() */
-    virtual NumericVector<double>& do_get_solution_vector(void);
+    virtual libMesh::NumericVector<double>& do_get_solution_vector(void);
 
 
     /*! \copydoc SimulationInterface::do_maximum_norm_of_difference() */
@@ -286,6 +291,21 @@ class DSSC : public SimulationInterface
 
     //! An internal pointer to the device
     Device* _device;
+
+
+    //! A cation DOF for mass conservation
+    /*!
+     * On this DOFs we will apply integral mass conservation condition
+     * for cations
+     */
+    libMesh::dof_id_type _cation_dof;
+
+    //! A iodide DOF for mass conservation
+    /*!
+     * On this DOFs we will apply integral mass conservation condition
+     * for iodine
+     */
+    libMesh::dof_id_type _iodide_dof;
 
 
     /*!
@@ -485,9 +505,10 @@ class DSSC : public SimulationInterface
      * This method gets called from the underlying nonlinear solver
      * library. It calls the real assembly routines.
      */
-    static void assemble_system(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+     static void assemble_system(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian,
+        libMesh::NonlinearImplicitSystem& system);
 
 
     //! Assembles the residual vector or the jacobian matrix
@@ -497,17 +518,17 @@ class DSSC : public SimulationInterface
      *
      * This implementation uses standard FEM.
      */
-    void do_assembly(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+    void do_assembly(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian);
 
 
     //! The assembly function for EIS
-    static void assemble_EIS(EquationSystems& es, const std::string& system_name);
+    static void assemble_EIS(libMesh::EquationSystems& es, const std::string& system_name);
 
 
     //! Assmebly of the Impedance Spectroscopy Jacobian matrix
-    void do_assembly_frequency(EquationSystems& es, const std::string& system_name);
+    void do_assembly_frequency(libMesh::EquationSystems& es, const std::string& system_name);
 
 
     //! Find the open circuit potential and densities

@@ -1,13 +1,17 @@
 #ifndef _EIGENSOLVER_H_
 #define _EIGENSOLVER_H_
 
+
 #include <vector>
 #include <string>
 #include <complex>
-
 #include <mpi.h>
 
-typedef std::complex<double> Complex;
+namespace libMesh {
+  typedef std::complex<double> Complex;
+}
+using libMesh::Complex;
+
 
 //! SLEPc interface class 
 class EigenSolver
@@ -63,6 +67,9 @@ class EigenSolver
   //!has to be called at the beginning of tibecad
   static void slepc_init(int argc1, char** argv1, MPI_Comm comm);
 
+  static void set_deflation_space(
+      const std::vector<const std::vector<Complex>*>& solutions);
+
   //!has to be called at the end of tibecad
   static void slepc_done(void);
 
@@ -76,7 +83,7 @@ class EigenSolver
   static void get_eigen_vector( int i, std::vector<Complex>& eigen_vector);
 
   //!has to be called before solving the eigenvalue problem
-  static int prepare_slepc(void);
+  static int prepare_slepc(MPI_Comm comm);
 
   //!has to be called after solving the eigenvalue problem
   static int clear_slepc(void);
@@ -94,42 +101,30 @@ class EigenSolver
   static int init_S_matrix(unsigned int size);
 
 
-  //!allocates memory for H matrix (non-parallel version!!!)
+  //! Allocates memory for H or S matrix
   /*!
-    \param matrix_size size of the matrix
-    \param non_zeros numbers of non-zero columns in each raw
+    \param matrix the matrix type, 'H' or 'S'
+    \param N the global size
+    \param n the local size
+    \param d_nnz the nonzeros on each local row in the diagonal block 
+    \param o_nnz the nonzeros on each local row in the off-diagonal block 
   */
-  static int preallocate_H_matrix(unsigned int matrix_size,  int*  non_zeros);
+  static int preallocate_matrix(const char matrix, unsigned int N, unsigned int n,
+      std::vector<int>& d_nnz, std::vector<int>& o_nnz);
 
-  //!allocates memory for S matrix (non-parallel version!!!)
+
+  //! Finalize assmebly of H or S matrix
+  static void finalize_matrix_assembly(const char matrix);
+
+  //! pass a row into H or S matrix
   /*!
-    \param matrix_size size of the matrix
-    \param non_zeros numbers of non-zero columns in each raw
-  */
-  static int preallocate_S_matrix(unsigned int matrix_size,  int*  non_zeros);
-
-
-  //closes H matrix
-  static int finalize_H_assembly(void);
-
-  //close S matrix
-  static int finalize_S_assembly(void);
-
-  //!pass a row into H matrix
-  /*!
+    \param matrix matrix type. 'H' or 'S'
     \param row row number
     \param columns numbers of columns
     \param value values of matrix elements
   */
-  static int insert_H_row( int row, const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
-
-  //!pass a row into S matrix
-  /*!
-    \param row row number
-    \param columns numbers of columns
-    \param value values of matrix elements
-  */
-  static int insert_S_row( int row, const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
+  static void insert_matrix_row(const char matrix, int row,
+      const std::vector<unsigned int>& columns, const std::vector<Complex>& value);
 
   static void print_options(const SLEPCoptions& opt);
 

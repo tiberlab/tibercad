@@ -27,6 +27,10 @@ Module elasticity
 
 plot = (Strain,Stress,Displacement)
 
+Solver {
+  preconditioner = jacobi
+}
+
 Physics
 {
   stiffness isotropic

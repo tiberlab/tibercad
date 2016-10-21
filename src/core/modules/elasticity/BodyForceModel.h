@@ -4,12 +4,14 @@
 #define _BODYFORCEMODEL_H_
 
 #include "PhysicalModelInterface.h"
+//#include "libMeshDefs.h"
 
 #include "tensor_value.h"
 #include "vector_value.h"
+#include "elem.h"
 
-class Elem;
-class Point;
+//class Elem;
+//class Point;
 
 using namespace std;
 
@@ -25,11 +27,11 @@ class BodyForceModel : public PhysicalModelInterface
     //! Creator function
     static BodyForceModel* create(const ModelOptions& options);
 
-    const RealGradient& get_force_source(void) const;
+    const libMesh::RealGradient& get_force_source(void) const;
 
-    const RealTensor& get_stress_source(void) const;
+    const libMesh::RealTensor& get_stress_source(void) const;
 
-    const RealTensor& get_strain_source(void) const;
+    const libMesh::RealTensor& get_strain_source(void) const;
 
 
     //! Calculate local body force
@@ -37,47 +39,47 @@ class BodyForceModel : public PhysicalModelInterface
      * \param elem pointer to the current element
      * \param point the coordinates in the reference element
      */
-    virtual void calculate(const Elem* elem, const Point& point){};
+    virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
 
   protected:
 
     //! Constructor
     BodyForceModel(const ModelOptions& options);
 
-    void set_force_source(const RealGradient& force_source);
+    void set_force_source(const libMesh::RealGradient& force_source);
 
-    void set_strain_source(const RealTensor& strain_source);
+    void set_strain_source(const libMesh::RealTensor& strain_source);
 
-    void set_stress_source(const RealTensor& stress_source);
+    void set_stress_source(const libMesh::RealTensor& stress_source);
 
 
 
   private:
 
-    RealGradient _force_source;
+    libMesh::RealGradient _force_source;
 
-    RealTensor _strain_source;
+    libMesh::RealTensor _strain_source;
 
-    RealTensor _stress_source;
+    libMesh::RealTensor _stress_source;
 
 };
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 BodyForceModel::get_force_source(void) const
 {
   return _force_source;
 }
 
 inline
-const RealTensor&
+const libMesh::RealTensor&
 BodyForceModel::get_strain_source(void) const
 {
   return _strain_source;
 }
 
 inline
-const RealTensor&
+const libMesh::RealTensor&
 BodyForceModel::get_stress_source(void) const
 {
   return _stress_source;
@@ -85,14 +87,14 @@ BodyForceModel::get_stress_source(void) const
 
 inline 
 void 
-BodyForceModel::set_force_source(const RealGradient& force_source)
+BodyForceModel::set_force_source(const libMesh::RealGradient& force_source)
 {
   _force_source = force_source;
 }
 
 inline 
 void 
-BodyForceModel::set_strain_source(const RealTensor& strain_source)
+BodyForceModel::set_strain_source(const libMesh::RealTensor& strain_source)
 {
   _strain_source = strain_source;
 }
@@ -100,7 +102,7 @@ BodyForceModel::set_strain_source(const RealTensor& strain_source)
 
 inline 
 void 
-BodyForceModel::set_stress_source(const RealTensor& stress_source)
+BodyForceModel::set_stress_source(const libMesh::RealTensor& stress_source)
 {
   _stress_source = stress_source;
 }

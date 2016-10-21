@@ -5,8 +5,6 @@
 #include "Optics.h"
 #include <tensor.h>
 #include "EigenvalueProblem.h"
-class Mesh;
-class Elem;
 
 //! A base class of optics calculation
 /*!
@@ -26,7 +24,6 @@ class OpticsTB : public Optics
 
  
     static OpticsTB* create(const ModelOptions& options);
-
 
 
   protected:

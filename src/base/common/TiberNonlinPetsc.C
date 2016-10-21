@@ -1,8 +1,9 @@
 // $Id$
 
 
-#include "TiberNonlinPetsc.h"
 #include "TiberPetscNonlinearSolver.h"
+#include "TiberNonlinPetsc.h"
+
 
 #include "InitFailedException.h"
 #include "PetscDivergedError.h"
@@ -19,8 +20,8 @@
 using namespace std;
 
 
-TiberNonlinPetsc::TiberNonlinPetsc(EquationSystems& es,
-    const string& name, const unsigned int number)
+TiberNonlinPetsc::TiberNonlinPetsc(libMesh::EquationSystems& es,
+    const std::string& name, const unsigned int number)
   : Parent(es, name, number)
 {
   _solver = new TiberPetscNonlinearSolver(*this);

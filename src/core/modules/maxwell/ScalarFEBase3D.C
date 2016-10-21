@@ -2,7 +2,7 @@
 #include "fe_type.h"
 #include "VectorFunction.h"
 #include "ElementUtils.h"
-using namespace libMesh;
+
 
 ScalarFEBase3D::ScalarFEBase3D(double scaling) : IScalarFEBase(DIM, scaling) {
 }
@@ -19,7 +19,7 @@ void ScalarFEBase3D::applyScaling() {
 }
 
 //TODO do not compute polynoms 2 times...
-void ScalarFEBase3D::addTetraFunctions(const Elem *elem, const std::vector<Point>& pts, int order) {
+void ScalarFEBase3D::addTetraFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order) {
   for (unsigned int i = 0; i < phi_functions.size(); i++) {
     addFunction(phi_functions[i], FunctionInfo::VERTEX, i, 0);
   }

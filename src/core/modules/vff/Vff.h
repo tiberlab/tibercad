@@ -89,9 +89,9 @@ protected:
 
 
   //! We have to provide somehow our solution variables
-  virtual void get_solution_secure(const Elem* elem,
+  virtual void get_solution_secure(const libMesh::Elem* elem,
       std::map<ID, std::vector<double> >& values,
-      const std::vector<Point>& p);
+      const std::vector<libMesh::Point>& p);
 
 
 

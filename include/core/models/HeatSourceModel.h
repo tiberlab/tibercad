@@ -10,8 +10,10 @@
 //#undef  TIBER_MODULE_PREFIX
 //#define TIBER_MODULE_PREFIX thermal_conductivity
 
-class Elem;
-class Point;
+//typedef double Real;
+#include "libMeshDefs.h"
+//class Elem;
+//class Point;
 
 using namespace std;
 

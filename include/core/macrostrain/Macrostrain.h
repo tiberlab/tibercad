@@ -11,7 +11,7 @@
 #include "libmesh.h"
 #include "mesh.h"
 #include "mesh_generation.h"
-#include "gmv_io.h"
+//#include "gmv_io.h"
 #include "equation_systems.h"
 
 #include "getpot.h"
@@ -55,7 +55,7 @@
 #include "Stiffness.h"
 #include "RotatedCrystal.h"
 
-#include "GMVIO_cell.h"
+//#include "GMVIO_cell.h"
 
 #include "Piezoelectricity.h"
 
@@ -71,6 +71,7 @@
 #include "MacrostrainModel.h"
 
 class TiberLinearSystem;
+//class EquationSystems;
 
 //! A class to calculate strain and shape
 class Macrostrain : public StrainSimulation
@@ -127,7 +128,7 @@ class Macrostrain : public StrainSimulation
     Static function that assembles the linear system matrix for Libmesh
 
    */
-  static void assemble_strain_matrix(EquationSystems& es,
+  static void assemble_strain_matrix(libMesh::EquationSystems& es,
 				     const std::string& system_name);
   //--------------------------------------------------------------------
 
@@ -225,7 +226,7 @@ class Macrostrain : public StrainSimulation
   SimulationInterface* poisson_equation;
 
   //!pointer to the equation systems
-  EquationSystems*   equation_systems;
+  libMesh::EquationSystems*   equation_systems;
 
 
 
@@ -478,12 +479,12 @@ class Macrostrain : public StrainSimulation
 
 
   //! non-static method that actually does matrix assembling
-  void do_assemble(EquationSystems& es,  const std::string& system_name);
+  void do_assemble(libMesh::EquationSystems& es,  const std::string& system_name);
 
 
 
   //! calculates \f$ \mathop{\rm{max}}_{\alpha, n}|u_{\alpha}^n - v_{\alpha}^n|  \f$
-  double norm_of_difference(NumericVector<Number>& solution1, NumericVector<Number>& solution2);
+  double norm_of_difference(libMesh::NumericVector<Number>& solution1, libMesh::NumericVector<Number>& solution2);
 
   //! Preapare all 6 components of the strain tensor for output
   void prepare_strain_data_for_output( std::vector<std::string>& eps_names, std::vector<double>& eps_data );
@@ -538,11 +539,11 @@ class Macrostrain : public StrainSimulation
 
 
 //-------------------------------------------------------------------
-inline bool Macrostrain::element_on_boundary(const Elem* element)
+inline bool Macrostrain::element_on_boundary(const libMesh::Elem* element)
 {
   bool result = false;
 
-  const MeshBase& mesh = equation_systems->get_mesh();
+  const libMesh::MeshBase& mesh = equation_systems->get_mesh();
 
 
   unsigned int n_sides ;
@@ -555,7 +556,7 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
 
   for (short i = 0; i < n_sides; i++)
     {
-      Elem* el1 = element->neighbor(i);
+    libMesh::Elem* el1 = element->neighbor(i);
       if ( (el1 == NULL)  )
 	  result = true;
       else
@@ -575,7 +576,7 @@ inline bool Macrostrain::element_on_boundary(const Elem* element)
 
 inline
 Tensor2Sym
-Macrostrain::get_strain_crystal(const Elem* el)
+Macrostrain::get_strain_crystal(const libMesh::Elem* el)
 {
   return get_strain_crystal(el, el->centroid());
 }

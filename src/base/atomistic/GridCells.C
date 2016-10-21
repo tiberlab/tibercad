@@ -16,7 +16,7 @@ GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
   
   if (projected_dim < 3)
   {
-    RealVectorValue period_x(0.0), period_y(0.0), period_z(0.0);
+    libMesh::RealVectorValue period_x(0.0), period_y(0.0), period_z(0.0);
     period_x(0) = _period(1,1);
     period_x(1) = _period(2,1);
     period_x(2) = _period(3,1);
@@ -61,13 +61,13 @@ GridCells::GridCells(const std::vector<Atom>& basis, const Tensor2Gen& period,
   //print_statistics();
   //std::cout<<"Number of atoms: "<<basis.size()<<std::endl;
 
-};
+}
 
 
 GridCells::~GridCells(void)
 {
     
-};
+}
 
 
 void
@@ -139,7 +139,7 @@ GridCells::include_atoms(const std::vector<Atom>& basis)
 }
 
 void 
-GridCells::get_cell(const Point& p, unsigned int& x,  unsigned int& y, unsigned int& z) const
+GridCells::get_cell(const libMesh::Point& p, unsigned int& x,  unsigned int& y, unsigned int& z) const
 {
   
   double dx = p(0) - _edge_min(1);

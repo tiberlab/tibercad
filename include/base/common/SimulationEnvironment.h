@@ -16,7 +16,11 @@
 #include <cassert>
 
 class Boundary;
+
+namespace libMesh
+{
 class Node;
+}
 
 //! Contains special data needed by a solver
 /*!
@@ -36,7 +40,7 @@ class SimulationEnvironment
     typedef HashMap<ElementSide, ID, ElementSide::hash>::Type ElemSideMap;
 
     //! The type of the element list
-    typedef HashSet<const Elem*>::Type ElementList;
+    typedef HashSet<const libMesh::Elem*>::Type ElementList;
 
 
   public:
@@ -45,7 +49,7 @@ class SimulationEnvironment
     class BoundarySideIterator;
 
     //! An iterator for the nodes lying on a boundary
-    typedef std::map<const Node*, ID>::const_iterator BoundaryNodeIterator;
+    typedef std::map<const libMesh::Node*, ID>::const_iterator BoundaryNodeIterator;
 
     //! An iterator for the elements
     typedef ElementList::const_iterator ConstElemIterator;
@@ -129,7 +133,7 @@ class SimulationEnvironment
 
 
     //! Get a reference to the mesh
-    MeshBase& get_mesh(void);
+    libMesh::MeshBase& get_mesh(void);
 
 
     //! Set the mesh
@@ -176,7 +180,7 @@ class SimulationEnvironment
 
 
     //! Check if a node is part of a given boundary
-    bool is_node_on_boundary(const Node* node, const Boundary* boundary) const;
+    bool is_node_on_boundary(const libMesh::Node* node, const Boundary* boundary) const;
 
 
     //! Get the boundary for a given boundary number
@@ -211,7 +215,7 @@ class SimulationEnvironment
      * \note If two boundaries touch in node \c node, the return value
      * is unpredictable.
      */
-    Boundary* get_boundary(const Node* node) const;
+    Boundary* get_boundary(const libMesh::Node* node) const;
 
 
     //! Get the list of all Nodes that belong to a certain boundary
@@ -220,7 +224,7 @@ class SimulationEnvironment
      * \param nodelist the list to create
      */
     void get_boundary_nodes(const std::string& name,
-        std::set<const Node*>& nodelist);
+        std::set<const libMesh::Node*>& nodelist);
 
 
     //! Get the list of all Nodes that belong to a certain boundary
@@ -229,7 +233,7 @@ class SimulationEnvironment
      * \param nodelist the list to create
      */
     void get_boundary_nodes(const Boundary* boundary,
-        std::set<const Node*>& nodelist);
+        std::set<const libMesh::Node*>& nodelist);
 
 
 
@@ -241,7 +245,7 @@ class SimulationEnvironment
     /*!
      * \param elem the element to check for
      */
-    bool contains_element(const Elem* elem) const;
+    bool contains_element(const libMesh::Elem* elem) const;
 
 
     //! Check if an ElementSide lies on the boundary of the simulation region
@@ -510,7 +514,7 @@ SimulationEnvironment::get_device(void) const
 
 
 inline
-MeshBase&
+libMesh::MeshBase&
 SimulationEnvironment::get_mesh(void)
 {
   return *_mesh;
@@ -548,7 +552,7 @@ SimulationEnvironment::is_on_boundary(const ElementSide& side) const
 {
   bool result = true;
 
-  const Elem* neighbour = (side.elem())->neighbor(side.side());
+  const libMesh::Elem* neighbour = (side.elem())->neighbor(side.side());
 
   if (neighbour != NULL)
   {
@@ -567,7 +571,7 @@ SimulationEnvironment::is_boundary(const ElementSide& side) const
 {
   bool result = false;
 
-  const Elem* neighbour = (side.elem())->neighbor(side.side());
+  const libMesh::Elem* neighbour = (side.elem())->neighbor(side.side());
 
   if ((neighbour == NULL) ||
       (neighbour->subdomain_id() != (side.elem()->subdomain_id())))
@@ -584,7 +588,7 @@ SimulationEnvironment::is_outer_boundary(const ElementSide& side) const
 {
   bool result = true;
 
-  const Elem* neighbour = (side.elem())->neighbor(side.side());
+  const libMesh::Elem* neighbour = (side.elem())->neighbor(side.side());
 
   if (neighbour != NULL)
   {
@@ -603,7 +607,7 @@ SimulationEnvironment::is_inner_boundary(const ElementSide& side) const
 {
   bool result = false;
 
-  const Elem* neighbour = (side.elem())->neighbor(side.side());
+  const libMesh::Elem* neighbour = (side.elem())->neighbor(side.side());
 
   if ((neighbour != NULL) &&
       (neighbour->subdomain_id() != (side.elem()->subdomain_id())))
@@ -634,7 +638,7 @@ SimulationEnvironment::get_boundary(const ElementSide& side) const
 
 inline
 Boundary*
-SimulationEnvironment::get_boundary(const Node* node) const
+SimulationEnvironment::get_boundary(const libMesh::Node* node) const
 {
   std::set<ID> ids;
   _node_map.find_node(node, ids);
@@ -663,7 +667,7 @@ SimulationEnvironment::contains_region(ID id) const
 
 inline
 bool
-SimulationEnvironment::contains_element(const Elem* elem) const
+SimulationEnvironment::contains_element(const libMesh::Elem* elem) const
 {
   bool result = true;
 
@@ -789,7 +793,7 @@ SimulationEnvironment::update_element_list(void)
 inline
 void
 SimulationEnvironment::get_boundary_nodes(const std::string& name,
-    std::set<const Node*>& nodelist)
+    std::set<const libMesh::Node*>& nodelist)
 {
   const Boundary* bd = get_boundary(name);
   get_boundary_nodes(bd, nodelist);

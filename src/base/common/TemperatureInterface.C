@@ -53,7 +53,7 @@ TemperatureInterface::get_temperature(const Elem* elem,
   std::vector<Point> nodes(nn);
 
   for (unsigned int i = 0; i < nn; ++i)
-    nodes[i] = elem->local_node(elem->type(), i);
+     nodes[i] = elem->master_point(i);
 
   get_temperature(elem, nodes, temperatures, true);
 }

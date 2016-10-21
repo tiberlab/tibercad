@@ -11,6 +11,7 @@
 #include <boost/version.hpp>
 #include <boost/filesystem/operations.hpp>
 
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -470,8 +471,7 @@ Database::set_alloy_composition(std::vector<double>& fractions)
 
 
 string
-Database::get(const string& variable,
-    const string& default_value, bool required) const
+Database::get(const string& variable, const string& default_value, bool required) const
 {
   open();
   string result;
@@ -552,11 +552,11 @@ Database::get(const string& variable, vector<double>& data, bool required) const
   {
     size_t n = get_number_of_components();
 
-    DenseVector<double> tmp(data);
+    libMesh::DenseVector<double> tmp(data);
     _comp_db[0].get(variable, tmp.get_values(), required);
     tmp.scale(_comp_fractions[0]);
 
-    DenseVector<double> result(tmp);
+    libMesh::DenseVector<double> result(tmp);
 
     for (size_t i = 1; i < n; i++)
     {
@@ -576,7 +576,7 @@ Database::get(const string& variable, vector<double>& data, bool required) const
     if (n == 2)
     {
       size_t nr = result.size();
-      DenseVector<double> bow(nr);
+      libMesh::DenseVector<double> bow(nr);
       string s((*_file)(string("bow_" + variable).c_str(),""));
       Utils::extract_vector(s, bow.get_values());
       if (bow.size() == 1)
@@ -707,7 +707,7 @@ Database::get(const string& variable,
 
 
 void
-Database::get(const std::string& variable, RealVectorValue& data,
+Database::get(const std::string& variable, libMesh::RealVectorValue& data,
     bool required) const
 {
 
@@ -739,7 +739,7 @@ Database::get(const std::string& variable, RealVectorValue& data,
 }
 
 void
-Database::get(const string& variable, RealTensor& tensor, 
+Database::get(const string& variable, libMesh::RealTensor& tensor, 
     bool required) const
 {
   open();
@@ -748,7 +748,7 @@ Database::get(const string& variable, RealTensor& tensor,
   {
     size_t n = get_number_of_components();
 
-    RealTensor tmp;
+    libMesh::RealTensor tmp;
 
     for (size_t i = 0; i < n; i++)
     {
@@ -759,7 +759,7 @@ Database::get(const string& variable, RealTensor& tensor,
 
     if (n == 2)
     {
-      RealTensor bow;
+      libMesh::RealTensor bow;
       string s((*_file)(string("bow_" + variable).c_str(),"0.0"));
 
       Utils::extract_tensor(s, bow);

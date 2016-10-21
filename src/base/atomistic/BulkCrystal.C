@@ -9,7 +9,7 @@ BulkCrystal*
 BulkCrystal::create(const Material* mat, const ModelOptions& options)
 {
   return new BulkCrystal(mat, options);
-};
+}
 
 BulkCrystal::BulkCrystal(const Material* mat, const ModelOptions& options)
 :_lattice_constant(3, 0.0),
@@ -21,7 +21,7 @@ _rotated_prim_vec(0)
   _options = ModelOptions(mat->get_options()); 
   _options += options;
   _mat = mat;
-};
+}
 
 void
 BulkCrystal::do_init(void)
@@ -48,7 +48,7 @@ BulkCrystal::do_init(void)
   refresh();
    
   
-};
+}
 
 
 void
@@ -78,7 +78,7 @@ BulkCrystal::build_rotation(void)
    it->set_position(_rotation * it->get_ttype_position());
    }
 
-};
+}
 
 
 void
@@ -289,7 +289,7 @@ BulkCrystal::read_database(void)
 
   } 
 
-};
+}
 
 
 void
@@ -401,5 +401,5 @@ BulkCrystal::set_prim_vec(void)
 
   //Messages::info( "Bulk Material "+ _mat->get_name()+
   //                               " is created with primitive vectors ");
-};
+}
 

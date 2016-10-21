@@ -3,7 +3,7 @@
 #include "DataOutput.h"
 #include "Utils.h"
 
-#include "GMVIO_cell.h"
+//#include "GMVIO_cell.h"
 #include "tecplot_IO_cell.h"
 #include "gnuplot_io.h"
 #include "GraceIO.h"
@@ -12,6 +12,7 @@
 
 #include "mesh.h"
 #include "gmsh_io.h"
+
 
 
 DataOutput::DataOutput(void) :
@@ -66,8 +67,8 @@ DataOutput::tell_data_format(const std::string& format)
     df = GRACE;
   else if ((format == "vtk") || (format == "paraview"))
     df = VTK;
-  else if (format == "gmv")
-    df = GMV;
+  //else if (format == "gmv")
+  //  df = GMV;
   //else if (format == "gmsh")
   //  df = GMSH;
   //else if (format == "gnuplot")
@@ -88,7 +89,7 @@ DataOutput::write_nodal_data(const std::string& filename,
   file += "/" + filename;
 
   if (_format & TECPLOT)
-    TecplotIO(*_mesh).write_nodal_data(file + ".plt", data, legend);
+    libMesh::TecplotIO(*_mesh).write_nodal_data(file + ".plt", data, legend);
   if (_format & GRACE)
     GraceIO(*_mesh).write_nodal_data(file + ".dat", data, legend);
   //if (_format & GNUPLOT)
@@ -97,8 +98,8 @@ DataOutput::write_nodal_data(const std::string& filename,
     TiberVTKIO(*_mesh).write_nodal_data(file + ".vtk", data, legend);
   //if (_format & GMSH)
   //  GmshIO(*_mesh).write_nodal_data(file + ".msh", data, legend);
-  if (_format & GMV)
-    GMVIO(*_mesh).write_nodal_data(file + ".gmv", data, legend);
+  //if (_format & GMV)
+  //  GMVIO(*_mesh).write_nodal_data(file + ".gmv", data, legend);
 }
 
 
@@ -121,8 +122,8 @@ DataOutput::write_cell_data(const std::string& filename,
   //  std::cout << "GnuPlot does not currently support cell data." << std::endl;
   if (_format & VTK)
     TiberVTKIO(*_mesh).write_elemental_data(file + ".vtk", data, legend);
-  if (_format & GMV)
-    GMVIO_cell(*_mesh).write_ascii_cell_data(file + ".gmv", data, legend);
+  //if (_format & GMV)
+  //  GMVIO_cell(*_mesh).write_ascii_cell_data(file + ".gmv", data, legend);
 }
 
 

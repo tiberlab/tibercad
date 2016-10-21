@@ -11,9 +11,13 @@
 #include <vector>
 #include <string>
 
+class SimulationInterface;
+
+namespace libMesh
+{
 class Elem;
 class Point;
-class SimulationInterface;
+}
 
 
 //! An interface to a temperature simulation.
@@ -44,11 +48,11 @@ class TemperatureInterface
 
 
     //! Get the nodal temperatures
-    void get_temperature(const Elem* elem, std::vector<double>& temperatures);
+    void get_temperature(const libMesh::Elem* elem, std::vector<double>& temperatures);
 
 
     //! Get the temperatures in specified points
-    void get_temperature(const Elem* elem, const std::vector<Point>& p,
+    void get_temperature(const libMesh::Elem* elem, const std::vector<libMesh::Point>& p,
         std::vector<double>& temperatures, bool refcoord = false);
 
 
@@ -56,7 +60,7 @@ class TemperatureInterface
     /*!
      * Set \c refcoord to true if p is given in reference coordinates
      */
-    double get_temperature(const Elem* elem, const Point& p, bool refcoord = false);
+    double get_temperature(const libMesh::Elem* elem, const libMesh::Point& p, bool refcoord = false);
 
 
     //! Tells if this interface has a simulation associated

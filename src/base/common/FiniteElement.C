@@ -3,21 +3,29 @@
 #include "FiniteElement.h"
 #include "Constants.h"
 
+
+
 #include "elem.h"
 #include "quadrature.h"
+#include "fe_map.h"
+//#include "fe_abstract.h"
+//#include "fe_base.h"
+#include "libMeshDefs.h"
 
 using namespace std;
 
+//USELIBMESHTYPE(FE);
 
 
-template <unsigned int Dim, FEFamily T>
+template <unsigned int Dim, libMesh::FEFamily T>
 void
-FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side,
-    const Real tolerance)
+FiniteElement<Dim, T>::reinit(const libMesh::Elem* elem, const unsigned int side,
+    const double tolerance, const std::vector<libMesh::Point>* const,
+    const std::vector<double>* const)
 {
-  FE<Dim, T>::reinit(elem, side, tolerance);
+  libMesh::FE<Dim, T>::reinit(elem, side, tolerance);
 
-  unsigned int dim = FE<Dim, T>::qrule->get_dim();
+  unsigned int dim = libMesh::FE<Dim, T>::qrule->get_dim();
 
   double x0 = _length_scaling / _mesh_units;
   double x0_inv = _mesh_units / _length_scaling;
@@ -34,16 +42,20 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side,
       J = 1.0;
   }
 
-  unsigned int n_points = FE<Dim, T>::JxW.size();
+
+  // TODO : check the _fe_map issue!
+  unsigned int n_points = this->_fe_map->get_JxW().size();
   switch (_symmetry)
   {
     case TiberCad::CYLINDRICAL:
-      for (unsigned int i = 0; i < n_points; i++)
-        FE<Dim, T>::JxW[i] *= 2 * M_PI * abs(FE<Dim, T>::xyz[i](0)) * x0_inv * J;
+      for (unsigned int i = 0; i < n_points; i++){
+        double r = abs(this->_fe_map->get_xyz()[i](0));
+        this->_fe_map->get_JxW()[i] *= 2 * M_PI * r * x0_inv * J;
+      }
       break;
     default:
       for (unsigned int i = 0; i < n_points; i++)
-        FE<Dim, T>::JxW[i] *= J;
+        this->_fe_map->get_JxW()[i] *= J;
       break;
   }
 
@@ -57,13 +69,15 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const unsigned int side,
 }
 
 
-template <unsigned int Dim, FEFamily T>
+template <unsigned int Dim, libMesh::FEFamily T>
 void
-FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
+FiniteElement<Dim, T>::reinit(const libMesh::Elem* elem, const vector<libMesh::Point>* const points,
+    const std::vector<double>* const)
 {
-  FE<Dim, T>::reinit(elem, points);
+  libMesh::FE<Dim, T>::reinit(elem, points);
+  //std::cerr << "here\n";
 
-  unsigned int dim = FE<Dim, T>::dim;
+  unsigned int dim = libMesh::FE<Dim, T>::dim;
 
   double x0 = _length_scaling / _mesh_units;
   double x0_inv = _mesh_units / _length_scaling;
@@ -78,25 +92,33 @@ FiniteElement<Dim, T>::reinit(const Elem* elem, const vector<Point>* points)
       break;
   }
 
-  unsigned int n_points = FE<Dim, T>::JxW.size();
+
+  unsigned int n_points = this->_fe_map->get_JxW().size();
   switch (_symmetry)
   {
     case TiberCad::CYLINDRICAL:
-      for (unsigned int i = 0; i < n_points; i++)
-        FE<Dim, T>::JxW[i] *= 2 * M_PI * abs(FE<Dim, T>::xyz[i](0)) * x0_inv * J;
+      for (unsigned int i = 0; i < n_points; i++){
+        double r = abs(this->_fe_map->get_xyz()[i](0));
+        this->_fe_map->get_JxW()[i] *= 2 * M_PI * r * x0_inv * J;
+        //libMesh::FEBase::JxW[i] *= 2 * M_PI * abs(libMesh::FEBase::xyz[i](0)) * x0_inv * J;
+      }
       break;
     default:
       for (unsigned int i = 0; i < n_points; i++)
-        FE<Dim, T>::JxW[i] *= J;
+      {
+        //std::cerr << this->_fe_map->get_JxW()[i] << "  ";
+        this->_fe_map->get_JxW()[i] *= J;
+        //std::cerr << this->_fe_map->get_JxW()[i] << "\n";
+      }
       break;
   }
-  
-  if (FE<Dim, T>::calculate_dphi)
+
+  if (libMesh::FE<Dim, T>::calculate_dphi)
   {
-    unsigned int n_dofs = FE<Dim, T>::dphi.size();
+    unsigned int n_dofs = libMesh::FE<Dim, T>::dphi.size();
     for (unsigned int i = 0; i < n_points; i++)
       for (unsigned int j = 0; j < n_dofs; j++)
-        FE<Dim, T>::dphi[j][i] *= x0;
+        libMesh::FE<Dim, T>::dphi[j][i] *= x0;
   }
 }
 

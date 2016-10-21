@@ -87,7 +87,7 @@ void AtomisticGenerator::print_basis(std::vector<Atom> &basis, const std::string
 
   output_file.close();
 
-};
+}
 
 
 
@@ -178,14 +178,14 @@ AtomisticGenerator::do_init()
   unsigned int num_elem = 0;
   for ( ; el != el_end; ++el)
   {
-    Elem* elem = *el;
+    libMesh::Elem* elem = *el;
     if (_as->get_IDset().count(elem->subdomain_id()))
       ++num_elem;
   }
   _structure_elements.reserve(num_elem);
   for (el = _as->get_device()->get_mesh().elements_begin(); el != el_end; ++el)
   {
-    Elem* elem = *el;
+    libMesh::Elem* elem = *el;
     if (_as->get_IDset().count(elem->subdomain_id()))
       _structure_elements.push_back(elem);
   }
@@ -296,7 +296,7 @@ AtomisticGenerator::finalize(void)
   _as->set_atom_types(atom_types);
 
 
-};
+}
 
 
 void 
@@ -480,6 +480,7 @@ AtomisticGenerator::dorestrict(bool passivation)
   remove_atoms();
 
 }
+
 
 
 double
@@ -711,7 +712,7 @@ void AtomisticGenerator::make_conv_cell()
      _conv_vect(1,3) = vec_y(1); _conv_vect(2,3) = vec_y(2); _conv_vect(3,3) = vec_y(3); 
   } 
 
-};
+}
 
 
 // -------------------------------------------------------------------------------
@@ -989,7 +990,7 @@ bool AtomisticGenerator::fold_in_cell(Point& position,
   // NOTE: below_surface() includes on the surface
   Point origin(orig);
 
-  Plane p(origin, origin + a2, origin + a1);
+  libMesh::Plane p(origin, origin + a2, origin + a1);
   pfold = p.below_surface(position);
   if (!pfold && fold) position += a3;
   is_inside &= pfold;
@@ -1167,7 +1168,7 @@ void  AtomisticGenerator::bond_map_gen(const std::vector<Atom>& basis){
 
   _bondmap->do_solve(basis, _period);
 
-};
+}
 
 
 void AtomisticGenerator::passivate()
@@ -1271,7 +1272,7 @@ AtomisticGenerator::reciprocal(Tensor2Gen real_basis)
   assert(det(reciprocal) != 0);
 
   return reciprocal;
-};
+}
 
 
 int
@@ -1282,7 +1283,7 @@ AtomisticGenerator::compare_tol(double a, double b)
   //a and b are considered equal
   if (std::fabs(a-b) < tol) return 1;
   else return 0;
-};
+}
 
 
 int
@@ -1294,7 +1295,7 @@ AtomisticGenerator::double_to_int_cast_checked(double a)
   else n = int(std::ceil(a));
   assert (std::abs(double(n) - a) < tol);
   return n;
-};
+}
 
 
 double
@@ -1304,7 +1305,7 @@ AtomisticGenerator::double_to_int_value_checked(double a)
   double b;
   b = double(double_to_int_cast_checked(a));
   return b;
-};
+}
 
 
 void
@@ -1315,7 +1316,7 @@ AtomisticGenerator::double_to_int_value_checked(Tensor1& a)
   tmp = double_to_int_value_checked(a(1)); a(1) = tmp;
   tmp = double_to_int_value_checked(a(2)); a(2) = tmp;
   tmp = double_to_int_value_checked(a(3)); a(3) = tmp;
-};
+}
 
 
 int
@@ -1338,7 +1339,7 @@ AtomisticGenerator::gcd(int a, int b)
     }
   } while (reminder);
   return b;
-};
+}
 
 
 Tensor1
@@ -1357,7 +1358,7 @@ AtomisticGenerator::reduce_vector(Tensor1 v)
   double_to_int_value_checked(v_tmp);
   return v_tmp;
 
-};
+}
 
 
 void AtomisticGenerator::scale_to_int(Tensor1& a)
@@ -1414,7 +1415,7 @@ AtomisticGenerator::scale_to_int(Tensor2Gen& a)
   select_vect(2) = 0.0; select_vect(3) = 1.0; tmp = a * select_vect;
   scale_to_int(tmp);
   a(1,3) = tmp(1); a(2,3) = tmp(2); a(3,3) = tmp(3);
-};
+}
 
 
 Tensor2Gen
@@ -1441,7 +1442,7 @@ AtomisticGenerator::reduce_vector(Tensor2Gen a)
   b(1,3) = tmp2(1); b(2,3) = tmp2(2); b(3,3) = tmp2(3);
   return b;
 
-};
+}
 
   
 void

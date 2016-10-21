@@ -20,7 +20,7 @@
 using namespace std;
 
 
-TiberNonlinearSystem::TiberNonlinearSystem(EquationSystems& es,
+TiberNonlinearSystem::TiberNonlinearSystem(libMesh::EquationSystems& es,
     const string& name, const unsigned int number)
 : TiberEqSystem(),
   Parent(es, name, number),
@@ -35,7 +35,7 @@ TiberNonlinearSystem::TiberNonlinearSystem(EquationSystems& es,
 
 
 TiberNonlinearSystem*
-TiberNonlinearSystem::create(EquationSystems& es,
+TiberNonlinearSystem::create(libMesh::EquationSystems& es,
     const std::string& sysname, const ModelOptions& options)
 {
   TiberNonlinearSystem* sys = NULL;

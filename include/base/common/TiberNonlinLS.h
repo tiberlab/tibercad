@@ -17,7 +17,7 @@ class TBDLLOCAL TiberNonlinLS : public TiberLineSearch
   public:
 
     //! Constructor
-    TiberNonlinLS(EquationSystems& es,
+    TiberNonlinLS(libMesh::EquationSystems& es,
         const std::string& name,
         const unsigned int number);
 

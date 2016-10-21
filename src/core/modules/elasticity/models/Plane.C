@@ -6,12 +6,12 @@
 
 
 
-void Plane::calculate(const Elem* elem, unsigned int side,
-			   const Point& point)
+void Plane::calculate(const libMesh::Elem* elem, unsigned int side,
+			   const libMesh::Point& point)
 {
 
-  RealTensor H(0);
-  RealGradient  R(0);
+  libMesh::RealTensor H(0);
+  libMesh::RealGradient  R(0);
   double A(0);
   set_is_extended(false);
 

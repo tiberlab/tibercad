@@ -12,8 +12,8 @@ void
 SurfaceForce::do_init(void)
 {
   
-  RealGradient  R(0);
-  RealTensor H(0);
+  libMesh::RealGradient  R(0);
+  libMesh::RealTensor H(0);
   double A(1.0);
   set_is_extended(false);
 

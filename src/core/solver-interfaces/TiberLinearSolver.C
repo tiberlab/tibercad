@@ -3,6 +3,9 @@
 #include "tiber_config.h"
 #include "TiberLinearSolver.h"
 #include "TiberPetscLinearSolver.h"
+
+#include "TiberCad.h"
+
 #ifdef ENABLE_PARDISO
 # include "PardisoLinearSolver.h"
 #endif
@@ -21,19 +24,20 @@ namespace
 
 
 
-TiberLinearSolver::TiberLinearSolver(const ModelOptions& options)
-  : TiberModelObject(options),
+TiberLinearSolver::TiberLinearSolver(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options)
+  : TiberModelObject(options), libMesh::LinearSolver<Number>(comm_in), 
     _linear_rtol(default_linear_rtol),
     _linear_atol(default_linear_atol),
     _linear_max_it(default_linear_max_it)
 {
+
 }
 
 
 
 
 TiberLinearSolver*
-TiberLinearSolver::create(const ModelOptions& options)
+TiberLinearSolver::create(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options)
 {
   TiberLinearSolver* solver = NULL;
 
@@ -43,7 +47,7 @@ TiberLinearSolver::create(const ModelOptions& options)
   type = options.get_option("type", type);
 
   if (type == "petsc")
-    solver = new TiberPetscLinearSolver(options);
+    solver = new TiberPetscLinearSolver(comm_in, options); 
 #ifdef ENABLE_PARDISO
   else if (type == "pardiso")
     solver = new PardisoLinearSolver(options);
@@ -91,7 +95,7 @@ TiberLinearSolver::get_simulation_name(void) const
 
 
 std::pair<unsigned int, Real>
-TiberLinearSolver::solve(const ShellMatrix<Number>&,
+TiberLinearSolver::solve(const libMesh::ShellMatrix<Number>&,
     NumericVector<Number>&,
     NumericVector<Number>&,
     const double,
@@ -103,8 +107,8 @@ TiberLinearSolver::solve(const ShellMatrix<Number>&,
 
 
 std::pair<unsigned int, Real>
-TiberLinearSolver::solve(const ShellMatrix<Number>& shell_matrix,
-    const SparseMatrix<Number>& precond_matrix,
+TiberLinearSolver::solve(const libMesh::ShellMatrix<Number>&,
+    const SparseMatrix<Number>&,
     NumericVector<Number>&,
     NumericVector<Number>&,
     const double,
@@ -112,6 +116,6 @@ TiberLinearSolver::solve(const ShellMatrix<Number>& shell_matrix,
 {
   Messages::error("Solving with shell matrix is not implemented");
 }
-  
+
 
 

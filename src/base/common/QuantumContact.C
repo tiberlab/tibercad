@@ -23,12 +23,17 @@
 #include "gmsh_io.h"
 #include "dof_map.h"
 
+#include "libMeshDefs.h"
 
 #include <fstream>
 #include <set>
 
 using namespace std;
 
+LIBMESHCLASS(QGauss);
+
+
+LIBMESHCLASS(QGauss);
 
 
 QuantumContact::QuantumContact(void)
@@ -75,7 +80,7 @@ QuantumContact::init(const ID id,
 }
 
 void
-QuantumContact::plot(const std::string& name)
+QuantumContact::plot(const std::string&)
 {
 }
 
@@ -89,9 +94,9 @@ QuantumContact::get_normal(double& area)
 {
   unsigned int dim = _mesh->mesh_dimension();
 
-  AutoPtr<FEBase> fe(FEBase::build(dim, FEType()));
+  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, libMesh::FEType()));
 
-  QGauss qrule(dim-1, CONSTANT); // Order 0 rule because in this way we take centroid's normal
+  libMesh::QGauss qrule(dim-1, libMesh::CONSTANT); // Order 0 rule because in this way we take centroid's normal
 
   fe->attach_quadrature_rule(&qrule);
 
@@ -172,7 +177,7 @@ QuantumContact::extend_mesh(void)
       
       if (!_rg_ids.count(elem->subdomain_id())) continue;   
       
-      Elem* newelem = _mesh->add_elem(new Edge2);
+      Elem* newelem = _mesh->add_elem(new libMesh::Edge2);
       
       newelem->subdomain_id() = _id;
       
@@ -221,7 +226,7 @@ QuantumContact::extend_mesh(void)
       
           const Elem* elem = itmap->second; //_elemmap[elemside.elem()];
           
-          Elem* newelem = _mesh->add_elem(new Edge2);
+          Elem* newelem = _mesh->add_elem(new libMesh::Edge2);
                     
           _elemsidemap[newelem] = &elemside;
 
@@ -269,7 +274,7 @@ QuantumContact::extend_mesh(void)
 
       if (!_rg_ids.count(elem->subdomain_id())) continue;
 
-      Elem* newelem = _mesh->add_elem(new Quad4);
+      Elem* newelem = _mesh->add_elem(new libMesh::Quad4);
 
       newelem->subdomain_id()=_id;
 
@@ -319,7 +324,7 @@ QuantumContact::extend_mesh(void)
 
           const Elem* elem = itmap->second;
 
-          Elem* newelem = _mesh->add_elem(new Quad4);
+          Elem* newelem = _mesh->add_elem(new libMesh::Quad4);
 
           _elemsidemap[newelem] = &elemside;
 
@@ -405,7 +410,7 @@ QuantumContact::extend_mesh(void)
 
       if (countnodes==3)
       {
-        newelem = _mesh->add_elem(new Prism6);
+        newelem = _mesh->add_elem(new libMesh::Prism6);
 
         // reorder nodes to have a closed loop counter clockwise
         // determinat must be positive, otherwise swap points
@@ -415,7 +420,7 @@ QuantumContact::extend_mesh(void)
 
       if (countnodes==4)
       {
-        newelem = _mesh->add_elem(new Hex8);
+        newelem = _mesh->add_elem(new libMesh::Hex8);
 
         // reorder nodes to have a closed loop counter clockwise
         // determinat must be positive, otherwise swap points
@@ -463,12 +468,12 @@ QuantumContact::extend_mesh(void)
 
           if (countnodes == 3)
           {
-            newelem = _mesh->add_elem(new Prism6);
+            newelem = _mesh->add_elem(new libMesh::Prism6);
           }
 
           if (countnodes == 4)
           {
-            newelem = _mesh->add_elem(new Hex8);
+            newelem = _mesh->add_elem(new libMesh::Hex8);
           }
 
           _elemsidemap[newelem] = &elemside;

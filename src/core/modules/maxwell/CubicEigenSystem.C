@@ -18,7 +18,7 @@
 #include "Utils.h"
 // ------------------------------------------------------------
 // CubicEigenSystem implementation
-CubicEigenSystem::CubicEigenSystem (EquationSystems& es, const std::string& name, const unsigned int number) :
+CubicEigenSystem::CubicEigenSystem (libMesh::EquationSystems& es, const std::string& name, const unsigned int number) :
    EigenSystem (es, name, number) {
 }
 

@@ -44,7 +44,7 @@ SimulationOptions::initialize(const ModelOptions& opts)
   using namespace boost::filesystem;
 
   std::string temp = opts.get_option("temperature", "300.0");
-  Variable::check_and_register(temp, temperature);
+  VariableValue::check_and_register(temp, temperature);
 
   incomplete_ionization = opts.get_option("incomplete_ionization", true);
 

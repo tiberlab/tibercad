@@ -17,6 +17,7 @@
 #include "TiberCad.h"
 #include "Constants.h"
 #include "TypeDefs.h"
+#include "DSSC.h"
 
 #include "vector_value.h"
 #include "point.h"
@@ -133,23 +134,23 @@ class DSSCModel : public PhysicalModel
 
 
     //! Set the electric field
-    void set_electric_field(const RealGradient& E);
+    void set_electric_field(const libMesh::RealGradient& E);
 
 
     //! Set the gradient of the electron electro-chemical potential
-    void set_grad_fermi_n(const RealGradient& grad_F);
+    void set_grad_fermi_n(const libMesh::RealGradient& grad_F);
 
 
     //! Set the gradient of the iodide electro-chemical potential
-    void set_grad_fermi_I(const RealGradient& grad_F);
+    void set_grad_fermi_I(const libMesh::RealGradient& grad_F);
 
 
     //! Set the gradient of the triiodide electro-chemical potential
-    void set_grad_fermi_I3(const RealGradient& grad_F);
+    void set_grad_fermi_I3(const libMesh::RealGradient& grad_F);
 
 
     //! Set the gradient of the cation electro-chemical potential
-    void set_grad_fermi_C(const RealGradient& grad_F);
+    void set_grad_fermi_C(const libMesh::RealGradient& grad_F);
 
 
     //! Get coordinates of the contact under illumination
@@ -157,23 +158,23 @@ class DSSCModel : public PhysicalModel
 
     
     //! Get the electric field
-    const RealGradient& get_electric_field(void) const;
+    const libMesh::RealGradient& get_electric_field(void) const;
 
 
     //! Get the gradient of the electron electro-chemical potential
-    const RealGradient& get_grad_fermi_n(void) const;
+    const libMesh::RealGradient& get_grad_fermi_n(void) const;
 
 
     //! Get the gradient of the iodide electro-chemical potential
-    const RealGradient& get_grad_fermi_I(void) const;
+    const libMesh::RealGradient& get_grad_fermi_I(void) const;
 
 
     //! Get the gradient of the triiodide electro-chemical potential
-    const RealGradient& get_grad_fermi_I3(void) const;
+    const libMesh::RealGradient& get_grad_fermi_I3(void) const;
 
 
     //! Get the gradient of the cation electro-chemical potential
-    const RealGradient& get_grad_fermi_C(void) const;
+    const libMesh::RealGradient& get_grad_fermi_C(void) const;
 
 
     //! Get the electric potential
@@ -343,19 +344,19 @@ class DSSCModel : public PhysicalModel
       double fermi_I3;
       double fermi_C;
 
-      RealGradient electric_field;
+      libMesh::RealGradient electric_field;
 
       //! The gradient of the electron chemical-potential
-      RealGradient grad_fermi_n;
+      libMesh::RealGradient grad_fermi_n;
 
       //! The gradient of the iodide chemical-potential
-      RealGradient grad_fermi_I;
+      libMesh::RealGradient grad_fermi_I;
 
       //! The gradient of the triiodide chemical-potential
-      RealGradient grad_fermi_I3;
+      libMesh::RealGradient grad_fermi_I3;
 
       //! The gradient of the cation chemical-potential
-      RealGradient grad_fermi_C;
+      libMesh::RealGradient grad_fermi_C;
 
 
       //! The temperature in eV (\f$= k_B T_{lat} / e\f$)
@@ -653,7 +654,7 @@ DSSCModel::set_x0(double x0)
 
 inline
 void
-DSSCModel::set_electric_field(const RealGradient& E)
+DSSCModel::set_electric_field(const libMesh::RealGradient& E)
 {
   _pd.electric_field = E;
 }
@@ -661,7 +662,7 @@ DSSCModel::set_electric_field(const RealGradient& E)
 
 inline
 void
-DSSCModel::set_grad_fermi_n(const RealGradient& grad_F)
+DSSCModel::set_grad_fermi_n(const libMesh::RealGradient& grad_F)
 {
   _pd.grad_fermi_n = grad_F;
 }
@@ -669,7 +670,7 @@ DSSCModel::set_grad_fermi_n(const RealGradient& grad_F)
 
 inline
 void
-DSSCModel::set_grad_fermi_I(const RealGradient& grad_F)
+DSSCModel::set_grad_fermi_I(const libMesh::RealGradient& grad_F)
 {
   _pd.grad_fermi_I = grad_F;
 }
@@ -677,7 +678,7 @@ DSSCModel::set_grad_fermi_I(const RealGradient& grad_F)
 
 inline
 void
-DSSCModel::set_grad_fermi_I3(const RealGradient& grad_F)
+DSSCModel::set_grad_fermi_I3(const libMesh::RealGradient& grad_F)
 {
   _pd.grad_fermi_I3 = grad_F;
 }
@@ -685,7 +686,7 @@ DSSCModel::set_grad_fermi_I3(const RealGradient& grad_F)
 
 inline
 void
-DSSCModel::set_grad_fermi_C(const RealGradient& grad_F)
+DSSCModel::set_grad_fermi_C(const libMesh::RealGradient& grad_F)
 {
   _pd.grad_fermi_C = grad_F;
 }
@@ -700,7 +701,7 @@ DSSCModel::get_x0(void) const
 
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DSSCModel::get_electric_field(void) const
 {
   return _pd.electric_field;
@@ -708,7 +709,7 @@ DSSCModel::get_electric_field(void) const
 
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DSSCModel::get_grad_fermi_n(void) const
 {
   return _pd.grad_fermi_n;
@@ -716,7 +717,7 @@ DSSCModel::get_grad_fermi_n(void) const
 
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DSSCModel::get_grad_fermi_I(void) const
 {
   return _pd.grad_fermi_I;
@@ -724,7 +725,7 @@ DSSCModel::get_grad_fermi_I(void) const
 
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DSSCModel::get_grad_fermi_I3(void) const
 {
   return _pd.grad_fermi_I3;
@@ -732,7 +733,7 @@ DSSCModel::get_grad_fermi_I3(void) const
 
 
 inline
-const RealGradient&
+const libMesh::RealGradient&
 DSSCModel::get_grad_fermi_C(void) const
 {
   return _pd.grad_fermi_C;

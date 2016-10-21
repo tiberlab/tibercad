@@ -5,7 +5,6 @@
 #include "ModelOptions.h"
 
 
-
 //! Template class for KspaceIntegration.
 /*!
  * The template is used to store a general pointer to an object invoking kintegration
@@ -45,7 +44,10 @@ class KspaceIntegrationTemplate : public KspaceIntegration
     //! Let base class be friend
     friend class KspaceIntegration;
 
-    KspaceIntegrationTemplate(T* hook, const ModelOptions& opts);
+    KspaceIntegrationTemplate(T* hook, 
+                              const ModelOptions& opts,
+                              const libMesh::Parallel::Communicator& device_comm,
+                              const libMesh::Parallel::Communicator& mesh_comm);
 
     //! The object which knows how to calculate the density
     T* _hook;
@@ -60,8 +62,11 @@ class KspaceIntegrationTemplate : public KspaceIntegration
 
 template <class T>
 inline
-KspaceIntegrationTemplate<T>::KspaceIntegrationTemplate(T* hook, const ModelOptions& opt)
-  : KspaceIntegration(opt),
+KspaceIntegrationTemplate<T>::KspaceIntegrationTemplate(T* hook, 
+                              const ModelOptions& opt,
+                              const libMesh::Parallel::Communicator& device_comm,
+                              const libMesh::Parallel::Communicator& mesh_comm)
+  : KspaceIntegration(opt, device_comm, mesh_comm),
     _callback(0),
     _callback2(0)
 {

@@ -1,7 +1,9 @@
 
 // $Id$
 
+
 // module includes
+#include "SolverException.h"
 #include "ExcitonTransport.h"
 #include "SimulationEnvironment.h"
 #include "Material.h"
@@ -19,21 +21,17 @@
 #include "fe_interface.h"
 #include "quadrature_gauss.h"
 #include "equation_systems.h"
-#include "TiberNonlinearSystem.h"
-//#include "mesh_refinement.h"
-//#include "error_vector.h"
-//#include "kelly_error_estimator.h"
 #include "sparse_matrix.h"
 #include "numeric_vector.h"
 #include "dense_submatrix.h"
 #include "dense_subvector.h"
+
 #include "TiberNonlinearScalarSolver.h"
-// C++ includes
+
 #include "TiberModule.h"
 
 using namespace std;
-
-
+using namespace libMesh; 
 
 
 ExcitonTransport*
@@ -264,17 +262,20 @@ ExcitonTransport::do_init(void)
   ModelOptions& solveropts = get_solver_options();
   if (solveropts.get_option("absolute_tolerance", -1.0) < 0)
     solveropts["absolute_tolerance"] = "1e-15";
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
 
   // create the exciton continuity equation
   create_equation_system("nonlinear");
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
+
+  //TiberNonlinearSystem::AssemblyRoutine assembly;
 
 
   system.add_variable("fermi_x", libMeshEnums::FIRST);
 
   // a local scaling
   system.add_vector("local_scaling");
+
 
   system.attach_assembly_routine(assemble);
 
@@ -319,14 +320,14 @@ ExcitonTransport::build_local_scaling(void)
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
   
   
-  const NumericVector<Number>& solution = *(system->solution);
-  NumericVector<Number>& locscal = system->get_vector("local_scaling");
+  const libMesh::NumericVector<Number>& solution = *(system->solution);
+  libMesh::NumericVector<Number>& locscal = system->get_vector("local_scaling");
 
   // aliases for nicer code
   const Device& device = *(_device);
   const MeshBase& mesh = get_mesh();
 
-  const DofMap& dof_map = system->get_dof_map();
+  const libMesh::DofMap& dof_map = system->get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -341,9 +342,9 @@ ExcitonTransport::build_local_scaling(void)
   
   vector<unsigned int> dof_indices;
 
-  FEType fe_type = system->variable_type(var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, params.integration_order);
+  libMesh::FEType fe_type = system->variable_type(var);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim, params.integration_order);
   fe->attach_quadrature_rule(&qrule);
 
 
@@ -356,7 +357,7 @@ ExcitonTransport::build_local_scaling(void)
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
   //
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   locscal.zero();
 
@@ -440,11 +441,11 @@ ExcitonTransport::do_solve(void)
 
   build_local_scaling();
 
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
 
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  NumericVector<Number>& solution = system.get_solution_vector();
+  libMesh::NumericVector<Number>& solution = system.get_solution_vector();
 
   // set the solver parameters (they could have change since we made
   // the first calculation)
@@ -458,7 +459,7 @@ ExcitonTransport::do_solve(void)
   {
     system.solve();
   }
-  catch (SolverException& e)
+  catch (::SolverException& e)
   {
     string msg("ExcitonTransport: solve failed (" +
       string(e.what()) + ")");
@@ -481,18 +482,18 @@ ExcitonTransport::do_maximum_norm_of_difference(ID id)
 }
 
 void
-ExcitonTransport::do_assembly(const NumericVector<Number>& x,
-    NumericVector<Number>* residual,
-    SparseMatrix<Number>* jacobian)
+ExcitonTransport::do_assembly(const libMesh::NumericVector<Number>& x,
+    libMesh::NumericVector<Number>* residual,
+    libMesh::SparseMatrix<Number>* jacobian)
 {
 
   // references for nicer code
   const MeshBase& mesh = get_mesh();
 
-  EquationSystems& eq_sys = get_equation_systems();
+  libMesh::EquationSystems& eq_sys = get_equation_systems();
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  NumericVector<Number>& locscal = system.get_vector("local_scaling");
+  libMesh::NumericVector<Number>& locscal = system.get_vector("local_scaling");
 
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -518,20 +519,20 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
   double R0 = C0 / scaling.get_time_scaling();
 
 
-  const DofMap& dof_map = system.get_dof_map();
+  const libMesh::DofMap& dof_map = system.get_dof_map();
 
   // numeric ids corresponding to the variables
   const unsigned int ex_var = system.variable_number("fermi_x");
 
-  FEType fe_type = system.variable_type(ex_var);
+  libMesh::FEType fe_type = system.variable_type(ex_var);
 
   // the finite element
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, params.integration_order);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim, params.integration_order);
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
-  //AutoPtr<FEBase> fe_face(FEBase::build(dim, fe_type));
+  //UniquePtr<FEBase> fe_face(FEBase::build(dim, fe_type));
   //libMeshEnums::Order integration_order;
   //if (dim == 1)
   //  integration_order = libMeshEnums::CONSTANT;
@@ -556,15 +557,15 @@ ExcitonTransport::do_assembly(const NumericVector<Number>& x,
   const vector<vector<Real> >& phi = fe->get_phi();
   //
   // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
   // the system matrix (will hold also element jacobian contribution)
-  DenseMatrix<Number> Ke;
+  libMesh::DenseMatrix<Number> Ke;
   // the system rhs (will hold also element rhs contribution)
-  DenseVector<Number> Fe;
+  libMesh::DenseVector<Number> Fe;
   // the local solution
-  DenseVector<Number> X;
+  libMesh::DenseVector<Number> X;
 
   // the DOF indices
   vector<unsigned int> dof_indices;
@@ -754,16 +755,16 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
 
     TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-    const NumericVector<Number>& ddsol = *(system->solution);
+    const libMesh::NumericVector<Number>& ddsol = *(system->solution);
 
     const unsigned int dim = get_mesh().mesh_dimension();
 
-    const DofMap& dof_map = system->get_dof_map();
+    const libMesh::DofMap& dof_map = system->get_dof_map();
 
     const unsigned int u_var = system->variable_number("fermi_x");
 
-    FEType fe_type = system->variable_type(u_var);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    libMesh::FEType fe_type = system->variable_type(u_var);
+    libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
     vector<unsigned int> dof_indices_u;
 
@@ -771,7 +772,7 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
     const vector<vector<Real> >& phi = fe->get_phi();
 
     // element shape function gradients
-    const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+    const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
     fe->reinit(elem, &points);
 
@@ -889,7 +890,7 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
 }
 
 // ------------- -------------- ------------
-void ExcitonTransport::calc_excpol_integral(const NumericVector<Number>& x) {
+void ExcitonTransport::calc_excpol_integral(const libMesh::NumericVector<Number>& x) {
   if (polaritons) {
     excpolprops.set(SimulationOptions::temperature);
     //excpolprops.calculate(x, SimulationOptions::temperature);
@@ -981,11 +982,11 @@ ExcitonTransport::do_assembly_DRSystem(const double& solution,
 
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
-  NumericVector<Number>& x_solution = system.get_solution_vector();
+  libMesh::NumericVector<Number>& x_solution = system.get_solution_vector();
 
-  DenseVector<Number> X;
+  libMesh::DenseVector<Number> X;
 
-  const MeshBase& mesh = get_mesh();
+  const libMesh::MeshBase& mesh = get_mesh();
 
   const unsigned int dim = mesh.mesh_dimension();
   const double phi0 = get_scaling().get_potential_scaling();
@@ -993,16 +994,16 @@ ExcitonTransport::do_assembly_DRSystem(const double& solution,
   const Device& device = get_environment().get_device();
   const Options& params = get_options();
 
-  const DofMap& dof_map = system.get_dof_map();
+  const libMesh::DofMap& dof_map = system.get_dof_map();
 
   // numeric ids corresponding to the variables
   const unsigned int ex_var = system.variable_number("fermi_x");
 
-  FEType fe_type = system.variable_type(ex_var);
+  libMesh::FEType fe_type = system.variable_type(ex_var);
 
   // the finite element
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, params.integration_order);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim, params.integration_order);
   fe->attach_quadrature_rule(&qrule);
 
   // Jacobian * quadrature weight at each integration point.

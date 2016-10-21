@@ -5,6 +5,7 @@
 #include "Material.h"
 #include "SimulationInterface.h"
 #include "DriftDiffusionProperties.h"
+#include "Messages.h"
 
 #include "TiberModule.h"
 
@@ -52,11 +53,27 @@ OpticalGeneration::do_init(void)
     _gen_id.resize(gens.size());
     for (size_t i = 0; i < gens.size(); ++i)
     {
-      _generation_model[i] = SimulationInterface::find_simulation(gens[i]);
+      pair<SimulationInterface*, ID> provider =
+        SimulationInterface::find_solution_provider(gens[i]);
+      _generation_model[i] = provider.first;
+      _gen_id[i] = provider.second;
+      cerr <<_generation_model[i] << " " << _gen_id[i] << endl;
+
       if (_generation_model[i] == NULL)
         throw InitFailedException("Cannot find generation model: " + gens[i]);
 
-      _gen_id[i] = _generation_model[i]->get_solution_id("Generation");
+      if (_gen_id[i] == INVALID_ID)
+        _gen_id[i] = _generation_model[i]->get_solution_id("generation");
+      if (_gen_id[i] == INVALID_ID)
+        _gen_id[i] = _generation_model[i]->get_solution_id("Generation");
+
+      if (_gen_id[i] == INVALID_ID)
+        throw InitFailedException("Cannot find a solution variable for generation model: " + gens[i]);
+
+
+      ostringstream os;
+      os << "Found generation model: " << gens[i] << " (" << _generation_model[i] << "), variable ID " << _gen_id[i] << endl;
+      Messages::info(os.str());
 
     }
    }

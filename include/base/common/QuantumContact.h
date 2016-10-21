@@ -15,8 +15,11 @@
 
 #include <string>
 
-class DofMap;
-class MeshRegionInfo;
+namespace libMesh
+{
+  class DofMap;
+}
+
 class BoundaryRegions;
 
 /*
@@ -32,8 +35,8 @@ class QuantumContact
 {
   public:
 
-    typedef std::map<const Elem*, const ElementSide*> ContactElemMap;
-    typedef std::map<const Elem*, const ElementSide*>::iterator ContactElemIterator;
+    typedef std::map<const libMesh::Elem*, const ElementSide*> ContactElemMap;
+    typedef std::map<const libMesh::Elem*, const ElementSide*>::iterator ContactElemIterator;
 
     // get normal 
     const Point& get_normal(void) const;
@@ -45,11 +48,11 @@ class QuantumContact
     void extend_mesh(void);
 
     // Project of any point in the extended mesh into a boundary point
-    std::pair<const Elem*, Point> project_on_boundary(const Elem*, const Point&);
+    std::pair<const libMesh::Elem*, libMesh::Point> project_on_boundary(const libMesh::Elem*, const Point&);
 
     // Project of point in the extended mesh into a boundary point
-    std::pair<const Elem*, std::vector<Point> > project_on_boundary(const Elem*, 
-                                                  const std::vector<Point>& p);
+    std::pair<const libMesh::Elem*, std::vector<libMesh::Point> > project_on_boundary(const libMesh::Elem*, 
+                                                  const std::vector<libMesh::Point>& p);
 
 
     ID get_id(void) const;

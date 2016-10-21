@@ -20,7 +20,7 @@
 using namespace std;
 
 
-TiberNonlinBR::TiberNonlinBR(EquationSystems& es,
+TiberNonlinBR::TiberNonlinBR(libMesh::EquationSystems& es,
     const string& name, const unsigned int number)
 : Parent(es, name, number)
 {
@@ -43,7 +43,7 @@ TiberNonlinBR::do_solve(void)
   //NumericVector<Number>& u = get_vector("sol");
   NumericVector<Number>& u = get_solution_vector();
   NumericVector<Number>& du = *solution;
-  AutoPtr<NumericVector<Number> > u_old_ptr = u.clone();
+  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = u.clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
   // the l_infty tolerance for the step size
@@ -68,8 +68,8 @@ TiberNonlinBR::do_solve(void)
   {
 
     // prepare jacobian and residual
-    _assemble(u, rhs, NULL);
-    _assemble(u, NULL, matrix);
+    _assemble(u, rhs, NULL, *this);
+    _assemble(u, NULL, matrix, *this);
 
     // solve the linear system
     get_linear_solver()->solve(*matrix, *solution, *rhs);
@@ -108,7 +108,7 @@ TiberNonlinBR::do_solve(void)
     
       u.add(-tk, du);
 
-      _assemble(u, rhs, NULL);
+      _assemble(u, rhs, NULL, *this);
       double norm_rhs_new = rhs->l2_norm();
 
       // we check for convergence here to not get stuck in the inner loop

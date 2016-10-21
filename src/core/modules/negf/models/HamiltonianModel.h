@@ -11,7 +11,7 @@ class HamiltonianModel : public PhysicalModelInterface
 
     virtual ~HamiltonianModel(void) {};
 
-    const TensorValue<double>& get_inv_mass(void) const;
+    const libMesh::TensorValue<double>& get_inv_mass(void) const;
 
     double get_degeneracy(void) const;
 
@@ -27,9 +27,9 @@ class HamiltonianModel : public PhysicalModelInterface
 
     HamiltonianModel(const ModelOptions& options);
 
-    TensorValue<double> _inv_mass_crys;
+    libMesh::TensorValue<double> _inv_mass_crys;
 
-    TensorValue<double> _inv_mass;
+    libMesh::TensorValue<double> _inv_mass;
 
     double _degeneracy;
 
@@ -44,7 +44,7 @@ class HamiltonianModel : public PhysicalModelInterface
 
 
 inline
-const TensorValue<double>&
+const libMesh::TensorValue<double>&
 HamiltonianModel::get_inv_mass(void) const
 {
   return _inv_mass;

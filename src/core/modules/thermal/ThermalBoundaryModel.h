@@ -6,9 +6,11 @@
 #include "PhysicalModel.h"
 
 
-class Elem;
-class Point;
-
+namespace libMesh
+{
+  class Elem;
+  class Point;
+}
 
 //! The base class for thermal balance boundary conditions
 class ThermalBoundaryModel : public PhysicalModel

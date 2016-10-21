@@ -11,7 +11,11 @@
 #include "tiber_dll.h"
 
 
-class Elem;
+namespace libMesh
+{
+  class Elem;
+}
+
 
 
 //! The base class for Poisson boundary conditions

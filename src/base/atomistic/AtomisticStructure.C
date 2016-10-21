@@ -14,7 +14,7 @@
 #include "DataOutput.h"
 #include "RuntimeException.h"
 
-#include "mesh_tetgen_support.h"
+#include "mesh_tetgen_interface.h"
 // unfortunately tetgen defines REAL
 #undef REAL
 
@@ -190,6 +190,211 @@ AtomisticStructure::init(const std::string& name,
  
       Messages::newline();
       Messages::info("Atomistic structure build time: "+tt.elapsed_string());
+
+
+      /*
+      double cutoff = _options.get_option("control_volume_radius", 0.5);
+      string cutoff_str = _options.get_option("control_volume_radius", "0.5");
+
+      if (_options.get_option("extract_alloy_statistics", false))
+      {
+        vector<string> reg_names(1, "all");
+        _options.get_option("regions", reg_names);
+
+        for (unsigned int i = 0; i < reg_names.size(); ++i)
+        {
+
+          IDSet reg_ids;
+          _device->extract_physical_regions(reg_names[i], reg_ids);
+          IDSet::iterator id_it(reg_ids.begin());
+          while (id_it != reg_ids.end())
+          {
+            const Material* mat = _device->get_material(*id_it);
+
+            // we extract statistics only for alloys
+            IDSet::iterator to_be_deleted(id_it);
+            ++id_it;
+
+            if (!mat->is_alloy())
+              reg_ids.erase(to_be_deleted);
+          }
+
+          // if there are no ids, we have no alloy
+          if (reg_ids.empty())
+            continue;
+
+          string reg_name = reg_names[i];
+
+          ofstream of(TiberCad::get_output_dir() + "/" + get_name() +
+              "_" + reg_name + "_statistics_R" + cutoff_str + ".dat");
+
+          map<Specie, vector<unsigned int>> stats;
+          extract_statistics(stats, reg_ids, cutoff);
+
+          of << "% alloy statistics for structure " << get_name() <<
+              ", region " << reg_name << "\n";
+          of << "% (first row gives total numbers)\n";
+          of << "% ";
+
+          int NN = 0;
+          map<Specie, vector<unsigned int>>::iterator mit(stats.begin());
+          const map<Specie, vector<unsigned int>>::iterator mend(stats.end());
+          for ( ; mit != mend; ++mit)
+          {
+            of << mit->first << "  ";
+            NN = (mit->second).size();
+          }
+          of << "\n";
+
+          of << "% ";
+          for (mit = stats.begin(); mit != mend; ++mit)
+            of << (mit->second)[0] << " ";
+          of << "\n";
+
+          vector<unsigned int> sums(NN, 0);
+          unsigned int max = 0;
+          for (int i = 1; i < NN; ++i)
+          {
+            for (mit = stats.begin(); mit != mend; ++mit)
+              sums[i] += (mit->second)[i];
+
+            if (sums[i] > max)
+              max = sums[i];
+          }
+
+          for (int i = 0; i < NN; ++i)
+          {
+            if (sums[i] >= (max - 1))
+            {
+              for (mit = stats.begin(); mit != mend; ++mit)
+                of << (mit->second)[i] << " ";
+              of << "\n";
+            }
+          }
+
+        }
+      }
+
+      if (_options.get_option("plot_alloy_composition", false))
+      {
+
+        // TODO here we should put a reasonable communicator
+        libMesh::UniquePtr<libMesh::UnstructuredMesh> mesh(new libMesh::Mesh(TiberCad::get_mpi_comm(), 3));
+
+        int ref_atom = _options.get_option("reference_atom", -1);
+        IDSet refatoms;
+        if (ref_atom >= 0)
+          refatoms.insert(ref_atom);
+        create_conformal_grid(*mesh, refatoms, true);
+
+        libMesh::UniquePtr<DataOutput> writer(DataOutput::create(
+            _options.get_option("meshdata_format", "vtk")));
+
+        writer->set_mesh(*mesh);
+        writer->set_output_directory(TiberCad::get_output_dir());
+        writer->set_filename(get_name() + "_alloycomposition_R" + cutoff_str);
+        //writer->write(1);
+
+        map<ID, map<SolutionDescriptor, vector<double>>> solmap;
+        map<Specie, SolutionDescriptor> species_to_descr;
+
+        // setup a map Specie->SolutionDescriptor
+        const vector<string>& atom_types = get_atom_types();
+        unsigned int ctr = 0;
+        for (unsigned int i = 0; i < atom_types.size(); ++i)
+        {
+          Specie sp(atom_types[i]);
+          if (!species_to_descr.count(sp) && !(sp == Specie::H))
+          {
+            SolutionDescriptor desc(atom_types[i], ctr,
+              SolutionDescriptor::REAL, SolutionDescriptor::NODES);
+            cerr << "Atom : " << atom_types[i] << endl;
+
+            species_to_descr[sp] = desc;
+            ++ctr;
+          }
+        }
+
+        IDSet reg_ids;
+        IDSet::iterator id_it(_IDset.begin());
+        const IDSet::iterator id_end(_IDset.end());
+        for ( ; id_it != id_end; ++id_it)
+        {
+
+          reg_ids.insert(*id_it);
+
+          // we extract statistics only for alloys
+          const Material* mat = _device->get_material(*id_it);
+          if (!mat->is_alloy())
+            continue;
+          map<Specie, SolutionDescriptor>::iterator s_it(species_to_descr.begin());
+          const map<Specie, SolutionDescriptor>::iterator s_end(species_to_descr.end());
+          for ( ; s_it != s_end; ++s_it)
+            solmap[*id_it][s_it->second].resize(0);
+        }
+
+
+        map<Specie, vector<unsigned int>> stats;
+        extract_statistics(stats, reg_ids, cutoff);
+
+        for (id_it = _IDset.begin(); id_it != id_end; ++id_it)
+        {
+          ID domain = *id_it;
+
+          // we extract statistics only for alloys
+          const Material* mat = _device->get_material(*id_it);
+          if (!mat->is_alloy())
+            continue;
+
+          // to keep track of already used nodes
+          set<unsigned int> used_nodes;
+
+          map<SolutionDescriptor, vector<double>>::iterator solit(solmap[domain].begin());
+          const map<SolutionDescriptor, vector<double>>::iterator solend(solmap[domain].end());
+          for ( ; solit != solend; ++solit)
+          {
+            (solit->second).clear();
+            (solit->second).reserve(mesh->n_nodes());
+          }
+
+
+          MeshBase::element_iterator elit(mesh->active_local_elements_begin());
+          const MeshBase::element_iterator elend(mesh->active_local_elements_end());
+          for ( ; elit != elend; ++elit)
+          {
+            const Elem* elem = *elit;
+
+            if (elem->subdomain_id() == domain)
+            {
+              for (unsigned int n = 0; n < elem->n_nodes(); ++n)
+              {
+                if (!used_nodes.count(elem->node(n)))
+                {
+                  used_nodes.insert(elem->node(n));
+
+                  map<Specie, vector<unsigned int>>::iterator it(stats.begin());
+                  const map<Specie, vector<unsigned int>>::iterator end(stats.end());
+                  for ( ; it != end; ++it)
+                  {
+                    auto desc(species_to_descr.find(it->first));
+                    if (desc != species_to_descr.end())
+                    {
+                      SolutionDescriptor& descr = species_to_descr[it->first];
+                      // +1 because the first values are the totals !
+                      solmap[domain][descr].push_back((it->second)[elem->node(n) + 1]);
+                    }
+                  }
+                }
+              }
+            }
+          }
+          writer->set_data(solmap[domain], domain);
+        }
+
+        writer->write();
+      }
+      */
+
    }
       
    //Calculate the number of atoms excluding hydrogens 
@@ -209,7 +414,7 @@ AtomisticStructure::init(const std::string& name,
    m.info("Lattice vectors (A):");
    m.indent();
  
-   RealVectorValue a, b, c;
+   libMesh::RealVectorValue a, b, c;
    get_lattice_vectors(a, b, c);
    os << "a1 = (";
    a.write_unformatted(os, false);
@@ -273,7 +478,7 @@ AtomisticStructure::parse_lattice_vectors(void)
 
 
 void
-AtomisticStructure::init(const std::string& filename)
+AtomisticStructure::init(const std::string& )
 {
 }
 
@@ -1860,7 +2065,7 @@ AtomisticStructure::get_material(const Atom& atom, bool parent) const
 
 const Material*
 AtomisticStructure::get_material(const Atom& atom1, const Atom& atom2,
-    bool parent) const
+    bool ) const
 {
   const Material* mat = nullptr;
 
@@ -1971,10 +2176,10 @@ AtomisticStructure::reorder(const std::vector<unsigned int>& P)
 
 
 void
-AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
+AtomisticStructure::create_conformal_grid(libMesh::UnstructuredMesh& mesh,
     set<unsigned int> labels, bool keep_node_order) const
 {
-
+#ifdef LIBMESH_HAVE_TETGEN
   Messages::info("Creating FEM mesh conforming with the atomistic structure."
       " This may take some time... ", false);
   mesh.set_mesh_dimension(3);
@@ -2080,7 +2285,7 @@ AtomisticStructure::create_conformal_grid(UnstructuredMesh& mesh,
   mesh.prepare_for_use(keep_node_order);
 
   Messages::info("done");
-
+#endif
 }
 
 
@@ -2190,7 +2395,7 @@ AtomisticStructure::extract_statistics(unsigned int atom,
 
 
 int
-AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, double cutoff)
+AtomisticStructure::find_nearest_atom(const Elem* elem, const Point& point, double )
 {
   ID id = elem->subdomain_id();
 
@@ -2304,7 +2509,7 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
   if (opt.get_option("control_volume", string("sphere")) == "column")
   {
 
-    RealVectorValue a, b, c;
+    libMesh::RealVectorValue a, b, c;
     get_lattice_vectors(a, b, c);
 
     double x = a.size() / 10;
@@ -2512,7 +2717,7 @@ AtomisticStructure::extract_alloy_statistics(const ModelOptions& opt)
       }
       else if (shape == "column")
       {
-        RealVectorValue a, b, c;
+        libMesh::RealVectorValue a, b, c;
         get_lattice_vectors(a, b, c);
         string dir = opt.get_option("orientation", "x");
         double side = opt.get_option("side_length", cutoff);
@@ -2591,7 +2796,7 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
   // CREATE A VTK FILE PROJECTING LOCAL ALLOY COMPOSITION 
   double cutoff = opt.get_option("control_volume_radius", 0.5);
   string cutoff_str = opt.get_option("control_volume_radius", "0.5");
-  AutoPtr<UnstructuredMesh> mesh(new Mesh(3));
+  libMesh::UniquePtr<libMesh::UnstructuredMesh> mesh(new libMesh::Mesh(TiberCad::get_mpi_comm(), 3));
 
   int ref_atom = _options.get_option("reference_atom", -1);
   IDSet refatoms;
@@ -2599,7 +2804,7 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
     refatoms.insert(ref_atom);
   create_conformal_grid(*mesh, refatoms, true);
 
-  AutoPtr<DataOutput> writer(DataOutput::create(
+  libMesh::UniquePtr<DataOutput> writer(DataOutput::create(
       _options.get_option("meshdata_format", "vtk")));
 
   writer->set_mesh(*mesh);
@@ -2658,7 +2863,7 @@ AtomisticStructure::plot_alloy_composition(const ModelOptions& opt)
   }
   else if (shape == "column")
   {
-    RealVectorValue a, b, c;
+    libMesh::RealVectorValue a, b, c;
     get_lattice_vectors(a, b, c);
     string dir = opt.get_option("orientation", "x");
     double side = opt.get_option("side_length", cutoff);

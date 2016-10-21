@@ -1,0 +1,41 @@
+--- ./src/mesh/mesh_refinement.C.orig	2014-02-15 04:22:25.000000000 +0100
++++ ./src/mesh/mesh_refinement.C	2015-03-05 14:48:26.807474743 +0100
+@@ -1788,9 +1788,12 @@
+ 
+       for ( ; elem_it != elem_end; ++elem_it)
+         {
+-	  (*elem_it)->set_refinement_flag(Elem::COARSEN);
+-          if ((*elem_it)->parent())
+-	    (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          if ((*elem_it)->level() != 0)
++          {
++            (*elem_it)->set_refinement_flag(Elem::COARSEN);
++            if ((*elem_it)->parent())
++              (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          }
+         }
+ 
+       // Coarsen all the elements we just flagged.
+--- ./src/geom/elem.C.orig	2014-02-15 04:22:25.000000000 +0100
++++ ./src/geom/elem.C	2015-03-21 09:18:41.804904032 +0100
+@@ -1650,7 +2455,8 @@
+   // Or recurse into an ancestor element's children.
+   // Do not clear the vector any more.
+   else if (!this->active())
+-    for (unsigned int c=0; c<this->n_children(); c++)
++    if (this->has_children())
++      for (unsigned int c=0; c<this->n_children(); c++)
+       {
+         Elem *current_child = this->child(c);
+         if (current_child != remote_elem && current_child->has_neighbor(neighbor_in))
+--- ./include/geom/elem.h.orig	2014-02-15 04:22:25.000000000 +0100
++++ ./include/geom/elem.h	2015-03-05 14:48:26.799474743 +0100
+@@ -1605,6 +1617,7 @@
+ bool Elem::subactive() const
+ {
+ #ifdef LIBMESH_ENABLE_AMR
++  return false;
+   if (this->active())
+     return false;
+   if (!this->has_children())
+

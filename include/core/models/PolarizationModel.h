@@ -5,15 +5,17 @@
 
 #include "PhysicalModelInterface.h"
 #include "SimulationInterface.h"
-#include "vector_value.h"
-#include "tensor_value.h"
 #include "RotatedCrystal.h"
 #include "Material.h"
 #include "tensor.h"
 #include "TensorOperators.h"
+#include "libMeshDefs.h"
 
-class Elem;
-class Point;
+#include "vector_value.h"
+#include "tensor_value.h"
+
+USELIBMESHTYPE(RealVectorValue);
+
 
 // Base class for charge density models
 class PolarizationModel : public PhysicalModelInterface
@@ -43,7 +45,7 @@ class PolarizationModel : public PhysicalModelInterface
     * If a constant value or module name is given in the input file,
     * this will override any internally calculated polarization.
     */
-   void calculate(const Elem* elem, const Point& point);
+   void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
   
 
   protected:
@@ -51,7 +53,7 @@ class PolarizationModel : public PhysicalModelInterface
    PolarizationModel(const ModelOptions& options);
   
    //! Calculate the polarization in model specific way
-   virtual void do_calculate(const Elem* elem, const Point& point);
+   virtual void do_calculate(const libMesh::Elem* elem, const libMesh::Point& point);
 
    //! Initialize the bas class model
    /*!
@@ -64,7 +66,7 @@ class PolarizationModel : public PhysicalModelInterface
    virtual void do_print_info(void);
 
    //! Set the polarization vector
-   void set_polarization(const RealVectorValue& polarization);
+   void set_polarization(const libMesh::RealVectorValue& polarization);
    
    //! Rotate the polarization vector to calculation system
    void rotate(void);
@@ -74,7 +76,7 @@ class PolarizationModel : public PhysicalModelInterface
 
   private:
 
-   RealVectorValue _polarization;
+   libMesh::RealVectorValue _polarization;
 
    Tensor2Sym _strain;
 
@@ -115,7 +117,7 @@ PolarizationModel::get_polarization() const
 
 inline
 void
-PolarizationModel::set_polarization(const RealVectorValue& polarization)
+PolarizationModel::set_polarization(const libMesh::RealVectorValue& polarization)
 {
   if (!_fixed_or_external)
    _polarization = polarization;

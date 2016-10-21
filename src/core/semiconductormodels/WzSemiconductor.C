@@ -56,7 +56,7 @@ void WzSemiconductor::do_init()
   // we override with hole band masses for 2x2
   if(_kp_model == "2x2")
   {
-    RealTensor mten(0.0);
+	  libMesh::RealTensor mten(0.0);
     get_option("m_v", mten);
 
     if (mten(0,0) != 0.0)
@@ -121,7 +121,7 @@ void WzSemiconductor::read_database( )
   //db.get("m_c_xx", 0.0);
   //db.get("m_c_zz", 0.0);  
   // Read as tensor:
-  RealTensor mten;
+  libMesh::RealTensor mten;
   db.get("m_G",mten,true);
   par.m_c_xx = mten(0,0);
   par.m_c_zz = mten(2,2);

@@ -8,14 +8,18 @@
 
 #include <mesh_modification.h>
 
+
 using namespace std;
 
+
 //------------------------------------------------------------------------------//
-Kspace::Kspace(const ModelOptions& options)
+Kspace::Kspace(const ModelOptions& options, const libMesh::Parallel::Communicator& comm)
  : mod_opt(options),
-   _mesh_order(FIRST)
+   _mesh_order(libMesh::FIRST)
 {
   kmesh = NULL;
+
+  kspace_comm = comm;
 
   transform_matrix = Tensor2Gen(1);
 
@@ -35,7 +39,8 @@ Kspace::Kspace( const Kspace& kspace)
    kmax[0] = kspace.kmax[0];  kmax[1] = kspace.kmax[1];  kmax[2] = kspace.kmax[2];
    transform_matrix = 0;
    transform_matrix += kspace.transform_matrix;
-   kmesh = new Mesh(*(kspace.kmesh));
+   kmesh = new libMesh::Mesh(*(kspace.kmesh));
+   kspace_comm = kspace.kspace_comm;
 }
 
 
@@ -71,45 +76,42 @@ void Kspace::build_k_grid()
   {
 
     //build mesh
-    kmesh = new Mesh(k_dim);
+    kmesh = new libMesh::Mesh(kspace_comm, k_dim);
 
-
-    ElemType type(EDGE2);
-    if (_mesh_order == SECOND)
+    libMesh::ElemType type(libMesh::EDGE2);
+    if (_mesh_order == libMesh::SECOND)
     {
 
       if (k_dim == 1)
       {
-	type = EDGE3;
+        	type = libMesh::EDGE3;
       }
     
       if (k_dim == 2)
       {
-	type = QUAD8;
-   
+        	type = libMesh::QUAD8;
       }
     
       if (k_dim == 3)
       {
-	type = HEX27;
+        	type = libMesh::HEX27;
       }
     }
     else 
     {
       if (k_dim == 1)
       {
-	type = EDGE2;
+        	type = libMesh::EDGE2;
       }
     
       if (k_dim == 2)
       {
-	type = QUAD4;
-   
+        	type = libMesh::QUAD4;
       }
     
       if (k_dim == 3)
       {
-	type = HEX8;
+        	type = libMesh::HEX8;
       }
 
 
@@ -117,14 +119,14 @@ void Kspace::build_k_grid()
 
 
     // to restrict the extension of the k-space
-    RealVectorValue k_max(1.0, 1.0, 1.0);
+    libMesh::RealVectorValue k_max(1.0, 1.0, 1.0);
     mod_opt.get_option("k_max", k_max);
 
     // NOTE: build cube produces a mesh along x for 1D and on
     //       x-y plane for 2D, but 1D k-space is along z and 2D one
     //       is on y-z plane, so we rotate the mesh after its creation
 
-    MeshTools::Generation::build_cube (*kmesh, 
+    libMesh::MeshTools::Generation::build_cube (*kmesh,
 				       num_nodes[0] - 1,
 				       num_nodes[1] - 1,
 				       num_nodes[2] - 1,
@@ -166,7 +168,7 @@ void Kspace::build_k_grid()
   }
   else
   {
-    kmesh = new Mesh(0);
+    kmesh = new libMesh::Mesh(kspace_comm, 0);
     kmesh->add_point(Point(0,0,0), 0, 0);
   }
 }
@@ -392,8 +394,8 @@ void Kspace::do_init() throw (InitFailedException)
 
   string mesh_order = mod_opt.get_option("mesh_order","first");
 
-  if ( mesh_order == "first") _mesh_order = FIRST;
-  else if (mesh_order == "second") _mesh_order =  SECOND;
+  if ( mesh_order == "first") _mesh_order = libMesh::FIRST;
+  else if (mesh_order == "second") _mesh_order =  libMesh::SECOND;
   else throw  InitFailedException("Kspace: incorrect mesh order " + mesh_order );
 
 
@@ -688,10 +690,10 @@ void Kspace::do_init() throw (InitFailedException)
 //---------------------------------------------------------------------------------------------------------------//
 void Kspace::define_k_path(void)
 {
-  kmesh = new Mesh(k_space_dim);
+  kmesh = new libMesh::Mesh(kspace_comm, k_space_dim);
 
   // to restrict the extension of the k-space
-  RealVectorValue k_max(1.0, 1.0, 1.0);
+  libMesh::RealVectorValue k_max(1.0, 1.0, 1.0);
   mod_opt.get_option("k_max", k_max);
 
   std::string kpath = mod_opt.get_option("k_path","");
@@ -747,7 +749,7 @@ void Kspace::define_k_path(void)
         double b3 = k1[2]*(nelem-j)/nelem + k2[2]*j/nelem;
 
 
-        Point pt(b1,b2,b3);
+        libMesh::Point pt(b1,b2,b3);
 
         kmesh->add_point(pt,id,0);
 
@@ -823,7 +825,7 @@ void Kspace::define_k_path(void)
         double b2 = k1[1]*(nelem-j)/nelem + k2[1]*j/nelem;
         double b3 = k1[2]*(nelem-j)/nelem + k2[2]*j/nelem;
 
-        Point pt(b1,b2,b3);
+        libMesh::Point pt(b1,b2,b3);
 
         kmesh->add_point(pt,id,0);
 
@@ -897,7 +899,7 @@ void Kspace::rotate_mesh(void)
 
   for (unsigned int n=0; n < kmesh->n_nodes(); n++)
   {
-    const Point p = kmesh->node(n);
+    const libMesh::Point p = kmesh->node(n);
     
     vec1(1) = p(0);
     vec1(2) = p(1);
@@ -905,7 +907,7 @@ void Kspace::rotate_mesh(void)
     
     vec1 = transform_matrix * vec1;
     
-    kmesh->node(n) = Point( vec1(1), vec1(2), vec1(3) );
+    kmesh->node(n) = libMesh::Point( vec1(1), vec1(2), vec1(3) );
     
   }
 
@@ -922,7 +924,7 @@ void Kspace::inv_rotate_mesh(void)
 
   for (unsigned int n=0; n < kmesh->n_nodes(); n++)
   {
-    const Point p = kmesh->node(n);
+    const libMesh::Point p = kmesh->node(n);
     
     vec1(1) = p(0);
     vec1(2) = p(1);
@@ -930,7 +932,7 @@ void Kspace::inv_rotate_mesh(void)
     
     vec1 = inv_matrix * vec1;
     
-    kmesh->node(n) = Point( vec1(1), vec1(2), vec1(3) );
+    kmesh->node(n) = libMesh::Point( vec1(1), vec1(2), vec1(3) );
     
   }
 

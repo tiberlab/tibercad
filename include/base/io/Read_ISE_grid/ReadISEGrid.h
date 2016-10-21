@@ -12,12 +12,12 @@
 #include <InitFailedException.h>
 
 #include "TypeDefs.h"
+#include "libMeshDefs.h"
 #include "tiber_dll.h"
 
 //  LibMesh  include files
 #include "mesh_input.h"
 
-class MeshBase;
 class MeshRegionInfo;
 class BoundaryRegions;
 class ISE_Element;
@@ -25,8 +25,10 @@ class ISE_Vertex;
 class ISE_Edge;
 class ISE_Face;
 
+
+
 //! Reads an ISE mesh (*.grd file).
-class TBDLLOCAL ReadISEGrid : public MeshInput<MeshBase>
+class TBDLLOCAL ReadISEGrid : public libMesh::MeshInput<MeshBase>
 {
 
  public:
@@ -82,7 +84,7 @@ class TBDLLOCAL ReadISEGrid : public MeshInput<MeshBase>
 inline
 ReadISEGrid::ReadISEGrid(MeshBase& mesh, MeshRegionInfo& reg_info,
     BoundaryRegions& bd_regions) :
-  MeshInput<MeshBase>(mesh),
+  libMesh::MeshInput<MeshBase>(mesh),
   _reg_info(reg_info),
   _bd_regions(bd_regions)
 {}

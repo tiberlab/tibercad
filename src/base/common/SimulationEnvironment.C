@@ -7,11 +7,14 @@
 
 #include "mesh.h"
 #include "elem.h"
+#include "libmesh_logging.h"
 
 #include <vector>
 
 
 using namespace std;
+
+//USELIBMESHTYPE(UniquePtr);
 
 
 SimulationEnvironment::EnvironmentSet
@@ -101,8 +104,8 @@ SimulationEnvironment::create_element_list(void)
   _element_list.clear();
   MeshBase& mesh = get_mesh();
 
-  MeshBase::element_iterator it = mesh.active_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_elements_end();
+  MeshBase::element_iterator it = mesh.active_local_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_local_elements_end();
 
   const set<ID>::iterator list_end = _region_numbers.end();
 
@@ -121,8 +124,7 @@ SimulationEnvironment::create_element_list(void)
 void
 SimulationEnvironment::create_bc_maps(void)
 {
-  PerfLog perf_log("create_bc_maps", false);
-  perf_log.start_event("create_bc_maps");
+  START_LOG("create_bc_maps", "");
 
   const Device::BCNodeMap& bd_nodes = _device->get_boundary_node_map();
   Device::BCNodeMap::const_iterator bd_it;
@@ -135,8 +137,8 @@ SimulationEnvironment::create_bc_maps(void)
   const unsigned dim = mesh.mesh_dimension();
 
   // we only look on level zero
-  MeshBase::const_element_iterator el(mesh.level_elements_begin(0));
-  const MeshBase::const_element_iterator el_end(mesh.level_elements_end(0));
+  MeshBase::const_element_iterator el(mesh.local_level_elements_begin(0));
+  const MeshBase::const_element_iterator el_end(mesh.local_level_elements_end(0));
 
   for ( ; el != el_end; ++el)
   {
@@ -188,7 +190,7 @@ SimulationEnvironment::create_bc_maps(void)
                 else
                 {
                   bool found = true;
-                  AutoPtr<Elem> side = elem->build_side(s);
+                  libMesh::UniquePtr<Elem> side = elem->build_side(s);
                   // check if all nodes of the side are in the node map
                   for (unsigned int i = 0; i < side->n_nodes(); i++)
                   {
@@ -205,7 +207,8 @@ SimulationEnvironment::create_bc_maps(void)
       }
     }
   }
-  perf_log.stop_event("create_bc_maps");
+
+  STOP_LOG("create_bc_maps", "");
 }
 
 
@@ -284,7 +287,7 @@ SimulationEnvironment::update_boundary_node_map(void)
         // we allow for internal boundaries
         if (is_boundary(elemside))
         {
-          AutoPtr<Elem> side = child->build_side(side_num);
+          libMesh::UniquePtr<Elem> side = child->build_side(side_num);
           for (unsigned int i = 0; i < side->n_nodes(); i++)
             //_node_map[side->get_node(i)] = it->second;
             _node_map.add_node(it->second, side->get_node(i));
@@ -430,8 +433,8 @@ SimulationEnvironment::is_node_on_boundary(const Node* node,
 void
 SimulationEnvironment::calculate_bounding_box(void)
 {
-  MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+  MeshBase::const_element_iterator it = get_mesh().active_local_elements_begin();
+  const MeshBase::const_element_iterator end = get_mesh().active_local_elements_end();
 
   Point pmax(std::numeric_limits<double>::min(),
              std::numeric_limits<double>::min(),
@@ -465,6 +468,17 @@ SimulationEnvironment::calculate_bounding_box(void)
         pmax(2) = p(2);
 
     }
+  }
+
+  if (get_mesh().comm().size() > 1)
+  {
+    vector<double> point = {pmin(0), pmin(1), pmin(2)};
+    get_mesh().comm().min(point);
+    pmin = Point(point[0], point[1], point[2]);
+
+    point = {pmax(0), pmax(1), pmax(2)};
+    get_mesh().comm().max(point);
+    pmax = Point(point[0], point[1], point[2]);
   }
 
   _bbox = make_pair(pmin, pmax);

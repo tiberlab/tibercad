@@ -15,6 +15,8 @@
 #include "Utils.h"
 #include <fstream>
 
+using namespace std;
+using namespace libMesh;
 
 
 Vff*
@@ -725,9 +727,9 @@ Vff::optimize(void)
 
 
 void
-Vff::get_solution_secure(const Elem* elem,
+Vff::get_solution_secure(const libMesh::Elem* elem,
     std::map<ID, std::vector<double> >& values,
-    const std::vector<Point>& p)
+    const std::vector<libMesh::Point>& p)
 {
   //TODO: these methods are experimental, their only purpose is to test different
   //techniques, they should not be trusted without speaking with the developer

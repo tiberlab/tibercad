@@ -12,12 +12,14 @@
 #include <cmath>
 #include <cstdlib>
 
+namespace libMesh
+{
+template <typename T> class VectorValue;
 template <typename T> class TypeVector;
-
+typedef VectorValue<double> RealVectorValue;
 template <typename T> class TensorValue;
 typedef TensorValue<double> RealTensor;
-
-
+}
 
 //! This class contains useful methods for different tasks
 class Utils
@@ -72,7 +74,7 @@ class Utils
      *
      * \return \c true if successful , \c false otherwise
      */
-    static void extract_vector(const std::string& input, TypeVector<double>& vec);
+    static void extract_vector(const std::string& input, libMesh::TypeVector<double>& vec);
 
 
     //! Extract a real tensor from a string
@@ -90,7 +92,7 @@ class Utils
      * Any of the syntax of the  extract_vector() method can be used for
      * the row data.
      */
-    static void extract_tensor(const std::string& input, RealTensor& tensor);
+    static void extract_tensor(const std::string& input, libMesh::RealTensor& tensor);
 
 
 
@@ -106,9 +108,9 @@ class Utils
     static void camel_tokenize(const std::string& input,       
         std::vector<std::string>& tokens);
 
-    //! Find matching strings in a vector of strings
-    static void find_matching_strings(const std::string& regex,
-        const std::vector<std::string>& in, std::vector<std::string>& out) {};
+    //   ! Find matching strings in a vector of strings
+    //static void find_matching_strings(const std::string& regex,
+    //    const std::vector<std::string>& in, std::vector<std::string>& out);
 
 
     //! A functor that checks if two double values are almost equal
@@ -374,6 +376,7 @@ Utils::convert<const char*>(const std::string& val)
 {
   return val.c_str();
 }
+
 
 
 inline

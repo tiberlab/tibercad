@@ -1,0 +1,86 @@
+
+Log start: Mon Jun 20 16:56:33 2016
+
+
+tiberCAD release 2.5.1 (rev. 4207, x86_64-linux)
+
+Input file: bulk.tib
+
+Initialize global simulation options
+  Simulation temperature: 300 K
+  Database search path  : /home/mpatria/newlibmesh3/materials
+  Log file              : output2D/bulk.log.0
+
+Setup mesh
+  Reading mesh file bulk2D.msh ... done.
+  mesh units          : 1e-06 m
+  mesh dimension      :       2
+  number of nodes     :   26662
+  number of elements  :   52722
+  number of subdomains:       1
+
+Create materials ...
+  Added material Si for region 'bulk' (mesh regions 1)
+    (using datafile /home/mpatria/newlibmesh3/materials/Si.dat)
+    x growth direction : (1,0,0)
+    y growth direction : (0,1,0)
+    z growth direction : (0,0,1)
+Creation of materials done.
+
+Setting up simulation of type 'poisson_example' ...
+  (using ../poisson_example.so)
+  Adding boundary 'anode'
+  (using ../contact_dirichlet.so)
+  Adding boundary 'cathode'
+Creating bulk models... 
+  Region: bulk
+
+Setting up bulk models ...
+  (using /home/mpatria/newlibmesh3/x86_64-linux/modules/permittivity_constant.so)
+  (using ../charge_density_constant.so)
+
+Setting up lower dimensional (boundary) models ...
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+Simulation options for poisson (poisson_example)
+MPI: rank 0 of communicator with size 1
+
+Available solution variables:
+------------------------------------------------------------------
+Name                     Units          Type      Association Plot
+------------------------------------------------------------------
+Potential                V              real      cell        y
+ElField                  V/cm           vector    cell        y
+Displacement             C/cm^2         vector    cell        y
+Polarization             C/cm^2         vector    cell        n
+ChargeDensity            C/cm^3         real      nodal       y
+RegionIDs                               real      cell        n
+------------------------------------------------------------------
+
+Output directory      : output2D
+Output file format    : vtk
+Output file basename  : poisson
+
+Module implementation example: simple Poisson
+
+# Region bulk, Si
+
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+We solve: poisson 
+
+>>>>-------------------------------- (poisson) ---------------------------------
+
+Solve time: 0h 0m 14s
+<<<<----------------------------------------------------------------------------
+
+Total solve time: 0h 0m 17s
+Simulation finished.
+
+0 warnings during run
+0 errors detected
+
+
+Log end: Mon Jun 20 16:56:51 2016
+
+

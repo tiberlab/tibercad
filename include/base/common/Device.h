@@ -14,6 +14,8 @@
 #include "QuantumContact.h"
 
 #include "elem.h"
+#include "point.h"
+#include "parallel.h"
 
 #include <vector>
 #include <set>
@@ -22,12 +24,16 @@ class Material;
 class MaterialBoundary;
 class EdgeObject;
 class NodeObject;
-class MeshBase;
-class EquationSystems;
 class AtomisticStructure;
 class MeshRegionInfo;
 class BoundaryRegions;
-class Point;
+
+namespace libMesh
+{
+  class MeshBase;
+  class EquationSystems;
+}
+
 
 //! Higher-level definition of the  structure to  be  simulated.
 /*!
@@ -76,18 +82,25 @@ class Device
 
 
     //! Get a reference to the mesh
-    MeshBase& get_mesh(void) const;
+    libMesh::MeshBase& get_mesh(void) const;
+
+
+    //! Get the associated MPI communicator object
+    libMesh::Parallel::Communicator& get_communicator(void);
+
+    //! Get the associated MPI communicator object
+    const libMesh::Parallel::Communicator& get_communicator(void) const;
 
 
     //! Get a reference to the equation systems object
-    EquationSystems& get_equation_systems(void) const;
+    libMesh::EquationSystems& get_equation_systems(void) const;
 
 
     //! Get a reference to the equation systems object for a given mesh
     /*!
      * If it does not exist yet, it will be created.
      */
-    EquationSystems& get_equation_systems(MeshBase* mesh);
+    libMesh::EquationSystems& get_equation_systems(MeshBase* mesh);
 
 
     //! Prepare the device
@@ -146,11 +159,11 @@ class Device
 
 
     //! Get the material for a given element
-    const Material* get_material(const Elem* elem) const;
+    const Material* get_material(const libMesh::Elem* elem) const;
 
 
     /*! \copydoc get_material(const Elem*) const */
-    Material* get_material(const Elem* elem);
+    Material* get_material(const libMesh::Elem* elem);
 
 
     //! Get the MaterialBoundary object for a given ID
@@ -162,7 +175,7 @@ class Device
 
 
     //! Get the MaterialBoundary object for a given element side
-    MaterialBoundary* get_boundary_object(const Elem*, int side);
+    MaterialBoundary* get_boundary_object(const libMesh::Elem*, int side);
 
 
     //! Get the EdgeObject for a given ID
@@ -174,7 +187,7 @@ class Device
 
 
     //! Get the EdgeObject for a given element edge
-    EdgeObject* get_edge_object(const Elem*, int edge);
+    EdgeObject* get_edge_object(const libMesh::Elem*, int edge);
 
 
     //! Get the NodeObject for a given ID
@@ -186,11 +199,11 @@ class Device
 
 
     //! Get the NodeObject for a given element node
-    NodeObject* get_node_object(const Elem*, int node);
+    NodeObject* get_node_object(const libMesh::Elem*, int node);
 
 
     //! Get the NodeObject for a given node
-    NodeObject* get_node_object(const Node* node);
+    NodeObject* get_node_object(const libMesh::Node* node);
 
 
     //! Get the map that contains all boundary nodes for all boundaries
@@ -353,7 +366,7 @@ class Device
      * The \c boundary_nodes map has to contain all nodes for each boundary
      * for which a boundary condition is implied.
      */
-    Device(void) TBDLLOCAL;
+    Device(const ModelOptions& options) TBDLLOCAL;
 
 
     //! Set a material for a physical region
@@ -369,14 +382,6 @@ class Device
     //! Set the name for a physical region
     void set_region_name(const std::string& name, const std::vector<ID>& ids) TBDLLOCAL;
 
-
-    //! Set options for this device
-    /*!
-     * The options are stored internally and are accessible through
-     * special methods.
-     * Options have to be specified at creation time.
-     */
-    void set_options(const ModelOptions& options) TBDLLOCAL;
 
 
     //! Get a reference to the model options
@@ -463,7 +468,7 @@ class Device
 
 
     //! The mesh for this device
-    MeshBase* _mesh;
+    libMesh::MeshBase* _mesh;
 
 
     //! A typdef for the bulk materials
@@ -487,11 +492,11 @@ class Device
      * This is stored here because it has to be consistent with the mesh
      * of the device
      */
-    EquationSystems* _eq_system;
+    libMesh::EquationSystems* _eq_system;
 
 
     //! A map with equations systems for all used meshes
-    std::map<const MeshBase*, EquationSystems*> _eq_sys_map;
+    std::map<const MeshBase*, libMesh::EquationSystems*> _eq_sys_map;
 
 
     //! A map that contains all nodes for boundary conditions
@@ -541,6 +546,11 @@ class Device
      */
     TiberCad::Symmetry _symmetry;
 
+
+    //! The associated MPI communicator
+    libMesh::Parallel::Communicator _mpi_comm;
+    libMesh::Parallel::Communicator _mesh_comm;
+
 };
 
 
@@ -559,12 +569,6 @@ Device::destroy(Device* device)
 }
 
 
-inline
-void
-Device::set_options(const ModelOptions& options)
-{
-  _options = options;
-}
 
 
 inline
@@ -603,7 +607,7 @@ Device::get_material(ID region_id) const
 
 inline
 const Material*
-Device::get_material(const Elem* elem) const
+Device::get_material(const libMesh::Elem* elem) const
 {
   return get_material(elem->subdomain_id());
 }
@@ -611,14 +615,14 @@ Device::get_material(const Elem* elem) const
 
 inline
 Material*
-Device::get_material(const Elem* elem)
+Device::get_material(const libMesh::Elem* elem)
 {
   return get_material(elem->subdomain_id());
 }
 
 
 inline
-MeshBase&
+libMesh::MeshBase&
 Device::get_mesh(void) const
 {
   return *_mesh;
@@ -627,7 +631,23 @@ Device::get_mesh(void) const
 
 
 inline
-EquationSystems&
+libMesh::Parallel::Communicator&
+Device::get_communicator(void)
+{
+  return(_mpi_comm);
+}
+
+
+inline
+const libMesh::Parallel::Communicator&
+Device::get_communicator(void) const
+{
+  return(_mpi_comm);
+}
+
+
+inline
+libMesh::EquationSystems&
 Device::get_equation_systems(void) const
 {
   return *_eq_system;

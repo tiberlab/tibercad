@@ -24,6 +24,8 @@ extern "C" void dsyev_(char* jobz,  char* uplo,int* n, double* a,int* lda, doubl
 
 
 using namespace std;
+
+
 Device* PhononDispersion::_device;
 
 //-----------------------------------------------------------------//

@@ -6,8 +6,11 @@
 #include "PhysicalModel.h"
 #include "vector_value.h"
 
-class Elem;
-class Point;
+namespace libMesh
+{
+  class Point;
+  class Elem;
+}
 
 
 //! The base class for thermal balance boundary conditions
@@ -29,7 +32,7 @@ class BoltzmannBoundaryModel : public PhysicalModel
         const Point& point) = 0;
 
     //! Calculate the periodic vector
-    RealGradient get_periodicity(void);
+    libMesh::RealGradient get_periodicity(void);
 
     //! Calculate the periodic vector
     double get_deltaT(void);
@@ -48,7 +51,7 @@ class BoltzmannBoundaryModel : public PhysicalModel
   void set_coefficients(double a, double b, double c);
 
   //! Set periodicity
-  void set_periodicity(const RealGradient& periodicity);
+  void set_periodicity(const libMesh::RealGradient& periodicity);
 
   //! Set deltaT
   void set_deltaT(double deltaT);
@@ -61,7 +64,7 @@ class BoltzmannBoundaryModel : public PhysicalModel
   double _gamma;
   double _deltaT;
 
-  RealGradient _periodicity;
+  libMesh::RealGradient _periodicity;
 
 
 };
@@ -92,7 +95,7 @@ BoltzmannBoundaryModel::get_deltaT(void)
 }
 
 inline
-RealGradient
+libMesh::RealGradient
 BoltzmannBoundaryModel::get_periodicity(void)
 {
  return _periodicity;
@@ -110,7 +113,7 @@ BoltzmannBoundaryModel::set_coefficients(double a, double b, double c)
 
 inline
 void
-BoltzmannBoundaryModel::set_periodicity(const RealGradient& periodicity)
+BoltzmannBoundaryModel::set_periodicity(const libMesh::RealGradient& periodicity)
 {
 _periodicity = periodicity;
 }

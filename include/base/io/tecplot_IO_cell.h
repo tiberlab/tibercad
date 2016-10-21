@@ -9,9 +9,8 @@
 #include "tecplot_io.h"
 #include "tiber_dll.h"
 
+#include "libMeshDefs.h"
 
-// Forward declarations
-class MeshBase;
 
 
 
@@ -26,7 +25,7 @@ class MeshBase;
 // ------------------------------------------------------------
 // TecplotIO_cell class definition
 //class TecplotIO_cell : public MeshOutput<MeshBase>
-class TBDLLOCAL TecplotIO_cell : public TecplotIO
+class TBDLLOCAL TecplotIO_cell : public libMesh::TecplotIO
 
 {
  public:
@@ -39,8 +38,8 @@ class TBDLLOCAL TecplotIO_cell : public TecplotIO
    * output files.
    */
   // TecplotIO_cell (const MeshBase&, const bool binary=false); 
-  TecplotIO_cell (const MeshBase& mesh, const bool binary=false)
-    : TecplotIO(mesh, binary) {} ; 
+  TecplotIO_cell (const libMesh::MeshBase& mesh, const bool binary=false)
+    : libMesh::TecplotIO(mesh, binary) {} ;
 
 
   void write_cell_data (const std::string& fname,

@@ -12,7 +12,6 @@
 
 using namespace std;
 
-const double pi = 3.14159265358979323846;
 
 GaussDOS::GaussDOS(const ModelOptions& options) :
   DensityOfStates(options),
@@ -87,7 +86,7 @@ double GaussDOS::erfc(double x) const
     double e;
 
     int n = 0;
-    double Sn = 2.0*x / sqrt(pi);
+    double Sn = 2.0*x / sqrt(M_PI);
     double S = 0.0;
 
     do
@@ -139,7 +138,7 @@ double GaussDOS::inverfc(double x) const
     long m;
 
     double p;
-    p = 0.5 * sqrt(pi) * (x - 1.0);
+    p = 0.5 * sqrt(M_PI) * (x - 1.0);
 
     double f;
     f = p;
@@ -179,12 +178,12 @@ double GaussDOS::inverfc(double x) const
   {
     if (x < 1)
     {
-      return sqrt( - log(x) - 0.5 * log(- pi * log(x) - 0.5 * log(- pi * log(x))));
+      return sqrt( - log(x) - 0.5 * log(- M_PI * log(x) - 0.5 * log(- M_PI * log(x))));
     }
     else
     {
       x = 2 - x;
-      return  - sqrt( - log(x) - 0.5 * log(- pi * log(x) - 0.5 * log(- pi * log(x))));
+      return  - sqrt( - log(x) - 0.5 * log(- M_PI * log(x) - 0.5 * log(- M_PI * log(x))));
     }
   }
 }
@@ -196,7 +195,7 @@ double GaussDOS::H(double x) const
 
 double GaussDOS::K(double x, double h) const
 { 
-  return 2.0*(1.0 - exp(0.5 * x * x * (1.0 - h * h)) * (h * sqrt(2.0/pi))/x);
+  return 2.0*(1.0 - exp(0.5 * x * x * (1.0 - h * h)) * (h * sqrt(2.0/M_PI))/x);
 }
 
 std::pair<double, double>
@@ -235,7 +234,7 @@ GaussDOS::calculate_density_and_derivative(double Ef, double Epot, double kT, do
   else
   {
     dens = _N0 * 0.5 * erfc(-1.0 * hs * z / (s * sqrt(2.0)) );
-    der = _N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*pi) * kT);
+    der = _N0 * hs * exp(-0.5 * hs * hs * z * z / (s*s)) / (s * sqrt(2.0*M_PI) * kT);
     //cout<<"s="<<s<<" >z="<<z<<" dens="<<dens<<" der="<<der<<endl;
   }
   return make_pair(dens, der);

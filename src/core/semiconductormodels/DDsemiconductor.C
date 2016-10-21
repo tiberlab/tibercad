@@ -24,10 +24,10 @@ namespace {
 
 
 
-  void rotate(DenseVector<Complex>& vec, const RotatedCrystal& cr)
+  void rotate(libMesh::DenseVector<Complex>& vec, const RotatedCrystal& cr)
   {
     // NOTE This is not tested well
-    DenseVector<Complex> tmp(vec);
+    libMesh::DenseVector<Complex> tmp(vec);
 
     const Tensor2Gen& mat = cr.RotMatrix;
 
@@ -67,9 +67,9 @@ namespace {
   }
 
 
-  void rotate(DenseVector<Complex>& vec, KDirection dir)
+  void rotate(libMesh::DenseVector<Complex>& vec, KDirection dir)
   {
-    DenseVector<Complex> tmp(vec);
+    libMesh::DenseVector<Complex> tmp(vec);
     switch (dir)
     {
       case X:
@@ -274,11 +274,11 @@ void DDsemiconductor::set_strain(const Tensor2Sym& strain_1)
 
 void
 DDsemiconductor::calculate_vb_bulk_states(const Tensor1& k_vector,
-    std::vector<double>& eigenvalues, std::vector<DenseVector<Complex> >& eigenvectors)
+    std::vector<double>& eigenvalues, std::vector<libMesh::DenseVector<Complex> >& eigenvectors)
 {
 
   eigenvalues.resize(6);
-  eigenvectors.resize(6, DenseVector<Complex>(6));
+  eigenvectors.resize(6, libMesh::DenseVector<Complex>(6));
 
   bulk_ham->set_k_vector(k_vector);
 
@@ -424,9 +424,9 @@ vector<vector<double> > DDsemiconductor::get_valence_kp_dispersion(Tensor1 k_i, 
 
 void DDsemiconductor::calculate_inverse_mass(
     const vector<vector<KPbulkHamiltonian::MatrixElement> >& ham,
-    const vector<DenseVector<Complex> >::const_iterator first,
-    const vector<DenseVector<Complex> >::const_iterator last,
-    map<ID, RealTensor>& imasses)
+    const vector<libMesh::DenseVector<Complex> >::const_iterator first,
+    const vector<libMesh::DenseVector<Complex> >::const_iterator last,
+    map<ID, libMesh::RealTensor>& imasses)
 {
 
   int N = distance(first, last);
@@ -442,10 +442,10 @@ void DDsemiconductor::calculate_inverse_mass(
       Hkk[n][i] = 0.0;
   }
 
-  vector<DenseVector<Complex> >::const_iterator it(first);
+  vector<libMesh::DenseVector<Complex> >::const_iterator it(first);
   for (int i = 0; it != last; ++i, ++it)
   {
-    vector<DenseVector<Complex> >::const_iterator jt(it);
+    vector<libMesh::DenseVector<Complex> >::const_iterator jt(it);
     for (int j = i; jt != last; ++j, ++jt)
     {
       for (int a = 0; a < 6; a++)
@@ -504,8 +504,8 @@ void DDsemiconductor::calculate_inverse_mass(
     // calculate the eigenvectors and identify band
     //
 
-    std::vector<DenseVector<Complex> > eigv;
-    eigv.resize(N, DenseVector<Complex>(6));
+    std::vector<libMesh::DenseVector<Complex> > eigv;
+    eigv.resize(N, libMesh::DenseVector<Complex>(6));
 
     // to avoid double counting of bands we keep track of already assigned ones
     set<int> identified_bands;
@@ -521,7 +521,7 @@ void DDsemiconductor::calculate_inverse_mass(
       rotate(eigv[n], static_cast<KDirection>(k));
       //rotate(eigv[n], get_material()->get_rotated_crystal());
 
-      DenseVector<Complex> vec(6);
+      libMesh::DenseVector<Complex> vec(6);
       for (int i = 0; i < 6; i++)
         for (int j = 0; j < 6; j++)
           vec(i) += eigv[n](j) * conj(T[i][j]);

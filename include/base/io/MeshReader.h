@@ -7,9 +7,13 @@
 
 #include <string>
 
-class MeshBase;
 class MeshRegionInfo;
 class BoundaryRegions;
+
+namespace libMesh
+{
+class MeshBase;
+}
 
 
 //! General Class for mesh file  reading.
@@ -34,7 +38,7 @@ class TBDLLOCAL MeshReader
     *
     * \note If the mesh file is not a .grd ISE grid type, these last two maps are empty.
     */
-   static void read_mesh(const std::string& filename, MeshBase& mesh,
+   static void read_mesh(const std::string& filename, libMesh::MeshBase& mesh,
        MeshRegionInfo& region_info, BoundaryRegions& bd_regions);
 
 

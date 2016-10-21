@@ -128,7 +128,7 @@ void ZbSemiconductor::read_database( )
 
   db.set_section("conductionband");
   
-  RealTensor mten;
+  libMesh::RealTensor mten;
   db.get("m_G", mten, true);
   par.m_G = (mten(0,0)+mten(1,1)+mten(2,2))/3.0;
 

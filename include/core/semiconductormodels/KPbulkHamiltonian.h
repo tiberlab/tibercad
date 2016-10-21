@@ -8,7 +8,6 @@
 #include "PhysicalModelInterface.h"
 #include "Semiconductor.h"
 #include "KPparameters.h"
-typedef std::complex<double> Complex;
 
 //! A class that builds kp bulk Hamiltonian
 class KPbulkHamiltonian : public EFAbulkHamiltonian

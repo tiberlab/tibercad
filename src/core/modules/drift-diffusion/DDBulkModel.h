@@ -78,7 +78,7 @@ class DDBulkModel : public DriftDiffusionProperties
 
 
     //! Set the polarization vector
-    void set_polarization(const RealVectorValue& polarization);
+    void set_polarization(const libMesh::RealVectorValue& polarization);
 
 
     // ! Get the element we are currently working on
@@ -137,7 +137,7 @@ class DDBulkModel : public DriftDiffusionProperties
      * The total electric polarization \b P is the sum of the
      * pyroelectric and piezoelectric polarization
      */
-    const RealVectorValue& get_total_polarization(void) const
+    const libMesh::RealVectorValue& get_total_polarization(void) const
       { return _polarization; };
 
 
@@ -164,10 +164,10 @@ class DDBulkModel : public DriftDiffusionProperties
     void compute_thermoelectric_power_gradient(void);
 
     //!provides holes thermoelectric power [V/K]
-    RealGradient get_electron_thermoelectric_power_gradient(void) const;
+    libMesh::RealGradient get_electron_thermoelectric_power_gradient(void) const;
 
     //!provides holes thermoelectric power [V/K]
-    RealGradient get_hole_thermoelectric_power_gradient(void) const;
+    libMesh::RealGradient get_hole_thermoelectric_power_gradient(void) const;
 
     //! Get the all nodal temperatures for a given element
     std::vector<double>& get_temperature_at_nodes(void);
@@ -258,10 +258,10 @@ class DDBulkModel : public DriftDiffusionProperties
 
 
     //! Electron thermoelectric power gradient
-    RealGradient _eTEpowerGrad;
+    libMesh::RealGradient _eTEpowerGrad;
 
     //! Hole thermoelectric power gradient
-    RealGradient _hTEpowerGrad;
+    libMesh::RealGradient _hTEpowerGrad;
 
     //! Electron thermoelectric power
     double _eTEpower;
@@ -271,7 +271,7 @@ class DDBulkModel : public DriftDiffusionProperties
 
 
     //! The total electric polarization
-    RealVectorValue _polarization;
+    libMesh::RealVectorValue _polarization;
 
 
     //! A background conductivity for electrons
@@ -443,7 +443,7 @@ DDBulkModel::get_charge_density_derivatives(
 
 inline
 void
-DDBulkModel::set_polarization(const RealVectorValue& polarization)
+DDBulkModel::set_polarization(const libMesh::RealVectorValue& polarization)
 {
   _polarization = _relax_polariz * polarization;
 }
@@ -467,7 +467,7 @@ DDBulkModel::get_hole_thermoelectric_power(void) const
 }
 
 inline
-RealGradient
+libMesh::RealGradient
 DDBulkModel::get_electron_thermoelectric_power_gradient(void) const
 {
 
@@ -476,7 +476,7 @@ DDBulkModel::get_electron_thermoelectric_power_gradient(void) const
 }
 
 inline
-RealGradient
+libMesh::RealGradient
 DDBulkModel::get_hole_thermoelectric_power_gradient(void) const
 {
 

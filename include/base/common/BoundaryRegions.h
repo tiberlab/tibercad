@@ -14,8 +14,11 @@
 #include <set>
 #include <vector>
 
+namespace libMesh
+{
 class Elem;
 class Node;
+}
 
 
 //! A class containing information on lower dimensional regions
@@ -34,7 +37,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
   public:
 
     //! A set of nodes
-    typedef HashSet<const Node*>::Type NodeSet;
+    typedef HashSet<const libMesh::Node*>::Type NodeSet;
 
     //! The type of boundary (side, edge node)
     enum Type
@@ -45,6 +48,12 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
         INVALID  /*!< invalid */
     };
 
+
+    //BoundaryRegions(const libMesh::Parallel::Communicator &comm_in) :
+    //  MeshRegionInfo(comm_in)
+    BoundaryRegions(libMesh::MeshBase &mesh) :
+      MeshRegionInfo(mesh)
+    {}
 
     //! Iterator to iterate over a subset of boundaries
     class side_iterator
@@ -121,19 +130,19 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 
 
     //! Add an element side with boundary ID \c id
-    void add_side(const Elem* elem, unsigned int side, ID id);
+    void add_side(const libMesh::Elem* elem, unsigned int side, ID id);
 
 
     //! Add an element edge with boundary ID \c id
-    void add_edge(const Elem* elem, unsigned int edge, ID id);
+    void add_edge(const libMesh::Elem* elem, unsigned int edge, ID id);
 
 
     //! Add a node with boundary ID \c id
-    void add_node(const Node* node, ID id);
+    void add_node(const libMesh::Node* node, ID id);
 
 
     //! Get the ID associated to a side
-    ID get_side_id(const Elem* elem, unsigned int side) const;
+    ID get_side_id(const libMesh::Elem* elem, unsigned int side) const;
 
 
     //! Get contiguous regions for a given side ID
@@ -147,11 +156,11 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 
 
     //! Get the ID associated to a edge
-    ID get_edge_id(const Elem* elem, unsigned int edge) const;
+    ID get_edge_id(const libMesh::Elem* elem, unsigned int edge) const;
 
 
     //! Get the ID associated to a node
-    ID get_node_id(const Node* node) const;
+    ID get_node_id(const libMesh::Node* node) const;
 
 
     //! Get the set of all side nodes of a certain boundary ID
@@ -202,6 +211,10 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     side_iterator sides_end(const std::set<ID>& ids);
 
 
+  protected:
+
+    virtual void do_broadcast(void);
+
 
   private:
 
@@ -215,7 +228,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     typedef HashMap<ElementEdge, ID, ElementEdge::hash>::Type ElemEdgeMap;
 
     //! The node map
-    typedef HashMap<const Node*, ID>::Type NodeMap;
+    typedef HashMap<const libMesh::Node*, ID>::Type NodeMap;
 
 
     //! The sides
@@ -223,7 +236,8 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 
 
     //! All IDs associated to sides
-    IDHashSet _side_ids;
+    //IDHashSet _side_ids;
+    std::set<ID> _side_ids;
 
 
     //! The regions touching each boundary region
@@ -235,7 +249,8 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 
 
     //! All IDs associated to sides
-    IDHashSet _edge_ids;
+    //IDHashSet _edge_ids;
+    std::set<ID> _edge_ids;
 
 
     //! The node map
@@ -243,7 +258,8 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
 
 
     //! All IDs associated to sides
-    IDHashSet _node_ids;
+    //IDHashSet _node_ids;
+    std::set<ID> _node_ids;
 
 
 };
@@ -279,7 +295,7 @@ BoundaryRegions::is_node(ID id) const
 
 inline
 ID
-BoundaryRegions::get_side_id(const Elem* elem, unsigned int side) const
+BoundaryRegions::get_side_id(const libMesh::Elem* elem, unsigned int side) const
 {
   ID id = INVALID_ID;
   ElemSideMap::const_iterator it(_sides.find(ElementSide(elem, side)));
@@ -292,7 +308,7 @@ BoundaryRegions::get_side_id(const Elem* elem, unsigned int side) const
 
 inline
 ID
-BoundaryRegions::get_edge_id(const Elem* elem, unsigned int edge) const
+BoundaryRegions::get_edge_id(const libMesh::Elem* elem, unsigned int edge) const
 {
   ID id = INVALID_ID;
   ElemEdgeMap::const_iterator it(_edges.find(ElementEdge(elem, edge)));
@@ -305,7 +321,7 @@ BoundaryRegions::get_edge_id(const Elem* elem, unsigned int edge) const
 
 inline
 ID
-BoundaryRegions::get_node_id(const Node* node) const
+BoundaryRegions::get_node_id(const libMesh::Node* node) const
 {
   ID id = INVALID_ID;
   NodeMap::const_iterator it(_nodes.find(node));

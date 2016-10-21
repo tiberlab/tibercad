@@ -4,7 +4,8 @@
 
 
 
-RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B)
+
+libMesh::RealTensorValue doubleContraction(const Tensor4DSym& A, const libMesh::RealTensorValue& B)
 {
   // we just call the Tensor implementation
 
@@ -15,7 +16,7 @@ RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B
 
   T = doubleContraction(A, T);
 
-  RealTensorValue R;
+  libMesh::RealTensorValue R;
   R(0, 0) = T(1, 1);
   R(1, 0) = R(0, 1) = T(2, 1);
   R(1, 1) = T(2, 2);
@@ -28,7 +29,7 @@ RealTensorValue doubleContraction(const Tensor4DSym& A, const RealTensorValue& B
 
 
 
-void doubleContraction(const Tensor4DSym& A, RealTensorValue& B)
+void doubleContraction(const Tensor4DSym& A, libMesh::RealTensorValue& B)
 {
   // we just call the Tensor implementation
 

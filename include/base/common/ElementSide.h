@@ -3,11 +3,14 @@
 #ifndef _ELEMENTSIDE_H_
 #define _ELEMENTSIDE_H_
 
+#include "TypeDefs.h"
+#include "libMeshDefs.h"
+
+#include "elem.h"
+
 #include <utility>
 #include <string>
 
-
-class Elem;
 
 
 //! A class defining an element side
@@ -26,7 +29,7 @@ class ElementSide
       }
     };
 
-    ElementSide(const Elem* elem, unsigned int side)
+    ElementSide(const libMesh::Elem* elem, unsigned int side)
       : _elside(elem, side) {}
 
     bool operator==(const ElementSide& rhs) const
@@ -41,14 +44,14 @@ class ElementSide
     }
 
 
-    const Elem* elem(void) const { return _elside.first; }
+    const libMesh::Elem* elem(void) const { return _elside.first; }
 
     unsigned int side(void) const { return _elside.second; }
 
 
   private:
 
-    std::pair<const Elem*, unsigned int> _elside;
+    std::pair<const libMesh::Elem*, unsigned int> _elside;
 };
 
 

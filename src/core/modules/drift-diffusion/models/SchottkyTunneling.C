@@ -11,7 +11,7 @@
 #include "mesh_base.h"
 #include "fe.h"
 #include "quadrature_gauss.h"
-#include "elem.h"
+
 
 #include <limits>
 
@@ -69,8 +69,8 @@ SchottkyTunneling::do_init(void)
 
   unsigned int dim = sim->get_mesh().mesh_dimension();
 
-  AutoPtr<FEBase> fe(FEBase::build(dim, FEType(CONSTANT, MONOMIAL)));
-  QGauss qrule(dim - 1, CONSTANT);
+  libMesh::UniquePtr<libMesh::FEBase> fe(libMesh::FEBase::build(dim, libMesh::FEType(libMesh::CONSTANT, libMesh::MONOMIAL)));
+  libMesh::QGauss qrule(dim - 1, libMesh::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Point>& normal = fe->get_normals();
 
@@ -224,7 +224,7 @@ SchottkyTunneling::get_net_recombination_rates(double& recomb_e,
 
   recomb_e = recomb_h = 0.0;
 
-  HashMap<const Elem*, Point>::Type::iterator it(
+  HashMap<const libMesh::Elem*, libMesh::Point>::Type::iterator it(
       _elem_map.find(dd.get_element()->top_parent()));
 
   // if the current element is not in our list, we can return immediately
@@ -298,7 +298,7 @@ SchottkyTunneling::get_net_recombination_rate_derivatives(
   recomb_e[0] = recomb_h[0] =  0;
   recomb_e[1] = recomb_h[1] =  0;
 
-  HashMap<const Elem*, Point>::Type::iterator it(
+  HashMap<const libMesh::Elem*, libMesh::Point>::Type::iterator it(
       _elem_map.find(dd.get_element()->top_parent()));
 
   // if the current element is not in our list, we can return immediately
@@ -409,8 +409,8 @@ SchottkyTunneling::do_reinit(void)
         data[hdens_id];
 
         unsigned int dim = sim->get_mesh().mesh_dimension();
-        AutoPtr<FEBase> fe(sim->build_finite_element(dim, FEType()));
-        AutoPtr<QBase> qrule(QBase::build(libMeshEnums::QGAUSS, dim, libMeshEnums::FIFTH));
+        UniquePtr<FEBase> fe(sim->build_finite_element(dim, FEType()));
+        UniquePtr<QBase> qrule(QBase::build(libMeshEnums::QGAUSS, dim, libMeshEnums::FIFTH));
         fe->attach_quadrature_rule(qrule.get());
 
         const vector<Real>& JxW = fe->get_JxW();

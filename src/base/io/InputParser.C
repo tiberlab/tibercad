@@ -54,9 +54,10 @@ InputParser::~InputParser(void)
 
 
 void
-InputParser::add_defined(const string& name, const string& value)
+InputParser::add_defined(const string& name, const string& value,
+    bool warn_on_redefine)
 {
-  if (_defined.find(name) != _defined.end())
+  if (warn_on_redefine && (_defined.find(name) != _defined.end()))
     Messages::warning("Redefining input file macro '" + name + "'");
   _defined[name] = value;
 }

@@ -1,6 +1,7 @@
 // $Id$
 
 #include "Device.h"
+#include "InputParser.h"
 #include "Material.h"
 #include "Alloy.h"
 #include "MeshUtils.h"
@@ -32,6 +33,7 @@
 using namespace std;
 
 
+
 namespace
 {
   class IDPair
@@ -52,14 +54,54 @@ namespace
   };
 }
 
-Device::Device(void)
+Device::Device(const ModelOptions& options)
   : _mesh(NULL),
     _mesh_units(1e-6),
     _eq_system(NULL),
     _boundary_nodes(NULL),
+    _mesh_region_info(NULL),
+    _bd_regions(NULL),
+    _options(options),
     _symmetry(TiberCad::NONE)
 {
   _material_map.clear();
+
+  libMesh::Parallel::Communicator& comm = TiberCad::get_mpi_comm();
+  unsigned int nodes_per_device = comm.size();
+
+  int color = 0;
+
+  if (_options.has_submodel("Parallel"))
+  {
+    const ModelOptions& mpi_opts = _options.submodels_begin("Parallel")->second;
+
+    nodes_per_device = mpi_opts.get_option("nodes_per_device", nodes_per_device);
+  }
+
+  if (nodes_per_device < comm.size())
+  {
+    int proc_id = comm.rank();
+    color = proc_id / nodes_per_device;
+
+    MPI_Comm local_comm;
+    MPI_Comm_split(comm.get(), color, 0, &local_comm);
+    _mpi_comm = local_comm;
+
+    // this currently does not work, because there is a bug in libmesh
+    // parallel_implementation.h, line 470, missing this->assign(comm)
+    //comm.split(color, 0, _mpi_comm);
+  }
+  else
+  {
+    _mpi_comm = TiberCad::get_mpi_comm();
+
+    if (nodes_per_device > comm.size())
+      Messages::warning("Too many MPI nodes requested for device");
+  }
+
+  ostringstream os;
+  os << color;
+  InputParser::add_defined("MPI_DEV_KEY", os.str(), false);
 }
 
 
@@ -110,9 +152,7 @@ Device*
 Device::create(const ModelOptions& options)
 {
 
-  Device* device = new Device();
-
-  device->set_options(options);
+  Device* device = new Device(options);
 
   return device;
 }
@@ -121,6 +161,8 @@ Device::create(const ModelOptions& options)
 void
 Device::prepare(void)
 {
+
+
   setup_mesh();
   setup_regions();
   setup_clusters();
@@ -131,13 +173,13 @@ Device::prepare(void)
   if (_options.get_option("write_boundary_mesh", false) &&
       (get_mesh().mesh_dimension() > 1))
   {
-    auto_ptr<DataOutput> writer(DataOutput::create("vtk"));
+    libMesh::UniquePtr<DataOutput> writer(DataOutput::create("vtk"));
     if (writer.get() != NULL)
     {
       writer->set_output_directory(_options.get_option("output_path", "./"));
       writer->set_filename(Utils::basename(_options["meshfile"]) + "_bnd");
 
-      AutoPtr<MeshBase> bdmesh = MeshUtils::create_boundary_mesh(get_mesh());
+      libMesh::UniquePtr<MeshBase> bdmesh = MeshUtils::create_boundary_mesh(get_mesh());
 
       writer->set_mesh(*bdmesh);
       writer->write(true);
@@ -197,14 +239,26 @@ Device::setup_mesh(void)
 
   {
     ostringstream os;
-    os << "Reading mesh file " << meshfile << " ...";
-    m.info(os.str(), false);
+    os << "Reading mesh file \'" << meshfile << "\' assuming dimension "<<dim<<" ...";
+    m.info(os.str());
   }
 
-  _mesh = new Mesh(dim);
+  // for now, FEM stuff is done in serial
+  // TODO, use split of libMesh::Parallel
+  MPI_Comm local_comm;
 
-  _mesh_region_info = new MeshRegionInfo;
-  _bd_regions = new BoundaryRegions;
+  // for testing of MPI in FEM
+  //int proc_id, p;
+  //MPI_Comm_rank(_mpi_comm.get(), &proc_id);
+  //MPI_Comm_size(_mpi_comm.get(), &p);
+  //MPI_Comm_split(_mpi_comm.get(), proc_id, 0, &local_comm);
+  //_mesh_comm = local_comm;
+  _mesh_comm = _mpi_comm;
+
+  _mesh = new libMesh::Mesh(_mesh_comm, dim);
+
+  _mesh_region_info = new MeshRegionInfo(*_mesh);
+  _bd_regions = new BoundaryRegions(*_mesh);
 
   MeshReader::read_mesh(meshfile, *_mesh, *_mesh_region_info, *_bd_regions);
 
@@ -226,7 +280,9 @@ Device::setup_mesh(void)
        << "mesh dimension      : " << setw(7) << setfill(' ') << dim << endl
        << "number of nodes     : " << setw(7) << setfill(' ') << _mesh->n_nodes() << endl
        << "number of elements  : " << setw(7) << setfill(' ') << _mesh->n_elem() << endl
-       << "number of subdomains: " << setw(7) << setfill(' ') << _mesh_region_info->n_subdomains();
+       << "number of subdomains: " << setw(7) << setfill(' ') 
+       << _mesh_region_info->n_subdomains() << endl
+       << "number of boundaries: " << setw(7) << setfill(' ') << _boundary_nodes->size();
     m.info(os.str());
   }
   m.newline();
@@ -248,7 +304,7 @@ Device::setup_mesh(void)
    */
 
 
-  _eq_system = new EquationSystems(*_mesh);
+  _eq_system = new libMesh::EquationSystems(*_mesh);
 }
 
 
@@ -358,6 +414,7 @@ Device::setup_regions(void)
     // create the materials
     data["x"] = x_frac;
     Material* mat = Material::create(material, data);
+
     set_material(mat, region_ids, data.get_name());
 
     // now we check if we should use variable alloy composition
@@ -591,7 +648,7 @@ Device::setup_quantum_contacts(void)
 
     std::cout<<"write meshfile new_"+meshfile<<std::endl;
 
-    GmshIO(*_mesh).write("new_" + meshfile);
+    libMesh::GmshIO(*_mesh).write("new_" + meshfile);
 
    }
 
@@ -753,20 +810,20 @@ Device::get_atomistic_structures(const string& names,
 }
 
 
-EquationSystems&
+	libMesh::EquationSystems&
 Device::get_equation_systems(MeshBase* mesh)
 {
-  EquationSystems* eqsys;
+	libMesh::EquationSystems* eqsys;
   if (mesh == _mesh)
     eqsys = _eq_system;
   else
   {
-    map<const MeshBase*, EquationSystems*>::iterator it =
+    map<const MeshBase*, libMesh::EquationSystems*>::iterator it =
         _eq_sys_map.find(mesh);
 
     if (it == _eq_sys_map.end())
     {
-      eqsys = new EquationSystems(*mesh);
+      eqsys = new libMesh::EquationSystems(*mesh);
       it = (_eq_sys_map.insert(make_pair(mesh, eqsys))).first;
     }
 
@@ -789,7 +846,7 @@ Device::set_material(Material* material, ID region_id)
      * In single processor case this has to be considered an error,
      * in parallel we should do the check in a different manner
      */
-    if (libMesh::n_processors() == 1)
+    if (libMesh::global_n_processors() == 1)
     {
       ostringstream s;
       s << "Device: region " << region_id <<

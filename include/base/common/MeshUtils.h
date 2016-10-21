@@ -5,18 +5,22 @@
 #define _MESHUTILS_H_
 
 #include "TypeDefs.h"
+//#include "libMeshDefs.h"
 #include "TensorGrid.h"
-#include "point.h"
+//#include "libMeshDefs.h"
 #include "tiber_dll.h"
 
 #include "auto_ptr.h"
+#include "elem.h"
+#include "mesh_base.h"
+#include "point.h"
 
 #include <set>
 #include <vector>
 #include <map>
 
-class Elem;
-class MeshBase;
+
+
 
 
 //! A few utilities for operations on a mesh
@@ -36,7 +40,7 @@ class MeshUtils
      * This method iterates over all mesh elements and puts the subdomain id
      * into the provided set.
      */
-    static void get_subdomain_ids(MeshBase& mesh, std::set<ID>& subdomain_ids);
+    static void get_subdomain_ids(libMesh::MeshBase& mesh, std::set<ID>& subdomain_ids);
 
 
     //! Preliminary check to see if a point can belong to an element
@@ -46,18 +50,18 @@ class MeshUtils
      * It's much faster then exact check. As it uses a parallepipedal box
      * around the element, it only performs a simple matrix-vector product
      */
-    static bool may_belong_to_element(const Elem* element, const Point& point);
+    static bool may_belong_to_element(const libMesh::Elem* element, libMesh::Point& point);
 
 
     //! Get the element a given point lies in
-    static const Elem* search_element(const MeshBase* mesh, const Point& point);
+    static const libMesh::Elem* search_element(const libMesh::MeshBase* mesh, const libMesh::Point& point);
 
 
     //! Get the outer normal on an element side
-    static Point get_outer_normal(const Elem* elem, int side);
+    static libMesh::Point get_outer_normal(const libMesh::Elem* elem, int side);
 
     //! Create the boundary mesh for a given volume mesh
-    static AutoPtr<MeshBase> create_boundary_mesh(const MeshBase& mesh);
+    static libMesh::UniquePtr<libMesh::MeshBase> create_boundary_mesh(const libMesh::MeshBase& mesh);
 
 
   private:
@@ -90,33 +94,33 @@ class MeshUtils
         /*!
          * \param regions a subset of the region IDs of \c mesh
          */
-        static GridMapper& get_mapper(const MeshBase* mesh,
+        static GridMapper& get_mapper(const libMesh::MeshBase* mesh,
             const std::set<ID>& regions = std::set<ID>());
 
         //! Obtain the GridMapper object for a given mesh
         /*!
          * \param regions a subset of the region IDs of \c mesh
          */
-        static GridMapper& get_mapper(const MeshBase& mesh,
+        static GridMapper& get_mapper(const libMesh::MeshBase& mesh,
             const std::set<ID>& regions = std::set<ID>());
 
         //! Get the element a given point is in
-        const Elem* get_element(const Point& point) const;
+        const libMesh::Elem* get_element(const libMesh::Point& point) const;
 
 
       private:
 
-        typedef std::vector<std::vector<const Elem*>>  ElementList;
+        typedef std::vector<std::vector<const libMesh::Elem*>>  ElementList;
 
         //! Default constructor is disabled
         GridMapper(void);
 
         //! Constructor
-        explicit GridMapper(const MeshBase* mesh,
+        explicit GridMapper(const libMesh::MeshBase* mesh,
             const std::set<ID>& regions = std::set<ID>());
 
         //! The real mesh
-        const MeshBase* _mesh;
+        const libMesh::MeshBase* _mesh;
 
         //! The subset of mesh region IDs
         std::set<ID> _regids;
@@ -132,7 +136,7 @@ class MeshUtils
 
 
         //! A static list of all GridMapper objects
-        static std::map<const MeshBase*, GridMapper*> _mappers;
+        static std::map<const libMesh::MeshBase*, GridMapper*> _mappers;
 
     };
 };

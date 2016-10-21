@@ -7,8 +7,7 @@
 #include "SimulationInterface.h"
 #include "tiber_dll.h"
 #include "Database.h"
-class Elem;
-class Point;
+
 
 // Base class for charge density models
 class  TBDLLOCAL ConstantPermittivity: public PermittivityModel
@@ -27,13 +26,13 @@ class  TBDLLOCAL ConstantPermittivity: public PermittivityModel
 
     virtual void do_init(void);
 
-    virtual void calculate(const Elem* elem, const Point& point){};
+    virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
 
     virtual void read_database(void);
 
   private:
 
-    RealVectorValue _permittivity_diag;
+    libMesh::RealVectorValue _permittivity_diag;
 
 };
 

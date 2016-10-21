@@ -522,7 +522,7 @@ Negf::init_k_space(ModelOptions& kopts)
       // these are the real space lattice vectors, in nm
       // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
       // k_max can be interpreted in nm^-1
-      RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+      RealVectorValue a(M_PI, 0.0, 0), b(0.0, M_PI, 0.0), c(0.0, 0.0, M_PI);
 
       auto bbox = get_environment().get_bounding_box();
       if (get_option("x-periodicity", false) && (mesh_dim > 0))
@@ -1485,11 +1485,11 @@ Negf::calculate_density(const std::string& particle)
       equ = 1.0/(u*u*u*1.0e6);
   }
 
-  DofMap& dof_map_qdens = _qdens_sys->get_dof_map();
+  libMesh::DofMap& dof_map_qdens = _qdens_sys->get_dof_map();
   std::vector<unsigned int> dof_indices_qdens;
   // setup output vector qdens
+  libMesh::NumericVector<Number>& qdens = *_qdens_sys->solution;
 
-  NumericVector<Number>& qdens = *_qdens_sys->solution;
   //qdens.zero();
 
   // compute connectivity of each node
@@ -1513,7 +1513,7 @@ Negf::calculate_density(const std::string& particle)
 
 
   // The _sys_H system contains the nodal dofmap (all variables)
-  DofMap& dof_map = _sys_H->get_dof_map();
+  libMesh::DofMap& dof_map = _sys_H->get_dof_map();
   std::vector<unsigned int> dof_indices;
 
   MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
@@ -1923,11 +1923,11 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
 
   if (values.count(ReorderPotential))
   {
-    const NumericVector<Number>& solution = _sys->get_solution_vector();
-    const DofMap& dof_map = _sys->get_dof_map();
+    const libMesh::NumericVector<Number>& solution = _sys->get_solution_vector();
+    const libMesh::DofMap& dof_map = _sys->get_dof_map();
     ID u_var = _sys->variable_number("u0");
     FEType fe_type = _sys->variable_type(u_var);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
     const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &p);
@@ -1960,15 +1960,15 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
     ID el_id = _qdens_sys->variable_number("edens");
     ID hl_id = _qdens_sys->variable_number("hdens");
 
-    NumericVector<Number>& qdens = *_qdens_sys->solution;
+    libMesh::NumericVector<Number>& qdens = *_qdens_sys->solution;
 
     FEType fe_type = _qdens_sys->variable_type(el_id);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
     const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &p);
 
-    DofMap& dof_map = _qdens_sys->get_dof_map();
+    libMesh::DofMap& dof_map = _qdens_sys->get_dof_map();
     std::vector<unsigned int> dof_indices_e;
     std::vector<unsigned int> dof_indices_h;
     dof_map.dof_indices(elem, dof_indices_e, el_id);
@@ -2028,7 +2028,7 @@ Negf::get_solution_secure(const Elem *elem, std::map<ID, std::vector<double>> &v
         Point point_current;      
         if (dim>1)
         { 
-          AutoPtr<Elem> elside = elem->build_side(side); 		
+          UniquePtr<Elem> elside = elem->build_side(side); 		
           point_current = _contact_current[qc] * qc->get_normal() * elside->volume() / qc->get_area();
         }
         else
@@ -2136,9 +2136,9 @@ Negf::reorder(void)
 
   //std::cout<<"Laplace solved"<<std::endl;
 
-  const NumericVector<Number>& solution = _sys->get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = _sys->get_solution_vector();
 
-  const DofMap& dof_map = _sys->get_dof_map();
+  const libMesh::DofMap& dof_map = _sys->get_dof_map();
 
   std::vector<unsigned int> dof_indices_u;
 
@@ -2226,14 +2226,14 @@ Negf::reorder(void)
 }
 
 void
-Negf::reorder_assemble(EquationSystems& es, const std::string& system_name)
+Negf::reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name)
 {
   static_this->do_reorder_assemble(es, system_name);
 }
 
 //Approch to Laplace problem
 void
-Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
+Negf::do_reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name)
 {
 
   std::map<const Boundary*, int> boundary_ids;
@@ -2250,15 +2250,15 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 
   const unsigned int dim = mesh.mesh_dimension();
 
-  DofMap& dof_map = _sys->get_dof_map();
+  libMesh::DofMap& dof_map = _sys->get_dof_map();
 
   unsigned int n_vars = _sys->n_vars();
 
-  FEType fe_type = dof_map.variable_type(0);
+  libMesh::FEType fe_type = dof_map.variable_type(0);
 
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
+  UniquePtr<FEBase> fe(FEBase::build(dim, fe_type));
 
-  QGauss qrule(dim, THIRD);
+  libMesh::QGauss qrule(dim, THIRD);
 
   fe->attach_quadrature_rule(&qrule);
 
@@ -2268,10 +2268,10 @@ Negf::do_reorder_assemble(EquationSystems& es, const std::string& system_name)
 
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
-  DenseMatrix<Number> Ke;
-  DenseVector<Number> Fe;
+  libMesh::DenseMatrix<Number> Ke;
+  libMesh::DenseVector<Number> Fe;
 
   std::vector<unsigned int> dof_indices;
   const double penalty = 1.e10;
@@ -2407,7 +2407,7 @@ Negf::compare(ID i, ID j)
 bool
 Negf::do_compare(ID i, ID j)
 {
-  const NumericVector<Number>& solution = _sys->get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = _sys->get_solution_vector();
   return (solution(j) < solution(i));
   // 2014-31-10 i and j were interchanged, before in 1D order of DOFs was flipped
   // Was this on purpose??
@@ -2431,9 +2431,9 @@ Negf::get_boundary_potentials(QuantumContact* qc, double& av_V, double& av_mu_n,
 
   unsigned int dim = mesh.mesh_dimension();
 
-  AutoPtr<FEBase> fe( FEBase::build(dim, FEType() ));
+  UniquePtr<FEBase> fe( FEBase::build(dim, FEType() ));
 
-  QGauss qrule(dim, FIRST); // Why order 1 ?  
+  libMesh::QGauss qrule(dim, FIRST); // Why order 1 ?
 
   fe->attach_quadrature_rule(&qrule);
 
@@ -2571,7 +2571,7 @@ Negf::apply_dirichlet_bc(void)
 
   dirichlet_dofs.clear();
 
-  DofMap& dof_map = _sys_H->get_dof_map();
+  libMesh::DofMap& dof_map = _sys_H->get_dof_map();
 
   unsigned int n_var = dof_map.n_variables();
 
@@ -2678,8 +2678,8 @@ Negf::do_ham_assemble(EquationSystems& es, const std::string& system_name)
 
   FEType fe_type = dof_map.variable_type(0);
 
-  AutoPtr<FEBase> fe(FEBase::build(dim, fe_type));
-  AutoPtr<FEBase> fe_face(FEBase::build(dim,fe_type));
+  UniquePtr<FEBase> fe(FEBase::build(dim, fe_type));
+  UniquePtr<FEBase> fe_face(FEBase::build(dim,fe_type));
 
   QGauss qrule(dim, THIRD);
   QGauss qrule_face(dim-1,CONSTANT);

@@ -17,7 +17,7 @@ class TBDLLOCAL TiberNonlinPetsc : public TiberNonlinearSystem
   public:
 
     //! Constructor
-    TiberNonlinPetsc(EquationSystems& es,
+    TiberNonlinPetsc(libMesh::EquationSystems& es,
         const std::string& name,
         const unsigned int number);
 
@@ -38,7 +38,7 @@ class TBDLLOCAL TiberNonlinPetsc : public TiberNonlinearSystem
 
 
     //! Get the solution vector
-    virtual NumericVector<double>& get_solution_vector(void);
+    virtual libMesh::NumericVector<double>& get_solution_vector(void);
 
 
 
@@ -75,7 +75,7 @@ TiberNonlinPetsc::system_type(void) const
 
 
 inline
-NumericVector<double>&
+libMesh::NumericVector<double>&
 TiberNonlinPetsc::get_solution_vector(void)
 {
   return *(solution);

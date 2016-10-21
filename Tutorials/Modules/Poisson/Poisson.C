@@ -148,7 +148,7 @@ Poisson::get_solution_secure(const Elem* elem,
   const unsigned int u_var = system.variable_number("u");
 
   FEType fe_type = system.variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices;
 
@@ -256,7 +256,7 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
   FEType fe_type = dof_map.variable_type(uvar);
 
   // the volume finite element
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type, true));
   QGauss qrule(dim, SECOND);
   fe->attach_quadrature_rule(&qrule);
 
@@ -267,7 +267,7 @@ Poisson::do_assemble(EquationSystems& es, const std::string& system_name)
 
 
   // the surface finite element
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
   QGauss qface(dim - 1, THIRD);
   fe_face->attach_quadrature_rule(&qface);
 

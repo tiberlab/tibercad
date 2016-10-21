@@ -7,31 +7,38 @@
 #include "HashMap.h"
 #include "HashSet.h"
 #include "RuntimeException.h"
+#include "TiberCad.h"
 
 #include "mesh.h"
 #include "elem.h"
 #include "mesh_tools.h"
 #include "mesh_base.h"
 
+
 #include <cassert>
 #include <list>
 #include <algorithm>
 
+#include "libMeshDefs.h"
 
 using namespace std;
 
+USELIBMESHTYPE(UniquePtr);
+USELIBMESHTYPE(DofObject);
+
+
 
 void
-MeshUtils::get_subdomain_ids(MeshBase& mesh, std::set<ID>& subdomain_ids)
+MeshUtils::get_subdomain_ids(libMesh::MeshBase& mesh, std::set<ID>& subdomain_ids)
 {
   subdomain_ids.clear();
 
-  MeshBase::element_iterator it = mesh.local_elements_begin();
-  const MeshBase::element_iterator end = mesh.local_elements_end();
+  libMesh::MeshBase::element_iterator it = mesh.local_elements_begin();
+  const libMesh::MeshBase::element_iterator end = mesh.local_elements_end();
 
   for ( ; it != end; ++it)
   {
-    Elem* elem = *it;
+    libMesh::Elem* elem = *it;
 
     ID id = static_cast<ID>(elem->subdomain_id());
     subdomain_ids.insert(id);
@@ -39,9 +46,9 @@ MeshUtils::get_subdomain_ids(MeshBase& mesh, std::set<ID>& subdomain_ids)
 }
 
 
-bool MeshUtils::may_belong_to_element(const Elem* element, const Point& point)
+bool MeshUtils::may_belong_to_element(const libMesh::Elem* element, libMesh::Point& point)
 {
-  Point vertex(element->point(0));
+  libMesh::Point vertex(element->point(0));
   double min_x = vertex(0);
   double min_y = vertex(1);
   double min_z = vertex(2);
@@ -81,16 +88,18 @@ bool MeshUtils::may_belong_to_element(const Elem* element, const Point& point)
 
 
 
-Point
-MeshUtils::get_outer_normal(const Elem* elem, int side)
+libMesh::Point
+MeshUtils::get_outer_normal(const libMesh::Elem* elem, int side)
 {
   assert(elem != NULL);
 
-  Point normal;
+  libMesh::Point normal;
 
-  AutoPtr<DofObject> sobj = elem->side(side);
-  const Elem* side_el = dynamic_cast<Elem*>(sobj.get());
-  const Point& centroid = elem->centroid();
+
+
+    libMesh::UniquePtr<libMesh::Elem> side_el(elem->side(side));
+  //const libMesh::Elem* side_el = dynamic_cast<libMesh::Elem*>(sobj.get());
+  const libMesh::Point& centroid = elem->centroid();
 
   switch (elem->dim())
   {
@@ -108,8 +117,8 @@ MeshUtils::get_outer_normal(const Elem* elem, int side)
       // normal direction is: p0 + t*(p1 - p0) - centroid, where
       // t gives the intersection between the side and the perpendicular
       // through the element centroid
-      Point p10((*side_el->get_node(1) - *side_el->get_node(0)).unit());
-      Point p03(*side_el->get_node(0) - centroid);
+      libMesh::Point p10((*side_el->get_node(1) - *side_el->get_node(0)).unit());
+      libMesh::Point p03(*side_el->get_node(0) - centroid);
       double t = p03 * p10;
       normal = p03 - t * p10;
       break;
@@ -129,39 +138,38 @@ MeshUtils::get_outer_normal(const Elem* elem, int side)
 
 
 
-AutoPtr<MeshBase>
-MeshUtils::create_boundary_mesh(const MeshBase& mesh)
+libMesh::UniquePtr<libMesh::MeshBase>
+MeshUtils::create_boundary_mesh(const libMesh::MeshBase& mesh)
 {
-
-  MeshBase *bdmesh = new SerialMesh(mesh.mesh_dimension() - 1);
+  libMesh::MeshBase* bdmesh = new libMesh::SerialMesh(TiberCad::get_mpi_comm() , mesh.mesh_dimension());
 
   using namespace std;
 
   // extract region boundary
   unsigned int node_ctr = 0;
   HashMap<unsigned int, unsigned int>::Type node_id_map;
-  set<pair<const Elem*, const Elem*>> sides_added;
+  set<pair<const libMesh::Elem*, const libMesh::Elem*>> sides_added;
 
 
-  MeshBase::const_element_iterator it = mesh.level_elements_begin(0);
-  const MeshBase::const_element_iterator end = mesh.level_elements_end(0);
+  libMesh::MeshBase::const_element_iterator it = mesh.level_elements_begin(0);
+  const libMesh::MeshBase::const_element_iterator end = mesh.level_elements_end(0);
   for ( ; it != end; ++it)
   {
-    const Elem* elem = *it;
+    const libMesh::Elem* elem = *it;
     ID subdomain = elem->subdomain_id();
 
     for (int i = 0; i < elem->n_sides(); ++i)
     {
-      const Elem* nb = elem->neighbor(i);
-      pair<const Elem*, const Elem*> el_pair(elem, nb);
+      const libMesh::Elem* nb = elem->neighbor(i);
+      pair<const libMesh::Elem*, const libMesh::Elem*> el_pair(elem, nb);
       if (nb > elem) { el_pair.first = nb; el_pair.second = elem; }
 
       if ((nb == NULL) || ((nb->subdomain_id() != subdomain) && !sides_added.count(el_pair)))
       {
         sides_added.insert(el_pair);
 
-        DofObject* sobj = elem->side(i).release();
-        Elem* side_el = dynamic_cast<Elem*>(sobj);
+        libMesh::Elem* side_el = elem->side(i).release();
+        //libMesh::Elem* side_el = dynamic_cast<libMesh::Elem*>(sobj);
 
         HashMap<unsigned int, unsigned int>::Type::iterator mit;
 
@@ -173,7 +181,7 @@ MeshUtils::create_boundary_mesh(const MeshBase& mesh)
           if (mit == node_id_map.end())
           {
             node_id_map[side_el->node(n)] = node_ctr;
-            const Node* p = side_el->get_node(n);
+            const libMesh::Node* p = side_el->get_node(n);
             bdmesh->add_point(*p, p->id(), 0);
           }
 
@@ -191,25 +199,25 @@ MeshUtils::create_boundary_mesh(const MeshBase& mesh)
 
   //bdmesh->prepare_for_use();
 
-  return AutoPtr<MeshBase>(bdmesh);
+  return libMesh::UniquePtr<libMesh::MeshBase>(bdmesh);
 }
 
 
 
-const Elem*
-MeshUtils::search_element(const MeshBase* mesh, const Point& point)
+const libMesh::Elem*
+MeshUtils::search_element(const libMesh::MeshBase* mesh, const libMesh::Point& point)
 {
   return GridMapper::get_mapper(mesh).get_element(point);
 }
 
 
 
-map<const MeshBase*, MeshUtils::GridMapper*>
+map<const libMesh::MeshBase*, MeshUtils::GridMapper*>
 MeshUtils::GridMapper::_mappers;
 
 
 
-MeshUtils::GridMapper::GridMapper(const MeshBase* mesh, const set<ID>& regions)
+MeshUtils::GridMapper::GridMapper(const libMesh::MeshBase* mesh, const set<ID>& regions)
 : _mesh(mesh),
   _regids(regions)
 {
@@ -219,8 +227,8 @@ MeshUtils::GridMapper::GridMapper(const MeshBase* mesh, const set<ID>& regions)
 
 MeshUtils::GridMapper::~GridMapper(void)
 {
-  map<const MeshBase*, GridMapper*>::iterator it(_mappers.begin());
-  map<const MeshBase*, GridMapper*>::iterator end(_mappers.end());
+  map<const libMesh::MeshBase*, GridMapper*>::iterator it(_mappers.begin());
+  map<const libMesh::MeshBase*, GridMapper*>::iterator end(_mappers.end());
   for ( ; it != end; ++it)
   {
     delete it->second;
@@ -232,7 +240,7 @@ MeshUtils::GridMapper::~GridMapper(void)
 void
 MeshUtils::GridMapper::setup(void)
 {
-  MeshTools::BoundingBox bb(MeshTools::bounding_box(*_mesh));
+  libMesh::MeshTools::BoundingBox bb(libMesh::MeshTools::bounding_box(*_mesh));
 
   int nx = 50, ny = 1, nz = 1;
   switch (_mesh->mesh_dimension())
@@ -249,8 +257,8 @@ MeshUtils::GridMapper::setup(void)
 
   _elem_list.resize(_tensor_grid.num_elements());
 
-  MeshBase::const_element_iterator it = _mesh->local_elements_begin();
-  const MeshBase::const_element_iterator end = _mesh->local_elements_end();
+  libMesh::MeshBase::const_element_iterator it = _mesh->local_elements_begin();
+  const libMesh::MeshBase::const_element_iterator end = _mesh->local_elements_end();
 
   Messages::newline();
   Messages::info("Setup of grid mapper: ", false);
@@ -258,7 +266,7 @@ MeshUtils::GridMapper::setup(void)
 
   for ( ; it != end; ++it)
   {
-    const Elem* elem = *it;
+    const libMesh::Elem* elem = *it;
 
     // only if the subdomain ID is in the required subset we proceed
     if (!_regids.empty() && !_regids.count(elem->subdomain_id()))
@@ -268,11 +276,11 @@ MeshUtils::GridMapper::setup(void)
     // by looking at the bounding box
 
     // get the bounding box
-    Point p0(elem->point(0));
-    Point p1(p0);
+    libMesh::Point p0(elem->point(0));
+    libMesh::Point p1(p0);
     for (unsigned int n = 1; n < elem->n_nodes(); n++)
     {
-      const Point& pn = elem->point(n);
+      const libMesh::Point& pn = elem->point(n);
       if (pn(0) < p0(0)) p0(0) = pn(0);
       if (pn(1) < p0(1)) p0(1) = pn(1);
       if (pn(2) < p0(2)) p0(2) = pn(2);
@@ -298,8 +306,8 @@ MeshUtils::GridMapper::setup(void)
           int tgrid_el = _tensor_grid.index_to_element(k, l, m);
 
 
-          vector<const Elem*>& ellist = _elem_list[tgrid_el];
-          vector<const Elem*>::iterator it(find(ellist.begin(), ellist.end(), elem));
+          vector<const libMesh::Elem*>& ellist = _elem_list[tgrid_el];
+          vector<const libMesh::Elem*>::iterator it(find(ellist.begin(), ellist.end(), elem));
 
           if (it == ellist.end())
             ellist.push_back(elem);
@@ -310,7 +318,7 @@ MeshUtils::GridMapper::setup(void)
   for (unsigned int i = 0; i < _elem_list.size(); ++i)
     mem += _elem_list[i].size();
 
-  mem *= sizeof(const Elem*);
+  mem *= sizeof(const libMesh::Elem*);
 
   ostringstream os;
   os << timer.elapsed_string() << ", memory usage: "
@@ -321,9 +329,9 @@ MeshUtils::GridMapper::setup(void)
 
 
 MeshUtils::GridMapper&
-MeshUtils::GridMapper::get_mapper(const MeshBase* mesh, const set<ID>& regions)
+MeshUtils::GridMapper::get_mapper(const libMesh::MeshBase* mesh, const set<ID>& regions)
 {
-  map<const MeshBase*, GridMapper*>::iterator it(_mappers.find(mesh));
+  map<const libMesh::MeshBase*, GridMapper*>::iterator it(_mappers.find(mesh));
   if (it == _mappers.end())
   {
     it = (_mappers.insert(make_pair(mesh, new GridMapper(mesh, regions)))).first;
@@ -334,26 +342,26 @@ MeshUtils::GridMapper::get_mapper(const MeshBase* mesh, const set<ID>& regions)
 
 
 MeshUtils::GridMapper&
-MeshUtils::GridMapper::get_mapper(const MeshBase& mesh, const set<ID>& regions)
+MeshUtils::GridMapper::get_mapper(const libMesh::MeshBase& mesh, const set<ID>& regions)
 {
   return(get_mapper(&mesh, regions));
 }
 
-const Elem*
-MeshUtils::GridMapper::get_element(const Point& point) const
+const libMesh::Elem*
+MeshUtils::GridMapper::get_element(const libMesh::Point& point) const
 {
-  const Elem* el = NULL;
+  const libMesh::Elem* el = NULL;
 
   int tgrid_el = _tensor_grid.find_element(point);
 
   if (tgrid_el >= 0)
   {
     // we can assume that _elem_list is assembled when getting here
-    const vector<const Elem*>& list = _elem_list[tgrid_el];
+    const vector<const libMesh::Elem*>& list = _elem_list[tgrid_el];
 
     for (int i = 0; i < list.size(); ++i)
     {
-      const Elem* elem = list[i];
+      const libMesh::Elem* elem = list[i];
       // note: by construction it is inside the bounding box of elem
       //if (MeshUtils::may_belong_to_element(elem, point))
       {

@@ -16,6 +16,7 @@
 
 #include <cassert>
 
+USELIBMESHTYPE(UniquePtr);
 
 namespace
 {
@@ -29,17 +30,17 @@ namespace
     {
       translate.resize(11);
 
-      translate[0] = INVALID_ELEM;
-      translate[1] = EDGE2;
-      translate[2] = TRI3;
-      translate[3] = QUAD4;
-      translate[4] = INVALID_ELEM;
-      translate[5] = TET4;
-      translate[6] = PYRAMID5;
-      translate[7] = PRISM6;
-      translate[8] = HEX8;
-      translate[9] = INVALID_ELEM;
-      translate[10] = INVALID_ELEM;
+      translate[0] = libMesh::INVALID_ELEM;
+      translate[1] = libMesh::EDGE2;
+      translate[2] = libMesh::TRI3;
+      translate[3] = libMesh::QUAD4;
+      translate[4] = libMesh::INVALID_ELEM;
+      translate[5] = libMesh::TET4;
+      translate[6] = libMesh::PYRAMID5;
+      translate[7] = libMesh::PRISM6;
+      translate[8] = libMesh::HEX8;
+      translate[9] = libMesh::INVALID_ELEM;
+      translate[10] = libMesh::INVALID_ELEM;
     }
   }
 
@@ -76,7 +77,7 @@ void ReadISEGrid::read(const std::string& name)
 void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
 {
 
-  MeshBase& mesh = MeshInput<MeshBase>::mesh();
+  MeshBase& mesh = libMesh::MeshInput<MeshBase>::mesh();
   mesh.clear();
   _reg_info.clear();
   _bd_regions.clear();
@@ -190,7 +191,7 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
       }
 
       vertices.push_back(new ISE_Vertex(node_coord, i));
-      mesh.add_point(Point(node_coord[0], node_coord[1], node_coord[2]), i);
+      mesh.add_point(libMesh::Point(node_coord[0], node_coord[1], node_coord[2]), i);
     }
 
   }
@@ -732,7 +733,7 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
     if (el->get_dimension() == dimension)
     {
       libMeshEnums::ElemType eltype = translate[el->get_type()];
-      Elem* elem = Elem::build(eltype).release();
+      libMesh::Elem* elem = libMesh::Elem::build(eltype).release();
 
       elem->set_id(elem_id_counter);
       mesh.add_elem(elem);
@@ -745,7 +746,7 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
       }
 
       elem->subdomain_id() =
-        static_cast<subdomain_id_type>(el->get_physical_region());
+        static_cast<libMesh::subdomain_id_type>(el->get_physical_region());
 
       // this is different from iel: lower dimensional elems aren't added
       elem_id_counter++;
@@ -780,11 +781,11 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
     // the same set of nodes as one of the boundary elements previously read
     for ( ; it != end; ++it)
     {
-      const Elem* elem = *it;
+      const libMesh::Elem* elem = *it;
 
       for (unsigned int s = 0; s < elem->n_sides(); s++)
       {
-        AutoPtr<Elem> side (elem->build_side(s));
+        UniquePtr<libMesh::Elem> side (elem->build_side(s));
         std::set<unsigned int> side_nodes;
         std::set<unsigned int>::iterator iter = side_nodes.begin();
 
@@ -846,11 +847,11 @@ void ReadISEGrid::scan_grid_file(std::istream& ISE_INPUT)
     // the same set of nodes as one of the edge elements previously read
     for ( ; it != end; ++it)
     {
-      const Elem* elem = *it;
+      const libMesh::Elem* elem = *it;
 
       for (unsigned int s = 0; s < elem->n_edges(); s++)
       {
-        AutoPtr<Elem> edge (elem->build_edge(s));
+        UniquePtr<libMesh::Elem> edge (elem->build_edge(s));
         std::set<unsigned int> edge_nodes;
         std::set<unsigned int>::iterator iter = edge_nodes.begin();
 

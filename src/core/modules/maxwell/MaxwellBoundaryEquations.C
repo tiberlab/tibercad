@@ -43,7 +43,7 @@ void MaxwellBoundaryEquations::do_init() {
 
   W = get_options().get_option("W", 0.0) / Constants::hbar * Constants::e;
 
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
 
   equation_systems.add_system<VectorLinearSystem> ("MaxwellBoundary");
 
@@ -86,7 +86,7 @@ void MaxwellBoundaryEquations::do_solve() {
   //os << "Lambda is " << 2 * M_PI * Constants::c / W;
   Messages::info(os.str());
 
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
 
   VectorLinearSystem& system = equation_systems.get_system<VectorLinearSystem> ("MaxwellBoundary");
 
@@ -121,7 +121,7 @@ MaxwellBoundaryEquations::do_setup_solution_variables(void)
 
 // TODO: remove code duplication
 void
-MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
+MaxwellBoundaryEquations::assemble_maxwell_equations(libMesh::EquationSystems& es,
     const std::string& system_name)
 {
 
@@ -145,9 +145,9 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
   IVectorFEBase* fe_face = dynamic_cast<IVectorFEBase*>(system.getVariableType(0).getFEbase());
 
   //TODO to be revised
-  AutoPtr<QBase> qrule(new QGauss(dimension, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
+  libMesh::UniquePtr<libMesh::QBase> qrule(new libMesh::QGauss(dimension, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
 
-  AutoPtr<QBase> qrule_face(new QGauss(dimension - 1, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
+  libMesh::UniquePtr<libMesh::QBase> qrule_face(new libMesh::QGauss(dimension - 1, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
 
   IScalarFEBase* fe_sc = NULL;
   if (system.getVariablesCount() > 1) {
@@ -192,10 +192,10 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
       if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID) {
         for (unsigned int j=0; j<edge_phi.size(); j++) {
           if (all_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
-            Complex aValue = 0;
+            libMesh::Complex aValue = 0;
 
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
-              Complex sInvertDet = pml.getSVectorDet(xyz[qp], opticModel->get_spml());
+              libMesh::Complex sInvertDet = pml.getSVectorDet(xyz[qp], opticModel->get_spml());
               aValue += 1/opticModel->get_permeability_constant() * JxW[qp] * (pml.curls(edge_phi[i], xyz[qp], qp, opticModel->get_spml()) * pml.curls(edge_phi[j], xyz[qp], qp, opticModel->get_spml())) / sInvertDet;
 
               aValue -= simulation->multiply(edge_phi[i].phi[qp], edge_phi[j].phi[qp], opticModel->get_optical_epsilon()) * JxW[qp] / sInvertDet * K * K;
@@ -213,7 +213,7 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
         for (unsigned int j = 0; j < scalar_phi.size(); j++) {
           if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID && all_dof_indices[j + edge_phi.size()] != ElementUtils::INVALID_FUNCTION_ID) {
 
-            Complex aValue = 0;
+            libMesh::Complex aValue = 0;
             for (unsigned int qp=0; qp<qrule->n_points(); qp++) {
               aValue += simulation->multiply(edge_phi[i].phi[qp], scalar_phi[j].grads(qp, pml.getSVector(xyz[qp], opticModel->get_spml())),  opticModel->get_optical_epsilon()) * JxW[qp];
             }
@@ -226,7 +226,7 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
 
       //Apply BC
       for (unsigned int side = 0; side < elem->n_sides(); side++) {
-        const AutoPtr<Elem> sideElem = elem->build_side(i);
+        const libMesh::UniquePtr<libMesh::Elem> sideElem = elem->build_side(i);
         Boundary* bd = simulation->get_environment().get_boundary(ElementSide(elem,i));
 
         if (bd != NULL && (bd->get_boundary_properties( simulation->get_id() ) != NULL )) {
@@ -241,12 +241,12 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
 
             for (unsigned int i=0; i<edge_phi_face.size(); i++) {
               if (all_dof_indices[i] != ElementUtils::INVALID_FUNCTION_ID) {
-                    Complex value = 0;
+                libMesh::Complex value = 0;
                     for (unsigned int qp=0; qp<qrule_face->n_points(); qp++) {
-                      Complex sInvertDet = pml.getSVectorDet(xyz_face[qp], opticModel->get_spml()), one(1, 0);
-                      Complex sDet = one / sInvertDet;
+                      libMesh::Complex sInvertDet = pml.getSVectorDet(xyz_face[qp], opticModel->get_spml()), one(1, 0);
+                      libMesh::Complex sDet = one / sInvertDet;
 
-                      Point sourceVector;
+                      libMesh::Point sourceVector;
                       sourceVector(direction) = boundaryProps->power * K / 2 * system.getGeometryEx()->getScaling().get_length_scaling();//TODO DIRECTION
                       value += sDet * JxW_face[qp] * (edge_phi_face[i].phi[qp] * sourceVector);
                     }
@@ -268,10 +268,10 @@ MaxwellBoundaryEquations::assemble_maxwell_equations(EquationSystems& es,
 //TODo code duplication
 void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& solutions,
-    const std::vector<Point>& points)
+    const std::vector<libMesh::Point>& points)
 {
   //Utils::Timer tt;
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
   VectorLinearSystem& system = equation_systems.get_system<VectorLinearSystem> ("MaxwellBoundary");
 
   std::vector<unsigned int> edge_dof_indices;
@@ -286,7 +286,28 @@ void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
 
   PML pml = system.getGeometryEx()->pml;
 
+
+    for (unsigned int qp = 0; qp < points.size(); qp++) {
+      libMesh::Point realValue;
+      libMesh::Point imagValue;
+      for (unsigned int j = 0; j < edge_dof_indices.size(); j++) {
+        if (edge_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
+          realValue +=edgeSolution[edge_dof_indices[j]].real() * edge_phi[j].phi[qp];
+          imagValue +=edgeSolution[edge_dof_indices[j]].imag() * edge_phi[j].phi[qp];
+        }
+      }
   OpticPropsInterface* opticModel = getOpticModel(elem);
+/*
+    for (unsigned int qp = 0; qp < points.size(); qp++) {
+      libMesh::Point realValue;
+      libMesh::Point imagValue;
+      for (unsigned int j = 0; j < edge_dof_indices.size(); j++) {
+        if (edge_dof_indices[j] != ElementUtils::INVALID_FUNCTION_ID) {
+          realValue +=edgeSolution[edge_dof_indices[j]].real() * edge_phi[j].phi[qp];
+          imagValue +=edgeSolution[edge_dof_indices[j]].imag() * edge_phi[j].phi[qp];
+        }
+      }
+*/
 
   for (unsigned int qp = 0; qp < points.size(); qp++) {
     if (solutions.count(Mu)) {
@@ -322,6 +343,10 @@ void MaxwellBoundaryEquations::get_solution_secure(const Elem* elem,
 
     B_value = B_value / Complex(0, 1) / W / system.simulationInterface->get_environment().get_device().get_mesh_units() / system.getGeometryEx()->getScaling().get_length_scaling();
 
+      if (solutions.count(SVector)) {
+        libMesh::Complex one(1, 0);
+        libMesh::VectorValue<libMesh::Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
+
     addVectorSolutionR(solutions, Efield_real, E_value, qp*3);
     addVectorSolutionI(solutions, Efield_imag, E_value, qp*3);
     addVectorSolutionA(solutions, Efield, E_value, qp*3);
@@ -349,5 +374,7 @@ OpticPropsInterface* MaxwellBoundaryEquations::getOpticModel(const Elem* elem) {
   OpticPropsInterface* result = dynamic_cast<OpticPropsInterface*>(
           material->get_model(get_id()));
 
+
   return result;
 }
+

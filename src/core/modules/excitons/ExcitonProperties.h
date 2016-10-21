@@ -13,14 +13,19 @@
 #include "SimulationOptions.h"
 #include "TemperatureInterface.h"
 #include "TiberCad.h"
+#include "libMeshDefs.h"
 
 #include "vector_value.h"
+#include <elem.h>
 
 #include <vector>
 
 // forward declarations
-class Point;
-class Elem;
+
+
+//class Elem;
+//class Point;
+
 
 class TBDLEXPORT ExcitonProperties : public PhysicalModel
 {

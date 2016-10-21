@@ -61,10 +61,10 @@ class TBDLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
     double get_holes_thermoelectric_power(void) const;
 
     //!provides holes thermoelectric power [V/K]
-    RealGradient get_electron_thermoelectric_power_gradient(void) const;
+    libMesh::RealGradient get_electron_thermoelectric_power_gradient(void) const;
 
     //!provides holes thermoelectric power [V/K]
-    RealGradient get_hole_thermoelectric_power_gradient(void) const;
+    libMesh::RealGradient get_hole_thermoelectric_power_gradient(void) const;
 
 
     //! Calculate the value of the thermoelectric power
@@ -81,9 +81,9 @@ class TBDLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
     //  void set_charge_densities(double n, double p);
 
     //! Set the electron and hole charge density
-    void set_potential_gradients(RealGradient eFermiGrad, 
-        RealGradient hFermiGrad, 
-        RealGradient ElectricField);
+    void set_potential_gradients(libMesh::RealGradient eFermiGrad,
+        libMesh::RealGradient hFermiGrad,
+        libMesh::RealGradient ElectricField);
 
 
 
@@ -119,15 +119,15 @@ class TBDLLOCAL ThermoelectricPower : public DriftDiffusionModelInterface
 
     double _ElPot;
 
-    RealGradient _eFermiGrad;
+    libMesh::RealGradient _eFermiGrad;
 
-    RealGradient _hFermiGrad;
+    libMesh::RealGradient _hFermiGrad;
 
-    RealGradient _ElectricField;
+    libMesh::RealGradient _ElectricField;
 
-    RealGradient _eTEpowerGrad;
+    libMesh::RealGradient _eTEpowerGrad;
 
-    RealGradient _hTEpowerGrad;
+    libMesh::RealGradient _hTEpowerGrad;
 
 
     //! Model for thermoelectric power 
@@ -159,7 +159,7 @@ ThermoelectricPower::get_holes_thermoelectric_power(void) const
 }
 
 inline
-RealGradient
+libMesh::RealGradient
 ThermoelectricPower::get_electron_thermoelectric_power_gradient(void) const
 {
   return _eTEpowerGrad;
@@ -167,7 +167,7 @@ ThermoelectricPower::get_electron_thermoelectric_power_gradient(void) const
 
 
 inline
-RealGradient
+libMesh::RealGradient
 ThermoelectricPower::get_hole_thermoelectric_power_gradient(void) const
 {
   return _hTEpowerGrad;
@@ -186,9 +186,9 @@ ThermoelectricPower::set_potentials(double eQfermi, double hQfermi, double ElPot
 
 inline
 void 
-ThermoelectricPower::set_potential_gradients(RealGradient eFermiGrad, 
-    RealGradient hFermiGrad, 
-    RealGradient ElectricField )
+ThermoelectricPower::set_potential_gradients(libMesh::RealGradient eFermiGrad,
+    libMesh::RealGradient hFermiGrad,
+    libMesh::RealGradient ElectricField )
 {
 
   _eFermiGrad = eFermiGrad;

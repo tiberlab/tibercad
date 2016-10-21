@@ -9,9 +9,9 @@
 #include "tensor_value.h"
 #include "vector_value.h"
 #include "tiber_dll.h"
+#include "libMeshDefs.h"
 
-
-class Elem;
+//class Elem;
 class HeatSourceModel;
 class ThermalConductivityModel;
 
@@ -30,7 +30,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 
   double get_total_heat_source(void) const;
 
-  const RealTensor& get_total_thermal_conductivity(void) const;
+  const libMesh::RealTensor& get_total_thermal_conductivity(void) const;
 
  //! Calculate for a point on the given side
   void calculate(const Elem* elem, const Point& point);
@@ -62,7 +62,7 @@ class TBDLLOCAL ThermalModel : public PhysicalModel
 
   ThermalConductivityModel* _tcm;
 
-  RealTensor _kappa;
+  libMesh::RealTensor _kappa;
 
   double  _heat_source;
 
@@ -95,7 +95,7 @@ ThermalModel::get_total_heat_source(void) const
 }
 
 inline
-const RealTensor&
+const libMesh::RealTensor&
 ThermalModel::get_total_thermal_conductivity(void) const
 {
   return  _kappa;

@@ -5,7 +5,6 @@
 #include "SimulationInterface.h"
 #include "MaterialBoundary.h"
 #include "Material.h"
-#include "Variable.h"
 #include "Database.h"
 
 #include "Utils.h"

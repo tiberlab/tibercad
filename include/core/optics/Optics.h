@@ -7,9 +7,10 @@
 #include "EigenvalueProblem.h"
 #include "KspaceIntegration.h"
 
-class Mesh;
-class Elem;
+LIBMESHCLASS(Mesh);
+
 class Tensor1;
+
 //! A base class of optics calculation
 /*!
  * The task of this class is to calculate the spectrum at a certain given
@@ -175,7 +176,7 @@ class Optics : public SimulationInterface
     /*!
       _P_matrix[p][i][j]:  i - initial state; j - final state
     */    
-    std::vector <std::vector <Complex> >  _P_matrix[3];
+    std::vector <std::vector <libMesh::Complex> >  _P_matrix[3];
 
     KspaceIntegration* _k_integration;
 

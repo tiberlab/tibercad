@@ -4,7 +4,8 @@ topdir := ../../../..
 
 include $(topdir)/Make.common
 
-target := modules
+#target := modules
+target :=
 
 modules: module.conf
 	@$(BUILDMODULE) module.conf

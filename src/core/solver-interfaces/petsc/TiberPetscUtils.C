@@ -26,6 +26,8 @@ TiberPetscUtils::extract_KSPType(const ModelOptions& options)
     return KSPCGS;
   else if (ksp == "richardson")
     return KSPRICHARDSON;
+  else if (ksp == "lsqr")
+    return KSPLSQR;
   else if (ksp == "pconly")
     return KSPPREONLY;
   else 

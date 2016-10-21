@@ -50,12 +50,12 @@ LinearProfile::get_min_max(void) const
 
 
 double
-LinearProfile::get_data(const Elem* elem, const Point& p) const
+LinearProfile::get_data(const libMesh::Elem*, const libMesh::Point& p) const
 {
   double data = 0.0;
 
   // shift to origin
-  Point point(p - _origin);
+  libMesh::Point point(p - _origin);
 
   // project onto _direction
   double xcoord = point * _direction;

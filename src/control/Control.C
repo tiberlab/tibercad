@@ -137,7 +137,7 @@ Control::~Control(void)
   Device::destroy(_device);
 
   // clear all variables
-  Variable::clear_all();
+  VariableValue::clear_all();
 
 }
 
@@ -168,28 +168,43 @@ Control::init(void)
     InputParser::add_defined("MPI_PROC", os.str());
   }
 
-
+  // I would like to define preprocessor variables from device
+  // MPI comm groups, but for that the input parser is not flexible enough
+  // Therefore at the moment we can do a trick and parse twice
+  // First parsing, and create a fake device:
   ModelOptions input;
   InputParser parser;
   parser.parse_file(_inputfile, input);
 
-  ModelOptions::submodel_iterator it(input.submodels_begin("Simulation"));
+  ModelOptions::submodel_iterator it = input.submodels_begin("Device");
+  if (it == input.submodels_end("Device"))
+    throw InitFailedException("\'Device\' block missing in input file.");
+
+  _device = Device::create(it->second);
+  delete _device;
+
+  // second parsing, now with all defines
+  input.clear();
+  parser.parse_file(_inputfile, input);
+
+  it = input.submodels_begin("Simulation");
   if (it == input.submodels_end("Simulation"))
     throw InitFailedException("\'Simulation\' block missing in input file.");
   const ModelOptions& global_opts = it->second;
 
+
+  ModelOptions device_opts;
+  device_opts["output_path"] = global_opts.get_option("resultpath", ".");
+  it = input.submodels_begin("Device");
+  device_opts += it->second;
+
+  // create the device
+  _device = Device::create(device_opts);
+
   // setup global options
   setup_globals(global_opts);
 
-  it = input.submodels_begin("Device");
-  if (it == input.submodels_end("Device"))
-    throw InitFailedException("\'Device\' block missing in input file.");
-  ModelOptions device_opts;
-  device_opts.set_option("output_path", _outputdir);
-  device_opts += it->second;
-
-  // create and prepare the device
-  _device = Device::create(device_opts);
+  // prepare the device
   _device->prepare();
 
 
@@ -249,6 +264,15 @@ Control::setup_globals(const ModelOptions& opts)
   if (logfile.empty())
     logfile = _outputdir + "/" + Utils::basename(_inputfile) + ".log";
 
+
+  // for the moment, if several processes try to use the same log file
+  // we let everyone use a different one
+  if (TiberCad::get_mpi_comm().semiverify(&logfile))
+  {
+    logfile = logfile + "." + to_string(TiberCad::get_mpi_comm().rank());
+  }
+
+
   Messages::info("Writing log to " + logfile);
 
   Messages::set_log_file(logfile);
@@ -260,6 +284,15 @@ Control::setup_globals(const ModelOptions& opts)
           << "rev. " << TiberCad::software_revision() << ", "
           << TiberCad::arch_string() << ")";
     Messages::info(os.str());
+
+    if (TiberCad::get_mpi_comm().size() > 1)
+    {
+      os.str("");
+      os << "MPI: rank " << TiberCad::get_mpi_comm().rank()
+            << " out of " << TiberCad::get_mpi_comm().size();
+      Messages::newline();
+      Messages::info(os.str());
+    }
   }
   Messages::newline();
   Messages::info("Input file: " + _inputfile);

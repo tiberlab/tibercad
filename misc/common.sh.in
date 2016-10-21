@@ -12,12 +12,12 @@ BUILDDIR=${BUILDDIR:-"$(dirname `pwd`)/extern"}
 SDKDIR=${SDKDIR:-"$(dirname `pwd`)/SDK"}
 
 # PETSc version
-PETSCVERSION=${PETSCVERSION:-"3.2"}
-PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-"-p7"}
-SLEPCPATCHLEVEL=${SLEPCPATCHLEVEL:-"-p5"}
+PETSCVERSION=${PETSCVERSION:-"3.6.2"}
+PETSCPATCHLEVEL=${PETSCPATCHLEVEL:-""}
+SLEPCPATCHLEVEL=${SLEPCPATCHLEVEL:-""}
 
 # libMesh version
-LIBMESHVERSION=${LIBMESHVERSION:-"svn"}
+LIBMESHVERSION=${LIBMESHVERSION:-"0.9.5"}
 
 # GMSH version
 GMSHVERSION=${GMSHVERSION:-"2.5.0"}
@@ -121,6 +121,7 @@ if [ "$march" == "x86_64" ] &&  [ "${target_os}" != "win32" ] ; then
   CFLAGS="-fPIC ${CFLAGS}"
   FCFLAGS="-fPIC ${FCFLAGS}"
 fi
+CXXFLAGS="${CXXFLAGS} -std=gnu++11"
 FFLAGS=${FCFLAGS}
 export CXXFLAGS CFLAGS FFLAGS FCFLAGS
 
@@ -135,6 +136,7 @@ if [ "x$FORTRANDIR" != "x" ]; then
   esac
   LDFLAGS="${LDFLAGS} -Wl,-rpath,${FLIBDIR}"
   FORTRAN_LIBS="${FORTRAN_LIBS} -Wl,-rpath,${FLIBDIR}"
+  export LD_LIBRARY_PATH="${FLIBDIR}:${LD_LIBRARY_PATH}"
 fi
 
 
@@ -156,13 +158,14 @@ fi
 # BLAS/LAPACK
 if [ "$MKL" = y ]; then
   if [ $march = x86_64 ]; then
-    #LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/em64t,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
-    #LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath-link,${MKLDIR}/lib/em64t"
-    #LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath,${MKLDIR}/lib/em64t"
-    #LAPACKLIBS="--with-blas-lapack-lib=[-Xlinker,-rpath,-Xlinker,${MKLDIR}/lib/intel64,-Xlinker,-rpath,-Xlinker,${MKLDIR}/mkl/lib/intel64,-L${MKLDIR}/lib/intel64,-L${MKLDIR}/mkl/lib/intel64,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
-    LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/intel64,-L${MKLDIR}/mkl/lib/intel64,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
-    LDFLAGS="${LDFLAGS} -L${MKLDIR}/mkl/lib/intel64 -L${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/mkl/lib/intel64"
-    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/mkl/lib/intel64 -L${MKLDIR}/lib/intel64  -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,-rpath,${MKLDIR}/mkl/lib/intel64"
+#    LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/em64t,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
+#    LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath-link,${MKLDIR}/lib/em64t"
+#    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/em64t -Wl,-rpath,${MKLDIR}/lib/em64t"
+    #LAPACKLIBS="--with-blas-lapack-lib=[-Xlinker,--no-as-needed,-Xlinker,-rpath,-Xlinker,${MKLDIR}/lib/intel64,-L${MKLDIR}/lib/intel64,-lmkl_intel_lp64,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
+    LAPACKLIBS="--with-blas-lapack-lib=\"-Wl,--no-as-needed -Wl,-rpath,${MKLDIR}/lib/intel64 -L${MKLDIR}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread\""
+    LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -L${FLIBDIR} -Wl,-rpath,${FLIBDIR} -Wl,-rpath,${MKLDIR}/lib/intel64"
+    LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/intel64 -L${FLIBDIR}  -Wl,-rpath,${FLIBDIR} -Wl,-rpath,${MKLDIR}/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
+ 
   else
     LAPACKLIBS="--with-blas-lapack-lib=[-L${MKLDIR}/lib/32,-lmkl_intel,-lmkl_intel_thread,-lmkl_core,-liomp5,-lm,-lpthread]"
     LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/32 -Wl,-rpath,${MKLDIR}/lib/32"

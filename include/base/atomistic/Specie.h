@@ -4,11 +4,11 @@
 #define _SPECIE_H_
 
 //C++ and boost includes
-#include <boost/assign/list_of.hpp>
 #include <string>
 #include <map>
 #include <iostream>
 #include <fstream>
+#include "boost/assign/list_of.hpp"
 
 
 

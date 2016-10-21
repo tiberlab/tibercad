@@ -5,6 +5,7 @@ topdir := ../../../..
 include $(topdir)/Make.common
 
 target := modules
+#target :=
 
 modules: module.conf paintlib-2.6.2
 	@$(BUILDMODULE) module.conf

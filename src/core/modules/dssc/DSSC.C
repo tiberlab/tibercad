@@ -1,6 +1,7 @@
 // $Id$
 
 // module includes
+#include "SimulationInterface.h"
 #include "DSSC.h"
 #include "SimulationEnvironment.h"
 #include "Scaling.h"
@@ -9,7 +10,8 @@
 #include "Constants.h"
 #include "DSSCModel.h"
 #include "DSSCContact.h"
-#include "TiberNonlinearSystem.h"
+#include "AugmentSparsityForMassConservation.h"
+
 #include "TiberLinearSystem.h"
 #include "SolveFailedException.h"
 #include "Messages.h"
@@ -18,19 +20,22 @@
 
 
 // libmesh includes
-#include "node.h"
-#include "mesh.h"
-#include "dof_map.h"
-#include "elem.h"
-#include "fe_interface.h"
-#include "quadrature_gauss.h"
-#include "quadrature_trap.h"
-#include "equation_systems.h"
-#include "mesh_refinement.h"
-#include "sparse_matrix.h"
-#include "numeric_vector.h"
-#include "dense_submatrix.h"
-#include "dense_subvector.h"
+#include "libmesh/node.h"
+#include "libmesh/mesh.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/elem.h"
+#include "libmesh/fe_interface.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/quadrature_trap.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/mesh_refinement.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/numeric_vector.h"
+#include "libmesh/dense_submatrix.h"
+#include "libmesh/dense_subvector.h"
+#include "libmesh/libmesh_logging.h"
+
+#include "libMeshDefs.h"
 
 #include <fstream>
 
@@ -51,7 +56,9 @@ DSSC::DSSC(const ModelOptions& options)
   : SimulationInterface(options),
     _rebuild_eq_system(true),
     _poisson_only(false),
-    _scaling_type(Scaling::UNITS)
+    _scaling_type(Scaling::UNITS),
+    _cation_dof(libMesh::DofObject::invalid_id),
+    _iodide_dof(libMesh::DofObject::invalid_id)
 {
 }
 
@@ -68,7 +75,7 @@ DSSC::~DSSC(void)
 
 PhysicalModel*
 DSSC::create_bulk_model(const ModelOptions& options,
-    const Material* mat) const
+    const Material* ) const
 {
   string modelname;
 
@@ -162,11 +169,11 @@ DSSC::compute_scaling(Scaling::ScalingType type)
     sc->reinit(elem);
     sc->set_coordinates(elem->centroid());
     sc->set_potentials(0.0);
-    sc->set_electric_field(RealGradient(0));
-    sc->set_grad_fermi_n(RealGradient(0));
-    sc->set_grad_fermi_I(RealGradient(0));
-    sc->set_grad_fermi_I3(RealGradient(0));
-    sc->set_grad_fermi_C(RealGradient(0));
+    sc->set_electric_field(libMesh::RealGradient(0));
+    sc->set_grad_fermi_n(libMesh::RealGradient(0));
+    sc->set_grad_fermi_I(libMesh::RealGradient(0));
+    sc->set_grad_fermi_I3(libMesh::RealGradient(0));
+    sc->set_grad_fermi_C(libMesh::RealGradient(0));
 
     sc->calculate_densities();
     sc->calculate_traps();
@@ -222,43 +229,11 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   {
     default: // UNITS
 
-      const MeshBase& mesh = get_mesh();
-      MeshBase::const_node_iterator it = mesh.nodes_begin();
-      const MeshBase::const_node_iterator end = mesh.nodes_end();
+      pair<Point, Point> bbox(get_environment().get_bounding_box());
+      Point dia(bbox.second - bbox.first);
 
-      assert(it != end);
-
-      const Node& n = **it;
-      double xmin = n(0), ymin = n(1), zmin = n(2);
-      double xmax = xmin, ymax = ymin, zmax = zmin;
-      ++it;
-      while (it != end)
-      {
-        const Node& n = **it;
-
-        if (n(0) < xmin)
-          xmin = n(0);
-        else if (n(0) > xmax)
-          xmax = n(0);
-
-        if (n(1) < ymin)
-          ymin = n(1);
-        else if (n(1) > ymax)
-          ymax = n(1);
-
-        if (n(2) < zmin)
-          zmin = n(2);
-        else if (n(2) > zmax)
-          zmax = n(2);
-
-        ++it;
-      }
-      double x = xmax - xmin;
-      double y = ymax - ymin;
-      double z = zmax - zmin;
-
-      x0 = (x > y) ? x : y;
-      x0 = (x0 > z) ? x0 : z;
+      x0 = (dia(0) > dia(1)) ? dia(0) : dia(1);
+      x0 = (x0 > dia(2)) ? x0 : dia(2);
 
       break;
   }
@@ -269,10 +244,19 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   x0 = 1;
   mesh_units = 1;
   phi0 = 1;
+
+  this->get_communicator().max(C0);
+  this->get_communicator().max(_cond_scaling.C);
+  this->get_communicator().max(_cond_scaling.n);
+  this->get_communicator().max(_cond_scaling.I);
+  this->get_communicator().max(_cond_scaling.I3);
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
   get_scaling().set_density_scaling(C0);
+
+  this->get_communicator().sum(_cation_amount);
+  this->get_communicator().sum(_iodine_amount);
 
   ostringstream os;
   os << "total amount cation: " << _cation_amount << endl;
@@ -315,10 +299,10 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-  const NumericVector<Number>& solution = get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = get_solution_vector();
 
 
-  const DofMap& dof_map = system->get_dof_map();
+  const libMesh::DofMap& dof_map = system->get_dof_map();
 
     // the scaling parameters to scale back the result
     phi0 = get_scaling().get_potential_scaling();
@@ -337,9 +321,9 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
     vector<unsigned int> dof_indices_eC;
     const unsigned int dim = mesh.mesh_dimension();
 
-    FEType fe_type = system->variable_type(u_var);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-    QGauss qrule(dim, libMeshEnums::CONSTANT);
+    libMesh::FEType fe_type = system->variable_type(u_var);
+    libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+    libMesh::QGauss qrule(dim, libMeshEnums::CONSTANT);
     fe->attach_quadrature_rule(&qrule);
 
 
@@ -352,7 +336,7 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 
     fe->reinit(elem);
     const vector<vector<Real> >& phi = fe->get_phi();
-    const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+    const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
       dof_map.dof_indices(elem, dof_indices_u, u_var);
       dof_map.dof_indices(elem, dof_indices_en, en_var);
@@ -376,11 +360,11 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
       double eI = 0.0;
       double eI3 = 0.0;
       double eC = 0.0;
-      RealGradient e_field(0);
-      RealGradient grad_en(0);
-      RealGradient grad_eI(0);
-      RealGradient grad_eI3(0);
-      RealGradient grad_eC(0);
+      libMesh::RealGradient e_field(0);
+      libMesh::RealGradient grad_en(0);
+      libMesh::RealGradient grad_eI(0);
+      libMesh::RealGradient grad_eI3(0);
+      libMesh::RealGradient grad_eC(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][0] * solution(dof_indices_u[i]);
@@ -441,44 +425,11 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
   switch (type)
   {
     default: // UNITS
+      pair<Point, Point> bbox(get_environment().get_bounding_box());
+      Point dia(bbox.second - bbox.first);
 
-      const MeshBase& mesh = get_mesh();
-      MeshBase::const_node_iterator it = mesh.nodes_begin();
-      const MeshBase::const_node_iterator end = mesh.nodes_end();
-
-      assert(it != end);
-
-      const Node& n = **it;
-      double xmin = n(0), ymin = n(1), zmin = n(2);
-      double xmax = xmin, ymax = ymin, zmax = zmin;
-      ++it;
-      while (it != end)
-      {
-        const Node& n = **it;
-
-        if (n(0) < xmin)
-          xmin = n(0);
-        else if (n(0) > xmax)
-          xmax = n(0);
-
-        if (n(1) < ymin)
-          ymin = n(1);
-        else if (n(1) > ymax)
-          ymax = n(1);
-
-        if (n(2) < zmin)
-          zmin = n(2);
-        else if (n(2) > zmax)
-          zmax = n(2);
-
-        ++it;
-      }
-      double x = xmax - xmin;
-      double y = ymax - ymin;
-      double z = zmax - zmin;
-
-      x0 = (x > y) ? x : y;
-      x0 = (x0 > z) ? x0 : z;
+      x0 = (dia(0) > dia(1)) ? dia(0) : dia(1);
+      x0 = (x0 > dia(2)) ? x0 : dia(2);
 
       break;
   }
@@ -486,6 +437,14 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
   x0 = 1;
   double mesh_units = 1;
   phi0 = 1;
+
+
+  this->get_communicator().max(C0);
+  this->get_communicator().max(_cond_scaling.C);
+  this->get_communicator().max(_cond_scaling.n);
+  this->get_communicator().max(_cond_scaling.I);
+  this->get_communicator().max(_cond_scaling.I3);
+
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
@@ -878,7 +837,7 @@ DSSC::rebuild_equation_system(void)
   if (!_rebuild_eq_system) return;
 
 
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
 
   ModelOptions::submodel_iterator linit(
       get_solver_options().submodels_begin("linear_solver"));
@@ -930,8 +889,79 @@ DSSC::rebuild_equation_system(void)
   system.add_variable("fermi_I3", libMeshEnums::FIRST);
   system.add_variable("fermi_C", libMeshEnums::FIRST);
 
-  // finally initialize the newly created system
   system.init();
+
+  const SimulationEnvironment& environment = get_environment();
+  Node* n_cat = nullptr;
+
+  MeshBase::const_element_iterator el =
+                                  get_mesh().active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el =
+                                  get_mesh().active_local_elements_end();
+
+  // loop over all active elements
+  for ( ; (el != end_el) && (n_cat == nullptr) ; ++el)
+  {
+    const Elem* elem = *el;
+    const Elem* top_parent = (*el)->top_parent();
+
+    for (unsigned int s = 0; s < elem->n_sides(); s++)
+    {
+      ElementSide side(top_parent, s);
+
+      // is this a boundary?
+      if (environment.is_boundary(side))
+      {
+        Boundary* boundary = environment.get_boundary(side);
+
+        DSSCContact* contact = NULL;
+        if (boundary != NULL)
+        {
+          contact = dynamic_cast<DSSCContact*>(
+              boundary->models_begin()->second);
+
+          if (contact->is_cathode())
+          {
+            if (n_cat == NULL)
+            {
+              libMesh::UniquePtr<libMesh::Elem> elside(elem->build_side(s));
+              n_cat = elside->get_node(0);
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const unsigned int phi_var = system.variable_number("potential");
+  const unsigned int eC_var = system.variable_number("fermi_C");
+  const unsigned int eI_var = system.variable_number("fermi_I");
+  const unsigned int eI3_var = system.variable_number("fermi_I3");
+
+  if (n_cat != nullptr)
+  {
+    _cation_dof = n_cat->dof_number(system.number(), eC_var, 0);
+    _iodide_dof = n_cat->dof_number(system.number(), eI_var, 0);
+  }
+  get_communicator().min(_cation_dof);
+  get_communicator().min(_iodide_dof);
+
+  if (_cation_dof == libMesh::DofObject::invalid_id)
+    throw InitFailedException("Cannot find DOF for applying mass conservation");
+
+  map<dof_id_type, set<unsigned int>> coupling;
+  coupling[_cation_dof].insert(eC_var);
+  coupling[_cation_dof].insert(phi_var);
+  coupling[_iodide_dof].insert(eI_var);
+  coupling[_iodide_dof].insert(eI3_var);
+  coupling[_iodide_dof].insert(phi_var);
+  AugmentSparsityForMassConservation augment_sparsity(system, coupling);
+  system.get_dof_map().attach_extra_sparsity_object(augment_sparsity);
+
+  // finally initialize the newly created system
+  system.reinit();
+
 
   if (_do_EIS)
   {
@@ -1021,10 +1051,10 @@ DSSC::do_init(void)
 
 
 
-NumericVector<double>&
+libMesh::NumericVector<double>&
 DSSC::solution_vector(void)
 {
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
 
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
@@ -1038,7 +1068,7 @@ void
 DSSC::do_newton(void)
 {
 
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
 
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
 
@@ -1058,8 +1088,8 @@ DSSC::find_dirichlet_nodes(void)
 
   MeshBase& mesh = get_mesh();
   unsigned int dim = mesh.mesh_dimension();
-  MeshBase::element_iterator it = mesh.active_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_elements_end();
+  MeshBase::element_iterator it = mesh.active_local_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -1082,7 +1112,7 @@ DSSC::find_dirichlet_nodes(void)
 
         if (contact != NULL)
         {
-          AutoPtr<Elem> side_el(elem->build_side(s));
+          libMesh::UniquePtr<libMesh::Elem> side_el(elem->build_side(s));
           for (unsigned int i = 0; i < side_el->n_nodes(); i++)
             _dirichlet_nodes[side_el->get_node(i)] = bd;
         }
@@ -1100,7 +1130,7 @@ DSSC::calculate_currents_rstf(void)
 {
 
   // we only do something if we are on processor 0
-  if (libMesh::processor_id() != 0)
+  if (get_mesh().comm().rank() != 0)
     return;
 
   // reset currents
@@ -1111,14 +1141,14 @@ DSSC::calculate_currents_rstf(void)
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-  const NumericVector<Number>& solution = system->get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
 
   // aliases for nicer code
   const MeshBase& mesh = system->get_mesh();
   const Device& device = *(_device);
   const SimulationEnvironment& env = get_environment();
 
-  const DofMap& dof_map = system->get_dof_map();
+  const libMesh::DofMap& dof_map = system->get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -1133,10 +1163,10 @@ DSSC::calculate_currents_rstf(void)
   const unsigned int eI3_var = system->variable_number("fermi_I3");
   const unsigned int eC_var = system->variable_number("fermi_C");
 
-  FEType fe_type = system->variable_type(u_var);
+  libMesh::FEType fe_type = system->variable_type(u_var);
 
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  libMesh::QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
   
@@ -1150,7 +1180,7 @@ DSSC::calculate_currents_rstf(void)
   const vector<vector<Real> >& phi = fe->get_phi();
 
   // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
   vector<unsigned int> dof_indices_u;
@@ -1164,9 +1194,9 @@ DSSC::calculate_currents_rstf(void)
   vector<Boundary*> node_ids;
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_elements_begin();
+                                  mesh.active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_elements_end();
+                                  mesh.active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
@@ -1222,12 +1252,12 @@ DSSC::calculate_currents_rstf(void)
       Real eI = 0.0;
       Real eI3 = 0.0;
       Real eC = 0.0;
-      RealGradient dEfn(0);
-      RealGradient dEfI(0);
-      RealGradient dEfI3(0);
-      RealGradient dEfC(0);
-      RealGradient e_field(0);
-      RealGradient dT(0);
+      libMesh::RealGradient dEfn(0);
+      libMesh::RealGradient dEfI(0);
+      libMesh::RealGradient dEfI3(0);
+      libMesh::RealGradient dEfC(0);
+      libMesh::RealGradient e_field(0);
+      libMesh::RealGradient dT(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * solution(dof_indices_u[i]);
@@ -1272,7 +1302,7 @@ DSSC::calculate_currents_rstf(void)
 
       //RealGradient j(JxW[qp] * phi0 *
       //    (sigma_n * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT)));
-      RealGradient j(JxW[qp] * phi0 *
+      libMesh::RealGradient j(JxW[qp] * phi0 *
           (sigma_n * dEfn + sigma_I * dEfI + sigma_I3 * dEfI3));
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
@@ -1335,7 +1365,7 @@ DSSC::build_local_scaling(void)
 
   FEType fe_type = system->variable_type(u_var);
 
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
   QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
@@ -1363,9 +1393,9 @@ DSSC::build_local_scaling(void)
   local_scaling_.clear();
   {
     MeshBase::const_element_iterator it =
-      mesh.active_elements_begin();
+      mesh.active_local_elements_begin();
     const MeshBase::const_element_iterator end =
-      mesh.active_elements_end();
+      mesh.active_local_elements_end();
 
     for ( ; it != end; ++it)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
@@ -1374,9 +1404,9 @@ DSSC::build_local_scaling(void)
 
 
   MeshBase::const_element_iterator it =
-    mesh.active_elements_begin();
+    mesh.active_local_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_elements_end();
+    mesh.active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -1513,7 +1543,7 @@ DSSC::build_local_scaling(void)
 
 
 
-NumericVector<double>&
+libMesh::NumericVector<double>&
 DSSC::do_get_solution_vector(void)
 {
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>();
@@ -1545,8 +1575,8 @@ void
 DSSC::find_internal_boundary_nodes(void)
 {
   MeshBase& mesh = get_mesh();
-  MeshBase::element_iterator it = mesh.active_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_elements_end();
+  MeshBase::element_iterator it = mesh.active_local_elements_begin();
+  const MeshBase::element_iterator end = mesh.active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -1568,7 +1598,7 @@ DSSC::find_internal_boundary_nodes(void)
           // if neighbor is not dielectric we record it
           if (!scn->is_TiO2())
           {
-            AutoPtr<Elem> side(el->build_side(s));
+            libMesh::UniquePtr<libMesh::Elem> side(el->build_side(s));
             for (unsigned int i = 0; i < side->n_nodes(); i++)
               _internal_boundary_nodes.insert(side->get_node(i));
           }
@@ -1583,9 +1613,10 @@ DSSC::find_internal_boundary_nodes(void)
 
 
 void
-DSSC::assemble_system(const NumericVector<Number>& x,
-    NumericVector<Number>* residual,
-    SparseMatrix<Number>* jacobian)
+DSSC::assemble_system(const libMesh::NumericVector<Number>& x,
+    libMesh::NumericVector<Number>* residual,
+    libMesh::SparseMatrix<Number>* jacobian,
+    libMesh::NonlinearImplicitSystem& system)
 {
   _this->do_assembly(x, residual, jacobian);
 }
@@ -1596,13 +1627,12 @@ DSSC::assemble_system(const NumericVector<Number>& x,
 
 
 void
-DSSC::do_assembly(const NumericVector<Number>& x,
-    NumericVector<Number>* residual,
-    SparseMatrix<Number>* jacobian)
+DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
+    libMesh::NumericVector<Number>* residual,
+    libMesh::SparseMatrix<Number>* jacobian)
 {
 
-  PerfLog perf_log("Matrix assembly", false);
-  perf_log.start_event("assembly");
+  START_LOG(get_name() + ": Matrix assembly", "");
 
   // references for nicer code
   const MeshBase& mesh = get_mesh();
@@ -1672,7 +1702,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   double R0_I3 = C0_I3 * tmp;
 
 
-  const DofMap& dof_map = system.get_dof_map();
+  const libMesh::DofMap& dof_map = system.get_dof_map();
 
   // numeric ids corresponding to the variables
   const unsigned int u_var = system.variable_number("potential");
@@ -1681,23 +1711,23 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   const unsigned int eI3_var = system.variable_number("fermi_I3");
   const unsigned int eC_var = system.variable_number("fermi_C");
 
-  FEType fe_type = system.variable_type(u_var);
+  libMesh::FEType fe_type = system.variable_type(u_var);
 
   libMeshEnums::Order integration_order = libMeshEnums::FIFTH;
   //libMeshEnums::Order integration_order = libMeshEnums::FIRST;
 
   // the finite element
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, integration_order);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim, integration_order);
   //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
 
-  QGauss qface(dim - 1, integration_order);
+  libMesh::QGauss qface(dim - 1, integration_order);
   fe_face->attach_quadrature_rule(&qface);
 
 
@@ -1715,7 +1745,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   const vector<vector<Real> >& phi = fe->get_phi();
   //
   // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
 
@@ -1725,7 +1755,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   //
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
   //
-  const vector<vector<RealGradient> >&  dphi_face = fe_face->get_dphi();
+  const vector<vector<libMesh::RealGradient> >&  dphi_face = fe_face->get_dphi();
   //
   // physical coordinates of the quadrature points
   const vector<Point>& q_point_face = fe_face->get_xyz();
@@ -1737,32 +1767,39 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
 
   // the system matrix (will hold also element jacobian contribution)
-  DenseMatrix<Number> Ke;
+  libMesh::DenseMatrix<Number> Ke;
   // the system rhs (will hold also element rhs contribution)
-  DenseVector<Number> Fe;
+  libMesh::DenseVector<Number> Fe;
   // the local solution
-  DenseVector<Number> X;
+  libMesh::DenseVector<Number> X;
 
-  DenseSubMatrix<Number>
+  libMesh::DenseSubMatrix<Number>
     Kuu(Ke), Kun(Ke), KuI(Ke), KuI3(Ke), KuC(Ke),
     Knu(Ke), Knn(Ke), KnI(Ke), KnI3(Ke),  // KnC = 0
     KIu(Ke), KIn(Ke), KII(Ke), KII3(Ke),  // KIC = 0
     KI3u(Ke),KI3n(Ke),KI3I(Ke),KI3I3(Ke), // KI3C = 0
     KCu(Ke), /* =0 */ /* =0 */ /* =0 */  KCC(Ke);
 
-  DenseSubVector<Number>
+  libMesh::DenseSubVector<Number>
     Fu(Fe),
     Fn(Fe),
     FI(Fe),
     FI3(Fe),
     FC(Fe);
 
-  DenseSubVector<Number>
+  libMesh::DenseSubVector<Number>
     Xu(X),
     Xn(X),
     XI(X),
     XI3(X),
     XC(X);
+
+  // these contain the mass conservation terms
+  libMesh::DenseMatrix<Number> Kmass;
+  libMesh::DenseVector<Number> Fmass;
+  libMesh::DenseSubMatrix<Number>
+    KmCu(Kmass), KmCC(Kmass),
+    KmIu(Kmass), KmII(Kmass), KmII3(Kmass);
 
 
   vector<unsigned int> dof_indices;
@@ -1772,21 +1809,16 @@ DSSC::do_assembly(const NumericVector<Number>& x,
   vector<unsigned int> dof_indices_eI3;
   vector<unsigned int> dof_indices_eC;
 
+  vector<unsigned int> dof_mass_cons({_cation_dof, _iodide_dof});
+
+
+
   // zero out residual and jacobian !! IMPORTANT !!
   if (residual != NULL)
     residual->zero();
   if (jacobian != NULL)
     jacobian->zero();
 
-
-  const Node* n_cat = NULL;
-  double tot_cat = 0;
-  AutoPtr<NumericVector<Number> > cons_cat = x.clone();
-  cons_cat->zero();
-
-  double tot_iodine = 0;
-  AutoPtr<NumericVector<Number> > cons_iodine = x.clone();
-  cons_iodine->zero();
 
   set<unsigned int> inner_boundary_nodes;
 
@@ -1819,6 +1851,9 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     Ke.resize(n_dofs_tot, n_dofs_tot);
     Fe.resize(n_dofs_tot);
     X.resize(n_dofs_tot);
+
+    Kmass.resize(2, n_dofs_tot);
+    Fmass.resize(2);
 
     // extract local solution, accounting for constraints
     dof_map.extract_local_vector(x, dof_indices, X);
@@ -1869,6 +1904,12 @@ DSSC::do_assembly(const NumericVector<Number>& x,
     XI3.reposition(3 * n_dofs, n_dofs);
     XC.reposition(4 * n_dofs, n_dofs);
 
+    // mass conservation terms
+    KmIu.reposition(0, 0, 1, n_dofs);
+    KmII.reposition(0, 2 * n_dofs, 1, n_dofs);
+    KmII3.reposition(0, 3 * n_dofs, 1, n_dofs);
+    KmCu.reposition(1, 0, 1, n_dofs);
+    KmCC.reposition(1, 4 * n_dofs, 1, n_dofs);
 
 
     DSSCModel* sc =
@@ -1905,11 +1946,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       Real eI = 0.0;
       Real eI3 = 0.0;
       Real eC = 0.0;
-      RealGradient e_field(0);
-      RealGradient grad_en(0);
-      RealGradient grad_eI(0);
-      RealGradient grad_eI3(0);
-      RealGradient grad_eC(0);
+      libMesh::RealGradient e_field(0);
+      libMesh::RealGradient grad_en(0);
+      libMesh::RealGradient grad_eI(0);
+      libMesh::RealGradient grad_eI3(0);
+      libMesh::RealGradient grad_eC(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u  += phi[i][qp] * Xu(i);
@@ -2080,12 +2121,19 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
           double volume = elem->volume();
 
-          cons_cat->add(dof_indices_eC[i], -phi0 * J * dC_dphi * phi[i][qp] / C0_C / scaling_C );
-          cons_cat->add(dof_indices_u[i], phi0 * J * dC_dphi * phi[i][qp]  / C0_C / scaling_C );
+          // cation conservation
+          double C_cons = phi0 * J * dC_dphi * phi[i][qp] / C0_C / scaling_C;
+          KmCu(0, i) += C_cons;
+          KmCC(0, i) -= C_cons;
 
-          cons_iodine->add(dof_indices_eI[i], -phi0 * J * dI_dphi * phi[i][qp] / (3.0*C0_tot*scaling_tot) );
-          cons_iodine->add(dof_indices_eI3[i], -phi0 * J * dI3_dphi * phi[i][qp] / (C0_tot * scaling_tot) );
-          cons_iodine->add(dof_indices_u[i], phi0 * J * phi[i][qp] * ( ( (1/3.0) * dI_dphi + dI3_dphi ) / (C0_tot * scaling_tot) ) );
+          // iodine conservation
+          double I_cons = phi0 * J * dI_dphi * phi[i][qp] / (3.0*C0_tot*scaling_tot);
+          double I3_cons = phi0 * J * dI3_dphi * phi[i][qp] / (C0_tot * scaling_tot);
+
+          KmIu(0, i) += I_cons + I3_cons;
+          KmII(0, i) -= I_cons;
+          KmII3(0, i) -= I3_cons;
+
 
           for (unsigned int j = 0; j < n_dofs; j++)
           {
@@ -2196,10 +2244,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           FI(i) += 1.5 * net_recomb / R0_I / local_scaling[i][1];
           FI3(i) -= 0.5 * net_recomb / R0_I3 / local_scaling[i][2];
 
-          double volume = elem->volume();
 
-          tot_cat += J * phi[i][qp] * n_C / C0_C;
-          tot_iodine += J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
+          // total cation, iodine mass
+          Fmass(0) += J * phi[i][qp] * (n_I3 + n_I / 3.0) / C0_tot;
+          Fmass(1) += J * phi[i][qp] * n_C / C0_C;
 
         }
       }
@@ -2243,7 +2291,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           contact = dynamic_cast<DSSCContact*>(
               boundary->models_begin()->second);
 
-        AutoPtr<Elem> side(elem->build_side(s));
+        libMesh::UniquePtr<libMesh::Elem> side(elem->build_side(s));
 
         fe_face->reinit(elem, s);
 
@@ -2252,7 +2300,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
         // calculate the fluxes on the nodes
         if ((contact != NULL) && (dim > 1))
         {
-          vector<Point> p(side->n_nodes());
+          vector<libMesh::Point> p(side->n_nodes());
           for (unsigned int i = 0; i < side->n_nodes(); i++)
           {
             nodes_on_boundary_sides.insert(side->node(i));
@@ -2301,11 +2349,11 @@ DSSC::do_assembly(const NumericVector<Number>& x,
               Real eI = 0.0;
               Real eI3 = 0.0;
               Real eC = 0.0;
-              RealGradient e_field(0);
-              RealGradient grad_en(0);
-              RealGradient grad_eI(0);
-              RealGradient grad_eI3(0);
-              RealGradient grad_eC(0);
+              libMesh::RealGradient e_field(0);
+              libMesh::RealGradient grad_en(0);
+              libMesh::RealGradient grad_eI(0);
+              libMesh::RealGradient grad_eI3(0);
+              libMesh::RealGradient grad_eC(0);
               for (unsigned int i = 0; i < n_dofs; i++)
               {
                 u  += phi_face[i][qp] * Xu(i);
@@ -2415,11 +2463,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
             else
             {
 
-             if (n_cat == NULL)
-             {
-               n_cat = side->get_node(0);
-             }
-
             for (unsigned int i = 0; i < n_dofs; i++)
             {
                if (jacobian != NULL)
@@ -2482,7 +2525,7 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           sc->set_coordinates(elem->point(s));
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
 
-          RealGradient e_field(0.0);
+          libMesh::RealGradient e_field(0.0);
           double grad_en = 0.0;
           double grad_eI = 0.0;
           double grad_eI3 = 0.0;
@@ -2497,10 +2540,10 @@ DSSC::do_assembly(const NumericVector<Number>& x,
           }
 
           sc->set_electric_field(phi0 / x0 * e_field);
-          sc->set_grad_fermi_n(phi0 / x0 * RealGradient(grad_en, 0.0, 0.0));
-          sc->set_grad_fermi_I(phi0 / x0 * RealGradient(grad_eI, 0.0, 0.0));
-          sc->set_grad_fermi_I3(phi0 / x0 * RealGradient(grad_eI3, 0.0, 0.0));
-          sc->set_grad_fermi_C(phi0 / x0 * RealGradient(grad_eC, 0.0, 0.0));
+          sc->set_grad_fermi_n(phi0 / x0 * libMesh::RealGradient(grad_en, 0.0, 0.0));
+          sc->set_grad_fermi_I(phi0 / x0 * libMesh::RealGradient(grad_eI, 0.0, 0.0));
+          sc->set_grad_fermi_I3(phi0 / x0 * libMesh::RealGradient(grad_eI3, 0.0, 0.0));
+          sc->set_grad_fermi_C(phi0 / x0 * libMesh::RealGradient(grad_eC, 0.0, 0.0));
           sc->calculate_densities();
           sc->calculate_traps();
           sc->calculate_equilibrium_traps();
@@ -2526,10 +2569,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
           if (contact->is_cathode())
           {
-//             if (n_cat == NULL)
-//             {
-//               n_cat = side->get_node(0);            
-//             }
 
             if (jacobian != NULL)
              {
@@ -2596,11 +2635,6 @@ DSSC::do_assembly(const NumericVector<Number>& x,
            }
            else
 	   {
-
-             if (n_cat == NULL)
-             {
-               n_cat = side->get_node(0);            
-             }
 
              if (jacobian != NULL)
              {
@@ -2769,9 +2803,28 @@ DSSC::do_assembly(const NumericVector<Number>& x,
       }
     }
 
+    // put the mass conservation lines to zero
+    for (unsigned int i = 2*n_dofs; i < 3*n_dofs; i++)
+    {
+      if (dof_indices_eI[i] == _iodide_dof)
+      {
+        for (unsigned int j = 0; j < n_dofs_tot; j++)
+          Ke(i, j) = 0.0;
+        break;
+      }
+    }
+
+    for (unsigned int i = 4*n_dofs; i < n_dofs_tot; i++)
+     {
+       if (dof_indices_eC[i] == _cation_dof)
+       {
+         for (unsigned int j = 0; j < n_dofs_tot; j++)
+           Ke(i, j) = 0.0;
+         break;
+       }
+     }
 
 
-    perf_log.start_event("add");
     if (residual != NULL)
     {
       for (unsigned int i = 0; i < n_dofs_tot; i++)
@@ -2780,53 +2833,33 @@ DSSC::do_assembly(const NumericVector<Number>& x,
 
 
       residual->add_vector(Fe, dof_indices);
+
+      Fmass(0) = Fmass(0) / scaling_tot - _iodine_amount / C0_tot / scaling_tot;
+      Fmass(1) = Fmass(1) / scaling_C - _cation_amount / C0_C / scaling_C;
+      residual->add_vector(Fmass, dof_mass_cons);
     }
     else
+    {
       jacobian->add_matrix(Ke, dof_indices);
+      jacobian->add_matrix(Kmass, dof_mass_cons, dof_indices);
+    }
 
-    perf_log.stop_event("add");
+
 
   } // end loop over elements
 
-//  if (jacobian != NULL)
-//    jacobian->close();
-//  else
-//    residual->close();
-
-  assert(n_cat != NULL);
-  unsigned int dof_cat = n_cat->dof_number(system.number(), eC_var, 0);
-  unsigned int dof_iodine = n_cat->dof_number(system.number(), eI_var, 0);
-
   if (jacobian != NULL)
   {
-
     jacobian->close();
-
-    for (unsigned int j = 0; j < cons_cat->size(); j++)
-      jacobian->set(dof_cat, j, (*cons_cat)(j));
-
-    for (unsigned int j = 0; j < cons_iodine->size(); j++)
-      jacobian->set(dof_iodine, j, (*cons_iodine)(j));
-
-    jacobian->close();
-//    jacobian->print_matlab("J.m");
-
+    jacobian->print_matlab("jac.m");
   }
   else
-  {
     residual->close();
 
-    residual->set(dof_cat, (tot_cat / scaling_C - _cation_amount / C0_C / scaling_C));
-    residual->set(dof_iodine, (tot_iodine / scaling_tot - _iodine_amount / C0_tot / scaling_tot));
-    residual->close();
-//    residual->print_matlab("F.m");
-
-  }
 
 
-  perf_log.stop_event("assembly");
+  STOP_LOG(get_name() + ": Matrix assembly", "");
 
-//    cerr << "fatto" << endl;
 }
 
 
@@ -3023,12 +3056,12 @@ DSSC::get_solution_secure(const Elem* elem,
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
-  const NumericVector<Number>& solution = system->get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
 //  const NumericVector<Number>& oldsolution = system->get_vector("old_sol");
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
-  const DofMap& dof_map = system->get_dof_map();
+  const libMesh::DofMap& dof_map = system->get_dof_map();
 
   const unsigned int u_var = system->variable_number("potential");
   unsigned int en_var = system->variable_number("fermi_n");
@@ -3036,8 +3069,8 @@ DSSC::get_solution_secure(const Elem* elem,
   unsigned int eI3_var = system->variable_number("fermi_I3");
   unsigned int eC_var = system->variable_number("fermi_C");
 
-  FEType fe_type = system->variable_type(u_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  libMesh::FEType fe_type = system->variable_type(u_var);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;
@@ -3047,7 +3080,7 @@ DSSC::get_solution_secure(const Elem* elem,
 
   // element shape functions
   const vector<vector<Real> >& phi = fe->get_phi();
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
   const vector<Point>& real_pts = fe->get_xyz();
 
   ID subdomain = elem->subdomain_id();
@@ -3081,11 +3114,11 @@ DSSC::get_solution_secure(const Elem* elem,
   }
 
   // cell data variables (to be integrated)
-  RealGradient jn(0);
-  RealGradient jI(0);
-  RealGradient jI3(0);
-  RealGradient jC(0);
-  RealGradient el_field(0);
+  libMesh::RealGradient jn(0);
+  libMesh::RealGradient jI(0);
+  libMesh::RealGradient jI3(0);
+  libMesh::RealGradient jC(0);
+  libMesh::RealGradient el_field(0);
 
   for (unsigned int n = 0; n < np; n++)
   {
@@ -3094,11 +3127,11 @@ DSSC::get_solution_secure(const Elem* elem,
     double eI = 0.0;
     double eI3 = 0.0;
     double eC = 0.0;
-    RealGradient e_field(0);
-    RealGradient grad_en_loc(0);
-    RealGradient grad_eI_loc(0);
-    RealGradient grad_eI3_loc(0);
-    RealGradient grad_eC_loc(0);
+    libMesh::RealGradient e_field(0);
+    libMesh::RealGradient grad_en_loc(0);
+    libMesh::RealGradient grad_eI_loc(0);
+    libMesh::RealGradient grad_eI3_loc(0);
+    libMesh::RealGradient grad_eC_loc(0);
 
     // do interpolation
     for (unsigned int i = 0; i < n_dofs; i++)
@@ -3161,14 +3194,14 @@ DSSC::get_solution_secure(const Elem* elem,
     double sigma_C = Constants::e * Cdens * sc->get_mobility_C();
 
 
-    RealGradient dfn = grad_en_loc;
-    RealGradient dfI = grad_eI_loc;
-    RealGradient dfI3 = grad_eI3_loc;
-    RealGradient dfC = grad_eC_loc;
-    RealGradient jn_loc = -sigma_e * dfn;
-    RealGradient jI_loc = -sigma_I * dfI;
-    RealGradient jI3_loc = -sigma_I3 * dfI3;
-    RealGradient jC_loc = sigma_C * dfC;
+    libMesh::RealGradient dfn = grad_en_loc;
+    libMesh::RealGradient dfI = grad_eI_loc;
+    libMesh::RealGradient dfI3 = grad_eI3_loc;
+    libMesh::RealGradient dfC = grad_eC_loc;
+    libMesh::RealGradient jn_loc = -sigma_e * dfn;
+    libMesh::RealGradient jI_loc = -sigma_I * dfI;
+    libMesh::RealGradient jI3_loc = -sigma_I3 * dfI3;
+    libMesh::RealGradient jC_loc = sigma_C * dfC;
     jn += jn_loc;
     jI += jI_loc;
     jI3 += jI3_loc;
@@ -3366,7 +3399,7 @@ DSSC::get_solution_secure(map<ID, vector<double> >& values)
 
 
 void
-DSSC::assemble_EIS(EquationSystems& es, const std::string& system_name)
+DSSC::assemble_EIS(libMesh::EquationSystems& es, const std::string& system_name)
 {
   _this->do_assembly_frequency(es, system_name);
 }
@@ -3374,22 +3407,22 @@ DSSC::assemble_EIS(EquationSystems& es, const std::string& system_name)
 
 
 void
-DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
+DSSC::do_assembly_frequency(libMesh::EquationSystems& es, const std::string& system_name)
 {
 
-  PerfLog perf_log("Matrix assembly", false);
-  perf_log.start_event("assembly EIS");
+  //PerfLog perf_log("Matrix assembly", false);
+  //perf_log.start_event("assembly EIS");
 
   // references for nicer code
   const MeshBase& mesh = get_mesh();
   TiberLinearSystem& system_frequency = get_equation_system<TiberLinearSystem>(1);
-  const NumericVector<Number>& solution_frequency = system_frequency.get_solution_vector();
+  const libMesh::NumericVector<Number>& solution_frequency = system_frequency.get_solution_vector();
 
   double freq = _frequency;
 
   // references for nicer code
   TiberNonlinearSystem& system = get_equation_system<TiberNonlinearSystem>(0);
-  const NumericVector<Number>& solution = system.get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
   unsigned int n_real_dofs = solution.size();
   
   const unsigned int dim = mesh.mesh_dimension();
@@ -3459,8 +3492,8 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   double R0_C = C0_C * tmp;
 
 
-  const DofMap& dof_map = system_frequency.get_dof_map();
-  const DofMap& dof_map_steady = system.get_dof_map();
+  const libMesh::DofMap& dof_map = system_frequency.get_dof_map();
+  const libMesh::DofMap& dof_map_steady = system.get_dof_map();
 
   // numeric ids corresponding to the variables
   const unsigned int u_var_R = system_frequency.variable_number("potential_R");
@@ -3480,23 +3513,23 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   const unsigned int eI3_var = system.variable_number("fermi_I3");
   const unsigned int eC_var = system.variable_number("fermi_C");
   
-  FEType fe_type = system_frequency.variable_type(u_var_R);
+  libMesh::FEType fe_type = system_frequency.variable_type(u_var_R);
 
   libMeshEnums::Order integration_order = libMeshEnums::FIFTH;
   //libMeshEnums::Order integration_order = libMeshEnums::FIRST;
 
   // the finite element
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, integration_order);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim, integration_order);
   //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
   // the finite element for boundary integration
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
 
-  QGauss qface(dim - 1, integration_order);
+  libMesh::QGauss qface(dim - 1, integration_order);
   fe_face->attach_quadrature_rule(&qface);
 
 
@@ -3514,7 +3547,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   const vector<vector<Real> >& phi = fe->get_phi();
   //
   // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
 
@@ -3524,7 +3557,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   //
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
   //
-  const vector<vector<RealGradient> >&  dphi_face = fe_face->get_dphi();
+  const vector<vector<libMesh::RealGradient> >&  dphi_face = fe_face->get_dphi();
   //
   // physical coordinates of the quadrature points
   const vector<Point>& q_point_face = fe_face->get_xyz();
@@ -3536,13 +3569,13 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
 
   // the system matrix (will hold also element jacobian contribution)
-  DenseMatrix<Number> Ke;
+  libMesh::DenseMatrix<Number> Ke;
   // the system rhs (will hold also element rhs contribution)
-  DenseVector<Number> Fe;
-//  // the local solution
-//  DenseVector<Number> X;
+  libMesh::DenseVector<Number> Fe;
+  // the local solution
+  //DenseVector<Number> X;
   // the steady-state solution
-  DenseVector<Number> S;
+  libMesh::DenseVector<Number> S;
     
     // Reposition the submatrices according to this scheme:
     //
@@ -3560,7 +3593,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     //                               
     //
 
-  DenseSubMatrix<Number>
+  libMesh::DenseSubMatrix<Number>
     KuuR(Ke), KunR(Ke), KuIR(Ke), KuI3R(Ke), KuCR(Ke), /* KFuuR = 0, KFunR = 0, KFuIR = 0, KFuI3R = 0, KFuCR = 0, */ 
     KnuR(Ke), KnnR(Ke), KnIR(Ke), KnI3R(Ke), /* KnCR = 0, */ KnuFR(Ke), KnnFR(Ke), /* =0, =0, =0, */
     KIuR(Ke), KInR(Ke), KIIR(Ke), KII3R(Ke), /* KICR = 0, */ KIuFR(Ke),  /* =0, */  KIIFR(Ke), /* =0, =0, */
@@ -3572,7 +3605,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     KI3uFI(Ke), /* =0, =0, */ KI3I3FI(Ke), /* =0, */ KI3uI(Ke), KI3nI(Ke), KI3II(Ke), KI3I3I(Ke), /* =0, */ 
     KCuFI(Ke), /* =0, =0, =0, */ KCCFI(Ke), KCuI(Ke), /* =0,  =0,  =0, */  KCCI(Ke);
 
-  DenseSubVector<Number>
+  libMesh::DenseSubVector<Number>
     FuR(Fe),
     FnR(Fe),
     FIR(Fe),
@@ -3598,7 +3631,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
     XCI(X);
    */
   
-  DenseSubVector<Number>
+  libMesh::DenseSubVector<Number>
     Su(S),
     Sn(S),
     SI(S),
@@ -3629,15 +3662,15 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
   const Node* n_cat = NULL;
   double tot_cat = 0;
-  AutoPtr<NumericVector<Number> > cons_cat_R = solution_frequency.clone();
+  libMesh::UniquePtr<libMesh::NumericVector<Number> > cons_cat_R = solution_frequency.clone();
   cons_cat_R->zero();
-  AutoPtr<NumericVector<Number> > cons_cat_I = solution_frequency.clone();
+  libMesh::UniquePtr<libMesh::NumericVector<Number> > cons_cat_I = solution_frequency.clone();
   cons_cat_I->zero();
 
   double tot_iodine = 0;
-  AutoPtr<NumericVector<Number> > cons_iodine_R = solution_frequency.clone();
+  libMesh::UniquePtr<libMesh::NumericVector<Number> > cons_iodine_R = solution_frequency.clone();
   cons_iodine_R->zero();
-  AutoPtr<NumericVector<Number> > cons_iodine_I = solution_frequency.clone();
+  libMesh::UniquePtr<libMesh::NumericVector<Number> > cons_iodine_I = solution_frequency.clone();
   cons_iodine_I->zero();
 
   set<unsigned int> inner_boundary_nodes;
@@ -3840,11 +3873,11 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
       Real eI = 0.0;
       Real eI3 = 0.0;
       Real eC = 0.0;
-      RealGradient e_field(0);
-      RealGradient grad_en(0);
-      RealGradient grad_eI(0);
-      RealGradient grad_eI3(0);
-      RealGradient grad_eC(0);
+      libMesh::RealGradient e_field(0);
+      libMesh::RealGradient grad_en(0);
+      libMesh::RealGradient grad_eI(0);
+      libMesh::RealGradient grad_eI3(0);
+      libMesh::RealGradient grad_eC(0);
       for (unsigned int i = 0; i < n_dofs_steady; i++)
       {
         u  += phi[i][qp] * Su(i);
@@ -4219,7 +4252,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
           contact = dynamic_cast<DSSCContact*>(
               boundary->models_begin()->second);
 
-        AutoPtr<Elem> side(elem->build_side(s));
+        libMesh::UniquePtr<libMesh::Elem> side(elem->build_side(s));
 
         fe_face->reinit(elem, s);
 
@@ -4228,7 +4261,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
         // calculate the fluxes on the nodes
         if ((contact != NULL) && (dim > 1))
         {
-          vector<Point> p(side->n_nodes());
+          vector<libMesh::Point> p(side->n_nodes());
           for (unsigned int i = 0; i < side->n_nodes(); i++)
           {
             nodes_on_boundary_sides.insert(side->node(i));
@@ -4277,11 +4310,11 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
               Real eI = 0.0;
               Real eI3 = 0.0;
               Real eC = 0.0;
-              RealGradient e_field(0);
-              RealGradient grad_en(0);
-              RealGradient grad_eI(0);
-              RealGradient grad_eI3(0);
-              RealGradient grad_eC(0);
+              libMesh::RealGradient e_field(0);
+              libMesh::RealGradient grad_en(0);
+              libMesh::RealGradient grad_eI(0);
+              libMesh::RealGradient grad_eI3(0);
+              libMesh::RealGradient grad_eC(0);
               for (unsigned int i = 0; i < n_dofs_steady; i++)
               {
                 u  += phi_face[i][qp] * Su(i);
@@ -4439,7 +4472,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
           sc->set_coordinates(elem->point(s));
           sc->set_potentials(phi0 * u, phi0 * en, phi0 * eI, phi0 * eI3, phi0 * eC);
 
-          RealGradient e_field(0.0);
+          libMesh::RealGradient e_field(0.0);
           double grad_en = 0.0;
           double grad_eI = 0.0;
           double grad_eI3 = 0.0;
@@ -4454,10 +4487,10 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
           }
 
           sc->set_electric_field(phi0 / x0 * e_field);
-          sc->set_grad_fermi_n(phi0 / x0 * RealGradient(grad_en, 0.0, 0.0));
-          sc->set_grad_fermi_I(phi0 / x0 * RealGradient(grad_eI, 0.0, 0.0));
-          sc->set_grad_fermi_I3(phi0 / x0 * RealGradient(grad_eI3, 0.0, 0.0));
-          sc->set_grad_fermi_C(phi0 / x0 * RealGradient(grad_eC, 0.0, 0.0));
+          sc->set_grad_fermi_n(phi0 / x0 * libMesh::RealGradient(grad_en, 0.0, 0.0));
+          sc->set_grad_fermi_I(phi0 / x0 * libMesh::RealGradient(grad_eI, 0.0, 0.0));
+          sc->set_grad_fermi_I3(phi0 / x0 * libMesh::RealGradient(grad_eI3, 0.0, 0.0));
+          sc->set_grad_fermi_C(phi0 / x0 * libMesh::RealGradient(grad_eC, 0.0, 0.0));
           sc->calculate_densities();
           sc->calculate_traps();
           sc->calculate_equilibrium_traps();
@@ -4678,12 +4711,12 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
 
 
 
-    perf_log.start_event("add");
+    //perf_log.start_event("add");
 
     system_frequency.rhs->add_vector(Fe, dof_indices);
     system_frequency.matrix->add_matrix(Ke, dof_indices);
 
-    perf_log.stop_event("add");
+    //perf_log.stop_event("add");
 
   } // end loop over elements
 
@@ -4727,7 +4760,7 @@ DSSC::do_assembly_frequency(EquationSystems& es, const std::string& system_name)
   }
 
 
-  perf_log.stop_event("assembly frequency");
+ // perf_log.stop_event("assembly frequency");
 
 }
 
@@ -4741,7 +4774,7 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
 {
 
   // we only do something if we are on processor 0
-  if (libMesh::processor_id() != 0)
+  if (get_mesh().comm().rank() != 0)
     return;
   
   // reset currents
@@ -4754,11 +4787,11 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
 
   TiberLinearSystem* system_frequency = &get_equation_system<TiberLinearSystem>(1);
 
-  const NumericVector<Number>& solution_frequency = system_frequency->get_solution_vector();
+  const libMesh::NumericVector<Number>& solution_frequency = system_frequency->get_solution_vector();
   
   // references for nicer code
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>(0);
-  const NumericVector<Number>& solution = system->get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
   //unsigned int n_real_dofs = solution->size();
 
   // aliases for nicer code
@@ -4766,8 +4799,8 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
   const Device& device = *(_device);
   const SimulationEnvironment& env = get_environment();
 
-  const DofMap& dof_map = system_frequency->get_dof_map();
-  const DofMap& dof_map_steady = system->get_dof_map();
+  const libMesh::DofMap& dof_map = system_frequency->get_dof_map();
+  const libMesh::DofMap& dof_map_steady = system->get_dof_map();
 
   const unsigned int dim = mesh.mesh_dimension();
 
@@ -4792,10 +4825,10 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
   const unsigned int eI3_var = system->variable_number("fermi_I3");
   const unsigned int eC_var = system->variable_number("fermi_C");
   
-  FEType fe_type = system_frequency->variable_type(u_var_R);
+  libMesh::FEType fe_type = system_frequency->variable_type(u_var_R);
 
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
-  QGauss qrule(dim, libMeshEnums::FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
+  libMesh::QGauss qrule(dim, libMeshEnums::FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
   
@@ -4809,7 +4842,7 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
   const vector<vector<Real> >& phi = fe->get_phi();
 
   // element shape function gradients
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
   
   
 
@@ -4835,9 +4868,9 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
   vector<Boundary*> node_ids;
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_elements_begin();
+                                  mesh.active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_elements_end();
+                                  mesh.active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
@@ -4912,18 +4945,18 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
       Real eI_I = 0.0;
       Real eI3_I = 0.0;
       Real eC_I = 0.0;
-      RealGradient dEfn_R(0);
-      RealGradient dEfI_R(0);
-      RealGradient dEfI3_R(0);
-      RealGradient dEfC_R(0);
-      RealGradient e_field_R(0);
-      RealGradient dT_R(0);
-      RealGradient dEfn_I(0);
-      RealGradient dEfI_I(0);
-      RealGradient dEfI3_I(0);
-      RealGradient dEfC_I(0);
-      RealGradient e_field_I(0);
-      RealGradient dT_I(0);
+      libMesh::RealGradient dEfn_R(0);
+      libMesh::RealGradient dEfI_R(0);
+      libMesh::RealGradient dEfI3_R(0);
+      libMesh::RealGradient dEfC_R(0);
+      libMesh::RealGradient e_field_R(0);
+      libMesh::RealGradient dT_R(0);
+      libMesh::RealGradient dEfn_I(0);
+      libMesh::RealGradient dEfI_I(0);
+      libMesh::RealGradient dEfI3_I(0);
+      libMesh::RealGradient dEfC_I(0);
+      libMesh::RealGradient e_field_I(0);
+      libMesh::RealGradient dT_I(0);
 
 
       Real u  = 0.0;
@@ -4931,12 +4964,12 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
       Real eI = 0.0;
       Real eI3 = 0.0;
       Real eC = 0.0;
-      RealGradient dEfn(0);
-      RealGradient dEfI(0);
-      RealGradient dEfI3(0);
-      RealGradient dEfC(0);
-      RealGradient e_field(0);
-      RealGradient dT(0);
+      libMesh::RealGradient dEfn(0);
+      libMesh::RealGradient dEfI(0);
+      libMesh::RealGradient dEfI3(0);
+      libMesh::RealGradient dEfC(0);
+      libMesh::RealGradient e_field(0);
+      libMesh::RealGradient dT(0);
       for (unsigned int i = 0; i < n_dofs; i++)
       {
         u_R  += phi[i][qp] * solution_frequency(dof_indices_u_R[i]);
@@ -4991,28 +5024,29 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
       sc->calculate_net_recombination_rate();
 
       // we put the minus here for convenience
-      RealGradient j_I_R = -Constants::e * sc->get_mobility_I() * sc->get_density_I() * dEfI_R;
-      RealGradient j_I3_R = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() * dEfI3_R;
-      RealGradient j_n_R = -Constants::e * sc->get_mobility_n() * sc->get_density_n() * dEfn_R;
-      RealGradient j_C_R = Constants::e * sc->get_mobility_C() * sc->get_density_C() * dEfC_R;
+      libMesh::RealGradient j_I_R = -Constants::e * sc->get_mobility_I() * sc->get_density_I() * dEfI_R;
+      libMesh::RealGradient j_I3_R = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() * dEfI3_R;
+      libMesh::RealGradient j_n_R = -Constants::e * sc->get_mobility_n() * sc->get_density_n() * dEfn_R;
+      libMesh::RealGradient j_C_R = Constants::e * sc->get_mobility_C() * sc->get_density_C() * dEfC_R;
       
-      RealGradient j_I_2_R = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * (u_R - eI_R) * phi0 * dEfI;
-      RealGradient j_I3_2_R = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * (u_R - eI3_R) * phi0 * dEfI3;
-      RealGradient j_n_2_R = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * (u_R - en_R) * phi0 * dEfn;
-      RealGradient j_C_2_R = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * (u_R - eC_R) * phi0 * dEfC;
+      libMesh::RealGradient j_I_2_R = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * (u_R - eI_R) * phi0 * dEfI;
+      libMesh::RealGradient j_I3_2_R = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * (u_R - eI3_R) * phi0 * dEfI3;
+      libMesh::RealGradient j_n_2_R = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * (u_R - en_R) * phi0 * dEfn;
+      libMesh::RealGradient j_C_2_R = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * (u_R - eC_R) * phi0 * dEfC;
 
-      RealGradient j_I_I = -Constants::e * sc->get_mobility_I() * sc->get_density_I() * dEfI_I;
-      RealGradient j_I3_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() * dEfI3_I;
-      RealGradient j_n_I = -Constants::e * sc->get_mobility_n() * sc->get_density_n() * dEfn_I;
-      RealGradient j_C_I = Constants::e * sc->get_mobility_C() * sc->get_density_C() * dEfC_I;
+      libMesh::RealGradient j_I_I = -Constants::e * sc->get_mobility_I() * sc->get_density_I() * dEfI_I;
+      libMesh::RealGradient j_I3_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_I3() * dEfI3_I;
+      libMesh::RealGradient j_n_I = -Constants::e * sc->get_mobility_n() * sc->get_density_n() * dEfn_I;
+      libMesh::RealGradient j_C_I = Constants::e * sc->get_mobility_C() * sc->get_density_C() * dEfC_I;
       
-      RealGradient j_I_2_I = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * (u_I - eI_I) * phi0 * dEfI;
-      RealGradient j_I3_2_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * (u_I - eI3_I) * phi0 * dEfI3;
-      RealGradient j_n_2_I = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * (u_I - en_I) * phi0 * dEfn;
-      RealGradient j_C_2_I = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * (u_I - eC_I) * phi0 * dEfC;
+      libMesh::RealGradient j_I_2_I = -Constants::e * sc->get_mobility_I() * sc->get_density_derivative_I() * (u_I - eI_I) * phi0 * dEfI;
+      libMesh::RealGradient j_I3_2_I = -Constants::e * sc->get_mobility_I3() * sc->get_density_derivative_I3() * (u_I - eI3_I) * phi0 * dEfI3;
+      libMesh::RealGradient j_n_2_I = -Constants::e * sc->get_mobility_n() * sc->get_density_derivative_n() * (u_I - en_I) * phi0 * dEfn;
+      libMesh::RealGradient j_C_2_I = Constants::e * sc->get_mobility_C() * sc->get_density_derivative_C() * (u_I - eC_I) * phi0 * dEfC;
        
-      RealGradient j_Cap_R = -freq * eps * e_field_I;
-      RealGradient j_Cap_I = freq * eps * e_field_R;
+      libMesh::RealGradient j_Cap_R = -freq * eps * e_field_I;
+      libMesh::RealGradient j_Cap_I = freq * eps * e_field_R;
+      
 //    cout << "freq " << freq << "\n";
 //    cout << "eI_I " << eI_I << "\n";
 //    cout << "eI3_I " << eI3_I << "\n";
@@ -5025,10 +5059,10 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
       //RealGradient j(JxW[qp] * phi0 *
       //    (sigma_n * (dEfn + Pn * dT) + sigma_h * (dEfp + Pp * dT)));
       
-      RealGradient j_R(JxW[qp] *
+      libMesh::RealGradient j_R(JxW[qp] *
           (j_I_R + j_I3_R + j_n_R + j_C_R + j_I_2_R + j_I3_2_R + j_n_2_R + j_C_2_R + j_Cap_R));
       
-      RealGradient j_I(JxW[qp] *
+      libMesh::RealGradient j_I(JxW[qp] *
           (j_I_I + j_I3_I + j_n_I + j_C_I + j_I_2_I + j_I3_2_I + j_n_2_I + j_C_2_I + j_Cap_I));
 /*     
       RealGradient j_R(JxW[qp] *

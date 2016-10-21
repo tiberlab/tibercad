@@ -8,10 +8,6 @@
 #include "tiber_dll.h"
 
 
-// forward declaration
-class MeshBase;
-class Elem;
-
 
 //! Write nodal and elemental data using a grace-compatible format
 class TBDLLOCAL GraceIO : public DataOutput
@@ -49,7 +45,7 @@ class TBDLLOCAL GraceIO : public DataOutput
 
  private:
 
-   typedef std::map<ID, std::vector<const Elem*> > PieceMap;
+   typedef std::map<ID, std::vector<const libMesh::Elem*> > PieceMap;
 
   void create_pieces(PieceMap& pieces);
 

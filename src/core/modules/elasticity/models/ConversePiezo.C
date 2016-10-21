@@ -17,11 +17,11 @@ ConversePiezo::ConversePiezo(const ModelOptions& options):BodyForceModel(options
 }
 
 void
-ConversePiezo::calculate(const Elem* elem, const Point& point)
+ConversePiezo::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
 {
   //Get ElectricField
-  RealVectorValue ElField = 0;
-  std::vector<Point> p(1);
+  libMesh::RealVectorValue ElField = 0;
+  std::vector<libMesh::Point> p(1);
   p[0] = point;
   std::vector<double> values(3);
   _simul->get_solution(elem, ElFieldID, values, p, true);
@@ -39,7 +39,7 @@ ConversePiezo::calculate(const Elem* elem, const Point& point)
 
 
   //Compute the converse piezo stress
-  RealTensor stress(0);
+  libMesh::RealTensor stress(0);
   stress(0,2) = ElField(0) * _e15;
   stress(2,0) =  stress(0,2);
   stress(2,1) = ElField(1) * _e15;

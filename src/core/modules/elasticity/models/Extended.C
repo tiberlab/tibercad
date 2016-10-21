@@ -10,8 +10,8 @@ void
 Extended::do_init(void)
 {
   
-  RealTensor H(0);
-  RealGradient  R(0);
+  libMesh::RealTensor H(0);
+  libMesh::RealGradient  R(0);
   double A(0);
 
   set_is_extended(true);
@@ -26,8 +26,8 @@ void
 Extended::calculate(const Elem* elem, unsigned int side,
     const Point& point)
 {
-  RealTensor H(0);
-  RealGradient  R(0);
+  libMesh::RealTensor H(0);
+  libMesh::RealGradient  R(0);
   double A(0);
 
   H(0,0) = _normal(0);

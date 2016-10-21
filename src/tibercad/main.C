@@ -61,7 +61,7 @@ namespace
   bool stop_on_warning = false;
 
   // TODO doe sthis work in windows?
-  //AutoPtr<ofstream> nullstream(NULL);
+  //UniquePtr<ofstream> nullstream(NULL);
 
   void usage(void)
   {

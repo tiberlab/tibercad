@@ -82,7 +82,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
         _val[0] = _val[1] = _val[2] = _val[3] = _val[4] = _val[5] = 0.0;
       }
 
-      SymTensor(const RealTensor& t)
+      SymTensor(const libMesh::RealTensor& t)
       {
         _val[0] = t(0,0);
         _val[1] = t(1,1);
@@ -92,7 +92,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
         _val[5] = t(0,2);
       }
 
-      void get_tensor(RealTensor& t)
+      void get_tensor(libMesh::RealTensor& t)
       {
         t(0,0) = _val[0];
         t(1,1) = _val[1];
@@ -102,7 +102,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
         t(0,2) = t(2,0) = _val[5];
       }
 
-      SymTensor& operator+=(RealTensor& t)
+      SymTensor& operator+=(libMesh::RealTensor& t)
       {
         _val[0] += t(0,0);
         _val[1] += t(1,1);
@@ -129,13 +129,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
   //! Compute the elastic energy
   Real compute_elastic_energy(void);
 
-  // Get the total stress
-  //RealTensor get_stress(const Elem* elem, const Point& p);
-  
-  // Get the internal stress
-  //RealTensor get_internal_stress(const Elem* elem, const Point& p);
-
-  typedef std::map<const Elem*, RealGradient> force_vector;
+  typedef std::map<const Elem*, libMesh::RealGradient> force_vector;
 
 
     //! These are the known solution variables
@@ -183,7 +177,7 @@ class TBDLLOCAL Elasticity : public SimulationInterface
 
 
   //! The total displacement
- AutoPtr<NumericVector<Number> > sol;
+    libMesh::UniquePtr<libMesh::NumericVector<Number> > sol;
 
   force_vector internal_force;
 
@@ -195,10 +189,10 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     Elasticity(const ModelOptions& options);
 
     //! The assembly function
-    static void assemble(EquationSystems& es, const std::string& system_name);
+    static void assemble(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! The real assembly function
-    void do_assemble(EquationSystems& es, const std::string& system_name);
+    void do_assemble(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! A static pointer to this
     static Elasticity* _this;
@@ -216,12 +210,12 @@ class TBDLLOCAL Elasticity : public SimulationInterface
     void restore_shape();
 
 
-  RealTensor get_subtensor(const Tensor4DSym& C_calc,unsigned int i,unsigned  int k);
+  libMesh::RealTensor get_subtensor(const Tensor4DSym& C_calc,unsigned int i,unsigned  int k);
 };
 
 
 void
-Elasticity::assemble(EquationSystems& es, const std::string& system_name)
+Elasticity::assemble(libMesh::EquationSystems& es, const std::string& system_name)
 {
   _this->do_assemble(es, system_name);
 }

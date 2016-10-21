@@ -55,7 +55,7 @@ class GridCells
   void index(const unsigned int c, unsigned int& x, unsigned int& y, unsigned int& z) const;
   
   //! Returns the cell were a point falls  
-  void get_cell(const Point& p, unsigned int& i,  
+  void get_cell(const libMesh::Point& p, unsigned int& i,  
                                 unsigned int& j, 
                                 unsigned int& k) const;
 
@@ -188,21 +188,21 @@ const std::vector<unsigned int>&
 GridCells::operator()(const unsigned int i, const unsigned int j, const unsigned int k) const
 {
   return _grid_cell[k * n_x*n_y + j * n_x + i];
-};
+}
   
 inline
 const std::vector<unsigned int>& 
 GridCells::operator[](const unsigned int i) const
 {
    return _grid_cell[i];
-};
+}
 
 inline 
 unsigned int 
 GridCells::size(void) const
 {
   return n_x*n_y*n_z;
-};
+}
 
 inline
 unsigned int

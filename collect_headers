@@ -1,27 +1,28 @@
 #!/bin/bash
 
 topdir=`pwd`
+builddir=/usr/pack/tibercad_dev-2.5-ma/build
 
 ARCH=`${topdir}/share/arch.sh`
-PETSC=petsc-3.0.0-p12
-SLEPC=slepc-3.0.0-p7
+PETSC=petsc-3.4.4
+SLEPC=slepc-3.4.4
 
-mkdir -p SDK/include/libmesh
+mkdir -p SDK/include
 cd SDK/include
 
-cp -r ${topdir}/extern/libmesh-svn-${ARCH}/include/* libmesh
+cp -L -r ${builddir}/libmesh-0.9.3-${ARCH}/include/libmesh .
 mkdir -p libmesh/${ARCH}
-mv libmesh/base/libmesh_config.h libmesh/${ARCH}
-mv libmesh/base/libmesh_contrib_config.h libmesh/${ARCH}
-rm libmesh/base/*.h.in
+mv libmesh/libmesh_config.h libmesh/${ARCH}
+#mv libmesh/base/libmesh_contrib_config.h libmesh/${ARCH}
+rm libmesh/*.h.in libmesh/Makefile*
 
 mkdir -p ${SLEPC}
-cp -r ${topdir}/extern/${SLEPC}/include/* ${SLEPC}
+cp -r ${builddir}/${SLEPC}/include/* ${SLEPC}
 find ${SLEPC} -name "*.html" -exec rm -f {} \;
 
 mkdir -p ${PETSC}/${ARCH}/
-cp -r ${topdir}/extern/${PETSC}/include/* ${PETSC}/
-cp -r ${topdir}/extern/${PETSC}/${ARCH}/include/* ${PETSC}/${ARCH}
+cp -r ${builddir}/${PETSC}/include/* ${PETSC}/
+cp -r ${builddir}/${PETSC}/${ARCH}/include/* ${PETSC}/${ARCH}
 rm ${PETSC}/${ARCH}/*.mod
 find ${PETSC} -name "makefile" -exec rm -f {} \;
 

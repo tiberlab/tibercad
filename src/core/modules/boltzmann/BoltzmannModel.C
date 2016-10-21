@@ -5,8 +5,10 @@
 #include "Material.h"
 #include "Database.h"
 #include "HeatSourceModel.h"
-#include "ThermalConductivityModel.h"
 
+
+//class Elem;
+//class Point;
 
 using namespace std;
 
@@ -122,7 +124,6 @@ BoltzmannModel::do_print_info(void)
 
 
 }
-
 
 void
 BoltzmannModel::calculate(const Elem* elem, const Point& point)

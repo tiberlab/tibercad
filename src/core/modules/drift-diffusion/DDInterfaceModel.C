@@ -215,7 +215,7 @@ DDInterfaceModel::do_init(void)
   string eflux = get_option("electron_current", "");
   if (!eflux.empty())
   {
-    if (Variable::check_string(eflux))
+    if (VariableValue::check_string(eflux))
       get_parameter("electron_current", _eflux);
     else
     {

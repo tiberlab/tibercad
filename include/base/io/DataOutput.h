@@ -4,12 +4,13 @@
 #define _DATAOUTPUT_H_
 
 #include "SolutionDescriptor.h"
+#include "libMeshDefs.h"
 
 #include <string>
 #include <vector>
 #include <map>
 
-class MeshBase;
+
 
 
 //! A wrapper class for data output
@@ -27,7 +28,7 @@ class DataOutput
       //GNUPLOT   = 0x0004,       //!< GnuPlot format
       VTK       = 0x0008,       //!< Paraview format
       //GMSH      = 0x0010,       //!< GMSH format
-      GMV       = 0x0020        //!< GMV format
+      //GMV       = 0x0020        //!< GMV format
     };
 
 
@@ -54,12 +55,18 @@ class DataOutput
 
 
     //! Write nodal data
+    /*!
+     * Parallel writing is not handled in this method!
+     */
     void write_nodal_data(const std::string& filename,
         const std::vector<double>& data,
         const std::vector<std::string>& legend);
 
 
     //! Write cell data
+    /*!
+     * Parallel writing is not handled in this method!
+     */
     void write_cell_data(const std::string& filename,
         const std::vector<double>& data,
         const std::vector<std::string>& legend);
@@ -143,11 +150,16 @@ class DataOutput
      */
     bool has_data(ID zone = INVALID_ID);
 
-    //! Get the zone data
+    //! Get the zone data for zone \c ID
     const DataMap& get_zone_data(ID zone);
 
     //! The actual writer
-    virtual void do_write(bool force) {}; // = 0;
+    /*!
+     * This needs to be implmented in the actual writer class. If force
+     * is true, the file should be written also if there is no data, i.e.
+     * only the geometrical data is written.
+     */
+    virtual void do_write(bool force); // = 0;
 
 
 
@@ -200,5 +212,10 @@ DataOutput::is_ascii(void) const
   return !is_binary();
 }
 
+inline
+void
+DataOutput::do_write(bool)
+{
+}
 
 #endif // _DATAOUTPUT_H_

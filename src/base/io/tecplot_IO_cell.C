@@ -10,11 +10,13 @@
 #include "elem.h"
 
 
+
+
 void TecplotIO_cell::write_cell_data (const std::string& fname,
 				      const std::vector<Number>& soln,
 				      const std::vector<std::string>& names)
 {
-  if (libMesh::processor_id() == 0)
+  if (libMesh::global_processor_id() == 0)
     {
       if (this->binary())
 	{
@@ -34,7 +36,7 @@ void TecplotIO_cell::write_ascii_cell (const std::string& fname,
 				       const std::vector<std::string>* solution_names)
 {
   // Should only do this on processor 0!
-  assert (libMesh::processor_id() == 0);
+  assert (libMesh::global_processor_id() == 0);
   
   // Create an output stream
   std::ofstream out(fname.c_str());
@@ -197,7 +199,7 @@ void TecplotIO_cell::write_ascii_cell (const std::string& fname,
   const MeshBase::const_element_iterator end = mesh.active_elements_end(); 
 
   for ( ; it != end; ++it)
-    (*it)->write_connectivity(out, TECPLOT);
+    (*it)->write_connectivity(out, libMesh::TECPLOT);
 }
 
 

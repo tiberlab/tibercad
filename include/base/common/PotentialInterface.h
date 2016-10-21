@@ -11,10 +11,15 @@
 #include <vector>
 #include <string>
 
-class Elem;
-class Atom;
-class Point;
 class SimulationInterface;
+class Atom;
+
+
+namespace libMesh
+{
+  class Elem;
+  class Point;
+}
 
 
 //! An interface to a Poisson simulation.
@@ -43,12 +48,12 @@ public:
 
 
   //! Get the electrostatic potential in specified points
-  void get_potential(const Elem* elem, const std::vector<Point>& p,
+  void get_potential(const libMesh::Elem* elem, const std::vector<libMesh::Point>& p,
       std::vector<double>& potentials, bool local_coord = false);
 
 
   //! Get the electrostatic potential in one point
-  double get_potential(const Elem* elem, const Point& p,
+  double get_potential(const libMesh::Elem* elem, const libMesh::Point& p,
       bool local_coord = false);
 
 
@@ -57,12 +62,12 @@ public:
 
 
   //! Get the electron chemical potential in specified points
-  void get_el_chem_potential(const Elem* elem, const std::vector<Point>& p,
+  void get_el_chem_potential(const libMesh::Elem* elem, const std::vector<libMesh::Point>& p,
       std::vector<double>& potentials, bool local_coord = false);
 
 
   //! Get the electron chemical potential in one point
-  double get_el_chem_potential(const Elem* elem, const Point& p,
+  double get_el_chem_potential(const libMesh::Elem* elem, const libMesh::Point& p,
       bool local_coord = false);
 
 
@@ -71,12 +76,12 @@ public:
 
 
   //! Get the hole chemical potential in specified points
-  void get_hl_chem_potential(const Elem* elem, const std::vector<Point>& p,
+  void get_hl_chem_potential(const libMesh::Elem* elem, const std::vector<libMesh::Point>& p,
       std::vector<double>& potentials, bool local_coord = false);
 
 
   //! Get the hole chemical potential in one point
-  double get_hl_chem_potential(const Elem* elem, const Point& p,
+  double get_hl_chem_potential(const libMesh::Elem* elem, const libMesh::Point& p,
       bool local_coord = false);
 
 

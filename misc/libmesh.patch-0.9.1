@@ -1,0 +1,872 @@
+--- include/geom/elem.h.orig	2013-04-23 06:57:18.000000000 +0200
++++ include/geom/elem.h	2014-08-19 13:27:44.904128317 +0200
+@@ -620,6 +620,18 @@
+    */
+   virtual bool close_to_point(const Point& p, Real tol) const;
+ 
++  /**
++   * @returns a point describing node coordinates related to master 
++   * element, depending on which type of element and which node
++   * are passed.
++   *
++   * TODO this is a hack
++   */
++  static Point local_node(ElemType, int);
++ 
++
++
++
+ private:
+   /**
+    * Shared private implementation used by the contains_point()
+@@ -1599,6 +1611,7 @@
+ bool Elem::subactive() const
+ {
+ #ifdef LIBMESH_ENABLE_AMR
++  return false;
+   if (this->active())
+     return false;
+   if (!this->has_children())
+--- src/geom/elem.C.orig	2014-08-18 12:30:36.731939514 +0200
++++ src/geom/elem.C	2014-08-19 12:36:46.611985704 +0200
+@@ -2062,6 +2062,811 @@
+ 
+ 
+ 
++Point Elem::local_node(ElemType e, int n){
++
++  //By G. Penazzi and G. Romano, University of Rome Tor Vergata
++  //2nd May 2007
++
++  libmesh_assert(n >= 0);
++
++  switch (e){
++
++  case EDGE2:
++
++    libmesh_assert(n < 2);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, 0.0, 0.0);     
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case EDGE3:
++
++    libmesh_assert(n < 3);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case EDGE4:
++
++    libmesh_assert (n < 4);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 3:
++      return Point(- 1.0 / 3.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0 / 3.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case TRI3:
++
++    libmesh_assert (n < 3);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case TRI6:
++
++    libmesh_assert (n < 6);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(0.5, 0.0, 0.0);
++      break;
++
++    case 4:
++      return Point(0.5, 0.5, 0.0);
++      break;
++
++    case 5:
++      return Point(0.0, 0.5, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case QUAD4:
++
++    libmesh_assert (n < 4);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 4:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++  
++
++    }
++
++    break;
++
++  case QUAD8:
++
++    libmesh_assert ( n < 8);
++
++  
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 4:
++      return Point(0.0, -1.0, 0.0);
++      break;
++
++    case 5:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 6:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case QUAD9:
++
++    libmesh_assert (n < 9);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 4:
++      return Point(0.0, -1.0, 0.0);
++      break;
++
++    case 5:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 6:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    case 8:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case TET4:
++
++    libmesh_assert (n < 4);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    }
++
++    break;
++
++  case TET10:
++
++    libmesh_assert (n < 10);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 4:
++      return Point(0.5, 0.0, 0.0);
++      break;
++
++    case 5:
++      return Point(0.5, 0.5, 0.0);
++      break;
++
++    case 6:
++      return Point(0.0, 0.5, 0.0);
++      break;
++
++    case 7:
++      return Point(0.0, 0.0, 0.5);
++      break;
++
++    case 8:
++      return Point(0.5, 0.0, 0.5);
++      break;
++
++    case 9:
++      return Point(0.0, 0.5, 0.5);
++      break;
++
++    }
++
++    break;
++
++  case HEX8:
++
++    libmesh_assert (n < 8);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, -1.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, -1.0);
++      break;
++
++    case 4:
++      return Point(-1.0, -1.0, 1.0);
++      break;
++
++    case 5:
++      return Point(1.0, -1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(1.0, 1.0, 1.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 1.0, 1.0);
++      break;
++ 
++    }
++
++    break;
++
++  case HEX20:
++
++    libmesh_assert(n < 20);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, -1.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, -1.0);
++      break;
++
++    case 4:
++      return Point(-1.0, -1.0, 1.0);
++      break;
++
++    case 5:
++      return Point(1.0, -1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(1.0, 1.0, 1.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 1.0, 1.0);
++      break;
++
++    case 8:
++      return Point(0.0, -1.0, -1.0);
++      break;
++
++    case 9:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 10:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 11:
++      return Point(-1.0, 0.0, -1.0);
++      break;
++
++    case 12:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 13:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 14:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 15:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 16:
++      return Point(0.0, -1.0, 1.0);
++      break;
++
++    case 17:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 18:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    case 19:
++      return Point(-1.0, 0.0, 1.0);
++      break;
++
++    }
++
++    break;
++
++  case HEX27:
++
++    libmesh_assert (n < 27);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, -1.0, -1.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(-1.0, 1.0, -1.0);
++      break;
++
++    case 4:
++      return Point(-1.0, -1.0, 1.0);
++      break;
++
++    case 5:
++      return Point(1.0, -1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(1.0, 1.0, 1.0);
++      break;
++
++    case 7:
++      return Point(-1.0, 1.0, 1.0);
++      break;
++
++    case 8:
++      return Point(0.0, -1.0, -1.0);
++      break;
++
++    case 9:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 10:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 11:
++      return Point(-1.0, 0.0, -1.0);
++      break;
++
++    case 12:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 13:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 14:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 15:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 16:
++      return Point(0.0, -1.0, 1.0);
++      break;
++
++    case 17:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 18:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    case 19:
++      return Point(-1.0, 0.0, 1.0);
++      break;
++
++    case 20:
++      return Point(0.0, 0.0, -1.0);
++      break;
++
++    case 21:
++      return Point(0.0, -1.0, 0.0);
++      break;
++
++    case 22:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 23:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 24:
++      return Point(-1.0, 0.0, 0.0);
++      break;
++
++    case 25:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 26:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case PRISM6:
++
++    libmesh_assert (n < 6);
++
++    switch(n){
++
++    case 0:
++      return Point(0.0, 0.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 4:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 5:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    }
++
++    break;
++
++  case PRISM15:
++
++    libmesh_assert (n < 15);
++
++    switch (n){
++
++    case 0:
++      return Point(0.0, 0.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 4:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 5:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(0.5, 0.0, -1.0);
++      break;
++
++    case 7:
++      return Point(0.5, 0.5, -1.0);
++      break;
++
++    case 8:
++      return Point(0.0, 0.5, -1.0);
++      break;
++
++    case 9:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 10:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 11:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 12:
++      return Point(0.5, 0.0, 1.0);
++      break;
++
++    case 13:
++      return Point(0.5, 0.5, 1.0);
++      break;
++
++    case 14:
++      return Point(0.0, 0.5, 1.0);
++      break;
++
++    }
++
++    break;
++
++  case PRISM18:
++
++    libmesh_assert (n < 18);
++
++    switch (n) {
++
++    case 0:
++      return Point(0.0, 0.0, -1.0);
++      break;
++
++    case 1:
++      return Point(1.0, 0.0, -1.0);
++      break;
++
++    case 2:
++      return Point(0.0, 1.0, -1.0);
++      break;
++
++    case 3:
++      return Point(0.0, 0.0, 1.0);
++      break;
++
++    case 4:
++      return Point(1.0, 0.0, 1.0);
++      break;
++
++    case 5:
++      return Point(0.0, 1.0, 1.0);
++      break;
++
++    case 6:
++      return Point(0.5, 0.0, -1.0);
++      break;
++
++    case 7:
++      return Point(0.5, 0.5, -1.0);
++      break;
++
++    case 8:
++      return Point(0.0, 0.5, -1.0);
++      break;
++
++    case 9:
++      return Point(0.0, 0.0, 0.0);
++      break;
++
++    case 10:
++      return Point(1.0, 0.0, 0.0);
++      break;
++
++    case 11:
++      return Point(0.0, 1.0, 0.0);
++      break;
++
++    case 12:
++      return Point(0.5, 0.0, 1.0);
++      break;
++
++    case 13:
++      return Point(0.5, 0.5, 1.0);
++      break;
++
++    case 14:
++      return Point(0.0, 0.5, 1.0);
++      break;
++
++    case 15:
++      return Point(0.5, 0.0, 0.0);
++      break;
++
++    case 16:
++      return Point(0.5, 0.5, 0.0);
++      break;
++
++    case 17:
++      return Point(0.0, 0.5, 0.0);
++      break;
++
++    }
++
++    break;
++
++  case PYRAMID5:
++
++    libmesh_assert (n < 5);
++
++    switch (n){
++
++    case 0:
++      return Point(-1.0, -1.0, 0.0);
++      break;
++
++    case 1:
++      return Point(-1.0, 1.0, 0.0);
++      break;
++
++    case 2:
++      return Point(1.0, 1.0, 0.0);
++      break;
++
++    case 3:
++      return Point(1.0, -1.0, 0.0);
++      break;
++
++    case 4:
++      return Point(0.0, 0.0, 1.0);
++
++    }
++
++    break;
++
++ default:
++
++   std::cerr << "ERROR: Unsupported element type!: " << e
++	     << std::endl;
++   libmesh_error();
++
++  }
++
++}
++
++
++
+ Real Elem::quality (const ElemQuality q) const
+ {
+   switch (q)
+--- src/mesh/mesh_refinement.C.orig	2013-04-23 06:57:18.000000000 +0200
++++ src/mesh/mesh_refinement.C	2014-08-19 13:33:04.236143207 +0200
+@@ -1789,9 +1789,12 @@
+ 
+       for ( ; elem_it != elem_end; ++elem_it)
+         {
+-	  (*elem_it)->set_refinement_flag(Elem::COARSEN);
+-          if ((*elem_it)->parent())
+-	    (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          if ((*elem_it)->level() != 0)
++          {
++            (*elem_it)->set_refinement_flag(Elem::COARSEN);
++            if ((*elem_it)->parent())
++              (*elem_it)->parent()->set_refinement_flag(Elem::COARSEN_INACTIVE);
++          }
+         }
+ 
+       // Coarsen all the elements we just flagged.
+--- m4/config_environment.m4.orig	2015-03-02 10:38:52.331685905 +0100
++++ m4/config_environment.m4	2015-03-02 10:39:12.347684960 +0100
+@@ -65,7 +65,7 @@
+ AC_DEFINE_UNQUOTED([BUILD_HOST],     "${BUILD_HOST}",     [Build host name])
+ AC_DEFINE_UNQUOTED([BUILD_VERSION],  "${BUILD_VERSION}",  [SVN revision])
+ AC_DEFINE_UNQUOTED([BUILD_DEVSTATUS],"${BUILD_DEVSTATUS}",[Dev/Release build])
+-AC_DEFINE(         [BUILD_DATE],     __DATE__" "__TIME__, [Build date])
++AC_DEFINE(         [BUILD_DATE],     __DATE__ " " __TIME__, [Build date])
+ 
+ AC_SUBST(BUILD_USER)
+ AC_SUBST(BUILD_ARCH)

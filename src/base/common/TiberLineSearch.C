@@ -4,12 +4,14 @@
 #include "TiberLinearSolver.h"
 #include "InitFailedException.h"
 
+#include "TiberCad.h"
+
 #include "mesh.h"
 
 using namespace std;
 
 
-TiberLineSearch::TiberLineSearch(EquationSystems& es,
+TiberLineSearch::TiberLineSearch(libMesh::EquationSystems& es,
     const string& name, const unsigned int number)
 : Parent(es, name, number),
   _solver(NULL),
@@ -22,7 +24,7 @@ TiberLineSearch::TiberLineSearch(EquationSystems& es,
   _divergence_tol(4.0)
 {
   // add a vector for the solution
-  add_vector("sol");
+  add_vector("sol", true, libMesh::GHOSTED);
 }
 
 
@@ -75,9 +77,9 @@ TiberLineSearch::user_initialization(void)
   {
     ModelOptions::submodel_iterator it = get_options().submodels_begin("linear_solver");
     if (it != get_options().submodels_end("linear_solver"))
-      _solver = TiberLinearSolver::create(it->second);
+      _solver = TiberLinearSolver::create(this->comm(), it->second);
     else
-      _solver = TiberLinearSolver::create(ModelOptions());
+      _solver = TiberLinearSolver::create(this->comm(), ModelOptions());
   }
 }
 

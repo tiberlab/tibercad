@@ -31,9 +31,9 @@ class OpticPropsWDependant: public OpticPropsInterface
 
      virtual Complex get_dielectric_constant() const;
 
-     virtual const TensorValue<Complex> get_optical_epsilon() const {
+     virtual const libMesh::TensorValue<Complex> get_optical_epsilon() const {
        Complex t = get_dielectric_constant();
-       return TensorValue<Complex>(t, 0, 0, 0, t, 0, 0, 0, t);
+       return libMesh::TensorValue<Complex>(t, 0, 0, 0, t, 0, 0, 0, t);
      }
 
      virtual double get_permeability_constant() const {

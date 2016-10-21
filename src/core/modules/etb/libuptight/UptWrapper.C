@@ -178,6 +178,14 @@ void UptWrapper::lanczos_diag(int st_vb, int st_cb, int n_vb, int n_cb, double g
 
 }
 
+
+void UptWrapper::jacobidavidson(int st_cb, int st_vb, int n_vb, int n_cb, double guess_vb, double guess_cb,
+      double long_tol)
+{
+  f77_upt_jd_diag(_handler, st_cb, st_vb, n_vb, n_cb, guess_vb, guess_cb, long_tol);
+}
+
+
 //! Call FEAST solver
 void UptWrapper::feast(double emin, double emax, int m0) {
 

@@ -8,10 +8,10 @@
 
 class IIFEBase {
   public:
-    virtual void reinit(const Elem *elem, unsigned int order, const std::vector<Point> *const pts=NULL) {
+    virtual void reinit(const libMesh::Elem *elem, unsigned int order, const std::vector<libMesh::Point> *const pts=NULL) {
     }
 
-    virtual void reinit(const Elem *elem, unsigned int order, const unsigned int side, const Real tolerance = TOLERANCE) {
+    virtual void reinit(const libMesh::Elem *elem, unsigned int order, const unsigned int side, const libMesh::Real tolerance = libMesh::TOLERANCE) {
     }
 
     virtual std::vector<FunctionInfo>& getFunctionsInfo() {
@@ -20,10 +20,10 @@ class IIFEBase {
     virtual ~IIFEBase() {
     }
 
-    virtual void attach_quadrature_rule(QBase* q) {
+    virtual void attach_quadrature_rule(libMesh::QBase* q) {
     }
 
-    virtual const std::vector<Real>& get_JxW() const {
+    virtual const std::vector<libMesh::Real>& get_JxW() const {
     }
 };
 

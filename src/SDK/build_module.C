@@ -622,6 +622,7 @@ Compiler::_compile(const string& source, const string& flags)
   string depfile = _outdir + "/" + basename + ".d";
   ostringstream cmdline;
   cmdline << _executable << " " << _preprocessor_flags
+    << " " << _compiler_flags
       << " -MG -MM -MF " << depfile << " " << source;
   system(cmdline.str().c_str());
 

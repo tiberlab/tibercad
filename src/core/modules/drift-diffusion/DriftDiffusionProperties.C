@@ -25,7 +25,7 @@
 
 using namespace std;
 
-
+class Elem;
 
 
 DriftDiffusionProperties::PointData::PointData(void)
@@ -489,7 +489,7 @@ DriftDiffusionProperties::clear_recombination(void)
 
 /*
 void
-DriftDiffusionProperties::reinit(const Elem* elem)
+DriftDiffusionProperties::reinit(const libMesh::Elem* elem)
 {
 
   if (_elem != elem)

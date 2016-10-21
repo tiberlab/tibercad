@@ -26,7 +26,7 @@ LatticeMismatch::do_init(void)
 {
 
 
-  RealGradient body_force(0);
+  libMesh::RealGradient body_force(0);
   
  //Get reference lattice
   const std::string name = get_option("reference_material", "");
@@ -75,7 +75,7 @@ LatticeMismatch::do_init(void)
   //_eps0 = sym(RotMatrix * ( _eps0 * (RotMatrix.transpose())));
 
 
-  RealTensor eps0(0);
+  libMesh::RealTensor eps0(0);
   for (ID i = 0; i<3; i ++)
     for (ID j = i; j<=i; j ++)
     {

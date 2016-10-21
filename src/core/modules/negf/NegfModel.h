@@ -21,7 +21,7 @@ class TBDLLOCAL NegfModel : public PhysicalModel
     //! Creator function
     static NegfModel* create(const Material* mat, const ModelOptions& options);
 
-    const TensorValue<double>& get_inv_mass(ID id) const;
+    const libMesh::TensorValue<double>& get_inv_mass(ID id) const;
 
     unsigned int get_n_bands(void) const;
 
@@ -64,7 +64,7 @@ void  NegfModel::_destroy( TiberModelObject* p)
 
 
 inline
-const TensorValue<double>& NegfModel::get_inv_mass(ID id) const
+const libMesh::TensorValue<double>& NegfModel::get_inv_mass(ID id) const
 {
    return _ham_models[id]->get_inv_mass();
 }

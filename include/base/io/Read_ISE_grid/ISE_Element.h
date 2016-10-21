@@ -2,7 +2,6 @@
 #define ISE_ELEMENT_H_
 #include <vector>
 #include "ISE_Vertex.h"
-#include "reference_counted_object.h"
 
 using  namespace std;
 
@@ -11,7 +10,7 @@ using  namespace std;
 /*!
   Contains general methods.
 */
-class TBDLLOCAL ISE_Element : public ReferenceCountedObject<ISE_Element>
+class TBDLLOCAL ISE_Element
 {
  public:
 

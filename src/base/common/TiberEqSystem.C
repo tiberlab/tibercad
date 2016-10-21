@@ -12,6 +12,8 @@
 #include <cassert>
 
 
+
+
 TiberEqSystem::TiberEqSystem(void)
   : _type(LINEAR),
     _l2_weight(NULL),
@@ -22,7 +24,7 @@ TiberEqSystem::TiberEqSystem(void)
 
 
 TiberEqSystem*
-TiberEqSystem::create(EquationSystems& es,
+TiberEqSystem::create(libMesh::EquationSystems& es,
     const std::string& sysname, const std::string& type,
     const ModelOptions& options)
 {
@@ -41,7 +43,7 @@ TiberEqSystem::create(EquationSystems& es,
 
 
 TiberEqSystem*
-TiberEqSystem::create(EquationSystems& es,
+TiberEqSystem::create(libMesh::EquationSystems& es,
     const std::string& sysname, SystemType type,
     const ModelOptions& options)
 {
@@ -66,10 +68,10 @@ TiberEqSystem::create(EquationSystems& es,
 
 
 
-System*
+libMesh::System*
 TiberEqSystem::get_libmesh_system(void)
 {
-  System* sys = NULL;
+  libMesh::System* sys = NULL;
   switch (get_type())
   {
     case LINEAR:
@@ -87,7 +89,7 @@ TiberEqSystem::get_libmesh_system(void)
 
 
 void
-TiberEqSystem::exclude_dofs(DenseMatrix<double>& mat,
+TiberEqSystem::exclude_dofs(libMesh::DenseMatrix<double>& mat,
     const std::vector<unsigned int>& dof_indices, const Elem* elem)
 {
 
@@ -119,7 +121,7 @@ TiberEqSystem::exclude_dofs(DenseMatrix<double>& mat,
 
 
 void
-TiberEqSystem::exclude_dofs(DenseVector<double>& vec,
+TiberEqSystem::exclude_dofs(libMesh::DenseVector<double>& vec,
     const std::vector<unsigned int>& dof_indices, const Elem* elem)
 {
   // if there are no excluded Dofs we have nothing to do
@@ -145,7 +147,7 @@ TiberEqSystem::exclude_dofs(DenseVector<double>& vec,
 
 
 void
-TiberEqSystem::set_weight(const NumericVector<double>* weight, NormType norm)
+TiberEqSystem::set_weight(const libMesh::NumericVector<double>* weight, NormType norm)
 {
   switch (norm)
   {
@@ -164,38 +166,32 @@ TiberEqSystem::set_weight(const NumericVector<double>* weight, NormType norm)
 
 
 double
-TiberEqSystem::calculate_norm(NumericVector<double>* vec, NormType norm)
+TiberEqSystem::calculate_norm(libMesh::NumericVector<double>* vec, NormType norm)
 {
   double result = 0;
-  double old;
   switch (norm)
   {
     case l2_NORM:
-      old = vec->l2_norm();
       if (_l2_weight != NULL)
         vec->pointwise_mult(*vec, *_l2_weight);
       result = vec->l2_norm();
-      //std::cerr << "l2 ";
       break;
 
     case MAX_NORM:
-      old = vec->linfty_norm();
       if (_linfty_weight != NULL)
         vec->pointwise_mult(*vec, *_linfty_weight);
       result = vec->linfty_norm();
-      //std::cerr << "linfty ";
       break;
 
     default:
       break;
   }
-      //std::cerr << old << "  " << result << std::endl;
 
   return result;
 }
 
 
-const NumericVector<double>*
+const libMesh::NumericVector<double>*
 TiberEqSystem::get_weight(NormType norm) const
 {
   switch (norm)

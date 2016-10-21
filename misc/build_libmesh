@@ -8,7 +8,8 @@ fi
 . common.sh
 
 
-REVISION=3581
+#REVISION=3581
+REVISION=HEAD
 
 echo "Compiling libMesh version $LIBMESHVERSION in $BUILDDIR ..."
 
@@ -18,30 +19,20 @@ if [ ! -d $BUILDDIR ]; then
   exit 1
 fi
 
-ARCHIVE=libmesh${LIBMESHVERSION}.tar.gz
+
+ARCHIVE=v${LIBMESHVERSION}.tar.gz
+#ARCHIVE=libmesh-${LIBMESHVERSION}.tar.gz
+
 PATCH=${PWD}/libmesh.patch-${LIBMESHVERSION}
 WINPATCH=${PWD}/libmesh-win.patch
 
 cd $BUILDDIR
 if [ ${LIBMESHVERSION} == "svn" ]; then
   if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
-    if [ ! -e libmesh-${LIBMESHVERSION}.tbz ]; then
-#      svn -r ${REVISION} co https://libmesh.svn.sourceforge.net/svnroot/libmesh/trunk/libmesh libmesh-${LIBMESHVERSION}
-      svn -r ${REVISION} co https://svn.code.sf.net/p/libmesh/svn/trunk/libmesh libmesh-${LIBMESHVERSION}
-      tar jcf libmesh-${LIBMESHVERSION}.tbz libmesh-${LIBMESHVERSION}
-      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$TCHOST
-    else
-      tar jxf libmesh-${LIBMESHVERSION}.tbz
-      mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$TCHOST
-    fi
-
-    if [ -e ${PATCH} ]; then
-      patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < ${PATCH}
-    fi
-
-    if [ "$target_os" == "win32" ] && [ -e $WINPATCH ]; then
-      patch -p0 -d libmesh-${LIBMESHVERSION}-$TCHOST < $WINPATCH
-
+    echo "svn version of libmesh is not available anymore"
+    exit
+  fi
+    
       cat > libmesh-${LIBMESHVERSION}-${TCHOST}/m4/check_file.m4 <<END
 # AC_CHECK_FILE(FILE, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
 # -------------------------------------------------------------
@@ -65,19 +56,18 @@ AS_VAR_POPDEF([ac_File])dnl
 
 END
 
-    fi
-  fi
 else
   if [ ! -e ${ARCHIVE} ]; then
-    wget http://dfn.dl.sourceforge.net/sourceforge/libmesh/${ARCHIVE}
+    wget -O $ARCHIVE https://github.com/libMesh/libmesh/archive/${ARCHIVE}
+    #wget https://github.com/libMesh/libmesh/releases/download/v${LIBMESHVERSION}/${ARCHIVE}
   fi
 fi
 
 if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
-  if [ ! -e ${ARCHIVE} ]; then
-    echo "Could not download libmesh."
-    exit 1
-  fi
+   if [ ! -e ${ARCHIVE} ]; then
+     echo "Could not download libmesh."
+     exit 1
+   fi
   tar zxf ${ARCHIVE}
   mv libmesh-${LIBMESHVERSION} libmesh-${LIBMESHVERSION}-$TCHOST
 
@@ -91,14 +81,17 @@ if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
 fi
 
 
-cd libmesh-${LIBMESHVERSION}-$TCHOST
+#cd libmesh-${LIBMESHVERSION}-${TCHOST}/libmesh
+cd libmesh-${LIBMESHVERSION}-${TCHOST}
+pwd
 
 # we have modifications to the configuration
 #aclocal -I m4
 #autoconf
-cp ${TOPDIR}/misc/configure.libmesh configure
+#cp ${TOPDIR}/misc/configure.libmesh configure
 
 
+#export SLEPC_DIR=${BUILDDIR}/slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}
 export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
 export PETSC_ARCH=${TCHOST}
 
@@ -130,32 +123,51 @@ then
   LDFLAGS="${LDFLAGS} -ldl"
 fi
 
-[ "$debug" = 1 ] && dll_name=${dll_name}_dbg
 dll_name=${dll_name}${dll_libext}
   
+export LDFLAGS
 
-./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --disable-second --disable-bzip2 --disable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv --disable-reference-counting --host=$HOST --build=$BUILD
 #--with-cc=${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicc
 #--with-cxx=${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx 
 
-#export libmesh_CXXFLAGS="-std=gnu++0x -g"
-export libmesh_CXXFLAGS="-g -fpermissive"
-
-# delete the -pedantic flag because it makes problems with mpi
-cp Make.common Make.common.orig
-sed -e 's/-pedantic//g' -e 's/-D_GLIBCXX_DEBUG_PEDANTIC//g' -e 's/-D_GLIBCXX_DEBUG//g' \
-  -e "s/-ansi//g"  -e 's/^enable-shared.*/enable-shared := no/'  Make.common.orig > Make.common
+#export METHODS=opt
+#if [ $DEBUG == 'y' ]
+#then
+#  export METHODS=dbg
+#fi
 
 
-make |tee make_opt.log
+#./configure --enable-petsc --disable-slepc --enable-mpi --disable-complex --disable-periodic ${SHARED} --disable-pfem --enable-static \
+
+./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --enable-static \
+ --disable-second --disable-bzip2 --enable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 \
+ --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv \
+ --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
+ --disable-openmp \
+ --with-fparser=none \
+ --with-methods="devel" \
+ --host=$HOST --build=$BUILD
+
+
+
+make |tee make.log
+
 
 echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${dll_name} ..."
-staticlib=`make echo | grep libmesh.a`
-contriblibs=`echo $staticlib | sed -e 's/lib\//contrib\/lib\//' -e 's/libmesh\.a/\*\.a/'`
-contribdir=${contriblibs/%\*\.a}
-rm -f ${contribdir}/libnemesis.*
-rm -f ${contribdir}/libexodusii.*
+#staticlib=`make echo | grep -m 1 libmesh.a`
+#if [ $DEBUG == 'y' ]
+#then
+  staticlib=`find -name libmesh_devel.a`
+#else
+#  staticlib=`find -name libmesh_opt.a`
+#fi
+contriblibs=
+#contriblibs=`echo $staticlib | sed -e 's/\.libs\//contrib\/\.libs\//' -e 's/libmesh_opt\.a/libcontrib_opt\.a/'`
+#contribdir=${contriblibs/%\*\.a}
+#rm -f ${contribdir}/libnemesis.*
+#rm -f ${contribdir}/libexodusii.*
 mkdir -p ${SDKDIR}/${TCHOST}/lib
+
 
 ARCHIVES="-Wl,--whole-archive ${staticlib} ${contriblibs} -Wl,--no-whole-archive" 
 if [ "$target_os" = darwin ]
@@ -173,19 +185,15 @@ then
   libmesh_linker_flags="-Wl,-install_name,@rpath/lib/${dll_name}"
 fi
 
+
 ${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${dll_name} \
   ${libmesh_linker_flags} \
   ${ARCHIVES} \
   -L${SDKDIR}/${TCHOST}/lib -Wl,-rpath,\$ORIGIN -lpetsc_real${dbg} \
-  ${LAPACK_LIBS} ${FORTRAN_LIBS}
+  ${LDFLAGS} ${LAPACK_LIBS} ${FORTRAN_LIBS} -limf
 
 mkdir -p ${TOPDIR}/${TCHOST}/lib
 cp ${SDKDIR}/${TCHOST}/lib/${dll_name} ${TOPDIR}/${TCHOST}/lib/${dll_name}
 
 
-
-if [ $DEBUG == 'y' ]; then
-  export PETSC_ARCH=${TCHOST}-dbg
-  make METHOD=dbg
-fi
 

@@ -18,7 +18,6 @@
 #include "hp_singular.h"
 #include "mesh_generation.h"
 #include "mesh_modification.h"
-#include "o_string_stream.h"
 #include "perf_log.h"
 #include "getpot.h"
 #include "dof_map.h"
@@ -36,7 +35,7 @@
 #include "MaxwellEquationsCommon.h"
 #include "ICubic.h"
 
-using namespace libMesh;
+
 using namespace std;
 
 //! Class to solve Maxwell equations
@@ -121,7 +120,7 @@ class MaxwellEquations : public MaxwellEquationsCommon
 
     std::map<ID, double> hopfieldCoeeficients; // Map: region ID -> hopfield coeff
 
-    static void assemble_maxwell_equations(EquationSystems& es, const std::string& system_name);
+    static void assemble_maxwell_equations(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! Setup the available variables
     virtual void do_setup_solution_variables(void);

@@ -20,6 +20,7 @@
  #include "omp.h"
 #endif
 
+
 #ifndef ARCH
 #error "Architecture has to be specified on the command line as string"
 #endif
@@ -27,9 +28,10 @@
 // we hand an empty command line to underlying libraries
 namespace
 {
-  int __empty_argc = 1;
-  char** __empty_argv = new char*[1];
+  int __empty_argc = 2;
+  char** __empty_argv = new char*[2];
   char __executable[] = "tibercad";
+  char __option[] = "--node_major_dofs";
 }
 
 
@@ -65,9 +67,8 @@ const int
 TiberCad::_SvnRevision = SVNREVISION;
 
 
-MPI_Comm
+libMesh::Parallel::Communicator
 TiberCad::_mpi_comm;
-
 
 
 TiberCad::TiberCad(MPI_Comm mpi_comm) :
@@ -89,12 +90,19 @@ TiberCad::~TiberCad(void)
 
 
 
-MPI_Comm
+//const libMesh::Parallel::Communicator&
+//TiberCad::get_mpi_comm()
+//{
+//  return(_mpi_comm);
+//}
+
+
+
+libMesh::Parallel::Communicator&
 TiberCad::get_mpi_comm()
 {
   return(_mpi_comm);
 }
-
 
 
 std::string
@@ -184,34 +192,24 @@ TiberCad::init(const std::string& inputfile)
 
   // to the libraries we hand empty cmdline!
   __empty_argv[0] = __executable;
+  __empty_argv[1] = __option;
 
 #ifdef _WIN32
   // a trick to get libgomp in
   int omp_procs = omp_get_num_procs();
 #endif
 
-  MPI_Comm local_comm;
-  int proc_id, p;
-
-  /* get current process id */
-  MPI_Comm_rank(_mpi_comm, &proc_id);
-  MPI_Comm_size(_mpi_comm, &p);    /* get number of processes */
-  MPI_Comm_split(_mpi_comm, proc_id, 0, &local_comm);
-
-  int local_id;
-  MPI_Comm_rank(local_comm, &local_id);
-  MPI_Barrier(_mpi_comm);
-
-  //if (proc_id == 1) sleep(2);
-  //std::cerr << "global: rank = " << proc_id << " np = " << p << std::endl;
-  //std::cerr << "local : rank = " << local_id << std::endl;
-
   // prepare libMesh
-  _libmeshinit = new LibMeshInit(__empty_argc, __empty_argv, local_comm);
+  _libmeshinit = new libMesh::LibMeshInit(__empty_argc, __empty_argv, _mpi_comm.get());
 
+  //MPI_Comm local_comm;
+  //int proc_id;
+
+  //MPI_Comm_rank(_mpi_comm.get(), &proc_id);
+  //MPI_Comm_split(_mpi_comm.get(), proc_id, 0, &local_comm);
   // prepare EigenSolver
-  EigenSolver::slepc_init(__empty_argc, __empty_argv, local_comm);
-  //EigenSolver::slepc_init(__empty_argc, __empty_argv, _mpi_comm);
+  //EigenSolver::slepc_init(__empty_argc, __empty_argv, local_comm);
+  EigenSolver::slepc_init(__empty_argc, __empty_argv, _mpi_comm.get());
 
   PetscPopSignalHandler();
 

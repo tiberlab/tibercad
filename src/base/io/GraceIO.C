@@ -8,11 +8,13 @@
 
 // C++ includes
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 #include <map>
 #include <stdexcept>
 
 using namespace std;
+
 
 
 GraceIO::GraceIO(const MeshBase& mesh)
@@ -26,9 +28,6 @@ void GraceIO::write_nodal_data(const std::string& fname,
     const std::vector<double>& soln,
     const std::vector<std::string>& names)
 {
-
-  if(libMesh::processor_id() != 0)
-    return;
 
   if (names.size() == 0)
     return;
@@ -138,9 +137,6 @@ void GraceIO::write_elemental_data(const std::string& fname,
     const std::vector<std::string>& names)
 {
 
-  if(libMesh::processor_id() != 0)
-    return;
-
   if (names.size() == 0)
     return;
 
@@ -182,7 +178,7 @@ void GraceIO::write_elemental_data(const std::string& fname,
   unsigned int elem_number = 0;
   for ( ; it != end; ++it)
   {
-    const Elem* elem = *it;
+    const libMesh::Elem* elem = *it;
 
     std::vector<Number> values;
 
@@ -229,14 +225,14 @@ GraceIO::create_pieces(PieceMap& pieces)
 {
   const MeshBase& mesh = get_mesh();
 
-  MeshBase::const_element_iterator it  = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end = mesh.active_elements_end();
+  MeshBase::const_element_iterator it  = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end = mesh.active_local_elements_end();
 
   unsigned int nelem = mesh.n_elem();
 
   for ( ; it != end; ++it)
   {
-    const Elem* elem = *it;
+    const libMesh::Elem* elem = *it;
     unsigned int id = elem->subdomain_id();
 
     if (! pieces.count(id))
@@ -347,9 +343,9 @@ GraceIO::do_write(bool force)
     {
       const DataMap& datamap = get_zone_data(id);
 
-      const vector<const Elem*>& elvec = it->second;
+      const vector<const libMesh::Elem*>& elvec = it->second;
 
-      map<const Elem*, unsigned int> elem_indices;
+      map<const libMesh::Elem*, unsigned int> elem_indices;
       // loop over all elements and make a map with element
       // position indices
       for (unsigned int n = 0; n < elvec.size(); n++)
@@ -361,12 +357,12 @@ GraceIO::do_write(bool force)
       // loop over all elements
       for (unsigned int n = 0; n < elvec.size(); n++)
       {
-        const Elem* elem = elvec[n];
+        const libMesh::Elem* elem = elvec[n];
 
         //loop over the nodes
         for (int i = 0; i < 2; i++)
         {
-          const Elem* neighbor = elem->neighbor(i);
+          const libMesh::Elem* neighbor = elem->neighbor(i);
           ID neighbor_id = INVALID_ID;
           if (neighbor != NULL)
             neighbor_id = neighbor->subdomain_id();

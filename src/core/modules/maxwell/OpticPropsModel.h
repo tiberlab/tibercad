@@ -26,7 +26,7 @@ class OpticPropsModel: public OpticPropsInterface
 
      PhysicalModelInterface* create_new() const;
 
-     virtual Complex get_dielectric_constant() const {
+     virtual libMesh::Complex get_dielectric_constant() const {
        return epsilon(0, 0);
      }
 

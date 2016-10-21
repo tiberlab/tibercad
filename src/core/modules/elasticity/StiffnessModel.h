@@ -7,13 +7,14 @@
 
 #include "tensor_value.h"
 #include "tensor.h"
+#include "elem.h"
 #include "RotatedCrystal.h"
 #include "Material.h"
 #include "TensorOperators.h"
 
 
-class Elem;
-class Point;
+//class Elem;
+//class Point;
 
 using namespace std;
 
@@ -31,7 +32,7 @@ class StiffnessModel : public PhysicalModelInterface
 
   Tensor4DSym get_stiffness(void) const;
 
-  virtual void calculate(const Elem* elem, const Point& point){};
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point){};
 
   protected:
 

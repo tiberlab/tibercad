@@ -5,16 +5,16 @@
 #include "ElasticityBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
-#include "equation_systems.h"
-#include "dof_map.h"
-#include "quadrature_gauss.h"
-#include "quadrature_trap.h"
-#include "sparse_matrix.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
-#include "dense_submatrix.h"
-#include "dense_subvector.h"
-#include "fe_interface.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/quadrature_trap.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/dense_matrix.h"
+#include "libmesh/dense_vector.h"
+#include "libmesh/dense_submatrix.h"
+#include "libmesh/dense_subvector.h"
+#include "libmesh/fe_interface.h"
 #include "SimulationOptions.h"
 #include "SimulationEnvironment.h"
 #include "TensorOperators.h"
@@ -27,6 +27,7 @@
 
 
 using namespace std;
+using namespace libMesh;
 
 Elasticity*
 Elasticity::_this = NULL;
@@ -62,6 +63,9 @@ Elasticity::do_init(void)
 {
 
   parse_options();
+
+  // setup matrix in some more useful units
+  get_scaling().set_length_scaling(get_mesh_units());
  
   create_equation_system("linear");
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
@@ -92,8 +96,8 @@ Elasticity::do_init(void)
     vector<unsigned short int> node_conn_local(node_conn.size());
     
     
-    MeshBase::const_element_iterator       el     = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator       el     = get_mesh().active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
     
     for ( ; el != end_el; ++el, ++n_elem)
       for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
@@ -162,7 +166,7 @@ Elasticity::do_solve(void)
   //       across different simulations. Accumulated strain should persist,
   //       and also sol should accumulate the deformation across several
   //       solves.
-  sol =  (system.solution)->clone();
+  sol =  (system.current_local_solution)->clone();
   sol->zero();
   _accumulated_strain.clear();
   (system.solution)->zero();
@@ -196,7 +200,7 @@ Elasticity::do_solve(void)
     system.solution->zero();
 
     system.solve();
-    sol->add(1.0,*(system.solution));
+    sol->add(1.0,*(system.current_local_solution));
     
     double tot_norm = sol->l2_norm();
     double norm = (system.solution)->l2_norm();
@@ -205,7 +209,7 @@ Elasticity::do_solve(void)
     //The error is based on the elastic energy
     //double elastic_energy = abs(compute_elastic_energy());
     //error_energy = abs((new_energy - energy)/energy) * 100.0;
-    //energy = new_energ�y;
+    //energy = new_energ���y;
 
     if ((verbose() > 1) && shape_iteration > 0)
     {
@@ -270,27 +274,27 @@ Elasticity::accumulate_strain(void)
 {
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
-  const NumericVector<Number>& solution = system.get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
 
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
 
-  DofMap& dof_map =  system.get_dof_map();
+  libMesh::DofMap& dof_map =  system.get_dof_map();
   vector<vector<unsigned int> > dof_indices_vec(3);
   vector<unsigned int> dof_indices;
 
-  FEType fe_type = dof_map.variable_type(uvar[0]);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, CONSTANT);
+  libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim, CONSTANT);
   fe->attach_quadrature_rule(&qrule);
 
   const vector<Point>& ref_points = qrule.get_points();
   const vector<Real>& JxW = fe->get_JxW();
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
@@ -302,7 +306,7 @@ Elasticity::accumulate_strain(void)
     dof_map.dof_indices(elem, dof_indices_vec[2], uvar[2]);
     const unsigned int n_dofs = dof_indices_vec[0].size();
 
-    RealTensor strain(0);
+    libMesh::RealTensor strain(0);
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 3; j++)
         for (int l = 0; l < n_dofs; l++)
@@ -324,32 +328,34 @@ Elasticity::get_solution_secure(const Elem* elem,
    
    TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
 
-   const NumericVector<Number>& solution = system->get_solution_vector();
-   const NumericVector<Number>& accum_sol = *sol;
+   const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
+   const libMesh::NumericVector<Number>& accum_sol = *sol;
    const unsigned int dim = get_mesh().mesh_dimension();
 
-   const DofMap& dof_map = system->get_dof_map();
+   const libMesh::DofMap& dof_map = system->get_dof_map();
 
    std::vector<std::vector<unsigned int> > dof_indices(3);
    for (unsigned int i = 0; i< 3 ; i++)
      dof_map.dof_indices(elem, dof_indices[i],uvar[i]);
 
-   FEType fe_type = system->variable_type(uvar[0]);
-   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+   libMesh::FEType fe_type = system->variable_type(uvar[0]);
+   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
    const std::vector<std::vector<Real> >& phi = fe->get_phi();
-   const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+   const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
    const std::vector<Point>& real_pts = fe->get_xyz();
   
    fe->reinit(elem, &p);
   
    ElasticityModel& mod = *get_bulk_model<ElasticityModel>(elem);
    
-   RealTensor total_strain;
-   RealTensor total_stress;
-   RealTensor stress;
-   RealTensor strain;
-   RealTensor summed_strain;
+   libMesh::RealTensor total_strain;
+   libMesh::RealTensor total_stress;
+   libMesh::RealTensor stress;
+   libMesh::RealTensor strain;
+   libMesh::RealTensor summed_strain;
    _accumulated_strain[elem].get_tensor(summed_strain);
+
+   double x0 = this->get_scaling().get_length_scaling();
 
   
    for (int n = 0; n < np; n++)
@@ -357,11 +363,11 @@ Elasticity::get_solution_secure(const Elem* elem,
      mod.calculate(elem, p[n]);
      
      const Tensor4DSym& C = mod.get_stiffness();
-     const RealGradient& force_source =  mod.get_force_source();
-     const RealTensor& strain_source  =  mod.get_strain_source();
-     const RealTensor& stress_source  =  mod.get_stress_source();
+     const libMesh::RealGradient& force_source =  mod.get_force_source();
+     const libMesh::RealTensor& strain_source  =  mod.get_strain_source();
+     const libMesh::RealTensor& stress_source  =  mod.get_stress_source();
     
-     RealGradient u(0);
+     libMesh::RealGradient u(0);
      for (unsigned int i = 0;i<3; i ++)
        for (unsigned int alpha = 0; alpha<dof_indices[i].size() ;alpha ++)
          u(i) += (accum_sol)(dof_indices[i][alpha]) * phi[alpha][n];
@@ -398,9 +404,9 @@ Elasticity::get_solution_secure(const Elem* elem,
      //----Displacemet--------
      if (values.count(Displacement))
      {
-       values[Displacement][3*n]   = u(0);
-       values[Displacement][3*n+1] = u(1);
-       values[Displacement][3*n+2] = u(2);
+       values[Displacement][3*n]   = x0 * u(0);
+       values[Displacement][3*n+1] = x0 * u(1);
+       values[Displacement][3*n+2] = x0 * u(2);
      }
 
      //Total Strain
@@ -448,7 +454,7 @@ Elasticity::get_solution_secure(const Elem* elem,
        const Material* mat = mod.get_material();
        const RotatedCrystal&   cr = mat->get_rotated_crystal ();
        const Tensor2Gen& rotate = cr.RotMatrix;
-       RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate);
+       libMesh::RealTensor crystal_strain = rotate.transpose() * (total_strain * rotate);
 
        values[StrainCrystal][6*n] =   crystal_strain(0,0);
        values[StrainCrystal][6*n+1] = crystal_strain(1,1);
@@ -491,7 +497,7 @@ Elasticity::get_solution_secure(const Elem* elem,
        const Material* mat = mod.get_material();
        const RotatedCrystal&   cr = mat->get_rotated_crystal ();
        const Tensor2Gen& rotate = cr.RotMatrix;
-       RealTensor crystal_stress = rotate.transpose() * (total_stress * rotate);
+       libMesh::RealTensor crystal_stress = rotate.transpose() * (total_stress * rotate);
        
        values[StressCrystal][6*n] =   crystal_stress(0,0);
        values[StressCrystal][6*n+1] = crystal_stress(1,1);
@@ -572,18 +578,18 @@ Elasticity::compute_elastic_energy(void)
 
   const MeshBase& mesh = get_mesh();
   const unsigned int dim = mesh.mesh_dimension();
-  DofMap& dof_map =  system.get_dof_map();
-  FEType fe_type = dof_map.variable_type(uvar[0]);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim, FIFTH);
+  libMesh::DofMap& dof_map =  system.get_dof_map();
+  libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim, FIFTH);
   fe->attach_quadrature_rule(&qrule);
 
   const vector<Point>& ref_points = qrule.get_points();
   const vector<Real>& JxW = fe->get_JxW();
 
   //Start assembling
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
 
   Real energy(0);
   for ( ; el != end_el ; ++el)
@@ -605,86 +611,31 @@ Elasticity::compute_elastic_energy(void)
 
 }
 
-/*
-RealTensor
-Elasticity::get_stress(const Elem* elem, const Point& p)
-{
-  
-  RealTensor stress(0);
-
-    std::vector<double> stress_p(6,0.0);
-    std::map<ID, std::vector<double> > values;
-    values[Stress] = stress_p;
-    
-    std::vector<Point>  points(1);  points[0] = p;
-    get_solution_secure(elem,values,points);
-
-    stress(0,0) = values[Stress][0];
-    stress(1,1) = values[Stress][1];
-    stress(2,2) = values[Stress][2];
-    stress(0,1) = values[Stress][3];
-    stress(1,2) = values[Stress][4];
-    stress(0,2) = values[Stress][5];
-    stress(1,0) = stress(0,1);
-    stress(2,0) = stress(0,2); 
-    stress(2,1) = stress(1,2);
-
-  return stress;
-}
-*/
-/*
-RealTensor
-Elasticity::get_internal_stress(const Elem* elem, const Point& p)
-{
-
-  RealTensor stress(0);
-
-    std::vector<double> stress_p(6,0.0);
-    std::map<ID, std::vector<double> > values;
-    values[InternalStress] = stress_p;
-
-    std::vector<Point>  points(1);  points[0] = p;
-    get_solution_secure(elem,values,points);
-
-    stress(0,0) = values[InternalStress][0];
-    stress(1,1) = values[InternalStress][1];
-    stress(2,2) = values[InternalStress][2];
-    stress(0,1) = values[InternalStress][3];
-    stress(1,2) = values[InternalStress][4];
-    stress(0,2) = values[InternalStress][5];
-    stress(1,0) = stress(0,1);
-    stress(2,0) = stress(0,2);
-    stress(2,1) = stress(1,2);
-
-  return stress;
-}
-*/
-
 
 void
-Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
+Elasticity::do_assemble(libMesh::EquationSystems& es, const std::string& system_name)
 {
 
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
-  const NumericVector<Number>& solution = *sol;
+  const libMesh::NumericVector<Number>& solution = *sol;
 
   const MeshBase& mesh = get_mesh();
   //const unsigned int dim = mesh.mesh_dimension();
   ID dim = mesh.mesh_dimension();
 
-  DofMap& dof_map =  system.get_dof_map();
+  libMesh::DofMap& dof_map =  system.get_dof_map();
 
-  FEType fe_type = dof_map.variable_type(uvar[0]);
+  libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
 
   SimulationEnvironment& si = get_environment();
 
   // the volume finite element
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  //AutoPtr<QBase> qrule(QBase::build(QTRAP, dim, FIFTH));
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  //UniquePtr<QBase> qrule(QBase::build(QTRAP, dim, FIFTH));
 
-  QGauss qrule(dim, FIFTH);
+  libMesh::QGauss qrule(dim, FIFTH);
   //QTrap qrule(dim);
   fe->attach_quadrature_rule(&qrule);
 
@@ -693,12 +644,12 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   const vector<Real>& JxW = fe->get_JxW();
   const vector<Point>& q_point = fe->get_xyz();
   const vector<vector<Real> >& phi = fe->get_phi();
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
   // the surface finite element
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  QGauss qface(dim - 1, SIXTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qface(dim - 1, SIXTH);
   //QTrap qface(dim - 1);
   fe_face->attach_quadrature_rule(&qface);
 
@@ -707,7 +658,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
   const vector<Real>& JxW_face = fe_face->get_JxW();
   const vector<Point>& qface_point = fe_face->get_xyz();
   const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-  const vector<vector<RealGradient> >& dphi_face = fe_face->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi_face = fe_face->get_dphi();
   const vector<Point>& normal = fe_face->get_normals();
 
 
@@ -717,12 +668,12 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
 
   //Initialize-----------------------------------------------
-  DenseMatrix<Number> Ke;
-  DenseVector<Number> Fe;
+  libMesh::DenseMatrix<Number> Ke;
+  libMesh::DenseVector<Number> Fe;
 
-  std::vector<DenseSubVector<Number>> F(3, DenseSubVector<Number>(Fe));
-  std::vector<std::vector<DenseSubMatrix<Number>>> K(3,
-      vector<DenseSubMatrix<Number>>(3, DenseSubMatrix<Number>(Ke)));
+  std::vector<libMesh::DenseSubVector<Number>> F(3, DenseSubVector<Number>(Fe));
+  std::vector<std::vector<libMesh::DenseSubMatrix<Number>>> K(3,
+      vector<libMesh::DenseSubMatrix<Number>>(3, libMesh::DenseSubMatrix<Number>(Ke)));
 
   //----------------------------------------------------------
   std::vector< std::vector<unsigned int> > dof_indices_vec(3);
@@ -730,11 +681,11 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
 
   //Start assembling
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
   for ( ; el != end_el ; ++el)
   {
-    const Elem* elem = *el;
+    const libMesh::Elem* elem = *el;
     
     dof_map.dof_indices (elem, dof_indices);
     const unsigned int n_dofs   = dof_indices.size();
@@ -770,7 +721,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 //    const RealTensor& internal_stress = get_internal_stress(elem, elem->centroid());
 
     // get the accumulated strain from shape deformation
-    RealTensor accum_strain;
+    libMesh::RealTensor accum_strain;
     _accumulated_strain[elem].get_tensor(accum_strain);
 
     // loop over the quadrature points
@@ -779,11 +730,11 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
      
        mod.calculate(elem, qrule.qp(qp));
        const Tensor4DSym& C = mod.get_stiffness();
-       const RealGradient& force =  mod.get_force_source();
+       const libMesh::RealGradient& force =  mod.get_force_source();
        //const RealTensor& strain_source =  mod.get_strain_source();
-       const RealTensor& stress_source =  mod.get_stress_source();
+       const libMesh::RealTensor& stress_source =  mod.get_stress_source();
 
-       RealTensor strain(mod.get_strain_source());
+       libMesh::RealTensor strain(mod.get_strain_source());
        strain += accum_strain;
 
        for (ID i = 0;i <3; i++)
@@ -798,7 +749,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
                K[i][j](alpha,beta) += JxW[qp] * dphi[alpha][qp] * (get_subtensor(C,i,j) * dphi[beta][qp]);
            }
 
-       RealTensor total_stress(stress_source);
+       libMesh::RealTensor total_stress(stress_source);
        total_stress += C * strain;
 
 
@@ -806,7 +757,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 	for (unsigned int alpha=0; alpha<n_dofs_vec[0]; alpha++)
 	{  
 
-	  RealGradient tmp = total_stress * dphi[alpha][qp] + force *  phi[alpha][qp];
+	  libMesh::RealGradient tmp = total_stress * dphi[alpha][qp] + force *  phi[alpha][qp];
 	  for (ID i = 0;i <3; i++)
 	    F[i](alpha) -= JxW[qp] * tmp(i);
 
@@ -828,12 +779,11 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
 
           fe_face->reinit(elem, s);
 
-
           for (unsigned int qp = 0; qp < qface.n_points(); qp++)
           {
 
-            RealTensor H(0);
-            RealGradient R(0);
+            libMesh::RealTensor H(0);
+            libMesh::RealGradient R(0);
 
             if (boundary_mod != NULL)
             {
@@ -894,7 +844,7 @@ Elasticity::do_assemble(EquationSystems& es, const std::string& system_name)
     system.rhs->add_vector    (Fe, dof_indices);
   }
 
-  //system.matrix->close();
+  system.matrix->close();
   //system.matrix->print_matlab("K.m");
   //system.rhs->close();
   //system.rhs->print_matlab("F.m");
@@ -917,14 +867,14 @@ Elasticity::apply_shape_deformation()
   // TODO CHECK THIS! It seems that this was terribly wrong and worked only
   // for one deformation step
   //const NumericVector<Number>& solution = *sol;
-  const NumericVector<Number>& solution = system->get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
   const unsigned int dim = get_mesh().mesh_dimension();
-  const DofMap& dof_map = system->get_dof_map();
+  const libMesh::DofMap& dof_map = system->get_dof_map();
   
   std::vector<std::vector<unsigned int> > dof_indices(3);
   
-  FEType fe_type = system->variable_type(uvar[0]);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::FEType fe_type = system->variable_type(uvar[0]);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
 
@@ -978,7 +928,7 @@ Elasticity::apply_shape_deformation()
         }
       }
 
-      p_ref[0] = FEInterface::inverse_map(get_mesh().mesh_dimension(), FEType(), elem, p_ref[0]);
+      p_ref[0] = libMesh::FEInterface::inverse_map(get_mesh().mesh_dimension(), libMesh::FEType(), elem, p_ref[0]);
 
       fe->reinit(elem, &p_ref);
 
@@ -990,7 +940,7 @@ Elasticity::apply_shape_deformation()
 	for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
 	  displ(i) += (solution)(dof_indices[i][alpha]) * phi[alpha][0];
         
-      displ /= get_scaling().get_calc_mesh_units();
+      //displ /= get_scaling().get_calc_mesh_units();
 
       old_pos += displ;
       old_pos *= scale;
@@ -1052,7 +1002,7 @@ Elasticity::apply_shape_deformation()
             for (unsigned int alpha = 0; alpha < dof_indices[i].size(); alpha++)
               displ(i) += (solution)(dof_indices[i][alpha]) * phi[alpha][0];
 
-          node->add(displ / get_scaling().get_calc_mesh_units());
+          node->add(displ);
         }
       }
 
@@ -1064,8 +1014,8 @@ Elasticity::apply_shape_deformation()
   // now move the mesh
   //
   const MeshBase& mesh = get_mesh();
-  MeshBase::const_node_iterator  nd  = mesh.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
+  MeshBase::const_node_iterator  nd  = mesh.local_nodes_begin();
+  const MeshBase::const_node_iterator nd_end = mesh.local_nodes_end();
 
   for ( ;  nd != nd_end ; ++nd)
   {
@@ -1082,7 +1032,7 @@ Elasticity::apply_shape_deformation()
     for (unsigned int i = 0; i < dim; i++)
     {
       const unsigned int  n_dof = node->dof_number(system_number,uvar[i],0);
-      pos(i) += (solution)(n_dof) / get_scaling().get_calc_mesh_units();
+      pos(i) += (solution)(n_dof);
     }
 
     *node = pos;
@@ -1223,13 +1173,13 @@ Elasticity::restore_shape()
   //MeshDeformation----
   TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
   
-  const NumericVector<Number>& solution = *sol;
+  const libMesh::NumericVector<Number>& solution = *sol;
 
   const unsigned int system_number = system->number();
   const MeshBase& mesh = get_mesh();
   ID  dim = get_mesh().mesh_dimension();
-  MeshBase::const_node_iterator  nd  = mesh.active_nodes_begin();
-  const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
+  MeshBase::const_node_iterator  nd  = mesh.local_nodes_begin();
+  const MeshBase::const_node_iterator nd_end = mesh.local_nodes_end();
   
   for ( ;  nd != nd_end ; ++nd)
   {
@@ -1249,7 +1199,7 @@ Elasticity::restore_shape()
 
 }
 
-RealTensor
+libMesh::RealTensor
 Elasticity::get_subtensor(const Tensor4DSym& C_calc,unsigned int i,unsigned  int j)
 {
 
@@ -1258,7 +1208,7 @@ Elasticity::get_subtensor(const Tensor4DSym& C_calc,unsigned int i,unsigned  int
 
 
 
-  RealTensor a;
+  libMesh::RealTensor a;
   for (unsigned int k = 0; k<3; k ++)
   {
     for (unsigned int m = 0; m<3; m ++)

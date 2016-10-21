@@ -13,13 +13,14 @@ srcfiles 	:= $(wildcard *.cpp)
 # object files
 objects		:= $(patsubst %.cpp, .$(ARCH)/%$(obj-suffix), $(srcfiles))
 
-target := $(libdir)/libtensor.a
+target := $(ARCH)/libtensor.a
 
 
 
-$(libdir)/libtensor.a: $(objects)
-	@mkdir -p $(libdir)
-	@$(AR) cru $@ $(objects)
+$(ARCH)/libtensor.a: $(objects)
+	@mkdir -p $(ARCH)
+	@rm -f $@
+	@$(AR) cr $@ $(objects)
 	@$(RANLIB) $@
 
 $(libdir)/libtensor$(shared_libext): $(objects)

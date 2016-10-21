@@ -22,11 +22,14 @@
 
 using namespace std;
 
-KspaceIntegration::KspaceIntegration(const ModelOptions& options)
+KspaceIntegration::KspaceIntegration(const ModelOptions& options, 
+                                     const libMesh::Parallel::Communicator& d_comm,
+                                     const libMesh::Parallel::Communicator& m_comm)
  : TiberModelObject(options)
 {
+  device_comm = d_comm;
+  mesh_comm = m_comm;
   _kspace = NULL;
-  
 }
 
 //-------------------------------------------------------//
@@ -50,7 +53,7 @@ void KspaceIntegration::calculate_density()
 
   int verbose = get_option("verbose",SimulationOptions::verbose());
 
-  Mesh* kmesh = const_cast <Mesh*>( _kspace->get_k_mesh() );
+  const libMesh::MeshBase* kmesh =  _kspace->get_k_mesh();
 
   /*
    * New approach:
@@ -81,9 +84,9 @@ void KspaceIntegration::calculate_density()
 
   //-----------------------------------------------------------
 
-  AutoPtr<FEBase> fe( FEBase::build(k_dim, FEType(fem_order) ));
+  libMesh::UniquePtr<libMesh::FEBase> fe( libMesh::FEBase::build(k_dim, libMesh::FEType(fem_order) ));
 
-  AutoPtr<QBase> qrule(QBase::build(quadrature_type, k_dim, integration_order));
+  libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(quadrature_type, k_dim, integration_order));
 
   fe->attach_quadrature_rule(qrule.get());
 
@@ -92,8 +95,8 @@ void KspaceIntegration::calculate_density()
   const std::vector<Point>& q_point = fe->get_xyz();
 
 
-  MeshBase::const_element_iterator it_k_space= kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator it_k_end  = kmesh->active_elements_end();
+  MeshBase::const_element_iterator it_k_space= kmesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator it_k_end  = kmesh->active_local_elements_end();
 
 
   double factor = opt.normalization_volume;
@@ -132,7 +135,7 @@ void KspaceIntegration::calculate_density()
         k_points[q_point[qp]] = w + JxW[qp] * factor;
 
 
-        if (this->quadrature_type == QGAUSS)
+        if (this->quadrature_type == libMesh::QGAUSS)
         {
           double error_value;
           //dens_at_k_point.clear();
@@ -164,7 +167,7 @@ void KspaceIntegration::calculate_density()
         }
       }  //qp sum (dens_at_k_elem is computed)
 
-      if (this->quadrature_type == QGAUSS)
+      if (this->quadrature_type == libMesh::QGAUSS)
       {
 
         if (verbose > 3)
@@ -197,7 +200,7 @@ void KspaceIntegration::calculate_density()
 
 
 
-  if (this->quadrature_type == QTRAP)
+  if (this->quadrature_type == libMesh::QTRAP)
   {
 
     real_space_density.resize(0);
@@ -228,8 +231,8 @@ void KspaceIntegration::calculate_density()
   //--------------------------------------------------------------------------//
   if (opt.k_domain_refinement)
   {
-    MeshBase::const_element_iterator it_k_space = kmesh->active_elements_begin();
-    const MeshBase::const_element_iterator it_k_end = kmesh->active_elements_end();
+    MeshBase::const_element_iterator it_k_space = kmesh->active_local_elements_begin();
+    const MeshBase::const_element_iterator it_k_end = kmesh->active_local_elements_end();
 
     for ( ; it_k_space != it_k_end ; ++it_k_space)
     {
@@ -245,7 +248,9 @@ void KspaceIntegration::calculate_density()
     }
 
   }
-      
+  
+  kspace_comm.sum(real_space_density);
+
   //std::cout<<"density: "<<real_space_density.size()<<std::endl;
 
 }
@@ -257,8 +262,7 @@ void KspaceIntegration::calculate_convergent_density()
 
   int verbose = get_option("verbose",SimulationOptions::verbose());
 
-
-  Mesh* kmesh = const_cast <Mesh*> (_kspace->get_k_mesh() );
+  libMesh::MeshBase* kmesh = _kspace->get_k_mesh();
 
   if (verbose>1)
  	 cout <<"(KIntegration) Calculate k-integral "<<endl;
@@ -276,7 +280,7 @@ void KspaceIntegration::calculate_convergent_density()
     if (verbose > 1)
       std::cout << "Simulation " << get_name() << " " << "is performing k space refinement\n";
 
-    MeshRefinement mesh_refinement(*kmesh);
+    libMesh::MeshRefinement mesh_refinement(*kmesh);
 
     double norm_of_error = opt.relative_accuracy + 1.0;
 
@@ -287,46 +291,46 @@ void KspaceIntegration::calculate_convergent_density()
       else
       {
 
-      ErrorVector error = ErrorVector(kmesh->n_elem(), kmesh);
-  
-  		estimate_error_for_refinement(error);
-    
-  		mesh_refinement.refine_fraction() = opt.refine_fraction;
-    
-  		mesh_refinement.max_h_level() = opt.maximum_ref_level;
-    
-  		mesh_refinement.coarsen_fraction() = 0.0;
-    
-  		if (verbose > 3)
-  		{
-  		  cout << "\nError vector:  " << error.size() << "\n";
-  		  for (unsigned int i = 0; i < error.size(); i++ )
-  		    cout << setprecision(10) <<  error[i] << "\n";
-  		}
-    
-  		mesh_refinement.flag_elements_by_error_fraction(error);
-    
-  		mesh_refinement.refine_and_coarsen_elements();
-    
-  		if (verbose > 1)
-  		{
-  		  cout << "\nThe new mesh: \n";
-  		  kmesh->print_info();
-  		}
-    
-  		old_density = real_space_density;
-    
-  		//real_space_density.clear();
-    
-  		calculate_density();
-    
-  		norm_of_error = estimate_error();
-    
-  		if (verbose > 1)
-  		  std::cout <<  "\n\n Relative Error: " << norm_of_error<<"\n"<<std::endl;
-    
-         } // h-refinement
-    
+	libMesh::ErrorVector error = libMesh::ErrorVector(kmesh->n_elem(), kmesh);
+
+	estimate_error_for_refinement(error);
+
+	mesh_refinement.refine_fraction() = opt.refine_fraction;
+
+	mesh_refinement.max_h_level() = opt.maximum_ref_level;
+
+	mesh_refinement.coarsen_fraction() = 0.0;
+
+	if (verbose > 3)
+	{
+	  cout << "\nError vector:  " << error.size() << "\n";
+	  for (unsigned int i = 0; i < error.size(); i++ )
+	    cout << setprecision(10) <<  error[i] << "\n";
+	}
+
+	mesh_refinement.flag_elements_by_error_fraction(error);
+
+	mesh_refinement.refine_and_coarsen_elements();
+
+	if (verbose > 1)
+	{
+	  cout << "\nThe new mesh: \n";
+	  kmesh->print_info();
+	}
+
+	old_density = real_space_density;
+
+	//real_space_density.clear();
+
+	calculate_density();
+
+	norm_of_error = estimate_error();
+
+	if (verbose > 1)
+	  std::cout <<  "\n\n Relative Error: " << norm_of_error<<"\n"<<std::endl;
+
+      } // h-refinement
+
     } //refinement loop
 
   }//end of refinement block
@@ -340,25 +344,25 @@ void KspaceIntegration::parse_options( )
 
   const ModelOptions& mod_opt = get_options();
 
-  fem_order = FIRST;
+  fem_order = libMesh::FIRST;
 
   string quad_type = mod_opt.get_option("quadrature_rule", "gaussian");
   quad_type = mod_opt.get_option("quadrature_type", quad_type);
 
-  if(quad_type == "gaussian") quadrature_type = QGAUSS;
-  else if(quad_type == "trapezoidal") quadrature_type = QTRAP;
+  if(quad_type == "gaussian") quadrature_type = libMesh::QGAUSS;
+  else if(quad_type == "trapezoidal") quadrature_type = libMesh::QTRAP;
   else throw  InitFailedException("Kspace: unsupported quadrature type: "+quad_type+"\n" ); 
 
   string int_order = mod_opt.get_option("quadrature_order","third");
 
-  if(int_order == "first") integration_order = FIRST;
-  else if(int_order == "second") integration_order = SECOND;
-  else if(int_order == "third") integration_order = THIRD;
-  else if(int_order == "fourth") integration_order = FOURTH;
-  else if(int_order == "fifth") integration_order = FIFTH;
-  else if(int_order == "sixth") integration_order = SIXTH;
-  else if(int_order == "seventh") integration_order = SEVENTH;
-  else if(int_order == "eighth") integration_order = EIGHTH;
+  if(int_order == "first") integration_order = libMesh::FIRST;
+  else if(int_order == "second") integration_order = libMesh::SECOND;
+  else if(int_order == "third") integration_order = libMesh::THIRD;
+  else if(int_order == "fourth") integration_order = libMesh::FOURTH;
+  else if(int_order == "fifth") integration_order = libMesh::FIFTH;
+  else if(int_order == "sixth") integration_order = libMesh::SIXTH;
+  else if(int_order == "seventh") integration_order = libMesh::SEVENTH;
+  else if(int_order == "eighth") integration_order = libMesh::EIGHTH;
   else throw  InitFailedException("Kspace: unsupported quadrature order: "+int_order+"\n" );   
 
   opt.normalization_volume = mod_opt.get_option("normalization_volume", 1.0);
@@ -372,7 +376,7 @@ void KspaceIntegration::parse_options( )
 
   opt.degeneracy                = mod_opt.get_option("degeneracy",1);
   opt.k_domain_refinement       = mod_opt.get_option("refine_k_space", false);
-  if ((quadrature_type == QTRAP) && opt.k_domain_refinement)
+  if ((quadrature_type == libMesh::QTRAP) && opt.k_domain_refinement)
   {
     Messages::warning("k-mesh refinement is not supported for trapezoidal quadrature.");
     opt.k_domain_refinement = false;
@@ -441,7 +445,13 @@ void KspaceIntegration::do_init(void)
   if ( !kopts.find_option("number_of_nodes"))
     throw InitFailedException("K-integration internal error: number_of_nodes must be initialized");  
 
-  _kspace = new Kspace(kopts);
+  // Create a parallel communicator by splitting the Device communicator (larger than mesh_comm)
+  // All nodes with same id (color) of the mesh_communicator have to compute the same k-point
+  libMesh::Parallel::Communicator& comm = device_comm;
+  unsigned int color = mesh_comm.rank();
+  comm.split(color, 0, kspace_comm);  
+
+  _kspace = new Kspace(kopts, kspace_comm);
 
   if(_kspace == NULL)
     throw InitFailedException("Could not initialize k-space");
@@ -470,12 +480,12 @@ void KspaceIntegration::do_init(void)
 }
 
 //--------------------------------------------------------------------------------------//
-void KspaceIntegration::estimate_error_for_refinement(ErrorVector& error) 
+void KspaceIntegration::estimate_error_for_refinement(libMesh::ErrorVector& error)
 {
 
   std::fill(error.begin(), error.end(), 0.0);
 
-  const Mesh* kmesh = _kspace->get_k_mesh();
+  const libMesh::MeshBase* kmesh = _kspace->get_k_mesh();
 
   MeshBase::const_element_iterator       elem_it1  = kmesh->elements_begin();
   const MeshBase::const_element_iterator elem_end1 = kmesh->elements_end();
@@ -517,11 +527,11 @@ unsigned int KspaceIntegration::count_elements() const
 {
   unsigned int result = 0;
 
-  const Mesh* kmesh = _kspace->get_k_mesh();
+  const libMesh::MeshBase* kmesh = _kspace->get_k_mesh();
 
 
-  MeshBase::const_element_iterator       elem_it  = kmesh->active_elements_begin();
-  const MeshBase::const_element_iterator elem_end = kmesh->active_elements_end();
+  libMesh::MeshBase::const_element_iterator elem_it  = kmesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator elem_end = kmesh->active_local_elements_end();
 
   for (; elem_it != elem_end; ++elem_it)
     result++;

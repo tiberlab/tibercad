@@ -32,6 +32,7 @@
 
 //#include <complex>
 using namespace std;
+using namespace libMesh;
 
 
 //--------------------------------------------------------------
@@ -40,15 +41,6 @@ ETB::ETB(const ModelOptions& options)
 : TightBinding(options),
   _upt_options()
 {
-  inst = UptWrapper::create();
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  cout << "rank: "<<rank<<endl;
-
-  inst->set_mpi_comm(MPI_COMM_WORLD);
-
   has_solution_vector(false);
 }
 
@@ -142,11 +134,20 @@ ETB::UptSolverOptions::~UptSolverOptions(void)
 
 }
 
+
+
+
+
+
 //-------------------------------------------------------------------------
 void
 ETB::do_init(void){
 
   std::cerr << "("+get_name()+") Empirical TB Initialisation..." << std::endl;
+
+  inst = UptWrapper::create();
+
+  inst->set_mpi_comm(this->get_communicator().get());
 
   //sanity check of complex number passing (this should be checked elsewere perhaps)
   Complex zz;
@@ -339,9 +340,11 @@ void ETB::do_reinit(void)
 
     //Messages::info("("+get_name()+") printing structure "+upt_filename);
 
-
-    get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset, 
+    if (get_communicator().rank() == 0)
+      get_atomistic_structure()->print_upg(upt_filename, _upt_options.etb_dataset,
                                                       !_upt_options.band_shift_flag);
+    get_communicator().barrier();
+
 
     std::cout << "("+get_name()+") Number of atoms: " <<get_atomistic_structure()->get_N_atoms() << std::endl;
 
@@ -501,7 +504,7 @@ void ETB::do_solve(void) {
     NumericVector<Number>& qdens = *qdens_sys.solution;
 
     FEType fe_type = qdens_sys.variable_type(0);
-    AutoPtr<FEBase> fe(build_finite_element(_dim, fe_type));
+    UniquePtr<FEBase> fe(build_finite_element(_dim, fe_type));
 
     DofMap& dof_map = qdens_sys.get_dof_map();
     vector<unsigned int> dof_indices_e;
@@ -631,17 +634,26 @@ ETB::call_uptight(void)
                      _upt_solver_options.long_tol, _upt_solver_options.ort_tol,
 		                _upt_solver_options.dynamic);
   }
-
-  if (_upt_solver_options.solver.compare("feast") == 0) 
+  else if (_upt_solver_options.solver.compare("feast") == 0) 
   {
       Messages::info("Solving Tight Binding with FEAST eigensolver");
       inst->feast(_upt_solver_options.e_min, _upt_solver_options.e_max, _upt_solver_options.m0);
   } 
+  else if (_upt_solver_options.solver.compare("jd") == 0)
+  {
+    Messages::info("\n("+get_name()+") solving using Jacobi-Davidson");
 
-  if (_upt_solver_options.solver.compare("slepc") == 0) 
+    inst->jacobidavidson(_upt_solver_options.start_vb, _upt_solver_options.start_cb, 
+		     _upt_solver_options.n_vb, _upt_solver_options.n_cb,
+                     _upt_solver_options.guess_vb, _upt_solver_options.guess_cb,
+                     _upt_solver_options.long_tol);
+
+  }
+  else if (_upt_solver_options.solver.compare("slepc") == 0) 
   {
       Messages::info("Solving Tight Binding with SLEPc eigensolver");
       //copy_H_to_solver();
+
 
   }
     
@@ -917,7 +929,7 @@ void ETB::parse_options(void)
   
 
   // get kpoint
-  RealVectorValue k_vec;
+  libMesh::RealVectorValue k_vec;
   get_option("k_vector", k_vec);
   set_k_point(k_vec);
 
@@ -1700,7 +1712,7 @@ ETB::get_solution_secure(const Elem* elem,
     unsigned int dim = get_mesh().mesh_dimension();
 
     FEType fe_type = qdens_sys.variable_type(0);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    UniquePtr<FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<Real> >& phi = fe->get_phi();
 
     fe->reinit(elem, &p);
@@ -1783,12 +1795,12 @@ ETB::get_solution_secure(const Elem* elem,
       {
       if (_dim == 3)
         {
-        phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        phys_p = libMesh::FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
         values[ElQuantumDensityNodes][n] = build_rho3d(_el_atomic_charges, elem, phys_p);
         }
       else if (_dim == 2)
         {
-        phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        phys_p = libMesh::FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
         values[ElQuantumDensityNodes][n] = build_rho2d(_el_atomic_charges, elem, phys_p);
         }
       else if (_dim == 1)
@@ -1805,12 +1817,12 @@ ETB::get_solution_secure(const Elem* elem,
       {
       if (_dim == 3)
         {
-        phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        phys_p = libMesh::FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
         values[HlQuantumDensityNodes][n] = build_rho3d(_hl_atomic_charges, elem, phys_p);
         }
       else if (_dim == 2)
         {
-        phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+        phys_p = libMesh::FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
         values[HlQuantumDensityNodes][n] = build_rho2d(_hl_atomic_charges, elem, phys_p);
         }
       else if (_dim == 1)
@@ -1832,13 +1844,13 @@ ETB::get_solution_secure(const Elem* elem,
         {
         if (_dim == 3)
           {
-          phys_p = FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+          phys_p = libMesh::FE< 3, libMeshEnums::LAGRANGE>::map(elem, p[n]);
           values[MeshStatesNodes][_solution_size * n + i] = 
             build_rho3d(_eigenvector_mag[i], elem, phys_p);
           }
         else if (_dim == 2)
           {
-          phys_p = FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
+          phys_p = libMesh::FE< 2, libMeshEnums::LAGRANGE>::map(elem, p[n]);
           values[MeshStates][_solution_size * n + i] = 
             build_rho2d(_eigenvector_mag[i], elem, phys_p);
           }
@@ -2070,15 +2082,21 @@ void ETB::do_copy_H_to_solver( )
 {
 
   int size_matrix = inst->get_H_dim();
+
+  // get the global matrix size
+  int global_size = size_matrix;
+  this->get_communicator().sum(global_size);
   
-  int non_zeros_number[size_matrix];
+  vector<int> non_zeros_number(size_matrix);
+  vector<int> offdiag_nnz(0);
 
   for (int row = 0 ; row < size_matrix; row++)	
   {
-      non_zeros_number[row] = inst->get_H_row_size(row);	  
+    non_zeros_number[row] = inst->get_H_row_size(row);	  
   }
 
-  EigenSolver::preallocate_H_matrix(size_matrix,  non_zeros_number);
+
+  EigenSolver::preallocate_matrix('H', global_size, size_matrix, non_zeros_number, offdiag_nnz);
 
 
   //----------------------------------------------------------------------------------------------------//
@@ -2087,8 +2105,6 @@ void ETB::do_copy_H_to_solver( )
   
   for (int row = 0 ; row < size_matrix; row++)
   {
-      Complex *row_vals;
-      int *cols;
       int n_cols = 0;
 	
       vector<unsigned int> column_vector;
@@ -2096,27 +2112,12 @@ void ETB::do_copy_H_to_solver( )
 
       n_cols = inst->get_H_row_size(row);
  
-      cols = new int[n_cols]; //PetscInt[n_cols];
-      row_vals = new Complex[n_cols];
+      inst->get_H_row(row, reinterpret_cast<int*>(column_vector.data()), row_values.data());
 
-      inst->get_H_row(row, cols, row_vals);
-
-      column_vector.resize(n_cols);
-      column_vector.clear();
-
-      row_values.resize(n_cols);
-      row_values.clear();
-
-      for (int i = 0; i < n_cols; i++)
-      {
-	  column_vector[i] = cols[i];
-	  row_values[i] = row_vals[i];
-      }
-     
-      EigenSolver::insert_H_row( row, column_vector, row_values);
+      EigenSolver::insert_matrix_row('H', row, column_vector, row_values);
   }
 
-  EigenSolver::finalize_H_assembly();
+  EigenSolver::finalize_matrix_assembly('H');
   
 }
 

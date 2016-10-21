@@ -48,6 +48,7 @@ extern "C" {
 #else
     obj = CREATABLE::create(options);
 #endif
+    static_cast<const void*>(handle);
     return obj;
   }
 }

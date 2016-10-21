@@ -33,7 +33,7 @@ class BondMap : public std::vector<std::vector<unsigned int>>
 
 public:
   
-  typedef std::vector<std::vector<Point>> Translation;
+  typedef std::vector<std::vector<libMesh::Point>> Translation;
 
 
   //!BondMap constructor with size as number of atoms

@@ -11,6 +11,9 @@
 #include "SimulationOptions.h"
 #include "TiberLinearSystem.h"
 #include "MeshUtils.h"
+//#include "TiberEqSystem.h"
+#include "gmv_io.h"
+
 
 #include "TiberLinearSolver.h"
 #include "TiberPetscLinearSolver.h"
@@ -67,7 +70,7 @@ Macrostrain::get_solution_secure(const Elem* elem,
   if (values.count(Displacement))
   {
     // Get a reference to the LinearImplicitSystem we are solving
-    LinearImplicitSystem& system = *my_system;
+    libMesh::LinearImplicitSystem& system = *my_system;
     const NumericVector<Number>& solution = *(system.solution);
 
     double x0 = get_scaling().get_length_scaling();
@@ -77,9 +80,9 @@ Macrostrain::get_solution_secure(const Elem* elem,
     for (unsigned int i = 0; i < 3; i++)
       uvar[i] = system.variable_number(uname_vec[i]);
 
-    DofMap& dof_map = system.get_dof_map();
-    FEType fe_type = dof_map.variable_type(uvar[0]);
-    AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+    libMesh::DofMap& dof_map = system.get_dof_map();
+    libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
+    libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
     const vector<vector<double> >& phi = fe->get_phi();
 
     vector<unsigned int> dof_indices_x;
@@ -532,7 +535,7 @@ void Macrostrain::do_init( )
 
   if (number_of_add_var != 0)
   {
-    FEType fe_type(CONSTANT,MONOMIAL);
+    libMesh::FEType fe_type(CONSTANT,MONOMIAL);
     my_system->add_variable("fict", fe_type);
   }
 
@@ -609,7 +612,7 @@ void Macrostrain::define_fixed_nodes()
 
 //--------------------------------------------------------------------//
 
-void Macrostrain::assemble_strain_matrix(EquationSystems& es,
+void Macrostrain::assemble_strain_matrix(libMesh::EquationSystems& es,
 				     const std::string& system_name)
 {
   static_this->do_assemble( es, system_name);
@@ -619,7 +622,7 @@ void Macrostrain::assemble_strain_matrix(EquationSystems& es,
 
 //-----------------------------------------------------------------//
 
-void Macrostrain::do_assemble(EquationSystems& es,
+void Macrostrain::do_assemble(libMesh::EquationSystems& es,
 				     const std::string& system_name)
 
 { //
@@ -641,7 +644,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   // string to identify what part of the code we are
   // logging, since there may be many PerfLogs in an
   // application.
-  PerfLog perf_log ("Matrix Assembly",false);
+  libMesh::PerfLog perf_log ("Matrix Assembly",false);
 
 
 
@@ -655,7 +658,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
   //dim = mesh.mesh_dimension();
 
   // Get a reference to the LinearImplicitSystem we are solving
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
 
 
@@ -675,20 +678,20 @@ void Macrostrain::do_assemble(EquationSystems& es,
   // to degree of freedom numbers.  We will talk more about the  DofMap
   // in future examples.
   // const DofMap& dof_map = system.get_dof_map();
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
 
 
 
 
 
-  FEType fe_type = dof_map.variable_type(uvar[0]);
+  libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
 
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //I need scaling here
+  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //I need scaling here
 
 
 
   // A 5th order Gauss quadrature rule for numerical integration.
-  QGauss qrule (dim, FIFTH);
+  libMesh::QGauss qrule (dim, FIFTH);
 
   // Tell the finite element object to use our quadrature rule.
 
@@ -697,13 +700,13 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   // Declare a special finite element object for
   // boundary integration.
-  AutoPtr<FEBase>  fe_face(build_finite_element(dim, fe_type, true)); //I need scaling here
+  libMesh::UniquePtr<libMesh::FEBase>  fe_face(build_finite_element(dim, fe_type, true)); //I need scaling here
 
 
   // Boundary integration requires one quadraure rule,
   // with dimensionality one less than the dimensionality
   // of the element.
-  QGauss qface(dim-1, CONSTANT);
+  libMesh::QGauss qface(dim-1, THIRD);
 
   // Tell the finite element object to use our
   // quadrature rule.
@@ -730,7 +733,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
   // The element shape function gradients evaluated at the quadrature
   // points.
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   // Define data structures to contain the element matrix
   // and right-hand-side vector contribution.  Following
@@ -744,26 +747,26 @@ void Macrostrain::do_assemble(EquationSystems& es,
   //matrixes to built the system
 
 
-  DenseMatrix<Number> Ke_total;
-  DenseVector<Number> Fe_total;
+  libMesh::DenseMatrix<Number> Ke_total;
+  libMesh::DenseVector<Number> Fe_total;
 
   //------------------------------------------------------------
 
   //-------------------------------------------------------------
   //submatrixes
-  DenseSubMatrix<Number>   Ke_sub(Ke_total);//matrix for master equation that couples u and additional variables
+  libMesh::DenseSubMatrix<Number>   Ke_sub(Ke_total);//matrix for master equation that couples u and additional variables
 
 
-  DenseSubVector<Number>   Fe_sub(Fe_total);//RHS for the master equation
+  libMesh::DenseSubVector<Number>   Fe_sub(Fe_total);//RHS for the master equation
 
-  DenseSubVector<Number>   Fe_add_sub(Fe_total);//RHS for the additional equation
+  libMesh::DenseSubVector<Number>   Fe_add_sub(Fe_total);//RHS for the additional equation
 
-  DenseSubMatrix<Number>   Ke_u_add_sub(Ke_total);//matrix for master equation that couples u and additional variables
+  libMesh::DenseSubMatrix<Number>   Ke_u_add_sub(Ke_total);//matrix for master equation that couples u and additional variables
 
-  DenseSubMatrix<Number>   Ke_add_u_sub(Ke_total);//matrix for superalttice equation that couples u and additional variables
+  libMesh::DenseSubMatrix<Number>   Ke_add_u_sub(Ke_total);//matrix for superalttice equation that couples u and additional variables
 
 
-  DenseSubMatrix<Number>   Ke_add_add_sub(Ke_total);//matrix for superalttice equation that couples additional variables only
+  libMesh::DenseSubMatrix<Number>   Ke_add_add_sub(Ke_total);//matrix for superalttice equation that couples additional variables only
   //--------------------------------------------------------------
 
 
@@ -1006,7 +1009,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
 
 
-		  const std::vector<std::vector<RealGradient> >& dphi_face = fe_face->get_dphi();
+		  const std::vector<std::vector<libMesh::RealGradient> >& dphi_face = fe_face->get_dphi();
 
 
 		  const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
@@ -1147,7 +1150,7 @@ void Macrostrain::do_assemble(EquationSystems& es,
 
 
 
-	      const std::vector<std::vector<RealGradient> >& dphi_face = fe_face->get_dphi();
+	      const std::vector<std::vector<libMesh::RealGradient> >& dphi_face = fe_face->get_dphi();
 
 	      const std::vector<std::vector<Real> >&  phi_face = fe_face->get_phi();
 
@@ -1582,17 +1585,15 @@ void Macrostrain::do_solve()
   update_substrate();
 
 
-  if (intermediate_output)
-  {
+  //if (intermediate_output)
+  //  {
 
-    if (output_type=="GMV") GMVIO (mesh).write_equation_systems ("displacement_field.dat.000", *equation_systems);
-    if (output_type=="tecplot") TecplotIO_cell(mesh,false).
-      write_equation_systems ("displacement_field.dat.000", *equation_systems);
-    
-    output_strain("strain.dat.000");
-    output_add_strain_variables("add_var.000");
-  }
+  //    if (output_type=="GMV") GMVIO (mesh).write_equation_systems ("displacement_field.dat.000", *equation_systems);
+  //    if (output_type=="tecplot") TecplotIO_cell(mesh,false).write_equation_systems ("displacement_field.dat.000", *equation_systems);
 
+  //    output_strain("strain.dat.000");
+  //    output_add_strain_variables("add_var.000");
+  //  }
 
   //if (dim > 1) mesh.write("mesh0.ucd");
   //-----------------------------------------------------
@@ -1601,16 +1602,16 @@ void Macrostrain::do_solve()
 
 
   //refinement loop----------------------------------------------------------------
-  MeshRefinement mesh_refinement(mesh);
+  libMesh::MeshRefinement mesh_refinement(mesh);
 
   for (unsigned int r_step = 1; r_step <= max_r_steps; ++r_step)
   {
     if (verbose > 0)  cout << "\nRefining the mesh... (Step" << r_step << ")\n" << flush;
     
 
-    ErrorVector error;
+    libMesh::ErrorVector error;
     
-    KellyErrorEstimator error_estimator;
+    libMesh::KellyErrorEstimator error_estimator;
     
     
     error_estimator.estimate_error (*my_system,error);
@@ -1674,40 +1675,112 @@ void Macrostrain::do_solve()
     
     if (intermediate_output)
     {
-      
-      std::ostringstream os;
-      os << "displacement_field.dat.00" << r_step;
-      
-      
-      if (output_type=="GMV")  
-        GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
-      if (output_type=="tecplot")   
-        TecplotIO_cell(mesh,false).write_equation_systems(os.str(), *equation_systems);
-      
-      std::ostringstream os_mesh;
-      os_mesh << "mesh" << r_step << ".ucd";
-      if (dim > 1) mesh.write(os_mesh.str());
-      
-      std::ostringstream os1;
-      os1 <<"strain.dat.00" << r_step;
-      output_strain(os1.str());
-      
-      std::ostringstream os2;
-      os2 <<"add_var.00" << r_step;
-      
-      output_add_strain_variables(os2.str());
-    }
-    
-    if (verbose > 1)
-    {
-      
-      //std::cout << "\n" ;
-      //std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
+      if (verbose > 0)  cout << "\nRefining the mesh... (Step" << r_step << ")\n" << flush;
+
+
+
+
+
+      libMesh::ErrorVector error;
+
+      libMesh::KellyErrorEstimator error_estimator;
+
+
+      error_estimator.estimate_error (*my_system,error);
+
+
+
+      mesh_refinement.flag_elements_by_error_fraction (error,
+          refine_fraction,
+          coarsen_fraction,
+          max_ref_level);
+
+
+
+
+      // This call actually refines and coarsens the flagged
+      // elements.
+      if (uniform_refinement == 1)
+        mesh_refinement.uniformly_refine(1);
+      else
+        mesh_refinement.refine_and_coarsen_elements();
+
+
+      equation_systems->reinit();
+
+      old_solution = *(my_system->solution);
+
+      old_solution.close();
+
+      initialize_eps0_list();
+
+      initialize_el_number_map();
+
+      set_up_additional_dofs();
+
+      init_substrate();
+
+      define_fixed_nodes();
+
+      if (grown_on_substrate) si.get_boundary_nodes (substrate_name, substrate_points);
+
+      refer_objects();
+
+      make_nodes_periodic();
+
+      apply_periodic_bc();
+
+      if (apply_antirotation) apply_antirotation_constraints();
+
       //mesh.print_info();
-      //std::cout << flush;
+
+      my_system->solution->zero();
+
+
+
+      my_system->solve();
+
+
+      if (verbose > 1)
+        std::cout << "Norm of the difference  " << norm_of_difference( old_solution, *(my_system->solution) )
+        << "  after step number " << r_step << "\n" << flush;
+
+      if (intermediate_output)
+        {
+
+          std::ostringstream os;
+          os << "displacement_field.dat.00" << r_step;
+
+
+          //if (output_type=="GMV")  GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+          //if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems(os.str(), *equation_systems);
+
+          std::ostringstream os_mesh;
+          os_mesh << "mesh" << r_step << ".ucd";
+          if (dim > 1) mesh.write(os_mesh.str());
+
+          std::ostringstream os1;
+          os1 <<"strain.dat.00" << r_step;
+          output_strain(os1.str());
+
+          std::ostringstream os2;
+          os2 <<"add_var.00" << r_step;
+
+          output_add_strain_variables(os2.str());
+        }
+
+      if (verbose > 1)
+        {
+
+          //std::cout << "\n" ;
+          //std::cout << "Final Mesh after  " <<  max_r_steps <<" refinements  steps   " <<  "\n" ;
+          //mesh.print_info();
+          //std::cout << flush;
+        }
+
+      if (verbose > 0) Messages::info("Grid refinement finished");
+
     }
-    
-    if (verbose > 0) Messages::info("Grid refinement finished");
     
   }
   
@@ -1720,14 +1793,14 @@ void Macrostrain::do_solve()
     AtomisticStructure* as = NULL;
     as = get_environment().get_device().get_atomistic_structure(structure_to_be_strained);
     
-    LinearImplicitSystem& system = *my_system;
+    libMesh::LinearImplicitSystem& system = *my_system;
 
-    DofMap& dof_map = system.get_dof_map();
+    libMesh::DofMap& dof_map = system.get_dof_map();
 
-    FEType fe_type = dof_map.variable_type(0);
+    libMesh::FEType fe_type = dof_map.variable_type(0);
 
 
-    AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+    libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));
 
     _atom_relative_points.resize(as->get_structure_atoms().size());
     for (unsigned int i = 0; i < as->get_structure_atoms().size(); i++)
@@ -1741,7 +1814,7 @@ void Macrostrain::do_solve()
 
         //get atom relative point
         _atom_relative_points[i] =  
-          FEInterface::inverse_map(dim, fe_type, as->get_structure_atoms()[i].get_elem(), tmp_point);
+          libMesh::FEInterface::inverse_map(dim, fe_type, as->get_structure_atoms()[i].get_elem(), tmp_point);
       }
     }
   }
@@ -1794,13 +1867,14 @@ void Macrostrain::do_solve()
     
     if (intermediate_output)
     {
+
       
       //------write-----------------------------------------------
       if (dim > 1) mesh.write("mesh0.ucd");
       
       std::ostringstream os;
       os << "displacement_field.dat.00" << geom_it + max_r_steps;
-      if (output_type=="GMV")  GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+      if (output_type=="GMV")  libMesh::GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
       if (output_type=="tecplot") TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
       
       std::ostringstream os_mesh;
@@ -1836,7 +1910,7 @@ void Macrostrain::do_solve()
     std::ostringstream os;
     os << "displacement_field.dat" ;
     
-    if (output_type=="GMV") GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
+    if (output_type=="GMV") libMesh::GMVIO (mesh).write_equation_systems (os.str(), *equation_systems);
     if (output_type=="tecplot")   TecplotIO_cell(mesh,false).write_equation_systems (os.str(), *equation_systems);
     
     std::ostringstream os_mesh;
@@ -1895,11 +1969,11 @@ void Macrostrain::update_eps0_list()
 
   const MeshBase& mesh = equation_systems->get_mesh();
 
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
-  AutoPtr<NumericVector<Number> >& solution = system.solution;
+  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
 
   unsigned int uvar[3] ;
 
@@ -1912,9 +1986,9 @@ void Macrostrain::update_eps0_list()
 
 
 
-  FEType fe_type = dof_map.variable_type(0);
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));//no scaling here!
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  libMesh::FEType fe_type = dof_map.variable_type(0);
+  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));//no scaling here!
+  const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   std::vector<Point> point_vec(1);
 
@@ -1931,7 +2005,7 @@ void Macrostrain::update_eps0_list()
 
       const Elem* elem = *el;
 
-      point_vec[0]  = FEInterface::inverse_map(dim, fe_type, elem, elem->centroid());
+      point_vec[0]  = libMesh::FEInterface::inverse_map(dim, fe_type, elem, elem->centroid());
       fe->reinit (elem, &point_vec);
 
 
@@ -2073,7 +2147,7 @@ void  Macrostrain::apply_periodic_bc()
   // string to identify what part of the code we are
   // logging, since there may be many PerfLogs in an
   // application.
-  PerfLog perf_log ("Periodic bc. Assembly",false);
+  libMesh::PerfLog perf_log ("Periodic bc. Assembly",false);
 
 
 
@@ -2084,7 +2158,7 @@ void  Macrostrain::apply_periodic_bc()
   //const unsigned int dim = mesh.mesh_dimension();
 
   // Get a reference to the LinearImplicitSystem we are solving
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
   unsigned int uvar[3] ;
   for (unsigned int i = 0; i<= 3 - 1; i++)
@@ -2094,12 +2168,12 @@ void  Macrostrain::apply_periodic_bc()
 
   unsigned int system_number=system.number();
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
 
-  FEType fe_type = dof_map.variable_type(uvar[0]);
+  libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
 
 
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));  //no scaling here
+  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true));  //no scaling here
 
 
 
@@ -2197,7 +2271,7 @@ void  Macrostrain::apply_periodic_bc()
 
 		      //active elem1 contains the opposite  point, we can constrain it now
 
-		      DofConstraintRow constraint;
+		      libMesh::DofConstraintRow constraint;
 		      constraint.clear();
 		      //dof_map.dof_indices (elem1, dof_indices);
 		      dof_map.dof_indices (elem1, dof_indices_component, uvar[var_index]);
@@ -2209,7 +2283,7 @@ void  Macrostrain::apply_periodic_bc()
 		      std::vector<Point> point2_ref_vec(1);
 
 
-		      FEInterface::inverse_map (elem1->dim(), fe_type , elem1,  point2_vec,  point2_ref_vec)  ;
+		      libMesh::FEInterface::inverse_map (elem1->dim(), fe_type , elem1,  point2_vec,  point2_ref_vec)  ;
 
 		      fe->reinit (elem1, &point2_ref_vec);
 
@@ -2277,7 +2351,7 @@ The constrants are the following:
 
  const MeshBase& mesh = equation_systems->get_mesh();
  // Get a reference to the LinearImplicitSystem we are solving
- LinearImplicitSystem& system = *my_system;
+ libMesh::LinearImplicitSystem& system = *my_system;
 
  unsigned int uvar[3] ;
  for (unsigned int i = 0; i<= 3 - 1; i++)
@@ -2287,16 +2361,16 @@ The constrants are the following:
 
  unsigned int system_number=system.number();
 
- DofMap& dof_map = system.get_dof_map();
+ libMesh::DofMap& dof_map = system.get_dof_map();
 
 
 
- FEType fe_type = dof_map.variable_type(uvar[0]);
+ libMesh::FEType fe_type = dof_map.variable_type(uvar[0]);
 
 
- //AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true));
+ //UniquePtr<FEBase> fe (build_finite_element(dim, fe_type, true));
 
- DofConstraintRow constraint;
+ libMesh::DofConstraintRow constraint;
 
 
 
@@ -2354,7 +2428,7 @@ The constrants are the following:
 
 		 const unsigned int  n_dof_constrained = node2.dof_number(system_number,uvar[dir2],0);
 		 const unsigned int  n_dof_used = node2.dof_number(system_number,uvar[dir1],0);
-		 DofConstraintRow constraint;
+		 libMesh::DofConstraintRow constraint;
 		 constraint.clear();
 		 constraint[n_dof_used] = nd1_to_nd2[dir2]/nd1_to_nd2[dir1];
 		 dof_map.add_constraint_row(n_dof_constrained,  constraint);
@@ -2522,11 +2596,11 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 
   //const unsigned int dim = mesh.mesh_dimension();
 
-  LinearImplicitSystem& system = *my_system  ;
+  libMesh::LinearImplicitSystem& system = *my_system  ;
 
-  AutoPtr<NumericVector<Number> >& solution = system.solution;
+  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
 
   unsigned int uvar[3] ;
   for (unsigned int i = 0; i<= 3 - 1; i++)
@@ -2534,11 +2608,11 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
       uvar[i] = system.variable_number(uname_vec[i]);
     }
 
-  FEType fe_type = dof_map.variable_type(0);
+  libMesh::FEType fe_type = dof_map.variable_type(0);
 
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
 
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
 
@@ -2593,7 +2667,7 @@ void Macrostrain::prepare_strain_data_for_output( std::vector<std::string>& eps_
 
 	    eps0 = eps0_of_elem[elem_number] + calculate_eps_lat_matching( elem ); //previous iterations and lattice matching
 
-	    Point center1 = FEInterface::inverse_map(dim, fe_type, elem, center);
+	    Point center1 = libMesh::FEInterface::inverse_map(dim, fe_type, elem, center);
 	    point_vec[0] = center1;
 	    fe->reinit (elem, &point_vec);
 
@@ -2727,9 +2801,9 @@ void Macrostrain::output_strain(std::string filename )
 
   const MeshBase& mesh = equation_systems->get_mesh();
 
-  if (output_type == "GMV")     GMVIO_cell(mesh).write_ascii_cell_data(filename, eps_data, eps_names);
+  //if (output_type == "GMV")     GMVIO_cell(mesh).write_ascii_cell_data(filename, eps_data, eps_names);
 
-  if (output_type == "tecplot") TecplotIO_cell(mesh,false).write_cell_data(filename,eps_data,eps_names);
+  //if (output_type == "tecplot") TecplotIO_cell(mesh,false).write_cell_data(filename,eps_data,eps_names);
 
 }
 //---------------------------------------------------------------------------
@@ -2796,9 +2870,9 @@ void Macrostrain::output_piezo(std :: string filename)
   prepare_polarization_data_for_output( polariz_names,  polariz_data );
 
 
-  if (output_type == "GMV")  GMVIO_cell(mesh).write_ascii_cell_data(filename, polariz_data, polariz_names);
+  //if (output_type == "GMV")  GMVIO_cell(mesh).write_ascii_cell_data(filename, polariz_data, polariz_names);
 
-  if (output_type == "tecplot") TecplotIO_cell(mesh,false).write_cell_data(filename, polariz_data, polariz_names);
+  //if (output_type == "tecplot") TecplotIO_cell(mesh,false).write_cell_data(filename, polariz_data, polariz_names);
 }
 
 //---------------------------------------------------------------------------
@@ -2809,9 +2883,9 @@ void Macrostrain::move_nodes()
 
   //const unsigned int dim = mesh.mesh_dimension();
 
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
-  AutoPtr<NumericVector<Number> >& solution = system.solution;
+  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
   // DofMap& dof_map = system.get_dof_map();
 
@@ -3040,11 +3114,11 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
   {
 
 
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
-  AutoPtr<NumericVector<Number> >& solution = system.solution;
+  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
 
 
   unsigned int uvar[3] ;
@@ -3055,9 +3129,9 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
 
 
-  FEType fe_type = dof_map.variable_type(0);
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  libMesh::FEType fe_type = dof_map.variable_type(0);
+  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+  const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   std::vector<Point> point_vec(1);
 
@@ -3081,7 +3155,7 @@ Tensor2Sym Macrostrain::get_strain(const Elem* elem, bool crystal_system )
 
 
 
-  point_vec[0]  = FEInterface::inverse_map(dim, fe_type, elem, elem->centroid());
+  point_vec[0]  = libMesh::FEInterface::inverse_map(dim, fe_type, elem, elem->centroid());
 
 
 
@@ -3397,9 +3471,9 @@ void  Macrostrain::set_up_additional_dofs()
 
   const MeshBase& mesh =  equation_systems->get_mesh();
 
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
 
   std::vector<unsigned int> dof_indices_component;
 
@@ -3478,9 +3552,9 @@ void Macrostrain::init_substrate()
 void Macrostrain::update_substrate()
 {
 
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
-  AutoPtr<NumericVector<Number> >& solution = system.solution;
+  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
 
   for (unsigned int i = 0; i <  number_of_add_var; i++)
@@ -3542,9 +3616,9 @@ void Macrostrain::update_u_node()
 {
   const MeshBase& mesh = equation_systems->get_mesh();
 
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
-  AutoPtr<NumericVector<Number> >& solution = system.solution;
+  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
   const unsigned int system_number = system.number();
 
@@ -3615,9 +3689,9 @@ void Macrostrain::output_add_strain_variables(string filename)
 
   if (number_of_add_var !=0)
     {
-      LinearImplicitSystem& system = *my_system;
+      libMesh::LinearImplicitSystem& system = *my_system;
 
-      AutoPtr<NumericVector<Number> >& solution = system.solution;
+      libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
 
       std::ofstream out (filename.c_str());
@@ -3639,7 +3713,7 @@ void Macrostrain::output_add_strain_variables(string filename)
 
 }
 //-------------------------------------------------------------------------------------------/
-unsigned int Macrostrain::get_number_of_the_fixed_node(Point point)
+unsigned int Macrostrain::get_number_of_the_fixed_node(libMesh::Point point)
 {
   const MeshBase& mesh =  equation_systems->get_mesh();
 
@@ -3732,11 +3806,11 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
 
   const MeshBase& mesh =  equation_systems->get_mesh();
 
-  LinearImplicitSystem& system = *my_system;
+  libMesh::LinearImplicitSystem& system = *my_system;
 
-  AutoPtr<NumericVector<Number> >& solution = system.solution;
+  libMesh::UniquePtr<libMesh::NumericVector<libMesh::Number> >& solution = system.solution;
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
 
   std::vector<unsigned int> dof_indices_component1;
 
@@ -3747,9 +3821,9 @@ Macrostrain::apply_atom_displacements(const std::string structure_name)
     }
 
 
-  FEType fe_type = dof_map.variable_type(0);
+  libMesh::FEType fe_type = dof_map.variable_type(0);
 
-  AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+  libMesh::UniquePtr<libMesh::FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
 
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
@@ -4025,7 +4099,7 @@ double Macrostrain::norm_of_difference(NumericVector<Number>& solution1, Numeric
   MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
 
-  DofMap& dof_map = my_system->get_dof_map();
+  libMesh::DofMap& dof_map = my_system->get_dof_map();
   vector<unsigned int> dof_indices;
 
   double  norm = 0;
@@ -4104,9 +4178,9 @@ void Macrostrain::adjust_derivatives(Tensor1& deriv_vectors, const Point& normal
 void Macrostrain::reallocate_matrix(void)
 {
   {
-    LinearImplicitSystem& system = *my_system;
+    libMesh::LinearImplicitSystem& system = *my_system;
 
-    DofMap& dof_map = system.get_dof_map();
+    libMesh::DofMap& dof_map = system.get_dof_map();
 
     std::vector< unsigned int > n_nz =	dof_map.get_n_nz();
     std::vector< unsigned int > n_oz =	dof_map.get_n_oz();
@@ -4126,7 +4200,7 @@ void Macrostrain::reallocate_matrix(void)
 
 
     //!system matrix
-    Mat _matr =  (dynamic_cast<PetscMatrix<Number>* >(system.matrix) ) ->mat();
+    Mat _matr =  (dynamic_cast<libMesh::PetscMatrix<Number>* >(system.matrix) ) ->mat();
 
     int ierr;
 
@@ -4237,7 +4311,7 @@ Macrostrain::Macrostrain(const ModelOptions& options)
 
 //   LinearImplicitSystem& system = *my_system;
 
-//   AutoPtr<NumericVector<Number> >& solution = system.solution;
+//   UniquePtr<NumericVector<Number> >& solution = system.solution;
 
 //   DofMap& dof_map = system.get_dof_map();
 
@@ -4254,7 +4328,7 @@ Macrostrain::Macrostrain(const ModelOptions& options)
 //   FEType fe_type = dof_map.variable_type(0);
 
 
-//   AutoPtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
+//   UniquePtr<FEBase> fe (build_finite_element(dim, fe_type, true)); //no scaling here
 
 
 //   const std::vector<std::vector<Real> >& phi = fe->get_phi();

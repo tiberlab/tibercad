@@ -1,11 +1,15 @@
 // $Id$
 
 #include "BoundaryRegions.h"
+#include "TiberCad.h"
 
-#include "elem.h"
+#include "libmesh/elem.h"
+#include "libmesh/mesh_base.h"
+#include "mesh_base.h"
 
 #include <algorithm>
 
+using namespace std;
 
 void
 BoundaryRegions::add_side(const Elem* elem, unsigned int side, ID id)
@@ -145,13 +149,303 @@ BoundaryRegions::get_bc_node_map(std::map<unsigned int, std::vector<ID> >& nodem
     ID id = it->second;
     const Elem* elem = (it->first).elem();
     unsigned int s = (it->first).side();
-    AutoPtr<Elem> side(elem->build_side(s));
+    libMesh::UniquePtr<Elem> side(elem->build_side(s));
 
     for (size_t i = 0; i < side->n_nodes(); i++)
     {
       unsigned int s_id = side->node(i);
       if (std::find(nodemap[id].begin(), nodemap[id].end(), s_id) == nodemap[id].end())
         nodemap[id].push_back(s_id);
+    }
+  }
+}
+
+
+/*
+void
+BoundaryRegions::do_broadcast(void)
+{
+
+  if (get_mesh().comm().size() == 1)
+    return;
+
+  // NOTE: TODO contiguous regions must probably be calculated globally
+  // in prepare_for_use, putting together pieces from different nodes
+  BDMatMap::iterator it(_contiguous_regions.begin());
+  const BDMatMap::iterator end(_contiguous_regions.end());
+  
+  size_t reg_size = _contiguous_regions.size();
+  get_mesh().comm().broadcast(reg_size);
+
+  vector<ID> ids(reg_size);
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (unsigned int i = 0; it != end; ++it, ++i)
+      ids[i] = it->first;
+  }
+  get_mesh().comm().broadcast(ids);
+  
+
+  if (get_mesh().comm().rank() != 0)
+  {
+    for (unsigned int i = 0; i < ids.size(); ++i)
+      _contiguous_regions[ids[i]] = set<ID>();
+  }
+
+  for (it = _contiguous_regions.begin(); it != end; ++it)
+    get_mesh().comm().broadcast(it->second);
+
+
+  // now we have to distribute information on the nodes/edges/sides, but we cannot
+  // distribute pointer values, so we first distribute list of dof_id_types
+
+  // first the sides
+  size_t vec_size = _sides.size();
+  get_mesh().comm().broadcast(vec_size);
+
+  vector<dof_id_type> elem_ids(vec_size);
+  vector<unsigned int> elem_sides(vec_size);
+  ids.resize(vec_size);
+
+  ElemSideMap::iterator elside_it(_sides.begin());
+  ElemSideMap::iterator elside_end(_sides.end());
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (size_t i = 0; elside_it != elside_end; ++elside_it, ++i)
+    {
+      elem_ids[i] = elside_it->first.elem()->id();
+      elem_sides[i] = elside_it->first.side();
+      ids[i] = elside_it->second;
+    }
+  }
+  get_mesh().comm().broadcast(elem_ids);
+  get_mesh().comm().broadcast(elem_sides);
+  get_mesh().comm().broadcast(ids);
+
+  // now we can reconstruct the actual information
+  if (get_mesh().comm().rank() != 0)
+  {
+    const MeshBase& mesh = get_mesh();
+    _sides.clear();
+    _side_ids.clear();
+
+    for (size_t i = 0; i < elem_ids.size(); ++i)
+    {
+      add_side(mesh.elem(elem_ids[i]), elem_sides[i], ids[i]);
+    }
+  }
+
+  // the the edges
+  vec_size = _edges.size();
+  get_mesh().comm().broadcast(vec_size);
+
+  elem_ids.resize(vec_size);
+  elem_sides.resize(vec_size);
+  ids.resize(vec_size);
+
+  elside_it = _edges.begin();
+  elside_end = _edges.end();
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (size_t i = 0; elside_it != elside_end; ++elside_it, ++i)
+    {
+      elem_ids[i] = elside_it->first.elem()->id();
+      elem_sides[i] = elside_it->first.side();
+      ids[i] = elside_it->second;
+    }
+  }
+  get_mesh().comm().broadcast(elem_ids);
+  get_mesh().comm().broadcast(elem_sides);
+  get_mesh().comm().broadcast(ids);
+
+  // now we can reconstruct the actual information
+  if (get_mesh().comm().rank() != 0)
+  {
+    const MeshBase& mesh = get_mesh();
+    _edges.clear();
+    _edge_ids.clear();
+
+    for (size_t i = 0; i < elem_ids.size(); ++i)
+    {
+      add_edge(mesh.elem(elem_ids[i]), elem_sides[i], ids[i]);
+    }
+  }
+
+  // the the nodes
+  vec_size = _nodes.size();
+  get_mesh().comm().broadcast(vec_size);
+
+  elem_ids.resize(vec_size);
+  ids.resize(vec_size);
+
+  NodeMap::iterator node_it(_nodes.begin());
+  const NodeMap::iterator node_end(_nodes.end());
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (size_t i = 0; node_it != node_end; ++node_it, ++i)
+    {
+      elem_ids[i] = node_it->first->id();
+      ids[i] = node_it->second;
+    }
+  }
+  get_mesh().comm().broadcast(elem_ids);
+  get_mesh().comm().broadcast(ids);
+
+  // now we can reconstruct the actual information
+  if (get_mesh().comm().rank() != 0)
+  {
+    const MeshBase& mesh = get_mesh();
+    _nodes.clear();
+    _node_ids.clear();
+
+    for (size_t i = 0; i < elem_ids.size(); ++i)
+    {
+      add_node(mesh.node_ptr(elem_ids[i]), ids[i]);
+    }
+  }
+}
+*/
+
+
+void
+BoundaryRegions::do_broadcast(void)
+{
+
+  if (get_mesh().comm().size() == 1)
+    return;
+
+  // NOTE: TODO contiguous regions must probably be calculated globally
+  // in prepare_for_use, putting together pieces from different nodes
+  BDMatMap::iterator it(_contiguous_regions.begin());
+  const BDMatMap::iterator end(_contiguous_regions.end());
+  
+  size_t reg_size = _contiguous_regions.size();
+  get_mesh().comm().broadcast(reg_size);
+
+  vector<ID> ids(reg_size);
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (unsigned int i = 0; it != end; ++it, ++i)
+      ids[i] = it->first;
+  }
+  get_mesh().comm().broadcast(ids);
+  
+
+  if (get_mesh().comm().rank() != 0)
+  {
+    for (unsigned int i = 0; i < ids.size(); ++i)
+      _contiguous_regions[ids[i]] = set<ID>();
+  }
+
+  for (it = _contiguous_regions.begin(); it != end; ++it)
+    get_mesh().comm().broadcast(it->second);
+
+
+  // now we have to distribute information on the nodes/edges/sides, but we cannot
+  // distribute pointer values, so we first distribute list of dof_id_types
+
+  // first the sides
+  size_t vec_size = _sides.size();
+  get_mesh().comm().broadcast(vec_size);
+
+  vector<libMesh::dof_id_type> elem_ids(vec_size);
+  vector<unsigned int> elem_sides(vec_size);
+  ids.resize(vec_size);
+
+  ElemSideMap::iterator elside_it(_sides.begin());
+  ElemSideMap::iterator elside_end(_sides.end());
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (size_t i = 0; elside_it != elside_end; ++elside_it, ++i)
+    {
+      elem_ids[i] = elside_it->first.elem()->id();
+      elem_sides[i] = elside_it->first.side();
+      ids[i] = elside_it->second;
+    }
+  }
+  get_mesh().comm().broadcast(elem_ids);
+  get_mesh().comm().broadcast(elem_sides);
+  get_mesh().comm().broadcast(ids);
+
+  // now we can reconstruct the actual information
+  if (get_mesh().comm().rank() != 0)
+  {
+    const MeshBase& mesh = get_mesh();
+    _sides.clear();
+    _side_ids.clear();
+
+    for (size_t i = 0; i < elem_ids.size(); ++i)
+    {
+      add_side(mesh.elem(elem_ids[i]), elem_sides[i], ids[i]);
+    }
+  }
+
+  // the the edges
+  vec_size = _edges.size();
+  get_mesh().comm().broadcast(vec_size);
+
+  elem_ids.resize(vec_size);
+  elem_sides.resize(vec_size);
+  ids.resize(vec_size);
+
+  elside_it = _edges.begin();
+  elside_end = _edges.end();
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (size_t i = 0; elside_it != elside_end; ++elside_it, ++i)
+    {
+      elem_ids[i] = elside_it->first.elem()->id();
+      elem_sides[i] = elside_it->first.side();
+      ids[i] = elside_it->second;
+    }
+  }
+  get_mesh().comm().broadcast(elem_ids);
+  get_mesh().comm().broadcast(elem_sides);
+  get_mesh().comm().broadcast(ids);
+
+  // now we can reconstruct the actual information
+  if (get_mesh().comm().rank() != 0)
+  {
+    const MeshBase& mesh = get_mesh();
+    _edges.clear();
+    _edge_ids.clear();
+
+    for (size_t i = 0; i < elem_ids.size(); ++i)
+    {
+      add_edge(mesh.elem(elem_ids[i]), elem_sides[i], ids[i]);
+    }
+  }
+
+  // the the nodes
+  vec_size = _nodes.size();
+  get_mesh().comm().broadcast(vec_size);
+
+  elem_ids.resize(vec_size);
+  ids.resize(vec_size);
+
+  NodeMap::iterator node_it(_nodes.begin());
+  const NodeMap::iterator node_end(_nodes.end());
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (size_t i = 0; node_it != node_end; ++node_it, ++i)
+    {
+      elem_ids[i] = node_it->first->id();
+      ids[i] = node_it->second;
+    }
+  }
+  get_mesh().comm().broadcast(elem_ids);
+  get_mesh().comm().broadcast(ids);
+
+  // now we can reconstruct the actual information
+  if (get_mesh().comm().rank() != 0)
+  {
+    const MeshBase& mesh = get_mesh();
+    _nodes.clear();
+    _node_ids.clear();
+
+    for (size_t i = 0; i < elem_ids.size(); ++i)
+    {
+      add_node(mesh.node_ptr(elem_ids[i]), ids[i]);
     }
   }
 }

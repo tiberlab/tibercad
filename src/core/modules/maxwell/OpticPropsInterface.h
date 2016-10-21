@@ -22,8 +22,8 @@ class TBDLEXPORT OpticPropsInterface: public PhysicalModel
   public:
      virtual ~OpticPropsInterface(void);
 
-     virtual Complex get_dielectric_constant() const {
-       return Complex(1, 0);
+     virtual libMesh::Complex get_dielectric_constant() const {
+       return libMesh::Complex(1, 0);
      }
 
      virtual const TensorValue<Complex> get_optical_epsilon() const {

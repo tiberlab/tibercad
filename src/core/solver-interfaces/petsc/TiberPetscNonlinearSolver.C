@@ -2,6 +2,7 @@
 
 #include "TiberPetscNonlinearSolver.h"
 #include "TiberPetscUtils.h"
+#include "TiberCad.h"
 #include "ModelOptions.h"
 #include "KSPDivergedError.h"
 #include "SNESDivergedError.h"
@@ -10,6 +11,7 @@
 #include "libmesh_common.h"
 #include "petsc_vector.h"
 #include "petsc_matrix.h"
+#include "nonlinear_implicit_system.h"
 
 #include "Messages.h"
 
@@ -108,15 +110,23 @@ extern "C"
     TiberPetscNonlinearSolver* solver =
       static_cast<TiberPetscNonlinearSolver*>(ctx);
 
-    PetscVector<Number> X_global(x), R(r);
-    PetscVector<Number> X_local(X_global.size());
+    libMesh::NonlinearImplicitSystem &sys = solver->system();
+
+    libMesh::PetscVector<Number> X_global(x , solver->comm());
+    libMesh::PetscVector<Number> R(r , solver->comm());
+    libMesh::PetscVector<Number> X_local(X_global);
+
+    // TODO see in libMesh for modifications
 
     X_global.localize (X_local);
 
-    if (solver->residual != NULL) solver->residual(X_local, R);
-    if (solver->matvec   != NULL) solver->matvec(X_local, &R, NULL);
+    R.zero();
+
+    if (solver->residual != NULL) solver->residual(X_local, R, sys);
+    if (solver->matvec   != NULL) solver->matvec(X_local, &R, NULL, sys);
 
     R.close();
+    X_global.close();
 
     return ierr;
   }
@@ -125,8 +135,13 @@ extern "C"
 
   // this function is called by PETSc to evaluate the Jacobian at X
   PetscErrorCode
-  __tiber_petsc_snes_jacobian(SNES snes, Vec x, Mat *jac, Mat *pc,
+# if (PETSC_VERSION_MAJOR >= 3) && (PETSC_VERSION_MINOR >= 5)
+  __tiber_petsc_snes_jacobian(SNES, Vec x, Mat jac, Mat pc,
+      void *ctx)
+#else
+  __tiber_petsc_snes_jacobian(SNES, Vec x, Mat *jac, Mat *pc,
       MatStructure *msflag, void *ctx)
+#endif
   {
     int ierr=0;
 
@@ -135,21 +150,32 @@ extern "C"
     TiberPetscNonlinearSolver* solver =
       static_cast<TiberPetscNonlinearSolver*>(ctx);
 
-    PetscMatrix<Number> PC(*pc);
-    PetscMatrix<Number> Jac(*jac);
-    PetscVector<Number> X_global(x);
-    PetscVector<Number> X_local(X_global.size());
+    libMesh::NonlinearImplicitSystem &sys = solver->system();
+
+    libMesh::PetscMatrix<Number> PC(pc , solver->comm());
+    libMesh::PetscMatrix<Number> Jac(jac , solver->comm());
+    libMesh::PetscVector<Number> X_global(x , solver->comm());
+    libMesh::PetscVector<Number> X_local(X_global);
+
+    // Set the dof maps
+    PC.attach_dof_map(sys.get_dof_map());
+    Jac.attach_dof_map(sys.get_dof_map());
 
     X_global.localize(X_local);
 
-    if (solver->jacobian != NULL) solver->jacobian(X_local, PC);
-    if (solver->matvec   != NULL) solver->matvec(X_local, NULL, &PC);
+    PC.zero();
+
+    if (solver->jacobian != NULL) solver->jacobian(X_local, PC, sys);
+    if (solver->matvec   != NULL) solver->matvec(X_local, NULL, &PC, sys);
 
     PC.close();
     Jac.close();
+    X_global.close();
 
+#if PETSC_RELEASE_LESS_THAN(3,5,0)
     *msflag = SAME_NONZERO_PATTERN;
     //*msflag = DIFFERENT_NONZERO_PATTERN;
+#endif
 
     return ierr;
   }
@@ -157,14 +183,21 @@ extern "C"
 
   // This is the PETSc error handler
   PetscErrorCode
-  __tiber_petsc_snes_error_handler(int line, const char* func,
+  __tiber_petsc_snes_error_handler(MPI_Comm, int line, const char*,
+# if (PETSC_VERSION_MAJOR >= 3) && (PETSC_VERSION_MINOR >= 5)
+      const char* file, PetscErrorCode n,
+#else
       const char* file, const char* dir, PetscErrorCode n,
-      int p, const char* mess, void* ctx) throw (PetscRuntimeError)
+#endif
+      PetscErrorType, const char*, void*) throw (PetscRuntimeError)
   {
 #ifdef DEBUG
     std::ostringstream os;
     os << "PETSc error in " << file << ", line " << line;
     Messages::error(os.str());
+#else
+    (void*) file;
+    (int) line;
 #endif
     if ((n != 71) && (n != 81) && (n != 82))
       throw(PetscRuntimeError(n));
@@ -205,7 +238,9 @@ extern "C"
 
       solver->old_gnorm() = gnorm;
 
-#if (PETSC_VERSION_MAJOR >= 3)
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 4))
+      return SNESConvergedDefault(snes, it, xnorm, gnorm, fnorm, reason, ctx);
+#elif (PETSC_VERSION_MAJOR >= 3)
       return SNESDefaultConverged(snes, it, xnorm, gnorm, fnorm, reason, ctx);
 #else
       return SNESConverged_LS(snes, it, xnorm, gnorm, fnorm, reason, ctx);
@@ -294,14 +329,14 @@ void TiberPetscNonlinearSolver::clear(void)
 
     int ierr=0;
 
-    ierr = SNESDestroy(_snes);
+    ierr = SNESDestroy(&_snes);
     TiberPetscUtils::checkerr(ierr);
   }
 }
 
 
 
-void TiberPetscNonlinearSolver::init(void)
+void TiberPetscNonlinearSolver::init(const char*)
 {
   // Initialize the data structures if not done so already.
   if (!this->initialized())
@@ -318,11 +353,11 @@ void TiberPetscNonlinearSolver::init(void)
     // The second argument was of type SNESProblemType, and could have a
     // value of either SNES_NONLINEAR_EQUATIONS or
     // SNES_UNCONSTRAINED_MINIMIZATION.
-    ierr = SNESCreate(libMesh::COMM_WORLD, SNES_NONLINEAR_EQUATIONS, &_snes);
+    ierr = SNESCreate(comm().get(), SNES_NONLINEAR_EQUATIONS, &_snes);
     TiberPetscUtils::checkerr(ierr);
 
 #else
-    ierr = SNESCreate(libMesh::COMM_WORLD,&_snes);
+    ierr = SNESCreate(comm().get(),&_snes);
     TiberPetscUtils::checkerr(ierr);
 
 #endif
@@ -337,7 +372,7 @@ void TiberPetscNonlinearSolver::init(void)
     PetscPushErrorHandler(__tiber_petsc_snes_error_handler, (void*) this);
 
 
-    ierr = SNESSetType(_snes, SNESLS);
+    ierr = SNESSetType(_snes, SNESNEWTONLS);
     TiberPetscUtils::checkerr(ierr);
 
 
@@ -365,9 +400,9 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
     NumericVector<double>& residual)
 {
 
-  PetscMatrix<double>* jac = dynamic_cast<PetscMatrix<double>*>(&jacobian);
-  PetscVector<double>* x   = dynamic_cast<PetscVector<double>*>(&solution);
-  PetscVector<double>* r   = dynamic_cast<PetscVector<double>*>(&residual);
+  libMesh::PetscMatrix<double>* jac = dynamic_cast<libMesh::PetscMatrix<double>*>(&jacobian);
+  libMesh::PetscVector<double>* x   = dynamic_cast<libMesh::PetscVector<double>*>(&solution);
+  libMesh::PetscVector<double>* r   = dynamic_cast<libMesh::PetscVector<double>*>(&residual);
 
   // We cast to pointers so we can be sure that they succeeded
   // by comparing the result against NULL.
@@ -397,27 +432,30 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   SNESSetMaxLinearSolveFailures(_snes, get_nonlinear_max_it());
 #endif
 
+  SNESLineSearch ls;
+  SNESGetLineSearch(_snes, &ls);
+
   switch (_ls_type)
   {
     case 1:
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       ierr = SNESSetLineSearch(_snes, SNESNoLineSearch, (void*) this);
 #else
-      ierr = SNESLineSearchSet(_snes, SNESLineSearchNo, (void*) this);
+      ierr = SNESLineSearchSetOrder(ls, SNES_LINESEARCH_ORDER_LINEAR);
 #endif
       break;
     case 2:
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       ierr = SNESSetLineSearch(_snes, SNESQuadraticLineSearch, (void*) this);
 #else
-      ierr = SNESLineSearchSet(_snes, SNESLineSearchQuadratic, (void*) this);
+      ierr = SNESLineSearchSetOrder(ls, SNES_LINESEARCH_ORDER_QUADRATIC);
 #endif
       break;
     default:
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       ierr = SNESSetLineSearch(_snes, SNESCubicLineSearch, (void*) this);
 #else
-      ierr = SNESLineSearchSet(_snes, SNESLineSearchCubic, (void*) this);
+      ierr = SNESLineSearchSetOrder(ls, SNES_LINESEARCH_ORDER_CUBIC);
 #endif
       break;
   }
@@ -426,7 +464,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   SNESSetLineSearchParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
   //SNESSetLineSearchParams(_snes, 0.00001, _ls_maxstep, PETSC_DEFAULT);
 #elif (PETSC_VERSION_MAJOR >= 3)
-  SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep);
+  SNESLineSearchSetTolerances(ls, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
 #else
   SNESLineSearchSetParams(_snes, PETSC_DEFAULT, _ls_maxstep, PETSC_DEFAULT);
 #endif
@@ -444,7 +482,7 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   KSPGetPC(ksp, &pc);
 
   // get the type of preconditioner
-  const PCType pc_type = 0;
+  PCType pc_type = 0;
   PCGetType(pc, &pc_type);
 
   // - the very first time, there's no preconditioner yet
@@ -473,6 +511,11 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
       PCILUSetZeroPivot(sub_pc, 1e-32);
       PCILUSetDamping(sub_pc, 1e-3);
+#elif (PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 1)
+    PCFactorSetShiftType(sub_pc, MAT_SHIFT_NONZERO);
+    PCFactorSetShiftAmount(sub_pc, 1e-3);
+    PCFactorSetZeroPivot(sub_pc, 1e-32);
+    //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
 #else
       PCFactorSetShiftNonzero(sub_pc, 1e-3);
       PCFactorSetZeroPivot(sub_pc, 1e-32);
@@ -528,7 +571,11 @@ TiberPetscNonlinearSolver::solve(SparseMatrix<double>&  jacobian,
   SNESGetIterationNumber(_snes, &n_iterations);
 
   double fnorm;
+# if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 5))
+  fnorm = r->l2_norm();
+#else
   SNESGetFunctionNorm(_snes, &fnorm);
+#endif
 
   // reason < 0 means that the solver diverged. In this case we
   // throw an exception.

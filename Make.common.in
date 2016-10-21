@@ -64,7 +64,7 @@ ifeq ($(target_os), darwin)
 endif
 LDFLAGS += -L$(libdir) 
 
-LDFLAGS += -Wl,--whole-archive -ltensor -Wl,--no-whole-archive
+TENSORLIB += -Wl,--whole-archive -L$(topdir)/src/utils/Tensor/$(ARCH) -ltensor -Wl,--no-whole-archive
 
 LIBMESH_PETSC_LIBS = @LIBMESH_PETSC_LIBS@
 LDFLAGS += $(LIBMESH_PETSC_LIBS)
@@ -74,9 +74,6 @@ LDFLAGS += $(BOOST_LIBS)
 
 LDFLAGS += @LDFLAGS@
 
-# TODO fortran compiler libraries
-LDFLAGS += @FCLIBS@
-
 ifeq ($(build_modules),yes)
   TIBER_OBJECTS = $(shell find $(topdir)/src -name "*$(obj-suffix)" -a -path "*.${ARCH}/*" -a ! -path "*/src/tibercad/*" -a ! -path "*/src/utils/*" -a ! -path "*/src/core/modules/*" -a ! -path "*/src/SDK/*")
 else
@@ -84,7 +81,8 @@ else
 endif
 
 
-INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --include)
+INCLUDE  := $(shell export METHOD=$(LIBMESHMETHOD) && $(libmesh_config) --include) -I@LIBMESH_PREFIX@/include/libmesh -I@LIBMESH_PREFIX@/include
+#INCLUDE  := -I@LIBMESH_PREFIX@/include/libmesh
 
 NON_TIBER_INCLUDES := @BOOST_CPPFLAGS@ @TAO_INCLUDES@ $(INCLUDE) 
 
@@ -95,6 +93,9 @@ endif
 
 LDFLAGS += $(BLASLAPACK_LDFLAGS)
 NON_TIBER_INCLUDES += $(BLASLAPACK_INCLUDE)
+
+# TODO fortran compiler libraries
+LDFLAGS += @FCLIBS@
 
 
 ifeq ($(have_cuda),yes)
@@ -112,15 +113,15 @@ NON_TIBER_INCLUDES := $(patsubst -I%,%,$(NON_TIBER_INCLUDES))
 # the machine architecture
 CPPFLAGS += -DARCH=\"$(ARCH)\"
 
-CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK
+CPPFLAGS += -DMPICH_IGNORE_CXX_SEEK -DLIBMESH_REQUIRE_SEPARATE_NAMESPACE
 CPPFLAGS += $(TIBER_INCLUDES)
 CPPFLAGS += $(patsubst %,-isystem %,$(NON_TIBER_INCLUDES))
 
-CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) -std=gnu++0x
+CXXFLAGS += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --cxxflags) 
 #LDFLAGS  += $(shell METHOD=$(LIBMESHMETHOD) $(libmesh_config) --ldflags) 
 
 ifneq ($(target_os),win32)
-  CXXFLAGS += -pthread
+  CXXFLAGS += -fPIC -pthread
   FCFLAGS  += -fPIC
   CFLAGS  += -fPIC
 

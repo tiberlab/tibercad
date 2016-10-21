@@ -21,7 +21,7 @@ $(topdir)/bin/create_license: .$(ARCH)/create_license$(obj-suffix) .$(ARCH)/libl
 ifeq ($(target_os),win32)
 	$(CXX) -o $@ $< .$(ARCH)/liblicense.a
 else
-	$(CXX) -o $@ $< .$(ARCH)/liblicense.a -lpthread
+	$(CXX) -o $@ $< .$(ARCH)/liblicense.a $(LDFLAGS) -lpthread
 endif
 
 

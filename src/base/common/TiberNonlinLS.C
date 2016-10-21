@@ -13,6 +13,7 @@
 
 #include "linear_solver.h"
 #include "equation_systems.h"
+#include "dof_map.h"
 
 #include "Messages.h"
 
@@ -23,7 +24,7 @@
 using namespace std;
 
 
-TiberNonlinLS::TiberNonlinLS(EquationSystems& es,
+TiberNonlinLS::TiberNonlinLS(libMesh::EquationSystems& es,
     const string& name, const unsigned int number)
 : Parent(es, name, number)
 {
@@ -47,9 +48,9 @@ TiberNonlinLS::do_solve(void)
 
   NumericVector<Number>& u = get_solution_vector();
   if (!u.closed()) u.close();
-  NumericVector<Number>& du = *solution;
-  AutoPtr<NumericVector<Number> > u_old_ptr = u.clone();
-  AutoPtr<NumericVector<Number> > tmp_vec = u.clone();
+  NumericVector<Number>& du = *current_local_solution;
+  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = u.clone();
+  libMesh::UniquePtr<NumericVector<Number> > tmp_vec = u.clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
   // the l_infty tolerance for the step size
@@ -70,15 +71,15 @@ TiberNonlinLS::do_solve(void)
   double tol = get_linear_solver()->get_linear_rtol();
   double tol_orig = tol;
 
-  //AutoPtr<SparseMatrix<double> > transpose = SparseMatrix<double>::build();
+  //UniquePtr<SparseMatrix<double> > transpose = SparseMatrix<double>::build();
 
   unsigned int i = 1;
   for ( ; i <= get_nonlinear_max_it(); i++)
   {
 
     // prepare jacobian and residual
-    _assemble(u, NULL, matrix);
-    _assemble(u, rhs, NULL);
+    _assemble(u, NULL, matrix, *this);
+    _assemble(u, rhs, NULL, *this);
 
     get_linear_solver()->set_linear_rtol(tol);
 
@@ -88,6 +89,9 @@ TiberNonlinLS::do_solve(void)
           *solution, *rhs);
     else
       get_linear_solver()->solve(*matrix, *solution, *rhs);
+
+    solution->localize(du, get_dof_map().get_send_list()); 
+
 
 
     // the l2 norm of the current residual
@@ -143,7 +147,7 @@ TiberNonlinLS::do_solve(void)
       u.add(-alpha, du);
 
       // evaluate the residual
-      _assemble(u, rhs, NULL);
+      _assemble(u, rhs, NULL, *this);
 
       old_norm = norm_res;
       //norm_res = rhs->l2_norm();
@@ -206,7 +210,7 @@ TiberNonlinLS::do_solve(void)
       u.add(-0.5 * alpha, du);
 
       // evaluate the residual
-      _assemble(u, rhs, NULL);
+      _assemble(u, rhs, NULL, *this);
 
       double norm_res_old = norm_res;
       //norm_res = rhs->l2_norm();

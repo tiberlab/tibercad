@@ -140,17 +140,17 @@ DSSCGeneration::get_solution_secure(const Elem* elem,
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(0);
 
-  const NumericVector<Number>& solution = system.get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
-  const DofMap& dof_map = system.get_dof_map();
+  const libMesh::DofMap& dof_map = system.get_dof_map();
 
   const unsigned int d_var = system.variable_number("d");
   //const unsigned int g_var = system.variable_number("G");
 
-  FEType fe_type = system.variable_type(d_var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+  libMesh::FEType fe_type = system.variable_type(d_var);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
   vector<unsigned int> dof_indices_d;
   //vector<unsigned int> dof_indices_g;
@@ -217,7 +217,7 @@ DSSCGeneration::_calculate_distances(void)
   unsigned short sysnr = system.number();
   unsigned short var = system.variable_number("d");
 
-  NumericVector<double>& solution = system.get_solution_vector();
+  libMesh::NumericVector<double>& solution = system.get_solution_vector();
 
   const unsigned int dim = get_mesh().mesh_dimension();
 
@@ -251,7 +251,7 @@ DSSCGeneration::_calculate_distances(void)
       }
       else if (dim == 2)
       {
-        AutoPtr<Elem> side_el(sideelem->build_side(s));
+        libMesh::UniquePtr<libMesh::Elem> side_el(sideelem->build_side(s));
 
         /*
          * have to solve: p0 = node; p1, p2 nodes of side elem
@@ -283,7 +283,7 @@ DSSCGeneration::_calculate_distances(void)
       }
       else // dim = 3
       {
-        AutoPtr<Elem> side_el(sideelem->build_side(s));
+        libMesh::UniquePtr<libMesh::Elem> side_el(sideelem->build_side(s));
 
         /*
          * have to solve: p0 = node; p1, p2, p3 nodes of side elem (TRI3)

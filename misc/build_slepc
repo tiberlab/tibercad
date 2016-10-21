@@ -16,11 +16,6 @@ make_slepc()
 {
 
   datatype=$1
-  debug=0
-  if [ $# -ge 2 ]
-  then
-    debug=$2
-  fi
 
   export SLEPC_DIR=${PWD}
 
@@ -34,9 +29,7 @@ make_slepc()
   ./config/configure.py $CONFIGOPTS
   make
 
-  dbg=
-  [ "$debug" == 1 ] && dbg=_dbg
-  libname=${slepc_dll_name}_${datatype}${dbg}
+  libname=${slepc_dll_name}_${datatype}
 
   ARCHIVES="-Wl,--whole-archive ${SLEPC_DIR}/${PETSC_ARCH}/lib/*.a -Wl,--no-whole-archive"
   if [ "$target_os" = darwin ]
@@ -56,16 +49,18 @@ make_slepc()
     slepc_linker_flags="-Wl,-install_name,@rpath/lib/${libname}${dll_libext}"
   fi
 
+  #echo "Copy shared library to ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
   echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ..."
   mkdir -p ${SDKDIR}/${TCHOST}/lib
   ${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} \
     ${slepc_linker_flags} \
     ${ARCHIVES} \
-    -L${SDKDIR}/${TCHOST}/lib -Wl,-rpath,\$ORIGIN -lpetsc_${datatype}${dbg} \
-    ${LAPACK_LIBS} ${FORTRAN_LIBS}
+    -L${SDKDIR}/${TCHOST}/lib -Wl,-rpath,\$ORIGIN -lpetsc_${datatype} \
+    ${LAPACK_LIBS} ${FORTRAN_LIBS} -fPIC
+  #cp ${SLEPC_DIR}/${PETSC_ARCH}/lib/libslepc.so ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext}
 
-    mkdir -p ${TOPDIR}/${TCHOST}/lib
-    cp ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ${TOPDIR}/${TCHOST}/lib/${libname}${dll_libext}
+  mkdir -p ${TOPDIR}/${TCHOST}/lib
+  cp ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ${TOPDIR}/${TCHOST}/lib/${libname}${dll_libext}
 
 }
 
@@ -80,6 +75,7 @@ if [ ! -d $BUILDDIR ]; then
 fi
 
 ARCHIVE=slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}.tar.gz
+PATCH=${PWD}/slepc.patch-${SLEPCVERSION}
 
 cd $BUILDDIR
 if [ ! -e ${ARCHIVE} ]; then
@@ -94,6 +90,10 @@ fi
 
 if [ ! -d slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} ]; then
   tar zxf ${ARCHIVE}
+
+  if [ -e ${PATCH} ]; then
+    patch -p0 -d slepc-${SLEPCVERSION}${SLEPCPATCHLEVEL} < ${PATCH}
+  fi
 fi
 
 
@@ -106,9 +106,4 @@ cd slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}
 make_slepc real
 make_slepc complex
 
-if [ $DEBUG == 'y' ]
-then
-  make_slepc real 1
-  make_slepc complex 1
-fi
 

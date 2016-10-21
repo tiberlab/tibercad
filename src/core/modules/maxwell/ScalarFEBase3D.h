@@ -13,13 +13,13 @@ class ScalarFEBase3D : public IScalarFEBase {
     ScalarFEBase3D(double length_scaling);
 
   protected:
-    virtual void addTetraFunctions(const Elem *elem, const std::vector<Point>& pts, int order);
+    virtual void addTetraFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order);
 
     virtual void applyScaling();
 
     static const unsigned int DIM = 3;
 
-    virtual void addFunctions(const Elem *elem, const std::vector<Point>& pts, unsigned int order) {
+    virtual void addFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, unsigned int order) {
       addTetraFunctions(elem, pts, order);
     }
 };

@@ -12,10 +12,11 @@
 #include <vector>
 #include <string>
 
-template <typename T> class VectorValue;
-typedef VectorValue<double> RealVectorValue;
+namespace libMesh
+{
+  class Point;
+}
 
-class Point;
 
 //! A class to store model options
 /*!
@@ -83,6 +84,10 @@ class ModelOptions
     const std::string& get_name(void) const;
 
 
+    //! Get an option as string as given in input file
+    std::string get_raw_option_string(const std::string& name) const;
+
+
     //! Get the value of an option
     /*!
      * \param name the name of the option
@@ -110,7 +115,7 @@ class ModelOptions
      * \param name the name of the option
      * \param vec the vector, where the values will be stored.
      */
-    void get_option(const std::string& name, RealVectorValue& vec) const;
+    void get_option(const std::string& name, libMesh::RealVectorValue& vec) const;
 
 
     //! Get an option which is a point
@@ -118,7 +123,7 @@ class ModelOptions
      * \param name the name of the option
      * \param point the point, where the values will be stored.
      */
-    void get_option(const std::string& name, Point& vec) const;
+    void get_option(const std::string& name, libMesh::Point& vec) const;
 
     //! Get an option which is a vector of vectors (with the same type)
     /*!

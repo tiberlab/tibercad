@@ -47,7 +47,7 @@ tibercad_static: $(objects)
 		-L$(libdir) \
 		-Wl,-rpath,$(libdir) -Wl,-Bstatic -ltibercad -Wl,-Bdynamic \
 		$(ADDITIONAL_LIBS) \
-		$(MODULE_LIBS) $(LDFLAGS) $(PACKAGEFLAGS)
+		$(MODULE_LIBS) $(LDFLAGS) $(PACKAGEFLAGS) -fPIC
 
 
 

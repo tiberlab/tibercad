@@ -11,19 +11,19 @@
 
 template <class T> class IFEBase : public IIFEBase {
   protected:
-    AutoPtr<FEBase> scalarFe;
+  libMesh::AutoPtr<libMesh::FEBase> scalarFe;
 
   public://TODO
     std::vector<FunctionInfo> functions_info;
-    QBase* qBase;
+    libMesh::QBase* qBase;
     double length_scaling;
     std::vector<T> functions;
     std::vector<ScalarFunction> phi_functions;
 
-    virtual Point changePoint(double matrix[2][2], const Point& point, unsigned int deriv_order) {
-      Point result = point;
+    virtual libMesh::Point changePoint(double matrix[2][2], const libMesh::Point& point, unsigned int deriv_order) {
+      libMesh::Point result = point;
       for (int i = 0; i < deriv_order; i++) {
-        result = Point(matrix[0][0] * result(0) + matrix[0][1] * result(1),
+        result = libMesh::Point(matrix[0][0] * result(0) + matrix[0][1] * result(1),
                        matrix[1][0] * result(0) + matrix[1][1] * result(1));
       }
       return result;
@@ -38,7 +38,7 @@ template <class T> class IFEBase : public IIFEBase {
 
     }
 
-    virtual void do_reinit(const Elem *elem, unsigned int order, const std::vector<Point> *const pts = NULL) {
+    virtual void do_reinit(const libMesh::Elem *elem, unsigned int order, const std::vector<libMesh::Point> *const pts = NULL) {
       functions_info.resize(0);
       functions.resize(0);
       phi_functions.resize(0);
@@ -51,7 +51,7 @@ template <class T> class IFEBase : public IIFEBase {
         }
       }
 
-      std::vector<Point> qpoints;
+      std::vector<libMesh::Point> qpoints;
       if (pts != NULL) {
         qpoints = *pts;
       } else if (qBase != NULL) {
@@ -62,7 +62,7 @@ template <class T> class IFEBase : public IIFEBase {
       applyScaling();
     }
 
-    virtual void addFunctions(const Elem *elem, const std::vector<Point>& pts, unsigned int order) {
+    virtual void addFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, unsigned int order) {
     }
 
   public:
@@ -70,28 +70,28 @@ template <class T> class IFEBase : public IIFEBase {
     static const int FOUR = 4; // ^^
 
     IFEBase(const unsigned int dim, double scaling) : length_scaling(scaling),
-        scalarFe(FEBase::build(dim, FEType(libMeshEnums::FIRST, libMeshEnums::LAGRANGE))), qBase(NULL) {
+        scalarFe(libMesh::FEBase::build(dim, libMesh::FEType(libMeshEnums::FIRST, libMeshEnums::LAGRANGE))), qBase(NULL) {
     }
 
     virtual ~IFEBase() {
-      FEBase* tmp = scalarFe.release();
+      libMesh::FEBase* tmp = scalarFe.release();
       delete tmp;
     }
 
-    virtual void attach_quadrature_rule(QBase* q) {
+    virtual void attach_quadrature_rule(libMesh::QBase* q) {
       qBase = q;
       scalarFe->attach_quadrature_rule(q);
     }
 
-    virtual const std::vector<Real>& get_JxW() const {
+    virtual const std::vector<libMesh::Real>& get_JxW() const {
       return scalarFe->get_JxW();
     }
 
-    virtual const std::vector<Point>& get_xyz() const {
+    virtual const std::vector<libMesh::Point>& get_xyz() const {
       return scalarFe->get_xyz();
     }
 
-    virtual void reinit(const Elem *elem, unsigned int order, const std::vector<Point> *const pts=NULL) {
+    virtual void reinit(const libMesh::Elem *elem, unsigned int order, const std::vector<libMesh::Point> *const pts=NULL) {
       if (qBase != NULL || pts != NULL) {
         scalarFe->reinit(elem, pts);
       }
@@ -99,7 +99,7 @@ template <class T> class IFEBase : public IIFEBase {
       do_reinit(elem, order, pts);
     }
 
-    virtual void reinit(const Elem *elem, unsigned int order, const unsigned int side, const Real tolerance = TOLERANCE) {
+    virtual void reinit(const libMesh::Elem *elem, unsigned int order, const unsigned int side, const libMesh::Real tolerance = libMesh::TOLERANCE) {
       scalarFe->reinit(elem, side, tolerance);
 
       do_reinit(elem, order);

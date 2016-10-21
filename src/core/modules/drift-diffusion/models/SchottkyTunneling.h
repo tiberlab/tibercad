@@ -7,10 +7,11 @@
 #include "HashMap.h"
 #include "TypeDefs.h"
 
+#include "elem.h"
 #include "point.h"
 
 class SimulationInterface;
-class Elem;
+//class Elem;
 
 //! Implementation of local Schottky Tunneling model
 /*!
@@ -83,7 +84,7 @@ class TBDLLOCAL SchottkyTunneling : public RecombinationModelInterface
 
 
     //! A map containing all elements inside the tunnel length
-    HashMap<const Elem*, Point>::Type _elem_map;
+    HashMap<const libMesh::Elem*, libMesh::Point>::Type _elem_map;
 
 
 

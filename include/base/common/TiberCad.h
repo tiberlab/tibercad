@@ -9,10 +9,14 @@
 #include <string>
 #include <list>
 
-#include <mpi.h>
+#include "parallel.h"
 
 class Control;
+
+namespace libMesh
+{
 class LibMeshInit;
+}
 
 
 //! Entry point and generic stuff for TiberCAD
@@ -138,7 +142,10 @@ class TiberCad
 
 
     //! Get our MPI Communicator
-    static MPI_Comm get_mpi_comm();
+    //static const libMesh::Parallel::Communicator& get_mpi_comm(void);
+
+    //! Get our MPI Communicator
+    static libMesh::Parallel::Communicator& get_mpi_comm(void);
 
 
 
@@ -181,7 +188,7 @@ class TiberCad
     static Control* _control;
 
     //! The libmesh entry point
-    LibMeshInit* _libmeshinit;
+    libMesh::LibMeshInit* _libmeshinit;
 
 
     //! The list from which the filename suffix gets constructed
@@ -189,7 +196,7 @@ class TiberCad
 
 
     //! This is our MPI communicator
-    static MPI_Comm _mpi_comm;
+    static libMesh::Parallel::Communicator _mpi_comm;
 
 
 };

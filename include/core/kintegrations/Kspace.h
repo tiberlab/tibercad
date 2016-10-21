@@ -11,13 +11,14 @@
 #include <node.h>
 #include "ModelOptions.h"
 #include "InitFailedException.h"
+#include "parallel.h"
 
 class Kspace
 {
  public:
 
   //! Constructor
-  Kspace( const ModelOptions& mod_opt);
+  Kspace( const ModelOptions& mod_opt, const libMesh::Parallel::Communicator& comm_in);
 
   //! copy constr
   Kspace( const Kspace& kspace);
@@ -26,17 +27,18 @@ class Kspace
   virtual ~Kspace();
 
 
-  //!returns reference to kmesh object
-  //Mesh* get_k_mesh(void);
+  //! returns reference to kmesh object
+  libMesh::MeshBase* get_k_mesh(void);
 
-  const Mesh* get_k_mesh(void);
+  //! returns reference to kmesh object
+  const libMesh::MeshBase* get_k_mesh(void) const;
 
   unsigned int dimension(void) const;
 
   double get_degeneracy_factor(void);
 
   //! Transform a k-point to relative coordinates
-  void inverse_transform(Point& p) const;
+  void inverse_transform(libMesh::Point& p) const;
 
 
   enum Wedge
@@ -115,7 +117,7 @@ class Kspace
 
 
    //!Brilluoin zone
-   Mesh* kmesh;
+   libMesh::Mesh* kmesh;
 
    //!Boundaries of the Brilluoin zone
    double kmin[3], kmax[3];
@@ -134,6 +136,7 @@ class Kspace
 
    bool k_path;
 
+   libMesh::Parallel::Communicator kspace_comm;
 
 };
 
@@ -145,7 +148,13 @@ inline  double Kspace::get_degeneracy_factor(void)
 
 
 
-inline const Mesh* Kspace::get_k_mesh()
+
+inline libMesh::MeshBase* Kspace::get_k_mesh()
+{
+  return(kmesh);
+}
+
+inline const libMesh::MeshBase* Kspace::get_k_mesh() const
 {
   return kmesh;
 }

@@ -8,6 +8,9 @@
 #include "KspaceIntegration.h"
 #include "KspaceIntegrationTemplate.h"
 
+
+
+
 class  KPbulkHamiltonian;
 class  Device;
 
@@ -18,7 +21,6 @@ class  Device;
 class OpticsKP: public Optics
 {
  public:
-
 
   //! constructor
   OpticsKP(const ModelOptions& options);
@@ -48,10 +50,12 @@ class OpticsKP: public Optics
 
   virtual void do_compute_matrix_elements(void);
 
+
  private:
 
+
   //!system that we add to the equation systems
-  LinearImplicitSystem* system;
+  libMesh::LinearImplicitSystem* system;
 
   std::vector<unsigned int> psivar;
   
@@ -69,30 +73,31 @@ class OpticsKP: public Optics
 
   
   //!pointer to the real part of  Px matrix
-  SparseMatrix<Number>* Px_matr_real;
+  libMesh::SparseMatrix<Number>* Px_matr_real;
 
   //!pointer to the imaginary part of  Px matrix
-  SparseMatrix<Number>* Px_matr_imag;
+  libMesh::SparseMatrix<Number>* Px_matr_imag;
 
   //!pointer to the real part of  Py matrix
-  SparseMatrix<Number>* Py_matr_real;
+  libMesh::SparseMatrix<Number>* Py_matr_real;
  
   //!pointer to the imaginary part of  Py matrix
-  SparseMatrix<Number>* Py_matr_imag;
+  libMesh::SparseMatrix<Number>* Py_matr_imag;
  
   //!pointer to the real part of  Pz matrix
-  SparseMatrix<Number>* Pz_matr_real;
+  libMesh::SparseMatrix<Number>* Pz_matr_real;
 
   //!pointer to the imaginary part of  Pz matrix
-  SparseMatrix<Number>* Pz_matr_imag;
+  libMesh::SparseMatrix<Number>* Pz_matr_imag;
   
+
 
   //!calculate P-vector matrix element between states i and j
   /*!
     \param i initial state number
     \param j final state number
   */
-  std::vector<Complex>  calculate_matrix_element(unsigned int i, unsigned int j);
+  std::vector<libMesh::Complex>  calculate_matrix_element(unsigned int i, unsigned int j);
 
 
 
@@ -100,6 +105,7 @@ class OpticsKP: public Optics
   /*!
     Has to be 8x8 model. Parameters may be different from those used in Schroedinger equation.
   */ 
+
 
 
 

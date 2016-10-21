@@ -13,11 +13,11 @@
 using namespace std;
 
 
-Variable::VariableMap
-Variable::_variables;
+VariableValue::VariableValueMap
+VariableValue::_variables;
 
 
-Variable::Variable(const std::string& name)
+VariableValue::VariableValue(const std::string& name)
   : _name(name)
 {
   // register the object
@@ -26,7 +26,7 @@ Variable::Variable(const std::string& name)
 
 
 
-Variable::~Variable(void)
+VariableValue::~VariableValue(void)
 {
 
 }
@@ -34,9 +34,9 @@ Variable::~Variable(void)
 
 
 void
-Variable::clear_all(void)
+VariableValue::clear_all(void)
 {
-  VariableMap::iterator it(_variables.begin());
+  VariableValueMap::iterator it(_variables.begin());
   for ( ; it != _variables.end(); ++it)
     delete it->second;
 
@@ -45,22 +45,22 @@ Variable::clear_all(void)
 
 
 void
-Variable::check_name(const std::string& name)
+VariableValue::check_name(const std::string& name)
 {
   if ((name.size() < 2) || (name[0] != '$'))
   {
     throw RuntimeException("\'" + name + "\' is not a valid variable name. "
-        "Variables hav to start with \'$\'");
+        "VariableValues hav to start with \'$\'");
   }
 }
 
 
 bool
-Variable::is_variable(const std::string& var)
+VariableValue::is_variable(const std::string& var)
 {
   bool result = false;
   check_name(var);
-  VariableMap::iterator it(_variables.find(var));
+  VariableValueMap::iterator it(_variables.find(var));
   if (it != _variables.end())
     result = true;
 
@@ -71,12 +71,12 @@ Variable::is_variable(const std::string& var)
 
 template <typename T>
 void
-Variable::set_variable_value(const string& var, const T& value)
+VariableValue::set_variable_value(const string& var, const T& value)
 {
   check_name(var);
 
   // we have to set the value in all objects
-  VariableMap::iterator it(_variables.find(var));
+  VariableValueMap::iterator it(_variables.find(var));
   if (it != _variables.end())
   {
     TypedVariable<T>* sw =
@@ -92,13 +92,13 @@ Variable::set_variable_value(const string& var, const T& value)
 
 template <typename T>
 T
-Variable::get_variable_value(const string& var)
+VariableValue::get_variable_value(const string& var)
 {
   check_name(var);
 
   T val;
 
-  VariableMap::iterator it(_variables.find(var));
+  VariableValueMap::iterator it(_variables.find(var));
   if (it != _variables.end())
   {
     const TypedVariable<T>* sw =
@@ -118,7 +118,7 @@ Variable::get_variable_value(const string& var)
 
 template <typename T>
 void
-Variable::check_and_register(const string& s, T& variable,
+VariableValue::check_and_register(const string& s, T& variable,
     const TiberModelObject* ct, InitializerBase<T>* initfunc)
 {
   if (s.size() >= 1)
@@ -166,10 +166,10 @@ Variable::check_and_register(const string& s, T& variable,
 
           // does it already exist?
           TypedVariable<T>* var;
-          VariableMap::iterator it(_variables.find(name));
+          VariableValueMap::iterator it(_variables.find(name));
           if (it != _variables.end())
           {
-            Variable* v = it->second;
+            VariableValue* v = it->second;
             var = dynamic_cast<TypedVariable<T>*>(v);
           }
           else
@@ -199,9 +199,9 @@ Variable::check_and_register(const string& s, T& variable,
 
 
 void
-Variable::unregister(const TiberModelObject* ct)
+VariableValue::unregister(const TiberModelObject* ct)
 {
-  VariableMap::iterator it(_variables.begin());
+  VariableValueMap::iterator it(_variables.begin());
   for ( ; it != _variables.end(); ++it)
     (it->second)->do_unregister(ct);
 }
@@ -214,37 +214,37 @@ Variable::unregister(const TiberModelObject* ct)
 
 template
 void
-Variable::check_and_register<double>(const string&, double&,
+VariableValue::check_and_register<double>(const string&, double&,
     const TiberModelObject*, InitializerBase<double>* initfunc);
 
 
 template
 void
-Variable::check_and_register<int>(const string&, int&,
+VariableValue::check_and_register<int>(const string&, int&,
     const TiberModelObject*, InitializerBase<int>* initfunc);
 
 
 template
 void
-Variable::check_and_register<string>(const string&, string&,
+VariableValue::check_and_register<string>(const string&, string&,
     const TiberModelObject*, InitializerBase<string>* initfunc);
 
 
 template
 void
-Variable::check_and_register<unsigned int>(const string&, unsigned int&,
+VariableValue::check_and_register<unsigned int>(const string&, unsigned int&,
     const TiberModelObject*, InitializerBase<unsigned int>* initfunc);
 
 
 template
 void
-Variable::check_and_register<char>(const string&, char&,
+VariableValue::check_and_register<char>(const string&, char&,
     const TiberModelObject*, InitializerBase<char>* initfunc);
 
 
 template
 void
-Variable::check_and_register<bool>(const string&, bool&,
+VariableValue::check_and_register<bool>(const string&, bool&,
     const TiberModelObject*, InitializerBase<bool>* initfunc);
 
 
@@ -252,51 +252,51 @@ Variable::check_and_register<bool>(const string&, bool&,
 
 template
 void
-Variable::set_variable_value<double>(const string&, const double&);
+VariableValue::set_variable_value<double>(const string&, const double&);
 
 template
 void
-Variable::set_variable_value<int>(const string&, const int&);
+VariableValue::set_variable_value<int>(const string&, const int&);
 
 template
 void
-Variable::set_variable_value<string>(const string&, const string&);
+VariableValue::set_variable_value<string>(const string&, const string&);
 
 template
 void
-Variable::set_variable_value<char>(const string&, const char&);
+VariableValue::set_variable_value<char>(const string&, const char&);
 
 template
 void
-Variable::set_variable_value<unsigned int>(const string&, const unsigned int&);
+VariableValue::set_variable_value<unsigned int>(const string&, const unsigned int&);
 
 template
 void
-Variable::set_variable_value<bool>(const string&, const bool&);
+VariableValue::set_variable_value<bool>(const string&, const bool&);
 
 
 
 
 template
 double
-Variable::get_variable_value<double>(const string&);
+VariableValue::get_variable_value<double>(const string&);
 
 template
 int
-Variable::get_variable_value<int>(const string&);
+VariableValue::get_variable_value<int>(const string&);
 
 template
 string
-Variable::get_variable_value<string>(const string&);
+VariableValue::get_variable_value<string>(const string&);
 
 template
 char
-Variable::get_variable_value<char>(const string&);
+VariableValue::get_variable_value<char>(const string&);
 
 template
 unsigned int
-Variable::get_variable_value<unsigned int>(const string&);
+VariableValue::get_variable_value<unsigned int>(const string&);
 
 template
 bool
-Variable::get_variable_value<bool>(const string&);
+VariableValue::get_variable_value<bool>(const string&);

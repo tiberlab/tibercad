@@ -1,14 +1,14 @@
 // the box base side length
-Lbox = 10; // 50;
+Lbox = 3; // 50;
 
 // the box height
-Hbox = 20; //100;
+Hbox =  5 ; //100;
 
 // the intrinsic layer thickness
-Hintr = 6; //30;
+Hintr = 3; //30;
 
 // the quantum cube side length
-Lqbox = 4.0; // 5;  //15;
+Lqbox = 2.0; // 5;  //15;
 
 // the radius of the ball
 R = 1.0;  // 1.5;

@@ -11,7 +11,7 @@ void
 BuiltInStrain::do_init(void)
 {
   
-  RealTensor strain(0);
+  libMesh::RealTensor strain(0);
   get_parameter("strain", strain);
 
   

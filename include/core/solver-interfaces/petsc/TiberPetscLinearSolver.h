@@ -27,13 +27,13 @@ EXTERN_C_FOR_PETSC_END
  * It is derived from the libmesh LinearSolver class
  *
  */
-class TiberPetscLinearSolver : public TiberLinearSolver
+class TiberPetscLinearSolver :  public TiberLinearSolver
 {
 
   public:
 
     //!  Constructor. Initializes Petsc data structures
-    TiberPetscLinearSolver(const ModelOptions& options);
+    TiberPetscLinearSolver(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options);
 
 
     //! Destructor.
@@ -41,15 +41,34 @@ class TiberPetscLinearSolver : public TiberLinearSolver
 
 
     //! Release all memory and clear data structures.
-    virtual void clear(void);
+    virtual void clear(void) override;
 
 
     //! Initialize data structures if not done so already.
-    virtual void init(void);
+    virtual void init(const char* name = NULL) override;
 
 
     //! Dummy implementation
-    virtual void print_converged_reason(void) {};
+    virtual std::pair<unsigned int, Real>
+      solve(const libMesh::ShellMatrix<Number>&,
+          const SparseMatrix<Number>&,
+          NumericVector<Number>&,
+          NumericVector<Number>&, double, unsigned int) override {};
+
+
+    //! Dummy implementation
+    virtual std::pair<unsigned int, Real>
+      solve(const libMesh::ShellMatrix<Number>&,
+          NumericVector<Number>&,
+          NumericVector<Number>&, double, unsigned int) override {};
+
+
+    //! Return the convergence reason
+    virtual libMesh::LinearConvergenceReason get_converged_reason() const override;
+
+
+    //! Dummy implementation
+    virtual void print_converged_reason(void) override {};
 
 
     /*!
@@ -72,7 +91,7 @@ class TiberPetscLinearSolver : public TiberLinearSolver
   protected:
 
     /*!  \copydoc TiberLinearSolver::parse_options() */
-    virtual void do_parse_options(void);
+    virtual void do_parse_options(void) override;
 
 
 
@@ -81,7 +100,7 @@ class TiberPetscLinearSolver : public TiberLinearSolver
       do_solve(SparseMatrix<Number> &matrix,
           SparseMatrix<Number> &preconditioner,
           NumericVector<Number> &solution,
-          NumericVector<Number> &rhs);
+          NumericVector<Number> &rhs) override;
 
 
     //! Setup the textual and graphical convergence monitors
@@ -118,6 +137,9 @@ class TiberPetscLinearSolver : public TiberLinearSolver
 
     //! Check convergence
     std::pair<unsigned int, double> check_convergence(void);
+
+    //! Set the sub PC
+    void _set_sub_pc(PC pc, const std::string& pc_type);
 
 
 };

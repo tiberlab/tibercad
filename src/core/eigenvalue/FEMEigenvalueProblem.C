@@ -8,16 +8,17 @@
 #include "Messages.h"
 
 #include "equation_systems.h"
-#include "linear_implicit_system.h"
-#include "sparse_matrix.h"
-#include "numeric_vector.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
-//#include "fe.h"
+#include "quadrature_gauss.h"
 #include "fe_interface.h"
-#include "petsc_matrix.h"
+#include "linear_implicit_system.h"
+
+#include "quadrature_gauss.h"
+#include "quadrature_gauss.h"
+
+#include <petsc_matrix.h>
 
 using namespace std;
+using namespace libMesh;
 
 FEMEigenvalueProblem::FEMEigenvalueProblem(const ModelOptions& options)
  : EigenvalueProblem(options),
@@ -60,12 +61,14 @@ void FEMEigenvalueProblem::make_new_dofs( )
   unsigned int number_it = 0;
 
 
-  for (unsigned int i = 0; i < number_of_all_dofs ; i++)
+  //for (unsigned int i = 0; i < number_of_all_dofs ; i++)
+  for (unsigned int i = dof_map.first_dof(); i < dof_map.end_dof() ; i++)
     {
 //      if ( !( dof_map.is_constrained_dof(i) ) && (find(n_begin, n_end, i) == n_end))
 	{
 	    new_dofs[i].independent = true;
-	    new_dofs[i].new_number = number_it;
+	    new_dofs[i].new_number = i;
+	    //new_dofs[i].new_number = number_it;
 	    number_it++;
 
 	  }
@@ -191,10 +194,11 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
     const Elem* elem = *it;
     unsigned int n_sides;
 
-    if ( dim > 1 ) 
+    // should now work always
+    //if ( dim > 1 ) 
       n_sides = elem->n_sides();
-    else
-      n_sides = elem->n_nodes();
+    //else
+    //  n_sides = elem->n_nodes();
      
 	 	
     for (short i = 0; i < n_sides; i++)
@@ -205,7 +209,11 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
       Elem* el1 = elem->neighbor(i);
 
       bool side_is_external = false;
+
+      if (get_environment().is_outer_boundary(ElementSide(elem, i)))
+        side_is_external = true;
       
+      /*
       if (el1 == NULL) 
       {
 	side_is_external = true;
@@ -240,6 +248,7 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 
 
       }
+      */
   
 
       //-------------------------------------------------------
@@ -249,7 +258,6 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 
       if (   side_is_external   )  
       {
-	
 	if (dim > 1)
 	{//2D/3D
 	  for (unsigned int nd = 0; nd < elem->n_nodes(); nd++)
@@ -284,8 +292,9 @@ void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, double st_shift_value)
 {
 
- 
   assemble(); //calculate Hamiltonian and S matrix
+
+  EigenSolver::prepare_slepc(get_communicator().get());
   
   copy_H_to_solver( );
 
@@ -299,8 +308,6 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
     throw SolveFailedException("Number of requested eigenvalues is bigger than the Hamiltonian size");
 
   
-
-  EigenSolver::prepare_slepc();
 
   EigenSolver::SLEPCoptions slep_opt;
 
@@ -344,6 +351,19 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
   while (!foundall)
   {
+    /*
+    if (slep_opt.use_deflation_space)
+    {
+      vector<const vector<Complex>*> sols;
+      for (int i = 0; i < _solution.size(); ++i)
+      {
+        if (_solution[i].eigen_vector.size() > 0)
+          sols.push_back(&_solution[i].eigen_vector);
+      }
+      EigenSolver::set_deflation_space(sols);
+    }
+    */
+
     int result;
     if (_haveS) 
       result = EigenSolver::eig_value_problem_general(slep_opt);
@@ -421,16 +441,12 @@ void FEMEigenvalueProblem::parse_options()
 
     unsigned int dim = get_mesh().mesh_dimension();
     
+    solver_opt.st_ksp_type = std::string("bcgsl");
+
     if (dim == 1)
-    {
-      solver_opt.preconditioner = std::string("redundant");
-      solver_opt.st_ksp_type = std::string("preonly");
-    }
+      solver_opt.preconditioner = std::string("lu");
     else
-    {
       solver_opt.preconditioner = std::string("jacobi");
-      solver_opt.st_ksp_type = std::string("bcgsl");
-    }
 
   }
 
@@ -438,323 +454,175 @@ void FEMEigenvalueProblem::parse_options()
 
   solver_opt.st_ksp_type =  sol_opt.get_option("ksp_type",solver_opt.st_ksp_type);
 
+  if ((this->get_communicator().size() == 1) && (solver_opt.preconditioner == "lu"))
+  {
+    solver_opt.st_ksp_type = std::string("preonly");
+  }
+
 }
+
+
+void FEMEigenvalueProblem::copy_matrix_to_solver(const char matrix)
+{
+
+  // our problems are square
+  int size_matrix = _H_real->n();
+  _hamiltonian_size = size_matrix;
+  
+  PetscMatrix<Number>* H_real = nullptr;
+  PetscMatrix<Number>* H_imag = nullptr;
+
+  if (matrix == 'H')
+  {
+    H_real = static_cast<PetscMatrix<Number>* >(_H_real);
+    H_real->close();
+
+    H_imag = static_cast<PetscMatrix<Number>* >(_H_imag);
+    H_imag->close();
+  }
+  else if (matrix == 'S')
+  {
+    H_real = static_cast<PetscMatrix<Number>* >(_S_real);
+    H_real->close();
+  }
+
+
+  // the first local index
+  const int start = H_real->row_start();
+  const int end   = H_real->row_stop();
+
+  const int local_size = end - start;
+
+  // diagonal nonzeros
+  vector<int> d_nnz(local_size);
+  // off-diagonal nonzeros
+  vector<int> o_nnz(local_size);
+
+  // we strongly assume H and S have the same partitioning
+  const int offset = H_real->row_start();
+
+  for (int i = start; i < end; ++i)
+  {
+    PetscInt ncols_r = 0, ncols_i = 0;
+    const PetscInt *row_r, *row_i;
+    PetscErrorCode ierr;
+    //const PetscReal *values_r, *values_i;
+
+    ierr = MatGetRow(H_real->mat(), i, &ncols_r, &row_r, PETSC_NULL);
+
+    if (matrix == 'H')
+      ierr = MatGetRow(H_imag->mat(), i, &ncols_i, &row_i, PETSC_NULL);
+
+    int diag = 0;
+    int offdiag = 0;
+
+    for (int j = 0; j < ncols_r; ++j)
+    {
+      if ((row_r[j] < start) || (row_r[j] >= end))
+        offdiag++;
+      else
+        diag++;
+    }
+
+    for (int j = 0; j < ncols_i; ++j)
+    {
+      if ((row_i[j] < start) || (row_i[j] >= end))
+        offdiag++;
+      else
+        diag++;
+    }
+
+    d_nnz[i - offset] = diag;
+    o_nnz[i - offset] = offdiag;
+
+    ierr = MatRestoreRow(H_real->mat(), i, &ncols_r, &row_r, PETSC_NULL);
+
+    if (matrix == 'H')
+      ierr = MatRestoreRow(H_imag->mat(), i, &ncols_i, &row_i, PETSC_NULL);
+  }
+
+  EigenSolver::preallocate_matrix(matrix, size_matrix, local_size, d_nnz, o_nnz);
+
+  for (int i = start; i < end; ++i)
+  {
+    PetscInt ncols_r = 0, ncols_i = 0;
+    const PetscInt *row_r, *row_i;
+    PetscErrorCode ierr;
+    const PetscReal *values_r, *values_i;
+
+    ierr = MatGetRow(H_real->mat(), i, &ncols_r, &row_r, &values_r);
+
+    if (matrix == 'H')
+      ierr = MatGetRow(H_imag->mat(), i, &ncols_i, &row_i, &values_i);
+
+    set<unsigned int> idset;
+    for (int j = 0; j < ncols_r; ++j)
+      idset.insert(row_r[j]);
+    for (int j = 0; j < ncols_i; ++j)
+      idset.insert(row_i[j]);
+
+    vector<unsigned int> column_ids;
+    column_ids.reserve(idset.size());
+    for (set<unsigned int>::iterator it(idset.begin()); it != idset.end(); ++it)
+      column_ids.push_back(*it);
+
+
+    vector<Complex> complex_values;
+    complex_values.reserve(column_ids.size());
+
+    vector<unsigned int> nonzero_ids;
+    nonzero_ids.reserve(column_ids.size());
+
+    for (int j = 0, k = 0, l = 0; j < column_ids.size(); ++j)
+    {
+      Complex value = 0.0;
+      while ((k < ncols_r) && (row_r[k] < column_ids[j]))
+        ++k;
+
+      if ((k < ncols_r) && (row_r[k] == column_ids[j]))
+        value += values_r[k];
+
+      while ((l < ncols_i) && (row_i[l] < column_ids[j]))
+        ++l;
+
+      if ((l < ncols_i) && (row_i[l] == column_ids[j]))
+        value += Complex(0.0, values_i[l]);
+
+      if (value != 0.0)
+      {
+        nonzero_ids.push_back(column_ids[j]);
+        complex_values.push_back(value);
+      }
+    }
+
+
+    EigenSolver::insert_matrix_row(matrix, i, nonzero_ids, complex_values);
+
+
+    ierr = MatRestoreRow(H_real->mat(), i, &ncols_r, &row_r, &values_r);
+
+    if (matrix == 'H')
+      ierr = MatRestoreRow(H_imag->mat(), i, &ncols_i, &row_i, &values_i);
+  }
+
+  EigenSolver::finalize_matrix_assembly(matrix);
+}
+
 
   
 //========================================================================================//
 void FEMEigenvalueProblem::do_copy_H_to_solver( )
 {
-
- 
-  int size_matrix = _H_real->n();
-  
-  PetscMatrix<Number>* H_real_matrix = static_cast<PetscMatrix<Number>* >(_H_real);
-
-  H_real_matrix->close();
-
-
-  PetscMatrix<Number>* H_imag_matrix = static_cast<PetscMatrix<Number>* >(_H_imag);
-
-  H_imag_matrix->close();
-
-
-  //----------------------------------------------------------------------------------------------------//
-
-  int non_zeros_number[number_of_new_dofs];
-
-  //preallocate memory for matrix (only for non-parallel calculus)
-  for (int row = 0 ; row < size_matrix; row++)
-  {
-    if (new_dofs[row].independent)
-    {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals_real;
-      const  PetscInt *petsc_cols_real;
-      int n_cols_real = 0;
-	  
-      const  PetscScalar *petsc_row_vals_imag;
-      const  PetscInt *petsc_cols_imag;
-      int n_cols_imag = 0;
-      
-      set<int> real_column, imag_column, complex_column;
-      set<int>::iterator com_col_it;
-      
-
-      map<int,double> real_values, imag_values;
-      map<int, double>::iterator  position;
-
-
-      insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
-      
-      ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real, &petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      real_column.clear();
-      real_values.clear();
-	
-      for (int i = 0; i < n_cols_real; i++)
-      {
-	if (new_dofs[petsc_cols_real[i]].independent && (petsc_row_vals_real[i] != 0.0))
-	{
-	  real_column.insert(petsc_cols_real[i]);
-	  real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
-	}
-      }
-
-      ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-      
-      imag_column.clear();
-      imag_values.clear();
-      for (int i = 0; i < n_cols_real; i++)
-      { 
-	if (new_dofs[petsc_cols_imag[i]].independent && (petsc_row_vals_imag[i] != 0.0))
-	{
-	  imag_column.insert(petsc_cols_imag[i]);
-	  imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
-	}
-      }
-      
-
-      set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
-	
-
-      non_zeros_number[new_dofs[row].new_number] = complex_column.size();
-
-     
-     
-      
-      
-      ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-	  
-	  
-
-    } 
-  }
-
-  EigenSolver::preallocate_H_matrix(number_of_new_dofs,  non_zeros_number);
-  //EigenSolver::init_H_matrix(number_of_new_dofs);
-  _hamiltonian_size = number_of_new_dofs;
-
-  //----------------------------------------------------------------------------------------------------//
- 
- 
-  //write data of columns in each row
-  
-  for (int row = 0 ; row < size_matrix; row++)
-    {
-      if (new_dofs[row].independent)
-      {
-	int ierr = 0;
-	const  PetscScalar *petsc_row_vals_real;
-	const  PetscInt *petsc_cols_real;
-	int n_cols_real = 0;
-	  
-	const  PetscScalar *petsc_row_vals_imag;
-	const  PetscInt *petsc_cols_imag;
-	int n_cols_imag = 0;
-	  
-	set<int> real_column, imag_column, complex_column;
-	set<int>::iterator com_col_it;
-
-
-	map<int,double> real_values, imag_values;
-	map<int, double>::iterator  position;
-
-
-	insert_iterator<set<int> >  com_ins(complex_column,complex_column.begin() );
-
-	ierr = MatGetRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-	CHKERRABORT(libMesh::COMM_WORLD,ierr);
-	real_column.clear();
-	real_values.clear();
-	
-	for (int i = 0; i < n_cols_real; i++)
-	{
-	  if (new_dofs[petsc_cols_real[i]].independent && (petsc_row_vals_real[i] != 0.0))
-	  {
-	    real_column.insert(petsc_cols_real[i]);
-	    real_values.insert(make_pair(petsc_cols_real[i],petsc_row_vals_real[i] ));
-	  }
-	}
-
-	ierr = MatGetRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-	CHKERRABORT(libMesh::COMM_WORLD,ierr);
-	
-	imag_column.clear();
-	imag_values.clear();
-	for (int i = 0; i < n_cols_real; i++)
-	{ 
-	  if (new_dofs[petsc_cols_imag[i]].independent && (petsc_row_vals_imag[i] != 0.0))
-	  {
-	    imag_column.insert(petsc_cols_imag[i]);
-	    imag_values.insert(make_pair(petsc_cols_imag[i],petsc_row_vals_imag[i] ));
-	  }
-	}
-	
-
-	set_union(real_column.begin(), real_column.end(), imag_column.begin(), imag_column.end(), com_ins);
-	
-	vector<unsigned int> column_vector;
-	vector<Complex> row_values;
-
-
-	for (com_col_it = complex_column.begin(); com_col_it != complex_column.end(); com_col_it++)
-	{
-	  int n1 = *com_col_it;
-
-	  double value_r, value_i;
-
-	  //real part------	  
-	  position = real_values.find(n1);
-	  if (position != real_values.end()) 
-	    value_r = position->second;
-	  else 
-	    value_r = 0.0;
-	  
-	     
-
-	  //----------------
-	  //imag part 
-	  position = imag_values.find(n1);
-	  if (position != imag_values.end()) 
-	    value_i = position->second;
-	  else 
-	    value_i = 0.0;
-	     
-	  //----------------
-
-	  column_vector.push_back(new_dofs[n1].new_number);
-	  row_values.push_back(Complex(value_r, value_i));
-	      
-	}
-     
-	EigenSolver::insert_H_row( new_dofs[row].new_number, column_vector, row_values);
-	
-	ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols_real,&petsc_row_vals_real);
-	CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-	ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols_imag,&petsc_row_vals_imag);
-	CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-	  
-	  
-
-      } 
-    }
-  //------------------------------------------------------------------------------
-
-
-  EigenSolver::finalize_H_assembly();
-
-  
+  copy_matrix_to_solver('H');
 }
 
 //============================================================//
 
 void FEMEigenvalueProblem::do_copy_S_to_solver()
 {
-
-  int size_matrix = _S_real->n();
-
-  PetscMatrix<double>* p_matrix = static_cast<PetscMatrix<double>* >(_S_real);
-
-  p_matrix->close();
-
-
-  //----------preallocate memory------------------------------------------------------
-  int non_zeros_number[number_of_new_dofs];
-
-  for (int row = 0 ; row < size_matrix; row++)
-  {
-    if (new_dofs[row].independent)
-    {
-      int ierr = 0;
-      const PetscScalar *petsc_row_vals;
-      const PetscInt *petsc_cols;
-      int n_cols = 0;
-
-      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols, &petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      vector<unsigned int> column_vector;
-      vector<Complex> row_values;
-
-      non_zeros_number[new_dofs[row].new_number] = 0;
-
-      for (int col = 0; col < n_cols; col++)
-      {
-	if ((new_dofs[petsc_cols[col]].independent) &&  (petsc_row_vals[col] != 0.0))
-	{
-
-	  non_zeros_number[new_dofs[row].new_number]++;
-
-
-	}
-      }
-
-      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-    }
-  }
-
-
-  EigenSolver::preallocate_S_matrix(number_of_new_dofs,  non_zeros_number);
-  //EigenSolver::init_S_matrix(number_of_new_dofs);
-
-  //--------------assebmle data--------------------------------------------------------
-
-
-  for (int row = 0 ; row < size_matrix; row++)
-  {
-    if (new_dofs[row].independent)
-    {
-      int ierr = 0;
-      const  PetscScalar *petsc_row_vals;
-      const PetscInt *petsc_cols;
-      int n_cols = 0;
-
-      ierr = MatGetRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-      vector<unsigned int> column_vector;
-      vector<Complex> row_values;
-
-      for (int col = 0; col < n_cols; col++)
-      {
-	if ((new_dofs[petsc_cols[col]].independent) &&  (petsc_row_vals[col] != 0.0))
-	{
-
-
-
-	  double value = petsc_row_vals[col];
-	  double zero = 0.0;
-
-	  column_vector.push_back(new_dofs[petsc_cols[col]].new_number);
-	  row_values.push_back(Complex(value, zero));
-
-
-
-
-	}
-      }
-
-      EigenSolver::insert_S_row( new_dofs[row].new_number, column_vector, row_values);
-
-      ierr = MatRestoreRow(p_matrix->mat(), row ,&n_cols, &petsc_cols,&petsc_row_vals);
-      CHKERRABORT(libMesh::COMM_WORLD,ierr);
-
-    }
-  }
-
-  EigenSolver::finalize_S_assembly();
-
+  copy_matrix_to_solver('S');
 }
+
 
 //=======================================================================================/
 void FEMEigenvalueProblem::apply_bc()
@@ -818,7 +686,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
   FEType fe_type = dof_map.variable_type(uvar[0]);
   
  
-  AutoPtr<FEBase> fe (FEBase::build(dim, fe_type));
+  UniquePtr<FEBase> fe (FEBase::build(dim, fe_type));
    
 
   
@@ -946,7 +814,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 
 		       
 		      dof_map.add_constraint_row (n_dof,  constraint); 
-                      my_dof_constraints.insert(pair<unsigned int, DofConstraintRow>(n_dof,  constraint));
+                      my_dof_constraints.insert(make_pair(n_dof, constraint));
 		      
 		    }
 		     
@@ -1087,10 +955,10 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
     int n_cols_imag = 0;
     
     ierr = MatGetRow(H_real_matrix->mat(), row, &n_cols_real, &petsc_cols, &petsc_row_vals_real);
-    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+    CHKERRABORT(MPI::COMM_WORLD,ierr);
 
     ierr = MatGetRow(H_imag_matrix->mat(), row, &n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
-    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+    CHKERRABORT(MPI::COMM_WORLD,ierr);
 
     if (n_cols_real != n_cols_imag) Messages::error("n_cols_real != n_cols_imag");
 
@@ -1117,10 +985,10 @@ FEMEigenvalueProblem::get_H_csr(std::vector<Complex>& A,
     IA[row + 1]= ind;
 
     ierr = MatRestoreRow(H_real_matrix->mat(), row ,&n_cols_real, &petsc_cols, &petsc_row_vals_real);
-    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+    CHKERRABORT(MPI::COMM_WORLD,ierr);
       
     ierr = MatRestoreRow(H_imag_matrix->mat(), row ,&n_cols_imag, &petsc_cols, &petsc_row_vals_imag);
-    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+    CHKERRABORT(MPI::COMM_WORLD,ierr);
  
 
   }
@@ -1176,7 +1044,7 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
     
   
     ierr = MatGetRow(S_real_matrix->mat(), row, &n_cols, &petsc_cols, &petsc_row_vals);
-    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+    CHKERRABORT(MPI::COMM_WORLD,ierr);
 
     for (unsigned int j = 0; j<n_cols; j++)
     {
@@ -1201,7 +1069,7 @@ FEMEigenvalueProblem::get_S_csr(std::vector<Complex>& A,
 
 
     ierr = MatRestoreRow(S_real_matrix->mat(), row ,&n_cols, &petsc_cols, &petsc_row_vals);
-    CHKERRABORT(libMesh::COMM_WORLD,ierr);
+    CHKERRABORT(MPI::COMM_WORLD,ierr);
        
 
   }

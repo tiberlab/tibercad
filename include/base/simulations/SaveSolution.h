@@ -47,13 +47,9 @@ class TBDLLOCAL SaveSolution : public SimulationInterface
     virtual void do_init(void);
 
 
-    // / *! \copydoc SimulationInterface::do_equilibrium() */
-    //virtual void do_equilibrium(void);
-
-    
     /*! \copydoc SimulationInterface::do_solve()
      *
-  l   * solve() of the associated SimulationInterface objects will
+     * solve() of the associated SimulationInterface objects will
      * be called repeatedly for all sweep values
      */
     virtual void do_solve(void);
@@ -62,9 +58,9 @@ class TBDLLOCAL SaveSolution : public SimulationInterface
     virtual void do_print_info(void);
 
     //! Get global quantities from all sub-simulations
-    virtual void get_solution_secure(const Elem* elem, 
+    virtual void get_solution_secure(const libMesh::Elem* elem, 
                                            std::map<ID, std::vector<double> >& values,
-                                     const std::vector<Point>& points);
+                                     const std::vector<libMesh::Point>& points);
 
     virtual void parse_options(void);
 

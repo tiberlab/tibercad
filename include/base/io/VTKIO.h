@@ -7,11 +7,8 @@
 #include "TypeDefs.h"
 #include "DataOutput.h"
 #include "tiber_dll.h"
+#include "elem.h"
 
-
-// forward declaration
-class MeshBase;
-class Elem;
 
 
 //! Write data using VTK XML unstructured grid format (.vtu)
@@ -84,7 +81,7 @@ class TBDLLOCAL TiberVTKIO : public DataOutput
   };
 
   //! Get the VTK cell type for an element
-  VTKCellType get_VTK_cell_type(const Elem* elem);
+  VTKCellType get_VTK_cell_type(const libMesh::Elem* elem);
 
   void create_pieces(std::map<ID, std::vector<unsigned int> >& points,
     std::map<ID, std::vector<VTKElem> >& elems);

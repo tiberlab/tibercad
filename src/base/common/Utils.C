@@ -522,7 +522,7 @@ Utils::extract_vector(const string& input, vector<double>& vec)
 
 
 void
-Utils::extract_vector(const string& input, TypeVector<double>& vec)
+Utils::extract_vector(const string& input, libMesh::TypeVector<double>& vec)
 {
   vector<double> v;
   extract_vector<double>(input, v);
@@ -556,7 +556,7 @@ Utils::extract_vector(const string& input, TypeVector<double>& vec)
 
 
 void
-Utils::extract_tensor(const std::string& input, RealTensor& tensor)
+Utils::extract_tensor(const std::string& input, libMesh::RealTensor& tensor)
 {
   string in(input);
   trim(in, "() \t\n\r");

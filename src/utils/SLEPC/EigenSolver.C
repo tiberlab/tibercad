@@ -6,21 +6,33 @@
 
 #include "EigenSolver.h"
 #include "RuntimeException.h"
+#include "TiberPetscUtils.h"
 #include "slepceps.h"
 //#include "petscsys.h"
 
-#include "private/matimpl.h"
+//#include <eigen_solver.h>
+
+#include "petsc/private/matimpl.h"
+
+//#include "libmesh/petsc_vector.h"
+
+using namespace std;
 
 namespace
 {
   Mat A; //Hamiltonian
   Mat B; //S-matrix
   EPS eps; //EigenSolver
-//  MPI_Comm comm;
+  MPI_Comm slepc_comm;
   double shift; //could be stored in ST but lapack does not apply any shift
+  
+  vector<Vec> _deflation_space;
 }
 
+
 static int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt);
+
+static void set_sub_pc(PC pc, PCType pc_type);
 
 
 int EigenSolver::_size_of_matrix;
@@ -28,7 +40,7 @@ int EigenSolver::_size_of_matrix;
 void EigenSolver::slepc_init(int argc1, char** argv1, MPI_Comm comm)
 {
 
-  PETSC_COMM_WORLD = comm;
+  slepc_comm = comm;
 
   //Seems to work ^^
   //  TODO Looks poor, but in current version of petsc there is no methods for it. (In later releases there is ...)
@@ -45,7 +57,6 @@ void EigenSolver::slepc_init(int argc1, char** argv1, MPI_Comm comm)
   SlepcInitialize(&argc1,&argv1,NULL,NULL);
   PetscPopSignalHandler();
 
-//  comm = PETSC_COMM_WORLD;
 
 }
 
@@ -64,8 +75,8 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   int         nev, ierr, maxit, i, its, lits, nconv;
   char        filename[256];
   PetscViewer viewer, viewer_out, viewer_eigvals;
-  PetscTruth  flg;
-  PetscMPIInt    rank,size;
+  //PetscBool  flg;
+  //PetscMPIInt    rank,size;
   ST st;
   KSP ksp;
   PC pc;
@@ -78,24 +89,26 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   //print_options(opt);
 
 
-  ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
-
+  //ierr = MPI_Comm_size(slepc_comm,&size);TiberPetscUtils::checkerr(ierr);
+  //ierr = MPI_Comm_rank(slepc_comm,&rank);TiberPetscUtils::checkerr(ierr);
 
   if (opt.read_matrix_from_file)
   {
 
 
-    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
+    ierr = PetscViewerBinaryOpen(slepc_comm,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);TiberPetscUtils::checkerr(ierr); //their
 
-    ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
-    ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
+    //ierr = MatLoad(viewer,MATAIJ,&A);TiberPetscUtils::checkerr(ierr);
+    ierr = MatLoad(A,viewer);TiberPetscUtils::checkerr(ierr);
+    ierr = PetscViewerDestroy(&viewer);TiberPetscUtils::checkerr(ierr);
 
     ierr = MatGetSize(A, &_size_of_matrix, NULL);
 
-    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.S_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
+    ierr = PetscViewerBinaryOpen(slepc_comm,opt.S_file_name.c_str(),FILE_MODE_READ,&viewer);TiberPetscUtils::checkerr(ierr); //their
 
-    ierr = MatLoad(viewer,MATAIJ,&B);CHKERRQ(ierr);
-    ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
+    //ierr = MatLoad(viewer,MATAIJ,&B);TiberPetscUtils::checkerr(ierr);
+    ierr = MatLoad(B,viewer);TiberPetscUtils::checkerr(ierr);
+    ierr = PetscViewerDestroy(&viewer);TiberPetscUtils::checkerr(ierr);
 
 
   }
@@ -106,16 +119,16 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   {//test of the matrix
 
 
-    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerASCIIOpen(slepc_comm,"matA.m",&viewer_out); TiberPetscUtils::checkerr(ierr);
     ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
-    ierr = MatView(A, viewer_out); CHKERRQ(ierr);
-    ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
+    ierr = MatView(A, viewer_out); TiberPetscUtils::checkerr(ierr);
+    ierr = PetscViewerDestroy(&viewer_out);TiberPetscUtils::checkerr(ierr);
 
 
-    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matB.m",&viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerASCIIOpen(slepc_comm,"matB.m",&viewer_out); TiberPetscUtils::checkerr(ierr);
     ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
-    ierr = MatView(B, viewer_out); CHKERRQ(ierr);
-    ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
+    ierr = MatView(B, viewer_out); TiberPetscUtils::checkerr(ierr);
+    ierr = PetscViewerDestroy(&viewer_out);TiberPetscUtils::checkerr(ierr);
 
   }
 
@@ -127,20 +140,22 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
   /*
      Set operators. In this case, it is a generalized eigenvalue problem
   */
-  ierr = EPSSetOperators(eps,A,B);CHKERRQ(ierr);
-  // ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
+  ierr = EPSSetOperators(eps,A,B);TiberPetscUtils::checkerr(ierr);
+  // ierr = EPSSetProblemType(eps,EPS_GHEP);TiberPetscUtils::checkerr(ierr);
 
 
   shift = opt.spectrum_shift.real();
 
-  ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
+  ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  TiberPetscUtils::checkerr(ierr);
+  ierr = EPSSetWhichEigenpairs(eps,EPS_TARGET_MAGNITUDE);TiberPetscUtils::checkerr(ierr);
+  ierr = EPSSetTarget(eps, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
 
   if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur" )
   {
-    ierr = EPSSetProblemType(eps,EPS_GNHEP);CHKERRQ(ierr);
+    //ierr = EPSSetProblemType(eps,EPS_GNHEP);TiberPetscUtils::checkerr(ierr);
 
-    //ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
+    ierr = EPSSetProblemType(eps,EPS_GHEP);TiberPetscUtils::checkerr(ierr);
 
     if (opt.solver_type == "arnoldi")
       ierr = EPSSetType(eps, EPSARNOLDI);
@@ -148,45 +163,45 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
       ierr = EPSSetType(eps, EPSKRYLOVSCHUR);
 
 
-    ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-
+    ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
+    
+   
     if (opt.spectral_trans == "folding")
     {
-      ierr = STSetType(st,STFOLD); CHKERRQ(ierr);
-      ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
+      //ierr = STSetType(st,STFOLD); TiberPetscUtils::checkerr(ierr);
+
+      throw RuntimeException("\'folding\' as spectral transform is"
+          " temporarily unsupported.");
     }
     else
     {
-      ierr = STSetType(st,STSINV); CHKERRQ(ierr);
-      ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
+      ierr = STSetType(st,STSINVERT); TiberPetscUtils::checkerr(ierr);
     }
 
-    ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
+    //ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
     set_ksp_and_pc(st, opt);
 
   }
   else if (opt.solver_type == "lapack")
   {
-    ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
+    ierr = EPSSetProblemType(eps,EPS_GHEP);TiberPetscUtils::checkerr(ierr);
     ierr = EPSSetType(eps, EPSLAPACK);
-    ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
-    //ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-    //ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
+    //ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
+    //ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
   }
   else if (opt.solver_type == "arpack")
   {
-    ierr = EPSSetProblemType(eps,EPS_GHEP);CHKERRQ(ierr);
+    ierr = EPSSetProblemType(eps,EPS_GHEP);TiberPetscUtils::checkerr(ierr);
     ierr = EPSSetType(eps, EPSARPACK);
-    ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
 
     if (std::abs(opt.spectrum_shift) >1e-8)
     {
-      ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-      ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
+      ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
+      ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
-      ierr = STSetType(st,STSHIFT); CHKERRQ(ierr);
+      ierr = STSetType(st,STSHIFT); TiberPetscUtils::checkerr(ierr);
 
       set_ksp_and_pc(st, opt);
     }
@@ -196,7 +211,7 @@ int EigenSolver::eig_value_problem_general(const EigenSolver::SLEPCoptions& opt 
 
   ierr = do_solve(opt);
 
-  CHKERRQ(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
 
   return ierr;
@@ -230,7 +245,7 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   int         nev, ierr, maxit, i, its, lits, nconv;
   char        filename[256];
   PetscViewer viewer, viewer_out, viewer_eigvals;
-  PetscTruth  flg;
+  PetscBool  flg;
   PetscMPIInt    rank,size;
   ST st;
   KSP ksp;
@@ -244,16 +259,17 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
 
 
 
-  ierr = MPI_Comm_size(PETSC_COMM_WORLD,&size);CHKERRQ(ierr);
+  ierr = MPI_Comm_size(slepc_comm,&size);TiberPetscUtils::checkerr(ierr);
 
 
    if (opt.read_matrix_from_file)
    {
 
 
-    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);CHKERRQ(ierr); //their
-    ierr = MatLoad(viewer,MATAIJ,&A);CHKERRQ(ierr);
-    ierr = PetscViewerDestroy(viewer);CHKERRQ(ierr);
+    ierr = PetscViewerBinaryOpen(slepc_comm,opt.H_file_name.c_str(),FILE_MODE_READ,&viewer);TiberPetscUtils::checkerr(ierr); //their
+    ierr = MatLoad(A, viewer);TiberPetscUtils::checkerr(ierr);
+    //ierr = MatLoad(viewer,MATAIJ,&A);TiberPetscUtils::checkerr(ierr);
+    ierr = PetscViewerDestroy(&viewer);TiberPetscUtils::checkerr(ierr);
 
     ierr = MatGetSize(A, &_size_of_matrix, NULL);
 
@@ -266,10 +282,10 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   {//test of the matrix
 
 
-    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out); CHKERRQ(ierr);
+    ierr = PetscViewerASCIIOpen(slepc_comm,"matA.m",&viewer_out); TiberPetscUtils::checkerr(ierr);
     ierr = PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
-    ierr = MatView(A, viewer_out); CHKERRQ(ierr);
-    ierr = PetscViewerDestroy(viewer_out);CHKERRQ(ierr);
+    ierr = MatView(A, viewer_out); TiberPetscUtils::checkerr(ierr);
+    ierr = PetscViewerDestroy(&viewer_out);TiberPetscUtils::checkerr(ierr);
 
 
 
@@ -286,15 +302,17 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
   /*
      Set operators. In this case, it is a generalized eigenvalue problem
   */
-  ierr = EPSSetOperators(eps,A,PETSC_NULL);CHKERRQ(ierr);
+  ierr = EPSSetOperators(eps,A,PETSC_NULL);TiberPetscUtils::checkerr(ierr);
 
 
-  ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  CHKERRQ(ierr);
+  ierr = EPSSetTolerances(eps,opt.eps_tolerance,opt.eps_max_it);  TiberPetscUtils::checkerr(ierr);
+  ierr = EPSSetWhichEigenpairs(eps,EPS_TARGET_MAGNITUDE);TiberPetscUtils::checkerr(ierr);
+  ierr = EPSSetTarget(eps, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
 
   if (opt.solver_type == "arnoldi" || opt.solver_type == "krylovshur")
   {
-    ierr = EPSSetProblemType(eps,EPS_HEP);CHKERRQ(ierr);
+    ierr = EPSSetProblemType(eps,EPS_HEP);TiberPetscUtils::checkerr(ierr);
 
     if (opt.solver_type == "arnoldi")
       ierr = EPSSetType(eps, EPSARNOLDI);
@@ -302,46 +320,43 @@ int EigenSolver::eig_value_problem(const EigenSolver::SLEPCoptions& opt )
       ierr = EPSSetType(eps, EPSKRYLOVSCHUR);
 
 
-    ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
+    ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
 
     if (opt.spectral_trans == "folding")
     {
-      ierr = STSetType(st,STFOLD); CHKERRQ(ierr);
-      ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
+      //ierr = STSetType(st,STFOLD); TiberPetscUtils::checkerr(ierr);
+
+      throw RuntimeException("\'folding\' as spectral transform is"
+          " temporarily unsupported.");
     }
     else
     {
-      ierr = STSetType(st,STSINV); CHKERRQ(ierr);
-      ierr = EPSSetWhichEigenpairs(eps,EPS_LARGEST_MAGNITUDE);CHKERRQ(ierr);
+      ierr = STSetType(st,STSINVERT); TiberPetscUtils::checkerr(ierr);
     }
-
-    ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
 
     ierr = set_ksp_and_pc(st, opt);
 
   }
   else if (opt.solver_type == "lapack")
   {
-    ierr = EPSSetProblemType(eps,EPS_HEP);CHKERRQ(ierr);
+    ierr = EPSSetProblemType(eps,EPS_HEP);TiberPetscUtils::checkerr(ierr);
     ierr = EPSSetType(eps, EPSLAPACK);
-    ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
-    //ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-    //ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
+    //ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
+    //ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
   }
   else if (opt.solver_type == "arpack")
   {
-    ierr = EPSSetProblemType(eps,EPS_HEP);CHKERRQ(ierr);
+    ierr = EPSSetProblemType(eps,EPS_HEP);TiberPetscUtils::checkerr(ierr);
     ierr = EPSSetType(eps, EPSARPACK);
-    ierr = EPSSetWhichEigenpairs(eps,EPS_SMALLEST_MAGNITUDE);CHKERRQ(ierr);
 
     if (std::abs(opt.spectrum_shift) >1e-8)
     {
-      ierr = EPSGetST(eps,&st); CHKERRQ(ierr);
-      ierr = STSetShift(st, opt.spectrum_shift);CHKERRQ(ierr);
+      ierr = EPSGetST(eps,&st); TiberPetscUtils::checkerr(ierr);
+      ierr = STSetShift(st, opt.spectrum_shift);TiberPetscUtils::checkerr(ierr);
 
 
-      ierr = STSetType(st,STSHIFT); CHKERRQ(ierr);
+      ierr = STSetType(st,STSHIFT); TiberPetscUtils::checkerr(ierr);
 
       ierr = set_ksp_and_pc(st, opt);
     }
@@ -368,6 +383,13 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
   PC pc;
   ierr = KSPGetPC(ksp,&pc);
 
+#if ((SLEPC_VERSION_MAJOR < 3) || \
+    ((SLEPC_VERSION_MAJOR == 3) && (SLEPC_VERSION_MINOR < 5)))
+  PCSetOperators(pc, A, A, SAME_NONZERO_PATTERN);
+#else
+  PCSetOperators(pc, A, A);
+#endif
+
   if (opt.st_ksp_type == "bcgsl")
     ierr = KSPSetType( ksp, KSPBCGS);
   else if (opt.st_ksp_type == "gmres" )
@@ -384,14 +406,41 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
     throw RuntimeException("KSP type \'" + opt.st_ksp_type +
         "\' not supported in EigenSolver.");
 
+
+  PetscMPIInt comm_size;
+  MPI_Comm_size(slepc_comm, &comm_size);
+
   if (opt.pc_type == "cholesky")
     ierr = PCSetType(pc,PCCHOLESKY);
   else if (opt.pc_type == "jacobi" )
-    ierr =  PCSetType(pc,PCJACOBI);
+    ierr =  PCSetType(pc, PCJACOBI);
   else if (opt.pc_type == "ilu" )
-    ierr =  PCSetType(pc,PCILU);
+  {
+    // in principle, this should have worked with this if, but for some reason even
+    // when running with a single process it complains about mpiaij matrix type
+    if (comm_size > 1)
+    {
+      ierr = PCSetType(pc, PCBJACOBI);
+      ierr = PCSetUp(pc);
+      set_sub_pc(pc, PCILU);
+    }
+    else
+      ierr =  PCSetType(pc, PCILU);
+
+  }
   else if (opt.pc_type == "lu" )
-    ierr =  PCSetType(pc,PCLU);
+  {
+    // in principle, this should have worked with this if, but for some reason even
+    // when running with a single process it complains about mpiaij matrix type
+    if (comm_size > 1)
+    {
+      ierr = PCSetType(pc, PCBJACOBI);
+      ierr = PCSetUp(pc);
+      set_sub_pc(pc, PCLU);
+    }
+    else
+      ierr =  PCSetType(pc, PCLU);
+  }
   else if (opt.pc_type == "redundant" )
     ierr =  PCSetType(pc,PCREDUNDANT);
   else if (opt.pc_type == "composite" )
@@ -410,7 +459,7 @@ int set_ksp_and_pc(ST st, const EigenSolver::SLEPCoptions& opt)
 int EigenSolver::number_of_converged_eigenvalues()
 {
   int ierr, nconv;
-  ierr =  EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
+  ierr =  EPSGetConverged(eps,&nconv);TiberPetscUtils::checkerr(ierr);
 
 
 
@@ -422,7 +471,7 @@ double EigenSolver::get_eigenvalue( int i)
   int ierr;
   PetscScalar ev, ev_i;
 
-  ierr = EPSGetValue(eps, i, &ev,  &ev_i);
+  ierr = EPSGetEigenvalue(eps, i, &ev,  &ev_i);
 
   double eigen_value = PetscRealPart(ev);
 
@@ -440,15 +489,29 @@ void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_ou
 
 
 
-  MatGetVecs(A,PETSC_NULL,&eigen_vector);
+  MatCreateVecs(A,PETSC_NULL,&eigen_vector);
 
   EPSGetEigenpair(eps,i,&kr,&ki,eigen_vector,PETSC_NULL);
 
+  //VecGetSize(eigen_vector, &vec_size);
+  
 
-  VecGetSize(eigen_vector, &vec_size);
+  PetscScalar *loc_part;
+  VecGetArray(eigen_vector, &loc_part);
+  VecGetLocalSize(eigen_vector, &vec_size);
 
   eigen_vector_out.resize(vec_size);
 
+  for (int j= 0; j < vec_size; j++)
+  {
+    eigen_vector_out[j] = loc_part[j];
+  }
+
+  VecRestoreArray(eigen_vector, &loc_part);
+
+  //PetscMPIInt rank;
+  //MPI_Comm_rank(slepc_comm,&rank);
+/*
   {
 
     PetscInt ix[vec_size];
@@ -462,12 +525,13 @@ void EigenSolver::get_eigen_vector( int i, std::vector<Complex>& eigen_vector_ou
     for (int j= 0; j < vec_size; j++)
     {
       eigen_vector_out[j] = Complex(  PetscRealPart(y[j]), PetscImaginaryPart(y[j]) );
+      //if (rank == 0) cerr << eigen_vector_out[j] << endl;
     }
 
   }
+*/
 
-
-  ierr = VecDestroy(eigen_vector);
+  ierr = VecDestroy(&eigen_vector);
 
 }
 //-----------------------------------------------------------------------------//
@@ -480,7 +544,7 @@ void EigenSolver::set_initial_vector( const std::vector<Complex>& in_vector)
 
 
 
-  MatGetVecs(A,PETSC_NULL,&v0);
+  MatCreateVecs(A,PETSC_NULL,&v0);
 
   PetscScalar y[_size_of_matrix];
   PetscInt ix[_size_of_matrix];
@@ -496,34 +560,69 @@ void EigenSolver::set_initial_vector( const std::vector<Complex>& in_vector)
   VecSetValues(v0,_size_of_matrix,ix,y,INSERT_VALUES);
 
 
+  //EPSSetInitialVector(eps, v0);
 
-  EPSSetInitialVector(eps, v0);
 
-
-  ierr = VecDestroy(v0);
+  ierr = VecDestroy(&v0);
 }
 
 
 //-----------------------------------------------------------------------------//
 
-int EigenSolver::prepare_slepc()
+int EigenSolver::prepare_slepc(MPI_Comm comm)
 {
   /*
      Create eigensolver context
   */
   int ierr;
 
+  slepc_comm = comm;
+
 
 //  if (eps == NULL)
   {
-    ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
-//    ierr = EPSCreate(comm ,&eps);CHKERRQ(ierr);
+    ierr = EPSCreate(slepc_comm,&eps);TiberPetscUtils::checkerr(ierr);
+//    ierr = EPSCreate(comm ,&eps);TiberPetscUtils::checkerr(ierr);
 
-    ierr = EPSSetFromOptions(eps); CHKERRQ(ierr);
+    //ierr = EPSSetFromOptions(eps); TiberPetscUtils::checkerr(ierr);
   }
 
 
   return(ierr);
+}
+
+
+void
+EigenSolver::set_deflation_space(
+    const std::vector<const std::vector<Complex>*>& solutions)
+{
+  //if (solutions.size() == 0)
+    return;
+
+
+  Vec* defl = new Vec[solutions.size()];
+  //vector<PetscVector<Complex>*> vecs(solutions.size(), NULL);
+
+  PetscScalar y[_size_of_matrix];
+  PetscInt ix[_size_of_matrix];
+
+  for (int j= 0; j < _size_of_matrix ; j++)
+    ix[j] = j;
+
+
+  for (int i = 0; i < solutions.size(); ++i)
+  {
+    //vecs[i] = new PetscVector<Complex>(libMesh::CommWorld);
+    //vecs[i]->init(solutions[i]->size());
+    //*vecs[i] = *solutions[i];
+    MatCreateVecs(A, PETSC_NULL, &defl[i]);
+    for (int j= 0; j < _size_of_matrix ; j++)
+      y[j]  = (*solutions[i])[j];
+    VecSetValues(defl[i], _size_of_matrix, ix, y, INSERT_VALUES);
+  }
+
+  PetscInt defl_dim = solutions.size();
+  EPSSetDeflationSpace(eps, defl_dim, defl);
 }
 
 //-----------------------------------------------------------------------------//
@@ -536,21 +635,25 @@ int EigenSolver::clear_slepc()
   //EPSRemoveDeflationSpace(eps);
 
   int ierr;
-  ierr = MatDestroy(A);CHKERRQ(ierr);
+  ierr = MatDestroy(&A);TiberPetscUtils::checkerr(ierr);
   {
-    PetscTruth generalized;
-    ierr = EPSIsGeneralized(eps,&generalized); CHKERRQ(ierr);
+    PetscBool generalized;
+    ierr = EPSIsGeneralized(eps,&generalized); TiberPetscUtils::checkerr(ierr);
 
-    if ( generalized)  ierr = MatDestroy(B);CHKERRQ(ierr);
+    if ( generalized)  ierr = MatDestroy(&B);TiberPetscUtils::checkerr(ierr);
   }
 
 
   // NOTE: with real MPI this leads to too many communicators
   // in a future version of SLEPc one could maybe use EPSReset()
-  ierr = EPSDestroy(eps);CHKERRQ(ierr);
+  ierr = EPSDestroy(&eps);TiberPetscUtils::checkerr(ierr);
   //eps = NULL;
 
 
+  for (int i = 0; i < _deflation_space.size(); ++i)
+    VecDestroy(&_deflation_space[i]);
+
+  _deflation_space.clear();
 
 
   return(ierr);
@@ -579,35 +682,41 @@ int EigenSolver::do_solve(const SLEPCoptions& opt)
 #if ((SLEPC_VERSION_MAJOR == 2) && (SLEPC_VERSION_MINOR == 3) && \
     (SLEPC_VERSION_SUBMINOR <= 2))
   if (opt.monitor) EPSSetMonitor(eps, EPSDefaultMonitor, PETSC_NULL);
-#else
-  if (opt.monitor) EPSMonitorSet(eps, EPSMonitorDefault, PETSC_NULL, PETSC_NULL);
+//#else
+  //if (opt.monitor) EPSMonitorSet(eps, EPSMonitorDefault, PETSC_NULL, PETSC_NULL);
 #endif
 
 
 
 #if (SLEPC_VERSION_MAJOR >= 3)
-  ierr = EPSSetDimensions(eps,opt.ev_number, ncv, PETSC_DECIDE); CHKERRQ(ierr);
+  ierr = EPSSetDimensions(eps,opt.ev_number, ncv, PETSC_DECIDE); TiberPetscUtils::checkerr(ierr);
 #else
-  ierr = EPSSetDimensions(eps,opt.ev_number, ncv); CHKERRQ(ierr);
+  ierr = EPSSetDimensions(eps,opt.ev_number, ncv); TiberPetscUtils::checkerr(ierr);
 #endif
+
+  //EPSSetFromOptions(eps);
 
 
   ierr = EPSSolve(eps);
 
   if (opt.use_deflation_space)
   {
-    ierr =  EPSGetConverged(eps, &nconv);  CHKERRQ(ierr);
+    ierr = EPSGetConverged(eps, &nconv);  TiberPetscUtils::checkerr(ierr);
 
     Vec* v = new Vec[nconv];
     for (int i = 0; i < nconv; ++i)
-    {
-      MatGetVecs(A,PETSC_NULL,&v[i]);
-    }
+      MatCreateVecs(A,PETSC_NULL,&v[i]);
+
     EPSGetInvariantSubspace(eps, v);
-    EPSAttachDeflationSpace(eps, nconv, v, PETSC_TRUE);
+
     for (int i = 0; i < nconv; ++i)
-      VecDestroy(v[i]);
-    delete [] v;
+      _deflation_space.push_back(v[i]);
+
+    PetscInt defl_dim = _deflation_space.size();
+    EPSSetDeflationSpace(eps, defl_dim, _deflation_space.data());
+    //for (int i = 0; i < nconv; ++i)
+    //  VecDestroy(&v[i]);
+    //delete [] v;
     //VecDestroyVecs(v, nconv);
   }
 
@@ -622,20 +731,22 @@ int EigenSolver::init_H_matrix(unsigned int n)
 
   int ierr;
 
-  ierr = MatCreate(PETSC_COMM_WORLD,&A);
+  ierr = MatCreate(slepc_comm,&A);
+  TiberPetscUtils::checkerr(ierr);
+  ierr = MatSetType(A, MATAIJ);
+  TiberPetscUtils::checkerr(ierr);
 
-  CHKERRQ(ierr);
 
 
   ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,n,n);
 
-  CHKERRQ(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
 
-  ierr = MatSetFromOptions(A);
+  //ierr = MatSetFromOptions(A);
 
 
-  CHKERRQ(ierr);
+  //TiberPetscUtils::checkerr(ierr);
 
 
 
@@ -653,52 +764,52 @@ int EigenSolver::init_S_matrix(unsigned int n)
 
   int ierr;
 
-  ierr = MatCreate(PETSC_COMM_WORLD,&B);
-  CHKERRQ(ierr);
+  ierr = MatCreate(slepc_comm,&B);
+  TiberPetscUtils::checkerr(ierr);
+  ierr = MatSetType(B, MATAIJ);
+  TiberPetscUtils::checkerr(ierr);
 
 
   ierr = MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,n,n);
-  CHKERRQ(ierr);
+  TiberPetscUtils::checkerr(ierr);
 
 
-  ierr = MatSetFromOptions(B);
-  CHKERRQ(ierr);
+  //ierr = MatSetFromOptions(B);
+  //TiberPetscUtils::checkerr(ierr);
 
 
   return(ierr);
 
 }
-//-----------------------------------------------------------------//
-int EigenSolver::finalize_H_assembly(void)
+
+
+
+void EigenSolver::finalize_matrix_assembly(const char matrix)
 {
   int ierr;
 
-  ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
-  CHKERRQ(ierr);
+  if (matrix == 'H')
+  {
+    ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+    TiberPetscUtils::checkerr(ierr);
 
-  ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
-  CHKERRQ(ierr);
+    ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+    TiberPetscUtils::checkerr(ierr);
+  }
+  else if (matrix == 'S')
+  {
+    ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);
+    TiberPetscUtils::checkerr(ierr);
 
+    ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);
+    TiberPetscUtils::checkerr(ierr);
+  }
 
-  return(ierr);
 }
-//------------------------------------------------------------------//
-int EigenSolver::finalize_S_assembly(void)
-{
-  int ierr;
-
-  ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);
-  CHKERRQ(ierr);
-
-  ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);
-  CHKERRQ(ierr);
 
 
-  return(ierr);
-}
-//-------------------------------------------------------------------//
-
-int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value_vector)
+void EigenSolver::insert_matrix_row(const char matrix, int row,
+    const std::vector<unsigned int>& colums, const std::vector<Complex>& value_vector)
 {
   int ierr;
   int number_of_columns =  colums.size();
@@ -712,54 +823,34 @@ int EigenSolver::insert_H_row( int row, const std::vector<unsigned int>& colums,
   }
 
 
-  ierr = MatSetValues(A,1,&row,number_of_columns,col,value,INSERT_VALUES);
+  if (matrix == 'H')
+    ierr = MatSetValues(A,1,&row,number_of_columns,col,value,INSERT_VALUES);
+  else if (matrix == 'S')
+    ierr = MatSetValues(B,1,&row,number_of_columns,col,value,INSERT_VALUES);
 
-
-
-  CHKERRQ(ierr);
-  return(ierr);
-
-
+  TiberPetscUtils::checkerr(ierr);
 }
 
-//-------------------------------------------------------------------//
-
-int EigenSolver::insert_S_row( int row, const std::vector<unsigned int>& colums, const std::vector<Complex>& value_vector)
+//------------------------------------------------------------------------------------//
+int EigenSolver::preallocate_matrix(const char matrix, unsigned int N, unsigned int n, vector<int>& d_nnz, vector<int>& o_nnz)
 {
-  int ierr;
-  int number_of_columns =  colums.size();
-  PetscInt col[number_of_columns];
-  PetscScalar value[number_of_columns];
 
-  for (unsigned int i = 0; i < number_of_columns; i++)
+  int ierr;
+  
+  if (matrix == 'H')
   {
-    col[i] = colums[i];
-    value[i] = value_vector[i];
+    ierr = MatCreateAIJ(slepc_comm, n, n, N, N,
+                        d_nnz.size(), d_nnz.data(),
+                        o_nnz.size(), o_nnz.data(), &A);
+  }
+  else if (matrix == 'S')
+  {
+    ierr = MatCreateAIJ(slepc_comm, n, n, N, N,
+                        d_nnz.size(), d_nnz.data(),
+                        o_nnz.size(), o_nnz.data(), &B);
   }
 
-
-  ierr = MatSetValues(B,1,&row,number_of_columns,col,value,INSERT_VALUES);
-
-  CHKERRQ(ierr);
-  return(ierr);
-}
-//------------------------------------------------------------------------------------//
-int  EigenSolver::preallocate_H_matrix(unsigned int matrix_size,  int*  non_zeros)
-{
-
-  int ierr;
-
-  ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &A);
-  _size_of_matrix = matrix_size;
-
-  return(ierr);
-}
-//------------------------------------------------------------------------------------//
-int  EigenSolver::preallocate_S_matrix(unsigned int matrix_size,  int*  non_zeros)
-{
-  int ierr;
-
-  ierr = MatCreateSeqAIJ(PETSC_COMM_WORLD, matrix_size, matrix_size,0, non_zeros, &B);
+  _size_of_matrix = N;
 
   return(ierr);
 }
@@ -773,11 +864,11 @@ double  EigenSolver::get_shift(void)
 
   //ierr = EPSGetST(eps, &st);     // ierr = EPSGetST(eps, st);
 
-  //CHKERRQ(ierr);
+  //TiberPetscUtils::checkerr(ierr);
 
   //ierr = STGetShift(st, &shift); // ierr = STGetShift(*st, &shift);
 
-  //CHKERRQ(ierr);
+  //TiberPetscUtils::checkerr(ierr);
 
   //return(real(shift));
   return(shift);
@@ -787,7 +878,7 @@ double  EigenSolver::get_shift(void)
 bool EigenSolver::check_matrices(double tol, bool verbose)
 {
   PetscErrorCode ierr;
-  PetscTruth is;
+  PetscBool is;
   bool ans;
 
   ans = false;
@@ -845,18 +936,19 @@ bool EigenSolver::check_matrices(double tol, bool verbose)
 bool EigenSolver::check_matrices(void)
 {
   PetscErrorCode ierr;
-  PetscTruth is;
+  PetscBool is;
   bool ans;
 
   ans = false;
 
-  ierr = SlepcIsHermitian(A, &is);
+  ierr = EPSIsHermitian(eps, &is);
 
   ans = is==PETSC_TRUE;
 
-  ierr = SlepcIsHermitian(B, &is);
+  //ierr = SlepcIsHermitian(B, &is);
 
-  return (is==PETSC_TRUE) && ans;
+  //return (is==PETSC_TRUE) && ans;
+  return(ans);
 
 }
 
@@ -882,23 +974,23 @@ int EigenSolver::eig_value_problem_general2(const EigenSolver::SLEPCoptions& opt
   if (opt.matrix_output) {
     PetscViewer viewer_out;
 
-    PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matA.m",&viewer_out);
+    PetscViewerASCIIOpen(slepc_comm,"matA.m",&viewer_out);
     PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
     MatView(A, viewer_out);
-    PetscViewerDestroy(viewer_out);
+    PetscViewerDestroy(&viewer_out);
 
 
-    PetscViewerASCIIOpen(PETSC_COMM_WORLD,"matB.m",&viewer_out);
+    PetscViewerASCIIOpen(slepc_comm,"matB.m",&viewer_out);
     PetscViewerSetFormat(viewer_out,PETSC_VIEWER_ASCII_MATLAB);
     MatView(B, viewer_out);
-    PetscViewerDestroy(viewer_out);
+    PetscViewerDestroy(&viewer_out);
   }
 
   ST st;
 
   EPSGetST(eps,&st);
   STSetShift(st, opt.spectrum_shift);
-  STSetType(st,STSINV);
+  STSetType(st,STSINVERT);
 
   //MatMumpsSetIcntl(A, 14, 40);
 
@@ -939,7 +1031,34 @@ int EigenSolver::addBRow(int row, const int columnsNum, int* columns, Complex va
 
 Complex EigenSolver::get_eigenvalue_c( int i) {
   PetscScalar ev, ev_i;
-  EPSGetValue(eps, i, &ev,  &ev_i);
+  EPSGetEigenvalue(eps, i, &ev,  &ev_i);
 
   return ev;
- }
+}
+
+
+void set_sub_pc(PC pc, PCType pc_type)
+{
+
+  PetscErrorCode ierr;
+
+  // To store array of local KSP contexts on this processor
+  KSP* subksps;
+
+  // the number of blocks on this processor
+  PetscInt n_local;
+
+  // Fill array of local KSP contexts
+  ierr = PCBJacobiGetSubKSP(pc, &n_local, PETSC_NULL, &subksps);
+
+  // Loop over sub-ksp objects, set ILU preconditioner
+  for (PetscInt i = 0; i < n_local; ++i)
+  {
+    // Get pointer to sub KSP object's PC
+    PC subpc;
+    ierr = KSPGetPC(subksps[i], &subpc);
+
+    // Set requested type on the sub PC
+    ierr = PCSetType(subpc, pc_type);
+  }
+}

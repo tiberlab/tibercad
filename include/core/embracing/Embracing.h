@@ -10,12 +10,10 @@
 
 #include <set>
 
+
 class SimulationInterface;
 class Control;
 class ModelOptions;
-class Elem;
-class Point;
-
 
 
 //! The embracing region of two different models
@@ -31,7 +29,7 @@ class Embracing
   public:
 
     //! The type of the element Map
-    typedef std::map<const Elem*, double> MapType;
+    typedef std::map<const libMesh::Elem*, double> MapType;
 
 
     //! An iterator to iterate over the elements
@@ -83,7 +81,7 @@ class Embracing
         }
 
         //! Dereference
-        const Elem* operator*(void)
+        const libMesh::Elem* operator*(void)
         {
           return _it->first;
         }
@@ -130,11 +128,11 @@ class Embracing
      * If \c elem is not contained in the embracing region,
      * 1.0 is returned
      */
-    double get_mixing_coefficient(const Elem* elem, const Point& p);
+    double get_mixing_coefficient(const libMesh::Elem* elem, const libMesh::Point& p);
 
 
     //! Check if an element is in the embracing region
-    bool is_in_embracing_region(const Elem* elem) const;
+    bool is_in_embracing_region(const libMesh::Elem* elem) const;
 
 
     //! Get an iterator to first element
@@ -144,21 +142,21 @@ class Embracing
     elem_iterator elem_end(void) const;
 
     //! Find an element and return its iterator
-    elem_iterator find_elem(const Elem* elem) const;
+    elem_iterator find_elem(const libMesh::Elem* elem) const;
 
 
   private:
 
     //! The class that handles the solve
     class LaplaceEq
-      : public LinearImplicitSystem
+      : public libMesh::LinearImplicitSystem
     {
 
       public:
 
-        LaplaceEq(EquationSystems& eq,
+        LaplaceEq(libMesh::EquationSystems& eq,
             const std::string& name, unsigned int number)
-          : LinearImplicitSystem(eq, name, number) { };
+          : libMesh::LinearImplicitSystem(eq, name, number) { };
 
         virtual void user_assembly(void) { _emb->assembly(*this); };
 

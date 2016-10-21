@@ -38,6 +38,6 @@ Pyropolarization::_initP(void)
 {
   PolarizationModel::do_init();
 
-  set_polarization(RealVectorValue(0, 0, _Pz));
+  set_polarization(libMesh::RealVectorValue(0.0, 0.0, _Pz));
   rotate();
 }

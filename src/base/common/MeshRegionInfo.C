@@ -2,8 +2,11 @@
 
 #include "MeshRegionInfo.h"
 
+#include "mesh_base.h"
+
 #include <cassert>
 
+using namespace std;
 
 ID
 MeshRegionInfo::next_id(void) const
@@ -24,10 +27,10 @@ MeshRegionInfo::next_id(void) const
 void
 MeshRegionInfo::print_info(void) const
 {
-  std::cerr << "mesh regions: " << std::endl;
+  cerr << "mesh regions: " << endl;
   IDToNameMap::const_iterator it(_ids_to_names.begin());
   for ( ; it != _ids_to_names.end(); ++it)
-    std::cerr << "  " << it->first << " : " << it->second << std::endl;
+    cerr << "  " << it->first << " : " << it->second << endl;
 }
 
 
@@ -45,3 +48,34 @@ MeshRegionInfo::clear(void)
   _names_to_ids.clear();
 }
 
+
+void
+MeshRegionInfo::broadcast(void)
+{
+  get_mesh().comm().broadcast(_ids_to_names);
+
+  NameToIDMap::iterator it(_names_to_ids.begin());
+  const NameToIDMap::iterator end(_names_to_ids.end());
+
+  size_t mapsize = _names_to_ids.size();
+  get_mesh().comm().broadcast(mapsize);
+
+  vector<string> names(mapsize);
+  if (get_mesh().comm().rank() == 0)
+  {
+    for (unsigned int i = 0; it != end; ++it, ++i)
+      names[i] = it->first;
+  }
+  get_mesh().comm().broadcast(names);
+
+  if (get_mesh().comm().rank() != 0)
+  {
+    for (unsigned int i = 0; i < names.size(); ++i)
+      _names_to_ids[names[i]] = set<ID>();
+  }
+
+  for (it = _names_to_ids.begin(); it != end; ++it)
+    get_mesh().comm().broadcast(it->second);
+
+  do_broadcast();
+}

@@ -182,7 +182,7 @@ void MaxwellAbsorption::get_solution_secure(const Elem* elem,
 
     const unsigned int dim = get_mesh().mesh_dimension();
 
-    AutoPtr<FEBase> fe(build_finite_element(dim, FEType()));
+    libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, libMesh::FEType()));
 
     // element shape functions
     const std::vector<std::vector<double> >& phi = fe->get_phi();

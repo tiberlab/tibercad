@@ -7,7 +7,7 @@
 VectorFEBase2D::VectorFEBase2D(double scaling) : IVectorFEBase(DIM, scaling) {
 }
 
-void VectorFEBase2D::addTriFunctions(const Elem *elem, const std::vector<Point>& pts, int order) {
+void VectorFEBase2D::addTriFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order) {
   /* Lower order (order == 0) */
   if (order >= 0) {
     VectorFunction nablal[THREE];
@@ -78,12 +78,12 @@ void VectorFEBase2D::addTriFunctions(const Elem *elem, const std::vector<Point>&
   phi_functions[2].setSecondOrder(false);
 }
 
-void VectorFEBase2D::addQuadFunctions(const Elem *elem, const std::vector<Point>& pts, int order) {
+void VectorFEBase2D::addQuadFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order) {
   ScalarFunction function_x(pts, 0);
   ScalarFunction function_y(pts, 1);
   ScalarFunction function_one(1.0, pts.size());
-  VectorFunction ex(Point(1, 0), pts.size());
-  VectorFunction ey(Point(0, 1), pts.size());
+  VectorFunction ex(libMesh::Point(1, 0), pts.size());
+  VectorFunction ey(libMesh::Point(0, 1), pts.size());
 
   ////////////////////////////////////////////////////
 
@@ -122,8 +122,8 @@ void VectorFEBase2D::addQuadFunctions(const Elem *elem, const std::vector<Point>
 void VectorFEBase2D::change_coordinate_system() {
   unsigned int ptsCount = functions.size() > 0 ? functions[0].phi.size() : 0;
   if (ptsCount > 0) {
-    const std::vector<RealGradient>& dxyzdxi = scalarFe->get_dxyzdxi();
-    const std::vector<RealGradient>& dxyzdeta = scalarFe->get_dxyzdeta();
+    const std::vector<libMesh::RealGradient>& dxyzdxi = scalarFe->get_dxyzdxi();
+    const std::vector<libMesh::RealGradient>& dxyzdeta = scalarFe->get_dxyzdeta();
 
     //For each point
     for (unsigned int qp = 0; qp < ptsCount; qp++) {

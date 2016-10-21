@@ -4,6 +4,9 @@
 #include "TiberPetscLinearSolver.h"
 #include "TiberPetscUtils.h"
 #include "ModelOptions.h"
+#include "Messages.h"
+
+#include "TiberCad.h"
 
 #include "libmesh_common.h"
 
@@ -12,8 +15,8 @@
 
 
 
-TiberPetscLinearSolver::TiberPetscLinearSolver(const ModelOptions& options)
-  : TiberLinearSolver(options),
+TiberPetscLinearSolver::TiberPetscLinearSolver(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options)
+  : TiberLinearSolver(comm_in, options),
     _ksp(NULL),
     _ksp_type(KSPBCGS),
     _pc_type(PCILU),
@@ -34,11 +37,12 @@ void TiberPetscLinearSolver::clear(void)
 {
   if (this->initialized())
     {
+      
       _is_initialized = false;
 
       int ierr = 0;
       
-      ierr = KSPDestroy(_ksp);
+      ierr = KSPDestroy(&_ksp);
       TiberPetscUtils::checkerr(ierr);
 	     
       // Mimic PETSc default solver and preconditioner
@@ -53,7 +57,7 @@ void TiberPetscLinearSolver::clear(void)
 
 
 
-void TiberPetscLinearSolver::init(void)
+void TiberPetscLinearSolver::init(const char*)
 {
   // Initialize the data structures if not done so already.
   if (!this->initialized())
@@ -64,7 +68,7 @@ void TiberPetscLinearSolver::init(void)
 
 
     // Create the linear solver context
-    ierr = KSPCreate(libMesh::COMM_WORLD, &_ksp);
+    ierr = KSPCreate(this->comm().get(), &_ksp);
     TiberPetscUtils::checkerr(ierr);
 
     // Create the preconditioner context
@@ -96,6 +100,11 @@ void TiberPetscLinearSolver::init(void)
 
 
 
+libMesh::LinearConvergenceReason
+TiberPetscLinearSolver::get_converged_reason() const
+{
+}
+
 
 
 
@@ -109,10 +118,10 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
 
   this->init();
   
-  PetscMatrix<Number>* matrix   = dynamic_cast<PetscMatrix<Number>*>(&matrix_in);
-  PetscMatrix<Number>* precond  = dynamic_cast<PetscMatrix<Number>*>(&precond_in);
-  PetscVector<Number>* solution = dynamic_cast<PetscVector<Number>*>(&solution_in);
-  PetscVector<Number>* rhs      = dynamic_cast<PetscVector<Number>*>(&rhs_in);
+  libMesh::PetscMatrix<Number>* matrix   = dynamic_cast<libMesh::PetscMatrix<Number>*>(&matrix_in);
+  libMesh::PetscMatrix<Number>* precond  = dynamic_cast<libMesh::PetscMatrix<Number>*>(&precond_in);
+  libMesh::PetscVector<Number>* solution = dynamic_cast<libMesh::PetscVector<Number>*>(&solution_in);
+  libMesh::PetscVector<Number>* rhs      = dynamic_cast<libMesh::PetscVector<Number>*>(&rhs_in);
 
   // We cast to pointers so we can be sure that they succeeded
   // by comparing the result against NULL.
@@ -131,8 +140,10 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   rhs->close();
 
   std::string ksp_type(_ksp_type);
-  if ((_pc_type == PCLU) && (matrix == precond))
-    ksp_type = KSPPREONLY;
+  // if we have LU on a single process, them we can use preconditioner only
+  if (this->comm().size() == 1)
+    if ((_pc_type == PCLU) && (matrix == precond))
+      ksp_type = KSPPREONLY;
 
   // Set user-specified solver and preconditioner types
   ierr = KSPSetType(_ksp, ksp_type.c_str());
@@ -142,10 +153,28 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   ierr = KSPGetPC(_ksp, &pc);
   TiberPetscUtils::checkerr(ierr);
 
+#if ((PETSC_VERSION_MAJOR < 3) || \
+    ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR < 5)))
+  ierr = PCSetOperators(pc, matrix->mat(), precond->mat(), SAME_NONZERO_PATTERN);
+#else
+  ierr = PCSetOperators(pc, matrix->mat(), precond->mat());
+#endif
+  TiberPetscUtils::checkerr(ierr);
+
   if (matrix != precond)
     _pc_type = PCMAT;
 
-  ierr = PCSetType(pc, _pc_type.c_str());
+  if (this->comm().size() > 1)
+  {
+    if ((_pc_type == PCLU) || (_pc_type == PCILU))
+    {
+      ierr = PCSetType(pc, PCBJACOBI);
+      ierr = PCSetUp(pc);
+      this->_set_sub_pc(pc, _pc_type);
+    }
+  }
+  else
+    ierr = PCSetType(pc, _pc_type.c_str());
 
   if (_solver_package != "") {
     PCFactorSetMatSolverPackage(pc, _solver_package.c_str());
@@ -169,6 +198,11 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
 #if (PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR <= 2)
     PCILUSetZeroPivot(sub_pc, 1e-32);
     PCILUSetDamping(sub_pc, 1e-3);
+#elif (PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 1)
+    PCFactorSetShiftType(sub_pc, MAT_SHIFT_NONZERO);
+    PCFactorSetShiftAmount(sub_pc, 1e-3);
+    PCFactorSetZeroPivot(sub_pc, 1e-32);
+    //PCILUReorderForNonzeroDiagonal(sub_pc, 1e-32);
 #else
     PCFactorSetShiftNonzero(sub_pc, 1e-3);
     PCFactorSetZeroPivot(sub_pc, 1e-32);
@@ -189,8 +223,13 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
   // we want PETSc >= 2.2.1 !
       
   // Set operators. The input matrix works as the preconditioning matrix
+#if (PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR < 5)
   ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat(),
 			 SAME_NONZERO_PATTERN);
+#else
+  ierr = KSPSetOperators(_ksp, matrix->mat(), precond->mat());
+  ierr = KSPSetReusePreconditioner(_ksp, PETSC_FALSE);
+#endif
   TiberPetscUtils::checkerr(ierr);
 
   // Set the tolerances for the iterative solver.  Use the user-supplied
@@ -210,6 +249,32 @@ TiberPetscLinearSolver::do_solve(SparseMatrix<Number>&  matrix_in,
 
 }
 
+
+
+void TiberPetscLinearSolver::_set_sub_pc(PC pc, const std::string& pc_type)
+{
+  PetscErrorCode ierr;
+
+  // To store array of local KSP contexts on this processor
+  KSP* subksps;
+
+  // the number of blocks on this processor
+  PetscInt n_local;
+
+  // Fill array of local KSP contexts
+  ierr = PCBJacobiGetSubKSP(pc, &n_local, PETSC_NULL, &subksps);
+
+  // Loop over sub-ksp objects, set ILU preconditioner
+  for (PetscInt i = 0; i < n_local; ++i)
+  {
+    // Get pointer to sub KSP object's PC
+    PC subpc;
+    ierr = KSPGetPC(subksps[i], &subpc);
+
+    // Set requested type on the sub PC
+    ierr = PCSetType(subpc, pc_type.c_str());
+  }
+}
 
 
 void TiberPetscLinearSolver::get_residual_history(std::vector<double>& hist)
@@ -327,13 +392,17 @@ TiberPetscLinearSolver::setup_monitors(void)
     TiberPetscUtils::checkerr(ierr);
 
 
+#if ((PETSC_VERSION_MAJOR <= 3) && (PETSC_VERSION_MINOR < 5))
+    // something change in version 3.5
     if (_xmonitor)
     {
       if (!_xmonitor_open)
       {
         std::string sim_name(get_simulation_name());
         sim_name += ": Linear solver convergence monitor";
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 4))
+        ierr = KSPMonitorLGResidualNormCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
+#elif ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
         ierr = KSPMonitorLGCreate(NULL, sim_name.c_str(),0,0,400,400, &_LG_monitor);
 #else
@@ -341,7 +410,9 @@ TiberPetscLinearSolver::setup_monitors(void)
 #endif
         TiberPetscUtils::checkerr(ierr);
     
-#if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
+#if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 4))
+        ierr = KSPMonitorSet(_ksp, KSPMonitorLGResidualNorm, _LG_monitor, 0);
+#elif ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3)	\
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
         ierr = KSPMonitorSet(_ksp, KSPMonitorLG, _LG_monitor, 0);
 #else
@@ -356,6 +427,7 @@ TiberPetscLinearSolver::setup_monitors(void)
     {
       // close xmonitor
     }
+#endif
   }
 }
 
@@ -367,6 +439,30 @@ TiberPetscLinearSolver::do_parse_options(void)
   _ksp_type = TiberPetscUtils::extract_KSPType(get_options());
 
   _pc_type = TiberPetscUtils::extract_PCType(get_options());
+
+  // for now we override in MPI with jacobi
+  /*
+  if ((this->comm().size() > 1) &&
+      ((_pc_type == "lu") || (_pc_type == "ilu")))
+  {
+    static int warned = 0;
+    if (warned < 5)
+    {
+      std::ostringstream os;
+      os << "PETSc linear solver cannot use '" << _pc_type <<
+          "' as preconditioner when running in parallel. "
+          "\nFalling back to 'jacobi'";
+
+      warned++;
+      if (warned == 5)
+        os << " (will suppress further messages of this type)";
+
+      Messages::warning(os.str());
+    }
+
+    _pc_type = "jacobi";
+  }
+  */
 
   _solver_package = get_option("solver_package", "");
 

@@ -6,7 +6,7 @@
 
 // ------------------------------------------------------------
 // EigenSystem implementation
-EigenSystem::EigenSystem (EquationSystems& es, const std::string& name, const unsigned int number) :
+EigenSystem::EigenSystem (libMesh::EquationSystems& es, const std::string& name, const unsigned int number) :
   System (es, name, number), _n_converged_eigenpairs (0) {
 }
 
@@ -31,7 +31,7 @@ void EigenSystem::solve () {
   Messages::debug(os.str());
 
 
-  EigenSolver::prepare_slepc();
+  EigenSolver::prepare_slepc(get_mesh().comm().get());
 
   Utils::Timer tt;
 

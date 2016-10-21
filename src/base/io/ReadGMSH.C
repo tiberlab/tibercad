@@ -25,6 +25,7 @@
 using namespace std;
 
 
+
 // anonymous namespace to hold local data
 namespace
 {
@@ -46,7 +47,7 @@ namespace
   struct elementDefinition {
       string label;
       vector<unsigned int> nodes;
-      ElemType type;
+      libMesh::ElemType type;
       unsigned int exptype;
       unsigned int dim;
       unsigned int nnodes;
@@ -58,7 +59,7 @@ namespace
   // here in this anonymous namespace gives us the
   // benefits of a global variable without the nasty
   // side-effects
-  map<ElemType, elementDefinition> eletypes_exp;
+  map<libMesh::ElemType, elementDefinition> eletypes_exp;
   map<unsigned int, elementDefinition> eletypes_imp;
 
 
@@ -94,117 +95,117 @@ namespace
 
       // EDGE2
       {
-        eledef.type    = EDGE2;
+        eledef.type    = libMesh::EDGE2;
         eledef.dim     = 1;
         eledef.nnodes  = 2;
         eledef.exptype = 1;
         eledef.nodes.clear();
 
-        eletypes_exp[EDGE2] = eledef;
+        eletypes_exp[libMesh::EDGE2] = eledef;
         eletypes_imp[1]     = eledef;
       }
 
       // EDGE3
       {
-        eledef.type    = EDGE3;
+        eledef.type    = libMesh::EDGE3;
         eledef.dim     = 1;
         eledef.nnodes  = 3;
         eledef.exptype = 8;
         eledef.nodes.clear();
 
-        eletypes_exp[EDGE3] = eledef;
+        eletypes_exp[libMesh::EDGE3] = eledef;
         eletypes_imp[8]     = eledef;
       }
 
       // TRI3
       {
-        eledef.type    = TRI3;
+        eledef.type    = libMesh::TRI3;
         eledef.dim     = 2;
         eledef.nnodes  = 3;
         eledef.exptype = 2;
         eledef.nodes.clear();
 
-        eletypes_exp[TRI3] = eledef;
+        eletypes_exp[libMesh::TRI3] = eledef;
         eletypes_imp[2] = eledef;
       }
 
       // TRI6
       {
-        eledef.type    = TRI6;
+        eledef.type    = libMesh::TRI6;
         eledef.dim     = 2;
         eledef.nnodes  = 6;
         eledef.exptype = 9;
         eledef.nodes.clear();
 
-        eletypes_exp[TRI6] = eledef;
+        eletypes_exp[libMesh::TRI6] = eledef;
         eletypes_imp[9]    = eledef;
       }
 
       // QUAD4
       {
-        eledef.type    = QUAD4;
+        eledef.type    = libMesh::QUAD4;
         eledef.dim     = 2;
         eledef.nnodes  = 4;
         eledef.exptype = 3;
         eledef.nodes.clear();
 
-        eletypes_exp[QUAD4] = eledef;
+        eletypes_exp[libMesh::QUAD4] = eledef;
         eletypes_imp[3]     = eledef;
       }
 
       // QUAD8
       {
-        eledef.type    = QUAD8;
+        eledef.type    = libMesh::QUAD8;
         eledef.dim     = 2;
         eledef.nnodes  = 8;
         eledef.exptype = 100;
         const unsigned int nodes[] = {1,2,3,4,5,6,7,8};
         vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
 
-        eletypes_exp[QUAD8] = eledef;
+        eletypes_exp[libMesh::QUAD8] = eledef;
         eletypes_imp[10]    = eledef;
       }
 
       // QUAD9
       {
-        eledef.type    = QUAD9;
+        eledef.type    = libMesh::QUAD9;
         eledef.dim     = 2;
         eledef.nnodes  = 9;
         eledef.exptype = 10;
         eledef.nodes.clear();
 
-        eletypes_exp[QUAD9] = eledef;
+        eletypes_exp[libMesh::QUAD9] = eledef;
         eletypes_imp[10]    = eledef;
       }
 
       // HEX8
       {
-        eledef.type    = HEX8;
+        eledef.type    = libMesh::HEX8;
         eledef.dim     = 3;
         eledef.nnodes  = 8;
         eledef.exptype = 5;
         eledef.nodes.clear();
 
-        eletypes_exp[HEX8] = eledef;
+        eletypes_exp[libMesh::HEX8] = eledef;
         eletypes_imp[5]    = eledef;
       }
 
       // HEX20
       {
-        eledef.type    = HEX20;
+        eledef.type    = libMesh::HEX20;
         eledef.dim     = 3;
         eledef.nnodes  = 20;
         eledef.exptype = 101;
         const unsigned int nodes[] = {1,2,3,4,5,6,7,8,9,10,11,16,17,18,19,12,13,14,15,16};
         vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
 
-        eletypes_exp[HEX20] = eledef;
+        eletypes_exp[libMesh::HEX20] = eledef;
         eletypes_imp[12]    = eledef;
       }
 
       // HEX27
       {
-        eledef.type    = HEX27;
+        eledef.type    = libMesh::HEX27;
         eledef.dim     = 3;
         eledef.nnodes  = 27;
         eledef.exptype = 12;
@@ -212,61 +213,61 @@ namespace
             15,16,19,17,18,20,21,24,22,23,25,26};
         vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
 
-        eletypes_exp[HEX27] = eledef;
+        eletypes_exp[libMesh::HEX27] = eledef;
         eletypes_imp[12]    = eledef;
       }
 
       // TET4
       {
-        eledef.type    = TET4;
+        eledef.type    = libMesh::TET4;
         eledef.dim     = 3;
         eledef.nnodes  = 4;
         eledef.exptype = 4;
         eledef.nodes.clear();
 
-        eletypes_exp[TET4] = eledef;
+        eletypes_exp[libMesh::TET4] = eledef;
         eletypes_imp[4]    = eledef;
       }
 
       // TET10
       {
-        eledef.type    = TET10;
+        eledef.type    = libMesh::TET10;
         eledef.dim     = 3;
         eledef.nnodes  = 10;
         eledef.exptype = 11;
         const unsigned int nodes[] = {0,1,2,3,4,5,6,7,9,8};
         vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
-        eletypes_exp[TET10] = eledef;
+        eletypes_exp[libMesh::TET10] = eledef;
         eletypes_imp[11]    = eledef;
       }
 
       // PRISM6
       {
-        eledef.type    = PRISM6;
+        eledef.type    = libMesh::PRISM6;
         eledef.dim     = 3;
         eledef.nnodes  = 6;
         eledef.exptype = 6;
         eledef.nodes.clear();
 
-        eletypes_exp[PRISM6] = eledef;
+        eletypes_exp[libMesh::PRISM6] = eledef;
         eletypes_imp[6]      = eledef;
       }
 
       // PRISM15
       {
-        eledef.type    = PRISM15;
+        eledef.type    = libMesh::PRISM15;
         eledef.dim     = 3;
         eledef.nnodes  = 15;
         eledef.exptype = 103;
         eledef.nodes.clear();
 
-        eletypes_exp[PRISM15] = eledef;
+        eletypes_exp[libMesh::PRISM15] = eledef;
         eletypes_imp[13] = eledef;
       }
 
       // PRISM18
       {
-        eledef.type    = PRISM18;
+        eledef.type    = libMesh::PRISM18;
         eledef.dim     = 3;
         eledef.nnodes  = 18;
         eledef.exptype = 13;
@@ -274,19 +275,19 @@ namespace
             12,14,13,15,17,16};
         vector<unsigned int>(nodes, nodes+eledef.nnodes).swap(eledef.nodes);
 
-        eletypes_exp[PRISM18] = eledef;
+        eletypes_exp[libMesh::PRISM18] = eledef;
         eletypes_imp[13]      = eledef;
       }
 
       // PYRAMID5
       {
-        eledef.type    = PYRAMID5;
+        eledef.type    = libMesh::PYRAMID5;
         eledef.dim     = 3;
         eledef.nnodes  = 5;
         eledef.exptype = 7;
         eledef.nodes.clear();
 
-        eletypes_exp[PYRAMID5] = eledef;
+        eletypes_exp[libMesh::PYRAMID5] = eledef;
         eletypes_imp[7]        = eledef;
       }
 
@@ -314,7 +315,7 @@ void ReadGMSH::read_mesh(istream& in)
   // This is a serial-only process for now;
   // the Mesh should be read on processor 0 and
   // broadcast later
-  libmesh_assert(libMesh::processor_id() == 0);
+  //libmesh_assert(libMesh::processor_id() == 0);
 
   libmesh_assert(in.good());
 
@@ -322,20 +323,20 @@ void ReadGMSH::read_mesh(istream& in)
   init_eletypes();
 
   // clear any data in the mesh
-  MeshBase& mesh = MeshInput<MeshBase>::mesh();
+  libMesh::MeshBase& mesh = MeshInput<libMesh::MeshBase>::mesh();
+  // we will try to get the mesh dimension from the file
+  unsigned int dim = mesh.mesh_dimension();
   mesh.clear();
   _reg_info.clear();
   _bd_regions.clear();
 
 
-  // we will try to get the mesh dimension from the file
-  unsigned int dim = mesh.mesh_dimension();
 
   // some variables
   const int  bufLen = 256;
   char       buf[bufLen+1];
   int        format=0, size=0;
-  Real       version = 1.0;
+  double       version = 1.0;
 
   // map to hold the node numbers for translation
   // note the the nodes can be non-consecutive
@@ -423,7 +424,7 @@ void ReadGMSH::read_mesh(istream& in)
         mesh.reserve_nodes (numNodes);
 
         // read in the nodal coordinates and form points.
-        Real x, y, z;
+        double x, y, z;
         unsigned int id;
 
         // add the nodal coordinates to the mesh
@@ -497,7 +498,7 @@ void ReadGMSH::read_mesh(istream& in)
           if (eletype.dim == dim)
           {
             // add the elements to the mesh
-            Elem* elem = Elem::build(eletype.type).release();
+            libMesh::Elem* elem = libMesh::Elem::build(eletype.type).release();
             elem->set_id(elem_id_counter);
             mesh.add_elem(elem);
 
@@ -538,7 +539,7 @@ void ReadGMSH::read_mesh(istream& in)
             }
 
             // Finally, set the subdomain ID to physical
-            elem->subdomain_id() = static_cast<subdomain_id_type>(physical);
+            elem->subdomain_id() = static_cast<libMesh::subdomain_id_type>(physical);
 
             // add the subdomain id to the MeshRegionInfo
             _reg_info.add_id(elem->subdomain_id());
@@ -649,7 +650,7 @@ void ReadGMSH::read_mesh(istream& in)
             for (unsigned int s = 0; s < elem->n_sides(); s++)
             //if (elem->neighbor(s) == NULL)
             {
-              AutoPtr<Elem> side (elem->build_side(s));
+              libMesh::UniquePtr<libMesh::Elem> side (elem->build_side(s));
               set<unsigned int> side_nodes;
               set<unsigned int>::iterator iter = side_nodes.begin();
 
@@ -704,11 +705,11 @@ void ReadGMSH::read_mesh(istream& in)
           // the same set of nodes as one of the boundary elements previously read
           for ( ; it != end; ++it)
           {
-            const Elem* elem = *it;
+            const libMesh::Elem* elem = *it;
 
             for (unsigned int s = 0; s < elem->n_edges(); s++)
             {
-              AutoPtr<Elem> side (elem->build_edge(s));
+              libMesh::UniquePtr<libMesh::Elem> side (elem->build_edge(s));
               set<unsigned int> side_nodes;
               set<unsigned int>::iterator iter = side_nodes.begin();
 

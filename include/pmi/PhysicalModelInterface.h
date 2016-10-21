@@ -9,6 +9,7 @@
 #include "ModelOptions.h"
 #include "InitFailedException.h"
 #include "ModelErrorException.h"
+#include "Material.h"
 
 #include <map>
 #include <string>
@@ -24,13 +25,11 @@
 #endif
 
 class PhysicalObject;
-class Material;
 class MaterialBoundary;
 class EdgeObject;
 class NodeObject;
 class Database;
-class Elem;
-class Point;
+class Material;
 
 
 //! Base class for the different physical models

@@ -10,16 +10,21 @@
 #include "mesh_input.h"
 
 // Forward declarations
-class MeshBase;
 class BoundaryRegions;
 class MeshRegionInfo;
+
+namespace libMesh
+{
+  class MeshBase;
+}
 
 
 
 /*!
  * This class implements reading of meshes in the Comsol format.
  */
-class TBDLLOCAL ReadComsol : public MeshInput<MeshBase>
+class TBDLLOCAL ReadComsol : public libMesh::MeshInput<libMesh::MeshBase>
+
 {
   public:
 
@@ -27,7 +32,7 @@ class TBDLLOCAL ReadComsol : public MeshInput<MeshBase>
      * Constructor.  Takes a non-const Mesh reference which it
      * will fill up with elements via the read() command.
      */
-    ReadComsol(MeshBase& mesh, MeshRegionInfo& reg_info, BoundaryRegions& bd_regions);
+    ReadComsol(libMesh::MeshBase& mesh, MeshRegionInfo& reg_info, BoundaryRegions& bd_regions);
 
     /*!
      * Reads in a mesh in the Comsol *.mphtxt format
@@ -58,9 +63,9 @@ class TBDLLOCAL ReadComsol : public MeshInput<MeshBase>
 
 
 inline
-ReadComsol::ReadComsol(MeshBase& mesh, MeshRegionInfo& reg_info,
+ReadComsol::ReadComsol(libMesh::MeshBase& mesh, MeshRegionInfo& reg_info,
     BoundaryRegions& bd_regions) :
-  MeshInput<MeshBase>(mesh),
+  MeshInput<libMesh::MeshBase>(mesh),
   _reg_info(reg_info),
   _bd_regions(bd_regions)
 {}

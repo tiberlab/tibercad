@@ -8,6 +8,7 @@
 #include "DriftDiffusionDefs.h"
 #include "Device.h"
 #include "SolverException.h"
+#include "TiberNonlinearSystem.h"
 
 // Libmesh includes
 #include "libmesh_common.h"
@@ -21,13 +22,16 @@
 #include <set>
 #include <map>
 
+//using namespace libMesh;
+
 
 // forward declarations
 //class Device;
-class Boundary;
+namespace libMesh{
+
 class MeshBase;
-class Elem;
-class Point;
+//class Elem;
+//class Point;
 class Node;
 class EquationSystems;
 class TiberLinearSolver;
@@ -37,6 +41,9 @@ template<typename T> class DenseMatrix;
 template<typename T> class NumericVector;
 template<typename T> class SparseMatrix;
 
+}
+
+class Boundary;
 
 //! The main class to perform standard drift-diffusion calculations
 /*!
@@ -454,14 +461,12 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
 
     //! Internal class for the RSTF test functions
-    class RSTFSys : public LinearImplicitSystem
+    class RSTFSys : public libMesh::LinearImplicitSystem
     {
       public:
-        RSTFSys(EquationSystems& es,
+        RSTFSys(libMesh::EquationSystems& es,
             const std::string& name,
-            const unsigned int number)
-        : LinearImplicitSystem(es, name, number), _dd(NULL)
-        {}
+            const unsigned int number): libMesh::LinearImplicitSystem(es, name, number), _dd(NULL) {}
 
         static RSTFSys* create(DriftDiffusion* dd);
 
@@ -469,9 +474,9 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         void solve(void);
 
-        NumericVector<double>* get_testfunction(int i);
+        libMesh::NumericVector<double>* get_testfunction(int i);
 
-        NumericVector<double>* get_testfunction(const Boundary* bd);
+        libMesh::NumericVector<double>* get_testfunction(const Boundary* bd);
 
       private:
         DriftDiffusion* _dd;
@@ -741,9 +746,10 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      * This method gets called from the underlying nonlinear solver
      * library. It calls the real assembly routines.
      */
-    static void assemble_system(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+    static void assemble_system(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian,
+        libMesh::NonlinearImplicitSystem& sys);
 
 
     //! Assembles the residual vector or the jacobian matrix
@@ -754,14 +760,14 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
      * This implementation uses standard FEM.
      */
     template <int T>
-    void do_assembly(const NumericVector<Number>& x,
-        NumericVector<Number>* residual,
-        SparseMatrix<Number>* jacobian);
+    void do_assembly(const libMesh::NumericVector<Number>& x,
+        libMesh::NumericVector<Number>* residual,
+        libMesh::SparseMatrix<Number>* jacobian);
 
 
     //! Write out a vector (e.g. residual)
     void write_nodal_vector(const std::string& filename,
-        const NumericVector<double>& vec);
+        const libMesh::NumericVector<double>& vec);
 
 
  

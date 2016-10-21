@@ -54,7 +54,8 @@ ModelOptions::set_option(const string& name, const T& value)
 
 template <>
 void
-ModelOptions::set_option<RealVectorValue>(const string& name, const RealVectorValue& value)
+ModelOptions::set_option<libMesh::RealVectorValue>(const string& name,
+    const libMesh::RealVectorValue& value)
 {
   ostringstream s;
   s << "(" << value(0) << "," << value(1) << "," << value(2) << ")";
@@ -114,9 +115,23 @@ ModelOptions::_find(const std::string& name) const
 }
 
 
+
+string
+ModelOptions::get_raw_option_string(const string& name) const
+{
+  OptionsMap::const_iterator it(_options.find(name));
+  if (it != _options.end())
+    return(it->second);
+
+  return(string(""));
+}
+
+
+
+
 void
 ModelOptions::get_option(const string& name,
-    RealVectorValue& vec) const
+   libMesh::RealVectorValue& vec) const
 {
   OptionsMap::const_iterator it(_find(name));
 
@@ -127,7 +142,7 @@ ModelOptions::get_option(const string& name,
 
 void
 ModelOptions::get_option(const string& name,
-    Point& point) const
+    libMesh::Point& point) const
 {
   OptionsMap::const_iterator it(_find(name));
 

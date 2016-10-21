@@ -68,20 +68,19 @@ class PML {
       return getSPML(elem, interface) > 0;
     }
 
-
     // Solution is smth like exp(ik(x+icxx/2)) ~ exp(-kcxx/2)
 
-    VectorValue<Complex> getSVector(const Point &point, double c) const {
-      VectorValue<Complex> result(1, 1, 1);
+    libMesh::VectorValue<libMesh::Complex> getSVector(const libMesh::Point &point, double c) const {
+      libMesh::VectorValue<libMesh::Complex> result(1, 1, 1);
 
       if (c > 0) {
         //std::cout << "ii " << point(0) << " " << minPoint(0) << " " << allMinPoint(0)<< "\n";
         for (int i = 0; i < 3; i++) {
-          Complex t, one(1, 0);
+          libMesh::Complex t, one(1, 0);
           if (point(i) > maxPoint(i)) {
-            t = Complex(1, c * (point(i) - maxPoint(i))/ (allMaxPoint(i) - maxPoint(i)) );
+            t = libMesh::Complex(1, c * (point(i) - maxPoint(i))/ (allMaxPoint(i) - maxPoint(i)) );
           } else if (point(i) < minPoint(i)) {
-            t = Complex(1, c * (point(i) - minPoint(i))/ (allMinPoint(i) - minPoint(i)) );
+            t = libMesh::Complex(1, c * (point(i) - minPoint(i))/ (allMinPoint(i) - minPoint(i)) );
             // x' = x - c' * (x - xmin)^2 Where c is negative
             // In this case: c' = c/2/(xallmin - xmin), xallmin < xmin, so c must be positive
             // And we do not need '-' before c here!
@@ -96,17 +95,17 @@ class PML {
       return result;
     }
 
-    Complex getSVectorDet(const Point &point, double c) const {
-      VectorValue<Complex> sVector = getSVector(point, c);
+    libMesh::Complex getSVectorDet(const libMesh::Point &point, double c) const {
+      libMesh::VectorValue<libMesh::Complex> sVector = getSVector(point, c);
 
       return sVector(0) * sVector(1) * sVector(2);
     }
 
     //return curls(f)
-    VectorValue<Complex> curls(const VectorFunction &f, const Point &point, unsigned int qp, double c) const {
-      VectorValue<Complex> sVector = getSVector(point, c);
+    libMesh::VectorValue<libMesh::Complex> curls(const VectorFunction &f, const libMesh::Point &point, unsigned int qp, double c) const {
+      libMesh::VectorValue<libMesh::Complex> sVector = getSVector(point, c);
 
-      return  VectorValue<Complex>(
+      return  libMesh::VectorValue<libMesh::Complex>(
           f.dphidy[qp](2)*sVector(1) - f.dphidz[qp](1)*sVector(2),
           f.dphidz[qp](0)*sVector(2) - f.dphidx[qp](2)*sVector(0),
           f.dphidx[qp](1)*sVector(0) - f.dphidy[qp](0)*sVector(1)

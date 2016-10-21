@@ -9,12 +9,16 @@
 
 #include <string>
 
+namespace libMesh
+{
 class EquationSystems;
 class System;
 class Elem;
 template <typename T> class NumericVector;
 template <typename T> class DenseVector;
 template <typename T> class DenseMatrix;
+}
+
 
 
 //! A base class for linear and nonlinear equation systems in TiberCAD
@@ -39,7 +43,7 @@ class TiberEqSystem
     enum NormType
     {
       MAX_NORM,  //< the maximum norm
-      l2_NORM,   //< the l2 norm
+      l2_NORM   //< the l2 norm
     };
 
 
@@ -55,7 +59,8 @@ class TiberEqSystem
      * \param[in] options the options for the new system
      * \return a reference to the newly created system
      */
-    static TiberEqSystem* create(EquationSystems& es,
+
+    static TiberEqSystem* create(libMesh::EquationSystems& es,
         const std::string& sysname, SystemType type,
         const ModelOptions& options);
 
@@ -68,7 +73,7 @@ class TiberEqSystem
      * \param[in] options the options for the new system
      * \return a reference to the newly created system
      */
-    static TiberEqSystem* create(EquationSystems& es,
+    static TiberEqSystem* create(libMesh::EquationSystems& es,
         const std::string& sysname, const std::string& type,
         const ModelOptions& options);
 
@@ -99,15 +104,15 @@ class TiberEqSystem
      * In future the return value may be \c NULL if there is no
      * libmesh system type associated
      */
-    System* get_libmesh_system(void);
+    libMesh::System* get_libmesh_system(void);
 
 
     //! Get the solution vector
-    virtual NumericVector<double>& get_solution_vector(void) = 0;
+    virtual libMesh::NumericVector<double>& get_solution_vector(void) = 0;
 
 
     //! Set a weight for a given norm
-    void set_weight(const NumericVector<double>* weight, NormType norm);
+    void set_weight(const libMesh::NumericVector<double>* weight, NormType norm);
 
 
     //! Set the set of excluded DoFs
@@ -120,12 +125,12 @@ class TiberEqSystem
         const std::set<ID>& region_ids = std::set<ID>());
 
     //! Exclude DoFs from a matrix
-    void exclude_dofs(DenseMatrix<double>& mat,
-        const std::vector<unsigned int>& dof_indices, const Elem* elem = NULL);
+    void exclude_dofs(libMesh::DenseMatrix<double>& mat,
+        const std::vector<unsigned int>& dof_indices, const libMesh::Elem* elem = NULL);
 
     //! Exclude DoFs from a matrix
-    void exclude_dofs(DenseVector<double>& vec,
-        const std::vector<unsigned int>& dof_indices, const Elem* elem = NULL);
+    void exclude_dofs(libMesh::DenseVector<double>& vec,
+        const std::vector<unsigned int>& dof_indices, const libMesh::Elem* elem = NULL);
 
 
   protected:
@@ -154,10 +159,10 @@ class TiberEqSystem
 
 
     //! Calculate a norm, considering the weight
-    double calculate_norm(NumericVector<double>* vec, NormType norm);
+    double calculate_norm(libMesh::NumericVector<double>* vec, NormType norm);
 
     //! Get the weight associated with a given norm
-    const NumericVector<double>* get_weight(NormType norm) const;
+    const libMesh::NumericVector<double>* get_weight(NormType norm) const;
 
 
 
@@ -172,11 +177,11 @@ class TiberEqSystem
 
 
     //! Weight for the l2 norm
-    const NumericVector<double>* _l2_weight;
+    const libMesh::NumericVector<double>* _l2_weight;
 
 
     //! Weight for the l_infty norm
-    const NumericVector<double>* _linfty_weight;
+    const libMesh::NumericVector<double>* _linfty_weight;
 
 
     //! A set of DoFs which should be excluded from the calculation

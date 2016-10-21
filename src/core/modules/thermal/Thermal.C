@@ -57,7 +57,7 @@ Thermal::do_init(void)
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
 
-  system.add_variable("T", FIRST);
+  system.add_variable("T", libMesh::FIRST);
   system.attach_assemble_function(assemble);
   system.init();
 
@@ -82,7 +82,7 @@ Thermal::do_init(void)
 }
 
 
-NumericVector<double>&
+libMesh::NumericVector<double>&
 Thermal::do_get_solution_vector(void)
 {
 
@@ -125,25 +125,25 @@ Thermal::compute_power_dissipated()
   //Gray System
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
-  const NumericVector<double>& solution = *(system.solution);
+  const libMesh::NumericVector<double>& solution = *(system.solution);
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
 
 
   const unsigned int tvar = system.variable_number("T");
-  FEType fe_type = dof_map.variable_type(tvar);
+  libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
   
   ID  dim = get_mesh().mesh_dimension();
 
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  QGauss qrule_face(dim-1,FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule_face(dim-1,libMesh::FIFTH);
   fe_face->attach_quadrature_rule(&qrule_face);
   
   const std::vector<Point>& q_point_face = fe_face->get_xyz();
-  const std::vector<std::vector<RealGradient> >&  dphi = fe_face->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >&  dphi = fe_face->get_dphi();
   const std::vector<Real>& JxW_face = fe_face->get_JxW();
   const std::vector<Point>& normal = fe_face->get_normals();
   
@@ -161,7 +161,7 @@ Thermal::compute_power_dissipated()
     
     ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
    
-    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+    const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
  
     for (ID ns = 0; ns<elem->n_sides(); ns++)
     {
@@ -194,27 +194,27 @@ Thermal::compute_power_emitted()
 {
 
   //Gray System
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
   ID  dim = get_mesh().mesh_dimension();
 
   const unsigned int tvar = system.variable_number("T");
-  FEType fe_type = dof_map.variable_type(tvar);
+  libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
   //------------BULK----------
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim,FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
   const std::vector<Point>& q_point = fe->get_xyz();
   //--------------------------
 
 
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  QGauss qrule_face(dim-1,CONSTANT);
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule_face(dim-1,libMesh::CONSTANT);
   fe_face->attach_quadrature_rule(&qrule_face);
 
   const std::vector<Real>& JxW_face = fe_face->get_JxW();
@@ -256,14 +256,14 @@ Thermal::do_solve(void)
 {
   _this = this;
 
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
 
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
   system.set_options(get_solver_options());
   system.solve();
 
-  const NumericVector<Number>& solution = system.get_solution_vector();
+  const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
   double Tmax = solution.linfty_norm();
   ostringstream os;
   os << "Maximum temperature : " << Tmax << " K";
@@ -319,22 +319,22 @@ Thermal::get_solution_secure(const Elem* elem,
    unsigned int np = p.size();
 
    TiberLinearSystem* system = &get_equation_system<TiberLinearSystem>();
-   const NumericVector<Number>& solution = system->get_solution_vector();
-   const DofMap& dof_map = system->get_dof_map();
+   const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
+   const libMesh::DofMap& dof_map = system->get_dof_map();
 
    ID  dim = get_mesh().mesh_dimension();
      
    //-------------
    const unsigned int u_var = system->variable_number("T");
 
-   FEType fe_type = system->variable_type(u_var);
-   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+   libMesh::FEType fe_type = system->variable_type(u_var);
+   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
    vector<unsigned int> dof_indices;
 
    //element shape functions
    const vector<vector<Real> >& phi = fe->get_phi();
-   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
    const vector<Point>& real_pts = fe->get_xyz();
 
    ID subdomain = elem->subdomain_id();
@@ -345,7 +345,7 @@ Thermal::get_solution_secure(const Elem* elem,
 
    const unsigned int n_dofs = dof_indices.size();
    ThermalModel& mod = *get_bulk_model<ThermalModel>(elem);
-   const RealTensor& kappa = mod.get_total_thermal_conductivity();
+   const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
 
    for (unsigned int n = 0; n < np; n++)
     {
@@ -363,7 +363,7 @@ Thermal::get_solution_secure(const Elem* elem,
       if (values.count(ThermalFlux))  
       {
 
-	RealGradient heat_flux(0);
+        libMesh::RealGradient heat_flux(0);
 	for (ID alpha = 0; alpha<dof_indices.size() ;alpha ++)
 	  heat_flux -= solution(dof_indices[alpha]) * (kappa * dphi[alpha][n]);
 	
@@ -377,7 +377,7 @@ Thermal::get_solution_secure(const Elem* elem,
       
       if (values.count(ThermCond))
       {
-	const RealTensor& kappa = mod.get_total_thermal_conductivity();
+	const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
 	values[ThermCond][0 + 3 * n] = kappa(0,0);
 	values[ThermCond][1 + 3 * n] = kappa(1,1);
 	values[ThermCond][2 + 3 * n] = kappa(2,2);
@@ -398,48 +398,48 @@ Thermal::get_solution_secure(const Elem* elem,
 
 
 void
-Thermal::do_assemble(EquationSystems& es, const std::string& system_name)
+Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_name)
 {
   TiberLinearSystem& system_fourier = get_equation_system<TiberLinearSystem>();
 
    const MeshBase& mesh = get_mesh();
 
-   DofMap& dof_map =  system_fourier.get_dof_map();
+   libMesh::DofMap& dof_map =  system_fourier.get_dof_map();
 
    const unsigned int tvar = system_fourier.variable_number("T");
 
-   FEType fe_type = dof_map.variable_type(tvar);
+   libMesh::FEType fe_type = dof_map.variable_type(tvar);
    ID  dim = get_mesh().mesh_dimension();
    SimulationEnvironment& se = get_environment();
    // the volume finite element
-   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-   QGauss qrule(dim, FIFTH);
+   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+   libMesh::QGauss qrule(dim, libMesh::FIFTH);
    fe->attach_quadrature_rule(&qrule);
 
    const vector<Real>& JxW = fe->get_JxW();
    const vector<Point>& q_point = fe->get_xyz();
    const vector<vector<Real> >& phi = fe->get_phi();
-   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
    // the surface finite element
-   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-   QGauss qface(dim - 1, SIXTH);
+   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   libMesh::QGauss qface(dim - 1, libMesh::SIXTH);
    fe_face->attach_quadrature_rule(&qface);
 
    const vector<Real>& JxW_face = fe_face->get_JxW();
    const vector<Point>& qface_point = fe_face->get_xyz();
    const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
+   const vector<vector<libMesh::RealGradient> >& dphi_face = fe->get_dphi();
    const vector<Point>& normal = fe_face->get_normals();
 
    vector<unsigned int> dof_indices;
 
-   DenseMatrix<Number> Ke;
-   DenseVector<Number> Fe;
+   libMesh::DenseMatrix<Number> Ke;
+   libMesh::DenseVector<Number> Fe;
 
-  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
+  MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
    for ( ; el != end_el ; ++el)
    {
 
@@ -462,7 +462,7 @@ Thermal::do_assemble(EquationSystems& es, const std::string& system_name)
      {
        mod.calculate(elem, q_point[qp]);
        
-       const RealTensor& kappa = mod.get_total_thermal_conductivity();
+       const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
        double heat_source = mod.get_total_heat_source();
        
        for (unsigned int i = 0; i < n_dofs; i++)
@@ -519,7 +519,6 @@ Thermal::do_assemble(EquationSystems& es, const std::string& system_name)
    
    system_fourier.matrix->close();
    system_fourier.rhs->close();
- 
 }
 
 

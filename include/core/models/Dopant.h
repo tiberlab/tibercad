@@ -9,9 +9,11 @@
 
 #include <string>
 
-
+namespace libMesh
+{
 class Elem;
 class Point;
+}
 
 
 //! Describes a dopant with a single energy level
@@ -75,7 +77,7 @@ class TBDLEXPORT Dopant
     /*! 
      * Sets the local doping density
      */
-    void calculate_doping_density(const Elem* elem, const Point& p);
+    void calculate_doping_density(const libMesh::Elem* elem, const libMesh::Point& p);
 
 
     //! Get the density of ionized dopants
@@ -98,6 +100,8 @@ class TBDLEXPORT Dopant
 
   protected:
 
+    //! Calculate the doping density
+    virtual double do_calculate_doping_density(const libMesh::Elem* elem, const libMesh::Point& p);
 
     //! Get the options
     ModelOptions& get_options(void);
@@ -165,7 +169,7 @@ Dopant::get_doping_density(void) const
 
 inline
 void
-Dopant::calculate_doping_density(const Elem* elem, const Point& p)
+Dopant::calculate_doping_density(const libMesh::Elem* elem, const libMesh::Point& p)
 {
   if (_profile != nullptr)
     _density = _profile->get_data(elem, p);
@@ -205,6 +209,12 @@ Dopant::get_options(void)
 
 
 
+inline
+double
+Dopant::do_calculate_doping_density(const libMesh::Elem*, const libMesh::Point&)
+{
+  return 0.0;
+}
 
 
 

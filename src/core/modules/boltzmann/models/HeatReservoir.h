@@ -11,7 +11,6 @@
 #include "tiber_dll.h"
 
 
-class Elem;
 
 //! The base class for Poisson boundary conditions
 class TBDLLOCAL HeatReservoir : public BoltzmannBoundaryModel

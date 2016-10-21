@@ -3,5 +3,5 @@
 ./build_petsc
 ./build_slepc
 ./build_libmesh
-./build_boost
-./build_tibercad
+#./build_boost
+#./build_tibercad

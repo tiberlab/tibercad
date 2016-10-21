@@ -9,6 +9,7 @@
 */
 
 #include "PhysicalModelInterface.h"
+#include "libMeshDefs.h"
 #include "KPbulkHamiltonian.h"
 
 #include "tensor.h"
@@ -79,8 +80,7 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
   void  calculate_valence_band_extremum(const Elem* element, const Point& point);
 
   //! Calculate valence band states
-  void calculate_vb_bulk_states(const Tensor1& k_vector,
-      std::vector<double>& eigenvalues, std::vector<DenseVector<Complex> >& eigenvectors);
+  void calculate_vb_bulk_states(const Tensor1& k_vector, std::vector<double>& eigenvalues, std::vector<libMesh::DenseVector<libMesh::Complex>>& eigenvectors);
 
 
   //! calculates dispersion along a line in k-space
@@ -119,9 +119,9 @@ class TBDLEXPORT DDsemiconductor : public PhysicalModelInterface
    */
   void calculate_inverse_mass(
       const std::vector<std::vector<KPbulkHamiltonian::MatrixElement> >& ham,
-      const std::vector<DenseVector<Complex> >::const_iterator first,
-      const std::vector<DenseVector<Complex> >::const_iterator last,
-      std::map<ID, RealTensor>& imasses);
+      const std::vector<libMesh::DenseVector<libMesh::Complex>>::const_iterator first,
+      const std::vector<libMesh::DenseVector<libMesh::Complex>>::const_iterator last,
+      std::map<ID, libMesh::RealTensor>& imasses);
 
    
 

@@ -15,7 +15,6 @@
 #include "uniform_refinement_estimator.h"
 #include "mesh_generation.h"
 #include "mesh_modification.h"
-#include "o_string_stream.h"
 #include "perf_log.h"
 #include "dof_map.h"
 #include "numeric_vector.h"
@@ -28,8 +27,10 @@
 #include "OpticPropsInterface.h"
 #include "MaxwellEquationsCommon.h"
 
-using namespace libMesh;
+
 using namespace std;
+
+//class EquationSystems
 
 //! Class to solve Maxwell equations
 class MaxwellBoundaryEquations : public MaxwellEquationsCommon
@@ -93,7 +94,7 @@ class MaxwellBoundaryEquations : public MaxwellEquationsCommon
     //!solver options
     //options opt;
 
-    static void assemble_maxwell_equations(EquationSystems& es, const std::string& system_name);
+    static void assemble_maxwell_equations(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! Setup the available variables
     virtual void do_setup_solution_variables(void);
@@ -106,7 +107,7 @@ class MaxwellBoundaryEquations : public MaxwellEquationsCommon
     std::vector<unsigned int> pmlRegions;
 
     double W;
-    std::vector<Complex> edgeSolution;
+    std::vector<libMesh::Complex> edgeSolution;
 };
 
 inline MaxwellBoundaryEquations*

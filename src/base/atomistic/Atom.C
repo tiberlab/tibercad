@@ -28,7 +28,8 @@ _position(position(1), position(2), position(3)),
 {
 }
 
-void Atom::set_elem(const Elem* el)
+
+void Atom::set_elem(const libMesh::Elem* el)
 {
   _el = el;
 }

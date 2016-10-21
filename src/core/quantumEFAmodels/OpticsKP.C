@@ -11,7 +11,9 @@
 #include "Messages.h"
 #include "SimulationOptions.h"
 #include "ModelOptions.h"
+#include "quadrature_gauss.h"
 
+#include <libmesh_common.h>
 #include <equation_systems.h>
 #include <linear_implicit_system.h>
 #include <dense_submatrix.h>
@@ -21,9 +23,12 @@
 #include <quadrature_gauss.h>
 
 #include <cstdlib>
+#include <petsc_matrix.h>
+#include <petsc_vector.h>
 
 using namespace std;
 using namespace Constants;
+using namespace libMesh;
 
 
 OpticsKP::~OpticsKP()
@@ -91,8 +96,8 @@ void OpticsKP::do_init()
   //
   string system_name(get_equation_system_name());
   EquationSystems& es = get_equation_systems();
-  es.add_system<LinearImplicitSystem>(system_name);
-  system = &(es.get_system<LinearImplicitSystem>(system_name));
+  es.add_system<libMesh::LinearImplicitSystem>(system_name);
+  system = &(es.get_system<libMesh::LinearImplicitSystem>(system_name));
 
   //-------------------------------------------------------------------------------------------------
   //add variables for an 8x8 k.p problem
@@ -167,7 +172,7 @@ void OpticsKP::do_compute_matrix_elements(void)
       unsigned int is = _initial_state_numbers[_initial_indices[i1]];
       unsigned int fs = _final_state_numbers[_final_indices[i2]];
 
-      std::vector<Complex> mat_el =  calculate_matrix_element(is, fs);
+      std::vector<libMesh::Complex> mat_el =  calculate_matrix_element(is, fs);
       for (unsigned i = 0; i < 3; i++)  _P_matrix[i][i1][i2] = mat_el[i];
     }
 
@@ -276,17 +281,17 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
   const MeshBase* mesh = &get_mesh();
   unsigned int dim = mesh->mesh_dimension();
 
-  DofMap& dof_map = system->get_dof_map();
+  libMesh::DofMap& dof_map = system->get_dof_map();
 
   // this makes at least the windows version to crash:
   //system->reinit();
 
-  FEType fe_type = dof_map.variable_type(psivar[0]);
+  libMesh::FEType fe_type = dof_map.variable_type(psivar[0]);
 
-  AutoPtr<FEBase> fe (  build_finite_element(dim, fe_type, true)  );
+  libMesh::UniquePtr<libMesh::FEBase> fe (  build_finite_element(dim, fe_type, true)  );
 
   // A 5th order Gauss quadrature rule for numerical integration.
-  QGauss qrule (dim, FIFTH);
+  libMesh::QGauss qrule (dim, FIFTH);
 
   // Tell the finite element object to use our quadrature rule.
   fe -> attach_quadrature_rule (&qrule);
@@ -301,7 +306,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
   const std::vector<std::vector<Real> >& phi = fe->get_phi();
 
   // The element shape function gradients evaluated at the quadrature points.
-  const std::vector<std::vector<RealGradient> >& dphi = fe->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
   //------------------------------------------------------------
@@ -318,28 +323,28 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
   Pz_matr_imag->zero();
 
 
-  DenseMatrix<Number> Px_real;
-  DenseMatrix<Number> Px_imag;
+  libMesh::DenseMatrix<Number> Px_real;
+  libMesh::DenseMatrix<Number> Px_imag;
 
-  DenseMatrix<Number> Py_real;
-  DenseMatrix<Number> Py_imag;
+  libMesh::DenseMatrix<Number> Py_real;
+  libMesh::DenseMatrix<Number> Py_imag;
 
-  DenseMatrix<Number> Pz_real;
-  DenseMatrix<Number> Pz_imag;
-
-
-  DenseSubMatrix<Number> Px_real_sub(Px_real);
-  DenseSubMatrix<Number> Px_imag_sub(Px_imag);
-
-  DenseSubMatrix<Number> Py_real_sub(Py_real);
-  DenseSubMatrix<Number> Py_imag_sub(Py_imag);
-
-  DenseSubMatrix<Number> Pz_real_sub(Pz_real);
-  DenseSubMatrix<Number> Pz_imag_sub(Pz_imag);
+  libMesh::DenseMatrix<Number> Pz_real;
+  libMesh::DenseMatrix<Number> Pz_imag;
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+  libMesh::DenseSubMatrix<Number> Px_real_sub(Px_real);
+  libMesh::DenseSubMatrix<Number> Px_imag_sub(Px_imag);
+
+  libMesh::DenseSubMatrix<Number> Py_real_sub(Py_real);
+  libMesh::DenseSubMatrix<Number> Py_imag_sub(Py_imag);
+
+  libMesh::DenseSubMatrix<Number> Pz_real_sub(Pz_real);
+  libMesh::DenseSubMatrix<Number> Pz_imag_sub(Pz_imag);
+
+
+  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
   //                                                              //
   // we do not apply neither electric potential nor strain        //
   // because in our model they do not affect optical properties   //
@@ -412,7 +417,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
             {//p2
 
 
-              vector<Complex> value(3, Complex(0.0,0.0));
+              vector<libMesh::Complex> value(3, libMesh::Complex(0.0,0.0));
 
               //----constant part-----------------------------------
               temp = JxW[qp] * phi[p1][qp] * phi[p2][qp];
@@ -429,7 +434,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
               {
                 temp = JxW[qp]* dphi[p1][qp](i) * phi[p2][qp];
                 for (short pol = 0; pol < 3; pol++)
-                  value[pol] -= temp * P[pol][band1][band2].linear_left[i]*Complex(0.0, -1.0) ;
+                  value[pol] -= temp * P[pol][band1][band2].linear_left[i]*libMesh::Complex(0.0, -1.0) ;
               }
               //--------           ----------------------------------------
 
@@ -439,7 +444,7 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
               {
                 temp = JxW[qp]* dphi[p2][qp](i) * phi[p1][qp];
                 for (short pol = 0; pol < 3; pol++)
-                  value[pol] += temp * P[pol][band1][band2].linear_right[i] * Complex(0.0, -1.0) ;
+                  value[pol] += temp * P[pol][band1][band2].linear_right[i] * libMesh::Complex(0.0, -1.0) ;
               }
               //-----------------------------------------------------------
 
@@ -483,17 +488,17 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
 
 //----------------------------------------------------------------------------------------//
 
-std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned int j)
+std::vector<libMesh::Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned int j)
 {
-  std::vector<Complex> result(3,Complex(0.0,0.0));
+  std::vector<libMesh::Complex> result(3,libMesh::Complex(0.0,0.0));
 
-  vector<  PetscMatrix<Number>* > P_real_p(3);
-  vector<  PetscMatrix<Number>* > P_imag_p(3);
+  vector<  PetscMatrix<libMesh::Number>* > P_real_p(3);
+  vector<  PetscMatrix<libMesh::Number>* > P_imag_p(3);
 
   const MeshBase& mesh = system->get_mesh();
 
 
-  DofMap& dof_map = system->get_dof_map();
+  libMesh::DofMap& dof_map = system->get_dof_map();
 
 
   // ?!! compute nuber of nodes of the active elements: is it safe this way ??
@@ -502,28 +507,28 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
 
 
-  P_real_p[0]  = static_cast< PetscMatrix<Number>* > (Px_matr_real); P_real_p[0]->close();
-  P_real_p[1]  = static_cast< PetscMatrix<Number>* > (Py_matr_real); P_real_p[1]->close();
-  P_real_p[2]  = static_cast< PetscMatrix<Number>* > (Pz_matr_real); P_real_p[2]->close();
-  P_imag_p[0]  = static_cast< PetscMatrix<Number>* > (Px_matr_imag); P_imag_p[0]->close();
-  P_imag_p[1]  = static_cast< PetscMatrix<Number>* > (Py_matr_imag); P_imag_p[1]->close();
-  P_imag_p[2]  = static_cast< PetscMatrix<Number>* > (Pz_matr_imag); P_imag_p[2]->close();
+  P_real_p[0]  = static_cast< PetscMatrix<libMesh::Number>* > (Px_matr_real); P_real_p[0]->close();
+  P_real_p[1]  = static_cast< PetscMatrix<libMesh::Number>* > (Py_matr_real); P_real_p[1]->close();
+  P_real_p[2]  = static_cast< PetscMatrix<libMesh::Number>* > (Pz_matr_real); P_real_p[2]->close();
+  P_imag_p[0]  = static_cast< PetscMatrix<libMesh::Number>* > (Px_matr_imag); P_imag_p[0]->close();
+  P_imag_p[1]  = static_cast< PetscMatrix<libMesh::Number>* > (Py_matr_imag); P_imag_p[1]->close();
+  P_imag_p[2]  = static_cast< PetscMatrix<libMesh::Number>* > (Pz_matr_imag); P_imag_p[2]->close();
 
-  const vector< Complex >&  eigen_vector_i =  _i_states[i].eigen_vector;
-  const vector< Complex >&  eigen_vector_f =  _f_states[j].eigen_vector;
+  const vector< libMesh::Complex >&  eigen_vector_i =  _i_states[i].eigen_vector;
+  const vector< libMesh::Complex >&  eigen_vector_f =  _f_states[j].eigen_vector;
 
 
   int size_matrix = Px_matr_real->n();
 
 
-  //!number of bands in initial state
-  //short    num_bands_initial = initial_state_model->get_number_of_bands();
+  //number of bands in initial state
+  short num_bands_initial = initial_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_in = initial_state_model->get_band_map();
 
   assert( kp_bands_map_in.size() > 0);
 
   //number of bands in final state
-  //short    num_bands_final   = final_state_model->get_number_of_bands();
+  short num_bands_final   = final_state_model->get_number_of_bands();
   const map<short, short>&  kp_bands_map_fi = final_state_model->get_band_map();
 
   assert( kp_bands_map_fi.size() > 0);
@@ -535,16 +540,19 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
 
   // create vectors with size of the P-matrix and put the solution vectors'
   // entries into the right place
-  PetscVector<Real> vec_i_r(size_matrix);
-  PetscVector<Real> vec_i_i(size_matrix);
-  PetscVector<Real> vec_f_r(size_matrix);
-  PetscVector<Real> vec_f_i(size_matrix);
+  numeric_index_type local_size = Px_matr_real->row_stop() - Px_matr_real->row_start();
+  libMesh::PetscVector<Real> vec_i_r(this->get_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> vec_i_i(this->get_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> vec_f_r(this->get_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> vec_f_i(this->get_communicator(), size_matrix, local_size, PARALLEL);
 
   for (size_t i = 0; i < size_matrix; ++i)
   {
     // calculate the dof in the optical matrix
     // assumes band-major ordering
-    short band_number = i / number_of_nodes;
+    //short band_number = i / number_of_nodes;
+    // NOTE 15/3/2016 in new libmesh default is node major
+    short band_number = i % 8;
 
     band_it = kp_bands_map_in.find(band_number);
 
@@ -552,9 +560,10 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
     {
       //band exists in kp model of the initial state
       unsigned int dof_in_initial_eigenvector =
-          band_it->second * number_of_nodes + i % number_of_nodes;
+          band_it->second + (i / 8) * num_bands_initial;
+          //band_it->second * number_of_nodes + i % number_of_nodes;
 
-      Complex value = eigen_vector_i[dof_in_initial_eigenvector];
+      libMesh::Complex value = eigen_vector_i[dof_in_initial_eigenvector];
       vec_i_r.set(i, std::real(value));
       vec_i_i.set(i, std::imag(value));
     }
@@ -566,9 +575,10 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
     {
       //band exists in kp model of the initial state
       unsigned int dof_in_final_eigenvector =
-          band_it->second * number_of_nodes + i % number_of_nodes;
+          band_it->second + (i / 8) * num_bands_final;
+          //band_it->second * number_of_nodes + i % number_of_nodes;
 
-      Complex value = eigen_vector_f[dof_in_final_eigenvector];
+      libMesh::Complex value = eigen_vector_f[dof_in_final_eigenvector];
       vec_f_r.set(i, std::real(value));
       vec_f_i.set(i, std::imag(value));
     }
@@ -578,10 +588,12 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
   vec_f_r.close();
   vec_f_i.close();
 
-  PetscVector<Real> tmp_r(size_matrix);
-  PetscVector<Real> tmp_i(size_matrix);
+
+  libMesh::PetscVector<Real> tmp_r(this->get_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> tmp_i(this->get_communicator(), size_matrix, local_size, PARALLEL);
   // now we have the initial and final eigenvector expanded to the bands
   // of the optical matrix
+
   for (short pol = 0; pol < 3; pol++)
   {
     // y_r = P_r * v_r - P_i * v_i
@@ -599,7 +611,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
     double mme_r = vec_f_r.dot(tmp_r) + vec_f_i.dot(tmp_i);
     double mme_i = vec_f_r.dot(tmp_i) - vec_f_i.dot(tmp_r);
 
-    result[pol] = Complex(mme_r, mme_i);
+    result[pol] = libMesh::Complex(mme_r, mme_i);
   }
 
 /*
@@ -693,7 +705,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
             else
               value_imag = 0.0;
 
-            Complex value_complex = Complex(value_real, value_imag);
+            libMesh::Complex value_complex = libMesh::Complex(value_real, value_imag);
 
 
             unsigned int dof_in_final_eigenvector = band_it->second * number_of_nodes + n1%number_of_nodes;
@@ -715,7 +727,7 @@ std::vector<Complex> OpticsKP::calculate_matrix_element(unsigned int i, unsigned
       }
     }
   }
-*/
+  */
 
   return(result);
 }

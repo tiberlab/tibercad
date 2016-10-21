@@ -121,8 +121,8 @@ DirectRecombination::do_reinit(void)
         data[hdens_id];
 
         unsigned int dim = sim->get_mesh().mesh_dimension();
-        AutoPtr<FEBase> fe(sim->build_finite_element(dim, FEType()));
-        AutoPtr<QBase> qrule(QBase::build(libMeshEnums::QGAUSS, dim, libMeshEnums::FIFTH));
+        libMesh::UniquePtr<libMesh::FEBase> fe(sim->build_finite_element(dim, libMesh::FEType()));
+        libMesh::UniquePtr<libMesh::QBase> qrule(libMesh::QBase::build(libMeshEnums::QGAUSS, dim, libMeshEnums::FIFTH));
         fe->attach_quadrature_rule(qrule.get());
 
         const vector<Real>& JxW = fe->get_JxW();
@@ -133,7 +133,7 @@ DirectRecombination::do_reinit(void)
         SimulationEnvironment::ConstElemIterator end(env.elements_end());
         for ( ; it != end; ++it)
         {
-          const Elem* elem = *it;
+          const libMesh::Elem* elem = *it;
           if (_quantum_optics->includes_region(elem->subdomain_id()))
           {
             fe->reinit(elem);

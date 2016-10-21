@@ -109,7 +109,7 @@ SelfconsistentSolver::do_equilibrium(void)
 
 
 
-NumericVector<double>&
+libMesh::NumericVector<double>&
 SelfconsistentSolver::do_get_solution_vector(void)
 {
   int num_sim = _simulations.size();
@@ -121,7 +121,7 @@ SelfconsistentSolver::do_get_solution_vector(void)
 
 void
 SelfconsistentSolver::do_set_solution_vector(
-    const NumericVector<double>& new_solution)
+    const libMesh::NumericVector<double>& new_solution)
 {
   int num_sim = _simulations.size();
   //_simulations[num_sim - 1]->set_solution_vector(new_solution); 

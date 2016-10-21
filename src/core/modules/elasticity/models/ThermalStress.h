@@ -25,7 +25,7 @@ class TBDLLOCAL ThermalStress : public BodyForceModel
   //! Creator function
   static ThermalStress* create(const ModelOptions& options);
   
-  virtual void calculate(const Elem* elem, const Point& point);
+  virtual void calculate(const libMesh::Elem* elem, const libMesh::Point& point);
 
   protected:
 
@@ -44,7 +44,7 @@ class TBDLLOCAL ThermalStress : public BodyForceModel
     ThermalStress(const ModelOptions& options);
 
     //! Thermal expansion coefficients for the crystal directions
-    RealVectorValue _alpha;
+    libMesh::RealVectorValue _alpha;
 
     //! A reference temperature
     double _ref_temp;

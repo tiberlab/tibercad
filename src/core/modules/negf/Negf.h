@@ -114,17 +114,13 @@ class TBDLLOCAL Negf : public SimulationInterface
 
     void compute_current(void);
 
-    static void reorder_assemble(EquationSystems& es, const std::string& system_name);
-
-    //static void ham_assemble(EquationSystems& es, const std::string& system_name);
+    static void reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name);
 
     static Negf* static_this;
 
     static bool compare(ID i, ID j);
 
-    void do_reorder_assemble(EquationSystems& es, const std::string& system_name);
-
-    //void do_ham_assemble(EquationSystems& es, const std::string& system_name);
+    void do_reorder_assemble(libMesh::EquationSystems& es, const std::string& system_name);
 
     bool do_compare(ID i, ID j);
 
@@ -249,7 +245,7 @@ class TBDLLOCAL Negf : public SimulationInterface
     // internal status for k_space_integration
     int _which_integration;
 
-    VectorValue<double> _k_vec;
+    libMesh::VectorValue<double> _k_vec;
 
     DofField _eldensity;
     //DofField _eldensity;

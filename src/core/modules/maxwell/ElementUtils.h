@@ -15,11 +15,11 @@ class ElementUtils
       TRI, QUAD
     };
 
-    static ElementType getType(const Elem* elem) {
+    static ElementType getType(const libMesh::Elem* elem) {
       return TRI;
     }
 
-    static void getVertecesIds(const Elem* elem, std::vector<int>& result) {
+    static void getVertecesIds(const libMesh::Elem* elem, std::vector<int>& result) {
       int nodesCount = elem->n_nodes();
 
       for (int i = 0; i < nodesCount; i++) {
@@ -40,24 +40,24 @@ class ElementUtils
     /* Rewrite the following methods if you want support i.e. TRI6 or QUAD9 elements.
      * Thow it will work slower it will work...*/
 
-    static int getDirection(const Elem* elem, const unsigned int index) {
+    static int getDirection(const libMesh::Elem* elem, const unsigned int index) {
       int i1 = (index == elem->n_nodes() - 1) ? 0 : (index + 1);
       return ( elem->get_node(index)->id() < elem->get_node(i1)->id() ) ? 1 : -1;
     }
 
-    static int getDirection(const Elem* elem, const unsigned int index1, const unsigned index2) {
+    static int getDirection(const libMesh::Elem* elem, const unsigned int index1, const unsigned index2) {
       return ( elem->get_node(index1)->id() < elem->get_node(index2)->id() ) ? 1 : -1;
     }
 
-    static unsigned int getVertecesCount(const Elem* elem) {
+    static unsigned int getVertecesCount(const libMesh::Elem* elem) {
       return elem->n_nodes();
     }
 
-    static unsigned int getVertexId(const Elem* elem, const unsigned int i) {
+    static unsigned int getVertexId(const libMesh::Elem* elem, const unsigned int i) {
       return elem->get_node(i)->id();
     }
 
-    static std::vector<std::pair<unsigned int, unsigned int>> getSortedEdge(const Elem* elem, unsigned int edgeNum) {
+    static std::vector<std::pair<unsigned int, unsigned int>> getSortedEdge(const libMesh::Elem* elem, unsigned int edgeNum) {
       std::vector<std::pair<unsigned int, unsigned int>> result;
 
       for (unsigned int i = 0; i < elem->n_nodes(); i++) {
@@ -73,7 +73,7 @@ class ElementUtils
     /**
      * Result is map<vertex element index, global vertex index>, where vertices are sort according to global indices.
      */
-    static std::vector<std::pair<unsigned int, unsigned int>> getSortedSide(const Elem* elem, unsigned int sideNum) {
+    static std::vector<std::pair<unsigned int, unsigned int>> getSortedSide(const libMesh::Elem* elem, unsigned int sideNum) {
       std::vector<std::pair<unsigned int, unsigned int>> result;
 
       for (unsigned int i = 0; i < elem->n_nodes(); i++) {

@@ -27,10 +27,10 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
     virtual double get_derivative_potential(void);
 
     //! Get the derivative of the mobility w.r.t. the gradient of the electric potential
-    virtual void get_derivative_grad_potential(RealGradient& dm);
+    virtual void get_derivative_grad_potential(libMesh::RealGradient& dm);
 
     //! Get the derivatives with respect to the fermi-level gradient
-    virtual void get_derivative_grad_fermi(RealGradient& dm);
+    virtual void get_derivative_grad_fermi(libMesh::RealGradient& dm);
 
     //! Creates a new named mobility model
     /*!
@@ -123,14 +123,14 @@ MobilityModelInterface::get_derivative_potential(void)
 
 inline
 void
-MobilityModelInterface::get_derivative_grad_potential(RealGradient& dm)
+MobilityModelInterface::get_derivative_grad_potential(libMesh::RealGradient& dm)
 {
   dm.zero();
 }
 
 inline
 void
-MobilityModelInterface::get_derivative_grad_fermi(RealGradient& dm)
+MobilityModelInterface::get_derivative_grad_fermi(libMesh::RealGradient& dm)
 {
   dm.zero();
 }

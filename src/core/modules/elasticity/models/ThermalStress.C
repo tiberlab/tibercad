@@ -28,7 +28,7 @@ void
 ThermalStress::do_init(void)
 {
 
-  RealGradient body_force(0);
+  libMesh::RealGradient body_force(0);
   
  //Get reference lattice
   _ref_temp = get_option("reference_temperature", SimulationOptions::temperature);
@@ -76,7 +76,7 @@ ThermalStress::read_database(void)
  
 
 void
-ThermalStress::calculate(const Elem* elem, const Point& point)
+ThermalStress::calculate(const libMesh::Elem* elem, const libMesh::Point& point)
 {
   // get temperature
   double deltaT = _temp.get_temperature(elem, point, true) - _ref_temp;
@@ -85,7 +85,7 @@ ThermalStress::calculate(const Elem* elem, const Point& point)
 
 
   // compute thermally induced strain
-  RealTensor strain(0);
+  libMesh::RealTensor strain(0);
   strain(0,0) = -_alpha(0) * deltaT;
   strain(1,1) = -_alpha(1) * deltaT;
   strain(2,2) = -_alpha(2) * deltaT;

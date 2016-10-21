@@ -3,15 +3,18 @@
 
 
 #include "PhysicalModelInterface.h"
+#include "libMeshDefs.h"
 #include "TemperatureInterface.h"
 #include "KPparameters.h"
 
+//#include "tensor.h"
+//#include "elem.h"
 #include <vector>
 
-//!  A general crystal semiconductor class.
+//! A general crystal semiconductor class.
 /*!
-     The class can read parameters database and convert them into kp parameters
-*/
+ *  The class can read parameters database and convert them into kp parameters
+ */
 class TBDLEXPORT Semiconductor : public PhysicalModelInterface
 {
  public:

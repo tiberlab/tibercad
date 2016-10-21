@@ -17,10 +17,15 @@
 #include <set>
 //-------------------
 
-template <typename T> class VectorValue;
-typedef VectorValue<double> RealVectorValue;
+
+namespace libMesh
+{
+  template <typename T> class VectorValue;
+  typedef VectorValue<double> RealVectorValue;
+}
 
 class ModelOptions;
+
 
 
 class AtomisticBasis
@@ -65,7 +70,9 @@ class AtomisticBasis
    */
   const std::vector<double>& get_lattice_vectors(void) const;
 
-  void get_lattice_vectors(RealVectorValue& a, RealVectorValue& b, RealVectorValue& c) const;
+  void get_lattice_vectors(libMesh::RealVectorValue& a,
+                           libMesh::RealVectorValue& b,
+                           libMesh::RealVectorValue& c) const;
 
   //! Set the periodicity
   void set_ttype_lattice_vectors(const Tensor2Gen& T);
@@ -246,7 +253,7 @@ class AtomisticBasis
     }
 
 
-    Point atom_translation(void)
+    libMesh::Point atom_translation(void)
     {
       return _image;
     }
@@ -254,8 +261,8 @@ class AtomisticBasis
 
     private:
 
-    typedef HashMultiMap<unsigned int, Point>::Type HMMap;
-    typedef HashMap<unsigned int, Point>::Type HMap;
+    typedef HashMultiMap<unsigned int, libMesh::Point>::Type HMMap;
+    typedef HashMap<unsigned int, libMesh::Point>::Type HMap;
 
     neighbor_iterator& operator=(const neighbor_iterator& rhs);
 
@@ -268,7 +275,7 @@ class AtomisticBasis
     double _height;
     double _width;
 
-    Point _image;
+    libMesh::Point _image;
 
     double _min_bond = 4;
 

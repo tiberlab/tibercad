@@ -119,10 +119,10 @@ SchottkyContact::do_compute(void)
     //std::cout<<"ve_th="<<vth_n<<" vh_th="<<vth_p<<std::endl;
     set_recombination_velocities(fac * vth_n, fac * vth_p);
  
-    const RealGradient& e_field = dd->get_electric_field();
+    const libMesh::RealGradient& e_field = dd->get_electric_field();
     const double pi = 3.14159265358979323846;
-    const RealTensor& permittivity  = dd->get_relative_permittivity();
-    const RealGradient& eps_e_field = permittivity * e_field;
+    const libMesh::RealTensor& permittivity  = dd->get_relative_permittivity();
+    const libMesh::RealGradient& eps_e_field = permittivity * e_field;
     double epsilon = Constants::e0 / (Constants::e * 100);
 
     if (e_field.size() != 0 && !std::isnan(e_field.size()) )

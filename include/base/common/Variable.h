@@ -1,13 +1,15 @@
 // $Id$
 
-#ifndef _VARIABLE_H_
-#define _VARIABLE_H_
+#ifndef _VARIABLEVALUE_H_
+#define _VARIABLEVALUE_H_
+
+
+#include <iostream>
+#include <string>
+#include <map>
 
 #include "tiber_dll.h"
 
-#include <map>
-#include <string>
-#include <iostream>
 
 class TiberModelObject;
 template <typename T> class InitializerBase;
@@ -31,14 +33,14 @@ template <typename T> class InitializerBase;
  * name \c variablename.
  *
  */
-class Variable
+class VariableValue
 {
 
 
   private:
 
     //! The type for the list of variables
-    typedef std::map<const std::string, Variable*> VariableMap;
+    typedef std::map<const std::string, VariableValue*> VariableValueMap;
 
 
   public:
@@ -49,24 +51,24 @@ class Variable
       public:
 
         iterator(const iterator& other) : _iter(other._iter) {};
-        iterator(const VariableMap::iterator& it) : _iter(it) {};
+        iterator(const VariableValueMap::iterator& it) : _iter(it) {};
 
         iterator& operator++(void) { ++_iter; return *this;};
         iterator& operator--(void) { --_iter; return *this;};
         iterator& operator=(const iterator& rhs) { _iter = rhs._iter; return *this;};
         bool operator==(const iterator& rhs) { return _iter == rhs._iter; };
         bool operator!=(const iterator& rhs) { return _iter != rhs._iter; };
-        Variable* operator*(void) { return _iter->second; };
-        Variable& operator->(void) { return *(_iter->second); };
+        VariableValue* operator*(void) { return _iter->second; };
+        VariableValue& operator->(void) { return *(_iter->second); };
 
 
       private:
 
-        VariableMap::iterator _iter;
+        VariableValueMap::iterator _iter;
     };
 
     //! Destructor
-    virtual ~Variable(void);
+    virtual ~VariableValue(void);
 
 
     //! Check if \c var is a valid variable variable
@@ -152,7 +154,7 @@ class Variable
   protected:
 
     //! Default constructor
-    explicit Variable(const std::string& name);
+    explicit VariableValue(const std::string& name);
 
 
     //! Do the unregistering of a model
@@ -173,7 +175,7 @@ class Variable
      * \c $name[defaultvalue]
      *
      */
-    static VariableMap _variables;
+    static VariableValueMap _variables;
 
 
     //! Check the name for valid syntax
@@ -185,23 +187,23 @@ class Variable
 
 inline
 const std::string&
-Variable::get_name(void) const
+VariableValue::get_name(void) const
 {
   return _name;
 }
 
 
 inline
-Variable::iterator
-Variable::begin(void)
+VariableValue::iterator
+VariableValue::begin(void)
 {
   return iterator(_variables.begin());
 }
 
 
 inline
-Variable::iterator
-Variable::end(void)
+VariableValue::iterator
+VariableValue::end(void)
 {
   return iterator(_variables.end());
 }
@@ -209,9 +211,9 @@ Variable::end(void)
 
 inline
 bool
-Variable::check_string(const std::string& s)
+VariableValue::check_string(const std::string& s)
 {
   return (!s.empty() && (s[0] == '$'));
 }
 
-#endif // _VARIABLE_H_
+#endif // _VARIABLEVALUE_H_

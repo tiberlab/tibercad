@@ -286,7 +286,7 @@ double TunnelingCurrent::get_current(double v)
 
       FEType fe_type (FIRST , LAGRANGE);
 
-      AutoPtr<FEBase> fe (FEBase::build(1,    fe_type));
+      UniquePtr<FEBase> fe (FEBase::build(1,    fe_type));
 
       vector<Point> points(1);
       FEInterface::inverse_map(1, fe_type, el, v_point, points);
@@ -547,7 +547,7 @@ void TunnelingCurrent::calculate_density()
 
 
 
-  AutoPtr<FEBase> fe (FEBase::build(k_dim, fe_type));
+  UniquePtr<FEBase> fe (FEBase::build(k_dim, fe_type));
 
   QGauss qrule (k_dim, THIRD);
 
@@ -954,7 +954,7 @@ double TunnelingCurrent::integrate_over_fix_energy(const Mesh* Emesh, double kpa
 
   FEType fe_type (FIRST , LAGRANGE);
 
-  AutoPtr<FEBase> fe (FEBase::build(1, fe_type));
+  UniquePtr<FEBase> fe (FEBase::build(1, fe_type));
 
   // QGauss qrule (1,  NINTH);
 

@@ -82,7 +82,7 @@ class IGeometryEx {
 
         for (unsigned int i = 0; i < elem->n_sides(); i++) {
           if (excludeSideFunction(elem, i)) {
-            const AutoPtr<Elem> sideElem = elem->build_side(i);
+            const libMesh::AutoPtr<libMesh::Elem> sideElem = elem->build_side(i);
 
             boundaryIds.insert(ItemId::get(sideElem.get()));
             for (int j = 0; j < sideElem->n_nodes(); j++) {

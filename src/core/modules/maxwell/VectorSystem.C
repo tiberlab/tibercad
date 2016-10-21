@@ -55,14 +55,14 @@ void VectorSystem::dof_indices(const Elem* const elem, std::vector<unsigned int>
   getEdgeDofMap(false)->dof_indices(elem, di);
 }
 
-void VectorSystem::countNonZeros(std::map<std::pair<int, int>, Complex>& values, int* result, unsigned int size) {
+void VectorSystem::countNonZeros(std::map<std::pair<int, int>, libMesh::Complex>& values, int* result, unsigned int size) {
   for (int i = 0; i < size; i++) {
     result[i] = 0;
   }
 
-  std::map<std::pair<int, int>, Complex>::iterator it = values.begin();
+  std::map<std::pair<int, int>, libMesh::Complex>::iterator it = values.begin();
   for (; it != values.end(); it++) {
-    std::pair<std::pair<int, int>, Complex> pair = *it;
+    std::pair<std::pair<int, int>, libMesh::Complex> pair = *it;
     result[pair.first.first]++;
   }
 }

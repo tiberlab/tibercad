@@ -9,8 +9,9 @@
 #include "SolveFailedException.h"
 
 
-#include "linear_solver.h"
-#include "equation_systems.h"
+#include "libmesh/linear_solver.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/dof_map.h"
 
 #include "Messages.h"
 
@@ -21,7 +22,7 @@
 using namespace std;
 
 
-TiberNonlinTR::TiberNonlinTR(EquationSystems& es,
+TiberNonlinTR::TiberNonlinTR(libMesh::EquationSystems& es,
     const string& name, const unsigned int number)
 : Parent(es, name, number)
 {
@@ -45,8 +46,8 @@ TiberNonlinTR::do_solve(void)
 
   NumericVector<Number>& u = get_solution_vector();
   if (!u.closed()) u.close();
-  NumericVector<Number>& du = *solution;
-  AutoPtr<NumericVector<Number> > u_old_ptr = u.clone();
+  NumericVector<Number>& du = *current_local_solution;
+  libMesh::UniquePtr<NumericVector<Number> > u_old_ptr = u.clone();
   NumericVector<Number>& u_old = *u_old_ptr;
 
   // the l_infty tolerance for the step size
@@ -70,9 +71,9 @@ TiberNonlinTR::do_solve(void)
   double tol_orig = tol;
 
   // for testing
-  //AutoPtr<SparseMatrix<Number> > transpose;
-  AutoPtr<NumericVector<double> > gradf = rhs->clone();
-  AutoPtr<NumericVector<double> > tmpvec = solution->clone();
+  //UniquePtr<SparseMatrix<Number> > transpose;
+  libMesh::UniquePtr<NumericVector<double> > gradf = rhs->clone();
+  libMesh::UniquePtr<NumericVector<double> > tmpvec = solution->clone();
 
   // this is only when l2 norm is used
   //double sqrtn = std::sqrt(du.size());
@@ -84,8 +85,8 @@ TiberNonlinTR::do_solve(void)
   {
 
     // prepare jacobian and residual
-    _assemble(u, NULL, matrix);
-    _assemble(u, rhs, NULL);
+    _assemble(u, NULL, matrix, *this);
+    _assemble(u, rhs, NULL, *this);
 
     double norm_rhs_now = rhs->l2_norm();
 
@@ -131,7 +132,8 @@ TiberNonlinTR::do_solve(void)
       //
       // calculate unconstrained minimizer (Newton step)
       //
-      get_linear_solver()->solve(*matrix, du, *rhs);
+      get_linear_solver()->solve(*matrix, *solution, *rhs);
+      solution->localize(du, get_dof_map().get_send_list()); 
       du.scale(-1.0);
 
       double t = 1.0;
@@ -204,7 +206,7 @@ TiberNonlinTR::do_solve(void)
     }
 
 
-    _assemble(u, tmpvec.get(), NULL);
+    _assemble(u, tmpvec.get(), NULL, *this);
 
     norm_rhs = tmpvec->l2_norm();
 

@@ -10,10 +10,13 @@
 #include "mesh_input.h"
 
 // Forward declarations
-class MeshBase;
 class BoundaryRegions;
 class MeshRegionInfo;
 
+namespace libMesh
+{
+class MeshBase;
+}
 
 
 /*!
@@ -22,7 +25,7 @@ class MeshRegionInfo;
  * GMSH software see
  * <a href="http://http://www.geuz.org/gmsh/">the Gmsh home page</a>
  */
-class TBDLLOCAL ReadGMSH : public MeshInput<MeshBase>
+class TBDLLOCAL ReadGMSH : public libMesh::MeshInput<libMesh::MeshBase>
 {
   public:
 
@@ -30,7 +33,7 @@ class TBDLLOCAL ReadGMSH : public MeshInput<MeshBase>
      * Constructor.  Takes a non-const Mesh reference which it
      * will fill up with elements via the read() command.
      */
-    ReadGMSH(MeshBase& mesh, MeshRegionInfo& reg_info, BoundaryRegions& bd_regions);
+    ReadGMSH(libMesh::MeshBase& mesh, MeshRegionInfo& reg_info, BoundaryRegions& bd_regions);
 
     /*!
      * Reads in a mesh in the Gmsh *.msh format
@@ -61,9 +64,9 @@ class TBDLLOCAL ReadGMSH : public MeshInput<MeshBase>
 
 
 inline
-ReadGMSH::ReadGMSH(MeshBase& mesh, MeshRegionInfo& reg_info,
+ReadGMSH::ReadGMSH(libMesh::MeshBase& mesh, MeshRegionInfo& reg_info,
     BoundaryRegions& bd_regions) :
-  MeshInput<MeshBase>(mesh),
+  libMesh::MeshInput<libMesh::MeshBase>(mesh),
   _reg_info(reg_info),
   _bd_regions(bd_regions)
 {}

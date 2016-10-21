@@ -10,10 +10,9 @@
 
 #include "vector_value.h"
 #include "RotatedCrystal.h"
-class Elem;
-class Point;
 
-using namespace std;
+#include "libMeshDefs.h"
+
 
 //! The base class for Poisson boundary conditions
 class ThermalConductivityModel : public PhysicalModelInterface
@@ -29,7 +28,7 @@ class ThermalConductivityModel : public PhysicalModelInterface
 
   virtual void calculate(const Elem* elem, const Point& point) = 0;
 
-  const RealTensor& get_thermal_conductivity(void);
+  const libMesh::RealTensor& get_thermal_conductivity(void);
 
   protected:
 
@@ -40,33 +39,36 @@ class ThermalConductivityModel : public PhysicalModelInterface
 
   // void set_thermal_conductivity(RealTensor kappa);
 
-  void set_thermal_conductivity(RealGradient kappa);
+  void set_thermal_conductivity(libMesh::RealGradient kappa);
 
   protected:
 
   void rotate(void);
 
-  RealTensor _kappa;
+  libMesh::RealTensor _kappa;
 
   private:
 
 };
 
 inline
-const RealTensor&
+const libMesh::RealTensor&
 ThermalConductivityModel::get_thermal_conductivity(void) 
 {
   return _kappa;
 }
 
-ThermalConductivityModel::ThermalConductivityModel(const ModelOptions& options) :
-PhysicalModelInterface(options)
+inline
+ThermalConductivityModel::ThermalConductivityModel(const ModelOptions& options)
+ : PhysicalModelInterface(options)
 {
 }
 
+
+
 inline 
 void 
-ThermalConductivityModel::set_thermal_conductivity(RealGradient kappa)
+ThermalConductivityModel::set_thermal_conductivity(libMesh::RealGradient kappa)
 {
 
   _kappa = 0;

@@ -9,11 +9,11 @@ class ScalarFunction {
     bool secondOrderDerivatives;
 
     std::vector<double> phi;
-    std::vector<Point> grad;
+    std::vector<libMesh::Point> grad;
 
-    std::vector<Point> dgraddx;
-    std::vector<Point> dgraddy;
-    std::vector<Point> dgraddz;
+    std::vector<libMesh::Point> dgraddx;
+    std::vector<libMesh::Point> dgraddy;
+    std::vector<libMesh::Point> dgraddz;
 
     bool getSecondOrderDerivatives() const {
         return secondOrderDerivatives;
@@ -37,7 +37,7 @@ class ScalarFunction {
     ScalarFunction(const std::vector<double>& values, const std::vector<double>& d_dx, const std::vector<double>& d_dy, const std::vector<double>& d_dz, double multiplier, bool sOrderDerivatives = false) : secondOrderDerivatives(sOrderDerivatives) {
       for (unsigned int i = 0; i < values.size(); i++) {
         phi.push_back(multiplier * values[i]);
-        grad.push_back(multiplier * Point(d_dx[i], d_dy[i], d_dz[i]));
+        grad.push_back(multiplier * libMesh::Point(d_dx[i], d_dy[i], d_dz[i]));
         if (secondOrderDerivatives) {
           dgraddx.push_back(0);
           dgraddy.push_back(0);
@@ -94,15 +94,15 @@ class ScalarFunction {
       }
     }
 
-    ScalarFunction(const std::vector<Point>& values, int coordNum, bool sOrderDerivatives = false) : secondOrderDerivatives(sOrderDerivatives) {
+    ScalarFunction(const std::vector<libMesh::Point>& values, int coordNum, bool sOrderDerivatives = false) : secondOrderDerivatives(sOrderDerivatives) {
       for (unsigned int i = 0; i < values.size(); i++) {
         phi.push_back(values[i](coordNum));
         if (coordNum == 0) {
-          grad.push_back(Point(1, 0, 0));
+          grad.push_back(libMesh::Point(1, 0, 0));
         } else if (coordNum == 1) {
-          grad.push_back(Point(0, 1, 0));
+          grad.push_back(libMesh::Point(0, 1, 0));
         } else {
-          grad.push_back(Point(0, 0, 1));
+          grad.push_back(libMesh::Point(0, 0, 1));
         }
 
         if (secondOrderDerivatives) {
@@ -193,8 +193,8 @@ class ScalarFunction {
       }
    }
 
-    VectorValue<Complex> grads(unsigned int qp,  VectorValue<Complex> sVector) const {
-     return  VectorValue<Complex>(grad[qp](0)*sVector(0), grad[qp](1)*sVector(1), grad[qp](2)*sVector(2));
+    libMesh::VectorValue<libMesh::Complex> grads(unsigned int qp,  libMesh::VectorValue<libMesh::Complex> sVector) const {
+     return  libMesh::VectorValue<libMesh::Complex>(grad[qp](0)*sVector(0), grad[qp](1)*sVector(1), grad[qp](2)*sVector(2));
    }
 };
 

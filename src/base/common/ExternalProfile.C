@@ -1,7 +1,6 @@
 // $Id$
 
 #include "ExternalProfile.h"
-
 #include "ExtProfile1D.h"
 #include "UniformRandomAlloy.h"
 #include "LinearProfile.h"

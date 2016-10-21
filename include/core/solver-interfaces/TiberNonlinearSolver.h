@@ -4,12 +4,16 @@
 #ifndef _TIBERNONLINEARSOLVER_H_
 #define _TIBERNONLINEARSOLVER_H_
 
+#include "libMeshDefs.h"
 
 // Libmesh includes
 #include "nonlinear_solver.h"
 
 class ModelOptions;
 class XMonitor;
+
+USELIBMESHTYPE(NumericVector);
+USELIBMESHTYPE(SparseMatrix);
 
 
 //! The TiberCAD nonlinear solver interface
@@ -19,12 +23,12 @@ class XMonitor;
  * It is derived from the libmesh NonlinearSolver class
  *
  */
-class TiberNonlinearSolver : public NonlinearSolver<double>
+class TiberNonlinearSolver : public libMesh::NonlinearSolver<double>
 {
 
   public:
 
-    typedef NonlinearImplicitSystem sys_type;
+    typedef libMesh::NonlinearImplicitSystem sys_type;
 
     //!  Constructor. Initializes  data structures
     TiberNonlinearSolver(sys_type& s);
@@ -51,12 +55,14 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
     //! Solve the system
     virtual std::pair<unsigned int, Real> solve(
         SparseMatrix<double>& jacobian,
-        NumericVector<double>& solution,
-        NumericVector<double>& residual,
+        libMesh::NumericVector<double>& solution,
+        libMesh::NumericVector<double>& residual,
         const double rtol,
         const unsigned int iter)
     {
       return this->solve(jacobian, solution, residual);
+      static_cast<int>(rtol);
+      static_cast<int>(iter);
     }
 
     
@@ -66,8 +72,8 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
      */
     virtual std::pair<unsigned int, Real> solve(
         SparseMatrix<double>& jacobian,
-        NumericVector<double>& solution,
-        NumericVector<double>& residual) = 0;
+        libMesh::NumericVector<double>& solution,
+        libMesh::NumericVector<double>& residual) = 0;
     
 
     //! Get the relative nonlinear tolerance
@@ -117,9 +123,10 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
   protected:
 
     //! Parse the options for solver specific stuff
-    virtual void parse_options(const ModelOptions& options) { };
+    virtual void parse_options(const ModelOptions& options);
 
     
+
 
   private:
 
@@ -137,6 +144,8 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
 
     //! The X monitor
     XMonitor* _xmonitor;
+
+
 };
 
 
@@ -149,6 +158,13 @@ class TiberNonlinearSolver : public NonlinearSolver<double>
 
 inline
 TiberNonlinearSolver::~TiberNonlinearSolver(void)
+{
+}
+
+
+inline
+void
+TiberNonlinearSolver::parse_options(const ModelOptions&)
 {
 }
 
@@ -233,5 +249,6 @@ TiberNonlinearSolver::set_xmonitor(XMonitor* xmonitor)
 {
   _xmonitor = xmonitor;
 }
+
 
 #endif // _TIBERNONLINEARSOLVER_H_

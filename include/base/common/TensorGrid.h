@@ -27,7 +27,7 @@ class TensorGrid
      * \param nl number of elements along y
      * \param nm number of elements along z
      */
-    TensorGrid(const Point& p0, const Point& p1, int nk = 50, int nl = 50, int nm = 50);
+    TensorGrid(const libMesh::Point& p0, const libMesh::Point& p1, int nk = 50, int nl = 50, int nm = 50);
 
     //! Setup a tensor grid
     /*!
@@ -37,7 +37,7 @@ class TensorGrid
      * \param nl number of elements along y
      * \param nm number of elements along z
      */
-    void setup(const Point& p0, const Point& p1, int nk = 50, int nl = 50, int nm = 50);
+    void setup(const libMesh::Point& p0, const libMesh::Point& p1, int nk = 50, int nl = 50, int nm = 50);
 
 
     //! Find the element for a given point
@@ -45,14 +45,14 @@ class TensorGrid
      * The elements are numbered as m*nl*nk + l*nk + k.
      * If the given point is outside the bounding box, -1 is returned.
      */
-    int find_element(const Point& p) const;
+    int find_element(const libMesh::Point& p) const;
     
 
     //! Find the element for a given point
     /*!
      * The element is identified by the triple (k,l,m).
      */
-    void find_element(const Point& p, int indices[3]) const;
+    void find_element(const libMesh::Point& p, int indices[3]) const;
 
 
     //! get grid spacing
@@ -78,13 +78,13 @@ class TensorGrid
 
     
     //! return a normalized vector r and distance
-    Point distance(int k1, int l1, int m1,
+    libMesh::Point distance(int k1, int l1, int m1,
                    int k2, int l2, int m2 ) const;
 
     //! Get the center point of an element \c i
-    Point get_centroid(unsigned int i) const;
+    libMesh::Point get_centroid(unsigned int i) const;
 
-    void get_bounding_box(Point& p0, Point& p1) const;
+    void get_bounding_box(libMesh::Point& p0, libMesh::Point& p1) const;
 
 
   private:
@@ -93,10 +93,10 @@ class TensorGrid
     unsigned int _dimension;
 
     //! The origin
-    Point _p0;
+    libMesh::Point _p0;
 
     //! The second point of the bounding box
-    Point _p1;
+    libMesh::Point _p1;
 
     //! The number of elements in x
     int _nk;
@@ -124,7 +124,7 @@ class TensorGrid
 
 
 inline
-TensorGrid::TensorGrid(const Point& p0, const Point& p1, int nk, int nl, int nm)
+TensorGrid::TensorGrid(const libMesh::Point& p0, const libMesh::Point& p1, int nk, int nl, int nm)
 {
   setup(p0, p1, nk, nl, nm);
 }
@@ -132,7 +132,7 @@ TensorGrid::TensorGrid(const Point& p0, const Point& p1, int nk, int nl, int nm)
 
 inline
 void
-TensorGrid::get_bounding_box(Point& p0, Point& p1) const 
+TensorGrid::get_bounding_box(libMesh::Point& p0, libMesh::Point& p1) const 
 {
   p0 = _p0;
   p1 = _p1;
@@ -141,7 +141,7 @@ TensorGrid::get_bounding_box(Point& p0, Point& p1) const
 
 inline
 void
-TensorGrid::find_element(const Point& p, int indices[3]) const
+TensorGrid::find_element(const libMesh::Point& p, int indices[3]) const
 {
   indices[0] = floor((p(0) - _p0(0)) / _dx);
   indices[1] = (_dimension > 1) ? floor((p(1) - _p0(1)) / _dy) : 0;
@@ -151,7 +151,7 @@ TensorGrid::find_element(const Point& p, int indices[3]) const
 
 inline
 int
-TensorGrid::find_element(const Point& p) const
+TensorGrid::find_element(const libMesh::Point& p) const
 {
   int k = floor((p(0) - _p0(0)) / _dx);
   int l = (_dimension > 1) ? floor((p(1) - _p0(1)) / _dy) : 0;
@@ -228,11 +228,11 @@ TensorGrid::element_to_index(unsigned int i, int& k, int& l, int& m) const
 
 
 inline
-Point
+libMesh::Point
 TensorGrid::distance(int k1, int l1, int m1,
                      int k2, int l2, int m2) const
 {
-  Point r((k2-k1)*_dx, (l2-l1)*_dy, (m2-m1)*_dz);
+  libMesh::Point r((k2-k1)*_dx, (l2-l1)*_dy, (m2-m1)*_dz);
   return r;
 }
 

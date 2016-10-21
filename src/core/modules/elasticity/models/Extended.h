@@ -23,8 +23,8 @@ class TBDLLOCAL Extended : public ElasticityBoundaryModel
 
 
     //! Calculate for a point on the given side
-    virtual void calculate(const Elem* elem, unsigned int side,
-			   const Point& point);
+    virtual void calculate(const libMesh::Elem* elem, unsigned int side,
+			   const libMesh::Point& point);
 
   protected:
 

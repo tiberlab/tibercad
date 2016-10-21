@@ -1,6 +1,7 @@
 // $Id$
 
 #include "TiberModelObject.h"
+#include "libMeshDefs.h"
 #include "Variable.h"
 #include "DLLoader.h"
 #include "Messages.h"
@@ -15,10 +16,11 @@
 
 using namespace std;
 
+USELIBMESHTYPE(RealVectorValue);
 
 
 TiberModelObject::TiberModelObject(const ModelOptions& options)
-  : ReferenceCountedObject<TiberModelObject>(),
+  : libMesh::ReferenceCountedObject<TiberModelObject>(),
     _options(options),
     _libhandle(NULL),
     _create(NULL),
@@ -32,7 +34,7 @@ TiberModelObject::TiberModelObject(const ModelOptions& options)
 
 TiberModelObject::~TiberModelObject(void)
 {
-  Variable::unregister(this);
+  VariableValue::unregister(this);
 }
 
 
@@ -63,7 +65,7 @@ TiberModelObject::get_parameter(const std::string& name,
   string val(_options.get_option(name, ""));
   // if one needs override from strange other sources
   if (override) override_parameter_string(name, val);
-  Variable::check_and_register(val, variable, this, initfunc);
+  VariableValue::check_and_register(val, variable, this, initfunc);
 }
 
 
@@ -73,7 +75,7 @@ TiberModelObject::get_option(const std::string& name,
     T default_value, bool override) const
 {
   string s(_options.get_option(name, ""));
-  if (Variable::check_string(s))
+  if (VariableValue::check_string(s))
     throw ModelErrorException("Option \'" + name + "\' cannot "
         " be used as variable (" + s +")");
   if (override) override_parameter_string(name, s);
@@ -86,8 +88,7 @@ TiberModelObject::get_option(const std::string& name,
 
 
 string
-TiberModelObject::get_option(const std::string& name,
-    const char* default_value, bool override) const
+TiberModelObject::get_option(const std::string& name, const char* default_value, bool override) const
 {
   string val(_options.get_option(name, default_value));
   if (override) override_parameter_string(name, val);
@@ -103,7 +104,7 @@ TiberModelObject::get_parameter(const std::string& name,
     std::vector<T>& vec, bool override)
 {
   string s(_options.get_option(name, ""));
-  if (Variable::check_string(s))
+  if (VariableValue::check_string(s))
     throw ModelErrorException("Option \'" + name + "\' cannot "
         " be used as variable (" + s +")");
   if (override) override_parameter_string(name, s);
@@ -120,7 +121,7 @@ TiberModelObject::get_parameter<RealVectorValue>(const std::string& name,
     RealVectorValue& vec, bool override, InitializerBase<RealVectorValue>*)
 {
   string val(_options.get_option(name, ""));
-  if (Variable::check_string(val))
+  if (VariableValue::check_string(val))
     throw ModelErrorException("Option \'" + name + "\' cannot "
         " be used as variable (" + val +")");
   // if one needs override from strange other sources
@@ -128,18 +129,17 @@ TiberModelObject::get_parameter<RealVectorValue>(const std::string& name,
 
   if (val.empty()) return;
 
-  //Variable::check_and_register(val, variable, this, initfunc);
+  //VariableValue::check_and_register(val, variable, this, initfunc);
   Utils::extract_vector(val, vec);
 }
 
 
 template<>
 void
-TiberModelObject::get_parameter<RealTensor>(const std::string& name,
-    RealTensor& vec, bool override, InitializerBase<RealTensor>*)
+TiberModelObject::get_parameter<libMesh::RealTensor>(const std::string& name, libMesh::RealTensor& vec, bool override, InitializerBase<libMesh::RealTensor>*)
 {
   string val(_options.get_option(name, ""));
-  if (Variable::check_string(val))
+  if (VariableValue::check_string(val))
     throw ModelErrorException("Option \'" + name + "\' cannot "
         " be used as variable (" + val +")");
   // if one needs override from strange other sources
@@ -147,7 +147,7 @@ TiberModelObject::get_parameter<RealTensor>(const std::string& name,
 
   if (val.empty()) return;
 
-  //Variable::check_and_register(val, variable, this, initfunc);
+  //VariableValue::check_and_register(val, variable, this, initfunc);
   Utils::extract_tensor(val, vec);
 
 }
@@ -166,11 +166,10 @@ TiberModelObject::get_option(const std::string& name,
 
 
 void
-TiberModelObject::get_option(const std::string& name,
-    RealVectorValue& vec, bool override) const
+TiberModelObject::get_option(const std::string& name, libMesh::RealVectorValue& vec, bool override) const
 {
   string val(_options.get_option(name, ""));
-  if (Variable::check_string(val))
+  if (VariableValue::check_string(val))
     throw ModelErrorException("Option \'" + name + "\' cannot "
         " be used as variable (" + val +")");
   // if one needs override from strange other sources
@@ -178,7 +177,7 @@ TiberModelObject::get_option(const std::string& name,
 
   if (val.empty()) return;
 
-  //Variable::check_and_register(val, variable, this, initfunc);
+  //VariableValue::check_and_register(val, variable, this, initfunc);
   Utils::extract_vector(val, vec);
 }
 
@@ -188,7 +187,7 @@ TiberModelObject::get_option(const std::string& name,
     Point& point, bool override) const
 {
   string val(_options.get_option(name, ""));
-  if (Variable::check_string(val))
+  if (VariableValue::check_string(val))
     throw ModelErrorException("Option \'" + name + "\' cannot "
         " be used as variable (" + val +")");
   // if one needs override from strange other sources
@@ -197,17 +196,17 @@ TiberModelObject::get_option(const std::string& name,
   if (val.empty()) return;
 
   //Variable::check_and_register(val, variable, this, initfunc);
-  RealVectorValue vec(point);
+  libMesh::RealVectorValue vec(point);
   Utils::extract_vector(val, vec);
   point = vec;
 }
 
 void
 TiberModelObject::get_option(const std::string& name,
-    RealTensor& vec, bool override) const
+    libMesh::RealTensor& vec, bool override) const
 {
   string val(_options.get_option(name, ""));
-  if (Variable::check_string(val))
+  if (VariableValue::check_string(val))
     throw ModelErrorException("Option \'" + name + "\' cannot "
         " be used as variable (" + val +")");
   // if one needs override from strange other sources
@@ -215,7 +214,7 @@ TiberModelObject::get_option(const std::string& name,
 
   if (val.empty()) return;
 
-  //Variable::check_and_register(val, variable, this, initfunc);
+  //VariableValue::check_and_register(val, variable, this, initfunc);
   Utils::extract_tensor(val, vec);
 
 }

@@ -106,6 +106,9 @@ else ifeq ($(target_os),win32)
   dll_prefix := 
 endif
 
+
+CXXFLAGS = @CXXFLAGS@
+
 ifdef PROFILE
   CXXFLAGS += -pg
 endif
@@ -121,7 +124,7 @@ ifeq ($(METHOD),dbg)
 endif
 
 
-CXXFLAGS += -fopenmp
+CXXFLAGS += -DLIBMESH_REQUIRE_SEPARATE_NAMESPACE -std=gnu++11 -fopenmp
 CFLAGS += -fopenmp
 FCFLAGS += -fopenmp
 LDFLAGS += -fopenmp

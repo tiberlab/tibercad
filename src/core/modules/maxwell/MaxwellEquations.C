@@ -96,7 +96,7 @@ void MaxwellEquations::do_init() {
 
   MeshBase& mesh = get_mesh();
 
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
 
 
   if (useCubic) {
@@ -139,7 +139,7 @@ void MaxwellEquations::do_init() {
 void MaxwellEquations::do_solve() {
   MeshBase& mesh = get_mesh();
 
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
 
   EigenSystem& system = equation_systems.get_system<EigenSystem> ("Maxwell");
 
@@ -243,7 +243,7 @@ void MaxwellEquations::do_solve() {
 }
 
 void MaxwellEquations::filterEigenValues() {
-  EquationSystems& equation_systems = get_equation_systems();
+  libMesh::EquationSystems& equation_systems = get_equation_systems();
 
   EigenSystem& system = equation_systems.get_system<EigenSystem> ("Maxwell");
 
@@ -329,7 +329,7 @@ int MaxwellEquations::get_solution_for_each_mode_size() const {
 }
 
 void
-MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
+MaxwellEquations::assemble_maxwell_equations(libMesh::EquationSystems& es,
     const std::string& system_name)
 {
   const MeshBase& mesh = es.get_mesh();
@@ -354,9 +354,9 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
   IVectorFEBase* fe = dynamic_cast<IVectorFEBase*>(system.getVariableType(0).getFEbase());
 
   //TODO to be revised
-  AutoPtr<QBase> qrule(new QGauss(dimension, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
+  libMesh::UniquePtr<libMesh::QBase> qrule(new libMesh::QGauss(dimension, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
 
-  AutoPtr<QBase> qrule_face(new QGauss(dimension - 1, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
+  libMesh::UniquePtr<libMesh::QBase> qrule_face(new libMesh::QGauss(dimension - 1, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
 
   IScalarFEBase* fe_sc = NULL;
   if (system.getVariablesCount() > 1) {
@@ -366,7 +366,7 @@ MaxwellEquations::assemble_maxwell_equations(EquationSystems& es,
   MeshBase::const_element_iterator el = mesh.active_local_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
 
-  PML pml = system.getGeometryEx()->pml;
+ PML pml = system.getGeometryEx()->pml;
 
   for (; el != end_el; ++el) {
     const Elem* elem = *el;
@@ -471,7 +471,7 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
 
     if (solutions.count(SVector)) {
       Complex one(1, 0);
-      VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
+      libMesh::VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
 
       solutions[SVector][qp*3] = (one / sVector(0)).imag();
       solutions[SVector][qp*3 + 1] = (one / sVector(1)).imag();
@@ -512,6 +512,10 @@ void MaxwellEquations::get_solution_secure(const Elem* elem,
           }
         }
       }
+
+      if (solutions.count(SVector)) {
+        Complex one(1, 0);
+        libMesh::VectorValue<Complex> sVector = pml.getSVector(xyz[qp], opticModel->get_spml());
 
       Complex W = system.get_eigen_lambda(ii) * c / system.simulationInterface->get_environment().get_device().get_mesh_units();
       B_value = B_value / Complex(0, 1) / W / system.simulationInterface->get_environment().get_device().get_mesh_units() / system.getGeometryEx()->getScaling().get_length_scaling();
@@ -663,16 +667,16 @@ void MaxwellEquations::calculateHopfieldCoefficients() {
 
   EigenSystem& system = get_equation_systems().get_system<EigenSystem>("Maxwell");
 
-  const MeshBase& mesh = system.get_mesh();
+  const libMesh::MeshBase& mesh = system.get_mesh();
   const unsigned int dimension = mesh.mesh_dimension();
 
   IVectorFEBase* fe = dynamic_cast<IVectorFEBase*>(system.getVariableType(0).getFEbase());
   const VariableType fe_type = system.getVariableType(0);
   //TODO to be revised
-  AutoPtr<QBase> qrule(new QGauss(dimension, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
+  libMesh::UniquePtr<libMesh::QBase> qrule(new libMesh::QGauss(dimension, static_cast<Order>(2 * fe_type.order + 2 + fe_type.extraQOrder)));
 
-  MeshBase::const_element_iterator el = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+  libMesh::MeshBase::const_element_iterator el = mesh.active_local_elements_begin();
+  const libMesh::MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
 
   PML pml = system.getGeometryEx()->pml;
 

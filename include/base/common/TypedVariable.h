@@ -24,14 +24,14 @@
  * member of the TiberModelObject class.
  */
 template <typename T>
-class TBDLLOCAL TypedVariable : public Variable
+class TBDLLOCAL TypedVariable : public VariableValue
 {
 
   public:
 
     //! Constructor
     TypedVariable(const std::string& name)
-      : Variable(name) { };
+      : VariableValue(name) { };
 
     //! Set the value
     void set_value(const T& value);
@@ -49,7 +49,7 @@ class TBDLLOCAL TypedVariable : public Variable
 
   protected:
 
-    /*! \copydoc Variable::do_unregister() */
+    /*! \copydoc VariableValue::do_unregister() */
     virtual void do_unregister(const TiberModelObject* ct);
 
 

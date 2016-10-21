@@ -12,8 +12,11 @@
 
 class GetPot;
 
+namespace libMesh
+{
 //template <typename T> class VectorValue;
-//typedef VectorValue<double> RealVectorValue;
+//typedef libMesh::VectorValue<double> RealVectorValue;
+}
 
 
 class Database
@@ -147,9 +150,8 @@ class Database
 
 
     //! Get data of some type
-    template <typename T>
-    T get(const std::string& variable, T default_value,
-        bool required = false) const;
+    template <typename T> T get(const std::string& variable, T default_value, bool required = false) const;
+
 
     //! Get data array/vector
     /*!
@@ -159,8 +161,7 @@ class Database
      * database.
      */
     template <typename T>
-    void get(const std::string& variable, std::vector<T>& data,
-        bool required = false) const;
+    void get(const std::string& variable, std::vector<T>& data, bool required = false) const;
 
     //! Get data matrix
     /*!
@@ -170,8 +171,7 @@ class Database
      * structure.
      */
     template <typename T>
-    void get(const std::string& variable,
-        std::vector<std::vector<T> >& data, bool required = false) const;
+    void get(const std::string& variable, std::vector<std::vector<T> >& data, bool required = false) const;
 
 
 
@@ -184,11 +184,11 @@ class Database
         const char* default_value, bool required = false) const;
 
     //! Get data in a libmesh vector type
-    void get(const std::string& variable, RealVectorValue& data,
+    void get(const std::string& variable, libMesh::RealVectorValue& data,
         bool required = false) const;
 
     //! Get data in a libmesh tensor type
-    void get(const std::string& variable, RealTensor& tensor, 
+    void get(const std::string& variable, libMesh::RealTensor& tensor, 
         bool required = false) const;
 
 

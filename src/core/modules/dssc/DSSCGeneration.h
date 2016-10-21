@@ -76,7 +76,7 @@ class DSSCGeneration : public SimulationInterface
 
 
     //! Direction of incident light
-    RealVectorValue _direction;
+    libMesh::RealVectorValue _direction;
 
 
     //! Light intensity in units of 1 sun

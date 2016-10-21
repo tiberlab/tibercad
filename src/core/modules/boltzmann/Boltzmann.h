@@ -7,6 +7,7 @@
 #include "ElementSide.h"
 #include "SimulationEnvironment.h"
 #include "tiber_dll.h"
+#include "libMeshDefs.h"
 
 class TiberLinearSystem;
 
@@ -55,7 +56,7 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
     virtual PhysicalModel* create_bulk_model(const ModelOptions& options,
 					   const Material* mat) const;
    /*! \copydoc SimulationInterface::do_get_solution_vector() */
-    virtual NumericVector<double>& do_get_solution_vector(void);
+    virtual libMesh::NumericVector<double>& do_get_solution_vector(void);
 
     //! We need to create boundary condition model
     PhysicalModel* create_boundary_model(const ModelOptions& options,
@@ -146,12 +147,12 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
 
   double get_boundary_value(ElementSide elside, Point normal);
   ID gray_sys_number;
-  std::vector< NumericVector<Number>* > sol_dir;
-  std::vector< NumericVector<Number>* > thermal_flux;
-  std::vector< NumericVector<Number>* > thermal_flux_nodal;
-  NumericVector<Number>*  equilibrium_energy;
+  std::vector< libMesh::NumericVector<Number>* > sol_dir;
+  std::vector< libMesh::NumericVector<Number>* > thermal_flux;
+  std::vector< libMesh::NumericVector<Number>* > thermal_flux_nodal;
+  libMesh::NumericVector<Number>*  equilibrium_energy;
 
-  NumericVector<Number>*  initial_energy;
+  libMesh::NumericVector<Number>*  initial_energy;
 
     //!A Class that handle the angular integration
  class AngularIntegrator
@@ -213,7 +214,7 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
     std::string macro_sim;
     std::vector<int> custom_dir;
     double phi_zero;
-    RealGradient dist;
+    libMesh::RealGradient dist;
     //New
     double equilibrium_energy;
     std::string first_guess;
@@ -330,28 +331,28 @@ class TBDLLOCAL Boltzmann : public SimulationInterface
     Boltzmann(const ModelOptions& options);
 
     //! The assembly function
-    static void assemble_fourier(EquationSystems& es, const std::string& system_name);
+    static void assemble_fourier(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! The real assembly function
-    void do_assemble_fourier(EquationSystems& es, const std::string& system_name);
+    void do_assemble_fourier(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! The real assembly function
-    void do_assemble_boltzmann(EquationSystems& es, const std::string& system_name);
+    void do_assemble_boltzmann(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! The assembly function
-    static void assemble_boltzmann(EquationSystems& es, const std::string& system_name);
+    static void assemble_boltzmann(libMesh::EquationSystems& es, const std::string& system_name);
 
      //! The assembly function
-    static void assemble_gray(EquationSystems& es, const std::string& system_name);
+    static void assemble_gray(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! The real assembly function
-    void do_assemble_gray(EquationSystems& es, const std::string& system_name);
+    void do_assemble_gray(libMesh::EquationSystems& es, const std::string& system_name);
 
      //! The assembly function
-    static void assemble_global(EquationSystems& es, const std::string& system_name);
+    static void assemble_global(libMesh::EquationSystems& es, const std::string& system_name);
 
     //! The real assembly function
-    void do_assemble_global(EquationSystems& es, const std::string& system_name);
+    void do_assemble_global(libMesh::EquationSystems& es, const std::string& system_name);
 
 
     //! A static pointer to this
@@ -397,14 +398,14 @@ Boltzmann::is_on_any_boundary(ElementSide elside)
 
 inline
 void
-Boltzmann::assemble_fourier(EquationSystems& es, const std::string& system_name)
+Boltzmann::assemble_fourier(libMesh::EquationSystems& es, const std::string& system_name)
 {
   _this->do_assemble_fourier(es, system_name);
 }
 
 inline
 void
-Boltzmann::assemble_gray(EquationSystems& es, const std::string& system_name)
+Boltzmann::assemble_gray(libMesh::EquationSystems& es, const std::string& system_name)
 {
   _this->do_assemble_gray(es, system_name);
 }
@@ -412,14 +413,14 @@ Boltzmann::assemble_gray(EquationSystems& es, const std::string& system_name)
 
 inline
 void
-Boltzmann::assemble_boltzmann(EquationSystems& es, const std::string& system_name)
+Boltzmann::assemble_boltzmann(libMesh::EquationSystems& es, const std::string& system_name)
 {
   _this->do_assemble_boltzmann(es, system_name);
 }
 
 inline
 void
-Boltzmann::assemble_global(EquationSystems& es, const std::string& system_name)
+Boltzmann::assemble_global(libMesh::EquationSystems& es, const std::string& system_name)
 {
   _this->do_assemble_global(es, system_name);
 }

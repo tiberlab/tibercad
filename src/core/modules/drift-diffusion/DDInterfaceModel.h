@@ -9,7 +9,7 @@
 
 #include <cassert>
 #include <set>
-
+#include "libMeshDefs.h"
 
 class DDBulkModel;
 class MaterialBoundary;

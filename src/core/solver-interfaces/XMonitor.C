@@ -18,7 +18,8 @@ XMonitor::XMonitor(const std::string& title)
   PetscDrawViewPortsSet(_ports, 0);
 
   PetscDrawLGCreate(_draw, 1, &_lg);
-  PetscDrawLGIndicateDataPoints(_lg);
+  // does not exist anymore
+  //PetscDrawLGIndicateDataPoints(_lg);
 
   PetscDrawLGGetAxis(_lg, &_axis);
   PetscDrawAxisSetColors(_axis, PETSC_DRAW_BLACK, PETSC_DRAW_RED, PETSC_DRAW_BLUE);
@@ -32,8 +33,8 @@ XMonitor::~XMonitor(void)
   {
     PetscDrawFlush(_draw);
     PetscDrawViewPortsDestroy(_ports);
-    PetscDrawLGDestroy(_lg);
-    PetscDrawDestroy(_draw);
+    PetscDrawLGDestroy(&_lg);
+    PetscDrawDestroy(&_draw);
     _draw = NULL;
   }
 }

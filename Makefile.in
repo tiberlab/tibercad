@@ -5,6 +5,7 @@ srcdir = @srcdir@
 
 include Make.common
 
+doxygen := @DOXYGEN@
 
 
 MODULE_LIBS := -leigen_solver
@@ -46,7 +47,7 @@ $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext): src
 	@echo "Linking $(dll_prefix)$(TIBERLIBNAME)$(shared_libext) ..."
 	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
 		-o $(libdir)/$(dll_prefix)$(TIBERLIBNAME)$(shared_libext) \
-		$(MODULE_LIBS) $(DLLNAME) $(LDFLAGS)
+		$(MODULE_LIBS) $(DLLNAME) $(TENSORLIB) $(LDFLAGS)
 		
 #	@$(MAKE) --no-print-directory -C src all
 #	@$(CXX) -shared $(CXXFLAGS) $(TIBER_OBJECTS) \
@@ -127,7 +128,9 @@ sdk:
 	@mkdir -p SDK/etc
 	@cp share/modules.conf SDK/etc
 	@./collect_headers
+	@if test -e $(doxygen); then $(doxygen) share/Doxyfile_SDK; fi
 	@tar jcf SDK.tbz SDK
+
 
 
 
@@ -175,7 +178,7 @@ config.status: configure VERSION
 
 
 aclocal.m4: acinclude.m4
-	aclocal -I /usr/share/autoconf-archive/
+	aclocal -I /usr/share/doc/autoconf-archive/m4source
     
 .PHONY: echo_cuda
 

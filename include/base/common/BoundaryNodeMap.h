@@ -9,7 +9,10 @@
 #include <set>
 #include <vector>
 
+namespace libMesh
+{
 class Node;
+}
 
 
 //! Contains a map connecting boundary IDs to set of nodes
@@ -19,7 +22,7 @@ class BoundaryNodeMap
   public:
 
     //! A typedef for convenience
-    typedef std::set<const Node*> NodeSet;
+    typedef std::set<const libMesh::Node*> NodeSet;
 
 
 
@@ -33,19 +36,19 @@ class BoundaryNodeMap
     //void add_node_set(ID id, const NodeSet& node_set);
 
     //! Add a single node
-    void add_node(ID id, const Node* node);
+    void add_node(ID id, const libMesh::Node* node);
 
     //! Find the boundaries corresponding to a node
     /*!
      * \return true if the node is on a boundary
      */
-    bool find_node(const Node* node, std::set<ID>& ids) const;
+    bool find_node(const libMesh::Node* node, std::set<ID>& ids) const;
 
     //! Find the boundaries corresponding to a node
     /*!
      * \return true if the node is on a boundary
      */
-    bool find_node(const Node* node, std::vector<ID>& ids) const;
+    bool find_node(const libMesh::Node* node, std::vector<ID>& ids) const;
 
 
 
@@ -62,7 +65,7 @@ class BoundaryNodeMap
 
 inline
 void
-BoundaryNodeMap::add_node(ID id, const Node* node)
+BoundaryNodeMap::add_node(ID id, const libMesh::Node* node)
 {
   _map[id].insert(node);
 }

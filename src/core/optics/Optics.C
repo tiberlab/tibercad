@@ -2,6 +2,8 @@
 
 #include "Optics.h"
 #include "EigenvalueProblem.h"
+//#include "KspaceIntegration.h"
+//#include "KspaceIntegrationTemplate.h"
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 #include "SimulationOptions.h"
@@ -12,7 +14,7 @@
 
 using namespace std;
 using namespace Constants; 
-
+using namespace libMesh;
 
 Optics::~Optics()
 {
@@ -97,7 +99,7 @@ void Optics::parse_options()
 
 
   //k-vector
-  RealVectorValue k_vec(0.0);
+  libMesh::RealVectorValue k_vec(0.0);
   get_parameter("k_vector",k_vec);
   for (short i = 0; i < 3; i++) _k_vector[i] = k_vec(i);
   
@@ -156,7 +158,7 @@ void Optics::parse_options()
   
   if (has_option("polarization") || has_option("polarisation"))
   {
-    RealVectorValue polariz(3, 0.0);
+    libMesh::RealVectorValue polariz(3, 0.0);
 
     get_option("polarization", polariz);
     get_option("polarisation", polariz);
@@ -204,14 +206,19 @@ void Optics::do_init()
   else
     throw InitFailedException("Optics: final_state_model must be defined\n");
 
+  //set the communicator (assume the same for Optics, initial and final state models)
+  libMesh::Parallel::Communicator& comm = get_communicator();
+  libMesh::Parallel::Communicator energy_comm;
+  // make a serial communicator  
+  comm.split(0,0,energy_comm); 
 
   parse_options();
 
-  _energy_mesh = new Mesh(1);
+  _energy_mesh = new Mesh(energy_comm, 1);
 
   unsigned int num_elem = (int)((_opt.Emax - _opt.Emin)/_opt.dE);
 
-  MeshTools::Generation::build_cube (*_energy_mesh,
+  libMesh::MeshTools::Generation::build_cube (*_energy_mesh,
 				     num_elem, 0, 0,
 				     _opt.Emin, _opt.Emax,
 				     0, 0,
@@ -278,7 +285,7 @@ void Optics::init_k_space_integration(void)
    // these are the real space lattice vectors, in nm
    // why pi? Because then the default max k becomes 1 ( = 2*pi/(2*a) ), and
    // k_max can be interpreted in nm^-1
-   RealVectorValue a(M_PI, 0, 0), b(0, M_PI, 0), c(0, 0, M_PI);
+   libMesh::RealVectorValue a(M_PI, 0.0, 0.0), b(0.0, M_PI, 0.0), c(0.0, 0.0, M_PI);
    auto bbox = _initial_state_model->get_environment().get_bounding_box();
    if (x_per && (mesh_dim > 0))
      a(0) = (bbox.second(0) - bbox.first(0)) * get_mesh_units() * 1e9;
@@ -323,7 +330,11 @@ void Optics::init_k_space_integration(void)
    m.info("Setting up k-space integration");
    m.indent();
 
-   _k_integration = KspaceIntegration::create(this, &Optics::calculate_for_k_point, kopts);
+   _k_integration = KspaceIntegration::create(this, 
+                                              &Optics::calculate_for_k_point, 
+                                              kopts, 
+                                              get_communicator(),
+                                              get_mesh().comm() );
 
    if (_k_integration == NULL)
       throw InitFailedException("Could not create k-integration");
@@ -765,7 +776,7 @@ void Optics::do_calculate_spectrum(const Mesh& Energy, double Gamma,const Tensor
       }
 
 
-      Complex Me = _P_matrix[0][i][j] * polariz(1) +
+      libMesh::Complex Me = _P_matrix[0][i][j] * polariz(1) +
 	           _P_matrix[1][i][j] * polariz(2) +
 	           _P_matrix[2][i][j] * polariz(3);
 

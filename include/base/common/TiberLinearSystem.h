@@ -4,22 +4,23 @@
 #define _TIBERLINEARSYSTEM_H_
 
 #include "TiberEqSystem.h"
+#include "libMeshDefs.h"
 
 #include "linear_implicit_system.h"
 
 
 class TiberLinearSolver;
-class EquationSystems;
+
 
 
 //! A base class for linear systems
-class TiberLinearSystem : public TiberEqSystem, public LinearImplicitSystem
+class TiberLinearSystem : public TiberEqSystem, public libMesh::LinearImplicitSystem
 {
 
   public:
 
     //! Constructor
-    TiberLinearSystem(EquationSystems& es,
+    TiberLinearSystem(libMesh::EquationSystems& es,
         const std::string& name,
         const unsigned int number);
 
@@ -35,7 +36,7 @@ class TiberLinearSystem : public TiberEqSystem, public LinearImplicitSystem
      * \param options the options for this system
      * \return a pointer to the newly created system
      */
-    static TiberLinearSystem* create(EquationSystems& es,
+    static TiberLinearSystem* create(libMesh::EquationSystems& es,
         const std::string& sysname, const ModelOptions& options);
 
 
@@ -60,7 +61,7 @@ class TiberLinearSystem : public TiberEqSystem, public LinearImplicitSystem
 
 
     //! Get the solution vector
-    virtual NumericVector<double>& get_solution_vector(void);
+    virtual libMesh::NumericVector<double>& get_solution_vector(void);
 
 
 
@@ -83,10 +84,10 @@ TiberLinearSystem::system_type(void) const
 
 
 inline
-NumericVector<double>&
+libMesh::NumericVector<double>&
 TiberLinearSystem::get_solution_vector(void)
 {
-  return *solution;
+  return *current_local_solution;
 }
 
 

@@ -1,10 +1,11 @@
 // $Id$
 
-#include "Multiscale.h"
-#include "ModelOptions.h"
+
+//#include "ModelOptions.h"
 #include "Messages.h"
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
+#include "Multiscale.h"
 #include "InitFailedException.h"
 
 #include <algorithm>

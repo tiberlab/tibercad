@@ -158,7 +158,7 @@ protected:
   AtomisticStructure*  _as;
 
   //! List of elements covered by structure
-  std::vector<Elem*> _structure_elements;
+  std::vector<libMesh::Elem*> _structure_elements;
 
 
   //! Setting growth conventional cell vectors (in primitive vectors basis)

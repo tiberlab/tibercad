@@ -23,8 +23,8 @@ AtomisticBasis::~AtomisticBasis(void)
 
 AtomisticBasis::AtomisticBasis(void)
 :_bondmap(NULL),
-_lattice_vectors(9,0.0),
-_periodicity({0, 0, 0})
+ _lattice_vectors(9,0.0),
+ _periodicity({0, 0, 0})
 {
 
 }
@@ -32,11 +32,12 @@ _periodicity({0, 0, 0})
 
 
 void
-AtomisticBasis::get_lattice_vectors(RealVectorValue& a, RealVectorValue& b, RealVectorValue& c) const
+AtomisticBasis::get_lattice_vectors(libMesh::RealVectorValue& a,
+    libMesh::RealVectorValue& b, libMesh::RealVectorValue& c) const
 {
-  a = RealVectorValue(_lattice_vectors[0], _lattice_vectors[1], _lattice_vectors[2]);
-  b = RealVectorValue(_lattice_vectors[3], _lattice_vectors[4], _lattice_vectors[5]);
-  c = RealVectorValue(_lattice_vectors[6], _lattice_vectors[7], _lattice_vectors[8]);
+  a = libMesh::RealVectorValue(_lattice_vectors[0], _lattice_vectors[1], _lattice_vectors[2]);
+  b = libMesh::RealVectorValue(_lattice_vectors[3], _lattice_vectors[4], _lattice_vectors[5]);
+  c = libMesh::RealVectorValue(_lattice_vectors[6], _lattice_vectors[7], _lattice_vectors[8]);
 }
 
 
@@ -310,7 +311,7 @@ AtomisticBasis::get_subset(vector<unsigned int>& subset,
   }
   else if (shape == "column")
   {
-    RealVectorValue a, b, c;
+    libMesh::RealVectorValue a, b, c;
     get_lattice_vectors(a, b, c);
     string dir = opt.get_option("orientation", "x");
     double side = opt.get_option("side_length", x);

@@ -50,6 +50,7 @@ AC_CACHE_VAL(tc_cv_boost_prefix,
 	[tc_cv_boost_prefix="$with_boost_prefix"])
 ])dnl
 if test "${tc_cv_boost_prefix+set}" == "set"; then
+ AC_SUBST([BOOST_PREFIX],["$tc_cv_boost_prefix"])
  AC_SUBST([BOOST_CPPFLAGS],["-I$tc_cv_boost_prefix/include"])
 fi
 AC_CACHE_VAL(tc_cv_boost,
@@ -199,7 +200,9 @@ AC_DEFUN([TC_MKL],
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
-      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/em64t -Wl,-rpath,$tc_cv_mkl_dir/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
+dnl      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/mkl/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/mkl/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
+dnl      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/mkl/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/mkl/lib/intel64 -lmkl_rt -lm -lpthread" ;;
+      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5  -lm -lpthread" ;;
       i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
@@ -318,7 +321,7 @@ AC_DEFUN([TC_LIBMESH_PATH],
 	[tc_libmesh_prefix=$with_libmesh_prefix])
   dnl check for something there
   CPPFLAGS_save="$CPPFLAGS"
-  CPPFLAGS="-I$tc_libmesh_prefix/include/base"
+  CPPFLAGS="-I$tc_libmesh_prefix/include"
   AC_CHECK_HEADER([libmesh_config.h], [AC_SUBST([LIBMESH_PREFIX],
   					  "$tc_libmesh_prefix")])
   CPPFLAGS="$CPPFLAGS_save"

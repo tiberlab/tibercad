@@ -174,9 +174,9 @@ Boltzmann::do_partition(void)
   						      get_equation_systems().get_system("fourier"));
 
   const MeshBase& mesh = get_mesh();
-  DofMap& dof_map =  system.get_dof_map();
+  libMesh::DofMap& dof_map =  system.get_dof_map();
   const unsigned int tvar = system.variable_number("T");
-  FEType fe_type = dof_map.variable_type(tvar);
+  libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
  //------------------------------DOMAIN PARTITIONING---------------------------
  MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
@@ -193,7 +193,7 @@ Boltzmann::do_partition(void)
      std::vector<Point>  p(1);
      p[0] = elem->centroid();
      vector<Point> points(1);
-     FEInterface::inverse_map(dim, fe_type, elem, p, points);
+     libMesh::FEInterface::inverse_map(dim, fe_type, elem, p, points);
      std::map<ID, std::vector<double> > values;
      std::vector<double> value_vec(1);
      values[LatticeTemp] = value_vec;
@@ -277,7 +277,7 @@ Boltzmann::do_partition(void)
 }
 
 
-NumericVector<double>&
+libMesh::NumericVector<double>&
 Boltzmann::do_get_solution_vector(void)
 {
 
@@ -302,7 +302,7 @@ TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 					     "fourier", get_solver_options());
 
 
-  system->add_variable("T", FIRST);
+  system->add_variable("T", libMesh::FIRST);
   system->attach_assemble_function(assemble_fourier);
   system->init();
 
@@ -324,7 +324,7 @@ Boltzmann::do_init_boltzmann(void)
   TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
                                                            "boltzmann", get_solver_options());
 
-    system->add_variable("T",CONSTANT,MONOMIAL);
+    system->add_variable("T",libMesh::CONSTANT,libMesh::MONOMIAL);
 
     t_var.resize(AngInt.n_slices,0);
 
@@ -332,7 +332,7 @@ Boltzmann::do_init_boltzmann(void)
     for (ID k = 0; k<AngInt.n_slices; k++)
     {
       int n=sprintf (buffer, "T_ %i",k);
-      system->add_variable(buffer,CONSTANT,MONOMIAL);
+      system->add_variable(buffer,libMesh::CONSTANT,libMesh::MONOMIAL);
 
       t_var[k] =  system->variable_number(buffer);
     }
@@ -353,7 +353,7 @@ Boltzmann::do_init_gray(void)
    TiberLinearSystem* system = TiberLinearSystem::create(get_equation_systems(),
 							 "gray", get_solver_options());
    
-   system->add_variable("T",CONSTANT,MONOMIAL);
+   system->add_variable("T",libMesh::CONSTANT,libMesh::MONOMIAL);
    system->attach_assemble_function(assemble_gray);
    system->init();
    
@@ -516,7 +516,7 @@ Boltzmann::solve_fourier(void)
 
   //cout<<endl;
   //cout<<"      FOURIER..."<<endl;
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
 
   TiberLinearSystem& system_fourier =
     es.get_system<TiberLinearSystem>("fourier");
@@ -527,14 +527,14 @@ Boltzmann::solve_fourier(void)
   //Write the nodal flux
   const MeshBase& mesh = get_mesh();
 
-  DofMap& dof_map_fourier = system_fourier.get_dof_map();
+  libMesh::DofMap& dof_map_fourier = system_fourier.get_dof_map();
   std::vector<unsigned int> dof_indices_fourier;
-  const NumericVector<double>& solution_fourier = *(system_fourier.solution);
+  const libMesh::NumericVector<double>& solution_fourier = *(system_fourier.solution);
 
   const unsigned int var = system_fourier.variable_number("T");
-  FEType fe_type = dof_map_fourier.variable_type(var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  libMesh::FEType fe_type = dof_map_fourier.variable_type(var);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   //--------------------------------------------
   for (ID d = 0; d< 3; d++)
@@ -557,14 +557,14 @@ Boltzmann::solve_fourier(void)
     std::vector<Point> p(1);
     p[0]=elem->centroid();
     vector<Point> points(1);
-    FEInterface::inverse_map(dim, fe_type, elem, p, points);
+    libMesh::FEInterface::inverse_map(dim, fe_type, elem, p, points);
     fe->reinit(elem, &points);
     
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
     mod.calculate(elem,elem->centroid());
-    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+    const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
     
-    RealGradient heat_flux(0);
+    libMesh::RealGradient heat_flux(0);
     for (ID alpha = 0; alpha<dof_indices_fourier.size() ;alpha ++)
       heat_flux -= solution_fourier(dof_indices_fourier[alpha]) * (kappa * dphi[alpha][0]);
     
@@ -589,21 +589,21 @@ Boltzmann::from_nodal_to_cell()
 
   //Fourier System
   TiberLinearSystem& system_fourier = get_equation_systems().get_system<TiberLinearSystem>("fourier");
-  DofMap& dof_map_fourier = system_fourier.get_dof_map();
+  libMesh::DofMap& dof_map_fourier = system_fourier.get_dof_map();
   std::vector<unsigned int> dof_indices_fourier;
-  const NumericVector<double>& solution_fourier = *(system_fourier.solution);
+  const libMesh::NumericVector<double>& solution_fourier = *(system_fourier.solution);
 
   const unsigned int var = system_fourier.variable_number("T");
-  FEType fe_type = dof_map_fourier.variable_type(var);
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::FEType fe_type = dof_map_fourier.variable_type(var);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
   const vector<vector<Real> >& phi = fe->get_phi();
-  const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+  const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
   //Gray System
   TiberLinearSystem& system_gray = get_equation_systems().get_system<TiberLinearSystem>("gray");
-  DofMap& dof_map_gray = system_gray.get_dof_map();
+  libMesh::DofMap& dof_map_gray = system_gray.get_dof_map();
   std::vector<unsigned int> dof_indices_gray;
-  const NumericVector<double>& solution_gray = *(system_gray.solution);
+  const libMesh::NumericVector<double>& solution_gray = *(system_gray.solution);
 
   set<const Elem*>::iterator el = Domain.begin();
   const set<const Elem*>::iterator end_el = Domain.end();
@@ -616,18 +616,18 @@ Boltzmann::from_nodal_to_cell()
 
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
     mod.calculate(elem,elem->centroid());
-    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+    const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
 
     //Compute temperature at the centroid. Maybe here we can compute value at the centroid by using the JXW.
     std::vector<Point> p(1);
     p[0]=elem->centroid();
     vector<Point> points(1);
-    FEInterface::inverse_map(dim, fe_type, elem, p, points);
+    libMesh::FEInterface::inverse_map(dim, fe_type, elem, p, points);
     //---------------------------------------------------------
 
     fe->reinit(elem, &points);
     Real T = 0.0;
-    RealGradient heat_flux(0);
+    libMesh::RealGradient heat_flux(0);
     for (ID alpha = 0; alpha<dof_indices_fourier.size() ;alpha ++)
     {
       T += solution_fourier(dof_indices_fourier[alpha]) *  phi[alpha][0];
@@ -651,13 +651,13 @@ Boltzmann::from_cell_to_nodal()
   const MeshBase& mesh = get_mesh();
   //Fourier System
   TiberLinearSystem& system_fourier = get_equation_systems().get_system<TiberLinearSystem>("fourier");
-  DofMap& dof_map_fourier = system_fourier.get_dof_map();
+  libMesh::DofMap& dof_map_fourier = system_fourier.get_dof_map();
   std::vector<unsigned int> dof_indices_fourier;
   //const NumericVector<double>& solution_fourier = *(system_fourier.solution);
 
   //Gray System
   TiberLinearSystem& system_gray = get_equation_systems().get_system<TiberLinearSystem>("gray");
-  DofMap& dof_map_gray = system_gray.get_dof_map();
+  libMesh::DofMap& dof_map_gray = system_gray.get_dof_map();
   std::vector<unsigned int> dof_indices_gray;
   // const NumericVector<double>& solution_gray = *(system_gray.solution);
 
@@ -681,7 +681,7 @@ Boltzmann::from_cell_to_nodal()
 
     double T = (*equilibrium_energy)(dof_indices_gray[0]);
 
-    RealGradient heat_flux(0);
+    libMesh::RealGradient heat_flux(0);
     for (ID d = 0; d<3; d++)
       heat_flux(d) = (*thermal_flux[d])(dof_indices_gray[0]);
 
@@ -704,7 +704,7 @@ Boltzmann::solve_boltzmann(void)
 {
 
 
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
 
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("boltzmann");
@@ -717,10 +717,10 @@ Boltzmann::solve_boltzmann(void)
   system.solve();
 
   //Get the equilibrium energy
- const DofMap& dof_map = system.get_dof_map();
+ const libMesh::DofMap& dof_map = system.get_dof_map();
 
 
- const NumericVector<Number>& solution = system.get_solution_vector();
+ const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
  MeshBase::const_element_iterator       el     = get_mesh().active_elements_begin();
   const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
 
@@ -758,7 +758,7 @@ Boltzmann::solve_gray(void)
 
   SimulationEnvironment& se = get_environment();
 
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
 
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("gray");
@@ -800,7 +800,7 @@ Boltzmann::solve_gray(void)
   }
 
   // Initialize a new equilibrium_energy_vector
-  NumericVector<Number>*  equilibrium_energy_new = (system.solution)->clone().release();
+  libMesh::NumericVector<Number>*  equilibrium_energy_new = (system.solution)->clone().release();
   equilibrium_energy_new->close();
 
   // if  (SimulationOptions::verbose() > 2)
@@ -856,7 +856,7 @@ Boltzmann::solve_gray(void)
 
       //Update equilibrium solution
       {
-        NumericVector<Number>*  tmp_solution = system.solution->clone().release();
+        libMesh::NumericVector<Number>*  tmp_solution = system.solution->clone().release();
         tmp_solution->scale(AngInt.d_omega[k]/(4.0 * M_PI));
         equilibrium_energy_new->add((*tmp_solution));
 
@@ -866,14 +866,14 @@ Boltzmann::solve_gray(void)
       {
         for (ID i = 0; i<3 ; i++ )
         {
-          NumericVector<Number>*  tmp_solution = system.solution->clone().release();
+          libMesh::NumericVector<Number>*  tmp_solution = system.solution->clone().release();
           tmp_solution->scale(factor * AngInt.directions[k](i));
           thermal_flux[i]->add(*tmp_solution);
         }
       }
 
       {
-        NumericVector<Number>*  tmp_solution = system.solution->clone().release();
+        libMesh::NumericVector<Number>*  tmp_solution = system.solution->clone().release();
         //----UPDATE BOUNDARY DATA-----------------------
         SideData::iterator it(SD.begin());
         SideData::const_iterator it_end(SD.end());
@@ -1070,20 +1070,20 @@ Boltzmann::energy_conservation_check()
   SimulationEnvironment& se = get_environment();
 
   //Fourier System
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("fourier");
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
 
-  FEType fe_type(FIRST,LAGRANGE);
-  AutoPtr<FEBase>  fe(build_finite_element(dim,fe_type,true));
+  libMesh::FEType fe_type(libMesh::FIRST,libMesh::LAGRANGE);
+  libMesh::UniquePtr<libMesh::FEBase>  fe(build_finite_element(dim,fe_type,true));
 
-  QGauss qrule(dim, CONSTANT);
+  libMesh::QGauss qrule(dim, libMesh::CONSTANT);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Point>& q_point = fe->get_xyz();
-  const std::vector<std::vector<RealGradient> >&  dphi_rstf = fe->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >&  dphi_rstf = fe->get_dphi();
   const std::vector<Real>& JxW = fe->get_JxW();
 
   double check = 0.0;
@@ -1132,28 +1132,28 @@ Boltzmann::energy_conservation_check_traditional()
 {
 
   //Gray System
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("gray");
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
 
 
   const unsigned int tvar = system.variable_number("T");
-  FEType fe_type = dof_map.variable_type(tvar);
+  libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
   //------------BULK----------
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim,FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
   const std::vector<Point>& q_point = fe->get_xyz();
   //--------------------------
 
 
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  QGauss qrule_face(dim-1,CONSTANT);
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule_face(dim-1,libMesh::CONSTANT);
   fe_face->attach_quadrature_rule(&qrule_face);
 
   // const std::vector<Point>& q_point = fe_face->get_xyz();
@@ -1226,26 +1226,26 @@ Boltzmann::compute_power_dissipated()
 {
 
   //Gray System
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("fourier");
 
-  const NumericVector<double>& solution = *(system.solution);
+  const libMesh::NumericVector<double>& solution = *(system.solution);
 
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
 
 
   const unsigned int tvar = system.variable_number("T");
-  FEType fe_type = dof_map.variable_type(tvar);
+  libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  QGauss qrule_face(dim-1,FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule_face(dim-1,libMesh::FIFTH);
   fe_face->attach_quadrature_rule(&qrule_face);
   
   const std::vector<Point>& q_point_face = fe_face->get_xyz();
-  const std::vector<std::vector<RealGradient> >&  dphi = fe_face->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >&  dphi = fe_face->get_dphi();
   const std::vector<Real>& JxW_face = fe_face->get_JxW();
   const std::vector<Point>& normal = fe_face->get_normals();
   
@@ -1263,7 +1263,7 @@ Boltzmann::compute_power_dissipated()
     
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
    
-    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+    const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
  
     for (ID ns = 0; ns<elem->n_sides(); ns++)
     {
@@ -1298,19 +1298,19 @@ double
 Boltzmann::compute_porosity()
 {
 
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("fourier");
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
 
   const unsigned int tvar = system.variable_number("T");
-  FEType fe_type = dof_map.variable_type(tvar);
+  libMesh::FEType fe_type = dof_map.variable_type(tvar);
   
   //------------BULK----------
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim,FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
   const std::vector<Point>& q_point = fe->get_xyz();
@@ -1355,7 +1355,7 @@ Boltzmann::compute_porosity()
 double
 Boltzmann::compute_effective_thermal_conductivity()
 {
- EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
 
 // if (is_gray)
 // {
@@ -1377,8 +1377,8 @@ Boltzmann::compute_effective_thermal_conductivity()
     // FEType fe_type_gray = dof_map_gray.variable_type(tvar);
 
    //--------------surface-----------------
-//   AutoPtr<FEBase> fe_face_gray(build_finite_element(dim, fe_type_gray, true));
- //  QGauss qrule_face_gray(dim-1,CONSTANT);
+//   UniquePtr<FEBase> fe_face_gray(build_finite_element(dim, fe_type_gray, true));
+ //  QGauss qrule_face_gray(dim-1,libMesh::CONSTANT);
  //  fe_face_gray->attach_quadrature_rule(&qrule_face_gray);
  //  const std::vector<Real>& JxW_face_gray = fe_face_gray->get_JxW();
  //  const std::vector<Point>& normal_gray = fe_face_gray->get_normals();
@@ -1388,26 +1388,26 @@ Boltzmann::compute_effective_thermal_conductivity()
    TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("fourier");
 
-  const NumericVector<double>& solution = *(system.solution);
-  DofMap& dof_map = system.get_dof_map();
+  const libMesh::NumericVector<double>& solution = *(system.solution);
+  libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   const unsigned int tvar = system.variable_number("T");
-  FEType fe_type = dof_map.variable_type(tvar);
+  libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
    //------------BULK----------
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim,FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
   const std::vector<Point>& q_point = fe->get_xyz();
 
   //--------------SURFACE-----------------
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  QGauss qrule_face(dim-1,FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule_face(dim-1,libMesh::FIFTH);
   fe_face->attach_quadrature_rule(&qrule_face);
 
   const std::vector<Point>& q_point_face = fe_face->get_xyz();
-  const std::vector<std::vector<RealGradient> >&  dphi = fe_face->get_dphi();
+  const std::vector<std::vector<libMesh::RealGradient> >&  dphi = fe_face->get_dphi();
   const std::vector<std::vector<double> >&  phi = fe_face->get_phi();
 
   const std::vector<Real>& JxW_face = fe_face->get_JxW();
@@ -1445,7 +1445,7 @@ Boltzmann::compute_effective_thermal_conductivity()
     fe->reinit(elem);
     
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+    const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
 
     
     //Power emitted
@@ -1572,27 +1572,27 @@ Boltzmann::compute_effective_thermal_conductivity_elemental()
 
   SimulationEnvironment& se = get_environment();
 
- EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
 
   //-----------------GRAY---------------
    TiberLinearSystem& system =
      es.get_system<TiberLinearSystem>("gray");
-   const NumericVector<Number>& solution = system.get_solution_vector();
-   const DofMap& dof_map= system.get_dof_map();
+   const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
+   const libMesh::DofMap& dof_map= system.get_dof_map();
    vector<unsigned int> dof_indices;
    const unsigned int tvar = system.variable_number("T");
-   FEType fe_type = dof_map.variable_type(tvar);
+   libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
    //--------------surface-----------------
-   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-   QGauss qrule_face(dim-1,CONSTANT);
+   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   libMesh::QGauss qrule_face(dim-1,libMesh::CONSTANT);
    fe_face->attach_quadrature_rule(&qrule_face);
    const std::vector<Real>& JxW_face = fe_face->get_JxW();
    const std::vector<Point>& normal = fe_face->get_normals();
    //---------------------------------------------------------------------------
    //------------BULK----------
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim,FIFTH);
+   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
   const std::vector<Point>& q_point = fe->get_xyz();
@@ -1626,7 +1626,7 @@ Boltzmann::compute_effective_thermal_conductivity_elemental()
 
     BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
 
-    const RealTensor& kappa = mod.get_total_thermal_conductivity();
+    const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
 
     for (ID ns = 0; ns<elem->n_sides(); ns++)
     {
@@ -1720,28 +1720,28 @@ Boltzmann::compute_power_emitted()
 {
 
   //Gray System
-  EquationSystems& es = get_equation_systems();
+  libMesh::EquationSystems& es = get_equation_systems();
   TiberLinearSystem& system =
     es.get_system<TiberLinearSystem>("fourier");
-  DofMap& dof_map = system.get_dof_map();
+  libMesh::DofMap& dof_map = system.get_dof_map();
   std::vector<unsigned int> dof_indices;
   //-----------------------------------------------
 
 
   const unsigned int tvar = system.variable_number("T");
-  FEType fe_type = dof_map.variable_type(tvar);
+  libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
   //------------BULK----------
-  AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-  QGauss qrule(dim,FIFTH);
+  libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule(dim,libMesh::FIFTH);
   fe->attach_quadrature_rule(&qrule);
   const std::vector<Real>& JxW = fe->get_JxW();
   const std::vector<Point>& q_point = fe->get_xyz();
   //--------------------------
 
 
-  AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-  QGauss qrule_face(dim-1,CONSTANT);
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::QGauss qrule_face(dim-1,libMesh::CONSTANT);
   fe_face->attach_quadrature_rule(&qrule_face);
 
   const std::vector<Real>& JxW_face = fe_face->get_JxW();
@@ -1757,7 +1757,7 @@ Boltzmann::compute_power_emitted()
   for ( ; it != end; ++it)
   {
 
-    const Elem* elem = *it;
+    const libMesh::Elem* elem = *it;
     dof_map.dof_indices(elem, dof_indices);
 
     fe->reinit(elem);
@@ -1824,16 +1824,16 @@ Boltzmann::compute_power_emitted()
 //   FEType fe_type = dof_map.variable_type(tvar);
 
 //   //------------BULK----------
-//   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-//   QGauss qrule(dim,FIFTH);
+//   UniquePtr<FEBase> fe(build_finite_element(dim, fe_type, true));
+//   QGauss qrule(dim,libMesh::FIFTH);
 //   fe->attach_quadrature_rule(&qrule);
 //   const std::vector<Real>& JxW = fe->get_JxW();
 //   const std::vector<Point>& q_point = fe->get_xyz();
 //   //--------------------------
 
 
-//   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-//   QGauss qrule_face(dim-1,CONSTANT);
+//   UniquePtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
+//   QGauss qrule_face(dim-1,libMesh::CONSTANT);
 //   fe_face->attach_quadrature_rule(&qrule_face);
 
 //   // const std::vector<Point>& q_point = fe_face->get_xyz();
@@ -1911,13 +1911,13 @@ Boltzmann::compute_view_factor(std::string S1, std::string S2)
                         get_equation_systems().get_system("gray"));
 
     const MeshBase& mesh = get_mesh();
-    DofMap& dof_map =  system.get_dof_map();
+    libMesh::DofMap& dof_map =  system.get_dof_map();
     const unsigned int tvar = system.variable_number("T");
-    FEType fe_type = dof_map.variable_type(tvar);
+    libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
     // the surface finite element
-    AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-    QGauss qface(dim - 1, CONSTANT);
+    libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+    libMesh::QGauss qface(dim - 1, libMesh::CONSTANT);
     fe_face->attach_quadrature_rule(&qface);
 
     const vector<Real>& JxW_face = fe_face->get_JxW();
@@ -2012,7 +2012,7 @@ Boltzmann::do_solve(void)
     cout<<"...done."<<endl;
     is_fourier_solved = true;
     first_guess = false;
-    EquationSystems& es = get_equation_systems();
+    libMesh::EquationSystems& es = get_equation_systems();
     TiberLinearSystem& system =
       es.get_system<TiberLinearSystem>("fourier");
     initial_energy = (system.solution)->clone().release();
@@ -2151,7 +2151,7 @@ Boltzmann::get_solution_secure(std::map<ID, std::vector<double> >& values)
   {
     TiberLinearSystem* system =
       &get_equation_systems().get_system<TiberLinearSystem>("fourier");
-    const NumericVector<Number>& solution = system->get_solution_vector();
+    const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
     double Tmax = solution.linfty_norm();
     values[MaxTemp] = std::vector<double>(1, Tmax);
   }
@@ -2169,8 +2169,8 @@ Boltzmann::get_solution_secure(const Elem* elem,
    TiberLinearSystem* system;
    system = &get_equation_systems().get_system<TiberLinearSystem>(
        "fourier");
-   const NumericVector<Number>& solution = system->get_solution_vector();
-   const DofMap& dof_map = system->get_dof_map();
+   const libMesh::NumericVector<Number>& solution = system->get_solution_vector();
+   const libMesh::DofMap& dof_map = system->get_dof_map();
 
    //Test Gray
  //   TiberLinearSystem* gray_system;
@@ -2182,14 +2182,14 @@ Boltzmann::get_solution_secure(const Elem* elem,
    //-------------
    const unsigned int u_var = system->variable_number("T");
 
-   FEType fe_type = system->variable_type(u_var);
-   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type));
+   libMesh::FEType fe_type = system->variable_type(u_var);
+   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
 
    vector<unsigned int> dof_indices;
 
    //element shape functions
    const vector<vector<Real> >& phi = fe->get_phi();
-   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
    const vector<Point>& real_pts = fe->get_xyz();
 
    ID subdomain = elem->subdomain_id();
@@ -2200,7 +2200,7 @@ Boltzmann::get_solution_secure(const Elem* elem,
 
    const unsigned int n_dofs = dof_indices.size();
    BoltzmannModel& mod = *get_bulk_model<BoltzmannModel>(elem);
-   const RealTensor& kappa = mod.get_total_thermal_conductivity();
+   const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
 
    Real vg = mod.get_sound_velocity();
    Real cg = mod.get_heat_capacity();
@@ -2235,7 +2235,7 @@ Boltzmann::get_solution_secure(const Elem* elem,
       if (values.count(ThermalFlux))  
       {
 	
-	RealGradient heat_flux(0);
+        libMesh::RealGradient heat_flux(0);
 	for (ID i = 0; i < n_dofs; i++)
 	  for (ID d = 0; d < 3; d++)
 	    heat_flux(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
@@ -2248,7 +2248,7 @@ Boltzmann::get_solution_secure(const Elem* elem,
       if (values.count(NormalizedThermalFlux))
           {
 
-            RealGradient heat_flux(0);
+        libMesh::RealGradient heat_flux(0);
             for (ID i = 0; i < n_dofs; i++)
               for (ID d = 0; d < 3; d++)
                 heat_flux(d) += phi[i][n] * (*thermal_flux_nodal[d])(dof_indices[i]);
@@ -2261,7 +2261,7 @@ Boltzmann::get_solution_secure(const Elem* elem,
       
       if (values.count(ThermCond))
       {
-	const RealTensor& kappa = mod.get_total_thermal_conductivity();
+	const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
 	values[ThermCond][0 + 3 * n] = kappa(0,0);
 	values[ThermCond][1 + 3 * n] = kappa(1,1);
 	values[ThermCond][2 + 3 * n] = kappa(2,2);
@@ -2304,11 +2304,11 @@ Boltzmann::clear_system(const std::string& system_name)
 
   vector<unsigned int> dof_indices;
 
-  DenseMatrix<Number> Ke;
+  libMesh::DenseMatrix<Number> Ke;
 
-  DenseVector<Number> Fe;
+  libMesh::DenseVector<Number> Fe;
 
-  DofMap& dof_map =  system.get_dof_map();
+  libMesh::DofMap& dof_map =  system.get_dof_map();
  //ClearSystem
   MeshBase::const_element_iterator       el   = mesh.active_elements_begin();
   const MeshBase::const_element_iterator end_el = mesh.active_elements_end();
@@ -2330,13 +2330,13 @@ Boltzmann::clear_system(const std::string& system_name)
 }
 
 void
-Boltzmann::do_assemble_global(EquationSystems& es, const std::string& system_name)
+Boltzmann::do_assemble_global(libMesh::EquationSystems& es, const std::string& system_name)
 {
 
 }
 
 void
-Boltzmann::do_assemble_boltzmann(EquationSystems& es, const std::string& system_name)
+Boltzmann::do_assemble_boltzmann(libMesh::EquationSystems& es, const std::string& system_name)
 {
 
 
@@ -2344,44 +2344,44 @@ Boltzmann::do_assemble_boltzmann(EquationSystems& es, const std::string& system_
                          get_equation_systems().get_system("boltzmann"));
 
      const MeshBase& mesh = get_mesh();
-     DofMap& dof_map =  system.get_dof_map();
-     FEType fe_type = dof_map.variable_type(t_var[0]);
+     libMesh::DofMap& dof_map =  system.get_dof_map();
+     libMesh::FEType fe_type = dof_map.variable_type(t_var[0]);
 
      // VOLUME
-     AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-     QGauss qrule(dim, CONSTANT);
+     libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+     libMesh::QGauss qrule(dim, libMesh::CONSTANT);
      fe->attach_quadrature_rule(&qrule);
 
      const vector<Real>& JxW = fe->get_JxW();
      const vector<Point>& q_point = fe->get_xyz();
      const vector<vector<Real> >& phi = fe->get_phi();
-     const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+     const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
      // SURFACE
-     AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-     QGauss qface(dim - 1, CONSTANT);
+     libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+     libMesh::QGauss qface(dim - 1, libMesh::CONSTANT);
      fe_face->attach_quadrature_rule(&qface);
 
      const vector<Real>& JxW_face = fe_face->get_JxW();
      const vector<Point>& qface_point = fe_face->get_xyz();
      const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-     const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
+     const vector<vector<libMesh::RealGradient> >& dphi_face = fe->get_dphi();
      const vector<Point>& normal = fe_face->get_normals();
 
 
   //Initialize-----------------------------------------------
-    DenseMatrix<Number> Ke;
-    DenseVector<Number> Fe;
+     libMesh::DenseMatrix<Number> Ke;
+     libMesh::DenseVector<Number> Fe;
 
-    std::vector< DenseSubVector<Number>* > F(AngInt.n_slices);
-    std::vector<std::vector< DenseSubMatrix<Number>* > > K(AngInt.n_slices);
+    std::vector< libMesh::DenseSubVector<Number>* > F(AngInt.n_slices);
+    std::vector<std::vector< libMesh::DenseSubMatrix<Number>* > > K(AngInt.n_slices);
     for (ID i= 0;i<AngInt.n_slices; i++)
     {
       K[i].resize(AngInt.n_slices);
       for (ID j= 0;j<AngInt.n_slices; j++)
-        K[i][j] = new  DenseSubMatrix<Number> (Ke);
+        K[i][j] = new  libMesh::DenseSubMatrix<Number> (Ke);
 
-      F[i] = new DenseSubVector<Number> (Fe) ;
+      F[i] = new libMesh::DenseSubVector<Number> (Fe) ;
     }
     //----------------------------------------------------------
     std::vector< std::vector<ID> > dof_indices_vec(AngInt.n_slices);
@@ -2536,7 +2536,7 @@ cout<<"HERE"<<endl;
 
 
 void
-Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
+Boltzmann::do_assemble_gray(libMesh::EquationSystems& es, const std::string& system_name)
 {
 
 
@@ -2544,39 +2544,39 @@ Boltzmann::do_assemble_gray(EquationSystems& es, const std::string& system_name)
 		       get_equation_systems().get_system("gray"));
 
    const MeshBase& mesh = get_mesh();
-   DofMap& dof_map =  system.get_dof_map();
+   libMesh::DofMap& dof_map =  system.get_dof_map();
    const unsigned int tvar = system.variable_number("T");
-   FEType fe_type = dof_map.variable_type(tvar);
+   libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
 
    // the volume finite element
-   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-   //QGauss qrule(dim, FIFTH);
-   QGauss qrule(dim, CONSTANT);
+   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+   //QGauss qrule(dim, libMesh::FIFTH);
+   libMesh::QGauss qrule(dim, libMesh::CONSTANT);
    fe->attach_quadrature_rule(&qrule);
 
    const vector<Real>& JxW = fe->get_JxW();
    const vector<Point>& q_point = fe->get_xyz();
    const vector<vector<Real> >& phi = fe->get_phi();
-   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
    // the surface finite element
-   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-   //QGauss qface(dim - 1, SIXTH);
-   QGauss qface(dim - 1, CONSTANT);
+   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   //QGauss qface(dim - 1, libMesh::SIXTH);
+   libMesh::QGauss qface(dim - 1, libMesh::CONSTANT);
    fe_face->attach_quadrature_rule(&qface);
 
    const vector<Real>& JxW_face = fe_face->get_JxW();
    const vector<Point>& qface_point = fe_face->get_xyz();
    const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
+   const vector<vector<libMesh::RealGradient> >& dphi_face = fe->get_dphi();
    const vector<Point>& normal = fe_face->get_normals();
 
    vector<unsigned int> dof_indices;
 
-   DenseMatrix<Number> Ke;
-   DenseVector<Number> Fe;
+   libMesh::DenseMatrix<Number> Ke;
+   libMesh::DenseVector<Number> Fe;
 
    //Clear the system (TO FIND ANOTHER METHOD)
    clear_system("gray");
@@ -2778,11 +2778,11 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
     if (mod->get_type() == "boltzmann_bnd_periodic")
     {
          //Get the periodicity vector
-         RealGradient periodicity = mod->get_periodicity();
+      libMesh::RealGradient periodicity = mod->get_periodicity();
          double DeltaT = mod->get_deltaT();
          double value_eq = 0.0;
          //Get the point to search for
-         AutoPtr< Elem > elem_face =  elside.elem()->build_side(elside.side());
+         libMesh::UniquePtr< Elem > elem_face =  elside.elem()->build_side(elside.side());
          Point point_side = elem_face->point(0);
 
          //The 1 - delta term has been included in order to be sure that the point is in the element
@@ -2982,46 +2982,46 @@ Boltzmann::get_boundary_value(ElementSide elside, Point normal)
 }
 
 void
-Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_name)
+Boltzmann::do_assemble_fourier(libMesh::EquationSystems& es, const std::string& system_name)
 {
   TiberLinearSystem& system_fourier = static_cast<TiberLinearSystem&>(
 								      get_equation_systems().get_system("fourier"));
 
    const MeshBase& mesh = get_mesh();
 
-   DofMap& dof_map =  system_fourier.get_dof_map();
+   libMesh::DofMap& dof_map =  system_fourier.get_dof_map();
 
    const unsigned int tvar = system_fourier.variable_number("T");
 
-   FEType fe_type = dof_map.variable_type(tvar);
+   libMesh::FEType fe_type = dof_map.variable_type(tvar);
 
    SimulationEnvironment& se = get_environment();
    // the volume finite element
-   AutoPtr<FEBase> fe(build_finite_element(dim, fe_type, true));
-   QGauss qrule(dim, FIFTH);
+   libMesh::UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type, true));
+   libMesh::QGauss qrule(dim, libMesh::FIFTH);
    fe->attach_quadrature_rule(&qrule);
 
    const vector<Real>& JxW = fe->get_JxW();
    const vector<Point>& q_point = fe->get_xyz();
    const vector<vector<Real> >& phi = fe->get_phi();
-   const vector<vector<RealGradient> >& dphi = fe->get_dphi();
+   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
    // the surface finite element
-   AutoPtr<FEBase> fe_face(build_finite_element(dim, fe_type, true));
-   QGauss qface(dim - 1, SIXTH);
+   libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+   libMesh::QGauss qface(dim - 1, libMesh::SIXTH);
    fe_face->attach_quadrature_rule(&qface);
 
    const vector<Real>& JxW_face = fe_face->get_JxW();
    const vector<Point>& qface_point = fe_face->get_xyz();
    const vector<vector<Real> >&  phi_face = fe_face->get_phi();
-   const vector<vector<RealGradient> >& dphi_face = fe->get_dphi();
+   const vector<vector<libMesh::RealGradient> >& dphi_face = fe->get_dphi();
    const vector<Point>& normal = fe_face->get_normals();
 
    vector<unsigned int> dof_indices;
 
-   DenseMatrix<Number> Ke;
-   DenseVector<Number> Fe;
+   libMesh::DenseMatrix<Number> Ke;
+   libMesh::DenseVector<Number> Fe;
 
    //Clear the system (TO FIND ANOTHER METHOD)
    clear_system("fourier");
@@ -3052,7 +3052,7 @@ Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_na
 
        mod.calculate(elem,q_point[qp]);
 
-       const RealTensor& kappa = mod.get_total_thermal_conductivity();
+       const libMesh::RealTensor& kappa = mod.get_total_thermal_conductivity();
        double heat_source = mod.get_total_heat_source();
       
        for (unsigned int i = 0; i < n_dofs; i++)
@@ -3093,7 +3093,7 @@ Boltzmann::do_assemble_fourier(EquationSystems& es, const std::string& system_na
 
  	      if (is_gray_solved)  //-----------Get the Gray flux-------------------------------
  	      {
-		RealGradient heat_flux(0);
+ 	       libMesh::RealGradient heat_flux(0);
 		for (ID i = 0; i < 3; i++)
 		  heat_flux(i) = (*thermal_flux[i])(dof);
 

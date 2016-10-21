@@ -711,6 +711,7 @@ COMPLEX_PETSC_ARCH
 SLEPC_DIR
 TAO_DIR
 TAO_INCLUDES
+BOOST_PREFIX
 BOOST_CPPFLAGS
 BOOST_REGEX_LIB
 BOOST_FILESYSTEM_LIB
@@ -4252,7 +4253,7 @@ fi
     MKL_INCLUDEDIR="$tc_cv_mkl_dir/include"
     HAVE_MKL="yes"
     case $host in
-      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/em64t -Wl,-rpath,$tc_cv_mkl_dir/lib/em64t -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
+      x86_64-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/intel64 -Wl,-rpath,$tc_cv_mkl_dir/lib/intel64 -Wl,--no-as-needed -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5  -lm -lpthread" ;;
       i?86-*-*) MKL_LIBS="-L$tc_cv_mkl_dir/lib/32 -Wl,-rpath,$tc_cv_mkl_dir/lib/32 -lmkl_intel -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" ;;
       *) tc_cv_mkl_dir="no"; HAVE_MKL="no"; MKL_LIBDIR= ; MKL_INCLUDEDIR= ;;
     esac
@@ -5033,7 +5034,7 @@ if test "${with_libmesh_prefix+set}" = set; then
 fi
 
     CPPFLAGS_save="$CPPFLAGS"
-  CPPFLAGS="-I$tc_libmesh_prefix/include/base"
+  CPPFLAGS="-I$tc_libmesh_prefix/include"
   if test "${ac_cv_header_libmesh_config_h+set}" = set; then
   { echo "$as_me:$LINENO: checking for libmesh_config.h" >&5
 echo $ECHO_N "checking for libmesh_config.h... $ECHO_C" >&6; }
@@ -5711,7 +5712,7 @@ echo "$as_me: ****************************************" >&6;}
 
 { echo "$as_me:$LINENO: checking whether the compiler implements namespaces" >&5
 echo $ECHO_N "checking whether the compiler implements namespaces... $ECHO_C" >&6; }
-if test "${ax_cv_cxx_namespaces+set}" = set; then
+if test "${ac_cv_cxx_namespaces+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
@@ -5753,12 +5754,12 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
 	 test -z "$ac_cxx_werror_flag" ||
 	 test ! -s conftest.err
        } && test -s conftest.$ac_objext; then
-  ax_cv_cxx_namespaces=yes
+  ac_cv_cxx_namespaces=yes
 else
   echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	ax_cv_cxx_namespaces=no
+	ac_cv_cxx_namespaces=no
 fi
 
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -5770,9 +5771,9 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 fi
-{ echo "$as_me:$LINENO: result: $ax_cv_cxx_namespaces" >&5
-echo "${ECHO_T}$ax_cv_cxx_namespaces" >&6; }
-if test "$ax_cv_cxx_namespaces" = yes; then
+{ echo "$as_me:$LINENO: result: $ac_cv_cxx_namespaces" >&5
+echo "${ECHO_T}$ac_cv_cxx_namespaces" >&6; }
+if test "$ac_cv_cxx_namespaces" = yes; then
 
 cat >>confdefs.h <<\_ACEOF
 #define HAVE_NAMESPACES
@@ -5792,6 +5793,8 @@ fi
 
 fi
 if test "${tc_cv_boost_prefix+set}" == "set"; then
+ BOOST_PREFIX="$tc_cv_boost_prefix"
+
  BOOST_CPPFLAGS="-I$tc_cv_boost_prefix/include"
 
 fi
@@ -7963,7 +7966,7 @@ fi
 
 ac_config_files="$ac_config_files stamp-h"
 
-ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/SLEPC/Makefile src/core/modules/etb/libuptight/Make.defs contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/coremodules.conf"
+ac_config_files="$ac_config_files Make.common Make.defs doc/Doxyfile Makefile doc/Makefile src/tibercad/Makefile src/utils/SLEPC/Makefile src/core/modules/etb/libuptight/Make.defs contrib/crypto++/make.defs installer/Makefile installer/windows/tibercad.bim installer/linux/deb/control installer/linux/tar/install share/coremodules.conf share/Doxyfile_SDK"
 
 ac_config_files="$ac_config_files installer/prepare_files.sh"
 
@@ -8541,6 +8544,7 @@ do
     "installer/linux/deb/control") CONFIG_FILES="$CONFIG_FILES installer/linux/deb/control" ;;
     "installer/linux/tar/install") CONFIG_FILES="$CONFIG_FILES installer/linux/tar/install" ;;
     "share/coremodules.conf") CONFIG_FILES="$CONFIG_FILES share/coremodules.conf" ;;
+    "share/Doxyfile_SDK") CONFIG_FILES="$CONFIG_FILES share/Doxyfile_SDK" ;;
     "installer/prepare_files.sh") CONFIG_FILES="$CONFIG_FILES installer/prepare_files.sh" ;;
     "bin/tibercad") CONFIG_FILES="$CONFIG_FILES bin/tibercad" ;;
     "bin/tiberCAD.sh") CONFIG_FILES="$CONFIG_FILES bin/tiberCAD.sh" ;;
@@ -8700,8 +8704,8 @@ COMPLEX_PETSC_ARCH!$COMPLEX_PETSC_ARCH$ac_delim
 SLEPC_DIR!$SLEPC_DIR$ac_delim
 TAO_DIR!$TAO_DIR$ac_delim
 TAO_INCLUDES!$TAO_INCLUDES$ac_delim
+BOOST_PREFIX!$BOOST_PREFIX$ac_delim
 BOOST_CPPFLAGS!$BOOST_CPPFLAGS$ac_delim
-BOOST_REGEX_LIB!$BOOST_REGEX_LIB$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -8743,6 +8747,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+BOOST_REGEX_LIB!$BOOST_REGEX_LIB$ac_delim
 BOOST_FILESYSTEM_LIB!$BOOST_FILESYSTEM_LIB$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 BUILD_TIBER_MODULES!$BUILD_TIBER_MODULES$ac_delim
@@ -8750,7 +8755,7 @@ LICENSE_CHECK!$LICENSE_CHECK$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 5; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 6; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -16,7 +16,7 @@ namespace
 
 
 TiberNonlinearSolver::TiberNonlinearSolver(sys_type& s)
-  : NonlinearSolver<double>(s),
+  : libMesh::NonlinearSolver<double>(s),
     _nonlinear_rtol(default_nonlinear_rtol),
     _nonlinear_atol(default_nonlinear_atol),
     _nonlinear_stol(default_nonlinear_stol),

@@ -3,6 +3,8 @@
 
 #include "libmesh_config.h"
 
+/*ciaociao
+
 
 // Local Includes
 #include "system.h"
@@ -15,7 +17,7 @@
 #include "VariableType.h"
 #include <vector>
 
-using namespace libMesh;
+
 using namespace libMeshEnums;
 
 /**
@@ -30,7 +32,7 @@ public:
   /**
    * Constructor.
    */
-    CubicEigenSystem (EquationSystems& es,
+    CubicEigenSystem (libMesh::EquationSystems& es,
 	       const std::string& name,
 	       const unsigned int number);
   

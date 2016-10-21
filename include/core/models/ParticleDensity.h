@@ -19,7 +19,10 @@
 
 class SimulationInterface;
 class Embracing;
+namespace libMesh
+{
 class Elem;
+}
 
 
 //! An abstract class for a classical particle density
@@ -136,7 +139,7 @@ class ParticleDensity : public PhysicalModelInterface
 
 
     //! Set the element and point we are working on
-    void set_element_and_point(const Elem* elem, const Point& p);
+    void set_element_and_point(const libMesh::Elem* elem, const libMesh::Point& p);
 
 
     //! Get the particle charge
@@ -236,11 +239,11 @@ class ParticleDensity : public PhysicalModelInterface
 
 
     //! The element we are currently working on
-    const Elem* _elem;
+    const libMesh::Elem* _elem;
 
 
     //! The point we are currently working on
-    Point _p;
+    libMesh::Point _p;
 
 
     //! The effective density of states
@@ -445,7 +448,7 @@ ParticleDensity::set_classical_parameters_comp(double N_eff, double E,
 
 inline
 void
-ParticleDensity::set_element_and_point(const Elem* elem, const Point& p)
+ParticleDensity::set_element_and_point(const libMesh::Elem* elem, const libMesh::Point& p)
 {
   _elem = elem;
   _p = p;

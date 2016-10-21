@@ -13,7 +13,7 @@
 
 // forward declarations
 //class Point;
-class Elem;
+//class Elem;
 
 
 //! The default DD semiconductor model container
@@ -55,11 +55,11 @@ class TBDLLOCAL SemiconductorModel : public DDBulkModel
       double Ef0;
       //double ni;
 
-      RealVectorValue polarization;
+libMesh::RealVectorValue polarization;
     };
 
     //! A data map type
-    typedef std::map<const Elem*, ElementData> DataMap;
+    typedef std::map<const libMesh::Elem*, ElementData> DataMap;
   
 
     /*! \copydoc DriftDiffusionProperties::do_init() */

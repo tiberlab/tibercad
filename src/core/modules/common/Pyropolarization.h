@@ -6,8 +6,6 @@
 #include "PolarizationModel.h"
 #include "SimulationInterface.h"
 #include "tiber_dll.h"
-class Elem;
-class Point;
 
 // Base class for charge density models
 class  TBDLLOCAL Pyropolarization: public PolarizationModel
@@ -27,7 +25,7 @@ class  TBDLLOCAL Pyropolarization: public PolarizationModel
 
    virtual void read_database(void);
 
-   virtual void do_calculate(const Elem* elem, const Point& point) {};
+   virtual void do_calculate(const libMesh::Elem*, const libMesh::Point&) {};
 
   private:
 

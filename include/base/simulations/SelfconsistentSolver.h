@@ -68,11 +68,11 @@ class TBDLLOCAL SelfconsistentSolver : public SimulationInterface
 
 
     //! Returns the solution vector of the last simulation
-    virtual NumericVector<double>& do_get_solution_vector(void);
+    virtual libMesh::NumericVector<double>& do_get_solution_vector(void);
 
 
     //! Returns the solution vector of the last simulation
-    virtual void do_set_solution_vector(const NumericVector<double>& new_solution);
+    virtual void do_set_solution_vector(const libMesh::NumericVector<double>& new_solution);
 
 
     //! Abused here for the inheritance of variables

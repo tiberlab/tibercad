@@ -4,13 +4,16 @@
 #ifndef _TIBERLINEARSOLVER_H_
 #define _TIBERLINEARSOLVER_H_
 
-//#include "TypeDefs.h"
+#include "libMeshDefs.h"
 #include "TiberModelObject.h"
 
 // Libmesh includes
 #include "linear_solver.h"
 
 class ModelOptions;
+
+USELIBMESHTYPE(NumericVector);
+USELIBMESHTYPE(SparseMatrix);
 
 
 //! The TiberCAD linear solver interface
@@ -20,13 +23,13 @@ class ModelOptions;
  * It is derived from the libmesh LinearSolver class
  *
  */
-class TiberLinearSolver : public TiberModelObject, public LinearSolver<Number>
+class TiberLinearSolver : public TiberModelObject, public libMesh::LinearSolver<Number>   
 {
 
   public:
 
     //!  Constructor. Initializes  data structures
-    TiberLinearSolver(const ModelOptions& options);
+    TiberLinearSolver(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options);
 
 
     //! Destructor.
@@ -34,16 +37,9 @@ class TiberLinearSolver : public TiberModelObject, public LinearSolver<Number>
 
     
     //! Create a linear solver
-    static TiberLinearSolver* create(const ModelOptions& options);
+   static TiberLinearSolver* create(const libMesh::Parallel::Communicator &comm_in, const ModelOptions& options);
     
-
-    //! Release all memory and clear data structures.
-    virtual void clear(void) { };
-
-
-    //! Initialize data structures if not done so already.
-    virtual void init(void) = 0;
-
+    
 
 
     //! Solve the linear system
@@ -115,7 +111,7 @@ class TiberLinearSolver : public TiberModelObject, public LinearSolver<Number>
 
     //! This is not supported in TiberCAD
     virtual std::pair<unsigned int, Real>
-      solve(const ShellMatrix<Number>&,
+      solve(const libMesh::ShellMatrix<Number>&,
         NumericVector<Number>&,
         NumericVector<Number>&,
           const double,
@@ -125,7 +121,7 @@ class TiberLinearSolver : public TiberModelObject, public LinearSolver<Number>
 
     //! This is not supported in TiberCAD
     virtual std::pair<unsigned int, Real>
-      solve(const ShellMatrix<Number>&,
+      solve(const libMesh::ShellMatrix<Number>&,
           const SparseMatrix<Number>&,
           NumericVector<Number>&,
           NumericVector<Number>&,

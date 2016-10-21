@@ -13,14 +13,16 @@ usage () {
 
 executable=tibercad
 usegdb=0
+n_mpi_procs=1
 
 OPTERR=0
-opts="dg"
+opts="dgn:"
 while getopts $opts flag
 do
   case "$flag" in
     d) executable=tibercad_dbg ;;
     g) usegdb=1 ;;
+    n) n_mpi_procs=${OPTARG}; export OMP_NUM_THREADS=1 ;;
     *) OPTIND=$(( $OPTIND - 1 )); break ;;
   esac
 done
@@ -34,6 +36,7 @@ then
 fi
 
 ARCH=`${TIBERCADROOT}/share/arch.sh`
+SDKDIR=${TIBERCADROOT}/SDK
 
 executable=${TIBERCADROOT}/${ARCH}/bin/${executable}
 if [ ! -x ${executable} ]
@@ -51,5 +54,6 @@ then
   gdb -nx -ex run --args ${executable} $@
 else
   #/usr/pack/tibercad_sdk-2.2-ma/build/petsc-3.0.0-p12/externalpackages/mpich2-1.0.8/bin/mpiexec -n 2 ${executable} $@
-  exec ${executable} $@
+  #${SDKDIR}/${ARCH}/bin/mpiexec -n ${n_mpi_procs} ${executable} $@
+  mpiexec-3.1.1 -n ${n_mpi_procs} ${executable} $@
 fi

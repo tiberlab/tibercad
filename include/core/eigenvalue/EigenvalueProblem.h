@@ -12,7 +12,6 @@
 
 
 class Kspace;
-class Mesh;
 
 
 //! Abstract class to solve complex valued eigenvalue problem
@@ -52,7 +51,7 @@ class EigenvalueProblem : public SimulationInterface
       //! eigenvalue
       double eigen_energy; 
       //! eigenvector
-      std::vector<Complex> eigen_vector; 
+      std::vector<libMesh::Complex> eigen_vector; 
       //! statistic type ("Bose" or "Fermi")
       std::string statistics;
       //! electro-chemical potential [eV] \f$ \langle \psi |\mu({\bf r} | \psi \rangle \f$
@@ -85,10 +84,10 @@ class EigenvalueProblem : public SimulationInterface
     void solve_for_kpoint(const Point& k_point);
     
     //! computes matrix elements between state i of particle_i and state j of particle_j
-    virtual Complex calculate_matrix_element(const std::string& i_particle,
+    virtual libMesh::Complex calculate_matrix_element(const std::string& i_particle,
         unsigned int i, 
         const std::string& j_particle,
-        unsigned int j) { return 0; }
+        unsigned int j);
 
     //! get number of states
     unsigned int get_num_states(void) const;
@@ -119,13 +118,13 @@ class EigenvalueProblem : public SimulationInterface
     virtual int get_H_nnz() const { return 0; }
 
     //! The Hamiltonian is returned in eV
-    virtual void get_H_csr(std::vector<Complex>& A, std::vector<int>& JA,
-        std::vector<int>& IA) const {}
+    virtual void get_H_csr(std::vector<libMesh::Complex>& A, std::vector<int>& JA,
+        std::vector<int>& IA) const;
 
-    virtual void get_S_csr(std::vector<Complex>& A, std::vector<int>& JA,
-        std::vector<int>& IA) const {}
+    virtual void get_S_csr(std::vector<libMesh::Complex>& A, std::vector<int>& JA,
+        std::vector<int>& IA) const;
 
-    virtual void print_H(const std::string& outpath) const {}
+    virtual void print_H(const std::string& outpath) const;
 
     //! Return the Hamiltonian Units in eV
     virtual double get_H_units(void) const { return 1.0; }
@@ -136,13 +135,7 @@ class EigenvalueProblem : public SimulationInterface
      */
     const std::vector<eigen_problem_solution>& get_solution(void) const {return _solution;};
 
-    //  ! compares eigenstate energy for electrons needed for sorting
-    //static bool compare_eigen_energy_electrons(const eigen_state& state1, const eigen_state& state2);
-
-    //  ! compares eigenstate energy for holes needed for sorting
-    //static bool compare_eigen_energy_holes(const eigen_state& state1, const eigen_state& state2);
-
-    virtual double get_band_edge(const std::string& band) { return 0; }
+    virtual double get_band_edge(const std::string& band);
 
     virtual unsigned int get_number_of_bands(void) const { return 0; }
 
@@ -179,7 +172,7 @@ class EigenvalueProblem : public SimulationInterface
 
     virtual void do_copy_S_to_solver(void){};  
 
-    virtual void do_assemble(const ModelOptions& options){}; 
+    virtual void do_assemble(const ModelOptions& options); 
 
     virtual void do_plot(void);
 
@@ -228,7 +221,7 @@ class EigenvalueProblem : public SimulationInterface
         DofField& density, double& error);
 
     //! Calculate density for the current solution
-    virtual void do_calculate_density_at_k(DofField& density) {};
+    virtual void do_calculate_density_at_k(DofField& density);
 
     //! Get the k-space
     const Kspace* get_kspace(void) const;
@@ -239,24 +232,24 @@ class EigenvalueProblem : public SimulationInterface
         std::vector<std::vector<eigen_problem_solution>>& ordered_solutions);
 
     //! Calculate the scalar product between states a and b
-    Complex scalar_product(const eigen_problem_solution& a,
+    libMesh::Complex scalar_product(const eigen_problem_solution& a,
                            const eigen_problem_solution& b) const;
 
     //! Calculate the scalar product between states a and b
-    Complex scalar_product(const std::vector<Complex>& a,
-                           const std::vector<Complex>& b) const;
+    libMesh::Complex scalar_product(const std::vector<libMesh::Complex>& a,
+                           const std::vector<libMesh::Complex>& b) const;
 
     //! pointer to the real part of the Hamiltonian
-    SparseMatrix<double>* _H_real;
+    libMesh::SparseMatrix<double>* _H_real;
 
     //! pointer to the imaginary part of the Hamiltonian
-    SparseMatrix<double>* _H_imag;
+    libMesh::SparseMatrix<double>* _H_imag;
 
     //! pointer to the real part of S matrix 
-    SparseMatrix<double>* _S_real;
+    libMesh::SparseMatrix<double>* _S_real;
 
     //! pointer to the real part of S matrix 
-    SparseMatrix<double>* _S_imag;
+    libMesh::SparseMatrix<double>* _S_imag;
 
     //! Stores a general permutation on dofs
     std::vector<ID> _perm;
@@ -280,7 +273,7 @@ class EigenvalueProblem : public SimulationInterface
 
     bool _new_k;
 
-    Mesh* _energy_mesh;
+    libMesh::UnstructuredMesh* _energy_mesh;
 
     //! Already calculated k-points
     KSolutions _ksolutions;
@@ -341,6 +334,15 @@ const Kspace* EigenvalueProblem::get_kspace(void) const
 }
 
 
+inline
+libMesh::Complex
+EigenvalueProblem::calculate_matrix_element(const std::string&,
+        unsigned int, 
+        const std::string&,
+        unsigned int)
+{
+  return 0;
+}
 
 inline
 void EigenvalueProblem::init_permutation(const unsigned int n_dofs)

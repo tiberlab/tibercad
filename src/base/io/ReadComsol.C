@@ -85,13 +85,13 @@ void ReadComsol::read_mesh(istream& in)
   // This is a serial-only process for now;
   // the Mesh should be read on processor 0 and
   // broadcast later
-  libmesh_assert(libMesh::processor_id() == 0);
+  libmesh_assert(libMesh::global_processor_id() == 0);
 
   libmesh_assert(in.good());
 
 
   // clear any data in the mesh
-  MeshBase& mesh = MeshInput<MeshBase>::mesh();
+  libMesh::MeshBase& mesh = MeshInput<libMesh::MeshBase>::mesh();
   mesh.clear();
   _reg_info.clear();
   _bd_regions.clear();
@@ -256,8 +256,8 @@ void ReadComsol::read_mesh(istream& in)
     }
 
 
-    MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
-    const MeshBase::const_element_iterator end = mesh.active_elements_end();
+    libMesh::MeshBase::const_element_iterator       it  = mesh.active_elements_begin();
+    const libMesh::MeshBase::const_element_iterator end = mesh.active_elements_end();
 
     // iterate over all elements and see which boundary element has
     // the same set of nodes as one of the boundary elements previously read
@@ -268,7 +268,7 @@ void ReadComsol::read_mesh(istream& in)
       for (unsigned int s = 0; s < elem->n_sides(); s++)
         //if (elem->neighbor(s) == NULL)
       {
-        AutoPtr<Elem> side (elem->build_side(s));
+        libMesh::UniquePtr<Elem> side (elem->build_side(s));
         set<unsigned int> side_nodes;
         set<unsigned int>::iterator iter = side_nodes.begin();
 

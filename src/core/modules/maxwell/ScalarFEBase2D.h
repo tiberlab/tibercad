@@ -15,9 +15,9 @@ class ScalarFEBase2D : public IScalarFEBase {
   protected:
     void change_coordinate_system();
 
-    virtual void addTriFunctions(const Elem *elem, const std::vector<Point>& pts, int order);
+    virtual void addTriFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order);
 
-    virtual void addQuadFunctions(const Elem *elem, const std::vector<Point>& pts, int order);
+    virtual void addQuadFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, int order);
 
     static const unsigned int THREE = 3; // ^^
 
@@ -25,7 +25,7 @@ class ScalarFEBase2D : public IScalarFEBase {
 
     static const unsigned int DIM = 2;
 
-    virtual void addFunctions(const Elem *elem, const std::vector<Point>& pts, unsigned int order) {
+    virtual void addFunctions(const libMesh::Elem *elem, const std::vector<libMesh::Point>& pts, unsigned int order) {
       if (ElementUtils::getVertecesCount(elem) == THREE) {
         addTriFunctions(elem, pts, order);
       } else {
