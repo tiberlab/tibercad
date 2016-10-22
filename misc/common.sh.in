@@ -171,6 +171,8 @@ if [ "$MKL" = y ]; then
     LDFLAGS="${LDFLAGS} -L${MKLDIR}/lib/32 -Wl,-rpath,${MKLDIR}/lib/32"
     LAPACK_LIBS="${LDFLAGS} -L${MKLDIR}/lib/32 -Wl,-rpath,${MKLDIR}/lib/32"
   fi
+else
+  LAPACK_LIBS=$LAPACKLIBS
 fi
 
 export LAPACKLIBS LDFLAGS LAPACK_LIBS

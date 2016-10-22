@@ -20,8 +20,8 @@ if [ ! -d $BUILDDIR ]; then
 fi
 
 
-ARCHIVE=v${LIBMESHVERSION}.tar.gz
-#ARCHIVE=libmesh-${LIBMESHVERSION}.tar.gz
+#ARCHIVE=v${LIBMESHVERSION}.tar.gz
+ARCHIVE=libmesh-${LIBMESHVERSION}.tar.gz
 
 PATCH=${PWD}/libmesh.patch-${LIBMESHVERSION}
 WINPATCH=${PWD}/libmesh-win.patch
@@ -58,8 +58,8 @@ END
 
 else
   if [ ! -e ${ARCHIVE} ]; then
-    wget -O $ARCHIVE https://github.com/libMesh/libmesh/archive/${ARCHIVE}
-    #wget https://github.com/libMesh/libmesh/releases/download/v${LIBMESHVERSION}/${ARCHIVE}
+    #wget -O $ARCHIVE https://github.com/libMesh/libmesh/releases/download/${ARCHIVE}
+    wget https://github.com/libMesh/libmesh/releases/download/v${LIBMESHVERSION}/${ARCHIVE}
   fi
 fi
 
@@ -137,7 +137,6 @@ export LDFLAGS
 #fi
 
 
-#./configure --enable-petsc --disable-slepc --enable-mpi --disable-complex --disable-periodic ${SHARED} --disable-pfem --enable-static \
 
 ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --enable-static \
  --disable-second --disable-bzip2 --enable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 \
@@ -190,7 +189,7 @@ ${CXX} -shared -o ${SDKDIR}/${TCHOST}/lib/${dll_name} \
   ${libmesh_linker_flags} \
   ${ARCHIVES} \
   -L${SDKDIR}/${TCHOST}/lib -Wl,-rpath,\$ORIGIN -lpetsc_real${dbg} \
-  ${LDFLAGS} ${LAPACK_LIBS} ${FORTRAN_LIBS} -limf
+  ${LDFLAGS} ${LAPACK_LIBS} ${FORTRAN_LIBS}
 
 mkdir -p ${TOPDIR}/${TCHOST}/lib
 cp ${SDKDIR}/${TCHOST}/lib/${dll_name} ${TOPDIR}/${TCHOST}/lib/${dll_name}
