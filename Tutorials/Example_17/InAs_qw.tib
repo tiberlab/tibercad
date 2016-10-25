@@ -5,9 +5,9 @@ Device
   mesh_units = 1e-10
   dimension = 1
 
-  x-growth-direction = (0, 0, 1)
+  x-growth-direction = (1, 0, 0)
   y-growth-direction = (0, 1, 0)
-  z-growth-direction = (1, 0, 0)
+  z-growth-direction = (0, 0, 1)
 
 
   Region QW
@@ -59,11 +59,12 @@ Module driftdiffusion
 
   name = driftdiffusion
   coupling = poisson
+  enforce_local_charge_neutrality = true
 
   #save_state = true
 
 # load existing driftdiffusion solution
-  load_state = dd.tsv
+#  load_state = dd.tsv
 
   plot = (Ec, Ev, eQFermi, hQFermi, ElField , eDensity, hDensity, Polarization)
 
@@ -114,7 +115,6 @@ Module empirical_tb
     guess_conduction = 0.0
     num_valence_eigenvalues = 4
     num_conduction_eigenvalues = 4
-
   }
 
 }
@@ -142,7 +142,7 @@ Module efaschroedinger
 Simulation
 {
   temperature = 1
-  solve = (driftdiffusion,tb)
+  solve = (driftdiffusion, tb)
   resultpath =  output
   output_format = grace
 
