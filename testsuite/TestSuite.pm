@@ -155,7 +155,7 @@ sub cleanup_test_dir($);
 ##
 ## Returns 1 in case of error, 0 otherwise
 ##
-sub compare_results_with_reference($$);
+sub compare_results_with_reference($$$);
 
 
 ##
@@ -383,12 +383,15 @@ sub run_test($) {
 
   my $out = $outdir;
   (defined $opts{"outputdir"}) && ($out = $opts{"outputdir"});
+
+  my $ref = $refdir;
+  (defined $opts{"referencedir"}) && ($ref = $opts{"referencedir"});
  
   my $failure = 0;
   if (not $options{'testonly'}) {
     $failure = run_executable($infile);
   }
-  $failure = compare_results_with_reference(\%checks, $out) unless $failure;
+  $failure = compare_results_with_reference(\%checks, $out, $ref) unless $failure;
 
   chdir($olddir);
 
@@ -431,13 +434,13 @@ sub cleanup_test_dir($) {
 
 
 
-sub compare_results_with_reference($$) {
+sub compare_results_with_reference($$$) {
 
   my $result = 0;
-
   
   my $checks = $_[0];
   my $outputdir = $_[1];
+  my $referencedir = $_[2];
 
   # the number of checks
   my $num_checks = scalar(keys(%$checks));
@@ -446,7 +449,7 @@ sub compare_results_with_reference($$) {
   
   while ( my ($file, $vars) = each(%$checks)) {
     my $datafile = "$outputdir/$file";
-    my $reffile = "$refdir/$file";
+    my $reffile = "$referencedir/$file";
 
     my ($filename, $path, $suffix) = fileparse($file, @known_suffixes);
     if (! length($suffix)) {
@@ -833,6 +836,9 @@ sub read_checks_from_config($$) {
      }
      elsif (/\s*outputdir\s*=([^=]+)/) {
        $opts->{"outputdir"} = trim($1);
+     }
+     elsif (/\s*referencedir\s*=([^=]+)/) {
+       $opts->{"referencedir"} = trim($1);
      }
   }
   close CF;
