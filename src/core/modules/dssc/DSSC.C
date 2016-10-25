@@ -2851,7 +2851,7 @@ DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
   if (jacobian != NULL)
   {
     jacobian->close();
-    jacobian->print_matlab("jac.m");
+    //jacobian->print_matlab("jac.m");
   }
   else
     residual->close();

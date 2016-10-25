@@ -82,8 +82,11 @@ Device qdot
     regions = atomistic 
     reference_region = nside  
 
+    # apply (non-physical) hydrogen passivation at surfaces
     passivation = yes
     print = (gen, xyz, tgn)
+
+    # we can translate the origin, if needed:
     translation = (0.0,  0.8983559, -4.39363) 
   }
 
@@ -130,7 +133,8 @@ Module empirical_tb
   {
 
 
-    load_path = output_tb1 
+    # here we load the results calculated in tb1
+    load_path = output 
    
     num_valence_eigenvalues = 4 # 2 
     num_conduction_eigenvalues = 4 # 2 
@@ -230,14 +234,15 @@ Module opticstb
 
   initial_state_model = tb2
   final_state_model = tb2
-  
-  compute_strengths = true
 
+  # let's not solve tb2 once again
+  skip_solve = true
+  
   plot = (matrix_elements, optical_spectrum_k_0)
   output_format = grace
 
   Emin = 4.25
-  Emax = 4.75
+  Emax = 5.00
   dE = 0.001
 
 }
@@ -251,11 +256,9 @@ Simulation
 {
   temperature = 300
 
-   solve = (str, dd, tb1, tb2) 
+  solve = (str, dd, tb1, tb2, opt) 
 
-#  solve = (str, dd, tb2, opt)
-
-  resultpath = output_tb1 # output_tb2  
+  resultpath = output  
 
  
   output_format = vtk 
