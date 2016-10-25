@@ -104,7 +104,7 @@ Module driftdiffusion
   save_state = true
   # comment this out if you want to perform the 
   # whole voltage sweep
-  #load_state = reference/dd_bias_3.8.tsv
+  load_state = reference/dd_bias_3.8.tsv
 
   Physics
   {
