@@ -163,10 +163,8 @@ Module driftdiffusion
 
   Solver
   {
-    max_iterations = 300
+    max_iterations = 30
     step_tolerance = 1e-3
-#    absolute_tolerance = 1e-2
-#    relative_tolerance = 1e-4
   }
 
 } #end of driftdiffusion
