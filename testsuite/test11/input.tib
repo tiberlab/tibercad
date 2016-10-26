@@ -58,6 +58,7 @@ Module driftdiffusion
 
   name = driftdiffusion
   coupling = poisson
+  enforce_local_charge_neutrality = true
 
   #save_state = true
   load_state = dd.tsv
