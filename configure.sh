@@ -8,7 +8,7 @@ SLEPC_DIR=${BUILDDIR}/slepc-3.6.2
 
 export CXX=mpicxx-3.1.1
 export CC=mpicc-3.1.1
-export FC=mpif90-3.1.1 -fc=ifort-11.1
+export FC="mpif90-3.1.1 -fc=ifort-11.1"
 export F77=${FC}
 #export CXX=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicxx
 #export CC=/usr/pack/tibercad_dev-2.2-ma/${ARCH}-linux/bin/mpicc
