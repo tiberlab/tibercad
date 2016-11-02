@@ -147,8 +147,8 @@ Module driftdiffusion
   coupling = poisson
   integration_order = 2
 
-  #save_state = true 
-  load_state = ./reference/dd.tsv
+  save_state = true 
+  #load_state = ./reference/dd.tsv
 
   Physics
   {
