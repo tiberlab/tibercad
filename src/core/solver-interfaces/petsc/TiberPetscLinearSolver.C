@@ -379,7 +379,7 @@ TiberPetscLinearSolver::setup_monitors(void)
     {
 #if ((PETSC_VERSION_MAJOR == 2) && (PETSC_VERSION_MINOR == 3) \
     && (PETSC_VERSION_SUBMINOR > 2)) || (PETSC_VERSION_MAJOR >= 3)
-      ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, PETSC_NULL, 0);
+      //ierr = KSPMonitorSet(_ksp, KSPMonitorDefault, PETSC_NULL, 0);
 #else
       ierr = KSPSetMonitor(_ksp, KSPDefaultMonitor, PETSC_NULL, 0);
 #endif

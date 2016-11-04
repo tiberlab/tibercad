@@ -114,7 +114,8 @@ extern "C"
 
     libMesh::PetscVector<Number> X_global(x , solver->comm());
     libMesh::PetscVector<Number> R(r , solver->comm());
-    libMesh::PetscVector<Number> X_local(X_global);
+    libMesh::PetscVector<Number> X_local(solver->comm());
+    X_local.init(X_global, true);
 
     // TODO see in libMesh for modifications
 
@@ -155,7 +156,8 @@ extern "C"
     libMesh::PetscMatrix<Number> PC(pc , solver->comm());
     libMesh::PetscMatrix<Number> Jac(jac , solver->comm());
     libMesh::PetscVector<Number> X_global(x , solver->comm());
-    libMesh::PetscVector<Number> X_local(X_global);
+    libMesh::PetscVector<Number> X_local(solver->comm());
+    X_local.init(X_global, true);
 
     // Set the dof maps
     PC.attach_dof_map(sys.get_dof_map());
