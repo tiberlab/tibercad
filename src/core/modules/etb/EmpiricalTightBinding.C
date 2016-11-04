@@ -216,8 +216,8 @@ ETB::do_init(void){
   // We add a second system just to contain the density
   create_equation_system("linear");
   TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(0);
-  linsys.add_variable("edens", libMeshEnums::FIRST);
-  linsys.add_variable("hdens", libMeshEnums::FIRST);
+  linsys.add_variable("edens", libMeshEnums::FIRST, &(this->get_region_ids()));
+  linsys.add_variable("hdens", libMeshEnums::FIRST, &(this->get_region_ids()));
   linsys.init();
 
 }
@@ -520,8 +520,8 @@ void ETB::do_solve(void) {
     Utils::Progress prog("Project densities", get_mesh().n_active_elem());
 
 
-    MeshBase::const_element_iterator el = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator el = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -1565,8 +1565,8 @@ ETB::get_band_edge(const std::string& edge)
 
     vector<double> edges(8,0.0);
 
-    MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator it = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end = this->active_local_elements_end();
 
     for ( ; it != end; ++it)
     { 
@@ -1609,6 +1609,12 @@ ETB::get_band_edge(const std::string& edge)
     }
   }
 
+
+  if (edge == "Ec")
+    this->get_communicator().min(band_edge);
+  else if (edge == "Ev")
+    this->get_communicator().max(band_edge);
+
   return band_edge;
 
 }
@@ -1639,8 +1645,8 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
     vector<double> cb_edges(8,0.0);
     vector<double> vb_edges(8,0.0);
 
-    MeshBase::const_element_iterator it = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator it = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end = this->active_local_elements_end();
 
     for ( ; it != end; ++it)
     { 
@@ -1687,6 +1693,9 @@ ETB::get_band_extrema(double& cb_min, double& vb_max)
     }
 
   }
+
+  this->get_communicator().min(cb_min);
+  this->get_communicator().max(vb_max);
 
   if(cb_min < vb_max)
   {
@@ -2153,19 +2162,21 @@ ETB::setup_atomistic_structure(void)
   string name(get_option("atomistic_structure", ""));
   if (!name.empty())
   {
-    _atomistic_structure = get_environment().get_device().get_atomistic_structure(name);
-    if (_atomistic_structure == NULL)
+    this->set_atomistic_structure(get_environment().get_device().get_atomistic_structure(name));
+    if (get_atomistic_structure() == NULL)
       throw InitFailedException("No atomistic structure \'" + name + "\' found "
           "for simulation \'" + get_name());
 
-    if (!includes_regions(_atomistic_structure->get_IDset())) 
+    if (!includes_regions(get_atomistic_structure()->get_IDset()))
     { 
        Messages::warning("Module will restrict the atomistic structure '"+name+"'");      
        Messages::info("Note: the module will work on a copy of the original structure");      
 
+
+       // TODO Warning: this looks like producing potential memory leakage
        AtomisticStructure* new_as = AtomisticStructure::create(*get_atomistic_structure());
 
-       _atomistic_structure = new_as;
+       set_atomistic_structure(new_as);
     
     }
   }

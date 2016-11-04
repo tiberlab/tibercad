@@ -1012,11 +1012,11 @@ unsigned int EigenvalueProblem::get_num_states(const std::string& particle) cons
   return num_i_states;
 }
 
-std::vector<unsigned int>
+std::vector<ID>
 EigenvalueProblem::get_state_indices(const std::string& particle) const
 {
   unsigned int num = get_num_states(particle);	
-  std::vector<unsigned int> result(num, 0);
+  std::vector<ID> result(num, 0);
 
   unsigned int num_st=0;
   for(unsigned int i=0; i<_solution.size(); i++)

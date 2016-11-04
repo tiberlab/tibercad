@@ -118,6 +118,8 @@ class TBDLLOCAL Thermal : public SimulationInterface
     //! A static pointer to this
     static Thermal* _this;
 
+    //! The maximum temperature calculated
+    double _max_temperature;
 
 
 };

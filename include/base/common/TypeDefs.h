@@ -3,14 +3,18 @@
 #ifndef _TYPEDEFS_H_
 #define _TYPEDEFS_H_
 
+#include "libmesh/id_types.h"
 #include <limits.h>
 
 
 //! A typedef to be used for numerical identifiers
-typedef unsigned int ID;
+/*!
+ * We use the same type as the libMesh subdomain id type
+ */
+typedef libMesh::subdomain_id_type ID;
 
 #ifndef INVALID_ID
-# define INVALID_ID UINT_MAX
+# define INVALID_ID std::numeric_limits<ID>::max()
 #endif
 
 

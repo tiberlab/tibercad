@@ -110,8 +110,6 @@ DirectRecombination::do_reinit(void)
         // for that, we have to loop over all elements
         // TODO this has to be checked for parallel execution
 
-        const SimulationEnvironment& env = sim->get_environment();
-
         data.clear();
         // TODO IntrinsicDensity is currently missing
         ID edens_id = sim->get_solution_id("eDensity");
@@ -129,8 +127,8 @@ DirectRecombination::do_reinit(void)
 
         double tot_rec = 0.0;
 
-        SimulationEnvironment::ConstElemIterator it(env.elements_begin());
-        SimulationEnvironment::ConstElemIterator end(env.elements_end());
+        MeshBase::const_element_iterator it = sim->active_local_elements_begin();
+        const MeshBase::const_element_iterator end = sim->active_local_elements_end();
         for ( ; it != end; ++it)
         {
           const libMesh::Elem* elem = *it;

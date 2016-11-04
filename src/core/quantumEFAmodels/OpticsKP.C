@@ -11,20 +11,19 @@
 #include "Messages.h"
 #include "SimulationOptions.h"
 #include "ModelOptions.h"
-#include "quadrature_gauss.h"
 
-#include <libmesh_common.h>
-#include <equation_systems.h>
-#include <linear_implicit_system.h>
-#include <dense_submatrix.h>
-#include <mesh_generation.h>
-#include <petsc_matrix.h>
-#include <petsc_vector.h>
-#include <quadrature_gauss.h>
+#include <libmesh/libmesh_common.h>
+#include <libmesh/equation_systems.h>
+#include <libmesh/linear_implicit_system.h>
+#include <libmesh/dense_submatrix.h>
+#include <libmesh/mesh_generation.h>
+#include <libmesh/petsc_matrix.h>
+#include <libmesh/petsc_vector.h>
+#include <libmesh/quadrature_gauss.h>
 
 #include <cstdlib>
-#include <petsc_matrix.h>
-#include <petsc_vector.h>
+#include <libmesh/petsc_matrix.h>
+#include <libmesh/petsc_vector.h>
 
 using namespace std;
 using namespace Constants;
@@ -115,7 +114,7 @@ void OpticsKP::do_init()
     string name = var_str.str();
     psi_name.push_back(name);
 
-    system->add_variable(name,FIRST);
+    system->add_variable(name, FIRST, &(this->get_region_ids()));
   }
 
 
@@ -343,8 +342,8 @@ void OpticsKP::do_assemble(const ModelOptions& opts)
   libMesh::DenseSubMatrix<Number> Pz_imag_sub(Pz_imag);
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
   //                                                              //
   // we do not apply neither electric potential nor strain        //
   // because in our model they do not affect optical properties   //

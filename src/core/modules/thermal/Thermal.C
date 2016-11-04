@@ -5,17 +5,18 @@
 #include "ThermalBoundaryModel.h"
 #include "TiberLinearSystem.h"
 #include "Messages.h"
-#include "ModelOptions.h"
-#include "equation_systems.h"
-#include "dof_map.h"
-#include "quadrature_gauss.h"
-#include "sparse_matrix.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
-#include "dense_submatrix.h"
-#include "dense_subvector.h"
 #include "SimulationOptions.h"
-#include "fe_interface.h"
+#include "ModelOptions.h"
+
+#include "libmesh/equation_systems.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/dense_matrix.h"
+#include "libmesh/dense_vector.h"
+#include "libmesh/dense_submatrix.h"
+#include "libmesh/dense_subvector.h"
+#include "libmesh/fe_interface.h"
 
 #include "TiberModule.h"
 
@@ -57,26 +58,27 @@ Thermal::do_init(void)
   TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
 
 
-  system.add_variable("T", libMesh::FIRST);
+  system.add_variable("T", libMesh::FIRST, &(this->get_region_ids()));
   system.attach_assemble_function(assemble);
   system.init();
 
 
   //Create node connection
   const unsigned int nn  = get_mesh().n_nodes();
-  node_conn.resize(nn);
+  node_conn.resize(0);
+  node_conn.resize(nn, 0);
   {
     vector<unsigned short int> node_conn_local(node_conn.size());
 
 
-    MeshBase::const_element_iterator       el     = get_mesh().active_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_elements_end();
+    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
     for ( ; el != end_el; ++el)
       for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
-	node_conn_local[(*el)->node(n)]++;
+	node_conn[(*el)->node(n)]++;
 
-    node_conn = node_conn_local;
+    this->get_communicator().sum(node_conn);
   }
 
 }
@@ -150,8 +152,8 @@ Thermal::compute_power_dissipated()
   double power_dissipated = 0.0;
  
 
-  MeshBase::const_element_iterator       it     = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+  MeshBase::const_element_iterator       it  = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end = this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -185,8 +187,9 @@ Thermal::compute_power_dissipated()
     
   }
 
-  return power_dissipated;
+  this->get_communicator().sum(power_dissipated);
 
+  return(power_dissipated);
 }
 
 double
@@ -220,8 +223,8 @@ Thermal::compute_power_emitted()
   const std::vector<Real>& JxW_face = fe_face->get_JxW();
   const std::vector<Point>& normal = fe_face->get_normals();
 
-  MeshBase::const_element_iterator       it     = get_mesh().active_elements_begin();
-  const MeshBase::const_element_iterator end = get_mesh().active_elements_end();
+  MeshBase::const_element_iterator       it  = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end = this->active_local_elements_end();
 
   Real total_heat_source = 0.0;
   for ( ; it != end; ++it)
@@ -244,9 +247,9 @@ Thermal::compute_power_emitted()
  
   }
 
+  this->get_communicator().sum(total_heat_source);
 
-  return  total_heat_source;
-
+  return(total_heat_source);
 }
 
 
@@ -264,9 +267,11 @@ Thermal::do_solve(void)
   system.solve();
 
   const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
-  double Tmax = solution.linfty_norm();
+  _max_temperature = solution.linfty_norm();
+  this->get_communicator().max(_max_temperature);
+
   ostringstream os;
-  os << "Maximum temperature : " << Tmax << " K";
+  os << "Maximum temperature : " << _max_temperature << " K";
   Messages::info(os.str());
 }
 
@@ -303,9 +308,7 @@ Thermal::get_solution_secure(std::map<ID, std::vector<double> >& values)
 {
   if (values.count(MaxTemp))
   {
-    TiberLinearSystem& system = get_equation_system<TiberLinearSystem>();
-    double Tmax =  system.get_solution_vector().linfty_norm();
-    values[MaxTemp] = std::vector<double>(1, Tmax);
+    values[MaxTemp] = std::vector<double>(1, _max_temperature);
   }
 }
 
@@ -438,8 +441,8 @@ Thermal::do_assemble(libMesh::EquationSystems& es, const std::string& system_nam
    libMesh::DenseMatrix<Number> Ke;
    libMesh::DenseVector<Number> Fe;
 
-  MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
    for ( ; el != end_el ; ++el)
    {
 

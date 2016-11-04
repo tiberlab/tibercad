@@ -74,9 +74,9 @@ Elasticity::do_init(void)
 
   Device*  _device = &get_environment().get_device();
   
-  system.add_variable("ux", FIRST);
-  system.add_variable("uy", FIRST);
-  system.add_variable("uz", FIRST);
+  system.add_variable("ux", FIRST, &(get_environment().get_region_ids()));
+  system.add_variable("uy", FIRST, &(get_environment().get_region_ids()));
+  system.add_variable("uz", FIRST, &(get_environment().get_region_ids()));
 
   uvar.resize(3);
   uvar[0] =  system.variable_number("ux");
@@ -96,8 +96,8 @@ Elasticity::do_init(void)
     vector<unsigned short int> node_conn_local(node_conn.size());
     
     
-    MeshBase::const_element_iterator       el     = get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
+    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     
     for ( ; el != end_el; ++el, ++n_elem)
       for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
@@ -293,8 +293,8 @@ Elasticity::accumulate_strain(void)
   const vector<vector<libMesh::RealGradient> >& dphi = fe->get_dphi();
 
 
-  MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
@@ -588,8 +588,8 @@ Elasticity::compute_elastic_energy(void)
   const vector<Real>& JxW = fe->get_JxW();
 
   //Start assembling
-  MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   Real energy(0);
   for ( ; el != end_el ; ++el)
@@ -681,8 +681,8 @@ Elasticity::do_assemble(libMesh::EquationSystems& es, const std::string& system_
 
 
   //Start assembling
-  MeshBase::const_element_iterator       el     = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh.active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
   for ( ; el != end_el ; ++el)
   {
     const libMesh::Elem* elem = *el;

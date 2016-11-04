@@ -141,7 +141,7 @@ BoundaryRegions::clear(void)
 
 
 void
-BoundaryRegions::get_bc_node_map(std::map<unsigned int, std::vector<ID> >& nodemap) const
+BoundaryRegions::get_bc_node_map(std::map<ID, std::vector<ID> >& nodemap) const
 {
   ElemSideMap::const_iterator it(_sides.begin());
   for ( ; it != _sides.end(); ++it)

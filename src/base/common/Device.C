@@ -19,11 +19,12 @@
 #include "QuantumContact.h"
 #include "ExternalProfile.h"
 
-#include "gmsh_io.h"
-#include "equation_systems.h"
-#include "mesh.h"
-#include "unstructured_mesh.h"
-#include "elem.h"
+#include "libmesh/gmsh_io.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/mesh.h"
+#include "libmesh/unstructured_mesh.h"
+#include "libmesh/elem.h"
+
 #include "Messages.h"
 
 #include <iostream>
@@ -265,7 +266,7 @@ Device::setup_mesh(void)
 
   // TODO only for now (back compatibility)
   delete _boundary_nodes;
-  _boundary_nodes = new map<unsigned int, vector<ID> >();
+  _boundary_nodes = new map<ID, vector<ID> >();
   _bd_regions->get_bc_node_map(*_boundary_nodes);
 
 

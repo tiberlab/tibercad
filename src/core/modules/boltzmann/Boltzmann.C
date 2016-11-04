@@ -7,22 +7,23 @@
 #include "Messages.h"
 #include "ModelOptions.h"
 #include "SimulationOptions.h"
-#include "equation_systems.h"
-#include "dof_map.h"
-#include "quadrature_gauss.h"
-#include "sparse_matrix.h"
-#include "dense_matrix.h"
-#include "dense_vector.h"
-#include "dense_submatrix.h"
-#include "dense_subvector.h"
-#include "SimulationOptions.h"
-#include "fe_interface.h"
+#include "libmesh/equation_systems.h"
+#include "libmesh/dof_map.h"
+#include "libmesh/quadrature_gauss.h"
+#include "libmesh/sparse_matrix.h"
+#include "libmesh/dense_matrix.h"
+#include "libmesh/dense_vector.h"
+#include "libmesh/dense_submatrix.h"
+#include "libmesh/dense_subvector.h"
+#include "libmesh/fe_interface.h"
+#include "libmesh/id_types.h"
 
 #include "TiberModule.h"
 
 
 
 using namespace std;
+using namespace libMesh;
 
 
 Boltzmann*
@@ -730,7 +731,7 @@ Boltzmann::solve_boltzmann(void)
 
     const Elem* elem = *el;
 
-    std::vector<std::vector<ID> > dof_indices(AngInt.n_slices);
+    std::vector<std::vector<dof_id_type> > dof_indices(AngInt.n_slices);
 
     double temperature = 0.0;
     for (unsigned int i = 0; i< AngInt.n_slices ; i++)
@@ -2384,11 +2385,11 @@ Boltzmann::do_assemble_boltzmann(libMesh::EquationSystems& es, const std::string
       F[i] = new libMesh::DenseSubVector<Number> (Fe) ;
     }
     //----------------------------------------------------------
-    std::vector< std::vector<ID> > dof_indices_vec(AngInt.n_slices);
+    std::vector< std::vector<dof_id_type> > dof_indices_vec(AngInt.n_slices);
 
 
-    std::vector<ID> n_dofs_vec(AngInt.n_slices);
-    std::vector<ID> dof_indices_n;
+    std::vector<dof_id_type> n_dofs_vec(AngInt.n_slices);
+    std::vector<dof_id_type> dof_indices_n;
     SimulationEnvironment& se = get_environment();
     //Start assembling
     MeshBase::const_element_iterator       el     = mesh.active_elements_begin();
@@ -2407,7 +2408,7 @@ Boltzmann::do_assemble_boltzmann(libMesh::EquationSystems& es, const std::string
 
       //Include close elements
 
-      std::vector<ID> dof_indices;
+      std::vector<dof_id_type> dof_indices;
       ID neighbor = elem->n_neighbors();
       for (ID n = 0; n < neighbor; n ++)
       {
@@ -2433,7 +2434,7 @@ Boltzmann::do_assemble_boltzmann(libMesh::EquationSystems& es, const std::string
 
       //Compute size
 
-      const ID n_dofs = dof_indices.size();
+      const unsigned int n_dofs = dof_indices.size();
       for (ID k= 0;k<AngInt.n_slices; k++)
         n_dofs_vec[k] = dof_indices_vec[k].size();
 
@@ -2573,7 +2574,7 @@ Boltzmann::do_assemble_gray(libMesh::EquationSystems& es, const std::string& sys
    const vector<vector<libMesh::RealGradient> >& dphi_face = fe->get_dphi();
    const vector<Point>& normal = fe_face->get_normals();
 
-   vector<unsigned int> dof_indices;
+   vector<dof_id_type> dof_indices;
 
    libMesh::DenseMatrix<Number> Ke;
    libMesh::DenseVector<Number> Fe;

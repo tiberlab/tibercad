@@ -267,7 +267,7 @@ Negf::init_efa_hamil(void)
 
   // get the number of subbands.
    const MeshBase& mesh = get_mesh();
-   MeshBase::const_element_iterator el = mesh.active_elements_begin();
+   MeshBase::const_element_iterator el = this->active_local_elements_begin();
    const Elem* elem = *el;
 
   unsigned int n_bands;

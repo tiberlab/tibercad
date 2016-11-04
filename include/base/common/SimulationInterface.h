@@ -21,8 +21,9 @@
 
 
 // LibMesh includes
-#include "numeric_vector.h"
-#include "parallel.h"
+#include "libmesh/mesh_base.h"
+#include "libmesh/numeric_vector.h"
+#include "libmesh/parallel.h"
 
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
@@ -616,6 +617,19 @@ class SimulationInterface : public TiberModelObject
     libMesh::MeshBase& get_mesh(void) const;
 
 
+    //! Get the const iterator for the models active local elements
+    libMesh::MeshBase::const_element_iterator active_local_elements_begin(void) const;
+
+    //! Get the past-the-end const iterator for the models active local elements
+    libMesh::MeshBase::const_element_iterator active_local_elements_end(void) const;
+
+
+    //! Get the const iterator for the models active local elements
+    libMesh::MeshBase::element_iterator active_local_elements_begin(void);
+
+    //! Get the past-the-end const iterator for the models active local elements
+    libMesh::MeshBase::element_iterator active_local_elements_end(void);
+
     //! Get the mesh units (in meters)
     double get_mesh_units(void) const;
 
@@ -673,13 +687,6 @@ class SimulationInterface : public TiberModelObject
     //! Create a bulk physical model to be used with this simulation
     PhysicalModel* new_bulk_model(const ModelOptions& options,
         const Material* material);
-
-
-    //! Create a boundary model to be used with this simulation
-    /*!
-     * deprecated the use of BoundaryProperties is obsolete
-     */
-    //BoundaryProperties* new_boundary_model(const ModelOptions& options);
 
 
     //! Create a boundary model to be used with this simulation
@@ -790,6 +797,12 @@ class SimulationInterface : public TiberModelObject
     //! Get the region IDs
     void get_region_ids(std::set<ID>& region_ids) const;
 
+    //! Get a reference to the region IDs
+    /*!
+     * The set will be empty if no environment is associated
+     */
+    const std::set<ID>& get_region_ids(void) const;
+
 
   protected:
  
@@ -866,6 +879,9 @@ class SimulationInterface : public TiberModelObject
      * do anything with atoms.
      */
     virtual void setup_atomistic_structure(void);
+
+    //! Set the atomistic structure
+    void set_atomistic_structure(AtomisticStructure* structure);
 
 
     //! Setup the available variables
@@ -1372,8 +1388,6 @@ class SimulationInterface : public TiberModelObject
      */
     virtual void do_load_data(std::istream& is);
 
-    //! A pointer to the principal atomistic structure
-    AtomisticStructure* _atomistic_structure;
 
   private:
 
@@ -1502,6 +1516,9 @@ class SimulationInterface : public TiberModelObject
 
     //! A pointer to the simulation mesh
     libMesh::MeshBase* _mesh;
+
+    //! A pointer to the principal atomistic structure
+    AtomisticStructure* _atomistic_structure;
 
 
     //! The associated MPI communicator
@@ -1680,6 +1697,17 @@ SimulationInterface::get_atomistic_structure(void) const
 {
   return _atomistic_structure;
 }
+
+
+
+inline
+void
+SimulationInterface::set_atomistic_structure(AtomisticStructure* structure)
+{
+  _atomistic_structure = structure;
+}
+
+
 
 inline
 const std::vector< std::vector<unsigned int> >& 

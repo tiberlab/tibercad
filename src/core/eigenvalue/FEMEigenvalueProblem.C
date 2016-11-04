@@ -32,8 +32,6 @@ FEMEigenvalueProblem::FEMEigenvalueProblem(const ModelOptions& options)
 
   es = NULL;
 
-  mesh = NULL;
-
   system = NULL;
 
   _hamiltonian_size = 0;
@@ -100,8 +98,8 @@ void FEMEigenvalueProblem::make_constraints(void)
   {
       
 
-    MeshBase::const_element_iterator       elem_it  = mesh->elements_begin();
-    const MeshBase::const_element_iterator elem_end = mesh->elements_end(); 
+    MeshBase::const_element_iterator       elem_it  = get_mesh().elements_begin();
+    const MeshBase::const_element_iterator elem_end = get_mesh().elements_end();
       
     for ( ; elem_it != elem_end; ++elem_it)
       FEInterface::compute_constraints (my_dof_constraints,
@@ -126,8 +124,8 @@ void  FEMEigenvalueProblem::create_dirichlet_dofs( )
 
   DofMap& dof_map = system->get_dof_map();
 
-  MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
+  MeshBase::const_element_iterator it = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  this->active_local_elements_end();
 
   dirichlet_dofs.clear();
 
@@ -172,8 +170,8 @@ void  FEMEigenvalueProblem::create_dirichlet_dofs( )
 //=======================================================================//
 void FEMEigenvalueProblem::apply_dirichlet_at_all_boundaries()
 {
-  MeshBase::const_element_iterator it = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end =  mesh->active_local_elements_end();
+  MeshBase::const_element_iterator it = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end =  this->active_local_elements_end();
  
  
 
@@ -438,8 +436,6 @@ void FEMEigenvalueProblem::parse_options()
   solver_opt.dump_on_file = get_option("dump_HS_on_files",false);
 
   {
-
-    unsigned int dim = get_mesh().mesh_dimension();
     
     solver_opt.st_ksp_type = std::string("bcgsl");
 
@@ -703,7 +699,7 @@ void FEMEigenvalueProblem::apply_periodic_bc()
  
   //dof_map.print_dof_constraints();  
 
-  for (int i = 0; i < mesh->mesh_dimension(); i++) //Loop over all the mesh directions
+  for (int i = 0; i < get_mesh().mesh_dimension(); i++) //Loop over all the mesh directions
     { 
       if  (solver_opt.periodicity[i]) //Check if the periodic b.c. are applied along the direction i
 	
@@ -744,8 +740,8 @@ void FEMEigenvalueProblem::apply_periodic_bc()
 
 		      //the most coarse element first
 		      unsigned int refinement_level = 0; 
-		      MeshBase::const_element_iterator el3  = mesh->active_elements_begin();
-		      MeshBase::const_element_iterator end_el3 = mesh->active_elements_end();
+		      MeshBase::const_element_iterator el3  = this->active_local_elements_begin();
+		      MeshBase::const_element_iterator end_el3 = this->active_local_elements_end();
 		      
 		      const Elem* elem1;
 		      bool found = false; 
@@ -845,9 +841,9 @@ void FEMEigenvalueProblem::make_nodes_periodic()
     
     if (solver_opt.periodicity[dir]) 
     {  
-      for (unsigned int n = 0; n < mesh->n_nodes(); n++) // Loop over all the nodes
+      for (unsigned int n = 0; n < get_mesh().n_nodes(); n++) // Loop over all the nodes
       {
-	const Node* node1 = & (mesh->node(n));
+	const Node* node1 = & (get_mesh().node(n));
 	if (node1->active())
 	{		
 	  if ( std::abs( (*node1)(dir) - min_coord[dir]) < pos_tol)  temp_vec.push_back(node1);

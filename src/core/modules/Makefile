@@ -9,8 +9,9 @@ subdirs += thermal drift-diffusion elasticity
 subdirs += vff negf etb 
 subdirs += polarizationgrid 
 subdirs += imagereader
-subdirs += drift-diffusion_hostguest
-subdirs += excitons2 excitons_ST maxwell maxwellabsorption 
+#subdirs += drift-diffusion_hostguest
+#subdirs += excitons2 excitons_ST
+#subdirs += maxwell maxwellabsorption 
 
 include $(topdir)/Make.common
 

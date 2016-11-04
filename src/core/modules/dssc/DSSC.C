@@ -153,9 +153,9 @@ DSSC::compute_scaling(Scaling::ScalingType type)
 
   // find minimum or maximum by looping over all elements
   MeshBase::const_element_iterator el =
-                                  get_mesh().active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  get_mesh().active_local_elements_end();
+                                  this->active_local_elements_end();
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
@@ -293,9 +293,9 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
 
     // find minimum or maximum by looping over all elements
     MeshBase::const_element_iterator el =
-                                  get_mesh().active_local_elements_begin();
+                                  this->active_local_elements_begin();
     const MeshBase::const_element_iterator end_el =
-                                  get_mesh().active_local_elements_end();
+                                  this->active_local_elements_end();
 
   TiberNonlinearSystem* system = &get_equation_system<TiberNonlinearSystem>();
 
@@ -494,9 +494,9 @@ DSSC::get_OC_values(void)
 
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   // loop over all active elements
   for ( ; el != end_el ; ++el)
@@ -883,11 +883,11 @@ DSSC::rebuild_equation_system(void)
 
   system.attach_assembly_routine(assemble_system);
 
-  system.add_variable("potential", libMeshEnums::FIRST);
-  system.add_variable("fermi_n", libMeshEnums::FIRST);
-  system.add_variable("fermi_I", libMeshEnums::FIRST);
-  system.add_variable("fermi_I3", libMeshEnums::FIRST);
-  system.add_variable("fermi_C", libMeshEnums::FIRST);
+  system.add_variable("potential", libMeshEnums::FIRST, &get_region_ids());
+  system.add_variable("fermi_n", libMeshEnums::FIRST, &get_region_ids());
+  system.add_variable("fermi_I", libMeshEnums::FIRST, &get_region_ids());
+  system.add_variable("fermi_I3", libMeshEnums::FIRST, &get_region_ids());
+  system.add_variable("fermi_C", libMeshEnums::FIRST, &get_region_ids());
 
   system.init();
 
@@ -895,9 +895,9 @@ DSSC::rebuild_equation_system(void)
   Node* n_cat = nullptr;
 
   MeshBase::const_element_iterator el =
-                                  get_mesh().active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  get_mesh().active_local_elements_end();
+                                  this->active_local_elements_end();
 
   // loop over all active elements
   for ( ; (el != end_el) && (n_cat == nullptr) ; ++el)
@@ -988,16 +988,16 @@ DSSC::rebuild_equation_system(void)
     // we will call assemble() by hand, since we need to solve for several rhs
     system_frequency.assemble_before_solve = false;
 
-    system_frequency.add_variable("potential_R", libMeshEnums::FIRST);
-    system_frequency.add_variable("fermi_n_R", libMeshEnums::FIRST);
-    system_frequency.add_variable("fermi_I_R", libMeshEnums::FIRST);
-    system_frequency.add_variable("fermi_I3_R", libMeshEnums::FIRST);
-    system_frequency.add_variable("fermi_C_R", libMeshEnums::FIRST);
-    system_frequency.add_variable("potential_I", libMeshEnums::FIRST);
-    system_frequency.add_variable("fermi_n_I", libMeshEnums::FIRST);
-    system_frequency.add_variable("fermi_I_I", libMeshEnums::FIRST);
-    system_frequency.add_variable("fermi_I3_I", libMeshEnums::FIRST);
-    system_frequency.add_variable("fermi_C_I", libMeshEnums::FIRST);
+    system_frequency.add_variable("potential_R", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("fermi_n_R", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("fermi_I_R", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("fermi_I3_R", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("fermi_C_R", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("potential_I", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("fermi_n_I", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("fermi_I_I", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("fermi_I3_I", libMeshEnums::FIRST, &get_region_ids());
+    system_frequency.add_variable("fermi_C_I", libMeshEnums::FIRST, &get_region_ids());
 
     system_frequency.init();
   }
@@ -1088,8 +1088,8 @@ DSSC::find_dirichlet_nodes(void)
 
   MeshBase& mesh = get_mesh();
   unsigned int dim = mesh.mesh_dimension();
-  MeshBase::element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_local_elements_end();
+  MeshBase::element_iterator it = this->active_local_elements_begin();
+  const MeshBase::element_iterator end = this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -1194,9 +1194,9 @@ DSSC::calculate_currents_rstf(void)
   vector<Boundary*> node_ids;
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
@@ -1393,9 +1393,9 @@ DSSC::build_local_scaling(void)
   local_scaling_.clear();
   {
     MeshBase::const_element_iterator it =
-      mesh.active_local_elements_begin();
+      this->active_local_elements_begin();
     const MeshBase::const_element_iterator end =
-      mesh.active_local_elements_end();
+      this->active_local_elements_end();
 
     for ( ; it != end; ++it)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
@@ -1404,9 +1404,9 @@ DSSC::build_local_scaling(void)
 
 
   MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
+    this->active_local_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end();
+    this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -1575,8 +1575,8 @@ void
 DSSC::find_internal_boundary_nodes(void)
 {
   MeshBase& mesh = get_mesh();
-  MeshBase::element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_local_elements_end();
+  MeshBase::element_iterator it = this->active_local_elements_begin();
+  const MeshBase::element_iterator end = this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -1823,9 +1823,9 @@ DSSC::do_assembly(const libMesh::NumericVector<Number>& x,
   set<unsigned int> inner_boundary_nodes;
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   // loop over all active elements
   for ( ; el != end_el ; ++el)
@@ -3676,9 +3676,9 @@ DSSC::do_assembly_frequency(libMesh::EquationSystems& es, const std::string& sys
   set<unsigned int> inner_boundary_nodes;
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   // loop over all active elements
   for ( ; el != end_el ; ++el)
@@ -4868,9 +4868,9 @@ DSSC::calculate_currents_rstf_EIS(std::map<const Boundary*, double>& curr_R,
   vector<Boundary*> node_ids;
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {

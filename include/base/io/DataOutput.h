@@ -153,6 +153,9 @@ class DataOutput
     //! Get the zone data for zone \c ID
     const DataMap& get_zone_data(ID zone);
 
+    //! Get the zone IDs
+    void get_zone_ids(std::set<ID>& zone_ids) const;
+  
     //! The actual writer
     /*!
      * This needs to be implmented in the actual writer class. If force

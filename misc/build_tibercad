@@ -51,7 +51,6 @@ export LDFLAGS="$LDFLAGS -fopenmp"
   --with-libmesh-prefix=${BUILDDIR}/libmesh-${LIBMESHVERSION}-${TCHOST} \
   --with-libmesh-petsc-libdir=${TOPDIR}/${TCHOST}/lib \
   --with-boost-prefix=${SDKDIR} --with-boost-libdir=${TOPDIR}/${TCHOST}/lib \
-  --with-mkl=${MKLDIR} \
   --host=$HOST --build=$BUILD
 
 #  --with-mkl=${MKLDIR} \

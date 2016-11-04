@@ -209,6 +209,15 @@ DataOutput::get_zone_data(ID zone)
   return *_data[zone];
 }
 
+
+void
+DataOutput::get_zone_ids(std::set<ID>& zone_ids) const
+{
+  for (auto&& it : _data)
+    zone_ids.insert(it.first);
+}
+
+
 void
 DataOutput::write(bool force)
 {

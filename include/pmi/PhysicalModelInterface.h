@@ -280,7 +280,7 @@ class PhysicalModelInterface : public TiberModelObject
     /*!
      * May be reimplemented if necesary
      */
-    virtual void do_reinit(const Elem* elem) {};
+    virtual void do_reinit(const Elem* elem);
 
 
     //! Initialize the model
@@ -903,6 +903,13 @@ PhysicalModelInterface::do_init_interface(const Material*,
     const Material*)
 {
   do_init();
+}
+
+
+inline
+void
+PhysicalModelInterface::do_reinit(const Elem*)
+{
 }
 
 

@@ -84,7 +84,7 @@ public:
    * \param keep_node_order if true, the nodes will be ordered in the same way as the atoms
    */
   void create_conformal_grid(libMesh::UnstructuredMesh& mesh,
-      std::set<unsigned int> labels = std::set<unsigned int>(),
+      std::set<ID> labels = std::set<ID>(),
       bool keep_node_order = false) const;
 
 

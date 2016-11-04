@@ -832,6 +832,14 @@ void
 TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
     map<ID, vector<VTKElem> >& elems)
 {
+  std::set<libMesh::subdomain_id_type> subdomains;
+  std::set<ID> subdomain_ids;
+  this->get_zone_ids(subdomain_ids);
+  for (auto&& id : subdomain_ids)
+  {
+    subdomains.insert(id);
+  }
+
   //if (libMesh::global_processor_id() == 0)
   {
     // # elements in each subdomain
@@ -839,8 +847,8 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
 
     const MeshBase& mesh = get_mesh();
 
-    MeshBase::const_element_iterator it  = mesh.active_elements_begin();
-    MeshBase::const_element_iterator end = mesh.active_elements_end();
+    MeshBase::const_element_iterator it  = mesh.active_local_subdomains_elements_begin(subdomains);
+    MeshBase::const_element_iterator end = mesh.active_local_subdomains_elements_end(subdomains);
 
     for ( ; it != end; ++it)
     {
@@ -856,7 +864,7 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
     // translation table for node IDs
     map<ID, map<ID, unsigned int> > ttable;
 
-    for (it = mesh.active_elements_begin(); it != end; ++it)
+    for (it = mesh.active_local_subdomains_elements_begin(subdomains); it != end; ++it)
     {
       const Elem* elem = *it;
       unsigned int id = elem->subdomain_id();
@@ -880,7 +888,7 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
     }
 
 
-    for (it = mesh.active_elements_begin(); it != end; ++it)
+    for (it = mesh.active_local_subdomains_elements_begin(subdomains); it != end; ++it)
     {
       const Elem* elem = *it;
       unsigned int id = elem->subdomain_id();

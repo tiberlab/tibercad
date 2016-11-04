@@ -385,7 +385,7 @@ void Optics::set_states()
 
   //-------------------------------------------------------------------------------------
   {
-    std::vector<ID> inum = _initial_state_model->get_state_indices(_initial_state_particle);
+    auto inum = _initial_state_model->get_state_indices(_initial_state_particle);
 
     get_option("initial_eigenstates", _initial_indices);
 
@@ -425,7 +425,7 @@ void Optics::set_states()
   _final_indices.clear();
 
   {
-    std::vector<unsigned int> fnum = _final_state_model->get_state_indices(_final_state_particle);
+    auto fnum = _final_state_model->get_state_indices(_final_state_particle);
 
     //for (ID i = 0; i < fnum.size(); i++)
     // {

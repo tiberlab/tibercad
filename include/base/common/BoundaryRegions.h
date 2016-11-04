@@ -201,7 +201,7 @@ class TBDLLOCAL BoundaryRegions : public MeshRegionInfo
     void prepare_for_use(void);
 
 
-    void get_bc_node_map(std::map<unsigned int, std::vector<ID> >& nodemap) const;
+    void get_bc_node_map(std::map<ID, std::vector<ID> >& nodemap) const;
 
 
     //! Get the side iterator for a given set of boundary IDs

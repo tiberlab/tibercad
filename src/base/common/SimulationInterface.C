@@ -38,10 +38,10 @@
 
 
 // LibMesh includes
-#include "system.h"
-#include "elem.h"
-#include "fe_interface.h"
-//#include "elem.h"
+#include "libmesh/system.h"
+#include "libmesh/elem.h"
+#include "libmesh/fe_interface.h"
+//#include "libmesh/elem.h"
 
 #include <sstream>
 #include <algorithm>
@@ -313,9 +313,9 @@ SimulationInterface::find_excluded_dofs(const std::set<ID>& ids,
   const MeshBase& mesh = get_mesh();
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   // loop over all active elements
   for ( ; el != end_el ; ++el)
@@ -539,7 +539,35 @@ SimulationInterface::_get_node_model(const Elem* elem, int node) const
 }
 
 
+libMesh::MeshBase::const_element_iterator
+SimulationInterface::active_local_elements_begin(void) const
+{
+  return(this->get_mesh().active_local_subdomains_elements_begin(
+      this->get_environment().get_region_ids()));
+}
 
+libMesh::MeshBase::const_element_iterator
+SimulationInterface::active_local_elements_end(void) const
+{
+  return(this->get_mesh().active_local_subdomains_elements_end(
+      this->get_environment().get_region_ids()));
+}
+
+
+
+libMesh::MeshBase::element_iterator
+SimulationInterface::active_local_elements_begin(void)
+{
+  return(this->get_mesh().active_local_subdomains_elements_begin(
+      this->get_environment().get_region_ids()));
+}
+
+libMesh::MeshBase::element_iterator
+SimulationInterface::active_local_elements_end(void)
+{
+  return(this->get_mesh().active_local_subdomains_elements_end(
+      this->get_environment().get_region_ids()));
+}
 
 double
 SimulationInterface::get_mesh_units(void) const
@@ -875,6 +903,20 @@ SimulationInterface::get_region_ids(std::set<ID>& region_ids) const
   region_ids.clear();
   if (has_environment())
     region_ids = get_environment().get_region_ids();
+}
+
+
+const std::set<ID>&
+SimulationInterface::get_region_ids(void) const
+{
+  // this is a bit of a quirk, but as long as region ids are in
+  // the environment, I don't know a better way without having to
+  // explicitly call all the time get_environment()
+  static const std::set<ID> empty_set;
+  if (has_environment())
+    return(get_environment().get_region_ids());
+
+  return(empty_set);
 }
 
 
@@ -1234,8 +1276,10 @@ SimulationInterface::plot_meshdata(void)
 
   const MeshBase& mesh = get_mesh();
 
-  MeshBase::const_element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::const_element_iterator end = mesh.active_local_elements_end();
+  // we write only on mesh part associated to this simulation
+
+  MeshBase::const_element_iterator it = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end = this->active_local_elements_end();
   //libMesh::MeshBase::const_element_iterator it = mesh.active_elements_begin();
   //const libMesh::MeshBase::const_element_iterator end = mesh.active_elements_end();
 
@@ -1309,7 +1353,7 @@ SimulationInterface::plot_meshdata(void)
 
 
   //for (it = mesh.active_elements_begin(); it != end; ++it)
-  for (it = mesh.active_local_elements_begin(); it != end; ++it)
+  for (it = this->active_local_elements_begin(); it != end; ++it)
   {
     const Elem* elem = *it;
 

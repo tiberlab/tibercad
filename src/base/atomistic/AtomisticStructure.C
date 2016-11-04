@@ -2177,7 +2177,7 @@ AtomisticStructure::reorder(const std::vector<unsigned int>& P)
 
 void
 AtomisticStructure::create_conformal_grid(libMesh::UnstructuredMesh& mesh,
-    set<unsigned int> labels, bool keep_node_order) const
+    set<ID> labels, bool keep_node_order) const
 {
 #ifdef LIBMESH_HAVE_TETGEN
   Messages::info("Creating FEM mesh conforming with the atomistic structure."

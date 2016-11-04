@@ -468,8 +468,8 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
   }
   else
   {
-    MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
     bool condband = (particle == "el") || (particle == "Ec");
 
@@ -676,8 +676,10 @@ void EnvelopFunctionApprox::parse_options()
 
     // get the bulk point's element
 
-    MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
+    // TODO to be adjusted for parallel
+
+    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
     bool found = false;
 
@@ -797,8 +799,8 @@ void EnvelopFunctionApprox::parse_options()
 
   std::set<const Node*> used_nodes;
 
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
@@ -863,12 +865,9 @@ void EnvelopFunctionApprox::do_print_info(void)
 //===================================================//
 void EnvelopFunctionApprox::do_init( )
 {
-
   FEMEigenvalueProblem::do_init();
 
   es = &(get_equation_systems());
-  
-  mesh = &(es->get_mesh());
   
   system_name = get_equation_system_name ( );
   
@@ -876,8 +875,15 @@ void EnvelopFunctionApprox::do_init( )
   
   system = &( es->get_system<LinearImplicitSystem>( system_name ) );
 
-  dim = mesh->mesh_dimension();
+  dim = get_mesh().mesh_dimension();
 
+//  set<ID> region_ids;
+//  this->get_region_ids(region_ids);
+//  set<unsigned short> reg_ids_s;
+//  for (auto&& it : region_ids)
+//  {
+//    reg_ids_s.insert(static_cast<unsigned short>(it));
+//  }
 
   //--------------------------------------------------------------------------------------------------------//
   //add variables
@@ -891,7 +897,7 @@ void EnvelopFunctionApprox::do_init( )
       string name = var_str.str();
       psi_name.push_back(name);
 
-      system->add_variable(name,FIRST);
+      system->add_variable(name, FIRST, &get_region_ids());
     }
 
   //add matrixes
@@ -929,53 +935,32 @@ void EnvelopFunctionApprox::do_init( )
     max_coord[i] = bbox.second(i);
   }
 
-  /*
-  MeshBase::const_element_iterator       el     = mesh->active_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_elements_end();
-
-  for ( ; el != end_el ; ++el) 
-  {
-    const Elem* elem = *el;
-    short n1 = elem->n_nodes();
-    for (short i1 = 0; i1 < n1 ; i1++)
-    {
-      
-      const Point& p = elem->point(i1);
-      for (unsigned i = 0; i < 3; i++)
-      {
-        if (min_coord[i] > p(i)) min_coord[i] = p(i);
-        if (max_coord[i] < p(i)) max_coord[i] = p(i);
-      }
-      
-    }
-    
-  }
-  */
-  //---------------------------------------------------------------------------------------------------------//
-
 
   Scaling& scaling = get_scaling();
 
   scaling.set_length_scaling(Constants::bohr_radius);
 
   //scaling.set_calc_mesh_units(get_mesh_units());
-
   system->init();
 
-  
   
   // We add a second system just to contain the density
   create_equation_system("linear");
   TiberLinearSystem& linsys = get_equation_system<TiberLinearSystem>(0);
-  linsys.add_variable("edens", libMeshEnums::FIRST);
-  linsys.add_variable("hdens", libMeshEnums::FIRST);
+  linsys.add_variable("edens", libMeshEnums::FIRST,
+                               libMeshEnums::LAGRANGE,
+                               &(this->get_region_ids()));
+  linsys.add_variable("hdens", libMeshEnums::FIRST,
+                               libMeshEnums::LAGRANGE,
+                               &(this->get_region_ids()));
   linsys.init();
   
+
   //------------------------------------------------------------------------------------------------------//
   //kp bands map
   {
-    MeshBase::const_element_iterator  el     = mesh->active_local_elements_begin();
-    MeshBase::const_element_iterator  end_el = mesh->active_local_elements_end();
+    MeshBase::const_element_iterator  el     = this->active_local_elements_begin();
+    MeshBase::const_element_iterator  end_el = this->active_local_elements_end();
 
     if (el != end_el)
     {
@@ -1016,7 +1001,6 @@ void EnvelopFunctionApprox::do_init( )
   // Initialize identity permutation: does not have constrained dofs 
   //if (solver_opt.Dirichlet_bc_everywhere)
   EigenvalueProblem::init_permutation(dof_map.n_dofs());
-
 }
 
 
@@ -1222,8 +1206,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       scale *= Constants::bohr_radius * 1e9;
     scale = 1.0 / scale;
 
-    MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     for ( ; el != end_el ; ++el)
     {
       const Elem* elem = *el;
@@ -1250,8 +1234,8 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
   }
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   double electric_potential = 0;
 
@@ -2003,8 +1987,8 @@ EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
   std::vector<unsigned int> dof_indices;
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   Complex sum(0.0, 0.0);
 
@@ -2143,8 +2127,8 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
   std::vector<unsigned int> dof_indices;
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   Complex temp(0.0, 0.0);
   Complex eigen_f_value1, eigen_f_value2;
@@ -2250,8 +2234,8 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
    std::vector<unsigned int> dof_indices;
 
 
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
 
   Complex eigen_f_value1;
@@ -2365,8 +2349,8 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
     //----------------------------------------------------//
 
 
-    MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+    MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
 
     Complex eigen_f_value1;
@@ -2600,8 +2584,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
   // we need the connectivity of the nodes to not double count
   vector<int> connectivity(qdens.size(), 0.0);
   {
-    MeshBase::const_element_iterator el = get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
+    MeshBase::const_element_iterator el = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -2664,8 +2648,8 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     if (_solution[i].particle == "hl")
       particletype = 1;
 
-    MeshBase::const_element_iterator el = get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
+    MeshBase::const_element_iterator el = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -2718,8 +2702,8 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
   // we need the connectivity of the nodes to not double count
   vector<int> connectivity(qdens.size(), 0.0);
   {
-    MeshBase::const_element_iterator el = get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
+    MeshBase::const_element_iterator el = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -2781,8 +2765,8 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
     double dos_factor = Fermi_statistics_probability(energy, fermi_energy,
         _solution[i].temperature, _solution[i].particle);
 
-    MeshBase::const_element_iterator el = get_mesh().active_local_elements_begin();
-    const MeshBase::const_element_iterator end_el = get_mesh().active_local_elements_end();
+    MeshBase::const_element_iterator el = this->active_local_elements_begin();
+    const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
     for ( ; el != end_el; ++el)
     {
       const Elem* elem = *el;
@@ -2812,8 +2796,8 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
 unsigned int EnvelopFunctionApprox::get_number_of_active_cells()
 {
   unsigned int result = 0;
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
     result++;
@@ -2833,12 +2817,15 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
   // let -1 indicate absence of the model
   short result = -1;
 
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
+  MeshBase::const_element_iterator       el     = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
+
+    if (!this->get_environment().contains_region(elem->subdomain_id()))
+      continue;
 
     EFAbulkHamiltonian* element_hamiltonian = get_bulk_model<EFAbulkModel>(elem)->get_Hamiltonian_model();
 
@@ -2893,28 +2880,6 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
 void EnvelopFunctionApprox::solve_bulk(void)
 {
-  /*
-  MeshBase::const_element_iterator       el     = mesh->active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el = mesh->active_local_elements_end();
-
-  bool found = false;
-  const Elem* mat_elem;
-
-  for ( ; (el != end_el) && (!found) ; ++el)
-  {
-    const Elem* elem = *el;
-    if (elem->contains_point(_bulk_point))
-    {
-      found = true;
-      mat_elem = elem;
-      _bulk_mat_element = mat_elem;
-      break;
-    }
-
-  }
-
-  if (!found) throw SolveFailedException("Bad material point\n");
-  */
 
   Point qp = _bulk_mat_element->centroid();
 

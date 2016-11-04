@@ -27,40 +27,10 @@ PATCH=${PWD}/libmesh.patch-${LIBMESHVERSION}
 WINPATCH=${PWD}/libmesh-win.patch
 
 cd $BUILDDIR
-if [ ${LIBMESHVERSION} == "svn" ]; then
-  if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
-    echo "svn version of libmesh is not available anymore"
-    exit
-  fi
-    
-      cat > libmesh-${LIBMESHVERSION}-${TCHOST}/m4/check_file.m4 <<END
-# AC_CHECK_FILE(FILE, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])
-# -------------------------------------------------------------
-#
-# Check for the existence of FILE.
-AC_DEFUN([AC_CHECK_FILE],
-[AC_DIAGNOSE([cross],
-	     [cannot check for file existence when cross compiling])dnl
-AS_VAR_PUSHDEF([ac_File], [ac_cv_file_$1])dnl
-AC_CACHE_CHECK([for $1], [ac_File],
-[test "$cross_compiling" = yes &&
-  AC_MSG_WARN([cannot check for file existence when cross compiling])
-if test -r "$1"; then
-  AS_VAR_SET([ac_File], [yes])
-else
-  AS_VAR_SET([ac_File], [no])
-fi])
-AS_IF([test AS_VAR_GET([ac_File]) = yes], [$2], [$3])[]dnl
-AS_VAR_POPDEF([ac_File])dnl
-])# AC_CHECK_FILE
 
-END
-
-else
-  if [ ! -e ${ARCHIVE} ]; then
-    #wget -O $ARCHIVE https://github.com/libMesh/libmesh/releases/download/${ARCHIVE}
-    wget https://github.com/libMesh/libmesh/releases/download/v${LIBMESHVERSION}/${ARCHIVE}
-  fi
+if [ ! -e ${ARCHIVE} ]; then
+  #wget -O $ARCHIVE https://github.com/libMesh/libmesh/releases/download/${ARCHIVE}
+  wget https://github.com/libMesh/libmesh/releases/download/v${LIBMESHVERSION}/${ARCHIVE}
 fi
 
 if [ ! -d libmesh-${LIBMESHVERSION}-$TCHOST ]; then
@@ -83,7 +53,6 @@ fi
 
 #cd libmesh-${LIBMESHVERSION}-${TCHOST}/libmesh
 cd libmesh-${LIBMESHVERSION}-${TCHOST}
-pwd
 
 # we have modifications to the configuration
 #aclocal -I m4
@@ -98,12 +67,6 @@ export PETSC_ARCH=${TCHOST}
 #export CXX=${PETSC_DIR}/externalpackages/mpich2-1.0.8/bin/mpicxx
 #LDFLAGS="${LDFLAGS} -L${PETSC_DIR}/${TCHOST}/lib"
 
-# let's always compile the static version, and do the shared lib ourselves
-#SHARED=--enable-shared
-#if [ $shared_libs == 'n' ]
-#then
-#  SHARED=--disable-shared
-#fi
 SHARED=--enable-shared
 if [ "${target_os}" = win32 ]
 then
@@ -137,14 +100,16 @@ export LDFLAGS
 #fi
 
 
+export METHODS=devel
 
 ./configure --enable-petsc --disable-slepc --disable-complex --disable-periodic ${SHARED} --disable-pfem --enable-static \
- --disable-second --disable-bzip2 --enable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 \
+ --disable-second --enable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 \
  --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv \
  --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
+ --with-subdomain-id-bytes=2
  --disable-openmp \
  --with-fparser=none \
- --with-methods="devel" \
+ --with-methods=devel \
  --host=$HOST --build=$BUILD
 
 

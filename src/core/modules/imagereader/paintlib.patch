@@ -345,3 +345,14 @@ diff -r -u ./common/test/pltestdecoders.cpp ../paintlib-2.6.2-new/common/test/pl
                JOCTET * pData,
                int FileSize,
                PLDataSink * pDataSrc
+--- common/plpicdec.cpp.orig	2016-10-22 14:00:51.347298271 +0200
++++ common/plpicdec.cpp	2016-10-22 14:02:59.299341609 +0200
+@@ -433,7 +433,7 @@
+       FILE * pFile = fopen (m_pszTraceFName, "a+t");
+       if (pFile != (FILE *)0)
+       {
+-        fprintf (pFile, pszMessage);
++        fputs (pszMessage, pFile);
+         fclose (pFile);
+       }
+       else

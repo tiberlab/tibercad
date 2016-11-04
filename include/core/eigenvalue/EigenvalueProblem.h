@@ -96,7 +96,7 @@ class EigenvalueProblem : public SimulationInterface
     unsigned int get_num_states(const std::string& particle) const;
 
     //! get states indeces of a given particle type
-    std::vector<unsigned int> get_state_indices(const std::string& particle) const;
+    std::vector<ID> get_state_indices(const std::string& particle) const;
 
 
     /* Note: for the moment calculate_matrix_element relays on the fact that the first
@@ -252,8 +252,8 @@ class EigenvalueProblem : public SimulationInterface
     libMesh::SparseMatrix<double>* _S_imag;
 
     //! Stores a general permutation on dofs
-    std::vector<ID> _perm;
-    std::vector<ID> _inv_perm;
+    std::vector<libMesh::dof_id_type> _perm;
+    std::vector<libMesh::dof_id_type> _inv_perm;
 
     //! bool do_dispersion;
     std::vector< std::vector<double> > _dispersion;

@@ -364,7 +364,7 @@ SimulationEnvironment::prepare_for_solve(void)
 
   MeshBase::element_iterator it = mesh.elements_begin();
   const MeshBase::element_iterator end = mesh.elements_end();
-
+/*
   for ( ; it != end; ++it)
   {
     Elem* el = *it;
@@ -374,7 +374,7 @@ SimulationEnvironment::prepare_for_solve(void)
     else
       el->set_refinement_flag(Elem::INACTIVE);
   }
-
+*/
   invalidate_all();
 
   _is_prepared = true;

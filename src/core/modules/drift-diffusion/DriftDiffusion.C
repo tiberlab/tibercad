@@ -179,10 +179,8 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   double eps0 = -1;
 
   // find minimum or maximum by looping over all elements
-  MeshBase::const_element_iterator el =
-                                  get_mesh().active_local_elements_begin();
-  const MeshBase::const_element_iterator end_el =
-                                  get_mesh().active_local_elements_end();
+  MeshBase::const_element_iterator el = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator end_el = this->active_local_elements_end();
   for ( ; el != end_el ; ++el)
   {
     const Elem* elem = *el;
@@ -272,8 +270,8 @@ DriftDiffusion::set_electron_fermi_level(double Ef_n)
   double level = Ef_n / phi0;
 
   MeshBase& mesh = get_mesh();
-  MeshBase::element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_local_elements_end();
+  MeshBase::element_iterator it = this->active_local_elements_begin();
+  const MeshBase::element_iterator end = this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -302,8 +300,8 @@ DriftDiffusion::set_hole_fermi_level(double Ef_p)
   double level = Ef_p / phi0;
 
   MeshBase& mesh = get_mesh();
-  MeshBase::element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_local_elements_end();
+  MeshBase::element_iterator it = this->active_local_elements_begin();
+  const MeshBase::element_iterator end = this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -332,8 +330,8 @@ DriftDiffusion::set_electric_potential(double pot)
   double level = -pot / phi0;
 
   MeshBase& mesh = get_mesh();
-  MeshBase::element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_local_elements_end();
+  MeshBase::element_iterator it = this->active_local_elements_begin();
+  const MeshBase::element_iterator end = this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -354,8 +352,8 @@ void
 DriftDiffusion::find_dielectric_boundary_nodes(void)
 {
   MeshBase& mesh = get_mesh();
-  MeshBase::element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_local_elements_end();
+  MeshBase::element_iterator it = this->active_local_elements_begin();
+  const MeshBase::element_iterator end = this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -626,8 +624,8 @@ DriftDiffusion::calculate_weights(void)
   const double C0 = get_scaling().get_density_scaling();
 
   MeshBase& mesh = get_mesh();
-  MeshBase::element_iterator it = mesh.active_local_elements_begin();
-  const MeshBase::element_iterator end = mesh.active_local_elements_end();
+  MeshBase::element_iterator it = this->active_local_elements_begin();
+  const MeshBase::element_iterator end = this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -839,7 +837,7 @@ DriftDiffusion::calculate_iqe(void)
 {
   _iqe = 0;
 
-  set<ID> active_regs = get_environment().get_region_ids();
+  set<ID> active_regs = get_region_ids();
   bool recomb_only = false;
 
   ModelOptions::submodel_iterator opts(get_options().submodels_begin("iqe"));
@@ -926,9 +924,9 @@ DriftDiffusion::calculate_iqe(void)
 
 
   MeshBase::const_element_iterator el =
-      get_mesh().active_local_elements_begin();
+      this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-      get_mesh().active_local_elements_end();
+      this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
@@ -1056,9 +1054,9 @@ DriftDiffusion::guess_equilibrium(void)
   //solution_u.zero();
 
   MeshBase::const_element_iterator el =
-                                  get_mesh().active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  get_mesh().active_local_elements_end();
+                                  this->active_local_elements_end();
 
   const double phi0 = get_scaling().get_potential_scaling();
 
@@ -1068,9 +1066,9 @@ DriftDiffusion::guess_equilibrium(void)
   // compute the average value at each node.
   {
     MeshBase::const_element_iterator it =
-      get_mesh().active_local_elements_begin();
+      this->active_local_elements_begin();
     const MeshBase::const_element_iterator end =
-      get_mesh().active_local_elements_end();
+      this->active_local_elements_end();
 
     for ( ; it != end; ++it)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
@@ -1307,9 +1305,9 @@ DriftDiffusion::rebuild_equation_system(void)
   system.attach_assembly_routine(assemble_system);
 
 
-  system.add_variable("potential", libMeshEnums::FIRST);
-  system.add_variable("fermi_e", libMeshEnums::FIRST);
-  system.add_variable("fermi_h", libMeshEnums::FIRST);
+  system.add_variable("potential", libMeshEnums::FIRST, &get_region_ids());
+  system.add_variable("fermi_e", libMeshEnums::FIRST, &get_region_ids());
+  system.add_variable("fermi_h", libMeshEnums::FIRST, &get_region_ids());
 
   system.add_vector("old_sol", true, GHOSTED);
   //system.add_vector("weight");
@@ -1340,7 +1338,7 @@ DriftDiffusion::RSTFSys::create(DriftDiffusion* dd)
 
   sys->_dd = dd;
 
-  sys->add_variable("u", libMeshEnums::FIRST);
+  sys->add_variable("u", libMeshEnums::FIRST, &dd->get_region_ids());
   // for each contact, we add a vector for the Ramo-Shockley test function
   ContactData::iterator it = dd->_boundary_currents.begin();
   for (int i = 0 ; it != dd->_boundary_currents.end(); ++it, ++i)
@@ -1446,8 +1444,8 @@ DriftDiffusion::RSTFSys::user_assembly(void)
 
   const double penalty = 1e6;
 
-  MeshBase::const_element_iterator el(mesh.active_local_elements_begin());
-  const MeshBase::const_element_iterator end_el(mesh.active_local_elements_end());
+  MeshBase::const_element_iterator el(_dd->active_local_elements_begin());
+  const MeshBase::const_element_iterator end_el(_dd->active_local_elements_end());
 
   for ( ; el != end_el ; ++el)
   {
@@ -1552,6 +1550,7 @@ DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
   //const unsigned int var = variable_number("u");
   const MeshBase& mesh = get_mesh();
 
+  // TODO this iterators would not work on subdomains
   MeshBase::const_node_iterator       nd     = mesh.active_nodes_begin();
   const MeshBase::const_node_iterator nd_end = mesh.active_nodes_end();
 
@@ -1560,9 +1559,9 @@ DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
 
   results.resize(number_of_points * _boundaries.size(), 0.0);
 
-  MeshBase::const_element_iterator it(mesh.active_local_elements_begin());
+  MeshBase::const_element_iterator it(_dd->active_local_elements_begin());
   const MeshBase::const_element_iterator
-    end(mesh.active_local_elements_end());
+    end(_dd->active_local_elements_end());
 
   vector<unsigned int> dof_indices;
   libMesh::DofMap& dof_map = get_dof_map();
@@ -1592,15 +1591,6 @@ DriftDiffusion::prepare_rstf(void)
   _rstf = RSTFSys::create(this);
   _rstf->init();
   _rstf->solve();
-
-  /*
-  create_equation_system("linear");
-  TiberLinearSystem& system = get_equation_system<TiberLinearSystem>(1);
-
-  system.attach_assemble_function(assemble_laplace);
-
-  system.add_variable("u", libMeshEnums::FIRST);
-  */
 
   _rstf->matrix->clear();
 }
@@ -2414,9 +2404,9 @@ DriftDiffusion::calculate_mean_fermi_levels(void)
   BoundaryElementMap::iterator bel(env.boundary_elements_begin());
   const BoundaryElementMap::iterator bend(env.boundary_elements_end());
   //MeshBase::const_element_iterator el =
-  //                                mesh.active_local_elements_begin();
+  //                                this->active_local_elements_begin();
   //const MeshBase::const_element_iterator end_el =
-  //                                mesh.active_local_elements_end();
+  //                                this->active_local_elements_end();
 
   // loop over all active elements
   for ( ; bel != bend ; ++bel)
@@ -2616,8 +2606,8 @@ DriftDiffusion::calculate_currents_rstf_global(void)
 
   vector<unsigned int> dof_indices_rstf;
 
-  MeshBase::const_element_iterator el(mesh.active_local_elements_begin());
-  const MeshBase::const_element_iterator end_el(mesh.active_local_elements_end());
+  MeshBase::const_element_iterator el(this->active_local_elements_begin());
+  const MeshBase::const_element_iterator end_el(this->active_local_elements_end());
 
   for ( ; el != end_el ; ++el)
   {
@@ -3028,9 +3018,9 @@ DriftDiffusion::calculate_field_emission(void)
 
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
@@ -3444,9 +3434,9 @@ DriftDiffusion::calculate_surface_recombination(void)
   //BoundaryElementMap::iterator el(env.boundary_elements_begin());
   //BoundaryElementMap::iterator end_el(env.boundary_elements_end());
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   for ( ; el != end_el ; ++el)
   {
@@ -3661,9 +3651,9 @@ DriftDiffusion::build_local_scaling(void)
 
 
   MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
+    this->active_local_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end();
+    this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
@@ -4062,7 +4052,7 @@ void
 DriftDiffusion::assemble_system(const libMesh::NumericVector<Number>& x,
     libMesh::NumericVector<Number>* residual,
     libMesh::SparseMatrix<Number>* jacobian,
-   libMesh::NonlinearImplicitSystem& sys)
+    libMesh::NonlinearImplicitSystem&)
 {
 
   switch (_this->_options.coupling)
@@ -4273,9 +4263,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
   MeshBase::const_element_iterator el =
-                                  mesh.active_local_elements_begin();
+                                  this->active_local_elements_begin();
   const MeshBase::const_element_iterator end_el =
-                                  mesh.active_local_elements_end();
+                                  this->active_local_elements_end();
 
   // loop over all active elements
   for ( ; el != end_el ; ++el)
@@ -5226,8 +5216,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     Pe.zero();
 
     unsigned int sysnum = system.get_libmesh_system()->number();
-    MeshBase::const_node_iterator nit(mesh.active_nodes_begin());
-    const MeshBase::const_node_iterator nend(mesh.active_nodes_end());
+    MeshBase::const_node_iterator nit(this->active_nodes_begin());
+    const MeshBase::const_node_iterator nend(this->active_nodes_end());
     for ( ; nit != nend; ++nit)
     {
       if ((*nit)->has_dofs(sysnum))
@@ -5359,9 +5349,9 @@ DriftDiffusion::write_nodal_vector(const string& filename, const libMesh::Numeri
 
 
   MeshBase::const_element_iterator it =
-    mesh.active_local_elements_begin();
+    this->active_local_elements_begin();
   const MeshBase::const_element_iterator end =
-    mesh.active_local_elements_end();
+    this->active_local_elements_end();
 
   for ( ; it != end; ++it)
   {
