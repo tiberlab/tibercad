@@ -165,3 +165,25 @@
  
    virtual element_iterator local_level_elements_begin (unsigned int level) = 0;
    virtual element_iterator local_level_elements_end (unsigned int level) = 0;
+--- include/mesh/serial_mesh.h.orig	2016-10-23 15:49:31.873327441 +0200
++++ include/mesh/serial_mesh.h	2016-10-23 15:59:25.292279409 +0200
+@@ -331,11 +331,19 @@
+   virtual element_iterator active_local_subdomain_elements_end (subdomain_id_type subdomain_id) libmesh_override;
+   virtual const_element_iterator active_local_subdomain_elements_begin (subdomain_id_type subdomain_id) const libmesh_override;
+   virtual const_element_iterator active_local_subdomain_elements_end (subdomain_id_type subdomain_id) const libmesh_override;
++  virtual element_iterator active_local_subdomains_elements_begin (const std::set<subdomain_id_type>& subdomain_ids) libmesh_override;
++  virtual element_iterator active_local_subdomains_elements_end (const std::set<subdomain_id_type>& subdomain_ids) libmesh_override;
++  virtual const_element_iterator active_local_subdomains_elements_begin (const std::set<subdomain_id_type>& subdomain_ids) const libmesh_override;
++  virtual const_element_iterator active_local_subdomains_elements_end (const std::set<subdomain_id_type>& subdomain_ids) const libmesh_override;
+ 
+   virtual element_iterator active_subdomain_elements_begin (subdomain_id_type subdomain_id) libmesh_override;
+   virtual element_iterator active_subdomain_elements_end (subdomain_id_type subdomain_id) libmesh_override;
+   virtual const_element_iterator active_subdomain_elements_begin (subdomain_id_type subdomain_id) const libmesh_override;
+   virtual const_element_iterator active_subdomain_elements_end (subdomain_id_type subdomain_id) const libmesh_override;
++  virtual element_iterator active_subdomains_elements_begin (const std::set<subdomain_id_type>& subdomain_ids) libmesh_override;
++  virtual element_iterator active_subdomains_elements_end (const std::set<subdomain_id_type>& subdomain_ids) libmesh_override;
++  virtual const_element_iterator active_subdomains_elements_begin (const std::set<subdomain_id_type>& subdomain_ids) const libmesh_override;
++  virtual const_element_iterator active_subdomains_elements_end (const std::set<subdomain_id_type>& subdomain_ids) const libmesh_override;
+ 
+   virtual element_iterator ghost_elements_begin () libmesh_override;
+   virtual element_iterator ghost_elements_end () libmesh_override;
