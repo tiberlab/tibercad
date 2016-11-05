@@ -5,14 +5,13 @@
 #include "TiberLinearSystem.h"
 #include "InitFailedException.h"
 
-#include <numeric_vector.h>
-#include <dense_vector.h>
-#include <dense_matrix.h>
+#include <libmesh/numeric_vector.h>
+#include <libmesh/dense_vector.h>
+#include <libmesh/dense_matrix.h>
+#include <libmesh/elem.h>
 
 #include <cassert>
 
-
-#include "libmesh/elem.h"
 
 
 TiberEqSystem::TiberEqSystem(void)

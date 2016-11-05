@@ -39,6 +39,7 @@ CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${ARCH}-linu
   --with-petsc-prefix=${PETSC_DIR} \
   --with-petsc-arch=${ARCH}-linux-complex \
   --with-slepc-prefix=${SLEPC_DIR} \
+  --with-mpiexec=mpiexec-3.1.1 \
   --with-mkl=/usr/pack/intel_mkl-11.2-ma/mkl \
   --with-subversion=svn-1.6.5 \
   --disable-license-check \

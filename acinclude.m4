@@ -515,6 +515,17 @@ AC_DEFUN([TC_SUBVERSION],
  AC_PATH_PROG([SVN], [$tc_subversion])])dnl
 
 
+dnl which MPIEXEC to use
+dnl
+AC_DEFUN([TC_MPIEXEC],
+[tc_mpiexec="mpiexec"
+ AC_ARG_WITH([mpiexec], AS_HELP_STRING([--with-mpiexec=PROG],
+ 	[specify the mpi launcher]),
+	[tc_mpiexec=$with_mpiexec])
+ AC_PATH_PROG([MPIEXEC], [$tc_mpiexec])])dnl
+
+
+
 
 dnl ----------------------------------------------------------------------------
 dnl Check to see if the compiler can compile a test program using

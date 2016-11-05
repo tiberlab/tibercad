@@ -47,6 +47,9 @@ AC_SUBST([LDFLAGS])
 
 AC_SUBST([cross_compiling])
 
+# mpiexec
+TC_MPIEXEC
+
 # libtool
 #AC_LIBTOOL_DLOPEN
 #AC_DISABLE_STATIC
