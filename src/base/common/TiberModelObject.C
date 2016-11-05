@@ -425,6 +425,11 @@ TiberModelObject::get_option<short>(const string& name,
 
 template
 void
+TiberModelObject::get_option<unsigned short>(const string& name,
+    vector<unsigned short>& vec, bool override) const;
+
+template
+void
 TiberModelObject::get_option<bool>(const string& name,
     vector<bool>& vec, bool override) const;
 

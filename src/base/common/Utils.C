@@ -698,6 +698,10 @@ Utils::extract_vector<short>(const string& input, vector<short>& vec);
 
 template
 void
+Utils::extract_vector<unsigned short>(const string& input, vector<unsigned short>& vec);
+
+template
+void
 Utils::extract_vector<char>(const string& input, vector<char>& vec);
 
 template

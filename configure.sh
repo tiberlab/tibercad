@@ -22,7 +22,7 @@ FORTRANDIR=/usr/pack/intel_ifort-13.0-ma
 export LDFLAGS="-Wl,-rpath,${FORTRANDIR}/lib/intel64"
 export FCFLAGS="-fexceptions -g -gcc-name=$(which ${CC}) -gxx-name=$(which ${CXX}) -nofor-main -openmp"
 
-BOOST="/usr/pack/tibercad_dev-3.0-ma/SDK"
+BOOST="/usr/pack/tibercad_dev-3.1-ma/SDK"
 
 #CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${sepparch}/lib"
 CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${ARCH}-linux/lib"
