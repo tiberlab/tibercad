@@ -2,9 +2,9 @@
 
 ARCH=`uname -m`
 
-BUILDDIR=/usr/pack/tibercad_dev-3.1-ma/build
-PETSC_DIR=${BUILDDIR}/petsc-3.7.3
-SLEPC_DIR=${BUILDDIR}/slepc-3.7.3
+BUILDDIR=/usr/pack/tibercad_dev-3.0-ma/build
+PETSC_DIR=${BUILDDIR}/petsc-3.6.2
+SLEPC_DIR=${BUILDDIR}/slepc-3.6.2
 
 export CXX=mpicxx-3.1.1
 export CC=mpicc-3.1.1
@@ -22,7 +22,7 @@ FORTRANDIR=/usr/pack/intel_ifort-13.0-ma
 export LDFLAGS="-Wl,-rpath,${FORTRANDIR}/lib/intel64"
 export FCFLAGS="-fexceptions -g -gcc-name=$(which ${CC}) -gxx-name=$(which ${CXX}) -nofor-main -openmp"
 
-BOOST="/usr/pack/tibercad_dev-3.1-ma/SDK"
+BOOST="/usr/pack/tibercad_dev-3.0-ma/SDK"
 
 #CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${sepparch}/lib"
 CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${ARCH}-linux/lib"
@@ -46,5 +46,5 @@ CONFIGOPTS="--with-boost-prefix=$BOOST --with-boost-libdir=${BOOST}/${ARCH}-linu
   --enable-uptight\
   --disable-pardiso \
   ${CONFIGOPTS} \
-  --with-libmesh-prefix=/usr/pack/tibercad_dev-3.1-ma/build/libmesh-1.0.0-${ARCH}-linux \
-  --with-libmesh-petsc-libdir=/usr/pack/tibercad_dev-3.1-ma/SDK/${ARCH}-linux/lib
+  --with-libmesh-prefix=/usr/pack/tibercad_dev-3.0-ma/build/libmesh-0.9.5-${ARCH}-linux \
+  --with-libmesh-petsc-libdir=/usr/pack/tibercad_dev-3.0-ma/SDK/${ARCH}-linux/lib
