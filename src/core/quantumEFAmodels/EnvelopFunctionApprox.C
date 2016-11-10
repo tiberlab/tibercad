@@ -288,10 +288,10 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
   {
     unsigned int dim = get_mesh().mesh_dimension();
     double scale = Constants::bohr_radius * 1e2;
-   if (dim > 1)
-     scale *= Constants::bohr_radius * 1e2;
-   if (dim > 2)
-     scale *= Constants::bohr_radius * 1e2;
+    if (dim > 1)
+      scale *= Constants::bohr_radius * 1e2;
+    if (dim > 2)
+      scale *= Constants::bohr_radius * 1e2;
 
     FEType fe_type = system->variable_type(0);
     UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));
@@ -341,10 +341,10 @@ EnvelopFunctionApprox::get_solution_secure(const Elem* elem,
   {
     unsigned int dim = get_mesh().mesh_dimension();
     double scale = Constants::bohr_radius * 1e2;
-   if (dim > 1)
-     scale *= Constants::bohr_radius * 1e2;
-   if (dim > 2)
-     scale *= Constants::bohr_radius * 1e2;
+    if (dim > 1)
+      scale *= Constants::bohr_radius * 1e2;
+    if (dim > 2)
+      scale *= Constants::bohr_radius * 1e2;
 
     FEType fe_type = system->variable_type(0);
     UniquePtr<libMesh::FEBase> fe(build_finite_element(dim, fe_type));

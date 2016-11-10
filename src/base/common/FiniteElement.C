@@ -23,6 +23,9 @@ FiniteElement<Dim, T>::reinit(const libMesh::Elem* elem, const unsigned int side
     const double tolerance, const std::vector<libMesh::Point>* const,
     const std::vector<double>* const)
 {
+  // we need this, otherwise below it will complain in some cases when accessing
+  this->_fe_map->get_JxW();
+
   libMesh::FE<Dim, T>::reinit(elem, side, tolerance);
 
   unsigned int dim = libMesh::FE<Dim, T>::qrule->get_dim();
@@ -74,8 +77,10 @@ void
 FiniteElement<Dim, T>::reinit(const libMesh::Elem* elem, const vector<libMesh::Point>* const points,
     const std::vector<double>* const)
 {
+  // we need this, otherwise below it will complain in some cases when accessing
+  this->_fe_map->get_JxW();
+
   libMesh::FE<Dim, T>::reinit(elem, points);
-  //std::cerr << "here\n";
 
   unsigned int dim = libMesh::FE<Dim, T>::dim;
 
@@ -106,9 +111,7 @@ FiniteElement<Dim, T>::reinit(const libMesh::Elem* elem, const vector<libMesh::P
     default:
       for (unsigned int i = 0; i < n_points; i++)
       {
-        //std::cerr << this->_fe_map->get_JxW()[i] << "  ";
         this->_fe_map->get_JxW()[i] *= J;
-        //std::cerr << this->_fe_map->get_JxW()[i] << "\n";
       }
       break;
   }
