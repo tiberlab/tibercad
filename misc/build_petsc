@@ -21,11 +21,6 @@ make_petsc()
     debug=$2
   fi
 
-  export PETSC_DIR=${PWD}
-
-  export PETSC_ARCH=${TCHOST}
-  [ "$datatype" == "complex" ] && export PETSC_ARCH=${TCHOST}-complex
-
   if [ -e  ${TOPDIR}/misc/reconfigure-${PETSC_ARCH}.py ]
   then
     cp ${TOPDIR}/misc/reconfigure-${PETSC_ARCH}.py .
@@ -45,7 +40,7 @@ make_petsc()
     #cp conftest conftest-${PETSC_ARCH}
 
     if [ "$target_os" != "win32" ]; then
-      ./conftest-${PETSC_ARCH}
+      mpirun ./conftest-${PETSC_ARCH}
       #cp reconfigure.py reconfigure-${PETSC_ARCH}.py
     fi
   fi
@@ -60,6 +55,13 @@ make_petsc()
     fi
 
     make
+  fi
+#    rm conftest* reconfigure*
+}
+
+link_library()
+{
+  datatype=$1
 
     libname=${petsc_dll_name}_${datatype}
     #[ $debug -eq 1 ] && libname=${libname}_dbg
@@ -106,8 +108,6 @@ make_petsc()
     mkdir -p ${TOPDIR}/${TCHOST}/lib
     cp ${SDKDIR}/${TCHOST}/lib/${libname}${dll_libext} ${TOPDIR}/${TCHOST}/lib/${libname}${dll_libext}
 
-    rm conftest* reconfigure*
-  fi
 
 }
 
@@ -203,16 +203,20 @@ CONFIGOPTS="--with-matlab=0 $SHARED  $MPIFLAGS $COMPILERS --with-clanguage=cxx -
 #  ${petsc_host} --download-mumps=yes  --download-parmetis=1 --download-scalapack=1 --download-blacs=1"
 
 export FCFLAGS="-fno-range-check $FCFLAGS"
+export FFLAGS=$FCFLAGS
 
-#if [ $DEBUG == 'y' ]
-#then
-#  make_petsc real 1
-#  make_petsc complex 1
-#else
-#  make_petsc real
-#  make_petsc complex
-#fi
 
-make_petsc real  
-make_petsc complex 
+export PETSC_DIR=${PWD}
+
+export PETSC_ARCH=${TCHOST}
+if [ "x$LINKONLY" == 'x' ]; then
+  make_petsc real
+fi
+link_library real
+
+export PETSC_ARCH=${TCHOST}-complex
+if [ "x$LINKONLY" == 'x' ]; then
+  make_petsc complex 
+fi
+link_library complex
 

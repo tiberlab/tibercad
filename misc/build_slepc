@@ -19,15 +19,18 @@ make_slepc()
 
   export SLEPC_DIR=${PWD}
 
-  export PETSC_DIR=${BUILDDIR}/petsc-${PETSCVERSION}${PETSCPATCHLEVEL}
+  export PETSC_DIR=${BUILDDIR}/petsc-${SLEPCVERSION}${PETSCPATCHLEVEL}
 
   export PETSC_ARCH=${TCHOST}
   [ "$datatype" == "complex" ] && export PETSC_ARCH=${TCHOST}-complex
 
   echo "Building with PETSC_ARCH=${PETSC_ARCH} ..."
 
-  ./config/configure.py $CONFIGOPTS
-  make
+  if [ "x$LINKONLY" == "x" ]
+  then
+    ./config/configure.py $CONFIGOPTS
+    make
+  fi
 
   libname=${slepc_dll_name}_${datatype}
 
@@ -66,7 +69,7 @@ make_slepc()
 
 
 
-echo "Compiling SLEPc version $PETSCVERSION in $BUILDDIR ..."
+echo "Compiling SLEPc version $SLEPCVERSION in $BUILDDIR ..."
 
 mkdir -p $BUILDDIR
 if [ ! -d $BUILDDIR ]; then
@@ -74,7 +77,7 @@ if [ ! -d $BUILDDIR ]; then
   exit 1
 fi
 
-ARCHIVE=slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}.tar.gz
+ARCHIVE=slepc-${SLEPCVERSION}${SLEPCPATCHLEVEL}.tar.gz
 PATCH=${PWD}/slepc.patch-${SLEPCVERSION}
 
 cd $BUILDDIR
@@ -88,7 +91,7 @@ if [ ! -e ${ARCHIVE} ]; then
   exit 1
 fi
 
-if [ ! -d slepc-${PETSCVERSION}${SLEPCPATCHLEVEL} ]; then
+if [ ! -d slepc-${SLEPCVERSION}${SLEPCPATCHLEVEL} ]; then
   tar zxf ${ARCHIVE}
 
   if [ -e ${PATCH} ]; then
@@ -100,7 +103,7 @@ fi
 slepc_dll_name=${dll_prefix}slepc
 
 
-cd slepc-${PETSCVERSION}${SLEPCPATCHLEVEL}
+cd slepc-${SLEPCVERSION}${SLEPCPATCHLEVEL}
 
 
 make_slepc real
