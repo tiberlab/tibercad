@@ -707,8 +707,9 @@ LIBMESH_PREFIX
 LIBMESH_CONFIG
 LIBMESH_PETSC_LIBS
 LIBMESH_PETSC_LIBDIR
-COMPLEX_PETSC_DIR
+PETSC_DIR
 COMPLEX_PETSC_ARCH
+REAL_PETSC_ARCH
 SLEPC_DIR
 TAO_DIR
 TAO_INCLUDES
@@ -1331,8 +1332,11 @@ Optional Packages:
   --with-libmesh-petsc-libdir=DIR
                           specify the path to the shared libmesh and
                           petsc/slepc libraries
-  --with-petsc-prefix=DIR specify the (complex) PETSc installation prefix
-  --with-petsc-arch=ARCH  specify the (complex) PETSc ARCH to be used
+  --with-petsc-prefix=DIR specify the PETSc installation prefix
+  --with-petsc-arch=ARCH  specify the PETSc ARCH to be used
+  --with-petsc-complex-arch=CARCH
+                          specify the complex PETSc ARCH to be used (default:
+                          ARCH-complex)
   --with-slepc-prefix=DIR specify the SLEPc installation prefix
   --with-tao-prefix=DIR   specify the TAO installation prefix
   --with-boost-prefix=DIR specify the path to the boost installation
@@ -4436,14 +4440,6 @@ fi
 
 
 # without libmesh nothing works
-{ echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
-{ echo "$as_me:$LINENO: * Checking for libMesh" >&5
-echo "$as_me: * Checking for libMesh" >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
 
 
 ac_ext=cpp
@@ -5078,6 +5074,14 @@ fi
 done
 
 
+ { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+ { echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+ { echo "$as_me:$LINENO: * Checking for libMesh" >&5
+echo "$as_me: * Checking for libMesh" >&6;}
+ { echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
 
 # Check whether --with-libmesh-prefix was given.
 if test "${with_libmesh_prefix+set}" = set; then
@@ -5223,6 +5227,8 @@ fi
 
 
   CPPFLAGS="$CPPFLAGS_save"
+ { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
 
  tc_libmesh_config="libmesh-config"
 
@@ -5289,9 +5295,15 @@ echo "$as_me: error: libMesh not found, but needed for tibercad!" >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-{ echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
 
+ { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+ { echo "$as_me:$LINENO: *************************************************" >&5
+echo "$as_me: *************************************************" >&6;}
+ { echo "$as_me:$LINENO: * Checking for libmesh, petsc and slepc libraries" >&5
+echo "$as_me: * Checking for libmesh, petsc and slepc libraries" >&6;}
+ { echo "$as_me:$LINENO: *************************************************" >&5
+echo "$as_me: *************************************************" >&6;}
  tc_libmesh_petsc_libdir=$(pwd)/SDK/$(./share/arch.sh ${host_cpu}-${host_os})/lib
 
 # Check whether --with-libmesh-petsc-libdir was given.
@@ -5604,19 +5616,24 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
  LIBMESH_PETSC_LIBDIR="$tc_libmesh_petsc_libdir"
 
-
-
-
-# check for SLEPc
-{ echo "$as_me:$LINENO: " >&5
+ { echo "$as_me:$LINENO:  found libraries in \"$tc_libmesh_petsc_libdir\"" >&5
+echo "$as_me:  found libraries in \"$tc_libmesh_petsc_libdir\"" >&6;}
+ { echo "$as_me:$LINENO:  link flags: \"$tc_libmesh_petsc_libs\"" >&5
+echo "$as_me:  link flags: \"$tc_libmesh_petsc_libs\"" >&6;}
+ { echo "$as_me:$LINENO: " >&5
 echo "$as_me: " >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
-{ echo "$as_me:$LINENO: * Checking for (complex) SLEPc" >&5
-echo "$as_me: * Checking for (complex) SLEPc" >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
 
+
+
+# check for PETSc
+ { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+ { echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+ { echo "$as_me:$LINENO: * Checking for PETSc" >&5
+echo "$as_me: * Checking for PETSc" >&6;}
+ { echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
 
 # Check whether --with-petsc-prefix was given.
 if test "${with_petsc_prefix+set}" = set; then
@@ -5629,11 +5646,36 @@ if test "${with_petsc_arch+set}" = set; then
   withval=$with_petsc_arch; tc_petsc_arch=$with_petsc_arch
 fi
 
- COMPLEX_PETSC_DIR="$tc_petsc_prefix"
+ tc_petsc_arch_cmplx=${tc_petsc_arch}-complex
 
- COMPLEX_PETSC_ARCH="$tc_petsc_arch"
+# Check whether --with-petsc-complex-arch was given.
+if test "${with_petsc_complex_arch+set}" = set; then
+  withval=$with_petsc_complex_arch; tc_petsc_arch_cmplx=$with_petsc_complex_arch
+fi
+
+ PETSC_DIR="$tc_petsc_prefix"
+
+ COMPLEX_PETSC_ARCH="${tc_petsc_arch_cmplx}"
+
+ REAL_PETSC_ARCH="$tc_petsc_arch"
+
+ { echo "$as_me:$LINENO:   PETSC_DIR  = \"$tc_petsc_prefix\"" >&5
+echo "$as_me:   PETSC_DIR  = \"$tc_petsc_prefix\"" >&6;}
+ { echo "$as_me:$LINENO:   PETSC_ARCH = \"$tc_petsc_arch\" / \"$tc_petsc_arch_cmplx (complex)\"" >&5
+echo "$as_me:   PETSC_ARCH = \"$tc_petsc_arch\" / \"$tc_petsc_arch_cmplx (complex)\"" >&6;}
+ { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
 
 
+# check for SLEPc
+ { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+ { echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+ { echo "$as_me:$LINENO: * Checking for SLEPc" >&5
+echo "$as_me: * Checking for SLEPc" >&6;}
+ { echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
 
 # Check whether --with-slepc-prefix was given.
 if test "${with_slepc_prefix+set}" = set; then
@@ -5649,8 +5691,8 @@ ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ex
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
  CXXFLAGS="-I${tc_slepc_prefix}/include"
- LDFLAGS="-L${tc_slepc_prefix}/lib/${tc_petsc_arch} -lslepc \
-  	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch} -lpetscksp"
+ LDFLAGS="-L${tc_slepc_prefix}/lib/${tc_petsc_arch_cmplx} -lslepc \
+  	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch_cmplx} -lpetscksp"
  cat >conftest.$ac_ext <<_ACEOF
 /* confdefs.h.  */
 _ACEOF
@@ -5712,21 +5754,18 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
  fi
-
-
-{ echo "$as_me:$LINENO: " >&5
+ { echo "$as_me:$LINENO:   SLEPC_DIR  = \"$tc_slepc_prefix\" (only complex version needed)" >&5
+echo "$as_me:   SLEPC_DIR  = \"$tc_slepc_prefix\" (only complex version needed)" >&6;}
+ { echo "$as_me:$LINENO: " >&5
 echo "$as_me: " >&6;}
+
 
 
 # check for TAO
-{ echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
-{ echo "$as_me:$LINENO: * Checking for tao" >&5
-echo "$as_me: * Checking for tao" >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
+#AC_MSG_NOTICE([])
+#AC_MSG_NOTICE([****************************************])
+#AC_MSG_NOTICE([* Checking for tao])
+#AC_MSG_NOTICE([****************************************])
 
 
 # Check whether --with-tao-prefix was given.
@@ -5747,19 +5786,10 @@ _ACEOF
  fi
 
 
-{ echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
+#AC_MSG_NOTICE([])
 
 
 # boost includes
-{ echo "$as_me:$LINENO: " >&5
-echo "$as_me: " >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
-{ echo "$as_me:$LINENO: * Checking for boost..." >&5
-echo "$as_me: * Checking for boost..." >&6;}
-{ echo "$as_me:$LINENO: ****************************************" >&5
-echo "$as_me: ****************************************" >&6;}
 
 { echo "$as_me:$LINENO: checking whether the compiler implements namespaces" >&5
 echo $ECHO_N "checking whether the compiler implements namespaces... $ECHO_C" >&6; }
@@ -5832,7 +5862,15 @@ _ACEOF
 
 fi
 
-if test "${tc_cv_boost_prefix+set}" = set; then
+ { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
+ { echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+ { echo "$as_me:$LINENO: * Checking for boost..." >&5
+echo "$as_me: * Checking for boost..." >&6;}
+ { echo "$as_me:$LINENO: ****************************************" >&5
+echo "$as_me: ****************************************" >&6;}
+ if test "${tc_cv_boost_prefix+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
@@ -6002,6 +6040,11 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 fi
+ tc_boost_version=$(grep "#define BOOST_LIB_VERSION" ${tc_cv_boost_prefix}/include/boost/version.hpp | awk '{print $''3}' )
+ { echo "$as_me:$LINENO:   BOOST version $tc_boost_version headers found in \"${tc_cv_boost_prefix}/include\"" >&5
+echo "$as_me:   BOOST version $tc_boost_version headers found in \"${tc_cv_boost_prefix}/include\"" >&6;}
+ { echo "$as_me:$LINENO: " >&5
+echo "$as_me: " >&6;}
 
 if test "$tc_cv_boost" == no
 then
@@ -8751,12 +8794,12 @@ LIBMESH_PREFIX!$LIBMESH_PREFIX$ac_delim
 LIBMESH_CONFIG!$LIBMESH_CONFIG$ac_delim
 LIBMESH_PETSC_LIBS!$LIBMESH_PETSC_LIBS$ac_delim
 LIBMESH_PETSC_LIBDIR!$LIBMESH_PETSC_LIBDIR$ac_delim
-COMPLEX_PETSC_DIR!$COMPLEX_PETSC_DIR$ac_delim
+PETSC_DIR!$PETSC_DIR$ac_delim
 COMPLEX_PETSC_ARCH!$COMPLEX_PETSC_ARCH$ac_delim
+REAL_PETSC_ARCH!$REAL_PETSC_ARCH$ac_delim
 SLEPC_DIR!$SLEPC_DIR$ac_delim
 TAO_DIR!$TAO_DIR$ac_delim
 TAO_INCLUDES!$TAO_INCLUDES$ac_delim
-BOOST_PREFIX!$BOOST_PREFIX$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -8798,6 +8841,7 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+BOOST_PREFIX!$BOOST_PREFIX$ac_delim
 BOOST_CPPFLAGS!$BOOST_CPPFLAGS$ac_delim
 BOOST_REGEX_LIB!$BOOST_REGEX_LIB$ac_delim
 BOOST_FILESYSTEM_LIB!$BOOST_FILESYSTEM_LIB$ac_delim
@@ -8807,7 +8851,7 @@ LICENSE_CHECK!$LICENSE_CHECK$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 7; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 8; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

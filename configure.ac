@@ -145,10 +145,6 @@ TC_HETERO
 
 
 # without libmesh nothing works
-AC_MSG_NOTICE([])
-AC_MSG_NOTICE([****************************************])
-AC_MSG_NOTICE([* Checking for libMesh])
-AC_MSG_NOTICE([****************************************])
 
 TC_LIBMESH_PATH
 TC_LIBMESH_CONFIG
@@ -158,38 +154,29 @@ then
   AC_MSG_ERROR([libMesh not found, but needed for tibercad!])
 fi
 
-AC_MSG_NOTICE([])
 
 TC_LIBMESH_PETSC_LIBS
 
 
+# check for PETSc
+TC_PETSC
+
 # check for SLEPc
-AC_MSG_NOTICE([])
-AC_MSG_NOTICE([****************************************])
-AC_MSG_NOTICE([* Checking for (complex) SLEPc])
-AC_MSG_NOTICE([****************************************])
-
 TC_SLEPC
-
-AC_MSG_NOTICE([])
 
 
 # check for TAO
-AC_MSG_NOTICE([])
-AC_MSG_NOTICE([****************************************])
-AC_MSG_NOTICE([* Checking for tao])
-AC_MSG_NOTICE([****************************************])
+#AC_MSG_NOTICE([])
+#AC_MSG_NOTICE([****************************************])
+#AC_MSG_NOTICE([* Checking for tao])
+#AC_MSG_NOTICE([****************************************])
 
 TC_TAO
 
-AC_MSG_NOTICE([])
+#AC_MSG_NOTICE([])
 
 
 # boost includes
-AC_MSG_NOTICE([])
-AC_MSG_NOTICE([****************************************])
-AC_MSG_NOTICE([* Checking for boost...])
-AC_MSG_NOTICE([****************************************])
 
 TC_BOOST
 if test "$tc_cv_boost" == no

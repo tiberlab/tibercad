@@ -72,7 +72,7 @@ Library libmesh
 
 Library petsc
 { 
-  path = @LIBMESH_PREFIX@/../petsc-3.7.3
+  path = @PETSC_DIR@
   includes = (.,../@ARCH/include)
   libpath = @LIBMESH_PETSC_LIBDIR@
   linker_flags = -lpetsc_real
@@ -80,7 +80,7 @@ Library petsc
 
 Library slepc
 {
-  path = @LIBMESH_PREFIX@/../slepc-3.7.3
+  path = @SLEPC_DIR@
   includes = (.)
   libpath = @LIBMESH_PETSC_LIBDIR@
   linker_flags = -lslepc_real

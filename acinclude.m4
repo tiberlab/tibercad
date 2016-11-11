@@ -44,7 +44,11 @@ dnl check for boost
 dnl
 AC_DEFUN([TC_BOOST],
 [AC_REQUIRE([AC_CXX_NAMESPACES])dnl
-AC_CACHE_VAL(tc_cv_boost_prefix,
+ AC_MSG_NOTICE([])
+ AC_MSG_NOTICE([****************************************])
+ AC_MSG_NOTICE([* Checking for boost...])
+ AC_MSG_NOTICE([****************************************])
+ AC_CACHE_VAL(tc_cv_boost_prefix,
 [AC_ARG_WITH([boost-prefix], AS_HELP_STRING([--with-boost-prefix=DIR],
 	[specify the path to the boost installation]),
 	[tc_cv_boost_prefix="$with_boost_prefix"])
@@ -63,6 +67,9 @@ AC_CACHE_VAL(tc_cv_boost,
 if test "$tc_cv_boost" == yes; then
   AC_DEFINE([HAVE_BOOST], [1], [define if boost is available.])
 fi
+ tc_boost_version=$(grep "#define BOOST_LIB_VERSION" ${tc_cv_boost_prefix}/include/boost/version.hpp | awk '{print $''3}' )
+ AC_MSG_NOTICE([  BOOST version $tc_boost_version headers found in "${tc_cv_boost_prefix}/include"])
+ AC_MSG_NOTICE([])
 ])dnl 
 
 dnl set boost libdir
@@ -316,6 +323,10 @@ dnl for now we just get the installation path
 dnl
 AC_DEFUN([TC_LIBMESH_PATH],
 [dnl
+ AC_MSG_NOTICE([])
+ AC_MSG_NOTICE([****************************************])
+ AC_MSG_NOTICE([* Checking for libMesh])
+ AC_MSG_NOTICE([****************************************])
   AC_ARG_WITH([libmesh-prefix], AS_HELP_STRING([--with-libmesh-prefix=DIR],
 	[specify the libmesh installation prefix]),
 	[tc_libmesh_prefix=$with_libmesh_prefix])
@@ -325,6 +336,7 @@ AC_DEFUN([TC_LIBMESH_PATH],
   AC_CHECK_HEADER([libmesh_config.h], [AC_SUBST([LIBMESH_PREFIX],
   					  "$tc_libmesh_prefix")])
   CPPFLAGS="$CPPFLAGS_save"
+ AC_MSG_NOTICE([])
 ])dnl
 
 
@@ -355,6 +367,10 @@ dnl check for shared libraries in build directory
 dnl
 AC_DEFUN([TC_LIBMESH_PETSC_LIBS],
 [AC_REQUIRE([TC_LIBMESH_CONFIG])dnl
+ AC_MSG_NOTICE([])
+ AC_MSG_NOTICE([*************************************************])
+ AC_MSG_NOTICE([* Checking for libmesh, petsc and slepc libraries])
+ AC_MSG_NOTICE([*************************************************])
 dnl AC_ARG_WITH([libmesh-petsc-libdir], AS_HELP_STRING([--with-libmesh-petsc-libdir=DIR],
 dnl	[specify the libmesh and PETSc shared library directory]),
 dnl	[tc_libmesh_petsc_libdir=$with_libmesh_petsc_libdir])
@@ -423,6 +439,9 @@ dnl LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} 
  LDFLAGS=$LDFLAGS_save
  AC_SUBST([LIBMESH_PETSC_LIBS], "$tc_libmesh_petsc_libs")
  AC_SUBST([LIBMESH_PETSC_LIBDIR], "$tc_libmesh_petsc_libdir")
+ AC_MSG_NOTICE([ found libraries in "$tc_libmesh_petsc_libdir"])
+ AC_MSG_NOTICE([ link flags: "$tc_libmesh_petsc_libs"])
+ AC_MSG_NOTICE([])
 ])dnl
 
 
@@ -430,16 +449,28 @@ dnl LDFLAGS="-L${tc_libmesh_petsc_libdir} -Wl,-rpath,${tc_libmesh_petsc_libdir} 
 
 dnl check for complex petsc
 dnl
-AC_DEFUN([TC_COMPLEX_PETSC],
+AC_DEFUN([TC_PETSC],
 [dnl
+ AC_MSG_NOTICE([])
+ AC_MSG_NOTICE([****************************************])
+ AC_MSG_NOTICE([* Checking for PETSc])
+ AC_MSG_NOTICE([****************************************])
  AC_ARG_WITH([petsc-prefix], AS_HELP_STRING([--with-petsc-prefix=DIR],
-	[specify the (complex) PETSc installation prefix]),
+	[specify the PETSc installation prefix]),
 	[tc_petsc_prefix=$with_petsc_prefix])
  AC_ARG_WITH([petsc-arch], AS_HELP_STRING([--with-petsc-arch=ARCH],
-	[specify the (complex) PETSc ARCH to be used]),
+	[specify the PETSc ARCH to be used]),
 	[tc_petsc_arch=$with_petsc_arch])
- AC_SUBST([COMPLEX_PETSC_DIR], "$tc_petsc_prefix")
- AC_SUBST([COMPLEX_PETSC_ARCH], "$tc_petsc_arch")
+ tc_petsc_arch_cmplx=${tc_petsc_arch}-complex
+ AC_ARG_WITH([petsc-complex-arch], AS_HELP_STRING([--with-petsc-complex-arch=CARCH],
+	[specify the complex PETSc ARCH to be used (default: ARCH-complex)]),
+	[tc_petsc_arch_cmplx=$with_petsc_complex_arch])
+ AC_SUBST([PETSC_DIR], "$tc_petsc_prefix")
+ AC_SUBST([COMPLEX_PETSC_ARCH], "${tc_petsc_arch_cmplx}")
+ AC_SUBST([REAL_PETSC_ARCH], "$tc_petsc_arch")
+ AC_MSG_NOTICE([  PETSC_DIR  = "$tc_petsc_prefix"])
+ AC_MSG_NOTICE([  PETSC_ARCH = "$tc_petsc_arch" / "$tc_petsc_arch_cmplx (complex)"])
+ AC_MSG_NOTICE([])
 ])dnl
 
 
@@ -447,7 +478,11 @@ AC_DEFUN([TC_COMPLEX_PETSC],
 dnl check for SLEPc
 dnl
 AC_DEFUN([TC_SLEPC],
-[AC_REQUIRE([TC_COMPLEX_PETSC])dnl
+[AC_REQUIRE([TC_PETSC])dnl
+ AC_MSG_NOTICE([])
+ AC_MSG_NOTICE([****************************************])
+ AC_MSG_NOTICE([* Checking for SLEPc])
+ AC_MSG_NOTICE([****************************************])
  AC_ARG_WITH([slepc-prefix], AS_HELP_STRING([--with-slepc-prefix=DIR],
 	[specify the SLEPc installation prefix]),
 	[tc_slepc_prefix=$with_slepc_prefix])
@@ -457,8 +492,8 @@ AC_DEFUN([TC_SLEPC],
  LDFLAGS_save=$LDFLAGS
  AC_LANG_PUSH([C++])
  CXXFLAGS="-I${tc_slepc_prefix}/include"
- LDFLAGS="-L${tc_slepc_prefix}/lib/${tc_petsc_arch} -lslepc \
-  	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch} -lpetscksp"
+ LDFLAGS="-L${tc_slepc_prefix}/lib/${tc_petsc_arch_cmplx} -lslepc \
+  	 -L${tc_petsc_prefix}/lib/${tc_petsc_arch_cmplx} -lpetscksp"
  AC_LINK_IFELSE(AC_LANG_PROGRAM([[#include "slepceps.h"]],
  			        [[SlepcInitialize(0,0,0,0);
  				  SlepcFinalize();]]),
@@ -470,6 +505,8 @@ AC_DEFUN([TC_SLEPC],
  if test "$tc_cv_have_slepc" == "yes"; then
    AC_DEFINE([HAVE_COMPLEX_SLEPC], [1], [Define to 1 if complex SLEPc is available])
  fi
+ AC_MSG_NOTICE([  SLEPC_DIR  = "$tc_slepc_prefix" (only complex version needed)])
+ AC_MSG_NOTICE([])
 ])dnl
 
 
