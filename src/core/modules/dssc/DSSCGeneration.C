@@ -223,6 +223,34 @@ DSSCGeneration::_calculate_distances(void)
 
   const double x0 = get_scaling().get_calc_mesh_units();
 
+
+  // recover element numbers from all processors
+  map<unsigned int, unsigned int> bd_elem_map;
+
+  SimulationEnvironment::BoundarySideIterator bit(env.boundary_sides_begin());
+  const SimulationEnvironment::BoundarySideIterator bend(env.boundary_sides_end());
+  for ( ; bit != bend; ++bit)
+  {
+    bd_elem_map[(bit->first).elem()->id()] = (bit->first).side();
+  }
+  vector<unsigned int> bd_elems(bd_elem_map.size());
+  vector<unsigned int> bd_sides(bd_elem_map.size());
+
+  {
+    map<unsigned int, unsigned int>::iterator it(bd_elem_map.begin());
+    map<unsigned int, unsigned int>::iterator end(bd_elem_map.end());
+    for (unsigned int i = 0; it != end; ++it, ++i)
+    {
+      bd_elems[i] = it->first;
+      bd_sides[i] = it->second;
+    }
+
+    this->get_communicator().allgather(bd_elems);
+    this->get_communicator().allgather(bd_sides);
+  }
+
+
+
   MeshBase::const_node_iterator it(get_mesh().local_nodes_begin());
   const MeshBase::const_node_iterator end(get_mesh().local_nodes_end());
 
@@ -236,12 +264,13 @@ DSSCGeneration::_calculate_distances(void)
 
     double d = numeric_limits<double>::max();
 
-    SimulationEnvironment::BoundarySideIterator bit(env.boundary_sides_begin());
-    const SimulationEnvironment::BoundarySideIterator bend(env.boundary_sides_end());
-    for ( ; bit != bend; ++bit)
+    for (unsigned int i = 0; i < bd_elems.size(); ++i)
     {
-      const Elem* sideelem = (bit->first).elem();
-      unsigned int s = (bit->first).side();
+      const Elem* sideelem = get_mesh().query_elem(bd_elems[i]);
+      if (sideelem == nullptr)
+        throw RuntimeException("Cannot retrieve baoundary element");
+    
+      unsigned int s = bd_sides[i];
 
       if (dim == 1)
       {
@@ -318,7 +347,6 @@ DSSCGeneration::_calculate_distances(void)
           double t2 = -(vz*xb*yc - vz*xc*yb - vy*xb*zc + vy*xc*zb + vx*yb*zc - vx*yc*zb) / det;
           double t3 = (vz*xa*yc - vz*xc*ya - vy*xa*zc + vy*xc*za + vx*ya*zc - vx*yc*za) / det;
 
-          //if ((t1 >= 0) && (t2 >= 0) && (t3 >= 0))
           if (t1 >= 0)
           {
             Point p(node - t1 * _direction);
@@ -336,6 +364,8 @@ DSSCGeneration::_calculate_distances(void)
     solution.set(dof, x0 * d);
 
   }
+  solution.close();
+  //system.update();
 
 }
 
