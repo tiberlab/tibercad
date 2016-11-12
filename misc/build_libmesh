@@ -107,10 +107,10 @@ then
    --disable-second --enable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 \
    --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv \
    --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
-   --with-subdomain-id-bytes=4
+   --with-subdomain-id-bytes=2
    --disable-openmp \
    --with-fparser=none \
-   --with-methods="devel" \
+   --with-method=devel \
    --host=$HOST --build=$BUILD
 
 

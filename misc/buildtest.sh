@@ -29,8 +29,8 @@ export FCFLAGS="-fexceptions -g"
 ./configure
 
 #./build_mpi
-#./build_petsc
-#./build_slepc
+./build_petsc
+./build_slepc
 ./build_libmesh
 #./build_boost
 ./build_tibercad

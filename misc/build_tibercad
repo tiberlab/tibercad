@@ -1,7 +1,5 @@
 #!/bin/bash
  
-#export CC=mpicc
-#export CXX=mpicxx
 
 if [ ! -e common.sh ]; then
   echo "Need configuration file (common.sh)."
@@ -10,8 +8,8 @@ fi
 
 . common.sh
 
-#TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
-TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-license-check --disable-hetero"}
+TIBEROPTS=${TIBEROPTS:-"--enable-uptight --enable-license-check --disable-hetero"}
+#TIBEROPTS=${TIBEROPTS:-"--enable-uptight --disable-license-check --disable-hetero"}
 
 if [ "$MKL" = y ]; then
 TIBEROPTS="${TIBEROPTS} --with-mkl=${MKLDIR}"
@@ -20,7 +18,6 @@ fi
 echo "Compiling TiberCAD ..."
 
 cd ../
-#BOOST="/usr/pack/boost-1.41.0-ma"
 
 ARCH=`uname -m`
 if [ $ARCH == "i686" ]
