@@ -272,11 +272,24 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
 
           f = nom / denom;
 
+          // in some cases f_e ~ 0 or f_h ~ 1, and both nom and denom may become 0
+          if (nom == 0.0)
+            f = 0.0;
+          else if (denom == 0.0)
+          {
+            f = 1.0;
+            denom = 1e-12;
+          }
+
           double dfdp = Cp * (1.0 - f * (1 + gv)) / denom;
           double dfdn = Cn * (gc - f * (1 + gc)) / denom;
 
           double dfdEfn = -(deriv_e / f_e) * ((1 - f) / f_e) * Cn * n / denom;
           double dfdEfp = -(f / (1 - f_h)) * (deriv_h / (1 - f_h)) * Cp * p / denom;
+
+          // this is somewhat crude ...
+          if (denom == 0.0)
+            dfdp = dfdn = dfdEfn = dfdEfp = 0.0;
 
           derivatives[0] = Nt * dfdn;
           derivatives[1] = Nt * dfdp;
@@ -299,11 +312,24 @@ Trap::get_ionized_density_and_derivative(const Elem* elem, const Point& p,
 
           f = nom / denom;
 
+          // in some cases f_e ~ 0 or f_h ~ 1, and both nom and denom may become 0
+          if (nom == 0.0)
+            f = 0.0;
+          else if (denom == 0.0)
+          {
+            f = 1.0;
+            denom = 1e-12;
+          }
+
           double dfdn = Cn * (1.0 - f * (1 + gc)) / denom;
           double dfdp = Cp * (gv - f * (1 + gv)) / denom;
 
           double dfdEfn = (deriv_e / f_e) * (f / f_e) * Cn * n / denom;
           double dfdEfp = ((1 - f) / (1 - f_h)) * (deriv_h / (1 - f_h)) * Cp * p / denom;
+
+          // this is somewhat crude ...
+          if (denom == 0.0)
+            dfdp = dfdn = dfdEfn = dfdEfp = 0.0;
 
           Nt = -Nt;
 

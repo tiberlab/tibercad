@@ -72,7 +72,7 @@ class BandProperties : public DriftDiffusionModelInterface
     double get_gamma(void) const;
 
     //! Set the band edge
-    void set_band_edge(double band_edge) {  }
+    void set_band_edge(double band_edge);
 
     //! Set the effective mass
     void set_effective_mass(double effective_mass) { _effective_mass = effective_mass; }
@@ -205,6 +205,11 @@ BandProperties::get_thermal_velocity(double temp) const
   return (100.0 * std::sqrt(vth));
 }
 
+inline
+void
+BandProperties::set_band_edge(double )
+{
+}
 
 
 #endif // _BANDPROPERTIES_H_
