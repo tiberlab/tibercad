@@ -100,6 +100,8 @@ export LDFLAGS
 #  export METHODS=dbg
 #fi
 
+METHOD=devel
+
 if [ "x$LINKONLY" == "x" ]
 then
 
@@ -107,14 +109,11 @@ then
    --disable-second --enable-exceptions --disable-laspack --disable-sfc --disable-gzstreams --disable-bzip2 \
    --disable-tecplot --disable-netcdf --disable-exodus --disable-nemesis --disable-libHilbert --disable-perflog  --disable-gmv \
    --disable-reference-counting --disable-legacy-using-namespace --enable-unique-ptr \
-   --with-subdomain-id-bytes=2
-   --disable-openmp \
+   --with-subdomain-id-bytes=2 \
    --with-fparser=none \
-   --with-method=devel \
+   --with-methods=$METHOD \
    --host=$HOST --build=$BUILD
 
-
-  export METHODS=devel
 
   make |tee make.log
 fi
@@ -124,7 +123,7 @@ echo "Create shared library ${SDKDIR}/${TCHOST}/lib/${dll_name} ..."
 #staticlib=`make echo | grep -m 1 libmesh.a`
 #if [ $DEBUG == 'y' ]
 #then
-  staticlib=`find -name libmesh_devel.a`
+  staticlib=`find -name libmesh_${METHOD}.a`
 #else
 #  staticlib=`find -name libmesh_opt.a`
 #fi
