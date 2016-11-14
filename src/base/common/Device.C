@@ -69,6 +69,7 @@ Device::Device(const ModelOptions& options)
 
   libMesh::Parallel::Communicator& comm = TiberCad::get_mpi_comm();
   unsigned int nodes_per_device = comm.size();
+  unsigned int nodes_per_mesh = comm.size();
 
   int color = 0;
 
@@ -76,7 +77,12 @@ Device::Device(const ModelOptions& options)
   {
     const ModelOptions& mpi_opts = _options.submodels_begin("Parallel")->second;
 
-    nodes_per_device = mpi_opts.get_option("nodes_per_device", nodes_per_device);
+    nodes_per_device = mpi_opts.get_option("mpi_processes_per_device", nodes_per_device);
+    nodes_per_mesh = mpi_opts.get_option("mpi_processes_per_mesh", nodes_per_device);
+
+    if (nodes_per_mesh > nodes_per_device)
+      throw InitFailedException("Cannot distribute mesh on more nodes than "
+          "requested for device.");
   }
 
   if (nodes_per_device < comm.size())
@@ -84,13 +90,13 @@ Device::Device(const ModelOptions& options)
     int proc_id = comm.rank();
     color = proc_id / nodes_per_device;
 
-    MPI_Comm local_comm;
-    MPI_Comm_split(comm.get(), color, 0, &local_comm);
-    _mpi_comm = local_comm;
+    //MPI_Comm local_comm;
+    //MPI_Comm_split(comm.get(), color, 0, &local_comm);
+    //_mpi_comm = local_comm;
 
-    // this currently does not work, because there is a bug in libmesh
+    // this did not work before 1.0.0, because there was a bug in libmesh
     // parallel_implementation.h, line 470, missing this->assign(comm)
-    //comm.split(color, 0, _mpi_comm);
+    comm.split(color, 0, _mpi_comm);
   }
   else
   {
@@ -98,6 +104,18 @@ Device::Device(const ModelOptions& options)
 
     if (nodes_per_device > comm.size())
       Messages::warning("Too many MPI nodes requested for device");
+  }
+
+  if (nodes_per_mesh < nodes_per_device)
+  {
+    int proc_id = _mpi_comm.rank();
+    int mesh_color = proc_id / nodes_per_mesh;
+
+    _mpi_comm.split(mesh_color, 0, _mesh_comm);
+  }
+  else
+  {
+    _mesh_comm = _mpi_comm;
   }
 
   ostringstream os;
@@ -243,18 +261,6 @@ Device::setup_mesh(void)
     os << "Reading mesh file \'" << meshfile << "\' assuming dimension "<<dim<<" ...";
     m.info(os.str());
   }
-
-  // for now, FEM stuff is done in serial
-  // TODO, use split of libMesh::Parallel
-  MPI_Comm local_comm;
-
-  // for testing of MPI in FEM
-  //int proc_id, p;
-  //MPI_Comm_rank(_mpi_comm.get(), &proc_id);
-  //MPI_Comm_size(_mpi_comm.get(), &p);
-  //MPI_Comm_split(_mpi_comm.get(), proc_id, 0, &local_comm);
-  //_mesh_comm = local_comm;
-  _mesh_comm = _mpi_comm;
 
   _mesh = new libMesh::Mesh(_mesh_comm, dim);
 

@@ -136,13 +136,16 @@ TiberNonlinLS::do_solve(void)
     {
       // apply step and look at the new residual
 
-      //norm_du = du.linfty_norm();
-      //if (norm_du > get_max_abs_step())
-      //{
-      //  double fac = get_max_abs_step() / norm_du;
-      //  du.scale(fac);
-      //  norm_du *= fac;
-      //}
+      /* This could be useful in some cases, but we have to assure that
+       * it does not limit the step size in other cases.
+      norm_du = du.linfty_norm();
+      if (norm_du > get_max_abs_step())
+      {
+        double fac = get_max_abs_step() / norm_du;
+        du.scale(fac);
+        norm_du *= fac;
+      }
+      */
 
       u.add(-alpha, du);
 
