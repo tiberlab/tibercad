@@ -3067,21 +3067,23 @@ SimulationInterface::project_on_tensor_grid(void)
   int Nx = ceil((pmax(0) - pmin(0)) / dx);
   int Ny = ceil((pmax(1) - pmin(1)) / dx);
 
-  if (pplane == 0)
+  switch (pplane)
   {
-    pmin(2) = 0.5 * (pmax(2) + pmin(2));
-  }
-  else if (pplane == 1)
-  {
-    int Nx = ceil((pmax(0) - pmin(0)) / dx);
-    int Ny = ceil((pmax(2) - pmin(2)) / dx);
-    pmin(1) = 0.5 * (pmax(1) + pmin(1));
-  }
-  else if (pplane == 2)
-  {
-    int Nx = ceil((pmax(1) - pmin(1)) / dx);
-    int Ny = ceil((pmax(2) - pmin(2)) / dx);
-    pmin(0) = 0.5 * (pmax(0) + pmin(0));
+    case 1:
+      Nx = ceil((pmax(0) - pmin(0)) / dx);
+      Ny = ceil((pmax(2) - pmin(2)) / dx);
+      pmin(1) = 0.5 * (pmax(1) + pmin(1));
+      break;
+
+    case 2:
+      Nx = ceil((pmax(1) - pmin(1)) / dx);
+      Ny = ceil((pmax(2) - pmin(2)) / dx);
+      pmin(0) = 0.5 * (pmax(0) + pmin(0));
+      break;
+
+    default:
+      pmin(2) = 0.5 * (pmax(2) + pmin(2));
+      break;
   }
 
   // we allow two formats:
@@ -3091,13 +3093,13 @@ SimulationInterface::project_on_tensor_grid(void)
   // 1: (one data per file)
   //   data1(x1y1) data1(x2y1) ...
   //   data1(x1y2) data1(x2y2) ...
-  int ascii_form = 0;
+  int ascii_form = 1;
   if (opts.get_option("ascii_format", "list") != "list")
-    ascii_form = 1;
+    ascii_form = 0;
 
 
 
-  string basename = get_output_directory() + "/" + get_output_filename() + "_projected_";
+  string basename = get_output_directory() + "/" + get_output_filename() + "_projected";
   string extension = ".dat";
 
   // to get solutions
@@ -3105,6 +3107,34 @@ SimulationInterface::project_on_tensor_grid(void)
 
   // the file streams
   map<ID, vector<ofstream*>> fstreams;
+
+  if (ascii_form == 0)
+  {
+    // in this case we use one single file
+    fstreams[0] = vector<ofstream*>(1);
+    fstreams[0][0] = new ofstream(basename + extension);
+    (*fstreams[0][0]) << "% pmin = (" << pmin(0) << ", " << pmin(1) << ", " << pmin(2) <<
+            "), dx = " << dx*get_mesh_units() << " Nx = " << Nx << " Ny = " << Ny << endl;
+    (*fstreams[0][0]) << "% ";
+    switch (pplane)
+    {
+      case 1:
+        (*fstreams[0][0]) << "x z ";
+        break;
+
+      case 2:
+        (*fstreams[0][0]) << "y z";
+        break;
+
+      default:
+        (*fstreams[0][0]) << "x y";
+        break;
+    }
+  }
+  else
+  {
+    basename += "_";
+  }
 
   IDSet::const_iterator idit(sol_ids.begin());
   IDSet::const_iterator idend(sol_ids.end());
@@ -3146,27 +3176,56 @@ SimulationInterface::project_on_tensor_grid(void)
 
       for (int i = 0; i < ncomp; ++i)
       {
-        fstreams[*idit][i] = new ofstream(basename + descr.name() + comp[i] + extension);
-        (*fstreams[*idit][i]) << "% " << get_name() << " " << descr.name() << comp[i] <<
-            "\n% pmin = (" << pmin(0) << ", " << pmin(1) << ", " << pmin(2) <<
+        if (ascii_form == 1)
+        {
+          fstreams[*idit][i] = new ofstream(basename + descr.name() + comp[i] + extension);
+          (*fstreams[*idit][i]) << "% ";
+          (*fstreams[*idit][i]) << get_name() << " " << descr.name() << comp[i] <<
+            "\n% origin = (" << pmin(0) << ", " << pmin(1) << ", " << pmin(2) <<
             "), dx = " << dx*get_mesh_units() << " Nx = " << Nx << " Ny = " << Ny << endl;
+        }
+        else
+        {
+          (*fstreams[0][0]) << " " << descr.name() << comp[i];
+        }
       }
     }
   }
+
+  if (ascii_form == 0)
+    (*fstreams[0][0]) << "\n";
 
 
   map<ID, vector<double>>::iterator mit(solutions.begin());
   map<ID, vector<double>>::iterator mend(solutions.end());
 
-  for (unsigned int j = 0; j < Ny; ++j)
+  for (unsigned int i = 0; i < Nx; ++i)
   {
-    for (unsigned int i = 0; i < Nx; ++i)
+    for (unsigned int j = 0; j < Ny; ++j)
     {
       Point p(pmin(0) + i * dx, pmin(1) + j * dx, pmin(2));
       if (pplane == 1)
         p = Point(pmin(0) + i * dx, pmin(1), pmin(2) + j * dx);
       if (pplane == 2)
         p = Point(pmin(0), pmin(1) + i * dx, pmin(2) + j * dx);
+
+      if (ascii_form == 0)
+      {
+        switch (pplane)
+        {
+          case 1:
+            (*fstreams[0][0]) << p(0) << " " << p(2) << " ";
+            break;
+
+          case 2:
+            (*fstreams[0][0]) << p(1) << " " << p(2) << " ";
+            break;
+
+          default:
+            (*fstreams[0][0]) << p(0) << " " << p(1) << " ";
+            break;
+        }
+      }
 
       const Elem* elem = MeshUtils::search_element(&get_mesh(), p);
 
@@ -3185,33 +3244,55 @@ SimulationInterface::project_on_tensor_grid(void)
         int ncomp = get_solution_descriptor(mit->first).n_components();
         for (unsigned int c = 0; c < ncomp; ++c)
         {
-          (*fstreams[mit->first][c]) << (mit->second)[c] << " ";
+          if (ascii_form == 1)
+          {
+            (*fstreams[mit->first][c]) << (mit->second)[c] << " ";
+          }
+          else
+          {
+            (*fstreams[0][0]) << (mit->second)[c] << " ";
+          }
         }
       }
+
+      if (ascii_form == 0)
+        (*fstreams[0][0]) << "\n";
     }
 
-    for (mit = solutions.begin(); mit != mend; ++mit)
+    if (ascii_form == 1)
     {
-      int ncomp = get_solution_descriptor(mit->first).n_components();
-      for (unsigned int c = 0; c < ncomp; ++c)
+      for (mit = solutions.begin(); mit != mend; ++mit)
       {
-        (*fstreams[mit->first][c]) << endl;
+        int ncomp = get_solution_descriptor(mit->first).n_components();
+        for (unsigned int c = 0; c < ncomp; ++c)
+        {
+          (*fstreams[mit->first][c]) << endl;
+        }
       }
     }
   }
 
 
-  for ( ; idit != idend; ++idit)
+  if (ascii_form == 1)
   {
-    const SolutionDescriptor& descr = get_solution_descriptor(*idit);
-    if (descr.on_mesh())
+    for ( ; idit != idend; ++idit)
     {
-      for (int i = 0; i < descr.n_components(); ++i)
+      const SolutionDescriptor& descr = get_solution_descriptor(*idit);
+      if (descr.on_mesh())
       {
-        fstreams[*idit][i]->flush();
-        fstreams[*idit][i]->close();
-        delete fstreams[*idit][i];
+        for (int i = 0; i < descr.n_components(); ++i)
+        {
+          fstreams[*idit][i]->flush();
+          fstreams[*idit][i]->close();
+          delete fstreams[*idit][i];
+        }
       }
     }
+  }
+  else
+  {
+    fstreams[0][0]->flush();
+    fstreams[0][0]->close();
+    delete fstreams[0][0];
   }
 }
