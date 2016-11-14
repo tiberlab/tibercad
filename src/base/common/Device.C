@@ -100,11 +100,13 @@ Device::Device(const ModelOptions& options)
   }
   else
   {
+    // TODO not sure if we should duplicate here?
     _mpi_comm = TiberCad::get_mpi_comm();
 
     if (nodes_per_device > comm.size())
       throw InitFailedException("Too many MPI nodes requested for device");
   }
+
 
   if (nodes_per_mesh < nodes_per_device)
   {
@@ -115,7 +117,7 @@ Device::Device(const ModelOptions& options)
   }
   else
   {
-    _mesh_comm = _mpi_comm;
+    _mpi_comm.duplicate(_mesh_comm);
   }
 
   ostringstream os;
