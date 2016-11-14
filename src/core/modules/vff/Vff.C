@@ -773,6 +773,7 @@ Vff::get_solution_secure(const libMesh::Elem* elem,
   const std::vector<StrainLattice::TensorField>& strain = _strain.get_solution();
   //const ElemAtomsMap& elematoms = get_map_elem_atoms();
   const std::vector<unsigned int>& atoms = get_elem_atoms(elem->id());
+  //const std::vector<unsigned int>& atoms = get_atomistic_structure()->get_atoms_in_elem(elem);
 
   // Projection of Strain on Nodes ----------------------------- 
   if (values.count(StrainNodes))
@@ -802,7 +803,7 @@ Vff::get_solution_secure(const libMesh::Elem* elem,
       for (unsigned int i=0; i < atoms.size(); i++)
       { 
         unsigned int at = atoms[i];
-        if (strain[at].atom_p->is_cation())
+        if ((at < strain.size()) && strain[at].atom_p->is_cation())
         {
           contribs += 1;
           sol += strain[at].tensor;
@@ -850,7 +851,7 @@ Vff::get_solution_secure(const libMesh::Elem* elem,
     for (unsigned int i=0; i < atoms.size(); i++)
     { 
       unsigned int at = atoms[i];
-      if (strain[at].atom_p->is_cation())
+      if ((at < strain.size()) && strain[at].atom_p->is_cation())
       { 
         sol += strain[at].tensor;
         contribs +=1;

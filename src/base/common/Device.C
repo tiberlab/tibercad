@@ -103,7 +103,7 @@ Device::Device(const ModelOptions& options)
     _mpi_comm = TiberCad::get_mpi_comm();
 
     if (nodes_per_device > comm.size())
-      Messages::warning("Too many MPI nodes requested for device");
+      throw InitFailedException("Too many MPI nodes requested for device");
   }
 
   if (nodes_per_mesh < nodes_per_device)

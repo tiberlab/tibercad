@@ -4,8 +4,16 @@
 Device
 {
 
-  # when running in parallel (MPI), the default is to assign to every
-  # process a distinct device and run solvers in serial
+  # when running in parallel (MPI), the default is to have one
+  # single device and run solvers in parallel.
+  # Here we want to run a certain number of devices, with or without 
+  # parallel solvers.
+  Parallel
+  {
+    mpi_processes_per_device = 2
+    # let's do FEM calculations in serial
+    mpi_processes_per_mesh   = 1
+  }
   
   meshfile = led.msh
   mesh_units = 1e-9
@@ -121,8 +129,8 @@ Device
     # supercell size should be at least 10 nm for real calculations
     #supercell_size_z = 100 
     #supercell_size_y = 100  
-    supercell_size_z = 50 
-    supercell_size_y = 50  
+    supercell_size_z = 20 
+    supercell_size_y = 20  
 
     # write out statistics of alloy
     alloy_statistics = true
@@ -200,12 +208,17 @@ Module  driftdiffusion
         
   name = dd
        
+  # the default is rstf, which uses Ramo-Shockley type test functions and
+  # integrates on the whole device to obtain the current. When using self-consistency
+  # with quantum densities, this can lead to spurious errors. The 'compact' version
+  # does not have this problem, as the test functions only extend near the contacts.
   current_integration_method = compact_rstf
-  # we solve only Poisson equation and fix the quasi Fermi
-  # levels to constant values
-  coupling = poisson
-  guess_el_qfermi = 0
-  guess_hl_qfermi = $bias
+
+  # we may solve only Poisson equation and fix the quasi Fermi
+  # levels to constant values:
+  #coupling = poisson
+  #guess_el_qfermi = 0
+  #guess_hl_qfermi = $bias
 
   # in this case we would do first the sweep only, and then reload the bias point of
   # interest
@@ -215,8 +228,10 @@ Module  driftdiffusion
      
   plot = (Ec, Ev, Eg, eQFermi, eDensity, eCurrentDensity, eMobility,
           hQFermi, hDensity, hCurrentDensity, hMobility,
+          IonizedDonors, IonizedAcceptors, IonizedHoleTraps,
           NetRecombination, ElField, ElPotential, Polarization, ContactCurrents, IQE)
-  Solver
+
+  Solver 
   {
     step_tolerance = 1e-3
   }
@@ -224,7 +239,12 @@ Module  driftdiffusion
   Physics
   {
 
-    strain_simulation = strain 
+    # at the internal injection barriers, we would have very large
+    # voltage losses. We model tunneling and defect assisted injection channels
+    # with a fixed but non-vanishing background conductivity
+    background_conductivity = 1e-6
+
+    # here we use 100% of the theoretical polarization
     relax_polarization = 1.0
 
     conduction_band
@@ -234,7 +254,7 @@ Module  driftdiffusion
         # where to get the quantum density from
         quantum_simulation = quantum_efa
 
-        # here we add a classical density
+        # here we add a classical density, to have smooth transition
         barrier_regions = (qbarrierl, qbarriert, buffer_q)
         #add_continuum_in_well = true
 
@@ -251,6 +271,10 @@ Module  driftdiffusion
 	classical_DOS bulk_kp 
         {
           strain_simulation = strain
+
+          # the tight-binding parameters are for 0K, so we switch off the
+          # temperature scaling of the band gap
+          consider_temperature = false
         }
 
       }
@@ -264,8 +288,9 @@ Module  driftdiffusion
         # where to get the quantum density from
         quantum_simulation = quantum_efa
 
-        # here we add a classical density
-        barrier_regions = (qbarrierl, qbarriert, buffer_q)
+        # here we add a classical density. We exclude qbarrierl here,
+        # because valence band offset is small
+        barrier_regions = (qbarriert, buffer_q)
         #add_continuum_in_well = true
 
         # This is currently unavailable:
@@ -281,6 +306,10 @@ Module  driftdiffusion
 	classical_DOS bulk_kp 
         {
           strain_simulation = strain
+
+          # the tight-binding parameters are for 0K, so we switch off the
+          # temperature scaling of the band gap
+          consider_temperature = false
         }
 
       }
@@ -300,7 +329,7 @@ Module  driftdiffusion
       regions = ebl
       Et = 0.22
       reference = vb
-      Nt = 4.5e19 # 1e17
+      Nt = 4.5e19
       sigma_n = 1e-18
       sigma_p = 1e-16
       recombination_center = true 
@@ -329,7 +358,6 @@ Module  driftdiffusion
 
     recombination direct
     {
-      #regions = quantum
       C = 6e-12
       #optics_simulation = spectrum
     }
@@ -437,8 +465,6 @@ Module empirical_tb
   regions = atomistic
   name = tb
 
-  #database_path = tmpmaterials
-
   atomistic_structure = tb
   Harrison_scaling = true     #set false when no strain
 
@@ -452,10 +478,9 @@ Module empirical_tb
 
   Solver
   {
-    #load_path = "run6/"INCONT"/"BIAS"/out_10x10_"INDEX
 
     #solver_type = gpu
-    solver = jd
+    #solver = jd
     
     num_conduction_eigenvalues = 8
     num_valence_eigenvalues = 8
@@ -562,14 +587,15 @@ Module sweep
 Simulation
 {  
   # tight binding parameters are for 0K, so we put temperature near that for consistency
-  temperature = 10
+  temperature = 300
   # uncomment this for doing the bias sweep
-  # solve = (strain, dd, sweep1, sweep2)   
+  #solve = (strain, dd, sweep1, sweep2)   
   solve = (strain, vff, dd, tb, opticstb)   
 
   # we usually make a set of simulations, for a statistical ensemble of random structures
   # this can be done e.g. in parallel
-  resultpath = "output_tb_"MPI_PROC
+  # MPI_DEV_KEY is an identifier for a single device process group
+  resultpath = "output_tb_"MPI_DEV_KEY
 
   output_format = grace
 }

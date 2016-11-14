@@ -2907,8 +2907,8 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
 
   unsigned int notassociated = 0;
 
-  MeshBase::const_element_iterator elit = get_mesh().elements_begin();
-  const MeshBase::const_element_iterator elend = get_mesh().elements_end();
+  MeshBase::const_element_iterator elit = this->active_local_elements_begin();
+  const MeshBase::const_element_iterator elend = this->active_local_elements_end();
   
   for ( ; elit != elend; ++elit)
   { 
@@ -2970,7 +2970,7 @@ SimulationInterface::build_map_elem_atoms(double sigma, double cutoff)
     }
 
 
-    ID id = elem->id();
+    unsigned int id = elem->id();
 
     _elem_to_atoms[id].resize(count);
 

@@ -144,7 +144,7 @@ StrainLattice::do_solve(void)
   //std::cout<<"Strain size: "<<_as->get_N_without_H()<<std::endl;
   unsigned int natoms = _as->get_N_without_H();
 
-  _solution.resize(_as->get_N_without_H());
+  _solution.resize(natoms);
   TensorField sol;
   
   //Do the job on any atom which is compatible with reference tetraedra
