@@ -897,7 +897,7 @@ DriftDiffusion::calculate_iqe(void)
   const vector<Real>& JxW = fe->get_JxW();
 
   // the finite element for boundary integration
-  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type, true));
+  libMesh::UniquePtr<libMesh::FEBase> fe_face(build_finite_element(dim, fe_type));
 
   if (dim == 1)
     integration_order = libMeshEnums::CONSTANT;
@@ -4560,7 +4560,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         libMesh::RealGradient dmu_e_grad_v(0);
         libMesh::RealGradient dmu_h_grad_w(0);
    
-	if (dim > 1)
+	//if (dim > 1)
         {
 	  sc->get_electron_mobility_derivative_grad_fermi(dmu_e_grad_v);
           dmu_e_grad_v *= J * phi0 / (mu0 * C0_e) * n / x0;
