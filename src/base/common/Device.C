@@ -117,7 +117,7 @@ Device::Device(const ModelOptions& options)
   }
   else
   {
-    _mpi_comm.duplicate(_mesh_comm);
+    _mesh_comm.duplicate(_mpi_comm);
   }
 
   ostringstream os;
