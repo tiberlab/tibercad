@@ -438,7 +438,7 @@ DDBulkModel::do_reinit(const Elem* elem)
       {
         _pm[n]->set_strain(get_strain());
         _pm[n]->calculate(get_element(), get_coordinates());
-        _polarization += _pm[n]->get_polarization();
+        _polarization += _relax_polariz * _pm[n]->get_polarization();
       }
       set_polarization(_polarization);
 
