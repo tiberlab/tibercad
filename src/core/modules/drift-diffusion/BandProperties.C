@@ -325,4 +325,4 @@ double
 BandProperties::get_gamma(void) const
 {
   return 1; //_density->get_gamma();
-};
+}
