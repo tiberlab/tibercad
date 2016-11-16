@@ -673,7 +673,7 @@ Field assisted mobility model
 
 
 The field assisted mobility model describes the enhancement of the carrier mobility by an electric field in organic
-semiconductors. It is identified by the identifier field_enhanced. 
+semiconductors. It is identified by the identifier ``field_assisted``. 
 
 The model is given by equation [devometterelareference]_:
 
