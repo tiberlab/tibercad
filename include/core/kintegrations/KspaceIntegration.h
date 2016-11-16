@@ -197,8 +197,8 @@ class KspaceIntegration : public TiberModelObject
   //!estimates error for mesh refinement KellyErrorEstimator is called
   void estimate_error_for_refinement(libMesh::ErrorVector& error);
 
-  libMesh::Parallel::Communicator device_comm;
-  libMesh::Parallel::Communicator mesh_comm;
+  const libMesh::Parallel::Communicator& device_comm;
+  const libMesh::Parallel::Communicator& mesh_comm;
   libMesh::Parallel::Communicator kspace_comm;
 
 };
