@@ -922,7 +922,7 @@ EigenvalueProblem::integrate_density(DofField& density)
   m.indent();
 
   KspaceIntegration* kint = KspaceIntegration::create(this,
-      &EigenvalueProblem::calculate_density_at_k, kopts, get_communicator(), get_mesh().comm());
+      &EigenvalueProblem::calculate_density_at_k, kopts, get_communicator(), get_solver_communicator());
 
   if (kint == NULL)
     throw InitFailedException("Could not create k-integration for density calculation");

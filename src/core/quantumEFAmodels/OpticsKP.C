@@ -540,10 +540,10 @@ std::vector<libMesh::Complex> OpticsKP::calculate_matrix_element(unsigned int i,
   // create vectors with size of the P-matrix and put the solution vectors'
   // entries into the right place
   numeric_index_type local_size = Px_matr_real->row_stop() - Px_matr_real->row_start();
-  libMesh::PetscVector<Real> vec_i_r(this->get_communicator(), size_matrix, local_size, PARALLEL);
-  libMesh::PetscVector<Real> vec_i_i(this->get_communicator(), size_matrix, local_size, PARALLEL);
-  libMesh::PetscVector<Real> vec_f_r(this->get_communicator(), size_matrix, local_size, PARALLEL);
-  libMesh::PetscVector<Real> vec_f_i(this->get_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> vec_i_r(this->get_solver_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> vec_i_i(this->get_solver_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> vec_f_r(this->get_solver_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> vec_f_i(this->get_solver_communicator(), size_matrix, local_size, PARALLEL);
 
   for (size_t i = 0; i < size_matrix; ++i)
   {
@@ -588,8 +588,8 @@ std::vector<libMesh::Complex> OpticsKP::calculate_matrix_element(unsigned int i,
   vec_f_i.close();
 
 
-  libMesh::PetscVector<Real> tmp_r(this->get_communicator(), size_matrix, local_size, PARALLEL);
-  libMesh::PetscVector<Real> tmp_i(this->get_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> tmp_r(this->get_solver_communicator(), size_matrix, local_size, PARALLEL);
+  libMesh::PetscVector<Real> tmp_i(this->get_solver_communicator(), size_matrix, local_size, PARALLEL);
   // now we have the initial and final eigenvector expanded to the bands
   // of the optical matrix
 

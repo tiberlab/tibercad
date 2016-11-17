@@ -497,9 +497,9 @@ double EnvelopFunctionApprox::get_band_edge(const std::string& particle)
 
     // get the extremum over all MPI processes
     if (condband)
-      this->get_communicator().min(band_edge);
+      this->get_solver_communicator().min(band_edge);
     else
-      this->get_communicator().max(band_edge);
+      this->get_solver_communicator().max(band_edge);
   }
 
   return (band_edge);
@@ -977,8 +977,8 @@ void EnvelopFunctionApprox::do_init( )
 
     // if we don't have active pieces, band_map is size zero, so let's distribute
     // the band map from any other process.
-    vector<map<short,short>::size_type> band_map_sizes(this->get_communicator().size());
-    this->get_communicator().allgather(band_map.size(), band_map_sizes);
+    vector<map<short,short>::size_type> band_map_sizes(this->get_solver_communicator().size());
+    this->get_solver_communicator().allgather(band_map.size(), band_map_sizes);
 
     int proc_id = 0;
     while ((proc_id < band_map_sizes.size()) && (band_map_sizes[proc_id] == 0))
@@ -988,8 +988,8 @@ void EnvelopFunctionApprox::do_init( )
       throw InitFailedException("efaschroedinger: cannot identify bulk bands");
 
     // now we can broadcast from processor
-    this->get_communicator().broadcast(band_map, proc_id);
-    this->get_communicator().broadcast(opt.degeneracy, proc_id);
+    this->get_solver_communicator().broadcast(band_map, proc_id);
+    this->get_solver_communicator().broadcast(opt.degeneracy, proc_id);
   }
   //------------------------------------------------------------------------------------------------------//
  
@@ -1225,7 +1225,7 @@ void EnvelopFunctionApprox::calculate_Hamiltonian_and_S(void)
       }
     }
 
-    this->get_communicator().sum(_sqrt_S_inv);
+    this->get_solver_communicator().sum(_sqrt_S_inv);
 
     // build the square root and invert
     for (size_t i = 0; i < _sqrt_S_inv.size(); i++)
@@ -1749,7 +1749,7 @@ bool EnvelopFunctionApprox::read_SLEPC_solution(void)
     //EigenSolver::get_eigen_vector(solution_number, temp);
     EigenSolver::get_eigen_vector(solution_number, _solution[index].eigen_vector);
 
-    this->get_communicator().allgather(_solution[index].eigen_vector);
+    this->get_solver_communicator().allgather(_solution[index].eigen_vector);
 
     //-----------------------------------------------------------------------------
     //put independent dofs in the eigenvectors that may contain also non independent dofs
@@ -2024,7 +2024,7 @@ EnvelopFunctionApprox::check_confinement(const vector<Complex>& state)
   }
 
   // sum up over MPI processes
-  this->get_communicator().sum(sum);
+  this->get_solver_communicator().sum(sum);
 
 
 
@@ -2168,7 +2168,7 @@ double  EnvelopFunctionApprox::eigenstate_norm(unsigned int state_number)
     }
 
 
-  this->get_communicator().sum(temp);
+  this->get_solver_communicator().sum(temp);
 
   result = sqrt( abs(temp)  );
 
@@ -2284,7 +2284,7 @@ double EnvelopFunctionApprox::calculate_fermi_averaged(unsigned int i, const str
 	}
     }
 
-  this->get_communicator().sum(result);
+  this->get_solver_communicator().sum(result);
 
   return(result.real());
 }
@@ -2393,7 +2393,7 @@ double EnvelopFunctionApprox::calculate_temperature_averaged(unsigned int i)
         }
       }
     }
-    this->get_communicator().sum(result);
+    this->get_solver_communicator().sum(result);
   }
 
   return(result.real());
@@ -2599,7 +2599,7 @@ void EnvelopFunctionApprox::calculate_density_analytic(void)
     }
   }
 
-  this->get_communicator().sum(connectivity);
+  this->get_solver_communicator().sum(connectivity);
 
   unsigned int start = 0;
   unsigned int stop  = num_states - 1;
@@ -2717,7 +2717,7 @@ EnvelopFunctionApprox::do_calculate_density_at_k(DofField& density)
     }
   }
 
-  this->get_communicator().sum(connectivity);
+  this->get_solver_communicator().sum(connectivity);
 
   density.clear();
   density.resize(qdens.size(), 0.0);
@@ -2802,7 +2802,7 @@ unsigned int EnvelopFunctionApprox::get_number_of_active_cells()
   for ( ; el != end_el ; ++el)
     result++;
 
-  this->get_communicator().sum(result);
+  this->get_solver_communicator().sum(result);
 
   return(result);
 
@@ -2850,8 +2850,8 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
 
   }
 
-  vector<short> num_bands(this->get_communicator().size());
-  this->get_communicator().allgather(result, num_bands);
+  vector<short> num_bands(this->get_solver_communicator().size());
+  this->get_solver_communicator().allgather(result, num_bands);
 
   for (unsigned int i = 0; i < num_bands.size(); ++i)
   {
@@ -2864,7 +2864,7 @@ short EnvelopFunctionApprox::calculate_number_of_bands(void) const
     }
   }
 
-  if (!this->get_communicator().verify(result))
+  if (!this->get_solver_communicator().verify(result))
   {
     std::string mess = "EnvelopFunctionApprox: Hamiltonians have different"
        " different number of bands on different mesh pieces";

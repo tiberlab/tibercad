@@ -292,7 +292,7 @@ void FEMEigenvalueProblem::solve_eigen_value_problem(unsigned int ev_number, dou
 
   assemble(); //calculate Hamiltonian and S matrix
 
-  EigenSolver::prepare_slepc(get_communicator().get());
+  EigenSolver::prepare_slepc(get_solver_communicator().get());
   
   copy_H_to_solver( );
 
@@ -450,7 +450,7 @@ void FEMEigenvalueProblem::parse_options()
 
   solver_opt.st_ksp_type =  sol_opt.get_option("ksp_type",solver_opt.st_ksp_type);
 
-  if ((this->get_communicator().size() == 1) && (solver_opt.preconditioner == "lu"))
+  if ((this->get_solver_communicator().size() == 1) && (solver_opt.preconditioner == "lu"))
   {
     solver_opt.st_ksp_type = std::string("preonly");
   }
