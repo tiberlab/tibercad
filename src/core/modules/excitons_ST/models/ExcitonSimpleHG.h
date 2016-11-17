@@ -164,6 +164,8 @@ class ExcitonSimpleHG : public ExcitonProperties
     //! The band gap for each element
     std::map<const Elem*, double> _bandgap_data;
 
+    //! Flag preventin infinite loops in host/guest simulations
+    static bool _coupled;
 
 };
 

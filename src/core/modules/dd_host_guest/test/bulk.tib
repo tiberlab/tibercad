@@ -97,9 +97,18 @@ Module dd_host_guest
 
     recombination srh { tau_n = 1e-7 tau_p = 1e-7 }
     #recombination direct { C = 1e-12 }
-    recombination direct { coupling = HG C = 1e-10 }
-    recombination host_guest { C = 1e-10 }
-    recombination host_guest { bands = h C = 1e-10 }
+    #recombination direct { coupling = HG C = 1e-10 }
+    recombination host_guest 
+    { 
+      regions = (bulk)
+      C = 4.5e-11 
+    }
+    recombination host_guest 
+    {
+      regions = (bulk)
+      bands = h 
+      C = 4.5e-11 
+    }
 
     mobility
     {
@@ -143,7 +152,7 @@ Simulation
   temperature = 300
   searchpath = .
   solve = sweep
-  resultpath = output
+  resultpath = output_test
   output_format = grace
 }
 

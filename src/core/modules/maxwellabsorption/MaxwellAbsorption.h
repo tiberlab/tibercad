@@ -18,7 +18,8 @@ class MaxwellAbsorption : public SimulationInterface
     enum Solutions
     {
       Absorption_Energy,
-      Absorption_Photon
+      Absorption_Photon,
+      Generation
     };
 
     //!constructor

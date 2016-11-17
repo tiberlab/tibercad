@@ -66,7 +66,6 @@ OpticalGeneration::do_init(void)
         _gen_id[i] = _generation_model[i]->get_solution_id("generation");
       if (_gen_id[i] == INVALID_ID)
         _gen_id[i] = _generation_model[i]->get_solution_id("Generation");
-
       if (_gen_id[i] == INVALID_ID)
         throw InitFailedException("Cannot find a solution variable for generation model: " + gens[i]);
 

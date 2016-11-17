@@ -55,6 +55,7 @@ Material::setup_doping(void)
 void
 Material::do_init(void)
 {
+
   setup_doping();
 
   PhysicalObject::do_init();

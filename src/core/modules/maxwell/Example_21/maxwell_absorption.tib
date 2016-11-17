@@ -87,5 +87,6 @@ Simulation
   temperature = 300
   solve = (maxwell_absorption)   
   resultpath = output
-  output_format = vtk
+  searchpath = ./materials
+  output_format = grace
 }

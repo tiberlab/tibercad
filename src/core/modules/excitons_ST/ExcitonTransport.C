@@ -852,10 +852,10 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
       }
 
       if (solutions.count(SRADPOWER)) {
-        solutions[SRADPOWER][n] = 0.0;
-        //excitonmodel->get_exciton_energy() * excitonmodel->get_s_density() / excitonmodel->get_s_radiative_recombination_rate();
+        solutions[SRADPOWER][n] =  excitonmodel->get_exciton_energy() * 
+                                        ( excitonmodel->get_s_radiative_recombination_rate() + 
+                                          excitonmodel->get_t_radiative_recombination_rate() );
       }
-
 
 
       if (solutions.count(TDENSITY)) {
@@ -906,6 +906,11 @@ void ExcitonTransport::get_solution_secure(const Elem* elem, std::map<ID, std::v
         //excitonmodel->get_exciton_energy() * excitonmodel->get_t_density() / excitonmodel->get_t_radiative_recombination_rate();
       }
 
+     if (solutions.count(SISC)) {
+        excitonmodel->calculate_net_recombination_rate();
+        solutions[SISC][n] = excitonmodel->get_isc_rate();
+      }
+
      if (solutions.count(RDISS)) {
         solutions[RDISS][n] = excitonmodel->get_s_dissociation_rate() + excitonmodel->get_t_dissociation_rate();
       }
@@ -927,6 +932,7 @@ ExcitonTransport::do_setup_solution_variables(void) {
   declare_solution_ext("s_generation", SGEN, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
   declare_solution_ext("s_net_recombination", SNETRECOMB, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
   declare_solution_ext("s_rad_power", SRADPOWER, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
+  declare_solution_ext("s_isc", SISC, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
 
   declare_solution_ext("t_dens", TDENSITY, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "x");
   declare_solution_ext("t_current", TJ, SolutionDescriptor::VECTOR, SolutionDescriptor::NODES, "x");

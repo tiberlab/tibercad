@@ -767,9 +767,9 @@ Device::init(void)
   m.indent();
   MaterialMap::iterator it(_material_map.begin());
   const MaterialMap::iterator end(_material_map.end());
-  for ( ; it != end; ++it)
+  for ( ; it != end; ++it) {
     (it->second)->init();
-
+  }
 
   m.unindent();
   m.newline();
@@ -792,6 +792,7 @@ Device::init(void)
   for ( ; nit != nend; ++nit)
     (nit->second)->init();
   m.unindent();
+
 
 }
 

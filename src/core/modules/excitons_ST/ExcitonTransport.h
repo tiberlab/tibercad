@@ -74,6 +74,7 @@ class ExcitonTransport : public SimulationInterface
       SHGGEN,            /*!< host-guest generation rate */
       SNETRECOMB,       /*!< net recombination rate */
       SRADPOWER,        /*!< radiative power density  */
+      SISC,              /*!< intersystem crossing */
 
       TDENSITY,         /*!< density */
       TDIFFUSION,       /*!< diffusion coefficient */

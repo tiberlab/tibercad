@@ -141,7 +141,9 @@ Trap::do_init(void)
   {
     string sim = get_option("ext_dens_simulation", "");
 
-    _ext_dens_sim = SimulationInterface::find_simulation(sim);
+    _ext_dens_sim = NULL;
+    if ( sim != "" )
+      _ext_dens_sim = SimulationInterface::find_simulation(sim);
 
     
     if ( ( _ext_dens_sim == NULL ) && ( sim != "" ) )

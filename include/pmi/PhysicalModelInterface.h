@@ -57,9 +57,14 @@ class PhysicalModelInterface : public TiberModelObject
     virtual ~PhysicalModelInterface(void);
 
 
-    //! Get the unique ID of this model
+    //! Get the unique ID of this model type
     ID get_id(void) const;
 
+    /*//! Get the unique ID of this model type
+    ID get_unique_id (void) const;
+
+    ID get_unique_id (std::string& name, std::string& material) const;
+    */
 
     //! Get the ID of the simulator this model is used with
     /*!
@@ -524,12 +529,20 @@ class PhysicalModelInterface : public TiberModelObject
         const Tensor2Sym& val_b, double xa,
         const Tensor2Sym& bowing = Tensor2Sym(0));
 
+    /*//! used if a model needs a unique id to set _has_unique_id = true
+    void has_unique_id(bool flag = false)
+    { _has_unique_id = true; };*/
 
 
   private:
 
     //! An iterator for the models
     typedef std::map<const std::string, ID>::iterator model_id_iterator;
+
+    /*//! An iterator for models with unique ID
+    typedef std::map< std::pair<const std::string,
+                                const std::string>,
+                      ID >::iterator unique_model_id_iterator;*/
 
 
     //! Disable copy constructor
@@ -540,9 +553,14 @@ class PhysicalModelInterface : public TiberModelObject
     PhysicalModelInterface& operator=(const PhysicalModelInterface&);
 
 
-    //! The unique ID of this model
+    //! The unique ID of this model type
     ID _id;
 
+    /*//! The unique ID of this model
+    ID _unique_id;
+
+    //! False by default. If the model needs a unique ID it has to be set to true in derived classes
+    bool _has_unique_id = false;*/
 
     //! The ID of the simulator this model is used for
     /*!
@@ -579,6 +597,11 @@ class PhysicalModelInterface : public TiberModelObject
      * Models are counted starting from 1. 0 means undefined model.
      */
     static std::map<const std::string, ID> _model_ids;
+
+    /*//! A map with unique ID/model name pairs
+    static std::map< std::pair<const std::string,
+                               const std::string>,
+                     ID > _unique_model_ids;*/
 
 
     //! Register a new model
@@ -719,7 +742,25 @@ PhysicalModelInterface::get_id(void) const
   return _id;
 }
 
+/*inline
+ID
+PhysicalModelInterface::get_unique_id(void) const
+{
+  return _unique_id;
+}
 
+inline
+ID
+PhysicalModelInterface::get_unique_id(std::string& name, std::string& material) const
+{
+  unique_model_id_iterator it = _unique_model_ids.find(std::make_pair(name, material));
+
+  if (it != _unique_model_ids.end())
+    return _unique_model_ids[std::make_pair(name, material)];
+
+  return INVALID_ID;
+}
+*/
 
 inline
 ID

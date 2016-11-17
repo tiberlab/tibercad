@@ -46,6 +46,11 @@ using namespace std;
 map<const string, ID>
 PhysicalModelInterface::_model_ids;
 
+/*map< std::pair<const std::string,
+               const std::string>,
+     ID >
+PhysicalModelInterface::_unique_model_ids;*/
+
 
 
 PhysicalModelInterface::~PhysicalModelInterface(void)
@@ -211,6 +216,24 @@ PhysicalModelInterface::_register_model(
   }
   else
     id = it->second;
+
+  /*
+  if (model->_has_unique_id) {
+    const string mat_name = (model->get_material())->get_name();
+    const string unique_name = model->get_name();
+
+    unique_model_id_iterator it = _unique_model_ids.find(std::make_pair(unique_name, mat_name));
+
+    if (it == _unique_model_ids.end())
+    {
+      id = _unique_model_ids.size() + 1;
+      _unique_model_ids[std::make_pair(unique_name, mat_name)] = id;
+      model->_unique_id = id;
+    }
+    else
+      throw ModelErrorException("'" + name + "' models MUST have unique names. Name: '" + unique_name + "' is not unique in material '" + mat_name + "'" );
+  }
+  */
 
   model->_id = id;
 }

@@ -14,6 +14,7 @@
 
 #include "TiberModule.h"
 
+bool ExcitonSimpleHG::_coupled;
 
 ExcitonSimpleHG::ExcitonSimpleHG(const ModelOptions& options)
   : ExcitonProperties(options),
@@ -81,10 +82,12 @@ double ExcitonSimpleHG::get_s_hg_generation_rate()
 {
   if (_hg_sim != NULL)
   {
-    if (_hg_sim->is_solved()) 
+    if (_hg_sim->is_solved() && _coupled) 
     {
       std::vector<double> G(1);
+      _coupled = false;
       _hg_sim->get_solution(get_element(), _exs_model, G, std::vector<Point>(1, get_coordinates()));
+      _coupled = true;
       return G[0];
     }
     else
@@ -109,10 +112,12 @@ double ExcitonSimpleHG::get_t_hg_generation_rate()
 {
   if (_hg_sim != NULL)
   {
-    if (_hg_sim->is_solved()) 
+    if (_hg_sim->is_solved() && _coupled) 
     {
       std::vector<double> G(1);
+      _coupled = false;
       _hg_sim->get_solution(get_element(), _ext_model, G, std::vector<Point>(1, get_coordinates()));
+      _coupled = true;
       return G[0];
     }
     else
@@ -328,19 +333,22 @@ ExcitonSimpleHG::do_init(void)
     throw InitFailedException(msg);
   }
 
-  /*
+  _coupled = false;
+  
   if (_hg_sim == NULL)
   {
     std::string msg("ExcitonSimpleHG: host-guest simulation " +
         std::string(hg) + " not found");
     throw InitFailedException(msg);
   }
-  */
+  
 
   if (_hg_sim != NULL)
   {
     _exs_model = _hg_sim->get_solution_id("s_hg_recombination");
     _ext_model = _hg_sim->get_solution_id("t_hg_recombination");
+
+    _coupled = true;
   }
 
   double RBeff = Constants::bohr_radius * 100.0 * _er / _m;  //effective Bohr radius in cm

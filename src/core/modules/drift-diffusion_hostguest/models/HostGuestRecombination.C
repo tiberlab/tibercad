@@ -170,7 +170,7 @@ HostGuestRecombination::get_net_recombination_rates(double& recomb_e, double& re
     }
     else {
       recomb_h = pt * nc + pt * (Nvc - pc) * exp(-(Evt-Evc)/T) - pc * (Nvt - pt)  ;  //pt * nc + pt * (Nvc - pc) * exp(-(Evt-Evc)/T) - pc * (Nvt - pt) 
-      recomb_h -= p0t * n0c + p0t * (Nvc - p0c) * exp(-(Evt-Evc)/T) - p0c * (Nvt - p0t)  ;     //equilibrium term
+      //recomb_h -= p0t * n0c + p0t * (Nvc - p0c) * exp(-(Evt-Evc)/T) - p0c * (Nvt - p0t)  ;     //equilibrium term
       recomb_h *= _gamma; 
       if (_langevin)
         recomb_h *= (mupt + munc) * Constants::e * 100 / (_er * Constants::e0);
@@ -182,6 +182,7 @@ HostGuestRecombination::get_net_recombination_rates(double& recomb_e, double& re
       _saved_old_sim->get_solution(el, _old_hrec, old_h_rec, this_m.get_coordinates());
 
       //cout<<"old_e_rec "<<old_e_rec<<" old_h_rec "<<old_h_rec<<endl;
+      //cout<<"alpha = "<<_alpha<<endl;
 
       recomb_e *= _alpha;
       recomb_e += (1.0 - _alpha) * old_e_rec;

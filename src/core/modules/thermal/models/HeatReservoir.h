@@ -55,6 +55,8 @@ class TBDLLOCAL HeatReservoir : public ThermalBoundaryModel
     HeatReservoir(const ModelOptions& options);
 
   double _temperature;
+
+  ID _host_sim;
 };
 
 

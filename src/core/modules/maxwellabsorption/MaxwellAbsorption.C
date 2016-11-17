@@ -161,13 +161,14 @@ MaxwellAbsorption::do_setup_solution_variables(void)
 {
   declare_solution_ext("Absorbed energy", Absorption_Energy, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "J/cm^3/c");
   declare_solution_ext("Absorbed photons", Absorption_Photon, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "1/cm^3/c");
+  declare_solution_ext("Generation", Generation, SolutionDescriptor::REAL, SolutionDescriptor::NODES, "1/cm^3/c");
 }
 
 void MaxwellAbsorption::get_solution_secure(const Elem* elem,
     std::map<ID, std::vector<double> >& solutions,
     const std::vector<Point>& points)
 {
-  if (solutions.count(Absorption_Energy) || solutions.count(Absorption_Photon)) {
+  if (solutions.count(Absorption_Energy) || solutions.count(Absorption_Photon) || solutions.count(Generation)) {
 
     std::vector<double>& sol_e = solutions[Absorption_Energy];
     sol_e.resize(points.size());
@@ -175,9 +176,13 @@ void MaxwellAbsorption::get_solution_secure(const Elem* elem,
     std::vector<double>& sol_ph = solutions[Absorption_Photon];
     sol_ph.resize(points.size());
 
+    std::vector<double>& sol_gen = solutions[Generation];
+    sol_gen.resize(points.size());
+
     for (int i = 0; i < points.size(); i++) {
       sol_e[i] = 0;
       sol_ph[i] = 0;
+      sol_gen[i] = 0;
     }
 
     const unsigned int dim = get_mesh().mesh_dimension();
@@ -193,6 +198,7 @@ void MaxwellAbsorption::get_solution_secure(const Elem* elem,
       for (int qp = 0; qp < points.size(); qp++) {
         sol_e[qp] += phi[i][qp] * solution_energy[elem->centroid()][i];
         sol_ph[qp] += phi[i][qp] * solution_photon[elem->centroid()][i];
+        sol_gen[qp] += phi[i][qp] * solution_photon[elem->centroid()][i];
       }
     }
   }
