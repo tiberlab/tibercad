@@ -207,10 +207,10 @@ Sweep::do_equilibrium(void)
 void
 Sweep::do_plot(void)
 {
-  int num_sim = _simulations.size();
+  //int num_sim = _simulations.size();
 
-  for (int i = 0; i < num_sim; i++)
-    _simulations[i]->plot();
+  //for (int i = 0; i < num_sim; i++)
+  //  _simulations[i]->plot();
 }
 
 
