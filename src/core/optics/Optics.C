@@ -2,8 +2,6 @@
 
 #include "Optics.h"
 #include "EigenvalueProblem.h"
-//#include "KspaceIntegration.h"
-//#include "KspaceIntegrationTemplate.h"
 #include "SimulationInterface.h"
 #include "SimulationEnvironment.h"
 #include "SimulationOptions.h"
@@ -206,10 +204,10 @@ void Optics::do_init()
   else
     throw InitFailedException("Optics: final_state_model must be defined\n");
 
-  //set the communicator (assume the same for Optics, initial and final state models)
+  // set the communicator (assume the same for Optics, initial and final state models)
   libMesh::Parallel::Communicator& comm = get_communicator();
   libMesh::Parallel::Communicator energy_comm;
-  // make a serial communicator  
+  // make a serial communicator (here we do not distribute energy points)
   comm.split(0,0,energy_comm); 
 
   parse_options();
@@ -334,7 +332,7 @@ void Optics::init_k_space_integration(void)
                                               &Optics::calculate_for_k_point, 
                                               kopts, 
                                               get_communicator(),
-                                              get_mesh().comm() );
+                                              _initial_state_model->get_solver_communicator());
 
    if (_k_integration == NULL)
       throw InitFailedException("Could not create k-integration");

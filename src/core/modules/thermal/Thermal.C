@@ -78,7 +78,7 @@ Thermal::do_init(void)
       for (unsigned int n = 0; n < (*el)->n_nodes(); n++)
 	node_conn[(*el)->node(n)]++;
 
-    this->get_communicator().sum(node_conn);
+    this->get_solver_communicator().sum(node_conn);
   }
 
 }
@@ -187,7 +187,7 @@ Thermal::compute_power_dissipated()
     
   }
 
-  this->get_communicator().sum(power_dissipated);
+  this->get_solver_communicator().sum(power_dissipated);
 
   return(power_dissipated);
 }
@@ -247,7 +247,7 @@ Thermal::compute_power_emitted()
  
   }
 
-  this->get_communicator().sum(total_heat_source);
+  this->get_solver_communicator().sum(total_heat_source);
 
   return(total_heat_source);
 }
@@ -268,7 +268,7 @@ Thermal::do_solve(void)
 
   const libMesh::NumericVector<Number>& solution = system.get_solution_vector();
   _max_temperature = solution.linfty_norm();
-  this->get_communicator().max(_max_temperature);
+  this->get_solver_communicator().max(_max_temperature);
 
   ostringstream os;
   os << "Maximum temperature : " << _max_temperature << " K";

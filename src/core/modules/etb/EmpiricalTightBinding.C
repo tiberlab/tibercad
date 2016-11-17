@@ -147,7 +147,7 @@ ETB::do_init(void){
 
   inst = UptWrapper::create();
 
-  inst->set_mpi_comm(this->get_communicator().get());
+  inst->set_mpi_comm(this->get_solver_communicator().get());
 
   //sanity check of complex number passing (this should be checked elsewere perhaps)
   Complex zz;
@@ -1299,6 +1299,8 @@ ETB::project_atom_strain(void)
     {
       const Elem* el = structure[i].get_elem();
 
+      // 6/5/2016 I believe on should take strain in crsyatl coordinates, here
+      //_strain_int.get_crystal_strain(el, el->centroid(), epsilon);
       _strain_int.get_strain(el, el->centroid(), epsilon);
 
       exx[i] = epsilon(1,1);
@@ -2094,7 +2096,7 @@ void ETB::do_copy_H_to_solver( )
 
   // get the global matrix size
   int global_size = size_matrix;
-  this->get_communicator().sum(global_size);
+  this->get_solver_communicator().sum(global_size);
   
   vector<int> non_zeros_number(size_matrix);
   vector<int> offdiag_nnz(0);
