@@ -666,12 +666,18 @@ void
 SimulationInterface::setup_mpi_comm(void)
 {
   if (this->has_environment())
+  {
     this->set_communicator(this->get_environment().get_device().get_communicator());
+
+    // this is just a guess
+    if (_atomistic_structure != NULL)
+      this->set_solver_communicator(this->get_communicator());
+    else
+      this->set_solver_communicator(this->get_mesh().comm());
+  }
   else
     this->set_communicator(TiberCad::get_mpi_comm());
 
-  //cerr << "MPI rank " << this->get_communicator().rank()
-  //    << " out of " << this->get_communicator().size() << endl;
 }
 
 
@@ -713,7 +719,9 @@ SimulationInterface::init(void)
       ostringstream os;
       os << "MPI: rank " << get_communicator().rank() <<
           " of communicator with size " <<
-          get_communicator().size();
+          get_communicator().size() << "\n";
+      os << "MPI: solver parallelized on " <<
+          get_solver_communicator().size() << " processes";
       Messages::info(os.str());
     }
 

@@ -226,10 +226,30 @@ class SimulationInterface : public TiberModelObject
 
 
     //! Get the associated MPI communicator object
+    /*!
+     * This should usually be the same as that associated with the device.
+     */
     libMesh::Parallel::Communicator& get_communicator(void);
 
     //! Get the associated MPI communicator object
+    /*!
+     * This should usually be the same as that associated with the device.
+     */
     const libMesh::Parallel::Communicator& get_communicator(void) const;
+
+    //! Get the MPI communicator object associated with the solver
+    /*!
+     * This communicator might contain a subset of the main communicator
+     * as obtained from \c get_communicator()
+     */
+    libMesh::Parallel::Communicator& get_solver_communicator(void);
+
+    //! Get the MPI communicator object associated with the solver
+    /*!
+     * This communicator might contain a subset of the main communicator
+     * as obtained from \c get_communicator()
+     */
+    const libMesh::Parallel::Communicator& get_solver_communicator(void) const;
 
 
     //! Setup the available solution variables
@@ -891,6 +911,10 @@ class SimulationInterface : public TiberModelObject
     //! Set the associated MPI communicator object
     void set_communicator(const libMesh::Parallel::Communicator& comm);
 
+    //! Set the MPI communicator object associated with the solver
+    void set_solver_communicator(const libMesh::Parallel::Communicator& comm);
+
+
     //! Solve for equilibrium
     /*!
      * Can be implemented in derived classes to solve for some
@@ -1524,6 +1548,8 @@ class SimulationInterface : public TiberModelObject
     //! The associated MPI communicator
     libMesh::Parallel::Communicator _mpi_comm;
 
+    //! The MPI communicator associated with the solver
+    libMesh::Parallel::Communicator _solver_comm;
 
 
     //! A map between elements of _mesh and atoms
@@ -1681,6 +1707,20 @@ SimulationInterface::get_communicator(void) const
 }
 
 
+inline
+libMesh::Parallel::Communicator&
+SimulationInterface::get_solver_communicator(void)
+{
+  return(_solver_comm);
+}
+
+inline
+const libMesh::Parallel::Communicator&
+SimulationInterface::get_solver_communicator(void) const
+{
+  return(_solver_comm);
+}
+
 
 inline
 void
@@ -1688,6 +1728,15 @@ SimulationInterface::set_communicator(const libMesh::Parallel::Communicator& com
 {
   _mpi_comm = comm;
 }
+
+
+inline
+void
+SimulationInterface::set_solver_communicator(const libMesh::Parallel::Communicator& comm)
+{
+  _solver_comm = comm;
+}
+
 
 
 

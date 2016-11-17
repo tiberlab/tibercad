@@ -287,9 +287,13 @@ Control::setup_globals(const ModelOptions& opts)
 
     if (TiberCad::get_mpi_comm().size() > 1)
     {
+      char buffer[MPI_MAX_PROCESSOR_NAME];
+      int buflen;
+      MPI_Get_processor_name(buffer, &buflen);
       os.str("");
       os << "MPI: rank " << TiberCad::get_mpi_comm().rank()
-            << " out of " << TiberCad::get_mpi_comm().size();
+            << " out of " << TiberCad::get_mpi_comm().size()
+            << ", running on host " << buffer;
       Messages::newline();
       Messages::info(os.str());
     }
