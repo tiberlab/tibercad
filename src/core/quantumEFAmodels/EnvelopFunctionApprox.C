@@ -1029,7 +1029,7 @@ void EnvelopFunctionApprox::do_solve()
    }
    set_k_point(k_vec);
 
-  if (_calculate_density && (get_k_point().size() == 0.0))
+  if (_calculate_density && (get_k_point().norm() == 0.0))
   {
     estimate_spectrum_shift();
     //apply_bc();
