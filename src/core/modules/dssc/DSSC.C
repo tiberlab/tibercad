@@ -245,18 +245,18 @@ DSSC::compute_scaling(Scaling::ScalingType type)
   mesh_units = 1;
   phi0 = 1;
 
-  this->get_communicator().max(C0);
-  this->get_communicator().max(_cond_scaling.C);
-  this->get_communicator().max(_cond_scaling.n);
-  this->get_communicator().max(_cond_scaling.I);
-  this->get_communicator().max(_cond_scaling.I3);
+  this->get_solver_communicator().max(C0);
+  this->get_solver_communicator().max(_cond_scaling.C);
+  this->get_solver_communicator().max(_cond_scaling.n);
+  this->get_solver_communicator().max(_cond_scaling.I);
+  this->get_solver_communicator().max(_cond_scaling.I3);
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
   get_scaling().set_mobility_scaling(mu0);
   get_scaling().set_density_scaling(C0);
 
-  this->get_communicator().sum(_cation_amount);
-  this->get_communicator().sum(_iodine_amount);
+  this->get_solver_communicator().sum(_cation_amount);
+  this->get_solver_communicator().sum(_iodine_amount);
 
   ostringstream os;
   os << "total amount cation: " << _cation_amount << endl;
@@ -439,11 +439,11 @@ DSSC::compute_scaling_only(Scaling::ScalingType type)
   phi0 = 1;
 
 
-  this->get_communicator().max(C0);
-  this->get_communicator().max(_cond_scaling.C);
-  this->get_communicator().max(_cond_scaling.n);
-  this->get_communicator().max(_cond_scaling.I);
-  this->get_communicator().max(_cond_scaling.I3);
+  this->get_solver_communicator().max(C0);
+  this->get_solver_communicator().max(_cond_scaling.C);
+  this->get_solver_communicator().max(_cond_scaling.n);
+  this->get_solver_communicator().max(_cond_scaling.I);
+  this->get_solver_communicator().max(_cond_scaling.I3);
 
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
@@ -944,8 +944,9 @@ DSSC::rebuild_equation_system(void)
     _cation_dof = n_cat->dof_number(system.number(), eC_var, 0);
     _iodide_dof = n_cat->dof_number(system.number(), eI_var, 0);
   }
-  get_communicator().min(_cation_dof);
-  get_communicator().min(_iodide_dof);
+  get_solver_communicator().min(_cation_dof);
+  get_solver_communicator().min(_iodide_dof);
+
 
   if (_cation_dof == libMesh::DofObject::invalid_id)
     throw InitFailedException("Cannot find DOF for applying mass conservation");
@@ -1128,10 +1129,6 @@ DSSC::find_dirichlet_nodes(void)
 void
 DSSC::calculate_currents_rstf(void)
 {
-
-  // we only do something if we are on processor 0
-  if (get_mesh().comm().rank() != 0)
-    return;
 
   // reset currents
   ContactData::iterator it =

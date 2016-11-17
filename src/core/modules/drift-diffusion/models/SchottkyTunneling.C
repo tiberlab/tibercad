@@ -120,7 +120,7 @@ SchottkyTunneling::do_init(void)
       }
       else
       {
-        string band = get_option("barrier", "c");
+        string band = get_option("band", "c");
         _band = band[0];
       }
     }

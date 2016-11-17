@@ -248,7 +248,7 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
   get_scaling().set_potential_scaling(phi0);
   get_scaling().set_length_scaling(x0 * mesh_units);
   vector<double> values = {mu0, C0};
-  this->get_communicator().max(values);
+  this->get_solver_communicator().max(values);
   mu0 = values[0];
   C0  = values[1];
   get_scaling().set_mobility_scaling(mu0 > 0 ? mu0 : 1.0);
@@ -987,7 +987,7 @@ DriftDiffusion::calculate_iqe(void)
   }
 
   vector<double> recs = {_iqe, Rsrh, Raug, Rtot};
-  this->get_communicator().sum(recs);
+  this->get_solver_communicator().sum(recs);
   _iqe = recs[0];
   Rsrh = recs[1];
   Raug = recs[2];
@@ -1074,7 +1074,7 @@ DriftDiffusion::guess_equilibrium(void)
       for (unsigned int n = 0; n < (*it)->n_nodes(); n++)
 	node_conn[(*it)->node(n)]++;
 
-    this->get_communicator().sum(node_conn);
+    this->get_solver_communicator().sum(node_conn);
   }
 
   for ( ; el != end_el ; ++el)
@@ -3526,7 +3526,7 @@ DriftDiffusion::calculate_surface_recombination(void)
   } // end loop over elements
 
   // accumulate from all
-  this->get_communicator().sum(current);
+  this->get_solver_communicator().sum(current);
 
   ostringstream rec;
   rec << "Surface recombination current = " << current * Constants::e << "\n";
@@ -4012,7 +4012,6 @@ DriftDiffusion::get_solution_secure(map<ID, vector<double> >& values)
 }
 
 
-
 void
 DriftDiffusion::calculate_currents(void)
 {
@@ -4025,10 +4024,18 @@ DriftDiffusion::calculate_currents(void)
 
 
   // sum up contributions from all processes
-  ContactData::iterator it = _boundary_currents.begin();
-  for ( ; it != _boundary_currents.end(); ++it)
+  // ATTENTION: the iterator does not follow any particular order,
+  // so we need to use th names explicitly
+  map<string, double> currents;
+  for (auto it =  _boundary_currents.begin(); it != _boundary_currents.end(); ++it)
   {
-    this->get_communicator().sum((*it).second);
+    currents[(*it).first->get_name()] = (*it).second;
+  }
+
+  for (auto it = currents.begin(); it != currents.end(); ++it)
+  {
+    this->get_solver_communicator().sum((*it).second);
+    _boundary_currents[this->get_environment().get_boundary((*it).first)] = (*it).second;
   }
 }
 
