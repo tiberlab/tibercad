@@ -247,7 +247,15 @@ void KspaceIntegration::calculate_density()
     }
 
   }
-  
+
+  // it might happen that some process has no k elements. In that case
+  // we have to resize the vector manually
+  int len = real_space_density.size();
+  unsigned int max_id;
+  kspace_comm.maxloc(len, max_id);
+  if (real_space_density.size() < static_cast<unsigned int>(len))
+    real_space_density.resize(len, 0.0);
+
   kspace_comm.sum(real_space_density);
 
   //std::cout<<"density: "<<real_space_density.size()<<std::endl;
