@@ -115,7 +115,6 @@ void KspaceIntegration::calculate_density()
   for ( ; it_k_space != it_k_end ; ++it_k_space) //loop over k space elements
   {
     const KElem* kelem = *it_k_space;
-
     KMeshToIntegratedValue::iterator it_k_elem;
 
    

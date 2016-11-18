@@ -331,7 +331,7 @@ void Optics::init_k_space_integration(void)
    _k_integration = KspaceIntegration::create(this, 
                                               &Optics::calculate_for_k_point, 
                                               kopts, 
-                                              get_communicator(),
+                                              _initial_state_model->get_communicator(),
                                               _initial_state_model->get_solver_communicator());
 
    if (_k_integration == NULL)

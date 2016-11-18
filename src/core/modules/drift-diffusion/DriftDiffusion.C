@@ -440,7 +440,7 @@ DriftDiffusion::do_solve(void)
     for ( ; it != end; ++it)
     {
       ElectricalContact* bd = dynamic_cast<ElectricalContact*>(
-          it->first->models_begin()->second);
+          this->get_environment().get_boundary(it->first)->models_begin()->second);
 
       if (bd != NULL)
       {
@@ -550,8 +550,13 @@ DriftDiffusion::do_solve(void)
 
   for (it = _boundary_currents.begin(); it != end; ++it)
   {
+    Boundary* bnd = this->get_environment().get_boundary(it->first);
+
+    if (bnd == nullptr)
+      continue;
+
     DDInterfaceModel* ifmod =
-        static_cast<DDInterfaceModel*>(it->first->models_begin()->second);
+        static_cast<DDInterfaceModel*>(bnd->models_begin()->second);
 
     // we print only contacts with a current
     if (!ifmod->has_current())
@@ -559,7 +564,7 @@ DriftDiffusion::do_solve(void)
 
     ostringstream os;
     os << setprecision(6);
-    os << it->first->get_name();
+    os << it->first;
     ElectricalContact* cnt = dynamic_cast<ElectricalContact*>(ifmod);
     if (cnt != NULL)
     {
@@ -582,7 +587,7 @@ DriftDiffusion::do_solve(void)
     else
       os.width(2 * width - os.tellp());
     os << "";
-    os << it->second * it->first->get_area_factor();
+    os << it->second * bnd->get_area_factor();
 
     Messages::info(os.str());
   }
@@ -733,7 +738,7 @@ DriftDiffusion::do_equilibrium(void)
   const ContactData::iterator end(sim_voltages.end());
   for ( ; it != end; ++it)
   {
-    const Boundary* bd = it->first;
+    const Boundary* bd = this->get_environment().get_boundary(it->first);
     vector<ID> ids;
     bd->get_region_ids(ids);
     for (unsigned int i = 0; i < ids.size(); i++)
@@ -745,7 +750,7 @@ DriftDiffusion::do_equilibrium(void)
 
       if (cnt != NULL)
       {
-        sim_voltages[bd] = cnt->get_simulation_voltage();
+        sim_voltages[bd->get_name()] = cnt->get_simulation_voltage();
         cnt->set_simulation_voltage(0.0);
       }
     }
@@ -778,7 +783,7 @@ DriftDiffusion::do_equilibrium(void)
   it = sim_voltages.begin();
   for ( ; it != end; ++it)
   {
-    const Boundary* bd = it->first;
+    const Boundary* bd = this->get_environment().get_boundary(it->first);
     vector<ID> ids;
     bd->get_region_ids(ids);
     for (unsigned int i = 0; i < ids.size(); i++)
@@ -789,7 +794,7 @@ DriftDiffusion::do_equilibrium(void)
           dynamic_cast<ElectricalContact*>(mb->get_model(get_id()));
 
       if (cnt != NULL)
-        cnt->set_simulation_voltage(sim_voltages[bd]);
+        cnt->set_simulation_voltage(sim_voltages[bd->get_name()]);
     }
   }
 
@@ -1016,8 +1021,12 @@ DriftDiffusion::calculate_iqe(void)
     ContactData::const_iterator it(_boundary_currents.begin());
     for ( ; it != _boundary_currents.end(); ++it)
     {
+      const Boundary* bnd = this->get_environment().get_boundary(it->first);
+      if (bnd == nullptr)
+        continue;
+
       DDInterfaceModel* ifmod =
-          static_cast<DDInterfaceModel*>(it->first->models_begin()->second);
+          static_cast<DDInterfaceModel*>(bnd->models_begin()->second);
 
       // we print only contacts with a current
       if (!ifmod->has_current())
@@ -1361,7 +1370,7 @@ DriftDiffusion::RSTFSys::solve(void)
   assemble();
 
   // we need to solve for every contact
-  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  auto bdit(_boundaries.begin());
   for ( ; bdit != _boundaries.end(); ++bdit)
   {
     int i = bdit->second;
@@ -1391,11 +1400,11 @@ DriftDiffusion::RSTFSys::get_testfunction(int i)
 }
 
 libMesh::NumericVector<double>*
-DriftDiffusion::RSTFSys::get_testfunction(const Boundary* bd)
+DriftDiffusion::RSTFSys::get_testfunction(const std::string& bd)
 {
   libMesh::NumericVector<double>* vec = NULL;
 
-  map<const Boundary*, int>::iterator bdit(_boundaries.find(bd));
+  auto bdit(_boundaries.find(bd));
   if (bdit != _boundaries.end())
   {
     ostringstream os;
@@ -1414,7 +1423,7 @@ DriftDiffusion::RSTFSys::user_assembly(void)
   const unsigned int var = variable_number("u");
 
   vector<libMesh::NumericVector<double>*> rhsides(_boundaries.size());
-  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  auto bdit(_boundaries.begin());
   for ( ; bdit != _boundaries.end(); ++bdit)
   {
     int i = bdit->second;
@@ -1474,7 +1483,7 @@ DriftDiffusion::RSTFSys::user_assembly(void)
 
       if (bd != NULL)
       {
-        map<const Boundary*, int>::iterator bdit(_boundaries.find(bd));
+        auto bdit(_boundaries.find(bd->get_name()));
         if (bdit != _boundaries.end())
         {
           // the internal number of the boundary
@@ -1497,7 +1506,7 @@ DriftDiffusion::RSTFSys::user_assembly(void)
     //dof_map.constrain_element_matrix_and_vector(Ke, Fe, dof_indices);
 
     matrix->add_matrix(Ke, dof_indices);
-    map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+    auto bdit(_boundaries.begin());
     for ( ; bdit != _boundaries.end(); ++bdit)
     {
       rhsides[bdit->second]->add_vector(Fe[bdit->second], dof_indices);
@@ -1536,7 +1545,7 @@ DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
   legend.resize(_boundaries.size());
 
   vector<libMesh::NumericVector<double>*> rhsides(_boundaries.size());
-  map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+  auto bdit(_boundaries.begin());
   for ( ; bdit != _boundaries.end(); ++bdit)
   {
     int i = bdit->second;
@@ -1575,7 +1584,7 @@ DriftDiffusion::RSTFSys::build_nodal_results(vector<double>& results,
     for (unsigned int n = 0; n < elem->n_nodes(); n++)
     {
       unsigned int id = elem->node(n) * _boundaries.size();
-      map<const Boundary*, int>::iterator bdit(_boundaries.begin());
+      auto bdit(_boundaries.begin());
       for ( ; bdit != _boundaries.end(); ++bdit)
       {
         int i = bdit->second;
@@ -1630,8 +1639,8 @@ DriftDiffusion::do_init(void)
       const Boundary* bnd = get_environment().get_boundary(mod->get_name());
       if (bnd != NULL)
       {
-        _boundary_currents[bnd] = 0.0;
-        _voltages[bnd] = 0.0;
+        _boundary_currents[bnd->get_name()] = 0.0;
+        _voltages[bnd->get_name()] = 0.0;
       }
     }
 
@@ -2465,9 +2474,9 @@ DriftDiffusion::calculate_mean_fermi_levels(void)
           // the jacobian x weight x scaling
           double J = JxW_face[qp];
 
-          _boundary_eqfermi[bd] += J * en * phi0;
-          _boundary_hqfermi[bd] += J * ep * phi0;
-          boundary_area[bd] += J;
+          _boundary_eqfermi[bd->get_name()] += J * en * phi0;
+          _boundary_hqfermi[bd->get_name()] += J * ep * phi0;
+          boundary_area[bd->get_name()] += J;
         }
 
         ifmodels[sm] = bd;
@@ -2503,7 +2512,7 @@ DriftDiffusion::calculate_mean_fermi_levels(void)
     reffermi_e[sit->first] = 0;
     double count = bdset.size();
     for (set<Boundary*>::iterator bdit(bdset.begin()); bdit != bdset.end(); ++bdit)
-      reffermi_e[sit->first] += _boundary_eqfermi[*bdit] / count;
+      reffermi_e[sit->first] += _boundary_eqfermi[(*bdit)->get_name()] / count;
   }
 
 
@@ -2536,7 +2545,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
   // now we have certainly the RSTFs prepared
 
   // put all RSTFs into a map
-  map<const Boundary*, libMesh::NumericVector<double>*> rstf;
+  map<string, libMesh::NumericVector<double>*> rstf;
 
   {
     ContactData::iterator it = _boundary_currents.begin();
@@ -2708,7 +2717,7 @@ DriftDiffusion::calculate_currents_rstf_global(void)
         {
           double elrate, hlrate;
           (*recit)->get_net_recombination_rates(elrate, hlrate);
-          _boundary_currents[bd] -= JxW[qp] * Constants::e * (elrate - hlrate);
+          _boundary_currents[bd->get_name()] -= JxW[qp] * Constants::e * (elrate - hlrate);
         }
       }
 
@@ -2718,13 +2727,12 @@ DriftDiffusion::calculate_currents_rstf_global(void)
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
       {
         // do this for each contact
-        map<const Boundary*, libMesh::NumericVector<double>*>::iterator rstf_it(rstf.begin());
+        auto rstf_it(rstf.begin());
         for ( ; rstf_it != rstf.end(); ++rstf_it)
         {
-          const Boundary* bd = rstf_it->first;
           const libMesh::NumericVector<double>& sol = *rstf_it->second;
 
-          _boundary_currents[bd] += ((je + jh) * dphi[n][qp] +
+          _boundary_currents[rstf_it->first] += ((je + jh) * dphi[n][qp] +
               net_rate * phi[n][qp]) * sol(dof_indices_rstf[n]);
 
         }
@@ -2899,7 +2907,7 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
       libMesh::RealGradient jh(JxW[qp] * phi0 * (sigma_h * (dEfp + Pp * dT)));
 
       for (unsigned int n = 0; n < elem->n_nodes(); n++)
-        _boundary_currents[boundary] += ((je + jh) * dphi[n][qp] -
+        _boundary_currents[boundary->get_name()] += ((je + jh) * dphi[n][qp] -
             net_rate * phi[n][qp]) * weight[n];
 
     } // end loop over quadrature points
@@ -2930,7 +2938,7 @@ DriftDiffusion::calculate_field_emission(void)
       const Boundary* bnd = get_environment().get_boundary(mod->get_name());
       if (bnd != NULL)
       {
-        fe_currents[bnd] = 0.0;
+        fe_currents[bnd->get_name()] = 0.0;
       }
     }
   }
@@ -3096,7 +3104,7 @@ DriftDiffusion::calculate_field_emission(void)
           of << "9.11e-31 -1.6e-19 " << current << "\n";
         }
 
-        fe_currents[boundary] += current;
+        fe_currents[boundary->get_name()] += current;
       }
     } // end loop over elem sides
   } // end loop over elements
@@ -3108,7 +3116,7 @@ DriftDiffusion::calculate_field_emission(void)
   for (ContactData::iterator it(fe_currents.begin()); it != fe_currents.end(); ++it)
   {
     ostringstream os;
-    os << (*it).first->get_name() << ": " << (*it).second << "" << endl;
+    os << (*it).first << ": " << (*it).second << "" << endl;
     m.info(os.str());
   }
 }
@@ -3281,7 +3289,7 @@ DriftDiffusion::calculate_currents_surfint(void)
               (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
           } // end loop over quadrature points
 
-          _boundary_currents[boundary] += current;
+          _boundary_currents[boundary->get_name()] += current;
         }
         else
         {
@@ -3349,7 +3357,7 @@ DriftDiffusion::calculate_currents_surfint(void)
           {
             //ElectricalContact* contact = dynamic_cast<ElectricalContact*>(
             //   boundary->get_boundary_properties(get_id()));
-            _boundary_currents[boundary] = -phi0 *
+            _boundary_currents[boundary->get_name()] = -phi0 *
               (cond_e * (dEfn + Pn * dT) + cond_h * (dEfp + Pp * dT));
           }
         }
@@ -4000,9 +4008,10 @@ DriftDiffusion::get_solution_secure(map<ID, vector<double> >& values)
       const ContactData::iterator end(_boundary_currents.end());
       for (; it != end; ++it)
       {
-        if (tokens[0] == it->first->get_name())
+        if (tokens[0] == it->first)
         {
-          double curr = it->second * it->first->get_area_factor();
+          const Boundary* bnd = this->get_environment().get_boundary(it->first);
+          double curr = it->second * bnd->get_area_factor();
           values[id] = vector<double>(1, curr);
           break;
         }
@@ -4024,19 +4033,11 @@ DriftDiffusion::calculate_currents(void)
 
 
   // sum up contributions from all processes
-  // ATTENTION: the iterator does not follow any particular order,
-  // so we need to use th names explicitly
-  map<string, double> currents;
   for (auto it =  _boundary_currents.begin(); it != _boundary_currents.end(); ++it)
   {
-    currents[(*it).first->get_name()] = (*it).second;
+    this->get_solver_communicator().sum((*it).second);
   }
 
-  for (auto it = currents.begin(); it != currents.end(); ++it)
-  {
-    this->get_solver_communicator().sum((*it).second);
-    _boundary_currents[this->get_environment().get_boundary((*it).first)] = (*it).second;
-  }
 }
 
 

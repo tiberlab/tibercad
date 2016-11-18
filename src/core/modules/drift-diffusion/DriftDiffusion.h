@@ -11,10 +11,10 @@
 #include "TiberNonlinearSystem.h"
 
 // Libmesh includes
-#include "libmesh_common.h"
-#include "enum_order.h"
-#include "enum_quadrature_type.h"
-#include "linear_implicit_system.h"
+#include "libmesh/libmesh_common.h"
+#include "libmesh/enum_order.h"
+#include "libmesh/enum_quadrature_type.h"
+#include "libmesh/linear_implicit_system.h"
 
 
 // C++ includes
@@ -26,8 +26,7 @@
 
 
 // forward declarations
-//class Device;
-namespace libMesh{
+namespace libMesh {
 
 class MeshBase;
 //class Elem;
@@ -456,7 +455,8 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
   
     // for nicer code
-    typedef std::map<const Boundary*, double> ContactData;
+    //typedef std::map<const Boundary*, double> ContactData;
+    typedef std::map<std::string, double> ContactData;
     typedef std::set<unsigned int> DofList;
 
 
@@ -476,12 +476,12 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
         libMesh::NumericVector<double>* get_testfunction(int i);
 
-        libMesh::NumericVector<double>* get_testfunction(const Boundary* bd);
+        libMesh::NumericVector<double>* get_testfunction(const std::string& bd);
 
       private:
         DriftDiffusion* _dd;
 
-        std::map<const Boundary*, int> _boundaries;
+        std::map<std::string, int> _boundaries;
 
         void plot(void);
         void build_nodal_results(std::vector<double>& results,
