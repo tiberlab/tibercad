@@ -1272,7 +1272,8 @@ SimulationInterface::do_plot(void)
 
   plot_meshdata();
   plot_atomisticdata();
-  plot_globaldata();
+  if (get_communicator().rank() == 0)
+    plot_globaldata();
 }
 
 

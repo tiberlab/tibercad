@@ -7,7 +7,7 @@
 #include "Messages.h"
 #include "DataOutput.h"
 
-#include<fstream>
+#include <fstream>
 #include "SimulationOptions.h"
 #include <iomanip> // ??
 #include <petsc_matrix.h>
@@ -17,8 +17,8 @@
 #include <iomanip> // ??
 #include <petsc_matrix.h>
 
-#include "elem.h"
-#include "quadrature_gauss.h"
+#include "libmesh/elem.h"
+#include "libmesh/quadrature_gauss.h"
 
 #include <boost/shared_ptr.hpp>
 #include <fstream>

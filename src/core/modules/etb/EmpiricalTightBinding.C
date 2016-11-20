@@ -17,8 +17,8 @@
 #include "RotatedCrystal.h"
 #include "Utils.h"
 
-#include "mesh.h"
-#include "dof_map.h"
+#include "libmesh/mesh.h"
+#include "libmesh/dof_map.h"
 
 #include <fstream>
 #include <sstream>
