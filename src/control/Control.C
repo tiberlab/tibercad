@@ -267,10 +267,10 @@ Control::setup_globals(const ModelOptions& opts)
 
   // for the moment, if several processes try to use the same log file
   // we let everyone use a different one
-  if (TiberCad::get_mpi_comm().semiverify(&logfile))
-  {
+  //if (TiberCad::get_mpi_comm().semiverify(&logfile))
+  //{
     logfile = logfile + "." + to_string(TiberCad::get_mpi_comm().rank());
-  }
+  //}
 
 
   Messages::info("Writing log to " + logfile);
