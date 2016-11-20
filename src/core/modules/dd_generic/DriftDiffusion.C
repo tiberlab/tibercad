@@ -51,7 +51,6 @@
 // Module interface
 //
 
-
 namespace
 {
   int __private_counter;
@@ -4133,6 +4132,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     libMesh::NumericVector<Number>* residual,
     libMesh::SparseMatrix<Number>* jacobian)
 {
+
   START_LOG(get_name() + ": Matrix assembly", "");
 
   //build_local_scaling();
@@ -4359,16 +4359,17 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       oldXv.insert( make_pair(var.first, oldX_tmp) );
       scalev.insert( make_pair(var.first, scale_tmp) );
 
-      map<unsigned int, libMesh::DenseSubMatrix<Number>> Kv_tmp; //Kvv columns
+      //map<unsigned int, libMesh::DenseSubMatrix<Number>> Kv_tmp; //Kvv columns
       unsigned int n_varj = 0;
       for (auto varj : q_var)
       {
         libMesh::DenseSubMatrix<Number> K_tmp(Ke);
         K_tmp.reposition(n_var*n_dofs, n_varj*n_dofs, n_dofs, n_dofs);
-        Kv_tmp.insert( make_pair(varj.first, K_tmp) );
+        //Kv_tmp.insert( make_pair(varj.first, K_tmp) );
+        Kvv[var.first].insert(make_pair(varj.first, K_tmp));
         n_varj++;
       }
-      Kvv.insert( make_pair(var.first, Kv_tmp) );
+      //Kvv.insert( make_pair(var.first, Kv_tmp) );
       n_var++;
     }
 
@@ -4395,9 +4396,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       {
         for (auto var : q_var)
         {
-          u[var.first] += phi[i][qp] * Xv[var.first](i);
-          oldu[var.first] += phi[i][qp] * oldXv[var.first](i);
-          grad_u[var.first] += dphi[i][qp] * Xv[var.first](i);
+          u[var.first] += phi[i][qp] * Xv.at(var.first)(i);
+          oldu[var.first] += phi[i][qp] * oldXv.at(var.first)(i);
+          grad_u[var.first] += dphi[i][qp] * Xv.at(var.first)(i);
         }
       }
 
@@ -4497,24 +4498,23 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             if (var.first == u_var)
             {
               if (coupling & POISSON)
-                Kvv[var.first][var.first](i,j) += l2 * laplace_u / scalev[var.first](i);
+                Kvv.at(var.first).at(var.first)(i,j) += l2 * laplace_u / scalev.at(var.first)(i);
               else
-                Kvv[var.first][var.first](i,j) += 1.0;
+                Kvv.at(var.first).at(var.first)(i,j) += 1.0;
             }
             else
             {
               if (coupling & CURRENTS)
-                Kvv[var.first][var.first](i,j) += sigma[var.first] * laplace / scalev[var.first](i);
+                Kvv.at(var.first).at(var.first)(i,j) += sigma[var.first] * laplace / scalev.at(var.first)(i);
               else
-                Kvv[var.first][var.first](i,j) += 1.0;
+                Kvv.at(var.first).at(var.first)(i,j) += 1.0;
             }
 
 
           }
         }
-
-
       }
+
 
       //
       // for jacobian compute the other contributions
@@ -4614,7 +4614,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                                     dsigma_x_lap;
           for (auto var : q_var)
           {
-            lap.insert( make_pair(var.first, (dphi[i][qp] * grad_u[var.first]) / scalev[var.first](i)) );
+            lap.insert( make_pair(var.first, (dphi[i][qp] * grad_u[var.first]) / scalev.at(var.first)(i)) );
             dsigma_x_lap.insert ( make_pair(var.first, dsigma[var.first]*lap[var.first]) );
           }
 
@@ -4638,9 +4638,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                   double dmu_grad_f_x_dphi = dmu_grad_f[var.first] * dphi[j][qp];
 
                   if (coupling & POISSON)
-                    Kvv[var.first][u_var](i,j) += dsigma_x_phi + (dmu_u_x_phi + dmu_grad_u_x_dphi) * lap[var.first];
+                    Kvv.at(var.first).at(u_var)(i,j) += dsigma_x_phi + (dmu_u_x_phi + dmu_grad_u_x_dphi) * lap[var.first];
 
-                  Kvv[var.first][var.first](i,j) += (dmu_grad_f_x_dphi - dmu_u_x_phi) * lap[var.first] - dsigma_x_phi;
+                  Kvv.at(var.first).at(var.first)(i,j) += (dmu_grad_f_x_dphi - dmu_u_x_phi) * lap[var.first] - dsigma_x_phi;
                 }
               }
             }
@@ -4682,18 +4682,18 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             */
 
 
-
+            
             // The dFe_i/dX_j part
             double phi_i_x_phi_j = J * phi[i][qp] * phi[j][qp];
 
             if (coupling & POISSON)
             {
-              Kvv[u_var][u_var](i,j) -= drho[u_var] * phi_i_x_phi_j / scalev[u_var](i);
+              Kvv.at(u_var).at(u_var)(i,j) -= drho[u_var] * phi_i_x_phi_j / scalev.at(u_var)(i);
 
               for (auto var : q_var)
               {
                 if ( (var.first != u_var) && (coupling & CURRENTS) )
-                  Kvv[u_var][var.first](i,j) -= drho[var.first] * phi_i_x_phi_j / scalev[u_var](i);
+                  Kvv.at(u_var).at(var.first)(i,j) -= drho[var.first] * phi_i_x_phi_j / scalev.at(u_var)(i);
               }
             }
 
@@ -4704,19 +4704,18 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 if (vari.first != u_var)
                 {
                   if ((coupling & POISSON) && _options.exact_newton)
-                    Kvv[vari.first][u_var](i,j) -= dR[vari.first][u_var] * phi_i_x_phi_j / scalev[vari.first](i);
+                    Kvv.at(vari.first).at(u_var)(i,j) -= dR[vari.first][u_var] * phi_i_x_phi_j / scalev.at(vari.first)(i);
 
                   for (auto varj : q_var)
-                    Kvv[vari.first][varj.first](i,j) -= dR[vari.first][varj.first] * phi_i_x_phi_j / scalev[vari.first](i);
+                    Kvv.at(vari.first).at(varj.first)(i,j) -= dR[vari.first][varj.first] * phi_i_x_phi_j / scalev.at(vari.first)(i);
                 }
               }
             }
-
+            
           }
         }
 
       } //end jacobian
-
 
       // if we are doing residual, calculate rhs contribution (i.e. Fe)
       if (residual != NULL)
@@ -4753,18 +4752,18 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             if (var.first == u_var)
             {
               if (coupling & POISSON)
-                Fv[var.first](i) -= J_x_rho * phi[i][qp] / scalev[var.first](i);
+                Fv.at(var.first)(i) -= J_x_rho * phi[i][qp] / scalev.at(var.first)(i);
               else
-                Fv[var.first](i) -= Xv[var.first](i);
+                Fv.at(var.first)(i) -= Xv.at(var.first)(i);
             }
             else
             {
-              long double net_recomb = J_x_R[var.first] * phi[i][qp] / scalev[var.first](i);
+              long double net_recomb = J_x_R[var.first] * phi[i][qp] / scalev.at(var.first)(i);
 
               if (coupling & CURRENTS)
-                Fv[var.first](i) -= net_recomb;
+                Fv.at(var.first)(i) -= net_recomb;
               else
-                Fv[var.first](i) -= Xv[var.first](i);
+                Fv.at(var.first)(i) -= Xv.at(var.first)(i);
             }
 
           }
@@ -4790,7 +4789,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       }  //end residual
 
     } // end loop over quadrature points
-
 
 
     map<unsigned int, vector<double> > dirichlet_jac;
@@ -4839,8 +4837,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           {
             for (auto var : q_var)
             {
-              u[var.first] += phi_face[i][qp] * Xv[var.first](i);
-              grad_u[var.first] += dphi_face[i][qp] * Xv[var.first](i);
+              u[var.first] += phi_face[i][qp] * Xv.at(var.first)(i);
+              grad_u[var.first] += dphi_face[i][qp] * Xv.at(var.first)(i);
             }
           }
 
@@ -4925,7 +4923,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
               vector<double> fac(q_var_bc.size());
               for (auto var : q_var_bc)
               {
-                fac[var.second] = scale_v[var.second] / scalev[var.first](i);
+                fac[var.second] = scale_v[var.second] / scalev.at(var.first)(i);
 
                 if (elem->is_node_on_side(i, s))
                 {
@@ -4945,7 +4943,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                     for (auto varj : q_var_bc)
                     {
                       if (((varj.first == u_var) && (coupling & POISSON)) || ((varj.first != u_var) && (coupling & CURRENTS)))
-                        Kvv[vari.first][varj.first](i,j) -= fac[vari.second] * deriv_v[vari.second][varj.second] * phi_i_x_phi_j;
+                        Kvv.at(vari.first).at(varj.first)(i,j) -= fac[vari.second] * deriv_v[vari.second][varj.second] * phi_i_x_phi_j;
                     }
                   }
                 }
@@ -5005,7 +5003,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             {
               for (auto var : q_var_bc)
               {
-                double scale_v = 1.0 / scalev[var.first](i);
+                double scale_v = 1.0 / scalev.at(var.first)(i);
 
                 if (elem->is_node_on_side(i, s))
                 {
@@ -5017,7 +5015,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 }
 
                 if (((var.first == u_var) && (coupling & POISSON)) || ((var.first != u_var) && (coupling & CURRENTS)))
-                  Fv[var.first](i) -= value_v[var.second] * phi_face[i][qp] * scale_v;
+                  Fv.at(var.first)(i) -= value_v[var.second] * phi_face[i][qp] * scale_v;
 
               } //end q_var_bc loop
             }  // end dof loop
@@ -5105,17 +5103,18 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           for (auto varj : q_var)
           {
             for (unsigned int j = 0; j < n_dofs; j++)
-              Kvv[vari.first][varj.first](i,j) = ((vari.first == u_var) && (varj.first == u_var)) ? Kvv[vari.first][varj.first](i,j) : 0.0;
+              Kvv.at(vari.first).at(varj.first)(i,j) = ((vari.first == u_var) && (varj.first == u_var)) ? 
+                                                         Kvv.at(vari.first).at(varj.first)(i,j) : 0.0;
           }
 
           if (vari.first != u_var)
           {
             if (is_dielectric_boundary_node(elem->get_node(i)))
-              Kvv[vari.first][vari.first](i, i) = 0.0;
+              Kvv.at(vari.first).at(vari.first)(i, i) = 0.0;
             else
-              Kvv[vari.first][vari.first](i, i) = 1.0;
+              Kvv.at(vari.first).at(vari.first)(i, i) = 1.0;
             // we simply set the electrochemical potential to zero
-            Fv[vari.first](i) = 0.0;
+            Fv.at(vari.first)(i) = 0.0;
           }
         }
       }

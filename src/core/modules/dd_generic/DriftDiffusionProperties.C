@@ -734,7 +734,7 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     _pd->q_recombination_rate_derivatives[cp0][cp1][0] += dR0[1];
     _pd->q_recombination_rate_derivatives[cp0][cp0][1] += dR0[2];
     _pd->q_recombination_rate_derivatives[cp0][cp1][1] += dR0[3];
-    _pd->q_recombination_rate[cp1] += Rh;
+    _pd->q_recombination_rate[cp1] += R1;
     _pd->q_recombination_rate_derivatives[cp1][cp1][0] += dR1[0];
     _pd->q_recombination_rate_derivatives[cp1][cp0][0] += dR1[1];
     _pd->q_recombination_rate_derivatives[cp1][cp1][1] += dR1[2];
