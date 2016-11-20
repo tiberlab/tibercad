@@ -50,8 +50,7 @@ DDBulkModel::DDBulkModel(const ModelOptions& options)
     _eTEpower(0),
     _hTEpower(0),
     _polarization(0),
-    _background_conductivity_e(0.0),
-    _background_conductivity_h(0.0),
+    _background_conductivity(0.0),
     _thermoelectric_power(NULL),
     _relax_polariz(1.0)
 {
@@ -244,60 +243,47 @@ DDBulkModel::prepare_submodels(void)
     //
     // mobilities
     //
-    ModelOptions::submodel_iterator
-      mobit(get_options().submodels_begin("mobility"));
+    ModelOptions::submodel_iterator it(get_options().submodels_begin("mobility"));
+    ModelOptions::submodel_iterator end(get_options().submodels_end("mobility"));
 
-    ModelOptions::submodel_iterator
-      it(get_options().submodels_begin("electron_mobility"));
-    ModelOptions::submodel_iterator
-      end(get_options().submodels_end("electron_mobility"));
+    //mobility models
+    std::vector<std::string> carriers_all;
+    for ( ; it != end; ++it)
+    {
+      std::vector<std::string> carriers;
+      (it->second).get_option("carriers", carriers);
 
-    // create electron mobility model
-    if (it != end)
-    {
-      (it->second).set_option("particle", "electron");
-      _electron_mobility = create_mobility_model(it->second);
-    }
-    else if (mobit != get_options().submodels_end("mobility"))
-    {
-      (mobit->second).set_option("particle", "electron");
-      (mobit->second).set_option("name", string("electron_mobility"));
-      _electron_mobility = create_mobility_model(mobit->second);
-    }
-    else
-    {
-      ModelOptions opts;
-      opts.set_option("particle", "electron");
-      opts.set_option("name", string("electron_mobility"));
-      _electron_mobility = create_mobility_model(opts);
-    }
+      // check if at least one carrier has been provided
+      if (carriers.size() < 1)
+       throw InitFailedException("Mobility model requires at least one carrier");
 
+      for ( auto ca : carriers)
+      {
+        // check if carriers have been defined
+        if (get_carrier_properties(ca) == nullptr)
+          throw InitFailedException("Mobility: carrier '" + (ca) + "' not found'");
 
+        // check if mobility for this carrier has already been defined
+        std::vector<std::string>::iterator find_it;
+        find_it = std::find(carriers_all.begin(), carriers_all.end(), ca);
+        if (find_it != carriers_all.end())
+          throw InitFailedException("Multiple definition of mobility for carrier '" + (ca) + "'");
+        else
+          carriers_all.push_back(ca); 
 
-    // create hole mobility model
-    it = get_options().submodels_begin("hole_mobility");
-    end = get_options().submodels_end("hole_mobility");
-
-    if (it != end)
-    {
-      (it->second).set_option("particle", "hole");
-      _hole_mobility = create_mobility_model(it->second);
-    }
-    else if (mobit != get_options().submodels_end("mobility"))
-    {
-      (mobit->second).set_option("particle", "hole");
-      (mobit->second).set_option("name", string("hole_mobility"));
-      _hole_mobility = create_mobility_model(mobit->second);
-    }
-    else
-    {
-      ModelOptions opts;
-      opts.set_option("particle", "hole");
-      opts.set_option("name", string("hole_mobility"));
-      _hole_mobility = create_mobility_model(opts);
+        _q_mobility.insert( make_pair(ca, create_mobility_model(it->second)) );
+        _q_mobility[ca]->set_carrier(ca);
+      }
     }
 
-
+    // check if a mobility model has been defined for all carriers
+    for (auto&& cp : get_carrier_properties())
+    {
+      std::vector<std::string>::iterator find_it;
+      find_it = std::find(carriers_all.begin(), carriers_all.end(), cp.first);
+      if (find_it == carriers_all.end())
+          throw InitFailedException("A mobility model for carrier '" + cp.first + "' has not been defined");
+    }
 
     //
     // Recombinations
@@ -325,8 +311,7 @@ DDBulkModel::prepare_submodels(void)
   {
     // a dielectric does not need all this models
     delete_submodel("thermoelectricpower");
-    delete_submodel("hole_mobility");
-    delete_submodel("electron_mobility");
+    delete_submodel("mobility");
     delete_submodel("generation");
   }
 
@@ -347,17 +332,15 @@ DDBulkModel::do_init(void)
   //  _background_conductivity =
   //      0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
   //else
-  _background_conductivity_e =
-      0.5 * get_option("background_conductivity", 1e-3 * Constants::e);
-  _background_conductivity_h = _background_conductivity_e;
+  _background_conductivity =
+      0.5 * get_option("background_conductivity", 1e-3 * Constants::e) / Constants::e;
 
-  _background_conductivity_e = get_option("background_conductivity_e",
-      _background_conductivity_e);
-  _background_conductivity_h = get_option("background_conductivity_h",
-      _background_conductivity_h);
+  ModelOptions::submodel_iterator it_bgc(get_options().submodels_begin("background_conductivity"));
+  ModelOptions::submodel_iterator end_bgc(get_options().submodels_end("background_conductivity"));
 
-  _background_conductivity_e /= Constants::e;
-  _background_conductivity_h /= Constants::e;
+  if (it_bgc != end_bgc)
+    _background_conductivity += (it_bgc->second).get_option("sigma", 1e-3 * Constants::e) / Constants::e;
+
 
   // calculate the equilibrium
   set_lattice_temperature(SimulationOptions::T);
@@ -466,25 +449,27 @@ DDBulkModel::calculate_mobilities(void)
   PointData& pd = get_pd();
   if (is_dielectric())
   {
-    pd.electron_mobility = 0.0;
-    pd.hole_mobility = 0.0;
+    for (auto&& cp : get_carrier_properties())
+    {
+      pd.q_mobility[cp.first] = 0.0;
+      pd.q_mobility_derivative_potential[cp.first] = 0.0;
+      pd.q_mobility_derivative_grad_potential[cp.first] = libMesh::RealGradient(0);
+      pd.q_mobility_derivative_grad_fermi[cp.first] = libMesh::RealGradient(0);
+    }
   }
   else
   {
-    pd.electron_mobility = _electron_mobility->get_mobility();
-    pd.electron_mobility_derivative_potential = _electron_mobility->get_derivative_potential();
-    _electron_mobility->get_derivative_grad_potential(pd.electron_mobility_derivative_grad_potential);
-    _electron_mobility->get_derivative_grad_fermi(pd.electron_mobility_derivatives);
-    pd.hole_mobility = _hole_mobility->get_mobility();
-    pd.hole_mobility_derivative_potential = _hole_mobility->get_derivative_potential();
-    _hole_mobility->get_derivative_grad_potential(pd.hole_mobility_derivative_grad_potential);
-    _hole_mobility->get_derivative_grad_fermi(pd.hole_mobility_derivatives);
+    for (auto&& cp : get_carrier_properties())
+    {
+     pd.q_mobility[cp.first] = _q_mobility[cp.first]->get_mobility();
+     pd.q_mobility_derivative_potential[cp.first] = _q_mobility[cp.first]->get_derivative_potential();
+     _q_mobility[cp.first]->get_derivative_grad_potential(pd.q_mobility_derivative_grad_potential[cp.first]);
+     _q_mobility[cp.first]->get_derivative_grad_fermi(pd.q_mobility_derivative_grad_fermi[cp.first]);
+
+     pd.q_conductivity[cp.first] = pd.q_mobility[cp.first]*pd.q_density[cp.first] + _background_conductivity;
+    }
   }
 
-  pd.electron_conductivity =
-    pd.electron_mobility * pd.electron_density + _background_conductivity_e;
-  pd.hole_conductivity =
-    pd.hole_mobility * pd.hole_density + _background_conductivity_h;
 }
 
 

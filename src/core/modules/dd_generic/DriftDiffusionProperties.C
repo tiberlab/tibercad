@@ -716,29 +716,29 @@ DriftDiffusionProperties::calculate_net_recombination_rates(void)
     }
   }
 
-  double Re, Rh;
-  vector<double> dRe(4), dRh(4);
+  double R0, R1;
+  vector<double> dR0(4), dR1(4);
 
   recomb_iterator it = _recombination_models.begin();
   recomb_iterator end = _recombination_models.end();
   for ( ; it != end; ++it)
   {
-    (it->second)->get_net_recombination_rates(Re, Rh);
-    (it->second)->get_net_recombination_rate_derivatives(dRe, dRh);
+    (it->second)->get_net_recombination_rates(R0, R1);
+    (it->second)->get_net_recombination_rate_derivatives(dR0, dR1);
 
     string cp0 = (it->second)->get_carriers()[0];
     string cp1 = (it->second)->get_carriers()[1];
 
-    _pd->q_recombination_rate[cp0] += Re;
-    _pd->q_recombination_rate_derivatives[cp0][cp0][0] += dRe[0];
-    _pd->q_recombination_rate_derivatives[cp0][cp1][0] += dRe[1];
-    _pd->q_recombination_rate_derivatives[cp0][cp0][1] += dRe[2];
-    _pd->q_recombination_rate_derivatives[cp0][cp1][1] += dRe[3];
+    _pd->q_recombination_rate[cp0] += R0;
+    _pd->q_recombination_rate_derivatives[cp0][cp0][0] += dR0[0];
+    _pd->q_recombination_rate_derivatives[cp0][cp1][0] += dR0[1];
+    _pd->q_recombination_rate_derivatives[cp0][cp0][1] += dR0[2];
+    _pd->q_recombination_rate_derivatives[cp0][cp1][1] += dR0[3];
     _pd->q_recombination_rate[cp1] += Rh;
-    _pd->q_recombination_rate_derivatives[cp1][cp1][0] += dRh[0];
-    _pd->q_recombination_rate_derivatives[cp1][cp0][0] += dRh[1];
-    _pd->q_recombination_rate_derivatives[cp1][cp1][1] += dRh[2];
-    _pd->q_recombination_rate_derivatives[cp1][cp0][1] += dRh[3];
+    _pd->q_recombination_rate_derivatives[cp1][cp1][0] += dR1[0];
+    _pd->q_recombination_rate_derivatives[cp1][cp0][0] += dR1[1];
+    _pd->q_recombination_rate_derivatives[cp1][cp1][1] += dR1[2];
+    _pd->q_recombination_rate_derivatives[cp1][cp0][1] += dR1[3];
   }
 }
 

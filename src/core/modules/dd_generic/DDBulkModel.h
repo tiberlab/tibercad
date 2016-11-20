@@ -274,19 +274,20 @@ class DDBulkModel : public DriftDiffusionProperties
     libMesh::RealVectorValue _polarization;
 
 
-    //! A background conductivity for electrons
+    //! A background conductivity
     /*!
      * Mainly used for stability reasons in pathologic cases
      * Units are S/cm
      */
-    double _background_conductivity_e;
+    double _background_conductivity;
 
+    
     //! A background conductivity for holes
     /*!
      * Mainly used for stability reasons in pathologic cases
      * Units are S/cm
      */
-    double _background_conductivity_h;
+    //double _background_conductivity_h;
 
 
 
@@ -350,6 +351,10 @@ class DDBulkModel : public DriftDiffusionProperties
     //! The relaxation factor for the polarization
     double _relax_polariz;
 
+    //New generic model
+
+    //! Carrier mobilities
+    std::map<std::string, MobilityModelInterface*> _q_mobility;
 
 };
 

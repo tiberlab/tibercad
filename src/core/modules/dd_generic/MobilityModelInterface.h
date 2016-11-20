@@ -51,9 +51,12 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
      */
     void set_carrier_type(char type);
 
+    void set_carrier(std::string carrier);
 
     //! Get the carrier type
     char get_carrier_type(void) const;
+
+    std::string get_carrier(void) const;
 
 
   protected:
@@ -69,7 +72,9 @@ class TBDLEXPORT MobilityModelInterface : public DriftDiffusionModelInterface
     /*!
      * Can be \c e or \c h
      */
-    char _carrier;
+    char _carrier_type;
+
+    std::string _carrier;
 
 };
 
@@ -86,9 +91,9 @@ MobilityModelInterface::MobilityModelInterface(const ModelOptions& options)
 {
   std::string p = get_options().get_option("particle", "electron");
   if (p == "electron")
-    _carrier = 'e';
+    _carrier_type = 'e';
   else
-    _carrier = 'h';
+    _carrier_type = 'h';
 }
 
 
@@ -103,13 +108,27 @@ inline
 void
 MobilityModelInterface::set_carrier_type(char type)
 {
-  _carrier = type;
+  _carrier_type = type;
 }
 
 
 inline
 char
 MobilityModelInterface::get_carrier_type(void) const
+{
+  return _carrier_type;
+}
+
+inline
+void
+MobilityModelInterface::set_carrier(std::string carrier)
+{
+  _carrier = carrier;
+}
+
+inline
+std::string
+MobilityModelInterface::get_carrier(void) const
 {
   return _carrier;
 }

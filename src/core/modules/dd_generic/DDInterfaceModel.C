@@ -305,14 +305,12 @@ DDInterfaceModel::reinit(const Elem* elem, int side)
 void
 DDInterfaceModel::compute()
 {
-  for (unsigned int i = 0; i < 3; i++)
+  for (unsigned int i = 0; i <= _n_carriers; i++)
   {
     if (get_type(i) == NEUMANN)
     {
       _coeff_g[i] = 0;
-      _jacobian[i][0] = 0;
-      _jacobian[i][1] = 0;
-      _jacobian[i][2] = 0;
+      _jacobian[i].resize(_n_carriers + 1, 0);
     }
   }
   calculate_densities();

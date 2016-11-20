@@ -4261,8 +4261,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
   vector<unsigned int> dof_indices_u;
   // dof indices vectors for fermi potentials are defined within element loop
   // since (in future) different variables can ben set in different regions
-  vector<unsigned int> dof_indices_en;
-  vector<unsigned int> dof_indices_ep;
 
   // zero out residual and jacobian !! IMPORTANT !!
   if (residual != NULL)
@@ -4291,9 +4289,13 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
     //Get variables for fermi potentials
     map<unsigned int, string> q_var;
+    map<unsigned int, unsigned int> q_var_bc;
     q_var.insert( make_pair(u_var, "potential") );
     for (auto&& cp : sc->get_carrier_properties())  //get carriers
-      q_var.insert( make_pair(system.variable_number(cp.first), cp.first) ); //insert variable number (key) and variable name (the same as carrier name)
+      q_var.insert( make_pair(system.variable_number(cp.first), cp.first) ); 
+                            //insert variable number   and      variable name (the same as carrier name)
+    for (auto var : q_var)
+      q_var_bc.insert( make_pair(var.first, q_var_bc.size()) );
 
    //Get dof indices
     map<unsigned int, vector<unsigned int>> dof_indices_var;
@@ -4304,7 +4306,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     {
       vector<unsigned int> dof_indices_var_tmp;
       dof_map.dof_indices(elem, dof_indices_var_tmp, var.first);
-      dof_indices_var.insert( make_pair(var.first, dof_indices_var_tmp) ); //insert variable number (key) and dof indices for the element
+      dof_indices_var.insert( make_pair(var.first, dof_indices_var_tmp) ); 
+                            //insert variable number and dof indices for the element
     }
 
     unsigned int n_dofs     = dof_indices_u.size();
@@ -4326,9 +4329,9 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     //define submatrices
     map<unsigned int, map<unsigned int, libMesh::DenseSubMatrix<Number>>> Kvv;
     map<unsigned int, libMesh::DenseSubVector<Number>> Fv,
-                                              Xv,
-                                              oldXv,
-                                              scalev;
+                                                       Xv,
+                                                       oldXv,
+                                                       scalev;
 
     // Reposition the submatrices according to this scheme:
     //
@@ -4338,7 +4341,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     //        | K.u ... ... ... |        | ...|
     //
 
-    n_var = 0;
+    unsigned int n_var = 0;
     for (auto var : q_var)
     {
       libMesh::DenseSubVector<Number> F_tmp(Fe), 
@@ -4382,8 +4385,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
       for (auto var : q_var)
       {
-        u.insert( make_pair(var.first, 0) );
-        oldu.insert( make_pair(var.first, 0) );
+        u.insert( make_pair(var.first, 0.0) );
+        oldu.insert( make_pair(var.first, 0.0) );
         grad_u.insert( make_pair(var.first, libMesh::RealGradient(0)) );
       }
 
@@ -4393,7 +4396,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         for (auto var : q_var)
         {
           u[var.first] += phi[i][qp] * Xv[var.first](i);
-          oldu[var.first] += phi[i][qp] * oldXv[var.first](i);;
+          oldu[var.first] += phi[i][qp] * oldXv[var.first](i);
           grad_u[var.first] += dphi[i][qp] * Xv[var.first](i);
         }
       }
@@ -4495,28 +4498,21 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             {
               if (coupling & POISSON)
                 Kvv[var.first][var.first](i,j) += l2 * laplace_u / scalev[var.first](i);
+              else
+                Kvv[var.first][var.first](i,j) += 1.0;
             }
             else
             {
               if (coupling & CURRENTS)
                 Kvv[var.first][var.first](i,j) += sigma[var.first] * laplace / scalev[var.first](i);
+              else
+                Kvv[var.first][var.first](i,j) += 1.0;
             }
+
+
           }
         }
 
-        for (auto var : q_var)
-        {
-          if (var.first == u_var)
-          {
-            if (!(coupling & POISSON))
-              Kvv[var.first][var.first](i,j) += 1.0;
-          }
-          else
-          {
-            if (!(coupling & CURRENTS))
-              Kvv[var.first][var.first](i,j) += 1.0;
-          }
-        }
 
       }
 
@@ -4525,20 +4521,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       //
       if (jacobian != NULL)
       {
-        double drho[3];
-        sc->get_charge_density_derivatives(&drho[1]);
-        //drho[1] = (dn_dphi - dNd_dphi) * phi0 / C0;
-        //drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
-        drho[1] *= phi0 / C0;
-        drho[2] *= phi0 / C0;
-        drho[0] = -(drho[1] + drho[2]);
-
-        if (params.local_neutrality)
-          drho[0] = drho[1] = drho[2] = 0.0;
-
-        if (sc->is_dielectric())
-          drho[2] = drho[1] = drho[0] = 0.0;
-
         map<unsigned int, long double> ddens_dphi;
         map<unsigned int, map<unsigned int, long double>> dR_ddens,
                                                           dR_dEf,
@@ -4550,7 +4532,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           {
             long double ddens_dphi_tmp = sc->get_q_density_derivative(vari.second);
             ddens_dphi.insert( make_pair(vari.first, ddens_dphi_tmp) );
-            dR.insert( make_pair( vari.first, make_pair(u_var, 0.0) ) );
+            dR[vari.first].insert( make_pair(u_var, 0.0) );
 
             for (auto varj : q_var)
             {
@@ -4560,15 +4542,35 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 long double dR_dEf_tmp = sc->get_net_q_recombination_rate_derivatives(vari.second, varj.second)[1];
                 long double dR_tmp = (dR_dEf_tmp - dR_ddens_tmp * ddens_dphi_tmp) * phi0 / R0;
 
-                if (R[vari] == 0.0)
+                if (R[vari.first] == 0.0)
                   dR_ddens_tmp = dR_dEf_tmp = dR_tmp = 0.0;
 
-                dR_ddens.insert( make_pair(vari.first, make_pair(varj.first, dR_ddens_tmp) ) );
-                dR_dEf.insert( make_pair(vari.first, make_pair(varj.first, dR_dEf_tmp) ) );
-                dR.insert( make_pair(vari.first, make_pair(varj.first, dR_tmp) ) );
-                dR[vari.first][u_var] -= dR_tmp;
+                dR_ddens[vari.first].insert( make_pair(varj.first, dR_ddens_tmp) );
+                dR_dEf[vari.first].insert( make_pair(varj.first, dR_dEf_tmp) );
+                dR[vari.first].insert( make_pair(varj.first, dR_tmp) );
+                dR[vari.first][u_var] -= dR_ddens_tmp * ddens_dphi_tmp * phi0 / R0;
               }
+
             }
+          }
+        }
+
+        map<unsigned int, double> drho;
+        drho.insert( make_pair(u_var, 0.0) );
+        //drho[1] = (dn_dphi - dNd_dphi) * phi0 / C0;
+        //drho[2] = -(dp_dphi - dNa_dphi) * phi0 / C0;
+        for (auto var : q_var)
+        {
+          if (var.first != u_var)
+          {
+            char ctype = sc->get_carrier_properties(var.second)->get_carrier_type();
+            drho[var.first] = (ctype == 'e') ? ddens_dphi[var.first] * phi0 / C0 : -ddens_dphi[var.first] * phi0 / C0;
+            drho[u_var] -= drho[var.first];
+
+            if (params.local_neutrality)
+              drho[u_var] = drho[var.first] = 0.0;
+            if (sc->is_dielectric())
+              drho[u_var] = drho[var.first] = 0.0;
           }
         }
 
@@ -4588,30 +4590,33 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             dsigma.insert( make_pair(var.first, dsigma_tmp) );
 
             double dmu_u_tmp = sc->get_q_mobility_derivative_potential(var.second);
-            dmu_u_tmp *= J * phi0 / (mu0 * C0) * dens[var.first]
+            dmu_u_tmp *= J * phi0 / (mu0 * C0) * dens[var.first];
             dmu_u.insert( make_pair(var.first, dmu_u_tmp) );
 
             libMesh::RealGradient dmu_grad_u_tmp(0);
-            sc->get_electron_mobility_derivative_grad_potential(dmu_grad_u_tmp);
+            sc->get_q_mobility_derivative_grad_potential(var.second, dmu_grad_u_tmp);
             dmu_grad_u_tmp *= J * phi0 / (mu0 * C0) * dens[var.first] / x0;
             dmu_grad_u.insert( make_pair(var.first, dmu_grad_u_tmp) );
 
             if (dim > 1)
             {
               libMesh::RealGradient dmu_grad_f_tmp(0);
-              sc->get_q_mobility_derivative_grad_fermi(dmu_grad_f_tmp);
+              sc->get_q_mobility_derivative_grad_fermi(var.second, dmu_grad_f_tmp);
               dmu_grad_f_tmp *= J * phi0 / (mu0 * C0) * dens[var.first] / x0;
-              dmu_grad_f.insert( make_pair(var.first, dmu_grad__tmp) );
+              dmu_grad_f.insert( make_pair(var.first, dmu_grad_f_tmp) );
             }
           }
         }
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
-          double lap_e = (dphi[i][qp] * grad_en) / scalen(i);
-          double lap_h = (dphi[i][qp] * grad_ep) / scalep(i);
-          double dsigma_e_x_lap = dsigma_e * lap_e;
-          double dsigma_h_x_lap = dsigma_h * lap_h;
+          map<unsigned int, double> lap,
+                                    dsigma_x_lap;
+          for (auto var : q_var)
+          {
+            lap.insert( make_pair(var.first, (dphi[i][qp] * grad_u[var.first]) / scalev[var.first](i)) );
+            dsigma_x_lap.insert ( make_pair(var.first, dsigma[var.first]*lap[var.first]) );
+          }
 
           for (unsigned int j = 0; j < n_dofs; j++)
           {
@@ -4622,35 +4627,22 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             if (_options.exact_newton)
             {
-              double dsigma_e_x_phi = dsigma_e_x_lap * phi[j][qp];
-              double dsigma_h_x_phi = dsigma_h_x_lap * phi[j][qp];
 
-              double dmu_e_grad_v_x_dphi = dmu_e_grad_v * dphi[j][qp];
-              double dmu_h_grad_w_x_dphi = dmu_h_grad_w * dphi[j][qp];
-
-              double dmu_e_u_x_phi = dmu_e_u * phi[j][qp];
-              double dmu_h_u_x_phi = dmu_h_u * phi[j][qp];
-
-              double dmu_e_grad_u_x_dphi = dmu_e_grad_u * dphi[j][qp];
-              double dmu_h_grad_u_x_dphi = dmu_h_grad_u * dphi[j][qp];
-
-
-              if (coupling & ECURRENT)
+              for (auto var : q_var)
               {
-                if (coupling & POISSON)
-                  Knu(i,j) += dsigma_e_x_phi + (dmu_e_u_x_phi + dmu_e_grad_u_x_dphi) * lap_e;
+                if ((var.first != u_var) && (coupling & CURRENTS))
+                {
+                  double dsigma_x_phi = dsigma_x_lap[var.first] * phi[j][qp];
+                  double dmu_u_x_phi = dmu_u[var.first] * phi[j][qp];
+                  double dmu_grad_u_x_dphi = dmu_grad_u[var.first] * dphi[j][qp];
+                  double dmu_grad_f_x_dphi = dmu_grad_f[var.first] * dphi[j][qp];
 
-                Knn(i,j) += (dmu_e_grad_v_x_dphi - dmu_e_u_x_phi) * lap_e - dsigma_e_x_phi;
+                  if (coupling & POISSON)
+                    Kvv[var.first][u_var](i,j) += dsigma_x_phi + (dmu_u_x_phi + dmu_grad_u_x_dphi) * lap[var.first];
+
+                  Kvv[var.first][var.first](i,j) += (dmu_grad_f_x_dphi - dmu_u_x_phi) * lap[var.first] - dsigma_x_phi;
+                }
               }
-
-              if (coupling & HCURRENT)
-              {
-                if (coupling & POISSON)
-                  Kpu(i,j) += dsigma_h_x_phi + (dmu_h_u_x_phi + dmu_h_grad_u_x_dphi) * lap_h;
-
-                Kpp(i,j) += (dmu_h_grad_w_x_dphi - dmu_h_u_x_phi) * lap_h - dsigma_h_x_phi;
-              }
-
             }
 
 
@@ -4696,42 +4688,34 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             if (coupling & POISSON)
             {
-              Kuu(i,j) -= drho[0] * phi_i_x_phi_j / scaleu(i);
+              Kvv[u_var][u_var](i,j) -= drho[u_var] * phi_i_x_phi_j / scalev[u_var](i);
 
-              if (coupling & ECURRENT)
-                Kun(i,j) -= drho[1] * phi_i_x_phi_j / scaleu(i);
-
-
-              if (coupling & HCURRENT)
-                Kup(i,j) -= drho[2] * phi_i_x_phi_j / scaleu(i);
+              for (auto var : q_var)
+              {
+                if ( (var.first != u_var) && (coupling & CURRENTS) )
+                  Kvv[u_var][var.first](i,j) -= drho[var.first] * phi_i_x_phi_j / scalev[u_var](i);
+              }
             }
 
-            if (coupling & ECURRENT)
+            if (coupling & CURRENTS)
             {
-              if ((coupling & POISSON) && _options.exact_newton)
-                Knu(i,j) -= dRn[0] * phi_i_x_phi_j / scalen(i);
+              for (auto vari : q_var)
+              {
+                if (vari.first != u_var)
+                {
+                  if ((coupling & POISSON) && _options.exact_newton)
+                    Kvv[vari.first][u_var](i,j) -= dR[vari.first][u_var] * phi_i_x_phi_j / scalev[vari.first](i);
 
-              Knn(i,j) -= dRn[1] * phi_i_x_phi_j / scalen(i);
-
-              if (coupling & HCURRENT)
-                Knp(i,j) -= dRn[2] * phi_i_x_phi_j / scalen(i);
-            }
-
-            if (coupling & HCURRENT)
-            {
-              if ((coupling & POISSON) && _options.exact_newton)
-                Kpu(i,j) += dRp[0] * phi_i_x_phi_j / scalep(i);
-
-              if (coupling & ECURRENT)
-                Kpn(i,j) += dRp[1] * phi_i_x_phi_j / scalep(i);
-
-              Kpp(i,j) += dRp[2] * phi_i_x_phi_j / scalep(i);
+                  for (auto varj : q_var)
+                    Kvv[vari.first][varj.first](i,j) -= dR[vari.first][varj.first] * phi_i_x_phi_j / scalev[vari.first](i);
+                }
+              }
             }
 
           }
         }
 
-      }
+      } //end jacobian
 
 
       // if we are doing residual, calculate rhs contribution (i.e. Fe)
@@ -4750,40 +4734,43 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         long double J_x_P0 = J / P0;
 
         // net recombination rate
-        long double J_x_Rn = J * Rn / R0_e;
-        long double J_x_Rp = J * Rp / R0_h;
+        map<unsigned int, long double> J_x_R;
+        for (auto var : q_var)
+        {
+          if (var.first != u_var)
+            J_x_R.insert( make_pair(var.first, J*R[var.first]/R0) );
+        }
 
+        /*
         libMesh::RealVectorValue P(sc->get_total_polarization());
         P *= J_x_P0;
+        */
 
         for (unsigned int i = 0; i < n_dofs; i++)
         {
-          long double net_recomb_e = J_x_Rn * phi[i][qp] / scalen(i);
-          long double net_recomb_h = J_x_Rp * phi[i][qp] / scalep(i);
-
-          if (coupling & POISSON)
-            Fu(i) -= (J_x_rho * phi[i][qp] + (P * dphi[i][qp])) / scaleu(i);
-          else
-            Fu(i) -= Xu(i);
-
-          if (coupling & ECURRENT)
-            Fn(i) -= net_recomb_e;
-          else
-            if (_useparticle == 'h')
-              Fn(i) -= 0;
+          for (auto var : q_var)
+          {
+            if (var.first == u_var)
+            {
+              if (coupling & POISSON)
+                Fv[var.first](i) -= J_x_rho * phi[i][qp] / scalev[var.first](i);
+              else
+                Fv[var.first](i) -= Xv[var.first](i);
+            }
             else
-              Fn(i) -= Xn(i);
+            {
+              long double net_recomb = J_x_R[var.first] * phi[i][qp] / scalev[var.first](i);
 
-          if (coupling & HCURRENT)
-            Fp(i) += net_recomb_h;
-          else
-            if (_useparticle == 'e')
-              Fp(i) -= 0;
-            else
-              Fp(i) -= Xp(i);
+              if (coupling & CURRENTS)
+                Fv[var.first](i) -= net_recomb;
+              else
+                Fv[var.first](i) -= Xv[var.first](i);
+            }
+
+          }
         }
 
-
+        /*
         // include Seebeck contribution -> Residual
 	for (unsigned int i = 0; i < n_dofs; i++)
 	{
@@ -4798,10 +4785,10 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 	      Fp(i) += sigma_h_x_Ph_x_J * laplace * T_nodes[k] / scalep(i);
 	  }
 	}
+        */
 
+      }  //end residual
 
-
-      }
     } // end loop over quadrature points
 
 
@@ -4837,29 +4824,44 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
         for (unsigned int qp = 0; qp < qface->n_points(); qp++)
         {
 
-          // get the solution values at the quadrature point
-          Real u  = 0.0;
-          Real en = 0.0;
-          Real ep = 0.0;
-          libMesh::RealGradient e_field(0);
-          libMesh::RealGradient grad_en(0);
-          libMesh::RealGradient grad_ep(0);
-          libMesh::RealGradient grad_T(0);
-          for (unsigned int i = 0; i < n_dofs; i++)
+          map<unsigned int, Real> u;
+          map<unsigned int, Real> oldu;
+          map<unsigned int, libMesh::RealGradient> grad_u;
+
+          for (auto var : q_var)
           {
-            u  += phi_face[i][qp] * Xu(i);
-            en += phi_face[i][qp] * Xn(i);
-            ep += phi_face[i][qp] * Xp(i);
-            e_field -= dphi_face[i][qp] * Xu(i);
-            grad_en += dphi_face[i][qp] * Xn(i);
-            grad_ep += dphi_face[i][qp] * Xp(i);
+            u.insert( make_pair(var.first, 0) );
+            grad_u.insert( make_pair(var.first, libMesh::RealGradient(0)) );
           }
 
-          sc->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
+          // get the solution values at the quadrature point
+          for (unsigned int i = 0; i < n_dofs; i++)
+          {
+            for (auto var : q_var)
+            {
+              u[var.first] += phi_face[i][qp] * Xv[var.first](i);
+              grad_u[var.first] += dphi_face[i][qp] * Xv[var.first](i);
+            }
+          }
+
+          // prepare for calculating local properties
           sc->set_coordinates(q_point_face[qp]);
-          sc->set_electric_field(phi0 / x0 * e_field);
-          sc->set_grad_fermi_e(phi0 / x0 * grad_en);
-          sc->set_grad_fermi_h(phi0 / x0 * grad_ep);
+
+          double grad_fac = phi0 / x0;
+          for (auto var : q_var)
+          {
+            if (var.first == u_var)
+            {
+              sc->set_el_potential(phi0 * u[var.first]);
+              sc->set_electric_field(-grad_fac * grad_u[var.first]);
+            }
+            else
+            {
+              sc->set_fermi_potential(var.second, phi0 * u[var.first]);
+              sc->set_grad_fermi(var.second, grad_fac * grad_u[var.first]);
+            }
+          }
+
           sc->calculate_densities();
           sc->calculate_mobilities();
 
@@ -4880,10 +4882,21 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
           sm->set_face_normal(face_normals[qp]);
           sm->set_coordinates(q_point_face[qp]);
-          sm->set_potentials(phi0 * u, phi0 * en, phi0 * ep);
-          sm->set_electric_field(phi0 / x0 * e_field);
-          sm->set_grad_fermi_e(phi0 / x0 * grad_en);
-          sm->set_grad_fermi_h(phi0 / x0 * grad_ep);
+
+          for (auto var : q_var)
+          {
+            if (var.first == u_var)
+            {
+              sm->set_el_potential(phi0 * u[var.first]);
+              sm->set_electric_field(-grad_fac * grad_u[var.first]);
+            }
+            else
+            {
+              sm->set_fermi_potential(var.second, phi0 * u[var.first]);
+              sm->set_grad_fermi(var.second, grad_fac * grad_u[var.first]);
+            }
+          }
+
           sm->compute();
 
           // the jacobian x weight x scaling
@@ -4894,108 +4907,74 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           if (jacobian != NULL)
           {
             // for Dirichlet DOFs we do not add anything
-            double scale_u = J * phi0 / x0 / C0;
-            if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
-              scale_u = 0;
+            vector<double> scale_v(q_var_bc.size());
+            vector<vector<double>> deriv_v(q_var_bc.size());
+            for (auto var : q_var_bc)
+            {
+              scale_v[var.second] = (var.first==u_var) ?  J * phi0 / x0 / C0 : J * phi0 / (x0 * R0);
+              if (sm->get_type(var.second) == DDInterfaceModel::DIRICHLET)
+                scale_v[var.second] = 0;
 
-            double scale_n = J * phi0 / (x0 * R0_e);
-            if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
-              scale_n = 0;
-
-            double scale_p = J * phi0 / (x0 * R0_h);
-            if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
-              scale_p = 0;
-
-
-            const vector<double>& deriv_u = sm->get_jacobian_row(0);
-            const vector<double>& deriv_en = sm->get_jacobian_row(1);
-            const vector<double>& deriv_ep = sm->get_jacobian_row(2);
+              vector<double> deriv_tmp = sm->get_jacobian_row(var.second);
+              deriv_v[var.second] = deriv_tmp;
+            }
 
 
             for (unsigned int i = 0; i < n_dofs; i++)
             {
-              double fac_u = scale_u / scaleu(i);
-              double fac_n = scale_n / scalen(i);
-              double fac_p = scale_p / scalep(i);
-
-              if (elem->is_node_on_side(i, s))
+              vector<double> fac(q_var_bc.size());
+              for (auto var : q_var_bc)
               {
-                if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
-                  dirichlet_jac[i] = deriv_u;
+                fac[var.second] = scale_v[var.second] / scalev[var.first](i);
 
-                if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
-                  dirichlet_jac[n_dofs + i] = deriv_en;
-
-                if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
-                  dirichlet_jac[2 * n_dofs + i] = deriv_ep;
+                if (elem->is_node_on_side(i, s))
+                {
+                  if (sm->get_type(var.second) == DDInterfaceModel::DIRICHLET)
+                    dirichlet_jac[var.second*n_dofs + i] = deriv_v[var.second];
+                }
               }
-
 
               for (unsigned int j = 0; j < n_dofs; j++)
               {
+                Real phi_i_x_phi_j = phi_face[i][qp] * phi_face[j][qp];
 
-                Real phi_i_x_phi_j =
-                  phi_face[i][qp] * phi_face[j][qp];
-
-                if (coupling & POISSON)
+                for (auto vari : q_var_bc)
                 {
-                  Kuu(i,j) -= fac_u * deriv_u[0] * phi_i_x_phi_j;
-
-                  if (coupling & ECURRENT)
-                    Kun(i,j) -= fac_u * deriv_u[1] * phi_i_x_phi_j;
-
-                  if (coupling & HCURRENT)
-                    Kup(i,j) -= fac_u * deriv_u[2] * phi_i_x_phi_j;
+                  if (((vari.first == u_var) && (coupling & POISSON)) || ((vari.first != u_var) && (coupling & CURRENTS)))
+                  {
+                    for (auto varj : q_var_bc)
+                    {
+                      if (((varj.first == u_var) && (coupling & POISSON)) || ((varj.first != u_var) && (coupling & CURRENTS)))
+                        Kvv[vari.first][varj.first](i,j) -= fac[vari.second] * deriv_v[vari.second][varj.second] * phi_i_x_phi_j;
+                    }
+                  }
                 }
-
-
                 ////
                 // NOTE:
                 //   the signs are inverted here because outflow means recombination
-                //   and the normal point outwards, giving a positiv current for
+                //   and the normal point outwards, giving a positive current for
                 //   outflow
-                if (coupling & ECURRENT)
-                {
-                  if (coupling & POISSON)
-                    Knu(i,j) -= fac_n * deriv_en[0] * phi_i_x_phi_j;
-
-                  Knn(i,j) -= fac_n * deriv_en[1] * phi_i_x_phi_j;
-
-                  if (coupling & HCURRENT)
-                    Knp(i,j) -= fac_n * deriv_en[2] * phi_i_x_phi_j;
-                }
-
-
-                if (coupling & HCURRENT)
-                {
-                  if (coupling & POISSON)
-                    Kpu(i,j) += fac_p * deriv_ep[0] * phi_i_x_phi_j;
-
-                  if (coupling & ECURRENT)
-                    Kpn(i,j) += fac_p * deriv_ep[1] * phi_i_x_phi_j;
-
-                  Kpp(i,j) += fac_p * deriv_ep[2] * phi_i_x_phi_j;
-                }
               }
             }
-          }
+          } // end jacobian
 
           // contribution to -Fe_i
           if (residual != NULL)
           {
 
-            double value_u = 0.0;
-            double value_n = 0.0;
-            double value_p = 0.0;
+            vector<double> value_v(q_var_bc.size());
 
             const vector<double>& coeff_a = sm->get_a();
             const vector<double>& coeff_g = sm->get_g();
 
-            double tmp = (coeff_g[0] - coeff_a[0] * u * phi0);
-            if (sm->get_type(0) != DDInterfaceModel::DIRICHLET)
-              value_u += J * tmp / (x0 * C0);
-            else
-              value_u = coeff_g[0] / phi0;
+            for (auto var : q_var_bc)
+            {
+              value_v[var.second] = (var.first == u_var) ? J / (x0 * C0) : J / (x0 * R0);
+              if (sm->get_type(0) != DDInterfaceModel::DIRICHLET)
+                value_v[var.second] *= (coeff_g[var.second] - coeff_a[var.second] * u[var.first] * phi0);
+              else
+                value_v[var.second] = coeff_g[var.second] / phi0;
+            }
 
             /*
             if (0) //(true_boundary)
@@ -5022,60 +5001,28 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
             }
             */
 
-            value_n = (coeff_g[1] - coeff_a[1] * en * phi0);
-            if (sm->get_type(1) != DDInterfaceModel::DIRICHLET)
-              value_n *= J / (x0 * R0_e);
-            else
-              value_n = coeff_g[1] / phi0;
-
-
-            value_p = (coeff_g[2] - coeff_a[2] * ep * phi0);
-            if (sm->get_type(2) != DDInterfaceModel::DIRICHLET)
-              value_p *= J / (x0 * R0_h);
-            else
-              value_p = coeff_g[2] / phi0;
-
-         
-
-
             for (unsigned int i = 0; i < n_dofs; i++)
             {
-              double scale_u = 1.0 / scaleu(i);
-              double scale_n = 1.0 / scalen(i);
-              double scale_p = 1.0 / scalep(i);
-
-              if (elem->is_node_on_side(i, s))
+              for (auto var : q_var_bc)
               {
-                if (sm->get_type(0) == DDInterfaceModel::DIRICHLET)
+                double scale_v = 1.0 / scalev[var.first](i);
+
+                if (elem->is_node_on_side(i, s))
                 {
-                  dirichlet_res[i] = value_u;
-                  scale_u = 0;
+                  if (sm->get_type(var.second) == DDInterfaceModel::DIRICHLET)
+                  {
+                    dirichlet_res[var.second*n_dofs + i] = value_v[var.second];
+                    scale_v = 0;
+                  }
                 }
 
-                if (sm->get_type(1) == DDInterfaceModel::DIRICHLET)
-                {
-                  dirichlet_res[n_dofs + i] = value_n;
-                  scale_n = 0;
-                }
+                if (((var.first == u_var) && (coupling & POISSON)) || ((var.first != u_var) && (coupling & CURRENTS)))
+                  Fv[var.first](i) -= value_v[var.second] * phi_face[i][qp] * scale_v;
 
-                if (sm->get_type(2) == DDInterfaceModel::DIRICHLET)
-                {
-                  dirichlet_res[2 * n_dofs + i] = value_p;
-                  scale_p = 0;
-                }
-              }
-
-              if (coupling & POISSON)
-                Fu(i) -= value_u * phi_face[i][qp] * scale_u;
-
-              if (coupling & ECURRENT)
-                Fn(i) -= value_n * phi_face[i][qp] * scale_n;
-
-              if (coupling & HCURRENT)
-                Fp(i) += value_p * phi_face[i][qp] * scale_p;
-            }
-          }
-        }
+              } //end q_var_bc loop
+            }  // end dof loop
+          }  // end residual
+        } // end loop over qp
       } // end if (sm != NULL)
       else if ((true_boundary) && (residual != NULL))
       {
@@ -5092,7 +5039,7 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
           for (unsigned int qp = 0; qp < qface->n_points(); qp++)
           {
-
+            /*
             // the jacobian x weight x scaling
             double J = JxW_face[qp];
 
@@ -5108,10 +5055,12 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
                 Fu(i) -= value_u * phi_face[i][qp] / scaleu(i);
               }
             }
+            */
+
           }
         }
-      }
-    }
+      }  // end true boundary && residual
+    } // end loop over element side
 
 
     // impose Dirichlet BCs
@@ -5126,9 +5075,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
           Ke(i,j) = 0.0;
 
         unsigned int j = i % n_dofs;
-        Ke(i,j) = -(it->second)[0];
-        Ke(i,n_dofs + j) = -(it->second)[1];
-        Ke(i,2 * n_dofs + j) = -(it->second)[2];
+        for (auto var : q_var_bc)
+          Ke(i,var.second * n_dofs + j) = -(it->second)[var.second];
       }
     }
 
@@ -5152,21 +5100,24 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     {
       for (unsigned int i = 0; i < n_dofs; i++)
       {
-        for (unsigned int j = 0; j < n_dofs; j++)
+        for (auto vari : q_var)
         {
-          Kun(i, j) = Kup(i, j) = 0.0;
-          Knu(i, j) = Knn(i, j) = Knp(i, j) = 0.0;
-          Kpu(i, j) = Kpn(i, j) = Kpp(i, j) = 0.0;
+          for (auto varj : q_var)
+          {
+            for (unsigned int j = 0; j < n_dofs; j++)
+              Kvv[vari.first][varj.first](i,j) = ((vari.first == u_var) && (varj.first == u_var)) ? Kvv[vari.first][varj.first](i,j) : 0.0;
+          }
+
+          if (vari.first != u_var)
+          {
+            if (is_dielectric_boundary_node(elem->get_node(i)))
+              Kvv[vari.first][vari.first](i, i) = 0.0;
+            else
+              Kvv[vari.first][vari.first](i, i) = 1.0;
+            // we simply set the electrochemical potential to zero
+            Fv[vari.first](i) = 0.0;
+          }
         }
-
-        if (is_dielectric_boundary_node(elem->get_node(i)))
-          Knn(i, i) = Kpp(i, i) = 0.0;
-        else
-          Knn(i, i) = Kpp(i, i) = 1.0;
-
-        // we simply set the electrochemical potential to zero
-        Fn(i) = 0.0;
-        Fp(i) = 0.0;
       }
     }
 
