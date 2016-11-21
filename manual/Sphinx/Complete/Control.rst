@@ -73,8 +73,9 @@ Options and  parameters:
  ``values`` :  double
   instead of ``start``, ``stop`` and ``steps``, provide the sweep values explicitly
 
- ``plot_data`` : boolean
-    set to true if you want to plot after each step the simulation results (default is false)
+ ``plot_data`` : string | boolean
+    set to true or ``each`` if you want to plot after each step the simulation results (default is false), or to ``last`` to write only
+    results of last step
 
  ``file_mode`` : string
     controls the behaviour for writing the data file containing global data. Can be one of ``append``, ``overwrite`` (default) or ``no-overwrite``
