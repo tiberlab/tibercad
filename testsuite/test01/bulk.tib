@@ -64,6 +64,7 @@ Module sweep
   start = 0.0
   stop = 1
   steps = 10
+  plot_data = true
 }
 
 
