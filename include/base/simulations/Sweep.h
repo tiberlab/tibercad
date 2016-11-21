@@ -105,6 +105,15 @@ class TBDLLOCAL Sweep : public SimulationInterface
       LOG
     };
 
+    //! When to write results to file
+    enum PlotMode
+    {
+      NONE,      //!< do not write data
+      EACH,      //!< write after each sweep step
+      LAST,      //!< write only last result
+      INDIVIDUAL //!< write at defined points
+    };
+
     //! The simulations for which we do the sweep
     std::vector<SimulationInterface*> _simulations;
 
@@ -121,8 +130,8 @@ class TBDLLOCAL Sweep : public SimulationInterface
     double _goal;
 
 
-    //! Write results to file after every step if true
-    bool _plot_data;
+    //! When to write results to file
+    PlotMode _plot_data;
 
 
     //! The current filename suffix
@@ -166,7 +175,7 @@ inline
 Sweep::Sweep(const ModelOptions& options)
   : SimulationInterface(options),
     _variable(""),
-    _plot_data(false),
+    _plot_data(NONE),
     _ignore_failures(false)
 {
   has_solution_vector(false);

@@ -178,7 +178,15 @@ Sweep::parse_options(void)
 
 
   // whether to plot data or not
-  _plot_data = get_option("plot_data", _plot_data);
+  string plot_data = get_option("plot_data", "none");
+  if (plot_data == "last")
+    _plot_data = LAST;
+  else
+  {
+    if ((plot_data == "each") ||
+        get_option("plot_data", false))
+      _plot_data = EACH;
+  }
 
 }
 
@@ -455,7 +463,7 @@ void
 Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
     vector<map<double, vector<double> > >& sweep_data)
 {
-  unsigned int n = values.size();
+  const unsigned int n = values.size();
 
   // if there are no values, we return immediately
   if (n == 0) return;
@@ -541,7 +549,8 @@ Sweep::do_sweep(vector<double>& values, vector<ofstream*>& plotfiles,
           _simulations[j]->solve();
 
         // plot results if required
-        if (_plot_data)
+        if ((_plot_data == EACH) ||
+            (_plot_data == LAST) && (i == (n - 1)))
           _simulations[j]->plot();
 
         // update "something-vs.-sweepvariable" files
@@ -639,7 +648,7 @@ Sweep::do_set_to_remembered_solution(ID id)
   int num_sim = _simulations.size();
 
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.begin());
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
 
   if (it != end)
     for (int i = 0; i < num_sim; i++)
