@@ -570,178 +570,203 @@ TiberVTKIO::do_write(bool force)
 {
   const MeshBase& mesh = get_mesh();
   string file = get_filename() + ".vtu";
-  ofstream of(file.c_str());
 
 
-  of << "<VTKFile type=\"UnstructuredGrid\" "
-    << "version=\"0.1\" byte_order=\"";
+  if (mesh.comm().rank() == 0)
   {
-    short int word = 0x0001;
-    char *byte = (char *) &word;
-    if (byte[0])
-      of << (byte[0] ? "LittleEndian" : "BigEndian");
-  }
-  of << "\">\n"
-    << "<UnstructuredGrid>\n";
+    ofstream of(file.c_str());
 
-  map<ID, vector<unsigned int> > nodes;
-  map<ID, vector<VTKElem> > vtk_elem;
-  create_pieces(nodes, vtk_elem);
-
-  map<ID, vector<unsigned int> >::iterator it(nodes.begin());
-  for ( ; it != nodes.end(); ++it)
-  {
-    ID id = it->first;
-
-    // only pieces with data are written
-    if (has_data(id) || force)
+    of << "<VTKFile type=\"UnstructuredGrid\" "
+        << "version=\"0.1\" byte_order=\"";
     {
-
-      const vector<unsigned int>& nodevec = nodes[id];
-      const vector<VTKElem>& elemvec = vtk_elem[id];
-      unsigned int num_pt = nodevec.size();
-      unsigned int num_el = elemvec.size();
-      of << "<Piece NumberOfPoints=\"" << num_pt << "\" "
-          << "NumberOfCells=\"" << num_el << "\">\n";
-
-      vector<float> buffer;
-
-      of << "<Points>\n";
-      buffer.resize(3 * num_pt);
-      for (unsigned int i = 0; i < num_pt; ++i)
-      {
-        const Point& p = mesh.point(nodevec[i]);
-        buffer[3 * i] = static_cast<float>(p(0));
-        buffer[3 * i + 1] = static_cast<float>(p(1));
-        buffer[3 * i + 2] = static_cast<float>(p(2));
-      }
-      write_data_array("", 3, buffer, of);
-      buffer.clear();
-      of << "</Points>\n";
-
-      vector<uint32_t> intbuf;
-      of << "<Cells>\n";
-      intbuf.reserve(4 * num_el);
-      for (size_t i = 0; i < num_el; ++i)
-      {
-        const VTKElem& el = elemvec[i];
-        size_t elconn = el.connectivity.size();
-        if (intbuf.capacity() < (intbuf.size() + elconn))
-          intbuf.reserve(2 * intbuf.capacity());
-
-        for (size_t n = 0; n < el.connectivity.size(); n++)
-          intbuf.push_back(static_cast<uint32_t>(el.connectivity[n]));
-      }
-      write_data_array("connectivity", 1, intbuf, of);
-
-      intbuf.resize(num_el);
-      size_t offset = 0;
-      for (size_t i = 0; i < num_el; ++i)
-      {
-        const VTKElem& el = elemvec[i];
-        offset += el.connectivity.size();
-        intbuf[i] = static_cast<uint32_t>(offset);
-      }
-      write_data_array("offsets", 1, intbuf, of);
-      intbuf.clear();
-
-
-      vector<uint8_t> shortbuf(num_el);
-      for (size_t i = 0; i < num_el; ++i)
-      {
-        const VTKElem& el = elemvec[i];
-        shortbuf[i] = static_cast<uint8_t>(el.type);
-      }
-      write_data_array("types", 1, shortbuf, of);
-      intbuf.clear();
-      of << "</Cells>\n";
-
-      if (has_data(id))
-      {
-        const DataMap& data = get_zone_data(id);
-
-        of << "<PointData";
-        DataMap::const_iterator it(data.begin());
-        const DataMap::const_iterator end(data.end());
-
-        bool scalar_ok = false;
-        bool vector_ok = false;
-        bool tensor_ok = false;
-        for ( ; it != end; ++it)
-        {
-          const SolutionDescriptor& descr = it->first;
-          if (descr.location() == SolutionDescriptor::NODES)
-          {
-            if (!scalar_ok && (descr.n_components() == 1))
-            {
-              of << " Scalars=\"" << descr.name() << "\"";
-              scalar_ok = true;
-            }
-            else if (!vector_ok && (descr.n_components() == 3))
-            {
-              of << " Vectors=\"" << descr.name() << "\"";
-              vector_ok = true;
-            }
-            else if (!tensor_ok && (descr.n_components() == 9))
-            {
-              of << " Tensors=\"" << descr.name() << "\"";
-              tensor_ok = true;
-            }
-          }
-        }
-        of << ">\n";
-
-        // loop over all data
-        for (it = data.begin(); it != end; ++it)
-        {
-          const SolutionDescriptor& descr = it->first;
-          if (descr.location() == SolutionDescriptor::NODES)
-            write_data_array(descr.name(), descr.n_components(), it->second, of);
-        }
-        of << "</PointData>\n";
-
-        of << "<CellData";
-        scalar_ok = false;
-        vector_ok = false;
-        tensor_ok = false;
-        for (it = data.begin(); it != end; ++it)
-        {
-          const SolutionDescriptor& descr = it->first;
-          if (descr.location() == SolutionDescriptor::CELL)
-          {
-            if (!scalar_ok && (descr.n_components() == 1))
-            {
-              of << " Scalars=\"" << descr.name() << "\"";
-              scalar_ok = true;
-            }
-            else if (!vector_ok && (descr.n_components() == 3))
-            {
-              of << " Vectors=\"" << descr.name() << "\"";
-              vector_ok = true;
-            }
-            else if (!tensor_ok && (descr.n_components() == 9))
-            {
-              of << " Tensors=\"" << descr.name() << "\"";
-              tensor_ok = true;
-            }
-          }
-        }
-        of << ">\n";
-        for (it = data.begin(); it != end; ++it)
-        {
-          const SolutionDescriptor& descr = it->first;
-          if (descr.location() == SolutionDescriptor::CELL)
-            write_data_array(descr.name(), descr.n_components(), it->second, of);
-        }
-        of << "</CellData>\n";
-      }
-
-      of << "</Piece>\n";
+      short int word = 0x0001;
+      char *byte = (char *) &word;
+      if (byte[0])
+        of << (byte[0] ? "LittleEndian" : "BigEndian");
     }
+    of << "\">\n"
+        << "<UnstructuredGrid>\n";
+
+    of.flush();
+    of.close();
   }
 
-  of << "</UnstructuredGrid>\n"
-    << "</VTKFile>\n";
+
+  for (unsigned int rank = 0; rank < mesh.comm().size(); ++rank)
+  {
+
+    if (mesh.comm().rank() == rank)
+    {
+      ofstream of(file.c_str(), std::ofstream::app);
+
+
+      map<ID, vector<unsigned int> > nodes;
+      map<ID, vector<VTKElem> > vtk_elem;
+      create_pieces(nodes, vtk_elem);
+
+      map<ID, vector<unsigned int> >::iterator it(nodes.begin());
+      for ( ; it != nodes.end(); ++it)
+      {
+        ID id = it->first;
+
+        // only pieces with data are written
+        if (has_data(id) || force)
+        {
+
+          const vector<unsigned int>& nodevec = nodes[id];
+          const vector<VTKElem>& elemvec = vtk_elem[id];
+          unsigned int num_pt = nodevec.size();
+          unsigned int num_el = elemvec.size();
+          of << "<Piece NumberOfPoints=\"" << num_pt << "\" "
+              << "NumberOfCells=\"" << num_el << "\">\n";
+
+          vector<float> buffer;
+
+          of << "<Points>\n";
+          buffer.resize(3 * num_pt);
+          for (unsigned int i = 0; i < num_pt; ++i)
+          {
+            const Point& p = mesh.point(nodevec[i]);
+            buffer[3 * i] = static_cast<float>(p(0));
+            buffer[3 * i + 1] = static_cast<float>(p(1));
+            buffer[3 * i + 2] = static_cast<float>(p(2));
+          }
+          write_data_array("", 3, buffer, of);
+          buffer.clear();
+          of << "</Points>\n";
+
+          vector<uint32_t> intbuf;
+          of << "<Cells>\n";
+          intbuf.reserve(4 * num_el);
+          for (size_t i = 0; i < num_el; ++i)
+          {
+            const VTKElem& el = elemvec[i];
+            size_t elconn = el.connectivity.size();
+            if (intbuf.capacity() < (intbuf.size() + elconn))
+              intbuf.reserve(2 * intbuf.capacity());
+
+            for (size_t n = 0; n < el.connectivity.size(); n++)
+              intbuf.push_back(static_cast<uint32_t>(el.connectivity[n]));
+          }
+          write_data_array("connectivity", 1, intbuf, of);
+
+          intbuf.resize(num_el);
+          size_t offset = 0;
+          for (size_t i = 0; i < num_el; ++i)
+          {
+            const VTKElem& el = elemvec[i];
+            offset += el.connectivity.size();
+            intbuf[i] = static_cast<uint32_t>(offset);
+          }
+          write_data_array("offsets", 1, intbuf, of);
+          intbuf.clear();
+
+
+          vector<uint8_t> shortbuf(num_el);
+          for (size_t i = 0; i < num_el; ++i)
+          {
+            const VTKElem& el = elemvec[i];
+            shortbuf[i] = static_cast<uint8_t>(el.type);
+          }
+          write_data_array("types", 1, shortbuf, of);
+          intbuf.clear();
+          of << "</Cells>\n";
+
+          if (has_data(id))
+          {
+            const DataMap& data = get_zone_data(id);
+
+            of << "<PointData";
+            DataMap::const_iterator it(data.begin());
+            const DataMap::const_iterator end(data.end());
+
+            bool scalar_ok = false;
+            bool vector_ok = false;
+            bool tensor_ok = false;
+            for ( ; it != end; ++it)
+            {
+              const SolutionDescriptor& descr = it->first;
+              if (descr.location() == SolutionDescriptor::NODES)
+              {
+                if (!scalar_ok && (descr.n_components() == 1))
+                {
+                  of << " Scalars=\"" << descr.name() << "\"";
+                  scalar_ok = true;
+                }
+                else if (!vector_ok && (descr.n_components() == 3))
+                {
+                  of << " Vectors=\"" << descr.name() << "\"";
+                  vector_ok = true;
+                }
+                else if (!tensor_ok && (descr.n_components() == 9))
+                {
+                  of << " Tensors=\"" << descr.name() << "\"";
+                  tensor_ok = true;
+                }
+              }
+            }
+            of << ">\n";
+
+            // loop over all data
+            for (it = data.begin(); it != end; ++it)
+            {
+              const SolutionDescriptor& descr = it->first;
+              if (descr.location() == SolutionDescriptor::NODES)
+                write_data_array(descr.name(), descr.n_components(), it->second, of);
+            }
+            of << "</PointData>\n";
+
+            of << "<CellData";
+            scalar_ok = false;
+            vector_ok = false;
+            tensor_ok = false;
+            for (it = data.begin(); it != end; ++it)
+            {
+              const SolutionDescriptor& descr = it->first;
+              if (descr.location() == SolutionDescriptor::CELL)
+              {
+                if (!scalar_ok && (descr.n_components() == 1))
+                {
+                  of << " Scalars=\"" << descr.name() << "\"";
+                  scalar_ok = true;
+                }
+                else if (!vector_ok && (descr.n_components() == 3))
+                {
+                  of << " Vectors=\"" << descr.name() << "\"";
+                  vector_ok = true;
+                }
+                else if (!tensor_ok && (descr.n_components() == 9))
+                {
+                  of << " Tensors=\"" << descr.name() << "\"";
+                  tensor_ok = true;
+                }
+              }
+            }
+            of << ">\n";
+            for (it = data.begin(); it != end; ++it)
+            {
+              const SolutionDescriptor& descr = it->first;
+              if (descr.location() == SolutionDescriptor::CELL)
+                write_data_array(descr.name(), descr.n_components(), it->second, of);
+            }
+            of << "</CellData>\n";
+          }
+
+          of << "</Piece>\n";
+        }
+      }
+      of.flush();
+      of.close();
+    }
+    mesh.comm().barrier();
+  }
+
+  if (mesh.comm().rank() == 0)
+  {
+    ofstream of(file.c_str(), std::ofstream::app);
+    of << "</UnstructuredGrid>\n"
+        << "</VTKFile>\n";
+  }
 
 }
 
@@ -840,7 +865,6 @@ TiberVTKIO::create_pieces(map<ID, vector<unsigned int> >& points,
     subdomains.insert(id);
   }
 
-  //if (libMesh::global_processor_id() == 0)
   {
     // # elements in each subdomain
     map<ID, unsigned int> n_elem;
