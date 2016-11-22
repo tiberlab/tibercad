@@ -205,10 +205,11 @@ DriftDiffusion::compute_scaling(Scaling::ScalingType type)
 
     // TODO get max of polarisation
 
-    double mu = sc->get_hole_mobility();
-    mu0 = (mu0 > mu) ? mu0 : mu;
-    mu = sc->get_electron_mobility();
-    mu0 = (mu0 > mu) ? mu0 : mu;
+    for (unsigned int i = 0; i < _variables.size(); ++i)
+    {
+      double mu = sc->get_q_mobility(_variables[i]);
+      mu0 = (mu0 > mu) ? mu0 : mu;
+    }
 
     // I don't know what is better...
     double C = fabs(sc->get_material()->get_net_doping_density());
@@ -4303,9 +4304,8 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
     map<unsigned int, string> q_var;
     map<unsigned int, unsigned int> q_var_bc;
     q_var.insert( make_pair(u_var, "potential") );
-    for (auto&& cp : sc->get_carrier_properties())  //get carriers
+    for (auto&& cp : sc->get_carrier_properties())
       q_var.insert( make_pair(system.variable_number(cp.first), cp.first) ); 
-                            //insert variable number   and      variable name (the same as carrier name)
 
     for (auto var : q_var)
       q_var_bc.insert( make_pair(var.first, q_var_bc.size()) );

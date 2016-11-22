@@ -61,13 +61,13 @@ Module dd_generic
   }   
 
 
-  CContact anode
+  Contact anode
   {
     type = ohmic
     voltage = $Vb
   }
 
-  CContact cathode
+  Contact cathode
   {
     type = ohmic
     voltage = 0.0
@@ -77,7 +77,7 @@ Module dd_generic
 
 
 
-MModule sweep
+Module sweep
 {
   solve = driftdiffusion
   variable = $Vb
@@ -92,7 +92,7 @@ MModule sweep
 Simulation
 {
   temperature = 300
-  solve = driftdiffusion #sweep
+  solve = sweep
   resultpath = output
   output_format = grace
 }
