@@ -648,7 +648,8 @@ Sweep::do_set_to_remembered_solution(ID id)
   int num_sim = _simulations.size();
 
   map<ID, vector<ID> >::iterator end(_remembered_sol_ids.end());
-  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.find(id));
+  // we use only ID = 1
+  map<ID, vector<ID> >::iterator it(_remembered_sol_ids.begin());
 
   if (it != end)
     for (int i = 0; i < num_sim; i++)
