@@ -49,7 +49,6 @@ DriftDiffusionProperties::DriftDiffusionProperties(const ModelOptions& options)
 
     _pd(NULL),
     _elem(NULL),
-    _coupling(DriftDiffusionDefs::BOTH),
     _strain(0),
     _conduction_band(NULL),
     _valence_band(NULL),
@@ -543,48 +542,20 @@ DriftDiffusionProperties::reinit(const Elem* elem)
 void
 DriftDiffusionProperties::calculate_densities(void)
 {
-  //const std::map<std::string, CarrierProperties*>& carriers = get_carrier_properties();
   for (auto&& cp: get_carrier_properties())
   {
     cp.second->set_temperature(_pd->carrier_vt[cp.first]);
-    pair<double, double> dens_der(cp.second->get_density_and_derivative(_pd->fermi_potential[cp.first], _pd->electric_potential));
+    pair<double, double> dens_der(cp.second->get_density_and_derivative(
+        _pd->fermi_potential[cp.first], _pd->electric_potential));
     _pd->q_density[cp.first] = dens_der.first;
     _pd->q_density_derivative[cp.first] = dens_der.second;
+
+    double sign = 1;
+    if (cp.second->get_carrier_type() == 'h')
+      sign = -1;
+
+    _pd->charge_density_derivative[cp.first] = sign * dens_der.second;
   }
-
-
-  /*
-  CarrierProperties& cb = get_conduction_band();
-  CarrierProperties& vb = get_valence_band();
-  double kTe = _pd->electron_vt;
-  double kTh = _pd->hole_vt;
-  cb.set_temperature(kTe);
-  vb.set_temperature(kTh);
-
-  pair<double, double> el(cb.get_density_and_derivative(_pd->fermi_e, _pd->electric_potential));
-  _pd->electron_density = el.first;
-  _pd->electron_density_derivative = el.second;
-
-  pair<double, double> hl(vb.get_density_and_derivative(_pd->fermi_h, _pd->electric_potential));
-  _pd->hole_density = hl.first;
-  _pd->hole_density_derivative = hl.second;
-  
-  
-  _pd->gamma_n = cb.get_gamma();
-  _pd->gamma_p = vb.get_gamma();
-
-  if (!(_coupling & DriftDiffusionDefs::ELECTRONS))
-  {
-    _pd->electron_density = 0.0;
-    _pd->electron_density_derivative = 0.0;
-  }
-
-  if (!(_coupling & DriftDiffusionDefs::HOLES))
-  {
-    _pd->hole_density = 0.0;
-    _pd->hole_density_derivative = 0.0;
-  }
-  */
 }
 
 
@@ -656,20 +627,19 @@ DriftDiffusionProperties::calculate_traps(void)
 void
 DriftDiffusionProperties::calculate_ionized_dopants(void)
 {
-  /*
+
   double kT = _lattice_vt;
 
-  double Ec = get_conduction_band_edge();
-  double Ev = get_valence_band_edge();
+  double Ec = get_carrier_band_edge("electron");
+  double Ev = get_carrier_band_edge("hole");
 
-  double arg_e = -_pd->fermi_e + _pd->electric_potential - Ec;
-  double arg_h = _pd->fermi_h - _pd->electric_potential + Ev;
-  */
+  double arg_e = -_pd->fermi_potential["electron"] + _pd->electric_potential - Ec;
+  double arg_h = _pd->fermi_potential["hole"] - _pd->electric_potential + Ev;
+
 
   double Nd = 0, dNd = 0;
   double Na = 0, dNa = 0;
 
-  /*
   Material::dopant_iterator it(get_material()->donors_begin());
   Material::dopant_iterator end(get_material()->donors_end());
   for ( ; it != end; ++it)
@@ -678,11 +648,11 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
     Nd += (*it)->get_ionized_dopant_density(arg_e, kT);
     dNd += (*it)->get_ionized_dopant_density_derivative(arg_e, kT);
   }
-  */
+
   _pd->ionized_donor_density = Nd;
   _pd->ionized_donor_density_derivative = dNd;
+  _pd->charge_density_derivative["electron"] -= dNd;
 
-  /*
   it = get_material()->acceptors_begin();
   end = get_material()->acceptors_end();
   for ( ; it != end; ++it)
@@ -691,9 +661,10 @@ DriftDiffusionProperties::calculate_ionized_dopants(void)
     Na += (*it)->get_ionized_dopant_density(arg_h, kT);
     dNa -= (*it)->get_ionized_dopant_density_derivative(arg_h, kT);
   }
-  */
+
   _pd->ionized_acceptor_density = Na;
   _pd->ionized_acceptor_density_derivative = dNa;
+  _pd->charge_density_derivative["hole"] -= dNa;
 
 }
 
@@ -798,7 +769,6 @@ void
 DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
 {
 
-  if (_coupling & DriftDiffusionDefs::ELECTRONS)
   {
     double kTe = _pd->electron_vt;
 
@@ -813,11 +783,8 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
     else
       _pd->fermi_e = -10.0;
 
-    if (! _coupling & DriftDiffusionDefs::HOLES)
-      _pd->fermi_h = _pd->fermi_e;
   }
 
-  if (_coupling & DriftDiffusionDefs::HOLES)
   {
     double kTh = _pd->hole_vt;
 
@@ -832,8 +799,6 @@ DriftDiffusionProperties::calculate_electro_chemical_potentials(void)
     else
       _pd->fermi_h = -10.0;
 
-    if (! _coupling & DriftDiffusionDefs::ELECTRONS)
-      _pd->fermi_e = _pd->fermi_h;
   }
 }
 
@@ -884,9 +849,6 @@ DriftDiffusionProperties::get_net_recombination_rate(ID id)
 void
 DriftDiffusionProperties::set_equilibrium_properties(double Ef)
 {
-  // remember the coupling
-  int coupling_bkp = _coupling;
-  _coupling = DriftDiffusionDefs::BOTH;
 
   _equilibrium_fermi_level = Ef;
   set_potentials(Ef);
@@ -896,8 +858,6 @@ DriftDiffusionProperties::set_equilibrium_properties(double Ef)
   _equilibrium_n = _pd->electron_density;
   _equilibrium_p = _pd->hole_density;
 
-  // restore original coupling
-  _coupling = coupling_bkp;
 }
 
 

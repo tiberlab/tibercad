@@ -223,6 +223,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
          //! A map storing carrier density derivatives
         std::map<std::string, double> q_density_derivative;
+        std::map<std::string, double> charge_density_derivative;
 
         //! A map storing carrier conductivities
         std::map<std::string, double> q_conductivity;
@@ -299,20 +300,6 @@ class DriftDiffusionProperties : public PhysicalModel
      * implemented in derived classes
      */
     //void reinit(const Elem* elem);
-
-
-    //! Set the coupling type
-    void set_coupling_type(DriftDiffusionDefs::Coupling coupling)
-      { _coupling = (int) coupling; };
-
-
-    //! Set the coupling type
-    void set_coupling_type(int coupling)
-      { _coupling = coupling; };
-
-    //! Get the coupling type
-    DriftDiffusionDefs::Coupling get_coupling_type(void) const
-      { return (DriftDiffusionDefs::Coupling) _coupling; };
 
 
     //! Tells if this model is for a dielectric
@@ -578,6 +565,7 @@ class DriftDiffusionProperties : public PhysicalModel
      * The derivatives are given w.r.t. the two quasi Fermi levels
      */
     void get_charge_density_derivatives(double derivatives[2]) const;
+    double get_charge_density_derivative(std::string qname) const;
 
 
     //! Get the net electron recombination rate
@@ -770,25 +758,6 @@ class DriftDiffusionProperties : public PhysicalModel
 
     //! Returns the number of recombination models
     int get_number_of_recombination_models(void) const;
-
-
-    //! Returns the thermoelectric power for electrons
-    //double get_electron_thermoelectric_power() const;
-
-    //! Returns the thermoelectric power for holes
-    //double get_hole_thermoelectric_power() const;
-
-    //! Computes the electron and hole thermoelectric powers
-    //void compute_thermoelectric_powers(void);
-
-    //! Computes the electron and hole thermoelectric power derivatives
-    //void compute_thermoelectric_power_gradient(void);
-
-    //!provides holes thermoelectric power [V/K]
-    //libMesh::RealGradient get_electron_thermoelectric_power_gradient(void) const;
-
-    //!provides holes thermoelectric power [V/K]
-    //libMesh::RealGradient get_hole_thermoelectric_power_gradient(void) const;
 
 
     //! Get the electric potential
@@ -1082,9 +1051,6 @@ class DriftDiffusionProperties : public PhysicalModel
     TemperatureInterface _lattice_temp;
 
 
-    //! The interface to a strain simulation
-    //StrainInterface _strain_if;
-
 
     //! \c true if we should assume inhomogeneous band parameters
     bool _is_inhomogeneous;
@@ -1112,17 +1078,6 @@ class DriftDiffusionProperties : public PhysicalModel
     PointData* _pd;
 
 
-    // ! Electron thermoelectric power gradient
-    //libMesh::RealGradient _eTEpowerGrad;
-
-    // ! Hole thermoelectric power gradient
-    //libMesh::RealGradient _hTEpowerGrad;
-
-    //! Electron thermoelectric power
-    //double _eTEpower;
-
-    //! Hole thermoelectric power
-    //double _hTEpower;
 
     //! The electric field
     libMesh::RealGradient _electric_field;
@@ -1170,12 +1125,6 @@ class DriftDiffusionProperties : public PhysicalModel
     Point _coord;
 
 
-    //! Type of coupling (particles) we want to study
-    /*!
-     * This can be one of \c ELECTRONS, \c HOLES or \c BOTH
-     */
-    int _coupling;
-
     //! The strain
     Tensor2Sym _strain;
 
@@ -1218,17 +1167,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //! True if this is a dielectric
     bool _is_dielectric;
 
-
-
-
-
-
-
-
-
-
-    //! The relaxation factor for the polarization
-    //double _relax_polariz;
 
     //New generic model
     //! The gradient of the electrochemical-potential
@@ -1705,7 +1643,7 @@ inline
 void
 DriftDiffusionProperties::set_old_el_potential(double phi)
 {
-  _pd->electric_potential = phi;
+  _pd->old_electric_potential = phi;
 }
 
 inline
@@ -1715,7 +1653,7 @@ DriftDiffusionProperties::set_old_fermi_potential(std::string qname, double phif
   if (_carrier_properties.find(qname) == _carrier_properties.end() )
     throw RuntimeException("Wrong carrier name: trying to assign fermi potential to a not defined carrier");
 
-  _pd->fermi_potential[qname] = phif;
+  _pd->old_fermi_potential[qname] = phif;
 }
 
 inline
@@ -1769,6 +1707,17 @@ DriftDiffusionProperties::get_q_density_derivative(std::string qname) const
 {
   if (_pd->q_density_derivative.find(qname) != _pd->q_density_derivative.end() )
     return _pd->q_density_derivative[qname];
+
+  return 0.0;
+}
+
+
+inline
+double
+DriftDiffusionProperties::get_charge_density_derivative(std::string qname) const
+{
+  if (_pd->charge_density_derivative.find(qname) != _pd->charge_density_derivative.end() )
+    return _pd->charge_density_derivative[qname];
 
   return 0.0;
 }

@@ -491,8 +491,6 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
 
   const std::map<std::string, CarrierProperties*>& carriers = get_carrier_properties();
-        //std::map<ID, CarrierProperties*>::const_iterator cp     = carriers.begin();
-  //const std::map<ID, CarrierProperties*>::const_iterator cp_end = carriers.end();
 
   double Ec, Ev = 0.0;
   for (auto&& cp: carriers)
@@ -505,15 +503,6 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
   }
   
-  /*
-  CarrierProperties& cb = get_conduction_band();
-  cb.calculate(kT);
-  double Ec = cb.get_band_edge();
-
-  CarrierProperties& vb = get_valence_band();
-  vb.calculate(kT);
-  double Ev = vb.get_band_edge();
-  */
 
   // for a dielectric we don't need much...
   if (is_dielectric())
@@ -523,10 +512,6 @@ DDBulkModel::calculate_equilibrium_properties(void)
         //* exp(-0.5 * get_band_gap() / kT));
     return;
   }
-
-  // remember the coupling
-  int coupling_bkp = get_coupling_type();
-  set_coupling_type(DriftDiffusionDefs::BOTH);
 
   for (auto&& cp: carriers)
   {
@@ -674,8 +659,6 @@ DDBulkModel::calculate_equilibrium_properties(void)
   else
     set_equilibrium_fermi_level(y);
 
-  // restore original coupling
-  set_coupling_type(coupling_bkp);
 
   for (auto&& cp: carriers)
   {
@@ -693,9 +676,6 @@ DDBulkModel::calculate_equilibrium_properties(void)
 void
 DDBulkModel::set_equilibrium_properties(double Ef)
 {
-  // remember the coupling
-  int coupling_bkp = get_coupling_type();
-  set_coupling_type(DriftDiffusionDefs::BOTH);
 
   set_equilibrium_fermi_level(Ef);
   set_potentials(Ef);
@@ -705,8 +685,6 @@ DDBulkModel::set_equilibrium_properties(double Ef)
   set_equilibrium_n(get_electron_density());
   set_equilibrium_p(get_hole_density());
 
-  // restore original coupling
-  set_coupling_type(coupling_bkp);
 }
 
 

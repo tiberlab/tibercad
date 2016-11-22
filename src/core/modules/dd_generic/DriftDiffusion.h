@@ -99,55 +99,7 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 {
   public:
 
-    //! The variables that can be provided
-    enum Solutions
-    {
-      Ec,               /*!< conduction band edge */
-      Ev,               /*!< valence band edge */
-      eQFermi,          /*!< electron electro-chemical potential */
-      hQFermi,          /*!< hole electro-chemical potential */
-      ElPotential,      /*!< electric potential */
-      Ec0,              /*!< bare conduction band edge */
-      Ev0,              /*!< bare valence band edge */
-      //CBANDEDGEINTR,    /*!< intrinsic conduction band edge */
-      //VBANDEDGEINTR,    /*!< intrinsic valence band edge */
-      Eg,               /*!< band gap */
-      ElectronBands,  /*!< the conduction band energies */
-      HoleBands,     /*!< the valence band energies */
-      eDensity,         /*!< electron density */
-      hDensity,         /*!< hole density */
-      IntrinsicDensity, /*!< the intrinsic density */
-      eMobility,        /*!< electron mobility */
-      hMobility,        /*!< hole mobility */
-      eConductivity,    /*!< electron conductivity */
-      hConductivity,    /*!< hole conductivity */
-      ElField,          /*!< electric field vector */
-      Polarization,     /*!< total electric polarization */
-      CurrentDensity,   /*!< total electric current density */
-      //eFlux,            /*!< electron flux */
-      //hFlux,            /*!< hole flux */
-      eCurrentDensity,  /*!< electron current density */
-      hCurrentDensity,  /*!< hole current density */
-      IonizedDonors,    /*!< ionized donor density */
-      IonizedAcceptors, /*!< ionized acceptor density */
-      IonizedElectronTraps, /*!< trapped electron density */
-      IonizedHoleTraps, /*!< trapped hole density */
-      eThElPower,       /*!< electron thermoelectric power */
-      hThElPower,       /*!< hole thermoelectric power */
-      eJoule,           /*!< electron Joule heat */
-      hJoule,           /*!< hole Joule heat */
-      ePowerFlux,       /*!< electron power flux */
-      hPowerFlux,       /*!< hole power flux */
-      ePeltier,         /*!< Electron Peltier-Thomson heat source */
-      hPeltier,         /*!< Electron Peltier-Thomson heat source */
-      RecombHeat,       /*!< Recombination heat  */
-      IQE,              /*!< Internal quantum efficiency */
-      eNetRecombination = 100,  /*!< base number for el recombination models */
-      hNetRecombination = 200,  /*!< base number for hl recombination models */
-      ContactCurrent   = 300,  /*!< base number for contact currents */
-      ContactVoltage   = 400   /*!< base number for contact voltages */
 
-    };
 
 
     //! The solver methods that can be used
@@ -460,6 +412,27 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     typedef std::set<unsigned int> DofList;
 
 
+    //! The fixed variables that can be provided
+    enum Solutions
+    {
+      ElPotential,      /*!< electric potential */
+      ElField,          /*!< electric field vector */
+      Polarization,     /*!< total electric polarization */
+      CurrentDensity,   /*!< total electric current density */
+      IonizedDonors,    /*!< ionized donor density */
+      IonizedAcceptors, /*!< ionized acceptor density */
+      IonizedElectronTraps, /*!< trapped electron density */
+      IonizedHoleTraps, /*!< trapped hole density */
+      RecombHeat,       /*!< Recombination heat  */
+      IQE,              /*!< Internal quantum efficiency */
+      ContactCurrent   = 100,  /*!< base number for contact currents */
+      ContactVoltage   = 200,  /*!< base number for contact voltages */
+      LAST               /*!< this is used to know the first free number */
+    };
+
+    unsigned int qFermi_base;
+    unsigned int density_base;
+
     //! Internal class for the RSTF test functions
     class RSTFSys : public libMesh::LinearImplicitSystem
     {
@@ -540,6 +513,11 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     char _useparticle;
 
     //! Variables
+    /*!
+     * The order in this vector is the same as the variables get
+     * added to the system, and as they are declared as solution
+     * variables.
+     */
     std::vector<std::string> _variables;
 
 

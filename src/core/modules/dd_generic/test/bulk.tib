@@ -1,0 +1,112 @@
+
+# Description of  the  device physical regions
+Device
+{
+  meshfile = bulk.msh
+  material = Si
+
+
+   Region bulk 
+   {
+     Doping { Nd = 1e16 type = donor}
+   }
+
+   Region ndop 
+   {
+     Doping { Nd = 1e19 type = donor }
+   }
+
+
+}
+
+
+Module dd_generic
+{ 
+
+  name = driftdiffusion
+  plot = (ElPotential, electronQFermi, holeQFermi, electronDensity)
+
+  local_scaling = false
+
+  Physics
+  {
+
+    carrier
+    {
+      name = electron
+      type = electron
+
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    carrier
+    {
+      name = hole
+      type = hole
+
+      density_of_states bulk_kp
+      {
+      }
+    }
+
+    mobility constant
+    {
+      carriers = (electron, hole)
+    }
+
+    #recombination srh {}
+
+  }   
+
+
+  CContact anode
+  {
+    type = ohmic
+    voltage = $Vb
+  }
+
+  CContact cathode
+  {
+    type = ohmic
+    voltage = 0.0
+  }
+
+}  
+
+
+
+MModule sweep
+{
+  solve = driftdiffusion
+  variable = $Vb
+  start = 0.0
+  stop = 1
+  steps = 10
+  plot_data = true
+}
+
+
+
+Simulation
+{
+  temperature = 300
+  solve = driftdiffusion #sweep
+  resultpath = output
+  output_format = grace
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

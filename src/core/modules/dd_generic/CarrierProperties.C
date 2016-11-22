@@ -55,16 +55,6 @@ CarrierProperties::~CarrierProperties(void)
 void
 CarrierProperties::prepare_submodels(void)
 {
-  //if (!get_options().has_submodel("particle_density"))
-  //  get_options().add_submodel("particle_density", ModelOptions());
-
-  //ModelOptions::submodel_iterator
-  //      it(get_options().submodels_begin("particle_density"));
-  //ModelOptions& opts = it->second;
-  //opts["particle"] = get_option("particle","-");
-
-  //create_submodel(_density, "particle_density", opts);
-
   if (!get_options().has_submodel("density_of_states"))
   {
     ModelOptions opts;
@@ -217,7 +207,7 @@ CarrierProperties::get_density_and_derivative(void) const
 std::pair<double, double>
 CarrierProperties::get_density_and_derivative(double Ef, double Epot) const
 {
-    const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
+  const DriftDiffusionProperties& ddp = get_driftdiffusionproperties();
 
   double kT = _temperature;
   double sign = (_particle == 'h') ? 1 : -1;
