@@ -482,12 +482,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     Device* _device;
 
 
-    /*!
-     * \brief A list of nodes which lie on an inner boundary between
-     * a dielectric and a semiconductor
-     */
-    std::set<const Node*> _dielectric_boundary_nodes;
-
     //! A set of all recombination model IDs (for variables)
     std::set<ID> _recombination_ids;
 
@@ -504,13 +498,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
     Options _options;
 
 
-    //! The particles to be solved for
-    /*!
-     * 'e' -> electrons
-     * 'h' -> holes
-     * 'b' -> both
-     */
-    char _useparticle;
 
     //! QuasiFermi potential variables present
     /*!
@@ -613,14 +600,6 @@ class TBDLLOCAL DriftDiffusion : public SimulationInterface
 
     //! Find the reference potential, if needed
     void compute_reference_potential(void);
-
-
-    //! Find nodes on boundary between dielectric/semiconductor
-    void find_dielectric_boundary_nodes(void);
-
-
-    //! Tells if node lies on an inner dielectric/semiconductor boundary
-    bool is_dielectric_boundary_node(const Node* node) const;
 
 
     //! Find elements that touch a real contact
@@ -806,19 +785,6 @@ DriftDiffusion::get_final_residual(void) const
   return _final_residual;
 }
 
-
-
-
-inline
-bool
-DriftDiffusion::is_dielectric_boundary_node(const Node* node) const
-{
-  bool result = false;
-  if (_dielectric_boundary_nodes.find(node) != _dielectric_boundary_nodes.end())
-    result = true;
-
-  return result;
-}
 
 
 

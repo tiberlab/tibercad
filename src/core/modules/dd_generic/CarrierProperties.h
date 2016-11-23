@@ -9,10 +9,6 @@
 #include "Constants.h"
 
 class ModelOptions;
-//class DensityOfStates;
-class ParticleDensity;
-class Elem;
-class Point;
 
 
 //! Base class for band parameter models
@@ -49,8 +45,6 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Get the effective DOS
     double get_effective_DOS(void) const;
 
-    // ! Get degeneracy
-    //unsigned int get_degeneracy(void) const { return _degeneracy; }
 
     //! Get thermal velocity in cm/s
     /*!
@@ -61,15 +55,10 @@ class CarrierProperties : public DriftDiffusionModelInterface
 
     //! Get the particle density and its derivative
     /*!
-     * calculate() has to be called before
+     * \param Ef the quasi Fermi level
+     * \param Epot the electrostatic potential
      */
-    std::pair<double, double> get_density_and_derivative(void) const;
-
-    //! Get the particle density and its derivative
     std::pair<double, double> get_density_and_derivative(double Ef, double Epot) const;
-
-    //! Get the \f$\gamma\f$ factor
-    //double get_gamma(void) const;
 
     //! Set the band edge
     void set_band_edge(double band_edge) {  }
@@ -80,6 +69,9 @@ class CarrierProperties : public DriftDiffusionModelInterface
     //! Get the carrier type
     const char get_carrier_type(void) const
       { return _particle; };
+
+    //! Get logical name of the particle
+    std::string get_particle_name(void) const;
 
     //! Get the particle charge in units of \c e
     double get_charge(void) const;
@@ -141,7 +133,13 @@ class CarrierProperties : public DriftDiffusionModelInterface
   private:
 
     //! The particle this band is describing
+    /*! \obsolete
+     *
+     */
     char _particle;
+
+    //! The logical name of the particle
+    std::string _particle_name;
 
 
     //! The band edge
@@ -154,8 +152,10 @@ class CarrierProperties : public DriftDiffusionModelInterface
      */
     double _effective_mass;
 
-    // ! The total degeneracy, including spin
-    //unsigned int _degeneracy;
+
+    //! The particle charge in units of \c e
+    double _charge;
+
 
     //! The temperature in eV
     double _temperature;
@@ -168,9 +168,6 @@ class CarrierProperties : public DriftDiffusionModelInterface
 
     //! The DOS model
     DensityOfStates* _dos_model;
-
-    //! The particle density
-    ParticleDensity* _density;
 
 };
 
@@ -217,8 +214,14 @@ inline
 double
 CarrierProperties::get_charge(void) const
 {
-  return((_particle == 'e') ? -1 : 1);
+  return(_charge);
 }
 
+inline
+std::string
+CarrierProperties::get_particle_name(void) const
+{
+  return(_particle_name);
+}
 
 #endif // _CarrierProperties_H_

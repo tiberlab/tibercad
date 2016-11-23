@@ -72,10 +72,6 @@ DDBulkModel::read_database(void)
 {
   const Database& db = get_database();
   db.set_section("");
-  is_dielectric() = db.get("dielectric", is_dielectric());
-
-  bool diel_as_sc = get_option("dielectric_as_semiconductor", false);
-  is_dielectric() &= !diel_as_sc;
 
 }
 
@@ -91,10 +87,7 @@ DDBulkModel::parse_options(void)
 
   _use_predictor = get_option("use_density_predictor", _use_predictor);
 
-  is_dielectric() = get_option("dielectric", is_dielectric());
 
-  bool diel_as_sc = get_option("dielectric_as_semiconductor", false);
-  is_dielectric() &= !diel_as_sc;
 
 
 
@@ -115,11 +108,6 @@ DDBulkModel::parse_options(void)
 void
 DDBulkModel::prepare_submodels(void)
 {
-  if (is_dielectric())
-  {
-    get_options().delete_submodels("recombination");
-    get_options().delete_submodels("generation");
-  }
 
   DriftDiffusionProperties::prepare_submodels();
 
@@ -237,7 +225,6 @@ DDBulkModel::prepare_submodels(void)
   create_submodels(_pm, "polarization");
 
 
-  if (!is_dielectric())
   {
 
     //
@@ -306,13 +293,6 @@ DDBulkModel::prepare_submodels(void)
 
       add_submodel("thermoelectricpower", _thermoelectric_power);
     }
-  }
-  else
-  {
-    // a dielectric does not need all this models
-    delete_submodel("thermoelectricpower");
-    delete_submodel("mobility");
-    delete_submodel("generation");
   }
 
 }
@@ -447,27 +427,14 @@ void
 DDBulkModel::calculate_mobilities(void)
 {
   PointData& pd = get_pd();
-  if (is_dielectric())
+  for (auto&& cp : get_carrier_properties())
   {
-    for (auto&& cp : get_carrier_properties())
-    {
-      pd.q_mobility[cp.first] = 0.0;
-      pd.q_mobility_derivative_potential[cp.first] = 0.0;
-      pd.q_mobility_derivative_grad_potential[cp.first] = libMesh::RealGradient(0);
-      pd.q_mobility_derivative_grad_fermi[cp.first] = libMesh::RealGradient(0);
-    }
-  }
-  else
-  {
-    for (auto&& cp : get_carrier_properties())
-    {
-     pd.q_mobility[cp.first] = _q_mobility[cp.first]->get_mobility();
-     pd.q_mobility_derivative_potential[cp.first] = _q_mobility[cp.first]->get_derivative_potential();
-     _q_mobility[cp.first]->get_derivative_grad_potential(pd.q_mobility_derivative_grad_potential[cp.first]);
-     _q_mobility[cp.first]->get_derivative_grad_fermi(pd.q_mobility_derivative_grad_fermi[cp.first]);
+    pd.q_mobility[cp.first] = _q_mobility[cp.first]->get_mobility();
+    pd.q_mobility_derivative_potential[cp.first] = _q_mobility[cp.first]->get_derivative_potential();
+    _q_mobility[cp.first]->get_derivative_grad_potential(pd.q_mobility_derivative_grad_potential[cp.first]);
+    _q_mobility[cp.first]->get_derivative_grad_fermi(pd.q_mobility_derivative_grad_fermi[cp.first]);
 
-     pd.q_conductivity[cp.first] = pd.q_mobility[cp.first]*pd.q_density[cp.first] + _background_conductivity;
-    }
+    pd.q_conductivity[cp.first] = pd.q_mobility[cp.first]*pd.q_density[cp.first] + _background_conductivity;
   }
 
 }
@@ -503,15 +470,6 @@ DDBulkModel::calculate_equilibrium_properties(void)
 
   }
   
-
-  // for a dielectric we don't need much...
-  if (is_dielectric())
-  {
-    set_equilibrium_fermi_level(0.5 * (Ec + Ev));
-    //set_intrinsic_density(sqrt(cb.get_effective_DOS() * vb.get_effective_DOS())
-        //* exp(-0.5 * get_band_gap() / kT));
-    return;
-  }
 
   for (auto&& cp: carriers)
   {
@@ -654,10 +612,7 @@ DDBulkModel::calculate_equilibrium_properties(void)
   //set_equilibrium_p(get_hole_density());
 
   // for a dielectric we don't need much...
-  if (is_dielectric())
-    set_equilibrium_fermi_level(0.0);
-  else
-    set_equilibrium_fermi_level(y);
+  set_equilibrium_fermi_level(y);
 
 
   for (auto&& cp: carriers)

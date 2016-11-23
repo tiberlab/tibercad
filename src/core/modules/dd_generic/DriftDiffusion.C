@@ -93,7 +93,6 @@ DriftDiffusion::Options::Options(void)
 DriftDiffusion::DriftDiffusion(const ModelOptions& options)
   : SimulationInterface(options),
     _rebuild_eq_system(true),
-    _useparticle('b'),
     _reference_potential(0.0),
     _rstf(NULL)
 {
@@ -347,45 +346,6 @@ DriftDiffusion::set_electric_potential(double pot)
   }
 }
 
-
-
-
-void
-DriftDiffusion::find_dielectric_boundary_nodes(void)
-{
-  MeshBase& mesh = get_mesh();
-  MeshBase::element_iterator it = this->active_local_elements_begin();
-  const MeshBase::element_iterator end = this->active_local_elements_end();
-
-  for ( ; it != end; ++it)
-  {
-    const Elem* el = *it;
-
-    DDBulkModel* sc = get_bulk_model<DDBulkModel>(el);
-
-    // we are only interested in boundaries between semiconductor/dielectric
-    if (sc->is_dielectric())
-    {
-      for (unsigned s = 0; s < el->n_sides(); s++)
-      {
-        if (get_environment().is_inner_boundary(ElementSide(el, s)))
-        {
-          // get the model of the neighbor element
-          DDBulkModel* scn = get_bulk_model<DDBulkModel>(el->neighbor(s));
-
-
-          // if neighbor is not dielectric we record it
-          if (!scn->is_dielectric())
-          {
-            libMesh::UniquePtr<Elem> side(el->build_side(s));
-            for (unsigned int i = 0; i < side->n_nodes(); i++)
-              _dielectric_boundary_nodes.insert(side->get_node(i));
-          }
-        }
-      }
-    }
-  }
-}
 
 
 
@@ -1229,14 +1189,10 @@ DriftDiffusion::parse_options(void)
   else if (coupling == "electrons")
   {
     myopts.coupling = ECURRENT | POISSON;
-    if (opts.get_option("local_equilibrium", true))
-      _useparticle = 'e';
   }
   else if (coupling == "holes")
   {
     myopts.coupling = HCURRENT | POISSON;
-    if (opts.get_option("local_equilibrium", true))
-      _useparticle = 'h';
   }
   else if (coupling == "current")
     myopts.coupling = CURRENTS;
@@ -1639,7 +1595,6 @@ DriftDiffusion::do_init(void)
 
   parse_const_options();
 
-  find_dielectric_boundary_nodes();
 
 
   get_environment().update_boundary_element_map();
@@ -2111,10 +2066,8 @@ DriftDiffusion::get_solution_secure(const Elem* elem,
 
     sc->calculate_densities();
 
-    double edens = (sc->is_dielectric() ? 0.0 : sc->get_electron_density());
-    double hdens = (sc->is_dielectric() ? 0.0 : sc->get_hole_density());
-    //double edens = sc->get_electron_density();
-    //double hdens = sc->get_hole_density();
+    double edens = sc->get_electron_density();
+    double hdens = sc->get_hole_density();
 
     sc->calculate_mobilities();
 
@@ -2482,14 +2435,8 @@ DriftDiffusion::calculate_mean_fermi_levels(void)
       {
 
         X.resize(n_dofs_tot);    Xu.reposition(0, n_dofs);
-        if (_useparticle == 'h')
-          Xn.reposition(2 * n_dofs, n_dofs);
-        else
-          Xn.reposition(n_dofs, n_dofs);
-        if (_useparticle == 'e')
-          Xp.reposition(n_dofs, n_dofs);
-        else
-          Xp.reposition(2 * n_dofs, n_dofs);
+        Xn.reposition(n_dofs, n_dofs);
+        Xp.reposition(2 * n_dofs, n_dofs);
 
         dof_map.extract_local_vector(solution, dof_indices, X);
 
@@ -2691,11 +2638,6 @@ DriftDiffusion::calculate_currents_rstf_global(void)
     assert(sc != NULL);
 
 
-    // in a dielectric we have no current
-    if (sc->is_dielectric())
-      continue;
-
-
     fe->reinit(elem);
 
     sc->reinit(elem);
@@ -2855,10 +2797,6 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
   const unsigned int u_var = system->variable_number("potential");
   unsigned int en_var = system->variable_number("fermi_e");
   unsigned int ep_var = system->variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
 
   libMesh::FEType fe_type = system->variable_type(u_var);
 
@@ -2907,11 +2845,6 @@ DriftDiffusion::calculate_currents_rstf_compact(void)
         get_bulk_model<DDBulkModel>(elem);
 
     assert(sc != NULL);
-
-
-    // in a dielectric we have no current
-    if (sc->is_dielectric())
-      continue;
 
 
     fe->reinit(elem);
@@ -3121,9 +3054,6 @@ DriftDiffusion::calculate_field_emission(void)
 
     assert(sc != NULL);
 
-    // for now, we calculate field emission only in dielectrics
-    if (!sc->is_dielectric())
-      continue;
 
     for (unsigned int s = 0; s < elem->n_sides(); s++)
     {
@@ -3231,10 +3161,6 @@ DriftDiffusion::calculate_currents_surfint(void)
   const unsigned int u_var = system->variable_number("potential");
   unsigned int en_var = system->variable_number("fermi_e");
   unsigned int ep_var = system->variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
 
   libMesh::FEType fe_type = system->variable_type(u_var);
 
@@ -3474,10 +3400,6 @@ DriftDiffusion::calculate_surface_recombination(void)
   const unsigned int u_var = system->variable_number("potential");
   unsigned int en_var = system->variable_number("fermi_e");
   unsigned int ep_var = system->variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
 
   libMesh::FEType fe_type = system->variable_type(u_var);
 
@@ -3847,10 +3769,6 @@ DriftDiffusion::build_local_scaling(void)
       double drhovec[2];
       sc->get_charge_density_derivatives(drhovec);
       double drho = -JxW[qp] * (drhovec[0] + drhovec[1]) * phi0 / C0;
-      if (sc->is_dielectric())
-        drho = 0.0;
-      if (params.local_neutrality)
-        drho = 0.0;
 
       for (unsigned int i = 0; i < n_dofs; i++)
       {
@@ -4609,8 +4527,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
             if (params.local_neutrality)
               drho[u_var] = drho[var.first] = 0.0;
-            if (sc->is_dielectric())
-              drho[u_var] = drho[var.first] = 0.0;
           }
         }
 
@@ -4766,8 +4682,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
 
 
         if (params.local_neutrality)
-          J_x_rho = 0.0;
-        if (sc->is_dielectric())
           J_x_rho = 0.0;
 
         long double J_x_P0 = J / P0;
@@ -5133,33 +5047,6 @@ DriftDiffusion::do_assembly(const libMesh::NumericVector<Number>& x,
       }
     }
 
-    // check if it is a dielectric
-    if (sc->is_dielectric())
-    {
-      for (unsigned int i = 0; i < n_dofs; i++)
-      {
-        for (auto vari : q_var)
-        {
-          for (auto varj : q_var)
-          {
-            for (unsigned int j = 0; j < n_dofs; j++)
-              Kvv.at(vari.first).at(varj.first)(i,j) = ((vari.first == u_var) && (varj.first == u_var)) ? 
-                                                         Kvv.at(vari.first).at(varj.first)(i,j) : 0.0;
-          }
-
-          if (vari.first != u_var)
-          {
-            if (is_dielectric_boundary_node(elem->get_node(i)))
-              Kvv.at(vari.first).at(vari.first)(i, i) = 0.0;
-            else
-              Kvv.at(vari.first).at(vari.first)(i, i) = 1.0;
-            // we simply set the electrochemical potential to zero
-            Fv.at(vari.first)(i) = 0.0;
-          }
-        }
-      }
-    }
-
 
     // constrain the jacobian and the rhs to account for constrained
     // DOFs
@@ -5354,10 +5241,6 @@ DriftDiffusion::write_nodal_vector(const string& filename, const libMesh::Numeri
   const unsigned int u_var = system->variable_number("potential");
   unsigned int en_var = system->variable_number("fermi_e");
   unsigned int ep_var = system->variable_number("fermi_h");
-  if (_useparticle == 'e')
-    ep_var = en_var;
-  else if (_useparticle == 'h')
-    en_var = ep_var;
 
   vector<unsigned int> dof_indices_u;
   vector<unsigned int> dof_indices_en;

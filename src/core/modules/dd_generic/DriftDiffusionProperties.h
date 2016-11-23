@@ -302,13 +302,6 @@ class DriftDiffusionProperties : public PhysicalModel
     //void reinit(const Elem* elem);
 
 
-    //! Tells if this model is for a dielectric
-    bool is_dielectric(void) const;
-
-    //! Get or set dielectric flag
-    bool& is_dielectric(void);
-
-
     //! Set the polarization vector
     //void set_polarization(const RealVectorValue& polarization);
 
@@ -342,16 +335,6 @@ class DriftDiffusionProperties : public PhysicalModel
     // Set the old potentials
     void set_old_potentials(double potential, double Ef_e = 0.0, double Ef_h = 0.0);
 
-    //! Set the carrier densities
-    /*!
-     * This method can be used if the densities are the independent variables.
-     * The densities have to be set before calling any of the
-     * \c calculate_xxx methods.
-     *
-     * \param n the electron density
-     * \param p the hole density
-     */
-    void set_densities(double n, double p);
 
     //! Set the electric field
     /*!
@@ -1164,10 +1147,6 @@ class DriftDiffusionProperties : public PhysicalModel
     double _lattice_vt;
 
 
-    //! True if this is a dielectric
-    bool _is_dielectric;
-
-
     //New generic model
     //! The gradient of the electrochemical-potential
     std::map<std::string, libMesh::RealGradient> _grad_fermi;
@@ -1192,21 +1171,7 @@ class DriftDiffusionProperties : public PhysicalModel
 
 
 
-inline
-bool
-DriftDiffusionProperties::is_dielectric(void) const
-{
-  return _is_dielectric;
-}
 
-
-
-inline
-bool&
-DriftDiffusionProperties::is_dielectric(void)
-{
-  return _is_dielectric;
-}
 
 
 inline
@@ -1334,7 +1299,7 @@ DriftDiffusionProperties::get_grad_fermi_h(void) const
 
 
 
-
+/*
 inline
 void
 DriftDiffusionProperties::set_densities(double n, double p)
@@ -1345,7 +1310,7 @@ DriftDiffusionProperties::set_densities(double n, double p)
   _pd->hole_density = p;
   _pd->hole_density_derivative = -p / _pd->hole_vt;
 }
-
+*/
 
 
 inline
